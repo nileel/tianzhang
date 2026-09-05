@@ -1,0 +1,95 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-LOADOUT-01",
+  "title": "正式战斗按角色装载校验攻击档案",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-PROJECTION-01"
+  ],
+  "stateReason": "等待顺序前置及 D-COMBAT-PARITY-01 手动冻结逐角色普攻/术法/神通授权；不能仅因前置归档就猜测已知与装载的关系或开通未接入内容。合同完整后可由定时器实施并独立复审。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt",
+    "开发管理/任务归档/U-COMBAT-LOADOUT-01.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作归档/U-COMBAT-LOADOUT-01-交接归档.txt",
+    "开发管理/任务卡/N-COMBAT-PARITY-01.txt",
+    "开发管理/任务列表/数值与战斗任务.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-LOADOUT-01 · 正式战斗按角色装载校验攻击档案
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视及负责人要求全部非美术问题先建卡；规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- CombatSession.ValidateAttack 不检查角色装载；AI 枚举只过滤术法，普攻和神通可来自全局表。唯一结果是直接命令和 AI 枚举对同一角色采用同一已批准装载约束。
+- 本卡是本批第 4/10 项。前置和手动合同均满足后才可 ready；外部产物必须先经 Codex 独立复审，再解锁后项。
+- 正式生产档案目前只有徒手普攻。术法/神通使用内存夹具证明授权边界，不因此接入全部能力或扩展生产内容。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-05-combat-behavior-parity-review.md::逐角色攻击与装载合同
+- src/Assets/Scripts/Modules/Character/AbilityLoadout.cs::四列表及快照；只读
+- src/Assets/Scripts/Modules/Content/CharacterData.cs::玩家/敌人能力与普攻引用；只读
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::TrySpawn/CreatePlayer/CreateEnemy/AdventureSpawnSet
+- src/Assets/Scripts/Combat/CombatantSnapshot.cs::装载字段与换法
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateCommand/ValidateAttack/ValidateSwapSpell
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs::AddTargetedAttacks/AddIfValid
+- src/Assets/Scripts/Combat/CombatCommandService.cs::Validate/Execute；只读
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RequestBasicAttack/RequestArt/RequestDivine/RunCombat；只读
+- src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs::PlayerAndAiReceiveTheSameSevenLegalCommandKinds/换法与拒绝测试
+- src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs::FormalAdjacentEncounterAcceptsTheCommittedBasicAttack
+- src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs；src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs::正式入战夹具
+
+## 实施范围
+
+- 消费上游冻结的唯一普攻绑定、术法/神通已知与装载关系、双方源列表、空列表行为、引用映射和拒绝码；在现有 CombatantSnapshot 承载必要只读绑定，由 Spawner 从现有输入投影，不新建权限服务。
+- 将归属校验集中到 CombatSession.ValidateAttack；直接执行和 AI 的 AddIfValid 共同消费，避免两套有效性规则。
+- 正式入战使用已选中的角色普攻；全局存在的其他普攻、术法、神通不能直接视作当前角色拥有。装载引用缺失或无法映射只按已批准合同拒绝，不能按显示名称猜测。
+- 只调整列明测试的装载输入及授权断言；保留前置 RNG 已形成的采样顺序和正式路径证明。
+
+## 禁止项
+
+- 不修改美术、场景、Prefab、生产能力档案、保存格式、学习/装备界面或资格策略；不新增 MonoBehaviour、程序集、通用能力权限系统、重试层或无证据兜底。
+- 写入仅限 expectedPaths。下游管理路径只供 Codex 复审通过后更新依赖，DeepSeek 不提前解除下游阻塞。
+
+## 验证
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1
+- 直接 Execute 拒绝他人普攻、未装载术法和神通；拒绝前后 HP、MP、CT、冷却与装载不变；AI 不枚举相同被拒能力，合法装载和换法后的新槽位仍可用。
+- 七种合法命令测试必须显式给双方相应神通装载；正式徒手链及前置随机采样测试保持有效，不能删断言或恢复“全局存在即拥有”。
+- 管理变化检查任务卡投影；提交前运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 直接命令与 AI 枚举共用已批准的逐角色攻击归属，正反例及正式徒手链通过，独立复审通过后归档。
+- 通过后仅从 N-COMBAT-PARITY-01 移除本项具名前置并同步 backlog；核对其合同、风险投影与停止条件后才可 ready。
+
+## 停止条件
+
+- 上游未冻结已知/装载关系、敌方来源或引用映射；需要新增资格、敌人槽位规则、内容 ID 迁移、学习/装备功能或保存字段时停止并回到合同，不扩路径。

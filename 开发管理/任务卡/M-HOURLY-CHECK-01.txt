@@ -1,0 +1,85 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "M-HOURLY-CHECK-01",
+  "title": "小时选题重复全量校验收敛",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "frozen",
+  "blockedBy": [
+    "N-COMBAT-PARITY-01"
+  ],
+  "stateReason": "等待前项；本卡修改共享自动化控制面，只由普通管理上下文统筹，两个写入定时器暂停并确认无活动 run 后实施与 canary。小时 owner 不得领取本卡自更新。",
+  "expectedPaths": [
+    "tools/select-hourly-task.ps1",
+    "tools/invoke-hourly-owner.ps1",
+    "tools/test-select-hourly-task.ps1",
+    "tools/test-queue-maintenance-decision-owner.ps1",
+    "开发管理/状态与建议维护规则.txt",
+    "开发管理/自动工作流规则.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-HOURLY-CHECK-01.txt",
+    "开发管理/任务归档/M-HOURLY-CHECK-01.txt",
+    "开发管理/任务卡/M-HOURLY-PATH-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-HOURLY-CHECK-01 · 小时选题重复全量校验收敛
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 有候选时 Codex 选题阶段至少三次、DeepSeek 至少两次全量检查；单卡参数也触发全部卡扫描。唯一结果是同一未变化选题过程保留一次完整校验并复用结果，安全判断不减弱。
+- 本卡是本批第 6/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+
+## 必查范围
+
+- 开发管理/自动工作流规则.txt#Canary、暂停与停止
+- tools/invoke-hourly-owner.ps1::RunOnce 的回复消费、queueEvidence 和 selector 调用
+- tools/select-hourly-task.ps1::全局及目标 postcondition 调用
+- tools/check-task-cards.ps1::全量/单卡输出与风险预检；只读
+- tools/test-select-hourly-task.ps1::fixture schema 与候选断言
+- tools/test-queue-maintenance-decision-owner.ps1；tools/test-queue-maintenance-waiting-run.ps1；tools/test-queue-maintenance-completion.ps1::维护决策分支
+- 开发管理/状态与建议维护规则.txt#检查脚本入口
+
+## 实施范围
+
+- 在普通管理上下文先冻结调用顺序：有候选时一次检查同时证明全局投影与目标 postcondition；无候选时一次全局检查。共享入口消费同次结果，不能又重复启动同范围 checker。
+- 保留完整投影校验、风险预检、claim 后摘要检查与最新 master 集成检查；回复处理或其他步骤造成状态变化后，旧证据立即失效，只重新检查受影响选择。
+- 同步现有维护规则，明确一次完整选题检查与投影变化重验的真实边界；不要求把现有 checker 重写为增量系统。
+- 现有 selector 测试的 schema 1 ready fixture 要迁为 schema 2，并补齐现有风险预检依赖。实际调用计数断言覆盖两个 owner 的有候选、空队列、维护回复和坏投影。
+- 实施、独立验证、集成及两侧真实 canary 均由普通管理上下文完成；变更定时器只用 app automation 工具，保存并恢复原配置，不编辑 TOML。
+
+## 禁止项
+
+- 不修改美术资源、立绘/3D/表现接线任务、生产美术预算或外部账号；不扩展原审视之外的游戏内容。不得创建平行状态、兼容分支、通用重试或无证据兜底。
+- 写入仅限 metadata.expectedPaths；本卡下游管理路径仅用于更新本项依赖/冻结实施合同，不能借此实施下游业务。
+
+## 验证
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-select-hourly-task.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-queue-maintenance-decision-owner.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-queue-maintenance-waiting-run.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-queue-maintenance-completion.ps1
+- 通过函数/进程调用计数证明同一未变化选择只完整检查一次；坏全局投影、坏目标后置、变更摘要仍拒绝。普通上下文按现有规则在暂停期间运行 codex/deepseek 两个 Canary，再核验配置后恢复。
+- 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 重复调用已消除，原安全拒绝与维护回复行为保持，测试和两侧 canary 通过，配置恢复证据齐全后归档。
+- 通过后仅从 M-HOURLY-PATH-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+
+## 停止条件
+
+- 两个写入 automation 未暂停、任一真实 run 未关闭、需要新缓存/磁盘证据状态/runtime schema/匹配算法/恢复分支，或修改绕过事实变更检查时停止；不得定时器自修改。

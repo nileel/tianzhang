@@ -1,0 +1,80 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "M-HANDOFF-CLOSE-AUTH-01",
+  "title": "复审交接收口路径授权补齐",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "automation",
+  "stage": "implementation",
+  "dispatchState": "frozen",
+  "blockedBy": [
+    "M-HANDOFF-ARCHIVE-01"
+  ],
+  "stateReason": "等待前项；已定位复审卡缺少交接迁档授权，修改 pending-review 转换与 checker 属控制面，只在普通管理上下文暂停两个写入定时器后实施，不由定时器自更新。",
+  "expectedPaths": [
+    "tools/set-task-pending-review.ps1",
+    "tools/check-task-cards.ps1",
+    "tools/test-set-task-pending-review.ps1",
+    "tools/test-check-task-cards.ps1",
+    "开发管理/审核入口.txt",
+    "开发管理/AI协作规则.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-HANDOFF-CLOSE-AUTH-01.txt",
+    "开发管理/任务归档/M-HANDOFF-CLOSE-AUTH-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-HANDOFF-CLOSE-AUTH-01 · 复审交接收口路径授权补齐
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 当前 pending-review 转换只追加未通过清单路径，未给复审方当前交接与对应归档路径；规则要求收口但严格授权没有完整出口。本卡唯一结果是新进入复审的卡具备本任务交接闭环授权，不建新的审核状态库。
+- 本卡是本批第 10/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+
+## 必查范围
+
+- tools/set-task-pending-review.ps1::expectedPaths 补入及 schema2重算
+- tools/check-task-cards.ps1::codex_review 路径约束和风险投影
+- tools/test-set-task-pending-review.ps1；tools/test-check-task-cards.ps1::转换/路径/风险fixture
+- 开发管理/审核入口.txt#最小规则
+- 开发管理/AI协作规则.txt#交接
+- 开发管理/自动工作流规则.txt#Canary、暂停与停止
+
+## 实施范围
+
+- 冻结精确约定：转换为 codex_review 时除了原授权，补入 开发管理/AI合作沟通.txt 和 开发管理/AI合作归档/<TaskId>-交接归档.txt 的实际字面量值，去重并重算现有 schema2风险投影。
+- checker 对新转换的复审卡验证同一精确授权；已完成历史卡不回迁、不批量升级。
+- 在现有审核规则明确：通过后按 taskId 原文迁档全部已消费轮次；返工时只迁已经被新证据替代的轮次，保留当前返工证据；无匹配交接则不创建空归档，不改其他任务。
+- 优先由既有复审责任方消费授权，不新建自动归档服务；测试验证路径合同及匹配边界。本轮只为新复审闭环修复，不重新清理全局26条。
+- 普通管理上下文负责暂停、检查无活动 run、实施与独立验证、持锁集成、两侧 canary和配置恢复；可委派隔离的机械候选，不让小时owner自修改。
+
+## 禁止项
+
+- 不修改美术资源、立绘/3D/表现接线任务、生产美术预算或外部账号；不扩展原审视之外的游戏内容。不得创建平行状态、兼容分支、通用重试或无证据兜底。
+- 写入仅限 metadata.expectedPaths；本卡下游管理路径仅用于更新本项依赖/冻结实施合同，不能借此实施下游业务。
+
+## 验证
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-set-task-pending-review.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-task-cards.ps1
+- fixture 覆盖缺一授权拒绝、重复无新增、schema2实时一致、合法 TaskId唯一归档路径和其他任务路径投影不变；不要求转换器或 checker 执行迁档。迁档消费边界通过规则原文审查，实际行为留给后续真实复审核验；依照现有规则完成 codex/deepseek 双 Canary。
+- 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 新复审卡有完整且最小的交接收口授权，规则与验证一致；历史不受批量迁移影响，双 canary 与配置恢复通过后归档。
+- 本卡通过后本批十项完成；只核对本批各项真实归档和残余决定，不新增全项目治理工作。
+
+## 停止条件
+
+- 未暂停写入定时器、仍有活动run、需要第二审核状态库/后台清理/跨任务批量删除、变更复审通过标准或绕过风险预检时停止。

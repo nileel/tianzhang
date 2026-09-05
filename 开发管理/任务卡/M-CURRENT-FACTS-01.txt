@@ -1,0 +1,79 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "M-CURRENT-FACTS-01",
+  "title": "非美术当前状态与运行时索引校正",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "management",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-HOURLY-PATH-01"
+  ],
+  "stateReason": "按用户要求依次执行，等待前项定案；只校正非美术当前事实，代码事实不清时停在具体条目，不扩大为全量文档治理。",
+  "expectedPaths": [
+    "开发管理/设计-当前状态.txt",
+    "UNITY_STRUCTURE.runtime.md",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/M-CURRENT-FACTS-01.txt",
+    "开发管理/任务归档/M-CURRENT-FACTS-01.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作归档/M-CURRENT-FACTS-01-交接归档.txt",
+    "开发管理/任务卡/M-HANDOFF-ARCHIVE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+}
+---TASK-BODY---
+# M-CURRENT-FACTS-01 · 非美术当前状态与运行时索引校正
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 当前文档仍有 GameSession、不重建角色、旧保存版本与 M8 未执行等相互冲突陈述。唯一结果是将现有当前事实层与执行时源码及有效验收证据对齐。
+- 本卡是本批第 8/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+
+## 必查范围
+
+- 开发管理/设计-当前状态.txt::当前项目边界、册界接入、Unity 正式链和当前风险中的非美术条目
+- UNITY_STRUCTURE.runtime.md::状态与用例所有者
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::长期状态和保存入口
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::SchemaVersion/迁移
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs::Capture/Restore/CharacterRecord
+- src/Assets/Scripts/Modules/World/CharterCommitService.cs::唯一提交职责
+- src/Assets/Tests/PlayMode/CharterVerticalSlicePlayModeTests.cs::实际覆盖
+
+## 实施范围
+
+- 只修正上述两份当前文档中实际过时的非美术所有者、版本、角色恢复和册界状态，写明现行事实与未完成边界。
+- 保留历史事实的时间和出处；过去测试数字不可当作本轮重跑结果。旧 schema 4 与重建后 schema 2 不是版本大小错误，不机械替换所有数字。
+- 美术方向、画像/3D资产及其任务状态完全不处理；不改任务归档、历史规格和设计原文，不新增第二份当前状态文档。
+
+## 禁止项
+
+- 不修改美术资源、立绘/3D/表现接线任务、生产美术预算或外部账号；不扩展原审视之外的游戏内容。不得创建平行状态、兼容分支、通用重试或无证据兜底。
+- 写入仅限 metadata.expectedPaths；本卡下游管理路径仅用于更新本项依赖/冻结实施合同，不能借此实施下游业务。
+
+## 验证
+
+- 每个改动陈述直接指向当前符号/任务归档/有效验证；确认不存在把旧证据标成新验收、删掉真实风险或将未实现功能写为完成。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths 开发管理/设计-当前状态.txt,UNITY_STRUCTURE.runtime.md
+- 代码和参数未改时不重跑 Unity/BattleSim；记录本轮验证边界。
+- 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 限定非美术状态与真实当前所有者及版本一致，旧验证适用范围明确，独立复审通过。
+- 通过后仅从 M-HANDOFF-ARCHIVE-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+
+## 停止条件
+
+- 发现需要修改源码/设计语义、追溯全部历史、改美术状态或缺乏有效验收才能写完成时停止在该项并报告，不用文案抹平冲突。

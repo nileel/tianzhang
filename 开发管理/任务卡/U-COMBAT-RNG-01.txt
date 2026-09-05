@@ -1,0 +1,80 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-RNG-01",
+  "title": "正式战斗玩家与敌方攻击随机采样接线",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-05 用户要求按顺序准备非美术审视整改；根因、两处业务路径与受控采样验收已冻结，首项可由现有 DeepSeek 定时器执行并交 Codex 独立复审。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-RNG-01.txt",
+    "开发管理/任务归档/U-COMBAT-RNG-01.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作归档/U-COMBAT-RNG-01-交接归档.txt",
+    "开发管理/任务卡/D-COMBAT-PARITY-01.txt",
+    "开发管理/任务列表/数值与战斗任务.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-COMBAT-RNG-01 · 正式战斗玩家与敌方攻击随机采样接线
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 静态调用链已证明：CombatCommand 的 rolls 默认为全零，正式玩家请求和 AI 候选直接执行而没有采样，正概率因此变为固定触发。本卡唯一结果是正式执行边界正确供给样本，不调整数值平衡。
+- 本卡是本批第 1/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+
+## 必查范围
+
+- src/Assets/Scripts/Combat/CombatCommand.cs::CombatCommand/CombatResolutionRolls
+- src/Assets/Scripts/Combat/CombatCommandService.cs::Validate/Execute
+- src/Assets/Scripts/Combat/CombatActionResolver.cs::RollHit/ResolvePhysical/ResolveSoul
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs::GetLegalActions
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RequestBasicAttack/RequestArt/RequestDivine/RunCombat/ExecutePlayer
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs::FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads
+- src/Assets/DataConfig/Enemies.csv::enemy_shijiahou；只读
+- tools/run-unity-playmode-tests.ps1::参数与执行入口
+
+## 实施范围
+
+- 优先在现有 EncounterCoordinator 内添加可注入的采样委托或普通对象，不新增 MonoBehaviour、场景引用或另一套回放系统；玩家与 AI 共用一个执行边界。
+- 先校验命令。每个被接受的攻击命令按固定顺序取得命中、暴击、格挡、魂盾四个 [0,100) 样本，随新命令交给原纯 resolver；非攻击、合法动作枚举、无效命令均不得消耗该序列。保留命令其他字段。
+- 使用有状态且可设种子的 System.Random 或等价既有实现；测试可注入阈值两侧的明确样本。采样在命令执行时发生，不在每帧、HUD 刷新或候选枚举时发生。
+- 保持当前比较运算符、配置概率、伤害公式、朝向及 CT 语义；实际正式调用者必须被测试覆盖。
+
+## 禁止项
+
+- 不修改美术资源、立绘/3D/表现接线任务、生产美术预算或外部账号；不扩展原审视之外的游戏内容。不得创建平行状态、兼容分支、通用重试或无证据兜底。
+- 写入仅限 metadata.expectedPaths；本卡下游管理路径仅用于更新本项依赖/冻结实施合同，不能借此实施下游业务。
+
+## 验证
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1
+- 玩家经 ICombatCommandHandler，AI 经 RunCombat 的真实敌方分支，二者共用校验后采样/执行入口；不为测试扩展敌方公开命令接口。明确样本分别证明暴击触发/不触发、非背击格挡触发/不触发、非零闪避下命中/未命中。允许测试内存夹具，不改生产角色数值。
+- 证明同种子和同一合法命令序列可复现；无效命令和合法动作枚举不推进采样；现有关中战斗、奖励、返回、存读档流程仍通过。现有 runner 无 TestFilter 参数。
+- 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 受控样本通过正式调用者产生预期分支，真实路径不再使用缺省全零概率值；必要 PlayMode 通过，Codex 独立复审通过后归档。不能仅验证纯 resolver。
+- 通过后仅从 D-COMBAT-PARITY-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+
+## 停止条件
+
+- 需要改变战斗公式、敌人强度、UI/场景、存档随机状态、跨战斗回放或新增组件时停止，不用这些变更掩盖接线问题。

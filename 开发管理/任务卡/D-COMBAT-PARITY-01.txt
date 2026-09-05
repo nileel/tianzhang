@@ -1,0 +1,91 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-PARITY-01",
+  "title": "最小战斗输入与双端行为对照合同定案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "frozen",
+  "blockedBy": [
+    "U-COMBAT-RNG-01"
+  ],
+  "stateReason": "等待前项通过；跨端语义和角色保存兼容由普通手动 Codex 上下文定案，本次只建卡，不授权 Terra 定时器自行选择哪一端公式正确。解除前置不自动解冻。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-05-combat-behavior-parity-review.md",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-PARITY-01.txt",
+    "开发管理/任务归档/D-COMBAT-PARITY-01.txt",
+    "开发管理/任务卡/U-COMBAT-PROJECTION-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/任务卡/N-COMBAT-PARITY-01.txt",
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-PARITY-01 · 最小战斗输入与双端行为对照合同定案
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 两端只共享部分几何和冲突规则，伤害与抗性、境界处理和取整尚有差异；角色快照也没有完整传递显式战斗字段。唯一结果是一份有来源、有范围、有预期值的最小实施合同，不把当前任一实现直接作为正确规则。
+- 本卡是本批第 2/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+
+## 必查范围
+
+- docs/基础设定/角色数值设计.txt::攻击结算、二级属性、境界、暴击
+- docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md::作用范围、冷却单位与生产消费者
+- simulations/BattleSim/Combat.cs::Dmg/ApplyDefenses 与直接调用者
+- simulations/BattleSim/GameData.cs::UnarmedBasicAttack
+- simulations/BattleSim/BattleSimSelfTests.cs::crit-multiplier-tq053/ct-reaction-tq052/attack-profile-d-combat-02/basic-unarmed-production-d-combat-prod-01/element-v510
+- src/Assets/Scripts/Combat/CombatActionResolver.cs::CalculateLineDamage/RollHit/ResolvePhysical/ResolveSoul
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::FromDefinition/Capture
+- src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs::角色输入
+- src/Assets/Scripts/Modules/Character/CharacterAttributes.cs::Derive
+- src/Assets/Scripts/Modules/Content/CharacterData.cs::显式加成与二级字段
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::SchemaVersion/MigrateSchemaOne
+- src/Assets/Scripts/Modules/Content/ContentCatalogData.cs::目录边界
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::CreatePlayer/CreateEnemy
+- src/Assets/Scripts/Modules/Character/AbilityLoadout.cs::已知与装载四列表；src/Assets/Scripts/Combat/CombatantSnapshot.cs::现有授权投影
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack；src/Assets/Scripts/Combat/CombatLegalActionService.cs::AddTargetedAttacks
+- src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs::PlayerAndAiReceiveTheSameSevenLegalCommandKinds
+
+## 实施范围
+
+- 分别列出双方可表达的徒手单目标物理、基础伤害、命中、暴击、格挡与 CT 的输入/输出；明确相同输入如何构造、观察位置和各规则的现行规范出处。
+- 区分必须一致、批准保留的差异、尚不可比三类；BattleSim 回合与 Unity tick 未有权威换算时不得猜测；未接入的能力、范围效果和成长系统不因此解冻。
+- 为 U-COMBAT-PROJECTION-01 冻结 CharacterData 已有六个显式加成、八个概率/减伤字段的原样传递与保存兼容。旧存档缺失值应保持已确认旧行为，不反推未保存的功法收益；不得改写先天到二级属性公式。当前保存 schema 2/legacy 1 必须重新核实。
+- 功法元素单列直接事实：不能把可见灵根、名字或默认元素当成功法元素。查明已有功法定义及目录能力；无法在当前批准边界唯一接入时，明确排除并登记尚需裁决的原因，不临场新增目录或 Resources 搜索。
+- 为 N-COMBAT-PARITY-01 冻结小型共用输入及输出表、数值容差/取整规则、允许修正的具体函数和唯一测试入口。禁止在本卡修改业务源码。
+- 为 U-COMBAT-LOADOUT-01 冻结逐角色普攻绑定与术法/神通装载来源：选中唯一普攻、是否同时要求已知与装载、玩家/敌方输入、空集合、稳定 ID 到 profileId 的映射和拒绝码。全局 profile 存在不能当作所有角色均已装载；无法映射时禁止猜测或放行。未接入能力不因此开通学习、装备或新内容。
+- 将三张实施下游卡的路径、验证和停止条件收窄到批准合同；先重新计算风险投影。合同缺少正确口径时保持下游 blocked，向负责人提供具体裁决项，不能将调查完成写成一致性修复。
+
+## 禁止项
+
+- 不修改美术资源、立绘/3D/表现接线任务、生产美术预算或外部账号；不扩展原审视之外的游戏内容。不得创建平行状态、兼容分支、通用重试或无证据兜底。
+- 写入仅限 metadata.expectedPaths；本卡下游管理路径仅用于更新本项依赖/冻结实施合同，不能借此实施下游业务。
+
+## 验证
+
+- 逐项核对合同引用与真实定义、消费者，记录核验基线；不以旧结构图、快照测试硬编码期望替代数值规范。
+- 仅文档/静态对照不重复跑模拟。若给出新计算或平衡结论，先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim，另按需要运行已存在的 --self-test 套件。
+- 审核文本、任务卡投影与路径限定 diff；确认下游没有尚未裁决的必需语义而被标 ready。
+- 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
+
+## 完成条件
+
+- 普通手动 Codex 已签收最小合同；每项有可核对事实源及可机器判断的预期行为，三张实施下游具备冻结范围。未决语义存在时本卡不能按完整定案关闭。
+- 通过后仅从 U-COMBAT-PROJECTION-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+
+## 停止条件
+
+- 需要由模型自选数值规范、换算未决时间单位、重写整个 Combat/BattleSim、恢复被冻结内容，或一次合同无法形成有界实现时停止；若确需拆分，只在同次规划中一次列齐已知依赖，不边实施边加补丁。

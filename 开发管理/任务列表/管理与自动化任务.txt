@@ -14,6 +14,11 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| M-HOURLY-CHECK-01 | P2 | codex | 冻结 | N-COMBAT-PARITY-01 | 小时选题重复全量校验收敛 | 开发管理/任务卡/M-HOURLY-CHECK-01.txt |
+| M-HOURLY-PATH-01 | P2 | codex | 冻结 | M-HOURLY-CHECK-01 | 共享管理路径并发交付的最小处置定案 | 开发管理/任务卡/M-HOURLY-PATH-01.txt |
+| M-CURRENT-FACTS-01 | P2 | deepseek | 阻塞 | M-HOURLY-PATH-01 | 非美术当前状态与运行时索引校正 | 开发管理/任务卡/M-CURRENT-FACTS-01.txt |
+| M-HANDOFF-ARCHIVE-01 | P2 | codex | 阻塞 | M-CURRENT-FACTS-01 | 已完成任务交接原文迁档 | 开发管理/任务卡/M-HANDOFF-ARCHIVE-01.txt |
+| M-HANDOFF-CLOSE-AUTH-01 | P2 | codex | 冻结 | M-HANDOFF-ARCHIVE-01 | 复审交接收口路径授权补齐 | 开发管理/任务卡/M-HANDOFF-CLOSE-AUTH-01.txt |
 | M-EXP-PREFLIGHT-01 | P1 | codex | 阻塞 | M-EXP-PREFLIGHT-CLOSE-01 | 预防型错误经验记忆系统汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-01.txt |
 | M-EXP-OBSERVE-20-01 | P2 | codex | 阻塞 | — | 技术与工作流 20 任务观察报告 | 开发管理/任务卡/M-EXP-OBSERVE-20-01.txt |
 | M-EXP-GATE-PWSH7-01 | P2 | deepseek | 阻塞 | M-EXP-OBSERVE-20-01 | PowerShell 7 经验独立门禁晋级 | 开发管理/任务卡/M-EXP-GATE-PWSH7-01.txt |
@@ -23,6 +28,14 @@
 | M-EXP-EXT-CONTENT-01 | P2 | codex | 阻塞 | M-EXP-OBSERVE-20-01 | 内容经验域开放决策 | 开发管理/任务卡/M-EXP-EXT-CONTENT-01.txt |
 | M-EXP-EXT-NUMERIC-01 | P2 | codex | 阻塞 | M-EXP-OBSERVE-20-01 | 数值经验域开放决策 | 开发管理/任务卡/M-EXP-EXT-NUMERIC-01.txt |
 | M-EXP-PREFLIGHT-CLOSE-01 | P2 | codex | 阻塞 | M-EXP-GATE-PWSH7-01、M-EXP-GATE-BS-TIMEOUT-01、M-EXP-GATE-UNITY-ASMDEF-01、M-EXP-EXT-DESIGN-01、M-EXP-EXT-CONTENT-01、M-EXP-EXT-NUMERIC-01 | 验证出口并关闭汇总父项 | 开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt |
+
+## 2026-09-05 非美术审视整改顺序
+
+- 本批来自负责人“除美术外全部先建任务、准备依次进行”的要求。任务状态仍只以各卡为准；下列编号只提供跨分线顺序，不建立新的调度状态。
+- 顺序：U-COMBAT-RNG-01 → D-COMBAT-PARITY-01 → U-COMBAT-PROJECTION-01 → U-COMBAT-LOADOUT-01 → N-COMBAT-PARITY-01 → M-HOURLY-CHECK-01 → M-HOURLY-PATH-01 → M-CURRENT-FACTS-01 → M-HANDOFF-ARCHIVE-01 → M-HANDOFF-CLOSE-AUTH-01。前项真正完成后才解除后项具名依赖，外部实施必须先经 Codex 独立复审。
+- 自动执行适用项：随机采样接线、合同确定后的角色字段透传、能力装载校验和双端对照、当前事实校正按现有 external_execute / deepseek 实施、codex_review 独立复审链执行；已完成交接原文迁档由 Codex 定时器直接处理，因为 DeepSeek wrapper 排除该文件。不变更当前定时器或模型配置。
+- 手动保留项：双端规则合同、小时校验控制面、共享路径处置、复审交接路径授权。四卡初始 frozen；前置完成和 QueueMaintenance 不能自行解冻。控制面写入必须遵守既有双定时器暂停、无活动 run、双侧 canary 和恢复规则，不能让运行中的定时器自修改。
+- 本批完成条件：十项均有符合自身验收的完成归档；双端合同中的未决必需语义不能以“已调查”关闭。美术资源、表现接线与美术生产任务不在本批范围。
 
 ## 执行边界
 
