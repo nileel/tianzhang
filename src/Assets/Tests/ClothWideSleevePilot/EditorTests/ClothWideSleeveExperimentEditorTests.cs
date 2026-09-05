@@ -41,8 +41,10 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
             ClothSkinningCoefficient[] coefficients = cloth.coefficients;
             Assert.AreEqual(renderer.sharedMesh.vertexCount, coefficients.Length);
             Assert.Greater(coefficients.Count(item => item.maxDistance <= 0.0001f), 24, "The sleeve root needs a pinned band.");
-            Assert.Greater(coefficients.Count(item => item.maxDistance >= 0.55f), 24, "The sleeve belly needs a genuinely loose region.");
-            Assert.GreaterOrEqual(coefficients.Max(item => item.maxDistance), 0.63f);
+            Assert.Greater(coefficients.Count(item => item.maxDistance >= 0.33f), 24, "The sleeve belly needs a constrained loose region.");
+            Assert.That(coefficients.Max(item => item.maxDistance), Is.InRange(0.379f, 0.381f));
+            Assert.That(cloth.stretchingStiffness, Is.EqualTo(0.88f).Within(0.001f));
+            Assert.That(cloth.bendingStiffness, Is.EqualTo(0.70f).Within(0.001f));
             Assert.AreEqual(3, cloth.sphereColliders.Length, "Torso, upper arm and forearm collision pairs are required.");
             Assert.IsTrue(cloth.useGravity);
             Assert.IsTrue(cloth.enableContinuousCollision);

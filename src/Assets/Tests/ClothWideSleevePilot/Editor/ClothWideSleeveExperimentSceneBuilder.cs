@@ -161,7 +161,7 @@ namespace TianZhang.ClothWideSleevePilot.Editor
             cloth.friction = 0.24f;
             cloth.collisionMassScale = 0.18f;
             cloth.stretchingStiffness = 0.88f;
-            cloth.bendingStiffness = 0.42f;
+            cloth.bendingStiffness = 0.70f;
             cloth.useTethers = true;
             cloth.useVirtualParticles = 1f;
             cloth.worldVelocityScale = 0.82f;
@@ -198,11 +198,11 @@ namespace TianZhang.ClothWideSleevePilot.Editor
                 if (t <= 0.17f)
                     maxDistance = 0f;
                 else if (t <= 0.28f)
-                    maxDistance = Mathf.Lerp(0f, 0.12f, Mathf.InverseLerp(0.17f, 0.28f, t));
+                    maxDistance = Mathf.Lerp(0f, 0.10f, Mathf.InverseLerp(0.17f, 0.28f, t));
                 else if (t <= 0.58f)
-                    maxDistance = Mathf.Lerp(0.12f, 0.40f, Mathf.InverseLerp(0.28f, 0.58f, t));
+                    maxDistance = Mathf.Lerp(0.10f, 0.24f, Mathf.InverseLerp(0.28f, 0.58f, t));
                 else
-                    maxDistance = Mathf.Lerp(0.40f, 0.64f, Mathf.InverseLerp(0.58f, 1f, t));
+                    maxDistance = Mathf.Lerp(0.24f, 0.38f, Mathf.InverseLerp(0.58f, 1f, t));
 
                 coefficients[i] = new ClothSkinningCoefficient
                 {
