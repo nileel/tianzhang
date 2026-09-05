@@ -8,20 +8,16 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-PARITY-01"
-  ],
-  "stateReason": "等待 D-COMBAT-PARITY-01 手动冻结字段所有者和旧存档兼容；合同完整且前置完成后由 DeepSeek 自动实施、Codex 独立复审，不需要用户另开手动执行会话。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-05：D-COMBAT-PARITY-01 已完成并冻结十四字段、legacy 1/schema 2 零值兼容、派生边界与显式功法元素映射；由 DeepSeek 自动实施、Codex 独立复审，不需要用户另开手动执行会话。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
-    "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
     "src/Assets/Scripts/Modules/Character/CharacterCombatModifiers.cs",
     "src/Assets/Scripts/Modules/Character/CharacterCombatModifiers.cs.meta",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
-    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
     "src/Assets/Tests/EditMode/CharacterStateTests.cs",
     "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
@@ -66,9 +62,10 @@
 
 ## 实施范围
 
-- 严格按上游合同传递六个显式加成与八个概率/减伤字段，保持百分比、暴击附加百分比点单位。可在已允许路径放置一个不可变值对象，但不新增状态服务。
-- 覆盖 FromDefinition → Capture → 保存/恢复 → CreatePlayer；玩家与敌人对相同显式输入采用同一已批准派生口径。避免 HP/MP 加成重复叠加。
-- 只按上游冻结版本兼容处理旧档；保留现有外观、技能、册界、导航、角色稳定 ID。未有明确元素来源则本卡不写 GongFaElement。
+- 建立不可变 `CharacterCombatModifiers`，原样保存 CharacterData 六个显式加成与八个概率/减伤 `float` 字段；只有进入现有 `CharacterAttributes.Derive` 时才对六项逐个 `Mathf.RoundToInt`。暴击伤害保持基础 150% 之上的附加百分比点。
+- 覆盖 FromDefinition → Capture → GameSaveEnvelope 保存/恢复 → CreatePlayer；FromDefinition 只派生一次初始资源，恢复不重算资源，CreatePlayer 的 HP/MP 使用保存资源、攻防使用基础属性 + 保存加成重新调用既有 Derive。敌人从同一值对象消费，不保留手抄投影。
+- schema 2 增量字段及 legacy 1/旧 schema 2 缺字段统一为十四个 0，不提高 SchemaVersion、不修改迁移器、不从功法/先天反推；`HasCharacterPayload` 将任一非零新字段计为载荷。
+- 玩家与敌人都以 `CombatElementFacts.ResolveGongFaElement(GongFaId)` 的精确现有映射写入 GongFaElement；未知为空，不改映射表、不从可见灵根或名称片段推断。
 
 ## 禁止项
 
@@ -78,7 +75,9 @@
 ## 验证
 
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1
-- 非零逐字段夹具证明完整链往返无损，保存前后入战输入一致；旧档及零加成角色保持原批准行为；外观/册界/导航既有断言仍通过。
+- 非零逐字段夹具证明十四字段完整链往返无损，保存前后入战输入一致；小数加成在保存中不丢失、只在 Derive 边界确定性取整；HP/MP 不双算。
+- schema 1、缺新字段的 schema 2 与零加成角色保持十四字段为 0；`hasPlayer=false` + 非零新字段按既有封套一致性规则拒绝；外观/册界/导航既有断言仍通过。
+- 已知功法名称与稳定 ID 映射到相同元素，未知值为空；玩家和敌人投影相同。
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1
 - 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
 
@@ -89,4 +88,4 @@
 
 ## 停止条件
 
-- 合同仍缺旧档解释、需要新的先天派生公式、功法目录、能力权限系统、重建资产或扩大数值内容时停止并返回上游，不填猜测性默认值。
+- 需要修改 `CharacterAttributes.Derive`、SchemaVersion/迁移器、功法元素表/内容目录、能力权限系统、重建资产或扩大数值内容时停止并返回上游，不填猜测性默认值。

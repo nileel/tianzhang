@@ -1,0 +1,96 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-PARITY-01",
+  "title": "最小战斗输入与双端行为对照合同定案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-05：用户授权普通手动 Codex 在前置完成后解除手动冻结；U-COMBAT-RNG-01 已完成归档，最小角色投影、逐角色授权及 combat-parity-v1 八个中性物理用例合同已冻结，三张下游卡范围与状态已同步。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-05-combat-behavior-parity-review.md",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-PARITY-01.txt",
+    "开发管理/任务归档/D-COMBAT-PARITY-01.txt",
+    "开发管理/任务卡/U-COMBAT-PROJECTION-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt",
+    "开发管理/任务卡/N-COMBAT-PARITY-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# D-COMBAT-PARITY-01 · 最小战斗输入与双端行为对照合同定案
+
+## 来源与当前边界
+
+- 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
+- 两端只共享部分几何和冲突规则，伤害与抗性、境界处理和取整尚有差异；角色快照也没有完整传递显式战斗字段。唯一结果是一份有来源、有范围、有预期值的最小实施合同，不把当前任一实现直接作为正确规则。
+- 本卡原为本批编号 2/10 的手动冻结项。用户随后明确要求先完成 U-COMBAT-RNG-01 前置，并已授权前置真正完成后由本次普通手动 Codex 会话解除冻结执行；前置已完成归档，本卡据此执行并关闭。
+
+## 必查范围
+
+- docs/基础设定/角色数值设计.txt::攻击结算、二级属性、境界、暴击
+- docs/superpowers/specs/2026-07-25-combat-attack-profile-data-contract.md::作用范围、冷却单位与生产消费者
+- simulations/BattleSim/Combat.cs::Dmg/ApplyDefenses 与直接调用者
+- simulations/BattleSim/GameData.cs::UnarmedBasicAttack/GongFaElements
+- simulations/BattleSim/BattleSimSelfTests.cs::crit-multiplier-tq053/ct-reaction-tq052/attack-profile-d-combat-02/basic-unarmed-production-d-combat-prod-01/element-v510
+- src/Assets/Scripts/Combat/CombatActionResolver.cs::CalculateLineDamage/RollHit/ResolvePhysical/ResolveSoul
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::FromDefinition/Capture
+- src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs::角色输入
+- src/Assets/Scripts/Modules/Character/CharacterAttributes.cs::Derive
+- src/Assets/Scripts/Modules/Content/CharacterData.cs::显式加成与二级字段
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::SchemaVersion/MigrateSchemaOne
+- src/Assets/Scripts/Modules/Content/ContentCatalogData.cs::目录边界
+- src/Assets/Scripts/Modules/Content/CombatElementFacts.cs::ResolveGongFaElement
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::CreatePlayer/CreateEnemy
+- src/Assets/Scripts/Modules/Character/AbilityLoadout.cs::已知与装载四列表；src/Assets/Scripts/Combat/CombatantSnapshot.cs::现有授权投影
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack；src/Assets/Scripts/Combat/CombatLegalActionService.cs::AddTargetedAttacks
+- src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs::PlayerAndAiReceiveTheSameSevenLegalCommandKinds
+
+## 实施范围
+
+- 形成 `docs/superpowers/specs/2026-09-05-combat-behavior-parity-review.md`，分别冻结角色字段、保存兼容、功法元素、逐角色攻击授权与双端最小对照。
+- 为 U-COMBAT-PROJECTION-01 冻结 CharacterData 六个显式加成与八个概率／减伤字段的原始 float 传递、Derive 边界取整、HP/MP 防双算以及 legacy 1/schema 2 缺字段为零。
+- 为 U-COMBAT-LOADOUT-01 冻结唯一普攻二选一、art/divine 同时 known + equipped、统一 ValidateAttack、稳定拒绝码及无生产 ability ID -> profileId 映射时失败关闭。
+- 为 N-COMBAT-PARITY-01 冻结同一 JSON 的八个中性物理用例、命名样本比较、事件顺序、精确输出、容差和唯一测试入口；不外推未裁决境界／抗性／取整／冷却语义。
+
+## 完成记录
+
+- 角色十四字段由单一不可变值对象贯穿定义、运行时、快照、保存和入战；旧 schema 1/2 缺字段保持零，不反推功法收益，不修改现有先天派生公式。
+- 仓库已有 `CombatElementFacts.ResolveGongFaElement` 与 BattleSim 对应显式表，故批准双方精确查询；未知为空，禁止用可见灵根、名称片段或默认元素猜测。
+- 普攻必须 main/unarmed 恰一非空；art/divine 战斗授权必须同时 available + equipped。全局存在但角色未授权统一拒绝 `attack_profile_not_authorized`；缺 profile/kind 错误保持 `attack_profile_unresolved`。
+- 当前生产目录没有 ability stable ID -> attackProfileId 外键，故正式 art/divine 授权保持空，内存夹具只测试已映射 profileId；没有借合同开放新能力内容。
+- 双端一致只覆盖 `combat-parity-v1` 八个中性、正面、徒手、单目标物理用例。CT 只共享首次行动顺序；非零冷却、非中性境界／抗性、midpoint、神魂／元素／功法／范围及完整平衡明确未接入。
+- U-COMBAT-PROJECTION-01 已解除本卡前置并转 ready，按 P1 插入现有 P2 项之前；U-COMBAT-LOADOUT-01 继续等待 projection，N-COMBAT-PARITY-01 继续等待 loadout。
+
+## 禁止项
+
+- 未修改任何业务源码、资产、生产数据或下游实现；未建立能力映射、内容目录、时间单位换算或新数值规范。
+- 写入严格限于 metadata.expectedPaths。
+
+## 验证
+
+- 合同逐项回查 docs 原文、当前 Unity/BattleSim 定义、直接消费者与现有测试入口；没有把全量输出改写为新平衡结论。
+- 隔离 worktree 首次 `dotnet build -c Release --no-restore simulations/BattleSim` 因缺少本地 `obj/project.assets.json` 失败；执行一次 `dotnet restore simulations/BattleSim` 生成构建资产后，原命令重跑成功（0 警告、0 错误）。
+- `dotnet run --no-build -c Release --project simulations/BattleSim` 完整运行结束；`crit-multiplier-tq053`、`ct-reaction-tq052`、`attack-profile-d-combat-02`、`basic-unarmed-production-d-combat-prod-01`、`element-v510` 五个定向 self-test 均 PASS。
+- 三张下游卡分别重算 schema 2 风险投影；N-COMBAT-PARITY-01 保持 `EXP-BS-001`，其余为空。
+- 管理投影、审核文本、路径限定、空白与暂存 diff 检查按项目规则执行。
+
+## 完成条件
+
+- 最小合同每项均有直接事实或显式排除，可由下游机器测试；三张实施卡的路径、验证与停止条件已冻结。本卡完成归档，不保留未裁决的下游必需语义。
+
+## 停止条件
+
+- 本卡完成并归档后停止；任何生产术法／神通映射、非中性双端公式、冷却换算或范围结算须另立决定和实施任务。

@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-COMBAT-PROJECTION-01"
   ],
-  "stateReason": "2026-09-05：U-COMBAT-RNG-01 已完成并归档，正式采样夹具可作为基线；仍等待 U-COMBAT-PROJECTION-01 的角色入战投影，并须消费 D-COMBAT-PARITY-01 的授权合同。保持 blocked，不进入 ready 队列。",
+  "stateReason": "2026-09-05：U-COMBAT-RNG-01 与 D-COMBAT-PARITY-01 已完成，逐角色授权合同已冻结；仍等待 U-COMBAT-PROJECTION-01 的角色入战投影。保持 blocked，不进入 ready 队列。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",
@@ -66,9 +66,10 @@
 
 ## 实施范围
 
-- 消费上游冻结的唯一普攻绑定、术法/神通已知与装载关系、双方源列表、空列表行为、引用映射和拒绝码；在现有 CombatantSnapshot 承载必要只读绑定，由 Spawner 从现有输入投影，不新建权限服务。
-- 将归属校验集中到 CombatSession.ValidateAttack；直接执行和 AI 的 AddIfValid 共同消费，避免两套有效性规则。
-- 正式入战使用已选中的角色普攻；全局存在的其他普攻、术法、神通不能直接视作当前角色拥有。装载引用缺失或无法映射只按已批准合同拒绝，不能按显示名称猜测。
+- 在 `CombatantSnapshot` 承载唯一 `BasicAttackProfileId`，以及 art/divine 各自的 available + equipped profileId 只读集合；空值表示无授权。art/divine 必须同时已知且已装载，legacy/篡改输入中只装载未已知不得放行。
+- 玩家与敌人的 main-equipment/unarmed 普攻引用必须恰一非空；Spawner 在实例化棋子前分别以 `adventure_player_basic_attack_binding_invalid` / `adventure_enemy_basic_attack_binding_invalid` 失败关闭，并把唯一值写入角色快照。
+- 将归属校验集中到 CombatSession.ValidateAttack；直接执行和 AI 的 AddIfValid 共同消费。全局 profile 缺失/kind 错误保持 `attack_profile_unresolved`；profile 合法但非本角色授权统一为 `attack_profile_not_authorized`，且拒绝不消耗资源、CT、冷却、随机样本或换法次数。
+- 当前生产 ability stable ID 没有到 attackProfileId 的外键/目录；Spawner 不把字符串相等、显示名或数组位置当作映射，正式 art/divine profile 授权投影为空。术法/神通只用直接传入已映射 profileId 的内存 CombatantSnapshot 夹具验证。
 - 只调整列明测试的装载输入及授权断言；保留前置 RNG 已形成的采样顺序和正式路径证明。
 
 ## 禁止项
@@ -81,8 +82,9 @@
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1
-- 直接 Execute 拒绝他人普攻、未装载术法和神通；拒绝前后 HP、MP、CT、冷却与装载不变；AI 不枚举相同被拒能力，合法装载和换法后的新槽位仍可用。
-- 七种合法命令测试必须显式给双方相应神通装载；正式徒手链及前置随机采样测试保持有效，不能删断言或恢复“全局存在即拥有”。
+- 直接 Execute 拒绝他人普攻、只 known/只 equipped 的术法或神通、全局存在但不归属的档案；逐项断言拒绝码及前后 HP、MP、CT、冷却、装载、换法次数不变，且前置随机源不推进。AI 不枚举同一被拒能力，合法双集合装载和换法后的新槽位仍可用。
+- 玩家/敌人分别覆盖唯一 main、唯一 unarmed、双空、双非空；失败发生在 marker 实例化前。正式关中玩家与石甲猴继续选择 `basic_unarmed`。
+- 七种合法命令测试必须给双方显式 basic、art available+equipped、divine available+equipped profileId；正式徒手链及前置随机采样测试保持有效，不能删断言或恢复“全局存在即拥有”。
 - 管理变化检查任务卡投影；提交前运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
 
 ## 完成条件
@@ -92,4 +94,4 @@
 
 ## 停止条件
 
-- 上游未冻结已知/装载关系、敌方来源或引用映射；需要新增资格、敌人槽位规则、内容 ID 迁移、学习/装备功能或保存字段时停止并回到合同，不扩路径。
+- 需要建立生产 ability ID -> profileId 映射、修改 ContentCatalog/SpellData/DivineSkillData、保存格式、资格策略、敌人槽位规则、内容 ID 迁移或学习/装备功能时停止；生产未映射能力保持未接入，不扩路径。

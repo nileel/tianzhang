@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-COMBAT-LOADOUT-01"
   ],
-  "stateReason": "等待 U-COMBAT-LOADOUT-01 完成对 CombatRuntimeKernelTests 的装载夹具修改，再以该基线实施批准双端对照。D-COMBAT-PARITY-01 的预期值必须已冻结；由 DeepSeek 自动实施、Codex 独立复审。",
+  "stateReason": "2026-09-05：D-COMBAT-PARITY-01 已冻结 combat-parity-v1 的八个中性物理用例；仍等待 U-COMBAT-LOADOUT-01 完成同一测试文件的装载夹具修改，再由 DeepSeek 自动实施、Codex 独立复审。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -56,9 +56,11 @@
 
 ## 实施范围
 
-- 将上游批准的小型输入与预期输出冻结为 simulations/BattleSim/combat-parity-cases.json；沿既有 BattleSimSelfTests 与 Unity EditMode 测试入口消费，不新建运行平台或依赖库。
-- 逐项比较基础伤害、已批准抗性/境界/取整、显式概率样本及可比行动语义。采样、CT、冷却各有合同范围；未决单位不擅自换算。
-- 先保留能定位原始不一致的失败证据，再在本卡允许的两个结算所有者内作最小修复；不改其他数据表、敌人强度或庞大风格系统。
+- 严格按上游表建立 `combat-parity-v1` JSON：固定 attack/defense=100、倍率=1、境界=1、抗性/穿透/元素/功法/朝向中性，并覆盖 base、hit equal/above、crit below/equal、block below/equal、crit+block 八行及精确事件/伤害预期。两端从同一文件读取，不复制预期。
+- 对照命名样本 `[0,100)`；hit 使用 `<= Clamp(100+hit-dodge,5,100)`，crit/block 使用 `<`，顺序 hit -> crit -> physical block；暴击倍率 `1.50 + critDamage/100`。中间率/倍率容差 `1e-4`，布尔和最终整数精确相等。
+- BattleSim 可在 `Combat.cs` 内为现有 `Dmg`/`ApplyDefenses` 增加最小确定性输入/结果结构，但 duel 与 group 的真实调用链必须消费同一实现；不得建测试专用平行公式。Unity 继续由现有 resolver 真实路径返回事件结果。
+- 先保留能定位原始不一致的失败证据，再只在 `Combat.cs::Dmg/ApplyDefenses`（含其同文件直接调用点）与 `CombatActionResolver::RollHit/ResolvePhysical/ResolveSoul` 内修复八行已认定差异；已通过的一端函数不机械改写。
+- CT 只对照“更高正反应首次行动不晚于更低值”和各端稳定同值顺序，不比较 tick/回合数。非中性境界/抗性、midpoint/最小伤害、魂盾/神魂/元素/功法/范围、非零冷却、正式 art/divine 和完整平衡均不纳入通过报告。
 - 若合同决定不应统一某项，保留有出处的差异断言；报告不得把它表述为数值一致，也不得外推全游戏平衡。
 
 ## 禁止项
@@ -72,7 +74,8 @@
 - dotnet run --no-build -c Release --project simulations/BattleSim
 - 新增自测标识 combat-parity-v1 必须在现有 self-test 调度注册后才使用：dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test combat-parity-v1。
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1
-- 两端消费同一输入表；必须一致项共用预期值；批准差异项分别冻结两端预期值与批准依据；不可比项不报告通过。记录各类边界，并验证未更改批准范围外数值。
+- 两端消费同一输入表，八行事件布尔与最终整数逐项一致；倍率/率容差仅 `1e-4`。CT 只断言首次行动顺序；批准差异按合同保留，尚不可比项不报告通过。
+- 现有 `crit-multiplier-tq053`、`ct-reaction-tq052`、`attack-profile-d-combat-02`、`basic-unarmed-production-d-combat-prod-01`、`element-v510` 继续通过，证明未改攻击数据来源、元素表或批准范围外入口。
 - 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
 
 ## 完成条件
@@ -82,4 +85,4 @@
 
 ## 停止条件
 
-- 需要修改上游规则选择、GameData/Character 成长、CombatSession/CTB 架构、冷却单位或范围内容才能对齐时停止；重返合同定案，不扩大路径。
+- 任一八行需要修改 GameData/Character 成长、CombatSession/CTB 架构、生产数据、非中性境界/抗性、全局 midpoint/最小伤害、冷却单位、神魂/元素/功法或范围内容才能通过时停止；重返合同定案，不扩大路径。
