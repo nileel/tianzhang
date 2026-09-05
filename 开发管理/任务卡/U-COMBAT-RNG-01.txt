@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-09-05 用户要求按顺序准备非美术审视整改；根因、两处业务路径与受控采样验收已冻结，首项可由现有 DeepSeek 定时器执行并交 Codex 独立复审。",
+  "stateReason": "2026-09-05 用户确认仅编号2、6、7、10手动，其余交定时器。本卡根因、两处业务路径和采样验收已冻结，无任务前置，由 DeepSeek 自动实施、Codex 独立复审。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
@@ -21,8 +21,7 @@
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/AI合作归档/U-COMBAT-RNG-01-交接归档.txt",
-    "开发管理/任务卡/D-COMBAT-PARITY-01.txt",
-    "开发管理/任务列表/数值与战斗任务.txt"
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -38,7 +37,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 静态调用链已证明：CombatCommand 的 rolls 默认为全零，正式玩家请求和 AI 候选直接执行而没有采样，正概率因此变为固定触发。本卡唯一结果是正式执行边界正确供给样本，不调整数值平衡。
-- 本卡是本批第 1/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+- 本卡为本批编号 1/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
 
 ## 必查范围
 
@@ -73,7 +72,7 @@
 ## 完成条件
 
 - 受控样本通过正式调用者产生预期分支，真实路径不再使用缺省全零概率值；必要 PlayMode 通过，Codex 独立复审通过后归档。不能仅验证纯 resolver。
-- 通过后仅从 D-COMBAT-PARITY-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 独立复审通过后仅从 U-COMBAT-LOADOUT-01 移除本项前置并同步其 backlog；它仍须等待角色投影和批准合同，不再解锁或改写独立手动合同卡。
 
 ## 停止条件
 

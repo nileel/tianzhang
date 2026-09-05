@@ -9,10 +9,8 @@
   "domain": "battlesim",
   "stage": "design",
   "dispatchState": "frozen",
-  "blockedBy": [
-    "U-COMBAT-RNG-01"
-  ],
-  "stateReason": "等待前项通过；跨端语义和角色保存兼容由普通手动 Codex 上下文定案，本次只建卡，不授权 Terra 定时器自行选择哪一端公式正确。解除前置不自动解冻。",
+  "blockedBy": [],
+  "stateReason": "用户保留编号2给独立 Sol 手动会话；不依赖随机采样实施，可直接开展合同定案。frozen 仅阻止自动领取，指定手动执行本卡时可按规则解冻；未决规则仍须裁决。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-05-combat-behavior-parity-review.md",
     "开发管理/任务列表/数值与战斗任务.txt",
@@ -21,8 +19,8 @@
     "开发管理/任务归档/D-COMBAT-PARITY-01.txt",
     "开发管理/任务卡/U-COMBAT-PROJECTION-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/任务卡/N-COMBAT-PARITY-01.txt",
-    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt"
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt",
+    "开发管理/任务卡/N-COMBAT-PARITY-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -38,7 +36,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 两端只共享部分几何和冲突规则，伤害与抗性、境界处理和取整尚有差异；角色快照也没有完整传递显式战斗字段。唯一结果是一份有来源、有范围、有预期值的最小实施合同，不把当前任一实现直接作为正确规则。
-- 本卡是本批第 2/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+- 本卡为本批编号 2/10 的手动项，仅供对应提示词，不代表全局执行顺序。负责人指定本卡的 Sol 手动会话在真实前置满足后可按规则解冻；QueueMaintenance 和定时器不得自行解冻或领取。
 
 ## 必查范围
 

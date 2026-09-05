@@ -10,9 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "M-HOURLY-PATH-01"
+    "U-COMBAT-PROJECTION-01"
   ],
-  "stateReason": "按用户要求依次执行，等待前项定案；只校正非美术当前事实，代码事实不清时停在具体条目，不扩大为全量文档治理。",
+  "stateReason": "等待 U-COMBAT-PROJECTION-01 完成其保存代码及 UNITY_STRUCTURE.runtime.md 修改，避免刚校正的事实再次失效；之后由 DeepSeek 自动校正、Codex 独立复审，不等待自动化线。",
   "expectedPaths": [
     "开发管理/设计-当前状态.txt",
     "UNITY_STRUCTURE.runtime.md",
@@ -22,8 +22,7 @@
     "开发管理/任务归档/M-CURRENT-FACTS-01.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
-    "开发管理/AI合作归档/M-CURRENT-FACTS-01-交接归档.txt",
-    "开发管理/任务卡/M-HANDOFF-ARCHIVE-01.txt"
+    "开发管理/AI合作归档/M-CURRENT-FACTS-01-交接归档.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -39,7 +38,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 当前文档仍有 GameSession、不重建角色、旧保存版本与 M8 未执行等相互冲突陈述。唯一结果是将现有当前事实层与执行时源码及有效验收证据对齐。
-- 本卡是本批第 8/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+- 本卡为本批编号 8/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
 
 ## 必查范围
 
@@ -72,7 +71,7 @@
 ## 完成条件
 
 - 限定非美术状态与真实当前所有者及版本一致，旧验证适用范围明确，独立复审通过。
-- 通过后仅从 M-HANDOFF-ARCHIVE-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 本卡独立复审通过后归档，不再解锁或等待独立的旧交接迁档卡。
 
 ## 停止条件
 

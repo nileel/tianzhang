@@ -10,9 +10,10 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
+    "U-COMBAT-RNG-01",
     "U-COMBAT-PROJECTION-01"
   ],
-  "stateReason": "等待顺序前置及 D-COMBAT-PARITY-01 手动冻结逐角色普攻/术法/神通授权；不能仅因前置归档就猜测已知与装载的关系或开通未接入内容。合同完整后可由定时器实施并独立复审。",
+  "stateReason": "等待 U-COMBAT-RNG-01 的正式 PlayMode 采样夹具和 U-COMBAT-PROJECTION-01 的角色入战投影；本卡会修改相同夹具与 AdventureUnitSpawner，按此基线衔接。仍须消费 D-COMBAT-PARITY-01 的授权合同；前置通过后自动实施、独立复审。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",
@@ -46,7 +47,7 @@
 
 - 来源：2026-09-05 项目整体只读审视及负责人要求全部非美术问题先建卡；规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - CombatSession.ValidateAttack 不检查角色装载；AI 枚举只过滤术法，普攻和神通可来自全局表。唯一结果是直接命令和 AI 枚举对同一角色采用同一已批准装载约束。
-- 本卡是本批第 4/10 项。前置和手动合同均满足后才可 ready；外部产物必须先经 Codex 独立复审，再解锁后项。
+- 本卡为本批编号 4/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
 - 正式生产档案目前只有徒手普攻。术法/神通使用内存夹具证明授权边界，不因此接入全部能力或扩展生产内容。
 
 ## 必查范围

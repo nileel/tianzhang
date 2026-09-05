@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-COMBAT-LOADOUT-01"
   ],
-  "stateReason": "等待前项与 D-COMBAT-PARITY-01 的逐项预期值；本卡只实施批准的最小双方共同语义，不接受通过修改测试期望掩盖差异。",
+  "stateReason": "等待 U-COMBAT-LOADOUT-01 完成对 CombatRuntimeKernelTests 的装载夹具修改，再以该基线实施批准双端对照。D-COMBAT-PARITY-01 的预期值必须已冻结；由 DeepSeek 自动实施、Codex 独立复审。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -25,9 +25,7 @@
     "开发管理/任务归档/N-COMBAT-PARITY-01.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
-    "开发管理/AI合作归档/N-COMBAT-PARITY-01-交接归档.txt",
-    "开发管理/任务卡/M-HOURLY-CHECK-01.txt",
-    "开发管理/任务列表/管理与自动化任务.txt"
+    "开发管理/AI合作归档/N-COMBAT-PARITY-01-交接归档.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -45,7 +43,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 本卡把手动定案的最小共同输入做成可复现对照，并只修复合同明确认定错误的一端函数；不要求当前所有功法/能力都跨端一致。
-- 本卡是本批第 5/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+- 本卡为本批编号 5/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
 
 ## 必查范围
 
@@ -80,7 +78,7 @@
 ## 完成条件
 
 - 批准共同语义在两端被同一有来源输入表验证，已认定差异修复有前后证据，最小与领域硬性验证通过，独立复审通过。
-- 通过后仅从 M-HOURLY-CHECK-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 本卡独立复审通过后按真实结果归档；没有自动化线解锁动作，不修改其任务卡或等待其完成。
 
 ## 停止条件
 

@@ -12,7 +12,7 @@
   "blockedBy": [
     "D-COMBAT-PARITY-01"
   ],
-  "stateReason": "等待 D-COMBAT-PARITY-01 在普通手动上下文冻结字段所有者和旧存档兼容；不得只因前置归档就绕过未决保存语义。合同完整后适合定时实施与独立复审。",
+  "stateReason": "等待 D-COMBAT-PARITY-01 手动冻结字段所有者和旧存档兼容；合同完整且前置完成后由 DeepSeek 自动实施、Codex 独立复审，不需要用户另开手动执行会话。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -33,7 +33,9 @@
     "开发管理/AI合作沟通.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/AI合作归档/U-COMBAT-PROJECTION-01-交接归档.txt",
-    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt"
+    "开发管理/任务卡/U-COMBAT-LOADOUT-01.txt",
+    "开发管理/任务卡/M-CURRENT-FACTS-01.txt",
+    "开发管理/任务列表/管理与自动化任务.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -49,7 +51,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 玩家定义、快照与入战链使用空显式加成，敌方却复制二级属性。唯一结果是已存在且已批准的显式字段无丢失传递，不新增角色成长规则。
-- 本卡是本批第 3/10 项。允许现有自动责任链在 ready 合同满足后执行；外部产物必须经 Codex 独立复审，未经复审不解锁后项。
+- 本卡为本批编号 3/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
 
 ## 必查范围
 
@@ -83,7 +85,7 @@
 ## 完成条件
 
 - 批准字段在定义、运行时、快照、保存、入战链中逐项有证据，旧档与现有状态回归通过，独立复审通过。
-- 通过后仅从 U-COMBAT-LOADOUT-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 独立复审通过后分别从 U-COMBAT-LOADOUT-01、M-CURRENT-FACTS-01 移除本项前置并同步各自 backlog；装载卡仍核对 RNG 前置，状态校正卡不等待战斗对照或自动化线。重新核验各自风险投影与真实门槛后才可 ready。
 
 ## 停止条件
 

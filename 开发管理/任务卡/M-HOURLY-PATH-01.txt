@@ -9,10 +9,8 @@
   "domain": "automation",
   "stage": "decision",
   "dispatchState": "frozen",
-  "blockedBy": [
-    "M-HOURLY-CHECK-01"
-  ],
-  "stateReason": "等待前项；并发吞吐与保守停止是安全取舍，只在普通手动 Codex 上下文定案，不自动改成全局串行或放宽路径保护。",
+  "blockedBy": [],
+  "stateReason": "用户保留编号7给独立 Sol 手动会话；独立分析既有冲突证据，不依赖编号6或9。保持 frozen，不自动改并发语义；证据读取固定历史基线，不受当前交接迁档影响。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-05-hourly-shared-path-disposition.md",
     "开发管理/AI协作规则.txt",
@@ -20,8 +18,7 @@
     "开发管理/任务列表/管理与自动化任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/M-HOURLY-PATH-01.txt",
-    "开发管理/任务归档/M-HOURLY-PATH-01.txt",
-    "开发管理/任务卡/M-CURRENT-FACTS-01.txt"
+    "开发管理/任务归档/M-HOURLY-PATH-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -37,13 +34,13 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 不同业务任务共享队列或 backlog 时可能因冻结的 expectedPaths 变化停止；这是已有安全保护的吞吐代价。唯一结果是确定本项目现阶段是否需要改变并发策略及其最小处置。
-- 本卡是本批第 7/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+- 本卡为本批编号 7/10 的手动项，仅供对应提示词，不代表全局执行顺序。负责人指定本卡的 Sol 手动会话在真实前置满足后可按规则解冻；QueueMaintenance 和定时器不得自行解冻或领取。
 
 ## 必查范围
 
 - tools/invoke-hourly-owner.ps1::Get-FormalPaths/Canonicalize 中 expectedPaths 对最新 master 冲突判断；只读
 - tools/hourly-automation-lease.ps1::原子 claim 与双 owner 规则；只读
-- 开发管理/AI合作沟通.txt::C-HS-YY-JD-01E/C-HS-YY-JD-01G 对应停止证据
+- Git 基线 312861953c71f1bf2c9ecfdaceef5251b526fdef 的 开发管理/AI合作沟通.txt::DSH-C-HS-YY-JD-01E-9852b140、DSH-C-HS-YY-JD-01G-f0d128df 两个完整条目；从固定提交读取，不依赖当前文件或编号9迁档结果
 - 开发管理/任务归档/C-HS-YY-JD-01E.txt；C-HS-YY-JD-01G.txt::正式结果
 - 开发管理/AI协作规则.txt#两个独立小时责任链
 - 开发管理/状态与建议维护规则.txt#自动工作流分层
@@ -63,14 +60,14 @@
 ## 验证
 
 - 原案例逐项有当前卡/完成归档或精确提交证据；建议不得降低任务摘要、路径冲突、人工 dirty 改动或集成锁保护。
-- 对本批严格依赖顺序作静态核对，证明两个 owner 不会在依赖未通过时并行领取后项。
+- 对本批真实依赖分支作静态核对，证明前置未完成的卡不会被领取；独立分支沿现有 worktree、路径冲突和持锁集成规则协调，不为共享管理文件新增整批串行前置。
 - 文本检查和限定 diff；本卡不启动 live claim、Canary，不调整定时器。
 - 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
 
 ## 完成条件
 
 - 普通手动 Codex 已写出有证据、保留现有安全拒绝的最小调度处置与边界，并明确成本与理由；需要另行修改代码的未决建议单列，不作为已完成优化，不在本卡扩大实施范围。
-- 通过后仅从 M-CURRENT-FACTS-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 本卡完成后独立归档，不解锁状态校正、交接迁档或控制面授权卡；共享规则文件的并发修改按现有 worktree 与集成检查处理。
 
 ## 停止条件
 

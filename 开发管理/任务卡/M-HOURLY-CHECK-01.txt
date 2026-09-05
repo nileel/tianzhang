@@ -9,10 +9,8 @@
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "frozen",
-  "blockedBy": [
-    "N-COMBAT-PARITY-01"
-  ],
-  "stateReason": "等待前项；本卡修改共享自动化控制面，只由普通管理上下文统筹，两个写入定时器暂停并确认无活动 run 后实施与 canary。小时 owner 不得领取本卡自更新。",
+  "blockedBy": [],
+  "stateReason": "用户保留编号6给独立 Sol 手动会话；不等待战斗线。本卡改共享控制面，暂停两个写入定时器并确认无活动 run 后实施与 canary；保持 frozen，不由小时 owner 自更新。",
   "expectedPaths": [
     "tools/select-hourly-task.ps1",
     "tools/invoke-hourly-owner.ps1",
@@ -24,7 +22,7 @@
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/M-HOURLY-CHECK-01.txt",
     "开发管理/任务归档/M-HOURLY-CHECK-01.txt",
-    "开发管理/任务卡/M-HOURLY-PATH-01.txt"
+    "开发管理/任务卡/M-HANDOFF-CLOSE-AUTH-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -40,7 +38,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 有候选时 Codex 选题阶段至少三次、DeepSeek 至少两次全量检查；单卡参数也触发全部卡扫描。唯一结果是同一未变化选题过程保留一次完整校验并复用结果，安全判断不减弱。
-- 本卡是本批第 6/10 项。手动保留项：先核验前置，再由普通手动上下文明确解冻；QueueMaintenance 和前置卡只可移除已完成依赖，不得自行解除本卡冻结。
+- 本卡为本批编号 6/10 的手动项，仅供对应提示词，不代表全局执行顺序。负责人指定本卡的 Sol 手动会话在真实前置满足后可按规则解冻；QueueMaintenance 和定时器不得自行解冻或领取。
 
 ## 必查范围
 
@@ -78,7 +76,7 @@
 ## 完成条件
 
 - 重复调用已消除，原安全拒绝与维护回复行为保持，测试和两侧 canary 通过，配置恢复证据齐全后归档。
-- 通过后仅从 M-HOURLY-PATH-01 移除本项具名前置并同步其 backlog；若后项为 frozen，保持 frozen。后项为 blocked 时仍须核验 stateReason 的真实门槛、重新计算 schema2风险投影后才可 ready。
+- 通过后仅从 M-HANDOFF-CLOSE-AUTH-01 移除本项前置并同步 backlog，保持该卡 frozen，交负责人另一个手动会话；不再解锁或等待独立的共享路径分析卡。
 
 ## 停止条件
 
