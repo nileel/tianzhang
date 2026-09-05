@@ -71,6 +71,7 @@ WF3 定时器暂停；未来人工恢复或用户明确调用时，Claude CLI �
 - DeepSeek 只接收已经领取的 taskId、runId、baseCommit、candidate branch 和 worktree。它只在 owner worktree 实施、直接验证并创建一个 candidate，不修改共享任务投影或 handoff，不集成、不自审、不管理 runtime 或 automation。
 - 共享入口核验 DeepSeek candidate 后，在最新 `master` 上形成一个原子正式提交，同时包含业务变化、`codex_review/codex/ready` 的 pending review 投影和 `AI合作沟通.txt` 交接证据；审核前不解锁依赖。
 - Codex 与 DeepSeek 可以并行开发不同 taskId；自动与手动正式集成统一由进程持有型排他锁串行化。任务事实、最新 `master`、相关人工改动或证据变化阻止集成，不自动解冲突或叠加重试。
+- 共享 `当前任务队列.txt`、分线 backlog 或审核清单不构成全局串行理由。真实业务前置与同批固定顺序必须在任务进入 ready 前落实，避免可预见的共享管理投影并发；没有真实依赖的不同 taskId 仍可并行开发。若最新 `master` 只改了同一共享文件中的无关条目，现有整路径证据仍不足以自动合并，当前 run 继续按路径冲突停止，由普通管理上下文取证；不得删减 `expectedPaths`、恢复旧模型会话或绕过人工 dirty 与集成锁保护。
 - owner 模型可按本文件在同一已领取任务内部使用子智能体，但子智能体对 schema 5、共享入口和候选合同透明；所有工作必须收敛到同一 owner worktree、同一主智能体最终验证和单一 candidate。
 - run 的 `developing`、`candidate_ready`、`canonical_ready`、`integrated` 与 `attention_required` 只保留诊断阶段；本 owner run 非空时新的小时轮次只报告，不自动恢复、重放、关闭或领取新任务。只有精确绑定且已有有效回复的 decision checkpoint 可由新 run、新 worktree 和新模型会话受控继续。
 

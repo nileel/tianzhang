@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "decision",
-  "dispatchState": "frozen",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "用户保留编号7给独立 Sol 手动会话；独立分析既有冲突证据，不依赖编号6或9。保持 frozen，不自动改并发语义；证据读取固定历史基线，不受当前交接迁档影响。",
+  "stateReason": "2026-09-05：普通手动 Codex 按负责人授权完成独立定案；保留双 owner、完整 expectedPaths、人工 dirty 拒绝与持锁集成，以真实依赖和固定顺序降低可避免的共享管理投影冲突，不修改 runtime、定时器或自动合并机制。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-05-hourly-shared-path-disposition.md",
     "开发管理/AI协作规则.txt",
@@ -72,3 +72,10 @@
 ## 停止条件
 
 - 需要假定公共路径可安全自动合并、删减 expectedPaths 保护、第二 runtime、自动重试或自关闭 attention run 才能提高吞吐时停止，不继续加机制。
+
+## 完成记录
+
+- 2026-09-05：固定基线的 01E/01G 两个 `hourly_revalidation_required` 案例均已复核到 candidate base、候选提交、期间 `master` 提交与正式复审结果。01E 的唯一重叠是其他任务改动的 `当前任务队列.txt`；01G 的重叠是 `当前任务队列.txt` 与未通过清单中新增的无关 `M-EXP-TASK-SCHEMA2-01` 条目。
+- 定案采用“保留既有拒绝，真实依赖与同批固定顺序优先，独立 taskId 继续双 owner 并行，排他锁串行正式集成”；没有降低任务摘要、完整 formal paths、人工 dirty 改动或集成锁保护。
+- 处置文档位于 `docs/superpowers/specs/2026-09-05-hourly-shared-path-disposition.md`；稳定规则已同步到 `开发管理/AI协作规则.txt` 与 `开发管理/状态与建议维护规则.txt`。本卡未修改 runtime、定时器、自动合并、恢复、通知或任何业务/美术文件，也未解锁直接下游。
+- 验证：历史 overlap 与四个正式/复审提交断言通过；`tools/check-task-cards.ps1` 为 `OK (cards=60 ready=2)`；`tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理` 为 `OK (524 files checked)`；未暂存 diff 的 `git diff --check` 通过。
