@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-COMBAT-RNG-01",
     "U-COMBAT-PROJECTION-01"
   ],
-  "stateReason": "等待 U-COMBAT-RNG-01 的正式 PlayMode 采样夹具和 U-COMBAT-PROJECTION-01 的角色入战投影；本卡会修改相同夹具与 AdventureUnitSpawner，按此基线衔接。仍须消费 D-COMBAT-PARITY-01 的授权合同；前置通过后自动实施、独立复审。",
+  "stateReason": "2026-09-05：U-COMBAT-RNG-01 已完成并归档，正式采样夹具可作为基线；仍等待 U-COMBAT-PROJECTION-01 的角色入战投影，并须消费 D-COMBAT-PARITY-01 的授权合同。保持 blocked，不进入 ready 队列。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",

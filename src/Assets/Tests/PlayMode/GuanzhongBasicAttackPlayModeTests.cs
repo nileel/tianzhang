@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
@@ -12,6 +13,7 @@ using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
+using TianZhang.Spatial;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -156,6 +158,94 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator FormalPlayerExecutionSamplesHitCriticalAndBlockThresholds()
+        {
+            var hitBoundary = new SequenceCombatRandomSource(50f, 50f, 50f, 50f);
+            var missAboveBoundary = new SequenceCombatRandomSource(51f, 0f, 0f, 0f);
+            Assert.Greater(ExecutePlayerBasicAttack(hitBoundary), 0);
+            Assert.AreEqual(0, ExecutePlayerBasicAttack(missAboveBoundary));
+            Assert.AreEqual(4, hitBoundary.Count);
+            Assert.AreEqual(4, missAboveBoundary.Count);
+
+            var criticalBelowBoundary = new SequenceCombatRandomSource(0f, 49f, 99f, 99f);
+            var criticalAtBoundary = new SequenceCombatRandomSource(0f, 50f, 99f, 99f);
+            int criticalDamage = ExecutePlayerBasicAttack(criticalBelowBoundary);
+            int normalDamage = ExecutePlayerBasicAttack(criticalAtBoundary);
+            Assert.Greater(criticalDamage, normalDamage);
+
+            var blockBelowBoundary = new SequenceCombatRandomSource(0f, 99f, 49f, 99f);
+            var blockAtBoundary = new SequenceCombatRandomSource(0f, 99f, 50f, 99f);
+            int blockedDamage = ExecutePlayerBasicAttack(blockBelowBoundary);
+            int unblockedDamage = ExecutePlayerBasicAttack(blockAtBoundary);
+            Assert.Less(blockedDamage, unblockedDamage);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator FormalEnemyRunCombatBranchUsesTheSharedSampler()
+        {
+            CombatSession session = CreateCombatSession(1, 100, out CombatantSnapshot player, out CombatantSnapshot enemy);
+            var source = new SequenceCombatRandomSource(50f, 50f, 50f, 50f);
+            EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
+            SetPrivateField(coordinator, "enemyPolicy", new LegalActionAI());
+            MethodInfo runCombat = typeof(EncounterCoordinator).GetMethod(
+                "RunCombat",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(runCombat);
+            int healthBefore = player.CurrentHealth;
+            Coroutine coroutine = coordinator.StartCoroutine((IEnumerator)runCombat.Invoke(coordinator, null));
+
+            for (int frame = 0; frame < 10 && source.Count == 0; frame++)
+                yield return null;
+
+            Assert.AreEqual(4, source.Count, "The formal enemy action did not sample exactly four rolls.");
+            Assert.Less(player.CurrentHealth, healthBefore);
+            coordinator.StopCoroutine(coroutine);
+            Object.Destroy(host);
+            Object.Destroy(enemyData);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator InvalidEnumerationAndNonAttackCommandsDoNotConsumeSamples()
+        {
+            CombatSession session = CreateCombatSession(100, 1, out CombatantSnapshot player, out CombatantSnapshot enemy);
+            var source = new SequenceCombatRandomSource();
+            EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
+            CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
+            Assert.AreEqual("player", advance.ActorId);
+            SetPrivateField(coordinator, "acceptsPlayerCommand", true);
+
+            Assert.IsNotEmpty(new CombatLegalActionService().GetLegalActions(session, "player"));
+            Assert.AreEqual(0, source.Count);
+            ICombatCommandHandler commands = coordinator;
+            commands.RequestBasicAttack("player", "missing");
+            Assert.AreEqual(0, source.Count, "An invalid attack consumed combat samples.");
+            commands.RequestGuard("player");
+            Assert.AreEqual(0, source.Count, "A non-attack command consumed combat samples.");
+
+            Object.Destroy(host);
+            Object.Destroy(enemyData);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SeededSamplerReplaysTheSameLegalCommandSequence()
+        {
+            var first = new SystemCombatResolutionRandomSource(1729);
+            var second = new SystemCombatResolutionRandomSource(1729);
+            var firstDamage = new int[3];
+            var secondDamage = new int[3];
+            for (int index = 0; index < firstDamage.Length; index++)
+            {
+                firstDamage[index] = ExecutePlayerBasicAttack(first);
+                secondDamage[index] = ExecutePlayerBasicAttack(second);
+            }
+            CollectionAssert.AreEqual(firstDamage, secondDamage);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator CombatEntryRejectsMissingCommittedProfiles()
         {
             var adapter = new CombatEntryAdapter();
@@ -189,6 +279,89 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual("adventure_player_missing", reason);
             Object.Destroy(go);
             yield return null;
+        }
+
+        private static int ExecutePlayerBasicAttack(ICombatResolutionRandomSource source)
+        {
+            CombatSession session = CreateCombatSession(100, 1, out CombatantSnapshot player, out CombatantSnapshot enemy);
+            EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
+            CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
+            Assert.AreEqual("player", advance.ActorId);
+            SetPrivateField(coordinator, "acceptsPlayerCommand", true);
+            int healthBefore = enemy.CurrentHealth;
+            ((ICombatCommandHandler)coordinator).RequestBasicAttack("player", "enemy");
+            int damage = healthBefore - enemy.CurrentHealth;
+            Object.Destroy(host);
+            Object.Destroy(enemyData);
+            return damage;
+        }
+
+        private static EncounterCoordinator CreateCoordinator(
+            CombatSession session,
+            CombatantSnapshot player,
+            CombatantSnapshot enemy,
+            ICombatResolutionRandomSource source,
+            out GameObject host,
+            out EnemyData enemyData)
+        {
+            host = new GameObject("CombatResolutionSamplerTest");
+            EncounterCoordinator coordinator = host.AddComponent<EncounterCoordinator>();
+            enemyData = ScriptableObject.CreateInstance<EnemyData>();
+            enemyData.displayNameKey = "enemy_test";
+            coordinator.Configure(new RecordingCombatPresentationSink(), (_, _) => { });
+            coordinator.SetCombatResolutionRandomSource(source);
+            SetPrivateField(coordinator, "session", session);
+            SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(
+                player,
+                enemy,
+                enemyData,
+                "basic_unarmed",
+                "basic_unarmed",
+                Array.Empty<string>(),
+                null,
+                null));
+            return coordinator;
+        }
+
+        private static CombatSession CreateCombatSession(
+            int playerSpeed,
+            int enemySpeed,
+            out CombatantSnapshot player,
+            out CombatantSnapshot enemy)
+        {
+            player = new CombatantSnapshot(
+                "player", CombatTeam.Player, new HexCoord(0, 0), playerSpeed,
+                500, 500, 60, 0, 0, 0, 1f, 0)
+            {
+                CriticalRate = 50f,
+                DodgeRate = 50f,
+                BlockRate = 50f,
+                BlockReduction = 50f,
+                Facing = 0,
+            };
+            enemy = new CombatantSnapshot(
+                "enemy", CombatTeam.Enemy, new HexCoord(1, 0), enemySpeed,
+                500, 500, 60, 0, 0, 0, 1f, 0)
+            {
+                CriticalRate = 50f,
+                DodgeRate = 50f,
+                BlockRate = 50f,
+                BlockReduction = 50f,
+                Facing = 3,
+            };
+            return new CombatSession(
+                new[] { player, enemy },
+                new[]
+                {
+                    new CombatAttackProfile(
+                        "basic_unarmed",
+                        CombatAttackKind.Basic,
+                        CombatAttackEffect.Physical,
+                        1,
+                        1,
+                        physicalMultiplier: 1f),
+                },
+                new AlwaysInRangeCombatSpatialQuery());
         }
 
         private static IEnumerator WaitForScene(string sceneName)
@@ -304,6 +477,55 @@ namespace TianZhang.Tests.PlayMode
             {
                 return index < values.Length ? values[index++] : 0;
             }
+        }
+
+        private sealed class SequenceCombatRandomSource : ICombatResolutionRandomSource
+        {
+            private readonly float[] values;
+            private int index;
+
+            public SequenceCombatRandomSource(params float[] values)
+            {
+                this.values = values ?? Array.Empty<float>();
+            }
+
+            public int Count => index;
+
+            public float NextPercent()
+            {
+                if (index >= values.Length)
+                    throw new InvalidOperationException("The combat roll sequence was exhausted.");
+                return values[index++];
+            }
+        }
+
+        private sealed class RecordingCombatPresentationSink : ICombatPresentationSink
+        {
+            public void Present(CombatHudSnapshot snapshot) { }
+            public void ClearLog() { }
+            public void AppendLog(string message) { }
+            public void Hide() { }
+        }
+
+        private sealed class AlwaysInRangeCombatSpatialQuery : ICombatSpatialQuery
+        {
+            public CombatRangeQueryResult QueryRange(
+                HexCoord source,
+                HexCoord target,
+                int minimumRange,
+                int maximumRange) => new CombatRangeQueryResult(true, string.Empty);
+
+            public CombatMovementQueryResult QueryMovement(
+                HexCoord source,
+                HexCoord destination,
+                int movementPoints,
+                IReadOnlyCollection<HexCoord> occupied) =>
+                new CombatMovementQueryResult(false, "movement_not_used", null, 0);
+
+            public IReadOnlyDictionary<HexCoord, int> FindReachable(
+                HexCoord source,
+                int movementPoints,
+                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
         }
     }
 }

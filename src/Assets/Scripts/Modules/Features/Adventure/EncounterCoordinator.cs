@@ -11,10 +11,33 @@ using UnityEngine;
 
 namespace TianZhang.Features.Adventure
 {
+    public interface ICombatResolutionRandomSource
+    {
+        float NextPercent();
+    }
+
+    public sealed class SystemCombatResolutionRandomSource : ICombatResolutionRandomSource
+    {
+        private readonly System.Random random;
+
+        public SystemCombatResolutionRandomSource()
+        {
+            random = new System.Random();
+        }
+
+        public SystemCombatResolutionRandomSource(int seed)
+        {
+            random = new System.Random(seed);
+        }
+
+        public float NextPercent() => (float)(random.NextDouble() * 100d);
+    }
+
     public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler
     {
         private readonly CombatCommandService commandService = new CombatCommandService();
         private readonly CombatResultBuilder resultBuilder = new CombatResultBuilder();
+        private ICombatResolutionRandomSource combatRandomSource = new SystemCombatResolutionRandomSource();
         private CombatLegalActionService legalActions;
         private CombatSession session;
         private AdventureSpawnSet spawned;
@@ -25,6 +48,11 @@ namespace TianZhang.Features.Adventure
         private bool playerActed;
 
         public bool IsRunning => session != null;
+
+        public void SetCombatResolutionRandomSource(ICombatResolutionRandomSource source)
+        {
+            combatRandomSource = source ?? throw new ArgumentNullException(nameof(source));
+        }
 
         public void Configure(
             ICombatPresentationSink presentationSink,
@@ -130,7 +158,7 @@ namespace TianZhang.Features.Adventure
                     CombatCommand command = enemyPolicy.ChooseAction(legal);
                     if (command != null)
                     {
-                        CombatActionResult result = commandService.Execute(session, command);
+                        CombatActionResult result = ExecuteCommand(command);
                         presentation.AppendLog(BuildActionMessage(spawned.EnemyData.displayNameKey, command, result));
                     }
                 }
@@ -144,10 +172,34 @@ namespace TianZhang.Features.Adventure
         {
             if (!acceptsPlayerCommand || session == null || command == null ||
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
-            CombatActionResult result = commandService.Execute(session, command);
+            CombatActionResult result = ExecuteCommand(command);
             presentation.AppendLog(BuildActionMessage("玩家", command, result));
             if (result.Succeeded) playerActed = true;
             Present("你的行动", !playerActed);
+        }
+
+        private CombatActionResult ExecuteCommand(CombatCommand command)
+        {
+            CombatActionResult validation = commandService.Validate(session, command);
+            if (!validation.Succeeded)
+                return validation;
+            if (command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine)
+            {
+                var rolls = new CombatResolutionRolls(
+                    combatRandomSource.NextPercent(),
+                    combatRandomSource.NextPercent(),
+                    combatRandomSource.NextPercent(),
+                    combatRandomSource.NextPercent());
+                command = new CombatCommand(
+                    command.Kind,
+                    command.ActorId,
+                    command.TargetId,
+                    command.ProfileId,
+                    rolls,
+                    command.Destination,
+                    command.SlotIndex);
+            }
+            return commandService.Execute(session, command);
         }
 
         private void Present(string turnText, bool acceptsCommands)

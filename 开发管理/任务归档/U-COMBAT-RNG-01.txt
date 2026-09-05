@@ -4,13 +4,13 @@
   "id": "U-COMBAT-RNG-01",
   "title": "正式战斗玩家与敌方攻击随机采样接线",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-05 用户确认仅编号2、6、7、10手动，其余交定时器。本卡根因、两处业务路径和采样验收已冻结，无任务前置，由 DeepSeek 自动实施、Codex 独立复审。",
+  "stateReason": "2026-09-05：用户明确改派普通手动 Codex 执行；玩家 ICombatCommandHandler 与敌方 RunCombat 共用校验后四样本入口，Unity PlayMode 19/19、程序集边界与文本差异检查通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
@@ -37,7 +37,7 @@
 
 - 来源：2026-09-05 项目整体只读审视，以及用户“除美术外全部先建任务、准备依次进行”的明确要求；本批规划基线 312861953c71f1bf2c9ecfdaceef5251b526fdef。
 - 静态调用链已证明：CombatCommand 的 rolls 默认为全零，正式玩家请求和 AI 候选直接执行而没有采样，正概率因此变为固定触发。本卡唯一结果是正式执行边界正确供给样本，不调整数值平衡。
-- 本卡为本批编号 1/10 的自动项，仅供对应提示词，不代表全局执行顺序。实际前置以 blockedBy 和正文门槛为准；由 DeepSeek 定时器实施、Codex 独立复审；复审通过后才更新真实下游依赖。
+- 本卡原定由 DeepSeek 实施、Codex 独立复审；2026-09-05 用户在普通手动会话中明确改派 Codex 先完成本前置，因此没有外部候选或交接材料，按 Codex 自有任务完成验证与归档。
 
 ## 必查范围
 
@@ -69,10 +69,17 @@
 - 证明同种子和同一合法命令序列可复现；无效命令和合法动作枚举不推进采样；现有关中战斗、奖励、返回、存读档流程仍通过。现有 runner 无 TestFilter 参数。
 - 管理状态变化运行 tools/check-task-cards.ps1；使用 PowerShell 7 的规范入口。提交前对本卡预期路径运行 check-pending-whitespace.ps1，暂存后 git diff --cached --check；不 stage 无关改动。
 
+## 完成记录
+
+- `EncounterCoordinator.ExecuteCommand` 成为正式玩家与敌方共用的执行边界：先调用既有无副作用校验，只有通过的 BasicAttack／Art／Divine 才按命中、暴击、格挡、魂盾顺序取得四个样本，再以保留原命令全部其他字段的新命令交给既有 `CombatCommandService`。
+- `SystemCombatResolutionRandomSource` 以有状态 `System.Random` 提供默认 `[0,100)` 样本并支持显式 seed；测试可注入同一窄接口，不新增 MonoBehaviour、场景引用、存档状态或回放系统。
+- PlayMode 新增并通过正式玩家命令入口、敌方 `RunCombat` 分支、命中 `<=`、暴击／格挡 `<`、同 seed 重放、无效命令／合法动作枚举／非攻击零消耗用例；完整 PlayMode 19/19 通过，既有关中战斗、奖励、返回和存读档链保持通过。
+- `tools/check-unity-assembly-boundaries.ps1` 通过；未修改 Combat 公式、Enemy 配置、场景、Prefab、UI、存档或 BattleSim。
+
 ## 完成条件
 
-- 受控样本通过正式调用者产生预期分支，真实路径不再使用缺省全零概率值；必要 PlayMode 通过，Codex 独立复审通过后归档。不能仅验证纯 resolver。
-- 独立复审通过后仅从 U-COMBAT-LOADOUT-01 移除本项前置并同步其 backlog；它仍须等待角色投影和批准合同，不再解锁或改写独立手动合同卡。
+- 受控样本通过正式调用者产生预期分支，真实路径不再使用缺省全零概率值；必要 PlayMode 通过。用户明确改派后本卡没有外部候选，不再进入 Codex 独立复审队列。
+- 通过后仅从 U-COMBAT-LOADOUT-01 移除本项前置并同步其 backlog；它仍等待 U-COMBAT-PROJECTION-01，并继续消费独立手动合同卡，不进入 ready 队列。
 
 ## 停止条件
 
