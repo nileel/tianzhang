@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-08：Codex 独立复审正式提交 71e9b7a6ddafad397194f225644345366f26a6d2 部分通过。保存 schema、角色恢复与历史证据边界已校正；但当前正式册界提交实际由 CharterUseCase.CommitEvaluatedState 处理，CharterCommitService.TryCommit 无运行时调用，当前文档将其写为唯一长期提交入口，仍与源码不符。需定向返工后复审。",
   "expectedPaths": [
     "开发管理/设计-当前状态.txt",
     "UNITY_STRUCTURE.runtime.md",
