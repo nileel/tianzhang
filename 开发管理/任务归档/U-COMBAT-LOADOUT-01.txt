@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-08：Codex 已独立复审正式提交 24b37eb912e06a3670a43c58653bef74e04bda74；逐角色攻击归属、快照集合去空去重和正式徒手链均通过，归档。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",

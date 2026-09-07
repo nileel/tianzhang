@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-COMBAT-LOADOUT-01 | codex_review | codex | P1 | unity | implementation | 正式战斗按角色装载校验攻击档案 | 开发管理/任务卡/U-COMBAT-LOADOUT-01.txt |
 | M-CURRENT-FACTS-01 | external_execute | deepseek | P2 | management | migration | 非美术当前状态与运行时索引校正 | 开发管理/任务卡/M-CURRENT-FACTS-01.txt |
