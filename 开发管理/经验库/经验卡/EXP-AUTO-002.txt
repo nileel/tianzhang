@@ -1,0 +1,25 @@
+# EXP-AUTO-002 · 兼容期 ready 状态转换须按 base 区分
+
+## 状态
+
+active；最后核验日期：2026-09-07；事实源版本：批准设计 `e7749d1378ee80a531df59c7240c4f25daf7c047` 与 `M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01` 完成归档。
+
+## 开工前
+
+适用：改动 QueueMaintenance 创建或恢复 ready 卡的过渡检查及其 candidate、canonical 或集成复查。排除：持续 ready 的既有卡和非 QueueMaintenance 入口。先以明确 base 比较前后状态；新进 ready 必须重算 schema 2 投影。不得只查当前快照或用兼容旧卡放宽新转换。运行对应任务卡与编排回归；无法取得可信 base 时停止。
+
+## 正确处理
+
+以实际 base commit 读取旧卡状态，仅对 base 缺失或非 ready、而当前为 ready 的卡执行更强合同；在 candidate、canonical 重放和正式集成复查中调用同一过渡 postcondition。
+
+## 根因与弯路
+
+兼容期全局检查只看当前快照，允许既有 schema 1 ready 卡的同时也放过本轮新建或重新 ready 的 schema 1 卡，直到小时责任方写前预检才失败。
+
+## 证据
+
+来源候选 `CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01`；批准设计提交 `e7749d1378ee80a531df59c7240c4f25daf7c047`；失败 run `33e3e59e-d132-4c64-b0e1-3b39aa9c63e9` 的 `experience_preflight_schema_invalid`；`tools/test-check-task-cards.ps1` 与 `tools/test-queue-maintenance-completion.ps1` 回归。
+
+## 失效条件
+
+QueueMaintenance 不再创建或恢复 ready 卡、schema 2 过渡合同被废弃，或 candidate、canonical、正式集成不再以同一 base 语义 postcondition 复查时，停止引用并重新核验。

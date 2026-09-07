@@ -91,8 +91,8 @@
 ### CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-A242521B1028
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-AUTO-002
 - 经验领域：automation
 - 现象：兼容期全局检查允许既有 schema 1 ready 卡，也因此无法拒绝 QueueMaintenance 本轮新建或重新 ready 的 schema 1 卡；结果直到小时责任方写前预检才失败。
 - 已证实根因：需要前后状态语义的 invariant 只检查了当前快照，没有以明确 base commit 区分“持续 ready”与“本轮进入 ready”。

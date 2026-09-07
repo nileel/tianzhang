@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "automation",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01/CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "已独立核验来源候选：根因、适用边界与回归证据充分，且现有 active 经验未覆盖 QueueMaintenance 的 base 状态转换语义；已 promoted 为 EXP-AUTO-002。",
   "expectedPaths": [
     "开发管理/任务归档/M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -60,6 +60,12 @@
 
 - 运行 `tools/check-task-cards.ps1`，核对来源／整理卡双向回链、风险索引 schema 和精确 changed paths。
 - 对本轮路径运行 `tools/check-pending-whitespace.ps1`、`tools/check-review-text.ps1` 和 `git diff --cached --check`。
+
+## 完成记录
+
+- 结论：promoted 为 `EXP-AUTO-002`。来源候选的根因由批准设计、失败 run 与两组回归共同支持；现有 active 经验中没有覆盖“兼容旧 ready 状态与本轮进入 ready 的 base 区分”这一自动化过渡语义。
+- 适用边界冻结为 QueueMaintenance 的 ready 转换及其 candidate、canonical、正式集成复查；持续 ready 旧卡和非 QueueMaintenance 入口排除。
+- 门禁可能保留为后续独立事项；本卡未新增 gate 或修改既有经验。
 
 ## 完成条件
 
