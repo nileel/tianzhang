@@ -62,10 +62,10 @@ namespace TianZhang.Combat
             SoulDefense = soulDefense;
             RealmMultiplier = Math.Max(1f, realmMultiplier);
             MovePoints = movePoints;
-            this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds, allowEmpty: true);
-            this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds, allowEmpty: false);
-            this.equippedDivineProfileIds = CreateProfileIdList(equippedDivineProfileIds, allowEmpty: true);
-            this.availableDivineProfileIds = CreateProfileIdList(availableDivineProfileIds, allowEmpty: false);
+            this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds);
+            this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds);
+            this.equippedDivineProfileIds = CreateProfileIdList(equippedDivineProfileIds);
+            this.availableDivineProfileIds = CreateProfileIdList(availableDivineProfileIds);
             BasicAttackProfileId = basicAttackProfileId ?? string.Empty;
             MaxCombatSwaps = maxCombatSwaps;
             CombatSwapsUsed = combatSwapsUsed;
@@ -196,7 +196,7 @@ namespace TianZhang.Combat
             CurrentHealth = Math.Min(MaximumHealth, CurrentHealth + amount);
         }
 
-        private static List<string> CreateProfileIdList(IEnumerable<string> profileIds, bool allowEmpty)
+        private static List<string> CreateProfileIdList(IEnumerable<string> profileIds)
         {
             var result = new List<string>();
             if (profileIds == null)
@@ -204,13 +204,8 @@ namespace TianZhang.Combat
 
             foreach (string profileId in profileIds)
             {
-                if (string.IsNullOrWhiteSpace(profileId))
-                {
-                    if (allowEmpty)
-                        result.Add(string.Empty);
-                    continue;
-                }
-                result.Add(profileId);
+                if (!string.IsNullOrWhiteSpace(profileId) && !result.Contains(profileId))
+                    result.Add(profileId);
             }
             return result;
         }

@@ -30,3 +30,16 @@
 - 残留风险：校正基于只读源码审查而非本轮 Unity 重跑；重建后册界 PlayMode 仅剩 UnknownNodeTypeFailsClosedAtMapLoad，保存/读取校验依赖 EditMode GameSaveEnvelopeTests 与 CharterUseCase.ValidateRestoredState，该覆盖表述按当前源码书写但未在本轮以 PlayMode 复验；旧 schema 4（GameSessionSnapshot）与重建后 schema 2（GameSaveEnvelope）的区分已保留，复审方需按提交 4aa505fe/a6371ae1 核对重建叙事；两份文档现标记为 ⚠️ 已修改/未审核，复审不通过需按普通返工同步修正。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-U-COMBAT-LOADOUT-01-64bab50c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-COMBAT-LOADOUT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-COMBAT-LOADOUT-01
+- 候选提交：e7ac284e351c9383ebd84f89ea706c323de5d127
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：src/Assets/Scripts/Combat/CombatantSnapshot.cs、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
+- 已验证：check-pending-whitespace.ps1 (2 changed files) OK；check-unity-assembly-boundaries.ps1 OK (19 assemblies, 2 asmrefs)；run-unity-editmode-tests.ps1: 463/464 passed — both new sanitization tests and all 28 CombatRuntimeKernelTests passed；run-unity-playmode-tests.ps1: 20/20 passed；git diff --cached --check (via finalizer) OK
+- 未验证：EditMode suite fully green: 1 pre-existing unrelated failure ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings (base commit, outside task scope)
+- 残留风险：EditMode 套件存在 1 个与本次改动无关的既有失败（ClothWideSleevePilot 宽袖实验用例，源自基线提交）；术法/神通授权仅以内存 profileId 夹具证明，生产 ability stable ID→attackProfileId 映射仍按冻结合同未接入。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

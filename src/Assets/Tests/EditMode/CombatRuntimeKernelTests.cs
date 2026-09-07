@@ -401,6 +401,38 @@ namespace TianZhang.Tests.EditMode
                 Is.EqualTo("attack_profile_not_authorized"));
         }
 
+        [Test]
+        public void ProfileIdListsKeepDistinctKnownIdsInOrder()
+        {
+            CombatantSnapshot combatant = CreateCombatant(
+                "ordered", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10,
+                equippedArtProfileIds: new[] { "art_a", "art_b" },
+                availableArtProfileIds: new[] { "art_a", "art_b", "art_c" },
+                equippedDivineProfileIds: new[] { "divine_a", "divine_b" },
+                availableDivineProfileIds: new[] { "divine_a", "divine_b", "divine_c" });
+
+            CollectionAssert.AreEqual(new[] { "art_a", "art_b" }, combatant.EquippedArtProfileIds);
+            CollectionAssert.AreEqual(new[] { "art_a", "art_b", "art_c" }, combatant.AvailableArtProfileIds);
+            CollectionAssert.AreEqual(new[] { "divine_a", "divine_b" }, combatant.EquippedDivineProfileIds);
+            CollectionAssert.AreEqual(new[] { "divine_a", "divine_b", "divine_c" }, combatant.AvailableDivineProfileIds);
+        }
+
+        [Test]
+        public void ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets()
+        {
+            CombatantSnapshot combatant = CreateCombatant(
+                "sanitized", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10,
+                equippedArtProfileIds: new[] { "art_a", "", "art_a", "  ", "art_b", null },
+                availableArtProfileIds: new[] { "art_a", "art_b", "art_b", "art_c", "" },
+                equippedDivineProfileIds: new[] { "divine_a", "divine_a", "", "divine_b", null },
+                availableDivineProfileIds: new[] { "divine_a", "  ", "divine_b", "divine_a" });
+
+            CollectionAssert.AreEqual(new[] { "art_a", "art_b" }, combatant.EquippedArtProfileIds);
+            CollectionAssert.AreEqual(new[] { "art_a", "art_b", "art_c" }, combatant.AvailableArtProfileIds);
+            CollectionAssert.AreEqual(new[] { "divine_a", "divine_b" }, combatant.EquippedDivineProfileIds);
+            CollectionAssert.AreEqual(new[] { "divine_a", "divine_b" }, combatant.AvailableDivineProfileIds);
+        }
+
         [TestCase(1f, 3, 5, 3, 0.15f, 3, 1f)]
         [TestCase(1.5f, 3, 5, 3, 0.15f, 3, 1.10f)]
         [TestCase(3f, 4, 3, 3, 0.15f, 5, 1.15f)]
