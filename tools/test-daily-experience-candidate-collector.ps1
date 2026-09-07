@@ -44,10 +44,11 @@ function Invoke-Git {
 function New-TaskCardText {
   param([string]$Id, [string]$State = 'ready', [string]$Domain = 'automation', [string[]]$BlockedBy = @())
   $metadata = [ordered]@{
-    schemaVersion=1; id=$Id; title="Fixture $Id"; priority='P1'; route='codex_execute'; owner='codex'; domain=$Domain
+    schemaVersion=2; id=$Id; title="Fixture $Id"; priority='P1'; route='codex_execute'; owner='codex'; domain=$Domain
     stage='implementation'; dispatchState=$State; blockedBy=[object[]]$BlockedBy; stateReason='fixture state'
     expectedPaths=[object[]]@("开发管理/任务卡/$Id.txt", "开发管理/任务归档/$Id.txt")
     sourceBacklog='开发管理/任务列表/管理与自动化任务.txt'
+    riskPreflight=[ordered]@{ explicitRefs=[object[]]@(); matched=[object[]]@(); gates=[object[]]@() }
   }
   @(
     '---TASK-META---', ($metadata | ConvertTo-Json -Depth 10), '---TASK-BODY---', "# $Id · Fixture $Id", '',
@@ -114,6 +115,7 @@ function New-Fixture {
     'invoke-project-integration.ps1','hourly-integration-lock.ps1'
   )) { Copy-Item -LiteralPath (Join-Path $script:toolRoot $tool) -Destination (Join-Path $root "tools/$tool") }
   Write-Utf8 (Join-Path $root '.gitignore') ".worktrees/`n"
+  Write-Utf8 (Join-Path $root '开发管理/任务归档/2026-07-01-legacy-summary.txt') "# Legacy summary fixture`n`n- no task metadata markers`n"
   Write-Utf8 (Join-Path $root '开发管理/经验库/风险索引.json') "{`n  `"schemaVersion`": 1,`n  `"experiences`": [],`n  `"gates`": []`n}`n"
   $existing='TASK-EXISTING-READY'
   Write-Utf8 (Join-Path $root "开发管理/任务卡/$existing.txt") (New-TaskCardText $existing)

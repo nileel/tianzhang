@@ -253,6 +253,9 @@ function Get-ReservedExperienceNumbers {
   foreach ($path in @($cardPathsText -split "`r?`n" | Where-Object { $_ -cmatch '^开发管理/(任务卡|任务归档)/[^/]+\.txt$' })) {
     $taskId = [IO.Path]::GetFileNameWithoutExtension($path)
     $text = Invoke-Git -Root $script:root -Arguments @('show', "$Commit`:$path")
+    $hasMetaMarker = $text -cmatch '(?m)^---TASK-META---\r?$'
+    $hasBodyMarker = $text -cmatch '(?m)^---TASK-BODY---\r?$'
+    if ($path -cmatch '^开发管理/任务归档/' -and -not $hasMetaMarker -and -not $hasBodyMarker) { continue }
     $document = Get-TaskDocument -Text $text -ExpectedId $taskId -RequireCompleted $false
     foreach ($expectedPath in @($document.Metadata.expectedPaths | ForEach-Object { [string]$_ })) {
       $match = [regex]::Match($expectedPath, '^开发管理/经验库/经验卡/EXP-(?<code>UNITY|BS|DATA|CONTENT|MGMT|AUTO)-(?<number>\d{3})\.txt$')
