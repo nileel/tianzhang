@@ -1,4 +1,4 @@
-# 设计当前状态（⚠️ 已修改/未审核）
+# 设计当前状态（审核完成）
 
 > 本文件只记录可用于当前决策的已验证事实与风险。任务状态、依赖和验收以 `开发管理/当前任务队列.txt` 为准；详细规格以 `docs/superpowers/specs/2026-07-10-trust-gates-and-vertical-slice-task-system-design.md` 为准。
 

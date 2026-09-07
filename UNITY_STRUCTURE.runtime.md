@@ -1,6 +1,6 @@
 # Unity 正式运行时结构
 
-> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：保存链 schema 版本与所有者校正。
+> 审核完成；修改方：DeepSeek V4 Pro 0813；审核方：Codex；变更范围：保存链 schema 版本与所有者校正。
 
 ## 何时读取
 

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-08：Codex 已独立复审正式提交 45955e21f581eb98c37e100f9c1fab6988e4b3d7；册界长期提交所有者、保存 schema 与角色恢复事实均与现行源码一致，归档。",
   "expectedPaths": [
     "开发管理/设计-当前状态.txt",
     "UNITY_STRUCTURE.runtime.md",
