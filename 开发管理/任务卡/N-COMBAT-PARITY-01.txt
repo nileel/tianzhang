@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-LOADOUT-01"
-  ],
-  "stateReason": "2026-09-05：D-COMBAT-PARITY-01 已冻结 combat-parity-v1 的八个中性物理用例；仍等待 U-COMBAT-LOADOUT-01 完成同一测试文件的装载夹具修改，再由 DeepSeek 自动实施、Codex 独立复审。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-08：U-COMBAT-LOADOUT-01 已完成并归档；combat-parity-v1 的八个中性物理用例、预期路径、验证、完成条件和停止条件均已冻结，可由 DeepSeek 自动实施并由 Codex 独立复审。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
