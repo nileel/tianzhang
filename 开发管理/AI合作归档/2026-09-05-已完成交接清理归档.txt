@@ -1,0 +1,340 @@
+# 2026-09-05 已完成交接清理归档
+
+> 由 M-HANDOFF-ARCHIVE-01 自 `开发管理/AI合作沟通.txt` 迁入：固定基线 `312861953c71f1bf2c9ecfdaceef5251b526fdef` 的 26 个已消费交接原文。各条原始审核结论、候选／正式 SHA 与风险自述保持原文。
+
+### DSH-M-EXP-PREFLIGHT-01A-ec2d51e5 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：be768985c5ebb2deaac788b33d8f9fd9951d09bd
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/经验库/风险索引.json、开发管理/经验库/经验卡模板.txt、tools/get-experience-risk-preflight.ps1、tools/test-get-experience-risk-preflight.ps1
+- 已验证：空索引顶层精确为 schemaVersion/experiences/gates 且均为空；匹配器 10 类正反例全部通过 tools/test-get-experience-risk-preflight.ps1；合法零命中 fixture：stdout 仅一个 JSON 对象且工作树无变化；tools/check-task-cards.ps1 OK (cards=82 ready=4)；tools/check-review-text.ps1 -Paths 开发管理,tools OK (533 files)；tools/check-pending-whitespace.ps1 OK (4 files)；git diff --check 通过；candidate 仅含 4 个授权路径，十张种子卡未改动
+- 未验证：Codex 独立复审尚未进行（待 Codex 签收）；真实种子经验在真实索引下的命中质量/误报率/读取量（属后续种子卡与 TRIAL 阶段）；600 字符边界与 3 条 must_read 限额仅以 fixture 证明，未在真实经验上验证
+- 残留风险：生产索引与门禁表均为空，尚无真实经验，匹配器行为仅在临时 fixture 上证明；schema 2 任务卡投影与小时入口接入属后续任务，本卡未实现。真实种子晋级并 active 后才会出现窄命中行为，仍需 Codex 独立复审签收，未解除任何种子卡前置。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+### DSH-M-EXP-PREFLIGHT-01A-9bd06607 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：33f96e29160d60f4d8bfa12fc7fce1c49c7b2e35
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/get-experience-risk-preflight.ps1、tools/test-get-experience-risk-preflight.ps1
+- 已验证：tools/test-get-experience-risk-preflight.ps1 全部通过（含 case9 两种过宽结果新增的 gates/gatePointers 去重断言）；tools/check-task-cards.ps1 -> OK (cards=83 ready=5)；tools/check-review-text.ps1 -Paths 开发管理,tools -> OK (534 files)；git diff --check 无输出；tools/check-pending-whitespace.ps1 对两个改动文件 -> OK (2 files)；零命中 -TaskId M-EXP-PREFLIGHT-01A 输出单一 JSON 对象，且调用前后 git status 均只有两个待提交文件、无新增改动（只读证明）
+- 未验证：未运行 tools/check-data-chain.ps1（本轮未改 CSV/asset/Unity 数据链路路径）；未运行 BattleSim（本轮不改数值或模拟器代码）；schema 2 强制投影与 ready 迁移不在本卡范围，未做该部分验证；Codex 独立复审尚未执行（DeepSeek 不得自审）
+- 残留风险：门禁指针构建块被上移到过宽判断之前，使两种过宽路径现在也会解析并校验 gate 的 instructionRef 与 entryPaths 文件存在性；若未来真实种子经验的 gate 入口缺失，过宽结果会改为返回稳定 missing_gate_entry 错误而非 preflight_overbroad。这与规格「门禁入口缺失停止写入」一致，但属行为面扩大，当前生产索引为空不受影响，需 Codex 复审确认优先级。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-PREFLIGHT-01A-5f6f2e97 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：1f7c35675b0589f886b1417cb284b67710a02b0d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-get-experience-risk-preflight.ps1
+- 已验证：tools/test-get-experience-risk-preflight.ps1 → PASS（含改后的 case10 只读+零命中 fixture）；tools/check-task-cards.ps1 → OK (cards=82 ready=5)；tools/check-review-text.ps1 -Paths 开发管理,tools → OK (534 files)；tools/check-pending-whitespace.ps1 -Paths tools/test-get-experience-risk-preflight.ps1 → OK；git diff --check → 通过；实机零命中 fixture 调用匹配器：stdout 单一 JSON(status=ok/matched=[]) 且 git status 前后一致（只读证明）；提交仅含 tools/test-get-experience-risk-preflight.ps1，为 CandidatePaths 子集
+- 未验证：未在真实归档态（移除 M-EXP-PREFLIGHT-01A 卡后）实跑；稳健性由测试不再引用该卡保证；未运行 BattleSim / Unity 构建（本卡不涉及数值或 C#）；未运行 check-data-chain.ps1（本卡不涉及 docs/CSV/Unity 数据链路）
+- 残留风险：只读证明由真实 git 工作树快照改为临时 fixture 文件树哈希，匹配器逻辑未改，风险低；归档态稳健性依赖测试不再引用任何真实任务卡。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-PREFLIGHT-01A-1e382b39 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-PREFLIGHT-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-PREFLIGHT-01A
+- 候选提交：e3850a876099c3fecc2364eb5ffdfcba88e4e52d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/get-experience-risk-preflight.ps1、tools/test-get-experience-risk-preflight.ps1
+- 已验证：tools/test-get-experience-risk-preflight.ps1 全部用例 PASS（含新增 detailRef 其他章节/无指针负例）；合法零命中 fixture 调用返回单一 JSON 对象且工作树无变化；tools/check-task-cards.ps1: OK (cards=81 ready=4)；tools/check-review-text.ps1 -Paths 开发管理,tools: OK (535 files)；git diff --check 通过；candidate 提交仅含两个授权路径且工作树干净
+- 未验证：Codex 独立复审未进行（返工一是否完全满足由 Codex 复审确认）；生产风险索引为空，未用真实经验卡验证 must_read 正文提取；真实历史任务只读回放与十张种子卡前置解除不属于本 candidate，未验证
+- 残留风险：限制 detailRef 为精确 路径#开工前 后，任何指向非「开工前」章节（如 开发-技术经验.txt#具体章节）的 must_read 指针都将返回 missing_body_pointer；当前生产索引为空、无既有条目受影响，后续种子经验登记时须统一使用 #开工前 指针。此为本 candidate 之外的真实经验录入约束，已由返工一明确决定。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01A-3b2add64 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01A 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01A
+- 候选提交：3506ae78275dbd8ed7c255e22d8d59fef6d2cd56
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Wood_TRANSFORM01_荣枯关.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Wood_DOMAIN01_扶疏天.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Wood_SOURCE_青帝祖庭.txt
+- 已验证：tools/check-review-text.ps1 -Paths docs,开发管理：通过（1007 文件，无控制字符）；tools/check-pending-whitespace.ps1：通过（5 文件，无行尾空白）；git diff --check：通过（仅 autocrlf 提示，无 trailing whitespace / space-before-tab）；candidate changed paths 精确等于 5 个预期路径，工作树干净，HEAD 为 baseCommit 直接后继
+- 未验证：tools/check-data-chain.ps1：未运行（本轮仅改动 docs/ 与 开发管理/ 的 .txt，未涉及 CSV 或 asset）；BattleSim：未运行（不涉及数值强度）；效果实际装配、山河实例建立与首次验证：未运行（按返工决议后置到原子稳定绑定之后，本轮不执行）
+- 残留风险：三份文档与索引的内容一致性由本主智能体复核，尚未经独立审核方验证；正式效果名称仍待 DS-JINDAN-NAMES-20260718-01；具体位置名称为本批次候选名，复审通过前不进入正式显示事实。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01B-d5a3f72c · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01B 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01B
+- 候选提交：91052f3921c12711dbfa33943cfb1ff239282a5e
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Fire_TRANSFORM01_燃犀渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Fire_DOMAIN01_长明赤野.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_赫曦炉心.txt
+- 已验证：三份位置文档均按 §十一 13 大节合同完整重写，各含 13 个一级大节；三份文档均补齐 §4.4 完整证位阶段（启动绑定目标/现实支点与主承载/材料供能维护/关键事件与时间推进/致命中断/失败结算/最终原子重验）与 §4.5 并行争位、临界争位及失败者处理；绑定前位置专属成就只用候选人已有合法非位格行为、现实对象与证位地点环境条件，不再要求本位置效果槽、白名单位别效果或 MountainRiverRuleInstance，实际效果装配与山河实例建立及首次验证移后至原子稳定绑定；燃犀渡理念重写为固定渡口筛选转化结构，可与 FIRE_MANIFEST／FIRE_FIELD／FIRE_ESCALATE 三项白名单效果逐项求交；长明赤野改为一次只装配白名单中的一项，三项效果不并列常驻，并移除战棋对山河层 MountainRiverCycleProfile 的依赖；主场景维护、NPC 响应与失败已写成实际规则；山河周期结算按三项效果分别写明地区结果与事件；存档与版本策略按证位/战棋/主场景/山河四类实例分别写明冻结、重验、迁移或失败关闭；索引 §六 火道路三行与文档一致（证位档案/位置档案版本升 1.1、理念摘要、审核记录同步 2026-08-28 返工）；未通过审核清单 01B 条目补记返工状态；验证已运行：tools/check-review-text.ps1 -Paths docs,开发管理 通过（1010 文件）；tools/check-pending-whitespace.ps1 通过（5 文件）；git diff --check 无空白错误；changed paths 精确等于 CandidatePaths 五项，worktree 干净，candidate 提交为 baseCommit f3b5b1b4 的直接后继
+- 未验证：未运行 BattleSim（任务不涉及数值强度，任务卡明确无需运行）；未运行 tools/check-data-chain.ps1（本轮不涉及 CSV/asset 变化）；未做 Codex 独立复审（按规则 DeepSeek 不自审，待 Codex 复审）
+- 残留风险：燃犀渡理念重写与长明赤野一槽一效改写的语义边界是否越界，以及未通过审核清单/索引的返工状态标记，均需 Codex 独立复审确认后闭环；本轮未触碰总规则、效果矩阵、数值或运行时。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01C-93f11b3e · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01C 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01C
+- 候选提交：26a3cd306482c583cdf78671159d78ddb8a94b8d
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Earth_TRANSFORM01_载岳回廊.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Earth_DOMAIN01_厚境垣.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Earth_SOURCE_坤舆地髓.txt
+- 已验证：pwsh check-pending-whitespace.ps1（5 个候选路径）→ OK；pwsh check-review-text.ps1 -Paths docs,开发管理（1010 文件）→ OK；git diff --check → OK；git diff --cached --check（automation-finalize-commit 内）→ OK；候选提交恰好包含 5 个候选路径且工作区干净
+- 未验证：BattleSim 未运行：本任务不涉及数值强度/平衡数值（任务卡明确无需运行）；check-data-chain.ps1 未运行：未改动 CSV/asset 数据链路；未运行 Unity/运行时验证：纯设定文档内容生产，无代码/运行时改动
+- 残留风险：载岳回廊理念重写为可与三项白名单效果逐项求交、厚境垣改为一次只装配一项白名单效果、厚境垣战棋移除对山河层 MountainRiverCycleProfile 的依赖，均为内容层修正，未改总规则/效果矩阵/装配规则/证位总规则/数值/运行时；绑定前专属成就改用合法非位格行为/现实对象/环境条件的表述仍需 Codex 独立复审确认合规性与理念求交完整性。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01D-d0b8f46e · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01D 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01D
+- 候选提交：a872902373bb8790ddb4168cedccaa615c00afca
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Metal_TRANSFORM01_从革渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Metal_DOMAIN01_肃刃原.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Metal_SOURCE_白帝砧.txt
+- 已验证：白帝砧（源位）：补齐 §4.4 完整证位阶段、§4.5 并行/临界争位及失败者处理，§4.3 三份专属成就改为绑定前只用合法非位格行为/现实对象/环境条件，§十按三项效果分别写明地区结果与事件，§12.3 四类实例冻结/重验/迁移策略，版本升 1.1；从革渡（化位）：重写设计理念为「固定渡口对金行对象作固定筛选与固定转化/落地」，可与 METAL_MANIFEST/METAL_FIELD/METAL_MAGNETISM 逐项求交，并同步补齐通用返工项，版本升 1.1；肃刃原（界位）：重写为「一槽一效」，三项白名单效果不再并列常驻，并同步补齐通用返工项，版本升 1.1；金丹位格索引.txt：§六金道路三行理念摘要、证位档案与位置档案版本（1.1）、审核记录同步，并加头部 DeepSeek V4 Pro 0813 返工标记；未通过审核清单.txt：01D 条目补「返工状态」行；tools/check-review-text.ps1 -Paths docs,开发管理（OK，1010 文件）；tools/check-pending-whitespace.ps1（OK，5 文件，fix=False）；git diff --check（通过，exit 0）；git status 清洁，base..HEAD 变更路径与 expectedPaths 精确一致（5 文件）
+- 未验证：三份文档 §十三 检查清单为按合同逐项文本自检勾选，未经 Codex 独立复审；未运行 BattleSim（本任务不涉及数值强度，任务卡明确无需）；未运行 check-data-chain.ps1（本轮未改 CSV/asset）
+- 残留风险：从革渡理念求交与肃刃原一槽一效为文本一致性返工，未改效果矩阵、装配规则、证位总规则、数值或运行时；具体位置名称与理念仍为本批次候选，待 Codex 复审通过前不进入正式显示事实。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01E-9852b140 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01E 的原子正式结果等待 Codex 独立复审；原自动 run 因共享管理路径变化停在 `hourly_revalidation_required`，本条由普通管理上下文基于最新 `master` 补齐，不恢复旧模型会话。
+- 任务：C-HS-YY-JD-01E
+- 候选提交：0bfc731df03f07cb726a6a1ee19ef7928fe3af73
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_FiveElements_Water_TRANSFORM01_潮衡渡.txt、docs/基础设定/金丹位格/界位/JD_FiveElements_Water_DOMAIN01_沧溟泽国.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_FiveElements_Water_SOURCE_玄冥泉眼.txt
+- 已验证：pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK（1010 files checked）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths（5 条候选路径）→ OK；git diff --check → 无空白/行尾错误（仅 autocrlf LF→CRLF 信息提示）；finalize-commit 内部 git diff --cached --check（core.whitespace=-blank-at-eol）→ 通过；changedPaths = baseCommit..HEAD 精确等于 5 条 CandidatePaths，工作树干净；三份文档 §十三检查清单逐项通过、positionId 全局唯一且已登记索引。
+- 未验证：未运行 BattleSim：本返工不涉及数值强度或平衡数值，任务卡明确无需运行；候选阶段未运行 check-data-chain.ps1，正式恢复阶段按 docs 变化补跑。
+- 残留风险：三份文档与索引为 DeepSeek 候选返工，统一标「⚠️ 已修改/未审核」，须经 Codex 独立复审通过后才进入正式显示事实；潮衡渡具体位置名称为本批次候选名，复审不通过时按普通返工同步修改名称、路径、引用，未设置独立重命名阶段。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01F-6d2b5d81 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01F 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01F
+- 候选提交：b856532c26484348da4287013c6ee34f0d804054
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Observe_TRANSFORM01_镜门.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Observe_DOMAIN01_无翳庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Observe_SOURCE_观照真瞳.txt
+- 已验证：check-pending-whitespace.ps1 -ExpectedPaths（5 个候选路径）：OK（fix=False）；check-review-text.ps1 -Paths docs,开发管理：OK（1012 文件）；git diff --check 与 git diff --cached --check：无空白错误（LF→CRLF 提示为预期换行策略，非错误）；三份文档 13 大节骨架齐全；positionId/seatNameKey/证位档案 1.1/索引条目与文档一致；锁定资格修正、战棋移除 MountainRiverCycleProfile、山河三效果地区结果事件表、四类实例版本策略均已落位
+- 未验证：未运行 BattleSim（本任务不涉及数值强度，任务卡明确无需运行）；未运行 check-data-chain.ps1（未改动 CSV/asset 数据链路）；未自审；返工结果待 Codex 独立复审
+- 残留风险：返工内容仍为「⚠️ 已修改/未审核」候选，复审通过前不进入正式显示事实；Codex 复审仍可能要求进一步收窄或再次返工。锁定资格与领域周期分层的修正只依据矩阵原文与装配/证位规则，未改动任何总规则、效果矩阵、数值或运行时。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01G-f0d128df · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01G 的原子正式结果等待 Codex 独立复审；原自动 run 因共享管理路径变化停在 `hourly_revalidation_required`，本条由普通管理上下文基于最新 `master` 补齐，不恢复旧模型会话。
+- 任务：C-HS-YY-JD-01G
+- 候选提交：5b7c2ce18e80dd01c8ae624aa161d683495892c9
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Hearing_TRANSFORM01_传响廊.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Hearing_DOMAIN01_万籁场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Hearing_SOURCE_天籁元钟.txt
+- 已验证：三份文档 §十三 13 大节检查清单逐项勾选通过；三份文档 positionId 全局唯一且已登记索引；check-review-text.ps1 -Paths docs,开发管理：OK（1015 文件）；check-pending-whitespace.ps1：OK（5 文件）；git diff --cached --check：通过；万籁场声迹只在存在合法传声／传振媒介时生成且不自动压过同阶消声；MountainRiverCycleProfile 引用已从战棋段移除；提交后工作树干净，changedPaths 与 CandidatePaths 精确一致。
+- 未验证：Codex 独立复审尚未进行（本 candidate 标未审核）；未运行 BattleSim（本任务不涉及数值强度）；候选阶段未运行 check-data-chain.ps1，正式恢复阶段按 docs 变化补跑。
+- 残留风险：具体位置名称仍为本批次候选名；绑定前专属成就已改为合法非位格行为／现实对象／环境条件证明，实际效果装配与山河实例建立及首次验证移后至原子稳定绑定之后；最终事实口径以 Codex 独立复审为准。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01H-ee222141 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01H 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01H
+- 候选提交：e7c68e924ac88cba24c51323b6824d77897b9d84
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Spirit_TRANSFORM01_驭机渡.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Spirit_DOMAIN01_启寂坛.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Spirit_SOURCE_万灵枢.txt
+- 已验证：changed paths 精确等于 CandidatePaths（git diff --name-only --no-renames HEAD~1..HEAD，5 文件，无改名）；check-pending-whitespace.ps1 通过（5 个候选文件，OK）；check-review-text.ps1 -Paths docs,开发管理 通过（1016 文件，无控制字符）；git diff --cached --check 通过（无行尾空白/空白错误）；工作树干净、HEAD 为直接后继 candidate 提交、提交主题为 candidate(C-HS-YY-JD-01H): DeepSeek implementation；启寂坛战棋 §八 不再读取 MountainRiverCycleProfile（仅保留「不读取只属于山河层」声明，战棋持续改由 JindanBaseEffectLoadoutTuning/领域档案读取）；三份文档均补齐 §4.4 完整证位阶段与 §4.5 并行/临界争位及失败者处理，且无残留 DeepSeek V4 Flash 标记；证位档案标识在文档 §一、§十三与索引 §六 统一由 1.0 升 1.1
+- 未验证：BattleSim 数值平衡（任务不涉及数值强度，任务卡明确无需运行）；check-data-chain.ps1（未涉及 CSV/asset 变化，无需运行）；正式效果装配、山河实例建立与首次验证（按返工决议移后至原子稳定绑定之后，本轮不在验证范围）
+- 残留风险：三份文档为文本返工，未运行可执行构建/数值验证；具体位置名称为本批次候选名，复审通过前不进入正式显示事实；Codex 独立复审仍可能对内容措辞或索引理念摘要与文档的一致性提出新意见（索引 §六 驭机渡理念摘要沿用既有「御面」措辞，属本轮返工范围之外的历史差异，未改动）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01I-2bd74e2f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01I 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01I
+- 候选提交：90e4cdd6fb08200ba7885cfd6c3f01c6ba456f59
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Soul_TRANSFORM01_渡魂津.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Soul_DOMAIN01_幽明原.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Soul_SOURCE_泥丸玄宫.txt
+- 已验证：pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK (1016 files checked)；git diff --check → clean；pwsh tools/check-pending-whitespace.ps1 (5 files) → OK；git diff --cached --check (via automation-finalize-commit.ps1) → clean；changed paths 精确等于 CandidatePaths（5 文件），工作树干净，candidate 为 base b050a435 的直接后继
+- 未验证：BattleSim 未运行（任务卡明确：不涉及数值强度无需运行）；check-data-chain.ps1 未运行（未涉及 CSV/asset 变化）；正式效果装配、MountainRiverRuleInstance 建立与首次验证未执行（按 2026-08-28 返工决议移后至原子稳定绑定之后）
+- 残留风险：内容为本批次候选名并标「⚠️ 已修改/未审核」，Codex 复审通过前不进入正式显示事实；正式效果装配、山河实例建立与首次验证仍待稳定绑定后由后续集成环节核验；未通过清单 01I 标题与分层返工行沿用旧口径「食识道路/谷神场」作为历史审核证据未一并改名（与 01F 等兄弟条目一致）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01J-bad78e0f · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01J 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01J
+- 候选提交：959c08f339010f48ee99a37701442659b5e96d3f
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Form_TRANSFORM01_易骨关.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Form_DOMAIN01_法身庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Form_SOURCE_形骸祖窍.txt
+- 已验证：三份位置文档补齐 §4.4 完整证位阶段（地点/支点/主承载/材料/供能/维护/关键事件/时间推进/致命中断/最终原子重验）与 §4.5 并行/临界争位及失败者处理，13 大节骨架完整；绑定前位置专属成就改写为只用合法非位格行为/现实对象/环境条件，不再要求白名单位别效果或 MountainRiverRuleInstance；法身庭战棋 §八 移除对山河层 MountainRiverCycleProfile 的读取，改用合法战棋持续/维持配置；三文档 §九 主场景维护/NPC响应/失败写成实际规则；§十 山河按三项效果分别写地区结果与事件；§12.3 四类实例版本策略分别写明；金丹位格索引三条形识道路条目证位档案版本 1.0→1.1 并加「2026-08-28 返工」；未通过审核清单 C-HS-YY-JD-01J 补写返工状态行；check-pending-whitespace（5 文件 OK）、check-review-text -Paths docs,开发管理（1016 文件 OK）、git diff --check、git diff --cached --check 均通过；candidate 959c08f3 为 af4d2f51 直接后继，changed paths 恰为 5 个 CandidatePaths，worktree 干净
+- 未验证：未运行 BattleSim（任务卡明确不涉及数值强度无需运行；本轮未改数值/矩阵/运行时）；未运行 check-data-chain.ps1（无 CSV/asset 变化）；未进行 Codex 独立复审（DeepSeek 不得自审，复审由 Codex 后续完成）
+- 残留风险：三份文档与索引为 DeepSeek 自产、未审核内容，具体位置名称仍为本批次候选名，Codex 复审通过前不进入正式显示事实；返工只补齐合同、未改总规则/效果矩阵/数值/运行时，但可能仍存在 Codex 复审口径下的不足，需由 Codex 独立复审确认。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01O-04adf7a6 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01O 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01O
+- 候选提交：56c41a661f6752bf7d8e53b629d77d639415d9b1
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_Cosmos_Time_TRANSFORM01_刻漏关.txt、docs/基础设定/金丹位格/界位/JD_Cosmos_Time_DOMAIN01_迟速庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_Cosmos_Time_SOURCE_岁序轮.txt
+- 已验证：tools/check-review-text.ps1 -Paths docs,开发管理 → OK（1016 文件）；tools/check-pending-whitespace.ps1 → OK（5 文件，fix=False）；git diff --check → 退出码 0；git -c core.whitespace=-blank-at-eol diff --cached --check（finalize 脚本内）→ 通过；三份文档版本引用 1.0 清零、§4.3/§4.4/§4.5 齐全、MountainRiverCycleProfile 仅存于「不读取」表述、旧「以本位置白名单效果/以本位置效果建立」已移除；候选提交仅含 5 个预期路径，工作树干净，HEAD=56c41a661f6752bf7d8e53b629d77d639415d9b1
+- 未验证：BattleSim：不涉及数值强度，按任务卡无需运行；tools/check-data-chain.ps1：无 CSV/asset 变化，不适用；Codex 独立复审：DeepSeek 不自审，内容仍为待审核（候选名未审核）
+- 残留风险：三份位置文档仍为待审核候选（候选具体位置名称未审核）；本轮仅定向修复绑定前专属成就、证位档案与迟速庭战棋分层，未做全量复审；位置档案与证位档案版本升至 1.1 属候选版本，Codex 复审不通过时按普通返工同步修改名称/路径/引用。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01P-ccf61c1d · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01P 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01P
+- 候选提交：48d2f6ae60c3a93e81660422d8734f44b5c9ab4a
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_CauseEffect_Cause_TRANSFORM01_移契门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Cause_DOMAIN01_万应场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Cause_SOURCE_缘起枢.txt
+- 已验证：tools/check-review-text.ps1 -Paths docs,开发管理：OK（1016 files checked）；git diff --check：OK（无行尾空白/冲突标记）；tools/check-pending-whitespace.ps1：OK（5 files checked，由 finalize 脚本执行）；三份文档位置档案/证位档案版本 1.0→1.1 无残留、§4.4 完整证位阶段与 §4.5 并行/临界争位均存在、§十 实例建立追加「山河实例只在原子稳定绑定之后建立」；三份文档 §4.3 已无绑定前白名单效果/位别版本/MountainRiverRuleInstance 前置要求（grep 确认）；候选提交仅含 5 个候选路径（git diff --name-only --no-renames HEAD~1..HEAD），worktree 清洁
+- 未验证：未运行 BattleSim（本任务为文档返工，不涉及数值强度，任务卡明确无需运行）；未运行 tools/check-data-chain.ps1（未涉及 CSV/asset 变化）；内容语义正确性与复审结论待 Codex 独立复审，DeepSeek 不自审
+- 残留风险：万应场 §8.1 战棋仍引用山河层 `MountainRiverCycleProfile`（战棋层读取山河周期配置的分层问题）；该问题已在 01E–01O 等兄弟卡的返工中修复，但 01P 复审反馈（2026-08-09）仅指出 §4.3 绑定前循环问题、未点名此分层项，故本次按授权范围未改动，留待 Codex 复审确认。三份文档的具体位置名称为本批次候选名，复审通过前不进入正式显示事实。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01Q-b3e0a0c4 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01Q 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01Q
+- 候选提交：9bfa0ddb0469e89d39c2ab614453b45563b0ef97
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_CauseEffect_Result_TRANSFORM01_定谳门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Result_DOMAIN01_收缘庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Result_SOURCE_报成镜.txt
+- 已验证：pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK（1016 文件）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths <5 路径> → OK（5 文件）；git diff --check → OK（无空白/行尾错误）；提交核验：candidate 精确包含 5 个 expectedPaths，worktree 干净，单一提交 9bfa0ddb
+- 未验证：BattleSim 未运行（本任务不涉及数值强度，任务卡明确无需运行）；tools/check-data-chain.ps1 未运行（无 CSV/asset 变化）；Codex 独立复审未执行（按边界 DeepSeek 不得自审）
+- 残留风险：具体位置名称（报成镜／定谳门／收缘庭）仍为本批次候选名，待 Codex 复审通过后才进入正式显示事实；三份证位档案的绑定前专属成就为候选措辞，若复审要求改措辞需按普通返工同步修改名称、路径与引用。未运行 BattleSim（任务不涉及数值强度）。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01I-fc238360 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01I 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01I
+- 候选提交：6adebed8f34c38ede834da8702c541b08980d376
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Soul_TRANSFORM01_渡魂津.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Soul_DOMAIN01_幽明原.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Soul_SOURCE_泥丸玄宫.txt
+- 已验证：三份文档 §4.4 均新增第 3 项「独立证位核心」并逐项写明准备／承载／受损／修复入口，致命中断句改为「独立证位核心被毁」；泥丸玄宫专属成就二完成判定与失败条件矛盾已消除（完成全程结算即计完成，无论胜负；放弃／跳过／未完成全程／借助外源／对象不合法不计）；git diff --check 无空白错误；check-review-text.ps1 -Paths docs,开发管理 通过（1027 文件 OK）；check-pending-whitespace.ps1 通过（5 个候选路径 OK）；changedPaths 与 CandidatePaths 精确一致（5 个路径），提交后工作树干净
+- 未验证：BattleSim 未运行（本任务不涉及数值强度，任务卡验证明确无需）；check-data-chain.ps1 未运行（无 CSV/asset 变化）
+- 残留风险：独立证位核心的具体构件、数量与修复阈值仍由证位档案配置读取、本文件不锁定数值；证位核心命名与语义待 Codex 独立复审确认；未触及效果矩阵／装配冲突／证位总规则／数值／运行时。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01J-8671d26a · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01J 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01J
+- 候选提交：c4f214236d98f0b9c474731407634033521bcb11
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_SixConsciousness_Form_TRANSFORM01_易骨关.txt、docs/基础设定/金丹位格/界位/JD_SixConsciousness_Form_DOMAIN01_法身庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_SixConsciousness_Form_SOURCE_形骸祖窍.txt
+- 已验证：check-review-text.ps1 -Paths docs,开发管理：OK（1028 文件）；check-pending-whitespace.ps1（5 个候选路径）：OK；git diff --check：无空白错误；变更范围仅限 5 个 CandidatePaths 文件（git status/diff 核验）；候选提交为 base dae0e0bc 的直接后继，worktree 干净，单一提交
+- 未验证：BattleSim 数值平衡：不涉及数值强度，任务卡明确无需运行；check-data-chain.ps1：无 CSV/asset 变更，未运行；Codex 独立复审：DeepSeek 不自审，待 Codex 复审
+- 残留风险：具体位置名称仍为本批次候选名；证位核心名称（身体规则核心／关枢核心／法身台核心）为 DeepSeek 拟定，需 Codex 复审确认与各位置理念自洽。本次仅改 §4.4 与索引/未通过审核清单，未触及效果矩阵、白名单、装配冲突、证位总规则、数值或运行时。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01O-b3131cae · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01O 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01O
+- 候选提交：56ce440edfccfb90eeda6ea56ba3a4672fb88ab2
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_Cosmos_Time_TRANSFORM01_刻漏关.txt、docs/基础设定/金丹位格/界位/JD_Cosmos_Time_DOMAIN01_迟速庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_Cosmos_Time_SOURCE_岁序轮.txt
+- 已验证：tools/check-review-text.ps1 -Paths docs,开发管理：OK（1029 文件）；git diff --check（暂存前）：无行尾空白错误；tools/check-pending-whitespace.ps1：OK（5 文件）；git diff --cached --check（finalize 脚本内）：无空白错误；提交后 git status 干净；提交为 baseCommit 6fe62dc6 直接后继；changedPaths 恰为 5 个候选路径
+- 未验证：BattleSim 数值平衡：未运行（本返工不涉及数值强度，任务卡明确无需）；tools/check-data-chain.ps1：未运行（无 CSV/asset 变化）；独立证位核心名称与候选位置名：待 Codex 独立复审确认
+- 残留风险：三份位置文档的具体位置名（岁序轮/刻漏关/迟速庭）与新增独立证位核心名（时序裁决核心/刻漏关枢核心/迟速庭证位核心）均为本批次待审核候选，尚未进入正式显示事实。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01P-ffabe5ff · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01P 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01P
+- 候选提交：e5b08dad91912cd0bc9e6a9e617ed0c3fbcbdb6a
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_CauseEffect_Cause_TRANSFORM01_移契门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Cause_DOMAIN01_万应场.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Cause_SOURCE_缘起枢.txt
+- 已验证：check-review-text.ps1 -Paths docs,开发管理：OK（1029 文件）；check-pending-whitespace.ps1：OK（5 文件，无尾随空白）；git diff --cached --check（core.whitespace=-blank-at-eol）：通过；candidate 仅改 5 个 expectedPaths 子集，工作树干净，父提交为 9a203087；三份文档 §4.4 按 证位与争位规则 §四.1 补齐独立证位核心及准备／承载／受损／修复入口，致命中断改为“独立证位核心被毁”；万应场 §8.1–8.3 战棋领域不再读取 MountainRiverCycleProfile，改用 JindanBaseEffectLoadoutTuning 战棋持续／维持配置
+- 未验证：check-data-chain.ps1：本轮无 CSV/asset 变化，未运行（不适用）；BattleSim：本轮无数值平衡变化，未运行（不适用）；Codex 独立复审：按分工由 Codex 执行，DeepSeek 不自审
+- 残留风险：具体位置名称与证位核心名称（缘起裁决核心／移契门枢核心／万应场证位核心）为本批次候选，复审通过前不进入正式显示事实；若 Codex 复审不通过按普通返工同步修改名称、路径与引用。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-C-HS-YY-JD-01Q-67cf2868 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 C-HS-YY-JD-01Q 的原子正式结果等待 Codex 独立复审。
+- 任务：C-HS-YY-JD-01Q
+- 候选提交：3fa2aef3bb93f2e59301b8819d132d1558039702
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/未通过审核清单.txt、docs/基础设定/金丹位格/化位/JD_CauseEffect_Result_TRANSFORM01_定谳门.txt、docs/基础设定/金丹位格/界位/JD_CauseEffect_Result_DOMAIN01_收缘庭.txt、docs/基础设定/金丹位格/金丹位格索引.txt、docs/基础设定/金丹位格/源位/JD_CauseEffect_Result_SOURCE_报成镜.txt
+- 已验证：三份文档 §4.4 已定义独立证位核心（报成裁决核心／定谳门枢核心／收缘庭证位核心）及准备／承载／受损／修复入口，并改致命中断为「独立证位核心被毁」；§4.4 条目 1–8 编号一致；收缘庭 §8.1–8.3 战棋领域已改用合法战棋持续／维持配置（JindanBaseEffectLoadoutTuning 与领域档案），正文仅保留「不读取只属于山河层的 MountainRiverCycleProfile」表述；索引 §六 三条果道路条目审核记录与三份文档 §十三 索引登记均追加「2026-08-31 返工」，位置档案版本保持 1.1；未通过审核清单 C-HS-YY-JD-01Q 条目新增 2026-08-31 返工完成行；pwsh tools/check-review-text.ps1 -Paths docs,开发管理 → OK（1029 files checked）；git diff --check → 通过（无输出）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths 五路径 → OK（5 files checked）；git 工作树干净，提交为 base 的直接后继，changedPaths 精确等于 CandidatePaths 五文件
+- 未验证：未自审：本提交为「⚠️ 已修改/未审核」，最终结论待 Codex 独立复审；未运行 BattleSim（本轮无数值强度变化，任务卡明示无需运行）；未运行 check-data-chain.ps1（无 CSV/asset 变化）；未重跑 51 个 positionId 全局唯一性全量核验（本轮未改任何 positionId，上一轮已确认无重复）；未逐字重验三份文档 §六–§十三 其余 13 大节（本轮仅定向修复 §4.4 与收缘庭 §8 的分层问题）
+- 残留风险：三份文档与索引仍为候选名并标「⚠️ 已修改/未审核」，独立证位核心命名（报成裁决核心／定谳门枢核心／收缘庭证位核心）为本轮新引入候选，是否满足《金丹位格证位与争位规则.txt》§四语义需 Codex 复审确认；收缘庭 §8 领域持续／维持费用与衰减节奏仅引用配置档案、未经 BattleSim 数值验证。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-HOURLY-PREFLIGHT-01-db1ef350 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-HOURLY-PREFLIGHT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-HOURLY-PREFLIGHT-01
+- 候选提交：4085ac0cd0096eda15c247ced2c7806e5fb192aa
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-automation-workflow.ps1、tools/hourly-owner-adapter.ps1、tools/invoke-codex-candidate.ps1、tools/invoke-deepseek-responsibility.ps1、tools/invoke-hourly-owner.ps1、tools/test-hourly-experience-preflight.ps1、tools/test-hourly-owner-adapter.ps1、tools/test-invoke-codex-candidate.ps1、tools/test-invoke-deepseek-responsibility.ps1
+- 已验证：tools/test-hourly-experience-preflight.ps1: PASS (Codex/DeepSeek 成功、过宽、缺指针、matcher 失败、投影失配、adapter QM 无参数)；tools/test-hourly-owner-adapter.ps1: OK；tools/test-hourly-task-input-materialization.ps1: PASS；tools/test-invoke-codex-candidate.ps1: OK (含 preflight 缺失/路径越界/digest 失配负例)；tools/test-invoke-deepseek-responsibility.ps1: OK (含 preflight 缺失/路径越界/digest 失配负例)；tools/test-check-automation-workflow.ps1: OK；tools/check-automation-workflow.ps1: OK；tools/check-task-cards.ps1: OK (cards=49 ready=2)；tools/check-pending-whitespace.ps1: OK (9 files)；git diff --check: clean
+- 未验证：共享入口 RunOnce 全量端到端（真实 DeepSeek gateway/claude CLI 模型 + 最新 master 重放/正式集成/交接提交）未在本 candidate 内执行，仅以函数导入与 fake-model 测试覆盖预检链路；真实 DeepSeek gateway 与 claude CLI 的 canary 身份探针未运行
+- 残留风险：真实小时轮次首次运行预检时，若 owner worktree 与主工作区风险索引出现未预期差异会触发 experience_preflight_binding_mismatch 闭锁进入 attention_required；该路径由确定性校验兜底且本 candidate 不触及索引/任务卡/runtime，失败不启动模型。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-HOURLY-PREFLIGHT-01-bd622abb · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-HOURLY-PREFLIGHT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-HOURLY-PREFLIGHT-01
+- 候选提交：c569bfff3dcec09467ce5ebd52c783104001d2d7
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-invoke-codex-candidate.ps1、tools/test-invoke-deepseek-responsibility.ps1
+- 已验证：tools/test-invoke-codex-candidate.ps1 -> OK（含新增 runId/taskId 失配拒绝用例）；tools/test-invoke-deepseek-responsibility.ps1 -> OK（含新增 runId/taskId 失配拒绝用例）；tools/test-hourly-experience-preflight.ps1 -> PASS；tools/test-hourly-owner-adapter.ps1 -> OK；tools/test-hourly-task-input-materialization.ps1 -> PASS；tools/test-check-automation-workflow.ps1 -> OK；tools/check-automation-workflow.ps1 -> OK；tools/check-task-cards.ps1 -> OK (cards=48 ready=1)；tools/check-pending-whitespace.ps1 -> OK（2 文件）；git diff --check -> 无输出（干净）
+- 未验证：未运行 BattleSim / Unity build（本次为纯 PowerShell 测试改动，不涉及数值或 Unity）；未运行共享入口端到端 canary/claim/集成（属于共享入口在正式重放阶段的职责）
+- 残留风险：改动仅限两个测试文件，复用 wrapper 已实现的 *_preflight_invalid 拒绝路径；不改变生产行为或任务生命周期，残留风险很低。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-READY-SCHEMA2-ACTIVATE-01-ce52bbaf · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-READY-SCHEMA2-ACTIVATE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-READY-SCHEMA2-ACTIVATE-01
+- 候选提交：b86b56e4ec88cedbbfb08b5115753acf09d8a0fc
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/check-task-cards.ps1、tools/test-check-task-cards.ps1
+- 已验证：tools/test-check-task-cards.ps1 → PASS（覆盖 schema 1 非 ready/归档仍合法、schema 1 ready 拒绝、schema 2 ready 零命中/正常/显式/旧投影失配）；tools/check-task-cards.ps1 -OutputJson → ok, cardCount=46, readyCount=1, 无 schema 1 ready；tools/get-experience-risk-preflight.ps1 -TaskId M-EXP-READY-SCHEMA2-ACTIVATE-01 → status=ok 零命中（taskCardDigest=37b3224d…, indexDigest=d46db414…）；tools/check-review-text.ps1 -Paths 开发管理,tools → OK（579 files）；tools/check-pending-whitespace.ps1 → OK（2 files, fix=False）；git diff --check 与暂存后 git diff --cached --check → 通过；tools/check-automation-workflow.ps1 → OK（guard 合同字符串仍保留）；tools/test-queue-maintenance-completion.ps1 → PASS（QueueMaintenance guard 路径兼容）
+- 未验证：Codex 独立复审尚未进行（本候选不自审、不预填审核结论）；共享入口最新 master 重放与正式集成未在本 candidate 内执行
+- 残留风险：非 ready 的 schema 1 卡按原样保留，其后续重新 ready 必须生成 schema 2 实时投影（现由全局拒绝 + QueueMaintenance guard 双重约束）；本候选标 ⚠️ 未审核，等待 Codex 独立复审与共享入口正式集成。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-EXP-READY-SCHEMA2-ACTIVATE-01-f9a35a83 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-EXP-READY-SCHEMA2-ACTIVATE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-EXP-READY-SCHEMA2-ACTIVATE-01
+- 候选提交：237f66ae8eba83fec3415d642204e4ed98d30ae5
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：tools/test-check-task-cards.ps1
+- 已验证：pwsh tools/test-check-task-cards.ps1 → PASS；pwsh tools/check-task-cards.ps1 -OutputJson → status=ok cardCount=46 readyCount=1（无 schema 1 ready）；pwsh tools/check-review-text.ps1 -Paths 开发管理,tools → OK（579 files）；git diff --check 与 check-pending-whitespace → OK
+- 未验证：未在本轮逐卡重跑 get-experience-risk-preflight（本轮仅改测试文件，未触及任何任务卡投影；激活迁移已在 aeabf192 完成并保留原预检证据）
+- 残留风险：纯测试覆盖修复，不改变检查器行为；生产侧 schema 1 completed 归档仍合法的逻辑未改动。残留风险仅在于后续若有人再次让 New-Fixture 的 ready 卡或 completed 归档 fixture 偏离本迁移合同，可能再度失去该覆盖。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

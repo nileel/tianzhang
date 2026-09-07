@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "用户确认编号9交定时器；已复核固定16任务均 completed 且无同ID active，无其他任务前置。由 Codex 定时器原文迁档，执行时重验26个固定旧标题并保留新交接；不放宽 DeepSeek wrapper。",
+  "stateReason": "2026-09-07：已逐项核实固定16个任务均仅有 completed 归档且无同ID active；基线锁定26个旧标题完整迁入日期归档，当前文件仅保留根说明与有效交接入口，未改写任何历史审核结论或任务业务。",
   "expectedPaths": [
     "开发管理/AI合作沟通.txt",
     "开发管理/AI合作归档/2026-09-05-已完成交接清理归档.txt",
@@ -69,6 +69,12 @@
 ## 停止条件
 
 - 同 ID active/归档并存、完成结论无法证实、目标旧交接仍有有效请求、归档目的地已有冲突内容或需要更改历史业务结论时停止相关块，不强行归档。
+
+## 完成记录
+
+- 2026-09-07：从固定基线 312861953c71f1bf2c9ecfdaceef5251b526fdef 提取的26个 DSH 标题与当前原文逐一匹配；对应16个任务均只存在 开发管理/任务归档/<ID>.txt 且 dispatchState=completed，无同 ID 活跃任务卡。
+- 已将26个完整交接块迁入 开发管理/AI合作归档/2026-09-05-已完成交接清理归档.txt；当前 AI合作沟通.txt 保留根标题、用途说明和当前队列标题，未删除非目标交接。
+- 迁档前后按规范化换行逐块核验标题、正文与 SHA-256；归档与当前合集无丢失、无重复。管理投影同步：本卡移入完成归档，并从 ready 队列与管理 backlog 移除。
 
 ## 固定迁档对象
 
