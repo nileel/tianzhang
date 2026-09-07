@@ -112,6 +112,8 @@ namespace TianZhang.Tests
             {
                 var player = Combatant("player", CombatTeam.Player, new HexCoord(0, 0), 20);
                 var enemy = Combatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1);
+                player.BasicAttackProfileId = "basic_unarmed";
+                enemy.BasicAttackProfileId = "basic_unarmed";
                 var spawned = new AdventureSpawnSet(
                     player, enemy, enemyData, "basic_unarmed", "basic_unarmed", null, null, null);
                 AttackProfileData basic = AssetDatabase.LoadAssetAtPath<AttackProfileData>(

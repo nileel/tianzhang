@@ -43,9 +43,6 @@ namespace TianZhang.Combat
         {
             foreach (CombatAttackProfile profile in session.AttackProfiles.Where(profile => profile.Kind == profileKind))
             {
-                if (profileKind == CombatAttackKind.Art && !actor.EquippedArtProfileIds.Contains(profile.Id))
-                    continue;
-
                 foreach (CombatantSnapshot target in session.Combatants.All)
                 {
                     if (!target.IsAlive || target.Team == actor.Team)

@@ -230,6 +230,58 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator UnauthorizedBasicAttackDoesNotConsumeCombatSamples()
+        {
+            CombatantSnapshot player = new CombatantSnapshot(
+                "player", CombatTeam.Player, new HexCoord(0, 0), 100,
+                500, 500, 60, 0, 0, 0, 1f, 0)
+            {
+                CriticalRate = 50f,
+                DodgeRate = 50f,
+                BlockRate = 50f,
+                BlockReduction = 50f,
+                Facing = 0,
+                BasicAttackProfileId = "basic_unarmed",
+            };
+            CombatantSnapshot enemy = new CombatantSnapshot(
+                "enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1,
+                500, 500, 60, 0, 0, 0, 1f, 0)
+            {
+                CriticalRate = 50f,
+                DodgeRate = 50f,
+                BlockRate = 50f,
+                BlockReduction = 50f,
+                Facing = 3,
+                BasicAttackProfileId = "basic_unarmed",
+            };
+            CombatSession session = new CombatSession(
+                new[] { player, enemy },
+                new[]
+                {
+                    new CombatAttackProfile(
+                        "basic_unarmed", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                    new CombatAttackProfile(
+                        "foreign_basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                },
+                new AlwaysInRangeCombatSpatialQuery());
+
+            var source = new SequenceCombatRandomSource();
+            EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
+            CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
+            Assert.AreEqual("player", advance.ActorId);
+            SetPrivateField(coordinator, "acceptsPlayerCommand", true);
+            SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(
+                player, enemy, enemyData, "foreign_basic", "basic_unarmed", Array.Empty<string>(), null, null));
+
+            ((ICombatCommandHandler)coordinator).RequestBasicAttack("player", "enemy");
+            Assert.AreEqual(0, source.Count, "An unauthorized attack consumed combat samples.");
+
+            Object.Destroy(host);
+            Object.Destroy(enemyData);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator SeededSamplerReplaysTheSameLegalCommandSequence()
         {
             var first = new SystemCombatResolutionRandomSource(1729);
@@ -338,6 +390,7 @@ namespace TianZhang.Tests.PlayMode
                 BlockRate = 50f,
                 BlockReduction = 50f,
                 Facing = 0,
+                BasicAttackProfileId = "basic_unarmed",
             };
             enemy = new CombatantSnapshot(
                 "enemy", CombatTeam.Enemy, new HexCoord(1, 0), enemySpeed,
@@ -348,6 +401,7 @@ namespace TianZhang.Tests.PlayMode
                 BlockRate = 50f,
                 BlockReduction = 50f,
                 Facing = 3,
+                BasicAttackProfileId = "basic_unarmed",
             };
             return new CombatSession(
                 new[] { player, enemy },

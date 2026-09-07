@@ -79,16 +79,27 @@ namespace TianZhang.Features.Adventure
 
             var playerPosition = new HexCoord(startNode.q, startNode.r);
             var enemyPosition = new HexCoord(encounterNode.q, encounterNode.r);
-            CombatantSnapshot playerSnapshot = CreatePlayer(player, playerPosition);
-            CombatantSnapshot enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition);
+            string playerBasic = ResolveBasicAttackBinding(
+                player.MainEquipmentBasicAttackProfileId,
+                player.UnarmedBasicAttackProfileId);
+            if (playerBasic == null)
+            {
+                reason = "adventure_player_basic_attack_binding_invalid";
+                return false;
+            }
+            string enemyBasic = ResolveBasicAttackBinding(
+                enemyData.combatTemplate.mainEquipmentBasicAttackProfileId,
+                enemyData.combatTemplate.unarmedBasicAttackProfileId);
+            if (enemyBasic == null)
+            {
+                reason = "adventure_enemy_basic_attack_binding_invalid";
+                return false;
+            }
+
+            CombatantSnapshot playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
+            CombatantSnapshot enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic);
             GameObject playerMarker = InstantiateMarker(unitMarkerPrefab, playerPosition, "PlayerMarker", Color.cyan);
             GameObject enemyMarker = InstantiateMarker(unitMarkerPrefab, enemyPosition, "EnemyMarker", Color.red);
-            string playerBasic = !string.IsNullOrWhiteSpace(player.MainEquipmentBasicAttackProfileId)
-                ? player.MainEquipmentBasicAttackProfileId
-                : player.UnarmedBasicAttackProfileId;
-            string enemyBasic = !string.IsNullOrWhiteSpace(enemyData.combatTemplate.mainEquipmentBasicAttackProfileId)
-                ? enemyData.combatTemplate.mainEquipmentBasicAttackProfileId
-                : enemyData.combatTemplate.unarmedBasicAttackProfileId;
             spawned = new AdventureSpawnSet(
                 playerSnapshot,
                 enemySnapshot,
@@ -102,7 +113,16 @@ namespace TianZhang.Features.Adventure
             return true;
         }
 
-        private static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position)
+        private static string ResolveBasicAttackBinding(string mainEquipment, string unarmed)
+        {
+            bool hasMain = !string.IsNullOrWhiteSpace(mainEquipment);
+            bool hasUnarmed = !string.IsNullOrWhiteSpace(unarmed);
+            if (hasMain == hasUnarmed)
+                return null;
+            return hasMain ? mainEquipment : unarmed;
+        }
+
+        private static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position, string basicAttackProfileId)
         {
             var attributes = new CharacterAttributes(
                 source.Attributes.RootBone,
@@ -128,8 +148,7 @@ namespace TianZhang.Features.Adventure
                 derived.MagicDefense,
                 source.Progression.RealmMultiplier,
                 Mathf.Clamp(Mathf.RoundToInt(source.Attributes.Reaction / 20f), 2, 8),
-                source.AbilityLoadout.EquippedSpells,
-                source.AbilityLoadout.KnownSpells)
+                basicAttackProfileId: basicAttackProfileId)
             {
                 BlockRate = source.CombatModifiers.BlockRate,
                 BlockReduction = source.CombatModifiers.BlockReduction,
@@ -146,7 +165,7 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position)
+        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position, string basicAttackProfileId)
         {
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(source);
             CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(source);
@@ -165,8 +184,7 @@ namespace TianZhang.Features.Adventure
                 derived.MagicDefense,
                 realmMultiplier,
                 Mathf.Clamp(Mathf.RoundToInt(attributes.Reaction / 20f), 2, 8),
-                ProjectEquippedSpells(source, realmMultiplier),
-                source.availableSpells)
+                basicAttackProfileId: basicAttackProfileId)
             {
                 BlockRate = combatModifiers.BlockRate,
                 BlockReduction = combatModifiers.BlockReduction,
@@ -181,46 +199,6 @@ namespace TianZhang.Features.Adventure
             };
             snapshot.SetSpirit(derived.MaxSpirit, derived.MaxSpirit);
             return snapshot;
-        }
-
-        private static string[] ProjectEquippedSpells(CharacterData source, float realmMultiplier)
-        {
-            string[] equipped = source.equippedSpells ?? Array.Empty<string>();
-            int slotLimit = source.maxSpellSlots > 0
-                ? source.maxSpellSlots
-                : DefaultSpellSlots(realmMultiplier) + MansionSpellSlotBonus(source);
-            if (slotLimit <= 0)
-                return Array.Empty<string>();
-            if (equipped.Length <= slotLimit)
-                return (string[])equipped.Clone();
-
-            var result = new string[slotLimit];
-            Array.Copy(equipped, result, slotLimit);
-            return result;
-        }
-
-        private static int DefaultSpellSlots(float realmMultiplier)
-        {
-            if (realmMultiplier >= 3f) return 5;
-            if (realmMultiplier >= 1.5f) return 4;
-            return 0;
-        }
-
-        private static int MansionSpellSlotBonus(CharacterData source)
-        {
-            if (source.foundationPurpleMansionState != null || source.developedMansions == null)
-                return 0;
-
-            var seen = new System.Collections.Generic.HashSet<string>();
-            int bonus = 0;
-            foreach (string mansion in source.developedMansions)
-            {
-                if (string.IsNullOrWhiteSpace(mansion) || !seen.Add(mansion))
-                    continue;
-                if ((mansion == "命府" || mansion == "魂府" || mansion == "气府") && bonus < 3)
-                    bonus++;
-            }
-            return bonus;
         }
 
         private static GameObject InstantiateMarker(

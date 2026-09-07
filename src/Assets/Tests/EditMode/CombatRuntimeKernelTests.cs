@@ -231,10 +231,12 @@ namespace TianZhang.Tests.EditMode
             HexCoord enemyOrigin = new HexCoord(1, 0);
             CombatantSnapshot player = CreateCombatant(
                 "player", CombatTeam.Player, playerOrigin, 100, 100, 20, 10, movePoints: 1,
-                equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" });
+                equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" },
+                equippedDivineProfileIds: new[] { "divine" }, availableDivineProfileIds: new[] { "divine" });
             CombatantSnapshot enemy = CreateCombatant(
                 "enemy", CombatTeam.Enemy, enemyOrigin, 100, 100, 20, 10, movePoints: 1,
-                equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" });
+                equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" },
+                equippedDivineProfileIds: new[] { "divine" }, availableDivineProfileIds: new[] { "divine" });
             var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
             {
                 [playerOrigin] = new Dictionary<HexCoord, CombatMovementQueryResult>
@@ -268,6 +270,135 @@ namespace TianZhang.Tests.EditMode
 
             CollectionAssert.AreEquivalent(expected, playerKinds);
             CollectionAssert.AreEquivalent(expected, enemyKinds);
+        }
+
+        [Test]
+        public void DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects()
+        {
+            CombatantSnapshot player = CreateCombatant(
+                "player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10,
+                basicAttackProfileId: "basic",
+                equippedArtProfileIds: new[] { "both_art", "equipped_only_art" },
+                availableArtProfileIds: new[] { "both_art", "known_only_art" },
+                equippedDivineProfileIds: new[] { "both_divine", "equipped_only_divine" },
+                availableDivineProfileIds: new[] { "both_divine", "known_only_divine" });
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            CombatSession session = CreateSession(
+                new[] { player, enemy },
+                new FixedRangeQuery(true),
+                new[]
+                {
+                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                });
+            var service = new CombatCommandService();
+
+            Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo("player"));
+            int health = enemy.CurrentHealth;
+            int spirit = player.CurrentSpirit;
+            int swapsUsed = player.CombatSwapsUsed;
+            string[] equippedArt = player.EquippedArtProfileIds.ToArray();
+
+            (CombatCommandKind, string)[] rejected =
+            {
+                (CombatCommandKind.BasicAttack, "foreign"),
+                (CombatCommandKind.Art, "known_only_art"),
+                (CombatCommandKind.Art, "equipped_only_art"),
+                (CombatCommandKind.Divine, "known_only_divine"),
+                (CombatCommandKind.Divine, "equipped_only_divine"),
+            };
+            foreach ((CombatCommandKind kind, string profileId) in rejected)
+            {
+                CombatActionResult result = service.Execute(session, new CombatCommand(
+                    kind, "player", "enemy", profileId, new CombatResolutionRolls(0f, 0f, 0f, 0f)));
+                Assert.That(result.Succeeded, Is.False, profileId);
+                Assert.That(result.RejectionReason, Is.EqualTo("attack_profile_not_authorized"), profileId);
+            }
+
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(health));
+            Assert.That(player.CurrentSpirit, Is.EqualTo(spirit));
+            Assert.That(player.CombatSwapsUsed, Is.EqualTo(swapsUsed));
+            Assert.That(player.GetCooldown("foreign"), Is.EqualTo(0));
+            Assert.That(player.GetCooldown("known_only_art"), Is.EqualTo(0));
+            CollectionAssert.AreEqual(equippedArt, player.EquippedArtProfileIds);
+            Assert.That(session.TurnScheduler.IsReady("player"), Is.True);
+        }
+
+        [Test]
+        public void AiEnumerationUsesTheSameAuthorizationAsDirectExecution()
+        {
+            CombatantSnapshot player = CreateCombatant(
+                "player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10,
+                basicAttackProfileId: "basic",
+                equippedArtProfileIds: new[] { "both_art", "equipped_only_art" },
+                availableArtProfileIds: new[] { "both_art", "known_only_art" },
+                equippedDivineProfileIds: new[] { "both_divine" },
+                availableDivineProfileIds: new[] { "both_divine", "known_only_divine" });
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            CombatSession session = CreateSession(
+                new[] { player, enemy },
+                new FixedRangeQuery(true),
+                new[]
+                {
+                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                });
+            var service = new CombatCommandService();
+            var legalActions = new CombatLegalActionService(service);
+
+            Assert.That(service.AdvanceUntilAction(session).HasActor, Is.True);
+            IReadOnlyList<CombatCommand> actions = legalActions.GetLegalActions(session, "player");
+
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.BasicAttack && command.ProfileId == "foreign"), Is.False);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.Art && command.ProfileId == "known_only_art"), Is.False);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.Art && command.ProfileId == "equipped_only_art"), Is.False);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.Divine && command.ProfileId == "known_only_divine"), Is.False);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.BasicAttack && command.ProfileId == "basic"), Is.True);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.Art && command.ProfileId == "both_art"), Is.True);
+            Assert.That(actions.Any(command =>
+                command.Kind == CombatCommandKind.Divine && command.ProfileId == "both_divine"), Is.True);
+        }
+
+        [Test]
+        public void SwapEquippedArtUpdatesAuthorizationToTheNewSlot()
+        {
+            CombatantSnapshot player = CreateCombatant(
+                "player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10,
+                equippedArtProfileIds: new[] { "old_art" },
+                availableArtProfileIds: new[] { "old_art", "new_art" });
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            CombatSession session = CreateSession(
+                new[] { player, enemy }, new FixedRangeQuery(true), CreateProfiles("old_art", "new_art"));
+            var service = new CombatCommandService();
+
+            Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo("player"));
+            Assert.That(
+                service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "new_art")).RejectionReason,
+                Is.EqualTo("attack_profile_not_authorized"));
+
+            player.SwapEquippedArt(0, "new_art");
+
+            Assert.That(service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "new_art")).Succeeded, Is.True);
+            Assert.That(
+                service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "old_art")).RejectionReason,
+                Is.EqualTo("attack_profile_not_authorized"));
         }
 
         [TestCase(1f, 3, 5, 3, 0.15f, 3, 1f)]
@@ -513,7 +644,10 @@ namespace TianZhang.Tests.EditMode
             IEnumerable<string> equippedArtProfileIds = null,
             IEnumerable<string> availableArtProfileIds = null,
             int combatSwapsUsed = 0,
-            float realmMultiplier = 1f)
+            float realmMultiplier = 1f,
+            string basicAttackProfileId = "basic",
+            IEnumerable<string> equippedDivineProfileIds = null,
+            IEnumerable<string> availableDivineProfileIds = null)
         {
             return new CombatantSnapshot(
                 id,
@@ -530,7 +664,10 @@ namespace TianZhang.Tests.EditMode
                 movePoints: movePoints,
                 equippedArtProfileIds: equippedArtProfileIds,
                 availableArtProfileIds: availableArtProfileIds,
-                combatSwapsUsed: combatSwapsUsed)
+                combatSwapsUsed: combatSwapsUsed,
+                basicAttackProfileId: basicAttackProfileId,
+                equippedDivineProfileIds: equippedDivineProfileIds,
+                availableDivineProfileIds: availableDivineProfileIds)
             {
                 Facing = 0,
             };
@@ -562,6 +699,8 @@ namespace TianZhang.Tests.EditMode
             CombatAttackProfile profile)
         {
             target.Facing = target.Position.DirectionTo(actor.Position);
+            if (profile.Kind == CombatAttackKind.Basic)
+                actor.BasicAttackProfileId = profile.Id;
             CombatSession session = CreateSession(
                 new[] { actor, target }, new FixedRangeQuery(true), new[] { profile });
             CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);

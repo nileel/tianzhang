@@ -4,3 +4,16 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
+
+### DSH-U-COMBAT-LOADOUT-01-69e10564 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-COMBAT-LOADOUT-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-COMBAT-LOADOUT-01
+- 候选提交：fb6471dcc31374947cfe794b42317663071f62d6
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：src/Assets/Scripts/Combat/CombatantSnapshot.cs、src/Assets/Scripts/Combat/CombatLegalActionService.cs、src/Assets/Scripts/Combat/CombatSession.cs、src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs、src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- 已验证：tools/check-pending-whitespace.ps1：8 个改动文件无行尾空白；tools/check-unity-assembly-boundaries.ps1：19 个程序集边界通过；tools/run-unity-playmode-tests.ps1：20/20 全部通过（含 UnauthorizedBasicAttackDoesNotConsumeCombatSamples）；tools/run-unity-editmode-tests.ps1：本任务相关用例全部通过（DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects / AiEnumerationUsesTheSameAuthorizationAsDirectExecution / SwapEquippedArtUpdatesAuthorizationToTheNewSlot / PlayerAndAiReceiveTheSameSevenLegalCommandKinds / SpawnerAppliesExactlyOneBasicAttackBindingForPlayerAndEnemy / FormalAdventureSpawnerPreservesPlayerAndStoneArmorBeastCombatSnapshots / FormalAdjacentEncounterAcceptsTheCommittedBasicAttack / OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine）；git diff --check：无空白/冲突错误
+- 未验证：run-unity-editmode-tests.ps1 全量未全绿：ClothWideSleevePilot.EditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings 因缺少 Blender 源失败，与本次改动无关且未触碰该路径（459/460 通过）
+- 残留风险：全量 EditMode 仍有 1 个与本次改动无关的既有环境失败（ClothWideSleevePilot 缺少 Blender 源）；本次未建立 production ability ID -> attackProfileId 映射，术法/神通生产授权仍为空，需后续独立数据合同接入。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

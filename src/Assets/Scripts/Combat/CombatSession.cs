@@ -136,6 +136,8 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("combat_session_target_invalid");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
+            if (!IsAuthorized(actor, profile))
+                return CombatActionResult.Rejected("attack_profile_not_authorized");
             if (actor.GetCooldown(profile.Id) > 0)
                 return CombatActionResult.Rejected("attack_profile_cooldown_active");
             if (profile.SpiritCost > 0 && actor.CurrentSpirit < profile.SpiritCost)
@@ -146,6 +148,21 @@ namespace TianZhang.Combat
             return range.IsInRange
                 ? CombatActionResult.Success()
                 : CombatActionResult.Rejected(string.IsNullOrEmpty(range.Reason) ? "target_out_of_range" : range.Reason);
+        }
+
+        private static bool IsAuthorized(CombatantSnapshot actor, CombatAttackProfile profile)
+        {
+            switch (profile.Kind)
+            {
+                case CombatAttackKind.Basic:
+                    return string.Equals(actor.BasicAttackProfileId, profile.Id, StringComparison.Ordinal);
+                case CombatAttackKind.Art:
+                    return actor.AvailableArtProfileIds.Contains(profile.Id) && actor.EquippedArtProfileIds.Contains(profile.Id);
+                case CombatAttackKind.Divine:
+                    return actor.AvailableDivineProfileIds.Contains(profile.Id) && actor.EquippedDivineProfileIds.Contains(profile.Id);
+                default:
+                    return false;
+            }
         }
 
         private CombatActionResult ValidateMove(CombatCommand command, CombatantSnapshot actor)

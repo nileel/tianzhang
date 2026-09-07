@@ -194,15 +194,14 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(
                 Mathf.Clamp(Mathf.RoundToInt(player.Attributes.Reaction / 20f), 2, 8),
                 spawned.Player.MovePoints);
-            CollectionAssert.AreEqual(
-                player.AbilityLoadout.EquippedSpells,
-                spawned.Player.EquippedArtProfileIds);
-            CollectionAssert.AreEqual(
-                player.AbilityLoadout.KnownSpells,
-                spawned.Player.AvailableArtProfileIds);
+            CollectionAssert.IsEmpty(spawned.Player.EquippedArtProfileIds);
+            CollectionAssert.IsEmpty(spawned.Player.AvailableArtProfileIds);
+            CollectionAssert.IsEmpty(spawned.Player.EquippedDivineProfileIds);
+            CollectionAssert.IsEmpty(spawned.Player.AvailableDivineProfileIds);
             Assert.AreEqual(2, spawned.Player.MaxCombatSwaps);
             Assert.AreEqual(0, spawned.Player.CombatSwapsUsed);
             Assert.AreEqual(CharacterCreationCatalog.BasicUnarmedAttackProfileId, spawned.PlayerBasicProfileId);
+            Assert.AreEqual(CharacterCreationCatalog.BasicUnarmedAttackProfileId, spawned.Player.BasicAttackProfileId);
 
             Assert.AreEqual(new HexCoord(encounter.q, encounter.r), spawned.Enemy.Position);
             Assert.AreEqual(6, spawned.Enemy.Speed);
@@ -218,6 +217,8 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(2, spawned.Enemy.MovePoints);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.AvailableArtProfileIds);
+            CollectionAssert.IsEmpty(spawned.Enemy.EquippedDivineProfileIds);
+            CollectionAssert.IsEmpty(spawned.Enemy.AvailableDivineProfileIds);
             Assert.AreEqual(2, spawned.Enemy.MaxCombatSwaps);
             Assert.AreEqual(0, spawned.Enemy.CombatSwapsUsed);
             Assert.AreEqual(15f, spawned.Enemy.BlockRate);
@@ -229,6 +230,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(10f, spawned.Enemy.CriticalDamage);
             Assert.AreEqual(0f, spawned.Enemy.HitRateBonus);
             Assert.AreEqual("basic_unarmed", spawned.EnemyBasicProfileId);
+            Assert.AreEqual("basic_unarmed", spawned.Enemy.BasicAttackProfileId);
         }
 
         [Test]
@@ -347,6 +349,107 @@ namespace TianZhang.Tests.EditMode
 
             Assert.AreEqual(string.Empty, spawned.Player.GongFaElement);
             Assert.AreEqual(string.Empty, spawned.Enemy.GongFaElement);
+        }
+
+        [Test]
+        public void SpawnerAppliesExactlyOneBasicAttackBindingForPlayerAndEnemy()
+        {
+            AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_basic_binding_fixture" };
+
+            AssertPlayerBinding(start, encounter, "basic_main", "", true, "basic_main");
+            AssertPlayerBinding(start, encounter, "", "basic_unarmed", true, "basic_unarmed");
+            AssertPlayerBinding(start, encounter, "", "", false, null);
+            AssertPlayerBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
+
+            AssertEnemyBinding(start, encounter, "basic_main", "", true, "basic_main");
+            AssertEnemyBinding(start, encounter, "", "basic_unarmed", true, "basic_unarmed");
+            AssertEnemyBinding(start, encounter, "", "", false, null);
+            AssertEnemyBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
+        }
+
+        private void AssertPlayerBinding(
+            AdventureNodeData start,
+            AdventureNodeData encounter,
+            string main,
+            string unarmed,
+            bool expectSuccess,
+            string expectedBasic)
+        {
+            CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.charName = "玩家";
+            playerData.mainEquipmentBasicAttackProfileId = main;
+            playerData.unarmedBasicAttackProfileId = unarmed;
+
+            EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = "enemy_basic_binding_fixture";
+            CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemy.combatTemplate = enemyTemplate;
+            var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.ReplaceEntries(null, new[] { enemy }, null, null);
+
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            AdventureUnitSpawner spawner = Track(new GameObject("PlayerBindingSpawner"))
+                .AddComponent<AdventureUnitSpawner>();
+            GameObject markerPrefab = Track(new GameObject("PlayerBindingMarker"));
+
+            bool ok = spawner.TrySpawn(
+                player, catalog, start, encounter, markerPrefab, out AdventureSpawnSet spawned, out string reason);
+            Assert.AreEqual(expectSuccess, ok, reason);
+            if (expectSuccess)
+            {
+                Assert.AreEqual(expectedBasic, spawned.Player.BasicAttackProfileId);
+                Track(spawned.PlayerMarker);
+                Track(spawned.EnemyMarker);
+            }
+            else
+            {
+                Assert.IsNull(spawned);
+                Assert.AreEqual("adventure_player_basic_attack_binding_invalid", reason);
+            }
+        }
+
+        private void AssertEnemyBinding(
+            AdventureNodeData start,
+            AdventureNodeData encounter,
+            string main,
+            string unarmed,
+            bool expectSuccess,
+            string expectedBasic)
+        {
+            CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.charName = "玩家";
+            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+
+            EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = "enemy_basic_binding_fixture";
+            CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.mainEquipmentBasicAttackProfileId = main;
+            enemyTemplate.unarmedBasicAttackProfileId = unarmed;
+            enemy.combatTemplate = enemyTemplate;
+            var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.ReplaceEntries(null, new[] { enemy }, null, null);
+
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            AdventureUnitSpawner spawner = Track(new GameObject("EnemyBindingSpawner"))
+                .AddComponent<AdventureUnitSpawner>();
+            GameObject markerPrefab = Track(new GameObject("EnemyBindingMarker"));
+
+            bool ok = spawner.TrySpawn(
+                player, catalog, start, encounter, markerPrefab, out AdventureSpawnSet spawned, out string reason);
+            Assert.AreEqual(expectSuccess, ok, reason);
+            if (expectSuccess)
+            {
+                Assert.AreEqual(expectedBasic, spawned.Enemy.BasicAttackProfileId);
+                Track(spawned.PlayerMarker);
+                Track(spawned.EnemyMarker);
+            }
+            else
+            {
+                Assert.IsNull(spawned);
+                Assert.AreEqual("adventure_enemy_basic_attack_binding_invalid", reason);
+            }
         }
 
         [Test]

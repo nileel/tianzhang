@@ -19,6 +19,8 @@ namespace TianZhang.Combat
         private readonly Dictionary<string, int> cooldowns = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<string> equippedArtProfileIds;
         private readonly List<string> availableArtProfileIds;
+        private readonly List<string> equippedDivineProfileIds;
+        private readonly List<string> availableDivineProfileIds;
 
         public CombatantSnapshot(
             string id,
@@ -36,7 +38,10 @@ namespace TianZhang.Combat
             IEnumerable<string> equippedArtProfileIds = null,
             IEnumerable<string> availableArtProfileIds = null,
             int maxCombatSwaps = 2,
-            int combatSwapsUsed = 0)
+            int combatSwapsUsed = 0,
+            string basicAttackProfileId = null,
+            IEnumerable<string> equippedDivineProfileIds = null,
+            IEnumerable<string> availableDivineProfileIds = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
@@ -59,6 +64,9 @@ namespace TianZhang.Combat
             MovePoints = movePoints;
             this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds, allowEmpty: true);
             this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds, allowEmpty: false);
+            this.equippedDivineProfileIds = CreateProfileIdList(equippedDivineProfileIds, allowEmpty: true);
+            this.availableDivineProfileIds = CreateProfileIdList(availableDivineProfileIds, allowEmpty: false);
+            BasicAttackProfileId = basicAttackProfileId ?? string.Empty;
             MaxCombatSwaps = maxCombatSwaps;
             CombatSwapsUsed = combatSwapsUsed;
         }
@@ -79,6 +87,9 @@ namespace TianZhang.Combat
         public int MovePoints { get; }
         public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
         public IReadOnlyList<string> AvailableArtProfileIds => availableArtProfileIds.AsReadOnly();
+        public string BasicAttackProfileId { get; set; }
+        public IReadOnlyList<string> EquippedDivineProfileIds => equippedDivineProfileIds.AsReadOnly();
+        public IReadOnlyList<string> AvailableDivineProfileIds => availableDivineProfileIds.AsReadOnly();
         public int CombatSwapsUsed { get; private set; }
         public int MaxCombatSwaps { get; }
         public float BlockRate { get; set; }
