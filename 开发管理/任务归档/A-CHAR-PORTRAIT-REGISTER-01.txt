@@ -102,8 +102,8 @@
 ## 经验候选
 
 ### CAND-A-CHAR-PORTRAIT-REGISTER-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-204FFB87C0B6
 - resolution: unresolved
 - experienceId:
 - 经验领域：content

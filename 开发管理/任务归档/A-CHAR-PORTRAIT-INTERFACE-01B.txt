@@ -91,8 +91,8 @@
 ## 经验候选
 
 ### CAND-A-CHAR-PORTRAIT-INTERFACE-01B-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-839A0EF598BC
 - resolution: unresolved
 - experienceId:
 - 经验领域：content
