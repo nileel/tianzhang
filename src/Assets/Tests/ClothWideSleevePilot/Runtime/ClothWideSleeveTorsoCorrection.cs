@@ -50,5 +50,59 @@ namespace TianZhang.ClothWideSleevePilot
                 sphere.radius = radius;
             }
         }
+
+        [Serializable]
+        public sealed class SleeveRangeProof
+        {
+            public Vector3 shoulderBindLocal, wristBindLocal, upBindLocal;
+            public float[] radialDistances, axisFractions, radialUpOffsets;
+            public int changedVertices;
+        }
+
+        // Optional Range 06: only the loose underside, after Apply, with Cloth still disabled.
+        // 2*d spans a full circle about the straight bind axis; it is not a solver convergence guarantee.
+        public static SleeveRangeProof ExpandSleeveRange(Cloth cloth, SkinnedMeshRenderer renderer, Transform characterRoot)
+        {
+            Mesh mesh = renderer.sharedMesh;
+            var coefficients = cloth.coefficients;
+            if (cloth.enabled || mesh.vertexCount != 456 || coefficients.Length != 456 ||
+                Vector3.Distance(renderer.transform.lossyScale, Vector3.one) > .0001f)
+                throw new InvalidOperationException("Sleeve range candidate requires the disabled, unit-scale v001 mesh.");
+
+            Transform[] bones = renderer.bones;
+            Matrix4x4[] binds = mesh.bindposes;
+            int shoulderIndex = Array.FindIndex(bones, bone => bone.name == "upperarm_l");
+            int wristIndex = Array.FindIndex(bones, bone => bone.name == "hand_l");
+            if (shoulderIndex < 0 || wristIndex < 0)
+                throw new InvalidOperationException("Sleeve bind-axis bones are missing.");
+
+            var proof = new SleeveRangeProof
+            {
+                shoulderBindLocal = binds[shoulderIndex].inverse.MultiplyPoint3x4(Vector3.zero),
+                wristBindLocal = binds[wristIndex].inverse.MultiplyPoint3x4(Vector3.zero),
+                upBindLocal = renderer.transform.InverseTransformDirection(characterRoot.up).normalized,
+                radialDistances = new float[456], axisFractions = new float[456], radialUpOffsets = new float[456]
+            };
+            Vector3 axis = proof.wristBindLocal - proof.shoulderBindLocal;
+            if (axis.sqrMagnitude < .01f)
+                throw new InvalidOperationException("Sleeve bind axis is too short.");
+            Vector3[] vertices = mesh.vertices;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 offset = vertices[i] - proof.shoulderBindLocal;
+                float t = Vector3.Dot(offset, axis) / axis.sqrMagnitude;
+                Vector3 radial = offset - t * axis;
+                proof.axisFractions[i] = t;
+                proof.radialDistances[i] = radial.magnitude;
+                proof.radialUpOffsets[i] = Vector3.Dot(radial, proof.upBindLocal);
+                // 0.17 is the existing v001 Builder's complete sleeve-root band, including released torso points.
+                if (coefficients[i].maxDistance <= .0001f || t <= .17f || proof.radialUpOffsets[i] >= 0f) continue;
+                float distance = Mathf.Max(coefficients[i].maxDistance, 2f * radial.magnitude);
+                if (distance > coefficients[i].maxDistance) proof.changedVertices++;
+                coefficients[i].maxDistance = distance;
+            }
+            cloth.coefficients = coefficients;
+            return proof;
+        }
     }
 }

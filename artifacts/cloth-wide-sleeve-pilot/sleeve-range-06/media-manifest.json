@@ -1,0 +1,41 @@
+{
+  "source": "D:\\Temp\\TianZhang-Blender\\cloth-wide-sleeve-range-06-capture",
+  "sourcePngCount": 864,
+  "sourceOrderedNamesAndHashDigest": "5fd788085754091391315aadb892bf60b07573f7518b5d3259d341556dc9c914",
+  "media": [
+    {
+      "file": "unity-range-06-comparison.gif",
+      "frames": 144,
+      "durationMs": 12000,
+      "bytes": 9174729,
+      "sourceCaptureIndices": [
+        144,
+        287
+      ],
+      "sha256": "ce5a711e59a45c7ee242860dbe61f9ce58e782a14fd2e393c83072a264720191"
+    },
+    {
+      "file": "unity-range-06-yaw150.gif",
+      "frames": 144,
+      "durationMs": 12000,
+      "bytes": 9000433,
+      "sourceCaptureIndices": [
+        144,
+        287
+      ],
+      "sha256": "12f6c6969376af8cd76ef5aaecf15907bba7f36c551ffbbd8b9065aae3934ab5"
+    },
+    {
+      "file": "unity-range-06-full.gif",
+      "frames": 864,
+      "durationMs": 72000,
+      "bytes": 49412206,
+      "sourceCaptureIndices": [
+        0,
+        863
+      ],
+      "sha256": "fa5a20e47038dd90a7169fa719f8645727a2afeff0c50a90d16f9d25fe50b129"
+    }
+  ],
+  "boundary": "Real Unity screenshots only; comparison is old-left/new-right same-time near views. Full GIF retains all three views and all six directions."
+}

@@ -239,6 +239,75 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
         }
 
         [Test]
+        public void SleeveRangeCandidateChangesOnly249LooseUndersideDistances()
+        {
+            EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<ClothWideSleevePilotController>();
+            var serialized = new SerializedObject(controller);
+            Assert.IsFalse(serialized.FindProperty("expandSleeveRange").boolValue, "Keep the original scene baseline.");
+            var cloth = controller.SleeveCloth;
+            var renderer = controller.SleeveRenderer;
+            var mesh = renderer.sharedMesh;
+            var vertices = mesh.vertices;
+            var weights = mesh.boneWeights;
+            var binds = mesh.bindposes;
+            bool enabled = cloth.enabled;
+            cloth.enabled = false;
+            try
+            {
+                var pose = new HumanPose();
+                using (var handler = new HumanPoseHandler(controller.Animator.avatar, controller.Animator.transform))
+                {
+                    handler.GetHumanPose(ref pose);
+                    var sample = ClothWideSleeveMotion.Evaluate(0f);
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Arm Down-Up")] = sample.armUp;
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Arm Front-Back")] = sample.armForward;
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Forearm Stretch")] = sample.forearm;
+                    handler.SetHumanPose(ref pose);
+                    ClothWideSleeveTorsoCorrection.Apply(cloth, controller.Animator.transform);
+                }
+                var before = cloth.coefficients;
+                var pairs = cloth.sphereColliders;
+                var spheres = pairs.SelectMany(p => new[] { p.first, p.second }).ToArray();
+                var centers = spheres.Select(c => c.center).ToArray();
+                var radii = spheres.Select(c => c.radius).ToArray();
+                var self = new List<uint>();
+                cloth.GetSelfAndInterCollisionIndices(self);
+                var proof = ClothWideSleeveTorsoCorrection.ExpandSleeveRange(cloth, renderer, controller.Animator.transform);
+                var after = cloth.coefficients;
+                Assert.AreEqual(249, proof.changedVertices);
+                Assert.AreEqual(29, after.Count(c => c.maxDistance <= .0001f));
+                for (int i = 0; i < after.Length; i++)
+                {
+                    bool eligible = before[i].maxDistance > .0001f && proof.axisFractions[i] > .17f &&
+                        proof.radialUpOffsets[i] < 0f;
+                    float expected = eligible ? Mathf.Max(before[i].maxDistance, 2f * proof.radialDistances[i]) :
+                        before[i].maxDistance;
+                    Assert.That(after[i].maxDistance, Is.EqualTo(expected), "Vertex " + i);
+                    Assert.AreEqual(before[i].collisionSphereDistance, after[i].collisionSphereDistance);
+                }
+                Assert.That(after[40].maxDistance, Is.EqualTo(1.470019f).Within(.00001f));
+                Assert.That(after[36].maxDistance, Is.EqualTo(1.445449f).Within(.00001f));
+                foreach (int i in new[] { 415, 454, 446 }) Assert.AreEqual(before[i].maxDistance, after[i].maxDistance);
+                CollectionAssert.AreEqual(pairs, cloth.sphereColliders);
+                CollectionAssert.AreEqual(centers, spheres.Select(c => c.center));
+                CollectionAssert.AreEqual(radii, spheres.Select(c => c.radius));
+                var afterSelf = new List<uint>();
+                cloth.GetSelfAndInterCollisionIndices(afterSelf);
+                CollectionAssert.AreEqual(self, afterSelf);
+                Assert.AreSame(mesh, renderer.sharedMesh);
+                CollectionAssert.AreEqual(vertices, mesh.vertices);
+                CollectionAssert.AreEqual(weights, mesh.boneWeights);
+                CollectionAssert.AreEqual(binds, mesh.bindposes);
+                Assert.That(cloth.bendingStiffness, Is.EqualTo(.70f).Within(.0001f));
+                Assert.That(cloth.stretchingStiffness, Is.EqualTo(.88f).Within(.0001f));
+                Assert.That(cloth.damping, Is.EqualTo(.34f).Within(.0001f));
+                Assert.IsTrue(cloth.useTethers);
+            }
+            finally { cloth.enabled = enabled; }
+        }
+
+        [Test]
         public void BodyProbeCapturesAllVisiblePartsWithoutChangingConstraintsOrProxies()
         {
             EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);

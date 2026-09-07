@@ -29,6 +29,7 @@ namespace TianZhang.ClothWideSleevePilot
         [SerializeField] private IsolationMode isolationMode;
         [SerializeField] private bool releaseDiagnosedTorsoPins;
         [SerializeField] private bool correctTorsoTransition;
+        [SerializeField] private bool expandSleeveRange;
 
         private HumanPoseHandler poseHandler;
         private HumanPose pose;
@@ -45,6 +46,7 @@ namespace TianZhang.ClothWideSleevePilot
         private Camera tacticalCamera, debugCamera;
         private ClothWideSleeveCollisionProbe probe;
         private ClothWideSleeveSkinningProbe skinningProbe;
+        private ClothWideSleeveTorsoCorrection.SleeveRangeProof sleeveRangeProof;
         private readonly List<FrameRecord> frames = new List<FrameRecord>();
         private readonly List<StepRecord> steps = new List<StepRecord>();
         private GUIStyle titleStyle, detailStyle;
@@ -68,6 +70,9 @@ namespace TianZhang.ClothWideSleevePilot
             if (isolationArgument != null) isolationMode = ParseIsolationMode(isolationArgument);
             if (ReadCommandLineValue("--release-conflicting-pins") == "true") releaseDiagnosedTorsoPins = true;
             if (ReadCommandLineValue("--correct-torso-transition") == "true") correctTorsoTransition = true;
+            if (ReadCommandLineValue("--expand-sleeve-range") == "true") expandSleeveRange = true;
+            if (expandSleeveRange && (!correctTorsoTransition || Isolating))
+                throw new InvalidOperationException("Sleeve Range 06 requires Torso Transition 05 and the full motion trial.");
             if (correctTorsoTransition && releaseDiagnosedTorsoPins)
                 throw new InvalidOperationException("Select the torso candidate OR the old pin-release baseline, not both.");
             if (releaseDiagnosedTorsoPins)
@@ -109,6 +114,8 @@ namespace TianZhang.ClothWideSleevePilot
             sleeveCloth.enabled = false;
             ApplyPose(Isolating ? 1 : 0, 0f);
             if (correctTorsoTransition) ClothWideSleeveTorsoCorrection.Apply(sleeveCloth, animator.transform);
+            if (expandSleeveRange) sleeveRangeProof =
+                ClothWideSleeveTorsoCorrection.ExpandSleeveRange(sleeveCloth, sleeveRenderer, animator.transform);
             probe = new ClothWideSleeveCollisionProbe(sleeveCloth, sleeveRenderer);
             if (Isolating || correctTorsoTransition) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth,
                 ReadCommandLineValue("--body-probe") == "true" ? animator : null);
@@ -251,7 +258,8 @@ namespace TianZhang.ClothWideSleevePilot
             }
             if (probe != null && debugCamera != null) probe.DrawOverlay(debugCamera);
             GUI.Box(new Rect(8, 8, Screen.width * 0.5f - 16, 98), GUIContent.none);
-            GUI.Label(new Rect(18, 12, 590, 28), correctTorsoTransition ? "TORSO TRANSITION 05 / CANDIDATE" :
+            GUI.Label(new Rect(18, 12, 590, 28), expandSleeveRange ? "SLEEVE RANGE 06 / CANDIDATE" :
+                correctTorsoTransition ? "TORSO TRANSITION 05 / CANDIDATE" :
                 releaseDiagnosedTorsoPins ? "PIN RELEASE 01 / 28 TARGETED VERTICES" :
                 Isolating ? "ISOLATION 03 / " + isolationMode :
                 "WIDE SLEEVE / RETEST 02 / UNITY CLOTH", titleStyle);
@@ -282,6 +290,7 @@ namespace TianZhang.ClothWideSleevePilot
                 unityVersion = Application.unityVersion, clothObject = sleeveCloth.name, isolationMode = isolationMode.ToString(),
                 releaseDiagnosedTorsoPins = releaseDiagnosedTorsoPins,
                 correctTorsoTransition = correctTorsoTransition,
+                expandSleeveRange = expandSleeveRange, sleeveRangeProof = sleeveRangeProof,
                 effectiveMaxDistances = Array.ConvertAll(sleeveCloth.coefficients, c => c.maxDistance),
                 simulationHz = SimulationRate, captureHz = SimulationRate / CaptureStride,
                 durationSeconds = Duration, capturedFrames = frames.Count,
@@ -378,7 +387,8 @@ namespace TianZhang.ClothWideSleevePilot
         private sealed class RuntimeReport
         {
             public string unityVersion, clothObject, isolationMode;
-            public bool releaseDiagnosedTorsoPins, correctTorsoTransition;
+            public bool releaseDiagnosedTorsoPins, correctTorsoTransition, expandSleeveRange;
+            public ClothWideSleeveTorsoCorrection.SleeveRangeProof sleeveRangeProof;
             public int simulationHz, captureHz, capturedFrames, vertexCount, pinnedVertices, colliderPairs, selfCollisionVertices;
             public float durationSeconds, wallSecondsIncludingCapture, bendingStiffness, stretchingStiffness,
                 maximumDistance, tacticalOrthographicSize;
