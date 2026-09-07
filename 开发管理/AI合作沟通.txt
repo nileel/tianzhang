@@ -4,3 +4,16 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
+
+### DSH-U-COMBAT-PROJECTION-01-7e31f876 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-COMBAT-PROJECTION-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-COMBAT-PROJECTION-01
+- 候选提交：f58ce8d0f3ff62f677862b79647a3abe63d5f079
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：src/Assets/Scripts/Modules/Character/CharacterCombatModifiers.cs、src/Assets/Scripts/Modules/Character/CharacterCombatModifiers.cs.meta、src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs、src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs、src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs、src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs、src/Assets/Tests/EditMode/CharacterStateTests.cs、src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs、src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs、UNITY_STRUCTURE.runtime.md
+- 已验证：Unity EditMode 新增 9 测试全部通过（十四字段保存往返/零值/缺字段/schema1 迁移/载荷拒绝/值对象取整/玩家敌人概率投影/GongFaElement 映射）；TianZhang.EditModeTests.dll 程序集 442/442 通过；check-unity-assembly-boundaries.ps1 通过（19 程序集、2 asmref）；check-pending-whitespace.ps1 通过（10 文件）+ git diff --cached --check 通过
+- 未验证：完整 EditMode 套件仍含 1 个无关既有失败：ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings（gitignore 的 .blend 源在本 worktree 缺失，与本次改动无关）；PlayMode 测试未运行（本卡验证未要求）
+- 残留风险：十四字段为 schema 2 可选增量字段，旧档缺字段按 0 兼容（已由测试覆盖）；下游 U-COMBAT-LOADOUT-01/M-CURRENT-FACTS-01 的 blockedBy 解除留待 Codex 复审后处理；ClothWideSleeve 失败为既有环境问题，非本卡引入。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

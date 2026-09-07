@@ -7,7 +7,7 @@ namespace TianZhang.Character
     public sealed class CharacterRuntimeProfile
     {
         public CharacterRuntimeProfile(CharacterIdentity identity, CharacterAttributes attributes, CharacterResources resources,
-            AbilityLoadout abilityLoadout, CharacterProgressionRef progression,
+            AbilityLoadout abilityLoadout, CharacterProgressionRef progression, CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
@@ -15,6 +15,7 @@ namespace TianZhang.Character
             Resources = resources ?? throw new System.ArgumentNullException(nameof(resources));
             AbilityLoadout = abilityLoadout ?? throw new System.ArgumentNullException(nameof(abilityLoadout));
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
+            CombatModifiers = combatModifiers ?? throw new System.ArgumentNullException(nameof(combatModifiers));
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
@@ -23,7 +24,7 @@ namespace TianZhang.Character
         }
         public CharacterIdentity Identity { get; } public CharacterAttributes Attributes { get; }
         public CharacterResources Resources { get; } public AbilityLoadout AbilityLoadout { get; }
-        public CharacterProgressionRef Progression { get; }
+        public CharacterProgressionRef Progression { get; } public CharacterCombatModifiers CombatModifiers { get; private set; }
         public string MainEquipmentBasicAttackProfileId { get; private set; }
         public string UnarmedBasicAttackProfileId { get; private set; }
         public string AppearanceProfileId { get; private set; }
@@ -32,15 +33,17 @@ namespace TianZhang.Character
         {
             if (definition == null) throw new System.ArgumentNullException(nameof(definition));
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(definition);
+            CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(definition);
             var progression = new CharacterProgressionRef(definition.gongFaName, definition.realmStage,
                 definition.realmMultiplier > 0f ? definition.realmMultiplier : 1f);
-            CharacterDerivedAttributes derived = attributes.Derive(progression.RealmMultiplier, CharacterAttributeBonuses.Empty);
+            CharacterDerivedAttributes derived = attributes.Derive(progression.RealmMultiplier, combatModifiers.ToAttributeBonuses());
             var loadout = new AbilityLoadout(definition.availableSpells, definition.availableSkills,
                 definition.maxSpellSlots, definition.maxSkillSlots);
             foreach (string spell in definition.equippedSpells ?? new string[0]) loadout.TryEquipSpell(spell);
             foreach (string skill in definition.equippedSkills ?? new string[0]) loadout.TryEquipSkill(skill);
             return new CharacterRuntimeProfile(new CharacterIdentity(characterId, definition.charName), attributes,
                 new CharacterResources(derived.MaxHealth, derived.MaxHealth, derived.MaxSpirit, derived.MaxSpirit), loadout, progression,
+                combatModifiers,
                 definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId, AppearanceProfileData.NoneId);
         }
 
@@ -71,6 +74,7 @@ namespace TianZhang.Character
                     snapshot.Progression.GongFaId,
                     snapshot.Progression.RealmStage,
                     snapshot.Progression.RealmMultiplier),
+                snapshot.CombatModifiers,
                 snapshot.MainEquipmentBasicAttackProfileId,
                 snapshot.UnarmedBasicAttackProfileId,
                 snapshot.AppearanceProfileId);
@@ -82,6 +86,7 @@ namespace TianZhang.Character
         {
             return new CharacterStateSnapshot(
                 Identity.Capture(), Attributes.Capture(), Resources.Capture(), AbilityLoadout.Capture(), Progression.Capture(),
+                CombatModifiers,
                 MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId);
         }
         public void Restore(CharacterStateSnapshot snapshot)
@@ -89,6 +94,7 @@ namespace TianZhang.Character
             if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
             Identity.Restore(snapshot.Identity); Attributes.Restore(snapshot.Attributes); Resources.Restore(snapshot.Resources);
             AbilityLoadout.Restore(snapshot.AbilityLoadout); Progression.Restore(snapshot.Progression);
+            CombatModifiers = snapshot.CombatModifiers;
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
             AppearanceProfileId = snapshot.AppearanceProfileId;

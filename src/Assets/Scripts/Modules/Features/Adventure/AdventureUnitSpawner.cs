@@ -114,7 +114,7 @@ namespace TianZhang.Features.Adventure
                 source.Attributes.Fortune);
             CharacterDerivedAttributes derived = attributes.Derive(
                 source.Progression.RealmMultiplier,
-                CharacterAttributeBonuses.Empty);
+                source.CombatModifiers.ToAttributeBonuses());
             var snapshot = new CombatantSnapshot(
                 "player",
                 CombatTeam.Player,
@@ -131,7 +131,16 @@ namespace TianZhang.Features.Adventure
                 source.AbilityLoadout.EquippedSpells,
                 source.AbilityLoadout.KnownSpells)
             {
+                BlockRate = source.CombatModifiers.BlockRate,
+                BlockReduction = source.CombatModifiers.BlockReduction,
+                SoulShieldRate = source.CombatModifiers.SoulShieldRate,
+                SoulShieldReduction = source.CombatModifiers.SoulShieldReduction,
+                DodgeRate = source.CombatModifiers.DodgeRate,
+                CriticalRate = source.CombatModifiers.CritRate,
+                CriticalDamage = source.CombatModifiers.CritDamage,
+                HitRateBonus = source.CombatModifiers.HitRateBonus,
                 GongFaId = source.Progression.GongFaId,
+                GongFaElement = CombatElementFacts.ResolveGongFaElement(source.Progression.GongFaId),
             };
             snapshot.SetSpirit(source.Resources.MaximumSpirit, source.Resources.CurrentSpirit);
             return snapshot;
@@ -140,18 +149,9 @@ namespace TianZhang.Features.Adventure
         private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position)
         {
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(source);
+            CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(source);
             float realmMultiplier = source.realmMultiplier > 0f ? source.realmMultiplier : 1f;
-            CharacterDerivedAttributes derived = attributes.Derive(
-                realmMultiplier,
-                new CharacterAttributeBonuses
-                {
-                    Health = Mathf.RoundToInt(source.hpBonus),
-                    SpiritResource = Mathf.RoundToInt(source.mpBonus),
-                    PhysicalAttack = Mathf.RoundToInt(source.physAtkBonus),
-                    MagicAttack = Mathf.RoundToInt(source.magAtkBonus),
-                    PhysicalDefense = Mathf.RoundToInt(source.physDefBonus),
-                    MagicDefense = Mathf.RoundToInt(source.magDefBonus),
-                });
+            CharacterDerivedAttributes derived = attributes.Derive(realmMultiplier, combatModifiers.ToAttributeBonuses());
             var snapshot = new CombatantSnapshot(
                 "enemy",
                 CombatTeam.Enemy,
@@ -168,15 +168,16 @@ namespace TianZhang.Features.Adventure
                 ProjectEquippedSpells(source, realmMultiplier),
                 source.availableSpells)
             {
-                BlockRate = source.blockRate,
-                BlockReduction = source.blockReduction,
-                SoulShieldRate = source.soulShieldRate,
-                SoulShieldReduction = source.soulShieldReduction,
-                DodgeRate = source.dodgeRate,
-                CriticalRate = source.critRate,
-                CriticalDamage = source.critDamage,
-                HitRateBonus = source.hitRateBonus,
+                BlockRate = combatModifiers.BlockRate,
+                BlockReduction = combatModifiers.BlockReduction,
+                SoulShieldRate = combatModifiers.SoulShieldRate,
+                SoulShieldReduction = combatModifiers.SoulShieldReduction,
+                DodgeRate = combatModifiers.DodgeRate,
+                CriticalRate = combatModifiers.CritRate,
+                CriticalDamage = combatModifiers.CritDamage,
+                HitRateBonus = combatModifiers.HitRateBonus,
                 GongFaId = source.gongFaName,
+                GongFaElement = CombatElementFacts.ResolveGongFaElement(source.gongFaName),
             };
             snapshot.SetSpirit(derived.MaxSpirit, derived.MaxSpirit);
             return snapshot;

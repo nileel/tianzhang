@@ -5,6 +5,7 @@ namespace TianZhang.Character
     {
         public CharacterStateSnapshot(CharacterIdentitySnapshot identity, CharacterAttributesSnapshot attributes,
             CharacterResourcesSnapshot resources, AbilityLoadoutSnapshot abilityLoadout, CharacterProgressionSnapshot progression,
+            CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
@@ -12,6 +13,7 @@ namespace TianZhang.Character
             Resources = resources ?? throw new System.ArgumentNullException(nameof(resources));
             AbilityLoadout = abilityLoadout ?? throw new System.ArgumentNullException(nameof(abilityLoadout));
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
+            CombatModifiers = combatModifiers ?? throw new System.ArgumentNullException(nameof(combatModifiers));
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
@@ -23,6 +25,7 @@ namespace TianZhang.Character
         public CharacterResourcesSnapshot Resources { get; }
         public AbilityLoadoutSnapshot AbilityLoadout { get; }
         public CharacterProgressionSnapshot Progression { get; }
+        public CharacterCombatModifiers CombatModifiers { get; }
         public string MainEquipmentBasicAttackProfileId { get; }
         public string UnarmedBasicAttackProfileId { get; }
         public string AppearanceProfileId { get; }

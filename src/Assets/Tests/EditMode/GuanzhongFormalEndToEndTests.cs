@@ -232,6 +232,124 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void SpawnerProjectsExplicitCombatModifiersAndGongFaElementForPlayerAndEnemy()
+        {
+            CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.charName = "玩家";
+            playerData.realmMultiplier = 1f;
+            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+            playerData.gongFaName = "抱元守一经";
+            playerData.hpBonus = 12.4f;
+            playerData.physAtkBonus = 3.2f;
+            playerData.blockRate = 15f;
+            playerData.blockReduction = 25f;
+            playerData.critRate = 8f;
+            playerData.critDamage = 15f;
+            playerData.hitRateBonus = 3f;
+
+            CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.charName = "敌人";
+            enemyTemplate.realmMultiplier = 1f;
+            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemyTemplate.gongFaName = "gongfa_baoyuanshouyi";
+            enemyTemplate.blockRate = 10f;
+            enemyTemplate.blockReduction = 20f;
+
+            EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = "enemy_combat_modifier_fixture";
+            enemy.combatTemplate = enemyTemplate;
+
+            var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.ReplaceEntries(null, new[] { enemy }, null, null);
+
+            AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_combat_modifier_fixture" };
+
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            AdventureUnitSpawner spawner = Track(new GameObject("CombatModifierSpawner"))
+                .AddComponent<AdventureUnitSpawner>();
+            GameObject markerPrefab = Track(new GameObject("CombatModifierMarker"));
+
+            Assert.IsTrue(spawner.TrySpawn(
+                player,
+                catalog,
+                start,
+                encounter,
+                markerPrefab,
+                out AdventureSpawnSet spawned,
+                out string reason), reason);
+            Track(spawned.PlayerMarker);
+            Track(spawned.EnemyMarker);
+
+            // HP/MP read saved resources; attack re-derives from base attributes + saved bonuses.
+            Assert.AreEqual(player.Resources.MaximumHealth, spawned.Player.MaximumHealth);
+            Assert.AreEqual(player.Resources.MaximumSpirit, spawned.Player.MaximumSpirit);
+            Assert.AreEqual(
+                Mathf.RoundToInt(player.Attributes.RootBone * 1f * 5f + Mathf.RoundToInt(3.2f)),
+                spawned.Player.PhysicalAttack);
+
+            // Player explicit probability fields are projected, not only the enemy's.
+            Assert.AreEqual(15f, spawned.Player.BlockRate);
+            Assert.AreEqual(25f, spawned.Player.BlockReduction);
+            Assert.AreEqual(8f, spawned.Player.CriticalRate);
+            Assert.AreEqual(15f, spawned.Player.CriticalDamage);
+            Assert.AreEqual(3f, spawned.Player.HitRateBonus);
+
+            // Enemy consumes the same value object.
+            Assert.AreEqual(10f, spawned.Enemy.BlockRate);
+            Assert.AreEqual(20f, spawned.Enemy.BlockReduction);
+
+            // GongFaElement resolves from the exact existing mapping for both name and stable ID.
+            Assert.AreEqual("水", spawned.Player.GongFaElement);
+            Assert.AreEqual("水", spawned.Enemy.GongFaElement);
+        }
+
+        [Test]
+        public void SpawnerLeavesUnknownGongFaElementEmptyForPlayerAndEnemy()
+        {
+            CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.charName = "玩家";
+            playerData.realmMultiplier = 1f;
+            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+            playerData.gongFaName = "未知功法";
+
+            CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.charName = "敌人";
+            enemyTemplate.realmMultiplier = 1f;
+            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemyTemplate.gongFaName = "未知功法";
+
+            EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
+            enemy.enemyId = "enemy_unknown_gongfa_fixture";
+            enemy.combatTemplate = enemyTemplate;
+
+            var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.ReplaceEntries(null, new[] { enemy }, null, null);
+
+            AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_unknown_gongfa_fixture" };
+
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            AdventureUnitSpawner spawner = Track(new GameObject("UnknownGongFaSpawner"))
+                .AddComponent<AdventureUnitSpawner>();
+            GameObject markerPrefab = Track(new GameObject("UnknownGongFaMarker"));
+
+            Assert.IsTrue(spawner.TrySpawn(
+                player,
+                catalog,
+                start,
+                encounter,
+                markerPrefab,
+                out AdventureSpawnSet spawned,
+                out string reason), reason);
+            Track(spawned.PlayerMarker);
+            Track(spawned.EnemyMarker);
+
+            Assert.AreEqual(string.Empty, spawned.Player.GongFaElement);
+            Assert.AreEqual(string.Empty, spawned.Enemy.GongFaElement);
+        }
+
+        [Test]
         public void RegisteredFutureNodeExtendsDispatchWithoutChangingLoaderOrInput()
         {
             var map = ScriptableObject.CreateInstance<AdventureMapData>();

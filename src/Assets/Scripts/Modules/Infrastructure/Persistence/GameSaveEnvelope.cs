@@ -134,7 +134,14 @@ namespace TianZhang.Infrastructure.Persistence
                  !string.IsNullOrEmpty(record.appearanceProfileId) ||
                  !string.IsNullOrEmpty(record.gongFaId) ||
                  !string.IsNullOrEmpty(record.realmStage) ||
-                 record.realmMultiplier != 0f);
+                 record.realmMultiplier != 0f ||
+                 record.hpBonus != 0f || record.mpBonus != 0f ||
+                 record.physAtkBonus != 0f || record.magAtkBonus != 0f ||
+                 record.physDefBonus != 0f || record.magDefBonus != 0f ||
+                 record.blockRate != 0f || record.blockReduction != 0f ||
+                 record.soulShieldRate != 0f || record.soulShieldReduction != 0f ||
+                 record.dodgeRate != 0f || record.critRate != 0f ||
+                 record.critDamage != 0f || record.hitRateBonus != 0f);
         }
 
         private static bool HasCultivationPayload(CultivationRecord record)
@@ -325,6 +332,20 @@ namespace TianZhang.Infrastructure.Persistence
         public string gongFaId;
         public string realmStage;
         public float realmMultiplier;
+        public float hpBonus;
+        public float mpBonus;
+        public float physAtkBonus;
+        public float magAtkBonus;
+        public float physDefBonus;
+        public float magDefBonus;
+        public float blockRate;
+        public float blockReduction;
+        public float soulShieldRate;
+        public float soulShieldReduction;
+        public float dodgeRate;
+        public float critRate;
+        public float critDamage;
+        public float hitRateBonus;
 
         public static CharacterRecord Capture(CharacterStateSnapshot snapshot)
         {
@@ -355,6 +376,20 @@ namespace TianZhang.Infrastructure.Persistence
                 gongFaId = snapshot.Progression.GongFaId,
                 realmStage = snapshot.Progression.RealmStage,
                 realmMultiplier = snapshot.Progression.RealmMultiplier,
+                hpBonus = snapshot.CombatModifiers.HpBonus,
+                mpBonus = snapshot.CombatModifiers.MpBonus,
+                physAtkBonus = snapshot.CombatModifiers.PhysAtkBonus,
+                magAtkBonus = snapshot.CombatModifiers.MagAtkBonus,
+                physDefBonus = snapshot.CombatModifiers.PhysDefBonus,
+                magDefBonus = snapshot.CombatModifiers.MagDefBonus,
+                blockRate = snapshot.CombatModifiers.BlockRate,
+                blockReduction = snapshot.CombatModifiers.BlockReduction,
+                soulShieldRate = snapshot.CombatModifiers.SoulShieldRate,
+                soulShieldReduction = snapshot.CombatModifiers.SoulShieldReduction,
+                dodgeRate = snapshot.CombatModifiers.DodgeRate,
+                critRate = snapshot.CombatModifiers.CritRate,
+                critDamage = snapshot.CombatModifiers.CritDamage,
+                hitRateBonus = snapshot.CombatModifiers.HitRateBonus,
             };
         }
 
@@ -379,6 +414,21 @@ namespace TianZhang.Infrastructure.Persistence
                     spellSlots,
                     skillSlots),
                 new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier),
+                new CharacterCombatModifiers(
+                    hpBonus,
+                    mpBonus,
+                    physAtkBonus,
+                    magAtkBonus,
+                    physDefBonus,
+                    magDefBonus,
+                    blockRate,
+                    blockReduction,
+                    soulShieldRate,
+                    soulShieldReduction,
+                    dodgeRate,
+                    critRate,
+                    critDamage,
+                    hitRateBonus),
                 mainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId,
                 appearanceProfileId);
