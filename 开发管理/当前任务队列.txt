@@ -7,3 +7,4 @@
 |----|------|------|--------|------|------|------|--------|
 | U-COMBAT-PROJECTION-01 | external_execute | deepseek | P1 | unity | implementation | 既有显式角色战斗字段快照与保存透传 | 开发管理/任务卡/U-COMBAT-PROJECTION-01.txt |
 | M-HANDOFF-ARCHIVE-01 | codex_execute | codex | P2 | management | migration | 已完成任务交接原文迁档 | 开发管理/任务卡/M-HANDOFF-ARCHIVE-01.txt |
+| M-EXP-PROMOTE-A242521B1028 | codex_execute | codex | P2 | automation | implementation | 经验候选整理：CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-A242521B1028.txt |

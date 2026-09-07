@@ -89,8 +89,8 @@
 ## 经验候选
 
 ### CAND-M-QUEUE-MAINT-READY-SCHEMA2-GUARD-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-A242521B1028
 - resolution: unresolved
 - experienceId:
 - 经验领域：automation
