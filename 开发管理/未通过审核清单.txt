@@ -6,6 +6,12 @@
 
 ## 当前未通过/待复核项
 
+### U-COMBAT-LOADOUT-01 · 正式战斗按角色装载校验攻击档案
+
+- 审核对象：正式提交 `5a844c88c2b0187047706d0eea6b6dabb037889e`；结论：部分通过，仍需返工。
+- 已确认逐角色普攻、术法、神通授权均在 `CombatSession.ValidateAttack` 统一校验，Spawner 的普攻二选一失败关闭位于棋子 marker 实例化之前。
+- 返工范围限于 `CombatantSnapshot`：`CreateProfileIdList` 仍保留 equipped 输入中的空值并允许重复 ID，违反已冻结合同要求的“列表去空、去重”；为术法和神通集合补齐该净化及相应正反例后再复审。
+
 ### C-HS-YY-JD-01A～01Q · 统一返工决议
 
 - 2026-08-28，用户指定 `C-HS-YY-JD-01A～01Q` 全部由 DeepSeek V4 Pro 0813 定向返工，完成后仍由 Codex 独立复审。
