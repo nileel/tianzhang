@@ -6,12 +6,30 @@ namespace TianZhang.ClothWideSleevePilot
     public static class ClothWideSleeveMotion
     {
         public const float TrialSeconds = 12f;
+        public const float InitializationSeconds = 4f;
         public const float MoveSpeed = 1.25f;
 
         public struct Sample
         {
             public float armUp, armForward, forearm, yawOffset, distance;
             public string action;
+        }
+
+        // Start from the saved open pose, not a lowered-arm skinning shape already wrapped around the torso.
+        // Keep this complete interval visible; the original trial is only shifted in time, never shortened.
+        public static Sample EvaluateWithInitialization(float time, Sample openPose)
+        {
+            if (time >= InitializationSeconds) return Evaluate(time - InitializationSeconds);
+            Sample rest = Evaluate(0f);
+            float blend = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((time - 1f) / 2f));
+            return new Sample
+            {
+                armUp = Mathf.Lerp(openPose.armUp, rest.armUp, blend),
+                armForward = Mathf.Lerp(openPose.armForward, rest.armForward, blend),
+                forearm = Mathf.Lerp(openPose.forearm, rest.forearm, blend),
+                action = time < 1f ? "INITIALIZE / OPEN POSE / CLOTH SETTLE" :
+                    time < 3f ? "INITIALIZE / SLOW LOWER" : "INITIALIZE / REST SETTLE"
+            };
         }
 
         public static Sample Evaluate(float time)

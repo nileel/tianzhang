@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.0365488">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="462" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.036549" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1019" name="TianZhang.ClothWideSleevePilot.EditorTests.dll" fullname="D:/天章游戏开发/.worktrees/cloth-wide-sleeve-pilot/src/Library/ScriptAssemblies/TianZhang.ClothWideSleevePilot.EditorTests.dll" runstate="Runnable" testcasecount="16" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.026523" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="3348" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1020" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="16" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.026008" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1021" name="ClothWideSleevePilot" fullname="TianZhang.ClothWideSleevePilot" runstate="Runnable" testcasecount="16" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.025698" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1022" name="EditorTests" fullname="TianZhang.ClothWideSleevePilot.EditorTests" runstate="Runnable" testcasecount="16" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.025374" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1001" name="ClothWideSleeveExperimentEditorTests" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" testcasecount="16" result="Failed" site="Child" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.024508" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1002" name="InitializationIsContinuousAndPreservesEveryOriginalActionSample" fullname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.InitializationIsContinuousAndPreservesEveryOriginalActionSample" methodname="InitializationIsContinuousAndPreservesEveryOriginalActionSample" classname="TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests" runstate="Runnable" seed="488756712" result="Failed" start-time="2026-09-07 19:21:44Z" end-time="2026-09-07 19:21:44Z" duration="0.014685" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Expected: -0.0350198336f +/- 9.99999997E-07f
+  But was:  -0.0350209214f
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.ClothWideSleevePilot.EditorTests.ClothWideSleeveExperimentEditorTests.InitializationIsContinuousAndPreservesEveryOriginalActionSample () [0x001b4] in D:\天章游戏开发\.worktrees\cloth-wide-sleeve-pilot\src\Assets\Tests\ClothWideSleevePilot\EditorTests\ClothWideSleeveExperimentEditorTests.cs:39
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

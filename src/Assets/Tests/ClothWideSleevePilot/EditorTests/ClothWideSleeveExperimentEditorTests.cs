@@ -11,6 +11,85 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
     public sealed class ClothWideSleeveExperimentEditorTests
     {
         [Test]
+        public void InitializationIsContinuousAndPreservesEveryOriginalActionSample()
+        {
+            var open = new ClothWideSleeveMotion.Sample { armUp = .1f, armForward = .2f, forearm = .9f };
+            for (int frame = 0; frame <= 60; frame++)
+            {
+                var sample = ClothWideSleeveMotion.EvaluateWithInitialization(frame / 60f, open);
+                Assert.AreEqual(open.armUp, sample.armUp);
+                Assert.AreEqual(open.armForward, sample.armForward);
+                Assert.AreEqual(open.forearm, sample.forearm);
+            }
+            foreach (float boundary in new[] { 1f, 3f, 4f })
+            {
+                var before = ClothWideSleeveMotion.EvaluateWithInitialization(boundary - .0001f, open);
+                var after = ClothWideSleeveMotion.EvaluateWithInitialization(boundary + .0001f, open);
+                Assert.That(Mathf.Abs(after.armUp - before.armUp), Is.LessThan(.0001f));
+                Assert.That(Mathf.Abs(after.armForward - before.armForward), Is.LessThan(.0001f));
+                Assert.That(Mathf.Abs(after.forearm - before.forearm), Is.LessThan(.0001f));
+            }
+            for (int frame = 0; frame < 720; frame++)
+            {
+                float time = frame / 60f;
+                var expected = ClothWideSleeveMotion.Evaluate(time);
+                var actual = ClothWideSleeveMotion.EvaluateWithInitialization(time + 4f, open);
+                // Adding/subtracting 4 s quantizes float time. Bound that error through the fastest
+                // swing derivative (< 20 muscle units/s), not exact JIT/intermediate bit identity.
+                Assert.That(actual.armUp, Is.EqualTo(expected.armUp).Within(.00005f));
+                Assert.That(actual.armForward, Is.EqualTo(expected.armForward).Within(.00005f));
+                Assert.That(actual.forearm, Is.EqualTo(expected.forearm).Within(.00005f));
+                Assert.That(actual.yawOffset, Is.EqualTo(expected.yawOffset).Within(.0005f));
+                Assert.That(actual.distance, Is.EqualTo(expected.distance).Within(.000005f));
+                Assert.AreEqual(expected.action, actual.action);
+            }
+        }
+
+        [Test]
+        public void OpenPosePreparationPreservesRange06InputsAndCapturesTheActualSavedPose()
+        {
+            EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<ClothWideSleevePilotController>();
+            Assert.IsFalse(new SerializedObject(controller).FindProperty("initializeFromOpenPose").boolValue);
+            var cloth = controller.SleeveCloth;
+            cloth.enabled = false;
+            var pose = new HumanPose();
+            using (var handler = new HumanPoseHandler(controller.Animator.avatar, controller.Animator.transform))
+            {
+                handler.GetHumanPose(ref pose);
+                var savedMuscles = (float[])pose.muscles.Clone();
+                string[] names = { "Left Arm Down-Up", "Left Arm Front-Back", "Left Forearm Stretch" };
+                int[] indices = names.Select(n => System.Array.IndexOf(HumanTrait.MuscleName, n)).ToArray();
+                var rest = ClothWideSleeveMotion.Evaluate(0f);
+                pose.muscles[indices[0]] = rest.armUp;
+                pose.muscles[indices[1]] = rest.armForward;
+                pose.muscles[indices[2]] = rest.forearm;
+                handler.SetHumanPose(ref pose);
+                ClothWideSleeveTorsoCorrection.Apply(cloth, controller.Animator.transform);
+                ClothWideSleeveTorsoCorrection.ExpandSleeveRange(cloth, controller.SleeveRenderer, controller.Animator.transform);
+                var coefficients = cloth.coefficients;
+                var pairs = cloth.sphereColliders;
+                var spheres = pairs.SelectMany(p => new[] { p.first, p.second }).ToArray();
+                var centers = spheres.Select(c => c.center).ToArray();
+                var radii = spheres.Select(c => c.radius).ToArray();
+                pose.muscles = savedMuscles;
+                handler.SetHumanPose(ref pose);
+                CollectionAssert.AreEqual(coefficients, cloth.coefficients);
+                CollectionAssert.AreEqual(centers, spheres.Select(c => c.center));
+                CollectionAssert.AreEqual(radii, spheres.Select(c => c.radius));
+                using (var probe = new ClothWideSleeveSkinningProbe(controller.SleeveRenderer, cloth, controller.Animator))
+                {
+                    var snapshot = probe.Measure(true);
+                    Assert.That(snapshot.bakeVsCpuMaxMeters, Is.LessThan(.00001f));
+                    string[] args = System.Environment.GetCommandLineArgs();
+                    int outputIndex = System.Array.IndexOf(args, "-clothPilotInitializationProbePath");
+                    if (outputIndex >= 0) File.WriteAllText(args[outputIndex + 1], JsonUtility.ToJson(snapshot, true));
+                }
+                Debug.Log("Initialization 07 saved arm muscles: " + string.Join(", ", indices.Select(i => savedMuscles[i])));
+            }
+        }
+
+        [Test]
         public void IsolationHasExplicitGroupsAndDoesNotTurnOrMoveTheBody()
         {
             Assert.AreEqual(ClothWideSleevePilotController.IsolationMode.A_SkinOnly,

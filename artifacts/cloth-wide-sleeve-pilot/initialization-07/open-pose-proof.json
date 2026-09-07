@@ -1,0 +1,26 @@
+{
+  "source": "D:\\Temp\\TianZhang-Blender\\cloth-wide-sleeve-initialization-07-validation\\open-pose.json",
+  "sourceSha256": "1e39cc9a918e78ca471904c2988043d993399019c286c7e16b288da5161b0aa9",
+  "bodyClosedAndOrientedAfterExactWeld": true,
+  "bakeVsCpuMaxMeters": 4.20479494778192e-07,
+  "nonRootVerticesInsideBody": 0,
+  "nonRootMinimumSurfaceDistanceMeters": 0.04638809686092873,
+  "rootIntersections": [
+    {
+      "index": 453,
+      "depthMeters": 0.005148264579140447,
+      "maxDistance": 0.3799999952316284
+    },
+    {
+      "index": 454,
+      "depthMeters": 0.00868009278044347,
+      "maxDistance": 0.08100000023841858
+    },
+    {
+      "index": 455,
+      "depthMeters": 0.01135615205720649,
+      "maxDistance": 0.3799999952316284
+    }
+  ],
+  "boundary": "Per-vertex CPU skinning/body surface test; root overlaps are retained, not hidden. Not a triangle intersection, cloth/body penetration, or solver convergence guarantee."
+}

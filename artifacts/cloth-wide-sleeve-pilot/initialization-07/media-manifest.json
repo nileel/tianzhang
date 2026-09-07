@@ -1,0 +1,30 @@
+{
+  "source": "D:\\Temp\\TianZhang-Blender\\cloth-wide-sleeve-initialization-07-visible-capture",
+  "sourcePngCount": 1152,
+  "sourceOrderedNamesAndHashDigest": "433e6c1a677bcd82f5c40bca52d6b1e6bb398f73c1043cc1461556251b72bfa0",
+  "media": [
+    {
+      "file": "unity-initialization-07-yaw150.gif",
+      "frames": 192,
+      "durationMs": 16000,
+      "bytes": 12141030,
+      "sourceCaptureIndices": [
+        192,
+        383
+      ],
+      "sha256": "f035ed08f721bb4aa42f7de93806fa9ed54da63e13e8a6f97245f45d68d618c9"
+    },
+    {
+      "file": "unity-initialization-07-full.gif",
+      "frames": 1152,
+      "durationMs": 96000,
+      "bytes": 65904559,
+      "sourceCaptureIndices": [
+        0,
+        1151
+      ],
+      "sha256": "3c3f658759181168ac36beab61a625437242722cb7b6433fef4cb2c9746172e2"
+    }
+  ],
+  "boundary": "Real Unity screenshots only, not AI video. Entire initialization and all three views retained; full GIF contains all six independent directions."
+}

@@ -1,0 +1,37 @@
+{
+  "source": "D:\\Temp\\TianZhang-Blender\\cloth-wide-sleeve-initialization-07-visible-capture\\runtime-report.json",
+  "sourceSha256": "1cdeef599999fb116947110bf82b36d8bbc77f0845c0fc901cdc8a5586de73b7",
+  "frames": 1152,
+  "simulationSteps": 5760,
+  "resetSteps": [
+    0,
+    960,
+    1920,
+    2880,
+    3840,
+    4800
+  ],
+  "clothOffSteps": [
+    0,
+    960,
+    1920,
+    2880,
+    3840,
+    4800
+  ],
+  "initializationSecondsPerDirection": 4,
+  "unchangedMaxDistances": 456,
+  "unchangedPinnedVertices": 29,
+  "sameActionCpuSnapshotPairs": 15,
+  "sameActionCpuMaxErrorMeters": 5.876165743460879e-07,
+  "sameActionProxyCenterMaxComponentErrorMeters": 1.033395528793335e-05,
+  "sameActionWorldRadiusMaxErrorMeters": 1.4901161193847656e-07,
+  "sameActionRootMaxErrorMeters": 4.805480091749757e-06,
+  "openPoseVsEditModeMaxErrorMeters": 5.096080812281376e-07,
+  "openPoseMusclesFromActualStep0": {
+    "armUp": 0.4340357184410095,
+    "armForward": 0.22264878451824188,
+    "forearm": 0.9617056250572205
+  },
+  "boundary": "Same-action inputs use 07 cycleTime=06 trialTime+4. Float time quantization is measured. Old raw Cloth index/world conversion is uncalibrated; no penetration-depth claim."
+}
