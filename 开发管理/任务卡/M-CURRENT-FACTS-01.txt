@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "management",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-PROJECTION-01"
-  ],
-  "stateReason": "等待 U-COMBAT-PROJECTION-01 完成其保存代码及 UNITY_STRUCTURE.runtime.md 修改，避免刚校正的事实再次失效；之后由 DeepSeek 自动校正、Codex 独立复审，不等待自动化线。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-07：U-COMBAT-PROJECTION-01 已完成归档；既有完整实施卡、路径、验证、完成条件与停止条件均满足 runnable，恢复 external_execute/deepseek/ready 并按 P2 插入队列。",
   "expectedPaths": [
     "开发管理/设计-当前状态.txt",
     "UNITY_STRUCTURE.runtime.md",

@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-PROJECTION-01"
-  ],
-  "stateReason": "2026-09-05：U-COMBAT-RNG-01 与 D-COMBAT-PARITY-01 已完成，逐角色授权合同已冻结；仍等待 U-COMBAT-PROJECTION-01 的角色入战投影。保持 blocked，不进入 ready 队列。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-07：U-COMBAT-PROJECTION-01 已完成归档；既有完整实施卡、路径、验证、完成条件与停止条件均满足 runnable，恢复 external_execute/deepseek/ready 并按 P1 插入队列。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",
