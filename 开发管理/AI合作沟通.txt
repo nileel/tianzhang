@@ -17,3 +17,16 @@
 - 残留风险：全量 EditMode 仍有 1 个与本次改动无关的既有环境失败（ClothWideSleevePilot 缺少 Blender 源）；本次未建立 production ability ID -> attackProfileId 映射，术法/神通生产授权仍为空，需后续独立数据合同接入。
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+### DSH-M-CURRENT-FACTS-01-fb274af4 · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 M-CURRENT-FACTS-01 的原子正式结果等待 Codex 独立复审。
+- 任务：M-CURRENT-FACTS-01
+- 候选提交：2b2d17968b99cd89fe668ff0b4315cf930ee68ff
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/设计-当前状态.txt、UNITY_STRUCTURE.runtime.md
+- 已验证：check-review-text.ps1 -Paths 开发管理/设计-当前状态.txt,UNITY_STRUCTURE.runtime.md：OK（2 文件）；check-pending-whitespace.ps1 -ExpectedPaths 两个文档：OK（2 文件，fix=False）；git diff --cached --check：通过（finalize 脚本执行）；逐条校正指向现行源码符号：GameRuntime.cs、GameSaveSerializer.cs(SchemaVersion=2/LegacySchemaVersion=1)、GameSaveEnvelope.cs(CharacterRecord/CharterRecord)、CharterCommitService.cs、CharterUseCase.cs、CharacterRuntimeProfile.cs、GameSaveSlotStore.cs、CharterVerticalSlicePlayModeTests.cs（当前仅 UnknownNodeTypeFailsClosedAtMapLoad）；任务归档核对：U-TZ-CHARTER-SLICE-01D、U-TZ-CHARTER-SAVE-01、U-TZ-CHARTER-SAVE-01A 均 completed 并归档
+- 未验证：check-task-cards.ps1 未运行：本轮候选未改动任务卡/队列/backlog，无管理状态变化；Unity/BattleSim 未重跑：本轮无源码或参数改动（按任务卡记录验证边界）；check-data-chain.ps1 未运行：无 CSV/asset 变化；Codex 独立复审未执行：本候选仍为 ⚠️ 已修改/未审核
+- 残留风险：校正基于只读源码审查而非本轮 Unity 重跑；重建后册界 PlayMode 仅剩 UnknownNodeTypeFailsClosedAtMapLoad，保存/读取校验依赖 EditMode GameSaveEnvelopeTests 与 CharterUseCase.ValidateRestoredState，该覆盖表述按当前源码书写但未在本轮以 PlayMode 复验；旧 schema 4（GameSessionSnapshot）与重建后 schema 2（GameSaveEnvelope）的区分已保留，复审方需按提交 4aa505fe/a6371ae1 核对重建叙事；两份文档现标记为 ⚠️ 已修改/未审核，复审不通过需按普通返工同步修正。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

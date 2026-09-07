@@ -1,5 +1,7 @@
 # Unity 正式运行时结构
 
+> ⚠️ 已修改/未审核；修改方：DeepSeek V4 Pro 0813；变更范围：保存链 schema 版本与所有者校正。
+
 ## 何时读取
 
 修改正式场景入口、运行时状态、导航、保存、Adventure／Combat 流程或 Bootstrap 接线时读取。
@@ -29,7 +31,7 @@
 - `GameRuntime` 组合 Player、Cultivation、World 子域 store、导航、悬赏、背包授予、册界和 NPC 修炼用例；领域规则仍在各模块。
 - `CharacterRuntimeProfile` 拥有角色身份、属性、资源、装载、成长引用与显式战斗修饰（`CharacterCombatModifiers`）。
 - `CultivationState` 拥有修炼状态；`WorldClockService`、Quest／Inventory／Npc／Bounty／Charter store 分别拥有世界长期状态。
-- `CharterCommitService` 是册界长期提交入口；`GameSaveEnvelope`／`GameSaveSerializer`／`GameSaveSlotStore` 负责 schema 1 快照与原子槽位文件适配。
+- `CharterCommitService` 是册界长期提交入口；`GameSaveEnvelope`／`GameSaveSerializer`／`GameSaveSlotStore` 负责 schema 2 快照（`SchemaVersion=2`，读旧 schema 1 档迁移外观档案）与原子槽位文件适配。
 - `INavigationUseCase`、`NavigationStateSnapshot` 与 `SceneReturnTarget` 承载正式场景进入／返回。
 
 ## Adventure 与 Combat 路线
