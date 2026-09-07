@@ -1,0 +1,447 @@
+{
+  "purpose": "body surface coverage, NOT observed cloth/body penetration",
+  "snapshots": [
+    {
+      "time": 0.0,
+      "parts": [
+        {
+          "name": "Eyebrows",
+          "mesh": "Eyebrows",
+          "vertices": 646,
+          "triangles": 984,
+          "bake_cpu_error_m": 2.3291258344215748e-07,
+          "bone_regions": []
+        },
+        {
+          "name": "Eyes",
+          "mesh": "Eyes",
+          "vertices": 556,
+          "triangles": 768,
+          "bake_cpu_error_m": 2.0502638164998643e-07,
+          "bone_regions": []
+        },
+        {
+          "name": "SuperHero_Male",
+          "mesh": "SuperHero_Male",
+          "vertices": 7275,
+          "triangles": 12566,
+          "bake_cpu_error_m": 5.990192448734888e-07,
+          "bone_regions": [
+            {
+              "bone": "clavicle_l",
+              "count": 101,
+              "local_min": [
+                0.01010880060493946,
+                1.4071286916732788,
+                -0.0820445790886879
+              ],
+              "local_max": [
+                0.24038636684417725,
+                1.569452166557312,
+                0.16385328769683838
+              ],
+              "outside_over_5mm": 45,
+              "maximum_uncovered_distance_m": 0.0824332580377386,
+              "worst_vertex": 1089,
+              "worst_local": [
+                0.24038636684417725,
+                1.5206232070922852,
+                0.03566873073577881
+              ]
+            },
+            {
+              "bone": "clavicle_r",
+              "count": 98,
+              "local_min": [
+                -0.21044188737869263,
+                1.4031987190246582,
+                -0.08204469829797745
+              ],
+              "local_max": [
+                -0.008125455118715763,
+                1.569452166557312,
+                0.16240140795707703
+              ],
+              "outside_over_5mm": 44,
+              "maximum_uncovered_distance_m": 0.07152495448110502,
+              "worst_vertex": 2346,
+              "worst_local": [
+                -0.205594003200531,
+                1.5346930027008057,
+                0.04213201254606247
+              ]
+            },
+            {
+              "bone": "neck_01",
+              "count": 195,
+              "local_min": [
+                -0.08241689205169678,
+                1.5246342420578003,
+                -0.02836846373975277
+              ],
+              "local_max": [
+                0.10263459384441376,
+                1.6218020915985107,
+                0.1288759708404541
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 3507,
+              "worst_local": [
+                -0.04290023073554039,
+                1.6218020915985107,
+                0.08363604545593262
+              ]
+            },
+            {
+              "bone": "pelvis",
+              "count": 248,
+              "local_min": [
+                -0.14644475281238556,
+                0.8964759111404419,
+                -0.09046052396297455
+              ],
+              "local_max": [
+                0.16666235029697418,
+                1.0947434902191162,
+                0.1538723111152649
+              ],
+              "outside_over_5mm": 96,
+              "maximum_uncovered_distance_m": 0.07190263681174341,
+              "worst_vertex": 2825,
+              "worst_local": [
+                0.0020130015909671783,
+                0.8964759111404419,
+                0.04934960976243019
+              ]
+            },
+            {
+              "bone": "spine_01",
+              "count": 152,
+              "local_min": [
+                -0.1406908929347992,
+                1.0596318244934082,
+                -0.10119365155696869
+              ],
+              "local_max": [
+                0.16090834140777588,
+                1.194191336631775,
+                0.09650945663452148
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 718,
+              "worst_local": [
+                -0.1406908929347992,
+                1.0908371210098267,
+                -0.013096451759338379
+              ]
+            },
+            {
+              "bone": "spine_02",
+              "count": 172,
+              "local_min": [
+                -0.14845813810825348,
+                1.1833522319793701,
+                -0.11507914960384369
+              ],
+              "local_max": [
+                0.16867555677890778,
+                1.318443775177002,
+                0.13907122611999512
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 174,
+              "worst_local": [
+                -0.14113254845142365,
+                1.2671632766723633,
+                0.10080945491790771
+              ]
+            },
+            {
+              "bone": "spine_03",
+              "count": 240,
+              "local_min": [
+                -0.19623547792434692,
+                1.2902625799179077,
+                -0.11962627619504929
+              ],
+              "local_max": [
+                0.20631861686706543,
+                1.5402700901031494,
+                0.1691598892211914
+              ],
+              "outside_over_5mm": 54,
+              "maximum_uncovered_distance_m": 0.05102402169447201,
+              "worst_vertex": 323,
+              "worst_local": [
+                0.1754637062549591,
+                1.4506735801696777,
+                0.16854429244995117
+              ]
+            }
+          ]
+        }
+      ],
+      "pinned_targets_inside_torso_over_5mm": 0,
+      "fixed_target_maximum_depth_m": 0.0013442811747553518
+    },
+    {
+      "time": 3.0,
+      "parts": [
+        {
+          "name": "Eyebrows",
+          "mesh": "Eyebrows",
+          "vertices": 646,
+          "triangles": 984,
+          "bake_cpu_error_m": 2.315156280019437e-07,
+          "bone_regions": []
+        },
+        {
+          "name": "Eyes",
+          "mesh": "Eyes",
+          "vertices": 556,
+          "triangles": 768,
+          "bake_cpu_error_m": 1.7059225854154647e-07,
+          "bone_regions": []
+        },
+        {
+          "name": "SuperHero_Male",
+          "mesh": "SuperHero_Male",
+          "vertices": 7275,
+          "triangles": 12566,
+          "bake_cpu_error_m": 5.748063927057956e-07,
+          "bone_regions": [
+            {
+              "bone": "clavicle_l",
+              "count": 101,
+              "local_min": [
+                0.006312450859695673,
+                1.3923372030258179,
+                -0.08348582684993744
+              ],
+              "local_max": [
+                0.22195038199424744,
+                1.5583162307739258,
+                0.1616504043340683
+              ],
+              "outside_over_5mm": 44,
+              "maximum_uncovered_distance_m": 0.06075026896405597,
+              "worst_vertex": 1089,
+              "worst_local": [
+                0.21132934093475342,
+                1.5216054916381836,
+                0.04551661014556885
+              ]
+            },
+            {
+              "bone": "clavicle_r",
+              "count": 98,
+              "local_min": [
+                -0.2142382562160492,
+                1.3920626640319824,
+                -0.08348594605922699
+              ],
+              "local_max": [
+                -0.011921806260943413,
+                1.5583162307739258,
+                0.16096018254756927
+              ],
+              "outside_over_5mm": 44,
+              "maximum_uncovered_distance_m": 0.07152490759421459,
+              "worst_vertex": 2346,
+              "worst_local": [
+                -0.20939034223556519,
+                1.5235569477081299,
+                0.04069077968597412
+              ]
+            },
+            {
+              "bone": "neck_01",
+              "count": 195,
+              "local_min": [
+                -0.08621322363615036,
+                1.5134981870651245,
+                -0.029809702187776566
+              ],
+              "local_max": [
+                0.09883823990821838,
+                1.610666275024414,
+                0.12743473052978516
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 3507,
+              "worst_local": [
+                -0.04669657722115517,
+                1.610666275024414,
+                0.08219482004642487
+              ]
+            },
+            {
+              "bone": "pelvis",
+              "count": 248,
+              "local_min": [
+                -0.15024109184741974,
+                0.8853399753570557,
+                -0.0919017568230629
+              ],
+              "local_max": [
+                0.16286596655845642,
+                1.08360755443573,
+                0.15243107080459595
+              ],
+              "outside_over_5mm": 96,
+              "maximum_uncovered_distance_m": 0.07190263678361347,
+              "worst_vertex": 2825,
+              "worst_local": [
+                -0.001783343032002449,
+                0.8853399753570557,
+                0.04790836572647095
+              ]
+            },
+            {
+              "bone": "spine_01",
+              "count": 152,
+              "local_min": [
+                -0.14448724687099457,
+                1.048495888710022,
+                -0.10263489186763763
+              ],
+              "local_max": [
+                0.1571120172739029,
+                1.1830554008483887,
+                0.09506821632385254
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 718,
+              "worst_local": [
+                -0.14448724687099457,
+                1.0797011852264404,
+                -0.01453767716884613
+              ]
+            },
+            {
+              "bone": "spine_02",
+              "count": 172,
+              "local_min": [
+                -0.15225449204444885,
+                1.1722162961959839,
+                -0.11652038991451263
+              ],
+              "local_max": [
+                0.1648792326450348,
+                1.3073078393936157,
+                0.13762997090816498
+              ],
+              "outside_over_5mm": 0,
+              "maximum_uncovered_distance_m": 0.0,
+              "worst_vertex": 174,
+              "worst_local": [
+                -0.14492888748645782,
+                1.256027340888977,
+                0.09936820715665817
+              ]
+            },
+            {
+              "bone": "spine_03",
+              "count": 240,
+              "local_min": [
+                -0.20003186166286469,
+                1.279126763343811,
+                -0.12106752395629883
+              ],
+              "local_max": [
+                0.22756442427635193,
+                1.5291341543197632,
+                0.16771863400936127
+              ],
+              "outside_over_5mm": 56,
+              "maximum_uncovered_distance_m": 0.0525156614287412,
+              "worst_vertex": 308,
+              "worst_local": [
+                0.22124120593070984,
+                1.3706929683685303,
+                0.10949456691741943
+              ]
+            }
+          ]
+        }
+      ],
+      "pinned_targets_inside_torso_over_5mm": 0,
+      "fixed_target_maximum_depth_m": 0.0
+    }
+  ],
+  "confirmed_body_constraint_conflicts": [
+    {
+      "time": 0.0,
+      "weld_rule": "exactly equal world positions; no geometric tolerance",
+      "welded_vertices": 6285,
+      "triangles": 12566,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "targets": [
+        {
+          "source_index": 415,
+          "max_distance_m": 0.0,
+          "winding_number": 0.9999999999999999,
+          "inside_body": true,
+          "distance_to_body_surface_m": 0.011765369230254157,
+          "minimum_motion_shortfall_m": 0.011765369230254157
+        },
+        {
+          "source_index": 454,
+          "max_distance_m": 0.0,
+          "winding_number": 1.0,
+          "inside_body": true,
+          "distance_to_body_surface_m": 0.011799409293528726,
+          "minimum_motion_shortfall_m": 0.011799409293528726
+        },
+        {
+          "source_index": 359,
+          "max_distance_m": 0.019475384,
+          "winding_number": 1.0,
+          "inside_body": true,
+          "distance_to_body_surface_m": 0.11191466641584026,
+          "minimum_motion_shortfall_m": 0.09243928241584026
+        }
+      ]
+    },
+    {
+      "time": 3.0,
+      "weld_rule": "exactly equal world positions; no geometric tolerance",
+      "welded_vertices": 6285,
+      "triangles": 12566,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "targets": [
+        {
+          "source_index": 415,
+          "max_distance_m": 0.0,
+          "winding_number": 2.3191544552338144e-17,
+          "inside_body": false,
+          "distance_to_body_surface_m": 0.04553163364850227,
+          "minimum_motion_shortfall_m": 0
+        },
+        {
+          "source_index": 454,
+          "max_distance_m": 0.0,
+          "winding_number": 1.3252311172764653e-17,
+          "inside_body": false,
+          "distance_to_body_surface_m": 0.018912760086216184,
+          "minimum_motion_shortfall_m": 0
+        },
+        {
+          "source_index": 359,
+          "max_distance_m": 0.019475384,
+          "winding_number": 9.93923337957349e-18,
+          "inside_body": false,
+          "distance_to_body_surface_m": 0.14075879585382112,
+          "minimum_motion_shortfall_m": 0
+        }
+      ]
+    }
+  ]
+}

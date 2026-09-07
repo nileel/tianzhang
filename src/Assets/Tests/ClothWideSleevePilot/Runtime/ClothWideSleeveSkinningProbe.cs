@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace TianZhang.ClothWideSleevePilot
@@ -14,6 +15,9 @@ namespace TianZhang.ClothWideSleevePilot
         private readonly Matrix4x4[] bindposes, matrices;
         private readonly Transform[] bones;
         private readonly ClothSkinningCoefficient[] coefficients;
+        private readonly SkinnedMeshRenderer[] bodyParts;
+        private readonly Transform characterRoot;
+        private readonly Mesh bodyBaked = new Mesh();
 
         [Serializable]
         public sealed class Snapshot
@@ -28,9 +32,23 @@ namespace TianZhang.ClothWideSleevePilot
             public Vector3[] cpuWorld, bakedWorld, clothRaw, clothCandidateWorld;
             public Vector3[] bodyProxyCenters;
             public float[] bodyProxyRadii;
+            public BodySnapshot[] bodySurfaces;
         }
 
-        public ClothWideSleeveSkinningProbe(SkinnedMeshRenderer renderer, Cloth cloth)
+        [Serializable]
+        public sealed class BodySnapshot
+        {
+            public string rendererName, meshName;
+            public Vector3 characterPosition, characterScale, rendererScale, boundsMin, boundsMax;
+            public Quaternion characterRotation;
+            public float bakeVsCpuMaxMeters;
+            public Vector3[] worldVertices, characterLocalVertices, bonePositionsLocal;
+            public Quaternion[] boneRotationsLocal;
+            public string[] boneNames;
+            public int[] triangles, dominantBone;
+        }
+
+        public ClothWideSleeveSkinningProbe(SkinnedMeshRenderer renderer, Cloth cloth, Animator bodyAnimator = null)
         {
             this.renderer = renderer;
             this.cloth = cloth;
@@ -42,6 +60,14 @@ namespace TianZhang.ClothWideSleevePilot
             coefficients = cloth.coefficients;
             if (rest.Length != weights.Length || rest.Length != coefficients.Length)
                 throw new InvalidOperationException("Snapshot input counts disagree.");
+            if (bodyAnimator != null)
+            {
+                characterRoot = bodyAnimator.transform;
+                bodyParts = characterRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                    .Where(r => r != renderer && r.enabled && r.gameObject.activeInHierarchy).ToArray();
+                if (bodyParts.Length == 0 || bodyParts.Any(r => r.GetComponent<Cloth>() != null))
+                    throw new InvalidOperationException("Visible body references are missing or have Cloth.");
+            }
         }
 
         public Snapshot Measure(bool includeVertices)
@@ -93,6 +119,7 @@ namespace TianZhang.ClothWideSleevePilot
                 snapshot.bakedWorld = worldBake;
                 snapshot.clothRaw = raw;
                 snapshot.clothCandidateWorld = candidate;
+                if (bodyParts != null) snapshot.bodySurfaces = bodyParts.Select(CaptureBody).ToArray();
                 var pairs = cloth.sphereColliders;
                 snapshot.bodyProxyCenters = new Vector3[pairs.Length * 2];
                 snapshot.bodyProxyRadii = new float[pairs.Length * 2];
@@ -112,6 +139,59 @@ namespace TianZhang.ClothWideSleevePilot
             return snapshot;
         }
 
-        public void Dispose() => UnityEngine.Object.Destroy(baked);
+        private BodySnapshot CaptureBody(SkinnedMeshRenderer body)
+        {
+            body.BakeMesh(bodyBaked, false);
+            Vector3[] bodyRest = body.sharedMesh.vertices;
+            BoneWeight[] bodyWeights = body.sharedMesh.boneWeights;
+            Matrix4x4[] bodyBinds = body.sharedMesh.bindposes;
+            Transform[] bodyBones = body.bones;
+            Matrix4x4[] skin = bodyBones.Select((b, i) => b.localToWorldMatrix * bodyBinds[i]).ToArray();
+            var s = new BodySnapshot
+            {
+                rendererName = body.name, meshName = body.sharedMesh.name,
+                characterPosition = characterRoot.position, characterRotation = characterRoot.rotation,
+                characterScale = characterRoot.lossyScale, rendererScale = body.transform.lossyScale,
+                boundsMin = body.bounds.min, boundsMax = body.bounds.max,
+                worldVertices = bodyBaked.vertices.Select(body.transform.TransformPoint).ToArray(),
+                boneNames = bodyBones.Select(b => b.name).ToArray(),
+                bonePositionsLocal = bodyBones.Select(b => characterRoot.InverseTransformPoint(b.position)).ToArray(),
+                boneRotationsLocal = bodyBones.Select(b => Quaternion.Inverse(characterRoot.rotation) * b.rotation).ToArray(),
+                triangles = bodyBaked.triangles, dominantBone = new int[bodyRest.Length]
+            };
+            if (s.worldVertices.Length != bodyRest.Length || bodyWeights.Length != bodyRest.Length)
+                throw new InvalidOperationException("Body BakeMesh correspondence changed.");
+            s.characterLocalVertices = s.worldVertices.Select(characterRoot.InverseTransformPoint).ToArray();
+            for (int i = 0; i < bodyRest.Length; i++)
+            {
+                BoneWeight w = bodyWeights[i];
+                Vector3 cpu = skin[w.boneIndex0].MultiplyPoint3x4(bodyRest[i]) * w.weight0 +
+                    skin[w.boneIndex1].MultiplyPoint3x4(bodyRest[i]) * w.weight1 +
+                    skin[w.boneIndex2].MultiplyPoint3x4(bodyRest[i]) * w.weight2 +
+                    skin[w.boneIndex3].MultiplyPoint3x4(bodyRest[i]) * w.weight3;
+                s.bakeVsCpuMaxMeters = Mathf.Max(s.bakeVsCpuMaxMeters, Vector3.Distance(cpu, s.worldVertices[i]));
+                int index = w.boneIndex0;
+                float weight = w.weight0;
+                if (w.weight1 > weight) { index = w.boneIndex1; weight = w.weight1; }
+                if (w.weight2 > weight) { index = w.boneIndex2; weight = w.weight2; }
+                if (w.weight3 > weight) index = w.boneIndex3;
+                s.dominantBone[i] = index;
+            }
+            return s;
+        }
+
+        public void Dispose()
+        {
+            if (Application.isPlaying)
+            {
+                UnityEngine.Object.Destroy(baked);
+                UnityEngine.Object.Destroy(bodyBaked);
+            }
+            else
+            {
+                UnityEngine.Object.DestroyImmediate(baked);
+                UnityEngine.Object.DestroyImmediate(bodyBaked);
+            }
+        }
     }
 }

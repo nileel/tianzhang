@@ -165,5 +165,33 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
             Assert.AreEqual(96, controller.SleeveCloth.coefficients.Count(c => c.maxDistance <= 0.0001f));
             Assert.Throws<System.InvalidOperationException>(() => ClothWideSleevePilotController.ReleaseDiagnosedPins(changed));
         }
+
+        [Test]
+        public void BodyProbeCapturesAllVisiblePartsWithoutChangingConstraintsOrProxies()
+        {
+            EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<ClothWideSleevePilotController>();
+            var cloth = controller.SleeveCloth;
+            var coefficients = cloth.coefficients;
+            var pairs = cloth.sphereColliders;
+            bool enabled = cloth.enabled;
+            cloth.enabled = false;
+            try
+            {
+                using (var probe = new ClothWideSleeveSkinningProbe(controller.SleeveRenderer, cloth, controller.Animator))
+                {
+                    var snapshot = probe.Measure(true);
+                    CollectionAssert.AreEquivalent(new[] { "SuperHero_Male", "Eyes", "Eyebrows" },
+                        snapshot.bodySurfaces.Select(b => b.rendererName));
+                    var body = snapshot.bodySurfaces.Single(b => b.rendererName == "SuperHero_Male");
+                    Assert.AreEqual(7275, body.worldVertices.Length);
+                    Assert.AreEqual(12566 * 3, body.triangles.Length);
+                    Assert.That(snapshot.bodySurfaces.Max(b => b.bakeVsCpuMaxMeters), Is.LessThan(.00001f));
+                    CollectionAssert.AreEqual(coefficients, cloth.coefficients);
+                    CollectionAssert.AreEqual(pairs, cloth.sphereColliders);
+                }
+            }
+            finally { cloth.enabled = enabled; }
+        }
     }
 }

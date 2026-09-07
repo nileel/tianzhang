@@ -102,7 +102,8 @@ namespace TianZhang.ClothWideSleevePilot
             forearmIndex = RequireMuscle("Left Forearm Stretch");
             ConfigureViews();
             probe = new ClothWideSleeveCollisionProbe(sleeveCloth, sleeveRenderer);
-            if (Isolating) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth);
+            if (Isolating) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth,
+                ReadCommandLineValue("--body-probe") == "true" ? animator : null);
 
             sleeveCloth.enabled = false;
             ApplyPose(Isolating ? 1 : 0, 0f);
