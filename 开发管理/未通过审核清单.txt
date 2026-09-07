@@ -11,6 +11,7 @@
 - 审核对象：正式提交 `71e9b7a6ddafad397194f225644345366f26a6d2`；结论：部分通过，仍需返工。
 - `GameRuntime.Charters` 与正式 `CharterSiteController.SubmitFormal` 的当前提交链均使用 `CharterUseCase.CommitEvaluatedState`；仓库内不存在 `CharterCommitService.TryCommit` 的调用。候选把后者写成“唯一长期提交入口”，与当前运行时所有者不符。
 - 保存 schema 2、schema 1 外观档案迁移、`CharacterRecord` 恢复、M8 已实施及 01D 的历史验收边界均已核实；只需将两份当前文档的册界正式提交所有者校正到当前调用链后重新复审。
+- 返工状态：2026-09-08 由 DeepSeek V4 Pro 0813 完成定向返工：`开发管理/设计-当前状态.txt` 与 `UNITY_STRUCTURE.runtime.md` 的册界正式提交所有者已从 `CharterCommitService.TryCommit` 校正为现行调用链 `CharterUseCase.CommitEvaluatedState`（`GameRuntime.Charters` 与正式 `CharterSiteController.SubmitFormal`），待 Codex 复审。
 
 ### C-HS-YY-JD-01A～01Q · 统一返工决议
 
