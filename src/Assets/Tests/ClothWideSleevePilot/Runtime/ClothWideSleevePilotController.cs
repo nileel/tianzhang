@@ -28,6 +28,7 @@ namespace TianZhang.ClothWideSleevePilot
         [SerializeField] private SkinnedMeshRenderer sleeveRenderer;
         [SerializeField] private IsolationMode isolationMode;
         [SerializeField] private bool releaseDiagnosedTorsoPins;
+        [SerializeField] private bool correctTorsoTransition;
 
         private HumanPoseHandler poseHandler;
         private HumanPose pose;
@@ -66,6 +67,9 @@ namespace TianZhang.ClothWideSleevePilot
             string isolationArgument = ReadCommandLineValue("--isolate-mode");
             if (isolationArgument != null) isolationMode = ParseIsolationMode(isolationArgument);
             if (ReadCommandLineValue("--release-conflicting-pins") == "true") releaseDiagnosedTorsoPins = true;
+            if (ReadCommandLineValue("--correct-torso-transition") == "true") correctTorsoTransition = true;
+            if (correctTorsoTransition && releaseDiagnosedTorsoPins)
+                throw new InvalidOperationException("Select the torso candidate OR the old pin-release baseline, not both.");
             if (releaseDiagnosedTorsoPins)
             {
                 var coefficients = sleeveCloth.coefficients;
@@ -101,12 +105,13 @@ namespace TianZhang.ClothWideSleevePilot
             armForwardIndex = RequireMuscle("Left Arm Front-Back");
             forearmIndex = RequireMuscle("Left Forearm Stretch");
             ConfigureViews();
-            probe = new ClothWideSleeveCollisionProbe(sleeveCloth, sleeveRenderer);
-            if (Isolating) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth,
-                ReadCommandLineValue("--body-probe") == "true" ? animator : null);
 
             sleeveCloth.enabled = false;
             ApplyPose(Isolating ? 1 : 0, 0f);
+            if (correctTorsoTransition) ClothWideSleeveTorsoCorrection.Apply(sleeveCloth, animator.transform);
+            probe = new ClothWideSleeveCollisionProbe(sleeveCloth, sleeveRenderer);
+            if (Isolating || correctTorsoTransition) skinningProbe = new ClothWideSleeveSkinningProbe(sleeveRenderer, sleeveCloth,
+                ReadCommandLineValue("--body-probe") == "true" ? animator : null);
             // Exclude shader/window startup from the recorded trial; Cloth is still disabled.
             for (int i = 0; i < SimulationRate; i++) yield return new WaitForEndOfFrame();
             wallStart = Time.realtimeSinceStartup;
@@ -173,6 +178,7 @@ namespace TianZhang.ClothWideSleevePilot
                 if (!running || direction < 0) continue;
                 if (Capturing && simulationFrame % CaptureStride == 0)
                 {
+                    int trialFrame = Mathf.RoundToInt(trialTime * SimulationRate);
                     var record = new FrameRecord
                     {
                         captureIndex = frames.Count, simulationFrame = simulationFrame, time = elapsed,
@@ -181,8 +187,9 @@ namespace TianZhang.ClothWideSleevePilot
                         clothEnabled = sleeveCloth.enabled, rootPosition = motionRoot.position,
                         rootRotation = motionRoot.rotation,
                         measurement = !Isolating && sleeveCloth.enabled ? probe.Measure() : null,
-                        skinning = Isolating ? skinningProbe.Measure(simulationFrame % 60 == 0 ||
-                            simulationFrame == 295 || simulationFrame == 330 || simulationFrame == 475) : null
+                        skinning = skinningProbe != null && (Isolating || direction == 1) ?
+                            skinningProbe.Measure(trialFrame % 60 == 0 ||
+                            trialFrame == 295 || trialFrame == 330 || trialFrame == 475) : null
                     };
                     Texture2D texture = ScreenCapture.CaptureScreenshotAsTexture();
                     File.WriteAllBytes(Path.Combine(captureDirectory, "frame_" + frames.Count.ToString("D4") + ".png"),
@@ -244,7 +251,8 @@ namespace TianZhang.ClothWideSleevePilot
             }
             if (probe != null && debugCamera != null) probe.DrawOverlay(debugCamera);
             GUI.Box(new Rect(8, 8, Screen.width * 0.5f - 16, 98), GUIContent.none);
-            GUI.Label(new Rect(18, 12, 590, 28), releaseDiagnosedTorsoPins ? "PIN RELEASE 01 / 28 TARGETED VERTICES" :
+            GUI.Label(new Rect(18, 12, 590, 28), correctTorsoTransition ? "TORSO TRANSITION 05 / CANDIDATE" :
+                releaseDiagnosedTorsoPins ? "PIN RELEASE 01 / 28 TARGETED VERTICES" :
                 Isolating ? "ISOLATION 03 / " + isolationMode :
                 "WIDE SLEEVE / RETEST 02 / UNITY CLOTH", titleStyle);
             GUI.Label(new Rect(18, 42, 590, 25), "Near | t=" + elapsed.ToString("F2") + "s | frame=" + simulationFrame +
@@ -273,6 +281,8 @@ namespace TianZhang.ClothWideSleevePilot
             {
                 unityVersion = Application.unityVersion, clothObject = sleeveCloth.name, isolationMode = isolationMode.ToString(),
                 releaseDiagnosedTorsoPins = releaseDiagnosedTorsoPins,
+                correctTorsoTransition = correctTorsoTransition,
+                effectiveMaxDistances = Array.ConvertAll(sleeveCloth.coefficients, c => c.maxDistance),
                 simulationHz = SimulationRate, captureHz = SimulationRate / CaptureStride,
                 durationSeconds = Duration, capturedFrames = frames.Count,
                 wallSecondsIncludingCapture = Time.realtimeSinceStartup - wallStart,
@@ -368,12 +378,13 @@ namespace TianZhang.ClothWideSleevePilot
         private sealed class RuntimeReport
         {
             public string unityVersion, clothObject, isolationMode;
-            public bool releaseDiagnosedTorsoPins;
+            public bool releaseDiagnosedTorsoPins, correctTorsoTransition;
             public int simulationHz, captureHz, capturedFrames, vertexCount, pinnedVertices, colliderPairs, selfCollisionVertices;
             public float durationSeconds, wallSecondsIncludingCapture, bendingStiffness, stretchingStiffness,
                 maximumDistance, tacticalOrthographicSize;
             public Vector3 rendererLossyScale, cameraEuler;
             public float[] testedDirectionYaw;
+            public float[] effectiveMaxDistances;
             public FrameRecord[] frames;
             public StepRecord[] steps;
         }

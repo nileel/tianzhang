@@ -167,6 +167,78 @@ namespace TianZhang.ClothWideSleevePilot.EditorTests
         }
 
         [Test]
+        public void TorsoCandidateChangesOnlyLocalConstraintsAndTorsoPair()
+        {
+            EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<ClothWideSleevePilotController>();
+            var cloth = controller.SleeveCloth;
+            var original = cloth.coefficients;
+            var baseline = (ClothSkinningCoefficient[])original.Clone();
+            ClothWideSleevePilotController.ReleaseDiagnosedPins(baseline);
+            var pairs = cloth.sphereColliders;
+            var armSpheres = new[] { pairs[1].first, pairs[1].second, pairs[2].second };
+            var armCenters = armSpheres.Select(c => c.center).ToArray();
+            var armRadii = armSpheres.Select(c => c.radius).ToArray();
+            var self = new List<uint>();
+            cloth.GetSelfAndInterCollisionIndices(self);
+            var mesh = controller.SleeveRenderer.sharedMesh;
+            bool enabled = cloth.enabled;
+            cloth.enabled = false;
+            try
+            {
+                var pose = new HumanPose();
+                using (var handler = new HumanPoseHandler(controller.Animator.avatar, controller.Animator.transform))
+                {
+                    handler.GetHumanPose(ref pose);
+                    var sample = ClothWideSleeveMotion.Evaluate(0f);
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Arm Down-Up")] = sample.armUp;
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Arm Front-Back")] = sample.armForward;
+                    pose.muscles[System.Array.IndexOf(HumanTrait.MuscleName, "Left Forearm Stretch")] = sample.forearm;
+                    handler.SetHumanPose(ref pose);
+                    ClothWideSleeveTorsoCorrection.Apply(cloth, controller.Animator.transform);
+                }
+                var changed = cloth.coefficients;
+                Assert.AreEqual(71, changed.Where((c, i) => c.maxDistance != baseline[i].maxDistance).Count());
+                Assert.AreEqual(29, changed.Count(c => c.maxDistance <= .0001f));
+                for (int i = 0; i < changed.Length; i++)
+                {
+                    Assert.That(changed[i].maxDistance, Is.GreaterThanOrEqualTo(baseline[i].maxDistance));
+                    Assert.AreEqual(original[i].collisionSphereDistance, changed[i].collisionSphereDistance);
+                }
+                Assert.That(changed.Max(c => c.maxDistance), Is.EqualTo(.38f).Within(.0001f));
+                CollectionAssert.AreEqual(pairs, cloth.sphereColliders);
+                CollectionAssert.AreEqual(armCenters, armSpheres.Select(c => c.center));
+                CollectionAssert.AreEqual(armRadii, armSpheres.Select(c => c.radius));
+                var afterSelf = new List<uint>();
+                cloth.GetSelfAndInterCollisionIndices(afterSelf);
+                CollectionAssert.AreEqual(self, afterSelf);
+                Assert.AreSame(mesh, controller.SleeveRenderer.sharedMesh);
+                Assert.That(cloth.bendingStiffness, Is.EqualTo(.70f).Within(.0001f));
+                Assert.That(cloth.stretchingStiffness, Is.EqualTo(.88f).Within(.0001f));
+                using (var probe = new ClothWideSleeveSkinningProbe(controller.SleeveRenderer, cloth))
+                {
+                    var snapshot = probe.Measure(true);
+                    Assert.That(Vector3.Distance(controller.Animator.transform.InverseTransformPoint(
+                        snapshot.bodyProxyCenters[0]), new Vector3(.01f, .995f, .025f)), Is.LessThan(.00001f));
+                    Assert.That(Vector3.Distance(controller.Animator.transform.InverseTransformPoint(
+                        snapshot.bodyProxyCenters[1]), new Vector3(.01f, 1.43f, .025f)), Is.LessThan(.00001f));
+                    Assert.That(snapshot.bodyProxyRadii[0], Is.EqualTo(.18f).Within(.00001f));
+                    Assert.That(snapshot.bodyProxyRadii[1], Is.EqualTo(.225f).Within(.00001f));
+                    for (int i = 0; i < changed.Length; i++)
+                    {
+                        float d = ClothWideSleeveCollisionProbe.ProxySignedDistance(snapshot.cpuWorld[i],
+                            snapshot.bodyProxyCenters[0], snapshot.bodyProxyCenters[1], .18f, .225f);
+                        Assert.That(changed[i].maxDistance, Is.GreaterThanOrEqualTo(Mathf.Max(0f, .015f - d) - .00001f),
+                            "Rest-pose target remains unreachable: " + i);
+                    }
+                }
+                Assert.Throws<System.InvalidOperationException>(() =>
+                    ClothWideSleeveTorsoCorrection.Apply(cloth, controller.Animator.transform));
+            }
+            finally { cloth.enabled = enabled; }
+        }
+
+        [Test]
         public void BodyProbeCapturesAllVisiblePartsWithoutChangingConstraintsOrProxies()
         {
             EditorSceneManager.OpenScene(Editor.ClothWideSleeveExperimentSceneBuilder.ScenePath, OpenSceneMode.Single);

@@ -1,0 +1,23 @@
+[
+  {
+    "file": "unity-transition-05-full.gif",
+    "frames": 864,
+    "durationMs": 72000,
+    "bytes": 49258049,
+    "sha256": "0d3d1d9e5f46bea25c76e3ef4704f07a9c56be8db5f3c7e07e69aa66cc2e77a6"
+  },
+  {
+    "file": "unity-transition-05-yaw150.gif",
+    "frames": 144,
+    "durationMs": 12000,
+    "bytes": 8850767,
+    "sha256": "5fdb103348815c55e2d3a3efc08a7b607204c8c5082c68c47cecbedabee12c7a"
+  },
+  {
+    "file": "unity-transition-05-comparison.gif",
+    "frames": 144,
+    "durationMs": 12000,
+    "bytes": 9103396,
+    "sha256": "2a8e1417f692ade0a38ed8828df15f436a6ad55de11fc66d6fd3dcee1205cbf1"
+  }
+]
