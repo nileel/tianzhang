@@ -1,0 +1,270 @@
+{
+  "v1": {
+    "unity": "6000.3.18f1",
+    "frames": 255,
+    "fps": 24,
+    "screen": {
+      "x": 1920.0,
+      "y": 1080.0
+    },
+    "initialProjectedSize": {
+      "x": 71.3331298828125,
+      "y": 116.1297607421875
+    },
+    "maxFootDrift": 0.0,
+    "nearWristXRange": [
+      -0.15028434991836548,
+      0.3802065849304199
+    ],
+    "nearWristYRange": [
+      0.6893341541290283,
+      1.132223129272461
+    ],
+    "stateTransitions": [
+      {
+        "frame": 0,
+        "time": 0.0,
+        "state": "Idle"
+      },
+      {
+        "frame": 74,
+        "time": 3.0833332538604736,
+        "state": "Cast"
+      },
+      {
+        "frame": 166,
+        "time": 6.916666507720947,
+        "state": "Idle"
+      },
+      {
+        "frame": 238,
+        "time": 9.916666984558105,
+        "state": "Cast"
+      }
+    ],
+    "skins": {
+      "foot_far": {
+        "allReady": true,
+        "vertices": 56,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 1.0,
+        "maxSignedAreaRatio": 1.0,
+        "maxVertexDisplacement": 0.0
+      },
+      "foot_near": {
+        "allReady": true,
+        "vertices": 80,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 1.0,
+        "maxSignedAreaRatio": 1.0,
+        "maxVertexDisplacement": 0.0
+      },
+      "sleeve_far": {
+        "allReady": true,
+        "vertices": 546,
+        "maxFlippedVisibleTriangles": 31,
+        "minSignedAreaRatio": -0.7734476327896118,
+        "maxSignedAreaRatio": 1.3398960828781128,
+        "maxVertexDisplacement": 0.20539528131484985
+      },
+      "hand_far": {
+        "allReady": true,
+        "vertices": 70,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999908208847046,
+        "maxSignedAreaRatio": 1.0000100135803223,
+        "maxVertexDisplacement": 0.24454528093338013
+      },
+      "robe_back": {
+        "allReady": true,
+        "vertices": 1290,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9483314156532288,
+        "maxSignedAreaRatio": 1.0326433181762695,
+        "maxVertexDisplacement": 0.009981334209442139
+      },
+      "robe_front": {
+        "allReady": true,
+        "vertices": 882,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9483689069747925,
+        "maxSignedAreaRatio": 1.0326451063156128,
+        "maxVertexDisplacement": 0.00998145341873169
+      },
+      "hair_back": {
+        "allReady": true,
+        "vertices": 198,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9374479651451111,
+        "maxSignedAreaRatio": 1.0847140550613403,
+        "maxVertexDisplacement": 0.015467217192053795
+      },
+      "torso": {
+        "allReady": true,
+        "vertices": 418,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.954822838306427,
+        "maxSignedAreaRatio": 1.0434963703155518,
+        "maxVertexDisplacement": 0.015427026897668839
+      },
+      "head": {
+        "allReady": true,
+        "vertices": 170,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999865293502808,
+        "maxSignedAreaRatio": 1.0000134706497192,
+        "maxVertexDisplacement": 0.010246377438306808
+      },
+      "sleeve_near": {
+        "allReady": true,
+        "vertices": 621,
+        "maxFlippedVisibleTriangles": 178,
+        "minSignedAreaRatio": -3.9377365112304688,
+        "maxSignedAreaRatio": 2.9356489181518555,
+        "maxVertexDisplacement": 0.6722780466079712
+      },
+      "hand_near": {
+        "allReady": true,
+        "vertices": 70,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999893307685852,
+        "maxSignedAreaRatio": 1.0000120401382446,
+        "maxVertexDisplacement": 0.8891485333442688
+      }
+    }
+  },
+  "v2": {
+    "unity": "6000.3.18f1",
+    "frames": 255,
+    "fps": 24,
+    "screen": {
+      "x": 1920.0,
+      "y": 1080.0
+    },
+    "initialProjectedSize": {
+      "x": 71.3331298828125,
+      "y": 116.1297607421875
+    },
+    "maxFootDrift": 0.0,
+    "nearWristXRange": [
+      -0.15028434991836548,
+      0.3802065849304199
+    ],
+    "nearWristYRange": [
+      0.6893341541290283,
+      1.132223129272461
+    ],
+    "stateTransitions": [
+      {
+        "frame": 0,
+        "time": 0.0,
+        "state": "Idle"
+      },
+      {
+        "frame": 74,
+        "time": 3.0833332538604736,
+        "state": "Cast"
+      },
+      {
+        "frame": 166,
+        "time": 6.916666507720947,
+        "state": "Idle"
+      },
+      {
+        "frame": 238,
+        "time": 9.916666984558105,
+        "state": "Cast"
+      }
+    ],
+    "skins": {
+      "foot_far": {
+        "allReady": true,
+        "vertices": 56,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 1.0,
+        "maxSignedAreaRatio": 1.0,
+        "maxVertexDisplacement": 0.0
+      },
+      "foot_near": {
+        "allReady": true,
+        "vertices": 80,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 1.0,
+        "maxSignedAreaRatio": 1.0,
+        "maxVertexDisplacement": 0.0
+      },
+      "sleeve_far": {
+        "allReady": true,
+        "vertices": 546,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.4258168339729309,
+        "maxSignedAreaRatio": 1.1830999851226807,
+        "maxVertexDisplacement": 0.24240274727344513
+      },
+      "hand_far": {
+        "allReady": true,
+        "vertices": 70,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999908208847046,
+        "maxSignedAreaRatio": 1.0000100135803223,
+        "maxVertexDisplacement": 0.24454528093338013
+      },
+      "robe_back": {
+        "allReady": true,
+        "vertices": 1290,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9483314156532288,
+        "maxSignedAreaRatio": 1.0326433181762695,
+        "maxVertexDisplacement": 0.009981334209442139
+      },
+      "robe_front": {
+        "allReady": true,
+        "vertices": 882,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9483689069747925,
+        "maxSignedAreaRatio": 1.0326451063156128,
+        "maxVertexDisplacement": 0.00998145341873169
+      },
+      "hair_back": {
+        "allReady": true,
+        "vertices": 198,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9374479651451111,
+        "maxSignedAreaRatio": 1.0847140550613403,
+        "maxVertexDisplacement": 0.015467217192053795
+      },
+      "torso": {
+        "allReady": true,
+        "vertices": 418,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.954822838306427,
+        "maxSignedAreaRatio": 1.0434963703155518,
+        "maxVertexDisplacement": 0.015427026897668839
+      },
+      "head": {
+        "allReady": true,
+        "vertices": 170,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999865293502808,
+        "maxSignedAreaRatio": 1.0000134706497192,
+        "maxVertexDisplacement": 0.010246377438306808
+      },
+      "sleeve_near": {
+        "allReady": true,
+        "vertices": 621,
+        "maxFlippedVisibleTriangles": 3,
+        "minSignedAreaRatio": -0.08718710392713547,
+        "maxSignedAreaRatio": 2.0521466732025146,
+        "maxVertexDisplacement": 0.9848613142967224
+      },
+      "hand_near": {
+        "allReady": true,
+        "vertices": 70,
+        "maxFlippedVisibleTriangles": 0,
+        "minSignedAreaRatio": 0.9999893307685852,
+        "maxSignedAreaRatio": 1.0000120401382446,
+        "maxVertexDisplacement": 0.8891485333442688
+      }
+    }
+  }
+}

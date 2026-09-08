@@ -1,0 +1,130 @@
+{
+  "source": "parts-atlas-green-v2.png",
+  "sourceSize": [
+    1448,
+    1086
+  ],
+  "operation": "chroma alpha + disjoint crop; torso ends immediately below belt",
+  "layers": [
+    {
+      "name": "torso",
+      "sourceRect": [
+        96,
+        36,
+        237,
+        281
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "robe_back",
+      "sourceRect": [
+        429,
+        25,
+        295,
+        427
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "robe_front",
+      "sourceRect": [
+        800,
+        33,
+        207,
+        416
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "head",
+      "sourceRect": [
+        1158,
+        66,
+        185,
+        337
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "hair_back",
+      "sourceRect": [
+        104,
+        502,
+        175,
+        306
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "sleeve_near",
+      "sourceRect": [
+        408,
+        464,
+        296,
+        335
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "sleeve_far",
+      "sourceRect": [
+        757,
+        467,
+        286,
+        333
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "hand_near",
+      "sourceRect": [
+        1159,
+        490,
+        240,
+        283
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "hand_far",
+      "sourceRect": [
+        63,
+        845,
+        255,
+        197
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "foot_near",
+      "sourceRect": [
+        432,
+        853,
+        216,
+        173
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "foot_far",
+      "sourceRect": [
+        823,
+        854,
+        174,
+        183
+      ],
+      "alphaThreshold": 8
+    },
+    {
+      "name": "cuff_lining",
+      "sourceRect": [
+        1114,
+        872,
+        247,
+        156
+      ],
+      "alphaThreshold": 8
+    }
+  ]
+}

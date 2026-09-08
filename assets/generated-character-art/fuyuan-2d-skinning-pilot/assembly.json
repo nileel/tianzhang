@@ -1,0 +1,238 @@
+{
+  "canvas": [
+    1024,
+    1280
+  ],
+  "ppu": 768,
+  "originTopLeft": [
+    512,
+    1160
+  ],
+  "direction": 1,
+  "yaw": 150,
+  "parts": [
+    {
+      "name": "foot_far",
+      "h": 0.11,
+      "p": [
+        -0.095,
+        0.005
+      ],
+      "anchor": [
+        0.5,
+        0
+      ],
+      "z": 0,
+      "order": 0,
+      "canvasRect": [
+        399,
+        1072,
+        80,
+        84
+      ]
+    },
+    {
+      "name": "foot_near",
+      "h": 0.12,
+      "p": [
+        0.105,
+        0
+      ],
+      "anchor": [
+        0.5,
+        0
+      ],
+      "z": 0,
+      "order": 1,
+      "canvasRect": [
+        535,
+        1068,
+        115,
+        92
+      ]
+    },
+    {
+      "name": "sleeve_far",
+      "h": 0.43,
+      "p": [
+        -0.11,
+        1.01
+      ],
+      "anchor": [
+        0.85,
+        0.904
+      ],
+      "z": 25,
+      "order": 2,
+      "canvasRect": [
+        196,
+        338,
+        396,
+        419
+      ]
+    },
+    {
+      "name": "hand_far",
+      "h": 0.11,
+      "p": [
+        -0.245,
+        0.725
+      ],
+      "anchor": [
+        0.88,
+        0.8
+      ],
+      "z": -15,
+      "order": 3,
+      "canvasRect": [
+        214,
+        562,
+        127,
+        109
+      ]
+    },
+    {
+      "name": "robe_back",
+      "h": 0.77,
+      "p": [
+        0.025,
+        0.065
+      ],
+      "anchor": [
+        0.5,
+        0
+      ],
+      "z": 0,
+      "order": 4,
+      "canvasRect": [
+        327,
+        519,
+        408,
+        591
+      ]
+    },
+    {
+      "name": "robe_front",
+      "h": 0.75,
+      "p": [
+        0,
+        0.085
+      ],
+      "anchor": [
+        0.5,
+        0
+      ],
+      "z": 0,
+      "order": 5,
+      "canvasRect": [
+        369,
+        519,
+        287,
+        576
+      ]
+    },
+    {
+      "name": "hair_back",
+      "h": 0.3,
+      "p": [
+        0.055,
+        1.255
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "z": 0,
+      "order": 6,
+      "canvasRect": [
+        488,
+        196,
+        132,
+        230
+      ]
+    },
+    {
+      "name": "torso",
+      "h": 0.38,
+      "p": [
+        0.035,
+        0.72
+      ],
+      "anchor": [
+        0.5,
+        0
+      ],
+      "z": 0,
+      "order": 7,
+      "canvasRect": [
+        416,
+        315,
+        246,
+        292
+      ]
+    },
+    {
+      "name": "head",
+      "h": 0.28,
+      "p": [
+        -0.018,
+        1.055
+      ],
+      "anchor": [
+        0.46,
+        0
+      ],
+      "z": 0,
+      "order": 8,
+      "canvasRect": [
+        444,
+        135,
+        118,
+        215
+      ]
+    },
+    {
+      "name": "sleeve_near",
+      "h": 0.45,
+      "p": [
+        0.17,
+        1.02
+      ],
+      "anchor": [
+        0.14527027027027026,
+        0.9164179104477612
+      ],
+      "z": -25,
+      "order": 9,
+      "canvasRect": [
+        468,
+        332,
+        424,
+        443
+      ]
+    },
+    {
+      "name": "hand_near",
+      "h": 0.14,
+      "p": [
+        0.35,
+        0.755
+      ],
+      "anchor": [
+        0.88,
+        0.86
+      ],
+      "z": 65,
+      "order": 10,
+      "canvasRect": [
+        733,
+        564,
+        137,
+        129
+      ]
+    }
+  ],
+  "unused": [
+    "cuff_lining: generated as collar, rejected; sleeve artwork already includes continuous lining"
+  ]
+}
