@@ -689,6 +689,18 @@ namespace TianZhang.Tests.EditMode
                 Assert.That(damage.IsCritical, Is.EqualTo(parityCase.expected.critical), parityCase.caseId + " critical");
                 Assert.That(damage.IsBlocked, Is.EqualTo(parityCase.expected.blocked), parityCase.caseId + " blocked");
                 Assert.That(damage.FinalDamage, Is.EqualTo(parityCase.expected.damage), parityCase.caseId + " damage");
+                Assert.That(
+                    CombatActionResolver.EffectiveHitRate(hitRateBonus, dodgeRate),
+                    Is.EqualTo(parityCase.expected.hitRate).Within(1e-4f),
+                    parityCase.caseId + " hit rate");
+                Assert.That(
+                    CombatActionResolver.CriticalMultiplier(critDamage, 0f),
+                    Is.EqualTo(parityCase.expected.critMultiplier).Within(1e-4f),
+                    parityCase.caseId + " crit multiplier");
+                Assert.That(
+                    CombatActionResolver.BlockReductionMultiplier(blockReduction),
+                    Is.EqualTo(parityCase.expected.blockMultiplier).Within(1e-4f),
+                    parityCase.caseId + " block multiplier");
             }
         }
 
@@ -804,6 +816,9 @@ namespace TianZhang.Tests.EditMode
             public bool critical;
             public bool blocked;
             public int damage;
+            public float hitRate;
+            public float critMultiplier;
+            public float blockMultiplier;
         }
 
         private static CombatSession CreateSession(

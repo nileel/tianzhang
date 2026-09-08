@@ -1938,6 +1938,9 @@ static class BattleSimSelfTests
             bool expectedCritical = expected.GetProperty("critical").GetBoolean();
             bool expectedBlocked = expected.GetProperty("blocked").GetBoolean();
             int expectedDamage = expected.GetProperty("damage").GetInt32();
+            double expectedHitRate = expected.GetProperty("hitRate").GetDouble();
+            double expectedCritMultiplier = expected.GetProperty("critMultiplier").GetDouble();
+            double expectedBlockMultiplier = expected.GetProperty("blockMultiplier").GetDouble();
 
             var attacker = Character.Create(caseId + "-attacker", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
             attacker.Primary["肉攻"] = attack;
@@ -1960,6 +1963,9 @@ static class BattleSimSelfTests
             AssertEqual(expectedCritical, result.Critical, $"{caseId} critical");
             AssertEqual(expectedBlocked, result.Blocked, $"{caseId} blocked");
             AssertEqual(expectedDamage, result.Damage, $"{caseId} damage");
+            AssertClose(expectedHitRate, Combat.EffectiveHitRate(hitRateBonus, dodgeRate), 1e-4, $"{caseId} hit rate");
+            AssertClose(expectedCritMultiplier, Combat.GetCritMultiplier(critDamage), 1e-4, $"{caseId} crit multiplier");
+            AssertClose(expectedBlockMultiplier, Combat.ShieldReductionMultiplier(blockReduction), 1e-4, $"{caseId} block multiplier");
         }
     }
 

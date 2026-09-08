@@ -26,45 +26,45 @@
       "hitPercent": 99.0,
       "criticalPercent": 100.0,
       "blockPercent": 100.0,
-      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 1.0 }
     },
     {
       "caseId": "hit_equal",
       "dodgeRate": 60.0,
       "hitPercent": 40.0,
-      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50, "hitRate": 40.0, "critMultiplier": 1.5, "blockMultiplier": 1.0 }
     },
     {
       "caseId": "hit_above",
       "dodgeRate": 60.0,
       "hitPercent": 41.0,
-      "expected": { "hit": false, "critical": false, "blocked": false, "damage": 0 }
+      "expected": { "hit": false, "critical": false, "blocked": false, "damage": 0, "hitRate": 40.0, "critMultiplier": 1.5, "blockMultiplier": 1.0 }
     },
     {
       "caseId": "crit_below",
       "critRate": 20.0,
       "criticalPercent": 19.0,
-      "expected": { "hit": true, "critical": true, "blocked": false, "damage": 75 }
+      "expected": { "hit": true, "critical": true, "blocked": false, "damage": 75, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 1.0 }
     },
     {
       "caseId": "crit_equal",
       "critRate": 20.0,
       "criticalPercent": 20.0,
-      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 1.0 }
     },
     {
       "caseId": "block_below",
       "blockRate": 30.0,
       "blockReduction": 20.0,
       "blockPercent": 29.0,
-      "expected": { "hit": true, "critical": false, "blocked": true, "damage": 40 }
+      "expected": { "hit": true, "critical": false, "blocked": true, "damage": 40, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 0.8 }
     },
     {
       "caseId": "block_equal",
       "blockRate": 30.0,
       "blockReduction": 20.0,
       "blockPercent": 30.0,
-      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 0.8 }
     },
     {
       "caseId": "crit_and_block",
@@ -73,7 +73,7 @@
       "blockRate": 30.0,
       "blockReduction": 20.0,
       "blockPercent": 29.0,
-      "expected": { "hit": true, "critical": true, "blocked": true, "damage": 60 }
+      "expected": { "hit": true, "critical": true, "blocked": true, "damage": 60, "hitRate": 100.0, "critMultiplier": 1.5, "blockMultiplier": 0.8 }
     }
   ]
 }

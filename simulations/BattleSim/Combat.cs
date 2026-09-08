@@ -231,6 +231,14 @@ static class Combat
         return BaseCritMultiplier + (critDamage + elementCritDamageBonus) / 100;
     }
 
+    // 命中率派生：Clamp(100 + 命中率 - 闪避率, 5, 100)。
+    internal static double EffectiveHitRate(double hitRateBonus, double dodgeRate) =>
+        Math.Clamp(100 + hitRateBonus - dodgeRate, 5.0, 100.0);
+
+    // 格挡/魂盾减伤倍率：1 - 减伤率/100。
+    internal static double ShieldReductionMultiplier(double shieldReduction) =>
+        1 - shieldReduction / 100;
+
     // v4.1: 合并攻击结算（含穿透）
     internal static int Dmg(int atk, int def, double resist, double defPen = 0, double mult = 1.0)
     {
@@ -284,7 +292,7 @@ static class Combat
         // 命中：hitPercent <= Clamp(100 + 命中率 - 闪避率, 5, 100)。
         double hitRateBonus = attacker.Secondary.GetValueOrDefault("命中率", 0);
         double dodgeRate = defender.Secondary.GetValueOrDefault("闪避率", 0);
-        bool hit = ignoreDodge || samples.HitPercent <= Math.Clamp(100 + hitRateBonus - dodgeRate, 5.0, 100.0);
+        bool hit = ignoreDodge || samples.HitPercent <= EffectiveHitRate(hitRateBonus, dodgeRate);
         if (!hit)
             return new DefenseSettlementResult(false, false, false, false, 0);
 
@@ -301,7 +309,7 @@ static class Combat
         double shieldReduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
         bool shielded = !ignoreBlock && (isPhysical ? samples.BlockPercent : samples.SoulShieldPercent) < shieldRate;
         if (shielded)
-            damage = (int)Math.Round(damage * (1 - shieldReduction / 100));
+            damage = (int)Math.Round(damage * ShieldReductionMultiplier(shieldReduction));
 
         return new DefenseSettlementResult(hit, critical, isPhysical && shielded, !isPhysical && shielded, damage);
     }

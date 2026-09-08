@@ -128,7 +128,7 @@ namespace TianZhang.Combat
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
             bool critical = rolls.CriticalPercent < actor.CriticalRate + element.CriticalRateBonus;
             float multiplier = profile.PhysicalMultiplier * ConsumeLeijieForPhysicalAction(actor) *
-                (critical ? BaseCriticalMultiplier + (actor.CriticalDamage + element.CriticalDamageBonus) / 100f : 1f);
+                (critical ? CriticalMultiplier(actor.CriticalDamage, element.CriticalDamageBonus) : 1f);
             int effectiveDefense = (int)Math.Round(target.PhysicalDefense * target.DefenseMultiplier(physical: true));
             float damage = CalculateLineDamage(actor.PhysicalAttack, effectiveDefense, 0f, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
@@ -137,7 +137,7 @@ namespace TianZhang.Combat
             bool backAttack = IsBackAttack(target, actor);
             bool blocked = !backAttack && rolls.BlockPercent < target.BlockRate;
             if (blocked)
-                damage *= 1f - Clamp(target.BlockReduction, 0f, 100f) / 100f;
+                damage *= BlockReductionMultiplier(target.BlockReduction);
             damage = ApplyCommonReductions(damage, target);
 
             int finalDamage = Math.Max(1, (int)Math.Round(damage, MidpointRounding.AwayFromZero));
@@ -190,9 +190,18 @@ namespace TianZhang.Combat
             return new CombatDamageResult(finalDamage, true, critical, false, soulShielded);
         }
 
+        public static float EffectiveHitRate(float hitRateBonus, float dodgeRate) =>
+            Clamp(BaseHitRate + hitRateBonus - dodgeRate, 5f, 100f);
+
+        public static float CriticalMultiplier(float criticalDamage, float criticalDamageBonus) =>
+            BaseCriticalMultiplier + (criticalDamage + criticalDamageBonus) / 100f;
+
+        public static float BlockReductionMultiplier(float blockReduction) =>
+            1f - Clamp(blockReduction, 0f, 100f) / 100f;
+
         private static bool RollHit(CombatantSnapshot actor, CombatantSnapshot target, float rollPercent)
         {
-            float rate = Clamp(BaseHitRate + actor.HitRateBonus - target.DodgeRate, 5f, 100f);
+            float rate = EffectiveHitRate(actor.HitRateBonus, target.DodgeRate);
             rate *= FacingHitModifier(target, actor);
             return rollPercent <= Clamp(rate, 5f, 100f);
         }
