@@ -1,0 +1,27 @@
+# N-COMBAT-PARITY-01 · 已消费交接归档
+
+## DSH-N-COMBAT-PARITY-01-48e49ea0 · DeepSeek 自动交接（已由 Codex 复审通过）
+
+- 方向：任务 N-COMBAT-PARITY-01 的原子正式结果等待 Codex 独立复审。
+- 任务：N-COMBAT-PARITY-01
+- 候选提交：f6557637d2ce05b9536d5ca94c357c96bca786ee
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：simulations/BattleSim/BattleSimSelfTests.cs、simulations/BattleSim/combat-parity-cases.json、simulations/BattleSim/Combat.cs、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
+- 已验证：dotnet build -c Release --no-restore simulations/BattleSim 通过（0 警告 0 错误）；dotnet run --no-build -c Release --project simulations/BattleSim 完整运行退出码 0；dotnet run -- --self-test combat-parity-v1 通过（八行 hit/critical/blocked/damage 逐项一致）；既有自测 crit-multiplier-tq053、ct-reaction-tq052、attack-profile-d-combat-02、basic-unarmed-production-d-combat-prod-01、element-v510 全部通过；Unity EditMode 测试 CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases 通过（全套 464/465 通过）；check-pending-whitespace 与 git diff --cached --check 通过；提交仅含 4 个预期路径
+- 未验证：Unity 全量 EditMode 套件存在 1 项无关既有失败（ClothWideSleeveExperimentEditorTests 缺 Blender 源），非本任务引入、未修复；BattleSim 自测 group-area-targeting-n-group-02 失败（区域命中中心断言），其断言值由未改动的 ResolveGroupActionPlan/ResolveAreaTargeting/SelectGroupTarget 确定性路径产生、与 Dmg/ApplyDefenses 改动无关，判断为既有失败，未在本次回滚复现；真实 duel/group 数值平衡矩阵的胜率数值（Rng 流因采样数 3→4 漂移，无断言失败，未与旧值逐一对比）
+- 残留风险：真实模拟链的 Rng 采样流因 ApplyDefenses 改为四命名样本而漂移，矩阵胜率数值会微移但无断言失败；命中新增 5% 下限是合同要求的对齐，会改变极端高闪避场景的命中概率；另存在与本任务无关的两处既有失败（Unity ClothWideSleeve Blender 源缺失、BattleSim group-area-targeting-n-group-02），未在本次范围修复。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
+
+## DSH-N-COMBAT-PARITY-01-973ee119 · DeepSeek 自动交接（已由 Codex 复审通过）
+
+- 方向：任务 N-COMBAT-PARITY-01 的原子正式结果等待 Codex 独立复审。
+- 任务：N-COMBAT-PARITY-01
+- 候选提交：af39f283c77b6ea60f3e5561b804622f33a39cf2
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：simulations/BattleSim/BattleSimSelfTests.cs、simulations/BattleSim/combat-parity-cases.json、simulations/BattleSim/Combat.cs、src/Assets/Scripts/Combat/CombatActionResolver.cs、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
+- 已验证：dotnet build -c Release --no-restore simulations/BattleSim：0 警告 0 错误；dotnet run --no-build -c Release --project simulations/BattleSim：完整默认矩阵退出码 0；self-test combat-parity-v1：PASS；既有自测 crit-multiplier-tq053 / ct-reaction-tq052 / attack-profile-d-combat-02 / basic-unarmed-production-d-combat-prod-01 / element-v510：均 PASS；Unity EditMode CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases：Passed（含新增中间率/倍率 1e-4 断言）；check-pending-whitespace（5 文件 OK）与 git diff --cached --check：通过
+- 未验证：tools/run-unity-editmode-tests.ps1 整体退出码非 0：全量 465 例中 1 例无关失败 SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings（ClothWideSleevePilot 依赖 LFS Blender 源缺失，与战斗无关、非本轮修改引入）；check-task-cards.ps1：未运行（本轮 candidate 未修改任务卡/队列/backlog/管理投影）
+- 残留风险：Unity 全量 EditMode 存在 1 例与战斗无关的既有失败（ClothWideSleevePilot 依赖 LFS Blender 源缺失），使 run-unity-editmode-tests.ps1 整体退出码为 1，但不影响 combat-parity 验收；中间率/倍率断言仅覆盖合同八行中性物理域的取值（hitRate 100/40、critMultiplier 1.5、blockMultiplier 1.0/0.8），未外推魂盾/元素/功法/境界抗性等尚不可比项。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
