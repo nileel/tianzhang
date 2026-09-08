@@ -8,12 +8,13 @@ const parts=[
  {name:'hand_far',h:.14,p:[-.245,.725],anchor:[.91,.88],z:-15,order:3},
  {name:'robe_back',h:.77,p:[.025,.065],anchor:[.5,0],z:0,order:4},
  {name:'robe_front',h:.75,p:[0,.085],anchor:[.5,0],z:0,order:5},
- {name:'hair_back',h:.29,p:[.015,1.28],anchor:[.5,1],z:0,order:6},
- // Preserve the original head pixel scale and crown position; only its hidden neck grows.
- {name:'head',h:.30*859/787,p:[-.018,1.335-.30*859/787],anchor:[.46,0],z:0,order:7},
+ {name:'hair_back',h:.29,p:[.015+36/ppu,1.28],anchor:[.5,1],z:0,order:6},
+ // Keep head/neck pixels and height; shift the whole layer to the user's marked position.
+ {name:'head',h:.30*859/787,p:[-.018+36/ppu,1.335-.30*859/787],anchor:[.46,0],z:0,order:7},
  {name:'torso',h:.38,p:[.035,.72],anchor:[.5,0],z:0,order:8},
  {name:'sleeve_near',h:.45,p:[.17,1.02],anchor:[43/296,307/335],z:-25,order:9},
- {name:'hand_near',h:.14,p:[.35,.755],anchor:[.88,.86],z:65,order:10}
+ // Keep the original back-of-hand; turn fingers downward along the marked arm arc.
+ {name:'hand_near',h:.14,p:[.35,.755],anchor:[.88,.86],z:40,order:10}
 ];
 (async()=>{
  fs.mkdirSync(path.join(root,'assembled-layers'),{recursive:true});

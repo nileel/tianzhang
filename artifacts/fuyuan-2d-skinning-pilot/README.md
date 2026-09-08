@@ -1,10 +1,12 @@
 # 苻渊 · 单方向 2D 分层骨骼小样
 
-2026-09-08。**当前为 v3：按用户截图修正四处静态素材与装配问题，保留原动作。** 本次实际使用 Unity 官方骨骼蒙皮，不是旧 `.spine` 栅格时间线，也不是生成序列帧。用户认为整体效果可以；此前助手把“拼反”误解为动态袖腹上翻，本轮已按具体标注纠正。最终视觉效果由用户观看判断，不以局部装配错误否定路线。
+2026-09-08。**当前为 v4：按用户红圈右移头颈和后发，画面右手沿箭头弧线向下垂，保留原动作。** v3已按用户截图修正四处静态素材与装配问题。本次实际使用 Unity 官方骨骼蒙皮，不是旧 `.spine` 栅格时间线，也不是生成序列帧。最终视觉效果由用户观看判断，不以局部装配错误否定路线。
 
 ## 先观看
 
-- [当前 v3 真实录像：1920×1080 / 24 fps / 9.5 秒](unity-pilot-v3.mp4)
+- [当前 v4 真实录像：1920×1080 / 24 fps / 9.5 秒](unity-pilot-v4.mp4)
+- [v4 动图](unity-pilot-v4.gif) · [v4 待机截图](still-idle-v4.png)
+- [保留的 v3 真实录像：1920×1080 / 24 fps / 9.5 秒](unity-pilot-v3.mp4)
 - [v3 动图：1280×720 / 12 fps](unity-pilot-v3.gif) · [v3 待机截图](still-idle-v3.png) · [回待机截图](still-return-v3.png)
 - [保留的隔离比较版 v2：1920×1080 / 24 fps / 9.5 秒](unity-pilot-v2.mp4)
 - [v2 缩放动图：1280×720 / 12 fps](unity-pilot-v2.gif)（检查原生战棋尺寸请看上方 MP4）
@@ -13,7 +15,16 @@
 
 左右画面是**同一个角色、同一个时刻、相同观察方向**。左侧近景 orthographicSize=0.90；右侧复用项目相机 position=(0,8,-10)、Euler=(38,0,0)、orthographicSize=6.2、near=.1/far=60。右侧 viewport 宽度缩小，屏幕高度仍为1080，角色原生像素高度没有被放大。画面没有角色特效。
 
-录屏来自 Unity Standalone Player 的 `WaitForEndOfFrame → ScreenCapture.CaptureScreenshotAsTexture`。每版实际连续录得255帧；v2/v3交付视频只截取前9.5秒，完整包含待机、施法和回待机，避免末尾进入下一次施法。没有补帧、AI生成帧或图像变形后制。首轮的隐藏窗口捕获失败，改为正常可见播放器后录制成功；失败日志仍在保留工作区。
+录屏来自 Unity Standalone Player 的 `WaitForEndOfFrame → ScreenCapture.CaptureScreenshotAsTexture`。每版实际连续录得255帧；v2/v3/v4交付视频只截取前9.5秒，完整包含待机、施法和回待机，避免末尾进入下一次施法。没有补帧、AI生成帧或图像变形后制。首轮的隐藏窗口捕获失败，改为正常可见播放器后录制成功；失败日志仍在保留工作区。
+
+## v4：头颈位置与画面右手
+
+- 复用v3头/裸颈的同一RGBA层，按红圈整体向右平移36个源画布像素（0.046875 world），后发同步平移以保持连接；高度和缩放不变。两层源像素平移对照均为零差异，脸没有重新生成，衣领与身体未移。
+- 用户红箭头要求肩→肘→腕→指尖逐渐向下的弧线。复用v3原近手背图，将组装角度65°改为40°，相当于指尖再顺时针下垂25°；腕点仍为(.35,.755)。只改静态组装，不改腕骨或动画曲线。
+- 最初助手误解为掌背/手性问题，进行过一次未采用的掌面生成。用户补充标注后撤回该解释；生成图和提示词保留为失败记录，未进入最终图层、场景或录像。无需人工补画即可完成本轮位置和朝向修正。
+- 原11层、17骨、Idle/Cast两个动画不变。255帧主肩肘腕、状态时间、人物和镜头参数与v3逐帧相同，脚底最大漂移0；头/后发/手未见可见三角翻面。当前4445网格顶点，战棋投影68.76×116.36px，头向右移动4.083原生屏幕像素。取证见`captures-v4/runtime-evidence.json`及`assembly-v4-summary.json`。
+- 实际抽查待机、抬臂与回待机帧，头颈/发和腕部连接保持，右手下垂方向符合标注。此前动态袖腹与肩袖布纹接缝未作为本轮目标，未标为已解决。
+- 本轮内置ImageGen 1次、等待55秒（未采用）；没有人工补画或外部采购。22:25左右开始，22:49完成最终录制与编码，约24分钟，含误解返工及等待用户补充标注；素材、组装、验证阶段没有独立计时，准确拆分未知。之后整理时间另计。
 
 ## v3：截图标注的四处修正
 
@@ -41,7 +52,7 @@ v3仍是11图层、17骨、2个原AnimationClip。`Idle.anim`、`Cast.anim`与`P
 `Assets/FuyuanPilot/Scenes/FuyuanSkinningPilot.unity`
 
 - Prefab：`Assets/FuyuanPilot/Prefabs/FuYuan_Direction1.prefab`
-- 17根骨骼在Prefab的`Root`下；11个图层对象挂官方`SpriteSkin`，v3共4455个网格顶点（原v1/v2为4401）。
+- 17根骨骼在Prefab的`Root`下；11个图层对象挂官方`SpriteSkin`，当前v4共4445个网格顶点（v3为4455，原v1/v2为4401）。
 - 图层与可编辑网格/权重：`Assets/FuyuanPilot/Art/*.png`及同名`.meta`。选PNG → Sprite Editor → Skinning Editor，可编辑骨骼、网格及权重。**必须保留 `.meta`**，网格权重保存在其中。
 - 动画：`Assets/FuyuanPilot/Animation/Idle.anim`、`Cast.anim`、`Fuyuan.controller`，均为标准Unity AnimationClip/AnimatorController。Animation窗口可编辑骨骼曲线。
 - 作者脚本：`Assets/FuyuanPilot/Editor/PilotRigBuilder.cs`、`PilotAnimationAuthor.cs`；运行/取证：`Runtime/PilotPlayback.cs`。菜单`Fuyuan Pilot/Rebuild Editable Sample`会按脚本重新生成覆盖实验资产，手工编辑之后不要直接重建。

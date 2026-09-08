@@ -1,0 +1,162 @@
+{
+  "frames": 255,
+  "mainMotionAndCameraMatchV3": true,
+  "sourceTranslations": [
+    {
+      "name": "head",
+      "canvasPixels": 36,
+      "worldShift": 0.046875,
+      "mismatchCount": 0
+    },
+    {
+      "name": "hair_back",
+      "canvasPixels": 36,
+      "worldShift": 0.046875,
+      "mismatchCount": 0
+    }
+  ],
+  "nearHand": {
+    "source": "unchanged v3 hand-back",
+    "assemblyAngleBefore": 65,
+    "assemblyAngleAfter": 40,
+    "wrist": [
+      0.35,
+      0.755
+    ],
+    "generatedPalmUsed": false
+  },
+  "runtimeHeadScreenShift": {
+    "minX": 4.0826416015625,
+    "maxX": 4.0826416015625,
+    "minY": 0,
+    "maxY": 0
+  },
+  "maxFootDrift": 0,
+  "totalVertices": 4445,
+  "initialProjectedSize": {
+    "x": 68.7626953125,
+    "y": 116.3565673828125
+  },
+  "stateTransitions": [
+    {
+      "frame": 0,
+      "time": 0,
+      "state": "Idle"
+    },
+    {
+      "frame": 74,
+      "time": 3.0833332538604736,
+      "state": "Cast"
+    },
+    {
+      "frame": 166,
+      "time": 6.916666507720947,
+      "state": "Idle"
+    },
+    {
+      "frame": 238,
+      "time": 9.916666984558105,
+      "state": "Cast"
+    }
+  ],
+  "skinStats": [
+    {
+      "name": "foot_far",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 56
+    },
+    {
+      "name": "foot_near",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 80
+    },
+    {
+      "name": "sleeve_far",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 546
+    },
+    {
+      "name": "hand_far",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 80
+    },
+    {
+      "name": "robe_back",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 1290
+    },
+    {
+      "name": "robe_front",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 882
+    },
+    {
+      "name": "hair_back",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 170
+    },
+    {
+      "name": "head",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 220
+    },
+    {
+      "name": "torso",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 440
+    },
+    {
+      "name": "sleeve_near",
+      "allReady": true,
+      "maxInverted": 3,
+      "vertices": 621
+    },
+    {
+      "name": "hand_near",
+      "allReady": true,
+      "maxInverted": 0,
+      "vertices": 60
+    }
+  ],
+  "corners": [
+    {
+      "name": "head",
+      "channels": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "hair_back",
+      "channels": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "hand_near",
+      "channels": 4,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
