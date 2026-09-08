@@ -12,7 +12,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| N-COMBAT-PARITY-01 | P1 | codex | 阻塞 | — | 首批双端战斗行为对照与批准差异修复 | 开发管理/任务卡/N-COMBAT-PARITY-01.txt |
+| N-COMBAT-PARITY-01 | P1 | deepseek | 已排队 | — | 首批双端战斗行为对照与批准差异修复 | 开发管理/任务卡/N-COMBAT-PARITY-01.txt |
 | N-FPD-REGRESSION-01 | P2 | DeepSeek V4 Pro 0813 执行矩阵；Codex 复审并定案 | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01、C-FPD-SHENTONG-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 冻结（仅保留旧审计） | DEC-20260728-NSUPPRESS01AFIELDS=B | 确定性削位与封丹父任务；负责人仅保留旧审计，不授权新结算。 | — |
 | N-SUPPRESS-01B | P2 | codex | 冻结 | — | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |
