@@ -1,0 +1,14 @@
+# 截图标注的四处静态装配修正
+
+使用内置 ImageGen，共两次局部调用。首轮输入为本目录原 `layers/head.png`、`torso.png`、`hand_far.png`；原版本由 Git `f16cb2ac` 保留。输出 `assembly-corrections-atlas-v3.png`，仅采用空领口躯干、远手；第二轮 `neck-extension-atlas-v3.png` 仅采用头/裸颈，其余素材不换。
+
+```text
+Use case: precise-object-edit
+Asset type: correction atlas for an existing Unity skeletal cutout character. This is NOT a new character, full illustration, or animation frames.
+Input 1 is the EXISTING HEAD edit target. Input 2 is the EXISTING TORSO edit target. Input 3 is the EXISTING screen-left/FAR HAND edit target. Preserve Fu Yuan's actual facial identity, white gray hair, short beard, charcoal gray fabric and exact restrained gold pattern style.
+Produce ONE atlas, landscape 1536x1024, 3 columns with one isolated edited part centered per column. Perfectly flat pure CHROMA GREEN #00FF00 everywhere outside the parts and in all cutout holes, no shadow or checkerboard. Each piece stays within its own column with generous green margin. No text, numbers, lines, labels, new items.
+COLUMN 1: preserve the entire original HEAD and face, hair bun, expression, proportions, ear, beard and painted detail. Change ONLY the bottom: REMOVE ALL GRAY CLOTHING/COLLAR FROM THIS HEAD PIECE. Replace that area with a short natural BARE NECK overlap extending downward from behind the jaw to below the beard. Skin only, no shoulders or garment. The neck is narrow and will insert inside a separate torso collar. The head silhouette, facial angle looking screen-left and identity must stay the same.
+COLUMN 2: preserve the torso silhouette, exact crossed lapel construction, color, folds, pattern, belt buckle and both soft cloth shoulders. It remains armless and headless, ending just below the belt, no hanging pendant. Fix ONLY the neck socket: replace the filled gray cap INSIDE the upright collar with pure green negative space, an OPEN U-SHAPED neckline slot that a separate bare neck can slide into from above. Keep the gray front collar rim and two lapels, but NO opaque cloth plate across the throat opening and NO drawn skin. The opening is genuinely empty/background. Keep the shoulder/armpit extension cloth intact to overlap sleeves.
+COLUMN 3: correct the screen-left hand so it is an anatomically coherent elderly man's RIGHT hand, relaxed empty open palm facing upward and partially toward the viewer, fingers gently curved toward screen-left/down-left, long bare wrist coming from the upper-right. Clearly visible PALM and creases, not another copy of the same hand-back with fingernails. Five digits, natural thumb on the correct anatomical side, no fabric ring, no sleeve, no jewelry, no effects. Preserve original wrist-to-fingertip length ratio and pale warm skin painting style. This is the far-side hand seen on screen-left of a front three-quarter man who faces left.
+No edits to other character parts are requested. High fidelity to inputs, no armor, no extra detail, no new design.
+```

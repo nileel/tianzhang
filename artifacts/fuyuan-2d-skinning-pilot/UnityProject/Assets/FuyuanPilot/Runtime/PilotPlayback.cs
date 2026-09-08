@@ -98,6 +98,8 @@ namespace FuyuanPilot
                     visibleTriangles[skin.name]=selected.ToArray();initialAreas[skin.name]=areas.ToArray();
                 }
                 float displacement=0,minRatio=float.MaxValue,maxRatio=0;int inverted=0;
+                Vector2 skinMin=Vector2.one*float.MaxValue,skinMax=Vector2.one*float.MinValue;
+                Vector2 sourceMin=skinMin,sourceMax=skinMax;
                 for(int i=0;i<vertices.Length;i++)displacement=Mathf.Max(displacement,Vector3.Distance(vertices[i],initialVertices[skin.name][i]));
                 int[] indices=visibleTriangles[skin.name];
                 for(int t=0;t<indices.Length;t+=3)
@@ -105,9 +107,17 @@ namespace FuyuanPilot
                     float ratio=Area(vertices[indices[t]],vertices[indices[t+1]],vertices[indices[t+2]])/initialAreas[skin.name][t/3];
                     if(ratio<0)inverted++;
                     minRatio=Mathf.Min(minRatio,ratio);maxRatio=Mathf.Max(maxRatio,ratio);
-                    for(int j=0;j<3;j++){Vector3 s=tacticalCamera.WorldToScreenPoint(skin.transform.TransformPoint(vertices[indices[t+j]]));min=Vector2.Min(min,s);max=Vector2.Max(max,s);}
+                    for(int j=0;j<3;j++)
+                    {
+                        int index=indices[t+j];
+                        Vector3 s=tacticalCamera.WorldToScreenPoint(skin.transform.TransformPoint(vertices[index]));
+                        min=Vector2.Min(min,s);max=Vector2.Max(max,s);skinMin=Vector2.Min(skinMin,s);skinMax=Vector2.Max(skinMax,s);
+                        sourceMin=Vector2.Min(sourceMin,initialVertices[skin.name][index]);sourceMax=Vector2.Max(sourceMax,initialVertices[skin.name][index]);
+                    }
                 }
-                stats.Add(new SkinEvidence{name=skin.name,ready=true,vertices=vertices.Length,maxVertexDisplacement=displacement,invertedVisibleTriangles=inverted,minAreaRatio=minRatio,maxAreaRatio=maxRatio});
+                stats.Add(new SkinEvidence{name=skin.name,spriteName=sprite.name,sortingOrder=skin.GetComponent<SpriteRenderer>().sortingOrder,
+                    sourceMin=sourceMin,sourceMax=sourceMax,projectedMin=skinMin,projectedMax=skinMax,
+                    ready=true,vertices=vertices.Length,maxVertexDisplacement=displacement,invertedVisibleTriangles=inverted,minAreaRatio=minRatio,maxAreaRatio=maxRatio});
             }
             result.skins=stats.ToArray();result.projectedMin=min;result.projectedMax=max;result.projectedSize=max-min;
             return result;
@@ -147,6 +157,6 @@ namespace FuyuanPilot
 
         [Serializable] public class EvidenceFile {public string unityVersion,description;public FrameEvidence[] frames;}
         [Serializable] public class FrameEvidence {public int frame;public float time,normalizedTime,footDrift,orthoSize;public string state;public Vector2 screen,projectedMin,projectedMax,projectedSize;public Vector3 actorPosition,actorRotation,nearShoulder,nearElbow,nearWrist,cameraPosition,cameraEuler;public SkinEvidence[] skins;}
-        [Serializable] public class SkinEvidence {public string name;public bool ready;public int vertices,invertedVisibleTriangles;public float maxVertexDisplacement,minAreaRatio,maxAreaRatio;}
+        [Serializable] public class SkinEvidence {public string name,spriteName;public bool ready;public int vertices,invertedVisibleTriangles,sortingOrder;public Vector2 sourceMin,sourceMax,projectedMin,projectedMax;public float maxVertexDisplacement,minAreaRatio,maxAreaRatio;}
     }
 }

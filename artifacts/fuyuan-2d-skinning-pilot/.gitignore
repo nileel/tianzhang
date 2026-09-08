@@ -1,5 +1,6 @@
 # Full raw frames and local player binaries remain in the retained experiment workspace.
 captures-v*/frame_*.png
+captures-v2-assembly-probe/
 Build/
 UnityProject/.vs/
 UnityProject/.idea/

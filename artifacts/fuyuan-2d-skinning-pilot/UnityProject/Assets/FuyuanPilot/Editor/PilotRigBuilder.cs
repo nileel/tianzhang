@@ -27,7 +27,7 @@ namespace FuyuanPilot.Editor
             new Vector2(-.11f,1.01f), new Vector2(-.20f,.85f), new Vector2(-.245f,.725f),
             new Vector2(-.12f,.61f), new Vector2(.025f,.14f), new Vector2(.105f,0), new Vector2(-.095f,.005f) };
         static readonly string[] Layers = { "foot_far", "foot_near", "sleeve_far", "hand_far", "robe_back",
-            "robe_front", "hair_back", "torso", "head", "sleeve_near", "hand_near" };
+            "robe_front", "hair_back", "head", "torso", "sleeve_near", "hand_near" };
 
         [MenuItem("Fuyuan Pilot/Rebuild Editable Sample")]
         public static void Build()

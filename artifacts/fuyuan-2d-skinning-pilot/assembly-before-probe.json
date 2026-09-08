@@ -1,0 +1,362 @@
+{
+  "unityVersion": "6000.3.18f1",
+  "description": "Actual pre-edit Unity Player first-frame per-layer source and projected bounds",
+  "frame": {
+    "frame": 0,
+    "time": 0.0,
+    "normalizedTime": 0.006666664034128189,
+    "footDrift": 0.0,
+    "orthoSize": 6.199999809265137,
+    "state": "Idle",
+    "screen": {
+      "x": 1920.0,
+      "y": 1080.0
+    },
+    "projectedMin": {
+      "x": 1497.866455078125,
+      "y": 557.6749877929688
+    },
+    "projectedMax": {
+      "x": 1569.1995849609375,
+      "y": 673.8047485351562
+    },
+    "projectedSize": {
+      "x": 71.3331298828125,
+      "y": 116.1297607421875
+    },
+    "actorPosition": {
+      "x": 0.5,
+      "y": 0.3400000035762787,
+      "z": 0.1339745968580246
+    },
+    "actorRotation": {
+      "x": 37.999996185302734,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "nearShoulder": {
+      "x": 0.17000001668930054,
+      "y": 1.0200083255767822,
+      "z": 0.0
+    },
+    "nearElbow": {
+      "x": 0.2549999952316284,
+      "y": 0.8600083589553833,
+      "z": 0.0
+    },
+    "nearWrist": {
+      "x": 0.3500000238418579,
+      "y": 0.755008339881897,
+      "z": 0.0
+    },
+    "cameraPosition": {
+      "x": 0.0,
+      "y": 8.0,
+      "z": -10.0
+    },
+    "cameraEuler": {
+      "x": 37.999996185302734,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "skins": [
+      {
+        "name": "foot_far",
+        "spriteName": "foot_far",
+        "ready": true,
+        "vertices": 56,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 0,
+        "sourceMin": {
+          "x": -0.1484375,
+          "y": 0.00390625
+        },
+        "sourceMax": {
+          "x": -0.04296875,
+          "y": 0.1145833358168602
+        },
+        "projectedMin": {
+          "x": 1518.6199951171875,
+          "y": 558.0151977539062
+        },
+        "projectedMax": {
+          "x": 1527.805908203125,
+          "y": 567.65478515625
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "foot_near",
+        "spriteName": "foot_near",
+        "ready": true,
+        "vertices": 80,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 1,
+        "sourceMin": {
+          "x": 0.02994791604578495,
+          "y": 0.0
+        },
+        "sourceMax": {
+          "x": 0.1783854216337204,
+          "y": 0.1184895858168602
+        },
+        "projectedMin": {
+          "x": 1534.15673828125,
+          "y": 557.6749877929688
+        },
+        "projectedMax": {
+          "x": 1547.085205078125,
+          "y": 567.9950561523438
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "sleeve_far",
+        "spriteName": "sleeve_far",
+        "ready": true,
+        "vertices": 546,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 2,
+        "sourceMin": {
+          "x": -0.3346354067325592,
+          "y": 0.5911482572555542
+        },
+        "sourceMax": {
+          "x": 0.01692708395421505,
+          "y": 1.046883463859558
+        },
+        "projectedMin": {
+          "x": 1502.4027099609375,
+          "y": 609.1620483398438
+        },
+        "projectedMax": {
+          "x": 1533.022705078125,
+          "y": 648.8551635742188
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "hand_far",
+        "spriteName": "hand_far",
+        "ready": true,
+        "vertices": 70,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 3,
+        "sourceMin": {
+          "x": -0.38671875,
+          "y": 0.6549563407897949
+        },
+        "sourceMax": {
+          "x": -0.2278645783662796,
+          "y": 0.7500084042549133
+        },
+        "projectedMin": {
+          "x": 1497.866455078125,
+          "y": 614.7195434570312
+        },
+        "projectedMax": {
+          "x": 1511.7021484375,
+          "y": 622.998291015625
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "robe_back",
+        "spriteName": "robe_back",
+        "ready": true,
+        "vertices": 1290,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 4,
+        "sourceMin": {
+          "x": -0.2343750298023224,
+          "y": 0.0703125
+        },
+        "sourceMax": {
+          "x": 0.2838541567325592,
+          "y": 0.8268314599990845
+        },
+        "projectedMin": {
+          "x": 1511.1351318359375,
+          "y": 563.7989501953125
+        },
+        "projectedMax": {
+          "x": 1556.271240234375,
+          "y": 629.6893310546875
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "robe_front",
+        "spriteName": "robe_front",
+        "ready": true,
+        "vertices": 882,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 5,
+        "sourceMin": {
+          "x": -0.1835937649011612,
+          "y": 0.08984375
+        },
+        "sourceMax": {
+          "x": 0.1809895634651184,
+          "y": 0.8281335234642029
+        },
+        "projectedMin": {
+          "x": 1515.5579833984375,
+          "y": 565.5000610351562
+        },
+        "projectedMax": {
+          "x": 1547.31201171875,
+          "y": 629.802734375
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "hair_back",
+        "spriteName": "hair_back",
+        "ready": true,
+        "vertices": 198,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 6,
+        "sourceMin": {
+          "x": -0.029947379603981972,
+          "y": 0.9583424925804138
+        },
+        "sourceMax": {
+          "x": 0.13802273571491241,
+          "y": 1.2539150714874268
+        },
+        "projectedMin": {
+          "x": 1528.9400634765625,
+          "y": 641.1435546875
+        },
+        "projectedMax": {
+          "x": 1543.5697021484375,
+          "y": 666.886962890625
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "torso",
+        "spriteName": "torso",
+        "ready": true,
+        "vertices": 418,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 7,
+        "sourceMin": {
+          "x": -0.12109378725290298,
+          "y": 0.7161542177200317
+        },
+        "sourceMax": {
+          "x": 0.1914062350988388,
+          "y": 1.093758463859558
+        },
+        "projectedMin": {
+          "x": 1521.00146484375,
+          "y": 620.0496826171875
+        },
+        "projectedMax": {
+          "x": 1548.21923828125,
+          "y": 652.9378051757812
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "head",
+        "spriteName": "head",
+        "ready": true,
+        "vertices": 170,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 8,
+        "sourceMin": {
+          "x": -0.08854193985462189,
+          "y": 1.054695963859558
+        },
+        "sourceMax": {
+          "x": 0.06250016391277313,
+          "y": 1.3333419561386108
+        },
+        "projectedMin": {
+          "x": 1523.836669921875,
+          "y": 649.5355834960938
+        },
+        "projectedMax": {
+          "x": 1536.991943359375,
+          "y": 673.8047485351562
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "sleeve_near",
+        "spriteName": "sleeve_near",
+        "ready": true,
+        "vertices": 621,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 9,
+        "sourceMin": {
+          "x": 0.016928289085626602,
+          "y": 0.5768231153488159
+        },
+        "sourceMax": {
+          "x": 0.412760466337204,
+          "y": 1.050789713859558
+        },
+        "projectedMin": {
+          "x": 1533.0228271484375,
+          "y": 607.9143676757812
+        },
+        "projectedMax": {
+          "x": 1567.49853515625,
+          "y": 649.1953735351562
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      },
+      {
+        "name": "hand_near",
+        "spriteName": "hand_near",
+        "ready": true,
+        "vertices": 70,
+        "invertedVisibleTriangles": 0,
+        "sortingOrder": 10,
+        "sourceMin": {
+          "x": 0.3229166567325592,
+          "y": 0.6158939003944397
+        },
+        "sourceMax": {
+          "x": 0.4322916567325592,
+          "y": 0.7656334638595581
+        },
+        "projectedMin": {
+          "x": 1559.67333984375,
+          "y": 611.3173217773438
+        },
+        "projectedMax": {
+          "x": 1569.1995849609375,
+          "y": 624.3591918945312
+        },
+        "maxVertexDisplacement": 0.0,
+        "minAreaRatio": 1.0,
+        "maxAreaRatio": 1.0
+      }
+    ]
+  }
+}

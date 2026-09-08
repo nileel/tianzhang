@@ -5,12 +5,13 @@ const parts=[
  {name:'foot_far',h:.11,p:[-.095,.005],anchor:[.5,0],z:0,order:0},
  {name:'foot_near',h:.12,p:[.105,0],anchor:[.5,0],z:0,order:1},
  {name:'sleeve_far',h:.43,p:[-.11,1.01],anchor:[.85,.904],z:25,order:2},
- {name:'hand_far',h:.11,p:[-.245,.725],anchor:[.88,.80],z:-15,order:3},
+ {name:'hand_far',h:.14,p:[-.245,.725],anchor:[.91,.88],z:-15,order:3},
  {name:'robe_back',h:.77,p:[.025,.065],anchor:[.5,0],z:0,order:4},
  {name:'robe_front',h:.75,p:[0,.085],anchor:[.5,0],z:0,order:5},
- {name:'hair_back',h:.30,p:[.055,1.255],anchor:[.5,1],z:0,order:6},
- {name:'torso',h:.38,p:[.035,.72],anchor:[.5,0],z:0,order:7},
- {name:'head',h:.28,p:[-.018,1.055],anchor:[.46,0],z:0,order:8},
+ {name:'hair_back',h:.29,p:[.015,1.28],anchor:[.5,1],z:0,order:6},
+ // Preserve the original head pixel scale and crown position; only its hidden neck grows.
+ {name:'head',h:.30*859/787,p:[-.018,1.335-.30*859/787],anchor:[.46,0],z:0,order:7},
+ {name:'torso',h:.38,p:[.035,.72],anchor:[.5,0],z:0,order:8},
  {name:'sleeve_near',h:.45,p:[.17,1.02],anchor:[43/296,307/335],z:-25,order:9},
  {name:'hand_near',h:.14,p:[.35,.755],anchor:[.88,.86],z:65,order:10}
 ];

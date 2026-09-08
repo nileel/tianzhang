@@ -1,0 +1,450 @@
+{
+  "unityVersion": "6000.3.18f1",
+  "frames": 255,
+  "mainMotionAndCameraEqualBefore": true,
+  "comparedFields": [
+    "state",
+    "normalizedTime",
+    "nearShoulder",
+    "nearElbow",
+    "nearWrist",
+    "cameraPosition",
+    "cameraEuler",
+    "orthoSize",
+    "actorPosition",
+    "actorRotation"
+  ],
+  "footMaxDrift": 0,
+  "initialProjectedSize": {
+    "x": 70.4637451171875,
+    "y": 116.3565673828125
+  },
+  "totalVertices": 4455,
+  "transitions": [
+    {
+      "frame": 0,
+      "time": 0,
+      "state": "Idle"
+    },
+    {
+      "frame": 74,
+      "time": 3.0833332538604736,
+      "state": "Cast"
+    },
+    {
+      "frame": 166,
+      "time": 6.916666507720947,
+      "state": "Idle"
+    },
+    {
+      "frame": 238,
+      "time": 9.916666984558105,
+      "state": "Cast"
+    }
+  ],
+  "seams": [
+    {
+      "name": "nearShoulderAnchor",
+      "pixel": [
+        643,
+        377
+      ],
+      "alpha": {
+        "before": 0,
+        "after": 255,
+        "head": 0
+      }
+    },
+    {
+      "name": "neckOpening",
+      "pixel": [
+        535,
+        345
+      ],
+      "alpha": {
+        "before": 255,
+        "after": 0,
+        "head": 255
+      }
+    },
+    {
+      "name": "neckOverlap",
+      "pixel": [
+        516,
+        370
+      ],
+      "alpha": {
+        "before": 255,
+        "after": 0,
+        "head": 255
+      }
+    }
+  ],
+  "corners": [
+    {
+      "name": "foot_far",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "foot_near",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "sleeve_far",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "hand_far",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "robe_back",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "robe_front",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "hair_back",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "head",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "torso",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "sleeve_near",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "hand_near",
+      "rgba": true,
+      "alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "skins": [
+    {
+      "name": "foot_far",
+      "vertices": 56,
+      "sort": 0,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.1484375,
+        "y": 0.00390625
+      },
+      "sourceMax": {
+        "x": -0.04296875,
+        "y": 0.1145833358168602
+      },
+      "projectedMin": {
+        "x": 1518.6199951171875,
+        "y": 558.0151977539062
+      },
+      "projectedMax": {
+        "x": 1527.805908203125,
+        "y": 567.65478515625
+      }
+    },
+    {
+      "name": "foot_near",
+      "vertices": 80,
+      "sort": 1,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": 0.02994791604578495,
+        "y": 0
+      },
+      "sourceMax": {
+        "x": 0.1783854216337204,
+        "y": 0.1184895858168602
+      },
+      "projectedMin": {
+        "x": 1534.15673828125,
+        "y": 557.6749877929688
+      },
+      "projectedMax": {
+        "x": 1547.085205078125,
+        "y": 567.9950561523438
+      }
+    },
+    {
+      "name": "sleeve_far",
+      "vertices": 546,
+      "sort": 2,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.3346354067325592,
+        "y": 0.5911482572555542
+      },
+      "sourceMax": {
+        "x": 0.01692708395421505,
+        "y": 1.046883463859558
+      },
+      "projectedMin": {
+        "x": 1502.4027099609375,
+        "y": 609.1620483398438
+      },
+      "projectedMax": {
+        "x": 1533.022705078125,
+        "y": 648.8551635742188
+      }
+    },
+    {
+      "name": "hand_far",
+      "vertices": 80,
+      "sort": 3,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.3767360746860504,
+        "y": 0.6198000907897949
+      },
+      "sourceMax": {
+        "x": -0.234375,
+        "y": 0.7448000907897949
+      },
+      "projectedMin": {
+        "x": 1498.73583984375,
+        "y": 611.6575317382812
+      },
+      "projectedMax": {
+        "x": 1511.1351318359375,
+        "y": 622.5446166992188
+      }
+    },
+    {
+      "name": "robe_back",
+      "vertices": 1290,
+      "sort": 4,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.2343750298023224,
+        "y": 0.0703125
+      },
+      "sourceMax": {
+        "x": 0.2838541567325592,
+        "y": 0.8268314599990845
+      },
+      "projectedMin": {
+        "x": 1511.1351318359375,
+        "y": 563.7989501953125
+      },
+      "projectedMax": {
+        "x": 1556.271240234375,
+        "y": 629.6893310546875
+      }
+    },
+    {
+      "name": "robe_front",
+      "vertices": 882,
+      "sort": 5,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.1835937649011612,
+        "y": 0.08984375
+      },
+      "sourceMax": {
+        "x": 0.1809895634651184,
+        "y": 0.8281335234642029
+      },
+      "projectedMin": {
+        "x": 1515.5579833984375,
+        "y": 565.5000610351562
+      },
+      "projectedMax": {
+        "x": 1547.31201171875,
+        "y": 629.802734375
+      }
+    },
+    {
+      "name": "hair_back",
+      "vertices": 170,
+      "sort": 6,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.06640612334012985,
+        "y": 0.9921973347663879
+      },
+      "sourceMax": {
+        "x": 0.07711391896009445,
+        "y": 1.27865469455719
+      },
+      "projectedMin": {
+        "x": 1525.7646484375,
+        "y": 644.0921630859375
+      },
+      "projectedMax": {
+        "x": 1538.2647705078125,
+        "y": 669.0416259765625
+      }
+    },
+    {
+      "name": "head",
+      "vertices": 220,
+      "sort": 7,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.09635444730520248,
+        "y": 1.0052168369293213
+      },
+      "sourceMax": {
+        "x": 0.0716145783662796,
+        "y": 1.3359460830688477
+      },
+      "projectedMin": {
+        "x": 1523.15625,
+        "y": 645.2261352539062
+      },
+      "projectedMax": {
+        "x": 1537.7857666015625,
+        "y": 674.0315551757812
+      }
+    },
+    {
+      "name": "torso",
+      "vertices": 440,
+      "sort": 8,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": -0.130208358168602,
+        "y": 0.7187584638595581
+      },
+      "sourceMax": {
+        "x": 0.1992187350988388,
+        "y": 1.100268840789795
+      },
+      "projectedMin": {
+        "x": 1520.2076416015625,
+        "y": 620.2764892578125
+      },
+      "projectedMax": {
+        "x": 1548.899658203125,
+        "y": 653.5048217773438
+      }
+    },
+    {
+      "name": "sleeve_near",
+      "vertices": 621,
+      "sort": 9,
+      "allReady": true,
+      "maxInverted": 3,
+      "sourceMin": {
+        "x": 0.016928289085626602,
+        "y": 0.5768231153488159
+      },
+      "sourceMax": {
+        "x": 0.412760466337204,
+        "y": 1.050789713859558
+      },
+      "projectedMin": {
+        "x": 1533.0228271484375,
+        "y": 607.9143676757812
+      },
+      "projectedMax": {
+        "x": 1567.49853515625,
+        "y": 649.1953735351562
+      }
+    },
+    {
+      "name": "hand_near",
+      "vertices": 70,
+      "sort": 10,
+      "allReady": true,
+      "maxInverted": 0,
+      "sourceMin": {
+        "x": 0.3229166567325592,
+        "y": 0.6158939003944397
+      },
+      "sourceMax": {
+        "x": 0.4322916567325592,
+        "y": 0.7656334638595581
+      },
+      "projectedMin": {
+        "x": 1559.67333984375,
+        "y": 611.3173217773438
+      },
+      "projectedMax": {
+        "x": 1569.1995849609375,
+        "y": 624.3591918945312
+      }
+    }
+  ]
+}

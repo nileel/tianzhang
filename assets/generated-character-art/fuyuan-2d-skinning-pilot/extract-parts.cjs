@@ -13,7 +13,14 @@ const regions = [
  ['foot_far',[815,848,191,192]], ['cuff_lining',[1105,866,265,164]]
 ];
 (async()=>{
- const {data,info}=await sharp(path.join(root,'parts-atlas-green-v2.png')).removeAlpha().raw().toBuffer({resolveWithObject:true});
+ const manifest=[];
+ const sources=[
+  {file:'parts-atlas-green-v2.png',regions},
+  {file:'assembly-corrections-atlas-v3.png',regions:[['torso',[460,170,610,720]],['hand_far',[1070,300,466,490]]]},
+  {file:'neck-extension-atlas-v3.png',regions:[['head',[0,75,455,935]]]}
+ ];
+ for(const source of sources){
+ const {data,info}=await sharp(path.join(root,source.file)).removeAlpha().raw().toBuffer({resolveWithObject:true});
  const rgba=Buffer.alloc(info.width*info.height*4);
  for(let i=0,j=0;i<data.length;i+=3,j+=4){
   const r=data[i],g=data[i+1],b=data[i+2],excess=g-Math.max(r,b);
@@ -21,14 +28,16 @@ const regions = [
   rgba[j]=r;rgba[j+1]=excess>20?Math.min(g,Math.max(r,b)):g;rgba[j+2]=b;rgba[j+3]=a;
  }
  fs.mkdirSync(path.join(root,'layers'),{recursive:true});
- const manifest=[];
- for(const [name,[x,y,w,h]] of regions){
+ for(const [name,[x,y,w,h]] of source.regions){
   let minX=w,minY=h,maxX=-1,maxY=-1;
   for(let py=0;py<h;py++)for(let px=0;px<w;px++)if(rgba[((y+py)*info.width+x+px)*4+3]>8){minX=Math.min(minX,px);maxX=Math.max(maxX,px);minY=Math.min(minY,py);maxY=Math.max(maxY,py);}
   const left=Math.max(x,x+minX-6),top=Math.max(y,y+minY-6),width=Math.min(x+w,x+maxX+7)-left,height=Math.min(y+h,y+maxY+7)-top;
   await sharp(rgba,{raw:{width:info.width,height:info.height,channels:4}}).extract({left,top,width,height}).png().toFile(path.join(root,'layers',name+'.png'));
-  manifest.push({name,sourceRect:[left,top,width,height],alphaThreshold:8});
+  const previous=manifest.findIndex(part=>part.name===name);
+  if(previous>=0)manifest.splice(previous,1);
+  manifest.push({name,source:source.file,sourceRect:[left,top,width,height],alphaThreshold:8});
  }
- fs.writeFileSync(path.join(root,'extraction.json'),JSON.stringify({source:'parts-atlas-green-v2.png',sourceSize:[info.width,info.height],operation:'chroma alpha + disjoint crop; torso ends immediately below belt',layers:manifest},null,2)+'\n');
+ }
+ fs.writeFileSync(path.join(root,'extraction.json'),JSON.stringify({sources:sources.map(source=>source.file),operation:'chroma alpha + disjoint crop; v3 replaces only head, torso and far hand',layers:manifest},null,2)+'\n');
  console.log(JSON.stringify(manifest));
 })();
