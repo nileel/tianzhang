@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-COMBAT-PARITY-01 | external_execute | deepseek | P1 | battlesim | implementation | 首批双端战斗行为对照与批准差异修复 | 开发管理/任务卡/N-COMBAT-PARITY-01.txt |
+| N-COMBAT-PARITY-01 | codex_review | codex | P1 | battlesim | implementation | 首批双端战斗行为对照与批准差异修复 | 开发管理/任务卡/N-COMBAT-PARITY-01.txt |

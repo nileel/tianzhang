@@ -232,28 +232,78 @@ static class Combat
     }
 
     // v4.1: 合并攻击结算（含穿透）
-    static int Dmg(int atk, int def, double resist, double defPen = 0, double mult = 1.0)
+    internal static int Dmg(int atk, int def, double resist, double defPen = 0, double mult = 1.0)
     {
         int effectiveDef = (int)Math.Round(def * (1 - defPen / 100));
         double df = atk / (double)(atk + effectiveDef);
         return (int)Math.Max(0, Math.Round(atk * df * (1 - resist / 100.0) * mult));
     }
 
-    // 格挡/魂盾/闪避/暴击 统一结算
-    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false, bool ignoreBlock = false, double critRateBonus = 0, double critDamageBonus = 0)
+    // N-COMBAT-PARITY-01：四命名概率样本（[0,100) 命中/暴击/格挡/魂盾）。
+    internal readonly record struct CombatSettlementSamples(
+        double HitPercent,
+        double CriticalPercent,
+        double BlockPercent,
+        double SoulShieldPercent)
+    {
+        internal static CombatSettlementSamples FromRandom(Random rng) => new(
+            rng.NextDouble() * 100,
+            rng.NextDouble() * 100,
+            rng.NextDouble() * 100,
+            rng.NextDouble() * 100);
+    }
+
+    internal readonly record struct DefenseSettlementResult(
+        bool Hit,
+        bool Critical,
+        bool Blocked,
+        bool SoulShielded,
+        int Damage);
+
+    // 格挡/魂盾/闪避/暴击 统一结算（真实 duel/group 链从种子 Rng 取样）。
+    static int ApplyDefenses(int rawDmg, Character attacker, Character defender, string atkType, bool ignoreDodge = false, bool ignoreBlock = false, double critRateBonus = 0, double critDamageBonus = 0) =>
+        ResolveDefenseSettlement(
+            rawDmg, attacker, defender, atkType,
+            CombatSettlementSamples.FromRandom(Rng),
+            ignoreDodge, ignoreBlock, critRateBonus, critDamageBonus).Damage;
+
+    // 命中 -> 暴击 -> 格挡/魂盾 的确定性结算；duel/group 真实链与 combat-parity-v1 共用同一实现。
+    internal static DefenseSettlementResult ResolveDefenseSettlement(
+        int rawDmg,
+        Character attacker,
+        Character defender,
+        string atkType,
+        CombatSettlementSamples samples,
+        bool ignoreDodge = false,
+        bool ignoreBlock = false,
+        double critRateBonus = 0,
+        double critDamageBonus = 0)
     {
         bool isPhysical = atkType == "物理";
-        double blockRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
-        if (!ignoreBlock && Rng.NextDouble() * 100 < blockRate)
-        {
-            double reduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
-            rawDmg = (int)Math.Round(rawDmg * (1 - reduction / 100));
-        }
-        if (!ignoreDodge && Rng.NextDouble() * 100 < Math.Max(0, defender.Secondary.GetValueOrDefault("闪避率", 0) - attacker.Secondary.GetValueOrDefault("命中率", 0)))
-            rawDmg = 0;
-        if (rawDmg > 0 && Rng.NextDouble() * 100 < attacker.Secondary.GetValueOrDefault("暴击率", 0) + critRateBonus)
-            rawDmg = (int)Math.Round(rawDmg * GetCritMultiplier(attacker.Secondary.GetValueOrDefault("暴击伤害", 0), critDamageBonus));
-        return rawDmg;
+
+        // 命中：hitPercent <= Clamp(100 + 命中率 - 闪避率, 5, 100)。
+        double hitRateBonus = attacker.Secondary.GetValueOrDefault("命中率", 0);
+        double dodgeRate = defender.Secondary.GetValueOrDefault("闪避率", 0);
+        bool hit = ignoreDodge || samples.HitPercent <= Math.Clamp(100 + hitRateBonus - dodgeRate, 5.0, 100.0);
+        if (!hit)
+            return new DefenseSettlementResult(false, false, false, false, 0);
+
+        int damage = rawDmg;
+
+        // 暴击：criticalPercent < 暴击率（+ 元素加成）。
+        double critRate = attacker.Secondary.GetValueOrDefault("暴击率", 0) + critRateBonus;
+        bool critical = samples.CriticalPercent < critRate;
+        if (critical)
+            damage = (int)Math.Round(damage * GetCritMultiplier(attacker.Secondary.GetValueOrDefault("暴击伤害", 0), critDamageBonus));
+
+        // 格挡（物理）/ 魂盾（神魂）：对应样本 < 对应率。
+        double shieldRate = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡率" : "魂盾率", 0);
+        double shieldReduction = defender.Secondary.GetValueOrDefault(isPhysical ? "格挡减伤率" : "魂盾减伤率", 0);
+        bool shielded = !ignoreBlock && (isPhysical ? samples.BlockPercent : samples.SoulShieldPercent) < shieldRate;
+        if (shielded)
+            damage = (int)Math.Round(damage * (1 - shieldReduction / 100));
+
+        return new DefenseSettlementResult(hit, critical, isPhysical && shielded, !isPhysical && shielded, damage);
     }
 
     public static RuleConflictDecision ResolveGoldenCoreConflict(

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using TianZhang.World;
 
 namespace BattleSim;
@@ -115,6 +116,9 @@ static class BattleSimSelfTests
 
         if (suite == "duel-bounds")
             return RunChecked(suite, RunDuelBounds);
+
+        if (suite == "combat-parity-v1")
+            return RunChecked(suite, RunCombatParityV1);
 
         if (suite != "element-v510")
         {
@@ -1902,6 +1906,65 @@ static class BattleSimSelfTests
         AssertClose(1.65, Combat.GetCritMultiplier(15), 0.0001, "15 critDamage adds percentage points");
         AssertClose(1.75, Combat.GetCritMultiplier(15, 10), 0.0001, "element bonus adds percentage points");
     }
+
+    static void RunCombatParityV1()
+    {
+        string path = Path.Combine(FindRepositoryRoot(), "simulations", "BattleSim", "combat-parity-cases.json");
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path));
+        JsonElement root = document.RootElement;
+        AssertEqual("combat-parity-v1", root.GetProperty("version").GetString(), "combat parity version");
+        JsonElement defaults = root.GetProperty("defaults");
+
+        foreach (JsonElement caseElement in root.GetProperty("cases").EnumerateArray())
+        {
+            string caseId = caseElement.GetProperty("caseId").GetString() ?? "";
+            int attack = (int)ReadParityNumber(caseElement, defaults, "attack");
+            int defense = (int)ReadParityNumber(caseElement, defaults, "defense");
+            double multiplier = ReadParityNumber(caseElement, defaults, "multiplier");
+            double resistance = ReadParityNumber(caseElement, defaults, "resistance");
+            double defensePenetration = ReadParityNumber(caseElement, defaults, "defensePenetration");
+            double hitRateBonus = ReadParityNumber(caseElement, defaults, "hitRateBonus");
+            double dodgeRate = ReadParityNumber(caseElement, defaults, "dodgeRate");
+            double critRate = ReadParityNumber(caseElement, defaults, "critRate");
+            double critDamage = ReadParityNumber(caseElement, defaults, "critDamage");
+            double blockRate = ReadParityNumber(caseElement, defaults, "blockRate");
+            double blockReduction = ReadParityNumber(caseElement, defaults, "blockReduction");
+            double hitPercent = ReadParityNumber(caseElement, defaults, "hitPercent");
+            double criticalPercent = ReadParityNumber(caseElement, defaults, "criticalPercent");
+            double blockPercent = ReadParityNumber(caseElement, defaults, "blockPercent");
+
+            JsonElement expected = caseElement.GetProperty("expected");
+            bool expectedHit = expected.GetProperty("hit").GetBoolean();
+            bool expectedCritical = expected.GetProperty("critical").GetBoolean();
+            bool expectedBlocked = expected.GetProperty("blocked").GetBoolean();
+            int expectedDamage = expected.GetProperty("damage").GetInt32();
+
+            var attacker = Character.Create(caseId + "-attacker", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+            attacker.Primary["肉攻"] = attack;
+            attacker.Secondary["命中率"] = hitRateBonus;
+            attacker.Secondary["暴击率"] = critRate;
+            attacker.Secondary["暴击伤害"] = critDamage;
+
+            var defender = Character.Create(caseId + "-defender", new() { ["根骨"] = 8, ["魂魄"] = 8, ["神识"] = 8, ["资质"] = 8, ["气运"] = 8 }, "physical");
+            defender.Primary["肉防"] = defense;
+            defender.Secondary["闪避率"] = dodgeRate;
+            defender.Secondary["格挡率"] = blockRate;
+            defender.Secondary["格挡减伤率"] = blockReduction;
+
+            int rawDmg = Combat.Dmg(attack, defense, resistance, defensePenetration, multiplier);
+            var result = Combat.ResolveDefenseSettlement(
+                rawDmg, attacker, defender, "物理",
+                new Combat.CombatSettlementSamples(hitPercent, criticalPercent, blockPercent, 0));
+
+            AssertEqual(expectedHit, result.Hit, $"{caseId} hit");
+            AssertEqual(expectedCritical, result.Critical, $"{caseId} critical");
+            AssertEqual(expectedBlocked, result.Blocked, $"{caseId} blocked");
+            AssertEqual(expectedDamage, result.Damage, $"{caseId} damage");
+        }
+    }
+
+    static double ReadParityNumber(JsonElement caseElement, JsonElement defaults, string field) =>
+        caseElement.TryGetProperty(field, out JsonElement value) ? value.GetDouble() : defaults.GetProperty(field).GetDouble();
 
     static void RunBuildInputTq054()
     {

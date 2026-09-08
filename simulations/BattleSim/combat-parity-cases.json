@@ -1,0 +1,79 @@
+{
+  "version": "combat-parity-v1",
+  "defaults": {
+    "attack": 100,
+    "defense": 100,
+    "multiplier": 1.0,
+    "realmMultiplier": 1.0,
+    "defensePenetration": 0.0,
+    "resistance": 0.0,
+    "hitRateBonus": 0.0,
+    "dodgeRate": 0.0,
+    "critRate": 0.0,
+    "critDamage": 0.0,
+    "blockRate": 0.0,
+    "blockReduction": 0.0,
+    "soulShieldRate": 0.0,
+    "soulShieldReduction": 0.0,
+    "hitPercent": 0.0,
+    "criticalPercent": 0.0,
+    "blockPercent": 0.0,
+    "soulShieldPercent": 0.0
+  },
+  "cases": [
+    {
+      "caseId": "base",
+      "hitPercent": 99.0,
+      "criticalPercent": 100.0,
+      "blockPercent": 100.0,
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+    },
+    {
+      "caseId": "hit_equal",
+      "dodgeRate": 60.0,
+      "hitPercent": 40.0,
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+    },
+    {
+      "caseId": "hit_above",
+      "dodgeRate": 60.0,
+      "hitPercent": 41.0,
+      "expected": { "hit": false, "critical": false, "blocked": false, "damage": 0 }
+    },
+    {
+      "caseId": "crit_below",
+      "critRate": 20.0,
+      "criticalPercent": 19.0,
+      "expected": { "hit": true, "critical": true, "blocked": false, "damage": 75 }
+    },
+    {
+      "caseId": "crit_equal",
+      "critRate": 20.0,
+      "criticalPercent": 20.0,
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+    },
+    {
+      "caseId": "block_below",
+      "blockRate": 30.0,
+      "blockReduction": 20.0,
+      "blockPercent": 29.0,
+      "expected": { "hit": true, "critical": false, "blocked": true, "damage": 40 }
+    },
+    {
+      "caseId": "block_equal",
+      "blockRate": 30.0,
+      "blockReduction": 20.0,
+      "blockPercent": 30.0,
+      "expected": { "hit": true, "critical": false, "blocked": false, "damage": 50 }
+    },
+    {
+      "caseId": "crit_and_block",
+      "critRate": 20.0,
+      "criticalPercent": 19.0,
+      "blockRate": 30.0,
+      "blockReduction": 20.0,
+      "blockPercent": 29.0,
+      "expected": { "hit": true, "critical": true, "blocked": true, "damage": 60 }
+    }
+  ]
+}

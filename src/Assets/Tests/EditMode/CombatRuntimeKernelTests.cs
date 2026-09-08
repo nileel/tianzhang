@@ -653,6 +653,159 @@ namespace TianZhang.Tests.EditMode
             }
         }
 
+        [Test]
+        public void CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases()
+        {
+            string jsonPath = Path.GetFullPath(Path.Combine(
+                UnityEngine.Application.dataPath, "..", "..", "simulations", "BattleSim", "combat-parity-cases.json"));
+            CombatParityDocument document = UnityEngine.JsonUtility.FromJson<CombatParityDocument>(File.ReadAllText(jsonPath));
+            Assert.That(document.version, Is.EqualTo("combat-parity-v1"));
+            Assert.That(document.defaults, Is.Not.Null);
+            Assert.That(document.cases, Is.Not.Empty);
+
+            foreach (CombatParityCase parityCase in document.cases)
+            {
+                CombatParityDefaults defaults = document.defaults;
+                float attack = MergeParity(parityCase.attack, defaults.attack);
+                float defense = MergeParity(parityCase.defense, defaults.defense);
+                float multiplier = MergeParity(parityCase.multiplier, defaults.multiplier);
+                float realmMultiplier = MergeParity(parityCase.realmMultiplier, defaults.realmMultiplier);
+                float hitRateBonus = MergeParity(parityCase.hitRateBonus, defaults.hitRateBonus);
+                float dodgeRate = MergeParity(parityCase.dodgeRate, defaults.dodgeRate);
+                float critRate = MergeParity(parityCase.critRate, defaults.critRate);
+                float critDamage = MergeParity(parityCase.critDamage, defaults.critDamage);
+                float blockRate = MergeParity(parityCase.blockRate, defaults.blockRate);
+                float blockReduction = MergeParity(parityCase.blockReduction, defaults.blockReduction);
+                float hitPercent = MergeParity(parityCase.hitPercent, defaults.hitPercent);
+                float criticalPercent = MergeParity(parityCase.criticalPercent, defaults.criticalPercent);
+                float blockPercent = MergeParity(parityCase.blockPercent, defaults.blockPercent);
+
+                CombatDamageResult damage = ResolveParityAttack(
+                    attack, defense, multiplier, realmMultiplier,
+                    hitRateBonus, dodgeRate, critRate, critDamage, blockRate, blockReduction,
+                    hitPercent, criticalPercent, blockPercent);
+
+                Assert.That(damage.IsHit, Is.EqualTo(parityCase.expected.hit), parityCase.caseId + " hit");
+                Assert.That(damage.IsCritical, Is.EqualTo(parityCase.expected.critical), parityCase.caseId + " critical");
+                Assert.That(damage.IsBlocked, Is.EqualTo(parityCase.expected.blocked), parityCase.caseId + " blocked");
+                Assert.That(damage.FinalDamage, Is.EqualTo(parityCase.expected.damage), parityCase.caseId + " damage");
+            }
+        }
+
+        private static float MergeParity(float caseValue, float defaultValue) => caseValue != 0f ? caseValue : defaultValue;
+
+        private static CombatDamageResult ResolveParityAttack(
+            float attack,
+            float defense,
+            float multiplier,
+            float realmMultiplier,
+            float hitRateBonus,
+            float dodgeRate,
+            float critRate,
+            float critDamage,
+            float blockRate,
+            float blockReduction,
+            float hitPercent,
+            float criticalPercent,
+            float blockPercent)
+        {
+            CombatantSnapshot actor = CreateCombatant(
+                "parity_actor", CombatTeam.Player, new HexCoord(0, 0), 10, 1000, (int)attack, 0,
+                realmMultiplier: realmMultiplier);
+            actor.HitRateBonus = hitRateBonus;
+            actor.CriticalRate = critRate;
+            actor.CriticalDamage = critDamage;
+
+            CombatantSnapshot target = CreateCombatant(
+                "parity_target", CombatTeam.Enemy, new HexCoord(1, 0), 10, 1000, 0, (int)defense,
+                realmMultiplier: realmMultiplier);
+            target.DodgeRate = dodgeRate;
+            target.BlockRate = blockRate;
+            target.BlockReduction = blockReduction;
+            target.Facing = target.Position.DirectionTo(actor.Position);
+
+            var profile = new CombatAttackProfile(
+                "basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: multiplier);
+            CombatSession session = CreateSession(
+                new[] { actor, target }, new FixedRangeQuery(true), new[] { profile });
+            CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
+            Assert.That(advance.ActorId, Is.EqualTo(actor.Id));
+
+            CombatActionResult result = new CombatActionResolver().Resolve(
+                session,
+                new CombatCommand(
+                    CombatCommandKind.BasicAttack, actor.Id, target.Id, profile.Id,
+                    new CombatResolutionRolls(hitPercent, criticalPercent, blockPercent, 0f)));
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.Damage.Count, Is.EqualTo(1));
+            return result.Damage[0];
+        }
+
+        [Serializable]
+        private sealed class CombatParityDocument
+        {
+            public string version;
+            public CombatParityDefaults defaults;
+            public List<CombatParityCase> cases;
+        }
+
+        [Serializable]
+        private sealed class CombatParityDefaults
+        {
+            public float attack;
+            public float defense;
+            public float multiplier;
+            public float realmMultiplier;
+            public float defensePenetration;
+            public float resistance;
+            public float hitRateBonus;
+            public float dodgeRate;
+            public float critRate;
+            public float critDamage;
+            public float blockRate;
+            public float blockReduction;
+            public float soulShieldRate;
+            public float soulShieldReduction;
+            public float hitPercent;
+            public float criticalPercent;
+            public float blockPercent;
+            public float soulShieldPercent;
+        }
+
+        [Serializable]
+        private sealed class CombatParityCase
+        {
+            public string caseId;
+            public float attack;
+            public float defense;
+            public float multiplier;
+            public float realmMultiplier;
+            public float defensePenetration;
+            public float resistance;
+            public float hitRateBonus;
+            public float dodgeRate;
+            public float critRate;
+            public float critDamage;
+            public float blockRate;
+            public float blockReduction;
+            public float soulShieldRate;
+            public float soulShieldReduction;
+            public float hitPercent;
+            public float criticalPercent;
+            public float blockPercent;
+            public float soulShieldPercent;
+            public CombatParityExpectation expected;
+        }
+
+        [Serializable]
+        private sealed class CombatParityExpectation
+        {
+            public bool hit;
+            public bool critical;
+            public bool blocked;
+            public int damage;
+        }
+
         private static CombatSession CreateSession(
             IReadOnlyList<CombatantSnapshot> combatants,
             ICombatSpatialQuery query,
