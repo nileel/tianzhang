@@ -27,7 +27,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| A-GZ-ART-LOOKDEV-01 | P1 | codex | 已排队 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
+| A-GZ-ART-LOOKDEV-01 | P1 | codex | 待决定 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-GZ-ART-BATTLEFIELD-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中首场正式战场环境美术 | 开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
 | U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-09-12：用户已批准首包重排范围；现有角色/关中/镜头事实足以制作两张整屏设计样板与具体生产合同，无外部交易授权要求，本卡不实施后续资源。",
+  "stateReason": "等待负责人决定：是否接受两张关中整屏样板作为首包视觉方向？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
     "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
@@ -36,7 +36,73 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-GZ-ART-LOOKDEV-01",
+    "sourceRunId": "7b1c5500-a738-4d8f-9a00-cccc7d09a5bb",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260912-CD1A9E90A58405",
+    "question": "是否接受两张关中整屏样板作为首包视觉方向？",
+    "options": [
+      {
+        "key": "A",
+        "label": "接受两张样板方向；继续按冻结合同完成 LOOKDEV，环境/UI 仅按既有前置重新评估，男主交易门仍阻塞。"
+      },
+      {
+        "key": "B",
+        "label": "保留城镇/悬赏方向，并针对野外战斗/HUD 提出一项具体修订；只使用一张剩余内置生成次数。"
+      },
+      {
+        "key": "C",
+        "label": "拒绝本轮方向并保持本卡阻塞；不解锁下游、不追加生成或付费。"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A 仅确认无费用的整屏方向并保留 RAW 的平台/额度门；B 消耗一张定点修订额度；C 保持当前阻塞。",
+    "plainSummary": {
+      "situation": "是否接受两张关中整屏样板作为首包视觉方向？",
+      "impact": "A 仅确认无费用的整屏方向并保留 RAW 的平台/额度门；B 消耗一张定点修订额度；C 保持当前阻塞。",
+      "action": "建议选择 A：接受两张样板方向；继续按冻结合同完成 LOOKDEV，环境/UI 仅按既有前置重新评估，男主交易门仍阻塞。"
+    },
+    "checkpointCommit": "2ad474ebf28d89cdd80e7e01b8f7e2826e5a7c3c",
+    "baseCommit": "43cae89469aebc5c41e0ee455f7e72c8a963432a",
+    "branch": "codex/automation/codex/7b1c5500-a738-4d8f-9a00-cccc7d09a5bb/candidate",
+    "changedPaths": [
+      "开发管理/关中整屏美术基准与生产批准记录.txt",
+      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
+      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
+      "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
+      "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+      "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
+      "开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt",
+      "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+      "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
+      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/battle-and-hud-v1.png",
+      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
+      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/manifest.json",
+      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/prompts.md",
+      "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md"
+    ],
+    "verified": [
+      "两张样板已实际查看，均为 RGB 1920×1080，SHA-256 与 manifest 一致。",
+      "内置 ImageGen 已使用 2/4 次；未调用外部 3D 平台、未上传、购买或消耗 credits，未运行 Blender 或修改 Unity。",
+      "合同、批准记录及八张直接下游卡仅补充参数；任务卡 metadata、blockedBy 与 dispatchState 未变。",
+      "check-task-cards、check-review-text、check-data-chain、check-asset-versioning、check-pending-whitespace 与 git diff --cached --check 均通过。",
+      "八张下游卡风险预检已重算且无门禁；涉及 Unity 场景的卡已读取 EXP-UNITY-001 builder 约束。",
+      "候选提交是基线之上的唯一直接后继，工作树干净。"
+    ],
+    "unverified": [
+      "负责人尚未接受或拒绝视觉方向。",
+      "未运行 Unity 实机、真实 HUD 交互或正式资源导入验证；两图不是运行截图。",
+      "Tripo 的登录会话、当日 credits、实际价格及具体模型设置仍未核验，且未发生外部交易。"
+    ],
+    "residualRisk": "未获得负责人视觉接受；两张样板不是 Unity 实机证据，Tripo 当日额度和价格仍未知。",
+    "taskContextDigest": "fe5a21b98850c29e9ca9ad5e551141ed3de67e1d650e605f802bbdfcc217a050",
+    "createdAt": "2026-09-12T19:48:30.7489107+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # A-GZ-ART-LOOKDEV-01 · 关中整屏美术样板与首包生产合同
