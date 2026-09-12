@@ -1,0 +1,115 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-ART-FEEDBACK-01",
+  "title": "关中首场六事件正式特效与音效",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
+  ],
+  "stateReason": "2026-09-12：等待U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
+  "expectedPaths": [
+    "assets/source/combat-feedback/guanzhong-first-bounty/manifest.json",
+    "开发管理/关中首场正式战斗反馈验收记录.txt",
+    "assets/source/combat-feedback/guanzhong-first-bounty/move.wav",
+    "assets/source/combat-feedback/guanzhong-first-bounty/attack.wav",
+    "assets/source/combat-feedback/guanzhong-first-bounty/hit.wav",
+    "assets/source/combat-feedback/guanzhong-first-bounty/cast.wav",
+    "assets/source/combat-feedback/guanzhong-first-bounty/death.wav",
+    "src/Assets/Art/Audio/Guanzhong/move.wav",
+    "src/Assets/Art/Audio/Guanzhong/move.wav.meta",
+    "src/Assets/Art/Audio/Guanzhong.meta",
+    "src/Assets/Art/Audio.meta",
+    "src/Assets/Art/Audio/Guanzhong/attack.wav",
+    "src/Assets/Art/Audio/Guanzhong/attack.wav.meta",
+    "src/Assets/Art/Audio/Guanzhong/hit.wav",
+    "src/Assets/Art/Audio/Guanzhong/hit.wav.meta",
+    "src/Assets/Art/Audio/Guanzhong/cast.wav",
+    "src/Assets/Art/Audio/Guanzhong/cast.wav.meta",
+    "src/Assets/Art/Audio/Guanzhong/death.wav",
+    "src/Assets/Art/Audio/Guanzhong/death.wav.meta",
+    "src/Assets/Art/VFX/Guanzhong/Guanzhong_CombatFeedback.prefab",
+    "src/Assets/Art/VFX/Guanzhong/Guanzhong_CombatFeedback.prefab.meta",
+    "src/Assets/Art/VFX/Guanzhong.meta",
+    "src/Assets/Art/VFX.meta",
+    "src/Assets/Art/VFX/Guanzhong/Guanzhong_CombatFeedback.mat",
+    "src/Assets/Art/VFX/Guanzhong/Guanzhong_CombatFeedback.mat.meta",
+    "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs",
+    "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D.meta",
+    "src/Assets/Art/Characters/CombatPieces.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta",
+    "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou.meta",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset.meta",
+    "src/Assets/Data/CombatPresentationProfiles.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatFeedbackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatFeedbackPlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt",
+    "开发管理/任务归档/U-GZ-ART-FEEDBACK-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-ART-FEEDBACK-01 · 关中首场六事件正式特效与音效
+
+## 来源与当前边界
+
+- 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
+- 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
+- 一个结果是双正式profile消费现有六事件的音画反馈；角色根节点动作仍由FORMAL-WIRING实现，本卡不重复拥有动作或规则。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 六事件时间/强度/静默态/资源清单；FORMAL-WIRING归档及真实provider/profile接口。
+- `CombatPresentationContracts.cs` 的事件及TargetResult字段；`EncounterCoordinator` 到只读端口的实际调用；`FormalStatic3DCombatPieceBuilder`、两项正式Prefab与profile set。
+- 现有 `StaticChessPresentationController` 仅作隔离方法参考，不把苻渊pilot资源视为正式输入；unity-agent-workflows的运行时所有者/事件时序验证。
+
+## 实施范围
+
+- 只按批准合同生产最多五条共享cue（move/attack/hit/cast/death）、一套有限粒子Prefab/材质，通过正式profile或provider已有事件消费；Idle默认无声、无持续特效。
+- 事件触发一次，按动作结果在正确对象/位置播放；根动作结束后复位，失败命令不播放成功结果。复用正式provider的生命周期，不另建动画层/第二控制器。
+- 为攻击、受击、施法、死亡提供清楚但不遮挡主体/格位的反馈；双角色通过配置强度/时点保持身份差异，不新增模型/动画。
+- 保存后的两项Prefab/配置及数据asset须由既有Builder维护，回读并从正式Adventure验证真实调用。
+
+## 禁止项
+
+- 不改Combat/CTB/AI/伤害/胜负/奖励/存档，不以反馈结束回调驱动规则。
+- 不新增Guard/Block事件，不把零伤害推断为格挡；不要求旧卡的防御/格挡专属音效。
+- 不改两个模型，不恢复Cloth/骨骼，不直接复用FuYuan比较Prefab，不采购素材或新增通用效果框架。
+
+## 验证
+
+- 正式Adventure实录验证实际出现的事件；其余六事件在同一正式provider的测试中覆盖，记录清楚实战与合同测试边界。
+- 六向锚点、单次触发、退出清理/复位及未影响规则结果；调用受影响PlayMode和资产版本/数据链检查。
+- 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
+- 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
+
+## 完成条件
+
+- 现有六事件的规定音画行为通过，两个正式profile均无重复/残留效果，首场真实战斗可看到/听到对应反馈。
+- 源/配置/实录/费用与返工记录齐备，进入统一整体验收。
+
+## 停止条件
+
+- 需要新规则事件、第二表现控制器、更换模型、修改根动作合同或未批准费用；用特效遮住角色/地面缺陷时停止并返回原owner。

@@ -10,9 +10,10 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-PROFILES-01"
+    "U-CHAR-BATTLE-STATIC3D-PROFILES-01",
+    "U-GZ-ART-BATTLEFIELD-01"
   ],
-  "stateReason": "2026-08-30：载体中立合同已完成归档；本卡只等待正式玩家／石甲兽双Profile总门，再在一个原子结果中迁移正式Marker生命周期并持久化唯一静态3D provider。",
+  "stateReason": "2026-09-12：等待双正式Profile和真实关中地面；原子接入唯一静态3D provider及六事件整体动作，保留既有环境/UI，正式VFX/声音由独立下游交付。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
@@ -45,6 +46,12 @@
 }
 ---TASK-BODY---
 # U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 · 静态3D Provider与正式Adventure Marker所有权解耦
+
+## 2026-09-12 首包接线边界
+
+- 消费 `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 和 U-GZ-ART-BATTLEFIELD-01 正式地面；不等待模块化肖像、宽袖或已冻结四足动画。
+- 本卡拥有六事件根节点动作/生命周期；U-GZ-ART-FEEDBACK-01 只补正式VFX/音效内容，不重复建立根动作控制器。
+- 保存场景时保留已交付 GuanzhongBattlefield 及城镇/战斗UI成果；只删除明确的 VisualBaselineBoard/比较面板/Marker 引用，不重建为旧基线。
 
 ## 来源与当前边界
 

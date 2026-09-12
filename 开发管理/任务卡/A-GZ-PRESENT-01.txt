@@ -1,51 +1,69 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "A-GZ-PRESENT-01",
-  "title": "关中正式场景与角色级表现资源",
+  "title": "关中首个可展示流程美术父项",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
-  "stage": "implementation",
+  "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": ["U-SHIJIAHOU-3D-PROTO-01"],
-  "stateReason": "等待石甲兽技术样例通过",
+  "blockedBy": [
+    "V-GZ-ART-SLICE-01"
+  ],
+  "stateReason": "2026-09-12：已一次性建立全部已知叶子与依赖，等待关中首场实机美术验收；本父项只汇总，不领取业务实现。",
   "expectedPaths": [
+    "docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md",
+    "开发管理/设计-当前状态.txt",
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-GZ-PRESENT-01.txt",
     "开发管理/任务归档/A-GZ-PRESENT-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
-# A-GZ-PRESENT-01 · 关中正式场景与角色级表现资源
+# A-GZ-PRESENT-01 · 关中首个可展示流程美术父项
 
 ## 来源与当前边界
 
-- 负责关中城、悬赏板、关中野外环境的正式场景表现，以及石甲兽角色级音效与战斗 VFX。
+- 2026-09-12 用户明确批准按“精绘2D立绘＋静态3D战棋表现、先交付完整关中流程”的方向重排任务。
+- 本卡从旧“环境＋音效”工作改为一个整段展示结果的汇总父项；当前合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`。
+- 不再依赖已冻结 U-SHIJIAHOU-3D-PROTO-01。全部已知子项已经建立，不再由自动化逐张拆卡。
 
 ## 必查范围
 
-- 关中城市／悬赏／野外直接设定，URP 视觉基线、石甲兽技术样例、正式场景所有者、音效／VFX 接口和美术资源版本规范。
+- 上述重排规格的完整依赖、首包、冻结、交易/本地返修与实机验收合同。
+- A-GZ-ART-LOOKDEV-01、四张生产/验收叶子及既有RAW/ASSET-04/PROFILES/FORMAL-WIRING卡或其完成归档。
+- V-GZ-ART-SLICE-01 的正式流程记录与用户整体品质接受；技术模块化父项保留自己的关闭证据。
 
 ## 实施范围
 
-- 生产并接入场景级视觉／环境音效、石甲兽攻击／受击／防御音效，以及命中／受击／格挡 VFX；先冻结精确资源清单和验收。
+- 只汇总首次悬赏→野外战斗→回城领取的整段可展示结果、实际成本与风险，不生产资源或写代码。
+- LOOKDEV分出角色、环境、UI；角色Profile与正式环境汇合到FORMAL-WIRING，之后补六事件反馈，最终由V-GZ-ART-SLICE-01验收。
+- 近期顺序与全部字面量路径以该规格和各叶子卡为准；父项永不ready。
 
 ## 禁止项
 
-- 不生成、导入或验收石甲兽模型、四足骨架、模型材质、技术 Prefab 或角色动画；不改变规则、数值或战斗所有者。
+- 不把模块化肖像、宽袖、旧骨骼、2D实验、额外角色设为当前交付前置。
+- 不把源检查、接线完成或自动测试等同用户接受整体品质；不新增通用生产线。
 
 ## 验证
 
-- 三个关中表面的视觉／环境音效矩阵、石甲兽角色级音效／VFX、正式场景功能回归和资源版本闭环；解阻塞前展开源资源、Unity、测试、登记和 `.meta` 路径。
+- 核对完整无环依赖、唯一ready投影及本父项从不进入队列；运行tools/check-task-cards.ps1和审核文本检查。
+- 关闭只消费本轮已有完成证据，不重复未变输入的子卡测试。
 
 ## 完成条件
 
-- 关中正式场景与角色级表现达到批准展示范围，且与石甲兽技术资产、AVM 和规则所有权无重复。
+- V-GZ-ART-SLICE-01完成：两个正式角色、关中城/悬赏、真实野外地面、统一UI和有限反馈组成实际可玩流程。
+- 用户接受整体展示品质，完整成本和关键实机证据可追溯；没有借关闭本父项解冻额外内容。
 
 ## 停止条件
 
-- 资源清单、expectedPaths 或验收无法冻结，或与石甲兽模型／动画、AVM、战斗规则开始重复拥有时停止。
+- 最终验收未完成或缺用户品质接受；需要修改游戏范围/正式表现方向时保持未完成，停止扩产。

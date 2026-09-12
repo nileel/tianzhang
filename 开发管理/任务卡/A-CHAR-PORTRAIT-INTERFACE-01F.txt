@@ -3,16 +3,16 @@
   "schemaVersion": 2,
   "id": "A-CHAR-PORTRAIT-INTERFACE-01F",
   "title": "64 组合确定性合成与证据",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01E"
   ],
-  "stateReason": "等待十三个直接透明组件全部通过；本卡不调用图片模型。",
+  "stateReason": "2026-09-12：按用户批准的美术交付重排冻结。默认主角采用完整母版裁切；模块化立绘不再承担本轮前置，须用户另行解冻才可继续。",
   "expectedPaths": [
     "assets/generated-character-art/player-modular-portrait-interface-v1/workflows/standard-interface-compositor.json",
     "assets/generated-character-art/player-modular-portrait-interface-v1/composites/portrait_young_refined_half_up_long_practical_long_robe_none.png",
@@ -229,6 +229,12 @@
 }
 ---TASK-BODY---
 # A-CHAR-PORTRAIT-INTERFACE-01F · 64 组合确定性合成与证据
+
+## 2026-09-12 调度裁决
+
+- 当前状态为 frozen；默认主角采用完整母版裁切；模块化立绘不再承担本轮前置，须用户另行解冻才可继续。
+- 本卡既有正文只在重新解冻后恢复执行效力，旧前置完成或旧审批回复不得自动恢复 ready；已完成归档和素材保留。
+- 本次覆盖事实：`docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`。不把本卡纳入 A-GZ-PRESENT-01 的关闭依赖。
 
 ## 来源与当前边界
 

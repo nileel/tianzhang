@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
+    "V-GZ-ART-SLICE-01"
   ],
-  "stateReason": "切片4只在正式provider合同与关中首遇接线稳定后选择第一个额外内容批次；当前不猜测角色或敌人范围。",
+  "stateReason": "2026-09-12：按用户批准的美术交付重排冻结。关中整段实机验收及本批成本完成后，仍须用户指定同类扩展对象才能解冻。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-27-static-3d-combat-piece-first-expansion-batch-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -25,9 +25,15 @@
 ---TASK-BODY---
 # D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 · 静态3D战斗棋子首批内容扩展规格
 
+## 2026-09-12 调度裁决
+
+- 当前状态为 frozen；关中整段实机验收及本批成本完成后，仍须用户指定同类扩展对象才能解冻。
+- 本卡既有正文只在重新解冻后恢复执行效力，旧前置完成或旧审批回复不得自动恢复 ready；已完成归档和素材保留。
+- 本次覆盖事实：`docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`。不把本卡纳入 A-GZ-PRESENT-01 的关闭依赖。
+
 ## 来源与当前边界
 
-- 本卡只在正式静态 3D provider 与首个玩家／石甲兽遭遇接线完成后进入 ready。
+- 本卡须在 V-GZ-ART-SLICE-01 完成、本批完整成本记录齐备且用户指定同类扩展对象后另行解冻；正式接线完成不自动进入 ready。
 - 批准设计切片 4 只允许在 provider 合同不变的前提下逐批增加其他玩家、敌人和表现资料。
 - 当前用户没有指定第一个额外单位批次；本轮管理拆卡不得猜测为风隼、炎尾狐、雪影魔修或荒野散修。
 

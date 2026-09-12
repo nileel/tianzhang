@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01汇总，A-GZ-ART-LOOKDEV-01为首批唯一ready；环境/UI独立于付费玩家原包与冻结动画。模块化肖像/角色扩展转P2冻结，无队列宽袖/2D骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
+
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
 - `U-URP-PREFLIGHT-01`、`U-URP-MIGRATE-01`、`U-URP-VISUAL-BASELINE-01` 与 `U-CHAR-3D-PROTO-01` 已于 2026-08-15 全部完成：项目固定为 Unity 6000.3.18f1／URP 17.3.0、唯一 Universal Renderer、四个正式场景的低模 3D 技术视觉基线和 Adventure 六向几何占位测试台；413/413 EditMode、场景批处理、程序集边界与负责人 1920×1080 人工视觉矩阵均已通过，未接入正式角色资源。
@@ -25,14 +27,19 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| A-GZ-ART-LOOKDEV-01 | P1 | codex | 已排队 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
+| U-GZ-ART-BATTLEFIELD-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中首场正式战场环境美术 | 开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt |
+| U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
+| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
+| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 阻塞 | — | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
+| A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
-| U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
-| D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |
+| U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01、U-GZ-ART-BATTLEFIELD-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
+| D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 冻结 | V-GZ-ART-SLICE-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |
 | AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | 苻渊 strict-round-02 四边面候选静态结构 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt |
@@ -57,12 +64,12 @@
 | U-CHAR-HUMANOID-PROTO-01 | P1 | codex | 冻结 | A-CHAR-AI-PLATFORM-EVAL-01 | 玩家基础人形技术样例 | 开发管理/任务卡/U-CHAR-HUMANOID-PROTO-01.txt |
 | U-SHIJIAHOU-3D-PROTO-01 | P1 | codex | 冻结 | U-CHAR-HUMANOID-PROTO-01 | 石甲兽重型四足技术样例 | 开发管理/任务卡/U-SHIJIAHOU-3D-PROTO-01.txt |
 | A-CHAR-PORTRAIT-STYLE-01 | P1 | codex | 冻结 | — | 默认男主四母图模块化 UI 立绘八组合样张 | 开发管理/任务卡/A-CHAR-PORTRAIT-STYLE-01.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01 | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-INTERFACE-01C、A-CHAR-PORTRAIT-INTERFACE-01D、A-CHAR-PORTRAIT-INTERFACE-01E、A-CHAR-PORTRAIT-INTERFACE-01F、A-CHAR-PORTRAIT-INTERFACE-01G | 默认男主标准接口模块化 UI 立绘库父项 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01C | P1 | codex | 阻塞 | — | B 门最小接口兼容证明 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01C.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01D | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-INTERFACE-01C | C1 门老龄头接口证明 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01D.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01E | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-INTERFACE-01D | C2 门剩余组件生产 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01E.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01F | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-INTERFACE-01E | 64 组合确定性合成与证据 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01F.txt |
-| A-CHAR-PORTRAIT-INTERFACE-01G | P1 | codex | 阻塞 | A-CHAR-PORTRAIT-INTERFACE-01F | 最终视觉批准与父项关闭 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01G.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01 | P2 | codex | 冻结 | A-CHAR-PORTRAIT-INTERFACE-01C、A-CHAR-PORTRAIT-INTERFACE-01D、A-CHAR-PORTRAIT-INTERFACE-01E、A-CHAR-PORTRAIT-INTERFACE-01F、A-CHAR-PORTRAIT-INTERFACE-01G | 默认男主标准接口模块化 UI 立绘库父项 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01C | P2 | codex | 冻结 | — | B 门最小接口兼容证明 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01C.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01D | P2 | codex | 冻结 | A-CHAR-PORTRAIT-INTERFACE-01C | C1 门老龄头接口证明 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01D.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01E | P2 | codex | 冻结 | A-CHAR-PORTRAIT-INTERFACE-01D | C2 门剩余组件生产 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01E.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01F | P2 | codex | 冻结 | A-CHAR-PORTRAIT-INTERFACE-01E | 64 组合确定性合成与证据 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01F.txt |
+| A-CHAR-PORTRAIT-INTERFACE-01G | P2 | codex | 冻结 | A-CHAR-PORTRAIT-INTERFACE-01F | 最终视觉批准与父项关闭 | 开发管理/任务卡/A-CHAR-PORTRAIT-INTERFACE-01G.txt |
 | U-CHAR-3D-FORMAL-01 | P1 | codex | 冻结 | A-CHAR-PORTRAIT-STYLE-01 | 正式 Adventure 3D 替换 | 开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt |
 | U-CHAR-CREATION-VISUAL-01 | P1 | codex | 冻结 | U-CHAR-3D-FORMAL-01 | 完整首版创角外观批次 | 开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
@@ -85,13 +92,13 @@
 
 ## Unity 架构、URP 与角色美术主线
 
-共同事实源：`docs/superpowers/specs/2026-08-09-unity-modular-architecture-rebuild-design.md`、`docs/superpowers/specs/2026-08-09-art-production-mainline-priority-design.md`、`docs/superpowers/specs/2026-08-05-character-art-and-modular-appearance-design.md`。架构重建是最高顺序的 Unity 前置；架构期间冻结 Runtime、正式场景、CSV、导入器和相关 asset 功能开发，只恢复功能完整、视觉简陋的正式薄切片。
+现行交付主线读取 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 与 A-GZ-PRESENT-01。架构、URP与载体中立接口沿用已完成结果；8月9日/8月5日设计只保留尚适用的技术边界，不再按旧动画链排列美术前置。
 
 - 架构主链 01A～01H 与父项均已完成归档；现行所有者、结构图和保留资产扫描基线已经交给 `U-URP-PREFLIGHT-01`，后续不恢复旧 Gameplay／Exploration／BattleUI 或 Built-in 原型。
 - 美术工具链中的 `A-CHAR-BLENDER-SETUP-01 -> A-CHAR-HUMANOID-RIG-01` 已完成；旧严格轮失败与冻结任务继续保留为历史，不恢复重复付费生产。2026-08-17 的 `strict-round-02` 四图和唯一 Tripo 任务已通过静态模型外观复核，RAW 绑定诊断、两个原始包保存以及 Blender 项目骨架换绑／三动作／factory-startup 验证均已完成；资源 QA 随后因宽袖跨正／侧／背与动作极值的硬折片、尖刺和折框明确失败，未形成 Unity 候选。FIX-01／FIX-02／FIX-03 三次局部权重返修均已按停止条件完成、回滚且未保存候选；最后一次已清除冻结袖面全部 `UpperLeg／Shoulder` 跨区影响，但数值与九视角仍失败。负责人批准的一次性双结构路线执行后，`LOCAL-RETOPO-01` 因冻结外边界分叉无法形成流形补片而停止，`REGEN-QUAD-01` 的唯一 Quad 输出又因脸部身份漂移与衣料手／头发纹理污染失败。旧统一骨架、严格轮、三槽和通用绑定自动化继续最终冻结，不再接收新补丁或重复付费生产。
 - Unity 视觉链 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01` 已全部完成；当前冻结结果是 URP 17.3.0、唯一 Universal Renderer、四个正式场景、低模 3D 技术视觉与六向几何占位测试台，不包含正式角色或关中最终装修。
-- 真实战场角色现行方向是正式静态 3D + 独立非阻塞 2D 实验。`U-CHAR-BATTLE-PRESENTATION-MODULAR-01` 及其完整依赖图是唯一新实施主链；苻渊 2D／静态 3D 样例只作隔离证据，不能直接接入正式单位。旧统一骨架玩家／石甲兽样例、旧动画 3D 正式替换 `U-CHAR-3D-FORMAL-01` 与完整创角批次继续冻结，不得借新方向解冻或复用。
-- `A-CHAR-PORTRAIT-STYLE-01` 只保留头像／剧情 UI 立绘职责；现有立绘的姿势不用于战场角色。`D-CHAR-APPEARANCE-01` 保留稳定 ID 与存档职责，后续战场外观生产依赖 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01` 的载体中立合同与正式 Profile 映射，不再预设为 2D 合同。
+- 真实战场角色现行方向是正式静态3D；2D保持独立非阻塞实验且本轮不主动扩展。角色技术链复用 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01`，完整展示交付归 `A-GZ-PRESENT-01`；苻渊 2D／静态 3D 样例只作隔离证据，不能直接接入正式单位。旧统一骨架玩家／石甲兽样例、旧动画 3D 正式替换 `U-CHAR-3D-FORMAL-01` 与完整创角批次继续冻结，不得借新方向解冻或复用。
+- `A-CHAR-PORTRAIT-STYLE-01` 与标准接口模块化肖像链保持冻结；首包只裁切批准完整男主母版，不恢复立绘组合。现有立绘的姿势不用于战场角色。`D-CHAR-APPEARANCE-01` 保留稳定 ID 与存档职责，后续战场外观生产依赖 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01` 的载体中立合同与正式 Profile 映射，不再预设为 2D 合同。
 - 首批真实资源产生时触发 `AVM-03 / TQ-074`；原始工程与生成记录进入 `assets/source/characters/`，通过闸门的 Unity 资源才进入 `src/Assets/Art/Characters/`。
 
 ## 筑基、紫府与丹相后续 Unity 任务卡

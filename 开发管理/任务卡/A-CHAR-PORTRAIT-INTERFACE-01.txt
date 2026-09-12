@@ -3,12 +3,12 @@
   "schemaVersion": 2,
   "id": "A-CHAR-PORTRAIT-INTERFACE-01",
   "title": "默认男主标准接口模块化 UI 立绘库父项",
-  "priority": "P1",
+  "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "frozen",
   "blockedBy": [
     "A-CHAR-PORTRAIT-INTERFACE-01C",
     "A-CHAR-PORTRAIT-INTERFACE-01D",
@@ -16,7 +16,7 @@
     "A-CHAR-PORTRAIT-INTERFACE-01F",
     "A-CHAR-PORTRAIT-INTERFACE-01G"
   ],
-  "stateReason": "2026-09-04：A-CHAR-PORTRAIT-INTERFACE-01A 与 A-CHAR-PORTRAIT-REGISTER-01 均已完成归档；01C 现等待负责人对已注册五组件作 B 门书面签收，后续 01D～01G 仍保持具名前置。父项继续只汇总，不直接执行。",
+  "stateReason": "2026-09-12：按用户批准的美术交付重排冻结。默认主角采用完整母版裁切；模块化立绘不再承担本轮前置，须用户另行解冻才可继续。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-03-standard-interface-player-modular-portrait-design.md",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -49,6 +49,12 @@
 }
 ---TASK-BODY---
 # A-CHAR-PORTRAIT-INTERFACE-01 · 默认男主标准接口模块化 UI 立绘库父项
+
+## 2026-09-12 调度裁决
+
+- 当前状态为 frozen；默认主角采用完整母版裁切；模块化立绘不再承担本轮前置，须用户另行解冻才可继续。
+- 本卡既有正文只在重新解冻后恢复执行效力，旧前置完成或旧审批回复不得自动恢复 ready；已完成归档和素材保留。
+- 本次覆盖事实：`docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`。不把本卡纳入 A-GZ-PRESENT-01 的关闭依赖。
 
 ## 来源与当前边界
 

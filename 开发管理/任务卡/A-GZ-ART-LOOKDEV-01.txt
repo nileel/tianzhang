@@ -1,0 +1,88 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-GZ-ART-LOOKDEV-01",
+  "title": "关中整屏美术样板与首包生产合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-12：用户已批准首包重排范围；现有角色/关中/镜头事实足以制作两张整屏设计样板与具体生产合同，无外部交易授权要求，本卡不实施后续资源。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/battle-and-hud-v1.png",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/prompts.md",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/manifest.json",
+    "开发管理/关中整屏美术基准与生产批准记录.txt",
+    "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt",
+    "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt",
+    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-GZ-ART-LOOKDEV-01 · 关中整屏美术样板与首包生产合同
+
+## 来源与当前边界
+
+- 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
+- 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
+- 唯一结果是关中城/悬赏与野外战斗两张配套整屏样板及其可执行生产合同；是设计示意，不是 Unity 运行截图。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 全文；`docs/剧情/据点/关中城.txt` 的视觉主题/当前启用功能，`docs/基础设定/关中野外最小环境档案.txt` 的当前地貌/空间范围。
+- `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` 的身份、姿态、画风、尺度；实际查看 `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png` 与石甲兽已批准 source 联系表，必要时按资源规范在所属 worktree 准备可读输入。
+- `src/Assets/Scripts/Editor/SceneBuildSupport.cs::BeginScene`、`AdventureSceneBuilder.Build`、`SettlementSceneBuilder.Build`、`AdventureHudPresenter.Present` 及 `CombatPresentationContracts.cs` 六事件，只读证明真实镜头、可见表面与已有交互。
+- 内置 imagegen 技能及 `docs/资源管理/美术资源版本管理规范.md`；不加载/恢复宽袖或模块化立绘实现。
+
+## 实施范围
+
+- 固定当前正交 6.2、pitch 38°/yaw 0°及1920×1080参考，记录棋子占屏与UI安全区的依据；设计图不得声称是测得的运行时尺寸。
+- 用统一低饱和黄土/草地、深靛男主、石甲兽轮廓和克制UI形成两个完整画面；内置生成最多四次（两张及两次有原因的修订）。实际查看输出，文字用独立可编辑说明表达，复杂可读文字不依赖生成准确性。
+- 在 `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 冻结当前五个工作面的资产逐项数量/字面量路径、源与消费者、主体轮廓、材质/颜色/UI层级、图标最小用途、首包各卡制作/返工上限；不增加新工作面。
+- 同一合同列出默认男主唯一原包路线的实际可用平台/服务与当日额度证据、四视图哈希、资产ID和建议上限供一次具体交易批准；不上传、不消费、不联系外包，未知报价如实记录，不拖延无费用的整屏基准交付。
+- 形成整屏基准批准记录，只有用户接受两张整屏方向才允许依赖本卡的生产任务解锁。未得到回复时按项目既有合法 checkpoint 或 blocked 状态记录，不能自行写 approved。
+- 对直接下游只补齐同范围生产参数/字面量路径与重新计算风险投影；不能借此继续拆父项或开始下游实施。
+
+## 禁止项
+
+- 不改Unity、CSV、模型、存档或既有角色身份，不生成第三个角色，不恢复换装/宽袖/六向研究。
+- 不把样板等同实机，不把已有资源或Codex自评等同用户视觉批准。
+- 不发起任何外部平台交易或采购；用户批准方向不等于平台费用批准。
+
+## 验证
+
+- 两张完整样板均实际查看；画面身份、场景主题、现有功能、只读事件与源一致，图文/哈希/用途可追溯。
+- 合同的每项输出都有本轮既有叶子所有者；制作次数与是否实际花费分开记录。
+- docs 变化运行 tools/check-data-chain.ps1；按资源路径运行 tools/check-asset-versioning.ps1；运行 tools/check-review-text.ps1 与 tools/check-task-cards.ps1。
+- 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
+- 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
+
+## 完成条件
+
+- 两张整屏样板、提示词/manifest、具体首包合同和用户整屏批准齐备；生产卡可按合同直接制作和验收。
+- RAW 的费用批准缺口独立保留，不能阻塞已经可执行的环境/UI分支，也不因本卡完成自动填入额度或调用平台。
+
+## 停止条件
+
+- 用完四次内置生成仍无法形成可审阅整屏；身份/方向需改变、需要新规则/模块、扩大路径或已知任务不原子。
+- 用户拒绝整屏方向时本卡保持未完成；未给费用批准不执行交易。不得追加平台或进入长期路线比较。

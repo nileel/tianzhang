@@ -1,0 +1,98 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-ART-BATTLEFIELD-01",
+  "title": "关中首场正式战场环境美术",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-GZ-ART-LOOKDEV-01"
+  ],
+  "stateReason": "2026-09-12：等待A-GZ-ART-LOOKDEV-01",
+  "expectedPaths": [
+    "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.blend",
+    "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.fbx",
+    "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_basecolor.png",
+    "assets/source/environments/guanzhong-first-bounty/manifest.json",
+    "开发管理/关中首场战场美术验收记录.txt",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_TerrainModules.fbx",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_TerrainModules.fbx.meta",
+    "src/Assets/Art/Environments/Guanzhong.meta",
+    "src/Assets/Art/Environments.meta",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Terrain_BaseColor.png",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Terrain_BaseColor.png.meta",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Terrain.mat",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Terrain.mat.meta",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Battlefield.prefab",
+    "src/Assets/Art/Environments/Guanzhong/Guanzhong_Battlefield.prefab.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldArtEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldArtEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBattlefieldArtPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBattlefieldArtPlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
+    "开发管理/任务归档/U-GZ-ART-BATTLEFIELD-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-001"
+    ],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-ART-BATTLEFIELD-01 · 关中首场正式战场环境美术
+
+## 来源与当前边界
+
+- 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
+- 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
+- 唯一结果是实际遭遇使用的正式关中地面和装饰；不承担角色、HUD、规则或比较实验。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 的战场/资源/镜头章节及 LOOKDEV 批准记录。
+- `AdventureSceneBuilder.Build|BuildVisualBaselineMatrix` 与 `SceneBuildSupport.BeginScene`、当前 `AdventureScene`；`AdventureMapData`、`AdventureMap_guanzhong_wild.asset`、`EnvironmentProfile_env_guanzhong_wild.asset` 与真实空间投影只读链。
+- `AdventureUnitSpawner.TrySpawn` 与正式 provider 的格位/六向合同、当前野外最小环境档案；tianzhang-blender-pipeline、unity-agent-workflows 的源资产和运行时所有者边界。
+
+## 实施范围
+
+- 从批准首包生产一组共享六角顶面/侧壁及少量石木模块，草地与黄土使用共享材质；清单数量上限由已批准合同逐项固定。
+- 通过现有 AdventureSceneBuilder 在真实地图/环境合法格位生成正式 GuanzhongBattlefield；模块资产不承载规则、不把技术九格矩阵直接改名为正式关卡。
+- 正式地面与现有/后续provider共用坐标；核验真实遭遇起点、敌方位置及合法行动覆盖。装饰不得新增阻挡/掩体/高度语义，不重写节点或战斗输入。
+- 保存、关闭、重开验证正式场景引用；保留UI和既有功能，正式比较板移除仍属于 FORMAL-WIRING。
+- 本卡不等待玩家原包费用或旧四足动画；与UI共享文件时按现有隔离/固定队列顺序交接，最终接线保留本卡地面。
+
+## 禁止项
+
+- 不改Spatial/Combat规则、地图CSV/合法格位/碰撞语义，不建通用地图系统，不改全局相机或私有角色补偿。
+- 不修改玩家/敌人模型、provider、UI逻辑和正式奖励，不复用苻渊比较板为正式输入。
+- 不手写场景/Prefab YAML，不擅自采购资源。
+
+## 验证
+
+- Unity importer材质/网格/尺度检查；同一实机镜头证明地面覆盖合法位置、棋子接地投影和UI避让，不以图片示意替代。
+- Builder保存重开保持引用；运行本卡直接EditMode/PlayMode及资源版本/数据链/任务投影检查，不重跑无关数值模拟。
+- 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
+- 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
+
+## 完成条件
+
+- 一个正式关中战场可由当前BuildSettings入口观察，地面与真实遭遇坐标一致，色彩/模块符合整屏基准；QA记录来源和真实画面。
+- 完成地面不代表角色接线/整体品质通过，正式接线卡消费本场景。
+
+## 停止条件
+
+- 需要改规则/地图/碰撞或另建渲染框架，现行投影无法一致，或为了遮住问题需要改镜头/私有偏移。
+- 超出批准清单/制作次数、资产来源变更或需要外部费用时停止。

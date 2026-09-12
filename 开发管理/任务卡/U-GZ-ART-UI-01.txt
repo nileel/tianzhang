@@ -1,0 +1,102 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-ART-UI-01",
+  "title": "关中城悬赏与首场战斗界面统一美术",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-GZ-ART-LOOKDEV-01"
+  ],
+  "stateReason": "2026-09-12：等待A-GZ-ART-LOOKDEV-01",
+  "expectedPaths": [
+    "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
+    "assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png",
+    "assets/source/ui/guanzhong-first-bounty/formal_player_default_portrait.png",
+    "assets/source/ui/guanzhong-first-bounty/manifest.json",
+    "开发管理/关中首场城镇与界面美术验收记录.txt",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png.meta",
+    "src/Assets/Art/UI/Guanzhong.meta",
+    "src/Assets/Art/UI.meta",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png.meta",
+    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png",
+    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png.meta",
+    "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Scenes/SettlementScene.unity.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务归档/U-GZ-ART-UI-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-001"
+    ],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-ART-UI-01 · 关中城悬赏与首场战斗界面统一美术
+
+## 来源与当前边界
+
+- 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
+- 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
+- 一个原子结果是批准的同一首流程UI主题在Settlement和Adventure两个表面完整应用；保留原交互，不建设全游戏UI系统。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 城镇/UI/头像裁切/有限图标章节；`docs/剧情/据点/关中城.txt` 主题及已有功能；批准男主完整RGBA母版。
+- `SettlementSceneBuilder.Build|BuildBountyPanel`、`SettlementView`/ `BountyBoardView` 创建/刷新链；`AdventureSceneBuilder.Build`、`AdventureHudPresenter.Present` 的动态按钮及战斗HUD/动作条/日志引用。
+- `SceneBuildSupport` 只读调用者列表，`GuanzhongFormalUiTextTests` 与 `GuanzhongFormalUiTextPlayModeTests`；unity-agent-workflows的双表面/文字所有者验证。
+
+## 实施范围
+
+- 生产批准关中城背景和有限UI图集；用现有男主母版确定性裁切头像，不使用模块化五组件组装，不重新生成角色。
+- 在两个既有Builder创建的目标对象上应用共同的底板/边框/按钮/字体层级；动态生成按钮的样式由AdventureHudPresenter相同主题设置，不能只改静态Builder。
+- 图标仅覆盖当前首流程已消费对象；复杂文字、按钮文本继续独立UI层，不烘焙成不可修改背景。首包沿用已确认可用字体，不采购/下载未知许可字体。
+- 1920×1080下核查主界面、悬赏打开/关闭、接取/领取、战斗行动列表与日志；保留旧水驿/保存/返回入口，不重做册界面板。
+- 修改Adventure Builder时保存已交付地面和provider，不因共享文件把其重建为旧版本。
+
+## 禁止项
+
+- 不改SceneBuildSupport全局默认值、StartMenu、World或通用UI框架；不新增角色/捏脸/图库。
+- 不改悬赏条件/奖励、功能开关、术法选择规则、业务数据、存档，不把显示样式变化解释为功能完成。
+- 不用背景遮挡真实按钮/文字，不手改Unity YAML。
+
+## 验证
+
+- 两个正式表面的真实截图和动态刷新检查：文字不截断、按钮可点击、界面不遮战场，头像身份与母版一致。
+- 既有UI文字与状态测试按影响面运行，接取/领取/返回入口保持；Builder保存重开引用不丢失，资产版本/数据链/任务投影通过。
+- 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
+- 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
+
+## 完成条件
+
+- 同一批准主题在城镇/悬赏及Adventure/HUD两个表面完整可见，源图集/头像和实际截图可追溯。
+- 只关闭UI叶子，不宣称正式角色、反馈或整场美术验收通过。
+
+## 停止条件
+
+- 需要新增业务显示字段/交互、修改册界面板/全局主题，未查明实际文字/动态样式所有者，或需扩充图标库/外部采购。
+- 任一表面不符合基准时先定位同一owner内最小问题，不叠加通用适配层。

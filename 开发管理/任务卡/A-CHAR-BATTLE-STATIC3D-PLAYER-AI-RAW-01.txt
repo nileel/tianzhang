@@ -9,8 +9,10 @@
   "domain": "content",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "严格四视图已完成归档；仍须取得负责人对平台、模型/服务、允许的最大 credits、唯一输入哈希和资产 ID 的交易前批准，才能补齐 automationInputs 并置为 ready。",
+  "blockedBy": [
+    "A-GZ-ART-LOOKDEV-01"
+  ],
+  "stateReason": "2026-09-12：先完成关中整屏生产合同；另须平台/服务/最大credits/四视图哈希/资产ID的真实交易批准。已有四视图不重做，本次重排未授权付费。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
@@ -26,6 +28,11 @@
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
+
+## 2026-09-12 首包边界
+
+- 先消费 `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md`；LOOKDEV通过不代表费用获批。外部交易仍最多一次、不得超过明确批准额度；未获批不上传。
+- 本卡只承担首包固定默认男主，不因已有四视图追加平台评测。费用缺口不阻塞独立环境/UI分支。
 
 ## 来源与当前边界
 

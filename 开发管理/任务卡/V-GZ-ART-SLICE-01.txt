@@ -1,0 +1,86 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "V-GZ-ART-SLICE-01",
+  "title": "关中首个可展示流程实机美术验收",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-ART-BATTLEFIELD-01",
+    "U-GZ-ART-UI-01",
+    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
+    "U-GZ-ART-FEEDBACK-01"
+  ],
+  "stateReason": "2026-09-12：等待U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01",
+  "expectedPaths": [
+    "开发管理/关中首个可展示流程美术验收记录.txt",
+    "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
+    "artifacts/guanzhong-first-bounty-art-acceptance/02-battle-idle.png",
+    "artifacts/guanzhong-first-bounty-art-acceptance/03-battle-feedback.png",
+    "artifacts/guanzhong-first-bounty-art-acceptance/04-city-reward.png",
+    "artifacts/guanzhong-first-bounty-art-acceptance/formal-flow.mp4",
+    "artifacts/guanzhong-first-bounty-art-acceptance/run-evidence.json",
+    "开发管理/设计-当前状态.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/任务卡/A-GZ-PRESENT-01.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt",
+    "开发管理/任务归档/A-GZ-PRESENT-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
+    "开发管理/任务归档/V-GZ-ART-SLICE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# V-GZ-ART-SLICE-01 · 关中首个可展示流程实机美术验收
+
+## 来源与当前边界
+
+- 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
+- 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
+- 一个可独立裁决结果：首场关中流程是否达到用户接受的整体展示品质。只读取证，不在验收卡修复多条业务链。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 与整屏批准记录；BATTLEFIELD/UI/FORMAL-WIRING/FEEDBACK的实际完成归档及本批成本。
+- `src/ProjectSettings/EditorBuildSettings.asset`、正式Settlement/Adventure场景，悬赏/奖励/保存回归既有入口；两个汇总父项的关闭条件。
+
+## 实施范围
+
+- 从正式入口新会话走关中城接悬赏→野外玩家与石甲兽战斗→返回领取；证明奖励仅领取一次，并验证同范围既有保存读取。
+- 记录1920×1080四张关键画面与连续录像、事件/入口/版本证据；不能使用比较台、概念图或补帧动画充当实机。
+- 对比整屏基准，判断角色/地面/UI统一性、六向和行动可读性、结果反馈；汇总制作、生成等待、返工、接入、验证成本，未知项如实标记。
+- 展示具体实机结果给用户；用户明确接受整体品质且各技术条件通过后，才关闭本卡及两个已满足直接叶子证据的汇总父项。2D实验只引用其既有关闭证据，不重跑。
+- 若失败，记录准确缺陷/owner与复现入口，父项保持未完成；不得以测试通过代替视觉接受。
+
+## 禁止项
+
+- 不修改模型/环境/UI/规则/脚本，不扩大到第三个角色、换装或完整世界；不在验收卡叠加修复。
+- 不把父项改为ready，不把验收完成自动解释为解冻扩展内容。
+
+## 验证
+
+- 现有正式悬赏/战斗/保存的受影响最小测试和真实连续操作相互对应；已通过且输入未变的子卡检查不重复。
+- 关键截图/连续实录/运行版本/用户决定和本批成本能够相互追溯；全局任务投影和审核文本检查通过。
+- 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
+- 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
+
+## 完成条件
+
+- 正式全流程、一次性奖励、保存行为与可读性通过，用户明确接受整段品质；验证记录完整，A-GZ-PRESENT-01可关闭。
+- 已有角色模块化父项只有原直接叶子证据齐全时才同步归档；不宣布任何未生产扩展完成。
+
+## 停止条件
+
+- 非正式入口、录像不连续、任一功能/可见结果失败、缺用户品质接受，或需要跨owner修补；按现有非ready/决定合同保留现场，不自动扩产。

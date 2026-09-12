@@ -27,6 +27,12 @@
 ---TASK-BODY---
 # U-CHAR-BATTLE-PRESENTATION-MODULAR-01 · 战斗棋子功能与表现模块化父项
 
+## 2026-09-12 汇总边界
+
+- 本卡继续只汇总原有角色技术结果；整段可展示美术由 A-GZ-PRESENT-01 和 V-GZ-ART-SLICE-01 单独验收。
+- 内容扩展现已 frozen，只有整段实机验收/成本记录完成及用户指定同类对象后才可解冻；不随本卡完成自动调度。
+- 当前整体交付与叶子依赖读取 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`。
+
 ## 来源与当前边界
 
 - 唯一直接设计事实源是 `docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md` 的用户已批准修订稿。
