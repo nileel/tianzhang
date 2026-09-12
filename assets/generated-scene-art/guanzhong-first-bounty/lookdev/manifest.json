@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "assetId": "guanzhong-first-bounty-lookdev-v1",
+  "purpose": "Two non-runtime 1920x1080 art-direction boards for the Guanzhong City bounty screen and the Guanzhong wilderness battle HUD.",
+  "status": "rejected_owner_visual_direction",
+  "sourceInputs": [
+    {
+      "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+      "role": "approved default-player identity and palette reference only",
+      "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_contact-sheet.png",
+      "role": "approved stone-beast silhouette and material reference only",
+      "sha256": "39ac621d0d2229ee775fb1c70ce7db605e31353582a1207276ab31a57be2a067"
+    }
+  ],
+  "generation": {
+    "tool": "OpenAI built-in ImageGen",
+    "mode": "built-in",
+    "executedOn": "2026-09-12T19:29:21+08:00",
+    "generationAttempts": 2,
+    "revisionAttempts": 0,
+    "maximumGenerationAttempts": 4,
+    "external3dPlatformCalled": false,
+    "externalCreditsUsed": 0,
+    "externalCost": "none",
+    "builtInQuota": "not exposed by the tool"
+  },
+  "deterministicPostProcess": {
+    "method": "Pillow LANCZOS resize from 1672x941 RGB to 1920x1081 RGB, followed by a centered one-row vertical crop to 1920x1080 RGB",
+    "sourceFilesRemainOutsideRepository": true,
+    "cropOrPaintedTextAdded": false
+  },
+  "outputs": [
+    {
+      "path": "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
+      "kind": "city_bounty_design_reference",
+      "width": 1920,
+      "height": 1080,
+      "mode": "RGB",
+      "bytes": 3098236,
+      "sha256": "4597716836798662ff01ebfc073f06b78ddcc3c1ddb950173fb40ffbd6775bf3",
+      "promptRef": "prompts.md"
+    },
+    {
+      "path": "assets/generated-scene-art/guanzhong-first-bounty/lookdev/battle-and-hud-v1.png",
+      "kind": "battle_hud_design_reference",
+      "width": 1920,
+      "height": 1080,
+      "mode": "RGB",
+      "bytes": 3199731,
+      "sha256": "7ef61ba3da4ce54d68b4f8eed7402d9f990de219e930a04b09483f504406c3b3",
+      "promptRef": "prompts.md"
+    }
+  ],
+  "inspection": {
+    "outputsActuallyViewed": true,
+    "cityBoard": "One indigo player portrait, empty editable bounty cards, loess city theme, no readable text or third character.",
+    "battleBoard": "Exactly one indigo player pawn and one four-legged stone beast on grass-and-loess hex ground, with blank left/right HUD zones.",
+    "runtimeClaim": "none"
+  },
+  "approval": {
+    "status": "rejected",
+    "approved": false,
+    "decisionId": "DEC-20260912-CD1A9E90A58405",
+    "optionKey": "C",
+    "source": "feishu_card",
+    "evidenceHash": "6aa1f2bee1e31e15b9589443bf867302a338e6a852e43aa638178f734bf03f11",
+    "reason": "Owner selected C: reject this visual direction, keep LOOKDEV blocked, and do not unlock downstream work or authorize further generation or external spending."
+  },
+  "scope": {
+    "newCharactersGenerated": 0,
+    "unityModified": false,
+    "blenderModified": false,
+    "externalUploadOrPurchase": false
+  }
+}

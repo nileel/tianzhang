@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260912-CD1A9E90A58405",
+  "stateReason": "负责人已通过 DEC-20260912-CD1A9E90A58405 选择 C：拒绝本轮整屏方向；本卡保持阻塞，不解锁下游、不追加生成或外部交易。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
     "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
@@ -160,3 +160,9 @@
 
 - 用完四次内置生成仍无法形成可审阅整屏；身份/方向需改变、需要新规则/模块、扩大路径或已知任务不原子。
 - 用户拒绝整屏方向时本卡保持未完成；未给费用批准不执行交易。不得追加平台或进入长期路线比较。
+
+## 已处理的负责人决定
+
+- 已绑定 DEC-20260912-CD1A9E90A58405 的有效 option C 回复；回复来源为 feishu_card，证据哈希为 6aa1f2bee1e31e15b9589443bf867302a338e6a852e43aa638178f734bf03f11。
+- C 拒绝本轮整屏方向而非视觉批准；本卡转为 blocked，样板、提示词、manifest 与合同只保留为拒绝记录。
+- 不移除任一下游对本卡的具名前置，不改变下游状态或队列投影，不追加内置生成、外部交易、Blender、Unity 或正式资产导入。
