@@ -365,21 +365,14 @@ namespace TianZhang.Editor
                 : first.y.CompareTo(second.y));
 
             var battlefield = new GameObject("GuanzhongBattlefield");
-            Mesh columnMesh = SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexColumnMeshPath);
-            Material top = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundTopMaterialPath);
-            Material side = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundSideMaterialPath);
+            GameObject tilePrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.TilePrefabPath);
             foreach (Vector2Int coord in cells)
             {
-                var cell = new GameObject("GuanzhongHex_" + coord.x + "_" + coord.y,
-                    typeof(MeshFilter), typeof(MeshRenderer));
+                var cell = (GameObject)PrefabUtility.InstantiatePrefab(tilePrefab);
+                cell.name = "GuanzhongHex_" + coord.x + "_" + coord.y;
                 cell.transform.SetParent(battlefield.transform, false);
-                cell.transform.localPosition = HexToWorld(coord.x, coord.y, 0f);
-                cell.transform.localScale = new Vector3(1f, HeightForLevel(0), 1f);
-                cell.GetComponent<MeshFilter>().sharedMesh = columnMesh;
-                MeshRenderer renderer = cell.GetComponent<MeshRenderer>();
-                renderer.sharedMaterials = new[] { top, side };
-                renderer.shadowCastingMode = ShadowCastingMode.On;
-                renderer.receiveShadows = true;
+                cell.transform.localPosition = HexToWorld(coord.x, coord.y, HeightForLevel(0));
+                PrefabUtility.RecordPrefabInstancePropertyModifications(cell.transform);
             }
             return battlefield;
         }

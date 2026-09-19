@@ -4,9 +4,11 @@
 
 ## 当前事实
 
+- 2026-09-20 `U-GZ-ART-BATTLEFIELD-01` 已完成：批准Tripo地块成为正式Adventure六格共享Prefab，石阶仅为备用Prefab；原Builder保存重开、两个直接EditMode和正式战斗/回城/领奖/存读PlayMode通过。验收记录见 `开发管理/关中首场战场美术验收记录.txt`。保留v5青绿地表、青蓝岩壁与自然边缘，不代表整屏、角色/UI、其他地形、高差通行或最终整体品质通过；直接下游卡继续依其余前置维护。
+
 - 2026-09-20 `U-GZ-BATTLEFIELD-BASELINE-01` 已完成：正式 Adventure 以 `env_guanzhong_wild` 有向边端点生成六格基础功能地面，技术 Marker 保持原所有者，比较板/面板默认隐藏并由 Builder 保存；验证记录见 `开发管理/关中正式战场功能地面验证记录.txt`。这不是环境美术、正式角色或整体品质验收，相关门槛继续沿原任务推进。
 
-- 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01汇总，A-GZ-ART-LOOKDEV-01曾为首批唯一ready；负责人后续对 DEC-20260912-CD1A9E90A58405 选择 C，拒绝本轮整屏方向，当前保持阻塞且未解锁环境/UI或付费玩家原包。环境/UI独立于付费玩家原包与冻结动画。模块化肖像/角色扩展转P2冻结，无队列宽袖/2D骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
+- 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01汇总，A-GZ-ART-LOOKDEV-01曾为首批唯一ready；负责人后续对 DEC-20260912-CD1A9E90A58405 选择 C，拒绝本轮整屏方向，当前整屏方向保持阻塞，未批准UI或付费玩家原包。9月20日初始地块/备用石阶获得独立采用与接入授权，不解除上述门槛。模块化肖像/角色扩展转P2冻结，无队列宽袖/2D骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
@@ -30,7 +32,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-GZ-ART-LOOKDEV-01 | P1 | codex | 阻塞 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
-| U-GZ-ART-BATTLEFIELD-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中首场正式战场环境美术 | 开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
 | U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |

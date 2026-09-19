@@ -1,0 +1,56 @@
+# 关中首场初始地形接入记录
+
+## U-GZ-ART-BATTLEFIELD-01 · 2026-09-20
+
+- 本轮只完成已批准两件原资源的正式初始接入。用户采用 v5 青绿地表、青蓝岩壁和自然边缘，不重新审批风格，不重生成、削成纯六角柱或加顶板/遮缝。整屏 LOOKDEV 拒绝历史、角色/UI、其他地形和最终整体品质门槛保持。
+- 实施树：D:/天章游戏开发/.worktrees/gz-terrain-initial-20260920；分支 codex/gz-terrain-initial-20260920；基点 dd6770a7082dc79bc23fda932e57e5ac54d39514。原美术实验树 gz-art-lookdev-20260912 保留且未修改。进入时主线同基点，schema 5 两个owner run为空、集成锁none；三份既有任务管理差异保留并纳入本卡收口。
+- 风险预检：taskCardDigest db94adca1c4f7272605af1adaa15bc526ac096b93d03d7bff5c385d5687a3fff；indexDigest 4d35e55ef2280ee9ae58b122a4cefcde1f4013186fda2a4497a82ee26e9a102c；matched=[EXP-UNITY-001]、gates=[]，已消费正文。路径没有扩展，无缺失gate。
+
+## 来源、导入与资源
+
+| 资源 | 地块 | 石阶 |
+|---|---|---|
+| Tripo ID | 67743c70-4965-4b6a-a649-2602782965aa | 1555965a-fb44-4cf0-98d1-8798ea36f8ee |
+| ZIP SHA256 | 67238be87531bf2766886ba14824d6ec016b446c0b943dda3373dceda4256b69 | 872d52998fd2404e080845b143659014986dfc45d4c3a94c841a65cf92117aab |
+| FBX SHA256 | 504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee | d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9 |
+| basecolor SHA256 | f32f6d747d8e9d3fa4cce72a9be4e5a0a3254acf40d4faca61d32193992b0ef5 | 23e14161e0051843fedfd8db1b691587a9638c94c4966e4f652d3b6549fcc54a |
+| Unity顶点/三角 | 59149 / 99346 | 63497 / 98138 |
+| 规范化平移 | (.2488144219,-.8945829622,-.4738227693) | (-2.4696964e-8,-1.8870144e-9,-.4071731672) |
+| 规范化四元数xyzw | (-.1757585686,.6849152689,.6849152689,.1757585686) | (0,-.7071067812,0,.7071067812) |
+| 正等比尺度 | 1.9770544759 | .4143463054 |
+
+- 两份用户Downloads ZIP原样留存在 assets/source/environments/guanzhong-first-bounty/initial-v1/terrain-source.zip、stairs-source.zip；normalization.json和fbx-coordinate-proof.json逐字节迁移自旧小样。FBX/basecolor逐字节取自ZIP。
+- 正式路径：src/Assets/Art/Environments/Guanzhong/{Tile,Stair}.fbx、{Tile,Stair}_basecolor.JPEG、{Tile,Stair}.mat、{Tile,Stair}.prefab及Unity生成meta。每份Prefab根单位缩放，MeasuredFbxAlignment子层使用上表刚体/正等比变换，保留原FBX嵌套层级。未创建替代网格、遮缝几何、Collider或第二套地形系统。
+- 两份材质各被对应资源实例共享；URP/Lit、原basecolor、白色BaseColor、Metallic=0、Smoothness=.15，沿用几何法线，不启用原包normal/roughness贴图。每份FBX比历史GLB少两个三角，原因仍未知；旧双向点云证明不代替拓扑或碰撞验收。
+- 版本规则：运行时四份二进制使用LFS，场景/Prefab/材质/meta/代码/本记录使用普通Git；原包与本机JSON/PNG证据遵守既有assets/source忽略规则，保留在任务树并核验复制到主工作区。没有强制提交原包或新增外部存储。
+
+## 正式所有者与运行时实测
+
+- 目标为 build-enabled AdventureScene/GuanzhongBattlefield；唯一地面所有者 AdventureSceneBuilder.BuildGuanzhongBattlefield，经 BeginScene→序列化绑定→SceneBuildSupport.Save/EditorSceneManager.SaveScene保存并重开。新 GuanzhongTerrainAssetBuilder 仅在现有 TianZhang.Editor 程序集负责两份资源和证据，不进入Player。运行时没有地块位置覆盖写入器。
+- 输入仍是 env_guanzhong_wild 的12条有向边端点，去重六格(-1,0)、(0,0)、(1,0)、(1,-1)、(0,1)、(-1,1)，不含导航return(0,2)。全部共享Tile.prefab，坐标 x=q+.5r、z=.8660254r+1、根Y=.34、根scale=(1,1,1)。Stair.prefab仅备用，场景不存在石阶实例。
+- 原VisualBaselineBoard和BattleVisualComparisonPanel默认隐藏。旧柱体和实验Tripo小样分别是比较fixture和实验场景，不是本轮正式所有者。只改变正式六格的Prefab引用，未修改共享SceneBuildSupport、Marker/Spawner、地图/环境数据、战斗规则、HUD、存档、其他场景或正式角色provider。
+- 固定相机位置(0,8,-10)、Euler(38,0,0)、orthographicSize=6.2。PlayerMarker根(0,.38,1)、bounds min(-.17,.45,.83)、max(.17,1.41,1.53)；EnemyMarker根(1,.38,1)、bounds min(.83,.45,.83)、max(1.17,1.41,1.53)。从真实Mesh子层变换后的三角面在格心XZ求最高交点，两个实际地面Y=.340433，脚底间距约.109567；草冠bounds.max.y=.433945，不再被测试当作接地面。
+- PlayMode日志中1920×1080基线投影：Player MarkerRect=(940.26,602.55)-(979.74,705.97)，Enemy=(1056.39,602.55)-(1095.87,705.97)；对应地块visual bounds投影分别(861.92,433.15)-(1053.20,654.14)、(978.05,433.15)-(1169.33,654.14)。此投影由实际640×480 GameView的相机换算，不冒充完整屏幕截图。
+- unity-formal.png为实际PlayMode正式相机对1920×1080 RenderTexture的URP StandardRequest渲染，包含本次生成的真实Marker，不包含ScreenSpaceOverlay UI。第一次在Marker刚创建时立即捕获出现背景纹理异常；独立静态核查和运行时材质/空贴图/空PropertyBlock证据排除了资源串线，等待一正常渲染帧后图像正常。没有改生产材质、坐标、相机或管线来遮掩；底层引擎首次渲染内部原因未进一步裁定。
+- 已查看正常图：六格青绿自然边缘与青蓝岩壁上缘可见，原固定远镜头让六格占屏较小，原背景Plane(Y=-.04)遮住深岩壁下部。以上限制如实保留，不构成最终整体画面批准。
+
+## 验证证据
+
+- Unity 6000.3.18f1真实首次导入和编译；CLI executeMethod TianZhang.Editor.GuanzhongTerrainAssetBuilder.BuildAssetsAndScene退出0，保存并重开正式Adventure；证据assets/source/environments/guanzhong-first-bounty/initial-v1/unity-scene-proof.json。
+- 精确EditMode筛选 GuanzhongBattlefieldBaselineEditorTests.AdventureBuilderPersistsOnlyGuanzhongEnvironmentEndpointsAsFunctionalGround：1/1通过，保留六格/坐标/起点覆盖/无Collider/同Prefab/原FBX层级/三角面和隐藏fixture/保存重开断言。
+- 精确EditMode筛选 GuanzhongBattlefieldBaselineEditorTests.ApprovedStairPersistsAsNormalizedReservePrefabOutsideTheFlatScene：1/1通过，验证石阶层级、尺度、原网格计数、共享材质/原basecolor、无Collider及未进入平地场景。
+- 精确PlayMode筛选 GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads：1/1通过；为复核首次截图异常，增加正常渲染帧及只读取证后再跑1/1通过。场景进入、战斗胜利、回城、领奖、SaveAndReturnToMenu、LoadPlayer与完整存档JSON相等均由原流程断言保持；没有弱化奖励数量或保存语义。
+- 测试使用Unity CLI的-runTests/-testPlatform/-testFilter/-testResults，未给既有runner添加不存在的筛选参数；XML均通过既有run-unity-editmode-tests.ps1或run-unity-playmode-tests.ps1的-ValidateResultOnly。原始结果位于D:/Temp/gz-terrain-initial-20260920/{editmode,stair,playmode-render-probe}.xml，完整用例名称与运行时日志已摘入本地unity-scene-proof.json。
+- check-unity-assembly-boundaries.ps1通过：19 assemblies、2 asmrefs；check-data-chain.ps1通过：GongFa29/29、Spells83/83、Skills31/31、language544；check-asset-versioning.ps1及Git LFS fsck通过。
+- TianZhang.Editor.SceneArchitectureValidator.ValidateForBatchMode：四个正式场景只读架构验证退出0，BuildSettings、渲染资源、正式绑定和比较fixture结构保持。原始日志D:/Temp/gz-terrain-initial-20260920/scene-validation.log。Unity生成的其他角色Prefab/材质与ProjectSettings空白差异已经精确还原，不进入本卡差异。
+- 完整场景差异复核：Builder重新保存导致fileID重排；按GameObject层级/组件类型/Prefab实例名归一化全部本地fileID后，原457块与新445块的实际差异仅位于GuanzhongBattlefield下六个旧地块转嵌套Prefab，非地面对象零差异。临时只读复核脚本D:/Temp/gz-terrain-initial-20260920/review_scene_diff.py，结果已写入unity-scene-proof.json。
+- check-task-cards.ps1 -TaskId U-GZ-ART-BATTLEFIELD-01 -Postcondition CodexClosedOrNonReady通过：cards=57、ready=0；check-review-text.ps1通过542份文件；check-pending-whitespace.ps1对43份现存expectedPaths文件通过，git diff --check通过。当前队列回到空表，没有挑选或重排其他任务。
+- 八份assets/source精确来源/证据文件已无覆盖复制至主工作区同名路径并逐份校验SHA256；原任务树及Downloads保留。集成前重读主线仍为dd6770a7、原blocked合同和空队列均无变化；本轮使用用户明确授权及已批准的本地ready收窄合同，不冒充纯1队列领取。
+
+## 成本、协作与后续边界
+
+- 本轮外部生成/购买/credits=0；原石阶制作记录为30 credits，地块历史总成本与人工总工时未知。没有重新生成基础块、调用Blender、增加服务或修改自动化。原ZIP其余贴图保留。
+- 主责完成全部写入和最终验证；两个继承当前入口配置的只读辅助分别核对直接测试合同和规格/父项同步，其中测试辅助随后核对异常截图的磁盘材质引用及最终代码差异。辅助会话名 verify_test_contract、verify_contract_sync；未请求模型覆盖，工具未返回实际模型/强度，故不把组合名称当已核验证明。未委派Unity写入、任务投影、提交或集成。
+- References loaded：unity-agent-workflows 的 runtime-owner-proof、visible-object-identity、asset-source-lock、serialized-persistence、unity-validation、ui-and-visual-assets、ai-workflows、project-structure-discovery、modular-architecture、shared-caller-blast-radius、cleanup-and-git；tianzhang-blender-pipeline及tool-routing。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.assemblies.md；Editor README/asmdef。新Editor类型小于500行；既有Builder未扩大运行时职责，不新增跨模块依赖。
+- 石阶近水平踏宽约.245～.260，小于.30尺度代理，局部穿入岩壁，六向最大地面高出踏面约.032695；保留旧qa.json证据，不声明通行通过。当前主线没有U-GZ-HEIGHT-RUNTIME-01活跃卡或完成归档，不虚构正在执行的高差任务。移动命令仍进入规则/HUD，未找到Marker移动写入，不声明实际移动/爬梯完成。
+- 本卡只提供“初始地面已接入”的依赖证据；FORMAL-WIRING、SLICE等直接下游仍依各自活跃卡其余前置维护，未在本轮越界修改其任务卡或宣称整屏、正式双角色、UI及最终品质通过。

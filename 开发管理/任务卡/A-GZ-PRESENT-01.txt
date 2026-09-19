@@ -46,7 +46,7 @@
 ## 实施范围
 
 - 只汇总首次悬赏→野外战斗→回城领取的整段可展示结果、实际成本与风险，不生产资源或写代码。
-- LOOKDEV分出角色、环境、UI；角色Profile与正式环境汇合到FORMAL-WIRING，之后补六事件反馈，最终由V-GZ-ART-SLICE-01验收。2026-09-20 用户明确美术实验不阻塞项目；U-GZ-BATTLEFIELD-BASELINE-01 先独立交付基础功能地面，环境叶子后续消费它。功能卡完成不代替本父项的用户品质接受。
+- LOOKDEV负责整屏方向与角色/UI合同；角色Profile与正式环境汇合到FORMAL-WIRING，之后补六事件反馈，最终由V-GZ-ART-SLICE-01验收。2026-09-20 U-GZ-BATTLEFIELD-BASELINE-01 已完成六格基础功能地面；用户另行批准初始 Tripo 地块和备用石阶，U-GZ-ART-BATTLEFIELD-01 消费同一地面独立接入，不等待 LOOKDEV 或全套地形。该批准不代表角色/UI、实际爬梯或本父项的整体品质接受。
 - 近期顺序与全部字面量路径以该规格和各叶子卡为准；父项永不ready。
 
 ## 禁止项

@@ -105,6 +105,7 @@ namespace TianZhang.Tests.PlayMode
             AssertTechnicalMarker("PlayerMarker", Color.cyan);
             AssertTechnicalMarker("EnemyMarker", Color.red);
             AssertFormalBattlefieldPresentation();
+            yield return CaptureFormalTerrainIfRequested();
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
             ICombatCommandHandler combatCommands = encounter;
@@ -528,6 +529,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(comparisonBoard, "AdventureScene is missing the preserved visual baseline fixture.");
             Assert.IsNotNull(comparisonPanel, "AdventureScene is missing the preserved comparison panel fixture.");
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
+            Assert.AreEqual(6, battlefield.transform.childCount);
+            Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
             Assert.IsFalse(comparisonBoard.activeInHierarchy,
                 "The formal Adventure route must not show the visual baseline fixture.");
             Assert.IsFalse(comparisonPanel.activeInHierarchy,
@@ -554,11 +557,8 @@ namespace TianZhang.Tests.PlayMode
             Transform ground = battlefield.Find("GuanzhongHex_" + q + "_" + r);
             Assert.IsNotNull(marker, "Adventure combat did not create " + markerName + ".");
             Assert.IsNotNull(ground, "The functional battlefield is missing the marker ground cell.");
-            MeshRenderer groundRenderer = ground.GetComponent<MeshRenderer>();
-            Assert.IsNotNull(groundRenderer);
-
             Bounds markerBounds = CombinedRendererBounds(marker);
-            Bounds groundBounds = groundRenderer.bounds;
+            Bounds groundBounds = CombinedRendererBounds(ground.gameObject);
             Vector3 expectedCenter = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f + 1f);
             Assert.Less(Vector2.Distance(
                 new Vector2(marker.transform.position.x, marker.transform.position.z),
@@ -566,10 +566,16 @@ namespace TianZhang.Tests.PlayMode
             Assert.Less(Vector2.Distance(
                 new Vector2(ground.position.x, ground.position.z),
                 new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
-            Assert.AreEqual(0.34f, groundBounds.max.y, 0.001f);
-            float footGap = markerBounds.min.y - groundBounds.max.y;
-            Assert.AreEqual(0.11f, footGap, 0.001f,
-                "The technical marker must retain its measured placeholder foot gap rather than changing its owner.");
+            Assert.AreEqual(0.34f, ground.position.y, 0.001f);
+            Assert.AreEqual(Vector3.one, ground.localScale);
+            Assert.AreEqual(0.38f, marker.transform.position.y, 0.001f);
+            Assert.AreEqual(0.45f, markerBounds.min.y, 0.001f,
+                "Keep the technical marker's measured foot height; do not move it to hide the terrain gap.");
+            float surfaceY = CenterSurfaceY(ground);
+            Assert.AreEqual(0.340432711f, surfaceY, 0.001f,
+                "The original normalized source has a natural center surface above its root datum.");
+            float footGap = markerBounds.min.y - surfaceY;
+            Assert.AreEqual(0.109567289f, footGap, 0.001f);
 
             Rect markerScreenRect = ScreenRectFromBounds(camera, markerBounds);
             Rect groundScreenRect = ScreenRectFromBounds(camera, groundBounds);
@@ -583,10 +589,83 @@ namespace TianZhang.Tests.PlayMode
                       " markerBoundsMin=" + markerBounds.min.ToString("F4") +
                       " markerBoundsMax=" + markerBounds.max.ToString("F4") +
                       " groundCell=(" + q + "," + r + ")" +
-                      " groundTop=" + groundBounds.max.y.ToString("F4") +
+                      " groundBoundsMaxY=" + groundBounds.max.y.ToString("F6") +
+                      " centerSurfaceY=" + surfaceY.ToString("F6") +
                       " footGap=" + footGap.ToString("F4") +
                       " markerScreenRect=" + RectText(markerScreenRect) +
                       " groundScreenRect=" + RectText(groundScreenRect));
+        }
+
+
+        private static float CenterSurfaceY(Transform ground)
+        {
+            float highest = float.NegativeInfinity;
+            Vector3 center = ground.position;
+            foreach (MeshFilter filter in ground.GetComponentsInChildren<MeshFilter>(true))
+            {
+                Mesh mesh = filter.sharedMesh;
+                Assert.IsNotNull(mesh);
+                Assert.IsTrue(mesh.isReadable, "Source mesh must remain readable for triangle evidence.");
+                Vector3[] vertices = mesh.vertices;
+                int[] triangles = mesh.triangles;
+                for (int index = 0; index < triangles.Length; index += 3)
+                {
+                    Vector3 a = filter.transform.TransformPoint(vertices[triangles[index]]);
+                    Vector3 b = filter.transform.TransformPoint(vertices[triangles[index + 1]]);
+                    Vector3 c = filter.transform.TransformPoint(vertices[triangles[index + 2]]);
+                    float denominator = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+                    if (Mathf.Abs(denominator) < 1e-10f) continue;
+                    float u = ((b.z - c.z) * (center.x - c.x) + (c.x - b.x) * (center.z - c.z)) / denominator;
+                    float v = ((c.z - a.z) * (center.x - c.x) + (a.x - c.x) * (center.z - c.z)) / denominator;
+                    float w = 1f - u - v;
+                    if (u >= 0f && v >= 0f && w >= 0f)
+                        highest = Mathf.Max(highest, u * a.y + v * b.y + w * c.y);
+                }
+            }
+            Assert.IsFalse(float.IsInfinity(highest), "No source triangle supports the logical cell center.");
+            return highest;
+        }
+
+        private static IEnumerator CaptureFormalTerrainIfRequested()
+        {
+            string path = Environment.GetEnvironmentVariable("TZ_GZ_TERRAIN_CAPTURE_PATH");
+            if (string.IsNullOrEmpty(path)) yield break;
+            // Capture after the spawned scene has gone through its first normal render frame.
+            yield return null;
+            Camera camera = Camera.main;
+            Renderer backdrop = FindSceneObjectIncludingInactive("VisualBackdrop").GetComponent<Renderer>();
+            Material backdropMaterial = backdrop.sharedMaterial;
+            var backdropProperties = new MaterialPropertyBlock();
+            backdrop.GetPropertyBlock(backdropProperties);
+            Debug.Log("[GuanzhongRenderProof] backdrop=" + backdropMaterial.name +
+                      " color=" + backdropMaterial.GetColor("_BaseColor") +
+                      " texture=" + backdropMaterial.GetTexture("_BaseMap") +
+                      " propertyBlockEmpty=" + backdropProperties.isEmpty +
+                      " position=" + backdrop.transform.position +
+                      " bounds=" + backdrop.bounds +
+                      " cameraAspect=" + camera.aspect + " pixelRect=" + camera.pixelRect);
+            var target = new RenderTexture(1920, 1080, 24, RenderTextureFormat.ARGB32);
+            target.Create();
+            var request = new RenderPipeline.StandardRequest { destination = target };
+            Assert.IsTrue(RenderPipeline.SupportsRenderRequest(camera, request));
+            var image = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                RenderPipeline.SubmitRenderRequest(camera, request);
+                RenderTexture.active = target;
+                image.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
+                image.Apply();
+                File.WriteAllBytes(path, image.EncodeToPNG());
+                Debug.Log("[GuanzhongTerrainCapture] Formal runtime camera and actual spawned markers; overlay UI is not included. " + path);
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                Object.DestroyImmediate(image);
+                target.Release();
+                Object.DestroyImmediate(target);
+            }
         }
 
         private static GameObject FindSceneObjectIncludingInactive(string name)

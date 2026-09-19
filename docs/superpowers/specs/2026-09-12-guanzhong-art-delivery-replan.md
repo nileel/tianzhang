@@ -7,13 +7,14 @@
 
 用户要求“继续推进项目吧，美术资产的方向实验不该拖累项目推进”。功能开发可沿用现有基础资源，按真实数据与运行时验收继续；美术方向、外部资源交易与最终品质仍分别验收。9月12日样板已被拒绝，LOOKDEV 保持 blocked；下文“本轮唯一 ready”仅指9月12日初始调度，当前队列以任务卡与有序投影为准。
 
-- 新增独立 P1 叶子 U-GZ-BATTLEFIELD-BASELINE-01，当前无前置并进入 ready。从既有环境卡提取真实遭遇地面：Builder 复用基础六角网格/材质，消费现有环境有向边端点，不改导航/战斗/空间规则。保持技术 Marker，核验真实 XZ 与 bounds；占位胶囊间距不冒充正式模型接地。
+- U-GZ-BATTLEFIELD-BASELINE-01 已完成归档：Builder 消费现有环境有向边端点，建立六格功能地面，不改导航/战斗/空间规则。保持技术 Marker，核验真实 XZ 与 bounds；占位胶囊间距不冒充正式模型接地。
 - 当前 CombatEntryAdapter 的半径12网格由环境边约束；关中12条双向边关联6格。AdventureMap 的 start/encounter/return 是导航节点，不是战斗格清单；原九格 VisualBaselineBoard 也不是正式战场。
 - BASELINE 负责持久化比较板/比较面板默认隐藏，避免其地形、探针和切换按钮覆盖功能场景；专用回归测试显式恢复原 fixture 并隐藏新地面。保留实验资源，不新增场景、provider、正式切换入口或框架。FORMAL-WIRING 继续负责最终删除比较对象及原子替换正式 provider。
-- U-GZ-ART-BATTLEFIELD-01 的全部剩余工作是环境美术：依赖 LOOKDEV + BASELINE，后续替换同一地面的批准网格/材质和装饰，不重复建立地面/格位所有者。原角色、UI、反馈及最终验收叶子不变；全部已知职责均有所有者，无需恢复父项逐轮拆分。
+- U-GZ-ART-BATTLEFIELD-01 收窄为已批准初始地块与石阶的正式接入：2026-09-20 用户采用 Tripo 地块 67743c70-4965-4b6a-a649-2602782965aa 与石阶 1555965a-fb44-4cf0-98d1-8798ea36f8ee，明确执行，不再等待 LOOKDEV 或其他地形。只替换同一六格平地的资源，石阶保存为备用 Prefab，不重复建立地面/格位所有者，不在平地伪造楼梯通路。原角色、UI、反馈及最终验收叶子不变。
+- 初始资产保留 v5 青绿地表、青蓝岩壁及自然边缘；不重新生成基础块、不切成纯六角柱、不加顶板或遮缝几何。采用初始地形不代表整屏 LOOKDEV、角色/UI、其他地形、高差通行或最终整体品质通过；其他独立功能按自身前置推进。
 - 功能卡可以独立完成，不以任何美术卡通过为前置；功能卡完成也不代替 LOOKDEV、正式双 Profile 或用户整体品质接受。父项仍只汇总美术完成，不成为功能工作调度门槛。
 
-本次是空队列恢复与直接依赖更新，按现行队列规则只建立完整 ready 卡；没有实施 Unity 业务、恢复美术实验或改变自动化配置。
+上述 BASELINE 已完成，初始地形接入按 U-GZ-ART-BATTLEFIELD-01 的当前任务卡及完成归档核验；9月12日规划和样板历史不替代当前授权与实机证据。
 
 ## 目标与范围
 
@@ -30,7 +31,7 @@
 | 整屏基准 | 关中城/悬赏与野外战斗各一张完整画面样板；附有限资源清单、镜头/屏幕尺度、色彩/材质/UI标准和来源/成本记录口径 | A-GZ-ART-LOOKDEV-01 |
 | 玩家资源 | 一个固定默认男主，沿用批准身份；无模块换头/换装、骨骼或布料 | 既有 RAW → ASSET-04 |
 | 双角色目录 | 玩家与石甲兽导入/Prefab/profile，原稳定 ID | 既有 PROFILES |
-| 正式战场 | 一张遭遇战场；共享六角地面、草地/黄土、少量石木；只表达当前空间事实 | U-GZ-ART-BATTLEFIELD-01 |
+| 正式战场初始资源 | 同一批准地块 Prefab 覆盖现有六格平地；批准石阶保存备用，不声明高差通行 | U-GZ-ART-BATTLEFIELD-01 |
 | 城镇与 UI | 一幅关中城背景、悬赏板和两个正式表面的统一界面；默认男主母版裁切头像；只做当前流程实际使用的图标 | U-GZ-ART-UI-01 |
 | 角色接线与整体动作 | 正式生成、六向、Idle/Move/Attack/Hit/Cast/Death、清理；移除正式场景的 Marker 与比较板 | 既有 FORMAL-WIRING |
 | 特效与声音 | 上述实际只读事件的有限音画反馈；不新增格挡/防御事件推断 | U-GZ-ART-FEEDBACK-01 |
@@ -40,10 +41,11 @@
 
 ## 完整依赖与首批 ready
 
-- A-GZ-ART-LOOKDEV-01：本轮唯一 ready 叶子，交付两张可审阅整屏样板和具体生产合同；不生产正式模型或修改 Unity。
+- A-GZ-ART-LOOKDEV-01：9月12日首批唯一 ready 叶子，样板被拒后保持 blocked；仍负责整屏样板及生产合同，不生产正式模型或修改 Unity。
 - LOOKDEV 完成并获整屏方向批准后：
   - A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 仍需真实平台/服务/最大 credits/输入哈希/资产 ID 的交易前批准；齐全后才 ready。
-  - U-GZ-ART-BATTLEFIELD-01 与 U-GZ-ART-UI-01 可以各自进入 ready，不等待角色费用批准、模块化肖像或旧四足动画。
+  - U-GZ-ART-UI-01 按其城镇/UI合同进入 ready，不等待角色费用批准、模块化肖像或旧四足动画。
+- U-GZ-ART-BATTLEFIELD-01 已由9月20日初始资源的独立批准解除 LOOKDEV 前置，消费已完成 BASELINE 的六格地面；不等待整套地形。
 - RAW → A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 → U-CHAR-BATTLE-STATIC3D-PROFILES-01。
 - PROFILES + BATTLEFIELD → U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01。正式接线需要真实地面/格位投影，不能删掉比较板后留下没有正式地面的场景。
 - FORMAL-WIRING → U-GZ-ART-FEEDBACK-01。
@@ -73,7 +75,7 @@
 ## 运行时与验收边界
 
 - 正式单位当前由 AdventureUnitSpawner 创建 Marker，EncounterCoordinator 持有并销毁；比较资源不等于正式玩家/敌人输入。
-- 当前地块是 VisualBaselineBoard 技术矩阵。BATTLEFIELD 从 AdventureMapData/env_guanzhong_wild 与现有空间投影建立真实遭遇地面；不得直接把测试九格改名为正式关卡，不复制空间规则。
+- 正式地面为 GuanzhongBattlefield，唯一生成点 AdventureSceneBuilder.BuildGuanzhongBattlefield 从 env_guanzhong_wild 有向边端点去重六格；AdventureMapData 仅提供导航节点。保留 x=q+.5r、z=.8660254r+1、地块根Y=.34；VisualBaselineBoard 仅为默认隐藏的比较 fixture。BATTLEFIELD 只替换该生成点消费的资源，不复制空间规则、不把小样的Z反号或三档高度带入正式场景。
 - UI 限定 SettlementScene 与 AdventureScene 的既有对象、布局和动态按钮。SceneBuildSupport 的全局默认值、StartMenu、World、册界业务/面板重做不在范围内；保留这些入口和功能。
 - FORMAL-WIRING 保留已交付的正式地面/UI，只删除明确的比较对象；根节点动作属于该卡，FEEDBACK 只增补其已存在事件对应的正式 VFX/声音，不引入第二个表现控制器。
 - CombatPresentationContracts 当前仅有 Idle/Move/Attack/Hit/Cast/Death；不根据零伤害推断格挡，不为美术新增 Guard/Block 语义。当前实战未触发的事件单独标为合同测试，不能算实战发生。

@@ -38,7 +38,8 @@
 
 `AdventureSceneInstaller` 显式绑定内容目录、冒险地图、环境档案、单位 Prefab、攻击档案与视图；`AdventureController`／`EncounterCoordinator` 把纯快照交给 Combat。CombatPresentation 只经 `ICombatCommandHandler` 和只读表现 DTO 连接，不拥有战斗规则。
 
-- `AdventureSceneBuilder` 通过既有 Builder 保存正式 `AdventureScene`；唯一 `GuanzhongBattlefield` 只消费 `env_guanzhong_wild` 有向边端点，复用 `HexToWorld` 与既有 `HexColumn`／`GroundTop`／`GroundSide` 作为功能地面。`VisualBaselineBoard`／`BattleVisualComparisonPanel` 仍是序列化比较 fixture，默认 inactive，不是正式格位或规则输入。
+- `AdventureSceneBuilder.BuildGuanzhongBattlefield` 通过既有 Builder 保存正式 `AdventureScene`；唯一 `GuanzhongBattlefield` 只消费 `env_guanzhong_wild` 有向边端点，六格共享 `Assets/Art/Environments/Guanzhong/Tile.prefab`。保留 `HexToWorld` 的 x=q+.5r、z=.8660254r+1，地块根Y=.34、单位缩放；Prefab 内保留原FBX层级与已测刚体/正等比规范化，天然格心三角面不等于草冠 bounds.max.y。
+- `GuanzhongTerrainAssetBuilder` 仅在 Editor 生成批准地块/石阶的共享材质与Prefab，正式地面格位仍由上述唯一Builder拥有。`Stair.prefab` 仅备用，不进入当前平地、碰撞、高差或移动表现链。`VisualBaselineBoard`／`BattleVisualComparisonPanel` 仍是序列化比较 fixture，默认 inactive，不是正式格位或规则输入。Marker与固定相机保持既有所有者；初始地形接入不代表整屏或最终美术验收。
 
 ## 非正式 2D 合同实验
 

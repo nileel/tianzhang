@@ -1,0 +1,131 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-ART-BATTLEFIELD-01",
+  "title": "关中首场初始地块与石阶资源接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-20：批准地块与备用石阶已形成可追溯Prefab，正式六格由原Builder保存重开；两项EditMode和正式战斗/回城/领奖/存读PlayMode通过。石阶未进入平地，初始地面接入不等于整屏、角色/UI或高差通行验收。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md",
+    "开发管理/任务卡/A-GZ-PRESENT-01.txt",
+    "开发管理/关中首场战场美术验收记录.txt",
+    "UNITY_STRUCTURE.runtime.md",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/terrain-source.zip",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/stairs-source.zip",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/normalization.json",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/fbx-coordinate-proof.json",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/manifest.json",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/README.md",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-scene-proof.json",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-formal.png",
+    "src/Assets/Art/Environments.meta",
+    "src/Assets/Art/Environments/Guanzhong.meta",
+    "src/Assets/Art/Environments/Guanzhong/Tile.fbx",
+    "src/Assets/Art/Environments/Guanzhong/Tile.fbx.meta",
+    "src/Assets/Art/Environments/Guanzhong/Stair.fbx",
+    "src/Assets/Art/Environments/Guanzhong/Stair.fbx.meta",
+    "src/Assets/Art/Environments/Guanzhong/Tile_basecolor.JPEG",
+    "src/Assets/Art/Environments/Guanzhong/Tile_basecolor.JPEG.meta",
+    "src/Assets/Art/Environments/Guanzhong/Stair_basecolor.JPEG",
+    "src/Assets/Art/Environments/Guanzhong/Stair_basecolor.JPEG.meta",
+    "src/Assets/Art/Environments/Guanzhong/Tile.mat",
+    "src/Assets/Art/Environments/Guanzhong/Tile.mat.meta",
+    "src/Assets/Art/Environments/Guanzhong/Stair.mat",
+    "src/Assets/Art/Environments/Guanzhong/Stair.mat.meta",
+    "src/Assets/Art/Environments/Guanzhong/Tile.prefab",
+    "src/Assets/Art/Environments/Guanzhong/Tile.prefab.meta",
+    "src/Assets/Art/Environments/Guanzhong/Stair.prefab",
+    "src/Assets/Art/Environments/Guanzhong/Stair.prefab.meta",
+    "src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs",
+    "src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
+    "开发管理/任务归档/U-GZ-ART-BATTLEFIELD-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-001"
+    ],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-ART-BATTLEFIELD-01 · 关中首场初始地块与石阶资源接入
+
+## 来源与当前边界
+
+- 2026-09-20 用户已采用修正后的 Tripo 地块与石阶，随后明确“那就这么执行吧”：先作为初始地形，其他地形与独立功能按各自前置并行推进。本卡以此明确授权替代此前等待整屏 LOOKDEV 的环境首包合同；不解除城镇/UI/角色各自的审批与费用门槛，不声称整段最终品质通过。
+- 唯一结果：已采用的两件原资源成为可追溯 Unity Prefab，现有正式 Adventure 的六格平地使用同一地块。石阶导入备用，不在平地伪造楼梯通路。其他地形和正式高差规则不属于本卡，不再以其全套完成为本卡前置。
+- 地块任务67743c70-4965-4b6a-a649-2602782965aa；石阶任务1555965a-fb44-4cf0-98d1-8798ea36f8ee。用户提供下载包位于 C:/Users/WINDOWS/Downloads。原美术工作树 gz-art-lookdev-20260912 内 tripo-height-fit-v1 保存已检验的 FBX 坐标、原包哈希和 Unity 样板，作为迁移来源；正式事实随本卡复制至 assets/source/environments/guanzhong-first-bounty/initial-v1。
+
+## 必查范围
+
+- U-GZ-BATTLEFIELD-BASELINE-01 完成归档的六格/坐标/Marker边界；本卡上述原包和旧样板 README、unity-normalization.json、fbx-coordinate-proof.json。
+- AdventureSceneBuilder::Build|BuildGuanzhongBattlefield|HexToWorld|HeightForLevel；AdventureUnitSpawner::InstantiateMarker|ToWorld；EncounterCoordinator::RequestMove|ExecuteCommand；SceneBuildSupport::BeginScene。
+- EnvironmentProfile_env_guanzhong_wild.asset::directedEdges；AdventureMap_guanzhong_wild.asset::nodes；UnitMarker.prefab，全部只读。
+- GuanzhongBattlefieldBaselineEditorTests 全部；GuanzhongBasicAttackPlayModeTests::FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads|AssertFormalBattlefieldPresentation|AssertMarkerGrounding。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、Editor README/asmdef；unity-agent-workflows 的源资产/所有者/持久化/验证与 tianzhang-blender-pipeline 的来源边界。
+
+## 实施范围
+
+- 正式场景调用 AdventureSceneBuilder.Build，经 SceneBuildSupport.BeginScene 创建并绑定后，使用 SceneBuildSupport.Save 内的 EditorSceneManager.SaveScene 保存；不手写 YAML。
+
+- 原样保留两个 ZIP；只将原 FBX 和原 basecolor 导入 Guanzhong 目录，产生共享材质与各一份 Prefab。不生成替代网格，不剪切、压平、加盖板或遮缝；无新外部费用。
+- Prefab 保留原 FBX 节点层级，以已测量的刚体与统一正等比尺度规范化。地块根在逻辑格心/地表基准，石阶保持已选样板的局部接入口参数但明确未过通行。
+- AdventureSceneBuilder 继续从同一 environmentProfile 有向边端点去重六格，只替换资源引用。x=q+.5r、z=.8660254r+1；所有格统一基准Y=.34。不得将旧柱体(1,.34,1)非等比尺度套到新FBX，不引入每格补偿。
+- 新的专用Editor资产构建类型只负责两份现有源资产的材质/Prefab及本卡证据；不进入Player、不新建运行时模块。Adventure地面仍只有原Builder所有者。
+- 比较对象继续默认隐藏。保留固定相机、UI、Marker/规则/保存/地图与其他场景。更新直接测试的旧柱体资源和根Renderer假设，保留六格覆盖、坐标、无Collider、保存重开、固定相机和正式流程断言；用真实三角面格心表面区分草冠bounds与接地。
+- 石阶当前踏面偏窄、局部与岩壁相交，原样记录，不宣称移动表现、实际爬梯或高差规则通过。后续扩展按需要形成独立任务，不把未形成的任务写成正在执行。
+
+## 禁止项
+
+- 不改原模型形态、六格输入、碰撞/高度语义、规则、角色/provider、HUD、固定镜头或其他正式场景。
+- 不新增费用、地形系统、盖板/遮缝几何或为了接地调整Marker；不把静态导入验收当成阶梯可走或整屏品质通过。
+
+## 模型协作
+
+- 明确的原资源迁移及单一Builder接入由入口主模型完成。已有独立只读子智能体核查当前地面/规则所有者，禁止写文件、操作Unity、任务投影或runtime；主责统一复核与运行最终验证。
+- 如发生导入/材质/尺度复杂根因问题，按AI协作规则选择一个gpt-5.6-sol/high只读辅助；关键证据冲突才选gpt-6-astra/high。没有该问题不额外调用；实际调用与未核实项写验收记录。
+
+## 验证
+
+- 写业务前运行同一卡风险预检，消费EXP-UNITY-001并核对schema 2；路径扩展时重跑。
+- Unity 6000.3.18f1真实导入、编译；两个Prefab的原FBX/贴图引用与正等比变换；旧源哈希逐字节一致。
+- Builder保存并重开正式Adventure，核验唯一六格、原XZ和统一.34基准、共享Prefab、无Collider、比较对象隐藏；通过直接EditMode用例。
+- 正式入口实际进入悬赏战斗，通过现有FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads用例，记录原Marker脚底与新格心实际表面差、固定镜头和实际Unity画面。截图仅证明当时画面，不代替规则流程。
+- 资产版本、数据链、程序集边界、任务卡投影、审核文本及预期路径whitespace检查。运行影响面所需验证，输入不变不重复全套数值/无关测试。
+
+## 完成条件
+
+- 原包、来源/费用/已知限制、两份可复用Prefab和真实六格场景可追溯；正式固定相机可见已选地块。
+- 正式流程仍可战斗、返回、领取和存读；本卡完成只解除“初始地面接入”依赖，不代表用户接受整屏最终品质、其他地形齐备或高差通行完成。
+
+## 停止条件
+
+- 原文件哈希/导入不一致、需改规则/地图/碰撞/相机或私有Marker偏移、需替换原模型/追加费用、当前资源导致正式流程无法维持，立即保留证据并停止，不叠加修补。
+- 目标路径存在他人改动或同taskId被活动run占用时不集成；新事实越过本卡原子边界时重新判断，不顺带扩图/角色/UI/通用地形。
+
+## 完成证据
+
+- 正式结果、原包/FBX/贴图哈希、规范化、运行时三角面接地数值、真实Unity图和剩余限制见 开发管理/关中首场战场美术验收记录.txt。原实验树未修改。
+- 本机证据位于 assets/source/environments/guanzhong-first-bounty/initial-v1；运行时四份二进制使用LFS，原包按既有规则保留在Git外。
+- Unity真实导入/编译及Builder保存重开退出0；地块与备用石阶EditMode各1/1，正式流程PlayMode1/1，场景架构验证退出0；程序集边界、数据链、资产版本通过。
+- 初次截图的首次渲染异常已保留并复核，取证等待一正常帧，未对生产材质或背景加补丁；不宣称底层引擎原因已查明。
+- 规格与父项同步为本次独立初始资源授权，父项和其他美术门槛不关闭；直接下游按各自卡其余条件继续维护。
