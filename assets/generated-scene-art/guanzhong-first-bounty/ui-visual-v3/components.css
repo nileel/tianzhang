@@ -1,0 +1,32 @@
+body { background: #101f2c; }
+.catalog-head { max-width: 1560px; padding: 65px 35px 35px; margin: auto; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
+.catalog-head h1 { font: 62px var(--serif); color: #ffebbf; margin: 22px 0; letter-spacing: 5px; }
+.catalog-head p, .catalog-head a { color: #bccfc7; font-size: 18px; }
+.catalog-head a { text-decoration: none; padding: 16px; border: 1px solid var(--line); }
+.catalog { max-width: 1560px; padding: 32px 35px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.catalog section { min-width: 0; padding: 29px; background: linear-gradient(130deg, #223b49, #192e3c); border-top: 1px solid #abc4a851; }
+.catalog .wide { grid-column: 1 / -1; }
+.section-label { font-size: 14px; color: #a5c5b4; letter-spacing: 2px; }
+.catalog h2 { font: 31px var(--serif); letter-spacing: 2px; margin: 18px 0 25px; }
+.catalog h3 { font: 25px var(--serif); color: #eedebc; }
+.note, .handoff p { font-size: 16px; color: #beccc5; line-height: 1.85; margin: 24px 0 0; }
+.swatches { display: flex; gap: 20px; }
+.swatches > div { flex: 1; }
+.swatches i { display: block; height: 68px; border: 1px solid #c5d9bb40; }
+.swatches b, .swatches code { display: block; margin-top: 12px; font-size: 15px; font-weight: 400; }
+.swatches code { color: #b6c6c1; }
+.type-title { font: 48px var(--serif); color: #f8e8be; margin: 18px 0; }
+.type-body { font: 20px/1.8 var(--sans); }
+.type-number { font: 28px var(--sans); color: #e1efcf; }
+.type-number span { font-size: 17px; color: #bbc7c5; margin-left: 20px; }
+.sample-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 15px 0 25px; }
+.sample-row .primary { font-size: 21px; padding: 12px 17px; }
+.sample-row small { display: block; text-align: center; margin-top: 12px; color: #b9c9c2; }
+.catalog .actions { justify-content: flex-start; margin: 0; }
+.catalog .combat-player { width: 470px; padding: 14px; }
+.state-list { display: grid; gap: 12px; }
+.state-list > div { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: #efe1c7; color: #203a42; }
+.state-list b { font-size: 17px; font-weight: 500; }
+.handoff { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+.catalog-foot { text-align: center; color: #9eb8b4; padding: 10px 30px 45px; font-size: 14px; }
+@media (max-width: 1150px) { .catalog { grid-template-columns: 1fr; } .catalog .actions { flex-wrap: wrap; } .catalog-head h1 { font-size: 45px; } }

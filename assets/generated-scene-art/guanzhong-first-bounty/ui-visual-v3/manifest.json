@@ -1,0 +1,249 @@
+{
+  "taskId": "D-GZ-PRODUCT-UI-UX-01",
+  "date": "2026-09-20",
+  "version": "ui-visual-v3",
+  "status": "delivered_for_visual_review",
+  "visualApproved": false,
+  "unityImplemented": false,
+  "baseMainCommit": "dd6770a7082dc79bc23fda932e57e5ac54d39514",
+  "sourceDesignCommit": "8b735866",
+  "sourceDirectory": "D:\\天章游戏开发\\.worktrees\\gz-art-lookdev-20260912\\assets\\generated-scene-art\\guanzhong-first-bounty\\lookdev-v2",
+  "branch": "codex/gz-ui-visual-v3-20260920",
+  "allowedWriteScope": "assets\\generated-scene-art\\guanzhong-first-bounty\\ui-visual-v3",
+  "unchangedV2Files": {
+    "battlefield.js": true,
+    "scene-data.json": true,
+    "vendor/three.module.js": true,
+    "vendor/three.core.js": true,
+    "vendor/THREE-LICENSE.txt": true
+  },
+  "portrait": {
+    "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+    "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948",
+    "treatment": "CSS crop only; no new character generation"
+  },
+  "browserValidation": {
+    "browser": "Codex in-app Chromium",
+    "viewports": [
+      [
+        1920,
+        1220
+      ],
+      [
+        1280,
+        860
+      ]
+    ],
+    "gameFrames": [
+      [
+        1920,
+        1080
+      ],
+      [
+        1280,
+        720
+      ]
+    ],
+    "surfaces": [
+      "city default",
+      "bounty detail",
+      "battle idle",
+      "attack preview"
+    ],
+    "passed": [
+      "accept bounty",
+      "out-of-range confirm disabled",
+      "move along existing 3D staircase",
+      "cancel attack leaves 839 HP",
+      "seven confirmed sample attacks to victory",
+      "return and claim once",
+      "claimed bounty has no reward button",
+      "click turn entry shows enemy HP",
+      "unavailable skill reason via keyboard",
+      "log open",
+      "grid selection clears after preview cancellation",
+      "victory to defeat/error restores enemy",
+      "component selection and confirmation feedback"
+    ],
+    "sampleEnemyHealth": [
+      839,
+      713,
+      587,
+      461,
+      335,
+      209,
+      83,
+      0
+    ],
+    "errors": [],
+    "warnings": [],
+    "screenshots": "Full browser viewport captures with review controls. Initial clip export was invalid and replaced; every final PNG was visually reread. Component sheet is full-page.",
+    "limits": [
+      "Browser prototype only",
+      "1280 minimum auxiliary text about 10.7px",
+      "No Unity runtime or BattleSim validation",
+      "No final background or Tripo integration"
+    ]
+  },
+  "dataBoundary": {
+    "bounty": "existing Stone Armor Beast bounty, defeat one, inferior spirit stone x3",
+    "damage": 126,
+    "hitChance": "90%",
+    "combatValues": "demo-only; not rule projection",
+    "terrain": "unchanged v2 true WebGL height fixture; not adopted Tripo asset"
+  },
+  "artifactChecks": {
+    "nodeSyntax": "passed",
+    "relativeAssets": "all existing",
+    "duplicateHtmlIds": [],
+    "terrainAndVendor": "byte-identical to v2",
+    "screenshotDimensions": "verified with PNG metadata",
+    "pendingWhitespace": "passed (24 files)",
+    "gitCachedDiffCheck": "passed"
+  },
+  "modelCollaboration": {
+    "subagent": "/root/current_ui_facts",
+    "requestedModel": "gpt-5.6-sol",
+    "requestedReasoning": "high",
+    "actualModel": "not independently verified",
+    "scope": "read-only current runtime owners and UI regressions"
+  },
+  "files": {
+    "app.js": {
+      "sha256": "71f1897b869ccd50eb049b175695cc80c3c89e1c3a212f4b4691c951b1f5b8c0",
+      "bytes": 12259
+    },
+    "battlefield.js": {
+      "sha256": "4b58d5d3f0f81944f35231934daeab9793c8802b00f06193b96a68fe0733ef0a",
+      "bytes": 11011
+    },
+    "components.css": {
+      "sha256": "bfec1e695d50475f130d6b614b905b7a739d7fbb694f6d8ba369cb37e11575ce",
+      "bytes": 2540
+    },
+    "components.html": {
+      "sha256": "d9f123e0784a5650e9654ebaada1e40581420bdc4d134c5460f69a44ae63bd00",
+      "bytes": 9190
+    },
+    "index.html": {
+      "sha256": "041acbe784bb6bb990796cfd4a1c039b86507da700e5ef8b8d8458da0d936500",
+      "bytes": 13618
+    },
+    "README.md": {
+      "sha256": "0d00ce7caffe89673414409a56a46631042a319ad1ced63d53c00fc3eab2ee61",
+      "bytes": 9371
+    },
+    "scene-data.json": {
+      "sha256": "a0d5e3e689692cee2ed803bd18808483ef3c592b2439be010ff981556eca6ba7",
+      "bytes": 789
+    },
+    "screenshots/battle-idle-1280.png": {
+      "sha256": "7739dd43b39384e3b6769713b426cf52c7de9a1fa86337b8b4badddbbcceb311",
+      "bytes": 78395,
+      "size": [
+        1280,
+        860
+      ]
+    },
+    "screenshots/battle-idle-1920.png": {
+      "sha256": "a7eef1f2705372a0bb6d564cac295693182ed1aa919509c334d5458644ed55bd",
+      "bytes": 131913,
+      "size": [
+        1920,
+        1220
+      ]
+    },
+    "screenshots/battle-out-of-range-1920.png": {
+      "sha256": "0fe27364a35f80f69c0e63a39a6ba06e6a744286e1e73799c373542284a7cd5e",
+      "bytes": 138376,
+      "size": [
+        1920,
+        1220
+      ]
+    },
+    "screenshots/battle-preview-1280.png": {
+      "sha256": "0c2d40f367852ccfb870796aefae9929b06c3ad7b4cc145f370cbc21893e6a7b",
+      "bytes": 83812,
+      "size": [
+        1280,
+        860
+      ]
+    },
+    "screenshots/battle-preview-1920.png": {
+      "sha256": "ad6dc848641cd60eadedfe10c2a2c6ddf3b846f1c1607f7699a464cf99fe9638",
+      "bytes": 139971,
+      "size": [
+        1920,
+        1220
+      ]
+    },
+    "screenshots/city-bounty-1280.png": {
+      "sha256": "c76892c04e72dc9d38c78df9ee70e8df944d25fe251f93e5a799d256a622c962",
+      "bytes": 79425,
+      "size": [
+        1280,
+        860
+      ]
+    },
+    "screenshots/city-bounty-1920.png": {
+      "sha256": "d165e91264a0d1110a5347cfc2f016d26e805563f0fc597659c4c65579a24b1a",
+      "bytes": 133872,
+      "size": [
+        1920,
+        1220
+      ]
+    },
+    "screenshots/city-default-1280.png": {
+      "sha256": "716ab0732af094cfd090af34d26e879ae3662868557eb876f46558e12b380d9a",
+      "bytes": 65903,
+      "size": [
+        1280,
+        860
+      ]
+    },
+    "screenshots/city-default-1920.png": {
+      "sha256": "853820209f0596d98cc8e267290a282906fbe2357ea901746521812351ca3feb",
+      "bytes": 109339,
+      "size": [
+        1920,
+        1220
+      ]
+    },
+    "screenshots/city-reward-1280.png": {
+      "sha256": "7c621ba041c72422f4a8a9d793174c5ac8a123246e420b5ac0eb383e1e6dfd76",
+      "bytes": 79572,
+      "size": [
+        1280,
+        860
+      ]
+    },
+    "screenshots/components.png": {
+      "sha256": "c94183f058d356269f841478821d7f4e28e1c5588eff431c974a65568234951d",
+      "bytes": 297830,
+      "size": [
+        1905,
+        2442
+      ]
+    },
+    "style.css": {
+      "sha256": "3e367d0b7d95e6c9bf284ddc168deebc591cd6a98fb1611820a582937151be4b",
+      "bytes": 22609
+    },
+    "vendor/THREE-LICENSE.txt": {
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    },
+    "vendor/three.core.js": {
+      "sha256": "496aa42d1d47b9a40d16eab2864177cb94368a165a7c3e79345c43ad0109e093",
+      "bytes": 1462227
+    },
+    "vendor/three.module.js": {
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "bytes": 603113
+    },
+    "VISUAL-SPEC.md": {
+      "sha256": "85636aefc46bf3c9e4e16720c936613b96b57519bae51178209f7a8bd63dc5bb",
+      "bytes": 4826
+    }
+  }
+}

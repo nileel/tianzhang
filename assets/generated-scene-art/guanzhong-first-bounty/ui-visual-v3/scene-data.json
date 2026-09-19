@@ -1,0 +1,14 @@
+{
+  "purpose": "design-prototype-only-not-a-production-map",
+  "radius": 3,
+  "baseHeight": 0.36,
+  "renderHeightStep": 0.78,
+  "heightBands": [{"maxR": -2, "height": 0}, {"maxR": 0, "height": 1}, {"maxR": 3, "height": 2}],
+  "stairEdges": [[[0,-2],[0,-1]], [[0,0],[0,1]]],
+  "inspectionCliff": [[1,0],[1,1]],
+  "edgeIntent": "same-height-flat; listed-stairs-bidirectional; all-other-height-differences-cliffs",
+  "units": {"hero": [1,-2], "enemy": [-1,2]},
+  "route": [[1,-2],[0,-2],[0,-1],[0,0],[0,1]],
+  "routeMeaning": "stairway geometry demonstration, not a turn movement range; ends adjacent to enemy, not in its occupied cell",
+  "formalGaps": ["height-bearing encounter content", "typed directed edges and costs", "shared rule-query preview", "height-aware unit world position"]
+}
