@@ -10,9 +10,10 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-GZ-ART-LOOKDEV-01"
+    "A-GZ-ART-LOOKDEV-01",
+    "U-GZ-BATTLEFIELD-BASELINE-01"
   ],
-  "stateReason": "2026-09-12：等待A-GZ-ART-LOOKDEV-01",
+  "stateReason": "2026-09-20：真实遭遇基础地面由独立BASELINE卡先行，不等待美术实验；本卡只承担后续环境美术，等待LOOKDEV批准及BASELINE完成。",
   "expectedPaths": [
     "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.blend",
     "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.fbx",
@@ -58,7 +59,7 @@
 
 - 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
 - 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
-- 唯一结果是实际遭遇使用的正式关中地面和装饰；不承担角色、HUD、规则或比较实验。
+- 2026-09-20 按用户要求分离功能与美术：U-GZ-BATTLEFIELD-BASELINE-01 独立交付真实格位基础地面及默认隐藏比较对象，不等待本卡。唯一美术结果是同一地面的批准网格/材质和装饰；不承担角色、HUD、规则或比较实验。
 
 ## 必查范围
 
@@ -69,9 +70,9 @@
 ## 实施范围
 
 - 从批准首包生产一组共享六角顶面/侧壁及少量石木模块，草地与黄土使用共享材质；清单数量上限由已批准合同逐项固定。
-- 通过现有 AdventureSceneBuilder 在真实地图/环境合法格位生成正式 GuanzhongBattlefield；模块资产不承载规则、不把技术九格矩阵直接改名为正式关卡。
+- 消费 U-GZ-BATTLEFIELD-BASELINE-01 的完成归档和既有 AdventureSceneBuilder/GuanzhongBattlefield，只替换批准的地面模块/材质及装饰；保留同一环境输入与格位生成所有者，不重做空间规则或把技术九格矩阵改名为正式关卡。
 - 正式地面与现有/后续provider共用坐标；核验真实遭遇起点、敌方位置及合法行动覆盖。装饰不得新增阻挡/掩体/高度语义，不重写节点或战斗输入。
-- 保存、关闭、重开验证正式场景引用；保留UI和既有功能，正式比较板移除仍属于 FORMAL-WIRING。
+- 保存、关闭、重开验证正式场景引用；保留UI、功能地面坐标与比较对象默认隐藏状态，正式比较板最终移除仍属于 FORMAL-WIRING。
 - 本卡不等待玩家原包费用或旧四足动画；与UI共享文件时按现有隔离/固定队列顺序交接，最终接线保留本卡地面。
 
 ## 禁止项

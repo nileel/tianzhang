@@ -1,0 +1,99 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-BATTLEFIELD-BASELINE-01",
+  "title": "关中正式战场功能地面与美术实验隔离",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-20：用户要求美术方向实验不阻塞项目；真实遭遇地面与比较对象默认隔离已形成独立原子合同，不依赖美术批准，进入 ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs.meta",
+    "src/Assets/Tests/EditMode/VisualBaselineEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleVisualComparisonPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/StaticChessPresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/TacticalSpritePresentationPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/BattleAnimationSpritePresentationPlayModeTests.cs",
+    "UNITY_STRUCTURE.runtime.md",
+    "开发管理/关中正式战场功能地面验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-BATTLEFIELD-BASELINE-01.txt",
+    "开发管理/任务归档/U-GZ-BATTLEFIELD-BASELINE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": ["EXP-UNITY-001"],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-BATTLEFIELD-BASELINE-01 · 关中正式战场功能地面与美术实验隔离
+
+## 来源与当前边界
+
+- 2026-09-20 用户要求“继续推进项目吧，美术资产的方向实验不该拖累项目推进”。从 U-GZ-ART-BATTLEFIELD-01 提取既有真实遭遇地面接入工作；本卡不等待 LOOKDEV、玩家原包、正式 Profile 或任何方向实验。
+- 唯一结果：正式 Adventure 的真实遭遇格位具有可验证的基础地面，既有比较板/面板默认不可见。现有 UnitMarker 继续承担功能占位；不表示角色、美术或整段展示品质已通过。
+- 当前根因证据：AdventureSceneBuilder.Build 只生成固定九格 VisualBaselineBoard，其中 (0,0)/(1,0) 有测试高度；AdventureUnitSpawner.ToWorld 使用固定 Y=0.38。CombatEntryAdapter 创建半径12的平地网格，SpatialQueryBoardFactory 消费环境有向边；实际关中环境的12条双向边关联6格。地图的3个导航节点不等于战斗可行走格位。
+- 本轮规划只制卡与同步依赖；执行者在任务 worktree 写前运行风险预检并完成下述运行时取证。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md 的“2026-09-20 功能推进与美术验收分离”；开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt 的剩余美术职责。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build|BuildVisualBaselineMatrix|BuildBattleVisualComparisonPanel|HexToWorld；src/Assets/Scripts/Editor/VisualBaselineBuilder.cs 中 HexColumnMeshPath、GroundTopMaterialPath、GroundSideMaterialPath 的生成与消费者。
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryCreateSession|SpatialCombatQuery；src/Assets/Scripts/Modules/Infrastructure/UnityContent/SpatialQueryBoardFactory.cs::TryCreate；src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::TrySpawn|InstantiateMarker|ToWorld；EncounterCoordinator.cs 的战斗进入/退出与移动调用链。
+- src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset 的 start/shijiahou_encounter/return；src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset 的 directedEdges；src/Assets/Resources/UnitMarker.prefab 的真实网格/材质及脚底 bounds。上述输入均只读。
+- src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::ValidateAdventureVisualMatrix；expectedPaths 内六份既有测试的完整相关用例，以及当前正式 AdventureScene 的引用/激活状态。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md；unity-agent-workflows 的 runtime-owner-proof、runtime-visible-output、serialized-persistence 与 unity-validation；开发管理/开发-技术经验.txt 中命中的 Unity 场景/坐标章节。
+
+## 实施范围
+
+- 只在现有 AdventureSceneBuilder 添加局部构建方法，生成唯一 GuanzhongBattlefield。复用已存在的基础 HexColumn 网格与 GroundTop/GroundSide 材质作为功能占位，不新建美术资产、材质、Prefab、模块或渲染框架。
+- 地面输入取同一 environmentProfile 的有向边端点集合去重，核验其与当前 CombatEntryAdapter/SpatialQueryBoardFactory 的战斗空间一致；当前应覆盖6格及双方起点。规则的可达性/距离仍由现有空间查询决定。不得把导航 return(0,2)、半径12的全部469格或技术九格当作本场可走范围。
+- 地面 X/Z 复用现有 HexToWorld，与 Spawner 的 x=q+r*0.5、z=r*0.8660254+1 对齐；高度沿用既有零级顶面0.34，全平、无碰撞或额外阻挡。写前测得真实 Marker bounds/脚底、地面顶面、根变换和相机数值。技术 Marker 根Y=0.38不是脚底；胶囊底部静态推算约0.45，与零级顶面约差0.11，须记录实测间距，不改 Marker/Spawner/相机去掩盖占位资源差异，也不宣称正式模型接地完成。
+- Build 完成后把 VisualBaselineBoard 与 BattleVisualComparisonPanel 两个根对象默认 SetActive(false) 并持久化；保留原对象、全部探针、比较资产和控制器。正式运行不加比较开关；FORMAL-WIRING 以后仍负责最终移除及正式 provider 接线。
+- 四份专用比较 PlayMode 测试从当前场景根以 includeInactive 查找并显式激活各自原 fixture，同时关闭新增功能地面；涉及按钮的测试再激活原 panel。只调整 fixture 启动，不弱化六向/事件/复位断言，不引入测试框架或新场景。
+- 在现有正式流程 PlayMode 用例核验功能地面可见且比较板/面板不可见；在独立 EditMode 测试核验数据端点覆盖、无多余可走地块、引用、平地与保存重开。更新 VisualBaselineEditorTests 的默认隐藏断言，保留原比较资产检查。
+- 使用当前 Builder 只保存 AdventureScene；不手写 YAML。更新运行时索引及验证记录；后续环境美术替换同一地面的网格/材质，不重新拥有格位生成。
+
+## 禁止项
+
+- 不改 CombatEntryAdapter、SpatialQueryBoardFactory、TacticalGridModel、环境/地图数据、战斗数值、奖励、存档、UI业务或正式角色 provider；不增加共享快照、坐标服务、兼容分支或第二套空间规则。
+- 不导入 FuYuan 样例作为正式角色，不购买/生成新美术，不解除 LOOKDEV 的拒绝状态，不绕过正式双 Profile 总门。
+- 不删除比较资源/对象或修改全局 SceneBuildSupport；不恢复宽袖、骨骼、2D/3D方向比较或更改正式静态3D方向。
+- 不将游戏功能占位验收写成美术验收通过。
+
+## 验证
+
+- 在 task worktree 运行 tools/get-experience-risk-preflight.ps1 -TaskId U-GZ-BATTLEFIELD-BASELINE-01，消费 mustRead，核对实时任务卡/索引 digest、schema 2 投影与门禁入口。
+- 写前运行时所有者证据：正式入口、当前场景、双方 Marker 实例、bounds/脚底与旧测试板顶面、相机和格位投影。无法取得真实数值时停止，不凭静态图猜偏移。
+- Builder 保存、关闭并重开 AdventureScene，核验唯一功能地面、6格集合/双方起点、平面高度、mesh/material引用、默认隐藏的比较根。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <本任务worktree/src>
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <本任务worktree/src>
+- 上述既有 runner 不支持 TestFilter；各运行一次，消费同次结果中的直接用例，不再重复跑相同测试。记录从正式入口接悬赏、战斗、返回/领奖的实际画面和相关断言；未实际发生的移动或结果分支清楚标记为测试覆盖。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+- tools/check-review-text.ps1、tools/check-task-cards.ps1、预期路径 whitespace 与暂存后 git diff --cached --check。不改美术源资产，不运行无关 Blender/资产生产/BattleSim 数值回归。
+
+## 完成条件
+
+- 正式流程能观察到与真实遭遇可行格一致的基础地面，双方棋子XZ投影位于对应地面，地面不遮住棋子并记录技术Marker的实际脚底间距；无比较地块/探针/按钮叠加，原交互与规则结果保持。
+- 持久化、代码测试与真实1920×1080运行证据齐备，记录基础资源路径、运行时数值、实际测试结果和剩余美术缺口。
+- 只关闭本卡。U-GZ-ART-BATTLEFIELD-01 仍等待整屏批准；其下游正式角色/反馈/最终美术验收不因此自动通过。
+
+## 停止条件
+
+- 实际空间查询与环境端点集合不一致、需要改规则/数据/公共接口，或未知根因要求修改 Marker/相机/其他所有者。
+- 无法隔离两个既有比较根，或需要新场景、输入开关、公共服务、扩充资源/美术方向。
+- 路径需扩大、运行时证据不可获得、任务不再原子时停止写入，保留根因证据，不叠加补丁或转做美术实验。
