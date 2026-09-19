@@ -198,7 +198,8 @@ function New-CandidatePrompt {
     'Implement and verify only this task in RepositoryRoot. Candidate changes are limited to CandidatePaths.'
     'Do not modify the task card, current queue, source backlog, task archive, AI合作沟通, main workspace, runtime, another worktree, or any branch other than the current candidate branch.'
     'Do not create temporary, diagnostic, conversion, or helper files anywhere under RepositoryRoot. Inspect existing outputs directly; if that is impossible, return blocked with a stable detailCode before committing.'
-    'Do not stash, reset, checkout, switch, clean, push, self-review, dispatch another agent, or start/manage Codex automation.'
+    'Do not stash, reset, checkout, switch, clean, push, self-review, start a second owner session, or start/manage Codex automation.'
+    'Before business edits, apply 开发管理/AI协作规则.txt#任务卡中的模型协作提示 to assess this task complexity and select a model combination using actual tool capabilities. Simple tasks use the entry default model alone; bounded native read-only helpers are allowed only under that rule. Record the assessment and actual helper evidence in existing verification results, never by editing the task card. Keep the entry main model and the single owner/candidate contract; helpers cannot self-review, mutate task lifecycle, commit, operate runtime, or delegate further.'
     'Before committing, run the task-card checks and required path/whitespace/Git checks. Do not claim a verification that was not run.'
     "Create exactly one candidate commit with: pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $quotedRoot -ExpectedPaths $quotedPaths -CommitMessage 'candidate($TaskId): DeepSeek implementation'"
     'Do not use RequireAutomationMetadata for the candidate. The fixed Windows entry creates formal business and handoff commits later.'

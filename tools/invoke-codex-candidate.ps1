@@ -212,6 +212,7 @@ function New-Prompt {
     $routeInstruction; $resumeInstruction
     $preflightInstruction
     '固定入口已经选择并 claim 本任务。不得重扫队列、领取其他任务、调用 runtime、集成、管理 automation 或修改其他 worktree。'
+    '读取并应用 开发管理/AI协作规则.txt#任务卡中的模型协作提示：业务写入前按当轮复杂度核对模型组合与实际工具能力，简单任务沿用入口默认单模型，有独立复杂问题才按规则选择原生只读辅助。QueueMaintenance 只为本轮实际新建或准备 ready 的卡填写模型协作；旧卡缺段时将本轮评估记入既有验证结果，不为此擅改已 claim 的任务摘要。主模型始终保持入口传入值，不启动第二责任会话。'
     '除 QueueMaintenance 外，不得从其他任务卡的 blockedBy 或 backlog 行的「阻塞于」投影移除当前 taskId，也不得顺带提升、重排或关闭下游任务。当前任务完成后，其他任务对它的具名前置引用继续保留；只有正式结果进入 master 后，后续 QueueMaintenance 才按既有事实源同时更新下游任务卡和 backlog 投影。'
     '只在当前 worktree 实施、验证并形成一个 candidate 提交；正式结果由共享入口在最新 master 重放。'
     '当前 worktree 的验证若要求 dotnet build --no-restore 且对应项目缺少 obj/project.assets.json，先在同一 worktree 对该项目执行一次 dotnet restore 作为环境准备，再执行任务卡规定的 --no-restore build；不得改用主工作区、其他 worktree 或其 obj/bin 缓存。'

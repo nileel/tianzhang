@@ -40,6 +40,7 @@
 ## 原子任务与任务内子智能体
 
 - ready 任务应已满足 `开发管理/AI协作规则.txt` 的原子任务条件；共享入口和 PowerShell 脚本不根据文件数、行数、预计时长或模型判断任务大小，也不动态创建、拆分或重排任务卡。
+- 后续每项任务必须按 `开发管理/AI协作规则.txt#任务卡中的模型协作提示` 评估复杂度并选择组合。QueueMaintenance 只为本轮实际新建或准备 ready 的卡填写模型协作；owner 智能体在业务写入前核对当轮执行／复审的组合和真实工具能力，简单任务沿用默认单模型。评估和辅助模型选择由责任智能体完成；薄触发器、adapter 与共享内核不评分、不调换主模型，不增加 schema/runtime 字段，已有缺能力和停止合同继续适用。
 - owner 模型读取已领取任务的直接事实后，在业务写入前做最小原子性检查。确认任务无法原子闭环时，不实施、不生成 candidate，以现有失败终态返回稳定 `detailCode=task_requires_decomposition`；共享入口据此把同一 run 更新为 `attention_required`，后续只按 `开发管理/自动工作流恢复规则.txt` 人工处置。
 - 实施中才暴露不可拆合的职责冲突时，owner 模型立即停止叠加补丁，不提交、不集成，保留 owner worktree、最小失败证据和已验证事实后进入 `attention_required`。worker 不边实施边创建零散子卡，也不把半成品机械拆成多个 candidate。
 - owner 模型可在执行环境实际暴露能力时，按 `开发管理/AI协作规则.txt` 在同一任务内使用子智能体；子智能体对 schema 5 和共享入口透明，不拥有 run、branch、candidate、任务投影或恢复状态。项目不依赖实验性 agent team。
