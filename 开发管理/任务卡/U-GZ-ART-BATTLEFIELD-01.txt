@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-GZ-ART-LOOKDEV-01",
-    "U-GZ-BATTLEFIELD-BASELINE-01"
+    "A-GZ-ART-LOOKDEV-01"
   ],
-  "stateReason": "2026-09-20：真实遭遇基础地面由独立BASELINE卡先行，不等待美术实验；本卡只承担后续环境美术，等待LOOKDEV批准及BASELINE完成。",
+  "stateReason": "2026-09-20：真实遭遇基础地面由独立BASELINE卡先行，不等待美术实验；本卡只承担后续环境美术，U-GZ-BATTLEFIELD-BASELINE-01已完成，仍等待LOOKDEV批准。",
   "expectedPaths": [
     "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.blend",
     "assets/source/environments/guanzhong-first-bounty/guanzhong_terrain_modules.fbx",
