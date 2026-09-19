@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-PROFILES-01",
-    "U-GZ-ART-BATTLEFIELD-01"
+    "U-CHAR-BATTLE-STATIC3D-PROFILES-01"
   ],
-  "stateReason": "2026-09-12：等待双正式Profile和真实关中地面；原子接入唯一静态3D provider及六事件整体动作，保留既有环境/UI，正式VFX/声音由独立下游交付。",
+  "stateReason": "2026-09-20：U-GZ-ART-BATTLEFIELD-01 已完成；仍等待双正式Profile，随后原子接入唯一静态3D provider及六事件整体动作，保留既有环境/UI，正式VFX/声音由独立下游交付。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",

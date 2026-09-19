@@ -10,12 +10,11 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-GZ-ART-BATTLEFIELD-01",
     "U-GZ-ART-UI-01",
     "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
     "U-GZ-ART-FEEDBACK-01"
   ],
-  "stateReason": "2026-09-12：等待U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01",
+  "stateReason": "2026-09-20：U-GZ-ART-BATTLEFIELD-01 已完成；仍等待U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01",
   "expectedPaths": [
     "开发管理/关中首个可展示流程美术验收记录.txt",
     "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
