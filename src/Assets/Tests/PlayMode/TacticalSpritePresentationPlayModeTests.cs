@@ -29,7 +29,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
-            GameObject board = GameObject.Find(TacticalSpriteProbeMatrix.BoardName);
+            GameObject board = PrepareVisualBaselineFixture();
             Assert.IsNotNull(board, "AdventureScene must persist the visual baseline board.");
             Transform group = board.transform.Find(TacticalSpriteProbeMatrix.GroupName);
             Assert.IsNotNull(group, "AdventureScene must persist the tactical sprite group.");
@@ -62,7 +62,7 @@ namespace TianZhang.Tests.PlayMode
 
             Camera camera = Camera.main;
             Assert.IsNotNull(camera, "AdventureScene must expose the frozen visual baseline camera.");
-            GameObject board = GameObject.Find(TacticalSpriteProbeMatrix.BoardName);
+            GameObject board = PrepareVisualBaselineFixture();
             Assert.IsNotNull(board, "AdventureScene must persist the visual baseline board.");
 
             for (int direction = 0; direction < TacticalSpriteProbeMatrix.DirectionCount; direction++)
@@ -157,6 +157,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
+            PrepareVisualBaselineFixture();
             TacticalSpriteProbeMatrix.SetActiveRoute(true);
             yield return null;
 
@@ -234,6 +235,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
+            PrepareVisualBaselineFixture();
             TacticalSpriteProbeMatrix.SetActiveRoute(true);
             yield return null;
 
@@ -269,6 +271,25 @@ namespace TianZhang.Tests.PlayMode
                 if (transform != root)
                     result.Add(transform, new TransformState(transform));
             return result;
+        }
+
+        private static GameObject PrepareVisualBaselineFixture()
+        {
+            GameObject board = FindSceneObjectIncludingInactive(TacticalSpriteProbeMatrix.BoardName);
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            Assert.IsNotNull(board, "AdventureScene is missing the visual baseline board fixture.");
+            Assert.IsNotNull(battlefield, "AdventureScene is missing the functional battlefield.");
+            battlefield.SetActive(false);
+            board.SetActive(true);
+            return board;
+        }
+
+        private static GameObject FindSceneObjectIncludingInactive(string name)
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                if (transform.name == name) return transform.gameObject;
+            return null;
         }
 
         private static void AssertChildStatesUnchanged(IReadOnlyDictionary<Transform, TransformState> states)

@@ -38,6 +38,8 @@
 
 `AdventureSceneInstaller` 显式绑定内容目录、冒险地图、环境档案、单位 Prefab、攻击档案与视图；`AdventureController`／`EncounterCoordinator` 把纯快照交给 Combat。CombatPresentation 只经 `ICombatCommandHandler` 和只读表现 DTO 连接，不拥有战斗规则。
 
+- `AdventureSceneBuilder` 通过既有 Builder 保存正式 `AdventureScene`；唯一 `GuanzhongBattlefield` 只消费 `env_guanzhong_wild` 有向边端点，复用 `HexToWorld` 与既有 `HexColumn`／`GroundTop`／`GroundSide` 作为功能地面。`VisualBaselineBoard`／`BattleVisualComparisonPanel` 仍是序列化比较 fixture，默认 inactive，不是正式格位或规则输入。
+
 ## 非正式 2D 合同实验
 
 `src/Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity` 不在 BuildSettings。`CombatPiece2DExperimentSceneBuilder` 只持久化实验相机、`BattleAnimationSpriteCombatUnitPresentationAdapter` 与既有 `FuYuan_BattleAnimationSprite.prefab` 引用；adapter 将 `ICombatUnitPresentationPort` 的准备、生成、事件、移除和清理投影为 2D pilot，不写 Combat、场景路由或保存状态。缺少实验 profile／Prefab／关键组件时在该入口失败关闭；不得接入 `AdventureScene`、`GameBootstrap` 或静态 3D provider。

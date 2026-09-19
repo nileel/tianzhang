@@ -19,7 +19,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
-            GameObject board = GameObject.Find(TacticalSpriteProbeMatrix.BoardName);
+            GameObject board = PrepareComparisonFixture();
             Assert.IsNotNull(board);
             BattleVisualComparisonController comparison = board.GetComponent<BattleVisualComparisonController>();
             Assert.IsNotNull(comparison);
@@ -74,7 +74,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
-            GameObject board = GameObject.Find(TacticalSpriteProbeMatrix.BoardName);
+            GameObject board = PrepareComparisonFixture();
             BattleVisualComparisonController comparison = board.GetComponent<BattleVisualComparisonController>();
             FindButton("Comparison2DRouteButton").onClick.Invoke();
 
@@ -123,6 +123,34 @@ namespace TianZhang.Tests.PlayMode
             GameObject button = GameObject.Find(name);
             Assert.IsNotNull(button, "AdventureScene is missing comparison button " + name + ".");
             return button.GetComponent<Button>();
+        }
+
+        private static GameObject PrepareComparisonFixture()
+        {
+            GameObject board = PrepareVisualBaselineFixture();
+            GameObject panel = FindSceneObjectIncludingInactive("BattleVisualComparisonPanel");
+            Assert.IsNotNull(panel, "AdventureScene is missing the comparison panel fixture.");
+            panel.SetActive(true);
+            return board;
+        }
+
+        private static GameObject PrepareVisualBaselineFixture()
+        {
+            GameObject board = FindSceneObjectIncludingInactive(TacticalSpriteProbeMatrix.BoardName);
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            Assert.IsNotNull(board, "AdventureScene is missing the visual baseline board fixture.");
+            Assert.IsNotNull(battlefield, "AdventureScene is missing the functional battlefield.");
+            battlefield.SetActive(false);
+            board.SetActive(true);
+            return board;
+        }
+
+        private static GameObject FindSceneObjectIncludingInactive(string name)
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                if (transform.name == name) return transform.gameObject;
+            return null;
         }
 
         private static void AssertRoute(GameObject board, bool battleAnimation2D)

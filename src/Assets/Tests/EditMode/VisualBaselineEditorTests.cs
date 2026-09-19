@@ -60,10 +60,14 @@ namespace TianZhang.Tests.EditMode
             Transform board = transforms.Single(item => item.name == "VisualBaselineBoard");
             BattleVisualComparisonController comparison = board.GetComponent<BattleVisualComparisonController>();
             Assert.IsNotNull(comparison, "VisualBaselineBoard must own the isolated comparison input controller.");
+            Assert.IsFalse(board.gameObject.activeSelf,
+                "The visual baseline board must remain hidden in the formal Adventure scene.");
 
             SerializedObject serialized = new SerializedObject(comparison);
 
             Transform panel = transforms.Single(item => item.name == "BattleVisualComparisonPanel");
+            Assert.IsFalse(panel.gameObject.activeSelf,
+                "The comparison panel must remain hidden in the formal Adventure scene.");
             Assert.AreEqual("BattleVisualComparisonStatus", serialized.FindProperty("statusText").objectReferenceValue.name);
             Assert.AreEqual(new Vector2(0.38f, 0.48f), ((RectTransform)panel).anchorMax);
             Assert.IsNotNull(panel.Find("ComparisonRouteButtons"));

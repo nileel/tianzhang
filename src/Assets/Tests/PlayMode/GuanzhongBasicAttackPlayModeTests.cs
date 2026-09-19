@@ -45,6 +45,7 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads()
         {
+            Screen.SetResolution(1920, 1080, false);
             GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (staleBootstrap != null)
             {
@@ -103,6 +104,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
             AssertTechnicalMarker("PlayerMarker", Color.cyan);
             AssertTechnicalMarker("EnemyMarker", Color.red);
+            AssertFormalBattlefieldPresentation();
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
             ICombatCommandHandler combatCommands = encounter;
@@ -516,6 +518,118 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(actual.a, Is.EqualTo(expectedColor.a).Within(0.001f));
             }
         }
+
+        private static void AssertFormalBattlefieldPresentation()
+        {
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            GameObject comparisonBoard = FindSceneObjectIncludingInactive("VisualBaselineBoard");
+            GameObject comparisonPanel = FindSceneObjectIncludingInactive("BattleVisualComparisonPanel");
+            Assert.IsNotNull(battlefield, "AdventureScene is missing the functional Guanzhong battlefield.");
+            Assert.IsNotNull(comparisonBoard, "AdventureScene is missing the preserved visual baseline fixture.");
+            Assert.IsNotNull(comparisonPanel, "AdventureScene is missing the preserved comparison panel fixture.");
+            Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
+            Assert.IsFalse(comparisonBoard.activeInHierarchy,
+                "The formal Adventure route must not show the visual baseline fixture.");
+            Assert.IsFalse(comparisonPanel.activeInHierarchy,
+                "The formal Adventure route must not show the comparison panel fixture.");
+
+            Camera camera = Camera.main;
+            Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
+            Assert.Less(Vector3.Distance(camera.transform.position, new Vector3(0f, 8f, -10f)), 0.001f);
+            Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
+            Assert.AreEqual(6.2f, camera.orthographicSize, 0.001f);
+
+            AssertMarkerGrounding("PlayerMarker", 0, 0, battlefield.transform, camera);
+            AssertMarkerGrounding("EnemyMarker", 1, 0, battlefield.transform, camera);
+        }
+
+        private static void AssertMarkerGrounding(
+            string markerName,
+            int q,
+            int r,
+            Transform battlefield,
+            Camera camera)
+        {
+            GameObject marker = FindSceneObjectIncludingInactive(markerName);
+            Transform ground = battlefield.Find("GuanzhongHex_" + q + "_" + r);
+            Assert.IsNotNull(marker, "Adventure combat did not create " + markerName + ".");
+            Assert.IsNotNull(ground, "The functional battlefield is missing the marker ground cell.");
+            MeshRenderer groundRenderer = ground.GetComponent<MeshRenderer>();
+            Assert.IsNotNull(groundRenderer);
+
+            Bounds markerBounds = CombinedRendererBounds(marker);
+            Bounds groundBounds = groundRenderer.bounds;
+            Vector3 expectedCenter = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f + 1f);
+            Assert.Less(Vector2.Distance(
+                new Vector2(marker.transform.position.x, marker.transform.position.z),
+                new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
+            Assert.Less(Vector2.Distance(
+                new Vector2(ground.position.x, ground.position.z),
+                new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
+            Assert.AreEqual(0.34f, groundBounds.max.y, 0.001f);
+            float footGap = markerBounds.min.y - groundBounds.max.y;
+            Assert.AreEqual(0.11f, footGap, 0.001f,
+                "The technical marker must retain its measured placeholder foot gap rather than changing its owner.");
+
+            Rect markerScreenRect = ScreenRectFromBounds(camera, markerBounds);
+            Rect groundScreenRect = ScreenRectFromBounds(camera, groundBounds);
+            Debug.Log("[GuanzhongBattlefieldProof] baselineResolution=1920x1080" +
+                      " runtimeResolution=" + Screen.width + "x" + Screen.height +
+                      " cameraPosition=" + camera.transform.position.ToString("F4") +
+                      " cameraEuler=" + camera.transform.eulerAngles.ToString("F4") +
+                      " ortho=" + camera.orthographicSize.ToString("F4") +
+                      " marker=" + markerName +
+                      " root=" + marker.transform.position.ToString("F4") +
+                      " markerBoundsMin=" + markerBounds.min.ToString("F4") +
+                      " markerBoundsMax=" + markerBounds.max.ToString("F4") +
+                      " groundCell=(" + q + "," + r + ")" +
+                      " groundTop=" + groundBounds.max.y.ToString("F4") +
+                      " footGap=" + footGap.ToString("F4") +
+                      " markerScreenRect=" + RectText(markerScreenRect) +
+                      " groundScreenRect=" + RectText(groundScreenRect));
+        }
+
+        private static GameObject FindSceneObjectIncludingInactive(string name)
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                if (transform.name == name) return transform.gameObject;
+            return null;
+        }
+
+        private static Bounds CombinedRendererBounds(GameObject target)
+        {
+            Renderer[] renderers = target.GetComponentsInChildren<Renderer>(true);
+            Assert.Greater(renderers.Length, 0, target.name + " must contain a visible renderer.");
+            Bounds bounds = renderers[0].bounds;
+            for (int index = 1; index < renderers.Length; index++) bounds.Encapsulate(renderers[index].bounds);
+            return bounds;
+        }
+
+        private static Rect ScreenRectFromBounds(Camera camera, Bounds bounds)
+        {
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            Vector2 screenMin = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 screenMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int x = 0; x < 2; x++)
+            for (int y = 0; y < 2; y++)
+            for (int z = 0; z < 2; z++)
+            {
+                Vector3 point = camera.WorldToViewportPoint(new Vector3(
+                    x == 0 ? min.x : max.x,
+                    y == 0 ? min.y : max.y,
+                    z == 0 ? min.z : max.z));
+                Vector2 screenPoint = new Vector2(point.x * 1920f, point.y * 1080f);
+                screenMin = Vector2.Min(screenMin, screenPoint);
+                screenMax = Vector2.Max(screenMax, screenPoint);
+            }
+            return Rect.MinMaxRect(screenMin.x, screenMin.y, screenMax.x, screenMax.y);
+        }
+
+        private static string RectText(Rect rect) =>
+            "(" + rect.xMin.ToString("F2") + "," + rect.yMin.ToString("F2") + ")-(" +
+            rect.xMax.ToString("F2") + "," + rect.yMax.ToString("F2") + ")";
 
         private sealed class SequenceRandomSource : IFormalEncounterRandomSource
         {

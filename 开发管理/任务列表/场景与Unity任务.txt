@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- 2026-09-20 用户明确美术资产方向实验不得阻塞项目推进。真实遭遇地面从 U-GZ-ART-BATTLEFIELD-01 提为独立 U-GZ-BATTLEFIELD-BASELINE-01，并进入 ready：沿用基础网格/材质和技术Marker，按实际环境边端点生成地面，正式默认隐藏比较板/面板；最终美术、正式角色和品质验收继续沿原门槛。本轮只完成调度准备，尚未实施地面。
+- 2026-09-20 `U-GZ-BATTLEFIELD-BASELINE-01` 已完成：正式 Adventure 以 `env_guanzhong_wild` 有向边端点生成六格基础功能地面，技术 Marker 保持原所有者，比较板/面板默认隐藏并由 Builder 保存；验证记录见 `开发管理/关中正式战场功能地面验证记录.txt`。这不是环境美术、正式角色或整体品质验收，相关门槛继续沿原任务推进。
 
 - 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01汇总，A-GZ-ART-LOOKDEV-01曾为首批唯一ready；负责人后续对 DEC-20260912-CD1A9E90A58405 选择 C，拒绝本轮整屏方向，当前保持阻塞且未解锁环境/UI或付费玩家原包。环境/UI独立于付费玩家原包与冻结动画。模块化肖像/角色扩展转P2冻结，无队列宽袖/2D骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
 
@@ -29,7 +29,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-GZ-BATTLEFIELD-BASELINE-01 | P1 | codex | 已排队 | — | 关中正式战场功能地面与美术实验隔离 | 开发管理/任务卡/U-GZ-BATTLEFIELD-BASELINE-01.txt |
 | A-GZ-ART-LOOKDEV-01 | P1 | codex | 阻塞 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-GZ-ART-BATTLEFIELD-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01、U-GZ-BATTLEFIELD-BASELINE-01 | 关中首场正式战场环境美术 | 开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |

@@ -47,6 +47,9 @@ namespace TianZhang.Editor
             VisualBaselineBuilder.BuildTacticalSpriteAssets();
             VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
             ValidateReadOnlyVisualAssets();
+            EnvironmentProfileAsset environmentProfile = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            BuildGuanzhongBattlefield(environmentProfile);
             GameObject visualBaselineBoard = BuildVisualBaselineMatrix();
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
@@ -78,7 +81,9 @@ namespace TianZhang.Editor
             Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out _);
             combatPanel.SetActive(false);
 
-            BuildBattleVisualComparisonPanel(canvas, visualBaselineBoard);
+            GameObject battleVisualComparisonPanel = BuildBattleVisualComparisonPanel(canvas, visualBaselineBoard);
+            visualBaselineBoard.SetActive(false);
+            battleVisualComparisonPanel.SetActive(false);
 
             SceneBuildSupport.SetObject(combatView, "root", combatPanel);
             SceneBuildSupport.SetObject(combatView, "playerText", player);
@@ -101,7 +106,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(installer, "languageTable", SceneBuildSupport.RequireAsset<TextAsset>("Assets/DataConfig/Language.csv"));
             SceneBuildSupport.SetObject(installer, "contentCatalog", SceneBuildSupport.RequireAsset<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
             SceneBuildSupport.RequireAsset<AdventureMapData>("Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset");
-            SceneBuildSupport.SetObject(installer, "environmentProfile", SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+            SceneBuildSupport.SetObject(installer, "environmentProfile", environmentProfile);
             SceneBuildSupport.SetObject(installer, "unitMarkerPrefab", SceneBuildSupport.RequireAsset<GameObject>("Assets/Resources/UnitMarker.prefab"));
             SceneBuildSupport.SetObjects(installer, "attackProfiles", LoadAttackProfiles());
             SceneBuildSupport.SetObject(installer, "controller", controller);
@@ -169,7 +174,9 @@ namespace TianZhang.Editor
             if (previousPanel != null) UnityEngine.Object.DestroyImmediate(previousPanel.gameObject);
             BattleVisualComparisonController previousController = board.GetComponent<BattleVisualComparisonController>();
             if (previousController != null) UnityEngine.Object.DestroyImmediate(previousController);
-            BuildBattleVisualComparisonPanel(canvas, board);
+            GameObject panel = BuildBattleVisualComparisonPanel(canvas, board);
+            board.SetActive(false);
+            panel.SetActive(false);
 
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the regenerated battle visual comparison entry.");
@@ -219,7 +226,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.RequireAsset<GameObject>(VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
         }
 
-        private static void BuildBattleVisualComparisonPanel(Canvas canvas, GameObject board)
+        private static GameObject BuildBattleVisualComparisonPanel(Canvas canvas, GameObject board)
         {
             GameObject panel = SceneBuildSupport.CreatePanel("BattleVisualComparisonPanel", canvas.transform,
                 new Vector2(0.02f, 0.03f), new Vector2(0.38f, 0.48f));
@@ -264,6 +271,7 @@ namespace TianZhang.Editor
                 UnityEventTools.AddIntPersistentListener(presentationEvents[presentationEvent].onClick,
                     comparison.TriggerPresentationByIndex, presentationEvent);
             UnityEventTools.AddPersistentListener(reset.onClick, comparison.ResetPresentations);
+            return panel;
         }
 
         private static Transform CreateComparisonGrid(string name, Transform parent, int columns, int rows)
@@ -336,6 +344,50 @@ namespace TianZhang.Editor
             occluderRenderer.shadowCastingMode = ShadowCastingMode.On;
             occluderRenderer.receiveShadows = true;
             return board;
+        }
+
+        private static GameObject BuildGuanzhongBattlefield(EnvironmentProfileAsset environmentProfile)
+        {
+            if (environmentProfile == null || environmentProfile.directedEdges == null)
+                throw new InvalidOperationException("Guanzhong battlefield requires a configured environment profile.");
+
+            var cells = new List<Vector2Int>();
+            foreach (EnvironmentDirectedEdge edge in environmentProfile.directedEdges)
+            {
+                AddGuanzhongBattlefieldCell(cells, edge.fromQ, edge.fromR);
+                AddGuanzhongBattlefieldCell(cells, edge.toQ, edge.toR);
+            }
+            if (cells.Count == 0)
+                throw new InvalidOperationException("Guanzhong battlefield requires environment edge endpoints.");
+
+            cells.Sort((first, second) => first.x != second.x
+                ? first.x.CompareTo(second.x)
+                : first.y.CompareTo(second.y));
+
+            var battlefield = new GameObject("GuanzhongBattlefield");
+            Mesh columnMesh = SceneBuildSupport.RequireAsset<Mesh>(VisualBaselineBuilder.HexColumnMeshPath);
+            Material top = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundTopMaterialPath);
+            Material side = SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.GroundSideMaterialPath);
+            foreach (Vector2Int coord in cells)
+            {
+                var cell = new GameObject("GuanzhongHex_" + coord.x + "_" + coord.y,
+                    typeof(MeshFilter), typeof(MeshRenderer));
+                cell.transform.SetParent(battlefield.transform, false);
+                cell.transform.localPosition = HexToWorld(coord.x, coord.y, 0f);
+                cell.transform.localScale = new Vector3(1f, HeightForLevel(0), 1f);
+                cell.GetComponent<MeshFilter>().sharedMesh = columnMesh;
+                MeshRenderer renderer = cell.GetComponent<MeshRenderer>();
+                renderer.sharedMaterials = new[] { top, side };
+                renderer.shadowCastingMode = ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+            return battlefield;
+        }
+
+        private static void AddGuanzhongBattlefieldCell(List<Vector2Int> cells, int q, int r)
+        {
+            var coord = new Vector2Int(q, r);
+            if (!cells.Contains(coord)) cells.Add(coord);
         }
 
         private static void CreateFacingProbes(Transform parent, int[,] cells)

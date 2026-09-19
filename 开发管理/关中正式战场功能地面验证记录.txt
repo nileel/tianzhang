@@ -1,0 +1,24 @@
+# 关中正式战场功能地面验证记录
+
+## U-GZ-BATTLEFIELD-BASELINE-01 · 2026-09-20
+
+- 入口与所有者：`AdventureSceneBuilder.Build` 通过既有 `SceneBuildSupport.BeginScene` 与 `SceneBuildSupport.Save` 重建并保存正式 `AdventureScene`。新增的唯一 `GuanzhongBattlefield` 只消费 `Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` 的 12 条有向边端点；去重后为 `(-1,0)`、`(0,0)`、`(1,0)`、`(1,-1)`、`(0,1)`、`(-1,1)`，包含起点 `(0,0)` 和石甲兽遭遇 `(1,0)`，不包含地图导航返回 `(0,2)`。
+- 基础资源与边界：每格复用 `Assets/Art/VisualBaseline/Meshes/VisualBaseline_HexColumn.asset` 和 `Assets/Art/VisualBaseline/Materials/VisualBaseline_GroundTop.mat`／`VisualBaseline_GroundSide.mat`，位置沿用 `HexToWorld`，零级顶面为 `0.3400`，无 Collider。它是功能地面，不拥有空间查询、规则或美术资产生产。
+- 保存状态：`GuanzhongBattlefield` 默认 active；`VisualBaselineBoard` 和 `BattleVisualComparisonPanel` 均作为已序列化比较 fixture 默认 inactive。关闭并重开由独立 EditMode 用例验证；四组比较 PlayMode 用例在自身 fixture 中重新启用原比较对象并关闭功能地面。
+- 正式流程运行时数值：`GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads` 从 StartMenu 建角、进入关中城、接悬赏、进入 Adventure、选择 `shijiahou_encounter`、战斗、返回并领奖后取证。相机为 position `(0.0000, 8.0000, -10.0000)`、Euler `(38.0000, 0.0000, 0.0000)`、orthographic size `6.2000`。PlayerMarker 根为 `(0.0000, 0.3800, 1.0000)`、bounds min `(-0.1700, 0.4500, 0.8300)`，EnemyMarker 根为 `(1.0000, 0.3800, 1.0000)`、bounds min `(0.8300, 0.4500, 0.8300)`；二者对应地面顶面均为 `0.3400`，实测脚底间距均为 `0.1100`。
+- 画面取证：测试按 `1920×1080` 基线投影记录 Player `(940.26,602.55)-(979.74,705.97)`、Enemy `(1056.39,602.55)-(1095.87,705.97)` 的 marker screen rect；标准批处理 runner 使用 `-nographics`，同次运行实际报告 `640×480`，因此该数值是同一冻结相机的 1920×1080基线投影，而非交互式截图。没有把该限制伪称为美术或整体画面验收。
+- 边界：未修改 `CombatEntryAdapter`、`SpatialQueryBoardFactory`、`TacticalGridModel`、环境/地图数据、Marker/Spawner、相机、奖励、存档、UI业务或正式角色 provider；没有生成、导入或验收新美术。
+
+## 已执行验证
+
+- 风险预检：`tools/get-experience-risk-preflight.ps1 -TaskId U-GZ-BATTLEFIELD-BASELINE-01` 两次返回一致的 `EXP-UNITY-001`，任务卡 digest `39d32a6f3c0a268bf94efd67138e86789e3bf931c0d5aec45e2a28982f25d08f`、索引 digest `4d35e55ef2280ee9ae58b122a4cefcde1f4013186fda2a4497a82ee26e9a102c`，无 gate。
+- Unity 6000.3.18f1 EditMode：完整 runner 466 项中 465 通过；本卡 `GuanzhongBattlefieldBaselineEditorTests.AdventureBuilderPersistsOnlyGuanzhongEnvironmentEndpointsAsFunctionalGround` 与 `VisualBaselineEditorTests.AdventureScenePersistsTheSymmetricBattleVisualComparisonEntry` 通过。唯一失败为不在本卡路径的 `ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings`，原因是其预期的可编辑 Blender 源不存在。
+- Unity 6000.3.18f1 PlayMode：完整 runner 20/20 通过。正式关中流程、两个 BattleVisualComparison 用例、StaticChess 冻结矩阵、四个 TacticalSprite 用例与两个 BattleAnimationSprite 用例均通过，保留六向、路线互斥、事件和复位断言。
+- `tools/check-unity-assembly-boundaries.ps1`：通过，19 assemblies、2 asmrefs。`tools/check-data-chain.ps1`：通过，GongFa `29/29`、Spells `83/83`、Skills `31/31`、language keys `544`。
+- `tools/check-task-cards.ps1 -TaskId U-GZ-BATTLEFIELD-BASELINE-01 -Postcondition CodexClosedOrNonReady`：通过，cards `58`、ready `0`。`tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`：通过，检查 `541` 文件。预期变更的可读文件 whitespace 检查与未暂存 diff 检查均通过。
+
+## 后续
+
+- `U-GZ-ART-BATTLEFIELD-01` 仍等待 `A-GZ-ART-LOOKDEV-01` 的整屏批准，并保留对本卡的具名前置，直至正式结果进入 master 后由既有 QueueMaintenance 依事实更新。
+- `U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01` 仍拥有正式 provider 接线；FORMAL-WIRING 与后续环境美术替换同一地面的网格/材质，不得重新拥有格位或把技术 Marker 当作正式角色。
+- 本记录不构成 LOOKDEV、环境美术、正式角色、特效音效或整体可展示流程的品质通过；批处理的 `640×480` 实际分辨率限制也不替代交互式 1920×1080 画面验收。

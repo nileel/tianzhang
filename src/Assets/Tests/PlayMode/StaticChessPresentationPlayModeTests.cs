@@ -19,6 +19,7 @@ namespace TianZhang.Tests.PlayMode
             LogAssert.Expect(LogType.Error, "[AdventureInstaller] game_bootstrap_missing");
             SceneManager.LoadScene("AdventureScene");
             yield return null;
+            PrepareVisualBaselineFixture();
 
             foreach (CombatUnitPresentationEvent presentationEvent in
                      (CombatUnitPresentationEvent[])Enum.GetValues(typeof(CombatUnitPresentationEvent)))
@@ -119,6 +120,24 @@ namespace TianZhang.Tests.PlayMode
                 case CombatUnitPresentationEvent.Death: return new[] { 0.25f, 0.70f, 0.85f };
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
+        }
+
+        private static void PrepareVisualBaselineFixture()
+        {
+            GameObject board = FindSceneObjectIncludingInactive(TacticalSpriteProbeMatrix.BoardName);
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            Assert.IsNotNull(board, "AdventureScene is missing the visual baseline board fixture.");
+            Assert.IsNotNull(battlefield, "AdventureScene is missing the functional battlefield.");
+            battlefield.SetActive(false);
+            board.SetActive(true);
+        }
+
+        private static GameObject FindSceneObjectIncludingInactive(string name)
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                if (transform.name == name) return transform.gameObject;
+            return null;
         }
 
         private static void AssertAtStart(

@@ -19,7 +19,7 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene("AdventureScene");
             yield return null;
 
-            GameObject board = GameObject.Find(BattleAnimationSpriteProbeMatrix.BoardName);
+            GameObject board = PrepareVisualBaselineFixture();
             Assert.IsNotNull(board);
             Transform battleGroup = board.transform.Find(BattleAnimationSpriteProbeMatrix.GroupName);
             Assert.IsNotNull(battleGroup);
@@ -44,6 +44,7 @@ namespace TianZhang.Tests.PlayMode
             LogAssert.Expect(LogType.Error, "[AdventureInstaller] game_bootstrap_missing");
             SceneManager.LoadScene("AdventureScene");
             yield return null;
+            PrepareVisualBaselineFixture();
             BattleAnimationSpriteProbeMatrix.SetActiveRoute(true);
             yield return null;
 
@@ -121,6 +122,25 @@ namespace TianZhang.Tests.PlayMode
                 case CombatUnitPresentationEvent.Death: return 5;
                 default: throw new ArgumentOutOfRangeException(nameof(presentationEvent));
             }
+        }
+
+        private static GameObject PrepareVisualBaselineFixture()
+        {
+            GameObject board = FindSceneObjectIncludingInactive(BattleAnimationSpriteProbeMatrix.BoardName);
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            Assert.IsNotNull(board, "AdventureScene is missing the visual baseline board fixture.");
+            Assert.IsNotNull(battlefield, "AdventureScene is missing the functional battlefield.");
+            battlefield.SetActive(false);
+            board.SetActive(true);
+            return board;
+        }
+
+        private static GameObject FindSceneObjectIncludingInactive(string name)
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+                if (transform.name == name) return transform.gameObject;
+            return null;
         }
 
         private static int ManifestEventFrame(CombatUnitPresentationEvent presentationEvent) =>

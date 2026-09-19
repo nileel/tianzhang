@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-20：用户要求美术方向实验不阻塞项目；真实遭遇地面与比较对象默认隔离已形成独立原子合同，不依赖美术批准，进入 ready。",
+  "stateReason": "2026-09-20：已通过既有 AdventureSceneBuilder 保存关中六格功能地面并默认隐藏比较 fixture；代码与运行时验证已记录，环境美术和正式角色门槛仍保持。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
@@ -97,3 +97,10 @@
 - 实际空间查询与环境端点集合不一致、需要改规则/数据/公共接口，或未知根因要求修改 Marker/相机/其他所有者。
 - 无法隔离两个既有比较根，或需要新场景、输入开关、公共服务、扩充资源/美术方向。
 - 路径需扩大、运行时证据不可获得、任务不再原子时停止写入，保留根因证据，不叠加补丁或转做美术实验。
+
+## 完成记录
+
+- `AdventureSceneBuilder.Build` 现由 `env_guanzhong_wild` 有向边端点生成唯一 `GuanzhongBattlefield` 六格基础地面，并经既有保存链重开验证；未改动空间查询、环境/地图数据、Marker/Spawner、相机或战斗规则。
+- `VisualBaselineBoard` 与 `BattleVisualComparisonPanel` 已保存为默认 inactive；正式流程展示功能地面，四组比较 PlayMode 用例只在各自 fixture 内显式重新启用旧对象并关闭功能地面。
+- 直接 EditMode 保存重开和正式 Adventure→战斗→返回/领奖 PlayMode 用例均通过；完整 EditMode 中仅现存宽袖试验缺少 Blender 源文件的无关失败，完整 PlayMode 20/20 通过。详见 `开发管理/关中正式战场功能地面验证记录.txt`。
+- 本完成仅证明功能地面和比较隔离，不等于环境美术、正式角色接线或整体画面品质验收；`U-GZ-ART-BATTLEFIELD-01` 对本卡的具名前置投影保留，等待正式结果进入 master 后由既有维护流程处理。
