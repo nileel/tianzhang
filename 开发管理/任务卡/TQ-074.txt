@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-09-20：用户已解除本卡范围冻结；直接已完成前置已核验，按本卡唯一结果、模型协作及停止条件执行。",
+  "stateReason": "自动责任方确认阻塞：original_source_offsite_backup_unverified",
   "expectedPaths": [
     "docs/资源管理/美术资源登记册.md",
     "开发管理/首批真实资源版本闭环验证记录.txt",
