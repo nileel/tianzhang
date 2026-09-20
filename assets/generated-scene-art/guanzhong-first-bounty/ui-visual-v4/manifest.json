@@ -1,0 +1,152 @@
+{
+  "version": "town-ui-v4",
+  "date": "2026-09-20",
+  "task": "D-GZ-PRODUCT-UI-UX-01",
+  "baseCommit": "fd928b5d",
+  "mainObserved": "b6c94ff1",
+  "status": "delivered_for_visual_review",
+  "acceptedDirection": "direction-two; city title and exit share one component; future city management belongs to that component",
+  "formalUnityIntegration": false,
+  "terrainOwner": "../ui-visual-v3/battlefield.js (read-only reference)",
+  "validation": {
+    "static": [
+      "index.html: unique IDs, local assets, ARIA targets OK",
+      "components.html: unique IDs, local assets, ARIA targets OK",
+      "App ID references resolved",
+      "node --check app.js/components.js passed"
+    ],
+    "browser": [
+      "1920x1220 and 1280x860: town default and bounty visible; no horizontal overflow",
+      "City name and exit under one .city-context; bounty below top HUD",
+      "More menu opens, Escape closes, mutually exclusive with bounty",
+      "Backpack entry reports scope in review bar; market unavailable feedback works",
+      "Accept bounty -> city component exit -> WebGL battlefield -> move -> attack preview -> cancel",
+      "Demo victory -> return -> reward; claimed board cannot offer second claim",
+      "Component page rendered at 1280 and 1920; exit component feedback works",
+      "Browser error/warn log empty"
+    ],
+    "battleCompletionProof": "Victory state selected by review dropdown; no new full seven-hit combat run claimed",
+    "screenshots": [
+      {
+        "file": "city-bounty-1280.jpg",
+        "width": 1280,
+        "height": 860,
+        "format": "JPEG"
+      },
+      {
+        "file": "city-bounty-1920.jpg",
+        "width": 1920,
+        "height": 1220,
+        "format": "JPEG"
+      },
+      {
+        "file": "city-default-1280.jpg",
+        "width": 1280,
+        "height": 860,
+        "format": "JPEG"
+      },
+      {
+        "file": "city-default-1920.jpg",
+        "width": 1920,
+        "height": 1220,
+        "format": "JPEG"
+      },
+      {
+        "file": "city-more-1280.jpg",
+        "width": 1280,
+        "height": 860,
+        "format": "JPEG"
+      },
+      {
+        "file": "city-reward-1280.jpg",
+        "width": 1280,
+        "height": 860,
+        "format": "JPEG"
+      },
+      {
+        "file": "components-1920.jpg",
+        "width": 1905,
+        "height": 1248,
+        "format": "JPEG"
+      }
+    ],
+    "captureNote": "Full-page capture intermittently returned collapsed content; six town screenshots replaced with actual viewport captures and visually inspected. Native JPEG encoding preserved."
+  },
+  "files": [
+    {
+      "path": "app.js",
+      "bytes": 13168,
+      "sha256": "7cea81c9a8f3ea76110d1069ab9ac1b73f0268b6a78d9e8481ec8e51ae0714f3"
+    },
+    {
+      "path": "components.css",
+      "bytes": 1224,
+      "sha256": "8d1ac7ff1367ab9aba12cfcc93e1b1c2726099d4c0745d87ab465820b13359a2"
+    },
+    {
+      "path": "components.html",
+      "bytes": 6674,
+      "sha256": "8595b93e06789be3537355008a778c8f49849fa1978d7320fa71fff7aabd4b87"
+    },
+    {
+      "path": "components.js",
+      "bytes": 410,
+      "sha256": "5cde128cde4cc9f413a53242ef13bc9e94ccefd6c3d450efcfd3db797245ebc8"
+    },
+    {
+      "path": "index.html",
+      "bytes": 16326,
+      "sha256": "812dea51acde32952c0e7482a1081077548a72b075ce09e6b70636f42ba25de2"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5123,
+      "sha256": "70c4c0e723c489da4d78f5fb897ce333befdc62c64301e42b777840f3ae2c193"
+    },
+    {
+      "path": "screenshots/city-bounty-1280.jpg",
+      "bytes": 86154,
+      "sha256": "5ebf2ca735f9902dbc2f736a6eeb8116e7cb175da0eeffb3ec42400608a8a441"
+    },
+    {
+      "path": "screenshots/city-bounty-1920.jpg",
+      "bytes": 146489,
+      "sha256": "8c62300d17568080c8ceba2fa62225ddd99733e03b116f418fdf37a25d0e4070"
+    },
+    {
+      "path": "screenshots/city-default-1280.jpg",
+      "bytes": 67970,
+      "sha256": "990fcf1b2b7ba36b959654edb7ebc5ae1183e1ef28990dd8d800f40f8bb45c83"
+    },
+    {
+      "path": "screenshots/city-default-1920.jpg",
+      "bytes": 110355,
+      "sha256": "15a898c2d876125ec8bfa2e6ed223353ff148d4ec35072a2fa660919fe39215e"
+    },
+    {
+      "path": "screenshots/city-more-1280.jpg",
+      "bytes": 69266,
+      "sha256": "3ae8d78eb64b24b0c427123b07e0050de30ae3ca7f4d355696e8956734fa1100"
+    },
+    {
+      "path": "screenshots/city-reward-1280.jpg",
+      "bytes": 86564,
+      "sha256": "0b62e9cac15d417b1ce76cd21611df056542e3d6dd90a2001f7903bfeda309dc"
+    },
+    {
+      "path": "screenshots/components-1920.jpg",
+      "bytes": 36652,
+      "sha256": "9f1afe6c07a667d06c75cd8c57ee0d97c1c1e3364fd7db2a2874fafe3ac4aaec"
+    },
+    {
+      "path": "style.css",
+      "bytes": 6773,
+      "sha256": "ad9737f5a8a7212083695a01bd44497c315eaa24799274a9c5feff04313bffa3"
+    },
+    {
+      "path": "VISUAL-SPEC.md",
+      "bytes": 4186,
+      "sha256": "6357622c48ea7e48e50a99d0414c0bf44cf15334dfd2e9b3e5cf480c8d7a58f5"
+    }
+  ]
+}

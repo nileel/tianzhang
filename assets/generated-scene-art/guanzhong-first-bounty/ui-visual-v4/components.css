@@ -1,0 +1,17 @@
+body { background: #132632; }
+.component-heading { padding: 45px 4vw 25px; display: flex; justify-content: space-between; align-items: center; }
+.component-heading small, .sample-number { color: #a8c6b9; letter-spacing: 3px; font-size: 16px; }
+h1 { font: 46px var(--serif); letter-spacing: 4px; margin: 19px 0; }
+h2 { font: 30px var(--serif); margin: 22px 0 30px; letter-spacing: 2px; }
+p { color: #c3cfcb; font-size: 17px; line-height: 1.9; }
+a { color: var(--jade); text-decoration: none; }
+.component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px 4vw; }
+.sample { padding: 30px; border-top: 1px solid #a9b89b70; background: #1c3440; min-width: 0; }
+.city-context { position: relative; left: auto; top: auto; max-width: 100%; }
+.town-player { max-width: 100%; }
+.global-actions { width: max-content; max-width: 100%; }
+.state-samples { display: flex; flex-wrap: wrap; gap: 19px; }
+.state-samples button:hover, .state-samples button.selected { background: #416c62; border-color: #d2dbb5; }
+footer { padding: 5px 4vw 35px; display: flex; align-items: center; gap: 30px; }
+#component-status { margin-right: auto; }
+@media(max-width:1450px) { .component-grid { grid-template-columns: 1fr; } }
