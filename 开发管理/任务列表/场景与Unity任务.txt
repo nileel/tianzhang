@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-09-20 进度核查后用户授权解冻资源版本闭环与UI接入准备。TQ-074（AVM-03）用已存在的关中初始地块/石阶验证真实资源闭环，不再等待“首批资源产生”；D-GZ-UI-V6-CONTRACT-01基于已定稿v6先冻结正式接入合同。U-GZ-ART-UI-01已解除旧整屏方向的笼统阻塞，改等该合同及实际最终资源条件；正式角色、费用、反馈和最终实机验收仍按各自卡判断。
+
 - 2026-09-20 `U-GZ-ART-BATTLEFIELD-01` 已完成：批准Tripo地块成为正式Adventure六格共享Prefab，石阶仅为备用Prefab；原Builder保存重开、两个直接EditMode和正式战斗/回城/领奖/存读PlayMode通过。验收记录见 `开发管理/关中首场战场美术验收记录.txt`。保留v5青绿地表、青蓝岩壁与自然边缘，不代表整屏、角色/UI、其他地形、高差通行或最终整体品质通过；直接下游卡继续依其余前置维护。
 
 - 2026-09-20 `U-GZ-BATTLEFIELD-BASELINE-01` 已完成：正式 Adventure 以 `env_guanzhong_wild` 有向边端点生成六格基础功能地面，技术 Marker 保持原所有者，比较板/面板默认隐藏并由 Builder 保存；验证记录见 `开发管理/关中正式战场功能地面验证记录.txt`。这不是环境美术、正式角色或整体品质验收，相关门槛继续沿原任务推进。
@@ -31,9 +33,10 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| D-GZ-UI-V6-CONTRACT-01 | P1 | codex | 已排队 | — | UI v6正式Unity接入合同准备 | 开发管理/任务卡/D-GZ-UI-V6-CONTRACT-01.txt |
 | A-GZ-ART-LOOKDEV-01 | P1 | codex | 阻塞 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
-| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
+| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | D-GZ-UI-V6-CONTRACT-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
@@ -43,7 +46,7 @@
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
 | D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 冻结 | V-GZ-ART-SLICE-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |
-| AVM-03 / TQ-074 | P1 | Codex | 阻塞（首批真实资源） | — | 使用真实资源验证原始路径登记、LFS、干净工作区恢复与 Unity 构建闭环。 | — |
+| TQ-074 | P1 | codex | 已排队 | — | 首批真实资源版本闭环试运行（AVM-03） | 开发管理/任务卡/TQ-074.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01 | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | 苻渊 strict-round-02 四边面候选静态结构 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01 | P1 | codex | 冻结 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-STATIC-QA-01 | 苻渊 strict-round-02 四边面候选统一换绑动作 QA | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RIG-QA-01.txt |
@@ -76,14 +79,14 @@
 | U-CHAR-3D-FORMAL-01 | P1 | codex | 冻结 | A-CHAR-PORTRAIT-STYLE-01 | 正式 Adventure 3D 替换 | 开发管理/任务卡/U-CHAR-3D-FORMAL-01.txt |
 | U-CHAR-CREATION-VISUAL-01 | P1 | codex | 冻结 | U-CHAR-3D-FORMAL-01 | 完整首版创角外观批次 | 开发管理/任务卡/U-CHAR-CREATION-VISUAL-01.txt |
 | AVM-04 | P2 | Codex | 按季度或阈值触发 | — | 只基于 LFS 容量、拉取耗时、备份可靠性或不可合并资源冲突的实证评估 UVCS。 | — |
-| U-MECH-02B / TQ-028 | P2 | DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
+| U-MECH-02B / TQ-028 | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（统一状态/debuff 流程） | — | 玄感清除链/玄同状态 Unity 回归。 | — |
 | U-FPD-UI-01 | P2 | Codex | 阻塞（U-FPD-UI-01A、U-FPD-UI-01B） | — | 筑基、紫府与唯一丹相界面父任务；不直接执行。 | — |
-| U-FPD-UI-01A | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
-| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-FPD-UI-01A） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
+| U-FPD-UI-01A | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 道基与紫府状态界面，只显示四阶段、容量、府胚／建成和镇府神通。 | — |
+| U-FPD-UI-01B | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（U-FPD-UI-01A） | — | 丹枢／丹相主辅与不可逆确认界面。 | — |
 | U-JD-RULE-01 | P2 | Codex | 阻塞（U-JD-RULE-01A、U-JD-RULE-01B、U-JD-RULE-01C） | — | 金丹 Unity 规则父任务；不直接执行。 | — |
-| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
-| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
-| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
+| U-JD-RULE-01A | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（D-FPD-MIGRATE-01） | — | 金丹装配、全部紫府输入、唯一丹相与兼容运行时。 | — |
+| U-JD-RULE-01B | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01A） | — | 冲突可视化与同结果 QTE／跳过输入。 | — |
+| U-JD-RULE-01C | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（U-JD-RULE-01B） | — | 跨阶挑战、真实失位与账本结果反馈。 | — |
 
 ## 执行边界
 
@@ -102,7 +105,7 @@
 - Unity 视觉链 `U-ARCH-REBUILD-01H -> U-URP-PREFLIGHT-01 -> U-URP-MIGRATE-01 -> U-URP-VISUAL-BASELINE-01 -> U-CHAR-3D-PROTO-01` 已全部完成；当前冻结结果是 URP 17.3.0、唯一 Universal Renderer、四个正式场景、低模 3D 技术视觉与六向几何占位测试台，不包含正式角色或关中最终装修。
 - 真实战场角色现行方向是正式静态3D；2D保持独立非阻塞实验且本轮不主动扩展。角色技术链复用 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01`，完整展示交付归 `A-GZ-PRESENT-01`；苻渊 2D／静态 3D 样例只作隔离证据，不能直接接入正式单位。旧统一骨架玩家／石甲兽样例、旧动画 3D 正式替换 `U-CHAR-3D-FORMAL-01` 与完整创角批次继续冻结，不得借新方向解冻或复用。
 - `A-CHAR-PORTRAIT-STYLE-01` 与标准接口模块化肖像链保持冻结；首包只裁切批准完整男主母版，不恢复立绘组合。现有立绘的姿势不用于战场角色。`D-CHAR-APPEARANCE-01` 保留稳定 ID 与存档职责，后续战场外观生产依赖 `U-CHAR-BATTLE-PRESENTATION-MODULAR-01` 的载体中立合同与正式 Profile 映射，不再预设为 2D 合同。
-- 首批真实资源产生时触发 `AVM-03 / TQ-074`；原始工程与生成记录进入 `assets/source/characters/`，通过闸门的 Unity 资源才进入 `src/Assets/Art/Characters/`。
+- 首批真实资源已产生，AVM-03以唯一任务ID TQ-074进入ready；本轮验证固定关中初始地块/石阶，原始输入位于assets/source/environments/guanzhong-first-bounty/initial-v1，正式资源位于src/Assets/Art/Environments/Guanzhong。角色批次继续沿其原来源边界，不借版本验证生产新资产。
 
 ## 筑基、紫府与丹相后续 Unity 任务卡
 

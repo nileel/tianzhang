@@ -1,0 +1,37 @@
+# DeepSeek V4.1 Flash 迁移验证记录
+
+核验日期：2026-09-20（Asia/Hong_Kong）
+修改与核验方：Codex
+
+## 结论与依据
+
+- 默认执行模型改为 DeepSeek V4.1 Flash，准确 API ID 为 deepseek-flash；owner 仍为 deepseek，生产入口仍为固定 Windows wrapper。
+- 官方 2026-09-10 更新确认原生视觉输入，并公布 Terminal-Bench 2.1 为90.6、NL2Repo-Bench为65.4；8月13日Pro对应公布值为87.9、61.5。这里只作为分派参考，不是本项目复现或所有任务均胜出的结论。
+- 更新日志明确旧Flash别名只作临时兼容、Pro服务继续提供；不依赖旧Pro自动切换或旧Flash别名。
+- 官方事实源：https://api-docs.deepseek.com/updates/ 。Anthropic接口与图像输入说明：https://api-docs.deepseek.com/guides/anthropic_api/ 。
+
+## 本机实际路由
+
+- Claude CLI通过本机127.0.0.1:15721的CC Switch代理调用DeepSeek Anthropic端点。
+- 起初活跃配置为DeepSeek-Pro，显式deepseek-flash请求仍被代理改成deepseek-v4-pro；只改项目脚本不足以迁移。
+- 用户手动切换到DeepSeek后，代理仍保留旧deepseek-v4-flash及部分带[1M]的预设。文本canary可以成功，但当时图片Read探针返回Unsupported Image；不能据文本成功宣称图像链路可用。
+- 本轮经CC Switch编辑界面把默认兜底和Haiku/Sonnet/Opus/Fable实际模型统一为裸deepseek-flash并保存。旧Pro供应商仍保留以便人工回退；没有改认证值或端点。
+- 只读数据库白名单复核：活跃Claude供应商DeepSeek的上述五个模型字段全部为deepseek-flash。
+- 2026-09-20 22:03:16～22:03:17本机代理日志：request_model=deepseek-flash、上游model=deepseek-flash、HTTP200；后台claude-haiku-4-5请求也映射为deepseek-flash/HTTP200。该证据来自代理日志，不以模型自报替代路由核验。
+- 复核时仅读取模型、供应商名、时间与状态码，不输出认证值。日志排序按created_at数值转换，避免混合SQLite存储类型导致旧日志排在前面。
+
+## 实际探针与代码验证
+
+- 新路由下运行tools/invoke-deepseek-responsibility.ps1 -Action Canary：status=verified，identity=DeepSeek V4.1 Flash，model=deepseek-flash，pwshMajor=7，pwshProbe=TZG_DEEPSEEK_PWSH_CANARY，Git可用。会话为2d3351de-a755-4b3e-986a-bc0757d69287；wrapper核对前后HEAD及Git状态不变。
+- 图像探针为仓库外生成的320×160白底PNG，左蓝圆、右橙三角；提示只给图片路径，限制CLI仅用Read读取该图，不提示正确答案。改映射后实际返回“The left object is a solid blue circle, and the right object is a solid orange triangle.”，subtype=success、is_error=false。
+- 上述图片探针证明当前CLI/网关/模型能完成简单视觉输入；未替代正式Unity、浏览器、场景或最终美术验收，也未据此判断复杂画面质量。
+- tools/test-hourly-owner-adapter.ps1与tools/test-invoke-deepseek-responsibility.ps1通过；后者新增旧Pro身份响应必须失败的负例。
+- tools/check-automation-workflow.ps1通过。任务解冻另经schema2卡/队列一致性检查，ready共11项。
+
+## 工作范围调整
+
+- 文本、代码、数据及确定性验证的原有职责保留；增加已冻结规格的UI/场景实现、资源接线、布局修复和实际截图中的客观问题诊断。
+- 每项执行仍须冻结所有者、完整路径、停止条件和验收，并核对实际可用的Unity/浏览器等工具；本次图片探针不代表所有会话都具备这些工具。
+- 开放式产品/美术语义、内容解冻、费用授权、任务编排、正式集成、最终视觉体验签收及独立复审仍由Codex/用户负责；DeepSeek不自审。
+- 不按模型升级批量改写既有owner/route。本轮解冻卡已逐项补齐模型协作：DeepSeek内容执行用Flash4.1后交Codex复审；有界工程查证按需用Sol/high，关键语义冲突按需用Astra/high，不作固定串行加层。
+- 小时automation的薄触发器模型、时刻、通知与暂停状态均保留；本轮核验两个写入入口仍为PAUSED。任务ready不表示已启动自动执行。

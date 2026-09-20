@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-FPD-NAME-01",
+  "title": "道基四阶段正式名称确认",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "C-FPD-NAME-01A"
+  ],
+  "stateReason": "2026-09-20：内容/准备授权已解除；仍等待 C-FPD-NAME-01A 的真实结果，不能以解冻替代前置完成。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-FPD-NAME-01.txt",
+    "开发管理/任务归档/C-FPD-NAME-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-FPD-NAME-01 · 道基四阶段正式名称确认
+
+## 来源与当前边界
+
+- 2026-09-20 用户解冻命名范围；本轮完整分离候选起草/复审与用户最终确认。候选叶子为 C-FPD-NAME-01A，本父项不承载起草或事实源迁移。
+
+## 必查范围
+
+- C-FPD-NAME-01A 的完成归档与候选文件；docs/基础设定/境界特性.txt、修行境界.txt 中四阶段现行约束。
+- 开发管理/状态与建议维护规则.txt 的任务状态与队列合同。
+
+## 实施范围
+
+- 候选叶子通过独立复审后，向用户展示具体候选与推荐理由，本卡转 pending_decision 或 waiting_reply，记录实际问题和确认状态。
+- 只有用户明确选定一组后才记录最终四名及确认依据、归档本卡；之后由独立事实源同步切片处理正式文档，不在本卡直接扩大写入范围。
+
+## 禁止项
+
+- 不把本轮解冻理解为名称已确认；不让自动执行者凭推荐项或等待时长代替用户选定；不重做候选或修改正式机制。
+
+## 模型协作
+
+- 简单管理收口，主责沿用 Codex 入口单模型；检查已审核产物与既有条件，不重复调用辅助。未具备叶子事实时不预判业务结论；临近 ready 核对实际验证能力。
+
+## 验证
+
+- 用户选择与已复审四阶段候选逐项一致，确认记录可追溯；任务卡/队列/backlog、文本与 whitespace 检查；不跑数值和运行时。
+
+## 完成条件
+
+- C-FPD-NAME-01A 已通过，用户明确确认一组四阶段正式名且记录落盘；候选通过或无人回复均不能关闭。
+
+## 停止条件
+
+- 候选未通过复审、用户未确认，或选择改变阶段机制/容量/数值时保持非 ready，不猜选。

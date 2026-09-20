@@ -1,0 +1,64 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-JD-LORE-MIGRATE-01",
+  "title": "旧金丹叙事语义迁移跨类型收口",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "C-JD-LORE-MIGRATE-01A",
+    "C-JD-LORE-MIGRATE-01B",
+    "C-JD-LORE-MIGRATE-01C"
+  ],
+  "stateReason": "2026-09-20：内容/准备授权已解除；仍等待 C-JD-LORE-MIGRATE-01A、C-JD-LORE-MIGRATE-01B、C-JD-LORE-MIGRATE-01C 的真实结果，不能以解冻替代前置完成。",
+  "expectedPaths": [
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt",
+    "开发管理/任务归档/C-JD-LORE-MIGRATE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-JD-LORE-MIGRATE-01 · 旧金丹叙事语义迁移跨类型收口
+
+## 来源与当前边界
+
+- 2026-09-20 用户解冻三批迁移，本父项只在 A/B/C 全部完成后统一复核，不领取叶子业务。
+
+## 必查范围
+
+- 三叶子归档、七份L2实际差异、养成/剧情L1及现行道路/效果/装配/自辟元婴规则。
+
+## 实施范围
+
+- 只核对三批跨类型语义一致和实际验收；发现缺口返回对应叶子，不跨批补写业务。
+
+## 禁止项
+
+- 不扩大七文件范围、不复审已联合通过的共享历史文件、不生产新规则/位置/数值。
+
+## 模型协作
+
+- 临近ready据三批实际差异评估；通常为确定性收口，Codex入口单模型即可，无需额外辅助。不能预填尚未产出的结论。
+
+## 验证
+
+- 已完成叶子及逐项证据核对，管理文本、任务投影和whitespace检查；无输入变化不重复数值/运行时测试。
+
+## 完成条件
+
+- A/B/C全部完成，跨类型无结构权限冲突后归档父项；父项无业务修补diff。
+
+## 停止条件
+
+- 任一叶子未完成或跨类型语义仍冲突时保持blocked并精确返回对应叶子。

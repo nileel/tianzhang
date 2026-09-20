@@ -4,6 +4,7 @@
 
 ## 已确认架构
 
+- 2026-09-20：DeepSeek默认模型迁移为DeepSeek V4.1 Flash（deepseek-flash）；adapter/wrapper、身份断言和相关测试已同步。CC Switch五个实际模型映射已显式改为deepseek-flash，代理上游日志HTTP200、真实文本/PowerShell canary及简单图片Read探针通过；来源、证据与能力边界见 开发管理/DeepSeek-V4.1-Flash迁移验证记录.txt。两个小时写入automation继续保持实时配置中的PAUSED，不因本轮11项任务ready自动恢复。
 - 两个独立写入入口为 `codex-hourly-worker` 与 `deepseek-hourly-trigger`；前者只处理 Codex 路由，后者只调用固定 DeepSeek Windows 入口。每日简报只读。
 - 权威设计为 `docs/superpowers/specs/2026-08-01-independent-codex-deepseek-hourly-worktree-design.md`。
 - 旧 controller v2、schema 3 长业务租约、通用 external wrapper 生产入口、机器任务注册表、manifest 和中央状态机均退出活动路径。

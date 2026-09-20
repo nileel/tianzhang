@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-FPD-SPELL-01",
+  "title": "古修术法升格迁移跨批一致性收口",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "C-FPD-SPELL-01A",
+    "C-FPD-SPELL-01B",
+    "C-FPD-SPELL-01C",
+    "C-FPD-SPELL-01D"
+  ],
+  "stateReason": "2026-09-20：内容/准备授权已解除；仍等待 C-FPD-SPELL-01A、C-FPD-SPELL-01B、C-FPD-SPELL-01C、C-FPD-SPELL-01D 的真实结果，不能以解冻替代前置完成。",
+  "expectedPaths": [
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-FPD-SPELL-01.txt",
+    "开发管理/任务归档/C-FPD-SPELL-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-FPD-SPELL-01 · 古修术法升格迁移跨批一致性收口
+
+## 来源与当前边界
+
+- 2026-09-20 已解除四批内容冻结并一次建立全部既定叶子；本卡为汇总父项，不领取任一叶子的业务实现。
+
+## 必查范围
+
+- C-FPD-SPELL-01A～01D 完成归档与实际差异；本批11术法及养成事实速查；现行术法模板/唯一丹相规则。
+
+## 实施范围
+
+- 四批均经Codex复审后，统一核对神通实例、合法府属、主辅接口、唯一丹相及迁移线索；只有一致时关闭父项。
+- 发现缺陷返回明确叶子及原句，不在父项重新跨11文件修文。
+
+## 禁止项
+
+- 不生产新内容、不重做已通过验证，不把父项当可重复领取的实现任务。
+
+## 模型协作
+
+- 临近 ready 根据四批实际差异复核；通常为确定性一致性检查，Codex入口默认单模型，无需辅助；不预判未产生的结果。
+
+## 验证
+
+- 一次跨批语义对照与实际审核状态核验；管理文本、任务投影、whitespace检查；业务输入不变不重跑BattleSim/Unity。
+
+## 完成条件
+
+- 四叶子完成且已独立复审，跨批无实例/丹相/府属冲突；收口后父项归档。
+
+## 停止条件
+
+- 叶子未完成或出现语义冲突时保持blocked并回到对应叶子，不新增父项修补职责。

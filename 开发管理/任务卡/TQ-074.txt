@@ -1,0 +1,104 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "TQ-074",
+  "title": "首批真实资源版本闭环试运行（AVM-03）",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-20：用户已解除本卡范围冻结；直接已完成前置已核验，按本卡唯一结果、模型协作及停止条件执行。",
+  "expectedPaths": [
+    "docs/资源管理/美术资源登记册.md",
+    "开发管理/首批真实资源版本闭环验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/TQ-074.txt",
+    "开发管理/任务归档/TQ-074.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/environments/guanzhong-first-bounty/initial-v1/terrain-source.zip",
+      "bytes": 7977204,
+      "sha256": "67238be87531bf2766886ba14824d6ec016b446c0b943dda3373dceda4256b69"
+    },
+    {
+      "path": "assets/source/environments/guanzhong-first-bounty/initial-v1/stairs-source.zip",
+      "bytes": 6941428,
+      "sha256": "872d52998fd2404e080845b143659014986dfc45d4c3a94c841a65cf92117aab"
+    },
+    {
+      "path": "assets/source/environments/guanzhong-first-bounty/initial-v1/manifest.json",
+      "bytes": 2450,
+      "sha256": "c13790cd85ac785a28db9fbce50eb2248fa15a8be7b7a2661148810e29104a5b"
+    },
+    {
+      "path": "assets/source/environments/guanzhong-first-bounty/initial-v1/normalization.json",
+      "bytes": 649,
+      "sha256": "2d24399487a4177a25f9ffa81dc9aa2e50190fe0d70b2f68c426c8ca73e21cec"
+    },
+    {
+      "path": "assets/source/environments/guanzhong-first-bounty/initial-v1/fbx-coordinate-proof.json",
+      "bytes": 7929,
+      "sha256": "083edbf8ab6d584b599406f91733894452270988a96da557746c348ed47c61ba"
+    }
+  ]
+}
+---TASK-BODY---
+# TQ-074 · 首批真实资源版本闭环试运行（AVM-03）
+
+## 来源与当前边界
+
+- 2026-09-20 用户授权解冻上一轮进度核查列出的资源版本闭环任务。AVM-03 使用既有稳定 ID TQ-074，不另立同义卡。
+- U-GZ-ART-BATTLEFIELD-01 已完成；本批固定为关中 initial-v1 的地块与备用石阶。原包、哈希、LFS 正式资源已存在，旧“首批真实资源尚未产生”阻塞失效。
+- 唯一结果是本批原包→正式资源→干净恢复→Unity 构建的可复现验证记录；不重做资源或宣称其他素材批次已可恢复。
+
+## 必查范围
+
+- docs/资源管理/美术资源版本管理规范.md#单批资源流程、原始素材备份；docs/superpowers/specs/2026-07-12-asset-version-management-design.md#资源登记与备份、自动化与失败处理、验收标准；docs/资源管理/美术资源登记册.md。
+- 开发管理/任务归档/U-GZ-ART-BATTLEFIELD-01.txt#验证记录；开发管理/关中首场战场美术验收记录.txt#来源、导入与资源、用户反馈后的视觉返修。
+- metadata.automationInputs 的五份只读输入；src/Assets/Art/Environments/Guanzhong/ 下 Tile、Stair 的 FBX、JPEG、Prefab、材质及 meta；.gitattributes、.gitignore；tools/check-asset-versioning.ps1。
+- src/ProjectSettings/EditorBuildSettings.asset 的正式场景；src/Assets/Scripts/Editor/SceneArchitectureValidator.cs::ValidateForBatchMode；本机当前 Unity Player 构建可用入口。
+
+## 实施范围
+
+- 按冻结输入校验原包与正式导出的逐项 SHA-256、路径和对应提交；只为本批补资源登记，既有批次行保持原样。
+- 在可精确清理的独立临时恢复目录，从可追溯 Git 提交恢复代码、普通 Git 元数据及 LFS 内容，证明未借用原工作树 Library、导入缓存或未提交文件；记录源提交、命令、环境和恢复前后状态。
+- 用已确认的本机 Unity 构建入口验证正式场景构建。临时日志、构建输出及只读辅助脚本放任务临时目录，不加入 src 或另建持久构建系统。
+- 核对原包异地备份证据；若未验证，准确标记“原始工程异地恢复未验证”，本卡不得宣称完整闭环。缺少外部证据时保留已完成验证，按既有 blocked 合同记录实际剩余条件。
+- automationInputs 仅为只读物化；手动执行也须从主工作区逐份核验并物化这些相同文件，不能因 linked worktree 不含 assets/source 就换来源。
+
+## 禁止项
+
+- 不生成/修改模型、贴图、Prefab、场景、.gitattributes、构建或自动化实现；不覆盖源包，不上传未知外部目的地，不更换 Git/LFS/备份体系。
+- 不以本地缓存、空资源、编译通过或 PlayMode 单测替代干净恢复和 Player 构建；不把未知备份写成已完成。
+
+## 模型协作
+
+- 复杂度：复杂诊断；原包忽略路径、LFS 指针、恢复环境与 Unity 构建跨边界，已有正式导入证据可复用。
+- 主模型沿用 Codex 入口（小时入口当前 gpt-5.6-terra）；仅当恢复与原资源哈希/导入结果不一致时，用 gpt-5.6-sol / high 对冻结 manifest、LFS 属性和构建日志作独立只读根因核查，返回差异及最小复现，不写资源或配置。
+- 写前核对实际工具能力，按 AI协作规则 记录触发、请求模型/强度、会话标识及可核实结果；未调用不得记作已验证，工具缺失不绕过原停止条件。
+
+## 验证
+
+- git check-attr filter -- <本批四份二进制及普通文本资源>；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1；干净恢复与实际 Player 构建证据。
+- 对源 ZIP、恢复的 FBX/basecolor、GUID/Prefab 引用及登记映射逐项核验；异地备份状态须可追溯。
+- 只修改登记与记录时不重跑 BattleSim；docs 变化运行 tools/check-data-chain.ps1，文本/任务投影与路径 whitespace 检查按现行规则执行。
+
+## 完成条件
+
+- 本批登记、原包与导出身份、干净恢复及 Unity Player 构建均有实际成功证据；规范要求的本批备份可验证后才关闭完整闭环。
+- 外部备份、构建入口或恢复证据不足时转 blocked 并保留真实缺口，不能以一份带限制的报告冒充闭环完成。
+
+## 停止条件
+
+- 源哈希不符、LFS 对象缺失、需要修改资源/生产代码/共享流程、无可用构建入口，或备份无法验证时停止相应闭环并报告，不叠加重试/兼容路径。

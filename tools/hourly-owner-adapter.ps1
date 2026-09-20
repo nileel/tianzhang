@@ -40,8 +40,8 @@ function Get-HourlyOwnerAdapter {
     allowedRoutes = @('external_execute')
     sessionKind = 'claude_cli'
     candidateScript = Join-Path $ToolsRoot 'invoke-deepseek-responsibility.ps1'
-    model = 'deepseek-v4-pro'
-    identity = 'DeepSeek V4 Pro 0813'
+    model = 'deepseek-flash'
+    identity = 'DeepSeek V4.1 Flash'
     formalMode = 'external_pending_review'
     successPostcondition = 'ExternalPendingReview'
     completedStatus = 'pending_review'

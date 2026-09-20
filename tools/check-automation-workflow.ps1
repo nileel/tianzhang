@@ -104,7 +104,7 @@ Assert-Contains $taskState 'task state transition' @('RequeueReview', 'review_re
 $taskStateDigestMatch = [regex]::Match($taskState, '(?s)function Get-TaskContextDigest\s*\{(?<body>.*?)\r?\n\}')
 Assert-Contract $taskStateDigestMatch.Success 'task state transition is missing Get-TaskContextDigest'
 Assert-Contains $taskStateDigestMatch.Groups['body'].Value 'task state context digest' @('automationInputs =', 'path =', 'bytes =', 'sha256 =', 'sourceBacklog =')
-Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-v4-pro', 'Test-HourlyOwnerModelVerified')
+Assert-Contains $adapter 'owner adapter' @('codex_execute', 'codex_review', 'queue_maintenance', 'external_execute', 'deepseek-flash', 'DeepSeek V4.1 Flash', 'Test-HourlyOwnerModelVerified')
 Assert-DoesNotContain $adapter 'owner adapter' @('git ', 'hourly-automation-lease.ps1', 'Enter-TzgIntegrationLock', 'CompleteRun')
 $codexCandidate = Read-Utf8 (Join-Path $root 'tools/invoke-codex-candidate.ps1')
 $deepseekCandidate = Read-Utf8 (Join-Path $root 'tools/invoke-deepseek-responsibility.ps1')

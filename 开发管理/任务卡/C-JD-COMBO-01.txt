@@ -1,0 +1,67 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-JD-COMBO-01",
+  "title": "金丹组合档案首批生产",
+  "priority": "P2",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-JD-COMBO-SCOPE-01"
+  ],
+  "stateReason": "2026-09-20：内容/准备授权已解除；仍等待 D-JD-COMBO-SCOPE-01 的真实结果，不能以解冻替代前置完成。",
+  "expectedPaths": [
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-JD-COMBO-01.txt",
+    "开发管理/任务归档/C-JD-COMBO-01.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作归档/C-JD-COMBO-01-交接归档.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-JD-COMBO-01 · 金丹组合档案首批生产
+
+## 来源与当前边界
+
+- 2026-09-20 内容冻结已解除；仍须先由 D-JD-COMBO-SCOPE-01 冻结首批对象/数量/用途/字面量路径。D-JD-SCHEMA、N-JD-RULE完成不等于生产清单已批准。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md 在前置完成后读取已批准版本；现行金丹装配冲突规则的配方/权限/失败关闭条款。
+
+## 实施范围
+
+- 当前仅登记已解冻的后续生产责任；前置合同确认后按其字面量对象逐份产出，每份独立文件，DeepSeek执行、Codex独立复审。
+- 未冻结业务expectedPaths前不得ready；若合同识别多个结果，必须在前置规划中一次建立全部叶子，本卡只汇总。
+
+## 禁止项
+
+- 不因content已解冻就任意选择数量/对象，不能使用规则例子代替生产许可，不写未批准配方或改底层规则。
+
+## 模型协作
+
+- 预定主责 DeepSeek V4.1 Flash（deepseek-flash）+ Codex独立复审；具体复杂度与辅助工作面须在前置冻结真实生产范围时补齐。
+- 如存在跨道路权限关键冲突，按规则用 gpt-6-astra / high 只读核查；尚缺业务输入时不提前调用或虚构已验证组合。
+
+## 验证
+
+- 待合同完成后将逐对象验收和业务检查展开为可运行入口；目前只校验blocked投影及具名前置真实存在。
+
+## 完成条件
+
+- 所有批准组合档案按冻结范围完成并通过Codex独立复审；范围设计通过不关闭生产卡。
+
+## 停止条件
+
+- 业务对象/路径/验收未冻结或必须突破结构/数值规则时保持blocked，不能消费此卡直接生产。
