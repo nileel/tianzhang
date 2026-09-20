@@ -6,6 +6,7 @@
 
 - 2026-09-20 用户明确解冻本轮列出的 C-FPD-NAME-01（新增候选叶子01A）、C-FPD-SPELL-01及01A～01D、C-FPD-SHENTONG-01、C-JD-COMBO-01（新增范围合同前置D-JD-COMBO-SCOPE-01）、C-JD-LORE-MIGRATE-01及01A～01C。可原子执行的叶子已建立 schema 2 卡并入队；名称最终确认、组合范围确认和守真升格结果等真实前置继续保留。其他内容冻结不变；下方早期日期的授权边界是历史事实，当前以本条和活跃卡为准。
 - 本批 DeepSeek 执行采用 DeepSeek V4.1 Flash（deepseek-flash），仍由 Codex 独立复审；各卡已按实际风险填写模型协作，关键语义冲突才调用 Astra/high 只读辅助。
+- 2026-09-20 用户随后明确要求本会话实施并提交：C-FPD-SHENTONG-01由Codex完成文档迁移，转codex_review待独立复审；C-JD-LORE-MIGRATE-01C仅卫长庚、祝融烈及对应L1已落稿，谢凌沧、姚观寂尚未完成整卡核查，保持codex_execute/ready。两项均未完成归档，详细证据见同一卡正文。
 
 - 2026-09-12 用户批准关中首个可展示流程美术重排；A-GZ-PRESENT-01改为汇总父项，解除冻结四足动画依赖。首包只沿用固定男主、石甲兽及既有关中内容，新增五张叶子列在场景与Unity分线；其余本文件内容状态不变。
 
@@ -45,7 +46,7 @@
 | C-FPD-SPELL-01B | P2 | deepseek | 已排队 | — | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
 | C-FPD-SPELL-01C | P2 | deepseek | 已排队 | — | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
 | C-FPD-SPELL-01D | P2 | deepseek | 已排队 | — | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
-| C-FPD-SHENTONG-01 | P2 | deepseek | 已排队 | — | 宿慧轮回血脉神通与唯一实例迁移 | 开发管理/任务卡/C-FPD-SHENTONG-01.txt |
+| C-FPD-SHENTONG-01 | P2 | codex | 已排队 | — | 宿慧轮回血脉神通与唯一实例迁移 | 开发管理/任务卡/C-FPD-SHENTONG-01.txt |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
 | C-JD-COMBO-01 | P2 | deepseek | 阻塞 | D-JD-COMBO-SCOPE-01 | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |
 | C-JD-LORE-MIGRATE-01 | P2 | codex | 阻塞 | C-JD-LORE-MIGRATE-01A、C-JD-LORE-MIGRATE-01B、C-JD-LORE-MIGRATE-01C | 旧金丹叙事语义迁移跨类型收口 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt |
@@ -198,7 +199,7 @@
 
 ### C-FPD-SHENTONG-01 · 宿慧轮回迁移
 
-- 依赖与状态：C-FPD-MANSION-01、N-FPD-MANSION-01已完成，2026-09-20内容冻结已解除并建立ready卡。
+- 依赖与状态：C-FPD-MANSION-01、N-FPD-MANSION-01已完成；2026-09-20用户授权Codex完成本轮文档迁移，现为codex_review/codex/ready，待独立复审后才可归档。
 - 预期路径：`docs/角色养成/神通/太虚观/宿慧轮回.txt`。
 - 交付：按现行血脉来源删除双道基、品质倍率与额外本命槽，明确形态、平铺效果、按需强化、唯一实例；来源紫府不适用，不占镇府名额，默认不进入丹相主辅。
 - 验证：通过神通规范；不以统一等级、经验条或道基品级决定最终强度。

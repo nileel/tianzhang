@@ -11,7 +11,7 @@
 | C-FPD-SPELL-01A | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
 | C-FPD-SPELL-01B | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
 | C-FPD-SPELL-01D | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
-| C-FPD-SHENTONG-01 | external_execute | deepseek | P2 | content | migration | 宿慧轮回血脉神通与唯一实例迁移 | 开发管理/任务卡/C-FPD-SHENTONG-01.txt |
+| C-FPD-SHENTONG-01 | codex_review | codex | P2 | content | verification | 宿慧轮回血脉神通与唯一实例迁移 | 开发管理/任务卡/C-FPD-SHENTONG-01.txt |
 | D-JD-COMBO-SCOPE-01 | codex_execute | codex | P2 | content | design | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
 | C-JD-LORE-MIGRATE-01A | codex_execute | codex | P2 | content | migration | 两部功法旧金丹语义重判 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01A.txt |
 | C-JD-LORE-MIGRATE-01C | codex_execute | codex | P2 | content | migration | 四名NPC旧金丹位格语义重判 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01C.txt |
