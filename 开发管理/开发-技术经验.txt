@@ -46,6 +46,17 @@
 - **Blender MCP FBX 导出上下文（2026-08-28，A-BLENDER-MCP-FBX-CONTEXT-01）**：Blender 5.2 `io_scene_fbx/export_fbx_bin.py` 的 `use_selection=true` 分支会读取 `context.selected_objects`，不能用于该 MCP 导出上下文；已知失败不得重试。当前 5.2 false 分支实际读取 `context.view_layer.objects`（不是旧说明中的 `context.scene.objects`）。唯一导出前必须把当前活动场景／View Layer 精确限制为一个 Empty root 和一个静态 Mesh，确认无 Armature、Action、Shape Key、脚本或额外对象，再固定 `use_selection=false`、`global_scale=1`、`apply_unit_scale=true`、`FBX_SCALE_NONE`、`axis_forward=Z`、`axis_up=Y`、`use_space_transform=false`、`bake_space_transform=false`、三角化、`bake_anim=false`、`path_mode=COPY`、`embed_textures=true`。该合同只证明一份任务专用临时 FBX 可由 Blender 5.2 factory-empty 回读；不证明美术质量、贴图精确嵌入或 Unity 表现，正式资产仍须独立一次性生产与 QA。
 - **角色立绘生成工作流**：生成或整理角色立绘时，先读 `assets/generated-character-art/README.md`；PC 人物介绍与角色资料的当前统一入口是 `assets/generated-character-art/profile-wide/prompts.md`，无字概念原版在 `no-title/prompts.md`，透明全身母版在 `dialogue-transparent/prompts.md`，静态合成预览在 `titled/prompts.md`。16:9 只约束人物介绍 UI、背景、FX 和静态预览，不横向拉伸透明人物母版；人物介绍、对话半身和头像默认裁切同一 RGBA 全身图。透明版先用 image2 生成纯绿幕源图，再本地抠图并验四角 alpha；姓名、道号与印章必须独立分层并逐字验收，复杂汉字优先从已验字样张提取或使用已确认授权的正确字体，不依赖 AI 重写。
 
+## UI 统一复用经验
+
+> 2026-09-20：用户要求保留本轮 UI 统一经验。依据已确认并合入 master 的 v6 原型，提交 `aeb36b3d493748f19b8b6da88125b9a92b45de5c`；适用范围为 UI 设计与原型验证，正式 Unity 接入仍须核对当时运行时所有者和实际资源表现。
+
+- **先共用结构，再替换皮肤**：普通全屏、大窗、小窗共用 header/body/footer 骨架，只变尺寸与内容；列表、按钮共用模板。内容与状态、结构、尺寸与交互规则、皮肤资源分开，避免每个页面复制一套底图和样式。
+- **资源按用途提供稳定槽位**：面板深底／纸面、按钮普通／悬停／选中是共用资源槽，图、色、字体从统一皮肤入口配置；页面不写具体美术路径。背景不烘焙文字、图标或数值，九宫格的源切片与显示边框宽度分别记录。尺寸变体和列表行不另产同用途图片。
+- **用原位换肤证明复用**：保留同一份页面和已打开窗口，只替换皮肤资源与配置；检查结构、窗口开闭和滚动位置不变，背景、按钮、颜色与字体确实同步变化。v6 的全屏／大窗／小窗 HTML 前后相同，长文 scrollTop=268 保持，证据含浏览器记录和前后截图。仅有资源清单或两张独立静态图不足以证明此能力。
+- **组合状态与内容边界一起验**：选中不能被普通 hover 覆盖，禁用不能因 hover 恢复可用表现；键盘焦点可见，禁用原因可读。验证长名称、长正文、空列表、取消／确认、Esc 和焦点返回；正文内部滚动，标题与操作区保持可达。v6 已覆盖 1920 与 1280 宽，更小尺寸未验收。
+- **专用布局保留明确例外**：行动轴、世界标签、肖像构图等可有专用布局，普通面板、按钮状态和文字配置仍应复用。压缩战斗信息时保留“当前行动者／查看目标／自身预计下次位置”的区别，姓名和 CT 可按需显示。原型验证不要求扩建完整 UI 框架，也不能据此宣称正式 Unity 或全游戏 UI 已完成。
+- **后续任务从已接受基线开始**：先读 `assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/REUSE-SPEC.md` 与 `ui-kit/RESOURCE-MANIFEST.json`；验证依据为同目录 `VALIDATION.md`、`browser-evidence.json` 和截图 04/05、07/08。v5 保留；绛紫包仅用于换肤验证，最终切图和字体仍待批准。
+
 ## Unity 开发经验
 
 - **先决定战斗框架再写功能**：当前项目目标是 CTB 战棋。若代码使用严格交替回合制，必须明确是临时原型还是正式改设计；不要让 UI 显示 CTB、底层却按交替回合跑。
