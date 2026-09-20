@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-20",
+  "fullSwap": {
+    "before": "314e29949519432ba0dbcb2ca7b5ba9a69dd5fb4dac50f8e3b5b9cd5b666aa27",
+    "after": "314e29949519432ba0dbcb2ca7b5ba9a69dd5fb4dac50f8e3b5b9cd5b666aa27",
+    "unchanged": true
+  },
+  "openWindowSwap": {
+    "before": "30dc14ea64bb02e4bf0c2e65609f44879f1403ac8055440345ebea8d34ad4b0b",
+    "after": "30dc14ea64bb02e4bf0c2e65609f44879f1403ac8055440345ebea8d34ad4b0b",
+    "unchanged": true,
+    "open": [
+      "large-dialog",
+      "small-dialog"
+    ],
+    "scrollTop": 268
+  },
+  "browser": "Codex in-app Chromium via CUA",
+  "testedViewports": {
+    "battle": [
+      [
+        1920,
+        1220
+      ],
+      [
+        1280,
+        860
+      ]
+    ],
+    "templates": [
+      [
+        1920,
+        1080
+      ],
+      [
+        1280,
+        860
+      ]
+    ]
+  }
+}

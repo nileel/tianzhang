@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "status": "prototype-assets-not-final-art",
+  "entry": "skin.css",
+  "sourceSize": [
+    64,
+    64
+  ],
+  "sourceSlice": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 16
+  },
+  "displayBorder": {
+    "panel": 8,
+    "button": 5
+  },
+  "colorSpace": "sRGB",
+  "textBaked": false,
+  "fontsBundled": false,
+  "skins": {
+    "jade": {
+      "panel.dark": "art/panel-dark.svg",
+      "panel.paper": "art/panel-paper.svg",
+      "button.normal": "art/button-normal.svg",
+      "button.hover": "art/button-hover.svg",
+      "button.selected": "art/button-selected.svg"
+    },
+    "proof": {
+      "panel.dark": "art/panel-check.svg",
+      "panel.paper": "art/panel-check-paper.svg",
+      "button.normal": "art/button-check.svg",
+      "button.hover": "art/button-check-hover.svg",
+      "button.selected": "art/button-check-selected.svg"
+    }
+  },
+  "states": {
+    "normal": "button.normal",
+    "hover": "button.hover; selected/primary keep selected texture",
+    "selected": "button.selected + accent inset",
+    "primary": "button.selected",
+    "pressed": "current texture + pressed brightness",
+    "focus": "3px focus outline; offset 3px",
+    "disabled": "button.normal + disabled text + opacity 0.65",
+    "quiet": "no texture; inherited text; underline on enabled hover"
+  },
+  "notes": [
+    "Resource list is documentation, not a second runtime loader.",
+    "No unique art per window size or per consumer page.",
+    "Proof skin is a swap validation package, not approved product art.",
+    "PNG at 2x: 128x128 with 32px source slices; keep logical display borders."
+  ]
+}

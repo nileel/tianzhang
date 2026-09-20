@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>天章 · 共用 UI 样板</title><link rel="stylesheet" href="components.css?v=6.2"></head>
+<body>
+<header class="review-tools"><div><strong>天章</strong><span>共用 UI / 06</span></div><nav aria-label="样板审阅"><button id="skin-toggle" aria-pressed="false">换肤：绛紫校验</button><button id="open-full">打开全屏</button><button id="show-states">控件状态</button><a href="./">战斗 v6 ↗</a><a href="REUSE-SPEC.md">复用规范 ↗</a></nav><span id="skin-label">青玉 · 当前皮肤</span></header>
+<main class="sample-stage ui-root"><div class="stage-label"><span>关陇玄域 / 随身行囊</span><span>全屏 · 同一窗口骨架</span></div><div id="sample-root"></div><div class="stage-closed" id="closed-state" hidden><h1>行囊已收起</h1><p>从上方“打开全屏”继续查看。</p></div></main>
+<dialog id="large-dialog" class="ui-dialog ui-root" aria-label="物品详录"></dialog>
+<dialog id="small-dialog" class="ui-dialog ui-root" aria-label="整理确认"></dialog>
+<footer class="sample-footer"><span>可操作设计样板 · 固定展示内容</span><span id="sample-status" role="status">选择物品 → 查看详录 → 整理确认；按 K 可原位切换皮肤。</span></footer>
+<script type="module" src="components.js"></script></body></html>

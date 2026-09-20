@@ -1,0 +1,62 @@
+@import url('./ui-kit/components.css?v=6.2');
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: #0f1d26; font-family: 'Microsoft YaHei UI',sans-serif; }
+button,a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; }
+.review-tools { min-height: 64px; padding: 10px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; color: #d5dfd8; background: #101f28; border-bottom: 1px solid #a5b4a333; font-size: 13px; }
+.review-tools > div { display: flex; align-items: center; gap: 18px; }
+.review-tools strong { font: 26px KaiTi,serif; letter-spacing: 5px; }
+.review-tools nav { display: flex; gap: 10px; align-items: center; }
+.review-tools button,.review-tools a { color: inherit; background: #213942; border: 1px solid #9aaca24d; text-decoration: none; padding: 9px 14px; cursor: pointer; }
+.review-tools button:hover,.review-tools a:hover { background: #37534e; }
+.review-tools :focus-visible { outline: 2px solid #bbdbc9; outline-offset: 3px; }
+#skin-label { min-width: 140px; text-align: right; }
+.sample-stage { height: calc(100vh - 112px); min-height: 620px; padding: 24px clamp(28px,5vw,96px) 30px; background: var(--ui-stage); }
+.stage-label { display: flex; justify-content: space-between; font-size: 13px; letter-spacing: 3px; color: var(--ui-muted); margin: 0 0 18px; }
+#sample-root { height: calc(100% - 36px); }
+.stage-closed { text-align: center; padding: 150px 20px; }
+.sample-footer { height: 48px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; color: #bfccc7; background: #101f28; font-size: 13px; }
+.inventory-layout { display: grid; grid-template-columns: minmax(300px,.75fr) minmax(0,1.25fr); gap: 32px; min-height: 100%; }
+.inventory-list { min-width: 0; }
+.section-label { color: var(--ui-muted); font-size: 13px; letter-spacing: 3px; margin: 0 0 16px; }
+.inventory-filter { display: flex; gap: 8px; margin-bottom: 18px; }
+.ui-root .inventory-filter .ui-text-button { font-size: 18px; padding: 8px 15px; min-height: 42px; }
+.item-sheet { padding: 32px 38px; min-width: 0; }
+.item-sheet .item-kicker { font-size: 14px; letter-spacing: 4px; color: var(--ui-paper-muted); }
+.item-sheet h3 { font: 38px/1.3 var(--ui-font-title); letter-spacing: 5px; margin: 18px 0 20px; overflow-wrap: anywhere; }
+.item-sheet p { font-size: 18px; line-height: 1.95; }
+.item-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-block: 1px solid var(--ui-paper-line); margin: 28px 0; padding: 20px 0; }
+.item-summary dt { color: var(--ui-paper-muted); font-size: 14px; }
+.item-summary dd { margin: 9px 0 0; font-size: 20px; }
+.item-seal { float: right; border: 1px solid currentColor; width: 64px; height: 72px; display: grid; place-items: center; font: 30px var(--ui-font-title); color: var(--ui-paper-muted); }
+.item-note { color: var(--ui-paper-muted); font-size: 15px !important; }
+.sample-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.long-copy { font-size: 18px; line-height: 1.9; }
+.long-copy h3 { font: 25px var(--ui-font-title); letter-spacing: 3px; margin: 6px 0 20px; }
+.long-copy p { margin: 0 0 22px; }
+.long-copy [data-ui-panel] { padding: 22px; margin-bottom: 22px; }
+.dialog-note { font-size: 15px; color: var(--ui-muted); }
+.confirm-copy { font-size: 19px; line-height: 1.9; margin: 0 0 16px; }
+.state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.state-cell { padding: 18px; border: 1px solid var(--ui-line); }
+.state-cell p { color: var(--ui-muted); font-size: 14px; line-height: 1.7; }
+@media(max-width:1400px) {
+ .review-tools { padding-inline: 20px; gap: 15px; }
+ .review-tools nav { gap: 6px; }
+ .review-tools button,.review-tools a { padding: 9px; }
+ .sample-stage { padding: 20px 32px 26px; }
+ .inventory-layout { gap: 24px; grid-template-columns: minmax(320px,.85fr) minmax(0,1.15fr); }
+ .item-sheet { padding: 24px 28px; }
+ .item-sheet h3 { font-size: 32px; }
+ .item-sheet p { font-size: 16px; }
+ .sample-footer { font-size: 12px; }
+}
+@media(max-width:850px) {
+ .review-tools { flex-wrap: wrap; }
+ .review-tools nav { flex-wrap: wrap; }
+ .sample-stage { min-height: 760px; height: auto; }
+ #sample-root { height: 680px; }
+ .inventory-layout { grid-template-columns: 1fr; }
+ .sample-footer { height: auto; padding: 14px; flex-wrap: wrap; }
+}
