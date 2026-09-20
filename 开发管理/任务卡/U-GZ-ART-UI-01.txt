@@ -12,7 +12,7 @@
   "blockedBy": [
     "D-GZ-UI-V6-CONTRACT-01"
   ],
-  "stateReason": "2026-09-20：用户已解冻UI接入准备且v6设计已定稿；等待D-GZ-UI-V6-CONTRACT-01冻结当前数据/事件/资源接入合同，最终切图、字体与实施路径仍需按合同核实。旧整屏LOOKDEV拒绝不替代这些真实剩余条件。",
+  "stateReason": "2026-09-20：D-GZ-UI-V6-CONTRACT-01 已在 candidate 中冻结当前所有者、数据／事件、资源语义与验收入口；本卡保留该具名前置直至正式进入 master，且最终切图、字体、既有对象引用点与实机验收仍无证据。旧整屏LOOKDEV拒绝不替代这些真实剩余条件。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
     "assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png",
@@ -29,10 +29,24 @@
     "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png.meta",
     "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs",
     "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs.meta",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs.meta",
     "src/Assets/Scenes/SettlementScene.unity",
     "src/Assets/Scenes/SettlementScene.unity.meta",
     "src/Assets/Scenes/AdventureScene.unity",
@@ -41,6 +55,10 @@
     "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs.meta",
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs.meta",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs.meta",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-ART-UI-01.txt",
@@ -60,8 +78,8 @@
 
 ## 来源与当前边界
 
-- 2026-09-20 用户确认 v6 设计并在本轮解冻 UI 接入准备；新前置为 D-GZ-UI-V6-CONTRACT-01。下列9月12日实施路径/条款仅保留为待新合同修订的旧边界；本卡在完整路径、最终资源和验收矩阵冻结前保持 blocked，不能直接照旧卡实施。
-- 新设计依据为 assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md 和 VALIDATION.md；最终UI完成仍由本卡承担，合同准备通过不代表正式接入通过。
+- 2026-09-20 用户确认 v6 设计并在本轮解冻 UI 接入准备；`docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md` 已冻结后续接入的真实所有者、数据／事件、资源语义与原型限定。本卡保留 `D-GZ-UI-V6-CONTRACT-01` 具名前置直至该结果正式进入 master；不得据 candidate 直接 ready 或实施。
+- 新设计依据为 assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md、VALIDATION.md、RESOURCE-MANIFEST.json 及上述接入合同；最终 UI 完成仍由本卡承担，合同准备通过不代表正式接入通过。
 - 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
 - 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
 - 一个原子结果是批准的同一首流程UI主题在Settlement和Adventure两个表面完整应用；保留原交互，不建设全游戏UI系统。
@@ -69,43 +87,43 @@
 ## 必查范围
 
 - `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md` 城镇/UI/头像裁切/有限图标章节；`docs/剧情/据点/关中城.txt` 主题及已有功能；批准男主完整RGBA母版。
-- `SettlementSceneBuilder.Build|BuildBountyPanel`、`SettlementView`/ `BountyBoardView` 创建/刷新链；`AdventureSceneBuilder.Build`、`AdventureHudPresenter.Present` 的动态按钮及战斗HUD/动作条/日志引用。
-- `SceneBuildSupport` 只读调用者列表，`GuanzhongFormalUiTextTests` 与 `GuanzhongFormalUiTextPlayModeTests`；unity-agent-workflows的双表面/文字所有者验证。
+- `docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md` 完整正文；`SettlementSceneBuilder.Build|BuildBountyPanel`、`SettlementView::ShowSettlement|BindFeature|BindAdventure|OpenBountyBoard|SetButton`、`BountyBoardView::Show|Refresh|UpdateButtons|SubmitAccept|SubmitClaim` 及 `BountyUseCase` 的直接调用链。
+- `AdventureSceneBuilder.Build`、`AdventureHudPresenter.Present`、`AdventureController.ResolveEncounter`、`EncounterCoordinator.Present`、`CombatPresentationContracts::CombatantHudSnapshot|CombatHudSnapshot|ICombatPresentationSink`、`CombatHudPresenter.Present`、`CombatHudView.Present`、`CombatActionBarView.Present`、`CombatCommandInput.Configure|SetContext`、`CombatLogView.Clear|Append`；只读 `SceneBuildSupport::CreateCanvas|CreatePanel|CreateText|CreateButton` 及 StartMenu／World 调用者。
+- `GuanzhongFormalUiTextTests`、`GuanzhongFormalUiTextPlayModeTests`、`BountyBoardViewTests`、`GuanzhongFormalEndToEndTests` 的对应验收入口；unity-agent-workflows 的双表面／文字所有者验证。
 
 ## 实施范围
 
-- 生产批准关中城背景和有限UI图集；用现有男主母版确定性裁切头像，不使用模块化五组件组装，不重新生成角色。
-- 在两个既有Builder创建的目标对象上应用共同的底板/边框/按钮/字体层级；动态生成按钮的样式由AdventureHudPresenter相同主题设置，不能只改静态Builder。
-- 图标仅覆盖当前首流程已消费对象；复杂文字、按钮文本继续独立UI层，不烘焙成不可修改背景。首包沿用已确认可用字体，不采购/下载未知许可字体。
-- 1920×1080下核查主界面、悬赏打开/关闭、接取/领取、战斗行动列表与日志；保留旧水驿/保存/返回入口，不重做册界面板。
-- 修改Adventure Builder时保存已交付地面和provider，不因共享文件把其重建为旧版本。
+- 只在已实际交付的 1 张关中城背景、1 张 UI atlas、1 张由批准透明母版确定性裁切的头像及 manifest 上实施；没有源路径、Unity 导入路径和 `.meta` 证据时不以 v6 SVG 或替代资源接线。
+- 只在合同列出的既有对象上应用共同的 `panel.*`／`button.*`、边框、字体和独立文字层：Settlement／悬赏的 Builder、View、Board；Adventure 的 Builder／动态节点；Combat HUD／action bar／log。动态 `AdventureHudPresenter.Present` 和 Combat 刷新 writer 必须随同静态 Builder 核验，不能只改一个表面。
+- 图标仅覆盖当前首流程已消费的石甲兽目标、矿料／奖励和通用状态圆点；复杂文字、按钮文字、数值和日志继续独立 UI 层，禁止烘焙。最终字体须有授权、中文覆盖和回退证据；不采购／下载未知许可字体。
+- 1920×1080 下核查关中城、悬赏打开／关闭、接取／领取、Adventure 节点、Combat HUD／行动栏／日志和连续返回流程；保留旧水驿、保存、返回入口，不重做册界面板。v6 的 76 宽行动轴、8／12 人、查看目标／自身预测位置、未知详情、行动预览、物品／移动／确认及通用窗口模板均为原型专用，不新增字段或交互。
+- 修改 Adventure Builder 时保存已交付地面、provider 和比较对象既有边界，不因共享文件重建旧版本。
 
 ## 禁止项
 
 - 不改SceneBuildSupport全局默认值、StartMenu、World或通用UI框架；不新增角色/捏脸/图库。
-- 不改悬赏条件/奖励、功能开关、术法选择规则、业务数据、存档，不把显示样式变化解释为功能完成。
+- 不改悬赏条件／奖励、功能开关、术法选择规则、业务数据、存档、`GameplayContracts` 或 Combat 合同，不把显示样式变化解释为功能完成。
 - 不用背景遮挡真实按钮/文字，不手改Unity YAML。
 
 ## 模型协作
 
-- 当前仍缺新接入合同，实施复杂度在 D-GZ-UI-V6-CONTRACT-01 完成后依据冻结所有者/资源/验收重新评估。主责保留 Codex 入口，不因 DeepSeek 模型更新自动更改既有 owner/route。
-- 预定组合：有界数据/事件接线诊断可用 gpt-5.6-sol / high 只读核查直接调用链；视觉与业务语义关键冲突才用 gpt-6-astra / high 独立核对。选择能解决实际问题的一项，不逐级调用。
-- DeepSeek V4.1 Flash 可在后续冻结的独立实施叶子承担受限UI代码/数据/资源接线及截图缺陷分析；须先证明实际工具/图像输入能力，仍由 Codex 独立复审及视觉验收。当前卡未授予其主责。
-- 写前记录实际工具能力、辅助模型/强度/会话标识及证据；模型名称和原型截图不替代正式运行时验证。
+- 本轮 D 合同由入口 `gpt-5.6-terra` 单模型完成：源码的 creator、refresh writer、直接调用者与数据边界可直接对齐，没有触发独立只读诊断；未发出 gpt-5.6-sol / high 或 gpt-6-astra / high 请求，故无辅助会话标识。该记录不替代 U 实施时重新评估。
+- U 实施前按当时资产、场景和运行时证据重评：若只需按冻结所有者接线且验收明确，沿用入口默认单模型；若直接调用链或动态 writer 无法对齐，可用 gpt-5.6-sol / high 只读返回逐行所有者与缺口；若出现产品语义／停止条件关键冲突，才用 gpt-6-astra / high 独立分析。选择一项实际可用组合，不逐级调用。
+- 主责、route 和审核边界不变。任何辅助只读、不得改卡／队列／提交；写前记录实际工具能力、请求模型／强度、会话标识和可核实证据。模型名称、原型截图和静态推断不替代最终运行时验证。
 
 ## 验证
 
-- 两个正式表面的真实截图和动态刷新检查：文字不截断、按钮可点击、界面不遮战场，头像身份与母版一致。
-- 既有UI文字与状态测试按影响面运行，接取/领取/返回入口保持；Builder保存重开引用不丢失，资产版本/数据链/任务投影通过。
+- 两个正式表面的真实截图和动态刷新检查：文字不截断、按钮可点击、界面不遮战场，头像身份与母版一致；核对 source slice 与 Unity Sprite.border、Canvas 缩放及运行时引用，不把网页 displayBorder 当导入值。
+- 既有 UI 文字／状态、悬赏接取／领取、Adventure HUD 表面隔离与首流程保存读取测试按影响面运行；Builder 保存重开引用不丢失，资产版本／数据链／任务投影通过。
 - 预期路径 whitespace、任务卡/队列/backlog 与 schema 2 风险投影一致，暂存后 git diff --cached --check。
 - 只运行影响面需要的检查；已有通过记录且相关输入未变化时不重复。
 
 ## 完成条件
 
-- 同一批准主题在城镇/悬赏及Adventure/HUD两个表面完整可见，源图集/头像和实际截图可追溯。
+- 同一批准主题在城镇／悬赏及 Adventure／HUD 两个表面完整可见，源图集／头像／字体、实际引用与连续实机截图可追溯。
 - 只关闭UI叶子，不宣称正式角色、反馈或整场美术验收通过。
 
 ## 停止条件
 
-- 需要新增业务显示字段/交互、修改册界面板/全局主题，未查明实际文字/动态样式所有者，或需扩充图标库/外部采购。
+- 需要新增业务显示字段／交互、修改 `GameplayContracts`／Combat／World／存档、册界面板／全局主题，未查明实际文字／动态样式所有者，或需扩充图标库／外部采购。
 - 任一表面不符合基准时先定位同一owner内最小问题，不叠加通用适配层。

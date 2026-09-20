@@ -1,0 +1,91 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-UI-V6-CONTRACT-01",
+  "title": "UI v6正式Unity接入合同准备",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-20：已完成 v6→当前正式 Unity 所有者、数据／事件、资源语义、原型限定与验收入口的接入合同；U-GZ-ART-UI-01 仍保留具名前置，待结果正式进入 master 后再由 QueueMaintenance 与最终资源事实共同处理。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-UI-V6-CONTRACT-01.txt",
+    "开发管理/任务归档/D-GZ-UI-V6-CONTRACT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-GZ-UI-V6-CONTRACT-01 · UI v6正式Unity接入合同准备
+
+## 来源与当前边界
+
+- v6 于 2026-09-20 获用户定稿确认；本轮用户进一步授权解除 UI 接入准备阻塞。设计方向不重复审批。
+- 唯一结果为 v6→当前正式 Unity 所有者／数据／事件／资源的接入合同及既有 U-GZ-ART-UI-01 的范围冻结；不执行正式 UI，也不把原型认作已完成玩法。
+- 本卡完成不等于 U-GZ-ART-UI-01 完成。最终切图／字体与实机验收仍按实际证据判断；旧 LOOKDEV 整屏拒绝不再笼统阻塞本次已批准 v6 的合同准备。
+
+## 必查范围
+
+- assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md#1—8、VALIDATION.md#用户确认与后续；ui-kit/RESOURCE-MANIFEST.json、templates.js::panelContent|buttonTemplate|listTemplate|windowTemplate|applyButtonSkin；app.js::renderAxis|renderDetail|renderHud|renderPreview|pick|chooseAction|confirm。
+- 开发管理/任务卡/U-GZ-ART-UI-01.txt 完整正文；docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md#4、4.1、5、7；2026-09-12-guanzhong-art-delivery-replan.md 中 UI 边界。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md；按其路径定位 SettlementSceneBuilder::Build|BuildBountyPanel、SettlementView::ShowSettlement|BindFeature|BindAdventure|OpenBountyBoard|SetButton、BountyBoardView::Show|Refresh|UpdateButtons|SubmitAccept|SubmitClaim 及 BountyUseCase 数据／事件。
+- AdventureSceneBuilder::Build、AdventureHudPresenter::Present、AdventureController::ResolveEncounter、EncounterCoordinator::Present；CombatPresentationContracts::CombatantHudSnapshot|CombatHudSnapshot|ICombatPresentationSink、CombatHudPresenter::Present、CombatHudView::Present、CombatActionBarView::Present、CombatCommandInput::Configure|SetContext、CombatLogView::Clear|Append 的实际字面量源码路径与直接调用者。
+- SceneBuildSupport::CreateCanvas|CreatePanel|CreateText|CreateButton 及 StartMenu／World 调用者只读；SettlementScene／AdventureScene 的 Canvas 与对象引用只读。
+- GuanzhongFormalUiTextTests、GuanzhongFormalUiTextPlayModeTests、BountyBoardViewTests、GuanzhongFormalEndToEndTests 的后续验收入口，本卡只读。
+
+## 实施范围
+
+- 唯一合同逐行冻结：v6 稳定 key→场景对象→creator→刷新 writer／事件→数据合同→资源语义槽→字面量实施路径及验证→原型专用／后续范围。
+- 保留 prototype-assets-not-final-art、fontsBundled=false 与九宫格源像素／输出像素区别，不把网页边框宽度当 Unity Sprite.border。
+- 以现有城镇／悬赏／Adventure／HUD 的主题和复用语义为范围；缺正式投影的行动轴8／12人、查看目标分离、下一次位置、未知目标信息、战斗悬赏追踪、物品／移动／确认等逐行标明原型限定，不偷加业务字段。
+- 更新 U-GZ-ART-UI-01 的真实前置、完整 expectedPaths、验收／停止条件和模型协作；最终资源未获证据时保持 blocked 并准确记录剩余条件。不能把本卡通过直接记为 UI 实施通过。
+
+## 禁止项
+
+- 不写 src、场景、运行时数据、正式PNG/SVG/字体，不改 SceneBuildSupport 全局值或 StartMenu／World／册界；不新建通用 UI 框架或资源加载器。
+- 不再请求已获得的 v6 设计方向批准，不擅自批准最终美术／字体／费用。
+
+## 模型协作
+
+- 复杂度：复杂接口诊断；旧静态美术合同与 v6 原型交互不一致，需分清当前数据能力和展示夹具。
+- 主责沿用 Codex 入口。触发条件为源数据／creator／刷新 writer 无法对齐；可用 gpt-5.6-sol / high 对上述直接调用链作只读定位，返回逐行所有者与缺口。涉及是否越过产品语义或旧停止条件的关键冲突时，改用 gpt-6-astra / high 对该冲突独立分析；不逐级或重复调用。
+- 主责统一裁定并写合同；记录实际工具能力、模型请求、会话标识和可核实证据；辅助不改卡／队列。
+
+## 验证
+
+- 每行必须回指实际路径／符号；区分已存在事件与原型模拟，不以效果图验证功能；U 卡仍是正式完成叶子。
+- 文本、task-cards/schema2预检、docs数据链、whitespace与cached diff检查；本卡不运行 Unity/BattleSim。
+
+## 完成条件
+
+- 映射合同完整，U-GZ-ART-UI-01 可明确判断哪些输入具备、哪些真实条件未满足；未扩大玩法／最终资源授权或伪称接入完成。
+
+## 停止条件
+
+- 必须新增GameplayContracts/Combat/World/存档字段或交互、扩图标/全局主题/采购，才可满足某行时，将该行排除并记录；若这些是本次唯一结果不可绕过的前置，停止并报告，不叠加实现补丁。
+- 若当前 UI 实施范围确认不原子，在本次合同规划内完整列出所有已知叶子、依赖及父项关闭条件，不边实施边逐张补拆。
+
+## 执行结果
+
+- 已建立 `docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md`：逐行冻结了当前 Scene object、creator、刷新 writer／直接事件、数据合同、资源语义、后续实施路径、验收入口和原型限定。
+- 已更新 U-GZ-ART-UI-01 的完整允许路径、必查范围、实施／停止条件和模型协作。`blockedBy` 与 backlog 的 `D-GZ-UI-V6-CONTRACT-01` 引用按候选／正式集成边界保留，未使下游 ready、未重排其他任务。
+- 已证实所有最终源 PNG、Unity PNG 和 manifest 路径当前缺失；`RESOURCE-MANIFEST.json` 明确为 prototype assets，且 `fontsBundled=false`。故本任务不宣称正式资源、字体、Unity 接线或实机验收完成。
+
+## 本轮模型协作与验证记录
+
+- 实际主模型：`gpt-5.6-terra`，通过入口元数据核验。直接源码中的 creator、刷新 writer、调用者、数据合同和原型夹具可一致对齐；没有触发独立只读工作面，因此未请求 gpt-5.6-sol / high 或 gpt-6-astra / high，辅助会话标识为空。
+- 已读取并交叉核对 v6 README／REUSE-SPEC#1—8／VALIDATION、资源清单和模板／交互函数；旧美术合同的 UI 章节；当前 U 卡；Unity 结构图；Settlement、Adventure、Combat HUD 的指定完整逻辑单元和直接调用者；后续四组测试入口。
+- 已只读检查最终 source／Unity PNG／manifest 路径均不存在，并确认 ui-kit 的十张 SVG 是原型资源；未写 `src/`、场景、运行时数据、正式资源或字体。
+- U-GZ-ART-UI-01 的 expectedPaths 更新后已重跑 schema 2 风险预检：`matched=[EXP-UNITY-001]`、无 gate；已消费其“正式 `.unity` 只能通过对应 Builder／Save 链重建、不手写 YAML”的正文。因 U 卡仍 blocked，本轮未进入场景重建或 Unity 验证。
+- 后续执行本卡之外的 U-GZ-ART-UI-01 前，须在其 own worktree 重新进行风险预检、资源／场景／运行时所有者核验和按影响面 Unity 验收。
