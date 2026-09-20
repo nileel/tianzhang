@@ -31,6 +31,8 @@ namespace TianZhang.Editor
         public static void Build()
         {
             GameObject root = SceneBuildSupport.BeginScene("AdventureRoot", new Color(0.08f, 0.1f, 0.14f));
+            // This legacy plane intersects the approved terrain's deep rock walls.
+            GameObject.Find("VisualBackdrop").SetActive(false);
             AdventureSceneInstaller installer = root.AddComponent<AdventureSceneInstaller>();
             AdventureController controller = root.AddComponent<AdventureController>();
             AdventureInputController input = root.AddComponent<AdventureInputController>();

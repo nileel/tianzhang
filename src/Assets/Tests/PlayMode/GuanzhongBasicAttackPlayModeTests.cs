@@ -531,6 +531,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
             Assert.AreEqual(6, battlefield.transform.childCount);
             Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
+            GameObject backdrop = FindSceneObjectIncludingInactive("VisualBackdrop");
+            Assert.IsNotNull(backdrop);
+            Assert.IsFalse(backdrop.activeInHierarchy,
+                "The legacy backdrop must remain hidden after formal runtime initialization.");
             Assert.IsFalse(comparisonBoard.activeInHierarchy,
                 "The formal Adventure route must not show the visual baseline fixture.");
             Assert.IsFalse(comparisonPanel.activeInHierarchy,
@@ -638,29 +642,125 @@ namespace TianZhang.Tests.PlayMode
             var backdropProperties = new MaterialPropertyBlock();
             backdrop.GetPropertyBlock(backdropProperties);
             Debug.Log("[GuanzhongRenderProof] backdrop=" + backdropMaterial.name +
+                      " active=" + backdrop.gameObject.activeInHierarchy +
                       " color=" + backdropMaterial.GetColor("_BaseColor") +
                       " texture=" + backdropMaterial.GetTexture("_BaseMap") +
                       " propertyBlockEmpty=" + backdropProperties.isEmpty +
                       " position=" + backdrop.transform.position +
                       " bounds=" + backdrop.bounds +
                       " cameraAspect=" + camera.aspect + " pixelRect=" + camera.pixelRect);
+            WriteTerrainCapture(camera, path);
+
+            // A temporary source-model reference, never a replacement for the formal provider.
+            Transform source = FindSceneObjectIncludingInactive("VisualBaselineBoard")
+                .transform.Find("FacingProbe_0/FuYuan_Model");
+            Assert.IsNotNull(source, "The preserved FuYuan source model must exist for visual QA.");
+            GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+            Transform ground = battlefield.transform.Find("GuanzhongHex_0_0");
+            GameObject reference = Object.Instantiate(source.gameObject, ground.position, source.rotation);
+            reference.name = "FuYuan_TerrainVisualReference";
+            reference.SetActive(true);
+            Renderer[] markers = FindSceneObjectIncludingInactive("PlayerMarker")
+                .GetComponentsInChildren<Renderer>();
+            var markerVisibility = new bool[markers.Length];
+            for (int index = 0; index < markers.Length; index++)
+            {
+                markerVisibility[index] = markers[index].enabled;
+                markers[index].enabled = false;
+            }
+            Vector3 cameraPosition = camera.transform.position;
+            float cameraSize = camera.orthographicSize;
+            string referencePath = Path.Combine(Path.GetDirectoryName(path),
+                Path.GetFileNameWithoutExtension(path) + "-fuyuan.png");
+            try
+            {
+                yield return null;
+                Assert.Less(Vector3.Distance(source.lossyScale, reference.transform.lossyScale), .00001f);
+                Assert.Less(Quaternion.Angle(source.rotation, reference.transform.rotation), .001f);
+                Renderer[] originalRenderers = source.GetComponentsInChildren<Renderer>(true);
+                Renderer[] referenceRenderers = reference.GetComponentsInChildren<Renderer>(true);
+                Assert.AreEqual(originalRenderers.Length, referenceRenderers.Length);
+                for (int index = 0; index < referenceRenderers.Length; index++)
+                    CollectionAssert.AreEqual(originalRenderers[index].sharedMaterials,
+                        referenceRenderers[index].sharedMaterials);
+                Bounds modelBounds = CombinedRendererBounds(reference);
+                Bounds terrainBounds = CombinedRendererBounds(battlefield);
+                float surfaceY = CenterSurfaceY(ground);
+                Debug.Log("[GuanzhongFuYuanProof] source=VisualBaselineBoard/FacingProbe_0/FuYuan_Model" +
+                          " model=" + reference.GetComponentInChildren<MeshFilter>().sharedMesh.name +
+                          " material=" + referenceRenderers[0].sharedMaterial.name +
+                          " root=" + reference.transform.position.ToString("F6") +
+                          " scale=" + reference.transform.lossyScale.ToString("F6") +
+                          " rotation=" + reference.transform.eulerAngles.ToString("F4") +
+                          " modelBoundsMin=" + modelBounds.min.ToString("F6") +
+                          " modelBoundsMax=" + modelBounds.max.ToString("F6") +
+                          " terrainBoundsMin=" + terrainBounds.min.ToString("F6") +
+                          " terrainBoundsMax=" + terrainBounds.max.ToString("F6") +
+                          " centerSurfaceY=" + surfaceY.ToString("F6") +
+                          " geometryMinGap=" + (modelBounds.min.y - surfaceY).ToString("F6") +
+                          " technicalBaseIncluded=False formalProviderChanged=False");
+                WriteTerrainCapture(camera, referencePath);
+
+                // Additional inspection framing only; the formal camera is restored before gameplay resumes.
+                Bounds inspectionBounds = terrainBounds;
+                inspectionBounds.Encapsulate(modelBounds);
+                camera.transform.position = inspectionBounds.center - camera.transform.forward * 14f;
+                camera.orthographicSize = inspectionBounds.extents.magnitude * 1.1f;
+                WriteTerrainCapture(camera, Path.Combine(Path.GetDirectoryName(path),
+                    Path.GetFileNameWithoutExtension(path) + "-fuyuan-detail.png"));
+            }
+            finally
+            {
+                camera.transform.position = cameraPosition;
+                camera.orthographicSize = cameraSize;
+                for (int index = 0; index < markers.Length; index++)
+                    markers[index].enabled = markerVisibility[index];
+                reference.SetActive(false);
+                Object.Destroy(reference);
+            }
+            yield return null;
+            Assert.IsTrue(reference == null, "The visual QA model must be removed before formal combat resumes.");
+            AssertFormalBattlefieldPresentation();
+        }
+
+        private static void WriteTerrainCapture(Camera camera, string path)
+        {
             var target = new RenderTexture(1920, 1080, 24, RenderTextureFormat.ARGB32);
             target.Create();
             var request = new RenderPipeline.StandardRequest { destination = target };
             Assert.IsTrue(RenderPipeline.SupportsRenderRequest(camera, request));
             var image = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
             RenderTexture previous = RenderTexture.active;
+            RenderTexture previousCameraTarget = camera.targetTexture;
             try
             {
+                // Keep the render and measured pixel rectangles on the same 16:9 projection.
+                camera.targetTexture = target;
                 RenderPipeline.SubmitRenderRequest(camera, request);
                 RenderTexture.active = target;
                 image.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
                 image.Apply();
                 File.WriteAllBytes(path, image.EncodeToPNG());
-                Debug.Log("[GuanzhongTerrainCapture] Formal runtime camera and actual spawned markers; overlay UI is not included. " + path);
+                GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
+                Rect terrainRect = ScreenRectFromBounds(camera, CombinedRendererBounds(battlefield));
+                Assert.GreaterOrEqual(terrainRect.xMin, 0);
+                Assert.GreaterOrEqual(terrainRect.yMin, 0);
+                Assert.LessOrEqual(terrainRect.xMax, 1920);
+                Assert.LessOrEqual(terrainRect.yMax, 1080);
+                GameObject reference = GameObject.Find("FuYuan_TerrainVisualReference");
+                Debug.Log("[GuanzhongTerrainCapture] path=" + path +
+                          " cameraPosition=" + camera.transform.position.ToString("F4") +
+                          " cameraEuler=" + camera.transform.eulerAngles.ToString("F4") +
+                          " ortho=" + camera.orthographicSize.ToString("F6") +
+                          " aspect=" + camera.aspect.ToString("F6") +
+                          " terrainScreenRect=" + RectText(terrainRect) +
+                          " referenceScreenRect=" + (reference == null ? "none" :
+                              RectText(ScreenRectFromBounds(camera, CombinedRendererBounds(reference)))) +
+                          " overlayUIIncluded=False");
             }
             finally
             {
+                camera.targetTexture = previousCameraTarget;
                 RenderTexture.active = previous;
                 Object.DestroyImmediate(image);
                 target.Release();

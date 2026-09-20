@@ -87,6 +87,9 @@ namespace TianZhang.Tests.EditMode
             AdventureSceneBuilder.Build();
             Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
             Assert.IsFalse(scene.isDirty, "AdventureScene must reopen from the Builder save without unsaved changes.");
+            GameObject backdrop = scene.GetRootGameObjects().Single(root => root.name == "VisualBackdrop");
+            Assert.IsFalse(backdrop.activeSelf,
+                "The legacy backdrop plane must not intersect the approved terrain's rock walls.");
 
             EnvironmentProfileAsset profile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");

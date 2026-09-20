@@ -24,6 +24,10 @@
     "assets/source/environments/guanzhong-first-bounty/initial-v1/README.md",
     "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-scene-proof.json",
     "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-formal.png",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-unoccluded.png",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-unoccluded-fuyuan.png",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-unoccluded-fuyuan-detail.png",
+    "assets/source/environments/guanzhong-first-bounty/initial-v1/unity-visual-correction.json",
     "src/Assets/Art/Environments.meta",
     "src/Assets/Art/Environments/Guanzhong.meta",
     "src/Assets/Art/Environments/Guanzhong/Tile.fbx",
@@ -129,3 +133,12 @@
 - Unity真实导入/编译及Builder保存重开退出0；地块与备用石阶EditMode各1/1，正式流程PlayMode1/1，场景架构验证退出0；程序集边界、数据链、资产版本通过。
 - 初次截图的首次渲染异常已保留并复核，取证等待一正常帧，未对生产材质或背景加补丁；不宣称底层引擎原因已查明。
 - 规格与父项同步为本次独立初始资源授权，父项和其他美术门槛不关闭；直接下游按各自卡其余条件继续维护。
+
+## 用户要求的视觉返修 · 2026-09-20
+
+- 用户指出上轮只用Marker验证且旧背景平面遮住地形底部，明确要求重新处理。本次沿用同一已完成任务做有限返修，不领取队列任务，不改变其他卡的route/owner/状态。
+- 已有运行时证据证明VisualBackdrop位于Y=-.04、地块最低Y=-1.54311085，导致岩壁遮挡。仅AdventureSceneBuilder关闭本场景背景平面，保留共享BeginScene其他三个正式场景行为；仍由原Builder保存重开，不改地块/相机/Marker坐标。
+- 必查补充：SceneBuildSupport.BeginScene及全部调用者；GuanzhongBasicAttackPlayModeTests.CaptureFormalTerrainIfRequested；VisualBaselineBoard/FacingProbe_0/FuYuan_Model及其静态FBX/贴图引用。苻渊只用于本次临时视觉参照，不成为正式provider或角色输入。
+- 验证补充：序列化及PlayMode断言Adventure背景inactive；正式流程截图保留Marker，另用原尺度/原材质苻渊模型在同六格上截图，记录模型几何最低点与真实三角面间距；不把棋子底座bounds冒认为双脚。附加近景只作细节图，不保存或替换正式相机。
+- 只写本卡已有Builder/场景/直接测试/验收记录/结构图和上述四份本地证据；不改共享场景工具、角色源、正式角色接线或其他场景。写入前重新核对风险预检；最终统一复核、限定路径提交与安全集成。
+- 返修结果：保存重开与运行时背景均inactive，完整岩壁可见；苻渊原模型子树同镜头与近景图已查看，实测几何最低点Y=.34、格心面Y=.340433，无技术底座。EditMode2/2、含取证清理的正式流程PlayMode1/1、四正式场景架构验证return code 0。完整事实与边界见验收记录文末，旧截图继续保留作历史。

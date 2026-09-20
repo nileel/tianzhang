@@ -1,5 +1,7 @@
 # 关中首场初始地形接入记录
 
+> 当前视觉结论以文末“用户反馈后的视觉返修”为准。首次记录保留用于追溯；旧背景遮挡已经修正，并已补做苻渊实模同场验证。
+
 ## U-GZ-ART-BATTLEFIELD-01 · 2026-09-20
 
 - 本轮只完成已批准两件原资源的正式初始接入。用户采用 v5 青绿地表、青蓝岩壁和自然边缘，不重新审批风格，不重生成、削成纯六角柱或加顶板/遮缝。整屏 LOOKDEV 拒绝历史、角色/UI、其他地形和最终整体品质门槛保持。
@@ -54,3 +56,16 @@
 - References loaded：unity-agent-workflows 的 runtime-owner-proof、visible-object-identity、asset-source-lock、serialized-persistence、unity-validation、ui-and-visual-assets、ai-workflows、project-structure-discovery、modular-architecture、shared-caller-blast-radius、cleanup-and-git；tianzhang-blender-pipeline及tool-routing。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.assemblies.md；Editor README/asmdef。新Editor类型小于500行；既有Builder未扩大运行时职责，不新增跨模块依赖。
 - 石阶近水平踏宽约.245～.260，小于.30尺度代理，局部穿入岩壁，六向最大地面高出踏面约.032695；保留旧qa.json证据，不声明通行通过。当前主线没有U-GZ-HEIGHT-RUNTIME-01活跃卡或完成归档，不虚构正在执行的高差任务。移动命令仍进入规则/HUD，未找到Marker移动写入，不声明实际移动/爬梯完成。
 - 本卡只提供“初始地面已接入”的依赖证据；FORMAL-WIRING、SLICE等直接下游仍依各自活跃卡其余前置维护，未在本轮越界修改其任务卡或宣称整屏、正式双角色、UI及最终品质通过。
+
+## 用户反馈后的视觉返修 · 2026-09-20
+
+- 用户明确要求重新处理“未用真实角色验证”和“地形底部截断”。上轮功能回归通过不能代替足够的视觉验收；仅把背景遮挡写成限制不妥。本轮从最新b6c94ff1375faed68f25f54ad72808f43c5fba92继续使用原接入工作树，保留原实验树与主线他人改动。
+- 已证实根因：共享SceneBuildSupport.BeginScene创建VisualBackdrop水平面，Y=-.04；地块最低Y=-1.54311085，平面遮住下部岩壁。AdventureSceneBuilder.Build在创建后仅将本场景该平面设inactive；没有改地块几何、Prefab、材质、坐标、相机、Marker或共享BeginScene。StartMenu/World/Settlement的背景行为保持。
+- 场景由原Builder保存重开。全量445个序列化块按层级/组件/Prefab引用归一化fileID后，本轮唯一语义差异为VisualBackdrop.m_IsActive从1变0；六格资源及坐标等全部保持。运行时日志同时证明active=False、固定相机仍为(0,8,-10)/38°/ortho6.2。
+- 新的正式流程图unity-unoccluded.png完整显示岩壁。unity-unoccluded-fuyuan.png是在同一实际PlayMode场景、同一正式相机下临时克隆VisualBaselineBoard/FacingProbe_0/FuYuan_Model原FBX子树，保持原材质、尺度(1,1,1)和世界旋转(270,90,0)，放到原玩家格心(0,.34,1)。未实例化技术棋子底座或动作控制器，未给模型染Marker色。只在取证期间隐藏玩家Marker Renderer；敌方红色Marker仍代表当前正式敌人占位。取证后销毁模型、恢复可见性和相机，再继续正式战斗流程。
+- 苻渊实际mesh为Fuyuan_StaticChess_Model，材质FuYuan_StaticChess，模型bounds min=(-.289576,.34,.774610)、max=(.098183,1.37,1.254719)。人物几何最低点减格心真实三角面Y=.340433约为-.000433；没有用底座或草冠bounds伪称脚底，也没有为接地移动地面/正式角色。原模型在草面上可见；此记录不是双脚各自三角面接触或正式角色接线完成的结论。
+- unity-unoccluded-fuyuan-detail.png为同场景补充近景：仍为38°，临时位置(-.0210,8.5327,-10.0148)、ortho3.151273，仅用于看清岩壁与人物，未保存成正式镜头。三份PNG均为1920×1080实际URP渲染，未包含ScreenSpaceOverlay UI；输出时临时绑定同一RenderTexture，实测aspect=1.777778，渲染与投影数字一致。
+- 同镜头terrainScreenRect=(799.34,386.71)-(1116.99,700.58)，苻渊=(934.78,592.03)-(968.55,688.46)；近景分别为(647.52,168.04)-(1272.48,785.56)和(913.98,571.99)-(980.43,761.73)，均位于画面内。已逐图查看完整岩壁与真实苻渊，源六角自然边缘保持。
+- 验证：GuanzhongBattlefieldBaselineEditorTests精确类筛选2/2通过，含保存重开/背景inactive；FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads精确用例1/1通过，含临时模型清理、固定相机恢复、实际战斗/回城/领奖/存读；两份XML通过既有runner的ValidateResultOnly。SceneArchitectureValidator.ValidateForBatchMode检查四个正式场景，日志return code 0。原始日志/XML：D:/Temp/gz-terrain-visual-correction-20260920；图像与摘录：assets/source/environments/guanzhong-first-bounty/initial-v1/unity-visual-correction.json及三份PNG，按既有规则Git外留存并镜像主工作区。
+- 取证代码初跑暴露lossyScale精确浮点比较和无父克隆未保留所需世界朝向的断言失败，分别使用1e-5容差和显式源世界旋转后验证通过；没有给生产场景叠加补丁。只读辅助audit_real_character_validation指出4:3 GameView与16:9截图投影差异，主责修正输出目标绑定并用上面实际数值验证。辅助未写文件或运行Unity；主责统一全部差异与验证。
+- 风险预检重新计算：taskCardDigest=785f393354afbf60752b6ae4727be521bd83cea66fd7e3d9b60d11c5eff53019，indexDigest=4d35e55ef2280ee9ae58b122a4cefcde1f4013186fda2a4497a82ee26e9a102c，matched=[EXP-UNITY-001]，gates=[]；正文已消费。未扩展到正式provider、UI、敌人模型、地形系统或高差通行；无新费用。额外读取shared-caller-blast-radius、serialized-persistence、runtime-numeric-proof和unity-validation；项目runtime结构图已同步。
