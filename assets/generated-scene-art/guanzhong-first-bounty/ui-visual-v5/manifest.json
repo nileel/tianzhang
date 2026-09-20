@@ -1,0 +1,89 @@
+{
+  "version": "ui-visual-v5",
+  "date": "2026-09-20",
+  "status": "prototype_complete_visual_review_pending",
+  "mainlineObserved": "b6c94ff1375faed68f25f54ad72808f43c5fba92",
+  "worktreeBase": "9244b40764c2f954ab847f7865f2056dcbd02157",
+  "scope": "Battle UI only; town remains v4; no Unity integration or task state changes",
+  "terrain": "v3 construction prefix identical; only camera framing and actor fixture presentation differ",
+  "interactionData": "fixed fixtures, no combat rule implementation",
+  "viewports": [
+    [
+      1920,
+      1220
+    ],
+    [
+      1280,
+      860
+    ]
+  ],
+  "screenshots": [
+    {
+      "path": "screenshots/01-player-actions.jpg",
+      "dimensions": [
+        1920,
+        1220
+      ],
+      "bytes": 177048,
+      "sha256": "392e76f6e00711df7e8703d478a14b670e36a8b4302f27a2dfbbea7a8ad933a2"
+    },
+    {
+      "path": "screenshots/02-target-details.jpg",
+      "dimensions": [
+        1920,
+        1220
+      ],
+      "bytes": 183758,
+      "sha256": "ea4f4f5ea145265b1d9223524e4d411193720347d0b036a98ec0dc86f3848d7a"
+    },
+    {
+      "path": "screenshots/03-combined-preview.jpg",
+      "dimensions": [
+        1920,
+        1220
+      ],
+      "bytes": 212883,
+      "sha256": "0c88a8f105555f5ae56b31161959137742e9bea0e22b69f13689071cf37cdb1e"
+    },
+    {
+      "path": "screenshots/04-twelve-unit-preview.jpg",
+      "dimensions": [
+        1920,
+        1220
+      ],
+      "bytes": 216346,
+      "sha256": "602504e7e08f104ca45c5a16eee217dea8f28b2dcd54fbde28965ebbce65ee02"
+    },
+    {
+      "path": "screenshots/05-1280-dense-preview.jpg",
+      "dimensions": [
+        1280,
+        860
+      ],
+      "bytes": 125089,
+      "sha256": "4da71ef542633aee57ca63b234c1364507cb4a4f25a19cbb3d3024697a2091e5"
+    },
+    {
+      "path": "screenshots/06-height-side-view.jpg",
+      "dimensions": [
+        1920,
+        1220
+      ],
+      "bytes": 173850,
+      "sha256": "1e3241d55fb9e566512fab525ed3eb3cb791381ab5dc9157a72feab2803ea4f8"
+    }
+  ],
+  "dependencies": [
+    "../ui-visual-v4/style.css",
+    "../ui-visual-v3/style.css",
+    "../ui-visual-v3/vendor/three.module.js",
+    "../ui-visual-v3/scene-data.json",
+    "../../../generated-character-art/dialogue-transparent/formal-player-default-male-v1.png"
+  ],
+  "limitations": [
+    "8/12-unit fixture, not formal multi-unit HUD",
+    "Fixed movement route and result snapshots",
+    "Side camera is height inspection only; some projected unit labels overlap, axis remains available",
+    "No approved final UI slicing, typography licensing or Unity assets"
+  ]
+}
