@@ -30,7 +30,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | D-JD-COMBO-SCOPE-01 | P2 | codex | 待决定 | — | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
-| C-FPD-NAME-01A | P2 | codex | 已排队 | — | 道基四阶段名称候选起草与复审 | 开发管理/任务卡/C-FPD-NAME-01A.txt |
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | V-GZ-ART-SLICE-01 | 关中首个可展示流程美术父项 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
 | C-FPD-NAME-01 | P2 | codex | 阻塞 | C-FPD-NAME-01A | 道基四阶段正式名称确认 | 开发管理/任务卡/C-FPD-NAME-01.txt |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |

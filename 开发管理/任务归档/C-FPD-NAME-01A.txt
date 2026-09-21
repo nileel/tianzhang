@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-21：Codex 独立复审正式提交 dd3b484f51d6da6bdaa043a447bbec92dde95875 通过；候选的出处两级口径、四阶段连续养基语义与冻结边界符合直接事实源，正式名称仍待用户确认。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md",
     "开发管理/任务列表/内容设计任务.txt",

@@ -4,30 +4,3 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
-
-### DSH-C-FPD-NAME-01A-1623c17a · DeepSeek 候选人工集成交接（部分通过，待返工）
-
-- 方向：C-FPD-NAME-01A 的 DeepSeek 名称候选经 Codex 独立复审后部分通过，保留当前候选等待返工；不得据此确认正式名称。
-- 原 run：1623c17a-8bc8-449d-a2b1-5c29458185bb；原候选：0a4f8f495be3d4efff11e8c785a2a930e6f050b2；原基线：c45272e8b1965a9d9d4ee29a960afa38359ddf8f。
-- 正式提交：与本交接及 codex_review/codex/ready 投影处于同一原子提交。
-- 恢复依据：原集成因主分支 a54d22e0 修改共享队列、内容 backlog 与交接文件而触发 hourly_revalidation_required；人工核对本任务卡、原候选两文件及直接机制事实源在原基线至 a26f6ce0a6c75769fc780edf0eb806c08e1c60ff 间均未变，候选原样重放，其他任务条目保留最新版本。
-- 修改文件：开发管理/未通过审核清单.txt、docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md；另同步本任务卡、队列、内容 backlog 和本交接。
-- 原候选已验证（原责任方记录）：candidate 提交 0a4f8f495be3d4efff11e8c785a2a930e6f050b2 为 baseCommit c45272e8b1965a9d9d4ee29a960afa38359ddf8f 的直接后继，worktree 干净；changedPaths 与预声明 CandidatePaths 精确一致（2 条），任务候选路径清单中多出的交接归档第三条应由固定入口建立；pwsh tools/check-review-text.ps1 -Paths docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md,开发管理 通过（OK，558 files checked）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths（候选文件与未通过审核清单）通过（OK，2 files checked）；git diff --cached --check 通过，git status --short 无残留；pwsh tools/check-data-chain.ps1 全库通过（EXITCODE=0，check-data-chain: OK；GongFa=29/29、Spells=83/83、Skills=31/31、language keys=544）；候选文件四阶段逐行覆盖且名称无重复（推荐组 元基／培基／拓基／圆基；替代组 元基／培基／渐基／渐陆）；未修改任何现行事实源、任务卡、当前队列、backlog、runtime、主工作区或其他分支；未创建临时／诊断／转换／辅助文件
-- 未验证：Codex 独立复审未进行（DeepSeek 不自审）：出处逐条可核验性、是否复刻旧五段、是否引入未授权机制暗示均待复审确认；辅助子智能体的具体模型标识未取得工具级证据，本文件不声明其模型或推理强度；古典引文归属仅由该只读辅助核验并经主智能体复核，未使用外部权威文本库二次比对；未运行 BattleSim／Unity（本轮不改数值、代码或运行时）；未额外新增经验候选章节：本轮为主模型直接执行、证据面有限，未检出可复用经验
-- 残留风险：候选内容本身未获独立验证：出处逐条核验与「不复刻旧五段」判断均为主智能体自证，须由 Codex 复审确认。仓库既有 docs/角色养成/术法/古修/无待.txt 将《庄子·逍遥游》引文标为《庄子·无待》，属本卡范围外的既有错误，未修复。候选名元基／培基／拓基／圆基／渐基／渐陆在本仓库无既有先例，与未来功法命名可能冲突。本轮两条改动只是任务 CandidatePaths 的子集，交接归档条目应由固定入口在正式提交时建立。
-- 人工恢复验证：写前风险预检零命中，candidate patch 在最新基线无冲突应用，ExternalPendingReview 投影检查通过；正式提交前继续运行文本、空白与数据链检查，以提交元数据记录最终结果。
-- 复审结论：审核对象为正式提交 `ddbf8fa94df6cc63730ce62db1a73b542a6f5d9c`；部分通过，仍需返工。四阶段覆盖、连续养基与容量边界符合事实源，未改正式机制；但候选文件 §一要求“用字有据”的构词每个字均有典籍原文依据，§3.1、§3.2、§4.2 只为 `元`、`培`、`渐` 提供引文，`基` 只有项目术语“道基”的现行依据。因此 `元基`、`培基`、`渐基` 及“替代组四项用字均有依据”不可按自定口径核验。
-- 建议下一步：仅重核名称出处分级或改列原创，保持阶段机制、顺序、容量释放和数值不变；返工后重新进入独立复审。父项 `C-FPD-NAME-01` 与下游继续阻塞，不得直接解冻或写入正式名称事实源。
-
-### DSH-C-FPD-NAME-01A-02a9c365 · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 C-FPD-NAME-01A 的原子正式结果等待 Codex 独立复审。
-- 任务：C-FPD-NAME-01A
-- 候选提交：26884677a6d78da2fbe6045e98b6d12fbd4cb2d2
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：开发管理/未通过审核清单.txt、docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md
-- 已验证：candidate 提交 26884677a6d78da2fbe6045e98b6d12fbd4cb2d2 是 baseCommit 052446c52372c7e3e9638de767182ce35635477a 的直接后继（单父提交，git rev-list --parents 核验）；changedPaths（2 条）与任务 CandidatePaths 子集及 expectedPaths 一致，未超出；worktree 干净（git status --short 无输出）、无未跟踪文件，未创建任何临时／诊断／转换／辅助文件；任务卡检查 pwsh tools/check-review-text.ps1 -Paths docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md,开发管理 通过（check-review-text: OK，560 files checked）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths（候选文件与未通过审核清单）通过（OK，2 files checked；提交脚本内再次运行同样通过）；pwsh tools/check-data-chain.ps1 按任务卡 docs 范围全库通过（EXITCODE=0；check-data-chain: OK；GongFa=29/29、Spells=83/83、Skills=31/31、language keys=544）；git diff --check 通过（EXITCODE=0）；提交由 tools/automation-finalize-commit.ps1 执行，内部另跑 check-pending-whitespace 与 git diff --cached --check 均通过；返工口径自检：候选文件已无按字命名的旧「用字有据」分级作为在用品级；§一 两级口径与 §三、§4.1、§4.2、§4.3 逐条一致，六个候选名（元基／培基／拓基／圆基／渐基／渐陆）出处级别均为原创，`基` 各处只标现行术语且不再声明典籍出处，§4.3 原「替代组四项用字均有依据」结论已按字义依据重述；事实源核对：`基`＝道基 与 docs/基础设定/境界特性.txt#一、筑基期 —— 唯一道基与四阶段（第 7、40-49 行）一致；候选文件 §二 机制表与 §五 对照表本轮零改动，阶段数量／顺序／容量释放／成长数值未动；模型协作评估已记入候选文件 §7.1：本轮为复审已给定范围的单文件分级返工，属简单任务，沿用入口单模型 deepseek-flash；本轮未调用辅助模型或子智能体，待查事实证明（rg 检索 docs/ 的 德之基／基，墙始／说文／说文解字，除本文件自身外零命中）已写入 §7.1，首轮记录保留于 §7.2
-- 未验证：Codex 独立复审未进行（DeepSeek 不自审）：新的出处分级是否被接受、机制适配与是否复刻旧五段均待复审确认，本轮未预填任何审核结论；未使用外部权威典籍语料库二次比对引文；本轮未新增任何引文，既有四处引文（《周易·乾·彖传》《庄子·逍遥游》《礼记·中庸》《周易·渐卦》）沿用首轮核验结果，只改标注级别；首轮只读辅助子智能体的具体模型标识仍未取得工具级证据，候选文件 §7.2 不声明其模型或推理强度；未运行 BattleSim／Unity（本轮不改数值、代码或运行时）；未创建 开发管理/AI合作归档/C-FPD-NAME-01A-交接归档.txt：按 开发管理/审核入口.txt 第 7 条与仓库先例（如 e2352202、dfa94dc2），交接归档由复审通过后的 review 提交建立，本轮不创建空归档
-- 残留风险：候选内容仍未获独立验证：出处分级与出处的可核验性由主模型自证，须由 Codex 复审确认，本轮返工不等于候选已通过。仓库既有 docs/角色养成/术法/古修/无待.txt 的《庄子》篇章归属错误属本卡范围外，未修复。候选名元基／培基／拓基／圆基／渐基／渐陆在本仓库无既有先例，与未来功法命名可能冲突。本轮取消中间级别后，出处分级的区分度改由「字义依据」列承载，若复审认为需要更细的出处层次，须由主责裁决后另立任务，本轮不叠加补丁。父项 C-FPD-NAME-01 与下游继续阻塞，正式名称仍待用户确认。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
