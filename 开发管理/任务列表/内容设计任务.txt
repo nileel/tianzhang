@@ -6,7 +6,7 @@
 
 - 2026-09-20 用户明确解冻本轮列出的 C-FPD-NAME-01（新增候选叶子01A）、C-FPD-SPELL-01及01A～01D、C-FPD-SHENTONG-01、C-JD-COMBO-01（新增范围合同前置D-JD-COMBO-SCOPE-01）、C-JD-LORE-MIGRATE-01及01A～01C。可原子执行的叶子已建立 schema 2 卡并入队；名称最终确认、组合范围确认和守真升格结果等真实前置继续保留。其他内容冻结不变；下方早期日期的授权边界是历史事实，当前以本条和活跃卡为准。
 - 本批 DeepSeek 执行采用 DeepSeek V4.1 Flash（deepseek-flash），仍由 Codex 独立复审；各卡已按实际风险填写模型协作，关键语义冲突才调用 Astra/high 只读辅助。
-- 2026-09-20 用户随后明确要求本会话实施并提交：C-FPD-SHENTONG-01由Codex完成文档迁移，已于2026-09-21独立复审通过并归档；C-JD-LORE-MIGRATE-01C仅卫长庚、祝融烈及对应L1已落稿，谢凌沧、姚观寂尚未完成整卡核查，保持codex_execute/ready。详细证据见对应任务卡。
+- 2026-09-20 用户随后明确要求本会话实施并提交：C-FPD-SHENTONG-01由Codex完成文档迁移，已于2026-09-21独立复审通过并归档；C-JD-LORE-MIGRATE-01C于2026-09-21完成四名NPC迁移并归档，人物志及对应L1仍保留迁移后独立复审标记。详细证据见对应任务归档。
 
 - 2026-09-12 用户批准关中首个可展示流程美术重排；A-GZ-PRESENT-01改为汇总父项，解除冻结四足动画依赖。首包只沿用固定男主、石甲兽及既有关中内容，新增五张叶子列在场景与Unity分线；其余本文件内容状态不变。
 
@@ -50,7 +50,6 @@
 | C-JD-COMBO-01 | P2 | deepseek | 阻塞 | D-JD-COMBO-SCOPE-01 | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |
 | C-JD-LORE-MIGRATE-01 | P2 | codex | 阻塞 | C-JD-LORE-MIGRATE-01A、C-JD-LORE-MIGRATE-01B、C-JD-LORE-MIGRATE-01C | 旧金丹叙事语义迁移跨类型收口 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt |
 | C-JD-LORE-MIGRATE-01B | P2 | codex | 阻塞 | C-FPD-SPELL-01C | 守真具体位格与道路权限重判 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01B.txt |
-| C-JD-LORE-MIGRATE-01C | P2 | codex | 已排队 | — | 四名NPC旧金丹位格语义重判 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01C.txt |
 | C-TAIYI-01 | P2 | Codex 规划；DeepSeek 整理 | 冻结（薄内容切片外） | — | 太一道庭法箓 CSV/BattleSim/Unity 字段方案。 | — |
 | C-GUXIU-03 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 古修第一批神通；每个完成品单独文件。 | — |
 | C-SANXIU-01 | P2 | DeepSeek | 冻结（薄内容切片外） | — | 散修通用内容可玩性补强清单。 | — |
