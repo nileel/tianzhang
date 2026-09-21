@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-21 Codex 复审部分通过：穷理将旧丹枢接口中的未命中障目代价写入源术法战斗效果绑定，新增了原特殊效果未声明的战斗行为，违反本卡不改基础术法数值、功法或结构规则的边界；待定向返工后复审。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",
