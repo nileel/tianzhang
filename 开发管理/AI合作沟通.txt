@@ -4,3 +4,17 @@
 > 历史过程记录按日期归档至 `开发管理/AI合作归档/`；当前调度事实以 `开发管理/当前任务队列.txt` 与匹配任务卡为准。
 
 ## 当前交接队列
+
+### DSH-C-FPD-NAME-01A-1623c17a · DeepSeek 候选人工集成交接（⚠️ 未审核）
+
+- 方向：C-FPD-NAME-01A 的 DeepSeek 名称候选交 Codex 独立复审；本轮只恢复交付，不作审核通过结论。
+- 原 run：1623c17a-8bc8-449d-a2b1-5c29458185bb；原候选：0a4f8f495be3d4efff11e8c785a2a930e6f050b2；原基线：c45272e8b1965a9d9d4ee29a960afa38359ddf8f。
+- 正式提交：与本交接及 codex_review/codex/ready 投影处于同一原子提交。
+- 恢复依据：原集成因主分支 a54d22e0 修改共享队列、内容 backlog 与交接文件而触发 hourly_revalidation_required；人工核对本任务卡、原候选两文件及直接机制事实源在原基线至 a26f6ce0a6c75769fc780edf0eb806c08e1c60ff 间均未变，候选原样重放，其他任务条目保留最新版本。
+- 修改文件：开发管理/未通过审核清单.txt、docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md；另同步本任务卡、队列、内容 backlog 和本交接。
+- 原候选已验证（原责任方记录）：candidate 提交 0a4f8f495be3d4efff11e8c785a2a930e6f050b2 为 baseCommit c45272e8b1965a9d9d4ee29a960afa38359ddf8f 的直接后继，worktree 干净；changedPaths 与预声明 CandidatePaths 精确一致（2 条），任务候选路径清单中多出的交接归档第三条应由固定入口建立；pwsh tools/check-review-text.ps1 -Paths docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md,开发管理 通过（OK，558 files checked）；pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths（候选文件与未通过审核清单）通过（OK，2 files checked）；git diff --cached --check 通过，git status --short 无残留；pwsh tools/check-data-chain.ps1 全库通过（EXITCODE=0，check-data-chain: OK；GongFa=29/29、Spells=83/83、Skills=31/31、language keys=544）；候选文件四阶段逐行覆盖且名称无重复（推荐组 元基／培基／拓基／圆基；替代组 元基／培基／渐基／渐陆）；未修改任何现行事实源、任务卡、当前队列、backlog、runtime、主工作区或其他分支；未创建临时／诊断／转换／辅助文件
+- 未验证：Codex 独立复审未进行（DeepSeek 不自审）：出处逐条可核验性、是否复刻旧五段、是否引入未授权机制暗示均待复审确认；辅助子智能体的具体模型标识未取得工具级证据，本文件不声明其模型或推理强度；古典引文归属仅由该只读辅助核验并经主智能体复核，未使用外部权威文本库二次比对；未运行 BattleSim／Unity（本轮不改数值、代码或运行时）；未额外新增经验候选章节：本轮为主模型直接执行、证据面有限，未检出可复用经验
+- 残留风险：候选内容本身未获独立验证：出处逐条核验与「不复刻旧五段」判断均为主智能体自证，须由 Codex 复审确认。仓库既有 docs/角色养成/术法/古修/无待.txt 将《庄子·逍遥游》引文标为《庄子·无待》，属本卡范围外的既有错误，未修复。候选名元基／培基／拓基／圆基／渐基／渐陆在本仓库无既有先例，与未来功法命名可能冲突。本轮两条改动只是任务 CandidatePaths 的子集，交接归档条目应由固定入口在正式提交时建立。
+- 人工恢复验证：写前风险预检零命中，candidate patch 在最新基线无冲突应用，ExternalPendingReview 投影检查通过；正式提交前继续运行文本、空白与数据链检查，以提交元数据记录最终结果。
+- 请求判断：请按审核入口复审本原子正式提交的候选内容、出处及机制适配；交接中的原责任方自述不替代独立取证。
+- 建议下一步：复审通过后归档本叶子，由父项 C-FPD-NAME-01 承接用户最终确认；不得直接解冻下游或写入正式名称事实源。
