@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：original_source_offsite_backup_unverified",
+  "stateReason": "2026-09-21：用户提供百度网盘原包截图，两个 ZIP 的云端显示大小与冻结本地原包换算一致，解除原包异地备份证据阻塞；恢复 ready 继续登记、干净恢复与 Player 构建验证。",
   "expectedPaths": [
     "docs/资源管理/美术资源登记册.md",
     "开发管理/首批真实资源版本闭环验证记录.txt",
@@ -62,6 +62,16 @@
 - U-GZ-ART-BATTLEFIELD-01 已完成；本批固定为关中 initial-v1 的地块与备用石阶。原包、哈希、LFS 正式资源已存在，旧“首批真实资源尚未产生”阻塞失效。
 - 唯一结果是本批原包→正式资源→干净恢复→Unity 构建的可复现验证记录；不重做资源或宣称其他素材批次已可恢复。
 
+## 2026-09-21 原包异地备份证据
+
+- 用户在本次对话从百度网盘手机端确认自动备份，并提供目录与文件列表截图。云端可见路径尾部为 `environments/guanzhong-first-bounty/initial-v1`；目录显示时间为 2026-09-21 09:24。
+- `stairs-source.zip`：云端显示 6.62 MB、2026-09-21 09:23；本地冻结原包为 6,941,428 字节，除以 1,048,576 并保留两位小数为 6.62，与截图一致。
+- `terrain-source.zip`：云端显示 7.61 MB、2026-09-21 09:24；本地冻结原包为 7,977,204 字节，同口径换算为 7.61，与截图一致。
+- 本轮重新读取主工作区五份 automationInputs，字节数与 SHA-256 均符合卡头冻结值。云端仅核对文件存在与界面显示精度的大小，未取得云端精确字节数、SHA-256 或回下载验证；截图也未展示三个冻结 JSON，不将其云端完整性记为已验证。
+- 按美术资源版本管理规范的“上传后核对 SHA-256 或文件大小”口径，以上用户云端截图与本地大小比对解除 `original_source_offsite_backup_unverified`。后续执行将这份有精度限制的备份证据纳入本批登记与验证记录，继续完成原有干净恢复和 Player 构建验收，不重复要求客户端可用或重新上传来证明同一原包存在。
+- 目录截图保存在主工作区 `.codex-remote-attachments/01a0c18a-9b4f-7a00-b3e8-47cefc3cf0c5/2e6e0a10-7570-41ce-ab21-b04bc79b2611/1-Photo-1.jpg`，SHA-256 为 `644695784ee525ee79c300ee8c9f9160d23421bdee3615b588411adbbc525bba`。
+- 文件列表截图保存在主工作区 `.codex-remote-attachments/01a0c18a-9b4f-7a00-b3e8-47cefc3cf0c5/46da38ed-1426-45df-9ad3-c263471032a3/1-Photo-1.jpg`，SHA-256 为 `32cbff44f0aa98fdb18f7f3e3e6a0ccca7030c172ec22bd11c7720b97c9f0161`。两张用户附件未加入 Git；linked worktree 可按主工作区绝对路径只读复核。
+
 ## 必查范围
 
 - docs/资源管理/美术资源版本管理规范.md#单批资源流程、原始素材备份；docs/superpowers/specs/2026-07-12-asset-version-management-design.md#资源登记与备份、自动化与失败处理、验收标准；docs/资源管理/美术资源登记册.md。
@@ -84,6 +94,7 @@
 
 ## 模型协作
 
+- 本次仅补充用户备份证据并恢复任务投影，属于简单管理修改，沿用入口单模型；未触发恢复差异调查，未调用辅助模型。后续执行复杂度与组合继续按下述合同。
 - 复杂度：复杂诊断；原包忽略路径、LFS 指针、恢复环境与 Unity 构建跨边界，已有正式导入证据可复用。
 - 主模型沿用 Codex 入口（小时入口当前 gpt-5.6-terra）；仅当恢复与原资源哈希/导入结果不一致时，用 gpt-5.6-sol / high 对冻结 manifest、LFS 属性和构建日志作独立只读根因核查，返回差异及最小复现，不写资源或配置。
 - 写前核对实际工具能力，按 AI协作规则 记录触发、请求模型/强度、会话标识及可核实结果；未调用不得记作已验证，工具缺失不绕过原停止条件。
