@@ -116,8 +116,8 @@
 ## 经验候选
 
 ### CAND-C-JD-LORE-MIGRATE-01C-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-EB7E3647997B
 - resolution: unresolved
 - experienceId:
 - 经验领域：management
