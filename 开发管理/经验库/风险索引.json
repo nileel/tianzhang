@@ -64,6 +64,28 @@
       "lastVerified": "2026-08-27"
     },
     {
+      "id": "EXP-MGMT-002",
+      "title": "Codex 归档须验证目标完成后置条件",
+      "preflightSummary": "Codex归档任务时，必须以目标TaskId和完成后置检查验证任务卡、队列、分线backlog同步。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [],
+      "stages": [],
+      "pathPatterns": [
+        "开发管理/任务卡/*.txt",
+        "开发管理/当前任务队列.txt",
+        "开发管理/任务列表/*.txt"
+      ],
+      "textPatterns": [
+        "CodexClosedOrNonReady",
+        "完成后置检查"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-MGMT-002.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-09-22"
+    },
+    {
       "id": "EXP-BS-001",
       "title": "BattleSim 修改先构建后运行",
       "preflightSummary": "BattleSim 源码或项目入口改动须先通过 Release build，再以 --no-build 运行。",

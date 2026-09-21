@@ -9,4 +9,3 @@
 | C-FPD-SPELL-01A | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
 | C-FPD-SPELL-01B | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
 | C-FPD-SPELL-01D | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
-| M-EXP-PROMOTE-EB7E3647997B | codex_execute | codex | P2 | management | implementation | 经验候选整理：CAND-C-JD-LORE-MIGRATE-01C-01 | 开发管理/任务卡/M-EXP-PROMOTE-EB7E3647997B.txt |

@@ -118,8 +118,8 @@
 ### CAND-C-JD-LORE-MIGRATE-01C-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-EB7E3647997B
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-MGMT-002
 - 经验领域：management
 - 现象：普通任务卡检查通过，完成候选却因已归档任务仍留在backlog而被自动验收拒绝。
 - 已证实根因：把分线任务行改为“已完成”而未删除；不带TaskId和Postcondition的全局检查不能替代目标任务的完成后置检查。

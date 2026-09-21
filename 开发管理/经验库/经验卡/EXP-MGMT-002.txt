@@ -1,0 +1,25 @@
+# EXP-MGMT-002 · Codex 归档须验证目标完成后置条件
+
+## 状态
+
+active；最后核验日期：2026-09-22；事实源：`C-JD-LORE-MIGRATE-01C` 的候选及其归档收尾修复记录。
+
+## 开工前
+
+适用：Codex归档并同步任务卡、队列、分线backlog。先定位目标TaskId的completed合同和backlog行；提交前运行 `check-task-cards.ps1 -TaskId <ID> -Postcondition CodexClosedOrNonReady`。外部待复审或仅调查排除。不得用全局检查替代目标后置检查；任一投影未同步即停止。
+
+## 正确处理
+
+将任务卡移入精确归档路径、从队列和分线 backlog 删除同一 ID 后，以目标 TaskId 和 `CodexClosedOrNonReady` 运行检查；通过后再提交候选。
+
+## 根因与弯路
+
+先前候选只运行未指定 TaskId／Postcondition 的全局检查，将分线 backlog 行标为“已完成”而没有删除。任务卡虽已归档且队列已移除，目标后置检查仍拒绝该候选。
+
+## 证据
+
+来源候选 `CAND-C-JD-LORE-MIGRATE-01C-01`；失败候选 `35ccb9c148fa540020eb220e1464310343a015e0`；`C-JD-LORE-MIGRATE-01C` 的“2026-09-21 归档收尾修复”；`tools/check-task-cards.ps1` 的 `CodexClosedOrNonReady` 分支。
+
+## 失效条件
+
+任务完成不再通过任务卡归档、队列和分线 backlog 的三处同步表示，或 `CodexClosedOrNonReady` 被替换／废弃时，停止引用并重新核验；不依据旧命令继续归档。

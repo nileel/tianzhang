@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 C-JD-LORE-MIGRATE-01C/CAND-C-JD-LORE-MIGRATE-01C-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-09-22：独立核验候选并晋级为 EXP-MGMT-002；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/C-JD-LORE-MIGRATE-01C.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-09-22 完成记录
+
+- 语义裁决：promoted。候选根因已由 `C-JD-LORE-MIGRATE-01C` 的失败候选、归档收尾修复及 `check-task-cards.ps1` 的目标后置检查分支直接证实；它约束 Codex 归档同步，不与仅覆盖共享 worktree／正式集成隔离的 `EXP-MGMT-001` 重复。
+- 索引边界：`EXP-MGMT-002` 仅在任务卡、队列或分线 backlog 路径与 `CodexClosedOrNonReady`／“完成后置检查”同时命中时提醒；外部待复审、未归档和仅调查排除。候选虽有门禁可能，但现无额外稳定门禁，未新增门禁。
+- 模型协作：简单：直接证据、既有经验边界与验收口径明确；沿用入口默认单模型，无需辅助。
