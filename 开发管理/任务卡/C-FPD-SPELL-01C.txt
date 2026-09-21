@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-22 Codex 复审部分通过：正式提交 30b87541e2f4f5adeee43e1394eb01db3d09de62 已移除未授权障目源术法效果，但穷理仍仅能在金丹期至理篇解锁，而现行开府只允许筑基期，无法在开府前成为兼容源术法；未满足本卡完整、可记录升格方案的完成条件，待有权任务裁决取得窗口。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",
