@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-21：用户提供百度网盘原包截图，两个 ZIP 的云端显示大小与冻结本地原包换算一致，解除原包异地备份证据阻塞；恢复 ready 继续登记、干净恢复与 Player 构建验证。",
+  "stateReason": "2026-09-21：五份冻结输入、两件正式资源及其 LFS/Prefab 映射均在 b86f0eb959d9249d2438b0146a0b89a6714b0f40 的干净恢复中复核；Unity 6000.3.18f1 Windows Player 构建成功。百度网盘截图按文件大小核验两个 ZIP，完整原始工程异地恢复未作声称。",
   "expectedPaths": [
     "docs/资源管理/美术资源登记册.md",
     "开发管理/首批真实资源版本闭环验证记录.txt",
@@ -113,3 +113,8 @@
 ## 停止条件
 
 - 源哈希不符、LFS 对象缺失、需要修改资源/生产代码/共享流程、无可用构建入口，或备份无法验证时停止相应闭环并报告，不叠加重试/兼容路径。
+
+## 完成证据 · 2026-09-21
+
+- 详见 `开发管理/首批真实资源版本闭环验证记录.txt`：原包、ZIP 内导出、Git LFS、GUID/Prefab 映射、无缓存干净恢复与 Windows Player 构建均有本轮实际证据。
+- 只关闭本批地块与备用石阶的版本闭环；不宣称石阶通行、高差、角色/UI、整屏视觉或其他素材批次验收。

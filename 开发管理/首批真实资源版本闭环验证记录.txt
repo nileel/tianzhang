@@ -1,0 +1,46 @@
+# 首批真实资源版本闭环验证记录
+
+## TQ-074 · AVM-03 · 2026-09-21
+
+本记录只覆盖关中 `initial-v1` 的正式地块与备用石阶。它证明冻结原包到正式 Unity 资源、可追溯 Git/LFS 恢复和 Windows Player 构建；不扩大为原始工程完整异地恢复、石阶通行、高差、角色/UI、整屏视觉或其他资源批次的验收。
+
+## 冻结输入与原包备份
+
+执行前从主工作区 `D:/天章游戏开发/assets/source/environments/guanzhong-first-bounty/initial-v1/` 逐份读取并物化到恢复目录；均与任务卡 `automationInputs` 的字节数及 SHA-256 一致：
+
+| 文件 | 字节 | SHA-256 |
+|------|------|----------|
+| `terrain-source.zip` | 7,977,204 | `67238be87531bf2766886ba14824d6ec016b446c0b943dda3373dceda4256b69` |
+| `stairs-source.zip` | 6,941,428 | `872d52998fd2404e080845b143659014986dfc45d4c3a94c841a65cf92117aab` |
+| `manifest.json` | 2,450 | `c13790cd85ac785a28db9fbce50eb2248fa15a8be7b7a2661148810e29104a5b` |
+| `normalization.json` | 649 | `2d24399487a4177a25f9ffa81dc9aa2e50190fe0d70b2f68c426c8ca73e21cec` |
+| `fbx-coordinate-proof.json` | 7,929 | `083edbf8ab6d584b599406f91733894452270988a96da557746c348ed47c61ba` |
+
+- 用户提供的百度网盘目录与文件列表截图分别复核为 SHA-256 `644695784ee525ee79c300ee8c9f9160d23421bdee3615b588411adbbc525bba`、`32cbff44f0aa98fdb18f7f3e3e6a0ccca7030c172ec22bd11c7720b97c9f0161`。截图显示 `initial-v1` 目录，以及 `terrain-source.zip` 7.61 MB、`stairs-source.zip` 6.62 MB；本地冻结 ZIP 按 1,048,576 字节/MiB、保留两位小数得到相同数值。
+- 这满足规范的“上传后核对 SHA-256 或文件大小”对两份 ZIP 的异地备份确认；未取得云端精确字节数、云端 SHA-256、回下载或三个 JSON 的云端证据，故不把原始工程的完整异地恢复写为已验证。
+
+## 原包到正式资源的可追溯映射
+
+在两份 ZIP 内直接计算成员 SHA-256，并与当前正式 LFS 工作区内容、`manifest.json` 和既有坐标证据核对：
+
+| 用途 | ZIP 成员 → 正式路径 | SHA-256 | LFS 与 Prefab 映射 |
+|------|---------------------|---------|-------------------|
+| 六格平地 | `terrain-source.zip:tripo_convert_bca38d02-5a2e-47fc-8aaa-dac8d078eeba.fbx` → `src/Assets/Art/Environments/Guanzhong/Tile.fbx` | `504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee` | `filter=lfs`；FBX GUID `746901f8341134a468146342d43cc2a5` 被 `Tile.prefab` 引用 |
+| 六格平地贴图 | `terrain-source.zip:.../tropical_terrain_hex_tile_3d_model_basecolor.JPEG` → `src/Assets/Art/Environments/Guanzhong/Tile_basecolor.JPEG` | `f32f6d747d8e9d3fa4cce72a9be4e5a0a3254acf40d4faca61d32193992b0ef5` | `filter=lfs`；贴图 GUID `735f46659de570441a3efa0bd79eb120` 由 `Tile.mat` 引用，材质 GUID `dd727724208c6c4449355bce929231ac` 被 Prefab 引用 |
+| 备用石阶 | `stairs-source.zip:tripo_convert_927767cd-61d3-4641-bf75-977c0aa2ca5e.fbx` → `src/Assets/Art/Environments/Guanzhong/Stair.fbx` | `d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9` | `filter=lfs`；FBX GUID `f0c78cfec1445de4bb26954ad0bdefe0` 被 `Stair.prefab` 引用 |
+| 备用石阶贴图 | `stairs-source.zip:.../stone_stairs_3d_model_basecolor.JPEG` → `src/Assets/Art/Environments/Guanzhong/Stair_basecolor.JPEG` | `23e14161e0051843fedfd8db1b691587a9638c94c4966e4f652d3b6549fcc54a` | `filter=lfs`；贴图 GUID `9f27756c4bd077e47a71193817f31e9b` 由 `Stair.mat` 引用，材质 GUID `e3730a0d9bec6fe428023f713585871f` 被 Prefab 引用 |
+
+- `git lfs ls-files --long` 的四个对象 ID 与上表 SHA-256 相同；`git check-attr filter` 对四个二进制正式资源均返回 `lfs`；`tools/check-asset-versioning.ps1`（含 `git lfs fsck`）通过。
+- 上述正式资源最初由提交 `195df642cd6b9f0a179ae162399cd2c3041bf0a8` 引入；`git diff --exit-code 195df642cd6b9f0a179ae162399cd2c3041bf0a8..b86f0eb959d9249d2438b0146a0b89a6714b0f40 -- src/Assets/Art/Environments/Guanzhong` 无差异。`fbx-coordinate-proof.json` 的双向点集覆盖仍为 Tile 59,149/55,903、Stair 63,497/55,387，且 `outsideTolerance=0`；这复用既有导入坐标证据，不另作网格、碰撞或通行结论。
+
+## 干净恢复与 Player 构建
+
+- 恢复源为提交 `b86f0eb959d9249d2438b0146a0b89a6714b0f40`。在任务临时目录运行 `git clone --no-local --no-checkout <本 worktree> <恢复目录>`、`git checkout --detach b86f0eb959d9249d2438b0146a0b89a6714b0f40`、`git lfs pull`，再从主工作区逐份复制上述五份冻结输入。恢复前 `git status --porcelain` 为空，恢复目录与 `src/` 下均不存在 `Library`；没有借用原工作树的 Library、导入缓存或未提交文件。
+- Unity 首次导入后在恢复目录的 `src/Library` 正常生成。使用 Unity `6000.3.18f1 (5ebeb53e4c07)`、Windows Standalone Support 和 `EditorBuildSettings.asset` 的四个 enabled 正式场景，执行：`Unity.exe -batchmode -nographics -quit -projectPath <恢复目录>/src -buildWindows64Player <恢复目录>/player/TianZhang-TQ074.exe`。
+- 输出日志为 `Build Finished, Result: Success.`、`return code 0`；生成 `TianZhang-TQ074.exe` 667,136 字节及对应 `Data`、`UnityPlayer.dll`、`GameAssembly.dll` 产物。构建时 Unity 在恢复副本内更新的渲染/ProjectSettings 及 `player/` 均未进入候选工作树；恢复目录 `D:/Temp/TQ-074-83c04866-clean` 已确认可精确定位，但当前受控终端拒绝删除命令，未把清理写为已完成。
+- 构建设置明确包含 `StartMenuScene`、`WorldScene`、`SettlementScene` 和 `AdventureScene`。`SceneArchitectureValidator.ValidateForBatchMode` 的实现同样以这四个正式场景及其渲染资产为验证对象；本轮 Player 构建实际消费该正式场景集合。
+
+## 模型协作与结论
+
+- 本轮是既有复杂跨边界验证的执行，不是新的恢复差异诊断：五份冻结输入、ZIP 成员、LFS、Prefab 引用和 Player 构建均一致，未触发任务卡规定的独立只读辅助模型条件。主模型为入口核验的 `gpt-5.6-terra`；未调用辅助模型。
+- 本批登记、原包与正式导出身份、干净恢复及 Unity Windows Player 构建均有实际成功证据，故 TQ-074 完成归档。没有修改模型、贴图、Prefab、场景、生产代码、`.gitattributes`、构建实现或外部备份体系。
