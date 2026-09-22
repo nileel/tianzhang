@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-FPD-STAGE-03",
     "C-FPD-LEARN-01"
   ],
-  "stateReason": "等待已冻结依赖：C-FPD-STAGE-03、C-FPD-LEARN-01",
+  "stateReason": "等待C-FPD-LEARN-01完成以消费全量功法／术法的筑基学习门槛结果。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/GameData.cs",

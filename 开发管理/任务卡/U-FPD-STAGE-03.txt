@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-FPD-STAGE-03",
     "N-FPD-STAGE-03"
   ],
-  "stateReason": "等待已冻结依赖：C-FPD-STAGE-03、N-FPD-STAGE-03",
+  "stateReason": "等待N-FPD-STAGE-03完成以消费三阶段成长与筑基入门数值合同。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs",
     "src/Assets/Scripts/Editor/CultivationContentImporter.cs",

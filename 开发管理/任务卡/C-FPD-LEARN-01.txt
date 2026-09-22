@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "C-FPD-STAGE-03"
-  ],
-  "stateReason": "等待C-FPD-STAGE-03统一功法/术法规范与模板的筑基学习及知识/章效果边界，再按新模板迁移实例；用户方向已确认。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "C-FPD-STAGE-03已完成；完整expectedPaths、验证、完成条件、停止条件与schema 2风险预检均已核对，等待DeepSeek按既定范围执行。",
   "expectedPaths": [
     "docs/角色养成/功法/古修/南华阐衍典.txt",
     "docs/角色养成/功法/古修/太易山藏经.txt",

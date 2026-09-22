@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-FPD-STAGE-03",
     "C-FPD-LEARN-01"
   ],
-  "stateReason": "用户新三阶段规则先行迁移；原批次保留升格返工边界，等待C-FPD-STAGE-03、C-FPD-LEARN-01完成后继续，取得窗口方向已获授权，不再重复询问。",
+  "stateReason": "用户新三阶段规则先行迁移；原批次保留升格返工边界，等待C-FPD-LEARN-01完成后继续，取得窗口方向已获授权，不再重复询问。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/冥微.txt",
     "docs/角色养成/术法/古修/任化.txt",

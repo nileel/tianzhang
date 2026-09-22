@@ -9,10 +9,8 @@
   "domain": "content",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "C-FPD-STAGE-03"
-  ],
-  "stateReason": "用户新三阶段规则先行迁移；原批次保留升格返工边界，等待C-FPD-STAGE-03完成后继续，取得窗口方向已获授权，不再重复询问。",
+  "blockedBy": [],
+  "stateReason": "C-FPD-STAGE-03已完成；2026-09-22 Codex复审仍未证明三术法在位格白名单、旧术法权限与直接矩阵／位置原文间的非空兼容交集，需在本卡返工边界内取得可证明兼容或按停止条件报告。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/北冥引.txt",
     "docs/角色养成/术法/古修/扶摇.txt",

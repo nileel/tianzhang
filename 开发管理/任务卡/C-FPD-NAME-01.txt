@@ -10,7 +10,6 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-FPD-STAGE-03",
     "C-FPD-LEARN-01",
     "N-FPD-STAGE-03",
     "D-FPD-SPELL-LEARN-01",
