@@ -192,7 +192,9 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $completedTerminal = [ordered]@{
     status = 'completed'; identity = 'DeepSeek V4.1 Flash'; model = 'deepseek-flash'; candidateCommit = 'a' * 40
     expectedTransition = 'codex_review/codex/ready'; changedPaths = @('fixtures/business.txt'); verified = @('passed')
-    unverified = @('none'); residualRisk = 'fixture'; result = 'fixture'; impact = 'fixture'; verify = 'fixture'; plain = 'fixture'
+    unverified = @('none'); residualRisk = 'fixture'; result = '问题=缺少候选；完成=创建候选'
+    impact = '影响=验证候选合同；边界=不修改生产任务'; verify = '验证=Git 检查通过；后续=等待固定入口集成'
+    plain = '发生=测试生成了候选；影响=只验证自动化；需要=无需处理'
   }
   Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $completedTerminal) 'Complete terminal schema rejected its full contract'
   $completedWithoutPaths = [ordered]@{} + $completedTerminal
@@ -207,8 +209,26 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   }
   Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionTerminal) 'Decision terminal schema rejected its full contract'
   $schemaJson = $terminalSchema | ConvertTo-Json -Depth 50 -Compress
+  Assert-True (Test-Json -Json ($completedTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson) 'Complete schema rejected valid finalizer metadata'
+  $incompleteMetadata = [ordered]@{
+    plain = '发生=全部功法术法的学习门槛此前分散在金丹至炼虚五档，源术法在筑基期拿不到。'
+    result = '问题=缺少候选'
+    impact = '影响=验证候选合同'
+    verify = '验证=Git 检查通过'
+  }
+  foreach ($field in $incompleteMetadata.Keys) {
+    foreach ($invalidValue in @(
+        $incompleteMetadata[$field],
+        ([string]$completedTerminal[$field]).Replace('；', ';'),
+        (([string]$completedTerminal[$field]) + "`n额外行")
+      )) {
+      $invalidTerminal = [ordered]@{} + $completedTerminal
+      $invalidTerminal[$field] = $invalidValue
+      Assert-True (-not (Test-Json -Json ($invalidTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson -ErrorAction SilentlyContinue)) "Complete schema accepted malformed $field metadata"
+    }
+  }
   Assert-True (Test-Json -Json ($decisionTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson) 'Decision schema rejected a valid DEC identifier'
-  foreach ($invalidId in @('CHK-C-FPD-SPELL-01D-20260922', 'DEC-20260922-SPELL-01D', 'DEC-20260922-lowercase', '')) {
+  foreach ($invalidId in @('CHK-C-FPD-SPELL-01D-20260922', 'DEC-20260922-SPELL-01D', 'DEC-20260922-lowercase', 'XDEC-20260922-SPELL01D', '')) {
     $invalidTerminal = [ordered]@{} + $decisionTerminal
     $invalidTerminal.decisionId = $invalidId
     Assert-True (-not (Test-Json -Json ($invalidTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson -ErrorAction SilentlyContinue)) "Decision schema accepted invalid identifier: $invalidId"

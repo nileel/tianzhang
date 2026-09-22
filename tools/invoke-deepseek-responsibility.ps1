@@ -237,7 +237,7 @@ function New-TerminalSchema {
       additionalProperties = $false
     } | ConvertTo-Json -Compress -Depth 20)
   }
-  ([ordered]@{
+  $schema = [ordered]@{
     type = 'object'
     properties = [ordered]@{
       status = [ordered]@{ type = 'string'; enum = @('completed', 'needs_decision', 'blocked', 'failed') }
@@ -249,10 +249,10 @@ function New-TerminalSchema {
       verified = [ordered]@{ type = 'array'; items = [ordered]@{ type = 'string' } }
       unverified = [ordered]@{ type = 'array'; items = [ordered]@{ type = 'string' } }
       residualRisk = [ordered]@{ type = 'string' }
-      result = [ordered]@{ type = 'string' }
-      impact = [ordered]@{ type = 'string' }
-      verify = [ordered]@{ type = 'string' }
-      plain = [ordered]@{ type = 'string' }
+      result = [ordered]@{ type = 'string'; pattern = '^问题=[^\x00-\x1F\x7F]+；完成=[^\x00-\x1F\x7F]+$' }
+      impact = [ordered]@{ type = 'string'; pattern = '^影响=[^\x00-\x1F\x7F]+；边界=[^\x00-\x1F\x7F]+$' }
+      verify = [ordered]@{ type = 'string'; pattern = '^验证=[^\x00-\x1F\x7F]+；后续=[^\x00-\x1F\x7F]+$' }
+      plain = [ordered]@{ type = 'string'; pattern = '^发生=[^\x00-\x1F\x7F]+；影响=[^\x00-\x1F\x7F]+；需要=[^\x00-\x1F\x7F]+$' }
       decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
       question = [ordered]@{ type = 'string' }
       options = [ordered]@{
@@ -294,7 +294,9 @@ function New-TerminalSchema {
       }
     )
     additionalProperties = $false
-  } | ConvertTo-Json -Compress -Depth 20)
+  } | ConvertTo-Json -Compress -Depth 20
+  # claude.cmd consumes literal carets; JSON escapes preserve regex anchors and negated classes.
+  $schema.Replace('^', '\u005e')
 }
 
 function Invoke-ClaudeSession {
