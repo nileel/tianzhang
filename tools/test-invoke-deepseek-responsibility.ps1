@@ -201,10 +201,19 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
   $decisionTerminal = [ordered]@{
     status = 'needs_decision'; identity = 'DeepSeek V4.1 Flash'; model = 'deepseek-flash'; candidateCommit = 'b' * 40
     changedPaths = @('fixtures/business.txt'); verified = @('passed'); unverified = @('none'); residualRisk = 'fixture'
-    decisionId = 'DEC-20260809-FIXTURE'; question = 'Choose.'; options = @(); recommendedOption = 'A'
+    decisionId = 'DEC-20260809-FIXTURE'; question = 'Choose.'
+    options = @(@{ key = 'A'; label = 'Option A' }, @{ key = 'B'; label = 'Option B' }, @{ key = 'C'; label = 'Option C' }); recommendedOption = 'A'
     impactSummary = 'fixture'; plainSummary = [ordered]@{ situation = 'fixture'; impact = 'fixture'; action = 'fixture' }
   }
   Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionTerminal) 'Decision terminal schema rejected its full contract'
+  $schemaJson = $terminalSchema | ConvertTo-Json -Depth 50 -Compress
+  Assert-True (Test-Json -Json ($decisionTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson) 'Decision schema rejected a valid DEC identifier'
+  foreach ($invalidId in @('CHK-C-FPD-SPELL-01D-20260922', 'DEC-20260922-SPELL-01D', 'DEC-20260922-lowercase', '')) {
+    $invalidTerminal = [ordered]@{} + $decisionTerminal
+    $invalidTerminal.decisionId = $invalidId
+    Assert-True (-not (Test-Json -Json ($invalidTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson -ErrorAction SilentlyContinue)) "Decision schema accepted invalid identifier: $invalidId"
+  }
+  Assert-True ([string]$record.prompt -cmatch [regex]::Escape('decisionId must match ^DEC-[0-9]{8}-[A-Z0-9]+$')) 'Decision prompt omitted the validated ID format'
   $decisionWithoutQuestion = [ordered]@{} + $decisionTerminal
   $decisionWithoutQuestion.Remove('question')
   Assert-True (-not (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionWithoutQuestion)) 'Decision terminal schema accepted a missing required field'

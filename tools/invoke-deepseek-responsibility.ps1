@@ -207,6 +207,7 @@ function New-CandidatePrompt {
     'Return only the supplied structured object. completed requires the full candidate SHA, exact changed paths, verified/unverified arrays, residual risk, and the four finalizer-ready metadata values.'
     'Use expectedTransition=codex_review/codex/ready. The four finalizer-ready values must use these exact single-line forms: result="问题=...；完成=...", impact="影响=...；边界=...", verify="验证=...；后续=...", and plain="发生=...；影响=...；需要=...".'
     'If a decision becomes necessary, stop guessing, create one clean direct-successor checkpoint commit containing only legal CandidatePaths, and return needs_decision with its SHA, exact paths, verification/risk evidence, and the complete three-option decision card fields. Do not change task lifecycle in the checkpoint.'
+    'For needs_decision, decisionId must match ^DEC-[0-9]{8}-[A-Z0-9]+$, for example DEC-20260922-SPELL01D. Use the decision date and an uppercase alphanumeric suffix; do not use CHK identifiers, task IDs with hyphens, or an empty string.'
     'blocked or failed must restore the worktree to its initial state and return a stable detailCode. Ordinary failure must not masquerade as a decision checkpoint.'
   ) -join "`n"
 }
@@ -252,7 +253,7 @@ function New-TerminalSchema {
       impact = [ordered]@{ type = 'string' }
       verify = [ordered]@{ type = 'string' }
       plain = [ordered]@{ type = 'string' }
-      decisionId = [ordered]@{ type = 'string' }
+      decisionId = [ordered]@{ type = 'string'; pattern = '^DEC-[0-9]{8}-[A-Z0-9]+$' }
       question = [ordered]@{ type = 'string' }
       options = [ordered]@{
         type = 'array'; minItems = 3; maxItems = 3

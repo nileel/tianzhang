@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-UI-V6-CONTRACT-01"
-  ],
-  "stateReason": "2026-09-20：D-GZ-UI-V6-CONTRACT-01 已在 candidate 中冻结当前所有者、数据／事件、资源语义与验收入口；本卡保留该具名前置直至正式进入 master，且最终切图、字体、既有对象引用点与实机验收仍无证据。旧整屏LOOKDEV拒绝不替代这些真实剩余条件。",
+  "blockedBy": [],
+  "stateReason": "2026-09-22：D-GZ-UI-V6-CONTRACT-01 已完成归档，已冻结当前所有者、数据／事件、资源语义与验收入口；最终切图、字体授权、既有对象引用点及连续实机验收仍无证据，故保持 blocked。旧整屏LOOKDEV拒绝不替代这些真实剩余条件。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
     "assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png",
@@ -78,7 +76,7 @@
 
 ## 来源与当前边界
 
-- 2026-09-20 用户确认 v6 设计并在本轮解冻 UI 接入准备；`docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md` 已冻结后续接入的真实所有者、数据／事件、资源语义与原型限定。本卡保留 `D-GZ-UI-V6-CONTRACT-01` 具名前置直至该结果正式进入 master；不得据 candidate 直接 ready 或实施。
+- 2026-09-22 `D-GZ-UI-V6-CONTRACT-01` 已完成归档；`docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md` 已冻结后续接入的真实所有者、数据／事件、资源语义与原型限定。最终切图、字体授权、既有对象引用点与连续实机验收仍无证据，不得据合同直接 ready 或实施。
 - 新设计依据为 assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md、VALIDATION.md、RESOURCE-MANIFEST.json 及上述接入合同；最终 UI 完成仍由本卡承担，合同准备通过不代表正式接入通过。
 - 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
 - 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。

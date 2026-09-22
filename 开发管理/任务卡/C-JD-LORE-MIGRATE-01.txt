@@ -10,11 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-JD-LORE-MIGRATE-01A",
-    "C-JD-LORE-MIGRATE-01B",
-    "C-JD-LORE-MIGRATE-01C"
+    "C-JD-LORE-MIGRATE-01B"
   ],
-  "stateReason": "2026-09-20：内容/准备授权已解除；仍等待 C-JD-LORE-MIGRATE-01A、C-JD-LORE-MIGRATE-01B、C-JD-LORE-MIGRATE-01C 的真实结果，不能以解冻替代前置完成。",
+  "stateReason": "2026-09-22：C-JD-LORE-MIGRATE-01A 与 C-JD-LORE-MIGRATE-01C 均已完成归档；仍等待 C-JD-LORE-MIGRATE-01B 的守真具体位格与道路权限重判结果，不能以已完成叶子替代该前置。",
   "expectedPaths": [
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",
@@ -33,7 +31,7 @@
 
 ## 来源与当前边界
 
-- 2026-09-20 用户解冻三批迁移，本父项只在 A/B/C 全部完成后统一复核，不领取叶子业务。
+- 2026-09-22 C-JD-LORE-MIGRATE-01A 与 C-JD-LORE-MIGRATE-01C 已完成归档；本父项只在剩余的 C-JD-LORE-MIGRATE-01B 完成后统一复核，不领取叶子业务。
 
 ## 必查范围
 

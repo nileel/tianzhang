@@ -136,9 +136,10 @@ try {
   Write-Utf8 -Path (Join-Path $mainRoot '开发管理/经验库/风险索引.json') -Text '{"schemaVersion":1,"experiences":[],"gates":[]}'
   Write-Utf8 -Path (Join-Path $mainRoot 'fixture/rename-source.txt') -Text 'rename fixture'
   $metadata = [ordered]@{
-    schemaVersion = 1; id = $taskId; title = 'Codex candidate fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
+    schemaVersion = 2; id = $taskId; title = 'Codex candidate fixture'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'
     domain = 'automation'; stage = 'implementation'; dispatchState = 'ready'; blockedBy = @(); stateReason = 'fixture'
-    expectedPaths = @('fixture/rename-source.txt', 'fixture/rename-target.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt", '开发管理/未通过审核清单.txt')
+    expectedPaths = @('fixture/rename-source.txt', 'fixture/rename-target.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/当前任务队列.txt', "开发管理/任务卡/$taskId.txt", "开发管理/任务归档/$taskId.txt", '开发管理/未通过审核清单.txt', '开发管理/AI合作沟通.txt', "开发管理/AI合作归档/$taskId-交接归档.txt")
+    riskPreflight = @{ explicitRefs = @(); matched = @(); gates = @() }
     sourceBacklog = '开发管理/任务列表/自动化任务.txt'
   }
   $card = @(
@@ -182,6 +183,18 @@ $outputPath = $CliArguments[$outputIndex + 1]
 $schemaIndex = [Array]::IndexOf($CliArguments, '--output-schema')
 if ($schemaIndex -lt 0) { throw 'fake Codex schema path missing' }
 $schema = [IO.File]::ReadAllText($CliArguments[$schemaIndex + 1], [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json -Depth 50
+if ($prompt.Contains('Route: QueueMaintenance')) {
+  if (@($schema.properties.status.enum) -ccontains 'needs_decision' -or @($schema.properties.status.enum) -cnotcontains 'maintenance_decision') {
+    throw 'QueueMaintenance schema must expose only the maintenance decision route'
+  }
+  if (-not $prompt.Contains('QueueMaintenance 不返回 needs_decision') -or $prompt.Contains('开发中确需负责人决定时立即停止猜测')) {
+    throw 'QueueMaintenance prompt exposed the ordinary checkpoint contract'
+  }
+} elseif (-not $prompt.Contains('[TZG_CODEX_CANARY]')) {
+  if (@($schema.properties.status.enum) -cnotcontains 'needs_decision' -or @($schema.properties.status.enum) -ccontains 'maintenance_decision') {
+    throw 'Execution and review schema must expose only the ordinary decision route'
+  }
+}
 $optionsProperty = $schema.properties.PSObject.Properties['options']
 if ($null -ne $optionsProperty -and @($optionsProperty.Value.items.required) -cnotcontains 'targetState') {
   throw 'candidate output schema does not require targetState'

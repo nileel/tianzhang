@@ -98,7 +98,7 @@ function New-TerminalSchema {
   $schema = [ordered]@{
     type = 'object'
     properties = [ordered]@{
-      status = @{ type = 'string'; enum = @('completed', 'no_candidate', 'needs_decision', 'maintenance_decision', 'blocked', 'failed') }
+      status = @{ type = 'string'; enum = $(if ($Route -ceq 'QueueMaintenance') { @('completed', 'no_candidate', 'maintenance_decision', 'blocked', 'failed') } else { @('completed', 'needs_decision', 'blocked', 'failed') }) }
       identity = @{ type = 'string' }; model = @{ type = 'string' }
       candidateCommit = @{ type = 'string' }
       expectedTransition = @{ type = 'string' }
@@ -225,7 +225,11 @@ function New-Prompt {
     '不得用普通 git commit 代替，也不得省略 -RequireAutomationMetadata。最终 JSON 的 result/impact/verify/plain 必须与该提交的四个元数据值逐字一致。QueueMaintenance 只可把占位路径替换为本轮实际改动且符合既有允许集合的精确仓库相对路径。'
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
     'QueueMaintenance 仅在本轮移除直接下游卡的最后一个具名前置、完整读卡后确认唯一剩余条件是负责人在两条可确定性形成 ready 卡的路线间选择时，返回 maintenance_decision。该候选提交只完成前置移除与准确阻塞事实，不写 automationDecision、不改 pending_decision、不入队；decisionTaskId 指向该下游卡，options 必须恰为 A/B/C 且 targetState 依次为 ready/ready/blocked，allowCustomReply 由共享入口固定为 false。decisionId 返回空字符串，由共享入口按事实摘要生成。'
-    '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption 和 impactSummary。direct needs_decision 的 decisionId 返回空字符串，plainSummary 三字段返回空字符串；固定 wrapper 会从 run/checkpoint 身份与上述已校验语义字段确定性生成它们。checkpoint 不得改变任务生命周期。'
+    $(if ($Route -ceq 'QueueMaintenance') {
+      'QueueMaintenance 不返回 needs_decision，也不创建普通开发 checkpoint。符合上述维护型决策条件时必须返回 maintenance_decision、非空 decisionTaskId、完整 plainSummary 以及与正式 finalizer 提交一致的 result/impact/verify/plain。'
+    } else {
+      '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption 和 impactSummary。direct needs_decision 的 decisionId 返回空字符串，plainSummary 三字段返回空字符串；固定 wrapper 会从 run/checkpoint 身份与上述已校验语义字段确定性生成它们。checkpoint 不得改变任务生命周期。'
+    })
     '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
