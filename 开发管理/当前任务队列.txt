@@ -5,4 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| C-FPD-SPELL-01A | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
 | C-FPD-SPELL-01C | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
