@@ -31,7 +31,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| C-FPD-LEARN-01 | P1 | codex | 阻塞 | — | 全部功法术法筑基学习门槛统一 | 开发管理/任务卡/C-FPD-LEARN-01.txt |
+| C-FPD-LEARN-01 | P1 | deepseek | 已排队 | — | 全部功法术法筑基学习门槛统一 | 开发管理/任务卡/C-FPD-LEARN-01.txt |
 | D-JD-COMBO-SCOPE-01 | P2 | codex | 待决定 | — | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | V-GZ-ART-SLICE-01 | 关中首个可展示流程美术父项 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
 | C-FPD-NAME-01 | P2 | codex | 阻塞 | C-FPD-LEARN-01、N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01、D-FPD-GONGFA-03、U-FPD-STAGE-03 | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
