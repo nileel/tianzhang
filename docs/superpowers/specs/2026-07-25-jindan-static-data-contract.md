@@ -8,7 +8,7 @@
 
 - 根对象为 `jindanStaticState`。后续实现可以拆为 CSV 分表或对象序列化，但不得改变本文件的字段语义、基数、派生规则或拒绝原因。
 - `roadId` 只能解析到现行十七道路；`positionId`、`proofProfileId`、基础效果、兼容档案、镇府神通、数值档案和表现档案必须解析到同一批次或已声明的外部权威表。未知、缺失、歧义或跨角色引用一律整表拒绝。
-- 本根对象只能引用同角色、已锁定的 `foundationPurpleMansionState`：其 `jindanLock.status=FORMED`、道基为 `PHASE_4`、没有 `EMBRYO` 府，且至少一座府为 `COMPLETE`。不从旧字段、运行时槽位或名称反推任何缺失输入。
+- 本根对象只能引用同角色、schema 2 且已锁定的 `foundationPurpleMansionState`：其 `jindanLock.status=FORMED`、道基为 `COMPLETE`／`30`、没有 `EMBRYO` 府，且至少一座府为 `COMPLETE`。不从旧字段、运行时槽位或名称反推任何缺失输入。
 - 所有未锁定的资源量、冷却、充能、展开／维持／冲突费用和数值强度只能引用已锁定的档案；生产数据不得填字面量或默认值。fixture 可在 `fixtureOnlyNumericProfile` 中声明其最小字面量，且不得被导入为生产内容。
 - `jindanStaticState` 只保存稳定真实位格。临时权限、证位候选、争位尝试与失位／死亡历史不属于本根对象，不能伪装为第四实位、稳定装配或替代承载。
 
@@ -133,7 +133,7 @@ fixture 与生产使用相同根结构，另加 `fixtureId`、`expect` 和仅测
 | `jd.valid.one-mansion-one-seat` | ACCEPT | 五府行完整，只有一府 `COMPLETE`；唯一核心、唯一丹相、一项 `SOURCE` 稳定位格，以该府唯一神通作主承载并有一条实例账本。 | 一府一位合法；未建四府仍作为完整输入行，不被误认为缺行或第二输入。 |
 | `jd.valid.three-mansion-three-seats` | ACCEPT | 三府建成、三项不同镇府神通、一个核心／丹相；`SOURCE`、`TRANSFORMATION`、`DOMAIN` 各一项，三项主承载不同，可有已声明辅助引用。 | 三府三位合法；每位仅一项基础效果，辅助不复制账本。 |
 | `jd.valid.five-mansion-three-seats` | ACCEPT | 五府均建成、五条实例账本、一个核心／丹相、三项不同实位与主承载；另两府保留为同一丹相输入，可按档案辅助或仅保留原有效果。 | 五府三位合法；第四、第五府不失效，也不生成第四、第五实位或第二丹相。 |
-| `jd.invalid.input-not-formed` | REJECT `JD_FPM_INPUT_NOT_FORMED` | 紫府根未锁定、不是 `PHASE_4`、含府胚、无已建府，或五府输入与冻结源不一致。 | 不从可变筑基状态创建金丹根。 |
+| `jd.invalid.input-not-formed` | REJECT `JD_FPM_INPUT_NOT_FORMED` | 紫府根未锁定、不是 `COMPLETE`／`30`、含府胚、无已建府，或五府输入与冻结源不一致。 | 不从可变筑基状态创建金丹根。 |
 | `jd.invalid.missing-mansion-input` | REJECT `JD_MANSION_INPUT_INCOMPLETE` | 少任一府属行，或未收录已建的第四／第五府。 | 所有五府均参与同一输入结构。 |
 | `jd.invalid.unknown-static-reference` | REJECT `JD_UNKNOWN_STATIC_REFERENCE` | 单独将道路、效果、位格、道证档案、兼容档案、神通、数值档案或表现／本地化稳定键之一指向未知或歧义 ID。 | 不猜测候选、名称或默认档案。 |
 | `jd.invalid.effect-outside-road-candidates` | REJECT `JD_EFFECT_LOADOUT_INVALID` | 为某实位装配不属于其 `roadId` 三项候选的效果，或使用与位格不兼容的档案。 | 每位只装配本道路的一项合法效果。 |

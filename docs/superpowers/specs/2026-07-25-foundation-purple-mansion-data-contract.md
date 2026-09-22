@@ -1,6 +1,6 @@
 # 道基、紫府与修炼静态数据契约
 
-状态：✅ 已锁定（D-FPD-SCHEMA-01A，2026-07-26）；本文件只定义供导入器、检查器与 fixture 消费的静态语义，不实现 CSV、Unity、BattleSim 或运行时行动。
+状态：✅ 已锁定（C-FPD-STAGE-03，2026-09-22；schema 2）；本文件只定义供导入器、检查器与 fixture 消费的静态语义，不实现 CSV、Unity、BattleSim 或运行时行动。
 
 ## 一、范围、权威与拒绝原则
 
@@ -42,25 +42,27 @@ foundationPurpleMansionState
 | `closedRetreatPlan` | 否 | 只能引用当前可恢复或可执行的同一行动与同一目标。 |
 | `jindanLock` | 是 | 结丹状态与锁定快照的唯一来源，见第七节。 |
 
-## 三、唯一道基、连续四阶段与容量
+## 三、唯一道基、三阶段、总上限与承载
 
-`foundationState` 必须具备下列字段。阶段名称尚未命名，故数据只使用稳定次序 `PHASE_1` 至 `PHASE_4`，不把临时文案当成 schema 值。
+`foundationState` 必须具备下列字段。三阶段的显示名、稳定 ID 和数字编码已冻结；数字编码故意不连续，不能把旧四阶段 ordinal 直接重解释为新阶段。
 
 | 字段 | 规则 |
 |---|---|
 | `foundationInstanceId` | 本角色内唯一且非空；是道基、行动与结丹锁的共同引用。 |
 | `foundationDefinitionId` | 必填，指向功法的筑基方案与道基核心效果定义；改修功法不能更换它。 |
 | `sourceGongFaId` | 必填，必须与 `foundationDefinitionId` 所属筑基方案一致。 |
-| `phase` | 仅 `PHASE_1`、`PHASE_2`、`PHASE_3`、`PHASE_4`；未知、五段旧阶段或道基品级均拒绝。 |
+| `stageId` / `stageCode` | 成对必填且只能为 `FOUNDATION`／`10`、`MANSION`／`20`、`COMPLETE`／`30`。旧 `phase`、`PHASE_1..4` 与 `0..3` ordinal 均非本版本输入。 |
 | `continuousProgress` | 必填的连续值，不得由四个离散经验条替代；其解释必须引用 `phaseBoundarySetId`。 |
-| `phaseBoundarySetId` | 必填的数值档案引用。档案负责从连续进度判定阶段边界；本契约不补写任何阈值或默认边界。导入器必须验证 `phase` 与该档案解析结果一致。 |
+| `phaseBoundarySetId` | 必填的数值档案引用，保留字段名只为既有对象兼容；它负责连续培养和承载能力的输入，不再从进度推导三阶段。新周期、曲线和阈值尚未锁定。 |
 | `naturalMansionCapacity` | 必填整数，范围 `0..3`，由筑基时最高相容灵根决定；不是可手工叠加的效果值。 |
-| `releasedNaturalCapacity` | 只读派生值：`min(naturalMansionCapacity, phaseIndex - 1)`，其中 `PHASE_1..4` 的 `phaseIndex` 为 `1..4`。生产输入若携带该字段，必须等于派生结果；不相等即拒绝。 |
 | `expansionGrants` | 零至两条。每条必须有唯一 `grantId`、`sourceItemId` 与一个已知的永久容量效果绑定；每条只贡献一座容量，不能用未声明的数值或同一 `grantId` 叠加。 |
 | `expandedMansionCapacity` | 只读派生值，等于合法 `expansionGrants` 数量，范围 `0..2`。 |
-| `totalMansionCapacity` | 只读派生值，等于 `releasedNaturalCapacity + expandedMansionCapacity`；不得独立填写不同数值。 |
+| `selfMansionCapacity` | 只读派生值，等于 `naturalMansionCapacity + expandedMansionCapacity`；天然额度在筑基成功时已全部计入，不得按阶段释放。 |
+| `carryingCapacityProfileId` / `currentMansionCarryingCapacity` | 前者为必填的已锁定数值档案引用；后者是按连续培养进度得出的只读整数，生产输入必须与档案结果一致。不得用阶段、旧总容量或府数猜值。 |
+| `committableMansionCapacity` | 只读派生值，等于 `min(selfMansionCapacity, currentMansionCarryingCapacity)`。 |
+| `completionMansionCapacity` | 仅 `COMPLETE` 必填；记录首次达成圆满时的正数自身总上限。必须不大于当前 `selfMansionCapacity`，并等于当次已建完整府数；扩府后保留该值，不能令阶段回退。其他两阶段必须缺失。 |
 
-`COMPLETE` 府数加上 `EMBRYO` 府数为已承诺容量，必须不大于 `totalMansionCapacity`。府胚尚未建成，仍要占用承诺，避免多个暂停府胚重复承诺同一容量；府胚主动放弃时才释放承诺。没有天然容量的角色仍可处于四个阶段；获得合法扩府后才可能承诺或建成紫府。
+`COMPLETE` 府数加上 `EMBRYO` 府数为已承诺容量，必须不大于 `committableMansionCapacity`。府胚尚未建成，仍要占用承诺，避免多个暂停府胚重复承诺同一容量；府胚主动放弃时才释放承诺。阶段的唯一判定为：`FOUNDATION` 尚无完整府；第一座完整府成功后为 `MANSION`；该座若已填满正数自身总上限则直接为 `COMPLETE`。`MANSION` 在完整府数首次等于正数自身总上限时进入 `COMPLETE` 并记录 `completionMansionCapacity`；`COMPLETE` 后扩府保持 `COMPLETE`，新增府仍须受承载限制。天然容量为 0 的角色保持 `FOUNDATION`，直至先取得扩府再完成首府。
 
 扩府绑定必须声明为永久的原子“紫府容量上限 +1”效果，并且其 `carrierKind` 为物品／扩府来源；它不得直接改变府属、阶段、槽位、位格、神通数量或丹相。结丹锁生效后不得新增、删除或替换 `expansionGrants`。
 
@@ -121,8 +123,8 @@ foundationPurpleMansionState
 
 | `actionKind` | `targetRef` 必须指向 | 特有硬边界 |
 |---|---|---|
-| `FOUNDATION_TRIAL` | 主修功法、筑基方案、地点与准备资源 | 成功才创建唯一 `foundationState` 并进入 `PHASE_1`；失败不产生残缺或低品道基。 |
-| `FOUNDATION_NURTURE` | 同一 `foundationInstanceId` 与阶段目标 | 只在筑基期、未完成第四阶段时合法；只提交同一连续进度。 |
+| `FOUNDATION_TRIAL` | 主修功法、筑基方案、地点与准备资源 | 成功才创建唯一 `foundationState` 并进入 `FOUNDATION`／`10`；失败不产生残缺或低品道基。 |
+| `FOUNDATION_NURTURE` | 同一 `foundationInstanceId` 与培养目标 | 只在筑基期、未结丹时合法；只提交同一连续进度并更新档案可证明的当前承载能力。 |
 | `MANSION_EMBRYO_NURTURE` | 同一 `embryoId`、府属与源术法 | 只推进该府胚；恢复时不得自动替换目标或源术法。 |
 | `MANSION_OPENING_TRIAL` | 完整府胚与当前开府条件 | 不可中途离开；成功才原子建立府体与唯一镇府神通，失败不建成。 |
 
@@ -139,19 +141,32 @@ foundationPurpleMansionState
 `jindanLock.status` 只能为 `PRE_JINDAN` 或 `FORMED`。
 
 - `PRE_JINDAN`：不得携带锁定快照；养基、扩府、府胚与开府仍按当前事实逐项校验。
-- `FORMED`：必须有 `formationSnapshot`，其中精确复制 `foundationInstanceId`、`phase`、`naturalMansionCapacity`、合法扩府 `grantId` 集合、五府状态、每座建成府的府体绑定和镇府神通实例 ID。当前值必须与快照逐字段相同。
+- `FORMED`：必须有 `formationSnapshot`，其中精确复制 `foundationInstanceId`、`stageId`／`stageCode`、`naturalMansionCapacity`、`completionMansionCapacity`、合法扩府 `grantId` 集合、五府状态、每座建成府的府体绑定和镇府神通实例 ID。当前值必须与快照逐字段相同。
 
-导入 `FORMED` 状态前必须同时满足：`phase=PHASE_4`、至少一座 `COMPLETE` 府、没有 `EMBRYO` 府，并且每座建成府有完整府体和镇府神通。锁定后，新增／删除／替换道基、阶段、扩府、府属、府体绑定或镇府神通实例均失败关闭；仅已存在镇府神通的明确强化节点可继续完成。金丹相关的主／辅承载、丹枢与丹相在后续金丹契约中表达，本对象不能创建第二丹相或改变位格边界。
+导入 `FORMED` 状态前必须同时满足：`stageId=COMPLETE`／`stageCode=30`、至少一座 `COMPLETE` 府、没有 `EMBRYO` 府，并且每座建成府有完整府体和镇府神通。锁定后，新增／删除／替换道基、阶段、扩府、府属、府体绑定或镇府神通实例均失败关闭；仅已存在镇府神通的明确强化节点可继续完成。金丹相关的主／辅承载、丹枢与丹相在后续金丹契约中表达，本对象不能创建第二丹相或改变位格边界。
 
 ## 八、旧字段与现有 DataConfig 的迁移边界
 
-当前 `Characters.csv` 没有本契约字段；`CharacterData.developedMansions`、`mansionBindings`、`realmStage`、`legacyDanJiType` 及运行时 `Character.CalculateSlotLimits` 是旧兼容结构，不是新 schema 的输入或默认值。尤其 `developedMansions` 的旧 `气府` 与按府数加通用槽位语义均与本契约冲突。
+当前 `Characters.csv` 没有本契约字段；`CharacterData.developedMansions`、`mansionBindings`、`realmStage`、`legacyDanJiType`、`releasedNaturalCapacity`、`totalMansionCapacity` 及运行时 `Character.CalculateSlotLimits` 是旧兼容结构，不是 schema 2 的输入或默认值。尤其 `developedMansions` 的旧 `气府` 与按府数加通用槽位语义均与本契约冲突。
 
 因此，未来导入器必须：
 
 1. 只在显式 `foundationPurpleMansionState` 根对象出现时读取本契约；不得从旧字段补齐道基、容量、府胚、府体或镇府神通。
-2. 把新根对象与任何旧道基品级、五段进度、`developedMansions`、`mansionBindings`、旧丹基字段的并存视为整表失败；迁移由 `D-FPD-MIGRATE-01` 另行授权。
+2. 把 schema 2 根对象与任何旧道基品级、五段进度、四阶段 `phase`／ordinal、`releasedNaturalCapacity`、`totalMansionCapacity`、`developedMansions`、`mansionBindings`、旧丹基字段的并存视为整表失败；迁移由 `U-FPD-STAGE-03` 另行授权。
 3. 不把紫府数量映射为普通术法／神通槽、金丹位格或丹相数量；这些旧运行时行为不能反向成为静态契约。
+
+### 8.1 玩家／NPC 旧存档的拒绝边界
+
+当前玩家 `GameSaveEnvelope.CultivationRecord` 只有 `foundationPhase:int`、进度与旧
+`totalMansionCapacity`；当前 NPC `FoundationPurpleMansionSaveData` 为内层 schema 1，
+以 `FoundationPhase` 的 `0..3` ordinal、旧已释放容量和旧总容量保存。两者都没有
+schema 2 必需的 `stageId`／`stageCode`、当前承载能力及圆满时自身总上限，不能证明
+旧 `int=2` 或任一旧 ordinal 属于筑基、开府还是圆满。
+
+因此 schema 2 的读取入口必须以 `FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE` 失败关闭：
+不得把玩家／NPC 的旧数字映射为 `COMPLETE`，不得以当前府数、旧总容量或缺省承载
+伪造圆满，也不得新增静默兼容层。`U-FPD-STAGE-03` 才可实现新的玩家／NPC字段、
+版本门和明确失败路径；在该任务完成前，现有运行时仍不是本合同的实现证据。
 
 ## 九、fixture 规格与稳定失败原因
 
@@ -159,9 +174,9 @@ fixture 使用与生产相同的根结构，并额外填写 `fixtureId`、`expec
 
 | Fixture ID | 预期 | 最小输入条件 | 必须验证的结果 |
 |---|---|---|---|
-| `fpm.valid.phase1-empty` | ACCEPT | 一个 `PHASE_1` 道基，天然／已释放／扩府／总容量均为零，五条 `NOT_BUILT` 府，无行动、无结丹锁。 | 四阶段链允许无天然容量起步；五府行完整且未误建府。 |
-| `fpm.valid.one-complete-mansion` | ACCEPT | `PHASE_4`、天然容量一、总容量一；命府 `COMPLETE`，其余四府未建；命府有精确一条命元回护绑定和一项镇府神通。 | 已建府与容量一致；府体和神通并列且一对一。 |
-| `fpm.valid.capacity-upper-bound` | ACCEPT | `PHASE_4`、天然容量三、两个不同扩府授权、总容量五，五府均建成且各有不同镇府神通实例。 | 五座是合法上界；两个扩府授权均为独立永久 +1 绑定。 |
+| `fpm.valid.foundation-empty` | ACCEPT | `FOUNDATION`／`10` 道基，天然容量零、无扩府、当前承载零，五条 `NOT_BUILT` 府，无行动、无结丹锁。 | 无天然容量者只能先扩府，五府行完整且未误建府。 |
+| `fpm.valid.one-complete-mansion` | ACCEPT | 天然容量一、承载一；命府 `COMPLETE`，其余四府未建，阶段和完成记录均为 `COMPLETE`／`30`／`1`；命府有精确一条命元回护绑定和一项镇府神通。 | 容量一的首府同时进入圆满；府体和神通并列且一对一。 |
+| `fpm.valid.complete-then-expand` | ACCEPT | 已以容量一完成圆满，后获一个不同扩府授权；阶段仍为 `COMPLETE`／`30`，完成记录为一，新增府尚未建。 | 圆满后扩府不回退，新增府仍受当前承载限制。 |
 | `fpm.valid.paused-embryo` | ACCEPT | 一座建成府加一座带固定目标／源术法的暂停府胚；两者承诺不超过总容量；闭关引用同一府胚行动。 | 府胚承诺容量、暂停可恢复、尚不产生府体或神通。 |
 | `fpm.invalid.capacity-overflow` | REJECT `FPM_CAPACITY_OVERFLOW` | 已建府与府胚承诺数大于派生总容量，或手填总容量与派生值不等。 | 不截断府或自动增加容量。 |
 | `fpm.invalid.duplicate-mansion-kind` | REJECT `FPM_DUPLICATE_MANSION_KIND` | 两条府状态同为任一合法府属，或五府覆盖不完整。 | 同类双府不被合并、替换或静默忽略。 |
@@ -169,7 +184,7 @@ fixture 使用与生产相同的根结构，并额外填写 `fixtureId`、`expec
 | `fpm.invalid.recursive-effect` | REJECT `FPM_RECURSIVE_EFFECT_BINDING` | 任一效果绑定包含子绑定／效果包／自引用／循环引用。 | 不展开递归包，也不改写为隐式顺序效果。 |
 | `fpm.invalid.jindan-add-mansion` | REJECT `FPM_JINDAN_LOCK_MUTATION` | `jindanLock=FORMED` 的快照没有某府，而当前状态新增该府、扩府授权或镇府神通。 | 结丹后不能新增府、扩府或替换既有输入。 |
 | `fpm.invalid.legacy-and-new-mixed` | REJECT `FPM_LEGACY_SCHEMA_MIXED` | 新根对象同时出现旧五段／品级、`developedMansions`、`mansionBindings` 或旧丹基字段。 | 不从旧字段回退，也不允许两套 schema 并存。 |
-| `fpm.invalid.unknown-phase` | REJECT `FPM_UNKNOWN_PHASE` | 阶段不在四个稳定值，或连续进度与边界档案解析出的阶段不一致。 | 不猜测相邻阶段或默认边界。 |
+| `fpm.invalid.legacy-stage-schema` | REJECT `FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE` | `schemaVersion=1`、`phase`、`PHASE_1..4`、旧 `0..3` ordinal，或缺少当前承载／圆满完成事实。 | 不把旧编码直接解释为新阶段，不猜承载或伪造圆满。 |
 
 这些 fixture 是后续导入器、Unity 数据对象与 BattleSim 投影的共同验收输入；它们不代表生产角色、数值平衡、NPC 权重或运行时实现。
 

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-22 用户明确授权，本次独立规划已冻结单一结果、路径和验证；准备schema2风险投影后执行",
+  "stateReason": "2026-09-22 C-FPD-STAGE-03 已完成三阶段、学习模板和旧存档失败关闭合同；归档等待共享入口在最新 master 重放与正式集成",
   "expectedPaths": [
     "docs/基础设定/境界特性.txt",
     "docs/基础设定/修行境界.txt",
@@ -105,3 +105,9 @@
 ## 直接合同引用同步
 
 - 上述补入的金丹静态、NPC行动权重、丹相、证位与争位规格及法箓规则/映射只同步旧四阶段、PHASE_4、养基与成丹前置引用；已圆满后扩府可继续培养承载，不能继续用“未圆满”禁止养基。不得改金丹效果、NPC权重、法箓身份/晋升权限或其他机制。
+
+## 验证记录
+
+- 模型协作核对：任务含旧阶段编码与玩家／NPC存档的关键语义冲突，按卡片要求评估为高风险；当前原生工具没有 `gpt-6-astra / high` 可用覆盖，故未执行辅助模型调用。入口主模型 `gpt-5.6-terra` 已由 Node REPL 核验，主责直接阅读六个指定所有者，未把工具不支持的辅助名称当作已调用证据。
+- 已确认旧编码边界：`FoundationPurpleMansionRuntimeState` 使用 `FoundationPhase.Phase1..Phase4` ordinal `0..3` 和 `min(naturalCapacity, phase)`；玩家 `CultivationRecord` 仅有 `foundationPhase:int`、进度及旧总容量，NPC 内层为 schema 1。它们均缺 schema 2 的 `stageId/stageCode`、当前承载与圆满完成事实，故合同明确失败关闭，不猜值、不伪造圆满、不新增兼容层。
+- 文本验证、数据链检查、空白检查与 cached diff 检查见本次 candidate 元数据；未运行 BattleSim／Unity，因为本卡禁止改数值、CSV、asset 与 C#，且三阶段数值仍由 `N-FPD-STAGE-03` 验证。

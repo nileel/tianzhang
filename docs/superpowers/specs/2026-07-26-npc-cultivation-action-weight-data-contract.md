@@ -34,10 +34,10 @@ npcCultivationActionWeightProfile
 | `actionStableId` | 现有行动语义权威 | 权重前不可绕过的边界 |
 |---|---|---|
 | `FOUNDATION_TRIAL` | 筑基考验 | 练气九品圆满、相容灵根、主修功法、地点、辅助资源及当前行动状态均合法。 |
-| `FOUNDATION_NURTURE` | 连续养基 | 已成功筑基、仍在筑基期、未完成第四阶段，且只推进同一唯一道基。 |
+| `FOUNDATION_NURTURE` | 连续养基 | 已成功筑基、仍在筑基期且未结丹，只推进同一唯一道基的连续培养与当前承载能力。 |
 | `MANSION_EMBRYO_NURTURE` | 府胚蕴养 | 目标府属、源术法、容量、同类府唯一性、知识、行为、资源与环境均合法。 |
 | `MANSION_OPENING_TRIAL` | 正式开府考验 | 目标完整府胚、原目标和源术法，以及全部当前开府硬条件仍有效；考验不可中途离开。 |
-| `JINDAN_PROOF` | 金丹位格证位 | 道基第四阶段、至少一座完整紫府及镇府神通、最低道证条件、已知空位与地点、兼容主承载／支点／设施／资源／护道准备，且无更高优先级生存危机或强制职责。 |
+| `JINDAN_PROOF` | 金丹位格证位 | 道基圆满（`COMPLETE`／`30`）、至少一座完整紫府及镇府神通、最低道证条件、已知空位与地点、兼容主承载／支点／设施／资源／护道准备，且无更高优先级生存危机或强制职责。 |
 
 每个行动行还必须带有 `legalityRuleSetRef`，精确引用上表对应的既有行动规则集，而不能把条件重抄为可调权重列。行动过滤器以当前角色和世界事实先产生 `legalActionSet`；不在其中的 ID 不得进入分数、封顶、递减或并列裁定。
 
@@ -146,7 +146,7 @@ fixture 与生产使用同一根结构，额外带 `fixtureId`、`expect`、`fix
 |---|---|---|---|
 | `npc-weight.valid.fixed-input-order` | ACCEPT | 一个版本化 profile、两项以上合法行动、每类命中修正、显式封顶／递减／并列策略和固定事实快照。 | 同一输入得到相同分数、修正序列和排序；改变 CSV 行顺序不改变结果。 |
 | `npc-weight.valid.legal-action-only` | ACCEPT | 一个高基础权重但不满足开府或证位硬门槛的行动，以及一个合法行动。 | 非法行动的权重不参与计算，合法行动被唯一选中，原因为 `NPC_WEIGHT_ILLEGAL_ACTION`。 |
-| `npc-weight.valid.lifespan-risk-boundary` | ACCEPT | 固定寿元压力档、证位所需已知证据与明确风险门。 | 寿元只改变合法候选的优先级／主观风险阈值；不能让缺少第四阶段、完整紫府、知识或资源的证位进入候选。 |
+| `npc-weight.valid.lifespan-risk-boundary` | ACCEPT | 固定寿元压力档、证位所需已知证据与明确风险门。 | 寿元只改变合法候选的优先级／主观风险阈值；不能让未处于道基圆满、缺少完整紫府、知识或资源的证位进入候选。 |
 | `npc-weight.invalid.unknown-reference` | REJECT `NPC_WEIGHT_UNKNOWN_ACTION` | 任一行动规则、性格／门派／目标／资源／环境选择器或策略引用未知。 | 整个 profile 在生成任一派生物前失败。 |
 | `npc-weight.invalid.double-authority` | REJECT `NPC_WEIGHT_DOUBLE_AUTHORITY` | 同一 profile 出现 Unity／BattleSim 覆盖、旧优先级字段、第二清单或不一致源哈希。 | 不选择任一来源，不创建 asset／模拟投影。 |
 | `npc-weight.invalid.missing-explicit-value` | REJECT `NPC_WEIGHT_MISSING_EXPLICIT_VALUE` | 行动基础权重、修正量、策略边界或风险阈值缺失，或试图从代码默认值取得。 | 不补零、不继承邻行、不回退固定行为顺序。 |
