@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立复审部分通过：门槛下调和六项间接前置解除已核对，但六部缺筑基成长的依赖数值／数据叶子未标注，且投鞭断流未保留旧句→新规则→非境界前置记录；待返工补齐记录后复审。",
   "expectedPaths": [
     "docs/角色养成/功法/古修/南华阐衍典.txt",
     "docs/角色养成/功法/古修/太易山藏经.txt",
