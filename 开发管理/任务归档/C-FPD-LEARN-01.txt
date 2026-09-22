@@ -4,13 +4,13 @@
   "id": "C-FPD-LEARN-01",
   "title": "全部功法术法筑基学习门槛统一",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20260923-REV2F8642B8A944 选择 DeepSeek 按未通过审核清单返工",
+  "stateReason": "2026-09-23：用户在本会话明确要求处理返工；Codex补齐六部功法成长依赖与投鞭断流迁移记录，保留已复审通过的门槛结果后闭环。",
   "expectedPaths": [
     "docs/角色养成/功法/古修/南华阐衍典.txt",
     "docs/角色养成/功法/古修/太易山藏经.txt",
@@ -131,3 +131,15 @@
 ## 模板依赖
 
 - 4份通用规范/模板由C-FPD-STAGE-03统一，本卡只读消费，不重复改写；本卡为55完成品、清风诀间接说明与养成L1共57个业务路径。
+
+## 2026-09-23 定向返工与复核
+
+- 用户本次明确要求本会话处理两项缺口；执行前已核对主工作区 schema 5 两个 run 均为空。原飞书 DeepSeek ready 投影由本次明确指示下的 Codex 返工完成结果收口；未运行外部执行器或改写私有决策记录。
+- 沿用简单任务、默认单模型：缺口与修改位置明确，仅新增事实说明和迁移记录；无需辅助模型。本轮使用隔离 worktree，未修改数值、CSV、asset、代码或神通。
+- 写前预检 taskId=C-FPD-LEARN-01，taskCardDigest=da1cd3d2646f0816f3149399daa85de7adac7c6e58b5278a51ae5ed27e6c3261，indexDigest=86caf96d5b879903527cb2e687338fc076bfbea554a851b9a44cd6d93d7f2bdf；matched/mustRead/gates 均为空，与原 schema 2 投影一致。
+- 六部功法逐份加入筑基成长依赖：N-FPD-STAGE-03 验证入门预算，D-FPD-GONGFA-03 同步正文、CSV 与 asset。原“六部完全缺筑基成长”的笼统表述经正文核对收窄：南华阐衍典、太易山藏经、玄牝道藏、空无般若经已有旧筑基行；万法都箓经、正一盟威箓没有筑基行。六部均未凭此次学习门槛修改取得新三阶段成长完成结论。
+- 投鞭断流以正式提交 0d9ae33eacedacd70f9196d5fbb9e80375bdfaec 的父版本核对旧句“境界要求：元婴”“混元山，需修习《混元同尘典》或《含弘光大典》至金丹篇以上”；新增旧句→筑基学习知识且篇章效果独立→保留门派、功法身份、双灵根与品级的记录。
+- 差异还原检查：移除本轮七份完成品中的新增说明后，内容与本轮 HEAD 输入一致；数值、效果、非境界条件与神通未改。29部功法、83项战斗术法的门槛仍不高于筑基；第84项为功能术法开阖九章，按其独立前置条件核对且零改动，不套战斗模板。
+- 前次独立复审已通过的9+46门槛下调与六项间接前置解除继续有效，本轮仅关闭未通过清单中本卡的两项记录缺口。古修术法升格／位格兼容仍由各自任务独立返工与复审，不随本卡关闭。
+- 本轮不解锁或执行下游业务；空队列维护可消费本归档重新评估直接依赖。无新的经验候选：本轮为已知文档记录缺口的补齐，不建立新经验或治理任务。
+- 验证通过：check-task-cards 的 CodexClosedOrNonReady 后置条件（71张活跃卡、ready=0、本卡completed）；check-data-chain（功法29/29、战斗术法83/83、神通31/31、语言键544）；check-review-text（572份文件）。本轮没有数值或运行时代码变化，按任务卡未运行 BattleSim／Unity。
