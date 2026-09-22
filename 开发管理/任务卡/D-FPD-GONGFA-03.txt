@@ -1,0 +1,128 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-FPD-GONGFA-03",
+  "title": "三阶段功法成长内容与数据同步",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-FPD-STAGE-03"
+  ],
+  "stateReason": "等待已冻结依赖：N-FPD-STAGE-03",
+  "expectedPaths": [
+    "docs/角色养成/功法/兰台书院/太易玄义笺.txt",
+    "docs/角色养成/功法/古修/南华大梦书.txt",
+    "docs/角色养成/功法/古修/南华阐衍典.txt",
+    "docs/角色养成/功法/古修/太易山藏经.txt",
+    "docs/角色养成/功法/古修/玄牝道藏.txt",
+    "docs/角色养成/功法/古修/见素抱朴经.txt",
+    "docs/角色养成/功法/太一道庭/万法都箓经.txt",
+    "docs/角色养成/功法/太一道庭/三洞法籍录.txt",
+    "docs/角色养成/功法/太一道庭/九江水府箓.txt",
+    "docs/角色养成/功法/太一道庭/云篆度人经.txt",
+    "docs/角色养成/功法/太一道庭/大洞炼真经.txt",
+    "docs/角色养成/功法/太一道庭/太一玉格典.txt",
+    "docs/角色养成/功法/太一道庭/抱元守一经.txt",
+    "docs/角色养成/功法/太一道庭/正一盟威箓.txt",
+    "docs/角色养成/功法/太一道庭/通神三玄礼录.txt",
+    "docs/角色养成/功法/太虚观/万物不迁法.txt",
+    "docs/角色养成/功法/太虚观/不真自虚法.txt",
+    "docs/角色养成/功法/太虚观/南华玄感录.txt",
+    "docs/角色养成/功法/太虚观/心无性有法.txt",
+    "docs/角色养成/功法/太虚观/空无般若经.txt",
+    "docs/角色养成/功法/散修/秋水游心经.txt",
+    "docs/角色养成/功法/混元山/含弘光大典.txt",
+    "docs/角色养成/功法/混元山/混元同尘典.txt",
+    "docs/角色养成/功法/混元山/白屋青云录.txt",
+    "docs/角色养成/功法/混元山/绳墨正法录.txt",
+    "docs/角色养成/功法/玉清崖/九霄雷劫录.txt",
+    "docs/角色养成/功法/玉清崖/疾雷破山经.txt",
+    "docs/角色养成/功法/玉清崖/苦行剑典.txt",
+    "docs/角色养成/功法/玉清崖/雷池淬体功.txt",
+    "src/Assets/DataConfig/GongFa.csv",
+    "src/Assets/Data/GongFa/GongFa_gongfa_baoyuanshouyi.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_qiushuiyouxin.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_jiuxiaoleijie.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_kuxingjiandian.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_jileiposhan.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_leicnicuiti.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_hanhongguangda.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_baiwuqingyun.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_hunyuantongchen.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_shengmozhengfa.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_wanwubuqian.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_buzhenzixu.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_nanhuaxuangan.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_xinwuxingyou.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_yunzhuandurenjing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_nanhuadamengshu.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_nanhuachanyandian.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_dadonglianzhenjing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_taiyishancangjing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_taiyixuanyijian.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_xuanpindaocang.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_kongwuborejing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_jiansubaopujing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_tongshensanxuanlilu.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_jiujiangshuifulu.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_sandongfajilu.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_taiyiyugedian.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_wanfadulujing.asset",
+    "src/Assets/Data/GongFa/GongFa_gongfa_zhengyimengweilu.asset",
+    "docs/角色养成/养成事实速查.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-FPD-GONGFA-03.txt",
+    "开发管理/任务归档/D-FPD-GONGFA-03.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-FPD-GONGFA-03 · 三阶段功法成长内容与数据同步
+
+## 来源与当前边界
+
+- 用户2026-09-22明确要求筑基／开府／圆满三阶段、保留灵根上限、开满自身上限即圆满；0容量先扩府，圆满后扩府保持圆满；功法、术法的高境学习门槛统一降到筑基。
+- 完整依赖与已核实所有者见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本卡仅承担下面一个可独立判断的结果；不重新拆父项、不预分析其他backlog。所有业务写入前消费同一卡risk preflight。
+
+## 必查范围
+
+- N-FPD-STAGE-03已冻结逐ID结果、29功法完整成长与篇章段、GongFa.csv29行；CultivationContentImporter.cs::ImportGongFa、GongFaGrowthData.cs只读。
+
+## 实施范围
+
+- 按前置已验证逐ID结果同步29功法三阶段成长表、筑基入门/首篇合同、GongFa.csv及29既有asset，补齐6部缺筑基成长内容。
+- 仅迁移阶段、学习入门与成长直接字段；保留既有神通篇章效果的高境门槛。GongFa.csv无独立初始学习境界列，不能改chapters.realm冒充学习门槛。
+- 不真自虚法旧chapter_none占位须按已冻结数值/篇章合同处理，不据占位宣称完整接入；L1同步实际结果。
+
+## 禁止项
+
+- 不重做C-FPD-GONGFA-01A～01F尚冻结的道基核心、五府亲和等广泛实例迁移；不新增门槛系统或二次设计数值、不改ID/GUID/contentScope/非相关功法机制。
+
+## 模型协作
+
+- 简单：语义已冻结且结果可机械核对；沿用入口默认单模型，无需辅助。
+- 执行前核对工具与验证能力；实际调用、未核实项写本卡既有验证记录。DeepSeek产物标“⚠️ 已修改/未审核”，由Codex独立复审，不自审。
+
+## 验证
+
+- docs/CSV/asset逐ID一致，使用现有导入器；check-data-chain和相关导入验证。前置BattleSim结果输入不变时不重跑同范围；若数据不能表达合同，停止交回。
+- 任务卡/队列/backlog、风险预检投影、审核文本、pending-whitespace与cached diff检查。docs/CSV/asset变化时运行 tools/check-data-chain.ps1。相关输入未变化，不重复已经通过的同范围验证。
+
+## 完成条件
+
+- 实施范围的单一结果全部成立，验证通过；外部执行须独立复审通过才归档。不得把设计、数据同步或状态薄切片描述为完整可玩学习／开府界面。
+
+## 停止条件
+
+- 前置没有给出可落地逐ID值、需要新增字段或调整章效果/神通时停止；不要越过数值所有者自行补值。
+- 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。

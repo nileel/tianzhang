@@ -1,0 +1,107 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-FPD-STAGE-03",
+  "title": "筑基三阶段与学习规则合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "migration",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-22 用户明确授权，本次独立规划已冻结单一结果、路径和验证；准备schema2风险投影后执行",
+  "expectedPaths": [
+    "docs/基础设定/境界特性.txt",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/灵根设定.txt",
+    "docs/基础设定/寿元与时间尺度设定.txt",
+    "docs/基础设定/金丹位格证位与争位规则.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "docs/角色养成/养成事实速查.txt",
+    "docs/角色养成/功法设计规范.txt",
+    "docs/角色养成/功法/功法设计.txt",
+    "docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md",
+    "docs/superpowers/specs/2026-07-21-foundation-mansion-cultivation-actions-design.md",
+    "docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md",
+    "docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md",
+    "docs/superpowers/plans/2026-07-20-foundation-purple-mansion-danxiang-fact-source-migration.md",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/C-FPD-STAGE-03.txt",
+    "开发管理/任务归档/C-FPD-STAGE-03.txt",
+    "docs/角色养成/术法设计规范.txt",
+    "docs/角色养成/术法/术法设计.txt",
+    "docs/superpowers/specs/2026-07-25-jindan-static-data-contract.md",
+    "docs/superpowers/specs/2026-07-26-npc-cultivation-action-weight-data-contract.md",
+    "docs/superpowers/specs/2026-06-19-jindan-danxiang-design.md",
+    "docs/superpowers/specs/2026-07-19-jindan-position-proof-and-contestation-design.md",
+    "docs/角色养成/太一道庭法箓规则.txt",
+    "docs/角色养成/太一道庭法箓体系导入映射表.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-FPD-STAGE-03 · 筑基三阶段与学习规则合同
+
+## 来源与当前边界
+
+- 用户2026-09-22明确要求筑基／开府／圆满三阶段、保留灵根上限、开满自身上限即圆满；0容量先扩府，圆满后扩府保持圆满；功法、术法的高境学习门槛统一降到筑基。
+- 完整依赖与已核实所有者见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本卡仅承担下面一个可独立判断的结果；不重新拆父项、不预分析其他backlog。所有业务写入前消费同一卡risk preflight。
+
+## 必查范围
+
+- 设定与养成L1所指筑基、容量、成丹、功法模板章节；expectedPaths中的完整对应逻辑段。
+- 开发管理/筑基三阶段与学习门槛迁移计划.txt#已确认决定；源术法、神通、道路和数值参数只作直接边界，不扩大读取。
+- FoundationPurpleMansionStateData.cs::FoundationPurpleMansionRuntimeState、FoundationState.cs、CultivationState.cs、GameSaveEnvelope.cs::CultivationRecord、GameSaveSerializer.cs：只读核对旧编码和可恢复信息。
+
+## 实施范围
+
+- 形成唯一三阶段正式规则，更新所有指定事实源中的阶段名称、阶段判定、容量释放与成丹引用；首府建成进入开府，达到正数自身上限进入圆满，容量1首府同时圆满；已圆满后扩府不回退。
+- 保留天然0/1/2/3、扩府最多2层、五府种类、已结丹永久锁；不能继续按旧stage-1释放容量。按已确认天然额度全部开放、道基承载另需培养的决定写入正文。
+- 明确连续成长与按开府成果分阶段的区别；旧四阶段18/22/27/33预算、周期和锚点在数值叶子前只能标记待迁移，不能沿用为已验证新值。
+- 在现有数据契约内冻结新阶段稳定ID/数字编码及玩家、NPC存档处理。旧编码不可直接重解释；字段不足走现有显式不兼容/失败路径，不猜值、不伪造圆满，不新增兼容层或静默覆盖旧档。
+- 旧命名候选只注明已被本次用户三阶段决定取代，保留历史审核依据；L1只同步线索。
+
+## 禁止项
+
+- 不重写角色战斗数值、个别功法成长、CSV/asset/C#或金丹道路/位格规则；不新增开府玩法、进度引擎或永久修炼损伤。
+
+## 模型协作
+
+- 复杂：阶段机制与存档旧编码直接冲突；主模型沿用入口，关键旧档语义核对可用 gpt-6-astra / high 只读辅助，限上述六个所有者与契约，返回可证明映射/不可证明字段。没有独立工作面时由主责统一核对，不为模型调用增设前置。
+- 执行前核对工具与验证能力；实际调用、未核实项写本卡既有验证记录。DeepSeek产物标“⚠️ 已修改/未审核”，由Codex独立复审，不自审。
+
+## 验证
+
+- 对天然0/1/2/3与0/1/2扩府层逐项核对阶段、首府可达、容量1、满自身上限、圆满后扩府、成丹永久锁；确认容量释放没有依赖未能开启的阶段形成循环。
+- 数据契约对玩家/NPC新旧编码可确定解释；任何无法证明的旧字段不声明自动迁移成功。
+- 任务卡/队列/backlog、风险预检投影、审核文本、pending-whitespace与cached diff检查。docs/CSV/asset变化时运行 tools/check-data-chain.ps1。相关输入未变化，不重复已经通过的同范围验证。
+
+## 完成条件
+
+- 实施范围的单一结果全部成立，验证通过；外部执行须独立复审通过才归档。不得把设计、数据同步或状态薄切片描述为完整可玩学习／开府界面。
+
+## 停止条件
+
+- 存档合同需数据中不存在的事实或必须猜新数值时停止；只记录精确缺口，不再询问已确认的阶段、容量或学习方向。
+- 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。
+
+## 2026-09-22 道基承载补充
+
+- 用户最终确认天然额度在筑基成功后全部开放；道基当前承载能力随培养增长。明确天然加扩府总上限与当前承载限制两层含义，当前可承诺容量取两者较小值；不得把临时承载量当圆满目标。初始承载、曲线、周期归数值叶子，不凭阶段序号猜值。
+
+## 统一模板先行
+
+- 同轮统一功法/术法两份规范和两份模板中的学习规则：所有内容最迟筑基可学习；原更低门槛保留；筑基取得传承知识不提前发放高境神通/章节效果/门派权限。此合同为C-FPD-LEARN-01实例迁移的直接事实前置。
+- 只改通用规则，不在本卡改9部功法及46术法实例；数值仍由N-FPD-STAGE-03验证。
+
+
+## 直接合同引用同步
+
+- 上述补入的金丹静态、NPC行动权重、丹相、证位与争位规格及法箓规则/映射只同步旧四阶段、PHASE_4、养基与成丹前置引用；已圆满后扩府可继续培养承载，不能继续用“未圆满”禁止养基。不得改金丹效果、NPC权重、法箓身份/晋升权限或其他机制。

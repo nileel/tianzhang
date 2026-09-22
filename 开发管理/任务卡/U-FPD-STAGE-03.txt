@@ -1,0 +1,92 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-FPD-STAGE-03",
+  "title": "筑基三阶段状态导入与存档迁移",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "C-FPD-STAGE-03",
+    "N-FPD-STAGE-03"
+  ],
+  "stateReason": "等待已冻结依赖：C-FPD-STAGE-03、N-FPD-STAGE-03",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Scripts/Modules/Cultivation/FoundationState.cs",
+    "src/Assets/Scripts/Modules/Cultivation/CultivationState.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs",
+    "src/Assets/Tests/EditMode/CharacterFoundationPurpleMansionTests.cs",
+    "src/Assets/Tests/EditMode/NpcCultivationUseCaseTests.cs",
+    "src/Assets/Tests/EditMode/CultivationStateTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv",
+    "UNITY_STRUCTURE.runtime.md",
+    "docs/superpowers/specs/2026-07-25-foundation-purple-mansion-data-contract.md",
+    "docs/角色养成/养成事实速查.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-FPD-STAGE-03.txt",
+    "开发管理/任务归档/U-FPD-STAGE-03.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-FPD-STAGE-03 · 筑基三阶段状态导入与存档迁移
+
+## 来源与当前边界
+
+- 用户2026-09-22明确要求筑基／开府／圆满三阶段、保留灵根上限、开满自身上限即圆满；0容量先扩府，圆满后扩府保持圆满；功法、术法的高境学习门槛统一降到筑基。
+- 完整依赖与已核实所有者见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本卡仅承担下面一个可独立判断的结果；不重新拆父项、不预分析其他backlog。所有业务写入前消费同一卡risk preflight。
+
+## 必查范围
+
+- C-FPD-STAGE-03冻结的阶段/容量/新旧存档合同和N-FPD-STAGE-03数值结果；Unity技能和UNITY_STRUCTURE.runtime.md对应模块。
+- 六个C#所有者及指定测试完整逻辑单元；JindanProofCoordinator.TryFormFoundationPurpleMansionLock、NpcStore/NpcState.Clone、GameRuntime.CaptureSave/RestoreSave、StartMenuSceneInstaller.CreateNewPlayer只读直接调用核对。
+
+## 实施范围
+
+- 同一提交迁移Content完整状态校验、CSV导入、玩家FoundationState投影、玩家/NPC存档，不拆成先删Phase4后修存档。
+- 保留天然容量、扩府最多2层、胚胎承诺容量、周期幂等、已结丹永久锁、实例ID/府体/神通绑定；圆满后扩府的历史阶段应可往返保存，不凭当前未建满否定已圆满。
+- 消费前置已明确新编码和旧档策略；旧int2不可静默解释为新圆满。恢复失败不替换live owner或覆盖旧档。
+- 生产FoundationPurpleMansionStates/JindanStaticStates表为0行，无对应状态资产；只更新确需变动的15行fixture，不制造角色资产差异。总schema确实变化时才更新GameSaveSlotStoreTests和UNITY_STRUCTURE.runtime.md。
+
+## 禁止项
+
+- 不新增完整修炼/学习/开府循环或界面；当前TryOpenMansionCycle/TryNurtureFoundationCycle只记周期，不把状态薄切片称作完整可玩。不得为测试新增运行器、兼容兜底或重构协调器。
+
+## 模型协作
+
+- 复杂状态/存档语义：主模型沿用入口；在现有六个所有者内统一实施，有独立只读验证面才用 gpt-6-astra / high 辅助核对旧编码和原子恢复；不并行写共享状态。
+- 执行前核对工具与验证能力；实际调用、未核实项写本卡既有验证记录。DeepSeek产物标“⚠️ 已修改/未审核”，由Codex独立复审，不自审。
+
+## 验证
+
+- Unity EditMode覆盖本卡测试及JindanStaticStateDataTests；现有run-unity-editmode-tests.ps1无过滤参数，沿用现有入口。
+- 天然0/1/2/3、0/1/2扩府、首府/正数自身上限、圆满后扩府、importer/runtime一致、结丹锁、玩家/NPC往返及旧档策略；恢复失败不替换live owner。check-data-chain；仅程序集结构变化才扩大边界检查。
+- 任务卡/队列/backlog、风险预检投影、审核文本、pending-whitespace与cached diff检查。docs/CSV/asset变化时运行 tools/check-data-chain.ps1。相关输入未变化，不重复已经通过的同范围验证。
+
+## 完成条件
+
+- 实施范围的单一结果全部成立，验证通过；外部执行须独立复审通过才归档。不得把设计、数据同步或状态薄切片描述为完整可玩学习／开府界面。
+
+## 停止条件
+
+- 旧档策略、阶段编码或数值前置未冻结；需要新业务所有者或新玩法入口；无法完成Unity实际验证时按既有停止合同记录，不将静态搜索当运行证明。
+- 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。
+
+## 2026-09-22 道基承载补充
+
+- 当前可承诺容量取天然加扩府总上限与道基已培养承载能力的较小值；按已冻结契约和数值档案表达，不能再由阶段枚举释放容量。圆满按总上限判定，培养承载/阶段历史须在现有完整状态、导入和存档合同中一致。

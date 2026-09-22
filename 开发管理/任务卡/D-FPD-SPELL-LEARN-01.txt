@@ -1,0 +1,115 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-FPD-SPELL-LEARN-01",
+  "title": "术法筑基学习门槛数据同步",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "data",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "C-FPD-LEARN-01"
+  ],
+  "stateReason": "等待已冻结依赖：C-FPD-LEARN-01",
+  "expectedPaths": [
+    "src/Assets/DataConfig/Spells.csv",
+    "src/Assets/Data/Spells/Spell_spell_jiuxiaotaiyizhan.asset",
+    "src/Assets/Data/Spells/Spell_spell_wuleihongding.asset",
+    "src/Assets/Data/Spells/Spell_spell_leicnicuiti_spell.asset",
+    "src/Assets/Data/Spells/Spell_spell_wanjianchaozong.asset",
+    "src/Assets/Data/Spells/Spell_spell_tianjieyin.asset",
+    "src/Assets/Data/Spells/Spell_spell_renjianheyi.asset",
+    "src/Assets/Data/Spells/Spell_spell_jiuxiaoleifa.asset",
+    "src/Assets/Data/Spells/Spell_spell_hengshaoqianjun.asset",
+    "src/Assets/Data/Spells/Spell_spell_shuwurushan.asset",
+    "src/Assets/Data/Spells/Spell_spell_tiesuolianzhou.asset",
+    "src/Assets/Data/Spells/Spell_spell_jindaoduanyan.asset",
+    "src/Assets/Data/Spells/Spell_spell_toubianduanliu.asset",
+    "src/Assets/Data/Spells/Spell_spell_hufubingce.asset",
+    "src/Assets/Data/Spells/Spell_spell_wanchengtianwei.asset",
+    "src/Assets/Data/Spells/Spell_spell_jianbiqingye.asset",
+    "src/Assets/Data/Spells/Spell_spell_mengyanxixin.asset",
+    "src/Assets/Data/Spells/Spell_spell_yinguosilv.asset",
+    "src/Assets/Data/Spells/Spell_spell_lunhuichanxiang.asset",
+    "src/Assets/Data/Spells/Spell_spell_hunguibian.asset",
+    "src/Assets/Data/Spells/Spell_spell_yongjiehuilang.asset",
+    "src/Assets/Data/Spells/Spell_spell_suhuijuexing.asset",
+    "src/Assets/Data/Spells/Spell_spell_sanqianmengjie.asset",
+    "src/Assets/Data/Spells/Spell_spell_yinguodaoxuan.asset",
+    "src/Assets/Data/Spells/Spell_spell_wanjunyinxian.asset",
+    "src/Assets/Data/Spells/Spell_spell_wanliuguizong.asset",
+    "src/Assets/Data/Spells/Spell_spell_buhuaijinshen.asset",
+    "src/Assets/Data/Spells/Spell_spell_jiuyuanhanquan.asset",
+    "src/Assets/Data/Spells/Spell_spell_jiuzhuandanhuo.asset",
+    "src/Assets/Data/Spells/Spell_spell_wuleifuchi.asset",
+    "src/Assets/Data/Spells/Spell_spell_junshirushan.asset",
+    "src/Assets/Data/Spells/Spell_spell_dadaoxuanyin.asset",
+    "src/Assets/Data/Spells/Spell_spell_tianshuyunzhuan.asset",
+    "src/Assets/Data/Spells/Spell_spell_tiangangfuzhen.asset",
+    "src/Assets/Data/Spells/Spell_spell_taiqingyuye.asset",
+    "src/Assets/Data/Spells/Spell_spell_yufenglingxu.asset",
+    "src/Assets/Data/Spells/Spell_spell_jiangliutiandi.asset",
+    "src/Assets/Data/Spells/Spell_spell_lingfumiaofa.asset",
+    "src/Assets/Data/Spells/Spell_spell_xuanyuanzhengqijue.asset",
+    "src/Assets/Data/Spells/Spell_spell_jingangpoyue.asset",
+    "src/Assets/Data/Spells/Spell_spell_suodichengcun.asset",
+    "src/Assets/Data/Spells/Spell_spell_mingwei.asset",
+    "src/Assets/Data/Spells/Spell_spell_qiongli.asset",
+    "src/Assets/Data/Spells/Spell_spell_renhua.asset",
+    "src/Assets/Data/Spells/Spell_spell_shoufen.asset",
+    "src/Assets/Data/Spells/Spell_spell_tongbian.asset",
+    "src/Assets/Data/Spells/Spell_spell_yangua.asset",
+    "docs/角色养成/养成事实速查.txt",
+    "开发管理/任务列表/数据链路任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-FPD-SPELL-LEARN-01.txt",
+    "开发管理/任务归档/D-FPD-SPELL-LEARN-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数据链路任务.txt"
+}
+---TASK-BODY---
+# D-FPD-SPELL-LEARN-01 · 术法筑基学习门槛数据同步
+
+## 来源与当前边界
+
+- 用户2026-09-22明确要求筑基／开府／圆满三阶段、保留灵根上限、开满自身上限即圆满；0容量先扩府，圆满后扩府保持圆满；功法、术法的高境学习门槛统一降到筑基。
+- 完整依赖与已核实所有者见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本卡仅承担下面一个可独立判断的结果；不重新拆父项、不预分析其他backlog。所有业务写入前消费同一卡risk preflight。
+
+## 必查范围
+
+- C-FPD-LEARN-01归档及46术法正文；Spells.csv表头和46命中行；CombatContentImporter.cs::ImportSpells、SpellData.cs::realmRequirement只读。
+
+## 实施范围
+
+- 将46高门槛行的realmReq同步为realm_zhuji，通过现有导入器同步对应46既有asset的realmRequirement；高阶现存ID包括realm_lianshen。
+- 核对全部83战斗术法docs/CSV/asset一致，保留其余低境行及contentScope。
+
+## 禁止项
+
+- 不改术法效果/倍率、升格方案、内容ID、GUID、player/reserved范围；不新增学习UI、学习系统、导入器兜底或资产。
+
+## 模型协作
+
+- 简单：语义已冻结且结果可机械核对；沿用入口默认单模型，无需辅助。
+- 执行前核对工具与验证能力；实际调用、未核实项写本卡既有验证记录。DeepSeek产物标“⚠️ 已修改/未审核”，由Codex独立复审，不自审。
+
+## 验证
+
+- 现有Unity导入器完成重导并逐项比对CSV/asset，check-data-chain；核对除realm门槛外的字段无变化。此数据同步不宣称实际学习界面已接入。
+- 任务卡/队列/backlog、风险预检投影、审核文本、pending-whitespace与cached diff检查。docs/CSV/asset变化时运行 tools/check-data-chain.ps1。相关输入未变化，不重复已经通过的同范围验证。
+
+## 完成条件
+
+- 实施范围的单一结果全部成立，验证通过；外部执行须独立复审通过才归档。不得把设计、数据同步或状态薄切片描述为完整可玩学习／开府界面。
+
+## 停止条件
+
+- 导入器输出额外变化或发现真正学习调用者要求新门槛系统时停止，不手写补丁掩盖。
+- 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。

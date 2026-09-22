@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-09-22 用户明确授权筑基／开府／圆满三阶段、保留灵根上限且满自身上限圆满（0容量先扩府、圆满后扩府不降阶段），天然额度从筑基起开放，道基承载另需培养；并把全部功法/术法的高境学习门槛降至筑基。原名称父项转迁移收口，六个叶子与直接依赖一次性冻结，见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本授权不自动提前全部神通或解冻其他内容机制。
+
 - 2026-09-20 用户明确解冻本轮列出的 C-FPD-NAME-01（新增候选叶子01A）、C-FPD-SPELL-01及01A～01D、C-FPD-SHENTONG-01、C-JD-COMBO-01（新增范围合同前置D-JD-COMBO-SCOPE-01）、C-JD-LORE-MIGRATE-01及01A～01C。可原子执行的叶子已建立 schema 2 卡并入队；名称最终确认、组合范围确认和守真升格结果等真实前置继续保留。其他内容冻结不变；下方早期日期的授权边界是历史事实，当前以本条和活跃卡为准。
 - 本批 DeepSeek 执行采用 DeepSeek V4.1 Flash（deepseek-flash），仍由 Codex 独立复审；各卡已按实际风险填写模型协作，关键语义冲突才调用 Astra/high 只读辅助。
 - 2026-09-20 用户随后明确要求本会话实施并提交：C-FPD-SHENTONG-01由Codex完成文档迁移，已于2026-09-21独立复审通过并归档；C-JD-LORE-MIGRATE-01C于2026-09-21完成四名NPC迁移并归档，人物志及对应L1仍保留迁移后独立复审标记。详细证据见对应任务归档。
@@ -29,9 +31,11 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| C-FPD-LEARN-01 | P1 | deepseek | 阻塞 | C-FPD-STAGE-03 | 全部功法术法筑基学习门槛统一 | 开发管理/任务卡/C-FPD-LEARN-01.txt |
+| C-FPD-STAGE-03 | P1 | codex | 已排队 | — | 筑基三阶段与学习规则合同 | 开发管理/任务卡/C-FPD-STAGE-03.txt |
 | D-JD-COMBO-SCOPE-01 | P2 | codex | 待决定 | — | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | V-GZ-ART-SLICE-01 | 关中首个可展示流程美术父项 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
-| C-FPD-NAME-01 | P2 | codex | 阻塞 | — | 道基四阶段正式名称确认 | 开发管理/任务卡/C-FPD-NAME-01.txt |
+| C-FPD-NAME-01 | P2 | codex | 阻塞 | C-FPD-STAGE-03、C-FPD-LEARN-01、N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01、D-FPD-GONGFA-03、U-FPD-STAGE-03 | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
 | C-FPD-GONGFA-01A | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 古修 5 部功法迁移。 | — |
@@ -41,10 +45,10 @@
 | C-FPD-GONGFA-01E | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 太一道庭 9 部功法迁移。 | — |
 | C-FPD-GONGFA-01F | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 玉清崖 4 部功法迁移。 | — |
 | C-FPD-SPELL-01 | P2 | codex | 阻塞 | C-FPD-SPELL-01A、C-FPD-SPELL-01B、C-FPD-SPELL-01C、C-FPD-SPELL-01D | 古修术法升格迁移跨批一致性收口 | 开发管理/任务卡/C-FPD-SPELL-01.txt |
-| C-FPD-SPELL-01A | P2 | deepseek | 已排队 | — | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
-| C-FPD-SPELL-01B | P2 | deepseek | 阻塞 | — | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
-| C-FPD-SPELL-01C | P2 | deepseek | 阻塞 | — | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
-| C-FPD-SPELL-01D | P2 | deepseek | 阻塞 | — | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
+| C-FPD-SPELL-01A | P2 | deepseek | 阻塞 | C-FPD-STAGE-03 | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
+| C-FPD-SPELL-01B | P2 | deepseek | 阻塞 | C-FPD-STAGE-03、C-FPD-LEARN-01 | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
+| C-FPD-SPELL-01C | P2 | deepseek | 阻塞 | C-FPD-STAGE-03、C-FPD-LEARN-01 | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
+| C-FPD-SPELL-01D | P2 | deepseek | 阻塞 | C-FPD-STAGE-03、C-FPD-LEARN-01 | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
 | C-JD-COMBO-01 | P2 | deepseek | 阻塞 | D-JD-COMBO-SCOPE-01 | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |
 | C-JD-LORE-MIGRATE-01 | P2 | codex | 阻塞 | C-JD-LORE-MIGRATE-01B | 旧金丹叙事语义迁移跨类型收口 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt |
@@ -156,14 +160,10 @@
 
 共同事实源：`docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/superpowers/plans/2026-07-20-foundation-purple-mansion-danxiang-fact-source-migration.md`。所有任务都不得重新引入筑基五段、天地玄黄道基品级、气府、候选槽或多丹相。
 
-### C-FPD-NAME-01 · 道基四阶段正式命名
+### C-FPD-NAME-01 · 筑基三阶段与学习门槛迁移收口
 
-- 依赖与状态：2026-09-20已解冻；G3已通过。候选起草与复审由新叶子C-FPD-NAME-01A承担（DeepSeek V4.1 Flash执行、Codex独立复审），本父项只承接用户最终确认，未确认前不完成。
-- 预期路径：新建 `docs/superpowers/specs/2026-07-21-foundation-stage-name-candidates.md`；用户确认前不得修改现行事实源。
-- 交付：为第一至第四阶段各提供少量单一名称候选、出处和与连续养基语义的对应说明；不得暗示天地玄黄品质、紫府数量或额外阶段。
-- 验证：恰好覆盖四阶段；名称无重复、无旧五段同义复刻；候选文件标 `⚠️ 已修改/未审核` 并交由 Codex 复审及用户确认。
-- 完成条件：用户确认一组四阶段正式名称，Codex 才建立后续事实源同步切片；候选本身不算完成迁移。
-- 停止条件：命名需要改变阶段机制、顺序、容量释放或数值。
+- 原四名选择已由用户明确三阶段取代；六叶子的完整依赖、路径、首批ready和关闭条件见 开发管理/筑基三阶段与学习门槛迁移计划.txt 及活跃卡。
+- 父项只汇总，不重复领取；所有子项完成后再提供下游解锁事实，不提前宣称正式内容和运行时已迁移。
 
 ### C-FPD-EXPAND-01 · 扩府天材地宝内容
 
