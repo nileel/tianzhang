@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "C-FPD-LEARN-01"
-  ],
-  "stateReason": "等待已冻结依赖：C-FPD-LEARN-01",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：C-FPD-LEARN-01已完成；完整任务卡的路径、验证与停止条件已核对，等待按既有范围同步术法数据。",
   "expectedPaths": [
     "src/Assets/DataConfig/Spells.csv",
     "src/Assets/Data/Spells/Spell_spell_jiuxiaotaiyizhan.asset",

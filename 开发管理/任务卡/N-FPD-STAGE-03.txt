@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "C-FPD-LEARN-01"
-  ],
-  "stateReason": "等待C-FPD-LEARN-01完成以消费全量功法／术法的筑基学习门槛结果。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：C-FPD-LEARN-01已完成；完整任务卡的路径、验证与停止条件已核对，等待用BattleSim冻结三阶段成长与筑基入门预算。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/GameData.cs",
