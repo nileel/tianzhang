@@ -1,0 +1,55 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "N-FPD-STAGE-03",
+  "title": "三阶段成长与筑基入门数值合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "migration",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：BattleSim 已直接迁为筑基／开府／圆满三阶段结算，旧五段累计预算守恒；六部缺失功法已有逐 ID 入门预算，内容数据同步留给 D-FPD-GONGFA-03。",
+  "expectedPaths": [
+    "simulations/BattleSim/Program.cs",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "docs/基础设定/角色数值设计.txt",
+    "docs/基础设定/修行境界.txt",
+    "docs/基础设定/寿元与时间尺度设定.txt",
+    "docs/角色养成/功法设计规范.txt",
+    "docs/角色养成/功法/功法设计.txt",
+    "docs/角色养成/养成事实速查.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "开发管理/任务归档/验证记录/三阶段与筑基入门成长数值验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-FPD-STAGE-03.txt",
+    "开发管理/任务归档/N-FPD-STAGE-03.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": ["EXP-BS-001"],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-FPD-STAGE-03 · 三阶段成长与筑基入门数值合同
+
+## 已完成范围
+
+- 以 BattleSim 锁定筑基／开府／圆满的 30%／32%／38% 累计预算、0.300／0.605／1.000 核心曲线锚点，以及旧五段总预算的 `1E-9` 守恒约束。
+- `GameData`、`Character.SubGrowthSum` 和成长审计使用同一三阶段入口；不再只以审计常量模拟迁移。
+- 锁定承载培养、0 容量先扩府、容量 1 直接圆满、府胚占承诺容量与圆满后扩府不回退的周期合同。
+- 六部缺失功法的逐 ID 入门预算已写入 BattleSim 与独立验证记录，供 `D-FPD-GONGFA-03` 同步正文、CSV 和 Unity asset。
+
+## 验证与边界
+
+- 执行 Release build 和完整 BattleSim；审计覆盖 21 Build、六部预算、0～5 容量、承载不足／达标、失败恢复与重复结算边界。
+- 未改 Unity、CSV 或个别功法完成品；它们仍由 `D-FPD-GONGFA-03` 在本记录的逐 ID 输出上机械同步。
+
+## 模型协作
+
+- 本任务的复杂数值语义由入口主模型统一复核。卡中可选的 `gpt-6-astra / high` 只读辅助不在当前工具能力中，未执行；没有以其未核实意见替代 BattleSim 结果。

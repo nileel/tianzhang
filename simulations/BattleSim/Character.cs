@@ -194,12 +194,15 @@ class Character
                     prevSubs += subsHere;
                     continue;
                 }
-                double val = attr switch
+                for (int stage = 0; stage < effective; stage++)
                 {
-                    "HP" => grow.HP, "MP" => grow.MP, "肉攻" => grow.肉攻, "神攻" => grow.神攻,
-                    "肉防" => grow.肉防, "神防" => grow.神防, "反应" => grow.反应, "神识" => grow.神识, _ => 0
-                };
-                sum += val * effective;
+                    var stageGrowth = GameData.GrowthAtSublevel(r, stage, grow);
+                    sum += attr switch
+                    {
+                        "HP" => stageGrowth.HP, "MP" => stageGrowth.MP, "肉攻" => stageGrowth.肉攻, "神攻" => stageGrowth.神攻,
+                        "肉防" => stageGrowth.肉防, "神防" => stageGrowth.神防, "反应" => stageGrowth.反应, "神识" => stageGrowth.神识, _ => 0
+                    };
+                }
                 prevSubs += subsHere;
                 if (r == realm) break;
             }
@@ -216,15 +219,18 @@ class Character
             int subsHere = GameData.Sublevels[r];
             int effective = Math.Min(subsHere, Math.Max(0, wtotalSubs - wprevSubs));
             if (effective <= 0) break;
-            var sgb = GameData.SubGrowthBase[r];
-            double val = attr switch
-            {
-                "HP" => sgb.HP, "MP" => sgb.MP, "肉攻" => sgb.肉攻, "神攻" => sgb.神攻,
-                "肉防" => sgb.肉防, "神防" => sgb.神防, "反应" => sgb.反应, "神识" => sgb.神识, _ => 0
-            };
             string innateKey = attr switch { "HP" or "肉攻" or "肉防" => "根骨", "MP" or "神攻" or "神防" => "魂魄", "神识" => "神识", "反应" => "根骨", _ => "根骨" };
             double scale = w[innateKey] / 0.6;
-            wsum += val * scale * effective;
+            for (int stage = 0; stage < effective; stage++)
+            {
+                var stageGrowth = GameData.GrowthAtSublevel(r, stage, GameData.SubGrowthBase[r]);
+                double val = attr switch
+                {
+                    "HP" => stageGrowth.HP, "MP" => stageGrowth.MP, "肉攻" => stageGrowth.肉攻, "神攻" => stageGrowth.神攻,
+                    "肉防" => stageGrowth.肉防, "神防" => stageGrowth.神防, "反应" => stageGrowth.反应, "神识" => stageGrowth.神识, _ => 0
+                };
+                wsum += val * scale;
+            }
             wprevSubs += subsHere;
             if (r == realm) break;
         }
