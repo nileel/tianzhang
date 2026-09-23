@@ -7,6 +7,8 @@
 |----|------|------|--------|------|------|------|--------|
 | N-FPD-STAGE-03 | codex_execute | codex | P1 | battlesim | migration | 三阶段成长与筑基入门数值合同 | 开发管理/任务卡/N-FPD-STAGE-03.txt |
 | D-FPD-SPELL-LEARN-01 | codex_execute | codex | P1 | data | migration | 术法筑基学习门槛数据同步 | 开发管理/任务卡/D-FPD-SPELL-LEARN-01.txt |
+| A-GZ-UI-FONT-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 关中中文字体许可覆盖与导入资源 | 开发管理/任务卡/A-GZ-UI-FONT-ASSET-01.txt |
+| A-GZ-UI-KIT-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 关中青玉 UI 图集与默认头像资源包 | 开发管理/任务卡/A-GZ-UI-KIT-ASSET-01.txt |
 | C-FPD-SPELL-01C | codex_review | codex | P2 | content | migration | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
 | C-FPD-SPELL-01B | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
 | C-FPD-SPELL-01D | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |

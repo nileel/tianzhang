@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-GZ-UI-CITY-ASSET-01",
+  "title": "关中城纯背景制作与独立导入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-GZ-ART-LOOKDEV-01"
+  ],
+  "stateReason": "2026-09-23：制作与导入边界已冻结，等待新版城镇视觉方向的明确接受。",
+  "expectedPaths": [
+    "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
+    "assets/source/ui/guanzhong-first-bounty/city-manifest.json",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png.meta",
+    "src/Assets/Art/UI.meta",
+    "src/Assets/Art/UI/Guanzhong.meta",
+    "开发管理/关中城纯背景资源验收记录.txt",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt",
+    "开发管理/任务归档/A-GZ-UI-CITY-ASSET-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# A-GZ-UI-CITY-ASSET-01 · 关中城纯背景制作与独立导入
+
+## 来源与当前边界
+
+- 2026-09-23 用户要求把 UI 独立资源缺口建卡；唯一结果是供现有 Settlement 背景表面消费的一张正式纯场景背景及导入证据。
+- 新图 assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png 目前仅为候选；等待 A-GZ-ART-LOOKDEV-01 对应 DEC-20260923-GZLOOKDEVV2 的城镇方向接受。该决定不涉及角色费用。
+- 不把整屏截图直接当最终背景；不得带人物信息、功能标签、悬赏文字、按钮或悬浮 UI。
+
+## 必查范围
+
+- 开发管理/关中UI与角色链卡点处理记录.txt 的新版方向与任务分工；A-GZ-ART-LOOKDEV-01 的新决定及批准记录。
+- docs/剧情/据点/关中城.txt 的视觉主题与现有功能；assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v4/screenshots/city-bounty-1920.jpg 的当前城镇布局安全区。
+- docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md 的背景资源路径与既有表面；src/Assets/Scripts/Editor/SettlementSceneBuilder.cs::Build 仅用于核对背景层，不修改。
+- imagegen 技能、docs/资源管理/美术资源版本管理规范.md；生成或编辑前实际查看被接受的城镇图。
+
+## 实施范围
+
+- 用一次内置图像生成／编辑取得 1920×1080 纯背景；如工具未输出该尺寸，先按图像技能允许方式处理并记录实际尺寸，不能谎报。最多一轮有明确缺陷依据的定点修订，不追加探索。
+- 保留夯土墙、灰瓦木构、集市与通行街道，人物信息和悬赏文书所在区保持可读安全区；不得将尚未启用的坊市等内容画成可操作入口或新增剧情角色。
+- source PNG 与独立 city-manifest.json 记录提示词、生成次数、尺寸、哈希、接受依据；通过 Unity 正常 importer 原样导入 Guanzhong_City_Background.png 及 .meta，保留 sRGB 与合适背景导入设置。
+- 仅导入资源；正式背景对象及布局由 U-GZ-ART-UI-01 接线。若当前父目录 .meta 已由其他资源卡建立，保留其 GUID。
+- 本卡成品如偏离已接受方向，形成实际图像证据后发飞书决策，不以自评覆盖方向；未偏离的技术验收不重复请求方向批准。
+
+## 禁止项
+
+- 不修改正式场景、Builder、运行时代码、玩法、字体、图集或角色资产；不生成第二张背景或采购素材。
+- 不把示意图上的文案、数值、路人或装饰当作新增内容事实。
+
+## 模型协作
+
+简单：一个已批准方向的纯背景和 importer 交付；沿用入口默认单模型，无需辅助。执行前确认图像与 Unity 工具可用，未具备时不得凭文本宣称图像／导入通过。
+
+## 验证
+
+- 实际查看输出、核对 SHA-256 与 Unity importer；source 文件按既有资源交付规则落到主工作区同路径并复核，不把 worktree 的 ignored 文件误认为已被 Git 集成。
+- 只运行本卡资源的最小充分检查、tools/check-asset-versioning.ps1、tools/check-task-cards.ps1、审核文本、预期路径 whitespace 和 git diff --cached --check；不运行 BattleSim，不重跑无关正式场景流程。
+- 目视证明无烘焙 UI、图像未拉伸且安全区可用；Unity 原样回读与源图尺寸、颜色对应。
+
+## 完成条件
+
+- 唯一源图、独立 manifest、Unity 导入物及 .meta、验收记录齐全且同一批准方向可追溯。
+- 完成后只移除 U-GZ-ART-UI-01 的本卡 blocker；其余资源未齐继续 blocked。最后一个资源前置完成时消费完整 U 卡，在同一维护切片核对当时引用点与资源、重算风险投影并判断 ready；连续实机验收是 U 卡实施后交付条件。
+
+## 停止条件
+
+- 缺城镇方向接受、需要更改构图方向／新增内容、超过一次初稿加一次有依据修订、需要费用、修改其他资源或正式场景时停止。

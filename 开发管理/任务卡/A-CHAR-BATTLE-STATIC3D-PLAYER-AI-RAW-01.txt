@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01",
   "title": "默认男主一次性 AI 静态3D原包生成与冻结",
   "priority": "P1",
@@ -9,10 +9,8 @@
   "domain": "content",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "A-GZ-ART-LOOKDEV-01"
-  ],
-  "stateReason": "2026-09-12：先完成关中整屏生产合同；另须平台/服务/最大credits/四视图哈希/资产ID的真实交易批准。已有四视图不重做，本次重排未授权付费。",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：四视图已完成并重新核验五项哈希；按当前用户授权移除旧 LOOKDEV 作为男主原包前置。仅等待 DEC-20260923-PLAYERRAW45 的具体平台/服务/额度批准；收到批准后仍须现场核验报价与可用额度，当前未上传或消费。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
@@ -24,14 +22,19 @@
     "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
     "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
 
 ## 2026-09-12 首包边界
 
-- 先消费 `docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md`；LOOKDEV通过不代表费用获批。外部交易仍最多一次、不得超过明确批准额度；未获批不上传。
+- 原包只消费已批准的角色身份／四视图和具体交易批准；2026-09-23 用户授权去除旧 LOOKDEV 前置，整屏接受不再是上传原包的前提。外部交易仍最多一次、不得超过明确批准额度；未获批不上传。
 - 本卡只承担首包固定默认男主，不因已有四视图追加平台评测。费用缺口不阻塞独立环境/UI分支。
 
 ## 来源与当前边界
@@ -80,3 +83,14 @@
 ## 停止条件
 
 - 四视图或 manifest 哈希变化、预授权缺字段、平台要求额外付费、实际 credits 将超上限、生成失败、下载不完整/损坏、模型为空、身份明显错误、明显缺肢、用户拒绝原包，或需要第二次生成/换平台时立即停止。
+
+## 模型协作
+
+简单：一次已冻结输入的受限平台操作与原包记录；沿用入口默认单模型，无需辅助。执行前核对可用浏览器／平台工具、当前会话和下载取证能力；不通过提示词假定价格、额度或四图支持。
+
+## 2026-09-23 决策与后续通知
+
+- 具体问题、A/B/C 选项、五项输入哈希与发送证据见 开发管理/关中UI与角色链卡点处理记录.txt 的 DEC-20260923-PLAYERRAW45。45 credits 是待批准硬上限提案，不是当前实际报价。
+- 手动决定回执由本任务后续维护读取现有飞书桥并核验 decisionId、操作者和冻结哈希；没有新回执不得复用旧整屏决定或把“批准方向”推断为具体额度。
+- 交易批准后按本卡 ready 前准备补齐 automationInputs、schema 2 风险投影与队列；现场服务、报价、可用额度或四视图支持不符合批准则在上传前停止。
+- 唯一原包生成后，先准备联系表、原包哈希和平台静态门证据，再通过飞书发送原包视觉接受决定；无可查看成果时不提前请求空泛批准。

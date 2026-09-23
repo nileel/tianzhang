@@ -1,0 +1,96 @@
+# 关中 UI 与角色链卡点处理记录
+
+日期：2026-09-23
+来源：用户要求“需要我决策的，都给我发飞书决策通知；不需要我做决定但需单独处理的，都建立对应任务”。
+本文件记录此次直接管理操作与决定证据；任务执行状态仍以活跃任务卡为唯一事实。
+
+## 核查范围与结论
+
+- 只核对关中 UI 和固定默认男主／石甲兽正式角色链、直接下游；没有扫描无关 backlog 或解冻旧角色实验。
+- v6 UI 设计、默认男主母版／四视图、初始地块均已有各自接受证据。旧整屏拒绝不能重新否决这些独立输入。
+- 已有 D-GZ-UI-V6-CONTRACT-01 完成归档并定位 creator／writer。引用点写前取证由 U-GZ-ART-UI-01 负责，连续实机验收是其实施后条件；不再把自身交付要求写成开工 blocker。
+- 当前明确需负责人选择的只有新版整屏方向与一次男主原包的具体服务／费用上限。字体验证、图集／头像、城市纯背景均落实独立任务。
+
+## 完整直接依赖与任务所有者
+
+| 缺口／结果 | 唯一任务 | 当前处理 |
+|---|---|---|
+| 新整屏方向及同范围首包合同收口 | A-GZ-ART-LOOKDEV-01 | 新版已有两图，发送新决定；旧 C 只保留为历史。 |
+| 城市纯背景源图及独立导入 | A-GZ-UI-CITY-ASSET-01 | 新建 blocked 卡；等新版城镇方向接受。 |
+| 青玉 atlas 与确定性男主头像及独立导入 | A-GZ-UI-KIT-ASSET-01 | 新建 ready 卡；只消费已接受 v6 与完整母版，不等 LOOKDEV。 |
+| 中文字体许可、覆盖和独立导入 | A-GZ-UI-FONT-ASSET-01 | 新建 ready 卡；从官方免费可分发候选核验，无采购或新产品决定。 |
+| 既有 UI 引用点、正式接线与连续流程 | U-GZ-ART-UI-01 | 复用既有卡；仅等待三个资源叶子，实施后做实机验收。 |
+| 一次男主 AI 原包与平台静态门 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 复用既有卡；移除旧 LOOKDEV blocker，等明确平台／额度决定。 |
+| 同一原包清理、十视图及 Blender／Unity importer | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 复用既有卡，等 RAW；无新原包／新费用授权。 |
+| 双角色 Prefab 与 Profile | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 复用既有卡，等 ASSET-04；石甲兽 source 已有归档，Unity 导入由本卡负责。 |
+| 正式静态 provider 与 Adventure 接线 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 复用既有卡，等双 Profile；地块前置已完成。 |
+| 六事件特效／音效 | U-GZ-ART-FEEDBACK-01 | 复用既有卡，等正式接线；不采购素材，不改动作所有者。 |
+| 最终整段实机验收 | V-GZ-ART-SLICE-01 | 复用既有卡，等 UI／正式接线／反馈；实际成果完成后发飞书品质决定。 |
+
+- 图集与字体为本批首组 ready，按现有固定队列保留其他任务相对顺序后插入 P1 段；城市背景经 A 或 B 的真实接受证据才可解除方向门。
+- B 只接受城镇时，LOOKDEV 仍保留战斗方向缺口，但允许基于该明确部分接受从 CITY 卡移除 LOOKDEV blocker；不据此宣称整屏／父项关闭。
+- 角色链：RAW → ASSET-04 → PROFILES → FORMAL-WIRING → FEEDBACK；UI 与该链独立汇合到 V-GZ-ART-SLICE-01。现有汇总父项继续只汇总。
+- 旧 ASSET-01／02 失败现场、旧骨骼动画、模块化肖像、额外角色扩展仍保持原状态；它们不是当前链前置，不为其另发解冻问题。
+- v6 的 8／12 人、行动预测、未知详情、物品／移动预览和全游戏窗口系统仍是已冻结合同明确排除的原型范围；不是本次凭空增加的缺口，不据示意图扩成业务任务。
+
+## 新版视觉证据
+
+- 城镇：assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png；1672×941；SHA-256 154666a8b55dd4647f34c86c40af91aff3b2913c1a31dc07798e95fb0a56a3ca。
+- 战斗：assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/battle-and-hud-v2.png；1672×941；SHA-256 f9b7af157404ef118d14124d6894112cda5c5b72faef106ca56b8a159387079c。
+- 两图提交 b290cae0000c4bea839b58158ddad9a3f0978821；Gmail 已发送到用户既有 QQ 地址，message_id=1a0cbf372949456d，主题《天章》新版场景示意图｜当前 UI 与地块（2张原图）。
+- 图内示例数值、文案、奖励、未实现动作、山峰与怪物造型不成为正式设计事实。
+
+## 默认男主具体交易输入
+
+资产 ID：combat_player_default_v1。服务提案：Tripo Studio 最高质量图生静态 3D，最多一次，无绑定／付费附加项／第二次生成。
+45 credits 仅为原有提案的授权上限，不是当前报价。执行前必须现场核实页面支持同一四视图、会话、报价、余额与服务设置；不符合选定上限与输入时停止，不更换来源或悄悄提价。
+
+| 冻结文件 | 字节数 | 本日复核 SHA-256 |
+|---|---:|---|
+| assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png | 416613 | 2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801 |
+| assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png | 385266 | 506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79 |
+| assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png | 376816 | c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31 |
+| assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png | 398077 | 4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9 |
+| assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json | 4926 | 112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9 |
+
+## 已发送的两个决定
+
+### DEC-20260923-GZLOOKDEVV2
+
+- 关联任务：A-GZ-ART-LOOKDEV-01。
+- 问题：是否采用刚发至 QQ 邮箱的新版城镇／战斗示意图作为整屏美术方向？邮件：《天章》新版场景示意图｜当前 UI 与地块（2张原图）。新版沿用当前 v6 UI／v4 城镇布局、青绿草面和青蓝岩壁。只决定视觉方向，图内文案、数值、奖励、未实现交互和怪物造型不是正式设计批准。
+- A：接受两张新版整屏方向，按现行 UI／地块／角色合同完成基准收口并推进纯城镇背景。
+- B：只接受城镇方向；战斗示意暂不接受。先推进纯城镇背景，战斗保留当前已批准地块和角色规格，不追加生成。
+- C：两张新版方向暂不接受，城市背景继续阻塞；可在自定义回复说明修改点。
+- 推荐：A。
+- 影响：此决定不重复批准 v6 布局，不涉及平台费用、不扩玩法、不批准尚未制作的角色原包。A/B 可据城镇接受证据推进背景；UI 图集、字体以及独立男主原包费用决定均不受 C 阻塞。没有新的明确修改授权，不追加生成。
+- 发送状态：PROVIDER_ACCEPTED；发送时间 2026-09-23T02:16:58.723Z；有效期至 2026-09-30T02:16:58.723Z；providerMessageIdHash=8e93ecac14b3c98ca88dbbb2f26de7b61a7672a433f125f3bc8b66679b077f51。每项仅发送一次，尚未据此认定用户接受。
+
+### DEC-20260923-PLAYERRAW45
+
+- 关联任务：A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01。
+- 问题：是否批准固定默认男主的这一次原包交易：Tripo Studio「最高质量」图生静态 3D，使用 9 月 1 日已批准且本日复核的四视图，资产 ID combat_player_default_v1，无自动绑定、无附加付费、无第二次生成？A 的硬上限 45 credits，B 的硬上限 20 credits；当前实际报价、余额和多图入口仍须执行前现场核验。
+- A：批准上述同一方案，最高 45 Tripo credits；现场报价／余额／设置／四视图支持均符合才允许上传和生成一次。
+- B：批准上述同一方案，但最高 20 Tripo credits；现场条件不满足即在上传前停止，不补差价或换方案。
+- C：暂不批准这次平台交易；保留已批准四视图，男主原包继续阻塞，UI／地块仍独立推进。
+- 推荐：A。
+- 影响：你之前的“批准”已用于移除旧 LOOKDEV 的原包前置；本卡只补明确平台服务与额度。45/20 是授权上限，不是实际报价。无可核验余额、页面不支持冻结四视图或费用超限，均不上传、不自动加购或重试。批准绑定以下五项 SHA-256：正面=2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801；鼻尖朝左侧=506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79；鼻尖朝右侧=c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31；背面=4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9；输入manifest=112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9。
+- 发送状态：PROVIDER_ACCEPTED；发送时间 2026-09-23T02:17:06.379Z；有效期至 2026-09-30T02:17:06.379Z；providerMessageIdHash=1dbe6a7d8b60767653a6a3835883ce1285f055ee0bdf4702c0b3e88aba33332d。每项仅发送一次，尚未据此认定用户接受。
+
+## 回复处理与未来需要决定的节点
+
+- 使用现有 tools/feishu-decision-bridge/src/send-decision.mjs；请求文件放在既有私有 stateRoot 的精确 DEC 文件中。PROVIDER_ACCEPTED 后原请求被改写为 pendingDecision，可由同一桥 consume-reply.mjs 按 --request-file 读取受验证回执。公开记录不保存配置、凭证或 provider 原始身份。
+- 这是用户直接要求的手动管理，不伪造 owner run／automationCheckpoint／automationDecision。现行 schema 的 pending_decision 必须绑定自动投影，本次两个执行卡保持 blocked 并在 stateReason 记录当前人工决定；不进入 ready 队列。后续本任务维护在新鲜任务事实下消费同 ID 回执、登记实际证据后才应用选择。
+- 原包联系表：由 RAW 卡在唯一原包与静态门证据完成后向飞书发送，接受后才解锁清理。
+- 清理后十视图：由 ASSET-04 在首轮 FBX 导出前完成候选及证据后向飞书发送，接受后才导出。
+- 城市背景若偏离已接受整屏方向：CITY 卡先给出具体成品和差异，再向飞书发送，不以自评替代方向修改批准。
+- 最终整段品质：V-GZ-ART-SLICE-01 完成连续实机录像、关键图和成本后发飞书决定。
+- 以上未来视觉节点目前没有对应成品，不提前发送空白批准，也不再为已有任务重复建卡。新平台费用／第二次生成等超出既有合同的事件只有真实发生时才提交具体决定。
+
+## 本轮验证
+
+- check-task-cards.ps1 -OutputJson 通过：74 张活跃卡，7 张 ready；本轮新增 3 卡，其中 2 ready。
+- 本轮 8 张涉及卡的风险预检已计算；仅 U-GZ-ART-UI-01 命中 EXP-UNITY-001，已消费其 Builder 保存链正文；没有新增门禁。
+- check-review-text.ps1 通过；check-data-chain.ps1 通过，功法／术法／神通数量仍为 29／83／31，语言键 544。
+- 已复核任务依赖无环、原队列相对顺序保留、资源生产与正式接线所有者分离；没有执行新资源业务或角色交易。
+- 两次飞书发送均返回 PROVIDER_ACCEPTED；私有 pendingDecision 已保存，后续可由既有 consume-reply 入口核验回复。

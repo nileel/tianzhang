@@ -1,5 +1,8 @@
 # 场景与 Unity 任务列表（✅ 已审核）
 
+- 2026-09-23：按用户要求将 UI 资源缺口拆为 A-GZ-UI-CITY-ASSET-01（等城镇方向）、A-GZ-UI-KIT-ASSET-01 与 A-GZ-UI-FONT-ASSET-01（ready）。U-GZ-ART-UI-01 等三个资源叶子；引用点写前核验、连续实机验收归实施任务。男主 RAW 不再等待旧 LOOKDEV，仅等具体平台／额度决定。新版视觉与费用的飞书通知及完整直接依赖见 开发管理/关中UI与角色链卡点处理记录.txt；以下带日期条目保留发生时事实。
+
+
 > 本文件只保留未完成、阻塞或按条件触发的场景与运行时任务。当前可执行切片以 `开发管理/当前任务队列.txt` 为准；已完成记录可由 Git 和 `开发管理/任务归档/` 追溯。
 
 ## 当前事实
@@ -36,12 +39,15 @@
 | U-FPD-STAGE-03 | P1 | codex | 阻塞 | N-FPD-STAGE-03 | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | A-GZ-ART-LOOKDEV-01 | P1 | codex | 阻塞 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
-| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | — | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
+| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-UI-CITY-ASSET-01、A-GZ-UI-KIT-ASSET-01、A-GZ-UI-FONT-ASSET-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
+| A-GZ-UI-CITY-ASSET-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 关中城纯背景制作与独立导入 | 开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt |
+| A-GZ-UI-KIT-ASSET-01 | P1 | codex | 已排队 | — | 关中青玉 UI 图集与默认头像资源包 | 开发管理/任务卡/A-GZ-UI-KIT-ASSET-01.txt |
+| A-GZ-UI-FONT-ASSET-01 | P1 | codex | 已排队 | — | 关中中文字体许可覆盖与导入资源 | 开发管理/任务卡/A-GZ-UI-FONT-ASSET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 阻塞 | A-GZ-ART-LOOKDEV-01 | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
+| A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 阻塞 | — | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |

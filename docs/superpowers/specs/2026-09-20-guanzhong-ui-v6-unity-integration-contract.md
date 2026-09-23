@@ -10,7 +10,7 @@
 
 本合同只为 `U-GZ-ART-UI-01` 冻结既有正式表面的接入目标、数据边界、资源语义槽和验收入口。正式范围仍限于 `SettlementScene` 的关中城／悬赏，以及 `AdventureScene` 的关中野外导航与战斗 HUD；`SceneBuildSupport` 的全局默认值、StartMenu、World、册界、业务规则、存档、Combat 合同和场景外 UI 均不在范围内。
 
-现有源资产均未物化：`assets/source/ui/guanzhong-first-bounty/` 的城市背景、UI atlas、头像裁切和 manifest，以及三个既定 Unity PNG 导入路径均不存在。`RESOURCE-MANIFEST.json` 的状态为 `prototype-assets-not-final-art`，`fontsBundled=false`；ui-kit 中只有十张 64×64、无烘焙文字的原型 SVG。因此 `U-GZ-ART-UI-01` 保持 blocked，不能把本合同或原型 SVG 当作最终资源证据。
+现有源资产均未物化：`assets/source/ui/guanzhong-first-bounty/` 的城市背景、UI atlas、头像裁切和 manifest，以及三个既定 Unity PNG 导入路径均不存在。`RESOURCE-MANIFEST.json` 的状态为 `prototype-assets-not-final-art`，`fontsBundled=false`；ui-kit 中只有十张 64×64、无烘焙文字的原型 SVG。因此不能把本合同或原型 SVG 当作最终资源证据。2026-09-23 已按用户要求建立独立资源生产卡；当前缺口由第 5 节的新分工承接。
 
 ## 2. 资源语义与不可混淆的尺寸
 
@@ -54,10 +54,12 @@
 
 U 卡可在其具名前置正式进入 master 后，且仅在下列全部真实条件满足时重新判断 ready：
 
-- 1 张城市背景、1 张 UI atlas、1 张确定性头像裁切及 manifest 已按第 3 节的 source／Unity 路径实际交付；每个 Unity 导入物和新目录的 `.meta` 证据齐全。
-- 最终字体的授权、字符覆盖和中文回退已获实际证据；不得以 `fontsBundled=false` 的原型或当前系统回退替代。
+- A-GZ-UI-CITY-ASSET-01 交付 1 张城市背景与 city-manifest.json；A-GZ-UI-KIT-ASSET-01 交付 1 张 UI atlas、1 张确定性头像与 kit-manifest.json；A-GZ-UI-FONT-ASSET-01 交付可分发字体、许可与 font-manifest.json。前三图仍按第 3 节既定 source／Unity 路径交付；所有导入物和新目录的 `.meta` 证据齐全。三个独立 manifest 均位于 assets/source/ui/guanzhong-first-bounty/；完整 manifest.json 由 U 卡实施时汇总实际资源引用，不作为资源卡之间的共享写入物。
+- 字体卡提供 source 的 fonts/GuanzhongChinese.otf、fonts/LICENSE.txt，以及 src/Assets/Art/UI/Guanzhong/Fonts/ 中同名导入物与 .meta。授权、字符覆盖和实际缺字处理边界有证据；不得以 fontsBundled=false 的原型或当前系统回退替代。先用同一已核验字体覆盖标题和正文，不新增全局字体系统。
 - 实施只在第 3 节列出的 `SettlementSceneBuilder`、`SettlementView`、`BountyBoardView`、`AdventureSceneBuilder`、`AdventureHudPresenter`、Combat HUD／action／log 视图和两个正式场景的既有对象上完成。引用点、Sprite 切片、Canvas 缩放及动态 writer 必须在写前再用当时 src／场景证明。
 - 不需要增加 `GameplayContracts`／Combat／World／存档字段、悬赏规则、行动指令、全局主题、图标库或采购。发现任一项即排除该原型行，并按其真实所有者另行处理。
+
+2026-09-23 分工澄清：U 卡不再生产或重新导入以上独立资源；它消费资源并在既有对象接线。引用点与动态 writer 是 U 卡写前取证，连续实机流程是 U 卡实施后验收，均不得反向要求 U 卡先完成自身才进入 ready。新版整屏只决定城镇背景方向；已接受的 v6 图集／字体准备不等待整屏或角色原包。
 
 实施后最低验收为：1920×1080 正式入口从关中城打开／关闭悬赏、接取、进入野外、战斗、返回、领取；文本与按钮保持独立、动态 Adventure 节点和 Combat action／log 同主题可读、HUD 不遮战场，且一次性奖励与现有保存读取未回归。原型截图、静态网页检查或单个资源导入都不能代替连续实机证据。
 

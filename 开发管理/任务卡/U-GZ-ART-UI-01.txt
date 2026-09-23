@@ -9,22 +9,15 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-09-22：D-GZ-UI-V6-CONTRACT-01 已完成归档，已冻结当前所有者、数据／事件、资源语义与验收入口；最终切图、字体授权、既有对象引用点及连续实机验收仍无证据，故保持 blocked。旧整屏LOOKDEV拒绝不替代这些真实剩余条件。",
+  "blockedBy": [
+    "A-GZ-UI-CITY-ASSET-01",
+    "A-GZ-UI-KIT-ASSET-01",
+    "A-GZ-UI-FONT-ASSET-01"
+  ],
+  "stateReason": "2026-09-23：独立资源生产拆为城市背景、青玉图集/头像、中文字体三卡；等待三卡源、导入及许可证据。当前所有者已冻结；引用点在实施写前核验，连续实机验收属于本卡实施后条件，不再作为循环开工前置。",
   "expectedPaths": [
-    "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
-    "assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png",
-    "assets/source/ui/guanzhong-first-bounty/formal_player_default_portrait.png",
     "assets/source/ui/guanzhong-first-bounty/manifest.json",
     "开发管理/关中首场城镇与界面美术验收记录.txt",
-    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png",
-    "src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png.meta",
-    "src/Assets/Art/UI/Guanzhong.meta",
-    "src/Assets/Art/UI.meta",
-    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png",
-    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png.meta",
-    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png",
-    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png.meta",
     "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs",
     "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs.meta",
     "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs",
@@ -76,8 +69,8 @@
 
 ## 来源与当前边界
 
-- 2026-09-22 `D-GZ-UI-V6-CONTRACT-01` 已完成归档；`docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md` 已冻结后续接入的真实所有者、数据／事件、资源语义与原型限定。最终切图、字体授权、既有对象引用点与连续实机验收仍无证据，不得据合同直接 ready 或实施。
-- 新设计依据为 assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md、VALIDATION.md、RESOURCE-MANIFEST.json 及上述接入合同；最终 UI 完成仍由本卡承担，合同准备通过不代表正式接入通过。
+- 2026-09-22 D-GZ-UI-V6-CONTRACT-01 已完成归档；所有者、数据／事件、资源语义与原型限定已冻结。2026-09-23 按用户要求，资源缺口由三张独立卡交付；资源齐备后核对引用点并准备 ready，连续实机验收在实施后完成。
+- 新设计依据为 assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/README.md、REUSE-SPEC.md、VALIDATION.md、ui-kit/RESOURCE-MANIFEST.json 及上述接入合同；最终 UI 完成仍由本卡承担，合同准备通过不代表正式接入通过。
 - 用户于 2026-09-12 批准方向并要求重排任务；按 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md` 执行。
 - 本卡只承担下面冻结的一个可独立验收结果；不新增玩法、数值、NPC、地区或通用资源系统。
 - 一个原子结果是批准的同一首流程UI主题在Settlement和Adventure两个表面完整应用；保留原交互，不建设全游戏UI系统。
@@ -125,3 +118,11 @@
 
 - 需要新增业务显示字段／交互、修改 `GameplayContracts`／Combat／World／存档、册界面板／全局主题，未查明实际文字／动态样式所有者，或需扩充图标库／外部采购。
 - 任一表面不符合基准时先定位同一owner内最小问题，不叠加通用适配层。
+
+## 2026-09-23 独立资源前置与写入所有权
+
+- A-GZ-UI-CITY-ASSET-01 交付城市背景和 city-manifest；A-GZ-UI-KIT-ASSET-01 交付图集、确定性头像和 kit-manifest；A-GZ-UI-FONT-ASSET-01 交付字体／许可证及 font-manifest。三卡负责对应 source、Unity 资源和 .meta；本卡只消费，不重复生成／导入或变更其 GUID。
+- 本卡在既有 surface-local 引用点接入三卡资源，将 source/manifest.json 汇总为完整运行引用清单；新引用必须随 Builder 保存重开与动态 writer 一起验证。
+- 资源证据齐备后，在原必查范围内查明当时 creator／writer／既有对象引用点即可判断 ready；新建资源加载器或业务字段仍触发停止。连续接取→战斗→回城→领取验收属于本卡完成条件。
+- 准备 ready 的同一切片为所有 ignored 只读源输入补齐 automationInputs：三张源 PNG、字体 OTF／LICENSE.txt、city-manifest.json、kit-manifest.json、font-manifest.json，均为 assets/source/ 下精确路径、正字节数与 SHA-256；本卡待汇总的 manifest.json 不列为既有输入。
+- 开发管理/关中UI与角色链卡点处理记录.txt 记录全部直接 blocker 和未来视觉决定的发送时点；最终整段品质接受仍由 V-GZ-ART-SLICE-01 承担。

@@ -1,0 +1,85 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-GZ-UI-KIT-ASSET-01",
+  "title": "关中青玉 UI 图集与默认头像资源包",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：负责人要求为 UI 独立资源缺口建卡；当前 v6 设计已批准，本卡无需新增产品或费用决定。",
+  "expectedPaths": [
+    "assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png",
+    "assets/source/ui/guanzhong-first-bounty/formal_player_default_portrait.png",
+    "assets/source/ui/guanzhong-first-bounty/kit-manifest.json",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png",
+    "src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png.meta",
+    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png",
+    "src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png.meta",
+    "src/Assets/Art/UI.meta",
+    "src/Assets/Art/UI/Guanzhong.meta",
+    "开发管理/关中UI图集与头像验收记录.txt",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-UI-KIT-ASSET-01.txt",
+    "开发管理/任务归档/A-GZ-UI-KIT-ASSET-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# A-GZ-UI-KIT-ASSET-01 · 关中青玉 UI 图集与默认头像资源包
+
+## 来源与当前边界
+
+- 2026-09-23 用户要求将独立资源缺口建卡；唯一结果是供同一 U 接入任务消费的青玉 UI 图集／头像资源包。
+- v6 青玉 UI 主题与复用合同已获接受；不依赖新版整屏示意、男主 3D 原包、模块化立绘或城市背景。头像已有完整透明母版。
+
+## 必查范围
+
+- assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/REUSE-SPEC.md 的资源包、九宫格与状态合同；ui-kit/RESOURCE-MANIFEST.json、skin.css、art/ 的五张 jade 源 SVG。
+- docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md 的资源语义、独立文字与三个既有图标用途上限。
+- assets/generated-character-art/README.md；dialogue-transparent/formal-player-default-male-v1.png 及母版批准记录，SHA-256 399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948。
+- docs/资源管理/美术资源版本管理规范.md；Unity Sprite importer 及 Atlas 子图命名／边框设置的当前工具能力。
+
+## 实施范围
+
+- 按已批准 v6 的 panel.dark、panel.paper、button.normal、button.hover、button.selected 五个语义槽制作一张可正式导入的青玉 PNG 图集；primary 复用 selected，不生产绛紫校验包。
+- 优先用现有 SVG/vector 结构确定性完善和栅格化，不能把原型 SVG 改标签或改扩展名冒充正式 PNG。统一采用每槽 128×128、源四边 32 像素，atlas 记录 rect、padding、稳定子图名与实际 Sprite.border；不把网页 8／5 显示边框写成源切片。
+- 最多附首流程石甲兽目标、矿料／奖励、通用状态圆点三种图标，绑定既有语义；不添加 Guard／Block 或其他图标库。所有文字独立，不烘焙。
+- 从批准完整男主透明母版确定性裁切唯一头像，记录像素裁切矩形、输出尺寸与 source/output 哈希；不重新生成、抠取组件或改变身份。
+- 以 kit-manifest.json 登记源与导入物、语义名、切片和裁切。通过 Unity importer 原样导入两张 PNG；atlas 多 Sprite、头像单 Sprite，生成真实 .meta，读取实际 importer 子图和边框证明引用稳定。
+- 原有父目录 .meta 存在时保留 GUID；不接线正式场景、不建立第二资源加载器。
+
+## 禁止项
+
+- 不改 v6 原型或其已确认设计，不用 AI 重绘头像，不扩成全游戏图库；不修改城市背景、字体、正式场景或业务合同。
+- 缺源／导入／可见证据时不宣称最终资源交付。
+
+## 模型协作
+
+简单：稳定语义、切片和完整母版已冻结，单一资源包可统一复核；沿用入口默认单模型，无需辅助。写前确认本机矢量栅格化和 Unity importer 能力，记录实际验证。
+
+## 验证
+
+- 实际查看输出、核对 SHA-256 与 Unity importer；source 文件按既有资源交付规则落到主工作区同路径并复核，不把 worktree 的 ignored 文件误认为已被 Git 集成。
+- 只运行本卡资源的最小充分检查、tools/check-asset-versioning.ps1、tools/check-task-cards.ps1、审核文本、预期路径 whitespace 和 git diff --cached --check；不运行 BattleSim，不重跑无关正式场景流程。
+- 实际查看正常／悬停／选中、横长／竖长九宫格，边角不失真；检查透明边缘和头像身份。
+- Unity 读取两图尺寸、atlas 子图名／rect／border、单头像引用与 .meta GUID；不以浏览器渲染代替 importer 证据。
+
+## 完成条件
+
+- 两张 source PNG、独立 kit-manifest、两项 Unity PNG/.meta、切片／头像和目视验收证据构成一个可引用资源包。
+- 完成后只移除 U-GZ-ART-UI-01 的本卡 blocker；其余资源未齐继续 blocked。最后一个资源前置完成时消费完整 U 卡，在同一维护切片核对当时引用点与资源、重算风险投影并判断 ready；连续实机验收是 U 卡实施后交付条件。
+
+## 停止条件
+
+- 源哈希变化、需要重设主题／头像／图标语义、不能证明导入切片、需要费用或正式场景／运行时代码改动时停止。

@@ -10,7 +10,7 @@
   "stage": "design",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20260912-CD1A9E90A58405 选择 C：拒绝本轮整屏方向；本卡保持阻塞，不解锁下游、不追加生成或外部交易。",
+  "stateReason": "2026-09-23：用户重新授权生成两张基于当前 UI/地块的 v2 示意图，已生成并邮件交付；等待 DEC-20260923-GZLOOKDEVV2 接受新版方向。旧 DEC-20260912-CD1A9E90A58405 的 C 仅保留为旧稿拒绝证据；不再阻塞独立图集、字体或男主原包路线。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
     "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
@@ -29,7 +29,13 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt",
-    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt"
+    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt",
+    "开发管理/关中UI与角色链卡点处理记录.txt",
+    "开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/battle-and-hud-v2.png",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/README.md",
+    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/prompts.md"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -114,6 +120,19 @@
 }
 ---TASK-BODY---
 # A-GZ-ART-LOOKDEV-01 · 关中整屏美术样板与首包生产合同
+
+## 2026-09-23 当前执行边界
+
+- 用户明确要求按当前 UI 与地块重新生成两张示意图，v2 已在提交 b290cae0000c4bea839b58158ddad9a3f0978821 交付；完整路径、哈希和邮件证据见 开发管理/关中UI与角色链卡点处理记录.txt。
+- 新版采用已接受 v6 UI／v4 城镇布局和已交付青绿草面、青蓝岩壁；旧稿的两侧宽 HUD、黄土底面与旧安全区只保留历史，不能覆盖新的 UI 接入合同或实际地面。
+- 本卡目前只等待 DEC-20260923-GZLOOKDEVV2 的新版接受，并据回执完成同范围首包合同／批准记录收口；不再生成图片，不重新请求已批准的 v6 功能布局／角色四视图。
+- 旧 automationCheckpoint/automationReply 仅标识已处理的 9 月 12 日 C，不能用于新版恢复。本次为用户直接要求的手动飞书决定，无新的自动 owner run，不伪造 automationCheckpoint 或 maintenance 投影；任务保持 blocked 并在正文跟踪回执。
+- 新版接受仅能解除城市背景方向门；独立 UI 图集、字体任务无需等待本卡，男主原包已移除本卡前置并独立等具体费用决定。不会把示意图里的山峰、额外功能标签、动作、数值、奖励或石甲兽造型推导成正式资产／玩法批准。
+- 新旧规格冲突按本节、当前 UI 接入合同及批准地块事实处理；以下 9 月 12 日实施与拒绝内容为历史约束记录，不再次执行旧生产。
+
+## 模型协作
+
+简单：已生成候选、既有合同与单次新决定的收口；沿用入口默认单模型，无需辅助。没有明确视觉回执不以模型判断代替负责人接受。
 
 ## 来源与当前边界
 

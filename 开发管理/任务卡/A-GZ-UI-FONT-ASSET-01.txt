@@ -1,0 +1,84 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-GZ-UI-FONT-ASSET-01",
+  "title": "关中中文字体许可覆盖与导入资源",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-23：负责人要求为 UI 独立资源缺口建卡；当前 v6 设计已批准，本卡无需新增产品或费用决定。",
+  "expectedPaths": [
+    "assets/source/ui/guanzhong-first-bounty/fonts/GuanzhongChinese.otf",
+    "assets/source/ui/guanzhong-first-bounty/fonts/LICENSE.txt",
+    "assets/source/ui/guanzhong-first-bounty/font-manifest.json",
+    "src/Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf",
+    "src/Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf.meta",
+    "src/Assets/Art/UI/Guanzhong/Fonts/LICENSE.txt",
+    "src/Assets/Art/UI/Guanzhong/Fonts/LICENSE.txt.meta",
+    "src/Assets/Art/UI/Guanzhong/Fonts.meta",
+    "src/Assets/Art/UI.meta",
+    "src/Assets/Art/UI/Guanzhong.meta",
+    "开发管理/关中中文字体授权与覆盖记录.txt",
+    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-UI-FONT-ASSET-01.txt",
+    "开发管理/任务归档/A-GZ-UI-FONT-ASSET-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# A-GZ-UI-FONT-ASSET-01 · 关中中文字体许可覆盖与导入资源
+
+## 来源与当前边界
+
+- 2026-09-23 用户要求为无需产品决定的技术缺口建卡；唯一结果是一份可随项目分发、覆盖本轮中文的独立字体资源和可追溯许可／导入证据。
+- 本卡只落实字体许可、覆盖和导入，不重新决定 UI 主题。无需购买，不把系统楷体／宋体／微软雅黑回退当作分发授权；原型 fontsBundled=false。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-20-guanzhong-ui-v6-unity-integration-contract.md 的字体与独立文字合同；v6 REUSE-SPEC.md 的标题／正文字体槽。
+- 当前正式 Settlement/Adventure 和 Combat HUD 的 Text 组件与 UiText／Language 字符输入，核对实际字形需要；不读取无关全库作为本轮交付门。
+- 候选仅限官方思源宋体简体中文常规字重静态 OTF；执行时从官方发布页取得具体版本、原始文件和许可证，核验允许游戏内嵌／分发及保留声明条件，不以记忆判断授权。
+- docs/资源管理/美术资源版本管理规范.md；当前 Unity Font importer 和 Text 动态字体实际字符查询能力。
+
+## 实施范围
+
+- 核实并下载一个无需额外采购、允许本项目用途的官方简体中文常规 OTF；原始字体字节不改动，规范文件名只用于项目路径，manifest 保留上游真实名、版本、URL、SHA-256 和许可原文来源。
+- 标题与正文先共用这一份可分发中文字体；不引入第二字体家族、系统字体兜底或字体框架。字符覆盖不足时记录缺字和真实输入，不静默替换。
+- source 与 Unity Fonts 路径各保存字体和 LICENSE.txt，并产生正常 importer 的 .meta；记录本轮中文、数字、标点及既有自定义名称显示的覆盖范围和明确限制。
+- 使用非持久化预览检查当前 Text 的实际中文字形与缺字行为，保存证据到验收记录；不改正式场景、SceneBuildSupport 默认字体、StartMenu/World、TMP 系统或存档。
+- 不用原型系统字体外观推导商用许可；若已有合法等价字体可用，核验后复用其原始字节，仍保留本卡唯一项目引用和来源记录。
+
+## 禁止项
+
+- 不购买字体，不下载来源／许可不明字体，不修改字体文件内部数据、不扩大成多字体图库；不改正式 UI 或通用回退系统。
+- 本卡只提供经过验证的资产，不宣称当前游戏已经使用该字体。
+
+## 模型协作
+
+简单：官方来源、许可原文、固定字符集与 importer 可直接取证；沿用入口默认单模型，无需辅助。执行前核对官方页面、字体解析与 Unity 工具；许可冲突或关键使用条款不清时停止并将具体冲突发负责人决定。
+
+## 验证
+
+- 实际查看输出、核对 SHA-256 与 Unity importer；source 文件按既有资源交付规则落到主工作区同路径并复核，不把 worktree 的 ignored 文件误认为已被 Git 集成。
+- 只运行本卡资源的最小充分检查、tools/check-asset-versioning.ps1、tools/check-task-cards.ps1、审核文本、预期路径 whitespace 和 git diff --cached --check；不运行 BattleSim，不重跑无关正式场景流程。
+- 核对官方许可原文与两份交付字节；记录已覆盖／未覆盖字符及实际 Unity Font 查询、中文预览结果，不用系统回退遮盖缺字。
+
+## 完成条件
+
+- 唯一可分发字体、许可证、font-manifest、Unity 导入 .meta、字符覆盖和可见证据齐全。
+- 完成后只移除 U-GZ-ART-UI-01 的本卡 blocker；其余资源未齐继续 blocked。最后一个资源前置完成时消费完整 U 卡，在同一维护切片核对当时引用点与资源、重算风险投影并判断 ready；连续实机验收是 U 卡实施后交付条件。
+
+## 停止条件
+
+- 官方来源／许可不能核实、需要付费或额外许可、必需中文缺字、OTF 不被当前 importer 正确支持、需要换字体路线或改运行时框架时停止，提交具体问题而不猜测批准。
