@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "N-JD-COMBO-FIRE-BUDGET-01",
+  "title": "渡火引线费用与容量验证",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-JD-COMBO-FIRE-INPUT-01"
+  ],
+  "stateReason": "等待 D-JD-COMBO-FIRE-INPUT-01 冻结真实火源、载体、行动与媒介输入；在此之前不能编造费用、容量或 BattleSim 结论。",
+  "expectedPaths": [
+    "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_费用容量验证.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
+    "开发管理/任务归档/N-JD-COMBO-FIRE-BUDGET-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-JD-COMBO-FIRE-BUDGET-01 · 渡火引线费用与容量验证
+
+## 来源与当前边界
+
+- 仅处理 `D-JD-COMBO-FIRE-INPUT-01` 验证合法后的单项战棋候选；数值事实以 BattleSim 实际运行结果为准。当前是具名前置未完成的 blocked 卡。
+
+## 必查范围
+
+- `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务`；完成后的 `docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt`。
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#一—三` 与 `docs/基础设定/五行显化与环境交互规则.txt#二`、`#四`；BattleSim 中实际承载此数值模型的入口、直接调用者及测试须在 ready 前定位并写入路径。
+
+## 实施范围
+
+- 交付一份可引用的显化、升烈、组合展开／维持／容量配置 ID、预算来源、支付与持续边界验证；核对两位置持续占用、地表与环境容量、逐节点火势预算、行动和资源是否可共同支付。
+- 真实数值和配置来源由本卡执行时从 BattleSim 运行取得；若模拟器目前不能表达该语义，先定位最小模拟输入及所有者，并在 ready 前补齐准确 `expectedPaths` 和风险投影，不以本卡文本代替数值证明。
+
+## 禁止项
+
+- 不猜预算或把零值当默认，不修改已批准的效果／位置权限、正式配方、CSV 或 Unity；不借山河周期费用替代战棋账本。
+
+## 模型协作
+
+- 当前 blocked，临近 ready 时按设计输入与真实 BattleSim 所有者重评复杂度和模型组合；数值结论必须由运行产生，模型意见不能代替模拟。
+
+## 验证
+
+- 执行时先 `dotnet build -c Release --no-restore simulations/BattleSim`，通过后 `dotnet run --no-build -c Release --project simulations/BattleSim`；保留种子、输入、结果和费用／容量反例。相关路径的数据链、schema 2、whitespace 与 staged diff 检查。
+
+## 完成条件
+
+- 费用／容量引用真实存在，展开费、维持、火源消耗和逐节点预算可由 BattleSim 复现，失败没有免费动作、重复收费或半状态；结果可交回 D 卡收口。
+
+## 停止条件
+
+- 媒介合同未合法完成、BattleSim 无法表示该组合且所需改动超出已冻结路径，或平衡结果依赖新增权限／运行时行为时停止并返回 D 卡，不伪造数值结论。

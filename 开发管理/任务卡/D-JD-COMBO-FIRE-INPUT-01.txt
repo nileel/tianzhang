@@ -1,0 +1,68 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-JD-COMBO-FIRE-INPUT-01",
+  "title": "渡火引线媒介与载体输入合同",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-27：负责人在当前对话直接选择 A，确认渡火引线单项战棋范围；本卡先证明显化火源能否合法接入燃犀渡预设走火，不生产正式组合。",
+  "expectedPaths": [
+    "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "开发管理/任务列表/内容设计任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-COMBO-FIRE-INPUT-01.txt",
+    "开发管理/任务归档/D-JD-COMBO-FIRE-INPUT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# D-JD-COMBO-FIRE-INPUT-01 · 渡火引线媒介与载体输入合同
+
+## 来源与当前边界
+
+- 2026-09-27 负责人在本对话选择 A，批准一项“渡火引线”战棋局部渡口设计方向；原飞书 checkpoint 未投递成功，本次人工决策不伪装为飞书回执。首批候选见 `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#二、建议的唯一首批对象、用途与规模`。
+- 本卡唯一结果是可审查的源位显化火源到化位预设走火的媒介与载体输入合同；`N-JD-COMBO-FIRE-BUDGET-01` 在本卡完成前保持阻塞，`D-JD-COMBO-SCOPE-01` 汇总收口，`C-JD-COMBO-01` 不生产。
+
+## 必查范围
+
+- `docs/基础设定/设定事实速查.txt#二、金丹结构`，再读 `docs/基础设定/元婴锚点与金丹位格矩阵.txt#三、五行十五项效果` 中 `FIRE_MANIFEST`、`FIRE_ESCALATE` 两行。
+- `docs/基础设定/金丹位格/金丹位格索引.txt#六、正式具体位置登记表` 的 `JD_FiveElements_Fire_SOURCE`、`JD_FiveElements_Fire_TRANSFORM01`；两份独立位置文档 `#六、效果白名单与逐项适配理由`、`#七、纵向嵌套、横向组合、主承载与不可越界项`、`#八、完整战棋玩法`。
+- `docs/基础设定/金丹基础效果装配与冲突规则.txt#一—三`；`docs/基础设定/五行显化与环境交互规则.txt#二、显化配方与运行载体`、`#四、升烈蔓延与火种`。
+
+## 实施范围
+
+- 在唯一字面量交付路径冻结源位燃烧地格的来源、燃犀渡预装火种档案与合法战场火源的映射、起点／固定走火路线、渡域阵眼和连续燃料链、既有地表载体、`resultPrototypeId`、行动先后、解除与不可双算账本。
+- 逐字段记录两处位置、位别、白名单、对象、操作、筛选、媒介、范围、结果与契约版本；按现行静态编译顺序判断合法、`INCOMPATIBLE` 或 `AMBIGUOUS`。只在原权限交集内消歧，不能用新权限补缺口。
+- 同步 `docs/基础设定/设定事实速查.txt` 的准确 L2 指针；不把 L1 摘要当事实源。
+
+## 禁止项
+
+- 不写正式 `comboProfileId` 配方，不修改位置、效果、结构、数值、CSV 或 Unity；不预设免费火种、行动或燃料。
+
+## 模型协作
+
+- 两处位置、两个效果、一个媒介链由 Codex 统一裁决；关键权限交集若出现独立歧义，才用 `gpt-6-astra / high` 对原文作只读分析，返回合法／不兼容／歧义和精确依据。辅助意见不能替代缺失档案或扩大权限。
+
+## 验证
+
+- 每个候选字段回指矩阵、位置、装配与五行规则；以合法与缺失媒介／断链／不足费用反例核验失败关闭。
+- `tools/check-task-cards.ps1` 的 schema 2 投影、`tools/check-data-chain.ps1`、目标路径 whitespace 与 staged diff 检查；无数值改动，不在本卡锁定 BattleSim 平衡结论。
+
+## 完成条件
+
+- 源火、预装档案、真实媒介、载体、行动与结束账本形成单一可审阅输入，或明确证明该候选不兼容并把证据返回 D 卡；只有合法结果才解除数值卡前置。
+
+## 停止条件
+
+- 必须新增道路、效果、位置、权限、媒介类型或运行时才能成立，或合同交集为空／歧义无法在原权限内消除时停止，不叠加补丁、不生产正式组合。

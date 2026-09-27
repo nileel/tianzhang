@@ -8,9 +8,12 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "pending_decision",
-  "blockedBy": [],
-  "stateReason": "等待负责人决定：是否以何种首批规模冻结完整金丹组合输入？选择 A 或 B 时请一次性提供范围合同第三节的全部对象字段与字面量完成品路径。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-JD-COMBO-FIRE-INPUT-01",
+    "N-JD-COMBO-FIRE-BUDGET-01"
+  ],
+  "stateReason": "2026-09-27：负责人在当前 Codex 对话直接选择 A，首批为渡火引线一项；旧决策卡未投递，人工收口不创建 automationReply。待媒介载体合同与 BattleSim 费用容量验证完成后再收口本范围合同。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
     "开发管理/任务卡/C-JD-COMBO-01.txt",
@@ -24,64 +27,15 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-JD-COMBO-SCOPE-01",
-    "sourceRunId": "1d74b224-b884-4ad3-9815-610c74715121",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260921-CD08014CC7679C",
-    "question": "是否以何种首批规模冻结完整金丹组合输入？选择 A 或 B 时请一次性提供范围合同第三节的全部对象字段与字面量完成品路径。",
-    "options": [
-      {
-        "key": "A",
-        "label": "确认最小单项首批，并提供一项组合的完整字段与字面量完成品路径。"
-      },
-      {
-        "key": "B",
-        "label": "确认多项首批，并一次性提供每项完整字段与路径以建立全部已知叶子。"
-      },
-      {
-        "key": "C",
-        "label": "暂不冻结对象，保持 C-JD-COMBO-01 阻塞且不生产。"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 将范围限制为可验证的单项输入；B 需要先完整拆出所有已知生产叶子；C 保持失败关闭。",
-    "plainSummary": {
-      "situation": "是否以何种首批规模冻结完整金丹组合输入？选择 A 或 B 时请一次性提供范围合同第三节的全部对象字段与字面量完成品路径。",
-      "impact": "A 将范围限制为可验证的单项输入；B 需要先完整拆出所有已知生产叶子；C 保持失败关闭。",
-      "action": "建议选择 A：确认最小单项首批，并提供一项组合的完整字段与字面量完成品路径。"
-    },
-    "checkpointCommit": "4888a905b659e1906950664a26b47e3807517ccd",
-    "baseCommit": "e235220225f54e6d93c700fa451f6859d17fe660",
-    "branch": "codex/automation/codex/1d74b224-b884-4ad3-9815-610c74715121/candidate",
-    "changedPaths": [
-      "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md"
-    ],
-    "verified": [
-      "范围合同已记录：51 个位置均无已登记 comboProfileId，当前批准组合与完成品路径均为 0。",
-      "C-JD-COMBO-01、任务卡、backlog 与队列均未改动；D 卡仍通过 CodexDispatchReady/schema 2 检查。",
-      "check-data-chain、check-review-text、check-pending-whitespace、git diff --cached --check 与基线差异检查均通过。",
-      "checkpoint 是基线后的唯一直接后继，工作树干净。"
-    ],
-    "unverified": [
-      "负责人尚未冻结首批对象、数量、用途及字面量完成品路径。",
-      "没有已批准的组合配方或运行时组合支持证据。"
-    ],
-    "residualRisk": "在完整对象字段获确认前，任何组合生产都会越过现有失败关闭边界。",
-    "taskContextDigest": "7688b05615e1be2fc6d2badd547fab7a59160a0ed653620c5fb9c4637659816a",
-    "createdAt": "2026-09-21T09:33:52.3568917+08:00",
-    "queueIndex": 6
-  }
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }
 ---TASK-BODY---
 # D-JD-COMBO-SCOPE-01 · 金丹组合首批生产范围与验收合同
 
 ## 来源与当前边界
 
-- 2026-09-20 用户解除金丹组合设计范围的内容冻结；结构/装配规则已完成，但当前没有首批数量、对象、用途或完成品路径。
+- 2026-09-20 用户解除金丹组合设计范围的内容冻结；2026-09-27 在本对话直接选择 A，确认“渡火引线”一项、战棋局部渡口用途及两火道路位置共同承载的语义。字面量候选路径与验收见 `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md`。
+- 旧 `DEC-20260921-CD08014CC7679C` 请求停在待发送结构，未收到服务商接受或有效回复。本次按明确对话选择人工收口，保留原 checkpoint 提交 `4888a905` 作追溯，不生成 `automationReply`，不声称飞书卡已回复。
 - 唯一结果是可审阅的首批生产范围与验收合同；C-JD-COMBO-01保留后续DeepSeek生产/Codex复审职责，当前不直接生产正式配方。
 
 ## 必查范围
@@ -91,17 +45,18 @@
 - docs/superpowers/plans/2026-07-18-jindan-long-spec-decomposition.md#Task 7 仅作迁移来源；现行结构以 docs L2 为准。D-JD-SCHEMA-01A/01B、D-JD-SAMPLE-01、N-JD-RULE-01C 的完成归档证明结构前置已闭合，不再列为 blocker。
 - docs/基础设定/金丹基础效果装配与冲突规则.txt 的显式异效配方、权限求交、费用/容量、breakPolicy及失败关闭原文；矩阵与具体位置登记的直接输入。
 - 开发管理/任务列表/内容设计任务.txt#C-JD-COMBO-01。
+- D-JD-COMBO-FIRE-INPUT-01 的媒介载体合同与 N-JD-COMBO-FIRE-BUDGET-01 的 BattleSim 验证结果；两个具名前置未完成时不收口本卡。
 
 ## 实施范围
 
 - 列已有批准输入及真实缺口，形成最小对象/数量候选、用途和字面量完成品路径；对每个候选证明参与效果/位格/具体位置白名单、权限贡献、真实媒介/环境、成本/容量、结束与失败边界。
 - 岩浆/林地/风雪原文只是示例，不自动视为批准生产清单；不能以自然语言“能组合”推导运行时已支持。
-- 用户或当前事实无法确定的对象/数量作为具体待决定项；合同可审阅后按现行 pending_decision/waiting_reply流程收口。范围确认前不把 C-JD-COMBO-01设ready。
+- 对象／数量的语义选择已由负责人确认；火源映射、真实费用、容量与结果原型仍待两个具名前置交付，期间本卡保持 blocked，C-JD-COMBO-01 不设 ready。
 - 确认范围后一次建立全部已知生产叶子、依赖和父项关闭条件（若首批可原子完成则保留原单卡），补齐精确路径/验证/模型；不在后续自动轮次逐张拆卡。
 
 ## 禁止项
 
-- 不写正式配方、结构规则、数据、运行时或新数值，不把示例和候选当批准内容；不扩展为全组合枚举。
+- 不写正式配方、结构规则、数据、运行时或新数值；不把语义方向确认当成完整输入与数值批准，不扩展为全组合枚举。
 
 ## 模型协作
 
@@ -115,7 +70,7 @@
 
 ## 完成条件
 
-- 首批范围、对象、用途、路径、停止条件和验收明确且已获得所需确认，后续C卡及全部已知叶子可按原子性判断；仅候选文档不能冒充正式组合生产完成。
+- 两个具名前置完成并证明合法后，首批单项范围、用途、精确路径、费用容量引用、停止条件和验收均可复核，后续 C 卡可按单一原子结果判断；仅候选文档或本次人工 A 记录不能冒充正式组合生产完成。
 
 ## 停止条件
 
