@@ -101,8 +101,8 @@
 
 ### N-FPD-STAGE-03-C01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-AECAA859638A
 - resolution: unresolved
 - experienceId:
 - 经验领域：battlesim
