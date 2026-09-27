@@ -10,7 +10,7 @@
 
 - 2026-09-27 用户明确：V-GZ-ART-SLICE-01 必须交付可操作的同版本正式入口和跑测步骤，由用户本人完成流程并确认品质；截图与录像只作辅助。当前UI、正式角色接线和反馈前置未齐，仍保持blocked，不提前请求验收。
 
-- 2026-09-27：已消费9月23日新版视觉及45 credits两条A回执；LOOKDEV转ready做同范围合同收口，城市背景与男主RAW解除等待批准并转ready，RAW已绑定五项automationInputs。数值前置归档后U-FPD-STAGE-03转ready；旧冻结路线仍冻结。卡点及回执见对应任务卡和关中UI与角色链卡点处理记录。
+- 2026-09-28：A-GZ-ART-LOOKDEV-01 已按已接受新版视觉完成同范围首包合同收口并归档；城市背景、男主 RAW 与其他下游状态不因本卡归档自动变化。9月23日新版视觉及45 credits两条 A 回执、RAW 的五项 automationInputs 和卡点证据见对应任务卡及关中UI与角色链卡点处理记录。
 
 - 2026-09-23：按用户要求将 UI 资源缺口拆为 A-GZ-UI-CITY-ASSET-01（等城镇方向）、A-GZ-UI-KIT-ASSET-01 与 A-GZ-UI-FONT-ASSET-01（ready）。U-GZ-ART-UI-01 等三个资源叶子；引用点写前核验、连续实机验收归实施任务。男主 RAW 不再等待旧 LOOKDEV，仅等具体平台／额度决定。新版视觉与费用的飞书通知及完整直接依赖见 开发管理/关中UI与角色链卡点处理记录.txt；以下带日期条目保留发生时事实。
 
@@ -25,7 +25,7 @@
 
 - 2026-09-20 `U-GZ-BATTLEFIELD-BASELINE-01` 已完成：正式 Adventure 以 `env_guanzhong_wild` 有向边端点生成六格基础功能地面，技术 Marker 保持原所有者，比较板/面板默认隐藏并由 Builder 保存；验证记录见 `开发管理/关中正式战场功能地面验证记录.txt`。这不是环境美术、正式角色或整体品质验收，相关门槛继续沿原任务推进。
 
-- 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01汇总，A-GZ-ART-LOOKDEV-01曾为首批唯一ready；负责人后续对 DEC-20260912-CD1A9E90A58405 选择 C，拒绝本轮整屏方向，当前整屏方向保持阻塞，未批准UI或付费玩家原包。9月20日初始地块/备用石阶获得独立采用与接入授权，不解除上述门槛。模块化肖像/角色扩展转P2冻结，无队列宽袖/2D骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
+- 2026-09-12 用户批准按完整关中可展示流程重排：A-GZ-PRESENT-01 汇总，A-GZ-ART-LOOKDEV-01 曾为首批唯一 ready；负责人随后对旧 DEC-20260912-CD1A9E90A58405 选择 C。该拒绝是历史时点事实，已被 9 月 23 日新版方向的 A 回执替代；新旧批准、独立地块和费用边界以当前合同及批准记录为准。模块化肖像／角色扩展转 P2 冻结，无队列宽袖／2D 骨骼实验只保留现场、不主动扩展。新合同为 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`；旧逐日记录保留为发生时事实。
 
 - G1 已由 TQ-071 于 2026-07-22 独立复核：正式 Build Settings 只有 `AdventureScene` 作为可达冒险所有者；批处理验证只读、当前 `StartMenuScene` 已同步，Unity EditMode 145/145 通过。
 - 2026-08-09 批准的 Unity 模块化架构重建已于 2026-08-13 完成：01A～01H 全部归档，19 个程序集／2 个 asmref、407/407 EditMode、5/5 PlayMode、正式场景 batch、数据链和旧引用总验收通过。
@@ -50,7 +50,6 @@
 |----|--------|------|----------|--------|------|--------|
 | U-FPD-STAGE-03 | P1 | codex | 已排队 | — | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | U-FPD-GONGFA-GROWTH-01 | P1 | codex | 阻塞 | U-FPD-STAGE-03 | 功法筑基三阶段成长字段与导入合同 | 开发管理/任务卡/U-FPD-GONGFA-GROWTH-01.txt |
-| A-GZ-ART-LOOKDEV-01 | P1 | codex | 已排队 | — | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
 | U-GZ-ART-UI-01 | P1 | codex | 阻塞 | A-GZ-UI-CITY-ASSET-01 | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
 | A-GZ-UI-CITY-ASSET-01 | P1 | codex | 阻塞 | — | 关中城纯背景制作与独立导入 | 开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt |

@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| A-GZ-ART-LOOKDEV-01 | codex_execute | codex | P1 | content | design | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |
 | U-FPD-STAGE-03 | codex_execute | codex | P1 | unity | migration | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | D-JD-COMBO-FIRE-INPUT-01 | codex_execute | codex | P2 | content | design | 渡火引线媒介与载体输入合同 | 开发管理/任务卡/D-JD-COMBO-FIRE-INPUT-01.txt |
 | C-FPD-SPELL-01C | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |

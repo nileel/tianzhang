@@ -1,0 +1,86 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-GZ-ART-LOOKDEV-01",
+  "title": "关中整屏美术样板与首包生产合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-28：已核验的 DEC-20260923-GZLOOKDEVV2 A 回执、两张 v2 整屏示意和当前 v6／地块五工作面合同已收口；未生成、上传、消费费用、导入 Unity 或改变下游任务状态。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
+    "开发管理/关中整屏美术基准与生产批准记录.txt",
+    "开发管理/关中UI与角色链卡点处理记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt",
+    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-GZ-ART-LOOKDEV-01 · 关中整屏美术样板与首包生产合同
+
+## 模型协作
+
+简单：已生成候选、既有合同与单次已核验决定的收口；沿用入口默认单模型，无需辅助。没有明确视觉回执不以模型判断代替负责人接受。
+
+## 来源与当前边界
+
+- 来源是 `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`、关中城和关中野外事实，以及已核验的 `DEC-20260923-GZLOOKDEVV2 = A` 回执。
+- 唯一结果是两张现有 v2 整屏设计示意及其当前五工作面首包合同／批准记录收口；不把示意图当作 Unity 运行截图或正式生产资源。
+
+## 必查范围
+
+- 已完整核对重排规格、`docs/剧情/据点/关中城.txt` 的视觉主题／启用功能、`docs/基础设定/关中野外最小环境档案.txt` 的地貌／空间范围、默认男主 v2 生产链和资源版本规范。
+- 已查看默认男主母版、两张 v2 图和石甲兽历史联系表；已只读核对 `SceneBuildSupport.BeginScene`、`AdventureSceneBuilder.Build`、`SettlementSceneBuilder.Build`、`AdventureHudPresenter.Present` 与 `CombatPresentationContracts` 六事件。
+
+## 实施范围
+
+- 只更新首包合同、整屏批准记录、关中 UI／角色链记录、场景与 Unity backlog、当前队列，以及本卡到完成归档的精确投影。
+- 合同冻结当前五个既有工作面的资产数量、字面量路径、来源、消费者、轮廓、材质、UI 层级、图标用途和返工上限；没有新增工作面。
+
+## 禁止项
+
+- 未改 Unity、CSV、模型、存档、角色身份或既有玩法；未生成第三角色、未恢复换装／宽袖／六向研究。
+- 未把样板、自评或旧石甲兽联系表当作正式品质批准；未上传、交易、采购或消费外部平台额度。
+
+## 完成结果
+
+- 已实际查看新版城镇／悬赏与野外战斗／HUD 两图，并以 `DEC-20260923-GZLOOKDEVV2 = A` 的核验回执冻结方向。图像、提示词、SHA-256、提交和回执证据写入首包合同与批准记录。
+- 合同按当前 v6 UI、已批准青绿草面／青蓝岩壁和既有 Unity 所有者冻结五个工作面、源与消费者、数量、字面量路径、轮廓、材质、UI 层级、最小图标用途、返工上限以及唯一男主交易硬门。
+- 两图仍是设计示意；图中文字、数值、奖励、未实现动作、山峰和怪物造型均没有转为正式事实。石甲兽旧联系表仅保留历史技术证据，非正式成品品质基准。
+
+## 完成条件
+
+- 已有两张可追溯 v2 样板、完整提示词／说明、当前首包合同和用户整屏方向 A 回执；后续生产卡可按各自既有合同消费方向，而非消费示意图内容。
+
+## 停止条件
+
+- 若需要新图、不同方向、新规则／模块、第三角色、外部费用或扩大路径，本卡本应停止并返回准确所有者；本轮未触发这些条件。
+
+## 边界与未完成项
+
+- 本卡未生成第三张图、未上传或消费 Tripo credits、未执行 Blender／Unity、未导入正式资源，也未创建第三角色、玩法、数值、NPC、地区或通用资源系统。
+- `DEC-20260923-PLAYERRAW45 = A` 的 45 credits 是 RAW 卡的一次交易上限；实际会话、四视图支持、服务设置、报价和余额仍须在上传前现场核验。整屏接受不能替代该费用门。
+- 下游具名前置、状态及队列均保持原样；后续只有正式结果进入 master 后的 QueueMaintenance 可按届时事实维护它们。
+
+## 历史决定保留
+
+- 2026-09-12 的 `DEC-20260912-CD1A9E90A58405 = C` 曾拒绝旧版方向，来源为 `feishu_card`，证据哈希为 `6aa1f2bee1e31e15b9589443bf867302a338e6a852e43aa638178f734bf03f11`。旧 `lookdev/city-and-bounty-v1.png` 与 `battle-and-hud-v1.png` 及其提示词／manifest 仅保留为拒绝证据，不能作为当前生产输入。
+- 9 月 23 日重新生成并取得新的 A 回执后，旧 C 不解释或否决 v2；完整的先后关系与旧样板哈希保留在 `开发管理/关中整屏美术基准与生产批准记录.txt` 和 Git 历史。
+
+## 验证
+
+- 实际查看两张 v2 图、默认男主母版及石甲兽历史联系表；核对 v2 两图和男主母版 SHA-256。
+- 只读核对 `SceneBuildSupport.BeginScene`、`AdventureSceneBuilder.Build`、`SettlementSceneBuilder.Build`、`AdventureHudPresenter.Present` 及 `CombatPresentationContracts` 六事件，与合同中的镜头、现有表面和事件边界一致。
+- `tools/check-data-chain.ps1`、`tools/check-asset-versioning.ps1`、`tools/check-review-text.ps1`、`tools/check-task-cards.ps1`、预期路径 whitespace 及 `git diff --cached --check` 在本次候选中执行。
