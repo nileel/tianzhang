@@ -6,3 +6,28 @@
 - 已批准原画为9月20日概念稿，SHA-256 2f8d193f5303162ad4cef54f6ba9b4eab2944e148c77322040c083eab62ac095；原文件及prompt说明保留。
 - 重制合同：docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md；三张生产卡分别四视图、Tripo原包、Blender清理。当前仅四视图准备；没有Tripo调用、费用或原包。
 - 视觉批准必须由用户本人针对实际候选给出；本记录不代签批准。
+
+
+## 2026-09-27 四视图候选与实际进度
+
+- 实际完成7次内置image_gen调用：初组4视图，正面2次、背面1次定向校正。当前使用front第3稿、left第1稿、right第1稿、back第2稿；淘汰稿保留原路径及提示，不上传平台。
+- 全部7个交付文件已复制到主工作区D:/天章游戏开发/assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/，逐文件SHA-256与隔离worktree一致；source_reference与9月20日批准原画原字节一致。
+- 主责逐张检查了实际候选与原画/侧视，修正初版正面俯角偏高和背面后脚方向、尾部投影问题。仍不把图像检查写成严格3D相机或跨视图几何证明；正背为方图、侧视为横图，未拉伸或统一像素尺度。用户本人尚未接受该组，不能完成归档或解除RAW前置。
+- 四图评审入口：C:/Users/WINDOWS/.codex/visualizations/2026/09/27/01a0e29a-179d-7d43-b7a6-916f100d999a/石甲兽v2四视图候选.md；每次完整提示与原输出路径在input/prompts.md。
+
+| 文件 | 尺寸 | 字节 | SHA-256 |
+|---|---|---|---|
+| shijiahou_back.png | 1254×1254 | 2165266 | 01a7d87b7bd470e30b93aa4eadeec69778a8114dae350e3654ccc5543d5be956 |
+| shijiahou_front.png | 1254×1254 | 2320167 | 7c68ab47158f9264bad91d5e3009f9f395dcf075d5f8f3a1dbc525891cf7583d |
+| shijiahou_left.png | 1774×887 | 1831801 | c6af44f045f0bb7b728345e672597ac101a15899b897e8e27310c7a6d012857c |
+| shijiahou_right.png | 1774×887 | 1752465 | f150026b15aa2b8cec60dc66c55425baf308eae226e6183bbe93301466dab730 |
+| source_reference.png | 1536×1024 | 2826900 | 2f8d193f5303162ad4cef54f6ba9b4eab2944e148c77322040c083eab62ac095 |
+| manifest.json | 文本 | 5485 | d4284c1e177ed94b9abfe7bad67b7a78c85ee6805b6ca914a134f6505c5d1992 |
+| prompts.md | 文本 | 12390 | 2e0b4f95bc6c3df6065f6f8977fa1a542b47f33649f42b670edbcd43dd68fd97 |
+
+## Tripo核验与待回复
+
+- 用户Chrome实际页面https://studio.tripo3d.ai/zh/workspace/generate已登录；通过可见UI核验前、左侧、右侧、后四个独立上传槽。H3.1最高质量，几何与纹理、私有；分部件与8K关闭。页面报价30 credits、余额2885。
+- 尚未上传、尚未点生成、无平台taskId、实际消耗0 credits；本对话已提出当前四图本人验收及石甲兽一次最多30credits请求，未收到回复不得默认同意。男主45credits授权不可挪用。
+- 报价截图：C:/Users/WINDOWS/.codex/visualizations/2026/09/27/01a0e29a-179d-7d43-b7a6-916f100d999a/tripo-shijiahou-fourview-quote.png。正式执行前仍以现场报价为准，额度超出或设置/输入变化停止。
+- 男主状态同期核查：PLAYER-AI-RAW-01仍为ready，已获一次上限45credits；v2/raw目录及默认男主AI模型原包生成记录.txt不存在。当前平台资产列表最新项目为9月20日石阶/地形，历史长袍资产不是这次默认男主v2的生成证据。男主仍未生成，未修改其任务或费用批准。

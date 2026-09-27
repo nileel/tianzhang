@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01"
   ],
-  "stateReason": "等待石甲兽四视图本人批准及本资产独立的Tripo服务/报价/最大credits授权；男主45 credits批准不适用于石甲兽。",
+  "stateReason": "当前四图候选已展示，待本人批准。已现场核验Tripo四图独立槽、H3.1最高质量报价30credits；石甲兽一次最多30credits请求待回复，尚未上传/扣费。男主45credits批准不适用于石甲兽。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_manifest.json",

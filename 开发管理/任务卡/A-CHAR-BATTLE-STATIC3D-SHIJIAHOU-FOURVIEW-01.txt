@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-09-27用户要求按四视图→Tripo标准路线重制；已有9月20日通过的概念原画，本卡只生成同一造型四视图并取得用户本人批准。",
+  "stateReason": "2026-09-27已生成并展示正/左/右/背四图候选，7次image_gen调用及完整输入/提示哈希已落主工作区。等待用户本人审图回执；未获批准，不完成归档、不放行Tripo。人工对话等待期间退出ready，不创建自动决策或代签批准。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png",
@@ -38,6 +38,7 @@
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01 · 石甲兽批准原画的严格建模四视图
 
 ## 来源与当前边界
+- 本轮候选、失败修正、PNG与manifest/prompts哈希和当前Tripo报价见开发管理/石甲兽v2四视图与Tripo生产记录.txt；当前仍待本人批准，未上传或生成模型。
 - 用户2026-09-27明确重制石甲兽并指定四视图→Tripo流程；唯一结果为同一批准造型的正、左、右、背四张独立PNG、输入manifest及本人视觉批准。
 - 唯一造型来源为已于9月20日获用户通过的 assets/generated-character-art/no-title/shijiahou_concept_v1.png，其说明与批准线索见同名prompt.md。图像SHA-256为2f8d193f5303162ad4cef54f6ba9b4eab2944e148c77322040c083eab62ac095。原文件保留，复制原始字节到input/source_reference.png。
 - 身份enemy_shijiahou、Profile combat_enemy_shijiahou_v1保持；旧v1积木式粗模不得作为生成参考。
