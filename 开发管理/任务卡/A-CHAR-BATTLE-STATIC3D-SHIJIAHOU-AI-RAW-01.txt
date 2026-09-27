@@ -10,8 +10,9 @@
   "stage": "implementation",
   "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "用户已自行选定并交付有纹理FBX+4K BaseColor原包，已完整接收并冻结哈希；剩余本地结构/材质预览核对。保持平台生成冻结，不能再按无纹理或未选择报告，也不视为清理/Unity成品通过。",
+  "stateReason": "2026-09-27用户选定有纹理FBX的本地检查已完成：导入、4K BaseColor绑定及五向预览正常；33538面含10026三角面、14条多于两面共边。按高0.78m等比缩放后全长1.70766m，超过既有1.06m包络，清理前须解决规格冲突。平台生成冻结，未批准成品。",
   "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/manifest.json",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_raw.zip",
@@ -61,6 +62,10 @@
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 · 石甲兽一次Tripo四视图静态3D原包
+
+## 2026-09-27 本轮检查授权
+- 用户明确“那就先检查”：仅检查已经选定的有纹理FBX包，允许通过blender_lab在本次临时独立场景中导入、读取网格/材质/UV和形成真实多角度预览。本节仅替代旧RAW卡“不启动Blender”的检查工具限制，不授权清理、改造型、保存候选blend、重新导出FBX、写Unity或平台付费。
+- 临时解包/检查证据限定D:/Temp/TianZhang-Blender/20260927-selected-textured-check/；原包及原manifest保持原字节。技术结果写user-selected/inspection.json和既有生产记录。
 
 ## 来源与当前边界
 - docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md完整合同；只消费A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01的四图与manifest，资产enemy_shijiahou。结果是一项Tripo任务的原始ZIP、manifest、平台联系表和用户批准。
@@ -128,3 +133,15 @@
 - 已查ZIP CRC/内容齐全、二进制FBX 7400文件头、FBX内含本包BaseColor文件名、JPEG完整解码。尚未以3D导入验证网格、材质实际绑定、贴合或本FBX四边面比例；不能直接套用旧灰模OBJ统计。
 - 用户自行纹理操作的实际消费、选中几何子任务ID和纹理子任务ID在本地包中没有已核验回执，均如实留空；不把20credits报价当已扣费事实。本轮没有浏览器操作或费用消费。
 - 原四候选ZIP/manifest/联系表全部保持原字节，用于历史追溯；后续本地检查以本次选定有纹理包为唯一目标。两张RAW卡维持平台生成frozen防重复，剩余是本地结构/材质核对，不再报告“等用户选一个/等生成纹理”。
+
+## 2026-09-27 选定有纹理FBX检查结果（当前）
+- 本轮只读几何与材质，通过唯一blender_lab交互通道导入独立临时场景；临时增加相机和灯光形成真实预览，没有修改原包、模型几何、源材质或导出FBX，没有平台操作和费用消费。检查为简单有界工作，沿用入口单模型，无辅助。
+- 已实测：一个静态MESH、一个材质、一张4096×4096 sRGB BaseColor，UV逐loop覆盖且数值有限，图像路径/哈希匹配本包；无骨骼、动画、ShapeKey或modifier。只有BaseColor贴图，未提供独立法线/粗糙度贴图；导入器的Normal Map空节点使用中性(0.5,0.5,1)，不是丢失法线文件。
+- 28618顶点，33538多边形（23512四边面 + 10026三角面，四边面70.11%），三角化后57050；不满足全四边面/精确25000面。不能把Tripo Quad设置当成下载网格已达标。
+- 拓扑诊断：零面积面0，开放边352，多于两面共边14，连通块3。开放边/分离块可能属于衣袍、毛发或甲片结构，不能仅凭计数判定可见破洞；多面共边与退化面留给清理任务按位置处理，本轮未自动焊接或重拓扑。
+- 世界坐标实测宽0.45557、全长0.99951、高0.45654；保持比例按目标高0.78m缩放后宽0.77833、全长1.70766。现有ASSET-02要求X±0.42m/Z=-0.48..0.58m，即长1.06m；长度超出0.64766m，纯平移不能消除。按1.06m长度等比缩放则高约0.48417m；本轮只报告冲突，不修改尺寸合同或挤压模型。
+- 前足最低点约0，后足最低点约0.001953（按0.78m高时约0.003337m），清理时核对四足接地。两个114顶点的小独立块位于左右眼范围，不把三个连通块直接当缺件。
+- 五向可见有机四足、头脸、层叠石甲和完整长尾，未见明显缺肢、漏贴图或全零模型；这只通过原包基础可视检查，不构成十视图成品或Unity批准。
+- 每资产正/左/右/背/斜前五向原始渲染：D:/Temp/TianZhang-Blender/20260927-selected-textured-check/stone-{front,left,right,back,angle}.png。以上是本次有纹理FBX在固定中性灯光下的真实渲染，不是AI效果图，也不是清理后的十视图。
+- 结构化证据：assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json，绑定当前ZIP/贴图哈希及各预览哈希；原接收manifest保持原字节。尺寸以世界坐标顶点bounds计算，避免依赖导入器缓存的Object.dimensions轴序。
+- 检查阶段完成，输入已由用户选定，不再等待选择或纹理生成。RAW平台入口维持frozen，清理/导出未启动、未代签本人验收；下游卡据本次结果列明真实剩余问题。
