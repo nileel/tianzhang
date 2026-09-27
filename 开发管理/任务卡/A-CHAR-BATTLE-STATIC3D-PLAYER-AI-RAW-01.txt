@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-09-27：已核验 DEC-20260923-PLAYERRAW45 的 A 回复，批准 Tripo Studio 最高质量静态3D一次、上限45 credits；五项输入哈希再次一致并写入 automationInputs。可领取执行；上传前必须现场核验服务、四图支持、报价与余额，未满足即停止。",
+  "stateReason": "等待负责人决定：Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
@@ -54,7 +54,57 @@
       "bytes": 4926,
       "sha256": "112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9"
     }
-  ]
+  ],
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01",
+    "sourceRunId": "38dae2a6-5ec7-46cc-83de-861523dfa350",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260927-CD4D4D15A7187A",
+    "question": "Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
+    "options": [
+      {
+        "key": "A",
+        "label": "立即生成一次，消费30 credits"
+      },
+      {
+        "key": "B",
+        "label": "暂不生成，保留任务为 ready"
+      },
+      {
+        "key": "C",
+        "label": "取消本次交易并转为阻塞"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "选择A会启动唯一获批平台任务并消费30 credits；B或C不会收费，也不会产生原包。",
+    "plainSummary": {
+      "situation": "Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
+      "impact": "选择A会启动唯一获批平台任务并消费30 credits；B或C不会收费，也不会产生原包。",
+      "action": "建议选择 A：立即生成一次，消费30 credits"
+    },
+    "checkpointCommit": "19c3a1d993d8768d33de40c2166ab87b8cb5211c",
+    "baseCommit": "bf8ba97268e6cfc93677145401838138b1e909ce",
+    "branch": "codex/automation/codex/38dae2a6-5ec7-46cc-83de-861523dfa350/candidate",
+    "changedPaths": [
+      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt"
+    ],
+    "verified": [
+      "模型元数据为 gpt-5.6-terra",
+      "Tripo 已显示四视图槽位及四张已上传预览",
+      "H3.1 最高质量，30 credits，余额42，未启用分部件生成或8K贴图",
+      "生成按钮尚未点击，未产生平台任务或收费",
+      "任务卡投影、资源版本、审核文本、空白检查与暂存差异检查通过"
+    ],
+    "unverified": [
+      "生成结果、实际扣费、下载包和原包视觉验收尚未发生"
+    ],
+    "residualRisk": "点击生成将立即消费30 credits；生成失败或视觉不合格时不得重试。",
+    "taskContextDigest": "530d9cb0b0c1279f256a374d055beaca1052ca035ceaede694631bc053024d11",
+    "createdAt": "2026-09-27T21:25:08.2385512+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
