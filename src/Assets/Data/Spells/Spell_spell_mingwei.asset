@@ -18,7 +18,7 @@ MonoBehaviour:
   minRange: 2
   maxRange: 5
   contentScope: reserved
-  realmRequirement: realm_jindan
+  realmRequirement: realm_zhuji
   elementRequirement: element_water_root
   sourceAffiliation: faction_guxiu
   element: "\u6C34"

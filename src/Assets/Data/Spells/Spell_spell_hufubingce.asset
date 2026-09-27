@@ -18,7 +18,7 @@ MonoBehaviour:
   minRange: 1
   maxRange: 4
   contentScope: reserved
-  realmRequirement: realm_yuanying
+  realmRequirement: realm_zhuji
   elementRequirement: element_metal_root
   sourceAffiliation: faction_hunyuanshan
   element: "\u91D1"

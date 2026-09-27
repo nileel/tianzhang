@@ -18,7 +18,7 @@ MonoBehaviour:
   minRange: 0
   maxRange: 0
   contentScope: player
-  realmRequirement: realm_jindan
+  realmRequirement: realm_zhuji
   elementRequirement: element_wind_root
   sourceAffiliation: faction_taiyidaoting
   element: "\u98CE"

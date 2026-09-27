@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-23：C-FPD-LEARN-01已完成；完整任务卡的路径、验证与停止条件已核对，等待按既有范围同步术法数据。",
+  "stateReason": "2026-09-27：46 项高境战斗术法的 Spells.csv realmReq 与既有 Unity asset realmRequirement 已同步为 realm_zhuji；数据链路、导入器投影与字段边界已核对。",
   "expectedPaths": [
     "src/Assets/DataConfig/Spells.csv",
     "src/Assets/Data/Spells/Spell_spell_jiuxiaotaiyizhan.asset",
@@ -111,3 +111,10 @@
 
 - 导入器输出额外变化或发现真正学习调用者要求新门槛系统时停止，不手写补丁掩盖。
 - 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。
+
+## 2026-09-27 实施与验证
+
+- 执行前按 `开发管理/AI协作规则.txt#任务卡中的模型协作提示` 核对：本卡语义冻结、46 个既有数据投影均由同一导入器字段机械生成，沿用入口 `gpt-5.6-terra` 单模型；无需独立只读辅助。
+- 已将 46 个目标 CSV 行的 `realmReq` 改为 `realm_zhuji`，并按 `CombatContentImporter.cs::ImportSpells` 的既有 `realmReq -> SpellData.realmRequirement` 投影同步同名既有 asset；未改导入器、`SpellData`、内容 ID、GUID、`contentScope` 或任何效果字段。
+- 逐项核对 46 份术法正文为筑基、目标 CSV 与 asset 均为 `realm_zhuji`；全量数据链为功法 29/29、战斗术法 83/83、神通 31/31。该结果仅为定义数据同步，未宣称学习界面或实际学习流程已接入。
+- 验证：`tools/check-data-chain.ps1 -FailOnMissingAssets` 通过；目标投影与非 realm 字段边界脚本通过；Unity EditMode 的 `ContentImporterArchitectureTests.FullImportRemainsDeterministicAcrossConsecutiveRuns` 通过，证明既有全量导入（含 `ImportSpells`）连续两次稳定。完整 EditMode 套件为 466/467 通过，唯一失败是无关的 `ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings` 缺少 Unity pilot 旁的 Blender 源文件。随后执行任务卡／队列／backlog、审核文本、待提交空白与 cached diff 检查。

@@ -18,7 +18,7 @@ MonoBehaviour:
   minRange: 2
   maxRange: 7
   contentScope: reserved
-  realmRequirement: realm_huashen
+  realmRequirement: realm_zhuji
   elementRequirement: element_thunder_root
   sourceAffiliation: faction_yuqingya
   element: "\u96F7"

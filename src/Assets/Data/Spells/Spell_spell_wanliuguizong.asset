@@ -18,7 +18,7 @@ MonoBehaviour:
   minRange: 3
   maxRange: 10
   contentScope: reserved
-  realmRequirement: realm_lianshen
+  realmRequirement: realm_zhuji
   elementRequirement: element_water_root
   sourceAffiliation: faction_taiyidaoting
   element: "\u6C34"
