@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "completed",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-08-28：本地 Blender 原生单一路线已完成 enemy_shijiahou 静态 source、冻结 FBX、唯一 BaseColor、manifest 与十视图联系表；源、factory-empty 回读和负责人视觉批准均通过，未导入 Unity 或建立 Profile 映射。",
+  "stateReason": "2026-09-27：用户查看十视图后否定当前石甲兽的成品品质。原approved由Codex task owner自签，不构成用户视觉批准；撤销完成归档与正式资产资格，保留技术粗模和失败证据。本卡不重试生产，等待独立重制范围明确。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.fbx",
@@ -27,6 +27,13 @@
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 · 石甲兽静态3D战斗棋子资产生产与批准
+
+## 2026-09-27 用户否决与完成结论撤销
+
+- 用户在查看现有十视图后质疑“石甲兽这也算成品？”，本轮按该品质否定撤销原完成与批准结论。当前产物只能作为技术粗模及历史证据，不得作为正式石甲兽输入。
+- 原QA与manifest的approver为Codex task owner；这是AI自行签署，不能替代用户批准。文件齐全、哈希和回读通过只保留为技术事实，不构成美术成品验收。
+- 卡片移回活跃blocked状态，不进入ready队列；不在本卡重试建模、导出、覆盖原文件或消费额度。独立重制须先明确输入、品质标准、生产路线与允许范围，当前没有可交付正式接入的石甲兽资产。
+- 下列2026-08-28执行收口仅保留历史记录，其“负责人视觉批准”“完成”及解除blocker表述已由本节撤销。
 
 ## 来源与当前边界
 

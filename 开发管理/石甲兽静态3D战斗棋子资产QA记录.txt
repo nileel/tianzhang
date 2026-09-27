@@ -2,7 +2,10 @@
 
 任务：`A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01`
 
-结论：**PASS／已批准**。本卡以本地 Blender 原生路线交付唯一静态石甲兽 source、冻结 FBX、唯一 BaseColor、manifest 和十视图联系表。未导入 Unity、未创建 Profile 映射、未改变敌人数值或战斗规则。
+当前结论（2026-09-27）：**用户品质验收未通过／正式资产资格撤销**。用户查看十视图后否定其成品品质；原“PASS／已批准”为Codex task owner自行签署，不能当作用户批准。原资产卡已从完成归档移回活跃blocked状态。本地Blender粗模、FBX、BaseColor、manifest及联系表保留为历史技术产物；未导入Unity、未创建Profile映射。
+
+- 主责复核：躯干、四肢与石甲仍呈明显几何块堆叠，结构塑造、轮廓及材质细节未达到正式交付质量；问题不能通过文件存在、哈希相符或FBX回读通过来消除。
+- 2026-08-28 manifest内的approved保持原始证据字节，不追改历史；当前批准状态以本记录和活跃资产卡为准。禁止将该自签字段用于正式接入放行。
 
 ## 事实源与生产边界
 
@@ -27,7 +30,7 @@
 - 回读结果：`mesh_count=1`、`empty_count=1`、`material_count=1`；材质为 `Shijiahou_Static3D_Mat`，必须前缀缺失列表为空，`script_free=true`。
 - 该回读证明冻结 FBX 能在 factory-empty Blender 中恢复静态根、网格和材质；其能力边界不包括 Unity 运行表现。本卡没有导入 Unity。
 
-## 联系表与负责人视觉批准
+## 历史联系表与AI自签记录（当前批准已撤销）
 
 - `shijiahou_static3d_v1_contact-sheet.png` 为 `2200×960` 固定相机、固定双 Area Light 联系表，包含正、左、右、背及 yaw `90/150/210/270/330/30` 共十视图。
 - 视觉复核：各视图均可辨识低伏重型四足身体、头部、躯干、尾部、四个承重足与叠层石甲；材质保持哑光石面而非阵营色、发光甲缝、武器、翼、浮空部件或人形／双足结构。
@@ -47,5 +50,5 @@ manifest 同时登记冻结输入和非自身输出 SHA-256、工具版本、来
 
 ## 后续边界
 
-- 完成此单项 source／FBX QA 不解除双资产总门；`U-CHAR-BATTLE-STATIC3D-PROFILES-01` 仍需正式玩家资产 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-03` 同时通过。
-- 后续 Unity 卡才可原样导入已批准文件并建立两条 profile 映射；本卡未提前创建 `src/Assets/Art`、Prefab、材质、Provider 或 Adventure 接线。
+- `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 同时等待默认男主`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04`和获用户认可的正式石甲兽；男主完成也不能自动解除当前石甲兽品质阻塞。
+- 当前v1文件不得导入正式Unity或建立Profile。旧文件、manifest与哈希保留；重制须先明确独立任务范围，本次没有授权新平台交易、追加费用或恢复旧动画路线。

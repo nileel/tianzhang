@@ -44,7 +44,7 @@
 ### Unity 正式链
 
 - 当前正式链的冒险运行时所有者为 `AdventureScene`；角色创建、出身、起点、据点、Adventure 与返回据点的会话上下文具有回归证据。
-- 2026-08-27 用户选择静态3D战斗棋子；2026-09-12 用户批准按精绘2D立绘＋静态3D轻量表现重排为关中首个可展示流程。载体中立合同和独立2D实验端口已完成，正式源码仍由 `AdventureUnitSpawner` 创建、`EncounterCoordinator` 销毁 Marker。石甲兽source已通过原资产检查；玩家v1源检查通过后在Unity导入出现全零顶点/bounds，v2原画与四视图已完成，AI原包仍待交易批准。双正式profile/provider/实机美术尚未完成，不能以源文件或比较样例认定正式接入。
+- 2026-08-27 用户选择静态3D战斗棋子；2026-09-12 用户批准按精绘2D立绘＋静态3D轻量表现重排为关中首个可展示流程。载体中立合同和独立2D实验端口已完成，正式源码仍由 `AdventureUnitSpawner` 创建、`EncounterCoordinator` 销毁 Marker。2026-09-27用户否定石甲兽v1粗模的成品品质，原AI自签批准撤销、资产卡转blocked，现有source不得正式接入；玩家v1源检查通过后在Unity导入出现全零顶点/bounds，v2原画与四视图已完成，一次最高45 credits的原包交易已获批准但原包尚未交付。双正式profile/provider/实机美术尚未完成，不能以源文件或比较样例认定正式接入。
 - TQ-071 已把 batch 场景检查改为只读验证，并移除 Unity 保存场景后的 YAML 二次写入；该二次写入会触发 Windows 文件映射错误。`StartMenuScene` 已同步创建流程需要的摘要引用。
 - 运行时所有者的直接事实源为 `开发管理/运行时所有者记录-TQ-060.txt`；结构治理任务必须重新扫描工作树，不以旧总览推断。
 - TQ-064 已以实时扫描生成根目录 `UNITY_STRUCTURE.md`；它是 TQ-065～TQ-067 的路径、场景、所有者、content、assembly、验证入口与 open gaps 事实入口。

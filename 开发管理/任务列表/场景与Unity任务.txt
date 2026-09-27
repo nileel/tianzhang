@@ -1,5 +1,7 @@
 # 场景与 Unity 任务列表（✅ 已审核）
 
+- 2026-09-27 用户否定现有石甲兽十视图的成品品质；A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01撤销完成归档并转blocked，原Codex自签approved不构成用户批准。v1只保留技术粗模证据，不得正式导入；双Profile总门新增该真实阻塞，待独立重制范围明确。
+
 - 2026-09-27 用户明确：V-GZ-ART-SLICE-01 必须交付可操作的同版本正式入口和跑测步骤，由用户本人完成流程并确认品质；截图与录像只作辅助。当前UI、正式角色接线和反馈前置未齐，仍保持blocked，不提前请求验收。
 
 - 2026-09-27：已消费9月23日新版视觉及45 credits两条A回执；LOOKDEV转ready做同范围合同收口，城市背景与男主RAW解除等待批准并转ready，RAW已绑定五项automationInputs。数值前置归档后U-FPD-STAGE-03转ready；旧冻结路线仍冻结。卡点及回执见对应任务卡和关中UI与角色链卡点处理记录。
@@ -53,7 +55,8 @@
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 已排队 | — | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
-| U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
+| A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 | P1 | codex | 阻塞 | — | 石甲兽静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt |
+| U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04、A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
 | D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 冻结 | V-GZ-ART-SLICE-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |
 | A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01 | P1 | codex | 冻结 | — | 苻渊 strict-round-02 四边面原包取得与冻结 | 开发管理/任务卡/A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-RAW-01.txt |

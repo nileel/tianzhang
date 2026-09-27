@@ -22,7 +22,7 @@
 | `docs/剧情/据点/关中城.txt` | 黄土城镇、夯土墙/灰瓦/木构集市、灵矿贸易与唯一已启用的 `bounty_board`；不引入主线或 NPC。 |
 | `docs/基础设定/关中野外最小环境档案.txt` | `env_guanzhong_wild` 的草地/黄土地表、唯一 `guanzhong_wild` 入口与既有六角空间事实。 |
 | `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png` | 唯一默认男主身份、深靛外袍/灰白内衫、半束黑长发与克制修行姿态的视觉参考。 |
-| `assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_contact-sheet.png` | 石甲兽的低伏重型四足、层叠风化石甲与哑光灰褐材质轮廓；不是 Unity 导入结果。 |
+| `assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1_contact-sheet.png` | 历史技术粗模证据。2026-09-27用户否定其成品品质，原Codex自签批准撤销；不得作为正式石甲兽资产、品质基准或Unity导入输入。 |
 | `SceneBuildSupport.BeginScene`、`AdventureSceneBuilder.Build`、`SettlementSceneBuilder.Build`、`AdventureHudPresenter.Present` | 现有固定镜头、1920×1080 Canvas、关中城/战斗两个表面的真实 UI 创建位置和动态节点按钮事实。 |
 | `CombatPresentationContracts.cs` | 仅有 `Idle`、`Move`、`Attack`、`Hit`、`Cast`、`Death` 六个表现事件；不推导 Guard/Block。 |
 
