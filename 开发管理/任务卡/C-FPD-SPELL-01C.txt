@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-27 Codex 复审部分通过：筑基取得窗口已解除；三术法声明的木／土／水位格与神通作用对象及操作未证明非空兼容交集，待有权裁决或定向返工。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",

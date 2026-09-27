@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-27 Codex 复审部分通过：筑基学习窗口已解除；升格行为依赖金丹周易篇【易数】，筑基开府前不可完成，且载岳回廊兼容交集未证明，待有权裁决或定向返工。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/通变.txt",
     "docs/角色养成/术法/古修/演卦.txt",

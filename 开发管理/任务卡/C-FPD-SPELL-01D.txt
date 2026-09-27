@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-09-27 Codex 复审部分通过：筑基学习窗口已解除；升格行为依赖金丹独化篇【自生】印记，筑基开府前不可完成，且三术法未有可证明兼容的主承载位格，待有权裁决或定向返工。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/冥微.txt",
     "docs/角色养成/术法/古修/任化.txt",
