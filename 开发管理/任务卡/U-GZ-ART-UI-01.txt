@@ -11,10 +11,9 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "A-GZ-UI-CITY-ASSET-01",
-    "A-GZ-UI-KIT-ASSET-01",
-    "A-GZ-UI-FONT-ASSET-01"
+    "A-GZ-UI-KIT-ASSET-01"
   ],
-  "stateReason": "2026-09-23：独立资源生产拆为城市背景、青玉图集/头像、中文字体三卡；等待三卡源、导入及许可证据。当前所有者已冻结；引用点在实施写前核验，连续实机验收属于本卡实施后条件，不再作为循环开工前置。",
+  "stateReason": "2026-09-27：中文字体源、许可、覆盖与 Unity 导入已交付；仍等待城市背景和青玉图集/头像两卡。引用点在实施写前核验，连续实机验收属于本卡实施后条件。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/manifest.json",
     "开发管理/关中首场城镇与界面美术验收记录.txt",

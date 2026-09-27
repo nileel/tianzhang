@@ -6,7 +6,6 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | codex_execute | codex | P1 | content | implementation | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
-| A-GZ-UI-FONT-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 关中中文字体许可覆盖与导入资源 | 开发管理/任务卡/A-GZ-UI-FONT-ASSET-01.txt |
 | A-GZ-UI-KIT-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 关中青玉 UI 图集与默认头像资源包 | 开发管理/任务卡/A-GZ-UI-KIT-ASSET-01.txt |
 | A-GZ-UI-CITY-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 关中城纯背景制作与独立导入 | 开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt |
 | A-GZ-ART-LOOKDEV-01 | codex_execute | codex | P1 | content | design | 关中整屏美术样板与首包生产合同 | 开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt |

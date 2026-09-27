@@ -1,0 +1,25 @@
+# 关中中文字体授权与覆盖记录
+
+## 交付与来源
+
+- 任务：A-GZ-UI-FONT-ASSET-01。唯一字体为 Adobe 官方 Source Han Serif SC Regular 静态 OTF，版本 2.003，发布标签 `2.003R`，发布提交 `7889f11bf31170b5d092a083b357c8c8130f89e0`。官方下载页：`https://github.com/adobe-fonts/source-han-serif/releases/tag/2.003R`；精确原文件：`https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/OTF/SimplifiedChinese/SourceHanSerifSC-Regular.otf`。
+- 上游文件名为 `SourceHanSerifSC-Regular.otf`，项目中仅将文件名规范为 `GuanzhongChinese.otf`；内部字节不变。上游 Git blob 为 `cb41635674be23029e98469f729eded6ebc54611`；项目 source 与 Unity 文件均为 24,543,332 字节，SHA-256 均为 `78aa7a328fd974df2d688c8a9fd74a33d8334dfa84ab24d9d11efb2ffc464117`。
+- source：`assets/source/ui/guanzhong-first-bounty/fonts/GuanzhongChinese.otf`，按项目规则为本地忽略素材；正式 Unity 导入：`src/Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf`，由 Git LFS 跟踪。`font-manifest.json` 保存上述来源与哈希。source 文件需按项目素材备份规则另行异地备份，Git 提交本身不包含 ignored source。
+
+## 许可核验
+
+- 官方同一发布提交的 `LICENSE.txt`：`https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/LICENSE.txt`，Git blob `07235a78b936958799812313565ba0d03e7cd7dd`。source 与 Unity 各保留原文一份，均为 4,463 字节、SHA-256 `9ff5bb567e1b92c801fc1069e5fbf992ff8efccacb9db94e5959a5b3ba9bb903`。
+- 原文为 SIL Open Font License 1.1，明确允许字体与软件捆绑、嵌入、再分发或随软件销售，条件是每份副本保留版权声明和许可原文；不得单独出售字体，字体仍受 OFL 约束。上游声明 Reserved Font Name `Source`；本轮未修改字体内部数据，保留上游家族名与许可，未以 Adobe 名义宣传修改版。无需采购或额外授权。
+
+## 字符覆盖与 Unity 导入
+
+- `fontTools` 读取实际 OTF：family `Source Han Serif SC`、style `Regular`、version `2.003`、`OS/2.fsType=0`。对 `src/Assets/DataConfig/Language.csv` 全部 544 个有效值行（689 个不同字符）核对 cmap：缺字 0。另对当前 `SettlementSceneBuilder`、`AdventureSceneBuilder`、`SettlementView`、`BountyBoardView`、`CombatHudView`、`CombatHudPresenter`、`AdventureHudPresenter` 七个相关 C# 文件的 262 个字符串字面量，以及本轮数字、中文标点与箭头样本核对：228 个不同字符，缺字 0。正式 UI 测试中的自定义名称样本 `我的角色` 也已覆盖。
+- Unity 6000.3.18f1 在隔离 worktree 的 `src` 导入该 OTF，生成 `TrueTypeFontImporter` `.meta`，`includeFontData=1`、`fontNames=[Source Han Serif SC]`、无 fallback。Unity 实际加载结果为动态 `Font`；`Language.csv` 加下述样本共 691 个不同字符，逐字 `Font.HasCharacter` 缺字 0。对样本调用 `RequestCharactersInTexture` 与 `GetCharacterInfo` 缺字 0；`TextGenerator.Populate` 成功，产生 192 个顶点。
+- 非持久化中文预览文本：`关中城  石甲兽悬赏 · 一次性除害令  旧水驿  进入副本：关中野外  我的角色  HP 10/10  灵力 5/5  攻击 → 命中`。Unity 的上述 Text 查询通过；同一原始 OTF 用 Pillow 渲染的本地预览为 `D:\Temp\tzg-gz-font-preview.png`，SHA-256 `14e3b181f02cd8e4674ca99848aa528bfef327453d8cf7945c68ff631e0273ad`，已人工查看中文、数字、标点与箭头均可见。该 PNG 是非持久化验收证据，不是游戏资产或 Unity 场景截图。
+- 明确边界：未来任意玩家输入名称或新符号未被本轮有限输入集证明；新增文字时需按实际输入重新查字。本任务只交付字体，不将其接入正式场景，不以系统字体回退掩盖缺字；正式 Settlement／Adventure／Combat HUD 接线属于 U-GZ-ART-UI-01。
+
+## 失败 run 现场与处置
+
+- `fd6d3668-2998-47ed-a62d-173c981e1df5` 的 schema 5 `Show` 曾返回 `attention_required`、原因 `Codex responsibility ended with failed/official_font_download_timeout`，无 candidate／canonical 记录；责任进程已退出，owner worktree 位于冻结 base `17006b836df9e2c14090c855c6e9e702e1cda82f`、无未提交差异或 ignored 业务文件。
+- 上次下载先取约 132 MB 的官方简中 ZIP，随后转向单独静态 OTF；下载调用在传输期间超时，故未产生候选。现场临时目录后来留下的单独 OTF 经过完整字节数、SHA-256、官方 Git blob 和字体解析核验才被本轮复用。失败点是下载调用与传输时长，不是来源、许可或 OTF 格式不成立；本轮未增加重试层或改下载机制。
+- 按 `CompleteRun` 对无候选 `attention_required` 的精确关闭合同，以原原因、`CompletionCategory=failed`、`DetailCode=official_font_download_timeout` 返回 `RUN_COMPLETED`。失败 worktree 和临时下载现场保留；字体交付由独立手动 worktree 完成。本次关闭失败 run 不发送成功通知。
