@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
   "title": "默认男主v2静态3D清理与Unity importer验收",
   "priority": "P1",
@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01"
-  ],
-  "stateReason": "2026-09-27选定原包检查完成，RAW仍未归档；核对4个零面积面/302条多面共边的实际影响，仅修复已证实的问题，再完成本人十视图及Unity importer验证。静态混合拓扑不是缺陷，不要求全四边面；不授权再生成/付费。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-28选定有纹理原包检查完成并获用户收尾授权，RAW已归档；九项输入路径/字节数/SHA-256、模型协作和schema 2风险投影齐备。可执行既有资产任务；清理十视图及相应导入验证仍在任务内完成，不新增平台交易。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
@@ -35,10 +33,71 @@
     "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
     "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
+      "bytes": 416613,
+      "sha256": "2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
+      "bytes": 385266,
+      "sha256": "506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png",
+      "bytes": 376816,
+      "sha256": "c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png",
+      "bytes": 398077,
+      "sha256": "4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json",
+      "bytes": 4926,
+      "sha256": "112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/主角有纹理模型.zip",
+      "bytes": 5136646,
+      "sha256": "a8ff686d152d998aa0b8a0a4416648252796e762fa0edab3f85fb51253af6e85"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/manifest.json",
+      "bytes": 2881,
+      "sha256": "31158d895ea7d0b0f292509e8b9d6fb9aa837ac33aea989310b26a4581c7d43c"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/inspection.json",
+      "bytes": 18271,
+      "sha256": "056b782ce58530c766b56e7fe4237e73b7ade761c65034ea9c5b6891d21706fe"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/review.html",
+      "bytes": 2912961,
+      "sha256": "5b35e6cd07ed0c07b2dfc5fa7c16585a7515f825204ecfb7c07911c2aef30460"
+    }
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 · 默认男主v2静态3D清理与Unity importer验收
+
+## 2026-09-28 唯一输入与执行起点
+- 已归档输入事实：开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt；用户本人选定并交付“主角有纹理模型.zip”，本对话在检查后明确“那就收尾”，接受该包用于后续资产任务。原包接受不等于清理十视图或Unity通过；未来对应候选的批准仍按原任务内时点办理，不再等待RAW收尾。
+- 唯一几何/纹理输入为 assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/主角有纹理模型.zip；接收manifest只记录当时接收事实，较新的实际导入/材质检查读取同目录inspection.json。review.html内嵌已展示的五向原始渲染，可离线查看；不使用旧四候选灰模ZIP/v1作为替代。
+- 卡头九项automationInputs冻结四图、input manifest、选定ZIP、接收manifest、inspection.json及review.html。主工作区既有输入已逐项验证；新review随本次收尾交付。源文件缺失或哈希变化即停止，不从下载目录猜选其他文件；当前未发现预存v2最终source文件。
+- 静态用途不要求全四边面；现有零面积面/多面共边等计数仅作诊断线索，不要求为统计归零而修模型。先按任务要求做正常坐标、命名、材质和导入准备，仅修复已证实影响外观、法线、UV、导入或实际成本的问题；不新增重拓扑/重新生成任务。
+
+- 透明身份母版（Git跟踪、非automationInputs）：assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png，SHA-256 399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948；对应formal-player-default-male-v1.manifest.json，SHA-256 a4d0d74986f1845fdcc4aac5478f73babe3ece959db7645bd6dcc6d7711d5a13。与四图input manifest的identitySource一致。
+
 
 ## 2026-09-12 本地修正合同
 
@@ -62,7 +121,7 @@
 
 ## ready 前准备
 
-- AI 原包卡完成时向本卡写入 schema 5 `automationInputs`：唯一 raw ZIP、raw manifest、前/角色左/角色右/后四图及 input manifest，全部为 `assets/source/` 仓库相对路径、正字节数和 64 位 SHA-256。
+- 2026-09-28已向schema 2卡头写入供schema 5工作流使用的九项automationInputs：唯一选定有纹理ZIP、接收manifest、inspection.json、review.html、前/角色左/角色右/后四图及input manifest；全部为assets/source/仓库相对路径、正字节数和64位SHA-256。
 - 透明母版不进入 `automationInputs`；以 Git 跟踪路径、任务卡 digest 和 v2 manifest SHA-256 固定。
 - 任一输入缺失、哈希变化、预存 v2 最终文件或来源不唯一时保持 blocked，不创建候选。
 
@@ -102,3 +161,7 @@
 
 - 负责人已要求 UI／角色链需要其决定的事项均走飞书。首轮 FBX 导出前，完成当前候选的十视图、身份／尺度／接地证据，再向飞书发送本候选的视觉批准决定；没有回执不导出。
 - 本次只登记未来十视图决定的证据时点；没有对应成品时不预发空白批准。优先使用既有发送桥，保留原任务／候选／哈希及回执证据；未具备视觉证据能力时先交付可查看原图再发决定。
+
+## 模型协作
+- 2026-09-28 ready评估：同一批准原包形成一个可独立验收的静态资产结果，所有者、输入、路径、停止条件和验收已冻结。沿用入口默认单主模型；清理、十视图和回读依赖同一可变候选，当前没有独立并行工作面，由主责统一复核。
+- 写入前核对实际Blender/验证工具能力与当前任务事实。只有出现复杂且可独立定位的导入失败时，才按AI协作规则使用gpt-5.6-sol / high只读辅助，范围限本卡失败日志、对应导入逻辑和输入哈希，返回已证实根因及受影响验证；不写文件、不改卡/队列、不另领任务。涉及输入或设计裁决仍按停止条件处理。

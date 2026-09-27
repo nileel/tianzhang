@@ -85,3 +85,23 @@
 - 每资产正/左/右/背/斜前五向原始渲染：D:/Temp/TianZhang-Blender/20260927-selected-textured-check/stone-{front,left,right,back,angle}.png。以上是本次有纹理FBX在固定中性灯光下的真实渲染，不是AI效果图，也不是清理后的十视图。
 - 结构化证据：assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json，绑定当前ZIP/贴图哈希及各预览哈希；原接收manifest保持原字节。尺寸以世界坐标顶点bounds计算，避免依赖导入器缓存的Object.dimensions轴序。
 - 检查阶段完成，输入已由用户选定，不再等待选择或纹理生成。RAW平台入口维持frozen，清理/导出未启动、未代签本人验收；下游卡据本次结果列明真实剩余问题。
+
+## 2026-09-28 原包阶段收尾（当前结论）
+- 批准者：本对话用户本人；来源：当前对话。用户自行选择并生产纹理、交付“石甲兽有纹理模型.zip”，查看既有检查结论并澄清静态混合拓扑/显示缩放要求后，在确认剩余为既有任务内工作时明确“那就收尾”。据此接受该唯一选定包作为下游输入并结束RAW阶段，无需重新选择或重复平台交易。
+- 接受范围为已交付有纹理原包及本次基础检查；清理后十视图、FBX导出回读、Unity导入和用户实机跑测尚未完成，各自保留在下游任务。当前对话授权直接作为原包收尾依据，不合成飞书回执。
+- 唯一原包、接收manifest、inspection.json及四视图均保持原字节；五向真实渲染逐项核对哈希后内嵌到 assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html。原四候选灰模包保留用于追溯，不作为清理输入。
+- 平台选择/纹理子任务ID及用户自行纹理实际费用仍无已核验回执，保持未知；本次不接管Tripo、不新增交易或费用。已知几何批次费用仍为本资产100 credits，两资产合计200。
+- 本卡completed并移入精确归档；A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 已补齐九项automationInputs、模型协作、风险投影并转ready。诊断计数不作为必须修复项；只针对已证实的外观、法线、UV、导入或实际成本问题做最小修复。
+- 本节替代以下历史段落中的frozen、未接受、未解锁及未完成本地检查的当前状态表述，历史生产记录保留。
+
+| 输入 | 字节数 | SHA-256 |
+|---|---:|---|
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png | 2320167 | 7c68ab47158f9264bad91d5e3009f9f395dcf075d5f8f3a1dbc525891cf7583d |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png | 1831801 | c6af44f045f0bb7b728345e672597ac101a15899b897e8e27310c7a6d012857c |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_right.png | 1752465 | f150026b15aa2b8cec60dc66c55425baf308eae226e6183bbe93301466dab730 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_back.png | 2165266 | 01a7d87b7bd470e30b93aa4eadeec69778a8114dae350e3654ccc5543d5be956 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/manifest.json | 5975 | c4a54d66099bebc6e1c37c2196d4b151c94b671c5c6fa939593d3be37dc88875 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip | 6766682 | 1ac3542523743d5c27461817aa488d845d4b6a572fe5db4a0b62c5c4c4d09e75 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/manifest.json | 2885 | 7879c4a79e1fb7349087193a11cd9237945c6a9536a8564cc258a94d532cc819 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json | 10479 | 2b88d085b1b685a3ab1179a5f41ee23c893ad21b38ead062259c56a6b8acc583 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html | 3029930 | a463ec6a7fa3ee3e986a5f10a3d3792754def02aa16a079363cf1d4372a47148 |

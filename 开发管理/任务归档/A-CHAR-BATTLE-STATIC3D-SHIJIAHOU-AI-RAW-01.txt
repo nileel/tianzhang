@@ -8,10 +8,11 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "frozen",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-27选定原包导入、4K BaseColor及五向预览正常；等比scale可处理尺寸，静态混合拓扑不构成缺陷或阻塞。多面共边仅作实际影响核对线索。平台生成冻结，清理/成品验收未完成。",
+  "stateReason": "2026-09-28用户在自行选定交付有纹理包、查看检查结论后明确“那就收尾”；唯一输入和五向证据已冻结，RAW阶段完成归档，下游A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02准备就绪。十视图和Unity验收仍属后续任务。",
   "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html",
     "docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip",
@@ -63,6 +64,27 @@
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 · 石甲兽一次Tripo四视图静态3D原包
+
+## 2026-09-28 原包阶段收尾（当前结论）
+- 批准者：本对话用户本人；来源：当前对话。用户自行选择并生产纹理、交付“石甲兽有纹理模型.zip”，查看既有检查结论并澄清静态混合拓扑/显示缩放要求后，在确认剩余为既有任务内工作时明确“那就收尾”。据此接受该唯一选定包作为下游输入并结束RAW阶段，无需重新选择或重复平台交易。
+- 接受范围为已交付有纹理原包及本次基础检查；清理后十视图、FBX导出回读、Unity导入和用户实机跑测尚未完成，各自保留在下游任务。当前对话授权直接作为原包收尾依据，不合成飞书回执。
+- 唯一原包、接收manifest、inspection.json及四视图均保持原字节；五向真实渲染逐项核对哈希后内嵌到 assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html。原四候选灰模包保留用于追溯，不作为清理输入。
+- 平台选择/纹理子任务ID及用户自行纹理实际费用仍无已核验回执，保持未知；本次不接管Tripo、不新增交易或费用。已知几何批次费用仍为本资产100 credits，两资产合计200。
+- 本卡completed并移入精确归档；A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 已补齐九项automationInputs、模型协作、风险投影并转ready。诊断计数不作为必须修复项；只针对已证实的外观、法线、UV、导入或实际成本问题做最小修复。
+- 本节替代以下历史段落中的frozen、未接受、未解锁及未完成本地检查的当前状态表述，历史生产记录保留。
+
+| 输入 | 字节数 | SHA-256 |
+|---|---:|---|
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png | 2320167 | 7c68ab47158f9264bad91d5e3009f9f395dcf075d5f8f3a1dbc525891cf7583d |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png | 1831801 | c6af44f045f0bb7b728345e672597ac101a15899b897e8e27310c7a6d012857c |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_right.png | 1752465 | f150026b15aa2b8cec60dc66c55425baf308eae226e6183bbe93301466dab730 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_back.png | 2165266 | 01a7d87b7bd470e30b93aa4eadeec69778a8114dae350e3654ccc5543d5be956 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/manifest.json | 5975 | c4a54d66099bebc6e1c37c2196d4b151c94b671c5c6fa939593d3be37dc88875 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip | 6766682 | 1ac3542523743d5c27461817aa488d845d4b6a572fe5db4a0b62c5c4c4d09e75 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/manifest.json | 2885 | 7879c4a79e1fb7349087193a11cd9237945c6a9536a8564cc258a94d532cc819 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json | 10479 | 2b88d085b1b685a3ab1179a5f41ee23c893ad21b38ead062259c56a6b8acc583 |
+| assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html | 3029930 | a463ec6a7fa3ee3e986a5f10a3d3792754def02aa16a079363cf1d4372a47148 |
+
 
 ## 2026-09-27 本轮检查授权
 - 用户明确“那就先检查”：仅检查已经选定的有纹理FBX包，允许通过blender_lab在本次临时独立场景中导入、读取网格/材质/UV和形成真实多角度预览。本节仅替代旧RAW卡“不启动Blender”的检查工具限制，不授权清理、改造型、保存候选blend、重新导出FBX、写Unity或平台付费。

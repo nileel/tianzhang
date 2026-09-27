@@ -1,5 +1,7 @@
 # 场景与 Unity 任务列表（✅ 已审核）
 
+- 2026-09-28：用户在选定有纹理包并查看检查结论后明确“那就收尾”。男主与石甲兽两张AI-RAW-01已完成归档，九项唯一输入及哈希、五向查看入口已冻结；PLAYER-ASSET-04与SHIJIAHOU-ASSET-02转ready入队。静态混合拓扑与游戏内等比scale不构成阻塞。清理后十视图、Unity导入/双Profile、正式接线及用户实际跑测仍按既有任务推进。以下旧日期条目保留当时事实，当前状态以本条和任务卡为准。
+
 - 2026-09-27两份选定有纹理FBX已完成Blender结构/材质与五向预览检查，单网格/单材质/4K BaseColor正常。游戏中等比scale处理尺寸，静态用途不要求全四边面，两者均不构成卡点；网格诊断计数只作线索，后续核对实际外观/法线/导入/成本影响再作最小修复。平台生成冻结防重复，不再等待选模/纹理生成/本次检查；清理候选十视图及Unity验收未完成。详情见RAW卡、生产记录及v2/raw/user-selected/inspection.json。
 
 - 2026-09-27男主与石甲兽已各生成一批P2.0四候选，实际各100credits、合计200；8份OBJ/MTL原包、哈希和联系表已保存。实际Quad网格含三角面、总面数高于25000且无纹理。用户明确自行选择并生成纹理、要求停止接管；两张RAW卡保持frozen防自动重复，未接受原包且不解锁清理。
@@ -57,11 +59,9 @@
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | P1 | codex | 冻结 | — | 默认男主一次性 AI 静态3D原包生成与冻结 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt |
-| A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
+| A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04 | P1 | codex | 已排队 | — | 默认男主v2静态3D清理与Unity importer验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt |
 | A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01 | P1 | codex | 阻塞 | — | 石甲兽静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01.txt |
-| A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 | P1 | codex | 冻结 | — | 石甲兽一次Tripo四视图静态3D原包 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt |
-| A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 | 石甲兽Tripo原包清理与静态资产验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt |
+| A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 | P1 | codex | 已排队 | — | 石甲兽Tripo原包清理与静态资产验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt |
 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | P1 | codex | 阻塞 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04、A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 | 正式玩家与石甲兽静态3D Profile映射总门 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt |
 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-PROFILES-01 | 静态3D Provider与正式Adventure Marker所有权解耦 | 开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt |
 | D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01 | P2 | codex | 冻结 | V-GZ-ART-SLICE-01 | 静态3D战斗棋子首批内容扩展规格 | 开发管理/任务卡/D-CHAR-BATTLE-STATIC3D-EXPANSION-BATCH-01.txt |

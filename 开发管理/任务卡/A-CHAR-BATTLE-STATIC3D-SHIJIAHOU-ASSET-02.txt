@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01"
-  ],
-  "stateReason": "2026-09-27选定原包检查完成，RAW仍未归档；核对14条多面共边及接地的实际影响，仅修复已证实的问题。静态混合拓扑不是缺陷；尺寸由既有Unity表现入口等比scale处理，两者均不阻塞。Unity导入由双Profile卡负责。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-28选定有纹理原包检查完成并获用户收尾授权，RAW已归档；九项输入路径/字节数/SHA-256、模型协作和schema 2风险投影齐备。可执行既有资产任务；清理十视图及相应导入验证仍在任务内完成，不新增平台交易。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
@@ -32,10 +30,64 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png",
+      "bytes": 2320167,
+      "sha256": "7c68ab47158f9264bad91d5e3009f9f395dcf075d5f8f3a1dbc525891cf7583d"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png",
+      "bytes": 1831801,
+      "sha256": "c6af44f045f0bb7b728345e672597ac101a15899b897e8e27310c7a6d012857c"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_right.png",
+      "bytes": 1752465,
+      "sha256": "f150026b15aa2b8cec60dc66c55425baf308eae226e6183bbe93301466dab730"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_back.png",
+      "bytes": 2165266,
+      "sha256": "01a7d87b7bd470e30b93aa4eadeec69778a8114dae350e3654ccc5543d5be956"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/manifest.json",
+      "bytes": 5975,
+      "sha256": "c4a54d66099bebc6e1c37c2196d4b151c94b671c5c6fa939593d3be37dc88875"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip",
+      "bytes": 6766682,
+      "sha256": "1ac3542523743d5c27461817aa488d845d4b6a572fe5db4a0b62c5c4c4d09e75"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/manifest.json",
+      "bytes": 2885,
+      "sha256": "7879c4a79e1fb7349087193a11cd9237945c6a9536a8564cc258a94d532cc819"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/inspection.json",
+      "bytes": 10479,
+      "sha256": "2b88d085b1b685a3ab1179a5f41ee23c893ad21b38ead062259c56a6b8acc583"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/review.html",
+      "bytes": 3029930,
+      "sha256": "a463ec6a7fa3ee3e986a5f10a3d3792754def02aa16a079363cf1d4372a47148"
+    }
+  ]
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 · 石甲兽Tripo原包清理与静态资产验收
+
+## 2026-09-28 唯一输入与执行起点
+- 已归档输入事实：开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt；用户本人选定并交付“石甲兽有纹理模型.zip”，本对话在检查后明确“那就收尾”，接受该包用于后续资产任务。原包接受不等于清理十视图或Unity通过；未来对应候选的批准仍按原任务内时点办理，不再等待RAW收尾。
+- 唯一几何/纹理输入为 assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/user-selected/石甲兽有纹理模型.zip；接收manifest只记录当时接收事实，较新的实际导入/材质检查读取同目录inspection.json。review.html内嵌已展示的五向原始渲染，可离线查看；不使用旧四候选灰模ZIP/v1作为替代。
+- 卡头九项automationInputs冻结四图、input manifest、选定ZIP、接收manifest、inspection.json及review.html。主工作区既有输入已逐项验证；新review随本次收尾交付。源文件缺失或哈希变化即停止，不从下载目录猜选其他文件；当前未发现预存v2最终source文件。
+- 静态用途不要求全四边面；现有零面积面/多面共边等计数仅作诊断线索，不要求为统计归零而修模型。先按任务要求做正常坐标、命名、材质和导入准备，仅修复已证实影响外观、法线、UV、导入或实际成本的问题；不新增重拓扑/重新生成任务。
+
 
 ## 来源与当前边界
 - docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md完整合同、A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01批准原包及四图；唯一结果为经本人视觉批准且技术验证通过的v2静态source/FBX/BaseColor/manifest/十视图。
@@ -50,7 +102,9 @@
 - 初次导出后，同一批准原包内最多两轮已知根因本地修正；每轮记录根因与受影响验证，无自动重试或新增平台交易。
 - 本卡仅交source；双Profile卡在本卡通过后核对v2输入、路径与哈希，承担石甲兽正式Unity导入/材质/Prefab与双映射。
 ## 模型协作
-- 待临近ready按实际原包与失败证据评估。源清理由同一主责；有独立复杂诊断才按AI协作规则请求只读辅助，不新增责任方。
+- 2026-09-28 ready评估：同一批准原包形成一个可独立验收的静态资产结果，所有者、输入、路径、停止条件和验收已冻结。沿用入口默认单主模型；清理、十视图和回读依赖同一可变候选，当前没有独立并行工作面，由主责统一复核。
+- 写入前核对实际Blender/验证工具能力与当前任务事实。只有出现复杂且可独立定位的导入失败时，才按AI协作规则使用gpt-5.6-sol / high只读辅助，范围限本卡失败日志、对应导入逻辑和输入哈希，返回已证实根因及受影响验证；不写文件、不改卡/队列、不另领任务。涉及输入或设计裁决仍按停止条件处理。
+
 ## 验证
 - Blender source/factory-empty技术事实与用户十视图批准分开记录；没有本人批准不得完成。
 - manifest绑定批准四图、唯一原包、输出哈希、Blender版本/参数、次数/测量与批准者/时间/回执；check-asset-versioning、task-cards、review-text、whitespace/cached diff通过。
