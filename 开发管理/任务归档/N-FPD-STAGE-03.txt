@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-23：C-FPD-LEARN-01已完成；完整任务卡的路径、验证与停止条件已核对，等待用BattleSim冻结三阶段成长与筑基入门预算。",
+  "stateReason": "2026-09-27：三阶段实际结算统一使用整数预算分配并修正凡人节点索引，太易 HP 累计 80／165／265；六部入门预算和周期合同见验证记录，内容数据同步留给 D-FPD-GONGFA-03。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/GameData.cs",
@@ -30,9 +30,7 @@
   ],
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [
-      "EXP-BS-001"
-    ],
+    "matched": ["EXP-BS-001"],
     "gates": []
   },
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
@@ -62,11 +60,6 @@
 
 - 不顺带调全部术法强度、金丹平衡、神通门槛或新玩法；不改Unity/CSV/个别功法完成品。不得仅改审计常量而让实际角色结算继续用旧五段。
 
-## 模型协作
-
-- 复杂数值/核心语义：主模型沿用入口；预算守恒与阶段触发可用 gpt-6-astra / high 独立只读复核上述模拟所有者及运行结果，不运行第二套模拟，不改卡或提交；主责统一最终验证。
-- 执行前核对工具与验证能力；实际调用、未核实项写本卡既有验证记录。DeepSeek产物标“⚠️ 已修改/未审核”，由Codex独立复审，不自审。
-
 ## 验证
 
 - 按AGENTS执行 dotnet build -c Release --no-restore simulations/BattleSim，通过后 dotnet run --no-build -c Release --project simulations/BattleSim；检查实际角色成长、0至5容量边界、重复成长、防回退与入门6部可用性。
@@ -85,3 +78,36 @@
 ## 2026-09-22 道基承载补充
 
 - 额外锁定道基当前承载能力的初始值、随连续培养的增长与上限映射；天然额度从筑基起开放，但实际可承诺容量受承载限制。验证承载不足、达标解锁、府胚占承诺量、满总上限圆满及圆满后扩府继续培养，不能把当前承载已用满当作圆满。
+
+## 已完成范围
+
+- 以 BattleSim 锁定筑基／开府／圆满的 30%／32%／38% 累计预算、0.300／0.605／1.000 核心曲线锚点，以及旧五段总预算的 `1E-9` 守恒约束。
+- `GameData`、`Character.SubGrowthSum` 和成长审计使用同一三阶段入口；不再只以审计常量模拟迁移。
+- 2026-09-27 人工收口：从原卡恢复七个必需章节与道基承载补充；将整数预算分配统一至 `GameData.AllocateFoundationBudget`，累计索引计入不产生成长的凡人节点，权重回退先形成总预算再分配。
+- 锁定承载培养、0 容量先扩府、容量 1 直接圆满、府胚占承诺容量与圆满后扩府不回退的周期合同。
+- 六部缺失功法的逐 ID 入门预算已写入 BattleSim 与独立验证记录，供 `D-FPD-GONGFA-03` 同步正文、CSV 和 Unity asset。
+
+## 验证与边界
+
+- 执行 Release build 和完整 BattleSim；审计覆盖 21 Build、六部预算、0～5 容量、承载不足／达标、失败恢复与重复结算边界。
+- 新增实际角色回归：21 Build 逐阶段八属性与预算一致，六部功法 HP、太易非整数神识、跨境索引、权重顺序及重复结算均通过；太易 HP 成长累计为 80／165／265。
+- 未改 Unity、CSV 或个别功法完成品；它们仍由 `D-FPD-GONGFA-03` 在本记录的逐 ID 输出上机械同步。
+
+## 模型协作
+
+- 2026-09-23 原候选未执行辅助复核。2026-09-27 人工收口通过原生子智能体工具请求 `gpt-6-astra / high`，任务标识 `/root/check_candidate_growth`；只读复核确认双算法与凡人索引根因，修复后未发现新阻断。模型设置由工具接受，未另取子会话模型元数据；实际构建、完整模拟、差异复核和唯一正式提交均由主智能体负责。
+
+## 经验候选
+
+### N-FPD-STAGE-03-C01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：battlesim
+- 现象：独立预算审计通过且总额守恒，但太易三阶段实际 HP 累计为 164.3／265／265，与合同 80／165／265 不同。
+- 已证实根因：审计采用整数最大余数分配而角色使用直接浮点比例；TotalSubs 包含凡人节点，累计成长循环跳过凡人却未推进索引。
+- 可能复用范围：阶段预算迁移、含不产生成长节点的累计索引、权重回退与独立审计入口。
+- 证据：GameData.AllocateFoundationBudget、Character.SubGrowthSum、Program.RunFoundationGrowthAudit 及三阶段与筑基入门成长数值验证记录；修复后实际角色累计和固定合同断言通过。
+- 门禁可能：yes

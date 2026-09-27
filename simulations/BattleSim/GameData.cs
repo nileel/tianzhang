@@ -8,7 +8,7 @@ static class GameData
 {
     public static readonly Dictionary<string, int> Sublevels = new()
     {
-        ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 5, ["金丹"] = 3
+        ["凡人"] = 1, ["练气"] = 9, ["筑基"] = 3, ["金丹"] = 3
     };
     public static readonly string[] RealmOrder = ["凡人", "练气", "筑基", "金丹"];
     public static readonly Dictionary<string, int> ExtensionSublevels = new()
@@ -43,6 +43,9 @@ static class GameData
         ["化神"] = new(50, 25, 28, 18, 7, 0.20),
     };
     public record SubGrowth(double HP, double MP, double 肉攻, double 神攻, double 肉防, double 神防, double 反应, double 移力, double 神识);
+    // 旧表中的筑基行是五段历史输入；运行时始终按此三阶段合同结算。
+    public static readonly double[] FoundationStageBudgetShares = [0.30, 0.32, 0.38];
+    public const int LegacyFoundationGrowthStages = 5;
     public static readonly Dictionary<string, SubGrowth> SubGrowthBase = new()
     {
         ["练气"] = new(8, 3, 4, 4, 3, 3, 2, 0.2, 0.3),
@@ -208,11 +211,9 @@ static class GameData
     {
         "筑基" => subIdx switch
         {
-            0 => "筑基初期",
-            1 => "筑基中期",
-            2 => "筑基后期",
-            3 => "紫府初开",
-            4 => "紫府圆满",
+            0 => "筑基",
+            1 => "开府",
+            2 => "圆满",
             _ => $"筑基{subIdx}"
         },
         "金丹" => subIdx switch
@@ -230,7 +231,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     {
         ("练气", 0, 10), ("练气", 1, 22), ("练气", 2, 36), ("练气", 3, 52),
         ("练气", 4, 70), ("练气", 5, 90), ("练气", 6, 112), ("练气", 7, 136), ("练气", 8, 162),
-        ("筑基", 0, 200), ("筑基", 1, 250), ("筑基", 2, 310), ("筑基", 3, 390), ("筑基", 4, 490),
+        ("筑基", 0, 200), ("筑基", 1, 330), ("筑基", 2, 490),
         ("金丹", 0, 620), ("金丹", 1, 800), ("金丹", 2, 1020),
     };
 
@@ -243,6 +244,53 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         int t = 0;
         foreach (var r in RealmOrder) { if (r == realm) { t += subIdx + 1; break; } t += Sublevels[r]; }
         return t;
+    }
+
+    public static SubGrowth GrowthAtSublevel(string realm, int subIdx, SubGrowth growth)
+    {
+        if (realm != "筑基") return growth;
+        if (subIdx < 0 || subIdx >= FoundationStageBudgetShares.Length)
+            throw new ArgumentOutOfRangeException(nameof(subIdx), "筑基成长阶段必须位于 0～2。");
+
+        double Allocate(double legacyGrowth) =>
+            AllocateFoundationBudget(legacyGrowth * LegacyFoundationGrowthStages)[subIdx];
+        return new(
+            Allocate(growth.HP), Allocate(growth.MP), Allocate(growth.肉攻), Allocate(growth.神攻),
+            Allocate(growth.肉防), Allocate(growth.神防), Allocate(growth.反应), growth.移力, Allocate(growth.神识));
+    }
+
+    public static SubGrowth GrowthAtSublevel(string realm, int subIdx, GongFaGrowth growth) =>
+        GrowthAtSublevel(realm, subIdx, new SubGrowth(
+            growth.HP, growth.MP, growth.肉攻, growth.神攻, growth.肉防, growth.神防, growth.反应, growth.移力, growth.神识));
+
+    public static double[] AllocateFoundationBudget(double total)
+    {
+        if (total < 0 || !double.IsFinite(total))
+            throw new ArgumentOutOfRangeException(nameof(total), "成长预算必须为有限非负数");
+        bool isWholeNumber = Math.Abs(total - Math.Round(total)) < 0.000000001;
+        if (!isWholeNumber || total < FoundationStageBudgetShares.Length)
+        {
+            var fractional = FoundationStageBudgetShares.Select(share => total * share).ToArray();
+            fractional[^1] = total - fractional.Take(fractional.Length - 1).Sum();
+            return fractional;
+        }
+
+        int wholeTotal = (int)Math.Round(total);
+        var allocation = Enumerable.Repeat(1.0, FoundationStageBudgetShares.Length).ToArray();
+        int remaining = wholeTotal - allocation.Length;
+        var fractionalParts = FoundationStageBudgetShares
+            .Select((share, index) => new { Index = index, Target = remaining * share })
+            .ToArray();
+        foreach (var part in fractionalParts)
+            allocation[part.Index] += Math.Floor(part.Target);
+
+        int undistributed = remaining - fractionalParts.Sum(part => (int)Math.Floor(part.Target));
+        foreach (var part in fractionalParts
+                     .OrderByDescending(item => item.Target - Math.Floor(item.Target))
+                     .ThenBy(item => item.Index)
+                     .Take(undistributed))
+            allocation[part.Index] += 1;
+        return allocation;
     }
 
     // N-ENV-01 环境规则 fixture：只定义固定点档位、查询边界和显式配对，不承载具体环境内容。
@@ -482,6 +530,14 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7),
             ["金丹"] = new(253, 233, 100, 93, 80, 73, 30, 0.8, 1.3),
         },
+        // N-FPD-STAGE-03：六部此前未进入 BattleSim 的筑基入门预算。数值仍以各自
+        // 文档旧行作五段历史输入，运行时统一转换为筑基／开府／圆满三阶段。
+        ["南华阐衍典"] = new() { ["筑基"] = new(17, 23, 7, 17, 6, 13, 8, 0.5, 0.7) },
+        ["太易山藏经"] = new() { ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7) },
+        ["玄牝道藏"] = new() { ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7) },
+        ["空无般若经"] = new() { ["筑基"] = new(53, 23, 20, 17, 17, 13, 8, 0.5, 0.7) },
+        ["万法都箓经"] = new() { ["筑基"] = new(17, 47, 7, 21, 6, 22, 10, 0.5, 1.7) },
+        ["正一盟威箓"] = new() { ["筑基"] = new(33, 47, 13, 21, 10, 22, 10, 0.5, 1.7) },
     };
 
     // v5.2: 功法属性倾向星数（来源：docs/角色养成/功法/）

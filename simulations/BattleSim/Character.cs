@@ -175,13 +175,14 @@ class Character
         Secondary["物抗率"] = 0; Secondary["魂抗率"] = 0;
     }
 
-    double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w, string gongFaName = "")
+    internal double SubGrowthSum(string attr, string realm, int subIdx, Dictionary<string, double> w, string gongFaName = "")
     {
         // v5.1: 优先使用功法实际成长表
         if (!string.IsNullOrEmpty(gongFaName) && GameData.GongFaTables.TryGetValue(gongFaName, out var table))
         {
             double sum = 0; int totalSubs = GameData.TotalSubs(realm, subIdx);
-            int prevSubs = 0;
+            // TotalSubs 包含凡人节点；该节点不产生成长，但仍占累计索引。
+            int prevSubs = GameData.Sublevels["凡人"];
             foreach (var r in GameData.RealmOrder)
             {
                 if (r == "凡人") continue;
@@ -194,12 +195,15 @@ class Character
                     prevSubs += subsHere;
                     continue;
                 }
-                double val = attr switch
+                for (int stage = 0; stage < effective; stage++)
                 {
-                    "HP" => grow.HP, "MP" => grow.MP, "肉攻" => grow.肉攻, "神攻" => grow.神攻,
-                    "肉防" => grow.肉防, "神防" => grow.神防, "反应" => grow.反应, "神识" => grow.神识, _ => 0
-                };
-                sum += val * effective;
+                    var stageGrowth = GameData.GrowthAtSublevel(r, stage, grow);
+                    sum += attr switch
+                    {
+                        "HP" => stageGrowth.HP, "MP" => stageGrowth.MP, "肉攻" => stageGrowth.肉攻, "神攻" => stageGrowth.神攻,
+                        "肉防" => stageGrowth.肉防, "神防" => stageGrowth.神防, "反应" => stageGrowth.反应, "神识" => stageGrowth.神识, _ => 0
+                    };
+                }
                 prevSubs += subsHere;
                 if (r == realm) break;
             }
@@ -209,22 +213,33 @@ class Character
             throw new InvalidOperationException($"功法「{gongFaName}」缺少成长表；必须补齐成长表或登记显式回退。");
         // 回退：原有权重近似计算
         double wsum = 0; int wtotalSubs = GameData.TotalSubs(realm, subIdx);
-        int wprevSubs = 0;
+        int wprevSubs = GameData.Sublevels["凡人"];
         foreach (var r in GameData.RealmOrder)
         {
             if (r == "凡人") continue;
             int subsHere = GameData.Sublevels[r];
             int effective = Math.Min(subsHere, Math.Max(0, wtotalSubs - wprevSubs));
             if (effective <= 0) break;
-            var sgb = GameData.SubGrowthBase[r];
-            double val = attr switch
+            var growth = GameData.SubGrowthBase[r];
+            double Scale(string key) => w[key] / 0.6;
+            // 权重先确定总预算，再按同一整数分配合同结算阶段成长。
+            var weightedGrowth = growth with
             {
-                "HP" => sgb.HP, "MP" => sgb.MP, "肉攻" => sgb.肉攻, "神攻" => sgb.神攻,
-                "肉防" => sgb.肉防, "神防" => sgb.神防, "反应" => sgb.反应, "神识" => sgb.神识, _ => 0
+                HP = growth.HP * Scale("根骨"), MP = growth.MP * Scale("魂魄"),
+                肉攻 = growth.肉攻 * Scale("根骨"), 神攻 = growth.神攻 * Scale("魂魄"),
+                肉防 = growth.肉防 * Scale("根骨"), 神防 = growth.神防 * Scale("魂魄"),
+                反应 = growth.反应 * Scale("根骨"), 神识 = growth.神识 * Scale("神识")
             };
-            string innateKey = attr switch { "HP" or "肉攻" or "肉防" => "根骨", "MP" or "神攻" or "神防" => "魂魄", "神识" => "神识", "反应" => "根骨", _ => "根骨" };
-            double scale = w[innateKey] / 0.6;
-            wsum += val * scale * effective;
+            for (int stage = 0; stage < effective; stage++)
+            {
+                var stageGrowth = GameData.GrowthAtSublevel(r, stage, weightedGrowth);
+                double val = attr switch
+                {
+                    "HP" => stageGrowth.HP, "MP" => stageGrowth.MP, "肉攻" => stageGrowth.肉攻, "神攻" => stageGrowth.神攻,
+                    "肉防" => stageGrowth.肉防, "神防" => stageGrowth.神防, "反应" => stageGrowth.反应, "神识" => stageGrowth.神识, _ => 0
+                };
+                wsum += val;
+            }
             wprevSubs += subsHere;
             if (r == realm) break;
         }
