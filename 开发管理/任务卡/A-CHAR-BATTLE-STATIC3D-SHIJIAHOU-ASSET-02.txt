@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01"
   ],
-  "stateReason": "2026-09-27用户已选定有纹理原包且本地检查完成；RAW仍未归档。原包按高0.78m等比缩放后全长1.70766m，超过本卡1.06m包络，须先解决规格冲突，禁止挤压凑数；另有14条多面共边及混合拓扑待清理。Unity导入仍由双Profile卡负责。",
+  "stateReason": "2026-09-27用户已选定有纹理原包且本地检查完成；RAW仍未归档。14条多面共边及混合拓扑待本地清理；用户明确游戏中通过等比scale处理显示尺寸，尺寸不再阻塞清理。Unity导入与显示scale设置由双Profile卡沿既有入口负责。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
@@ -45,7 +45,7 @@
 ## 实施范围
 - 只在批准Tripo原包上做拓扑、法线、UV、材质与静态导出整理，不从零写几何拼块生成器，不改变身份/头甲/四足/尾设计，不换源或发起第二次外部生成。
 - 单静态网格、单命名材质Shijiahou_Static3D_Mat、单不透明非发光BaseColor；无骨骼/动作/ShapeKey/底座。
-- 保留+Y向上、+Z正面、单位缩放、根居中、四足Y=0；最高点Y=0.78m、X±0.42m/Z=-0.48..0.58m包络与六向90/150/210/270/330/30。若批准造型无法满足既有包络，先报告冲突，不挤压变形凑通过。
+- 保留+Y向上、+Z正面、source变换应用后单位缩放、根居中、四足Y=0及六向90/150/210/270/330/30。2026-09-27用户明确“调整游戏中模型的scale不就完了吗”：保持批准造型比例，由既有Unity表现入口等比调整显示大小；最高0.78m与X±0.42m/Z=-0.48..0.58m仅作旧参考，不再同时硬锁源资产或据此阻塞清理。禁止非等比压扁造型；实际占地、接地与观感留到游戏中跑测。
 - 固定相机光照输出正/左/右/背与六向十视图，用户本人批准具体候选后才冻结FBX；source与factory-empty回读证明网格顶点坐标和三轴bounds非零、材质/接地/尺度/朝向一致。
 - 初次导出后，同一批准原包内最多两轮已知根因本地修正；每轮记录根因与受影响验证，无自动重试或新增平台交易。
 - 本卡仅交source；双Profile卡在本卡通过后核对v2输入、路径与哈希，承担石甲兽正式Unity导入/材质/Prefab与双映射。
