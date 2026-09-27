@@ -1,0 +1,41 @@
+# 关中 UI 图集与默认头像验收记录
+
+任务：`A-GZ-UI-KIT-ASSET-01`
+
+结论：通过。交付一张青玉五槽 UI 图集和一张由已批准透明男主母版确定性裁切的默认头像；没有接线正式场景、创建资源加载器、烘焙文字或新增图标。
+
+## 输入与范围
+
+- v6 青玉 SVG 输入为 `panel-dark.svg`、`panel-paper.svg`、`button-normal.svg`、`button-hover.svg`、`button-selected.svg`；其准确路径和 SHA-256 见 `assets/source/ui/guanzhong-first-bounty/kit-manifest.json`。
+- 图集仅含 `panel.dark`、`panel.paper`、`button.normal`、`button.hover`、`button.selected` 五个槽；`primary` 复用 selected。没有绛紫校验包、文字、石甲兽／矿料／状态圆点或其他图标。
+- 默认头像只裁切 `assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png`，其冻结 SHA-256 为 `399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948`，批准为 `DEC-20260830-CD8702E62EB4B6` 的 A。
+
+## 产物与哈希
+
+| 产物 | 尺寸／模式 | 字节 | SHA-256 |
+|---|---|---:|---|
+| `assets/source/ui/guanzhong-first-bounty/guanzhong_ui_atlas.png` | 640×128 RGBA | 1724 | `dbbef1d753bc3dd7168f852c392865d812464411d0e8dd944ea337f40e968d7d` |
+| `src/Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png` | 640×128 RGBA | 1724 | `dbbef1d753bc3dd7168f852c392865d812464411d0e8dd944ea337f40e968d7d` |
+| `assets/source/ui/guanzhong-first-bounty/formal_player_default_portrait.png` | 512×512 RGBA | 384209 | `93ab517d071487c7b7dc5fb5733be783cd6714525ce9f2adc8e8c90b440562bf` |
+| `src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png` | 512×512 RGBA | 384209 | `93ab517d071487c7b7dc5fb5733be783cd6714525ce9f2adc8e8c90b440562bf` |
+
+`assets/source/` 为项目既有的 Git 忽略原始素材路径；以上 source 文件已在主工作区同路径落盘并与 Unity 导入物逐字节复核，但不被当作 Git candidate 的集成证据。
+
+## 图集与 Unity importer
+
+- 以 Microsoft Edge `154.0.4258.37` headless 将五张既有 64×64 SVG 按 2 倍确定性栅格化，并拼为 5×1 atlas；没有修改原型 SVG 或将 SVG 改扩展名冒充 PNG。
+- 每槽为 128×128；矩形依次为 `(0,0,128,128)`、`(128,0,128,128)`、`(256,0,128,128)`、`(384,0,128,128)`、`(512,0,128,128)`。
+- Unity `6000.3.18f1` 实际导入 `Guanzhong_UI_Atlas.png` 为 `Sprite/Multiple`，得到 5 个稳定子图名：`Guanzhong_Panel_Dark`、`Guanzhong_Panel_Paper`、`Guanzhong_Button_Normal`、`Guanzhong_Button_Hover`、`Guanzhong_Button_Selected`。每项实读 rect 均为登记值，`Sprite.border=(32,32,32,32)`，pivot 居中；导入器为 sRGB、透明、无 mipmap、Clamp、Bilinear、Uncompressed。
+- 32 是 2 倍源切片边界；v6 网页 `panel=8`、`button=5` 的 displayBorder 没有写入 Unity `Sprite.border`。
+
+## 头像与目视检查
+
+- 裁切矩形为母版像素 `(x=176, y=64, width=512, height=512)`，未缩放、重绘、抠取组件或改变身份。输出 alpha 非透明 bbox 为 `(41,31,468,512)`；透明角及人物边缘已以暖灰底实际查看。
+- Unity `6000.3.18f1` 实际导入头像为 `Sprite/Single`，rect `512×512`、border `(0,0,0,0)`，同为 sRGB、透明、无 mipmap、Clamp、Bilinear、Uncompressed。
+- 实际以 32 像素边界检查图集：`panel.dark` 纵向拉伸至 300×480，`panel.paper` 横向拉伸至 640×300；normal／hover／selected 各横向拉伸至 360×180。四角、边缘与安静中心未失真，三种状态可辨。
+
+## 验证与边界
+
+- PNG 尺寸、RGBA alpha、source/Unity SHA-256、实际 Unity importer、五项子图 rect/border 和头像单 Sprite 已复核。
+- `src/Assets/Art/UI.meta` 与 `src/Assets/Art/UI/Guanzhong.meta` 均已存在，GUID 保持不变；没有修改它们、场景、运行时代码或其它资源卡产物。
+- 模型协作重评：本轮语义、切片和冻结母版均稳定；本机具备 Edge 矢量栅格化、Pillow RGBA 裁切和 Unity importer 实读能力，沿用入口 `gpt-5.6-terra` 单模型，未请求辅助会话。
