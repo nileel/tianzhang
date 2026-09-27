@@ -1,0 +1,61 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "N-FPD-GONGFA-03A",
+  "title": "29部功法三阶段逐ID成长交付",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "verification",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-27：以N-FPD-STAGE-03已验证算法、23部现有筑基行和6部已冻结输入，发布29个ID各三阶段八属性增量；未改数值或模拟器。",
+  "expectedPaths": [
+    "开发管理/任务归档/验证记录/29部功法三阶段逐ID成长交付.txt",
+    "开发管理/任务卡/N-FPD-GONGFA-03A.txt",
+    "开发管理/任务归档/N-FPD-GONGFA-03A.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
+}
+---TASK-BODY---
+# N-FPD-GONGFA-03A · 29部功法三阶段逐ID成长交付
+
+## 来源与当前边界
+
+N-FPD-STAGE-03已归档，但原D-FPD-GONGFA-03仍缺29部完整逐ID三阶段表。原卡没有可继续的活跃返工入口，本卡独立补齐该数值交付。
+
+## 必查范围
+
+- `simulations/BattleSim/GameData.cs::AllocateFoundationBudget/GongFaTables`、`开发管理/任务归档/验证记录/三阶段与筑基入门成长数值验证记录.txt#六部筑基入门预算（供 D-FPD-GONGFA-03 逐 ID 同步）`。
+- `src/Assets/DataConfig/GongFa.csv`29行与对应23份旧筑基原文行。
+
+## 实施范围
+
+以既有23部旧筑基行与6部已验证的入门历史输入发布29部逐ID三阶段表，不重新设计预算或改变运行时。
+
+## 禁止项
+
+不改BattleSim、功法正文、CSV、asset、篇章效果或平衡参数。
+
+## 模型协作
+
+简单机械交付；主模型单独执行。没有独立写入面或新平衡裁决，不调用辅助模型。
+
+## 验证
+
+- 验证记录：`开发管理/任务归档/验证记录/29部功法三阶段逐ID成长交付.txt`。
+- 29个CSV ID各一行，23+6来源不混用；23部旧行与原文逐字段相等，每个属性旧五段总预算与三阶段之和相等，六部与已归档明表逐值相等。相关 BattleSim 输入未变化，不重复完整模拟。
+
+## 完成条件
+
+逐ID三阶段八属性新增量全部落表，顺序、移力边界和D-FPD-GONGFA-03消费指针明确。
+
+## 停止条件
+
+任一旧行与正文或已验证六部输入冲突、预算不守恒或必须重做平衡时停止；不以猜测补值。本卡不负责CSV/asset三阶段schema与导入实现。
