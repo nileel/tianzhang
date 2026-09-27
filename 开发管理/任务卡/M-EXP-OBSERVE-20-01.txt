@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-09-27核对：正式激活后找到19个固定技术域完成任务；本轮13个具备可绑定执行前预检证据，另6个尚未找到同等证据，尚不足20个合格样本，继续blocked。",
+  "stateReason": "2026-09-27补证：正式激活后19个固定技术域完成任务均找到可绑定的执行前schema 2预检证据；截至b48905a687582462ee4e4e8b5652b2e8b74b38f7无新增合格完成任务，距20项仍差1项，继续blocked。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -85,3 +85,20 @@
 - 6项候选尚未找到同等实际预检绑定证据：U-COMBAT-RNG-01、M-HOURLY-PATH-01、M-HOURLY-CHECK-01、D-COMBAT-PARITY-01、M-HANDOFF-CLOSE-AUTH-01、U-GZ-ART-BATTLEFIELD-01。卡头riskPreflight投影或“写前必须运行”的要求不能替代实际执行证据；以后找到原始证据可据实补计，不要求重跑历史任务。
 - 即便上述6项补证成功，当前也只有19项域候选，仍需后续合格完成样本。不得因提醒次数、候选数量或归档总数提前产出continue／stop观察报告。
 - 辅助只读核对请求gpt-5.6-sol/high、任务/root/observe_readiness；工具接受设置，未另取辅助会话模型元数据。主责复核固定纳入规则和当前不足20的结论；本轮没有实施观察报告或扩域。
+
+## 2026-09-27 原始预检补证与剩余缺口
+
+- 以下六项均在原执行会话的 `CommandExecution` 完成事件中找到 `get-experience-risk-preflight.ps1` 返回 `status=ok`、退出码0、同 taskId 和 `taskCardDigest`；表中序号是该 JSONL 会话的 `ordinal`，可在本机 `C:/Users/WINDOWS/.codex/sessions/` 下按日期与文件名复核。六项预检均早于同会话的首项业务写入；任务卡进入 ready 的状态准备不算业务写入。未重跑历史预检。
+
+| taskId | 原始会话（日期目录／文件名简记） | 预检序号 → 首项业务写入序号 | taskCardDigest | 命中／必读字符 | 完成提交 |
+|---|---|---:|---|---|---|
+| U-COMBAT-RNG-01 | `09/05/rollout-2026-09-05T11-29-43-01a06f9d-6db6-7882-8c41-991923fc2157.jsonl` | 111 → 219 | `fd52803fe8c2ad486ef4c7bc54501d94ba1d03133e595d7101480d29f9c87f8d` | 0／0 | `0ea9998640c09903626d7fcf2b30bd964a37aac5` |
+| M-HOURLY-PATH-01 | `09/05/rollout-2026-09-05T11-30-45-01a06f9e-61a5-7282-afc5-81bfc78f358d.jsonl` | 147 → 257 | `0762a7d2f90caa16f4af438cdabccabace74750e8c53ab4c01052e76821bd7eb` | 0／0 | `482b5f5ee2bf25914f164ee1fb91fb51107e14ea` |
+| M-HOURLY-CHECK-01 | `09/05/rollout-2026-09-05T11-30-25-01a06f9e-10cd-75d0-92ca-e8aab38de566.jsonl` | 126 → 173 | `c309e4bf888962f8ad0c6ef9dbb4649c4d457b2539f74831b92c034d10f5216d` | 0／0 | `49543bf8a516f38d4acbd52a0eb3762cb506f18e` |
+| D-COMBAT-PARITY-01 | `09/05/rollout-2026-09-05T11-29-43-01a06f9d-6db6-7882-8c41-991923fc2157.jsonl` | 584 → 850 | `a85e6e89d0bd64fbb563129a0f8a5931a7a2dc2344ff96b0fe3000efd7bcd49d` | 0／0 | `b06580779cfec64fed6fbd44702770a66b1f4698` |
+| M-HANDOFF-CLOSE-AUTH-01 | `09/05/rollout-2026-09-05T11-31-04-01a06f9e-a8a8-7441-b393-cf7e65bcede8.jsonl` | 434 → 516 | `c4109517e5f308eaa1a108af0cc5c0ed9312c81f90e11973903e059245df0b73` | 0／0 | `72e6b1d664b476e42c88e52bd3a0a30b76ea9d1b` |
+| U-GZ-ART-BATTLEFIELD-01 | `09/20/rollout-2026-09-20T02-34-39-01a0baf2-f4d1-7412-a212-859b826633bd.jsonl` | 56 → 125 | `db94adca1c4f7272605af1adaa15bc526ac096b93d03d7bff5c385d5687a3fff` | `EXP-UNITY-001`／316 | `72b7e85f10be56ba6da70153fbfac37f6c6723c1` |
+
+- 六项归档卡均为 `schemaVersion=2` 且预检命中与 `riskPreflight.matched` 一致；五项零命中是真实结果。五项9月5日预检的 `indexDigest` 均为 `d46db414950ffe1f9ab8baa482bf8b8bc872feeed571eed704edf551e02b2769`，U-GZ-ART-BATTLEFIELD-01 为 `4d35e55ef2280ee9ae58b122a4cefcde1f4013186fda2a4497a82ee26e9a102c`。原13项加本轮六项，共19个合格样本。
+- 从原核对锚点 `17006b836df9e2c14090c855c6e9e702e1cda82f` 到当前主线 `b48905a687582462ee4e4e8b5652b2e8b74b38f7`，`开发管理/任务归档/` 无新增完成归档。活动中的 `A-GZ-UI-FONT-ASSET-01` run 为 `attention_required`，不能计为完成。
+- 固定口径仍差1个后续真实合格完成任务。观察报告不启动，六张门禁／扩域后继继续 blocked；现有本卡已足够记录缺口，不新建任务卡，不要求用户人工补造样本。
