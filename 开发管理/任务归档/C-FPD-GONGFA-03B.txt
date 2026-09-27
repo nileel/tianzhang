@@ -1,0 +1,62 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "C-FPD-GONGFA-03B",
+  "title": "九部功法筑基知识与高境篇章映射合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-09-27：九部逐ID首篇、知识与效果境界合同完成；补齐两项旧首篇Language映射，不真自虚法替换占位的两组合法chapter/desc ID和导入字段已冻结。",
+  "expectedPaths": [
+    "开发管理/任务归档/验证记录/九部功法筑基学习与篇章映射合同.txt",
+    "src/Assets/DataConfig/Language.csv",
+    "开发管理/任务卡/C-FPD-GONGFA-03B.txt",
+    "开发管理/任务归档/C-FPD-GONGFA-03B.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
+}
+---TASK-BODY---
+# C-FPD-GONGFA-03B · 九部功法筑基知识与高境篇章映射合同
+
+## 来源与当前边界
+
+消费 C-FPD-LEARN-01 已完成的九部筑基学习起点。该卡已归档且无活跃返工入口，原D-FPD-GONGFA-03缺逐ID首篇落表合同，本卡为最小独立所有者。
+
+## 必查范围
+
+- 九份功法原文的初始境界、首篇表及 `src/Assets/DataConfig/GongFa.csv` 对应九行、`Language.csv` 对应ID。
+- `CultivationContentImporter.cs::ImportGongFa`的篇章解析和`GongFaGrowthData.cs::ChapterBonus/GetCumulativeBonus`完整逻辑单元。
+
+## 实施范围
+
+逐ID区分筑基可得传承/首篇研读线索和首篇效果门槛；给不真自虚法的 `chapter_none` 占位确定两篇ID、描述ID、境界与八个加成字段；补齐两项旧首篇Language映射。
+
+## 禁止项
+
+不改篇章数值、神通、contentScope、学习系统、GongFa.csv或asset。
+
+## 模型协作
+
+有界内容映射：仅一部旧占位需提出具体候选，其余八部直接沿用已存在ID；主模型统一核对并选定，不调用辅助模型，也不把技术字段留空待用户填写。
+
+## 验证
+
+- 合同：`开发管理/任务归档/验证记录/九部功法筑基学习与篇章映射合同.txt`；六个补齐的ID在`src/Assets/DataConfig/Language.csv`。
+- 九份正文与CSV首篇逐项对应；八部原首篇保持高境，六个新增Language映射ID唯一且有值；不真自虚法元婴/化神两篇对应正文，筑基/金丹不会获得其效果。数据链、审核文本和任务投影检查通过。
+
+## 完成条件
+
+九部首篇/知识/效果境界合同完整，D-FPD-GONGFA-03可按确切ID和字段机械同步不真自虚法，不自行发明效果篇。
+
+## 停止条件
+
+若现有字段无法表达原文两篇、需把高境效果降至筑基或改变非境界条件，则停止；功法三阶段成长的asset表达不足归独立所有者，不用篇章字段掩盖。

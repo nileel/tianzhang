@@ -1,0 +1,43 @@
+# 九部功法筑基学习与篇章映射合同
+
+状态：逐 ID 合同已核对（2026-09-27）；供 D-FPD-GONGFA-03 消费。沿用 C-FPD-LEARN-01 已完成的初始境界下调，不调整数值或高境效果。
+
+## 字段边界
+
+- 传承取得／学习：九部功法原文的 `初始境界=筑基` 是唯一现有事实。`GongFa.csv` 没有独立初始学习境界列；`chapters.realm` 和 asset 的 `ChapterBonus.realm` 仅表示该篇效果解锁境界，不能填筑基以冒充学习门槛。筑基可取得传承及首篇文本／研读线索，可修习三阶段成长；取得文本不等于领悟或解锁该篇，不发放其二级属性、道基效果、神通或宗门权限。
+- 下表“首个效果篇”指现有正文的第一篇，不增造筑基效果篇。除不真自虚法的旧占位外，八部 CSV 的首篇 ID、描述 ID 和境界已存在；其中 `chapter_gezhu`／`chapter_tongchen` 原缺 Language 映射，本合同按各住／同尘正文补齐。后续篇章及其境界全部原样保留。非境界前置仍按各原文，包括正一盟威箓血盟条件。
+
+| 功法 ID | 筑基可取得的传承／首篇线索 | 首个效果篇 ID / 描述 ID | 效果最早境界 | CSV/asset 处理 |
+|---|---|---|---|---|
+| `gongfa_nanhuachanyandian` | 南华阐衍典传承与独化篇知识 | `chapter_duhua` / `desc_duhua_zisheng` | 金丹 | 首篇 `realm_jindan` 保留 |
+| `gongfa_taiyishancangjing` | 太易山藏经传承与周易篇知识 | `chapter_zhouyi` / `desc_zhouyi_yishu` | 金丹 | 首篇 `realm_jindan` 保留 |
+| `gongfa_xuanpindaocang` | 玄牝道藏传承与道可道篇知识 | `chapter_daokedao` / `desc_daokedao_dao` | 化神 | 首篇 `realm_huashen` 保留 |
+| `gongfa_kongwuborejing` | 空无般若经传承与空观篇知识 | `chapter_kongguan` / `desc_kongguan_zhaojian` | 金丹 | 首篇 `realm_jindan` 保留 |
+| `gongfa_wanfadulujing` | 万法都箓经传承与都箓篇知识 | `chapter_dulu` / `desc_dulu_wanfa` | 金丹 | 首篇 `realm_jindan` 保留 |
+| `gongfa_zhengyimengweilu` | 正一盟威箓传承与盟威篇知识；血盟条件保留 | `chapter_mengwei` / `desc_mengwei_zhenlu` | 元婴 | 首篇 `realm_yuanying` 保留 |
+| `gongfa_wanwubuqian` | 万物不迁法传承与各住篇知识 | `chapter_gezhu` / `desc_buqian` | 金丹 | 首篇 `realm_jindan` 保留 |
+| `gongfa_buzhenzixu` | 不真自虚法传承与不真篇知识 | `chapter_buzhen` / `desc_buzhen_zixu` | 元婴 | 按下述两篇合同替换旧占位 |
+| `gongfa_hunyuantongchen` | 混元同尘典传承与同尘篇知识 | `chapter_tongchen` / `desc_wanjun_ally` | 金丹 | 首篇 `realm_jindan` 保留 |
+
+## 不真自虚法的唯一替换
+
+现状：正文只有不真（元婴）和中道（化神）两篇；CSV 的 `chapter_none:realm_lianqi:0:0:0:0:0:0:0:0:desc_none` 是占位，且现有 asset `chapters: []`。占位既不是筑基首篇，也不是已接入的高境篇。现选定以下四个尚未占用、符合 `类型_拼音` 规则的 Language ID，并在 `Language.csv` 落实中文映射；不改变 `gongfa_buzhenzixu` ID、GUID 或 `contentScope=reserved`。
+
+| 正文篇 | chapterName ID | realm ID | soulShieldRate | hitRate | blockRate / critRate / critDamage / dodgeRate / magAtkBonus / magDefBonus | specialEffect ID |
+|---|---|---|---:|---:|---|---|
+| 不真 | `chapter_buzhen` | `realm_yuanying` | 3 | 3 | 六项均为 0 | `desc_buzhen_zixu` |
+| 中道 | `chapter_zhongdao` | `realm_huashen` | 3 | 3 | 六项均为 0 | `desc_zhongdao_feiyoufeiwu` |
+
+`GongFa.csv` 的 `chapters` 完整替换值（两篇按境界顺序；不得在前面插入筑基效果行）：
+
+```text
+chapter_buzhen:realm_yuanying:3:3:0:0:0:0:0:0:desc_buzhen_zixu|chapter_zhongdao:realm_huashen:3:3:0:0:0:0:0:0:desc_zhongdao_feiyoufeiwu
+```
+
+导入器 `CultivationContentImporter.ImportGongFa` 按 `chapterName / realm / soulShieldRate / hitRate / blockRate / critRate / critDamage / dodgeRate / magAtkBonus / magDefBonus / specialEffect` 顺序写入两个 `ChapterBonus`；asset 不再为空。`GetCumulativeBonus(筑基/金丹)` 不包含这两篇；元婴仅不真篇魂盾率与命中率各 +3，化神两篇累计各 +6。特殊效果描述保留正文原有 25% 虚化、进化后 40% 虚化／30% 反弹／每战首次必成；此字段只是显示文字，不能据此声称运行时实现该效果。
+
+## 验收边界
+
+- 九个 ID 对应九份原文与 CSV；其初始学习境界均为筑基，首个效果篇的 `realm` 均不低于正文要求。八部既有首篇不更名、不改二级属性数值；`chapter_gezhu`和`chapter_tongchen`有唯一中文值。
+- 不真自虚法四个新 Language ID 全局唯一且有中文值；CSV 旧占位只能整项替换，不能与新两篇并列。仅落表时由 D-FPD-GONGFA-03 更新 CSV 和 asset，维持 `reserved`。
+- 本合同不解决功法成长的三阶段 asset 表达能力；该能力须单独验收，不能用三个同名 `realm_zhuji` 项冒充，因为 `GongFaGrowthData.GetGrowth` 返回首个匹配项。

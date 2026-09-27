@@ -625,3 +625,11 @@ above_max_range,距离过远
 occupied,该格被占据
 distance_budget_exhausted,移动力不足
 spatial_query_not_configured,地形数据未配置
+
+# === 不真自虚法既有高境篇章 ===
+chapter_gezhu,各住篇
+chapter_tongchen,同尘篇
+chapter_buzhen,不真篇
+desc_buzhen_zixu,即万物之自虚：物理与神魂受击分别有25%概率视为0
+chapter_zhongdao,中道篇
+desc_zhongdao_feiyoufeiwu,非有非无：虚化概率累计40%；成功反弹原伤害30%；每战首次虚化必成
