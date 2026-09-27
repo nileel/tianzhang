@@ -4,7 +4,7 @@
 
 ## 当前风险入口
 
-- 2026-09-27：N-FPD-STAGE-03已完成，D-FPD-GONGFA-03不再等待其归档；实际仍缺完整逐ID成长交付及9部新起点首篇落表合同，不真自虚法chapter_none替换ID／字段映射未冻结，按原停止条件保持blocked。
+- 2026-09-27：29部逐ID成长（N-FPD-GONGFA-03A）与9部首篇/知识/效果映射（C-FPD-GONGFA-03B）已交付，不真自虚法替换占位的两篇ID和字段已冻结。D-FPD-GONGFA-03重新判定仍blocked：现有功法成长asset/导入器无筑基三阶段标识，等待U-FPD-GONGFA-GROWTH-01。
 
 - TQ-057 与 TQ-059 已完成并归档；当前 G3 严格检查为功法 29/29、术法 83/83、神通 31/31。
 - 三份历史扫描证据已归档：`开发管理/任务归档/CSV高阶内容定位表.txt`、`开发管理/任务归档/realm_lianshen专项检查.txt`、`开发管理/任务归档/炼虚与高阶内容影响面清单.txt`。它们只提供调查线索，不是当前事实源。
@@ -16,7 +16,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-FPD-GONGFA-03 | P1 | codex | 阻塞 | — | 三阶段功法成长内容与数据同步 | 开发管理/任务卡/D-FPD-GONGFA-03.txt |
+| D-FPD-GONGFA-03 | P1 | codex | 阻塞 | U-FPD-GONGFA-GROWTH-01 | 三阶段功法成长内容与数据同步 | 开发管理/任务卡/D-FPD-GONGFA-03.txt |
 | D-REALM-02 | P2 | Codex | 阻塞（D-REALM-DEC-02～04） | — | 高阶内容最终处理父任务；D-REALM-DEC-01 已选择资料片隔离，其他影响根仍待决定。 | — |
 | D-FPD-MIGRATE-01 | P2 | Codex | 阻塞（D-FPD-MIGRATE-01A～01E） | — | 筑基／紫府内容数据迁移父任务；只负责五个子任务的最终收口。 | — |
 | D-FPD-MIGRATE-01A | P2 | Codex 规划；DeepSeek V4 Pro 0813 执行；Codex 复审 | 阻塞（C-FPD-GONGFA-01） | — | 六批功法 docs／CSV／asset 迁移。 | — |

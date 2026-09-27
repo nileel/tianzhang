@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-FPD-GONGFA-GROWTH-01",
+  "title": "功法筑基三阶段成长字段与导入合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": ["U-FPD-STAGE-03"],
+  "stateReason": "2026-09-27：D-FPD-GONGFA-03需逐阶段asset成长；现有SubGrowthPerRealm只有realm且GetGrowth只取同境界首项。待U-FPD-STAGE-03冻结并完成相同导入器的状态迁移后，独立增加阶段字段和导入映射。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/GongFaGrowthData.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Tests/EditMode/GongFaGrowthDataTests.cs",
+    "src/Assets/Tests/EditMode/GongFaGrowthDataTests.cs.meta",
+    "docs/角色养成/养成事实速查.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-FPD-GONGFA-GROWTH-01.txt",
+    "开发管理/任务归档/U-FPD-GONGFA-GROWTH-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-FPD-GONGFA-GROWTH-01 · 功法筑基三阶段成长字段与导入合同
+
+## 来源与当前边界
+
+`GongFa.csv`现仅每境界一条成长，`CultivationContentImporter.ImportGongFa`把冒号左侧整体译为realm，`GongFaGrowthData.SubGrowthPerRealm`无阶段字段，`GetGrowth(string realm)`返回首个同境界项。因此三条`realm_zhuji`不能表达筑基／开府／圆满；D-FPD-GONGFA-03原停止条件禁止数据卡自行新增字段。
+
+与U-FPD-STAGE-03共享导入器且要沿用其10/20/30阶段编码，故以其完成为真实前置。29部实际值和9部篇章合同已由N-FPD-GONGFA-03A/C-FPD-GONGFA-03B交付。
+
+## 必查范围
+
+- `开发管理/任务归档/验证记录/29部功法三阶段逐ID成长交付.txt#逐 ID 新增量`、`开发管理/任务归档/验证记录/九部功法筑基学习与篇章映射合同.txt#字段边界`、U-FPD-STAGE-03最终归档与阶段编码。
+- `src/Assets/Scripts/Modules/Content/GongFaGrowthData.cs::SubGrowthPerRealm/GetGrowth`、`src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa`完整方法及直接调用、现有相关EditMode入口。
+
+## 实施范围
+
+本卡只使现有功法成长模型和导入器能够无歧义承载三个筑基阶段，并给出可复现的字段测试，不写29行成品数据。
+
+## 具体实现候选
+
+- 最小语法候选：成长键 `realm_zhuji@10`、`realm_zhuji@20`、`realm_zhuji@30` 分别表示筑基、开府、圆满；冒号后九个数值维持现有格式，`realm_zhuji`仍译成“筑基”，`@`后的整数进入新的`foundationStageCode`，不增加Language ID、不把阶段伪装成新境界。
+- 非筑基旧行维持`foundationStageCode=0`；D卡落表之前旧筑基行按0读入，但不得冒充三阶段完整数据。`GetGrowth`须按境界与阶段码精确取值并拒绝重复键；不允许用首项匹配或顺序暗示阶段。实施时先核对U-FPD-STAGE-03最终编码和导入器差异；若不能维持本合同，在业务写入前按停止条件重新判断，不连续叠加补丁。
+
+## 禁止项
+
+- 不修改`GongFa.csv`、29个asset、功法正文、篇章、神通、BattleSim或玩法；不接入完整学习界面。缺少可用Unity验证时不得宣称完成。
+
+## 模型协作
+
+有界导入与模型迁移，主模型负责统一修改和验证；准备ready时依U-FPD-STAGE-03最终差异重估是否需要独立只读辅助，当前blocked不预先派生子智能体。
+
+## 验证
+
+- 测试三代码各读出不同值、导入/asset字段一一对应、重复或非法阶段码拒绝、原非筑基行不变；运行相关Unity EditMode入口和数据链检查。
+- 卡、backlog、队列、riskPreflight、审核文本、pending-whitespace与cached diff检查；输入未变时不重复已通过的同范围BattleSim。
+
+## 完成条件
+
+现有导入器和asset字段能无歧义表达三个筑基阶段；测试证明精确选择，D-FPD-GONGFA-03可只同步内容与数据，不再新增字段。
+
+## 停止条件
+
+U-FPD-STAGE-03最终编码与本候选冲突、代码所有者超出冻结路径、需要改运行时学习机制或无法实际验证时停止，并保留具体证据重新判断原子性。

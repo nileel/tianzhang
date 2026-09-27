@@ -9,8 +9,8 @@
   "domain": "data",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-09-27：N-FPD-STAGE-03已完成且成长数值可机械推导；仍缺本卡要求的29功法完整逐ID三阶段交付及9部新起点的逐ID首篇落表合同。不真自虚法仍为chapter_none/空chapters，缺获批替换ID与字段映射；触发原停止条件，继续blocked。",
+  "blockedBy": ["U-FPD-GONGFA-GROWTH-01"],
+  "stateReason": "2026-09-27：29功法逐ID成长由N-FPD-GONGFA-03A交付，9部首篇/知识/效果合同由C-FPD-GONGFA-03B交付，不真自虚法两篇ID和字段已冻结；现有GongFaGrowthData/导入器无法区分三个筑基阶段，等待U-FPD-GONGFA-GROWTH-01完成，继续blocked。",
   "expectedPaths": [
     "docs/角色养成/功法/兰台书院/太易玄义笺.txt",
     "docs/角色养成/功法/古修/南华大梦书.txt",
@@ -94,7 +94,7 @@
 
 ## 必查范围
 
-- N-FPD-STAGE-03已冻结逐ID结果、29功法完整成长与篇章段、GongFa.csv29行；CultivationContentImporter.cs::ImportGongFa、GongFaGrowthData.cs只读。
+- N-FPD-STAGE-03数值合同、`开发管理/任务归档/验证记录/29部功法三阶段逐ID成长交付.txt`、`开发管理/任务归档/验证记录/九部功法筑基学习与篇章映射合同.txt`、29功法完整成长与篇章段、GongFa.csv29行；CultivationContentImporter.cs::ImportGongFa、GongFaGrowthData.cs只读。
 
 ## 实施范围
 
@@ -125,10 +125,9 @@
 - 前置没有给出可落地逐ID值、需要新增字段或调整章效果/神通时停止；不要越过数值所有者自行补值。
 - 出现新所有者、需要扩展路径或增加新机制时先核对原子性和停止合同，不连续叠加补丁。
 
-## 2026-09-27 已完成前置与实际剩余缺口
+## 2026-09-27 前置验收与重新判定
 
-- N-FPD-STAGE-03 已归档，不再把等待它完成写为 blocker。其验证记录冻结分配函数和六部明表，23部既有筑基行可机械转换；不把缺口表述为需要重新设计数值。
-- 原卡要求的29部完整逐ID三段交付尚未完整发布，现有验证记录明列六部并记录21 Build审计；本轮没有把可计算视为该逐ID交付已验收。
-- 9部下降学习起点只有通用“筑基可取得、高境效果不提前”原则，缺逐ID首篇知识与效果的落表合同。尤其不真自虚法正文为元婴不真／化神中道，GongFa.csv为chapter_none:realm_lianqi且既有asset的chapters为空；没有对应获批chapter／desc ID及导入字段映射。
-- 本卡既要求按已冻结篇章合同处理占位，又禁止新增ID和改章效果；在该缺口明确前不得自行补ID、前移高境效果或伪造数值所有者交付，因此保持blocked。后续先补足有权合同／交付，再按原卡重判ready。
-- 本轮只读核对由主责统一复核；辅助请求gpt-5.6-sol/high、任务/root/growth_readiness，工具接受设置，未另取辅助会话模型元数据。没有运行数值模拟或修改业务输入。
+- N-FPD-STAGE-03已归档；新增N-FPD-GONGFA-03A逐项发布29部三阶段八属性新增量，其中23部保留旧五段总预算、6部与已验证明表逐值相等。不是新平衡设计。
+- C-FPD-GONGFA-03B逐项冻结9部筑基知识与原首篇高境效果边界。不真自虚法旧`chapter_none:realm_lianqi`只作待替换占位；`Language.csv`已有不真/中道的两组合法chapter/desc ID，精确CSV字段及asset映射见该合同。高境效果未提前。
+- 重新检查发现`GongFaGrowthData.SubGrowthPerRealm`只有`realm`，`GetGrowth`返回首个同境界条目；现有导入器也没有阶段字段。直接同步29行不能形成可用三阶段asset，故本卡尚不ready。U-FPD-GONGFA-GROWTH-01独立承接最小字段/导入合同，与U-FPD-STAGE-03共享导入器并以其完成为前置；该卡通过后再按本卡已有路径和停止条件重判ready。
+- 本轮未运行新数值模拟；N-FPD-STAGE-03已通过的BattleSim输入未变化。未修改功法正文、GongFa.csv或asset。
