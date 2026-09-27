@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02",
+  "title": "石甲兽Tripo原包清理与静态资产验收",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01"
+  ],
+  "stateReason": "等待唯一经用户批准的石甲兽Tripo原包；只清理该原包并交付v2静态source，Unity导入仍由双Profile卡负责。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_basecolor.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_manifest.json",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_contact-sheet.png",
+    "开发管理/石甲兽v2静态3D清理QA记录.txt",
+    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+    "开发管理/任务归档/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 · 石甲兽Tripo原包清理与静态资产验收
+
+## 来源与当前边界
+- docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md完整合同、A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01批准原包及四图；唯一结果为经本人视觉批准且技术验证通过的v2静态source/FBX/BaseColor/manifest/十视图。
+- assetId enemy_shijiahou，Profile combat_enemy_shijiahou_v1；旧v1粗模及其manifest只留失败证据，不复用或覆盖。
+## 必查范围
+- 已归档四图/RAW及实际批准回执；tianzhang-blender-pipeline及工具路由；旧合同#二、四、五中保留的身份、坐标与验收；docs/资源管理/美术资源版本管理规范.md。
+## 实施范围
+- 只在批准Tripo原包上做拓扑、法线、UV、材质与静态导出整理，不从零写几何拼块生成器，不改变身份/头甲/四足/尾设计，不换源或发起第二次外部生成。
+- 单静态网格、单命名材质Shijiahou_Static3D_Mat、单不透明非发光BaseColor；无骨骼/动作/ShapeKey/底座。
+- 保留+Y向上、+Z正面、单位缩放、根居中、四足Y=0；最高点Y=0.78m、X±0.42m/Z=-0.48..0.58m包络与六向90/150/210/270/330/30。若批准造型无法满足既有包络，先报告冲突，不挤压变形凑通过。
+- 固定相机光照输出正/左/右/背与六向十视图，用户本人批准具体候选后才冻结FBX；source与factory-empty回读证明网格顶点坐标和三轴bounds非零、材质/接地/尺度/朝向一致。
+- 初次导出后，同一批准原包内最多两轮已知根因本地修正；每轮记录根因与受影响验证，无自动重试或新增平台交易。
+- 本卡仅交source；双Profile卡在本卡通过后核对v2输入、路径与哈希，承担石甲兽正式Unity导入/材质/Prefab与双映射。
+## 模型协作
+- 待临近ready按实际原包与失败证据评估。源清理由同一主责；有独立复杂诊断才按AI协作规则请求只读辅助，不新增责任方。
+## 验证
+- Blender source/factory-empty技术事实与用户十视图批准分开记录；没有本人批准不得完成。
+- manifest绑定批准四图、唯一原包、输出哈希、Blender版本/参数、次数/测量与批准者/时间/回执；check-asset-versioning、task-cards、review-text、whitespace/cached diff通过。
+- 不宣称Unity已接入，不运行无关BattleSim/Unity测试，不关闭未完成的正式接线父项。
+## 完成条件
+- 唯一批准原包的清理结果通过用户十视图批准及导出回读验证，source已在主工作区按哈希交付。
+## 禁止项
+- 不换造型、不从零拼几何体替代批准原包，不自行平台重试，不写Unity，不由AI代签批准。
+## 停止条件
+- 输入变化、需要改设计/换原包/新费用、用户拒绝、技术门失败且无法在本清理范围修复、超过两轮或根因不明停止；不以块体替代，不由AI代签批准。

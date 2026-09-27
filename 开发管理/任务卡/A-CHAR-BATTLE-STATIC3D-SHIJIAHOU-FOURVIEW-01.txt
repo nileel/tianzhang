@@ -1,0 +1,63 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01",
+  "title": "石甲兽批准原画的严格建模四视图",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-27用户要求按四视图→Tripo标准路线重制；已有9月20日通过的概念原画，本卡只生成同一造型四视图并取得用户本人批准。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_right.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_back.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/source_reference.png",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/manifest.json",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/prompts.md",
+    "开发管理/石甲兽v2四视图与Tripo生产记录.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01 · 石甲兽批准原画的严格建模四视图
+
+## 来源与当前边界
+- 用户2026-09-27明确重制石甲兽并指定四视图→Tripo流程；唯一结果为同一批准造型的正、左、右、背四张独立PNG、输入manifest及本人视觉批准。
+- 唯一造型来源为已于9月20日获用户通过的 assets/generated-character-art/no-title/shijiahou_concept_v1.png，其说明与批准线索见同名prompt.md。图像SHA-256为2f8d193f5303162ad4cef54f6ba9b4eab2944e148c77322040c083eab62ac095。原文件保留，复制原始字节到input/source_reference.png。
+- 身份enemy_shijiahou、Profile combat_enemy_shijiahou_v1保持；旧v1积木式粗模不得作为生成参考。
+## 必查范围
+- docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md完整合同；docs/怪物/关陇玄域/石甲兽.txt完整身份/识别；assets/generated-character-art/README.md#生成流程；原画及prompt.md。
+- docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md#二、四、五保留的身份/坐标/人工验收边界。
+## 实施范围
+- 使用内置image_gen，以批准原画作身份参考，生成四张单视角、等比例、同一站姿、同一头/背甲/足/尾结构的正交建模图。左/右是角色自身侧别；保持四足接地、宽楔头、层叠板岩甲与有机皮肤关节，禁止漂石、发光裂缝、底座和几何块替代。
+- 纯净浅底、完整收纳主体，不含文字、标尺、UI、背景景观、地面道具；四视图固定中性站姿，体量、甲片和尾部连续对应。每张由一次内置调用生成；本轮先交一组四张候选，存在具体错误就保留证据并定向处理，不自行扩成多轮探索。
+- 记录生成提示、输入/输出真实路径、尺寸、字节、SHA-256、视角和工具次数；后出的视图引用已生成视图保持连续性。
+- 展示实际四图给用户本人；明确回执前不得称为已批准或触发Tripo。只把候选状态与缺陷记入既有生产记录；批准后才归档并解除RAW本项前置。
+## 模型协作
+- 沿用入口主模型与内置image_gen。造型/视图一致性由同一主责逐图复核，工作面耦合，无需辅助；模型审图不代替用户批准。
+## 验证
+- 逐图实际查看并对照原画及其余视图；四张文件可读取、尺寸/哈希可重算、准确视角无缺肢裁切、同一造型/站姿。
+- 用户本人批准绑定这组四图哈希，输入manifest与记录一致后完成；待回复时退出ready队列，后继保持blocked。批准后RAW的automationInputs必须由这四PNG与manifest实算生成。
+- check-task-cards、check-review-text、check-asset-versioning、预期现存文本whitespace和cached diff；不运行Blender、Unity、BattleSim。
+## 完成条件
+- 本人批准实际四图，manifest、哈希和批准回执一致；未批准不得完成或解除后继依赖。
+## 禁止项
+- 不修改原画、旧v1模型或Unity资产；不由AI代签批准，不调用Tripo。
+## 停止条件
+- 原画哈希不符、必须更改既定造型、四视图不一致、用户拒绝或未回复；不上传平台、不消费credits、不修旧v1、不使用代码生成网格代替四视图。

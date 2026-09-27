@@ -1,0 +1,60 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01",
+  "title": "石甲兽一次Tripo四视图静态3D原包",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01"
+  ],
+  "stateReason": "等待石甲兽四视图本人批准及本资产独立的Tripo服务/报价/最大credits授权；男主45 credits批准不适用于石甲兽。",
+  "expectedPaths": [
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_raw.zip",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_manifest.json",
+    "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_contact_sheet.png",
+    "开发管理/石甲兽v2四视图与Tripo生产记录.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt",
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 · 石甲兽一次Tripo四视图静态3D原包
+
+## 来源与当前边界
+- docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md完整合同；只消费A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01的四图与manifest，资产enemy_shijiahou。结果是一项Tripo任务的原始ZIP、manifest、平台联系表和用户批准。
+## 必查范围
+- 重制合同完整交易与批准段；四图任务的批准回执和input/manifest.json；实际Tripo四图入口、服务、报价和余额。
+## ready前准备
+- 现场核验Tripo Studio登录、当前服务与真实四图入口、报价/余额。用户虽已指定Tripo路线，尚未提供该石甲兽交易的最大credits；先形成具体交易提案，不能借用男主45 credits。
+- 用户批准须绑定资产、平台/服务、最多一次、最大credits和四图哈希。转ready时实算四图及manifest的schema5 automationInputs和schema2 riskPreflight；来源仅assets/source/。
+## 实施范围
+- 查询是否已发起同一交易，防止重复；批准范围内上传这组四图并发起一次静态3D生成，无绑定/动画/附加服务。
+- 记录平台taskId、实际服务/设置/费用、输入哈希、时间、余额、全部下载文件和哈希；原包不重写、不换名散装，不启动Blender。
+- 从实际平台预览/原包形成可查看的多角度证据，核对有机四足、脸/甲片/尾、无缺肢及空网格，再展示给用户本人。批准原包后才冻结输入供清理卡。
+## 模型协作
+- 待临近ready核对平台能力；冻结输入的一次交易沿用入口单模型，无独立辅助工作面。不得把自然语言承诺当交易证据。
+## 验证
+- 一项任务、一次消耗且不超该资产预算；ZIP可读，manifest枚举完整，平台taskId与输入哈希、原包哈希一致，用户本人接受具体原包。
+- check-task-cards、review-text、asset-versioning、whitespace/cached diff；不运行Blender/Unity/BattleSim。
+## 完成条件
+- 唯一Tripo原包完整落盘且用户本人接受，交易记录、输入输出哈希可核对，清理任务输入已冻结。
+## 禁止项
+- 不消费男主额度，不用单图或拼图冒充四图输入，不写Blender或Unity，不自行重试第二次交易。
+## 停止条件
+- 未批准四图或额度、入口不是实际多视图、需换服务/输入/平台、超预算、生成失败、下载损坏、身份错误、缺肢或用户拒绝即停止；无第二次生成或免费重试。
+- 本任务不以单图/四图拼图上传替代平台真实四图输入，不把历史旧动画项目当当前资产。

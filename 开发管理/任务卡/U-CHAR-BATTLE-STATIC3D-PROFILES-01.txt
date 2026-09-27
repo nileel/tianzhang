@@ -11,9 +11,9 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
-    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01"
+    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02"
   ],
-  "stateReason": "2026-09-27：除等待默认男主ASSET-04外，用户已否定石甲兽v1成品品质，其原资产卡撤销完成并转blocked。现有石甲兽不得正式导入；必须先取得获用户认可且技术通过的替代资产合同和交付，不能仅因男主完成就ready。",
+  "stateReason": "2026-09-27：等待男主ASSET-04及新石甲兽ASSET-02。石甲兽须按批准原画四视图→Tripo→清理的v2链取得用户本人批准和技术交付；v1粗模与AI自签approved不得放行。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
@@ -58,7 +58,7 @@
 
 ## 来源与当前边界
 
-- 本卡依赖 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04` 已通过当前 Unity importer 的默认男主 v2 FBX/BaseColor，以及经用户视觉批准的石甲兽source/FBX；缺少任一方不得开始或部分提交。2026-09-27石甲兽v1被用户否定，当前没有合法石甲兽输入；后续重制资产获批后须先更新本卡来源、输入及路径合同，不得沿用旧manifest中Codex自签approved放行。
+- 本卡依赖 `A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04` 已通过当前Unity importer的默认男主v2 FBX/BaseColor，以及 `A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02` 经用户本人批准的石甲兽v2 source/FBX；缺少任一方不得开始或部分提交。石甲兽输入按 `docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md`，仅从assets/source/characters/combat-pieces/shijiahou-static-3d-v2/读取，沿用本卡既有稳定Unity目标。v1粗模及其Codex自签approved不得放行。
 - 载体中立内容映射固定为 `player -> combat_player_default_v1`、`enemy_shijiahou -> combat_enemy_shijiahou_v1`。
 - 静态 3D provider 映射只引用两项正式 Prefab；`FuYuan_StaticChess` 不得出现在内容目录、profile set 或正式 Prefab 依赖中。
 - 正式玩家视觉与 source 事实改读 `docs/superpowers/specs/2026-08-29-formal-player-default-male-v2-production-chain.md` 和 v2 manifest；2026-08-27 合同继续约束稳定 ID、石甲兽及本规格保留的共同坐标/材质边界。
@@ -66,7 +66,7 @@
 ## 必查范围
 
 - 默认男主 v2 资产卡归档、manifest、Unity importer 数值、负责人十视图批准和完整 QA 记录。
-- 石甲兽资产卡归档、manifest、哈希、负责人批准和完整 QA 记录。
+- 石甲兽新四视图/Tripo原包/ASSET-02各卡归档、v2 manifest/哈希、用户本人批准、开发管理/石甲兽v2静态3D清理QA记录.txt，以及新重制合同；旧ASSET-01只读为失败警示，不作批准证据。
 - `TianZhang.Content` 当前 ScriptableObject 数据模式、CombatPresentation 模块边界、Editor Builder 持久化模式和直接测试。
 - 已进入稳定 Unity 路径的玩家 FBX/BaseColor，以及石甲兽 source FBX/BaseColor 的精确绝对路径、导出轴、单位缩放、接地与 Unity importer 回读。
 

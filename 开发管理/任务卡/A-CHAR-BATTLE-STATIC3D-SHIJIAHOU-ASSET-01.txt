@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-09-27：用户查看十视图后否定当前石甲兽的成品品质。原approved由Codex task owner自签，不构成用户视觉批准；撤销完成归档与正式资产资格，保留技术粗模和失败证据。本卡不重试生产，等待独立重制范围明确。",
+  "stateReason": "2026-09-27：用户否定v1成品品质，原AI自签批准与完成结论撤销。本卡保留失败现场且不重试；用户已指定按四视图→Tripo重制，后续由SHIJIAHOU-FOURVIEW-01、AI-RAW-01、ASSET-02三张独立卡承担。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v1/shijiahou_static3d_v1.fbx",
@@ -34,6 +34,21 @@
 - 原QA与manifest的approver为Codex task owner；这是AI自行签署，不能替代用户批准。文件齐全、哈希和回读通过只保留为技术事实，不构成美术成品验收。
 - 卡片移回活跃blocked状态，不进入ready队列；不在本卡重试建模、导出、覆盖原文件或消费额度。独立重制须先明确输入、品质标准、生产路线与允许范围，当前没有可交付正式接入的石甲兽资产。
 - 下列2026-08-28执行收口仅保留历史记录，其“负责人视觉批准”“完成”及解除blocker表述已由本节撤销。
+- 同日用户进一步明确四视图→Tripo重制；完整新链见 `docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md`。本卡只保留失败证据，不承载新生产，Profile前置已改为新ASSET-02。
+
+## 经验候选
+
+### CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：management
+- 现象：现有石甲兽几何粗模只有文件/哈希/FBX回读等技术证据，却被标为正式成品完成；用户看到实际十视图后否定品质。
+- 已证实根因：QA与manifest的批准者是Codex task owner，未绑定用户本人针对候选的接受回执；技术通过被混作视觉验收。9月20日已有更完整的获批概念原画，9月27日状态说明仍沿用旧粗模的自签批准。
+- 可能复用范围：正式角色、怪物、UI与场景资源交付中，生产路线、当前视觉基准、技术QA、用户批准和完成归档之间的区分。
+- 证据：石甲兽静态3D战斗棋子资产QA记录及v1 manifest的ownerVisualApproval.approver=Codex task owner；原画prompt.md的9月20日通过记录；用户本对话否定十视图并要求四视图→Tripo重制；撤销完成提交25109319。
+- 门禁可能：yes
 
 ## 来源与当前边界
 

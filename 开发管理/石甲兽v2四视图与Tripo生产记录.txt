@@ -1,0 +1,8 @@
+# 石甲兽v2四视图与Tripo生产记录
+
+## 2026-09-27 授权与输入
+
+- 用户要求重做石甲兽，明确四视图→Tripo标准路线，并要求记录不再用技术粗模冒充成品的经验。
+- 已批准原画为9月20日概念稿，SHA-256 2f8d193f5303162ad4cef54f6ba9b4eab2944e148c77322040c083eab62ac095；原文件及prompt说明保留。
+- 重制合同：docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md；三张生产卡分别四视图、Tripo原包、Blender清理。当前仅四视图准备；没有Tripo调用、费用或原包。
+- 视觉批准必须由用户本人针对实际候选给出；本记录不代签批准。

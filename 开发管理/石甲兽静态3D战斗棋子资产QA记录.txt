@@ -52,3 +52,4 @@ manifest 同时登记冻结输入和非自身输出 SHA-256、工具版本、来
 
 - `U-CHAR-BATTLE-STATIC3D-PROFILES-01` 同时等待默认男主`A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04`和获用户认可的正式石甲兽；男主完成也不能自动解除当前石甲兽品质阻塞。
 - 当前v1文件不得导入正式Unity或建立Profile。旧文件、manifest与哈希保留；重制须先明确独立任务范围，本次没有授权新平台交易、追加费用或恢复旧动画路线。
+- 同日用户随后已明确新路线为四视图→Tripo；新三卡和来源边界见docs/superpowers/specs/2026-09-27-shijiahou-fourview-tripo-reproduction.md。v1仍保留失败状态；本记录不是新原包或费用批准。
