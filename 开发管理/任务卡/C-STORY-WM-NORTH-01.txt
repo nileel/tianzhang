@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "design",
   "dispatchState": "frozen",
-  "blockedBy": ["C-STORY-WM-05B"],
-  "stateReason": "2026-08-19 用户指示建立任务卡（剧情再推导结论：北地诸雄倒计时与章节时间表未对接）。内容冻结（薄内容切片外）；C-STORY-WM-05B 完成后由用户解除冻结再排期。⚠️ 已修改/未审核",
+  "blockedBy": [],
+  "stateReason": "2026-09-27核对：C-STORY-WM-05B已完成，人物志前置解除；本卡仍属薄内容切片外的冻结设计，须负责人另行解除内容冻结后再排期。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-19-ch04-northern-line-resolution-input.md",
     "开发管理/任务卡/C-STORY-WM-NORTH-01.txt",
@@ -28,7 +28,7 @@
 - 来源：2026-08-19 剧情设定再推导结论——拓跋烈三十次苍狼真形侵蚀、慕容朔妖化边界、祝融烈 8–12 年寿元倒计时均未与第四章章节表对接；谢观微 ch1"龙脊余震是否会再次被人为牵动"预警未回收。
 - 第四章 L1 骨架（C-STORY-WM-L1C）仍冻结；本卡只产出其生产所需的设计输入，不直接生产 L1。
 - 输出文件：`docs/superpowers/specs/2026-08-19-ch04-northern-line-resolution-input.md`，标注「⚠️ 已修改/未审核」。
-- 前置：读取 C-STORY-WM-05B 完成后的人物志（blockedBy）。
+- 人物志前置 C-STORY-WM-05B 已完成；实施时读取完成后的现行人物志。当前唯一调度限制仍是本卡未获内容解冻。
 
 ## 必查范围
 

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-GZ-ART-LOOKDEV-01"
-  ],
-  "stateReason": "2026-09-23：制作与导入边界已冻结，等待新版城镇视觉方向的明确接受。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-27：DEC-20260923-GZLOOKDEVV2 已核验为 A，新版城镇方向已接受；制作、次数、路径与独立 importer 边界已冻结，可按原卡生产。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
     "assets/source/ui/guanzhong-first-bounty/city-manifest.json",
@@ -40,7 +38,7 @@
 ## 来源与当前边界
 
 - 2026-09-23 用户要求把 UI 独立资源缺口建卡；唯一结果是供现有 Settlement 背景表面消费的一张正式纯场景背景及导入证据。
-- 新图 assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png 目前仅为候选；等待 A-GZ-ART-LOOKDEV-01 对应 DEC-20260923-GZLOOKDEVV2 的城镇方向接受。该决定不涉及角色费用。
+- 新图 assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png 已由 DEC-20260923-GZLOOKDEVV2 的 A 回复接受城镇方向（2026-09-23 10:29，2026-09-27核验并应用）。该决定不涉及角色费用。
 - 不把整屏截图直接当最终背景；不得带人物信息、功能标签、悬赏文字、按钮或悬浮 UI。
 
 ## 必查范围
@@ -81,3 +79,8 @@
 ## 停止条件
 
 - 缺城镇方向接受、需要更改构图方向／新增内容、超过一次初稿加一次有依据修订、需要费用、修改其他资源或正式场景时停止。
+
+## 2026-09-27 解除方向前置
+
+- 新版方向有效 A 回执及哈希见 开发管理/关中UI与角色链卡点处理记录.txt；按原冻结合同，仅移除城市方向门，不把整屏图当作已完成纯背景。
+- 任务仍为同一张纯背景加 importer 的单一交付；本轮只准备 ready 卡，未生成、导入或宣称资源验收通过。

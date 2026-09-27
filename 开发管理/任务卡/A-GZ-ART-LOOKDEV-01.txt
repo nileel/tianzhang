@@ -8,115 +8,24 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-09-23：用户重新授权生成两张基于当前 UI/地块的 v2 示意图，已生成并邮件交付；等待 DEC-20260923-GZLOOKDEVV2 接受新版方向。旧 DEC-20260912-CD1A9E90A58405 的 C 仅保留为旧稿拒绝证据；不再阻塞独立图集、字体或男主原包路线。",
+  "stateReason": "2026-09-27：已消费 DEC-20260923-GZLOOKDEVV2 的 A 回执（9月23日10:29收到），新版两图方向获批准。剩余工作仅为现行 v6／地块下首包合同和批准记录的同范围收口；无需重生成或再次等待用户。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/battle-and-hud-v1.png",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/prompts.md",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev/manifest.json",
     "开发管理/关中整屏美术基准与生产批准记录.txt",
-    "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
-    "开发管理/任务卡/U-GZ-ART-UI-01.txt",
-    "开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt",
-    "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
-    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
-    "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
-    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
-    "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
+    "开发管理/关中UI与角色链卡点处理记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-GZ-ART-LOOKDEV-01.txt",
-    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt",
-    "开发管理/关中UI与角色链卡点处理记录.txt",
-    "开发管理/任务卡/A-GZ-UI-CITY-ASSET-01.txt",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/battle-and-hud-v2.png",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/README.md",
-    "assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/prompts.md"
+    "开发管理/任务归档/A-GZ-ART-LOOKDEV-01.txt"
   ],
   "riskPreflight": {
     "explicitRefs": [],
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "A-GZ-ART-LOOKDEV-01",
-    "sourceRunId": "7b1c5500-a738-4d8f-9a00-cccc7d09a5bb",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260912-CD1A9E90A58405",
-    "question": "是否接受两张关中整屏样板作为首包视觉方向？",
-    "options": [
-      {
-        "key": "A",
-        "label": "接受两张样板方向；继续按冻结合同完成 LOOKDEV，环境/UI 仅按既有前置重新评估，男主交易门仍阻塞。"
-      },
-      {
-        "key": "B",
-        "label": "保留城镇/悬赏方向，并针对野外战斗/HUD 提出一项具体修订；只使用一张剩余内置生成次数。"
-      },
-      {
-        "key": "C",
-        "label": "拒绝本轮方向并保持本卡阻塞；不解锁下游、不追加生成或付费。"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A 仅确认无费用的整屏方向并保留 RAW 的平台/额度门；B 消耗一张定点修订额度；C 保持当前阻塞。",
-    "plainSummary": {
-      "situation": "是否接受两张关中整屏样板作为首包视觉方向？",
-      "impact": "A 仅确认无费用的整屏方向并保留 RAW 的平台/额度门；B 消耗一张定点修订额度；C 保持当前阻塞。",
-      "action": "建议选择 A：接受两张样板方向；继续按冻结合同完成 LOOKDEV，环境/UI 仅按既有前置重新评估，男主交易门仍阻塞。"
-    },
-    "checkpointCommit": "2ad474ebf28d89cdd80e7e01b8f7e2826e5a7c3c",
-    "baseCommit": "43cae89469aebc5c41e0ee455f7e72c8a963432a",
-    "branch": "codex/automation/codex/7b1c5500-a738-4d8f-9a00-cccc7d09a5bb/candidate",
-    "changedPaths": [
-      "开发管理/关中整屏美术基准与生产批准记录.txt",
-      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt",
-      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04.txt",
-      "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
-      "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
-      "开发管理/任务卡/U-GZ-ART-BATTLEFIELD-01.txt",
-      "开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt",
-      "开发管理/任务卡/U-GZ-ART-UI-01.txt",
-      "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
-      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/battle-and-hud-v1.png",
-      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/city-and-bounty-v1.png",
-      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/manifest.json",
-      "assets/generated-scene-art/guanzhong-first-bounty/lookdev/prompts.md",
-      "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md"
-    ],
-    "verified": [
-      "两张样板已实际查看，均为 RGB 1920×1080，SHA-256 与 manifest 一致。",
-      "内置 ImageGen 已使用 2/4 次；未调用外部 3D 平台、未上传、购买或消耗 credits，未运行 Blender 或修改 Unity。",
-      "合同、批准记录及八张直接下游卡仅补充参数；任务卡 metadata、blockedBy 与 dispatchState 未变。",
-      "check-task-cards、check-review-text、check-data-chain、check-asset-versioning、check-pending-whitespace 与 git diff --cached --check 均通过。",
-      "八张下游卡风险预检已重算且无门禁；涉及 Unity 场景的卡已读取 EXP-UNITY-001 builder 约束。",
-      "候选提交是基线之上的唯一直接后继，工作树干净。"
-    ],
-    "unverified": [
-      "负责人尚未接受或拒绝视觉方向。",
-      "未运行 Unity 实机、真实 HUD 交互或正式资源导入验证；两图不是运行截图。",
-      "Tripo 的登录会话、当日 credits、实际价格及具体模型设置仍未核验，且未发生外部交易。"
-    ],
-    "residualRisk": "未获得负责人视觉接受；两张样板不是 Unity 实机证据，Tripo 当日额度和价格仍未知。",
-    "taskContextDigest": "fe5a21b98850c29e9ca9ad5e551141ed3de67e1d650e605f802bbdfcc217a050",
-    "createdAt": "2026-09-12T19:48:30.7489107+08:00",
-    "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260912-CD1A9E90A58405",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "C",
-    "source": "feishu_card",
-    "evidenceHash": "6aa1f2bee1e31e15b9589443bf867302a338e6a852e43aa638178f734bf03f11"
-  }
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
 # A-GZ-ART-LOOKDEV-01 · 关中整屏美术样板与首包生产合同
@@ -125,8 +34,8 @@
 
 - 用户明确要求按当前 UI 与地块重新生成两张示意图，v2 已在提交 b290cae0000c4bea839b58158ddad9a3f0978821 交付；完整路径、哈希和邮件证据见 开发管理/关中UI与角色链卡点处理记录.txt。
 - 新版采用已接受 v6 UI／v4 城镇布局和已交付青绿草面、青蓝岩壁；旧稿的两侧宽 HUD、黄土底面与旧安全区只保留历史，不能覆盖新的 UI 接入合同或实际地面。
-- 本卡目前只等待 DEC-20260923-GZLOOKDEVV2 的新版接受，并据回执完成同范围首包合同／批准记录收口；不再生成图片，不重新请求已批准的 v6 功能布局／角色四视图。
-- 旧 automationCheckpoint/automationReply 仅标识已处理的 9 月 12 日 C，不能用于新版恢复。本次为用户直接要求的手动飞书决定，无新的自动 owner run，不伪造 automationCheckpoint 或 maintenance 投影；任务保持 blocked 并在正文跟踪回执。
+- 本卡已取得 DEC-20260923-GZLOOKDEVV2 的新版接受，当前 ready，仅完成同范围首包合同／批准记录收口；不再生成图片，不重新请求已批准的 v6 功能布局／角色四视图。
+- 旧 9 月 12 日 C 的 checkpoint/reply 已从活跃卡头移除，历史拒绝及原提交保留在本卡历史正文、批准记录和 Git；不得向新执行注入旧样板。此次仅应用手动飞书 A 回执，不创建自动 checkpoint 或 maintenance 投影。
 - 新版接受仅能解除城市背景方向门；独立 UI 图集、字体任务无需等待本卡，男主原包已移除本卡前置并独立等具体费用决定。不会把示意图里的山峰、额外功能标签、动作、数值、奖励或石甲兽造型推导成正式资产／玩法批准。
 - 新旧规格冲突按本节、当前 UI 接入合同及批准地块事实处理；以下 9 月 12 日实施与拒绝内容为历史约束记录，不再次执行旧生产。
 
@@ -185,3 +94,9 @@
 - 已绑定 DEC-20260912-CD1A9E90A58405 的有效 option C 回复；回复来源为 feishu_card，证据哈希为 6aa1f2bee1e31e15b9589443bf867302a338e6a852e43aa638178f734bf03f11。
 - C 拒绝本轮整屏方向而非视觉批准；本卡转为 blocked，样板、提示词、manifest 与合同只保留为拒绝记录。
 - 不移除任一下游对本卡的具名前置，不改变下游状态或队列投影，不追加内置生成、外部交易、Blender、Unity 或正式资产导入。
+
+## 2026-09-27 回执应用与 ready 边界
+
+- 通过现有 consume-reply 入口取得 OPTION_ACCEPTED／A；回复时间 2026-09-23T02:29:37.512Z，来源 feishu_card，evidenceHash=95f369820a032c12da76c54702249f1dea0a6b259f2b19c35c82c92ccc537fc9；操作者、消息绑定与签名已核验。
+- 本轮没有把方向批准写成整卡完成：当前首包合同仍有旧样板内容，须按已批准 v6、地块及三张独立资源卡完成文字收口。expectedPaths 收窄到这一既有结果，以下历史图像生成／旧下游写入范围不再执行。
+- 城市背景已凭本次直接城镇接受解除方向门；其独立生产参数由 A-GZ-UI-CITY-ASSET-01 冻结，不必等待本卡文字收口。男主费用以独立 DEC-20260923-PLAYERRAW45 为准。

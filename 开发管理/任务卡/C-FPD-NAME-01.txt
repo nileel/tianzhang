@@ -10,12 +10,10 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "N-FPD-STAGE-03",
-    "D-FPD-SPELL-LEARN-01",
     "D-FPD-GONGFA-03",
     "U-FPD-STAGE-03"
   ],
-  "stateReason": "2026-09-22 用户已取代四阶段命名并确认三阶段及筑基学习规则；一次性建立六张全部已知迁移叶子，父项只等待结果并收口，不再向用户发起旧名称决策。",
+  "stateReason": "2026-09-27：阶段规则、学习门槛、数值合同和术法数据同步已完成；只等待D-FPD-GONGFA-03功法数据同步与U-FPD-STAGE-03状态/存档迁移的真实结果，再统一收口。",
   "expectedPaths": [
     "开发管理/筑基三阶段与学习门槛迁移计划.txt",
     "开发管理/任务列表/内容设计任务.txt",

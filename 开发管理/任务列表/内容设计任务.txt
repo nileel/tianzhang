@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-09-27状态核对：筑基迁移父项只剩功法数据同步与Unity状态／存档两叶子，已移除完成的数值及术法数据前置；北地收束设计的人物志前置已完成，但原内容冻结仍需单独解除。三批术法沿用当日已入队的DeepSeek返工责任及未通过清单，不把重新排队当成已审核完成。
+
 - 2026-09-22 用户明确授权筑基／开府／圆满三阶段、保留灵根上限且满自身上限圆满（0容量先扩府、圆满后扩府不降阶段），天然额度从筑基起开放，道基承载另需培养；并把全部功法/术法的高境学习门槛降至筑基。原名称父项转迁移收口，六个叶子与直接依赖一次性冻结，见 开发管理/筑基三阶段与学习门槛迁移计划.txt。本授权不自动提前全部神通或解冻其他内容机制。
 
 - 2026-09-20 用户明确解冻本轮列出的 C-FPD-NAME-01（新增候选叶子01A）、C-FPD-SPELL-01及01A～01D、C-FPD-SHENTONG-01、C-JD-COMBO-01（新增范围合同前置D-JD-COMBO-SCOPE-01）、C-JD-LORE-MIGRATE-01及01A～01C。可原子执行的叶子已建立 schema 2 卡并入队；名称最终确认、组合范围确认和守真升格结果等真实前置继续保留。其他内容冻结不变；下方早期日期的授权边界是历史事实，当前以本条和活跃卡为准。
@@ -33,7 +35,7 @@
 |----|--------|------|----------|--------|------|--------|
 | D-JD-COMBO-SCOPE-01 | P2 | codex | 待决定 | — | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | V-GZ-ART-SLICE-01 | 关中首个可展示流程美术父项 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
-| C-FPD-NAME-01 | P2 | codex | 阻塞 | N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01、D-FPD-GONGFA-03、U-FPD-STAGE-03 | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
+| C-FPD-NAME-01 | P2 | codex | 阻塞 | D-FPD-GONGFA-03、U-FPD-STAGE-03 | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
 | C-FPD-GONGFA-01A | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 古修 5 部功法迁移。 | — |
@@ -84,7 +86,7 @@
 | C-DIALOGUE-01 | P3 | DeepSeek 执行；Codex 复审 | 冻结（薄内容切片外） | — | 据点通用称谓、寒暄和任务入口文案表。 | — |
 | C-ECON-01 | P3 | Codex 规划 | 冻结（薄内容切片外） | — | 灵石、丹药、天材地宝、掉落表经济基线。 | — |
 | C-HIGH-01 | P3 | Codex | 冻结（薄内容切片外） | — | 高阶内容按 NPC/资料片/历史说明分类收口。 | — |
-| C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | C-STORY-WM-05B | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
+| C-STORY-WM-NORTH-01 | P2 | codex | 冻结 | — | 第四章北地线收束节拍设计输入 | 开发管理/任务卡/C-STORY-WM-NORTH-01.txt |
 
 ## 世界主线拆分
 

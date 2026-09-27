@@ -10,7 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "强制激活已完成；等待激活提交后按固定纳入规则收集前 20 个相关完成任务及其 schema 2 预检证据，未满 20 个不得提前门禁或扩域。",
+  "stateReason": "2026-09-27核对：正式激活后找到19个固定技术域完成任务；本轮13个具备可绑定执行前预检证据，另6个尚未找到同等证据，尚不足20个合格样本，继续blocked。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -77,3 +77,11 @@
 ## 停止条件
 
 - 样本不足 20、证据无法绑定、误报／成本达到原停止阈值、持续 matcher 问题、无可观察预防价值、collector 持续重复制卡／失败、整理维护成本高于避免的返工，或需要关键词权重、兼容分支、模型重判原任务、第二索引／runtime／重试层维持命中或收集；这些情况不得返回 continue。
+
+## 2026-09-27 开工样本核对
+
+- 激活完成锚点为b86e05310a07c753dda5299bc17f20e4eca7e905（2026-09-01 19:34:17）。截至17006b836df9e2c14090c855c6e9e702e1cda82f的完成归档，28项中19项属于固定五个技术域；另外9项content卡没有明确技术工作流标识，不推断纳入。
+- 本轮在既有私有preflight-results中找到13项可回指执行前Git卡片taskCardDigest的证据：A-CHAR-PORTRAIT-INTERFACE-01A、M-HANDOFF-ARCHIVE-01、M-EXP-PROMOTE-A242521B1028、U-COMBAT-PROJECTION-01、U-COMBAT-LOADOUT-01、M-CURRENT-FACTS-01、N-COMBAT-PARITY-01、U-GZ-BATTLEFIELD-BASELINE-01、D-GZ-UI-V6-CONTRACT-01、TQ-074、M-EXP-PROMOTE-EB7E3647997B、N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01。
+- 6项候选尚未找到同等实际预检绑定证据：U-COMBAT-RNG-01、M-HOURLY-PATH-01、M-HOURLY-CHECK-01、D-COMBAT-PARITY-01、M-HANDOFF-CLOSE-AUTH-01、U-GZ-ART-BATTLEFIELD-01。卡头riskPreflight投影或“写前必须运行”的要求不能替代实际执行证据；以后找到原始证据可据实补计，不要求重跑历史任务。
+- 即便上述6项补证成功，当前也只有19项域候选，仍需后续合格完成样本。不得因提醒次数、候选数量或归档总数提前产出continue／stop观察报告。
+- 辅助只读核对请求gpt-5.6-sol/high、任务/root/observe_readiness；工具接受设置，未另取辅助会话模型元数据。主责复核固定纳入规则和当前不足20的结论；本轮没有实施观察报告或扩域。

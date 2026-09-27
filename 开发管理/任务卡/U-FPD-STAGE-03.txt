@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-FPD-STAGE-03"
-  ],
-  "stateReason": "等待N-FPD-STAGE-03完成以消费三阶段成长与筑基入门数值合同。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-27：N-FPD-STAGE-03 已完成；三阶段编码10/20/30、旧档显式拒绝及承载周期合同已冻结。现有六个所有者、验证和停止边界完整，可在本卡实施状态导入及玩家/NPC存档迁移。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/FoundationPurpleMansionStateData.cs",
     "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
@@ -89,3 +87,9 @@
 ## 2026-09-22 道基承载补充
 
 - 当前可承诺容量取天然加扩府总上限与道基已培养承载能力的较小值；按已冻结契约和数值档案表达，不能再由阶段枚举释放容量。圆满按总上限判定，培养承载/阶段历史须在现有完整状态、导入和存档合同中一致。
+
+## 2026-09-27 前置复核与 ready 准备
+
+- 数值前置已于03211cdd完成归档，直接消费 开发管理/任务归档/验证记录/三阶段与筑基入门成长数值验证记录.txt 的承载、周期和幂等合同；本轮输入未变，不重跑BattleSim。
+- 静态契约第三节已冻结 FOUNDATION/10、MANSION/20、COMPLETE/30；第8.1节明确旧字段无法证明新阶段，按 FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE 拒绝，不能静默重解释旧int2。
+- 现有六个代码所有者与测试边界保持不变，静态契约中旧“新周期尚未锁定”的时点说明由本卡实施时按已归档数值同步。本轮只准备任务，不宣称Unity迁移已完成。

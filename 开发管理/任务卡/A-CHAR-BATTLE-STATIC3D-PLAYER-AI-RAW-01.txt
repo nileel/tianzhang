@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-09-23：四视图已完成并重新核验五项哈希；按当前用户授权移除旧 LOOKDEV 作为男主原包前置。仅等待 DEC-20260923-PLAYERRAW45 的具体平台/服务/额度批准；收到批准后仍须现场核验报价与可用额度，当前未上传或消费。",
+  "stateReason": "2026-09-27：已核验 DEC-20260923-PLAYERRAW45 的 A 回复，批准 Tripo Studio 最高质量静态3D一次、上限45 credits；五项输入哈希再次一致并写入 automationInputs。可领取执行；上传前必须现场核验服务、四图支持、报价与余额，未满足即停止。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
@@ -27,7 +27,34 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
-  }
+  },
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
+      "bytes": 416613,
+      "sha256": "2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
+      "bytes": 385266,
+      "sha256": "506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png",
+      "bytes": 376816,
+      "sha256": "c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png",
+      "bytes": 398077,
+      "sha256": "4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json",
+      "bytes": 4926,
+      "sha256": "112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9"
+    }
+  ]
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
@@ -94,3 +121,10 @@
 - 手动决定回执由本任务后续维护读取现有飞书桥并核验 decisionId、操作者和冻结哈希；没有新回执不得复用旧整屏决定或把“批准方向”推断为具体额度。
 - 交易批准后按本卡 ready 前准备补齐 automationInputs、schema 2 风险投影与队列；现场服务、报价、可用额度或四视图支持不符合批准则在上传前停止。
 - 唯一原包生成后，先准备联系表、原包哈希和平台静态门证据，再通过飞书发送原包视觉接受决定；无可查看成果时不提前请求空泛批准。
+
+## 2026-09-27 交易批准与 ready 准备
+
+- consume-reply 已返回 OPTION_ACCEPTED／A；回复时间 2026-09-23T02:29:48.511Z，来源 feishu_card，evidenceHash=4eecf5926baf9074786b506f435f4b343955495d2d996cb2ece5514d10227a47，签名、操作者与消息绑定均已核验。
+- 批准绑定资产 combat_player_default_v1、Tripo Studio 最高质量图生静态3D、同一卡头五项四视图输入、最多一次、最高45 credits，无自动绑定、附加付费、第二次生成。批准者为既有飞书配对负责人。
+- 本日从主工作区逐文件重算字节数／SHA-256，五项均与9月23日批准输入一致；已据此填写 automationInputs。没有上传、消费或生成原包。
+- 当前平台登录、报价、余额与同一四图入口必须在实施上传前现场核验，这是执行门，不再把已经收到的额度批准列为待决定。任何不符合项按原停止条件处理，不改平台、输入或上限。

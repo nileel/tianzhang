@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "frozen",
-  "blockedBy": [
-    "A-CHAR-TRIPO-STRICT-R2-REGEN-QUAD-01"
-  ],
-  "stateReason": "2026-08-21：用户批准冻结旧 Tripo 绑定动画角色路线；失败的 Quad 输出不再下载或进入原包接收。",
+  "blockedBy": [],
+  "stateReason": "2026-09-27核对：四边面生成卡已以平台静态门失败归档，没有可接收候选；移除已归档任务ID依赖。旧绑定动画路线仍按8月21日批准冻结，不下载失败输出、不恢复原包接收。",
   "expectedPaths": [
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -65,3 +63,7 @@
 ## 停止条件
 
 - 人工下载未完成、ZIP 损坏、包内有骨架／动画、任务身份不唯一或必须启动 Blender 才能区分下载文件时停止。
+
+## 2026-09-27 前置事实核对
+
+- 上游虽为 completed 归档，其完成结果是命中停止条件且未形成合格候选；本轮只删除已终结任务的等待投影，不把失败归档当成成功资产，不解冻本卡。
