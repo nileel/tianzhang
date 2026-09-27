@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-27已生成并展示正/左/右/背四图候选，7次image_gen调用及完整输入/提示哈希已落主工作区。等待用户本人审图回执；未获批准，不完成归档、不放行Tripo。人工对话等待期间退出ready，不创建自动决策或代签批准。",
+  "stateReason": "2026-09-27用户在看到本轮四图后明确要求双方按P2.0四边面规格生产并分别批准100点，当前四图作为本轮生成输入获准；原包/清理仍分别验收。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png",
@@ -62,3 +62,9 @@
 - 不修改原画、旧v1模型或Unity资产；不由AI代签批准，不调用Tripo。
 ## 停止条件
 - 原画哈希不符、必须更改既定造型、四视图不一致、用户拒绝或未回复；不上传平台、不消费credits、不修旧v1、不使用代码生成网格代替四视图。
+
+
+## 2026-09-27 本人批准与归档
+- 用户在本对话展示P2.0设置截图并明确要求“都按照这个规格来生产4边面的模型，我都批准100点数”。
+- 本回执绑定当前正/左/右/背四PNG原哈希；只接受其作为本轮3D生成输入，保留manifest中相机/尺度局限，不夸大为技术测量证明。
+- input/manifest.json已记录原始回执、批准时间及实际输入哈希。四图交付与用户输入批准完成，下游改为本轮明确P2.0参数，不沿用先前H3.1报价。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "frozen",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
+  "stateReason": "2026-09-27用户已批准P2.0四边面、25000面、数量4，一批最多100credits；本人工对话执行，冻结自动领取防重复，旧H3.1待决定已由新指令替代。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/formal_player_static3d_v2_platform_manifest.json",
@@ -54,57 +54,7 @@
       "bytes": 4926,
       "sha256": "112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9"
     }
-  ],
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01",
-    "sourceRunId": "38dae2a6-5ec7-46cc-83de-861523dfa350",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20260927-CD4D4D15A7187A",
-    "question": "Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
-    "options": [
-      {
-        "key": "A",
-        "label": "立即生成一次，消费30 credits"
-      },
-      {
-        "key": "B",
-        "label": "暂不生成，保留任务为 ready"
-      },
-      {
-        "key": "C",
-        "label": "取消本次交易并转为阻塞"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "选择A会启动唯一获批平台任务并消费30 credits；B或C不会收费，也不会产生原包。",
-    "plainSummary": {
-      "situation": "Tripo 已按冻结四视图配置为 H3.1 最高质量，价格30 credits且余额42；是否现在点击生成，消费这一次30 credits？",
-      "impact": "选择A会启动唯一获批平台任务并消费30 credits；B或C不会收费，也不会产生原包。",
-      "action": "建议选择 A：立即生成一次，消费30 credits"
-    },
-    "checkpointCommit": "19c3a1d993d8768d33de40c2166ab87b8cb5211c",
-    "baseCommit": "bf8ba97268e6cfc93677145401838138b1e909ce",
-    "branch": "codex/automation/codex/38dae2a6-5ec7-46cc-83de-861523dfa350/candidate",
-    "changedPaths": [
-      "开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01.txt"
-    ],
-    "verified": [
-      "模型元数据为 gpt-5.6-terra",
-      "Tripo 已显示四视图槽位及四张已上传预览",
-      "H3.1 最高质量，30 credits，余额42，未启用分部件生成或8K贴图",
-      "生成按钮尚未点击，未产生平台任务或收费",
-      "任务卡投影、资源版本、审核文本、空白检查与暂存差异检查通过"
-    ],
-    "unverified": [
-      "生成结果、实际扣费、下载包和原包视觉验收尚未发生"
-    ],
-    "residualRisk": "点击生成将立即消费30 credits；生成失败或视觉不合格时不得重试。",
-    "taskContextDigest": "530d9cb0b0c1279f256a374d055beaca1052ca035ceaede694631bc053024d11",
-    "createdAt": "2026-09-27T21:25:08.2385512+08:00",
-    "queueIndex": 0
-  }
+  ]
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01 · 默认男主一次性 AI 静态3D原包生成与冻结
@@ -178,3 +128,15 @@
 - 批准绑定资产 combat_player_default_v1、Tripo Studio 最高质量图生静态3D、同一卡头五项四视图输入、最多一次、最高45 credits，无自动绑定、附加付费、第二次生成。批准者为既有飞书配对负责人。
 - 本日从主工作区逐文件重算字节数／SHA-256，五项均与9月23日批准输入一致；已据此填写 automationInputs。没有上传、消费或生成原包。
 - 当前平台登录、报价、余额与同一四图入口必须在实施上传前现场核验，这是执行门，不再把已经收到的额度批准列为待决定。任何不符合项按原停止条件处理，不改平台、输入或上限。
+
+
+## 旧checkpoint替代记录
+- DEC-20260927-CD4D4D15A7187A、sourceRunId=38dae2a6-5ec7-46cc-83de-861523dfa350、checkpointCommit=19c3a1d993d8768d33de40c2166ab87b8cb5211c由当前用户明确P2.0/100授权替代；原run已关闭，不恢复旧H3.1操作。历史证据保留于99479577提交，不合成飞书回复。
+- 旧记录把页面通知数42误作余额；本轮可见金币余额2885，交易前后重新读取金币位置。
+
+## 2026-09-27 用户最新P2.0授权（替代旧交易参数）
+- 用户在本对话展示P2.0设置截图并明确要求“都按照这个规格来生产4边面的模型，我都批准100点数”。批准时间：2026-09-27T21:30:19.4302168+08:00；截图证据：C:/Users/WINDOWS/.codex/visualizations/2026/09/27/01a0e29a-179d-7d43-b7a6-916f100d999a/tripo-p2-user-authorization.png。
+- 本卡资产单独一批、最多100 credits；Tripo Studio智能网格P2.0，真实前/左侧/右侧/后四图输入，四边面，使用相同面数25000，生成数量4，按截图仅分享。男主与石甲兽各有100额度，合计最多200，不是四次点击或不限次数重试。
+- 此节替代旧H3.1、30/45 credits、单候选结果限制。一批允许平台返回4个子任务/候选ID，必须完整记录并保留4份原始输出；展示4候选后由用户选定接受的一份供下游清理。一次批次外不重试、不追加收费服务。
+- 人工执行期间本卡frozen且不入自动队列，防止重复交易；无活动run占用本taskId。后续只按实际生成/下载/待选结果更新，不因已有费用批准而伪造原包视觉通过。
+- P2.0当前页面仅拓扑设置；纹理是否存在以实际下载为准，不把几何原包写成材质已完成。

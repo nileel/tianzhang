@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-FOURVIEW-01"
-  ],
-  "stateReason": "当前四图候选已展示，待本人批准。已现场核验Tripo四图独立槽、H3.1最高质量报价30credits；石甲兽一次最多30credits请求待回复，尚未上传/扣费。男主45credits批准不适用于石甲兽。",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-09-27用户批准当前四图用于生成并指定P2.0四边面、25000面、数量4，一批最多100credits；人工执行期间冻结自动领取，无需重复额度确认。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_raw.zip",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/raw/shijiahou_static3d_v2_platform_manifest.json",
@@ -30,7 +28,34 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_front.png",
+      "bytes": 2320167,
+      "sha256": "7c68ab47158f9264bad91d5e3009f9f395dcf075d5f8f3a1dbc525891cf7583d"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_left.png",
+      "bytes": 1831801,
+      "sha256": "c6af44f045f0bb7b728345e672597ac101a15899b897e8e27310c7a6d012857c"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_right.png",
+      "bytes": 1752465,
+      "sha256": "f150026b15aa2b8cec60dc66c55425baf308eae226e6183bbe93301466dab730"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/shijiahou_back.png",
+      "bytes": 2165266,
+      "sha256": "01a7d87b7bd470e30b93aa4eadeec69778a8114dae350e3654ccc5543d5be956"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/input/manifest.json",
+      "bytes": 5975,
+      "sha256": "c4a54d66099bebc6e1c37c2196d4b151c94b671c5c6fa939593d3be37dc88875"
+    }
+  ]
 }
 ---TASK-BODY---
 # A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01 · 石甲兽一次Tripo四视图静态3D原包
@@ -58,3 +83,10 @@
 ## 停止条件
 - 未批准四图或额度、入口不是实际多视图、需换服务/输入/平台、超预算、生成失败、下载损坏、身份错误、缺肢或用户拒绝即停止；无第二次生成或免费重试。
 - 本任务不以单图/四图拼图上传替代平台真实四图输入，不把历史旧动画项目当当前资产。
+
+## 2026-09-27 用户最新P2.0授权（替代旧交易参数）
+- 用户在本对话展示P2.0设置截图并明确要求“都按照这个规格来生产4边面的模型，我都批准100点数”。批准时间：2026-09-27T21:30:19.4302168+08:00；截图证据：C:/Users/WINDOWS/.codex/visualizations/2026/09/27/01a0e29a-179d-7d43-b7a6-916f100d999a/tripo-p2-user-authorization.png。
+- 本卡资产单独一批、最多100 credits；Tripo Studio智能网格P2.0，真实前/左侧/右侧/后四图输入，四边面，使用相同面数25000，生成数量4，按截图仅分享。男主与石甲兽各有100额度，合计最多200，不是四次点击或不限次数重试。
+- 此节替代旧H3.1、30/45 credits、单候选结果限制。一批允许平台返回4个子任务/候选ID，必须完整记录并保留4份原始输出；展示4候选后由用户选定接受的一份供下游清理。一次批次外不重试、不追加收费服务。
+- 人工执行期间本卡frozen且不入自动队列，防止重复交易；无活动run占用本taskId。后续只按实际生成/下载/待选结果更新，不因已有费用批准而伪造原包视觉通过。
+- P2.0当前页面仅拓扑设置；纹理是否存在以实际下载为准，不把几何原包写成材质已完成。
