@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01"
   ],
-  "stateReason": "2026-09-27用户已选定有纹理原包且本地检查完成；RAW仍未归档。14条多面共边及混合拓扑待本地清理；用户明确游戏中通过等比scale处理显示尺寸，尺寸不再阻塞清理。Unity导入与显示scale设置由双Profile卡沿既有入口负责。",
+  "stateReason": "2026-09-27选定原包检查完成，RAW仍未归档；核对14条多面共边及接地的实际影响，仅修复已证实的问题。静态混合拓扑不是缺陷；尺寸由既有Unity表现入口等比scale处理，两者均不阻塞。Unity导入由双Profile卡负责。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",

@@ -12,7 +12,7 @@
   "blockedBy": [
     "A-CHAR-BATTLE-STATIC3D-PLAYER-AI-RAW-01"
   ],
-  "stateReason": "2026-09-27用户已选定有纹理原包且本地检查完成；RAW仍未归档。待按检查结果推进同一输入的本地清理（4个零面积面、302条多面共边、混合拓扑），再完成本人十视图批准和Unity importer硬门；不是缺原包或贴图，不授权再生成/付费。",
+  "stateReason": "2026-09-27选定原包检查完成，RAW仍未归档；核对4个零面积面/302条多面共边的实际影响，仅修复已证实的问题，再完成本人十视图及Unity importer验证。静态混合拓扑不是缺陷，不要求全四边面；不授权再生成/付费。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
