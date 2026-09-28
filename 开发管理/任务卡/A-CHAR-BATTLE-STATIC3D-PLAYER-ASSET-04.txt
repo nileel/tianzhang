@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260928-CDEE8F4E660A8D",
+  "stateReason": "2026-09-28 Unity importer 轴向与单位缩放硬门失败；导出/导入交接根因未查明，按本卡停止条件阻塞",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
@@ -226,3 +226,9 @@
 ## 模型协作
 - 2026-09-28 ready评估：同一批准原包形成一个可独立验收的静态资产结果，所有者、输入、路径、停止条件和验收已冻结。沿用入口默认单主模型；清理、十视图和回读依赖同一可变候选，当前没有独立并行工作面，由主责统一复核。
 - 写入前核对实际Blender/验证工具能力与当前任务事实。只有出现复杂且可独立定位的导入失败时，才按AI协作规则使用gpt-5.6-sol / high只读辅助，范围限本卡失败日志、对应导入逻辑和输入哈希，返回已证实根因及受影响验证；不写文件、不改卡/队列、不另领任务。涉及输入或设计裁决仍按停止条件处理。
+
+## 2026-09-28 Unity importer 失败与阻塞
+
+- 自动 run a32e6515-0280-4420-b7c8-88fd21cd155e 在负责人批准的同一 v2 检查点上完成首轮 FBX 导出和 Blender factory-empty 非空回读；Unity 测试关闭 bakeAxisConversion 时模型根旋转为 (0,1,0,0)（Y 轴 180°），开启后模型根缩放为 (100,100,100)，useFileScale=0 与 globalScale=0.01 两次 importer 调整仍未消除缩放失败。Unity 身份变换硬门未通过，无正式资产 candidate 或集成。
+- 失败层保存在 .worktrees/automation/a32e6515-0280-4420-b7c8-88fd21cd155e/codex 的四个暂存检查点文件和原 run 记录；试验性的 FBX、Unity 文件与 importer 测试已由原责任方撤回。暂存的 Blender 源中 BaseColor 图像路径仍指向前次检查点 worktree，后续若继续生产须修成当前相对路径并重新核验。
+- 当前技术经验中的 Blender 5.2 参数只证明 factory-empty 回读，未证明 Unity 零旋转、单位缩放。先只读定位 FBX 轴/单位元数据与 Unity importer 的实际转换，明确根因及是否需修改冻结导出合同；未经确认不追加补偿、复导出或改验收标准。具备符合既定轴、尺度、朝向的可验证方案后才重新评估 ready。
