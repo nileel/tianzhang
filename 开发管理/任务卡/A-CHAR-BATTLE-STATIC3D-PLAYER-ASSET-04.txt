@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否批准当前默认男主v2十视图候选，并允许执行首轮FBX导出？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260928-CDEE8F4E660A8D",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
@@ -136,8 +136,16 @@
     ],
     "residualRisk": "未经负责人批准不得导出FBX或进入Unity导入QA。",
     "taskContextDigest": "111436e2eb5152894da880c4958ff0fd34c1a9c425c94a8af794335020b80e8c",
-    "createdAt": "2026-09-28T09:34:23.0014230+08:00",
+    "createdAt": "2026-09-28T09:34:23.001423+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260928-CDEE8F4E660A8D",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "516d2095fe5593e18f40d58f66b0a6ef670192230a518e4cbc16d6955af75dc1"
   }
 }
 ---TASK-BODY---
