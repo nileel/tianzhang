@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：ignored_source_transfer_unsupported",
+  "stateReason": "2026-09-28 手动交付纯背景、city-manifest 与 Unity importer；源文件主工作区哈希一致，实际尺寸 1672×941 已如实记录。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png",
     "assets/source/ui/guanzhong-first-bounty/city-manifest.json",
@@ -84,3 +84,11 @@
 
 - 新版方向有效 A 回执及哈希见 开发管理/关中UI与角色链卡点处理记录.txt；按原冻结合同，仅移除城市方向门，不把整屏图当作已完成纯背景。
 - 任务仍为同一张纯背景加 importer 的单一交付；本轮只准备 ready 卡，未生成、导入或宣称资源验收通过。
+
+## 2026-09-28 手动完成证据
+
+- 用户明确选择先手动修复；本轮完成一张纯背景及 importer，不改共享自动化。
+- 内置图像工具一次初稿、一次针对残留路人的修订；请求 1920×1080，实际 1672×941，保留原生尺寸并完整登记，不伪称达到请求像素数。
+- source PNG、city-manifest 已在主工作区同路径落盘并验证哈希；Unity PNG 原样一致，GUID 为 1c7c4c035daafe64d80708bc2e144bc4。
+- Unity 6000.3.18f1 实读 Sprite/Single、sRGB、无压缩、无 mipmap、Clamp、Bilinear；1,573,352 个像素与源 PNG 解码一致，差异 0。证据见 开发管理/关中城纯背景资源验收记录.txt。
+- 未修改正式场景或运行时代码。U-GZ-ART-UI-01 的本卡 blocker 已移除；资源／引用点／八项 automationInputs 已核对，剩余阻塞是 U 卡新生成的 ignored manifest 尚无自动回传方式，不把资源缺失继续作为原因。

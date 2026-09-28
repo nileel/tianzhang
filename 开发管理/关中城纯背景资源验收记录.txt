@@ -1,0 +1,58 @@
+# 关中城纯背景资源验收记录
+
+任务：A-GZ-UI-CITY-ASSET-01
+日期：2026-09-28
+
+## 结论与范围
+
+资源交付及 Unity importer 验证通过。使用内置 image_gen 生成一次，并针对初稿残留的小型路人做一次定点修订；最终源 PNG 与 Unity PNG 原样一致。未接线正式场景，也未把资源验收等同于最终实机品质接受。
+
+请求尺寸为 1920×1080；两次工具实际输出均为 1672×941。按卡面“工具未输出指定尺寸时记录实际尺寸”的分支保留原生像素，没有重采样、拉伸或伪称 1080p 源图。后续 U-GZ-ART-UI-01 在 1920×1080 Game View 中须保持图像比例并验证清晰度。
+
+## 批准输入与目视复核
+
+- 唯一城镇方向：assets/generated-scene-art/guanzhong-first-bounty/lookdev-ui-v6-20260923/city-and-bounty-v2.png；SHA-256：154666a8b55dd4647f34c86c40af91aff3b2913c1a31dc07798e95fb0a56a3ca。
+- 接受依据：DEC-20260923-GZLOOKDEVV2 的 A，2026-09-23 10:29:37 +08:00；范围仅为城镇美术方向。
+- 实际查看批准图、ui-visual-v4/screenshots/city-bounty-1920.jpg 布局参考、初稿和修订图。保留正面街道透视、灰瓦木构集市、土黄墙面／石门、山景和日光；空白招幡与木板没有功能文字、悬赏令或可点击标记。
+- 初稿中央仍有小型路人，唯一修订清除可见路人；最终无人物信息、头像、功能标签、菜单、悬赏卡、按钮或图标。没有新增剧情角色与功能入口。
+- 上方天空和中央街道保留通行感；角色信息与右侧悬赏原布局所占区域为连贯环境。UI 仍需独立底板保证可读，最终遮挡、按钮与清晰度由 U 卡实施后验证。
+- 原生像素未作非等比缩放。与批准城镇方向一致，未触发重新选择城镇方向的决定。
+
+## 交付登记
+
+| 文件 | 字节 | SHA-256 |
+|---|---:|---|
+| assets/source/ui/guanzhong-first-bounty/guanzhong_city_background.png | 2850693 | 4750da13c8c72dfa82eb0c6045b56f6a7b3dc1456790c672e2c48ad86b667180 |
+| src/Assets/Art/UI/Guanzhong/Guanzhong_City_Background.png | 2850693 | 4750da13c8c72dfa82eb0c6045b56f6a7b3dc1456790c672e2c48ad86b667180 |
+| assets/source/ui/guanzhong-first-bounty/city-manifest.json | 6327 | 72dd138b3fe48c0fa6f338746670e58eb2ff7c8b00c3c09f6f813a8b5e4ec11f |
+
+完整初稿／修订提示词、生成次数、实际尺寸、批准依据与 importer 回读均写入 city-manifest.json。原图和 manifest 已手动复制至 D:/天章游戏开发/assets/source/ui/guanzhong-first-bounty/ 并逐文件验证字节数及 SHA-256；source 保持 Git 忽略。Unity PNG 由 Git LFS 追踪，.meta 为普通文本。
+
+## Unity 实读证据
+
+Unity 6000.3.18f1 在任务 worktree 的 src 项目执行临时 GuanzhongCityImportProbe.Run：
+- 正常 TextureImporter 生成 GUID：1c7c4c035daafe64d80708bc2e144bc4。
+- Sprite/Single，FullRect，1672×941，RGB24，sRGB；NPOT=None，Max Size=2048，Uncompressed，Bilinear，Clamp，无 mipmap，零 border。
+- 先临时打开 read/write，把 Unity 导入结果与 Unity 原生 PNG 解码逐像素比较：1,573,352 个像素，RGB／不透明 alpha 差异 0。随后关闭 read/write 并重新导入，回读尺寸及 readable=false。
+- 保留已有 UI.meta GUID 22b70486f63ae444ab5a6108f48a3b73 与 Guanzhong.meta GUID 5c6b8b51bba26a84a9e4c75e697dd79b。
+- 本机证据：D:/Temp/TianZhang-GuanzhongCity/import-proof.json、unity-import.log、GuanzhongCityImportProbe.cs。日志含 GUANZHONG_CITY_IMPORT_OK。
+- 临时 Editor 探针及 .meta 已从工作区移除；Unity 初次启动自动添加的 ShaderGraphSettings.asset 空白已恢复。未保留脚本、场景或 ProjectSettings 改动。
+
+命令：Unity.exe -batchmode -nographics -projectPath <任务 worktree>/src -executeMethod GuanzhongCityImportProbe.Run -logFile D:/Temp/TianZhang-GuanzhongCity/unity-import.log。
+
+## 所有者与下游收口
+
+本卡只交付 PNG/importer。读取 UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md，以及 unity-agent-workflows 的 UI 资源、runtime owner、Unity validation 规则；模型协作沿用入口默认单模型，未请求辅助。
+
+当前代码／场景再次确认：
+- SettlementSceneBuilder.Build / BuildBountyPanel 创建 UICanvas、SettlementPanel、BountyBoardPanel；SceneBuildSupport.CreateCanvas 的基准是 1920×1080。背景及 UI 资源将在该表面局部接线，不能改全局默认值。
+- SettlementController.RefreshSettlementUi / DispatchFeature → SettlementView.ShowSettlement / BindFeature / BindAdventure / OpenBountyBoard → BountyBoardView.Show / Refresh / SubmitAccept / SubmitClaim。文字和按钮状态有既有 writer。
+- AdventureSceneBuilder.Build 已保留正式地面及隐藏比较层，创建 AdventurePanel、AdventureNodeContainer、CombatHudRoot、CombatActionBar 和 CombatLogText；AdventureHudPresenter.Present 动态创建节点 Image/Button/Text。
+- EncounterCoordinator.Present → CombatHudPresenter.Present → CombatHudView / CombatCommandInput.SetContext / CombatActionBarView；日志由 CombatLogView.Clear / Append 写入。正式场景同名对象仍存在。
+- 图集、头像、字体与许可证 source/Unity 文件哈希一致且 .meta 齐全；未变化资源沿用其既有真实 importer 验证，不重跑。
+- 已完整消费 U 卡并补齐八项 automationInputs、重新计算风险投影。城市资源 blocker 可移除。
+- U 卡仍需写入 ignored 的 assets/source/ui/guanzhong-first-bounty/manifest.json；共享自动入口目前只有 automationInputs 主工作区→worktree 输入复制，没有生成源文件回传。故资源前置已齐，但自动执行的同类交付阻塞仍真实存在，U 卡保持 blocked、blockedBy=[]，明确剩余原因，未错误提前入 ready 队列。需手动实施 U 卡或先另行修复现有源文件回传能力。
+
+## 验证边界
+
+check-asset-versioning 通过（Git LFS fsck OK）；check-task-cards 的 CodexClosedOrNonReady 通过（73 张活跃卡、8 项 ready、本卡 completed）；check-review-text 通过；现存预期路径 whitespace 通过，归档导致的原 active 路径缺失已按删除项核对；暂存 git diff --cached --check 通过。没有运行 BattleSim、重建正式场景或重复无关流程。Play Mode、正式 UI 接线及 1920×1080 连续实机验证仍由 U-GZ-ART-UI-01 承担。
