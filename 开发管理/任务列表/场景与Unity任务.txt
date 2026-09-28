@@ -56,7 +56,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-FPD-STAGE-03 | P1 | codex | 已排队 | — | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | U-FPD-GONGFA-GROWTH-01 | P1 | codex | 阻塞 | U-FPD-STAGE-03 | 功法筑基三阶段成长字段与导入合同 | 开发管理/任务卡/U-FPD-GONGFA-GROWTH-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |

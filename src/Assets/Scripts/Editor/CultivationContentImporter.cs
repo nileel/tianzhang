@@ -61,14 +61,16 @@ namespace TianZhang.Editor
             "foundationInstanceId",
             "foundationDefinitionId",
             "sourceGongFaId",
-            "phase",
+            "stageId",
+            "stageCode",
             "continuousProgress",
             "phaseBoundarySetId",
             "naturalMansionCapacity",
-            "releasedNaturalCapacity",
             "expansionGrants",
             "expandedMansionCapacity",
-            "totalMansionCapacity",
+            "carryingCapacityProfileId",
+            "currentMansionCarryingCapacity",
+            "completionMansionCapacity",
             "mansionStates",
             "effectBindings",
             "guardianAbilities",
@@ -89,10 +91,13 @@ namespace TianZhang.Editor
             "legacyDanJiType",
             "foundationGrade",
             "foundationStages",
+            "phase",
+            "releasedNaturalCapacity",
+            "totalMansionCapacity",
         };
 
         private const string FoundationPurpleMansionSchemaId = "foundationPurpleMansionState";
-        private const int FoundationPurpleMansionSchemaVersion = 1;
+        private const int FoundationPurpleMansionSchemaVersion = 2;
 
         private static readonly string[] JindanStaticColumns =
         {
@@ -745,7 +750,9 @@ namespace TianZhang.Editor
             if (foundation == null)
                 throw JindanError("JD_UNKNOWN_STATIC_REFERENCE", sourceName, "does not resolve foundationPurpleMansionStateRef for the same character.");
             if (foundation.jindanLock == null || foundation.jindanLock.status != JindanLockStatus.Formed ||
-                foundation.foundationState.phase != FoundationPhase.Phase4 || foundation.mansionStates == null ||
+                foundation.foundationState.stageId != FoundationStage.Complete ||
+                foundation.foundationState.stageCode != (int)FoundationStage.Complete ||
+                foundation.mansionStates == null ||
                 foundation.mansionStates.Any(mansion => mansion == null || mansion.state == PurpleMansionBuildState.Embryo) ||
                 !foundation.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete))
             {
@@ -1059,7 +1066,14 @@ namespace TianZhang.Editor
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Foundation/Purple Mansion CSV was not found: {path}", path);
 
-            var states = ParseFoundationPurpleMansionStates(File.ReadAllLines(path), path, allowFixtures: false);
+            string[] lines = File.ReadAllLines(path);
+            int headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
+            bool hasDataRows = headerLineIndex >= 0 && lines.Skip(headerLineIndex + 1).Any(line =>
+                !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"));
+            if (!hasDataRows)
+                return;
+
+            var states = ParseFoundationPurpleMansionStates(lines, path, allowFixtures: false);
             try
             {
                 foreach (var state in states)
@@ -1183,8 +1197,11 @@ namespace TianZhang.Editor
                 "schemaVersion");
             if (schemaId != FoundationPurpleMansionSchemaId || schemaVersion != FoundationPurpleMansionSchemaVersion)
             {
+                string code = schemaId == FoundationPurpleMansionSchemaId && schemaVersion == 1
+                    ? "FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE"
+                    : "FPM_UNKNOWN_SCHEMA";
                 throw FoundationError(
-                    "FPM_UNKNOWN_SCHEMA",
+                    code,
                     sourceName,
                     $"requires {FoundationPurpleMansionSchemaId} v{FoundationPurpleMansionSchemaVersion}.");
             }
@@ -1194,9 +1211,13 @@ namespace TianZhang.Editor
                 foundationInstanceId = GetRequiredFoundationColumnValue(headers, columns, "foundationInstanceId", sourceName),
                 foundationDefinitionId = GetRequiredFoundationColumnValue(headers, columns, "foundationDefinitionId", sourceName),
                 sourceGongFaId = GetRequiredFoundationColumnValue(headers, columns, "sourceGongFaId", sourceName),
-                phase = ParseFoundationPhase(
-                    GetRequiredFoundationColumnValue(headers, columns, "phase", sourceName),
+                stageId = ParseFoundationStage(
+                    GetRequiredFoundationColumnValue(headers, columns, "stageId", sourceName),
                     sourceName),
+                stageCode = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "stageCode", sourceName),
+                    sourceName,
+                    "stageCode"),
                 continuousProgress = ParseFoundationFloat(
                     GetRequiredFoundationColumnValue(headers, columns, "continuousProgress", sourceName),
                     sourceName,
@@ -1206,10 +1227,6 @@ namespace TianZhang.Editor
                     GetRequiredFoundationColumnValue(headers, columns, "naturalMansionCapacity", sourceName),
                     sourceName,
                     "naturalMansionCapacity"),
-                releasedNaturalCapacity = ParseFoundationInteger(
-                    GetRequiredFoundationColumnValue(headers, columns, "releasedNaturalCapacity", sourceName),
-                    sourceName,
-                    "releasedNaturalCapacity"),
                 expansionGrants = ParseFoundationExpansionGrants(
                     GetFoundationColumnValue(headers, columns, "expansionGrants"),
                     sourceName),
@@ -1217,16 +1234,23 @@ namespace TianZhang.Editor
                     GetRequiredFoundationColumnValue(headers, columns, "expandedMansionCapacity", sourceName),
                     sourceName,
                     "expandedMansionCapacity"),
-                totalMansionCapacity = ParseFoundationInteger(
-                    GetRequiredFoundationColumnValue(headers, columns, "totalMansionCapacity", sourceName),
+                carryingCapacityProfileId = GetRequiredFoundationColumnValue(
+                    headers, columns, "carryingCapacityProfileId", sourceName),
+                currentMansionCarryingCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "currentMansionCarryingCapacity", sourceName),
                     sourceName,
-                    "totalMansionCapacity"),
+                    "currentMansionCarryingCapacity"),
+                completionMansionCapacity = ParseFoundationInteger(
+                    GetRequiredFoundationColumnValue(headers, columns, "completionMansionCapacity", sourceName),
+                    sourceName,
+                    "completionMansionCapacity"),
             };
 
             RequireFoundationReference(foundation.foundationInstanceId, sourceName, "foundationInstanceId");
             RequireFoundationReference(foundation.foundationDefinitionId, sourceName, "foundationDefinitionId");
             RequireFoundationReference(foundation.sourceGongFaId, sourceName, "sourceGongFaId");
             RequireFoundationReference(foundation.phaseBoundarySetId, sourceName, "phaseBoundarySetId");
+            RequireFoundationReference(foundation.carryingCapacityProfileId, sourceName, "carryingCapacityProfileId");
             if (foundation.naturalMansionCapacity < 0 || foundation.naturalMansionCapacity > 3)
                 throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "naturalMansionCapacity must be in 0..3.");
 
@@ -1261,7 +1285,7 @@ namespace TianZhang.Editor
                     sourceName);
 
                 ValidateFoundationPurpleMansionState(state, sourceName);
-                ValidateFixturePhaseBoundary(state, fixtureId, fixtureNumericProfile, sourceName);
+                ValidateFixtureCarryingCapacity(state, fixtureId, fixtureNumericProfile, sourceName);
                 return state;
             }
             catch
@@ -1275,22 +1299,37 @@ namespace TianZhang.Editor
             FoundationPurpleMansionStateData state,
             string sourceName)
         {
-            int releasedCapacity = Math.Min(
-                state.foundationState.naturalMansionCapacity,
-                FoundationPhaseIndex(state.foundationState.phase) - 1);
             int expandedCapacity = state.foundationState.expansionGrants.Length;
-            int totalCapacity = releasedCapacity + expandedCapacity;
-            if (state.foundationState.releasedNaturalCapacity != releasedCapacity ||
+            int selfCapacity = state.foundationState.naturalMansionCapacity + expandedCapacity;
+            if (state.foundationState.stageCode != (int)state.foundationState.stageId ||
                 state.foundationState.expandedMansionCapacity != expandedCapacity ||
-                state.foundationState.totalMansionCapacity != totalCapacity)
+                state.foundationState.currentMansionCarryingCapacity < 0 ||
+                state.foundationState.currentMansionCarryingCapacity > selfCapacity)
             {
                 throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "derived mansion capacity does not match the supplied values.");
             }
 
             int committedCapacity = state.mansionStates.Count(mansion =>
                 mansion.state == PurpleMansionBuildState.Embryo || mansion.state == PurpleMansionBuildState.Complete);
-            if (committedCapacity > totalCapacity)
-                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "mansion commitments exceed totalMansionCapacity.");
+            if (committedCapacity > Math.Min(selfCapacity, state.foundationState.currentMansionCarryingCapacity))
+                throw FoundationError("FPM_CAPACITY_OVERFLOW", sourceName, "mansion commitments exceed committableMansionCapacity.");
+
+            int completeMansions = state.mansionStates.Count(mansion =>
+                mansion.state == PurpleMansionBuildState.Complete);
+            bool validStage = state.foundationState.stageId switch
+            {
+                FoundationStage.Foundation => completeMansions == 0 &&
+                    state.foundationState.completionMansionCapacity == 0,
+                FoundationStage.Mansion => completeMansions > 0 && completeMansions < selfCapacity &&
+                    state.foundationState.completionMansionCapacity == 0,
+                FoundationStage.Complete => completeMansions > 0 &&
+                    state.foundationState.completionMansionCapacity > 0 &&
+                    state.foundationState.completionMansionCapacity <= selfCapacity &&
+                    state.foundationState.completionMansionCapacity <= completeMansions,
+                _ => false,
+            };
+            if (!validStage)
+                throw FoundationError("FPM_INVALID_RUNTIME_STATE", sourceName, "stage does not match completed mansion history.");
 
             var effectsById = state.effectBindings.ToDictionary(effect => effect.effectBindingId, StringComparer.Ordinal);
             var grantsById = state.foundationState.expansionGrants.ToDictionary(grant => grant.grantId, StringComparer.Ordinal);
@@ -1565,13 +1604,16 @@ namespace TianZhang.Editor
             }
 
             var snapshot = state.jindanLock.formationSnapshot;
-            bool validFormedState = state.foundationState.phase == FoundationPhase.Phase4 &&
+            bool validFormedState = state.foundationState.stageId == FoundationStage.Complete &&
+                                    state.foundationState.stageCode == (int)FoundationStage.Complete &&
                                     state.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) &&
                                     state.mansionStates.All(mansion => mansion.state != PurpleMansionBuildState.Embryo);
             if (!validFormedState || snapshot == null ||
                 snapshot.foundationInstanceId != state.foundationState.foundationInstanceId ||
-                snapshot.phase != state.foundationState.phase ||
-                snapshot.naturalMansionCapacity != state.foundationState.naturalMansionCapacity)
+                snapshot.stageId != state.foundationState.stageId ||
+                snapshot.stageCode != state.foundationState.stageCode ||
+                snapshot.naturalMansionCapacity != state.foundationState.naturalMansionCapacity ||
+                snapshot.completionMansionCapacity != state.foundationState.completionMansionCapacity)
             {
                 throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "FORMED state does not match its irreversible snapshot.");
             }
@@ -1594,7 +1636,7 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void ValidateFixturePhaseBoundary(
+        private static void ValidateFixtureCarryingCapacity(
             FoundationPurpleMansionStateData state,
             string fixtureId,
             string fixtureNumericProfile,
@@ -1608,24 +1650,13 @@ namespace TianZhang.Editor
             }
 
             var parts = fixtureNumericProfile.Split(new[] { '~' }, StringSplitOptions.None);
-            if (parts.Length != 4 || parts[0] != state.foundationState.phaseBoundarySetId)
-                throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixture numeric profile does not match phaseBoundarySetId.");
-
-            float phase1Maximum = ParseFoundationFloat(parts[1], sourceName, "fixture phase 1 maximum");
-            float phase2Maximum = ParseFoundationFloat(parts[2], sourceName, "fixture phase 2 maximum");
-            float phase3Maximum = ParseFoundationFloat(parts[3], sourceName, "fixture phase 3 maximum");
-            if (phase1Maximum >= phase2Maximum || phase2Maximum >= phase3Maximum)
-                throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixture phase boundaries must be strictly increasing.");
-
-            FoundationPhase resolvedPhase = state.foundationState.continuousProgress <= phase1Maximum
-                ? FoundationPhase.Phase1
-                : state.foundationState.continuousProgress <= phase2Maximum
-                    ? FoundationPhase.Phase2
-                    : state.foundationState.continuousProgress <= phase3Maximum
-                        ? FoundationPhase.Phase3
-                        : FoundationPhase.Phase4;
-            if (state.foundationState.phase != resolvedPhase)
-                throw FoundationError("FPM_UNKNOWN_PHASE", sourceName, "phase disagrees with fixture phase boundaries.");
+            if (parts.Length != 3 || parts[0] != state.foundationState.phaseBoundarySetId ||
+                parts[1] != state.foundationState.carryingCapacityProfileId ||
+                ParseFoundationInteger(parts[2], sourceName, "fixture currentMansionCarryingCapacity") !=
+                    state.foundationState.currentMansionCarryingCapacity)
+            {
+                throw FoundationError("FPM_FIXTURE_INVALID", sourceName, "fixture numeric profile does not match carrying capacity inputs.");
+            }
         }
 
         private static FoundationExpansionGrant[] ParseFoundationExpansionGrants(string raw, string sourceName)
@@ -1866,12 +1897,12 @@ namespace TianZhang.Editor
             }
 
             var parts = raw.Split(new[] { '~' }, StringSplitOptions.None);
-            if (parts.Length != 6 || parts[0] != "FORMED")
+            if (parts.Length != 8 || parts[0] != "FORMED")
                 throw FoundationError("FPM_JINDAN_LOCK_MUTATION", sourceName, "has an invalid jindanLock payload.");
             RequireFoundationReference(parts[1], sourceName, "formationSnapshot.foundationInstanceId");
             var snapshots = new List<PurpleMansionSnapshot>();
             var kinds = new HashSet<PurpleMansionKind>();
-            foreach (var entry in SplitFoundationList(parts[5], '+', sourceName, "formationSnapshot.mansionStates", allowNone: false))
+            foreach (var entry in SplitFoundationList(parts[7], '+', sourceName, "formationSnapshot.mansionStates", allowNone: false))
             {
                 var mansionParts = entry.Split(new[] { ':' }, StringSplitOptions.None);
                 if (mansionParts.Length < 2 || mansionParts.Length > 4)
@@ -1905,9 +1936,11 @@ namespace TianZhang.Editor
                 formationSnapshot = new JindanFormationSnapshot
                 {
                     foundationInstanceId = parts[1],
-                    phase = ParseFoundationPhase(parts[2], sourceName),
-                    naturalMansionCapacity = ParseFoundationInteger(parts[3], sourceName, "formationSnapshot.naturalMansionCapacity"),
-                    expansionGrantIds = ParseFoundationReferenceList(parts[4], '+', sourceName, "formationSnapshot.expansionGrantIds"),
+                    stageId = ParseFoundationStage(parts[2], sourceName),
+                    stageCode = ParseFoundationInteger(parts[3], sourceName, "formationSnapshot.stageCode"),
+                    naturalMansionCapacity = ParseFoundationInteger(parts[4], sourceName, "formationSnapshot.naturalMansionCapacity"),
+                    completionMansionCapacity = ParseFoundationInteger(parts[5], sourceName, "formationSnapshot.completionMansionCapacity"),
+                    expansionGrantIds = ParseFoundationReferenceList(parts[6], '+', sourceName, "formationSnapshot.expansionGrantIds"),
                     mansionStates = snapshots.ToArray(),
                 },
             };
@@ -2023,27 +2056,14 @@ namespace TianZhang.Editor
             return index >= 0 && index < columns.Length ? columns[index].Trim() : "";
         }
 
-        private static FoundationPhase ParseFoundationPhase(string raw, string sourceName)
+        private static FoundationStage ParseFoundationStage(string raw, string sourceName)
         {
             return raw switch
             {
-                "PHASE_1" => FoundationPhase.Phase1,
-                "PHASE_2" => FoundationPhase.Phase2,
-                "PHASE_3" => FoundationPhase.Phase3,
-                "PHASE_4" => FoundationPhase.Phase4,
-                _ => throw FoundationError("FPM_UNKNOWN_PHASE", sourceName, $"has unknown phase '{raw}'."),
-            };
-        }
-
-        private static int FoundationPhaseIndex(FoundationPhase phase)
-        {
-            return phase switch
-            {
-                FoundationPhase.Phase1 => 1,
-                FoundationPhase.Phase2 => 2,
-                FoundationPhase.Phase3 => 3,
-                FoundationPhase.Phase4 => 4,
-                _ => throw new ArgumentOutOfRangeException(nameof(phase)),
+                "FOUNDATION" => FoundationStage.Foundation,
+                "MANSION" => FoundationStage.Mansion,
+                "COMPLETE" => FoundationStage.Complete,
+                _ => throw FoundationError("FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE", sourceName, $"has incompatible stage '{raw}'."),
             };
         }
 

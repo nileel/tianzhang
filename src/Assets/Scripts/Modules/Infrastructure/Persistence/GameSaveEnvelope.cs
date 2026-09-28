@@ -47,7 +47,7 @@ namespace TianZhang.Infrastructure.Persistence
             {
                 hasPlayer = player != null,
                 player = player == null ? null : CharacterRecord.Capture(player.Capture()),
-                cultivation = cultivation == null ? null : CultivationRecord.Capture(cultivation.Capture()),
+                cultivation = cultivation == null ? null : CultivationRecord.Capture(cultivation),
                 worldClock = WorldClockRecord.Capture(worldClock.Capture()),
                 quests = CaptureQuests(quests.Capture()),
                 inventory = CaptureInventory(inventory.Capture()),
@@ -85,9 +85,7 @@ namespace TianZhang.Infrastructure.Persistence
             CharacterRuntimeProfile restoredPlayer = hasPlayer
                 ? CharacterRuntimeProfile.FromSnapshot(player.Restore())
                 : null;
-            CultivationState restoredCultivation = hasPlayer
-                ? CultivationState.FromSnapshot(cultivation.Restore())
-                : null;
+            CultivationState restoredCultivation = hasPlayer ? cultivation.Restore() : null;
             var restoredClock = new WorldClockService(1);
             restoredClock.Restore(worldClock.Restore());
             var restoredQuests = new QuestStore();
@@ -146,14 +144,7 @@ namespace TianZhang.Infrastructure.Persistence
 
         private static bool HasCultivationPayload(CultivationRecord record)
         {
-            return record != null &&
-                (record.foundationPhase != 0 || record.foundationProgress != 0f ||
-                 record.totalMansionCapacity != 0 || HasItems(record.mansions) ||
-                 HasItems(record.guardians) || !string.IsNullOrEmpty(record.actionStateId) ||
-                 record.actionStatus != 0 || HasItems(record.committedCycleIds) ||
-                 !string.IsNullOrEmpty(record.retreatId) || record.retreatActive ||
-                 !string.IsNullOrEmpty(record.retreatStopReason) || record.jindanFormed ||
-                 !string.IsNullOrEmpty(record.jindanFormedBy));
+            return record != null && record.hasFoundationPurpleMansionState;
         }
 
         private static bool HasItems<T>(T[] values)
@@ -438,79 +429,27 @@ namespace TianZhang.Infrastructure.Persistence
     [Serializable]
     public sealed class CultivationRecord
     {
-        public int foundationPhase;
-        public float foundationProgress;
-        public int totalMansionCapacity;
-        public MansionRecord[] mansions;
-        public GuardianRecord[] guardians;
-        public string actionStateId;
-        public int actionStatus;
-        public string[] committedCycleIds;
-        public string retreatId;
-        public bool retreatActive;
-        public string retreatStopReason;
-        public bool jindanFormed;
-        public string jindanFormedBy;
+        public bool hasFoundationPurpleMansionState;
+        public FoundationPurpleMansionSaveData foundationPurpleMansionState;
 
-        public static CultivationRecord Capture(CultivationStateSnapshot snapshot)
+        public static CultivationRecord Capture(CultivationState state)
         {
-            var mansionRecords = new List<MansionRecord>();
-            foreach (MansionStateSnapshot state in snapshot.Mansions)
-                mansionRecords.Add(new MansionRecord { mansionId = state.MansionId, buildState = state.BuildState, capacity = state.Capacity });
-            var guardianRecords = new List<GuardianRecord>();
-            foreach (GuardianAbilityStateSnapshot state in snapshot.Guardians)
-                guardianRecords.Add(new GuardianRecord { mansionId = state.MansionId, abilityInstanceId = state.AbilityInstanceId, form = state.Form });
             return new CultivationRecord
             {
-                foundationPhase = snapshot.Foundation.Phase,
-                foundationProgress = snapshot.Foundation.ContinuousProgress,
-                totalMansionCapacity = snapshot.Foundation.TotalMansionCapacity,
-                mansions = mansionRecords.ToArray(),
-                guardians = guardianRecords.ToArray(),
-                actionStateId = snapshot.Action.ActionStateId,
-                actionStatus = snapshot.Action.Status,
-                committedCycleIds = snapshot.Action.CommittedCycleIds,
-                retreatId = snapshot.Retreat.RetreatId,
-                retreatActive = snapshot.Retreat.Active,
-                retreatStopReason = snapshot.Retreat.LastStopReason,
-                jindanFormed = snapshot.JindanLock.IsFormed,
-                jindanFormedBy = snapshot.JindanLock.FormedBy,
+                hasFoundationPurpleMansionState = state.HasFoundationPurpleMansionState,
+                foundationPurpleMansionState = state.CaptureFoundationPurpleMansionSaveData(),
             };
         }
 
-        public CultivationStateSnapshot Restore()
+        public CultivationState Restore()
         {
-            if (foundationPhase < 0 || foundationProgress < 0f || totalMansionCapacity < 0 ||
-                mansions == null || guardians == null || committedCycleIds == null)
-            {
+            if (!hasFoundationPurpleMansionState)
+                return CultivationState.CreateEmpty();
+            if (foundationPurpleMansionState == null)
                 throw new ArgumentException("Cultivation record is invalid.");
-            }
-            var mansionStates = new List<MansionStateSnapshot>();
-            foreach (MansionRecord state in mansions)
-            {
-                if (state == null || string.IsNullOrWhiteSpace(state.mansionId) || state.capacity < 0)
-                    throw new ArgumentException("Mansion record is invalid.");
-                mansionStates.Add(new MansionStateSnapshot(state.mansionId, state.buildState, state.capacity));
-            }
-            var guardianStates = new List<GuardianAbilityStateSnapshot>();
-            foreach (GuardianRecord state in guardians)
-            {
-                if (state == null || string.IsNullOrWhiteSpace(state.mansionId))
-                    throw new ArgumentException("Guardian record is invalid.");
-                guardianStates.Add(new GuardianAbilityStateSnapshot(state.mansionId, state.abilityInstanceId, state.form));
-            }
-            return new CultivationStateSnapshot(
-                new FoundationStateSnapshot(foundationPhase, foundationProgress, totalMansionCapacity),
-                mansionStates,
-                guardianStates,
-                new CultivationActionStateSnapshot(actionStateId, actionStatus, committedCycleIds),
-                new ClosedRetreatStateSnapshot(retreatId, retreatActive, retreatStopReason),
-                new JindanLockStateSnapshot(jindanFormed, jindanFormedBy));
+            return CultivationState.FromFoundationPurpleMansionSaveData(foundationPurpleMansionState);
         }
     }
-
-    [Serializable] public sealed class MansionRecord { public string mansionId; public int buildState; public int capacity; }
-    [Serializable] public sealed class GuardianRecord { public string mansionId; public string abilityInstanceId; public string form; }
 
     [Serializable]
     public sealed class WorldClockRecord

@@ -120,21 +120,23 @@ namespace TianZhang.Tests
             return new FoundationPurpleMansionSaveData
             {
                 schemaId = "foundationPurpleMansionState",
-                schemaVersion = 1,
+                schemaVersion = 2,
                 characterId = "npc_cultivator",
                 foundationState = new FoundationStateRecord
                 {
                     foundationInstanceId = "foundation_npc",
                     foundationDefinitionId = "foundation_definition",
                     sourceGongFaId = "gongfa_npc",
-                    phase = FoundationPhase.Phase1,
+                    stageId = FoundationStage.Foundation,
+                    stageCode = (int)FoundationStage.Foundation,
                     continuousProgress = 100f,
                     phaseBoundarySetId = "phase_boundaries",
                     naturalMansionCapacity = 1,
-                    releasedNaturalCapacity = 0,
                     expansionGrants = Array.Empty<FoundationExpansionGrant>(),
                     expandedMansionCapacity = 0,
-                    totalMansionCapacity = 0,
+                    carryingCapacityProfileId = "carrying_profile",
+                    currentMansionCarryingCapacity = 0,
+                    completionMansionCapacity = 0,
                 },
                 mansionStates = Enum.GetValues(typeof(PurpleMansionKind)).Cast<PurpleMansionKind>()
                     .Select(kind => new PurpleMansionStateRecord

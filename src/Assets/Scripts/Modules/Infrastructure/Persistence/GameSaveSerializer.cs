@@ -1,14 +1,17 @@
 using System;
 using System.IO;
-using TianZhang.Content;
+using TianZhang.Entity;
 using UnityEngine;
 
 namespace TianZhang.Infrastructure.Persistence
 {
     public static class GameSaveSerializer
     {
-        public const int SchemaVersion = 2;
+        public const int SchemaVersion = 3;
         public const int LegacySchemaVersion = 1;
+        public const int LegacyFoundationPurpleMansionSchemaVersion = 2;
+        public const string LegacyFoundationPurpleMansionSchemaIncompatible =
+            FoundationPurpleMansionRuntimeState.LegacyStageSchemaIncompatible;
 
         public static string Serialize(GameSaveEnvelope envelope)
         {
@@ -27,17 +30,24 @@ namespace TianZhang.Infrastructure.Persistence
             try { envelope = JsonUtility.FromJson<GameSaveEnvelope>(json); }
             catch (Exception exception) { throw new InvalidDataException("Save data is not valid JSON.", exception); }
             if (envelope == null) throw new InvalidDataException("Save data did not contain an envelope.");
-            if (envelope.schemaVersion == LegacySchemaVersion)
-                return MigrateSchemaOne(envelope);
+            if (envelope.schemaVersion == LegacySchemaVersion ||
+                envelope.schemaVersion == LegacyFoundationPurpleMansionSchemaVersion)
+            {
+                return MigrateLegacySchema(envelope);
+            }
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Unsupported save schema: " + envelope.schemaVersion + ".");
             return envelope;
         }
 
-        private static GameSaveEnvelope MigrateSchemaOne(GameSaveEnvelope envelope)
+        private static GameSaveEnvelope MigrateLegacySchema(GameSaveEnvelope envelope)
         {
-            if (envelope.hasPlayer && envelope.player != null)
-                envelope.player.appearanceProfileId = AppearanceProfileData.NoneId;
+            if (envelope.hasPlayer)
+            {
+                throw new InvalidDataException(
+                    LegacyFoundationPurpleMansionSchemaIncompatible +
+                    ": legacy player cultivation data cannot prove the three-stage foundation state.");
+            }
             envelope.schemaVersion = SchemaVersion;
             return envelope;
         }

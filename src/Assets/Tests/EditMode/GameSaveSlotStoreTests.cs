@@ -129,17 +129,20 @@ namespace TianZhang.Tests
             File.WriteAllText(Path.Combine(temporaryDirectory, "broken.json"), "not-json");
             File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":4}");
             File.WriteAllText(Path.Combine(temporaryDirectory, "empty.json"), "{\"schemaVersion\":1,\"hasPlayer\":false}");
+            File.WriteAllText(Path.Combine(temporaryDirectory, "legacy-player.json"),
+                "{\"schemaVersion\":2,\"hasPlayer\":true,\"player\":{\"characterId\":\"legacy\",\"displayName\":\"旧档\"}}");
 
             GameSaveSlotListResult list = store.ListSlots();
 
             Assert.That(list.Succeeded, Is.True);
             Assert.That(list.Slots.Select(slot => slot.SlotId), Is.EqualTo(new[]
             {
-                "broken", "empty", "old", "valid",
+                "broken", "empty", "legacy-player", "old", "valid",
             }));
             Assert.That(Find(list, "broken").FailureReason, Is.EqualTo(GameSaveSlotFailureReason.InvalidSaveData));
             Assert.That(Find(list, "old").FailureReason, Is.EqualTo(GameSaveSlotFailureReason.InvalidSaveData));
             Assert.That(Find(list, "empty").FailureReason, Is.EqualTo(GameSaveSlotFailureReason.MissingPlayerPayload));
+            Assert.That(Find(list, "legacy-player").FailureReason, Is.EqualTo(GameSaveSlotFailureReason.InvalidSaveData));
             Assert.That(Find(list, "valid").IsReadable, Is.True);
         }
 

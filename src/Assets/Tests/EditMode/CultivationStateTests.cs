@@ -10,12 +10,12 @@ namespace TianZhang.Tests
         public void FoundationStateRoundTripsIndependentlyOfCharacterImplementation()
         {
             Type type = Load("TianZhang.Cultivation", "TianZhang.Cultivation.FoundationState");
-            object state = Activator.CreateInstance(type, 2, 100f, 1);
+            object state = Activator.CreateInstance(type, 20, 100f, 2, 1, 0);
             Invoke(state, "Advance", 25f);
             object snapshot = Invoke(state, "Capture");
-            object restored = Activator.CreateInstance(type, 0, 0f, 0);
+            object restored = Activator.CreateInstance(type, 0, 0f, 0, 0, 0);
             Invoke(restored, "Restore", snapshot);
-            Assert.That(Get(restored, "Phase"), Is.EqualTo(2));
+            Assert.That(Get(restored, "StageCode"), Is.EqualTo(20));
             Assert.That(Get(restored, "ContinuousProgress"), Is.EqualTo(125f));
             foreach (AssemblyName reference in type.Assembly.GetReferencedAssemblies())
                 Assert.That(reference.Name, Is.Not.EqualTo("TianZhang.Domain"));

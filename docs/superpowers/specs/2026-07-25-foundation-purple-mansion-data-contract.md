@@ -53,7 +53,7 @@ foundationPurpleMansionState
 | `sourceGongFaId` | 必填，必须与 `foundationDefinitionId` 所属筑基方案一致。 |
 | `stageId` / `stageCode` | 成对必填且只能为 `FOUNDATION`／`10`、`MANSION`／`20`、`COMPLETE`／`30`。旧 `phase`、`PHASE_1..4` 与 `0..3` ordinal 均非本版本输入。 |
 | `continuousProgress` | 必填的连续值，不得由四个离散经验条替代；其解释必须引用 `phaseBoundarySetId`。 |
-| `phaseBoundarySetId` | 必填的数值档案引用，保留字段名只为既有对象兼容；它负责连续培养和承载能力的输入，不再从进度推导三阶段。新周期、曲线和阈值尚未锁定。 |
+| `phaseBoundarySetId` | 必填的数值档案引用，保留字段名只为既有对象兼容；它负责连续培养和承载能力的输入，不再从进度推导三阶段。固定周期、资源与承载节律以 `N-FPD-STAGE-03` 数值档案为准，本对象只保存其稳定引用。 |
 | `naturalMansionCapacity` | 必填整数，范围 `0..3`，由筑基时最高相容灵根决定；不是可手工叠加的效果值。 |
 | `expansionGrants` | 零至两条。每条必须有唯一 `grantId`、`sourceItemId` 与一个已知的永久容量效果绑定；每条只贡献一座容量，不能用未声明的数值或同一 `grantId` 叠加。 |
 | `expandedMansionCapacity` | 只读派生值，等于合法 `expansionGrants` 数量，范围 `0..2`。 |
@@ -149,7 +149,7 @@ foundationPurpleMansionState
 
 当前 `Characters.csv` 没有本契约字段；`CharacterData.developedMansions`、`mansionBindings`、`realmStage`、`legacyDanJiType`、`releasedNaturalCapacity`、`totalMansionCapacity` 及运行时 `Character.CalculateSlotLimits` 是旧兼容结构，不是 schema 2 的输入或默认值。尤其 `developedMansions` 的旧 `气府` 与按府数加通用槽位语义均与本契约冲突。
 
-因此，未来导入器必须：
+因此，导入器必须：
 
 1. 只在显式 `foundationPurpleMansionState` 根对象出现时读取本契约；不得从旧字段补齐道基、容量、府胚、府体或镇府神通。
 2. 把 schema 2 根对象与任何旧道基品级、五段进度、四阶段 `phase`／ordinal、`releasedNaturalCapacity`、`totalMansionCapacity`、`developedMansions`、`mansionBindings`、旧丹基字段的并存视为整表失败；迁移由 `U-FPD-STAGE-03` 另行授权。
@@ -165,8 +165,9 @@ schema 2 必需的 `stageId`／`stageCode`、当前承载能力及圆满时自�
 
 因此 schema 2 的读取入口必须以 `FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE` 失败关闭：
 不得把玩家／NPC 的旧数字映射为 `COMPLETE`，不得以当前府数、旧总容量或缺省承载
-伪造圆满，也不得新增静默兼容层。`U-FPD-STAGE-03` 才可实现新的玩家／NPC字段、
-版本门和明确失败路径；在该任务完成前，现有运行时仍不是本合同的实现证据。
+伪造圆满，也不得新增静默兼容层。`U-FPD-STAGE-03` 以 `CultivationRecord` 的完整
+schema 2 根状态和 NPC 的同一内层 schema 2 负载实现该路径；外层存档升为 schema 3，
+旧 schema 1／2 玩家档和内层 schema 1 NPC 负载均明确失败关闭。
 
 ## 九、fixture 规格与稳定失败原因
 

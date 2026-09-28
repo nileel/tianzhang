@@ -8,6 +8,7 @@ namespace TianZhang.Cultivation
     {
         private readonly Dictionary<string, MansionState> mansions = new Dictionary<string, MansionState>();
         private readonly Dictionary<string, GuardianAbilityState> guardians = new Dictionary<string, GuardianAbilityState>();
+        private FoundationPurpleMansionSaveData foundationPurpleMansionState;
         public CultivationState(FoundationState foundation, CultivationActionState action, ClosedRetreatState retreat, JindanLockState jindanLock)
         {
             Foundation = foundation ?? throw new System.ArgumentNullException(nameof(foundation));
@@ -31,7 +32,7 @@ namespace TianZhang.Cultivation
         public static CultivationState CreateEmpty()
         {
             return new CultivationState(
-                new FoundationState(0, 0f, 0),
+                new FoundationState(0, 0f, 0, 0, 0),
                 new CultivationActionState(string.Empty, 0),
                 new ClosedRetreatState(string.Empty, false, string.Empty),
                 new JindanLockState(false, string.Empty));
@@ -40,15 +41,39 @@ namespace TianZhang.Cultivation
         public static CultivationState FromDefinition(FoundationPurpleMansionStateData definition)
         {
             if (definition == null) return CreateEmpty();
-            FoundationStateRecord foundation = definition.foundationState;
-            CultivationActionStateRecord action = definition.cultivationActionState;
-            ClosedRetreatPlanRecord retreat = definition.closedRetreatPlan;
-            JindanLockRecord jindan = definition.jindanLock;
+            if (!FoundationPurpleMansionRuntimeState.TryCreate(
+                    definition,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new System.ArgumentException(failureReason, nameof(definition));
+            }
+            return FromFoundationPurpleMansionSaveData(runtimeState.CaptureSaveData());
+        }
+
+        public static CultivationState FromFoundationPurpleMansionSaveData(
+            FoundationPurpleMansionSaveData saveData)
+        {
+            if (!FoundationPurpleMansionRuntimeState.TryRestore(
+                    saveData,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new System.ArgumentException(failureReason, nameof(saveData));
+            }
+
+            FoundationPurpleMansionSaveData normalized = runtimeState.CaptureSaveData();
+            FoundationStateRecord foundation = normalized.foundationState;
+            CultivationActionStateRecord action = normalized.cultivationActionState;
+            ClosedRetreatPlanRecord retreat = normalized.closedRetreatPlan;
+            JindanLockRecord jindan = normalized.jindanLock;
             var state = new CultivationState(
                 new FoundationState(
-                    foundation == null ? 0 : (int)foundation.phase,
-                    foundation == null ? 0f : foundation.continuousProgress,
-                    foundation == null ? 0 : foundation.totalMansionCapacity),
+                    foundation.stageCode,
+                    foundation.continuousProgress,
+                    foundation.naturalMansionCapacity + foundation.expansionGrants.Length,
+                    foundation.currentMansionCarryingCapacity,
+                    foundation.completionMansionCapacity),
                 new CultivationActionState(
                     action == null ? string.Empty : action.actionStateId,
                     action == null ? 0 : (int)action.status),
@@ -66,12 +91,12 @@ namespace TianZhang.Cultivation
                 foreach (string cycleId in action.committedCycleIds ?? new string[0])
                     state.Action.TryCommitCycle(cycleId);
             }
-            foreach (PurpleMansionStateRecord mansion in definition.mansionStates ?? new PurpleMansionStateRecord[0])
+            foreach (PurpleMansionStateRecord mansion in normalized.mansionStates ?? new PurpleMansionStateRecord[0])
             {
                 if (mansion != null)
                     state.TryAddMansion(new MansionState(mansion.mansionKind.ToString(), (int)mansion.state, 0));
             }
-            foreach (GuardianAbilityRecord guardian in definition.guardianAbilities ?? new GuardianAbilityRecord[0])
+            foreach (GuardianAbilityRecord guardian in normalized.guardianAbilities ?? new GuardianAbilityRecord[0])
             {
                 if (guardian != null)
                     state.TryAddGuardian(new GuardianAbilityState(
@@ -79,7 +104,24 @@ namespace TianZhang.Cultivation
                         guardian.abilityInstanceId,
                         guardian.form.ToString()));
             }
+            state.foundationPurpleMansionState = normalized;
             return state;
+        }
+
+        public bool HasFoundationPurpleMansionState => foundationPurpleMansionState != null;
+
+        public FoundationPurpleMansionSaveData CaptureFoundationPurpleMansionSaveData()
+        {
+            if (foundationPurpleMansionState == null)
+                return null;
+            if (!FoundationPurpleMansionRuntimeState.TryRestore(
+                    foundationPurpleMansionState,
+                    out FoundationPurpleMansionRuntimeState runtimeState,
+                    out string failureReason))
+            {
+                throw new System.InvalidOperationException(failureReason);
+            }
+            return runtimeState.CaptureSaveData();
         }
 
         public static CultivationState FromSnapshot(CultivationStateSnapshot snapshot)
@@ -103,6 +145,7 @@ namespace TianZhang.Cultivation
             Foundation.Restore(snapshot.Foundation); Action.Restore(snapshot.Action); Retreat.Restore(snapshot.Retreat); JindanLock.Restore(snapshot.JindanLock);
             mansions.Clear(); foreach (MansionStateSnapshot entry in snapshot.Mansions) TryAddMansion(new MansionState(entry.MansionId, entry.BuildState, entry.Capacity));
             guardians.Clear(); foreach (GuardianAbilityStateSnapshot entry in snapshot.Guardians) TryAddGuardian(new GuardianAbilityState(entry.MansionId, entry.AbilityInstanceId, entry.Form));
+            foundationPurpleMansionState = null;
         }
     }
     public sealed class CultivationStateSnapshot

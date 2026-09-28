@@ -5,12 +5,14 @@ using UnityEngine;
 
 namespace TianZhang.Entity
 {
-    public enum FoundationPhase
+    /// <summary>
+    /// 筑基后的离散状态稳定编码。数值故意不连续，不能把旧四阶段 ordinal 重解释为本状态。
+    /// </summary>
+    public enum FoundationStage
     {
-        Phase1,
-        Phase2,
-        Phase3,
-        Phase4,
+        Foundation = 10,
+        Mansion = 20,
+        Complete = 30,
     }
 
     public enum PurpleMansionKind
@@ -86,14 +88,17 @@ namespace TianZhang.Entity
         public string foundationInstanceId;
         public string foundationDefinitionId;
         public string sourceGongFaId;
-        public FoundationPhase phase;
+        public FoundationStage stageId;
+        public int stageCode;
         public float continuousProgress;
         public string phaseBoundarySetId;
         public int naturalMansionCapacity;
-        public int releasedNaturalCapacity;
         public FoundationExpansionGrant[] expansionGrants;
         public int expandedMansionCapacity;
-        public int totalMansionCapacity;
+        public string carryingCapacityProfileId;
+        public int currentMansionCarryingCapacity;
+        // Zero is the intentional absence marker before COMPLETE.
+        public int completionMansionCapacity;
     }
 
     [Serializable]
@@ -184,8 +189,10 @@ namespace TianZhang.Entity
     public sealed class JindanFormationSnapshot
     {
         public string foundationInstanceId;
-        public FoundationPhase phase;
+        public FoundationStage stageId;
+        public int stageCode;
         public int naturalMansionCapacity;
+        public int completionMansionCapacity;
         public string[] expansionGrantIds;
         public PurpleMansionSnapshot[] mansionStates;
     }
@@ -254,6 +261,7 @@ namespace TianZhang.Entity
     {
         public const string InvalidRuntimeState = "FPM_INVALID_RUNTIME_STATE";
         public const string CapacityOverflow = "FPM_CAPACITY_OVERFLOW";
+        public const string LegacyStageSchemaIncompatible = "FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE";
         public const string DuplicateMansionKind = "FPM_DUPLICATE_MANSION_KIND";
         public const string InvalidAction = "FPM_INVALID_ACTION";
         public const string InvalidClosedRetreat = "FPM_INVALID_CLOSED_RETREAT";
@@ -283,12 +291,18 @@ namespace TianZhang.Entity
             LastClosedRetreatStopReason = source.lastClosedRetreatStopReason;
         }
 
-        public FoundationPhase Phase => foundationState.phase;
+        public FoundationStage Stage => foundationState.stageId;
+        public int StageCode => foundationState.stageCode;
         public float ContinuousProgress => foundationState.continuousProgress;
         public int NaturalMansionCapacity => foundationState.naturalMansionCapacity;
-        public int ReleasedNaturalCapacity => foundationState.releasedNaturalCapacity;
         public int ExpandedMansionCapacity => foundationState.expandedMansionCapacity;
-        public int TotalMansionCapacity => foundationState.totalMansionCapacity;
+        public int SelfMansionCapacity => foundationState.naturalMansionCapacity +
+            foundationState.expansionGrants.Length;
+        public int CurrentMansionCarryingCapacity => foundationState.currentMansionCarryingCapacity;
+        public int CommittableMansionCapacity => Math.Min(
+            SelfMansionCapacity,
+            CurrentMansionCarryingCapacity);
+        public int CompletionMansionCapacity => foundationState.completionMansionCapacity;
         public bool IsJindanFormed => jindanLock.status == JindanLockStatus.Formed;
         public string LastClosedRetreatStopReason { get; private set; }
 
@@ -469,7 +483,7 @@ namespace TianZhang.Entity
             return new FoundationPurpleMansionSaveData
             {
                 schemaId = "foundationPurpleMansionState",
-                schemaVersion = 1,
+                schemaVersion = 2,
                 characterId = characterId,
                 foundationState = Copy(foundationState),
                 mansionStates = mansionStates.Select(Copy).ToArray(),
@@ -490,7 +504,7 @@ namespace TianZhang.Entity
         {
             if (IsJindanFormed)
                 return Rejected(JindanLockMutation);
-            if (Phase == FoundationPhase.Phase4 || cultivationActionState == null ||
+            if (Stage == FoundationStage.Complete || cultivationActionState == null ||
                 cultivationActionState.actionKind != CultivationActionKind.FoundationNurture ||
                 cultivationActionState.targetRef != foundationState.foundationInstanceId)
             {
@@ -578,7 +592,7 @@ namespace TianZhang.Entity
 
         public FoundationPurpleMansionOperationResult TryFormJindanLock()
         {
-            if (IsJindanFormed || Phase != FoundationPhase.Phase4 ||
+            if (IsJindanFormed || Stage != FoundationStage.Complete ||
                 !mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) ||
                 mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Embryo))
             {
@@ -591,8 +605,10 @@ namespace TianZhang.Entity
                 formationSnapshot = new JindanFormationSnapshot
                 {
                     foundationInstanceId = foundationState.foundationInstanceId,
-                    phase = foundationState.phase,
+                    stageId = foundationState.stageId,
+                    stageCode = foundationState.stageCode,
                     naturalMansionCapacity = foundationState.naturalMansionCapacity,
+                    completionMansionCapacity = foundationState.completionMansionCapacity,
                     expansionGrantIds = foundationState.expansionGrants.Select(grant => grant.grantId).ToArray(),
                     mansionStates = mansionStates.Select(mansion => new PurpleMansionSnapshot
                     {
@@ -647,7 +663,7 @@ namespace TianZhang.Entity
                         mansion.embryoId == targetRef);
                 case CultivationActionKind.JindanProof:
                     return targetRef == foundationState.foundationInstanceId &&
-                        foundationState.phase == FoundationPhase.Phase4 &&
+                        foundationState.stageId == FoundationStage.Complete &&
                         mansionStates.Any(mansion =>
                             mansion.state == PurpleMansionBuildState.Complete) &&
                         !mansionStates.Any(mansion =>
@@ -668,13 +684,21 @@ namespace TianZhang.Entity
         {
             failureReason = InvalidRuntimeState;
             if (source == null || source.schemaId != "foundationPurpleMansionState" ||
-                source.schemaVersion != 1 || source.foundationState == null ||
+                source.foundationState == null ||
                 source.mansionStates == null || source.effectBindings == null ||
                 source.guardianAbilities == null || source.enhancementNodes == null ||
                 source.jindanLock == null || source.foundationState.expansionGrants == null ||
                 string.IsNullOrWhiteSpace(source.characterId) ||
                 string.IsNullOrWhiteSpace(source.foundationState.foundationInstanceId))
             {
+                return false;
+            }
+
+            if (source.schemaVersion != 2)
+            {
+                failureReason = source.schemaVersion == 1
+                    ? LegacyStageSchemaIncompatible
+                    : InvalidRuntimeState;
                 return false;
             }
 
@@ -687,20 +711,20 @@ namespace TianZhang.Entity
             }
 
             FoundationStateRecord foundation = source.foundationState;
-            if (!Enum.IsDefined(typeof(FoundationPhase), foundation.phase) ||
+            if (!Enum.IsDefined(typeof(FoundationStage), foundation.stageId) ||
+                foundation.stageCode != (int)foundation.stageId ||
                 foundation.naturalMansionCapacity < 0 || foundation.naturalMansionCapacity > 3 ||
-                foundation.expansionGrants.Length > 2)
+                foundation.expansionGrants.Length > 2 ||
+                string.IsNullOrWhiteSpace(foundation.carryingCapacityProfileId) ||
+                foundation.currentMansionCarryingCapacity < 0)
             {
                 failureReason = CapacityOverflow;
                 return false;
             }
 
-            int releasedCapacity = Math.Min(
-                foundation.naturalMansionCapacity,
-                (int)foundation.phase);
-            if (foundation.releasedNaturalCapacity != releasedCapacity ||
-                foundation.expandedMansionCapacity != foundation.expansionGrants.Length ||
-                foundation.totalMansionCapacity != releasedCapacity + foundation.expansionGrants.Length)
+            int selfCapacity = foundation.naturalMansionCapacity + foundation.expansionGrants.Length;
+            if (foundation.expandedMansionCapacity != foundation.expansionGrants.Length ||
+                foundation.currentMansionCarryingCapacity > selfCapacity)
             {
                 failureReason = CapacityOverflow;
                 return false;
@@ -726,9 +750,29 @@ namespace TianZhang.Entity
             int committedCapacity = source.mansionStates.Count(mansion =>
                 mansion.state == PurpleMansionBuildState.Embryo ||
                 mansion.state == PurpleMansionBuildState.Complete);
-            if (committedCapacity > foundation.totalMansionCapacity)
+            if (committedCapacity > Math.Min(selfCapacity, foundation.currentMansionCarryingCapacity))
             {
                 failureReason = CapacityOverflow;
+                return false;
+            }
+
+            int completeMansions = source.mansionStates.Count(mansion =>
+                mansion.state == PurpleMansionBuildState.Complete);
+            bool validStage = foundation.stageId switch
+            {
+                FoundationStage.Foundation => completeMansions == 0 &&
+                    foundation.completionMansionCapacity == 0,
+                FoundationStage.Mansion => completeMansions > 0 && completeMansions < selfCapacity &&
+                    foundation.completionMansionCapacity == 0,
+                FoundationStage.Complete => completeMansions > 0 &&
+                    foundation.completionMansionCapacity > 0 &&
+                    foundation.completionMansionCapacity <= selfCapacity &&
+                    foundation.completionMansionCapacity <= completeMansions,
+                _ => false,
+            };
+            if (!validStage)
+            {
+                failureReason = InvalidRuntimeState;
                 return false;
             }
 
@@ -775,7 +819,7 @@ namespace TianZhang.Entity
 
             bool validFormedLock = source.jindanLock.status == JindanLockStatus.Formed &&
                                    source.jindanLock.formationSnapshot != null &&
-                                   foundation.phase == FoundationPhase.Phase4 &&
+                                   foundation.stageId == FoundationStage.Complete &&
                                    !source.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Embryo) &&
                                    source.mansionStates.Any(mansion => mansion.state == PurpleMansionBuildState.Complete) &&
                                    MatchesFormationSnapshot(source);
@@ -793,8 +837,10 @@ namespace TianZhang.Entity
                 snapshot.mansionStates.Select(mansion => mansion.mansionKind).Distinct().Count() !=
                     snapshot.mansionStates.Length ||
                 snapshot.foundationInstanceId != source.foundationState.foundationInstanceId ||
-                snapshot.phase != source.foundationState.phase ||
+                snapshot.stageId != source.foundationState.stageId ||
+                snapshot.stageCode != source.foundationState.stageCode ||
                 snapshot.naturalMansionCapacity != source.foundationState.naturalMansionCapacity ||
+                snapshot.completionMansionCapacity != source.foundationState.completionMansionCapacity ||
                 snapshot.expansionGrantIds == null ||
                 !snapshot.expansionGrantIds.SequenceEqual(
                     source.foundationState.expansionGrants.Select(grant => grant.grantId)))
@@ -833,7 +879,7 @@ namespace TianZhang.Entity
                         mansion.embryoId == action.targetRef);
                 case CultivationActionKind.JindanProof:
                     return action.targetRef == source.foundationState.foundationInstanceId &&
-                        source.foundationState.phase == FoundationPhase.Phase4 &&
+                        source.foundationState.stageId == FoundationStage.Complete &&
                         source.mansionStates.Any(mansion =>
                             mansion.state == PurpleMansionBuildState.Complete) &&
                         !source.mansionStates.Any(mansion =>
@@ -926,14 +972,16 @@ namespace TianZhang.Entity
             foundationInstanceId = source.foundationInstanceId,
             foundationDefinitionId = source.foundationDefinitionId,
             sourceGongFaId = source.sourceGongFaId,
-            phase = source.phase,
+            stageId = source.stageId,
+            stageCode = source.stageCode,
             continuousProgress = source.continuousProgress,
             phaseBoundarySetId = source.phaseBoundarySetId,
             naturalMansionCapacity = source.naturalMansionCapacity,
-            releasedNaturalCapacity = source.releasedNaturalCapacity,
             expansionGrants = source.expansionGrants.Select(Copy).ToArray(),
             expandedMansionCapacity = source.expandedMansionCapacity,
-            totalMansionCapacity = source.totalMansionCapacity,
+            carryingCapacityProfileId = source.carryingCapacityProfileId,
+            currentMansionCarryingCapacity = source.currentMansionCarryingCapacity,
+            completionMansionCapacity = source.completionMansionCapacity,
         };
 
         private static FoundationExpansionGrant Copy(FoundationExpansionGrant source) => new FoundationExpansionGrant
@@ -1027,8 +1075,10 @@ namespace TianZhang.Entity
                 formationSnapshot = source.formationSnapshot == null ? null : new JindanFormationSnapshot
                 {
                     foundationInstanceId = source.formationSnapshot.foundationInstanceId,
-                    phase = source.formationSnapshot.phase,
+                    stageId = source.formationSnapshot.stageId,
+                    stageCode = source.formationSnapshot.stageCode,
                     naturalMansionCapacity = source.formationSnapshot.naturalMansionCapacity,
+                    completionMansionCapacity = source.formationSnapshot.completionMansionCapacity,
                     expansionGrantIds = source.formationSnapshot.expansionGrantIds.ToArray(),
                     mansionStates = source.formationSnapshot.mansionStates.Select(snapshot => new PurpleMansionSnapshot
                     {

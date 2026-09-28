@@ -29,7 +29,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaTwoRoundTripIsCanonicalAndIdempotent()
+        public void SchemaThreeRoundTripIsCanonicalAndIdempotent()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             string first = source.CaptureSaveJson();
@@ -47,7 +47,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaTwoDefaultNavigationRoundTripRemainsCanonical()
+        public void SchemaThreeDefaultNavigationRoundTripRemainsCanonical()
         {
             var source = new GameRuntime();
             string first = source.CaptureSaveJson();
@@ -59,22 +59,14 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaOneDeserializeMigratesAppearanceToNoneAndResavesSchemaTwo()
+        public void LegacyPlayerSchemaIsRejectedRatherThanInventingAFoundationStage()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             GameSaveEnvelope legacy = source.CaptureSave();
             legacy.schemaVersion = GameSaveSerializer.LegacySchemaVersion;
-            legacy.player.appearanceProfileId = null;
-
-            GameSaveEnvelope migrated = GameSaveSerializer.Deserialize(JsonUtility.ToJson(legacy));
-
-            Assert.That(migrated.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
-            Assert.That(migrated.player.appearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
-
-            var restored = new GameRuntime();
-            restored.RestoreSave(migrated, catalog);
-            Assert.That(restored.Player.AppearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
-            Assert.That(restored.CaptureSave().schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+                GameSaveSerializer.Deserialize(JsonUtility.ToJson(legacy)));
+            StringAssert.StartsWith(FoundationPurpleMansionRuntimeState.LegacyStageSchemaIncompatible + ":", exception.Message);
         }
 
         [Test]
@@ -101,7 +93,7 @@ namespace TianZhang.Tests
             invalid.player = includePlayerPayload ? donor.player : null;
             invalid.cultivation = includePlayerPayload ? null : donor.cultivation;
             if (!includePlayerPayload)
-                invalid.cultivation.foundationPhase = 1;
+                invalid.cultivation = new CultivationRecord { hasFoundationPurpleMansionState = true };
 
             AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
         }
@@ -269,46 +261,51 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaTwoEnvelopeMissingCombatModifierFieldsDefaultsToZero()
+        public void SchemaTwoEnvelopeIsRejectedAsAnIncompatibleFoundationSave()
         {
-            GameSaveEnvelope envelope = GameSaveSerializer.Deserialize(
-                "{\"schemaVersion\":2,\"hasPlayer\":true,\"player\":{\"characterId\":\"player\",\"displayName\":\"旧档\"}}");
-            Assert.That(envelope.player.hpBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.mpBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.physAtkBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.magAtkBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.physDefBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.magDefBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.blockRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.blockReduction, Is.EqualTo(0f));
-            Assert.That(envelope.player.soulShieldRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.soulShieldReduction, Is.EqualTo(0f));
-            Assert.That(envelope.player.dodgeRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.critRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.critDamage, Is.EqualTo(0f));
-            Assert.That(envelope.player.hitRateBonus, Is.EqualTo(0f));
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() => GameSaveSerializer.Deserialize(
+                "{\"schemaVersion\":2,\"hasPlayer\":true,\"player\":{\"characterId\":\"player\",\"displayName\":\"旧档\"}}"));
+            StringAssert.StartsWith(FoundationPurpleMansionRuntimeState.LegacyStageSchemaIncompatible + ":", exception.Message);
         }
 
         [Test]
-        public void SchemaOneMigrationKeepsCombatModifierFieldsAtZero()
+        public void SchemaOneEnvelopeIsRejectedAsAnIncompatibleFoundationSave()
         {
-            GameSaveEnvelope envelope = GameSaveSerializer.Deserialize(
-                "{\"schemaVersion\":1,\"hasPlayer\":true,\"player\":{\"characterId\":\"player\",\"displayName\":\"旧档\"}}");
-            Assert.That(envelope.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
-            Assert.That(envelope.player.hpBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.mpBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.physAtkBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.magAtkBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.physDefBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.magDefBonus, Is.EqualTo(0f));
-            Assert.That(envelope.player.blockRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.blockReduction, Is.EqualTo(0f));
-            Assert.That(envelope.player.soulShieldRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.soulShieldReduction, Is.EqualTo(0f));
-            Assert.That(envelope.player.dodgeRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.critRate, Is.EqualTo(0f));
-            Assert.That(envelope.player.critDamage, Is.EqualTo(0f));
-            Assert.That(envelope.player.hitRateBonus, Is.EqualTo(0f));
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() => GameSaveSerializer.Deserialize(
+                "{\"schemaVersion\":1,\"hasPlayer\":true,\"player\":{\"characterId\":\"player\",\"displayName\":\"旧档\"}}"));
+            StringAssert.StartsWith(FoundationPurpleMansionRuntimeState.LegacyStageSchemaIncompatible + ":", exception.Message);
+        }
+
+        [Test]
+        public void PlayerAndNpcFoundationStateRoundTripWithTheSameSchemaTwoPayload()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            source.BeginNewGame(
+                CharacterRuntimeProfile.FromDefinition("player", definition),
+                CultivationState.FromFoundationPurpleMansionSaveData(CreateCompleteFoundationSave("player_foundation")),
+                "guanzhong_hub");
+            GameSaveEnvelope save = source.CaptureSave();
+            save.npcs = new[]
+            {
+                new NpcRecord
+                {
+                    npcId = "npc_foundation",
+                    worldNodeId = "guanzhong_hub",
+                    cultivationActionId = "",
+                    cultivationState = CreateCompleteFoundationSave("npc_foundation"),
+                },
+            };
+
+            var restored = new GameRuntime();
+            restored.RestoreSave(save, catalog);
+            GameSaveEnvelope roundTrip = restored.CaptureSave();
+
+            Assert.That(roundTrip.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            Assert.That(roundTrip.cultivation.hasFoundationPurpleMansionState, Is.True);
+            Assert.That(roundTrip.cultivation.foundationPurpleMansionState.foundationState.stageCode,
+                Is.EqualTo((int)FoundationStage.Complete));
+            Assert.That(roundTrip.npcs[0].cultivationState.schemaVersion, Is.EqualTo(2));
+            Assert.That(roundTrip.npcs[0].cultivationState.foundationState.completionMansionCapacity, Is.EqualTo(1));
         }
 
         private void AssertRestoreFailsWithoutChangingRuntime(
@@ -350,6 +347,59 @@ namespace TianZhang.Tests
             runtime.EnterSettlement("settlement_test");
             runtime.EnterAdventure("adventure_test", SceneReturnTarget.Settlement("settlement_test"));
             return runtime;
+        }
+
+        private static FoundationPurpleMansionSaveData CreateCompleteFoundationSave(string foundationId)
+        {
+            return new FoundationPurpleMansionSaveData
+            {
+                schemaId = "foundationPurpleMansionState",
+                schemaVersion = 2,
+                characterId = foundationId,
+                foundationState = new FoundationStateRecord
+                {
+                    foundationInstanceId = foundationId,
+                    foundationDefinitionId = "foundation_definition",
+                    sourceGongFaId = "gongfa_definition",
+                    stageId = FoundationStage.Complete,
+                    stageCode = (int)FoundationStage.Complete,
+                    continuousProgress = 100f,
+                    phaseBoundarySetId = "phase_boundaries",
+                    naturalMansionCapacity = 1,
+                    expansionGrants = new FoundationExpansionGrant[0],
+                    expandedMansionCapacity = 0,
+                    carryingCapacityProfileId = "carrying_profile",
+                    currentMansionCarryingCapacity = 1,
+                    completionMansionCapacity = 1,
+                },
+                mansionStates = new[]
+                {
+                    new PurpleMansionStateRecord
+                    {
+                        mansionKind = PurpleMansionKind.Ming,
+                        state = PurpleMansionBuildState.Complete,
+                        mansionInstanceId = "mansion_ming",
+                        mansionBodyEffectBindingId = "MANSION_BODY_MING_YUAN_HUIHU",
+                        guardianAbilityInstanceId = "guardian_ming",
+                        sourceSpellId = "spell_ming",
+                        upgradePlanId = "upgrade_ming",
+                        sourceSpellDisposition = "RETAIN",
+                    },
+                    NotBuilt(PurpleMansionKind.Hun),
+                    NotBuilt(PurpleMansionKind.Shi),
+                    NotBuilt(PurpleMansionKind.Wu),
+                    NotBuilt(PurpleMansionKind.Yun),
+                },
+                effectBindings = new FoundationEffectBinding[0],
+                guardianAbilities = new GuardianAbilityRecord[0],
+                enhancementNodes = new EnhancementNodeRecord[0],
+                jindanLock = new JindanLockRecord { status = JindanLockStatus.PreJindan },
+            };
+        }
+
+        private static PurpleMansionStateRecord NotBuilt(PurpleMansionKind kind)
+        {
+            return new PurpleMansionStateRecord { mansionKind = kind, state = PurpleMansionBuildState.NotBuilt };
         }
     }
 }

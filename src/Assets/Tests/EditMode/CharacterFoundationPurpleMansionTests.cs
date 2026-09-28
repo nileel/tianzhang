@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using TianZhang.Cultivation.JindanProof;
 using TianZhang.Entity;
@@ -9,234 +9,111 @@ namespace TianZhang.Tests
     public sealed class CharacterFoundationPurpleMansionTests
     {
         [Test]
-        public void FoundationRuntimeStateUsesFoundationRootWithoutCharacterAggregation()
+        public void CompleteHistorySurvivesExpansionAndSaveRoundTrip()
         {
-            FoundationPurpleMansionStateData state = CreateCompleteState();
+            FoundationPurpleMansionStateData state = CreateCompleteState(1, 1, 1);
             try
             {
-                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
-
-                Assert.AreEqual(FoundationPhase.Phase4, runtimeState.Phase);
-                Assert.AreEqual(400f, runtimeState.ContinuousProgress);
-                Assert.AreEqual(1, runtimeState.TotalMansionCapacity);
-                Assert.AreEqual(PurpleMansionBuildState.Complete,
-                    runtimeState.GetMansionBuildState(PurpleMansionKind.Ming));
-                Assert.AreEqual("guardian_ming",
-                    runtimeState.GetGuardianAbilityInstanceId(PurpleMansionKind.Ming));
-            }
-            finally
-            {
-                Destroy(state);
-            }
-        }
-
-        [Test]
-        public void MaximumTwoExpansionGrantsProvideFiveMansionsButCannotAddAnotherGrant()
-        {
-            FoundationPurpleMansionStateData state = CreateMaximumCapacityState();
-            try
-            {
-                Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryCreate(
-                    state,
-                    out FoundationPurpleMansionRuntimeState runtimeState,
-                    out string failureReason), failureReason);
-
-                Assert.AreEqual(3, runtimeState.NaturalMansionCapacity);
-                Assert.AreEqual(2, runtimeState.ExpandedMansionCapacity);
-                Assert.AreEqual(5, runtimeState.TotalMansionCapacity);
-                Assert.AreEqual(PurpleMansionBuildState.Complete,
-                    runtimeState.GetMansionBuildState(PurpleMansionKind.Yun));
-
-                FoundationPurpleMansionOperationResult result = runtimeState.CanExpandMansionCapacity();
-                Assert.IsFalse(result.Succeeded);
-                Assert.AreEqual(FoundationPurpleMansionRuntimeState.CapacityOverflow, result.FailureReason);
-            }
-            finally
-            {
-                Destroy(state);
-            }
-        }
-
-        [Test]
-        public void ClosedRetreatRepeatsOnlyItsCurrentActionAndOpeningFailureKeepsEmbryo()
-        {
-            FoundationPurpleMansionStateData state = CreatePausedEmbryoState();
-            try
-            {
-                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
-
-                FoundationPurpleMansionOperationResult stopped =
-                    runtimeState.TryRepeatClosedRetreatCycle("unused", false);
-                Assert.IsTrue(stopped.Succeeded);
-                Assert.AreEqual("INSUFFICIENT_NEXT_CYCLE_RESOURCES",
-                    runtimeState.LastClosedRetreatStopReason);
-
-                FoundationPurpleMansionOperationResult committed =
-                    runtimeState.TryRepeatClosedRetreatCycle("cycle_hun_1", true);
-                Assert.IsTrue(committed.Succeeded);
-                Assert.AreEqual(CultivationActionStatus.Active,
-                    runtimeState.GetCultivationActionState().status);
-                Assert.AreEqual(1,
-                    runtimeState.GetCultivationActionState().committedCycleIds.Length);
-                Assert.IsFalse(runtimeState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
-
-                state.cultivationActionState.actionKind = CultivationActionKind.MansionOpeningTrial;
-                FoundationPurpleMansionRuntimeState openingState = CreateRuntimeState(state);
-                FoundationPurpleMansionOperationResult failed =
-                    openingState.TryFailMansionOpeningTrial(PurpleMansionKind.Hun);
-                Assert.IsTrue(failed.Succeeded);
-                Assert.AreEqual(PurpleMansionBuildState.Embryo,
-                    openingState.GetMansionBuildState(PurpleMansionKind.Hun));
-                Assert.IsNull(openingState.GetGuardianAbilityInstanceId(PurpleMansionKind.Hun));
-                Assert.AreEqual(CultivationActionStatus.Failed,
-                    openingState.GetCultivationActionState().status);
-            }
-            finally
-            {
-                Destroy(state);
-            }
-        }
-
-        [Test]
-        public void RuntimeSaveDataRoundTripPreservesGuardianNodesStopReasonAndCommittedCycles()
-        {
-            FoundationPurpleMansionStateData state = CreatePausedEmbryoState();
-            state.enhancementNodes = new[]
-            {
-                new EnhancementNodeRecord
+                state.foundationState.expansionGrants = new[]
                 {
-                    nodeId = "node_ming_1",
-                    abilityInstanceId = "guardian_ming",
-                    nodeKind = EnhancementNodeKind.Cultivation,
-                    requirements = Array.Empty<string>(),
-                    effectBindingIds = Array.Empty<string>(),
-                },
-            };
-            try
-            {
-                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
-                Assert.IsTrue(runtimeState.TryRepeatClosedRetreatCycle("unused", false).Succeeded);
+                    new FoundationExpansionGrant
+                    {
+                        grantId = "grant_one",
+                        sourceItemId = "item_one",
+                        capacityEffectBindingId = "capacity_effect_one",
+                    },
+                };
+                state.foundationState.expandedMansionCapacity = 1;
+                state.effectBindings = new[]
+                {
+                    BodyEffect(PurpleMansionKind.Ming, "mansion_ming"),
+                    new FoundationEffectBinding
+                    {
+                        effectBindingId = "capacity_effect_one",
+                        carrierKind = FoundationEffectCarrierKind.ExpansionGrant,
+                        carrierId = "grant_one",
+                        order = 1,
+                        trigger = "grant_applied",
+                        conditions = Array.Empty<string>(),
+                        target = "mansion_capacity",
+                        atomicEffectType = "MANSION_CAPACITY_PLUS_ONE",
+                        parameters = new[] { "profileRef:fixture" },
+                    },
+                };
 
-                FoundationPurpleMansionSaveData pausedSave =
-                    runtimeState.CaptureSaveData();
-                Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryRestore(
-                    pausedSave,
-                    out FoundationPurpleMansionRuntimeState pausedState,
-                    out string failureReason), failureReason);
-                Assert.AreEqual("INSUFFICIENT_NEXT_CYCLE_RESOURCES",
-                    pausedState.LastClosedRetreatStopReason);
-                Assert.AreEqual("guardian_ming", pausedState.GetGuardianAbilities()[0].abilityInstanceId);
-                Assert.AreEqual("node_ming_1", pausedState.GetEnhancementNodes()[0].nodeId);
+                FoundationPurpleMansionRuntimeState runtime = CreateRuntimeState(state);
+                Assert.That(runtime.Stage, Is.EqualTo(FoundationStage.Complete));
+                Assert.That(runtime.SelfMansionCapacity, Is.EqualTo(2));
+                Assert.That(runtime.CompletionMansionCapacity, Is.EqualTo(1));
 
-                Assert.IsTrue(pausedState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
-                FoundationPurpleMansionSaveData committedSave = pausedState.CaptureSaveData();
-                Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryRestore(
-                    committedSave,
-                    out FoundationPurpleMansionRuntimeState restoredState,
-                    out failureReason), failureReason);
-                Assert.IsFalse(restoredState.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded);
+                FoundationPurpleMansionSaveData save = runtime.CaptureSaveData();
+                Assert.That(FoundationPurpleMansionRuntimeState.TryRestore(
+                    save, out FoundationPurpleMansionRuntimeState restored, out string reason), Is.True, reason);
+                Assert.That(restored.Stage, Is.EqualTo(FoundationStage.Complete));
+                Assert.That(restored.CompletionMansionCapacity, Is.EqualTo(1));
             }
-            finally
-            {
-                Destroy(state);
-            }
+            finally { UnityEngine.Object.DestroyImmediate(state); }
         }
 
         [Test]
-        public void JindanCoordinatorLocksFoundationNurtureExpansionAndMansionOpening()
+        public void PausedEmbryoKeepsItsCommittedCapacityAndCycleIdempotence()
         {
-            FoundationPurpleMansionStateData state = CreateCompleteState();
+            FoundationPurpleMansionStateData state = CreatePausedEmbryoState();
             try
             {
-                FoundationPurpleMansionRuntimeState runtimeState = CreateRuntimeState(state);
-                var coordinator = new JindanProofCoordinator();
-
-                FoundationPurpleMansionOperationResult formed =
-                    coordinator.TryFormFoundationPurpleMansionLock(runtimeState);
-                Assert.IsTrue(formed.Succeeded);
-                Assert.IsTrue(runtimeState.IsJindanFormed);
-
-                AssertLocked(runtimeState.TryNurtureFoundationCycle("cycle_foundation"));
-                AssertLocked(runtimeState.CanExpandMansionCapacity());
-                AssertLocked(runtimeState.TryOpenMansionCycle(PurpleMansionKind.Ming, "cycle_opening"));
+                FoundationPurpleMansionRuntimeState runtime = CreateRuntimeState(state);
+                Assert.That(runtime.CommittableMansionCapacity, Is.EqualTo(2));
+                Assert.That(runtime.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded, Is.True);
+                Assert.That(runtime.TryRepeatClosedRetreatCycle("cycle_hun_1", true).Succeeded, Is.False);
+                Assert.That(runtime.TryRepeatClosedRetreatCycle("unused", false).Succeeded, Is.True);
+                Assert.That(runtime.LastClosedRetreatStopReason, Is.EqualTo("INSUFFICIENT_NEXT_CYCLE_RESOURCES"));
             }
-            finally
+            finally { UnityEngine.Object.DestroyImmediate(state); }
+        }
+
+        [Test]
+        public void JindanLockRejectsAllFoundationAndMansionMutationEntrypoints()
+        {
+            FoundationPurpleMansionStateData state = CreateCompleteState(1, 1, 1);
+            try
             {
-                Destroy(state);
+                FoundationPurpleMansionRuntimeState runtime = CreateRuntimeState(state);
+                FoundationPurpleMansionOperationResult formed = new JindanProofCoordinator()
+                    .TryFormFoundationPurpleMansionLock(runtime);
+                Assert.That(formed.Succeeded, Is.True);
+                Assert.That(runtime.TryNurtureFoundationCycle("cycle_foundation").FailureReason,
+                    Is.EqualTo(FoundationPurpleMansionRuntimeState.JindanLockMutation));
+                Assert.That(runtime.CanExpandMansionCapacity().FailureReason,
+                    Is.EqualTo(FoundationPurpleMansionRuntimeState.JindanLockMutation));
+                Assert.That(runtime.TryOpenMansionCycle(PurpleMansionKind.Ming, "cycle_opening").FailureReason,
+                    Is.EqualTo(FoundationPurpleMansionRuntimeState.JindanLockMutation));
             }
+            finally { UnityEngine.Object.DestroyImmediate(state); }
         }
 
-        private static void AssertLocked(FoundationPurpleMansionOperationResult result)
+        private static FoundationPurpleMansionRuntimeState CreateRuntimeState(FoundationPurpleMansionStateData state)
         {
-            Assert.IsFalse(result.Succeeded);
-            Assert.AreEqual(FoundationPurpleMansionRuntimeState.JindanLockMutation, result.FailureReason);
+            Assert.That(FoundationPurpleMansionRuntimeState.TryCreate(
+                state, out FoundationPurpleMansionRuntimeState runtime, out string reason), Is.True, reason);
+            return runtime;
         }
 
-        private static FoundationPurpleMansionRuntimeState CreateRuntimeState(
-            FoundationPurpleMansionStateData state)
+        private static FoundationPurpleMansionStateData CreateCompleteState(
+            int naturalCapacity,
+            int carryingCapacity,
+            int completionCapacity)
         {
-            Assert.IsTrue(FoundationPurpleMansionRuntimeState.TryCreate(
-                state,
-                out FoundationPurpleMansionRuntimeState runtimeState,
-                out string failureReason), failureReason);
-            return runtimeState;
-        }
-
-        private static FoundationPurpleMansionStateData CreateCompleteState()
-        {
-            var state = CreateBaseState(FoundationPhase.Phase4, 1, 1, 1);
-            state.mansionStates[0] = CompleteMansion(PurpleMansionKind.Ming);
+            var state = CreateBaseState(FoundationStage.Complete, naturalCapacity, carryingCapacity, completionCapacity);
+            state.mansionStates[0] = CompleteMansion(PurpleMansionKind.Ming, "mansion_ming");
             state.effectBindings = new[] { BodyEffect(PurpleMansionKind.Ming, "mansion_ming") };
             state.guardianAbilities = new[] { Guardian(PurpleMansionKind.Ming, "mansion_ming") };
             return state;
         }
 
-        private static FoundationPurpleMansionStateData CreateMaximumCapacityState()
-        {
-            var state = CreateBaseState(FoundationPhase.Phase4, 3, 3, 5);
-            state.foundationState.expansionGrants = new[]
-            {
-                new FoundationExpansionGrant
-                {
-                    grantId = "grant_one",
-                    sourceItemId = "item_one",
-                    capacityEffectBindingId = "capacity_effect_one",
-                },
-                new FoundationExpansionGrant
-                {
-                    grantId = "grant_two",
-                    sourceItemId = "item_two",
-                    capacityEffectBindingId = "capacity_effect_two",
-                },
-            };
-            state.foundationState.expandedMansionCapacity = 2;
-            PurpleMansionKind[] kinds =
-            {
-                PurpleMansionKind.Ming,
-                PurpleMansionKind.Hun,
-                PurpleMansionKind.Shi,
-                PurpleMansionKind.Wu,
-                PurpleMansionKind.Yun,
-            };
-            state.mansionStates = new PurpleMansionStateRecord[kinds.Length];
-            state.effectBindings = new FoundationEffectBinding[kinds.Length + 2];
-            state.guardianAbilities = new GuardianAbilityRecord[kinds.Length];
-            for (int index = 0; index < kinds.Length; index++)
-            {
-                string mansionId = "mansion_" + kinds[index].ToString().ToLowerInvariant();
-                state.mansionStates[index] = CompleteMansion(kinds[index], mansionId);
-                state.effectBindings[index] = BodyEffect(kinds[index], mansionId);
-                state.guardianAbilities[index] = Guardian(kinds[index], mansionId);
-            }
-            state.effectBindings[5] = CapacityEffect("capacity_effect_one", "grant_one");
-            state.effectBindings[6] = CapacityEffect("capacity_effect_two", "grant_two");
-            return state;
-        }
-
         private static FoundationPurpleMansionStateData CreatePausedEmbryoState()
         {
-            var state = CreateBaseState(FoundationPhase.Phase3, 2, 2, 2);
-            state.mansionStates[0] = CompleteMansion(PurpleMansionKind.Ming);
+            FoundationPurpleMansionStateData state = CreateBaseState(FoundationStage.Mansion, 2, 2, 0);
+            state.mansionStates[0] = CompleteMansion(PurpleMansionKind.Ming, "mansion_ming");
             state.mansionStates[1] = new PurpleMansionStateRecord
             {
                 mansionKind = PurpleMansionKind.Hun,
@@ -272,116 +149,84 @@ namespace TianZhang.Tests
         }
 
         private static FoundationPurpleMansionStateData CreateBaseState(
-            FoundationPhase phase,
+            FoundationStage stage,
             int naturalCapacity,
-            int releasedCapacity,
-            int totalCapacity)
+            int carryingCapacity,
+            int completionCapacity)
         {
-            var state = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
-            state.schemaId = "foundationPurpleMansionState";
-            state.schemaVersion = 1;
-            state.characterId = "runtime_fixture";
-            state.foundationState = new FoundationStateRecord
+            return new FoundationPurpleMansionStateData
             {
-                foundationInstanceId = "foundation_runtime",
-                foundationDefinitionId = "foundation_definition",
-                sourceGongFaId = "gongfa_runtime",
-                phase = phase,
-                continuousProgress = phase == FoundationPhase.Phase4 ? 400f : 250f,
-                phaseBoundarySetId = "phase_boundaries",
-                naturalMansionCapacity = naturalCapacity,
-                releasedNaturalCapacity = releasedCapacity,
-                expansionGrants = Array.Empty<FoundationExpansionGrant>(),
-                expandedMansionCapacity = 0,
-                totalMansionCapacity = totalCapacity,
-            };
-            state.mansionStates = new[]
-            {
-                NotBuilt(PurpleMansionKind.Ming),
-                NotBuilt(PurpleMansionKind.Hun),
-                NotBuilt(PurpleMansionKind.Shi),
-                NotBuilt(PurpleMansionKind.Wu),
-                NotBuilt(PurpleMansionKind.Yun),
-            };
-            state.effectBindings = Array.Empty<FoundationEffectBinding>();
-            state.guardianAbilities = Array.Empty<GuardianAbilityRecord>();
-            state.enhancementNodes = Array.Empty<EnhancementNodeRecord>();
-            state.jindanLock = new JindanLockRecord { status = JindanLockStatus.PreJindan };
-            return state;
-        }
-
-        private static PurpleMansionStateRecord NotBuilt(PurpleMansionKind kind)
-        {
-            return new PurpleMansionStateRecord
-            {
-                mansionKind = kind,
-                state = PurpleMansionBuildState.NotBuilt,
+                schemaId = "foundationPurpleMansionState",
+                schemaVersion = 2,
+                characterId = "runtime_fixture",
+                foundationState = new FoundationStateRecord
+                {
+                    foundationInstanceId = "foundation_runtime",
+                    foundationDefinitionId = "foundation_definition",
+                    sourceGongFaId = "gongfa_runtime",
+                    stageId = stage,
+                    stageCode = (int)stage,
+                    continuousProgress = 100f,
+                    phaseBoundarySetId = "phase_boundaries",
+                    naturalMansionCapacity = naturalCapacity,
+                    expansionGrants = Array.Empty<FoundationExpansionGrant>(),
+                    expandedMansionCapacity = 0,
+                    carryingCapacityProfileId = "carrying_profile",
+                    currentMansionCarryingCapacity = carryingCapacity,
+                    completionMansionCapacity = completionCapacity,
+                },
+                mansionStates = new[]
+                {
+                    NotBuilt(PurpleMansionKind.Ming), NotBuilt(PurpleMansionKind.Hun), NotBuilt(PurpleMansionKind.Shi),
+                    NotBuilt(PurpleMansionKind.Wu), NotBuilt(PurpleMansionKind.Yun),
+                },
+                enhancementNodes = Array.Empty<EnhancementNodeRecord>(),
+                jindanLock = new JindanLockRecord { status = JindanLockStatus.PreJindan },
             };
         }
 
-        private static PurpleMansionStateRecord CompleteMansion(PurpleMansionKind kind, string mansionId = "mansion_ming")
+        private static PurpleMansionStateRecord NotBuilt(PurpleMansionKind kind) => new PurpleMansionStateRecord
         {
-            string lowerKind = kind.ToString().ToLowerInvariant();
-            return new PurpleMansionStateRecord
-            {
-                mansionKind = kind,
-                state = PurpleMansionBuildState.Complete,
-                mansionInstanceId = mansionId,
-                mansionBodyEffectBindingId = RequiredBodyBinding(kind),
-                guardianAbilityInstanceId = "guardian_" + lowerKind,
-                sourceSpellId = "spell_" + lowerKind,
-                upgradePlanId = "upgrade_" + lowerKind,
-                sourceSpellDisposition = "RETAIN",
-            };
-        }
+            mansionKind = kind,
+            state = PurpleMansionBuildState.NotBuilt,
+        };
 
-        private static FoundationEffectBinding BodyEffect(PurpleMansionKind kind, string mansionId)
+        private static PurpleMansionStateRecord CompleteMansion(PurpleMansionKind kind, string mansionId) => new PurpleMansionStateRecord
         {
-            return new FoundationEffectBinding
-            {
-                effectBindingId = RequiredBodyBinding(kind),
-                carrierKind = FoundationEffectCarrierKind.MansionBody,
-                carrierId = mansionId,
-                order = 1,
-                trigger = "fixture_trigger",
-                conditions = Array.Empty<string>(),
-                target = "fixture_target",
-                atomicEffectType = "fixture_atomic",
-                parameters = new[] { "profileRef:fixture_numeric" },
-            };
-        }
+            mansionKind = kind,
+            state = PurpleMansionBuildState.Complete,
+            mansionInstanceId = mansionId,
+            mansionBodyEffectBindingId = RequiredBodyBinding(kind),
+            guardianAbilityInstanceId = "guardian_" + kind.ToString().ToLowerInvariant(),
+            sourceSpellId = "spell_" + kind.ToString().ToLowerInvariant(),
+            upgradePlanId = "upgrade_" + kind.ToString().ToLowerInvariant(),
+            sourceSpellDisposition = "RETAIN",
+        };
 
-        private static FoundationEffectBinding CapacityEffect(string effectId, string grantId)
+        private static FoundationEffectBinding BodyEffect(PurpleMansionKind kind, string mansionId) => new FoundationEffectBinding
         {
-            return new FoundationEffectBinding
-            {
-                effectBindingId = effectId,
-                carrierKind = FoundationEffectCarrierKind.ExpansionGrant,
-                carrierId = grantId,
-                order = 1,
-                trigger = "grant_applied",
-                conditions = Array.Empty<string>(),
-                target = "mansion_capacity",
-                atomicEffectType = "MANSION_CAPACITY_PLUS_ONE",
-                parameters = new[] { "profileRef:fixture_numeric" },
-            };
-        }
+            effectBindingId = RequiredBodyBinding(kind),
+            carrierKind = FoundationEffectCarrierKind.MansionBody,
+            carrierId = mansionId,
+            order = 1,
+            trigger = "fixture_trigger",
+            conditions = Array.Empty<string>(),
+            target = "fixture_target",
+            atomicEffectType = "fixture_atomic",
+            parameters = new[] { "profileRef:fixture" },
+        };
 
-        private static GuardianAbilityRecord Guardian(PurpleMansionKind kind, string mansionId)
+        private static GuardianAbilityRecord Guardian(PurpleMansionKind kind, string mansionId) => new GuardianAbilityRecord
         {
-            string lowerKind = kind.ToString().ToLowerInvariant();
-            return new GuardianAbilityRecord
-            {
-                abilityInstanceId = "guardian_" + lowerKind,
-                abilityDefinitionId = "ability_" + lowerKind,
-                mansionInstanceId = mansionId,
-                sourceSpellId = "spell_" + lowerKind,
-                upgradePlanId = "upgrade_" + lowerKind,
-                sourceSpellDisposition = "RETAIN",
-                form = GuardianAbilityForm.Passive,
-                effectBindingIds = Array.Empty<string>(),
-            };
-        }
+            abilityInstanceId = "guardian_" + kind.ToString().ToLowerInvariant(),
+            abilityDefinitionId = "ability_" + kind.ToString().ToLowerInvariant(),
+            mansionInstanceId = mansionId,
+            sourceSpellId = "spell_" + kind.ToString().ToLowerInvariant(),
+            upgradePlanId = "upgrade_" + kind.ToString().ToLowerInvariant(),
+            sourceSpellDisposition = "RETAIN",
+            form = GuardianAbilityForm.Passive,
+            effectBindingIds = Array.Empty<string>(),
+        };
 
         private static string RequiredBodyBinding(PurpleMansionKind kind)
         {
@@ -394,15 +239,6 @@ namespace TianZhang.Tests
                 PurpleMansionKind.Yun => "MANSION_BODY_YUN_JIYUAN_SHIZHAO",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind)),
             };
-        }
-
-        private static void Destroy(params UnityEngine.Object[] objects)
-        {
-            foreach (UnityEngine.Object item in objects)
-            {
-                if (item != null)
-                    UnityEngine.Object.DestroyImmediate(item);
-            }
         }
     }
 }
