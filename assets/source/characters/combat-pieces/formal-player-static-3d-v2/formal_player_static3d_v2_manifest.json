@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
+  "status": "accepted",
+  "sourceRoute": "approved_user_selected_package_blender_cleanup",
+  "inputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_front.png",
+      "bytes": 416613,
+      "sha256": "2a8313b6e7312198c8be5cbd62651339c8bb8f5945639f2dcab768c3b2c65801"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-left-side.png",
+      "bytes": 385266,
+      "sha256": "506578eca5e7cd04ca5c713ebac34998016d3d550c90344275028fc848e96c79"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_face-right-side.png",
+      "bytes": 376816,
+      "sha256": "c4f0b8a3b12d908fdd62e938643cadeae5e3562c4090b5052328ed748cf09f31"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/formal_player_default_male_back.png",
+      "bytes": 398077,
+      "sha256": "4497577b3fcea41b9ff71dc639916381d169245c312acb0e05f1a446a33ea5e9"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/input/manifest.json",
+      "bytes": 4926,
+      "sha256": "112c971b2282efb03b2a7abb3b9c75ff873a540bfa1c0228f077eef4741d71d9"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/主角有纹理模型.zip",
+      "bytes": 5136646,
+      "sha256": "a8ff686d152d998aa0b8a0a4416648252796e762fa0edab3f85fb51253af6e85"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/manifest.json",
+      "bytes": 2881,
+      "sha256": "31158d895ea7d0b0f292509e8b9d6fb9aa837ac33aea989310b26a4581c7d43c"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/inspection.json",
+      "bytes": 18271,
+      "sha256": "056b782ce58530c766b56e7fe4237e73b7ade761c65034ea9c5b6891d21706fe"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/raw/user-selected/review.html",
+      "bytes": 2912961,
+      "sha256": "5b35e6cd07ed0c07b2dfc5fa7c16585a7515f825204ecfb7c07911c2aef30460"
+    }
+  ],
+  "identitySource": [
+    {
+      "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.png",
+      "sha256": "399175e1d5f2ca81fbd246c43a4cc02b2867721ad13df429340d9950698f4948"
+    },
+    {
+      "path": "assets/generated-character-art/dialogue-transparent/formal-player-default-male-v1.manifest.json",
+      "sha256": "a4d0d74986f1845fdcc4aac5478f73babe3ece959db7645bd6dcc6d7711d5a13"
+    }
+  ],
+  "approval": {
+    "approver": "user",
+    "decisionId": "DEC-20260928-CDEE8F4E660A8D",
+    "reply": "A",
+    "evidenceHash": "516d2095fe5593e18f40d58f66b0a6ef670192230a518e4cbc16d6955af75dc1",
+    "checkpointCommit": "fd231a3c9e1d7bf6c2acb17f2900b6fd75bbfe04",
+    "contactSheetSha256": "88b2120a39d3d574be6952f68914d1e5668a57d3c20a131a704d47e983b8b9f0",
+    "currentGeometryUnchanged": true,
+    "scaleContractAmendment": "2026-09-28 current conversation: user explicitly approved relaxing Unity node unit scale; final size, grounding and +Z remain required"
+  },
+  "blenderVersion": "5.2.0 LTS",
+  "exportSettings": {
+    "use_selection": false,
+    "use_active_collection": false,
+    "global_scale": 1.0,
+    "apply_unit_scale": true,
+    "apply_scale_options": "FBX_SCALE_NONE",
+    "use_space_transform": false,
+    "bake_space_transform": false,
+    "axis_forward": "Z",
+    "axis_up": "Y",
+    "object_types": [
+      "EMPTY",
+      "MESH"
+    ],
+    "use_mesh_modifiers": true,
+    "use_mesh_edges": false,
+    "use_tspace": false,
+    "use_triangles": true,
+    "use_custom_props": false,
+    "bake_anim": false,
+    "path_mode": "COPY",
+    "embed_textures": true
+  },
+  "exportHistory": [
+    {
+      "number": 1,
+      "runId": "a32e6515-0280-4420-b7c8-88fd21cd155e",
+      "bytes": 18633868,
+      "result": "Unity root identity failed; original export withdrawn, checkpoint preserved",
+      "reexports": 0
+    },
+    {
+      "number": 2,
+      "reason": "User relaxed Unity unit-node-scale gate; repair stale BaseColor path and verify final geometry",
+      "changes": "BaseColor relative path only; source geometry and frozen export parameters unchanged",
+      "sha256": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28",
+      "result": "factory-empty and Unity 470/470 passed",
+      "reexports": 1
+    }
+  ],
+  "remainingReexports": 1,
+  "newGenerationAttempts": 0,
+  "newCreditsUsed": 0,
+  "source": {
+    "meshCount": 1,
+    "vertices": 26105,
+    "polygons": 28669,
+    "trianglesBeforeExport": 51311,
+    "boundsMin": [
+      -0.1798851937,
+      0,
+      -0.1406375021
+    ],
+    "boundsMax": [
+      0.1798851937,
+      1.0299999714,
+      0.1406375021
+    ],
+    "texturePath": "//formal_player_static3d_v2_basecolor.png",
+    "missingFiles": [],
+    "rootAndMeshIdentity": true
+  },
+  "fbx": {
+    "fbx_version": 7400,
+    "global_settings": {
+      "UpAxis": [
+        1
+      ],
+      "UpAxisSign": [
+        1
+      ],
+      "FrontAxis": [
+        2
+      ],
+      "FrontAxisSign": [
+        -1
+      ],
+      "CoordAxis": [
+        0
+      ],
+      "CoordAxisSign": [
+        -1
+      ],
+      "UnitScaleFactor": [
+        1.0
+      ],
+      "OriginalUnitScaleFactor": [
+        1.0
+      ]
+    },
+    "fbx_nodes": [
+      {
+        "name": "FormalPlayer_Static3D_Mesh\u0000\u0001Model",
+        "properties": {}
+      },
+      {
+        "name": "FormalPlayer_Static3D_Root\u0000\u0001Model",
+        "properties": {
+          "Lcl Scaling": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        }
+      }
+    ],
+    "factory_empty": {
+      "mesh_count": 1,
+      "vertices": 26105,
+      "triangles": 51301,
+      "asset_local_min": [
+        -0.17988519370555878,
+        0.0,
+        -0.14063750207424164
+      ],
+      "asset_local_max": [
+        0.17988519370555878,
+        1.0299999713897705,
+        0.14063750207424164
+      ],
+      "native_world_min": [
+        -0.17988519370555878,
+        -0.14063751697540283,
+        9.307231096933322E-10
+      ],
+      "native_world_max": [
+        0.17988519370555878,
+        0.14063744246959686,
+        1.0299999713897705
+      ],
+      "all_zero": false,
+      "materials": [
+        "FormalPlayer_Static3D_Mat"
+      ],
+      "images": [
+        {
+          "name": "basecolor.001",
+          "packed": true,
+          "size": [
+            4096,
+            4096
+          ]
+        }
+      ],
+      "transforms": [
+        {
+          "name": "FormalPlayer_Static3D_Mesh",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation_radians": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "name": "FormalPlayer_Static3D_Root",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation_radians": [
+            1.570796251296997,
+            -0.0,
+            3.1415927410125732
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      ],
+      "armatures": 0,
+      "actions": 0,
+      "shape_keys": false
+    }
+  },
+  "unity": {
+    "version": "6000.3.18f1",
+    "meshCount": 1,
+    "vertices": 49570,
+    "triangles": 51311,
+    "globalScale": 1,
+    "fileScale": 0.01,
+    "useFileScale": true,
+    "bakeAxisConversion": true,
+    "rootScale": [
+      100,
+      100,
+      100
+    ],
+    "meshScale": [
+      1,
+      1,
+      1
+    ],
+    "allNodePositionZero": true,
+    "allNodeRotationZero": true,
+    "finalBoundsMin": [
+      -0.1798852,
+      0,
+      -0.1406375
+    ],
+    "finalBoundsMax": [
+      0.1798852,
+      1.03,
+      0.1406375
+    ],
+    "toleranceMeters": 0.0001,
+    "assetBasisConversion": "Blender RH +Y/+Z to Unity LH +Y/+Z: (-x,y,z)",
+    "approvedAsymmetricPointMaxErrorMeters": 5.96046448E-08,
+    "noAnimatorOrSkinnedMesh": true,
+    "textureSize": [
+      4096,
+      4096
+    ],
+    "testsPassed": 470,
+    "testsFailed": 0,
+    "modelTestOutput": "IMPORT globalScale=1 fileScale=0.01 useFileScale=True bakeAxisConversion=True\nNODE FormalPlayer_Static3D position=(0.00000000, 0.00000000, 0.00000000) rotation=(0.00000000, 0.00000000, 0.00000000, 1.00000000) scale=(100.00000000, 100.00000000, 100.00000000)\nNODE FormalPlayer_Static3D_Mesh position=(0.00000000, 0.00000000, 0.00000000) rotation=(0.00000000, 0.00000000, 0.00000000, 1.00000000) scale=(1.00000000, 1.00000000, 1.00000000)\nGEOMETRY vertices=49570 triangles=51311 localMin=(-0.00179885, 0.00000000, -0.00140638) localMax=(0.00179885, 0.01030000, 0.00140638) finalMin=(-0.17988520, 0.00000000, -0.14063750) finalMax=(0.17988520, 1.03000000, 0.14063750)\nANCHOR errors for signs (1.00000000, 1.00000000, 1.00000000): 0.0561079942,0.0106739653,0.0361936875,0.078245,0.0015911978,0.0149773955\nANCHOR errors for signs (-1.00000000, 1.00000000, 1.00000000): 0,5.96046448E-08,1.49011612E-08,0,3.7252903E-09,3.83994125E-09\nANCHOR errors for signs (1.00000000, 1.00000000, -1.00000000): 0.0292491447,0.0280607678,0.0358457342,0.0579722933,0.005557713,0.03335417\nANCHOR errors for signs (-1.00000000, 1.00000000, -1.00000000): 0.02014588,0.0122840535,0.00420989934,0.0457503,0.008066506,0.0293226764\n"
+  },
+  "validation": {
+    "resultXml": "D:\\Temp\\TianZhang-Blender\\player-v2-unity-repair\\unity-export-2.xml",
+    "resultXmlSha256": "9a74656c5ae31f6d3b19907790c195f2e131a055b8e0e3d0ca6f5dd5e54b4367",
+    "editorLog": "D:\\Temp\\TianZhang-Blender\\player-v2-unity-repair\\unity-export-2.log",
+    "editorLogSha256": "0b1d7432e39637fc29f1694d57f2673b660af2dc9dfa3b9c3c429478bb539c89",
+    "dataChain": "passed",
+    "assetVersioning": "passed",
+    "runnerCleanup": "Runner restoration failed on a mapped unrelated material; exact generated tracked Unity differences restored from the clean worktree base, git diff --quiet verified, ValidateResultOnly succeeded",
+    "playMode": "not run: Profile/Prefab/runtime integration belongs to downstream task"
+  },
+  "outputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
+      "bytes": 1806370,
+      "sha256": "fd87aaddb2ac3e44021830e4dba2fae9a39e0a16aeac857c549a3aad9607e1d0"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
+      "bytes": 18633820,
+      "sha256": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_basecolor.png",
+      "bytes": 16740570,
+      "sha256": "4ad0083980d0af3d21d1117db1f65f51548f5f10019dae09ead1946be3380fa5"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_contact-sheet.png",
+      "bytes": 960263,
+      "sha256": "88b2120a39d3d574be6952f68914d1e5668a57d3c20a131a704d47e983b8b9f0"
+    },
+    {
+      "path": "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+      "bytes": 18633820,
+      "sha256": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28"
+    },
+    {
+      "path": "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png",
+      "bytes": 16740570,
+      "sha256": "4ad0083980d0af3d21d1117db1f65f51548f5f10019dae09ead1946be3380fa5"
+    }
+  ]
+}

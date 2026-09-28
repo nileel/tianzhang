@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-28 Unity importer 轴向与单位缩放硬门失败；导出/导入交接根因未查明，按本卡停止条件阻塞",
+  "stateReason": "2026-09-28 用户放宽 Unity 节点单位缩放；同一批准 v2 完成第 2 次总导出，最终尺寸/接地/+Z/零位移零旋转通过，EditMode 470/470 通过。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
@@ -232,3 +232,32 @@
 - 自动 run a32e6515-0280-4420-b7c8-88fd21cd155e 在负责人批准的同一 v2 检查点上完成首轮 FBX 导出和 Blender factory-empty 非空回读；Unity 测试关闭 bakeAxisConversion 时模型根旋转为 (0,1,0,0)（Y 轴 180°），开启后模型根缩放为 (100,100,100)，useFileScale=0 与 globalScale=0.01 两次 importer 调整仍未消除缩放失败。Unity 身份变换硬门未通过，无正式资产 candidate 或集成。
 - 失败层保存在 .worktrees/automation/a32e6515-0280-4420-b7c8-88fd21cd155e/codex 的四个暂存检查点文件和原 run 记录；试验性的 FBX、Unity 文件与 importer 测试已由原责任方撤回。暂存的 Blender 源中 BaseColor 图像路径仍指向前次检查点 worktree，后续若继续生产须修成当前相对路径并重新核验。
 - 当前技术经验中的 Blender 5.2 参数只证明 factory-empty 回读，未证明 Unity 零旋转、单位缩放。先只读定位 FBX 轴/单位元数据与 Unity importer 的实际转换，明确根因及是否需修改冻结导出合同；未经确认不追加补偿、复导出或改验收标准。具备符合既定轴、尺度、朝向的可验证方案后才重新评估 ready。
+
+## 2026-09-28 用户放宽 Unity 节点缩放的手动修复合同
+
+- 本对话用户在确认“允许在 Unity Transform 上缩放需要放宽所有节点单位缩放”后明确回复“放宽”。本条只替代本卡及所引用旧合同对默认男主 v2 的 FBX／Unity 每节点 Scale=(1,1,1) 要求；不修改其他角色、旧资产或运行时规则。
+- 保留已批准检查点的几何大小与角色设计，保持 Blender 根／网格零位移、零旋转、单位缩放；沿用原冻结导出参数（global_scale=1、apply_unit_scale=true、FBX_SCALE_NONE、Z forward/Y up、use_space_transform=false、bake_space_transform=false）。允许 FBX／Unity 导入产生的正值均匀单位转换缩放，不另加补偿父节点、不改 Prefab 或运行时。
+- Unity 验收改为在模型实例的最终米制坐标中测量全部顶点：最高 Y=1.03m、足底 Y=0、X/Z 包络 ±0.30m、几何正面 +Z。资产根和模型节点继续要求零位移、零旋转；保留单网格／材质、无骨骼／动画和原六向要求。
+- 原会话已执行初始 FBX 导出 1 次、复导 0 次；三次 importer 参数调整另记为失败历史，不记作 FBX 导出。本轮仅在隔离 worktree 使用同一批准检查点，修正 BaseColor 相对路径，执行第 2 次总导出（第 1 次复导），以 Unity bakeAxisConversion=true、useFileScale=true、globalScale=1 实测。任何不满足仍保留失败层，不能把缩放放宽推导为轴向放宽。
+- 当前继续保持 blocked，待本轮数值和朝向验证通过才改变任务后置状态；主工作区未重新入队，防止自动化重复领取。原失败 run 和四个暂存检查点均保留。
+
+## 2026-09-28 手动修复完成
+
+- 本轮在 codex/player-v2-unity-import 隔离 worktree 完成；已批准几何、贴图、十视图不变，修复相对贴图路径；沿用原导出参数。总导出 2 次、复导 1 次，剩余 1 次。
+- Unity 模型根缩放 100、网格节点缩放 1，全部节点零位移/零旋转；最终 Y=0..1.03m，X=±0.17988520m、Z=±0.14063750m；49570 顶点、51311 三角形，非零 bounds、几何 +Z、纹理均通过。
+- 项目 EditMode 最终结果 470/470 Passed；包装脚本恢复工作区时遇到 mapped-file 错误，已精确恢复本轮生成改动并用 ValidateResultOnly 校验同一 XML。完整命令/哈希/数值与能力边界见 开发管理/默认男主静态3D模型与Unity导入QA记录.txt 和 v2 manifest。
+- 仅解除下游 Profile 卡的本卡 blocker；石甲兽 ASSET-02 仍阻塞，未创建下游资产或运行时接线。原失败 worktree 不变。
+
+## 经验候选
+
+### CAND-A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：content
+- 现象：Blender 非空回读成功，但 Unity 根 Y 180° 或 Scale=100；原测试在根断言中止后没有实际几何尺寸证据。
+- 已证实根因：FBX_SCALE_NONE 把米/厘米转换写入根节点，Unity bakeAxisConversion 只改变轴转换的存放位置；Blender/Unity 左右手基底也不能直接逐分量比较。节点缩放不等于最终几何尺寸。
+- 可能复用范围：已批准静态 FBX 的 Blender 到 Unity 轴/单位导入 QA；不自动放宽其他任务的单位变换合同。
+- 证据：开发管理/默认男主静态3D模型与Unity导入QA记录.txt；formal_player_static3d_v2_manifest.json 的 FBX 原始元数据与 Unity modelTestOutput；470/470 EditMode 结果。
+- 门禁可能：yes

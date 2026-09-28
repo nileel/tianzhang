@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
     "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02"
   ],
-  "stateReason": "2026-09-27：等待男主ASSET-04及新石甲兽ASSET-02。石甲兽须按批准原画四视图→Tripo→清理的v2链取得用户本人批准和技术交付；v1粗模与AI自签approved不得放行。",
+  "stateReason": "2026-09-28 男主 ASSET-04 已通过 Unity 导入；仍等待石甲兽 ASSET-02 的用户本人批准和技术交付。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
@@ -102,3 +101,9 @@
 
 - 任一资产未获批准、哈希变化、已验收玩家 Unity FBX/BaseColor 需要覆盖或重导出、石甲兽 Unity importer 失败、两项无法使用同一坐标／六向合同，或需要部分提交。
 - 需要让 Content／GameplayContracts 引用具体 Prefab、修改保存结构、使用苻渊／Marker fallback 或提前修改正式 Adventure。
+
+## 2026-09-28 玩家输入已验收
+
+- ASSET-04 已归档，玩家 FBX/BaseColor 已位于本卡稳定 Unity 路径。用户明确放宽玩家导入模型的单位节点缩放：模型根 Scale=100、网格 Scale=1，完整变换后的高度 1.03m、足底 Y=0、+Z 正面、零位移/零旋转均通过。下游必须保留导入模型的已验证缩放，不把模型实例 localScale 强制设为 1；不得再乘 0.01 或增加补偿节点。此为玩家资产既有单位转换，不修改六向或战斗规则。
+- 玩家 source/Unity 哈希、factory-empty、49570 顶点/51311 三角形、470/470 EditMode 与批准回执见 开发管理/默认男主静态3D模型与Unity导入QA记录.txt 及 v2 manifest。
+- 本卡仍因石甲兽 ASSET-02 保持 blocked，不进入 ready，不开始部分实现。

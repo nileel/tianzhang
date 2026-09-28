@@ -1,0 +1,50 @@
+# 默认男主 v2 静态 3D 模型与 Unity 导入 QA 记录
+
+任务：A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04。结论：按 2026-09-28 用户明确放宽后的节点缩放合同，通过静态资产与 Unity importer 验收；未接入正式游戏。
+
+## 输入、批准与边界
+
+- 唯一输入为 v2/raw/user-selected/主角有纹理模型.zip，5136646 字节，SHA-256 a8ff686d152d998aa0b8a0a4416648252796e762fa0edab3f85fb51253af6e85；任务卡九项输入与透明母版均核验一致。没有替换原包、重新生成、改变角色设计或使用 v1。
+- 原用户视觉批准：DEC-20260928-CDEE8F4E660A8D，选项 A；回执 evidenceHash=516d2095fe5593e18f40d58f66b0a6ef670192230a518e4cbc16d6955af75dc1，checkpoint=fd231a3c9e1d7bf6c2acb17f2900b6fd75bbfe04。本轮只修改贴图路径，几何、BaseColor 像素与已批准十视图不变；联系表哈希与原失败现场一致，已再次查看。
+- 用户本轮明确“放宽”：允许 Unity 导入节点保留正值均匀缩放；保留最终高度 1.03m、足底 Y=0、X/Z ±0.30m、+Z 正面、全部节点零位移零旋转。只修订默认男主 v2，旧合同对其他资产不变。
+- 工具为 blender_lab 单一路线和项目既有 Unity EditMode 脚本。没有创建材质、Prefab、Profile、catalog、provider、运行时补偿或游戏规则。
+
+## 根因与实际导出次数
+
+- Blender 源为 METRIC/scale_length=1，根及网格单位变换。原冻结 FBX_SCALE_NONE 将 100 倍米/厘米转换写到根 Lcl Scaling，文件 UnitScaleFactor=1。第 2 次导出原始 FBX 字节解析直接确认该组合。
+- axis_up=Y、axis_forward=Z、use_space_transform=false、bake_space_transform=false；FBX 元数据 UpAxis=(1,+1)、FrontAxis=(2,-1)、CoordAxis=(0,-1)。Unity bakeAxisConversion=false 时把轴转换放到根形成 Y 180°；开启后根旋转归零，单位转换缩放 100 仍保留。改变 globalScale=0.01 并不能让节点单位化，且原测试提前中止，没有证明最终尺寸。
+- 初始导出仅 1 次，原会话 JSONL 第 113 行返回 FINISHED/18633868 字节；随后三次 importer 调整没有再次导出。原失败 run a32e6515-0280-4420-b7c8-88fd21cd155e 已关闭，其四个暂存检查点保留不变。
+- 本轮第 2 次总导出＝第 1 次复导；沿用全部冻结导出参数，只把 BaseColor 修为 //formal_player_static3d_v2_basecolor.png。当前还剩 1 次复导额度，未再导出。重新打开源后 missing_files=[]。
+
+## Blender 与 FBX 数值
+
+- Blender 5.2.0 LTS：单根 FormalPlayer_Static3D_Root、单网格 FormalPlayer_Static3D_Mesh、单材质 FormalPlayer_Static3D_Mat，26105 顶点、28669 面、导出前三角计数 51311；无 Armature、Action、Shape Key。
+- 作者资产坐标 bounds：X=-0.17988519..0.17988519，Y=0..1.02999997，Z=-0.14063750..0.14063750 米。
+- factory-empty 回读：1 mesh、26105 顶点、51301 三角形、非全零位置、三轴非零；单材质、嵌入 4096×4096 BaseColor，无骨骼/动作/Shape Key。Blender 回读器恢复其原生坐标后世界高度在 Z，根欧拉角约 (90,0,180)；资产局部坐标仍为上述 Y 高度。二者明确分别记录，不把原生世界轴当 Unity 轴。
+
+## Unity 实测
+
+- Unity 6000.3.18f1，globalScale=1、fileScale=0.01、useFileScale=true、bakeAxisConversion=true。
+- 根 FormalPlayer_Static3D：Position=(0,0,0)、Rotation=identity、Scale=(100,100,100)；网格子节点：Position=(0,0,0)、Rotation=identity、Scale=(1,1,1)。没有额外补偿节点。Unity 会折叠原 FBX Empty 根，不能把文件名根和源根名称当同一层级。
+- 1 mesh、49570 顶点、51311 三角形；顶点有限且非全零、三轴 bounds 非零。Unity 局部 mesh 高度 0.0103，经完整节点矩阵后最终高度为 1.03000000 米。
+- 最终 bounds：X=-0.17988520..0.17988520，Y=0.00000000..1.03000000，Z=-0.14063750..0.14063750 米；高度、接地、包络全部通过，容差 0.0001m。
+- +Z 朝向由已批准源的六个不对称顶点验证。源右手 +Y/+Z 到 Unity 左手 +Y/+Z 的坐标映射为 (-x,y,z)，最大误差 5.96046448e-8m；Y、Z 未翻转。检查几何而非仅用 Transform.forward，未添加物体镜像缩放、旋转或修改顶点。
+- 1 submesh，无 SkinnedMeshRenderer、Animator、Animation、BlendShape；BaseColor 为 Default/sRGB、AlphaSource=None、alphaIsTransparency=false，4096×4096。
+
+## 验证与保留证据
+
+- tools/run-unity-editmode-tests.ps1：最终 XML 为 470/470 Passed，模型与纹理两项均通过。首次测试代码使用当前 NUnit 不支持的 Assert.Multiple，修正为普通断言后通过编译；首次执行还暴露新 worktree 未物化既有 LFS 文件，已从本机缓存完成 git lfs checkout。没有为这些验证修复重新导出 FBX。
+- Runner 在结束后的 tracked 文件恢复遇到 Windows mapped-file 错误，退出码 1；测试成功与清理错误分别记录。人工仅恢复本轮测试产生的 tracked Unity 差异，git diff --quiet -- src/Assets src/ProjectSettings 返回 0；随后同一 XML 的 -ValidateResultOnly 返回 0。没有修订验证脚本或声称原包装命令退出码为 0。
+- tools/check-data-chain.ps1 -FailOnMissingAssets：通过。tools/check-asset-versioning.ps1：通过，Git LFS fsck OK。
+- 原始结果与各轮失败证据保留在 D:/Temp/TianZhang-Blender/player-v2-unity-repair/；manifest 内包含最终 XML/log SHA-256、全部输入/输出哈希、实参、FBX 字节解析、回读和 Unity 原始数值输出。
+- 未运行 PlayMode、未创建或接入正式 Prefab/Profile/Adventure，未做正式游戏镜头的运行时视觉批准；这些属于下游。既有用户十视图批准继续绑定未改变的几何和贴图，不用技术通过代替新的运行时批准。
+
+## 输出 SHA-256
+
+- assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend：fd87aaddb2ac3e44021830e4dba2fae9a39e0a16aeac857c549a3aad9607e1d0
+- assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx：393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28
+- assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_basecolor.png：4ad0083980d0af3d21d1117db1f65f51548f5f10019dae09ead1946be3380fa5
+- assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_contact-sheet.png：88b2120a39d3d574be6952f68914d1e5668a57d3c20a131a704d47e983b8b9f0
+- src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx：393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28
+- src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D_BaseColor.png：4ad0083980d0af3d21d1117db1f65f51548f5f10019dae09ead1946be3380fa5
+- assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_manifest.json：99a7bea0b288d22dcd6241f7726fb753d174b5481b45855a9ed609117de3f111
