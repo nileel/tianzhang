@@ -1,0 +1,34 @@
+# 正式玩家与石甲兽静态3D战斗棋子 Profile 映射 QA
+
+任务：`U-CHAR-BATTLE-STATIC3D-PROFILES-01`。结论：双输入的正式静态 3D Prefab、稳定身份目录、载体专属 Profile 集合及其保存后重载验证均已完成；没有接入 Adventure、Installer、`AdventureUnitSpawner`、战斗规则或存档。
+
+## 冻结输入与来源
+
+- 默认男主继续使用已经验收的 Unity 输入：`FormalPlayer_Static3D.fbx` SHA-256 `393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28`，`FormalPlayer_Static3D_BaseColor.png` SHA-256 `4ad0083980d0af3d21d1117db1f65f51548f5f10019dae09ead1946be3380fa5`。Builder 只读取并核验它们，未复制、覆盖或重导出。
+- 石甲兽只读取 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/` 的冻结 FBX/BaseColor：SHA-256 分别为 `36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700` 与 `7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac`。Builder 仅在稳定 Unity 路径缺失时原样复制；导入后的两项文件哈希再次一致。
+- 两项上游的人类视觉批准、石甲兽十视图批准、源坐标与 Blender 回读分别以 `开发管理/默认男主静态3D模型与Unity导入QA记录.txt`、`开发管理/石甲兽v2静态3D清理QA记录.txt` 与两个 v2 manifest 为事实源；本卡不以技术检查替代已有用户批准。
+
+## 交付与所有者边界
+
+- `CombatUnitPresentationProfileCatalogData` 位于 Content，只保存 `player -> combat_player_default_v1` 与 `enemy_shijiahou -> combat_enemy_shijiahou_v1`，没有 Prefab、Sprite、Mesh 或载体选择。
+- `Static3DCombatUnitPresentationProfileSet` 位于 CombatPresentation，只保存两个 profileId 到正式 Prefab 的引用与批准 FBX 路径/哈希、bounds、接地及六向 `90/150/210/270/330/30` 元数据；它不引用 Content 程序集。
+- `FormalStatic3DCombatPieceBuilder` 通过 Unity `AssetDatabase`、`PrefabUtility` 与 `EditorUtility` 创建材质、Prefab 和两项 `.asset`，保存后重新加载并验证。没有手写 `.asset` 或 `.prefab` YAML。
+- 玩家 Prefab 保留导入模型的正值均匀 Scale=100 单位换算，未再乘 `0.01`、未强制模型实例 `localScale=1`、未增加补偿节点；两项 Prefab 根都为零位移、零旋转、单位缩放。
+- Profile 集合的依赖扫描和直接 EditMode 测试均确认 `FuYuan_StaticChess` 为零正式引用。
+
+## Unity 导入与保存后验证
+
+- 男主：保持已验收的最终 Y=0..1.03m、局部 +Z 正面、单网格/单材质、无骨骼/动画/BlendShape。
+- 石甲兽：Unity 导入后以完整节点变换核验 Y=0..0.45654297m、X=-0.22778321..0.22778321m、Z=-0.49975586..0.49975586m；单网格、无 SkinnedMeshRenderer/Animator/Animation，4096×4096 sRGB、无 alpha 的 BaseColor。
+- Builder 连续两次运行后，目录、Profile set 及两项 Prefab 均保留同一 asset GUID；保存后重载能从中立 catalog 解析两个稳定 profileId，再从静态 3D set 取得各自正式 Prefab。
+
+## 已执行验证
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；新增检查覆盖双 catalog/Profile 的精确稳定映射、Prefab GUID、source hash、六向合同、完整资产/`.meta` 与零苻渊引用。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-asset-versioning.ps1`：通过，`Git LFS fsck OK`。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`：本卡 `CombatUnitPresentationProfileEditorTests` 4/4 通过。全项目总结果为 473/474，唯一失败为既有 `ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings`，原因是宽袖实验旁缺少可编辑 Blender source；该失败不涉及本卡路径、输入或代码。
+
+## 能力边界与剩余工作
+
+- 本卡不运行 PlayMode、不创建正式场景实例、不声称游戏内镜头或最终视觉体验已验收；静态 3D provider runtime 接线由后续正式接线卡独立消费本卡的双输入结果。
+- 未新增经验候选：本轮发现的玩家单位换算缩放是已在 ASSET-04 归档中记录的既有事实，未产生新的可复用根因。

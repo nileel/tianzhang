@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-28 男主 Unity 导入与石甲兽本人十视图批准/source FBX 回读均完成；双输入已冻结，schema 2 风险预检和模型协作齐备，可执行正式双 Profile。",
+  "stateReason": "2026-09-28 双 Profile 资产、稳定身份目录、静态3D集合与保存后重载验证完成；正式 runtime 接线仍由下游卡独立消费。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
@@ -151,3 +151,10 @@
 - 本卡是一个双输入同时通过的原子结果：稳定身份目录、载体专属映射和确定性 Builder 的唯一验收是两项 Prefab/映射同时可重载且幂等。实现跨两个现有配置所有者，但接口和禁止依赖已经冻结，无未决设计裁决，不触及 Adventure 运行时。
 - 沿用入口主模型统一实现、检查完整差异和验证；当前没有值得拆开的独立工作面，不派写入辅助。若出现可独立定位的 Unity importer 失败，再按 AI 协作规则使用只读辅助；不得追加补偿、修改已验收男主或扩大任务边界。
 - schema 2 风险投影由 get-experience-risk-preflight 对本卡实算，目前零命中/零门禁；执行者仍须按共享入口取得绑定当前卡摘要的预检，并核实 Unity/Editor 能力后实施。
+
+## 2026-09-28 实施与验证结果
+
+- 已创建 provider-neutral `CombatUnitPresentationProfileCatalogData`：精确保存 `player -> combat_player_default_v1` 与 `enemy_shijiahou -> combat_enemy_shijiahou_v1`，不包含视觉对象或路线选择。
+- 已创建 `Static3DCombatUnitPresentationProfileSet`、两项正式材质与 Prefab；保存后重载、两次 Builder 幂等、Prefab GUID 稳定、完整 hash/轴/接地/六向/材质/静态组件检查均通过。玩家保留导入模型根的正值均匀单位缩放，不覆盖批准 FBX/BaseColor；石甲兽只从冻结 source 原样导入稳定 Unity 路径。
+- `CombatUnitPresentationProfileEditorTests` 4/4 通过，覆盖双输入、重复/未知 ID、缺 Prefab/材质/组件、方向合同、苻渊零引用与部分输入失败关闭。`check-data-chain -FailOnMissingAssets` 和 `check-asset-versioning` 通过。
+- `run-unity-editmode-tests.ps1` 全项目结果为 473/474；唯一既有失败是宽袖实验缺少可编辑 Blender source，和本卡无关。本卡不运行 PlayMode、不修改 Adventure/Installer/Spawner/战斗或存档；详情见 `开发管理/正式玩家与石甲兽静态3D战斗棋子Profile映射QA记录.txt`。

@@ -285,6 +285,85 @@ function Test-FormalContentCatalog {
   }
 }
 
+function Test-FormalStatic3DPresentationProfiles {
+  $requiredFiles = @(
+    'src/Assets/Data/CombatPresentationProfiles.meta',
+    'src/Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset',
+    'src/Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset.meta',
+    'src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset',
+    'src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.mat.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D_BaseColor.png',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D_BaseColor.png.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta'
+  )
+  foreach ($relativePath in $requiredFiles) {
+    if (-not (Test-Path -LiteralPath (Join-Path $root $relativePath) -PathType Leaf)) {
+      Add-Finding 'STATIC3D_PROFILE_ASSET_MISSING' $relativePath 'Formal static-3D profile delivery is incomplete.'
+    }
+  }
+
+  $catalogPath = Join-Path $root 'src/Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset'
+  $profileSetPath = Join-Path $root 'src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset'
+  if (-not (Test-Path -LiteralPath $catalogPath -PathType Leaf) -or -not (Test-Path -LiteralPath $profileSetPath -PathType Leaf)) { return }
+  $catalog = Get-Content -Raw -LiteralPath $catalogPath
+  $profileSet = Get-Content -Raw -LiteralPath $profileSetPath
+  foreach ($mapping in @(
+    @{ Combatant = 'player'; Profile = 'combat_player_default_v1' },
+    @{ Combatant = 'enemy_shijiahou'; Profile = 'combat_enemy_shijiahou_v1' }
+  )) {
+    if ($catalog -notmatch "(?ms)^  - combatantId: $([regex]::Escape($mapping.Combatant))\r?\n    presentationProfileId: $([regex]::Escape($mapping.Profile))\s*$") {
+      Add-Finding 'STATIC3D_PROFILE_CATALOG_MAPPING_INVALID' $mapping.Combatant 'Provider-neutral catalog must retain the exact stable combatant-to-profile mapping.'
+    }
+  }
+  if (@([regex]::Matches($catalog, '(?m)^  - combatantId: ')).Count -ne 2) {
+    Add-Finding 'STATIC3D_PROFILE_CATALOG_CARDINALITY_INVALID' 'CombatUnitPresentationProfileCatalog' 'Formal catalog must contain exactly the two approved combatant identities.'
+  }
+
+  $expectedProfiles = @(
+    @{
+      Id = 'combat_player_default_v1'
+      PrefabMeta = 'src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.prefab.meta'
+      ModelPath = 'Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx'
+      ModelHash = '393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28'
+    },
+    @{
+      Id = 'combat_enemy_shijiahou_v1'
+      PrefabMeta = 'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta'
+      ModelPath = 'Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx'
+      ModelHash = '36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700'
+    }
+  )
+  foreach ($expected in $expectedProfiles) {
+    $metaPath = Join-Path $root $expected.PrefabMeta
+    $guidMatch = if (Test-Path -LiteralPath $metaPath -PathType Leaf) { @(Select-String -LiteralPath $metaPath -Pattern '^guid: ([0-9a-f]{32})$').Matches } else { @() }
+    if ($guidMatch.Count -ne 1) {
+      Add-Finding 'STATIC3D_PROFILE_PREFAB_META_INVALID' $expected.Id 'Approved Prefab meta must declare exactly one GUID.'
+      continue
+    }
+    $guid = $guidMatch[0].Groups[1].Value
+    $entryPattern = "(?ms)^  - presentationProfileId: $([regex]::Escape($expected.Id))\r?\n    prefab: \{fileID: \d+, guid: $guid, type: 3\}\r?\n    approvedModelAssetPath: $([regex]::Escape($expected.ModelPath))\r?\n    approvedModelSha256: $($expected.ModelHash)\r?\n.*?    sixDirectionYawDegrees: 5a00000096000000d20000000e0100004a0100001e000000\s*$"
+    if ($profileSet -notmatch $entryPattern) {
+      Add-Finding 'STATIC3D_PROFILE_SET_ENTRY_INVALID' $expected.Id 'Static-3D set must bind the approved Prefab, source identity and six-direction contract.'
+    }
+  }
+  if (@([regex]::Matches($profileSet, '(?m)^  - presentationProfileId: ')).Count -ne 2) {
+    Add-Finding 'STATIC3D_PROFILE_SET_CARDINALITY_INVALID' 'Static3DCombatUnitPresentationProfileSet' 'Static-3D set must contain exactly the two approved profiles.'
+  }
+  if ($profileSet -match 'FuYuan_StaticChess') {
+    Add-Finding 'STATIC3D_PROFILE_FORBIDDEN_REFERENCE' 'Static3DCombatUnitPresentationProfileSet' 'Formal profile set must not reference FuYuan_StaticChess.'
+  }
+}
+
 function Test-NpcCultivationActionWeightProfile {
   param([object]$Table)
 
@@ -703,6 +782,7 @@ Test-AssetCoverage 'Spells' $tables.Spells.Rows 'src/Assets/Data/Spells' 'Spell'
 Test-AssetCoverage 'Skills' $tables.Skills.Rows 'src/Assets/Data/Skills' 'Skill'
 Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfiles
 Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
+Test-FormalStatic3DPresentationProfiles
 Test-FormalAttackProfileProjection $tables.AttackProfiles $languageIds
 Test-CharterSiteProjection $tables.CharterSites $languageIds
 Test-UiTextProjection $languageIds

@@ -8,6 +8,7 @@
 
 - CSV 与说明：`src/Assets/DataConfig/`
 - 不可变 schema／目录：`src/Assets/Scripts/Modules/Content/`
+- 静态 3D 表现映射：`Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset`（中立稳定身份）与 `Static3DCombatUnitPresentationProfileSet.asset`（载体 Prefab／QA），由 `FormalStatic3DCombatPieceBuilder` 创建并重载验证。
 - 领域导入器：`src/Assets/Scripts/Editor/*ContentImporter.cs`
 - 导入编排：`src/Assets/Scripts/Editor/ContentImportCoordinator.cs`
 - 生成资产：`src/Assets/Data/`
@@ -18,7 +19,7 @@
 
 `Language.csv` 提供显示文本；其他 CSV 使用稳定 ID。`ContentImportCoordinator.ImportAll` 只确定导入顺序，Character、Combat、Cultivation、World、Settlement 与 Adventure importer 各自拥有读取、领域校验、投影与提交；任一领域失败时不得跨领域半提交或静默默认。
 
-`ContentCatalogData` 是正式只读目录，解析据点、敌人、物品、悬赏、册界静态目录、册界站点与 Adventure 地图。`EnvironmentProfileAsset` 和 `SpatialQueryBoardFactory` 是显式 UnityContent 适配；Player C# 不调用 `Resources.Load`。
+`ContentCatalogData` 是正式只读目录，解析据点、敌人、物品、悬赏、册界静态目录、册界站点与 Adventure 地图。`CombatUnitPresentationProfileCatalogData` 只把 `player`、`enemy_shijiahou` 映射到稳定 profile ID；具体 Prefab 只留给 CombatPresentation 的静态 3D 集合。`EnvironmentProfileAsset` 和 `SpatialQueryBoardFactory` 是显式 UnityContent 适配；Player C# 不调用 `Resources.Load`。
 
 ## 正式场景绑定
 
