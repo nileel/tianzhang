@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-FPD-GONGFA-03",
-    "U-FPD-STAGE-03"
+    "D-FPD-GONGFA-03"
   ],
-  "stateReason": "2026-09-27：阶段规则、学习门槛、数值合同和术法数据同步已完成；只等待D-FPD-GONGFA-03功法数据同步与U-FPD-STAGE-03状态/存档迁移的真实结果，再统一收口。",
+  "stateReason": "2026-09-29：U-FPD-STAGE-03 状态/存档迁移已完成归档；阶段规则、学习门槛、数值合同和术法数据同步已完成，只等待 D-FPD-GONGFA-03 功法数据同步后统一收口。",
   "expectedPaths": [
     "开发管理/筑基三阶段与学习门槛迁移计划.txt",
     "开发管理/任务列表/内容设计任务.txt",

@@ -9,10 +9,8 @@
   "domain": "battlesim",
   "stage": "design",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "D-JD-COMBO-FIRE-INPUT-01"
-  ],
-  "stateReason": "等待 D-JD-COMBO-FIRE-INPUT-01 冻结真实火源、载体、行动与媒介输入；在此之前不能编造费用、容量或 BattleSim 结论。",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：D-JD-COMBO-FIRE-INPUT-01 已完成归档；实时 BattleSim 扫描确认当前只有通用地表/现象接口，没有组合档案、火种、结果原型、费用或容量账本模型，不能以文本编造费用结论。待负责人批准所需模拟器与配置工作面后再准备 ready。",
   "expectedPaths": [
     "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_费用容量验证.txt",
     "docs/基础设定/设定事实速查.txt",
@@ -33,7 +31,7 @@
 
 ## 来源与当前边界
 
-- 仅处理 `D-JD-COMBO-FIRE-INPUT-01` 验证合法后的单项战棋候选；数值事实以 BattleSim 实际运行结果为准。当前是具名前置未完成的 blocked 卡。
+- `D-JD-COMBO-FIRE-INPUT-01` 已完成并冻结合法媒介输入；数值事实仍只能以 BattleSim 实际运行结果为准。实时扫描确认 `HexBattlefield` 只提供通用地表／现象接口，当前不存在本候选的组合档案、火种、结果原型、费用或容量账本模型；在负责人批准所需模拟器与配置工作面前，本卡保持 blocked。
 
 ## 必查范围
 

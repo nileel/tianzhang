@@ -10,10 +10,9 @@
   "stage": "design",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-JD-COMBO-FIRE-INPUT-01",
     "N-JD-COMBO-FIRE-BUDGET-01"
   ],
-  "stateReason": "2026-09-27：负责人在当前 Codex 对话直接选择 A，首批为渡火引线一项；旧决策卡未投递，人工收口不创建 automationReply。待媒介载体合同与 BattleSim 费用容量验证完成后再收口本范围合同。",
+  "stateReason": "2026-09-29：负责人已选定渡火引线，D-JD-COMBO-FIRE-INPUT-01 的媒介载体合同已完成归档；只等待 N-JD-COMBO-FIRE-BUDGET-01 的 BattleSim 费用容量验证后再收口本范围合同。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
     "开发管理/任务卡/C-JD-COMBO-01.txt",

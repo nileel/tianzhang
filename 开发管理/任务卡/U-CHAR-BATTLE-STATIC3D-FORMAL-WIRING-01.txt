@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
   "title": "静态3D Provider与正式Adventure Marker所有权解耦",
   "priority": "P1",
@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-PROFILES-01"
-  ],
-  "stateReason": "2026-09-20：U-GZ-ART-BATTLEFIELD-01 已完成；仍等待双正式Profile，随后原子接入唯一静态3D provider及六事件整体动作，保留既有环境/UI，正式VFX/声音由独立下游交付。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：U-CHAR-BATTLE-STATIC3D-PROFILES-01 已完成归档；已扫描 Adventure 的 Marker 所有者、静态3D Profile集合、Builder、正式场景及直接测试，字面量路径和验证边界完整，现可原子接入唯一静态3D provider及六事件整体动作。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
@@ -41,6 +39,13 @@
     "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt",
     "开发管理/任务归档/U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01.txt"
   ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-001"
+    ],
+    "gates": []
+  },
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
@@ -80,6 +85,10 @@
 - 不新增玩家运行时切换、同场双正式 provider、兼容分支、重试层、隐藏 2D／Marker fallback 或表现路线存档字段。
 - 不复用 `FuYuan_StaticChess`、`U-CHAR-3D-FORMAL-01`、VisualBaseline probe 或比较 UI 作为正式 provider。
 - 不手改 `AdventureScene.unity` YAML；只通过既有 Builder 持久化并重开验证。
+
+## 模型协作
+
+简单：双 Profile、Adventure 当前所有者、Builder 保存链和验收入口均已冻结；沿用入口 `gpt-5.6-terra` 单模型统一实施和验证，无独立只读问题需要辅助。风险预检命中场景 Builder 经验，执行时先按该指引核验保存链。
 
 ## 验证
 

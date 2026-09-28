@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-FPD-STAGE-03"],
-  "stateReason": "2026-09-27：D-FPD-GONGFA-03需逐阶段asset成长；现有SubGrowthPerRealm只有realm且GetGrowth只取同境界首项。待U-FPD-STAGE-03冻结并完成相同导入器的状态迁移后，独立增加阶段字段和导入映射。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：U-FPD-STAGE-03 已完成归档并冻结 10/20/30 阶段编码；已扫描现有 GongFaGrowthData、CultivationContentImporter 和直接导入测试所有者，字面量路径与验证边界完整，现可独立增加阶段字段和导入映射。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/GongFaGrowthData.cs",
     "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
@@ -36,7 +36,7 @@
 
 `GongFa.csv`现仅每境界一条成长，`CultivationContentImporter.ImportGongFa`把冒号左侧整体译为realm，`GongFaGrowthData.SubGrowthPerRealm`无阶段字段，`GetGrowth(string realm)`返回首个同境界项。因此三条`realm_zhuji`不能表达筑基／开府／圆满；D-FPD-GONGFA-03原停止条件禁止数据卡自行新增字段。
 
-与U-FPD-STAGE-03共享导入器且要沿用其10/20/30阶段编码，故以其完成为真实前置。29部实际值和9部篇章合同已由N-FPD-GONGFA-03A/C-FPD-GONGFA-03B交付。
+U-FPD-STAGE-03 已完成归档并冻结相同导入器的10/20/30阶段编码；29部实际值和9部篇章合同已由N-FPD-GONGFA-03A/C-FPD-GONGFA-03B交付。
 
 ## 必查范围
 
@@ -58,7 +58,7 @@
 
 ## 模型协作
 
-有界导入与模型迁移，主模型负责统一修改和验证；准备ready时依U-FPD-STAGE-03最终差异重估是否需要独立只读辅助，当前blocked不预先派生子智能体。
+简单：阶段编码、现有导入器所有者、字面量路径和验收均已冻结；沿用入口 `gpt-5.6-terra` 单模型统一修改和验证，无独立只读问题需要辅助。
 
 ## 验证
 
