@@ -1,0 +1,31 @@
+# EXP-BS-002 · BattleSim 三阶段成长预算须与实际角色结算一致
+
+## 状态
+
+active；最后核验日期：2026-09-29；事实源：`N-FPD-STAGE-03-C01` 的候选、`GameData.AllocateFoundationBudget`、`Character.SubGrowthSum` 与 `Program.RunFoundationGrowthAudit`。
+
+## 开工前
+
+适用：修改 `simulations/BattleSim/GameData.cs`、`Character.cs` 或 `Program.cs` 中的筑基三阶段成长、`AllocateFoundationBudget`、`GrowthAtSublevel`、`SubGrowthSum`、`RunFoundationGrowthAudit` 或累计索引时，预算审计与实际角色结算必须使用同一分配合同；核验整数预算、非整数尾差和包含凡人节点的累计索引。纯 1v1／2v2 战斗、无关属性计算、只读既有结果及未改变模拟器输入的文档编辑不触发。
+
+## 根因
+
+三阶段迁移曾让审计使用整数最大余数分配，而运行时直接按浮点份额结算；同时 `TotalSubs` 包含不产生成长的凡人节点，累计循环跳过该节点却未推进索引。二者使总额守恒的审计仍可能与实际角色累计不一致。
+
+## 适用与排除
+
+- 适用：改动三阶段预算分配、筑基小境界成长、功法成长累计、权重回退，或引用 `TotalSubs` 的阶段累计索引。
+- 排除：只改 1v1／2v2 战斗、独立非成长属性、显示文案，或只读已有运行结果且输入未变化的数值讨论。
+
+## 正反例
+
+- 正例：将旧五段预算迁为筑基／开府／圆满时，以 `AllocateFoundationBudget` 同时生成审计与运行时阶段值，并验证实际角色的三段累计。
+- 反例：审计总额守恒即视为通过，或在跳过凡人节点时不保留它在 `TotalSubs` 中占用的累计索引。
+
+## 失效条件
+
+`AllocateFoundationBudget`、`GrowthAtSublevel`、`SubGrowthSum`、`TotalSubs` 或三阶段审计与运行时的关系被明确替换，或凡人节点不再计入累计索引时，停止引用并重新核验。
+
+## 正确处理
+
+先对总预算使用唯一分配合同，再由审计和实际角色共同消费结果；非整数预算将尾差收于最终阶段。遍历累计成长时，跳过不产生成长的节点仍要推进其索引。以实际角色的三阶段累计、跨境索引和重复结算断言验证，而不只检查预算审计。

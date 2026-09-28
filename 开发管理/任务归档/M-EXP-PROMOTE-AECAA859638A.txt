@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 N-FPD-STAGE-03/N-FPD-STAGE-03-C01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-09-29：独立核验候选并晋级为 EXP-BS-002；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/N-FPD-STAGE-03.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-09-29 完成记录
+
+- 语义裁决：promoted。`GameData.AllocateFoundationBudget` 已为整数预算使用最大余数分配，`Character.SubGrowthSum` 对跳过的凡人节点仍推进 `TotalSubs` 累计索引，`Program.RunFoundationGrowthAudit` 以实际角色断言太易 HP 80／165／265、浮点尾差、跨境索引与重复结算；根因与修复证据完整。
+- 去重与边界：`EXP-BS-001` 只约束源码修改后的 build／run 顺序，`EXP-BS-003`、`EXP-BS-004` 与 `EXP-BS-005` 分别约束 1v1 双侧、抗性键和超时结算，均不覆盖三阶段预算与累计索引的一致性。本经验仅在三个所有者文件与具名成长符号同时命中时触发；不新增门禁。
+- 模型协作：简单：来源候选、现行代码和既有经验的边界无冲突，验收为确定性回链与 schema 检查；实际能力支持原生只读辅助，但无独立复杂问题，沿用入口默认单模型，未调用辅助。

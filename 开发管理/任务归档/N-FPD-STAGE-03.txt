@@ -103,8 +103,8 @@
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-AECAA859638A
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-BS-002
 - 经验领域：battlesim
 - 现象：独立预算审计通过且总额守恒，但太易三阶段实际 HP 累计为 164.3／265／265，与合同 80／165／265 不同。
 - 已证实根因：审计采用整数最大余数分配而角色使用直接浮点比例；TotalSubs 包含凡人节点，累计成长循环跳过凡人却未推进索引。

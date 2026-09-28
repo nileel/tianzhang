@@ -110,6 +110,40 @@
       "lastVerified": "2026-08-26"
     },
     {
+      "id": "EXP-BS-002",
+      "title": "BattleSim 三阶段成长预算须与实际角色结算一致",
+      "preflightSummary": "调整三阶段成长预算或累计索引时，统一审计与运行时的分配，并以实际角色累计验证整数预算、浮点尾差和凡人节点索引。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [
+        "implementation",
+        "migration",
+        "verification"
+      ],
+      "pathPatterns": [
+        "simulations/BattleSim/GameData.cs",
+        "simulations/BattleSim/Character.cs",
+        "simulations/BattleSim/Program.cs"
+      ],
+      "textPatterns": [
+        "AllocateFoundationBudget",
+        "GrowthAtSublevel",
+        "SubGrowthSum",
+        "RunFoundationGrowthAudit",
+        "FoundationStageBudgetShares",
+        "TotalSubs",
+        "三阶段成长",
+        "筑基成长"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-002.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-09-29"
+    },
+    {
       "id": "EXP-BS-003",
       "title": "BattleSim 双侧分支对称接入",
       "preflightSummary": "修改 Combat.Simulate 双侧分支时，逐机制同时核对 A/B 的初始化、攻击、受击状态与结算。",
