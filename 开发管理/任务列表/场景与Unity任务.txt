@@ -21,7 +21,7 @@
 
 ## 当前事实
 
-- 2026-09-28：A-GZ-UI-CITY-ASSET-01 手动完成并归档，原生 1672×941 纯背景、city-manifest、主工作区源文件交付和 Unity 像素／importer 验证齐全。U-GZ-ART-UI-01 的三项资源前置均已完成，引用点及八项 automationInputs 已准备；仍因其新产出的 ignored source/manifest.json 没有自动回传方式而 blocked（已无资源 blocker），需手动实施或另行修复现有回传能力。此前带日期条目保留当时事实。
+- 2026-09-28：A-GZ-UI-CITY-ASSET-01 与 U-GZ-ART-UI-01 均已手动完成归档。关中城／悬赏及 Adventure／Combat HUD 已接入批准图集、字体、背景和头像；1920×1080 连续流程、15 项 EditMode 检查、动态节点／长日志与保存恢复通过，source/manifest.json 已回传主工作区且哈希一致。证据见 开发管理/关中首场城镇与界面美术验收记录.txt。V-GZ-ART-SLICE-01 仍等待正式角色接线和反馈，之后由用户本人实际跑测接受整段品质；此前带日期条目保留当时事实。
 
 - 2026-09-22 进度核查确认 D-GZ-UI-V6-CONTRACT-01 已完成归档，v6→既有 Unity 所有者、数据／事件、资源语义与验收入口已冻结。U-GZ-ART-UI-01 仍因城市背景、atlas、确定性头像、字体授权、引用点和连续实机验收尚无证据而 blocked；正式角色、费用、反馈和最终实机验收仍按各自卡判断。
 
@@ -55,8 +55,7 @@
 | U-FPD-STAGE-03 | P1 | codex | 已排队 | — | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | U-FPD-GONGFA-GROWTH-01 | P1 | codex | 阻塞 | U-FPD-STAGE-03 | 功法筑基三阶段成长字段与导入合同 | 开发管理/任务卡/U-FPD-GONGFA-GROWTH-01.txt |
 | U-GZ-ART-FEEDBACK-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 关中首场六事件正式特效与音效 | 开发管理/任务卡/U-GZ-ART-FEEDBACK-01.txt |
-| U-GZ-ART-UI-01 | P1 | codex | 阻塞 | — | 关中城悬赏与首场战斗界面统一美术 | 开发管理/任务卡/U-GZ-ART-UI-01.txt |
-| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
+| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01、U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |

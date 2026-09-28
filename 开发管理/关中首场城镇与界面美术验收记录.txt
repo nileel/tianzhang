@@ -1,0 +1,71 @@
+# 关中首场城镇与界面美术验收记录
+
+日期：2026-09-28
+任务：U-GZ-ART-UI-01
+结论：本 UI 叶子实施与技术验收通过；整段美术接受仍由 V-GZ-ART-SLICE-01 承担。
+版本：开发基线 69ad3a418cb684f6814b2b0be7cc96a26498aca5；集成前已重放到 f67774fee0c0d9c0d79c8715469edfc333cff6c2，src 与已验证版本零差异。实现、场景、测试与本记录位于同一次路径限定提交。
+
+## 授权、隔离与所有者
+
+- 用户明确同意手动实施本卡，并将生成的 source/manifest.json 手动复制回主工作区核对哈希。
+- 复用 C:/Users/WINDOWS/.codex/worktrees/guanzhong-city-background/天章游戏开发；本轮分支 codex/guanzhong-ui-integration。默认入口单模型统一实施、复核与验证，没有辅助模型调用。
+- 开工时两个自动化槽均为其他 taskId 的 attention_required，本卡未被占用，集成锁空闲。未操作这两个 run。
+- 已查明 SettlementSceneBuilder → SettlementView / BountyBoardView，以及 AdventureSceneBuilder → AdventureHudPresenter / CombatHudView / CombatActionBarView / CombatLogView 的 creator、刷新 writer 和事件链。
+- 预检命中 EXP-UNITY-001、无 gate，已消费 builder BeginScene → 序列化引用 → Save 规则；两个场景由 builder 保存，未经手工 YAML 改写。收尾添加直接下游 V 卡的维护路径后重算，taskCardDigest=846129cebf7f2b80ced774ada217c63fd9a80dda739731e1519e4f944e1c0a01，indexDigest=86caf96d5b879903527cb2e687338fc076bfbea554a851b9a44cd6d93d7f2bdf，命中未变。
+
+## 实施与实测
+
+- Settlement：已交付纯背景使用独立 Image、preserveAspect=true、raycastTarget=false；左侧城镇信息及保留的五个入口、右侧悬赏板使用 v6 深底板和按钮。悬赏内容使用图集中的纸面底板，文字仍由原视图独立写入。
+- Adventure：导航面板与运行时创建的三个节点按钮均引用已交付字体和图集。Combat 的轮次、两单位信息、五个行动和日志使用同一主题；默认男主头像为已批准确定性裁切。
+- 已证实原布局的 childControlWidth 未开启，按钮与动态容器只有 100 逻辑像素宽；本轮仅在两个目标构建器的列布局开启宽度控制，正式行动按钮变为 372×56，导航按钮 324×56。
+- 1920×1080 实测 Canvas 为 ScreenSpaceOverlay、scaleFactor=1。Adventure 面板范围 x=48..420，Combat 面板 x=1452..1872，中间战场保持无遮挡。
+- 图集五个 Sprite 的源 border 保持 32/32/32/32；面板 pixelsPerUnitMultiplier=4、按钮=6.4，分别对应 8、5 逻辑像素显示边框。没有改写 importer 或 GUID。
+- 正常／悬停／选中／主操作 Sprite 已接线；实测普攻悬停为 Guanzhong_Button_Hover、导航点击选中为 Guanzhong_Button_Selected。未装备术法／神通时原禁用逻辑保持，底图 alpha=0.65、标签使用 #b1bfbb。
+- 日志文本不截断存储或改写消息；使用原生 ScrollRect / RectMask2D 在固定区域滚动，新消息定位到末尾。七次实际普攻后的日志内容高 390、视口高 296，滚动值为 0；回看历史时全文保持一致。没有新增战斗指令或业务字段。
+- 所有目标 Text 使用已批准 GuanzhongChinese 字体；12 个阶段逐项断言正文 preferredHeight 不超过各自 RectTransform（可滚动日志除外），可见 UI 位于屏幕内。点击路径同时验证 EventSystem 实际射线命中按钮。
+- 背景实际源尺寸仍为 1672×941；1920×1080 下保持比例。Source 字体、许可与字符覆盖边界沿用 FONT 卡证据。
+- BuildCharterPanel、SceneBuildSupport、StartMenu、World、业务条件／奖励／存档、Combat 合同、地面/provider/比较对象逻辑没有修改。Unity 对其他 Prefab / 材质 / ProjectSettings 生成的纯空白变化已恢复。
+
+## 连续实机证据
+
+取证目录：D:/Temp/TianZhang-GuanzhongUI/final/
+实际引擎：Unity 6000.3.18f1，正式 StartMenu → 新建会话 → World 关中节点 → Settlement → Adventure → Settlement → 保存菜单 → 读档。
+没有以原型网页或静态拼图代替实机。
+
+1. 01-city.png：城镇、背景、头像与全部保留入口。
+2. 02-bounty-open.png：打开悬赏；关闭、再打开均通过。
+3. 03-bounty-accepted.png：接取后真实 BountyStatus.Accepted。
+4. 04-adventure.png：动态节点使用正式主题。
+5. 05-combat.png：初始战斗 HUD 与两单位数据。
+6. 05a-combat-hover.png：普攻悬停；05b-combat-log.png：真实一次普攻后的 HP 和日志。
+7. 05c-combat-long-log.png、05d-combat-log-history.png：七次普攻后的自动末尾与历史回看。
+8. 06-return-claimable.png：胜利回城，BountyStatus.ObjectiveCompleted。
+9. 07-claimed.png：领取后再次领取被既有规则拒绝，保存 JSON 不变。
+10. 08-restored.png：保存并返回菜单后读取同一角色，保存 JSON 与领取后逐字一致。
+
+每张图均为 1920×1080，并有同名前缀 -bounds.txt，记录完整层级、屏幕边界、字体、Sprite、源切片、倍率和禁用状态；全部 24 个证据文件的字节数与 SHA-256 已写入 manifest。
+捕获使用 Unity Editor GameView.RenderView 原始 ScreenSpaceOverlay 渲染，D3D 读回时规范化上下行方向；场景切换先绘制一帧完成材质/字体上传。批处理没有自动 Game View 重绘，因此首次未就绪截图不作结论；重新显示的行动按钮在渲染后再做射线检查。
+可复现临时脚本保存在 D:/Temp/TianZhang-GuanzhongUI/GuanzhongUiProbeSetup.cs 和 GuanzhongUiManualProbe.cs，已从项目移除。
+
+## 验证结果
+
+- EditMode：GuanzhongFormalUiTextTests、BountyBoardViewTests、GuanzhongFormalEndToEndTests 合计 15/15，通过；证据 D:/Temp/TianZhang-GuanzhongUI/editmode.xml。
+- 新增 GuanzhongSkinReferencesSurviveBothBuildersAndSceneReopen：两个 builder 保存重开后字体、背景 GUID、面板切片、按钮状态和动态节点引用不丢失。
+- PlayMode：既有 AdventureHudShowsMapWithoutOwningCombatHud 与连续流程共 2/2，通过，证据 playmode.xml；增加悬停和长日志后最终连续流程 1/1，通过，证据 continuous.xml。后者为截图最终版本。
+- 连续流程覆盖接取、进入副本、真实战斗胜利、回城、领取、重复领取拒绝和保存恢复。
+- check-data-chain：通过，GongFa=29/29、Spells=83/83、Skills=31/31，language keys=550。
+- check-asset-versioning：Git LFS fsck OK，检查通过。
+- 收尾任务投影通过：本卡 completed、活跃卡 72；重放最新 master 后 ready 7，并再次通过数据链检查。最新 master 对男主资产卡的阻塞及独立术法任务提交均保留。check-review-text 检查 597 个文件通过；check-pending-whitespace 检查本轮 12 个现存文件通过；git diff --check 与暂存后的 git diff --cached --check 通过。Unity 程序集边界检查通过：19 assemblies、2 asmrefs。
+
+## 源文件交付
+
+- 原八项 source 输入在主工作区和任务 worktree 的字节数／SHA-256 一致；三张 PNG、字体和许可与 Unity 导入物内容相同。
+- 新清单位于 assets/source/ui/guanzhong-first-bounty/manifest.json，21217 字节，SHA-256=31241ab16fa9de0969c6ed35f73ad0335da395648f5159b38940381272afa99e。
+- 清单包含八项来源、对应 Unity 路径／GUID、五个子 Sprite fileID、切片与显示倍率、52 个实机引用点、动态样式绑定、测试及全部截图哈希。
+- 已从任务 worktree 复制至 D:/天章游戏开发/assets/source/ui/guanzhong-first-bounty/manifest.json，并对副本执行 SHA-256 核验一致。该目录被 Git 忽略，交付依靠此手动复制，未改变自动化机制。
+
+## 剩余边界
+
+- Adventure 标题／节点／状态与 Combat 敌名／技术日志仍按既有 writer 显示原键或原消息；本轮保持这些数据和文本语义，截图如实保留。
+- 当前正式战斗仍显示既有占位角色，正式静态 3D provider 接线与反馈由各自任务完成。
+- U 卡可以完成归档；V-GZ-ART-SLICE-01 仍等待 U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 和 U-GZ-ART-FEEDBACK-01，随后还需用户本人实际跑测并明确接受整段品质。

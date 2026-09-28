@@ -10,6 +10,10 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Transform nodeContainer;
         [SerializeField] private Text adventureText;
         [SerializeField] private Text statusText;
+        [SerializeField] private Font nodeFont;
+        [SerializeField] private Sprite nodeNormal;
+        [SerializeField] private Sprite nodeHover;
+        [SerializeField] private Sprite nodeSelected;
 
         public void Present(AdventureSession session, Func<string, bool> selectNode, string failureReason)
         {
@@ -26,22 +30,37 @@ namespace TianZhang.Features.Adventure
                     typeof(Button),
                     typeof(LayoutElement));
                 go.transform.SetParent(nodeContainer, false);
-                go.GetComponent<LayoutElement>().preferredHeight = 44f;
-                go.GetComponent<Image>().color = new Color(0.2f, 0.34f, 0.3f, 1f);
+                go.GetComponent<LayoutElement>().minHeight = 56f;
+                go.GetComponent<LayoutElement>().preferredHeight = 56f;
+                Image image = go.GetComponent<Image>();
+                image.sprite = nodeNormal;
+                image.type = Image.Type.Sliced;
+                image.pixelsPerUnitMultiplier = 6.4f;
+                Button button = go.GetComponent<Button>();
+                button.transition = Selectable.Transition.SpriteSwap;
+                button.spriteState = new SpriteState
+                {
+                    highlightedSprite = nodeHover,
+                    pressedSprite = nodeSelected,
+                    selectedSprite = nodeSelected,
+                    disabledSprite = nodeNormal,
+                };
                 var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
                 labelGo.transform.SetParent(go.transform, false);
                 Text label = labelGo.GetComponent<Text>();
-                label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                label.font = nodeFont;
                 label.fontSize = 18;
-                label.color = new Color(0.91f, 0.88f, 0.77f, 1f);
+                label.color = new Color32(244, 234, 212, 255);
+                label.raycastTarget = false;
                 label.alignment = TextAnchor.MiddleCenter;
                 label.text = node.nodeId + " (" + node.q + "," + node.r + ")";
                 RectTransform rect = labelGo.GetComponent<RectTransform>();
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
-                rect.sizeDelta = Vector2.zero;
+                rect.offsetMin = new Vector2(12, 4);
+                rect.offsetMax = new Vector2(-12, -4);
                 string nodeId = node.nodeId;
-                go.GetComponent<Button>().onClick.AddListener(() => selectNode(nodeId));
+                button.onClick.AddListener(() => selectNode(nodeId));
             }
         }
     }

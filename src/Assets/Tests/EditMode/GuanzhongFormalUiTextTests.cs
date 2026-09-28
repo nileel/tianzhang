@@ -8,6 +8,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using System.Linq;
 
 namespace TianZhang.Tests
 {
@@ -200,6 +201,54 @@ namespace TianZhang.Tests
                 EditorSceneManager.OpenScene(
                     "Assets/Scenes/AdventureScene.unity",
                     OpenSceneMode.Single);
+            }
+        }
+
+        [Test]
+        public void GuanzhongSkinReferencesSurviveBothBuildersAndSceneReopen()
+        {
+            SettlementSceneBuilder.Build();
+            AdventureSceneBuilder.Build();
+            Font font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf");
+            Assert.IsNotNull(font);
+            foreach (string scenePath in new[] { SceneBuildSupport.SettlementScenePath, SceneBuildSupport.AdventureScenePath })
+            {
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                var roots = scene.GetRootGameObjects();
+                string[] panels = scenePath == SceneBuildSupport.SettlementScenePath
+                    ? new[] { "SettlementPanel", "BountyBoardPanel" }
+                    : new[] { "AdventurePanel", "CombatHudRoot" };
+                foreach (string panelName in panels)
+                {
+                    Transform panel = roots.SelectMany(root => root.GetComponentsInChildren<Transform>(true)).Single(item => item.name == panelName);
+                    Image image = panel.GetComponent<Image>();
+                    Assert.AreEqual("Guanzhong_Panel_Dark", image.sprite.name, panelName);
+                    Assert.AreEqual(new Vector4(32, 32, 32, 32), image.sprite.border);
+                    Assert.AreEqual(Image.Type.Sliced, image.type);
+                    Assert.AreEqual(4, image.pixelsPerUnitMultiplier);
+                    foreach (Text text in panel.GetComponentsInChildren<Text>(true)) Assert.AreEqual(font, text.font, text.name);
+                    foreach (Button button in panel.GetComponentsInChildren<Button>(true))
+                    {
+                        Assert.AreEqual(Image.Type.Sliced, button.image.type, button.name);
+                        Assert.AreEqual("Guanzhong_Button_Selected", button.spriteState.pressedSprite.name, button.name);
+                    }
+                }
+                if (scenePath == SceneBuildSupport.SettlementScenePath)
+                {
+                    Image background = GameObject.Find("GuanzhongCityBackground").GetComponent<Image>();
+                    Assert.IsTrue(background.preserveAspect);
+                    Assert.IsFalse(background.raycastTarget);
+                    Assert.AreEqual("1c7c4c035daafe64d80708bc2e144bc4", AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(background.sprite)));
+                }
+                else
+                {
+                    var hud = Object.FindFirstObjectByType<TianZhang.Features.Adventure.AdventureHudPresenter>();
+                    var serialized = new SerializedObject(hud);
+                    Assert.AreEqual(font, serialized.FindProperty("nodeFont").objectReferenceValue);
+                    Assert.IsNotNull(serialized.FindProperty("nodeNormal").objectReferenceValue);
+                    Assert.IsNotNull(serialized.FindProperty("nodeHover").objectReferenceValue);
+                    Assert.IsNotNull(serialized.FindProperty("nodeSelected").objectReferenceValue);
+                }
             }
         }
 

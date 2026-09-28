@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-28 三项资源前置与当前引用点已核验；八项 automationInputs 齐备。仍需生成 ignored 的 source/manifest.json，而共享自动入口尚无生成源文件回传主工作区能力；需手动实施本卡或先补齐回传，暂不进入自动 ready 队列。",
+  "stateReason": "2026-09-28 按用户授权手动完成两个正式表面的主题接入、连续实机验证及 source/manifest.json 回传哈希核验；UI 叶子完成，整体品质仍由 V 卡验收。",
   "expectedPaths": [
     "assets/source/ui/guanzhong-first-bounty/manifest.json",
     "开发管理/关中首场城镇与界面美术验收记录.txt",
@@ -49,6 +49,7 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-ART-UI-01.txt",
+    "开发管理/任务卡/V-GZ-ART-SLICE-01.txt",
     "开发管理/任务归档/U-GZ-ART-UI-01.txt"
   ],
   "riskPreflight": {
@@ -172,3 +173,11 @@
 - 八项 source 输入均核对正字节数／SHA-256，图集、头像、字体和许可证与对应 Unity 资源一致，.meta 齐全。风险预检仍命中 EXP-UNITY-001，无 gate；已消费其 builder 保存链规则。
 - 模型协作：冻结的同一主题、creator/writer 与验收入口明确，由入口默认单模型统一实施；无独立诊断缺口，当前不请求辅助。后续写前仍核对 Unity 运行及截图能力。
 - 剩余阻塞不是资源或先做完 U 卡的验收要求：本卡产出的 assets/source/ui/guanzhong-first-bounty/manifest.json 被忽略，自动化仅支持主工作区→worktree 的只读输入，尚无生成源文件回传。当前手动资源交付没有改变该机制。保持 blocked、blockedBy=[]；手动执行本卡可沿本次源文件复制／哈希核验方式收口，或在另获授权的自动化修复后重新判断 ready。
+
+## 2026-09-28 手动实施完成
+
+- 用户明确选择手动实施与 source 清单复制回传；同一 worktree、同一主智能体按冻结所有者完成接入。
+- Settlement/悬赏与 Adventure/Combat HUD 共用已交付图集、字体和头像；背景保持真实原尺寸比例。动态节点主题、行动禁用态、长日志末尾／历史回看与独立文字经过实机核验。
+- Unity EditMode 15/15、PlayMode 表面隔离与连续流程通过；1920×1080 实际接取→战斗→回城→领取→重复领取拒绝→保存恢复通过。两个 builder 保存重开引用保持。
+- assets/source/ui/guanzhong-first-bounty/manifest.json 已手动回传主工作区，21217 字节，SHA-256=31241ab16fa9de0969c6ed35f73ad0335da395648f5159b38940381272afa99e；八项输入在两边一致，包含 52 个实机引用点及 24 个截图／边界证据哈希。
+- 完整事实、命令入口、截图、已保留的原键显示／占位角色边界见 开发管理/关中首场城镇与界面美术验收记录.txt。只关闭本 UI 叶子，直接下游 V 卡移除本 blocker 后仍保持 blocked。
