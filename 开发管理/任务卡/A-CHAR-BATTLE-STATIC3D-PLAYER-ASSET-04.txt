@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-09-28选定有纹理原包检查完成并获用户收尾授权，RAW已归档；九项输入路径/字节数/SHA-256、模型协作和schema 2风险投影齐备。可执行既有资产任务；清理十视图及相应导入验证仍在任务内完成，不新增平台交易。",
+  "stateReason": "等待负责人决定：是否批准当前默认男主v2十视图候选，并允许执行首轮FBX导出？",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend",
     "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.fbx",
@@ -85,6 +85,59 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
+  },
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04",
+    "sourceRunId": "306cf90e-ce02-42dc-ab73-8982292340da",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20260928-CDEE8F4E660A8D",
+    "question": "是否批准当前默认男主v2十视图候选，并允许执行首轮FBX导出？",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准并继续首轮FBX导出"
+      },
+      {
+        "key": "B",
+        "label": "拒绝当前候选并停止本卡"
+      },
+      {
+        "key": "C",
+        "label": "暂不批准并列出复核项"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A只解锁首轮FBX导出及既定QA；B停止本卡；C保留检查点等待具体复核项。",
+    "plainSummary": {
+      "situation": "是否批准当前默认男主v2十视图候选，并允许执行首轮FBX导出？",
+      "impact": "A只解锁首轮FBX导出及既定QA；B停止本卡；C保留检查点等待具体复核项。",
+      "action": "建议选择 A：批准并继续首轮FBX导出"
+    },
+    "checkpointCommit": "fd231a3c9e1d7bf6c2acb17f2900b6fd75bbfe04",
+    "baseCommit": "81ed1c73623bde857d510edd71fb0357d0c12791",
+    "branch": "codex/automation/codex/306cf90e-ce02-42dc-ab73-8982292340da/candidate",
+    "changedPaths": [
+      "开发管理/默认男主静态3D模型与Unity导入QA记录.txt",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_basecolor.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2_contact-sheet.png",
+      "assets/source/characters/combat-pieces/formal-player-static-3d-v2/formal_player_static3d_v2.blend"
+    ],
+    "verified": [
+      "九项冻结输入的字节数和SHA-256均匹配",
+      "Blender场景为单根单网格单材质，坐标与bounds通过",
+      "十视图联系表已视觉检查为正立且完整",
+      "任务卡、审核文本、资产版本、空白与Git检查通过"
+    ],
+    "unverified": [
+      "负责人十视图视觉批准",
+      "FBX导出、factory-empty回读与Unity importer测试"
+    ],
+    "residualRisk": "未经负责人批准不得导出FBX或进入Unity导入QA。",
+    "taskContextDigest": "111436e2eb5152894da880c4958ff0fd34c1a9c425c94a8af794335020b80e8c",
+    "createdAt": "2026-09-28T09:34:23.0014230+08:00",
+    "queueIndex": 0
   }
 }
 ---TASK-BODY---
