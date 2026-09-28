@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：C-FPD-SPELL-01C（守真、玉液、穷理）的镇府神通主承载口径应如何裁决：本轮已按《金丹基础效果装配与冲突规则》§三.2 对现行《金丹位格索引》§六登记的全部五十一个具体位置逐条求交，三术法均无覆盖神通本体的完整交集——守真的伤害抵消／灵力恢复／丹药行动权豁免、玉液的直接恢复生命与丹药恢复修正、穷理的无视神魂防御／按增益叠加倍率／障目，在五十一个已登记效果中没有任何对象或操作对应（空交集）；仅有守真「越界移动成本×2」对土·源位 坤舆地髓、玉液「清除减益临时状态」对阳·化位 曜行关、穷理「缩短状态持续」对宙·化位 刻漏关在部分条目上非空，且媒介项仍未落入目标位置档案。《术法设计规范》必填的「目标源化界位格适配／主承载」因此无法在现行白名单内如实填满，且解决路径可能涉及新增道路／效果或新位置（超本卡禁止项与停止条件）。请裁决主承载兼容口径与后续执行方向。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260928-SPELL01C",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",
@@ -89,6 +89,14 @@
     "taskContextDigest": "e1738a9f7a141f86e16e62f8ef6278484419bbcb6f4c412b895cc30b9084a5ea",
     "createdAt": "2026-09-28T12:53:47.5269519+08:00",
     "queueIndex": 4
+  },
+  "automationReply": {
+    "decisionId": "DEC-20260928-SPELL01C",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "b654ff08be6f7d136e69f97dbd77fbb24974ce38597d4c6724b249ee20929876"
   }
 }
 ---TASK-BODY---

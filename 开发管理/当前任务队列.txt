@@ -9,6 +9,7 @@
 | A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02 | codex_execute | codex | P1 | content | implementation | 石甲兽Tripo原包清理与静态资产验收 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02.txt |
 | U-FPD-STAGE-03 | codex_execute | codex | P1 | unity | migration | 筑基三阶段状态导入与存档迁移 | 开发管理/任务卡/U-FPD-STAGE-03.txt |
 | D-JD-COMBO-FIRE-INPUT-01 | codex_execute | codex | P2 | content | design | 渡火引线媒介与载体输入合同 | 开发管理/任务卡/D-JD-COMBO-FIRE-INPUT-01.txt |
+| C-FPD-SPELL-01C | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
 | C-FPD-SPELL-01B | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：通变、演卦 | 开发管理/任务卡/C-FPD-SPELL-01B.txt |
 | C-FPD-SPELL-01D | external_execute | deepseek | P2 | content | migration | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
 | M-EXP-PROMOTE-AECAA859638A | codex_execute | codex | P2 | battlesim | implementation | 经验候选整理：N-FPD-STAGE-03-C01 | 开发管理/任务卡/M-EXP-PROMOTE-AECAA859638A.txt |
