@@ -142,8 +142,8 @@
 ## 经验候选
 
 ### CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-76FEF6527F6A
 - resolution: unresolved
 - experienceId:
 - 经验领域：content

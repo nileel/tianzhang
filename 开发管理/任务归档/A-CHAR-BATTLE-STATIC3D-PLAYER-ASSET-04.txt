@@ -251,8 +251,8 @@
 ## 经验候选
 
 ### CAND-A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-04-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-CDAC04DF25B2
 - resolution: unresolved
 - experienceId:
 - 经验领域：content

@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "M-EXP-PROMOTE-76FEF6527F6A",
+  "title": "经验候选整理：CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "M-EXP-EXT-CONTENT-01"
+  ],
+  "stateReason": "每日收集器已收集 A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01/CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01；等待具名前置 M-EXP-EXT-CONTENT-01 完成后再进行经验语义核验。",
+  "expectedPaths": [
+    "开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt",
+    "开发管理/经验库/风险索引.json",
+    "开发管理/经验库/经验卡/EXP-CONTENT-005.txt",
+    "开发管理/任务卡/M-EXP-PROMOTE-76FEF6527F6A.txt",
+    "开发管理/任务归档/M-EXP-PROMOTE-76FEF6527F6A.txt",
+    "开发管理/任务列表/管理与自动化任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# M-EXP-PROMOTE-76FEF6527F6A · 经验候选整理：CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01
+
+## 来源与当前边界
+
+- 单一结果：独立核验来源候选，确定 promoted／duplicate／rejected 之一，并按真实结论原子回链来源。
+- 来源任务：A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01
+- 候选 ID：CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01
+- 来源候选 digest：5339fea2b817020068b8b425b7bfc82f0461c284b608cadae903ee6fa63b920c
+- 原经验领域：content
+- 预留经验 ID：EXP-CONTENT-005
+
+## 必查范围
+
+- `开发管理/任务归档/A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01.txt` 中 `CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-AI-RAW-01-01` 的完整候选字段及其直接证据。
+- `开发管理/经验库/风险索引.json` 的现有经验、状态、触发和门禁合同。
+- `docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md#独立整理任务`。
+
+## 实施范围
+
+- 核验候选是否可泛化、是否与现有 active 经验重复，以及适用／排除／失效边界；本卡是唯一语义裁决点。
+- promoted 时使用预留 ID `EXP-CONTENT-005` 创建正式经验卡并登记索引；duplicate 时只回链既有经验；rejected 时记录精确原因。
+- 完成时更新来源候选的 resolution／experienceId，归档本卡并同步队列与管理 backlog。
+
+## 禁止项
+
+- 不合并其他候选，不修改未在 expectedPaths 中冻结的既有经验，不顺带新增门禁或开放领域。
+- 不更换预留经验 ID，不把证据不足的候选伪造成正式经验。
+
+## 验证
+
+- 运行 `tools/check-task-cards.ps1`，核对来源／整理卡双向回链、风险索引 schema 和精确 changed paths。
+- 对本轮路径运行 `tools/check-pending-whitespace.ps1`、`tools/check-review-text.ps1` 和 `git diff --cached --check`。
+
+## 完成条件
+
+- 候选以 promoted／duplicate／rejected 之一真实闭环；来源候选、整理归档、风险索引／经验卡按所选终态一致。
+
+## 停止条件
+
+- 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
