@@ -4,13 +4,13 @@
   "id": "C-FPD-SPELL-01C",
   "title": "古修术法升格迁移：守真、玉液、穷理",
   "priority": "P2",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "content",
   "stage": "migration",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20260928-SPELL01C",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",
@@ -29,75 +29,7 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "C-FPD-SPELL-01C",
-    "sourceRunId": "64a759b6-ad3e-4c33-96a3-0ae690958bc5",
-    "owner": "deepseek",
-    "route": "external_execute",
-    "decisionId": "DEC-20260928-SPELL01C",
-    "question": "C-FPD-SPELL-01C（守真、玉液、穷理）的镇府神通主承载口径应如何裁决：本轮已按《金丹基础效果装配与冲突规则》§三.2 对现行《金丹位格索引》§六登记的全部五十一个具体位置逐条求交，三术法均无覆盖神通本体的完整交集——守真的伤害抵消／灵力恢复／丹药行动权豁免、玉液的直接恢复生命与丹药恢复修正、穷理的无视神魂防御／按增益叠加倍率／障目，在五十一个已登记效果中没有任何对象或操作对应（空交集）；仅有守真「越界移动成本×2」对土·源位 坤舆地髓、玉液「清除减益临时状态」对阳·化位 曜行关、穷理「缩短状态持续」对宙·化位 刻漏关在部分条目上非空，且媒介项仍未落入目标位置档案。《术法设计规范》必填的「目标源化界位格适配／主承载」因此无法在现行白名单内如实填满，且解决路径可能涉及新增道路／效果或新位置（超本卡禁止项与停止条件）。请裁决主承载兼容口径与后续执行方向。",
-    "options": [
-      {
-        "key": "A",
-        "label": "裁决并授权「部分交集＋子集主枢表现」口径：主承载只要求主枢表现在对象／操作／媒介／结果四项上与目标位置非空，未交集条目保留为紫府原有效果；由 DeepSeek 按已证交集（守真↔土·源位 坤舆地髓、玉液↔阳·化位 曜行关、穷理↔宙·化位 刻漏关）在本卡原字面量路径内补齐兼容档案"
-      },
-      {
-        "key": "B",
-        "label": "维持「主承载须覆盖神通本体全部条目」口径：改由 Codex 裁决并立项新位置／新效果（超本卡禁止项与停止条件），本卡按裁决拆分为新子任务后执行"
-      },
-      {
-        "key": "C",
-        "label": "本卡保持阻塞：三术法的位格兼容整体移交 C-JD-LORE-MIGRATE-01B（道路权限归属），本卡只保留本轮逐条求交记录，不再承接"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "影响=C 批三术法以及同因的 A／B／D 三批（共十一项术法）全部卡在同一处主承载口径上，一次裁决可同时解除四批阻塞；边界=本卡只改设计文本与 L1 线索层，不改战斗数值、功法、结构规则，不新增道路／位置／效果，不自审、不集成、不推送。",
-    "plainSummary": {
-      "action": "需要在三种口径里裁决一种：按已证的部分交集收口并继续返工、改为立项新位置／新效果后拆分执行、或整体移交后续任务。",
-      "impact": "本卡与同因的另外三批术法都停在同一处；本轮已按证据把模板必填项标为待裁决，没有编造映射。",
-      "situation": "守真、玉液、穷理要写明镇府神通可挂在哪个金丹位格上，但按现行十七道路五十一个已登记位置逐条求交后，三者的核心效果在现有位格里找不到对应权限，模板必填的这一项无法如实填满。"
-    },
-    "checkpointCommit": "6e86eae2dceabcae68d9bf1b05ee2ee773eae0cc",
-    "baseCommit": "7fb0a3c460bca55bdba89de471a8321bcf23ea77",
-    "branch": "codex/automation/deepseek/64a759b6-ad3e-4c33-96a3-0ae690958bc5/candidate",
-    "changedPaths": [
-      "docs/角色养成/术法/古修/穷理.txt",
-      "docs/角色养成/术法/古修/守真.txt",
-      "docs/角色养成/术法/古修/玉液.txt",
-      "docs/角色养成/养成事实速查.txt"
-    ],
-    "verified": [
-      "按《金丹基础效果装配与冲突规则》§三.2 的四要素（对象 `objectSchema`／操作 `operationSchema`／媒介 `mediumSchema`／结果 `resultCarrierSchema`）对现行《金丹位格索引》§六登记的全部五十一个具体位置逐条求交，并对三术法神通本体的每一条效果行写入「旧句→现行依据→结论」有界记录；三术法均不再声明主承载位格，也不保留按主题相似立论的兼容位格。",
-      "只读取证范围：三份术法全文、`docs/基础设定/元婴锚点与金丹位格矩阵.txt` 全部五十一个 effect_id 与十七道路变量／不可越界项、`docs/基础设定/金丹基础效果装配与冲突规则.txt` §三与§八相似效果权限边界索引、`docs/基础设定/境界特性.txt` §二.2—二.4 与§三.3／§三.5、`docs/角色养成/术法设计规范.txt`、`docs/基础设定/金丹位格/金丹位格设计规范.txt` §5.3、`docs/基础设定/金丹位格/金丹位格索引.txt` §四／§六、以及全部五十一个位置独立文档的效果白名单、理念边界、媒介与不可越界项；关键词穷举确认「神魂／神魂防御／无视防御／破障／生命值／丹药／行动权豁免／移力」在五十一个位置文档与矩阵中零命中。",
-      "仅有的三项部分非空交集已逐条核到原文：守真「越界敌方移力消耗×2」对土·源位 坤舆地髓（`EARTH_GRAVITY` 源版含「提高普通移动成本」，对象含单位，`源位/JD_FiveElements_Earth_SOURCE_坤舆地髓.txt`）；玉液「额外清除1个 debuff」对阳·化位 曜行关（`YANG_DEBUFF_LOCK` 化版统一清除符合预设标签的 `DEBUFF`／`MIXED` 临时状态，`化位/JD_YinYang_Yang_TRANSFORM01_曜行关.txt`）；穷理「目标增益持续时间-1回合」对宙·化位 刻漏关（`TIME_PROCESS` 化版固定执行同步／催进／压缩／延长之一，`化位/JD_Cosmos_Time_TRANSFORM01_刻漏关.txt`）；三者媒介项均未落入目标位置档案声明的既有通路（关枢／刻漏标尺／应事台／状态标签簿等），故不构成四项齐全的兼容档案。",
-      "零改动核对：三术法的类型、物理与神魂倍率、灵力消耗、冷却惩罚、射程、范围、境界要求、灵根种类与品级、五行属性、前置／门派、熟练度上限与源术法效果绑定表逐行未改；升格方案其余部分（固定镇海神通本体表述、兼容府属命府／悟府与魂府／识府、术法熟练度、可记录行为、升格知识、材料地点环境、防刷、源术法处置=保留、神通形态=主动、强化与府间节点、六项丹枢接口、唯一实例与 `abilityInstanceId` 账本、丹器显化）未改；本轮改动仅为「目标源化界位格适配」的兼容位格两行与依据段、「主承载／辅助接口」的可主承载行与主承载不独占句，以及规则引用中两个位置文档指针替换为§三／§八／金丹位格设计规范 §5.3。",
-      "pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths <本批四文件>：OK（4 文件）；pwsh tools/check-review-text.ps1 -Paths <本批四文件>,开发管理：OK（598 文件）；pwsh tools/check-data-chain.ps1：OK（GongFa=29/29、Spells=83/83、Skills=31/31、language keys=550，未改 CSV／asset，数量与迁移前一致）；pwsh tools/check-task-cards.ps1：OK（cards=73 ready=8，任务投影与 schema2 风险投影一致）；git diff --check 与 `automation-finalize-commit.ps1` 内部 `git diff --cached --check` 通过。",
-      "checkpoint 提交 `6e86eae2dceabcae68d9bf1b05ee2ee773eae0cc` 是 baseCommit `7fb0a3c460bca55bdba89de471a8321bcf23ea77` 的直接后继，changedPaths 恰为本批四个文件（CandidatePaths 子集），worktree 清洁、无未跟踪文件，未使用 RequireAutomationMetadata，未改任务卡、队列、未通过审核清单、AI合作沟通或归档。",
-      "模型协作评估（业务写入前）：本轮为按冻结的§三求交口径做的有界返工，验收明确、无跨所有者依赖冲突；卡中 `gpt-6-astra / high` 的触发条件（现行位置白名单与旧术法权限关键冲突）确已出现，但当前子智能体工具不支持该模型覆盖，按规则记录「未执行该模型辅助」；实际调用 1 次原生只读子智能体（Explore）完成五十一个位置文档的只读取证，全程只读、无写入、无提交、无派生。"
-    ],
-    "unverified": [
-      "未运行 BattleSim 与 Unity：本卡明确不改战斗数值、不作强度或平衡结论，按任务卡验证节不重跑；本轮只改设计文本与 L1 线索层。",
-      "未做游戏内装配、证位或运行时验证：本轮求交是文本合同层面判定，没有实现层 `PositionCompatibilityContract` 编译结果、`compatibilityProfileId` 或证位流程证据（五十一个位置文档当前也只引用 §三.2 字段清单，未填入实例值）。",
-      "未独立核验会话 provider／gateway／模型串（会话内无可用取证工具）；identity 与 model 按固定入口给定值返回，未自行换端点或重启。",
-      "未修改 `开发管理/未通过审核清单.txt`、`开发管理/任务卡/C-FPD-SPELL-01C.txt`、`开发管理/当前任务队列.txt`、`开发管理/AI合作沟通.txt` 与交接归档：任务生命周期、审核结论与正式交接按审核入口由 Codex／共享入口处置，DeepSeek 不自审，checkpoint 不改任务生命周期。",
-      "未验证三术法金丹期节点（守真纹／玉液纹／至理纹）的数值配置与触发，也未验证共享 `abilityInstanceId` 唯一账本与唯一丹相边界的运行时／存档接入，只核对文本合同一致。",
-      "卡内 `gpt-6-astra / high` 只读辅助未执行：当前原生子智能体工具不支持该模型的覆盖，按 AI协作规则记录「未执行该模型辅助」，未取得该模型的独立核查意见。"
-    ],
-    "residualRisk": "三术法的「目标源化界位格适配」与「主承载／辅助接口」两项模板必填字段现按求交结果标记为待有权任务裁决，字段处于未填满状态；若裁决口径为「主承载须覆盖神通本体全部条目」，解决路径可能涉及新增道路／效果或新位置，超本卡禁止项与停止条件，将触发任务拆分。已移除的原「木·界位 扶疏天／土·界位 厚境垣」「木·化位 荣枯关／水·化位 潮衡渡」「木·化位 荣枯关／土·化位 载岳回廊」属按§三.7 不合格的主题相似立论，移除不改变守真／玉液的府属（命府、悟府）与穷理的府属（魂府、识府）判定，也不改变源术法数值与源术法处置结论。旧别名与现行五十一个具体位置的对应关系、《见素抱朴经》与本批术法的道路权限归属仍明确未完成，留给 C-JD-LORE-MIGRATE-01B。本卡最终能否关闭仍须 Codex 独立复审与上述裁决。",
-    "taskContextDigest": "e1738a9f7a141f86e16e62f8ef6278484419bbcb6f4c412b895cc30b9084a5ea",
-    "createdAt": "2026-09-28T12:53:47.5269519+08:00",
-    "queueIndex": 4
-  },
-  "automationReply": {
-    "decisionId": "DEC-20260928-SPELL01C",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "b654ff08be6f7d136e69f97dbd77fbb24974ce38597d4c6724b249ee20929876"
-  }
+  "sourceBacklog": "开发管理/任务列表/内容设计任务.txt"
 }
 ---TASK-BODY---
 # C-FPD-SPELL-01C · 古修术法升格迁移：守真、玉液、穷理
