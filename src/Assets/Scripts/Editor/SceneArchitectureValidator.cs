@@ -342,36 +342,22 @@ namespace TianZhang.Editor
             foreach (Component component in root.GetComponentsInChildren<Component>(true))
                 Require(component != null, path + " contains a Missing Script.");
 
-            if (path == SceneBuildSupport.AdventureScenePath) ValidateAdventureVisualMatrix(scene);
+            if (path == SceneBuildSupport.AdventureScenePath) ValidateAdventureStatic3DPresentation(scene);
         }
 
-        private static void ValidateAdventureVisualMatrix(Scene scene)
+        private static void ValidateAdventureStatic3DPresentation(Scene scene)
         {
-            GameObject board = FindNamed(scene, "VisualBaselineBoard");
-            Require(board != null, "AdventureScene is missing the visual baseline board.");
-            Require(board.GetComponentsInChildren<MeshRenderer>(true)
-                        .Count(item => item.name.StartsWith("VisualHex_", StringComparison.Ordinal)) == 9,
-                "AdventureScene must contain the bounded nine-cell technical matrix.");
-            for (int index = 0; index < VisualBaselineCells.GetLength(0); index++)
-                ValidateVisualBaselineCell(board.transform, VisualBaselineCells[index, 0], VisualBaselineCells[index, 1],
-                    VisualBaselineCells[index, 2]);
-            for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
-                ValidateFacingProbe(board.transform, index, FacingProbeExpectations[index, 0],
-                    FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
-                    FacingProbeExpectations[index, 3]);
-            Transform tacticalGroup = board.transform.Find("TacticalSpriteProbeGroup");
-            Require(tacticalGroup != null, "AdventureScene is missing the tactical sprite probe group.");
-            Require(!tacticalGroup.gameObject.activeSelf,
-                "The tactical sprite group must stay inactive by default so the 2D and 3D routes are mutually exclusive.");
-            for (int index = 0; index < FacingProbeExpectations.GetLength(0); index++)
-                ValidateTacticalSpriteProbe(tacticalGroup, index, FacingProbeExpectations[index, 0],
-                    FacingProbeExpectations[index, 1], FacingProbeExpectations[index, 2],
-                    FacingProbeExpectations[index, 3]);
-            ValidateTacticalSpriteOcclusionProbe(tacticalGroup);
-            ValidateBattleAnimationSpriteProbes(board.transform);
-            foreach (string name in new[]
-                     { "SurfaceOverlay", "ReachableOverlay", "SelectedOverlay", "AttackOverlay", "VisualBaselineOccluder" })
-                Require(FindNamed(scene, name) != null, "AdventureScene is missing visual layer: " + name);
+            Static3DCombatUnitPresentationProvider[] providers =
+                FindComponents<Static3DCombatUnitPresentationProvider>(scene);
+            Require(providers.Length == 1, "AdventureScene must contain exactly one formal static-3D provider.");
+            Require(providers[0].TryValidate(out string reason),
+                "AdventureScene static-3D provider is invalid: " + reason);
+            foreach (string name in new[] { "VisualBaselineBoard", "BattleVisualComparisonPanel" })
+                Require(FindNamed(scene, name) == null,
+                    "AdventureScene must not retain the non-formal visual baseline entry: " + name);
+            Require(!AssetDatabase.GetDependencies(SceneBuildSupport.AdventureScenePath, true)
+                        .Any(path => path.EndsWith("/UnitMarker.prefab", StringComparison.Ordinal)),
+                "AdventureScene must not reference UnitMarker.prefab.");
         }
 
         private static void ValidateTacticalSpriteOcclusionProbe(Transform group)

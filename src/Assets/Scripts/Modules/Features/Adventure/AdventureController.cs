@@ -24,7 +24,6 @@ namespace TianZhang.Features.Adventure
         private AdventureMapData map;
         private CharacterStateSnapshot player;
         private EnvironmentProfileAsset environmentProfile;
-        private GameObject unitMarkerPrefab;
         private AttackProfileData[] attackProfiles;
         private AdventureMapLoader mapLoader;
         private AdventureUnitSpawner unitSpawner;
@@ -51,7 +50,6 @@ namespace TianZhang.Features.Adventure
             AdventureMapData adventureMap,
             CharacterStateSnapshot playerSnapshot,
             EnvironmentProfileAsset environment,
-            GameObject markerPrefab,
             AttackProfileData[] profiles,
             AdventureMapLoader loader,
             AdventureUnitSpawner spawner,
@@ -68,7 +66,6 @@ namespace TianZhang.Features.Adventure
             map = adventureMap ?? throw new ArgumentNullException(nameof(adventureMap));
             player = playerSnapshot ?? throw new ArgumentNullException(nameof(playerSnapshot));
             environmentProfile = environment ?? throw new ArgumentNullException(nameof(environment));
-            unitMarkerPrefab = markerPrefab ?? throw new ArgumentNullException(nameof(markerPrefab));
             attackProfiles = profiles ?? Array.Empty<AttackProfileData>();
             mapLoader = loader ?? throw new ArgumentNullException(nameof(loader));
             unitSpawner = spawner ?? throw new ArgumentNullException(nameof(spawner));
@@ -128,7 +125,6 @@ namespace TianZhang.Features.Adventure
                     catalog,
                     startNode,
                     encounterNode,
-                    unitMarkerPrefab,
                     attackProfiles,
                     environmentProfile,
                     unitSpawner,

@@ -16,7 +16,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private ContentCatalogData contentCatalog;
         [SerializeField] private EnvironmentProfileAsset environmentProfile;
         [SerializeField] private AttackProfileData[] attackProfiles = Array.Empty<AttackProfileData>();
-        [SerializeField] private GameObject unitMarkerPrefab;
+        [SerializeField] private CombatUnitPresentationProfileCatalogData combatPresentationProfileCatalog;
 
         [Header("Adventure")]
         [SerializeField] private AdventureController controller;
@@ -31,6 +31,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatCommandInput combatCommandInput;
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
+        [SerializeField] private Static3DCombatUnitPresentationProvider static3DUnitPresentationProvider;
 
         private void Awake()
         {
@@ -39,7 +40,9 @@ namespace TianZhang.Bootstrap
                 RequireReference(languageTable, "adventure_language_table_missing");
                 RequireReference(contentCatalog, "adventure_content_catalog_missing");
                 RequireReference(environmentProfile, "adventure_environment_missing");
-                RequireReference(unitMarkerPrefab, "adventure_unit_marker_missing");
+                RequireReference(combatPresentationProfileCatalog, "adventure_presentation_catalog_missing");
+                if (!combatPresentationProfileCatalog.TryValidate(out _))
+                    throw new InvalidOperationException("adventure_presentation_catalog_invalid");
                 RequireReference(controller, "adventure_controller_missing");
                 RequireReference(input, "adventure_input_missing");
                 RequireReference(adventureHud, "adventure_hud_missing");
@@ -50,6 +53,9 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatCommandInput, "combat_command_input_missing");
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
+                RequireReference(static3DUnitPresentationProvider, "static_3d_presentation_provider_missing");
+                if (!static3DUnitPresentationProvider.TryValidate(out string presentationReason))
+                    throw new InvalidOperationException(presentationReason);
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 if (runtime.Player == null) throw new InvalidOperationException("adventure_player_missing");
                 if (!contentCatalog.TryGetAdventureMap(
@@ -59,13 +65,16 @@ namespace TianZhang.Bootstrap
                         "adventure_map_unresolved:" + runtime.Navigation.AdventureId);
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar);
-                encounterCoordinator.Configure(combatHudPresenter, controller.ResolveEncounter);
+                encounterCoordinator.Configure(
+                    combatHudPresenter,
+                    static3DUnitPresentationProvider,
+                    combatPresentationProfileCatalog,
+                    controller.ResolveEncounter);
                 controller.Configure(
                     contentCatalog,
                     adventureMap,
                     runtime.Player.Capture(),
                     environmentProfile,
-                    unitMarkerPrefab,
                     attackProfiles,
                     new AdventureMapLoader(),
                     unitSpawner,

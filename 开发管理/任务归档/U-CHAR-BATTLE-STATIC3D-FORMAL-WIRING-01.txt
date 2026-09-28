@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-29：U-CHAR-BATTLE-STATIC3D-PROFILES-01 已完成归档；已扫描 Adventure 的 Marker 所有者、静态3D Profile集合、Builder、正式场景及直接测试，字面量路径和验证边界完整，现可原子接入唯一静态3D provider及六事件整体动作。",
+  "stateReason": "2026-09-29：唯一静态3D provider 已接入正式 Adventure，Builder 保存后重开与场景架构验证通过；全量 Unity 测试仍有非本卡宽袖源缺失及已移除比较板 fixture 失败，详见验证记录。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
@@ -106,6 +106,13 @@
 - build-enabled `AdventureScene` 只绑定一个正式静态 3D provider，玩家与石甲兽均按稳定 profile 生成、消费六类事件并精确清理。
 - Adventure／Combat 规则链不创建、保存、销毁或引用具体表现对象；规则、数值、奖励、返回与存档结果不依赖表现实现。
 - 技术 Marker、比较面板、VisualBaselineBoard、2D fallback 和玩家切换入口均不在正式链。
+
+## 2026-09-29 实施与验证结果
+
+- 已建立唯一 `Static3DCombatUnitPresentationProvider`，由批准 profile catalog 与 static3D profile set 预检双单位后生成玩家与石甲兽根节点、材质底座及六类只读事件；按稳定 combatant ID 移除并支持整场清理，不提供 Marker、2D 或重试 fallback。
+- `AdventureUnitSpawner` 现只形成快照和稳定内容引用；`EncounterCoordinator` 在创建 `CombatSession` 前解析全部表现描述，规则成功后才投影事件，表现异常不回写规则、数值、奖励或存档。正式 Installer、Builder 和 `AdventureScene` 只绑定这一 provider，已移除 Marker、VisualBaselineBoard、比较面板和切换入口。
+- `AdventureSceneBuilder.Build()` 保存并关闭重开后，`SceneArchitectureValidator.ValidateForBatchMode`、程序集边界检查通过；新的 provider PlayMode 覆盖双 profile、六事件、无 SpriteRenderer 及稳定清理。
+- 全量 EditMode 为 5 个失败、PlayMode 为 10 个失败：宽袖实验缺 Blender source、profile fixture 在本 worktree 缺冻结石甲兽 source，及旧比较板 fixture 仍期望已移除的正式板；`GuanzhongBasicAttackPlayModeTests` 还暴露既有 `AdventureHudPresenter` 未写入节点颜色。上述源或 fixture 均不在本卡允许路径，未作越界修复；详情见 `开发管理/正式静态3D战斗棋子Provider与Adventure解耦验证记录.txt`。
 
 ## 停止条件
 

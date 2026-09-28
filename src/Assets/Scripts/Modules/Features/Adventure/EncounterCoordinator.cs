@@ -43,6 +43,8 @@ namespace TianZhang.Features.Adventure
         private AdventureSpawnSet spawned;
         private ICombatActionPolicy enemyPolicy;
         private ICombatPresentationSink presentation;
+        private ICombatUnitPresentationPort unitPresentation;
+        private CombatUnitPresentationProfileCatalogData presentationProfileCatalog;
         private Action<CombatSessionOutcome, EnemyData> completed;
         private bool acceptsPlayerCommand;
         private bool playerActed;
@@ -56,9 +58,13 @@ namespace TianZhang.Features.Adventure
 
         public void Configure(
             ICombatPresentationSink presentationSink,
+            ICombatUnitPresentationPort unitPresentationPort,
+            CombatUnitPresentationProfileCatalogData profileCatalog,
             Action<CombatSessionOutcome, EnemyData> onCompleted)
         {
             presentation = presentationSink ?? throw new ArgumentNullException(nameof(presentationSink));
+            unitPresentation = unitPresentationPort ?? throw new ArgumentNullException(nameof(unitPresentationPort));
+            presentationProfileCatalog = profileCatalog ?? throw new ArgumentNullException(nameof(profileCatalog));
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             legalActions = new CombatLegalActionService(commandService);
         }
@@ -68,7 +74,6 @@ namespace TianZhang.Features.Adventure
             ContentCatalogData catalog,
             AdventureNodeData startNode,
             AdventureNodeData encounterNode,
-            GameObject unitMarkerPrefab,
             AttackProfileData[] attackProfiles,
             EnvironmentProfileAsset environmentProfile,
             AdventureUnitSpawner unitSpawner,
@@ -81,19 +86,34 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!unitSpawner.TrySpawn(
-                    player, catalog, startNode, encounterNode, unitMarkerPrefab, out spawned, out reason))
+                    player, catalog, startNode, encounterNode, out spawned, out reason))
                 return false;
             if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(
                     spawned.EnemyData.aiProfileId, out enemyPolicy, out reason))
             {
-                DestroyMarkers();
+                spawned = null;
+                return false;
+            }
+            if (!TryCreatePresentationDescriptors(spawned, out IReadOnlyList<CombatUnitPresentationDescriptor> descriptors, out reason))
+            {
                 spawned = null;
                 return false;
             }
             if (!combatEntry.TryCreateSession(spawned, attackProfiles, environmentProfile, out session, out reason))
             {
-                DestroyMarkers();
                 spawned = null;
+                return false;
+            }
+            try
+            {
+                unitPresentation.Prepare(descriptors);
+            }
+            catch (Exception exception)
+            {
+                unitPresentation.Clear();
+                session = null;
+                spawned = null;
+                reason = "adventure_presentation_spawn_failed:" + exception.Message;
                 return false;
             }
 
@@ -180,6 +200,12 @@ namespace TianZhang.Features.Adventure
 
         private CombatActionResult ExecuteCommand(CombatCommand command)
         {
+            session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
+            session.Combatants.TryGet(command.TargetId, out CombatantSnapshot targetBefore);
+            CombatUnitPresentationHex actorStart = actorBefore == null
+                ? default
+                : ToPresentationHex(actorBefore.Position);
+            int actorFacing = actorBefore?.Facing ?? 0;
             CombatActionResult validation = commandService.Validate(session, command);
             if (!validation.Succeeded)
                 return validation;
@@ -199,7 +225,10 @@ namespace TianZhang.Features.Adventure
                     command.Destination,
                     command.SlotIndex);
             }
-            return commandService.Execute(session, command);
+            CombatActionResult result = commandService.Execute(session, command);
+            if (result.Succeeded)
+                ProjectPresentation(command, result, actorBefore, actorStart, actorFacing, targetBefore);
+            return result;
         }
 
         private void Present(string turnText, bool acceptsCommands)
@@ -222,18 +251,101 @@ namespace TianZhang.Features.Adventure
             presentation.AppendLog(outcome == CombatSessionOutcome.Victory ? "战斗胜利" : "战斗失败");
             Present(outcome.ToString(), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
-            DestroyMarkers();
+            unitPresentation.Remove(spawned.Player.Id);
+            unitPresentation.Remove(spawned.Enemy.Id);
+            unitPresentation.Clear();
             session = null;
             AdventureSpawnSet prior = spawned;
             spawned = null;
             completed(outcome, defeated ?? prior.EnemyData);
         }
 
-        private void DestroyMarkers()
+        private bool TryCreatePresentationDescriptors(
+            AdventureSpawnSet values,
+            out IReadOnlyList<CombatUnitPresentationDescriptor> descriptors,
+            out string reason)
         {
-            if (spawned?.PlayerMarker != null) Destroy(spawned.PlayerMarker);
-            if (spawned?.EnemyMarker != null) Destroy(spawned.EnemyMarker);
+            descriptors = null;
+            if (presentationProfileCatalog == null || !presentationProfileCatalog.TryValidate(out _))
+            {
+                reason = "adventure_presentation_catalog_invalid";
+                return false;
+            }
+            if (!presentationProfileCatalog.TryGetPresentationProfileId(
+                    CombatUnitPresentationProfileCatalogData.PlayerCombatantId, out string playerProfileId) ||
+                !presentationProfileCatalog.TryGetPresentationProfileId(
+                    values.EnemyData.enemyId, out string enemyProfileId))
+            {
+                reason = "adventure_presentation_profile_unresolved";
+                return false;
+            }
+
+            int playerFacing = values.Player.Position.DirectionTo(values.Enemy.Position);
+            int enemyFacing = values.Enemy.Position.DirectionTo(values.Player.Position);
+            descriptors = new[]
+            {
+                new CombatUnitPresentationDescriptor(
+                    values.Player.Id,
+                    playerProfileId,
+                    CombatUnitDisplayFaction.Player,
+                    ToPresentationHex(values.Player.Position),
+                    playerFacing < 0 ? 0 : playerFacing),
+                new CombatUnitPresentationDescriptor(
+                    values.Enemy.Id,
+                    enemyProfileId,
+                    CombatUnitDisplayFaction.Enemy,
+                    ToPresentationHex(values.Enemy.Position),
+                    enemyFacing < 0 ? 0 : enemyFacing),
+            };
+            reason = null;
+            return true;
         }
+
+        private void ProjectPresentation(
+            CombatCommand command,
+            CombatActionResult result,
+            CombatantSnapshot actorBefore,
+            CombatUnitPresentationHex actorStart,
+            int actorFacing,
+            CombatantSnapshot targetBefore)
+        {
+            if (actorBefore == null) return;
+            try
+            {
+                CombatUnitPresentationEvent actionEvent = command.Kind switch
+                {
+                    CombatCommandKind.Move => CombatUnitPresentationEvent.Move,
+                    CombatCommandKind.BasicAttack => CombatUnitPresentationEvent.Attack,
+                    CombatCommandKind.Art or CombatCommandKind.Divine => CombatUnitPresentationEvent.Cast,
+                    _ => CombatUnitPresentationEvent.Idle,
+                };
+                unitPresentation.Present(new CombatUnitPresentationEventProjection(
+                    actorBefore.Id,
+                    actionEvent,
+                    actorStart,
+                    ToPresentationHex(actorBefore.Position),
+                    actorFacing,
+                    Array.Empty<CombatUnitPresentationTargetResult>()));
+
+                if (targetBefore == null || result.Damage.Count == 0) return;
+                int finalDamage = result.Damage.Sum(item => item.FinalDamage);
+                bool isDead = targetBefore.CurrentHealth <= 0;
+                unitPresentation.Present(new CombatUnitPresentationEventProjection(
+                    targetBefore.Id,
+                    isDead ? CombatUnitPresentationEvent.Death : CombatUnitPresentationEvent.Hit,
+                    ToPresentationHex(targetBefore.Position),
+                    ToPresentationHex(targetBefore.Position),
+                    targetBefore.Facing,
+                    new[] { new CombatUnitPresentationTargetResult(targetBefore.Id, finalDamage, isDead) }));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("[AdventurePresentation] " + exception.Message);
+            }
+        }
+
+        private static CombatUnitPresentationHex ToPresentationHex(TianZhang.Spatial.HexCoord value) =>
+            new CombatUnitPresentationHex(value.Q, value.R);
 
         private static CombatantHudSnapshot ToHud(CombatantSnapshot value, string name)
         {

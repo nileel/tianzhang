@@ -9,6 +9,7 @@ using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CharacterCreation;
+using TianZhang.Features.CombatPresentation;
 using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
@@ -102,10 +103,12 @@ namespace TianZhang.Tests.PlayMode
             adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
             Assert.IsTrue(adventureInput.SelectNode("shijiahou_encounter"));
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
-            AssertTechnicalMarker("PlayerMarker", Color.cyan);
-            AssertTechnicalMarker("EnemyMarker", Color.red);
+            Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
+            Assert.IsNotNull(provider, "AdventureScene must bind the single formal static-3D provider.");
+            AssertFormalProviderUnit(provider, "player", Color.cyan);
+            AssertFormalProviderUnit(provider, "enemy", Color.red);
             AssertFormalBattlefieldPresentation();
-            yield return CaptureFormalTerrainIfRequested();
+            yield return null;
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
             ICombatCommandHandler combatCommands = encounter;
@@ -274,7 +277,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual("player", advance.ActorId);
             SetPrivateField(coordinator, "acceptsPlayerCommand", true);
             SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(
-                player, enemy, enemyData, "foreign_basic", "basic_unarmed", Array.Empty<string>(), null, null));
+                player, enemy, enemyData, "foreign_basic", "basic_unarmed", Array.Empty<string>()));
 
             ((ICombatCommandHandler)coordinator).RequestBasicAttack("player", "enemy");
             Assert.AreEqual(0, source.Count, "An unauthorized attack consumed combat samples.");
@@ -326,7 +329,6 @@ namespace TianZhang.Tests.PlayMode
                 ScriptableObject.CreateInstance<ContentCatalogData>(),
                 new AdventureNodeData { nodeId = "start", q = 0, r = 0 },
                 new AdventureNodeData { nodeId = "encounter", q = 1, r = 0, contentId = "enemy" },
-                new GameObject("MarkerPrefab"),
                 out AdventureSpawnSet result,
                 out string reason);
             Assert.IsFalse(spawned);
@@ -363,7 +365,11 @@ namespace TianZhang.Tests.PlayMode
             EncounterCoordinator coordinator = host.AddComponent<EncounterCoordinator>();
             enemyData = ScriptableObject.CreateInstance<EnemyData>();
             enemyData.displayNameKey = "enemy_test";
-            coordinator.Configure(new RecordingCombatPresentationSink(), (_, _) => { });
+            coordinator.Configure(
+                new RecordingCombatPresentationSink(),
+                new RecordingCombatUnitPresentationPort(),
+                CreatePresentationCatalog(),
+                (_, _) => { });
             coordinator.SetCombatResolutionRandomSource(source);
             SetPrivateField(coordinator, "session", session);
             SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(
@@ -372,9 +378,7 @@ namespace TianZhang.Tests.PlayMode
                 enemyData,
                 "basic_unarmed",
                 "basic_unarmed",
-                Array.Empty<string>(),
-                null,
-                null));
+                Array.Empty<string>()));
             return coordinator;
         }
 
@@ -496,38 +500,31 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreNotEqual(image.color, label.color, "Adventure node labels must contrast with their button background.");
         }
 
-        private static void AssertTechnicalMarker(string objectName, Color expectedColor)
+        private static void AssertFormalProviderUnit(
+            Static3DCombatUnitPresentationProvider provider,
+            string combatantId,
+            Color expectedBaseColor)
         {
-            GameObject marker = GameObject.Find(objectName);
-            Assert.IsNotNull(marker, "Adventure combat did not create " + objectName + ".");
-            Assert.Greater(marker.transform.position.y, 0f, objectName + " must use the 3D ground plane.");
-            Assert.Zero(marker.GetComponentsInChildren<SpriteRenderer>(true).Length,
-                objectName + " must not use the legacy SpriteRenderer.");
-            MeshRenderer[] renderers = marker.GetComponentsInChildren<MeshRenderer>(true);
-            Assert.GreaterOrEqual(renderers.Length, 2, objectName + " must expose body and facing meshes.");
+            Assert.IsTrue(provider.TryGetPresentedUnit(combatantId, out GameObject unit));
+            Assert.Greater(unit.transform.position.y, 0f);
+            Assert.Zero(unit.GetComponentsInChildren<SpriteRenderer>(true).Length);
+            MeshRenderer[] renderers = unit.GetComponentsInChildren<MeshRenderer>(true);
+            Assert.AreEqual(2, renderers.Length, "The provider must create exactly the approved body and independent base.");
             int baseColorId = Shader.PropertyToID("_BaseColor");
-            foreach (MeshRenderer renderer in renderers)
-            {
-                Assert.AreEqual(ShadowCastingMode.On, renderer.shadowCastingMode);
-                Assert.IsTrue(renderer.receiveShadows);
-                var properties = new MaterialPropertyBlock();
-                renderer.GetPropertyBlock(properties);
-                Color actual = properties.GetColor(baseColorId);
-                Assert.That(actual.r, Is.EqualTo(expectedColor.r).Within(0.001f));
-                Assert.That(actual.g, Is.EqualTo(expectedColor.g).Within(0.001f));
-                Assert.That(actual.b, Is.EqualTo(expectedColor.b).Within(0.001f));
-                Assert.That(actual.a, Is.EqualTo(expectedColor.a).Within(0.001f));
-            }
+            MeshRenderer baseRenderer = System.Array.Find(renderers, item => item.name == "Static3DCombatBase");
+            Assert.IsNotNull(baseRenderer);
+            var properties = new MaterialPropertyBlock();
+            baseRenderer.GetPropertyBlock(properties);
+            Color actual = properties.GetColor(baseColorId);
+            Assert.That(actual.r, Is.EqualTo(expectedBaseColor.r).Within(0.001f));
+            Assert.That(actual.g, Is.EqualTo(expectedBaseColor.g).Within(0.001f));
+            Assert.That(actual.b, Is.EqualTo(expectedBaseColor.b).Within(0.001f));
         }
 
         private static void AssertFormalBattlefieldPresentation()
         {
             GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
-            GameObject comparisonBoard = FindSceneObjectIncludingInactive("VisualBaselineBoard");
-            GameObject comparisonPanel = FindSceneObjectIncludingInactive("BattleVisualComparisonPanel");
             Assert.IsNotNull(battlefield, "AdventureScene is missing the functional Guanzhong battlefield.");
-            Assert.IsNotNull(comparisonBoard, "AdventureScene is missing the preserved visual baseline fixture.");
-            Assert.IsNotNull(comparisonPanel, "AdventureScene is missing the preserved comparison panel fixture.");
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
             Assert.AreEqual(6, battlefield.transform.childCount);
             Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
@@ -535,10 +532,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(backdrop);
             Assert.IsFalse(backdrop.activeInHierarchy,
                 "The legacy backdrop must remain hidden after formal runtime initialization.");
-            Assert.IsFalse(comparisonBoard.activeInHierarchy,
-                "The formal Adventure route must not show the visual baseline fixture.");
-            Assert.IsFalse(comparisonPanel.activeInHierarchy,
-                "The formal Adventure route must not show the comparison panel fixture.");
+            Assert.IsNull(FindSceneObjectIncludingInactive("VisualBaselineBoard"));
+            Assert.IsNull(FindSceneObjectIncludingInactive("BattleVisualComparisonPanel"));
 
             Camera camera = Camera.main;
             Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
@@ -546,58 +541,32 @@ namespace TianZhang.Tests.PlayMode
             Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
             Assert.AreEqual(6.2f, camera.orthographicSize, 0.001f);
 
-            AssertMarkerGrounding("PlayerMarker", 0, 0, battlefield.transform, camera);
-            AssertMarkerGrounding("EnemyMarker", 1, 0, battlefield.transform, camera);
+            Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
+            AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
+            AssertProviderGrounding(provider, "enemy", 1, 0, battlefield.transform);
         }
 
-        private static void AssertMarkerGrounding(
-            string markerName,
+        private static void AssertProviderGrounding(
+            Static3DCombatUnitPresentationProvider provider,
+            string combatantId,
             int q,
             int r,
-            Transform battlefield,
-            Camera camera)
+            Transform battlefield)
         {
-            GameObject marker = FindSceneObjectIncludingInactive(markerName);
+            Assert.IsNotNull(provider);
+            Assert.IsTrue(provider.TryGetPresentedUnit(combatantId, out GameObject unit));
             Transform ground = battlefield.Find("GuanzhongHex_" + q + "_" + r);
-            Assert.IsNotNull(marker, "Adventure combat did not create " + markerName + ".");
             Assert.IsNotNull(ground, "The functional battlefield is missing the marker ground cell.");
-            Bounds markerBounds = CombinedRendererBounds(marker);
-            Bounds groundBounds = CombinedRendererBounds(ground.gameObject);
             Vector3 expectedCenter = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f + 1f);
             Assert.Less(Vector2.Distance(
-                new Vector2(marker.transform.position.x, marker.transform.position.z),
+                new Vector2(unit.transform.position.x, unit.transform.position.z),
                 new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
             Assert.Less(Vector2.Distance(
                 new Vector2(ground.position.x, ground.position.z),
                 new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
             Assert.AreEqual(0.34f, ground.position.y, 0.001f);
             Assert.AreEqual(Vector3.one, ground.localScale);
-            Assert.AreEqual(0.38f, marker.transform.position.y, 0.001f);
-            Assert.AreEqual(0.45f, markerBounds.min.y, 0.001f,
-                "Keep the technical marker's measured foot height; do not move it to hide the terrain gap.");
-            float surfaceY = CenterSurfaceY(ground);
-            Assert.AreEqual(0.340432711f, surfaceY, 0.001f,
-                "The original normalized source has a natural center surface above its root datum.");
-            float footGap = markerBounds.min.y - surfaceY;
-            Assert.AreEqual(0.109567289f, footGap, 0.001f);
-
-            Rect markerScreenRect = ScreenRectFromBounds(camera, markerBounds);
-            Rect groundScreenRect = ScreenRectFromBounds(camera, groundBounds);
-            Debug.Log("[GuanzhongBattlefieldProof] baselineResolution=1920x1080" +
-                      " runtimeResolution=" + Screen.width + "x" + Screen.height +
-                      " cameraPosition=" + camera.transform.position.ToString("F4") +
-                      " cameraEuler=" + camera.transform.eulerAngles.ToString("F4") +
-                      " ortho=" + camera.orthographicSize.ToString("F4") +
-                      " marker=" + markerName +
-                      " root=" + marker.transform.position.ToString("F4") +
-                      " markerBoundsMin=" + markerBounds.min.ToString("F4") +
-                      " markerBoundsMax=" + markerBounds.max.ToString("F4") +
-                      " groundCell=(" + q + "," + r + ")" +
-                      " groundBoundsMaxY=" + groundBounds.max.y.ToString("F6") +
-                      " centerSurfaceY=" + surfaceY.ToString("F6") +
-                      " footGap=" + footGap.ToString("F4") +
-                      " markerScreenRect=" + RectText(markerScreenRect) +
-                      " groundScreenRect=" + RectText(groundScreenRect));
+            Assert.AreEqual(0.34f, unit.transform.position.y, 0.001f);
         }
 
 
@@ -852,6 +821,34 @@ namespace TianZhang.Tests.PlayMode
             public void ClearLog() { }
             public void AppendLog(string message) { }
             public void Hide() { }
+        }
+
+        private sealed class RecordingCombatUnitPresentationPort : ICombatUnitPresentationPort
+        {
+            public void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> combatants) { }
+            public void Spawn(CombatUnitPresentationDescriptor combatant) { }
+            public void Present(CombatUnitPresentationEventProjection presentationEvent) { }
+            public void Remove(string combatantId) { }
+            public void Clear() { }
+        }
+
+        private static CombatUnitPresentationProfileCatalogData CreatePresentationCatalog()
+        {
+            var catalog = ScriptableObject.CreateInstance<CombatUnitPresentationProfileCatalogData>();
+            catalog.SetEntries(new[]
+            {
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.PlayerCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.PlayerProfileId,
+                },
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.ShijiahouProfileId,
+                },
+            });
+            return catalog;
         }
 
         private sealed class AlwaysInRangeCombatSpatialQuery : ICombatSpatialQuery

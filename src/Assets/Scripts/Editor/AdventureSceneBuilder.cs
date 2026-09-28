@@ -44,15 +44,12 @@ namespace TianZhang.Editor
             CombatCommandInput combatInput = root.AddComponent<CombatCommandInput>();
             CombatActionBarView actionBar = root.AddComponent<CombatActionBarView>();
             CombatLogView logView = root.AddComponent<CombatLogView>();
+            Static3DCombatUnitPresentationProvider static3DProvider =
+                root.AddComponent<Static3DCombatUnitPresentationProvider>();
 
-            VisualBaselineBuilder.BuildStaticChessAssets();
-            VisualBaselineBuilder.BuildTacticalSpriteAssets();
-            VisualBaselineBuilder.BuildBattleAnimationSpriteAssets();
-            ValidateReadOnlyVisualAssets();
             EnvironmentProfileAsset environmentProfile = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             BuildGuanzhongBattlefield(environmentProfile);
-            GameObject visualBaselineBoard = BuildVisualBaselineMatrix();
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, Vector2.zero, Vector2.one);
@@ -121,10 +118,6 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(logView, "scrollRect", logScroll);
             combatPanel.SetActive(false);
 
-            GameObject battleVisualComparisonPanel = BuildBattleVisualComparisonPanel(canvas, visualBaselineBoard);
-            visualBaselineBoard.SetActive(false);
-            battleVisualComparisonPanel.SetActive(false);
-
             SceneBuildSupport.SetObject(combatView, "root", combatPanel);
             SceneBuildSupport.SetObject(combatView, "playerText", player);
             SceneBuildSupport.SetObject(combatView, "enemyText", enemy);
@@ -147,7 +140,11 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(installer, "contentCatalog", SceneBuildSupport.RequireAsset<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
             SceneBuildSupport.RequireAsset<AdventureMapData>("Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset");
             SceneBuildSupport.SetObject(installer, "environmentProfile", environmentProfile);
-            SceneBuildSupport.SetObject(installer, "unitMarkerPrefab", SceneBuildSupport.RequireAsset<GameObject>("Assets/Resources/UnitMarker.prefab"));
+            SceneBuildSupport.SetObject(
+                installer,
+                "combatPresentationProfileCatalog",
+                SceneBuildSupport.RequireAsset<CombatUnitPresentationProfileCatalogData>(
+                    FormalStatic3DCombatPieceBuilder.CatalogAssetPath));
             SceneBuildSupport.SetObjects(installer, "attackProfiles", LoadAttackProfiles());
             SceneBuildSupport.SetObject(installer, "controller", controller);
             SceneBuildSupport.SetObject(installer, "input", input);
@@ -159,6 +156,12 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(installer, "combatCommandInput", combatInput);
             SceneBuildSupport.SetObject(installer, "combatActionBar", actionBar);
             SceneBuildSupport.SetObject(installer, "combatLogView", logView);
+            SceneBuildSupport.SetObject(installer, "static3DUnitPresentationProvider", static3DProvider);
+            SceneBuildSupport.SetObject(
+                static3DProvider,
+                "profileSet",
+                SceneBuildSupport.RequireAsset<Static3DCombatUnitPresentationProfileSet>(
+                    FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 

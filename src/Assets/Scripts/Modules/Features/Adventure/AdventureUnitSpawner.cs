@@ -16,9 +16,7 @@ namespace TianZhang.Features.Adventure
             EnemyData enemyData,
             string playerBasicProfileId,
             string enemyBasicProfileId,
-            string[] playerDivineProfileIds,
-            GameObject playerMarker,
-            GameObject enemyMarker)
+            string[] playerDivineProfileIds)
         {
             Player = player;
             Enemy = enemy;
@@ -26,8 +24,6 @@ namespace TianZhang.Features.Adventure
             PlayerBasicProfileId = playerBasicProfileId;
             EnemyBasicProfileId = enemyBasicProfileId;
             PlayerDivineProfileIds = playerDivineProfileIds ?? Array.Empty<string>();
-            PlayerMarker = playerMarker;
-            EnemyMarker = enemyMarker;
         }
 
         public CombatantSnapshot Player { get; }
@@ -36,20 +32,15 @@ namespace TianZhang.Features.Adventure
         public string PlayerBasicProfileId { get; }
         public string EnemyBasicProfileId { get; }
         public string[] PlayerDivineProfileIds { get; }
-        public GameObject PlayerMarker { get; }
-        public GameObject EnemyMarker { get; }
     }
 
     public sealed class AdventureUnitSpawner : MonoBehaviour
     {
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-
         public bool TrySpawn(
             CharacterStateSnapshot player,
             ContentCatalogData catalog,
             AdventureNodeData startNode,
             AdventureNodeData encounterNode,
-            GameObject unitMarkerPrefab,
             out AdventureSpawnSet spawned,
             out string reason)
         {
@@ -71,12 +62,6 @@ namespace TianZhang.Features.Adventure
                 reason = "adventure_spawn_coordinate_invalid";
                 return false;
             }
-            if (unitMarkerPrefab == null)
-            {
-                reason = "adventure_unit_marker_missing";
-                return false;
-            }
-
             var playerPosition = new HexCoord(startNode.q, startNode.r);
             var enemyPosition = new HexCoord(encounterNode.q, encounterNode.r);
             string playerBasic = ResolveBasicAttackBinding(
@@ -98,17 +83,13 @@ namespace TianZhang.Features.Adventure
 
             CombatantSnapshot playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
             CombatantSnapshot enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic);
-            GameObject playerMarker = InstantiateMarker(unitMarkerPrefab, playerPosition, "PlayerMarker", Color.cyan);
-            GameObject enemyMarker = InstantiateMarker(unitMarkerPrefab, enemyPosition, "EnemyMarker", Color.red);
             spawned = new AdventureSpawnSet(
                 playerSnapshot,
                 enemySnapshot,
                 enemyData,
                 playerBasic,
                 enemyBasic,
-                (string[])player.AbilityLoadout.EquippedSkills.Clone(),
-                playerMarker,
-                enemyMarker);
+                (string[])player.AbilityLoadout.EquippedSkills.Clone());
             reason = null;
             return true;
         }
@@ -201,27 +182,5 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        private static GameObject InstantiateMarker(
-            GameObject prefab,
-            HexCoord coord,
-            string objectName,
-            Color color)
-        {
-            GameObject marker = Instantiate(prefab, ToWorld(coord), Quaternion.identity);
-            marker.name = objectName;
-            var properties = new MaterialPropertyBlock();
-            foreach (Renderer renderer in marker.GetComponentsInChildren<Renderer>(true))
-            {
-                renderer.GetPropertyBlock(properties);
-                properties.SetColor(BaseColorId, color);
-                renderer.SetPropertyBlock(properties);
-            }
-            return marker;
-        }
-
-        private static Vector3 ToWorld(HexCoord coord)
-        {
-            return new Vector3(coord.Q + coord.R * 0.5f, 0.38f, coord.R * 0.8660254f + 1f);
-        }
     }
 }

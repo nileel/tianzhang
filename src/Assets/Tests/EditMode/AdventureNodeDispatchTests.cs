@@ -115,7 +115,7 @@ namespace TianZhang.Tests
                 player.BasicAttackProfileId = "basic_unarmed";
                 enemy.BasicAttackProfileId = "basic_unarmed";
                 var spawned = new AdventureSpawnSet(
-                    player, enemy, enemyData, "basic_unarmed", "basic_unarmed", null, null, null);
+                    player, enemy, enemyData, "basic_unarmed", "basic_unarmed", null);
                 AttackProfileData basic = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
                     "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
                 EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(

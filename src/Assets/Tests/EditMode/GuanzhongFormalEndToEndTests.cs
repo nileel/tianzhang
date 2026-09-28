@@ -84,7 +84,6 @@ namespace TianZhang.Tests.EditMode
             AdventureHudPresenter hud = adventureObject.AddComponent<AdventureHudPresenter>();
             AdventureUnitSpawner spawner = adventureObject.AddComponent<AdventureUnitSpawner>();
             EncounterCoordinator encounters = adventureObject.AddComponent<EncounterCoordinator>();
-            GameObject markerPrefab = Track(new GameObject("FormalMarkerPrefab"));
             int sceneLoadCount = 0;
             string loadedScene = null;
             controller.Configure(
@@ -92,7 +91,6 @@ namespace TianZhang.Tests.EditMode
                 map,
                 runtime.Player.Capture(),
                 environment,
-                markerPrefab,
                 System.Array.Empty<AttackProfileData>(),
                 new AdventureMapLoader(),
                 spawner,
@@ -171,18 +169,14 @@ namespace TianZhang.Tests.EditMode
                 .Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("FormalSnapshotSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
-            GameObject markerPrefab = Track(new GameObject("FormalSnapshotMarkerPrefab"));
 
             Assert.IsTrue(spawner.TrySpawn(
                 player,
                 catalog,
                 start,
                 encounter,
-                markerPrefab,
                 out AdventureSpawnSet spawned,
                 out string reason), reason);
-            Track(spawned.PlayerMarker);
-            Track(spawned.EnemyMarker);
 
             Assert.AreEqual(new HexCoord(start.q, start.r), spawned.Player.Position);
             Assert.AreEqual(player.Attributes.Reaction, spawned.Player.Speed);
@@ -270,18 +264,14 @@ namespace TianZhang.Tests.EditMode
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("CombatModifierSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
-            GameObject markerPrefab = Track(new GameObject("CombatModifierMarker"));
 
             Assert.IsTrue(spawner.TrySpawn(
                 player,
                 catalog,
                 start,
                 encounter,
-                markerPrefab,
                 out AdventureSpawnSet spawned,
                 out string reason), reason);
-            Track(spawned.PlayerMarker);
-            Track(spawned.EnemyMarker);
 
             // HP/MP read saved resources; attack re-derives from base attributes + saved bonuses.
             Assert.AreEqual(player.Resources.MaximumHealth, spawned.Player.MaximumHealth);
@@ -334,18 +324,14 @@ namespace TianZhang.Tests.EditMode
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("UnknownGongFaSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
-            GameObject markerPrefab = Track(new GameObject("UnknownGongFaMarker"));
 
             Assert.IsTrue(spawner.TrySpawn(
                 player,
                 catalog,
                 start,
                 encounter,
-                markerPrefab,
                 out AdventureSpawnSet spawned,
                 out string reason), reason);
-            Track(spawned.PlayerMarker);
-            Track(spawned.EnemyMarker);
 
             Assert.AreEqual(string.Empty, spawned.Player.GongFaElement);
             Assert.AreEqual(string.Empty, spawned.Enemy.GongFaElement);
@@ -392,16 +378,12 @@ namespace TianZhang.Tests.EditMode
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("PlayerBindingSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
-            GameObject markerPrefab = Track(new GameObject("PlayerBindingMarker"));
-
             bool ok = spawner.TrySpawn(
-                player, catalog, start, encounter, markerPrefab, out AdventureSpawnSet spawned, out string reason);
+                player, catalog, start, encounter, out AdventureSpawnSet spawned, out string reason);
             Assert.AreEqual(expectSuccess, ok, reason);
             if (expectSuccess)
             {
                 Assert.AreEqual(expectedBasic, spawned.Player.BasicAttackProfileId);
-                Track(spawned.PlayerMarker);
-                Track(spawned.EnemyMarker);
             }
             else
             {
@@ -434,16 +416,12 @@ namespace TianZhang.Tests.EditMode
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("EnemyBindingSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
-            GameObject markerPrefab = Track(new GameObject("EnemyBindingMarker"));
-
             bool ok = spawner.TrySpawn(
-                player, catalog, start, encounter, markerPrefab, out AdventureSpawnSet spawned, out string reason);
+                player, catalog, start, encounter, out AdventureSpawnSet spawned, out string reason);
             Assert.AreEqual(expectSuccess, ok, reason);
             if (expectSuccess)
             {
                 Assert.AreEqual(expectedBasic, spawned.Enemy.BasicAttackProfileId);
-                Track(spawned.PlayerMarker);
-                Track(spawned.EnemyMarker);
             }
             else
             {

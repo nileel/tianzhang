@@ -1,0 +1,18 @@
+# 正式静态3D战斗棋子 Provider 与 Adventure 解耦验证记录
+
+日期：2026-09-29
+任务：`U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01`
+
+## 已通过
+
+- `AdventureSceneBuilder.Build()` 通过现有 Builder 保存 `AdventureScene`；关闭并重新打开后的 `SceneArchitectureValidator.ValidateForBatchMode` 通过。
+- `check-unity-assembly-boundaries.ps1` 通过。
+- 场景架构验证确认唯一静态3D provider，正式场景不含 `VisualBaselineBoard`、`BattleVisualComparisonPanel` 或 `UnitMarker.prefab` 依赖。
+- 全量 PlayMode 运行中新增 `Static3DCombatUnitPresentationProviderPlayModeTests` 未报告失败；它覆盖双 profile、六事件、无 `SpriteRenderer` 与稳定 Remove/Clear。
+
+## 全量测试残留
+
+- EditMode：`ClothWideSleeveExperimentEditorTests` 缺可编辑 Blender source；两项 `CombatUnitPresentationProfileEditorTests` 在本 worktree 缺冻结石甲兽 source；两项旧比较板 fixture 仍要求 `VisualBaselineBoard`。
+- PlayMode：八项旧比较板／静态棋子 fixture 仍要求已从正式 Adventure 移除的 `VisualBaselineBoard` 或比较控制器；`GuanzhongBasicAttackPlayModeTests` 断言的节点颜色仍为白色，根因在本卡范围外的 `AdventureHudPresenter` 未将参数颜色赋给运行时 `Image`。
+
+这些残留均位于本卡允许路径之外，未通过兼容分支、重新引入正式比较板或越界修改掩盖。
