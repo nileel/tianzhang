@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-28选定有纹理原包检查完成并获用户收尾授权，RAW已归档；九项输入路径/字节数/SHA-256、模型协作和schema 2风险投影齐备。可执行既有资产任务；清理十视图及相应导入验证仍在任务内完成，不新增平台交易。",
+  "stateReason": "2026-09-28 本人已批准清理十视图；首次 FBX 导出及工厂空场景回读通过，源资产已按哈希交付，复导 0 次。Unity 导入由 PROFILES-01 承担。",
   "expectedPaths": [
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
     "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
@@ -115,3 +115,33 @@
 - 不换造型、不从零拼几何体替代批准原包，不自行平台重试，不写Unity，不由AI代签批准。
 ## 停止条件
 - 输入变化、需要改设计/换原包/新费用、用户拒绝、技术门失败且无法在本清理范围修复、超过两轮或根因不明停止；不以块体替代，不由AI代签批准。
+
+## 2026-09-28 人工处理与待批准候选
+
+- 用户在本对话明确“那就直接处理”。原自动 run 17c4a5c5-0477-4148-958b-e2396e56c8bc 的责任会话已退出，未生成 candidate 或 FBX；按既有人工处置规则保留错误日志和解包原件，不恢复旧模型会话，不改共享自动化机制。
+- 已证实出图前置失败来自懒加载 JPEG 在改 filepath_raw 后丢失输入路径，以及后续误用未安装的 PIL。使用原生 Image.pixels 读取后 Image.save(filepath=..., save_copy=True) 保存 PNG，全部 4096×4096 解码像素一致。工厂空场景用允许的 read_homefile(use_empty=True,use_factory_startup=True)，5.2 引擎为 BLENDER_EEVEE。
+- 同一批准原包已生成 shijiahou_static3d_v2.blend、BaseColor PNG、manifest 与正/左/右/背及六向十视图；未换包、未生成、未动 Unity。保留原尺寸/比例，仅对实测约 1.95311mm 后足悬空做局部接地修正，四足 Y=0；28618 顶点、33538 面、57050 三角形、UV 不变。
+- 本对话已展示并打开具体联系表，请用户批准；当前 pending，不代签视觉结论。候选 .blend SHA-256=baa998423da49c206274564cbcf1d0ba84645858d527e6e5a6790256f881914f；联系表 SHA-256=bcb032668646a179fd138430e17c4913681cd4e8a31402433df21705ee404de4。
+- FBX 导出 0 次、复导 0 次；尚未执行 factory-empty FBX 回读或 Unity 导入。技术记录与完整哈希见 开发管理/石甲兽v2静态3D清理QA记录.txt 及 v2 manifest。批准后继续同一候选的首次导出和回读；不能把源重开当 FBX 回读。
+- 当前从 ready 队列移除，blocked 只表示等待本次候选的用户视觉批准；PROFILES-01 仍等待本卡，不提前解除依赖。原男主失败现场不变。
+
+## 2026-09-28 本人批准与完成归档
+
+- 用户在本对话对上述具体候选回复“批准，继续导出验证”；.blend 和联系表保持绑定的原哈希，未在批准后修改几何或贴图。
+- 完成首次 FBX 导出和 factory-empty 回读：28618 顶点/57050 三角形，全量局部顶点最大误差 0m、四足 Y=0、贴图嵌入哈希一致、单网格/材质、无骨骼/动画。总导出 1 次、复导 0 次、剩余 2 次。
+- 正式 source FBX SHA-256=36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700，manifest SHA-256=f3b2bb3e2b36c3985fb3c38f9fa96756b74afc80e5aee4efd93c98d8d2f3b879；源与 Unity 验证边界详见本卡 QA。Unity 未验证，不以 Blender 通过代替。
+- 本卡完成归档；直接下游 PROFILES-01 的最后一个 blocker 已解除，并完成模型协作、schema 2 风险投影与 automationInputs 准备后入队。未实施 Profile 或正式接线业务。
+
+## 经验候选
+
+### CAND-A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：content
+- 现象：Blender 读取 JPEG 后改输出路径再保存，报没有图像数据；改用 PIL 又缺少依赖，自动化中止。
+- 已证实根因：Image.load 懒加载尚未取得像素时，先改变 filepath_raw 使输入位置丢失；原 JPEG 本身可正常解码。先载入像素，使用原生 save(filepath=...,save_copy=True) 可保留输入路径和全部解码像素。
+- 可能复用范围：Blender 5.2 MCP 内源贴图的确定性格式转换；不需要安装额外图像依赖或更换 Blender 通道。
+- 证据：开发管理/石甲兽v2静态3D清理QA记录.txt；原 run 日志 103/117 行；v2 manifest.texture 中完整像素 SHA-256 与回读嵌入贴图哈希。
+- 门禁可能：yes

@@ -1,0 +1,56 @@
+# 石甲兽 v2 静态 3D 清理 QA 记录
+
+任务：A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02。当前结论：工具故障已定位并修复使用方式；用户已批准本轮十视图，首次 FBX 导出及 factory-empty 回读通过，source 资产验收完成。Unity 导入尚未验证，由 PROFILES-01 承担。
+
+## 自动化失败根因与人工恢复
+
+- 失败 run：17c4a5c5-0477-4148-958b-e2396e56c8bc，owner=codex，原 base=9aeda8b5a4257b1dab1e8e802b2a5fd93a36d340；原失败无 candidate、无业务提交、无 source 输出、无 FBX 导出，责任进程已退出。原工作树仅物化九项输入，当前由用户“那就直接处理”授权进行人工处理。
+- 原始日志：C:/Users/WINDOWS/.codex/sessions/2026/09/28/rollout-2026-09-28T22-16-06-01a0e85f-78fa-7fd0-8c6c-73cbc00ec536.jsonl。第 94 行记录 read_factory_settings 被 MCP 限制并给出 read_homefile 替代；第 103 行在 image.save 报没有图像数据；第 117 行为 ModuleNotFoundError: PIL。没有进入实际预览渲染，更不是模型或 JPEG 无法解码。
+- 已复现根因：bpy.data.images.load 创建的图像初始 has_data=false，先改 filepath_raw 到不存在的 PNG 后，size 变为 0×0。必须先读取像素，再用 image.save(filepath=..., save_copy=True) 输出，保持原输入路径。原 JPEG 能正常解码为 4096×4096；原生保存 PNG 后全部 RGBA 浮点逐值一致，解码 SHA-256=91027fefe76905a22e59daa71fe060268462bc3c697583d83fb0f1622e901417。
+- 本轮沿用 blender_lab 单一路线，使用允许的 read_homefile(use_empty=True,use_factory_startup=True) 与实际存在的 BLENDER_EEVEE；不用 Pillow、不安装依赖、不启动第二 Blender 工具路线、不更改共享自动化脚本。联系表仅用 Windows System.Drawing 排版真实渲染，按像素矩形复制，避免 PNG DPI 造成裁切。
+- 模型协作：问题已由原始错误和最小原生接口实测定位，资产清理和十视图共用同一场景；本轮沿用主模型，无独立辅助调用。
+
+## 唯一输入和最小清理
+
+- 主工作区与 run worktree 的九项 automationInputs 均逐项核验字节数和 SHA-256，一致。唯一 ZIP 为 raw/user-selected/石甲兽有纹理模型.zip，SHA-256=1ac3542523743d5c27461817aa488d845d4b6a572fe5db4a0b62c5c4c4d09e75。
+- 包内 FBX SHA-256=2df346f183d58f6ba88f34d9a92c7ef21f1161932621d6d3abed8029e53857bb，原 BaseColor JPEG SHA-256=ebe2ccd3d3a6328c5db63f2a66f3317b47b13319dbaecbd7f4df0ca0ed3115b3。没有换包、换造型、使用 v1、重新生成或发生费用。
+- 单根 Shijiahou_Static3D_Root，单网格 Shijiahou_Static3D_Mesh，单材质 Shijiahou_Static3D_Mat；源根/网格 Position=(0,0,0)、Rotation=(0,0,0)、Scale=(1,1,1)。按实际导入矩阵换算为 +Y 向上、+Z 正面，不把 Blender 原生 Z 轴当资产高度。
+- 保留原大小与比例：bounds X=±0.227783203125m，Y=0..0.45654296875m，Z=±0.499755859375m。没有按旧 0.78m 指标缩放，Unity 显示尺寸留给既有下游。
+- 实测原后足最低点约 0.00195311m，前足为 0；仅在后足 z<0、y<0.05m 区域向足踝平滑衰减修正，3351 顶点最大下移 1.95311mm。四足各自最低点现均为 Y=0。没有移动根、增加底座、压扁整体、焊接眼部或为拓扑统计归零重建模型；完整逐顶点修正证据留在本轮临时目录。
+- 保留 28618 顶点、33538 多边形、57050 三角形、124126 UV loops；拓扑和 UV 索引不变，UV float32 SHA-256=80de23837520241829fd5dde46fde7ba1ab6d7b8c664c0dc362287305f23432b。
+- BaseColor 为 4096×4096 sRGB，保存 PNG 的解码像素与本包 JPEG 完全一致；路径为 //shijiahou_static3d_v2_basecolor.png。不透明、Metallic=0、Roughness=0.78、Emission Strength=0，无骨骼、Action、Shape Key、底座或额外贴图。
+
+## 实际预览与源重开验证
+
+- 同一固定正交相机与三灯输出正/左/右/背及 yaw 90/150/210/270/330/30 十视图；640×640/视角，AgX，联系表 3200×1360。未使用 AI 重绘，也没有在不同角度更换资产、镜头或光照。
+- 原生 to_track_quat 的默认上方向不适用于本任务的 +Y 资产坐标，首次临时测试图上方向为负 Y；正式十视图使用显式右/上/后正交相机基，camera up=(0,0.97396457,-0.22670020)。源模型没有因此旋转或改轴。首张错误测试图只留临时证据，不属于批准联系表。
+- 侧向投影范围 X=0.0835368..0.9164632、Y=0.2741747..0.6853197，完整模型入镜；已查看正式联系表，头、四足、甲片和长尾可辨。此为技术检查，不代签用户视觉批准。
+- 保存后重新打开 .blend：只有 1 Empty + 1 Mesh、1 材质、1 BaseColor，全部源变换单位化，四足 Y=0，有限/非全零顶点及三轴 bounds 通过；missing_files=[]。相机、灯光没有存入源。
+- 全部渲染及源重开原始证据：D:/Temp/TianZhang-Blender/shijiahou-manual-recovery-20260928/，manifest 绑定输入/输出哈希、固定相机/光照和各图哈希。
+
+## 当前验收边界
+
+- 本对话用户针对已展示的清理十视图明确回复“批准，继续导出验证”；批准绑定下列 .blend/联系表哈希。已据此首次冻结 FBX，不把 AI 技术检查当本人批准。
+- 当前 FBX 导出次数 1，复导次数 0，剩余本地修正复导额度 2。factory-empty 回读已通过，Unity 导入尚未验证；不把 Blender 回读当 Unity 验收。
+- 原男主失败 run a32e6515-0280-4420-b7c8-88fd21cd155e 及其四个暂存检查点完全未触碰。原石甲兽错误日志和原临时解包文件继续保留。
+
+## 当前候选哈希
+
+- shijiahou_static3d_v2.blend：baa998423da49c206274564cbcf1d0ba84645858d527e6e5a6790256f881914f
+- shijiahou_static3d_v2_basecolor.png：7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac
+- shijiahou_static3d_v2_contact-sheet.png：bcb032668646a179fd138430e17c4913681cd4e8a31402433df21705ee404de4
+
+## 管理与交付检查
+
+- check-task-cards：通过，收口前 blocked 投影通过；完成归档和下游 ready 投影另做最终检查；check-review-text：599 文件通过；check-asset-versioning：通过，Git LFS fsck OK；预期文件 whitespace 与 staged diff check 通过。没有 Unity 或 BattleSim 业务变化，不运行无关测试。
+- source 工程、BaseColor、联系表与 manifest 按现行合同保留为本地源文件；主工作区交付逐文件核验哈希。Git 提交本卡归档、直接下游准备、队列、backlog 和 QA 证据；本卡仅完成 source 资产，不声称游戏已接入。
+
+
+## 本人批准后的首次导出与回读
+
+- 参数沿用项目 Blender 5.2 冻结设置：use_selection=false、global_scale=1、apply_unit_scale=true、FBX_SCALE_NONE、Z forward/Y up、use_space_transform=false、bake_space_transform=false、EMPTY/MESH、三角化、bake_anim=false、COPY/embed_textures=true。
+- FBX 7400，24929388 字节；实际元数据 Up=(1,+1)、Front=(2,-1)、Coord=(0,-1)、UnitScaleFactor=1，文件根 Lcl Scaling=(100,100,100)。这是冻结参数的单位转换记录；没有修改源大小、没有新增补偿节点，也不声称 FBX 字节根为 1。
+- 工厂空场景回读：1 根、1 Mesh、28618 顶点、57050 三角形；全量资产局部顶点与批准源最近点最大误差 0m，四足最低 Y 均为 0，三轴非零且数值有限；1 材质、无骨骼/动作/Shape Key。
+- 嵌入 4096×4096 BaseColor，PNG 哈希与正式 source PNG 完全一致。Blender 回读器恢复原生 Z-up，根约 (90,0,180) 度、scale=1，原生世界高度 Z=0.45654297；资产局部坐标仍 +Y 高度、+Z 正面，二者分别记录。
+- FBX SHA-256=36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700；manifest SHA-256=f3b2bb3e2b36c3985fb3c38f9fa96756b74afc80e5aee4efd93c98d8d2f3b879。详细证明见 manifest.factoryEmpty 和 D:/Temp/TianZhang-Blender/shijiahou-manual-recovery-20260928/factory-export-1.json。
+- 双资产前置现已齐备；PROFILES-01 补齐 schema 2 风险投影、五项石甲兽本地输入及模型协作后进入 ready。正式接线仍等待该 Profile 卡完成。

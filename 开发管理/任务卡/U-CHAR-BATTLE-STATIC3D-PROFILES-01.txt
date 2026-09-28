@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "U-CHAR-BATTLE-STATIC3D-PROFILES-01",
   "title": "正式玩家与石甲兽静态3D Profile映射总门",
   "priority": "P1",
@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-CHAR-BATTLE-STATIC3D-SHIJIAHOU-ASSET-02"
-  ],
-  "stateReason": "2026-09-28 男主 ASSET-04 已通过 Unity 导入；仍等待石甲兽 ASSET-02 的用户本人批准和技术交付。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-28 男主 Unity 导入与石甲兽本人十视图批准/source FBX 回读均完成；双输入已冻结，schema 2 风险预检和模型协作齐备，可执行正式双 Profile。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs",
     "src/Assets/Scripts/Modules/Content/CombatUnitPresentationProfileCatalogData.cs.meta",
@@ -50,7 +48,39 @@
     "开发管理/任务卡/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt",
     "开发管理/任务归档/U-CHAR-BATTLE-STATIC3D-PROFILES-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.blend",
+      "bytes": 2057362,
+      "sha256": "baa998423da49c206274564cbcf1d0ba84645858d527e6e5a6790256f881914f"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
+      "bytes": 24929388,
+      "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_basecolor.png",
+      "bytes": 22800947,
+      "sha256": "7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_manifest.json",
+      "bytes": 15996,
+      "sha256": "f3b2bb3e2b36c3985fb3c38f9fa96756b74afc80e5aee4efd93c98d8d2f3b879"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_contact-sheet.png",
+      "bytes": 2549939,
+      "sha256": "bcb032668646a179fd138430e17c4913681cd4e8a31402433df21705ee404de4"
+    }
+  ]
 }
 ---TASK-BODY---
 # U-CHAR-BATTLE-STATIC3D-PROFILES-01 · 正式玩家与石甲兽静态3D Profile映射总门
@@ -106,4 +136,18 @@
 
 - ASSET-04 已归档，玩家 FBX/BaseColor 已位于本卡稳定 Unity 路径。用户明确放宽玩家导入模型的单位节点缩放：模型根 Scale=100、网格 Scale=1，完整变换后的高度 1.03m、足底 Y=0、+Z 正面、零位移/零旋转均通过。下游必须保留导入模型的已验证缩放，不把模型实例 localScale 强制设为 1；不得再乘 0.01 或增加补偿节点。此为玩家资产既有单位转换，不修改六向或战斗规则。
 - 玩家 source/Unity 哈希、factory-empty、49570 顶点/51311 三角形、470/470 EditMode 与批准回执见 开发管理/默认男主静态3D模型与Unity导入QA记录.txt 及 v2 manifest。
-- 本卡仍因石甲兽 ASSET-02 保持 blocked，不进入 ready，不开始部分实现。
+- 石甲兽 ASSET-02 已完成并获用户本人批准，本卡两个前置均已解除；当前 ready，仍须完成本卡的实际 Unity 导入与双 Profile 验收。
+
+## 2026-09-28 双输入冻结与 ready 准备
+
+- 石甲兽用户对实际清理十视图回复“批准，继续导出验证”，绑定源 .blend SHA-256=baa998423da49c206274564cbcf1d0ba84645858d527e6e5a6790256f881914f、联系表 SHA-256=bcb032668646a179fd138430e17c4913681cd4e8a31402433df21705ee404de4。首次 FBX 导出及 factory-empty 验证通过；FBX SHA-256=36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700，BaseColor SHA-256=7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac。
+- 五项石甲兽本地源文件作为 automationInputs 逐文件物化，不依赖自动 worktree 之外的路径，也不从原 ZIP 再做一轮清理或重导出。男主源 manifest 和稳定 Unity 输入已经在 Git 中，保持原批准字节。
+- 石甲兽 source 维持原大小：高 0.45654297m、宽 0.45556641m、长 0.99951172m，四足 Y=0。按 2026-09-27 用户尺寸修订，在既有 Prefab/Profile 职责中等比处理游戏显示大小；不得恢复旧 0.78m 和长度包络的双重硬锁，也不得非等比压扁或改变战斗占格规则。
+- 石甲兽 FBX 冻结参数与男主相同：Y up/Z forward、FBX_SCALE_NONE、全局 1；实际文件根包含单位转换 scale=100。源 .blend 根/网格为单位变换。当前只有 Blender 回读证明，不能照抄男主 Unity 数值作为石甲兽通过；导入后必须测完整变换后的顶点、足底、朝向和实际层级，并遵守本卡的导入失败停止条件。
+- 现有 Content 只依赖 Foundation，CombatPresentation 只依赖 Foundation/Gameplay.Contracts/UI；Editor 已引用两者。内容目录仅存稳定字符串，载体专属 set 仅存 Prefab 映射，保持当前 asmdef 边界；不为此次静态配置交付增加跨模块依赖或运行时所有者。
+
+## 模型协作
+
+- 本卡是一个双输入同时通过的原子结果：稳定身份目录、载体专属映射和确定性 Builder 的唯一验收是两项 Prefab/映射同时可重载且幂等。实现跨两个现有配置所有者，但接口和禁止依赖已经冻结，无未决设计裁决，不触及 Adventure 运行时。
+- 沿用入口主模型统一实现、检查完整差异和验证；当前没有值得拆开的独立工作面，不派写入辅助。若出现可独立定位的 Unity importer 失败，再按 AI 协作规则使用只读辅助；不得追加补偿、修改已验收男主或扩大任务边界。
+- schema 2 风险投影由 get-experience-risk-preflight 对本卡实算，目前零命中/零门禁；执行者仍须按共享入口取得绑定当前卡摘要的预检，并核实 Unity/Editor 能力后实施。
