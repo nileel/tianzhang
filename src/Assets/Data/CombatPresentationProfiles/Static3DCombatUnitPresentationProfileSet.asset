@@ -20,6 +20,15 @@ MonoBehaviour:
     approvedBoundsMin: {x: -0.1798852, y: 0, z: -0.1406375}
     approvedBoundsMax: {x: 0.1798852, y: 1.03, z: 0.1406375}
     sixDirectionYawDegrees: 5a00000096000000d20000000e0100004a0100001e000000
+    combatFeedback:
+      vfxPrefab: {fileID: 8064310501446360324, guid: 9030897052737c74fbfd229cc735cd8b, type: 3}
+      moveCue: {fileID: 8300000, guid: 4987365c1674df140a6549a230d923ae, type: 3}
+      attackCue: {fileID: 8300000, guid: 76947a8d6aea7fd42a98e3379e6537ce, type: 3}
+      hitCue: {fileID: 8300000, guid: 6b541fb610f56ee4c91e9c67f4059a2c, type: 3}
+      castCue: {fileID: 8300000, guid: e8c1519c6b592b44190f8de3a77d33dc, type: 3}
+      deathCue: {fileID: 8300000, guid: a21bb09867ffe9341a7874f0e23fc357, type: 3}
+      intensity: 0.82
+      actionRecoverySeconds: 0.14
   - presentationProfileId: combat_enemy_shijiahou_v1
     prefab: {fileID: 3314757268473140006, guid: c31c7823df2adda4d9b9bef8c546ad70, type: 3}
     approvedModelAssetPath: Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx
@@ -27,3 +36,12 @@ MonoBehaviour:
     approvedBoundsMin: {x: -0.2277832, y: 0, z: -0.49975586}
     approvedBoundsMax: {x: 0.2277832, y: 0.45654297, z: 0.49975586}
     sixDirectionYawDegrees: 5a00000096000000d20000000e0100004a0100001e000000
+    combatFeedback:
+      vfxPrefab: {fileID: 8064310501446360324, guid: 9030897052737c74fbfd229cc735cd8b, type: 3}
+      moveCue: {fileID: 8300000, guid: 4987365c1674df140a6549a230d923ae, type: 3}
+      attackCue: {fileID: 8300000, guid: 76947a8d6aea7fd42a98e3379e6537ce, type: 3}
+      hitCue: {fileID: 8300000, guid: 6b541fb610f56ee4c91e9c67f4059a2c, type: 3}
+      castCue: {fileID: 8300000, guid: e8c1519c6b592b44190f8de3a77d33dc, type: 3}
+      deathCue: {fileID: 8300000, guid: a21bb09867ffe9341a7874f0e23fc357, type: 3}
+      intensity: 1.12
+      actionRecoverySeconds: 0.2

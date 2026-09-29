@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-29：U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 已完成归档；正式 provider、双 profile 与六事件根动作合同已冻结，现有仓库和已批准事实足以实施本卡，已准备 ready。",
+  "stateReason": "2026-09-29：五条共享 PCM cue、一项有限粒子 Prefab/材质和双正式 profile 的反馈配置已由既有 Builder 保存并回读；定向 PlayMode、数据链和程序集边界检查通过。正式 Adventure 全流程回归仍在既有节点颜色断言处提前失败，未以越界 UI 修改掩盖，详见验收记录。",
   "expectedPaths": [
     "assets/source/combat-feedback/guanzhong-first-bounty/manifest.json",
     "开发管理/关中首场正式战斗反馈验收记录.txt",
@@ -112,6 +112,14 @@
 
 - 现有六事件的规定音画行为通过，两个正式profile均无重复/残留效果，首场真实战斗可看到/听到对应反馈。
 - 源/配置/实录/费用与返工记录齐备，进入统一整体验收。
+
+## 2026-09-29 实施与验证结果
+
+- 已以零外部费用的确定性 PCM16 方式制作 `move/attack/hit/cast/death` 五条短 cue；source manifest 记录精确 SHA-256、时长、格式、用途和零返工。Unity 导入文件与 source 逐文件 SHA-256 一致，均为 44.1 kHz、单声道、PCM、预加载。
+- `Static3DCombatUnitPresentationProfileSet` 现让两个正式 profile 共享同一有限粒子 Prefab、材质和五条 cue，同时以 `intensity`／`actionRecoverySeconds` 保留玩家与石甲兽的配置差异。`Static3DCombatUnitPresentationProvider` 仍只消费六类已提交投影：Idle 静默，Move 只播短 cue，Attack/Hit/Cast/Death 在投影终点生成短暂 VFX；失败命令仍由既有 Coordinator 在投影前返回，未触及 Combat、CTB、AI、奖励或存档。
+- Builder 新增独立 `BuildFeedback` 入口，只核验本卡 feedback source、生成 Unity 音频／粒子资产并回写现有 profile set；不会因本 worktree 缺少与本卡无关的冻结石甲兽 source 而重建或替换正式模型。`BuildFeedback` 已实际保存并通过回读验证。
+- 定向 PlayMode：`GuanzhongCombatFeedbackPlayModeTests` 覆盖双 profile 的共享资源与差异配置、六事件、根节点复位、死亡隐藏和短效清理，1/1 通过；既有 `Static3DCombatUnitPresentationProviderPlayModeTests` 亦 1/1 通过。`check-data-chain -FailOnMissingAssets`、程序集边界和 `TianZhang.PlayModeTests.csproj` 构建通过。
+- 正式 Adventure 全流程测试到达 `AdventureScene`、找到唯一正式 provider 后，在既有 `AdventureHudPresenter` 未将节点颜色写入 Image 的断言处提前失败（预期 RGBA 0.200/0.340/0.300，实际白色；`GuanzhongBasicAttackPlayModeTests.cs:498`），尚未进入选择／攻击循环。本卡没有修改该范围外 UI 所有者；因此实际首战的主观画面／听感仍由 `V-GZ-ART-SLICE-01` 用户跑测签收，不将 headless 定向测试伪称为最终品质接受。
 
 ## 停止条件
 

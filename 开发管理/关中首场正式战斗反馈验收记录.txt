@@ -1,0 +1,37 @@
+# 关中首场正式战斗反馈验收记录
+
+任务：`U-GZ-ART-FEEDBACK-01`
+日期：2026-09-29
+
+## 交付与边界
+
+- 交付五条项目内确定性 PCM16 WAV（44.1 kHz、单声道、短于 0.5 秒）、一项 `Guanzhong_CombatFeedback` 粒子 Prefab 和其透明 URP 粒子材质；没有上传、采购、外部 credits、模型／动画新增或返工。
+- 正式运行时链固定为 `EncounterCoordinator.ProjectPresentation` 的已提交六事件投影 → `ICombatUnitPresentationPort` → 唯一 `Static3DCombatUnitPresentationProvider` → 双 profile 的 `combatFeedback` 配置。provider 不引用 Combat 实现，不回调规则，不创建第二控制器或通用效果框架。
+- `Idle` 不创建音效或 VFX；`Move` 只播放短 cue；`Attack`、`Hit`、`Cast` 与 `Death` 在投影终点生成小型、1 秒内销毁的粒子爆发，死亡爆发在根节点隐藏前脱离棋子。Attack/Hit/Cast 根节点分别在 profile 配置的 0.14／0.20 秒内还原到单位缩放；两个 profile 共享五条 cue/Prefab，仅强度和复位时长不同。
+
+## 源与导入登记
+
+| Cue | Source SHA-256 | Unity SHA-256 | 时长（秒） |
+|---|---|---|---:|
+| `move.wav` | `c189b99794e9a2244caef72ac186870986f98b2be425cf3975ed0294f0733688` | 同 source | 0.18 |
+| `attack.wav` | `f234c88dc5f752c470fb65edd6d8d57a7295d8c4ab056b432a2a38c2fb11dade` | 同 source | 0.22 |
+| `hit.wav` | `4c8c25688a4a815d16da4ce4a852825d2eeaf2796d997a80b4c49353b8f92f57` | 同 source | 0.14 |
+| `cast.wav` | `035624656c51874fbbce40510f65becfbee9007c72fe65efc4a4d42a79f10729` | 同 source | 0.32 |
+| `death.wav` | `0182fc1dbe126d121239d0cd971f2e206a130664ff654718325991f940edbfbf` | 同 source | 0.36 |
+
+`FormalStatic3DCombatPieceBuilder.BuildFeedback` 对 source hash 失败关闭，只在 Unity 目标音频缺失时复制；导入器为 PCM、DecompressOnLoad、预加载、无后台加载、强制单声道。它只维护本卡资产和既有 Profile set，避免缺少无关冻结石甲兽 source 时重跑正式模型 Builder。
+
+## 验证
+
+- `TianZhang.Editor.FormalStatic3DCombatPieceBuilder.BuildFeedback`：通过，保存后 `VerifyFeedbackOutputs` 回读共享 cue、粒子 Prefab、材质及双 profile 差异。
+- `TianZhang.Tests.PlayMode.GuanzhongCombatFeedbackPlayModeTests`：1/1 通过，覆盖六事件、单次短效、两 profile 配置、根节点复位、死亡隐藏与残留清理。
+- `TianZhang.Tests.PlayMode.Static3DCombatUnitPresentationProviderPlayModeTests`：1/1 通过，确认既有 provider 的双 profile、六事件与按 combatant ID 清理未回归。
+- `dotnet restore src/TianZhang.PlayModeTests.csproj` 后 `dotnet build --no-restore src/TianZhang.PlayModeTests.csproj`：通过，72 个既有序列化字段警告、0 错误。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`：通过。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：通过。
+
+## 正式 Adventure 与剩余验收
+
+`GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads` 已实际进入正式 `AdventureScene` 并找到唯一静态 3D provider，但在选择 encounter 前的既有 UI 断言失败：`AdventureHudPresenter` 未把节点颜色写入运行时 Image（预期 `RGBA(0.200, 0.340, 0.300, 1.000)`，实际白色，`GuanzhongBasicAttackPlayModeTests.cs:498`）。因此这次 headless 回归没有伪称覆盖真实攻击循环、画面或可听性；该 UI 修复不在本卡路径内。
+
+最终首场战斗的可操作流程、实际画面／听感与用户品质接受由 `V-GZ-ART-SLICE-01` 负责。本卡只完成有限反馈资产、正式接线和可重复的 provider 级验证。

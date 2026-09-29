@@ -1,9 +1,36 @@
 using System;
 using System.Collections.Generic;
+using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 
 namespace TianZhang.Features.CombatPresentation
 {
+    [Serializable]
+    public sealed class Static3DCombatFeedbackProfile
+    {
+        public GameObject vfxPrefab;
+        public AudioClip moveCue;
+        public AudioClip attackCue;
+        public AudioClip hitCue;
+        public AudioClip castCue;
+        public AudioClip deathCue;
+        [Range(0.35f, 1.5f)] public float intensity = 1f;
+        [Range(0.08f, 0.5f)] public float actionRecoverySeconds = 0.18f;
+
+        public AudioClip GetCue(CombatUnitPresentationEvent presentationEvent)
+        {
+            return presentationEvent switch
+            {
+                CombatUnitPresentationEvent.Move => moveCue,
+                CombatUnitPresentationEvent.Attack => attackCue,
+                CombatUnitPresentationEvent.Hit => hitCue,
+                CombatUnitPresentationEvent.Cast => castCue,
+                CombatUnitPresentationEvent.Death => deathCue,
+                _ => null,
+            };
+        }
+    }
+
     [Serializable]
     public sealed class Static3DCombatUnitPresentationProfile
     {
@@ -14,6 +41,7 @@ namespace TianZhang.Features.CombatPresentation
         public Vector3 approvedBoundsMin;
         public Vector3 approvedBoundsMax;
         public int[] sixDirectionYawDegrees = Array.Empty<int>();
+        public Static3DCombatFeedbackProfile combatFeedback;
     }
 
     /// <summary>
@@ -89,6 +117,12 @@ namespace TianZhang.Features.CombatPresentation
                 return false;
             }
 
+            if (!HasSharedFeedbackResources(values[0].combatFeedback, values[1].combatFeedback))
+            {
+                reason = "static_3d_profile_feedback_not_shared";
+                return false;
+            }
+
             reason = null;
             return true;
         }
@@ -122,6 +156,8 @@ namespace TianZhang.Features.CombatPresentation
                 reason = "static_3d_profile_direction_contract_invalid";
                 return false;
             }
+            if (!TryValidateFeedback(profile.combatFeedback, out reason))
+                return false;
             if (profile.prefab.transform.localPosition != Vector3.zero ||
                 Quaternion.Angle(profile.prefab.transform.localRotation, Quaternion.identity) > 0.01f ||
                 Vector3.Distance(profile.prefab.transform.localScale, Vector3.one) > 0.0001f)
@@ -152,6 +188,58 @@ namespace TianZhang.Features.CombatPresentation
             return true;
         }
 
+        private static bool TryValidateFeedback(Static3DCombatFeedbackProfile feedback, out string reason)
+        {
+            if (feedback == null || feedback.vfxPrefab == null || feedback.moveCue == null ||
+                feedback.attackCue == null || feedback.hitCue == null || feedback.castCue == null ||
+                feedback.deathCue == null)
+            {
+                reason = "static_3d_profile_feedback_missing";
+                return false;
+            }
+            if (!IsFinite(feedback.intensity) || feedback.intensity < 0.35f || feedback.intensity > 1.5f ||
+                !IsFinite(feedback.actionRecoverySeconds) || feedback.actionRecoverySeconds < 0.08f ||
+                feedback.actionRecoverySeconds > 0.5f)
+            {
+                reason = "static_3d_profile_feedback_timing_invalid";
+                return false;
+            }
+            if (feedback.vfxPrefab.GetComponentsInChildren<ParticleSystem>(true).Length != 1 ||
+                feedback.vfxPrefab.GetComponentsInChildren<AudioSource>(true).Length != 0)
+            {
+                reason = "static_3d_profile_feedback_vfx_invalid";
+                return false;
+            }
+
+            foreach (AudioClip cue in new[]
+                     {
+                         feedback.moveCue,
+                         feedback.attackCue,
+                         feedback.hitCue,
+                         feedback.castCue,
+                         feedback.deathCue,
+                     })
+            {
+                if (cue.channels != 1 || cue.frequency != 44100 || cue.length < 0.08f || cue.length > 0.5f)
+                {
+                    reason = "static_3d_profile_feedback_cue_invalid";
+                    return false;
+                }
+            }
+
+            reason = null;
+            return true;
+        }
+
+        private static bool HasSharedFeedbackResources(
+            Static3DCombatFeedbackProfile left,
+            Static3DCombatFeedbackProfile right)
+        {
+            return left != null && right != null && left.vfxPrefab == right.vfxPrefab &&
+                left.moveCue == right.moveCue && left.attackCue == right.attackCue &&
+                left.hitCue == right.hitCue && left.castCue == right.castCue && left.deathCue == right.deathCue;
+        }
+
         private static bool HasRequiredSixDirections(int[] values)
         {
             if (values == null || values.Length != RequiredSixDirectionYawDegrees.Length)
@@ -169,6 +257,8 @@ namespace TianZhang.Features.CombatPresentation
             !float.IsNaN(value.x) && !float.IsInfinity(value.x) &&
             !float.IsNaN(value.y) && !float.IsInfinity(value.y) &&
             !float.IsNaN(value.z) && !float.IsInfinity(value.z);
+
+        private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         private static bool HasLowercaseHex(string value)
         {

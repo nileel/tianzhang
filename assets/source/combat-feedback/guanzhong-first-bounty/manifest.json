@@ -1,0 +1,49 @@
+{
+  "assetId": "guanzhong_first_bounty_combat_feedback_v1",
+  "scope": "U-GZ-ART-FEEDBACK-01",
+  "license": "project-authored procedural PCM cues",
+  "generation": {
+    "sampleRateHz": 44100,
+    "channels": 1,
+    "encoding": "PCM16 WAV",
+    "externalCost": "none",
+    "reworkCount": 0
+  },
+  "cues": [
+    {
+      "event": "Move",
+      "path": "move.wav",
+      "durationSeconds": 0.18,
+      "sha256": "c189b99794e9a2244caef72ac186870986f98b2be425cf3975ed0294f0733688",
+      "purpose": "short ascending footstep impulse"
+    },
+    {
+      "event": "Attack",
+      "path": "attack.wav",
+      "durationSeconds": 0.22,
+      "sha256": "f234c88dc5f752c470fb65edd6d8d57a7295d8c4ab056b432a2a38c2fb11dade",
+      "purpose": "short forward strike impulse"
+    },
+    {
+      "event": "Hit",
+      "path": "hit.wav",
+      "durationSeconds": 0.14,
+      "sha256": "4c8c25688a4a815d16da4ce4a852825d2eeaf2796d997a80b4c49353b8f92f57",
+      "purpose": "brief impact acknowledgement"
+    },
+    {
+      "event": "Cast",
+      "path": "cast.wav",
+      "durationSeconds": 0.32,
+      "sha256": "035624656c51874fbbce40510f65becfbee9007c72fe65efc4a4d42a79f10729",
+      "purpose": "short rising spiritual-release cue"
+    },
+    {
+      "event": "Death",
+      "path": "death.wav",
+      "durationSeconds": 0.36,
+      "sha256": "0182fc1dbe126d121239d0cd971f2e206a130664ff654718325991f940edbfbf",
+      "purpose": "short descending defeat cue"
+    }
+  ]
+}
