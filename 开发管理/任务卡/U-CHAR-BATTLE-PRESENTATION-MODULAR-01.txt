@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
-  ],
-  "stateReason": "2026-08-30：非 BuildSettings 2D 实验关闭叶子已完成归档；父项只剩正式静态3D接线关闭叶子，且不直接承担合同、资产、接线或实验实现。",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：正式静态3D接线与非 BuildSettings 2D 实验两个关闭叶子均已完成归档；父项仍须由现有 Codex 关闭责任核对完整完成条件，并等待 V-GZ-ART-SLICE-01 的用户本人实测与明确接受后才可关闭，QueueMaintenance 不代替验收或归档。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md",
     "开发管理/战场角色视觉方向重新评估用户决定记录.txt",

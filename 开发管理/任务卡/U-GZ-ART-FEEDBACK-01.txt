@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01"
-  ],
-  "stateReason": "2026-09-12：等待U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 已完成归档；正式 provider、双 profile 与六事件根动作合同已冻结，现有仓库和已批准事实足以实施本卡，已准备 ready。",
   "expectedPaths": [
     "assets/source/combat-feedback/guanzhong-first-bounty/manifest.json",
     "开发管理/关中首场正式战斗反馈验收记录.txt",
@@ -97,6 +95,11 @@
 - 不改Combat/CTB/AI/伤害/胜负/奖励/存档，不以反馈结束回调驱动规则。
 - 不新增Guard/Block事件，不把零伤害推断为格挡；不要求旧卡的防御/格挡专属音效。
 - 不改两个模型，不恢复Cloth/骨骼，不直接复用FuYuan比较Prefab，不采购素材或新增通用效果框架。
+
+## 模型协作
+
+- 2026-09-29 准备 ready 评估：正式 provider、双 profile、六事件合同、字面量路径与验收入口均已冻结，单一音画反馈接线没有独立的复杂根因诊断工作面；沿用入口 `gpt-5.6-terra` 单模型，无需辅助。
+- 执行时如发现运行时所有者、根动作合同或资源路径与本卡冻结事实冲突，先按停止条件重新判断；不以辅助意见扩展责任或改写合同。写前核对工具和现有实机验证入口，并在既有验证记录记录实际调用或未执行原因。
 
 ## 验证
 

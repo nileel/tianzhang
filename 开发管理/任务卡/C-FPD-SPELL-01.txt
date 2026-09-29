@@ -10,11 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "C-FPD-SPELL-01A",
-    "C-FPD-SPELL-01C",
-    "C-FPD-SPELL-01D"
+    "C-FPD-SPELL-01A"
   ],
-  "stateReason": "2026-09-29：C-FPD-SPELL-01B 已完成归档；内容/准备授权已解除，仍等待 C-FPD-SPELL-01A、C-FPD-SPELL-01C、C-FPD-SPELL-01D 的真实结果，不能以解冻替代前置完成。",
+  "stateReason": "2026-09-29：C-FPD-SPELL-01B、C-FPD-SPELL-01C、C-FPD-SPELL-01D 已完成归档；仍等待 C-FPD-SPELL-01A 的真实结果，不能以已解除内容/准备授权代替前置完成。",
   "expectedPaths": [
     "开发管理/任务列表/内容设计任务.txt",
     "开发管理/当前任务队列.txt",

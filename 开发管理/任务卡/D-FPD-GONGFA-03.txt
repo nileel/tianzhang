@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-FPD-GONGFA-GROWTH-01"],
-  "stateReason": "2026-09-27：29功法逐ID成长由N-FPD-GONGFA-03A交付，9部首篇/知识/效果合同由C-FPD-GONGFA-03B交付，不真自虚法两篇ID和字段已冻结；现有GongFaGrowthData/导入器无法区分三个筑基阶段，等待U-FPD-GONGFA-GROWTH-01完成，继续blocked。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：U-FPD-GONGFA-GROWTH-01 已完成归档，GongFaGrowthData 与导入器现可无歧义承载筑基 10/20/30 阶段；29功法逐 ID 成长、九部篇章合同及本卡路径均已冻结，已准备 ready。",
   "expectedPaths": [
     "docs/角色养成/功法/兰台书院/太易玄义笺.txt",
     "docs/角色养成/功法/古修/南华大梦书.txt",
