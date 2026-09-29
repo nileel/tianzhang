@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-ART-FEEDBACK-01"
-  ],
-  "stateReason": "2026-09-29：U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01 与 U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 已完成归档；仍等待 U-GZ-ART-FEEDBACK-01，随后由用户本人实测并明确接受整体品质。",
+  "blockedBy": [],
+  "stateReason": "2026-09-29：U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 与 U-GZ-ART-FEEDBACK-01 均已完成归档；唯一剩余条件是用户本人在同版本正式入口完成全流程实测并明确接受整体品质。",
   "expectedPaths": [
     "开发管理/关中首个可展示流程美术验收记录.txt",
     "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",

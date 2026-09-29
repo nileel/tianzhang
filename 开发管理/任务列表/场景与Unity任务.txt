@@ -27,7 +27,7 @@
 
 - 2026-09-28：A-GZ-UI-CITY-ASSET-01 与 U-GZ-ART-UI-01 均已手动完成归档。关中城／悬赏及 Adventure／Combat HUD 已接入批准图集、字体、背景和头像；1920×1080 连续流程、15 项 EditMode 检查、动态节点／长日志与保存恢复通过，source/manifest.json 已回传主工作区且哈希一致。证据见 开发管理/关中首场城镇与界面美术验收记录.txt。V-GZ-ART-SLICE-01 仍等待正式角色接线和反馈，之后由用户本人实际跑测接受整段品质；此前带日期条目保留当时事实。
 
-- 2026-09-29：U-GZ-ART-FEEDBACK-01 已完成归档。五条共享 PCM cue、一个有限粒子 Prefab/材质和双正式 profile 的强度／复位时长配置已由现有 Builder 保存、回读并通过定向 PlayMode、数据链和程序集边界检查；source 与 Unity WAV 哈希一致且无外部费用。正式 Adventure 全流程回归仍在既有 Adventure 节点颜色断言处提前失败，未修改范围外 UI 掩盖；最终首战画面／听感与用户流程接受仍由 V-GZ-ART-SLICE-01 承担，具名前置保留至正式集成后再维护。
+- 2026-09-29：U-GZ-ART-FEEDBACK-01 已完成归档。五条共享 PCM cue、一个有限粒子 Prefab/材质和双正式 profile 的强度／复位时长配置已由现有 Builder 保存、回读并通过定向 PlayMode、数据链和程序集边界检查；source 与 Unity WAV 哈希一致且无外部费用。正式 Adventure 全流程回归仍在既有 Adventure 节点颜色断言处提前失败，未修改范围外 UI 掩盖；V-GZ-ART-SLICE-01 的具名前置已解除，但仍等待用户本人在同版本正式入口实测并明确接受整体品质。
 
 - 2026-09-22 进度核查确认 D-GZ-UI-V6-CONTRACT-01 已完成归档，v6→既有 Unity 所有者、数据／事件、资源语义与验收入口已冻结。U-GZ-ART-UI-01 仍因城市背景、atlas、确定性头像、字体授权、引用点和连续实机验收尚无证据而 blocked；正式角色、费用、反馈和最终实机验收仍按各自卡判断。
 
@@ -58,7 +58,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | U-GZ-ART-FEEDBACK-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
+| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
