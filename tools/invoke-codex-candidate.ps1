@@ -226,6 +226,7 @@ function New-Prompt {
     '正常完成返回 status=completed、identity=Codex、完整 candidate SHA、精确 paths、验证数组、风险和九字段值。QueueMaintenance 无变化返回 no_candidate。'
     'QueueMaintenance 仅在本轮移除直接下游卡的最后一个具名前置、完整读卡后确认唯一剩余条件是负责人在两条可确定性形成 ready 卡的路线间选择时，返回 maintenance_decision。该候选提交只完成前置移除与准确阻塞事实，不写 automationDecision、不改 pending_decision、不入队；decisionTaskId 指向该下游卡，options 必须恰为 A/B/C 且 targetState 依次为 ready/ready/blocked，allowCustomReply 由共享入口固定为 false。decisionId 返回空字符串，由共享入口按事实摘要生成。'
     $(if ($Route -ceq 'QueueMaintenance') {
+      'QueueMaintenance 写入白名单仅为：开发管理/当前任务队列.txt、开发管理/任务卡/<ID>.txt、开发管理/任务列表/<分线>.txt、开发管理/设计-当前状态.txt、开发管理/设计-下一步建议.txt、开发管理/开发-下一步建议.txt、开发管理/自动工作流状态.txt。开发管理/任务归档/不在白名单；归档只用于读取前置完成证据，不得创建或修改归档，也不得移动活跃任务卡到归档。汇总父项的前置已完成不等于父项已验收；保留活跃卡，按其完整完成条件、用户接受条件和现有关闭责任方记录剩余条件，不在维护轮次代替验收或宣布完成。'
       'QueueMaintenance 不返回 needs_decision，也不创建普通开发 checkpoint。符合上述维护型决策条件时必须返回 maintenance_decision、非空 decisionTaskId、完整 plainSummary 以及与正式 finalizer 提交一致的 result/impact/verify/plain。'
     } else {
       '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption 和 impactSummary。direct needs_decision 的 decisionId 返回空字符串，plainSummary 三字段返回空字符串；固定 wrapper 会从 run/checkpoint 身份与上述已校验语义字段确定性生成它们。checkpoint 不得改变任务生命周期。'

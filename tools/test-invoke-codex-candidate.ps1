@@ -50,6 +50,14 @@ $failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-f
 $pathMismatchStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-path-mismatch"
 $reviewStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-review"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
+$wrapperAst = [Management.Automation.Language.Parser]::ParseFile($wrapperPath, [ref]$null, [ref]$null)
+$queuePathGuard = $wrapperAst.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Test-QueueMaintenancePath' }, $false)
+Assert-True ($null -ne $queuePathGuard) 'QueueMaintenance path guard is missing'
+. ([scriptblock]::Create($queuePathGuard.Extent.Text))
+Assert-True (Test-QueueMaintenancePath '开发管理/任务卡/PARENT.txt') 'QueueMaintenance must allow active card maintenance'
+foreach ($forbiddenPath in @('开发管理/任务归档/PARENT.txt', '开发管理/任务归档/nested/PARENT.txt', 'docs/design.txt', 'src/Assets/runtime.cs')) {
+  Assert-True (-not (Test-QueueMaintenancePath $forbiddenPath)) "QueueMaintenance accepted an unauthorized path: $forbiddenPath"
+}
 $runtimePath = Join-Path $PSScriptRoot 'hourly-automation-lease.ps1'
 $originalPath = $env:PATH
 $originalTrace = $env:TZG_FAKE_CODEX_TRACE
@@ -189,6 +197,9 @@ if ($prompt.Contains('Route: QueueMaintenance')) {
   }
   if (-not $prompt.Contains('QueueMaintenance 不返回 needs_decision') -or $prompt.Contains('开发中确需负责人决定时立即停止猜测')) {
     throw 'QueueMaintenance prompt exposed the ordinary checkpoint contract'
+  }
+  if (-not $prompt.Contains('QueueMaintenance 写入白名单仅为') -or -not $prompt.Contains('开发管理/任务归档/不在白名单') -or -not $prompt.Contains('不得移动活跃任务卡到归档') -or -not $prompt.Contains('用户接受条件和现有关闭责任方')) {
+    throw 'QueueMaintenance prompt omitted the archive and acceptance boundary'
   }
 } elseif (-not $prompt.Contains('[TZG_CODEX_CANARY]')) {
   if (@($schema.properties.status.enum) -cnotcontains 'needs_decision' -or @($schema.properties.status.enum) -ccontains 'maintenance_decision') {
