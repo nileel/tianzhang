@@ -31,9 +31,9 @@
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
 
-### DSH-C-FPD-SPELL-01D-eeeeb38c · DeepSeek 自动交接（⚠️ 未审核）
+### DSH-C-FPD-SPELL-01D-eeeeb38c · 已消费的 DeepSeek 自动交接（历史原文）
 
-- 方向：任务 C-FPD-SPELL-01D 的原子正式结果等待 Codex 独立复审。
+- 方向：本交接已由 2026-09-29 Codex 定向返工与复核消费；下列原文仅保留追溯。
 - 任务：C-FPD-SPELL-01D
 - 候选提交：6752d46dbf303485a734888b070c7b0b822cb16b
 - 正式提交：与本交接、pending_review 投影处于同一原子提交。
@@ -57,9 +57,9 @@
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
 
-### DSH-C-FPD-SPELL-01D-1e634603 · DeepSeek 自动交接（⚠️ 未审核）
+### DSH-C-FPD-SPELL-01D-1e634603 · 已消费的 DeepSeek 自动交接（历史原文）
 
-- 方向：任务 C-FPD-SPELL-01D 的原子正式结果等待 Codex 独立复审。
+- 方向：本交接已由 2026-09-29 Codex 定向返工与复核消费；下列原文仅保留追溯。
 - 任务：C-FPD-SPELL-01D
 - 候选提交：8e8898dbaded8b6bf7d8d243f917f77b4575d26c
 - 正式提交：与本交接、pending_review 投影处于同一原子提交。
