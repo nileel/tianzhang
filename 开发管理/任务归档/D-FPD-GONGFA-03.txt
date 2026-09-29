@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-29：U-FPD-GONGFA-GROWTH-01 已完成归档，GongFaGrowthData 与导入器现可无歧义承载筑基 10/20/30 阶段；29功法逐 ID 成长、九部篇章合同及本卡路径均已冻结，已准备 ready。",
+  "stateReason": "2026-09-29：29部功法三阶段成长、六部补齐、不真自虚法两篇篇章替换及对应正文、CSV、Unity asset 已同步；相关 EditMode 与数据链验证通过，候选提交待共享入口在最新 master 重放并正式集成。",
   "expectedPaths": [
     "docs/角色养成/功法/兰台书院/太易玄义笺.txt",
     "docs/角色养成/功法/古修/南华大梦书.txt",
@@ -131,3 +131,12 @@
 - C-FPD-GONGFA-03B逐项冻结9部筑基知识与原首篇高境效果边界。不真自虚法旧`chapter_none:realm_lianqi`只作待替换占位；`Language.csv`已有不真/中道的两组合法chapter/desc ID，精确CSV字段及asset映射见该合同。高境效果未提前。
 - 重新检查发现`GongFaGrowthData.SubGrowthPerRealm`只有`realm`，`GetGrowth`返回首个同境界条目；现有导入器也没有阶段字段。直接同步29行不能形成可用三阶段asset，故本卡尚不ready。U-FPD-GONGFA-GROWTH-01独立承接最小字段/导入合同，与U-FPD-STAGE-03共享导入器并以其完成为前置；该卡通过后再按本卡已有路径和停止条件重判ready。
 - 本轮未运行新数值模拟；N-FPD-STAGE-03已通过的BattleSim输入未变化。未修改功法正文、GongFa.csv或asset。
+
+## 2026-09-29 实施与验证结果
+
+- 模型协作复核：本卡语义、逐 ID 数值和路径均冻结，属可机械核对的简单任务；由入口默认单模型 `gpt-5.6-terra` 直接实施，未启动辅助模型或第二责任会话。
+- 29部功法正文的成长表均已由单一筑基行同步为筑基／开府／圆满三行；六部原缺筑基成长的正文已补齐同一合同中的三阶段值，并明确只同步成长数据、不提前解锁高境篇章或神通。
+- `GongFa.csv` 的29行保留既有非筑基成长段，将筑基成长替换为 `realm_zhuji@10`、`realm_zhuji@20`、`realm_zhuji@30`；不真自虚法的旧占位替换为冻结的 `chapter_buzhen` 与 `chapter_zhongdao` 两篇字段。
+- 使用既有 `CultivationContentImporter.ImportGongFa` 导入29份既有 asset，确认每份 `foundationStageCode` 含10／20／30，且未改动 ID、GUID、contentScope、非相关功法机制或高境篇章效果门槛。
+- 逐 ID 脚本核对29行 CSV、29份 asset 与29篇正文均各有且仅有筑基／开府／圆满三阶段；不真自虚法两篇字段与冻结合同一致。`GongFaGrowthDataTests` EditMode 通过 6/6（含生产 CSV 与 asset 一一对应检查）。
+- 未重跑 BattleSim：本卡只消费 `N-FPD-STAGE-03` 已验证的数值合同，相关模拟输入未变化。无新的经验候选：本轮为已冻结数据合同的机械同步，未发现可复用的新根因或门禁。

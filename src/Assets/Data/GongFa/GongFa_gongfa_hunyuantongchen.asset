@@ -11,13 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_hunyuantongchen
-  m_EditorClassIdentifier:
-  contentScope: reserved
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Cultivation.GongFaGrowthData
   gongFaName: "\u6DF7\u5143\u540C\u5C18\u5178"
   affiliation: "\u6DF7\u5143\u5C71"
   grade: "\u6781\u54C1"
   elementMain: "\u571F"
   elementSub: "\u91D1"
+  contentScope: reserved
   starRootBone: 5
   starPhysique: 4
   starSpirit: 4
@@ -27,6 +27,7 @@ MonoBehaviour:
   starFortune: 4
   subGrowth:
   - realm: "\u7EC3\u6C14"
+    foundationStageCode: 0
     hp: 13
     mp: 2
     physAtk: 7
@@ -37,16 +38,40 @@ MonoBehaviour:
     movePoints: 0.2
     mindGrowth: 0.2
   - realm: "\u7B51\u57FA"
-    hp: 133
-    mp: 29
-    physAtk: 50
-    magAtk: 21
-    physDef: 42
-    magDef: 17
-    reaction: 10
+    foundationStageCode: 10
+    hp: 200
+    mp: 44
+    physAtk: 75
+    magAtk: 31
+    physDef: 63
+    magDef: 26
+    reaction: 15
     movePoints: 0.5
-    mindGrowth: 0.8
+    mindGrowth: 1
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 20
+    hp: 213
+    mp: 46
+    physAtk: 80
+    magAtk: 34
+    physDef: 67
+    magDef: 27
+    reaction: 16
+    movePoints: 0.5
+    mindGrowth: 1
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 30
+    hp: 252
+    mp: 55
+    physAtk: 95
+    magAtk: 40
+    physDef: 80
+    magDef: 32
+    reaction: 19
+    movePoints: 0.5
+    mindGrowth: 2
   - realm: "\u91D1\u4E39"
+    foundationStageCode: 0
     hp: 633
     mp: 292
     physAtk: 250
@@ -57,6 +82,7 @@ MonoBehaviour:
     movePoints: 0.8
     mindGrowth: 1.7
   - realm: "\u5143\u5A74"
+    foundationStageCode: 0
     hp: 3000
     mp: 1167
     physAtk: 1000
@@ -67,6 +93,7 @@ MonoBehaviour:
     movePoints: 1
     mindGrowth: 2.5
   - realm: "\u5316\u795E"
+    foundationStageCode: 0
     hp: 11667
     mp: 5417
     physAtk: 4167
@@ -77,7 +104,7 @@ MonoBehaviour:
     movePoints: 1.2
     mindGrowth: 3.8
   chapters:
-  - chapterName: chapter_tongchen
+  - chapterName: "\u540C\u5C18\u7BC7"
     realm: "\u91D1\u4E39"
     soulShieldRate: 3
     hitRate: 3

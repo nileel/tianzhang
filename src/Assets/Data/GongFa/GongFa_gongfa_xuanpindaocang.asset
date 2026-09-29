@@ -11,13 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_xuanpindaocang
-  m_EditorClassIdentifier:
-  contentScope: reserved
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Cultivation.GongFaGrowthData
   gongFaName: "\u7384\u725D\u9053\u85CF"
   affiliation: "\u53E4\u4FEE"
   grade: "\u6781\u54C1"
-  elementMain: "element_chaos"
-  elementSub: "element_chaos"
+  elementMain: element_chaos
+  elementSub: element_chaos
+  contentScope: reserved
   starRootBone: 1
   starPhysique: 1
   starSpirit: 3
@@ -26,7 +26,41 @@ MonoBehaviour:
   starTalent: 2
   starFortune: 2
   subGrowth:
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 10
+    hp: 80
+    mp: 35
+    physAtk: 30
+    magAtk: 26
+    physDef: 26
+    magDef: 20
+    reaction: 12
+    movePoints: 0.5
+    mindGrowth: 1.05
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 20
+    hp: 85
+    mp: 37
+    physAtk: 32
+    magAtk: 27
+    physDef: 27
+    magDef: 21
+    reaction: 13
+    movePoints: 0.5
+    mindGrowth: 1.12
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 30
+    hp: 100
+    mp: 43
+    physAtk: 38
+    magAtk: 32
+    physDef: 32
+    magDef: 24
+    reaction: 15
+    movePoints: 0.5
+    mindGrowth: 1.33
   - realm: "\u5316\u795E"
+    foundationStageCode: 0
     hp: 4667
     mp: 4333
     physAtk: 1667
@@ -36,7 +70,8 @@ MonoBehaviour:
     reaction: 300
     movePoints: 1.2
     mindGrowth: 3
-  - realm: "realm_lianshen"
+  - realm: "\u70BC\u795E"
+    foundationStageCode: 0
     hp: 20000
     mp: 18667
     physAtk: 6667
@@ -57,9 +92,9 @@ MonoBehaviour:
     dodgeRate: 0
     magAtkBonus: 0
     magDefBonus: 0
-    specialEffect: "\u7384\u725D\u9053\u85CF\u00B7\u9053\u53EF\u9053\u7BC7 \u6548\u679C\u63CF\u8FF0"
+    specialEffect: "\u7384\u725D\u9053\u85CF\xB7\u9053\u53EF\u9053\u7BC7 \u6548\u679C\u63CF\u8FF0"
   - chapterName: "\u7384\u725D\u7BC7"
-    realm: "realm_lianshen"
+    realm: "\u70BC\u795E"
     soulShieldRate: 3
     hitRate: 3
     blockRate: 0
@@ -68,4 +103,4 @@ MonoBehaviour:
     dodgeRate: 0
     magAtkBonus: 0
     magDefBonus: 0
-    specialEffect: "\u7384\u725D\u9053\u85CF\u00B7\u7384\u725D\u7BC7 \u6548\u679C\u63CF\u8FF0"
+    specialEffect: "\u7384\u725D\u9053\u85CF\xB7\u7384\u725D\u7BC7 \u6548\u679C\u63CF\u8FF0"

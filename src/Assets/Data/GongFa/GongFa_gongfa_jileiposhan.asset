@@ -11,13 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64215da84d9d4c9db5712467bda7dd09, type: 3}
   m_Name: GongFa_gongfa_jileiposhan
-  m_EditorClassIdentifier:
-  contentScope: reserved
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Cultivation.GongFaGrowthData
   gongFaName: "\u75BE\u96F7\u7834\u5C71\u7ECF"
   affiliation: "\u7389\u6E05\u5D16"
   grade: "\u6781\u54C1"
   elementMain: "\u96F7"
   elementSub: "\u91D1"
+  contentScope: reserved
   starRootBone: 5
   starPhysique: 4
   starSpirit: 4
@@ -27,6 +27,7 @@ MonoBehaviour:
   starFortune: 1
   subGrowth:
   - realm: "\u7EC3\u6C14"
+    foundationStageCode: 0
     hp: 13
     mp: 5
     physAtk: 7
@@ -37,16 +38,40 @@ MonoBehaviour:
     movePoints: 0.2
     mindGrowth: 0.5
   - realm: "\u7B51\u57FA"
-    hp: 133
-    mp: 58
-    physAtk: 50
-    magAtk: 42
-    physDef: 42
-    magDef: 33
-    reaction: 20
+    foundationStageCode: 10
+    hp: 200
+    mp: 87
+    physAtk: 75
+    magAtk: 63
+    physDef: 63
+    magDef: 50
+    reaction: 30
     movePoints: 0.5
-    mindGrowth: 1.7
+    mindGrowth: 2.55
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 20
+    hp: 213
+    mp: 93
+    physAtk: 80
+    magAtk: 67
+    physDef: 67
+    magDef: 53
+    reaction: 32
+    movePoints: 0.5
+    mindGrowth: 2.72
+  - realm: "\u7B51\u57FA"
+    foundationStageCode: 30
+    hp: 252
+    mp: 110
+    physAtk: 95
+    magAtk: 80
+    physDef: 80
+    magDef: 62
+    reaction: 38
+    movePoints: 0.5
+    mindGrowth: 3.23
   - realm: "\u91D1\u4E39"
+    foundationStageCode: 0
     hp: 633
     mp: 583
     physAtk: 250
@@ -57,6 +82,7 @@ MonoBehaviour:
     movePoints: 0.8
     mindGrowth: 3.3
   - realm: "\u5143\u5A74"
+    foundationStageCode: 0
     hp: 3000
     mp: 2333
     physAtk: 1000
@@ -67,6 +93,7 @@ MonoBehaviour:
     movePoints: 1
     mindGrowth: 5
   - realm: "\u5316\u795E"
+    foundationStageCode: 0
     hp: 11667
     mp: 10833
     physAtk: 4167
