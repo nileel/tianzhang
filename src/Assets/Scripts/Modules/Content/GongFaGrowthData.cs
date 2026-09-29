@@ -56,6 +56,8 @@ namespace TianZhang.Cultivation
         public struct SubGrowthPerRealm
         {
             public string realm;     // 练气/筑基/金丹/元婴/化神/炼虚
+            // 筑基阶段：0=旧行或非筑基，10=筑基，20=开府，30=圆满。
+            public int foundationStageCode;
             public float hp;
             public float mp;
             public float physAtk;
@@ -83,13 +85,29 @@ namespace TianZhang.Cultivation
             public string specialEffect;  // 特殊效果描述（守一印记等）
         }
 
-        /// <summary>根据境界获取每级成长值</summary>
-        public SubGrowthPerRealm GetGrowth(string realm)
+        /// <summary>根据境界与筑基阶段码获取每级成长值。</summary>
+        public SubGrowthPerRealm GetGrowth(string realm, int foundationStageCode)
         {
             if (subGrowth == null) return default;
+
+            var found = default(SubGrowthPerRealm);
+            bool hasMatch = false;
             foreach (var g in subGrowth)
-                if (g.realm == realm) return g;
-            return default;
+            {
+                if (g.realm != realm || g.foundationStageCode != foundationStageCode)
+                    continue;
+
+                if (hasMatch)
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate gongfa growth key: realm='{realm}', foundationStageCode={foundationStageCode}.");
+                }
+
+                found = g;
+                hasMatch = true;
+            }
+
+            return found;
         }
 
         /// <summary>获取篇章加成总和（截至指定境界）</summary>

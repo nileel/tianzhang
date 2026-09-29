@@ -2285,30 +2285,9 @@ namespace TianZhang.Editor
                 asset.starTalent = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "starTalent", path));
                 asset.starFortune = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "starFortune", path));
 
-                // 境界成长表
-                var growthRaw = CsvTableReader.GetRequiredValue(headers, cols, "growth", path);
-                var growthList = new List<GongFaGrowthData.SubGrowthPerRealm>();
-                foreach (var realmEntry in growthRaw.Split('|'))
-                {
-                    var parts = realmEntry.Split(':');
-                    if (parts.Length < 2) continue;
-                    var values = parts[1].Split('/');
-                    if (values.Length < 9) continue;
-                    growthList.Add(new GongFaGrowthData.SubGrowthPerRealm
-                    {
-                        realm = T(parts[0]),
-                        hp = float.Parse(values[0]),
-                        mp = float.Parse(values[1]),
-                        physAtk = float.Parse(values[2]),
-                        magAtk = float.Parse(values[3]),
-                        physDef = float.Parse(values[4]),
-                        magDef = float.Parse(values[5]),
-                        reaction = float.Parse(values[6]),
-                        movePoints = float.Parse(values[7]),
-                        mindGrowth = float.Parse(values[8])
-                    });
-                }
-                asset.subGrowth = growthList.ToArray();
+                asset.subGrowth = ParseGongFaGrowth(
+                    CsvTableReader.GetRequiredValue(headers, cols, "growth", path),
+                    path);
 
                 // 篇章加成（chapters 列存在时解析，否则为空数组）
                 var chaptersRaw = CsvTableReader.GetValueOrDefault(headers, cols, "chapters", "");
@@ -2354,6 +2333,98 @@ namespace TianZhang.Editor
                 }
                 Debug.Log($"  功法: {displayName} ← {assetPath}");
             }
+        }
+
+        /// <summary>
+        /// Parses one GongFa.csv growth field. The optional @10/@20/@30 suffix is reserved for
+        /// the three frozen foundation stages; all legacy rows remain stage code 0.
+        /// </summary>
+        public static GongFaGrowthData.SubGrowthPerRealm[] ParseGongFaGrowth(string growthRaw, string sourceName)
+        {
+            if (string.IsNullOrWhiteSpace(growthRaw))
+                throw GongFaGrowthError("GONGFA_GROWTH_RECORD_INVALID", sourceName, "has an empty growth field.");
+
+            var growthList = new List<GongFaGrowthData.SubGrowthPerRealm>();
+            var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string realmEntry in growthRaw.Split(new[] { '|' }, StringSplitOptions.None))
+            {
+                string[] parts = realmEntry.Split(new[] { ':' }, StringSplitOptions.None);
+                if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]))
+                {
+                    throw GongFaGrowthError(
+                        "GONGFA_GROWTH_RECORD_INVALID", sourceName, $"has an invalid growth record '{realmEntry}'.");
+                }
+
+                string realmId = parts[0].Trim();
+                int foundationStageCode = 0;
+                int stageSeparator = realmId.IndexOf('@');
+                if (stageSeparator >= 0)
+                {
+                    if (stageSeparator != realmId.LastIndexOf('@') || stageSeparator == 0 ||
+                        !string.Equals(realmId.Substring(0, stageSeparator), "realm_zhuji", StringComparison.Ordinal) ||
+                        !int.TryParse(
+                            realmId.Substring(stageSeparator + 1),
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out foundationStageCode) ||
+                        (foundationStageCode != 10 && foundationStageCode != 20 && foundationStageCode != 30))
+                    {
+                        throw GongFaGrowthError(
+                            "GONGFA_GROWTH_STAGE_INVALID", sourceName,
+                            $"has invalid foundation stage key '{realmId}'.");
+                    }
+
+                    realmId = realmId.Substring(0, stageSeparator);
+                }
+
+                string key = $"{realmId}@{foundationStageCode}";
+                if (!seenKeys.Add(key))
+                {
+                    throw GongFaGrowthError(
+                        "GONGFA_GROWTH_DUPLICATE_KEY", sourceName, $"has duplicate growth key '{key}'.");
+                }
+
+                string[] values = parts[1].Split('/');
+                if (values.Length != 9)
+                {
+                    throw GongFaGrowthError(
+                        "GONGFA_GROWTH_VALUES_INVALID", sourceName,
+                        $"has {values.Length} values for growth key '{key}', expected 9.");
+                }
+
+                var parsedValues = new float[values.Length];
+                for (int index = 0; index < values.Length; index++)
+                {
+                    if (!float.TryParse(values[index], NumberStyles.Float, CultureInfo.InvariantCulture, out parsedValues[index]))
+                    {
+                        throw GongFaGrowthError(
+                            "GONGFA_GROWTH_VALUES_INVALID", sourceName,
+                            $"has non-numeric value '{values[index]}' for growth key '{key}'.");
+                    }
+                }
+
+                growthList.Add(new GongFaGrowthData.SubGrowthPerRealm
+                {
+                    realm = T(realmId),
+                    foundationStageCode = foundationStageCode,
+                    hp = parsedValues[0],
+                    mp = parsedValues[1],
+                    physAtk = parsedValues[2],
+                    magAtk = parsedValues[3],
+                    physDef = parsedValues[4],
+                    magDef = parsedValues[5],
+                    reaction = parsedValues[6],
+                    movePoints = parsedValues[7],
+                    mindGrowth = parsedValues[8]
+                });
+            }
+
+            return growthList.ToArray();
+        }
+
+        private static InvalidDataException GongFaGrowthError(string code, string sourceName, string message)
+        {
+            return new InvalidDataException($"{code}: {sourceName} {message}");
         }
 
 

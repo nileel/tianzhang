@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-29：U-FPD-STAGE-03 已完成归档并冻结 10/20/30 阶段编码；已扫描现有 GongFaGrowthData、CultivationContentImporter 和直接导入测试所有者，字面量路径与验证边界完整，现可独立增加阶段字段和导入映射。",
+  "stateReason": "2026-09-29：功法成长 schema、10/20/30 阶段导入合同和相关 EditMode 测试已完成；候选提交待共享入口在最新 master 重放并正式集成。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/GongFaGrowthData.cs",
     "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
@@ -72,3 +72,10 @@ U-FPD-STAGE-03 已完成归档并冻结相同导入器的10/20/30阶段编码；
 ## 停止条件
 
 U-FPD-STAGE-03最终编码与本候选冲突、代码所有者超出冻结路径、需要改运行时学习机制或无法实际验证时停止，并保留具体证据重新判断原子性。
+
+## 2026-09-29 实施与验证结果
+
+- 模型协作核对：阶段编码、代码所有者、字面量路径与验收保持冻结，沿用入口 `gpt-5.6-terra` 单模型；无独立只读问题需要辅助。
+- `GongFaGrowthData.SubGrowthPerRealm` 增加 `foundationStageCode`：旧筑基与全部非筑基行保持 `0`，`realm_zhuji@10`、`@20`、`@30` 分别映射筑基、开府、圆满。`GetGrowth` 以境界和阶段码精确取值，重复精确键显式拒绝。
+- `CultivationContentImporter.ParseGongFaGrowth` 只接受上述筑基阶段码，拒绝重复键、非法阶段码、非九值记录和非数值；既有 CSV 行保持原成长值与阶段码 `0`。本卡未修改 `GongFa.csv` 或29个功法 asset。
+- Unity EditMode 结果：新增 `GongFaGrowthDataTests` 的6项全部通过；全量入口共461项、456通过、5项既有无关失败（宽袖实验 Blender 源、VisualBaselineBoard、石甲兽冻结 FBX 两项、关中地面基线）。`tools/check-data-chain.ps1` 通过，计数为 GongFa=29/29、Spells=83/83、Skills=31/31。
