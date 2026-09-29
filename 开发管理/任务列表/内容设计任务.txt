@@ -47,7 +47,7 @@
 | C-FPD-SPELL-01 | P2 | codex | 阻塞 | C-FPD-SPELL-01A、C-FPD-SPELL-01C、C-FPD-SPELL-01D | 古修术法升格迁移跨批一致性收口 | 开发管理/任务卡/C-FPD-SPELL-01.txt |
 | C-FPD-SPELL-01A | P2 | deepseek | 阻塞 | — | 古修术法升格迁移：北冥引、扶摇、无待 | 开发管理/任务卡/C-FPD-SPELL-01A.txt |
 | C-FPD-SPELL-01C | P2 | codex | 已排队 | — | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
-| C-FPD-SPELL-01D | P2 | codex | 阻塞 | — | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
+| C-FPD-SPELL-01D | P2 | codex | 已排队 | — | 古修术法升格迁移：冥微、任化、守分 | 开发管理/任务卡/C-FPD-SPELL-01D.txt |
 | C-FPD-LORE-MIGRATE-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 复核剧情、NPC、任务与旧导入材料中的筑基初／中／后期等机械阶段标签；叙事泛称可保留，系统门槛必须迁移。 | — |
 | C-JD-COMBO-01 | P2 | deepseek | 阻塞 | D-JD-COMBO-SCOPE-01 | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |
 | C-JD-LORE-MIGRATE-01 | P2 | codex | 阻塞 | C-JD-LORE-MIGRATE-01B | 旧金丹叙事语义迁移跨类型收口 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt |
