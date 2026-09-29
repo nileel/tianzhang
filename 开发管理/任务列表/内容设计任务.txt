@@ -35,7 +35,6 @@
 |----|--------|------|----------|--------|------|--------|
 | D-JD-COMBO-SCOPE-01 | P2 | codex | 阻塞 | N-JD-COMBO-FIRE-BUDGET-01 | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
 | A-GZ-PRESENT-01 | P1 | codex | 阻塞 | V-GZ-ART-SLICE-01 | 关中首个可展示流程美术父项 | 开发管理/任务卡/A-GZ-PRESENT-01.txt |
-| C-FPD-NAME-01 | P2 | codex | 已排队 | — | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
 | C-FPD-EXPAND-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-ECON-01、内容冻结） | — | 设计扩府天材地宝的具体身份、稀有度与掉落；统一复用永久容量 `+1`，不得改写两层上限。 | — |
 | C-FPD-GONGFA-01 | P2 | Codex 规划；DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结、C-FPD-GONGFA-01A～01F） | — | 29 部功法迁移父任务；只负责六批一致性收口。 | — |
 | C-FPD-GONGFA-01A | P2 | DeepSeek V4.1 Flash 执行；Codex 复审 | 阻塞（C-FPD-NAME-01、内容冻结） | — | 古修 5 部功法迁移。 | — |
@@ -155,11 +154,6 @@
 ## 筑基、紫府与丹相后续内容任务卡
 
 共同事实源：`docs/superpowers/specs/2026-07-20-foundation-purple-mansion-danxiang-integration-design.md`、`docs/superpowers/plans/2026-07-20-foundation-purple-mansion-danxiang-fact-source-migration.md`。所有任务都不得重新引入筑基五段、天地玄黄道基品级、气府、候选槽或多丹相。
-
-### C-FPD-NAME-01 · 筑基三阶段与学习门槛迁移收口
-
-- 原四名选择已由用户明确三阶段取代；六叶子的完整依赖、路径、首批ready和关闭条件见 开发管理/筑基三阶段与学习门槛迁移计划.txt 及活跃卡。
-- 父项只汇总，不重复领取；所有子项完成后再提供下游解锁事实，不提前宣称正式内容和运行时已迁移。
 
 ### C-FPD-EXPAND-01 · 扩府天材地宝内容
 

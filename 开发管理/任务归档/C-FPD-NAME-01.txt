@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-29：六张叶子 C-FPD-STAGE-03、C-FPD-LEARN-01、N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01、D-FPD-GONGFA-03 与 U-FPD-STAGE-03 均已完成归档；可按既定范围统一核对并收口。",
+  "stateReason": "2026-09-29：六张叶子 C-FPD-STAGE-03、C-FPD-LEARN-01、N-FPD-STAGE-03、D-FPD-SPELL-LEARN-01、D-FPD-GONGFA-03 与 U-FPD-STAGE-03 的归档、实际差异和验证证据一致；父项已完成归档。",
   "expectedPaths": [
     "开发管理/筑基三阶段与学习门槛迁移计划.txt",
     "开发管理/任务列表/内容设计任务.txt",
@@ -67,3 +67,11 @@
 ## 2026-09-22 道基承载补充
 
 - 用户最终确认：天然额度筑基成功后全部开放，但道基承载能力需培养；承载量不是圆满目标，满自身总上限才圆满。阶段、数值和状态叶子必须共同满足。
+
+## 2026-09-29 收口验证记录
+
+- 模型协作复核：本卡的六张完成归档、预期路径与验证入口均已冻结，跨源结论可由现有证据直接核对；按 `开发管理/AI协作规则.txt#任务卡中的模型协作提示` 继续使用入口 `gpt-5.6-terra` 单模型，未启动辅助模型或第二责任会话。
+- 已逐卡读取并核对 `C-FPD-STAGE-03`、`C-FPD-LEARN-01`、`N-FPD-STAGE-03`、`D-FPD-SPELL-LEARN-01`、`D-FPD-GONGFA-03` 与 `U-FPD-STAGE-03` 的 `dispatchState=completed`、实际差异和验证记录；对应完成提交 `d53947d1f8c06ce76a036005ca744ee3eadcf15d`、`e64e3e733981d35d82235465df9514dcd97ad217`、`03211cdd5945b4bc11f4c5f90232650f2d710588`、`17006b836df9e2c14090c855c6e9e702e1cda82f`、`32449a0c1ab086dc90c3e7339451afd150ed25ae` 与 `9e9828f6ae43e4d3a73d578cbc7699fafcfeb9b1` 均为当前 HEAD 的祖先。
+- 一致性结论：三阶段与旧档失败关闭合同先冻结；所有功法／术法学习门槛下调至筑基且不提前高境效果；BattleSim 实际结算锁定三阶段成长、承载和六部入门预算；46 术法及29功法数据／asset按既有导入器同步；运行时与玩家／NPC存档均使用 FOUNDATION／10、MANSION／20、COMPLETE／30，旧阶段档显式拒绝。各叶子均未把该薄切片宣称为完整可玩学习或开府系统。
+- 复用的有效验证：C-FPD-LEARN-01 的全量门槛／数据链检查为功法29/29、战斗术法83/83、神通31/31；N-FPD-STAGE-03 的 Release build 与完整 BattleSim 覆盖21个Build、容量0至5、承载、恢复及重复结算；D-FPD-SPELL-LEARN-01 的严格数据链和导入器确定性测试通过；D-FPD-GONGFA-03 的逐ID同步和 `GongFaGrowthDataTests` 6/6通过；U-FPD-STAGE-03 的本卡状态、玩家／NPC往返、存档与JindanStaticStateDataTests通过。相关业务输入未变化，本卡按验证成本控制不重跑 BattleSim 或 Unity。
+- 已读取 `C-FPD-NAME-01A` 历史候选归档，确认其四阶段候选仅为历史审核产物，已由用户2026-09-22的三阶段决定取代。未发现跨源冲突、缺实际验证或新的经验候选；不改动下游任务对本ID的具名前置引用。

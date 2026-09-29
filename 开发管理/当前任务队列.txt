@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-FPD-NAME-01 | codex_execute | codex | P2 | content | verification | 筑基三阶段与学习门槛迁移收口 | 开发管理/任务卡/C-FPD-NAME-01.txt |
 | C-JD-LORE-MIGRATE-01 | codex_execute | codex | P2 | content | verification | 旧金丹叙事语义迁移跨类型收口 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01.txt |
