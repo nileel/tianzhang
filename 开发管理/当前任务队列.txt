@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-JD-LORE-MIGRATE-01B | codex_execute | codex | P2 | content | migration | 守真具体位格与道路权限重判 | 开发管理/任务卡/C-JD-LORE-MIGRATE-01B.txt |
