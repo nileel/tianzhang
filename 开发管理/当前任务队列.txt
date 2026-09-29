@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| C-FPD-SPELL-01C | codex_execute | codex | P2 | content | migration | 古修术法升格迁移：守真、玉液、穷理 | 开发管理/任务卡/C-FPD-SPELL-01C.txt |
 | U-FPD-GONGFA-GROWTH-01 | codex_execute | codex | P1 | unity | migration | 功法筑基三阶段成长字段与导入合同 | 开发管理/任务卡/U-FPD-GONGFA-GROWTH-01.txt |

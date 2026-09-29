@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20260929-REVC2AC22677CDE 选择 Codex 按未通过审核清单返工",
+  "stateReason": "2026-09-29：Codex 已把守真与玉液主枢收窄为目标位置允许的固定操作并复核通过，已归档。",
   "expectedPaths": [
     "docs/角色养成/术法/古修/守真.txt",
     "docs/角色养成/术法/古修/玉液.txt",
@@ -73,6 +73,7 @@
 - pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1；tools/check-review-text.ps1 按目标 docs 与管理路径检查；任务投影、schema2风险、pending-whitespace与cached diff检查。
 - 不改变战斗数值、不作强度或平衡结论，因此不重跑 BattleSim/Unity；发现需要新增或改倍率/概率/CT/持续/资源量时按停止条件交回。
 - 定向扫描本批旧候选/气府/GAP-DAN/独立丹相残留，逐项区分已迁移正文与明确历史说明；正向核对本体、府属、可记录条件、主辅与唯一账本。
+- 2026-09-29 Codex 定向返工并复核通过：守真主枢从守真域越界第一格的自动触发收窄为坤舆地髓 `EARTH_GRAVITY` 源版允许的普通距离手动极重操作；玉液主枢从控制类优先加第二次随机清除收窄为曜行关 `YANG_DEBUFF_LOCK` 化版允许的单一预设 `CONTROL` 标签统一清除与祛禁；穷理既有刻漏关 `TIME_PROCESS` 固定压缩主枢经复核保持不变。三术法的基础战斗字段、数值、功法、结构规则、唯一实例与丹相边界均未改。模型协作按本卡与《AI协作规则》评估为简单：冻结审核条目已给出两项直接操作边界，任务无独立复杂只读工作面；入口主模型 gpt-5.6-terra 单模型完成，未调用辅助会话，卡内 gpt-6-astra / high 辅助未执行。
 
 ## 完成条件
 
