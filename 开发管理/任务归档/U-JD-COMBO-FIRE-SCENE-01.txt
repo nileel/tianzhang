@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已完成归档且活跃卡不存在，已移除本卡最后一个具名前置；现有范围、路径、验证与停止条件完整，风险预检返回 status=ok 且无 matched/gates，本卡进入 ready。",
+  "stateReason": "2026-10-01：已完成隔离的渡火引线 fixture、Builder、场景与直接 EditMode/PlayMode 验证；正式场景、金丹数据、Combat 与 BuildSettings 均未修改。N-JD-COMBO-FIRE-BUDGET-01 的具名前置保留，待正式结果进入 master 后由 QueueMaintenance 处理。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs.meta",
@@ -80,3 +80,10 @@
 ## 停止条件
 
 - D 的正式结果尚未进入 master、所有者／路径／fixture 输入缺失、必须接入正式金丹装配／Combat／存档、必须新增设计权限或范围扩展为多项场景时停止；不得在当前卡临时扩建机制、补造正式配置或绕过 N 卡。
+
+## 完成记录
+
+- 2026-10-01：`JindanFireFerryLineScenarioController` 在 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE` 内唯一拥有源火、固定相邻走火链、局部行动／灵力／燃料／火势账本、地表／环境容量、可见标记与 `END` 清理；未接入正式 Adventure、Combat、存档、CSV 或金丹装配。
+- `JindanFireFerryLineScenarioSceneBuilder.Build` 可重复重建 `Assets/Tests/Scenes/JindanFireFerryLineScenario.unity`，保持四个正式 BuildSettings 场景不变。EditMode 直接测试通过（1/1）；PlayMode 直接测试通过（2/2），覆盖正常 source→走火→END、缺 source、无效阵眼、水／隔绝／断燃料／非相邻、预算／容量不足以及 OnDisable 清理。
+- Unity 版本为 `6000.3.18f1`；`tools/check-unity-assembly-boundaries.ps1` 与 `tools/check-data-chain.ps1 -FailOnMissingAssets` 通过。全量 EditMode 462 项中本卡直接测试通过，另有 6 项既有资产／Adventure 基线失败；全量 PlayMode 24 项中本卡 2 项直接测试通过，另有 10 项既有 Adventure 视觉基线失败。
+- 模型协作实际核对：卡中冻结的单一 fixture、所有者、路径与验收仍为简单原子任务，入口 `gpt-5.6-terra` 单模型完成，未调用辅助模型。N 卡继续保留 `U-JD-COMBO-FIRE-SCENE-01` 具名前置，未提前变更下游状态。
