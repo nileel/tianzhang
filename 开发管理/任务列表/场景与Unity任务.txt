@@ -58,6 +58,9 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| D-JD-COMBO-FIRE-UNITY-01 | P2 | codex | 已排队 | — | 渡火引线 Unity 实现与验收范围准备 | 开发管理/任务卡/D-JD-COMBO-FIRE-UNITY-01.txt |
+| U-JD-COMBO-FIRE-SCENE-01 | P2 | codex | 阻塞 | D-JD-COMBO-FIRE-UNITY-01 | 渡火引线单项 Unity 场景实现 | 开发管理/任务卡/U-JD-COMBO-FIRE-SCENE-01.txt |
+| N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | U-JD-COMBO-FIRE-SCENE-01 | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |

@@ -1,0 +1,60 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-JD-COMBO-FIRE-SCENE-01",
+  "title": "渡火引线单项 Unity 场景实现",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": ["D-JD-COMBO-FIRE-UNITY-01"],
+  "stateReason": "2026-09-30：场景效果归 Unity 的方向已确认；等待 D-JD-COMBO-FIRE-UNITY-01 冻结实际所有者、输入、代码/配置/场景路径和验证合同后实施。当前管理路径不构成业务代码授权。",
+  "expectedPaths": [
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-JD-COMBO-FIRE-SCENE-01.txt",
+    "开发管理/任务归档/U-JD-COMBO-FIRE-SCENE-01.txt"
+  ],
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-JD-COMBO-FIRE-SCENE-01 · 渡火引线单项 Unity 场景实现
+
+## 来源与当前边界
+
+- 只实现已确认的渡火引线单项可操作场景结果；真实火源、固定连续燃料路线、阻断、支付及容量占用沿用已完成媒介合同。
+- 本卡只在技术准备合同完成后执行。原 N-JD-COMBO-FIRE-BUDGET-01 独立复验同版本场景；本卡不能替代该验收或正式组合档案生产。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务；D-JD-COMBO-FIRE-UNITY-01 交付的现行所有者/路径/输入/验证合同。
+- docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六；技术准备卡冻结的源代码完整逻辑单元、直接调用者与测试。
+
+## 实施范围
+
+- 在技术准备明确的 Unity 入口实现该单项火源→走火→终止链，支付、容量与状态由已证明的所有者唯一处理；功能反例、可见操作和复现入口同版本交付。
+- ready 前补全全部业务 expectedPaths 及 Unity .meta、直接测试、必要工具和输入。若独立结果边界不成立，不得以当前卡名直接开工。
+
+## 禁止项
+
+- 不扩充 BattleSim，不新增道路/位置权限，不扩展完整金丹系统，不生产正式组合配方，不复制第二套账本或建立通用环境框架。
+- 不把测试参数称为正式平衡值；不以单元测试替代实际场景可操作证据。
+
+## 模型协作
+
+- 当前 blocked；技术准备完成时依据真实所有者、影响面和验收难度确定组合，单一责任方统一交付。模型意见不能替代场景运行。
+
+## 验证
+
+- 准备任务必须在 ready 前写入精确 Unity 编译、定向 EditMode/PlayMode、可操作场景及正常/失败输入矩阵；本轮仅校验 blocked 投影和依赖。
+
+## 完成条件
+
+- 冻结合同内的场景可操作、支付/容量/终止反例及相关直接测试通过；交付可供 N 卡按版本复验的入口与配置证据。
+
+## 停止条件
+
+- 所有者/路径/输入未冻结、直接前置未完成、必须跨出单项实现或新增设计权限时停止，不边实施边扩卡或补机制。

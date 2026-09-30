@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| D-JD-COMBO-FIRE-UNITY-01 | codex_execute | codex | P2 | unity | design | 渡火引线 Unity 实现与验收范围准备 | 开发管理/任务卡/D-JD-COMBO-FIRE-UNITY-01.txt |

@@ -21,7 +21,7 @@
 
 ## 二、两份位置兼容合同
 
-下表以 `金丹基础效果装配与冲突规则.txt#三.2` 的字段为准。`costSchemaId` 与 `capacitySchemaId` 仅冻结共同记账的接口责任；其真实配置 ID、数值和 BattleSim 结论由 `N-JD-COMBO-FIRE-BUDGET-01` 另行提供，本文不得填零值或伪造档案。
+下表以 `金丹基础效果装配与冲突规则.txt#三.2` 的字段为准。`costSchemaId` 与 `capacitySchemaId` 仅冻结共同记账的接口责任；其真实配置引用、支付与容量占用的 Unity 场景验证由 `N-JD-COMBO-FIRE-BUDGET-01` 另行提供。2026-09-30 用户明确场景效果在 Unity 实现和验收，不要求 BattleSim 复刻本场景；本文不得填零值或伪造档案，场景功能验证也不构成角色数值平衡结论。
 
 | 字段 | 源位合同：赫曦炉心显化燃烧地格 | 化位合同：燃犀渡预装走火 |
 |---|---|---|
@@ -39,7 +39,7 @@
 | `capacitySchemaId` | `PENDING:N-JD-COMBO-FIRE-BUDGET-01:manifest-surface`；持续地表显化容量。 | `PENDING:N-JD-COMBO-FIRE-BUDGET-01:ferry-surface-environment`；同一结果的地表／环境容量，不另造第二份容量。 |
 | `forbiddenContractIds` | 未登记横向组合、递归以组合结果作未付费输入、免费供能或多火种混合均拒绝。 | 通用火种兜底、临场改聚焰、跨断链跳格、逐对象换火种、无阵眼传播与重复计费均拒绝。 |
 
-`PENDING:` 是本前置到数值前置的字面量闸门，不能被当作可解析配置 ID、默认值或兼容 fallback。它只证明两侧成本与容量的账本位置唯一且可共同记账；真正 ID 未交付前，不能创建正式配方、运行实例或 `compatibilityProfileId`。
+`PENDING:` 是本前置到 Unity 场景验证前置的字面量闸门，不能被当作可解析配置 ID、默认值或兼容 fallback。它只证明两侧成本与容量的账本位置唯一且可共同记账；真正 ID 未交付前，不能创建正式配方、运行实例或 `compatibilityProfileId`。
 
 ## 三、预装火种档案与合法战场火源映射
 

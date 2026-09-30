@@ -12,7 +12,7 @@
   "blockedBy": [
     "N-JD-COMBO-FIRE-BUDGET-01"
   ],
-  "stateReason": "2026-09-29：负责人已选定渡火引线，D-JD-COMBO-FIRE-INPUT-01 的媒介载体合同已完成归档；只等待 N-JD-COMBO-FIRE-BUDGET-01 的 BattleSim 费用容量验证后再收口本范围合同。",
+  "stateReason": "2026-09-30：负责人已选定渡火引线，媒介载体合同已完成；按用户明确方向，等待 N-JD-COMBO-FIRE-BUDGET-01 的 Unity 场景费用容量验证后收口，不再以扩充 BattleSim 为前置。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
     "开发管理/任务卡/C-JD-COMBO-01.txt",
@@ -44,7 +44,7 @@
 - docs/superpowers/plans/2026-07-18-jindan-long-spec-decomposition.md#Task 7 仅作迁移来源；现行结构以 docs L2 为准。D-JD-SCHEMA-01A/01B、D-JD-SAMPLE-01、N-JD-RULE-01C 的完成归档证明结构前置已闭合，不再列为 blocker。
 - docs/基础设定/金丹基础效果装配与冲突规则.txt 的显式异效配方、权限求交、费用/容量、breakPolicy及失败关闭原文；矩阵与具体位置登记的直接输入。
 - 开发管理/任务列表/内容设计任务.txt#C-JD-COMBO-01。
-- D-JD-COMBO-FIRE-INPUT-01 的媒介载体合同与 N-JD-COMBO-FIRE-BUDGET-01 的 BattleSim 验证结果；两个具名前置未完成时不收口本卡。
+- D-JD-COMBO-FIRE-INPUT-01 的媒介载体合同与 N-JD-COMBO-FIRE-BUDGET-01 的 Unity 场景验证结果；两个具名前置未完成时不收口本卡。场景功能验证与抽象角色数值平衡分别取证，不要求 BattleSim 复刻具体地图效果。
 
 ## 实施范围
 

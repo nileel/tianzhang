@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-JD-COMBO-FIRE-UNITY-01",
+  "title": "渡火引线 Unity 实现与验收范围准备",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-09-30：用户确认场景效果归 Unity 并要求准备 ready；合法媒介输入已完成，当前缺的是可执行的 Unity 实现/验收范围。本卡只交付有代码依据的范围合同并准备直接下游，不实施场景或扩充 BattleSim。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
+    "开发管理/任务卡/U-JD-COMBO-FIRE-SCENE-01.txt",
+    "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-JD-COMBO-FIRE-UNITY-01.txt",
+    "开发管理/任务归档/D-JD-COMBO-FIRE-UNITY-01.txt"
+  ],
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-JD-COMBO-FIRE-UNITY-01 · 渡火引线 Unity 实现与验收范围准备
+
+## 来源与当前边界
+
+- 用户已确认渡火引线单项方向及合法媒介输入，并明确具体地图效果由 Unity 实现和验收。本卡唯一结果是能供 U 卡实施、N 卡独立复验的技术范围合同；实现、验收和正式组合内容生产不在本轮执行。
+- 2026-09-30 只读核对：EnvironmentProfileRuntime 提供配置引用与现象配对，SpatialQueryBoard 提供空间查询，CombatSession 消费 ICombatSpatialQuery；src 中未检出本候选的 FIRE_MANIFEST/FIRE_ESCALATE、comboProfileId、resultPrototypeId 或 JindanBaseEffectLoadoutTuning 实现，JindanStaticStates.csv 只有表头。通用数据接口和既有环境卡归档不能替代现行场景的实现证明。
+- 已知完整顺序：本卡 → U-JD-COMBO-FIRE-SCENE-01 → N-JD-COMBO-FIRE-BUDGET-01 → D-JD-COMBO-SCOPE-01 → C-JD-COMBO-01。后两卡仍负责生产范围与正式档案，不得用场景样例冒充正式组合已生产。
+
+## 必查范围
+
+- AGENTS.md#数值与 BattleSim；开发管理/状态与建议维护规则.txt#状态与队列、#风险预检与收尾候选；开发管理/AI协作规则.txt#任务原子性与子智能体。
+- docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#二—四；docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六；现行装配冲突规则与五行显化规则中直接对应的支付、容量和走火段落。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.content.md、UNITY_STRUCTURE.assemblies.md 的实际所属模块；索引只作导航。
+- src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs::EnvironmentProfileRuntime；src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs；src/Assets/Scripts/Modules/Infrastructure/UnityContent/SpatialQueryBoardFactory.cs::TryCreate。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::TryBegin、Complete 及实际退出/清理方法；src/Assets/Scripts/Combat/CombatSession.cs::构造、ValidateCommand；实际调用到的 Combat 命令、资源、场景和表现所有者。
+- src/Assets/Scripts/Modules/Content/JindanStaticStateData.cs、src/Assets/DataConfig/JindanStaticStates.csv；src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs、SpatialQueryBoardTests.cs；src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs 只取入口和场景测试约定，不接管其现有 UI 失败。
+- U-JD-COMBO-FIRE-SCENE-01 与 N-JD-COMBO-FIRE-BUDGET-01 完整任务卡；U-JD-RULE-01A 的 backlog 边界只用于识别真实依赖，不实施其余金丹系统。
+
+## 实施范围
+
+- 在现有首批规格中补齐单项 Unity 实现合同：实际入口、场景对象/规则/数据所有者、复用点、缺口、字面量修改路径、输入来源、支付/容量生命周期、可见结果及验收矩阵；禁止仅把模块名当成所有者证明。
+- 明确候选测试输入与正式生产配置的区别，避免正式组合尚未生产却要求先引用其完成品的循环依赖；功能测试参数必须有明确来源和测试用途，不据此宣称数值平衡已定。
+- 优先以现有入口和最小单项实现完成场景验证，不复制 BattleSim 或扩建通用系统。若正式入口确有外部前置，准确绑定已有任务；不能把不存在的实现当已完成，也不顺带解冻完整金丹系统。
+- 将完整代码/配置/资源及对应 .meta、直接测试和工具入口写入 U 卡与 N 卡，重新计算 schema 2 风险投影。U 卡原子性、输入和门禁齐全时解除本卡依赖并入 ready；N 卡继续等待 U 卡的真实结果。
+
+## 禁止项
+
+- 本卡只写上述文档和管理路径，不改 src、simulations、资源或正式配方，不运行 Unity/BattleSim 来替代尚未实现的功能，不修改自动化控制面。
+- 不制造预算、扩大效果/位置权限、恢复冻结内容或新增全局框架；不把“开始准备”记为实现或验收通过。
+
+## 模型协作
+
+- 本轮为一个有界技术范围合同，场景、规则和测试路径相互耦合，由 Codex 入口默认单模型统一核对；没有可独立裁决且需要额外模型的工作面。实际执行前复核工具能力，不启动第二责任会话。
+
+## 验证
+
+- 合同逐项指向现行代码逻辑单元和设计原文；U/N 卡的允许路径、输入、验证和停止条件与合同一致，新增 Unity 文件/目录必须含对应 .meta。
+- 对准备后的 U/N 卡运行 tools/get-experience-risk-preflight.ps1，消费 mustRead、核对门禁并同步投影；只在 U 卡满足全部条件时设置 ready。
+- tools/check-task-cards.ps1、tools/check-review-text.ps1、tools/check-data-chain.ps1、预期路径 whitespace 和 staged diff 检查。无业务代码变化，不跑 Unity 或 BattleSim。
+
+## 完成条件
+
+- 同一规格中的单项实现合同完整、U 卡满足原子执行条件并 ready、N 卡具备精确验收合同但仍依赖 U；本卡归档，不关闭生产范围或内容卡。
+
+## 停止条件
+
+- 必须新增设计权限、缺少无法推导的用户决定、依赖尚未完成的其他业务任务，或单项场景需要越过 U 卡独立结果边界时停止并记录证据；不得用文档合同冒充该前置已完成。发现非原子范围按既有 task_requires_decomposition 合同交回，不让 worker 临时增建卡或扩大路径。
