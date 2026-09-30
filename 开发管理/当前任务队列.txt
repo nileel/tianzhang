@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-JD-COMBO-FIRE-BUDGET-01 | codex_execute | codex | P2 | unity | verification | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |

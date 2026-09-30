@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": ["U-JD-COMBO-FIRE-SCENE-01"],
-  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已冻结唯一非正式场景及验收边界；本卡继续等待 U-JD-COMBO-FIRE-SCENE-01 交付同版本控制器、Builder、场景和运行证据。自动化候选不提前解除该具名前置。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：U-JD-COMBO-FIRE-SCENE-01 已在完成归档中确认交付同版本控制器、Builder、场景及直接 EditMode/PlayMode 运行证据。本卡的唯一具名前置已解除；既有路径、独立复验范围、验证、完成条件与停止条件完整，现可入队执行。",
   "expectedPaths": [
     "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt",
     "docs/基础设定/设定事实速查.txt",
@@ -28,7 +28,7 @@
 ## 来源与当前边界
 
 - `D-JD-COMBO-FIRE-UNITY-01` 已冻结唯一允许的场景切片：非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE`，由 `JindanFireFerryLineScenarioController` 处理单项 source→走火→`END`。它不是正式组合、金丹装配、生产配置或角色数值平衡。
-- 本卡只在 U 卡完成并给出同一提交／版本的控制器、Builder、场景、EditMode 和 PlayMode 证据后独立复验。若 U 没有实际实现、运行证据或场景隔离，本卡记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
+- `U-JD-COMBO-FIRE-SCENE-01` 已完成归档，确认交付同版本的控制器、Builder、场景以及直接 EditMode/PlayMode 运行证据。本卡现在只对这些现有输入独立复验并记录费用／容量事实；若执行时输入、运行证据或场景隔离无法复现，记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
 
 ## 必查范围
 
@@ -50,7 +50,7 @@
 
 ## 模型协作
 
-- 当前 blocked。临近 ready 时按 U 的实际运行证据、失败归属与验收难度重新评估；若实现和记录边界清晰，沿用入口默认单模型。任何辅助只读分析均不能替代 PlayMode 运行或改变本卡只验证、不修补的职责。
+- 简单：本轮已核对 U 的完成归档，现有 fixture、输入、预期路径、独立复验步骤与停止边界均明确；本卡只验证并记录，不修补实现。沿用入口默认 `gpt-5.6-terra` 单模型，无需辅助；Unity 实际运行仍是完成门，模型意见不能替代 PlayMode 证据。
 
 ## 验证
 
