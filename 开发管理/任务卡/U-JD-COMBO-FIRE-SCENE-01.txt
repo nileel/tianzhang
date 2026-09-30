@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": ["D-JD-COMBO-FIRE-UNITY-01"],
-  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已在 candidate 中冻结单项所有者、输入、路径与验证合同；按自动化候选边界，本卡继续保留对该任务的具名前置，待正式结果进入 master 后由 QueueMaintenance 同步解除并重新判断 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已完成归档且活跃卡不存在，已移除本卡最后一个具名前置；现有范围、路径、验证与停止条件完整，风险预检返回 status=ok 且无 matched/gates，本卡进入 ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs.meta",
@@ -38,7 +38,7 @@
 
 - `D-JD-COMBO-FIRE-UNITY-01` 已用现行代码证明：正式 `EnvironmentProfileRuntime`／`SpatialQueryBoard`／`CombatSession`／Adventure 入口没有火种、燃料、阵眼、地表持续状态、组合账本或金丹装配实现。`JindanStaticStates.csv` 仍只有 schema 表头，`U-JD-RULE-01A` 仍是完整金丹系统的独立 blocker。
 - 本卡只实现一个非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE` 场景切片。它真实执行源火→固定走火→`END` 清理及支付／容量反例，但不是正式 `comboProfileId`、`fireSeedProfileId`、`resultPrototypeId`、角色金丹状态、数值平衡或正式 Adventure 功能。
-- 本卡在 D 的正式结果进入 master 且 QueueMaintenance 解除具名前置前不得开工；当前路径合同不构成提前业务写入授权。完成后仅交付 N 卡可复验的同版本场景、配置和测试证据，不替代 N 卡独立验收或正式组合档案生产。
+- 2026-10-01：D 的正式结果已进入 master，QueueMaintenance 已解除本卡最后一个具名前置；现有范围、路径、验证和停止条件已足以形成 ready 卡。后续执行仍只交付 N 卡可复验的同版本场景、配置和测试证据，不替代 N 卡独立验收或正式组合档案生产。
 
 ## 必查范围
 
