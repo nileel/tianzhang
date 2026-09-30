@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-09-30：用户确认场景效果归 Unity 并要求准备 ready；合法媒介输入已完成，当前缺的是可执行的 Unity 实现/验收范围。本卡只交付有代码依据的范围合同并准备直接下游，不实施场景或扩充 BattleSim。",
+  "stateReason": "2026-10-01：已以现行 Unity 所有者证明冻结渡火引线单项场景实现与验收范围，准备 U/N 的精确合同；未实施场景、未扩充 BattleSim、未生产正式组合。自动化 candidate 保留直接下游的具名前置，待正式结果进入 master 后由 QueueMaintenance 处理状态投影。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
     "开发管理/任务卡/U-JD-COMBO-FIRE-SCENE-01.txt",
@@ -47,7 +47,7 @@
 - 在现有首批规格中补齐单项 Unity 实现合同：实际入口、场景对象/规则/数据所有者、复用点、缺口、字面量修改路径、输入来源、支付/容量生命周期、可见结果及验收矩阵；禁止仅把模块名当成所有者证明。
 - 明确候选测试输入与正式生产配置的区别，避免正式组合尚未生产却要求先引用其完成品的循环依赖；功能测试参数必须有明确来源和测试用途，不据此宣称数值平衡已定。
 - 优先以现有入口和最小单项实现完成场景验证，不复制 BattleSim 或扩建通用系统。若正式入口确有外部前置，准确绑定已有任务；不能把不存在的实现当已完成，也不顺带解冻完整金丹系统。
-- 将完整代码/配置/资源及对应 .meta、直接测试和工具入口写入 U 卡与 N 卡，重新计算 schema 2 风险投影。U 卡原子性、输入和门禁齐全时解除本卡依赖并入 ready；N 卡继续等待 U 卡的真实结果。
+- 将完整代码/配置/资源及对应 .meta、直接测试和工具入口写入 U 卡与 N 卡，重新计算 schema 2 风险投影。本 candidate 保留 U 的具名前置；正式结果进入 master 后，后续 QueueMaintenance 才按同一合同解除并判断 ready，N 卡继续等待 U 的真实结果。
 
 ## 禁止项
 
@@ -61,13 +61,20 @@
 ## 验证
 
 - 合同逐项指向现行代码逻辑单元和设计原文；U/N 卡的允许路径、输入、验证和停止条件与合同一致，新增 Unity 文件/目录必须含对应 .meta。
-- 对准备后的 U/N 卡运行 tools/get-experience-risk-preflight.ps1，消费 mustRead、核对门禁并同步投影；只在 U 卡满足全部条件时设置 ready。
+- 对准备后的 U/N 卡运行 tools/get-experience-risk-preflight.ps1，消费 mustRead、核对门禁并同步投影；本 candidate 只准备范围合同并保留 U 的具名前置，正式结果进入 master 后再由 QueueMaintenance 判断是否 ready。
 - tools/check-task-cards.ps1、tools/check-review-text.ps1、tools/check-data-chain.ps1、预期路径 whitespace 和 staged diff 检查。无业务代码变化，不跑 Unity 或 BattleSim。
 
 ## 完成条件
 
-- 同一规格中的单项实现合同完整、U 卡满足原子执行条件并 ready、N 卡具备精确验收合同但仍依赖 U；本卡归档，不关闭生产范围或内容卡。
+- 同一规格中的单项实现合同完整、U/N 卡具备原子范围与精确验收合同；本 candidate 保留 U/N 的具名前置，正式结果进入 master 后由 QueueMaintenance 处理 U 的 ready 判断。本卡归档，不关闭生产范围或内容卡。
 
 ## 停止条件
 
 - 必须新增设计权限、缺少无法推导的用户决定、依赖尚未完成的其他业务任务，或单项场景需要越过 U 卡独立结果边界时停止并记录证据；不得用文档合同冒充该前置已完成。发现非原子范围按既有 task_requires_decomposition 合同交回，不让 worker 临时增建卡或扩大路径。
+
+## 完成记录
+
+- 2026-10-01：在 `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#六、渡火引线 Unity 单项场景实现与验收范围合同` 冻结唯一非 BuildSettings 场景切片。现行 `EnvironmentProfileRuntime`、`SpatialQueryBoardFactory`、`CombatEntryAdapter`、`CombatSession`、`EncounterCoordinator` 和正式 Adventure 只提供环境／空间／战斗既有职责，均没有候选火源、燃料、阵眼、地表持续状态、组合账本或金丹装配；`JindanStaticStates.csv` 仍仅有表头。
+- 已将 U 卡收口为隔离的 `JindanFireFerryLineScenarioController`、Builder、测试场景、EditMode／PlayMode 测试及每个新 Unity 文件 `.meta` 的精确路径合同；N 卡收口为同版本运行记录和费用／容量独立复验合同。fixture 输入只证明支付顺序、原子失败、单一承载与 `END`，不登记正式数值或组合。
+- 按 automation candidate 边界，U／N 的 `blockedBy` 与 backlog 投影仍保留现有具名前置，未提前进入队列；当前队列只移除了已完成的本卡。正式结果进入 master 后，后续 QueueMaintenance 才能基于归档处理 U 的解阻塞和 ready 判断。
+- 模型协作核对：目标、事实源、所有者和验收路径已明确，且没有需要独立裁决的冲突或只读工作面；沿用入口 `gpt-5.6-terra` 单模型完成，未调用辅助模型。模型身份已通过 Node REPL 元数据核验；该记录不代替 Unity 运行证据。

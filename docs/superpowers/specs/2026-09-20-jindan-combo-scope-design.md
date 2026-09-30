@@ -63,3 +63,45 @@
 ## 五、交给负责人的最小语义决定
 
 2026-09-27，负责人先在本对话回复“可以”，随后说明未收到原决策卡并明确要求“你直接选A”。据此，**A 的设计选择已明确**：首批为“渡火引线”一项，战棋局部渡口用途，源位显化火源与化位预设走火共同承载。负责人无需编写技术字段或预算；ID、文件路径、字段、费用及容量由上列任务落实。本对话的 A 选择不是飞书桥鉴权后的旧决策卡回执。本次人工收口旧 checkpoint，只将 D 卡改为等待真实前置的 blocked 状态，不生成 `automationReply`、不调用自动 `ResumeReady`、不解锁 C 卡。
+
+## 六、渡火引线 Unity 单项场景实现与验收范围合同
+
+### 1. 已证明的现行所有者与缺口
+
+| 链路 | 已证明的现行职责 | 对本单项的结论 |
+|---|---|---|
+| `EnvironmentProfileRuntime` 与 `EnvironmentProfileAsset` | 只校验并保存环境档案的有向边、地表原型引用、现象配对、五行关系和查询上限；`EnvironmentProfileAsset.TryCreateDefinition` 只把序列化字段投影为该不可变定义。 | 可作为环境档案的既有事实参考，不能保存单格燃料、水、阵眼、火源、费用、容量或地表持续实例。不得把一个 `surfacePrototypeRef` 误作已存在的燃烧地格实现。 |
+| `SpatialQueryBoard` 与 `SpatialQueryBoardFactory.TryCreate` | 前者是只读空间查询；后者把 `TacticalGridModel` 和环境档案投影为 `SpatialQuerySnapshot`。工厂仅保留高度、移动／效果阻断、实体障碍、占位和有向边；`TacticalTerrainType`、燃料和持续状态不进入快照。 | 可复用 `HexCoord` 的相邻判定及现有空间事实，不在本卡改写空间查询或给它附加火势状态。固定走火链由本单项场景的局部状态逐格核验，不能假称现有 Board 已具备燃料传播。 |
+| `CombatEntryAdapter.TryCreateSession` → `CombatSession` → `EncounterCoordinator` | 入口当前新建半径 12 的空格盘；`CombatSession.ValidateCommand` 仅接受普攻、术法、神通、防御、待机、移动和换术；`EncounterCoordinator.Complete` 只清理当前双单位表现并回调 Adventure。 | 没有火种、地表状态、组合账本或金丹装配入口。向这条正式 Adventure／Combat 链硬塞候选行为会跨越 `U-JD-RULE-01A` 的冻结边界，故本单项不得修改这些文件、正式 `AdventureScene`、`JindanStaticStates.csv` 或 `JindanStaticStateData`。 |
+| 正式场景与表现 | `AdventureSceneInstaller` 绑定正式目录、环境档案、攻击档案、`EncounterCoordinator` 和单一静态 3D 表现；`AdventureSceneBuilder.BuildGuanzhongBattlefield` 只按现有环境边端点摆放关中地块。 | 正式场景不是未完成金丹组合的测试替身。新场景必须独立、非 BuildSettings、无 `GameBootstrap`、无 `AdventureSceneInstaller`，且不读取／写入正式角色、战斗、存档或内容目录。 |
+
+因此，现有代码的可复用边界是坐标相邻、场景构建和 PlayMode／EditMode 测试约定；缺口是候选专属的火源、路线、阻断、账本、容量和可见地表结果。该缺口只能由一个隔离的单项场景切片承接，不能用“已有空间模块”或“已有环境卡”冒充运行时支持。
+
+### 2. `U-JD-COMBO-FIRE-SCENE-01` 的冻结实现边界
+
+- 新增的唯一运行时所有者是 `src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs`。它只服务 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE`：维护源位火源、燃犀渡阵眼、固定相邻燃料链、局部费用／容量账本、一个地表状态链和对应可见标记；不注册正式 `comboProfileId`、`fireSeedProfileId`、`resultPrototypeId` 或金丹装配。
+- `src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs` 唯一创建／重建 `src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity`。该场景只含 `JindanFireFerryLineScenarioRoot`、控制器、测试用阵眼／地格／火焰标记和状态文本；不修改 `EditorBuildSettings.asset`，不接入 `AdventureScene`，不创建新美术资源。现有 `CombatPiece2DExperimentSceneBuilder` 的非 BuildSettings、可重复构建模式是唯一场景构建参考。
+- 场景 Builder 序列化候选测试输入：唯一 `fixtureId`、源格、阵眼、固定燃料格序列、初始行动／灵力／燃料／火势预算、地表／环境容量，以及水、隔绝、断燃料和阵眼失效的受控反例开关。它们只用于证明支付顺序、原子失败、单一承载和释放；不写入 CSV、ScriptableObject 正式内容或数值平衡结论。
+- 控制器先完整预览源位行动、灵力、燃料、地表容量与源格空位，全部满足时才一次性建立 `sourceRef`。随后完整预览阵眼、仍燃烧的 `sourceRef`、相邻连续可燃路线、逐节点火势预算和环境容量；任一条件不足时不扣本次走火费用、不生成半条链，既有独立源火按其原账本保留。成功时仅建立一条可见、可切断的地表状态链，并把两位置的持续承载和容量记为同一场景实例，禁止免费传播、重复收费或第二条链。
+- 控制器的结束入口以及 `OnDisable`／场景卸载清理未来作用、标记和地表／环境容量；已经结算的测试费用不回滚。水、隔绝、拆燃料、扑灭源火、毁阵眼、资源／容量不足和战斗结束都必须走同一 `END` 语义，不寻找 fallback。
+
+### 3. 字面量路径、验证和下游边界
+
+`U-JD-COMBO-FIRE-SCENE-01` 只能修改以下 Unity 业务路径及其新建文件的 `.meta`：
+
+| 用途 | 精确路径 |
+|---|---|
+| 单项状态、账本和可见结果所有者 | `src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs`、`src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs.meta` |
+| 非正式场景 Builder | `src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs`、`src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs.meta` |
+| 单项可操作场景 | `src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity`、`src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity.meta` |
+| Builder／序列化隔离检查 | `src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs`、`src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs.meta` |
+| 运行时账本、反例和可见标记检查 | `src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs`、`src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs.meta` |
+
+| 验收项 | 直接证据 |
+|---|---|
+| 正常链 | PlayMode 以 Builder 同源的 fixture 输入依次建立源火、走完唯一连续链，核对每项费用只扣一次、地表／环境容量仅占一份、源火和链标记均可见。 |
+| 前置和阻断 | 缺源火、无效阵眼、水／隔绝、断燃料、非相邻格、容量不足或预算不足必须返回稳定失败原因；本次走火前后账本、标记和容量相同。 |
+| 生命周期 | 位置／阵眼失效和场景结束经同一 `END` 清理标记与容量，不撤回既有结算，也不留下半状态。 |
+| 场景隔离 | EditMode 重建两次仍只有一个控制器和规定标记，正式四个 BuildSettings 场景不变，场景中不存在 `GameBootstrap` 或 `AdventureSceneInstaller`。 |
+
+U 卡完成后，`N-JD-COMBO-FIRE-BUDGET-01` 只读取这一场景、同版本代码、Builder 和两类直接测试，写入实际运行记录 `docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt`。N 卡不补建实现、不将 fixture 值称为正式预算，也不要求 BattleSim 复刻该场景；正式组合生产仍由 `D-JD-COMBO-SCOPE-01` 与 `C-JD-COMBO-01` 的既有链负责。

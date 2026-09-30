@@ -10,20 +10,16 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": ["U-JD-COMBO-FIRE-SCENE-01"],
-  "stateReason": "2026-09-30：用户要求准备 ready；已建立 D-JD-COMBO-FIRE-UNITY-01 技术准备 → U-JD-COMBO-FIRE-SCENE-01 实现 → 本卡验收的完整已知链。技术准备先 ready，本卡等待 U 卡可操作场景与同版本配置证据，不再等待 BattleSim 扩充。",
+  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已冻结唯一非正式场景及验收边界；本卡继续等待 U-JD-COMBO-FIRE-SCENE-01 交付同版本控制器、Builder、场景和运行证据。自动化候选不提前解除该具名前置。",
   "expectedPaths": [
-    "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_费用容量验证.txt",
+    "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt",
     "docs/基础设定/设定事实速查.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
     "开发管理/任务归档/N-JD-COMBO-FIRE-BUDGET-01.txt"
   ],
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
@@ -31,39 +27,42 @@
 
 ## 来源与当前边界
 
-- `D-JD-COMBO-FIRE-INPUT-01` 已完成并冻结合法媒介输入。2026-09-30 用户明确：具体地图与场景交互在 Unity 中实现和验收，模拟器不承担全部功能。本卡保留稳定 ID，改由 Unity 分线承接。
-- 本卡验证真实火源、连续燃料链、阻断、地表结果及其支付／占用行为；不再等待扩充 BattleSim。D-JD-COMBO-FIRE-UNITY-01 冻结入口、实现与验收范围，U-JD-COMBO-FIRE-SCENE-01 交付可操作场景，本卡只在其完成后复验；不在验收中顺带补建缺失实现。
+- `D-JD-COMBO-FIRE-UNITY-01` 已冻结唯一允许的场景切片：非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE`，由 `JindanFireFerryLineScenarioController` 处理单项 source→走火→`END`。它不是正式组合、金丹装配、生产配置或角色数值平衡。
+- 本卡只在 U 卡完成并给出同一提交／版本的控制器、Builder、场景、EditMode 和 PlayMode 证据后独立复验。若 U 没有实际实现、运行证据或场景隔离，本卡记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
 
 ## 必查范围
 
-- `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务`；完成后的 `docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt`。
-- `docs/基础设定/金丹基础效果装配与冲突规则.txt#一—三` 与 `docs/基础设定/五行显化与环境交互规则.txt#二`、`#四`；按 `UNITY_STRUCTURE.md` 与相关聚焦索引定位实际 Unity 战场入口、场景对象、地表状态、费用／容量规则所有者、直接调用者及测试，在 ready 前写入准确路径，不凭名称指定新组件。
+- `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务`、`#六、渡火引线 Unity 单项场景实现与验收范围合同`；`docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六`。
+- U 完成后完整读取 `src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs`、`src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs`、`src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity`、`src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs`、`src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs` 及每个新建 Unity 文件对应 `.meta`。
+- `UNITY_STRUCTURE.md`、`UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.content.md`、`UNITY_STRUCTURE.assemblies.md`；仅为拒绝错误复用而读 `EnvironmentProfileRuntime`、`SpatialQueryBoardFactory.TryCreate`、`CombatEntryAdapter.TryCreateSession`、`CombatSession.ValidateCommand` 与 `EncounterCoordinator.Complete` 的实际边界。
 
 ## 实施范围
 
-- 交付一份绑定 Unity 场景入口、版本、实际配置引用和运行记录的费用／容量验证；核对两位置持续占用、地表与环境容量、逐节点火势预算、行动和资源的实际支付行为。
-- 在实际场景中验证合法火源沿相邻连续燃料链走火，以及缺火源、断燃料、水／隔绝、阵眼失效、资源／容量不足和战斗结束的反例；记录扣费、占用与释放，证明无免费传播、重复收费或半状态。
-- 消费技术准备冻结的验收路径、风险投影和 U 卡交付版本；失败时记录准确所有者与复现输入，不在本验收卡跨界修补，也不为模拟器另建一份场景结算。
-- 场景功能证据不冒充强度平衡结论；若另有可抽象的角色数值平衡问题，再按明确输入与指标交给 BattleSim，不要求它复刻本场景。
+- 创建唯一验证记录 `docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt`，并在 `docs/基础设定/设定事实速查.txt` 增加其准确 L2 指针；记录绑定 U 的 candidate／正式提交、Unity 版本、fixture ID、场景路径、控制器／Builder／测试文件哈希或版本、运行命令和结果。验证文档只记录已运行事实，不填写正式数值档案、`comboProfileId` 或 `resultPrototypeId`。
+- 在同一 fixture 中独立复现源位显化先支付行动／灵力／实际燃料／地表容量，再预览并支付化位行动、展开、逐节点火势和环境容量。逐项记录 source 支付、借用 source 的消耗、走火支付、地表／环境占用和释放，证明同一地表链只占一份容量，既付 source 不被再收，走火也不因已付 source 而免费。
+- 复现并记录：缺 source、无效阵眼、水／隔绝、断燃料、非相邻节点、预算／资源不足、容量不足、位置／阵眼失效和场景结束。每个失败必须在支付前拒绝本次走火、保持既有合法 source，且没有半标记、重复扣费、容量泄漏或 fallback；`END` 只停止未来作用和释放场景占用，不反转已结算费用。
+- 只修改验证记录和本卡完成所需的管理投影；不修改 U 的控制器、Builder、场景、测试、正式 Adventure／Combat、金丹数据、`EditorBuildSettings.asset`、资产、CSV 或 BattleSim。发现 U 实现越界时标记失败证据，不在本卡修补。
 
 ## 禁止项
 
-- 不猜预算或把零值当默认，不修改已批准的效果／位置权限或正式配方；Unity／配置／测试精确路径未冻结前不写业务代码或资源，不借山河周期费用替代战棋账本。
-- 不新增 BattleSim 地图、火种或传播实现来满足本卡，不新建通用场景系统或第二套费用结算。
+- 不猜预算或把 fixture 计数当正式平衡值；不改位置、效果、媒介、白名单、正式配方、金丹状态或 `JindanBaseEffectLoadoutTuning`。
+- 不新增 BattleSim 地图、火种、传播或费用实现，不把现有环境／空间查询模块当作本场景账本，也不以静态源代码、截图或模型意见替代同版本实际运行。
 
 ## 模型协作
 
-- 当前 blocked，临近 ready 时按设计输入与真实 Unity 所有者重评复杂度和模型组合；场景结论必须由实际运行产生，模型意见不能代替运行证据。
+- 当前 blocked。临近 ready 时按 U 的实际运行证据、失败归属与验收难度重新评估；若实现和记录边界清晰，沿用入口默认单模型。任何辅助只读分析均不能替代 PlayMode 运行或改变本卡只验证、不修补的职责。
 
 ## 验证
 
-- ready 前冻结对应 Unity 编译、定向 EditMode／PlayMode 检查和真实场景操作入口；记录同版本场景、配置、初始资源／容量、逐节点结果与反例，不以静态文本或截图单独证明结算正确。
-- 相关路径的数据链、schema 2、whitespace 与 staged diff 检查；只验证场景功能时不运行 BattleSim，独立角色数值平衡结论仍须使用 BattleSim。
+- 先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 和 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，记录 U 的直接测试是否真实执行且通过。
+- 在同版本场景重建后由验证者分别操作／观察每一条正常与失败输入；记录初始和最终行动、灵力、燃料、火势预算、地表／环境容量、source 状态、链标记和结束状态。若无法获取运行对象或数值，不得以文本推断通过。
+- 本卡、验证文档和管理路径通过 schema 2 风险预检、`tools/check-task-cards.ps1`、`tools/check-review-text.ps1`、`tools/check-data-chain.ps1`、whitespace 与 staged diff；无可抽象数值平衡修改，不运行 BattleSim。
 
 ## 完成条件
 
-- 费用／容量配置引用真实存在，展开费、维持、火源消耗、逐节点预算及占用／释放可在同版本 Unity 场景复现；失败没有免费动作、重复收费或半状态，结果可交回 D 卡收口。场景验证通过不自动表示全局数值平衡通过。
+- 验证文档使另一位执行者能够在同版本 Unity 场景复现 source→走火→END 及所有列明反例，并证明没有免费动作、重复收费、容量双占用、容量泄漏或半状态。
+- 记录精确区分场景功能已验证与正式组合／角色数值平衡尚未完成，结果可供 `D-JD-COMBO-SCOPE-01` 以后续既有流程收口。
 
 ## 停止条件
 
-- 媒介合同未合法完成、Unity 场景／规则所有者未定位、所需改动超出已冻结路径，或必须新增效果／位置权限时停止并返回 D 卡；发现非原子范围按既有拆分规则处理，不以补建模拟器绕过停止条件。
+- U 未完成、场景／规则所有者或同版本输入不可定位、运行证据缺失、复现要求越过单项 fixture，或必须新增权限／修补业务实现时停止并回报 U／D 边界；不得改用模拟器或写入正式内容绕过。

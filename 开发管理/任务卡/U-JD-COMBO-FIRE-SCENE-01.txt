@@ -10,8 +10,19 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": ["D-JD-COMBO-FIRE-UNITY-01"],
-  "stateReason": "2026-09-30：场景效果归 Unity 的方向已确认；等待 D-JD-COMBO-FIRE-UNITY-01 冻结实际所有者、输入、代码/配置/场景路径和验证合同后实施。当前管理路径不构成业务代码授权。",
+  "stateReason": "2026-10-01：D-JD-COMBO-FIRE-UNITY-01 已在 candidate 中冻结单项所有者、输入、路径与验证合同；按自动化候选边界，本卡继续保留对该任务的具名前置，待正式结果进入 master 后由 QueueMaintenance 同步解除并重新判断 ready。",
   "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs.meta",
+    "src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs.meta",
+    "src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity",
+    "src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity.meta",
+    "src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs",
+    "src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs.meta",
+    "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-JD-COMBO-FIRE-SCENE-01.txt",
@@ -25,36 +36,47 @@
 
 ## 来源与当前边界
 
-- 只实现已确认的渡火引线单项可操作场景结果；真实火源、固定连续燃料路线、阻断、支付及容量占用沿用已完成媒介合同。
-- 本卡只在技术准备合同完成后执行。原 N-JD-COMBO-FIRE-BUDGET-01 独立复验同版本场景；本卡不能替代该验收或正式组合档案生产。
+- `D-JD-COMBO-FIRE-UNITY-01` 已用现行代码证明：正式 `EnvironmentProfileRuntime`／`SpatialQueryBoard`／`CombatSession`／Adventure 入口没有火种、燃料、阵眼、地表持续状态、组合账本或金丹装配实现。`JindanStaticStates.csv` 仍只有 schema 表头，`U-JD-RULE-01A` 仍是完整金丹系统的独立 blocker。
+- 本卡只实现一个非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE` 场景切片。它真实执行源火→固定走火→`END` 清理及支付／容量反例，但不是正式 `comboProfileId`、`fireSeedProfileId`、`resultPrototypeId`、角色金丹状态、数值平衡或正式 Adventure 功能。
+- 本卡在 D 的正式结果进入 master 且 QueueMaintenance 解除具名前置前不得开工；当前路径合同不构成提前业务写入授权。完成后仅交付 N 卡可复验的同版本场景、配置和测试证据，不替代 N 卡独立验收或正式组合档案生产。
 
 ## 必查范围
 
-- docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务；D-JD-COMBO-FIRE-UNITY-01 交付的现行所有者/路径/输入/验证合同。
-- docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六；技术准备卡冻结的源代码完整逻辑单元、直接调用者与测试。
+- `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#六、渡火引线 Unity 单项场景实现与验收范围合同`；`docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六`。
+- `UNITY_STRUCTURE.md`、`UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.content.md`、`UNITY_STRUCTURE.assemblies.md`；`src/Assets/Scripts/Editor/CombatPiece2DExperimentSceneBuilder.cs` 与 `src/Assets/Tests/EditMode/CombatPiece2DExperimentEditorTests.cs` 的非 BuildSettings 场景约定。
+- 只读边界证明：`src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs::EnvironmentProfileRuntime`、`src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs`、`src/Assets/Scripts/Modules/Infrastructure/UnityContent/SpatialQueryBoardFactory.cs::TryCreate`、`src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryCreateSession`、`src/Assets/Scripts/Combat/CombatSession.cs::ValidateCommand`、`src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::TryBegin,Complete`。
+- `src/Assets/Scripts/Modules/Spatial/TacticalGridModel.cs` 的 `HexCoord`／地格基本类型、`src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs` 的 PlayMode 生命周期约定，以及本卡新增控制器、Builder、场景和两类直接测试的完整逻辑单元。
 
 ## 实施范围
 
-- 在技术准备明确的 Unity 入口实现该单项火源→走火→终止链，支付、容量与状态由已证明的所有者唯一处理；功能反例、可见操作和复现入口同版本交付。
-- ready 前补全全部业务 expectedPaths 及 Unity .meta、直接测试、必要工具和输入。若独立结果边界不成立，不得以当前卡名直接开工。
+- 新增 `JindanFireFerryLineScenarioController` 作为唯一单项状态、账本与可见结果所有者。它只消费 Builder 序列化的 fixture：源格、阵眼、唯一相邻可燃链、测试行动／灵力／燃料／火势预算、地表／环境容量和受控阻断开关；不得读取或写入正式 CSV、内容目录、存档、角色或 Combat 会话。
+- `TryManifest` 必须先原子预览源位行动、灵力、燃料、目标载体空位和地表容量，再建立可见 `sourceRef`。`TryEscalate` 必须先原子预览有效阵眼、仍燃烧的 source、所有路线节点的相邻／可燃／未阻断条件、逐节点预算和环境容量；成功时建立唯一可见地表链，失败时不扣本次走火费用、不生成半状态。既有独立 source 按原账本保留。
+- 水、隔绝、断燃料、扑灭 source、阵眼失效、预算／容量不足和场景结束都走同一 `END` 边界：停止未来走火、清理标记与地表／环境容量，不退回已经结算的测试费用，也不创建 fallback 或第二条链。
+- `JindanFireFerryLineScenarioSceneBuilder.Build` 只重建 `Assets/Tests/Scenes/JindanFireFerryLineScenario.unity` 的根、控制器、测试格／阵眼／火焰标记和状态文本。它必须保持幂等、保持正式四个 BuildSettings 场景不变，且场景中不得存在 `GameBootstrap`、`AdventureSceneInstaller`、正式角色、攻击档案或静态 3D provider。
+- `JindanFireFerryLineScenarioEditorTests` 负责 Builder 两次重建、序列化引用、唯一控制器与非 BuildSettings 隔离；`JindanFireFerryLineScenarioPlayModeTests` 负责正常链、每类反例、账本／容量前后值、可见标记与场景清理。不得修改 `EnvironmentProfileRuntime`、空间查询、Combat 命令／resolver、正式场景或金丹静态数据。
+- 本卡完成时只在同版本证据已经存在后更新 N 卡的直接前置、场景／测试引用和队列投影；不得生产费用容量验证文档或声称正式组合／数值平衡完成。
 
 ## 禁止项
 
-- 不扩充 BattleSim，不新增道路/位置权限，不扩展完整金丹系统，不生产正式组合配方，不复制第二套账本或建立通用环境框架。
-- 不把测试参数称为正式平衡值；不以单元测试替代实际场景可操作证据。
+- 不扩充 BattleSim，不新增道路、位置、白名单、正式配方、通用火种／环境／账本框架或正式金丹装配；不把 fixture 数值登记为 `JindanBaseEffectLoadoutTuning`、CSV 或生产资产。
+- 不改 `src/Assets/Scenes/AdventureScene.unity`、`src/ProjectSettings/EditorBuildSettings.asset`、`JindanStaticStates.csv`、`JindanStaticStateData.cs`、`CombatSession`、`CombatEntryAdapter`、`EncounterCoordinator`、`SpatialQueryBoard` 或 `EnvironmentProfileRuntime`。
+- 不以 EditMode 静态断言代替 PlayMode 的场景生命周期／可见结果证据，也不以该场景证明正式角色数值平衡。
 
 ## 模型协作
 
-- 当前 blocked；技术准备完成时依据真实所有者、影响面和验收难度确定组合，单一责任方统一交付。模型意见不能替代场景运行。
+- 简单：D 卡已冻结单一 fixture 的语义、实际所有者、路径与验收矩阵，且实现、Builder 与两类测试属于同一场景切片。沿用入口默认单模型，无需辅助；实际 Unity 编译／场景运行仍是完成门，模型意见不能代替运行证据。
 
 ## 验证
 
-- 准备任务必须在 ready 前写入精确 Unity 编译、定向 EditMode/PlayMode、可操作场景及正常/失败输入矩阵；本轮仅校验 blocked 投影和依赖。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1`；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`。
+- 两类直接测试分别至少覆盖：Builder 幂等／隔离；合法 source→连续走火；缺 source、无效阵眼、水／隔绝、断链、非相邻、预算不足、容量不足；`END`／OnDisable 清理；每项失败前后账本、容量与标记不变。记录 Unity 版本、场景路径、fixture ID 和运行结果，不能只引用截图或静态文本。
+- 相关路径的 schema 2 风险预检、`tools/check-task-cards.ps1`、whitespace 与 staged diff 检查；只验证场景功能，不运行 BattleSim。
 
 ## 完成条件
 
-- 冻结合同内的场景可操作、支付/容量/终止反例及相关直接测试通过；交付可供 N 卡按版本复验的入口与配置证据。
+- 同一非正式场景可重复构建并在 PlayMode 执行一条真实 source→走火→END 链；所有正常和失败输入可复现，费用／容量无免费传播、重复收费或半状态，且正式场景、金丹数据、Combat 与 BuildSettings 未被触碰。
+- N 卡拿到同版本控制器、Builder、场景、EditMode／PlayMode 测试和运行证据，能够独立记录费用／容量验证；场景通过不自动表示正式组合或角色数值平衡通过。
 
 ## 停止条件
 
-- 所有者/路径/输入未冻结、直接前置未完成、必须跨出单项实现或新增设计权限时停止，不边实施边扩卡或补机制。
+- D 的正式结果尚未进入 master、所有者／路径／fixture 输入缺失、必须接入正式金丹装配／Combat／存档、必须新增设计权限或范围扩展为多项场景时停止；不得在当前卡临时扩建机制、补造正式配置或绕过 N 卡。
