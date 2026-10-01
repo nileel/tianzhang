@@ -9,8 +9,11 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-09-29：U-GZ-ART-BATTLEFIELD-01、U-GZ-ART-UI-01、U-CHAR-BATTLE-STATIC3D-FORMAL-WIRING-01 与 U-GZ-ART-FEEDBACK-01 均已完成归档；唯一剩余条件是用户本人在同版本正式入口完成全流程实测并明确接受整体品质。",
+  "blockedBy": [
+    "V-GZ-PLAYTEST-FLOW-01",
+    "U-GZ-BASE-MODELS-01"
+  ],
+  "stateReason": "2026-10-01：用户已亲自跑测并报告8项缺口，尚未接受整体品质。已一次建立20张修复/方案/资源叶子；等待V-GZ-PLAYTEST-FLOW-01正式可玩复验与U-GZ-BASE-MODELS-01双底座接入，之后仍须用户同版本重测接受。",
   "expectedPaths": [
     "开发管理/关中首个可展示流程美术验收记录.txt",
     "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
@@ -87,3 +90,9 @@
 
 - 负责人已要求 UI／角色链需要其决定的事项均走飞书。按2026-09-27补充要求，先交付可玩入口、版本和跑测步骤；完整实际流程、辅助截图／连续录像和成本齐备后，邀请用户实际跑测。最终整体品质接受必须在用户本人跑测后取得，不以示意图、AI测试通过或只看录像的回复代替。
 - 本次只登记未来整段实机决定的证据时点；没有对应可玩成果时不预发空白批准。优先使用既有发送桥，保留原任务／候选／哈希、实际跑测反馈及回执证据；未具备可玩交付条件时保持未完成。
+
+## 2026-10-01 用户实测返工
+
+- 用户已实际测试，反馈场地不足30格/缺障碍、相机过远且不能移动、角色比例/底座穿模、石甲兽100倍疑问、行动轴/头顶血条缺失、基础移动/高光/动画缺失、没有两术法且普通角色难以击杀。
+- 本次不构成验收通过；完整已知任务、依赖和首批ready见 docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md。用户重测仍为最后品质闸门，修复不能在本验收卡跨owner实施。
+- V-GZ-PLAYTEST-FLOW-01允许先用修正后的临时底座交付功能重测；最终模型与用户整体接受在本卡汇合，不用美术生产阻塞可玩修复。

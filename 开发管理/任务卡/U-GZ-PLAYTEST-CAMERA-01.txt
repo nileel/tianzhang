@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-CAMERA-01",
+  "title": "关中战棋相机近景与平移操作",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：用户关中实测反馈已明确授权本项；本卡结果、只读事实源、允许路径与验证已冻结，可按卡执行。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "UNITY_STRUCTURE.runtime.md",
+    "src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-CAMERA-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-CAMERA-01 · 关中战棋相机近景与平移操作
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
+- 唯一结果：关中战棋相机近景与平移操作。主责统一复核差异、验证与单一candidate；不接管其他叶子。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- src/Assets/Scripts/Editor/SceneBuildSupport.cs
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
+- src/Assets/Scenes/AdventureScene.unity
+- src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef
+- 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
+
+## 实施范围
+
+- 正式Adventure相机正交size=4持久化；局部配置，不改共享BeginScene其他场景。实现WASD/方向键与鼠标中键拖动的平面移动，移动速度不依赖帧率；按真实战场bounds钳制，焦点在输入框或指针操作UI时不抢输入。保持现有朝向，本轮不加旋转/自由飞行。新控制器位于Adventure，经Builder显式接线，复用项目实际输入栈；后续地图扩大会自动使用新的bounds。
+
+## 禁止项
+
+- 不扩大到其他地区、全套金丹/神通、动画骨骼、全局UI框架或新自动化机制；不修改未列路径。
+- 不把模型意见、静态文档、测试fixture或Editor预览当正式运行证据；场景功能在Unity验收，可抽象角色数值平衡才运行BattleSim。
+- 保留用户改动；不删除历史源资产，不在未量化情况下叠加scale/offset补丁。
+
+## 模型协作
+
+- 目标有界：推荐 GPT-6.1 Sol（gpt-6.1-sol / medium）完成已冻结实现；入口实际主模型不因卡中名称切换。默认单主责，只有出现独立复杂根因工作面时再用 gpt-6.1-sol / high 只读核查，不重复做同一实现。
+- 子智能体只读、不得改卡/队列/提交/runtime/锁或派生；写前核对实际工具支持，记录调用/未执行与证据。辅助能力不是虚构完成证据；确无独立工作面则主责直接完成。不会因本卡修改全局自动化模型设置。
+
+## 验证
+
+- 正式新会话验证size4、键鼠平移/边缘限制/输入焦点与场景退出清理；修改后重建重开仍一致；PlayMode定向测试并取实际Game View，不只检查YAML。
+- 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
+- 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
+
+## 完成条件
+
+- 上述唯一结果与验证均有可追溯证据；不代替下游实现/独立验收。代码/资源卡无可见效果时不能标完成；设计卡交付可审合同与下游已知完整范围。
+- 准备后的下游重新预检并满足原子/runnable合同才入ready。最终用户重测与整体接受仍由V-GZ-ART-SLICE-01负责。
+
+## 停止条件
+
+- 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。

@@ -58,8 +58,27 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| D-GZ-PLAYTEST-MAP-01 | P1 | codex | 已排队 | — | 关中三十格以上战场与障碍格合同 | 开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt |
+| U-GZ-PLAYTEST-MAP-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-MAP-01 | 关中扩展战场与不可通行格型接入 | 开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt |
+| U-GZ-PLAYTEST-CAMERA-01 | P1 | codex | 已排队 | — | 关中战棋相机近景与平移操作 | 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt |
+| D-GZ-PLAYTEST-SCALE-01 | P1 | codex | 已排队 | — | 正式棋子尺寸与石甲兽百倍缩放诊断 | 开发管理/任务卡/D-GZ-PLAYTEST-SCALE-01.txt |
+| U-GZ-PLAYTEST-SCALE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-SCALE-01 | 正式双棋子视觉比例修正到现状一点四倍 | 开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt |
+| U-GZ-PLAYTEST-BASE-FIT-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-SCALE-01 | 现有棋子底座减薄与地面接触修正 | 开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt |
+| D-GZ-BASE-MODELS-01 | P1 | codex | 已排队 | — | 两个通用棋子底座造型与生产方案 | 开发管理/任务卡/D-GZ-BASE-MODELS-01.txt |
+| A-GZ-BASE-MODEL-01 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第1款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-01.txt |
+| A-GZ-BASE-MODEL-02 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第2款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-02.txt |
+| U-GZ-BASE-MODELS-01 | P1 | codex | 阻塞 | A-GZ-BASE-MODEL-01、A-GZ-BASE-MODEL-02、U-GZ-PLAYTEST-BASE-FIT-01 | 双通用底座模型正式接入 | 开发管理/任务卡/U-GZ-BASE-MODELS-01.txt |
+| D-GZ-PLAYTEST-UI-AUDIT-01 | P1 | codex | 已排队 | — | 正式战斗UI逐项对照与缺口归属 | 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt |
+| U-GZ-PLAYTEST-TIMELINE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-UI-AUDIT-01、U-GZ-PLAYTEST-MOVE-RULE-01 | 正式战斗行动轴与真实CT状态显示 | 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt |
+| U-GZ-PLAYTEST-HP-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-UI-AUDIT-01、U-GZ-PLAYTEST-SCALE-01 | 每单位头顶血条与资源信息接线 | 开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt |
+| D-GZ-PLAYTEST-MOVE-01 | P1 | codex | 已排队 | — | 战棋移动操作与行动阶段方案 | 开发管理/任务卡/D-GZ-PLAYTEST-MOVE-01.txt |
+| U-GZ-PLAYTEST-MOVE-RULE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-MOVE-01、U-GZ-PLAYTEST-MAP-01 | 正式移动命令与CT行动阶段闭环 | 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt |
+| U-GZ-PLAYTEST-MOVE-UI-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-CAMERA-01、U-GZ-PLAYTEST-BASE-FIT-01 | 移动输入可达高光路径预览与棋子位移动画 | 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt |
+| D-GZ-PLAYTEST-SPELLS-01 | P1 | codex | 已排队 | — | 关中初始两术法选择与获得装配合同 | 开发管理/任务卡/D-GZ-PLAYTEST-SPELLS-01.txt |
+| U-GZ-PLAYTEST-SPELLS-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-SPELLS-01 | 两术法从建角装配到正式施法完整接入 | 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt |
+| V-GZ-PLAYTEST-FLOW-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-MAP-01、U-GZ-PLAYTEST-CAMERA-01、U-GZ-PLAYTEST-BASE-FIT-01、U-GZ-PLAYTEST-TIMELINE-01、U-GZ-PLAYTEST-HP-01、U-GZ-PLAYTEST-MOVE-UI-01、U-GZ-PLAYTEST-SPELLS-01、N-GZ-PLAYTEST-BALANCE-01 | 关中修复后可玩流程独立复验 | 开发管理/任务卡/V-GZ-PLAYTEST-FLOW-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 已排队 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
-| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
+| V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | V-GZ-PLAYTEST-FLOW-01、U-GZ-BASE-MODELS-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子新授权生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-02.txt |
