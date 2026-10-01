@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-01：D-GZ-PLAYTEST-SCALE-01 已冻结唯一持久显示层为 Provider 在 Spawn 中创建的 body；正式 FBX/importer/Prefab 不改，root 继续专属动作倍率。现有代码与既有 PlayMode 测试路径完整，已重新预检后可执行。",
+  "stateReason": "2026-10-01：Provider 的 Spawn 已在唯一持久 body 层写入 1.4；双 Profile 的六向、移动、攻击、受击与动作复位均由直接 PlayMode 测量通过，root 保持专属动作倍率。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
@@ -73,3 +73,8 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 完成结论
+
+- `Static3DCombatUnitPresentationProvider.Spawn` 对两个正式 Profile 的 body 写入 `(1.4,1.4,1.4)`；body 的脚底仍在 `GroundY=0.34`，root 的 idle/移动/恢复尺度仍为 `(1,1,1)`。
+- 直接 PlayMode 对两个 Profile 的六向 yaw、idle/移动/攻击/受击和动作复位测量通过：攻击瞬间 body 的 `lossyScale` 为 root 动作倍率与 1.4 body 倍率的逐分量乘积；FBX、importer、Prefab、ProfileSet、材质和 GUID 未改。

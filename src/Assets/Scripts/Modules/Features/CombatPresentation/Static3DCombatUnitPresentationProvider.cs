@@ -89,7 +89,7 @@ namespace TianZhang.Features.CombatPresentation
                 body.name = profile.prefab.name;
                 body.transform.localPosition = Vector3.zero;
                 body.transform.localRotation = Quaternion.identity;
-                body.transform.localScale = Vector3.one;
+                body.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
                 MeshRenderer baseRenderer = CreateFactionBase(root.transform, combatant.DisplayFaction);
                 units.Add(combatant.CombatantId, new PresentedUnit(
                     root,
