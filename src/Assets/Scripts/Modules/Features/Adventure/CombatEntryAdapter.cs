@@ -25,11 +25,28 @@ namespace TianZhang.Features.Adventure
             }
             if (!TryProjectProfiles(attackProfiles, out var profiles, out reason)) return false;
 
+            if (environmentProfile == null ||
+                environmentProfile.battlefieldCells == null ||
+                environmentProfile.battlefieldCells.Length == 0 ||
+                !environmentProfile.TryCreateDefinition(out _, out reason))
+            {
+                reason ??= "environment_profile_not_configured";
+                return false;
+            }
+
             var grid = new TacticalGridModel();
-            const int radius = 12;
-            for (int q = -radius; q <= radius; q++)
-            for (int r = Math.Max(-radius, -q - radius); r <= Math.Min(radius, -q + radius); r++)
-                grid.SetTile(new TacticalTileData(new HexCoord(q, r)));
+            foreach (EnvironmentBattlefieldCell cell in environmentProfile.battlefieldCells)
+            {
+                grid.SetTile(new TacticalTileData(new HexCoord(cell.q, cell.r))
+                {
+                    TerrainType = cell.blocksGroundMove ? TacticalTerrainType.Obstacle : TacticalTerrainType.Plain,
+                    BlocksGroundMove = cell.blocksGroundMove,
+                    BlocksFlyingMove = false,
+                    BlocksLineOfSight = cell.blocksLineOfSight,
+                    BlocksLanding = cell.blocksGroundMove,
+                    IsEntityObstacle = false,
+                });
+            }
             if (!SpatialQueryBoardFactory.TryCreate(grid, environmentProfile, out SpatialQuerySnapshot spatial, out reason))
                 return false;
 

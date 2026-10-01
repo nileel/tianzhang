@@ -10,6 +10,7 @@ namespace TianZhang.Infrastructure.UnityContent
         public string profileId;
         public int unitsPerRange;
         public int maxQueryRange;
+        public EnvironmentBattlefieldCell[] battlefieldCells;
         public EnvironmentDirectedEdge[] directedEdges;
         public string[] surfacePrototypeRefs;
         public EnvironmentPhenomenonChannelData[] phenomenonChannels;
@@ -23,6 +24,7 @@ namespace TianZhang.Infrastructure.UnityContent
                 profileId = profileId,
                 unitsPerRange = unitsPerRange,
                 maxQueryRange = maxQueryRange,
+                battlefieldCells = battlefieldCells,
                 directedEdges = directedEdges,
                 surfacePrototypeRefs = surfacePrototypeRefs,
                 phenomenonChannels = phenomenonChannels,
@@ -37,6 +39,7 @@ namespace TianZhang.Infrastructure.UnityContent
             profileId = definition.profileId;
             unitsPerRange = definition.unitsPerRange;
             maxQueryRange = definition.maxQueryRange;
+            battlefieldCells = definition.battlefieldCells;
             directedEdges = definition.directedEdges;
             surfacePrototypeRefs = definition.surfacePrototypeRefs;
             phenomenonChannels = definition.phenomenonChannels;

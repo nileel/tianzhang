@@ -32,7 +32,8 @@ namespace TianZhang.Editor
         private static readonly string[] EnvironmentProfileColumns =
         {
             "profileId",
-            "directedEdges",
+            "queryLimits",
+            "battlefieldCells",
             "surfacePrototypeRefs",
             "phenomenonChannels",
             "phenomenonPairs",
@@ -160,11 +161,15 @@ namespace TianZhang.Editor
             string profileId = CsvTableReader.GetRequiredValue(headers, cols, "profileId", sourceName);
             ValidateReference(profileId, sourceName, "profileId");
 
-            var directedEdges = ParseDirectedEdges(
-                CsvTableReader.GetRequiredValue(headers, cols, "directedEdges", sourceName),
+            ParseQueryLimits(
+                CsvTableReader.GetRequiredValue(headers, cols, "queryLimits", sourceName),
                 sourceName,
                 out int unitsPerRange,
                 out int maxQueryRange);
+            var battlefieldCells = ParseBattlefieldCells(
+                CsvTableReader.GetRequiredValue(headers, cols, "battlefieldCells", sourceName),
+                sourceName);
+            var directedEdges = BuildDirectedEdges(battlefieldCells, unitsPerRange);
             var surfacePrototypeRefs = ParseReferenceList(
                 CsvTableReader.GetRequiredValue(headers, cols, "surfacePrototypeRefs", sourceName),
                 '|',
@@ -186,6 +191,7 @@ namespace TianZhang.Editor
             profile.profileId = profileId;
             profile.unitsPerRange = unitsPerRange;
             profile.maxQueryRange = maxQueryRange;
+            profile.battlefieldCells = battlefieldCells;
             profile.directedEdges = directedEdges;
             profile.surfacePrototypeRefs = surfacePrototypeRefs;
             profile.phenomenonChannels = channels;
@@ -194,19 +200,18 @@ namespace TianZhang.Editor
             return profile;
         }
 
-        private static EnvironmentDirectedEdge[] ParseDirectedEdges(
+        private static void ParseQueryLimits(
             string raw,
             string sourceName,
             out int unitsPerRange,
             out int maxQueryRange)
         {
             var sections = raw.Split(new[] { ';' }, StringSplitOptions.None);
-            if (sections.Length != 3 ||
+            if (sections.Length != 2 ||
                 !sections[0].StartsWith("unitsPerRange=", StringComparison.Ordinal) ||
-                !sections[1].StartsWith("maxQueryRange=", StringComparison.Ordinal) ||
-                !sections[2].StartsWith("edges=", StringComparison.Ordinal))
+                !sections[1].StartsWith("maxQueryRange=", StringComparison.Ordinal))
             {
-                throw new InvalidDataException($"{sourceName} has invalid directedEdges query envelope '{raw}'.");
+                throw new InvalidDataException($"{sourceName} has invalid queryLimits envelope '{raw}'.");
             }
             unitsPerRange = ParsePositiveInteger(
                 sections[0].Substring("unitsPerRange=".Length),
@@ -217,53 +222,68 @@ namespace TianZhang.Editor
                 sourceName,
                 "maxQueryRange");
 
-            var edges = new List<EnvironmentDirectedEdge>();
-            var seenEdges = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var entry in SplitRequired(
-                sections[2].Substring("edges=".Length),
-                '|',
-                sourceName,
-                "directedEdges"))
+        }
+
+        private static EnvironmentBattlefieldCell[] ParseBattlefieldCells(string raw, string sourceName)
+        {
+            var cells = new List<EnvironmentBattlefieldCell>();
+            var seenCells = new HashSet<string>(StringComparer.Ordinal);
+            int previousQ = int.MinValue;
+            int previousR = int.MinValue;
+            foreach (string entry in SplitRequired(raw, '|', sourceName, "battlefieldCells"))
             {
                 var ruleParts = entry.Split(new[] { '@' }, StringSplitOptions.None);
-                if (ruleParts.Length != 4)
-                    throw new InvalidDataException($"{sourceName} has invalid directed edge rule '{entry}'.");
+                if (ruleParts.Length != 3)
+                    throw new InvalidDataException($"{sourceName} has invalid battlefield cell '{entry}'.");
 
-                var ends = ruleParts[0].Split(new[] { '>' }, StringSplitOptions.None);
-                if (ends.Length != 2)
-                    throw new InvalidDataException($"{sourceName} has invalid directed edge '{entry}'.");
+                ParseHexCoordinate(ruleParts[0], sourceName, out int q, out int r);
+                string cellKey = $"{q}:{r}";
+                if (!seenCells.Add(cellKey))
+                    throw new InvalidDataException($"{sourceName} has duplicate battlefield cell '{cellKey}'.");
+                if (q < previousQ || (q == previousQ && r <= previousR))
+                    throw new InvalidDataException($"{sourceName} battlefieldCells must be ordered by q and r.");
 
-                ParseHexCoordinate(ends[0], sourceName, out int fromQ, out int fromR);
-                ParseHexCoordinate(ends[1], sourceName, out int toQ, out int toR);
-                if (!AreTopologicalNeighbors(fromQ, fromR, toQ, toR))
+                cells.Add(new EnvironmentBattlefieldCell
                 {
-                    throw new InvalidDataException(
-                        $"{sourceName} directed edge '{entry}' does not connect topological neighbors.");
-                }
+                    q = q,
+                    r = r,
+                    blocksGroundMove = ParseBinaryFlag(ruleParts[1], sourceName, $"battlefieldCells '{cellKey}' blocksGroundMove"),
+                    blocksLineOfSight = ParseBinaryFlag(ruleParts[2], sourceName, $"battlefieldCells '{cellKey}' blocksLineOfSight"),
+                });
+                previousQ = q;
+                previousR = r;
+            }
+            return cells.ToArray();
+        }
 
-                string edgeKey = $"{fromQ}:{fromR}>{toQ}:{toR}";
-                if (!seenEdges.Add(edgeKey))
-                    throw new InvalidDataException($"{sourceName} has duplicate directed edge '{edgeKey}'.");
+        private static EnvironmentDirectedEdge[] BuildDirectedEdges(
+            EnvironmentBattlefieldCell[] cells,
+            int metricDistanceUnits)
+        {
+            var knownCells = new HashSet<string>(StringComparer.Ordinal);
+            foreach (EnvironmentBattlefieldCell cell in cells)
+                knownCells.Add(cell.q + ":" + cell.r);
 
-                int metricDistanceUnits = ParsePositiveInteger(
-                    ruleParts[1], sourceName, $"directedEdges '{edgeKey}' metricDistanceUnits");
-                bool allowsMovement = ParseBinaryFlag(
-                    ruleParts[2], sourceName, $"directedEdges '{edgeKey}' allowsMovement");
-                bool allowsEffects = ParseBinaryFlag(
-                    ruleParts[3], sourceName, $"directedEdges '{edgeKey}' allowsEffects");
-
+            int[,] directions = { { 1, 0 }, { 1, -1 }, { 0, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 } };
+            var edges = new List<EnvironmentDirectedEdge>();
+            foreach (EnvironmentBattlefieldCell cell in cells)
+            for (int direction = 0; direction < directions.GetLength(0); direction++)
+            {
+                int toQ = cell.q + directions[direction, 0];
+                int toR = cell.r + directions[direction, 1];
+                if (!knownCells.Contains(toQ + ":" + toR))
+                    continue;
                 edges.Add(new EnvironmentDirectedEdge
                 {
-                    fromQ = fromQ,
-                    fromR = fromR,
+                    fromQ = cell.q,
+                    fromR = cell.r,
                     toQ = toQ,
                     toR = toR,
                     metricDistanceUnits = metricDistanceUnits,
-                    allowsMovement = allowsMovement,
-                    allowsEffects = allowsEffects,
+                    allowsMovement = true,
+                    allowsEffects = true,
                 });
             }
-
             return edges.ToArray();
         }
 

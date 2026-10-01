@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using TianZhang.Editor;
 using TianZhang.Content;
@@ -12,10 +13,10 @@ namespace TianZhang.Tests
     public class EnvironmentProfileDataTests
     {
         private const string Header =
-            "profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs";
+            "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs";
 
         private const string ValidRow =
-            "fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@1@1@1|1:0>1:-1@4@0@1,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water";
+            "fixture_profile,unitsPerRange=2;maxQueryRange=16,0:0@0@0|1:0@1@0,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water";
 
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
@@ -29,12 +30,19 @@ namespace TianZhang.Tests
             Assert.AreEqual("fixture_profile", profile.profileId);
             Assert.AreEqual(2, profile.unitsPerRange);
             Assert.AreEqual(16, profile.maxQueryRange);
+            Assert.AreEqual(2, profile.battlefieldCells.Length);
+            Assert.AreEqual(0, profile.battlefieldCells[0].q);
+            Assert.AreEqual(0, profile.battlefieldCells[0].r);
+            Assert.IsFalse(profile.battlefieldCells[0].blocksGroundMove);
+            Assert.AreEqual(1, profile.battlefieldCells[1].q);
+            Assert.IsTrue(profile.battlefieldCells[1].blocksGroundMove);
+            Assert.IsFalse(profile.battlefieldCells[1].blocksLineOfSight);
             Assert.AreEqual(2, profile.directedEdges.Length);
-            Assert.AreEqual(1, profile.directedEdges[0].metricDistanceUnits);
+            Assert.AreEqual(2, profile.directedEdges[0].metricDistanceUnits);
             Assert.IsTrue(profile.directedEdges[0].allowsMovement);
             Assert.IsTrue(profile.directedEdges[0].allowsEffects);
-            Assert.AreEqual(4, profile.directedEdges[1].metricDistanceUnits);
-            Assert.IsFalse(profile.directedEdges[1].allowsMovement);
+            Assert.AreEqual(2, profile.directedEdges[1].metricDistanceUnits);
+            Assert.IsTrue(profile.directedEdges[1].allowsMovement);
             Assert.AreEqual(6, profile.phenomenonChannels.Length);
             Assert.AreEqual(1, profile.phenomenonPairs.Length);
             Assert.AreEqual(EnvironmentPhenomenonChannel.Visibility, profile.phenomenonPairs[0].channel);
@@ -71,7 +79,7 @@ namespace TianZhang.Tests
         }
 
         private const string GuanzhongWildRow =
-            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16;edges=-1:0>0:0@2@1@1|0:0>1:0@2@1@1|1:0>1:-1@2@1@1|0:0>0:1@2@1@1|0:1>-1:1@2@1@1|-1:0>-1:1@2@1@1|0:0>-1:0@2@1@1|1:0>0:0@2@1@1|1:-1>1:0@2@1@1|0:1>0:0@2@1@1|-1:1>0:1@2@1@1|-1:1>-1:0@2@1@1,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
+            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@0@0|1:4@0@0|1:5@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|4:0@0@0|4:1@0@0|4:2@0@0|4:3@0@0|4:4@0@0|4:5@0@0|5:0@0@0|5:1@0@0|5:2@0@0|5:3@0@0|5:4@0@0|5:5@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
 
         [Test]
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
@@ -86,6 +94,20 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(1, expectedProfiles.Length);
             Assert.AreEqual(1, actualProfiles.Length);
+            Assert.AreEqual(36, expectedProfiles[0].battlefieldCells.Length);
+            Assert.AreEqual(4, expectedProfiles[0].battlefieldCells.Count(item => item.blocksGroundMove));
+            Assert.IsTrue(expectedProfiles[0].battlefieldCells
+                .Where(item => item.blocksGroundMove)
+                .All(item => !item.blocksLineOfSight));
+            Assert.AreEqual(170, expectedProfiles[0].directedEdges.Length);
+            foreach (EnvironmentDirectedEdge edge in expectedProfiles[0].directedEdges)
+            {
+                Assert.IsTrue(expectedProfiles[0].directedEdges.Any(reverse =>
+                    reverse.fromQ == edge.toQ &&
+                    reverse.fromR == edge.toR &&
+                    reverse.toQ == edge.fromQ &&
+                    reverse.toR == edge.fromR));
+            }
             AssertEnvironmentProfileEquals(expectedProfiles[0], actualProfiles[0]);
 
             const string assetPath =
@@ -100,6 +122,17 @@ namespace TianZhang.Tests
             Assert.AreEqual(expected.profileId, actual.profileId);
             Assert.AreEqual(expected.unitsPerRange, actual.unitsPerRange);
             Assert.AreEqual(expected.maxQueryRange, actual.maxQueryRange);
+
+            Assert.AreEqual(expected.battlefieldCells.Length, actual.battlefieldCells.Length);
+            for (int index = 0; index < expected.battlefieldCells.Length; index++)
+            {
+                Assert.AreEqual(expected.battlefieldCells[index].q, actual.battlefieldCells[index].q);
+                Assert.AreEqual(expected.battlefieldCells[index].r, actual.battlefieldCells[index].r);
+                Assert.AreEqual(expected.battlefieldCells[index].blocksGroundMove,
+                    actual.battlefieldCells[index].blocksGroundMove);
+                Assert.AreEqual(expected.battlefieldCells[index].blocksLineOfSight,
+                    actual.battlefieldCells[index].blocksLineOfSight);
+            }
 
             Assert.AreEqual(expected.directedEdges.Length, actual.directedEdges.Length);
             for (int index = 0; index < expected.directedEdges.Length; index++)

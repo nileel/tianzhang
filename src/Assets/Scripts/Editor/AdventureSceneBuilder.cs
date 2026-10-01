@@ -165,6 +165,20 @@ namespace TianZhang.Editor
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
+        [MenuItem("天章/场景/重建关中战场")]
+        public static void RebuildGuanzhongBattlefield()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            EnvironmentProfileAsset environmentProfile = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            GameObject existing = Array.Find(scene.GetRootGameObjects(), root => root.name == "GuanzhongBattlefield");
+            if (existing != null) UnityEngine.Object.DestroyImmediate(existing);
+            BuildGuanzhongBattlefield(environmentProfile);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the rebuilt Guanzhong battlefield.");
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("天章/场景/重建战术精灵隔离矩阵")]
         public static void RebuildTacticalSpriteIsolationMatrix()
         {
@@ -391,15 +405,12 @@ namespace TianZhang.Editor
 
         private static GameObject BuildGuanzhongBattlefield(EnvironmentProfileAsset environmentProfile)
         {
-            if (environmentProfile == null || environmentProfile.directedEdges == null)
+            if (environmentProfile == null || environmentProfile.battlefieldCells == null)
                 throw new InvalidOperationException("Guanzhong battlefield requires a configured environment profile.");
 
             var cells = new List<Vector2Int>();
-            foreach (EnvironmentDirectedEdge edge in environmentProfile.directedEdges)
-            {
-                AddGuanzhongBattlefieldCell(cells, edge.fromQ, edge.fromR);
-                AddGuanzhongBattlefieldCell(cells, edge.toQ, edge.toR);
-            }
+            foreach (EnvironmentBattlefieldCell cell in environmentProfile.battlefieldCells)
+                AddGuanzhongBattlefieldCell(cells, cell.q, cell.r);
             if (cells.Count == 0)
                 throw new InvalidOperationException("Guanzhong battlefield requires environment edge endpoints.");
 
@@ -409,6 +420,7 @@ namespace TianZhang.Editor
 
             var battlefield = new GameObject("GuanzhongBattlefield");
             GameObject tilePrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.TilePrefabPath);
+            GameObject stairPrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.StairPrefabPath);
             foreach (Vector2Int coord in cells)
             {
                 var cell = (GameObject)PrefabUtility.InstantiatePrefab(tilePrefab);
@@ -416,6 +428,16 @@ namespace TianZhang.Editor
                 cell.transform.SetParent(battlefield.transform, false);
                 cell.transform.localPosition = HexToWorld(coord.x, coord.y, HeightForLevel(0));
                 PrefabUtility.RecordPrefabInstancePropertyModifications(cell.transform);
+
+                EnvironmentBattlefieldCell definition = Array.Find(
+                    environmentProfile.battlefieldCells,
+                    item => item.q == coord.x && item.r == coord.y);
+                if (definition.blocksGroundMove)
+                {
+                    var obstacle = (GameObject)PrefabUtility.InstantiatePrefab(stairPrefab);
+                    obstacle.name = "GuanzhongObstacle_" + coord.x + "_" + coord.y;
+                    obstacle.transform.SetParent(cell.transform, false);
+                }
             }
             return battlefield;
         }

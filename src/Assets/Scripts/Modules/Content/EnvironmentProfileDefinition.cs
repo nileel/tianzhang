@@ -32,6 +32,15 @@ namespace TianZhang.Content
     }
 
     [Serializable]
+    public struct EnvironmentBattlefieldCell
+    {
+        public int q;
+        public int r;
+        public bool blocksGroundMove;
+        public bool blocksLineOfSight;
+    }
+
+    [Serializable]
     public struct EnvironmentPhenomenonChannelData
     {
         public EnvironmentPhenomenonChannel channel;
@@ -54,6 +63,8 @@ namespace TianZhang.Content
         public const string ProfileIdNotConfigured = "environment_profile_id_not_configured";
         public const string QueryLimitsNotConfigured = "query_limits_not_configured";
         public const string DirectedEdgesNotConfigured = "directed_edges_not_configured";
+        public const string BattlefieldCellsNotConfigured = "battlefield_cells_not_configured";
+        public const string DuplicateBattlefieldCell = "duplicate_battlefield_cell";
         public const string SurfacePrototypesNotConfigured = "surface_prototypes_not_configured";
         public const string SurfacePrototypeNotConfigured = "surface_prototype_not_configured";
         public const string PhenomenonChannelsNotConfigured = "phenomenon_channels_not_configured";
@@ -177,7 +188,6 @@ namespace TianZhang.Content
                 return Fail(EnvironmentRuntimeReasons.QueryLimitsNotConfigured, out reason);
             if (profile.directedEdges == null || profile.directedEdges.Length == 0)
                 return Fail(EnvironmentRuntimeReasons.DirectedEdgesNotConfigured, out reason);
-
             if (!TryCopyUniqueRefs(
                     profile.surfacePrototypeRefs,
                     EnvironmentRuntimeReasons.SurfacePrototypesNotConfigured,
@@ -382,6 +392,7 @@ namespace TianZhang.Content
         public string profileId;
         public int unitsPerRange;
         public int maxQueryRange;
+        public EnvironmentBattlefieldCell[] battlefieldCells;
         public EnvironmentDirectedEdge[] directedEdges;
         public string[] surfacePrototypeRefs;
         public EnvironmentPhenomenonChannelData[] phenomenonChannels;

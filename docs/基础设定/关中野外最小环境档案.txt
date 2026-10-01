@@ -10,23 +10,21 @@
 | 绑定冒险 | `guanzhong_wild`（`AdventureSceneController` 单入口） |
 | 数据源 | `src/Assets/DataConfig/EnvironmentProfiles.csv` — 唯一行 |
 | 运行时 asset | `src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` |
-| 契约 | 六字段：`profileId`、`directedEdges`、`surfacePrototypeRefs`、`phenomenonChannels`、`phenomenonPairs`、`elementRelationRefs` |
+| 契约 | 七字段：`profileId`、`queryLimits`、`battlefieldCells`、`surfacePrototypeRefs`、`phenomenonChannels`、`phenomenonPairs`、`elementRelationRefs`；导入器从格位确定性生成 asset 的 `directedEdges` |
 | 后续绑定 | 由 `U-2_5D-01D` 的 `SpatialQueryBoardFactory` 从正式 `AdventureScene` 显式读取本档案后，迁移旧战斗范围分支 |
 
 ## 契约字段与规则回链
 
-### 1. `directedEdges` — 有向相邻边（六条）
+### 1. `queryLimits` 与 `battlefieldCells` — 战场格位唯一输入
 
-| 边（fromQ:fromR → toQ:toR） | 规则依据 |
-|----|----|
-| `-1:0>0:0` | `docs/基础设定/战场空间与环境规则.txt#一、六角拓扑与加权距离` — 拓扑相邻、加权距离 1 的有向连接 |
-| `0:0>1:0` | 同上 |
-| `1:0>1:-1` | 同上 |
-| `0:0>0:1` | 同上 |
-| `0:1>-1:1` | 同上 |
-| `-1:0>-1:1` | 同上 |
+`queryLimits` 固定为 `unitsPerRange=2;maxQueryRange=16`。`battlefieldCells` 是正式战场唯一手工地图输入，每项为 `q:r@blocksGroundMove@blocksLineOfSight`；坐标按 q、再 r 升序，6×6 轴坐标平行四边形共 36 格。
 
-每条边均通过 `AreTopologicalNeighbors` 验证（`(abs(dq)+abs(dr)+abs(dq+dr))/2 = 1`），无重复有向边。
+| 类型 | 坐标 | 移动 | 视线 |
+|----|------|------|------|
+| 不可通行 | `(2,1)`、`(3,1)`、`(2,4)`、`(3,4)` | `blocksGroundMove=1` | `blocksLineOfSight=0` |
+| 其余 32 格 | `{ (q,r) | q∈[0,5] 且 r∈[0,5] }` 中非障碍格 | `blocksGroundMove=0` | `blocksLineOfSight=0` |
+
+导入器校验格位非空、坐标唯一、排序和二值标记，随后按六角相邻关系确定性生成 85 条无向、170 条有向 `directedEdges`。边不是第二份手工地图；每条边的加权距离为 `unitsPerRange=2`，允许移动与效果查询。障碍格保留在边图中，但由格型阻止地面进入与落点，不阻挡视线。
 
 ### 2. `surfacePrototypeRefs` — 地表原型引用（两项）
 
@@ -79,8 +77,8 @@
 
 - 正式 `AdventureScene` 的唯一入口 ID 为 `guanzhong_wild`（`AdventureSceneController.GuanzhongWildAdventureId`）。
 - 本档案 `profileId = env_guanzhong_wild` 即该入口的环境配置。
-- `U-2_5D-01D` 实施时，`SpatialQueryBoardFactory` 按 `AdventureSceneController.CurrentAdventureId` 加载本档案，无需默认档案或兼容分支。
-- 在 `U-2_5D-01D` 显式绑定前，本档案仅作为 CSV 行与 asset 存在，不修改任何运行时代码或场景绑定。
+- `CombatEntryAdapter` 从本档案的 `battlefieldCells` 投影 `TacticalTileData`；`SpatialQueryBoardFactory` 消费同一 asset 中的确定性边，`AdventureSceneBuilder` 也从同一格位生成显示地块。
+- `(0,0)` 与 `(1,0)` 分别为玩家与石甲兽起点，均为可通行且相邻的正式格；四个障碍在对应 tile 下复用 `Stair.prefab` 作为纯显示，不承担阻挡逻辑。
 
 ## 不包含的内容
 

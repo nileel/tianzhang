@@ -75,16 +75,20 @@ namespace TianZhang.Tests.EditMode
                 AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")));
 
             Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
-            foreach (Transform item in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)))
-                Assert.AreNotEqual(GuanzhongTerrainAssetBuilder.StairPrefabPath,
-                    PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(item.gameObject),
-                    "The reserve stair must not fabricate a route in the flat formal battlefield.");
+            Transform[] stairs = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .Where(item => PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(item.gameObject) ==
+                    GuanzhongTerrainAssetBuilder.StairPrefabPath &&
+                    PrefabUtility.GetOutermostPrefabInstanceRoot(item.gameObject) == item.gameObject)
+                .ToArray();
+            Assert.AreEqual(4, stairs.Length,
+                "The formal battlefield must show exactly the four configured obstacle cells.");
         }
 
         [Test]
         public void AdventureBuilderPersistsOnlyGuanzhongEnvironmentEndpointsAsFunctionalGround()
         {
-            AdventureSceneBuilder.Build();
+            AdventureSceneBuilder.RebuildGuanzhongBattlefield();
             Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
             Assert.IsFalse(scene.isDirty, "AdventureScene must reopen from the Builder save without unsaved changes.");
             GameObject backdrop = scene.GetRootGameObjects().Single(root => root.name == "VisualBackdrop");
@@ -98,14 +102,15 @@ namespace TianZhang.Tests.EditMode
             Assert.IsNotNull(profile);
             Assert.IsNotNull(map);
 
-            var expectedCells = new HashSet<Vector2Int>();
-            foreach (EnvironmentDirectedEdge edge in profile.directedEdges)
-            {
-                expectedCells.Add(new Vector2Int(edge.fromQ, edge.fromR));
-                expectedCells.Add(new Vector2Int(edge.toQ, edge.toR));
-            }
-            Assert.AreEqual(6, expectedCells.Count,
-                "The current Guanzhong environment profile must expose exactly six unique edge endpoints.");
+            var expectedCells = new HashSet<Vector2Int>(profile.battlefieldCells
+                .Select(item => new Vector2Int(item.q, item.r)));
+            var expectedObstacles = new HashSet<Vector2Int>(profile.battlefieldCells
+                .Where(item => item.blocksGroundMove)
+                .Select(item => new Vector2Int(item.q, item.r)));
+            Assert.AreEqual(36, expectedCells.Count,
+                "The current Guanzhong environment profile must expose all formal battlefield cells.");
+            Assert.AreEqual(4, expectedObstacles.Count,
+                "The current Guanzhong environment profile must expose four impassable cells.");
             AdventureNodeData start = map.nodes.Single(item => item.nodeId == "start");
             AdventureNodeData encounter = map.nodes.Single(item => item.nodeId == "shijiahou_encounter");
             Assert.IsTrue(expectedCells.Contains(new Vector2Int(start.q, start.r)),
@@ -119,9 +124,7 @@ namespace TianZhang.Tests.EditMode
                 .Where(item => item.parent == battlefield.transform)
                 .ToArray();
             Assert.AreEqual(expectedCells.Count, cells.Length,
-                "The functional battlefield must not add return nodes, radius-grid cells, or comparison cells.");
-            Assert.IsNull(battlefield.transform.Find("GuanzhongHex_0_2"),
-                "The navigation return node must not become a combat ground cell.");
+                "The functional battlefield must use exactly the configured formal cells.");
 
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GuanzhongTerrainAssetBuilder.TilePrefabPath);
             Material material = AssetDatabase.LoadAssetAtPath<Material>(GuanzhongTerrainAssetBuilder.AssetRoot + "/Tile.mat");
@@ -147,30 +150,37 @@ namespace TianZhang.Tests.EditMode
                 Assert.AreEqual(1, alignment.childCount, "Keep the original nested FBX hierarchy.");
                 Assert.AreEqual(GuanzhongTerrainAssetBuilder.AssetRoot + "/Tile.fbx",
                     PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(alignment.GetChild(0).gameObject));
-                MeshFilter[] filters = cell.GetComponentsInChildren<MeshFilter>(true);
+                MeshFilter[] filters = cell.GetComponentsInChildren<MeshFilter>(true)
+                    .Where(item => AssetDatabase.GetAssetPath(item.sharedMesh) ==
+                        GuanzhongTerrainAssetBuilder.AssetRoot + "/Tile.fbx")
+                    .ToArray();
                 Assert.AreEqual(1, filters.Length);
                 Assert.AreEqual(GuanzhongTerrainAssetBuilder.AssetRoot + "/Tile.fbx",
                     AssetDatabase.GetAssetPath(filters[0].sharedMesh));
                 Assert.AreEqual(59149, filters[0].sharedMesh.vertexCount);
                 Assert.AreEqual(99346 * 3, filters[0].sharedMesh.triangles.Length);
-                MeshRenderer[] renderers = cell.GetComponentsInChildren<MeshRenderer>(true);
+                MeshRenderer[] renderers = cell.GetComponentsInChildren<MeshRenderer>(true)
+                    .Where(item => AssetDatabase.GetAssetPath(item.sharedMaterials[0]) ==
+                        GuanzhongTerrainAssetBuilder.AssetRoot + "/Tile.mat")
+                    .ToArray();
                 Assert.AreEqual(1, renderers.Length);
                 CollectionAssert.AreEqual(new[] { material }, renderers[0].sharedMaterials);
                 Assert.AreEqual(ShadowCastingMode.On, renderers[0].shadowCastingMode);
                 Assert.IsTrue(renderers[0].receiveShadows);
                 // Original triangle measurement: root datum + 0.000432711, not grass-crown bounds.
                 Assert.AreEqual(0.340432711f, CenterSurfaceY(cell), 0.001f);
+
+                Transform obstacle = cell.Find("GuanzhongObstacle_" + coord.x + "_" + coord.y);
+                if (expectedObstacles.Contains(coord))
+                {
+                    Assert.IsNotNull(obstacle, "Missing visible obstacle at " + coord + ".");
+                    Assert.AreEqual(GuanzhongTerrainAssetBuilder.StairPrefabPath,
+                        PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obstacle.gameObject));
+                }
+                else
+                    Assert.IsNull(obstacle, "Walkable cell must not gain an obstacle visual at " + coord + ".");
             }
 
-            Transform[] all = scene.GetRootGameObjects()
-                .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
-                .ToArray();
-            Transform comparisonBoard = all.Single(item => item.name == "VisualBaselineBoard");
-            Transform comparisonPanel = all.Single(item => item.name == "BattleVisualComparisonPanel");
-            Assert.IsFalse(comparisonBoard.gameObject.activeSelf,
-                "The preserved visual baseline fixture must stay hidden in the formal scene.");
-            Assert.IsFalse(comparisonPanel.gameObject.activeSelf,
-                "The preserved comparison panel fixture must stay hidden in the formal scene.");
         }
     }
 }

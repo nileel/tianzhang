@@ -1,0 +1,95 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-MAP-01",
+  "title": "关中扩展战场与不可通行格型接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：已将36格关中战场和4个不挡视线的不可通行格接入CSV、asset、逻辑格与正式场景；同源EditMode验证通过。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/EnvironmentProfiles.csv",
+    "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
+    "src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/EnvironmentProfileAsset.cs",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "docs/基础设定/关中野外最小环境档案.txt",
+    "UNITY_STRUCTURE.runtime.md",
+    "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs",
+    "tools/check-data-chain.ps1",
+    "src/Assets/DataConfig/EnvironmentProfiles.csv.meta",
+    "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset.meta",
+    "src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/EnvironmentProfileAsset.cs.meta",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs.meta",
+    "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-MAP-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-MAP-01 · 关中扩展战场与不可通行格型接入
+
+## 来源与当前边界
+
+- 本卡消费 `docs/superpowers/specs/2026-10-01-guanzhong-board-obstacles.md` 的36格、四障碍、起点、邻接与唯一数据映射合同。
+- 只交付关中扩展战场与不可通行格型接入；下游 `U-GZ-PLAYTEST-MOVE-RULE-01` 与 `V-GZ-PLAYTEST-FLOW-01` 的具名前置引用保留，待正式结果进入master后再由QueueMaintenance处理。
+
+## 必查范围
+
+- `src/Assets/Scripts/Editor/AdventureSceneBuilder.cs`、`CombatEntryAdapter.cs`、`SpatialQueryBoardFactory.cs`，以及关中战场合同、CSV、asset和直接EditMode验证入口。
+
+## 实施范围
+
+- CSV→环境asset→逻辑格／空间查询→正式显示地块的单一映射；不修改移动行动阶段或敌人数值。
+
+## 禁止项
+
+- 不扩展其他地区、相机、角色表现、全局UI或自动化机制；不新增美术资源或meta。
+
+## 完成交付
+
+- `EnvironmentProfiles.csv.battlefieldCells` 成为关中6×6共36格的唯一手工地图输入；导入器校验格位并确定性生成85条无向、170条有向边。
+- `(2,1)`、`(3,1)`、`(2,4)`、`(3,4)` 投影为 `TacticalTileData.Obstacle`：禁止地面移动与落点、不禁止飞行、不阻挡视线、不是实体障碍；玩家/敌人仍从 `(0,0)`／`(1,0)` 邻接部署。
+- `CombatEntryAdapter`、`SpatialQueryBoardFactory` 和 `AdventureSceneBuilder` 共同消费同一环境 asset；取消原半径12逻辑格与由边端点推断显示格的两份地图。
+- 正式 `AdventureScene` 保存36个 `GuanzhongHex` 地块，四个配置障碍在对应 tile 下复用 `Stair.prefab`，不新增美术资源或meta。
+- 新增局部重建入口 `AdventureSceneBuilder.RebuildGuanzhongBattlefield`，只替换正式场景的 `GuanzhongBattlefield` 根，避免地图重建覆盖现有UI或比较fixture。
+
+## 验证
+
+- `EnvironmentProfileDataTests`：10/10通过，覆盖CSV/asset同步、36格、4障碍、170有向边和双向邻接。
+- `GuanzhongBattlefieldBaselineEditorTests`：2/2通过，覆盖局部Builder保存重开、36个显示地块与四个Stair障碍。
+- `GuanzhongFormalEndToEndTests`：6/6通过，证明正式入口仍可创建会话与完成流程。
+- `tools/check-data-chain.ps1` 与 `tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理` 通过；全量EditMode仍有与本卡无关的既存美术源/VisualBaseline失败，正式PlayMode类测试亦有既存按钮颜色断言失败。
+
+## 完成条件
+
+- 36格、4障碍、170有向边和同源逻辑／显示链均已落地并由局部Unity测试验证；最终用户重测仍由 `V-GZ-ART-SLICE-01` 负责。
+
+## 模型协作
+
+- 简单：合同、所有者和验证已冻结，实施面为唯一CSV→asset→逻辑/Builder链；当前原生只读辅助工具不支持卡中建议的模型覆盖。沿用入口默认单模型，未执行辅助调用。
+
+## 停止条件
+
+- 本轮无停止条件触发；若后续需改变移动规则、额外场景所有者或扩大地图语义，应新建有界任务而非在本卡叠加。
