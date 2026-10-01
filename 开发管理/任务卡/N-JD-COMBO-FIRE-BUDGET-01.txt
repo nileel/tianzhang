@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-01：U-JD-COMBO-FIRE-SCENE-01 已在完成归档中确认交付同版本控制器、Builder、场景及直接 EditMode/PlayMode 运行证据。本卡的唯一具名前置已解除；既有路径、独立复验范围、验证、完成条件与停止条件完整，现可入队执行。",
+  "stateReason": "2026-10-01：用户正在修改金丹设定，明确要求本卡暂时 blocked，待其完成修改后再继续。保留未集成候选与原工作区作为证据，解除旧自动运行占用，不阻塞其他无依赖任务。用户确认修改完成且当前规则、验证输入与路径冲突重新核对后，才可转 ready；不得仅因 U 前置已完成或工作区变干净而自动解阻塞。",
   "expectedPaths": [
     "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt",
     "docs/基础设定/设定事实速查.txt",
@@ -28,7 +28,14 @@
 ## 来源与当前边界
 
 - `D-JD-COMBO-FIRE-UNITY-01` 已冻结唯一允许的场景切片：非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE`，由 `JindanFireFerryLineScenarioController` 处理单项 source→走火→`END`。它不是正式组合、金丹装配、生产配置或角色数值平衡。
-- `U-JD-COMBO-FIRE-SCENE-01` 已完成归档，确认交付同版本的控制器、Builder、场景以及直接 EditMode/PlayMode 运行证据。本卡现在只对这些现有输入独立复验并记录费用／容量事实；若执行时输入、运行证据或场景隔离无法复现，记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
+- `U-JD-COMBO-FIRE-SCENE-01` 已完成归档，确认交付同版本的控制器、Builder、场景以及直接 EditMode/PlayMode 运行证据。本卡恢复执行后只对这些现有输入独立复验并记录费用／容量事实；若执行时输入、运行证据或场景隔离无法复现，记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
+
+## 用户阻塞与保留证据（2026-10-01）
+
+- 用户正在修改金丹设定，要求暂缓本卡，修改完成后再继续；这是内容尚未冻结的明确阻塞，`blockedBy=[]` 不表示可执行。其他无依赖任务继续按原队列调度。
+- 原 run：`73e3e299-6fbe-446e-9c8d-1a1c053a8ebe`；base：`7e6dfff4dfea21490131943998879398da90d725`；candidate：`78d03afa0491b6683203983e9c68cf7fabed3783`。原分支 `codex/automation/codex/73e3e299-6fbe-446e-9c8d-1a1c053a8ebe/candidate` 与 `.worktrees/automation/73e3e299-6fbe-446e-9c8d-1a1c053a8ebe/codex` 保留，不清理、不直接合并。
+- 原 candidate 已形成验证记录；正式集成因 `hourly_main_path_conflict` 停止：`docs/基础设定/设定事实速查.txt` 的人工更名与候选新增指针涉及同一路径。候选不是正式完成事实，不据此解锁下游。
+- 用户确认金丹设定修改完成后，先对照最新正式事实核对本卡范围、fixture 输入、已有验证证据有效性及路径冲突，再按现有规则转 ready、新建 run；只补充因输入变化而必要的验证，不恢复旧模型会话，不机械重放旧候选中的任务归档或队列。
 
 ## 必查范围
 

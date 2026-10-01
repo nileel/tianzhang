@@ -77,7 +77,7 @@
 | D-GZ-PLAYTEST-SPELLS-01 | P1 | codex | 已排队 | — | 关中初始两术法选择与获得装配合同 | 开发管理/任务卡/D-GZ-PLAYTEST-SPELLS-01.txt |
 | U-GZ-PLAYTEST-SPELLS-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-SPELLS-01 | 两术法从建角装配到正式施法完整接入 | 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt |
 | V-GZ-PLAYTEST-FLOW-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-MAP-01、U-GZ-PLAYTEST-CAMERA-01、U-GZ-PLAYTEST-BASE-FIT-01、U-GZ-PLAYTEST-TIMELINE-01、U-GZ-PLAYTEST-HP-01、U-GZ-PLAYTEST-MOVE-UI-01、U-GZ-PLAYTEST-SPELLS-01、N-GZ-PLAYTEST-BALANCE-01 | 关中修复后可玩流程独立复验 | 开发管理/任务卡/V-GZ-PLAYTEST-FLOW-01.txt |
-| N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 已排队 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
+| N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | V-GZ-PLAYTEST-FLOW-01、U-GZ-BASE-MODELS-01 | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
 | A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01 | P1 | codex | 阻塞 | — | 正式玩家静态3D战斗棋子资产生产与批准 | 开发管理/任务卡/A-CHAR-BATTLE-STATIC3D-PLAYER-ASSET-01.txt |
