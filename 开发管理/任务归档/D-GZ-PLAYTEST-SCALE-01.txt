@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-PLAYTEST-SCALE-01",
+  "title": "正式棋子尺寸与石甲兽百倍缩放诊断",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "discovery",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：正式 Profile、provider 动作层、地块支撑面及百倍单位换算已量化并归档；U-GZ-PLAYTEST-SCALE-01 已具备唯一实现路径，底座 0.25 的语义仍按直接子卡停止条件保留。",
+  "expectedPaths": [
+    "开发管理/关中棋子尺寸与落地诊断记录.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-PLAYTEST-SCALE-01.txt",
+    "开发管理/任务归档/D-GZ-PLAYTEST-SCALE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-GZ-PLAYTEST-SCALE-01 · 正式棋子尺寸与石甲兽百倍缩放诊断
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡仅完成正式棋子尺寸与石甲兽百倍缩放诊断，不代替下游实现或最终用户验收。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md`
+- `src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs`
+- `src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs`
+- `开发管理/石甲兽v2静态3D清理QA记录.txt`
+- 两个正式 Prefab/importer、Adventure provider 接线、关中 tile Builder 和直接 PlayMode grounding 入口。
+
+## 实施范围
+
+- 量化冻结 FBX、importer、Prefab、provider、body/root/base 和地块三角面支撑坐标；只准备既有直接子卡 U-GZ-PLAYTEST-SCALE-01、U-GZ-PLAYTEST-BASE-FIT-01。
+
+## 禁止项
+
+- 不修改 FBX/importer/Prefab/Provider/场景，不扩大到其他地区、动画骨骼、全局 UI 或自动化。
+- 不把静态证据、fixture 或 Editor 预览伪称为正式 Game View 验收；不在未量化时叠加 scale/offset。
+
+## 模型协作
+
+- 复杂度复核为单一所有者的有界诊断。卡中建议的 `gpt-6.1-sol/high` 在当前原生只读辅助工具中不可用，未执行辅助调用；入口主模型 `gpt-5.6-terra` 统一核对，未将模型名当调用证明。
+
+## 验证
+
+- 文档中的完整量化、所有者链、双资产 100 单位换算、动作 scale writer 与 `CenterSurfaceY` 依据见 `开发管理/关中棋子尺寸与落地诊断记录.txt`。
+- 本卡无业务代码或资产变化，不无目的运行 Unity/BattleSim；下游实现仍须取得同版本 Game View 和运行数值。
+
+## 完成条件
+
+- 已确认石甲兽没有额外 100 倍实例缩放证据；1.4 只可稳定写入 Provider 的 body；动作 root 的复位不会抹除该倍率。
+- U-GZ-PLAYTEST-SCALE-01 已具备完整可执行路径并进入 ready；base 的 0.25 参照物不明，保留 blocked 而不猜测。
+
+## 停止条件
+
+- 若需改变其他所有者、FBX、导入器、付费资源，或仍无法确定底座 0.25 的参照，停止并记录事实，不连续叠加补丁。
+
+## 完成结论
+
+- 正式 Profile 的导入 bounds、root/body 缩放、动作复位层、底座世界坐标和 tile 中心三角面已量化；下游比例卡可只改 body，底座卡仍须负责人澄清 0.25 的几何语义。

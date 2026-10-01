@@ -8,16 +8,12 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-PLAYTEST-SCALE-01"
-  ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：D-GZ-PLAYTEST-SCALE-01 已冻结唯一持久显示层为 Provider 在 Spawn 中创建的 body；正式 FBX/importer/Prefab 不改，root 继续专属动作倍率。现有代码与既有 PlayMode 测试路径完整，已重新预检后可执行。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
-    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
-    "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs.meta",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt",
@@ -49,7 +45,8 @@
 
 ## 实施范围
 
-- 依照实测尺度合同修正两个模型的唯一持久显示层，最终世界可见尺寸为用户反馈基准的1.4倍；地块尺寸不变。只有诊断证明重复单位换算才修复该处，不能删除合法FBX内部100换算；不盲目统一所有Transform=1.4。
+- 只在 `Static3DCombatUnitPresentationProvider.Spawn` 实例化后的 body 写入 `(1.4,1.4,1.4)`，使两正式 Prefab 的脚底继续位于 `GroundY=0.34`；`PresentedUnit.Root` 保留为动作临时倍率层，idle/移动/攻击恢复回 `(1,1,1)` 不得抹掉 body 倍率。地块、FBX、importer、Prefab、ProfileSet 和材质/GUID均不变。
+- 以既有 `Static3DCombatUnitPresentationProviderPlayModeTests` 增补直接断言：两个 profile 的 body idle/end `lossyScale=(1.4,1.4,1.4)`、root idle/end `lossyScale=(1,1,1)`、攻击瞬间 root 动作倍率与 body 1.4 相乘、六向 yaw 保持既有 Profile 合同；不为此新增或修改 `.meta`。
 
 ## 禁止项
 
@@ -64,7 +61,7 @@
 
 ## 验证
 
-- 两角色在六向、idle/移动/攻击/受击复位后尺度不丢失；FBX/材质/GUID不替换，直接provider/导入测试及PlayMode测量。
+- 两角色在六向、idle/移动/攻击/受击复位后尺度不丢失；FBX/材质/GUID不替换，直接provider PlayMode 测量和正式 Game View/运行数值同时核验。运行数值以 body/root local/lossyScale、renderer bounds、脚底和 `CenterSurfaceY` 记录，不将 grass renderer bounds.max 当支撑面。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 

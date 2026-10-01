@@ -12,12 +12,10 @@
   "blockedBy": [
     "U-GZ-PLAYTEST-SCALE-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-01：D-GZ-PLAYTEST-SCALE-01 已冻结 root/body/base 坐标合同；本卡仍等待 U-GZ-PLAYTEST-SCALE-01 的实际体型倍率验证，且用户“上抬0.25”没有指定 Cylinder 中心、顶面或脚底/地表参照，不能猜测后转ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
-    "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs.meta",
-    "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs.meta",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt",
@@ -49,7 +47,8 @@
 
 ## 实施范围
 
-- 以冻结基准将现有底座厚度减半，并将底座支撑位置按用户实测上抬0.25世界单位；若父级换算后有差异，以已记录同一基准计算，不重复叠加偏移。修正脚底、底座顶面与地块实体表面的关系；不等新Tripo模型，保留当前通用几何暂用。
+- 冻结现有 Cylinder 基准：root `Y=0.34`、base local center `-0.04`、`scale.y=0.08`，故世界厚度 `0.16`、中心/下/上表面 `0.30/0.22/0.38`，脚底与 tile 中心三角面均为 `0.34`。厚度减半唯一对应 `scale.y=0.04`、世界厚度 `0.08`；body 的 1.4 倍不得传给 base。
+- 在 U-GZ-PLAYTEST-SCALE-01 完成后的真实 Game View/运行数值中，由负责人明确“上抬0.25”的参照后才写 Provider：若指 Cylinder 中心，目标为 `0.55`、下/上为 `0.51/0.59`，脚底会低于底座 `0.17`；若要求下表面贴住 `CenterSurfaceY=0.34`，目标中心/上表面为 `0.38/0.42`，相对旧中心只上抬 `0.08`。二者不可同时成立，不得擅选或叠加偏移。
 
 ## 禁止项
 

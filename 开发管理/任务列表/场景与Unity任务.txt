@@ -25,6 +25,8 @@
 
 ## 当前事实
 
+- 2026-10-01：D-GZ-PLAYTEST-SCALE-01 已完成归档。正式 Profile、provider 动作层和关中格中心三角面已量化：石甲兽 FBX 内部 100 为合法单位换算，不存在已证实的实例额外百倍放大；两个角色的唯一持久 1.4 倍层冻结为 Provider 新建 body，root 继续只承载动作倍率。U-GZ-PLAYTEST-SCALE-01 已重新准备为 ready；U-GZ-PLAYTEST-BASE-FIT-01 仍等待比例实测，且“上抬0.25”参照物不明，不能擅改为落地或悬空。证据见 `开发管理/关中棋子尺寸与落地诊断记录.txt`。
+
 - 2026-09-28：A-GZ-UI-CITY-ASSET-01 与 U-GZ-ART-UI-01 均已手动完成归档。关中城／悬赏及 Adventure／Combat HUD 已接入批准图集、字体、背景和头像；1920×1080 连续流程、15 项 EditMode 检查、动态节点／长日志与保存恢复通过，source/manifest.json 已回传主工作区且哈希一致。证据见 开发管理/关中首场城镇与界面美术验收记录.txt。V-GZ-ART-SLICE-01 仍等待正式角色接线和反馈，之后由用户本人实际跑测接受整段品质；此前带日期条目保留当时事实。
 
 - 2026-09-29：U-GZ-ART-FEEDBACK-01 已完成归档。五条共享 PCM cue、一个有限粒子 Prefab/材质和双正式 profile 的强度／复位时长配置已由现有 Builder 保存、回读并通过定向 PlayMode、数据链和程序集边界检查；source 与 Unity WAV 哈希一致且无外部费用。正式 Adventure 全流程回归仍在既有 Adventure 节点颜色断言处提前失败，未修改范围外 UI 掩盖；V-GZ-ART-SLICE-01 的具名前置已解除，但仍等待用户本人在同版本正式入口实测并明确接受整体品质。
@@ -61,8 +63,7 @@
 | D-GZ-PLAYTEST-MAP-01 | P1 | codex | 已排队 | — | 关中三十格以上战场与障碍格合同 | 开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt |
 | U-GZ-PLAYTEST-MAP-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-MAP-01 | 关中扩展战场与不可通行格型接入 | 开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt |
 | U-GZ-PLAYTEST-CAMERA-01 | P1 | codex | 已排队 | — | 关中战棋相机近景与平移操作 | 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt |
-| D-GZ-PLAYTEST-SCALE-01 | P1 | codex | 已排队 | — | 正式棋子尺寸与石甲兽百倍缩放诊断 | 开发管理/任务卡/D-GZ-PLAYTEST-SCALE-01.txt |
-| U-GZ-PLAYTEST-SCALE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-SCALE-01 | 正式双棋子视觉比例修正到现状一点四倍 | 开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt |
+| U-GZ-PLAYTEST-SCALE-01 | P1 | codex | 已排队 | — | 正式双棋子视觉比例修正到现状一点四倍 | 开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt |
 | U-GZ-PLAYTEST-BASE-FIT-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-SCALE-01 | 现有棋子底座减薄与地面接触修正 | 开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt |
 | D-GZ-BASE-MODELS-01 | P1 | codex | 已排队 | — | 两个通用棋子底座造型与生产方案 | 开发管理/任务卡/D-GZ-BASE-MODELS-01.txt |
 | A-GZ-BASE-MODEL-01 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第1款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-01.txt |

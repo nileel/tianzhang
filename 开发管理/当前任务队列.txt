@@ -5,7 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-GZ-PLAYTEST-SCALE-01 | codex_execute | codex | P1 | unity | discovery | 正式棋子尺寸与石甲兽百倍缩放诊断 | 开发管理/任务卡/D-GZ-PLAYTEST-SCALE-01.txt |
+| U-GZ-PLAYTEST-SCALE-01 | codex_execute | codex | P1 | unity | implementation | 正式双棋子视觉比例修正到现状一点四倍 | 开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt |
 | D-GZ-PLAYTEST-MAP-01 | codex_execute | codex | P1 | unity | design | 关中三十格以上战场与障碍格合同 | 开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt |
 | D-GZ-PLAYTEST-MOVE-01 | codex_execute | codex | P1 | unity | design | 战棋移动操作与行动阶段方案 | 开发管理/任务卡/D-GZ-PLAYTEST-MOVE-01.txt |
 | D-GZ-BASE-MODELS-01 | codex_execute | codex | P1 | unity | design | 两个通用棋子底座造型与生产方案 | 开发管理/任务卡/D-GZ-BASE-MODELS-01.txt |

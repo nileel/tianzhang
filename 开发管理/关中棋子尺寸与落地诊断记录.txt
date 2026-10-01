@@ -1,0 +1,44 @@
+# 关中正式棋子尺寸与落地诊断
+
+任务：`D-GZ-PLAYTEST-SCALE-01`。本记录只冻结正式静态 3D 双棋子的尺寸和现有 Cylinder 底座坐标合同；没有修改导入器、FBX、Prefab、Provider 或场景，也没有把测试/静态检查伪称为用户流程的视觉验收。
+
+## 结论
+
+- 石甲兽没有已证实的额外百倍放大。其冻结 FBX 根的 `(100,100,100)` 是 FBX 单位换算；玩家 FBX 同样有该换算。两个 Unity importer 都启用 `useFileScale`、`bakeAxisConversion`，且 `globalScale=1`；两张正式 Prefab 外根、Provider 新建 root 和 Provider 新建 body 都是单位缩放。不能添加 `0.01` 补偿，也不应重导出资产。
+- 用户“相对当前可见模型 1.4 倍”的唯一持久层是 `Static3DCombatUnitPresentationProvider.Spawn` 所创建的 `body`（正式 Prefab 实例）。该 `body` 的 `localPosition=0`、`localRotation=identity`，应由 `U-GZ-PLAYTEST-SCALE-01` 设置为 `localScale=(1.4,1.4,1.4)`；不能改 importer、Prefab 根或动作 root。
+- Provider 的动作只写 `PresentedUnit.Root.localScale`：idle/移动/恢复都重置为 `1`，攻击/受击/施法只短暂写 `1.08/.94/1.04` 等动作倍率。因此 body 的 1.4 倍会在动作结束后保留；动作瞬间总倍率为 root 动作倍率乘 body `1.4`，不是第二个持久补偿层。
+- 底座“上抬 0.25”缺少参照物，不能唯一推导。它必须保留在 `U-GZ-PLAYTEST-BASE-FIT-01` 的停止条件内，直到负责人明确是“Cylinder 中心上抬”还是“底座与脚底/地表的支撑关系”。该卡在 `U-GZ-PLAYTEST-SCALE-01` 结束后仍不得仅凭这句文字开工。
+
+## 正式运行时所有者链
+
+`AdventureScene` 的唯一 `Static3DCombatUnitPresentationProvider` 引用 ProfileSet；`AdventureSceneInstaller` 将它传给 `EncounterCoordinator.Configure` 的 `ICombatUnitPresentationPort`。`Prepare` 调用 `Spawn`，生成 `Static3DCombatUnit_<combatantId>` root，再实例化 ProfileSet 指向的 `FormalPlayer_Static3D` 或 `Shijiahou_Static3D` body。唯一动作/复位写入者也是该 Provider 的 `Present`、`SetActionScale`、`RecoverRootScale` 和 `ResetRootScale`；没有第二个正式 2D carrier。`BattleAnimationSpriteCombatUnitPresentationAdapter` 仅属于测试实验场景。
+
+## 冻结尺寸量化
+
+| 项目 | 玩家 | 石甲兽 |
+|---|---:|---:|
+| Profile/Prefab | `combat_player_default_v1` / `FormalPlayer_Static3D` | `combat_enemy_shijiahou_v1` / `Shijiahou_Static3D` |
+| 导入 mesh bounds (X,Y,Z) | `0.35977040, 1.03000000, 0.28127500` | `0.45556642, 0.45654297, 0.99951172` |
+| body/root idle local 与 lossy scale | `(1,1,1)` / `(1,1,1)` | `(1,1,1)` / `(1,1,1)` |
+| body 持久 1.4 后 renderer 尺寸 (X,Y,Z) | `0.50367856, 1.44200000, 0.39378500` | `0.63779299, 0.63916016, 1.39931641` |
+| 脚底 idle world Y | `0.34000000` | `0.34000000` |
+
+两套 Profile 的批准 bounds 均从局部 `Y=0` 起算；Provider `HexToWorld` 的 `GroundY=0.34` 和正式关中格根的 `HeightForLevel(0)=0.34` 相同。body 只作以脚底为 pivot 的比例放大，所以 1.4 倍后的脚底仍是 `Y=0.34`。正式 tile 没有 Collider；支撑面是 `GuanzhongBasicAttackPlayModeTests.CenterSurfaceY` 按格中心投射的实际三角面，而非草冠或 renderer `bounds.max.y`。
+
+## 现有底座与待决定的 0.25
+
+Provider 的 `CreateFactionBase` 使用 Unity Cylinder，局部 `position=(0,-0.04,0)`、`scale=(0.62,0.08,0.62)`。Cylinder 原高为 2，故 idle/end 状态的世界高度为 `0.16`，中心为 `0.30`，下/上表面为 `0.22/0.38`；脚底及格中心支撑面均为 `0.34`，当前脚底在底座体积内 `0.04`。
+
+厚度减半唯一得到 `scale.y=0.04`、世界厚度 `0.08`。但“上抬 0.25”有两个不可等价的读法：
+
+- 若指 Cylinder 中心相对现状上抬，中心必须为 `0.55`，下/上表面为 `0.51/0.59`；脚底 `0.34` 会位于底座下表面以下 `0.17`，不能同时声称脚底接触底座或地表。
+- 若指缩薄后仍让底座下表面贴合格中心支撑面 `0.34`，中心应为 `0.38`、上表面 `0.42`；这是相对旧中心只上抬 `0.08`，不是字面 `0.25`。
+
+因此 `U-GZ-PLAYTEST-BASE-FIT-01` 必须在真实 Game View 和运行数值中记录六向、idle、移动结束、攻击恢复后的 base thickness、上下表面、脚底与 `CenterSurfaceY`；不得把草冠 bounds.max 作为支撑面，也不得同时叠加 root、body 和 base offset。
+
+## 本轮验证与边界
+
+- 已重新读取 Provider、ProfileSet、正式 ProfileSet asset、两张 Prefab 与 importer、`FormalStatic3DCombatPieceBuilder` 的完整相关单元、`AdventureSceneInstaller`/`EncounterCoordinator` 的直接接线、正式关中地块 Builder 和直接 PlayMode grounding/center-surface 测试。
+- 已核对旧石甲兽 QA：FBX root `(100,100,100)` 是冻结单位换算，资产局部 bounds 的 Y 为 `0..0.45654297`；现有正式 Profile QA 同时记录玩家正值均匀 `100` 单位换算与两张 Prefab 外根单位缩放。
+- 模型协作评估：这是边界明确的单一所有者诊断；卡中建议的 `gpt-6.1-sol/high` 在当前原生只读辅助工具中不可用，未执行辅助调用。主模型 `gpt-5.6-terra` 完成统一核对；未把提示词中的模型名当作调用证据。
+- 当前 owner worktree 的 Unity Editor 已以项目 `src/` 打开，但当前 Computer Use surface 没有暴露 native app 窗口，不能取得同版本 Game View。这里的数值为代码/资产/既有 PlayMode 入口的可复算合同，不是新的正式视觉验收；两个下游实现卡分别保留真实 Game View 和运行数值验证。
