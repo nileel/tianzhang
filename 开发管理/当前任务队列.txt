@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-GZ-PLAYTEST-MOVE-01 | codex_execute | codex | P1 | unity | design | 战棋移动操作与行动阶段方案 | 开发管理/任务卡/D-GZ-PLAYTEST-MOVE-01.txt |
 | D-GZ-BASE-MODELS-01 | codex_execute | codex | P1 | unity | design | 两个通用棋子底座造型与生产方案 | 开发管理/任务卡/D-GZ-BASE-MODELS-01.txt |
 | D-GZ-PLAYTEST-SPELLS-01 | codex_execute | codex | P1 | unity | design | 关中初始两术法选择与获得装配合同 | 开发管理/任务卡/D-GZ-PLAYTEST-SPELLS-01.txt |
 | D-GZ-PLAYTEST-UI-AUDIT-01 | codex_execute | codex | P1 | unity | discovery | 正式战斗UI逐项对照与缺口归属 | 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt |

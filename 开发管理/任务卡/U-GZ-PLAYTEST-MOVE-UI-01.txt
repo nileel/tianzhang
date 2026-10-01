@@ -14,7 +14,7 @@
     "U-GZ-PLAYTEST-CAMERA-01",
     "U-GZ-PLAYTEST-BASE-FIT-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-01：移动交互合同、现有输入/展示所有者和完整字面量路径已冻结；仍等待 U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-CAMERA-01 与 U-GZ-PLAYTEST-BASE-FIT-01 的正式结果，再由QueueMaintenance按实际投影准备ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
@@ -73,7 +73,8 @@
 
 ## 实施范围
 
-- 按批准方案接正式输入→权威可达查询→选格预览→确认命令→MovementPath事件→逐段根节点动画；可走/不可走/选中目标区分，鼠标悬停和取消不提交，UI遮挡时不误点格。输入锁和动作复位唯一，镜头平移后拾取不偏移，底座随棋子，不要求新骨骼资源。
+- 消费 `docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md` 与规则卡的权威阶段/完整MovementPath：CombatActionBarView/CombatCommandInput 进入选格、确认/取消与结束行动；CombatHudPresenter只把权威阶段映射为控件可用性。`CombatMovementView` 在Adventure中从同一权威 `FindReachable`/路径事件生成高光和预览；悬停、取消、空地、当前格、障碍、敌人和不可达格不提交，确认才走 `ICombatCommandHandler.RequestMove`。
+- EventSystem UI抢占、动画锁和当前相机拾取为唯一输入守卫；Static3DCombatUnitPresentationProvider按相邻完整路径逐段移动根节点、每段更新六向朝向、结束准确落格，body/底座随根节点且不新增骨骼或缩放补偿。Installer、Builder与AdventureScene只显式接线上述现有所有者。
 
 ## 禁止项
 
@@ -88,7 +89,7 @@
 
 ## 验证
 
-- 实际30格以上障碍场地中可操作绕行；高光集合与权威查询一致、超预算不可确认、动画不穿障碍、动作后位置/尺度正确；正式PlayMode与Game View。
+- `GuanzhongMovementPlayModeTests` 在正式36格四障碍场地覆盖绕行、高光集合与权威查询一致、超预算拒绝、UI抢占、取消、相机平移后拾取、动画锁、逐段不穿障碍和最终位置/朝向/尺度/底座随行；`Static3DCombatUnitPresentationProviderPlayModeTests` 量化根节点逐段位置和复位。两者均须取得正式Game View和运行数值。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 

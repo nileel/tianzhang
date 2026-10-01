@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-PLAYTEST-MOVE-01",
+  "title": "战棋移动操作与行动阶段方案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：已归档移动/行动阶段合同；直接子卡的实际路径、验证和停止边界已冻结。U-GZ-PLAYTEST-MOVE-RULE-01与U-GZ-PLAYTEST-MOVE-UI-01仍保留具名前置，待本结果正式进入master后由QueueMaintenance按事实处理。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md",
+    "开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-PLAYTEST-MOVE-01.txt",
+    "开发管理/任务归档/D-GZ-PLAYTEST-MOVE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-GZ-PLAYTEST-MOVE-01 · 战棋移动操作与行动阶段方案
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡只完成战棋移动操作与行动阶段方案，不代替下游实现或最终用户验收。
+- 交付为 `docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md`，并已准备两个已建立的直接子卡；未新增任务、代码、资源或自动化机制。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md`
+- `docs/基础设定/战斗系统.txt#第一章：行动轴 —— CTB 充能制`、`#第二章：六角格棋盘与移动`
+- `docs/基础设定/战场空间与环境规则.txt` 的空间查询、占格、阻挡和路径规则
+- `CombatCommandService.Execute`、`CombatSession.ValidateMove`、`CombatActionResolver.ResolveMove`、`EncounterCoordinator.RunCombat/ExecutePlayer/ProjectPresentation`、`CombatCommandInput` 与 `ICombatCommandHandler`。
+
+## 实施范围
+
+- 冻结移力与行动权分离、MoveThenAction/ActionThenMove/Finished状态、Wait、显式结束行动、相同Spatial查询、完整MovementPath、输入高光预览和根节点逐段动画合同。
+- 只准备 U-GZ-PLAYTEST-MOVE-RULE-01 与 U-GZ-PLAYTEST-MOVE-UI-01 的实际路径、验证和停止条件；具名前置引用不在candidate阶段移除。
+
+## 禁止项
+
+- 不改变六角拓扑、空间查询所有者、CTB阈值、攻击/术法数值、地图合同、底座几何、相机合同或任何其他地区。
+- 不新增移动模式、全局UI、骨骼动画、资源采购或自动化状态。
+
+## 模型协作
+
+- 复杂度复核：权威CTB规则与当前Move立即ConsumeAction/playerActed行为冲突，但独立问题面无法由当前原生只读辅助工具以卡中建议的 `gpt-6-astra/high` 或 `gpt-6.1-sol/high` 调用；未执行辅助调用。入口主模型 `gpt-5.6-terra` 直接交叉核对规则、空间查询及调用链，未把模型名称当调用证明。
+
+## 验证
+
+- 已核对 `CombatSession.ValidateMove` 同时返回完整路径/成本且在失败时不提交；`CombatActionResolver.ResolveMove` 只改终点；`CombatCommandService.Execute` 对Move错误调用 `ConsumeAction`；`EncounterCoordinator.ExecutePlayer` 对任意成功命令设置 `playerActed`；`ProjectPresentation` 丢弃MovementPath且Provider立即写终点。
+- 本卡只有规格和管理文本变化，未无目的运行Unity或BattleSim。下游须按合同运行定向EditMode/PlayMode、正式Game View和运行数值验证。
+- `U-GZ-PLAYTEST-MOVE-RULE-01` 现仍由本卡与已归档地图卡阻塞；`U-GZ-PLAYTEST-MOVE-UI-01` 仍由规则、相机和底座卡阻塞，未提前入队。
+
+## 完成条件
+
+- 已交付可审的唯一状态/命令/表现合同，并把下游字面量路径、验证与停止边界冻结；正式实现和用户重测仍分别由下游卡与 V-GZ-ART-SLICE-01 负责。
+
+## 停止条件
+
+- 若实施必须改变空间查询、地图、CTB权威规则、底座几何含义或无法取得必需正式运行证据，停止并回到对应有界任务，不叠加输入层补丁。
+
+## 完成结论
+
+- 成功移动不再被允许同时扣CT和结束回合：下游必须以同一Spatial路径扣移力、保留完整路径用于逐段表现，并在行动前后都允许合法移动；Wait仍按既有CT规则结束，行动后的显式结束只结算已产生的冷却。

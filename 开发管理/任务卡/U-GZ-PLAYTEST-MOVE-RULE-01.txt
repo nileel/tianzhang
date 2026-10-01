@@ -13,23 +13,27 @@
     "D-GZ-PLAYTEST-MOVE-01",
     "U-GZ-PLAYTEST-MAP-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-01：移动合同已冻结完整权威路径、阶段、命令和验证；仍等待 D-GZ-PLAYTEST-MOVE-01 正式结果及U-GZ-PLAYTEST-MAP-01前置同时进入master后，由QueueMaintenance按实际投影准备ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
     "src/Assets/Scripts/Combat/CombatActionResolver.cs",
     "src/Assets/Scripts/Combat/CombatCommand.cs",
+    "src/Assets/Scripts/Combat/CombatActionResult.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs.meta",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs.meta",
     "src/Assets/Scripts/Combat/CombatCommandService.cs.meta",
     "src/Assets/Scripts/Combat/CombatLegalActionService.cs.meta",
     "src/Assets/Scripts/Combat/CombatActionResolver.cs.meta",
     "src/Assets/Scripts/Combat/CombatCommand.cs.meta",
+    "src/Assets/Scripts/Combat/CombatActionResult.cs.meta",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs.meta",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs.meta",
@@ -67,7 +71,8 @@
 
 ## 实施范围
 
-- 只修复并暴露冻结移动合同的权威命令、移力账本、占格和行动阶段；路径从同一Spatial查询取得，失败不扣费/不移动，移动不错误结束整次行动，攻击/等待按现有规则结算CT。跨模块走既有GameplayContracts；不由输入层重算规则。
+- 消费 `docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md`：CombatantSnapshot 把构造移力保存为不可变 `MaximumMovePoints` 和可变当回合 `MovePoints`；CombatSession 在调度器交出存活单位时重置余额，并唯一持有 `MoveThenAction`、`ActionThenMove`、`Finished` 及每回合行动冷却。Move只从同一Spatial `QueryMovement` 消费返回成本、提交原始完整路径/终点/最终六向朝向，不结算CT；攻击、术法、神通与防御成功后进入 `ActionThenMove`，保留剩余移力；Wait保留既有50% CT并立即结束；新增 `EndTurn` 仅结束已消耗行动的回合并结算已记录冷却，绝不产生第二次行动或冷却。
+- 在 `CombatCommand`、`CombatActionResult`、`CombatPresentationContracts`、`ICombatCommandHandler` 和 `EncounterCoordinator` 传递明确结束与完整MovementPath；Coordinator只根据权威阶段结束协程等待，拒绝、重复、死亡和敌方回合不得改变移力/CT/阶段。`CombatLegalActionService` 与敌方策略继续消费相同命令边界；不在输入层重算规则，不接UI、场景或动画。
 
 ## 禁止项
 
@@ -82,7 +87,7 @@
 
 ## 验证
 
-- 不同路径成本、障碍/占格/边界、连续移动、移力耗尽、移动后攻击、等待、取消、重复命令/死亡与敌方行动的确定性测试；数值公式未改则不重复平衡矩阵。
+- `CombatRuntimeKernelTests` 定向覆盖不同路径成本、障碍/占格/边界、连续移动、移力耗尽、移动后攻击、攻击后移动、显式结束、Wait、重复命令、死亡与敌方行动；`GuanzhongBasicAttackPlayModeTests` 验证正式会话移动后仍能攻击。数值公式未改，不重复平衡矩阵。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 
