@@ -1,0 +1,72 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-PLAYTEST-MAP-01",
+  "title": "关中三十格以上战场与障碍格合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：已冻结36格关中战场、4个障碍、起点、双向邻接、视线语义和CSV至逻辑格唯一映射；U-GZ-PLAYTEST-MAP-01已具备完整实施路径并进入ready。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-10-01-guanzhong-board-obstacles.md",
+    "开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt",
+    "开发管理/任务归档/D-GZ-PLAYTEST-MAP-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-GZ-PLAYTEST-MAP-01 · 关中三十格以上战场与障碍格合同
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡仅完成关中三十格以上战场与障碍格合同，不代替下游实现或最终用户验收。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md`
+- `docs/基础设定/关中野外最小环境档案.txt`
+- `src/Assets/DataConfig/EnvironmentProfiles.csv`
+- `src/Assets/DataConfig/Adventures.csv`
+- `src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs`
+- `src/Assets/Scripts/Modules/Infrastructure/UnityContent/SpatialQueryBoardFactory.cs`
+- `src/Assets/Scripts/Editor/AdventureSceneBuilder.cs`
+
+## 实施范围
+
+- 冻结关中正式棋盘、障碍格、部署、邻接、数据映射、既有显示资源和直接子卡的完整实施路径；不修改Unity代码、资产或场景。
+
+## 禁止项
+
+- 不扩大到其他地区、全套金丹/神通、动画骨骼、全局UI框架或新自动化机制。
+- 不把静态文档、测试fixture或Editor预览当正式运行证据。
+
+## 模型协作
+
+- 复杂度复核为单一所有者的有界合同。卡中建议的 `gpt-6.1-sol/high` 在当前原生只读辅助工具中不可用，未执行辅助调用；入口主模型 `gpt-5.6-terra` 统一核对，未将模型名当调用证明。
+
+## 验证
+
+- 已用坐标图检查36格、4障碍、32可行走格、85条无向/170条有向邻接，以及 `(0,0) → (1,0)` 的可达路径。
+- 本卡无业务代码或资产变化；未无目的运行Unity或BattleSim。下游须执行CSV/asset、EditMode、Builder重开和正式PlayMode验证。
+
+## 完成条件
+
+- `docs/superpowers/specs/2026-10-01-guanzhong-board-obstacles.md` 已冻结6×6共36格、四障碍、玩家/敌人起点、170条有向边、移动与视线语义及既有Stair表现路径。
+- 已确认原 `CombatEntryAdapter` 的radius12与 `AdventureSceneBuilder` 的六个边端点分别为逻辑和显示两份地图；下游改为以 `battlefieldCells` 为唯一手工输入，导入器确定性导出边和asset，再由逻辑与Builder共同消费。
+- U-GZ-PLAYTEST-MAP-01 已按完整路径、验证和停止条件准备为ready；最终用户重测与整体接受仍由V-GZ-ART-SLICE-01负责。
+
+## 停止条件
+
+- 若需改变其他所有者、额外规则、付费资源或无法取得必需运行证据，停止并记录事实，不连续叠加补丁。

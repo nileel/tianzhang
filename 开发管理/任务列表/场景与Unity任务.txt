@@ -60,8 +60,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| D-GZ-PLAYTEST-MAP-01 | P1 | codex | 已排队 | — | 关中三十格以上战场与障碍格合同 | 开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt |
-| U-GZ-PLAYTEST-MAP-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-MAP-01 | 关中扩展战场与不可通行格型接入 | 开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt |
+| U-GZ-PLAYTEST-MAP-01 | P1 | codex | 已排队 | — | 关中扩展战场与不可通行格型接入 | 开发管理/任务卡/U-GZ-PLAYTEST-MAP-01.txt |
 | U-GZ-PLAYTEST-CAMERA-01 | P1 | codex | 已排队 | — | 关中战棋相机近景与平移操作 | 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt |
 | U-GZ-PLAYTEST-BASE-FIT-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-SCALE-01 | 现有棋子底座减薄与地面接触修正 | 开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt |
 | D-GZ-BASE-MODELS-01 | P1 | codex | 已排队 | — | 两个通用棋子底座造型与生产方案 | 开发管理/任务卡/D-GZ-BASE-MODELS-01.txt |

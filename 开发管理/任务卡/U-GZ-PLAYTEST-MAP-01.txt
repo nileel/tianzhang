@@ -8,24 +8,28 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-PLAYTEST-MAP-01"
-  ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：D-GZ-PLAYTEST-MAP-01 已冻结36格、4障碍、起点、邻接、格型与唯一数据映射；本卡路径、输入、验证和停止条件已补全，可按冻结合同实施。",
   "expectedPaths": [
     "src/Assets/DataConfig/EnvironmentProfiles.csv",
     "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
+    "src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/EnvironmentProfileAsset.cs",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
     "src/Assets/Scenes/AdventureScene.unity",
     "docs/基础设定/关中野外最小环境档案.txt",
-    "docs/superpowers/specs/2026-09-12-guanzhong-art-first-batch-contract.md",
     "UNITY_STRUCTURE.runtime.md",
     "src/Assets/Tests/EditMode/EnvironmentProfileDataTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs",
+    "tools/check-data-chain.ps1",
     "src/Assets/DataConfig/EnvironmentProfiles.csv.meta",
     "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset.meta",
+    "src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/UnityContent/EnvironmentProfileAsset.cs.meta",
+    "src/Assets/Scripts/Editor/WorldContentImporter.cs.meta",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
     "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs.meta",
     "src/Assets/Scenes/AdventureScene.unity.meta",
@@ -50,7 +54,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：关中扩展战场与不可通行格型接入。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 未ready前不得以当前候选路径开工。直接准备卡须消费真实输出，补齐字面量路径（含生成资产与.meta）、输入来源、测试和风险投影；仅移除blockedBy不代表可执行。
+- 已消费上游冻结输出；字面量路径、输入来源、测试和风险投影已齐全。本卡只在自身预检仍通过时实施。
 
 ## 必查范围
 
@@ -60,12 +64,14 @@
 - src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
 - src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs
 - src/Assets/Scripts/Modules/Infrastructure/UnityContent/SpatialQueryBoardFactory.cs
-- 开发管理/任务卡/D-GZ-PLAYTEST-MAP-01.txt（已归档则读取对应完成结论）
+- docs/superpowers/specs/2026-10-01-guanzhong-board-obstacles.md
+- 开发管理/任务归档/D-GZ-PLAYTEST-MAP-01.txt
 - 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
 
 ## 实施范围
 
 - 按地图合同让正式显示格、逻辑格、格型、邻接和部署同源；保留现有地块尺度，落地至少30格含可见且不可进入的障碍。只交付这一张可查询/可行走地图，不修改移动行动阶段或敌人数值。
+- 先消费 `docs/superpowers/specs/2026-10-01-guanzhong-board-obstacles.md`：`battlefieldCells` 是36格及四障碍的唯一手工地图输入，导入器从它生成170条有向边；玩家/敌人保持 `(0,0)`／`(1,0)`。四个障碍复用既有 `Stair.prefab` 作为显示子物体，不新增资源或 `.meta`。
 
 ## 禁止项
 
@@ -75,12 +81,11 @@
 
 ## 模型协作
 
-- 目标有界：推荐 GPT-6.1 Sol（gpt-6.1-sol / medium）完成已冻结实现；入口实际主模型不因卡中名称切换。默认单主责，只有出现独立复杂根因工作面时再用 gpt-6.1-sol / high 只读核查，不重复做同一实现。
-- 子智能体只读、不得改卡/队列/提交/runtime/锁或派生；写前核对实际工具支持，记录调用/未执行与证据。辅助能力不是虚构完成证据；确无独立工作面则主责直接完成。不会因本卡修改全局自动化模型设置。
+- 简单：合同、所有者和验证已冻结，实施面有唯一CSV→asset→逻辑/Builder链；当前原生只读辅助工具不支持卡中建议的模型覆盖。沿用入口默认单模型，不执行辅助调用；入口主模型不因卡中文字切换。
 
 ## 验证
 
-- CSV/asset一致；地图格数量/障碍路径/绕行/边界和部署定向EditMode，正式场景PlayMode重建重开一致；不在BattleSim复制地图。
+- CSV/asset一致；地图格数量、170条有向边、双向邻接、障碍不可地面进入且不挡视线、玩家到敌方路径和部署定向EditMode，正式场景PlayMode重建重开一致；不在BattleSim复制地图。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 
