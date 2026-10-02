@@ -87,7 +87,7 @@ namespace TianZhang.Features.CombatPresentation
 
                 GameObject body = Instantiate(profile.prefab, root.transform);
                 body.name = profile.prefab.name;
-                body.transform.localPosition = Vector3.zero;
+                body.transform.localPosition = new Vector3(0f, 0.08f, 0f);
                 body.transform.localRotation = Quaternion.identity;
                 body.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
                 MeshRenderer baseRenderer = CreateFactionBase(root.transform, combatant.DisplayFaction);
@@ -297,8 +297,8 @@ namespace TianZhang.Features.CombatPresentation
             GameObject baseObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             baseObject.name = "Static3DCombatBase";
             baseObject.transform.SetParent(parent, false);
-            baseObject.transform.localPosition = new Vector3(0f, -0.04f, 0f);
-            baseObject.transform.localScale = new Vector3(0.62f, 0.08f, 0.62f);
+            baseObject.transform.localPosition = new Vector3(0f, 0.04f, 0f);
+            baseObject.transform.localScale = new Vector3(0.62f, 0.04f, 0.62f);
             Collider collider = baseObject.GetComponent<Collider>();
             if (collider != null) Destroy(collider);
             MeshRenderer renderer = baseObject.GetComponent<MeshRenderer>();

@@ -31,7 +31,7 @@
 
 - 2026-10-01：战棋移动操作与行动阶段方案已归档。移动合同已冻结移力与行动权分离、MoveThenAction/ActionThenMove/Finished、Wait/显式结束、同一Spatial路径、完整MovementPath、输入高光预览和根节点逐段动画；当前Move成功会错误ConsumeAction并令playerActed，不能作为下游实现基线。两个移动下游的完整实施/验证路径已准备，但继续保留具名前置，待正式结果进入master后再由QueueMaintenance处理。
 
-- 2026-10-01：U-GZ-PLAYTEST-SCALE-01 已完成归档。Provider 在唯一持久 body 层写入 `(1.4,1.4,1.4)`；root 仍只承载动作倍率，双 Profile 的六向、移动、攻击、受击与复位 PlayMode 直接测量通过。FBX、importer、Prefab、ProfileSet、材质与 GUID 均未改。2026-10-02用户已批准底座下表面贴地、脚底贴顶，替代字面上抬0.25；BASE-FIT 已冻结中心.38、厚度.08、顶面/脚底.42并转ready。证据见 `开发管理/关中棋子尺寸与落地诊断记录.txt` 与归档任务卡。
+- 2026-10-01：U-GZ-PLAYTEST-SCALE-01 已完成归档。Provider 在唯一持久 body 层写入 `(1.4,1.4,1.4)`；root 仍只承载动作倍率，双 Profile 的六向、移动、攻击、受击与复位 PlayMode 直接测量通过。FBX、importer、Prefab、ProfileSet、材质与 GUID 均未改。2026-10-02用户已批准底座下表面贴地、脚底贴顶，替代字面上抬0.25；BASE-FIT 已实现并通过正式双分辨率战斗及普攻恢复验证，中心.38、厚度.08、顶面/脚底.42；详见完成归档。证据见 `开发管理/关中棋子尺寸与落地诊断记录.txt` 与归档任务卡。
 
 - 2026-09-28：A-GZ-UI-CITY-ASSET-01 与 U-GZ-ART-UI-01 均已手动完成归档。关中城／悬赏及 Adventure／Combat HUD 已接入批准图集、字体、背景和头像；1920×1080 连续流程、15 项 EditMode 检查、动态节点／长日志与保存恢复通过，source/manifest.json 已回传主工作区且哈希一致。证据见 开发管理/关中首场城镇与界面美术验收记录.txt。V-GZ-ART-SLICE-01 仍等待正式角色接线和反馈，之后由用户本人实际跑测接受整段品质；此前带日期条目保留当时事实。
 
@@ -67,7 +67,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | U-GZ-PLAYTEST-CAMERA-01 | P1 | codex | 阻塞 | — | 关中战棋相机近景与平移操作 | 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt |
-| U-GZ-PLAYTEST-BASE-FIT-01 | P1 | codex | 已排队 | — | 现有棋子底座减薄与地面接触修正 | 开发管理/任务卡/U-GZ-PLAYTEST-BASE-FIT-01.txt |
 | A-GZ-BASE-MODEL-01 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第1款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-01.txt |
 | A-GZ-BASE-MODEL-02 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第2款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-02.txt |
 | U-GZ-BASE-MODELS-01 | P1 | codex | 阻塞 | A-GZ-BASE-MODEL-01、A-GZ-BASE-MODEL-02、U-GZ-PLAYTEST-BASE-FIT-01 | 双通用底座模型正式接入 | 开发管理/任务卡/U-GZ-BASE-MODELS-01.txt |

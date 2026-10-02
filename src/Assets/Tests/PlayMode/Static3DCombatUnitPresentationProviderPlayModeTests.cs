@@ -81,6 +81,18 @@ namespace TianZhang.Tests.PlayMode
             AssertBodyAndRootScale(playerRoot, playerBody, Vector3.one);
             AssertBodyAndRootScale(enemyRoot, enemyBody, Vector3.one);
 
+            foreach (CombatUnitPresentationDescriptor actor in new[] { player, enemy })
+            {
+                provider.Present(new CombatUnitPresentationEventProjection(
+                    actor.CombatantId, CombatUnitPresentationEvent.Cast, actor.Position, actor.Position, 0,
+                    Array.Empty<CombatUnitPresentationTargetResult>()));
+                Assert.IsTrue(provider.TryGetPresentedUnit(actor.CombatantId, out GameObject actorRoot));
+                AssertBodyAndRootScale(actorRoot, FindBody(actorRoot), new Vector3(1.04f, 1.1f, 1.04f));
+            }
+            yield return new WaitForSeconds(0.25f);
+            AssertBodyAndRootScale(playerRoot, playerBody, Vector3.one);
+            AssertBodyAndRootScale(enemyRoot, enemyBody, Vector3.one);
+
             provider.Present(new CombatUnitPresentationEventProjection(
                 enemy.CombatantId,
                 CombatUnitPresentationEvent.Death,
@@ -135,8 +147,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.Less(Vector3.Distance(Vector3.Scale(expectedRootScale, BodyScale), body.lossyScale), 0.00001f);
             MeshRenderer renderer = body.GetComponentInChildren<MeshRenderer>(true);
             Assert.IsNotNull(renderer);
-            Assert.AreEqual(root.transform.position.y, renderer.bounds.min.y, 0.0001f,
-                "The body pivot must keep its foot on GroundY while scaled.");
+            MeshRenderer factionBase = root.transform.Find("Static3DCombatBase").GetComponent<MeshRenderer>();
+            Assert.AreEqual(0.34f, root.transform.position.y, 0.0001f);
+            Assert.AreEqual(root.transform.position.y, factionBase.bounds.min.y, 0.0001f,
+                "The base bottom must stay on the battlefield plane during actions.");
+            Assert.AreEqual(0.08f * expectedRootScale.y, factionBase.bounds.size.y, 0.0001f);
+            Assert.AreEqual(factionBase.bounds.max.y, renderer.bounds.min.y, 0.0001f,
+                "The body foot must stay on the base top through root action scaling.");
+            TestContext.WriteLine($"contact:{root.name}:rootY={root.transform.position.y:F4},rootScale={expectedRootScale},bodyScale={body.localScale},baseBottom={factionBase.bounds.min.y:F4},baseTop={factionBase.bounds.max.y:F4},foot={renderer.bounds.min.y:F4},thickness={factionBase.bounds.size.y:F4}");
         }
 
         private static void AssertYaw(GameObject root, float expectedYaw)

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-02：已消费SCALE完成归档与正式尺度事实；用户明确批准底面贴地、脚底贴顶替代字面上抬0.25。保持Root=.34、body=1.4，底座厚度.08、中心.38、顶面/脚底.42，既有动作缩放自然维持接触；路径与验证已冻结。",
+  "stateReason": "2026-10-02：底座减薄及接地已实现；双正式Profile六向/移动/攻受击/施法数值检查通过，StartMenu实际新角色进入关中战斗，1366×768与1920×1080可见及真实普攻恢复验证通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
@@ -79,3 +79,11 @@
 - SCALE完成归档与正式Provider已证明独立body=1.4、root临时动作倍率；现有底座底面.22、顶面.38与脚底.34穿入.04为根因。用户接地决定已明确，不再以历史blockedBy阻塞。
 - 两个既有业务文件即可完成，已有.meta不变；直接测试由旧脚底等于root改为脚底等于底座顶面、底座底面等于root，并补施法恢复。现有正式普攻验证只检查RootY，不需扩大路径。
 - 模型协作：gpt-6.1-sol/high只读核查直接依赖、几何与验证边界；主责统一准备和实施，不改定时配置。
+## 2026-10-02 实施与正式运行证据
+
+- 唯一生产改动为Static3DCombatUnitPresentationProvider：base localY=.04、scaleY=.04，body localY=.08；root=.34和body scale=1.4不变。根因是旧base下表面.22/顶面.38、脚底.34造成穿入；无新增补偿层。
+- 定向PlayMode：Static3DCombatUnitPresentationProviderPlayModeTests 1/1通过。双正式Profile六向、移动、Attack、Hit、Cast及复位均测量真实Renderer.bounds；idle底面.3400、顶面/脚底.4200、厚度.0800；Attack顶面/脚底.4152厚度.0752；Hit .4248/.0848；Cast .4280/.0880，复位回.4200/.0800。
+- 正式可见：2026-10-02 16:30，新槽base-fit-20261002-1630、默认无名修士，从StartMenuScene→新建角色→World关陇玄域→关中城→关中野外→石甲兽遭遇。1366×768与1920×1080实际Game View可见双方薄底座及脚底贴顶；点击普攻后敌方839→793、玩家571→509，动作结束接地保持。只读运行探针测得双方body世界Y=.420000、localY=.080000、scale=1.4，player base中心Y=.380000/localY=.04/scaleY=.04。
+- 证据目录：.worktrees/manual/U-GZ-PLAYTEST-BASE-FIT-01/src/Logs/base-fit/；playmode.xml与playmode.log、01-formal-battle-1366.jpg、02-real-attack-1366.jpg、03-formal-battle-1920.jpg、formal-player-base.json、formal-player-body.json、formal-enemy-body.json。日志截图为本地忽略运行证据，关键值随本归档提交；不以Editor静态预览或测试代替实际入口。
+- check-data-chain通过（83术法、602中文键）；相关输入未变不重复。主责复核完整2文件差异；本卡简单冻结几何直接由主责实施，前置Sol/high只读分析已消费。未修改Timer配置、新美术、Prefab/FBX、相机或其他UI。
+- 最终全批双分辨率功能验收与V-GZ-ART-SLICE-01用户接受仍分别进行，本卡仅关闭底座结果。
