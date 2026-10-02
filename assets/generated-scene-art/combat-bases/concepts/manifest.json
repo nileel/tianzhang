@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "assetSet": "guanzhong-reusable-combat-base-concepts",
+  "status": "design_preview_only",
+  "generator": "OpenAI built-in image generation",
+  "generatedAt": "2026-10-01",
+  "entries": [
+    {
+      "id": "base-01",
+      "path": "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+      "role": "Base 01 circular humanoid-footprint concept preview",
+      "productionSemantic": "0.62 m diameter, 0.04 m height, flat top at local Y=0; exact geometry is defined by docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
+      "promptSummary": "low circular stone-and-bronze combat base with a clear central top and a six-sector jade outer groove",
+      "constraints": ["no character", "no text", "no selection ring", "no watermark"],
+      "tripoInputCandidate": true
+    },
+    {
+      "id": "base-02",
+      "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+      "role": "Base 02 rounded-rectangle quadruped-footprint concept preview",
+      "productionSemantic": "0.96 m X by 1.18 m Z, 0.04 m height, flat top at local Y=0; exact geometry is defined by docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
+      "promptSummary": "low rounded dark-stone-and-bronze quadruped base with a clear central top and a six-sector amber outer groove",
+      "constraints": ["no creature", "no text", "no selection ring", "no watermark"],
+      "tripoInputCandidate": true
+    }
+  ],
+  "approvalGate": "These are look-development previews. Production requires an explicit choice and a separate Tripo transaction approval; no credit was used by this task."
+}

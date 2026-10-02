@@ -12,8 +12,13 @@
   "blockedBy": [
     "D-GZ-BASE-MODELS-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-01：D-GZ-BASE-MODELS-01 candidate 已冻结 Base 02 方案、唯一输入、Tripo 参数、35 credits 单款上限和清理完成条件；待其正式进入 master 后，再取得负责人造型选择与本款交易前授权。",
   "expectedPaths": [
+    "assets/source/combat-bases/base-02/base-02-source.blend",
+    "assets/source/combat-bases/base-02/base-02-source.fbx",
+    "assets/source/combat-bases/base-02/base-02-basecolor.png",
+    "assets/source/combat-bases/base-02/base-02-manifest.json",
+    "assets/source/combat-bases/base-02/base-02-contact-sheet.png",
     "开发管理/通用底座第2款资源QA记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
@@ -34,7 +39,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：Tripo通用底座第2款资源生产与清理。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 未ready前不得以当前候选路径开工。直接准备卡须消费真实输出，补齐字面量路径（含生成资产与.meta）、输入来源、测试和风险投影；仅移除blockedBy不代表可执行。
+- 未ready前不得以当前候选路径开工。正式前置进入 master 后，本卡只消费 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md` 的 Base 02、`assets/generated-scene-art/combat-bases/concepts/base-02.png` 和对应人工交易回执；不得以历史角色 credits 或其他底座候选替代。
 
 ## 必查范围
 
@@ -46,7 +51,7 @@
 
 ## 实施范围
 
-- 消费已选第2款底座输入和具体交易授权，使用Tripo仅生成本卡单款资源，冻结原包ID/设置/真实费用/哈希；按项目Blender技能清理，交付唯一FBX/贴图及尺寸/轴/接触面证据。不复用角色历史额度，不自动重试或重复生产；现有资产可读入时先检查，停止条件沿原费用合同。
+- 消费已选 Base 02 输入和具体交易授权，使用 Tripo H3.1 image-to-model 一次（`texture=false`、`pbr=false`、`geometry_quality=standard`、`smart_low_poly=true`、`quad=true`、`face_limit=5000`，单款上限35 credits）仅生成本卡单款资源；冻结原包ID/seed/设置/真实费用/哈希。按项目 Blender 规则清理，交付 expectedPaths 中唯一 FBX/贴图及尺寸/轴/接触面证据；不复用角色历史额度，不自动重试或重复生产。
 
 ## 禁止项
 

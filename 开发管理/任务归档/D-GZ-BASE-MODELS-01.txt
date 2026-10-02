@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-BASE-MODELS-01",
+  "title": "两个通用棋子底座造型与生产方案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-01：已交付双足圆台与四足圆角矩形台的可审预览、尺寸/坐标/分层合同及单款35 credits生产上限；生产卡仍须在本结果正式进入master后取得负责人选择与独立交易前授权。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
+    "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+    "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+    "assets/generated-scene-art/combat-bases/concepts/manifest.json",
+    "开发管理/任务卡/A-GZ-BASE-MODEL-01.txt",
+    "开发管理/任务卡/A-GZ-BASE-MODEL-02.txt",
+    "开发管理/任务卡/U-GZ-BASE-MODELS-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-BASE-MODELS-01.txt",
+    "开发管理/任务归档/D-GZ-BASE-MODELS-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# D-GZ-BASE-MODELS-01 · 两个通用棋子底座造型与生产方案
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡仅完成两个通用棋子底座的造型与生产方案，不代替下游资源生产、Unity接入或最终用户验收。
+
+## 必查范围
+
+- `docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md`
+- `src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs`
+- `docs/superpowers/specs/2026-08-27-formal-static-3d-combat-piece-asset-contract.md`
+- `docs/superpowers/specs/2026-09-12-guanzhong-art-delivery-replan.md`
+
+## 实施范围
+
+- 已冻结 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md`：Base 01 为0.62 m双足圆台，Base 02为0.96×1.18 m四足圆角矩形台；两者顶面为本地Y=0、底面Y=-0.04、+Y向上、+Z向前，并将中性几何、阵营窄带与选中高光分层。
+- 已生成两张只供审阅的概念预览和 manifest；生成图不是正式模型、运行时证据或交易授权。
+- 已为两张 A 卡冻结独立输入、一次候选、H3.1参数、单款35 credits上限和本地清理输出路径；U 卡已取得足印、接地和表现分层约束。
+
+## 禁止项
+
+- 不扩大到其他地区、全套金丹/神通、动画骨骼、全局UI框架或新自动化机制；不修改未列路径。
+- 不把模型意见、静态文档、测试fixture或Editor预览当正式运行证据；场景功能在Unity验收，可抽象角色数值平衡才运行BattleSim。
+- 保留用户改动；不删除历史源资产，不在未量化情况下叠加scale/offset补丁。
+
+## 模型协作
+
+- 复杂度复核为单一所有者、输入和验收明确的有界设计任务。卡中建议的 `gpt-6.1-sol/high` 在当前原生只读辅助工具中不可用，未执行辅助调用；入口主模型 `gpt-5.6-terra` 统一核对，未将模型名当调用证明。
+
+## 验证
+
+- 已人工检查两张生成预览：Base 01的圆形轮廓、平整中央顶面和六段外环清晰；Base 02的圆角矩形轮廓、平整中央顶面和外环清晰。
+- 已比对正式角色合同的足底Y=0、玩家水平包络±0.30 m、石甲兽X=±0.42 m/Z=-0.48..0.58 m，以及现有provider临时Cylinder的局部中心Y=-0.04与scale.y=0.08。
+- 已核实Tripo官方H3.1模型/参数与定价文档；本卡没有调用Tripo、使用credits、改Unity代码或无目的运行Unity/BattleSim。
+- 2026-10-02人工修复归档遗漏：从原卡恢复完整禁止项，移除backlog中已完成的本任务行；原候选39b45b01保留取证，修复后以CodexClosedOrNonReady及相关文本、数据链和暂存差异检查核验。
+
+## 完成条件
+
+- 造型、可供判断的两张预览、尺寸/轴/接地/分层合同和可量化生产上限均已交付。
+- A-GZ-BASE-MODEL-01、A-GZ-BASE-MODEL-02、U-GZ-BASE-MODELS-01 已按本轮事实补齐路径和完成条件；A卡仍因负责人选择和独立交易授权保持blocked，U卡仍等待两个A卡及既有接地前置。
+- 最终正式入口重测与整体接受仍由V-GZ-ART-SLICE-01负责。
+
+## 停止条件
+
+- 若需额外费用、重试、另一套造型、角色资源改动或无法取得负责人选择与交易授权，停止并记录事实，不连续叠加补丁。
+
+## 完成结论
+
+- 已提交两款可复用的足印方案和可复核生产边界；未把“人形/四足”建议当作阵营分类，也未把预览或静态文档伪称为正式场景证据。

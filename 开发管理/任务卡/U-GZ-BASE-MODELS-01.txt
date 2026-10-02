@@ -14,7 +14,7 @@
     "A-GZ-BASE-MODEL-02",
     "U-GZ-PLAYTEST-BASE-FIT-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-01：D-GZ-BASE-MODELS-01 candidate 已冻结两款独立底座的尺寸、根轴、脚底接触面、材质分层及下游验收；仍等待两张 A 资源卡与 U-GZ-PLAYTEST-BASE-FIT-01 的正式完成。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
@@ -24,6 +24,8 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs.meta",
     "src/Assets/Scripts/Editor/FormalStatic3DCombatPieceBuilder.cs.meta",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs.meta",
+    "assets/source/combat-bases/base-01/base-01-source.fbx",
+    "assets/source/combat-bases/base-02/base-02-source.fbx",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-BASE-MODELS-01.txt",
@@ -43,7 +45,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：双通用底座模型正式接入。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 未ready前不得以当前候选路径开工。直接准备卡须消费真实输出，补齐字面量路径（含生成资产与.meta）、输入来源、测试和风险投影；仅移除blockedBy不代表可执行。
+- 未ready前不得以当前候选路径开工。接入时消费两张 A 卡的 factory-empty QA 已通过 FBX，按 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md` 的独立几何、阵营带和选中层接线；仅移除blockedBy不代表可执行。
 
 ## 必查范围
 
@@ -57,7 +59,7 @@
 
 ## 实施范围
 
-- 将批准两资源接到现有唯一provider/表现profile，替换临时Cylinder，保留角色与底座独立、阵营提示、选中/移动高光以及已修正接地尺度。没有新底座管理器，不修改战斗规则。
+- 将批准两资源接到现有唯一provider/表现profile，替换临时Cylinder；Base 01 使用直径0.62 m圆形足印，Base 02使用0.96×1.18 m圆角矩形足印，二者顶面均为局部Y=0、底面Y=-0.04。保留角色与底座独立、窄 `FactionTintBand` 阵营提示、可见 `SelectionHighlight` 与已修正接地尺度；没有新底座管理器，不修改战斗规则。
 
 ## 禁止项
 
