@@ -25,6 +25,8 @@
 
 ## 当前事实
 
+- 2026-10-02：D-GZ-PLAYTEST-UI-AUDIT-01完成正式入口取证与逐项对照，1920×1080/1366×768均确认时间轴、头顶条、移动控件未接；真实战报加唯一调用链确认CTB路径运行，未冒充逐tick数值验证。现有atlas/中文字体已齐；战斗中return可直接回城、显示名称泄露key及整体HUD/目标联动缺口交规划。新运行合同冻结两个直接卡：HP消费已完成SCALE后ready，TIMELINE仍等待MOVE-RULE。审计/合同见本任务记录，不代表下游或最终用户验收。
+
 - 2026-10-01：战棋移动操作与行动阶段方案已归档。移动合同已冻结移力与行动权分离、MoveThenAction/ActionThenMove/Finished、Wait/显式结束、同一Spatial路径、完整MovementPath、输入高光预览和根节点逐段动画；当前Move成功会错误ConsumeAction并令playerActed，不能作为下游实现基线。两个移动下游的完整实施/验证路径已准备，但继续保留具名前置，待正式结果进入master后再由QueueMaintenance处理。
 
 - 2026-10-01：U-GZ-PLAYTEST-SCALE-01 已完成归档。Provider 在唯一持久 body 层写入 `(1.4,1.4,1.4)`；root 仍只承载动作倍率，双 Profile 的六向、移动、攻击、受击与复位 PlayMode 直接测量通过。FBX、importer、Prefab、ProfileSet、材质与 GUID 均未改。U-GZ-PLAYTEST-BASE-FIT-01 仍等待比例实测，且“上抬0.25”参照物不明，不能擅改为落地或悬空。证据见 `开发管理/关中棋子尺寸与落地诊断记录.txt` 与归档任务卡。
@@ -67,9 +69,8 @@
 | A-GZ-BASE-MODEL-01 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第1款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-01.txt |
 | A-GZ-BASE-MODEL-02 | P1 | codex | 阻塞 | D-GZ-BASE-MODELS-01 | Tripo通用底座第2款资源生产与清理 | 开发管理/任务卡/A-GZ-BASE-MODEL-02.txt |
 | U-GZ-BASE-MODELS-01 | P1 | codex | 阻塞 | A-GZ-BASE-MODEL-01、A-GZ-BASE-MODEL-02、U-GZ-PLAYTEST-BASE-FIT-01 | 双通用底座模型正式接入 | 开发管理/任务卡/U-GZ-BASE-MODELS-01.txt |
-| D-GZ-PLAYTEST-UI-AUDIT-01 | P1 | codex | 已排队 | — | 正式战斗UI逐项对照与缺口归属 | 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt |
-| U-GZ-PLAYTEST-TIMELINE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-UI-AUDIT-01、U-GZ-PLAYTEST-MOVE-RULE-01 | 正式战斗行动轴与真实CT状态显示 | 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt |
-| U-GZ-PLAYTEST-HP-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-UI-AUDIT-01、U-GZ-PLAYTEST-SCALE-01 | 每单位头顶血条与资源信息接线 | 开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt |
+| U-GZ-PLAYTEST-TIMELINE-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-MOVE-RULE-01 | 正式战斗行动轴与真实CT状态显示 | 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt |
+| U-GZ-PLAYTEST-HP-01 | P1 | codex | 已排队 | — | 每单位头顶血条与资源信息接线 | 开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt |
 | U-GZ-PLAYTEST-MOVE-RULE-01 | P1 | codex | 阻塞 | D-GZ-PLAYTEST-MOVE-01、U-GZ-PLAYTEST-MAP-01 | 正式移动命令与CT行动阶段闭环 | 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt |
 | U-GZ-PLAYTEST-MOVE-UI-01 | P1 | codex | 阻塞 | U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-CAMERA-01、U-GZ-PLAYTEST-BASE-FIT-01 | 移动输入可达高光路径预览与棋子位移动画 | 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt |
 | D-GZ-PLAYTEST-SPELLS-01 | P1 | codex | 待决定 | — | 关中初始两术法选择与获得装配合同 | 开发管理/任务卡/D-GZ-PLAYTEST-SPELLS-01.txt |

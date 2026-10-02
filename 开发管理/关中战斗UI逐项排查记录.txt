@@ -1,0 +1,78 @@
+# 关中正式战斗 UI 逐项排查记录
+
+日期：2026-10-02。任务：D-GZ-PLAYTEST-UI-AUDIT-01。结论性质：诊断与下游准备，不代表实现或用户验收。
+
+## 基线与复现
+
+- 基线：master a4b73d941f646c05831ddcc8df88438ab09a87e3；独立 worktree `.worktrees/manual/D-GZ-PLAYTEST-UI-AUDIT-01`，分支 `codex/d-gz-playtest-ui-audit-01`。本轮没有修改游戏代码、数据或场景。
+- Unity 6000.3.18f1，项目为该 worktree 的 src，进程 53908，启动时间 2026-10-02T05:08:32.9284245Z。运行探针确认 isPlaying=true、activeScene=AdventureScene、buildIndex=3、isCompiling=false、isPaused=false。
+- 正式路径：StartMenuScene → 新建默认角色（独立槽名 ui-audit-20261002-1313，未注入属性）→ 关陇玄域 → 关中城 → 悬赏板接取 → 关中野外 → shijiahou_encounter。未通过测试 fixture、直接战斗自举或固定伤害替代正式入口。
+- 初始可见数值：玩家 HP 571/571、灵力 180/180；敌方 HP 839/839、灵力 108/108。只作本次功能观察，不是数值平衡结论。
+- Game View 分别使用 Full HD 1920×1080（编辑器显示缩放 0.8）和 WXGA 1366×768（显示缩放 1）。下面的布局结论基于 Game View 内画面，不把整个 2560×1440 编辑器窗口当游戏分辨率。
+
+## 逐项对照与归属
+
+“已有”只表示列出的实现/观测成立；未实测的分支另列。“未接”不能被旧合同中的 fixture 排除项解释为本轮不需要。
+
+| 项目 | 状态与直接证据 | creator → writer → DTO/状态 owner | 资源是否真缺 | 既建任务/边界 |
+|---|---|---|---|---|
+| 行动轴 | 未接。正式层级只有 CombatTurnText、双方文字、五按钮和日志，没有轴；CTBEngine 没有只读单位 CT/队列快照 API | AdventureSceneBuilder（将建轴）→ CombatHudPresenter/CombatTimelineView（待建）→ EncounterCoordinator → CombatTurnScheduler/CTBEngine | 已有面板、三态按钮、字体及玩家头像；敌方专属头像未提供，可按 v6 使用阵营图形，不以新图挡住功能 | U-GZ-PLAYTEST-TIMELINE-01；先等 U-GZ-PLAYTEST-MOVE-RULE-01 |
+| 当前行动者 | 已有“你的行动”文字；身份仅在 RunCombat 的 advance.ActorId 中，DTO 只有 TurnText，无稳定 CurrentActorId，不能从中文字符串反解 | Builder.CombatTurnText → CombatHudView.Present → EncounterCoordinator.Present/RunCombat → CombatHudSnapshot.TurnText；权威为调度返回 ActorId | 不缺 | TIMELINE 同卡补稳定 ID 与当前项标记 |
+| CT 与实际门槛 | CTB 调度入口确实运行，见下节真实动作日志与唯一调用链；数值未接 UI。现有探针和日志没有每次 tick/CT/NextActionThreshold，不能宣称本轮验证了每个 CT 数值 | CombatSession 创建 scheduler → CombatCommandService.AdvanceUntilAction/Execute → CombatTurnScheduler → CTBEngine（ChargeTime、NextActionThreshold、actionQueue 唯一所有者） | 不缺；缺只读数据投影 | TIMELINE；禁止 UI 计时器/交替头像/根据文本猜门槛 |
+| 每单位头顶 HP/资源 | 未接。角色顶端没有条，边栏两段 HP/灵力能刷新；现有 DTO 已含各自 ID、当前/最大生命与灵力 | Builder 将建条容器 → CombatHudPresenter/新 CombatUnitHealthBarView → CombatantHudSnapshot；数值来自 EncounterCoordinator.ToHud/CombatantSnapshot。世界位置 owner 是 Static3DCombatUnitPresentationProvider | 不缺基础条、字体；无需重做模型或增加骨骼 | U-GZ-PLAYTEST-HP-01；SCALE 已归档且实际 body=1.4 接线存在 |
+| 两术法按钮 | 未接。本次仅一个禁用“术法”按钮和一个禁用“神通”按钮；Presenter 只取 ArtProfileIds[0]，ActionBar 固定五按钮，不能表达两术法选择 | Builder/CombatActionBarView → CombatCommandInput → EncounterCoordinator.RequestArt → CombatCommandService；装配源 player.EquippedArtProfileIds → CombatHudSnapshot.ArtProfileIds | 通用按钮已齐；不是缺按钮图。两术法选择、获得和装配仍等专卡 | D-GZ-PLAYTEST-SPELLS-01、U-GZ-PLAYTEST-SPELLS-01；本卡不代选术法 |
+| 移动/确认/取消 | 未接。正式五按钮中无此入口；虽有 RequestMove，现实现成功 Move 仍 ConsumeAction，且 ExecutePlayer 对任何成功命令设 playerActed=true | 将由移动 UI/input 产生命令 → EncounterCoordinator → CombatCommandService/CombatSession；路径由现有 Spatial 负责，Provider 现只接起终点 | 不缺通用按钮；高光/路径/动画接线由移动卡冻结 | U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-MOVE-UI-01；本轮移动合同优先于旧 fixture 排除 |
+| 资源与费用 | 部分已有。HP/灵力当前值/上限可见；玩家受击 571→509→447，敌方普攻后 839→793。按钮无术法消耗/冷却门槛信息 | Builder → HudView/ActionBarView → HudSnapshot；生命/灵力 owner 是 CombatantSnapshot，费用/技能规则 owner 是攻击档案与 CombatCommandService | 不缺基础 UI；未装配两术法时不伪造费用 | HP 管头顶资源，SPELLS 管两术法费用与可用性，TIMELINE 管 CT 门槛；N-GZ-PLAYTEST-BALANCE-01 才做平衡 |
+| 选中目标 | 未接可交互目标详情/世界选中。当前固定 commandInput target=snapshot.Enemy.Id；右侧敌人文字不等于用户选中目标 | Builder → CombatCommandInput.SetContext → 固定 Enemy.Id；没有 InspectedTargetId/可选目标 DTO | 玩家头像已在；敌方可用阵营图形，但目标联动的数据/输入缺口仍在 | 当前 1v1 固定目标可维持；v6 查看目标/世界选中完整联动没有已冻结的独立实施归属，交规划，不能塞入 HP 或扩展 TIMELINE 战斗规则 |
+| 战报 | 已有滚动 Text。真实记录 Wait、BasicAttack、伤害；英语命令名和 enemy_shijiahou 原样泄露，不是中文字体缺字 | Builder.CombatLogViewport/Text → CombatLogView.Append/LateUpdate → EncounterCoordinator.BuildActionMessage → CombatActionResult | 字体实际存在且中文正常；缺名称/文案解析接线 | V-GZ-PLAYTEST-FLOW-01 复验；通用本地化缺口交规划，不擅改域外文件 |
+| 胜负与返回 | 胜负代码已有 Complete→ResolveEncounter→ReturnToPreviousScene，胜利记录悬赏及掉落；本轮未跑至胜/败，不以代码宣称两分支验收。另已实测：双方仍存活时点左侧 return 直接回 SettlementScene，绕开胜负返回入口 | AdventureHudPresenter 创建节点按钮 → AdventureInputController.SelectNode → AdventureNodeDispatcher/ReturnNodeHandler → AdventureController.ReturnToSource；此方法无 Combat 状态检查 | 不缺美术 | V-GZ-PLAYTEST-FLOW-01 必须覆盖胜/败；战斗中退出策略及修复所有者交规划，不能把此现象写成胜利/失败返回通过 |
+| 分辨率/战场占用 | 已有 ScaleWithScreenSize，referenceResolution=1920×1080。两实测分辨率均能看到五按钮及日志，右侧整块 HUD 遮住战场右侧，左侧探索节点在战斗中仍显示；未完成 v6 左窄轴/右详情结构 | SceneBuildSupport.CreateCanvas、AdventureSceneBuilder 固定 panel 布局 → CanvasScaler/LayoutGroup；该场景 Builder 是持久布局 owner | 不缺面板/字体；是布局与场景模式接线 | CAMERA 解决相机近景/平移；TIMELINE 只解决新增轴及其直接冲突；整屏 HUD/探索切换缺口交规划，不能宣称相机卡包办所有遮挡 |
+
+## 真实调度后的动作日志
+
+来源为正在运行的 `/UICanvas/CombatHudRoot/CombatLogViewport/CombatLogText` 的 `UnityEngine.UI.Text.m_Text`，由仓库 RuntimeProbe Inspect 读取并保存；不是测试脚本构造。按正式 UI 依次点击待机三次、普攻一次：
+
+```text
+战斗开始：player VS enemy_shijiahou
+玩家：Wait
+enemy_shijiahou：BasicAttack，伤害 62
+玩家：Wait
+玩家：Wait
+玩家：BasicAttack，伤害 46
+enemy_shijiahou：BasicAttack，伤害 62
+```
+
+第一次待机后玩家 HP=509，后两次待机没有敌方插入；一次普攻后玩家 HP=447、敌方 HP=793。真实动作序列已经排除“每按一次必定玩家/敌方严格轮流”的判断。为何可归到 CTB 而非另一个计时器：本版 RunCombat 每轮唯一调用 CombatCommandService.AdvanceUntilAction(session)，其唯一调度链为 session.TurnScheduler→CTBEngine；玩家命令只在 advance.ActorId=player 的等待段被接受。上面的战报来自这个正式协程的成功命令，未运行替代调度器。
+
+证据限度：这份日志记录调度之后的执行顺序，没有暴露 ticksElapsed、CurrentTick、各单位 CT 和门槛。它证明实际 CTB 路径正在运行，不证明具体速度/惩罚计算或 UI 顺序正确；不得从这些伤害或动作间隔反推平衡结论。TIMELINE 验收须增加同一正式会话的只读取值与 advance 对照证据，不能把本轮战报冒充逐 tick 跟踪。源码常量 ActionThreshold=100、CtRetentionOnWait=0.5 和 ConsumeAction 写入 100+penalty 仅作为所有者说明。
+
+## 新发现但不扩入本卡的规划证据
+
+1. 战斗中直接返回：最小复现为正式进入战斗，双方仍存活（本次 447/571、793/839）→点击左侧 return(0,2)→立刻回城。SelectNode 无场景模式门禁，ReturnToSource 无战斗状态判断。建议规划优先确认“战斗中禁用探索返回”这一最小路线；若允许撤退，需要另定结算规则，不能默认为无代价退出。本卡没有授权修改 AdventureController/Input/节点 UI，也不建立新卡。
+2. v6 整屏布局、敌人/地图/命令显示名称和查看目标联动尚无完整叶子承担。所需决策是明确归属与允许路径，不是重新购买图集。规划可在现有计划中为这些已证实缺口一次性收口；未收口前 V-FLOW/V-ART 不得宣布整屏与完整交互通过。
+3. 新时间轴仅有一个“当前行动者/真实 CT 只读投影”结果；新血条仅有一个“稳定 ID 对应资源与真实锚点”结果。后续发现必须跨越上述边界时按原卡停止，不连续补丁。
+
+## 原始证据与复查入口
+
+原始文件保留在 `D:/天章游戏开发/.worktrees/manual/D-GZ-PLAYTEST-UI-AUDIT-01/src/Logs/ui-audit/`（本地忽略目录，不作为产品资产提交）。本文内嵌动作日志与复现，保证提交自身可审；下列 SHA-256 可核对本地截图/探针。不要删除该 worktree 的证据后仍引用其可用。
+
+| 文件 | SHA-256 |
+|---|---|
+| 01-combat-1920x1080.jpg | C213B917267715C91FD01F6DC5DB83DB853933714017E174D73D92EB253EE857 |
+| 02-wait-order.jpg | EB2A8A941E7CF2F2AB39CECEFBABBD19A18FDB67D968CCBD40296953211537AA |
+| 03-combat-1366x768.jpg | E8C1818B289AA4755DCD333573F133EB9756C2D4281542E8994095C35E56BFC2 |
+| 04-return-during-combat.jpg | D3EF2DB9F618ECF3F18B1266B982E03F10EF46A4185E4332EC04376BEA5FAF2F |
+| log-after-wait-01.json | 0E6F88CD9BC36304E0A81248EEE00B0FC87EDA441AD4A40768E406437D5D99B9 |
+| log-after-wait-02.json | E6522CB2C07DF25965145662AFA50154DD1D6D8F4460C2E9BC1AA8C347B27AB3 |
+| log-after-wait-03.json | 5325338A9678285083E127E5E0883FA445CE5F7625F8B1415D7E5276DF7BD5F1 |
+| log-after-attack-01.json | 8202CCA23971122D75D7214D14F00339956561FF7CDBCA022152139592399BEE |
+
+只读复查命令：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-unity-runtime-snapshot.ps1 -Action Inspect -ProjectPath <上述worktree>/src -Scene AdventureScene -HierarchyPath /UICanvas/CombatHudRoot/CombatLogViewport/CombatLogText`。须先按本节正式入口进入 Play Mode；日志路径不是 CT 状态 API。
+
+## 下游与本轮收口
+
+- 新合同：`docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md`。只更新本轮已授权功能边界；9月20日合同中的历史缺资源/fixture 排除不再代表本轮状态。
+- HP 的两个前置均有本轮/完成归档证据，准备完整输入后可 ready；TIMELINE 仍等待移动阶段规则，不能将其当前 Move 会结束行动的行为固化为正确基线。
+- 实际主模型经 Node REPL metadata 核验为 gpt-6-astra。任务是有界的只读取证与两直接卡准备，主责直接完成，未调用子智能体、未修改自动化模型配置。
+- 使用 unity-agent-workflows 的 runtime-owner-proof、ui-and-visual-assets、unity-validation 及 UNITY_STRUCTURE.md/UI 映射定位；使用 computer-use 操作隔离 Unity。两份映射只作入口，结论取自上述正式对象、源码完整方法和运行日志。
+- 已退出 Play Mode 并关闭本轮启动的 Unity。仅由该次编辑器产生的 ShaderGraphSettings.asset 尾空格已恢复；没有保留 src 路径变更。未运行与文档无关的全套 Unity 测试或 BattleSim；本轮游戏启动/正式 UI 取证不替代下游定向测试和用户最终接受。

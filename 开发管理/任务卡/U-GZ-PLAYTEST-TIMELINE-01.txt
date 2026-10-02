@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-GZ-PLAYTEST-UI-AUDIT-01",
     "U-GZ-PLAYTEST-MOVE-RULE-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-02：UI审计已冻结唯一调度所有者、只读DTO、v6显示/刷新、精确路径与定向验收；仍等待U-GZ-PLAYTEST-MOVE-RULE-01，交付后核对真实行动阶段入口并重新预检才可ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
     "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
@@ -63,11 +62,17 @@
 - 开发管理/AI协作规则.txt#任务卡中的模型协作提示
 - 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt（已归档则读取对应完成结论）
 - 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt（已归档则读取对应完成结论）
+- 开发管理/关中战斗UI逐项排查记录.txt#真实调度后的动作日志
+- docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md#2. TIMELINE：真实状态的只读投影
+- docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md（行动阶段与结束入口）
 - 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
 
 ## 实施范围
 
 - 按审计合同从唯一CTBEngine/CombatTurnScheduler只读状态形成行动轴DTO，显示当前行动者、单位顺序、CT和实际冷却门槛；不得做假的交替头像或另建UI计时器。只影响表现与只读投影；移动阶段合同先落地，保持真实顺序一致。
+- 严格消费新运行合同第2节：CTB文件内不可变快照及现队列原序，Scheduler过滤死亡，Coordinator以真实advance/移动阶段构造稳定ID的Timeline DTO，Presenter→新TimelineView显示。实际CT/门槛/CurrentTick来自引擎，不以战报动作顺序冒充逐tick数值证明。
+- 只使用当前expectedPaths；新类型放在已列文件内，新脚本仅CombatTimelineView和GuanzhongCombatTimelinePlayModeTests及其.meta。Builder保存场景、Installer注入；既有Presenter.Configure调用者不扩改，单独增加轴配置入口。
+- 左窄轴使用v6参考尺寸；战斗时隐藏与其直接冲突的探索面板，Hide/退出恢复。当前行动者与查看焦点分开；保留1v1固定命令目标，不实现未知后续行动的“自身预计下次位置”，不扩建世界选中/技能预览/全屏UI。
 
 ## 禁止项
 
@@ -83,6 +88,7 @@
 ## 验证
 
 - 固定不同速度/惩罚样本下UI顺序与调度事件一致；移动中、行动提交、等待、死亡/退出后刷新正确；正式Game View及定向PlayMode。
+- 新运行合同第2节的三组验收是完成门：快照读取不变更引擎/下一真实Advance；多ready原序、不同速度/门槛、Wait与移动阶段；正式入口1920×1080/1366×768可见结果及同会话ActorId、tick、CT、门槛、队列数值证据。测试放已列PlayMode文件，不另建测试框架。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 
@@ -94,3 +100,8 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 准备结论
+
+- 审计证实正式CTB路径在运行、行动轴及CT快照未接；本卡只有真实状态只读投影这一结果。移动规则前置仍未交付，故保持blocked。
+- 准备由实际主模型gpt-6-astra完成，未调用子智能体。expectedPaths没有扩展；新合同与必要完整逻辑单元已定位。实现前重查移动结果，不把当前成功Move立即结束行动的旧行为当正确事实。

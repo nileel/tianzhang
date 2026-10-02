@@ -8,12 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-PLAYTEST-UI-AUDIT-01",
-    "U-GZ-PLAYTEST-SCALE-01"
-  ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-02：UI审计与SCALE完成归档已消费；现有资源DTO、body锚点所有者、显示/刷新/清理、精确脚本/场景/meta路径与定向验收已冻结，风险投影为空，可单主责独立实现。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
@@ -57,11 +54,16 @@
 - 开发管理/AI协作规则.txt#任务卡中的模型协作提示
 - 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt（已归档则读取对应完成结论）
 - 开发管理/任务卡/U-GZ-PLAYTEST-SCALE-01.txt（已归档则读取对应完成结论）
+- 开发管理/关中战斗UI逐项排查记录.txt#逐项对照与归属
+- docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md#3. HP：稳定 ID、真实头部锚点与资源
 - 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
 
 ## 实施范围
 
 - 按唯一单位ID绑定各自HP/上限，使用真实角色头顶锚点投影到HUD，随相机平移与棋子位置更新；受击、治疗、死亡和场景退出正确刷新/清理，低血提示可读。复用现有UI atlas和字体，不能用两段固定边栏文字替代各自头顶条。
+- 严格消费新运行合同第3节：复用CombatantHudSnapshot的Id/生命/灵力当前值及上限，由Presenter喂新CombatUnitHealthBarView；provider按ID查询实际body renderer顶部世界锚点，排除底座/反馈，包含1.4 body和root动作倍率；LateUpdate只投影位置，不篡改资源。
+- Builder创建同一Canvas内的双条模板/容器并保存AdventureScene，Installer注入实际Camera/Canvas/provider；Presenter新增独立血条配置入口，既有Configure调用者无需改动。新增文件仅expectedPaths所列HealthBarView、PlayMode测试及其.meta；不改GameplayContracts/EncounterCoordinator或模型资产。
+- 文字与填充表达低血，灵力显示当前/上限；屏外/相机后方、无ID/inactive、死亡/退出隐藏或清理；屏内采用覆盖式血条，不新增遮挡射线规则。所有Graphic不拦截世界输入。数值异常报告输入问题，不以默认满条掩盖。
 
 ## 禁止项
 
@@ -77,6 +79,7 @@
 ## 验证
 
 - 分别伤害/治疗两单位不会串条；相机移动、模型1.4倍、远近/屏外/遮挡、死亡和重进战斗有证据；用实际坐标投影与Game View验收。
+- 新运行合同第3节四组验收为完成门：稳定ID不串条；实际body/root尺度、bounds、screen/Canvas点、最终Rect一致；生命周期/遮挡策略；正式入口1920×1080/1366×768双方血条及实际受击刷新。定向PlayMode可直接移动已有相机，用户平移操作由CAMERA卡负责，不以该卡尚未交付阻塞本任务。
 - 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
 - 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
 
@@ -88,3 +91,8 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 准备结论
+
+- 审计实际观察到边栏生命刷新、头顶条缺失；现有DTO足够，provider已有稳定ID与实例，SCALE归档及本轮源码证实body=1.4，基础atlas/字体实际导入。没有美术采购或规则决定前置。
+- 本卡一个结果：稳定ID资源与真实头部锚点的可见接线。允许路径完整且没有新增程序集/模型/全局框架依赖；准备由gpt-6-astra单主责完成，未调用子智能体。ready后执行者仍须在自己的任务worktree重新预检并取得正式运行证据。

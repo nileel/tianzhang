@@ -5,5 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-GZ-PLAYTEST-UI-AUDIT-01 | codex_execute | codex | P1 | unity | discovery | 正式战斗UI逐项对照与缺口归属 | 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt |
 | U-GZ-PLAYTEST-CAMERA-01 | codex_execute | codex | P1 | unity | implementation | 关中战棋相机近景与平移操作 | 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt |
+| U-GZ-PLAYTEST-HP-01 | codex_execute | codex | P1 | unity | implementation | 每单位头顶血条与资源信息接线 | 开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt |
