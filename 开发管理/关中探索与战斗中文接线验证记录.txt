@@ -1,0 +1,43 @@
+# 关中探索与战斗中文接线验证记录
+
+- 任务：U-GZ-PLAYTEST-UI-TEXT-01；日期：2026-10-02。
+- 提交：本记录与实现同一提交；基线 e4e3d7709c3a389b65b604f7a115de8a210c60af；分支 codex/u-gz-playtest-ui-text-01。
+- 唯一工作区：D:\天章游戏开发\.worktrees\manual\U-GZ-PLAYTEST-UI-TEXT-01。
+- 主模型：Node REPL requestMeta 实测 gpt-6-astra；辅助 text_owner 请求 gpt-6.1-sol/medium，用于独立显示所有者核查、限定两份既有测试文件实现与只读复核，辅助实际服务模型未单独核验。主责复核全部差异、正式运行与唯一提交。
+- 风险预检：schema 2，taskDigest=7750458d95030858d5e98b842f51f18d2012d3a52d306fac14a336eabebcc91c，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates 均空，与卡投影一致。
+
+## 根因与改动
+
+AdventureHudPresenter 和 EncounterCoordinator 的创建及刷新写入者直接显示 key、枚举和原因码；Installer 已持有 Language.csv，但没有注入解析。复用既有 UiText，由 Bootstrap 传入显示委托。战报按结构化字段解析后拼接，玩家姓名保持原文；动作栏以实际 AttackProfileData.displayNameKey 映射。补齐本次可达语言键，生命标签改为中文；未改变命令稳定 ID、战斗规则、按钮资格、字体、图集和场景布局。
+
+## 正式可见运行
+
+- Unity 6000.3.18f1，真实 Editor Play Mode/Game View，非 Editor 静态预览；进程 57052，启动 UTC 2026-10-02T06:13:33.3659713Z，项目为上述 worktree/src。
+- 从 Assets/Scenes/StartMenuScene.unity 播放：新建角色（测试槽 ui-text-20261002-1415，默认无名修士）→关陇玄域→关中城→悬赏板接取→进入副本关中野外→石甲兽遭遇。没有注入角色数值或替换正式地图。
+- 1366×768：关中野外、起点、石甲兽遭遇、返回据点及状态中文；进入时生命 571/571、灵力 180/180，石甲兽生命 839/839、灵力 108/108。战报为“战斗开始：无名修士 对阵 石甲兽”。
+- 点击待机：战报“无名修士：待机”“石甲兽：普攻，伤害 62”，玩家生命刷新为 509/571。点击普攻：战报“无名修士：普攻，伤害 46”，敌人生命刷新为 793/839。RuntimeProbe 对真实 CombatLogText 的 m_Text 读回与截图一致，未截断。
+- 战斗中再次点击遭遇：显示“当前无法进行探索操作”，没有用中文转换伪造成功。
+- 切换 1920×1080：地图、角色、生命/灵力、动作和已有战报保持中文可读。正式 Game View 的显示缩放为 0.8，游戏渲染分辨率为 1920×1080。
+- 通过本版本仍开放的返回节点回到关中城，再进入野外与遭遇：状态恢复“请选择探索地点”，战报只有新一战开场，双方生命恢复初始值，无上一战文本残留。该返回漏洞属于 EXIT-GUARD 后续卡，本卡不宣称已经修复。
+- 截图与原始 JSON/XML/日志保存于本工作区 src/Logs/ui-text/（忽略目录，保留本工作区供复查）。截图 01—05 为 1366×768，06—08 为 1920×1080；wait-log.json、attack-log.json 为真实运行文本证据，exit-status.json 为返回后的真实场景状态。
+
+## 定向验证
+
+- Unity EditMode TianZhang.Tests.GuanzhongFormalUiTextTests：19/19 通过。覆盖已知键、全部现有命令枚举、复合/未知拒绝、包含 key 的自定义姓名不替换、实际 profile 名称与不可用按钮、Builder 保存回读。
+- Unity PlayMode TianZhang.Tests.PlayMode.GuanzhongFormalUiTextPlayModeTests：2/2 通过，覆盖首次呈现、节点原始 ID、刷新/失败及组件禁用再启用。真实场景退出重入另由上述人工 UI 操作证明。
+- check-data-chain.ps1 通过（GongFa 29/29，Spells 83/83，Skills 31/31，语言键 602）。check-unity-assembly-boundaries.ps1 通过（19 assemblies，2 asmrefs），没有新增 Feature 互引。
+- 测试 Builder 导致的 Adventure/Settlement 场景序列化变化和 Unity ProjectSettings 空格噪声已恢复，不纳入提交。
+- 本轮不涉及角色数值平衡，未重跑 BattleSim。整屏布局、目标/预览/行动轴/头顶条及两术法由后续卡完成；本记录不替代 V-GZ-PLAYTEST-FLOW-01 和用户 V-GZ-ART-SLICE-01 接受。
+
+## 证据 SHA-256
+
+- 01-exploration-1366x768.jpg: 84B8CECDFEAE6466AF2A036544F87F3221FB05BFE2FE135592753438181FD9B1
+- 02-combat-initial-1366x768.jpg: 4792DA03A221D6DB6CF4561905BB612A17FE49B98A31D17D4F97B57A12CD23F4
+- 03-wait-1366x768.jpg: 1A47BF623901551B2AB1EA24AC29EC2652B85975E6EC1292E3A0F5920E8F0AF3
+- 04-basic-attack-1366x768.jpg: EDF997391971D6AD59E13D02DA4CE109E26E4C050646570BCD1970F3A6906111
+- 05-rejection-1366x768.jpg: B2A89C991471BD50C26D5BD80C0451FB5F4CED157B28AB16A3DCD38D79500E70
+- 06-combat-1920x1080.jpg: 39E783D78B3D2362CAF64A243C14E11120BDFE449CB7F5774BF2D1EEDFBD749D
+- 07-reentry-exploration-1920x1080.jpg: 04C729135A80E0D5DA67DC032B1ACFAD39AA7CDEB89AE06F8CCE241A3FB3F006
+- 08-reentry-combat-1920x1080.jpg: D9EB6BFC492DA36D74F119A32B2BF182E179375278B97F7170C12480ADC6A23B
+
+- 集成准备：定时器独立推进 D-GZ-PLAYTEST-SPELLS-01 后主线变为 85ed155a。仅保留其设计卡队列行并移除本已完成卡；重放没有业务代码差异，不重复已通过运行。未操作该 attention_required run。

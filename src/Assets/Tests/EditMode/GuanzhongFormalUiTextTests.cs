@@ -252,6 +252,138 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void AdventureStatusNodeAndOutcomeKeysHaveChineseDisplayValues()
+        {
+            UiText.Load(LoadLanguageTable());
+            foreach (string key in new[]
+            {
+                "adventure_node_start", "adventure_node_shijiahou_encounter", "adventure_node_return",
+                "adventure_ready", "adventure_node_selected", "adventure_start_selected",
+                "adventure_returning", "adventure_not_exploring", "adventure_failed",
+                "combat_outcome_ongoing", "combat_outcome_victory", "combat_outcome_defeat",
+            })
+            {
+                Assert.IsTrue(UiText.TryResolve(key, out string value), key);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(value), key);
+                Assert.IsTrue(value.Any(character => character >= '\u4e00' && character <= '\u9fff'), key);
+            }
+        }
+        [TestCase(TianZhang.Combat.CombatCommandKind.BasicAttack, "combat_command_basic_attack")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Art, "combat_command_art")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Divine, "combat_command_divine")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Guard, "combat_command_guard")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Wait, "combat_command_wait")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Move, "combat_command_move")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.SwapSpell, "combat_command_swap_spell")]
+        public void AdventureActionLogTranslatesCommandAndPreservesCustomName(
+            TianZhang.Combat.CombatCommandKind kind, string key)
+        {
+            UiText.Load(LoadLanguageTable());
+            Assert.IsTrue(UiText.TryResolve(key, out string commandName), key);
+            var host = new GameObject("AdventureActionTextTest");
+            try
+            {
+                var coordinator = host.AddComponent<TianZhang.Features.Adventure.EncounterCoordinator>();
+                coordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
+                const string playerName = "修士 enemy_shijiahou attack_profile_basic_unarmed";
+                var command = new TianZhang.Combat.CombatCommand(kind, "player", "enemy", "basic_unarmed");
+                var result = TianZhang.Combat.CombatActionResult.Success(
+                    new TianZhang.Combat.CombatDamageResult(12, true, false, false, false));
+                string message = ActionMessage(coordinator, playerName, command, result);
+                StringAssert.StartsWith(playerName + "：", message);
+                StringAssert.Contains(commandName, message);
+                StringAssert.Contains("伤害 12", message);
+                Assert.AreEqual(kind, command.Kind);
+                Assert.AreEqual("basic_unarmed", command.ProfileId);
+                Assert.AreEqual("enemy", command.TargetId);
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void AdventureRejectionUsesReasonPrefixAndRetainsUnknownOriginalInLog()
+        {
+            UiText.Load(LoadLanguageTable());
+            var host = new GameObject("AdventureRejectionTextTest");
+            try
+            {
+                var coordinator = host.AddComponent<TianZhang.Features.Adventure.EncounterCoordinator>();
+                coordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
+                var command = new TianZhang.Combat.CombatCommand(TianZhang.Combat.CombatCommandKind.BasicAttack, "player");
+                var known = TianZhang.Combat.CombatActionResult.Rejected("attack_profile_unresolved:basic_unarmed");
+                Assert.AreEqual("玩家：" + UiText.Resolve("attack_profile_unresolved"),
+                    ActionMessage(coordinator, "玩家", command, known));
+                Assert.AreEqual("attack_profile_unresolved:basic_unarmed", known.RejectionReason);
+                const string original = "unknown_adventure_rejection:enemy_shijiahou";
+                var unknown = TianZhang.Combat.CombatActionResult.Rejected(original);
+                LogAssert.Expect(LogType.Warning, "[UiText] 未映射的稳定原因（保留原始值）: " + original);
+                Assert.AreEqual("玩家：操作未完成", ActionMessage(coordinator, "玩家", command, unknown));
+                Assert.AreEqual(original, unknown.RejectionReason);
+                Assert.IsFalse(unknown.Succeeded);
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void ActionBarUsesActualProfileDisplayKeyAndKeepsUnavailableActionDisabled()
+        {
+            UiText.Load(LoadLanguageTable());
+            var profile = AssetDatabase.LoadAssetAtPath<TianZhang.Combat.AttackProfileData>(
+                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
+            Assert.IsNotNull(profile);
+            var host = new GameObject("ActionBarTextTest");
+            var labelHost = new GameObject("ArtLabel", typeof(RectTransform), typeof(Text));
+            var buttonHost = new GameObject("ArtButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            try
+            {
+                var view = host.AddComponent<CombatActionBarView>();
+                Text label = labelHost.GetComponent<Text>();
+                SetField(view, "artLabel", label);
+                SetField(view, "artButton", buttonHost.GetComponent<Button>());
+                view.ConfigureText(id => id == profile.attackProfileId ? UiText.Resolve(profile.displayNameKey) : id);
+                view.Present(true, profile.attackProfileId, null);
+                Assert.AreEqual("徒手", label.text);
+                Assert.IsTrue(buttonHost.GetComponent<Button>().interactable);
+                view.Present(true, null, null);
+                Assert.AreEqual("术法", label.text);
+                Assert.IsFalse(buttonHost.GetComponent<Button>().interactable);
+                Assert.AreEqual("basic_unarmed", profile.attackProfileId);
+                Assert.AreEqual("attack_profile_basic_unarmed", profile.displayNameKey);
+            }
+            finally
+            {
+                Object.DestroyImmediate(buttonHost);
+                Object.DestroyImmediate(labelHost);
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        private static string ActionMessage(
+            TianZhang.Features.Adventure.EncounterCoordinator coordinator,
+            string actor,
+            TianZhang.Combat.CombatCommand command,
+            TianZhang.Combat.CombatActionResult result)
+        {
+            var method = typeof(TianZhang.Features.Adventure.EncounterCoordinator).GetMethod(
+                "BuildActionMessage", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+            return (string)method.Invoke(coordinator, new object[] { actor, command, result });
+        }
+
+        private static void SetField(object target, string name, object value)
+        {
+            var field = target.GetType().GetField(name,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(field, name);
+            field.SetValue(target, value);
+        }
         private static void InvokePrivate(MonoBehaviour target, string methodName)
         {
             Assert.IsNotNull(target, methodName + " target must exist in the built scene.");

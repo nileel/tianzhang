@@ -48,6 +48,15 @@ namespace TianZhang.Features.Adventure
         private Action<CombatSessionOutcome, EnemyData> completed;
         private bool acceptsPlayerCommand;
         private bool playerActed;
+        private Func<string, string> resolveText = value => value;
+        private Func<string, string> displayReason = value => value;
+        private string playerDisplayName;
+
+        public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay)
+        {
+            resolveText = resolve ?? throw new ArgumentNullException(nameof(resolve));
+            displayReason = reasonDisplay ?? throw new ArgumentNullException(nameof(reasonDisplay));
+        }
 
         public bool IsRunning => session != null;
 
@@ -118,7 +127,8 @@ namespace TianZhang.Features.Adventure
             }
 
             presentation.ClearLog();
-            presentation.AppendLog("战斗开始：" + spawned.Player.Id + " VS " + spawned.EnemyData.displayNameKey);
+            playerDisplayName = player.Identity.DisplayName;
+            presentation.AppendLog("战斗开始：" + playerDisplayName + " 对阵 " + resolveText(spawned.EnemyData.displayNameKey));
             StartCoroutine(RunCombat());
             reason = null;
             return true;
@@ -172,14 +182,14 @@ namespace TianZhang.Features.Adventure
                 }
                 else
                 {
-                    Present(spawned.EnemyData.displayNameKey + " 行动", false);
+                    Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
                     yield return null;
                     IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, "enemy");
                     CombatCommand command = enemyPolicy.ChooseAction(legal);
                     if (command != null)
                     {
                         CombatActionResult result = ExecuteCommand(command);
-                        presentation.AppendLog(BuildActionMessage(spawned.EnemyData.displayNameKey, command, result));
+                        presentation.AppendLog(BuildActionMessage(resolveText(spawned.EnemyData.displayNameKey), command, result));
                     }
                 }
                 Present("战斗中", false);
@@ -193,7 +203,7 @@ namespace TianZhang.Features.Adventure
             if (!acceptsPlayerCommand || session == null || command == null ||
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
             CombatActionResult result = ExecuteCommand(command);
-            presentation.AppendLog(BuildActionMessage("玩家", command, result));
+            presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
             if (result.Succeeded) playerActed = true;
             Present("你的行动", !playerActed);
         }
@@ -237,8 +247,8 @@ namespace TianZhang.Features.Adventure
             session.Combatants.TryGet("player", out CombatantSnapshot player);
             session.Combatants.TryGet("enemy", out CombatantSnapshot enemy);
             presentation.Present(new CombatHudSnapshot(
-                ToHud(player, "玩家"),
-                ToHud(enemy, spawned.EnemyData.displayNameKey),
+                ToHud(player, playerDisplayName),
+                ToHud(enemy, resolveText(spawned.EnemyData.displayNameKey)),
                 turnText,
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
@@ -249,7 +259,12 @@ namespace TianZhang.Features.Adventure
         {
             acceptsPlayerCommand = false;
             presentation.AppendLog(outcome == CombatSessionOutcome.Victory ? "战斗胜利" : "战斗失败");
-            Present(outcome.ToString(), false);
+            Present(resolveText(outcome switch
+            {
+                CombatSessionOutcome.Victory => "combat_outcome_victory",
+                CombatSessionOutcome.Defeat => "combat_outcome_defeat",
+                _ => "combat_outcome_ongoing",
+            }), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
             unitPresentation.Remove(spawned.Player.Id);
             unitPresentation.Remove(spawned.Enemy.Id);
@@ -358,12 +373,23 @@ namespace TianZhang.Features.Adventure
                 value.MaximumSpirit);
         }
 
-        private static string BuildActionMessage(string actor, CombatCommand command, CombatActionResult result)
+        private string BuildActionMessage(string actor, CombatCommand command, CombatActionResult result)
         {
-            if (!result.Succeeded) return actor + "：" + result.RejectionReason;
+            if (!result.Succeeded) return actor + "：" + displayReason(result.RejectionReason);
+            string commandName = resolveText(command.Kind switch
+            {
+                CombatCommandKind.BasicAttack => "combat_command_basic_attack",
+                CombatCommandKind.Art => "combat_command_art",
+                CombatCommandKind.Divine => "combat_command_divine",
+                CombatCommandKind.Guard => "combat_command_guard",
+                CombatCommandKind.Wait => "combat_command_wait",
+                CombatCommandKind.Move => "combat_command_move",
+                CombatCommandKind.SwapSpell => "combat_command_swap_spell",
+                _ => throw new ArgumentOutOfRangeException(nameof(command.Kind)),
+            });
             if (result.Damage.Count > 0)
-                return actor + "：" + command.Kind + "，伤害 " + result.Damage.Sum(item => item.FinalDamage);
-            return actor + "：" + command.Kind;
+                return actor + "：" + commandName + "，伤害 " + result.Damage.Sum(item => item.FinalDamage);
+            return actor + "：" + commandName;
         }
     }
 }

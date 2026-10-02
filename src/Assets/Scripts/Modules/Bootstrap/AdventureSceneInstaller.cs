@@ -3,6 +3,7 @@ using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CombatPresentation;
+using TianZhang.Features.Settlement;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -63,6 +64,10 @@ namespace TianZhang.Bootstrap
                         out AdventureMapData adventureMap))
                     throw new InvalidOperationException(
                         "adventure_map_unresolved:" + runtime.Navigation.AdventureId);
+                UiText.Load(languageTable);
+                adventureHud.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
+                encounterCoordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
+                combatActionBar.ConfigureText(ResolveAttackProfileName);
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar);
                 encounterCoordinator.Configure(
@@ -95,6 +100,13 @@ namespace TianZhang.Bootstrap
                 Disable(combatCommandInput);
                 Debug.LogError("[AdventureInstaller] " + exception.Message);
             }
+        }
+
+        private string ResolveAttackProfileName(string profileId)
+        {
+            AttackProfileData profile = Array.Find(attackProfiles,
+                item => item != null && string.Equals(item.attackProfileId, profileId, StringComparison.Ordinal));
+            return profile == null ? profileId : UiText.Resolve(profile.displayNameKey);
         }
 
         private static void RequireReference(UnityEngine.Object value, string reason)

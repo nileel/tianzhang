@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,12 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button waitButton;
         [SerializeField] private Text artLabel;
         [SerializeField] private Text divineLabel;
+        private Func<string, string> displayProfile = value => value;
+
+        public void ConfigureText(Func<string, string> profileDisplay)
+        {
+            displayProfile = profileDisplay ?? throw new ArgumentNullException(nameof(profileDisplay));
+        }
 
         public Button BasicAttackButton => basicAttackButton;
         public Button ArtButton => artButton;
@@ -28,8 +35,8 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(waitButton, visible);
             SetEnabled(artButton, visible && !string.IsNullOrWhiteSpace(artProfileId));
             SetEnabled(divineButton, visible && !string.IsNullOrWhiteSpace(divineProfileId));
-            if (artLabel != null) artLabel.text = string.IsNullOrWhiteSpace(artProfileId) ? "术法" : artProfileId;
-            if (divineLabel != null) divineLabel.text = string.IsNullOrWhiteSpace(divineProfileId) ? "神通" : divineProfileId;
+            if (artLabel != null) artLabel.text = string.IsNullOrWhiteSpace(artProfileId) ? "术法" : displayProfile(artProfileId);
+            if (divineLabel != null) divineLabel.text = string.IsNullOrWhiteSpace(divineProfileId) ? "神通" : displayProfile(divineProfileId);
         }
 
         private static void SetEnabled(Button button, bool enabled)

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-02：用户明确要求将剩余UI缺口全部建卡；已查明词表和UiText解析器存在，AdventureInstaller有languageTable但未接显示解析，creator/刷新writer、精确路径与验收已冻结。",
+  "stateReason": "2026-10-02：正式 StartMenu 进入关中首战，双分辨率中文、待机/普攻/拒绝刷新与场景重入已实测留证；19项EditMode及2项PlayMode、数据链与程序集边界通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -101,3 +101,7 @@
 ## 停止条件
 
 - 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
+
+## 完成验证
+
+- 实现及证据见 开发管理/关中探索与战斗中文接线验证记录.txt，与本归档同一提交。主责统一复核，未修改任务以外功能或自动化。下游及最终复验保持各自真实状态。

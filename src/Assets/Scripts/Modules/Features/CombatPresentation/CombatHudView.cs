@@ -28,7 +28,7 @@ namespace TianZhang.Features.CombatPresentation
         private static string Format(CombatantHudSnapshot combatant)
         {
             if (combatant == null) return string.Empty;
-            return combatant.DisplayName + "\nHP " + combatant.CurrentHealth + "/" + combatant.MaximumHealth +
+            return combatant.DisplayName + "\n生命 " + combatant.CurrentHealth + "/" + combatant.MaximumHealth +
                    "  灵力 " + combatant.CurrentSpirit + "/" + combatant.MaximumSpirit;
         }
     }

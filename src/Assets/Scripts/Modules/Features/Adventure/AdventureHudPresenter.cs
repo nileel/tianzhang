@@ -14,12 +14,21 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Sprite nodeNormal;
         [SerializeField] private Sprite nodeHover;
         [SerializeField] private Sprite nodeSelected;
+        private Func<string, string> resolveText = value => value;
+        private Func<string, string> displayReason = value => value;
+
+        public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay)
+        {
+            resolveText = resolve ?? throw new ArgumentNullException(nameof(resolve));
+            displayReason = reasonDisplay ?? throw new ArgumentNullException(nameof(reasonDisplay));
+        }
 
         public void Present(AdventureSession session, Func<string, bool> selectNode, string failureReason)
         {
             if (session == null) return;
-            if (adventureText != null) adventureText.text = session.Map.displayNameKey;
-            if (statusText != null) statusText.text = string.IsNullOrWhiteSpace(failureReason) ? session.Status : failureReason;
+            if (adventureText != null) adventureText.text = resolveText(session.Map.displayNameKey);
+            if (statusText != null) statusText.text = string.IsNullOrWhiteSpace(failureReason)
+                ? resolveText(session.Status) : displayReason(failureReason);
             if (nodeContainer == null || nodeContainer.childCount > 0) return;
             foreach (AdventureNodeData node in session.Map.nodes)
             {
@@ -53,7 +62,7 @@ namespace TianZhang.Features.Adventure
                 label.color = new Color32(244, 234, 212, 255);
                 label.raycastTarget = false;
                 label.alignment = TextAnchor.MiddleCenter;
-                label.text = node.nodeId + " (" + node.q + "," + node.r + ")";
+                label.text = resolveText("adventure_node_" + node.nodeId) + " (" + node.q + "," + node.r + ")";
                 RectTransform rect = labelGo.GetComponent<RectTransform>();
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
