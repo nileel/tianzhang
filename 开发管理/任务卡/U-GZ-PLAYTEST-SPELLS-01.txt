@@ -102,23 +102,22 @@
     "开发管理/关中两术法正式施法验证记录.txt",
     "开发管理/关中首战普通角色输入.json",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
-    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
-    ".meta",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
-    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
-    ".meta",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
-    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
-    ".meta",
     "src/Assets/Tests/EditMode/CharacterStateTests.cs",
-    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
-    ".meta",
     "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
-    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
-    ".meta",
     "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
-    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
-    ".meta"
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs.meta",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs.meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs.meta",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs.meta",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs.meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs.meta",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs.meta",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
+    "simulations/BattleSim/BattleSimSelfTests.cs"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -190,3 +189,8 @@
 - Combat保持纯快照与既有程序集依赖。现有CombatAttackProfile内注入纯Func<string,string,string,bool>资格谓词（真实RealmStage、RootElement、RootGrade），EntryAdapter先复制不可变requirement字符串后调用修正的Content.AbilityRequirementPolicy，禁止捕获Unity Asset、场景或可变角色。Session扣费前统一调用，HUD消费同一命令合法性；不缓存第二套资格结果。
 - AbilityRequirementPolicy当前倍率签名仅测试调用，直接改为真实境界身份/元素/有效品级签名，更新唯一直接AbilityRequirementPolicyTests；不保留错误倍率兼容分支。unknown/非法品级不得以非空字符串放行；源品级表消费角色灵根原文和建角Catalog。
 - 本补全仍服务同一两术法正式施法纵向结果。已调用Sol/medium定位保存丢失点与数据字段；另调用Astra/high只读复核原子性、保存兼容与纯内核边界，明确不需增加asmdef或新资格服务。主责冻结分工后委派互不重叠字面量路径，统一复核完整差异与唯一candidate。
+
+## 2026-10-02 严格路径与直接校验消费边界
+
+- 修正保存链准备时PowerShell表达式产生的重复.cs和裸.meta项，逐项恢复字面量.cs.meta路径；未因此开始业务写入。SpatialQueryBoardTests/TacticalGridModelTests中原有显式环境fixture补充ordinary，未知环境保持拒绝。
+- AttackProfiles共享fixture新增四个恢复列后，BattleSimSelfTests的旧34列表头和生产仅1行断言必然失效。仅同步此直接校验消费者的严格38列契约：旧fixture及basic_unarmed的新恢复列必须为空，生产普攻迁移验证精确选择唯一basic_unarmed，仍保持其逐字段迁移断言与旧投影的未支持效果/非零冷却拒绝；不在本卡实现两术法模拟、角色平衡或扩展BattleSim生产能力，正式数值验证仍归N-GZ-PLAYTEST-BALANCE-01。
