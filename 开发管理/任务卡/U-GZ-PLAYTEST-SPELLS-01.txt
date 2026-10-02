@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-02：批准合同已冻结两术法；实施前核实真实中品水灵根在CharacterRuntimeProfile/保存链丢失，补齐原有者路径和资格直接测试。沿同一保存链补事实，不增加资格状态、Content程序集依赖或旧档迁移；重新预检后实施。",
+  "stateReason": "2026-10-02：独立worktree已实现并通过EditMode121/121、PlayMode11/11；实际StartMenu固定寒门散修且无出身选择，不能通过可见入口取得合同限定小族的两术法。已暂停入口扩写，待用户确认补既有出身选择或改默认；未标完成，现场保留。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs.meta",
@@ -204,3 +204,9 @@
 ## 2026-10-02 导入产物边界
 
 - 既有AttackProfileData新增四个序列化恢复参数，正式ImportAttackProfiles将唯一普攻资产一并补写零值。显式纳入AttackProfile_basic_unarmed.asset及.meta；不改变普攻任何既有字段、GUID或语义。仍严格三条生产档案，并由直接迁移检查验证普攻不变。其他未列术法资产若导入仅产生无语义序列化噪声，逐项核实并还原，不扩展内容范围。
+
+## 2026-10-02 可见入口阻塞
+
+- 实际StartMenuScene正常新建slot spells-20261002-1726进入World，起点江左；CharacterCreationController.Configure/Open/Submit均使用CreateDefaultDraft，Catalog默认OriginId=origin_loose，View只有槽名/姓名/提交，无出身控件。先前测试显式设Draft.OriginId=origin_minor_clan，只证明已批准小族链的功能正确，不能冒充默认可见入口。
+- 实现与验证保留在.worktrees/manual/U-GZ-PLAYTEST-SPELLS-01，src/Logs/spells/下有导入、EditMode121/121、PlayMode11/11及普通小族源数据导出；BattleSim构建/完整运行通过，数据链84/84与613语言键通过。尚无两个正式按钮的双分辨率实际点击验收。
+- 2026-10-02已向用户集中提出入口选择：推荐仅在现有View/Controller/Builder接出身选择，沿用四项OriginOption、预算、起点，默认寒门不变；备选明确把正式建角默认改小族。回复前不扩写入口路径，不提交业务candidate，不影响其他可执行UI卡或定时配置。
