@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-SCALE-01"
-  ],
-  "stateReason": "2026-10-01：D-GZ-PLAYTEST-SCALE-01 已冻结 root/body/base 坐标合同；本卡仍等待 U-GZ-PLAYTEST-SCALE-01 的实际体型倍率验证，且用户“上抬0.25”没有指定 Cylinder 中心、顶面或脚底/地表参照，不能猜测后转ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-02：已消费SCALE完成归档与正式尺度事实；用户明确批准底面贴地、脚底贴顶替代字面上抬0.25。保持Root=.34、body=1.4，底座厚度.08、中心.38、顶面/脚底.42，既有动作缩放自然维持接触；路径与验证已冻结。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Tests/PlayMode/Static3DCombatUnitPresentationProviderPlayModeTests.cs",
@@ -48,7 +46,7 @@
 ## 实施范围
 
 - 冻结现有 Cylinder 基准：root `Y=0.34`、base local center `-0.04`、`scale.y=0.08`，故世界厚度 `0.16`、中心/下/上表面 `0.30/0.22/0.38`，脚底与 tile 中心三角面均为 `0.34`。厚度减半唯一对应 `scale.y=0.04`、世界厚度 `0.08`；body 的 1.4 倍不得传给 base。
-- 在 U-GZ-PLAYTEST-SCALE-01 完成后的真实 Game View/运行数值中，由负责人明确“上抬0.25”的参照后才写 Provider：若指 Cylinder 中心，目标为 `0.55`、下/上为 `0.51/0.59`，脚底会低于底座 `0.17`；若要求下表面贴住 `CenterSurfaceY=0.34`，目标中心/上表面为 `0.38/0.42`，相对旧中心只上抬 `0.08`。二者不可同时成立，不得擅选或叠加偏移。
+- 用户于2026-10-02明确采用底座下表面贴地、脚底落在底座顶面的关系，替代字面“上抬0.25”。冻结实现为root Y=.34不变、base localY=.04与scaleY=.04、body localY=.08与scale=1.4；静态底面/中心/顶面与脚底为.34/.38/.42。共享root动作倍率使顶面和脚底同步为.34+.08×rootScaleY，不新增动态补偿。
 
 ## 禁止项
 
@@ -75,3 +73,9 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 准备证据
+
+- SCALE完成归档与正式Provider已证明独立body=1.4、root临时动作倍率；现有底座底面.22、顶面.38与脚底.34穿入.04为根因。用户接地决定已明确，不再以历史blockedBy阻塞。
+- 两个既有业务文件即可完成，已有.meta不变；直接测试由旧脚底等于root改为脚底等于底座顶面、底座底面等于root，并补施法恢复。现有正式普攻验证只检查RootY，不需扩大路径。
+- 模型协作：gpt-6.1-sol/high只读核查直接依赖、几何与验证边界；主责统一准备和实施，不改定时配置。
