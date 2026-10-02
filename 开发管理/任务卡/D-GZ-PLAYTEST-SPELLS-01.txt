@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-01：用户关中实测反馈已明确授权本项；本卡结果、只读事实源、允许路径与验证已冻结，可按卡执行。",
+  "stateReason": "等待负责人决定：关中小族新角色的第二术法应采用哪条授权路线？",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md",
     "开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt",
@@ -26,7 +26,56 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-GZ-PLAYTEST-SPELLS-01",
+    "sourceRunId": "bed13a05-23d9-4bb2-bd19-105b662e0368",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261002-CD9BEC9E8C20F4",
+    "question": "关中小族新角色的第二术法应采用哪条授权路线？",
+    "options": [
+      {
+        "key": "A",
+        "label": "新增无门派练气攻击术法"
+      },
+      {
+        "key": "B",
+        "label": "授权小族例外获得磐石桩"
+      },
+      {
+        "key": "C",
+        "label": "改为太一道庭角色起点"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A保持小族与资格语义，但需后续新增内容和实现路径。",
+    "plainSummary": {
+      "situation": "关中小族新角色的第二术法应采用哪条授权路线？",
+      "impact": "A保持小族与资格语义，但需后续新增内容和实现路径。",
+      "action": "建议选择 A：新增无门派练气攻击术法"
+    },
+    "checkpointCommit": "e4909627772af62fe1e7d0d5d384ed5c1ba296aa",
+    "baseCommit": "6f827525098fe6c135d8319b7a059ea2cc235648",
+    "branch": "codex/automation/codex/bed13a05-23d9-4bb2-bd19-105b662e0368/candidate",
+    "changedPaths": [
+      "docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md"
+    ],
+    "verified": [
+      "术法CSV筛选确认仅spell_julingshu同时为练气、player、faction_sanxiu",
+      "术法原文、建角、保存、生成、HUD与AttackProfile所有者已核对",
+      "check-review-text、check-pending-whitespace、git diff --cached --check、check-data-chain通过"
+    ],
+    "unverified": [
+      "两术法正式施法与Game View运行证据",
+      "石甲兽数值平衡"
+    ],
+    "residualRisk": "未选择第二术法前不得授予太一道庭术法或解除U、N阻塞。",
+    "taskContextDigest": "294b8a6d9fc6efd17661f6e012f0a95aada8a574da4775242980dd36472c0ce9",
+    "createdAt": "2026-10-02T12:21:16.8451433+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-GZ-PLAYTEST-SPELLS-01 · 关中初始两术法选择与获得装配合同
