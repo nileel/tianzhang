@@ -56,6 +56,8 @@
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta",
     "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset",
     "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset.meta",
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
@@ -198,3 +200,7 @@
 
 - MOVE-RULE已完成并集成77ccf501。正式施法后会停在ActionThenMove，现有旧HUD仅Wait且无EndTurn，若不消费新阶段将无法在正式UI进入第二回合。故在本卡既有ActionBar/Input/Presenter/DTO/Coordinator/Builder路径，复用原待机按钮：MoveThenAction发Wait，ActionThenMove明确显示结束行动并发已存在RequestEndTurn；阶段来自Session，资格/费用均从同一ValidateCommand投影。不是另加回合规则，不代替MOVE-UI的移动/高光/路径/确认取消与动画。
 - 两术法按钮按真实装配ID各自发Art；聚灵的自身/他人选择由简单目标切换按钮明确显示，仅改变输入选择。DTO提供正式profile中文、费用/CT、每合法目标及拒绝原因；View不读取会话或复制资格规则。后续TARGET/PREVIEW沿同一命令入口接线。
+
+## 2026-10-02 导入产物边界
+
+- 既有AttackProfileData新增四个序列化恢复参数，正式ImportAttackProfiles将唯一普攻资产一并补写零值。显式纳入AttackProfile_basic_unarmed.asset及.meta；不改变普攻任何既有字段、GUID或语义。仍严格三条生产档案，并由直接迁移检查验证普攻不变。其他未列术法资产若导入仅产生无语义序列化噪声，逐项核实并还原，不扩展内容范围。
