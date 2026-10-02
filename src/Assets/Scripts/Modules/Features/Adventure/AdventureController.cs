@@ -44,6 +44,7 @@ namespace TianZhang.Features.Adventure
         public FormalEncounterResult LastFormalEncounterResult { get; private set; }
         public string LastFailureReason { get; private set; }
         public AdventureSession Session => session;
+        public bool CanSelectExplorationNode => CurrentState == AdventureSceneState.Exploration;
 
         public void Configure(
             ContentCatalogData contentCatalog,
@@ -92,9 +93,9 @@ namespace TianZhang.Features.Adventure
                 Fail(reason);
                 return;
             }
-            input.Configure(session, dispatcher, hud);
-            hud.Present(session, input.SelectNode, null);
             CurrentState = AdventureSceneState.Exploration;
+            input.Configure(session, dispatcher, hud, () => CanSelectExplorationNode);
+            hud.Present(session, input.SelectNode, null, CanSelectExplorationNode);
         }
 
         public void SetEncounterRandomSource(IFormalEncounterRandomSource source)
@@ -140,8 +141,14 @@ namespace TianZhang.Features.Adventure
 
         private bool ReturnToSource(AdventureNodeData node, out string reason)
         {
+            if (!CanSelectExplorationNode)
+            {
+                reason = "adventure_not_exploring";
+                return false;
+            }
             CurrentState = AdventureSceneState.Returning;
             reason = "adventure_returning";
+            hud.Present(session, input.SelectNode, null, CanSelectExplorationNode);
             loadScene(navigation.ReturnToPreviousScene());
             return true;
         }
@@ -186,6 +193,7 @@ namespace TianZhang.Features.Adventure
                 }
             }
             CurrentState = AdventureSceneState.Returning;
+            hud.Present(session, input.SelectNode, null, CanSelectExplorationNode);
             loadScene(navigation.ReturnToPreviousScene());
         }
 
@@ -194,7 +202,7 @@ namespace TianZhang.Features.Adventure
             LastFailureReason = string.IsNullOrWhiteSpace(reason) ? "adventure_failed" : reason;
             CurrentState = AdventureSceneState.Loading;
             Debug.LogError("[Adventure] " + LastFailureReason);
-            if (session != null) hud?.Present(session, input.SelectNode, LastFailureReason);
+            if (session != null) hud?.Present(session, input.SelectNode, LastFailureReason, CanSelectExplorationNode);
         }
     }
 }

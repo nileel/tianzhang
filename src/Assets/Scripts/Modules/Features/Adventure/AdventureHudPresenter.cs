@@ -23,13 +23,21 @@ namespace TianZhang.Features.Adventure
             displayReason = reasonDisplay ?? throw new ArgumentNullException(nameof(reasonDisplay));
         }
 
-        public void Present(AdventureSession session, Func<string, bool> selectNode, string failureReason)
+        public void Present(AdventureSession session, Func<string, bool> selectNode, string failureReason,
+            bool nodesInteractable = true)
         {
             if (session == null) return;
             if (adventureText != null) adventureText.text = resolveText(session.Map.displayNameKey);
             if (statusText != null) statusText.text = string.IsNullOrWhiteSpace(failureReason)
                 ? resolveText(session.Status) : displayReason(failureReason);
-            if (nodeContainer == null || nodeContainer.childCount > 0) return;
+            if (nodeContainer == null) return;
+            if (nodeContainer.childCount == 0) CreateNodes(session, selectNode);
+            foreach (Transform node in nodeContainer)
+                node.GetComponent<Button>().interactable = nodesInteractable;
+        }
+
+        private void CreateNodes(AdventureSession session, Func<string, bool> selectNode)
+        {
             foreach (AdventureNodeData node in session.Map.nodes)
             {
                 var go = new GameObject(

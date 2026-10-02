@@ -138,6 +138,138 @@ namespace TianZhang.Tests
             }
         }
 
+        [TestCase(AdventureSceneState.Combat)]
+        [TestCase(AdventureSceneState.Loading)]
+        [TestCase(AdventureSceneState.Returning)]
+        public void ReturnHandlerAndRepeatedButtonInvocationRejectOutsideExploration(AdventureSceneState state)
+        {
+            var map = ScriptableObject.CreateInstance<AdventureMapData>();
+            var host = new GameObject("NavigationGuardTest");
+            try
+            {
+                map.nodes = new[] { Node("start", "adventure_node_start", 0, 0), Node("return", "adventure_node_return", 0, 2) };
+                var session = new AdventureSession(map, map.nodes[0]);
+                var runtime = new TianZhang.Bootstrap.GameRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("guanzhong_city");
+                runtime.EnterAdventure("guanzhong_wild", TianZhang.Gameplay.Contracts.SceneReturnTarget.Settlement("guanzhong_city"));
+                var priorNavigation = runtime.Navigation;
+                var controller = host.AddComponent<AdventureController>();
+                var input = host.AddComponent<AdventureInputController>();
+                var hud = host.AddComponent<AdventureHudPresenter>();
+                var nodes = new GameObject("Nodes", typeof(RectTransform));
+                nodes.transform.SetParent(host.transform, false);
+                var status = new GameObject("Status", typeof(RectTransform), typeof(UnityEngine.UI.Text));
+                status.transform.SetParent(host.transform, false);
+                SetPrivate(hud, "nodeContainer", nodes.transform);
+                SetPrivate(hud, "statusText", status.GetComponent<UnityEngine.UI.Text>());
+                SetPrivate(controller, "session", session);
+                SetPrivate(controller, "hud", hud);
+                SetPrivate(controller, "input", input);
+                SetPrivate(controller, "navigation", runtime);
+                int loads = 0;
+                SetPrivate(controller, "loadScene", new Action<string>(_ => loads++));
+                SetState(controller, state);
+                var dispatcher = ReturnDispatcher(controller);
+                input.Configure(session, dispatcher, hud, () => controller.CanSelectExplorationNode);
+                hud.Present(session, input.SelectNode, null, false);
+                var button = nodes.transform.GetChild(1).GetComponent<UnityEngine.UI.Button>();
+                Assert.IsFalse(button.interactable);
+                for (int i = 0; i < 2; i++)
+                {
+                    Assert.IsFalse(dispatcher.TryDispatch(map.nodes[1], out string reason));
+                    Assert.AreEqual("adventure_not_exploring", reason);
+                    button.onClick.Invoke();
+                    Assert.IsFalse(input.SelectNode("return"));
+                }
+                Assert.AreEqual("adventure_not_exploring", status.GetComponent<UnityEngine.UI.Text>().text);
+                Assert.AreEqual(state, controller.CurrentState);
+                Assert.AreSame(priorNavigation, runtime.Navigation);
+                Assert.AreSame(map.nodes[0], session.CurrentNode);
+                Assert.AreEqual("adventure_ready", session.Status);
+                Assert.AreEqual(0, loads);
+                Assert.AreEqual(CombatSessionOutcome.Ongoing, controller.LastEncounterOutcome);
+                Assert.IsNull(controller.LastFormalEncounterResult);
+                Assert.IsNull(controller.LastFailureReason);
+                Assert.IsFalse((bool)GetPrivate(controller, "formalEncounterConsumed"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+                UnityEngine.Object.DestroyImmediate(map);
+            }
+        }
+
+        [Test]
+        public void ExplorationReturnUsesOriginalNavigationAndExistingButtonsCanReenable()
+        {
+            var map = ScriptableObject.CreateInstance<AdventureMapData>();
+            var host = new GameObject("ExplorationReturnTest");
+            try
+            {
+                map.nodes = new[] { Node("start", "adventure_node_start", 0, 0), Node("return", "adventure_node_return", 0, 2) };
+                var session = new AdventureSession(map, map.nodes[0]);
+                var runtime = new TianZhang.Bootstrap.GameRuntime();
+                runtime.EnterWorld("guanzhong_hub");
+                runtime.EnterSettlement("guanzhong_city");
+                runtime.EnterAdventure("guanzhong_wild", TianZhang.Gameplay.Contracts.SceneReturnTarget.Settlement("guanzhong_city"));
+                var controller = host.AddComponent<AdventureController>();
+                var input = host.AddComponent<AdventureInputController>();
+                var hud = host.AddComponent<AdventureHudPresenter>();
+                var nodes = new GameObject("Nodes", typeof(RectTransform));
+                nodes.transform.SetParent(host.transform, false);
+                SetPrivate(hud, "nodeContainer", nodes.transform);
+                SetPrivate(controller, "session", session);
+                SetPrivate(controller, "hud", hud);
+                SetPrivate(controller, "input", input);
+                SetPrivate(controller, "navigation", runtime);
+                int loads = 0;
+                string loaded = null;
+                SetPrivate(controller, "loadScene", new Action<string>(scene => { loads++; loaded = scene; }));
+                SetState(controller, AdventureSceneState.Exploration);
+                input.Configure(session, ReturnDispatcher(controller), hud, () => controller.CanSelectExplorationNode);
+                hud.Present(session, input.SelectNode, null, true);
+                var button = nodes.transform.GetChild(1).GetComponent<UnityEngine.UI.Button>();
+                hud.Present(session, input.SelectNode, null, false);
+                Assert.IsFalse(button.interactable);
+                hud.Present(session, input.SelectNode, null, true);
+                Assert.IsTrue(button.interactable);
+                Assert.AreSame(button, nodes.transform.GetChild(1).GetComponent<UnityEngine.UI.Button>());
+                Assert.AreEqual(2, nodes.transform.childCount);
+                button.onClick.Invoke();
+                Assert.AreEqual(1, loads);
+                Assert.AreEqual(TianZhang.Gameplay.Contracts.GameplaySceneNames.Settlement, loaded);
+                Assert.AreEqual("guanzhong_city", runtime.Navigation.SettlementId);
+                Assert.IsNull(runtime.Navigation.AdventureId);
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+                Assert.AreSame(map.nodes[1], session.CurrentNode);
+                button.onClick.Invoke();
+                Assert.AreEqual(1, loads);
+                Assert.AreEqual(AdventureSceneState.Returning, controller.CurrentState);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+                UnityEngine.Object.DestroyImmediate(map);
+            }
+        }
+
+        private static AdventureNodeDispatcher ReturnDispatcher(AdventureController controller)
+        {
+            var method = typeof(AdventureController).GetMethod("ReturnToSource",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var action = (AdventureNodeAction)Delegate.CreateDelegate(typeof(AdventureNodeAction), controller, method);
+            return new AdventureNodeDispatcher(new IAdventureNodeHandler[] { new ReturnNodeHandler(action) });
+        }
+
+        private static void SetState(AdventureController controller, AdventureSceneState state) =>
+            typeof(AdventureController).GetProperty("CurrentState").SetValue(controller, state);
+
+        private static void SetPrivate(object target, string name, object value) =>
+            target.GetType().GetField(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(target, value);
+
+        private static object GetPrivate(object target, string name) =>
+            target.GetType().GetField(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(target);
         private static CombatantSnapshot Combatant(
             string id,
             CombatTeam team,

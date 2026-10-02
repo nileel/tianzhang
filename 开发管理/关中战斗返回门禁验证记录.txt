@@ -1,0 +1,36 @@
+# 关中战斗返回门禁验证记录
+
+- 任务：U-GZ-PLAYTEST-EXIT-GUARD-01；2026-10-02；实现与本记录同提交；基线 3d683324059467ac0ae3e3282665e645a721133d。
+- 工作区：D:\天章游戏开发\.worktrees\manual\U-GZ-PLAYTEST-EXIT-GUARD-01；分支 codex/u-gz-playtest-exit-guard-01。
+- 主模型此前 requestMeta 实测 gpt-6-astra；辅助请求 gpt-6.1-sol/high 只读核对直接所有者、gpt-6.1-sol/medium 独占两份允许测试文件并只读复核生产差异。辅助服务实际模型未另核验。主责负责生产代码、全部差异、最终验证及提交。
+- 写前风险预检 taskCardDigest=374d5e650fdf7ad70a9b5781bee45ef9da8a84170fcaa28097fe6a422a382fc1，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates=[]，与schema2投影一致。
+
+## 根因及实现
+
+ReturnToSource无状态检查，Input直接派发节点，Hud在已有节点时提前返回，导致战斗期间探索返回入口仍可执行。现在 Controller.CurrentState 是唯一门禁来源，计算属性只允许 Exploration；Input 在派发前查询，ReturnToSource 本身也拒绝非探索状态，复用 adventure_not_exploring。拒绝不调用 Fail、导航、结算或地图节点写入。Hud 首次创建及后续呈现均刷新同一 Button.interactable。正常 ResolveEncounter 保留原结算与导航路径。
+
+## 正式运行证据
+
+- Unity 6000.3.18f1，进程38152，启动UTC 2026-10-02T06:37:24.1255712Z；真实项目为该工作区/src。实际 Game View 1920×1080（显示缩放0.8），从 StartMenuScene Play Mode 新建默认角色，独立槽 exit-guard-20261002-1445，无改写属性或模拟场景。
+- 路径：StartMenu→新建角色→关陇玄域→关中城→进入副本关中野外。未进入战斗时点击“返回据点”，实际回到 SettlementScene/关中城。截图01、02。
+- 重入野外→石甲兽遭遇：玩家生命571/571、灵力180/180；石甲兽生命839/839、灵力108/108，双方真实模型可见。截图03。
+- 在原返回按钮位置（此窗口坐标590,490）连续点击两次，仍为AdventureScene，双方生命与开场战报未改变，未回城。截图04、05。
+- 同会话 RuntimeProbe Inspect /UICanvas/AdventurePanel/AdventureNodeContainer/AdventureNode_return 返回 status=ok、truncated=false，Button.m_Interactable=false；原始return-button.json记录项目、进程、isPlaying、场景及对象身份。
+- 随后点击待机，原战斗继续，敌方真实普攻造成62伤害，玩家生命509/571；截图06。未把禁用按钮等同于底层合法性，直接调用由下列定向测试覆盖。
+- 证据保存于此工作区 src/Logs/exit-guard/（忽略目录，保留工作区）：01-exploration.jpg、02-exploration-return.jpg、03-combat-before-return.jpg、04-combat-after-return.jpg、05-combat-repeat-return.jpg、06-combat-continues.jpg、return-button.json及formal.log。
+
+## 定向验证及限制
+
+- EditMode TianZhang.Tests.AdventureNodeDispatchTests：8/8通过；非探索三状态直接Dispatcher/ReturnNodeHandler、Input及绕过按钮onClick反复调用均无导航、节点或结算副作用；探索正常返回一次，同一按钮禁用再启用无重复对象。
+- PlayMode TianZhang.Tests.PlayMode.GuanzhongCombatNavigationGuardPlayModeTests：2/2通过；真实内容catalog、角色、导航、悬赏与掉落服务链，Victory/Defeat从Combat经过原ResolveEncounter返回一次，重复Resolve按已有AlreadyConsumed拒绝，无重复发奖或跳转。两分支是定向测试，未冒充正式实玩胜负结果。
+- XML分别位于editmode.xml/playmode.xml，两个现有run-unity脚本ValidateResultOnly均通过；Unity编译通过。测试meta导入成功；没有CSV、内容asset或asmdef变化，沿用输入未变化的已通过数据链/程序集边界检查，不重复运行。
+- Unity自动产生的ProjectSettings/ShaderGraphSettings空格噪声已恢复。本卡未改战斗平衡、存档、撤退规则或自动化配置。最终双分辨率整体UI与实际胜负仍由后续批次和V卡验收，本记录不代签用户品质接受。
+
+## 证据SHA-256
+
+- 01-exploration.jpg: 80E6D3C4E74148CF663C690BAACC1F97210DEC30C0BC757EE15A2A25343527D8
+- 02-exploration-return.jpg: FD8F026967A81FA12CAE605C086E9CEFF79B746EF5CD42E37CA1DB08F0EB9D0A
+- 03-combat-before-return.jpg: D7FB4764E89A71E387CC972FD01AF871EBDB4CE5AA1853C93CE4DE01E2DBA07A
+- 04-combat-after-return.jpg: AD6FCA15F287DE17554EF396AE83DB5FE70E5B2E4B8BB1B705E66399A4F7C549
+- 05-combat-repeat-return.jpg: 3B7EB1DC40DC10E613BF49B60C1DA0B4D6C87305C068D2AD5E93C8238DD80414
+- 06-combat-continues.jpg: 8DD193F8C63E863EDB7EEBE5BD564C3B9C387E506C3B248001789113CA8C5BA0

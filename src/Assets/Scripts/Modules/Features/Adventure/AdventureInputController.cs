@@ -8,23 +8,31 @@ namespace TianZhang.Features.Adventure
         private AdventureSession session;
         private AdventureNodeDispatcher dispatcher;
         private AdventureHudPresenter hud;
+        private Func<bool> canSelectExplorationNode;
 
         public void Configure(
             AdventureSession adventureSession,
             AdventureNodeDispatcher nodeDispatcher,
-            AdventureHudPresenter presenter)
+            AdventureHudPresenter presenter,
+            Func<bool> canSelectNode)
         {
             session = adventureSession ?? throw new ArgumentNullException(nameof(adventureSession));
             dispatcher = nodeDispatcher ?? throw new ArgumentNullException(nameof(nodeDispatcher));
             hud = presenter;
+            canSelectExplorationNode = canSelectNode ?? throw new ArgumentNullException(nameof(canSelectNode));
         }
 
         public bool SelectNode(string nodeId)
         {
             if (session == null || !session.TryGetNode(nodeId, out var node)) return false;
+            if (!canSelectExplorationNode())
+            {
+                hud?.Present(session, SelectNode, "adventure_not_exploring", false);
+                return false;
+            }
             bool handled = dispatcher.TryDispatch(node, out string reason);
             if (handled) session.Select(node, reason);
-            hud?.Present(session, SelectNode, handled ? null : reason);
+            hud?.Present(session, SelectNode, handled ? null : reason, canSelectExplorationNode());
             return handled;
         }
     }

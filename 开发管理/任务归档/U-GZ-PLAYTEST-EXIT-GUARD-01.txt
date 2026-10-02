@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-02：正式首战双方存活时点return可直接回城已有运行证据；采用最小修复：战斗期间拒绝探索返回，胜负仍走原ResolveEncounter，不新增撤退规则。所有者与定向验收已冻结。",
+  "stateReason": "2026-10-02：正式StartMenu首战重复点击原返回入口不离开战斗，按钮真实禁用；探索返回可用，8项EditMode及2项胜败一次返回PlayMode通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs",
@@ -90,3 +90,7 @@
 ## 停止条件
 
 - 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
+
+## 完成验证
+
+- 实现、正式Game View/按钮运行探针和测试证据见 开发管理/关中战斗返回门禁验证记录.txt，与本归档同提交。未改变胜败结算规则；不替代最终整体复验。
