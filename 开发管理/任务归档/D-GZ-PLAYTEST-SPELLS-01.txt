@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261002-CD9BEC9E8C20F4",
+  "stateReason": "2026-10-02：按负责人选择 A 完成两术法合同、下游精确路径与验收准备；U 转 ready，N 等待 U 的正式施法与普通角色输入。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md",
     "开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt",
@@ -26,64 +26,7 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-GZ-PLAYTEST-SPELLS-01",
-    "sourceRunId": "bed13a05-23d9-4bb2-bd19-105b662e0368",
-    "owner": "codex",
-    "route": "codex_execute",
-    "decisionId": "DEC-20261002-CD9BEC9E8C20F4",
-    "question": "关中小族新角色的第二术法应采用哪条授权路线？",
-    "options": [
-      {
-        "key": "A",
-        "label": "新增无门派练气攻击术法"
-      },
-      {
-        "key": "B",
-        "label": "授权小族例外获得磐石桩"
-      },
-      {
-        "key": "C",
-        "label": "改为太一道庭角色起点"
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A保持小族与资格语义，但需后续新增内容和实现路径。",
-    "plainSummary": {
-      "situation": "关中小族新角色的第二术法应采用哪条授权路线？",
-      "impact": "A保持小族与资格语义，但需后续新增内容和实现路径。",
-      "action": "建议选择 A：新增无门派练气攻击术法"
-    },
-    "checkpointCommit": "e4909627772af62fe1e7d0d5d384ed5c1ba296aa",
-    "baseCommit": "6f827525098fe6c135d8319b7a059ea2cc235648",
-    "branch": "codex/automation/codex/bed13a05-23d9-4bb2-bd19-105b662e0368/candidate",
-    "changedPaths": [
-      "docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md"
-    ],
-    "verified": [
-      "术法CSV筛选确认仅spell_julingshu同时为练气、player、faction_sanxiu",
-      "术法原文、建角、保存、生成、HUD与AttackProfile所有者已核对",
-      "check-review-text、check-pending-whitespace、git diff --cached --check、check-data-chain通过"
-    ],
-    "unverified": [
-      "两术法正式施法与Game View运行证据",
-      "石甲兽数值平衡"
-    ],
-    "residualRisk": "未选择第二术法前不得授予太一道庭术法或解除U、N阻塞。",
-    "taskContextDigest": "294b8a6d9fc6efd17661f6e012f0a95aada8a574da4775242980dd36472c0ce9",
-    "createdAt": "2026-10-02T12:21:16.8451433+08:00",
-    "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20261002-CD9BEC9E8C20F4",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "c18abfe4b6e1f398c9031da13d493642d15323ee81da33ab919efb1c107a1090"
-  }
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
 # D-GZ-PLAYTEST-SPELLS-01 · 关中初始两术法选择与获得装配合同
@@ -138,3 +81,12 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 完成记录（2026-10-02）
+
+- 唯一交付：docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md。负责人选择 A 已确认；贯石击、聚灵术、两槽取得装配与存档、资格、效果、施术者环境和所有者链完整冻结。
+- U 卡已补齐直接代码、数据、生成资产及 .meta、测试、正式运行记录和普通角色输入路径并进入 ready。N 保留 U 阻塞，精确冻结复用正式 Combat 源码的 BattleSim 定向入口；不拿旧 Character/CT 公式冒充关中。
+- D 开工风险预检：taskCardDigest=b3f93913c40c23e24cc24e8a4dfd70b07c4f98666cde7725a59263d723c1627e，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，命中/门禁为空。U 重算为空；N 命中 EXP-BS-001，已消费先 build 后 run 正文，投影同步。
+- 模型协作：请求 Sol / medium 作数据/保存/路径核查，Sol / high 作 N 实际入口核查，Astra / high 作规则冲突复核；全部只读，主责统一复核，无子提交或自动化操作。
+- 自动 run 7583741b-3163-41f3-a7b5-15033d5c0376 的 context_invalid 故障已按负责人本对话明确授权精确以 failed/manual_authorized_preserve_checkpoint 关闭；其暂存 spec 与 checkpoint 保留。旧待选项元数据不再留在 completed 事实投影；批准与现场出处见本合同。
+- 管理/文本/数据链与路径限定检查随本次提交验证。未改变 Unity/BattleSim 输入，不用编译或实机测试伪装设计卡成果。两术法实机施放和首战平衡仍未验收，由 U/N/V 分别交付。

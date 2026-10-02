@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-GZ-PLAYTEST-SPELLS-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-02：D 已冻结两术法及数值验证入口；仍等待 U 的真实 profile、正式普通小族快照和施法交付。不得仅凭设计值进入 ready。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
@@ -25,11 +25,18 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt",
-    "开发管理/任务归档/N-GZ-PLAYTEST-BALANCE-01.txt"
+    "开发管理/任务归档/N-GZ-PLAYTEST-BALANCE-01.txt",
+    "docs/怪物/怪物事实速查.txt",
+    "simulations/BattleSim/Program.cs",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "开发管理/关中首战普通角色输入.json"
   ],
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-BS-001"
+    ],
     "gates": []
   },
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt"
@@ -84,3 +91,12 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 数值入口准备
+
+- 读取 docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md 与 U 交付的关中首战普通角色输入.json。默认五项先天均 8；只选择小族出身，不使用 15 点样本。
+- 现 BattleSim Character.FinalizeStats 与正式 CharacterAttributes.Derive 不同，Combat.Simulate 只有一个 Art 且按回合递减冷却，不能冒充正式 CT。保留它们，不复制一套新内核。只在 Program 分派 --guanzhong-playtest --input <输入文件>，由 GuanzhongPlaytestAudit 读取正式 CSV 与输入并调用实际纯 C# Combat 内核。
+- BattleSim.csproj 沿既有 Compile Link 引用只读的 CombatCommand、CombatAttackProfile、CombatantSnapshot、CombatantRegistry、CombatActionResult、CombatSession、CombatActionResolver、CombatCommandService、CombatTurnScheduler、CombatResultBuilder、Turns/CTBEngine 与 Editor/CsvTableReader；Spatial 已链接。最终链接集合以 U/MOVE-RULE 实际字段为准，在转 ready 时复核，不改这些 Unity 文件。
+- 新审计文件仅做 LoadProductionInputs/RunSeed/VerifyRejectedCommands 和报告。普攻、贯石耗尽后普攻、贯石加必要自用聚灵三策略按多种随机种子比较；参数读取真实 AttackProfiles/Enemies，不重写 1.2/12/10/5 常量。核实他用聚灵与缺 MP、死亡/越界拒绝不消费。
+- 两单位相邻仅是正式起点的数值抽象，不复制 36 格地图、场景环境传播或输入。报告明确数值样本范围。敌人数值改变后从同源 CSV→asset→Unity owner 更新快照，再模拟，防止旧输入。
+- 修改后按 AGENTS 运行 Release build、默认 run，再运行定向关中模式。正式普通角色最终可胜与完整体验仍交给 V-FLOW。当前保持 blockedBy=U-GZ-PLAYTEST-SPELLS-01；准备结论不是平衡结论。
