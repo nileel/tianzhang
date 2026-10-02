@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：关中小族新角色的第二术法应采用哪条授权路线？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261002-CD9BEC9E8C20F4",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md",
     "开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt",
@@ -75,6 +75,14 @@
     "taskContextDigest": "294b8a6d9fc6efd17661f6e012f0a95aada8a574da4775242980dd36472c0ce9",
     "createdAt": "2026-10-02T12:21:16.8451433+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261002-CD9BEC9E8C20F4",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "c18abfe4b6e1f398c9031da13d493642d15323ee81da33ab919efb1c107a1090"
   }
 }
 ---TASK-BODY---
