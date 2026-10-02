@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-MOVE-RULE-01"
-  ],
-  "stateReason": "2026-10-02：UI审计已冻结唯一调度所有者、只读DTO、v6显示/刷新、精确路径与定向验收；仍等待U-GZ-PLAYTEST-MOVE-RULE-01，交付后核对真实行动阶段入口并重新预检才可ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-02：MOVE-RULE已归档并集成77ccf501，Session.CurrentActorId/TurnPhase及Coordinator.Present与原冻结合同匹配；现有路径足够，无待规则决定，复用CTB原排序投影后实施。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
     "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
@@ -105,3 +103,9 @@
 
 - 审计证实正式CTB路径在运行、行动轴及CT快照未接；本卡只有真实状态只读投影这一结果。移动规则前置仍未交付，故保持blocked。
 - 准备由实际主模型gpt-6-astra完成，未调用子智能体。expectedPaths没有扩展；新合同与必要完整逻辑单元已定位。实现前重查移动结果，不把当前成功Move立即结束行动的旧行为当正确事实。
+
+## 2026-10-02 前置交付后的执行准备
+
+- 已消费MOVE-RULE完成归档及77ccf501，完整读取Session/Coordinator与CTB/Scheduler、Presenter/Builder/Installer；Sol/high独立只读核查确认原expectedPaths足够。新工作树隔离，不占用HP定时run。
+- ActionThenMove仍显示CTB实际CT/门槛，不把尚未结算的PendingCooldownPenalty当作引擎现值；Finished到下次Advance之间允许无当前项。已排队项保留原序、死亡由Scheduler过滤，蓄力预测复用CTB比较语义且不冒称已排队。
+- Builder在原文件内提供局部轴重建方法，仅添加既有UICanvas下轴并写引用，避免Build全场重建覆盖相机/HP/术法接线。子智能体如获独占写入，只负责CTBEngine与CombatTurnScheduler两路径；主责整合DTO/UI/场景与最终验收，唯一candidate。
