@@ -33,6 +33,9 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
         [SerializeField] private Static3DCombatUnitPresentationProvider static3DUnitPresentationProvider;
+        [SerializeField] private CombatUnitHealthBarView combatUnitHealthBars;
+        [SerializeField] private Camera battlefieldCamera;
+        [SerializeField] private Canvas hudCanvas;
 
         private void Awake()
         {
@@ -55,6 +58,9 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
                 RequireReference(static3DUnitPresentationProvider, "static_3d_presentation_provider_missing");
+                RequireReference(combatUnitHealthBars, "combat_unit_health_bars_missing");
+                RequireReference(battlefieldCamera, "battlefield_camera_missing");
+                RequireReference(hudCanvas, "combat_hud_canvas_missing");
                 if (!static3DUnitPresentationProvider.TryValidate(out string presentationReason))
                     throw new InvalidOperationException(presentationReason);
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
@@ -69,6 +75,8 @@ namespace TianZhang.Bootstrap
                 encounterCoordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
                 combatActionBar.ConfigureText(ResolveAttackProfileName);
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
+                combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
+                combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar);
                 encounterCoordinator.Configure(
                     combatHudPresenter,

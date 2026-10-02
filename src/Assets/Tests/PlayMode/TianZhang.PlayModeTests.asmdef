@@ -2,6 +2,7 @@
     "name": "TianZhang.PlayModeTests",
     "references": [
         "UnityEngine.TestRunner",
+        "UnityEngine.UI",
         "TianZhang.Foundation",
         "TianZhang.Domain",
         "TianZhang.Content",

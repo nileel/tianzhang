@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-02：UI审计与SCALE完成归档已消费；现有资源DTO、body锚点所有者、显示/刷新/清理、精确脚本/场景/meta路径与定向验收已冻结，风险投影为空，可单主责独立实现。",
+  "stateReason": "2026-10-02：稳定ID资源/真实body头部锚点接入正式场景；4项定向PlayMode通过，修正字体行高后正式链顶点复验1/1通过，StartMenu双分辨率双方受击刷新、低血红色与败北清理可见。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
@@ -29,7 +29,9 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt",
-    "开发管理/任务归档/U-GZ-PLAYTEST-HP-01.txt"
+    "开发管理/任务归档/U-GZ-PLAYTEST-HP-01.txt",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -96,3 +98,27 @@
 
 - 审计实际观察到边栏生命刷新、头顶条缺失；现有DTO足够，provider已有稳定ID与实例，SCALE归档及本轮源码证实body=1.4，基础atlas/字体实际导入。没有美术采购或规则决定前置。
 - 本卡一个结果：稳定ID资源与真实头部锚点的可见接线。允许路径完整且没有新增程序集/模型/全局框架依赖；准备由gpt-6-astra单主责完成，未调用子智能体。ready后执行者仍须在自己的任务worktree重新预检并取得正式运行证据。
+
+## 2026-10-02 直接验证依赖
+
+- PlayMode定向测试直接检查Text/Image/Canvas投影，测试程序集需显式引用UnityEngine.UI；只补该直接依赖，不新增生产程序集或放宽边界。
+## 完成交付与运行证据
+
+- Provider按稳定ID只合并实际body Renderer bounds；排除底座/反馈并包含body1.4与root动作倍率。HealthBarView按ID保存资源，仅LateUpdate投影，ScreenSpaceOverlay无额外倍率补偿、无遮挡射线，全部Graphic不拦截输入；Presenter/Installer注入既有Camera/Canvas/provider。局部Builder保存同一AdventureScene双条模板，复用批准图集与GuanzhongChinese字体。
+- 主责复核完整差异；gpt-6.1-sol/medium子智能体text_owner负责独占HealthBarView两路径，gpt-6.1-sol/high子智能体runtime_evidence负责独占定向测试并只读复核，主责统一接线、实机和提交。模型覆盖由原生委派请求，未更改定时模型配置。
+- 修改前/直接测试asmdef路径补齐后重跑风险预检：taskCardDigest=b081489a5d5302d44e6cc78bde1d3b8bfcb2ad4a6d3dd4b00502f018824b9e71，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates均空。
+- Unity6000.3.18f1定向GuanzhongUnitHealthBarPlayModeTests 4/4通过（src/Logs/hp/playmode.xml）：双方伤害/治疗/灵力、交换DTO槽仍按ID、不合法上限报错清条；实际双Profile六向/移动/攻击/受击/root复位/相机移动与远近的bounds→screen→Canvas→Rect底中点误差<0.5px；屏外/背后/inactive/死亡/退出/重进/真实遮挡覆盖策略。
+- 首次正式Game View发现文字全部不可见后停止布局猜测：同一正式链量得font lineHeight22、Text字号20/18、preferredHeight27，而旧rectHeight24且vertices0。只修局部条模板为姓名/生命/灵力单行，HorizontalLayoutGroup+PreferredSize横向宽度、文本内高32、总高44；不动字体、世界锚点或Canvas。追加真实非空Text顶点断言后单正式链1/1通过（src/Logs/hp/text-fit.xml）；六Text顶点24/36/36与12/36/36，均preferredHeight27<rectHeight32。失败诊断保留text-diagnostic.xml，未冒充通过。
+- 正式实机入口：Assets/Scenes/StartMenuScene.unity→新建默认寒门角色“无名修士”，独立slot hp-20261002-1613→关陇玄域→关中城→关中野外→石甲兽遭遇。1920×1080双方姓名/生命/灵力与条均可见；点击普攻后玩家571→509、敌839→793。1366×768再次普攻玩家509→447、敌793→747；无串条/截断。后续真实战斗玩家137/571时红色填充，运行探针fill=0.23992994、RGBA(0.804,0.239,0.200,1)，敌仍为独立绿色资源；最终实际败北回关中城，两条随战斗清理。
+- 原始实机截图与探针均保存在本任务独立worktree的src/Logs/hp/：03-startmenu-reentry.jpg、04-visible-bars-1920.jpg、05-real-attack-refresh-1920.jpg、06-visible-bars-1366.jpg、07-real-attack-refresh-1366.jpg、08-low-health-red-1366.jpg、09-defeat-return-cleanup.jpg、formal-bars-after-attack-1920.json、formal-health-low-1366.json、formal-fill-low-1366.json。Logs为忽略证据，不伪装正式产品资产。
+- 数据链检查通过（83术法/602语言键）；管理与路径检查随最终提交执行。不改变战斗数值，未运行BattleSim。相机键鼠实操由CAMERA卡独立验收，最终v6整屏与两术法资源费用仍由各自下游负责；不代替V-FLOW和用户V-ART接受。
+
+## 经验候选
+
+- pending：正式UI文本字段非空不等于可见。此次固定24高文字框小于批准字体实际27高，Text竖向Truncate导致顶点0；同入口运行时字体指标、Rect高度及cachedTextGenerator.vertexCount共同证实根因。可复用于固定行高中文HUD；门禁可能为真实场景非空文本必须生成字形且preferredHeight不超文字框，不以编译/数据绑定成功替代可见验收。
+
+## 2026-10-03 恢复与集成核对
+
+- 用户批准精确关闭超时自动run afd4e6f7-21cb-4edc-83df-b0b2eb3525bc。已核对无该run存活进程、记录中无candidate/canonical，并以failed关闭；自动工作树中c27dd838及全部暂存/未暂存现场和日志保留，不恢复旧会话、不发送成功通知、不修改定时配置。本对话独立候选a1350ac8重放到最新master，保留BASE-FIT与MOVE-RULE结果。
+- 后续正式建角核查证实默认出身为寒门，以上实机记录据实际入口更正，HP功能不依赖小族资格。
+- 重放后的受影响头顶条定向PlayMode再次4/4通过（src/Logs/hp/rebase-playmode.xml）；新底座贴地关系和移动阶段输入已消费。已通过且输入未变的双分辨率截图不重复取得。

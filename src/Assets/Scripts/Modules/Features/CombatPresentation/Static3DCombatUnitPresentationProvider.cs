@@ -94,6 +94,7 @@ namespace TianZhang.Features.CombatPresentation
                 units.Add(combatant.CombatantId, new PresentedUnit(
                     root,
                     baseRenderer,
+                    body.GetComponentsInChildren<Renderer>(true),
                     combatant.PresentationProfileId,
                     combatant.CombatantId));
             }
@@ -164,6 +165,27 @@ namespace TianZhang.Features.CombatPresentation
         {
             root = null;
             return units.TryGetValue(combatantId, out PresentedUnit unit) && (root = unit.Root) != null;
+        }
+
+        public bool TryGetHeadAnchor(string combatantId, out Vector3 anchor)
+        {
+            anchor = default;
+            if (string.IsNullOrWhiteSpace(combatantId) ||
+                !units.TryGetValue(combatantId, out PresentedUnit unit) ||
+                unit.Root == null || !unit.Root.activeInHierarchy)
+                return false;
+
+            bool found = false;
+            Bounds bounds = default;
+            foreach (Renderer renderer in unit.BodyRenderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                if (found) bounds.Encapsulate(renderer.bounds);
+                else { bounds = renderer.bounds; found = true; }
+            }
+            if (!found) return false;
+            anchor = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+            return true;
         }
 
         public bool TryGetLastEvent(string combatantId, out CombatUnitPresentationEvent presentationEvent)
@@ -319,10 +341,11 @@ namespace TianZhang.Features.CombatPresentation
 
         private sealed class PresentedUnit
         {
-            public PresentedUnit(GameObject root, MeshRenderer baseRenderer, string profileId, string combatantId)
+            public PresentedUnit(GameObject root, MeshRenderer baseRenderer, Renderer[] bodyRenderers, string profileId, string combatantId)
             {
                 Root = root;
                 BaseRenderer = baseRenderer;
+                BodyRenderers = bodyRenderers;
                 ProfileId = profileId;
                 CombatantId = combatantId;
                 LastEvent = CombatUnitPresentationEvent.Idle;
@@ -330,6 +353,7 @@ namespace TianZhang.Features.CombatPresentation
 
             public GameObject Root { get; }
             public MeshRenderer BaseRenderer { get; }
+            public Renderer[] BodyRenderers { get; }
             public string ProfileId { get; set; }
             public string CombatantId { get; }
             public CombatUnitPresentationEvent LastEvent { get; set; }

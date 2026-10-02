@@ -8,6 +8,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatHudView view;
         [SerializeField] private CombatCommandInput commandInput;
         [SerializeField] private CombatLogView logView;
+        [SerializeField] private CombatUnitHealthBarView healthBars;
 
         public void Configure(
             CombatHudView hudView,
@@ -22,6 +23,7 @@ namespace TianZhang.Features.CombatPresentation
         public void Present(CombatHudSnapshot snapshot)
         {
             view?.Present(snapshot);
+            healthBars?.Present(snapshot);
             string art = snapshot != null && snapshot.ArtProfileIds.Count > 0 ? snapshot.ArtProfileIds[0] : null;
             string divine = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             commandInput?.SetContext(
@@ -33,11 +35,13 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         public void ClearLog() => logView?.Clear();
+        public void ConfigureHealthBars(CombatUnitHealthBarView value) => healthBars = value;
         public void AppendLog(string message) => logView?.Append(message);
 
         public void Hide()
         {
             view?.Hide();
+            healthBars?.Hide();
             commandInput?.SetContext(null, null, null, null, false);
         }
     }

@@ -162,7 +162,102 @@ namespace TianZhang.Editor
                 "profileSet",
                 SceneBuildSupport.RequireAsset<Static3DCombatUnitPresentationProfileSet>(
                     FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
+            BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/重建关中头顶血条")]
+        public static void RebuildUnitHealthBars()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), item => item.name == "AdventureRoot");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), item => item.name == "UICanvas")?.GetComponent<Canvas>();
+            Camera camera = Array.Find(scene.GetRootGameObjects(), item => item.name == "Main Camera")?.GetComponent<Camera>();
+            if (root == null || canvas == null || camera == null)
+                throw new InvalidOperationException("Adventure health bars require the existing root, Canvas and Camera.");
+            BuildUnitHealthBars(root, canvas, camera);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the Guanzhong unit health bars.");
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void BuildUnitHealthBars(GameObject root, Canvas canvas, Camera camera)
+        {
+            Transform existing = canvas.transform.Find("CombatUnitHealthBars");
+            if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+            var container = new GameObject("CombatUnitHealthBars", typeof(RectTransform));
+            container.transform.SetParent(canvas.transform, false);
+            container.transform.SetAsFirstSibling();
+            RectTransform containerRect = container.GetComponent<RectTransform>();
+            containerRect.anchorMin = Vector2.zero;
+            containerRect.anchorMax = Vector2.one;
+            containerRect.offsetMin = containerRect.offsetMax = Vector2.zero;
+            CombatUnitHealthBarView view = root.GetComponent<CombatUnitHealthBarView>() ?? root.AddComponent<CombatUnitHealthBarView>();
+            var serialized = new SerializedObject(view);
+            SerializedProperty bars = serialized.FindProperty("bars");
+            bars.arraySize = 2;
+            for (int index = 0; index < 2; index++)
+            {
+                GameObject bar = SceneBuildSupport.CreatePanel("UnitHealthBar_" + index, container.transform, Vector2.one * 0.5f, Vector2.one * 0.5f);
+                RectTransform rect = bar.GetComponent<RectTransform>();
+                rect.pivot = new Vector2(0.5f, 0f);
+                rect.sizeDelta = new Vector2(0f, 44f);
+                rect.anchoredPosition = Vector2.zero;
+                SettlementSceneBuilder.ApplyPanelSkin(bar);
+                HorizontalLayoutGroup row = bar.AddComponent<HorizontalLayoutGroup>();
+                row.padding = new RectOffset(8, 8, 2, 10);
+                row.spacing = 10;
+                row.childAlignment = TextAnchor.MiddleCenter;
+                row.childControlWidth = row.childControlHeight = true;
+                row.childForceExpandWidth = false;
+                row.childForceExpandHeight = true;
+                bar.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                Text identity = CreateHealthBarText("Identity", bar.transform, 20);
+                Text health = CreateHealthBarText("Health", bar.transform, 18);
+                Text spirit = CreateHealthBarText("Spirit", bar.transform, 18);
+                var track = new GameObject("HealthTrack", typeof(RectTransform), typeof(Image));
+                track.transform.SetParent(bar.transform, false);
+                RectTransform trackRect = track.GetComponent<RectTransform>();
+                trackRect.anchorMin = Vector2.zero;
+                trackRect.anchorMax = Vector2.right;
+                trackRect.anchoredPosition = new Vector2(0f, 5f);
+                trackRect.sizeDelta = new Vector2(-16f, 5f);
+                track.AddComponent<LayoutElement>().ignoreLayout = true;
+                track.GetComponent<Image>().color = new Color32(35, 42, 42, 255);
+                var fill = new GameObject("HealthFill", typeof(RectTransform), typeof(Image));
+                fill.transform.SetParent(track.transform, false);
+                RectTransform fillRect = fill.GetComponent<RectTransform>();
+                fillRect.anchorMin = Vector2.zero;
+                fillRect.anchorMax = Vector2.one;
+                fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
+                Image fillImage = fill.GetComponent<Image>();
+                fillImage.sprite = SettlementSceneBuilder.UiSprite("Guanzhong_Panel_Paper");
+                fillImage.type = Image.Type.Filled;
+                fillImage.fillMethod = Image.FillMethod.Horizontal;
+                fillImage.fillOrigin = 0;
+                foreach (Graphic graphic in bar.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+                SerializedProperty entry = bars.GetArrayElementAtIndex(index);
+                entry.FindPropertyRelative("root").objectReferenceValue = rect;
+                entry.FindPropertyRelative("identityText").objectReferenceValue = identity;
+                entry.FindPropertyRelative("healthText").objectReferenceValue = health;
+                entry.FindPropertyRelative("spiritText").objectReferenceValue = spirit;
+                entry.FindPropertyRelative("healthFill").objectReferenceValue = fillImage;
+                bar.SetActive(false);
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            AdventureSceneInstaller installer = root.GetComponent<AdventureSceneInstaller>();
+            SceneBuildSupport.SetObject(installer, "combatUnitHealthBars", view);
+            SceneBuildSupport.SetObject(installer, "battlefieldCamera", camera);
+            SceneBuildSupport.SetObject(installer, "hudCanvas", canvas);
+            SceneBuildSupport.SetObject(root.GetComponent<CombatHudPresenter>(), "healthBars", view);
+        }
+
+        private static Text CreateHealthBarText(string name, Transform parent, int fontSize)
+        {
+            Text text = SceneBuildSupport.CreateText(name, parent, string.Empty, fontSize);
+            text.font = SettlementSceneBuilder.UiFont;
+            text.raycastTarget = false;
+            return text;
         }
 
         [MenuItem("天章/场景/重建关中战场")]
