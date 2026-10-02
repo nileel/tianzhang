@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-02：冻结实际 Input System 输入栈及其直接程序集引用/白名单检查路径；相机结果与原验收不变，正式实施前重算风险。",
+  "stateReason": "自动责任方确认阻塞：unity_batchmode_project_locked_by_manual_worktree",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
