@@ -1,0 +1,92 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-EXIT-GUARD-01",
+  "title": "关中战斗中探索返回入口门禁修复",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-02：正式首战双方存活时点return可直接回城已有运行证据；采用最小修复：战斗期间拒绝探索返回，胜负仍走原ResolveEncounter，不新增撤退规则。所有者与定向验收已冻结。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs.meta",
+    "开发管理/关中战斗返回门禁验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-EXIT-GUARD-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-EXIT-GUARD-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-EXIT-GUARD-01 · 关中战斗中探索返回入口门禁修复
+
+## 来源与当前边界
+
+- 用户于2026-10-02明确要求审计剩余问题全部建立任务；本卡是该次完整补充规划的一个叶子，沿用既有A-GZ-PRESENT-01汇总，不新建父项。
+- 实际功能实现与本卡验证完成才可归档；建卡、方案或仅隐藏故障入口不等于实现完成。当前允许路径、数据/代码所有者、停止条件及验证已冻结。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md#2026-10-02 审计剩余UI缺口补充
+- 开发管理/关中战斗UI逐项排查记录.txt（本卡对应行和运行证据）
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::Start/BeginEncounter/ReturnToSource/ResolveEncounter
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs::Configure/SelectNode
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs::Present
+- src/Assets/Scripts/Modules/Features/Adventure/ReturnNodeHandler.cs
+- src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs
+- 开发管理/关中战斗UI逐项排查记录.txt#新发现但不扩入本卡的规划证据
+- 先检索再读取当前步骤完整逻辑单元及直接调用者；不读取整个backlog，不以历史摘要替代src/docs与任务事实。
+
+## 实施范围
+
+- 唯一结果：玩家处于Combat时不能通过仍存在的探索节点/return绕开战斗结束；正常探索返回和胜负结算返回继续可用。
+- 沿用AdventureController.CurrentState这一个权威状态。ReturnToSource检查允许探索返回的状态，拒绝时不改CurrentState/Navigation/地图当前节点、不调用loadScene。探索节点按钮可用性由同一状态投影；如需Input入口限制，使用该状态的显式查询，不能再维护一份isInCombat状态。
+- 在现有Controller→Input/Hud配置链局部接线；节点禁用/隐藏只作反馈，直接派发return也必须被原返回处理者拒绝。复用已存在adventure_not_exploring原因语义，显示中文由UI-TEXT既有映射负责，不为本卡建规则或独立恢复路径。
+- ResolveEncounter胜负后正常结算/返回不走探索点击门禁；没有战斗撤退、逃跑消耗、存档迁移或新结算策略。TIMELINE隐藏左面板不能替代本卡底层限制。
+
+## 禁止项
+
+- 不修改expectedPaths外文件；不扩大到其他地区、全局UI框架、模型重制、数值平衡、存档迁移或新自动化机制。需要扩边界时先停止并回报已证实根因。
+- 不改稳定ID、命令合法性或领域参数来迎合显示；不把网页fixture、静态文档、Editor预览当正式可见结果。
+- 保留用户改动。手动执行先创建任务worktree并消费风险预检；子智能体不写任务卡/队列/提交/runtime/锁，也不派生。
+
+## 模型协作
+
+- 简单修复：已有真实复现和单一状态owner，结果是返回入口合法性。沿用入口默认单模型，无需子智能体；执行前核对Unity工具与正式场景取证能力。
+- 业务写入前核对复杂度、实际工具/证据能力；主模型以入口实际值为准，调用及未核实项记入本卡验证记录。不因建议模型切换配置或新增审批。主责统一复核完整diff、最终验证和唯一提交。
+
+## 验证
+
+- 定向测试探索return仍返回原据点；Combat时鼠标点击和直接节点派发均不跳场景、不改变节点/导航/结算；重复点击无额外副作用。
+- 正式StartMenu进入首战，双方存活时重现原点击位置/入口并记录拒绝或不可操作；另用定向PlayMode验证正常Victory/Defeat调用原ResolveEncounter只结算一次并能返回。测试分支证据不得冒充正式流程实玩胜负通过。
+- 只运行受本卡影响的编译、直接EditMode/PlayMode与正式Game View；Unity/CSV变化校验.meta、数据链及程序集边界。未改角色数值平衡不运行BattleSim。
+- 管理/文档使用check-task-cards、check-review-text；建卡/改路径/转ready重跑get-experience-risk-preflight并消费mustRead/门禁；暂存前check-pending-whitespace，暂存后git diff --cached --check。已通过且输入未变不重复检查。
+
+## 完成条件
+
+- 唯一结果可独立判断，正式功能/可见证据与定向测试可追溯；开发管理/关中战斗返回门禁验证记录.txt记录提交、入口、操作、关键状态/数值和限制，不代签用户体验接受。
+- 完成归档时同步本卡、backlog、队列；下游由后续维护按本补充计划核对全部前置、精确路径/.meta/验收及风险投影后才ready，不在本卡未列路径写其他任务卡。最终V-GZ-PLAYTEST-FLOW-01复验、V-GZ-ART-SLICE-01用户实玩门保持。
+
+## 停止条件
+
+- 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。

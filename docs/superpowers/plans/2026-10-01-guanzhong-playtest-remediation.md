@@ -86,3 +86,37 @@ V-GZ-PLAYTEST-FLOW-01与U-GZ-BASE-MODELS-01完成后，V-GZ-ART-SLICE-01仍须�
 - 2026-09-20-guanzhong-ui-v6-unity-integration-contract.md第3节；战斗系统行动轴与移动规则；CombatTurnScheduler/CTBEngine/CombatCommandService及EncounterCoordinator。
 - CharacterCreationRules、AdventureUnitSpawner.CreatePlayer、AttackProfiles.csv、CombatHudPresenter/CombatActionBarView/CombatCommandInput。
 - 术法设计卡还须解决具体候选的docs/CSV冲突与合法授予：例如玄水咒灵根要求、流火灵符伤害类型有已发现不一致。本计划未选择候选、未给出平衡值、未改这些事实源。
+
+## 2026-10-02 审计剩余UI缺口补充
+
+用户在确认审计尚未实现UI、仍有未分配缺口后要求剩余问题全部建卡。本次一次建立以下5张实施叶子，原20张叶子/汇总父项保持；不增加审计任务或自动化状态。原表首批状态是历史事实，实时调度只读任务卡/队列。
+
+| ID | 唯一结果 | 直接前置 | 建卡状态 |
+|---|---|---|---|
+| U-GZ-PLAYTEST-UI-TEXT-01 | 关中探索与战斗界面中文文本接线 | — | ready |
+| U-GZ-PLAYTEST-EXIT-GUARD-01 | 关中战斗中探索返回入口门禁修复 | — | ready |
+| U-GZ-PLAYTEST-UI-TARGET-01 | 战斗目标详情与行动轴世界选中联动 | U-GZ-PLAYTEST-UI-TEXT-01、U-GZ-PLAYTEST-TIMELINE-01、U-GZ-PLAYTEST-MOVE-UI-01 | blocked |
+| U-GZ-PLAYTEST-UI-PREVIEW-01 | 战斗行动预览确认与条件CT下次位置显示 | U-GZ-PLAYTEST-UI-TARGET-01、U-GZ-PLAYTEST-TIMELINE-01、U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-MOVE-UI-01、U-GZ-PLAYTEST-SPELLS-01 | blocked |
+| U-GZ-PLAYTEST-UI-LAYOUT-01 | 关中战斗v6整屏布局与双分辨率收口 | U-GZ-PLAYTEST-CAMERA-01、U-GZ-PLAYTEST-HP-01、U-GZ-PLAYTEST-TIMELINE-01、U-GZ-PLAYTEST-MOVE-UI-01、U-GZ-PLAYTEST-SPELLS-01、U-GZ-PLAYTEST-UI-TEXT-01、U-GZ-PLAYTEST-UI-TARGET-01、U-GZ-PLAYTEST-UI-PREVIEW-01、U-GZ-PLAYTEST-EXIT-GUARD-01 | blocked |
+
+### 完整覆盖与依赖
+
+- 显示key/英语命令→UI-TEXT；战斗中return回城→EXIT-GUARD；世界/轴查看目标缺失→UI-TARGET；行动预览/确认/取消、条件自身下次位置→UI-PREVIEW；旧整块HUD遮挡/v6结构/双分辨率→UI-LAYOUT。布局卡同时接已有悬赏进度的只读摘要，不留假数据。
+- UI-TEXT→UI-TARGET→UI-PREVIEW→UI-LAYOUT；EXIT-GUARD→UI-LAYOUT。TARGET还等待原TIMELINE/MOVE-UI；PREVIEW等待原TIMELINE/MOVE-RULE/MOVE-UI/SPELLS；LAYOUT等待全部真实可见组件及相机。完整直接边见上表，没有反向依赖。
+- V-GZ-PLAYTEST-FLOW-01保留原八项前置并显式增加五卡；V-GZ-ART-SLICE-01继续通过V-FLOW与正式双底座汇合，用户同版本实玩接受后才关闭原A-GZ-PRESENT-01等汇总项。
+- 每张卡均列完整已知expectedPaths（Unity文件含.meta）、所有者、输入、验证记录、停止条件与模型协作。blocked卡在临近ready消费真实前置输出再冻结接口/布局与风险；不预分析其他backlog，不用“审计完成”替代功能完成。
+
+### 已查明的准备事实
+
+- 原审计有战斗中return直接回城的正式运行证据。AdventureController.ReturnToSource缺少状态检查，而BeginEncounter已有Exploration检查；Input.SelectNode直接派发。修复沿用唯一CurrentState拒绝战斗中的探索返回，不建立撤退/逃跑结算规则。
+- Language.csv已有enemy_shijiahou和adventure_guanzhong_wild，SettlementView.cs中UiText已有解析，AdventureInstaller已有languageTable但未接显示writer。Bootstrap可引用Settlement，Adventure/CombatPresentation不能新增兄弟Feature引用；用Bootstrap显式注入显示委托复用解析器，不建第二词表/框架，不对用户姓名或整条战报做Replace。
+- v6 app.js的pick/renderDetail/renderPreview冻结的是当前、查看、条件下次三个语义，以及选择→预览→确认、取消零消耗。未知敌方伤害/命中保持未知，8/12人、固定费用/排名、药品/逃跑等网页fixture不自动变成正式规则。
+- HP/TIMELINE保持局部职责；TARGET接联动，PREVIEW接未提交候选/条件预测，LAYOUT最后组合真实功能。共享文件不是虚构业务前置，表中的依赖来自实际组件、数据和输入生产者；同一Builder/Presenter仍单主责顺序修改。
+
+### 首批ready与关闭条件
+
+UI-TEXT、EXIT-GUARD具备根因、权威输入与验收，可ready；后三卡保留具名前置。按P1下游解锁量、等待时间插入后，队列为UI-TEXT→原CAMERA→原HP→EXIT-GUARD，原CAMERA/HP相对顺序不变。本轮只建卡，不执行新任务。
+
+UI-TEXT推荐gpt-6.1-sol/medium，EXIT-GUARD默认单模型；TARGET/PREVIEW/LAYOUT推荐gpt-6.1-sol/high，仅独立证据冲突才按卡触发只读辅助。主模型沿用实际入口。本次规划由主责完成，未调用子智能体，未修改Unity代码/CSV/场景，未重跑输入未变的旧运行取证。
+
+五卡全部交付并由V-FLOW对同版本正式UI复验后，本次剩余问题才算功能闭合；整段品质仍等待V-GZ-ART-SLICE-01用户接受。验收必须包含中文刷新、战斗返回拒绝与正常胜负返回、世界/轴同ID联动、取消零消费/确认一次执行、条件CT预测、长文本与双分辨率整屏操作；任何缺失不得静默从验收中移除。

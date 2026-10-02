@@ -71,5 +71,12 @@
 
 - TIMELINE 已准备，仍 blockedBy U-GZ-PLAYTEST-MOVE-RULE-01；前置交付后核对当前行动阶段入口、重新预检才可 ready。
 - HP 已消费 SCALE完成归档及本审计；路径、输入、视图与验收已冻结，可在本审计完成事件中转ready。其实现仍须在独立任务 worktree 中正式取证。
-- 两术法、移动、相机按现有计划卡推进；整屏布局、通用本地化、完整目标查看联动及战斗返回门禁按审计记录交规划。本合同不偷偷把它们变成这两个叶子的扩展范围。
+- 两术法、移动、相机按现有计划卡推进；2026-10-02用户要求其余问题全部建卡后，中文显示归U-GZ-PLAYTEST-UI-TEXT-01，返回门禁归U-GZ-PLAYTEST-EXIT-GUARD-01，目标查看/世界联动归U-GZ-PLAYTEST-UI-TARGET-01，行动预览/条件自身下次位置归U-GZ-PLAYTEST-UI-PREVIEW-01，整屏布局归U-GZ-PLAYTEST-UI-LAYOUT-01。第2/3节对TIMELINE和HP的局部边界不变，这五项不再是无归属缺口。
 - 最终连续流程由 V-GZ-PLAYTEST-FLOW-01，最终用户实玩接受由 V-GZ-ART-SLICE-01；本合同不代签。
+
+## 5. 补充实施接缝
+
+- 中文解析沿用现有Language.csv和UiText，由Bootstrap注入显示委托；Adventure/CombatPresentation不新增对Settlement的直接程序集引用，不对整条日志或用户姓名做字符串替换。
+- TARGET区分当前行动者与被查看目标；PREVIEW额外持有未提交候选命令和有条件的下次位置。选中/预览不得改权威战斗状态，确认重新验证后才执行。v6 fixture中的固定数值、未知敌方属性、药品/撤退菜单不进入本轮正式规则。
+- LAYOUT消费以上真实组件做最终屏幕集成，并接入现有悬赏进度的只读摘要；所有新卡的完整路径、输入、模型协作、验收和停止条件读取各自任务卡。blocked卡只在真实前置交付并完成准备后进入ready。
+- 五项均成为V-GZ-PLAYTEST-FLOW-01显式前置；最终用户接受链为五项及既有修复→V-FLOW→V-GZ-ART-SLICE-01，不创建新的汇总父项。

@@ -76,3 +76,7 @@ enemy_shijiahou：BasicAttack，伤害 62
 - 实际主模型经 Node REPL metadata 核验为 gpt-6-astra。任务是有界的只读取证与两直接卡准备，主责直接完成，未调用子智能体、未修改自动化模型配置。
 - 使用 unity-agent-workflows 的 runtime-owner-proof、ui-and-visual-assets、unity-validation 及 UNITY_STRUCTURE.md/UI 映射定位；使用 computer-use 操作隔离 Unity。两份映射只作入口，结论取自上述正式对象、源码完整方法和运行日志。
 - 已退出 Play Mode 并关闭本轮启动的 Unity。仅由该次编辑器产生的 ShaderGraphSettings.asset 尾空格已恢复；没有保留 src 路径变更。未运行与文档无关的全套 Unity 测试或 BattleSim；本轮游戏启动/正式 UI 取证不替代下游定向测试和用户最终接受。
+
+## 2026-10-02 后续规划落卡
+
+本节是用户随后要求“剩余的问题也全部建立任务”的状态事件，不改写以上审计发生时事实。已新建U-GZ-PLAYTEST-UI-TEXT-01、U-GZ-PLAYTEST-EXIT-GUARD-01、U-GZ-PLAYTEST-UI-TARGET-01、U-GZ-PLAYTEST-UI-PREVIEW-01、U-GZ-PLAYTEST-UI-LAYOUT-01，分别承接中文显示、返回门禁、目标联动、行动预览/条件自身下次位置和整屏布局。依赖/首批ready/关闭条件见原反馈修复计划的“2026-10-02 审计剩余UI缺口补充”；V-GZ-PLAYTEST-FLOW-01已加入五项前置。这里仅证明已排入正式任务体系，不表示问题已修复。

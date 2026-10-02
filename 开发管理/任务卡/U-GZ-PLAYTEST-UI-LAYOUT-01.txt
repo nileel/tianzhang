@@ -1,0 +1,138 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-UI-LAYOUT-01",
+  "title": "关中战斗v6整屏布局与双分辨率收口",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-PLAYTEST-CAMERA-01",
+    "U-GZ-PLAYTEST-HP-01",
+    "U-GZ-PLAYTEST-TIMELINE-01",
+    "U-GZ-PLAYTEST-MOVE-UI-01",
+    "U-GZ-PLAYTEST-SPELLS-01",
+    "U-GZ-PLAYTEST-UI-TEXT-01",
+    "U-GZ-PLAYTEST-UI-TARGET-01",
+    "U-GZ-PLAYTEST-UI-PREVIEW-01",
+    "U-GZ-PLAYTEST-EXIT-GUARD-01"
+  ],
+  "stateReason": "2026-10-02：整屏遮挡/布局缺口已建立最终组合叶子；等待真实控件/目标/预览/文字及相机输入完成后，以运行中的矩形和已有v6参考布局做一次收口，不拿空占位面板验收。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBountyTrackerView.cs",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatLogView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBountyTrackerView.cs.meta",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs.meta",
+    "开发管理/关中战斗整屏布局验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-UI-LAYOUT-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-UI-LAYOUT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-UI-LAYOUT-01 · 关中战斗v6整屏布局与双分辨率收口
+
+## 来源与当前边界
+
+- 用户于2026-10-02明确要求审计剩余问题全部建立任务；本卡是该次完整补充规划的一个叶子，沿用既有A-GZ-PRESENT-01汇总，不新建父项。
+- 实际功能实现与本卡验证完成才可归档；建卡、方案或仅隐藏故障入口不等于实现完成。前置尚未齐备，当前路径为完整已知边界；临近ready须消费前置真实输出重新核对原子性和风险，不得提前开工。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md#2026-10-02 审计剩余UI缺口补充
+- 开发管理/关中战斗UI逐项排查记录.txt（本卡对应行和运行证据）
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/REUSE-SPEC.md#6. 战斗 v6 收尾
+- assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/app.js::renderHud/renderPreview/renderDetail
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build
+- src/Assets/Scripts/Editor/SceneBuildSupport.cs::CreateCanvas（只读，不改共享helper）
+- src/Assets/Scripts/Modules/World/BountyUseCase.cs（已接任务/进度只读查询）
+- src/Assets/Scripts/Modules/World/BountyStore.cs
+- 开发管理/关中战斗UI逐项排查记录.txt#逐项对照与归属
+- 开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-HP-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-UI-TEXT-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-UI-TARGET-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-UI-PREVIEW-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-EXIT-GUARD-01.txt（已归档则读取对应完成结果）
+- 先检索再读取当前步骤完整逻辑单元及直接调用者；不读取整个backlog，不以历史摘要替代src/docs与任务事实。
+
+## 实施范围
+
+- 唯一结果：前置真实功能在同一正式Adventure Game View内按v6组成可操作、不被旧左右整块面板遮挡的战斗界面；这是既有控件的最终布局集成，不重写功能规则。
+- 保留同一UICanvas，Builder为持久布局creator，Installer接线，Presenter/View为刷新writer。使用v6左窄行动轴、右上悬赏追踪、右侧可关闭目标详情、底部操作/预览及可滚动战报；把旧探索节点面板在Combat隐藏、返回Exploration恢复。TIMELINE已有切换逻辑在此统一消费，不能另建模式状态。
+- 右上悬赏摘要只读投影已有BountyUseCase/Store的已接任务与进度，由Adventure/Bootstrap→Contracts→新CombatBountyTrackerView接线；不改悬赏接取、奖励、存档或领域状态。未接任务时明确显示无追踪，不写固定假任务文本。
+- 以v6 reference1920×1080的52边距/76行动轴/360详情等为源，量测CanvasScaler、实际父Rect、LayoutGroup/Mask、相机viewport及最终控件rect；低分辨率使用收纳/内部滚动保留操作和战场，不用连续offset/scale补丁。不能将相机size4改回远景掩盖HUD遮挡，也不改SceneBuildSupport共享创建默认值。
+- 当前、选中、预测三标记区别清楚，长中文名称/长战报/目标详情展开/预览弹出不能遮住确认取消或抢世界输入。按实际已实现功能呈现；不增加其他地区窗口、背包、药品、撤退或未支持菜单，不采购整套新UI资源。
+- 新脚本仅CombatBountyTrackerView和两份本卡测试；前置交付后按真实引用再冻结布局数值和直连测试，expectedPaths外出现新资产/全局框架/规则需求时停止回规划。
+
+## 禁止项
+
+- 不修改expectedPaths外文件；不扩大到其他地区、全局UI框架、模型重制、数值平衡、存档迁移或新自动化机制。需要扩边界时先停止并回报已证实根因。
+- 不改稳定ID、命令合法性或领域参数来迎合显示；不把网页fixture、静态文档、Editor预览当正式可见结果。
+- 保留用户改动。手动执行先创建任务worktree并消费风险预检；子智能体不写任务卡/队列/提交/runtime/锁，也不派生。
+
+## 模型协作
+
+- 复杂组合验收：前置真实界面齐备后建议gpt-6.1-sol/high统一收口，单主责复核全部差异。只有独立的runtime布局/输入证据冲突才用gpt-6.1-sol/high只读核查一组明确表面；没有独立面不派辅助，禁止多个写入者同时调共享Builder。
+- 业务写入前核对复杂度、实际工具/证据能力；主模型以入口实际值为准，调用及未核实项记入本卡验证记录。不因建议模型切换配置或新增审批。主责统一复核完整diff、最终验证和唯一提交。
+
+## 验证
+
+- 正式入口同版本1920×1080和1366×768：探索→战斗→目标详情→预览取消/确认→长战报→胜/败返回；按钮/提示可读可点，战场操作区域不被旧整块HUD覆盖，模式切换无残留。
+- 保存Builder输出、重开场景、Play Mode再检查引用与布局；记录source/parent/final rect、Canvas scale、camera viewport、截屏和点击证据，不能只用Editor预览。
+- 目标/行动轴/血条/预览/战报的既有直接测试只在受本次改动影响时重跑；悬赏摘要与唯一Store一致且不增加/重复结算。最终FLOW与V-ART仍独立验证。
+- 只运行受本卡影响的编译、直接EditMode/PlayMode与正式Game View；Unity/CSV变化校验.meta、数据链及程序集边界。未改角色数值平衡不运行BattleSim。
+- 管理/文档使用check-task-cards、check-review-text；建卡/改路径/转ready重跑get-experience-risk-preflight并消费mustRead/门禁；暂存前check-pending-whitespace，暂存后git diff --cached --check。已通过且输入未变不重复检查。
+
+## 完成条件
+
+- 唯一结果可独立判断，正式功能/可见证据与定向测试可追溯；开发管理/关中战斗整屏布局验证记录.txt记录提交、入口、操作、关键状态/数值和限制，不代签用户体验接受。
+- 完成归档时同步本卡、backlog、队列；下游由后续维护按本补充计划核对全部前置、精确路径/.meta/验收及风险投影后才ready，不在本卡未列路径写其他任务卡。最终V-GZ-PLAYTEST-FLOW-01复验、V-GZ-ART-SLICE-01用户实玩门保持。
+
+## 停止条件
+
+- 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。

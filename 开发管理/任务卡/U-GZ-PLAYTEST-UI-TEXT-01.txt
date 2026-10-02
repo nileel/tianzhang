@@ -1,0 +1,103 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-UI-TEXT-01",
+  "title": "关中探索与战斗界面中文文本接线",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-02：用户明确要求将剩余UI缺口全部建卡；已查明词表和UiText解析器存在，AdventureInstaller有languageTable但未接显示解析，creator/刷新writer、精确路径与验收已冻结。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs.meta",
+    "src/Assets/DataConfig/Language.csv.meta",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongFormalUiTextPlayModeTests.cs.meta",
+    "开发管理/关中探索与战斗中文接线验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-UI-TEXT-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-UI-TEXT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-UI-TEXT-01 · 关中探索与战斗界面中文文本接线
+
+## 来源与当前边界
+
+- 用户于2026-10-02明确要求审计剩余问题全部建立任务；本卡是该次完整补充规划的一个叶子，沿用既有A-GZ-PRESENT-01汇总，不新建父项。
+- 实际功能实现与本卡验证完成才可归档；建卡、方案或仅隐藏故障入口不等于实现完成。当前允许路径、数据/代码所有者、停止条件及验证已冻结。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md#2026-10-02 审计剩余UI缺口补充
+- 开发管理/关中战斗UI逐项排查记录.txt（本卡对应行和运行证据）
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs::UiText（完整解析逻辑，作为只读复用入口）
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs::Present
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::TryBegin/RunCombat/Present/Complete/BuildActionMessage
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::Present
+- src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::Awake
+- src/Assets/DataConfig/Language.csv::enemy_shijiahou/adventure_guanzhong_wild及实际显示原因键
+- src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef
+- src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef
+- 先检索再读取当前步骤完整逻辑单元及直接调用者；不读取整个backlog，不以历史摘要替代src/docs与任务事实。
+
+## 实施范围
+
+- 唯一结果：正式关中探索/战斗画面的地图、节点、状态、单位、命令、胜负及拒绝提示显示可理解的中文，稳定ID/原因码和玩家自定义文本保持原始语义。
+- 实证链：AdventureHudPresenter.Present直接写displayNameKey/session.Status/nodeId；EncounterCoordinator把enemy key、command.Kind与拒绝原因拼入战报；CombatActionBarView刷新时写profileId；AdventureInstaller已有languageTable字段。修创建与后续刷新两处，不仅替换初始label。
+- 复用SettlementView.cs内既有UiText和Language.csv，不搬迁解析器、不新增本地化系统/程序集/Feature互引。由已可引用Settlement的Bootstrap加载同一词表，并用显式委托注入Adventure/CombatPresentation的显示解析入口；两个Feature不直接引用Settlement。按结构化名称/命令/原因字段解析后再拼战报，禁止对整条战报或用户姓名做全局Replace。
+- Language.csv只补本次实际可达的节点、状态、命令/胜负与拒绝键；现有enemy_shijiahou=石甲兽、adventure_guanzhong_wild=关中野外直接消费。未知失败仍拒绝，原始原因保留开发证据；不伪造成功或用新兜底层掩盖漏映射。
+- 本卡不实现第二术法按钮、目标选择或整屏重排。未来SPELLS/TARGET/PREVIEW通过本批补充计划复用此显示入口；profile与术法名称取正式内容映射，不猜固定前缀。
+
+## 禁止项
+
+- 不修改expectedPaths外文件；不扩大到其他地区、全局UI框架、模型重制、数值平衡、存档迁移或新自动化机制。需要扩边界时先停止并回报已证实根因。
+- 不改稳定ID、命令合法性或领域参数来迎合显示；不把网页fixture、静态文档、Editor预览当正式可见结果。
+- 保留用户改动。手动执行先创建任务worktree并消费风险预检；子智能体不写任务卡/队列/提交/runtime/锁，也不派生。
+
+## 模型协作
+
+- 中等复杂：跨创建与刷新写入者，但根因和唯一词表明确。推荐gpt-6.1-sol/medium，实际主模型沿用入口；单主责无需辅助。若出现独立程序集边界冲突才按AI协作规则启用gpt-6.1-sol/high只读核查，返回调用者和引用证据。
+- 业务写入前核对复杂度、实际工具/证据能力；主模型以入口实际值为准，调用及未核实项记入本卡验证记录。不因建议模型切换配置或新增审批。主责统一复核完整diff、最终验证和唯一提交。
+
+## 验证
+
+- 直接EditMode验证已知键/枚举/复合拒绝的单向映射、未知拒绝保留原始原因、含稳定键片段的玩家姓名不被替换；定向PlayMode覆盖首次进入、命令后刷新、失败提示、退出重入。
+- 从正式StartMenu新建角色进入关中首战，核对地图/节点/敌人/Wait与BasicAttack战报不再泄露key；中文值与Language.csv一致，命令仍携带原始ID，按钮有效性不变。运行程序集边界检查，证明未新增Feature互引。
+- 只运行受本卡影响的编译、直接EditMode/PlayMode与正式Game View；Unity/CSV变化校验.meta、数据链及程序集边界。未改角色数值平衡不运行BattleSim。
+- 管理/文档使用check-task-cards、check-review-text；建卡/改路径/转ready重跑get-experience-risk-preflight并消费mustRead/门禁；暂存前check-pending-whitespace，暂存后git diff --cached --check。已通过且输入未变不重复检查。
+
+## 完成条件
+
+- 唯一结果可独立判断，正式功能/可见证据与定向测试可追溯；开发管理/关中探索与战斗中文接线验证记录.txt记录提交、入口、操作、关键状态/数值和限制，不代签用户体验接受。
+- 完成归档时同步本卡、backlog、队列；下游由后续维护按本补充计划核对全部前置、精确路径/.meta/验收及风险投影后才ready，不在本卡未列路径写其他任务卡。最终V-GZ-PLAYTEST-FLOW-01复验、V-GZ-ART-SLICE-01用户实玩门保持。
+
+## 停止条件
+
+- 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。

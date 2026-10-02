@@ -17,9 +17,14 @@
     "U-GZ-PLAYTEST-HP-01",
     "U-GZ-PLAYTEST-MOVE-UI-01",
     "U-GZ-PLAYTEST-SPELLS-01",
-    "N-GZ-PLAYTEST-BALANCE-01"
+    "N-GZ-PLAYTEST-BALANCE-01",
+    "U-GZ-PLAYTEST-UI-TEXT-01",
+    "U-GZ-PLAYTEST-EXIT-GUARD-01",
+    "U-GZ-PLAYTEST-UI-TARGET-01",
+    "U-GZ-PLAYTEST-UI-PREVIEW-01",
+    "U-GZ-PLAYTEST-UI-LAYOUT-01"
   ],
-  "stateReason": "2026-10-01：已在同一次规划建立全部已知叶子；等待具名前置冻结/交付。本卡现有业务路径为已定位范围，前置须补齐实际新增数据/资源路径与.meta、校验原子性和风险后才能ready。",
+  "stateReason": "2026-10-02：在原反馈修复前置上补齐审计剩余五项：中文显示、返回门禁、目标联动、行动预览与整屏布局；全部正式结果交付后才可复验，不能以审计完成代替功能完成。",
   "expectedPaths": [
     "开发管理/关中2026-10-01反馈修复复验记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -59,11 +64,14 @@
 - 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt（已归档则读取对应完成结论）
 - 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt（已归档则读取对应完成结论）
 - 开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt（已归档则读取对应完成结论）
+- 开发管理/任务卡/U-GZ-PLAYTEST-UI-TEXT-01.txt、U-GZ-PLAYTEST-EXIT-GUARD-01.txt、U-GZ-PLAYTEST-UI-TARGET-01.txt、U-GZ-PLAYTEST-UI-PREVIEW-01.txt、U-GZ-PLAYTEST-UI-LAYOUT-01.txt（均为同目录具名卡，已归档则读对应完成结果）
 - 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
 
 ## 实施范围
 
 - 对同一提交从正式StartMenu创建默认合法小族角色，接悬赏→进入扩展战场→平移镜头→观察真实行动轴与头顶HP→绕障碍移动→使用两个术法击败石甲兽→回城交任务→重复领取拒绝→保存读档。只复验与记录，不在验收卡修跨owner代码。允许暂用已修薄底座先给用户重测，正式新底座的最终品质另由V-GZ-ART-SLICE-01汇合。
+- 同一次正式流程加入五项补充验收：地图/节点/敌人/战报不泄露内部key；战斗未结束时探索return不能跳转；世界与轴查看同一目标但不改变当前行动者；两术法预览/取消零消费、确认才执行、条件CT预测不混为当前顺序；1920×1080和1366×768下整屏布局/长文本/详情/预览可读可操作，悬赏摘要取真实进度。
+- 胜负返回分别记录证据；正常结算不会被探索返回门禁锁死。缺失或被前置省略的UI功能仍是不通过，不能只验证打死敌人就宣布整屏与流程通过。
 
 ## 禁止项
 

@@ -1,0 +1,131 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-UI-PREVIEW-01",
+  "title": "战斗行动预览确认与条件CT下次位置显示",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-PLAYTEST-UI-TARGET-01",
+    "U-GZ-PLAYTEST-TIMELINE-01",
+    "U-GZ-PLAYTEST-MOVE-RULE-01",
+    "U-GZ-PLAYTEST-MOVE-UI-01",
+    "U-GZ-PLAYTEST-SPELLS-01"
+  ],
+  "stateReason": "2026-10-02：v6行动预览/确认/取消和自身预计下次标记已建立实施叶子；等待真实目标、移动阶段、两术法与CT快照，消费实际输出冻结只读预览接口与条件后才能ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs.meta",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs.meta",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs.meta",
+    "开发管理/关中战斗行动预览验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-UI-PREVIEW-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-UI-PREVIEW-01.txt",
+    "docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-UI-PREVIEW-01 · 战斗行动预览确认与条件CT下次位置显示
+
+## 来源与当前边界
+
+- 用户于2026-10-02明确要求审计剩余问题全部建立任务；本卡是该次完整补充规划的一个叶子，沿用既有A-GZ-PRESENT-01汇总，不新建父项。
+- 实际功能实现与本卡验证完成才可归档；建卡、方案或仅隐藏故障入口不等于实现完成。前置尚未齐备，当前路径为完整已知边界；临近ready须消费前置真实输出重新核对原子性和风险，不得提前开工。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md#2026-10-02 审计剩余UI缺口补充
+- 开发管理/关中战斗UI逐项排查记录.txt（本卡对应行和运行证据）
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- assets/generated-scene-art/guanzhong-first-bounty/ui-visual-v6/app.js::chooseAction/renderPreview/cancel/showTurnConfirmation（交互语义，非运行数值）
+- docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md
+- docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md#2. TIMELINE：真实状态的只读投影
+- src/Assets/Scripts/Combat/CombatCommandService.cs::Validate/Execute
+- src/Assets/Scripts/Combat/Turns/CTBEngine.cs::AdvanceUntilAction/ConsumeAction/WaitAction
+- src/Assets/Scripts/Modules/Content/AttackProfileData.cs（费用、目标及CooldownTicks字段）
+- 开发管理/任务卡/U-GZ-PLAYTEST-UI-TARGET-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt（已归档则读取对应完成结果）
+- 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt（已归档则读取对应完成结果）
+- 先检索再读取当前步骤完整逻辑单元及直接调用者；不读取整个backlog，不以历史摘要替代src/docs与任务事实。
+
+## 实施范围
+
+- 唯一结果：正式支持的操作形成可查看、可取消、确认才提交的同一候选命令；预览显示真实费用/可用性和有明确条件的自身下次位置。移动使用MOVE-UI已有选格/确认，不叠第二层确认；药品、逃跑、未装配神通等fixture功能不凭网页样板新增。
+- CombatCommandInput持有一个未提交候选；Presenter/新CombatActionPreviewView显示候选、当前目标、费用、拒绝原因及确认可用性。选择、换目标、取消、焦点变化不扣生命/灵力/移力/CT、不抽随机数；确认时用原CommandService重新Validate，再且仅再Execute一次，阶段/目标已变化则拒绝并刷新。
+- 普攻/两术法/防御/Wait/EndTurn的确认语义服从移动规则已冻结的行动阶段，不能把Move重新当整回合。关闭/取消/失去行动权/死亡/换场景清空候选；显示未知伤害/命中时明确未探明，不读取隐藏敌方数值制作假精确伤害。
+- 只读预览由真实Combat/CTB所有者提供，费用与惩罚取正式档案，UI不建计时器或复制规则。自身下次标记独立于当前和查看目标；按所选命令的明确假设给出条件预测，取消即移除。不得将未来其他单位尚未选择的行动当既成事实；精确排名不可确定时显示条件/不确定性，不能编造固定第N位。
+- 前置交付后的准备步骤必须冻结：候选命令字段、合法性入口、不会改权威状态的预览接口、预测条件/可确定范围及对应测试；写入本卡和运行合同时使用已列路径。若真实顺序预测需要新增战斗语义而不能由现规则推导，保持blocked并交具体决策，不用fixture或静默省略自身下次标记结项。
+- 新脚本仅CombatActionPreviewView及本卡PlayMode测试；Combat只读类型放已列现有文件内，不新增第二战斗模拟器、持久化或全局预览服务。
+
+## 禁止项
+
+- 不修改expectedPaths外文件；不扩大到其他地区、全局UI框架、模型重制、数值平衡、存档迁移或新自动化机制。需要扩边界时先停止并回报已证实根因。
+- 不改稳定ID、命令合法性或领域参数来迎合显示；不把网页fixture、静态文档、Editor预览当正式可见结果。
+- 保留用户改动。手动执行先创建任务worktree并消费风险预检；子智能体不写任务卡/队列/提交/runtime/锁，也不派生。
+
+## 模型协作
+
+- 复杂规则/表现边界：建议gpt-6.1-sol/high主责，临近ready依真实前置重新评估。若条件预测与调度顺序存在独立语义冲突，使用gpt-6-astra/high只读审查CommandService/CTB及对应合同，返回假设与可验证边界；不让模型意见替代运行证据。
+- 业务写入前核对复杂度、实际工具/证据能力；主模型以入口实际值为准，调用及未核实项记入本卡验证记录。不因建议模型切换配置或新增审批。主责统一复核完整diff、最终验证和唯一提交。
+
+## 验证
+
+- 对快照/随机源/资源做前后比较，反复预览与取消均零业务修改；确认一次执行一次，快速双击、过期目标/阶段、非法费用拒绝不误消费。
+- 在确定性样本中把相同真实命令分别用于独立会话：预览结果与实际提交后的费用/CT门槛/队列一致；条件外发生变化时UI撤销旧预测。不同速度/Wait/术法惩罚覆盖真实调度，不让测试重抄UI公式。
+- 正式入口使用两个术法分别预览/取消/确认，目标与当前角色不混淆；记录操作、实际命令ID、CT/门槛、费用和Game View。最终FLOW须重复这套真实交互。
+- 只运行受本卡影响的编译、直接EditMode/PlayMode与正式Game View；Unity/CSV变化校验.meta、数据链及程序集边界。未改角色数值平衡不运行BattleSim。
+- 管理/文档使用check-task-cards、check-review-text；建卡/改路径/转ready重跑get-experience-risk-preflight并消费mustRead/门禁；暂存前check-pending-whitespace，暂存后git diff --cached --check。已通过且输入未变不重复检查。
+
+## 完成条件
+
+- 唯一结果可独立判断，正式功能/可见证据与定向测试可追溯；开发管理/关中战斗行动预览验证记录.txt记录提交、入口、操作、关键状态/数值和限制，不代签用户体验接受。
+- 完成归档时同步本卡、backlog、队列；下游由后续维护按本补充计划核对全部前置、精确路径/.meta/验收及风险投影后才ready，不在本卡未列路径写其他任务卡。最终V-GZ-PLAYTEST-FLOW-01复验、V-GZ-ART-SLICE-01用户实玩门保持。
+
+## 停止条件
+
+- 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
