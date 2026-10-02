@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-02：负责人已选择新增无门派练气攻击术法；D 合同冻结贯石击、聚灵术、正式资格、环境与完整纵向所有者，直接路径和验证已补齐。实施前消费本卡最新风险预检。",
+  "stateReason": "2026-10-02：批准合同已冻结两术法；实施前核实真实中品水灵根在CharacterRuntimeProfile/保存链丢失，补齐原有者路径和资格直接测试。沿同一保存链补事实，不增加资格状态、Content程序集依赖或旧档迁移；重新预检后实施。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs.meta",
@@ -100,7 +100,25 @@
     "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs.meta",
     "tools/check-data-chain.ps1",
     "开发管理/关中两术法正式施法验证记录.txt",
-    "开发管理/关中首战普通角色输入.json"
+    "开发管理/关中首战普通角色输入.json",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    ".meta",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    ".meta",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    ".meta",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    ".meta",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    ".meta",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    ".meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -165,3 +183,10 @@
 - 新 GuanzhongStarterArtsPlayModeTests 负责两正式 profile、保存读回、资格与费用拒绝、self/other/环境分支，原 GuanzhongBasicAttackPlayModeTests 保留普攻回归。Content/Importer 的严格列和 fixture 同步，check-data-chain 的生产唯一普攻断言改为精确三 ID，不能放宽成任意数量。
 - 正式 StartMenu 路线截图/日志/真实数值记入关中两术法正式施法验证记录；不能仅靠受控场景或测试。另导出关中首战普通角色输入.json：真实新建小族、五项先天均 8、Spawner 最终快照、两 ID、裸魂魄、境界身份及来源摘要，供 N 使用；禁止抄写一个特调角色。输入记录不参与生产运行。
 - 独立范围核查请求 Sol / medium、规则核查请求 Astra / high；均只读，主责统一复核。此卡仍只有两术法可真实施放这一个纵向结果；任何新增语义或 owner 超出上述合同须暂停重新判断。
+## 2026-10-02 实施前直接链路补全
+
+- CreateDefaultDraft真实默认root_water_middle，中品水灵根；小族不改根，隐藏根为Dormant不授予资格。CharacterCreationRules.ApplyVisibleRoot已写入三个事实，缺失发生CharacterRuntimeProfile.FromDefinition→CharacterStateSnapshot→GameSaveEnvelope.CharacterRecord。补齐原三所有者及直接CharacterState/GameSaveEnvelope测试的精确路径和.meta；不新增根服务/存档/schema/Serializer迁移。
+- 新档保存VisibleRootId/Grade/Element（record camelCase），原Capture/Restore/FromSnapshot/HasCharacterPayload贯通。旧schema3缺字段保留空/未知，不回填默认根、不赠术法、不重写已有装配；未知事实不能获得术法资格。
+- Combat保持纯快照与既有程序集依赖。现有CombatAttackProfile内注入纯Func<string,string,string,bool>资格谓词（真实RealmStage、RootElement、RootGrade），EntryAdapter先复制不可变requirement字符串后调用修正的Content.AbilityRequirementPolicy，禁止捕获Unity Asset、场景或可变角色。Session扣费前统一调用，HUD消费同一命令合法性；不缓存第二套资格结果。
+- AbilityRequirementPolicy当前倍率签名仅测试调用，直接改为真实境界身份/元素/有效品级签名，更新唯一直接AbilityRequirementPolicyTests；不保留错误倍率兼容分支。unknown/非法品级不得以非空字符串放行；源品级表消费角色灵根原文和建角Catalog。
+- 本补全仍服务同一两术法正式施法纵向结果。已调用Sol/medium定位保存丢失点与数据字段；另调用Astra/high只读复核原子性、保存兼容与纯内核边界，明确不需增加asmdef或新资格服务。主责冻结分工后委派互不重叠字面量路径，统一复核完整差异与唯一candidate。
