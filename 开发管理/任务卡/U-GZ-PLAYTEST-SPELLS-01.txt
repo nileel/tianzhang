@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-02：独立worktree已实现并通过EditMode121/121、PlayMode11/11；实际StartMenu固定寒门散修且无出身选择，不能通过可见入口取得合同限定小族的两术法。已暂停入口扩写，待用户确认补既有出身选择或改默认；未标完成，现场保留。",
+  "stateReason": "2026-10-03：用户批准在现有建角界面接入四种既有出身选择，沿用默认寒门、预算和起点。补齐入口View/Controller/局部Builder/场景字面路径；既有小族两术法实现继续正式入口验收。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs.meta",
@@ -119,7 +119,15 @@
     "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs.meta",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
     "src/Assets/Tests/EditMode/TacticalGridModelTests.cs.meta",
-    "simulations/BattleSim/BattleSimSelfTests.cs"
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs.meta",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs.meta",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Scenes/StartMenuScene.unity.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -210,3 +218,9 @@
 - 实际StartMenuScene正常新建slot spells-20261002-1726进入World，起点江左；CharacterCreationController.Configure/Open/Submit均使用CreateDefaultDraft，Catalog默认OriginId=origin_loose，View只有槽名/姓名/提交，无出身控件。先前测试显式设Draft.OriginId=origin_minor_clan，只证明已批准小族链的功能正确，不能冒充默认可见入口。
 - 实现与验证保留在.worktrees/manual/U-GZ-PLAYTEST-SPELLS-01，src/Logs/spells/下有导入、EditMode121/121、PlayMode11/11及普通小族源数据导出；BattleSim构建/完整运行通过，数据链84/84与613语言键通过。尚无两个正式按钮的双分辨率实际点击验收。
 - 2026-10-02已向用户集中提出入口选择：推荐仅在现有View/Controller/Builder接出身选择，沿用四项OriginOption、预算、起点，默认寒门不变；备选明确把正式建角默认改小族。回复前不扩写入口路径，不提交业务candidate，不影响其他可执行UI卡或定时配置。
+## 2026-10-03 用户批准的正式建角入口
+
+- 用户明确选择“接入现有出身选择”，不改默认寒门。仅在现有CharacterCreationView/Controller和StartMenuScene的创建角色面板添加四项现有OriginOption按钮，消费Catalog的ID/名称，选中后沿现有Rules.Validate展示真实预算和起点；不新增出身、资格、预算或起点规则，不改旧档。
+- 所有者：StartMenuSceneBuilder局部更新CharacterCreationPanel及已有View序列化引用；Controller选择事件写Draft.OriginId并以单独刷新方法保持槽名与姓名输入，Submit仍走原验证和创建流程。Installer/Catalog/Models无需新增接缝；禁止整体重建菜单或改存档列表。
+- 直接测试在既有CharacterCreationTests覆盖默认值、四项选择、非法ID、输入保留和重复配置；GuanzhongStarterArtsPlayModeTests改由正式按钮选小族，移除直接改Draft.OriginId的入口捷径。主责在双分辨率实际StartMenu按钮点击后取得两术法可见施放证据。
+- 该补全仍是两术法从建角装配到正式施法同一纵向结果。入口实现有界，Sol/medium独占上述三个C#生产文件；测试由Sol/high独占两个既有测试文件。子智能体不得写场景/任务卡/队列/提交/runtime/锁或派生，主责统一场景生成、验证、完整diff和唯一candidate。
