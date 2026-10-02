@@ -10,7 +10,7 @@
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-01：用户关中实测反馈已明确授权本项；本卡结果、只读事实源、允许路径与验证已冻结，可按卡执行。",
+  "stateReason": "2026-10-02：冻结实际 Input System 输入栈及其直接程序集引用/白名单检查路径；相机结果与原验收不变，正式实施前重算风险。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
@@ -24,11 +24,20 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-CAMERA-01.txt",
-    "开发管理/任务归档/U-GZ-PLAYTEST-CAMERA-01.txt"
+    "开发管理/任务归档/U-GZ-PLAYTEST-CAMERA-01.txt",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef",
+    "src/Assets/Scripts/Modules/Features/Adventure/TianZhang.Features.Adventure.asmdef.meta",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef",
+    "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1"
   ],
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-002"
+    ],
     "gates": []
   },
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
@@ -81,3 +90,10 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 直接依赖准备
+
+- 实际项目仅启用 Input System，不能写旧 UnityEngine.Input。Adventure 与 PlayModeTests asmdef 缺 Unity.InputSystem 直接引用；AssemblyBoundaryEditorTests 与 check-unity-assembly-boundaries 的精确白名单须同步该一个依赖，不放宽模块边界。以上路径已补全，不修改 Packages 或全局输入配置。
+- 相机挂在正式 Camera，经 Builder 配置 GuanzhongBattlefield。bounds 由真实棋盘子 renderer 合并，只用于相机视线与棋盘平面交点的 XZ 钳制，不能把整个视窗强塞进小棋盘导致不能平移。不用固定格数、UI板、全场景Renderer或人物FX作为边界。
+- 新 Input System Keyboard/Mouse 实际设备事件驱动定向测试；UI 指针或 InputField 焦点阻止相机输入；鼠标中键从 UI 开始不得启动拖动，释放/失焦/禁用清除拖动状态。既有 Camera 朝向/Y 保持，帧时长只用于按键速度，拖动按地平面射线差值不再乘帧时长。
+- 本准备是已授权实施的最小直接依赖补齐；不改变任务目标，不新增自动化状态或第二相机框架。
