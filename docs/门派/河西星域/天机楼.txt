@@ -11,7 +11,7 @@
 与其他势力关系：与所有宗门都有交易，但无人真正信任他们
 ## 当前位格口径
 - 星术推演与星痕是天机楼的丹枢方向与丹枢积累，不产生独立位格，也不构成证位通道；真实位格仍唯一可争。
-- 推演/预知类能力以宙道路（ROAD_TIME：TIME_CT、TIME_PROCESS、TIME_REWIND）与意识道路（ROAD_ACTION：ACTION_OPTION_EDIT、ACTION_TARGET_EDIT、ACTION_INTENT_LOCK）效果为框架依据，而非独立证位通道。
+- 推演/预知类能力以宙道路（ROAD_TIME：TIME_CT、TIME_PROCESS、TIME_REWIND）与心念道路（ROAD_ACTION：ACTION_OPTION_EDIT、ACTION_TARGET_EDIT、ACTION_INTENT_LOCK）效果为框架依据，而非独立证位通道。
 - 天机楼拥有传承、星宿司组织接口与叙事解释权，不垄断任何道路或真实位格。
 （数值标注：本文件「功法侧重」「术法侧重」「神通侧重」中的倍率、概率、冷却折扣等均为设计草稿，待数值任务与 BattleSim 验证。）
 ## 功法侧重
