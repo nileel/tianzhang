@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Bootstrap;
@@ -117,6 +118,7 @@ namespace TianZhang.Tests.PlayMode
                  frame++)
             {
                 combatCommands.RequestBasicAttack("player", "enemy");
+                encounter.RequestEndTurn("player");
                 yield return null;
             }
             Assert.AreEqual(
@@ -161,6 +163,140 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual("guanzhong_hub", restored.Navigation.WorldNodeId);
             Assert.AreEqual(SettlementId, restored.Navigation.SettlementId);
             Assert.IsNull(restored.Navigation.AdventureId);
+        }
+
+        [UnityTest]
+        public IEnumerator FormalStartMenuSessionSupportsBothMoveActionOrdersAndProjectsTheCanonicalPath()
+        {
+            GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
+            if (staleBootstrap != null) { Object.Destroy(staleBootstrap.gameObject); yield return null; }
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
+            yield return WaitForScene(GameplaySceneNames.StartMenu);
+            GameBootstrap bootstrap = GameBootstrap.RequireInstance();
+            temporarySaveDirectory = Path.Combine(Application.temporaryCachePath,
+                "TianZhang-MoveRule-" + Guid.NewGuid().ToString("N"));
+            SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(temporarySaveDirectory));
+            CharacterCreationController creation = FindInActiveScene<CharacterCreationController>();
+            creation.Open();
+            creation.Draft.OriginId = "origin_minor_clan";
+            creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
+            creation.Submit("formal-move-rule", "移动规则验证");
+            yield return WaitForScene(GameplaySceneNames.World);
+            WorldMapController world = FindInActiveScene<WorldMapController>();
+            Assert.IsTrue(world.SelectNode("guanzhong_hub"));
+            world.EnterSelectedLocation();
+            yield return WaitForScene(GameplaySceneNames.Settlement);
+            SettlementController settlement = FindInActiveScene<SettlementController>();
+            BountyBoardView board = FindInActiveScene<BountyBoardView>();
+            board.Show(GetPrivateField<ContentCatalogData>(settlement, "contentCatalog"),
+                SettlementId, GameBootstrap.RequireRuntime().Bounties);
+            board.SubmitAccept(BountyId);
+            Assert.IsTrue(settlement.EnterAdventure(AdventureId));
+            yield return WaitForScene(GameplaySceneNames.Adventure);
+            AdventureController adventure = FindInActiveScene<AdventureController>();
+            yield return WaitForAdventureReady(adventure);
+            adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
+            EncounterCoordinator encounter = FindInActiveScene<EncounterCoordinator>();
+            encounter.SetCombatResolutionRandomSource(new SystemCombatResolutionRandomSource(1729));
+            Assert.IsTrue(FindInActiveScene<AdventureInputController>().SelectNode("shijiahou_encounter"));
+            CombatSession session = GetPrivateField<CombatSession>(encounter, "session");
+            AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
+            CombatantSnapshot player = spawned.Player, enemy = spawned.Enemy;
+            Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
+            var recording = new ForwardingPresentationPort(provider);
+            SetPrivateField(encounter, "unitPresentation", recording);
+            AssertFormalBattlefieldPresentation();
+            Assert.GreaterOrEqual(player.MaximumMovePoints, 2);
+
+            yield return WaitForPlayerTurn(encounter, session, player.Id);
+            int tickBeforeMove = session.TurnScheduler.CurrentTick;
+            foreach (HexCoord rejectedDestination in new[]
+                     { enemy.Position, new HexCoord(2, 1), new HexCoord(-1, 0), new HexCoord(5, 5) })
+            {
+                HexCoord positionBefore = player.Position;
+                int remainingBefore = player.MovePoints, facingBefore = player.Facing;
+                Assert.IsFalse(session.SpatialQuery.QueryMovement(positionBefore, rejectedDestination,
+                    remainingBefore, new[] { enemy.Position }).IsReachable);
+                ((ICombatCommandHandler)encounter).RequestMove(player.Id, rejectedDestination.Q, rejectedDestination.R);
+                Assert.That(player.Position, Is.EqualTo(positionBefore));
+                Assert.AreEqual(remainingBefore, player.MovePoints);
+                Assert.AreEqual(facingBefore, player.Facing);
+                Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
+                Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+            }
+            HexCoord firstDestination = new HexCoord(0, 1);
+            CombatMovementQueryResult firstPath = session.SpatialQuery.QueryMovement(
+                player.Position, firstDestination, player.MovePoints, new[] { enemy.Position });
+            Assert.IsTrue(firstPath.IsReachable, firstPath.Reason);
+            int movementBefore = player.MovePoints;
+            ((ICombatCommandHandler)encounter).RequestMove(player.Id, firstDestination.Q, firstDestination.R);
+            Assert.That(player.Position, Is.EqualTo(firstDestination));
+            Assert.AreEqual(movementBefore - firstPath.MovementCost, player.MovePoints);
+            Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+            Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
+            AssertFormalMovementProjection(recording, provider, player, firstPath);
+            ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
+            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase,
+                "Moving first must leave a real action and its remaining movement available.");
+            Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject playerRoot));
+            Vector3 startedAttackScale = playerRoot.transform.localScale;
+            Assert.AreNotEqual(Vector3.one, startedAttackScale, "The actual provider must have started its attack presentation.");
+            int eventsBeforeEnd = recording.Events.Count;
+            encounter.RequestEndTurn(player.Id);
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+            Assert.AreEqual(eventsBeforeEnd, recording.Events.Count, "EndTurn must not create an Idle presentation event.");
+            Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale,
+                "EndTurn must preserve the attack already running on the actual unit.");
+            int penaltyAfterEnd = session.PendingCooldownPenalty;
+            encounter.RequestEndTurn(player.Id);
+            Assert.AreEqual(penaltyAfterEnd, session.PendingCooldownPenalty);
+
+            yield return WaitForPlayerTurn(encounter, session, player.Id);
+            Assert.AreEqual(player.MaximumMovePoints, player.MovePoints);
+            ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
+            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            HexCoord secondDestination = new HexCoord(0, 0);
+            CombatMovementQueryResult secondPath = session.SpatialQuery.QueryMovement(
+                player.Position, secondDestination, player.MovePoints, new[] { enemy.Position });
+            Assert.IsTrue(secondPath.IsReachable, secondPath.Reason);
+            movementBefore = player.MovePoints;
+            ((ICombatCommandHandler)encounter).RequestMove(player.Id, secondDestination.Q, secondDestination.R);
+            Assert.That(player.Position, Is.EqualTo(secondDestination));
+            Assert.AreEqual(movementBefore - secondPath.MovementCost, player.MovePoints);
+            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            AssertFormalMovementProjection(recording, provider, player, secondPath);
+            encounter.RequestEndTurn(player.Id);
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+            TestContext.WriteLine($"Formal movement: firstCost={firstPath.MovementCost}, secondCost={secondPath.MovementCost}, " +
+                $"maxMovement={player.MaximumMovePoints}, final={player.Position}, facing={player.Facing}");
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
+            yield return WaitForScene(GameplaySceneNames.StartMenu);
+        }
+
+        private static IEnumerator WaitForPlayerTurn(EncounterCoordinator encounter, CombatSession session, string playerId)
+        {
+            for (int frame = 0; frame < 300; frame++)
+            {
+                Assert.IsTrue(encounter != null && encounter.IsRunning, "Formal combat ended before the movement scenario completed.");
+                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.MoveThenAction)
+                    yield break;
+                yield return null;
+            }
+            Assert.Fail("Formal combat did not yield the player's next turn.");
+        }
+
+        private static void AssertFormalMovementProjection(ForwardingPresentationPort recording,
+            Static3DCombatUnitPresentationProvider provider, CombatantSnapshot player, CombatMovementQueryResult query)
+        {
+            CombatUnitPresentationEventProjection movement = recording.Events.Last(value =>
+                value.ActorCombatantId == player.Id && value.PresentationEvent == CombatUnitPresentationEvent.Move);
+            CollectionAssert.AreEqual(query.Path.Select(value => new CombatUnitPresentationHex(value.Q, value.R)).ToArray(), movement.MovementPath);
+            Assert.AreEqual(player.Position.Q, movement.EndPosition.Q);
+            Assert.AreEqual(player.Position.R, movement.EndPosition.R);
+            Assert.AreEqual(player.Facing, movement.Facing);
+            Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject root));
+            Assert.Less(Vector3.Distance(Static3DCombatUnitPresentationProvider.HexToWorld(movement.EndPosition), root.transform.position), 0.0001f);
+            TestContext.WriteLine("Formal provider movement path: " + string.Join(" -> ", movement.MovementPath.Select(value => $"({value.Q},{value.R})")));
         }
 
         [UnityTest]
@@ -492,12 +628,35 @@ namespace TianZhang.Tests.PlayMode
             GameObject buttonObject = GameObject.Find("AdventureNode_" + nodeId);
             Assert.IsNotNull(buttonObject, "Adventure HUD did not create the expected runtime node button.");
             Image image = buttonObject.GetComponent<Image>();
+            Button button = buttonObject.GetComponent<Button>();
             Text label = buttonObject.GetComponentInChildren<Text>(true);
             Assert.IsNotNull(image);
+            Assert.IsNotNull(button);
             Assert.IsNotNull(label);
-            Assert.AreEqual(new Color(0.2f, 0.34f, 0.3f, 1f), image.color);
-            Assert.AreEqual(new Color(0.91f, 0.88f, 0.77f, 1f), label.color);
-            Assert.AreNotEqual(image.color, label.color, "Adventure node labels must contrast with their button background.");
+            Type database = Type.GetType("UnityEditor.AssetDatabase, UnityEditor");
+            Assert.IsNotNull(database);
+            MethodInfo loadAll = database.GetMethod("LoadAllAssetsAtPath", new[] { typeof(string) });
+            MethodInfo loadAsset = database.GetMethod("LoadAssetAtPath", new[] { typeof(string), typeof(Type) });
+            Assert.IsNotNull(loadAll);
+            Assert.IsNotNull(loadAsset);
+            Sprite[] approvedSprites = ((Object[])loadAll.Invoke(null, new object[]
+                { "Assets/Art/UI/Guanzhong/Guanzhong_UI_Atlas.png" })).OfType<Sprite>().ToArray();
+            Sprite normal = approvedSprites.Single(sprite => sprite.name == "Guanzhong_Button_Normal");
+            Sprite hover = approvedSprites.Single(sprite => sprite.name == "Guanzhong_Button_Hover");
+            Sprite selected = approvedSprites.Single(sprite => sprite.name == "Guanzhong_Button_Selected");
+            var font = loadAsset.Invoke(null, new object[]
+                { "Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf", typeof(Font) }) as Font;
+            Assert.IsNotNull(font);
+            Assert.AreEqual(normal, image.sprite);
+            Assert.AreEqual(Image.Type.Sliced, image.type);
+            Assert.AreEqual(Color.white, image.color, "The approved atlas must retain its untinted colors.");
+            Assert.AreEqual(Selectable.Transition.SpriteSwap, button.transition);
+            Assert.AreEqual(hover, button.spriteState.highlightedSprite);
+            Assert.AreEqual(selected, button.spriteState.pressedSprite);
+            Assert.AreEqual(selected, button.spriteState.selectedSprite);
+            Assert.AreEqual(normal, button.spriteState.disabledSprite);
+            Assert.AreEqual(font, label.font);
+            Assert.AreEqual((Color)new Color32(244, 234, 212, 255), label.color);
         }
 
         private static void AssertFormalProviderUnit(
@@ -526,7 +685,9 @@ namespace TianZhang.Tests.PlayMode
             GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
             Assert.IsNotNull(battlefield, "AdventureScene is missing the functional Guanzhong battlefield.");
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
-            Assert.AreEqual(6, battlefield.transform.childCount);
+            Assert.AreEqual(36, battlefield.transform.childCount);
+            Assert.AreEqual(4, battlefield.GetComponentsInChildren<Transform>(true).Count(value =>
+                value.name.StartsWith("GuanzhongObstacle_", StringComparison.Ordinal)));
             Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
             GameObject backdrop = FindSceneObjectIncludingInactive("VisualBackdrop");
             Assert.IsNotNull(backdrop);
@@ -830,6 +991,18 @@ namespace TianZhang.Tests.PlayMode
             public void Present(CombatUnitPresentationEventProjection presentationEvent) { }
             public void Remove(string combatantId) { }
             public void Clear() { }
+        }
+
+        private sealed class ForwardingPresentationPort : ICombatUnitPresentationPort
+        {
+            private readonly ICombatUnitPresentationPort actual;
+            public readonly List<CombatUnitPresentationEventProjection> Events = new List<CombatUnitPresentationEventProjection>();
+            public ForwardingPresentationPort(ICombatUnitPresentationPort actual) => this.actual = actual;
+            public void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> combatants) => actual.Prepare(combatants);
+            public void Spawn(CombatUnitPresentationDescriptor combatant) => actual.Spawn(combatant);
+            public void Present(CombatUnitPresentationEventProjection value) { Events.Add(value); actual.Present(value); }
+            public void Remove(string combatantId) => actual.Remove(combatantId);
+            public void Clear() => actual.Clear();
         }
 
         private static CombatUnitPresentationProfileCatalogData CreatePresentationCatalog()

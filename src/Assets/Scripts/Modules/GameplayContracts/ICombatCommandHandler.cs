@@ -11,6 +11,7 @@ namespace TianZhang.Gameplay.Contracts
         void RequestDivine(string actorId, string targetId, string profileId);
         void RequestGuard(string actorId);
         void RequestWait(string actorId);
+        void RequestEndTurn(string actorId);
         void RequestMove(string actorId, int destinationQ, int destinationR);
         void RequestSwapSpell(string actorId, int slotIndex, string profileId);
     }

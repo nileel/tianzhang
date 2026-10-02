@@ -61,6 +61,7 @@ namespace TianZhang.Combat
             PhysicalDefense = physicalDefense;
             SoulDefense = soulDefense;
             RealmMultiplier = Math.Max(1f, realmMultiplier);
+            MaximumMovePoints = movePoints;
             MovePoints = movePoints;
             this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds);
             this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds);
@@ -84,7 +85,8 @@ namespace TianZhang.Combat
         public int PhysicalDefense { get; }
         public int SoulDefense { get; }
         public float RealmMultiplier { get; }
-        public int MovePoints { get; }
+        public int MaximumMovePoints { get; }
+        public int MovePoints { get; private set; }
         public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
         public IReadOnlyList<string> AvailableArtProfileIds => availableArtProfileIds.AsReadOnly();
         public string BasicAttackProfileId { get; set; }
@@ -120,6 +122,22 @@ namespace TianZhang.Combat
         public void SetPosition(HexCoord position)
         {
             Position = position;
+        }
+
+        internal void ResetMovePoints()
+        {
+            MovePoints = MaximumMovePoints;
+        }
+
+        internal void CommitMovement(HexCoord destination, int cost, int facing)
+        {
+            if (cost < 0 || cost > MovePoints)
+                throw new ArgumentOutOfRangeException(nameof(cost));
+            if (facing < 0 || facing >= HexCoord.Directions.Length)
+                throw new ArgumentOutOfRangeException(nameof(facing));
+            MovePoints -= cost;
+            Facing = facing;
+            Position = destination;
         }
 
         public void SwapEquippedArt(int slotIndex, string profileId)

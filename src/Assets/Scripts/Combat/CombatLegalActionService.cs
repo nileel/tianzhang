@@ -20,7 +20,9 @@ namespace TianZhang.Combat
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
             if (!session.Combatants.TryGet(actorId, out CombatantSnapshot actor) ||
-                !actor.IsAlive || !session.TurnScheduler.IsReady(actor.Id))
+                !actor.IsAlive || session.IsFinished || session.TurnPhase == CombatTurnPhase.Finished ||
+                !string.Equals(session.CurrentActorId, actor.Id, StringComparison.Ordinal) ||
+                !session.TurnScheduler.IsReady(actor.Id))
                 return Array.Empty<CombatCommand>();
 
             var actions = new List<CombatCommand>();
@@ -29,6 +31,7 @@ namespace TianZhang.Combat
             AddTargetedAttacks(session, actor, CombatAttackKind.Divine, CombatCommandKind.Divine, actions);
             AddIfValid(session, new CombatCommand(CombatCommandKind.Guard, actor.Id), actions);
             AddIfValid(session, new CombatCommand(CombatCommandKind.Wait, actor.Id), actions);
+            AddIfValid(session, new CombatCommand(CombatCommandKind.EndTurn, actor.Id), actions);
             AddMoves(session, actor, actions);
             AddSpellSwaps(session, actor, actions);
             return actions;

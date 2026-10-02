@@ -13,10 +13,7 @@ namespace TianZhang.Combat
         {
             if (session == null || command == null)
                 throw new ArgumentNullException(session == null ? nameof(session) : nameof(command));
-            CombatActionResult validation = session.ValidateCommand(command);
-            return !validation.Succeeded
-                ? validation
-                : ResolveValidated(session, command, validation);
+            return new CombatCommandService(this).Execute(session, command);
         }
 
         internal CombatActionResult ResolveValidated(
@@ -29,6 +26,7 @@ namespace TianZhang.Combat
             return command.Kind switch
             {
                 CombatCommandKind.Guard => ResolveGuard(actor),
+                CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack => ResolveAttack(session, command, actor, CombatAttackKind.Basic),
                 CombatCommandKind.Art => ResolveAttack(session, command, actor, CombatAttackKind.Art),
@@ -50,8 +48,8 @@ namespace TianZhang.Combat
             CombatCommand command,
             CombatActionResult validation)
         {
-            actor.SetPosition(command.Destination.Value);
-            return CombatActionResult.MovementSuccess(validation.MovementPath, validation.MovementCost);
+            actor.CommitMovement(command.Destination.Value, validation.MovementCost, validation.MovementFacing);
+            return validation;
         }
 
         private static CombatActionResult ResolveSwapSpell(CombatantSnapshot actor, CombatCommand command)

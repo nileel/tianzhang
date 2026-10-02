@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-02：D-MOVE与MAP均已归档并进入master；已消费冻结合同和当前所有者，补齐EndTurn正式中文键及既有文本测试的直接路径，按用户连续实施授权准备ready。",
+  "stateReason": "2026-10-02：权威移动/行动阶段与一次CT结算完成；33内核、8中文、9项正式PlayMode定向用例通过（旧atlas断言修正后单项复验）；StartMenu默认新角真实普攻后保留当前回合、重复攻击零消费拒绝可见。移动按钮与动画仍归MOVE-UI。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -107,3 +107,18 @@
 - EndTurn须在EncounterCoordinator.BuildActionMessage中显式生成正式中文键，故补齐Language.csv及既有GuanzhongFormalUiTextTests路径；不新增UI、场景、动画、CTB引擎或敌方策略修改面。
 - Session校验当前ActorId（不是仅IsReady），未结束回合再次Advance不重置余额/充CT；既有换术按一次行动记录冷却，敌方复用原合法命令与策略，在行动后通过同一EndTurn结算。原始MovementPath不含起点，末段朝向按提交前位置/倒数第二格计算。
 - 复杂权威状态实现由主责统一处理，gpt-6.1-sol/high只读辅助核查当前根因及调用者；用户已授权子智能体协作，任何写入委派须冻结互不重叠的字面量路径。
+
+## 2026-10-02 实施及正式运行证据
+
+- CombatSession唯一持有当前ActorId、MoveThenAction/ActionThenMove/Finished与行动冷却；Snapshot分离最大/剩余移力。Move消费同一Spatial路径/成本/末段朝向且不结算CT；行动后保留剩余移动，EndTurn一次结算，Wait维持50%规则。Resolver公开入口也经同一CommandService，未结束Advance不重置或推进。
+- Coordinator退出等待只依据权威阶段，敌方既有合法策略完成一次行动后走同一EndTurn；完整MovementPath投影至既有Provider，显式结束不发Idle覆盖正在播放的真实攻击。此问题在独立复核中证实并修复，无额外表现状态。
+- EditMode CombatRuntimeKernelTests 33/33通过，覆盖不同路径成本、非法路径/占格/边界、连续移动、耗尽、移动前后行动、Wait、EndTurn重复、死亡和错误行动者；GuanzhongFormalUiTextTests的ActionLog命令中文8/8通过。
+- GuanzhongBasicAttackPlayModeTests初次8/9通过，新正式StartMenu链路案例证明先Move再Attack及先Attack再Move，均最终EndTurn；唯一失败是旧正式流程测试仍断言历史纯色按钮，根因是已批准atlas已取代纯色。仅修正该测试读取正式Normal/Hover/Selected atlas、字体及前景色，再定向复验该项1/1通过，已通过且输入未变的其余8项不重跑。
+- 新正式PlayMode实际Provider数值：原始路径(0,1)、再回(0,0)，两次成本各1，MaximumMovePoints=2，最终朝向2；命令拒绝不改变位置/移力/CT/阶段。EndTurn后Provider事件数与攻击缩放保持，下一真实回合重置移力。
+- 额外实机可见：2026-10-02，槽move-rule-20261002-1647，默认无名修士从StartMenu新建→World关陇玄域→关中城→关中野外→石甲兽遭遇。1920×1080实际点击普攻后敌HP839→793，玩家571/571、MP180/180，仍显示你的行动；第二次点击显示当前行动阶段不可执行，敌HP仍793、双方资源不变且未推进敌方回合。
+- 本地忽略证据目录.worktrees/manual/U-GZ-PLAYTEST-MOVE-RULE-01/src/Logs/move-rule/：editmode.xml、playmode.xml、formal-flow.xml、text.xml、formal-editor.log及01-formal-battle-1920.jpg、02-action-retains-player-1920.jpg、03-duplicate-rejected-1920.jpg。正式UI此时尚无Move/EndTurn按钮，不能从旧UI完成整场；本卡不把API移动证明当MOVE-UI或最终双分辨率验收，后续由相应卡接线并复验。
+- check-data-chain通过83/83术法、606中文键；主责复核全部14业务/测试文件，Sol/high分别在互不重叠内核和直接测试面协作、另Sol/high独立复核权威阶段，不改任务或提交；主责形成唯一candidate。风险预检e39825ff33a115d4f68f9af2d171f91584a3985f6f939d7a0fecf052a287fe83/index ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0与空投影一致。
+
+## 经验候选
+
+- 状态pending：给既有行动管线新增纯回合结束命令时，通用表现switch的默认Idle会打断此前实际攻击动画。已证实根因是EndTurn成功后走与有表现动作相同的ProjectPresentation；修复为不投影此无表现命令。证据是正式StartMenu链路测试记录真实Provider事件数和非单位攻击缩放在EndTurn前后不变。可能适用于动作结算/表现分离的命令新增复核，候选门禁检查无表现命令是否误入默认动画。

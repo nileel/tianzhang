@@ -29,7 +29,8 @@ namespace TianZhang.Combat
             string rejectionReason,
             IReadOnlyList<CombatDamageResult> damage,
             IReadOnlyList<HexCoord> movementPath,
-            int movementCost)
+            int movementCost,
+            int movementFacing = -1)
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
@@ -38,6 +39,7 @@ namespace TianZhang.Combat
                 ? Array.Empty<HexCoord>()
                 : new List<HexCoord>(movementPath).AsReadOnly();
             MovementCost = movementCost;
+            MovementFacing = movementFacing;
         }
 
         public bool Succeeded { get; }
@@ -45,15 +47,16 @@ namespace TianZhang.Combat
         public IReadOnlyList<CombatDamageResult> Damage { get; }
         public IReadOnlyList<HexCoord> MovementPath { get; }
         public int MovementCost { get; }
+        public int MovementFacing { get; }
 
         public static CombatActionResult Success(params CombatDamageResult[] damage)
         {
             return new CombatActionResult(true, string.Empty, damage, null, 0);
         }
 
-        public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost)
+        public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost, int movementFacing = -1)
         {
-            return new CombatActionResult(true, string.Empty, null, path, movementCost);
+            return new CombatActionResult(true, string.Empty, null, path, movementCost, movementFacing);
         }
 
         public static CombatActionResult Rejected(string reason)

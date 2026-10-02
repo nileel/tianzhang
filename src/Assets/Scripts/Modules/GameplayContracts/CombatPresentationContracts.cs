@@ -94,7 +94,8 @@ namespace TianZhang.Gameplay.Contracts
             CombatUnitPresentationHex startPosition,
             CombatUnitPresentationHex endPosition,
             int facing,
-            IReadOnlyList<CombatUnitPresentationTargetResult> targetResults)
+            IReadOnlyList<CombatUnitPresentationTargetResult> targetResults,
+            IReadOnlyList<CombatUnitPresentationHex> movementPath = null)
         {
             if (string.IsNullOrWhiteSpace(actorCombatantId))
                 throw new ArgumentException("Actor combatant ID is required.", nameof(actorCombatantId));
@@ -112,6 +113,9 @@ namespace TianZhang.Gameplay.Contracts
             TargetResults = targetResults == null
                 ? Array.Empty<CombatUnitPresentationTargetResult>()
                 : new List<CombatUnitPresentationTargetResult>(targetResults).AsReadOnly();
+            MovementPath = movementPath == null
+                ? Array.Empty<CombatUnitPresentationHex>()
+                : new List<CombatUnitPresentationHex>(movementPath).AsReadOnly();
         }
 
         public string ActorCombatantId { get; }
@@ -120,6 +124,7 @@ namespace TianZhang.Gameplay.Contracts
         public CombatUnitPresentationHex EndPosition { get; }
         public int Facing { get; }
         public IReadOnlyList<CombatUnitPresentationTargetResult> TargetResults { get; }
+        public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
 
     public interface ICombatUnitPresentationPort

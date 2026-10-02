@@ -687,3 +687,7 @@ combat_swap_same_profile,该栏位已装配此术法
 combat_swap_profile_already_equipped,该术法已装配在其他栏位
 combat_swap_profile_unresolved,术法资料不可用
 combat_command_validation_changed,行动条件已改变
+combat_command_end_turn,结束行动
+combat_session_finished,战斗已经结束
+combat_turn_actor_invalid,尚未轮到该单位行动
+combat_turn_phase_invalid,当前行动阶段不可执行

@@ -27,6 +27,20 @@ namespace TianZhang.Combat
             if (command.Kind == CombatCommandKind.Wait)
             {
                 session.TurnScheduler.Wait(command.ActorId);
+                session.FinishTurn();
+                return result;
+            }
+
+            if (command.Kind == CombatCommandKind.EndTurn)
+            {
+                EndTurn(session, command.ActorId);
+                return result;
+            }
+            if (command.Kind == CombatCommandKind.Move)
+            {
+                if (session.TurnPhase == CombatTurnPhase.ActionThenMove &&
+                    session.Combatants.TryGet(command.ActorId, out CombatantSnapshot movedActor) && movedActor.MovePoints == 0)
+                    EndTurn(session, command.ActorId);
                 return result;
             }
 
@@ -35,7 +49,9 @@ namespace TianZhang.Combat
                 !string.IsNullOrEmpty(command.ProfileId) &&
                 session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
                 cooldownPenalty = profile.CooldownTicks;
-            session.TurnScheduler.ConsumeAction(command.ActorId, cooldownPenalty);
+            session.RecordAction(cooldownPenalty);
+            if (session.IsFinished || (session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor) && actor.MovePoints == 0))
+                EndTurn(session, command.ActorId);
             return result;
         }
 
@@ -50,13 +66,32 @@ namespace TianZhang.Combat
         {
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
+            if (session.IsFinished)
+            {
+                session.FinishTurn();
+                return new CombatTurnAdvance(string.Empty, 0);
+            }
+            if (session.TurnPhase != CombatTurnPhase.Finished)
+            {
+                if (session.Combatants.TryGet(session.CurrentActorId, out CombatantSnapshot currentActor) && currentActor.IsAlive)
+                    return new CombatTurnAdvance(currentActor.Id, 0);
+                session.FinishTurn();
+            }
             CombatTurnAdvance advance = session.TurnScheduler.AdvanceUntilAction(session.Combatants.All);
             if (advance.TicksElapsed > 0)
             {
                 foreach (CombatantSnapshot combatant in session.Combatants.All)
                     combatant.AdvanceCooldowns(advance.TicksElapsed);
             }
+            if (advance.HasActor && session.Combatants.TryGet(advance.ActorId, out CombatantSnapshot actor))
+                session.BeginTurn(actor);
             return advance;
+        }
+
+        private static void EndTurn(CombatSession session, string actorId)
+        {
+            session.TurnScheduler.ConsumeAction(actorId, session.PendingCooldownPenalty);
+            session.FinishTurn();
         }
     }
 }

@@ -274,6 +274,7 @@ namespace TianZhang.Tests
         [TestCase(TianZhang.Combat.CombatCommandKind.Divine, "combat_command_divine")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Guard, "combat_command_guard")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Wait, "combat_command_wait")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.EndTurn, "combat_command_end_turn")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Move, "combat_command_move")]
         [TestCase(TianZhang.Combat.CombatCommandKind.SwapSpell, "combat_command_swap_spell")]
         public void AdventureActionLogTranslatesCommandAndPreservesCustomName(

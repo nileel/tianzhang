@@ -47,7 +47,6 @@ namespace TianZhang.Features.Adventure
         private CombatUnitPresentationProfileCatalogData presentationProfileCatalog;
         private Action<CombatSessionOutcome, EnemyData> completed;
         private bool acceptsPlayerCommand;
-        private bool playerActed;
         private Func<string, string> resolveText = value => value;
         private Func<string, string> displayReason = value => value;
         private string playerDisplayName;
@@ -148,6 +147,7 @@ namespace TianZhang.Features.Adventure
             ExecutePlayer(new CombatCommand(CombatCommandKind.Divine, actorId, targetId, profileId));
         public void RequestGuard(string actorId) => ExecutePlayer(new CombatCommand(CombatCommandKind.Guard, actorId));
         public void RequestWait(string actorId) => ExecutePlayer(new CombatCommand(CombatCommandKind.Wait, actorId));
+        public void RequestEndTurn(string actorId) => ExecutePlayer(new CombatCommand(CombatCommandKind.EndTurn, actorId));
         public void RequestMove(string actorId, int destinationQ, int destinationR) =>
             ExecutePlayer(new CombatCommand(
                 CombatCommandKind.Move,
@@ -173,10 +173,10 @@ namespace TianZhang.Features.Adventure
 
                 if (string.Equals(advance.ActorId, "player", StringComparison.Ordinal))
                 {
-                    playerActed = false;
                     acceptsPlayerCommand = true;
                     Present("你的行动", true);
-                    while (!playerActed && resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
+                    while (session.TurnPhase != CombatTurnPhase.Finished &&
+                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                         yield return null;
                     acceptsPlayerCommand = false;
                 }
@@ -184,12 +184,21 @@ namespace TianZhang.Features.Adventure
                 {
                     Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
                     yield return null;
-                    IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, "enemy");
-                    CombatCommand command = enemyPolicy.ChooseAction(legal);
-                    if (command != null)
+                    while (session.TurnPhase != CombatTurnPhase.Finished &&
+                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                     {
+                        IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
+                        CombatCommand command = session.TurnPhase == CombatTurnPhase.ActionThenMove
+                            ? legal.FirstOrDefault(action => action.Kind == CombatCommandKind.EndTurn)
+                            : enemyPolicy.ChooseAction(legal);
+                        if (command == null)
+                            throw new InvalidOperationException("combat_enemy_turn_has_no_legal_command");
                         CombatActionResult result = ExecuteCommand(command);
                         presentation.AppendLog(BuildActionMessage(resolveText(spawned.EnemyData.displayNameKey), command, result));
+                        if (!result.Succeeded)
+                            throw new InvalidOperationException("combat_enemy_legal_command_rejected:" + result.RejectionReason);
+                        Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
+                        yield return null;
                     }
                 }
                 Present("战斗中", false);
@@ -204,8 +213,8 @@ namespace TianZhang.Features.Adventure
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
             CombatActionResult result = ExecuteCommand(command);
             presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
-            if (result.Succeeded) playerActed = true;
-            Present("你的行动", !playerActed);
+            Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
+                resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
         }
 
         private CombatActionResult ExecuteCommand(CombatCommand command)
@@ -215,7 +224,6 @@ namespace TianZhang.Features.Adventure
             CombatUnitPresentationHex actorStart = actorBefore == null
                 ? default
                 : ToPresentationHex(actorBefore.Position);
-            int actorFacing = actorBefore?.Facing ?? 0;
             CombatActionResult validation = commandService.Validate(session, command);
             if (!validation.Succeeded)
                 return validation;
@@ -236,8 +244,8 @@ namespace TianZhang.Features.Adventure
                     command.SlotIndex);
             }
             CombatActionResult result = commandService.Execute(session, command);
-            if (result.Succeeded)
-                ProjectPresentation(command, result, actorBefore, actorStart, actorFacing, targetBefore);
+            if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
+                ProjectPresentation(command, result, actorBefore, actorStart, targetBefore);
             return result;
         }
 
@@ -321,7 +329,6 @@ namespace TianZhang.Features.Adventure
             CombatActionResult result,
             CombatantSnapshot actorBefore,
             CombatUnitPresentationHex actorStart,
-            int actorFacing,
             CombatantSnapshot targetBefore)
         {
             if (actorBefore == null) return;
@@ -339,8 +346,9 @@ namespace TianZhang.Features.Adventure
                     actionEvent,
                     actorStart,
                     ToPresentationHex(actorBefore.Position),
-                    actorFacing,
-                    Array.Empty<CombatUnitPresentationTargetResult>()));
+                    actorBefore.Facing,
+                    Array.Empty<CombatUnitPresentationTargetResult>(),
+                    result.MovementPath.Select(ToPresentationHex).ToArray()));
 
                 if (targetBefore == null || result.Damage.Count == 0) return;
                 int finalDamage = result.Damage.Sum(item => item.FinalDamage);
@@ -383,6 +391,7 @@ namespace TianZhang.Features.Adventure
                 CombatCommandKind.Divine => "combat_command_divine",
                 CombatCommandKind.Guard => "combat_command_guard",
                 CombatCommandKind.Wait => "combat_command_wait",
+                CombatCommandKind.EndTurn => "combat_command_end_turn",
                 CombatCommandKind.Move => "combat_command_move",
                 CombatCommandKind.SwapSpell => "combat_command_swap_spell",
                 _ => throw new ArgumentOutOfRangeException(nameof(command.Kind)),

@@ -12,6 +12,7 @@ namespace TianZhang.Combat
         Wait,
         Move,
         SwapSpell,
+        EndTurn,
     }
 
     /// <summary>Fixed roll values make a command replayable without a runtime random source.</summary>

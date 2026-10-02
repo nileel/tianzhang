@@ -52,6 +52,13 @@ namespace TianZhang.Combat
             IReadOnlyCollection<HexCoord> occupied);
     }
 
+    public enum CombatTurnPhase
+    {
+        MoveThenAction,
+        ActionThenMove,
+        Finished,
+    }
+
     /// <summary>Pure session aggregate; it has no scene registration or production composition role.</summary>
     public sealed class CombatSession
     {
@@ -82,6 +89,33 @@ namespace TianZhang.Combat
             TurnScheduler = new CombatTurnScheduler(Combatants.All);
         }
 
+        public string CurrentActorId { get; private set; } = string.Empty;
+        public CombatTurnPhase TurnPhase { get; private set; } = CombatTurnPhase.Finished;
+        public int PendingCooldownPenalty { get; private set; }
+        internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
+            !Combatants.HasLivingMembers(CombatTeam.Enemy);
+
+        internal void BeginTurn(CombatantSnapshot actor)
+        {
+            CurrentActorId = actor.Id;
+            TurnPhase = CombatTurnPhase.MoveThenAction;
+            PendingCooldownPenalty = 0;
+            actor.ResetMovePoints();
+        }
+
+        internal void RecordAction(int cooldownPenalty)
+        {
+            PendingCooldownPenalty = cooldownPenalty;
+            TurnPhase = CombatTurnPhase.ActionThenMove;
+        }
+
+        internal void FinishTurn()
+        {
+            CurrentActorId = string.Empty;
+            TurnPhase = CombatTurnPhase.Finished;
+            PendingCooldownPenalty = 0;
+        }
+
         public CombatantRegistry Combatants { get; }
         public ICombatSpatialQuery SpatialQuery { get; }
         public CombatTurnScheduler TurnScheduler { get; }
@@ -100,11 +134,22 @@ namespace TianZhang.Combat
                 throw new ArgumentNullException(nameof(command));
             if (!Combatants.TryGet(command.ActorId, out CombatantSnapshot actor) || !actor.IsAlive)
                 return CombatActionResult.Rejected("combat_session_actor_invalid");
+            if (IsFinished)
+                return CombatActionResult.Rejected("combat_session_finished");
+            if (!string.Equals(CurrentActorId, actor.Id, StringComparison.Ordinal) ||
+                TurnPhase == CombatTurnPhase.Finished)
+                return CombatActionResult.Rejected("combat_turn_actor_invalid");
             if (!TurnScheduler.IsReady(actor.Id))
                 return CombatActionResult.Rejected("combat_turn_not_ready");
 
+            if ((command.Kind == CombatCommandKind.EndTurn && TurnPhase != CombatTurnPhase.ActionThenMove) ||
+                (command.Kind != CombatCommandKind.EndTurn && command.Kind != CombatCommandKind.Move &&
+                 TurnPhase != CombatTurnPhase.MoveThenAction))
+                return CombatActionResult.Rejected("combat_turn_phase_invalid");
+
             return command.Kind switch
             {
+                CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Guard => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack => ValidateAttack(command, actor, CombatAttackKind.Basic),
@@ -183,12 +228,18 @@ namespace TianZhang.Combat
                 occupied);
             if (!movement.IsReachable || movement.Path.Count == 0 ||
                 movement.Path[movement.Path.Count - 1] != command.Destination.Value ||
-                movement.MovementCost < 0)
+                movement.MovementCost < 0 || movement.MovementCost > actor.MovePoints)
             {
                 return CombatActionResult.Rejected(
                     string.IsNullOrEmpty(movement.Reason) ? "combat_move_path_invalid" : movement.Reason);
             }
-            return CombatActionResult.MovementSuccess(movement.Path, movement.MovementCost);
+            HexCoord previous = movement.Path.Count == 1
+                ? actor.Position
+                : movement.Path[movement.Path.Count - 2];
+            int facing = previous.DirectionTo(movement.Path[movement.Path.Count - 1]);
+            if (facing < 0)
+                return CombatActionResult.Rejected("combat_move_path_invalid");
+            return CombatActionResult.MovementSuccess(movement.Path, movement.MovementCost, facing);
         }
 
         private CombatActionResult ValidateSwapSpell(CombatCommand command, CombatantSnapshot actor)
