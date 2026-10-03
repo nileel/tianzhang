@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-03：用户批准在现有建角界面接入四种既有出身选择，沿用默认寒门、预算和起点。补齐入口View/Controller/局部Builder/场景字面路径；既有小族两术法实现继续正式入口验收。",
+  "stateReason": "2026-10-03：两术法正式建角装配、保存读回、施法与费用/恢复完整接入；1366/1920真实正常施放和缺灵力禁用、1920真实超距禁用且状态不变均有证据。逐方法消费MOVE共享接缝，4条受影响PlayMode通过，双分辨率布局不重叠。普通首战输入已交付；平衡、V-FLOW、V-ART仍由独立卡承担。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs.meta",
@@ -254,3 +254,9 @@
 - 合并后实机首次只读几何发现440高动作栏挤压拒绝文字与日志重叠（182116.state.json）；根因为MOVE96/100高区与双术法控件总高超额。仅局部动作栏设468高/4间距，移动区96高/8间距，不改全局helper/字体/面板。1920 ActionStatus下边240、日志上边228，间隔12像素；1366为170.39对161.85，间隔8.54像素。拒绝文字preferred262.84×22.49、容器372×48、68顶点，无裁切重叠。记录导出只读取当前正式状态并按时间戳存储，不参与生产。
 - 此次通过的是本卡两术法完整链与真实拒绝；普通角色胜率、V-FLOW及用户V-ART尚不因此通过。普通首战输入交付仍保留原施法前JSON及SHA256 37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492，不用本次耗尽灵力状态替换。
 - 主责继续形成合并提交并消费主线9808e7b2的MOVE完成归档，随后本卡路径限定提交、归档与受保护集成；上述日志/截图和全部原工作树保留。Sol只读核共享方法、场景对象差异及真实AI选项；Astra只读核MOVE证据/后续TARGET最小前置。子智能体没有写卡、提交或操作UI/runtime/锁。
+## 完成归档
+
+- 审核结论：通过。本卡真实入口与拒绝条件已完成；共享接缝提交48f0516e并消费主线9808e7b2，最终相对主线仅保留SPELLS允许路径。
+- 2026-10-03已核现有diff和风险预检：taskCardDigest=2e09c52f1765380be7daae465dca961b13d9da1480c4eb4cef52c65b66801f3d；indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/notice/mustRead/gates/gatePointers均空，与schema2一致。
+- 验证依据为本卡18:40节及关中两术法正式施法验证记录，日志/截图在原SPELLS工作树src/Logs/spells。实机退出后编辑器已正常关闭，原存档/日志/工作树/stash全部保留。无外部交接待消费。
+- 未重复CAMERA/TIMELINE验收、未重跑相关输入未变的检查、未更改定时配置。经验候选仅依据已有事实：本次局部控件总高问题有项目既有布局所有者可直接修复，无需新机制；没有新增独立经验候选。
