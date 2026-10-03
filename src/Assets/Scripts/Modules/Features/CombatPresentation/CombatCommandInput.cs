@@ -9,6 +9,47 @@ namespace TianZhang.Features.CombatPresentation
     {
         [SerializeField] private CombatActionBarView actionBar;
         private ICombatCommandHandler handler;
+        private ICombatActionPreviewHandler previewHandler;
+        private CombatActionPreviewView previewView;
+        private CombatTimelineView timeline;
+        public CombatActionPreviewSnapshot Preview { get; private set; }
+        public CombatActionCandidate Candidate => Preview?.Candidate;
+
+        public void ConfigurePreview(ICombatActionPreviewHandler previews, CombatActionPreviewView view, CombatTimelineView axis)
+        {
+            previewHandler = previews ?? throw new ArgumentNullException(nameof(previews));
+            previewView = view;
+            timeline = axis;
+            Bind(view.ConfirmButton, ConfirmCandidate);
+            Bind(view.CancelButton, CancelCandidate);
+        }
+
+        public void CancelCandidate()
+        {
+            Preview = null;
+            previewView?.Present(null);
+            timeline?.PresentPrediction(null);
+        }
+
+        public void ConfirmCandidate()
+        {
+            if (!isActiveAndEnabled || Preview == null || !Preview.CanConfirm) return;
+            CombatActionCandidate selected = Candidate;
+            CancelCandidate();
+            previewHandler.ConfirmAction(selected);
+        }
+
+        private void Choose(CombatActionKind kind, string target = null, string profile = null)
+        {
+            if (!acceptsCommands || snapshot == null || previewHandler == null) return;
+            movementView?.Cancel();
+            Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
+                snapshot.CommandContextVersion));
+            previewView?.Present(Preview);
+            timeline?.PresentPrediction(Preview);
+        }
+
+        private void OnDisable() => ClearContext();
         private CombatMovementView movementView;
         private string actorId;
         private string targetId;
@@ -26,20 +67,21 @@ namespace TianZhang.Features.CombatPresentation
             handler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
             actionBar = bar;
             movementView = movement;
+            if (movementView != null) movementView.SelectionStarted = CancelCandidate;
             Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
             Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
             Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
-            Bind(actionBar?.BasicAttackButton, () => { if (CanAct) handler.RequestBasicAttack(actorId, targetId); });
+            Bind(actionBar?.BasicAttackButton, () => { if (CanAct) Choose(CombatActionKind.BasicAttack, targetId); });
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
             Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);
-            Bind(actionBar?.DivineButton, () => { if (CanAct) handler.RequestDivine(actorId, targetId, divineProfileId); });
-            Bind(actionBar?.GuardButton, () => { if (CanAct) handler.RequestGuard(actorId); });
+            Bind(actionBar?.DivineButton, () => { if (CanAct) Choose(CombatActionKind.Divine, targetId, divineProfileId); });
+            Bind(actionBar?.GuardButton, () => { if (CanAct) Choose(CombatActionKind.Guard); });
             Bind(actionBar?.WaitButton, () =>
             {
                 if (!acceptsCommands) return;
-                if (snapshot != null && snapshot.CanEndTurn) handler.RequestEndTurn(actorId);
-                else handler.RequestWait(actorId);
+                if (snapshot != null && snapshot.CanEndTurn) Choose(CombatActionKind.EndTurn);
+                else Choose(CombatActionKind.Wait);
             });
         }
 
@@ -50,6 +92,7 @@ namespace TianZhang.Features.CombatPresentation
             string nextDivineProfileId,
             bool acceptsCommands)
         {
+            CancelCandidate();
             snapshot = null;
             firstArtTargetId = secondArtTargetId = null;
             firstArtSelectionProfileId = secondArtSelectionProfileId = null;
@@ -64,6 +107,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void SetContext(CombatHudSnapshot nextSnapshot)
         {
+            CancelCandidate();
             snapshot = nextSnapshot;
             acceptsCommands = snapshot != null && snapshot.AcceptsCommands;
             actorId = snapshot?.Player?.Id;
@@ -79,7 +123,14 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Present(nextSnapshot);
         }
 
-        public void ClearContext() => SetContext(null);
+        public void ClearContext()
+        {
+            // Clearing authority on exit must not redraw a Canvas that may already be destroyed.
+            acceptsCommands = false;
+            snapshot = null;
+            CancelCandidate();
+            movementView?.Present(null);
+        }
 
         private bool CanAct => acceptsCommands && (snapshot == null || !snapshot.CanEndTurn);
 
@@ -103,20 +154,15 @@ namespace TianZhang.Features.CombatPresentation
         private void RequestArt(int index)
         {
             if (!CanAct) return;
-            if (snapshot == null)
-            {
-                if (index == 0 && !string.IsNullOrWhiteSpace(artProfileId))
-                    handler.RequestArt(actorId, targetId, artProfileId);
-                return;
-            }
+            if (snapshot == null) return;
             CombatArtActionSnapshot art = GetArt(index);
             if (art == null) return;
             string selected = index == 0 ? firstArtTargetId : secondArtTargetId;
             foreach (CombatArtTargetSnapshot target in art.Targets)
             {
-                if (target != null && target.CanExecute && string.Equals(target.Id, selected, StringComparison.Ordinal))
+                if (target != null && string.Equals(target.Id, selected, StringComparison.Ordinal))
                 {
-                    handler.RequestArt(actorId, target.Id, art.ProfileId);
+                    Choose(CombatActionKind.Art, target.Id, art.ProfileId);
                     return;
                 }
             }
@@ -137,13 +183,15 @@ namespace TianZhang.Features.CombatPresentation
             }
             secondArtTargetId = art.Targets[(selectedIndex + 1) % art.Targets.Count].Id;
             actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
+            if (Candidate?.Kind == CombatActionKind.Art && Candidate.ProfileId == art.ProfileId)
+                Choose(CombatActionKind.Art, secondArtTargetId, art.ProfileId);
         }
 
-        private static void Bind(Button button, Action action)
+        private void Bind(Button button, Action action)
         {
             if (button == null) return;
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => action());
+            button.onClick.AddListener(() => { if (isActiveAndEnabled && acceptsCommands) action(); });
         }
     }
 }

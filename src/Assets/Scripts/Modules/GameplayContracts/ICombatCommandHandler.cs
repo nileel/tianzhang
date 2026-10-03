@@ -1,5 +1,11 @@
 namespace TianZhang.Gameplay.Contracts
 {
+    public interface ICombatActionPreviewHandler
+    {
+        CombatActionPreviewSnapshot PreviewAction(CombatActionCandidate candidate);
+        void ConfirmAction(CombatActionCandidate candidate);
+    }
+
     /// <summary>
     /// Scene-agnostic command boundary between combat presentation and the gameplay composition root.
     /// All identities are stable combatant or profile IDs; coordinates are represented as scalar values.

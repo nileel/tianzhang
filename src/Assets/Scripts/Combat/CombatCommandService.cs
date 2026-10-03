@@ -2,6 +2,24 @@ using System;
 
 namespace TianZhang.Combat
 {
+    public sealed class CombatCommandPreview
+    {
+        internal CombatCommandPreview(CombatActionResult validation, int spiritCost, int penalty,
+            bool remainsInTurn, CombatTurnPreview turn)
+        {
+            Validation = validation;
+            SpiritCost = spiritCost;
+            CooldownPenalty = penalty;
+            RemainsInTurn = remainsInTurn;
+            Turn = turn;
+        }
+        public CombatActionResult Validation { get; }
+        public int SpiritCost { get; }
+        public int CooldownPenalty { get; }
+        public bool RemainsInTurn { get; }
+        public CombatTurnPreview Turn { get; }
+    }
+
     /// <summary>Single command gate: readiness, resolution, CTB consumption, and cooldown advancement.</summary>
     public sealed class CombatCommandService
     {
@@ -10,6 +28,29 @@ namespace TianZhang.Combat
         public CombatCommandService(CombatActionResolver resolver = null)
         {
             this.resolver = resolver ?? new CombatActionResolver();
+        }
+
+        /// <summary>Read-only legality and conditional turn-end CT; no resolver or random source.</summary>
+        public CombatCommandPreview Preview(CombatSession session, CombatCommand command)
+        {
+            CombatActionResult validation = Validate(session, command);
+            int cost = 0, penalty = command.Kind == CombatCommandKind.EndTurn ? session.PendingCooldownPenalty : 0;
+            if (command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine)
+                if (session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
+                {
+                    cost = profile.GetSpiritCost(command.ActorId == command.TargetId);
+                    penalty = profile.CooldownTicks;
+                }
+            // Movement has its own preview/confirmation and cannot predict an unchosen action.
+            bool supported = command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or
+                CombatCommandKind.Divine or CombatCommandKind.Guard or CombatCommandKind.Wait or CombatCommandKind.EndTurn;
+            if (!supported) validation = CombatActionResult.Rejected("combat_command_kind_invalid");
+            session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
+            bool remains = command.Kind != CombatCommandKind.Wait && command.Kind != CombatCommandKind.EndTurn &&
+                actor != null && actor.MovePoints > 0;
+            return new CombatCommandPreview(validation, cost, penalty, remains,
+                validation.Succeeded ? session.TurnScheduler.PreviewTurnEnd(command.ActorId, penalty,
+                    command.Kind == CombatCommandKind.Wait, session.Combatants.All) : null);
         }
 
         public CombatActionResult Execute(CombatSession session, CombatCommand command)

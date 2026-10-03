@@ -21,6 +21,18 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Image[] entryPortraits = new Image[MaximumEntries];
         [SerializeField] private Sprite playerPortrait;
 
+        [SerializeField] private GameObject predictionRoot;
+        [SerializeField] private Text predictionText;
+        public CombatActionPreviewSnapshot Prediction { get; private set; }
+
+        public void PresentPrediction(CombatActionPreviewSnapshot value)
+        {
+            Prediction = value != null && value.CanConfirm ? value : null;
+            if (predictionRoot != null) predictionRoot.SetActive(Prediction != null);
+            if (predictionText != null) predictionText.text = Prediction == null ? string.Empty :
+                "◇ 自身下次\n+" + value.TicksUntilReady + " 刻\n顺位未定";
+        }
+
         private CombatTimelineSnapshot snapshot;
         private string focusedCombatantId;
         private string inspectedTargetId;
@@ -191,6 +203,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void ClearContent()
         {
+            PresentPrediction(null);
             snapshot = null;
             focusedCombatantId = null;
             inspectedTargetId = null;

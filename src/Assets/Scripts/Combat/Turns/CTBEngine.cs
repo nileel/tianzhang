@@ -86,8 +86,7 @@ namespace TianZhang.Combat.Turns
                 {
                     // The engine charges at least one tick before checking a non-ready unit,
                     // including a Wait whose retained overshoot is already above its threshold.
-                    long ticks = Math.Max(1L, (long)Math.Ceiling(
-                        (state.NextActionThreshold - (double)state.ChargeTime) / state.Speed));
+                    long ticks = ChargingTicks(state.ChargeTime, state.NextActionThreshold, state.Speed);
                     charging.Add(new ChargingCandidate(state.Id, state.Speed, ticks,
                         state.ChargeTime + state.Speed * ticks));
                 }
@@ -98,6 +97,30 @@ namespace TianZhang.Combat.Turns
                 chargingIds.Add(candidate.Id);
             return new CTBSnapshot(CurrentTick, snapshots, actionQueue.ToArray(), chargingIds);
         }
+
+        /// <summary>Projects only this turn's settlement on a private engine copy; never advances live time.</summary>
+        public CTBSnapshot PreviewTurnEnd(string unitId, int cooldownPenalty, bool wait)
+        {
+            var copy = new CTBEngine();
+            copy.CurrentTick = CurrentTick;
+            foreach (UnitState state in units.Values)
+                copy.units.Add(state.Id, new UnitState(state.Id, state.Speed)
+                {
+                    ChargeTime = state.ChargeTime,
+                    NextActionThreshold = state.NextActionThreshold,
+                    IsReady = state.IsReady,
+                });
+            foreach (string id in actionQueue) copy.actionQueue.Enqueue(id);
+            if (wait) copy.WaitAction(unitId);
+            else copy.ConsumeAction(unitId, cooldownPenalty);
+            return copy.GetSnapshot();
+        }
+
+        public static long TicksUntilReady(CTBUnitSnapshot unit) => unit.IsReady ? 0 :
+            ChargingTicks(unit.ChargeTime, unit.NextActionThreshold, unit.Speed);
+
+        private static long ChargingTicks(float ct, float threshold, int speed) =>
+            Math.Max(1L, (long)Math.Ceiling((threshold - (double)ct) / speed));
 
         public CTBAdvance AdvanceUntilAction(IReadOnlyDictionary<string, bool> aliveById)
         {

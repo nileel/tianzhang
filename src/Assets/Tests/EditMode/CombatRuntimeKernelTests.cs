@@ -1197,6 +1197,83 @@ namespace TianZhang.Tests.EditMode
             public float blockMultiplier;
         }
 
+        [TestCase(100, 50, 30, false)]
+        [TestCase(100, 100, 70, false)]
+        [TestCase(220, 50, 0, true)]
+        [TestCase(13, 8, 10, false)]
+        public void PreviewMatchesIndependentRealSettlementWithoutMutation(int speed, int enemySpeed, int penalty, bool wait)
+        {
+            var service = new CombatCommandService();
+            CombatSession MakeSession()
+            {
+                var player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), speed, 1000, 20, 10,
+                    movePoints: 2, equippedArtProfileIds: new[] { "preview_art" }, availableArtProfileIds: new[] { "preview_art" });
+                player.MaximumSpirit = 100;
+                player.RestoreSpirit(100);
+                return CreateSession(new[] { player, CreateCombatant("enemy", CombatTeam.Enemy,
+                    new HexCoord(1, 0), enemySpeed, 1000, 20, 10) }, new FixedRangeQuery(true), new[]
+                {
+                    new CombatAttackProfile("preview_art", CombatAttackKind.Art, CombatAttackEffect.Soul,
+                        1, 1, soulMultiplier: 1, spiritCost: 12, cooldownTicks: penalty),
+                });
+            }
+            CombatSession live = MakeSession(), actual = MakeSession();
+            Assert.AreEqual("player", service.AdvanceUntilAction(live).ActorId);
+            Assert.AreEqual("player", service.AdvanceUntilAction(actual).ActorId);
+            var command = new CombatCommand(wait ? CombatCommandKind.Wait : CombatCommandKind.Art,
+                "player", "enemy", "preview_art");
+            string before = PreviewState(live);
+            CombatCommandPreview preview = null;
+            for (int index = 0; index < 5; index++) preview = service.Preview(live, command);
+            Assert.IsTrue(preview.Validation.Succeeded);
+            Assert.AreEqual(before, PreviewState(live));
+            Assert.IsTrue(service.Execute(actual, command).Succeeded);
+            actual.Combatants.TryGet("player", out CombatantSnapshot realPlayer);
+            Assert.AreEqual(100 - preview.SpiritCost, realPlayer.CurrentSpirit);
+            if (!wait)
+            {
+                Assert.IsTrue(preview.RemainsInTurn);
+                Assert.AreEqual(CombatTurnPhase.ActionThenMove, actual.TurnPhase);
+                var end = new CombatCommand(CombatCommandKind.EndTurn, "player");
+                Assert.AreEqual(penalty, service.Preview(actual, end).CooldownPenalty);
+                Assert.IsTrue(service.Execute(actual, end).Succeeded);
+            }
+            CombatTurnSnapshot settled = actual.TurnScheduler.GetSnapshot(actual.Combatants.All);
+            Assert.AreEqual(preview.Turn.Snapshot.CurrentTick, settled.CurrentTick);
+            Assert.That(settled.ReadyQueueIds, Is.EqualTo(preview.Turn.Snapshot.ReadyQueueIds));
+            Assert.That(settled.ChargingUnitIds, Is.EqualTo(preview.Turn.Snapshot.ChargingUnitIds));
+            foreach (CombatTurnUnitSnapshot unit in settled.Units)
+            {
+                var predicted = preview.Turn.Snapshot.Units.Single(value => value.Id == unit.Id);
+                Assert.AreEqual(predicted.ChargeTime, unit.ChargeTime);
+                Assert.AreEqual(predicted.NextActionThreshold, unit.NextActionThreshold);
+                Assert.AreEqual(predicted.IsReady, unit.IsReady);
+            }
+            int originTick = actual.TurnScheduler.CurrentTick;
+            // Real scheduler and commands, no copy of the prediction formula in this test.
+            for (int step = 0; step < 100; step++)
+            {
+                CombatTurnAdvance next = service.AdvanceUntilAction(actual);
+                if (next.ActorId == "player")
+                {
+                    Assert.AreEqual(preview.Turn.TicksUntilReady, actual.TurnScheduler.CurrentTick - originTick);
+                    return;
+                }
+                Assert.IsTrue(service.Execute(actual, new CombatCommand(CombatCommandKind.Wait, next.ActorId)).Succeeded);
+            }
+            Assert.Fail("Actor did not return to the real scheduler.");
+        }
+
+        private static string PreviewState(CombatSession session)
+        {
+            CombatTurnSnapshot s = session.TurnScheduler.GetSnapshot(session.Combatants.All);
+            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCooldownPenalty + ":" + s.CurrentTick +
+                string.Join(";", s.Units.Select(u => u.Id + ":" + u.ChargeTime + ":" + u.NextActionThreshold + ":" + u.IsReady)) +
+                string.Join(",", s.ReadyQueueIds) + string.Join(",", s.ChargingUnitIds) +
+                string.Join(";", session.Combatants.All.Select(u => u.Id + ":" + u.CurrentHealth + ":" + u.CurrentSpirit +
+                    ":" + u.MovePoints + ":" + u.Position + ":" + u.GetCooldown("preview_art")));
+        }
+
         private static CombatSession CreateSession(
             IReadOnlyList<CombatantSnapshot> combatants,
             ICombatSpatialQuery query,

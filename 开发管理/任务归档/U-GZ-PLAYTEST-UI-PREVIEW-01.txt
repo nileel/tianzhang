@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-03：已消费五项真实完成前置及完整方法，冻结候选/只读预览/确认与条件CT合同，直接按钮测试路径已补全；原子结果与正式验收入口齐备。",
+  "stateReason": "2026-10-03：候选/只读预览/确认/条件CT实现通过定向4+6项及正式两术法预览取消确认取证，完成归档。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
@@ -139,3 +139,9 @@
 - 原expectedPaths内足够实现；准备时发现两份旧UI测试按钮立即执行断言是直接受影响调用者，已加入GuanzhongStarterArtsPlayModeTests.cs、GuanzhongMovementPlayModeTests.cs及.meta，只修改受影响测试流程。完整其他路径保持；当前唯一结果仍是选择/取消/确认/条件预测闭环，无独立新职责。
 - 模型协作本轮：复杂规则与输入边界；实际主模型由Node REPL核为gpt-6-astra；gpt-6.1-sol/high只读辅助preview_input_audit核输入和测试接缝，实际模型已核、推理强度未独立核验。不委派写入。所有业务写入由主责统一复核及最终验证。
 - 验收：定向Preview EditMode对独立会话实执行后的费用、CT、门槛、队列及下一Advance核验（Wait/术法惩罚/不同速度）；定向正式链PlayMode核反复取消零状态/零随机、双击一次、过期/非法拒绝、目标独立、MOVE互斥、Hide重进；只运行受影响旧按钮测试。正式Game View两术法分别选择取消确认，记录权威值、实际命令ID和截图。
+
+## 2026-10-03 完成归档
+
+- 审核结论：通过。候选只读、确认单次提交、失权/关闭撤销和独立条件CT标记已实现；正式入口两个术法分别预览/取消/确认，费用及14刻后自身行动与真实结果一致。证据见开发管理/关中战斗行动预览验证记录.txt。
+- EditMode4/4、PlayMode6/6，程序集与数据链通过；主责统一复核全diff，Sol只读复核无剩余P1/P2。未改平衡/相机/模型/定时配置，不重复已通过且输入未变测试。经验收尾无新增独立候选。
+- 全部工作树、日志、存档和用户改动保留。下游LAYOUT须重新消费本完成输出与所有真实前置，核完整方法/路径/验收并风险预检后ready；本卡不提前改下游卡。V-FLOW/V-ART原门禁保留。

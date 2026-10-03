@@ -150,7 +150,63 @@ namespace TianZhang.Editor
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
             BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);
             BuildCombatTargetSelection(root, canvas);
+            BuildCombatActionPreview(root, canvas);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/接入关中行动预览")]
+        public static void RebuildCombatActionPreview()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas")?.GetComponent<Canvas>();
+            if (root == null || canvas == null) throw new InvalidOperationException("Adventure preview owners are missing.");
+            BuildCombatActionPreview(root, canvas);
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatActionPreview(GameObject root, Canvas canvas)
+        {
+            Transform old = canvas.transform.Find("CombatActionPreviewRoot");
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            CombatActionPreviewView view = root.GetComponent<CombatActionPreviewView>() ?? root.AddComponent<CombatActionPreviewView>();
+            GameObject panel = SceneBuildSupport.CreatePanel("CombatActionPreviewRoot", canvas.transform, Vector2.zero, Vector2.one);
+            SettlementSceneBuilder.PlacePanel(panel, new Vector2(544, 48), new Vector2(1396, 278));
+            SettlementSceneBuilder.ApplyPanelSkin(panel);
+            SettlementSceneBuilder.ConfigureColumn(panel);
+            Text summary = SceneBuildSupport.CreateText("ActionPreviewSummary", panel.transform, string.Empty, 20);
+            SettlementSceneBuilder.ApplyTextSkin(summary, 120);
+            summary.raycastTarget = false;
+            var row = new GameObject("PreviewActions", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(panel.transform, false);
+            SettlementSceneBuilder.SetHeight(row, 44);
+            HorizontalLayoutGroup layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            Button cancel = SceneBuildSupport.CreateButton("CancelActionButton", row.transform, "取消", out _);
+            Button confirm = SceneBuildSupport.CreateButton("ConfirmActionButton", row.transform, "确认施行", out _);
+            SettlementSceneBuilder.ApplyButtonSkin(cancel);
+            SettlementSceneBuilder.ApplyButtonSkin(confirm);
+            SceneBuildSupport.SetObject(view, "root", panel);
+            SceneBuildSupport.SetObject(view, "summary", summary);
+            SceneBuildSupport.SetObject(view, "confirmButton", confirm);
+            SceneBuildSupport.SetObject(view, "cancelButton", cancel);
+            SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatActionPreviewView", view);
+            Transform rail = canvas.transform.Find("CombatTimelineRoot");
+            if (rail == null) throw new InvalidOperationException("Preview requires the formal timeline.");
+            Transform oldPrediction = rail.Find("ConditionalNextMarker");
+            if (oldPrediction != null) UnityEngine.Object.DestroyImmediate(oldPrediction.gameObject);
+            Text prediction = SceneBuildSupport.CreateText("ConditionalNextMarker", rail, string.Empty, 15);
+            prediction.font = SettlementSceneBuilder.UiFont;
+            prediction.raycastTarget = false;
+            prediction.alignment = TextAnchor.UpperCenter;
+            prediction.color = new Color32(239, 206, 123, 255);
+            PlaceTimelineRect(prediction.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -204), new Vector2(76, 116));
+            SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionRoot", prediction.gameObject);
+            SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionText", prediction);
+            prediction.gameObject.SetActive(false);
+            panel.SetActive(false);
         }
 
         [MenuItem("天章/场景/接入关中目标联动")]

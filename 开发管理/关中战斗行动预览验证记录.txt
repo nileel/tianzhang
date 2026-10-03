@@ -1,0 +1,33 @@
+# 关中战斗行动预览验证记录
+
+## 2026-10-03 实施过程检查点（历史，以下完成节覆盖）
+
+- worktree：D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-UI-PREVIEW-01；分支codex/u-gz-playtest-ui-preview-01。ready准备9feb2716已通过invoke-project-integration.ps1受保护集成；业务改动尚未提交/归档/集成。主线现为9feb2716，用户全部原dirty路径、旧工作树、stash、日志和存档保留。
+- 写前预检taskCardDigest=2a062c6b24215ec6b246e21c76fe99721bf7ea946a8e37d7091010d1dd98fca1，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates/gatePointers为空，与schema2投影相符。准备时补齐两份受影响按钮测试及.meta，此后未扩路径。
+- 主模型经nodeRepl元数据核为gpt-6-astra。Sol/high只读preview_input_audit核输入接缝并继续最终diff检查，实际模型核为gpt-6.1-sol，推理强度未独立核实。子智能体不写文件、不操作runtime/锁/提交、不派生。
+- 运行时所有者：AdventureSceneBuilder局部创建持久预览子树及条件标记；Installer注入独立ICombatActionPreviewHandler；Input唯一候选，Presenter完整HUD刷新/Hide/OnDisable清空；Coordinator上下文版本与原ExecutePlayer执行；CommandService.Validate/Preview与CTB私有副本复用结算。无新全局服务/存储/场景/资产或程序集依赖，不改CSV/数值/相机/模型。
+- 独立◇展示自身到门槛的条件时间位置，明确顺位未定；不冒充实际排队。攻击后仍可移动时注明随后结束本回合；伤害/命中未探明。取消/失权/关闭撤销预测。
+- 第一次编译build-preview.log报CS0012：公开CTBSnapshot泄漏到未引用Turns的测试程序集。已在原CombatTurnScheduler通过现有CombatTurnSnapshot转换，未增加asmdef依赖；build-preview-fixed.log编译和局部Builder成功，退出0。
+- editmode-preview.xml：4/4 Passed；不同速度100/50、100/100、220/50、13/8，Wait/术法惩罚/EndTurn对照独立真实会话费用、完整结算快照与下一Advance，预览前后权威状态不变。已通过结果验证入口，不重复输入未变测试。
+- 程序集边界19 asmdef/2 asmref通过；数据链GongFa29、Spells84、Skills31、keys613通过。PlayMode日志playmode-preview.log/XML正在取得，正式实机可见证据尚未取得；不得归档或称实现已验收。
+- 资料：已加载unity-agent-workflows所需UI、运行所有者、序列化、模块、验证、状态、AI协作参考与UNITY_STRUCTURE索引/UI/assemblies。Computer-use已初始化sky，后续真实UI动作只用该技能；所有证据日志在本树src/Logs/preview。
+- 接续顺序：完成定向PlayMode与独立diff核查→正式StartMenu入口两术法分别预览/取消/确认、记录实际值和Game View→本卡限定提交/归档/受保护集成→消费真实PREVIEW完成结果准备LAYOUT。V-FLOW保持真实前置，V-ART由用户确认。不重验CAMERA/TIMELINE，不重审backlog，不改定时配置，不重复apply或删除stash。
+
+## 定向验证收口
+
+- 首轮PlayMode 5项2过3失败，第二轮6项3过3失败：均是teardown的MissingReference。首个堆栈在新PreviewView，随后栈明确指出新增Presenter.OnDisable→ClearContext→完整ActionBar.Present触碰已销毁Canvas。最小根因修正为ClearContext只撤销输入权限/快照/候选和移动选择，不在退出时重画完整HUD；未修改旧ActionBar或增加捕获/重试。
+- Sol指出disabled MonoBehaviour仍会被UnityEvent调用，已在统一Bind与Confirm门禁拒绝禁用输入，并覆盖禁用期间Art/Move/Confirm点击。补Hide、实际Wait保留、死亡目标拒绝及条件标记文字。
+- playmode-preview-lifecycle.xml/log最终6/6 Passed，并通过run-unity-playmode-tests.ps1 -ValidateResultOnly。包括4项新候选测试和两项直接受按钮语义影响的既有正式链。4项EditMode输入未变化，沿用通过不重跑。
+- 场景逐fileID对照：无已有对象删除；仅39个新增序列化块、5个已有块增加新组件/引用/子节点。其余diff为Unity重新排序和行尾空白，未改相机/模型/旧布局。
+
+## 2026-10-03 正式入口可见验证与完成
+
+- 正式入口：本任务树Unity 6000.3.18f1，StartMenuScene→既有spells-1920-1003·李琳存档→关中城→关中野外→石甲兽遭遇；Game View 1366×768、Scale1。使用真实SystemCombatResolutionRandomSource与正式档案，未改角色数值、存档或RNG。GUI日志gui-preview.log，控制台无错误。
+- tick13基线：player HP571/MP180/移力2/CT104门槛100，enemy HP839/MP108/CT78门槛100。先选贯石击再取消，聚灵术自身→敌方再取消，两种取消均移除预览及◇，资源/回合未变。baseline 230513和贯石击候选230600的JSON权威字段完全一致。
+- 贯石击实际候选Art:spell_guanshiji:enemy：费用12，条件结束后CT0/110、+14刻、顺位未定；说明施行后仍可移动。确认一次后MP180→168，敌HP839→784，进入行动后移动阶段；随后结束行动确认，下一自身行动tick27（13+14）、CT112/110。
+- 聚灵术实际候选Art:spell_julingshu:player（230749 JSON）：自身费用0、对敌切换费用20；条件结束后CT0/105、+14刻。先前已分别选择/取消，tick27重选自身确认一次后MP168→173，日志恢复5/消耗0。结束行动确认后自身tick41（27+14）、CT112/105。
+- 新预览面板真实范围x387.03..993.20/y34.13..197.69；文本逻辑804×120、preferredHeight84.33，三行完整可读且确认/取消可点击，未遮挡原命令栏或角色。独立◇与当前行动、查看目标分离；未知伤害/命中和未来顺位明确标为未探明/未定。整屏视觉统一及1920/1366组合验收归LAYOUT，不代签V-ART。
+- 截图位于本树src/Logs/preview：1366-stone-candidate、1366-cancel、1366-recovery-self、1366-recovery-enemy、1366-stone-confirm、1366-stone-endturn-preview、1366-stone-next-tick27、1366-recovery-confirm、1366-recovery-next-tick41.png。只读JSON为visible-preview-20261003-230513/230600/230749.json；所有日志/失败记录/存档/工作树保留。只读菜单快捷键与Unity步进快捷键冲突时选择记录命令执行，未重绑用户快捷键。
+- 最终定向EditMode4/4、PlayMode6/6；主责复核完整diff，Sol最终只读复核无P1/P2。最后生产代码未再变化，未重复已通过测试；程序集/数据链沿用本轮通过结果。两份ProjectSettings自有尾空白噪声排除。
+- 实现与定向真实证据通过，任务完成归档；唯一业务提交由本完成记录的Git提交追溯。合并前再次核主工作区schema5 Show、原ready卡/队列/HEAD和用户脏路径，使用invoke-project-integration.ps1受保护fast-forward。
+- 经验收尾已依据现有失败堆栈、修正diff与验证检查，本轮没有需另立的经验候选。后续只推进LAYOUT准备与实施，V-FLOW真实前置及V-ART用户确认门保留。

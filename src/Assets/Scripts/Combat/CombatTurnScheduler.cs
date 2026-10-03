@@ -52,6 +52,21 @@ namespace TianZhang.Combat
         public IReadOnlyList<string> ChargingUnitIds { get; }
     }
 
+    public sealed class CombatTurnPreview
+    {
+        internal CombatTurnPreview(CombatTurnSnapshot snapshot, float ct, float threshold, long ticks)
+        {
+            Snapshot = snapshot;
+            ChargeTime = ct;
+            NextActionThreshold = threshold;
+            TicksUntilReady = ticks;
+        }
+        public CombatTurnSnapshot Snapshot { get; }
+        public float ChargeTime { get; }
+        public float NextActionThreshold { get; }
+        public long TicksUntilReady { get; }
+    }
+
     /// <summary>Root Combat wrapper for the lower-level pure CTB engine.</summary>
     public sealed class CombatTurnScheduler
     {
@@ -69,7 +84,10 @@ namespace TianZhang.Combat
         public int CurrentTick => engine.CurrentTick;
 
         /// <summary>Filters the immutable engine projection through the session's living combatants.</summary>
-        public CombatTurnSnapshot GetSnapshot(IReadOnlyList<CombatantSnapshot> combatants)
+        public CombatTurnSnapshot GetSnapshot(IReadOnlyList<CombatantSnapshot> combatants) =>
+            ProjectSnapshot(engine.GetSnapshot(), combatants);
+
+        private static CombatTurnSnapshot ProjectSnapshot(CTBSnapshot snapshot, IReadOnlyList<CombatantSnapshot> combatants)
         {
             if (combatants == null)
                 throw new ArgumentNullException(nameof(combatants));
@@ -80,7 +98,6 @@ namespace TianZhang.Combat
                     aliveIds.Add(combatant.Id);
             }
 
-            CTBSnapshot snapshot = engine.GetSnapshot();
             var unitSnapshots = new List<CombatTurnUnitSnapshot>();
             foreach (CTBUnitSnapshot unit in snapshot.Units)
             {
@@ -101,6 +118,16 @@ namespace TianZhang.Combat
                     chargingUnitIds.Add(id);
             }
             return new CombatTurnSnapshot(snapshot.CurrentTick, unitSnapshots, readyQueueIds, chargingUnitIds);
+        }
+
+        public CombatTurnPreview PreviewTurnEnd(string actorId, int penalty, bool wait, IReadOnlyList<CombatantSnapshot> combatants)
+        {
+            CTBSnapshot snapshot = engine.PreviewTurnEnd(actorId, penalty, wait);
+            foreach (CTBUnitSnapshot unit in snapshot.Units)
+                if (unit.Id == actorId)
+                    return new CombatTurnPreview(ProjectSnapshot(snapshot, combatants), unit.ChargeTime, unit.NextActionThreshold,
+                        CTBEngine.TicksUntilReady(unit));
+            throw new ArgumentException("Unknown preview actor.", nameof(actorId));
         }
 
         public CombatTurnAdvance AdvanceUntilAction(IReadOnlyList<CombatantSnapshot> combatants)

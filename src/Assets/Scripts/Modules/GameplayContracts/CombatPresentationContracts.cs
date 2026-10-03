@@ -3,6 +3,56 @@ using System.Collections.Generic;
 
 namespace TianZhang.Gameplay.Contracts
 {
+    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn }
+
+    public sealed class CombatActionCandidate
+    {
+        public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion)
+        {
+            Kind = kind;
+            ActorId = actorId;
+            TargetId = targetId;
+            ProfileId = profileId;
+            ContextVersion = contextVersion;
+        }
+        public CombatActionKind Kind { get; }
+        public string ActorId { get; }
+        public string TargetId { get; }
+        public string ProfileId { get; }
+        public long ContextVersion { get; }
+    }
+
+    public sealed class CombatActionPreviewSnapshot
+    {
+        public CombatActionPreviewSnapshot(CombatActionCandidate candidate, string actionName, string actorName,
+            string targetName, bool canConfirm, string reason, int spiritCost, bool remainsInTurn,
+            float settledCt, float threshold, long ticksUntilReady)
+        {
+            Candidate = candidate;
+            ActionName = actionName;
+            ActorName = actorName;
+            TargetName = targetName;
+            CanConfirm = canConfirm;
+            Reason = reason;
+            SpiritCost = spiritCost;
+            RemainsInTurn = remainsInTurn;
+            SettledCt = settledCt;
+            Threshold = threshold;
+            TicksUntilReady = ticksUntilReady;
+        }
+        public CombatActionCandidate Candidate { get; }
+        public string ActionName { get; }
+        public string ActorName { get; }
+        public string TargetName { get; }
+        public bool CanConfirm { get; }
+        public string Reason { get; }
+        public int SpiritCost { get; }
+        public bool RemainsInTurn { get; }
+        public float SettledCt { get; }
+        public float Threshold { get; }
+        public long TicksUntilReady { get; }
+    }
+
     public enum CombatUnitPresentationEvent
     {
         Idle,
@@ -297,8 +347,10 @@ namespace TianZhang.Gameplay.Contracts
             bool canEndTurn = false,
             CombatMovementSnapshot movement = null,
             bool isPresenting = false,
-            IReadOnlyList<CombatArtActionSnapshot> artActions = null)
+            IReadOnlyList<CombatArtActionSnapshot> artActions = null,
+            long commandContextVersion = 0)
         {
+            CommandContextVersion = commandContextVersion;
             Player = player;
             Enemy = enemy;
             TurnText = turnText;
@@ -313,6 +365,7 @@ namespace TianZhang.Gameplay.Contracts
             IsPresenting = isPresenting;
         }
 
+        public long CommandContextVersion { get; }
         public CombatantHudSnapshot Player { get; }
         public CombatantHudSnapshot Enemy { get; }
         public string TurnText { get; }

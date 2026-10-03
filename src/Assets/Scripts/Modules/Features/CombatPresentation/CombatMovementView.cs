@@ -30,6 +30,7 @@ namespace TianZhang.Features.CombatPresentation
         private CombatHudSnapshot snapshot;
         private CombatMovementOption selected;
         private LineRenderer pathLine;
+        public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
@@ -76,6 +77,7 @@ namespace TianZhang.Features.CombatPresentation
         public void BeginSelection()
         {
             if (!CanInput || snapshot.Movement == null || snapshot.Movement.Options.Count == 0) return;
+            SelectionStarted?.Invoke();
             IsSelecting = true;
             selected = null;
             foreach (CombatMovementOption option in snapshot.Movement.Options)

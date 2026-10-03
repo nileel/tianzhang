@@ -33,7 +33,7 @@ namespace TianZhang.Features.Adventure
         public float NextPercent() => (float)(random.NextDouble() * 100d);
     }
 
-    public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler
+    public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler, ICombatActionPreviewHandler
     {
         private readonly CombatCommandService commandService = new CombatCommandService();
         private readonly CombatResultBuilder resultBuilder = new CombatResultBuilder();
@@ -51,6 +51,7 @@ namespace TianZhang.Features.Adventure
         private Func<string, string> displayReason = value => value;
         private Func<string, string> displayProfile = value => value;
         private string playerDisplayName;
+        private long commandContextVersion;
 
         public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay,
             Func<string, string> profileDisplay = null)
@@ -135,6 +136,64 @@ namespace TianZhang.Features.Adventure
             StartCoroutine(RunCombat());
             reason = null;
             return true;
+        }
+
+        public CombatActionPreviewSnapshot PreviewAction(CombatActionCandidate candidate)
+        {
+            if (candidate == null) return null;
+            CombatCommand command = ToCommand(candidate);
+            string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
+            CombatCommandPreview preview = string.IsNullOrEmpty(reason) ? commandService.Preview(session, command) : null;
+            if (preview != null && !preview.Validation.Succeeded) reason = displayReason(preview.Validation.RejectionReason);
+            string name = candidate.Kind switch
+            {
+                CombatActionKind.BasicAttack => "普攻",
+                CombatActionKind.Guard => "防御",
+                CombatActionKind.Wait => "待机",
+                CombatActionKind.EndTurn => "结束行动",
+                _ => displayProfile(command.ProfileId),
+            };
+            string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
+                ? playerDisplayName : command.TargetId == "enemy" && spawned != null
+                    ? resolveText(spawned.EnemyData.displayNameKey) : "无效目标";
+            var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
+                command.ProfileId, candidate.ContextVersion);
+            return new CombatActionPreviewSnapshot(resolved, name, playerDisplayName, targetName,
+                preview != null && preview.Validation.Succeeded, reason, preview?.SpiritCost ?? 0,
+                preview?.RemainsInTurn ?? false, preview?.Turn?.ChargeTime ?? 0,
+                preview?.Turn?.NextActionThreshold ?? 0, preview?.Turn?.TicksUntilReady ?? 0);
+        }
+
+        public void ConfirmAction(CombatActionCandidate candidate)
+        {
+            if (!IsCandidateCurrent(candidate))
+            {
+                presentation?.AppendLog("行动状态已变化，请重新选择");
+                Present("行动状态已变化", acceptsPlayerCommand && session != null &&
+                    session.TurnPhase != CombatTurnPhase.Finished);
+                return;
+            }
+            ExecutePlayer(ToCommand(candidate));
+        }
+
+        private bool IsCandidateCurrent(CombatActionCandidate candidate) => candidate != null && session != null &&
+            acceptsPlayerCommand && !IsPresenting && candidate.ContextVersion == commandContextVersion &&
+            candidate.ActorId == session.CurrentActorId && candidate.ActorId == "player";
+
+        private CombatCommand ToCommand(CombatActionCandidate candidate)
+        {
+            CombatCommandKind kind = candidate.Kind switch
+            {
+                CombatActionKind.BasicAttack => CombatCommandKind.BasicAttack,
+                CombatActionKind.Art => CombatCommandKind.Art,
+                CombatActionKind.Divine => CombatCommandKind.Divine,
+                CombatActionKind.Guard => CombatCommandKind.Guard,
+                CombatActionKind.Wait => CombatCommandKind.Wait,
+                CombatActionKind.EndTurn => CombatCommandKind.EndTurn,
+                _ => throw new ArgumentOutOfRangeException(nameof(candidate)),
+            };
+            string profile = candidate.Kind == CombatActionKind.BasicAttack ? spawned?.PlayerBasicProfileId : candidate.ProfileId;
+            return new CombatCommand(kind, candidate.ActorId, candidate.TargetId, profile);
         }
 
         public void RequestBasicAttack(string actorId, string targetId)
@@ -282,7 +341,8 @@ namespace TianZhang.Features.Adventure
                     new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded,
                 movement: BuildMovement(player, acceptsCommands),
                 isPresenting: IsPresenting,
-                artActions: BuildArtActions(player, enemy)));
+                artActions: BuildArtActions(player, enemy),
+                commandContextVersion: ++commandContextVersion));
         }
 
         private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)

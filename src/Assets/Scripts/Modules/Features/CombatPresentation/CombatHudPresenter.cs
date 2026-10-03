@@ -68,6 +68,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void OnDisable()
         {
+            commandInput?.ClearContext();
             Snapshot = null;
             ClearInspectedTarget();
         }

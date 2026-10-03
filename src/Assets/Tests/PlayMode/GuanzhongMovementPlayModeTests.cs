@@ -225,6 +225,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
             Assert.AreEqual("结束行动", Get<Text>(bar, "waitLabel").text);
             bar.WaitButton.onClick.Invoke();
+            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             TestContext.WriteLine($"MOVE scene: options={expected.Length}, cost={option.Cost}, points={player.MovePoints}, root={root.transform.position}, button={moveRect.rect}");
         }

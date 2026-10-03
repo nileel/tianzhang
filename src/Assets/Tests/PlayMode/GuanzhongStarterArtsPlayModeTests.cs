@@ -145,6 +145,7 @@ namespace TianZhang.Tests.PlayMode
                 spawned.Player.Id, "missing_target", RecoveryId));
             int mana = spawned.Player.CurrentSpirit, health = spawned.Enemy.CurrentHealth, rolls = random.Count;
             actionBar.ArtButton.onClick.Invoke();
+            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
             Assert.That(random.Count, Is.EqualTo(rolls + 4));
@@ -155,6 +156,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(actionBar.WaitButton.interactable, Is.True);
             StringAssert.Contains("结束行动", actionBar.WaitButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.WaitButton.onClick.Invoke();
+            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
 
             foreach (int recovery in new[] { 5, 5, 2 })
@@ -166,6 +168,7 @@ namespace TianZhang.Tests.PlayMode
                 AssertArtTargets();
                 Assert.That(actionBar.SecondArtButton.interactable, Is.True);
                 actionBar.SecondArtButton.onClick.Invoke();
+                Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana + recovery));
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(enemyHealth));
                 AssertRecoveryProjection(spawned.Player.Id, recovery, rolls);
@@ -184,6 +187,7 @@ namespace TianZhang.Tests.PlayMode
                 actionBar.SecondArtTargetButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             StringAssert.Contains("20 MP", actionBar.SecondArtButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.SecondArtButton.onClick.Invoke();
+            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 20));
             AssertRecoveryProjection(spawned.Enemy.Id, 0, rolls);
             StringAssert.Contains("恢复灵力 0", sink.Logs.Last());
