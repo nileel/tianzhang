@@ -6,4 +6,3 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | U-GZ-PLAYTEST-SPELLS-01 | codex_execute | codex | P1 | unity | implementation | 两术法从建角装配到正式施法完整接入 | 开发管理/任务卡/U-GZ-PLAYTEST-SPELLS-01.txt |
-| U-GZ-PLAYTEST-MOVE-UI-01 | codex_execute | codex | P1 | unity | implementation | 移动输入可达高光路径预览与棋子位移动画 | 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt |
