@@ -8,13 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-UI-TEXT-01",
-    "U-GZ-PLAYTEST-TIMELINE-01",
-    "U-GZ-PLAYTEST-MOVE-UI-01"
-  ],
-  "stateReason": "2026-10-02：已建立完整目标联动叶子；等待中文显示、真实行动轴及移动输入守卫交付，再核对同一点击仲裁/稳定ID入口并准备ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-03：UI-TEXT/TIMELINE/MOVE-UI均已完成归档，主线0a08a277已含双术法共享接缝。已核稳定ID、轴焦点与点击分离、UI/移动/演出仲裁和实际renderer命中路径；按现有允许路径接入只读目标详情，不修改命令规则。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -115,3 +111,15 @@
 ## 停止条件
 
 - 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
+
+## 2026-10-03 TARGET ready冻结
+
+- 真实前置：UI-TEXT 3d683324、TIMELINE efca74b4、MOVE-UI 9808e7b2均有completed归档；SPELLS已0a08a277合回主线。只核当前卡直接前置，没有重审backlog。任务树codex/u-gz-playtest-ui-target-01基于0a08a277，全部旧工作树保留。
+- 所有者：CombatHudPresenter独占InspectedTargetId，保存最新只读HUD。查看只刷新TargetView与轴选中，不重新调用完整Present/SetContext，避免清除MOVE未提交选择，也不更改术法目标或CurrentActorId。只返回已存活/实际provider根的稳定ID供后续PREVIEW消费。
+- Timeline原PointerEnter/Select仍只更新peek；Button.onClick（含Submit）才发稳定ID选中。选中标记独立于IsCurrent和focusedCombatantId，快照重排按ID恢复，不能绑定槽下标。此卡不改CT计算或已验收轴布局。
+- World输入仅在当前HUD存在、非IsPresenting且非MovementView.IsSelecting时执行；先EventSystem射线UI抢占，再用注入Camera和provider返回的真实可见renderer bounds选择最近命中ID。当前Prefab无Collider，不额外生成碰撞资产；只扩原provider只读bounds接口。空地清除，死亡/实际根inactive、Hide、OnDisable/重入清除。
+- TargetView仅消费CombatantHudSnapshot的姓名/HP/MP和轴阵营投影，伤害/命中/能力写未探明，不复制完整内核快照，不补虚构境界或状态。新增查看面板沿现有本地皮肤和字体、关闭按钮；组合阶段先置于左侧轴peek下方的空白区域，最终v6右侧整屏摆放仍归LAYOUT。
+- 世界选中标记使用独立Overlay框：源为provider同一活跃模型renderer bounds，8角经当前Camera WorldToScreenPoint、Canvas RectTransformUtility转换后求屏幕包围框；TargetView LateUpdate刷新四边，不改底座颜色/几何。记录源ID/根/世界bounds/屏幕rect实际证据。UI/世界两处的主写者均为Presenter，目标详情不拥有战斗规则。
+- Bootstrap显式Require/Configure TargetView、TargetInput和现有provider/camera/canvas/movement；Builder新增局部RebuildCombatTargetSelection，完整Build接同一函数。所有新.cs/.meta与测试均在卡原允许路径，不新增asmdef/资产/全局组件。
+- 验证最小集：直接PlayMode由正式入口建立真实provider，测轴点击/世界命中同ID、自己与敌、peek不选/Submit选、ID重排、UI与移动选格/演出阻止世界选中、标记跟根及死亡/Hide清空；实际StartMenu→存档→关中首战鼠标/键盘Game View取证。不重验旧CAMERA/TIMELINE或平衡，不用fixture代替正式可见结果。
+- 复杂度为有界交互实现，主责统一写入强耦合所有者。复用Sol/high只读最小测试入口核查，Astra/high已只读核输入仲裁与直接前置；实际辅助模型此前元数据已核，推理强度未独立核实。子智能体不写文件/队列/卡/提交/runtime/锁，也不派生。业务写入前重跑本卡风险预检并核投影；无新模型审批或全局配置修改。
