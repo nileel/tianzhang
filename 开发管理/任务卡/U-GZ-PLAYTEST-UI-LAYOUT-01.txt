@@ -8,19 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-CAMERA-01",
-    "U-GZ-PLAYTEST-HP-01",
-    "U-GZ-PLAYTEST-TIMELINE-01",
-    "U-GZ-PLAYTEST-MOVE-UI-01",
-    "U-GZ-PLAYTEST-SPELLS-01",
-    "U-GZ-PLAYTEST-UI-TEXT-01",
-    "U-GZ-PLAYTEST-UI-TARGET-01",
-    "U-GZ-PLAYTEST-UI-PREVIEW-01",
-    "U-GZ-PLAYTEST-EXIT-GUARD-01"
-  ],
-  "stateReason": "2026-10-02：整屏遮挡/布局缺口已建立最终组合叶子；等待真实控件/目标/预览/文字及相机输入完成后，以运行中的矩形和已有v6参考布局做一次收口，不拿空占位面板验收。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-03：九项真实前置已归档并集成至63da50ca；完整布局creator/writer、悬赏只读入口、允许路径和验收已冻结，先运行基线矩形探针再实施布局。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scenes/AdventureScene.unity",
@@ -136,3 +126,14 @@
 ## 停止条件
 
 - 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
+
+## 2026-10-03 ready准备与冻结合同
+
+- 九项前置逐项核对归档完成、主线包含及正式入口证据，无同ID活跃卡；PREVIEW最终63da50ca（Edit4/Play6通过及正式两术法），TARGET5b67b0db键盘用户已确认。CAMERA/TIMELINE/其他前置输入未变不重测；V-FLOW/V-ART仍独立保留真实门禁。
+- 唯一结果与原expectedPaths不变：正式AdventureScene同一Canvas的v6组合布局和只读悬赏摘要。Builder.Build末尾与局部RebuildCombatLayout共用一个布局方法；既有控件引用保留。SceneBuildSupport、相机size4、领域命令、结算、存档、共享资源均不改。
+- source→parent→writer：UICanvas overlay/reference1920×1080→CombatHudRoot/TargetRoot/PreviewRoot/TimelineRoot；Builder持久布局，Installer注入，HudView/ActionBar/Target/Preview负责文本与显隐，Timeline仅沿用其既有条目writer；旧HudRoot的纵向LayoutGroup是右420×984大块和468高行动栏的确定来源。先由新测试文件只读记录正式Play中source/parent/final rect、scale与camera viewport，量测齐全前不修改坐标。
+- v6基准：左右52，行动轴76/顶279沿用；悬赏右52顶171宽360高100；详情右52顶294宽360，头部固定、正文滚动、高度≤700；底部操作左351底31宽1091，现有移动/两术法/目标切换/普攻/防御/待机横向分组；预览同宽置其上方，固定确认取消，长正文滚动。战报按v6右432顶235宽520最大350可收起；默认收起以保留战场。1366按同一Canvas比例，长名/正文内部收纳滚动，不另设分辨率offset补丁。最终高度按基线测量与文本容量一次冻结，变更需先取新数值证据。
+- 悬赏来源：AdventureController查询正式来源城镇catalog.GetBountiesByIssuer，再按当前map.adventureId过滤；对每条用既有BountyUseCase.GetState读取Accepted/ObjectiveCompleted，映射仅含稳定ID/中文名/进度/目标数/完成标记的Contracts DTO，由Installer将只读提供函数交给新View。没有已接或已领奖显示无追踪。无Accept/RecordDefeat/Claim/Save调用，不新增Store/状态事件。
+- 模式只消费现有CombatHudPresenter.Present/Hide与explorationPanel显隐，不创建新模式状态。新悬赏随HUD显隐，战报收起状态仅View表示状态，隐藏战斗重置。当前/查看/条件预测不重算，透明HUD根和纯文字不拦截世界输入。
+- 验收：新EditMode核持久引用、单Canvas/布局writer与源矩形；新PlayMode正式入口分别1366/1920核目标+预览+长日志矩形、确认取消命中、中央世界无整屏射线阻挡、只读悬赏与唯一Store一致、关闭/隐藏清理；正式GUI同版本双分辨率走探索/战斗/详情/预览/日志/返回，记录真实随机与关键数值。仅重跑实际重排的目标/预览/移动/术法直连测试，不扩大前置业务验证。
+- 模型：实际主模型gpt-6-astra；只读gpt-6.1-sol/high preview_input_audit核矩形冲突与hierarchy测试依赖（实际模型已核，推理强度未独立核验）。无写入委派，无子任务ID；主责最终复核、验证、唯一candidate。
