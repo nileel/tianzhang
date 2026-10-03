@@ -252,8 +252,19 @@ namespace TianZhang.Tests.PlayMode
             UnityEditor.EditorApplication.CallbackFunction sample = null;
             sample = () =>
             {
-                if (!Application.isPlaying || encounter == null || !encounter.IsRunning || UnityEditor.EditorApplication.timeSinceStartup >= deadline)
+                if (!Application.isPlaying || UnityEditor.EditorApplication.timeSinceStartup >= deadline)
                 {
+                    UnityEditor.EditorApplication.update -= sample;
+                    return;
+                }
+                if (encounter == null)
+                {
+                    File.AppendAllText(file, JsonUtility.ToJson(new VisibleMovementEvidence
+                    {
+                        frame = Time.frameCount, time = Time.realtimeSinceStartup,
+                        scene = SceneManager.GetActiveScene().name, root = "encounter_unloaded",
+                        activeUnits = -1
+                    }) + Environment.NewLine);
                     UnityEditor.EditorApplication.update -= sample;
                     return;
                 }
@@ -264,9 +275,12 @@ namespace TianZhang.Tests.PlayMode
                 var evidence = new VisibleMovementEvidence
                 {
                     width = Screen.width, height = Screen.height, phase = session.TurnPhase.ToString(),
+                    scene = SceneManager.GetActiveScene().name, actor = session.CurrentActorId,
                     tick = session.TurnScheduler.CurrentTick, points = player.MovePoints, q = player.Position.Q, r = player.Position.R,
                     hp = player.CurrentHealth, mp = player.CurrentSpirit, enemyHp = enemy.CurrentHealth,
-                    busy = encounter.IsPresenting, selecting = movement.IsSelecting,
+                    busy = encounter.IsPresenting, running = encounter.IsRunning,
+                    activeUnits = provider.ActiveCombatantCount, rootActive = root != null && root.activeInHierarchy,
+                    selecting = movement.IsSelecting,
                     selected = movement.Selected == null ? "" : movement.Selected.Destination.ToString(),
                     root = root == null ? "removed" : $"position={root.transform.position:F5}; rotation={root.transform.eulerAngles:F3}; scale={root.transform.localScale:F3}; base={root.transform.Find("Static3DCombatBase").position:F5}",
                     status = $"{status.text}; rect={status.rectTransform.rect}; preferred={status.preferredWidth:F2}x{status.preferredHeight:F2}; vertices={status.cachedTextGenerator.vertexCount}; font={status.font.name}; canvas={status.canvas.renderMode}/{status.canvas.scaleFactor}",
@@ -300,6 +314,7 @@ namespace TianZhang.Tests.PlayMode
                 evidence.frame = Time.frameCount;
                 evidence.time = Time.realtimeSinceStartup;
                 File.AppendAllText(file, JsonUtility.ToJson(evidence) + Environment.NewLine);
+                if (!encounter.IsRunning) UnityEditor.EditorApplication.update -= sample;
             };
             sample();
             UnityEditor.EditorApplication.update += sample;
@@ -309,10 +324,10 @@ namespace TianZhang.Tests.PlayMode
         [Serializable]
         private sealed class VisibleMovementEvidence
         {
-            public int frame, width, height, tick, points, q, r, hp, mp, enemyHp;
+            public int frame, width, height, tick, points, q, r, hp, mp, enemyHp, activeUnits;
             public float time;
-            public bool busy, selecting;
-            public string phase, selected, root, status, camera, controls;
+            public bool busy, running, rootActive, selecting;
+            public string scene, actor, phase, selected, root, status, camera, controls;
             public string[] lines, tiles;
         }
 #endif

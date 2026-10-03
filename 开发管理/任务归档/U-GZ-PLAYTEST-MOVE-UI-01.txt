@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-03：MOVE-RULE、BASE-FIT和CAMERA均已实际完成并集成；消费完整移动合同、正式InputSystem与演出锁的直接消费者，补齐字面路径并重新预检后按整批授权实施。SPELLS未完成验收保持独立，共享源码合并须完整保留。",
+  "stateReason": "2026-10-03：正式移动交互与逐段演出已完成；1366/1920真实入口、绕障碍转向、自动Finished锁及本次真实败北退出证据齐备。5个直接PlayMode、4个EditMode与边界/数据链沿用已有通过；SPELLS真实拒绝与共享源码接缝仍由独立卡收口。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
@@ -217,3 +217,27 @@
 - 用户在工作树盘点后明确要求“该合并的都先提交吧”。据此将本卡当前21个授权路径在原MOVE分支形成检查点提交；这是保全已实施成果的本地提交，不是完成candidate或主线集成，不将尚缺验收改写为已通过。
 - 17:26检查点的正式双分辨率移动、转向、绕障碍和自动Finished证据沿用；真实致死演出清理、SPELLS逐方法共享接缝及其真实缺灵力/非法目标证据仍待完成。route/owner/stage/dispatchState、队列和下游前置均不变；不归档，不操作stash或自动化配置。
 - 提交仅包含已实施源码、场景、测试、边界说明和本卡；忽略目录中的日志/截图保留在原工作树，旧工作树及主目录原改动保留。后续继续在原树补齐验收，再统一复核最终差异并通过受保护入口集成。
+
+## 2026-10-03 18:12完成核对与归档
+
+- 本卡生产成果已于0e040526提交保全；本轮从真实StartMenu读取move-1920-1003存档，经关中城/野外进入石甲兽遭遇，仅普通攻击和结束行动自然推进，未注入角色、资源、随机源或fixture。1366真实败北最后一击：formal-before-lethal-1366.png记录HP13；formal-lethal-attempt2-1366.png记录HP0/571、MP180、敌HP241/839、tick170，仍在Adventure敌方行动界面，玩家棋子隐藏且按钮呈禁用外观；formal-after-lethal-settlement-1366.png记录正常返回关中城。文件均在本树src/Logs/move-ui。
+- formal-after-lethal-hierarchy.json于18:03:44记录PID33832、正确MOVE项目、Play Mode、仅SettlementScene加载且Combat查询为空。结合RunCombat等待IsPresenting、Complete移除/清理会话、ResolveEncounter回城的源码链，关闭本卡实际败北分支的致死清理缺口。Death事件即时隐藏死者是既有设计，不等于提前清理独立反馈。没有实测精确等待秒数、最后反馈销毁帧或全部死亡分支，不夸称逐帧证明。
+- formal-lethal-presentation-1366.png实际是敌方未命中、玩家仍HP13，文件名不构成致死证据。visible-movement-20261003-180134.jsonl有65行、DeathRows=0，只是致死前记录；175719日志也提前到期，均不列为死亡轨迹。未因记录到期重复磨战斗。
+- 保留GuanzhongMovementPlayModeTests中只读记录器增量：scene/actor/running/activeUnits/rootActive及Encounter卸载终帧，不修改会话或命令。致死实机时尚未加载该增量，故不把它列为本次实测；18:10刷新后Unity脚本编译成功，manual-entry-20261003.log记录Tundra build success、程序集重载成功，PlayModeTests.dll时间18:10:19。只读Status确认不在Play、不在编译且StartMenu无dirty。
+- 本轮写前预检status=ok，taskCardDigest=0bc065bddcb616bc584238ef60c3b98113b3ce02cd350de7bc0e3fcaa1ef60f1、indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates为空，与schema2投影一致。复用Astra只读move_rule_check核致死证据最低范围、Sol只读spells_seams核合并接缝；主责亲查截图/终态/差异。未新增模型身份或推理强度的核实声明。
+- 16:00和17:26已通过且输入未变的五个直接PlayMode、四个EditMode、程序集和数据链结果沿用；没有重跑CAMERA/TIMELINE。MOVE独立结果完成，卡归档并移除本项队列/backlog；SPELLS仍ready，其真实缺MP/非法目标和双术法合并后验证必须实际完成后再归档，不以本卡替代。TARGET/PREVIEW/LAYOUT按实际前置继续；V-FLOW保持真实前置，V-ART仍由用户确认。
+- 原工作树、日志、失败证据、旧stash和main用户改动全部保留；本卡合并通过主工作区最新Show、卡/队列和路径冲突核对以及受保护fast-forward入口，不能用此前Show代替。
+
+## 经验候选
+
+### CAND-U-GZ-PLAYTEST-MOVE-UI-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：正式移动状态文字字符串存在但Game View无文字。
+- 已证实根因：Text框高24小于实际preferredHeight26，Wrap/Truncate导致vertices=0；局部文字框高32后选择/选定状态产生36/52顶点并在两分辨率显示。
+- 证据：本卡17:26根因记录与src/Logs/move-ui正式截图、诊断日志；AdventureSceneBuilder.BuildCombatMovement局部改动。
+- 可能复用范围：动态Text结合固定高度和Truncate的UGUI控件；不推及缺字或材质问题。
+- 门禁可能：yes
