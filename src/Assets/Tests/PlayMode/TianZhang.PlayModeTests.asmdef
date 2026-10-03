@@ -20,6 +20,7 @@
         ,"TianZhang.Features.Settlement"
         ,"TianZhang.Features.Adventure"
         ,"TianZhang.Features.CombatPresentation"
+        ,"Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

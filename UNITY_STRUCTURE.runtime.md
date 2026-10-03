@@ -42,6 +42,7 @@
 - `EnvironmentProfiles.csv.battlefieldCells` 是关中 6×6 正式战场的唯一手工地图输入；`WorldContentImporter` 确定性生成 170 条有向边并写入 asset。`CombatEntryAdapter` 逐项投影 `TacticalTileData`，`SpatialQueryBoardFactory` 消费同 asset 的边，`AdventureSceneBuilder.BuildGuanzhongBattlefield` 逐项保存 36 个显示地块，三者不再各自推断地图。
 - `GuanzhongTerrainAssetBuilder` 仅在 Editor 生成批准地块/石阶的共享材质与Prefab。36 格均共享 `Assets/Art/Environments/Guanzhong/Tile.prefab`；四个 `blocksGroundMove` 格在 tile 下实例化 `Stair.prefab` 作为可见障碍，逻辑仍由 `TacticalTileData` 的不可地面进入／不挡视线语义拥有。保留 `HexToWorld` 的 x=q+.5r、z=.8660254r+1，地块根Y=.34、单位缩放；Prefab 内保留原FBX层级与已测刚体/正等比规范化，天然格心三角面不等于草冠 bounds.max.y。`VisualBaselineBoard`／`BattleVisualComparisonPanel` 仍是序列化比较 fixture，默认 inactive，不是正式格位或规则输入。Marker与固定相机保持既有所有者；初始地形接入不代表整屏或最终美术验收。
 - `AdventureSceneBuilder.Build` 仅在Adventure关闭旧`VisualBackdrop`平面，避免Y=-.04的平面挡住延伸至Y≈-1.543的岩壁；共享`BeginScene`和其他场景不变。苻渊同地形图片由可选PlayMode取证临时克隆原模型子树，取证后销毁并恢复Marker/相机，不形成正式角色引用或第二条表现链。
+- `AdventureCameraController` 由 Builder 显式配置正式 Camera 与 `GuanzhongBattlefield`，Adventure 局部正交 size=4。Input System 的 WASD／方向键按实际帧时长平移，中键以棋盘平面射线差值拖动；视线焦点按棋盘实际 renderer bounds 的 XZ 钳制，保持相机 Y 与朝向。UI 指针／输入框取得输入时停止相机操作；禁用、失焦清除拖动状态，不写战斗或跨场景状态。
 
 ## 非正式 2D 合同实验
 

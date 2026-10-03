@@ -1183,6 +1183,7 @@ GameObject:
   - component: {fileID: 270165484}
   - component: {fileID: 270165483}
   - component: {fileID: 270165482}
+  - component: {fileID: 270165485}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1233,7 +1234,7 @@ Camera:
   far clip plane: 60
   field of view: 60
   orthographic: 1
-  orthographic size: 6.2
+  orthographic size: 4
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -1264,6 +1265,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &270165485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 270165481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8bc4919e27242d88fa21c458aeaa251, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Features.Adventure::TianZhang.Features.Adventure.AdventureCameraController
+  controlledCamera: {fileID: 270165483}
+  battlefield: {fileID: 201146059}
+  groundHeight: 0.34
+  panSpeed: 4
 --- !u!1001 &275604732
 PrefabInstance:
   m_ObjectHideFlags: 0

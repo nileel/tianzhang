@@ -9,6 +9,7 @@
         "TianZhang.Gameplay.Contracts",
         "TianZhang.Spatial",
         "TianZhang.Infrastructure.UnityContent",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ]
 }

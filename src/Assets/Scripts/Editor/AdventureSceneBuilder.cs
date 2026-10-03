@@ -49,7 +49,8 @@ namespace TianZhang.Editor
 
             EnvironmentProfileAsset environmentProfile = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
-            BuildGuanzhongBattlefield(environmentProfile);
+            GameObject battlefield = BuildGuanzhongBattlefield(environmentProfile);
+            ConfigureAdventureCamera(Camera.main, battlefield);
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, Vector2.zero, Vector2.one);
@@ -354,10 +355,33 @@ namespace TianZhang.Editor
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             GameObject existing = Array.Find(scene.GetRootGameObjects(), root => root.name == "GuanzhongBattlefield");
             if (existing != null) UnityEngine.Object.DestroyImmediate(existing);
-            BuildGuanzhongBattlefield(environmentProfile);
+            GameObject battlefield = BuildGuanzhongBattlefield(environmentProfile);
+            ConfigureAdventureCamera(Camera.main, battlefield);
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the rebuilt Guanzhong battlefield.");
             AssetDatabase.SaveAssets();
+        }
+
+        [MenuItem("天章/场景/更新关中战术相机")]
+        public static void RebuildTacticalCamera()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject battlefield = Array.Find(scene.GetRootGameObjects(), root => root.name == "GuanzhongBattlefield");
+            if (battlefield == null) throw new InvalidOperationException("AdventureScene requires its battlefield.");
+            ConfigureAdventureCamera(Camera.main, battlefield);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the Adventure camera.");
+        }
+
+        private static void ConfigureAdventureCamera(Camera camera, GameObject battlefield)
+        {
+            if (camera == null) throw new InvalidOperationException("AdventureScene requires its main camera.");
+            camera.orthographicSize = 4f;
+            AdventureCameraController controller = camera.GetComponent<AdventureCameraController>();
+            if (controller == null) controller = camera.gameObject.AddComponent<AdventureCameraController>();
+            controller.Configure(camera, battlefield.transform, battlefield.transform.GetChild(0).position.y);
+            EditorUtility.SetDirty(camera);
+            EditorUtility.SetDirty(controller);
         }
 
         [MenuItem("天章/场景/重建战术精灵隔离矩阵")]

@@ -698,9 +698,24 @@ namespace TianZhang.Tests.PlayMode
 
             Camera camera = Camera.main;
             Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
-            Assert.Less(Vector3.Distance(camera.transform.position, new Vector3(0f, 8f, -10f)), 0.001f);
+            Assert.AreEqual(8f, camera.transform.position.y, 0.001f);
             Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
-            Assert.AreEqual(6.2f, camera.orthographicSize, 0.001f);
+            Assert.AreEqual(4f, camera.orthographicSize, 0.001f);
+            AdventureCameraController cameraController = camera.GetComponent<AdventureCameraController>();
+            Assert.IsNotNull(cameraController);
+            Assert.IsTrue(cameraController.enabled);
+            Assert.AreSame(camera, GetPrivateField<Camera>(cameraController, "controlledCamera"));
+            Assert.AreSame(battlefield.transform, GetPrivateField<Transform>(cameraController, "battlefield"));
+            Renderer[] renderers = battlefield.GetComponentsInChildren<Renderer>();
+            Assert.IsNotEmpty(renderers);
+            Bounds bounds = renderers[0].bounds;
+            foreach (Renderer renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            var plane = new Plane(Vector3.up, new Vector3(0f, 0.34f, 0f));
+            Ray centerRay = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            Assert.IsTrue(plane.Raycast(centerRay, out float distance));
+            Vector3 focus = centerRay.GetPoint(distance);
+            Assert.That(focus.x, Is.InRange(bounds.min.x - 0.001f, bounds.max.x + 0.001f));
+            Assert.That(focus.z, Is.InRange(bounds.min.z - 0.001f, bounds.max.z + 0.001f));
 
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
