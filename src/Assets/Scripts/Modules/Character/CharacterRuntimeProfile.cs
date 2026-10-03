@@ -8,7 +8,8 @@ namespace TianZhang.Character
     {
         public CharacterRuntimeProfile(CharacterIdentity identity, CharacterAttributes attributes, CharacterResources resources,
             AbilityLoadout abilityLoadout, CharacterProgressionRef progression, CharacterCombatModifiers combatModifiers,
-            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId)
+            string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId,
+            string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -21,6 +22,9 @@ namespace TianZhang.Character
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
                 ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
                 : appearanceProfileId;
+            VisibleRootId = visibleRootId;
+            VisibleRootGrade = visibleRootGrade;
+            VisibleRootElement = visibleRootElement;
         }
         public CharacterIdentity Identity { get; } public CharacterAttributes Attributes { get; }
         public CharacterResources Resources { get; } public AbilityLoadout AbilityLoadout { get; }
@@ -28,6 +32,9 @@ namespace TianZhang.Character
         public string MainEquipmentBasicAttackProfileId { get; private set; }
         public string UnarmedBasicAttackProfileId { get; private set; }
         public string AppearanceProfileId { get; private set; }
+        public string VisibleRootId { get; private set; }
+        public string VisibleRootGrade { get; private set; }
+        public string VisibleRootElement { get; private set; }
 
         public static CharacterRuntimeProfile FromDefinition(string characterId, CharacterData definition)
         {
@@ -44,7 +51,8 @@ namespace TianZhang.Character
             return new CharacterRuntimeProfile(new CharacterIdentity(characterId, definition.charName), attributes,
                 new CharacterResources(derived.MaxHealth, derived.MaxHealth, derived.MaxSpirit, derived.MaxSpirit), loadout, progression,
                 combatModifiers,
-                definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId, AppearanceProfileData.NoneId);
+                definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId, AppearanceProfileData.NoneId,
+                definition.visibleRootId, definition.visibleRootGrade, definition.visibleRootElement);
         }
 
         public static CharacterRuntimeProfile FromSnapshot(CharacterStateSnapshot snapshot)
@@ -77,7 +85,8 @@ namespace TianZhang.Character
                 snapshot.CombatModifiers,
                 snapshot.MainEquipmentBasicAttackProfileId,
                 snapshot.UnarmedBasicAttackProfileId,
-                snapshot.AppearanceProfileId);
+                snapshot.AppearanceProfileId,
+                snapshot.VisibleRootId, snapshot.VisibleRootGrade, snapshot.VisibleRootElement);
             profile.Restore(snapshot);
             return profile;
         }
@@ -87,7 +96,8 @@ namespace TianZhang.Character
             return new CharacterStateSnapshot(
                 Identity.Capture(), Attributes.Capture(), Resources.Capture(), AbilityLoadout.Capture(), Progression.Capture(),
                 CombatModifiers,
-                MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId);
+                MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId,
+                VisibleRootId, VisibleRootGrade, VisibleRootElement);
         }
         public void Restore(CharacterStateSnapshot snapshot)
         {
@@ -98,6 +108,9 @@ namespace TianZhang.Character
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
             AppearanceProfileId = snapshot.AppearanceProfileId;
+            VisibleRootId = snapshot.VisibleRootId;
+            VisibleRootGrade = snapshot.VisibleRootGrade;
+            VisibleRootElement = snapshot.VisibleRootElement;
         }
     }
 }

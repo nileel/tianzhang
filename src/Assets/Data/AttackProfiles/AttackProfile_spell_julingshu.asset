@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9d6bc45a77474a9aa5101850d20a36, type: 3}
+  m_Name: AttackProfile_spell_julingshu
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Combat.AttackProfileData
+  attackProfileId: spell_julingshu
+  displayNameKey: spell_julingshu
+  profileKind: 2
+  basicBindingKind: 0
+  contentScope: player
+  sourceAffiliation: faction_sanxiu
+  realmRequirementId: realm_lianqi
+  elementRequirementId: element_none
+  effectType: 8
+  damageElementId:
+  physicalDamageMultiplier: 0
+  soulDamageMultiplier: 0
+  healAmount: 0
+  buffMultiplier: 0
+  defensePenetration: 0
+  spiritRecoveryMultiplier: 0.5
+  minimumSpiritRecovery: 5
+  otherTargetResourceCost: 20
+  otherTargetRecoveryMultiplier: 0.5
+  resourceKind: 2
+  resourceCost: 0
+  cooldownTicks: 5
+  minCastRange: 0
+  maxCastRange: 2
+  targetingMode: 1
+  areaCenterKind: 0
+  areaShapeKind: 0
+  areaRadius: 0
+  areaLength: 0
+  areaFanHalfAngleSteps: 0
+  areaFacing: -1
+  areaInnerRadius: 0
+  areaEffectBlockers: 0
+  areaAllowedFactions: 0
+  areaAllowedStates: 0
+  isDomain: 0
+  isBloodline: 0
+  specialEffectTextKey:

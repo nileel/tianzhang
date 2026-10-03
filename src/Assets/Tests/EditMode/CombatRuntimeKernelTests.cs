@@ -472,20 +472,20 @@ namespace TianZhang.Tests.EditMode
             int swapsUsed = player.CombatSwapsUsed;
             string[] equippedArt = player.EquippedArtProfileIds.ToArray();
 
-            (CombatCommandKind, string)[] rejected =
+            (CombatCommandKind, string, string)[] rejected =
             {
-                (CombatCommandKind.BasicAttack, "foreign"),
-                (CombatCommandKind.Art, "known_only_art"),
-                (CombatCommandKind.Art, "equipped_only_art"),
-                (CombatCommandKind.Divine, "known_only_divine"),
-                (CombatCommandKind.Divine, "equipped_only_divine"),
+                (CombatCommandKind.BasicAttack, "foreign", "attack_profile_not_authorized"),
+                (CombatCommandKind.Art, "known_only_art", "attack_profile_not_equipped"),
+                (CombatCommandKind.Art, "equipped_only_art", "attack_profile_not_learned"),
+                (CombatCommandKind.Divine, "known_only_divine", "attack_profile_not_equipped"),
+                (CombatCommandKind.Divine, "equipped_only_divine", "attack_profile_not_learned"),
             };
-            foreach ((CombatCommandKind kind, string profileId) in rejected)
+            foreach ((CombatCommandKind kind, string profileId, string reason) in rejected)
             {
                 CombatActionResult result = service.Execute(session, new CombatCommand(
                     kind, "player", "enemy", profileId, new CombatResolutionRolls(0f, 0f, 0f, 0f)));
                 Assert.That(result.Succeeded, Is.False, profileId);
-                Assert.That(result.RejectionReason, Is.EqualTo("attack_profile_not_authorized"), profileId);
+                Assert.That(result.RejectionReason, Is.EqualTo(reason), profileId);
             }
 
             Assert.That(enemy.CurrentHealth, Is.EqualTo(health));
@@ -558,14 +558,14 @@ namespace TianZhang.Tests.EditMode
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo("player"));
             Assert.That(
                 service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "new_art")).RejectionReason,
-                Is.EqualTo("attack_profile_not_authorized"));
+                Is.EqualTo("attack_profile_not_equipped"));
 
             player.SwapEquippedArt(0, "new_art");
 
             Assert.That(service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "new_art")).Succeeded, Is.True);
             Assert.That(
                 service.Validate(session, new CombatCommand(CombatCommandKind.Art, "player", "enemy", "old_art")).RejectionReason,
-                Is.EqualTo("attack_profile_not_authorized"));
+                Is.EqualTo("attack_profile_not_equipped"));
         }
 
         [Test]
@@ -871,6 +871,215 @@ namespace TianZhang.Tests.EditMode
             }
         }
 
+        [TestCase("ordinary", 1f, true, 5)]
+        [TestCase("spirit_vein_node", 2f, true, 11)]
+        [TestCase("blessed_land", 2f, true, 11)]
+        [TestCase("ordinary", 1f, false, 2)]
+        [TestCase("spirit_vein_node", 2f, false, 5)]
+        [TestCase("blessed_land", 2f, false, 5)]
+        public void RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(
+            string environment, float factor, bool self, int expectedRecovery)
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 999, 10, movePoints: 1, rawSpirit: 11,
+                equippedArtProfileIds: new[] { "restore" }, availableArtProfileIds: new[] { "restore" });
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            player.SetSpirit(100, 40);
+            enemy.SetSpirit(100, 10);
+            var session = new CombatSession(new[] { player, enemy }, new[] { CreateSpiritRecoveryProfile() },
+                new FixedRangeQuery(true, enforceDeclaredRange: true), factor);
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+            int tick = session.TurnScheduler.CurrentTick;
+            CombatantSnapshot target = self ? player : enemy;
+            int targetBefore = target.CurrentSpirit;
+
+            CombatActionResult result = service.Execute(session, new CombatCommand(
+                CombatCommandKind.Art, player.Id, target.Id, "restore",
+                new CombatResolutionRolls(100f, 0f, 0f, 0f)));
+
+            Assert.That(result.Succeeded, Is.True, environment + ": " + result.RejectionReason);
+            Assert.That(result.Damage, Is.Empty);
+            Assert.That(result.SpiritSpent, Is.EqualTo(self ? 0 : 20));
+            Assert.That(result.SpiritRecoveries, Has.Count.EqualTo(1));
+            Assert.That(result.SpiritRecoveries[0].TargetId, Is.EqualTo(target.Id));
+            Assert.That(result.SpiritRecoveries[0].RequestedRecovery, Is.EqualTo(expectedRecovery));
+            Assert.That(result.SpiritRecoveries[0].ActualRecovery, Is.EqualTo(expectedRecovery));
+            Assert.That(target.CurrentSpirit, Is.EqualTo(targetBefore + expectedRecovery));
+            Assert.That(player.CurrentSpirit, Is.EqualTo(self ? 40 + expectedRecovery : 20));
+            Assert.That(player.CurrentHealth, Is.EqualTo(100));
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(100));
+            Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(5));
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
+            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.False);
+        }
+
+        [TestCase(true, 0, 10, 5, 15)]
+        [TestCase(true, 0, 0, 5, 5)]
+        [TestCase(true, 0, 100, 0, 100)]
+        [TestCase(false, 20, 98, 2, 100)]
+        [TestCase(false, 20, 100, 0, 100)]
+        [TestCase(true, 2, 100, 2, 100)]
+        public void RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(
+            bool self, int selfCost, int targetSpirit, int actualRecovery, int finalSpirit)
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 500, 10, rawSpirit: 0,
+                equippedArtProfileIds: new[] { "restore" }, availableArtProfileIds: new[] { "restore" });
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            player.SetSpirit(100, self ? targetSpirit : 20);
+            enemy.SetSpirit(100, targetSpirit);
+            CombatSession session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true),
+                new[] { CreateSpiritRecoveryProfile(selfCost) });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+            CombatantSnapshot target = self ? player : enemy;
+
+            CombatActionResult result = service.Execute(session,
+                new CombatCommand(CombatCommandKind.Art, player.Id, target.Id, "restore"));
+
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.SpiritSpent, Is.EqualTo(self ? selfCost : 20));
+            Assert.That(result.SpiritRecoveries.Single().ActualRecovery, Is.EqualTo(actualRecovery));
+            Assert.That(target.CurrentSpirit, Is.EqualTo(finalSpirit));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
+            if (!self) Assert.That(player.CurrentSpirit, Is.Zero);
+        }
+
+        [Test]
+        public void SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering()
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 20, 10, equippedArtProfileIds: new[] { "restore" }, availableArtProfileIds: new[] { "restore" });
+            player.SetSpirit(100, 20);
+            CombatantSnapshot ally = CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 1, 100, 20, 10);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            CombatantSnapshot secondEnemy = CreateCombatant("second", CombatTeam.Enemy, new HexCoord(1, 1), 1, 100, 20, 10);
+            CombatSession session = CreateSession(new[] { player, ally, enemy, secondEnemy },
+                new FixedRangeQuery(true, enforceDeclaredRange: true),
+                new[] { CreateSpiritRecoveryProfile() });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+
+            CollectionAssert.AreEquivalent(new[] { player.Id, ally.Id, enemy.Id, secondEnemy.Id },
+                new CombatLegalActionService(service).GetLegalActions(session, player.Id)
+                    .Where(command => command.ProfileId == "restore").Select(command => command.TargetId));
+            CombatActionResult result = service.Execute(session,
+                new CombatCommand(CombatCommandKind.Art, player.Id, ally.Id, "restore"));
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.SpiritSpent, Is.EqualTo(20));
+            Assert.That(result.SpiritRecoveries.Single().TargetId, Is.EqualTo(ally.Id));
+        }
+
+        [TestCase("unknown", "attack_profile_not_learned")]
+        [TestCase("unequipped", "attack_profile_not_equipped")]
+        [TestCase("realm", "attack_profile_requirements_not_met")]
+        [TestCase("root", "attack_profile_requirements_not_met")]
+        [TestCase("grade", "attack_profile_requirements_not_met")]
+        [TestCase("cost", "spirit_insufficient")]
+        [TestCase("dead", "combat_session_target_invalid")]
+        [TestCase("actor_dead", "combat_session_actor_invalid")]
+        [TestCase("far", "target_out_of_range")]
+        [TestCase("same_cell", "target_out_of_range")]
+        [TestCase("missing", "combat_session_target_invalid")]
+        [TestCase("cooldown", "attack_profile_cooldown_active")]
+        public void SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(string invalid, string reason)
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 20, 10, movePoints: 1, rawSpirit: 11,
+                realmStage: invalid == "realm" ? null : "realm_lianqi",
+                visibleRootElement: invalid == "root" ? null : "水",
+                visibleRootGrade: invalid == "grade" ? null : "中品",
+                equippedArtProfileIds: invalid == "unequipped" ? null : new[] { "restore" },
+                availableArtProfileIds: invalid == "unknown" ? null : new[] { "restore" });
+            player.SetSpirit(100, invalid == "cost" ? 19 : 20);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy,
+                new HexCoord(invalid == "far" ? 3 : invalid == "same_cell" ? 0 : 1, 0), 1, 100, 20, 10);
+            CombatantSnapshot ally = CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 1, 100, 20, 10);
+            CombatantSnapshot secondEnemy = CreateCombatant("second", CombatTeam.Enemy, new HexCoord(2, 0), 1, 100, 20, 10);
+            enemy.SetSpirit(100, 10);
+            if (invalid == "dead") enemy.ReceiveDamage(100);
+            CombatSession session = CreateSession(new[] { player, ally, enemy, secondEnemy },
+                new FixedRangeQuery(true, enforceDeclaredRange: true),
+                new[] { CreateSpiritRecoveryProfile(qualification: (realm, element, grade) =>
+                    realm == "realm_lianqi" && element == "水" && grade == "中品") });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+            if (invalid == "actor_dead") player.ReceiveDamage(100);
+            if (invalid == "cooldown") player.SetCooldown("restore", 3);
+            player.ShouyiStacks = 2;
+            player.FudanStacks = 2;
+            player.LeijieStacks = 2;
+            int spirit = player.CurrentSpirit, health = enemy.CurrentHealth, cooldown = player.GetCooldown("restore");
+            var command = new CombatCommand(CombatCommandKind.Art, player.Id,
+                invalid == "missing" ? "missing" : enemy.Id, "restore");
+
+            Assert.That(service.Validate(session, command).RejectionReason, Is.EqualTo(reason));
+            AssertRejectedWithoutTurnMutation(service, session, player, command);
+            Assert.That(player.CurrentSpirit, Is.EqualTo(spirit));
+            Assert.That(enemy.CurrentSpirit, Is.EqualTo(10));
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(health));
+            Assert.That(player.CurrentHealth, Is.EqualTo(invalid == "actor_dead" ? 0 : 100));
+            Assert.That(player.GetCooldown("restore"), Is.EqualTo(cooldown));
+            Assert.That(player.ShouyiStacks, Is.EqualTo(2));
+            Assert.That(player.FudanStacks, Is.EqualTo(2));
+            Assert.That(player.LeijieStacks, Is.EqualTo(2));
+            Assert.That(new CombatLegalActionService(service).GetLegalActions(session, player.Id)
+                .Any(action => action.ProfileId == "restore" && action.TargetId == command.TargetId), Is.False);
+        }
+
+        [TestCase(0f)]
+        [TestCase(1.5f)]
+        [TestCase(3f)]
+        public void SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(float factor)
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new CombatSession(new[] { player, enemy },
+                new[] { CreateSpiritRecoveryProfile() }, new FixedRangeQuery(true), factor));
+        }
+
+        [Test]
+        public void GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown()
+        {
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 40, 20, movePoints: 1,
+                equippedArtProfileIds: new[] { "spell_guanshiji" }, availableArtProfileIds: new[] { "spell_guanshiji" });
+            player.SetSpirit(100, 12);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 20);
+            enemy.Facing = enemy.Position.DirectionTo(player.Position);
+            var profile = new CombatAttackProfile("spell_guanshiji", CombatAttackKind.Art, CombatAttackEffect.Physical,
+                1, 1, physicalMultiplier: 1.2f, spiritCost: 12, cooldownTicks: 10);
+            CombatSession session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true), new[] { profile });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+
+            CombatActionResult result = service.Execute(session, new CombatCommand(CombatCommandKind.Art,
+                player.Id, enemy.Id, profile.Id, new CombatResolutionRolls(0f, 100f, 100f, 100f)));
+
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.Damage.Single().FinalDamage, Is.EqualTo(32));
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(68));
+            Assert.That(result.SpiritRecoveries, Is.Empty);
+            Assert.That(result.SpiritSpent, Is.EqualTo(12));
+            Assert.That(player.CurrentSpirit, Is.Zero);
+            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(10));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+        }
+
+        private static CombatAttackProfile CreateSpiritRecoveryProfile(int selfCost = 0,
+            Func<string, string, string, bool> qualification = null)
+        {
+            return new CombatAttackProfile("restore", CombatAttackKind.Art, CombatAttackEffect.RestoreSpirit,
+                0, 2, spiritCost: selfCost, cooldownTicks: 5,
+                spiritRecoveryMultiplier: 0.5f, minimumSpiritRecovery: 5, otherTargetSpiritCost: 20,
+                otherTargetSpiritRecoveryMultiplier: 0.5f, qualification: qualification);
+        }
+
         private static float MergeParity(float caseValue, float defaultValue) => caseValue != 0f ? caseValue : defaultValue;
 
         private static CombatDamageResult ResolveParityAttack(
@@ -1014,7 +1223,11 @@ namespace TianZhang.Tests.EditMode
             float realmMultiplier = 1f,
             string basicAttackProfileId = "basic",
             IEnumerable<string> equippedDivineProfileIds = null,
-            IEnumerable<string> availableDivineProfileIds = null)
+            IEnumerable<string> availableDivineProfileIds = null,
+            int rawSpirit = 0,
+            string realmStage = null,
+            string visibleRootElement = null,
+            string visibleRootGrade = null)
         {
             return new CombatantSnapshot(
                 id,
@@ -1034,7 +1247,11 @@ namespace TianZhang.Tests.EditMode
                 combatSwapsUsed: combatSwapsUsed,
                 basicAttackProfileId: basicAttackProfileId,
                 equippedDivineProfileIds: equippedDivineProfileIds,
-                availableDivineProfileIds: availableDivineProfileIds)
+                availableDivineProfileIds: availableDivineProfileIds,
+                rawSpirit: rawSpirit,
+                realmStage: realmStage,
+                visibleRootElement: visibleRootElement,
+                visibleRootGrade: visibleRootGrade)
             {
                 Facing = 0,
             };
@@ -1123,21 +1340,26 @@ namespace TianZhang.Tests.EditMode
         {
             private readonly bool inRange;
             private readonly string reason;
+            private readonly bool enforceDeclaredRange;
             private readonly IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> movementBySource;
 
             public FixedRangeQuery(
                 bool inRange,
                 string reason = "",
-                IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> movementBySource = null)
+                IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> movementBySource = null,
+                bool enforceDeclaredRange = false)
             {
                 this.inRange = inRange;
                 this.reason = reason;
+                this.enforceDeclaredRange = enforceDeclaredRange;
                 this.movementBySource = movementBySource ??
                     new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>();
             }
 
             public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
             {
+                if (enforceDeclaredRange && (source.Distance(target) < minimumRange || source.Distance(target) > maximumRange))
+                    return new CombatRangeQueryResult(false, "target_out_of_range");
                 return new CombatRangeQueryResult(inRange, reason);
             }
 

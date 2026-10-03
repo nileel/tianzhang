@@ -8,6 +8,7 @@ namespace TianZhang.Infrastructure.UnityContent
     public sealed class EnvironmentProfileAsset : ScriptableObject, IEnvironmentProfileDefinitionSource
     {
         public string profileId;
+        public SpiritRecoveryEnvironment spiritRecoveryEnvironment;
         public int unitsPerRange;
         public int maxQueryRange;
         public EnvironmentBattlefieldCell[] battlefieldCells;
@@ -22,6 +23,7 @@ namespace TianZhang.Infrastructure.UnityContent
             definition = new EnvironmentProfileDefinition
             {
                 profileId = profileId,
+                spiritRecoveryEnvironment = spiritRecoveryEnvironment,
                 unitsPerRange = unitsPerRange,
                 maxQueryRange = maxQueryRange,
                 battlefieldCells = battlefieldCells,
@@ -37,6 +39,7 @@ namespace TianZhang.Infrastructure.UnityContent
         public void Apply(EnvironmentProfileDefinition definition)
         {
             profileId = definition.profileId;
+            spiritRecoveryEnvironment = definition.spiritRecoveryEnvironment;
             unitsPerRange = definition.unitsPerRange;
             maxQueryRange = definition.maxQueryRange;
             battlefieldCells = definition.battlefieldCells;

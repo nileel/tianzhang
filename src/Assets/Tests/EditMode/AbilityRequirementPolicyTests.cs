@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using TianZhang.Combat;
 using TianZhang.Content;
@@ -12,28 +12,61 @@ namespace TianZhang.Tests
         [Test]
         public void RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs()
         {
-            Assert.IsTrue(IsSatisfied(6f, "水", "realm_zhuji", "element_water_root"));
-            Assert.IsTrue(IsSatisfied(6f, "水", "realm_jindan", "element_water_or_wind"));
-            Assert.IsFalse(IsSatisfied(6f, "水", "realm_yuanying", "element_water_root"));
-            Assert.IsFalse(IsSatisfied(6f, "水", "realm_zhuji", "element_fire_root"));
-            Assert.IsFalse(IsSatisfied(6f, "水", "realm_unknown", "element_water_root"));
-            Assert.IsFalse(IsSatisfied(6f, "水", "realm_zhuji", "element_unknown_root"));
+            Assert.IsTrue(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_zhuji", "element_water_root"));
+            Assert.IsTrue(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_jindan", "element_water_or_wind"));
+            Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_yuanying", "element_water_root"));
+            Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_zhuji", "element_fire_root"));
+            Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_unknown", "element_water_root"));
+            Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_zhuji", "element_unknown_root"));
+        }
+
+        [TestCase("凡品")]
+        [TestCase("下品")]
+        [TestCase("中品")]
+        [TestCase("上品")]
+        [TestCase("极品")]
+        public void StarterArtsAllowEveryValidRootGrade(string grade)
+        {
+            Assert.IsTrue(AbilityRequirementPolicy.IsSatisfied("练气", "雷", grade, "realm_lianqi", "element_none"));
+        }
+
+        [TestCase("", "水", "中品")]
+        [TestCase("未知", "水", "中品")]
+        [TestCase("凡人", "水", "中品")]
+        [TestCase("练气", "水", "")]
+        [TestCase("练气", "水", "上古")]
+        [TestCase("练气", "水", "未知")]
+        [TestCase("练气", "", "中品")]
+        [TestCase("练气", "element_unknown", "中品")]
+        [TestCase("练气", "garbage_water_root", "中品")]
+        public void StarterArtsRejectMissingOrInvalidQualificationFacts(string realm, string element, string grade)
+        {
+            Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied(realm, element, grade, "realm_lianqi", "element_none"));
         }
 
         [Test]
-        public void CharacterDefinitionFeedsVisibleRootElementToRequirementPolicy()
+        public void UnrestrictedStarterArtsAcceptAllTwelveFormalRootElements()
+        {
+            foreach (string element in new[] { "金", "木", "水", "火", "土", "风", "雷", "冰", "暗", "星", "毒", "混沌" })
+                Assert.IsTrue(AbilityRequirementPolicy.IsSatisfied("练气", element, "中品", "realm_lianqi", "element_none"), element);
+        }
+
+        [Test]
+        public void CharacterDefinitionFeedsIdentityRatherThanDamageMultiplierToRequirementPolicy()
         {
             var data = ScriptableObject.CreateInstance<CharacterData>();
             try
             {
                 data.visibleRootElement = "雷";
-                data.realmMultiplier = 3f;
-
-                Assert.IsTrue(IsSatisfied(
-                    data.realmMultiplier,
-                    data.visibleRootElement,
-                    "realm_zhuji",
-                    "element_thunder_root"));
+                data.visibleRootGrade = "下品";
+                data.realmStage = "筑基";
+                data.realmMultiplier = 1f;
+                Assert.IsTrue(AbilityRequirementPolicy.IsSatisfied(data.realmStage, data.visibleRootElement,
+                    data.visibleRootGrade, "realm_zhuji", "element_thunder_root"));
+                data.realmStage = "凡人";
+                data.realmMultiplier = 24f;
+                Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied(data.realmStage, data.visibleRootElement,
+                    data.visibleRootGrade, "realm_lianqi", "element_none"));
             }
             finally
             {
@@ -52,19 +85,6 @@ namespace TianZhang.Tests
             Assert.IsNotNull(typeof(DivineSkillData).GetField("realmRequirement"));
             Assert.IsNotNull(typeof(DivineSkillData).GetField("sourceAffiliation"));
             Assert.IsNull(typeof(DivineSkillData).GetField("affiliation"));
-        }
-
-        private static bool IsSatisfied(
-            float realmMultiplier,
-            string visibleRootElement,
-            string realmRequirement,
-            string elementRequirement)
-        {
-            return AbilityRequirementPolicy.IsSatisfied(
-                realmMultiplier,
-                visibleRootElement,
-                realmRequirement,
-                elementRequirement);
         }
 
         [Test]

@@ -130,6 +130,9 @@ namespace TianZhang.Infrastructure.Persistence
                  !string.IsNullOrEmpty(record.mainEquipmentBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.unarmedBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.appearanceProfileId) ||
+                 !string.IsNullOrEmpty(record.visibleRootId) ||
+                 !string.IsNullOrEmpty(record.visibleRootGrade) ||
+                 !string.IsNullOrEmpty(record.visibleRootElement) ||
                  !string.IsNullOrEmpty(record.gongFaId) ||
                  !string.IsNullOrEmpty(record.realmStage) ||
                  record.realmMultiplier != 0f ||
@@ -320,6 +323,9 @@ namespace TianZhang.Infrastructure.Persistence
         public string mainEquipmentBasicAttackProfileId;
         public string unarmedBasicAttackProfileId;
         public string appearanceProfileId;
+        public string visibleRootId;
+        public string visibleRootGrade;
+        public string visibleRootElement;
         public string gongFaId;
         public string realmStage;
         public float realmMultiplier;
@@ -364,6 +370,9 @@ namespace TianZhang.Infrastructure.Persistence
                 mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId,
                 appearanceProfileId = snapshot.AppearanceProfileId,
+                visibleRootId = snapshot.VisibleRootId,
+                visibleRootGrade = snapshot.VisibleRootGrade,
+                visibleRootElement = snapshot.VisibleRootElement,
                 gongFaId = snapshot.Progression.GongFaId,
                 realmStage = snapshot.Progression.RealmStage,
                 realmMultiplier = snapshot.Progression.RealmMultiplier,
@@ -422,7 +431,8 @@ namespace TianZhang.Infrastructure.Persistence
                     hitRateBonus),
                 mainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId,
-                appearanceProfileId);
+                appearanceProfileId,
+                visibleRootId, visibleRootGrade, visibleRootElement);
         }
     }
 

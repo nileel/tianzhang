@@ -134,6 +134,7 @@ namespace TianZhang.Tests.EditMode
             try
             {
                 profile.profileId = "factory_fixture";
+                profile.spiritRecoveryEnvironment = SpiritRecoveryEnvironment.Ordinary;
                 profile.unitsPerRange = 2;
                 profile.maxQueryRange = 16;
                 profile.surfacePrototypeRefs = new[] { "surface_grassland" };

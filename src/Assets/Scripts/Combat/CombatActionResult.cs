@@ -22,6 +22,20 @@ namespace TianZhang.Combat
         public bool IsSoulShielded { get; }
     }
 
+    public readonly struct CombatSpiritRecoveryResult
+    {
+        public CombatSpiritRecoveryResult(string targetId, int requestedRecovery, int actualRecovery)
+        {
+            TargetId = targetId;
+            RequestedRecovery = requestedRecovery;
+            ActualRecovery = actualRecovery;
+        }
+
+        public string TargetId { get; }
+        public int RequestedRecovery { get; }
+        public int ActualRecovery { get; }
+    }
+
     public sealed class CombatActionResult
     {
         private CombatActionResult(
@@ -30,7 +44,9 @@ namespace TianZhang.Combat
             IReadOnlyList<CombatDamageResult> damage,
             IReadOnlyList<HexCoord> movementPath,
             int movementCost,
-            int movementFacing = -1)
+            int movementFacing = -1,
+            int spiritSpent = 0,
+            IReadOnlyList<CombatSpiritRecoveryResult> spiritRecoveries = null)
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
@@ -40,6 +56,10 @@ namespace TianZhang.Combat
                 : new List<HexCoord>(movementPath).AsReadOnly();
             MovementCost = movementCost;
             MovementFacing = movementFacing;
+            SpiritSpent = spiritSpent;
+            SpiritRecoveries = spiritRecoveries == null
+                ? Array.Empty<CombatSpiritRecoveryResult>()
+                : new List<CombatSpiritRecoveryResult>(spiritRecoveries).AsReadOnly();
         }
 
         public bool Succeeded { get; }
@@ -48,6 +68,8 @@ namespace TianZhang.Combat
         public IReadOnlyList<HexCoord> MovementPath { get; }
         public int MovementCost { get; }
         public int MovementFacing { get; }
+        public int SpiritSpent { get; }
+        public IReadOnlyList<CombatSpiritRecoveryResult> SpiritRecoveries { get; }
 
         public static CombatActionResult Success(params CombatDamageResult[] damage)
         {
@@ -57,6 +79,17 @@ namespace TianZhang.Combat
         public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost, int movementFacing = -1)
         {
             return new CombatActionResult(true, string.Empty, null, path, movementCost, movementFacing);
+        }
+
+        public static CombatActionResult AttackSuccess(int spiritSpent, params CombatDamageResult[] damage)
+        {
+            return new CombatActionResult(true, string.Empty, damage, null, 0, spiritSpent: spiritSpent);
+        }
+
+        public static CombatActionResult SpiritRecoverySuccess(int spiritSpent, params CombatSpiritRecoveryResult[] recoveries)
+        {
+            return new CombatActionResult(true, string.Empty, null, null, 0,
+                spiritSpent: spiritSpent, spiritRecoveries: recoveries);
         }
 
         public static CombatActionResult Rejected(string reason)

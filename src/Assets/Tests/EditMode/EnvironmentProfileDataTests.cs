@@ -13,10 +13,10 @@ namespace TianZhang.Tests
     public class EnvironmentProfileDataTests
     {
         private const string Header =
-            "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs";
+            "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment";
 
         private const string ValidRow =
-            "fixture_profile,unitsPerRange=2;maxQueryRange=16,0:0@0@0|1:0@1@0,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water";
+            "fixture_profile,unitsPerRange=2;maxQueryRange=16,0:0@0@0|1:0@1@0,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary";
 
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
@@ -54,12 +54,12 @@ namespace TianZhang.Tests
                 profile.elementRelationRefs);
         }
 
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@0@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@yes@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;invalid=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+unknown>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
-        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@0@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@yes@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;invalid=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+unknown>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
+        [TestCase("fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary")]
         public void ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(string row)
         {
             Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
@@ -79,7 +79,7 @@ namespace TianZhang.Tests
         }
 
         private const string GuanzhongWildRow =
-            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@0@0|1:4@0@0|1:5@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|4:0@0@0|4:1@0@0|4:2@0@0|4:3@0@0|4:4@0@0|4:5@0@0|5:0@0@0|5:1@0@0|5:2@0@0|5:3@0@0|5:4@0@0|5:5@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water";
+            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@0@0|1:4@0@0|1:5@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|4:0@0@0|4:1@0@0|4:2@0@0|4:3@0@0|4:4@0@0|4:5@0@0|5:0@0@0|5:1@0@0|5:2@0@0|5:3@0@0|5:4@0@0|5:5@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water,ordinary";
 
         [Test]
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
@@ -117,9 +117,59 @@ namespace TianZhang.Tests
             AssertEnvironmentProfileEquals(expectedProfiles[0], asset);
         }
 
+        [TestCase("ordinary", SpiritRecoveryEnvironment.Ordinary)]
+        [TestCase("spirit_vein_node", SpiritRecoveryEnvironment.SpiritVeinNode)]
+        [TestCase("blessed_land", SpiritRecoveryEnvironment.BlessedLand)]
+        public void ExplicitRecoveryEnvironmentProjectsThroughAssetAndRuntime(string value, SpiritRecoveryEnvironment expected)
+        {
+            string row = ValidRow.Substring(0, ValidRow.LastIndexOf(',') + 1) + value;
+            var definition = WorldContentImporter.ParseEnvironmentProfiles(new[] { Header, row }, "fixture")[0];
+            var asset = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
+            try
+            {
+                asset.Apply(definition);
+                Assert.AreEqual(expected, asset.spiritRecoveryEnvironment);
+                Assert.IsTrue(asset.TryCreateDefinition(out var projected, out string reason), reason);
+                Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(projected, out var runtime, out reason), reason);
+                Assert.AreEqual(expected, runtime.SpiritRecoveryEnvironment);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(asset);
+            }
+        }
+
+        [TestCase("")]
+        [TestCase("unknown")]
+        [TestCase("Ordinary")]
+        [TestCase("spirit_vein")]
+        public void RecoveryEnvironmentMissingOrUnknownFailsBeforeImport(string value)
+        {
+            string row = ValidRow.Substring(0, ValidRow.LastIndexOf(',') + 1) + value;
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(new[] { Header, row }, "fixture"));
+        }
+
+        [Test]
+        public void RecoveryEnvironmentColumnCannotBeOmitted()
+        {
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header.Substring(0, Header.LastIndexOf(',')), ValidRow.Substring(0, ValidRow.LastIndexOf(',')) }, "fixture"));
+        }
+
+        [TestCase(SpiritRecoveryEnvironment.Unknown)]
+        [TestCase((SpiritRecoveryEnvironment)99)]
+        public void RuntimeRejectsUnconfiguredRecoveryEnvironment(SpiritRecoveryEnvironment value)
+        {
+            var definition = WorldContentImporter.ParseEnvironmentProfiles(new[] { Header, ValidRow }, "fixture")[0];
+            definition.spiritRecoveryEnvironment = value;
+            Assert.IsFalse(EnvironmentProfileRuntime.TryCreate(definition, out _, out string reason));
+            Assert.AreEqual("spirit_recovery_environment_not_configured", reason);
+        }
+
         private static void AssertEnvironmentProfileEquals(EnvironmentProfileDefinition expected, EnvironmentProfileDefinition actual)
         {
             Assert.AreEqual(expected.profileId, actual.profileId);
+            Assert.AreEqual(expected.spiritRecoveryEnvironment, actual.spiritRecoveryEnvironment);
             Assert.AreEqual(expected.unitsPerRange, actual.unitsPerRange);
             Assert.AreEqual(expected.maxQueryRange, actual.maxQueryRange);
 
@@ -189,7 +239,7 @@ namespace TianZhang.Tests
                 File.WriteAllText(
                     sourceFilePath,
                     Header + "\n" +
-                    "fixture_invalid,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water\n");
+                    "fixture_invalid,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary\n");
                 AssetDatabase.ImportAsset(sourceAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
                 Assert.Throws<InvalidDataException>(() => WorldContentImporter.ImportEnvironmentProfiles());

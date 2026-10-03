@@ -59,6 +59,12 @@ namespace TianZhang.Features.CharacterCreation
             profile.availableSpells = new string[0];
             profile.equippedSkills = new string[0];
             profile.availableSkills = new string[0];
+            if (origin?.Id == "origin_minor_clan")
+            {
+                profile.maxSpellSlots = 2;
+                profile.availableSpells = new[] { "spell_guanshiji", "spell_julingshu" };
+                profile.equippedSpells = (string[])profile.availableSpells.Clone();
+            }
             // 角色装配所有者显式绑定生产无装备普攻档案；战斗调用点不再补默认值。
             profile.unarmedBasicAttackProfileId = CharacterCreationCatalog.BasicUnarmedAttackProfileId;
 

@@ -83,16 +83,7 @@ namespace TianZhang.Editor
             SettlementSceneBuilder.ApplyTextSkin(turn, 44);
             SettlementSceneBuilder.ApplyTextSkin(player, 64);
             SettlementSceneBuilder.ApplyTextSkin(enemy, 64);
-            GameObject actionRoot = new GameObject("CombatActionBar", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            actionRoot.transform.SetParent(combatPanel.transform, false);
-            SettlementSceneBuilder.ConfigureColumn(actionRoot, 0);
-            SettlementSceneBuilder.SetHeight(actionRoot, 328);
-            Button basic = SceneBuildSupport.CreateButton("BasicAttackButton", actionRoot.transform, "普攻", out _);
-            Button art = SceneBuildSupport.CreateButton("ArtButton", actionRoot.transform, "术法", out Text artLabel);
-            Button divine = SceneBuildSupport.CreateButton("DivineButton", actionRoot.transform, "神通", out Text divineLabel);
-            Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
-            Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out _);
-            foreach (Button button in new[] { basic, art, divine, guard, wait }) SettlementSceneBuilder.ApplyButtonSkin(button);
+            BuildStarterActionBar(combatPanel.transform, actionBar);
             var logViewport = new GameObject("CombatLogViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
             logViewport.transform.SetParent(combatPanel.transform, false);
             logViewport.GetComponent<Image>().color = new Color(0, 0, 0, 0.15f);
@@ -123,14 +114,6 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(combatView, "enemyText", enemy);
             SceneBuildSupport.SetObject(combatView, "turnText", turn);
             SceneBuildSupport.SetObject(logView, "logText", log);
-            SceneBuildSupport.SetObject(actionBar, "root", actionRoot);
-            SceneBuildSupport.SetObject(actionBar, "basicAttackButton", basic);
-            SceneBuildSupport.SetObject(actionBar, "artButton", art);
-            SceneBuildSupport.SetObject(actionBar, "divineButton", divine);
-            SceneBuildSupport.SetObject(actionBar, "guardButton", guard);
-            SceneBuildSupport.SetObject(actionBar, "waitButton", wait);
-            SceneBuildSupport.SetObject(actionBar, "artLabel", artLabel);
-            SceneBuildSupport.SetObject(actionBar, "divineLabel", divineLabel);
             SceneBuildSupport.SetObject(combatInput, "actionBar", actionBar);
             SceneBuildSupport.SetObject(combatPresenter, "view", combatView);
             SceneBuildSupport.SetObject(combatPresenter, "commandInput", combatInput);
@@ -344,6 +327,75 @@ namespace TianZhang.Editor
             rect.pivot = new Vector2(anchor.x, 1);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+
+        [MenuItem("天章/场景/接入关中初始两术法")]
+        public static void RebuildStarterArts()
+        {
+            CombatContentImporter.ImportSpells();
+            CombatContentImporter.ImportAttackProfiles();
+            WorldContentImporter.ImportEnvironmentProfiles();
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "AdventureRoot");
+            if (root == null) throw new InvalidOperationException("AdventureScene is missing AdventureRoot.");
+            CombatActionBarView actionBar = root.GetComponent<CombatActionBarView>();
+            GameObject canvas = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "UICanvas");
+            Transform panel = canvas == null ? null : canvas.transform.Find("CombatHudRoot");
+            if (actionBar == null || panel == null)
+                throw new InvalidOperationException("AdventureScene is missing its combat HUD owner.");
+            Transform existing = panel.Find("CombatActionBar");
+            int siblingIndex = existing == null ? 4 : existing.GetSiblingIndex();
+            if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+            BuildStarterActionBar(panel, actionBar).transform.SetSiblingIndex(siblingIndex);
+            SceneBuildSupport.SetObjects(root.GetComponent<AdventureSceneInstaller>(), "attackProfiles", LoadAttackProfiles());
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the starter arts HUD.");
+            AssetDatabase.SaveAssets();
+        }
+
+        private static GameObject BuildStarterActionBar(Transform parent, CombatActionBarView actionBar)
+        {
+            var actionRoot = new GameObject("CombatActionBar", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            actionRoot.transform.SetParent(parent, false);
+            SettlementSceneBuilder.ConfigureColumn(actionRoot, 0);
+            actionRoot.GetComponent<VerticalLayoutGroup>().spacing = 8;
+            SettlementSceneBuilder.SetHeight(actionRoot, 440);
+            Button basic = SceneBuildSupport.CreateButton("BasicAttackButton", actionRoot.transform, "普攻", out _);
+            Button art = SceneBuildSupport.CreateButton("ArtButton", actionRoot.transform, "术法", out Text artLabel);
+            Button secondArt = SceneBuildSupport.CreateButton("SecondArtButton", actionRoot.transform, "术法", out Text secondLabel);
+            Button target = SceneBuildSupport.CreateButton("SecondArtTargetButton", actionRoot.transform, "目标：自身", out Text targetLabel);
+            Button divine = SceneBuildSupport.CreateButton("DivineButton", actionRoot.transform, "神通", out Text divineLabel);
+            Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
+            Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out Text waitLabel);
+            foreach (Button button in new[] { basic, art, secondArt, target, divine, guard, wait })
+            {
+                SettlementSceneBuilder.ApplyButtonSkin(button);
+                SettlementSceneBuilder.SetHeight(button.gameObject, 44);
+            }
+            foreach (Button button in new[] { art, secondArt })
+            {
+                SettlementSceneBuilder.SetHeight(button.gameObject, 64);
+                button.GetComponentInChildren<Text>().fontSize = 18;
+            }
+            SettlementSceneBuilder.SetHeight(target.gameObject, 36);
+            targetLabel.fontSize = 16;
+            Text status = SceneBuildSupport.CreateText("ActionStatusText", actionRoot.transform, string.Empty, 16);
+            SettlementSceneBuilder.ApplyTextSkin(status, 48);
+            SceneBuildSupport.SetObject(actionBar, "root", actionRoot);
+            SceneBuildSupport.SetObject(actionBar, "basicAttackButton", basic);
+            SceneBuildSupport.SetObject(actionBar, "artButton", art);
+            SceneBuildSupport.SetObject(actionBar, "artLabel", artLabel);
+            SceneBuildSupport.SetObject(actionBar, "secondArtButton", secondArt);
+            SceneBuildSupport.SetObject(actionBar, "secondArtLabel", secondLabel);
+            SceneBuildSupport.SetObject(actionBar, "secondArtTargetButton", target);
+            SceneBuildSupport.SetObject(actionBar, "secondArtTargetLabel", targetLabel);
+            SceneBuildSupport.SetObject(actionBar, "divineButton", divine);
+            SceneBuildSupport.SetObject(actionBar, "divineLabel", divineLabel);
+            SceneBuildSupport.SetObject(actionBar, "guardButton", guard);
+            SceneBuildSupport.SetObject(actionBar, "waitButton", wait);
+            SceneBuildSupport.SetObject(actionBar, "waitLabel", waitLabel);
+            SceneBuildSupport.SetObject(actionBar, "actionStatusLabel", status);
+            return actionRoot;
         }
 
         [MenuItem("天章/场景/重建关中战场")]

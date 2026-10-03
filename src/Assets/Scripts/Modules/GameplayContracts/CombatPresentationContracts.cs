@@ -68,21 +68,23 @@ namespace TianZhang.Gameplay.Contracts
     [Serializable]
     public sealed class CombatUnitPresentationTargetResult
     {
-        public CombatUnitPresentationTargetResult(string combatantId, int finalDamage, bool isDead)
+        public CombatUnitPresentationTargetResult(string combatantId, int finalDamage, bool isDead, int restoredSpirit = 0)
         {
             if (string.IsNullOrWhiteSpace(combatantId))
                 throw new ArgumentException("Combatant ID is required.", nameof(combatantId));
-            if (finalDamage < 0)
+            if (finalDamage < 0 || restoredSpirit < 0)
                 throw new ArgumentOutOfRangeException(nameof(finalDamage));
 
             CombatantId = combatantId;
             FinalDamage = finalDamage;
             IsDead = isDead;
+            RestoredSpirit = restoredSpirit;
         }
 
         public string CombatantId { get; }
         public int FinalDamage { get; }
         public bool IsDead { get; }
+        public int RestoredSpirit { get; }
     }
 
     [Serializable]
@@ -164,6 +166,44 @@ namespace TianZhang.Gameplay.Contracts
     }
 
     [Serializable]
+    public sealed class CombatArtTargetSnapshot
+    {
+        public CombatArtTargetSnapshot(string id, string displayName, int spiritCost, bool canExecute, string rejectionReason)
+        {
+            Id = id;
+            DisplayName = displayName;
+            SpiritCost = spiritCost;
+            CanExecute = canExecute;
+            RejectionReason = rejectionReason ?? string.Empty;
+        }
+
+        public string Id { get; }
+        public string DisplayName { get; }
+        public int SpiritCost { get; }
+        public bool CanExecute { get; }
+        public string RejectionReason { get; }
+    }
+
+    [Serializable]
+    public sealed class CombatArtActionSnapshot
+    {
+        public CombatArtActionSnapshot(string profileId, string displayName, int cooldownPenalty,
+            IReadOnlyList<CombatArtTargetSnapshot> targets)
+        {
+            ProfileId = profileId;
+            DisplayName = displayName;
+            CooldownPenalty = cooldownPenalty;
+            Targets = targets == null ? Array.Empty<CombatArtTargetSnapshot>() :
+                new List<CombatArtTargetSnapshot>(targets).AsReadOnly();
+        }
+
+        public string ProfileId { get; }
+        public string DisplayName { get; }
+        public int CooldownPenalty { get; }
+        public IReadOnlyList<CombatArtTargetSnapshot> Targets { get; }
+    }
+
+    [Serializable]
     public sealed class CombatTimelineEntrySnapshot
     {
         public CombatTimelineEntrySnapshot(string id, string displayName, CombatUnitDisplayFaction faction,
@@ -217,6 +257,8 @@ namespace TianZhang.Gameplay.Contracts
             bool acceptsCommands,
             IReadOnlyList<string> artProfileIds,
             IReadOnlyList<string> divineProfileIds,
+            IReadOnlyList<CombatArtActionSnapshot> artActions = null,
+            bool canEndTurn = false,
             CombatTimelineSnapshot timeline = null)
         {
             Player = player;
@@ -225,6 +267,9 @@ namespace TianZhang.Gameplay.Contracts
             AcceptsCommands = acceptsCommands;
             ArtProfileIds = artProfileIds ?? Array.Empty<string>();
             DivineProfileIds = divineProfileIds ?? Array.Empty<string>();
+            ArtActions = artActions == null ? Array.Empty<CombatArtActionSnapshot>() :
+                new List<CombatArtActionSnapshot>(artActions).AsReadOnly();
+            CanEndTurn = canEndTurn;
             Timeline = timeline;
         }
 
@@ -234,6 +279,8 @@ namespace TianZhang.Gameplay.Contracts
         public bool AcceptsCommands { get; }
         public IReadOnlyList<string> ArtProfileIds { get; }
         public IReadOnlyList<string> DivineProfileIds { get; }
+        public IReadOnlyList<CombatArtActionSnapshot> ArtActions { get; }
+        public bool CanEndTurn { get; }
         public CombatTimelineSnapshot Timeline { get; }
     }
 

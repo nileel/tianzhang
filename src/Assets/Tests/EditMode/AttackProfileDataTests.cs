@@ -41,8 +41,9 @@ namespace TianZhang.Tests
                 "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
                 "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
                 "isDomain", "isBloodline", "specialEffectTextKey",
+                "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost", "otherTargetRecoveryMultiplier",
             });
-            var valid = new string[34];
+            var valid = new string[38];
             valid[0] = "basic_test";
             valid[1] = "name_test";
             valid[2] = "basic";
@@ -145,7 +146,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(0, fan.areaInnerRadius);
                 // fixture 的 fan 行使用单值阵营（ally）：BattleSim 侧按原 CSV 行逐字
                 // Split(',') 读取同一物理行，双值阵营字段（"ally,enemy"）无法在该
-                // 读取方式下保持 34 列对齐，故按契约允许的子集以 ally 单值承载。
+                // 读取方式下保持全部列对齐，故按契约允许的子集以 ally 单值承载。
                 Assert.AreEqual(AttackAreaTargetFaction.Ally, fan.areaAllowedFactions);
 
                 var line = byId["divine_fixture_line"];
@@ -321,7 +322,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ProductionAttackProfileCsvProjectsExactlyTheApprovedBasicUnarmedRow()
+        public void ProductionAttackProfileCsvProjectsExactlyTheThreeApprovedProfiles()
         {
             var lines = File.ReadAllLines(ProductionAbsolutePath());
             var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
@@ -330,8 +331,40 @@ namespace TianZhang.Tests
                 reason);
             try
             {
-                Assert.AreEqual(1, projected.Length);
-                var profile = projected[0];
+                Assert.AreEqual(3, projected.Length);
+                CollectionAssert.AreEquivalent(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" },
+                    projected.Select(item => item.attackProfileId).ToArray());
+                var byId = projected.ToDictionary(item => item.attackProfileId);
+                var strike = byId["spell_guanshiji"];
+                Assert.AreEqual(AttackEffectType.Physical, strike.effectType);
+                Assert.AreEqual(1.2f, strike.physicalDamageMultiplier);
+                Assert.AreEqual("element_none", strike.damageElementId);
+                Assert.AreEqual(12, strike.resourceCost);
+                Assert.AreEqual(10, strike.cooldownTicks);
+                Assert.AreEqual(1, strike.minCastRange);
+                Assert.AreEqual(1, strike.maxCastRange);
+                var recovery = byId["spell_julingshu"];
+                Assert.AreEqual(AttackEffectType.RestoreSpirit, recovery.effectType);
+                Assert.AreEqual(0, recovery.resourceCost);
+                Assert.AreEqual(5, recovery.cooldownTicks);
+                Assert.AreEqual(0, recovery.minCastRange);
+                Assert.AreEqual(2, recovery.maxCastRange);
+                Assert.AreEqual(0.5f, recovery.spiritRecoveryMultiplier);
+                Assert.AreEqual(5, recovery.minimumSpiritRecovery);
+                Assert.AreEqual(20, recovery.otherTargetResourceCost);
+                Assert.AreEqual(0.5f, recovery.otherTargetRecoveryMultiplier);
+                foreach (var art in new[] { strike, recovery })
+                {
+                    Assert.AreEqual(AttackProfileKind.Art, art.profileKind);
+                    Assert.AreEqual("player", art.contentScope);
+                    Assert.AreEqual("faction_sanxiu", art.sourceAffiliation);
+                    Assert.AreEqual("realm_lianqi", art.realmRequirementId);
+                    Assert.AreEqual("element_none", art.elementRequirementId);
+                    Assert.AreEqual(art.attackProfileId, art.displayNameKey);
+                    Assert.AreEqual(AttackResourceKind.Mp, art.resourceKind);
+                    Assert.AreEqual(AttackTargetingMode.Single, art.targetingMode);
+                }
+                var profile = byId["basic_unarmed"];
                 Assert.AreEqual("basic_unarmed", profile.attackProfileId);
                 Assert.AreEqual("attack_profile_basic_unarmed", profile.displayNameKey);
                 Assert.AreEqual(AttackProfileKind.Basic, profile.profileKind);
@@ -362,6 +395,46 @@ namespace TianZhang.Tests
                 foreach (var profile in projected)
                     UnityEngine.Object.DestroyImmediate(profile);
             }
+        }
+
+        [TestCase("spiritRecoveryMultiplier", "", "attack_profile_required_spiritRecoveryMultiplier_missing")]
+        [TestCase("spiritRecoveryMultiplier", "NaN", "attack_profile_spiritRecoveryMultiplier_invalid")]
+        [TestCase("spiritRecoveryMultiplier", "Infinity", "attack_profile_spiritRecoveryMultiplier_invalid")]
+        [TestCase("spiritRecoveryMultiplier", "0", "spirit_recovery_profile_contract_invalid")]
+        [TestCase("minimumSpiritRecovery", "", "attack_profile_required_minimumSpiritRecovery_missing")]
+        [TestCase("minimumSpiritRecovery", "-1", "attack_profile_minimumSpiritRecovery_invalid")]
+        [TestCase("otherTargetResourceCost", "", "attack_profile_required_otherTargetResourceCost_missing")]
+        [TestCase("otherTargetResourceCost", "-1", "attack_profile_otherTargetResourceCost_invalid")]
+        [TestCase("otherTargetRecoveryMultiplier", "", "attack_profile_required_otherTargetRecoveryMultiplier_missing")]
+        [TestCase("otherTargetRecoveryMultiplier", "NaN", "attack_profile_otherTargetRecoveryMultiplier_invalid")]
+        [TestCase("otherTargetRecoveryMultiplier", "0", "spirit_recovery_profile_contract_invalid")]
+        [TestCase("otherTargetRecoveryMultiplier", "2", "spirit_recovery_profile_contract_invalid")]
+        [TestCase("healAmount", "5", "attack_profile_healAmount_must_be_empty")]
+        public void RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(string field, string value, string expectedReason)
+        {
+            var lines = File.ReadAllLines(ProductionAbsolutePath());
+            string header = lines.First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
+            var row = lines.First(line => line.StartsWith("spell_julingshu,", StringComparison.Ordinal)).Split(',');
+            row[Array.IndexOf(header.Split(','), field)] = value;
+            Assert.IsFalse(CombatContentImporter.TryBuildAttackProfileProjection(new[] { header, string.Join(",", row) },
+                ProductionLanguageKeys(), out var projected, out string reason));
+            Assert.IsEmpty(projected);
+            StringAssert.StartsWith(expectedReason, reason);
+        }
+
+        [TestCase("spiritRecoveryMultiplier")]
+        [TestCase("minimumSpiritRecovery")]
+        [TestCase("otherTargetResourceCost")]
+        [TestCase("otherTargetRecoveryMultiplier")]
+        public void NonRecoveryCsvRequiresEmptyRecoveryColumnsEvenForZero(string field)
+        {
+            var lines = File.ReadAllLines(ProductionAbsolutePath());
+            string header = lines.First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
+            var row = lines.First(line => line.StartsWith("basic_unarmed,", StringComparison.Ordinal)).Split(',');
+            row[Array.IndexOf(header.Split(','), field)] = "0";
+            Assert.IsFalse(CombatContentImporter.TryValidateAttackProfileCsv(new[] { header, string.Join(",", row) },
+                ProductionLanguageKeys(), out string reason));
+            StringAssert.StartsWith("attack_profile_" + field + "_must_be_empty", reason);
         }
 
         [Test]
@@ -433,9 +506,34 @@ namespace TianZhang.Tests
             Assert.AreEqual(1, asset.maxCastRange);
             Assert.AreEqual(AttackTargetingMode.Single, asset.targetingMode);
             Assert.IsTrue(asset.TryValidate(out var validationReason), validationReason);
+            foreach (string id in new[] { "spell_guanshiji", "spell_julingshu" })
+            {
+                var art = AssetDatabase.LoadAssetAtPath<AttackProfileData>($"Assets/Data/AttackProfiles/AttackProfile_{id}.asset");
+                Assert.IsNotNull(art, id);
+                Assert.AreEqual(id, art.attackProfileId);
+                Assert.AreEqual(id, art.displayNameKey);
+                Assert.IsTrue(art.TryValidate(out string artReason), artReason);
+                if (id == "spell_julingshu")
+                {
+                    Assert.AreEqual(AttackEffectType.RestoreSpirit, art.effectType);
+                    Assert.AreEqual(0.5f, art.spiritRecoveryMultiplier);
+                    Assert.AreEqual(5, art.minimumSpiritRecovery);
+                    Assert.AreEqual(20, art.otherTargetResourceCost);
+                    Assert.AreEqual(0.5f, art.otherTargetRecoveryMultiplier);
+                }
+                else
+                {
+                    Assert.AreEqual(AttackEffectType.Physical, art.effectType);
+                    Assert.AreEqual(1.2f, art.physicalDamageMultiplier);
+                    Assert.AreEqual(0f, art.spiritRecoveryMultiplier);
+                    Assert.AreEqual(0, art.minimumSpiritRecovery);
+                    Assert.AreEqual(0, art.otherTargetResourceCost);
+                    Assert.AreEqual(0f, art.otherTargetRecoveryMultiplier);
+                }
+            }
             Assert.IsTrue(
                 CombatContentImporter.TryValidateAttackProfileAssetIdProjection(
-                    new[] { "basic_unarmed" }, out var idReason),
+                    new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" }, out var idReason),
                 idReason);
 
             // 石甲兽模板 asset 显式引用同一档案：导入绑定校验必须通过（ImportAttackProfiles 已成功）。

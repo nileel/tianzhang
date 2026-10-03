@@ -68,10 +68,13 @@ namespace TianZhang.Combat
         public CombatSession(
             IEnumerable<CombatantSnapshot> combatants,
             IEnumerable<CombatAttackProfile> attackProfiles,
-            ICombatSpatialQuery spatialQuery)
+            ICombatSpatialQuery spatialQuery,
+            float spiritRecoveryEnvironmentMultiplier = 1f)
         {
             if (spatialQuery == null)
                 throw new ArgumentNullException(nameof(spatialQuery));
+            if (spiritRecoveryEnvironmentMultiplier != 1f && spiritRecoveryEnvironmentMultiplier != 2f)
+                throw new ArgumentOutOfRangeException(nameof(spiritRecoveryEnvironmentMultiplier));
             Combatants = new CombatantRegistry(combatants);
             ValidateSideCardinality(Combatants.All);
             profiles = new Dictionary<string, CombatAttackProfile>(StringComparer.Ordinal);
@@ -86,6 +89,7 @@ namespace TianZhang.Combat
             }
 
             SpatialQuery = spatialQuery;
+            SpiritRecoveryEnvironmentMultiplier = spiritRecoveryEnvironmentMultiplier;
             TurnScheduler = new CombatTurnScheduler(Combatants.All);
         }
 
@@ -118,6 +122,7 @@ namespace TianZhang.Combat
 
         public CombatantRegistry Combatants { get; }
         public ICombatSpatialQuery SpatialQuery { get; }
+        public float SpiritRecoveryEnvironmentMultiplier { get; }
         public CombatTurnScheduler TurnScheduler { get; }
         public IReadOnlyList<CombatAttackProfile> AttackProfiles => orderedProfiles.AsReadOnly();
 
@@ -177,36 +182,48 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatAttackKind expectedKind)
         {
-            if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive || target.Team == actor.Team)
-                return CombatActionResult.Rejected("combat_session_target_invalid");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
-            if (!IsAuthorized(actor, profile))
-                return CombatActionResult.Rejected("attack_profile_not_authorized");
+            if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
+                (profile.Effect != CombatAttackEffect.RestoreSpirit && target.Team == actor.Team))
+                return CombatActionResult.Rejected("combat_session_target_invalid");
+            string authorizationFailure = GetAuthorizationFailure(actor, profile);
+            if (!string.IsNullOrEmpty(authorizationFailure))
+                return CombatActionResult.Rejected(authorizationFailure);
+            if (!profile.MeetsRequirements(actor.RealmStage, actor.VisibleRootElement, actor.VisibleRootGrade))
+                return CombatActionResult.Rejected("attack_profile_requirements_not_met");
             if (actor.GetCooldown(profile.Id) > 0)
                 return CombatActionResult.Rejected("attack_profile_cooldown_active");
-            if (profile.SpiritCost > 0 && actor.CurrentSpirit < profile.SpiritCost)
+            bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
+            int spiritCost = profile.GetSpiritCost(targetsSelf);
+            if (actor.CurrentSpirit < spiritCost)
                 return CombatActionResult.Rejected("spirit_insufficient");
 
             CombatRangeQueryResult range = SpatialQuery.QueryRange(
-                actor.Position, target.Position, profile.MinimumRange, profile.MaximumRange);
+                actor.Position, target.Position,
+                profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
+                    ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange,
+                profile.MaximumRange);
             return range.IsInRange
                 ? CombatActionResult.Success()
                 : CombatActionResult.Rejected(string.IsNullOrEmpty(range.Reason) ? "target_out_of_range" : range.Reason);
         }
 
-        private static bool IsAuthorized(CombatantSnapshot actor, CombatAttackProfile profile)
+        private static string GetAuthorizationFailure(CombatantSnapshot actor, CombatAttackProfile profile)
         {
             switch (profile.Kind)
             {
                 case CombatAttackKind.Basic:
-                    return string.Equals(actor.BasicAttackProfileId, profile.Id, StringComparison.Ordinal);
+                    return string.Equals(actor.BasicAttackProfileId, profile.Id, StringComparison.Ordinal)
+                        ? string.Empty : "attack_profile_not_authorized";
                 case CombatAttackKind.Art:
-                    return actor.AvailableArtProfileIds.Contains(profile.Id) && actor.EquippedArtProfileIds.Contains(profile.Id);
+                    if (!actor.AvailableArtProfileIds.Contains(profile.Id)) return "attack_profile_not_learned";
+                    return actor.EquippedArtProfileIds.Contains(profile.Id) ? string.Empty : "attack_profile_not_equipped";
                 case CombatAttackKind.Divine:
-                    return actor.AvailableDivineProfileIds.Contains(profile.Id) && actor.EquippedDivineProfileIds.Contains(profile.Id);
+                    if (!actor.AvailableDivineProfileIds.Contains(profile.Id)) return "attack_profile_not_learned";
+                    return actor.EquippedDivineProfileIds.Contains(profile.Id) ? string.Empty : "attack_profile_not_equipped";
                 default:
-                    return false;
+                    return "attack_profile_not_authorized";
             }
         }
 

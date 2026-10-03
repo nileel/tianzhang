@@ -9,6 +9,14 @@ namespace TianZhang.Content
         bool TryCreateDefinition(out EnvironmentProfileDefinition definition, out string reason);
     }
 
+    public enum SpiritRecoveryEnvironment
+    {
+        Unknown = 0,
+        Ordinary,
+        SpiritVeinNode,
+        BlessedLand,
+    }
+
     public enum EnvironmentPhenomenonChannel
     {
         Airflow,
@@ -94,9 +102,11 @@ namespace TianZhang.Content
             Dictionary<EnvironmentPhenomenonChannel, HashSet<string>> phenomenonTypes,
             Dictionary<string, string> phenomenonPairResults,
             int unitsPerRange,
-            int maxQueryRange)
+            int maxQueryRange,
+            SpiritRecoveryEnvironment spiritRecoveryEnvironment)
         {
             ProfileId = profileId;
+            SpiritRecoveryEnvironment = spiritRecoveryEnvironment;
             this.directedEdges = Array.AsReadOnly(directedEdges);
             this.surfacePrototypeRefs = Array.AsReadOnly(surfacePrototypeRefs);
             this.elementRelationRefs = Array.AsReadOnly(elementRelationRefs);
@@ -107,6 +117,7 @@ namespace TianZhang.Content
         }
 
         public string ProfileId { get; }
+        public SpiritRecoveryEnvironment SpiritRecoveryEnvironment { get; }
         public int UnitsPerRange { get; }
         public int MaxQueryRange { get; }
         public IReadOnlyList<EnvironmentDirectedEdge> DirectedEdges => directedEdges;
@@ -184,6 +195,9 @@ namespace TianZhang.Content
                 return Fail(EnvironmentRuntimeReasons.ProfileNotConfigured, out reason);
             if (string.IsNullOrWhiteSpace(profile.profileId))
                 return Fail(EnvironmentRuntimeReasons.ProfileIdNotConfigured, out reason);
+            if (profile.spiritRecoveryEnvironment is not (SpiritRecoveryEnvironment.Ordinary or
+                    SpiritRecoveryEnvironment.SpiritVeinNode or SpiritRecoveryEnvironment.BlessedLand))
+                return Fail("spirit_recovery_environment_not_configured", out reason);
             if (profile.unitsPerRange < 1 || profile.maxQueryRange < 1)
                 return Fail(EnvironmentRuntimeReasons.QueryLimitsNotConfigured, out reason);
             if (profile.directedEdges == null || profile.directedEdges.Length == 0)
@@ -224,7 +238,8 @@ namespace TianZhang.Content
                 types,
                 pairs,
                 profile.unitsPerRange,
-                profile.maxQueryRange);
+                profile.maxQueryRange,
+                profile.spiritRecoveryEnvironment);
             reason = EnvironmentRuntimeReasons.Ok;
             return true;
         }
@@ -390,6 +405,7 @@ namespace TianZhang.Content
     public sealed class EnvironmentProfileDefinition
     {
         public string profileId;
+        public SpiritRecoveryEnvironment spiritRecoveryEnvironment;
         public int unitsPerRange;
         public int maxQueryRange;
         public EnvironmentBattlefieldCell[] battlefieldCells;

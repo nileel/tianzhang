@@ -38,6 +38,7 @@ namespace TianZhang.Editor
             "phenomenonChannels",
             "phenomenonPairs",
             "elementRelationRefs",
+            "spiritRecoveryEnvironment",
         };
 
         private static readonly string[] CharterRuleDefinitionColumns =
@@ -189,6 +190,14 @@ namespace TianZhang.Editor
 
             var profile = new EnvironmentProfileDefinition();
             profile.profileId = profileId;
+            profile.spiritRecoveryEnvironment = CsvTableReader.GetRequiredValue(
+                headers, cols, "spiritRecoveryEnvironment", sourceName) switch
+            {
+                "ordinary" => SpiritRecoveryEnvironment.Ordinary,
+                "spirit_vein_node" => SpiritRecoveryEnvironment.SpiritVeinNode,
+                "blessed_land" => SpiritRecoveryEnvironment.BlessedLand,
+                _ => throw new InvalidDataException($"{sourceName} has invalid spiritRecoveryEnvironment."),
+            };
             profile.unitsPerRange = unitsPerRange;
             profile.maxQueryRange = maxQueryRange;
             profile.battlefieldCells = battlefieldCells;

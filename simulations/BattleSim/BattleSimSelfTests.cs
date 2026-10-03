@@ -1196,6 +1196,8 @@ static class BattleSimSelfTests
         "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
         "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
         "isDomain", "isBloodline", "specialEffectTextKey",
+        "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost",
+        "otherTargetRecoveryMultiplier",
     };
 
     static IReadOnlyList<Dictionary<string, string>> ReadFixtureRows(string fileName)
@@ -1408,6 +1410,9 @@ static class BattleSimSelfTests
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "areaCenterKind", "caster")), "single_target_area_fields_present");
         // 未支持效果语义：heal 行在既有 BattleSim 载体上没有对应字段。
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "effectType", "heal")), "unsupported_effect_semantics");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "effectType", "restore_spirit")), "unsupported_effect_semantics");
+        foreach (string field in AttackProfileHeaders.TakeLast(4))
+            AssertTableRejected(TableWith(MutateRowLine(artSingleLine, field, "0")), "unsupported_effect_semantics");
     }
 
     /// <summary>
@@ -1420,9 +1425,13 @@ static class BattleSimSelfTests
         var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), profilePath))
             .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
             .ToArray();
-        ValidateAttackProfileTable(lines);
+        var basicUnarmedLines = lines.Skip(1)
+            .Where(line => line.Split(',')[0] == "basic_unarmed")
+            .ToArray();
+        AssertEqual(1, basicUnarmedLines.Length, "AttackProfiles.csv basic_unarmed row count");
+        // 本迁移检查只消费普攻行；其他正式术法不投影到旧 BattleSim 载体。
+        ValidateAttackProfileTable(lines.Take(1).Concat(basicUnarmedLines).ToArray());
         var rows = ReadCsvRows(profilePath);
-        AssertEqual(1, rows.Count, "AttackProfiles.csv production row count");
         var row = rows.Single(entry => entry["attackProfileId"] == "basic_unarmed");
 
         AssertEqual("basic", row["profileKind"], "basic_unarmed profile kind");
@@ -1579,6 +1588,10 @@ static class BattleSimSelfTests
             var row = headers.Select((header, index) => (header, value: values[index]))
                 .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
 
+            // 旧投影无恢复/他人费用语义；新增四列必须严格留空，不能丢列。
+            if (AttackProfileHeaders.TakeLast(4).Any(field => row[field] != ""))
+                throw new InvalidOperationException("unsupported_effect_semantics");
+
             string profileKind = row["profileKind"];
             string targetingMode = row["targetingMode"];
             if (profileKind is not ("basic" or "art" or "divine"))
@@ -1614,7 +1627,7 @@ static class BattleSimSelfTests
                 if (effectType is "magic" or "hybrid" && !ParseNonNegativeDouble(row["soulDamageMultiplier"], "soulDamageMultiplier"))
                     throw new InvalidOperationException("attack_profile_soulDamageMultiplier_invalid");
             }
-            else if (effectType is "heal" or "buff" or "debuff" or "movement")
+            else if (effectType is "heal" or "buff" or "debuff" or "movement" or "restore_spirit")
             {
                 // 既有 BattleSim 载体（AttackProfile/ArtConfig/DivineConfig）没有治疗量、增益倍率
                 // 或移动语义字段；当前投影不能表达已声明效果时必须拒绝，不能丢列或读旧默认值。

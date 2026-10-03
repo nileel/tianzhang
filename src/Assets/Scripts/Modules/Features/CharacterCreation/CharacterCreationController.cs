@@ -24,13 +24,27 @@ namespace TianZhang.Features.CharacterCreation
                 throw new ArgumentNullException(nameof(characterCreationPointBuyConfig));
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             draft = CharacterCreationCatalog.CreateDefaultDraft();
-            view?.Configure(Submit);
+            view?.Configure(Submit, id => { SelectOrigin(id); });
         }
 
         public void Open()
         {
             if (draft == null) draft = CharacterCreationCatalog.CreateDefaultDraft();
             view?.Show(draft);
+            RefreshOrigin();
+        }
+
+        public bool SelectOrigin(string originId)
+        {
+            if (draft == null || CharacterCreationCatalog.FindOrigin(originId) == null) return false;
+            draft.OriginId = originId;
+            RefreshOrigin();
+            return true;
+        }
+
+        private void RefreshOrigin()
+        {
+            view?.RefreshOrigin(draft, CharacterCreationRules.Validate(draft, pointBuyConfig));
         }
 
         public void Submit(string slotId, string characterName)

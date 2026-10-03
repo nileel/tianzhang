@@ -49,12 +49,15 @@ namespace TianZhang.Features.Adventure
         private bool acceptsPlayerCommand;
         private Func<string, string> resolveText = value => value;
         private Func<string, string> displayReason = value => value;
+        private Func<string, string> displayProfile = value => value;
         private string playerDisplayName;
 
-        public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay)
+        public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay,
+            Func<string, string> profileDisplay = null)
         {
             resolveText = resolve ?? throw new ArgumentNullException(nameof(resolve));
             displayReason = reasonDisplay ?? throw new ArgumentNullException(nameof(reasonDisplay));
+            displayProfile = profileDisplay ?? resolveText;
         }
 
         public bool IsRunning => session != null;
@@ -227,7 +230,9 @@ namespace TianZhang.Features.Adventure
             CombatActionResult validation = commandService.Validate(session, command);
             if (!validation.Succeeded)
                 return validation;
-            if (command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine)
+            if ((command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
+                session.TryGetProfile(command.ProfileId, out CombatAttackProfile sampledProfile) &&
+                sampledProfile.Effect != CombatAttackEffect.RestoreSpirit)
             {
                 var rolls = new CombatResolutionRolls(
                     combatRandomSource.NextPercent(),
@@ -261,7 +266,35 @@ namespace TianZhang.Features.Adventure
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
                 spawned.PlayerDivineProfileIds,
+                BuildArtActions(player, enemy),
+                acceptsCommands && player != null && commandService.Validate(session,
+                    new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded,
                 timeline: BuildTimeline()));
+        }
+
+        private IReadOnlyList<CombatArtActionSnapshot> BuildArtActions(CombatantSnapshot player, CombatantSnapshot enemy)
+        {
+            var actions = new List<CombatArtActionSnapshot>();
+            if (player == null) return actions;
+            foreach (string id in player.EquippedArtProfileIds)
+            {
+                session.TryGetProfile(id, out CombatAttackProfile profile);
+                var targets = new List<CombatArtTargetSnapshot>();
+                if (profile?.Effect == CombatAttackEffect.RestoreSpirit)
+                    AddTarget(player, playerDisplayName);
+                if (enemy != null) AddTarget(enemy, resolveText(spawned.EnemyData.displayNameKey));
+                actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CooldownTicks ?? 0, targets));
+
+                void AddTarget(CombatantSnapshot target, string name)
+                {
+                    CombatActionResult legality = commandService.Validate(session,
+                        new CombatCommand(CombatCommandKind.Art, player.Id, target.Id, id));
+                    targets.Add(new CombatArtTargetSnapshot(target.Id, name,
+                        profile?.GetSpiritCost(target.Id == player.Id) ?? 0,
+                        legality.Succeeded, legality.RejectionReason));
+                }
+            }
+            return actions;
         }
 
         private CombatTimelineSnapshot BuildTimeline()
@@ -372,7 +405,8 @@ namespace TianZhang.Features.Adventure
                     actorStart,
                     ToPresentationHex(actorBefore.Position),
                     actorBefore.Facing,
-                    Array.Empty<CombatUnitPresentationTargetResult>(),
+                    result.SpiritRecoveries.Select(value => new CombatUnitPresentationTargetResult(
+                        value.TargetId, 0, false, value.ActualRecovery)).ToArray(),
                     result.MovementPath.Select(ToPresentationHex).ToArray()));
 
                 if (targetBefore == null || result.Damage.Count == 0) return;
@@ -421,8 +455,13 @@ namespace TianZhang.Features.Adventure
                 CombatCommandKind.SwapSpell => "combat_command_swap_spell",
                 _ => throw new ArgumentOutOfRangeException(nameof(command.Kind)),
             });
+            if (command.Kind == CombatCommandKind.Art) commandName = displayProfile(command.ProfileId);
+            if (result.SpiritRecoveries.Count > 0)
+                return actor + "：" + commandName + "，恢复灵力 " + result.SpiritRecoveries.Sum(item => item.ActualRecovery) +
+                    "，消耗灵力 " + result.SpiritSpent;
             if (result.Damage.Count > 0)
-                return actor + "：" + commandName + "，伤害 " + result.Damage.Sum(item => item.FinalDamage);
+                return actor + "：" + commandName + "，伤害 " + result.Damage.Sum(item => item.FinalDamage) +
+                    (result.SpiritSpent > 0 ? "，消耗灵力 " + result.SpiritSpent : string.Empty);
             return actor + "：" + commandName;
         }
     }

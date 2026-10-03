@@ -442,101 +442,214 @@ function Test-NpcCultivationActionWeightProfile {
   }
 }
 
-function Test-FormalAttackProfileProjection {
-  param([object]$Table, [string[]]$LanguageIds)
-
-  $rows = @($Table.Rows)
-  if ($rows.Count -ne 1 -or $rows[0].attackProfileId -cne 'basic_unarmed') {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly the approved basic_unarmed production row.'
+function Test-FormalProjectionAssetFields {
+  param([string]$Label, [string]$RelativePath, [hashtable]$Fields)
+  $path = Join-Path $root $RelativePath
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+    Add-Finding 'FORMAL_PROJECTION_ASSET_MISSING' $Label "Missing generated asset: $RelativePath"
     return
   }
-
-  $row = $rows[0]
-  $fixedFields = @{
-    profileKind = 'basic'
-    basicBindingKind = 'unarmed_fallback'
-    effectType = 'physical'
-    damageElementId = 'element_none'
-    physicalDamageMultiplier = '1.0'
-    resourceKind = 'none'
-    resourceCost = '0'
-    cooldownTicks = '0'
-    minCastRange = '1'
-    maxCastRange = '1'
-    targetingMode = 'single'
-  }
-  foreach ($name in $fixedFields.Keys) {
-    $value = [string]$row.PSObject.Properties[$name].Value
-    if ($value -cne $fixedFields[$name]) {
-      Add-Finding 'ATTACK_PROFILE_PROJECTION_INVALID' "AttackProfiles:$name" "Field must equal '$($fixedFields[$name])'."
+  foreach ($field in $Fields.Keys) {
+    $matches = @(Select-String -LiteralPath $path -Pattern "^  $([regex]::Escape($field)): *(.*?)\s*$").Matches
+    if ($matches.Count -ne 1) {
+      Add-Finding 'FORMAL_PROJECTION_ASSET_FIELD_MISMATCH' "${Label}:$field" 'Asset must serialize exactly one field.'
+      continue
+    }
+    $actual = $matches[0].Groups[1].Value
+    $expected = $Fields[$field]
+    if ($expected -is [ValueType]) {
+      $number = 0.0
+      if (-not [double]::TryParse($actual, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or
+          [double]::IsNaN($number) -or [double]::IsInfinity($number) -or $number -ne [double]$expected) {
+        Add-Finding 'FORMAL_PROJECTION_ASSET_FIELD_MISMATCH' "${Label}:$field" "Asset numeric field must equal '$expected'."
+      }
+    } elseif ($actual -cne [string]$expected) {
+      Add-Finding 'FORMAL_PROJECTION_ASSET_FIELD_MISMATCH' "${Label}:$field" "Asset field must equal '$expected'."
     }
   }
+}
 
-  foreach ($name in @('contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')) {
-    $value = [string]$row.PSObject.Properties[$name].Value
-    if (-not [string]::IsNullOrWhiteSpace($value)) {
-      Add-Finding 'ATTACK_PROFILE_UNUSED_FIELD_NONEMPTY' "AttackProfiles:$name" 'The unarmed single-target row must leave this column empty.'
-    }
-  }
-
-  $displayKey = [string]$row.displayNameKey
-  if ($displayKey -notin $LanguageIds) {
-    Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' "AttackProfiles:$displayKey" 'displayNameKey must exist in Language.csv.'
-  }
-  $languagePath = Join-ProjectPath @('src', 'Assets', 'DataConfig', 'Language.csv')
-  $displayLine = @(Get-Content -LiteralPath $languagePath -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith('#') -and $_.StartsWith($displayKey + ',') })
-  if ($displayLine.Count -ne 1 -or (($displayLine[0] -split ',', 2)[1].Trim() -cne '徒手')) {
-    Add-Finding 'ATTACK_PROFILE_LANGUAGE_TEXT_INVALID' "AttackProfiles:$displayKey" 'Language value must be 徒手.'
-  }
-
-  # 单向链 CSV -> asset：规范路径必须存在且关键字段与 CSV 一致。
-  $assetPath = 'src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset'
-  $absoluteAssetPath = Join-ProjectPath @('src', 'Assets', 'Data', 'AttackProfiles', 'AttackProfile_basic_unarmed.asset')
-  if (-not (Test-Path -LiteralPath $absoluteAssetPath -PathType Leaf)) {
-    Add-Finding 'ATTACK_PROFILE_ASSET_MISSING' 'AttackProfiles' "CSV profile has no matching asset: $assetPath"
-    return
-  }
-  foreach ($field in @('attackProfileId', 'displayNameKey', 'damageElementId')) {
-    $expected = [string]$row.PSObject.Properties[$field].Value
-    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
-    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $expected) {
-      Add-Finding 'ATTACK_PROFILE_ASSET_FIELD_MISMATCH' "AttackProfile:$field" "Asset field must equal '$expected'."
-    }
-  }
-  foreach ($field in @('physicalDamageMultiplier', 'minCastRange', 'maxCastRange', 'resourceCost', 'cooldownTicks')) {
-    $expected = [double][string]$row.PSObject.Properties[$field].Value
-    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
-    if ($matches.Count -ne 1 -or [double]$matches[0].Groups[1].Value -ne $expected) {
-      Add-Finding 'ATTACK_PROFILE_ASSET_FIELD_MISMATCH' "AttackProfile:$field" "Asset numeric field must equal '$expected'."
-    }
-  }
-  # 枚举序列化：Basic=1、UnarmedFallback=2、Physical=1、None=1、Single=1。
-  $enumFields = @{
-    profileKind = '1'; basicBindingKind = '2'; effectType = '1'; resourceKind = '1'; targetingMode = '1'
-  }
-  foreach ($field in $enumFields.Keys) {
-    $matches = @(Select-String -LiteralPath $absoluteAssetPath -Pattern "^  $([regex]::Escape($field)):\s*(\S+)\s*$").Matches
-    if ($matches.Count -ne 1 -or $matches[0].Groups[1].Value -cne $enumFields[$field]) {
-      Add-Finding 'ATTACK_PROFILE_ASSET_ENUM_MISMATCH' "AttackProfile:$field" "Asset enum must equal '$($enumFields[$field])'."
-    }
-  }
-
-  # 场景引用：AdventureScene.unity 必须序列化同一 asset 的 GUID（场景重建不丢失引用）。
-  $metaPath = Join-ProjectPath @('src', 'Assets', 'Data', 'AttackProfiles', 'AttackProfile_basic_unarmed.asset.meta')
+function Test-FormalProjectionSceneReference {
+  param([string]$Label, [string]$AssetPath)
+  $metaPath = Join-Path $root ($AssetPath + '.meta')
   if (-not (Test-Path -LiteralPath $metaPath -PathType Leaf)) {
-    Add-Finding 'ATTACK_PROFILE_ASSET_META_MISSING' 'AttackProfiles' 'Attack profile asset .meta is missing.'
+    Add-Finding 'FORMAL_PROJECTION_ASSET_META_MISSING' $Label 'Generated asset .meta is missing.'
     return
   }
   $guid = @(Select-String -LiteralPath $metaPath -Pattern '^\s*guid:\s*([0-9a-f]{32})\s*$').Matches
   if ($guid.Count -ne 1) {
-    Add-Finding 'ATTACK_PROFILE_ASSET_META_INVALID' 'AttackProfiles' 'Attack profile asset .meta must declare exactly one guid.'
+    Add-Finding 'FORMAL_PROJECTION_ASSET_META_INVALID' $Label 'Asset .meta must declare exactly one guid.'
     return
   }
-  $scenePath = Join-ProjectPath @('src', 'Assets', 'Scenes', 'AdventureScene.unity')
+  $scenePath = Join-Path $root 'src/Assets/Scenes/AdventureScene.unity'
   if (-not (Test-Path -LiteralPath $scenePath -PathType Leaf) -or
       -not (Select-String -LiteralPath $scenePath -Pattern ([regex]::Escape($guid[0].Groups[1].Value)) -Quiet)) {
-    Add-Finding 'ADVENTURE_SCENE_ATTACK_PROFILE_REFERENCE_MISSING' 'AdventureScene' 'AdventureScene.unity must reference the production basic_unarmed asset.'
+    Add-Finding 'FORMAL_PROJECTION_SCENE_REFERENCE_MISSING' $Label 'AdventureScene must reference this exact generated asset.'
   }
+}
+
+function Test-FormalAttackProfileProjection {
+  param([object]$Table, [string[]]$LanguageIds)
+  if (($Table.Headers -join ',') -cne ($schemas.AttackProfiles -join ',')) {
+    Add-Finding 'ATTACK_PROFILE_HEADER_NOT_EXACT' 'AttackProfiles' 'Header must match the ordered 38-column contract.'
+  }
+  $expectedRows = @{
+    basic_unarmed = @{
+      attackProfileId='basic_unarmed'; displayNameKey='attack_profile_basic_unarmed'; profileKind='basic'; basicBindingKind='unarmed_fallback'
+      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
+      cooldownTicks='0'; minCastRange='1'; maxCastRange='1'; targetingMode='single'
+    }
+    spell_guanshiji = @{
+      attackProfileId='spell_guanshiji'; displayNameKey='spell_guanshiji'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
+      realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='physical'; damageElementId='element_none'
+      physicalDamageMultiplier='1.2'; resourceKind='mp'; resourceCost='12'; cooldownTicks='10'; minCastRange='1'; maxCastRange='1'; targetingMode='single'
+    }
+    spell_julingshu = @{
+      attackProfileId='spell_julingshu'; displayNameKey='spell_julingshu'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
+      realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='restore_spirit'; resourceKind='mp'; resourceCost='0'
+      cooldownTicks='5'; minCastRange='0'; maxCastRange='2'; targetingMode='single'; spiritRecoveryMultiplier='0.5'
+      minimumSpiritRecovery='5'; otherTargetResourceCost='20'; otherTargetRecoveryMultiplier='0.5'
+    }
+  }
+  $rows = @($Table.Rows)
+  if ($rows.Count -ne 3 -or (@($rows.attackProfileId | Sort-Object) -join ',') -cne (@($expectedRows.Keys | Sort-Object) -join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly basic_unarmed, spell_guanshiji and spell_julingshu once each.'
+    return
+  }
+  $assetDir = Join-Path $root 'src/Assets/Data/AttackProfiles'
+  $expectedAssetNames = @($expectedRows.Keys | ForEach-Object { "AttackProfile_$_.asset" } | Sort-Object)
+  $actualAssetNames = if (Test-Path -LiteralPath $assetDir -PathType Container) { @(Get-ChildItem -LiteralPath $assetDir -File -Filter *.asset | Select-Object -ExpandProperty Name | Sort-Object) } else { @() }
+  if (($actualAssetNames -join ',') -cne ($expectedAssetNames -join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Production directory must contain exactly the three canonical assets.'
+  }
+  $names = @{ basic_unarmed='徒手'; spell_guanshiji='贯石击'; spell_julingshu='聚灵术' }
+  $languagePath = Join-Path $root 'src/Assets/DataConfig/Language.csv'
+  $stringFields = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey')
+  $enumFields = @('profileKind','basicBindingKind','effectType','resourceKind','targetingMode','areaCenterKind','areaShapeKind','areaEffectBlockers','areaAllowedFactions','areaAllowedStates')
+  foreach ($row in $rows) {
+    $id = [string]$row.attackProfileId
+    $expected = $expectedRows[$id]
+    foreach ($field in $schemas.AttackProfiles) {
+      $value = [string]$row.PSObject.Properties[$field].Value
+      $required = if ($expected.ContainsKey($field)) { [string]$expected[$field] } else { '' }
+      if ($value -cne $required) {
+        Add-Finding 'ATTACK_PROFILE_PROJECTION_INVALID' "${id}:$field" "CSV field must equal '$required' (unused fields must be empty)."
+      }
+    }
+    $displayKey = [string]$row.displayNameKey
+    if ($displayKey -notin $LanguageIds) { Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' $id 'displayNameKey must exist in Language.csv.' }
+    $displayLines = @(Get-Content -LiteralPath $languagePath -Encoding UTF8 | Where-Object { $_.StartsWith($displayKey + ',') })
+    if ($displayLines.Count -ne 1 -or (($displayLines[0] -split ',',2)[1].Trim() -cne $names[$id])) {
+      Add-Finding 'ATTACK_PROFILE_LANGUAGE_TEXT_INVALID' $id "Language value must be '$($names[$id])'."
+    }
+    $fields = @{}
+    foreach ($field in $stringFields) { $fields[$field] = if ($expected.ContainsKey($field)) { [string]$expected[$field] } else { '' } }
+    foreach ($field in $schemas.AttackProfiles) {
+      if ($field -in $stringFields -or $field -in $enumFields) { continue }
+      $fields[$field] = if ($expected.ContainsKey($field)) { [double]::Parse([string]$expected[$field], [Globalization.CultureInfo]::InvariantCulture) } elseif ($field -ceq 'areaFacing') { -1 } else { 0 }
+    }
+    foreach ($field in $enumFields) { $fields[$field] = 0 }
+    $fields.profileKind = if ($id -ceq 'basic_unarmed') { 1 } else { 2 }
+    $fields.basicBindingKind = if ($id -ceq 'basic_unarmed') { 2 } else { 0 }
+    $fields.effectType = if ($id -ceq 'spell_julingshu') { 8 } else { 1 }
+    $fields.resourceKind = if ($id -ceq 'basic_unarmed') { 1 } else { 2 }
+    $fields.targetingMode = 1
+    $assetPath = "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset"
+    Test-FormalProjectionAssetFields $id $assetPath $fields
+    Test-FormalProjectionSceneReference $id $assetPath
+  }
+}
+
+function Test-FormalStarterSpellProjection {
+  param([object]$Table)
+  $spellColumns = @('name','type','minRange','maxRange','mpCost','cooldownTicks','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope','physicalDamageMultiplier','soulDamageMultiplier')
+  $expectedRows = @{
+    spell_guanshiji = 'spell_guanshiji,0,0,1,12,10,0,0,0,0,0,realm_lianqi,element_none,element_none,faction_sanxiu,player,1.2,0'
+    spell_julingshu = 'spell_julingshu,2,0,2,0,5,0,0,0,0,0,realm_lianqi,element_none,element_none,faction_sanxiu,player,0,0.0'
+  }
+  foreach ($id in $expectedRows.Keys) {
+    $matches = @($Table.Rows | Where-Object { $_.name -ceq $id })
+    if ($matches.Count -ne 1) {
+      Add-Finding 'STARTER_SPELL_ROW_INVALID' $id 'Formal starter spell must appear exactly once.'
+      continue
+    }
+    $row = $matches[0]
+    $actual = (@($spellColumns | ForEach-Object { [string]$row.$_ }) -join ',')
+    if ($actual -cne $expectedRows[$id]) {
+      Add-Finding 'STARTER_SPELL_PROJECTION_INVALID' $id 'Formal starter spell CSV must retain all approved fields.'
+    }
+    $expectedValues = $expectedRows[$id].Split(',')
+    $fields = @{}
+    for ($index = 0; $index -lt $spellColumns.Count; $index++) {
+      $field = $spellColumns[$index]
+      $value = $expectedValues[$index]
+      switch ($field) {
+        'name' { continue }
+        'realmReq' { $fields.realmRequirement = $value }
+        'elementReq' { $fields.elementRequirement = $value }
+        'element' { $fields.element = '' }
+        'sourceAffiliation' { $fields.sourceAffiliation = $value }
+        'contentScope' { $fields.contentScope = $value }
+        default { $fields[$field] = [double]::Parse($value, [Globalization.CultureInfo]::InvariantCulture) }
+      }
+    }
+    $assetPath = "src/Assets/Data/Spells/Spell_$id.asset"
+    Test-FormalProjectionAssetFields $id $assetPath $fields
+    # Combat consumes AttackProfiles; Spell assets are catalog content, not direct scene references.
+    $metaPath = Join-Path $root ($assetPath + '.meta')
+    $guid = if (Test-Path -LiteralPath $metaPath -PathType Leaf) { @(Select-String -LiteralPath $metaPath -Pattern '^guid: ([0-9a-f]{32})$').Matches } else { @() }
+    if ($guid.Count -ne 1) { Add-Finding 'STARTER_SPELL_ASSET_META_INVALID' $id 'Spell asset must have exactly one stable GUID.' }
+  }
+}
+function Test-FormalEnvironmentProjection {
+  param([object]$Table)
+  if (($Table.Headers -join ',') -cne ($schemas.EnvironmentProfiles -join ',')) {
+    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered eight-column contract.'
+  }
+  $rows = @($Table.Rows)
+  if ($rows.Count -ne 1 -or $rows[0].profileId -cne 'env_guanzhong_wild') {
+    Add-Finding 'ENVIRONMENT_PROFILE_ROW_SET_INVALID' 'EnvironmentProfiles' 'CSV must contain exactly env_guanzhong_wild.'
+    return
+  }
+  $row = $rows[0]
+  if ($row.spiritRecoveryEnvironment -cne 'ordinary' -or $row.queryLimits -cne 'unitsPerRange=2;maxQueryRange=16') {
+    Add-Finding 'ENVIRONMENT_PROFILE_PROJECTION_INVALID' 'env_guanzhong_wild' 'Formal Guanzhong must declare ordinary recovery and its approved query limits.'
+  }
+  $assetPath = 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset'
+  Test-FormalProjectionAssetFields 'env_guanzhong_wild' $assetPath @{ profileId='env_guanzhong_wild'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=16 }
+  Test-FormalProjectionSceneReference 'env_guanzhong_wild' $assetPath
+  $path = Join-Path $root $assetPath
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
+  $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+  $cells = @([regex]::Matches($text, '(?m)^  - q: (\d+)\r?\n    r: (\d+)\r?\n    blocksGroundMove: ([01])\r?\n    blocksLineOfSight: ([01])\s*$') | ForEach-Object {
+    "$($_.Groups[1].Value):$($_.Groups[2].Value)@$($_.Groups[3].Value)@$($_.Groups[4].Value)"
+  })
+  if ($cells.Count -ne 36 -or ($cells -join '|') -cne [string]$row.battlefieldCells) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELLS_MISMATCH' 'env_guanzhong_wild' 'All 36 asset cells must exactly match CSV order and flags.'
+  }
+  foreach ($field in @('surfacePrototypeRefs','elementRelationRefs')) {
+    $block = [regex]::Match($text, "(?m)^  ${field}:\r?\n((?:  - [^\r\n]+\r?\n)+)")
+    $values = @([regex]::Matches($block.Groups[1].Value, '(?m)^  - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
+    if (($values -join '|') -cne [string]$row.$field) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_REFS_MISMATCH' $field 'Asset references must exactly match the CSV.' }
+  }
+  $channels = @('airflow','visibility','temperature','precipitation','suspendedHazard','cloudDischarge')
+  $channelRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    phenomenonTypeRefs:\r?\n((?:    - [^\r\n]+\r?\n)+)') | ForEach-Object {
+    $channelMatch = $_
+    $types = @([regex]::Matches($channelMatch.Groups[2].Value, '(?m)^    - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
+    $channels[[int]$channelMatch.Groups[1].Value] + '=' + ($types -join '+')
+  })
+  $expectedChannels = @(([string]$row.phenomenonChannels).Split(';') | ForEach-Object {
+    $parts = $_.Split('='); $parts[0] + '=' + (@($parts[1].Split('+') | Sort-Object) -join '+')
+  })
+  if ($channelRows.Count -ne 6 -or ($channelRows -join ';') -cne ($expectedChannels -join ';')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CHANNELS_MISMATCH' 'env_guanzhong_wild' 'Asset channels must exactly match CSV types.' }
+  $pairRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    firstTypeRef: (\S+)\r?\n    secondTypeRef: (\S+)\r?\n    resultTypeRef: (\S+)\s*$') | ForEach-Object {
+    "$($channels[[int]$_.Groups[1].Value]):$($_.Groups[2].Value)+$($_.Groups[3].Value)>$($_.Groups[4].Value)"
+  })
+  $expectedPairs = @(([string]$row.phenomenonPairs).Split('|') | ForEach-Object {
+    $parts = $_ -split '[:>]',3; $parts[0] + ':' + (@($parts[1].Split('+') | Sort-Object) -join '+') + '>' + $parts[2]
+  })
+  if ($pairRows.Count -ne 6 -or ($pairRows -join '|') -cne ($expectedPairs -join '|')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_PAIRS_MISMATCH' 'env_guanzhong_wild' 'Asset pair results must exactly match the CSV.' }
+  if ([regex]::Matches($text, '(?m)^  - fromQ:').Count -ne 170) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize its 170 generated directed edges.' }
 }
 
 function Test-CharterSiteProjection {
@@ -696,7 +809,10 @@ function Test-UiTextProjection {
     'cell_not_configured', 'directed_edge_not_configured', 'reverse_directed_edge_not_permitted',
     'directed_edge_blocks_movement', 'directed_edge_blocks_effects', 'entity_obstacle', 'movement_blocked',
     'sight_blocked', 'height_rule_unconfigured', 'no_legal_path_within_query_limit', 'below_min_range',
-    'above_max_range', 'occupied', 'distance_budget_exhausted', 'spatial_query_not_configured'
+    'above_max_range', 'occupied', 'distance_budget_exhausted', 'spatial_query_not_configured',
+    'spell_guanshiji', 'spell_julingshu', 'attack_profile_not_learned', 'attack_profile_not_equipped',
+    'attack_profile_requirements_not_met', 'spirit_recovery_profile_contract_invalid',
+    'non_recovery_fields_present', 'spirit_recovery_environment_not_configured'
   )
   foreach ($key in $requiredKeys) {
     if ($key -notin $LanguageIds) {
@@ -747,8 +863,8 @@ $schemas = [ordered]@{
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId')
-  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','cooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')
-  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs')
+  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','cooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
+  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','phase','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','releasedNaturalCapacity','expansionGrants','expandedMansionCapacity','totalMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
@@ -763,7 +879,7 @@ $tables = [ordered]@{
   Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @() @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
-  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey')
+  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites
@@ -784,6 +900,8 @@ Test-NpcCultivationActionWeightProfile $tables.NpcCultivationActionWeightProfile
 Test-FormalContentCatalog $tables.Settlements $tables.Items $tables.Bounties $tables.Enemies $languageIds
 Test-FormalStatic3DPresentationProfiles
 Test-FormalAttackProfileProjection $tables.AttackProfiles $languageIds
+Test-FormalStarterSpellProjection $tables.Spells
+Test-FormalEnvironmentProjection $tables.EnvironmentProfiles
 Test-CharterSiteProjection $tables.CharterSites $languageIds
 Test-UiTextProjection $languageIds
 

@@ -29,6 +29,7 @@ namespace TianZhang.Combat
         Debuff,
         Movement,
         Hybrid,
+        RestoreSpirit,
     }
 
     public enum AttackResourceKind
@@ -111,6 +112,10 @@ namespace TianZhang.Combat
         public int healAmount;
         public float buffMultiplier;
         public float defensePenetration;
+        public float spiritRecoveryMultiplier;
+        public int minimumSpiritRecovery;
+        public int otherTargetResourceCost;
+        public float otherTargetRecoveryMultiplier;
 
         [Header("资源、冷却与距离")]
         public AttackResourceKind resourceKind;
@@ -155,6 +160,27 @@ namespace TianZhang.Combat
                 maxCastRange < minCastRange)
             {
                 reason = "attack_profile_required_field_invalid";
+                return false;
+            }
+
+            if (effectType == AttackEffectType.RestoreSpirit)
+            {
+                if (float.IsNaN(spiritRecoveryMultiplier) || float.IsInfinity(spiritRecoveryMultiplier) ||
+                    spiritRecoveryMultiplier <= 0f || minimumSpiritRecovery < 0 || otherTargetResourceCost < 0 ||
+                    float.IsNaN(otherTargetRecoveryMultiplier) || float.IsInfinity(otherTargetRecoveryMultiplier) ||
+                    otherTargetRecoveryMultiplier <= 0f || otherTargetRecoveryMultiplier > 1f ||
+                    resourceKind != AttackResourceKind.Mp || targetingMode != AttackTargetingMode.Single ||
+                    physicalDamageMultiplier != 0f || soulDamageMultiplier != 0f || healAmount != 0 ||
+                    buffMultiplier != 0f || defensePenetration != 0f || !string.IsNullOrEmpty(damageElementId))
+                {
+                    reason = "spirit_recovery_profile_contract_invalid";
+                    return false;
+                }
+            }
+            else if (spiritRecoveryMultiplier != 0f || minimumSpiritRecovery != 0 ||
+                     otherTargetResourceCost != 0 || otherTargetRecoveryMultiplier != 0f)
+            {
+                reason = "non_recovery_fields_present";
                 return false;
             }
 

@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 using TianZhang.Character;
 using TianZhang.Entity;
 using TianZhang.Features.CharacterCreation;
@@ -10,6 +11,12 @@ namespace TianZhang.Tests
     public class CharacterCreationRuleTests
     {
         private CharacterCreationPointBuyConfig pointBuyConfig;
+        private GameObject creationPanel;
+        private CharacterCreationController creationController;
+        private CharacterData submittedProfile;
+        private string submittedSlotId;
+        private string submittedStartNodeId;
+        private int submissionCount;
 
         [SetUp]
         public void SetUp()
@@ -20,7 +27,91 @@ namespace TianZhang.Tests
         [TearDown]
         public void TearDown()
         {
+            if (creationPanel != null) Object.DestroyImmediate(creationPanel);
+            if (submittedProfile != null) Object.DestroyImmediate(submittedProfile);
             Object.DestroyImmediate(pointBuyConfig);
+        }
+
+        [Test]
+        public void CreationControllerDefaultsToLooseOriginWithoutGrantingStarterArts()
+        {
+            ConfigureCreationController();
+            creationController.Open();
+
+            Assert.AreEqual("origin_loose", creationController.Draft.OriginId);
+            Assert.AreEqual("root_water_middle", creationController.Draft.VisibleSpiritRootId);
+            creationController.Submit("default-origin", creationController.Draft.CharacterName);
+
+            Assert.AreEqual(1, submissionCount);
+            Assert.AreEqual("origin_loose", submittedProfile.originId);
+            Assert.AreEqual("jiangzuo_hub", submittedStartNodeId);
+            CollectionAssert.IsEmpty(submittedProfile.availableSpells);
+            CollectionAssert.IsEmpty(submittedProfile.equippedSpells);
+        }
+
+        [TestCase("origin_loose", 0, 0, 10, "jiangzuo_hub")]
+        [TestCase("origin_sect_servant", 1, 0, 9, "jiangzuo_hub")]
+        [TestCase("origin_minor_clan", 2, 0, 8, "guanzhong_hub")]
+        [TestCase("origin_debt_exile", 0, 2, 12, "jiangzuo_hub")]
+        public void OriginSelectionAppliesExistingBudgetAndStartNodeWithoutReplacingDraft(
+            string originId, int used, int refunded, int remaining, string startNodeId)
+        {
+            ConfigureCreationController();
+            CharacterCreationDraft draft = creationController.Draft;
+            draft.CharacterName = "保留姓名修士";
+            InnateAttributeSet innate = draft.Innate;
+
+            Assert.IsTrue(creationController.SelectOrigin(originId));
+
+            Assert.AreSame(draft, creationController.Draft);
+            Assert.AreSame(innate, draft.Innate);
+            Assert.AreEqual(originId, draft.OriginId);
+            Assert.AreEqual("保留姓名修士", draft.CharacterName);
+            Assert.AreEqual("root_water_middle", draft.VisibleSpiritRootId);
+            var validation = CharacterCreationRules.Validate(draft, pointBuyConfig);
+            Assert.IsTrue(validation.IsValid, string.Join("|", validation.Errors));
+            Assert.AreEqual(used, validation.BudgetUsed);
+            Assert.AreEqual(refunded, validation.BudgetRefunded);
+            Assert.AreEqual(remaining, validation.BudgetAvailable);
+            creationController.Submit("选择出身存档", draft.CharacterName);
+
+            Assert.AreEqual(1, submissionCount);
+            Assert.AreEqual("选择出身存档", submittedSlotId);
+            Assert.AreEqual("保留姓名修士", submittedProfile.charName);
+            Assert.AreEqual(originId, submittedProfile.originId);
+            Assert.AreEqual(used, submittedProfile.creationBudgetUsed);
+            Assert.AreEqual(refunded, submittedProfile.creationBudgetRefunded);
+            Assert.AreEqual(startNodeId, submittedStartNodeId);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        [TestCase("origin_unknown")]
+        public void InvalidOriginSelectionLeavesEveryDraftFieldUntouched(string originId)
+        {
+            ConfigureCreationController();
+            Assert.IsTrue(creationController.SelectOrigin("origin_minor_clan"));
+            CharacterCreationDraft draft = creationController.Draft;
+            draft.VisibleSpiritRootId = "root_thunder_middle";
+            draft.HiddenRootSeedId = "hidden_variant_seed";
+            draft.CharacterName = "草稿姓名";
+            draft.FateTagIds.Add("fate_market_contact");
+
+            Assert.IsFalse(creationController.SelectOrigin(originId));
+
+            Assert.AreSame(draft, creationController.Draft);
+            Assert.AreEqual("origin_minor_clan", draft.OriginId);
+            Assert.AreEqual("root_thunder_middle", draft.VisibleSpiritRootId);
+            Assert.AreEqual("hidden_variant_seed", draft.HiddenRootSeedId);
+            Assert.AreEqual("草稿姓名", draft.CharacterName);
+            CollectionAssert.AreEqual(new[] { 8, 8, 8, 8, 8 }, new[]
+                { draft.Innate.RootBone, draft.Innate.Soul, draft.Innate.DivineSense, draft.Innate.Aptitude, draft.Innate.Fortune });
+            CollectionAssert.AreEqual(new[] { "fate_market_contact" }, draft.FateTagIds);
+            CollectionAssert.AreEqual(new[] { "craft_alchemy", "craft_talisman", "craft_herb" },
+                draft.CraftSkills.Select(skill => skill.SkillId).ToArray());
+            Assert.IsTrue(draft.CraftSkills.All(skill => skill.Level == 1));
+            Assert.AreEqual(0, submissionCount);
         }
 
         [Test]
@@ -263,6 +354,30 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void MinorClanLearnsAndEquipsOnlyTheTwoApprovedStarterArts()
+        {
+            var draft = CharacterCreationCatalog.CreateDefaultDraft();
+            draft.OriginId = "origin_minor_clan";
+            CharacterData profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
+            try
+            {
+                var expected = new[] { "spell_guanshiji", "spell_julingshu" };
+                Assert.IsTrue(string.IsNullOrEmpty(profile.gongFaName));
+                Assert.AreEqual(2, profile.maxSpellSlots);
+                CollectionAssert.AreEqual(expected, profile.availableSpells);
+                CollectionAssert.AreEqual(expected, profile.equippedSpells);
+                CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+                CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.KnownSpells);
+                CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.EquippedSpells);
+                Assert.AreEqual("basic_unarmed", runtime.UnarmedBasicAttackProfileId);
+            }
+            finally
+            {
+                Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
         public void DormantHiddenRootDoesNotChangeRuntimeDerivedCombatStats()
         {
             var baselineDraft = CharacterCreationCatalog.CreateDefaultDraft();
@@ -299,6 +414,20 @@ namespace TianZhang.Tests
         {
             Assert.Throws<System.ArgumentNullException>(() =>
                 CharacterCreationRules.Validate(CharacterCreationCatalog.CreateDefaultDraft(), null));
+        }
+
+        private void ConfigureCreationController()
+        {
+            creationPanel = new GameObject("CharacterCreationTestController");
+            creationController = creationPanel.AddComponent<CharacterCreationController>();
+            submissionCount = 0;
+            creationController.Configure(null, pointBuyConfig, (slot, profile, start) =>
+            {
+                submissionCount++;
+                submittedSlotId = slot;
+                submittedProfile = profile;
+                submittedStartNodeId = start;
+            });
         }
 
         private static CharacterCreationPointBuyConfig CreatePointBuyConfig()

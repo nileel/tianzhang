@@ -41,7 +41,11 @@ namespace TianZhang.Combat
             int combatSwapsUsed = 0,
             string basicAttackProfileId = null,
             IEnumerable<string> equippedDivineProfileIds = null,
-            IEnumerable<string> availableDivineProfileIds = null)
+            IEnumerable<string> availableDivineProfileIds = null,
+            int rawSpirit = 0,
+            string realmStage = null,
+            string visibleRootElement = null,
+            string visibleRootGrade = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
@@ -49,6 +53,8 @@ namespace TianZhang.Combat
                 throw new ArgumentOutOfRangeException(nameof(currentHealth));
             if (movePoints < 0 || maxCombatSwaps < 0 || combatSwapsUsed < 0 || combatSwapsUsed > maxCombatSwaps)
                 throw new ArgumentOutOfRangeException(nameof(movePoints));
+            if (rawSpirit < 0)
+                throw new ArgumentOutOfRangeException(nameof(rawSpirit));
 
             Id = id;
             Team = team;
@@ -70,6 +76,10 @@ namespace TianZhang.Combat
             BasicAttackProfileId = basicAttackProfileId ?? string.Empty;
             MaxCombatSwaps = maxCombatSwaps;
             CombatSwapsUsed = combatSwapsUsed;
+            RawSpirit = rawSpirit;
+            RealmStage = realmStage;
+            VisibleRootElement = visibleRootElement;
+            VisibleRootGrade = visibleRootGrade;
         }
 
         public string Id { get; }
@@ -85,6 +95,10 @@ namespace TianZhang.Combat
         public int PhysicalDefense { get; }
         public int SoulDefense { get; }
         public float RealmMultiplier { get; }
+        public int RawSpirit { get; }
+        public string RealmStage { get; }
+        public string VisibleRootElement { get; }
+        public string VisibleRootGrade { get; }
         public int MaximumMovePoints { get; }
         public int MovePoints { get; private set; }
         public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
@@ -165,6 +179,13 @@ namespace TianZhang.Combat
                 return false;
             CurrentSpirit -= amount;
             return true;
+        }
+
+        public void RestoreSpirit(int amount)
+        {
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+            CurrentSpirit += Math.Min(amount, MaximumSpirit - CurrentSpirit);
         }
 
         public void SetCooldown(string profileId, int ticks)

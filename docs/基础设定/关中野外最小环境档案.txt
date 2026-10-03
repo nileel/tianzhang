@@ -10,7 +10,7 @@
 | 绑定冒险 | `guanzhong_wild`（`AdventureSceneController` 单入口） |
 | 数据源 | `src/Assets/DataConfig/EnvironmentProfiles.csv` — 唯一行 |
 | 运行时 asset | `src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset` |
-| 契约 | 七字段：`profileId`、`queryLimits`、`battlefieldCells`、`surfacePrototypeRefs`、`phenomenonChannels`、`phenomenonPairs`、`elementRelationRefs`；导入器从格位确定性生成 asset 的 `directedEdges` |
+| 契约 | 八字段：`profileId`、`queryLimits`、`battlefieldCells`、`surfacePrototypeRefs`、`phenomenonChannels`、`phenomenonPairs`、`elementRelationRefs`、`spiritRecoveryEnvironment`；导入器从格位确定性生成 asset 的 `directedEdges` |
 | 后续绑定 | 由 `U-2_5D-01D` 的 `SpatialQueryBoardFactory` 从正式 `AdventureScene` 显式读取本档案后，迁移旧战斗范围分支 |
 
 ## 契约字段与规则回链
@@ -72,6 +72,12 @@
 | `element_water` | 同上 — 水行（含冰） |
 
 导入器 `ParseElementRelationReferences` 要求五行引用恰好各一次，并为每种关系回调 `docs/基础设定/五行显化与环境交互规则.txt#一` 的灵域相生/相克链与 `docs/基础设定/元婴锚点与金丹位格矩阵.txt` 的五行数值关系。
+
+### 6. `spiritRecoveryEnvironment` — 整个战斗区域的恢复环境类别
+
+按已批准的 `docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md#环境与内核所有者`，关中野外正式档案固定为 `ordinary`。该值声明整个档案绑定战斗区域都是普通恢复环境；不能因为地图某处存在节点、草地、黄土、名称或视觉效果而推导全图双倍恢复。
+
+此字段必填，仅允许 `ordinary`、`spirit_vein_node`、`blessed_land`；沿 CSV → WorldContentImporter → Definition／Runtime → Asset → CombatEntryAdapter → CombatSession 传递，缺失或未知类别失败关闭。正式关中聚灵术环境倍率为 1；灵脉节点、洞天福地的倍率 2 只可由相应明确配置的区域声明，本档案不新增此类节点。混合区域属于未来地图设计，不能用本字段表达“某处存在节点”。
 
 ## 与正式冒险入口的绑定关系
 

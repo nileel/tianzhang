@@ -127,7 +127,9 @@
     "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
     "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs.meta",
     "src/Assets/Scenes/StartMenuScene.unity",
-    "src/Assets/Scenes/StartMenuScene.unity.meta"
+    "src/Assets/Scenes/StartMenuScene.unity.meta",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -224,3 +226,19 @@
 - 所有者：StartMenuSceneBuilder局部更新CharacterCreationPanel及已有View序列化引用；Controller选择事件写Draft.OriginId并以单独刷新方法保持槽名与姓名输入，Submit仍走原验证和创建流程。Installer/Catalog/Models无需新增接缝；禁止整体重建菜单或改存档列表。
 - 直接测试在既有CharacterCreationTests覆盖默认值、四项选择、非法ID、输入保留和重复配置；GuanzhongStarterArtsPlayModeTests改由正式按钮选小族，移除直接改Draft.OriginId的入口捷径。主责在双分辨率实际StartMenu按钮点击后取得两术法可见施放证据。
 - 该补全仍是两术法从建角装配到正式施法同一纵向结果。入口实现有界，Sol/medium独占上述三个C#生产文件；测试由Sol/high独占两个既有测试文件。子智能体不得写场景/任务卡/队列/提交/runtime/锁或派生，主责统一场景生成、验证、完整diff和唯一candidate。
+
+
+## 2026-10-03 用户实机发现的存档入口阻塞
+
+- 用户明确报告开始菜单存档按钮纯白无法识别，实际点最上方；真实菜单首项SaveSlot_001/Label文本为001 · 李林，旧槽无术法；新槽test保存两术法完整。只按角色名无法区分，不修改旧档补赠或排序。
+- 只读现场证实按钮Image与Label颜色均RGBA(1,1,1,1)；slot按钮实际100×100而preferredHeight48；内层列表childControlWidth/Height均false，外层width控制false，15槽把新建按钮压到100×15.91并越屏。证据在src/Logs/spells/white-slot-*-before.json与StartMenuPanel/SaveSlotContainer/NewPlayerButton-before.json。
+- 本次用户反馈授权解除此前禁止修改存档列表的局部边界，仅修正开始菜单可辨认、可滚动选槽。新增StartMenuView.cs及.meta字面路径；在现有Builder局部生成SaveSlotScroll/Viewport/原slotContainer，使用Unity内置ScrollRect/RectMask2D/ContentSizeFitter，原View负责颜色/字号/行高。不得改全局helper、存档读写/排序/默认出身、角色数据、其他界面或整体重建菜单。
+- 所有者：StartMenuView.CreateSlotButton是唯一行创建/文字写入点；StartMenuController.RefreshSlots调用ShowSlots；Builder拥有局部布局与View引用。原newPlayerButton为本面板按钮样式参考；无运行时样式writer覆盖。子智能体Sol/medium只读核对局部布局方案，主责独占实现/场景/证据/提交。
+- 直接验收：真实现有存档两分辨率编号姓名可读，新建按钮不挤薄，列表滚到test可按明确槽ID加载，第一玩家行动前导出并见两术法。局部Builder持久化、直接编译及正式链定向验证；未改输入不扩大既有测试范围。若需新框架、其他所有者或存档语义则停止。
+
+## 2026-10-03 用户授权先提交当前成果
+
+- 用户在工作树盘点后明确要求“该合并的都先提交吧”。据此将本树当前64个实际变更路径在原SPELLS分支形成检查点提交；这是保全现有实现的本地提交，不是完成candidate、归档或主线集成，不把测试fixture写成真实验收。提交前原65路径中Spell_spell_julingshu.asset只有行尾空白，项目脚本清理后与HEAD一致，因此不产生该文件提交差异；其余7个场景/资产同样只清理行尾空白并逐字串核对语义未变。
+- 沿用开发管理/关中两术法正式施法验证记录.txt中的既有EditMode/PlayMode、BattleSim直接契约校验、数据链及1366/1920真实正常施法证据，不重复输入未变的已通过检查。真实缺灵力/非法目标禁用或拒绝仍未完成；普通角色输入交付SHA256仍为37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492，来源限制保持原文。
+- 本树仍基于efca74b4，尚未消费主线CAMERA和MOVE实现；必须随后逐完整方法保留两术法与MOVE共享接缝，禁止整文件覆盖。route/owner/stage/dispatchState、队列和下游前置均不变，不更改定时配置或stash。
+- 提交只含本卡已有允许路径的源码、内容、场景、测试、验证记录与输入交付；日志/截图等忽略内容继续留在原树。主目录、其他工作树、用户存档和实验现场均保留。

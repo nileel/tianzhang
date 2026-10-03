@@ -27,6 +27,10 @@ MonoBehaviour:
   healAmount: 0
   buffMultiplier: 0
   defensePenetration: 0
+  spiritRecoveryMultiplier: 0
+  minimumSpiritRecovery: 0
+  otherTargetResourceCost: 0
+  otherTargetRecoveryMultiplier: 0
   resourceKind: 1
   resourceCost: 0
   cooldownTicks: 0

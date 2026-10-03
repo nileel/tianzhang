@@ -50,11 +50,17 @@ namespace TianZhang.Features.CharacterCreation
                 typeof(Button),
                 typeof(LayoutElement));
             go.transform.SetParent(slotContainer, false);
-            go.GetComponent<LayoutElement>().preferredHeight = 48f;
+            go.GetComponent<Image>().color = new Color(0.2f, 0.34f, 0.3f, 1f);
+            LayoutElement rowLayout = go.GetComponent<LayoutElement>();
+            rowLayout.minHeight = rowLayout.preferredHeight = 48f;
+            rowLayout.flexibleHeight = 0f;
             var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
             labelGo.transform.SetParent(go.transform, false);
             Text label = labelGo.GetComponent<Text>();
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 18;
+            label.color = new Color(0.91f, 0.88f, 0.77f, 1f);
+            label.raycastTarget = false;
             label.alignment = TextAnchor.MiddleCenter;
             label.text = slot.CanLoad
                 ? slot.SlotId + " · " + slot.DisplayName

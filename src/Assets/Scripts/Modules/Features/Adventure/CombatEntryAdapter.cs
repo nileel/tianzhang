@@ -55,7 +55,13 @@ namespace TianZhang.Features.Adventure
                 session = new CombatSession(
                     new[] { spawned.Player, spawned.Enemy },
                     profiles,
-                    new SpatialCombatQuery(spatial.Board));
+                    new SpatialCombatQuery(spatial.Board),
+                    spatial.Environment.SpiritRecoveryEnvironment switch
+                    {
+                        SpiritRecoveryEnvironment.Ordinary => 1f,
+                        SpiritRecoveryEnvironment.SpiritVeinNode or SpiritRecoveryEnvironment.BlessedLand => 2f,
+                        _ => throw new ArgumentException("spirit_recovery_environment_not_configured"),
+                    });
                 reason = null;
                 return true;
             }
@@ -82,9 +88,16 @@ namespace TianZhang.Features.Adventure
                     AttackEffectType.Magic => CombatAttackEffect.Soul,
                     AttackEffectType.Hybrid => CombatAttackEffect.Hybrid,
                     AttackEffectType.Heal => CombatAttackEffect.Heal,
+                    AttackEffectType.RestoreSpirit => CombatAttackEffect.RestoreSpirit,
                     _ => (CombatAttackEffect)(-1),
                 };
                 if ((int)effect < 0) continue;
+                string realmRequirement = profile.realmRequirementId;
+                string elementRequirement = profile.elementRequirementId;
+                Func<string, string, string, bool> qualification = profile.profileKind == AttackProfileKind.Basic
+                    ? null
+                    : (realmStage, rootElement, rootGrade) => AbilityRequirementPolicy.IsSatisfied(
+                        realmStage, rootElement, rootGrade, realmRequirement, elementRequirement);
                 result.Add(new CombatAttackProfile(
                     profile.attackProfileId,
                     profile.profileKind switch
@@ -103,7 +116,12 @@ namespace TianZhang.Features.Adventure
                     profile.resourceCost,
                     profile.cooldownTicks,
                     profile.damageElementId,
-                    profile.defensePenetration));
+                    profile.defensePenetration,
+                    profile.spiritRecoveryMultiplier,
+                    profile.minimumSpiritRecovery,
+                    profile.otherTargetResourceCost,
+                    profile.otherTargetRecoveryMultiplier,
+                    qualification));
             }
             if (result.Count == 0 || result.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() != result.Count)
             {

@@ -62,6 +62,7 @@ namespace TianZhang.Editor
             "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
             "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
             "isDomain", "isBloodline", "specialEffectTextKey",
+            "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost", "otherTargetRecoveryMultiplier",
         };
 
         [MenuItem("天章/导入术法配置")]
@@ -295,6 +296,10 @@ namespace TianZhang.Editor
             public int HealAmount;
             public float BuffMultiplier;
             public float DefensePenetration;
+            public float SpiritRecoveryMultiplier;
+            public int MinimumSpiritRecovery;
+            public int OtherTargetResourceCost;
+            public float OtherTargetRecoveryMultiplier;
             public AttackResourceKind ResourceKind;
             public int ResourceCost;
             public int CooldownTicks;
@@ -332,6 +337,10 @@ namespace TianZhang.Editor
                 asset.healAmount = HealAmount;
                 asset.buffMultiplier = BuffMultiplier;
                 asset.defensePenetration = DefensePenetration;
+                asset.spiritRecoveryMultiplier = SpiritRecoveryMultiplier;
+                asset.minimumSpiritRecovery = MinimumSpiritRecovery;
+                asset.otherTargetResourceCost = OtherTargetResourceCost;
+                asset.otherTargetRecoveryMultiplier = OtherTargetRecoveryMultiplier;
                 asset.resourceKind = ResourceKind;
                 asset.resourceCost = ResourceCost;
                 asset.cooldownTicks = CooldownTicks;
@@ -527,6 +536,20 @@ namespace TianZhang.Editor
             Func<string, string> required,
             Action<string> requireEmpty)
         {
+            if (row.EffectType == AttackEffectType.RestoreSpirit)
+            {
+                row.SpiritRecoveryMultiplier = ParseNonNegativeFloat(required("spiritRecoveryMultiplier"), "spiritRecoveryMultiplier");
+                row.MinimumSpiritRecovery = ParseNonNegativeInt(required("minimumSpiritRecovery"), "minimumSpiritRecovery");
+                row.OtherTargetResourceCost = ParseNonNegativeInt(required("otherTargetResourceCost"), "otherTargetResourceCost");
+                row.OtherTargetRecoveryMultiplier = ParseNonNegativeFloat(required("otherTargetRecoveryMultiplier"), "otherTargetRecoveryMultiplier");
+            }
+            else
+            {
+                requireEmpty("spiritRecoveryMultiplier");
+                requireEmpty("minimumSpiritRecovery");
+                requireEmpty("otherTargetResourceCost");
+                requireEmpty("otherTargetRecoveryMultiplier");
+            }
             bool physical = row.EffectType is AttackEffectType.Physical or AttackEffectType.Hybrid;
             bool magic = row.EffectType is AttackEffectType.Magic or AttackEffectType.Hybrid;
             if (physical)
@@ -710,6 +733,7 @@ namespace TianZhang.Editor
             "debuff" => AttackEffectType.Debuff,
             "movement" => AttackEffectType.Movement,
             "hybrid" => AttackEffectType.Hybrid,
+            "restore_spirit" => AttackEffectType.RestoreSpirit,
             _ => throw new InvalidDataException("attack_profile_effect_type_invalid"),
         };
 

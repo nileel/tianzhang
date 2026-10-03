@@ -76,8 +76,8 @@ namespace TianZhang.Bootstrap
                         "adventure_map_unresolved:" + runtime.Navigation.AdventureId);
                 UiText.Load(languageTable);
                 adventureHud.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
-                encounterCoordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
-                combatActionBar.ConfigureText(ResolveAttackProfileName);
+                encounterCoordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"), ResolveAttackProfileName);
+                combatActionBar.ConfigureText(ResolveAttackProfileName, reason => UiText.ReasonDisplay(reason, "操作未完成"));
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
                 combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
                 combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);

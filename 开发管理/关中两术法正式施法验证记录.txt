@@ -1,0 +1,175 @@
+# 关中两术法正式施法验证记录
+
+## 2026-10-03 续接检查点：未完成、未提交
+
+- 本记录只保存已经发生的实现与验证，不代表正式可见验收通过。任务仍为 U-GZ-PLAYTEST-SPELLS-01，ready；没有业务 candidate，没有归档，没有集成。
+- 工作树：D:\天章游戏开发\.worktrees\manual\U-GZ-PLAYTEST-SPELLS-01。当前 HEAD e88b469c590fd4f19ebe1d4e08e7d16e2d084a7f；主线同 HEAD，包含 HP 59f019566f23b7d9a7fc8da2c61aa96ead7f8b1f 及本卡出身入口准备 e88b469c。
+- 本轮已消费的风险预检 task digest：817344d360d7671fc4db2cc908fd7311abc48798619de38cb9376f76cbc94acb；matched/gates 为空。继续前核对最新卡、索引和允许路径，发生规定触发条件则重跑，不直接沿用过时投影。
+- 合并前备份 stash 名称 spells-before-hp-origin-prep-20261003 已应用到当前工作树，仅保留作现场备份，不可再次 apply。同行动轴备份 timeline-formal-verified-before-hp-20261003 一样不删除。
+
+## 已批准事实与当前实现
+
+- 用户批准第二术法采用新增无门派练气攻击术法，冻结为贯石击 spell_guanshiji；另一项为聚灵术 spell_julingshu。参数和边界以 docs/superpowers/specs/2026-10-01-guanzhong-two-starter-arts.md 原文为准。
+- 用户批准在正式建角界面接入四种既有出身选择，默认寒门、既有预算、资格、起点均不改变。不再等待此决定。
+- 两术法原实现已贯通建角 AbilityLoadout、快照、保存读回、正式 AttackProfiles、Art 命令、费用/目标资格、资源恢复与两个独立按钮；具体生产修改全部保留在本工作树。正式小族新角色两项装配，不为旧档补赠能力或推断未知灵根。
+- HP 合并时保留 Presenter 血条配置/刷新及既有术法输入上下文，AdventureScene 以 HP 主线为底，再用局部 RebuildStarterArts 生成；src/Logs/spells/rebase-arts-import.log 退出 0。额外 71 个术法资产仅尾空白的导入噪声已经逐项确认并还原。
+- Sol/medium 子智能体独占 CharacterCreationView.cs、CharacterCreationController.cs、StartMenuSceneBuilder.cs；Sol/high 独占 CharacterCreationTests.cs 与 GuanzhongStarterArtsPlayModeTests.cs。两者均已交回且不再写入；主责复核、生成场景、运行测试，不存在子智能体提交或自动化操作。
+- 四按钮直接消费 Catalog；Controller.SelectOrigin 拒绝未知 ID，更新 Draft 后通过 Rules.Validate 刷新预算、起点、选中态；单独刷新不重置槽名与姓名。局部 RebuildOriginSelection 仅修改创建角色面板、控件与引用，未整体重建菜单。
+
+## 已运行的定向验证
+
+- 出身入口补充前：src/Logs/spells 下既有 EditMode 121/121、PlayMode 11/11 通过，BattleSim 构建及完整运行通过，数据链 84/84 与 613 语言键通过。相关原始结果留在原日志目录。此前测试直接设置 Draft.OriginId 为小族，只证明底层链路，不能证明实际可见入口。
+- 新出身规则测试：src/Logs/spells/origin-editmode.xml，9/9 通过。覆盖默认寒门、四种出身预算/起点、非法 ID 保持原草稿。
+- 首次入口 PlayMode：src/Logs/spells/origin-playmode.xml，0/1；正式创建面板的四按钮各宽 20.5，而选中文字 preferredWidth=102、preferredHeight=126。已确认父 VerticalLayoutGroup 未控制子项宽度，不能把本次失败作为通过证据。
+- 唯一修复：在既有 StartMenuSceneBuilder.BuildOriginSelection 对创建角色面板设置 childControlWidth=true；不改全局布局 helper，不加偏移或回退。局部再生成日志 origin-width-import.log 退出 0。
+- 修复后同一测试 AllFormalOriginButtonsPreserveInputsAndReplaceRepeatedConfigurationCallbacks：src/Logs/spells/origin-width-playmode.xml，1/1 通过；日志 origin-width-playmode.log。实际按钮/标签宽 215.5、高 48，选中文字 preferred=102×18、28 顶点、1 行；普通文字 preferred=60×18、16 顶点、1 行。四项点击、输入保留和重复配置事件验证通过。该批处理分辨率为 640×480，绝不能替代要求的双分辨率实际可见验收。
+- 上述批处理 Unity 进程 PID 29736 已结束。只剩行动轴工作树的交互式 Unity 现场，不能误杀或把它当成本卡项目锁。
+
+## 下一步：先消费现场，再继续实施
+
+1. 新正式链测试 FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness 已于本日后续运行1/1通过，见下方最新节；通过 StartMenu 新建按钮、四出身按钮中的小族、创建按钮进入，不再直接修改 Draft.OriginId 或先天。下一步转真实可见入口，不能把该受控测试当作可见验收。
+2. 从本工作树 src 的 StartMenuScene 正式可见入口新建小族角色，实际检查四出身控件，再进入关中战斗；在 1920×1080 与 1366×768 逐项点击两术法、核对真实费用/资源/拒绝/结束行动及保存读回。没有这组证据不能完成本卡。
+3. src/Logs/spells/ordinary-player-input.json 为此前直接指定小族测试导出，不得冒称新出身按钮的可见证据。新正式入口通过后重新导出真实普通小族快照到任务允许的 开发管理/关中首战普通角色输入.json，供 N-GZ-PLAYTEST-BALANCE-01 消费；不能先把旧 JSON 改名当完成。
+4. 主线在本记录时 Show 为 schema 5、activeTaskIds=[]、codex/deepseek run 均 null、integrationLockStatus=none；定时配置未改。后续集成仍必须重新读取主线 Show、卡/队列和路径冲突，并经 invoke-project-integration.ps1。
+5. ProjectSettings.asset 存在 Unity 会话生成的未提交差异，尚不属于本卡允许路径；提交前核实完整差异，仅还原确认属于本次的无关噪声，不扩充范围或误收提交。
+
+## 同批次交接边界
+
+- 用户要求上下文过长时停止并给新对话提示词，本次在上述单项复验结束后停止，不再扩跑整个批次。
+- 行动轴实现另在 .worktrees/manual/U-GZ-PLAYTEST-TIMELINE-01，详细检查点在该树 开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt。它尚未完成：HP 合并后的 1920×1080 待机现场出现敌方头顶文字缺字，m_Text 正确但实际字形不全，根因未确定；保留截图和只读探针，不用猜测性字体/偏移补丁。
+- 已批准精确关闭的旧术法 run 7583741b-3163-41f3-a7b5-15033d5c0376 与 HP run afd4e6f7-21cb-4edc-83df-b0b2eb3525bc 均已按失败处置，现场保留；本卡无需重复请求这些已给授权。
+- 最终 V-GZ-PLAYTEST-FLOW-01 还需 N-GZ-PLAYTEST-BALANCE-01 等真实前置；V-GZ-ART-SLICE-01 最终接受仍由用户确认。当前不是整批完成。
+
+## 2026-10-03 09:40后续检查点：正式链1/1通过，可见验收未做
+
+- 本树与主线HEAD仍e88b469c；未提交、未归档、无candidate、未集成、未操作定时配置。原全部实现、两个已应用的备份stash和其他工作树保留。
+- 本轮重新运行风险预检，taskCardDigest=817344d360d7671fc4db2cc908fd7311abc48798619de38cb9376f76cbc94acb，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，mustRead/matched/gates为空。Sol/high只读复核新正式链按钮调用，没有确认新缺陷。
+- 实际新运行：TianZhang.Tests.PlayMode.GuanzhongStarterArtsPlayModeTests.FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness；src/Logs/spells/formal-origin-chain-playmode.xml为total=1/passed=1/failed=0，配套formal-origin-chain-playmode.log。批处理PID10256已退出。此次没有重跑不受影响的规则/全套测试。
+- 上述测试通过后，Sol/high获主责独占授权，仅在允许的GuanzhongStarterArtsPlayModeTests.cs内增加Editor菜单“天章/诊断/导出当前正式两术法角色”。读取当前真实runtime/spawned/session，校验五项先天8、两术法已知与装配、裸魂魄、普通环境和当前生产随机源类型，独立导出src/Logs/spells/visible-ordinary-player-input.json。原测试与导出逻辑保留。新增菜单尚未编译、主责尚未最终复核、尚未真实调用，不可声称JSON已取得。
+- 运行时快照/存档没有出身字段，导出originId留空并写明限制，必须关联本轮真实StartMenu“小族”选中截图；当前生产随机源类型只证明当前类型，不证明历史/种子。不得把旧ordinary-player-input.json改名当作新入口证据。
+- 下一步先主责复核/编译菜单，然后真实StartMenu新建小族、确认四出身与槽名姓名，取得1920×1080及1366×768两术法可见施法和费用/恢复/拒绝/结束行动/保存读回证据，调用菜单后再按冻结合同整理普通角色输入。测试通过不替代这些完成门。
+- ProjectSettings.asset本轮检查为androidAppCategoryOther和qnxGraphicConfPath两行尾空白差异；不在允许路径，最终仍须核实最新差异后只还原确认的噪声，不误收提交。
+- TIMELINE缺字根因现已确认：1366→1920后敌方Text保留旧preferred框宽，字符串不变导致行布局不失效，Wrap后第二行被32高截断；不是图集缺字。详见同行动轴卡“09:40后续检查点”及两份health-text日志。最小候选owner为CombatUnitHealthBarView.cs，尚未冻结新增路径、尚未修复。当前交互Unity仍属TIMELINE，PID7728；下次重新枚举，不能误关现场。
+- 本轮主线Show返回两个run空、activeTaskIds=[]、integrationLockStatus=unknown，更新早先记录的锁信息；集成前须重新按受保护流程核验，不能按旧none直接集成。CAMERA保持原未完成状态；未扩大检查其他backlog。
+
+## 2026-10-03 10:12后续检查点：TIMELINE已集成，SPELLS转真实入口
+
+- 本节更新09:40节与早先交接的TIMELINE状态：行动轴和缩放缺字已完成、归档并经受保护入口fast-forward到主线efca74b4e5304e6e1fff56203c20d23c370e46e6。完成证据读取主线开发管理/任务归档/U-GZ-PLAYTEST-TIMELINE-01.txt的10:08完成检查点；原活跃卡已移走。当前主线ready队列只余SPELLS，本整批授权仍继续适用，不改为普通“1”单卡模式。
+- 本SPELLS工作树HEAD仍e88b469c，原未提交实现完整保留，本轮未编译新导出菜单、未启动本树Unity、未取得真实施法或新普通角色JSON。TIMELINE树HEAD为efca74b4且已干净，保留原目录及日志；CAMERA树仍cd797cf7且原未提交工作保留。两个旧stash早已应用，本轮没有重复apply或删除，也没有新建stash。
+- 写本检查点前重新消费本卡预检：taskCardDigest=817344d360d7671fc4db2cc908fd7311abc48798619de38cb9376f76cbc94acb，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates/gatePointers为空，schema2的explicitRefs/matched/gates为空且一致。未扩大SPELLS允许路径。
+- 两树ProjectSettings.asset已重新核实完整差异，确实仅androidAppCategoryOther与qnxGraphicConfPath两行尾空白，已仅还原这两份噪声，不再留待提交处理。下次Unity运行后如又生成差异，仍须按最新差异判断。
+- TIMELINE最新实机为从StartMenu真实新建默认寒门“无名修士”，槽timeline-layout-fix-1003，经关陇/关中/野外/石甲兽；1366 tick13与切1920尚未改资源、1920待机后tick19均完整显示。敌身份/生命/灵力框60/107/103，preferredHeight29/26/26，mesh12/36/36；截图15/16/17、health-text的015808/015908/020023三份日志留在TIMELINE src/Logs/timeline。受影响HP+TIMELINE正式链layout-fix-formal.xml为2/2。以上是行动轴/HP布局证据，不替代本卡两术法与小族证据。
+- 本轮主责实际模型gpt-6-astra，Sol/high分别只读核查TIMELINE布局与SPELLS真实入口/导出证据，Sol/medium只读核查CAMERA与直接前置；均未操作队列、提交、runtime、锁或派生。最后TIMELINE交互Unity PID26324与批处理PID24392均正常退出；当前无本轮Unity现场。续接必须重新枚举进程/窗口，不能复用历史PID7728或句柄。
+- SPELLS下一步先在保留未提交现场的前提下消费最新主线TIMELINE结果，核对并处理共享Coordinator/Presenter/Installer/Builder/AdventureScene逻辑接缝；不要覆盖术法实现或重新应用旧stash。重新核对任务字面路径、运行时owner及风险预检后，再复核/编译只读ExportCurrentVisibleOrdinaryInputs菜单。
+- 实机路线必须是真实StartMenu新建按钮→小族按钮（保留槽名姓名，记录预算/起点/选中态）→创建→关陇→关中；保存返回菜单再加载同一槽，接石甲兽悬赏→野外→真实战斗。新增FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness的1/1结果只证明受控按钮链，测试后旧ordinary-player-input.json不能当新可见入口证据。
+- 每个目标分辨率在第一次玩家行动、施法前调用“天章/诊断/导出当前正式两术法角色”，即时另存带分辨率的visible-ordinary-player-input.json副本，防止菜单默认文件被覆盖。导出读取当前spawned资源，施法后导出不能冒称首战初始输入。没有存档出身字段，originId仍留空并关联真实小族选中截图；生产随机源类型只能证明当前类型。
+- 继续真实按钮验证贯石击和聚灵术、费用/恢复/拒绝/结束行动及保存读回，分别取得1920×1080和1366×768可见证据。按真实随机结果记命中或未命中，不为了成功替换生产随机源。普通小族贯石击费12，聚灵对己恢复5；对敌聚灵费20且敌方满灵力时恢复0可以是合法结果。以当场runtime/战报/任务冻结验收为准；验收后才整理允许的开发管理/关中首战普通角色输入.json。
+- 真实StartMenu多存档时出现标题/新建按钮被挤薄与存档列表白条，重开仍在；当时14个有效schema3存档，静态代码显示SaveSlotContainer的childControlHeight=false与按钮默认100高，但尚无菜单运行几何，不能据此直接补丁。新建按钮实际仍可点击，本轮按真实点击完成建角，未调用回调绕过、未删存档。若该现象妨碍SPELLS入口，先量化并冻结必要owner，不顺带重写菜单框架。
+- CAMERA仍缺实际按住键盘平移与中键拖动证据；现有sky文档API没有hold时长/keyDown/up或drag鼠标按钮，不把瞬时按键/左键普通拖动或注入fixture当证据。其既有EditMode4/4与PlayMode6/6输入未变，不重跑来冒充实机。
+- 直接依赖按真实完成事实消费：MOVE-UI仍需CAMERA（MOVE-RULE/BASE-FIT已完成）；TARGET需MOVE-UI，TIMELINE/TEXT已完成；PREVIEW需TARGET/MOVE-UI/SPELLS；LAYOUT需CAMERA/MOVE-UI/SPELLS/TARGET/PREVIEW。只核对当前选中叶子的直接前置并完整准备，不重审整个backlog或单纯移除blockedBy。V-FLOW缺数值等前置时保持真实状态，V-ART最终由用户确认。
+- TIMELINE集成前从主工作区重新读取schema5 Show：codex/deepseek run均null、activeTaskIds=[]、integrationLockStatus=none；主线仍e88b469c、原卡codex_execute/codex/ready及队列未变、无路径冲突，然后invoke-project-integration.ps1返回integrated到efca74b4。unknown根因是无run时未传RepositoryRoot，后续Show显式传D:/天章游戏开发；这不免除每次集成重新检查。定时配置始终未改，主工作区的无关改动原样保留。
+- 按用户上下文过长即保存检查点并停止的要求，在本卡真实入口验证之前停下。续接仍沿用整批授权和三个原工作树；TIMELINE已完成，不再修一次缺字。后续每卡维持预检、字面路径、最小充分验证、路径限定提交、归档和受保护集成。
+
+## 2026-10-03 13:19后续检查点：已消费TIMELINE，转用户实机操作
+
+- 用户继续整批授权，并明确由其自行打开项目操作，主责提供验收步骤、读取证据；不再自动控制本轮交互Unity。主工作区仍efca74b4，SPELLS树已安全fast-forward至efca74b4，原全部术法/出身实现保持未提交；CAMERA树未改，仍cd797cf7。没有归档、业务提交或主线集成，没有修改定时配置。两个旧stash未apply、未删除。
+- 消费主线前将全部62条dirty/untracked文件逐字节备份至src/Logs/spells/consume-timeline-20261003/working，manifest.json记录old/new/shared/paths；只暂时还原与主线交集的6文件后ff，再写入检查过的组合。所有非交集文件保持备份字节一致，唯一额外最小修改是导出菜单改读GameBootstrap.Runtime并检查已有Player，避免RequireRuntime潜在初始化副作用。
+- 组合保留SPELLS ArtActions/CanEndTurn与TIMELINE Timeline，Coordinator同时投影三者，Presenter保留SetContext(snapshot)/ClearContext和timeline/exploration显隐；Builder/Installer方法并存。AdventureScene保留SPELLS原79新增块与三profile，仅并入TIMELINE45新增块及4既有块字段；新增fileID无碰撞，未整体重建场景。
+- 写前与消费后风险预检均status=ok；taskCardDigest=817344d360d7671fc4db2cc908fd7311abc48798619de38cb9376f76cbc94acb，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates/gatePointers为空，与schema2投影一致。首次主仓显式RepositoryRoot的Show为两个run空、activeTaskIds=[]、integrationLockStatus=none；之后没有执行主线集成，正式集成仍必须重读。
+- 原生子智能体请求Sol/high只读共享接缝与导出、Sol/medium只读CAMERA证据与MOVE-UI直接前置、Astra/high只读SPELLS路径与冻结语义；会话名spells_seams、camera_evidence、spells_scope_check。工具只返回会话名，实际模型/强度未独立核实。均未编辑、提交、操作Unity/runtime/锁/队列或派生。checker确认62条修改路径均在主线卡expectedPaths，无新冻结语义冲突。
+- 本轮最小定向PlayMode：timeline-consumed-formal.xml total=2/passed=2/failed=0，测试为正式小族按钮/保存加载/两术法链及正式默认入口行动轴移动防御待机死亡重进链；日志timeline-consumed-formal.log退出0，批处理PID20920已退出。新只读导出菜单已经随本轮成功编译，但尚未在真实现场调用。测试仍使用受控链，不能冒充真人双分辨率证据。
+- 此次Unity再次产生ProjectSettings.asset两行尾空白，主责完整核对仅androidAppCategoryOther/qnxGraphicConfPath后单独还原。其余既有场景/导入产物尾空白仍留待正式路径限定暂存前按项目脚本处理；本轮未暂存，不把diff --check算通过。
+- 用户自行打开时发现其现有Unity指向主项目D:/天章游戏开发/src（PID12036），已告知主项目不含两卡未提交实现，应分别打开SPELLS或CAMERA工作树的src；不关闭用户窗口。
+- SPELLS仍缺：真实StartMenu四出身/小族选中→保存回菜单读同槽→关中接悬赏→野外石甲兽；1920×1080和1366×768每次在第一次玩家行动且施法前调用天章/诊断/导出当前正式两术法角色，保存带分辨率副本并关联小族截图；真实两按钮施法、费用/恢复/拒绝不消费、结束行动证据。当前不存在新的visible普通输入交付，不得把受控ordinary-player-input.json当真人结果。
+- CAMERA只读确认公开sky没有持键或中键drag能力，既有3个formal探针位置完全相同，不能算移动通过；用户已同意亲自操作。需键盘持续平移/松开停止、真实中键按住拖动、边缘、UI阻挡、失焦退出重进及重开size4证据；原4/4和6/6不重复冒充实机。MOVE-UI等继续依真实CAMERA完成前置；V-FLOW真实阻塞不变，V-ART由用户最终确认。
+
+## 2026-10-03 13:58检查点：白色存档按钮已局部修复，待用户继续施法
+
+- 用户报告导出ordinary contract mismatch及两个灰色无名术法，后说明因开始菜单白色按钮不可辨认而点击最上方。现场运行SPELLS树，Main Camera只有Transform/Camera/AudioListener，非CAMERA验收现场。新槽test的李林有两术法known/equipped、2槽、中品水；001是无术法旧李林。实际列表按槽ID ordinal排序，首项SaveSlot_001/Label为001 · 李林。未改旧档、角色装配或导出合同。
+- 实测白条根因：行Image与Label均RGBA1，行rect100×100而preferredHeight48，内层不控宽高、外层不控宽度，15槽使新建按钮100×15.91并越屏。证据white-slot-label-before.json、white-slot-button-before.json、StartMenuPanel-before.json、SaveSlotContainer-before.json、NewPlayerButton-before.json；用户截图user-no-arts-20261003.png保留。
+- 用户确认停止Play后，只修改StartMenuView.CreateSlotButton颜色/字号/行高；StartMenuSceneBuilder局部RebuildSaveSlotList及Build共用方法，原内容加入内置ScrollRect/RectMask2D/ContentSizeFitter，保留排序/回调/存档和出身面板。卡已按用户反馈更新局部边界并纳入StartMenuView.cs/.meta。
+- 写前预检taskCardDigest=55a3753518313f65d233f15a14f2befc9b011ac93826f6e6d661a2c87a2af201，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates/gatePointers为空，与schema2一致。Sol/medium只读核对局部方案，主责实施。现场编译无error CS，控制台0错误/4项既有warning；两个源码diff --check通过。check-data-chain通过：功法29/29、术法84/84、神通31/31、语言键613。
+- 已从真实Editor菜单局部生成并保存，再Play验证：1920×1080新建和存档行880×48，浅金字/深绿底；实际滚轮到末尾，test · 李林可见且内容裁切于viewport。1366×768同样可读，test文字18号、RGBA(.91,.88,.77,1)。截图menu-repaired-1920-top.png、menu-repaired-1920-scroll.png、menu-repaired-1366-scroll.png；数值NewPlayerButton-after-1920.json、SaveSlot_001-after-1920.json、test-label-after-1366.json。
+- 场景与局部修复前逐YAML块比较新增13块、移除原列表LayoutElement 1块、修改9个既有菜单/列表块，出身子树未改。没有整体重建菜单或修改全局helper。
+- 当前用户Unity PID35960停在SPELLS StartMenuScene Play，1366×768，已滚到test可见，尚未点test。交用户加载该槽，正式首战首次施法前导出。真实双分辨率术法施放和CAMERA仍未通过，无归档/提交/主线集成/定时变更，主线仍efca74b4。后续预检以当前卡digest核对，集成仍需重新显式主仓Show与卡/队列/锁/冲突。
+
+## 2026-10-03 14:01检查点：1366真实首战施法前导出已取得
+
+- 用户加载可辨认的新槽后亲自调用导出，文件写入14:00:05；主责只读检查当前PID35960/AdventureScene/Play，Game View为1366×768，行动轴tick13且当前玩家，战报仅战斗开始。截图formal-before-cast-1366-20261003-140005.png，按钮明确贯石击·石甲兽12MP/CT+10和聚灵术·李林0MP/CT+5。
+- 原始JSON已立即独立备份为src/Logs/spells/visible-ordinary-player-input-1366x768-20261003-140005.json，SHA256=7fee6ebf9fe24d5336ca8bae8b3a97658aea64ce880e8e1e067c110a984a6f9a。五先天均8；李林571/571HP、180/180MP，裸魂魄8、练气、中品水，两术法known/equipped完整；石甲兽839/839HP、108/108MP；ordinary环境1；两个当前随机源为生产System类型。originId仍空，原始JSON限制保留，当前类型不能证明历史/种子。
+- 此次为用户真实操作的施法前输入，不是受控测试ordinary-player-input.json。用户建角小族选中截图尚未在本会话取得，不用代码或同名存档替代该可见步骤；旧槽001无术法原因与当前槽区分已经明确。1920初始输入、双分辨率实际施法/费用/恢复/拒绝/结束行动仍待后续，尚不生成最终N卡交付或宣告SPELLS完成。
+
+## 2026-10-03 14:03检查点：1366真实贯石击已施放
+
+- 用户报告“已经施法”，当前正式1366×768战报为“李林：贯石击，伤害 55，消耗灵力 12”。只读UI探针确认李林生命571/571、灵力168/180；石甲兽生命784/839、灵力108/108；行动轴仍刻13；待机按钮变为结束行动。与14:00:05施法前导出相比，灵力减少12、敌生命减少55。
+- 证据为src/Logs/spells/cast-guanshiji-1366-CombatPlayerText.json、cast-guanshiji-1366-CombatEnemyText.json、cast-guanshiji-1366-WaitButtonLabel.json、cast-guanshiji-1366-TimelineTick.json、cast-guanshiji-1366-log.json及formal-after-guanshiji-1366-20261003.png。截图显示两术法按钮置灰，提示当前行动阶段不可执行，结束行动可用；这证明当前阶段状态，不冒充实际非法目标/低灵力点击拒绝验收。
+- 下一步由用户点击结束行动，待下次玩家行动对自己施放聚灵术，再读取恢复及战报；1920真实初始输入和双术法、小族选择可见证据仍待补齐。未提交、归档或集成，未改定时配置。
+
+## 2026-10-03 14:09检查点：1366真实聚灵术与结束行动已取得
+
+- 用户报告“已使用”后读取正式现场，1366×768、AdventureScene、刻27。战报依次为贯石击伤害55/耗灵12、李林结束行动、石甲兽普攻伤害62/结束行动、李林聚灵术恢复灵力5/消耗0。李林生命509/571、灵力173/180，石甲兽784/839、108/108。聚灵前168→173，实际恢复5；敌方普攻对应生命571→509。
+- 原始只读探针保存src/Logs/spells/cast-julingshu-1366-CombatPlayerText.json、cast-julingshu-1366-CombatEnemyText.json、cast-julingshu-1366-WaitButtonLabel.json、cast-julingshu-1366-TimelineTick.json、cast-julingshu-1366-log.json；真实窗口截图formal-after-julingshu-1366-20261003.png。两术法置灰并显示当前行动阶段不可执行，结束行动可用。1366真实两术法费用/恢复与上次结束行动后的调度已记录；尚不将阶段提示当作非法目标或低灵力的实际拒绝操作。
+- 下一步补1920×1080，同时取得真实StartMenu小族选中可见证据：用户停止Play，切分辨率，重新从StartMenu新建独立槽，选小族后先保留创建前画面，再记录创建/保存/回菜单读回同槽及施法前导出。当前test槽不覆盖。仍未提交/归档/集成，CAMERA与后续前置保持未完成状态，定时配置未动。
+
+## 2026-10-03 14:12检查点：1920真实小族选中已取得
+
+- 用户亲自停止并重开StartMenu后选择小族。只读现场为PID35960、StartMenuScene、Play，Game View Full HD 1920×1080（编辑器显示缩放0.8）。截图formal-minor-clan-selected-1920-20261003.png显示四出身按钮与“已选 · 小族子弟”，起点关中，创建预算2/10、返还0、剩余8，创建按钮尚未提交。
+- 槽名spells-1920-1003，角色名实际为李琳（不是此前test槽的李林）。原始探针minor-clan-selected-1920-CreationSummary.json、minor-clan-selected-1920-SlotIdInput.json、minor-clan-selected-1920-CharacterNameInput.json保存在src/Logs/spells。后续证据关联此独立新槽，不能混用旧槽初始数值或旧名。
+- 下一步用户创建，进入关中后经“保存并返回菜单”，再加载spells-1920-1003 · 李琳，之后记录真实保存读回与1920施法前导出。当前尚未创建/读回该新槽；不宣告这些步骤完成。所有既有工作树和未提交实现保留，未集成或改定时配置。
+
+## 2026-10-03 14:14检查点：新槽保存与1920读回首战现场
+
+- 用户确认完成创建、保存返回菜单和读回后，主责读取spells-1920-1003.json：写入14:13:02，schema3，角色李琳，known/equipped均为贯石击/聚灵术、术法槽2，五先天均8，中品水、练气，生命571/571、灵力180/180，保存导航guanzhong_hub/guanzhong_city。原始存档副本src/Logs/spells/formal-saved-slot-spells-1920-1003.json保留；不改用户存档。
+- 现场已由用户推进至AdventureScene首战，1920×1080、刻13、李琳首次行动，战报仅“战斗开始：李琳 对阵 石甲兽”，两术法名称/费用可见且可用。截图formal-reloaded-before-cast-1920-20261003.png、探针reloaded-before-cast-1920-player.json及reloaded-before-cast-1920-log.json。保存/返回/加载按钮动作由用户确认，现场与磁盘内容一致；不声称拍到未采集的按钮点击瞬间。
+- 当前默认visible-ordinary-player-input.json仍是14:00:05的1366旧导出，1920初始导出尚未取得。下一步必须先由用户调用正式导出，再贯石击、结束行动、下次玩家回合自用聚灵术；读取新导出另存1920副本与最终战报。未提交、归档或集成。
+
+## 2026-10-03 14:18检查点：1920真实两术法与施法前导出已取得
+
+- 用户完成先导出、贯石击、结束行动、次回合自用聚灵术。新导出写入14:16:28，已独立备份src/Logs/spells/visible-ordinary-player-input-1920x1080-20261003-141628.json，SHA256=37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492。李琳初始571/571HP、180/180MP；石甲兽839/839HP、108/108MP；五先天8、裸魂魄8、练气中品水、两术法known/equipped均完整，环境倍率1。originId仍为空，关联14:12真实小族选中截图，不篡改导出来源或历史随机证明。
+- 1920×1080真实战报：贯石击伤害55/消耗12，李琳结束行动，石甲兽普攻伤害62/结束行动，聚灵术恢复5/消耗0。当前李琳509/571HP、173/180MP，敌784/839HP、108/108MP，刻27。两术法当前阶段禁用，结束行动可用。
+- 证据src/Logs/spells/cast-both-1920-{player,enemy,log,tick,wait}.json及formal-after-both-1920-20261003.png。配合1366记录，两个分辨率正常施法/费用/自用恢复/结束行动均已有用户真实按钮和可见运行证据；不得据此声称灵力不足或非法目标已验收。
+- 复用只读子智能体spells_scope_check核本卡剩余硬门禁，不扩查backlog；当前仅有阶段禁用截图，正在确认拒绝条件的最小真实动作。尚无最终普通角色输入交付文件、提交、归档或主线集成；用户保留当前现场。所有worktree和未提交实现、两个已应用stash保留，定时配置未变。
+
+### 14:20续接边界
+
+- 主责及只读spells_scope_check均确认：受控测试FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness通过直接RequestArt自攻/missing_target验证拒绝；ExplicitEnvironmentClonesExerciseOrdinaryVeinAndBlessedRecoveryInTheRealScene通过SetSpirit(19)验证费用拒绝。这些不是真实用户输入证据。现有CombatCommandInput仅固定敌方贯石击和自己/敌方聚灵目标，无正式移动输入caller；不能用满灵力敌方聚灵冒充非法目标（合同合法、耗20、恢复0）。不要求用户盲刷耗MP直至阵亡，不注入资源或替换随机源。
+- SPELLS保留未完成：真实缺MP/非法目标禁用或拒绝证据、最终普通输入交付与收尾检查/路径提交/受保护集成尚未完成。两个分辨率正常施法和真实小族选择/保存读回已经完成，不重复重打；既有测试输入未改不重复执行。
+- 下一独立工作面为CAMERA用户实机输入，原树HEAD已重新只读核实cd797cf7，路径D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-CAMERA-01/src，所有未提交实现保留。用户需在该树真实StartMenu进入关中战场后先保留现场，主责采初始相机数值，再分步验真实WASD/方向键持续平移、松开、中键拖动、边界/UI/失焦与重开size4。不得在SPELLS无控制器的现场冒充CAMERA验证。各卡完成前置仍保持真实，未归档或集成，未动定时配置或stash。
+
+## 2026-10-03 用户纠正：相机已由用户验完，撤回重复验收要求
+
+- 用户明确反馈：“相机我都验完了，上面不都说过来吗”。此最新真人反馈更新此前“等待用户重新打开CAMERA并操作”的工作安排；撤回14:20以及上一条回复要求用户重新进入相机工作树、再走一遍持键/中键验收的指示，不再把重复操作作为用户的下一步。
+- 验收来源明确记为用户确认已完成相机实机验收。主责此前沿用旧检查点并要求重做属于状态同步错误；后续由主责整理既有记录和代码收尾。现有磁盘旧探针/fixture不改称新实机数值，不虚构未采集的截图或位置变化；用户验收反馈与机器采集证据分别如实保留。
+- 本条不代表已完成CAMERA路径限定提交、归档、前置更新或受保护主线集成；这些收尾仍须按原授权和门禁由主责办理，不再要求用户重复已确认的相机操作。SPELLS双分辨率正常施法、小族选择及保存读回证据保持已完成，剩余拒绝条件边界不变。
+
+## 2026-10-03 14:35续接检查点：CAMERA完成集成，MOVE-UI已ready
+
+### 本轮实际进展与继续授权
+
+- 用户纠正相机已验完，并要求继续整批；不是普通“1”只做一张，不需要再问继续与否。相机用户实机确认有效，不再重复要求打开CAMERA/持键/中键。主责已实际完成CAMERA收尾并继续准备MOVE-UI；上下文较长，按最初用户要求在本检查点停止，不冒称整批完成。
+- 主线当前5c55f0be4636f73503bbfb2d5924bb0c84075047。1cdc299a98bf221664c21eb0a1d88dae478c84ce为CAMERA唯一生产/归档提交；5c55f0be为MOVE-UI直接前置/路径/ready管理准备提交。两次均受保护fast-forward成功，不是仅生成本地candidate。
+- 每次集成均从D:/天章游戏开发显式-RepositoryRoot调用schema5 Show：runs.codex/deepseek均null、activeTaskIds=[]、integrationLockStatus=none；重新读取main同卡route/owner/state与队列，核对main HEAD和路径冲突，再invoke-project-integration.ps1。保留主目录四条原改动及全部原untracked，不改定时配置、不apply或删除两旧stash。
+
+### CAMERA完成结果
+
+- CAMERA工作树HEAD为1cdc299a，工作区干净，目录与src/Logs/camera全部保留。原11条dirty/untracked先逐字节备份consume-main-20261003/working及manifest，再cd797cf7→efca74b4 ff；三重叠AdventureScene/Builder/PlayModeTests.asmdef通过三方组合，去掉合并产生的重复UI引用。所有相机生产实现保留，主线HP/TIMELINE保留。
+- 用户验收来源与机器证据分开：用户已明确相机实机验完；旧三个无位移探针仍只记录当时状态。既有EditMode4/4、PlayMode6/6不重跑；发现并最小修正GuanzhongBasicAttackPlayModeTests的旧size6.2/固定XZ断言，验证size4、Y/朝向、组件/棋盘引用和焦点实际bounds，正式两条受影响流程formal-main-consumed.xml 2/2通过。测试批处理PID5336已退出。
+- 新增直接测试cs/meta先补卡预检；EXP-UNITY-002正文已消费，风险投影一致。程序集19/2检查、数据链83/83术法/606语言、卡片closed、管理文本、14现存路径空白和staged diff均通过；ProjectSettings只两行尾空白核实后还原。完成归档在主线开发管理/任务归档/U-GZ-PLAYTEST-CAMERA-01.txt，backlog移除该已完成行。
+
+### MOVE-UI当前准确状态
+
+- 新建并保留D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-MOVE-UI-01，分支codex/u-gz-playtest-move-ui-01，HEAD=5c55f0be，工作区干净。仅管理准备完成，尚无MOVE-UI生产修改、Unity Library导入、测试或实机证据，不能说移动按钮/高光/动画已经做完。
+- 主线ready队列当前SPELLS、MOVE-UI；只消费MOVE-RULE e88b469c、BASE-FIT 76c6fa04、CAMERA1cdc299a直接完成事实，没有重审backlog。MOVE-UI卡完整读取冻结合同、实际所有者、测试/路径/停止条件；补CombatPresentation.asmdef/meta、AssemblyBoundaryEditorTests/meta与边界脚本、三个直接正式PlayMode测试/meta、UNITY_STRUCTURE.runtime.md。已存在的新MovementView/Movement测试预期路径继续有效。
+- MOVE-UI最终准备预检taskCardDigest=d1dc1d4139e6226ee858bcdb9b5524f99365bb6cf9ed9e63af974d748dd359e4，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates/gatePointers均空，与schema2空投影一致；不是凭经验推断命中EXP。额外已主动消费同一asmdef经验并运行边界19/2通过。check-task-cards readyCount2及CodexDispatchReady通过，管理文本3/3、路径空白、staged检查通过。
+- 最小实现：先正式Static3D provider的完整路径逐段动画和只读演出状态接口，再Coordinator投影权威FindReachable/ValidateCommand(Move)路径与成本/阶段/余额；再MovementView当前Camera射线拾取、UI守卫、选格/确认/取消、高光预览；最后ActionBar/Input/Presenter/Installer/Builder局部场景接线和真实运行。UI不复制规则、不重写kernel或CTB，不给实验Sprite port加必实现接口。
+- MovementPath不含起点；必须以起点+路径逐段六向转身，固定可量化速度，最后准确落格。只移动root，保持rootY=.34、body localY=.08/scale1.4、base localY=.04/scaleY=.04。完整演出期间UI与Coordinator命令同时锁住；Clear/Remove/Disable停止旧协程，禁止旧会话写新同ID根。BasicAttack/Timeline/SPELLS直接测试原来动作后立即再发命令，须等待真实演出恢复。
+- SPELLS共享Input/ActionBar/Presenter/Coordinator/DTO/Installer/Builder/Scene已完成未提交的双术法与CanEndTurn接线，MOVE-UI已在卡正文冻结逐逻辑单元保留的合并边界。不能用main的旧单术法文件整体覆盖SPELLS，也不能把它未完成验收改为完成。本轮没有复制或重写这些生产文件。主责需在业务写入前结合最新实际源码决定顺序；强耦合代码主责统一，子智能体只读checker，不新建状态服务或复杂集成框架。
+
+### SPELLS证据与交付
+
+- SPELLS树HEAD仍efca74b4，全部原未提交实现和菜单修复保留；本轮没有消费新CAMERA/main，不假称已经包含控制器。用户交互Unity最后已在1920 Adventure、李琳施法后，未主动关闭。续接先重新确认实际进程/场景，避免对正在Play的源码热改造成现场丢失。
+- 1366与1920的真实两术法、费用/恢复、EndTurn和敌方调度均已完成，详见14:03/14:09/14:18节。1920另有真实小族选中、预算2/10剩余8起点关中、spells-1920-1003/李琳保存读回来源。拒绝条件只已有受控测试和真实阶段置灰，缺MP/非法目标的真实禁用或拒绝仍未取证；不能用满灵力敌方聚灵当非法，不能盲刷到阵亡或注入MP/fixture冒充。
+- 本轮在当前SPELLS卡预检55a3753518313f65d233f15a14f2befc9b011ac93826f6e6d661a2c87a2af201、空投影一致后，将真实1920导出逐字节复制为开发管理/关中首战普通角色输入.json，作为后续N的来源候选，不代表SPELLS完成或N解锁。源src/Logs/spells/visible-ordinary-player-input-1920x1080-20261003-141628.json与交付SHA256均37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492。
+- 原JSON九顶层字段完全保留；originId仍空，由formal-minor-clan-selected-1920-20261003.png证明小族；槽/姓名/保存副本formal-saved-slot-spells-1920-1003.json及formal-reloaded-before-cast-1920-20261003.png关联来源；14:16:28是施法前导出。敌空境界/灵根和浮点倍率1.2000000476837159不补造，当前随机源类型不证明历史/种子。N应自行记录模拟种子。
+- 本轮三原子只读面复用camera_evidence、spells_seams、spells_scope_check：相机最终差异/陈旧直接测试、MOVE-UI直接所有者准备、普通输入格式/来源核查。均未写文件、提交、改卡队列/runtime锁或派生。先前请求Sol medium/high与Astra high，实际模型/强度未独立核实，不编造证明。
+- 下一步继续MOVE-UI业务实施及SPELLS共享接缝收口，再按实际完成前置到TARGET、PREVIEW、LAYOUT；V-FLOW仍保持真实数值等前置，V-ART由用户确认。不要重验已经确认的相机，不重修已完成TIMELINE缺字，不重跑未改输入已通过范围，不修改任何定时配置。

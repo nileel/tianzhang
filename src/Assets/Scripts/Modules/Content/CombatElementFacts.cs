@@ -68,7 +68,7 @@ namespace TianZhang.Content
             return NormalizeElement(elementRequirement);
         }
 
-        private static string NormalizeElement(string element)
+        internal static string NormalizeElement(string element)
         {
             if (string.IsNullOrWhiteSpace(element)) return string.Empty;
             return element.Trim() switch
@@ -91,24 +91,32 @@ namespace TianZhang.Content
         }
     }
 
-    /// <summary>Pure content gate over the two runtime primitives needed by ability requirements.</summary>
+    /// <summary>Pure content gate over explicit realm identity and valid visible spirit-root facts.</summary>
     public static class AbilityRequirementPolicy
     {
-        private static readonly Dictionary<string, float> RealmThresholds = new()
+        private static readonly Dictionary<string, int> RealmThresholds = new(StringComparer.Ordinal)
         {
-            ["realm_fanren"] = 1f, ["realm_lianqi"] = 1.5f, ["realm_zhuji"] = 3f,
-            ["realm_jindan"] = 6f, ["realm_yuanying"] = 12f, ["realm_huashen"] = 24f,
+            ["realm_fanren"] = 0, ["realm_lianqi"] = 1, ["realm_zhuji"] = 2,
+            ["realm_jindan"] = 3, ["realm_yuanying"] = 4, ["realm_huashen"] = 5,
+        };
+
+        private static readonly Dictionary<string, int> RealmStages = new(StringComparer.Ordinal)
+        {
+            ["凡人"] = 0, ["练气"] = 1, ["筑基"] = 2,
+            ["金丹"] = 3, ["元婴"] = 4, ["化神"] = 5,
         };
 
         public static bool IsSatisfied(
-            float realmMultiplier,
+            string realmStage,
             string visibleRootElement,
+            string visibleRootGrade,
             string realmRequirement,
             string elementRequirement)
         {
-            if (string.IsNullOrWhiteSpace(realmRequirement) ||
-                !RealmThresholds.TryGetValue(realmRequirement.Trim(), out float minimum) ||
-                realmMultiplier < minimum)
+            if (string.IsNullOrWhiteSpace(realmStage) || !RealmStages.TryGetValue(realmStage, out int current) ||
+                string.IsNullOrWhiteSpace(realmRequirement) || !RealmThresholds.TryGetValue(realmRequirement, out int minimum) ||
+                current < minimum || visibleRootGrade is not ("凡品" or "下品" or "中品" or "上品" or "极品") ||
+                string.IsNullOrEmpty(CombatElementFacts.NormalizeElement(visibleRootElement)))
                 return false;
             if (string.Equals(elementRequirement?.Trim(), "element_none", StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -120,12 +128,12 @@ namespace TianZhang.Content
             if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
                 return false;
 
-            string characterElement = CombatElementFacts.ResolveElement(visibleRootElement);
+            string characterElement = CombatElementFacts.NormalizeElement(visibleRootElement);
             foreach (string alternative in normalized.Substring(prefix.Length)
                          .Replace("_root", string.Empty)
                          .Split(new[] { "_or_" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (CombatElementFacts.ResolveElement(prefix + alternative) == characterElement)
+                if (CombatElementFacts.NormalizeElement(prefix + alternative) == characterElement)
                     return true;
             }
             return false;

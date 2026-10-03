@@ -1,4 +1,4 @@
-﻿# Spells config (2026-06-14)
+# Spells config (2026-06-14)
 name,type,minRange,maxRange,mpCost,cooldownTicks,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,realmReq,elementReq,element,sourceAffiliation,contentScope,physicalDamageMultiplier,soulDamageMultiplier
 spell_xuanshuizhou,1,1,4,12,8,0,0,0,0,0,realm_lianqi,element_water_root,element_water_root,faction_taiyidaoting,player,0,1.2
 spell_canglangji,1,1,4,25,20,0,0,0,0,0,realm_zhuji,element_water_root,element_water_root,faction_taiyidaoting,player,0,1.6
@@ -91,3 +91,4 @@ spell_tongbian,3,0,0,22,10,0,0,0,0,0,realm_zhuji,element_star_root,element_star_
 spell_wudai,5,0,0,15,5,0,0,0,0,0,realm_zhuji,element_wind_root,element_wind_root,faction_guxiu,reserved,0,0
 spell_yangua,6,1,4,28,20,0,0,0,0,0,realm_zhuji,element_star_root,element_star_root,faction_guxiu,reserved,0.9,0.7
 spell_yuye,2,0,2,30,15,0,0,0,0,0,realm_zhuji,element_wood_root,element_wood_root,faction_guxiu,reserved,0,0
+spell_guanshiji,0,0,1,12,10,0,0,0,0,0,realm_lianqi,element_none,element_none,faction_sanxiu,player,1.2,0

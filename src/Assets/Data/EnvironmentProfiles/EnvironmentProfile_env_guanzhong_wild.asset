@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: EnvironmentProfile_env_guanzhong_wild
   m_EditorClassIdentifier:
   profileId: env_guanzhong_wild
+  spiritRecoveryEnvironment: 1
   unitsPerRange: 2
   maxQueryRange: 16
   battlefieldCells:

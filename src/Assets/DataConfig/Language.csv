@@ -1,4 +1,4 @@
-﻿# 多语言文本映射表
+# 多语言文本映射表
 # 格式: id, zh_CN
 # 所有其他 CSV 表中的文本字段均使用此表中的 ID 引用
 #
@@ -691,3 +691,10 @@ combat_command_end_turn,结束行动
 combat_session_finished,战斗已经结束
 combat_turn_actor_invalid,尚未轮到该单位行动
 combat_turn_phase_invalid,当前行动阶段不可执行
+spell_guanshiji,贯石击
+attack_profile_not_learned,尚未学会该术法
+attack_profile_not_equipped,尚未装配该术法
+attack_profile_requirements_not_met,境界或灵根不满足要求
+spirit_recovery_profile_contract_invalid,灵力恢复配置不可用
+non_recovery_fields_present,术法效果配置不一致
+spirit_recovery_environment_not_configured,灵力恢复环境尚未配置

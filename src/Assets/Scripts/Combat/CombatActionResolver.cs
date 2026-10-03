@@ -70,12 +70,30 @@ namespace TianZhang.Combat
                 profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("combat_command_validation_changed");
 
-            CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
-            if (profile.SpiritCost > 0)
-                actor.TryConsumeSpirit(profile.SpiritCost);
+            bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
+            int spiritCost = profile.GetSpiritCost(targetsSelf);
+            if (!actor.TryConsumeSpirit(spiritCost))
+                return CombatActionResult.Rejected("spirit_insufficient");
+            CombatActionResult result;
+            if (profile.Effect == CombatAttackEffect.RestoreSpirit)
+            {
+                int requestedRecovery = (int)Math.Floor(Math.Max(profile.MinimumSpiritRecovery,
+                    actor.RawSpirit * (double)profile.SpiritRecoveryMultiplier) *
+                    session.SpiritRecoveryEnvironmentMultiplier *
+                    (targetsSelf ? 1f : profile.OtherTargetSpiritRecoveryMultiplier));
+                int before = target.CurrentSpirit;
+                target.RestoreSpirit(requestedRecovery);
+                result = CombatActionResult.SpiritRecoverySuccess(spiritCost,
+                    new CombatSpiritRecoveryResult(target.Id, requestedRecovery, target.CurrentSpirit - before));
+            }
+            else
+            {
+                CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
+                result = CombatActionResult.AttackSuccess(spiritCost, damage);
+            }
             if (profile.CooldownTicks > 0)
                 actor.SetCooldown(profile.Id, profile.CooldownTicks);
-            return CombatActionResult.Success(damage);
+            return result;
         }
 
         private static CombatDamageResult ResolveEffect(

@@ -129,7 +129,13 @@ namespace TianZhang.Features.Adventure
                 derived.MagicDefense,
                 source.Progression.RealmMultiplier,
                 Mathf.Clamp(Mathf.RoundToInt(source.Attributes.Reaction / 20f), 2, 8),
-                basicAttackProfileId: basicAttackProfileId)
+                equippedArtProfileIds: source.AbilityLoadout.EquippedSpells,
+                availableArtProfileIds: source.AbilityLoadout.KnownSpells,
+                basicAttackProfileId: basicAttackProfileId,
+                rawSpirit: source.Attributes.Spirit,
+                realmStage: source.Progression.RealmStage,
+                visibleRootElement: source.VisibleRootElement,
+                visibleRootGrade: source.VisibleRootGrade)
             {
                 BlockRate = source.CombatModifiers.BlockRate,
                 BlockReduction = source.CombatModifiers.BlockReduction,
@@ -165,7 +171,11 @@ namespace TianZhang.Features.Adventure
                 derived.MagicDefense,
                 realmMultiplier,
                 Mathf.Clamp(Mathf.RoundToInt(attributes.Reaction / 20f), 2, 8),
-                basicAttackProfileId: basicAttackProfileId)
+                basicAttackProfileId: basicAttackProfileId,
+                rawSpirit: attributes.Spirit,
+                realmStage: source.realmStage,
+                visibleRootElement: source.visibleRootElement,
+                visibleRootGrade: source.visibleRootGrade)
             {
                 BlockRate = combatModifiers.BlockRate,
                 BlockReduction = combatModifiers.BlockReduction,

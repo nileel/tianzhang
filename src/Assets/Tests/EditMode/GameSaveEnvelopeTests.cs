@@ -59,6 +59,78 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void VisibleRootFactsRoundTripThroughSchemaThreeJsonWithoutChangingLoadout()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            definition.visibleRootId = "root_water_middle";
+            definition.visibleRootGrade = "中品";
+            definition.visibleRootElement = "水";
+            definition.availableSpells = new[] { "already_known_spell" };
+            definition.equippedSpells = new[] { "already_known_spell" };
+            definition.maxSpellSlots = 1;
+            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            GameSaveEnvelope save = source.CaptureSave();
+            Assert.That(save.player.visibleRootId, Is.EqualTo(definition.visibleRootId));
+            Assert.That(save.player.visibleRootGrade, Is.EqualTo(definition.visibleRootGrade));
+            Assert.That(save.player.visibleRootElement, Is.EqualTo(definition.visibleRootElement));
+            string json = source.CaptureSaveJson();
+            var restored = new GameRuntime();
+
+            restored.RestoreSaveJson(json, catalog);
+
+            Assert.That(restored.Player.VisibleRootId, Is.EqualTo(definition.visibleRootId));
+            Assert.That(restored.Player.VisibleRootGrade, Is.EqualTo(definition.visibleRootGrade));
+            Assert.That(restored.Player.VisibleRootElement, Is.EqualTo(definition.visibleRootElement));
+            Assert.That(restored.CaptureSave().player.knownSpells, Is.EqualTo(new[] { "already_known_spell" }));
+            Assert.That(restored.CaptureSave().player.equippedSpells, Is.EqualTo(new[] { "already_known_spell" }));
+            Assert.That(restored.CaptureSaveJson(), Is.EqualTo(json));
+        }
+
+        [Test]
+        public void SchemaThreeJsonWithoutVisibleRootFieldsKeepsUnknownRootAndExistingSpells()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            definition.visibleRootId = "root_water_middle";
+            definition.visibleRootGrade = "中品";
+            definition.visibleRootElement = "水";
+            definition.availableSpells = new[] { "already_known_spell" };
+            definition.equippedSpells = new[] { "already_known_spell" };
+            definition.maxSpellSlots = 1;
+            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            string legacyJson = System.Text.RegularExpressions.Regex.Replace(source.CaptureSaveJson(),
+                "\"visibleRoot(?:Id|Grade|Element)\"\\s*:\\s*\"[^\"]*\"\\s*,", "");
+            StringAssert.DoesNotContain("visibleRootId", legacyJson);
+            StringAssert.DoesNotContain("visibleRootGrade", legacyJson);
+            StringAssert.DoesNotContain("visibleRootElement", legacyJson);
+            Assert.That(GameSaveSerializer.Deserialize(legacyJson).schemaVersion, Is.EqualTo(3));
+            var restored = new GameRuntime();
+
+            restored.RestoreSaveJson(legacyJson, catalog);
+
+            Assert.That(restored.Player.VisibleRootId, Is.Null.Or.Empty);
+            Assert.That(restored.Player.VisibleRootGrade, Is.Null.Or.Empty);
+            Assert.That(restored.Player.VisibleRootElement, Is.Null.Or.Empty);
+            Assert.That(restored.CaptureSave().player.knownSpells, Is.EqualTo(new[] { "already_known_spell" }));
+            Assert.That(restored.CaptureSave().player.equippedSpells, Is.EqualTo(new[] { "already_known_spell" }));
+        }
+
+        [TestCase("id")]
+        [TestCase("grade")]
+        [TestCase("element")]
+        public void PlayerPayloadWithOnlyVisibleRootFactFailsClosedWithoutChangingLiveOwners(string field)
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = new GameRuntime().CaptureSave();
+            invalid.hasPlayer = false;
+            invalid.player = new CharacterRecord();
+            if (field == "id") invalid.player.visibleRootId = "root_water_middle";
+            if (field == "grade") invalid.player.visibleRootGrade = "中品";
+            if (field == "element") invalid.player.visibleRootElement = "水";
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [Test]
         public void LegacyPlayerSchemaIsRejectedRatherThanInventingAFoundationStage()
         {
             GameRuntime source = CreateRuntimeWithInventory();

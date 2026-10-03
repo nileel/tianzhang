@@ -182,6 +182,7 @@ namespace TianZhang.Tests
         {
             var profile = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
             profile.profileId = "runtime_fixture";
+            profile.spiritRecoveryEnvironment = SpiritRecoveryEnvironment.Ordinary;
             profile.unitsPerRange = 2;
             profile.maxQueryRange = 16;
             profile.directedEdges = new[]
