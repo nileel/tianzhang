@@ -8,15 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-UI-TARGET-01",
-    "U-GZ-PLAYTEST-TIMELINE-01",
-    "U-GZ-PLAYTEST-MOVE-RULE-01",
-    "U-GZ-PLAYTEST-MOVE-UI-01",
-    "U-GZ-PLAYTEST-SPELLS-01"
-  ],
-  "stateReason": "2026-10-02：v6行动预览/确认/取消和自身预计下次标记已建立实施叶子；等待真实目标、移动阶段、两术法与CT快照，消费实际输出冻结只读预览接口与条件后才能ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-03：已消费五项真实完成前置及完整方法，冻结候选/只读预览/确认与条件CT合同，直接按钮测试路径已补全；原子结果与正式验收入口齐备。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
@@ -57,7 +51,11 @@
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-UI-PREVIEW-01.txt",
     "开发管理/任务归档/U-GZ-PLAYTEST-UI-PREVIEW-01.txt",
-    "docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md"
+    "docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -129,3 +127,15 @@
 ## 停止条件
 
 - 所有者/真实输入不明、需改变未授权规则、原子结果不成立、额外资产/费用、路径需扩展或必要运行证据无法取得时停止记录，不叠加补丁；不得以假数据显示、静默省略验收项或新兜底宣称完成。
+
+## 2026-10-03 ready准备与冻结合同
+
+- 真实前置：TARGET 5b67b0db、SPELLS 0a08a277、MOVE-UI 9808e7b2、MOVE-RULE e88b469c、TIMELINE efca74b4均已完成归档并进入当前master；无同ID活跃卡冲突，不重跑其已通过证据。
+- 候选为不可变 kind/actorId/targetId/profileId/contextVersion。CombatCommandInput唯一持有；Coordinator每次权威HUD投影递增上下文版本，选择/换目标/取消/查看不递增、不执行。确认先移除本地候选，Coordinator核版本、行动权和演出锁，再由原ExecutePlayer→Validate→抽随机→Execute单次执行；拒绝也刷新HUD。失权、完整HUD刷新、隐藏/禁用清空候选和条件标记。
+- 新ICombatActionPreviewHandler与旧ICombatCommandHandler同文件，单独注入；不改旧Request*立即提交合同或测试替身。正式按钮普攻、两术法、防御、Wait/EndTurn走候选；未装配神通保持隐藏。MOVE保持原选格确认，进入移动与选行动互相取消，不叠确认。第二术法切目标只替换该术法候选。查看目标和轴peek仍不改命令目标。
+- CombatCommandService.Preview调用同一Validate；费用取GetSpiritCost、惩罚取CooldownTicks或EndTurn的PendingCooldownPenalty，不调用Resolve、不读伤害公式、不抽随机。CTB在本引擎私有状态副本上复用ConsumeAction/WaitAction，返回结束本回合后的CT/门槛与自身到门槛刻数；无第二模拟器、无未来敌方行动策略。术法后剩余移力保持现阶段，预测明确以随后结束本回合、双方存活、速度/CT不受干预为条件。
+- 自身下次标记使用独立◇与自身身份/CT/门槛/预计刻数，显示“顺位未定”；它是条件时间位置，不在真实已排队条目中伪造固定第N位。其他单位未来行动/死亡/干预未知，伤害与命中显示未探明；取消或权威刷新即移除。
+- Builder只局部新建CombatActionPreviewRoot与轴内条件标记；Installer明确注入，View只显示DTO。现有UICanvas与所有者链已核：Builder持久creator→Installer→Input/Presenter/View writer；不改相机、模型、共享helper、CSV或其他场景。最终整屏由LAYOUT消费真实组件。
+- 原expectedPaths内足够实现；准备时发现两份旧UI测试按钮立即执行断言是直接受影响调用者，已加入GuanzhongStarterArtsPlayModeTests.cs、GuanzhongMovementPlayModeTests.cs及.meta，只修改受影响测试流程。完整其他路径保持；当前唯一结果仍是选择/取消/确认/条件预测闭环，无独立新职责。
+- 模型协作本轮：复杂规则与输入边界；实际主模型由Node REPL核为gpt-6-astra；gpt-6.1-sol/high只读辅助preview_input_audit核输入和测试接缝，实际模型已核、推理强度未独立核验。不委派写入。所有业务写入由主责统一复核及最终验证。
+- 验收：定向Preview EditMode对独立会话实执行后的费用、CT、门槛、队列及下一Advance核验（Wait/术法惩罚/不同速度）；定向正式链PlayMode核反复取消零状态/零随机、双击一次、过期/非法拒绝、目标独立、MOVE互斥、Hide重进；只运行受影响旧按钮测试。正式Game View两术法分别选择取消确认，记录权威值、实际命令ID和截图。
