@@ -8,13 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-MOVE-RULE-01",
-    "U-GZ-PLAYTEST-CAMERA-01",
-    "U-GZ-PLAYTEST-BASE-FIT-01"
-  ],
-  "stateReason": "2026-10-01：移动交互合同、现有输入/展示所有者和完整字面量路径已冻结；仍等待 U-GZ-PLAYTEST-MOVE-RULE-01、U-GZ-PLAYTEST-CAMERA-01 与 U-GZ-PLAYTEST-BASE-FIT-01 的正式结果，再由QueueMaintenance按实际投影准备ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-03：MOVE-RULE、BASE-FIT和CAMERA均已实际完成并集成；消费完整移动合同、正式InputSystem与演出锁的直接消费者，补齐字面路径并重新预检后按整批授权实施。SPELLS未完成验收保持独立，共享源码合并须完整保留。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
@@ -43,7 +39,19 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-PLAYTEST-MOVE-UI-01.txt",
-    "开发管理/任务归档/U-GZ-PLAYTEST-MOVE-UI-01.txt"
+    "开发管理/任务归档/U-GZ-PLAYTEST-MOVE-UI-01.txt",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs.meta",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
+    "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
+    "tools/check-unity-assembly-boundaries.ps1",
+    "UNITY_STRUCTURE.runtime.md"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -101,3 +109,15 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+
+## 2026-10-03 消费实际前置与当前所有者
+
+- MOVE-RULE完成归档与e88b469c提供权威MoveThenAction/ActionThenMove/Finished、剩余移力、ValidateCommand(Move)完整路径和末段方向；路径不含起点。BASE-FIT完成归档与76c6fa04提供rootY=.34、body localY=.08/scale1.4、base localY=.04/scaleY=.04，移动只作用根节点，不改接地或FBX。
+- CAMERA已完成归档并受保护集成1cdc299a，包含正式size4、InputSystem键鼠与实际棋盘焦点钳制。不得以旧blockedBy或原Unity占用原因继续阻塞。TIMELINE已完成efca74b4，同步保留行动轴与探索面板显隐。
+- 高光与预览同源于Session.SpatialQuery.FindReachable和ValidateCommand(Move)，Coordinator投影只读可达格/原始路径/成本/阶段/余额，UI不读Session或复制寻路。MovementView用当前Camera射线和正式格位，不缓存屏幕位置；拾取、确认和取消遵守EventSystem与演出锁。
+- 正式Static3D provider消费起点加原始路径，逐相邻段插值与六向转身，固定可量化速度，完整路径结束才释放锁。Contracts新增独立只读演出状态接口，不给ICombatUnitPresentationPort强加必实现成员而侵入实验Sprite adapter。清理/禁用/移除单位取消旧演出，不能覆盖新会话同ID对象。
+- 新MovementView使用Unity.InputSystem，显式补CombatPresentation.asmdef及meta，同时补唯一程序集白名单脚本/测试直接消费者，禁止放宽其他程序集。CAMERA已提供PlayModeTests的InputSystem引用，无需再改该asmdef。
+- 动画时点改变后，既有BasicAttack正式移动、Timeline移动后防御及SPELLS施法后EndTurn测试须等待真实演出结束；仅补这些直接测试路径，不把瞬移或只禁按钮作为演出锁。新增MovementPlayModeTests与既有Provider测试测逐段路径、UI/取消、最终位置/方向/接地与锁。
+- SPELLS保留原工作树全部未提交源码和双分辨率正常施法证据，未完成真实拒绝验收，不改变其状态。主责已读取其SetContext(snapshot)、两ArtActions、CanEndTurn和Wait→EndTurn；MOVE在独立worktree实施且合并时逐完整逻辑单元保留两术法接线，不从主线旧单术法实现覆盖已完成源码，不为源码接缝另建状态服务或宣称SPELLS已归档。
+- 本卡仍是一个可独立判断的移动交互纵向结果。主责统一写生产和最终验证；复用先前Sol/high只读spells_seams核直接调用者与路径、Astra/high只读spells_scope_check核证据边界，实际模型/强度未独立核实。CAMERA checker仅核本卡前置，均未另领任务、写文件、提交、操作runtime/锁或派生。
