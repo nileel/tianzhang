@@ -85,7 +85,8 @@ namespace TianZhang.Features.CombatPresentation
             CombatArtTargetSnapshot secondTarget = FindTarget(second, secondArtTargetId);
             SetEnabled(secondArtTargetButton, canAct && second != null && second.Targets.Count > 1);
             if (secondArtTargetLabel != null)
-                secondArtTargetLabel.text = secondTarget == null ? "目标：—" : "目标：" + secondTarget.DisplayName;
+                secondArtTargetLabel.text = secondTarget == null ? "目标：—" : "目标：" +
+                    (secondTarget.Id == snapshot.Player?.Id ? "自身" : secondTarget.DisplayName);
             if (actionStatusLabel != null)
                 actionStatusLabel.text = !visible ? string.Empty : firstReason +
                     (!string.IsNullOrEmpty(firstReason) && !string.IsNullOrEmpty(secondReason) ? "；" : string.Empty) + secondReason;
@@ -97,8 +98,7 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(button, canAct && target != null && target.CanExecute);
             if (label != null)
             {
-                label.text = art == null ? "术法" : art.DisplayName + " · " +
-                    (target == null ? "无目标" : target.DisplayName) + "\n" +
+                label.text = art == null ? "术法" : art.DisplayName + "\n" +
                     (target == null ? string.Empty : target.SpiritCost + " MP · ") + "CT +" + art.CooldownPenalty;
             }
             if (art == null) return string.Empty;

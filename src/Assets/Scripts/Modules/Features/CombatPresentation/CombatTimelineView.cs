@@ -35,6 +35,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private CombatTimelineSnapshot snapshot;
         private string focusedCombatantId;
+        private int hoveredSlot = -1;
         private string inspectedTargetId;
         private Action<string> selectTarget;
         public string InspectedTargetId => inspectedTargetId;
@@ -68,6 +69,8 @@ namespace TianZhang.Features.CombatPresentation
                 if (trigger == null) trigger = button.gameObject.AddComponent<EventTrigger>();
                 AddFocusEvent(trigger, EventTriggerType.PointerEnter, slot);
                 AddFocusEvent(trigger, EventTriggerType.Select, slot);
+                AddFocusExit(trigger, EventTriggerType.PointerExit);
+
             }
         }
 
@@ -153,14 +156,39 @@ namespace TianZhang.Features.CombatPresentation
         private void AddFocusEvent(EventTrigger trigger, EventTriggerType eventType, int slot)
         {
             var entry = new EventTrigger.Entry { eventID = eventType };
-            entry.callback.AddListener(_ => FocusEntry(slot));
+            entry.callback.AddListener(_ =>
+            {
+                if (eventType == EventTriggerType.PointerEnter) hoveredSlot = slot;
+                FocusEntry(slot);
+            });
             trigger.triggers.Add(entry);
+        }
+
+        private void AddFocusExit(EventTrigger trigger, EventTriggerType eventType)
+        {
+            var entry = new EventTrigger.Entry { eventID = eventType };
+            entry.callback.AddListener(_ => hoveredSlot = -1);
+            trigger.triggers.Add(entry);
+        }
+
+        private void LateUpdate()
+        {
+            if (focusText == null) return;
+            int count = snapshot == null ? 0 : Math.Min(MaximumEntries, snapshot.Entries.Count);
+            int slot = hoveredSlot >= 0 && hoveredSlot < count ? hoveredSlot : -1;
+            GameObject current = EventSystem.current == null ? null : EventSystem.current.currentSelectedGameObject;
+            if (slot < 0)
+                for (int index = 0; index < count; index++)
+                    if (entryButtons[index] != null && entryButtons[index].gameObject == current) slot = index;
+            if (slot >= 0) FocusEntry(slot);
+            focusText.transform.parent.gameObject.SetActive(slot >= 0);
         }
 
         private void FocusEntry(int index)
         {
             if (snapshot == null || index >= Math.Min(MaximumEntries, snapshot.Entries.Count)) return;
             focusedCombatantId = snapshot.Entries[index].Id;
+
             RefreshFocusText();
         }
 
@@ -206,9 +234,14 @@ namespace TianZhang.Features.CombatPresentation
             PresentPrediction(null);
             snapshot = null;
             focusedCombatantId = null;
+            hoveredSlot = -1;
             inspectedTargetId = null;
             if (tickText != null) tickText.text = string.Empty;
-            if (focusText != null) focusText.text = string.Empty;
+            if (focusText != null)
+            {
+                focusText.text = string.Empty;
+                focusText.transform.parent.gameObject.SetActive(false);
+            }
             for (int index = 0; index < MaximumEntries; index++)
             {
                 if (entryRoots[index] != null) entryRoots[index].gameObject.SetActive(false);

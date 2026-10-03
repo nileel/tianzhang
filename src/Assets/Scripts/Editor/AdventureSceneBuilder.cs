@@ -151,7 +151,172 @@ namespace TianZhang.Editor
             BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);
             BuildCombatTargetSelection(root, canvas);
             BuildCombatActionPreview(root, canvas);
+            BuildCombatLayout(root, canvas);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/收口关中战斗布局")]
+        public static void RebuildCombatLayout()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas").GetComponent<Canvas>();
+            BuildCombatLayout(root, canvas);
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatLayout(GameObject root, Canvas canvas)
+        {
+            // Only this Adventure layout owns these rectangles. Shared builders and the camera stay unchanged.
+            RectTransform hud = LayoutObject(canvas.transform, "CombatHudRoot");
+            RemoveLayout(hud);
+            hud.anchorMin = Vector2.zero; hud.anchorMax = Vector2.one;
+            hud.offsetMin = hud.offsetMax = Vector2.zero;
+            hud.GetComponent<Image>().color = Color.clear;
+            hud.GetComponent<Image>().raycastTarget = false;
+            GameObject hotbar = LayoutPanel(hud, "CombatHotbar");
+            SettlementSceneBuilder.PlacePanel(hotbar, new Vector2(351, 31), new Vector2(1442, 269));
+            foreach (string name in new[] { "CombatTurnText", "CombatPlayerPortrait", "CombatPlayerText", "CombatEnemyText", "CombatActionBar" })
+                LayoutObject(hud, name).SetParent(hotbar.transform, false);
+            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatTurnText"), 16, 178, 198, 44);
+            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatPlayerPortrait"), 16, 118, 60, 54);
+            MakeLayoutScroll(hotbar.transform, "PlayerSummaryBody", LayoutObject(hotbar.transform, "CombatPlayerText").GetComponent<Text>(), 16, 16, 877, 126);
+            LayoutObject(hotbar.transform, "CombatEnemyText").gameObject.SetActive(false);
+            RectTransform actions = LayoutObject(hotbar.transform, "CombatActionBar");
+            RemoveLayout(actions);
+            PlaceLayoutRect(actions, 230, 16, 841, 206);
+            PlaceLayoutRect(LayoutObject(actions, "MovementControls"), 0, 78, 240, 128);
+            SettlementSceneBuilder.SetHeight(LayoutObject(actions, "MovementStatus").gameObject, 64);
+            PlaceLayoutRect(LayoutObject(actions, "BasicAttackButton"), 252, 138, 114, 68);
+            PlaceLayoutRect(LayoutObject(actions, "ArtButton"), 378, 138, 216, 68);
+            PlaceLayoutRect(LayoutObject(actions, "SecondArtButton"), 606, 138, 216, 68);
+            PlaceLayoutRect(LayoutObject(actions, "GuardButton"), 252, 92, 114, 44);
+            PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 378, 92, 216, 44);
+            PlaceLayoutRect(LayoutObject(actions, "SecondArtTargetButton"), 606, 92, 216, 44);
+            PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
+            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 252, 8, 570, 76);
+            foreach (Text text in actions.GetComponentsInChildren<Text>(true)) text.fontSize = 20;
+
+            RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
+            RemoveLayout(target);
+            SettlementSceneBuilder.PlacePanel(target.gameObject, new Vector2(1508, 286), new Vector2(1868, 786));
+            Text targetTitle = LayoutText(target, "TargetHeading", "目标详情", 24);
+            PlaceLayoutRect(targetTitle.rectTransform, 20, 440, 210, 44);
+            PlaceLayoutRect(LayoutObject(target, "CloseTargetButton"), 240, 440, 100, 44);
+            LayoutObject(target, "CloseTargetButton").GetComponentInChildren<Text>(true).text = "关闭";
+            MakeLayoutScroll(target, "TargetBody", LayoutObject(target, "CombatTargetDetails").GetComponent<Text>(), 20, 20, 20, 76);
+
+            RectTransform preview = LayoutObject(canvas.transform, "CombatActionPreviewRoot");
+            RemoveLayout(preview);
+            SettlementSceneBuilder.PlacePanel(preview.gameObject, new Vector2(351, 281), new Vector2(1442, 477));
+            MakeLayoutScroll(preview, "PreviewBody", LayoutObject(preview, "ActionPreviewSummary").GetComponent<Text>(), 20, 80, 20, 16);
+            PlaceLayoutRect(LayoutObject(preview, "PreviewActions"), 20, 16, 1051, 48);
+
+            CombatBountyTrackerView bounty = root.GetComponent<CombatBountyTrackerView>() ?? root.AddComponent<CombatBountyTrackerView>();
+            GameObject bountyPanel = LayoutPanel(hud, "CombatBountyTrackerRoot");
+            SettlementSceneBuilder.PlacePanel(bountyPanel, new Vector2(1508, 809), new Vector2(1868, 909));
+            Text bountyText = LayoutText(bountyPanel.transform, "BountySummary", string.Empty, 22);
+            MakeLayoutScroll(bountyPanel.transform, "BountyBody", bountyText, 20, 16, 20, 16);
+            SceneBuildSupport.SetObject(bounty, "root", bountyPanel);
+            SceneBuildSupport.SetObject(bounty, "summary", bountyText);
+            SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatBountyTrackerView", bounty);
+
+            CombatLogView logView = root.GetComponent<CombatLogView>();
+            GameObject logPanel = LayoutPanel(hud, "CombatLogPanel");
+            SettlementSceneBuilder.PlacePanel(logPanel, new Vector2(968, 495), new Vector2(1488, 845));
+            Text logHeading = LayoutText(logPanel.transform, "LogHeading", "战报", 24);
+            PlaceLayoutRect(logHeading.rectTransform, 20, 290, 360, 44);
+            RectTransform logViewport = LayoutObject(hud, "CombatLogViewport");
+            logViewport.SetParent(logPanel.transform, false);
+            StretchLayoutRect(logViewport, 20, 20, 20, 76);
+            Button closeLog = LayoutButton(logPanel.transform, "CloseLogButton", "关闭");
+            PlaceLayoutRect(closeLog.GetComponent<RectTransform>(), 400, 290, 100, 44);
+            Button toggleLog = LayoutButton(hud, "ToggleLogButton", "战报");
+            SettlementSceneBuilder.PlacePanel(toggleLog.gameObject, new Vector2(1708, 32), new Vector2(1868, 84));
+            SceneBuildSupport.SetObject(logView, "panel", logPanel);
+            SceneBuildSupport.SetObject(logView, "toggleButton", toggleLog);
+            SceneBuildSupport.SetObject(logView, "closeButton", closeLog);
+            logPanel.SetActive(false);
+            // The rail's current/selected/predicted units keep their existing runtime writer.
+            LayoutObject(canvas.transform, "CombatTimelineRoot/TimelineFocus").gameObject.SetActive(false);
+            hud.gameObject.SetActive(false);
+        }
+
+        private static RectTransform LayoutObject(Transform parent, string name)
+        {
+            if (name.Contains("/")) return (RectTransform)parent.Find(name);
+            foreach (RectTransform child in parent.GetComponentsInChildren<RectTransform>(true))
+                if (child.name == name) return child;
+            throw new InvalidOperationException("Missing formal layout object: " + name);
+        }
+
+        private static void RemoveLayout(RectTransform rect)
+        {
+            foreach (LayoutGroup layout in rect.GetComponents<LayoutGroup>()) UnityEngine.Object.DestroyImmediate(layout);
+            ContentSizeFitter fit = rect.GetComponent<ContentSizeFitter>();
+            if (fit != null) UnityEngine.Object.DestroyImmediate(fit);
+        }
+
+        private static void PlaceLayoutRect(RectTransform rect, float x, float y, float width, float height)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
+            rect.anchoredPosition = new Vector2(x, y); rect.sizeDelta = new Vector2(width, height);
+        }
+
+        private static void StretchLayoutRect(RectTransform rect, float left, float bottom, float right, float top)
+        {
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(left, bottom); rect.offsetMax = new Vector2(-right, -top);
+        }
+
+        private static GameObject LayoutPanel(Transform parent, string name)
+        {
+            Transform existing = parent.Find(name);
+            if (existing != null) return existing.gameObject;
+            GameObject panel = SceneBuildSupport.CreatePanel(name, parent, Vector2.zero, Vector2.one);
+            SettlementSceneBuilder.ApplyPanelSkin(panel);
+            return panel;
+        }
+
+        private static Text LayoutText(Transform parent, string name, string value, int size)
+        {
+            Text text = null;
+            foreach (Text existing in parent.GetComponentsInChildren<Text>(true))
+                if (existing.name == name) { text = existing; break; }
+            if (text == null) text = SceneBuildSupport.CreateText(name, parent, value, size);
+            text.font = SettlementSceneBuilder.UiFont; text.alignment = TextAnchor.MiddleLeft;
+            text.color = new Color32(244, 234, 212, 255); text.raycastTarget = false;
+            return text;
+        }
+
+        private static Button LayoutButton(Transform parent, string name, string value)
+        {
+            Button button = parent.Find(name)?.GetComponent<Button>() ?? SceneBuildSupport.CreateButton(name, parent, value, out _);
+            SettlementSceneBuilder.ApplyButtonSkin(button);
+            return button;
+        }
+
+        private static void MakeLayoutScroll(Transform parent, string name, Text text, float left, float bottom, float right, float top)
+        {
+            Transform existing = parent.Find(name);
+            GameObject viewport = existing != null ? existing.gameObject :
+                new GameObject(name, typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+            viewport.transform.SetParent(parent, false);
+            StretchLayoutRect(viewport.GetComponent<RectTransform>(), left, bottom, right, top);
+            viewport.GetComponent<Image>().color = Color.clear;
+            text.transform.SetParent(viewport.transform, false);
+            LayoutElement oldHeight = text.GetComponent<LayoutElement>();
+            if (oldHeight != null) UnityEngine.Object.DestroyImmediate(oldHeight);
+            text.alignment = TextAnchor.UpperLeft; text.fontSize = 22;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.rectTransform.anchorMin = new Vector2(0, 1); text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.pivot = new Vector2(0.5f, 1); text.rectTransform.anchoredPosition = Vector2.zero;
+            text.rectTransform.sizeDelta = Vector2.zero;
+            ContentSizeFitter fit = text.GetComponent<ContentSizeFitter>() ?? text.gameObject.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ScrollRect scroll = viewport.GetComponent<ScrollRect>(); scroll.viewport = viewport.GetComponent<RectTransform>();
+            scroll.content = text.rectTransform; scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 28;
         }
 
         [MenuItem("天章/场景/接入关中行动预览")]
@@ -162,6 +327,7 @@ namespace TianZhang.Editor
             Canvas canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas")?.GetComponent<Canvas>();
             if (root == null || canvas == null) throw new InvalidOperationException("Adventure preview owners are missing.");
             BuildCombatActionPreview(root, canvas);
+            BuildCombatLayout(root, canvas);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -217,6 +383,7 @@ namespace TianZhang.Editor
             GameObject canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas");
             if (root == null || canvas == null) throw new InvalidOperationException("Adventure target owners are missing.");
             BuildCombatTargetSelection(root, canvas.GetComponent<Canvas>());
+            BuildCombatLayout(root, canvas.GetComponent<Canvas>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -277,6 +444,7 @@ namespace TianZhang.Editor
             Camera camera = Array.Find(scene.GetRootGameObjects(), value => value.name == "Main Camera")?.GetComponent<Camera>();
             BuildCombatMovement(root, camera, battlefield, SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+            BuildCombatLayout(root, Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas").GetComponent<Canvas>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -313,7 +481,8 @@ namespace TianZhang.Editor
             confirm.gameObject.SetActive(false);
             cancel.gameObject.SetActive(false);
             // Two starter arts: 96 movement + 344 controls + seven 4-unit gaps.
-            actionRoot.GetComponent<VerticalLayoutGroup>().spacing = 4;
+            VerticalLayoutGroup actionColumn = actionRoot.GetComponent<VerticalLayoutGroup>();
+            if (actionColumn != null) actionColumn.spacing = 4;
             SettlementSceneBuilder.SetHeight(actionRoot, 468);
             SceneBuildSupport.SetObject(bar, "moveButton", move);
             SceneBuildSupport.SetObject(bar, "confirmMoveButton", confirm);
@@ -443,6 +612,8 @@ namespace TianZhang.Editor
             if (root == null || canvasRoot == null) throw new InvalidOperationException("Adventure HUD owners are missing.");
             BuildCombatTimeline(root, canvasRoot.GetComponent<Canvas>(), root.GetComponent<AdventureSceneInstaller>(),
                 root.GetComponent<CombatHudPresenter>());
+            BuildCombatActionPreview(root, canvasRoot.GetComponent<Canvas>());
+            BuildCombatLayout(root, canvasRoot.GetComponent<Canvas>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -532,15 +703,18 @@ namespace TianZhang.Editor
             Transform panel = canvas == null ? null : canvas.transform.Find("CombatHudRoot");
             if (actionBar == null || panel == null)
                 throw new InvalidOperationException("AdventureScene is missing its combat HUD owner.");
-            Transform existing = panel.Find("CombatActionBar");
-            int siblingIndex = existing == null ? 4 : existing.GetSiblingIndex();
-            if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
-            BuildStarterActionBar(panel, actionBar).transform.SetSiblingIndex(siblingIndex);
+            var barData = new SerializedObject(actionBar);
+            Transform existing = ((GameObject)barData.FindProperty("root").objectReferenceValue).transform;
+            Transform barParent = existing.parent;
+            int siblingIndex = existing.GetSiblingIndex();
+            UnityEngine.Object.DestroyImmediate(existing.gameObject);
+            BuildStarterActionBar(barParent, actionBar).transform.SetSiblingIndex(siblingIndex);
             GameObject battlefield = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "GuanzhongBattlefield");
             EnvironmentProfileAsset environment = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             BuildCombatMovement(root, Camera.main, battlefield, environment);
             SceneBuildSupport.SetObjects(root.GetComponent<AdventureSceneInstaller>(), "attackProfiles", LoadAttackProfiles());
+            BuildCombatLayout(root, canvas.GetComponent<Canvas>());
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the starter arts HUD.");
             AssetDatabase.SaveAssets();
@@ -603,6 +777,7 @@ namespace TianZhang.Editor
             ConfigureAdventureCamera(Camera.main, battlefield);
             GameObject adventureRoot = Array.Find(scene.GetRootGameObjects(), root => root.name == "AdventureRoot");
             BuildCombatMovement(adventureRoot, Camera.main, battlefield, environmentProfile);
+            BuildCombatLayout(adventureRoot, Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas").GetComponent<Canvas>());
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the rebuilt Guanzhong battlefield.");
             AssetDatabase.SaveAssets();

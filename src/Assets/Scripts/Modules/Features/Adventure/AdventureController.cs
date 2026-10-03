@@ -80,6 +80,20 @@ namespace TianZhang.Features.Adventure
             loadScene = sceneLoader ?? throw new ArgumentNullException(nameof(sceneLoader));
         }
 
+        public IReadOnlyList<CombatBountyTrackerSnapshot> ReadBountyTracker(Func<string, string> display)
+        {
+            var result = new List<CombatBountyTrackerSnapshot>();
+            foreach (BountyData bounty in catalog.GetBountiesByIssuer(navigation.Navigation.ReturnTarget.SettlementId))
+            {
+                if (bounty.allowedAdventureId != map.adventureId) continue;
+                BountyState state = bounties.GetState(bounty.bountyId);
+                if (state.Status != BountyStatus.Accepted && state.Status != BountyStatus.ObjectiveCompleted) continue;
+                result.Add(new CombatBountyTrackerSnapshot(bounty.bountyId, display(bounty.titleKey),
+                    state.Progress, bounty.requiredCount, state.Status == BountyStatus.ObjectiveCompleted));
+            }
+            return result.AsReadOnly();
+        }
+
         private void Start()
         {
             var dispatcher = new AdventureNodeDispatcher(new IAdventureNodeHandler[]

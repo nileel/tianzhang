@@ -3,6 +3,17 @@ using System.Collections.Generic;
 
 namespace TianZhang.Gameplay.Contracts
 {
+    public sealed class CombatBountyTrackerSnapshot
+    {
+        public CombatBountyTrackerSnapshot(string id, string title, int progress, int required, bool completed)
+        { Id = id; Title = title; Progress = progress; Required = required; Completed = completed; }
+        public string Id { get; }
+        public string Title { get; }
+        public int Progress { get; }
+        public int Required { get; }
+        public bool Completed { get; }
+    }
+
     public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn }
 
     public sealed class CombatActionCandidate

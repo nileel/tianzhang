@@ -33,6 +33,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatMovementView combatMovementView;
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
+        [SerializeField] private CombatBountyTrackerView combatBountyTrackerView;
         [SerializeField] private CombatTimelineView combatTimelineView;
         [SerializeField] private CombatActionPreviewView combatActionPreviewView;
         [SerializeField] private CombatTargetView combatTargetView;
@@ -64,6 +65,7 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatMovementView, "combat_movement_view_missing");
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
+                RequireReference(combatBountyTrackerView, "combat_bounty_tracker_missing");
                 RequireReference(combatTimelineView, "combat_timeline_view_missing");
                 RequireReference(combatActionPreviewView, "combat_action_preview_missing");
                 RequireReference(combatTargetView, "combat_target_view_missing");
@@ -87,6 +89,8 @@ namespace TianZhang.Bootstrap
                 encounterCoordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"), ResolveAttackProfileName);
                 combatActionBar.ConfigureText(ResolveAttackProfileName, reason => UiText.ReasonDisplay(reason, "操作未完成"));
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
+                combatBountyTrackerView.Configure(() => controller.ReadBountyTracker(UiText.Resolve));
+                combatHudPresenter.ConfigureBountyTracker(combatBountyTrackerView);
                 combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
                 combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);
                 combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);

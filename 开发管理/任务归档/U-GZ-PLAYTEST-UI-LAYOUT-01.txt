@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-03：九项真实前置已归档并集成至63da50ca；完整布局creator/writer、悬赏只读入口、允许路径和验收已冻结，先运行基线矩形探针再实施布局。",
+  "stateReason": "2026-10-04：v6整屏布局、双分辨率正式取证与定向验证通过；用户授权临时怪物生命1的胜利返回2/2通过，完成归档。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scenes/AdventureScene.unity",
@@ -137,3 +137,24 @@
 - 模式只消费现有CombatHudPresenter.Present/Hide与explorationPanel显隐，不创建新模式状态。新悬赏随HUD显隐，战报收起状态仅View表示状态，隐藏战斗重置。当前/查看/条件预测不重算，透明HUD根和纯文字不拦截世界输入。
 - 验收：新EditMode核持久引用、单Canvas/布局writer与源矩形；新PlayMode正式入口分别1366/1920核目标+预览+长日志矩形、确认取消命中、中央世界无整屏射线阻挡、只读悬赏与唯一Store一致、关闭/隐藏清理；正式GUI同版本双分辨率走探索/战斗/详情/预览/日志/返回，记录真实随机与关键数值。仅重跑实际重排的目标/预览/移动/术法直连测试，不扩大前置业务验证。
 - 模型：实际主模型gpt-6-astra；只读gpt-6.1-sol/high preview_input_audit核矩形冲突与hierarchy测试依赖（实际模型已核，推理强度未独立核验）。无写入委派，无子任务ID；主责最终复核、验证、唯一candidate。
+
+## 2026-10-03 实测后直接调用者复核
+
+- 基线同帧探针确认Canvas/各父Rect/LayoutGroup，640×480仅作为writer证据；最终1920/1366测量已获得（src/Logs/layout/layout-*.json），不冒充正式GUI。1920时playerText需87高但仅84，聚灵按钮长姓名需87而正文56。根因是旧纵列标签内容原样塞入横向窄格；固定核心费用行、自身语义短标记，完整目标名仍在滚动预览/详情。玩家摘要作为内部滚动正文保留完整名称资源，不缩全局字号或相机。
+- 只读复核发现同一Builder内既有增量入口RebuildStarterArts、RebuildCombatMovement、RebuildGuanzhongBattlefield、RebuildCombatTargetSelection、RebuildCombatActionPreview、RebuildCombatTimeline仍生产旧子布局。新增允许直接调用者已冻结：这些入口完成原职能后调用同一个BuildCombatLayout；StarterArts从actionBar序列化root取得真实父级；Movement的局部纵向创建不再假定总行动栏有VerticalLayoutGroup。Timeline重建须一并重建已有PREVIEW子标记引用。无新脚本/框架/路径/玩法，不改变它们原导入范围；新Editor测试仅检查相关构建接缝和场景唯一控件，不重测相机/调度/键盘。
+
+## 2026-10-04 用户授权的胜利受控验收
+
+- 用户明确允许临时修改怪物数值，使其一招可击败。仅在本卡PlayMode胜利用例的CombatSession临时实例将石甲兽当前生命降至1，保留真实命令、伤害、死亡、结算和场景返回；不改EnemyData/CSV/ScriptableObject/存档或生产代码。测试结束销毁该会话，正式生命上限和初始生命保持839。
+- 两分辨率只重跑此前失败胜利用例，断言确认一次后实际胜利返回、HUD销毁和悬赏进度1；一击结束不制造长战报，沿用已经通过的独立长日志和败退证据。此为布局/返回受控验收，不是原数值自然实战胜利或平衡结论。主责单模型处理这一有界测试修正；允许路径不变。
+
+## 2026-10-04 完成归档
+
+- 结论：通过。现有真实组件组成同一Canvas v6布局，正文内部滚动、固定操作可达、悬赏只读，无旧左右整块HUD遮挡。正式1366/1920目标/预览/确认取消/战报截图与源矩形证据完整。
+- Edit2/2、核心Play2/2、focus1/1通过；败退双分辨率2/2，用户授权的临时怪物HP1胜利双分辨率2/2。胜利每场仅一次真实确认攻击，正式数据保持839。证据与历史失败保留于开发管理/关中战斗整屏布局验证记录.txt及工作树src/Logs/layout。
+- 主责统一复核完整diff；Sol只读复核生产代码和Scene非UI语义无P1/P2，临时生命测试由主责直接修正和验证。程序集/数据链沿用通过结果，未重复无变化前置业务；正式数值、相机、模型、定时配置不改。
+- 本完成允许下游消费LAYOUT结果，不提前签V-FLOW/V-ART或改其任务卡。日志/存档/工作树/用户改动/stash全部保留，使用同一进程锁保护集成。
+
+## 经验候选
+
+- 状态：pending。现象：UI重排后旧增量Builder仍查原父级或要求已移除的VerticalLayoutGroup，可产生重复控件、空引用或丢失预测标记引用。已证实根因：持久布局父级改变但局部creator仍写旧结构。证据：本卡Builder diff、IncrementalCreatorsRetainOneFinalLayout及SavedFormalLayoutKeepsReferencesAndSingleWriters的2/2结果。可能复用范围：有正式全量与局部重建入口的Unity UI；门禁可能：按序列化实际父级重建后统一布局，并检查单一对象/引用。未查重、未分配正式ID、未改风险索引。

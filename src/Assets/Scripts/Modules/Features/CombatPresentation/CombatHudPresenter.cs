@@ -12,6 +12,8 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private CombatTimelineView timelineView;
         [SerializeField] private GameObject explorationPanel;
+        private CombatBountyTrackerView bountyTracker;
+        public void ConfigureBountyTracker(CombatBountyTrackerView tracker) => bountyTracker = tracker;
         private CombatTargetView targetView;
         private Static3DCombatUnitPresentationProvider unitProvider;
         private CombatMovementView movementView;
@@ -93,6 +95,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             Snapshot = snapshot;
             view?.Present(snapshot);
+            bountyTracker?.Present(snapshot != null);
             healthBars?.Present(snapshot);
             timelineView?.Present(snapshot?.Timeline);
             explorationPanel?.SetActive(snapshot == null);
@@ -109,6 +112,8 @@ namespace TianZhang.Features.CombatPresentation
             Snapshot = null;
             ClearInspectedTarget();
             view?.Hide();
+            bountyTracker?.Present(false);
+            logView?.Hide();
             healthBars?.Hide();
             timelineView?.Hide();
             explorationPanel?.SetActive(true);

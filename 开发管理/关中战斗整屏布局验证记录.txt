@@ -1,0 +1,59 @@
+# 关中战斗整屏布局验证记录
+
+## 历史检查点（2026-10-04 00:04，以下完成节覆盖）
+
+- 主线d313fa64，PREVIEW完成提交63da50ca。LAYOUT ready准备已保护集成；实施工作树D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-UI-LAYOUT-01，分支codex/u-gz-playtest-ui-layout-01，业务尚未提交或集成。
+- 九前置已核真实完成；TARGET键盘用户确认，不重复排查。CAMERA/TIMELINE业务不重测，V-FLOW保持真实前置，V-ART用户确认。
+- LAYOUT风险任务digest初次062e69b2e3db40fb9698e9d289ab97785828f144992bfae72289c37d27a79d4f；直接调用者更新后7269888a29e2a24b6c634435275550c722105725dfbee0afa4b0676e7bbd4962；风险索引ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0。两次matched/mustRead/gates为空，与卡投影一致。
+- 实际模型：主gpt-6-astra；只读preview_input_audit为gpt-6.1-sol/high（模型已核，推理档未独立核验），无写入委派。主责复核全部差异与最终验证。
+
+## 已证实根因与实施
+
+- 旧CombatHudRoot 420×984纵列，子最小高度合计996而内高936；子控件位置由VerticalLayoutGroup重写。只挪目标/预览会与旧大块及新操作栏交叠。
+- 保留同一UICanvas、组件/序列化引用、正式场景与相机size4。HUD根透明且raycastTarget=false，局部Builder唯一持久布局；操作横向分组，目标/预览/玩家摘要/悬赏正文内部滚动，固定关闭或确认取消；战报可收起并滚动。行动轴只改变焦点说明显隐，不改CT/顺序/键盘选择合同。
+- 实测两术法按钮原文本含完整长目标名，1920需87高但正文56；横向紧凑标签只保留术法/费用/CT，第二术法目标自身使用语义“自身”，完整目标名留在可滚动预览/详情。根据真实preferredHeight调整按钮68高与玩家摘要滚动，不堆缩放补丁。
+- 悬赏由Controller只读查询正式来源城镇的目录，并过滤当前adventureId，再读取已有BountyUseCase.GetState；Contracts DTO无领域引用。View不Accept/RecordDefeat/Claim/Save，不增加Store，未接任务明确暂无追踪。
+- 同一Builder既有增量入口按依赖复用最终布局；StarterArts按序列化root确定父级，Movement不再要求最终动作栏是纵列；Timeline局部重建恢复其预测标记引用。没有新框架或路径扩展。
+
+## 当前验证证据
+
+- 全部原始证据保留在本工作树src/Logs/layout；初次baseline.log另保留主工作区Logs/layout原件。
+- baseline-20261003-231944.json为正式启动链的控制测试同帧矩形，640×480、scale1/3、Canvas1920×1440，证明实际writer/parent/final rect；不作为双分辨率GUI证据。
+- build.log正常退出0。初次Edit1/1，初次Play2/2。新增增量构建/重开引用验证editmode-final.xml为2/2。最终playmode-final.xml为2/2通过，覆盖实测长名、双分辨率射线点击、长日志/详情滚动、只读悬赏与目标详情受影响用例；不重复已通过范围。
+- 初次layout-1920/1366 JSON明确宽高与scale：1920为1，1366×768为0.7114583。热栏351..1442/y31..269，预览同宽/y281..477，右详情1508..1868/y286..786；1366按实际Canvas投影，不另加分辨率偏移。
+- 直接程序集边界19 asmdef/2 asmref通过；数据链GongFa29/Spells84/Skills31、语言键613通过。未改角色数值不运行BattleSim。
+- 正式GUI双分辨率核心布局已取证；胜/败返回的受控用例为败退2/2通过、胜利2/2未通过。人工GUI尚未取得胜败返回全链，不把控制测试或退出Play Mode冒充正式返回。未宣称完成、未归档业务；用户改动、所有工作树、存档、日志与stash保留，不改定时配置。
+
+## 正式GUI与最终只读复核
+
+- Unity6000.3.18f1，StartMenu载入已有spells-1920-1003 · 李琳→城镇接取石甲兽悬赏→探索→正式遭遇。1366×768 scale1的Game View，运行Canvas scale0.7114583；1920×1080最大化后Game View scale1。未改存档、角色数值或随机源。
+- 1366现场：玩家571/571、灵力180/180、敌839/839；贯石击确认后战报实际伤害55、灵力消耗12，玩家168/180；结束行动候选取消后仍刻13、资源不变。1920现场：结束行动确认后敌方普攻62，玩家509/571、168/180，敌784/839；刻27打开目标详情并取消贯石击，后待机到刻33。未完成该场战斗；之后主动停止Play Mode并关闭本任务Unity，不作为胜败返回证据。
+- 截图：1366-bounty-accepted.png、1366-exploration.png、1366-combat.png、1366-target-preview.png、1366-confirmed-art-log.png、1366-cancel-endturn.png；1920-preview-log.png、1920-target-preview.png。visible-20261003-234150.json是实际1366运行几何。全部位于本工作树src/Logs/layout。
+- 原浮层P2：selected0→hover1→exit1时显示保持但文字仍属1。现LateUpdate统一选择有效hover slot，否则现EventSystem selected slot，并用当前snapshot范围约束；沿用现状态源，无新状态机、不改排序/命令/键盘合同。focus.xml 1/1通过（悬停期间Select、退出恢复、无焦点隐藏）；未重复TIMELINE业务验证。
+- Sol最终源码复核：该P2关闭，未发现其他功能P1/P2。AdventureScene逐YAML文档比较，相机/世界模型/Transform/全局设置无语义变化；实质非Canvas差异仅AdventureRoot新增悬赏组件、Installer/Log接线及重建后的UI引用，fileID/GUID均解析正确。主责已复核全部代码与新测试diff；Unity造成的两份ProjectSettings尾空格已按明确自有噪声还原，场景尾空格由项目脚本清理。
+
+## 历史未通过验收与停止点（用户后续授权已解决）
+
+- 新增四个布局返回用例，沿既有正式入口fixture创建角色、接悬赏、进入战斗；通过真实UGUI输入选择候选并确认，由正式CombatSession结算；只替换测试随机源，不修改HP/数值/地图、不直接赋予胜负。与人工GUI分开记录。
+- returns.xml：DefeatReturnsAt1366、DefeatReturnsAt1920通过，各25次确认命令后真实进入SettlementScene，战斗HUD销毁，悬赏进度仍0；实际长战报可滚动且关闭按钮可点，defeat-long-log-*及defeat-returned-* JSON保留。
+- VictoryReturnsAt1366、VictoryReturnsAt1920失败，达到12000帧上限时仍在AdventureScene，断言位于CompleteFormalBattle末尾。该测试的随机源以敌方首骰99试图构造未命中，假设不成立：victory-long-log-*真实日志显示玩家普攻46、敌普攻62；CombatActionResolver.RollHit采用rollPercent <= Clamp(rate,5,100)，99不能保证落空。两场没有已验证胜利结果；失败不是已证实的LAYOUT生产缺陷，也不能将阈值/随机值或HP强改来造通过。
+- 保留上述失败测试与原始日志，不skip、不放宽断言、不删证据。尚未验证12000帧上限和实际演出耗时的关系；下一步先选择符合现有规则的可复现胜利操作/正式输入并核查测试终止条件，不能在尚未查明时堆等待、重试、数值兜底或扩领域路径。已有败退及布局测试输入未变不重跑。
+- LAYOUT业务未暂存、未提交、未归档、未保护集成；主线仍d313fa64e72614b0ace4af97d1469384fda454cd，队列仍LAYOUT ready。PREVIEW63da50cab8f48d775a5b14a9b58bf62bc91e49ae已完成。最终runtime合同补充、任务归档/队列/backlog收口、路径限定提交和保护集成均待验收完整后执行。没有运行中的本任务Unity GUI或批测进程。
+
+## 历史续接提示词（以下完成节覆盖）
+
+继续D:/天章游戏开发关中UI整批实施，沿用既有授权并按复杂度使用只读子智能体。先读AGENTS.md、最新队列、本检查点和U-GZ-PLAYTEST-UI-LAYOUT-01卡。主线d313fa64；PREVIEW63da50ca完成，LAYOUT ready已保护集成，业务仅在D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-UI-LAYOUT-01未提交。核心布局Edit2/2、Play2/2、浮层focus1/1通过，1366/1920人工Game View目标/预览/确认取消/战报已取证。returns.xml败退2通过、胜利2失败；先核CompleteFormalBattle完整方法、失败日志和CombatActionResolver.RollHit，不凭99会miss的错误假设继续加补丁。确认合法最小胜利验收方案及必要停止条件后再推进，不能强改HP/领域参数或skip失败用例。保留所有日志/存档/工作树/用户改动，CAMERA/TIMELINE业务和TARGET键盘不重验，不重复输入未变的通过测试，不改定时配置、不apply或删stash。完成实际剩余验收后才归档/路径限定提交/受保护集成，集成前从主目录重新Show并核同卡队列、无占用/锁与路径冲突。V-FLOW保持真实前置，V-ART由用户确认。
+
+## 2026-10-04 用户授权后一击胜利验收与完成
+
+- 用户明确要求“临时修改怪物数值进行测试，把怪物改成一招就能打死”。在原本允许的GuanzhongCombatLayoutPlayModeTests.CompleteFormalBattle中，仅胜利分支把当前CombatSession的enemy生命839降到1；上限仍839。正式EnemyData/CSV/ScriptableObject与存档未修改，不改生产代码、不直接指定胜负。fixture结束销毁临时会话；两个用例各自进入时首先断言原生命839，证明测试之间未残留。
+- 更新同卡授权边界后风险预检：taskCardDigest=4250c6e01c6dca341c0a2a571ad41be79bfb20f129ee7b6c249f3f20bd6e7b8c，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates/gatePointers为空，与schema2投影一致。未扩大expectedPaths。
+- victory-one-hit.xml/log：VictoryReturnsAt1366、VictoryReturnsAt1920均Passed，2/2。每场日志明确HP839→1、上限839，confirmedCommands=1；真实按钮候选→确认→CombatSession伤害/死亡→结算→SettlementScene，战斗HUD销毁，悬赏进度1。victory-returned-1366/1920-*.json保留。一次攻击结束不可能形成长战报，因此胜利分支改为断言恰好一次确认；长日志已由既有独立布局压力/自然败退长日志用例证明。
+- 只重跑此前失败胜利分支；败退分支输入与逻辑未变，沿用returns.xml的2/2通过；布局Edit2/2、核心Play2/2、浮层focus1/1和数据链/程序集已通过结果均不重跑。旧returns.xml的2个失败及其日志保留作为历史，胜利结果由新文件覆盖。
+- 真实GUI覆盖1366/1920正式入口目标、预览、确认取消与战报；胜败返回为正式场景链的受控PlayMode证据。胜利临时生命与用户授权一致，不宣称原数值自然实战胜利、数值平衡或用户美术接受。V-FLOW仍需其全部真实前置并独立完整流程复验；V-ART仍由用户确认。
+- 最终主责复核全部代码/测试/scene差异，生产实现沿用Sol已核无P1/P2版本，新增测试修正由主责单模型完成。使用unity-agent-workflows已加载的运行所有者/序列化/UI/验证等参考及UNITY_STRUCTURE索引，不增加模块依赖或新组件职责。相机/模型/正式数值/定时配置未改。
+- 完成本卡归档、从ready队列及活跃backlog行移除；唯一业务提交由本完成记录Git历史追溯。集成前重新从主工作区Show并核同卡原ready route/owner、队列、HEAD、运行占用/锁及路径冲突，再调用invoke-project-integration.ps1受保护fast-forward。所有原始日志、存档、旧工作树与用户改动保留，不apply或删除stash。
+
+## 当前续接提示词
+
+PREVIEW和LAYOUT实现验收已收口；从主工作区git HEAD、归档U-GZ-PLAYTEST-UI-LAYOUT-01及本记录确认最终保护集成结果。胜利使用用户授权的测试临时enemy HP1，正式数据839未变；不得把它解释为原数值自然获胜或V-FLOW完成。保留所有工作树/日志/存档/用户改动，不重验CAMERA/TIMELINE或TARGET键盘、不重跑输入未变通过测试、不改定时配置、不apply或删stash。V-FLOW仅按其直接任务事实核真实剩余前置，V-ART由用户本人确认；不重审整个backlog。

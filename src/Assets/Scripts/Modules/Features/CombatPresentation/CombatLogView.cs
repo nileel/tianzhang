@@ -7,10 +7,27 @@ namespace TianZhang.Features.CombatPresentation
     {
         [SerializeField] private Text logText;
         [SerializeField] private ScrollRect scrollRect;
+        [SerializeField] private GameObject panel;
+        [SerializeField] private Button toggleButton;
+        [SerializeField] private Button closeButton;
         private bool scrollToLatest;
+
+        private void Awake()
+        {
+            toggleButton.onClick.AddListener(() => SetExpanded(!panel.activeSelf));
+            closeButton.onClick.AddListener(Hide);
+        }
+
+        public void Hide() => SetExpanded(false);
+        private void SetExpanded(bool expanded)
+        {
+            if (panel != null) panel.SetActive(expanded);
+            if (expanded) scrollToLatest = true;
+        }
 
         public void Clear()
         {
+            Hide();
             if (logText != null) logText.text = string.Empty;
             scrollToLatest = true;
         }
