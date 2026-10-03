@@ -1,0 +1,166 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-TIMELINE-01",
+  "title": "正式战斗行动轴与真实CT状态显示",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-03：真实CTB行动轴投影、双分辨率正式入口与缩放缺字修正已验证；受影响HP及TIMELINE正式链2/2通过，本卡完成，不代替整批或用户美术验收。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Scripts/Combat/Turns/CTBEngine.cs.meta",
+    "src/Assets/Scripts/Combat/CombatTurnScheduler.cs.meta",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs.meta",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs.meta",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-TIMELINE-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-TIMELINE-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-TIMELINE-01 · 正式战斗行动轴与真实CT状态显示
+
+## 来源与当前边界
+
+- 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
+- 唯一结果：正式战斗行动轴与真实CT状态显示。主责统一复核差异、验证与单一candidate；不接管其他叶子。
+- 未ready前不得以当前候选路径开工。直接准备卡须消费真实输出，补齐字面量路径（含生成资产与.meta）、输入来源、测试和风险投影；仅移除blockedBy不代表可执行。
+
+## 必查范围
+
+- docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md
+- AGENTS.md#修改与验证
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- 开发管理/任务卡/D-GZ-PLAYTEST-UI-AUDIT-01.txt（已归档则读取对应完成结论）
+- 开发管理/任务卡/U-GZ-PLAYTEST-MOVE-RULE-01.txt（已归档则读取对应完成结论）
+- 开发管理/关中战斗UI逐项排查记录.txt#真实调度后的动作日志
+- docs/superpowers/specs/2026-10-01-guanzhong-combat-ui-runtime-contract.md#2. TIMELINE：真实状态的只读投影
+- docs/superpowers/specs/2026-10-01-guanzhong-movement-interaction.md（行动阶段与结束入口）
+- 按以上路径定位本步骤的完整逻辑单元、直接调用者和验证入口，不整库读档。代码事实查src；方案/数值事实查对应docs；禁止用摘要代替原文。
+
+## 实施范围
+
+- 2026-10-03续接范围冻结：依当次整批授权，仅新增CombatUnitHealthBarView.cs作为已证实缩放缺字修正owner。保存Configure注入的Canvas，在既有LateUpdate发现scaleFactor变化时标记两个bar.root布局失效；不改字体、字号、Overflow、Builder或场景几何。正式AdventureScene的Installer→view→UpdateResources/LateUpdate为唯一生产调用面；其他UI与规则不在本次修正范围。以1366→1920未改变资源时的真实框宽、行高与网格顶点及待机后复验为门；失败即重新取证，不叠加布局机制。
+- 按审计合同从唯一CTBEngine/CombatTurnScheduler只读状态形成行动轴DTO，显示当前行动者、单位顺序、CT和实际冷却门槛；不得做假的交替头像或另建UI计时器。只影响表现与只读投影；移动阶段合同先落地，保持真实顺序一致。
+- 严格消费新运行合同第2节：CTB文件内不可变快照及现队列原序，Scheduler过滤死亡，Coordinator以真实advance/移动阶段构造稳定ID的Timeline DTO，Presenter→新TimelineView显示。实际CT/门槛/CurrentTick来自引擎，不以战报动作顺序冒充逐tick数值证明。
+- 只使用当前expectedPaths；新类型放在已列文件内，新脚本仅CombatTimelineView和GuanzhongCombatTimelinePlayModeTests及其.meta。Builder保存场景、Installer注入；既有Presenter.Configure调用者不扩改，单独增加轴配置入口。
+- 左窄轴使用v6参考尺寸；战斗时隐藏与其直接冲突的探索面板，Hide/退出恢复。当前行动者与查看焦点分开；保留1v1固定命令目标，不实现未知后续行动的“自身预计下次位置”，不扩建世界选中/技能预览/全屏UI。
+
+## 禁止项
+
+- 不扩大到其他地区、全套金丹/神通、动画骨骼、全局UI框架或新自动化机制；不修改未列路径。
+- 不把模型意见、静态文档、测试fixture或Editor预览当正式运行证据；场景功能在Unity验收，可抽象角色数值平衡才运行BattleSim。
+- 保留用户改动；不删除历史源资产，不在未量化情况下叠加scale/offset补丁。
+
+## 模型协作
+
+- 复杂：涉及权威规则/表现边界或已有证据冲突。推荐执行主模型 GPT-6.1 Sol（gpt-6.1-sol / high）；主模型仍以入口实际值为准。独立的规则或数据证据冲突核查优先 gpt-6-astra / high，只读直接事实源，返回允许/禁止/歧义及证据；不因模型建议新增规则。
+- 子智能体只读、不得改卡/队列/提交/runtime/锁或派生；写前核对实际工具支持，记录调用/未执行与证据。辅助能力不是虚构完成证据；确无独立工作面则主责直接完成。不会因本卡修改全局自动化模型设置。
+
+## 验证
+
+- 固定不同速度/惩罚样本下UI顺序与调度事件一致；移动中、行动提交、等待、死亡/退出后刷新正确；正式Game View及定向PlayMode。
+- 新运行合同第2节的三组验收是完成门：快照读取不变更引擎/下一真实Advance；多ready原序、不同速度/门槛、Wait与移动阶段；正式入口1920×1080/1366×768可见结果及同会话ActorId、tick、CT、门槛、队列数值证据。测试放已列PlayMode文件，不另建测试框架。
+- 只跑受改动影响的编译/直接EditMode或PlayMode；src/Assets变化校验对应.meta及数据链，正式可见结果必须有Game View/运行数值。
+- 卡片/依赖/队列一致与schema2风险预检；文档/管理路径使用check-review-text，暂存前check-pending-whitespace，暂存后git diff --cached --check。相关输入未变不重复同范围验证。
+
+## 完成条件
+
+- 上述唯一结果与验证均有可追溯证据；不代替下游实现/独立验收。代码/资源卡无可见效果时不能标完成；设计卡交付可审合同与下游已知完整范围。
+- 准备后的下游重新预检并满足原子/runnable合同才入ready。最终用户重测与整体接受仍由V-GZ-ART-SLICE-01负责。
+
+## 停止条件
+
+- 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-02 准备结论
+
+- 审计证实正式CTB路径在运行、行动轴及CT快照未接；本卡只有真实状态只读投影这一结果。移动规则前置仍未交付，故保持blocked。
+- 准备由实际主模型gpt-6-astra完成，未调用子智能体。expectedPaths没有扩展；新合同与必要完整逻辑单元已定位。实现前重查移动结果，不把当前成功Move立即结束行动的旧行为当正确事实。
+
+## 2026-10-02 前置交付后的执行准备
+
+- 已消费MOVE-RULE完成归档及77ccf501，完整读取Session/Coordinator与CTB/Scheduler、Presenter/Builder/Installer；Sol/high独立只读核查确认原expectedPaths足够。新工作树隔离，不占用HP定时run。
+- ActionThenMove仍显示CTB实际CT/门槛，不把尚未结算的PendingCooldownPenalty当作引擎现值；Finished到下次Advance之间允许无当前项。已排队项保留原序、死亡由Scheduler过滤，蓄力预测复用CTB比较语义且不冒称已排队。
+- Builder在原文件内提供局部轴重建方法，仅添加既有UICanvas下轴并写引用，避免Build全场重建覆盖相机/HP/术法接线。子智能体如获独占写入，只负责CTBEngine与CombatTurnScheduler两路径；主责整合DTO/UI/场景与最终验收，唯一candidate。
+
+## 2026-10-03 手动批次续接检查点（未完成、未提交）
+
+- 用户电脑重启后恢复原独立worktree，先前CTB/DTO/轴实现完整保留。2026-10-03已将master e88b469c的HP结果合入本工作树；冲突按实际owner合并，局部RebuildCombatTimeline保留同Canvas血条。Sol/high只读复核Installer/Presenter/Builder接缝与YAML：两view各1个、引用一致，HP子树56块无语义变化。
+- 既有7项调度检查通过，原正式链失败系Unity销毁对象的null条件运算符未识别fake-null，已改显式!=null；修复后的正式链1/1通过。标签几何失败已取得运行数据：普通字体14宽度不足，现单行“2石甲兽”字号12、preferred42×18、框50×44、vertices16且不与24×24图形重叠；当前66×66、普通52×46。证据src/Logs/timeline/playmode.xml（原7过1失败）、playmode-formal-final.xml（修复后1过）。
+- 与HP合并后只复验受影响两条正式StartMenu链，src/Logs/timeline/rebase-formal.xml 2/2通过，rebase-import.log退出0。真实会话数值对照为formal-session-44540.txt及formal-session-45976.txt：tick13玩家104/100、敌78/100；Move/Guard阶段保持CT；EndTurn后玩家0；tick17敌102/100、玩家32；Wait、死亡过滤与重进新会话均逐步对照同一Session/Scheduler。数据链83/83、606语言键通过。
+- 实际可见入口：StartMenu新建默认寒门“无名修士”、slot timeline-20261003-resume→关陇→关中城→野外→石甲兽。1920×1080玩家当前104/100、敌焦点78/100，待机后tick19敌12/100；1366×768当前玩家100/100，继续待机tick26玩家106/100。截图02至07在本WT的src/Logs/timeline/。当前行动者与查看焦点分离，不改变命令目标。
+- 合并后的实际复验从StartMenu已有存档按钮加载“李林”进入同一路线，双方资源571/571、180/180与839/839、108/108，tick13一致；1366×768与1920×1080同时可见HP和轴、焦点切换正常，截图08-merged-hp-timeline-1366.png、09-merged-enemy-focus-1366.png、10-merged-hp-timeline-1920.png。
+- 未通过的可见结果：从1366切到1920后点击待机，tick19轴正常刷新，玩家509/571正常；敌方头顶文字只剩部分身份/“生命”/“灵力”，数字缺失，持续等待仍未恢复。截图11-merged-wait-enemy-glyph-loss-1920.png。只读探针merged-enemy-health-glyph-loss.json证实Health active=true、m_Text=“生命 839/839”、Font=GuanzhongChinese字号18、Rect=102.606147766×32、localScale=1；merged-focus-1920.json为同现场CT12/门槛100。尚未取得该现场TextGenerator行数/字形顶点/像素调整Rect，不把字体图集或像素舍入猜测当根因，不加偏移/兜底补丁。
+- 因上述合并现场失败，本卡不归档、不提交业务candidate、不集成；主线仍e88b469c。本卡仍ready表示可继续修复，未谎称外部阻塞。下一轮从该复现点查同一Text的实际preferred尺寸、行数/顶点及最终像素Rect，先确认owner与根因；若需改HP自身路径，先依最新授权与规则做最小路径/风险准备，禁止混入未经冻结的修补。
+- 用户要求上下文过长时保存现场并给新对话提示词；本次在这个明确失败点交接，后续继续原批次，不重启全量审计。不得删除保存现场的stash“timeline-formal-verified-before-hp-20261003”或两术法的“spells-before-hp-origin-prep-20261003”，它们仅为合并前备份；当前工作树已应用，不要再次apply。
+
+## 2026-10-03 09:40后续检查点：缺字根因已确认，尚未修复
+
+- 本节更新前节“根因未确定”的状态；本卡仍未完成、未提交、无candidate、未归档、未集成。主线与本树HEAD仍e88b469c；本轮没有修改任何生产代码、卡的route/owner/dispatchState或定时配置。主模型从Node REPL元数据核验为gpt-6-astra；Astra/high子智能体独立核查布局链，Sol/high核查两术法，Sol/medium核查CAMERA与直接前置。
+- 本树风险预检已运行，taskCardDigest=9960fcfd3ca75b9d15a1f4d03dcfb5776d836ea0f9a89cd6fd6cb0ef704d9a53，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，mustRead/matched/gates为空。该digest对应写本节之前；新增生产owner路径前必须重新冻结范围并重跑预检，不沿用旧digest。
+- 原失败现场先保存src/Logs/timeline/12-resumed-glyph-loss-1920.png和resumed-enemy-health-before-diagnostic.json，然后正常退出旧Unity。已在允许的GuanzhongCombatTimelinePlayModeTests.cs内增加仅Editor可用的菜单“天章/诊断/采集当前头顶文字”，Unity编译成功；只读六个真实Text的原generator/mesh/Rect，再取得preferred和独立generator对照，不改真实Text、不强刷布局、不更改会话。此菜单新增部分仍需最终代码复核；未重跑原未受影响测试。
+- 新真实会话从StartMenu新建，slot=timeline-20261003-glyph，姓名李林，默认寒门；经关陇玄域→关中城→关中野外→石甲兽进入战斗。该次是布局诊断，未冒称完成悬赏/V-FLOW验收。1366×768时tick13，玩家571/571、180/180，敌839/839、108/108。切到1920后在待机之前双方即缺字；点击真实待机后tick19，玩家509/571的整行恢复，敌方仍缺字。
+- 原始几何证据：src/Logs/timeline/health-text-20261003T013934.1020948Z.txt（1366）、health-text-20261003T014038.5001006Z.txt（1920待机后）。截图13-reproduced-before-wait-1920.png和14-reproduced-after-wait-1920.png。1366 Canvas scale/ppu=0.7114583，1920=1；pixelPerfect=false，PixelAdjustedRect与Rect相同。
+- 根因：敌方Identity/Health/Spirit在1920残留框宽59.0336761/102.606148/99.79502，逐位等于1366 preferred宽；1920当前preferred应60/107/103。高度仍32，而换行后的preferredHeight为58/52/52；真实网格仅8/12/12顶点，独立相同设置generator同样截断，仅横向Overflow对照为完整12/36/36。不是缺字图集或像素Rect舍入；不得用Overflow或加宽补丁掩盖旧布局。
+- 本地uGUI链：CanvasScaler在preWillRenderCanvases更新scaleFactor，没有显式标记子布局；动态Text.pixelsPerUnit随之改变preferred尺寸，Text.text仅字符串改变时SetLayoutDirty。玩家受伤改变字符串后父行自然重排，三个框恢复40/105/103；敌方字符串未变，旧宽度持续保留。HorizontalLayoutGroup与ContentSizeFitter重新参与布局即可按当前preferred恢复。
+- 最小候选修正owner为src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs：保存已有注入Canvas，在现有LateUpdate检测scale变化时仅将两个bar.root标为需重排，继续使用既有布局计算。无需改Builder/Scene/Installer/字体/规则。尚未实施；该路径不在本卡expectedPaths，续接先按用户整批授权及卡停止条件做最小范围准备与预检，不擅自混入。CanvasScaler渲染前改scale，LateUpdate下一帧捕获；不另加第二套时序机制。
+- 修正后最小验证：同一正式会话1366→1920，不先改变资源，等待正常两帧后核对敌方框60/107/103、preferredHeight不超过32、顶点12/36/36，再点真实待机核对同组证据；同时保留轴CT/焦点的双分辨率正式入口证据。未取得则不可完成。
+- 停止时Unity主进程7728仍开本树src，日志src/Logs/timeline/editor-diagnostic.log，最近可见现场为上述1920/tick19失败；下次必须重新枚举进程/窗口，不复用旧句柄。没有关闭此现场。两树ProjectSettings差异仍未纳入允许路径，提交前逐项核实噪声。
+- SPELLS本轮新正式小族按钮链formal-origin-chain-playmode.xml已1/1通过；真实双分辨率施法仍未验收，详见其验证记录最新节。CAMERA仍缺真实按住键盘平移/中键拖动，现有sky文档API没有hold时长/keyDown/up或drag鼠标按钮，不把瞬时按键/普通拖动替代验收。
+- 直接依赖已核对，无须再审整个backlog：MOVE-UI只缺CAMERA（MOVE-RULE、BASE-FIT完成）；TARGET缺TIMELINE/MOVE-UI（TEXT完成）；PREVIEW缺TARGET/TIMELINE/MOVE-UI/SPELLS；LAYOUT缺CAMERA/TIMELINE/MOVE-UI/SPELLS/TARGET/PREVIEW（HP/TEXT/EXIT完成）。最新Show两个owner run为空、activeTaskIds=[]，但本轮返回integrationLockStatus=unknown，不得冒称锁空闲；每次集成必须重新核验。
+
+## 2026-10-03 10:08完成检查点：行动轴与缩放缺字验证通过
+
+- 本节取代09:40节的未修复状态。主模型经Node REPL核验gpt-6-astra；本轮Sol/high分别只读核对TIMELINE与SPELLS，Sol/medium只读核对CAMERA和直接依赖。主责统一实施、实机、完整差异复核和提交；子智能体没有修改卡、队列、runtime、锁或创建提交。
+- 写前已将CombatUnitHealthBarView.cs加入字面expectedPaths并冻结最小修正范围；预检taskCardDigest=87f3f4fd79087926f18fcb145ec92e1a84749e9886a58e73a55b4b615953e0d6，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates/gatePointers为空，与schema2投影相符。此digest对应本节归档前的ready卡，不冒充归档正文digest。
+- 唯一缺字修正是在原view保存注入Canvas及scaleFactor，既有LateUpdate检测缩放变化后对两个bar.root调用LayoutRebuilder.MarkLayoutForRebuild；未改字体、字号、Overflow、条框几何或另设时序机制。
+- 实际新会话由StartMenu真实按钮新建默认寒门“无名修士”，槽timeline-layout-fix-1003，经关陇玄域→关中城→野外→石甲兽；此轮仅验证布局和行动轴，未冒称完成悬赏/V-FLOW。1366×768 tick13玩家571/571、180/180，敌839/839、108/108。保持字符串不变切1920×1080，敌身份/生命/灵力框宽已为60/107/103，preferredHeight=29/26/26，实际mesh=12/36/36，框高32；真实待机后tick19同组数值仍正确，玩家509/571、敌焦点CT12/100，当前行动者保持玩家。
+- 真实只读数值证据均在本工作树src/Logs/timeline：health-text-20261003T015808.3658197Z.txt（1366）、health-text-20261003T015908.6070721Z.txt（1920未改资源）、health-text-20261003T020023.7149386Z.txt（1920待机后）；对应截图15-layout-fix-before-1366.png、16-layout-fix-unchanged-resources-1920.png、17-layout-fix-wait-enemy-focus-1920.png。未通过强刷布局、修改Text或注入会话制造通过。
+- 受改动影响的两条正式入口PlayMode定向复验：layout-fix-formal.xml total=2/passed=2/failed=0，layout-fix-formal.log，Unity退出0。既有7项调度快照测试、移动/行动/等待/死亡/重进证据及已通过83/83数据链和606语言键输入未变，不重跑。最终Unity批处理PID24392已退出；交互PID26324亦正常关闭，当前无本轮Unity现场，下轮重新枚举窗口和进程。
+- 场景完整差异复核：新增45个YAML块，仅4个既有块写入行动轴及Presenter/Installer/Canvas引用；既有HP子树56块完全无语义变化，新增本地引用与GUID解析正确。新增TimelineView和测试meta GUID唯一。已清理AdventureScene纯行尾空白；TIMELINE与SPELLS的ProjectSettings.asset均完整核实为androidAppCategoryOther/qnxGraphicConfPath两处行尾空白，已仅还原这两份噪声文件。
+- 正式StartMenu存在多存档时标题/新建入口被挤薄、存档区域白条的独立现象；正常重开仍在，实际新建按钮仍可点击进入。已知SaveSlots当时14个有效schema3存档，静态代码显示内层列表childControlHeight=false与按钮默认100高会撑高外层，但未取得该菜单运行几何，不把该解释写成已证实根因。此卡未修改菜单、删除存档或扩张修补，后续按实际入口取证。
+- 本卡完成后可供TARGET/PREVIEW/LAYOUT消费，但其他真实前置仍须分别核实；不按旧blockedBy机械阻塞，也不把本卡完成等同于MOVE-UI/SPELLS/CAMERA完成。SPELLS真实小族双分辨率施法及普通输入导出未做；CAMERA仍缺实际按住键盘与中键拖动证据。V-FLOW和V-ART保持原验收责任。
+- 所有本地日志、三个原工作树、两个已应用的备份stash保留，不重复apply、不删除。定时配置未改。Show必须显式传主仓RepositoryRoot才能在无run时定位集成锁；本轮明确参数的读取为两个run空、activeTaskIds=[]、integrationLockStatus=none，实际集成前仍须重新核验并调用受保护入口。
+
+## 经验候选
+
+### CAND-U-GZ-PLAYTEST-TIMELINE-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：正式Canvas从1366切到1920后，敌方头顶文字字符串完整但可见数字消失，改变生命字符串的玩家反而恢复。
+- 已证实根因：CanvasScaler改变scaleFactor使动态Text的pixelsPerUnit及preferred尺寸变化；未变字符串不触发布局失效，父行保留旧preferred宽，Wrap生成第二行后被32高Truncate。原框59.0336761/102.606148/99.79502变更为当下preferred60/107/103后，实际mesh由8/12/12恢复12/36/36。
+- 可能复用范围：动态字体Text配合LayoutGroup/ContentSizeFitter、CanvasScaler运行时缩放且文本值未变化的UI；不推及图集缺字或其他字体渲染故障。
+- 证据：本卡09:40根因节、10:08完成节及其真实health-text日志与截图；CombatUnitHealthBarView.LateUpdate最小修正；layout-fix-formal.xml两条受影响正式链通过。
+- 门禁可能：yes

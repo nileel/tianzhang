@@ -163,6 +163,7 @@ namespace TianZhang.Editor
                 SceneBuildSupport.RequireAsset<Static3DCombatUnitPresentationProfileSet>(
                     FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
+            BuildCombatTimeline(root, canvas, installer, combatPresenter);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -258,6 +259,91 @@ namespace TianZhang.Editor
             text.font = SettlementSceneBuilder.UiFont;
             text.raycastTarget = false;
             return text;
+
+        }
+
+        [MenuItem("天章/场景/接入关中真实行动轴")]
+        public static void RebuildCombatTimeline()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "AdventureRoot");
+            GameObject canvasRoot = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "UICanvas");
+            if (root == null || canvasRoot == null) throw new InvalidOperationException("Adventure HUD owners are missing.");
+            BuildCombatTimeline(root, canvasRoot.GetComponent<Canvas>(), root.GetComponent<AdventureSceneInstaller>(),
+                root.GetComponent<CombatHudPresenter>());
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatTimeline(GameObject root, Canvas canvas, AdventureSceneInstaller installer,
+            CombatHudPresenter presenter)
+        {
+            Transform old = canvas.transform.Find("CombatTimelineRoot");
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            CombatTimelineView view = root.GetComponent<CombatTimelineView>() ?? root.AddComponent<CombatTimelineView>();
+            GameObject rail = SceneBuildSupport.CreatePanel("CombatTimelineRoot", canvas.transform, Vector2.zero, Vector2.one);
+            SettlementSceneBuilder.PlacePanel(rail, new Vector2(52, 196), new Vector2(128, 801));
+            SettlementSceneBuilder.ApplyPanelSkin(rail);
+            rail.GetComponent<Image>().raycastTarget = false;
+            Text tick = SceneBuildSupport.CreateText("TimelineTick", rail.transform, string.Empty, 16);
+            tick.font = SettlementSceneBuilder.UiFont;
+            tick.raycastTarget = false;
+            PlaceTimelineRect(tick.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -2), new Vector2(76, 28));
+            var entries = new RectTransform[2];
+            var buttons = new Button[2];
+            var labels = new Text[2];
+            var portraits = new Image[2];
+            for (int index = 0; index < 2; index++)
+            {
+                buttons[index] = SceneBuildSupport.CreateButton("TimelineEntry" + index, rail.transform, string.Empty, out labels[index]);
+                SettlementSceneBuilder.ApplyButtonSkin(buttons[index]);
+                labels[index].fontSize = 14;
+                labels[index].rectTransform.offsetMin = new Vector2(1, 1);
+                labels[index].rectTransform.offsetMax = new Vector2(-1, -1);
+                labels[index].alignment = TextAnchor.LowerCenter;
+                entries[index] = buttons[index].GetComponent<RectTransform>();
+                PlaceTimelineRect(entries[index], new Vector2(0.5f, 1), new Vector2(0, -34 - index * 71), new Vector2(66, 66));
+                var portrait = new GameObject("Identity", typeof(RectTransform), typeof(Image));
+                portrait.transform.SetParent(entries[index], false);
+                portrait.transform.SetAsFirstSibling();
+                portraits[index] = portrait.GetComponent<Image>();
+                portraits[index].preserveAspect = true;
+                portraits[index].raycastTarget = false;
+                PlaceTimelineRect(portrait.GetComponent<RectTransform>(), new Vector2(0.5f, 1), new Vector2(0, -2), new Vector2(30, 30));
+            }
+            GameObject detail = SceneBuildSupport.CreatePanel("TimelineFocus", rail.transform, Vector2.zero, Vector2.one);
+            SettlementSceneBuilder.ApplyPanelSkin(detail);
+            detail.GetComponent<Image>().raycastTarget = false;
+            PlaceTimelineRect(detail.GetComponent<RectTransform>(), new Vector2(0, 1), new Vector2(90, 0), new Vector2(280, 136));
+            Text focus = SceneBuildSupport.CreateText("TimelineFocusText", detail.transform, string.Empty, 18);
+            focus.font = SettlementSceneBuilder.UiFont;
+            focus.alignment = TextAnchor.MiddleLeft;
+            focus.raycastTarget = false;
+            focus.rectTransform.anchorMin = Vector2.zero;
+            focus.rectTransform.anchorMax = Vector2.one;
+            focus.rectTransform.offsetMin = new Vector2(12, 8);
+            focus.rectTransform.offsetMax = new Vector2(-12, -8);
+            SceneBuildSupport.SetObject(view, "root", rail);
+            SceneBuildSupport.SetObject(view, "tickText", tick);
+            SceneBuildSupport.SetObject(view, "focusText", focus);
+            SceneBuildSupport.SetObjects(view, "entryRoots", entries);
+            SceneBuildSupport.SetObjects(view, "entryButtons", buttons);
+            SceneBuildSupport.SetObjects(view, "entryLabels", labels);
+            SceneBuildSupport.SetObjects(view, "entryPortraits", portraits);
+            SceneBuildSupport.SetObject(view, "playerPortrait", SceneBuildSupport.RequireAsset<Sprite>("Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"));
+            GameObject exploration = canvas.transform.Find("AdventurePanel").gameObject;
+            SceneBuildSupport.SetObject(installer, "combatTimelineView", view);
+            SceneBuildSupport.SetObject(installer, "explorationPanel", exploration);
+            SceneBuildSupport.SetObject(presenter, "timelineView", view);
+            SceneBuildSupport.SetObject(presenter, "explorationPanel", exploration);
+            rail.SetActive(false);
+        }
+
+        private static void PlaceTimelineRect(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = new Vector2(anchor.x, 1);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
         }
 
         [MenuItem("天章/场景/重建关中战场")]

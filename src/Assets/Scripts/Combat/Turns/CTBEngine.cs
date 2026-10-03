@@ -15,6 +15,41 @@ namespace TianZhang.Combat.Turns
         public int TicksElapsed { get; }
     }
 
+    public readonly struct CTBUnitSnapshot
+    {
+        internal CTBUnitSnapshot(string id, int speed, float chargeTime, float nextActionThreshold, bool isReady)
+        {
+            Id = id;
+            Speed = speed;
+            ChargeTime = chargeTime;
+            NextActionThreshold = nextActionThreshold;
+            IsReady = isReady;
+        }
+
+        public string Id { get; }
+        public int Speed { get; }
+        public float ChargeTime { get; }
+        public float NextActionThreshold { get; }
+        public bool IsReady { get; }
+    }
+
+    public sealed class CTBSnapshot
+    {
+        internal CTBSnapshot(int currentTick, IEnumerable<CTBUnitSnapshot> units,
+            IEnumerable<string> readyQueueIds, IEnumerable<string> chargingUnitIds)
+        {
+            CurrentTick = currentTick;
+            Units = new List<CTBUnitSnapshot>(units).AsReadOnly();
+            ReadyQueueIds = new List<string>(readyQueueIds).AsReadOnly();
+            ChargingUnitIds = new List<string>(chargingUnitIds).AsReadOnly();
+        }
+
+        public int CurrentTick { get; }
+        public IReadOnlyList<CTBUnitSnapshot> Units { get; }
+        public IReadOnlyList<string> ReadyQueueIds { get; }
+        public IReadOnlyList<string> ChargingUnitIds { get; }
+    }
+
     /// <summary>Pure stable-ID CTB scheduler; it owns no combatant, scene, or presentation reference.</summary>
     public sealed class CTBEngine
     {
@@ -36,6 +71,32 @@ namespace TianZhang.Combat.Turns
         public bool IsReady(string unitId)
         {
             return !string.IsNullOrWhiteSpace(unitId) && units.TryGetValue(unitId, out UnitState state) && state.IsReady;
+        }
+
+        /// <summary>Copies actual state and projects charging order without advancing or consuming the queue.</summary>
+        public CTBSnapshot GetSnapshot()
+        {
+            var snapshots = new List<CTBUnitSnapshot>();
+            var charging = new List<ChargingCandidate>();
+            foreach (UnitState state in units.Values)
+            {
+                snapshots.Add(new CTBUnitSnapshot(state.Id, state.Speed, state.ChargeTime,
+                    state.NextActionThreshold, state.IsReady));
+                if (!state.IsReady)
+                {
+                    // The engine charges at least one tick before checking a non-ready unit,
+                    // including a Wait whose retained overshoot is already above its threshold.
+                    long ticks = Math.Max(1L, (long)Math.Ceiling(
+                        (state.NextActionThreshold - (double)state.ChargeTime) / state.Speed));
+                    charging.Add(new ChargingCandidate(state.Id, state.Speed, ticks,
+                        state.ChargeTime + state.Speed * ticks));
+                }
+            }
+            charging.Sort(CompareChargingUnits);
+            var chargingIds = new List<string>();
+            foreach (ChargingCandidate candidate in charging)
+                chargingIds.Add(candidate.Id);
+            return new CTBSnapshot(CurrentTick, snapshots, actionQueue.ToArray(), chargingIds);
         }
 
         public CTBAdvance AdvanceUntilAction(IReadOnlyDictionary<string, bool> aliveById)
@@ -95,8 +156,20 @@ namespace TianZhang.Combat.Turns
 
         private static int CompareReadyUnits(UnitState left, UnitState right)
         {
-            int speed = right.Speed.CompareTo(left.Speed);
-            return speed != 0 ? speed : right.ChargeTime.CompareTo(left.ChargeTime);
+            return CompareReadyValues(left.Speed, left.ChargeTime, right.Speed, right.ChargeTime);
+        }
+
+        private static int CompareChargingUnits(ChargingCandidate left, ChargingCandidate right)
+        {
+            int ticks = left.TicksUntilReady.CompareTo(right.TicksUntilReady);
+            return ticks != 0 ? ticks : CompareReadyValues(left.Speed, left.ArrivalChargeTime,
+                right.Speed, right.ArrivalChargeTime);
+        }
+
+        private static int CompareReadyValues(int leftSpeed, float leftChargeTime, int rightSpeed, float rightChargeTime)
+        {
+            int speed = rightSpeed.CompareTo(leftSpeed);
+            return speed != 0 ? speed : rightChargeTime.CompareTo(leftChargeTime);
         }
 
         private static bool IsAlive(string unitId, IReadOnlyDictionary<string, bool> aliveById)
@@ -125,6 +198,22 @@ namespace TianZhang.Combat.Turns
             public float ChargeTime { get; set; }
             public float NextActionThreshold { get; set; }
             public bool IsReady { get; set; }
+        }
+
+        private readonly struct ChargingCandidate
+        {
+            public ChargingCandidate(string id, int speed, long ticksUntilReady, float arrivalChargeTime)
+            {
+                Id = id;
+                Speed = speed;
+                TicksUntilReady = ticksUntilReady;
+                ArrivalChargeTime = arrivalChargeTime;
+            }
+
+            public string Id { get; }
+            public int Speed { get; }
+            public long TicksUntilReady { get; }
+            public float ArrivalChargeTime { get; }
         }
     }
 }

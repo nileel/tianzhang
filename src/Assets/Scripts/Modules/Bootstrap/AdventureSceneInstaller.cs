@@ -32,6 +32,8 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatCommandInput combatCommandInput;
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
+        [SerializeField] private CombatTimelineView combatTimelineView;
+        [SerializeField] private GameObject explorationPanel;
         [SerializeField] private Static3DCombatUnitPresentationProvider static3DUnitPresentationProvider;
         [SerializeField] private CombatUnitHealthBarView combatUnitHealthBars;
         [SerializeField] private Camera battlefieldCamera;
@@ -57,6 +59,8 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatCommandInput, "combat_command_input_missing");
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
+                RequireReference(combatTimelineView, "combat_timeline_view_missing");
+                RequireReference(explorationPanel, "combat_exploration_panel_missing");
                 RequireReference(static3DUnitPresentationProvider, "static_3d_presentation_provider_missing");
                 RequireReference(combatUnitHealthBars, "combat_unit_health_bars_missing");
                 RequireReference(battlefieldCamera, "battlefield_camera_missing");
@@ -77,6 +81,7 @@ namespace TianZhang.Bootstrap
                 combatHudPresenter.Configure(combatHudView, combatCommandInput, combatLogView);
                 combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
                 combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);
+                combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar);
                 encounterCoordinator.Configure(
                     combatHudPresenter,

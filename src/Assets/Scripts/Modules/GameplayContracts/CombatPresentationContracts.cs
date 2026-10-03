@@ -164,6 +164,50 @@ namespace TianZhang.Gameplay.Contracts
     }
 
     [Serializable]
+    public sealed class CombatTimelineEntrySnapshot
+    {
+        public CombatTimelineEntrySnapshot(string id, string displayName, CombatUnitDisplayFaction faction,
+            int speed, float currentCt, float nextActionThreshold, bool isReady, int queuePosition, bool isCurrent)
+        {
+            Id = id;
+            DisplayName = displayName;
+            Faction = faction;
+            Speed = speed;
+            CurrentCt = currentCt;
+            NextActionThreshold = nextActionThreshold;
+            IsReady = isReady;
+            QueuePosition = queuePosition;
+            IsCurrent = isCurrent;
+        }
+
+        public string Id { get; }
+        public string DisplayName { get; }
+        public CombatUnitDisplayFaction Faction { get; }
+        public int Speed { get; }
+        public float CurrentCt { get; }
+        public float NextActionThreshold { get; }
+        public bool IsReady { get; }
+        public int QueuePosition { get; }
+        public bool IsCurrent { get; }
+    }
+
+    [Serializable]
+    public sealed class CombatTimelineSnapshot
+    {
+        public CombatTimelineSnapshot(int currentTick, string currentActorId, IReadOnlyList<CombatTimelineEntrySnapshot> entries)
+        {
+            CurrentTick = currentTick;
+            CurrentActorId = currentActorId;
+            Entries = entries == null ? Array.Empty<CombatTimelineEntrySnapshot>()
+                : new List<CombatTimelineEntrySnapshot>(entries).AsReadOnly();
+        }
+
+        public int CurrentTick { get; }
+        public string CurrentActorId { get; }
+        public IReadOnlyList<CombatTimelineEntrySnapshot> Entries { get; }
+    }
+
+    [Serializable]
     public sealed class CombatHudSnapshot
     {
         public CombatHudSnapshot(
@@ -172,7 +216,8 @@ namespace TianZhang.Gameplay.Contracts
             string turnText,
             bool acceptsCommands,
             IReadOnlyList<string> artProfileIds,
-            IReadOnlyList<string> divineProfileIds)
+            IReadOnlyList<string> divineProfileIds,
+            CombatTimelineSnapshot timeline = null)
         {
             Player = player;
             Enemy = enemy;
@@ -180,6 +225,7 @@ namespace TianZhang.Gameplay.Contracts
             AcceptsCommands = acceptsCommands;
             ArtProfileIds = artProfileIds ?? Array.Empty<string>();
             DivineProfileIds = divineProfileIds ?? Array.Empty<string>();
+            Timeline = timeline;
         }
 
         public CombatantHudSnapshot Player { get; }
@@ -188,6 +234,7 @@ namespace TianZhang.Gameplay.Contracts
         public bool AcceptsCommands { get; }
         public IReadOnlyList<string> ArtProfileIds { get; }
         public IReadOnlyList<string> DivineProfileIds { get; }
+        public CombatTimelineSnapshot Timeline { get; }
     }
 
     public interface ICombatPresentationSink

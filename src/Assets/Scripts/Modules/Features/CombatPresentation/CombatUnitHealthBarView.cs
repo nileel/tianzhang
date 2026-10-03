@@ -23,6 +23,8 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private Bar[] bars = Array.Empty<Bar>();
         private Camera worldCamera;
+        private Canvas canvas;
+        private float layoutScaleFactor;
         private Static3DCombatUnitPresentationProvider provider;
         private bool configured;
 
@@ -46,6 +48,8 @@ namespace TianZhang.Features.CombatPresentation
                     throw new InvalidOperationException("combat_health_bar_duplicate_slot");
             }
             this.worldCamera = worldCamera;
+            this.canvas = canvas;
+            layoutScaleFactor = canvas.scaleFactor;
             this.provider = provider;
             foreach (Bar bar in bars)
             {
@@ -121,6 +125,8 @@ namespace TianZhang.Features.CombatPresentation
         private void LateUpdate()
         {
             if (!configured) return;
+            bool scaleChanged = layoutScaleFactor != canvas.scaleFactor;
+            layoutScaleFactor = canvas.scaleFactor;
             foreach (Bar bar in bars)
             {
                 Vector3 anchor = default;
@@ -138,6 +144,8 @@ namespace TianZhang.Features.CombatPresentation
                     }
                 }
                 bar.root.gameObject.SetActive(visible);
+                // Dynamic Text preferred sizes change with pixelsPerUnit even when its string does not.
+                if (scaleChanged) LayoutRebuilder.MarkLayoutForRebuild(bar.root);
             }
         }
 

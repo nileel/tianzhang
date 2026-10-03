@@ -260,7 +260,32 @@ namespace TianZhang.Features.Adventure
                 turnText,
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
-                spawned.PlayerDivineProfileIds));
+                spawned.PlayerDivineProfileIds,
+                timeline: BuildTimeline()));
+        }
+
+        private CombatTimelineSnapshot BuildTimeline()
+        {
+            CombatTurnSnapshot turns = session.TurnScheduler.GetSnapshot(session.Combatants.All);
+            string current = session.TurnPhase == CombatTurnPhase.Finished ? null : session.CurrentActorId;
+            var units = turns.Units.ToDictionary(unit => unit.Id, StringComparer.Ordinal);
+            var entries = new List<CombatTimelineEntrySnapshot>();
+            var included = new HashSet<string>(StringComparer.Ordinal);
+            void Add(string id, int queuePosition)
+            {
+                if (string.IsNullOrEmpty(id) || !units.TryGetValue(id, out CombatTurnUnitSnapshot unit) || !included.Add(id)) return;
+                session.Combatants.TryGet(id, out CombatantSnapshot combatant);
+                bool isPlayer = combatant.Team == CombatTeam.Player;
+                entries.Add(new CombatTimelineEntrySnapshot(id,
+                    isPlayer ? playerDisplayName : resolveText(spawned.EnemyData.displayNameKey),
+                    isPlayer ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
+                    unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady, queuePosition,
+                    string.Equals(current, id, StringComparison.Ordinal)));
+            }
+            Add(current, -1);
+            for (int index = 0; index < turns.ReadyQueueIds.Count; index++) Add(turns.ReadyQueueIds[index], index);
+            foreach (string id in turns.ChargingUnitIds) Add(id, -1);
+            return new CombatTimelineSnapshot(turns.CurrentTick, current, entries);
         }
 
         private void Complete(CombatSessionOutcome outcome)

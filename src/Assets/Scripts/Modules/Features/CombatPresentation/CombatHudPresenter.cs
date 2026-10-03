@@ -9,6 +9,14 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatCommandInput commandInput;
         [SerializeField] private CombatLogView logView;
         [SerializeField] private CombatUnitHealthBarView healthBars;
+        [SerializeField] private CombatTimelineView timelineView;
+        [SerializeField] private GameObject explorationPanel;
+
+        public void ConfigureTimeline(CombatTimelineView timeline, GameObject exploration)
+        {
+            timelineView = timeline;
+            explorationPanel = exploration;
+        }
 
         public void Configure(
             CombatHudView hudView,
@@ -24,6 +32,8 @@ namespace TianZhang.Features.CombatPresentation
         {
             view?.Present(snapshot);
             healthBars?.Present(snapshot);
+            timelineView?.Present(snapshot?.Timeline);
+            explorationPanel?.SetActive(snapshot == null);
             string art = snapshot != null && snapshot.ArtProfileIds.Count > 0 ? snapshot.ArtProfileIds[0] : null;
             string divine = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             commandInput?.SetContext(
@@ -42,6 +52,8 @@ namespace TianZhang.Features.CombatPresentation
         {
             view?.Hide();
             healthBars?.Hide();
+            timelineView?.Hide();
+            explorationPanel?.SetActive(true);
             commandInput?.SetContext(null, null, null, null, false);
         }
     }
