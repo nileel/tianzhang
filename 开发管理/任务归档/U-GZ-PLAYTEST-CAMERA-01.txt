@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：unity_batchmode_project_locked_by_manual_worktree",
+  "stateReason": "2026-10-03：正式相机size4、键鼠平移及UI/边界守卫实现完成；用户明确确认实机验完，既有定向4/4与6/6及主线消费后正式流程2/2通过，保留机器采集与用户确认的证据边界。",
   "expectedPaths": [
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
@@ -31,7 +31,9 @@
     "src/Assets/Tests/PlayMode/TianZhang.PlayModeTests.asmdef.meta",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs",
     "src/Assets/Tests/EditMode/AssemblyBoundaryEditorTests.cs.meta",
-    "tools/check-unity-assembly-boundaries.ps1"
+    "tools/check-unity-assembly-boundaries.ps1",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -97,3 +99,21 @@
 - 相机挂在正式 Camera，经 Builder 配置 GuanzhongBattlefield。bounds 由真实棋盘子 renderer 合并，只用于相机视线与棋盘平面交点的 XZ 钳制，不能把整个视窗强塞进小棋盘导致不能平移。不用固定格数、UI板、全场景Renderer或人物FX作为边界。
 - 新 Input System Keyboard/Mouse 实际设备事件驱动定向测试；UI 指针或 InputField 焦点阻止相机输入；鼠标中键从 UI 开始不得启动拖动，释放/失焦/禁用清除拖动状态。既有 Camera 朝向/Y 保持，帧时长只用于按键速度，拖动按地平面射线差值不再乘帧时长。
 - 本准备是已授权实施的最小直接依赖补齐；不改变任务目标，不新增自动化状态或第二相机框架。
+
+## 2026-10-03 实机确认与直接测试接缝
+
+- 用户明确确认相机已实机验完；作为用户操作验收记录，不再要求重复持键和中键拖动。既有三份未产生位移的机器探针不冒充成功位移数据，保留原始证据。
+- 主责复用保留原CAMERA工作树并在11条未提交路径逐字节备份后消费主线efca74b4；只组合Scene、Builder和PlayModeTests.asmdef三处重叠，其他实现不变。
+- 直接正式流程测试AssertFormalBattlefieldPresentation仍断言旧size6.2和固定XZ位置，与本卡已批准的size4及焦点边界钳制冲突。补入该既有测试及meta字面路径；仅改相机断言为size4、Y/朝向不变、控制器接线与焦点在实际棋盘bounds内，其他战斗断言不变。重跑其直接调用用例，不为测试回退生产或修改共享BeginScene。
+
+
+## 2026-10-03 完成检查点
+
+- 用户明确反馈“相机我都验完了，上面不都说过来吗”，主责接受为用户完成正式实机验收，不再要求重做。历史formal-before/formal-key-d/formal-ui-gate三份未产生位移的探针只证明当时状态，不冒充持键/中键成功数值；用户确认和机器证据分别记录。
+- 生产所有者为AdventureCameraController；Builder的Build、RebuildGuanzhongBattlefield、RebuildTacticalCamera显式配置Camera与GuanzhongBattlefield。Scene保存size4、enabled组件、正确Camera/棋盘引用、groundHeight=.34、panSpeed4；保持相机Y=8、朝向38度。InputSystem直接引用只补Adventure和PlayModeTests，不改共享BeginScene/包/全局输入配置。
+- 既有src/Logs/camera/editmode.xml 4/4、playmode-3.xml 6/6通过，输入未变不重跑；本轮消费efca74b4后src/Logs/camera/formal-main-consumed.xml两条直接正式流程2/2通过：FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads与FormalStartMenuSessionSupportsBothMoveActionOrdersAndProjectsTheCanonicalPath。旧size6.2和固定XZ测试改为size4、Y/朝向、组件引用和实际棋盘bounds内焦点断言；未弱化战斗/接地断言。
+- check-unity-assembly-boundaries通过19程序集/2asmref；check-data-chain通过GongFa29/29、Spells83/83、Skills31/31、语言606。正式角色数值未改，不跑BattleSim平衡矩阵。消费合并引入的PlayModeTests重复UnityEngine.UI引用已去重。
+- 原11条未提交路径完整字节备份在src/Logs/camera/consume-main-20261003/working，manifest保存cd797cf7→efca74b4及3个交集；仅合并AdventureScene、Builder、PlayModeTests.asmdef，保留主线HP/TIMELINE。ProjectSettings两处自动尾空白完整核实后还原。原工作树、测试日志与两个已应用stash全部保留，不apply、不删除。
+- 扩直接测试路径后预检status=ok，taskCardDigest=77a88353905220b396b470ec7d3ae7ccf7c957ee47b0a530096da3fb5d8b76f9，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched=EXP-UNITY-002，mustRead已消费，gates/gatePointers为空，与schema2一致。此digest为归档前任务卡，不是归档正文digest。
+- 复用只读camera_evidence（先前请求Sol/medium，实际模型/强度未独立核实）复核生产diff与直接测试陈旧合同；主责统一合并、测试、最终diff与单一提交，子智能体未写文件/卡/队列、未提交、未操作runtime或锁，未派生。
+- 本卡仅提供CAMERA实际完成前置；MOVE-UI须另按真实规则/底座与SPELLS共享接缝准备实施，TARGET/PREVIEW/LAYOUT与V-FLOW/V-ART不因此完成。每次主线集成仍重读显式RepositoryRoot的Show、同卡、队列、锁与冲突，经invoke-project-integration.ps1；定时配置不改。

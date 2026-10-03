@@ -9,6 +9,7 @@ namespace TianZhang.Features.CombatPresentation
     {
         [SerializeField] private CombatActionBarView actionBar;
         private ICombatCommandHandler handler;
+        private CombatMovementView movementView;
         private string actorId;
         private string targetId;
         private string artProfileId;
@@ -20,10 +21,14 @@ namespace TianZhang.Features.CombatPresentation
         private string firstArtSelectionProfileId;
         private string secondArtSelectionProfileId;
 
-        public void Configure(ICombatCommandHandler commandHandler, CombatActionBarView bar)
+        public void Configure(ICombatCommandHandler commandHandler, CombatActionBarView bar, CombatMovementView movement = null)
         {
             handler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
             actionBar = bar;
+            movementView = movement;
+            Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
+            Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
+            Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
             Bind(actionBar?.BasicAttackButton, () => { if (CanAct) handler.RequestBasicAttack(actorId, targetId); });
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
@@ -54,6 +59,7 @@ namespace TianZhang.Features.CombatPresentation
             artProfileId = nextArtProfileId;
             divineProfileId = nextDivineProfileId;
             actionBar?.Present(acceptsCommands, artProfileId, divineProfileId);
+            movementView?.Present(null);
         }
 
         public void SetContext(CombatHudSnapshot nextSnapshot)
@@ -70,9 +76,10 @@ namespace TianZhang.Features.CombatPresentation
             firstArtSelectionProfileId = first?.ProfileId;
             secondArtSelectionProfileId = second?.ProfileId;
             actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
+            movementView?.Present(nextSnapshot);
         }
 
-        public void ClearContext() => SetContext(null, null, null, null, false);
+        public void ClearContext() => SetContext(null);
 
         private bool CanAct => acceptsCommands && (snapshot == null || !snapshot.CanEndTurn);
 

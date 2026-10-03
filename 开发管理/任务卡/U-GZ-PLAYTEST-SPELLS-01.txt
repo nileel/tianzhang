@@ -242,3 +242,15 @@
 - 沿用开发管理/关中两术法正式施法验证记录.txt中的既有EditMode/PlayMode、BattleSim直接契约校验、数据链及1366/1920真实正常施法证据，不重复输入未变的已通过检查。真实缺灵力/非法目标禁用或拒绝仍未完成；普通角色输入交付SHA256仍为37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492，来源限制保持原文。
 - 本树仍基于efca74b4，尚未消费主线CAMERA和MOVE实现；必须随后逐完整方法保留两术法与MOVE共享接缝，禁止整文件覆盖。route/owner/stage/dispatchState、队列和下游前置均不变，不更改定时配置或stash。
 - 提交只含本卡已有允许路径的源码、内容、场景、测试、验证记录与输入交付；日志/截图等忽略内容继续留在原树。主目录、其他工作树、用户存档和实验现场均保留。
+
+## 2026-10-03 18:40 共享接缝与真实拒绝验收完成
+
+- 已逐完整方法消费主线 CAMERA/MOVE：Input 保留两个术法稳定 ID、目标切换与 CanEndTurn，并接移动三按钮；ActionBar/DTO/Coordinator 保留权威合法性、费用、CT、恢复效果以及移动/演出锁。局部 RebuildStarterArts 重建术法动作栏后重新绑定移动；RebuildGuanzhongBattlefield 更新实际格引用。未整文件覆盖两术法，也未重验 CAMERA/TIMELINE。
+- 冲突 AdventureScene 原文备份 src/Logs/spells/adventure-unresolved-merge-20261003.unity.txt；以已经通过的 MOVE 场景为基底，执行局部 RebuildStarterArts，恢复三 AttackProfiles 和两术法控件，同时保留相机/行动轴与36格移动引用。merge-rebuild-starter-arts.log 退出0。
+- 受 MOVE 演出锁影响的术法直接测试转发 ICombatPresentationActivity，并等待实际 ActionThenMove/解锁后结束行动。merge-direct-playmode.xml 为4/4通过：正式移动1条、正式出身/两术法/三环境3条；未改输入的既有121 EditMode、11 PlayMode、数据链与BattleSim直接契约结果继续有效，不重复全量运行。
+- 正式入口为 StartMenu 加载先前由真实小族按钮创建并保存的 spells-1920-1003 / 李琳，进入 Settlement→野外→石甲兽。没有 fixture、资源注入或随机源替换。1920自然移动至(0,2)，贯石击显示距离过远；实际禁用点击前后182541与183041.state.json的玩家HP571/MP180、敌HP839/MP108、tick13、pendingCooldown0、MoveThenAction、busy=false完全一致。formal-range-disabled-1920.png 保留可见证据。
+- 真实对敌聚灵每次消耗20；首发后敌正常移动并攻击81，玩家HP490。第二发后玩家正常退至(0,3)，其后每回合观察敌移动两次后防御，HP保持490。共9发将180→160→140→120→100→80→60→40→20→0；末次结束行动后tick139、MoveThenAction、busy=false、pendingCooldown0，两术法均显示灵力不足。没有盲刷到阵亡或改敌AI。
+- 1920及1366各实际点击禁用聚灵。183655.state.json（1920点击前）与183818.state.json（1366点击后）逐对象核对tick、cooldown、phase、actor、busy及双方完整CombatInputEvidence完全一致：玩家(0,3)HP490/MP0、敌(0,1)HP839/MP108。截图formal-spirit-zero-before-1920.png、formal-spirit-zero-after-1920.png、formal-spirit-zero-after-1366.png及消耗过程160/140/20截图保留原树。此证据证明真实UI禁用且不扣费，不冒称禁用按钮仍向内核提交非法命令。
+- 合并后实机首次只读几何发现440高动作栏挤压拒绝文字与日志重叠（182116.state.json）；根因为MOVE96/100高区与双术法控件总高超额。仅局部动作栏设468高/4间距，移动区96高/8间距，不改全局helper/字体/面板。1920 ActionStatus下边240、日志上边228，间隔12像素；1366为170.39对161.85，间隔8.54像素。拒绝文字preferred262.84×22.49、容器372×48、68顶点，无裁切重叠。记录导出只读取当前正式状态并按时间戳存储，不参与生产。
+- 此次通过的是本卡两术法完整链与真实拒绝；普通角色胜率、V-FLOW及用户V-ART尚不因此通过。普通首战输入交付仍保留原施法前JSON及SHA256 37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492，不用本次耗尽灵力状态替换。
+- 主责继续形成合并提交并消费主线9808e7b2的MOVE完成归档，随后本卡路径限定提交、归档与受保护集成；上述日志/截图和全部原工作树保留。Sol只读核共享方法、场景对象差异及真实AI选项；Astra只读核MOVE证据/后续TARGET最小前置。子智能体没有写卡、提交或操作UI/runtime/锁。

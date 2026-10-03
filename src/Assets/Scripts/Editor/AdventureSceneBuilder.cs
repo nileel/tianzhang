@@ -49,7 +49,8 @@ namespace TianZhang.Editor
 
             EnvironmentProfileAsset environmentProfile = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
-            BuildGuanzhongBattlefield(environmentProfile);
+            GameObject battlefield = BuildGuanzhongBattlefield(environmentProfile);
+            ConfigureAdventureCamera(Camera.main, battlefield);
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, Vector2.zero, Vector2.one);
@@ -147,7 +148,79 @@ namespace TianZhang.Editor
                     FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
+            BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/接入关中移动交互")]
+        public static void RebuildCombatMovement()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            GameObject battlefield = Array.Find(scene.GetRootGameObjects(), value => value.name == "GuanzhongBattlefield");
+            Camera camera = Array.Find(scene.GetRootGameObjects(), value => value.name == "Main Camera")?.GetComponent<Camera>();
+            BuildCombatMovement(root, camera, battlefield, SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatMovement(GameObject root, Camera camera, GameObject battlefield,
+            EnvironmentProfileAsset environment)
+        {
+            if (root == null || camera == null || battlefield == null)
+                throw new InvalidOperationException("Formal movement scene owners are missing.");
+            CombatMovementView view = root.GetComponent<CombatMovementView>() ?? root.AddComponent<CombatMovementView>();
+            CombatActionBarView bar = root.GetComponent<CombatActionBarView>();
+            var barData = new SerializedObject(bar);
+            GameObject actionRoot = (GameObject)barData.FindProperty("root").objectReferenceValue;
+            Transform old = actionRoot.transform.Find("MovementControls");
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            var controls = new GameObject("MovementControls", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            controls.transform.SetParent(actionRoot.transform, false);
+            controls.transform.SetAsFirstSibling();
+            SettlementSceneBuilder.ConfigureColumn(controls, 0);
+            controls.GetComponent<VerticalLayoutGroup>().spacing = 8;
+            SettlementSceneBuilder.SetHeight(controls, 96);
+            Text status = SceneBuildSupport.CreateText("MovementStatus", controls.transform, "移力", 18);
+            SettlementSceneBuilder.ApplyTextSkin(status, 32);
+            var row = new GameObject("MovementButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(controls.transform, false);
+            row.GetComponent<HorizontalLayoutGroup>().spacing = 6;
+            row.GetComponent<HorizontalLayoutGroup>().childControlWidth = true;
+            row.GetComponent<HorizontalLayoutGroup>().childControlHeight = true;
+            row.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = true;
+            SettlementSceneBuilder.SetHeight(row, 56);
+            Button move = SceneBuildSupport.CreateButton("MoveButton", row.transform, "移动", out _);
+            Button confirm = SceneBuildSupport.CreateButton("ConfirmMoveButton", row.transform, "确认", out _);
+            Button cancel = SceneBuildSupport.CreateButton("CancelMoveButton", row.transform, "取消", out _);
+            foreach (Button button in new[] { move, confirm, cancel }) SettlementSceneBuilder.ApplyButtonSkin(button);
+            confirm.gameObject.SetActive(false);
+            cancel.gameObject.SetActive(false);
+            // Two starter arts: 96 movement + 344 controls + seven 4-unit gaps.
+            actionRoot.GetComponent<VerticalLayoutGroup>().spacing = 4;
+            SettlementSceneBuilder.SetHeight(actionRoot, 468);
+            SceneBuildSupport.SetObject(bar, "moveButton", move);
+            SceneBuildSupport.SetObject(bar, "confirmMoveButton", confirm);
+            SceneBuildSupport.SetObject(bar, "cancelMoveButton", cancel);
+            SceneBuildSupport.SetObject(bar, "movementLabel", status);
+            Button wait = (Button)barData.FindProperty("waitButton").objectReferenceValue;
+            SceneBuildSupport.SetObject(bar, "waitLabel", wait.GetComponentInChildren<Text>(true));
+            SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatMovementView", view);
+            SceneBuildSupport.SetObject(view, "battlefieldCamera", camera);
+            SceneBuildSupport.SetObject(view, "reachableMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.ReachableMaterialPath));
+            SceneBuildSupport.SetObject(view, "selectedMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
+            var data = new SerializedObject(view);
+            SerializedProperty cells = data.FindProperty("cells");
+            cells.arraySize = environment.battlefieldCells.Length;
+            for (int index = 0; index < cells.arraySize; index++)
+            {
+                EnvironmentBattlefieldCell cell = environment.battlefieldCells[index];
+                SerializedProperty entry = cells.GetArrayElementAtIndex(index);
+                entry.FindPropertyRelative("q").intValue = cell.q;
+                entry.FindPropertyRelative("r").intValue = cell.r;
+                entry.FindPropertyRelative("tile").objectReferenceValue = battlefield.transform.Find("GuanzhongHex_" + cell.q + "_" + cell.r);
+            }
+            data.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [MenuItem("天章/场景/重建关中头顶血条")]
@@ -347,6 +420,10 @@ namespace TianZhang.Editor
             int siblingIndex = existing == null ? 4 : existing.GetSiblingIndex();
             if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
             BuildStarterActionBar(panel, actionBar).transform.SetSiblingIndex(siblingIndex);
+            GameObject battlefield = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "GuanzhongBattlefield");
+            EnvironmentProfileAsset environment = SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            BuildCombatMovement(root, Camera.main, battlefield, environment);
             SceneBuildSupport.SetObjects(root.GetComponent<AdventureSceneInstaller>(), "attackProfiles", LoadAttackProfiles());
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the starter arts HUD.");
@@ -406,10 +483,35 @@ namespace TianZhang.Editor
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             GameObject existing = Array.Find(scene.GetRootGameObjects(), root => root.name == "GuanzhongBattlefield");
             if (existing != null) UnityEngine.Object.DestroyImmediate(existing);
-            BuildGuanzhongBattlefield(environmentProfile);
+            GameObject battlefield = BuildGuanzhongBattlefield(environmentProfile);
+            ConfigureAdventureCamera(Camera.main, battlefield);
+            GameObject adventureRoot = Array.Find(scene.GetRootGameObjects(), root => root.name == "AdventureRoot");
+            BuildCombatMovement(adventureRoot, Camera.main, battlefield, environmentProfile);
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the rebuilt Guanzhong battlefield.");
             AssetDatabase.SaveAssets();
+        }
+
+        [MenuItem("天章/场景/更新关中战术相机")]
+        public static void RebuildTacticalCamera()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject battlefield = Array.Find(scene.GetRootGameObjects(), root => root.name == "GuanzhongBattlefield");
+            if (battlefield == null) throw new InvalidOperationException("AdventureScene requires its battlefield.");
+            ConfigureAdventureCamera(Camera.main, battlefield);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Could not save the Adventure camera.");
+        }
+
+        private static void ConfigureAdventureCamera(Camera camera, GameObject battlefield)
+        {
+            if (camera == null) throw new InvalidOperationException("AdventureScene requires its main camera.");
+            camera.orthographicSize = 4f;
+            AdventureCameraController controller = camera.GetComponent<AdventureCameraController>();
+            if (controller == null) controller = camera.gameObject.AddComponent<AdventureCameraController>();
+            controller.Configure(camera, battlefield.transform, battlefield.transform.GetChild(0).position.y);
+            EditorUtility.SetDirty(camera);
+            EditorUtility.SetDirty(controller);
         }
 
         [MenuItem("天章/场景/重建战术精灵隔离矩阵")]

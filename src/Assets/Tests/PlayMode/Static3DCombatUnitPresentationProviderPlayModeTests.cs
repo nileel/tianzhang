@@ -70,8 +70,9 @@ namespace TianZhang.Tests.PlayMode
 
             provider.Present(new CombatUnitPresentationEventProjection(
                 player.CombatantId, CombatUnitPresentationEvent.Move, player.Position,
-                new CombatUnitPresentationHex(1, -1), 2,
-                new[] { new CombatUnitPresentationTargetResult(enemy.CombatantId, 17, false) }));
+                new CombatUnitPresentationHex(1, -1), 1,
+                new[] { new CombatUnitPresentationTargetResult(enemy.CombatantId, 17, false) },
+                new[] { new CombatUnitPresentationHex(1, -1) }));
             provider.Present(new CombatUnitPresentationEventProjection(
                 enemy.CombatantId, CombatUnitPresentationEvent.Hit, enemy.Position, enemy.Position, 5,
                 new[] { new CombatUnitPresentationTargetResult(player.CombatantId, 19, false) }));
@@ -81,6 +82,7 @@ namespace TianZhang.Tests.PlayMode
             AssertBodyAndRootScale(playerRoot, playerBody, Vector3.one);
             AssertBodyAndRootScale(enemyRoot, enemyBody, Vector3.one);
 
+            while (provider.IsPresenting) yield return null;
             foreach (CombatUnitPresentationDescriptor actor in new[] { player, enemy })
             {
                 provider.Present(new CombatUnitPresentationEventProjection(
@@ -106,6 +108,69 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(1, provider.ActiveCombatantCount);
             provider.Clear();
             Assert.Zero(provider.ActiveCombatantCount);
+            UnityEngine.Object.Destroy(host);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AdjacentPathMovesEachSegmentAndClearCancelsOldSameIdUnit()
+        {
+            var host = new GameObject("PathProviderTest");
+            var provider = host.AddComponent<Static3DCombatUnitPresentationProvider>();
+            SetPrivateField(provider, "profileSet", LoadProfileSet());
+            var actor = new CombatUnitPresentationDescriptor("player", Static3DCombatUnitPresentationProfileSet.PlayerProfileId,
+                CombatUnitDisplayFaction.Player, new CombatUnitPresentationHex(0, 0), 0);
+            provider.Prepare(new[] { actor });
+            Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject root));
+            var path = new[] { new CombatUnitPresentationHex(1, 0), new CombatUnitPresentationHex(1, 1), new CombatUnitPresentationHex(2, 1) };
+            var projection = new CombatUnitPresentationEventProjection("player", CombatUnitPresentationEvent.Move,
+                actor.Position, path[2], 0, Array.Empty<CombatUnitPresentationTargetResult>(), path);
+            Assert.Throws<InvalidOperationException>(() => provider.Present(new CombatUnitPresentationEventProjection(
+                "player", CombatUnitPresentationEvent.Move, actor.Position, path[2], 0,
+                Array.Empty<CombatUnitPresentationTargetResult>(), new[] { path[2] })));
+            Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(actor.Position), root.transform.position);
+            provider.Present(projection);
+            Assert.IsTrue(provider.IsPresenting);
+            Assert.Throws<InvalidOperationException>(() => provider.Present(projection));
+            Vector3 previous = root.transform.position;
+            int samples = 0;
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && provider.IsPresenting;)
+            {
+                yield return null;
+                Vector3 current = root.transform.position;
+                float distanceToPath = float.PositiveInfinity;
+                Vector3 start = Static3DCombatUnitPresentationProvider.HexToWorld(actor.Position);
+                foreach (CombatUnitPresentationHex cell in path)
+                {
+                    Vector3 end = Static3DCombatUnitPresentationProvider.HexToWorld(cell);
+                    float t = Mathf.Clamp01(Vector3.Dot(current - start, end - start) / (end - start).sqrMagnitude);
+                    distanceToPath = Mathf.Min(distanceToPath, Vector3.Distance(current, Vector3.Lerp(start, end, t)));
+                    start = end;
+                }
+                Assert.Less(distanceToPath, 0.0001f, "The root must stay on adjacent path segments.");
+                Assert.LessOrEqual(Vector3.Distance(previous, current), Time.deltaTime * Static3DCombatUnitPresentationProvider.MovementCellsPerSecond + 0.001f);
+                AssertBodyAndRootScale(root, FindBody(root), Vector3.one);
+                if (Vector3.Distance(previous, current) > 0) samples++;
+                previous = current;
+            }
+            Assert.Greater(samples, 2);
+            Assert.IsFalse(provider.IsPresenting);
+            Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(path[2]), root.transform.position);
+            AssertYaw(root, Static3DCombatUnitPresentationProfileSet.RequiredSixDirectionYawDegrees[0]);
+            Assert.Throws<InvalidOperationException>(() => provider.Present(projection));
+            provider.Prepare(new[] { actor });
+            provider.Present(projection);
+            yield return null;
+            provider.Clear();
+            provider.Prepare(new[] { actor });
+            Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject replacement));
+            yield return new WaitForSeconds(1f);
+            Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(actor.Position), replacement.transform.position);
+            Assert.IsFalse(provider.IsPresenting);
+            provider.Present(projection);
+            host.SetActive(false);
+            Assert.IsFalse(provider.IsPresenting);
+            Assert.AreEqual(0, provider.ActiveCombatantCount);
             UnityEngine.Object.Destroy(host);
             yield return null;
         }

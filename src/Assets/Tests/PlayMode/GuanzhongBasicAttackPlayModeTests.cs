@@ -234,6 +234,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(movementBefore - firstPath.MovementCost, player.MovePoints);
             Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
             Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
+            yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, firstPath);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
             Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase,
@@ -243,10 +244,13 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreNotEqual(Vector3.one, startedAttackScale, "The actual provider must have started its attack presentation.");
             int eventsBeforeEnd = recording.Events.Count;
             encounter.RequestEndTurn(player.Id);
+            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase, "EndTurn must be rejected during the attack.");
+            Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale);
+            yield return WaitForMovementPresentation(encounter);
+            encounter.RequestEndTurn(player.Id);
             Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             Assert.AreEqual(eventsBeforeEnd, recording.Events.Count, "EndTurn must not create an Idle presentation event.");
-            Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale,
-                "EndTurn must preserve the attack already running on the actual unit.");
+            Assert.AreEqual(Vector3.one, playerRoot.transform.localScale, "The attack must finish before EndTurn is accepted.");
             int penaltyAfterEnd = session.PendingCooldownPenalty;
             encounter.RequestEndTurn(player.Id);
             Assert.AreEqual(penaltyAfterEnd, session.PendingCooldownPenalty);
@@ -255,6 +259,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(player.MaximumMovePoints, player.MovePoints);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
             Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            yield return WaitForMovementPresentation(encounter);
             HexCoord secondDestination = new HexCoord(0, 0);
             CombatMovementQueryResult secondPath = session.SpatialQuery.QueryMovement(
                 player.Position, secondDestination, player.MovePoints, new[] { enemy.Position });
@@ -264,6 +269,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(player.Position, Is.EqualTo(secondDestination));
             Assert.AreEqual(movementBefore - secondPath.MovementCost, player.MovePoints);
             Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, secondPath);
             encounter.RequestEndTurn(player.Id);
             Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
@@ -273,12 +279,19 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForScene(GameplaySceneNames.StartMenu);
         }
 
+        private static IEnumerator WaitForMovementPresentation(EncounterCoordinator encounter)
+        {
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
+            Assert.IsFalse(encounter.IsPresenting, "Presentation did not release its command lock.");
+            yield return null;
+        }
+
         private static IEnumerator WaitForPlayerTurn(EncounterCoordinator encounter, CombatSession session, string playerId)
         {
-            for (int frame = 0; frame < 300; frame++)
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline;)
             {
                 Assert.IsTrue(encounter != null && encounter.IsRunning, "Formal combat ended before the movement scenario completed.");
-                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.MoveThenAction)
+                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.MoveThenAction && !encounter.IsPresenting)
                     yield break;
                 yield return null;
             }
@@ -698,9 +711,24 @@ namespace TianZhang.Tests.PlayMode
 
             Camera camera = Camera.main;
             Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
-            Assert.Less(Vector3.Distance(camera.transform.position, new Vector3(0f, 8f, -10f)), 0.001f);
+            Assert.AreEqual(8f, camera.transform.position.y, 0.001f);
             Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
-            Assert.AreEqual(6.2f, camera.orthographicSize, 0.001f);
+            Assert.AreEqual(4f, camera.orthographicSize, 0.001f);
+            AdventureCameraController cameraController = camera.GetComponent<AdventureCameraController>();
+            Assert.IsNotNull(cameraController);
+            Assert.IsTrue(cameraController.enabled);
+            Assert.AreSame(camera, GetPrivateField<Camera>(cameraController, "controlledCamera"));
+            Assert.AreSame(battlefield.transform, GetPrivateField<Transform>(cameraController, "battlefield"));
+            Renderer[] renderers = battlefield.GetComponentsInChildren<Renderer>();
+            Assert.IsNotEmpty(renderers);
+            Bounds bounds = renderers[0].bounds;
+            foreach (Renderer renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            var plane = new Plane(Vector3.up, new Vector3(0f, 0.34f, 0f));
+            Ray centerRay = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            Assert.IsTrue(plane.Raycast(centerRay, out float distance));
+            Vector3 focus = centerRay.GetPoint(distance);
+            Assert.That(focus.x, Is.InRange(bounds.min.x - 0.001f, bounds.max.x + 0.001f));
+            Assert.That(focus.z, Is.InRange(bounds.min.z - 0.001f, bounds.max.z + 0.001f));
 
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
@@ -993,10 +1021,11 @@ namespace TianZhang.Tests.PlayMode
             public void Clear() { }
         }
 
-        private sealed class ForwardingPresentationPort : ICombatUnitPresentationPort
+        private sealed class ForwardingPresentationPort : ICombatUnitPresentationPort, ICombatPresentationActivity
         {
             private readonly ICombatUnitPresentationPort actual;
             public readonly List<CombatUnitPresentationEventProjection> Events = new List<CombatUnitPresentationEventProjection>();
+            public bool IsPresenting => (actual as ICombatPresentationActivity)?.IsPresenting ?? false;
             public ForwardingPresentationPort(ICombatUnitPresentationPort actual) => this.actual = actual;
             public void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> combatants) => actual.Prepare(combatants);
             public void Spawn(CombatUnitPresentationDescriptor combatant) => actual.Spawn(combatant);

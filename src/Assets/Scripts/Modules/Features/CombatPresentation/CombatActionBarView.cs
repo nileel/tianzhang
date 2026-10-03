@@ -22,6 +22,14 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text actionStatusLabel;
         [SerializeField] private Text waitLabel;
         private Func<string, string> displayReason = value => value;
+        [SerializeField] private Button moveButton;
+        [SerializeField] private Button confirmMoveButton;
+        [SerializeField] private Button cancelMoveButton;
+        [SerializeField] private Text movementLabel;
+        public Button MoveButton => moveButton;
+        public Button ConfirmMoveButton => confirmMoveButton;
+        public Button CancelMoveButton => cancelMoveButton;
+
         private Func<string, string> displayProfile = value => value;
 
         public void ConfigureText(Func<string, string> profileDisplay, Func<string, string> reasonDisplay = null)
@@ -60,7 +68,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             bool visible = snapshot != null && snapshot.AcceptsCommands;
             bool canAct = visible && !snapshot.CanEndTurn;
-            root?.SetActive(visible);
+            root?.SetActive(snapshot != null);
             SetEnabled(basicAttackButton, canAct);
             SetEnabled(guardButton, canAct);
             SetEnabled(waitButton, visible);
@@ -109,6 +117,20 @@ namespace TianZhang.Features.CombatPresentation
                     return target;
             }
             return null;
+        }
+
+        public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption selected, CombatMovementOption preview = null)
+        {
+            bool canInput = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
+            SetEnabled(moveButton, canInput && snapshot.Movement != null && snapshot.Movement.Options.Count > 0);
+            SetEnabled(confirmMoveButton, canInput && selecting && selected != null);
+            SetEnabled(cancelMoveButton, canInput && selecting);
+            if (confirmMoveButton != null) confirmMoveButton.gameObject.SetActive(selecting);
+            if (cancelMoveButton != null) cancelMoveButton.gameObject.SetActive(selecting);
+            CombatMovementOption shown = preview ?? selected;
+            if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
+                "移力 " + snapshot.Movement.RemainingPoints + (shown == null ?
+                    (selecting ? " · 选择目的地" : string.Empty) : " · 消耗 " + shown.Cost + (selected == null ? " · 点击选定" : " · 确认后移动"));
         }
 
         private static void SetEnabled(Button button, bool enabled)

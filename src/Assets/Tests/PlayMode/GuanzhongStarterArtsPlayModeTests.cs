@@ -151,6 +151,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(session.PendingCooldownPenalty, Is.EqualTo(10));
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
             StringAssert.Contains("消耗灵力 12", sink.Logs.Last());
+            yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
             Assert.That(actionBar.WaitButton.interactable, Is.True);
             StringAssert.Contains("结束行动", actionBar.WaitButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.WaitButton.onClick.Invoke();
@@ -169,6 +170,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(enemyHealth));
                 AssertRecoveryProjection(spawned.Player.Id, recovery, rolls);
                 StringAssert.Contains("消耗灵力 0", sink.Logs.Last());
+                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
             }
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(spawned.Player.MaximumSpirit));
@@ -186,6 +188,7 @@ namespace TianZhang.Tests.PlayMode
             AssertRecoveryProjection(spawned.Enemy.Id, 0, rolls);
             StringAssert.Contains("恢复灵力 0", sink.Logs.Last());
             StringAssert.Contains("消耗灵力 20", sink.Logs.Last());
+            yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
             ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
         }
 
@@ -208,6 +211,7 @@ namespace TianZhang.Tests.PlayMode
                 ((ICombatCommandHandler)encounter).RequestArt(spawned.Player.Id, spawned.Player.Id, RecoveryId);
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(spawned.Player.MaximumSpirit));
                 AssertRecoveryProjection(spawned.Player.Id, 1, rolls);
+                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
 
                 yield return WaitForPlayerTurn();
@@ -220,6 +224,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(spawned.Enemy.CurrentSpirit, Is.EqualTo(targetMana + expected));
                 AssertRecoveryProjection(spawned.Enemy.Id, expected, rolls);
                 StringAssert.Contains("消耗灵力 20", sink.Logs.Last());
+                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
             }
         }
@@ -378,12 +383,13 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(session.TurnPhase, Is.EqualTo(phase));
         }
 
-        private IEnumerator WaitForPlayerTurn()
+        private IEnumerator WaitForPlayerTurn(CombatTurnPhase phase = CombatTurnPhase.MoveThenAction)
         {
-            for (int frame = 0; frame < 300; frame++)
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < deadline)
             {
                 Assert.That(encounter != null && encounter.IsRunning, Is.True, "Formal combat ended before the arts scenario completed.");
-                if (session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.MoveThenAction &&
+                if (session.CurrentActorId == spawned.Player.Id && session.TurnPhase == phase && !encounter.IsPresenting &&
                     sink.Latest != null && sink.Latest.AcceptsCommands) yield break;
                 yield return null;
             }
@@ -461,10 +467,43 @@ namespace TianZhang.Tests.PlayMode
                 environmentMultiplier = liveSession.SpiritRecoveryEnvironmentMultiplier,
             };
             string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "spells",
-                "visible-ordinary-player-input.json"));
+                "visible-ordinary-player-input-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json"));
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllText(path, JsonUtility.ToJson(evidence, true));
+            CombatActionBarView liveBar = FindInActiveScene<CombatActionBarView>();
+            var state = new VisibleActionEvidence
+            {
+                frame = Time.frameCount, width = Screen.width, height = Screen.height,
+                tick = liveSession.TurnScheduler.CurrentTick, pendingCooldown = liveSession.PendingCooldownPenalty,
+                phase = liveSession.TurnPhase.ToString(), actor = liveSession.CurrentActorId,
+                busy = liveEncounter.IsPresenting, player = CombatInputEvidence.Capture(liveSpawned.Player),
+                enemy = CombatInputEvidence.Capture(liveSpawned.Enemy),
+                controls = GetPrivateField<GameObject>(liveBar, "root").transform.parent
+                    .GetComponentsInChildren<RectTransform>(true).Select(rect =>
+                    {
+                        var corners = new Vector3[4];
+                        rect.GetWorldCorners(corners);
+                        Text text = rect.GetComponent<Text>();
+                        Button button = rect.GetComponent<Button>();
+                        return rect.name + "; active=" + rect.gameObject.activeInHierarchy + "; rect=" + rect.rect +
+                            "; screen=" + corners[0] + ".." + corners[2] +
+                            (button == null ? string.Empty : "; interactable=" + button.interactable) +
+                            (text == null ? string.Empty : "; text=" + text.text + "; preferred=" + text.preferredWidth +
+                                "x" + text.preferredHeight + "; vertices=" + text.cachedTextGenerator.vertexCount);
+                    }).ToArray()
+            };
+            File.WriteAllText(Path.ChangeExtension(path, ".state.json"), JsonUtility.ToJson(state, true));
             Debug.Log("Current visible ordinary generated input evidence: " + path);
+        }
+
+        [Serializable]
+        private sealed class VisibleActionEvidence
+        {
+            public int frame, width, height, tick, pendingCooldown;
+            public string phase, actor;
+            public bool busy;
+            public CombatInputEvidence player, enemy;
+            public string[] controls;
         }
 #endif
 
@@ -585,9 +624,10 @@ namespace TianZhang.Tests.PlayMode
             public void Hide() { actual.Hide(); }
         }
 
-        private sealed class ForwardingUnitPort : ICombatUnitPresentationPort
+        private sealed class ForwardingUnitPort : ICombatUnitPresentationPort, ICombatPresentationActivity
         {
             private readonly ICombatUnitPresentationPort actual;
+            public bool IsPresenting => actual is ICombatPresentationActivity activity && activity.IsPresenting;
             public ForwardingUnitPort(ICombatUnitPresentationPort actual) { this.actual = actual; }
             public readonly List<CombatUnitPresentationEventProjection> Events = new List<CombatUnitPresentationEventProjection>();
             public void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> values) => actual.Prepare(values);
