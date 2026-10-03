@@ -149,7 +149,67 @@ namespace TianZhang.Editor
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
             BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);
+            BuildCombatTargetSelection(root, canvas);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/接入关中目标联动")]
+        public static void RebuildCombatTargetSelection()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            GameObject canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas");
+            if (root == null || canvas == null) throw new InvalidOperationException("Adventure target owners are missing.");
+            BuildCombatTargetSelection(root, canvas.GetComponent<Canvas>());
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatTargetSelection(GameObject root, Canvas canvas)
+        {
+            foreach (string name in new[] { "CombatTargetRoot", "CombatTargetMarker" })
+            {
+                Transform old = canvas.transform.Find(name);
+                if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            }
+            CombatTargetView view = root.GetComponent<CombatTargetView>() ?? root.AddComponent<CombatTargetView>();
+            CombatTargetInput input = root.GetComponent<CombatTargetInput>() ?? root.AddComponent<CombatTargetInput>();
+            GameObject panel = SceneBuildSupport.CreatePanel("CombatTargetRoot", canvas.transform, Vector2.zero, Vector2.one);
+            SettlementSceneBuilder.PlacePanel(panel, new Vector2(152, 296), new Vector2(512, 640));
+            SettlementSceneBuilder.ApplyPanelSkin(panel);
+            SettlementSceneBuilder.ConfigureColumn(panel);
+            Text details = SceneBuildSupport.CreateText("CombatTargetDetails", panel.transform, string.Empty, 20);
+            SettlementSceneBuilder.ApplyTextSkin(details, 224);
+            details.raycastTarget = false;
+            Button close = SceneBuildSupport.CreateButton("CloseTargetButton", panel.transform, "关闭查看", out _);
+            SettlementSceneBuilder.ApplyButtonSkin(close);
+            var marker = new GameObject("CombatTargetMarker", typeof(RectTransform));
+            marker.transform.SetParent(canvas.transform, false);
+            var markerRect = marker.GetComponent<RectTransform>();
+            markerRect.anchorMin = markerRect.anchorMax = markerRect.pivot = new Vector2(0.5f, 0.5f);
+            for (int side = 0; side < 4; side++)
+            {
+                var edge = new GameObject("Edge" + side, typeof(RectTransform), typeof(Image));
+                edge.transform.SetParent(marker.transform, false);
+                Image image = edge.GetComponent<Image>();
+                image.color = new Color32(239, 206, 123, 255);
+                image.raycastTarget = false;
+                RectTransform rect = image.rectTransform;
+                bool horizontal = side < 2;
+                float position = side % 2;
+                rect.anchorMin = horizontal ? new Vector2(0, position) : new Vector2(position, 0);
+                rect.anchorMax = horizontal ? new Vector2(1, position) : new Vector2(position, 1);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = horizontal ? new Vector2(0, 2) : new Vector2(2, 0);
+            }
+            SceneBuildSupport.SetObject(view, "root", panel);
+            SceneBuildSupport.SetObject(view, "details", details);
+            SceneBuildSupport.SetObject(view, "closeButton", close);
+            SceneBuildSupport.SetObject(view, "worldMarker", markerRect);
+            AdventureSceneInstaller installer = root.GetComponent<AdventureSceneInstaller>();
+            SceneBuildSupport.SetObject(installer, "combatTargetView", view);
+            SceneBuildSupport.SetObject(installer, "combatTargetInput", input);
+            panel.SetActive(false);
+            marker.SetActive(false);
         }
 
         [MenuItem("天章/场景/接入关中移动交互")]

@@ -1,0 +1,46 @@
+# 关中战斗目标联动验证记录
+
+## 2026-10-03 实施与验收状态
+
+- 任务：U-GZ-PLAYTEST-UI-TARGET-01；工作树：D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-UI-TARGET-01；分支codex/u-gz-playtest-ui-target-01，基线6b548793348c40c83cd291d060cae2e37bec1e44。真实键盘验收已由用户确认，完成状态见末节；提交身份由本记录所在提交追溯。
+- MOVE已9808e7b2、SPELLS已0a08a277合回主线；TARGET ready准备已6b548793合回主线。全部旧工作树、stash、日志保留。
+- 业务写入前risk preflight：taskCardDigest=8d3a2292921ce71840814a5707c44271d97c0b383872be03bec45382b25b60e5；indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched、mustRead、gates均为空，已核schema 2空投影与门禁。此后未扩路径、所有者或技术路线。
+- 主责统一实施和复核；复用Astra/high只读核输入仲裁，Sol/high只读核测试和最终diff。辅助实际模型此前元数据已核，推理强度未独立核实。子智能体未写文件、卡、队列、提交、runtime或锁。最终Sol核查无剩余P1/P2。
+
+## 实现边界
+
+- CombatHudPresenter独占InspectedTargetId与最新HUD；查看只更新详情和轴标记，不调用完整Present/SetContext，不改变CurrentActor或双术法合法目标，也不清MOVE候选。
+- 世界点击先UI射线仲裁，再用注入Camera和真实provider可见body renderer bounds命中最近存活稳定ID。选格、演出阻止世界查看；空地、关闭、死亡、根失活、Hide/OnDisable/重进清空。
+- Timeline悬停/键盘Select仅peek，Button.onClick/Submit才查看；重排时键盘焦点按旧ID恢复。详情仅姓名/HP/MP/阵营，伤害、命中、能力均未探明。
+- Overlay四边框每帧从同一真实renderer bounds八角投影，未改模型、底座、相机或战斗规则。Installer显式Require/Configure，Builder只局部重建目标子树。
+
+## 定向验证
+
+- src/Logs/target/build-target.log：导入、编译、局部Builder成功。
+- 首轮target-playmode.xml为1通过、2失败；失败为batch帧循环早于真实演出结束。仅把等待改为实时10/15秒；target-playmode-retry.xml的两项通过。
+- 补强两术法非空前置、完整Presenter HUD重排、死亡前已选中与清理断言后，target-strengthened.xml/log为3/3 Passed，并通过结果验证入口。涵盖世界/轴同ID、peek/Submit、重排、命令独立、UI/移动/演出仲裁、标记投影、实际死亡、Hide和重进。
+- 定向测试使用正式StartMenu→真实建角minor_clan五维8→世界→关中→接悬赏→副本流程；测试内临时存档、受控随机与死亡用1HP仅是定向测试条件，不算真实可见取证。
+- 程序集边界19 asmdef/2 asmref通过；数据链GongFa29、Spells84、Skills31、keys613通过。未改平衡，不运行BattleSim；未重验CAMERA/TIMELINE。
+
+## 真实正式入口证据
+
+- Unity6000.3.18f1正式StartMenu加载既有spells-1920-1003·李琳存档→关中城→关中野外→石甲兽遭遇；未改运行资源、随机、存档或敌方HP。tick13，李琳HP571/571 MP180/180，石甲兽HP839/839 MP108/108。
+- 以下日志与PNG均在同树src/Logs/target。readonly现场菜单仅读取HUD/provider/输入和UI状态、导出JSON，不调用命令或变更场景。屏幕截图为native实际窗口。
+- 1366世界点石甲兽：formal-world-enemy-1366.png、visible-target-20261003-192531.json；selected=axis=enemy，focus=actor=player，commandTarget=enemy，secondArtTarget=player。formal-axis-self-1366.png证明点轴我方切到同一player。
+- 1920移动：formal-move-guard-1920.png与193045.json证明查看player时选格点击敌方仍保持player、CanInspect=false；实际选(0,1)并确认一次，移动2→1，tick13、HP571、MP180不变；formal-marker-after-move-1920.png、193116.json记录player根(0.5,0.34,1.8660254)，框跟随至屏幕[min(984.7664,660.5173),max(1070.2336,863.1951)]。未重复MOVE完整验收。
+- 1920首次发现七行文本末行被裁切：formal-world-enemy-1920-before-layout.png、details-1920-before-layout.json，原Text高200、font20。只修目标Text为224、面板为344并局部Builder保存；GUI重新编译无错误，原有VisualBaselineBuilder obsolete警告仍在。两常数未改变交互输入，不重复3/3测试。
+- 修复后1920：formal-world-enemy-1920.png与visible-target-20261003-193914.json，七行完整，preferredHeight203≤224。敌根(1,0.34,1)，bounds中心(1,0.7395800,1)、大小(1.3993167,0.6391601,0.6377932)，框[min(1000.5460,586.6713),max(1189.4540,707.6757)]。
+- 修复后1366：formal-world-enemy-1366-after-layout.png与visible-target-20261003-194044.json，七行完整，preferredHeight196.7789≤224；selected/axis=enemy，actor=player，两术法目标仍enemy/player。
+- formal-close-1920.png：点击关闭后详情、世界框与轴◆同步消失。
+
+## 真实键盘取证经过（已闭环）
+
+- native工具Down短按未观察到焦点变化。193953.json证实当时focusedEditor=GameView、selectedButton=TimelineEntry0，focus=selected=axis=player。尚不能确定是输入工具短按时序还是真实键盘问题，不改生产输入、不把定向测试当成真实键盘通过。
+- 已请用户在保留的正式Game View按住↓约半秒，然后Enter，核对先只切peek、再切详情/世界框。用户结果未到；当前1366现场已点选我方，适合直接操作。完成真实证据后才归档与受保护集成，再推进PREVIEW/LAYOUT。V-FLOW仍需真实前置，V-ART仍由用户确认。
+
+## 2026-10-03 完成收口
+
+- 用户实机反馈先称Enter没反应，随后明确是在询问Enter用途；解释“方向键移焦点、Enter确认查看”后，用户确认“切换了的，那是我刚刚理解错了”。据此真实键盘验收通过，未发现需修复的键盘故障；没有新增输入补丁。该项证据来自用户实操确认，非自动截图或定向测试替代。
+- 最终完成条件满足，归档TARGET，移除队列/backlog该行；V-FLOW与V-ART仍保留原门槛。当前树完整diff已由主责统一复核，独立Sol复核无P1/P2。无新增独立经验候选。
+- 收口风险预检taskCardDigest=24b242e4eb1f308df941af1209f2ec5bc009fac94e933ae19ebdf4f5e388dcaa，indexDigest沿前值，matched/notice/mustRead/gates/gatePointers为空，与schema2投影一致。
+- 已退出Play并正常关闭本树Unity；所有日志、存档、旧工作树和stash保留。仅恢复本轮Unity生成的ProjectSettings尾空格噪声，生产场景仅清理行尾空格，不改语义。未复跑已通过且输入未变的检查。

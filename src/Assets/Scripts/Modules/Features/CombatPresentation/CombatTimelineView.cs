@@ -23,6 +23,20 @@ namespace TianZhang.Features.CombatPresentation
 
         private CombatTimelineSnapshot snapshot;
         private string focusedCombatantId;
+        private string inspectedTargetId;
+        private Action<string> selectTarget;
+        public string InspectedTargetId => inspectedTargetId;
+
+        public void ConfigureSelection(Action<string> onSelected) => selectTarget = onSelected;
+
+        public void SetInspectedTarget(string id)
+        {
+            inspectedTargetId = id;
+            if (snapshot == null) return;
+            for (int index = 0; index < Math.Min(MaximumEntries, snapshot.Entries.Count); index++)
+                if (entryLabels[index] != null)
+                    entryLabels[index].text = FormatEntry(snapshot.Entries[index], index);
+        }
 
         public string FocusedCombatantId => focusedCombatantId;
 
@@ -33,7 +47,11 @@ namespace TianZhang.Features.CombatPresentation
                 Button button = entryButtons[index];
                 if (button == null) continue;
                 int slot = index;
-                button.onClick.AddListener(() => FocusEntry(slot));
+                button.onClick.AddListener(() =>
+                {
+                    FocusEntry(slot);
+                    if (snapshot != null && slot < snapshot.Entries.Count) selectTarget?.Invoke(snapshot.Entries[slot].Id);
+                });
                 EventTrigger trigger = button.GetComponent<EventTrigger>();
                 if (trigger == null) trigger = button.gameObject.AddComponent<EventTrigger>();
                 AddFocusEvent(trigger, EventTriggerType.PointerEnter, slot);
@@ -49,6 +67,11 @@ namespace TianZhang.Features.CombatPresentation
                 return;
             }
 
+            string keyboardFocusId = null;
+            if (snapshot != null && EventSystem.current != null)
+                for (int index = 0; index < Math.Min(MaximumEntries, snapshot.Entries.Count); index++)
+                    if (entryButtons[index] != null && EventSystem.current.currentSelectedGameObject == entryButtons[index].gameObject)
+                        keyboardFocusId = snapshot.Entries[index].Id;
             snapshot = timeline;
             if (root != null) root.SetActive(true);
             if (tickText != null) tickText.text = "刻 " + timeline.CurrentTick;
@@ -97,6 +120,14 @@ namespace TianZhang.Features.CombatPresentation
                 focusedCombatantId = timeline.Entries[0].Id;
             if (FindFocusedEntry() == null) focusedCombatantId = null;
             RefreshFocusText();
+            if (keyboardFocusId != null)
+            {
+                GameObject nextFocus = null;
+                for (int index = 0; index < count; index++)
+                    if (timeline.Entries[index].Id == keyboardFocusId && entryButtons[index] != null)
+                        nextFocus = entryButtons[index].gameObject;
+                EventSystem.current.SetSelectedGameObject(nextFocus);
+            }
         }
 
         public void Hide()
@@ -151,16 +182,18 @@ namespace TianZhang.Features.CombatPresentation
                 entry.Speed + " · 调度 tick " + snapshot.CurrentTick + "\n" + state;
         }
 
-        private static string FormatEntry(CombatTimelineEntrySnapshot entry, int index)
+        private string FormatEntry(CombatTimelineEntrySnapshot entry, int index)
         {
             bool player = entry.Faction == CombatUnitDisplayFaction.Player;
-            return (index + 1) + (entry.IsCurrent ? " 当前" : player ? " 我方" : entry.DisplayName);
+            return (entry.Id == inspectedTargetId ? "◆" : string.Empty) +
+                (index + 1) + (entry.IsCurrent ? " 当前" : player ? " 我方" : entry.DisplayName);
         }
 
         private void ClearContent()
         {
             snapshot = null;
             focusedCombatantId = null;
+            inspectedTargetId = null;
             if (tickText != null) tickText.text = string.Empty;
             if (focusText != null) focusText.text = string.Empty;
             for (int index = 0; index < MaximumEntries; index++)

@@ -34,6 +34,8 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
         [SerializeField] private CombatTimelineView combatTimelineView;
+        [SerializeField] private CombatTargetView combatTargetView;
+        [SerializeField] private CombatTargetInput combatTargetInput;
         [SerializeField] private GameObject explorationPanel;
         [SerializeField] private Static3DCombatUnitPresentationProvider static3DUnitPresentationProvider;
         [SerializeField] private CombatUnitHealthBarView combatUnitHealthBars;
@@ -62,6 +64,8 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
                 RequireReference(combatTimelineView, "combat_timeline_view_missing");
+                RequireReference(combatTargetView, "combat_target_view_missing");
+                RequireReference(combatTargetInput, "combat_target_input_missing");
                 RequireReference(explorationPanel, "combat_exploration_panel_missing");
                 RequireReference(static3DUnitPresentationProvider, "static_3d_presentation_provider_missing");
                 RequireReference(combatUnitHealthBars, "combat_unit_health_bars_missing");
@@ -86,6 +90,9 @@ namespace TianZhang.Bootstrap
                 combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);
                 combatMovementView.Configure(encounterCoordinator, combatActionBar);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar, combatMovementView);
+                combatTargetView.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
+                combatHudPresenter.ConfigureTargets(combatTargetView, static3DUnitPresentationProvider, combatMovementView);
+                combatTargetInput.Configure(battlefieldCamera, static3DUnitPresentationProvider, combatHudPresenter);
                 encounterCoordinator.Configure(
                     combatHudPresenter,
                     static3DUnitPresentationProvider,
@@ -115,6 +122,7 @@ namespace TianZhang.Bootstrap
                 Disable(encounterCoordinator);
                 Disable(combatCommandInput);
                 Disable(combatMovementView);
+                Disable(combatTargetInput);
                 Debug.LogError("[AdventureInstaller] " + exception.Message);
             }
         }

@@ -12,6 +12,65 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private CombatTimelineView timelineView;
         [SerializeField] private GameObject explorationPanel;
+        private CombatTargetView targetView;
+        private Static3DCombatUnitPresentationProvider unitProvider;
+        private CombatMovementView movementView;
+        public CombatHudSnapshot Snapshot { get; private set; }
+        public string InspectedTargetId { get; private set; }
+        public bool CanInspect => Snapshot != null && !Snapshot.IsPresenting &&
+            unitProvider != null && !unitProvider.IsPresenting && movementView != null && !movementView.IsSelecting;
+
+        public void ConfigureTargets(CombatTargetView targets, Static3DCombatUnitPresentationProvider provider,
+            CombatMovementView movement)
+        {
+            targetView = targets;
+            unitProvider = provider;
+            movementView = movement;
+            timelineView.ConfigureSelection(InspectTarget);
+            targetView.CloseButton.onClick.RemoveAllListeners();
+            targetView.CloseButton.onClick.AddListener(ClearInspectedTarget);
+        }
+
+        public CombatantHudSnapshot FindInspectable(string id)
+        {
+            if (string.IsNullOrEmpty(id) || Snapshot == null) return null;
+            CombatantHudSnapshot value = Snapshot.Player?.Id == id ? Snapshot.Player :
+                Snapshot.Enemy?.Id == id ? Snapshot.Enemy : null;
+            return value != null && value.CurrentHealth > 0 && unitProvider != null &&
+                unitProvider.TryGetVisibleBounds(id, out _) ? value : null;
+        }
+
+        public void InspectTarget(string id)
+        {
+            if (!CanInspect) return;
+            InspectedTargetId = FindInspectable(id)?.Id;
+            RefreshTarget();
+        }
+
+        public void ClearInspectedTarget()
+        {
+            InspectedTargetId = null;
+            RefreshTarget();
+        }
+
+        private void RefreshTarget()
+        {
+            CombatantHudSnapshot selected = FindInspectable(InspectedTargetId);
+            if (selected == null) InspectedTargetId = null;
+            targetView?.Present(selected, Snapshot?.Player?.Id == InspectedTargetId);
+            timelineView?.SetInspectedTarget(InspectedTargetId);
+        }
+
+        private void LateUpdate()
+        {
+            if (InspectedTargetId != null && FindInspectable(InspectedTargetId) == null) ClearInspectedTarget();
+        }
+
+        private void OnDisable()
+        {
+            Snapshot = null;
+            ClearInspectedTarget();
+        }
 
         public void ConfigureTimeline(CombatTimelineView timeline, GameObject exploration)
         {
@@ -31,11 +90,13 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Present(CombatHudSnapshot snapshot)
         {
+            Snapshot = snapshot;
             view?.Present(snapshot);
             healthBars?.Present(snapshot);
             timelineView?.Present(snapshot?.Timeline);
             explorationPanel?.SetActive(snapshot == null);
             commandInput?.SetContext(snapshot);
+            RefreshTarget();
         }
 
         public void ClearLog() => logView?.Clear();
@@ -44,6 +105,8 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Hide()
         {
+            Snapshot = null;
+            ClearInspectedTarget();
             view?.Hide();
             healthBars?.Hide();
             timelineView?.Hide();

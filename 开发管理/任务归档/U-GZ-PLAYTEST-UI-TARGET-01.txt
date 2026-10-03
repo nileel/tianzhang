@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-03：UI-TEXT/TIMELINE/MOVE-UI均已完成归档，主线0a08a277已含双术法共享接缝。已核稳定ID、轴焦点与点击分离、UI/移动/演出仲裁和实际renderer命中路径；按现有允许路径接入只读目标详情，不修改命令规则。",
+  "stateReason": "2026-10-03：目标世界/轴/详情同ID、输入仲裁、生命周期与双分辨率真实验收完成；用户确认键盘焦点和Enter切换正常。定向3/3通过，完成归档。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -123,3 +123,25 @@
 - Bootstrap显式Require/Configure TargetView、TargetInput和现有provider/camera/canvas/movement；Builder新增局部RebuildCombatTargetSelection，完整Build接同一函数。所有新.cs/.meta与测试均在卡原允许路径，不新增asmdef/资产/全局组件。
 - 验证最小集：直接PlayMode由正式入口建立真实provider，测轴点击/世界命中同ID、自己与敌、peek不选/Submit选、ID重排、UI与移动选格/演出阻止世界选中、标记跟根及死亡/Hide清空；实际StartMenu→存档→关中首战鼠标/键盘Game View取证。不重验旧CAMERA/TIMELINE或平衡，不用fixture代替正式可见结果。
 - 复杂度为有界交互实现，主责统一写入强耦合所有者。复用Sol/high只读最小测试入口核查，Astra/high已只读核输入仲裁与直接前置；实际辅助模型此前元数据已核，推理强度未独立核实。子智能体不写文件/队列/卡/提交/runtime/锁，也不派生。业务写入前重跑本卡风险预检并核投影；无新模型审批或全局配置修改。
+
+## 2026-10-03 19:45续接检查点
+
+- 主线与本树基线为6b548793348c40c83cd291d060cae2e37bec1e44。MOVE/SPELLS分别9808e7b2/0a08a277已受保护集成；不再重复处理。TARGET生产、Builder场景、定向测试仍未提交，全部保留；没有创建candidate或宣称完成。
+- 详细实现、失败原因、最小修复与证据见开发管理/关中战斗目标联动验证记录.txt。target-strengthened.xml定向3/3通过，程序集/数据链通过；最后仅目标Text200→224、面板320→344，GUI编译与1366/1920真实七行详情已通过，不重复未变交互测试。
+- native正式存档spells-1920-1003·李琳，tick13，双方HP571/839、MP180/108；真实世界→轴、轴→世界、移动仲裁/随根标记、关闭已取证。目录src/Logs/target全部保留。
+- 当前唯一缺口为真实键盘轴导航/Submit：工具Down短按无可见作用，定向键盘测试通过但不可替代。193953.json证明GameView焦点与TimelineEntry0实际选中。未证明根因，不叠加输入补丁；已请用户按住↓约半秒再Enter报告两阶段效果，待回复。
+- Unity当前运行本TARGET树，1366 Game View已点轴我方，native窗口528428、进程38324（续接须重新核对，不能盲用旧坐标）。readonly菜单Ctrl+Alt+Y输出visible-target JSON，新增focusedEditor/selectedButton/textSize/preferredHeight只读诊断。不得用fixture补真实证据。
+- 主责已复核生产diff与新脚本；Sol最终只读复核无P1/P2。两个ProjectSettings文件仅本轮Unity生成尾空白，尚需在最终提交前排除/恢复自有噪声；不可带进卡提交。
+- 实体键盘证据满足后补记录、按允许路径空白检查/暂存检查、完成归档同步卡/backlog/队列；合并前重新主工作区schema5 Show、卡/队列/路径冲突/HEAD核对，经invoke-project-integration.ps1集成。保留所有树、stash和日志，不触定时配置。PREVIEW/LAYOUT未开工，不能越过TARGET真实前置。
+
+## 2026-10-03 完成归档
+
+- 审核结论：通过。用户已确认真实键盘切换成功，先前Enter反馈为用途理解差异，不是已证实故障；无需输入补丁。1366/1920鼠标、详情、关闭、移动标记证据及定向3/3、程序集/数据链结果见关中战斗目标联动验证记录。
+- 唯一结果已实现；Presenter查看ID、命令目标、当前行动者保持独立。最终diff主责统一复核，Sol只读复核无P1/P2。经验收尾仅消费本轮事实，无新增独立经验候选。
+- 日志和截图保存在原TARGET树src/Logs/target；全部工作树/stash/用户存档保留。合并前需主工作区最新Show、卡与队列、完整允许路径冲突检查，并仅通过受保护集成入口fast-forward。
+
+## 用户指定暂停点与新对话续接
+
+- 用户于本卡收口时明确要求“完成后就先暂停吧，剩下的给提示词后续新对话继续”。本次以TARGET路径限定提交和受保护合回主线为停止点，不实施PREVIEW/LAYOUT，不提前转ready。
+- 下次读取AGENTS.md、最新队列、本归档完成节及关中战斗目标联动验证记录。下一选中项为U-GZ-PLAYTEST-UI-PREVIEW-01，其次U-GZ-PLAYTEST-UI-LAYOUT-01；先消费真实前置、冻结允许路径/条件CT预览合同并重新风险预检。只读预分析不是ready或实施证明。
+- 已通过且输入未变的检查沿用，不重验CAMERA/TIMELINE，不重审backlog，不改定时配置，不重复apply或删除stash。全部工作树、未提交用户文件、日志和存档保留。V-FLOW依赖真实前置，V-ART仍由用户确认。
