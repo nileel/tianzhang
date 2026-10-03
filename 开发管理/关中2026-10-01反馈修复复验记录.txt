@@ -1,0 +1,44 @@
+# 关中反馈修复组合复验记录
+
+## 2026-10-04 结论与版本
+
+- N-GZ-PLAYTEST-BALANCE-01已完成归档，业务提交da65ae24受保护集成；正式石甲兽rootBone13、HP657、物攻78。详见关中首战双术法数值验证记录；未混入LAYOUT测试HP1。
+- V-GZ-PLAYTEST-FLOW-01的13项具名前置均已归档completed、没有同ID活跃卡，完成提交都是da65ae24祖先。准备提交aa285baf13657ac4a214242437e1dbef3036462f已受保护集成。
+- 本轮整体结果：未通过完整V-FLOW，保持blocked、不归档。1920正式胜利链的行为断言通过，但发现真实界面内部key显示；其余组合证据仍未完成。测试Passed不是用户品质接受，也不是整卡验收通过。
+
+## 输入与正式链证据
+
+- 工作树：D:/天章游戏开发/.worktrees/manual/V-GZ-PLAYTEST-FLOW-01；分支codex/v-gz-playtest-flow-01。Unity6000.3.18f1。
+- 验收夹具GuanzhongPlaytestFlowPlayModeTests.cs及.meta保留在该树src/Assets/Tests/PlayMode，尚未提交；仅用真实Mouse按下/释放帧和生产EventSystem/Button监听，文本框填唯一槽/角色名。点击前检查可见、可交互、屏幕边界与最上层命中；读取session只用于断言，不提交命令。
+- 未替换生产slotStore、战斗/掉落随机源，未改先天、HP、MP、CT或伤害。正式StartMenu只加载一次起点，此后由真实导航切场景。
+- 唯一正式槽flow-1920-001ab9bc，角色“关中流程1920”，小族五项先天8。初始HP571/MP180；石甲兽HP657/MP108/物攻78。存档目录由生产Application.persistentDataPath/SaveSlots提供，确切绝对位置见steps.log首行。全部旧存档及本槽均保留。
+- 运行命令：Unity.exe -batchmode -projectPath "D:/天章游戏开发/.worktrees/manual/V-GZ-PLAYTEST-FLOW-01/src" -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Victory1920 -testResults ".../src/Logs/flow/first.xml" -logFile ".../src/Logs/flow/first.log"。未使用-nographics。
+- first.xml：1/1 Passed，运行31.72秒。完整取证目录src/Logs/flow/20261004-015252-1920-victory；steps.log记录逐个真实点击和确认前资源/CT，PNG与同名TXT关联，before-save.json为正式保存前状态。
+- 实际通过：新建小族→关中城接悬赏→野外首战→贯石和聚灵各候选取消资源/CT不变→确认贯石扣12MP→下一回合确认自聚灵恢复5MP→合法两格移动→连续正式贯石自然胜利→自动回城→领取增加3低阶灵石→再次点击拒绝→保存返回→点击同槽读回，完整CaptureSaveJson相等。
+- 世界棋子与轴点击同一敌人，观察ID=enemy且当前行动者/资源/CT不变；战斗return按钮不可交互；条件预测显示“顺位未定”；悬赏初始0/1、胜利后进度1。正式自然胜利前末次输入玩家19HP/29MP、敌26HP；确认贯石后玩家19HP/17MP，24条循环确认命令（此前双术法/移动另记）。
+- 重复领奖实际回执bounty_claim_repeated，领取后完整JSON与再次点击后相等。1920已审预览截图：正式敌人657、两术法按钮与确认/取消、条件CT标记可见；loaded截图为真实保存读回后的关中城。
+
+## 已证实缺口与停止边界
+
+1. 回城/读取后实机11-loaded.png清楚显示“据点已加载 · 返回世界：guanzhong_hub”。直接根因：src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs#WorldNodeDisplay原样return nodeId，ShowSettlement将其拼入状态文字。不是翻译加载时机或缺少随机测试。
+2. WorldScene活动Text导出02-world-selected.txt包含“据点: guanzhong_city”。直接根因：src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs#ShowSelectedNode直接拼接settlementId/adventureIds。该次02-world-selected.png只捕获背景与色块，未完整呈现UI，不能把它当作世界界面视觉通过证据；文本证据与源代码事实单独标明，不据此推断新渲染故障。
+3. 尚未验证1366组合、两个分辨率败北、绕静态障碍、长日志滚轮及全部文字可读性。本次路径(0,0)→(0,1)→(1,1)是绕敌人占位的合法移动，未绕(2,1)/(3,1)等静态障碍。未运行的Defeat夹具还需增加返回前后背包无奖励比较；不得把单个1/1当四链通过。
+
+- 本卡规定“只复验与记录，不在验收卡修跨owner代码”。因此停止继续输入组合与生产修改，转blocked并移出队列，未完成归档。生产WorldMap/Settlement显示修复须先取得明确范围；不修改旧UI-TEXT归档、不偷偷扩验收卡allowedPaths、不重查CAMERA/TIMELINE/TARGET键盘。
+- 已生成的ProjectSettings.asset与ShaderGraphSettings.asset仅尾随空白变化，先保存到src/Logs/flow/editor-generated-settings再恢复工作树原内容；未改用户主目录文件。验收夹具和所有日志/截图/存档仍在原处。
+
+## V-ART直接资源依赖核实（只读）
+
+- V-GZ-ART-SLICE-01仍等待V-FLOW与U-GZ-BASE-MODELS-01；最终还必须交付同版本可玩入口与步骤并由用户本人接受，未代签。
+- D-GZ-BASE-MODELS-01已完成归档，6f827525在本主线；现有两张concepts/base-01.png、base-02.png和manifest只供造型选择，状态design_preview_only，不是FBX。assets/source/combat-bases尚无生产输出。
+- A-GZ-BASE-MODEL-01/02尚未生产；真实门为两款造型选择与分别的Tripo交易前授权，不能把已经完成的D卡继续当作未交付设计。已读直接卡/规格/manifest未找到本两款交易回执。
+- 冻结方案：Base01直径0.62m双足圆台，Base02为0.96×1.18m四足圆角矩形；各厚0.04m。每款一次H3.1无贴图生成、最多一个候选，卡内旧预算各35 credits、合计70；这是2026-10-01冻结上限，不是本轮核实的实时报价。下单当日还需核价与实际credits_consumed，禁止自动重试或复用角色额度。本轮无下单、无费用。
+- U接入仍等待两份factory-empty QA通过FBX；BASE-FIT已完成76c6fa04。取得资源后冻结具体prefab/material/profile/.meta和风险投影，再接到现有唯一provider，不新增管理器。不修改A/U/V-ART卡或展开其他backlog。
+
+## 检查点与最短续接提示
+
+当前主线含N完成da65ae24与V准备aa285baf；本轮阻塞记录提交后以git rev-parse HEAD为准。主目录原有四项修改和四项未跟踪路径保持原样；无stash操作、无定时配置改动，所有旧工作树保留。
+
+续接：先读AGENTS、最新Show/队列、本V卡与本记录。V实际未完成，不能直接重跑全部旧子卡或把first.xml当整体通过。先按新明确授权冻结WorldMap/Settlement中文显示修复的最小独立范围；实机修复后只补V未通过/未执行证据，1920输入未变的已证据步骤不无目的重复。只读夹具在V工作树未提交，先核缺失的静态障碍、长日志、败北背包断言与截图时机，不修改生产随机或slotStore。之后再沿双底座直接卡推进；生成需真实新授权，V-ART始终由用户本人同版本实玩接受。
+
+可供功能查看的现有正式入口：Unity Hub打开D:/天章游戏开发/src，使用6000.3.18f1，打开Assets/Scenes/StartMenuScene.unity进入Play，新建小族→关陇玄域→进入地点→悬赏板接取→关中野外→石甲兽节点；贯石/聚灵先预览再确认，行动后“结束行动”。此入口为当前功能版本，不是V-ART最终验收交付；双底座仍未接入。

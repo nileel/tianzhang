@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-04：13项具名前置均归档且完成提交可达da65ae24；冻结正式默认角色、真实输入事件和双分辨率胜败组合验收。",
+  "stateReason": "2026-10-04：正式1920胜利/领奖防重/保存读档已跑通，但回城可见guanzhong_hub且世界节点Text含guanzhong_city，未满足不泄露key；按验收卡边界停止跨owner修复，完整双分辨率/败北/静态障碍与长日志证据未完成。",
   "expectedPaths": [
     "开发管理/关中2026-10-01反馈修复复验记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -95,3 +95,9 @@
 - 胜败分别自然回城且战斗显示销毁。胜利领取前后背包差额及重复领取拒绝、保存返回菜单、点击同一真实槽重新读入，比较正式存档和悬赏。败北不得获得击杀进度/奖励。截图、结构化状态、逐操作日志、XML与本轮存档全部保留；日志写src/Logs/flow，存档由原生产store写入原目录，不删除已有或本轮槽。
 - 运行入口Unity6000.3.18f1正式四Scene PlayMode，测试过滤仅GuanzhongPlaytestFlowPlayModeTests。新验证文件仅输入/观察，不是生产替代；图片必须检查实际渲染，不用只读字段冒充视觉通过。不重跑输入未变子卡/BattleSim。若发现真实功能失败、需跨owner修复或无法取得可见运行证据，保留失败现场，停止本卡完成/归档，不叠加补丁、不将部分通过写成完成。
 - 模型协作：复杂组合验证，主责实际gpt-6-astra已由Node元数据核实；沿用production_inputs只读核13项直接前置、sim_entry只读核View/Input/Controller事件链，两者继承主模型但辅助实际模型/强度未单独核实。均未写入/派生/改卡/锁/runtime，主责复核完整diff与最终证据；不改定时配置。
+## 2026-10-04 运行取证与停止
+
+- 准备aa285baf已受保护集成；同一业务版本运行Unity6000.3.18f1的正式StartMenu→World→Settlement→Adventure，仅输入/观察夹具未提交保留于本卡工作树。Victory1920实际通过1/1，普通五先天8，敌657HP/78物攻，真实双术法（聚灵+5）、预览取消零消费、目标世界/轴联动、合法两格移动、自然胜利、领奖+3、重复原因bounty_claim_repeated、保存/同槽读取JSON相等。未替换随机源或store，未改HP，最后玩家19HP/17MP。
+- 不判整卡通过：回城与读档截图可见“据点已加载 · 返回世界：guanzhong_hub”；所有者SettlementView.WorldNodeDisplay直接return nodeId。世界场景活动Text为“据点: guanzhong_city”，所有者WorldMapView.ShowSelectedNode直接拼接settlementId；该帧截图未完整渲染UI，不能当世界视觉证据。需要具名显示修复的独立范围，未修改生产代码/语言表。
+- 剩余1366、两种败北、绕静态障碍、长日志滚动及完整视觉证据未完成；已做的移动(0,0)→(0,1)→(1,1)只绕占位敌，不冒充静态障碍。只读辅助已指出这些覆盖限制。按本卡停止条件转blocked、移出ready队列；不归档、不签V-ART，不继续叠加修改。
+- 完整日志、截图、slot位置、成本/底座直接依赖与续接提示见开发管理/关中2026-10-01反馈修复复验记录.txt。保留原工作树及未提交夹具以便受限续接。
