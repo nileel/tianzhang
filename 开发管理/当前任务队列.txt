@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-GZ-PLAYTEST-BALANCE-01 | codex_execute | codex | P1 | battlesim | verification | 关中首战石甲兽削弱与双术法数值验证 | 开发管理/任务卡/N-GZ-PLAYTEST-BALANCE-01.txt |

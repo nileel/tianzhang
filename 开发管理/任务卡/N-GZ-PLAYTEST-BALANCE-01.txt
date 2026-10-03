@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-PLAYTEST-SPELLS-01"
-  ],
-  "stateReason": "2026-10-02：D 已冻结两术法及数值验证入口；仍等待 U 的真实 profile、正式普通小族快照和施法交付。不得仅凭设计值进入 ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-04：SPELLS真实profile与普通小族快照核实；冻结正式内核审计、Unity原生候选导出和多种子验收，完成ready准备。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
@@ -30,7 +28,9 @@
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/BattleSim.csproj",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
-    "开发管理/关中首战普通角色输入.json"
+    "开发管理/关中首战普通角色输入.json",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -100,3 +100,14 @@
 - 新审计文件仅做 LoadProductionInputs/RunSeed/VerifyRejectedCommands 和报告。普攻、贯石耗尽后普攻、贯石加必要自用聚灵三策略按多种随机种子比较；参数读取真实 AttackProfiles/Enemies，不重写 1.2/12/10/5 常量。核实他用聚灵与缺 MP、死亡/越界拒绝不消费。
 - 两单位相邻仅是正式起点的数值抽象，不复制 36 格地图、场景环境传播或输入。报告明确数值样本范围。敌人数值改变后从同源 CSV→asset→Unity owner 更新快照，再模拟，防止旧输入。
 - 修改后按 AGENTS 运行 Release build、默认 run，再运行定向关中模式。正式普通角色最终可胜与完整体验仍交给 V-FLOW。当前保持 blockedBy=U-GZ-PLAYTEST-SPELLS-01；准备结论不是平衡结论。
+## 2026-10-04 ready冻结
+
+- 主线d8bd3817，SPELLS归档0a08a277在主线可达，无同ID活跃卡；普通小族spells-1920-1003/李琳的施法前输入，五先天8、HP571/MP180。JSON originId空保持原来源限制，与正式小族选中截图关联；LF规范SHA256 37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492；CRLF字节差异不代表内容漂移。
+- 唯一结果仍为首战敌人既有字段最小削弱与两术法数值证据。新增允许路径仅现有GuanzhongStarterArtsPlayModeTests.cs及.meta：在现有导出逻辑旁新增Editor批处理导出方法，读取原玩家交付，克隆生产敌人模板，仅枚举rootBone=18..8，通过真实AdventureUnitSpawner.CreateEnemy与CharacterRuntimeProfile导出候选到忽略日志；正式模板不被候选写入。最终CSV导入后再次导出生产快照并与选定候选相等。保留基线和所有日志。不得把候选导出称为正式UI验收。
+- BattleSim新增GuanzhongPlaytestAudit只负责LoadProductionInputs/RunSeed/VerifyRejectedCommands和报告；Program.Main在原未知参数拒绝前分派--guanzhong-playtest --input，可选--candidate-rootbone明确标记候选，其他入口不变。csproj只读链接CombatCommand/CombatAttackProfile/CombatantSnapshot/CombatantRegistry/CombatActionResult/CombatSession/CombatActionResolver/CombatCommandService/CombatTurnScheduler/CombatResultBuilder/Turns/CTBEngine、Editor/CsvTableReader及Modules/Content/CombatElementFacts（正式AbilityRequirementPolicy），不修改被链接文件。
+- 读取AttackProfiles三行并按CombatEntryAdapter字段与资格投影；快照补齐CharacterRecord的格挡/暴击/闪避等修饰值。CSV对照敌人全部已有数值字段，候选只允许显式rootBone差异。相邻(0,0)/(1,0)、默认Facing0/0与正式初始快照一致，注明背击影响；不模拟地图和移动，正式移动后的朝向与体验留V-FLOW。
+- 每seed独立Random，先Validate，仅合法伤害按Hit/Critical/Block/SoulShield四次抽样；恢复和拒绝零抽样。AdvanceUntilAction→正式Execute→ActionThenMove时真实EndTurn，不手调CT/行动/伤害/MP。三策略：全普攻；合法贯石否则普攻；合法贯石、仅缺MP时自聚灵、其他合法普攻。每局最多300行动，未结束明确失败，不判赢。
+- 首战目标先冻结：调参种子0..199，各策略报告胜率、行动数、HP/MP/CT及双术法次数；在rootBone18..8中取改动最小（最大根骨）的候选，使普攻胜率≥90%、两术法策略≥95%、两术法获胜样本剩余HP中位数≥初始20%。选定后使用独立种子10000..10199复验，同门槛不通过则停止说明，不临时放宽指标。保留体魄16、速度6及格挡定位等其他字段；所有候选不达标则停止，不自动增加第二调整轴。
+- 自聚灵若满资源实战样本未耗尽须直说；独立控制资源样本覆盖0MP自恢复、20MP他恢复、满MP合法零收益及贯石/他聚灵缺MP、死亡、越界拒绝，并断言HP/MP/冷却/CT/行动阶段/移动资源/随机抽数不变。生产普通完整资源战果与控制样本分开。
+- 验证：首次工作树dotnet restore后Release --no-restore build成功才默认--no-build run，再定向模式；最终docs→CSV→asset→正式快照一致及独立种子。Unity只运行新导出方法和正式导入入口，不重跑输入未变子卡；V-FLOW双分辨率独立完整流程仍保留。
+- 模型协作：复杂数据链主责实际gpt-6-astra（Node元数据核实）；两个继承主模型只读子智能体production_inputs、sim_entry分别核输入和内核入口，工具返回会话名，辅助实际模型/强度未独立核实。禁止写入/派生/runtime/锁；主责统一复核完整diff、最终验证与唯一业务提交。当前既定卡关键语义核查已覆盖，不新增重复辅助调用。
