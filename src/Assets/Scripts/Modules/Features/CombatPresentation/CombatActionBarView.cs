@@ -1,4 +1,5 @@
 using System;
+using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,15 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button waitButton;
         [SerializeField] private Text artLabel;
         [SerializeField] private Text divineLabel;
+        [SerializeField] private Button moveButton;
+        [SerializeField] private Button confirmMoveButton;
+        [SerializeField] private Button cancelMoveButton;
+        [SerializeField] private Text movementLabel;
+        [SerializeField] private Text waitLabel;
+        public Button MoveButton => moveButton;
+        public Button ConfirmMoveButton => confirmMoveButton;
+        public Button CancelMoveButton => cancelMoveButton;
+
         private Func<string, string> displayProfile = value => value;
 
         public void ConfigureText(Func<string, string> profileDisplay)
@@ -37,6 +47,33 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(divineButton, visible && !string.IsNullOrWhiteSpace(divineProfileId));
             if (artLabel != null) artLabel.text = string.IsNullOrWhiteSpace(artProfileId) ? "术法" : displayProfile(artProfileId);
             if (divineLabel != null) divineLabel.text = string.IsNullOrWhiteSpace(divineProfileId) ? "神通" : displayProfile(divineProfileId);
+        }
+
+        public void Present(CombatHudSnapshot snapshot, string artProfileId, string divineProfileId)
+        {
+            bool canInput = snapshot != null && snapshot.AcceptsCommands;
+            Present(canInput, artProfileId, divineProfileId);
+            root?.SetActive(snapshot != null);
+            bool canAct = canInput && !snapshot.CanEndTurn;
+            SetEnabled(basicAttackButton, canAct);
+            SetEnabled(guardButton, canAct);
+            SetEnabled(artButton, canAct && !string.IsNullOrWhiteSpace(artProfileId));
+            SetEnabled(divineButton, canAct && !string.IsNullOrWhiteSpace(divineProfileId));
+            if (waitLabel != null) waitLabel.text = snapshot != null && snapshot.CanEndTurn ? "结束行动" : "待机";
+        }
+
+        public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption selected, CombatMovementOption preview = null)
+        {
+            bool canInput = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
+            SetEnabled(moveButton, canInput && snapshot.Movement != null && snapshot.Movement.Options.Count > 0);
+            SetEnabled(confirmMoveButton, canInput && selecting && selected != null);
+            SetEnabled(cancelMoveButton, canInput && selecting);
+            if (confirmMoveButton != null) confirmMoveButton.gameObject.SetActive(selecting);
+            if (cancelMoveButton != null) cancelMoveButton.gameObject.SetActive(selecting);
+            CombatMovementOption shown = preview ?? selected;
+            if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
+                "移力 " + snapshot.Movement.RemainingPoints + (shown == null ?
+                    (selecting ? " · 选择目的地" : string.Empty) : " · 消耗 " + shown.Cost + (selected == null ? " · 点击选定" : " · 确认后移动"));
         }
 
         private static void SetEnabled(Button button, bool enabled)

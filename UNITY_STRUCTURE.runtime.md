@@ -44,6 +44,9 @@
 - `AdventureSceneBuilder.Build` 仅在Adventure关闭旧`VisualBackdrop`平面，避免Y=-.04的平面挡住延伸至Y≈-1.543的岩壁；共享`BeginScene`和其他场景不变。苻渊同地形图片由可选PlayMode取证临时克隆原模型子树，取证后销毁并恢复Marker/相机，不形成正式角色引用或第二条表现链。
 - `AdventureCameraController` 由 Builder 显式配置正式 Camera 与 `GuanzhongBattlefield`，Adventure 局部正交 size=4。Input System 的 WASD／方向键按实际帧时长平移，中键以棋盘平面射线差值拖动；视线焦点按棋盘实际 renderer bounds 的 XZ 钳制，保持相机 Y 与朝向。UI 指针／输入框取得输入时停止相机操作；禁用、失焦清除拖动状态，不写战斗或跨场景状态。
 
+- 关中移动的只读投影由 EncounterCoordinator 从同一 Session.SpatialQuery.FindReachable 与 ValidateCommand(Move) 生成：CombatMovementSnapshot 保存余额/阶段和原始路径/成本。CombatMovementView 仅从显式保存的正式格位、当前 Camera 射线和 EventSystem 做选格/高光/路径显示，本地选择直到确认才经 ICombatCommandHandler.RequestMove 提交。
+- Static3DCombatUnitPresentationProvider 以固定4格/秒消费起点加完整相邻路径，根节点逐段转向/插值，保留body与底座几何；独立 ICombatPresentationActivity 把移动、动作恢复和反馈寿命的只读busy交给Coordinator。玩家直接命令、回合交接和胜负清理均等待同一演出；实验Sprite port不增加必实现成员。Installer与AdventureSceneBuilder.RebuildCombatMovement显式接线，不新增全局状态服务。
+
 ## 非正式 2D 合同实验
 
 `src/Assets/Tests/Scenes/CombatPiece2DExperimentScene.unity` 不在 BuildSettings。`CombatPiece2DExperimentSceneBuilder` 只持久化实验相机、`BattleAnimationSpriteCombatUnitPresentationAdapter` 与既有 `FuYuan_BattleAnimationSprite.prefab` 引用；adapter 将 `ICombatUnitPresentationPort` 的准备、生成、事件、移除和清理投影为 2D pilot，不写 Combat、场景路由或保存状态。缺少实验 profile／Prefab／关键组件时在该入口失败关闭；不得接入 `AdventureScene`、`GameBootstrap` 或静态 3D provider。

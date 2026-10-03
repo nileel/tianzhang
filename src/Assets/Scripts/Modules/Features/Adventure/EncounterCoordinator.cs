@@ -58,6 +58,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public bool IsRunning => session != null;
+        public bool IsPresenting => (unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false;
 
         public void SetCombatResolutionRandomSource(ICombatResolutionRandomSource source)
         {
@@ -175,9 +176,18 @@ namespace TianZhang.Features.Adventure
                 {
                     acceptsPlayerCommand = true;
                     Present("你的行动", true);
-                    while (session.TurnPhase != CombatTurnPhase.Finished &&
-                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
+                    bool wasPresenting = IsPresenting;
+                    while (IsPresenting || (session.TurnPhase != CombatTurnPhase.Finished &&
+                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing))
+                    {
                         yield return null;
+                        if (wasPresenting != IsPresenting)
+                        {
+                            wasPresenting = IsPresenting;
+                            Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
+                                resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
+                        }
+                    }
                     acceptsPlayerCommand = false;
                 }
                 else
@@ -198,7 +208,7 @@ namespace TianZhang.Features.Adventure
                         if (!result.Succeeded)
                             throw new InvalidOperationException("combat_enemy_legal_command_rejected:" + result.RejectionReason);
                         Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
-                        yield return null;
+                        do { yield return null; } while (IsPresenting);
                     }
                 }
                 Present("战斗中", false);
@@ -209,7 +219,7 @@ namespace TianZhang.Features.Adventure
 
         private void ExecutePlayer(CombatCommand command)
         {
-            if (!acceptsPlayerCommand || session == null || command == null ||
+            if (!acceptsPlayerCommand || IsPresenting || session == null || command == null ||
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
             CombatActionResult result = ExecuteCommand(command);
             presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
@@ -254,6 +264,7 @@ namespace TianZhang.Features.Adventure
             if (session == null) return;
             session.Combatants.TryGet("player", out CombatantSnapshot player);
             session.Combatants.TryGet("enemy", out CombatantSnapshot enemy);
+            acceptsCommands = acceptsCommands && !IsPresenting;
             presentation.Present(new CombatHudSnapshot(
                 ToHud(player, playerDisplayName),
                 ToHud(enemy, resolveText(spawned.EnemyData.displayNameKey)),
@@ -261,7 +272,32 @@ namespace TianZhang.Features.Adventure
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
                 spawned.PlayerDivineProfileIds,
-                timeline: BuildTimeline()));
+                timeline: BuildTimeline(),
+                canEndTurn: acceptsCommands && player != null && commandService.Validate(session,
+                    new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded,
+                movement: BuildMovement(player, acceptsCommands),
+                isPresenting: IsPresenting));
+        }
+
+        private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)
+        {
+            if (player == null) return null;
+            var options = new List<CombatMovementOption>();
+            if (acceptsCommands && player.MovePoints > 0)
+            {
+                var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id)
+                    .Select(unit => unit.Position).ToArray();
+                foreach (var cell in session.SpatialQuery.FindReachable(player.Position, player.MovePoints, occupied))
+                {
+                    CombatActionResult validation = session.ValidateCommand(new CombatCommand(
+                        CombatCommandKind.Move, player.Id, destination: cell.Key));
+                    if (validation.Succeeded)
+                        options.Add(new CombatMovementOption(ToPresentationHex(cell.Key), validation.MovementCost,
+                            validation.MovementPath.Select(ToPresentationHex).ToArray()));
+                }
+            }
+            return new CombatMovementSnapshot(ToPresentationHex(player.Position), player.MovePoints,
+                session.TurnPhase.ToString(), options);
         }
 
         private CombatTimelineSnapshot BuildTimeline()

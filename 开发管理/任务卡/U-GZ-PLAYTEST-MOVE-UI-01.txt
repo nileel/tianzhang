@@ -121,3 +121,99 @@
 - 动画时点改变后，既有BasicAttack正式移动、Timeline移动后防御及SPELLS施法后EndTurn测试须等待真实演出结束；仅补这些直接测试路径，不把瞬移或只禁按钮作为演出锁。新增MovementPlayModeTests与既有Provider测试测逐段路径、UI/取消、最终位置/方向/接地与锁。
 - SPELLS保留原工作树全部未提交源码和双分辨率正常施法证据，未完成真实拒绝验收，不改变其状态。主责已读取其SetContext(snapshot)、两ArtActions、CanEndTurn和Wait→EndTurn；MOVE在独立worktree实施且合并时逐完整逻辑单元保留两术法接线，不从主线旧单术法实现覆盖已完成源码，不为源码接缝另建状态服务或宣称SPELLS已归档。
 - 本卡仍是一个可独立判断的移动交互纵向结果。主责统一写生产和最终验证；复用先前Sol/high只读spells_seams核直接调用者与路径、Astra/high只读spells_scope_check核证据边界，实际模型/强度未独立核实。CAMERA checker仅核本卡前置，均未另领任务、写文件、提交、操作runtime/锁或派生。
+
+## 2026-10-03 16:00续接检查点（生产已实施，验收未完成）
+
+### 当前状态与授权
+
+- 用户明确继续整批MOVE-UI→按实际前置TARGET/PREVIEW/LAYOUT并收口SPELLS；不是普通1，不重审backlog，不改定时配置。上下文较长，按用户要求保存检查点停止；没有宣称整批或本卡完成。
+- main和本MOVE工作树HEAD仍5c55f0be4636f73503bbfb2d5924bb0c84075047；本树为D:/天章游戏开发/.worktrees/manual/U-GZ-PLAYTEST-MOVE-UI-01，分支codex/u-gz-playtest-move-ui-01。当前生产/测试/场景改动全部未提交，尚未归档/集成。任务route/owner/ready与队列不变，不能启动下游生产。
+- 原SPELLS树HEAD仍efca74b4，全部原未提交源码、开始菜单修复、记录和日志未写入或覆盖；两个旧stash没有apply或删除。main原dirty/untracked保持。CAMERA用户验收、TIMELINE缺字结论不重验。V-FLOW保持实际前置，V-ART由用户确认。
+
+### 已实际实现与所有者
+
+- Contracts增加独立ICombatPresentationActivity、CombatMovementSnapshot/Option；不改变ICombatUnitPresentationPort必实现成员，不侵入实验Sprite。Coordinator从FindReachable候选逐一ValidateCommand(Move)，剔除起点/非法目的地，保留MovementPath与MovementCost，禁止把空间cost units当移力；UI不读Session或另寻路。
+- CombatMovementView及meta已新增：显式序列化36格tile与q/r、Camera、既有reachable/selected材质；格位plane与六边形范围拾取，当前Camera每次射线，不缓存屏幕点。高光、悬停路径和成本、点击待确认、确认RequestMove、取消清本地选择已接。每个新权威快照清过期候选，EventSystem.RaycastAll抢占，非法格不提交。
+- Provider逐段4格/秒移动根节点，每段六向转身；完整路径先验证相邻/起点/终点/末段方向，重复/过期起点/非相邻先拒绝再副作用。Remove/Clear/Prepare/Disable停止旧移动协程，捕获旧PresentedUnit实例防同ID新会话被覆盖；body localY=.08/scale1.4、base localY=.04/scaleY=.04、rootY=.34保持。
+- IsPresenting覆盖movement/actionRecovery/transient反馈。Coordinator命令同步拒绝busy，Finished或致死后仍等完整演出，敌方每次命令也等待；玩家等待循环观察busy释放并重新发布HUD。EndTurn继续不发Idle覆盖演出。
+- Input使用SetContext(snapshot)/ClearContext，Wait按权威CanEndTurn选择EndTurn或Wait；ActionBar追加移动/确认/取消、余额/成本文本并按阶段启用。Presenter保留血条/Timeline/探索显隐。Installer显式配置MovementView，Builder的Build与局部RebuildCombatMovement接线。
+- src/Assets/Scenes/AdventureScene.unity已由局部Builder真实保存；新增movement component、36格引用、三个按钮/label和Installer引用，保留CAMERA size4及控制器。新按钮row显式childControlWidth/Height=true，避免ugui Reset默认false造成尺寸不受LayoutElement控制。仅CombatPresentation增加Unity.InputSystem，并同步唯一边界白名单及直接EditMode测试。UNITY_STRUCTURE.runtime.md追加实际所有者描述。
+
+### 已验证与失败根因
+
+- 本轮开工及实现后预检均status=ok，taskCardDigest=d1dc1d4139e6226ee858bcdb9b5524f99365bb6cf9ed9e63af974d748dd359e4，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates/gatePointers均空，与schema2空投影一致；该digest是添加本检查点前的卡，续接必须按当前卡重跑。
+- tools/check-unity-assembly-boundaries.ps1通过19程序集/2asmref；check-data-chain通过GongFa29/29、Spells83/83、Skills31/31、语言606。未改数值公式，不跑BattleSim。
+- src/Logs/move-ui/build-scene-3.log：Unity6000.3.18f1正式编译和AdventureSceneBuilder.RebuildCombatMovement成功exit0。初次导入创建本树Library，没有复制其他树Library/csproj。全部失败日志保留，不以最后成功掩盖过程。
+- PlayMode五个不同直接用例已有通过证据：playmode-1.xml中的ApprovedProfilesProjectAllSixEventsAndCleanByCombatantId通过；playmode-2.xml中新增Provider三段路径/清理同ID测试、BasicAttack完整移动行动顺序、Timeline完整流程三项通过；playmode-ui-6.xml中FormalSceneProjectsAuthorityAndCommitsOnlyConfirmedMovement通过1/1。前两份XML含当时其他失败，不可把文件总体冒称全通过。
+- 新Movement用例走正式StartMenu/World/Settlement/Adventure场景，但显式使用受控建角/随机源和合成InputSystem鼠标，是自动化场景测试，不是用户普通角色真实人工入口证据。覆盖权威高光集合、悬停路径/成本、确认前零提交、选中后取消、当前格/敌人/障碍/超预算/空地点击零消费、UI射线、当前Camera位置变化后拾取、原路径顶点、确认扣一次、锁中Guard/EndTurn/Move拒绝、最终根节点/底座、动作后结束。
+- UI运行数值：640x480，按钮开启后下一帧depth18、raycast=True、hits=MoveButton,CombatHudRoot，按钮height56；悬停mouse=(350,300.73)、hex=(0,1)、options3、line=True；确认cost1/remaining1、root=(.50,.34,1.87)。这是测试分辨率，不是1366或1920证据。
+- 首轮600帧超时只跑约0.09秒，未等完按秒演出；等待改为Time.realtimeSinceStartup有界10秒，Timeline战斗循环60秒。UI最初depth=-1是同帧启用尚未渲染，带图形/无图形均可出现，下一帧depth18；不能把根因只写成nographics。合成鼠标位置曾停在(0,0)，已按既有Camera测试的SetUp临时IgnoreFocus/AllDeviceInputAlwaysGoesToGameView并在TearDown恢复，未修改生产输入配置；修正后真实LateUpdate读到预期坐标并通过。不需要为这些测试环境问题改生产守卫。
+
+### 模型协作与源码接缝
+
+- Node REPL requestMeta核实主模型gpt-6-astra。三只读子智能体：/root/spells_seams请求gpt-6.1-sol/high，实际模型已核实Sol；/root/movement_contract请求gpt-6-astra/high，实际模型已核实Astra；/root/validation_entry请求gpt-6.1-sol/medium，实际未核实。所有推理强度未独立核实。分别核共享接缝、权威/演出语义、验证入口与直接测试，之后复用checker；未写文件/卡/队列、提交、操作runtime锁或派生。
+- MOVE独立main基线没有SPELLS的RestoreSpirit/SpiritRecoveries/SpiritSpent/GetSpiritCost，故本轮没有整文件搬SPELLS，也没有以main旧文件覆盖SPELLS。MOVE当前仍是main单术法基线；合回SPELLS必须逐完整逻辑单元保留双术法，不得用ours/theirs整文件裁决。
+- SPELLS必须保留：Input.snapshot/firstArtTargetId/secondArtTargetId/selectionProfileIds、KeepTarget/GetArt/RequestArt(index)/SelectNextSecondArtTarget/SetContext(snapshot)/ClearContext；ActionBar双术法/第二目标/拒绝原因/费用CT、双参数ConfigureText与Present(snapshot,firstTarget,secondTarget)；Presenter完整快照；Coordinator.displayProfile、BuildArtActions、恢复不抽随机、SpiritRecoveries投影、费用/恢复日志；Contracts.ArtActions/CanEndTurn/RestoredSpirit，构造器合并用命名参数。
+- SPELLS Builder.RebuildStarterArts会销毁并重建CombatActionBar，因此合并BuildStarterActionBar也必须接移动控件，否则下次菜单重建会抹掉MOVE。其旧scene相机size6.2/无控制器，本次MOVE已含size4/CAMERA，合场景保留相机并局部合双术法子树和attackProfiles。Installer保留SPELLS两个profile/reason显示委托。
+
+### 下一轮直接继续
+
+- 先读取本检查点、最新main队列/卡及本树diff，重跑当前卡风险预检。保留所有工作树与未提交实现，不重新apply stash，不重做已经通过且输入未变的测试。
+- 取得MOVE两分辨率1366x768、1920x1080真实正式入口Game View与运行数值：正常创建/保存读回角色→关中正式战斗，真实移动按钮/悬停/选定/取消/确认/逐段，完整动作锁和结束行动。正式四障碍绕行及逐段朝向/自动Finished末步/致死后等待等仍须对照完成条件补足证据；三段Provider fixture不能替代全部正式证据。不得把本轮5条通过直接写为本卡完成。
+- Windows实机工具可用：computer-use技能的Node REPL import('@oai/sky')，get_window_state图像块须用functions.image转发，不能text打印base64。本轮只观察旧SPELLS窗口，未发键鼠或关闭它；实际已退出Play，停StartMenu，GameView1920x1080，控制台保留历史14:20:54 input event throughput错误。续接重新识别进程/项目/场景；不要假定仍在Adventure。旧SPELLS进程PID35960，仅供线索不可当新事实。
+- 然后逐方法合入SPELLS共享接缝，按SPELLS卡风险预检和备份/消费main规则推进，保留已有1366/1920两术法/普通输入SHA256 37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492。SPELLS缺MP/非法目标真实拒绝未完成，不用fixture或盲刷阵亡替代。
+- 完成所有本卡证据才做路径限定提交/归档/受保护集成，再按实际完成前置准备TARGET、PREVIEW、LAYOUT。每次集成必须在D:/天章游戏开发显式RepositoryRoot重新Show、重读同卡/队列、锁与路径冲突。本轮仅开工Show显示双run为空/锁none，不能复用为未来集成许可。
+
+### 停止前最终核对
+
+- EditMode正确命名空间TianZhang.Tests.AssemblyBoundaryEditorTests的editmode-assembly-2.xml通过4/4；首份错误过滤得到0条，不作为通过证据。PlayMode与EditMode结果各已通过项目脚本ValidateResultOnly校验。
+- 本卡CodexDispatchReady任务卡检查、目标审核文本检查通过。21个实际变更/新增路径全部属于expectedPaths，暂存前空白检查和git diff --check通过；仅恢复了Unity自动生成的两个ProjectSettings文件空白变化，未丢弃业务修改。没有暂存、提交或集成。
+- 本检查点最后补记后再次运行风险预检，输出保存src/Logs/move-ui/checkpoint-preflight.json；该文件记录最终卡digest，避免在卡内回填digest导致其自身再次变化。
+## 2026-10-03 16:46续接实机诊断范围
+
+- 已从本树1920正式StartMenu真实新建默认寒门move-1920-1003，保存回菜单并点击同槽读回，经悬赏和野外进入正式战斗；保存副本与只读探针在src/Logs/move-ui/formal-1920-*，未注入角色或随机源。
+- 当前选格状态的MovementStatus实际文本为“移力 2 · 选择目的地”，Rect372×24，字体GuanzhongChinese/18/Wrap/Truncate，但Game View文字未显示；Reachable_0_1激活、6顶点、width=.035，但画面难辨认。先取真实文字preferred/mesh及线条/地块bounds/屏幕投影，再判根因，禁止先调常数。
+- 在已允许的GuanzhongMovementPlayModeTests.cs内补Editor专用只读实机诊断菜单，读取当前真实session/快照、UI与root/line/tile运行数值并有界记录位置变化。不能设置资源、随机源、相机、输入、行动阶段或直接调用命令，不能将其变成第二生产入口；日志只保存在src/Logs/move-ui。新增该诊断符号后重跑本卡风险预检。
+
+## 2026-10-03 17:26续接检查点（双分辨率实机已推进，仍未提交）
+
+### 本轮状态与最小修复
+
+- main与MOVE HEAD仍为5c55f0be4636f73503bbfb2d5924bb0c84075047；MOVE全部21个变更/新增路径仍未暂存、未提交、未归档、未集成。main最新队列仍SPELLS→MOVE，均codex_execute/codex/ready。SPELLS工作树、旧stash和main原dirty/untracked均未操作。没有重验CAMERA/TIMELINE、重审backlog或修改定时配置。
+- 开工读取AGENTS、队列和16:00检查点，schema5 Show双run为空且锁none；此结果不可复用为未来集成许可。开工当前卡预检digest为0d53139851a0381bc9c07508f074f731bac9677e1f3d802f84ba2bae080643e3；追加诊断范围后再次预检digest为2cbc2575a0becc855deca4366bc63bf40441bfdbae47109fd18356981429c831。两次indexDigest均ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0，matched/mustRead/gates为空并与schema2投影一致。
+- 真实1920文字根因已量化：MovementStatus的Rect372×24小于preferredHeight26，Wrap/Truncate导致vertices=0。仅BuildCombatMovement改文字高32、容器高100（32+12+56）、actionRoot高440，局部菜单真实重建AdventureScene；修复后Rect372×32、选择状态vertices36、选定52、空闲12，1920/1366 Game View均能看见文字。未改共享布局helper。
+- 可达线条实际active/enabled/isVisible、width=.035、mesh14顶点/36索引、正面dot为正，世界/屏幕投影和tile bounds已记录；共享填充材质alpha .48用于细线时对比不足。仅CombatMovementView.CreateLine以MaterialPropertyBlock保留RGB并把该LineRenderer的_BaseColor alpha设1；路径线同属本控件，亦局部设1。没有改材质资产、shader、线宽、坐标、高度、模型尺度或相机。选格截图中青色边界和金色折线路径可辨。
+- 新只读菜单位于GuanzhongMovementPlayModeTests的UNITY_EDITOR段：天章/诊断/记录当前移动实机60秒。启动要求Adventure Play Mode与SystemCombatResolutionRandomSource/SystemFormalEncounterRandomSource；不运行fixture SetUp、不改随机源/资源/相机/输入/命令，Editor update在60秒或结束会话时解除订阅，变化才落日志。包含root/底座/phase/points/tick/HP/MP/按钮、文字mesh和line BakeMesh诊断。
+
+### 正式入口与真实证据
+
+- MOVE Unity6000.3.18f1进程PID33832，启动日志src/Logs/move-ui/manual-entry-20261003.log。1920从StartMenu真实创建默认寒门无名修士，槽move-1920-1003；生命571/灵力180/八项先天均8，不含双术法。经世界关陇/城正式保存、回菜单点击同槽读回，再经悬赏与野外入口进入Adventure战斗；1366也退出Play回StartMenu再点击同槽，经城/野外进入新战斗。没有注入角色、Session、随机种子或资源。
+- 保存副本src/Logs/move-ui/formal-saved-move-1920-1003.json，原槽在用户LocalLow/DefaultCompany/src/SaveSlots；formal-1920-save-slot.json、formal-1920-hierarchy.json、formal-1366-slot.json及各status/ring探针保留。正式保存的角色与导航可读回；这些是操作和存档证据，不能把采样时类型检查单独当全历史证明。
+- 1920日志visible-movement-20261003-170743.jsonl共325行：行37–312有276个移动busy样本，约.497742秒，(0,0)→(0,1)→(0,2)，行174准确中点(.5,.34,1.86603)，行313准确终点(1,.34,2.73205)才解锁；移力一次2→0，tick13不提前推进。rootY .34、scale1、底座相对(0,.04,0)恒定，轨迹偏差≤1.32e-5。行322–325还记录非致死受击Finished演出释放后才推进tick17→26，HP531。formal-1920-after-move.png是对应正常入口结果截图。
+- 1366日志visible-movement-20261003-171808.jsonl共313行：行1 ActionThenMove/points2/tick26/start(0,2)；行45确认后逻辑(1,0)/points0/Finished，root仍在起点；行45–174第一段yaw150，行175准确中点(1.5,.34,1.86603)换yaw210，行175–307第二段；263个连续busy样本、约.500366秒，期间Finished/tick26恒定且相关按钮禁用。行308准确终点(1,.34,1)、busy释放才tick26→34；行313下一玩家tick39/HP495。证明行动后移力耗尽自动Finished仍等待完整运动与段间转向。formal-1366-turning-selected.png保留实际折线；formal-1366-after-action-then-move.png是此前同入口普通两格移动后的截图，不能混作171808的终态。
+- 1366日志visible-movement-20261003-172142.jsonl共309行：行1预览(1,1)→(1,2)→(2,2)，绕开正式障碍(2,1)；行35–163第一段yaw30，行164准确中点(2,.34,2.73205)换yaw90，行164–308第二段，行309准确终点(3,.34,2.73205)解锁。274个busy样本、约.499512秒，轨迹偏差≤1.30e-5，未进入障碍逻辑六边形，rootY/scale/base保持，移力一次2→0且tick52不变。截图formal-1366-obstacle-selected.png与formal-1366-obstacle-complete.png对应真实预览和落格。这是四障碍场地中一个障碍转角，不夸称一次绕遍四障碍或全角色mesh对stair零重叠。
+- visible-movement-20261003-171456.jsonl仅录到待确认即到60秒上限，57行且busy=0，不能写成移动完成证据。165122/165618/170332等前期诊断保留，170332到期后才操作的移动也不能用该日志证明。编辑器菜单失焦期间部分Screen.width/height为1529×1007但camera.pixelRect仍正式分辨率，相关样本不得冒称另一分辨率；真正运动样本需同时核camera与Screen。
+- 真实交互中使用sky的单次点击或同点drag按下释放并逐次观察。菜单返回Game View可能先消耗焦点或清待选状态，按实际“点击选定/确认后移动”文字确认后才点击确认；没有为工具焦点问题修改生产输入。每个动作后取新窗口状态，不用盲批键鼠。
+
+### 模型复核与证据边界
+
+- 主模型requestMeta已核gpt-6-astra；复用两个只读子智能体：spells_seams请求gpt-6.1-sol/high、实际模型Sol，核共享方法与本轮窄修复；move_rule_check请求gpt-6-astra/high、实际模型Astra，核语义和三份实机轨迹。推理强度未独立核实。子智能体没有写文件/卡/队列、运行测试、操作Unity/runtime/锁、提交或派生。
+- checker未发现本轮文字高度/局部MPB生产P1/P2，但诊断仍只记录sharedMaterial color而非MPB实际覆盖色，是记录缺口；不能把日志中的alpha .48/.58写成修复后有效alpha。修复效果目前以局部源码和Game View为证；后续需要精确alpha时只在同一诊断读取GetPropertyBlock并明确shared/effective，不改生产或材质。
+- 既有5个不同PlayMode用例、4个EditMode、程序集边界和数据链通过事实沿用16:00检查点，未重跑输入未变的测试。本轮窄修复经过当前Unity编译并在真实场景运行；不把Editor warning调用栈中的EmitExceptionAsError方法名误判为CS编译错误。
+- 仍缺真实致死演出等待与胜负清理证据；当前日志只记player root且在Encounter.IsRunning=false退出（该属性=session!=null），可观察致死期间但不记录清理后的终帧，后续需针对清理用现有只读探针/实际界面补证，不能提前宣称完成。锁中命令拒绝已有受控自动化覆盖，实机日志只证明按钮禁用，未记录实际锁中提交，不互相冒充。
+- SPELLS仍缺真实缺灵力/非法目标拒绝，尚未逐方法合入MOVE，也未消费/覆盖SPELLS已有双术法源码及正常双分辨率证据。必须沿用16:00列出的每方法接缝，并同时保留SPELLS RestoreSpirit/SpiritRecoveries/ArtActions/第二目标、Builder双术法重建+MOVE控制、相机size4/控制器。不能整文件ours/theirs覆盖或另建状态服务。
+- Sol只读给出的SPELLS拒绝操作路线仅是待实测建议，不是通过：新正常角色先到(0,2)，对敌聚灵20后退至(0,4)；以后每回合(0,4)→(0,3)、对敌聚灵20、退回(0,4)，每步核真实敌位置/费用/阶段。MP耗尽后在有效距离确认缺灵力拒绝、费用不变；(0,2)与初始敌(1,0)距离2可核射程1攻击术非法目标。实际不符立即停，不盲刷阵亡、不注入fixture。
+
+### 停止前最终核对（本轮）
+
+- 17:23重新确认main HEAD为5c55f0be、队列未改；MOVE当前仍21个路径变更/新增，未新增ProjectSettings改动。局部Builder重新保存场景产生Unity YAML空字段行尾空白，已仅对AdventureScene运行项目空白脚本-Fix；不改序列化值，最终检查另存日志。
+- 本轮没有stage/commit/archive/merge/stash apply或drop；保留全部工作树、日志、未提交源码与所有失败/不完整证据。因长上下文保存此检查点，整批未完成；不以检查点替代验收。
+- Unity停止前仍在MOVE Adventure Play Mode、Game View1366×768，正常玩家(2,2)、tick52、HP459/MP180、移力0、MoveThenAction，敌HP839；PID/window只作续接线索，下一轮必须重新识别。不要凭该瞬时状态继续盲点。
+- 续接先读本节及16:00源码接缝，核当前diff/最新队列并重跑风险预检；不重复已有合格且输入未变的移动/转向/绕障碍/Finished测试。补致死清理，再按实际主线与卡边界逐方法合SPELLS、取得真实拒绝证据；全部满足后每卡限定路径提交、归档和受保护集成。集成前必须从主树重新schema5 Show并重读同卡/队列、核task占用/锁/路径冲突，不能使用开工旧结果。之后才按实际前置继续TARGET/PREVIEW/LAYOUT；V-FLOW保持真实前置、V-ART由用户确认。
+- 本节落盘后的最终卡/索引digest与mustRead/gates保存在src/Logs/move-ui/checkpoint-1726-preflight.json，不在卡内回填自身digest。
+
+## 2026-10-03 用户授权先提交当前成果
+
+- 用户在工作树盘点后明确要求“该合并的都先提交吧”。据此将本卡当前21个授权路径在原MOVE分支形成检查点提交；这是保全已实施成果的本地提交，不是完成candidate或主线集成，不将尚缺验收改写为已通过。
+- 17:26检查点的正式双分辨率移动、转向、绕障碍和自动Finished证据沿用；真实致死演出清理、SPELLS逐方法共享接缝及其真实缺灵力/非法目标证据仍待完成。route/owner/stage/dispatchState、队列和下游前置均不变；不归档，不操作stash或自动化配置。
+- 提交仅包含已实施源码、场景、测试、边界说明和本卡；忽略目录中的日志/截图保留在原工作树，旧工作树及主目录原改动保留。后续继续在原树补齐验收，再统一复核最终差异并通过受保护入口集成。

@@ -34,14 +34,7 @@ namespace TianZhang.Features.CombatPresentation
             healthBars?.Present(snapshot);
             timelineView?.Present(snapshot?.Timeline);
             explorationPanel?.SetActive(snapshot == null);
-            string art = snapshot != null && snapshot.ArtProfileIds.Count > 0 ? snapshot.ArtProfileIds[0] : null;
-            string divine = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
-            commandInput?.SetContext(
-                snapshot?.Player?.Id,
-                snapshot?.Enemy?.Id,
-                art,
-                divine,
-                snapshot != null && snapshot.AcceptsCommands);
+            commandInput?.SetContext(snapshot);
         }
 
         public void ClearLog() => logView?.Clear();
@@ -54,7 +47,7 @@ namespace TianZhang.Features.CombatPresentation
             healthBars?.Hide();
             timelineView?.Hide();
             explorationPanel?.SetActive(true);
-            commandInput?.SetContext(null, null, null, null, false);
+            commandInput?.ClearContext();
         }
     }
 }

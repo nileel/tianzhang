@@ -165,7 +165,76 @@ namespace TianZhang.Editor
                     FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
+            BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        [MenuItem("天章/场景/接入关中移动交互")]
+        public static void RebuildCombatMovement()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            GameObject battlefield = Array.Find(scene.GetRootGameObjects(), value => value.name == "GuanzhongBattlefield");
+            Camera camera = Array.Find(scene.GetRootGameObjects(), value => value.name == "Main Camera")?.GetComponent<Camera>();
+            BuildCombatMovement(root, camera, battlefield, SceneBuildSupport.RequireAsset<EnvironmentProfileAsset>(
+                "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildCombatMovement(GameObject root, Camera camera, GameObject battlefield,
+            EnvironmentProfileAsset environment)
+        {
+            if (root == null || camera == null || battlefield == null)
+                throw new InvalidOperationException("Formal movement scene owners are missing.");
+            CombatMovementView view = root.GetComponent<CombatMovementView>() ?? root.AddComponent<CombatMovementView>();
+            CombatActionBarView bar = root.GetComponent<CombatActionBarView>();
+            var barData = new SerializedObject(bar);
+            GameObject actionRoot = (GameObject)barData.FindProperty("root").objectReferenceValue;
+            Transform old = actionRoot.transform.Find("MovementControls");
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            var controls = new GameObject("MovementControls", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            controls.transform.SetParent(actionRoot.transform, false);
+            controls.transform.SetAsFirstSibling();
+            SettlementSceneBuilder.ConfigureColumn(controls, 0);
+            SettlementSceneBuilder.SetHeight(controls, 100);
+            Text status = SceneBuildSupport.CreateText("MovementStatus", controls.transform, "移力", 18);
+            SettlementSceneBuilder.ApplyTextSkin(status, 32);
+            var row = new GameObject("MovementButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(controls.transform, false);
+            row.GetComponent<HorizontalLayoutGroup>().spacing = 6;
+            row.GetComponent<HorizontalLayoutGroup>().childControlWidth = true;
+            row.GetComponent<HorizontalLayoutGroup>().childControlHeight = true;
+            row.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = true;
+            SettlementSceneBuilder.SetHeight(row, 56);
+            Button move = SceneBuildSupport.CreateButton("MoveButton", row.transform, "移动", out _);
+            Button confirm = SceneBuildSupport.CreateButton("ConfirmMoveButton", row.transform, "确认", out _);
+            Button cancel = SceneBuildSupport.CreateButton("CancelMoveButton", row.transform, "取消", out _);
+            foreach (Button button in new[] { move, confirm, cancel }) SettlementSceneBuilder.ApplyButtonSkin(button);
+            confirm.gameObject.SetActive(false);
+            cancel.gameObject.SetActive(false);
+            SettlementSceneBuilder.SetHeight(actionRoot, 440);
+            SceneBuildSupport.SetObject(bar, "moveButton", move);
+            SceneBuildSupport.SetObject(bar, "confirmMoveButton", confirm);
+            SceneBuildSupport.SetObject(bar, "cancelMoveButton", cancel);
+            SceneBuildSupport.SetObject(bar, "movementLabel", status);
+            Button wait = (Button)barData.FindProperty("waitButton").objectReferenceValue;
+            SceneBuildSupport.SetObject(bar, "waitLabel", wait.GetComponentInChildren<Text>(true));
+            SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatMovementView", view);
+            SceneBuildSupport.SetObject(view, "battlefieldCamera", camera);
+            SceneBuildSupport.SetObject(view, "reachableMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.ReachableMaterialPath));
+            SceneBuildSupport.SetObject(view, "selectedMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
+            var data = new SerializedObject(view);
+            SerializedProperty cells = data.FindProperty("cells");
+            cells.arraySize = environment.battlefieldCells.Length;
+            for (int index = 0; index < cells.arraySize; index++)
+            {
+                EnvironmentBattlefieldCell cell = environment.battlefieldCells[index];
+                SerializedProperty entry = cells.GetArrayElementAtIndex(index);
+                entry.FindPropertyRelative("q").intValue = cell.q;
+                entry.FindPropertyRelative("r").intValue = cell.r;
+                entry.FindPropertyRelative("tile").objectReferenceValue = battlefield.transform.Find("GuanzhongHex_" + cell.q + "_" + cell.r);
+            }
+            data.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [MenuItem("天章/场景/重建关中头顶血条")]

@@ -127,6 +127,42 @@ namespace TianZhang.Gameplay.Contracts
         public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
 
+    public interface ICombatPresentationActivity
+    {
+        bool IsPresenting { get; }
+    }
+
+    [Serializable]
+    public sealed class CombatMovementOption
+    {
+        public CombatMovementOption(CombatUnitPresentationHex destination, int cost, IReadOnlyList<CombatUnitPresentationHex> path)
+        {
+            Destination = destination;
+            Cost = cost;
+            Path = new List<CombatUnitPresentationHex>(path).AsReadOnly();
+        }
+        public CombatUnitPresentationHex Destination { get; }
+        public int Cost { get; }
+        public IReadOnlyList<CombatUnitPresentationHex> Path { get; }
+    }
+
+    [Serializable]
+    public sealed class CombatMovementSnapshot
+    {
+        public CombatMovementSnapshot(CombatUnitPresentationHex origin, int remainingPoints, string phase,
+            IReadOnlyList<CombatMovementOption> options)
+        {
+            Origin = origin;
+            RemainingPoints = remainingPoints;
+            Phase = phase;
+            Options = new List<CombatMovementOption>(options).AsReadOnly();
+        }
+        public CombatUnitPresentationHex Origin { get; }
+        public int RemainingPoints { get; }
+        public string Phase { get; }
+        public IReadOnlyList<CombatMovementOption> Options { get; }
+    }
+
     public interface ICombatUnitPresentationPort
     {
         void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> combatants);
@@ -217,7 +253,10 @@ namespace TianZhang.Gameplay.Contracts
             bool acceptsCommands,
             IReadOnlyList<string> artProfileIds,
             IReadOnlyList<string> divineProfileIds,
-            CombatTimelineSnapshot timeline = null)
+            CombatTimelineSnapshot timeline = null,
+            bool canEndTurn = false,
+            CombatMovementSnapshot movement = null,
+            bool isPresenting = false)
         {
             Player = player;
             Enemy = enemy;
@@ -226,6 +265,9 @@ namespace TianZhang.Gameplay.Contracts
             ArtProfileIds = artProfileIds ?? Array.Empty<string>();
             DivineProfileIds = divineProfileIds ?? Array.Empty<string>();
             Timeline = timeline;
+            CanEndTurn = canEndTurn;
+            Movement = movement;
+            IsPresenting = isPresenting;
         }
 
         public CombatantHudSnapshot Player { get; }
@@ -235,6 +277,9 @@ namespace TianZhang.Gameplay.Contracts
         public IReadOnlyList<string> ArtProfileIds { get; }
         public IReadOnlyList<string> DivineProfileIds { get; }
         public CombatTimelineSnapshot Timeline { get; }
+        public bool CanEndTurn { get; }
+        public CombatMovementSnapshot Movement { get; }
+        public bool IsPresenting { get; }
     }
 
     public interface ICombatPresentationSink

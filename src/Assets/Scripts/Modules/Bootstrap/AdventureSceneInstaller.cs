@@ -30,6 +30,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatHudPresenter combatHudPresenter;
         [SerializeField] private CombatHudView combatHudView;
         [SerializeField] private CombatCommandInput combatCommandInput;
+        [SerializeField] private CombatMovementView combatMovementView;
         [SerializeField] private CombatActionBarView combatActionBar;
         [SerializeField] private CombatLogView combatLogView;
         [SerializeField] private CombatTimelineView combatTimelineView;
@@ -57,6 +58,7 @@ namespace TianZhang.Bootstrap
                 RequireReference(combatHudPresenter, "combat_hud_presenter_missing");
                 RequireReference(combatHudView, "combat_hud_view_missing");
                 RequireReference(combatCommandInput, "combat_command_input_missing");
+                RequireReference(combatMovementView, "combat_movement_view_missing");
                 RequireReference(combatActionBar, "combat_action_bar_missing");
                 RequireReference(combatLogView, "combat_log_view_missing");
                 RequireReference(combatTimelineView, "combat_timeline_view_missing");
@@ -82,7 +84,8 @@ namespace TianZhang.Bootstrap
                 combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
                 combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);
                 combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);
-                combatCommandInput.Configure(encounterCoordinator, combatActionBar);
+                combatMovementView.Configure(encounterCoordinator, combatActionBar);
+                combatCommandInput.Configure(encounterCoordinator, combatActionBar, combatMovementView);
                 encounterCoordinator.Configure(
                     combatHudPresenter,
                     static3DUnitPresentationProvider,
@@ -111,6 +114,7 @@ namespace TianZhang.Bootstrap
                 Disable(input);
                 Disable(encounterCoordinator);
                 Disable(combatCommandInput);
+                Disable(combatMovementView);
                 Debug.LogError("[AdventureInstaller] " + exception.Message);
             }
         }

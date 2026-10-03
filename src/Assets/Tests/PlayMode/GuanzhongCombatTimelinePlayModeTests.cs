@@ -232,6 +232,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.MoveThenAction));
             AssertSameSchedulerSnapshot(beforeMove, session.TurnScheduler.GetSnapshot(session.Combatants.All));
             Assert.That(captured.Latest.Timeline.CurrentActorId, Is.EqualTo(spawned.Player.Id));
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
+            Assert.That(encounter.IsPresenting, Is.False);
             commands.RequestGuard(spawned.Player.Id);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
             AssertSameSchedulerSnapshot(beforeMove, session.TurnScheduler.GetSnapshot(session.Combatants.All));
@@ -251,11 +253,11 @@ namespace TianZhang.Tests.PlayMode
                 Is.EqualTo(ctBeforeWait * 0.5f));
             Assert.That(captured.Latest.Timeline.CurrentActorId, Is.Null.Or.Empty);
 
-            for (int frame = 0; frame < 600 && encounter != null && encounter.IsRunning; frame++)
+            for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && encounter != null && encounter.IsRunning;)
             {
-                if (session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.MoveThenAction)
+                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.MoveThenAction)
                     commands.RequestBasicAttack(spawned.Player.Id, spawned.Enemy.Id);
-                if (session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.ActionThenMove)
+                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.ActionThenMove)
                     commands.RequestEndTurn(spawned.Player.Id);
                 yield return null;
             }
@@ -305,10 +307,10 @@ namespace TianZhang.Tests.PlayMode
 
         private static IEnumerator WaitForTimelinePlayer(EncounterCoordinator encounter, CombatSession session, string id)
         {
-            for (int frame = 0; frame < 300; frame++)
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline;)
             {
                 Assert.That(encounter != null && encounter.IsRunning, Is.True);
-                if (session.CurrentActorId == id && session.TurnPhase == CombatTurnPhase.MoveThenAction) yield break;
+                if (!encounter.IsPresenting && session.CurrentActorId == id && session.TurnPhase == CombatTurnPhase.MoveThenAction) yield break;
                 yield return null;
             }
             Assert.Fail("The actual scheduler did not yield the player's turn.");

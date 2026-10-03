@@ -9,8 +9,12 @@ namespace TianZhang.Features.CombatPresentation
     /// The sole formal Adventure carrier for approved static-3D combat pieces.  It projects only
     /// already-committed combat lifecycle events and has no route back into Combat or save state.
     /// </summary>
-    public sealed class Static3DCombatUnitPresentationProvider : MonoBehaviour, ICombatUnitPresentationPort
+    public sealed class Static3DCombatUnitPresentationProvider : MonoBehaviour, ICombatUnitPresentationPort, ICombatPresentationActivity
     {
+        public const float MovementCellsPerSecond = 4f;
+        private readonly Dictionary<string, Coroutine> movements = new Dictionary<string, Coroutine>();
+        public bool IsPresenting => movements.Count > 0 || actionRecoveries.Count > 0 || transientFeedback.Count > 0;
+
         private const float GroundY = 0.34f;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
@@ -96,7 +100,7 @@ namespace TianZhang.Features.CombatPresentation
                     baseRenderer,
                     body.GetComponentsInChildren<Renderer>(true),
                     combatant.PresentationProfileId,
-                    combatant.CombatantId));
+                    combatant.CombatantId, combatant.Position));
             }
             catch
             {
@@ -116,6 +120,18 @@ namespace TianZhang.Features.CombatPresentation
             if (!profileSet.TryGetProfile(unit.ProfileId, out Static3DCombatUnitPresentationProfile profile))
                 throw new InvalidOperationException("static_3d_presentation_profile_unavailable");
 
+            if (presentationEvent.PresentationEvent == CombatUnitPresentationEvent.Move)
+            {
+                ValidateMovement(unit, presentationEvent);
+                unit.LastEvent = CombatUnitPresentationEvent.Move;
+                ResetRootScale(unit);
+                movements.Add(unit.CombatantId, StartCoroutine(MoveAlongPath(unit, profile, presentationEvent)));
+                PlayFeedback(unit, profile, presentationEvent);
+                return;
+            }
+            if (movements.ContainsKey(unit.CombatantId))
+                throw new InvalidOperationException("static_3d_presentation_busy");
+            unit.Position = presentationEvent.EndPosition;
             unit.Root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[presentationEvent.Facing], 0f);
             unit.Root.transform.position = HexToWorld(presentationEvent.EndPosition);
             unit.LastEvent = presentationEvent.PresentationEvent;
@@ -148,6 +164,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (string.IsNullOrWhiteSpace(combatantId)) throw new ArgumentException("Combatant ID is required.", nameof(combatantId));
             if (!units.TryGetValue(combatantId, out PresentedUnit unit)) return;
+            StopMovement(combatantId);
             units.Remove(combatantId);
             StopActionRecovery(combatantId);
             if (unit.Root != null) Destroy(unit.Root);
@@ -155,6 +172,9 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Clear()
         {
+            foreach (Coroutine routine in movements.Values) StopCoroutine(routine);
+            movements.Clear();
+            ClearTransientFeedback();
             foreach (PresentedUnit unit in units.Values)
                 if (unit.Root != null) Destroy(unit.Root);
             units.Clear();
@@ -201,6 +221,65 @@ namespace TianZhang.Features.CombatPresentation
 
         public static Vector3 HexToWorld(CombatUnitPresentationHex position) =>
             new Vector3(position.Q + position.R * 0.5f, GroundY, position.R * 0.8660254f + 1f);
+
+        private static int SegmentDirection(CombatUnitPresentationHex from, CombatUnitPresentationHex to)
+        {
+            int q = to.Q - from.Q, r = to.R - from.R;
+            if (q == 1 && r == 0) return 0;
+            if (q == 1 && r == -1) return 1;
+            if (q == 0 && r == -1) return 2;
+            if (q == -1 && r == 0) return 3;
+            if (q == -1 && r == 1) return 4;
+            if (q == 0 && r == 1) return 5;
+            return -1;
+        }
+
+        private void ValidateMovement(PresentedUnit unit, CombatUnitPresentationEventProjection projection)
+        {
+            if (movements.ContainsKey(unit.CombatantId) || projection.MovementPath.Count == 0 ||
+                !unit.Position.Equals(projection.StartPosition))
+                throw new InvalidOperationException("static_3d_presentation_move_stale");
+            CombatUnitPresentationHex previous = projection.StartPosition;
+            int direction = -1;
+            foreach (CombatUnitPresentationHex next in projection.MovementPath)
+            {
+                direction = SegmentDirection(previous, next);
+                if (direction < 0) throw new InvalidOperationException("static_3d_presentation_move_nonadjacent");
+                previous = next;
+            }
+            if (!previous.Equals(projection.EndPosition) || direction != projection.Facing)
+                throw new InvalidOperationException("static_3d_presentation_move_endpoint_invalid");
+        }
+
+        private System.Collections.IEnumerator MoveAlongPath(PresentedUnit unit,
+            Static3DCombatUnitPresentationProfile profile, CombatUnitPresentationEventProjection projection)
+        {
+            CombatUnitPresentationHex previous = projection.StartPosition;
+            foreach (CombatUnitPresentationHex next in projection.MovementPath)
+            {
+                Vector3 start = HexToWorld(previous), end = HexToWorld(next);
+                unit.Root.transform.rotation = Quaternion.Euler(0f,
+                    profile.sixDirectionYawDegrees[SegmentDirection(previous, next)], 0f);
+                float progress = 0f;
+                while (progress < 1f)
+                {
+                    yield return null;
+                    progress = Mathf.Min(1f, progress + Time.deltaTime * MovementCellsPerSecond);
+                    unit.Root.transform.position = Vector3.Lerp(start, end, progress);
+                }
+                unit.Position = next;
+                previous = next;
+            }
+            unit.Root.transform.position = HexToWorld(projection.EndPosition);
+            movements.Remove(unit.CombatantId);
+        }
+
+        private void StopMovement(string id)
+        {
+            if (!movements.TryGetValue(id, out Coroutine routine)) return;
+            StopCoroutine(routine);
+            movements.Remove(id);
+        }
 
         private void PlayFeedback(
             PresentedUnit unit,
@@ -341,13 +420,14 @@ namespace TianZhang.Features.CombatPresentation
 
         private sealed class PresentedUnit
         {
-            public PresentedUnit(GameObject root, MeshRenderer baseRenderer, Renderer[] bodyRenderers, string profileId, string combatantId)
+            public PresentedUnit(GameObject root, MeshRenderer baseRenderer, Renderer[] bodyRenderers, string profileId, string combatantId, CombatUnitPresentationHex position)
             {
                 Root = root;
                 BaseRenderer = baseRenderer;
                 BodyRenderers = bodyRenderers;
                 ProfileId = profileId;
                 CombatantId = combatantId;
+                Position = position;
                 LastEvent = CombatUnitPresentationEvent.Idle;
             }
 
@@ -355,6 +435,7 @@ namespace TianZhang.Features.CombatPresentation
             public MeshRenderer BaseRenderer { get; }
             public Renderer[] BodyRenderers { get; }
             public string ProfileId { get; set; }
+            public CombatUnitPresentationHex Position { get; set; }
             public string CombatantId { get; }
             public CombatUnitPresentationEvent LastEvent { get; set; }
         }

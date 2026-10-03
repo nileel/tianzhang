@@ -57,7 +57,7 @@ namespace TianZhang.Tests
                 "TianZhang.Spatial", "TianZhang.Infrastructure.UnityContent", "UnityEngine.UI", "Unity.InputSystem");
             AssertAssembly("Assets/Scripts/Modules/Features/CombatPresentation/TianZhang.Features.CombatPresentation.asmdef",
                 "TianZhang.Features.CombatPresentation", "TianZhang.Foundation",
-                "TianZhang.Gameplay.Contracts", "UnityEngine.UI");
+                "TianZhang.Gameplay.Contracts", "UnityEngine.UI", "Unity.InputSystem");
 
             AssertAssembly("Assets/Scripts/Modules/Infrastructure/Persistence/TianZhang.Infrastructure.Persistence.asmdef",
                 "TianZhang.Infrastructure.Persistence", "TianZhang.Foundation", "TianZhang.Content",
