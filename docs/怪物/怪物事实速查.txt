@@ -8,7 +8,7 @@
 
 ## 一、现有怪物行（正式档案）
 
-- 石甲兽｜关陇玄域·关中野外：练气期低阶妖兽（type_yaoshou），厚甲、迟缓、近战、格挡倾向（ai_melee）；出战场景 `guanzhong_wild` 单敌遭遇 → `docs/怪物/关陇玄域/石甲兽.txt#战斗识别`、`docs/剧情/副本叙事/adventure_guanzhong_wild.txt#三、敌人与流程` ⚠️ 已修改/未审核
+- 石甲兽｜关陇玄域·关中野外：练气期低阶妖兽（type_yaoshou），厚甲、迟缓、近战、格挡倾向（ai_melee）；出战场景 `guanzhong_wild` 单敌遭遇 → `docs/怪物/关陇玄域/石甲兽.txt#战斗识别`、`docs/怪物/关陇玄域/石甲兽.txt#关中首战数值（2026-10-04）`、`docs/剧情/副本叙事/adventure_guanzhong_wild.txt#三、敌人与流程`（本轮仅补首战数值指针，其余原审核范围不变）
 
 ## 二、关陇玄域出没登记（地图侧，未建正式档案）
 

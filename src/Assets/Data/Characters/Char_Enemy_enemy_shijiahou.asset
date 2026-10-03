@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   charName: "\u77F3\u7532\u517D"
   baseLevel: 1
-  rootBone: 18
+  rootBone: 13
   physique: 16
   spirit: 6
   mind: 6

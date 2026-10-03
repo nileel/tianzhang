@@ -6,6 +6,19 @@
     <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatCommand.cs" Link="Combat\CombatCommand.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatAttackProfile.cs" Link="Combat\CombatAttackProfile.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatantSnapshot.cs" Link="Combat\CombatantSnapshot.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatantRegistry.cs" Link="Combat\CombatantRegistry.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatActionResult.cs" Link="Combat\CombatActionResult.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSession.cs" Link="Combat\CombatSession.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatActionResolver.cs" Link="Combat\CombatActionResolver.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatCommandService.cs" Link="Combat\CombatCommandService.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatTurnScheduler.cs" Link="Combat\CombatTurnScheduler.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatResultBuilder.cs" Link="Combat\CombatResultBuilder.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\Turns\CTBEngine.cs" Link="Combat\Turns\CTBEngine.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Editor\CsvTableReader.cs" Link="Editor\CsvTableReader.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Content\CombatElementFacts.cs" Link="Content\CombatElementFacts.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\World\CharterConflictRules.cs" Link="World\CharterConflictRules.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\HexCoord.cs" Link="Spatial\HexCoord.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryTypes.cs" Link="Spatial\SpatialQueryTypes.cs" />

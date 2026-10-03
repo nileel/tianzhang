@@ -421,6 +421,43 @@ namespace TianZhang.Tests.PlayMode
         }
 
 #if UNITY_EDITOR
+        // Batch-only numeric inputs: production owner derives stats; clones never change the asset.
+        public static void ExportBalanceCandidates()
+        {
+            string root = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+            string original = File.ReadAllText(Path.Combine(root, "开发管理", "关中首战普通角色输入.json"));
+            var template = UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Entity.CharacterData>(
+                "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            Assert.That(template, Is.Not.Null);
+            MethodInfo factory = typeof(AdventureUnitSpawner).GetMethod("CreateEnemy", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(factory, Is.Not.Null);
+            string directory = Path.Combine(Application.dataPath, "..", "Logs", "balance");
+            Directory.CreateDirectory(directory);
+            foreach (int rootBone in Enumerable.Range(8, 11).Append(template.rootBone).Distinct())
+            {
+                var copy = Object.Instantiate(template);
+                try
+                {
+                    copy.rootBone = rootBone;
+                    var enemy = (CombatantSnapshot)factory.Invoke(null, new object[] {
+                        copy, new TianZhang.Spatial.HexCoord(1, 0), copy.unarmedBasicAttackProfileId });
+                    var evidence = JsonUtility.FromJson<OrdinaryInputEvidence>(original);
+                    evidence.source = "Player: unchanged SPELLS visible ordinary input; enemy: Unity production CreateEnemy on explicit rootBone candidate clone=" + rootBone;
+                    evidence.enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition("enemy", copy).Capture());
+                    evidence.enemy = CombatInputEvidence.Capture(enemy);
+                    string json = JsonUtility.ToJson(evidence, true);
+                    File.WriteAllText(Path.Combine(directory, "rootbone-" + rootBone + ".json"), json);
+                    if (rootBone == template.rootBone)
+                    {
+                        evidence.source = "Player: unchanged SPELLS visible ordinary input; enemy: current imported production template through Unity CreateEnemy; numeric projection, not new UI playthrough";
+                        File.WriteAllText(Path.Combine(directory, "production-input.json"), JsonUtility.ToJson(evidence, true));
+                    }
+                }
+                finally { Object.DestroyImmediate(copy); }
+            }
+            Debug.Log("Guanzhong balance inputs exported through production owner: " + directory);
+        }
+
         [UnityEditor.MenuItem("天章/诊断/导出当前正式两术法角色")]
         public static void ExportCurrentVisibleOrdinaryInputs()
         {

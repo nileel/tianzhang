@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-04：SPELLS真实profile与普通小族快照核实；冻结正式内核审计、Unity原生候选导出和多种子验收，完成ready准备。",
+  "stateReason": "2026-10-04：正式内核多种子与Unity同源导出通过，仅根骨18→13；HP657/物攻78，默认run及数据链通过，完成归档。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
@@ -111,3 +111,9 @@
 - 自聚灵若满资源实战样本未耗尽须直说；独立控制资源样本覆盖0MP自恢复、20MP他恢复、满MP合法零收益及贯石/他聚灵缺MP、死亡、越界拒绝，并断言HP/MP/冷却/CT/行动阶段/移动资源/随机抽数不变。生产普通完整资源战果与控制样本分开。
 - 验证：首次工作树dotnet restore后Release --no-restore build成功才默认--no-build run，再定向模式；最终docs→CSV→asset→正式快照一致及独立种子。Unity只运行新导出方法和正式导入入口，不重跑输入未变子卡；V-FLOW双分辨率独立完整流程仍保留。
 - 模型协作：复杂数据链主责实际gpt-6-astra（Node元数据核实）；两个继承主模型只读子智能体production_inputs、sim_entry分别核输入和内核入口，工具返回会话名，辅助实际模型/强度未独立核实。禁止写入/派生/runtime/锁；主责统一复核完整diff、最终验证与唯一业务提交。当前既定卡关键语义核查已覆盖，不新增重复辅助调用。
+## 2026-10-04 完成归档
+
+- 完成唯一结果：原根骨18的普攻/贯石各0/200，根骨13为预先冻结单字段范围内最小合格候选；独立200种子普攻199胜、贯石200胜，胜者HP中位数202，正式生产复验逐场一致。docs→CSV→Unity正式导入→CreateEnemy快照一致；玩家五先天8/571HP/180MP保持原输入，未混入HP1。
+- Release build/default run/专用600场生产复验及10项控制核验通过，数据链通过；详细种子、输入hash、命令、日志、只读复核与限制见关中首战双术法数值验证记录。默认运行未变部分不重复。
+- 结果只覆盖静止相邻初始朝向的数值抽象；满资源未触发必要聚灵，不代替V-FLOW双术法完整UI链、移动后朝向、胜败返回和用户V-ART接受。未修改技能、战斗公式、地图、相机、存档或定时配置。
+- 统一归档、移出backlog/队列，主责路径限定业务提交并受保护集成，保留全部日志、输入基线、工作树、存档和用户改动。

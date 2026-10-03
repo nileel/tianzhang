@@ -147,6 +147,9 @@ class Program
     {
         Combat.ResetDeterministicRandom();
 
+        if (args.Length >= 1 && args[0] == "--guanzhong-playtest")
+            return GuanzhongPlaytestAudit.Run(args);
+
         if (args.Length == 2 && args[0] == "--self-test")
             return BattleSimSelfTests.Run(args[1]);
 

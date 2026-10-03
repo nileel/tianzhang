@@ -1,0 +1,56 @@
+# 关中首战双术法数值验证记录
+
+结论：N-GZ-PLAYTEST-BALANCE-01通过。生产只改石甲兽根骨18→13，正式派生HP657/物攻78；基线、候选、独立种子、正式导入、生产复验和规定默认运行均有证据。V-FLOW与用户V-ART尚未验收。
+
+## 历史检查点（2026-10-04，已由末尾完成记录接续）
+
+- 主线ready准备cf4def69；任务树D:/天章游戏开发/.worktrees/manual/N-GZ-PLAYTEST-BALANCE-01，分支codex/n-gz-playtest-balance-01。业务未提交，数值卡尚未完成。任务树正式数据已为根骨13/生命657，尚未业务集成。
+- 已读AGENTS、最新队列、LAYOUT归档与布局记录、N/V-FLOW卡；SPELLS真实profile、普通小族快照、原生Combat/CTB及导入所有者经主责和两个只读辅助核实。主责Node元数据gpt-6-astra；production_inputs/sim_entry均继承主模型，辅助实际模型/推理强度未独立核实。辅助未写入/运行/派生/改状态。
+- unity-agent-workflows参考已读content-and-systems、project-structure-discovery、ai-workflows、unity-validation；结构索引UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md。数据拥有者Enemies.csv→SettlementContentImporter→CharacterData/EnemyData→AdventureUnitSpawner.CreateEnemy；审计链接现有纯Combat，未修改生产内核、相机、UI、技能或存档。
+- 预检taskCardDigest=a4ca667936b5affe3f90b84015dcb5e5d615379fc4632598f6a1c2108edd529e；indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched仅EXP-BS-001，与schema2一致；mustRead已消费（先build后run），gates与指针均空。
+- 原输入LF规范SHA256=37caab58689cbd1f3e345601a3e85c634aa94522e8348697bbd004b86ebe8492；CRLF差异不是漂移。originId空保留，与SPELLS正式1920小族选中/槽spells-1920-1003及施法前证据关联。默认五先天8，571HP/180MP，非15点角色；无正式HP1。
+- 现有术法测试文件仅增加Editor数值导出方法：克隆敌人模板逐项rootBone18..8，调用实际CreateEnemy与CharacterRuntimeProfile，不复制公式，不改资产。Unity批处理export-candidates.log返回0，11份candidate与production-input.json在本树src/Logs/balance。ShaderGraphSettings首次导入只产生m_Name尾空白，原样备份到同日志目录后恢复该生成变化。
+- BattleSim Release构建首次因同名BattleSim.HexCoord/SpatialQueryKind遮蔽报错；明确限定TianZhang.Spatial类型后0错0警告。默认run正在独立进程运行，src/Logs/balance/default-run.log保留。随后因默认进程仍持有apphost而新build报MSB3021，未打断该默认进程；采用标准-o src/Logs/balance/audit-bin独立输出目录完成同一Release --no-restore build（0警告0错误）并直接dotnet该DLL执行定向审计，不改代码、锁或重试层。
+
+## 已运行候选（调参种子0..199，各策略200场）
+
+静态相邻(0,0)/(1,0)、正式默认Facing0/0包含玩家背击；不代表绕障碍移动、地图、正式完整流程或最终好玩。三策略使用正式CT/命令/资格/费用/随机顺序。所有seed详细行动数/HP/MP/tick/随机数保存在candidate-*.json，不用历史默认BattleSim公式替代。
+
+| 根骨 | 普攻胜场/200 | 贯石策略胜场/200 | 贯石胜者HP中位数 | 贯石玩家行动中位数 |
+|---|---|---|---|---|
+| 18 | 0 | 0 | 0 | 12 |
+| 17 | 0 | 0 | 0 | 12 |
+| 16 | 0 | 0 | 0 | 13 |
+| 15 | 0 | 174 | 32 | 14 |
+| 14 | 171 | 200 | 121 | 13 |
+| 13 | 200 | 200 | 202 | 12 |
+| 12 | 200 | 200 | 247 | 12 |
+| 11 | 200 | 200 | 315 | 11 |
+| 10 | 200 | 200 | 347 | 10 |
+| 9 | 200 | 200 | 379 | 10 |
+| 8 | 200 | 200 | 431 | 9 |
+
+- 按预先冻结的普攻≥90%、贯石/必要自聚灵≥95%、贯石胜者HP中位数≥114.2，根骨13是最小改动候选；rootBone14普攻85.5%不达标。候选13由Unity派生HP657/物攻78，其他已有字段不变。尚待独立种子和正式导入复验，当前不是最终生产结论。
+- 满资源样本均未触发必要聚灵，贯石策略与必要聚灵策略结果相同；不能声称双术法共同取得这些战果。控制样本另覆盖恢复/耗尽/失败，不用其战果代替正式满资源战果。
+- 初版拒绝/恢复9项通过，只读审查指出拒绝原因须精确匹配、他用恢复应从正好20MP验证。已修正这两个审计断言，补合法贯石耗尽→下次拒绝→合法自聚灵的独立控制序列，待新build后运行；这些改动不影响种子战斗计算。
+
+## 历史续接入口（以下步骤现已完成，当前续接见末尾）
+
+先检查本树默认run进程/日志是否结束，再Release build。运行候选13独立种子10000..10199；通过冻结门槛后docs石甲兽→Enemies.csv根骨13→正式SettlementContentImporter.ImportEnemies导入，重新Unity导出production-input，逐字段与候选13/原玩家比较，保存原输入基线后更新允许的JSON并以生产模式复验。检查数据链、任务投影、文本/空白、完整diff；归档并路径限定提交后，主目录重新Show、同卡/队列/HEAD/占用/锁/冲突，保护集成。此后再准备V-FLOW，最后沿V-ART直接依赖；不得代签V-ART，不重排backlog、不改定时、不apply/删stash，全部现场保留。
+
+## 正式数值复验
+
+- 独立种子10000..10199：普攻199/200（99.5%），贯石及必要自聚灵策略均200/200；贯石胜者HP中位数202，最小130，玩家行动中位数12，总行动中位数21，剩余MP中位数36。普攻玩家行动中位数15、总行动26，胜者HP中位数120、最小72。保持冻结门槛，未因结果改标准。
+- 10项控制核验通过：精确缺MP/越界/死亡原因且所有快照状态与随机数不变；0MP自恢复5、满MP自恢复0、距上限1时恢复1、正好20MP他恢复2且支付到0；合法贯石用尽12MP、下一玩家行动拒绝、随后合法自聚灵，只有第一次伤害抽4次随机。控制序列中敌人防御，仅用于费用/耗尽证据，不计入正式胜率。
+- 正式数据链：先在docs石甲兽档案记录根骨13及限制，再改Enemies.csv唯一行的rootBone；Unity SettlementContentImporter.ImportEnemies（import-final.log退出0）→同GUID CharacterData，EnemyData引用不变，因此该EnemyData文件无需无意义改动。导入同时序列化关中城空字段尾空白，已保留after-import副本后恢复该无关生成变化；敌资产仅用已有空白工具规范尾空白，最终业务diff只有rootBone18→13。
+- 再运行ExportBalanceCandidates（export-final.log退出0），production-input.json敌区与选定13候选逐字段一致，玩家/角色/五先天/originId与baseline-visible-input.json逐字段一致；保存原始基线后更新允许的正式JSON。新输入SHA256 b442f9f09cbbe9d4faff6b335c34d22327d392bcca1c4356f9fc29ec0c56abaa。
+- final-production-10000.json明确mode=production，600场逐场结果与候选holdout完全一致。check-data-chain通过：GongFa29/29、Spells84/84、Skills31/31、Language613。未更改两个术法CSV/asset、全局战斗/CT公式、相机、地图、UI、存档或定时配置。
+- 只读复核：sim_entry对审计核心随机/CT/空间/资格/修饰投影未发现确定失真，提出的两项控制测试缺口已精确修正并运行通过；production_inputs对最终docs/CSV/asset/JSON/导出方法和日志复核无确定P1/P2。主责继续统一复核完整diff、验证与单一业务提交；不把辅助静态结论当运行证据。
+
+## 2026-10-04 完成记录
+
+- 标准Release --no-restore构建通过，默认dotnet run --no-build -c Release --project simulations/BattleSim正常退出0；default-run.log保存既有完整矩阵、练气/筑基/金丹与最终调试输出。日志49152字节处只是缓冲边界，不能据该尾部误称程序停在Console输出。最终标准build再次通过（final-build.log）；审计控制代码只影响专用入口，默认逻辑与相关输入未变，不重复该默认运行。
+- 默认run后的原命令链自动以更新后的正式JSON运行seed0..199，输出原名baseline-0.json实际是production/rootBone13（已保留并另存final-production-0.json），不得把它当旧839HP基线。旧基线使用candidate-18.json及baseline-visible-input.json；生产seed0结果与候选13一致，三策略200/200。独立seed10000结果仍为199/200、200/200、200/200。
+- 全部允许差异由主责复核：BattleSim审计及13个只读链接、Main三行入口、现有测试37行Editor候选导出、docs/L1指针、CSV/asset根骨单字段、正式JSON敌区派生值与来源声明、验证记录和本卡管理投影。无其他系统业务改动，无新生产组件/模块依赖。
+- 日志均保留于任务树src/Logs/balance；原用户存档、所有其他工作树与用户改动保留。不改定时、不apply或删除stash。业务提交后按主目录最新Show/原ready卡/队列/HEAD/占用/锁/路径冲突复核受保护集成；提交身份由本文件Git历史追溯。
+- 当前续接：数值卡保护集成后，按V-GZ-PLAYTEST-FLOW-01核全部具名前置的归档/主线可达/不存在同ID活跃卡，冻结正式UI等价输入、双分辨率、新建小族、悬赏、移动、两术法、胜败返回、领奖防重和保存读档；不重跑已通过且输入未变的CAMERA/TIMELINE/TARGET键盘。最后仅沿V-ART直接依赖核双底座与接入，保留用户亲自确认门。
