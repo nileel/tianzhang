@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "V-GZ-PLAYTEST-FLOW-01",
     "U-GZ-BASE-MODELS-01"
   ],
-  "stateReason": "2026-10-02：用户尚未接受整体品质；原20张反馈叶子加本轮5张剩余UI实施叶子已全部建卡。V-GZ-PLAYTEST-FLOW-01已纳入五项新前置；继续等待其正式可玩复验及U-GZ-BASE-MODELS-01双底座接入，之后仍须用户同版本重测接受。",
+  "stateReason": "2026-10-04：V-GZ-PLAYTEST-FLOW-01已归档并受保护集成c0c00ddb，正式双分辨率胜败4/4及导航2/2已通过；继续等待双底座接入，之后必须交付同版本可玩入口/步骤并由用户本人实玩接受，不代签。",
   "expectedPaths": [
     "开发管理/关中首个可展示流程美术验收记录.txt",
     "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
@@ -96,3 +95,8 @@
 - 用户已实际测试，反馈场地不足30格/缺障碍、相机过远且不能移动、角色比例/底座穿模、石甲兽100倍疑问、行动轴/头顶血条缺失、基础移动/高光/动画缺失、没有两术法且普通角色难以击杀。
 - 本次不构成验收通过；完整已知任务、依赖和首批ready见 docs/superpowers/plans/2026-10-01-guanzhong-playtest-remediation.md。用户重测仍为最后品质闸门，修复不能在本验收卡跨owner实施。
 - V-GZ-PLAYTEST-FLOW-01允许先用修正后的临时底座交付功能重测；最终模型与用户整体接受在本卡汇合，不用美术生产阻塞可玩修复。
+
+## 2026-10-04 直接依赖状态核实
+
+- V-GZ-PLAYTEST-FLOW-01已完成归档、c0c00ddb已受保护集成；消费其真实四链正式小族胜败、静态障碍绕行、长日志、败北无奖励、领奖防重及保存读档证据。只移除V-FLOW已完成依赖，保留U-GZ-BASE-MODELS-01。现有可玩功能入口及步骤位于开发管理/关中2026-10-01反馈修复复验记录.txt#当前同版本可玩入口与最短步骤，固定工作树D:/天章游戏开发/.worktrees/manual/V-GZ-PLAYTEST-FLOW-01/src及6000.3.18f1，生产内容与c0c00ddb一致。双底座接入后仍须在同一最终版本重新交付正式可玩入口、步骤、四关键画面和连续录像，并由用户本人实际跑测并明确接受。本轮没有本卡实机验收/用户接受回执，不关闭本卡或父项，不发送空白批准，不重复已通过子卡。
+- 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
