@@ -40,7 +40,7 @@
 - Modify: `开发管理/任务列表/场景与Unity任务.txt`
 - Modify: `开发管理/当前任务队列.txt`
 - Preserve unchanged: `开发管理/任务卡/N-SLOT-01.txt`
-- Reference: `docs/superpowers/specs/2026-07-25-task-unblocking-decomposition-design.md`
+- Reference: `docs/superpowers/archive/2026-10-04/specs/2026-07-25-task-unblocking-decomposition-design.md`
 - Reference: `开发管理/状态与建议维护规则.txt`
 
 - [ ] **Step 1：确认写入前状态与失败基线**

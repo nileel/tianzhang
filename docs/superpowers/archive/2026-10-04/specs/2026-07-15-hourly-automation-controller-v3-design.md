@@ -2,7 +2,7 @@
 
 > 日期：2026-07-15
 > 状态：用户已批准“薄提示词 + 厚控制器”方向
-> 继承：`docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md`、`docs/superpowers/specs/2026-07-14-hourly-automation-recovery-hardening-design.md`、`docs/superpowers/specs/2026-07-14-hourly-automation-preflight-failure-design.md`
+> 继承：`docs/superpowers/archive/2026-10-04/specs/2026-07-13-hourly-automation-controller-v2-design.md`、`docs/superpowers/archive/2026-10-04/specs/2026-07-14-hourly-automation-recovery-hardening-design.md`、`docs/superpowers/archive/2026-10-04/specs/2026-07-14-hourly-automation-preflight-failure-design.md`
 > 范围：把确定性编排从自动化 prompt 下沉到固定入口；不处理任何业务任务，不改变主责、队列水位、审核、邮件私密配置或 Git 安全边界
 
 ## 1. 问题与设计结论

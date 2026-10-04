@@ -67,7 +67,7 @@
   - 把“不同 decisionId 一律 quarantine”的旧断言改为跨决策保留合同。
   - 增加真实顺序回归：决策 B 的回复先到；查询决策 A 时 B 留在 inbox；随后查询 B 时正常接受并进入 processed。
   - 保留同 decisionId 下错误 option、nonce、message、operator、tenant、过早和过晚证据的隔离负例。
-- `docs/superpowers/specs/2026-08-14-cross-decision-reply-isolation-repair-design.md`
+- `docs/superpowers/archive/2026-10-04/specs/2026-08-14-cross-decision-reply-isolation-repair-design.md`
   - 保留本次已批准设计、恢复目标和停止条件，不再扩展实现职责。
 
 不修改 `consume-reply.mjs` 的 CLI 输出合同，不修改 `invoke-hourly-owner.ps1` 的决策顺序，也不新增状态字段。

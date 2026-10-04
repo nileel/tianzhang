@@ -398,4 +398,4 @@ If the responsibility reports a new decision or another root cause, stop rather 
 
 - [ ] **Step 6: Return to the briefing rollout**
 
-After recovery closes, continue Task 3 of `docs/superpowers/plans/2026-07-22-automation-commit-briefing-implementation.md`: update the hourly canonical prompt and daily briefing automation through the automation management capability, then run `tools/check-automation-workflow.ps1 -RequireActive`.
+After recovery closes, continue Task 3 of `docs/superpowers/archive/2026-10-04/plans/2026-07-22-automation-commit-briefing-implementation.md`: update the hourly canonical prompt and daily briefing automation through the automation management capability, then run `tools/check-automation-workflow.ps1 -RequireActive`.

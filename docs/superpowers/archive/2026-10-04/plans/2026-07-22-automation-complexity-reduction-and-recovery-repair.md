@@ -240,7 +240,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-automation-workflow.ps
 - Create: `tools/test-get-automation-briefing-source.ps1`
 - Modify: `tools/check-automation-workflow.ps1`
 - Modify: `tools/test-check-automation-workflow.ps1`
-- Reference: `docs/superpowers/specs/2026-07-22-automation-commit-briefing-design.md`
+- Reference: `docs/superpowers/archive/2026-10-04/specs/2026-07-22-automation-commit-briefing-design.md`
 
 **Step 1: 新增只读 Git 数据源脚本**
 

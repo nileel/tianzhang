@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- 权威设计是 `docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md`；本计划只拆解该设计，不允许重新设计。
+- 权威设计是 `docs/superpowers/archive/2026-10-04/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md`；本计划只拆解该设计，不允许重新设计。
 - 只在独立 linked worktree 和 `codex/hourly-controller-v2-rebuild` 分支实施。不得在当前主工作区修改代码，不得触碰用户已有的远程附件、两份 2026-07-15 金丹规格、`.agents/summary_state.json` 或 `设计总结.txt` 改动。
 - 建设期间 `tzg-hourly-controller` 必须保持 `PAUSED`；不得编辑任何私有 automation TOML，不得同时启用旧控制器和 v2 写入能力。
 - 保留且不重写 `tools/feishu-decision-bridge/` 的消息协议、飞书配置脚本、`tools/private-path-acl.ps1`、`tools/automation-workspace-guard.ps1`、`tools/automation-finalize-commit.ps1` 与 `tools/check-pending-whitespace.ps1`。只允许按批准规格窄改飞书安装/启动宿主，解决登录可见窗口并增加生命周期动作。
@@ -152,8 +152,8 @@ git commit -m '<本任务指定提交信息>'
 **Files:**
 
 - Read: `AGENTS.md`
-- Read: `docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md`
-- Read: `docs/superpowers/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md`
+- Read: `docs/superpowers/archive/2026-10-04/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md`
+- Read: `docs/superpowers/archive/2026-10-04/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md`
 - Read: `开发管理/自动工作流规则.txt`
 - Read: `开发管理/自动工作流状态.txt`
 - Read: `开发管理/当前任务队列.txt`
@@ -282,7 +282,7 @@ TQ-057 最低契约固定为：
     "开发管理/当前任务队列.txt",
     "开发管理/自动工作流状态.txt",
     "开发管理/开发-技术经验.txt",
-    "docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md"
+    "docs/superpowers/archive/2026-10-04/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md"
   ],
   "allowedRoots": [
     "src/Assets/DataConfig",
@@ -1052,8 +1052,8 @@ Commit: `chore(automation): retire legacy orchestration after observation`
 
 ```text
 完整读取并严格执行：
-1. docs/superpowers/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md
-2. docs/superpowers/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md
+1. docs/superpowers/archive/2026-10-04/specs/2026-07-17-hourly-controller-orchestration-rebuild-design.md
+2. docs/superpowers/archive/2026-10-04/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md
 
 使用 superpowers:executing-plans（或按计划允许的 subagent-driven-development）逐任务执行，从 Task 0 开始，不重新设计。只在独立 linked worktree 工作；生产 tzg-hourly-controller 全程保持 PAUSED，直到计划中的切换门禁。保留飞书消息协议和 Git 安全底座；按 Task 8 窄改飞书宿主为 WINDOWLESS_WSCRIPT 并增加显式启停，不编辑私有 automation TOML，不触碰主工作区现有未跟踪或已修改文件。严格遵守 Validation Budget：每个切片只跑直接测试，Task 9 合并跑一次 v2 套件，切换前保留组件只回归一次。每完成一个 Task 汇报提交、直接验证结果和下一门禁；遇到事实源冲突立即停止询问。
 ```

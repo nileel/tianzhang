@@ -50,7 +50,7 @@ Bug 修复是第一验收项，不得以 prompt 瘦身、飞书通知兜底或�
 - 不新增自暂停辅助脚本、skill、第二 automation、第二 runtime、后台进程或监视器。
 - 不修改 DeepSeek、日报或周报 automation。
 - 不清理 `fa64f285-54ec-4291-bb58-8cc8b6e484d3` 等历史 worktree、branch 或 session；历史现场清理由独立恢复任务处理。
-- 不暂存、提交或覆盖主工作区的 `.agents/summary_state.json`、`设计总结.txt` 与 `docs/superpowers/specs/2026-08-14-codex-cli-isolated-canary-repair-design.md`。
+- 不暂存、提交或覆盖主工作区的 `.agents/summary_state.json`、`设计总结.txt` 与 `docs/superpowers/archive/2026-10-04/specs/2026-08-14-codex-cli-isolated-canary-repair-design.md`。
 
 ## 四、方案比较与决定
 
@@ -121,7 +121,7 @@ Bug 修复是第一验收项，不得以 prompt 瘦身、飞书通知兜底或�
 - 同一 checker 的 prompt 侧 `Assert-Contains $codexPrompt` 改为完整的新链路清单，必须保留：`tools.mcp__node_repl__js`、`nodeRepl.requestMeta`、`codex_model_metadata_invalid`、`modelTexts.length !== 1`、`invoke-hourly-owner.ps1`、`-Owner codex`、`tools.exec_command`、`tools.write_stdin`、60 秒 session 轮询、外层 `Script running with cell ID` 同一 cell `wait`，以及四个软合同表述 `不读取队列或任务卡`、`Desktop automation memory`、`恰好一个简短 \`::inbox-item\``、`memory 不得改变固定命令`。
 - prompt 侧旧必含清单必须移除：`timeout_ms: 3060000`、`shouldSelfPause`、五个 `terminal.status/owner/taskId/detailCode/cleanup === ...` 自暂停比较、`tools.codex_app__automation_update` 和 `status: 'PAUSED'`。这些 token 同时加入 `Assert-DoesNotContain $codexPrompt`；`shell_command` 与 `automation.toml` 也必须显式拒绝，防止版本化 prompt 回退到旧调用链或残留自管理配置读取。
 - `tools/test-check-automation-workflow.ps1` 要求 Codex prompt 恰有一个主 JavaScript 代码块，保留上述模型核验、`exec_command/write_stdin`、外层同一 cell `wait` 和四个软合同表述，并逐项拒绝上述旧 `shell_command`、超时、自暂停五字段、automation 更新和 TOML token。
-- `docs/superpowers/specs/2026-08-14-codex-hourly-self-pause-decoupling-design.md` 的状态改为“已退役”，补记 2026-08-15 的移除原因和本设计路径。旧 prompt 不另复制，精确实现由 Git 历史保存。
+- `docs/superpowers/archive/2026-10-04/specs/2026-08-14-codex-hourly-self-pause-decoupling-design.md` 的状态改为“已退役”，补记 2026-08-15 的移除原因和本设计路径。旧 prompt 不另复制，精确实现由 Git 历史保存。
 - `docs/superpowers/specs/2026-08-14-queue-maintenance-decision-lifecycle-design.md` 只对第 8 节“选择、自暂停与并发边界”增加局部退役说明：其中自暂停五字段、空队列自动暂停和对姊妹自暂停设计第 4.1 节的交叉引用自 2026-08-15 起不再是活动合同；决策创建、等待、TTL、回复消费、并发与 `decision_requested/waiting_decision/maintenance_completed` 终态合同仍有效。不得把整份维护决策设计标记为退役。
 
 ### 5.5 实时 automation 配置
@@ -145,9 +145,9 @@ Bug 修复是第一验收项，不得以 prompt 瘦身、飞书通知兜底或�
   - `开发管理/自动工作流规则.txt`
   - `tools/check-automation-workflow.ps1`
   - `tools/test-check-automation-workflow.ps1`
-  - `docs/superpowers/specs/2026-08-14-codex-hourly-self-pause-decoupling-design.md`
+  - `docs/superpowers/archive/2026-10-04/specs/2026-08-14-codex-hourly-self-pause-decoupling-design.md`
   - `docs/superpowers/specs/2026-08-14-queue-maintenance-decision-lifecycle-design.md`
-  - `docs/superpowers/specs/2026-08-15-codex-hourly-thin-trigger-and-queue-maintenance-result-fix-design.md`
+  - `docs/superpowers/archive/2026-10-04/specs/2026-08-15-codex-hourly-thin-trigger-and-queue-maintenance-result-fix-design.md`
 - 暂存前对上述实际变化路径运行 `tools/check-pending-whitespace.ps1`，暂存后运行 `git diff --cached --check`，只创建一个路径限定提交。
 - 合并前从主工作区重新调用 schema 5 `Show`，确认两个 owner run 均空、集成锁空闲；重新检查主工作区 staged、unstaged、untracked 路径与待合并路径不重叠。
 - 只通过 `tools/invoke-project-integration.ps1` 取得同一进程持有型集成锁并 fast-forward 到 `master`。任何事实变化、路径冲突或非 fast-forward 均停止，不 stash、不覆盖用户改动。

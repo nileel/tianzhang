@@ -269,7 +269,7 @@ git commit --only -m "fix(automation): route commits and recovery through fixed 
 
 **Files:**
 - Commit existing intended change only: `开发管理/自动工作流状态.txt`
-- Preserve untouched: `docs/superpowers/plans/2026-07-14-daily-automation-briefing-content-plan.md`
+- Preserve untouched: `docs/superpowers/archive/2026-10-04/plans/2026-07-14-daily-automation-briefing-content-plan.md`
 - Update user-level state through: `tools/automation-controller-state.ps1`
 
 - [ ] **Step 1: Confirm the diff still matches the resolved decision**

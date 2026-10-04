@@ -22,8 +22,8 @@
 - Modify `开发管理/AI协作规则.txt`: authorize controller-owned sequential DeepSeek invocation while keeping WF3 paused and review boundaries intact.
 - Modify `开发管理/DeepSeek工作提示词.txt`: controller wrapper owns lease, expected paths, staging, and commit; DeepSeek only edits and hands off.
 - Modify `AGENTS.md` and `CLAUDE.md`: route controller-invoked Claude/DeepSeek identity and authorization through the same rules.
-- Modify `docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md`: mark v1 as implemented and superseded for routing by v2 without deleting it.
-- Modify `docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md`: link this implementation plan and record the predecessor relationship.
+- Modify `docs/superpowers/archive/2026-10-04/specs/2026-07-11-hourly-automation-controller-design.md`: mark v1 as implemented and superseded for routing by v2 without deleting it.
+- Modify `docs/superpowers/archive/2026-10-04/specs/2026-07-13-hourly-automation-controller-v2-design.md`: link this implementation plan and record the predecessor relationship.
 - Modify `开发管理/自动工作流状态.txt`: first commit the existing controller-owned pending-decision visibility change; update hardening/canary facts only after evidence exists.
 - Update `%USERPROFILE%\.codex\automations\tzg-hourly-controller\automation.toml` only through the Codex automation update tool; do not edit the TOML directly.
 - Do not relocate or delete existing `docs/superpowers/specs/` or `docs/superpowers/plans/` files. They are durable decision records; daily routing files should link only to currently authoritative specifications.
@@ -460,8 +460,8 @@ Expected: nonzero exit listing missing v2 markers. This is the red test; do not 
 - Modify: `开发管理/DeepSeek工作提示词.txt`
 - Modify: `AGENTS.md`
 - Modify: `CLAUDE.md`
-- Modify: `docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md`
-- Modify: `docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md`
+- Modify: `docs/superpowers/archive/2026-10-04/specs/2026-07-11-hourly-automation-controller-design.md`
+- Modify: `docs/superpowers/archive/2026-10-04/specs/2026-07-13-hourly-automation-controller-v2-design.md`
 - Modify: `tools/check-automation-workflow.ps1`
 
 - [ ] **Step 1: Mark the specification relationship without deleting history**
@@ -469,14 +469,14 @@ Expected: nonzero exit listing missing v2 markers. This is the red test; do not 
 Add to the v1 header:
 
 ```markdown
-> 生命周期：已实施；当前调度优化由 `docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md` 继承。本文保留初始单控制器取舍与部署证据，不再作为 v2 队列/脏工作区/执行器路由规则源。
+> 生命周期：已实施；当前调度优化由 `docs/superpowers/archive/2026-10-04/specs/2026-07-13-hourly-automation-controller-v2-design.md` 继承。本文保留初始单控制器取舍与部署证据，不再作为 v2 队列/脏工作区/执行器路由规则源。
 ```
 
 Add to the v2 header:
 
 ```markdown
-> 前身：`docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md`
-> 实施计划：`docs/superpowers/plans/2026-07-13-hourly-automation-controller-v2-implementation.md`
+> 前身：`docs/superpowers/archive/2026-10-04/specs/2026-07-11-hourly-automation-controller-design.md`
+> 实施计划：`docs/superpowers/archive/2026-10-04/plans/2026-07-13-hourly-automation-controller-v2-implementation.md`
 ```
 
 - [ ] **Step 2: Replace total-row maintenance with runnable watermarks**

@@ -96,7 +96,7 @@ Run:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
-pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths docs/superpowers/plans/2026-07-23-automation-runnable-queue-depth.md,开发管理/自动工作流规则.txt,开发管理/状态与建议维护规则.txt,tools/check-automation-workflow.ps1,tools/test-check-automation-workflow.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -Paths docs/superpowers/archive/2026-10-04/plans/2026-07-23-automation-runnable-queue-depth.md,开发管理/自动工作流规则.txt,开发管理/状态与建议维护规则.txt,tools/check-automation-workflow.ps1,tools/test-check-automation-workflow.ps1
 git diff --check
 ```
 
@@ -105,7 +105,7 @@ Expected: all commands exit 0 with no whitespace errors.
 - [ ] **Step 6: Commit the implementation**
 
 ```powershell
-git add -- docs/superpowers/plans/2026-07-23-automation-runnable-queue-depth.md 开发管理/自动工作流规则.txt 开发管理/状态与建议维护规则.txt tools/check-automation-workflow.ps1 tools/test-check-automation-workflow.ps1
+git add -- docs/superpowers/archive/2026-10-04/plans/2026-07-23-automation-runnable-queue-depth.md 开发管理/自动工作流规则.txt 开发管理/状态与建议维护规则.txt tools/check-automation-workflow.ps1 tools/test-check-automation-workflow.ps1
 git diff --cached --check
 git commit -m "fix(automation): maintain runnable queue depth"
 ```

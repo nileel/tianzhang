@@ -492,7 +492,7 @@ Create `开发管理/自动工作流规则.txt` with these sections and operatio
 ```text
 # 自动工作流规则（✅ 已审核）
 
-> 2026-07-11 Codex：按已批准设计，将四条三小时写入工作流收束为一个每小时串行控制器。设计依据：docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md。
+> 2026-07-11 Codex：按已批准设计，将四条三小时写入工作流收束为一个每小时串行控制器。设计依据：docs/superpowers/archive/2026-10-04/specs/2026-07-11-hourly-automation-controller-design.md。
 
 ## 自动化拓扑
 - `tzg-wf2-codex-execute-1` 原地改造为唯一写入型 `TZG Hourly Controller`，每小时第 15 分钟触发。

@@ -185,7 +185,7 @@
 - `开发管理/管理目录重组影响面清单.txt`
 - `tools/check-automation-workflow.ps1`
 - `tools/test-check-automation-workflow.ps1`
-- `docs/superpowers/specs/2026-08-15-deepseek-workflow-contract-refresh-design.md`
+- `docs/superpowers/archive/2026-10-04/specs/2026-08-15-deepseek-workflow-contract-refresh-design.md`
 
 不修改共享编排脚本、adapter、runtime、任务卡、队列、backlog、审核归档、业务 docs、CSV、Unity 或 BattleSim。
 

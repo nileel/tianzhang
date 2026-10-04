@@ -12,9 +12,9 @@
 
 ## Authority and Supersession
 
-- 权威设计：`docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`。
+- 权威设计：`docs/superpowers/archive/2026-10-04/specs/2026-07-18-hourly-automation-simplification-design.md`。
 - 2026-07-19 负责人确认的 CLI-native 修订覆盖本计划原 Task 3 的 Codex Desktop 恢复假设和 Task 9 的旧金丝雀步骤；原 Claude/DeepSeek、飞书签名协议、租约 schema 与 Task 0–8 已完成证据不重做。
-- 本计划完整替代 `docs/superpowers/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md` 的未完成任务；不得继续执行旧计划的 Task 11/12，也不得恢复 manifest、发现网关、机器任务注册表或十五 Action 状态机。
+- 本计划完整替代 `docs/superpowers/archive/2026-10-04/plans/2026-07-17-hourly-controller-orchestration-rebuild-implementation.md` 的未完成任务；不得继续执行旧计划的 Task 11/12，也不得恢复 manifest、发现网关、机器任务注册表或十五 Action 状态机。
 - 实际执行使用用户指定的 `superpowers:executing-plans`，从 Task 0 开始顺序执行；不并行派发、不使用 subagent-driven 路径。
 - 实施分支固定为 `codex/hourly-automation-simplification`，建设 worktree 固定为 `D:\天章游戏开发-worktrees\hourly-controller-v2`。
 - 生产工作区固定为 `D:\天章游戏开发`；建设期不得在该工作区修改、暂存、提交、stash、reset、checkout 或 clean 用户改动。
@@ -167,8 +167,8 @@ Show Acquire SaveRecovery ClearRecovery QueueResume TakeResume RecordResult Rele
 **Files:**
 
 - Read: `AGENTS.md`
-- Read: `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`
-- Read: `docs/superpowers/plans/2026-07-18-hourly-automation-simplification-implementation.md`
+- Read: `docs/superpowers/archive/2026-10-04/specs/2026-07-18-hourly-automation-simplification-design.md`
+- Read: `docs/superpowers/archive/2026-10-04/plans/2026-07-18-hourly-automation-simplification-implementation.md`
 - Read: `开发管理/自动工作流规则.txt`
 - Read: `开发管理/自动工作流状态.txt`
 - Read: `开发管理/当前任务队列.txt`
@@ -714,8 +714,8 @@ Expected: 通过；automation prompt 与 canonical 一致；所有写入型 auto
 
 **Files:**
 
-- Read: `docs/superpowers/specs/2026-07-18-hourly-automation-simplification-design.md`
-- Read: `docs/superpowers/plans/2026-07-18-hourly-automation-simplification-implementation.md`
+- Read: `docs/superpowers/archive/2026-10-04/specs/2026-07-18-hourly-automation-simplification-design.md`
+- Read: `docs/superpowers/archive/2026-10-04/plans/2026-07-18-hourly-automation-simplification-implementation.md`
 - Read: `开发管理/自动工作流规则.txt`
 - Read: `开发管理/自动工作流状态.txt`
 - Private read: hourly runtime state

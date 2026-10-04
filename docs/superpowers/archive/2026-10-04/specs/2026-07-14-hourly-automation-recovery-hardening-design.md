@@ -2,7 +2,7 @@
 
 > 日期：2026-07-14
 > 状态：待用户复核
-> 继承：`docs/superpowers/specs/2026-07-13-hourly-automation-controller-v2-design.md`
+> 继承：`docs/superpowers/archive/2026-10-04/specs/2026-07-13-hourly-automation-controller-v2-design.md`
 > 范围：修复提交命令解析失败与控制器自产脏改恢复自锁；不重构队列、执行器或业务任务路由
 
 ## 1. 问题与根因

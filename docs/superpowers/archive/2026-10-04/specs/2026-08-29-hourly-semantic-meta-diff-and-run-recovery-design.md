@@ -128,7 +128,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tools/test-check-automation-workfl
 共享基础设施修改还必须运行：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/invoke-hourly-owner.ps1|tools/test-hourly-finalizer-invocation.ps1|docs/superpowers/specs/2026-08-29-hourly-semantic-meta-diff-and-run-recovery-design.md'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'tools/invoke-hourly-owner.ps1|tools/test-hourly-finalizer-invocation.ps1|docs/superpowers/archive/2026-10-04/specs/2026-08-29-hourly-semantic-meta-diff-and-run-recovery-design.md'
 git diff --cached --check
 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
 ```

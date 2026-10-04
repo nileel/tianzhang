@@ -2,8 +2,8 @@
 
 > 日期：2026-07-13
 > 状态：用户已确认设计方向，待书面规格复核
-> 前身：`docs/superpowers/specs/2026-07-11-hourly-automation-controller-design.md`
-> 实施计划：`docs/superpowers/plans/2026-07-13-hourly-automation-controller-v2-implementation.md`
+> 前身：`docs/superpowers/archive/2026-10-04/specs/2026-07-11-hourly-automation-controller-design.md`
+> 实施计划：`docs/superpowers/archive/2026-10-04/plans/2026-07-13-hourly-automation-controller-v2-implementation.md`
 > 范围：队列补充、脏工作区隔离、Codex / DeepSeek 串行调度及相应恢复验证
 
 ## 1. 背景与现状证据
