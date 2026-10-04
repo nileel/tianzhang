@@ -1,8 +1,8 @@
-{
+﻿{
   "schemaVersion": 1,
   "assetId": "base-01",
   "taskId": "A-GZ-BASE-MODEL-01",
-  "status": "accepted_four_view_inputs_production_authorized",
+  "status": "generated_raw_geometry_qa_failed",
   "createdDate": "2026-10-04",
   "generator": "OpenAI built-in image_gen",
   "orientation": {
@@ -257,14 +257,15 @@
       "topology": "quad",
       "faceCount": 5000,
       "ultraGeometry": false,
-      "texture": false,
+      "texture": true,
       "partGeneration": false,
       "texture8K": false,
       "privacy": "private (existing value)",
-      "pbr": "not requested; texture disabled",
+      "pbr": "not requested",
       "smartLowPoly": "unknown; not exposed",
       "modelSeed": "unknown; not exposed",
-      "aiCompletion": "unknown; not exposed in four-view mode, not requested"
+      "aiCompletion": "unknown; not exposed in four-view mode, not requested",
+      "textureResolution": "4K"
     },
     "quoteBeforeImageUpload": {
       "date": "2026-10-04",
@@ -274,13 +275,13 @@
       "recheckImmediatelyBeforeGeneration": true
     },
     "authorizedRouteAcknowledgment": "User: 是的，改，而且应该先生成顶部朝正前方的底座四视图来制作",
-    "studioCreditsCeiling": 20,
+    "studioCreditsCeiling": 69,
     "inputSetAcceptedByUser": true,
     "resourceAcceptedByUser": false,
-    "uploaded": false,
-    "generationAttempts": 0,
-    "taskId": null,
-    "creditsConsumed": 0,
+    "uploaded": true,
+    "generationAttempts": 1,
+    "taskId": "a067a77e-413e-41f0-8119-76dcccce9ddd",
+    "creditsConsumed": 40,
     "inputAcceptance": {
       "date": "2026-10-04",
       "userReply": "确认",
@@ -289,6 +290,56 @@
       "studioCreditsCeiling": 20,
       "maxGenerationAttempts": 1,
       "doesNotAcceptProducedResource": true
+    },
+    "quoteImmediatelyBeforeGeneration": {
+      "date": "2026-10-04",
+      "credits": 20,
+      "walletBalance": 2840,
+      "fourSlotsVerified": true,
+      "evidence": "assets/source/combat-bases/base-01/base-01-studio-submit.png",
+      "transactionStatus": "task_created_wallet_delta_verified",
+      "selectedInputsHashesVerified": true
+    },
+    "transaction": {
+      "taskUrl": "https://studio.tripo3d.ai/zh/workspace/generate/a067a77e-413e-41f0-8119-76dcccce9ddd",
+      "balanceBefore": 2840,
+      "balanceAfter": 2820,
+      "chargedStudioPoints": 20,
+      "clickCount": 1,
+      "observedProgressPercent": 28,
+      "status": "completed_wallet_delta_verified"
+    },
+    "standingBudgetAuthorization": {
+      "date": "2026-10-04",
+      "userReply": "全部用4K的，以后统一预算低于70不用审批",
+      "basis": "per-asset full-flow cumulative Studio points",
+      "exclusiveUpperBound": 70,
+      "integerMaximum": 69,
+      "textureResolution": "4K",
+      "rechargeOrSubscriptionAuthorized": false
+    },
+    "textureGenerationAttempts": 1,
+    "textureTransaction": {
+      "parentTaskId": "a067a77e-413e-41f0-8119-76dcccce9ddd",
+      "resolution": "4K",
+      "quoteStudioPoints": 20,
+      "walletBefore": 2820,
+      "deLight": false,
+      "sourceImages": "original accepted front/left-v2/right-v2/back inherited on texture page",
+      "evidence": "assets/source/combat-bases/base-01/base-01-texture-submit.png",
+      "status": "completed_wallet_delta_verified",
+      "taskId": null,
+      "creditsConsumed": 20,
+      "walletAfter": 2800
+    },
+    "rawGeometryQA": {
+      "status": "failed",
+      "geometryModified": false,
+      "fbxExportAttempts": 0,
+      "centralTopVariationMeters": 0.005809627513966283,
+      "resourceAcceptedByUser": false,
+      "record": "开发管理/通用底座第1款资源QA记录.txt",
+      "sourceBackup": "D:/Temp/TianZhang-Blender/combat-base-production-20261004/base-01"
     }
   }
 }
