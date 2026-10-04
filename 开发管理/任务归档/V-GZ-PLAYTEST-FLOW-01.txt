@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-04：导航修复4f23451c已完成归档并受保护集成，14项直接完成输出已核实；冻结剩余正式组合证据，原1920胜利证据保留，允许在同版本有目的补齐静态绕障碍与长日志视觉。",
+  "stateReason": "2026-10-04：正式双分辨率胜败组合4/4通过，静态绕行、自然长日志、败北无奖励及保存读档证据完整；独立复验完成，V-ART仍待双底座与用户实玩接受。",
   "expectedPaths": [
     "开发管理/关中2026-10-01反馈修复复验记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -117,3 +117,18 @@
 - 夹具补上新存档列表真实滚轮（NAV已证实该生产列表需滚动），不更换slotStore、不改用户或旧槽；每条新链用唯一slot。允许路径仍只有既有测试cs/.meta和本卡列出的管理路径，生产文件零写入。
 - 本轮主责Node元数据gpt-6-astra；复杂组合取证调用flow_prerequisites与flow_missing_proof两只读辅助（请求gpt-6.1-sol/high），前者实际模型gpt-6.1-sol已核实/强度未核实，后者实际模型/强度未核实。前者限14项直接归档/规划，后者限本夹具与地图/移动/日志/败北直接所有者；均不写入/改卡/提交/锁/runtime/派生，主责复核并执行最终验证。
 - 准备提交受保护集成后，业务写入前再次运行同卡风险预检、核schema2投影/digest/mustRead/gates；完成后按原最小检查/归档/受保护集成合同处理。真实生产失败、额外生产修改或证据无法取得仍按原停止条件，不将部分通过写为完成。
+## 2026-10-04 独立复验完成
+
+- 正式基线/准备提交8341d180（业务内容含NAV4f23451c及N da65ae24），本卡只提交输入/观察夹具417行及既有.meta、管理证据；生产脚本/场景/数值/store/随机源零修改，所有非请求系统未触碰。原旧1920证据和flow-1920-001ab9bc保留原版本。
+- 执行前riskPreflight taskCardDigest=ad9d58f249c7d23d81b7dd44741140ddadd383172245c2716fad6f52c74448df，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates零命中，与schema2投影一致。
+- Unity6000.3.18f1 -batchmode -projectPath <本树>/src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests -testResults <本树>/src/Logs/flow/remaining.xml -logFile <本树>/src/Logs/flow/remaining.log；不使用-nographics。4/4 Passed，100.69秒；独立新建的四槽全部真实五先天8、玩家571HP/180MP、敌657HP/78物攻，未用HP1或高属性。
+- 四链：1366败北src/Logs/flow/20261004-134751-1366-defeat，槽flow-1366-0baa8fd3；1920败北20261004-134808-1920-defeat，槽flow-1920-feb519d1；1366胜利20261004-134825-1366-victory，槽flow-1366-98885ce4；1920胜利20261004-134859-1920-victory，槽flow-1920-7effe070。目录含逐输入steps.log、PNG/TXT、before-encounter/after-encounter/before-save JSON；共54张PNG尺寸均为要求分辨率。
+- 双术法实际施放与候选取消资源/CT不变、世界/轴目标一致且不改变行动者、当前轴/头顶HP/条件预测、战斗探索返回禁用均通过。静态绕行在两胜利链均为(2,0)→(1,1)→(1,2)→(2,2)，分两回合耗2+1移动点，超过直线2步，避开静态(2,1)；所有实际路径排除四配置障碍及活敌占位。只声称实际绕(2,1)，未单独证明绕(3,1)。点击的合法选项来自实时权威投影，未传送/注入移动。
+- 自然战报长日志滚动：1366败北content430.10/viewport253.83、位置约0→.9531；1920败北468/254、0→.7850；1366胜利549.58/253.83、约0→.5681；1920胜利598/254、0→.4884。全部真实MouseState单位滚轮，读取前后权威State不变，真实关闭按钮可达；未追加假日志、未直接设置滚动值。滚动裁剪边缘半行正常，未额外要求返回最底端。
+- 自然败北两链35条循环确认，玩家0HP/敌657HP，回城销毁战斗HUD；完整inventory保持空、全组bounties保持Accepted/progress0，两个奖励物品差额均0，保存同槽加载后再比较仍一致。没有改生产死亡/结算规则。
+- 1366自然胜利最后玩家26HP/5MP，1920胜利67HP/17MP；两次自然掉落各1石甲碎片，本轮随机灵石掉落0，领取悬赏再+3灵石。重复领取原因bounty_claim_repeated且完整JSON不变；四个正式槽读回完整JSON一致，辅助还核对槽文件与before-save.json字符串一致。
+- 主责审图覆盖世界/城、预览、静态绕行、胜败长日志、领奖防重、读取；只读flow_missing_proof另审11张关键图与四链日志/JSON/生产槽，未发现阻塞布局缺口。实际图片完整渲染，中文及确认/取消/关闭可读可操作；字段/Passed未替代审图。
+- 只读flow_prerequisites确认14项直接归档completed、无同ID活跃卡、提交均主线可达；flow_missing_proof复核新夹具与关键截图/证据。主责gpt-6-astra元数据已核实，前者gpt-6.1-sol已核实/强度未核实，后者实际模型/强度未核实；均只读、无派生/写入/任务领取/锁/runtime操作。主责统一差异与最终验证。
+- 验证：Unity编译及4/4、check-data-chain通过；卡片/队列、check-review-text、允许现存路径check-pending-whitespace、git diff --cached --check随本次收尾执行。只有既有无关obsolete/重复using编译警告。Unity写回ProjectSettings两尾随空白备份至Logs/flow/editor-generated-settings/ProjectSettings-remaining.asset后恢复。
+- 已加载Unity技能所需所有者/UI/验证/结构参考与UNITY_STRUCTURE.md/ui/assemblies；运行链为原SceneInstaller→Controller→EncounterCoordinator→CombatCommandInput/Presenter/View，新增仅Tests/PlayMode既有测试程序集，无新运行时职责或模块边。无新增经验候选。
+- 可玩入口与用户步骤详见本次反馈复验记录。本卡通过是技术组合验收，V-GZ-ART-SLICE-01仍等待双底座QA资源接入及用户本人同版本实玩确认；未代签、未费用交易、未修改定时配置、未操作stash。全部工作树/日志/存档/用户改动保留。
