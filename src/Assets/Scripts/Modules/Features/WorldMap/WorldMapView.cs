@@ -48,8 +48,8 @@ namespace TianZhang.Features.WorldMap
             if (selectedNodeDescription != null)
             {
                 string entry = hasSettlement
-                    ? "据点: " + node.settlementId
-                    : hasAdventure ? "副本: " + node.adventureIds[0] : "暂无可进入地点";
+                    ? "可进入据点"
+                    : hasAdventure ? "可进入副本" : "暂无可进入地点";
                 selectedNodeDescription.text = node.displayName + "（区域枢纽）\n" + entry;
             }
             if (enterLocationButton != null) enterLocationButton.interactable = hasSettlement || hasAdventure;

@@ -256,7 +256,7 @@ namespace TianZhang.Features.Settlement
                     "\n区域: " + UiText.Resolve("region_" + settlement.regionId);
             }
 
-            SetStatus("据点已加载 · 返回世界：" + WorldNodeDisplay(returnWorldNodeId));
+            SetStatus("据点已加载 · 可返回主世界");
         }
 
         public void ShowFailure(string reason, string returnWorldNodeId)
@@ -265,7 +265,7 @@ namespace TianZhang.Features.Settlement
             if (settlementNameText != null)
                 settlementNameText.text = "据点不可用";
             if (settlementDetailText != null)
-                settlementDetailText.text = "返回主世界：" + WorldNodeDisplay(returnWorldNodeId);
+                settlementDetailText.text = "可返回主世界";
             SetStatus(UiText.ReasonDisplay(reason, "据点不可用"));
             SetButton(featureButton, featureButtonText, "功能不可用", false, null);
             SetButton(adventureButton, adventureButtonText, "副本不可用", false, null);
@@ -321,11 +321,6 @@ namespace TianZhang.Features.Settlement
         {
             if (settlementStatusText != null)
                 settlementStatusText.text = value;
-        }
-
-        private static string WorldNodeDisplay(string nodeId)
-        {
-            return nodeId;
         }
 
         private static void SetButton(Button button, Text label, string text, bool interactable, Action action)

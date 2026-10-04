@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-04：用户授权单独建卡；V-FLOW已证实两处视图直接显示内部ID，最小文字修复范围与双分辨率导航验收已冻结，本轮仅建卡。",
+  "stateReason": "2026-10-04：两View最小文字修复完成，正式双分辨率导航/存档/可见证据2/2通过；本卡归档，V-FLOW仍须独立续验。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs",
     "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs.meta",
@@ -88,3 +88,17 @@
 
 - 如需修改两个View显示单元之外的生产文件、改变公共接口/asmdef、发现直接ID只是其他未明故障的表象或取得不了实际可见证据，停止并记录根因，不连续叠加补丁。
 - 不修改用户已有文件/存档，不apply或删除stash；保留所有工作树、日志与失败现场。费用/造型决定和V-ART接受不在本卡授权内。
+
+## 2026-10-04 完成与证据
+
+- 基线fd3e243c；仅按冻结方案改WorldMapView.ShowSelectedNode、SettlementView.ShowSettlement/ShowFailure，删除无调用私有WorldNodeDisplay；公共签名、导航/存档ID、Language、场景、数值和所有非请求系统未改。
+- 运行所有者：SceneBuilder序列化World/Settlement视图，SceneInstaller接线Controller；WorldMapController.SelectNode刷新SelectedWorldNodeDescription，SettlementController.RefreshSettlementUi/ShowFailure刷新SettlementStatusText/SettlementDetailText。UiText和导航层不是这两处直接拼接的修复所有者，未修改共用工厂或语言解析。
+- 模型协作：简单任务主责单模型，未启动辅助；实际可用Unity6000.3.18f1、PlayMode夹具、原生产InputSystem/EventSystem/SlotStore，未修改随机源/先天。
+- 风险预检taskCardDigest=c7f98ec9461ad850452166d75ed7b659640b9def09848f850ae8b9e867018cee，indexDigest=ab4fa007e4d5645d15986d1f86cbc556f613cf8c515e05aa1fe672bfdd6d30e0；matched/mustRead/gates均空，与schema2投影一致。
+- 命令：Unity.exe -batchmode -projectPath <本树>/src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongNavigationTextPlayModeTests -testResults <本树>/src/Logs/navigation/navigation-final.xml -logFile <本树>/src/Logs/navigation/navigation-final.log（未使用-nographics）。结果2/2 Passed，3.80秒，含正式新建默认小族、关中选择/入城/返回/再入城/保存/同槽读取、稳定ID、完整JSON相等及隔离ShowFailure文字断言。
+- 可见证据：本树src/Logs/navigation/20261004-133514-1366与20261004-133516-1920下01-world、02-settlement、03-returned-world、04-loaded的PNG/TXT及steps.log、before-save.json。实际审图中文完整可见，按钮经真实射线最上层命中/屏幕边界验证；状态preferredHeight分别22.49/23，小于64容器；世界描述39.36/39，与容器匹配。保存槽nav-1366-32b20086、nav-1920-ebedf019，全程生产SaveSlots。
+- 首轮两个用例停于新槽位于列表可视区域外；夹具补真实滚轮后原始120单位过大导致列表夹限两端，运行几何和InputSystem换算源码证实。最终改单位滚轮事件，未改生产滚动/导航。navigation.xml、navigation-scroll.xml与对应日志、四个先前新槽均保留，不当成功证据。
+- 首次截图等待8个实际帧后完整渲染，未改生产布局/渲染时机。Unity自行写回的两ProjectSettings尾随空白备份至src/Logs/navigation/editor-generated-settings后恢复。
+- 验证：check-data-chain、check-task-cards、check-review-text、预期路径check-pending-whitespace及git diff --cached --check；详见同提交反馈复验记录。不重复BattleSim、CAMERA/TIMELINE/TARGET或完整战斗。
+- 已加载unity-agent-workflows的runtime-owner-proof、screenshot-text-owner、ui-and-visual-assets、ai-workflows、unity-validation、project-structure-discovery、modular-architecture；结构图UNITY_STRUCTURE.md/ui/assemblies。无生产新职责/跨模块依赖。
+- 本卡不等于V-FLOW或V-ART完成。无新增经验候选，既有直接字符串拼接问题与夹具输入问题无需另建机制。工作树、日志、存档及用户改动全部保留。
