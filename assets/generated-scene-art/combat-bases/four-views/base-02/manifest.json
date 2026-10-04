@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 1,
+  "assetId": "base-02",
+  "taskId": "A-GZ-BASE-MODEL-02",
+  "status": "awaiting_user_four_view_acceptance",
+  "createdDate": "2026-10-04",
+  "generator": "OpenAI built-in image_gen",
+  "orientation": {
+    "front": "playing top faces production +Z",
+    "back": "underside faces production -Z",
+    "left": "camera -X",
+    "right": "camera +X",
+    "gameMapping": {
+      "productionX": "game +X",
+      "productionY": "game -Z",
+      "productionZ": "game +Y"
+    }
+  },
+  "selectedInputs": {
+    "front": {
+      "base": "base-02",
+      "view": "front",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+      "bytes": 2073997,
+      "sha256": "704801b4c9b0dc0e7907cc25647e96ace1bed1aad5f9b56a457c4c6c41fe2cb6",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        200,
+        55,
+        1053,
+        1158
+      ],
+      "silhouetteRatioApprox": 0.77335,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-e7e52d27-ee57-4d54-8550-8f7fc2d87ba6.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+          "role": "approved concept look reference"
+        }
+      ]
+    },
+    "left": {
+      "base": "base-02",
+      "view": "left-v2",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left-v2.png",
+      "bytes": 1228467,
+      "sha256": "5a931604846e5f4d9a15e71040b0cc33e2538435167d38047ad338b9b1411d7e",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        600,
+        42,
+        653,
+        1212
+      ],
+      "silhouetteRatioApprox": 0.0453,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-666caeee-8f88-4776-b82a-47aec0797a2c.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left.png",
+          "role": "edit target, correct profile thickness"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "canonical front scale and pose"
+        }
+      ]
+    },
+    "right": {
+      "base": "base-02",
+      "view": "right-v2",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/right-v2.png",
+      "bytes": 1192425,
+      "sha256": "c0e974925e46e4011dfd5e4a99227f6a3b0af126dd69f7f9060bb01f244bb8d1",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        599,
+        42,
+        654,
+        1213
+      ],
+      "silhouetteRatioApprox": 0.04697,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-9bae88c3-aeb5-458b-8188-9e2864d20f68.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left-v2.png",
+          "role": "corrected left silhouette scale and thickness"
+        }
+      ]
+    },
+    "back": {
+      "base": "base-02",
+      "view": "back",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/back.png",
+      "bytes": 2324469,
+      "sha256": "ab122e226f6517d8783af32166400c2c1c9a3b74d8697c2b5e6585a8b8192c0c",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        202,
+        53,
+        1052,
+        1157
+      ],
+      "silhouetteRatioApprox": 0.76993,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-4a4aacc3-2074-47ac-804b-19ef2a895b3a.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left.png",
+          "role": "canonical left side"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+          "role": "approved concept material"
+        }
+      ]
+    }
+  },
+  "preservedDrafts": [
+    {
+      "base": "base-02",
+      "view": "front-v2",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front-v2.png",
+      "bytes": 2381578,
+      "sha256": "746dcadab0a5caef145a373ef1e8b11fa0f38ba74ab6e856fa97c24bd8bb75d0",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        154,
+        54,
+        1101,
+        1160
+      ],
+      "silhouetteRatioApprox": 0.85624,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-9f8947fb-97dc-46ed-83e4-8d09b2c42f41.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "edit target, broaden width 5% only"
+        }
+      ]
+    },
+    {
+      "base": "base-02",
+      "view": "left",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left.png",
+      "bytes": 875595,
+      "sha256": "13f88a83035627d12a4307e9a16f6dc6d96019edd4f2de5e84cb76ff45ea4ecb",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        585,
+        42,
+        669,
+        1212
+      ],
+      "silhouetteRatioApprox": 0.07179,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-9ef166ed-3773-4e32-a5c2-7a2d9069e7dd.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+          "role": "approved concept sidewall material"
+        }
+      ]
+    },
+    {
+      "base": "base-02",
+      "view": "right",
+      "path": "assets/generated-scene-art/combat-bases/four-views/base-02/right.png",
+      "bytes": 1251190,
+      "sha256": "e5b2b06688f8a4c4ee17380c8614e9a0d01596052703dbac9ed03072876393b2",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "bboxThreshold210": [
+        585,
+        42,
+        670,
+        1212
+      ],
+      "silhouetteRatioApprox": 0.07265,
+      "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-1ab5495a-cbac-4495-bf30-9c72e01b48ea.png",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+          "role": "approved concept sidewall material"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-02/left.png",
+          "role": "canonical left side depth and scale"
+        }
+      ]
+    }
+  ],
+  "promptSet": {
+    "path": "assets/generated-scene-art/combat-bases/four-views/base-02/prompts.json",
+    "sha256": "9b86ad7ce13c752eaea94fd9b1b7df636e8395e5e4b1778029c791db6c5018b7",
+    "hashNormalization": "UTF-8 without BOM; line endings normalized to LF; final newline retained"
+  },
+  "concept": {
+    "path": "assets/generated-scene-art/combat-bases/concepts/base-02.png",
+    "sha256": "0acce02460b4990825009af9901831f6cbce95905c2a127788b54ab73b60bdcb"
+  },
+  "imageQA": {
+    "observed": "front is playing top; back is closed underside; independent left/right edge-on views; white background; no cast shadow or labels; central playing surface unobstructed; six divisions on top outer ring",
+    "scaleStatus": "approximate_bitmap_proportions_not_metric_QA",
+    "measurementMethod": "RGB minimum channel <210 bounding box; no source image resizing or pixel edits",
+    "targetFrontRatio": 0.8135593220338984,
+    "targetSideRatio": 0.03389830508474576,
+    "limitations": [
+      "Selected front/back approximate 0.77 width/height versus nominal 0.8136; first front kept to match underside.",
+      "Selected sides approximate 0.0453/0.0470 width/height versus nominal 0.0339; heights about 6% greater than front.",
+      "Front-v2 overshot width and is an unselected alternative. Targeted first front edit also became narrower and was rejected.",
+      "Exact physical geometry remains mandatory at Blender/FBX QA."
+    ]
+  },
+  "modelContract": {
+    "units": "meters",
+    "footprint": {
+      "x": 0.96,
+      "z": 1.18
+    },
+    "topY": 0,
+    "bottomY": -0.04,
+    "rootPosition": [
+      0,
+      0,
+      0
+    ],
+    "rootRotation": [
+      0,
+      0,
+      0
+    ],
+    "rootScale": [
+      1,
+      1,
+      1
+    ],
+    "up": "+Y",
+    "forward": "+Z",
+    "selectionMaximumY": 0.003,
+    "factionTintBand": "independent exterior narrow groove"
+  },
+  "tripo": {
+    "route": "existing Tripo Studio account points",
+    "url": "https://studio.tripo3d.ai/zh/workspace/generate",
+    "modelVisibleLabel": "H3.1 – 最高质量",
+    "inputMode": "front/left/right/back, not 10-image batch mode",
+    "singleClickMaximumCandidates": 1,
+    "maxGenerationAttempts": 1,
+    "automaticRetry": false,
+    "settings": {
+      "topology": "quad",
+      "faceCount": 5000,
+      "ultraGeometry": false,
+      "texture": false,
+      "partGeneration": false,
+      "texture8K": false,
+      "privacy": "private (existing value)",
+      "pbr": "not requested; texture disabled",
+      "smartLowPoly": "unknown; not exposed",
+      "modelSeed": "unknown; not exposed",
+      "aiCompletion": "unknown; not exposed in four-view mode, not requested"
+    },
+    "quoteBeforeImageUpload": {
+      "date": "2026-10-04",
+      "credits": 20,
+      "walletBalance": 2840,
+      "evidence": "C:/Users/WINDOWS/.codex/visualizations/2026/10/04/01a10602-aac3-79d2-8138-df6f8003d52e/tripo-studio-fourview-quote.png",
+      "recheckImmediatelyBeforeGeneration": true
+    },
+    "authorizedRouteAcknowledgment": "User: 是的，改，而且应该先生成顶部朝正前方的底座四视图来制作",
+    "studioCreditsCeiling": 20,
+    "inputSetAcceptedByUser": false,
+    "resourceAcceptedByUser": false,
+    "uploaded": false,
+    "generationAttempts": 0,
+    "taskId": null,
+    "creditsConsumed": 0
+  },
+  "rejectedUnsavedIteration": {
+    "view": "front-revision",
+    "generatorOutput": "C:/Users/WINDOWS/.codex/generated_images/01a10602-aac3-79d2-8138-df6f8003d52e/exec-e5c43982-9de3-40d1-8299-dbd9fb9e2e52.png",
+    "reason": "Silhouette became narrower; keep original front, no overwrite."
+  }
+}

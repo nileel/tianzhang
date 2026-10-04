@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "assetId": "base-01",
+  "generator": "OpenAI built-in image_gen",
+  "generatedAt": "2026-10-04",
+  "purpose": "Four independent source images; waiting for user acceptance before Tripo Studio submission.",
+  "canvas": "1536x1536 requested; actual tool resolution recorded in manifest.",
+  "orientation": {
+    "front": "playing top faces production +Z",
+    "back": "underside faces production -Z",
+    "left": "camera -X",
+    "right": "camera +X",
+    "gameMapping": {
+      "productionX": "game +X",
+      "productionY": "game -Z",
+      "productionZ": "game +Y"
+    }
+  },
+  "entries": [
+    {
+      "view": "front",
+      "prompt": "Use case: stylized-concept. Asset type: one independent orthographic source image for a Tripo four-view reconstruction of a combat miniature base. This is a single object, upright like a thin plaque, with its normal playing TOP face pointing directly toward the FRONT camera. Pure solid white background, even neutral studio illumination, no ground, no cast shadow, no text, no labels, no inset, no multiple views, no human or creature, no selection glow. Show the entire object, perfectly centered, with identical scale across its four views. One square 1536x1536 image. Photorealistic stone and aged bronze material, faithful to the approved concept. This input orientation is temporary; it must not change the final object's geometry. Keep a flat unobstructed center and exactly SIX outer divisions. No spikes, inscriptions, raised center, plinth, feet, sockets or extra decorations.\nInput image 1 is the approved Base 01 look reference only: use its gray flat central stone, muted green jade recessed outer ring and narrow aged bronze edging; ignore its photographic angle, background and small inset. Primary request: EXACT FRONT ORTHOGRAPHIC VIEW of the upright round base, directly perpendicular to its top face. It must be a PERFECT CIRCLE, NOT AN ELLIPSE. Diameter 0.62 m and physical depth only 0.04 m. The plane fills 80% of image height and width. The full circular gray top is visible; retain subtle flat stone cracks, not carved seams. An outer narrow jade groove is divided by exactly six thin bronze radial separators, evenly spaced at 12, 2, 4, 6, 8 and 10 o'clock. The bronze bordering remains very low and does not occlude the center. No sidewall visible other than a tiny symmetric perimeter bevel. The camera has zero yaw, zero pitch, no perspective foreshortening.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+          "role": "approved concept look reference"
+        }
+      ]
+    },
+    {
+      "view": "left",
+      "prompt": "Use case: stylized-concept. Asset type: one independent orthographic source image for a Tripo four-view reconstruction of a combat miniature base. This is a single object, upright like a thin plaque, with its normal playing TOP face pointing directly toward the FRONT camera. Pure solid white background, even neutral studio illumination, no ground, no cast shadow, no text, no labels, no inset, no multiple views, no human or creature, no selection glow. Show the entire object, perfectly centered, with identical scale across its four views. One square 1536x1536 image. Photorealistic stone and aged bronze material, faithful to the approved concept. This input orientation is temporary; it must not change the final object's geometry. Keep a flat unobstructed center and exactly SIX outer divisions. No spikes, inscriptions, raised center, plinth, feet, sockets or extra decorations.\nInput image 1 is the canonical FRONT view of this exact base; keep its geometry, material identity and the same upright pose. Input image 2 is the original approved concept for sidewall material only.  Primary request: EXACT LEFT ORTHOGRAPHIC SIDE VIEW of this circular upright plaque, physical diameter 0.62 m, total depth 0.04 m. Camera at -X looking +X, exactly 90 degrees from the front view, zero elevation, NO three-quarter angle. Its playing top is still pointing +Z as in the front reference; DO NOT rotate the object to put the playing top upward. Thus the top face is viewed EXACTLY EDGE ON and the object appears as a VERY THIN VERTICAL STRIP of height 0.62 m and width 0.04 m, ratio 0.04:0.62. The object height fills about 89% of the image, centered. The visible thickness is genuinely four centimeters; do not thicken it for readability. A simple dark stone sidewall and tiny bronze top/bottom chamfer trim matching the approved concept. Any jade/amber is only a hairline at the top-face edge. Do not show the central playing surface. Do not add floor, support or wide horizontal base. Keep the entire strip visible. Match the canonical front's actual vertical silhouette height and centered position; maintaining scale with that reference takes priority over the nominal framing percentage.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+          "role": "approved concept sidewall material"
+        }
+      ]
+    },
+    {
+      "view": "right",
+      "prompt": "Use case: stylized-concept. Asset type: one independent orthographic source image for a Tripo four-view reconstruction of a combat miniature base. This is a single object, upright like a thin plaque, with its normal playing TOP face pointing directly toward the FRONT camera. Pure solid white background, even neutral studio illumination, no ground, no cast shadow, no text, no labels, no inset, no multiple views, no human or creature, no selection glow. Show the entire object, perfectly centered, with identical scale across its four views. One square 1536x1536 image. Photorealistic stone and aged bronze material, faithful to the approved concept. This input orientation is temporary; it must not change the final object's geometry. Keep a flat unobstructed center and exactly SIX outer divisions. No spikes, inscriptions, raised center, plinth, feet, sockets or extra decorations.\nInput image 1 is the canonical FRONT view of this exact base; keep its geometry, material identity and the same upright pose. Input image 2 is the original approved concept for sidewall material only. Input image 3 is the canonical LEFT side, use it to match depth and camera scale, but render the object's actual opposite side, not a mirrored copy. Primary request: EXACT RIGHT ORTHOGRAPHIC SIDE VIEW of this circular upright plaque, physical diameter 0.62 m, total depth 0.04 m. Camera at +X looking -X, exactly 90 degrees from the front view, zero elevation, NO three-quarter angle. Its playing top is still pointing +Z as in the front reference; DO NOT rotate the object to put the playing top upward. Thus the top face is viewed EXACTLY EDGE ON and the object appears as a VERY THIN VERTICAL STRIP of height 0.62 m and width 0.04 m, ratio 0.04:0.62. The object height fills about 89% of the image, centered. The visible thickness is genuinely four centimeters; do not thicken it for readability. A simple dark stone sidewall and tiny bronze top/bottom chamfer trim matching the approved concept. Any jade/amber is only a hairline at the top-face edge. Do not show the central playing surface. Do not add floor, support or wide horizontal base. Keep the entire strip visible. Match the canonical front's actual vertical silhouette height and centered position; maintaining scale with that reference takes priority over the nominal framing percentage.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+          "role": "approved concept sidewall material"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/left.png",
+          "role": "canonical left side depth and scale"
+        }
+      ]
+    },
+    {
+      "view": "back",
+      "prompt": "Use case: stylized-concept. Asset type: one independent orthographic source image for a Tripo four-view reconstruction of a combat miniature base. This is a single object, upright like a thin plaque, with its normal playing TOP face pointing directly toward the FRONT camera. Pure solid white background, even neutral studio illumination, no ground, no cast shadow, no text, no labels, no inset, no multiple views, no human or creature, no selection glow. Show the entire object, perfectly centered, with identical scale across its four views. One square 1536x1536 image. Photorealistic stone and aged bronze material, faithful to the approved concept. This input orientation is temporary; it must not change the final object's geometry. Keep a flat unobstructed center and exactly SIX outer divisions. No spikes, inscriptions, raised center, plinth, feet, sockets or extra decorations.\nInput image 1 is the canonical FRONT of this exact base, input image 2 is its canonical LEFT side, input image 3 is the approved original concept for material identity. Primary request: EXACT BACK ORTHOGRAPHIC VIEW of the same circular upright plaque, physical diameter 0.62 m, total depth 0.04 m, camera at -Z looking +Z, zero yaw, zero pitch. Show its UNDERSIDE, not its decorated playing top. Keep the identical perfect circular silhouette, same scale and about 89% canvas height as the front reference. The underside is a simple closed, flat neutral gray stone face with subtle stone grain and a narrow bronze bevel at the outer perimeter. No green jade or amber ring, no radial separators on the underside, no holes, recess, socket, legs, lettering or mounting hardware. Do not invent additional structures. Symmetric tiny perimeter bevel only, no foreshortening or visible sidewall. Match the canonical front's actual vertical silhouette height and centered position; maintaining scale with that reference takes priority over the nominal framing percentage.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/left.png",
+          "role": "canonical left side"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/concepts/base-01.png",
+          "role": "approved concept material"
+        }
+      ]
+    },
+    {
+      "view": "left-v2",
+      "prompt": "Use case: precise-object-edit. Input image 1 is the LEFT profile edit target; input image 2 is the canonical FRONT for vertical alignment and material identity. Correct only the profile silhouette dimensions. The object is a thin upright stone plaque observed exactly edge on from its LEFT, camera -X, no tilt or perspective. Reduce the profile's width to about 70 percent of the reference width, keeping its height and vertical position. For a square 1254-pixel canvas, the plaque is approximately 72 pixels wide by 1114 pixels tall. Width/height = 0.04/0.62 = 0.0645. It should look MUCH THINNER than input image 1, like the edge of a thin tile, never a post. Maintain the stone sidewall and hairline bronze trim, neutral even lighting, solid white background, no cast shadow, no floor or support, no labels, no dimensions, no playing top face visible. The playing TOP still points production +Z; leave the object's orientation unchanged. Preserve the square canvas, whole object centered, output only this one independent left profile.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/left.png",
+          "role": "edit target, correct profile thickness"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/front.png",
+          "role": "canonical front scale and pose"
+        }
+      ]
+    },
+    {
+      "view": "right-v2",
+      "prompt": "Use case: stylized-concept. Input image 1 is the canonical FRONT of the object; input image 2 is the corrected LEFT profile for precise camera scale and physical thickness. Render a NEW independent RIGHT orthographic profile of that exact same thin stone combat base, camera at +X looking -X, exactly edge on. The playing TOP still faces production +Z; no tilt, no perspective and no visible top. Match the corrected LEFT profile's silhouette, height, center and thin depth exactly. Diameter 0.62 m, thickness 0.04 m: width/height 0.0645, about 72 pixels wide by 1114 tall on a square 1254 canvas. Render the actual opposite stone sidewall, with its own surface texture, no mirrored reuse. Only hairline bronze bevels at the edge, neutral even illumination, pure white background, centered whole upright plaque, no shadows, floor, labels, dimensions, extra structure or central playing surface. Output just one square RIGHT profile.",
+      "references": [
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/front.png",
+          "role": "canonical front"
+        },
+        {
+          "path": "assets/generated-scene-art/combat-bases/four-views/base-01/left-v2.png",
+          "role": "corrected left silhouette scale and thickness"
+        }
+      ]
+    }
+  ]
+}

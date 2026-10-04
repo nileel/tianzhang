@@ -10,8 +10,20 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-04：D-GZ-BASE-MODELS-01已完成并集成6f827525；Base 02仍仅concept，等待负责人造型选择及本款独立Tripo交易前授权，旧35 credits上限须下单前重新核价，本次无新费用授权。",
+  "stateReason": "2026-10-04：圆角矩形底座四视图已生成并记录比例近似误差，等待负责人整组接受；Studio H3.1四槽当前20点，实际上传后下单前仍须复核，本轮未上传、未扣费、未生产模型。",
   "expectedPaths": [
+    "docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/front-v2.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/left.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/left-v2.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/right.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/right-v2.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/back.png",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/prompts.json",
+    "assets/generated-scene-art/combat-bases/four-views/base-02/manifest.json",
+    "assets/generated-scene-art/combat-bases/four-views/preview.html",
+    "assets/generated-scene-art/combat-bases/four-views/preview.png",
     "assets/source/combat-bases/base-02/base-02-source.blend",
     "assets/source/combat-bases/base-02/base-02-source.fbx",
     "assets/source/combat-bases/base-02/base-02-basecolor.png",
@@ -37,7 +49,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：Tripo通用底座第2款资源生产与清理。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 未ready前不得以当前候选路径开工。正式前置进入 master 后，本卡只消费 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md` 的 Base 02、`assets/generated-scene-art/combat-bases/concepts/base-02.png` 和对应人工交易回执；不得以历史角色 credits 或其他底座候选替代。
+- 本轮明确授权仅准备四视图及其生产合同，允许写本卡列出的四视图路径；正式资源生产仍须ready。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
 
 ## 必查范围
 
@@ -49,7 +61,7 @@
 
 ## 实施范围
 
-- 消费已选 Base 02 输入和具体交易授权，使用 Tripo H3.1 image-to-model 一次（`texture=false`、`pbr=false`、`geometry_quality=standard`、`smart_low_poly=true`、`quad=true`、`face_limit=5000`，单款上限35 credits）仅生成本卡单款资源；冻结原包ID/seed/设置/真实费用/哈希。按项目 Blender 规则清理，交付 expectedPaths 中唯一 FBX/贴图及尺寸/轴/接触面证据；不复用角色历史额度，不自动重试或重复生产。
+- 先基于已选圆角矩形概念准备顶部朝正前方的独立正/左/右/背四图，保留完整提示词、参考链和哈希；正面为顶面、背面为底面、两侧为严格90度厚度侧面，四图保持同一竖立生产姿态。整组获负责人接受后，按Studio四槽的实时报价及本款授权使用H3.1一次、最多一个候选，四边面、5000面、标准几何、关闭纹理/超清几何/分部件/8K，不请求PBR及AI补全。不调用CLI/OpenAPI，不复用旧35 API credits上限；当前授权按此前Studio单图20点报价，四图价格超过20点或关键设置改变时先取得新的具体授权。Studio未暴露smart_low_poly或model_seed控制，不声明已固定；只记录实际暴露的值，未暴露记unknown。冻结平台任务ID、原包、可见设置、真实Studio扣费及哈希，再按Blender合同恢复+Y上/+Z前及精确尺寸，交付唯一FBX/贴图和QA证据。失败不自动重试。
 
 ## 禁止项
 
@@ -77,7 +89,14 @@
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
 
-## 2026-10-04 直接依赖状态核实
+## 2026-10-04 授权前直接依赖状态核实
 
 - D-GZ-BASE-MODELS-01归档completed、6f827525主线可达，移除已完成具名前置；Base 02唯一输入仍为assets/generated-scene-art/combat-bases/concepts/base-02.png，manifest状态design_preview_only，assets/source/combat-bases尚无资源。用户本次未选择造型、未授权新费用；保留blocked，不默认批准，不下单或本地伪造FBX。旧单款35 credits是冻结上限而非本轮实时报价，获明确选择和本款独立交易授权后仍须重新核价并记录真实credits_consumed。后续按原卡冻结参数及Blender QA合同执行；本轮仅直接依赖事实维护，无业务产物、无需Unity/BattleSim。
 - 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
+
+## 2026-10-04 Studio与四视图修订回执
+
+- 负责人在展示两款概念、尺寸及独立交易项后回复“授权”，随后明确“是的，改，而且应该先生成顶部朝正前方的底座四视图来制作”，批准改用Studio现有点数及准备四视图。两款造型选择保留；该回复不代表尚未生成的四图或生产资源已接受，不授权API充值、CLI/OpenAPI交易或重试。
+- D-GZ-BASE-MODELS-01和接地修正76c6fa04已经完成；不重新实施，不恢复角色绑定/动画或模块化立绘路线。本轮为两款输入合同的有界共同修订，生产阶段仍按每张A卡分别形成一款资源；由主责统一处理，无独立子智能体工作面。
+- 已生成front.png、left-v2.png、right-v2.png、back.png四张独立图，1254×1254，顶部朝生产+Z正面、背面为底面；完整提示词、参考链、生成来源、SHA-256及未选初稿见本款four-views目录prompts.json/manifest.json。preview.html与preview.png仅供审阅，不能上传为多视图拼图。图片比例仍有近似误差，manifest逐项披露；不声称通过精确尺寸QA，不以图片替代最终Blender/FBX实测。等待负责人接受或提出修改。
+- Studio现场四槽明确为前/左侧/右侧/后，H3.1、四边面、5000面、无纹理、超清几何/分部件/8K关闭，按钮20点、余额2840；四图模式未暴露AI补全、smart_low_poly或seed，不虚构固定值。未上传、生成次数0、扣费0；现场截图保存在本对话visualizations目录。获图片接受后仍须复核实际提交价；每款最多一次，失败不自动重试。U卡继续blocked，资源与最终实玩接受仍由负责人本人签署。

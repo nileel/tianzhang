@@ -1,6 +1,6 @@
 # 两个通用战斗棋子底座：造型与生产合同
 
-状态：**供负责人选择与交易前批准的设计方案**。本文件不代表 Tripo 已下单、模型已产生或 Unity 已接入。
+状态：**2026-10-04两款顶部朝正前方四视图已生成，等待负责人整组接受；Studio H3.1四槽当前报价20点/款，上传后提交前仍须复核**。本文件不代表Tripo已下单、模型已产生或Unity已接入。
 
 ## 目的与适用范围
 
@@ -23,26 +23,42 @@
 2. `FactionTintBand`：仅为最外侧凹槽／窄环的可着色材质槽，接线时承接现有玩家青色、敌人红色提示；中央顶面保持中性。
 3. `SelectionHighlight`：由后续表现层独立绘制的薄轮廓／半透明覆盖，位于顶面上方不高于 `Y=0.003 m`，遵循相同足印。它必须能显示可达、选中与移动反馈，不能被图案或实心饰件遮住。
 
-这与当前 provider 创建 `Cylinder`（局部中心 `Y=-0.04`、`scale.y=0.08`）的世界厚度 `0.08 m` 区分开：新资源的物理厚度按本合同为 `0.04 m`，接入卡须在已有底座减薄与接地修正完成后一次替换，不能叠加缩放或 offset 补丁。
+接地修正`76c6fa04`已完成：当前provider的临时Cylinder局部中心Y=0.04、scale.y=0.04，真实世界厚度0.08 m，body局部Y=0.08，静态脚底与顶面均为世界Y=0.42、底面Y=0.34。新资源物理厚度仍按本合同为0.04 m；U卡消费已修正的脚底贴顶、底面贴地关系，一次替换临时几何并按新资源实测上下表面接线，不重新实施接地卡，不叠加缩放或offset补丁。
+
+## 顶部朝正前方的四视图
+
+负责人于2026-10-04要求先生成底座四视图，并让顶部朝正前方。本次输入将底座竖立：顶部法线朝向生产正面相机，正面图就是完整顶面，背面图为封闭底面，左右图为严格90度的厚度侧面。四图不各自旋转或改变姿态；不把旧斜俯视概念图、验收合图或前三分之四视角放进侧槽。
+
+生产构图采用右手坐标：生产X对应游戏X，生产Y对应游戏-Z，生产Z对应游戏+Y。Base 01正面保持正圆；Base 02正面长轴竖直、宽高比0.96:1.18。侧面分别保持0.04:0.62及0.04:1.18的厚度与高度关系；薄侧图不能为了显眼而放大厚度。背景统一纯白、无地面和投影，光照中性，完整居中，图中无标题、尺寸线、字符或选中光效。
+
+每款的front/left/right/back各为一张独立PNG，以manifest.json的selectedInputs映射冻结实际文件名。提示词、直接参考路径和SHA-256记录于本款prompts.json与manifest.json；未选迭代只记生成来源，不进入平台槽位。preview.html和preview.png只供审阅，不作为平台输入。左右以生产对象自身方向命名，分别从-X和+X观察，不能靠简单镜像伪造另一侧。
+
+当前拟选文件为front.png、left-v2.png、right-v2.png、back.png；生成原图1254×1254，未用像素缩放或镜像加工。图像模型未精确保持标注比例：圆台侧图约0.0548宽高比（目标0.0645），宽台顶/底面约0.77（目标0.8136）、侧图约0.0453/0.0470（目标0.0339），侧图高度较正面约大3%/6%。已将差异列入manifest与预览，尚未取得负责人图片接受；它们是造型参考，不能声明精确尺寸QA通过。后续模型仍须满足本合同全部物理尺寸，Blender资产整理不能被替换为Unity角色scale/offset补丁。
+
+四图只改变生产输入观察姿态。Tripo原包实际坐标须在Blender中检查后再记录转换，不能假设服务返回了上述轴向；清理完成品仍须满足本文件的+Y向上、+Z向前、顶面Y=0、底面Y=-0.04及单位根变换。竖立构图不改变最终水平底座、中央留空或接地关系。
 
 ## 生产输入与候选上限
 
-生产前需同时取得两项人工回执：选择 Base 01/02 的造型方向，以及独立的 Tripo 交易前授权。历史男主／石甲兽 credits 不可复用。每一款资源由自己的 A 卡完成，彼此不混用候选或费用。
+负责人已在本对话选择两款造型并授权改用Studio现有点数。交易只允许使用已有Studio登录会话及账户点数；不调用Tripo CLI/OpenAPI，不充值API额度，不创建第三方凭据。四图须先由负责人整组接受，再消费与本款输入哈希、四槽设置和现场价格绑定的独立授权。历史男主/石甲兽额度不可复用，两张A卡仍各生产自己的一款资源。
 
 | 项目 | Base 01（A-GZ-BASE-MODEL-01） | Base 02（A-GZ-BASE-MODEL-02） |
 | --- | --- | --- |
-| 唯一视觉输入 | `assets/generated-scene-art/combat-bases/concepts/base-01.png`，SHA-256 由下单前 manifest 记录 | `assets/generated-scene-art/combat-bases/concepts/base-02.png`，SHA-256 由下单前 manifest 记录 |
-| 数量与候选 | 1 次 image-to-model，最多 1 个原始候选；失败不自动重试 | 1 次 image-to-model，最多 1 个原始候选；失败不自动重试 |
-| 可核实 Tripo 选项 | H3.1 `v3/generation/image-to-model`，`texture=false`、`pbr=false`、`geometry_quality=standard`、`smart_low_poly=true`、`quad=true`、`face_limit=5000`；固定记录 `model_seed`，不启用 parts、rig、retarget 或自动补全 | 与 Base 01 相同，但提示词明确为圆角矩形、`X=0.96 m`、`Z=1.18 m` 的四足足印 |
+| 唯一视觉输入 | `assets/generated-scene-art/combat-bases/four-views/base-01/`下front.png、left-v2.png、right-v2.png、back.png及整组获批SHA-256；原concept仅作造型参考 | `assets/generated-scene-art/combat-bases/four-views/base-02/`下同名四张独立PNG及整组获批SHA-256；原concept仅作造型参考 |
+| 数量与候选 | 一次四槽多视图提交，最多1个原始候选；失败不自动重试 | 一次四槽多视图提交，最多1个原始候选；失败不自动重试 |
+| 可核实Tripo选项 | Studio高精度H3.1、四边面、5000面；标准几何；纹理/超清几何/分部件/8K关闭，不请求PBR及AI补全，保持原私有设置。四图模式未暴露AI补全、smart_low_poly与model_seed，值记unknown | 与Base 01相同；四图对应0.96×1.18 m圆角矩形足印 |
 | 下单文字约束 | 低圆台、平顶、无角色／文字／环境、六段外环只作凹槽、根在顶面中心 | 低圆角矩形台、平顶、无角色／文字／环境、六段外环只作凹槽、根在顶面中心 |
-| 单款上限 | 35 credits：H3 image-to-model 无贴图 20 + `smart_low_poly` 10 + `quad` 5 | 35 credits：同左 |
+| 当前费用边界 | 改用Studio现有点数；此前单图现场20点已获路线授权，四图槽须重新核价，超过20点或关键设置变化时先取得本款新的具体授权 | 与Base 01分别核价、分别记录，不能混用额度 |
 
-因此两款生成交易总上限为 **70 credits（按官方 `1 credit = US$0.01` 即 US$0.70）**；不包含未授权的贴图、重试、转换、分件、rig 或平台订阅。价格与 H3.1 参数在下单当日重新核验；任务返回的 `credits_consumed` 是唯一实际费用记录。Tripo 的 H3.1 文档列出 stable `v3.1-20260211`、`quad` 与 `smart_low_poly` 参数；官方价目列出 H2/H3 无贴图 image-to-model 20 credits、`smart_low_poly` 10、`quad` 5，以及 `US$1=100 credits`。来源：[Tripo H3.1](https://developers.tripo3d.ai/en/models/v3-1)、[Tripo Pricing](https://docs.tripo3d.ai/get-started/pricing.html)。
+旧35 credits/款、合计70及美元折算来自OpenAPI计价，已由负责人本次Studio路线决定替代，不适用于Studio余额或本次交易。Studio与API点数独立：[官方说明](https://www.tripo3d.ai/help/api-plugins/tripo-studiotripo-api)。2026-10-04只读现场核验过H3.1、无贴图、四边面、5000面的单图按钮20点和Studio余额2840；未上传或生成。四视图模式下必须重新读取真实按钮价格、候选数量及完整设置，不能推断与单图相同。
+
+同日后续现场已经打开明确的前/左侧/右侧/后四槽（不使用最多10张的批量模式）：H3.1、四边面、5000面、纹理和超清几何关闭，生成按钮仍为20点、余额仍为2840。该报价在上传图片之前取得，实际下单前仍须复核，未生成任务、未消费点数；截图见本对话`tripo-studio-fourview-quote.png`。没有独立候选数量控件，本合同以一次点击、一个平台任务和禁止重试限制候选。
+
+下单前记录四张获批图片的哈希、实际槽位映射、H3.1页面字面量、全部可见设置和精确Studio点数授权。下单后以同一平台任务ID、生成状态、页面费用及余额差额核对真实费用；seed或内部参数未暴露时如实记unknown。价格超出授权、出现额外收费步骤、关键设置变化或交易结果不明时停止，不再次点击、不自动重试。
 
 下单后的本地清理仍属于各 A 卡：仅移除非网格杂项、按本合同精确缩放和根轴整理、导出一次 FBX，并以 factory-empty Blender 回读记录接地／轴向／网格／哈希。生成图不等于可接入模型，未获回执不得调用 Tripo。
 
 ## 下游冻结与未解锁项
 
-- `A-GZ-BASE-MODEL-01`、`A-GZ-BASE-MODEL-02` 消费各自单一图像与参数；本轮只补齐其生产路径、完成条件和费用门，仍保持 blocked。
+- `A-GZ-BASE-MODEL-01`、`A-GZ-BASE-MODEL-02`本轮只准备各自四张独立输入和更新生产合同；正式生成仍等待四图接受、四槽核价及对应交易授权，保持blocked。
 - `U-GZ-BASE-MODELS-01` 只能在两份清理资产和 `U-GZ-PLAYTEST-BASE-FIT-01` 都完成后，替换临时 Cylinder，并以 Unity Game View／运行时取证两种足印、六向、阵营带和选中高光。
 - 没有改变角色现有独立资源、正式战斗规则、数值、骨骼、动画或全局 UI；最终正式入口重测仍由 `V-GZ-ART-SLICE-01` 负责。
