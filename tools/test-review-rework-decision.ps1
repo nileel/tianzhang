@@ -7,13 +7,16 @@ function Assert-Equal { param($Actual, $Expected, [string]$Message) if ($Actual 
 function Write-Utf8 { param([string]$Path, [string]$Text) [IO.Directory]::CreateDirectory((Split-Path -Parent $Path)) | Out-Null; [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false)) }
 
 function New-Card {
-  param([string]$Id, [string]$Route, [string]$Owner, [string]$State, [string]$Title)
+  param([string]$Id, [string]$Route, [string]$Owner, [string]$State, [string]$Title, [string]$ExecutionModel)
   $meta = [ordered]@{
-    schemaVersion = 1; id = $Id; title = $Title; priority = 'P1'; route = $Route; owner = $Owner
+    schemaVersion = 2; id = $Id; title = $Title; priority = 'P1'; route = $Route; owner = $Owner
     domain = 'automation'; stage = 'implementation'; dispatchState = $State; blockedBy = @(); stateReason = 'Codex 复审不通过，等待返工决定'
     expectedPaths = @("开发管理/任务卡/$Id.txt", "开发管理/任务归档/$Id.txt", '开发管理/当前任务队列.txt', '开发管理/任务列表/自动化任务.txt', '开发管理/未通过审核清单.txt')
     sourceBacklog = '开发管理/任务列表/自动化任务.txt'
+    riskPreflight = @{ explicitRefs = @(); matched = @(); gates = @() }
   }
+  if ($Route -ceq 'codex_review') { $meta.expectedPaths += @('开发管理/AI合作沟通.txt', "开发管理/AI合作归档/$Id-交接归档.txt") }
+  if ($ExecutionModel) { $meta.executionModel = $ExecutionModel }
   $body = @("# $Id · $Title", '', '## 来源与当前边界', 'fixture', '## 必查范围', 'fixture', '## 实施范围', 'fixture', '## 禁止项', 'fixture', '## 验证', 'fixture', '## 完成条件', 'fixture', '## 停止条件', 'fixture') -join "`n"
   @('---TASK-META---', ($meta | ConvertTo-Json -Depth 20), '---TASK-BODY---', $body) -join "`n"
 }
@@ -50,6 +53,7 @@ function Get-ContextDigest {
     automationInputs = $automationInputs
     sourceBacklog = [string]$Metadata.sourceBacklog
   }
+  if ($Metadata.PSObject.Properties.Name -ccontains 'executionModel') { $context.executionModel = [string]$Metadata.executionModel }
   $json = $context | ConvertTo-Json -Compress -Depth 20
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
 }
@@ -79,12 +83,14 @@ $scriptPath = Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
 try {
   [IO.Directory]::CreateDirectory((Join-Path $root 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $root 'tools\check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $root 'tools/get-experience-risk-preflight.ps1')
+  Write-Utf8 (Join-Path $root '开发管理/经验库/风险索引.json') '{"schemaVersion":1,"experiences":[],"gates":[]}'
   & git -C $root init -q
   & git -C $root config user.name 'Review Rework Test'
   & git -C $root config user.email 'review-rework@example.invalid'
 
-  Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-A.txt') (New-Card 'TASK-A' 'external_execute' 'deepseek' 'blocked' '返工 A')
-  Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-B.txt') (New-Card 'TASK-B' 'external_execute' 'deepseek' 'blocked' '返工 B')
+  Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-A.txt') (New-Card 'TASK-A' 'codex_execute' 'codex' 'blocked' '返工 A' 'gpt-6.1-sol')
+  Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-B.txt') (New-Card 'TASK-B' 'codex_execute' 'codex' 'blocked' '返工 B' 'gpt-6.1-sol')
   Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-C.txt') (New-Card 'TASK-C' 'external_execute' 'deepseek' 'blocked' '保持阻塞 C')
   Write-Utf8 (Join-Path $root '开发管理\任务卡\TASK-Z.txt') (New-Card 'TASK-Z' 'codex_execute' 'codex' 'ready' '已有任务 Z')
   $queue = @(
@@ -97,8 +103,8 @@ try {
     '# 自动化任务', '',
     '| ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |',
     '|---|---|---|---|---|---|---|',
-    '| TASK-A | P1 | deepseek | 阻塞 | — | 返工 A | 开发管理/任务卡/TASK-A.txt |',
-    '| TASK-B | P1 | deepseek | 阻塞 | — | 返工 B | 开发管理/任务卡/TASK-B.txt |',
+    '| TASK-A | P1 | codex | 阻塞 | — | 返工 A | 开发管理/任务卡/TASK-A.txt |',
+    '| TASK-B | P1 | codex | 阻塞 | — | 返工 B | 开发管理/任务卡/TASK-B.txt |',
     '| TASK-C | P1 | deepseek | 阻塞 | — | 保持阻塞 C | 开发管理/任务卡/TASK-C.txt |',
     '| TASK-Z | P1 | codex | 已排队 | — | 已有任务 Z | 开发管理/任务卡/TASK-Z.txt |', ''
   ) -join "`n"
@@ -111,12 +117,14 @@ try {
   $aMeta = Read-Meta (Join-Path $root '开发管理\任务卡\TASK-A.txt')
   Assert-Equal $aMeta.route 'external_execute' 'A route changed incorrectly'
   Assert-Equal $aMeta.owner 'deepseek' 'A owner changed incorrectly'
+  Assert-True ($aMeta.PSObject.Properties.Name -cnotcontains 'executionModel') 'DeepSeek rework retained a Codex executionModel'
 
   $b = Invoke-State 'TASK-B' (New-Context 'TASK-B' 'B' 1)
   Assert-Equal $b.dispatchState 'ready' 'B did not restore ready'
   $bMeta = Read-Meta (Join-Path $root '开发管理\任务卡\TASK-B.txt')
   Assert-Equal $bMeta.route 'codex_execute' 'B route was not transferred to Codex execution'
   Assert-Equal $bMeta.owner 'codex' 'B owner was not transferred to Codex'
+  Assert-Equal $bMeta.executionModel 'gpt-6.1-sol' 'Codex rework lost the task executionModel'
 
   $queueText = [IO.File]::ReadAllText((Join-Path $root '开发管理\当前任务队列.txt'))
   Assert-True ($queueText.IndexOf('TASK-A', [StringComparison]::Ordinal) -lt $queueText.IndexOf('TASK-B', [StringComparison]::Ordinal)) 'A queue position was not restored'
@@ -138,6 +146,8 @@ try {
   try {
     [IO.Directory]::CreateDirectory((Join-Path $integrationRoot 'tools')) | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $integrationRoot 'tools\check-task-cards.ps1')
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $integrationRoot 'tools/get-experience-risk-preflight.ps1')
+    Write-Utf8 (Join-Path $integrationRoot '开发管理/经验库/风险索引.json') '{"schemaVersion":1,"experiences":[],"gates":[]}'
     & git -C $integrationRoot init -q -b master
     & git -C $integrationRoot config user.name 'Review Rework Integration Test'
     & git -C $integrationRoot config user.email 'review-rework-integration@example.invalid'

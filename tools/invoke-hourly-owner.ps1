@@ -245,6 +245,7 @@ function Get-TaskContextDigest {
     automationInputs = @(Get-TaskAutomationInputs $Metadata | ForEach-Object { [ordered]@{ path = $_.Path; bytes = $_.Bytes; sha256 = $_.Sha256 } })
     sourceBacklog = [string]$Metadata.sourceBacklog
   }
+  if ($Metadata.PSObject.Properties.Name -ccontains 'executionModel') { $context.executionModel = [string]$Metadata.executionModel }
   $json = $context | ConvertTo-Json -Compress -Depth 20
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
 }
@@ -1490,6 +1491,11 @@ try {
         if ([string]$run.route -cne 'queue_maintenance') {
           $script:stage = 'experience_preflight'
           $preflightResultPath = Invoke-ExperiencePreflight -Run $run
+        }
+        if ($Owner -ceq 'codex' -and [string]$run.route -cne 'queue_maintenance') {
+          $script:stage = 'execution_model'
+          $task = Read-RunTaskMetadata $run
+          $script:adapter = Get-HourlyOwnerAdapter -Owner $Owner -Model $Model -ToolsRoot $PSScriptRoot -TaskMetadata $task.Metadata
         }
         $candidateArgs = Get-HourlyCandidateArguments -Adapter $script:adapter -Run $run -StateRoot $script:effectiveStateRoot -TimeoutSeconds $ResponsibilityTimeoutSeconds -ResumeContextPath $resumeContext -PreflightResultPath $preflightResultPath
         $script:stage = 'candidate'

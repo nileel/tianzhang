@@ -309,6 +309,10 @@ function Get-Card {
   Assert-Contract ((($metadata.route -in @('codex_execute', 'codex_review')) -and $metadata.owner -ceq 'codex') -or ($metadata.route -ceq 'external_execute' -and $metadata.owner -in @('deepseek', 'claude'))) "route/owner mismatch: $Path"
   Assert-Contract (($null -eq $metadata.blockedBy) -or (($metadata.blockedBy -is [System.Collections.IEnumerable]) -and -not ($metadata.blockedBy -is [string]))) "invalid blockedBy: $Path"
   Assert-AutomationInputs -Metadata $metadata -Path $Path
+  if (Test-ObjectField $metadata 'executionModel') {
+    Assert-Contract ($metadata.owner -ceq 'codex' -and $metadata.route -cin @('codex_execute', 'codex_review')) "executionModel requires a Codex route/owner: $Path"
+    Assert-Contract ($metadata.executionModel -is [string] -and $metadata.executionModel -cmatch '^gpt-[A-Za-z0-9][A-Za-z0-9._-]*$' -and $metadata.executionModel -notmatch '[\x00-\x1F\x7F]') "invalid executionModel: $Path"
+  }
   $hasCheckpoint = Test-ObjectField $metadata 'automationCheckpoint'
   $hasDecision = Test-ObjectField $metadata 'automationDecision'
   Assert-Contract (-not ($hasCheckpoint -and $hasDecision)) "automationCheckpoint and automationDecision are mutually exclusive: $Path"

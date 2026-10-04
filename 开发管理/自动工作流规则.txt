@@ -25,6 +25,7 @@
 - adapter／Codex／DeepSeek wrapper 对非 `queue_maintenance` 只接受批准 StateRoot 中上述精确绑定的结果，并把其中 `notice`、`mustRead` 正文和门禁指针直接放入首条责任提示；它们不自行决定是否运行预检，也不复制匹配算法。`queue_maintenance` 不运行业务预检、不传结果路径，但其创建或重新 ready 的卡必须通过 schema 2 投影检查。预检失败时不启动模型、不伪造零命中，沿用 `attention_required`、worktree 保留和稳定 `experience_preflight_*` detailCode；不增加 runtime、重试或 owner 专属分支。
 - 收尾候选检查只复用原任务本轮已有事实、diff 和验证，不新增模型调用。DeepSeek 仅在转 `codex_review` 前写 `provisional`；Codex 复审保留／修正时改为 `pending`、不成立时删除；Codex 自有完成任务在归档前直接写 `pending`。候选语义、查重、正式经验 ID、整理任务和风险索引均不属于 owner prompt、adapter 或 runtime 的职责。
 - `tools/hourly-owner-adapter.ps1` 只定义 owner 的 route、candidate 启动脚本、模型／身份和正式结果合同。adapter 不读写 runtime，不含 Git 集成、通知或清理逻辑。
+- Codex 触发模型只负责运行薄触发器；共享入口的 `-Model` 是缺省执行模型。非 QueueMaintenance 任务在预检后、CLI 启动前重验当前卡与 claim 的摘要、route、owner 和 ready 状态，并将卡头可选 `executionModel` 交给 adapter 优先选择。缺省时保持入口模型；非法字段在任务卡检查阶段拒绝，模型不可用按原失败合同停止，不降级或重试。模型选择绑定现有任务卡摘要与 checkpoint／决策上下文摘要，不增加 runtime 状态。Canary 直接验证入口传入的模型。触发器继续不读卡、不改全局模型配置。
 - Codex candidate 通过 `tools/invoke-codex-candidate.ps1` 和 `tools/codex-cli-session.ps1` 启动；必须使用 `codex exec --output-schema` 与 `--output-last-message` 的私有结构化终态，不从自然语言正文猜测状态。
 - Codex candidate 正常完成提交后，最终 `changedPaths` 只按 run 的 `baseCommit..HEAD` 执行 `git -c core.quotepath=false diff --name-only --no-renames` 生成并排序去重；文件移动必须同时报告源路径和目标路径，不得用 `git show --name-only`、rename detection 或其他压缩表示替代。共享入口继续按同一口径计算真实集合并要求终态精确相等。
 - DeepSeek candidate 通过 `tools/invoke-deepseek-responsibility.ps1` 启动，只接受本机 `http://127.0.0.1:15721` 同源 gateway 和 `deepseek-flash`（当前 API 版本 `DeepSeek-V4.1-Flash`），身份或模型不符立即停止。
@@ -40,7 +41,7 @@
 ## 原子任务与任务内子智能体
 
 - ready 任务应已满足 `开发管理/AI协作规则.txt` 的原子任务条件；共享入口和 PowerShell 脚本不根据文件数、行数、预计时长或模型判断任务大小，也不动态创建、拆分或重排任务卡。
-- 后续每项任务必须按 `开发管理/AI协作规则.txt#任务卡中的模型协作提示` 评估复杂度并选择组合。QueueMaintenance 只为本轮实际新建或准备 ready 的卡填写模型协作；owner 智能体在业务写入前核对当轮执行／复审的组合和真实工具能力，简单任务沿用默认单模型。评估和辅助模型选择由责任智能体完成；薄触发器、adapter 与共享内核不评分、不调换主模型，不增加 schema/runtime 字段，已有缺能力和停止合同继续适用。
+- 后续每项任务必须按 `开发管理/AI协作规则.txt#任务卡中的模型协作提示` 评估复杂度并选择组合。QueueMaintenance 只为本轮实际新建或准备 ready 的卡填写模型协作及按需填写 `executionModel`；owner 智能体在业务写入前核对当轮执行／复审的组合和真实工具能力，简单任务沿用默认单模型。评估和辅助模型选择由责任智能体完成；薄触发器、adapter 与共享内核不评分，共享入口只在启动前机械选择卡头指定的执行模型，启动后不调换主模型，不增加 schema 版本或 runtime 字段，已有缺能力和停止合同继续适用。
 - owner 模型读取已领取任务的直接事实后，在业务写入前做最小原子性检查。确认任务无法原子闭环时，不实施、不生成 candidate，以现有失败终态返回稳定 `detailCode=task_requires_decomposition`；共享入口据此把同一 run 更新为 `attention_required`，后续只按 `开发管理/自动工作流恢复规则.txt` 人工处置。
 - 实施中才暴露不可拆合的职责冲突时，owner 模型立即停止叠加补丁，不提交、不集成，保留 owner worktree、最小失败证据和已验证事实后进入 `attention_required`。worker 不边实施边创建零散子卡，也不把半成品机械拆成多个 candidate。
 - owner 模型可在执行环境实际暴露能力时，按 `开发管理/AI协作规则.txt` 在同一任务内使用子智能体；子智能体对 schema 5 和共享入口透明，不拥有 run、branch、candidate、任务投影或恢复状态。项目不依赖实验性 agent team。

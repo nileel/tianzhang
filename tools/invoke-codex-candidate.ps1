@@ -207,7 +207,7 @@ function New-Prompt {
   $finalizerCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 -RepositoryRoot $(Quote-Single $script:root) -ExpectedPaths $(Quote-Single $pathText) -CommitMessage $(Quote-Single "candidate($TaskId): Codex implementation") -RequireAutomationMetadata -AutomationTask $(Quote-Single $TaskId) -AutomationState 'completed' -AutomationResult '<RESULT>' -AutomationImpact '<IMPACT>' -AutomationVerify '<VERIFY>' -AutomationPlain '<PLAIN>'"
   @(
     '[TZG_CODEX_CANDIDATE]'
-    "模型核验证明：外层已核验并传入 $Model；返回 model 必须精确等于该值。"
+    "模型启动证明：共享入口已按冻结任务卡 executionModel（未指定时沿用入口默认值）选定 $Model，并通过 codex exec -m 传入；返回 model 必须精确等于该值。"
     "TaskId: $TaskId"; "RunId: $RunId"; "Route: $Route"; "RepositoryRoot: $script:root"; "CandidateBranch: $($Run.candidateBranch)"; "BaseCommit: $($Run.baseCommit)"
     $routeInstruction; $resumeInstruction
     $preflightInstruction

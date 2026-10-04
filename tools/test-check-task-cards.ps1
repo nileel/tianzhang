@@ -263,6 +263,25 @@ try {
   Assert-True ($null -eq $globalJson.taskState) 'global JSON invented taskState'
   Assert-True ($null -eq $globalJson.postcondition) 'global JSON invented postcondition'
 
+  foreach ($taskRoute in @('codex_execute', 'codex_review')) {
+    $modelReady = Get-Schema2Metadata -Id 'T-READY-01' -Title '合法 ready 卡' -Route $taskRoute
+    $modelReady.executionModel = 'gpt-6.1-sol'
+    Set-Card $tempRoot $modelReady
+    Set-Queue $tempRoot @($modelReady)
+    Set-Backlog $tempRoot @($modelReady, $fixture.Blocked)
+    Assert-Success "valid executionModel for $taskRoute" $tempRoot
+  }
+  foreach ($badModel in @($null, '', 'unknown', ' gpt-6.1-sol', "gpt-6.1-sol`n", 'gpt-6.1-sol --help', 61, @('gpt-6.1-sol'))) {
+    $modelReady.executionModel = $badModel
+    Set-Card $tempRoot $modelReady
+    Assert-Failure 'invalid executionModel' $tempRoot 'invalid executionModel'
+  }
+  $modelReady = Get-Schema2Metadata -Id 'T-READY-01' -Title '合法 ready 卡' -Route external_execute -Owner deepseek
+  $modelReady.executionModel = 'gpt-6.1-sol'
+  Set-Card $tempRoot $modelReady
+  Assert-Failure 'external executionModel' $tempRoot 'executionModel requires a Codex route/owner'
+  $fixture = New-Fixture $tempRoot
+
   $inputReady = Copy-Metadata $fixture.Ready
   $inputReady.automationInputs = @((Get-AutomationInput))
   Set-Card $tempRoot $inputReady

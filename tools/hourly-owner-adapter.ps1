@@ -17,11 +17,19 @@ function Get-HourlyOwnerAdapter {
   param(
     [Parameter(Mandatory = $true)][ValidateSet('codex', 'deepseek')][string]$Owner,
     [AllowNull()][string]$Model,
-    [Parameter(Mandatory = $true)][string]$ToolsRoot
+    [Parameter(Mandatory = $true)][string]$ToolsRoot,
+    [AllowNull()][object]$TaskMetadata
   )
 
   if ($Owner -ceq 'codex') {
     if ([string]::IsNullOrWhiteSpace($Model)) { throw 'Codex model is required' }
+    if ($null -ne $TaskMetadata -and $TaskMetadata.PSObject.Properties.Name -ccontains 'executionModel') {
+      if ([string]$TaskMetadata.owner -cne 'codex' -or [string]$TaskMetadata.route -cnotin @('codex_execute', 'codex_review') -or
+        $TaskMetadata.executionModel -isnot [string] -or -not (Test-HourlyOwnerModelVerified -Owner codex -Model $TaskMetadata.executionModel)) {
+        throw 'Invalid task executionModel'
+      }
+      $Model = $TaskMetadata.executionModel
+    }
     return [pscustomobject][ordered]@{
       owner = 'codex'
       allowedRoutes = @('codex_execute', 'codex_review', 'queue_maintenance')

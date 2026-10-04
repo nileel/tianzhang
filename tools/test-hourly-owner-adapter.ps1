@@ -14,6 +14,19 @@ Assert-True (-not (Test-HourlyOwnerModelVerified -Owner codex -Model "gpt-test`n
 Assert-True (-not (Test-HourlyOwnerModelVerified -Owner codex -Model '')) 'Empty Codex model was accepted'
 Assert-True (Test-HourlyOwnerModelVerified -Owner deepseek -Model 'unknown') 'DeepSeek was incorrectly routed through the Codex model guard'
 Assert-Equal $codex.model 'gpt-test' 'Codex model was not preserved'
+foreach ($taskRoute in @('codex_execute', 'codex_review')) {
+  $taskAdapter = Get-HourlyOwnerAdapter -Owner codex -Model 'gpt-5.6-terra' -ToolsRoot $PSScriptRoot -TaskMetadata ([pscustomobject]@{ route = $taskRoute; owner = 'codex'; executionModel = 'gpt-6.1-sol' })
+  Assert-Equal $taskAdapter.model 'gpt-6.1-sol' 'Task executionModel did not override the trigger model'
+  $taskArgs = Get-HourlyCandidateArguments -Adapter $taskAdapter -Run ([pscustomobject]@{ route = $taskRoute; worktree = 'C:\fixture'; taskId = 'T-MODEL'; runId = 'R-MODEL' }) -StateRoot 'C:\state' -TimeoutSeconds 10 -PreflightResultPath 'C:\state\preflight.json'
+  Assert-Equal $taskArgs[[array]::IndexOf($taskArgs, '-Model') + 1] 'gpt-6.1-sol' 'Selected task model did not reach candidate arguments'
+}
+$defaultAdapter = Get-HourlyOwnerAdapter -Owner codex -Model 'gpt-5.6-terra' -ToolsRoot $PSScriptRoot -TaskMetadata ([pscustomobject]@{ route = 'codex_execute'; owner = 'codex' })
+Assert-Equal $defaultAdapter.model 'gpt-5.6-terra' 'Task without executionModel changed the default'
+foreach ($badModel in @($null, '', 'unknown', ' gpt-6.1-sol', "gpt-6.1-sol`n", 'gpt-6.1-sol --help', 61, @('gpt-6.1-sol'))) {
+  $rejected = $false
+  try { $null = Get-HourlyOwnerAdapter -Owner codex -Model 'gpt-5.6-terra' -ToolsRoot $PSScriptRoot -TaskMetadata ([pscustomobject]@{ route = 'codex_execute'; owner = 'codex'; executionModel = $badModel }) } catch { $rejected = $true }
+  Assert-True $rejected 'Invalid task executionModel fell back to the trigger model'
+}
 Assert-Equal ($codex.allowedRoutes -join ',') 'codex_execute,codex_review,queue_maintenance' 'Codex routes are invalid'
 Assert-Equal $deepseek.model 'deepseek-flash' 'DeepSeek model is invalid'
 Assert-Equal $deepseek.identity 'DeepSeek V4.1 Flash' 'DeepSeek identity is invalid'

@@ -41,6 +41,7 @@ function Get-TaskContextDigest {
     automationInputs = $automationInputs
     sourceBacklog = [string]$Metadata.sourceBacklog
   }
+  if ($Metadata.PSObject.Properties.Name -ccontains 'executionModel') { $context.executionModel = [string]$Metadata.executionModel }
   $json = $context | ConvertTo-Json -Compress -Depth 20
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
 }
@@ -169,6 +170,7 @@ try {
       }
       $meta.route = [string]$target.route
       $meta.owner = [string]$target.owner
+      if ($meta.owner -cne 'codex') { $meta.PSObject.Properties.Remove('executionModel') }
       $meta.dispatchState = 'ready'
       $meta.stateReason = "负责人已通过 $([string]$context.decisionId) 选择 $([string]$target.label) 按未通过审核清单返工"
       foreach ($field in @('automationCheckpoint', 'automationReply')) {
