@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "两A卡一次FBX/尺寸/UV/两槽回读完成，本人接受原网格例外并要求直接Unity使用；四份源件哈希和现有provider/profile/Builder接入路径已冻结。",
+  "stateReason": "两批准原候选FBX＋4K已接入正式唯一provider/profile；Unity保存回读、3/3定向PlayMode及正式1920流程/Game View通过。已接受几何例外保留；本人最终实玩待V。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
@@ -157,3 +157,9 @@
 - 新底座厚度0.04 m；根仍世界Y=.34，base根/body承重原点均为本地Y=.04，底面.34、脚底/bbox顶.38。这是原合同一次替换后的精确接地关系，不新增偏移层，角色scale1.4保持。原表面偏差不声称消除。
 - 验证：Builder保存回读两Prefabs/profile映射和实际Unity包络；定向provider PlayMode双足/宽足印、六向及移动/攻受击/施法后的接地；既有GuanzhongPlaytestFlowPlayModeTests从StartMenu新建槽进入正式场景，保留真实Game View截图/运行数值。U只证明接入，不代签V本人实玩。
 - 单主责，无独立工作面；UNITY_STRUCTURE地图未找到，以实际源码/asmdef/序列化引用路由。没有新Manager、新模块、规则或动画。
+
+## 实施与完成证据
+
+- 现有provider/profile/Builder新增独立双底座接线与窄带/选中层；角色源/Prefab、规则、动画与其他UI不变。新资产和来源哈希见开发管理/双通用底座Unity接入验收记录.txt。
+- 图形Unity Test Runner 3/3；双足印六向、Move/Attack/Hit/Cast与复位实测底面.34、idle顶/脚底.38、厚.04。正式StartMenu新槽flow-1920-d3d4116a完整自然胜利、返城、一次奖励与读档通过；三张实际Game View已查看。表面起伏/开放边仍为本人已接受的例外，不声明修平。
+- 数据链与19程序集/2asmref门禁通过；单主责复核完整差异，无新经验候选，不代签V用户实玩。

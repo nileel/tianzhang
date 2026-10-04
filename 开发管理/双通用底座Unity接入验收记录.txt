@@ -1,0 +1,49 @@
+# 双通用底座Unity接入验收记录
+
+任务：U-GZ-BASE-MODELS-01
+日期：2026-10-04
+状态：正式双Profile接入与真实Game View取证通过，最终本人实玩未接受。
+
+## 来源、所有者与接线
+
+- 本人接受现有网格并直接使用的回复见两A卡归档。Base01来源a067a77e-413e-41f0-8119-76dcccce9ddd，Base02来源e6116b82-06a7-4253-af7c-0a00cd0838b9，各40 Studio点/一次几何/一次4K/一次FBX，不再生产。
+- 唯一正式链：AdventureScene.unity provider.profileSet GUID 3efef3dc211373a4ba192d8725f65e0a → AdventureSceneInstaller.Awake → EncounterCoordinator → provider.Prepare/Spawn；双Profile新增独立combatBasePrefab与approvedBaseModelAssetPath/SHA256/包络，替换CreateFactionBase的Cylinder。实例名Static3DCombatBase，body仍为已有角色Prefab。
+- 现有Builder的BuildCombatBases只消费四份锁定源件，在Assets/Art/Environments/CombatBases保存两FBX/PNG、各两材质/Prefab与共享SelectionHighlight材质，并保存重读原ProfileSet。原角色、反馈、场景、2D实验与战斗规则不变；全量Build的CreateProfile保留对应底座映射。
+- 竞争所有者已排除：探索AdventureUnitSpawner/UnitVisual和独立2D实验adapter不是正式战斗Static3DCombatUnit对象；ProfileSet被Adventure场景消费，原角色Prefab中没有新底座。没有新底座管理器/动画/模块化立绘。
+- 中央BaseGeometry只绑定原4096² PNG及0.8色因子；材质槽1 FactionTintBand由实例MaterialPropertyBlock接受玩家cyan/敌red，槽0为空block。独立SelectionHighlight为局部平面Y=.002的轮廓；HUD既有选择/移动选择状态与provider实际movements驱动，原可达格和路径owner不变。
+
+## Unity实际尺寸与运行数值
+
+- Unity 6000.3.18f1。FBX importer：globalScale=1、useFileScale=true、bakeAxisConversion=true、静态/可读/无动画、灯、相机与BlendShape；贴图sRGB、max4096、非alpha。导入器保留文件单位在内部Transform，Mesh自身包络是厘米转换后的值，renderer和实际顶点TransformPoint后的米制包络才是正式尺寸；底座Prefab及运行时根scale=1。轮廓依据renderer.bounds，未用额外补偿比例。
+- Base01实际包络.62×.04×.62 m，Unity4595顶点/7714三角面；Base02 .96×.04×1.18 m，11051顶点/14567三角面。Unity顶点因法线/UV处理分裂，原三角数量保持；分别480/901源三角划入窄带。
+- 六向90/150/210/270/330/30两款均通过；idle根Y=.34、base底.34、bbox顶/角色脚底.38、厚.04，body localY=.04且既有scale1.4保留。Attack顶/脚底.3776厚.0376，Hit .3824/.0424，Cast .3840/.0440；动作复位均.38/.04，底面始终.34。逐格移动、取消和同ID复建通过。
+- 这些是bbox接地；原顶底起伏/开放边仍为本人接受的accepted_exception，不宣称承重平面已修平。角色和底座共用既有动作根Scale，未另添grounding补丁。
+
+## 验证与真实正式入口
+
+- -batchmode -nographics -executeMethod TianZhang.Editor.FormalStatic3DCombatPieceBuilder.BuildCombatBases：编译、两导入包络/4K、两槽、保存重读成功；日志builder.log。
+- 图形PlayMode（未使用-nographics），-runTests -testPlatform PlayMode -testFilter "TianZhang.Tests.PlayMode.Static3DCombatUnitPresentationProviderPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Victory1920"：3/3、失败0，XML由run-unity-playmode-tests.ps1 -ValidateResultOnly复核。双正式资产fixture与StartMenu真实新槽正式流程分别证明数值和可见接线。
+- 正式flow-1920-d3d4116a，小族默认五先天8，StartMenu→关中城接悬赏→野外石甲兽→22次确认命令自然胜利→回城领奖→再次领取bounty_claim_repeated→保存/读取完整状态；生产随机源与存档未替换。原证据src/Logs/flow/20261004-232956-1920-victory。
+- 实际1920×1080渲染已查看：battle-entry、selected-enemy、battle-after-action展示两足印、窄阵营带、独立选中轮廓；不是Blender黑图、概念图、Editor静态预览或比较台。
+- check-data-chain：29/29、84/84、31/31、613中文键；check-unity-assembly-boundaries：19程序集/2asmref。风险投影matched/gates/mustRead为空且与schema2一致。Unity仅自动追加ProjectSettings尾随空白，恢复原字节，不作为业务改动。
+- 单主责，没有子智能体或跨模块引用；runtime provider低于500行，Builder原有超过500行，本次仍承担同一资产导入职责，未新增运行时责任。
+
+## 能力与验收边界
+
+- 技能：tianzhang-blender-pipeline的blender_lab；unity-agent-workflows已读取owner/visible-object/asset-source/UI/serialized/validation/shared-caller/ai-workflows/runtime-visible/structure/modular参考。项目UNITY_STRUCTURE地图不存在，采用实际源码/asmdef/场景GUID。Unity MCP不可用；真实证据来自图形Unity Test Runner与Game View捕获。
+- 不代签V-GZ-ART-SLICE-01本人最终实玩，不关闭父项；四关键画面/同版本入口在V卡继续交付，连续录像仍须真实取得，不能把本次稀疏截图编成连续录像。
+
+| 源输入 | 字节 | SHA-256 |
+| --- | --- | --- |
+| assets/source/combat-bases/base-01/base-01-basecolor.png | 18218188 | 64b13b3bf35b4cceea3f9fafce3b80609abced133900cdc9cc28982bdf8e8301 |
+| assets/source/combat-bases/base-01/base-01-source.fbx | 275628 | 3e7dc49edbe0a35dbacd939583c92f693636cff482e5cd8f47bea9c1478d1386 |
+| assets/source/combat-bases/base-02/base-02-basecolor.png | 22042962 | 0be5fc564938f36e8136e836fc2dba1e3c8c381a86830da2729e82b65b33141e |
+| assets/source/combat-bases/base-02/base-02-source.fbx | 576812 | 14fe780d187d46b1f5fd5f4021e6bbc9443e265bac6eeb7d9e4b20cea9ab5acc |
+
+| Unity证据 | SHA-256 |
+| --- | --- |
+| artifacts/combat-bases-unity-20261004/battle-entry.png | fad23f2cbfcb694b229ccb24f53628d4301ded12eb62a9ee048461cb004d6c94 |
+| artifacts/combat-bases-unity-20261004/selected-enemy.png | 16f9efc437df9fc73d420aad2d85c77ec79f031e9ab9f1c9105d32796946fed5 |
+| artifacts/combat-bases-unity-20261004/battle-after-action.png | 5c63f0bb112f15f5426a4ec75afcecc7e73df11c8c3b38c9f928d3c879b6580a |
+| artifacts/combat-bases-unity-20261004/playmode.xml | 7e95d404fb425ef4c1602ce6c146ebcae6b0b4c7af89981d7d9e740340447afc |
+| artifacts/combat-bases-unity-20261004/runtime-base-evidence.txt | 127213eb9c512fc30cce18f38f747280e877c3eb0b49650b4e4043de5d436eb9 |

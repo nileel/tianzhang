@@ -45,6 +45,12 @@ namespace TianZhang.Tests.PlayMode
             Transform enemyBody = FindBody(enemyRoot);
             AssertBodyAndRootScale(playerRoot, playerBody, Vector3.one);
             AssertBodyAndRootScale(enemyRoot, enemyBody, Vector3.one);
+            AssertBaseSource(playerRoot, new Vector3(0.62f, 0.04f, 0.62f), 7714, Color.cyan);
+            AssertBaseSource(enemyRoot, new Vector3(0.96f, 0.04f, 1.18f), 14567, Color.red);
+            provider.SetSelectionHighlight(enemy.CombatantId);
+            Assert.IsFalse(playerRoot.GetComponentInChildren<LineRenderer>(true).enabled);
+            Assert.IsTrue(enemyRoot.GetComponentInChildren<LineRenderer>(true).enabled);
+            provider.SetSelectionHighlight(null);
 
             for (int facing = 0; facing < Static3DCombatUnitPresentationProfileSet.RequiredSixDirectionYawDegrees.Length; facing++)
             {
@@ -212,11 +218,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.Less(Vector3.Distance(Vector3.Scale(expectedRootScale, BodyScale), body.lossyScale), 0.00001f);
             MeshRenderer renderer = body.GetComponentInChildren<MeshRenderer>(true);
             Assert.IsNotNull(renderer);
-            MeshRenderer factionBase = root.transform.Find("Static3DCombatBase").GetComponent<MeshRenderer>();
+            MeshRenderer factionBase = root.transform.Find("Static3DCombatBase").GetComponentInChildren<MeshRenderer>();
             Assert.AreEqual(0.34f, root.transform.position.y, 0.0001f);
             Assert.AreEqual(root.transform.position.y, factionBase.bounds.min.y, 0.0001f,
                 "The base bottom must stay on the battlefield plane during actions.");
-            Assert.AreEqual(0.08f * expectedRootScale.y, factionBase.bounds.size.y, 0.0001f);
+            Assert.AreEqual(0.04f * expectedRootScale.y, factionBase.bounds.size.y, 0.0001f);
             Assert.AreEqual(factionBase.bounds.max.y, renderer.bounds.min.y, 0.0001f,
                 "The body foot must stay on the base top through root action scaling.");
             TestContext.WriteLine($"contact:{root.name}:rootY={root.transform.position.y:F4},rootScale={expectedRootScale},bodyScale={body.localScale},baseBottom={factionBase.bounds.min.y:F4},baseTop={factionBase.bounds.max.y:F4},foot={renderer.bounds.min.y:F4},thickness={factionBase.bounds.size.y:F4}");
@@ -225,6 +231,39 @@ namespace TianZhang.Tests.PlayMode
         private static void AssertYaw(GameObject root, float expectedYaw)
         {
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(expectedYaw, root.transform.eulerAngles.y)), 0.001f);
+        }
+
+        private static void AssertBaseSource(GameObject root, Vector3 size, int triangles, Color faction)
+        {
+            Transform combatBase = root.transform.Find("Static3DCombatBase");
+            MeshFilter filter = combatBase.GetComponentInChildren<MeshFilter>();
+            MeshRenderer renderer = combatBase.GetComponentInChildren<MeshRenderer>();
+            var localBounds = new Bounds();
+            bool first = true;
+            foreach (Vector3 vertex in filter.sharedMesh.vertices)
+            {
+                Vector3 point = combatBase.InverseTransformPoint(filter.transform.TransformPoint(vertex));
+                if (first) { localBounds = new Bounds(point, Vector3.zero); first = false; }
+                else localBounds.Encapsulate(point);
+            }
+            Assert.Less(Vector3.Distance(localBounds.size, size), 0.0001f);
+            Assert.AreEqual(Vector3.one, combatBase.localScale);
+            Assert.AreEqual(triangles, filter.sharedMesh.triangles.Length / 3);
+            Assert.AreEqual(2, filter.sharedMesh.subMeshCount);
+            Assert.AreEqual(4096, renderer.sharedMaterials[0].mainTexture.width);
+            Assert.AreEqual(new Color(0.8f, 0.8f, 0.8f), renderer.sharedMaterials[0].GetColor("_BaseColor"));
+            var block = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(block, 0);
+            Assert.IsTrue(block.isEmpty, "Faction color must not tint the neutral center.");
+            renderer.GetPropertyBlock(block, 1);
+            Assert.AreEqual(faction, block.GetColor("_BaseColor"));
+            LineRenderer highlight = combatBase.GetComponentInChildren<LineRenderer>(true);
+            Assert.AreEqual("SelectionHighlight", highlight.name);
+            Assert.AreEqual(LineAlignment.TransformZ, highlight.alignment);
+            for (int i = 0; i < highlight.positionCount; i++)
+                Assert.AreEqual(0.002f, combatBase.InverseTransformPoint(
+                    highlight.transform.TransformPoint(highlight.GetPosition(i))).y, 0.00001f);
+            TestContext.WriteLine($"base-source:{root.name}:mesh={filter.sharedMesh.name},size={size},triangles={triangles},texture=4096,neutralSlot=0,factionSlot=1,highlightY=.002");
         }
 
         private static Static3DCombatUnitPresentationProfileSet LoadProfileSet()

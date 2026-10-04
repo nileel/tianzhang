@@ -42,6 +42,11 @@ namespace TianZhang.Features.CombatPresentation
         public Vector3 approvedBoundsMax;
         public int[] sixDirectionYawDegrees = Array.Empty<int>();
         public Static3DCombatFeedbackProfile combatFeedback;
+        public GameObject combatBasePrefab;
+        public string approvedBaseModelAssetPath;
+        public string approvedBaseModelSha256;
+        public Vector3 combatBaseBoundsMin;
+        public Vector3 combatBaseBoundsMax;
     }
 
     /// <summary>
@@ -184,6 +189,44 @@ namespace TianZhang.Features.CombatPresentation
                 return false;
             }
 
+            if (!TryValidateCombatBase(profile, out reason)) return false;
+
+            reason = null;
+            return true;
+        }
+
+        private static bool TryValidateCombatBase(Static3DCombatUnitPresentationProfile profile, out string reason)
+        {
+            GameObject prefab = profile.combatBasePrefab;
+            if (prefab == null || string.IsNullOrWhiteSpace(profile.approvedBaseModelAssetPath) ||
+                string.IsNullOrWhiteSpace(profile.approvedBaseModelSha256) ||
+                profile.approvedBaseModelSha256.Length != 64 || !HasLowercaseHex(profile.approvedBaseModelSha256) ||
+                !IsFinite(profile.combatBaseBoundsMin) || !IsFinite(profile.combatBaseBoundsMax) ||
+                Mathf.Abs(profile.combatBaseBoundsMin.y + 0.04f) > 0.0001f ||
+                Mathf.Abs(profile.combatBaseBoundsMax.y) > 0.0001f)
+            {
+                reason = "static_3d_profile_base_source_invalid";
+                return false;
+            }
+            MeshRenderer renderer = prefab.GetComponentInChildren<MeshRenderer>(true);
+            MeshFilter filter = prefab.GetComponentInChildren<MeshFilter>(true);
+            LineRenderer selection = prefab.GetComponentInChildren<LineRenderer>(true);
+            if (prefab.transform.localPosition != Vector3.zero ||
+                Quaternion.Angle(prefab.transform.localRotation, Quaternion.identity) > 0.01f ||
+                prefab.transform.localScale != Vector3.one ||
+                prefab.GetComponentsInChildren<MeshFilter>(true).Length != 1 ||
+                prefab.GetComponentsInChildren<MeshRenderer>(true).Length != 1 ||
+                filter.sharedMesh == null || filter.sharedMesh.subMeshCount != 2 ||
+                renderer.sharedMaterials.Length != 2 || renderer.sharedMaterials[0] == null ||
+                renderer.sharedMaterials[0].mainTexture == null || renderer.sharedMaterials[1] == null ||
+                selection == null || selection.gameObject.name != "SelectionHighlight" ||
+                selection.sharedMaterial == null || selection.useWorldSpace || selection.enabled ||
+                prefab.GetComponentsInChildren<Animator>(true).Length != 0 ||
+                prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length != 0)
+            {
+                reason = "static_3d_profile_base_components_invalid";
+                return false;
+            }
             reason = null;
             return true;
         }

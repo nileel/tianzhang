@@ -1,0 +1,631 @@
+FLOW productionSaveDirectory=C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\SaveSlots slot=flow-1920-d3d4116a
+FLOW click=NewPlayerButton point=(960.00, 792.00)
+FLOW click=Origin_origin_minor_clan point=(1070.75, 699.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\01-creation
+FLOW click=CreatePlayerButton point=(960.00, 520.00)
+FLOW click=WorldNodeButton_1 point=(186.00, 825.60)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\02-world-selected
+FLOW click=EnterLocationButton point=(186.00, 567.60)
+FLOW click=SettlementFeature_bounty_board point=(258.00, 568.00)
+FLOW click=AcceptBountyButton point=(1580.00, 516.00)
+FLOW rewardBaseline=|{"bountyId":"bounty_guanzhong_shijiahou","status":1,"progress":0}
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\03-bounty-accepted
+FLOW click=CloseBountyButton point=(1580.00, 380.00)
+FLOW click=SettlementAdventure_guanzhong_wild point=(258.00, 500.00)
+FLOW click=AdventureNode_shijiahou_encounter point=(234.00, 760.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\04-battle-entry
+FLOW click=TimelineEntry1 point=(90.00, 673.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\05-target-linked
+FLOW click=CloseTargetButton point=(1798.00, 748.00)
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\06-preview-ArtButton
+FLOW click=CancelActionButton point=(630.75, 317.00)
+FLOW click=SecondArtButton point=(1295.00, 219.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\07-preview-SecondArtButton
+FLOW click=CancelActionButton point=(630.75, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:13:player:104:100:True;enemy:78:100:Falseplayer:HP571:MP180:move2:(0, 0, 0):0:False:0,0;enemy:HP657:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:13:player:104:100:True;enemy:78:100:Falseplayer:HP571:MP168:move2:(0, 0, 0):0:False:10,0;enemy:HP602:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=SecondArtButton before=player:MoveThenAction:0:27:player:112:110:True;enemy:60:100:Falseplayer:HP530:MP168:move2:(0, 0, 0):0:False:0,0;enemy:HP602:MP108:move2:(1, 0, -1):0:False:
+FLOW click=SecondArtButton point=(1295.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:5:27:player:112:110:True;enemy:60:100:Falseplayer:HP530:MP173:move2:(0, 0, 0):0:False:0,5;enemy:HP602:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW movement origin=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex path=0,1;1,1 cost=2 before=player:MoveThenAction:0:41:player:112:105:True;enemy:42:100:Falseplayer:HP489:MP173:move2:(0, 0, 0):0:False:0,0;enemy:HP602:MP108:move2:(1, 0, -1):0:False:
+FLOW click=MoveButton point=(701.00, 153.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\08-movement-1-1
+FLOW click=ConfirmMoveButton point=(701.00, 153.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:41:player:112:105:True;enemy:42:100:Falseplayer:HP489:MP173:move0:(1, 1, -2):0:False:0,0;enemy:HP602:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW movement origin=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex path=2,0 cost=1 before=player:MoveThenAction:0:55:player:112:110:True;enemy:24:100:Falseplayer:HP442:MP161:move2:(1, 1, -2):0:False:0,0;enemy:HP553:MP108:move2:(1, 0, -1):0:False:
+FLOW click=MoveButton point=(701.00, 153.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\09-movement-2-0
+FLOW click=ConfirmMoveButton point=(701.00, 153.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:55:player:112:110:True;enemy:24:100:Falseplayer:HP442:MP161:move1:(2, 0, -2):1:False:0,0;enemy:HP553:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:55:player:112:110:True;enemy:24:100:Falseplayer:HP442:MP149:move1:(2, 0, -2):1:False:10,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW movement origin=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex path=1,1;1,2 cost=2 before=player:MoveThenAction:0:69:player:112:110:True;enemy:6:100:Falseplayer:HP395:MP149:move2:(2, 0, -2):1:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=MoveButton point=(701.00, 153.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\10-movement-1-2
+FLOW click=ConfirmMoveButton point=(701.00, 153.00)
+FLOW action=WaitButton before=player:MoveThenAction:0:69:player:112:110:True;enemy:6:100:Falseplayer:HP395:MP149:move0:(1, 2, -3):5:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW movement origin=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex path=2,2 cost=1 before=player:MoveThenAction:0:75:player:104:100:True;enemy:42:100:Falseplayer:HP395:MP149:move2:(1, 2, -3):5:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=MoveButton point=(701.00, 153.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\11-movement-2-2
+FLOW click=ConfirmMoveButton point=(701.00, 153.00)
+FLOW STATIC DETOUR origin=2,0 blocked=2,1 destination=2,2 directDistance=2 actual=1,1;1,2;2,2
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\12-static-obstacle-detour-complete
+FLOW action=WaitButton before=player:MoveThenAction:0:75:player:104:100:True;enemy:42:100:Falseplayer:HP395:MP149:move1:(2, 2, -4):0:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW movement origin=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex path=1,2;1,1 cost=2 before=player:MoveThenAction:0:81:player:100:100:True;enemy:78:100:Falseplayer:HP395:MP149:move2:(2, 2, -4):0:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=MoveButton point=(701.00, 153.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\13-movement-1-1
+FLOW click=ConfirmMoveButton point=(701.00, 153.00)
+FLOW click=ToggleLogButton point=(1788.00, 58.00)
+FLOW LONG LOG content=(x:-232.00, y:-598.00, width:464.00, height:598.00) viewport=(x:-240.00, y:-127.00, width:480.00, height:254.00) position=0->0.4883721
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\14-long-log-scrolled
+FLOW click=CloseLogButton point=(1418.00, 807.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:81:player:100:100:True;enemy:78:100:Falseplayer:HP395:MP149:move0:(1, 1, -2):2:False:0,0;enemy:HP510:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:95:player:112:110:True;enemy:60:100:Falseplayer:HP354:MP137:move2:(1, 1, -2):2:False:0,0;enemy:HP461:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:95:player:112:110:True;enemy:60:100:Falseplayer:HP354:MP125:move2:(1, 1, -2):2:False:10,0;enemy:HP412:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:109:player:112:110:True;enemy:42:100:Falseplayer:HP313:MP125:move2:(1, 1, -2):2:False:0,0;enemy:HP412:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:109:player:112:110:True;enemy:42:100:Falseplayer:HP313:MP113:move2:(1, 1, -2):2:False:10,0;enemy:HP363:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:123:player:112:110:True;enemy:24:100:Falseplayer:HP272:MP113:move2:(1, 1, -2):2:False:0,0;enemy:HP363:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:123:player:112:110:True;enemy:24:100:Falseplayer:HP272:MP101:move2:(1, 1, -2):2:False:10,0;enemy:HP326:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:137:player:112:110:True;enemy:6:100:Falseplayer:HP231:MP101:move2:(1, 1, -2):2:False:0,0;enemy:HP326:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:137:player:112:110:True;enemy:6:100:Falseplayer:HP231:MP89:move2:(1, 1, -2):2:False:10,0;enemy:HP277:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:151:player:112:110:True;enemy:90:100:Falseplayer:HP231:MP89:move2:(1, 1, -2):2:False:0,0;enemy:HP277:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:151:player:112:110:True;enemy:90:100:Falseplayer:HP231:MP77:move2:(1, 1, -2):2:False:10,0;enemy:HP240:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:165:player:112:110:True;enemy:72:100:Falseplayer:HP190:MP77:move2:(1, 1, -2):2:False:0,0;enemy:HP240:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:165:player:112:110:True;enemy:72:100:Falseplayer:HP190:MP65:move2:(1, 1, -2):2:False:10,0;enemy:HP191:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:179:player:112:110:True;enemy:54:100:Falseplayer:HP149:MP65:move2:(1, 1, -2):2:False:0,0;enemy:HP191:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:179:player:112:110:True;enemy:54:100:Falseplayer:HP149:MP53:move2:(1, 1, -2):2:False:10,0;enemy:HP142:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:193:player:112:110:True;enemy:36:100:Falseplayer:HP108:MP53:move2:(1, 1, -2):2:False:0,0;enemy:HP142:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:193:player:112:110:True;enemy:36:100:Falseplayer:HP108:MP41:move2:(1, 1, -2):2:False:10,0;enemy:HP93:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:207:player:112:110:True;enemy:18:100:Falseplayer:HP67:MP41:move2:(1, 1, -2):2:False:0,0;enemy:HP93:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:207:player:112:110:True;enemy:18:100:Falseplayer:HP67:MP29:move2:(1, 1, -2):2:False:10,0;enemy:HP44:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:221:player:112:110:True;enemy:102:100:Trueplayer:HP67:MP29:move2:(1, 1, -2):2:False:0,0;enemy:HP44:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=WaitButton before=player:ActionThenMove:10:221:player:112:110:True;enemy:102:100:Trueplayer:HP67:MP17:move2:(1, 1, -2):2:False:10,0;enemy:HP7:MP108:move2:(1, 0, -1):0:False:
+FLOW click=WaitButton point=(1067.00, 161.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW action=ArtButton before=player:MoveThenAction:0:235:player:112:110:True;enemy:84:100:Falseplayer:HP26:MP17:move2:(1, 1, -2):2:False:0,0;enemy:HP7:MP108:move2:(1, 0, -1):0:False:
+FLOW click=ArtButton point=(1067.00, 219.00)
+FLOW click=ConfirmActionButton point=(1162.25, 317.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\15-returned
+FLOW click=SettlementFeature_bounty_board point=(258.00, 568.00)
+FLOW click=ClaimBountyButton point=(1580.00, 448.00)
+FLOW click=ClaimBountyButton point=(1580.00, 448.00)
+FLOW duplicateReason=bounty_claim_repeated
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\16-duplicate-rejected
+FLOW click=CloseBountyButton point=(1580.00, 380.00)
+FLOW click=SaveAndReturnButton point=(258.00, 296.00)
+FLOW click=SaveSlot_flow-1920-d3d4116a point=(960.00, 302.00)
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\17-loaded
+FLOW FLOW COMPLETE width=1920 victory=True confirmedCommands=22
+FLOW capture=D:\天章游戏开发\.worktrees\manual\combat-base-fourview-20261004\src\Logs\flow\20261004-232956-1920-victory\18-final-state
+
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+base-source:Static3DCombatUnit_player:mesh=BaseGeometry,size=(0.62, 0.04, 0.62),triangles=7714,texture=4096,neutralSlot=0,factionSlot=1,highlightY=.002
+base-source:Static3DCombatUnit_enemy:mesh=BaseGeometry,size=(0.96, 0.04, 1.18),triangles=14567,texture=4096,neutralSlot=0,factionSlot=1,highlightY=.002
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.08, 0.94, 1.08),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3776,foot=0.3776,thickness=0.0376
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.08, 0.94, 1.08),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3776,foot=0.3776,thickness=0.0376
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(0.94, 1.06, 0.94),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3824,foot=0.3824,thickness=0.0424
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.04, 1.10, 1.04),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3840,foot=0.3840,thickness=0.0440
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.04, 1.10, 1.04),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3840,foot=0.3840,thickness=0.0440
+contact:Static3DCombatUnit_player:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+contact:Static3DCombatUnit_enemy:rootY=0.3400,rootScale=(1.00, 1.00, 1.00),bodyScale=(1.40, 1.40, 1.40),baseBottom=0.3400,baseTop=0.3800,foot=0.3800,thickness=0.0400
+Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml

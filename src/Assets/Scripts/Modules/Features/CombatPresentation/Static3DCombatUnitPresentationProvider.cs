@@ -17,6 +17,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private const float GroundY = 0.34f;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private const float BaseThickness = 0.04f;
 
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
 
@@ -91,10 +92,10 @@ namespace TianZhang.Features.CombatPresentation
 
                 GameObject body = Instantiate(profile.prefab, root.transform);
                 body.name = profile.prefab.name;
-                body.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+                body.transform.localPosition = new Vector3(0f, BaseThickness, 0f);
                 body.transform.localRotation = Quaternion.identity;
                 body.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
-                MeshRenderer baseRenderer = CreateFactionBase(root.transform, combatant.DisplayFaction);
+                MeshRenderer baseRenderer = CreateFactionBase(root.transform, profile, combatant.DisplayFaction);
                 units.Add(combatant.CombatantId, new PresentedUnit(
                     root,
                     baseRenderer,
@@ -222,6 +223,13 @@ namespace TianZhang.Features.CombatPresentation
             }
             presentationEvent = default;
             return false;
+        }
+
+        public void SetSelectionHighlight(string combatantId)
+        {
+            foreach (PresentedUnit unit in units.Values)
+                unit.SelectionHighlight.enabled =
+                    unit.CombatantId == combatantId || movements.ContainsKey(unit.CombatantId);
         }
 
         public static Vector3 HexToWorld(CombatUnitPresentationHex position) =>
@@ -398,20 +406,19 @@ namespace TianZhang.Features.CombatPresentation
             };
         }
 
-        private static MeshRenderer CreateFactionBase(Transform parent, CombatUnitDisplayFaction faction)
+        private static MeshRenderer CreateFactionBase(Transform parent, Static3DCombatUnitPresentationProfile profile,
+            CombatUnitDisplayFaction faction)
         {
-            GameObject baseObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            GameObject baseObject = Instantiate(profile.combatBasePrefab, parent);
             baseObject.name = "Static3DCombatBase";
-            baseObject.transform.SetParent(parent, false);
-            baseObject.transform.localPosition = new Vector3(0f, 0.04f, 0f);
-            baseObject.transform.localScale = new Vector3(0.62f, 0.04f, 0.62f);
-            Collider collider = baseObject.GetComponent<Collider>();
-            if (collider != null) Destroy(collider);
-            MeshRenderer renderer = baseObject.GetComponent<MeshRenderer>();
+            baseObject.transform.localPosition = new Vector3(0f, BaseThickness, 0f);
+            baseObject.transform.localRotation = Quaternion.identity;
+            baseObject.transform.localScale = Vector3.one;
+            MeshRenderer renderer = baseObject.GetComponentInChildren<MeshRenderer>();
             var block = new MaterialPropertyBlock();
-            renderer.GetPropertyBlock(block);
+            renderer.GetPropertyBlock(block, 1);
             block.SetColor(BaseColorId, faction == CombatUnitDisplayFaction.Player ? Color.cyan : Color.red);
-            renderer.SetPropertyBlock(block);
+            renderer.SetPropertyBlock(block, 1);
             return renderer;
         }
 
@@ -429,6 +436,7 @@ namespace TianZhang.Features.CombatPresentation
             {
                 Root = root;
                 BaseRenderer = baseRenderer;
+                SelectionHighlight = root.transform.Find("Static3DCombatBase").GetComponentInChildren<LineRenderer>(true);
                 BodyRenderers = bodyRenderers;
                 ProfileId = profileId;
                 CombatantId = combatantId;
@@ -438,6 +446,7 @@ namespace TianZhang.Features.CombatPresentation
 
             public GameObject Root { get; }
             public MeshRenderer BaseRenderer { get; }
+            public LineRenderer SelectionHighlight { get; }
             public Renderer[] BodyRenderers { get; }
             public string ProfileId { get; set; }
             public CombatUnitPresentationHex Position { get; set; }

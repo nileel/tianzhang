@@ -53,6 +53,117 @@ namespace TianZhang.Editor
         private static readonly Vector3 ShijiahouBoundsMin = new(-0.22778321f, 0f, -0.49975586f);
         private static readonly Vector3 ShijiahouBoundsMax = new(0.22778321f, 0.45654297f, 0.49975586f);
 
+
+        public const string CombatBaseFolderPath = "Assets/Art/Environments/CombatBases";
+
+        [MenuItem("天章/战斗表现/接入两款通用底座")]
+        public static void BuildCombatBases()
+        {
+            EnsureFolder("Assets/Art/Environments", "CombatBases");
+            Static3DCombatUnitPresentationProfileSet set =
+                RequireAsset<Static3DCombatUnitPresentationProfileSet>(ProfileSetAssetPath);
+            Material selection = AssetDatabase.LoadAssetAtPath<Material>(CombatBaseFolderPath + "/SelectionHighlight.mat");
+            if (selection == null)
+            {
+                selection = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                AssetDatabase.CreateAsset(selection, CombatBaseFolderPath + "/SelectionHighlight.mat");
+            }
+            selection.SetColor("_BaseColor", new Color(1f, 0.85f, 0.2f));
+            EditorUtility.SetDirty(selection);
+            foreach (Static3DCombatUnitPresentationProfile profile in set.Profiles)
+            {
+                string id = profile.presentationProfileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ? "01" : "02";
+                string folder = CombatBaseFolderPath + "/Base" + id;
+                string modelPath = folder + "/Base" + id + ".fbx";
+                string texturePath = folder + "/Base" + id + "_BaseColor.png";
+                string modelHash = id == "01" ?
+                    "3e7dc49edbe0a35dbacd939583c92f693636cff482e5cd8f47bea9c1478d1386" :
+                    "14fe780d187d46b1f5fd5f4021e6bbc9443e265bac6eeb7d9e4b20cea9ab5acc";
+                string textureHash = id == "01" ?
+                    "64b13b3bf35b4cceea3f9fafce3b80609abced133900cdc9cc28982bdf8e8301" :
+                    "0be5fc564938f36e8136e836fc2dba1e3c8c381a86830da2729e82b65b33141e";
+                string sourceFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..",
+                    "assets/source/combat-bases/base-" + id));
+                VerifyFileHash(Path.Combine(sourceFolder, "base-" + id + "-source.fbx"), modelHash, "accepted combat base");
+                VerifyFileHash(Path.Combine(sourceFolder, "base-" + id + "-basecolor.png"), textureHash, "accepted 4K base color");
+                EnsureFolder(CombatBaseFolderPath, "Base" + id);
+                CopyFrozenFileIfMissing(Path.Combine(sourceFolder, "base-" + id + "-source.fbx"), AbsoluteAssetPath(modelPath), modelHash);
+                CopyFrozenFileIfMissing(Path.Combine(sourceFolder, "base-" + id + "-basecolor.png"), AbsoluteAssetPath(texturePath), textureHash);
+                ConfigureStaticModelImporter(modelPath);
+                ConfigureBaseColorImporter(texturePath);
+                Vector3 min = id == "01" ? new Vector3(-0.31f, -0.04f, -0.31f) : new Vector3(-0.48f, -0.04f, -0.59f);
+                Vector3 max = id == "01" ? new Vector3(0.31f, 0f, 0.31f) : new Vector3(0.48f, 0f, 0.59f);
+                ValidateImportedModel(modelPath, min, max);
+                ValidateBaseColor(texturePath);
+                Material geometry = GetOrCreateMaterial(folder + "/Base" + id + "_Geometry.mat", "BaseGeometry", texturePath);
+                geometry.SetColor("_BaseColor", new Color(0.8f, 0.8f, 0.8f));
+                Material band = GetOrCreateMaterial(folder + "/Base" + id + "_FactionTintBand.mat", "FactionTintBand", texturePath);
+                var root = new GameObject("CombatBase" + id);
+                try
+                {
+                    GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(RequireAsset<GameObject>(modelPath));
+                    model.transform.SetParent(root.transform, false);
+                    MeshRenderer renderer = model.GetComponentInChildren<MeshRenderer>();
+                    MeshFilter filter = model.GetComponentInChildren<MeshFilter>();
+                    if (filter.sharedMesh.subMeshCount != 2) throw new InvalidOperationException("Combat base must have two slots.");
+                    renderer.sharedMaterials = new[] { geometry, band };
+                    var highlight = new GameObject("SelectionHighlight");
+                    highlight.transform.SetParent(root.transform, false);
+                    highlight.transform.localPosition = new Vector3(0f, 0.002f, 0f);
+                    highlight.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                    LineRenderer line = highlight.AddComponent<LineRenderer>();
+                    line.sharedMaterial = selection;
+                    line.useWorldSpace = false;
+                    line.alignment = LineAlignment.TransformZ;
+                    line.widthMultiplier = 0.012f;
+                    line.loop = true;
+                    line.shadowCastingMode = ShadowCastingMode.Off;
+                    line.receiveShadows = false;
+                    line.positionCount = 64;
+                    // FBX file units may remain on its imported Transform. The prefab root is identity,
+                    // so renderer world bounds are the actual meter-sized footprint in prefab space.
+                    Bounds bounds = renderer.bounds;
+                    float x = bounds.extents.x, z = bounds.extents.z;
+                    for (int i = 0; i < 64; i++)
+                    {
+                        Vector2 point;
+                        if (id == "01")
+                        {
+                            float angle = i * 2f * Mathf.PI / 64f;
+                            point = new Vector2(x * Mathf.Cos(angle), z * Mathf.Sin(angle));
+                        }
+                        else
+                        {
+                            float radius = Mathf.Min(x, z) * 0.15f;
+                            int quadrant = i / 16;
+                            float angle = (quadrant * 90f + i % 16 * 90f / 15f) * Mathf.Deg2Rad;
+                            Vector2 corner = new Vector2(quadrant == 0 || quadrant == 3 ? x - radius : -x + radius,
+                                quadrant < 2 ? z - radius : -z + radius);
+                            point = corner + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                        }
+                        line.SetPosition(i, new Vector3(point.x, -point.y, 0f));
+                    }
+                    line.enabled = false;
+                    profile.combatBasePrefab = PrefabUtility.SaveAsPrefabAsset(root, folder + "/Base" + id + ".prefab");
+                    profile.approvedBaseModelAssetPath = modelPath;
+                    profile.approvedBaseModelSha256 = modelHash;
+                    profile.combatBaseBoundsMin = min;
+                    profile.combatBaseBoundsMax = max;
+                    Debug.Log("COMBAT_BASE_IMPORT " + id + " meshBounds=" + bounds + " vertices=" +
+                        filter.sharedMesh.vertexCount + " triangles=" + filter.sharedMesh.triangles.Length / 3 +
+                        " texture=" + RequireAsset<Texture2D>(texturePath).width + "x" +
+                        RequireAsset<Texture2D>(texturePath).height + " sha256=" + modelHash);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(root); }
+            }
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
+            if (!set.TryValidate(out string reason)) throw new InvalidOperationException(reason);
+            AssetDatabase.ImportAsset(ProfileSetAssetPath, ImportAssetOptions.ForceSynchronousImport);
+            if (!RequireAsset<Static3DCombatUnitPresentationProfileSet>(ProfileSetAssetPath).TryValidate(out reason))
+                throw new InvalidOperationException("Saved combat base profiles: " + reason);
+        }
+
         [MenuItem("天章/战斗表现/构建正式静态3D棋子 Profile")]
         public static void Build()
         {
@@ -238,6 +349,17 @@ namespace TianZhang.Editor
                 approvedBoundsMax = boundsMax,
                 sixDirectionYawDegrees = (int[])Static3DCombatUnitPresentationProfileSet.RequiredSixDirectionYawDegrees.Clone(),
                 combatFeedback = combatFeedback,
+                combatBasePrefab = RequireAsset<GameObject>(CombatBaseFolderPath +
+                    (profileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ? "/Base01/Base01.prefab" : "/Base02/Base02.prefab")),
+                approvedBaseModelAssetPath = CombatBaseFolderPath +
+                    (profileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ? "/Base01/Base01.fbx" : "/Base02/Base02.fbx"),
+                approvedBaseModelSha256 = profileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ?
+                    "3e7dc49edbe0a35dbacd939583c92f693636cff482e5cd8f47bea9c1478d1386" :
+                    "14fe780d187d46b1f5fd5f4021e6bbc9443e265bac6eeb7d9e4b20cea9ab5acc",
+                combatBaseBoundsMin = profileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ?
+                    new Vector3(-0.31f, -0.04f, -0.31f) : new Vector3(-0.48f, -0.04f, -0.59f),
+                combatBaseBoundsMax = profileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId ?
+                    new Vector3(0.31f, 0f, 0.31f) : new Vector3(0.48f, 0f, 0.59f),
             };
         }
 
