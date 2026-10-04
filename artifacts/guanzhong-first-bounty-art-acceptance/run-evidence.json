@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "taskId": "V-GZ-ART-SLICE-01",
+  "date": "2026-10-04",
+  "status": "incomplete_capture_and_human_playtest_pending",
+  "productionCommit": "2cd11635b055b4475fc9191603c052a1f9f4c413",
+  "unityVersion": "6000.3.18f1",
+  "playableProject": "D:/天章游戏开发/src",
+  "entryScene": "Assets/Scenes/StartMenuScene.unity",
+  "observedProject": "D:/天章游戏开发/.worktrees/manual/combat-base-fourview-20261004/src",
+  "observedFlowDirectory": "D:/天章游戏开发/.worktrees/manual/combat-base-fourview-20261004/src/Logs/flow/20261004-232956-1920-victory",
+  "observedSaveSlot": "flow-1920-d3d4116a",
+  "technicalFlowPassed": true,
+  "testResult": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "actualFormalScenes": true,
+  "bountyRewardOnce": true,
+  "duplicateReason": "bounty_claim_repeated",
+  "savedStateRoundtrip": true,
+  "screenshots": [
+    {
+      "path": "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
+      "sha256": "96e3c79fae3603e503419012ab833814025608fa9f087c5e4e55ba4a467bc747",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "path": "artifacts/guanzhong-first-bounty-art-acceptance/02-battle-idle.png",
+      "sha256": "fad23f2cbfcb694b229ccb24f53628d4301ded12eb62a9ee048461cb004d6c94",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "path": "artifacts/guanzhong-first-bounty-art-acceptance/04-city-reward.png",
+      "sha256": "3d75d67c47416d8c40b9425c321ab4c0458367c2c8cf9921c079796efc3804ad",
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "continuousRecording": null,
+  "missingEvidence": [
+    "03-battle-feedback.png at actual action feedback",
+    "continuous formal-flow.mp4"
+  ],
+  "userPlaytestPerformedForThisVersion": false,
+  "finalQualityAcceptedByUser": false,
+  "baseResourceAcceptedByUser": true,
+  "baseStudioPointsConsumed": 80,
+  "baseExtraGenerationOrRetry": false,
+  "otherHistoricalCosts": "see archived leaf tasks; unknown total, do not infer zero"
+}

@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-BASE-MODELS-01"
-  ],
-  "stateReason": "2026-10-04：V-GZ-PLAYTEST-FLOW-01已归档并受保护集成c0c00ddb，正式双分辨率胜败4/4及导航2/2已通过；继续等待双底座接入，之后必须交付同版本可玩入口/步骤并由用户本人实玩接受，不代签。",
+  "blockedBy": [],
+  "stateReason": "U双底座真实导入与3/3图形PlayMode完成；同版本正式入口和3张关键画面已交付，仍缺动作反馈当帧图/连续录像及本人实玩接受。V及父项保持未完成，不代签。",
   "expectedPaths": [
     "开发管理/关中首个可展示流程美术验收记录.txt",
     "artifacts/guanzhong-first-bounty-art-acceptance/01-city-bounty.png",
@@ -100,3 +98,10 @@
 
 - V-GZ-PLAYTEST-FLOW-01已完成归档、c0c00ddb已受保护集成；消费其真实四链正式小族胜败、静态障碍绕行、长日志、败北无奖励、领奖防重及保存读档证据。只移除V-FLOW已完成依赖，保留U-GZ-BASE-MODELS-01。现有可玩功能入口及步骤位于开发管理/关中2026-10-01反馈修复复验记录.txt#当前同版本可玩入口与最短步骤，固定工作树D:/天章游戏开发/.worktrees/manual/V-GZ-PLAYTEST-FLOW-01/src及6000.3.18f1，生产内容与c0c00ddb一致。双底座接入后仍须在同一最终版本重新交付正式可玩入口、步骤、四关键画面和连续录像，并由用户本人实际跑测并明确接受。本轮没有本卡实机验收/用户接受回执，不关闭本卡或父项，不发送空白批准，不重复已通过子卡。
 - 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
+
+## 2026-10-04 双底座接入后的可玩交付
+
+- U-GZ-BASE-MODELS-01已归档，生产版本2cd11635b055b4475fc9191603c052a1f9f4c413；主线额外9077f262只把无关术法迁移转blocked，没有Unity内容改动，重放后src与取证版本逐路径一致。解除已完成具名前置，余项仍未满足，不转ready。
+- 同版本Unity正式入口：D:/天章游戏开发/src，6000.3.18f1，Assets/Scenes/StartMenuScene.unity；启动与最短实玩步骤见开发管理/关中首个可展示流程美术验收记录.txt。真实1920自然胜利新槽flow-1920-d3d4116a通过悬赏/战斗/返城、防重领奖、保存读取；两底座和选择层实际可见。
+- artifacts/guanzhong-first-bounty-art-acceptance/run-evidence.json与01/02/04关键画面已取得。现有正式测试只在检查点截图，没有连续录像或动作反馈当帧图；不把稀疏截图、行动预览或测试通过伪装为这两项证据。本卡禁止修改脚本/业务链，依既有停止条件保留blocked，未签本人最终实玩和整体品质接受。
+- 本轮无脚本/美术/规则修复，无新验证机制或父项归档；单主责，无独立工作面，风险投影为空。
