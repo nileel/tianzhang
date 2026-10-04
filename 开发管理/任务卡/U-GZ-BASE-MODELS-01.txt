@@ -11,10 +11,9 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "A-GZ-BASE-MODEL-01",
-    "A-GZ-BASE-MODEL-02",
-    "U-GZ-PLAYTEST-BASE-FIT-01"
+    "A-GZ-BASE-MODEL-02"
   ],
-  "stateReason": "2026-10-01：D-GZ-BASE-MODELS-01 candidate 已冻结两款独立底座的尺寸、根轴、脚底接触面、材质分层及下游验收；仍等待两张 A 资源卡与 U-GZ-PLAYTEST-BASE-FIT-01 的正式完成。",
+  "stateReason": "2026-10-04：设计6f827525与BASE-FIT76c6fa04已完成并集成；尚无两份QA合格底座生产资源，继续等待A-GZ-BASE-MODEL-01/02，不能只移除已完成依赖就ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
@@ -86,3 +85,8 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-04 直接依赖状态核实
+
+- 消费D-GZ-BASE-MODELS-01及U-GZ-PLAYTEST-BASE-FIT-01真实完成归档，提交6f827525/76c6fa04均主线可达，移除已完成BASE-FIT依赖。两A卡仍等待造型选择与分别交易授权，assets/source/combat-bases尚无生产FBX；本卡只等待两份factory-empty QA通过且用户接受的资源。收到资源后才冻结具体prefab/material/profile/.meta、输入哈希与风险投影，再接入现有唯一provider。当前不改生产代码或资产，不提前ready，不新增底座管理器；本轮仅直接依赖维护，不重跑Unity。
+- 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
