@@ -1,4 +1,4 @@
----TASK-META---
+﻿---TASK-META---
 {
   "schemaVersion": 2,
   "id": "A-GZ-BASE-MODEL-02",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-04：负责人“确认”接受本款四视图及Studio现有点数最多20点、单次生成授权；在隔离工作区按卡生产，上传后提交前重新核价，不自动重试，不代表资源接受。",
+  "stateReason": "2026-10-04：唯一几何+4K纹理已完成、实扣40 Studio点；中央顶面起伏17.391 mm、底面27.768 mm，米制虚拟焊接后仍1186条开放边/1198条非流形边。未改网格、未导出FBX、未签资源接受；待原网格局部修平/补洞边界决定，禁止重试。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
     "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
@@ -42,7 +42,12 @@
     "assets/source/combat-bases/base-02/base-02-roundtrip.blend",
     "assets/source/combat-bases/base-02/base-02-view-front.png",
     "assets/source/combat-bases/base-02/base-02-view-side.png",
-    "assets/source/combat-bases/base-02/base-02-view-top.png"
+    "assets/source/combat-bases/base-02/base-02-view-top.png",
+    "AGENTS.md",
+    "assets/source/combat-bases/base-02/base-02-tripo-textured.glb",
+    "assets/source/combat-bases/base-02/base-02-tripo-textured.zip",
+    "assets/source/combat-bases/base-02/base-02-texture-submit.png",
+    "assets/source/combat-bases/base-02/base-02-texture-result.png"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -58,7 +63,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：Tripo通用底座第2款资源生产与清理。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 负责人已确认四视图并授权本款Studio现有点数最多20点、只生成一次；本卡在隔离工作区冻结ready后生产。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
+- 负责人已确认四视图，随后授权全部4K、单款全流程累计低于70个Studio点直接执行；本款唯一几何+纹理已实扣40点完成。原网格QA失败，当前blocked，禁止再次生成。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
 
 ## 必查范围
 
@@ -70,7 +75,7 @@
 
 ## 实施范围
 
-- 先基于已选圆角矩形概念准备顶部朝正前方的独立正/左/右/背四图，保留完整提示词、参考链和哈希；正面为顶面、背面为底面、两侧为严格90度厚度侧面，四图保持同一竖立生产姿态。整组获负责人接受后，按Studio四槽的实时报价及本款授权使用H3.1一次、最多一个候选，四边面、5000面、标准几何、关闭纹理/超清几何/分部件/8K，不请求PBR及AI补全。不调用CLI/OpenAPI，不复用旧35 API credits上限；当前授权按此前Studio单图20点报价，四图价格超过20点或关键设置改变时先取得新的具体授权。Studio未暴露smart_low_poly或model_seed控制，不声明已固定；只记录实际暴露的值，未暴露记unknown。冻结平台任务ID、原包、可见设置、真实Studio扣费及哈希，再按Blender合同恢复+Y上/+Z前及精确尺寸，交付唯一FBX/贴图和QA证据。失败不自动重试。
+- 先基于已选圆角矩形概念准备顶部朝正前方的独立正/左/右/背四图，保留完整提示词、参考链和哈希；正面为顶面、背面为底面、两侧为严格90度厚度侧面，四图保持同一竖立生产姿态。整组获负责人接受后，按Studio四槽的实时报价及本款授权使用H3.1一次、最多一个候选，四边面、5000面、标准几何、开启4K纹理、关闭超清几何/分部件/8K，不请求PBR及AI补全。不调用CLI/OpenAPI，不复用旧35 API credits上限；现行授权为本款全流程低于70 Studio点直接执行，达到70点或需充值/订阅时先确认；5000面仅为本次简单底座预算。Studio未暴露smart_low_poly或model_seed控制，不声明已固定；只记录实际暴露的值，未暴露记unknown。冻结平台任务ID、原包、可见设置、真实Studio扣费及哈希，再按Blender合同恢复+Y上/+Z前及精确尺寸，交付唯一FBX/贴图和QA证据。失败不自动重试。
 
 ## 禁止项
 
@@ -115,3 +120,17 @@
 - 负责人在收到两款四图、比例差异和四槽20点报价后回复“确认”。本款输入固定front.png、left-v2.png、right-v2.png、back.png，SHA-256沿用four-views manifest.selectedInputs；每款独立20点上限，最多一次生成，禁止自动重试；resourceAcceptedByUser仍为false。
 - 本次生产原包GLB或ZIP、提交/结果截图、QA JSON、回读blend及正侧顶截图纳入精确expectedPaths；原文件保留，清理边界仍按现有合同。技术路线不增加，主责统一处理，无独立子智能体工作面。
 - Blender 5.2专用会话原进程退出。负责人明确允许保留旧service-state并修复；既有启动脚本恢复PID49952，localhost:9876健康、MCP读取成功。原持久场景只有Camera/Cube/Light、无未保存改动；任务场景另存，不覆盖持久启动文件。
+
+## 2026-10-04 4K纹理与预算授权修正
+
+- 负责人回复：全部用4K的，以后统一预算低于70不用审批。按每款独立边界，本款完整流程累计低于70个Studio点可直接执行，达到70点须确认，仅使用已有余额，不含充值/订阅。几何与纹理各最多一次、失败不自动重试。
+- 原关闭纹理参数与贴图交付要求不一致，现按负责人要求开启4K纹理。已上传获批四图并核价：H3.1、5000四边面目标、标准几何、4K纹理，PBR/去光/超清/分部件/8K均关闭，40点。原包保留，不能替换为本地新建网格。
+
+## 2026-10-04 实际生产与资源QA失败
+
+- 唯一资产e6116b82-06a7-4253-af7c-0a00cd0838b9，一次几何+4K纹理40点，余额2800→2760。提交截图页头曾显示另一标签页刷新前的2820；实际2800前余额由Base 01纹理完成页核实，本款完成页2760，总账2840→2760、合计80点。生成/纹理次数各1，不重试。
+- 平台7363四边面/7875顶点，超过目标5000；GLB实际10645顶点/14567三角面、单UV/材质、4096×4096 BaseColor。target不等于硬上限，不声明面数已经符合最终预算。
+- 原包Blender实际包络77.442932×5.535532×99.953949；只在临时bmesh虚拟映射到0.96×0.04×1.18 m测量。米制面法线过滤下中央顶面起伏17.391 mm、底面27.768 mm；1/10微米虚拟焊接均为1186开放边/1198非流形边，0.1 mm仍1185/1197，不把异常当UV接缝忽略。
+- 未施加实际单位/根轴或几何改动；source.blend仅原样导入检查场景。原包GLB/4K贴图/检查blend/QA JSON/Studio截图已按哈希备份至D:/Temp/TianZhang-Blender/combat-base-production-20261004/base-02，追溯见开发管理/通用底座第2款资源QA记录.txt。source依既有.gitignore不入Git。
+- 独立FactionTintBand槽未分区，FBX导出0次、factory回读未开始，resourceAcceptedByUser=false；U/V不解锁。Blender截图通道返回黑图的既有失败未重复测试，不添加第二渲染路线。
+- 原网格局部修平/补洞超过现有单位、轴、根和材质槽整理合同，需冻结新的有界范围后继续。不付费重试，不新建替代网格，不用Unity scale/offset掩盖。局部修复不能保证一定合格，失败继续停止。本轮单主责，无独立子智能体工作面。

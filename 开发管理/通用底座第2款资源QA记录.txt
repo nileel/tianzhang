@@ -1,0 +1,38 @@
+﻿# 通用底座第2款资源QA记录
+
+任务：A-GZ-BASE-MODEL-02
+状态：❌ 原网格QA失败，未完成资源生产，负责人尚未接受
+日期：2026-10-04
+工具：Tripo Studio既有账户；Blender 5.2交互式blender_lab/MCP
+
+## 输入与真实交易
+
+负责人接受front/left-v2/right-v2/back整组，哈希见four-views/base-02/manifest.json。图片未缩放/镜像。H3.1、标准几何、5000四边面目标、4K纹理；PBR/去光/超清/分部件/8K关闭，未暴露seed/smart_low_poly记unknown。
+负责人明确全部4K、单款完整流程累计低于70点直接执行。本款e6116b82-06a7-4253-af7c-0a00cd0838b9一次几何+4K纹理40点、2800→2760，生成/纹理各一次，不自动重试。提交截图页头2820是另一标签页刷新前值；2800前余额由Base 01纹理完成页核实，完成页2760，总账2840→2760、合计80点。
+
+## 原包检查与米制测量
+
+GLB2头/长度检查通过。Studio实际7363四边面/7875顶点，5000只是目标。原包10645顶点/14567三角面；RootNode+一个网格，无相机/灯光/骨骼/动作。原UVMap、单材质、4096×4096 BaseColor，贴图只转存PNG不重绘。
+原包Blender包络77.442932×5.535532×99.953949，未施加实际单位、根轴或几何修改。只在临时bmesh映射游戏X/-Y/-Z并虚拟归一化至0.96×0.04×1.18 m，避免把原包未知尺度当真实米。
+米制面法线与中心|X|≤0.36、|Z|≤0.46筛选下：中央顶面1033点Y=-0.017390503..0 m，中位数-0.000237446 m；底面904点Y=-0.039999999..-0.012231560 m。顶面起伏17.391 mm，底面27.768 mm。极端局部缺陷不能被平均值掩盖。
+米制临时焊接1微米/10微米均剩1186开放边/1198非流形边；0.1 mm仍1185/1197。没有改动源网格，不把异常当UV接缝略过。封闭与平顶/平底QA失败。
+source.blend仅原样导入检查场景，FactionTintBand槽未分区，FBX导出0次、factory回读未开始，资源接受false；不是可接入资源或Unity运行证明。
+
+## 停止与证据边界
+
+Studio提交与真实结果已截图。Blender截屏通道在Base 01已证实区域/全窗口均返回黑图，重绘无效，此截屏故障尚未解决，本款未重复捕获；没有加入第二渲染路线。
+当前单位、轴、根与材质槽清理不足以修平/封闭，必须先冻结原网格局部修平、补洞范围。保持原4K/UV/轮廓，不付费重试，不新建替代网格，不用Unity scale/offset掩盖；局部修复也不能保证合格，失败停止。A卡blocked并移出队列，U/V未解锁，由本人后续接受资源和实玩。
+
+## 原包与检查产物追溯
+
+assets/source依现有.gitignore不入Git。本次worktree产物已逐文件哈希核对备份到D:/Temp/TianZhang-Blender/combat-base-production-20261004/base-02，以下不是清理完成品。
+
+| 文件 | 字节 | SHA-256 |
+| --- | --- | --- |
+| assets/source/combat-bases/base-02/base-02-basecolor.png | 22042962 | 0be5fc564938f36e8136e836fc2dba1e3c8c381a86830da2729e82b65b33141e |
+| assets/source/combat-bases/base-02/base-02-qa.json | 3653 | d4f98a75f9e495861677be25c11e6ecd79af1c65cf1a17600cd810f5f669e9a5 |
+| assets/source/combat-bases/base-02/base-02-source.blend | 3567020 | a0b705765313ae714b7e3bc21a960ff5e15b6c636f9c666bff80e35193f59b04 |
+| assets/source/combat-bases/base-02/base-02-studio-result.png | 241348 | 6d6dedbdfe13ed7da833676304d4299fe26873d6c1fd9adcc469fbecaeb0f85d |
+| assets/source/combat-bases/base-02/base-02-studio-submit.png | 134497 | 34341a158675a3ea0cbd0da0da38def534cfc036cc8fc04653d78a8acfff9658 |
+| assets/source/combat-bases/base-02/base-02-tripo-original.glb | 3390436 | 788a820c4a94e09c188f793e3eaf6bce459e5a647688ca8a4490a298460e2400 |
+| assets/source/combat-bases/base-02/base-02-manifest.json | 1949 | 57dd5ac005d2c1d25a2d083a6c3f0e701df335c17db1d422bdb46ab6ba52e758 |
