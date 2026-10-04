@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-BASE-MODELS-01"
-  ],
-  "stateReason": "2026-10-01：D-GZ-BASE-MODELS-01 candidate 已冻结 Base 01 方案、唯一输入、Tripo 参数、35 credits 单款上限和清理完成条件；待其正式进入 master 后，再取得负责人造型选择与本款交易前授权。",
+  "blockedBy": [],
+  "stateReason": "2026-10-04：D-GZ-BASE-MODELS-01已完成并集成6f827525；Base 01仍仅concept，等待负责人造型选择及本款独立Tripo交易前授权，旧35 credits上限须下单前重新核价，本次无新费用授权。",
   "expectedPaths": [
     "assets/source/combat-bases/base-01/base-01-source.blend",
     "assets/source/combat-bases/base-01/base-01-source.fbx",
@@ -78,3 +76,8 @@
 ## 停止条件
 
 - 所有者/路径/输入不明、需修改额外规则/付费而无具体授权、事实源冲突无法在本卡裁决、原子结果不成立或不能取得必需运行证据时停止记录事实；不连续加补丁，不由worker临时加卡/扩范围。
+
+## 2026-10-04 直接依赖状态核实
+
+- D-GZ-BASE-MODELS-01归档completed、6f827525主线可达，移除已完成具名前置；Base 01唯一输入仍为assets/generated-scene-art/combat-bases/concepts/base-01.png，manifest状态design_preview_only，assets/source/combat-bases尚无资源。用户本次未选择造型、未授权新费用；保留blocked，不默认批准，不下单或本地伪造FBX。旧单款35 credits是冻结上限而非本轮实时报价，获明确选择和本款独立交易授权后仍须重新核价并记录真实credits_consumed。后续按原卡冻结参数及Blender QA合同执行；本轮仅直接依赖事实维护，无业务产物、无需Unity/BattleSim。
+- 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
