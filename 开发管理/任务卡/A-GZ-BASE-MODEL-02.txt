@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-04：圆角矩形底座四视图已生成并记录比例近似误差，等待负责人整组接受；Studio H3.1四槽当前20点，实际上传后下单前仍须复核，本轮未上传、未扣费、未生产模型。",
+  "stateReason": "2026-10-04：负责人“确认”接受本款四视图及Studio现有点数最多20点、单次生成授权；在隔离工作区按卡生产，上传后提交前重新核价，不自动重试，不代表资源接受。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
     "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
@@ -33,7 +33,16 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/A-GZ-BASE-MODEL-02.txt",
-    "开发管理/任务归档/A-GZ-BASE-MODEL-02.txt"
+    "开发管理/任务归档/A-GZ-BASE-MODEL-02.txt",
+    "assets/source/combat-bases/base-02/base-02-tripo-original.glb",
+    "assets/source/combat-bases/base-02/base-02-tripo-original.zip",
+    "assets/source/combat-bases/base-02/base-02-studio-submit.png",
+    "assets/source/combat-bases/base-02/base-02-studio-result.png",
+    "assets/source/combat-bases/base-02/base-02-qa.json",
+    "assets/source/combat-bases/base-02/base-02-roundtrip.blend",
+    "assets/source/combat-bases/base-02/base-02-view-front.png",
+    "assets/source/combat-bases/base-02/base-02-view-side.png",
+    "assets/source/combat-bases/base-02/base-02-view-top.png"
   ],
   "riskPreflight": {
     "explicitRefs": [],
@@ -49,7 +58,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：Tripo通用底座第2款资源生产与清理。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 本轮明确授权仅准备四视图及其生产合同，允许写本卡列出的四视图路径；正式资源生产仍须ready。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
+- 负责人已确认四视图并授权本款Studio现有点数最多20点、只生成一次；本卡在隔离工作区冻结ready后生产。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
 
 ## 必查范围
 
@@ -100,3 +109,9 @@
 - D-GZ-BASE-MODELS-01和接地修正76c6fa04已经完成；不重新实施，不恢复角色绑定/动画或模块化立绘路线。本轮为两款输入合同的有界共同修订，生产阶段仍按每张A卡分别形成一款资源；由主责统一处理，无独立子智能体工作面。
 - 已生成front.png、left-v2.png、right-v2.png、back.png四张独立图，1254×1254，顶部朝生产+Z正面、背面为底面；完整提示词、参考链、生成来源、SHA-256及未选初稿见本款four-views目录prompts.json/manifest.json。preview.html与preview.png仅供审阅，不能上传为多视图拼图。图片比例仍有近似误差，manifest逐项披露；不声称通过精确尺寸QA，不以图片替代最终Blender/FBX实测。等待负责人接受或提出修改。
 - Studio现场四槽明确为前/左侧/右侧/后，H3.1、四边面、5000面、无纹理、超清几何/分部件/8K关闭，按钮20点、余额2840；四图模式未暴露AI补全、smart_low_poly或seed，不虚构固定值。未上传、生成次数0、扣费0；现场截图保存在本对话visualizations目录。获图片接受后仍须复核实际提交价；每款最多一次，失败不自动重试。U卡继续blocked，资源与最终实玩接受仍由负责人本人签署。
+
+## 2026-10-04 四图接受与生产执行回执
+
+- 负责人在收到两款四图、比例差异和四槽20点报价后回复“确认”。本款输入固定front.png、left-v2.png、right-v2.png、back.png，SHA-256沿用four-views manifest.selectedInputs；每款独立20点上限，最多一次生成，禁止自动重试；resourceAcceptedByUser仍为false。
+- 本次生产原包GLB或ZIP、提交/结果截图、QA JSON、回读blend及正侧顶截图纳入精确expectedPaths；原文件保留，清理边界仍按现有合同。技术路线不增加，主责统一处理，无独立子智能体工作面。
+- Blender 5.2专用会话原进程退出。负责人明确允许保留旧service-state并修复；既有启动脚本恢复PID49952，localhost:9876健康、MCP读取成功。原持久场景只有Camera/Cube/Light、无未保存改动；任务场景另存，不覆盖持久启动文件。
