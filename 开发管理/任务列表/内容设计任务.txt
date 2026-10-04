@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- 2026-10-04 用户指定将C-FPD-SPELL-01A从DeepSeek转给GPT-6.1 Sol；现为codex_execute/codex/ready，按原有界返工合同执行。本次用共享入口单次指定gpt-6.1-sol，不修改其他任务分工或自动化默认模型。
+- 2026-10-04 用户指定将C-FPD-SPELL-01A转由GPT-6.1 Sol承接；自动执行随后因无待兼容空交集转blocked。2026-10-05用户选择自身瞬移重设计并授权删除未定义的移动反应攻击描述；机制设计稿已写入无待与L1，等待负责人审稿、神通参数冻结及本批剩余返工／独立复审，当前仍为codex_execute/codex/blocked，不入队。
 
 - 2026-10-04 C-FPD-SPELL-REVALIDATE-01 已由 Codex 完成 B/C/D 八术法的新版契约复核并归档；B/C/D 原迁移归档及未受影响成果保留。C-FPD-SPELL-01A 仍按新版位格返工，父项继续等待该具名前置后收口。
 
