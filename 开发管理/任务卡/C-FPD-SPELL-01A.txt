@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "content",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-04：用户明确要求重新打开A批返工；随后用户指定转给GPT-6.1 Sol，由codex_execute/codex承接，以2026-10-02位格修订后的正式事实重验北冥引、扶摇、无待的兼容合同。旧未通过结论保留，重新ready不代表兼容已成立；B/C/D新版复核另由C-FPD-SPELL-REVALIDATE-01承担。",
+  "stateReason": "自动责任方确认阻塞：spell_compatibility_empty_intersection",
   "expectedPaths": [
     "docs/角色养成/术法/古修/北冥引.txt",
     "docs/角色养成/术法/古修/扶摇.txt",
