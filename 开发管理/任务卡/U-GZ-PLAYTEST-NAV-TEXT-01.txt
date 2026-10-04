@@ -1,0 +1,90 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-PLAYTEST-NAV-TEXT-01",
+  "title": "关中导航界面内部键显示修复",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-04：用户授权单独建卡；V-FLOW已证实两处视图直接显示内部ID，最小文字修复范围与双分辨率导航验收已冻结，本轮仅建卡。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs",
+    "src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongNavigationTextPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongNavigationTextPlayModeTests.cs.meta",
+    "开发管理/关中2026-10-01反馈修复复验记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-GZ-PLAYTEST-NAV-TEXT-01.txt",
+    "开发管理/任务归档/U-GZ-PLAYTEST-NAV-TEXT-01.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+}
+---TASK-BODY---
+# U-GZ-PLAYTEST-NAV-TEXT-01 · 关中导航界面内部键显示修复
+
+## 来源与当前边界
+
+- 用户2026-10-04针对V-FLOW发现的两处内部键显示，明确要求“单独建卡”。本次只准备独立修复任务，不执行代码修改，不将此回复解释为双底座造型或收费交易授权。
+- 唯一结果：关中正式世界节点与据点返回提示使用玩家可读中文，不显示guanzhong_city/guanzhong_hub等内部ID；现有导航目标、进入/返回、保存读档行为不变。两个显示端共同构成这一导航文字修复，主责统一复核全部差异与一个业务提交。
+- 基线05eef9aa，V-FLOW仍blocked；本卡完成不等于V-FLOW或V-ART通过。既有N正式657HP/78物攻不变。
+
+## 已证实根因与运行证据
+
+- WorldMapView.ShowSelectedNode完整方法将node.settlementId或node.adventureIds[0]直接拼入selectedNodeDescription；节点标题已使用node.displayName。世界实际活动Text记录为“关陇玄域（区域枢纽）\n据点: guanzhong_city”。
+- SettlementView.ShowSettlement调用WorldNodeDisplay(returnWorldNodeId)，后者原样return nodeId；ShowFailure也调用同一方法。回城与读档实际截图显示“据点已加载 · 返回世界：guanzhong_hub”。
+- 证据：开发管理/关中2026-10-01反馈修复复验记录.txt#已证实缺口与停止边界；原V工作树src/Logs/flow/20261004-015252-1920-victory/02-world-selected.txt、11-loaded.png及steps.log。世界当帧PNG没有完整UI，不当视觉通过证据；据点截图为已确认可见缺陷。
+
+## 必查范围
+
+- AGENTS.md#修改与验证；开发管理/AI协作规则.txt#任务卡中的模型协作提示；开发管理/开发-技术经验.txt#Unity 场景验证注意。
+- src/Assets/Scripts/Modules/Features/WorldMap/WorldMapView.cs::ShowSelectedNode、Configure。
+- src/Assets/Scripts/Modules/Features/WorldMap/WorldMapController.cs::PrototypeNodes、Start、SelectNode、EnterSelectedLocation、BuildAdventureReturnTarget；WorldNodeDefinition.cs::WorldNodeDefinition。仅理解输入/路由，不修改。
+- src/Assets/Scripts/Modules/Features/Settlement/SettlementView.cs::ShowSettlement、ShowFailure、WorldNodeDisplay、SetStatus；同文件UiText仅确认其他中文显示边界，不改解析系统。
+- src/Assets/Scripts/Modules/Features/Settlement/SettlementController.cs::RefreshSettlementUi、ShowFailure、ReturnToWorld、ResolveReturnWorldNodeId、SaveAndReturnToMenu。只读调用者，稳定ID必须保留。
+- src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs::SaveActiveSlot、EnsureSlotStore；src/Assets/Scenes/StartMenuScene.unity、WorldScene.unity、SettlementScene.unity只查正式视图接线。
+- src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs::Click、SetGameSize作为输入/分辨率方法参考；原V工作树GuanzhongPlaytestFlowPlayModeTests.cs::Click、Pointer、Flow仅供真实导航输入参考，未提交且覆盖不完整，不引用为生产依赖。
+
+## 实施范围
+
+- 仅两个现有View的显示方法：WorldMapView.ShowSelectedNode保留区域标题、枢纽说明和原hasSettlement/hasAdventure判断；入口描述改为“可进入据点”／“可进入副本”，无入口保持“暂无可进入地点”。不新增名称映射表或跨Feature依赖，不为去掉ID扩建本地化机制。
+- SettlementView.ShowSettlement状态改为“据点已加载 · 可返回主世界”；ShowFailure详情改为“可返回主世界”；删除因此无调用者的私有WorldNodeDisplay。保留public方法签名、现有据点名/区域中文和按钮事件，不向控制器改传参。
+- expectedPaths为全部可写字面量路径。两个View对应.meta只允许确有必要的身份维护，不重生成GUID；新增单个GuanzhongNavigationTextPlayModeTests及.meta用于正式导航定向证据。场景、语言表、asmdef、导航契约、角色/战斗/奖励/存档实现均不改。
+- 技术日志、save内部字段、节点ID仍可保留稳定键；本卡只修这两处玩家可见导航提示，不扫描全游戏所有英文或错误码，不回改旧UI-TEXT完成归档。
+
+## 模型协作
+
+- 简单：两处根因已由正式状态/截图与完整方法互证，冻结为纯显示文本调整，无新状态或模块接口；沿用入口默认单模型，无需辅助。
+- 执行者写前核对实际工具与Unity6000.3.18f1运行入口，记录实际调用和证据；仅建卡阶段不启动Unity、不调用子智能体、不改任何定时模型配置。
+
+## 验证
+
+- 实施前在规定隔离worktree运行同卡风险预检并消费mustRead，核schema2投影/digest/gates；新增调用者、路径或技术路线即暂停重算。
+- 只运行GuanzhongNavigationTextPlayModeTests的正式StartMenu新建默认小族→世界选关中→进入关中城→返回主世界→再入城→保存返回菜单→同槽读回；1920×1080与1366×768各一次，以真实Mouse/EventSystem事件或实机输入推进。只新增唯一槽，保留全部旧槽和本轮槽，不替换生产store或篡改状态。
+- WorldMap节点标题仍为关陇玄域，描述为可进入据点且进入按钮可用；进入后关中城名称/区域正常，状态为中文返回提示。保存读回和返回世界后选中ID仍为guanzhong_hub、据点仍为guanzhong_city，完整正式保存内容往返一致。
+- 两分辨率分别保存World节点和Settlement（含读回）的实际Game View截图/活动Text/分辨率/版本/入口证据，审图确认文字完整、操作可达且上述玩家可见字段无内部键；等界面实际渲染稳定再截图，色块或空白截图不得算通过。共用ShowFailure的文字修改可用定向视图断言核对，不为它破坏正式存档或生产场景。
+- 若新增测试，保持一个窄夹具；不运行原高属性/HP1旧流程，不重跑BattleSim、完整战斗、CAMERA/TIMELINE/TARGET键盘、其他输入未变子卡。本卡UI导航证据不能替代V-FLOW剩余静态障碍、长日志、胜败双分辨率组合与V-ART用户验收。
+- 编译和本卡定向运行通过后，将实际diff、截图/日志路径与限制追加到既有反馈修复复验记录。src/Assets变动按仓库要求检查对应.meta与数据链；卡片/队列一致、check-review-text、预期路径check-pending-whitespace及git diff --cached --check通过。
+## 完成条件
+
+- 两处玩家可见导航文字为中文，双分辨率实际截图与导航/存档断言通过，业务ID及行为未改变。
+- 本卡完成独立路径限定提交、归档并受保护集成；集成前从主目录重新Show，核原卡/队列/占用/锁/路径冲突。V-FLOW后续由其自身准备流程消费本卡完成证据再决定ready，不在本卡代签或接管剩余组合验收。
+
+## 禁止项
+
+- 不改数值、技能、导航语义、世界设定、存档schema、角色/底座资源；不新增本地化服务、映射注册表、组件、重试或兼容层。
+## 停止条件
+
+- 如需修改两个View显示单元之外的生产文件、改变公共接口/asmdef、发现直接ID只是其他未明故障的表象或取得不了实际可见证据，停止并记录根因，不连续叠加补丁。
+- 不修改用户已有文件/存档，不apply或删除stash；保留所有工作树、日志与失败现场。费用/造型决定和V-ART接受不在本卡授权内。

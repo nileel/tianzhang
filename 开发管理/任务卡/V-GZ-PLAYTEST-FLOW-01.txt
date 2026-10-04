@@ -9,8 +9,10 @@
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-10-04：正式1920胜利/领奖防重/保存读档已跑通，但回城可见guanzhong_hub且世界节点Text含guanzhong_city，未满足不泄露key；按验收卡边界停止跨owner修复，完整双分辨率/败北/静态障碍与长日志证据未完成。",
+  "blockedBy": [
+    "U-GZ-PLAYTEST-NAV-TEXT-01"
+  ],
+  "stateReason": "2026-10-04：用户要求单独建卡，中文导航显示缺口交U-GZ-PLAYTEST-NAV-TEXT-01；等待其正式完成后重新准备本卡剩余双分辨率/败北/静态障碍与长日志验收，既有1920胜利链证据保留。",
   "expectedPaths": [
     "开发管理/关中2026-10-01反馈修复复验记录.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -101,3 +103,7 @@
 - 不判整卡通过：回城与读档截图可见“据点已加载 · 返回世界：guanzhong_hub”；所有者SettlementView.WorldNodeDisplay直接return nodeId。世界场景活动Text为“据点: guanzhong_city”，所有者WorldMapView.ShowSelectedNode直接拼接settlementId；该帧截图未完整渲染UI，不能当世界视觉证据。需要具名显示修复的独立范围，未修改生产代码/语言表。
 - 剩余1366、两种败北、绕静态障碍、长日志滚动及完整视觉证据未完成；已做的移动(0,0)→(0,1)→(1,1)只绕占位敌，不冒充静态障碍。只读辅助已指出这些覆盖限制。按本卡停止条件转blocked、移出ready队列；不归档、不签V-ART，不继续叠加修改。
 - 完整日志、截图、slot位置、成本/底座直接依赖与续接提示见开发管理/关中2026-10-01反馈修复复验记录.txt。保留原工作树及未提交夹具以便受限续接。
+
+## 2026-10-04 独立修复依赖
+
+- 用户要求单独建卡：两处导航内部键显示已冻结为U-GZ-PLAYTEST-NAV-TEXT-01，列入blockedBy。该卡只修显示，不接管V组合验收；完成后消费其真实输出再准备本卡。其余停止证据与未执行项保持原记录，不回改已通过子卡。
