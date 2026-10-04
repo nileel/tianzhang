@@ -1,7 +1,7 @@
 ﻿# 通用底座第1款资源QA记录
 
 任务：A-GZ-BASE-MODEL-01
-状态：❌ 原网格QA失败，未完成资源生产，负责人尚未接受
+状态：本人接受现有网格例外；一次FBX导出与技术回读完成，最终Unity实玩仍待下游
 日期：2026-10-04
 工具：Tripo Studio既有登录账户；Blender 5.2交互式blender_lab/MCP
 
@@ -10,14 +10,14 @@
 负责人接受front/left-v2/right-v2/back整组，哈希见four-views/base-01/manifest.json，图片未缩放或镜像。H3.1、标准几何、5000四边面目标、唯一候选；超清/分部件/8K关闭，未请求PBR/AI补全，未暴露seed/smart_low_poly记unknown。
 唯一几何a067a77e-413e-41f0-8119-76dcccce9ddd：20点，2840→2820。随后负责人明确全部4K、单款完整流程低于70点免逐次审批；只对同几何补一次4K纹理20点，2820→2800，累计40点。独立纹理taskId未暴露。几何与纹理各一次，失败不自动重试。
 
-## 原包检查
+## 历史原包检查
 
 GLB2头与长度检查通过；原无纹理包与纹理包均保留。Studio3857四边面/3859顶点；纹理GLB4582顶点/7714三角面，RootNode+一个网格，无相机/灯光/骨骼/动作，UVMap、一个原材质、内嵌4096×4096 BaseColor。贴图仅转存PNG，不重绘。
 实际原包Blender包络0.995745778×0.063264102×0.994405389；仅虚拟映射到游戏X/-Y/-Z并按目标0.62×0.04×0.62 m归一化。源网格、根和单位尚未修改。
 中央顶面1304点采样Y=-0.006728335..-0.000918708 m，起伏0.005809628 m；底面Y=-0.039371954..-0.034296659 m。临时bmesh虚拟焊接后开放/非流形边0/0，但中央平顶/平底要求失败。
 source.blend仅为未经几何改动的导入检查场景。独立阵营槽未分区；FBX导出0次、factory回读未开始，resourceAcceptedByUser=false；不是可交付资源或Unity运行证明。
 
-## 截图与停止边界
+## 历史截图与停止边界
 
 Studio提交/结果/4K报价及纹理结果有真实截图。Blender区域和全窗口捕获均为全黑，DRAW_WIN_SWAP后仍黑，黑图拒绝作为验收证据；未改走未授权渲染通道。
 现合同只有单位、轴、根与材质槽整理，局部修平需冻结新的范围后继续。保持原GLB/UV/4K与轮廓；不付费重试、不本地新建替代网格、不加Unity scale/offset补丁。A卡blocked并移出队列；U/V不解锁，本人资源/实玩接受仍待后续。
@@ -38,3 +38,24 @@ assets/source依既有.gitignore不入Git。源文件仍位于任务worktree，�
 | assets/source/combat-bases/base-01/base-01-tripo-original.glb | 187416 | 7bab6e8e2f46229514963a097cef5a8f53788eebcf23d4f73a82c3aacf23c89f |
 | assets/source/combat-bases/base-01/base-01-tripo-textured.glb | 4743424 | e64d13c2d0cd8d16915f1fd86b695bdd29d44292208429ee59cc1e0f21793d15 |
 | assets/source/combat-bases/base-01/base-01-manifest.json | 2558 | 5781d53a2e3eb94494915d56e15636bc8ce96f38e7dbd8b64e8d5086e4e901b3 |
+
+## 本人接受与最终交付
+
+负责人回复：“我觉得不会，你直接用”；“你直接导出fpx到unity中去用，我目前看起来认为最多会有的问题就是比较薄”。原网格起伏与开放边作为accepted_exception保留，不修平/补洞/重建/重试，不代签最终实玩。
+仅米制轴向仿射映射，拓扑/UV不变；包络0.62×0.04×0.62 m，bbox Y=0/-0.04，根及网格单位变换。原三角面划分窄FactionTintBand：480面。FBX一次FINISHED，factory空场景回读4582顶点/7714三角面、UVMap和两槽一致，无动作。Blender回读Z-up根转换通过实际world顶点(x,z,-y)验证；Unity仍需bakeAxisConversion实測。
+FBX未序列化glTF Mix贴图节点，回读images=[]；采用FBX＋独立4096² PNG，Unity显式绑定原0.8色因子。Blender黑图不作证据，按本人直接使用决定转Unity取证。
+最新产物已哈希校验备份：D:/Temp/TianZhang-Blender/combat-base-production-20261004/final-fbx-accepted-20261004-2312/base-01。以下为当前交付哈希，旧表仅历史检查版本。
+
+| 文件 | 字节 | SHA-256 |
+| --- | --- | --- |
+| assets/source/combat-bases/base-01/base-01-basecolor.png | 18218188 | 64b13b3bf35b4cceea3f9fafce3b80609abced133900cdc9cc28982bdf8e8301 |
+| assets/source/combat-bases/base-01/base-01-qa.json | 5811 | 991e34dd1fabdc22ae3f4e9467585ec0589a10d318fb5bead3477b44f9257d22 |
+| assets/source/combat-bases/base-01/base-01-roundtrip.blend | 377283 | 012d75eda6f8bae19b066b9a55571806c34a4736ab1304315c3d95f06f2deae6 |
+| assets/source/combat-bases/base-01/base-01-source.blend | 4896321 | 6abc9d947b0eb56e220820a035e5f50c61ed944b36ed6591f766ffe15537d9b4 |
+| assets/source/combat-bases/base-01/base-01-source.fbx | 275628 | 3e7dc49edbe0a35dbacd939583c92f693636cff482e5cd8f47bea9c1478d1386 |
+| assets/source/combat-bases/base-01/base-01-studio-result.png | 152169 | 53caa62273a48b0121aaf9aa1e9d50207dd7a436aef2607044a9f0d47f1f31da |
+| assets/source/combat-bases/base-01/base-01-studio-submit.png | 131244 | 7894fd50634ec79719ff900ed3bd7a16bd3418a6323a4ad523648c54ec8d0f2c |
+| assets/source/combat-bases/base-01/base-01-texture-result.png | 226607 | 1237b88becd9780a3206f84d628e8feddf976e9de266a107a306c7b11f691c1a |
+| assets/source/combat-bases/base-01/base-01-texture-submit.png | 146434 | be48356080f8a1f149c74b6b40faded4860ffc107314ca6673f24df276ea3206 |
+| assets/source/combat-bases/base-01/base-01-tripo-original.glb | 187416 | 7bab6e8e2f46229514963a097cef5a8f53788eebcf23d4f73a82c3aacf23c89f |
+| assets/source/combat-bases/base-01/base-01-tripo-textured.glb | 4743424 | e64d13c2d0cd8d16915f1fd86b695bdd29d44292208429ee59cc1e0f21793d15 |

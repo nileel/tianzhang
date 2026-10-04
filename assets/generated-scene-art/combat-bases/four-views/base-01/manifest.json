@@ -1,8 +1,8 @@
-﻿{
+{
   "schemaVersion": 1,
   "assetId": "base-01",
   "taskId": "A-GZ-BASE-MODEL-01",
-  "status": "generated_raw_geometry_qa_failed",
+  "status": "production_complete_technical_FBX_QA_passed_geometry_exceptions_accepted",
   "createdDate": "2026-10-04",
   "generator": "OpenAI built-in image_gen",
   "orientation": {
@@ -277,7 +277,7 @@
     "authorizedRouteAcknowledgment": "User: 是的，改，而且应该先生成顶部朝正前方的底座四视图来制作",
     "studioCreditsCeiling": 69,
     "inputSetAcceptedByUser": true,
-    "resourceAcceptedByUser": false,
+    "resourceAcceptedByUser": true,
     "uploaded": true,
     "generationAttempts": 1,
     "taskId": "a067a77e-413e-41f0-8119-76dcccce9ddd",
@@ -340,6 +340,16 @@
       "resourceAcceptedByUser": false,
       "record": "开发管理/通用底座第1款资源QA记录.txt",
       "sourceBackup": "D:/Temp/TianZhang-Blender/combat-base-production-20261004/base-01"
+    },
+    "finalResourceAcceptance": {
+      "date": "2026-10-04",
+      "userReplies": [
+        "我觉得不会，你直接用",
+        "你直接导出fpx到unity中去用，我目前看起来认为最多会有的问题就是比较薄"
+      ],
+      "technicalRoundtrip": "passed_mesh_uv_material_slots_bounds",
+      "fbxExportAttempts": 1,
+      "finalPlaytestAccepted": false
     }
   }
 }

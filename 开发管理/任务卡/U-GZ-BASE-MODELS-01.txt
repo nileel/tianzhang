@@ -8,12 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "A-GZ-BASE-MODEL-01",
-    "A-GZ-BASE-MODEL-02"
-  ],
-  "stateReason": "2026-10-04：设计6f827525与BASE-FIT76c6fa04已完成并集成；尚无两份QA合格底座生产资源，继续等待A-GZ-BASE-MODEL-01/02，不能只移除已完成依赖就ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "两A卡一次FBX/尺寸/UV/两槽回读完成，本人接受原网格例外并要求直接Unity使用；四份源件哈希和现有provider/profile/Builder接入路径已冻结。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProfileSet.cs",
@@ -28,14 +25,75 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-GZ-BASE-MODELS-01.txt",
-    "开发管理/任务归档/U-GZ-BASE-MODELS-01.txt"
+    "开发管理/任务归档/U-GZ-BASE-MODELS-01.txt",
+    "src/Assets/Art/Environments/CombatBases.meta",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset",
+    "src/Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset.meta",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs.meta",
+    "开发管理/双通用底座Unity接入验收记录.txt",
+    "artifacts/combat-bases-unity-20261004/battle-entry.png",
+    "artifacts/combat-bases-unity-20261004/selected-enemy.png",
+    "artifacts/combat-bases-unity-20261004/battle-after-action.png",
+    "artifacts/combat-bases-unity-20261004/playmode.xml",
+    "artifacts/combat-bases-unity-20261004/runtime-base-evidence.txt",
+    "artifacts/combat-bases-unity-20261004/builder.log",
+    "artifacts/combat-bases-unity-20261004/playmode.log",
+    "src/Assets/Art/Environments/CombatBases/Base01.meta",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01.fbx",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01.fbx.meta",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_BaseColor.png",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_BaseColor.png.meta",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_Geometry.mat",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_Geometry.mat.meta",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_FactionTintBand.mat",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01_FactionTintBand.mat.meta",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01.prefab",
+    "src/Assets/Art/Environments/CombatBases/Base01/Base01.prefab.meta",
+    "assets/source/combat-bases/base-01/base-01-basecolor.png",
+    "src/Assets/Art/Environments/CombatBases/Base02.meta",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02.fbx",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02.fbx.meta",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_BaseColor.png",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_BaseColor.png.meta",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_Geometry.mat",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_Geometry.mat.meta",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_FactionTintBand.mat",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02_FactionTintBand.mat.meta",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02.prefab",
+    "src/Assets/Art/Environments/CombatBases/Base02/Base02.prefab.meta",
+    "assets/source/combat-bases/base-02/base-02-basecolor.png",
+    "src/Assets/Art/Environments/CombatBases/SelectionHighlight.mat",
+    "src/Assets/Art/Environments/CombatBases/SelectionHighlight.mat.meta"
   ],
   "riskPreflight": {
     "explicitRefs": [],
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/combat-bases/base-01/base-01-basecolor.png",
+      "bytes": 18218188,
+      "sha256": "64b13b3bf35b4cceea3f9fafce3b80609abced133900cdc9cc28982bdf8e8301"
+    },
+    {
+      "path": "assets/source/combat-bases/base-01/base-01-source.fbx",
+      "bytes": 275628,
+      "sha256": "3e7dc49edbe0a35dbacd939583c92f693636cff482e5cd8f47bea9c1478d1386"
+    },
+    {
+      "path": "assets/source/combat-bases/base-02/base-02-basecolor.png",
+      "bytes": 22042962,
+      "sha256": "0be5fc564938f36e8136e836fc2dba1e3c8c381a86830da2729e82b65b33141e"
+    },
+    {
+      "path": "assets/source/combat-bases/base-02/base-02-source.fbx",
+      "bytes": 576812,
+      "sha256": "14fe780d187d46b1f5fd5f4021e6bbc9443e265bac6eeb7d9e4b20cea9ab5acc"
+    }
+  ]
 }
 ---TASK-BODY---
 # U-GZ-BASE-MODELS-01 · 双通用底座模型正式接入
@@ -44,7 +102,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：双通用底座模型正式接入。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 未ready前不得以当前候选路径开工。接入时消费两张 A 卡的 factory-empty QA 已通过 FBX，按 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md` 的独立几何、阵营带和选中层接线；仅移除blockedBy不代表可执行。
+- 未ready前不得以当前候选路径开工。接入时消费两张 A 卡的 factory-empty技术回读已通过且本人接受几何例外的 FBX，按 `docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md` 的独立几何、阵营带和选中层接线；仅移除blockedBy不代表可执行。
 
 ## 必查范围
 
@@ -58,7 +116,7 @@
 
 ## 实施范围
 
-- 将批准两资源接到现有唯一provider/表现profile，替换临时Cylinder；Base 01 使用直径0.62 m圆形足印，Base 02使用0.96×1.18 m圆角矩形足印，二者顶面均为局部Y=0、底面Y=-0.04。保留角色与底座独立、窄 `FactionTintBand` 阵营提示、可见 `SelectionHighlight` 与已修正接地尺度；没有新底座管理器，不修改战斗规则。
+- 将批准两资源接到现有唯一provider/表现profile，替换临时Cylinder；Base 01 使用直径0.62 m圆形足印，Base 02使用0.96×1.18 m圆角矩形足印，二者包络顶/底均为局部Y=0/-0.04；本人接受实际顶底起伏与开放边。保留角色与底座独立、窄 `FactionTintBand` 阵营提示、可见 `SelectionHighlight` 与已修正接地尺度；没有新底座管理器，不修改战斗规则。
 
 ## 禁止项
 
@@ -90,3 +148,12 @@
 
 - 消费D-GZ-BASE-MODELS-01及U-GZ-PLAYTEST-BASE-FIT-01真实完成归档，提交6f827525/76c6fa04均主线可达，移除已完成BASE-FIT依赖。两A卡仍等待造型选择与分别交易授权，assets/source/combat-bases尚无生产FBX；本卡只等待两份factory-empty QA通过且用户接受的资源。收到资源后才冻结具体prefab/material/profile/.meta、输入哈希与风险投影，再接入现有唯一provider。当前不改生产代码或资产，不提前ready，不新增底座管理器；本轮仅直接依赖维护，不重跑Unity。
 - 本轮为简单管理维护，由主智能体直接处理，无独立子智能体工作面；写前风险预检通过，matched/mustRead/gates均为空，与本卡投影一致。
+
+## 2026-10-04 真实输入与接线冻结
+
+- 来源锁：Base 01 Tripo a067a77e-413e-41f0-8119-76dcccce9ddd，Base 02 e6116b82-06a7-4253-af7c-0a00cd0838b9。每款原候选只做单位/轴/根/材质分区；几何偏差由本人直接使用回复接受为accepted_exception，禁止重试或用Unity补丁修平。FBX及独立4K PNG的path/bytes/sha256见automationInputs，源件另有哈希备份。
+- 实际所有者链：AdventureScene.unity序列化provider.profileSet → AdventureSceneInstaller.Awake交给EncounterCoordinator → provider.Prepare/Spawn；现有Spawn实例化角色、CreateFactionBase建Cylinder，Present/MoveAlongPath/SetActionScale更新表现根。此独立底座只在该正式carrier下替换，2D实验adapter与探索UnitVisual不是目标。HUD.RefreshTarget和movementView.IsSelecting提供现有选择状态，provider绘制底座独立SelectionHighlight；可达格/路径仍由既有CombatMovementView投影，规则不变。
+- 资源位置按现有Art/Environments：CombatBases/Base01和Base02；Profile新增独立底座Prefab与来源/包络字段，角色Prefab和原source身份不变。现有Builder增加BuildCombatBases有界入口，沿用已验证的importer/bakeAxisConversion、4K PNG显式材质路线；不触发BuildFeedback或重建角色。中央材质0.8原色因子，阵营只改槽1，选中轮廓由真实导入mesh.bounds产生且局部顶面上方0.002 m。
+- 新底座厚度0.04 m；根仍世界Y=.34，base根/body承重原点均为本地Y=.04，底面.34、脚底/bbox顶.38。这是原合同一次替换后的精确接地关系，不新增偏移层，角色scale1.4保持。原表面偏差不声称消除。
+- 验证：Builder保存回读两Prefabs/profile映射和实际Unity包络；定向provider PlayMode双足/宽足印、六向及移动/攻受击/施法后的接地；既有GuanzhongPlaytestFlowPlayModeTests从StartMenu新建槽进入正式场景，保留真实Game View截图/运行数值。U只证明接入，不代签V本人实玩。
+- 单主责，无独立工作面；UNITY_STRUCTURE地图未找到，以实际源码/asmdef/序列化引用路由。没有新Manager、新模块、规则或动画。

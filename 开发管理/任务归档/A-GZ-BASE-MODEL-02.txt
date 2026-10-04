@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "A-GZ-BASE-MODEL-02",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-04：唯一几何+4K纹理已完成、实扣40 Studio点；中央顶面起伏17.391 mm、底面27.768 mm，米制虚拟焊接后仍1186条开放边/1198条非流形边。未改网格、未导出FBX、未签资源接受；待原网格局部修平/补洞边界决定，禁止重试。",
+  "stateReason": "本人接受原网格例外；一次FBX导出及factory技术回读完成，4K外置贴图/源件哈希已冻结。最终实玩等待U/V。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-01-two-reusable-combat-bases.md",
     "assets/generated-scene-art/combat-bases/four-views/base-02/front.png",
@@ -63,7 +63,7 @@
 
 - 用户于2026-10-01亲自测试关中正式流程并提出8项缺口；本卡是该次反馈完整拆分中的一个叶子，未完成项不算用户验收通过。
 - 唯一结果：Tripo通用底座第2款资源生产与清理。主责统一复核差异、验证与单一candidate；不接管其他叶子。
-- 负责人已确认四视图，随后授权全部4K、单款全流程累计低于70个Studio点直接执行；本款唯一几何+纹理已实扣40点完成。原网格QA失败，当前blocked，禁止再次生成。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
+- 负责人已确认四视图，随后授权全部4K、单款全流程累计低于70个Studio点直接执行；本款唯一几何+纹理已实扣40点完成。原网格几何偏差由本人接受为例外，一次FBX技术回读完成，禁止再次生成。概念base-02.png只作已选造型参考，Studio只能消费本款获负责人接受的front/left/right/back四张独立图片及对应交易回执；不得以历史角色credits或其他底座候选替代。
 
 ## 必查范围
 
@@ -134,3 +134,14 @@
 - 未施加实际单位/根轴或几何改动；source.blend仅原样导入检查场景。原包GLB/4K贴图/检查blend/QA JSON/Studio截图已按哈希备份至D:/Temp/TianZhang-Blender/combat-base-production-20261004/base-02，追溯见开发管理/通用底座第2款资源QA记录.txt。source依既有.gitignore不入Git。
 - 独立FactionTintBand槽未分区，FBX导出0次、factory回读未开始，resourceAcceptedByUser=false；U/V不解锁。Blender截图通道返回黑图的既有失败未重复测试，不添加第二渲染路线。
 - 原网格局部修平/补洞超过现有单位、轴、根和材质槽整理合同，需冻结新的有界范围后继续。不付费重试，不新建替代网格，不用Unity scale/offset掩盖。局部修复不能保证一定合格，失败继续停止。本轮单主责，无独立子智能体工作面。
+
+## 2026-10-04 本人接受现有网格并继续
+
+- 负责人看到两款真实4K结果与QA偏差后回复“我觉得不会，你直接用”，随后明确“你直接导出fpx到unity中去用，我目前看起来认为最多会有的问题就是比较薄”。按FBX生产合同理解，记录本人接受当前已展示原候选及披露几何偏差，并授权继续接入；不代签最终实玩接受。
+- 本款Tripo几何/纹理阶段已经结束，次数均为1、实扣40点，任何后续worker均不得再次下单或重试。当前实施仅为原网格单位/轴/根和材质槽整理，一次FBX导出、空场景回读、真实4K/UV/尺寸/轴向证据。
+- 原平顶/平底/封闭性偏差作为本批accepted_exception保留，不修平、不补洞、不重建；4 cm厚度保持，不用Unity角色缩放/额外偏移掩盖。Blender黑图不再阻塞直接使用指令，剩余技术回读仍需实测，正式画面由下游Unity取证。原生成网格的资源接受来自本人上述回复，最终实玩接受仍待V卡。
+
+## 完成证据
+
+- 本人接受来自上述直接使用回复；一次FBX技术回读、4K和最终哈希/独立备份见开发管理/通用底座第2款资源QA记录.txt最新章节。几何/纹理各1次，40点，无重试。
+- 技术通过仅限尺寸、UV、材质槽、静态结构与回读；平顶/平底/开放边保持accepted_exception。正式可见证据由U卡提供，最终实玩未接受。单主责，无独立工作面，无新增经验候选。
