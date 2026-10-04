@@ -238,6 +238,6 @@
 - 经验领域：unity
 - 现象：正式移动状态文字字符串存在但Game View无文字。
 - 已证实根因：Text框高24小于实际preferredHeight26，Wrap/Truncate导致vertices=0；局部文字框高32后选择/选定状态产生36/52顶点并在两分辨率显示。
-- 证据：本卡17:26根因记录与src/Logs/move-ui正式截图、诊断日志；AdventureSceneBuilder.BuildCombatMovement局部改动。
 - 可能复用范围：动态Text结合固定高度和Truncate的UGUI控件；不推及缺字或材质问题。
+- 证据：本卡17:26根因记录与src/Logs/move-ui正式截图、诊断日志；AdventureSceneBuilder.BuildCombatMovement局部改动。
 - 门禁可能：yes

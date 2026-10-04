@@ -101,6 +101,6 @@
 - 经验领域：unity
 - 现象：正式战斗双方仍存活时，探索节点中的return可直接回城，绕开胜负结算入口。
 - 已证实根因：AdventureInputController.SelectNode始终派发节点，AdventureController.ReturnToSource没有检查CurrentState；BeginEncounter的Exploration检查没有覆盖返回路径。
-- 证据：本卡排查记录的复现、04-return-during-combat.jpg及SHA-256；完整SelectNode/ReturnToSource方法；退出前HP447/571与793/839的正式画面和动作日志。
 - 可能复用范围：同场景探索/战斗共用输入与返回入口的状态门禁检查；隐藏按钮不能代替命令入口合法性。
+- 证据：本卡排查记录的复现、04-return-during-combat.jpg及SHA-256；完整SelectNode/ReturnToSource方法；退出前HP447/571与793/839的正式画面和动作日志。
 - 门禁可能：yes

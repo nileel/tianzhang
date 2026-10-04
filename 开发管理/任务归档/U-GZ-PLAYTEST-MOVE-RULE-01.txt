@@ -121,4 +121,14 @@
 
 ## 经验候选
 
-- 状态pending：给既有行动管线新增纯回合结束命令时，通用表现switch的默认Idle会打断此前实际攻击动画。已证实根因是EndTurn成功后走与有表现动作相同的ProjectPresentation；修复为不投影此无表现命令。证据是正式StartMenu链路测试记录真实Provider事件数和非单位攻击缩放在EndTurn前后不变。可能适用于动作结算/表现分离的命令新增复核，候选门禁检查无表现命令是否误入默认动画。
+### CAND-U-GZ-PLAYTEST-MOVE-RULE-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：新增纯回合结束命令后，通用表现switch的默认Idle打断此前实际攻击动画。
+- 已证实根因：EndTurn成功后走与有表现动作相同的ProjectPresentation；修复为不投影此无表现命令。
+- 可能复用范围：动作结算与表现分离的行动管线新增命令复核，检查无表现命令是否误入默认动画。
+- 证据：本卡正式StartMenu链路测试记录真实Provider事件数和非单位攻击缩放在EndTurn前后不变；src/Logs/move-rule/formal-flow.xml。
+- 门禁可能：yes

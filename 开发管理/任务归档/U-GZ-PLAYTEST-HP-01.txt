@@ -115,7 +115,17 @@
 
 ## 经验候选
 
-- pending：正式UI文本字段非空不等于可见。此次固定24高文字框小于批准字体实际27高，Text竖向Truncate导致顶点0；同入口运行时字体指标、Rect高度及cachedTextGenerator.vertexCount共同证实根因。可复用于固定行高中文HUD；门禁可能为真实场景非空文本必须生成字形且preferredHeight不超文字框，不以编译/数据绑定成功替代可见验收。
+### CAND-U-GZ-PLAYTEST-HP-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：正式UI文本字段非空，但Game View中文字不可见。
+- 已证实根因：固定24高文字框小于批准字体实际27高，Text竖向Truncate导致顶点0。
+- 可能复用范围：固定行高中文HUD；可检查真实场景非空文本必须生成字形且preferredHeight不超文字框，不以编译或数据绑定成功替代可见验收。
+- 证据：本卡完成记录中同入口运行时字体指标、Rect高度及cachedTextGenerator.vertexCount；src/Logs/hp/text-diagnostic.xml与text-fit.xml。
+- 门禁可能：yes
 
 ## 2026-10-03 恢复与集成核对
 

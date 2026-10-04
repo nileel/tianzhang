@@ -157,4 +157,14 @@
 
 ## 经验候选
 
-- 状态：pending。现象：UI重排后旧增量Builder仍查原父级或要求已移除的VerticalLayoutGroup，可产生重复控件、空引用或丢失预测标记引用。已证实根因：持久布局父级改变但局部creator仍写旧结构。证据：本卡Builder diff、IncrementalCreatorsRetainOneFinalLayout及SavedFormalLayoutKeepsReferencesAndSingleWriters的2/2结果。可能复用范围：有正式全量与局部重建入口的Unity UI；门禁可能：按序列化实际父级重建后统一布局，并检查单一对象/引用。未查重、未分配正式ID、未改风险索引。
+### CAND-U-GZ-PLAYTEST-UI-LAYOUT-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：UI重排后旧增量Builder仍查原父级或要求已移除的VerticalLayoutGroup，可产生重复控件、空引用或丢失预测标记引用。
+- 已证实根因：持久布局父级改变但局部creator仍写旧结构。
+- 可能复用范围：有正式全量与局部重建入口的Unity UI，按序列化实际父级重建后统一布局并检查单一对象和引用。
+- 证据：本卡Builder diff、IncrementalCreatorsRetainOneFinalLayout及SavedFormalLayoutKeepsReferencesAndSingleWriters的2/2结果。
+- 门禁可能：yes
