@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-PLAYTEST-UI-LAYOUT-01/CAND-U-GZ-PLAYTEST-UI-LAYOUT-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-06：独立核验来源候选并晋级为 EXP-UNITY-010；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-PLAYTEST-UI-LAYOUT-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-06 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-010`。来源归档已直接证实持久布局父级改变后，六个局部重建入口仍生产旧子布局；统一复用 `BuildCombatLayout`、按序列化 root 取父级、移除纵列假设并恢复 Timeline 预测标记后，`IncrementalCreatorsRetainOneFinalLayout` 与 `SavedFormalLayoutKeepsReferencesAndSingleWriters` 2/2 通过。
+- 去重与边界：`EXP-UNITY-001` 仅覆盖正式场景 builder 重建与保存链，`EXP-UNITY-002` 仅覆盖程序集依赖，`EXP-UNITY-005` 仅覆盖探索输入门禁，`EXP-UNITY-006`／`EXP-UNITY-008` 仅覆盖固定高度 UGUI Text，均未覆盖持久布局重排与局部重建入口的父级、单一对象和引用接缝。本经验限于 `AdventureSceneBuilder` 的该共享布局／局部重建链；不涉及这些接缝的静态文本、自动布局样式或其他 UI 排除。候选的门禁可能保留为后续独立事项，本卡未新增门禁。
+- 模型协作：简单：来源候选、现有经验边界和确定性回链验收可直接核验；沿用入口默认单模型 `gpt-5.6-terra`，未调用辅助。

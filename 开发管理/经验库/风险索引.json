@@ -356,6 +356,36 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-008.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-06"
+    },
+    {
+      "id": "EXP-UNITY-010",
+      "title": "持久 UI 布局重排须同步局部重建入口",
+      "preflightSummary": "调整持久 UI 布局与局部重建入口时，按实际序列化父级统一重建，并验证单一对象和引用。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs"
+      ],
+      "textPatterns": [
+        "BuildCombatLayout",
+        "RebuildStarterArts",
+        "RebuildCombatMovement",
+        "RebuildGuanzhongBattlefield",
+        "RebuildCombatTargetSelection",
+        "RebuildCombatActionPreview",
+        "RebuildCombatTimeline"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-010.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-06"
     }
   ],
   "gates": []

@@ -1,0 +1,25 @@
+# EXP-UNITY-010 · 持久 UI 布局重排须同步局部重建入口
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-U-GZ-PLAYTEST-UI-LAYOUT-01-01`、`U-GZ-PLAYTEST-UI-LAYOUT-01` 的 Builder 差异与增量重建验证。
+
+## 开工前
+
+任务同时触及 `AdventureSceneBuilder.BuildCombatLayout` 与 `RebuildStarterArts`、`RebuildCombatMovement`、`RebuildGuanzhongBattlefield`、`RebuildCombatTargetSelection`、`RebuildCombatActionPreview` 或 `RebuildCombatTimeline` 之一时，先从已序列化 root 确认局部 creator 的真实父级和现有引用。持久布局重排后，每个受影响局部入口在完成自身职责后复用同一最终布局；验证场景中对象唯一、引用仍有效。不得让局部 creator 查旧父级或假定已移除的 `VerticalLayoutGroup`；Timeline 重建还须恢复既有预测标记引用。只改静态文本、自动布局样式或不涉及这些持久／局部重建接缝的 UI 排除；所有者、层级或重建链改变时重新核验。
+
+## 正确处理
+
+以正式场景序列化层级为准，先冻结全量布局 writer 与局部重建入口的调用关系。局部入口只生产本职对象，再调用共享的 `BuildCombatLayout` 完成最终布局；`RebuildStarterArts` 从 actionBar 序列化 root 取得真实父级，移动局部创建不依赖总行动栏为纵列，Timeline 重建同时恢复 PREVIEW 子标记引用。通过定向测试同时确认一个最终布局、单一控件和持久引用。
+
+## 根因与弯路
+
+持久布局父级已经改变，但局部 creator 仍按旧层级查找父级或要求原有 `VerticalLayoutGroup`。因此局部重建会产生重复控件、空引用或丢失预测标记；只修正全量布局不能覆盖这些增量入口。问题不属于相机、Canvas 缩放、领域命令或新建 UI 框架。
+
+## 证据
+
+来源归档记录同一 Builder 的 `RebuildStarterArts`、`RebuildCombatMovement`、`RebuildGuanzhongBattlefield`、`RebuildCombatTargetSelection`、`RebuildCombatActionPreview` 与 `RebuildCombatTimeline` 均曾继续生产旧子布局。Builder 差异使它们复用最终布局，StarterArts 改按序列化 root 取父级，Movement 移除纵列假设，Timeline 恢复预测标记；`IncrementalCreatorsRetainOneFinalLayout` 与 `SavedFormalLayoutKeepsReferencesAndSingleWriters` 2/2 通过。
+
+## 失效条件
+
+`AdventureSceneBuilder`、`BuildCombatLayout`、上述局部重建入口、其序列化层级、PREVIEW 标记引用或正式场景重建方式被替换，或 UI 改为不共享持久布局／局部重建链时，停止引用并重新核验。
