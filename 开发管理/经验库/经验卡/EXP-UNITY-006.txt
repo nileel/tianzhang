@@ -1,0 +1,25 @@
+# EXP-UNITY-006 · 关中单位头顶条固定高度文本截断导致无网格
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-U-GZ-PLAYTEST-HP-01-01`、`U-GZ-PLAYTEST-HP-01` 正式链文字诊断及头顶条双分辨率实机验收。
+
+## 开工前
+
+任务改动 `AdventureSceneBuilder.BuildUnitHealthBars`／`CreateHealthBarText` 或 `CombatUnitHealthBarView` 的固定高度单位头顶条文字，且实施范围出现 `preferredHeight`、`cachedTextGenerator.vertexCount` 或 `Truncate` 时，先在目标分辨率的正式 Game View 读取文字框 Rect、高度与生成 vertices。批准字体的 `preferredHeight` 超出文字框时，只扩容直接 Text 与头顶条容器后复验字形网格和画面；不要把字段非空而没有文字归因于数据绑定、字体、材质或世界锚点。静态文本、自动布局文本、没有固定高度的条目、明确移除单位头顶条全部文字的任务，或不涉及单位头顶条的其他 HUD 排除；头顶条所有者或 UGUI Text 生成链改变时停止引用并重新核验。
+
+## 正确处理
+
+通过正式运行入口量化目标 Text 的 Rect、`preferredHeight` 和 `cachedTextGenerator.vertexCount`。当固定高度不足时，保持既有字体、世界锚点和 Canvas 不变，仅调整每行 Text 的直接高度及其头顶条容器；随后确认姓名、生命和灵力各自生成非零顶点，并在 1920×1080 与 1366×768 的 Game View 可见。
+
+## 根因与弯路
+
+单位头顶条的姓名、生命和灵力字段已有非空数据，但固定 24 高文字框小于批准字体实际 `preferredHeight` 27。UGUI Text 的竖向 `Truncate` 因而生成 0 vertices，Game View 无法显示文字。将局部 Text 高度调整为 32、头顶条总高调整为 44 后，六个 Text 都生成非零顶点；该问题不属于字体、材质、资源绑定、世界锚点或 Canvas 缩放。
+
+## 证据
+
+来源候选及 `U-GZ-PLAYTEST-HP-01` 完成记录保存同一正式入口的字体 lineHeight 22、字号 20／18、`preferredHeight` 27、旧 Rect 高 24 与 0 vertices；修复后 `src/Logs/hp/text-fit.xml` 记录姓名 24、生命／灵力各 36 顶点（双方对应 12／36／36），并在 1920×1080、1366×768 的正式战斗中确认双方文字和受击刷新可见。
+
+## 失效条件
+
+`AdventureSceneBuilder.BuildUnitHealthBars`、`CreateHealthBarText`、`CombatUnitHealthBarView`、单位头顶条的直接布局所有者、UGUI Text 生成方式或正式战斗验证入口被替换，或文字改为自动布局、TMP 或其他渲染链时，停止引用并重新核验。

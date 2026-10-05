@@ -306,6 +306,32 @@
       "lastVerified": "2026-10-06"
     },
     {
+      "id": "EXP-UNITY-006",
+      "title": "关中单位头顶条固定高度文本截断导致无网格",
+      "preflightSummary": "变更关中单位头顶条的固定高度文字时，核对批准字体的 preferredHeight 与 Text 网格，并以目标分辨率 Game View 验收。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs"
+      ],
+      "textPatterns": [
+        "preferredHeight",
+        "cachedTextGenerator.vertexCount",
+        "Truncate"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-006.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-06"
+    },
+    {
       "id": "EXP-UNITY-008",
       "title": "动态 UGUI Text 固定高度截断导致无网格",
       "preflightSummary": "变更关中移动状态文字时，核对动态 Text 的固定高度是否容纳 preferredHeight，并以 vertices 与目标分辨率画面验证。",
