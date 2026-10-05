@@ -116,8 +116,8 @@
 ## 经验候选
 
 ### CAND-U-GZ-PLAYTEST-HP-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-7231C7AA927B
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

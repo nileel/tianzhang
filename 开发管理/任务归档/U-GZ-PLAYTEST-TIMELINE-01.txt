@@ -154,8 +154,8 @@
 ## 经验候选
 
 ### CAND-U-GZ-PLAYTEST-TIMELINE-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-CE872C1D0BA8
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

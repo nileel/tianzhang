@@ -7,3 +7,9 @@
 |----|------|------|--------|------|------|------|--------|
 | U-GZ-SAVE-DELETE-01 | external_execute | deepseek | P1 | unity | implementation | 关中开始菜单存档删除与确认 | 开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt |
 | U-GZ-HEALTHBAR-SLIM-01 | external_execute | deepseek | P1 | unity | implementation | 关中头顶血条精简为无文字细条 | 开发管理/任务卡/U-GZ-HEALTHBAR-SLIM-01.txt |
+| M-EXP-PROMOTE-0CDBF5A0DC57 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-D-GZ-PLAYTEST-UI-AUDIT-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-0CDBF5A0DC57.txt |
+| M-EXP-PROMOTE-2A00F7A33F88 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-PLAYTEST-MOVE-UI-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-2A00F7A33F88.txt |
+| M-EXP-PROMOTE-7231C7AA927B | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-PLAYTEST-HP-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-7231C7AA927B.txt |
+| M-EXP-PROMOTE-75051E92EDBE | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-PLAYTEST-UI-LAYOUT-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-75051E92EDBE.txt |
+| M-EXP-PROMOTE-CE872C1D0BA8 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-PLAYTEST-TIMELINE-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-CE872C1D0BA8.txt |
+| M-EXP-PROMOTE-F28C767E0B52 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-PLAYTEST-MOVE-RULE-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-F28C767E0B52.txt |

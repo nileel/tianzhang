@@ -99,8 +99,8 @@
 ## 经验候选
 
 ### CAND-D-COMBAT-AP-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-F7A9B284FE1D
 - resolution: unresolved
 - experienceId:
 - 经验领域：design

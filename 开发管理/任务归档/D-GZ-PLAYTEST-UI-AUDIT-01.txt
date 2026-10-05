@@ -94,8 +94,8 @@
 ## 经验候选
 
 ### CAND-D-GZ-PLAYTEST-UI-AUDIT-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-0CDBF5A0DC57
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity
