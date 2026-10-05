@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 D-GZ-PLAYTEST-UI-AUDIT-01/CAND-D-GZ-PLAYTEST-UI-AUDIT-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-06：独立核验候选并晋级为 EXP-UNITY-005；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/D-GZ-PLAYTEST-UI-AUDIT-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-06 完成记录
+
+- 语义裁决：promoted。来源审计已实际复现双方仍存活时 return 绕开胜负结算；当前 `df68b1b5` 的完整输入、返回和 HUD 刷新链均复用 `CanSelectExplorationNode`，并有节点分发与正式胜负导航测试证明修复边界。
+- 去重与边界：`EXP-UNITY-001` 只约束正式场景 builder 保存链，`EXP-UNITY-002` 只约束程序集依赖，均不覆盖探索输入与返回命令在战斗状态下的双层门禁。本经验只在两条所有者路径和具名节点／状态符号同时命中时触发；不新增门禁。
+- 模型协作：简单：来源候选、修复提交、现行入口和既有经验边界均可直接核验，验收是确定性回链与 schema 检查；沿用入口默认单模型，未调用辅助。

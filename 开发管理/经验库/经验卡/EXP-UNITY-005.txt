@@ -1,0 +1,25 @@
+# EXP-UNITY-005 · 战斗期间探索返回须由输入与命令双层门禁
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-D-GZ-PLAYTEST-UI-AUDIT-01-01`、`df68b1b5` 及其节点分发／正式导航测试。
+
+## 开工前
+
+任务同时改动 `AdventureInputController.cs`／`AdventureController.cs` 且正文出现 `SelectNode`、`ReturnToSource`、`CanSelectExplorationNode` 或 `adventure_not_exploring` 时，先核对输入层与返回处理均只在 `Exploration` 放行，并验证按钮不可点也不能绕过命令。只改遭遇结算、HUD外观、非探索节点或仅读取历史证据不触发；状态模型、节点分发或返回链改变时停止引用并重新核验。
+
+## 正确处理
+
+由 `AdventureController.CanSelectExplorationNode` 作为唯一状态判断，传给 `AdventureInputController.SelectNode` 拒绝非探索态输入；`ReturnToSource` 也复用同一判断。HUD 只据此更新可交互性，测试应覆盖直接 dispatcher 调用、既有按钮回调和正常探索返回。
+
+## 根因与弯路
+
+正式战斗中左侧 return 节点仍可调用：`SelectNode` 始终派发节点，`ReturnToSource` 也未检查 `CurrentState`，因此仅隐藏或禁用按钮不能阻断已有回调或直接命令入口。`df68b1b5` 将两层都收敛到 `CanSelectExplorationNode`，非探索态返回 `adventure_not_exploring`，避免绕开胜负结算。
+
+## 证据
+
+来源候选记录了双方仍存活时点击 return 直接回城的正式复现、截图 `04-return-during-combat.jpg` 的 SHA-256，以及完整调用链。提交 `df68b1b5` 的 `AdventureNodeDispatchTests.ReturnHandlerAndRepeatedButtonInvocationRejectOutsideExploration` 覆盖 Combat／Loading／Returning 三态的 dispatcher 与按钮重复调用；`GuanzhongCombatNavigationGuardPlayModeTests` 覆盖胜负各一次正式结算返回。
+
+## 失效条件
+
+`AdventureSceneState`、`AdventureNodeDispatcher`、`AdventureInputController.SelectNode`、`AdventureController.ReturnToSource` 或正式胜负返回链被替换，或探索返回不再由这两个入口共同处理时，停止引用并重新核验。

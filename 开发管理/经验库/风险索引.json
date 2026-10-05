@@ -276,6 +276,34 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-002.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-08-27"
+    },
+    {
+      "id": "EXP-UNITY-005",
+      "title": "战斗期间探索返回须由输入与命令双层门禁",
+      "preflightSummary": "修改探索节点输入、返回节点或冒险战斗状态转换时，核对按钮与命令均只在 Exploration 放行。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+        "src/Assets/Scripts/Modules/Features/Adventure/AdventureInputController.cs"
+      ],
+      "textPatterns": [
+        "SelectNode",
+        "ReturnToSource",
+        "CanSelectExplorationNode",
+        "adventure_not_exploring"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-005.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-06"
     }
   ],
   "gates": []
