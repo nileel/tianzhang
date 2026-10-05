@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-05 用户要求统一行动力并明确允许同回合多次攻击／施法；先形成单一规则与迁移设计，不把跨规则、数据、BattleSim 和 Unity 的全部实现塞入一张执行卡。",
+  "stateReason": "2026-10-05 已完成统一行动力与多次行动的规则及迁移建议稿、源码事实核对和静态契约矩阵；只完成设计交付，新语义待负责人批准、费用待验证、运行时未实施，后续须独立一次性规划完整实现任务图。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-05-combat-action-points-design.md",
     "开发管理/统一行动力设计核对记录.txt",
@@ -79,3 +79,27 @@
 ## 停止条件
 
 - 需要写运行时代码或调参才能继续、需要改用户已确认多次行动、当前事实冲突无法收口、或需要跨原边界实施时停止并报告；不能把设计卡扩成全量战斗重构。规格仍有真实不可推导的用户选择时明确提出，不用额外状态或兼容层掩盖。
+
+## 2026-10-05 设计交付与验证结果
+
+- 已交付 docs/superpowers/specs/2026-10-05-combat-action-points-design.md 与 开发管理/统一行动力设计核对记录.txt。前者是单份可审阅建议，后者保存L2／源码符号、事实与推断区分、用户报告未复现、逐项契约及后续验收入口。
+- 规则覆盖100基础AP方向、固定100/v移动换算、独立位移与AP成长、移动／动作自由穿插、多次普攻／施法、CT惩罚累加、独立技能冷却、恢复／持续／触发时点、防御退出、待机／结束、费用提交与失败不扣费、零成本／返还循环边界。
+- 现行Unity移动不关闭动作；旧阶段限制再次攻击／施法，输入还受正式Static3D provider的IsPresenting门控。没有用户运行版本或现场证据，未确认顺序报告根因，未写猜测性运行时补丁。
+- 迁移矩阵覆盖规则／L1、公共字段、CSV／严格导入／asset、角色长期成长／存档、空间精度、内核、BattleSim两个入口、敌方、HUD／预览、缺失道具／换装与换术正式入口、场景功能、数值和最终关闭；W标签只为工作包，没有建新实现卡、提升下游或改其他任务。
+- 模型协作按当轮复杂度核对：主模型gpt-6.1-sol保持共享入口证明；发现独立时间量纲冲突后请求gpt-6-astra／high只读辅助，会话 /root/ct_semantics_evidence；辅助实际模型／强度工具未证明，记录为未核实，返回证据已由主责复核。组合与工具限制完整记录于核对记录。
+- 本轮静态契约逐项核对通过，所需任务卡／审核文本／数据链／路径限定空白与暂存差异检查的执行证据由candidate终态及提交元数据承载；没有Unity或BattleSim实跑，不宣称新AP已上线或费用已平衡。
+- 新语义仍为建议：CTB衔接、余量不结转、移动精度、待机收紧、CT惩罚合并、防御／恢复时点、血脉免费条款交叉须负责人审阅批准。具体成本、减耗下限与返还预算须后续数值实跑；规格批准后一次独立规划完整任务图。本设计交付信息充分，没有触发本卡实施停止条件。
+
+## 经验候选
+
+### CAND-D-COMBAT-AP-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：design
+- 现象：统一行动力设计核对发现同名冷却数值在Unity同时决定CT门槛和技能tick倒计时，BattleSim又按全场行动次数递减；只看费用字段或行动顺序会误判两个运行时已经对齐。
+- 已证实根因：现行CooldownTicks被两个不同单位的消费者共用；1v1与2v2各自有独立调度／恢复循环，已有CT回归未覆盖同刻队列、首行动、技能重用时钟和个人回合事件。
+- 可能复用范围：战斗规则迁移、行动经济设计、Unity／BattleSim数据字段与事件时钟核对；不适用于尚未复现的用户输入问题根因。
+- 证据：开发管理/统一行动力设计核对记录.txt#BattleSim 差异与反例；CombatActionResolver.ResolveAttack、CombatCommandService.AdvanceUntilAction、CTBEngine.AdvanceUntilAction、Combat.Simulate／Simulate2v2Detailed；基线dcb8372e286772bfb45dcf731d94dc3c90aa9f02。
+- 门禁可能：yes

@@ -1,0 +1,147 @@
+# 统一行动力设计核对记录
+
+任务：D-COMBAT-AP-01
+日期：2026-10-05
+责任方：Codex
+主模型：gpt-6.1-sol（共享入口启动证明；executionModel 与 codex exec -m 一致）
+核对基线：dcb8372e286772bfb45dcf731d94dc3c90aa9f02
+交付：docs/superpowers/specs/2026-10-05-combat-action-points-design.md
+结论：规则与迁移建议稿完成；新规则待批准、生产费用待验证、Unity／BattleSim 尚未迁移。
+
+## 授权、原子性与模型协作
+
+- 本轮一个 taskId、一个 owner worktree、一个 candidate。只修改冻结的六条允许路径；完成只关闭设计卡，不操作其他任务、runtime、集成或其他 worktree。
+- 单一结果是可审阅的 AP 规则与迁移方案，虽然读取多个所有者，实施仍只有文档和本卡闭环，原子边界成立。没有把跨端实现或数值调参塞入本卡。
+- 写前已读完整任务卡、AI协作规则的模型协作段、自动工作流规则及任务维护闭环规则。主模型保持入口指定值。共享入口绑定本 run／task 的风险预检 matched、notice、mustRead、gatePointers 均为空；卡头 schema 2 explicitRefs、matched、gates 亦为空。本轮没有扩大 expectedPaths 或从文档实施转为代码／数据／Unity资产实施。
+- 复杂度：复杂规则设计，AP／CT／冷却／状态语义强耦合，由主责统一写入与验收。原生工具具备只读辅助的模型／推理强度覆盖，任务卡条件是发现独立 CT／状态证据冲突才调用。
+- 触发事实：Unity 的一个 cooldownTicks 字段同时作为 tick CD 与 CT门槛；BattleSim 1v1 和 2v2 与整数刻／就绪队列不一致，存在可独立审阅的量纲反例。
+- 实际调用：collaboration.spawn_agent，请求 gpt-6-astra／high、fork_turns=none；返回会话标识 /root/ct_semantics_evidence。辅助只读指定文档与 Combat／BattleSim 时间入口，未写文件、未提交、未派生。工具没有提供辅助 requestMeta 的实际模型／强度证明，故实际辅助模型与强度标记“未核实”，不能把请求参数当身份核验结果。
+- 辅助返回：三套时间语义、反例和停止判断。主责重读相应方法／用例核实；采用整数刻与惩罚相加的候选理由，未采用其“普通技能默认无独立冷却”建议，因为本卡要求保留原冷却合法性。主模型身份仍仅按入口证明填写。
+- 使用 brainstorming 的上下文调查、方案比较与写后自查；本轮任务已明确授权交付建议稿，规则批准作为后续实施前置，未借技能扩大为本轮实现或逐段等待批准。
+
+## L2 事实路由核对
+
+先读取 docs/基础设定/设定事实速查.txt 的战斗／空间／状态入口，再读以下原文对应完整规则段：
+
+| 事实源 | 相关章节／字段 | 本轮结论 |
+|---|---|---|
+| docs/基础设定/战斗系统.txt | 第一章 CTB／冷却惩罚／待机／行动阶段；第二章移动摘要；第四章技能字段／神通；第五章状态职责；第六章信息 | 原规则为单行动＋独立移力，100是 CT门槛；不是新 AP已实现；冷却惩罚以 CT计，不等于独立 CD |
+| docs/基础设定/角色属性_一级.txt | 一级属性定义：反应／移力；境界表仅用于字段定位 | 反应为行动轴频率，移力为单次距离；没有读取旧区间并锁定新平衡 |
+| docs/基础设定/角色属性_二级.txt | 二、恢复类 | 每回合 HP／MP恢复尚未规定个人回合及开始／结束，方案明确给出候选时点 |
+| docs/基础设定/战场空间与环境规则.txt | 一、六角拓扑与加权距离，1～23条 | 距离与拓扑分离；合法边先判，metricDistance与移动负担另算；不建新地图规则 |
+| docs/角色养成/养成事实速查.txt | 三规范入口与模板指针 | 只作线索，不加载术法／神通内容整库 |
+| docs/角色养成/术法设计规范.txt | 战斗模板、核心原则、通用约束 | MP与CT惩罚保留；控制／恢复／移动以效用定价；AP不是已存在模板字段 |
+| docs/角色养成/神通设计规范.txt | 模板、四类型、核心原则、通用约束 | 主动／被动／触发区分；丹相共享abilityInstanceId；血脉免费条款需负责人决定后才能改 |
+| 开发管理/开发-技术经验.txt | Unity开发经验中的CTB量纲／冷却分层；BattleSim对称性 | 作为相关经验，不替代源码；本轮不沿用旧文中的UI／保存所有者 |
+| 开发管理/设计-当前状态.txt | Unity正式链／保存摘要 | 只作定位；schema2和旧Marker等摘要与当前源码有差异，当前事实取源码，本轮不顺带改状态总览 |
+
+## Unity 源码与直接所有者证据
+
+以下为静态代码事实，未作为本轮运行测试通过证据：
+
+1. src/Assets/Scripts/Combat/CombatSession.cs::BeginTurn、RecordAction、ValidateCommand、ValidateMove（约99～166、224～260行）
+   - BeginTurn 重置移力与惩罚；RecordAction 直接赋值 PendingCooldownPenalty，再转ActionThenMove；移动允许处于任一未结束阶段，动作只允许MoveThenAction。
+   - MovePoints为0会拒绝移动，但不因移动本身关闭攻击。这只能否定“当前内核必然先移动就禁用攻击”的猜测，不能复现用户现场。
+2. src/Assets/Scripts/Combat/CombatCommandService.cs::Preview、Execute、AdvanceUntilAction、EndTurn
+   - Preview 读取一个profile惩罚与独立移力来推断RemainsInTurn；非移动动作RecordAction，移力为0时自动结束；EndTurn只允许旧后行动阶段。
+   - 未结束回合重复Advance返回当前actor、0刻，不重置移力；只有新全局刻才全员AdvanceCooldowns。
+3. src/Assets/Scripts/Combat/CombatantSnapshot.cs::MovePoints、ResetMovePoints、CommitMovement、SetCooldown、AdvanceCooldowns（约102～103、141～155、191～214行）
+   - 独立整数移力余额；位置／朝向随合法移动提交。技能冷却存字典并按全局经过刻递减，没有AP余额或独立长期位移成长字段。
+4. src/Assets/Scripts/Combat/CombatTurnScheduler.cs::AdvanceUntilAction、ConsumeAction、Wait 与 Combat/Turns/CTBEngine.cs::ChargingTicks、AdvanceUntilAction、ConsumeAction、WaitAction（约122～177行）
+   - Root wrapper委托唯一CTBEngine；先清同刻就绪队列，再充下一整数刻；正常清零，待机乘0.5；预览刻数向上取整。
+   - 同反应按CT降序；完全相等没有显式稳定ID次序。后续验收需冻结最终平手规则，不能称当前已证明稳定ID排序。
+5. src/Assets/Scripts/Combat/CombatActionResolver.cs::ResolveValidated、ResolveAttack、ResolveGuard、ResolveSwapSpell、ApplyCommonReductions、AdvanceActionState
+   - ResolveAttack扣MP并把CooldownTicks设为技能CD；CommandService又用此值做CT门槛。Guard置bool，伤害公共减免为×0.5，查到的BeginTurn／FinishTurn不清它。
+   - SwapSpell换槽＋计数，设置换入技能60刻；技能／出手效果还涉及守一、符胆、雷劫。新多动作必须逐条分类这些事件，不能默默按每回合多倍增长。
+6. src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RunCombat、ExecutePlayer、Present、BuildMovement、BuildArtActions、PreviewAction／IsCurrentCandidate
+   - 正式运行循环等待玩家当前回合与演出完成；敌方ActionThenMove优先EndTurn，不具备新AP组合决策。
+   - ExecutePlayer在IsPresenting时直接不接受请求；Present剔除忙碌输入、重建可达格／术法目标并增加上下文版本。后续费用与确认都必须走此权威链。
+7. src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles／SpatialCombatQuery.QueryMovement（约75～169行）与 Modules/Spatial/SpatialQueryBoard.cs::Traverse（约286～339行）
+   - profile显式投影resourceCost／cooldownTicks；Spatial遍历用合法边MetricDistanceUnits＋目标格MovementBurdenUnits，Adapter按(cost+UnitsPerRange−1)/UnitsPerRange向上取整到整移力。
+   - 原始定点费用是AP换算需要的输入，不能先丢精度；路线仍由当前Spatial所有者提供。
+8. src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::CanAct／SetContext、CombatActionBarView.cs::Present／PresentMovement；Modules/GameplayContracts/CombatPresentationContracts.cs::CombatActionPreviewSnapshot、CombatMovementSnapshot、CombatHudSnapshot
+   - CanEndTurn目前还意味着不能再次动作；动作条以!CanEndTurn控制普攻／防御／术法，待机同按钮改成结束。
+   - 预览有MP、条件结束CT／门槛／刻数，没有AP；移动快照显示独立移力。新UI要分别展示每行为合法性与结束资格。
+9. src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::Awake中的Configure接线（约98～117行）；src/Assets/Scenes/AdventureScene.unity::static3DUnitPresentationProvider（3211行）；Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs::IsPresenting／Present
+   - 正式Encounter注入Static3D provider；IsPresenting由movements、actionRecoveries、transientFeedback共同决定。Move沿路径开协程，动作与反馈也可封锁输入。
+   - MovementCellsPerSecond=4是演出秒制常量，不是AP位移属性。
+10. src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::CreatePlayer／CreateEnemy（约106～193行）
+    - 双方以Clamp(RoundToInt(Reaction/20),2,8)产生移力，与BattleSim rb.移力不是同一独立属性来源。迁移须显式给玩家／NPC位移效率，不能把反应养成冒称位移养成已接入。
+11. src/Assets/Scripts/Combat/CombatCommand.cs::CombatCommandKind 与 GameplayContracts::CombatActionKind
+    - 内核八种命令含SwapSpell／EndTurn，没有UseItem／SwapEquipment；正式动作预览只列六种，不含SwapSpell。道具和换装备目前是L2行为概念，未查到正式战斗命令；本轮没有实现它们。
+
+## 用户报告与已有用例的证据限度
+
+- 用户现场：任务卡记录“先位移不能用其他行为，先其他行为却可以位移”。没有运行commit、Editor／构建身份、点击时间／目的地／余额、日志或可见现场。基线HEAD只能证明本次读到的版本，不能证明用户运行的就是该版。
+- git对两个直接所有者的最近路径历史含2cd11635（双FBX正式运行）、63da50ca（动作预览）、48f0516e（移动／术法共享接缝）；这些是定位线索，不是用户现场启动版本证明。
+- EditMode/CombatRuntimeKernelTests.cs::MoveUsesTheCanonicalSpatialPathAndOnlyConsumesMovementPoints（61～93行）：移力用尽仍可攻击；ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn（287～324行）：两段移动不推进刻且保留行动；ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce（326～358行）：旧第二次攻击拒绝；WaitAfterMovementPreservesHalfCtAndCannotReplaceAnAlreadyUsedAction（361～378行）：旧移动后待机收益。
+- PlayMode/GuanzhongMovementPlayModeTests.cs::FormalSceneProjectsAuthorityAndCommitsOnlyConfirmedMovement（核心确认／恢复段196～229行）：确认移动立即提交规则，IsPresenting时防御／结束／移动请求被封锁；结束演出后防御成功，改为结束按钮。该用例覆盖入口，但本轮仅阅读，没有重新运行。
+- PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs::CandidateCancelAndTargetChangesNeverMutateAuthority、ConfirmOnceAndRejectStaleOrUnaffordableCandidates、MoveAndLifecycleClearOnlyUncommittedCandidates、HideWaitAndDeadTargetUseRealValidation：提供取消、陈旧确认、生命周期清空与旧阶段验收入口，不证明新AP已通过。
+- 根因状态：未确认。后续W11须取得实际运行版本及演出前／中／后actor、phase或AP、输入合法性与拒绝原因，再定向复现；本轮不以IsPresenting猜测补丁修用户问题。
+
+## BattleSim 差异与反例
+
+| 入口／符号 | 基线事实 | 最小静态反例与迁移入口 |
+|---|---|---|
+| simulations/BattleSim/Combat.cs::Simulate（471～472、512～525、643／748附近） | ctA／ctB实际是下一时间，从0开始，选小值并增加100／反应；双方CD／秋水恢复在每次全场行动入口推进 | A反应10、B反应50时初始0＝0使A先手；冷却3随B1、A2、B2减完，不是3个本人回合或3个整数刻。W7迁移首行动、CD／恢复事件 |
+| Combat.cs::Simulate2v2Detailed（881、922～944行） | 每外层循环全员加反应，选择最高CT的一人；先扣100、保留溢出；缺独立技能CD状态 | 四人反应60：第2刻只处理一人，其余人之前继续充新刻；Unity应先耗尽该刻队列。W7验证队列、时点与清零，不只看前四名顺序 |
+| Combat.cs::ResolveActionPosition（119～133行） | 旧整次移力FindAttackPosition然后判断CanAttack | 新AP需记录实际移动费及其后可用动作，不以“找到攻击位”替代双预算合法性；W7与W5共享冻结语义 |
+| simulations/BattleSim/Character.cs::ArtCooldown／DivineCooldown、Primary[移力]（49、57、163行） | 冷却注释为回合数，移力是rb.移力 | 不能乘10或照抄到tick当批准参数；W2／W3／W7逐来源映射 |
+| BattleSimSelfTests.cs::RunCtReactionTq052（697～719行）、RunGroupPositioningNGroup01（含2800～2808行） | 反应先手与同值输入顺序／四人行动观察 | 不覆盖1v1首行动、队列同刻、CT清零、技能时钟与恢复；W7补反例 |
+| BattleSimSelfTests.cs::RunBattlefieldFoundationNDist01、RunPositionControlNDist02、RunEnvironmentRulesNEnv01 | 负担、阻挡、定身、空间缩放／环境既有回归 | 后续扩充AP预算证据；不用模拟器复刻关中演出与整图 |
+
+Unity量纲反例：反应50、原CooldownTicks=30，同时得到CT门槛130和技能CD30刻；下个人回合约3刻就绪时CD仍有27刻。它们是不同职责，不得“分字段”时直接删除现有重用限制。方案保留已接入Unity的tick重用，旧模拟输入另行冻结转换。
+
+上述差异已按现行文档／运行时分别列明，不存在本轮无法解释的事实矛盾。交付建议稿不需要改代码／调参，未触发停止条件；任何直接修正或新胜率结论均会越界。
+
+## 数据与保存事实
+
+- src/Assets/DataConfig/AttackProfiles.csv::表头／三条生产行：basic_unarmed、spell_guanshiji、spell_julingshu；没有AP字段，也没有Divine生产行。resourceCost／cooldownTicks当前值只是既有事实，未据此定新AP成本。
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles／TryParseAttackProfiles／ImportSpells／ImportSkills：AttackProfiles严格生产，Spells.csv与Skills.csv分别投影术法／神通；Modules/Content/AttackProfileData.cs、SpellData.cs、DivineSkillData.cs承载对应字段。W3须同步相关字段和生成asset／meta，不建第二攻击成本生产表。
+- Modules/Character/CharacterStateSnapshot.cs 没有独立AP／位移字段；Modules/Infrastructure/Persistence/GameSaveEnvelope.cs::CharacterRecord（302～384行）保存reaction、资源、装配、成长／modifier等，没有临时战斗AP。
+- GameSaveSerializer.cs::SchemaVersion／Deserialize／MigrateLegacySchema（10～55行）：现行schema3；有玩家的旧schema1／2档拒绝，空会话可机械迁移。旧摘要schema2不能指导新保存迁移。W4只因新增不可重建长期成长时版本化，保留现有拒绝／原子恢复边界，不改存档删除流程。
+
+## 静态契约逐项核对
+
+“静态通过”表示建议稿已给出单一可验证语义，不表示代码实现／运行通过。下表每项运行证据仍待后续对应工作包。
+
+| 契约 | 本稿规则及纯技术夹具预期 | 后续验证入口 | 本轮 |
+|---|---|---|---|
+| 移动→攻击 | AP够则仍能攻击；v5距离1费20、夹具普攻40，剩40 | W5／W6内核＋W11移动PlayMode | 静态通过 |
+| 攻击→移动 | 普攻40后余额60，移动20后40，不受旧阶段阻断 | W6、W8／W9、W11 | 静态通过 |
+| 移动→施法→再移动 | 20＋夹具术法30＋20＝70，同回合剩30、不推进刻 | W5／W6、W11 | 静态通过 |
+| 多次普攻／不同术法 | 夹具零CD普攻40×2＝80；不同术法各查AP／MP／CD且累加惩罚 | W6确定性用例、W7双入口、W12生产成本实跑 | 静态通过 |
+| 同技能冷却 | CD0可重复；CD>0拒绝；本回合移动／施法不减CD | W6／W7三时钟反例 | 静态通过 |
+| 惩罚合并 | 10＋30，任意顺序门槛140；随后0不覆盖 | W6、W7、W9条件轴预览 | 静态通过 |
+| AP／灵力／道具不足 | 任一费用不足整体拒绝，无扣其他资源或动作额度 | W6、W10a、W11 | 静态通过 |
+| 取消／陈旧／失败 | 不变AP／MP／库存／位置／CD／CT惩罚；未命中属于已执行仍付费 | W6及现有Preview PlayMode入口扩展 | 静态通过 |
+| 分段移动一致 | 同路线／速度逐边定价，命令段数不重置舍入或多领减耗／返还；v3三条普通边费99.999避免向上取整导致第三边超预算 | W5压缩边／地形／整数预算用例，W11同路径预览 | 静态通过 |
+| AP与位移成长 | AP100→120时v5每距离仍20，移动分子固定100；反应不发AP | W3／W4／W5、W12 | 静态通过 |
+| 主动结束／AP用尽 | 任意时点结束可用；普通CT清零＋累计惩罚，仅一次 | W6内核＋W8敌方结束＋W11 | 静态通过 |
+| 普通待机 | 无收益动作才保留50%；移动后不能选择；取消仍可待机 | W6替换旧移动后待机断言、W9显示区分 | 静态通过 |
+| 恢复／状态持续 | 本人开始恢复一次；本人后续结束递减，施加当前回合不减；tick原型独立 | W6／W7，控制／DOT／跳过／死亡夹具 | 静态通过 |
+| 每回合／每次触发 | 回合额度不随子动作刷新；每次命中按原型触发，多目标不是重复付费动作 | W1逐条内容归类、W6／W7唯一账本 | 静态通过 |
+| 普通防御 | 不叠加；至下本人开始；成功主动收益退出、失败不退出、结束保留 | W1批准公式、W6功能、W12强度、W11可见状态 | 静态通过 |
+| 演出与输入 | IsPresenting仅防重入，演出结束AP够可继续；刷新不重启回合 | W8／W9、W11正式provider真实证据 | 静态通过 |
+| 敌我同规则 | 相同报价／合法性；净支出终止，有余额无合法动作选择正常结束 | W6、W7、W8敌方日志 | 静态通过 |
+| 费用与HUD一致 | AP／MP／重用CD／累计惩罚同源；轴是此时结束的条件预测 | W2／W9、Preview PlayMode与正式场景 | 静态通过 |
+| 减耗／返还 | 正最小净费＋本人总预算；返还不递归，来源实例不重复，超上限截断 | W2／W6确定性循环反例、W12数值 | 静态通过 |
+| 控制／免费例外 | AP不绕过定身／封灵／眩晕；主动血脉未获新费用批准 | W1批准、W6／W7按原型有限性证明 | 静态通过；批准待办 |
+| 换装／换术／保存 | 换装不重发AP；换术保留每战次数／冷却；保存长期成长输入 | W4、W10b、W11 | 静态通过；缺失正式入口待实施 |
+
+## 迁移覆盖与验收归属
+
+- 单份方案§10已覆盖W0批准／一次完整规划、W1规则／L1、W2公共字段／单位、W3CSV／导入／生成asset、W4长期成长／存档、W5空间精度、W6内核回合／费用、W7BattleSim1v1／2v2、W8正式控制器／敌方、W9HUD／输入／预览、W10a道具、W10b换装／换术、W11场景功能、W12行动经济／平衡、W13最终关闭。
+- 每包有语义结果、模块所有者／责任角色、前置与验收入口。W标签没有被写成任务卡或ready任务；缺失道具／换装行为不能在统一AP最终验收中省略。
+- 公共语义／规划归Codex；冻结代码实现可交DeepSeek后由Codex独立复审。后续建立字面量路径时，新增Unity对象必须包含.meta，同一方法只给一个写入所有者。
+- 场景功能由Unity验证路径／扣费／输入／演出；BattleSim验证可抽象行动经济和角色强度。费用字段名不决定归属，不扩模拟器复刻关中地图。
+- 后续参数改变必须使对应运行证据失效并重跑受影响范围；原输入未变的已通过检查不重复。
+
+## 写后自查与本轮验证入口
+
+- 已确认需求／建议／待批准／未实施四类分开。多次行动许可没有撤销，MP、冷却、资格、范围和控制没有被取消。
+- 每边定点向下取整并保留正最小费，避免按命令分段得利及v3第三条边因微小超费不可达；普通移动不按段数获得固定减耗／返还。AP上限成长没有改动100分子；净成本／返还预算有限，未添加新执行器、兼容层或重试机制。
+- 所有费用数值夹具仅证明合同算术；没有新AP胜率或“已平衡”结论。本轮未运行Unity、dotnet build／restore或BattleSim，因为没有修改对应输入，也未被授权实现模拟器。
+- 待负责人批准的真实规则交叉已列在方案§11，尤其血脉免费、移动后待机、防御公式／时点、全局tick冷却拆分；这些不妨碍完成建议稿，不能在下一轮跳过批准直接实施。
+- 本轮要求的脚本：tools/check-task-cards.ps1（本卡CodexClosedOrNonReady）、tools/check-review-text.ps1、tools/check-data-chain.ps1、tools/check-pending-whitespace.ps1（实际存在的本轮允许文件）、git diff --cached --check。执行终态与最小验证证据随candidate元数据及最终JSON返回，不将静态核对冒称运行回归。
+- 本卡闭环只归档自身并移除自身队列／backlog行；保留其他条目及具名前置引用，不提升任何下游。
