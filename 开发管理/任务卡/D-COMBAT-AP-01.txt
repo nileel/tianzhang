@@ -1,0 +1,81 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP-01",
+  "title": "统一行动力与多次行动的规则设计及迁移方案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "executionModel": "gpt-6.1-sol",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-05 用户要求统一行动力并明确允许同回合多次攻击／施法；先形成单一规则与迁移设计，不把跨规则、数据、BattleSim 和 Unity 的全部实现塞入一张执行卡。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-10-05-combat-action-points-design.md",
+    "开发管理/统一行动力设计核对记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+}
+---TASK-BODY---
+# D-COMBAT-AP-01 · 统一行动力与多次行动的规则设计及迁移方案
+
+## 来源与当前边界
+
+- 2026-10-05 用户试玩报告“先位移不能用其他行为，先其他行为却可以位移”，要求统一行动力：轮到角色时基础行动力以 100 为设计基准；按玩家位移速度换算每移动 1 距离的行动力消耗；术法、神通、防御、使用道具等各有自己的消耗，并支持独立养成线和玩法流派。
+- 用户对关键规则明确回答“允许”：同一回合可以多次攻击／施法，仍须满足行动力、灵力、冷却及动作原有合法性；不得再加“每回合最多一次攻击／施法”的通用限制。
+- 用户本轮要求建立三个任务，未要求在建卡时实施。此卡的原子交付是单份可审阅规则与迁移方案，完成只代表设计完成，绝不表示统一行动力已上线；后续实现要在规格冻结后单独规划完整任务图。
+- 上轮提出的“剩余行动力不跨回合积累”、100/v 的具体换算、保留 CTB 的具体衔接与减耗／返还机制目前是方案候选，不能冒写成用户已逐项批准的规则或已验证平衡结论。
+- 当前源码 CombatSession／CombatCommandService 允许 MoveThenAction 下移动后继续行动，因此报告中的顺序问题尚未确认根因；不得把用户观察直接写成已证实的单一代码原因。
+
+## 必查范围
+
+- docs/基础设定/设定事实速查.txt 中战斗与属性指针，再读 docs/基础设定/战斗系统.txt#第一章：行动轴、第二章移动摘要、技能框架及界面信息；docs/基础设定/角色属性_一级.txt 中反应速度／移动力；角色属性_二级.txt 中回合恢复；战场空间与环境规则.txt 中 metricDistance、合法路径与移动专用负担。
+- docs/角色养成/养成事实速查.txt 中术法／神通成本指针，再按设计涉及字段读取术法设计规范.txt、神通设计规范.txt 的现行模板与消耗／冷却约束，不整库预读内容实例。
+- src/Assets/Scripts/Combat/CombatSession.cs::BeginTurn、RecordAction、ValidateCommand、ValidateMove；CombatCommandService.cs::Preview、Execute、AdvanceUntilAction；CombatantSnapshot.cs::MovePoints、ResetMovePoints、CommitMovement；CombatTurnScheduler.cs 中 CT 与待机；CombatActionResolver.cs 中动作／冷却提交。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RunCombat、ExecutePlayer、Present、BuildMovement、BuildArtActions；CombatEntryAdapter.cs::TryProjectProfiles／SpatialCombatQuery；CombatPresentation/CombatCommandInput.cs::CanAct、SetContext；CombatActionBarView.cs::Present／PresentMovement；GameplayContracts/CombatPresentationContracts.cs 中预览、行动、移动快照。
+- src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs 与 PlayMode/GuanzhongMovementPlayModeTests.cs、GuanzhongCombatActionPreviewPlayModeTests.cs 中行动阶段／移动后输入证据；追查用户实际运行版本和 IsPresenting 输入封锁的直接所有者。
+- simulations/BattleSim/Combat.cs 中行动循环、CT 与 ResolveActionPosition；Character.cs 中移力与反应属性；BattleSimSelfTests.cs 中直接相关 CT／移动回归。只读定位现有模拟与 Unity 差异，数值断言必须另有实跑。
+
+## 实施范围
+
+- 交付一份标明“已确认需求／建议规则／待决定项／实现状态”的设计文档及事实核对记录。基于既有 CTB 讨论轮到谁、回合内 AP、技能冷却和灵力的职责，明确多次施法时冷却惩罚如何合并，不能直接套用旧单行动的覆盖写入。
+- 设计 AP 获得／上限／消耗／结束时处理、移动与动作自由穿插、重复动作合法性、普通待机与显式结束区别；区分一次动作、个人行动回合和 tick，逐项说明恢复、持续时间、触发次数、防御持续与退出、失败不扣费和结束结算时点。
+- 移动消耗复用同一合法路径、加权距离和地形负担。定义位移速度的单位与现行“移力”映射、与反应速度的区别、定点精度和舍入；拆成多段移动与一次移动同一路线不能靠舍入获得优势。成长增加 AP 上限时不能又提高分子抵消成长收益。
+- 为普攻、术法、神通、防御、道具及现有换装／换术动作列出统一成本接口和首批迁移对象；查明尚未接入的行为，不冒称已有道具战斗命令。具体费用、减耗下限和返还预算只能作为待验证候选，不未经实跑宣称平衡。
+- 明确养成扩展维度及互斥／预算边界：AP 上限、移动效率、特定动作减耗、条件返还等，保留形成流派的空间；识别零成本循环、防御叠加、返还递归和控制状态绕过的防线。此卡不顺带生产功法、术法、神通、装备或整条养成内容。
+- 迁移方案列清现行事实源、数据字段／导入／存档影响、BattleSim、Unity 规则、敌方决策、HUD／预览、正式跑测的所有已知工作包、依赖顺序和验收入口。冻结前不提前建立可执行实现卡；规格确定后须在一次独立规划中完整建齐已知叶子、依赖图、首批 ready 与最终关闭条件，不反复领取一个大实现父项逐张拆分。
+- 区分场景功能证据与角色数值平衡：Unity 验证实际路径／费用扣除／输入及动画交互；BattleSim 验证可抽象的行动经济与角色强度，不要求模拟器复刻关中全部场景。
+
+## 禁止项
+
+- 本卡不改现行 L2 规则正文、CSV、Unity、BattleSim、存档或自动化；不把未经验证候选数值改成生产事实，不按当前报告猜测性修补移动问题。
+- 不撤销多次行动许可，不取消原有灵力／冷却／范围／状态合法性，不扩展其他 backlog 或改动存档删除与血条任务。
+
+## 模型协作
+
+- 复杂设计：涉及 AP／CT／冷却／回合语义和两个运行时的迁移边界；主模型 gpt-6.1-sol，建议 high，由主责统一收口强耦合规则。
+- 仅当发现独立可界定的 CT／状态结算证据冲突时，可请 gpt-6-astra／high 对上述 Combat、BattleSim 与对应文档做只读分析，返回冲突位置、反例和停止判断；不要求无条件增加辅助轮次，不允许辅助改卡、提交或继续派生。
+- 写前核对真实工具与风险预检，调用和未执行辅助的原因记入设计核对记录；模型意见不能替代代码证据、实跑或用户规则决定。
+
+## 验证
+
+- 静态契约逐项核对：移动→攻击、攻击→移动、移动→施法→再移动、多次普攻／不同术法、同技能冷却、AP／灵力不足、取消／失败不扣费、分段移动一致、主动结束、待机、状态与恢复时点、敌我同规则、成本与 HUD 预览一致、成长与返还边界。
+- 设计记录保存源码路径／符号、事实与推断区分、未复现的用户报告、迁移覆盖矩阵和每项后续验证入口；纯设计本轮不为“走流程”重复 Unity 或 BattleSim 全回归。
+- 若要声称候选角色数值已经平衡，必须先有受影响 BattleSim 实跑；本卡未授权实现模拟器，缺此证据只能标待验证，交后续数值工作包。不得沿用旧单行动胜率作新 AP 结论。
+- 运行 tools/check-task-cards.ps1、相关审核文本检查；docs 新设计文档变化时运行 tools/check-data-chain.ps1；提交前路径限定空白检查及 git diff --cached --check。
+
+## 完成条件
+
+- 单份方案完整覆盖已确认的 100 基础预算方向、速度换算、各行为独立成本、同回合多次行动和养成目标；新增语义给出具体建议与理由，确需用户决定的问题准确列明，不能伪装为批准。
+- 迁移工作包与依赖／所有者／验收覆盖齐全，后续能据此一次性冻结完整实现任务图；设计完成状态与规则批准、数值验证、实际实现严格分开。
+
+## 停止条件
+
+- 需要写运行时代码或调参才能继续、需要改用户已确认多次行动、当前事实冲突无法收口、或需要跨原边界实施时停止并报告；不能把设计卡扩成全量战斗重构。规格仍有真实不可推导的用户选择时明确提出，不用额外状态或兼容层掩盖。

@@ -1,0 +1,88 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-SAVE-DELETE-01",
+  "title": "关中开始菜单存档删除与确认",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-05 用户试玩反馈并明确要求建立任务；存档删除范围、所有者与验收已冻结，完成后交 Codex 独立复审。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs.meta",
+    "开发管理/关中存档删除验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-GZ-SAVE-DELETE-01-交接归档.txt",
+    "开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt",
+    "开发管理/任务归档/U-GZ-SAVE-DELETE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+}
+---TASK-BODY---
+# U-GZ-SAVE-DELETE-01 · 关中开始菜单存档删除与确认
+
+## 来源与当前边界
+
+- 2026-10-05 用户反馈“存档没有删除功能，导致存档无限增加”，随后明确要求分别建卡。本卡只增加用户主动删除单个存档的闭环，不自动清理现有存档。
+- 已查明：GameSaveSlotStore 只有枚举、读取、写入；StartMenuView.CreateSlotButton 只生成读取按钮，IPlayerEntryHost 没有删除入口。删除能力缺失贯穿既有链路，不另建保存服务。
+- 原子结果：正式 StartMenuScene 可以确认删除一个指定槽位，取消和失败不误删，成功立即刷新列表。与血条、行动力任务没有业务前置关系。
+
+## 必查范围
+
+- UNITY_STRUCTURE.md#正式场景入口、UNITY_STRUCTURE.runtime.md 与 UNITY_STRUCTURE.ui.md 中开始菜单／保存所有者；开发管理/开发-技术经验.txt#Unity 开发经验中场景持久化与测试入口。
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs::ListSlots、Read、Write、TryGetSlotPath、IsValidSlotId、IsFileSystemFailure；GameSaveSerializer.cs::SchemaVersion 只读核实现行保存格式。
+- src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs::PlayerSlotSummary、IPlayerEntryHost；StartMenuController.cs::Start、RefreshSlots、LoadPlayer；StartMenuView.cs::Configure、ShowSlots、CreateSlotButton。
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::Awake、ListSlots、LoadPlayer；GameBootstrap.cs::SlotStore、ActivateSlot、SaveActiveSlot 及活动槽位字段的直接写入者。
+- src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs::BuildSaveSlotList 与正式场景引用；src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs、FeatureCompositionEditorTests.cs::RecordingEntryHost；正式菜单进入、退出与读档的直接 PlayMode 调用。
+
+## 实施范围
+
+- 文件适配仍由 GameSaveSlotStore 唯一拥有。增加明确的单槽位删除结果及稳定失败原因；复用合法槽位 ID 和目录内路径校验，只删除其对应单个 JSON 文件。格式损坏的真实槽位也可删除；目录不可用等合成错误行不提供删除动作。
+- 通过既有 host／installer／controller 接到列表。每行独立显示读取与删除；删除先确认，明确展示存档编号和可读取时的角色名，提供确认／取消，并说明不可恢复。
+- 只有确认才调用删除；取消不写文件。成功后重新枚举、移除对应行，最后一个槽位删除后显示空列表提示；失败保留列表及存档，显示中文失败原因，不假报成功。
+- 核对活动槽位引用：删除后不得因旧活动槽位引用被后续保存重建。仅在现有组合根内清理确实指向该槽位的引用，不删除其他槽位或重建会话机制。
+- 界面继续复用现有 Canvas／字体／按钮风格。场景引用如需更新，通过原 Builder 保存并重开验证；新测试仅使用任务临时存档目录。
+- 回滚限本卡代码、场景和测试差异；功能回滚不承诺恢复玩家主动确认删除的数据，因此验收禁止删除用户真实存档。
+
+## 禁止项
+
+- 不改保存 schema、角色创建与加载语义，不实现自动清理、批量删除、云同步或回收站，不使用通配／递归／跨目录删除。
+- 不修改战斗、血条、行动力、养成或其他功能；不重构保存工作流。
+
+## 模型协作
+
+- 有界实现，但删除和公共 host 接口涉及数据安全：主责 DeepSeek V4.1 Flash，沿用入口模型；规格已冻结，沿单一调用链实施，无需辅助智能体。Codex 必须独立复审文件边界、取消／失败行为和真实 UI 证据，执行者不得自审。
+- 写入前核对 Unity、PowerShell 7、临时文件测试和截图能力，并消费同一卡风险预检正文；调用、验证及缺失能力记录在本卡验证记录。
+
+## 验证
+
+- EditMode：仅目标槽位被删除；其他文件和其他槽位内容保持一致；非法 ID／路径穿越被拒绝；槽位不存在、文件操作失败有明确结果；损坏 JSON 可删；更新 host 测试替身并验证取消不调用删除。
+- PlayMode：正式开始菜单用临时目录创建两个槽位，依次验证取消、确认、列表即时刷新、剩余槽位可读、最后一项删除后空状态、损坏槽位删除与活动槽位引用处理；记录 1920×1080 和 1366×768 的可读确认界面。
+- 使用 tools/run-unity-editmode-tests.ps1 和 tools/run-unity-playmode-tests.ps1 的现有入口或已支持的定向 Unity runner，保存命令、测试结果和正式场景证据；仅主张实际运行过的范围。公共接口改动运行 tools/check-unity-assembly-boundaries.ps1；场景改变才运行对应只读场景验证。
+- 提交前运行 tools/check-pending-whitespace.ps1、git diff --cached --check；按交接路由完成任务投影和审核文本检查。
+
+## 完成条件
+
+- 正式菜单完成上述单槽位删除闭环，取消／失败不误删，旧槽位引用不复活已删除文件，损坏槽位可清理，直接测试与实际 UI 证据齐全；Codex 复审通过后归档。
+
+## 停止条件
+
+- 需要改 schema、跨保存目录、自动／批量删除、重建保存所有者或使用真实玩家存档验证时停止；路径或直接依赖扩展先重跑预检。真实错误尚未定位时不叠加重试／兜底。

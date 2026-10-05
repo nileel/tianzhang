@@ -1,0 +1,79 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-HEALTHBAR-SLIM-01",
+  "title": "关中头顶血条精简为无文字细条",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-05 用户明确要求只有血条、没有文字；目标所有者与局部实现边界已定位，完成后交 Codex 独立复审。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "开发管理/关中头顶细血条验证记录.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-GZ-HEALTHBAR-SLIM-01-交接归档.txt",
+    "开发管理/任务卡/U-GZ-HEALTHBAR-SLIM-01.txt",
+    "开发管理/任务归档/U-GZ-HEALTHBAR-SLIM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+}
+---TASK-BODY---
+# U-GZ-HEALTHBAR-SLIM-01 · 关中头顶血条精简为无文字细条
+
+## 来源与当前边界
+
+- 2026-10-05 用户实玩反馈头顶血条遮挡视野，要求“只有血条没有文字”，并要求单独建卡。
+- 已确认正式链：AdventureScene/UICanvas/CombatUnitHealthBars → AdventureSceneBuilder.BuildUnitHealthBars → CombatUnitHealthBarView.Configure／UpdateResources／LateUpdate。现状包含姓名、生命和灵力三段文字、面板皮肤及随文字伸展的布局；这是本卡唯一视觉目标。
+- 原子结果：玩家与敌人的头顶只显示紧凑生命细条，保持原生命比例和头部跟随。与存档及行动力没有业务前置关系。
+
+## 必查范围
+
+- UNITY_STRUCTURE.md#正式场景入口、UNITY_STRUCTURE.ui.md 中 CombatPresentation 与 Adventure 组合入口；开发管理/开发-技术经验.txt#UI 统一复用经验及场景持久化条目。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs::Bar、Configure、UpdateResources、LateUpdate、Clear；CombatHudPresenter.cs::Present／Hide 是直接调用者。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildUnitHealthBars、CreateHealthBarText 和对应场景更新入口；src/Assets/Scenes/AdventureScene.unity::CombatUnitHealthBars 及序列化引用。
+- Static3DCombatUnitPresentationProvider.cs::TryGetHeadAnchor、AdventureSceneInstaller.cs 中 healthBars.Configure 的调用；CombatTargetView.cs::Present 只读确认详细信息仍有原显示位置。
+- src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs 中文字、资源更新、跟随与双分辨率断言；src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs 中头顶层级断言。
+
+## 实施范围
+
+- 删除头顶姓名、生命数值、灵力文字及其序列化引用、文字驱动布局与大背景。只保留生命轨道和填充，采用固定宽度细条，不随名称长度伸展，不新增灵力条、徽标或数值标签。
+- 保留现有头部锚点、世界到屏幕转换、生命比例、低血量颜色、死亡／离屏隐藏、敌我双槽位和 Graphic 不接收射线的行为；不要修改 provider 或角色尺寸。
+- 创建路径与运行时刷新路径同时收口，避免刷新重新出现文字；原 Builder 更新正式场景并保存重开，不手改 YAML 后声称持久化完成。
+- 角色名称、生命／灵力详细值继续由已有目标面板承载，本卡不改该面板或整屏布局。回滚仅恢复本卡 View、Builder、场景和直接测试差异。
+
+## 禁止项
+
+- 不改角色模型、头部锚点、相机、其他 HUD、公共皮肤 helper、字体／图集／美术资产、生命数值和战斗规则。
+- 不通过关闭整个头顶层、把文字透明化但保留大布局、覆盖其他单位信息或新增 Canvas 实现。
+
+## 模型协作
+
+- 简单：目标对象与创建／刷新所有者明确，规格为无文字生命细条；DeepSeek V4.1 Flash 沿用入口默认单模型，无需辅助。Codex 独立复审真实画面及运行时证据，执行者不得自行签收视觉结果。
+- 写前核对实际图片输入／Unity 取证能力并消费风险预检；截图、布局值、命令结果及缺证据项记入验证记录，不能用编译成功代替画面验证。
+
+## 验证
+
+- 更新既有 GuanzhongUnitHealthBarPlayModeTests：正式头顶子树没有可见文字或旧大面板，条宽不依赖角色名；生命减少／归零、低血量、镜头移动和角色逐段移动后的跟随、离屏及离战隐藏保持正确，射线不阻挡棋盘操作。
+- 正式 AdventureScene 保存后重开，在 1920×1080 与 1366×768 各取实际战斗画面和 RectTransform 尺寸；确认双单位为细血条、目标面板仍显示详情。仅改直接相关断言，不删掉资源与跟随验收。
+- 运行现有 Unity EditMode／PlayMode 入口或已支持的定向 runner，至少覆盖上述两个直接测试类与正式场景引用校验；保存命令和实际结果。
+- 提交前运行 tools/check-pending-whitespace.ps1、git diff --cached --check；完成外部交接及审核文本检查。
+
+## 完成条件
+
+- 正式场景头顶仅剩生命细条，无遮挡用的大文字背景，生命更新和相机／单位跟随证据通过；Codex 独立复审通过后归档，不据此代签整个关中流程美术验收。
+
+## 停止条件
+
+- 目标所有者或刷新链无法证明、需新增视觉资产／修改 provider 或其他 HUD、场景持久化不一致时停止取证；出现“修改后仍未变化”时先取运行时对象、尺寸和最终写入者，不继续猜坐标或叠补丁。
