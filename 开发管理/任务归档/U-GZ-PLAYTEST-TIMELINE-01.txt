@@ -156,8 +156,8 @@
 ### CAND-U-GZ-PLAYTEST-TIMELINE-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-CE872C1D0BA8
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-009
 - 经验领域：unity
 - 现象：正式Canvas从1366切到1920后，敌方头顶文字字符串完整但可见数字消失，改变生命字符串的玩家反而恢复。
 - 已证实根因：CanvasScaler改变scaleFactor使动态Text的pixelsPerUnit及preferred尺寸变化；未变字符串不触发布局失效，父行保留旧preferred宽，Wrap生成第二行后被32高Truncate。原框59.0336761/102.606148/99.79502变更为当下preferred60/107/103后，实际mesh由8/12/12恢复12/36/36。

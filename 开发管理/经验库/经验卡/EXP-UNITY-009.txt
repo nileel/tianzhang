@@ -1,0 +1,25 @@
+# EXP-UNITY-009 · CanvasScaler 缩放后未变动态 Text 须重排
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-U-GZ-PLAYTEST-TIMELINE-01-01`、`U-GZ-PLAYTEST-TIMELINE-01` 09:40 根因诊断、10:08 正式双分辨率验收及 `CombatUnitHealthBarView.LateUpdate` 最小修正。
+
+## 开工前
+
+任务变更 `CombatUnitHealthBarView` 的 Canvas、单位头顶条或其 `LayoutGroup`／`ContentSizeFitter` 自动布局，并出现 `Canvas.scaleFactor`、`LayoutRebuilder.MarkLayoutForRebuild` 或运行时分辨率缩放时，先在不改变文字字符串的情况下切换目标分辨率，读取各 Text 的 Rect、当前 preferred 尺寸、`cachedTextGenerator.vertexCount` 和画面。若缩放后动态 Text 保留前一 scaleFactor 的 preferred 尺寸，只让既有布局链重排，不把可见字符缺失归因为图集、字体或像素舍入。固定高度不足但没有自动布局、静态文字、未发生运行时缩放、图集缺字、其他字体渲染故障及所有者已迁移的 UI 排除；任一布局所有者、Text 生成方式或正式验证入口改变时停止引用并重新核验。
+
+## 正确处理
+
+以正式入口在原始分辨率和目标分辨率分别读取 Text 的实际框、preferred 尺寸、mesh 顶点和画面。Canvas scaleFactor 变化而文字未变时，使用既有 `LayoutGroup`／`ContentSizeFitter` 重新计算该头顶条根布局，并在资源不变的切换后及真实状态更新后再次确认文字框、非零顶点和画面；不要更改字体、字号、Overflow、条框几何或新增布局时序机制。
+
+## 根因与弯路
+
+CanvasScaler 在预渲染阶段改变 scaleFactor，动态 Text 的 pixelsPerUnit 与 preferred 尺寸随之改变；字符串未变不会触发 Text 的布局失效，父行因而保留 1366×768 的旧 preferred 宽。敌方姓名、生命、灵力在 1920×1080 分别保留 59.0336761／102.606148／99.79502，当前应为 60／107／103；Wrap 后在固定 32 高内 Truncate，mesh 只有 8／12／12 顶点。仅标记已有布局重排后，mesh 恢复 12／36／36；问题不属于图集缺字、字体故障或像素 Rect 舍入。
+
+## 证据
+
+`U-GZ-PLAYTEST-TIMELINE-01` 的 09:40 诊断记录和 `health-text-20261003T013934.1020948Z.txt`、`health-text-20261003T014038.5001006Z.txt` 保存旧框与截断网格；10:08 正式验收记录 `health-text-20261003T015808.3658197Z.txt`、`health-text-20261003T015908.6070721Z.txt`、`health-text-20261003T020023.7149386Z.txt` 及截图 15 至 17，确认 1366×768→1920×1080 资源不变切换和真实待机后，敌方框为 60／107／103、preferredHeight 为 29／26／26、mesh 为 12／36／36。`layout-fix-formal.xml` 两条受影响正式链通过。
+
+## 失效条件
+
+`CombatUnitHealthBarView`、CanvasScaler 接入、单位头顶条的 `LayoutGroup`／`ContentSizeFitter`、Text 生成方式或正式战斗验证入口被替换，或文字改为 TMP、非自动布局、无运行时缩放的独立渲染链时，停止引用并重新核验。

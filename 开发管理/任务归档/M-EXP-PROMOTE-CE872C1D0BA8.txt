@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-PLAYTEST-TIMELINE-01/CAND-U-GZ-PLAYTEST-TIMELINE-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-06：独立核验候选并晋级为 EXP-UNITY-009；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-PLAYTEST-TIMELINE-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-06 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-009`。来源归档的正式复现确认 CanvasScaler 从 1366×768 切到 1920×1080 后，未变的敌方 Text 保留旧 preferred 宽 59.0336761／102.606148／99.79502，使 Wrap 后文字被 32 高 Truncate；标记既有 LayoutGroup/ContentSizeFitter 重排后宽度变为 60／107／103，mesh 由 8／12／12 恢复 12／36／36，真实待机后仍通过两条正式链。
+- 去重与边界：`EXP-UNITY-006` 与 `EXP-UNITY-008` 仅覆盖固定高度不足造成的静态／移动状态 Text 截断，且分别排除自动布局；`EXP-UNITY-010` 仅覆盖 Builder 的持久布局与局部重建入口，均不覆盖运行时 Canvas 缩放使未变动态 Text 保留旧 preferred 尺寸。本经验只覆盖 `CombatUnitHealthBarView` 中 CanvasScaler、LayoutGroup 与 ContentSizeFitter 的该接缝；图集缺字、其他字体故障、没有自动布局或不发生运行时缩放的 UI 排除。候选门禁可能保留为后续独立事项，本卡未新增门禁。
+- 模型协作：简单：来源候选、现有经验边界和回链验收均可直接核验；主模型经 Node REPL 实测为 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

@@ -358,6 +358,32 @@
       "lastVerified": "2026-10-06"
     },
     {
+      "id": "EXP-UNITY-009",
+      "title": "CanvasScaler 缩放后未变动态 Text 须重排",
+      "preflightSummary": "变更关中单位头顶条的 Canvas 缩放或自动布局链时，核对未变动态 Text 是否因 scaleFactor 变化保留旧 preferred 尺寸，并以目标分辨率网格验证。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs"
+      ],
+      "textPatterns": [
+        "Canvas.scaleFactor",
+        "LayoutRebuilder.MarkLayoutForRebuild",
+        "ContentSizeFitter"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-009.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-06"
+    },
+    {
       "id": "EXP-UNITY-010",
       "title": "持久 UI 布局重排须同步局部重建入口",
       "preflightSummary": "调整持久 UI 布局与局部重建入口时，按实际序列化父级统一重建，并验证单一对象和引用。",
