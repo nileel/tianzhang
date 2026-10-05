@@ -332,6 +332,32 @@
       "lastVerified": "2026-10-06"
     },
     {
+      "id": "EXP-UNITY-007",
+      "title": "无表现结束命令不得投影默认 Idle 动画",
+      "preflightSummary": "新增纯回合结束命令并调整 EncounterCoordinator 表现投影时，先确认该命令不会经默认 Idle 打断此前真实动作。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
+      ],
+      "textPatterns": [
+        "ProjectPresentation",
+        "CombatCommandKind.EndTurn",
+        "CombatUnitPresentationEvent.Idle"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-007.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-06"
+    },
+    {
       "id": "EXP-UNITY-008",
       "title": "动态 UGUI Text 固定高度截断导致无网格",
       "preflightSummary": "变更关中移动状态文字时，核对动态 Text 的固定高度是否容纳 preferredHeight，并以 vertices 与目标分辨率画面验证。",

@@ -124,8 +124,8 @@
 ### CAND-U-GZ-PLAYTEST-MOVE-RULE-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-F28C767E0B52
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-007
 - 经验领域：unity
 - 现象：新增纯回合结束命令后，通用表现switch的默认Idle打断此前实际攻击动画。
 - 已证实根因：EndTurn成功后走与有表现动作相同的ProjectPresentation；修复为不投影此无表现命令。

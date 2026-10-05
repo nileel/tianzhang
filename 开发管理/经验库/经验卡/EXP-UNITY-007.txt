@@ -1,0 +1,25 @@
+# EXP-UNITY-007 · 无表现结束命令不得投影默认 Idle 动画
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-U-GZ-PLAYTEST-MOVE-RULE-01-01`、`U-GZ-PLAYTEST-MOVE-RULE-01` 的正式 StartMenu 链路与 `EncounterCoordinator.ExecuteCommand`／`ProjectPresentation` 实现。
+
+## 开工前
+
+任务新增或调整 `EncounterCoordinator` 中只结算回合／冷却而不产生单位动作的命令，且触及 `ProjectPresentation`、`CombatCommandKind.EndTurn` 或 `CombatUnitPresentationEvent.Idle` 时，先确认成功命令是否应产生单位表现事件。纯结束命令不得落入通用 switch 的默认 `Idle` 投影；须验证此前真实攻击、术法或移动表现不被该命令打断。已有明确 Idle 语义的 Guard／Wait、只改 HUD／日志或不经该投影链的命令排除；命令表现合同、`CombatUnitPresentationEvent` 或 `EncounterCoordinator` 所有者改变时停止引用并重新核验。
+
+## 正确处理
+
+在调用 `ProjectPresentation` 前按命令的真实单位表现语义分流。`EndTurn` 只推进权威回合与冷却，不创建单位表现投影；攻击、术法、神通和移动继续按既有明确事件投影。用正式战斗链确认 EndTurn 前后的 Provider 事件数和攻击缩放保持，并确认已播放的真实攻击未被 Idle 覆盖。
+
+## 根因与弯路
+
+`ExecuteCommand` 曾让每个成功命令进入 `ProjectPresentation`，其通用 switch 将未列出的 `EndTurn` 落到默认 `CombatUnitPresentationEvent.Idle`。因此新增的纯结束命令会打断此前实际攻击动画。以成功命令排除 `EndTurn` 后，权威结算保持不变且不再发送该无表现投影；不要为此新增动画状态或把 EndTurn 伪装为攻击／移动。
+
+## 证据
+
+来源候选记录正式 StartMenu 链路在 EndTurn 前后真实 Provider 事件数与攻击缩放均保持，且正式实机普攻后仍处于当前玩家行动时重复攻击被拒绝、生命与资源不变。完成归档的 `EncounterCoordinator.ExecuteCommand` 只在成功且命令不是 `EndTurn` 时调用 `ProjectPresentation`；该方法的默认分支仍为 Idle，直接说明绕过该分支是本经验的边界。
+
+## 失效条件
+
+`EncounterCoordinator.ExecuteCommand`、`ProjectPresentation`、`CombatCommandKind.EndTurn`、`CombatUnitPresentationEvent`、单位表现 Provider 或正式战斗验证入口被替换，或 EndTurn 被定义为具有独立单位动作的命令时，停止引用并重新核验。
