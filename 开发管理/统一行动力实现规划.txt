@@ -1,0 +1,73 @@
+# 统一行动力完整实现规划
+
+日期：2026-10-05。来源：负责人已批准 docs/superpowers/specs/2026-10-05-combat-action-points-design.md，随后明确要求“那就执行下一步”。本文件是本次一次性拆分的索引；活跃事实仍以各任务卡为准，L2规则、Unity代码与BattleSim实跑分别承担业务事实。
+
+## 本次范围与事实
+
+- 已完成设计归档 D-COMBAT-AP-01；本次建立汇总父项 P-COMBAT-AP-01 和19张叶子卡，只做任务管理，不修改规则正文、CSV或运行时。
+- 首批仅 D-COMBAT-AP-RULES-01 ready；其余18张按真实前置blocked。后续合同完成再按既有维护规则准备下游，不执行blocked卡，也不让父项反复拆卡。
+- 三个现有生产攻击是 basic_unarmed、spell_guanshiji、spell_julingshu；没有Divine生产行。AttackProfiles是唯一攻击成本生产者。
+- Combat保持纯规则，不反向依赖World／Character／GameplayContracts；Adventure承担桥接；CombatPresentation通过GameplayContracts读不可变投影。Character拥有长期属性，World.InventoryStore拥有库存；AbilityLoadout只管理术法／神通，不能当作装备库存。
+- InventoryStore现有能力是发放，没有战斗使用命令。Items目前只有灵石和石甲碎片，没有战斗效果。换装也只有主装备普攻profile绑定，缺正式槽位／实例／写回链；两个独立内容合同卡先冻结真实可用内容。缺失不可推导决定时明确请求负责人决定，不能虚构可用品来验收。
+- 移动费用经Spatial查询→CombatEntryAdapter整数格转换时丢失原始边精度；位移仍由反应派生，AP迁移须改到显式输入。用户报告的“移动后不能行动”尚未复现，不能将这两项差异当作已确认的反馈根因。
+- 实际保存SchemaVersion=3；旧摘要不是保存事实。仅必需的新长期输入才版本化，不存AP余额，不删除旧档解决缺字段。
+
+## 完整任务图
+
+下表列全部已知叶子，不以W标签代替调度ID。每张卡有字面量路径、必查符号、原子结果、验证和停止条件。
+
+| 任务 | 结果 | 主责／路由 | 直接前置 | 初始状态 |
+|---|---|---|---|---|
+| D-COMBAT-AP-RULES-01 | 统一行动力已批准规则同步 | codex／codex_execute | — | ready |
+| D-COMBAT-AP-CONTRACT-01 | 统一行动力公共单位与接口合同冻结 | codex／codex_execute | D-COMBAT-AP-RULES-01 | blocked |
+| D-COMBAT-AP-ITEM-01 | 战斗道具首批内容与原子使用合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
+| D-COMBAT-AP-EQUIP-01 | 战斗换装备首批资格与写回合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
+| U-COMBAT-AP-DATA-01 | 统一行动力生产数据与严格导入 | deepseek／external_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
+| U-COMBAT-AP-CHAR-01 | 角色长期行动力成长与快照 | deepseek／external_execute | U-COMBAT-AP-DATA-01 | blocked |
+| U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
+| U-COMBAT-AP-MOVE-01 | 合法路径到行动力的定点报价 | deepseek／external_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
+| U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01、U-COMBAT-AP-MOVE-01 | blocked |
+| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-MOVE-01、U-COMBAT-AP-CORE-01 | blocked |
+| U-COMBAT-AP-FLOW-01 | 关中正式战斗控制与敌方多动作 | deepseek／external_execute | U-COMBAT-AP-CORE-01 | blocked |
+| U-COMBAT-AP-HUD-01 | 行动力HUD与同源费用预览 | deepseek／external_execute | U-COMBAT-AP-FLOW-01 | blocked |
+| U-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | deepseek／external_execute | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
+| U-COMBAT-AP-EQUIP-01 | 战斗换装备统一费用与长期写回 | deepseek／external_execute | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
+| U-COMBAT-AP-SWAP-01 | 战斗换术正式入口与费用预览 | deepseek／external_execute | U-COMBAT-AP-HUD-01 | blocked |
+| N-COMBAT-AP-BALANCE-01 | 行动经济与成长预算实跑定案 | codex／codex_execute | N-COMBAT-AP-SIM-01、U-COMBAT-AP-CORE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01 | blocked |
+| U-COMBAT-AP-TUNING-01 | 行动力已验证参数回填生产链 | deepseek／external_execute | N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-DATA-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01 | blocked |
+| U-COMBAT-AP-SCENE-01 | 统一行动力正式场景最终验收 | codex／codex_execute | U-COMBAT-AP-TUNING-01、U-COMBAT-AP-SAVE-01、U-COMBAT-AP-FLOW-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01、U-COMBAT-AP-SWAP-01 | blocked |
+| D-COMBAT-AP-CLOSE-01 | 统一行动力交付闭环与父项关闭 | codex／codex_execute | U-COMBAT-AP-SCENE-01、N-COMBAT-AP-BALANCE-01 | blocked |
+
+主干：规则→公共合同→数据／角色／移动→内核→BattleSim与正式控制→HUD→缺失行为／换术；数值定案→生产参数回填；最终场景验收汇合全部实际输入与行为→交付闭环→汇总父项归档。
+道具／换装合同与代码是已知的独立结果，已全部建卡；合同还未冻结的具体生产资源路径必须在下游转ready前补齐，当前禁止用通配授权或在执行时猜ID。
+
+## W工作包对应
+
+- W0：设计批准已完成，本次完整规划完成。
+- W1→D-COMBAT-AP-RULES-01；W2→D-COMBAT-AP-CONTRACT-01；W3→U-COMBAT-AP-DATA-01；W4→U-COMBAT-AP-CHAR-01、U-COMBAT-AP-SAVE-01；W5→U-COMBAT-AP-MOVE-01；W6→U-COMBAT-AP-CORE-01；W7→N-COMBAT-AP-SIM-01。
+- W8→U-COMBAT-AP-FLOW-01；W9→U-COMBAT-AP-HUD-01；W10a→D-COMBAT-AP-ITEM-01、U-COMBAT-AP-ITEM-01；W10b→D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-EQUIP-01、U-COMBAT-AP-SWAP-01。
+- W12→N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-TUNING-01；W11→U-COMBAT-AP-SCENE-01（最终生产输入后验收，避免用旧参数证据关闭）；W13→D-COMBAT-AP-CLOSE-01。
+
+## 依赖与准备门槛
+
+- “完成”指正式归档；DeepSeek业务提交还须Codex独立复审。接口未冻结、生产内容未批准、能力缺失或风险门禁未消费时不提升ready。blocked卡的路径是当前定位基线；公共合同必须给出具体类型、文件、测试和剩余内容决定，维护者在提升时完成精准化，而不是执行器扩范围。
+- 独立模块业务不存在逻辑依赖时不因共享任务队列／backlog人为串行。数据→角色、内核→模拟／正式控制、控制→HUD、HUD→新增命令均为真实接口依赖。多个后续命令共享CommandService／coordinator／ActionBar；可在独立owner worktree开发，但主智能体统一持有一卡，路径重叠按既有排他集成冲突停止，不自动重放冲突、不共享可变工作区。
+- AP／v／CT／CD候选在公共合同中明确单位与来源，功能fixture与生产调参分开。角色平衡只认迁移后BattleSim运行；实际场景路径、库存原子性、输入与动画只认Unity功能验证。
+- 首批P1规则卡解锁本图后续，按“优先级→下游解锁量→等待时间”插入队列前列；保留现有存档删除和血条精简两卡相对顺序与状态。后续数值与代码叶子不因DeepSeek触发器当前状态改变owner。
+- 只采用现有schema 2 riskPreflight与预检脚本，不新增工作流状态、自动拆卡逻辑、重试机制或调度器。
+
+## 最终关闭条件
+
+1. 规则、公共合同和两个缺失行为合同均有确定结果；未批准内容不能用夹具替代。
+2. 数据／角色／保存／移动／内核／模拟／控制／HUD／道具／换装／换术均正式完成，外部执行复审通过。
+3. 最终生产参数有迁移后实跑依据；Unity正式场景证据绑定同一最终输入，涵盖全部动作、失败／取消、三时钟、Guard、有限返还、敌方终止和保存边界。
+4. D-COMBAT-AP-CLOSE-01 逐项核对全部叶子（不仅直接前置），向负责人提供实际体验入口并记录确认，再将自身和父项一并归档；父项永不入执行队列。
+
+## 本轮验证
+
+本轮仅任务拓扑与文档索引，不运行输入未变化的Unity／BattleSim，不将规划称为已实现。
+
+- 任务卡检查：check-task-cards -TaskId D-COMBAT-AP-RULES-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute，通过；全仓82张活跃卡、3张ready（本轮新增1张）。
+- 全部20张新卡运行风险预检；首张ready卡matched／gates为空，与schema 2投影一致。模拟迁移卡命中EXP-BS-001、EXP-BS-003，已写入投影；执行前仍须按最新输入重跑并消费正文。
+- 拓扑与路径核对：20张新卡全部可由父项追溯，19张叶子，无循环，唯一首批ready正确；所有新增Unity测试预留对应.meta，路径为字面量；Codex叶子显式指定gpt-6.1-sol。
+- check-review-text通过（675文件）；check-data-chain通过（功法29、术法84、神通31，语言key 613）。暂存前空白检查和暂存后diff检查按本次正式提交执行。

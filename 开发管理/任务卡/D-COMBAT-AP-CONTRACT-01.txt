@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP-CONTRACT-01",
+  "title": "统一行动力公共单位与接口合同冻结",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-RULES-01"
+  ],
+  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "expectedPaths": [
+    "开发管理/统一行动力公共合同.txt",
+    "开发管理/D-COMBAT-AP-CONTRACT-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP-CONTRACT-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP-CONTRACT-01 · 统一行动力公共单位与接口合同冻结
+
+## 来源与当前边界
+
+- 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
+- 原子结果：冻结所有实现叶子共用的数据、事务、时间单位和跨模块边界合同及可复用验证夹具。
+- 直接前置：D-COMBAT-AP-RULES-01
+- 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力设计核对记录.txt。
+- L2 新规则；核对记录的双运行时差异；AttackProfiles.csv 三 ID 与 CombatContentImporter；Character／Content／Combat／Spatial／World／Persistence／Adventure／GameplayContracts／CombatPresentation 的现行 README、asmdef 和下游卡所列符号；GameSaveSerializer.SchemaVersion、Combat.Simulate／Simulate2v2Detailed。
+- 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
+
+## 实施范围
+
+- 逐字段列唯一生产者、类型、单位、合法范围、缺失处理、消费者与序列化归属；冻结 AP 正净费／返还账本、路径原始边度量、AP 上限快照、三时钟事件、费用报价和失败原子性。普通行为定义复用当前所有者；攻击成本只来自 AttackProfiles。逐 ID 列 Unity 旧 cooldownTicks 的两个投影及 BattleSim 旧回合 CD 的单位迁移依据，未知值保留待验证标签，不能随意乘 10。逐角色列独立 v 候选映射和理由，不继承反应隐式公式。保存先判断长期输入可重建性，只有必需时冻结版本变更及旧 schema 3 的明确迁移，保留 schema 1／2 角色档拒绝边界。冻结 Item／Equipment 后续合同的接口位置，不替两卡造生产内容。为每张 blocked 代码卡给出精确文件／新增符号／测试入口核对表，待维护者提升时消费；不更改任务拓扑。
+- 验证证据写入 开发管理/D-COMBAT-AP-CONTRACT-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+
+## 禁止项
+
+- 不修改自动化脚本、runtime、调度机制或模型配置；不实现未授权内容，不用兜底、兼容执行器和重试层掩盖失败。
+- 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
+
+## 模型协作
+
+- 主责 GPT-6.1 Sol（gpt-6.1-sol），建议 high；承担语义合同或最终判定，不将结论交给实现者自审。当前blocked，临近ready基于直接事实重新评估。
+- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+
+## 验证
+
+- 合同能逐条映射至批准规格和真实所有者；覆盖非法输入、失效报价、同一路径分段、两个成功动作 CT 求和、CD 全局刻、恢复／触发一次、返还有限、存档往返。静态核对所有公共边界不引入 Combat→World／Character／GameplayContracts 或 Presentation→Combat／Character 依赖。
+- 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
+- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+
+## 完成条件
+
+- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+
+## 停止条件
+
+- 需新增框架、生产内容、未经批准数值、改变模块方向或替代现有执行器时停止；数值候选和技术夹具必须分开，不能将合同冻结说成平衡已验证。
+- 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。

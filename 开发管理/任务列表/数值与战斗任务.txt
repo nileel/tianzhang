@@ -1,6 +1,6 @@
 # 数值与战斗任务列表（✅ 已审核）
 
-> 本文件只保留未完成或阻塞的 BattleSim、战斗规则与数值任务。当前可执行切片以 `开发管理/当前任务队列.txt` 为准；已完成记录可由 Git 和 `开发管理/任务归档/` 追溯。
+> 本文件只保留未完成或阻塞的 BattleSim、战斗规则、数值及跨 Unity 的统一行动力任务。当前可执行切片以 `开发管理/当前任务队列.txt` 为准；已完成记录可由 Git 和 `开发管理/任务归档/` 追溯。
 
 ## 当前事实
 
@@ -12,6 +12,26 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
+| P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
+| D-COMBAT-AP-RULES-01 | P1 | codex | 已排队 | — | 统一行动力已批准规则同步 | 开发管理/任务卡/D-COMBAT-AP-RULES-01.txt |
+| D-COMBAT-AP-CONTRACT-01 | P1 | codex | 阻塞 | D-COMBAT-AP-RULES-01 | 统一行动力公共单位与接口合同冻结 | 开发管理/任务卡/D-COMBAT-AP-CONTRACT-01.txt |
+| D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
+| D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
+| U-COMBAT-AP-DATA-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 统一行动力生产数据与严格导入 | 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt |
+| U-COMBAT-AP-CHAR-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01 | 角色长期行动力成长与快照 | 开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt |
+| U-COMBAT-AP-SAVE-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-CHAR-01 | 行动力长期输入保存与恢复 | 开发管理/任务卡/U-COMBAT-AP-SAVE-01.txt |
+| U-COMBAT-AP-MOVE-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
+| U-COMBAT-AP-CORE-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01、U-COMBAT-AP-MOVE-01 | 统一行动力个人回合内核 | 开发管理/任务卡/U-COMBAT-AP-CORE-01.txt |
+| N-COMBAT-AP-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01、U-COMBAT-AP-MOVE-01、U-COMBAT-AP-CORE-01 | BattleSim双入口行动力语义迁移 | 开发管理/任务卡/N-COMBAT-AP-SIM-01.txt |
+| U-COMBAT-AP-FLOW-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-CORE-01 | 关中正式战斗控制与敌方多动作 | 开发管理/任务卡/U-COMBAT-AP-FLOW-01.txt |
+| U-COMBAT-AP-HUD-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-FLOW-01 | 行动力HUD与同源费用预览 | 开发管理/任务卡/U-COMBAT-AP-HUD-01.txt |
+| U-COMBAT-AP-ITEM-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
+| U-COMBAT-AP-EQUIP-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
+| U-COMBAT-AP-SWAP-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-HUD-01 | 战斗换术正式入口与费用预览 | 开发管理/任务卡/U-COMBAT-AP-SWAP-01.txt |
+| N-COMBAT-AP-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP-SIM-01、U-COMBAT-AP-CORE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01 | 行动经济与成长预算实跑定案 | 开发管理/任务卡/N-COMBAT-AP-BALANCE-01.txt |
+| U-COMBAT-AP-TUNING-01 | P1 | deepseek | 阻塞 | N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-DATA-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01 | 行动力已验证参数回填生产链 | 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt |
+| U-COMBAT-AP-SCENE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-TUNING-01、U-COMBAT-AP-SAVE-01、U-COMBAT-AP-FLOW-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01、U-COMBAT-AP-SWAP-01 | 统一行动力正式场景最终验收 | 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt |
+| D-COMBAT-AP-CLOSE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-SCENE-01、N-COMBAT-AP-BALANCE-01 | 统一行动力交付闭环与父项关闭 | 开发管理/任务卡/D-COMBAT-AP-CLOSE-01.txt |
 | N-FPD-REGRESSION-01 | P2 | DeepSeek V4 Pro 0813 执行矩阵；Codex 复审并定案 | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 冻结（仅保留旧审计） | DEC-20260728-NSUPPRESS01AFIELDS=B | 确定性削位与封丹父任务；负责人仅保留旧审计，不授权新结算。 | — |
 | N-SUPPRESS-01B | P2 | codex | 冻结 | — | 确定性削位与封丹结算 | 开发管理/任务卡/N-SUPPRESS-01B.txt |

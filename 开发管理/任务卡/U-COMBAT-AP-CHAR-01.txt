@@ -1,0 +1,87 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP-CHAR-01",
+  "title": "角色长期行动力成长与快照",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP-DATA-01"
+  ],
+  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterCombatModifiers.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
+    "src/Assets/Scripts/Modules/Character/AbilityLoadout.cs",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs",
+    "开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-CHAR-01.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-COMBAT-AP-CHAR-01-交接归档.txt",
+    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-AP-CHAR-01 · 角色长期行动力成长与快照
+
+## 来源与当前边界
+
+- 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
+- 原子结果：Character 单一所有者承载可重建的 AP 上限／独立 v／有界修正输入，并保持快照原子恢复。
+- 直接前置：U-COMBAT-AP-DATA-01
+- 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
+- 公共合同长期字段；CharacterRuntimeProfile、CharacterAttributes、CharacterCombatModifiers、CharacterStateSnapshot 的构建／Capture／Restore；CharacterProgressionRef 和 AbilityLoadout 的直接输入；Content 新字段及现有角色创建调用。
+- 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
+
+## 实施范围
+
+- 只增加冻结的长期参数投影、来源去重和校验，不保存战斗 AP 余额。按既有成长所有者整合上限、v、动作减耗／有限返还来源，禁从 MP 折扣自动推导 AP 折扣；不添加整套成长内容。所有默认值来自批准的显式数据；恢复先验证整体再写入。
+- 验证证据写入 开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+
+## 禁止项
+
+- 不修改自动化脚本、runtime、调度机制或模型配置；不实现未授权内容，不用兜底、兼容执行器和重试层掩盖失败。
+- 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
+
+## 模型协作
+
+- 主责 DeepSeek V4.1 Flash，冻结合同内实施；Codex 独立复审，不自审。当前blocked，临近ready按真实接口／失败影响重新评估复杂度与执行能力。
+- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+
+## 验证
+
+- 玩家／NPC 同字段；正／零／负／溢出边界、同来源不重复、snapshot 往返和失败无部分恢复；现有角色创建测试不失效。
+- 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
+- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+
+## 完成条件
+
+- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+
+## 停止条件
+
+- 需要新增成长树／道具实例／战斗存档，或 Character 反向依赖 Combat／World 时停止。
+- 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。

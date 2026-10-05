@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP-ITEM-01",
+  "title": "战斗道具首批内容与原子使用合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-CONTRACT-01"
+  ],
+  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "expectedPaths": [
+    "开发管理/统一行动力道具合同.txt",
+    "开发管理/D-COMBAT-AP-ITEM-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP-ITEM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP-ITEM-01 · 战斗道具首批内容与原子使用合同
+
+## 来源与当前边界
+
+- 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
+- 原子结果：得到可追溯的首批战斗可用道具清单及库存／效果原子使用合同，或者明确不可推导的负责人决定。
+- 直接前置：D-COMBAT-AP-CONTRACT-01
+- 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
+- docs/道具/道具事实速查.txt 指向的道具设计规范、目标道具 L2 使用限制；Items.csv 当前 item_lingshi_low／item_shijia_piece；ItemData、InventoryStore／InventoryGrantUseCase、ContentCatalogData；公共合同的跨模块资源报价。
+- 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
+
+## 实施范围
+
+- 只调查战斗道具所需直接事实。当前两生产 ID 均无战斗效果；练气丹药含突破／永久成长限制，不能改作临时回复。列真实可用 ID、目标、条件、效果、库存扣减、AP 候选与持久化时点，冻结失败无扣除和唯一库存写入者。没有适用现有内容时，本卡转待决定并提交“补充哪项有事实源的内容／明确调整范围”的具体问题；不得完成归档或虚构道具。得到授权后在本卡准备阶段冻结实际内容路径和下游导入路径，重跑风险预检，不新拆父项。
+- 验证证据写入 开发管理/D-COMBAT-AP-ITEM-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+
+## 禁止项
+
+- 不修改自动化脚本、runtime、调度机制或模型配置；不实现未授权内容，不用兜底、兼容执行器和重试层掩盖失败。
+- 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
+
+## 模型协作
+
+- 主责 GPT-6.1 Sol（gpt-6.1-sol），建议 high；承担语义合同或最终判定，不将结论交给实现者自审。当前blocked，临近ready基于直接事实重新评估。
+- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+
+## 验证
+
+- 每个入选 ID 有 L2 来源及正式可取得入口；未冻结生产 ID 时不解锁道具实现。无库存、错误目标、已满但合法、取消、重复确认的事务预期表齐全。
+- 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
+- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+
+## 完成条件
+
+- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+
+## 停止条件
+
+- 需要新造药物／掉率／商店或改变现有永久成长效果时先请求对应内容决定；fixture 只能证明协议，不能替代生产道具验收。
+- 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。

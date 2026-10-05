@@ -1,0 +1,77 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP-EQUIP-01",
+  "title": "战斗换装备首批资格与写回合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "decision",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-CONTRACT-01"
+  ],
+  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "expectedPaths": [
+    "开发管理/统一行动力换装合同.txt",
+    "开发管理/D-COMBAT-AP-EQUIP-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP-EQUIP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP-EQUIP-01 · 战斗换装备首批资格与写回合同
+
+## 来源与当前边界
+
+- 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
+- 原子结果：冻结一个有实际来源的战斗装备更换闭环：装备资格、槽位、战斗投影与长期写回。
+- 直接前置：D-COMBAT-AP-CONTRACT-01
+- 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
+- 战斗系统的更换武器／法宝；CharacterRuntimeProfile.MainEquipmentBasicAttackProfileId、AbilityLoadout（仅术法／神通）、InventoryStore、ItemData、CharacterRecord；AttackProfiles 三生产 ID 与 AdventureUnitSpawner。
+- 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
+
+## 实施范围
+
+- 当前只有主装备普攻档案绑定，没有完整装备库存／槽位／切换所有者，不能称 AbilityLoadout 为装备系统。只对首批战斗换装冻结身份、资格、库存关系、主槽位、属性／攻击投影和原子写回；AP 上限本回合不重发，v 下次移动读取，退出防御，同一能力实例不洗冷却／返还额度。已有事实不足以指定正式装备时进入具体负责人决定，不推导出广义装备系统、背包界面或新武器内容授权。记录批准后的精确内容和实现路径供下游准备。
+- 验证证据写入 开发管理/D-COMBAT-AP-EQUIP-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+
+## 禁止项
+
+- 不修改自动化脚本、runtime、调度机制或模型配置；不实现未授权内容，不用兜底、兼容执行器和重试层掩盖失败。
+- 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
+
+## 模型协作
+
+- 主责 GPT-6.1 Sol（gpt-6.1-sol），建议 high；承担语义合同或最终判定，不将结论交给实现者自审。当前blocked，临近ready基于直接事实重新评估。
+- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+
+## 验证
+
+- 入选装备及获得入口可追溯；不满足资格／重复装备／无变化／失败／取消的 AP 与库存结果有明确合同；存档恢复能够保持装备身份。
+- 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
+- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+
+## 完成条件
+
+- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+
+## 停止条件
+
+- 新增正式装备、槽位体系、强化／打造、独立装备 UI 或世界掉落需额外决策时停止；不得用空装备↔同一徒手档案作为正式成功验收。
+- 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。

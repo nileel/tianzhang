@@ -1,0 +1,66 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "P-COMBAT-AP-01",
+  "title": "统一行动力完整实现汇总",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-CLOSE-01"
+  ],
+  "stateReason": "仅汇总：19张已知叶子已一次建立；不得领取或逐轮拆分。由D-COMBAT-AP-CLOSE-01核实全部结果与负责人体验后随其归档。",
+  "expectedPaths": [
+    "开发管理/统一行动力实现规划.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/P-COMBAT-AP-01.txt",
+    "开发管理/任务归档/P-COMBAT-AP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# P-COMBAT-AP-01 · 统一行动力完整实现汇总
+
+## 来源与当前边界
+
+- 已批准设计：docs/superpowers/specs/2026-10-05-combat-action-points-design.md；D-COMBAT-AP-01 已完成设计，不重新打开。
+- 2026-10-05 负责人明确要求下一步，完整建立19个已知叶子、依赖和首批ready；拓扑见 开发管理/统一行动力实现规划.txt。
+- 本卡仅汇总，永不提升ready、不直接执行、不持有candidate，不再反复领取拆分。
+
+## 必查范围
+
+- 开发管理/统一行动力实现规划.txt 的全部叶子、直接依赖、所有者和最终关闭条件；叶子卡／完成归档是执行事实。
+
+## 实施范围
+
+- 仅由 D-COMBAT-AP-CLOSE-01 完成最终核验时将本卡一并归档；不承载业务实现，不批量清理其他backlog。
+
+## 禁止项
+
+- 不以基础多动作、临时夹具、部分UI、设计批准或单一运行时验证关闭整个目标。
+
+## 模型协作
+
+- Codex 仅负责规划汇总和最终核验；各叶子已分别冻结模型路由。父项不调度执行模型或子智能体。
+
+## 验证
+
+- 由闭环卡逐一核对全部叶子的正式完成归档、独立复审、最终输入与验证证据，以及负责人体验记录；只复用仍有效的证据。
+
+## 完成条件
+
+- 所有叶子正式完成，外部执行独立复审通过；道具／装备真实内容、保存和成长边界齐全；最终生产输入绑定数值实跑和正式场景证据；负责人体验确认后才关闭。
+
+## 停止条件
+
+- 任一未决内容、待复审、过期证据或体验未确认都保持blocked。只由闭环卡更新父项与其投影，不形成可重复执行的父任务。
