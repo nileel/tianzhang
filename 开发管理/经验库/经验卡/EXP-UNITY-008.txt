@@ -1,0 +1,25 @@
+# EXP-UNITY-008 · 动态 UGUI Text 固定高度截断导致无网格
+
+## 状态
+
+active；最后核验日期：2026-10-06；事实源：`CAND-U-GZ-PLAYTEST-MOVE-UI-01-01`、`U-GZ-PLAYTEST-MOVE-UI-01` 17:26 实机诊断与 `AdventureSceneBuilder.BuildCombatMovement` 局部修复。
+
+## 开工前
+
+改动 `AdventureSceneBuilder.BuildCombatMovement` 的 `MovementStatus` 且固定高度用 `Truncate` 时，先在目标分辨率读取 Rect、preferredHeight、vertices并验证画面。高度不足只局部扩容文本；不把无文字归因字体/材质，不改布局 helper。静态文本、自动布局或缺字/材质问题不触发；所有者迁移时重新核验。
+
+## 正确处理
+
+先在正式 Game View 读取动态文字的 Rect、`preferredHeight` 与生成 vertices；若固定高度不足，按实际最大状态文字只调整该 Text 与其直接容器，并重新验证选择、选定等状态在目标分辨率可见。不要以字体、材质、共享布局 helper 或无关控件补丁替代该量化检查。
+
+## 根因与弯路
+
+`MovementStatus` 的文本字符串和控件均存在，但 Rect 高 24 小于实际 `preferredHeight` 26；`Wrap/Truncate` 因此生成 0 vertices，Game View 没有文字。将局部文字框高改为 32 后，选择与选定状态分别生成 36／52 vertices 并在 1920×1080、1366×768 显示。根因不属于缺字、字体或材质问题。
+
+## 证据
+
+来源候选 `CAND-U-GZ-PLAYTEST-MOVE-UI-01-01` 及归档任务 17:26 记录了正式入口下的 Rect、`preferredHeight`、vertices、双分辨率截图和诊断日志；`AdventureSceneBuilder.BuildCombatMovement` 仅局部调整 `MovementStatus` 与直接容器高度，修复后有运行数值和画面证据。
+
+## 失效条件
+
+`MovementStatus`、`BuildCombatMovement`、UGUI Text 生成方式或其直接布局所有者被替换，或状态文字改为自动布局、TMP 或其他渲染链时，停止引用并重新核验。

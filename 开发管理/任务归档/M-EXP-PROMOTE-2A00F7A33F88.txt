@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-PLAYTEST-MOVE-UI-01/CAND-U-GZ-PLAYTEST-MOVE-UI-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-06：独立核验来源候选并晋级为 EXP-UNITY-008；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-PLAYTEST-MOVE-UI-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-06 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-008`。来源归档 17:26 的正式诊断量化确认 `MovementStatus` Rect 高 24 小于 `preferredHeight` 26，`Wrap/Truncate` 使 vertices 为 0；仅局部扩至 32 后选择／选定状态生成 36／52 vertices，并在 1920×1080 与 1366×768 显示。
+- 去重与边界：现有 active 的 `EXP-UNITY-001` 只覆盖正式场景 builder 保存链，`EXP-UNITY-002` 只覆盖程序集依赖，`EXP-UNITY-005` 只覆盖探索返回门禁，均不覆盖动态 UGUI Text 的固定高度截断。新经验限于 `AdventureSceneBuilder.BuildCombatMovement`／`MovementStatus` 的固定高度与 `Truncate` 组合；静态文本、自动布局、缺字或材质问题排除。候选的门禁可能保留为后续独立事项，本卡未新增门禁。
+- 模型协作：简单：来源候选、现行局部实现、既有经验边界和回链验收均可直接核验；主模型经 Node REPL 实测为 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

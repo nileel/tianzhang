@@ -233,8 +233,8 @@
 ### CAND-U-GZ-PLAYTEST-MOVE-UI-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-2A00F7A33F88
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-008
 - 经验领域：unity
 - 现象：正式移动状态文字字符串存在但Game View无文字。
 - 已证实根因：Text框高24小于实际preferredHeight26，Wrap/Truncate导致vertices=0；局部文字框高32后选择/选定状态产生36/52顶点并在两分辨率显示。
