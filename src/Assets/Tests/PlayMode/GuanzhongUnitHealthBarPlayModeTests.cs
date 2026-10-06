@@ -15,6 +15,7 @@ using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -48,44 +49,56 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator StableIdsKeepDamageHealingAndSpiritIndependentWhenSnapshotOrderChanges()
+        public IEnumerator StableIdsKeepDamageHealingAndHealthFillWhenSnapshotOrderChanges()
         {
             Fixture fixture = CreateFixture();
             CombatHudPresenter presenter = Own("HealthPresenter").AddComponent<CombatHudPresenter>();
             presenter.ConfigureHealthBars(fixture.View);
             presenter.Present(Snapshot(Unit("player", "修士", 100, 100, 40, 60), Unit("enemy", "石甲猴", 80, 80, 20, 30)));
             yield return null;
-            AssertResources(FindBar(fixture.Bars, "修士"), 100, 100, 40, 60);
-            AssertResources(FindBar(fixture.Bars, "石甲猴"), 80, 80, 20, 30);
-            Color healthyColor = FindBar(fixture.Bars, "修士").healthFill.color;
+            AssertResources(FindBar(fixture.Bars, "player"), 100, 100);
+            AssertResources(FindBar(fixture.Bars, "enemy"), 80, 80);
+            Color healthyColor = FindBar(fixture.Bars, "player").healthFill.color;
 
             presenter.Present(Snapshot(Unit("player", "修士", 15, 100, 12, 60), Unit("enemy", "石甲猴", 80, 80, 20, 30)));
             yield return null;
-            AssertResources(FindBar(fixture.Bars, "修士"), 15, 100, 12, 60);
-            AssertResources(FindBar(fixture.Bars, "石甲猴"), 80, 80, 20, 30);
-            Assert.AreNotEqual(healthyColor, FindBar(fixture.Bars, "修士").healthFill.color,
+            AssertResources(FindBar(fixture.Bars, "player"), 15, 100);
+            AssertResources(FindBar(fixture.Bars, "enemy"), 80, 80);
+            Assert.AreNotEqual(healthyColor, FindBar(fixture.Bars, "player").healthFill.color,
                 "Low health needs a visible color distinction as well as its numeric value and fill.");
 
             // Swap DTO slots: position must still follow the stable ID, rather than the player/enemy slot.
             presenter.Present(Snapshot(Unit("enemy", "石甲猴", 35, 80, 7, 30), Unit("player", "修士", 65, 100, 12, 60)));
             yield return null;
-            AssertResources(FindBar(fixture.Bars, "修士"), 65, 100, 12, 60);
-            AssertResources(FindBar(fixture.Bars, "石甲猴"), 35, 80, 7, 30);
-            Assert.AreEqual(healthyColor, FindBar(fixture.Bars, "修士").healthFill.color);
+            AssertResources(FindBar(fixture.Bars, "player"), 65, 100);
+            AssertResources(FindBar(fixture.Bars, "enemy"), 35, 80);
+            Assert.AreEqual(healthyColor, FindBar(fixture.Bars, "player").healthFill.color);
             presenter.Present(Snapshot(Unit("enemy", "石甲猴", 55, 80, 7, 30), Unit("player", "修士", 65, 100, 12, 60)));
             yield return null;
-            AssertResources(FindBar(fixture.Bars, "石甲猴"), 55, 80, 7, 30);
-            AssertResources(FindBar(fixture.Bars, "修士"), 65, 100, 12, 60);
-            AssertProjection(fixture, "player", FindBar(fixture.Bars, "修士"));
-            AssertProjection(fixture, "enemy", FindBar(fixture.Bars, "石甲猴"));
+            AssertResources(FindBar(fixture.Bars, "enemy"), 55, 80);
+            AssertResources(FindBar(fixture.Bars, "player"), 65, 100);
+            AssertProjection(fixture, "player", FindBar(fixture.Bars, "player"));
+            AssertProjection(fixture, "enemy", FindBar(fixture.Bars, "enemy"));
+            foreach (CombatUnitHealthBarView.Bar bar in fixture.Bars)
+            {
+                Assert.IsEmpty(bar.root.GetComponentsInChildren<Text>(true),
+                    bar.root.name + " must stay a text-free slim bar.");
+                Assert.IsEmpty(bar.root.GetComponentsInChildren<LayoutGroup>(true),
+                    bar.root.name + " must not keep the text-driven layout group.");
+                Assert.IsEmpty(bar.root.GetComponentsInChildren<ContentSizeFitter>(true),
+                    bar.root.name + " must not stretch with its content.");
+                Assert.IsNull(bar.root.GetComponent<Image>(), bar.root.name + " must not keep the old text panel background.");
+                Assert.AreEqual(new Vector2(CombatUnitHealthBarView.BarWidth, CombatUnitHealthBarView.BarHeight),
+                    bar.root.sizeDelta, bar.root.name + " must keep the fixed slim bar size.");
+            }
             foreach (Graphic graphic in fixture.Canvas.GetComponentsInChildren<Graphic>(true))
                 Assert.IsFalse(graphic.raycastTarget, graphic.name + " must not take world input.");
-            CombatUnitHealthBarView.Bar invalidBar = FindBar(fixture.Bars, "修士");
+            CombatUnitHealthBarView.Bar invalidBar = FindBar(fixture.Bars, "player");
             LogAssert.Expect(LogType.Error, "combat_health_bar_input_invalid:player");
             presenter.Present(Snapshot(Unit("player", "修士", 1, 0, 12, 60), Unit("enemy", "石甲猴", 55, 80, 7, 30)));
             Assert.IsFalse(invalidBar.root.gameObject.activeSelf);
             Assert.Zero(invalidBar.healthFill.fillAmount, "Invalid maxima cannot masquerade as full health.");
-            AssertResources(FindBar(fixture.Bars, "石甲猴"), 55, 80, 7, 30);
+            AssertResources(FindBar(fixture.Bars, "enemy"), 55, 80);
             presenter.Hide();
             AssertAllHidden(fixture.Bars);
         }
@@ -100,25 +113,34 @@ namespace TianZhang.Tests.PlayMode
             {
                 Assert.IsTrue(fixture.Provider.TryGetPresentedUnit(id, out GameObject root));
                 Assert.AreEqual(Vector3.one * 1.4f, root.transform.GetChild(0).localScale);
+                // Stay one hex from the prepared origin so every facing keeps the unit inside the validation camera.
+                CombatUnitPresentationHex origin = id == "player"
+                    ? new CombatUnitPresentationHex(0, 0) : new CombatUnitPresentationHex(1, 0);
                 for (int facing = 0; facing < 6; facing++)
                 {
-                    Project(fixture.Provider, id, CombatUnitPresentationEvent.Move, facing, new CombatUnitPresentationHex(0, 0));
+                    CombatUnitPresentationHex away = Neighbour(origin, facing);
+                    Project(fixture.Provider, id, CombatUnitPresentationEvent.Move, facing, origin, away, away);
+                    yield return WaitForPresentation(fixture.Provider);
                     Refresh(fixture.View);
-                    AssertProjection(fixture, id, FindBar(fixture.Bars, id == "player" ? "修士" : "石甲猴"));
+                    AssertProjection(fixture, id, FindBar(fixture.Bars, id));
+                    Project(fixture.Provider, id, CombatUnitPresentationEvent.Move, (facing + 3) % 6, away, origin, origin);
+                    yield return WaitForPresentation(fixture.Provider);
+                    Refresh(fixture.View);
+                    AssertProjection(fixture, id, FindBar(fixture.Bars, id));
                 }
                 foreach (CombatUnitPresentationEvent action in new[] { CombatUnitPresentationEvent.Attack, CombatUnitPresentationEvent.Hit })
                 {
-                    Project(fixture.Provider, id, action, 2, new CombatUnitPresentationHex(1, -1));
+                    Project(fixture.Provider, id, action, 2, new CombatUnitPresentationHex(1, -1), new CombatUnitPresentationHex(1, -1));
                     Vector3 expectedScale = action == CombatUnitPresentationEvent.Attack
                         ? new Vector3(1.08f, 0.94f, 1.08f) : new Vector3(0.94f, 1.06f, 0.94f);
                     Assert.AreEqual(expectedScale, root.transform.localScale);
                     Refresh(fixture.View);
-                    AssertProjection(fixture, id, FindBar(fixture.Bars, id == "player" ? "修士" : "石甲猴"));
+                    AssertProjection(fixture, id, FindBar(fixture.Bars, id));
                 }
                 yield return new WaitForSeconds(0.6f);
                 Assert.AreEqual(Vector3.one, root.transform.localScale);
                 Refresh(fixture.View);
-                AssertProjection(fixture, id, FindBar(fixture.Bars, id == "player" ? "修士" : "石甲猴"));
+                AssertProjection(fixture, id, FindBar(fixture.Bars, id));
             }
 
             foreach (float size in new[] { 4f, 8f })
@@ -126,9 +148,9 @@ namespace TianZhang.Tests.PlayMode
                 fixture.Camera.orthographicSize = size;
                 fixture.Camera.transform.position += Vector3.right * 0.25f;
                 Refresh(fixture.View);
-                AssertProjection(fixture, "player", FindBar(fixture.Bars, "修士"));
+                AssertProjection(fixture, "player", FindBar(fixture.Bars, "player"));
             }
-            AssertResources(FindBar(fixture.Bars, "修士"), 100, 100, 40, 60);
+            AssertResources(FindBar(fixture.Bars, "player"), 100, 100);
         }
 
         [UnityTest]
@@ -137,7 +159,7 @@ namespace TianZhang.Tests.PlayMode
             Fixture fixture = CreateFixture();
             fixture.View.Present(DefaultSnapshot());
             yield return null;
-            CombatUnitHealthBarView.Bar playerBar = FindBar(fixture.Bars, "修士");
+            CombatUnitHealthBarView.Bar playerBar = FindBar(fixture.Bars, "player");
             Assert.IsTrue(fixture.Provider.TryGetPresentedUnit("player", out GameObject playerRoot));
             Vector3 original = playerRoot.transform.position;
             playerRoot.transform.position += Vector3.right * 100f;
@@ -165,7 +187,7 @@ namespace TianZhang.Tests.PlayMode
             playerRoot.SetActive(true);
             fixture.View.Present(Snapshot(Unit("player", "修士", 0, 100, 40, 60), Unit("enemy", "石甲猴", 80, 80, 20, 30)));
             Refresh(fixture.View);
-            Assert.IsFalse(FindBar(fixture.Bars, "修士").root.gameObject.activeSelf);
+            Assert.IsFalse(FindBar(fixture.Bars, "player").root.gameObject.activeSelf);
             fixture.Provider.Remove("enemy");
             Refresh(fixture.View);
             AssertAllHidden(fixture.Bars);
@@ -174,8 +196,8 @@ namespace TianZhang.Tests.PlayMode
             fixture.Provider.Prepare(Descriptors());
             fixture.View.Present(DefaultSnapshot());
             yield return null;
-            AssertProjection(fixture, "player", FindBar(fixture.Bars, "修士"));
-            AssertProjection(fixture, "enemy", FindBar(fixture.Bars, "石甲猴"));
+            AssertProjection(fixture, "player", FindBar(fixture.Bars, "player"));
+            AssertProjection(fixture, "enemy", FindBar(fixture.Bars, "enemy"));
             fixture.View.enabled = false;
             AssertAllHidden(fixture.Bars);
             fixture.View.enabled = true;
@@ -183,7 +205,7 @@ namespace TianZhang.Tests.PlayMode
             AssertAllHidden(fixture.Bars);
             fixture.View.Present(DefaultSnapshot());
             yield return null;
-            Assert.IsTrue(FindBar(fixture.Bars, "修士").root.gameObject.activeSelf);
+            Assert.IsTrue(FindBar(fixture.Bars, "player").root.gameObject.activeSelf);
             fixture.Provider.gameObject.SetActive(false);
             yield return null;
             AssertAllHidden(fixture.Bars);
@@ -229,22 +251,51 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(view, "Formal AdventureScene must carry the injected health view.");
             CombatUnitHealthBarView.Bar[] bars = GetField<CombatUnitHealthBarView.Bar[]>(view, "bars");
             Assert.AreEqual(2, bars.Length);
-            Text[] formalTexts = bars.SelectMany(bar => new[] { bar.identityText, bar.healthText, bar.spiritText }).ToArray();
-            foreach (Text text in formalTexts) LogTextGeometry(text, "before_canvas_update");
             Canvas.ForceUpdateCanvases();
-            foreach (Text text in formalTexts) LogTextGeometry(text, "after_canvas_update");
-            foreach (Text text in formalTexts)
-                if (!string.IsNullOrEmpty(text.text))
-                    Assert.Greater(text.cachedTextGenerator.vertexCount, 0,
-                        text.name + " has committed text but no generated visible geometry.");
+            foreach (CombatUnitHealthBarView.Bar bar in bars) AssertSlimTextFreeBar(bar);
             CombatSession session = GetField<CombatSession>(encounter, "session");
             AdventureSpawnSet spawned = GetField<AdventureSpawnSet>(encounter, "spawned");
             Assert.IsTrue(session.Combatants.TryGet(spawned.Player.Id, out CombatantSnapshot player));
             Assert.IsTrue(session.Combatants.TryGet(spawned.Enemy.Id, out CombatantSnapshot enemy));
-            CombatUnitHealthBarView.Bar playerBar = FindBar(bars, "血条接线验证");
-            CombatUnitHealthBarView.Bar enemyBar = FindBar(bars, UiText.Resolve(spawned.EnemyData.displayNameKey));
-            AssertResources(playerBar, player.CurrentHealth, player.MaximumHealth, player.CurrentSpirit, player.MaximumSpirit);
-            AssertResources(enemyBar, enemy.CurrentHealth, enemy.MaximumHealth, enemy.CurrentSpirit, enemy.MaximumSpirit);
+            CombatUnitHealthBarView.Bar playerBar = FindBar(bars, player.Id);
+            CombatUnitHealthBarView.Bar enemyBar = FindBar(bars, enemy.Id);
+            string enemyName = UiText.Resolve(spawned.EnemyData.displayNameKey);
+            Assert.AreNotEqual("血条接线验证", enemyName,
+                "Name-independent bar width needs two different committed names.");
+            AssertResources(playerBar, player.CurrentHealth, player.MaximumHealth);
+            AssertResources(enemyBar, enemy.CurrentHealth, enemy.MaximumHealth);
+            CombatHudPresenter hud = FindInScene<CombatHudPresenter>();
+            Camera battlefieldCamera = GetField<Camera>(view, "worldCamera");
+            CombatTargetView targetView = FindInScene<CombatTargetView>();
+            Canvas hudCanvas = FindInScene<Canvas>();
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                int height = width == 1920 ? 1080 : 768;
+                SetGameSize(width, height);
+                yield return null;
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(width, Screen.width, "The formal combat frame must keep the requested width.");
+                Rect playerRect = AssertSlimBarOnScreen(playerBar, player.Id);
+                Rect enemyRect = AssertSlimBarOnScreen(enemyBar, enemy.Id);
+                Assert.AreEqual(playerRect.width, enemyRect.width, 0.01f, "Bar width must not depend on the unit name.");
+                Assert.AreEqual(playerRect.height, enemyRect.height, 0.01f, "Bar height must not depend on the unit name.");
+                for (int inspect = 0; inspect < 60 && targetView.TargetId != enemy.Id; inspect++)
+                {
+                    hud.InspectTarget(enemy.Id);
+                    yield return null;
+                }
+                Assert.AreEqual(enemy.Id, targetView.TargetId, "The existing target panel must still present details.");
+                StringAssert.Contains(enemyName, targetView.DetailsText);
+                StringAssert.Contains("生命 " + enemy.CurrentHealth + "/" + enemy.MaximumHealth, targetView.DetailsText);
+                StringAssert.Contains("灵力 " + enemy.CurrentSpirit + "/" + enemy.MaximumSpirit, targetView.DetailsText);
+                string framePath = CaptureBattleFrame(battlefieldCamera, width, height);
+                RectTransform canvasRect = (RectTransform)hudCanvas.transform;
+                TestContext.WriteLine($"Formal slim bar {width}x{height}: screen={Screen.width}x{Screen.height}, " +
+                    $"canvasScale={hudCanvas.scaleFactor}, canvasRect={RectText(canvasRect.rect)}, " +
+                    $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, " +
+                    $"slots={bars.Length}, frame={framePath}");
+            }
             int playerBefore = player.CurrentHealth;
             int enemyBefore = enemy.CurrentHealth;
             for (int frame = 0; frame < 180 && player.CurrentHealth == playerBefore && enemy.CurrentHealth == enemyBefore; frame++)
@@ -255,8 +306,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(player.CurrentHealth < playerBefore || enemy.CurrentHealth < enemyBefore,
                 "Formal combat must produce real damage before the resource refresh assertion.");
             yield return null;
-            AssertResources(playerBar, player.CurrentHealth, player.MaximumHealth, player.CurrentSpirit, player.MaximumSpirit);
-            AssertResources(enemyBar, enemy.CurrentHealth, enemy.MaximumHealth, enemy.CurrentSpirit, enemy.MaximumSpirit);
+            AssertResources(playerBar, player.CurrentHealth, player.MaximumHealth);
+            AssertResources(enemyBar, enemy.CurrentHealth, enemy.MaximumHealth);
             TestContext.WriteLine($"Formal HP refresh: player {playerBefore}->{player.CurrentHealth}, enemy {enemyBefore}->{enemy.CurrentHealth}");
         }
 
@@ -301,30 +352,22 @@ namespace TianZhang.Tests.PlayMode
 
         private static CombatUnitHealthBarView.Bar CreateBar(Transform parent, string name)
         {
-            var host = new GameObject(name, typeof(RectTransform), typeof(Image));
+            var host = new GameObject(name, typeof(RectTransform));
             host.transform.SetParent(parent, false);
             RectTransform root = host.GetComponent<RectTransform>();
             root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
             root.pivot = new Vector2(0.5f, 0f);
-            root.sizeDelta = new Vector2(170f, 72f);
-            var fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-            fill.transform.SetParent(root, false);
+            root.sizeDelta = new Vector2(CombatUnitHealthBarView.BarWidth, CombatUnitHealthBarView.BarHeight);
+            var track = new GameObject("HealthTrack", typeof(RectTransform), typeof(Image));
+            track.transform.SetParent(root, false);
+            var fill = new GameObject("HealthFill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(track.transform, false);
             fill.GetComponent<Image>().type = Image.Type.Filled;
             return new CombatUnitHealthBarView.Bar
             {
                 root = root,
-                identityText = CreateText(root, "Identity"),
-                healthText = CreateText(root, "Health"),
-                spiritText = CreateText(root, "Spirit"),
                 healthFill = fill.GetComponent<Image>(),
             };
-        }
-
-        private static Text CreateText(Transform parent, string name)
-        {
-            var host = new GameObject(name, typeof(RectTransform), typeof(Text));
-            host.transform.SetParent(parent, false);
-            return host.GetComponent<Text>();
         }
 
         private static void AssertProjection(Fixture fixture, string id, CombatUnitHealthBarView.Bar bar)
@@ -347,27 +390,98 @@ namespace TianZhang.Tests.PlayMode
             TestContext.WriteLine($"{id}: body={root.transform.GetChild(0).localScale}, root={root.transform.localScale}, bounds={bounds}, head={anchor}, screen={screen}, canvas={canvasPoint}, rectBottom={bottom}");
         }
 
-        private static CombatUnitHealthBarView.Bar FindBar(CombatUnitHealthBarView.Bar[] bars, string name) =>
-            bars.Single(bar => bar.identityText.text.Contains(name));
+        private static CombatUnitHealthBarView.Bar FindBar(CombatUnitHealthBarView.Bar[] bars, string id) =>
+            bars.Single(bar => string.Equals(GetField<string>(bar, "Id"), id, StringComparison.Ordinal));
 
-        private static void AssertResources(CombatUnitHealthBarView.Bar bar, int hp, int maxHp, int spirit, int maxSpirit)
+        private static void AssertSlimTextFreeBar(CombatUnitHealthBarView.Bar bar)
         {
-            StringAssert.Contains(hp + "/" + maxHp, bar.healthText.text);
-            StringAssert.Contains(spirit + "/" + maxSpirit, bar.spiritText.text);
-            Assert.AreEqual(hp / (float)maxHp, bar.healthFill.fillAmount, 0.0001f);
+            Assert.IsNotNull(bar.root, "Health bar slot needs its root.");
+            Assert.IsEmpty(bar.root.GetComponentsInChildren<Text>(true), bar.root.name + " must carry no head text.");
+            Assert.IsEmpty(bar.root.GetComponentsInChildren<LayoutGroup>(true),
+                bar.root.name + " must not keep the text-driven layout group.");
+            Assert.IsEmpty(bar.root.GetComponentsInChildren<ContentSizeFitter>(true),
+                bar.root.name + " must not stretch with its content.");
+            Assert.IsNull(bar.root.GetComponent<Image>(), bar.root.name + " must not keep the old text panel background.");
+            Assert.AreEqual(new Vector2(CombatUnitHealthBarView.BarWidth, CombatUnitHealthBarView.BarHeight),
+                bar.root.sizeDelta, bar.root.name + " must keep the fixed slim bar size.");
+            Assert.IsNotNull(bar.healthFill, bar.root.name + " must keep its health fill.");
+            Assert.IsFalse(bar.healthFill.raycastTarget, bar.root.name + " must not take world input.");
         }
 
-        private static void LogTextGeometry(Text text, string phase)
+        private static Rect AssertSlimBarOnScreen(CombatUnitHealthBarView.Bar bar, string id)
         {
-            Assert.IsNotNull(text);
-            Assert.IsNotNull(text.font, text.name + " needs its formal font.");
-            Canvas canvas = text.GetComponentInParent<Canvas>();
-            TestContext.WriteLine($"HP text geometry {phase}: name={text.transform.parent.name}/{text.name}, text={text.text}, " +
-                $"font={text.font.name}, fontSize={text.font.fontSize}, lineHeight={text.font.lineHeight}, ascent={text.font.ascent}, " +
-                $"textFontSize={text.fontSize}, preferredWidth={text.preferredWidth}, preferredHeight={text.preferredHeight}, " +
-                $"rectWidth={text.rectTransform.rect.width}, rectHeight={text.rectTransform.rect.height}, " +
-                $"canvasScaleFactor={canvas.scaleFactor}, vertices={text.cachedTextGenerator.vertexCount}, " +
-                $"active={text.gameObject.activeInHierarchy}, verticalOverflow={text.verticalOverflow}");
+            Assert.IsTrue(bar.root.gameObject.activeSelf, id + " bar must stay visible in the formal combat frame.");
+            var corners = new Vector3[4];
+            bar.root.GetWorldCorners(corners);
+            var rect = new Rect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[2].y - corners[0].y);
+            Assert.Greater(rect.width, 0f, id + " bar needs a visible width.");
+            Assert.Less(rect.height, Screen.height * 0.02f, id + " bar must stay a slim strip, not a text panel.");
+            Assert.AreEqual(CombatUnitHealthBarView.BarWidth / CombatUnitHealthBarView.BarHeight, rect.width / rect.height,
+                0.01f, id + " bar must keep the fixed thin aspect.");
+            return rect;
+        }
+
+        private static string RectText(Rect rect) =>
+            $"{rect.x:F1},{rect.y:F1},{rect.width:F1}x{rect.height:F1}";
+
+        private static string CaptureBattleFrame(Camera camera, int width, int height)
+        {
+            var target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
+            target.Create();
+            var request = new RenderPipeline.StandardRequest { destination = target };
+            Assert.IsTrue(RenderPipeline.SupportsRenderRequest(camera, request),
+                "The formal battlefield camera must support render requests.");
+            var image = new Texture2D(width, height, TextureFormat.RGB24, false);
+            RenderTexture previous = RenderTexture.active;
+            RenderTexture previousTarget = camera.targetTexture;
+            try
+            {
+                // Batchmode keeps a small game view, so the formal frame comes from the scene camera, not the screen backbuffer.
+                camera.targetTexture = target;
+                RenderPipeline.SubmitRenderRequest(camera, request);
+                RenderTexture.active = target;
+                image.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                image.Apply();
+                string path = Path.Combine(Application.temporaryCachePath,
+                    "tzg-slim-healthbar-" + width + "x" + height + ".png");
+                File.WriteAllBytes(path, image.EncodeToPNG());
+                return path;
+            }
+            finally
+            {
+                camera.targetTexture = previousTarget;
+                RenderTexture.active = previous;
+                Object.DestroyImmediate(image);
+                target.Release();
+                Object.DestroyImmediate(target);
+            }
+        }
+
+        private static void SetGameSize(int width, int height)
+        {
+#if UNITY_EDITOR
+            var assembly = typeof(UnityEditor.Editor).Assembly;
+            var sizesType = assembly.GetType("UnityEditor.GameViewSizes");
+            var sizes = sizesType.BaseType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            var group = sizesType.GetMethod("GetGroup").Invoke(sizes, new object[] { 0 });
+            var sizeType = assembly.GetType("UnityEditor.GameViewSize");
+            var kind = assembly.GetType("UnityEditor.GameViewSizeType");
+            var size = Activator.CreateInstance(sizeType, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null,
+                new object[] { Enum.ToObject(kind, 1), width, height, "Slim health bar validation" }, null);
+            group.GetType().GetMethod("AddCustomSize").Invoke(group, new[] { size });
+            int count = (int)group.GetType().GetMethod("GetTotalCount").Invoke(group, null);
+            var game = UnityEditor.EditorWindow.GetWindow(assembly.GetType("UnityEditor.GameView"));
+            game.GetType().GetProperty("selectedSizeIndex", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(game, count - 1);
+#else
+            Screen.SetResolution(width, height, false);
+#endif
+        }
+
+        private static void AssertResources(CombatUnitHealthBarView.Bar bar, int hp, int maxHp)
+        {
+            Assert.IsTrue(bar.healthFill.enabled, "The slim bar must keep an enabled health fill.");
+            Assert.AreEqual(hp / (float)maxHp, bar.healthFill.fillAmount, 0.0001f);
         }
 
         private static void AssertAllHidden(CombatUnitHealthBarView.Bar[] bars)
@@ -390,8 +504,28 @@ namespace TianZhang.Tests.PlayMode
                 CombatUnitDisplayFaction.Enemy, new CombatUnitPresentationHex(1, 0), 3),
         };
         private static void Project(Static3DCombatUnitPresentationProvider provider, string id,
-            CombatUnitPresentationEvent action, int facing, CombatUnitPresentationHex end) =>
-            provider.Present(new CombatUnitPresentationEventProjection(id, action, end, end, facing, null));
+            CombatUnitPresentationEvent action, int facing, CombatUnitPresentationHex start, CombatUnitPresentationHex end,
+            params CombatUnitPresentationHex[] movementPath) =>
+            provider.Present(new CombatUnitPresentationEventProjection(id, action, start, end, facing, null, movementPath));
+
+        /// <summary>Neighbour hex the provider maps to the requested six-direction facing.</summary>
+        private static CombatUnitPresentationHex Neighbour(CombatUnitPresentationHex from, int facing) => facing switch
+        {
+            0 => new CombatUnitPresentationHex(from.Q + 1, from.R),
+            1 => new CombatUnitPresentationHex(from.Q + 1, from.R - 1),
+            2 => new CombatUnitPresentationHex(from.Q, from.R - 1),
+            3 => new CombatUnitPresentationHex(from.Q - 1, from.R),
+            4 => new CombatUnitPresentationHex(from.Q - 1, from.R + 1),
+            5 => new CombatUnitPresentationHex(from.Q, from.R + 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(facing)),
+        };
+
+        private static IEnumerator WaitForPresentation(Static3DCombatUnitPresentationProvider provider)
+        {
+            float deadline = Time.time + 10f;
+            while (provider.IsPresenting && Time.time < deadline) yield return null;
+            Assert.IsFalse(provider.IsPresenting, "The presentation provider must settle before the next projection.");
+        }
         private GameObject Own(string name, params Type[] components)
         {
             var value = new GameObject(name, components);

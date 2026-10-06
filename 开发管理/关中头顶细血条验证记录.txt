@@ -1,0 +1,101 @@
+# U-GZ-HEALTHBAR-SLIM-01 · 关中头顶血条精简为无文字细条验证记录
+
+日期：2026-10-06；责任方／修改方：DeepSeek V4.1 Flash（⚠️ 已修改/未审核；变更范围：头顶血条 View 与 Builder、正式 AdventureScene 重建、PlayMode／EditMode 直接测试）。
+主模型：deepseek-flash（入口默认模型；任务卡无 `executionModel`，未调用辅助模型或子智能体）。RunId：5a7f25d2-03d1-45d4-916f-08770fca835f。
+核对基线：75c3987b97797cd34c0a1763c0bdbaa46135d989；候选分支：codex/automation/deepseek/5a7f25d2-03d1-45d4-916f-08770fca835f/candidate。
+提交绑定：本记录与业务差异包含于同一个 candidate；SHA 由共享入口与 git 提交承载，不在提交自身写入循环 SHA。
+审核状态：待 Codex 复审；本记录不预填任何审核结论。
+
+## 授权、模型协作与预检
+
+- 直接事实：任务卡 U-GZ-HEALTHBAR-SLIM-01 的必查范围、实施范围、禁止项与验证；`CombatUnitHealthBarView`（Bar 序列化槽位、`Configure`／`UpdateResources`／`LateUpdate`／`Clear`）；`AdventureSceneBuilder.BuildUnitHealthBars`（创建路径）；`AdventureSceneInstaller` 的 `combatUnitHealthBars.Configure` 与 `CombatHudPresenter.ConfigureHealthBars`／`Present`；`Static3DCombatUnitPresentationProvider.TryGetHeadAnchor`；`CombatTargetView.Present`／`DetailsText`（名称与生命／灵力详情的既有位置）；`开发管理/开发-技术经验.txt#Unity 开发经验`（场景只用 Editor Builder 程序化生成，不手写 `.unity` YAML）。
+- 模型协作评估（业务写入前）：卡已冻结目标与语义（删除头顶姓名／生命／灵力文字与文字驱动的大背景，只留固定宽度生命细条），所有者唯一（CombatPresentation View → Editor Builder → 正式场景 → 直接测试的单一调用链），无跨所有者依赖；错误影响限于头顶投影层，验收矩阵明确（无文字、固定宽度、生命比例、低血量颜色、跟随、隐藏、不挡射线）。结论：简单，沿用入口默认单模型 deepseek-flash，不新增辅助子智能体——改动集中在同一视图及其创建与测试面，属强耦合小任务，按 `AGENTS.md`「任务粒度与子智能体」由主智能体直接处理；与卡中「模型协作」结论一致，未越过原范围与停止条件。
+- 实际能力核对（写入前）：PowerShell 7 可用；Unity `6000.3.18f1` 可用；EditMode／PlayMode 入口可用；本机网关与模型为 `http://127.0.0.1:15721` 同源与 `deepseek-flash`。取证能力实测：`-nographics` 批处理**不能**强设分辨率（既有 `SetGameSize` 走 `EditorWindow.GetWindow(GameView)` 在无图形设备时直接失败）；去掉 `-nographics` 的图形批处理后 `Screen` 与 `CanvasScaler` 可按 1920×1080 与 1366×768 生效，但批处理的活动 RenderTarget 仍为 321×578，整屏 `ScreenCapture` 不可用，实际画面改由场景相机 RenderTexture 取得（**不含 Screen Space Overlay 的头顶血条与目标面板**）；主模型本次直接读取了这两张真实 PNG 画面。
+- 预检：共享入口已按 runId／taskId／任务卡 digest／索引 digest 精确绑定本次实时预检，`matched`、`notice`、`mustRead`、`gatePointers` 均空，与卡头 `riskPreflight` 的 `explicitRefs`／`matched`／`gates` 空数组一致；允许路径、领域、事实源与技术路线均未扩展。
+- 原子结果：正式关中场景中玩家与敌人头顶只剩紧凑生命细条，没有文字与文字驱动的大背景，宽度不随名称变化；生命比例、低血量颜色、头部跟随、死亡／离屏隐藏、敌我双槽位与 Graphic 不接收射线的行为保持。
+
+## 实现与所有者
+
+| 位置 | 归属与变化 |
+|---|---|
+| `CombatUnitHealthBarView.cs` | 头顶投影唯一所有者。`Bar` 只保留 `root` 与 `healthFill`，删除 `identityText`／`healthText`／`spiritText`；`Configure` 只校验并固定 `root`／`healthFill`，同时把槽位收到固定尺寸 `BarWidth=96`／`BarHeight=8`（创建与运行时刷新同时收口，宽度不可能再随名称伸展）；`UpdateResources` 只写 `fillAmount` 与低血量颜色；`Clear` 不再触碰文字；删除仅为动态文字服务的 `layoutScaleFactor` 与 `LayoutRebuilder.MarkLayoutForRebuild` 及已无读取者的 `canvas` 字段。头部锚点、世界到屏幕换算、生命比例、双槽位、死亡／离屏隐藏、`raycastTarget=false` 保持原实现。 |
+| `AdventureSceneBuilder.cs` | 创建路径所有者。`BuildUnitHealthBars` 改为创建无文字的槽位（只带 `RectTransform`，不再套面板皮肤、`HorizontalLayoutGroup`、`ContentSizeFitter`），轨道与填充铺满固定槽位；序列化只写 `root`／`healthFill`；删除只服务旧文字的 `CreateHealthBarText`。入口 `天章/场景/重建关中头顶血条` 保持不变。 |
+| `AdventureScene.unity` | 由上一条 Builder 在正式场景上重建并保存（`-executeMethod`），非手改 YAML。重建后 `bars[0/1]` 只剩 `root`／`healthFill`，槽位 `m_SizeDelta: {x: 96, y: 8}`、`m_AnchorMin/Max = 0.5,0.5`、`m_Pivot = 0.5,0`，并已无任何 `identityText`／`healthText`／`spiritText` 序列化引用。 |
+| `GuanzhongUnitHealthBarPlayModeTests.cs` | 头顶验收面。条按绑定的单位 ID 定位（不再按文字内容）；新增无可见文字／无旧大面板／无布局组的子树断言、固定尺寸与「双单位名称不同但条宽相同」断言；两个目标分辨率下都断言 `Screen` 尺寸、两单位条的尺寸与 12:1 细条比例、目标面板仍显示名称与生命／灵力详情，并各落一张真实战斗画面；跟随验收改为真实六向单格移动路径并等待 provider 静止。 |
+| `GuanzhongCombatLayoutEditorTests.cs` | 正式场景引用校验。保存后的场景必须保持单一 Canvas、血条容器子树无 `Text`／无布局组／无 `ContentSizeFitter`，两个槽位为固定 `96×8`、锚点与轴心不变、只保留轨道与填充两个图形，且旧的文字序列化引用不得残留。 |
+
+未改角色模型、头部锚点、相机、其他 HUD、公共皮肤 helper、字体／图集／美术资产、生命数值与战斗规则；未新增灵力条、徽标、数值标签或 Canvas；详细名称与生命／灵力值继续由既有目标面板承载。
+
+## 验证命令与结果
+
+| 检查 | 命令 | 结果 |
+|---|---|---|
+| 正式场景重建 | `Unity.exe -batchmode -nographics -projectPath src -executeMethod TianZhang.Editor.AdventureSceneBuilder.RebuildUnitHealthBars -quit` | 退出码 0；场景由 Builder 重建并保存；对象名对照基线只少 2×`Identity`、2×`Health`、2×`Spirit` 六个文字对象，无其他对象增减；`identityText`／`healthText`／`spiritText` 残留 0 处 |
+| EditMode（全量，卡指定入口） | `pwsh -File tools/run-unity-editmode-tests.ps1` | total=590，passed=583，failed=7，skipped=0；两个直接测试类 `GuanzhongCombatLayoutEditorTests` 全部通过；7 项失败与本卡路径不相交（见下） |
+| PlayMode（本卡定向，图形批处理） | `Unity.exe -batchmode -projectPath src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongUnitHealthBarPlayModeTests -testResults <xml>`，再以 `tools/run-unity-playmode-tests.ps1 -ValidateResultOnly` 校验 | total=4，passed=4，failed=0，inconclusive=0，skipped=0，result=Passed；校验退出码 0 |
+| 程序集边界 | `pwsh -File tools/check-unity-assembly-boundaries.ps1` | OK（assemblies=19，asmrefs=2） |
+| 审核文本 | `pwsh -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理` | 见下（与行尾空白检查同批执行） |
+| 行尾空白（暂存前） | `pwsh -File tools/check-pending-whitespace.ps1 -ExpectedPaths <本轮路径>` | 见下 |
+| Git 暂存检查 | `git diff --cached --check`（由 `tools/automation-finalize-commit.ps1` 执行） | 见下 |
+
+### 双分辨率与画面取证（本卡要求的实测数值）
+
+图形批处理下 `SetGameSize` + `Screen` 生效，两条槽位在正式场景中的实测矩形（`RectTransform` 世界角点，Canvas 单位）：
+
+| 目标分辨率 | Screen | Canvas.scaleFactor | 玩家条 | 敌人条 | 画面 |
+|---|---|---|---|---|---|
+| 1920×1080 | 1920×1080 | 1 | 96.0×8.0 | 96.0×8.0 | `%TEMP%\DefaultCompany\src\tzg-slim-healthbar-1920x1080.png` |
+| 1366×768 | 1366×768 | 0.7114583 | 68.3×5.7 | 68.3×5.7 | `%TEMP%\DefaultCompany\src\tzg-slim-healthbar-1366x768.png` |
+
+- 两条槽位在任何分辨率下尺寸逐位相同（名称分别为「血条接线验证」与石甲猴显示名，名称不同不影响条宽），比例恒为 12:1，占屏高约 0.74%，即「紧凑细条」而非旧文字面板。
+- 正式战斗内生命刷新：玩家 `571→571`、敌人 `657→611`，`healthFill.fillAmount` 同步为 `当前/上限`，证明真实伤害落到细条上。
+- 目标面板未退化：`InspectTarget(enemy)` 后 `CombatTargetView.DetailsText` 仍包含敌人显示名与「生命 x/y」「灵力 x/y」。
+- 两张 PNG 由场景相机 RenderTexture 取得，主模型已实际读取确认：画面为 1920×1080 与 1366×768 的正式关中战场（玩家与石甲猴同在），**不含** Screen Space Overlay 的头顶血条与目标面板（见「未验证」）。
+
+### 本卡测试覆盖
+
+- PlayMode `StableIdsKeepDamageHealingAndHealthFillWhenSnapshotOrderChanges`：稳定 ID 换槽后条仍按 ID 归属；生命减少／低血量换色／归零隐藏；无效上限（上限 0）不伪造满血；子树无 `Text`／无 `LayoutGroup`／无 `ContentSizeFitter`／无旧面板背景且固定 `96×8`；Canvas 内所有 Graphic 不接收射线。
+- PlayMode `HeadAnchorUsesActualBodyBoundsThroughSixFacingsMovementActionScaleAndCameraChanges`：锚点取自真实包围盒；六个朝向各走一格再退回并逐次断言条底中心与头部投影重合（<0.5px）；攻击／受击缩放与恢复；相机正交尺寸 4／8 与平移后仍跟随。
+- PlayMode `VisibilityAndLifecycleHideInvalidAnchorsWithoutTreatingGeometryAsOcclusion`：离屏、相机背后、单位隐藏、单位移除、离战后隐藏；遮挡物存在时 Overlay 血条仍显示（几何不作遮挡判断）。
+- PlayMode `FormalStartMenuRouteInjectsHealthBarsAndFeedsRealCombatResources`：从正式开始菜单走到关中遭遇战的真实链路中，正式场景血条为无文字细条，双分辨率尺寸、生命刷新、目标面板详情与两张画面取证。
+- EditMode `GuanzhongCombatLayoutEditorTests`：保存后的正式场景保持血条容器归属 `UICanvas`、无文字／无文字驱动布局、两槽位固定尺寸与轴向、只保留轨道与填充，且旧文字序列化引用不残留；增量重建器幂等。
+
+## 已验证
+
+- 头顶只剩生命轨道与填充：正式场景与运行时两条路径都不再产生姓名、生命、灵力文字，也不再有随文字伸展的面板与 `HorizontalLayoutGroup`／`ContentSizeFitter`。
+- 条宽不依赖角色名：两个名称不同的单位在 1920×1080 与 1366×768 下条宽逐位相同，恒为固定 `96×8` 画布单位（12:1）。
+- 生命比例、低血量颜色、无效输入与归零隐藏行为保持；`fillAmount` 与 `当前/上限` 一致。
+- 头部锚点、世界到屏幕换算与跟随在六朝向逐格移动、攻击／受击缩放、正交尺寸与相机平移变化下均与头部投影重合（<0.5px）。
+- `raycastTarget=false` 与离屏／死亡／离战隐藏保持；目标面板名称与生命／灵力详情仍由既有位置承载。
+- 正式 `AdventureScene` 由 Builder 重建保存：只减少六个头顶文字对象与文字驱动组件，无其他对象增减；`CombatUnitPresentationProfileEditorTests` 的引用校验之外，`GuanzhongCombatLayoutEditorTests` 逐项通过。
+- 程序集边界检查通过；行尾空白与审核文本检查见「命令与结果」。
+
+## 未验证
+
+- **带头顶血条的像素画面**：批处理下活动 RenderTarget 固定为 321×578，`ScreenCapture.CaptureScreenshotAsTexture()` 直接报 `requested a region that exceeds the active Render Target sized [W:321, H:578]`，因此无法取得包含 Screen Space Overlay 的整屏截图。本轮的「实际战斗画面」是场景相机 RenderTexture（世界层），头顶血条与目标面板属于 Overlay，**不在该图中**；它们在两个分辨率下的形状与比例只有数值证据（上表），没有像素证据。1920×1080／1366×768 下的最终视觉观感仍未由执行者签收。
+- **批处理下的 Overlay 绝对屏幕位置**：同一原因，Canvas（按 `Screen` 缩放）与批处理实际渲染目标不同源，血条的 Canvas 世界坐标不能当作屏幕像素读；本轮只断言与空间无关的尺寸、比例、「两单位一致」和视图自身的可见性门限，未把该坐标当作落点证据。跟随落点由 fixture 断言（相机投影与条底中心重合）承担。
+- **全量 PlayMode 套件**：本轮只运行本卡定向 4 项；全量套件的既有失败集中在分辨率相关与 3D 表现链，未在本轮复跑对照。
+- 未评价最终美术与整体体验；未据此代签关中流程美术验收。
+
+## 与卡无关的既有失败（供复审参考）
+
+- EditMode 7 项：`ClothWideSleeveExperimentEditorTests`(1) 与 `CombatUnitPresentationProfileEditorTests`(3) 要求 `assets/source/` 下未被 Git 跟踪的冻结素材，在 linked worktree 中不存在；`BattleAnimationSpritePresentationEditorTests`(1) 期望场景内的 `VisualBaselineBoard` 探针（基线场景与重建后场景中该名字出现次数均为 0，非本卡引入）；`GuanzhongFormalEndToEndTests`(1) 与 `GuanzhongFormalUiTextTests`(1) 分别涉及遭遇战数值快照与战斗文本解析，均不在本候选改动路径上。与本 worktree 前一轮（基线 `01dd245e`）记录的 7 项失败集合逐项一致。
+- 诊断入口 `天章/诊断/采集当前头顶文字`（`GuanzhongCombatTimelinePlayModeTests` 内 `#if UNITY_EDITOR` 的 `MenuItem`，非自动化用例）仍要求 `UnitHealthBar_*/Identity|Health|Spirit` 存在，本卡删除文字后手动调用会抛「Formal health text is missing」。该文件不在本卡 `expectedPaths` 内，未改动，留待有权任务处置。
+
+## 残留风险
+
+- `AdventureScene.unity` 本轮由当前 Unity 版本整体重新序列化：语义上只少六个头顶文字对象及其文字驱动组件，但 fileID 与文档顺序变化，diff 大于纯增量；重建另引入 265 处空值行尾空格，已用项目 `check-pending-whitespace.ps1 -Fix` 归一化（复审请以对象与引用解析结果为准）。
+- 旧 PlayMode 跟随用例原本在第一次 Move 投影就抛 `static_3d_presentation_move_stale`（其 `Project` 助手不传移动路径，而 `ValidateMovement` 对空路径硬失败），即断言实际从未执行；本轮改为真实单格路径并等待 provider 静止后才断言，因此「逐段移动跟随」在本轮才第一次被真正执行。该改动只在本卡直接测试类内，未触碰 provider。
+- `CombatUnitHealthBarView.BarWidth`／`BarHeight` 是新增公共常量，Builder、View 与测试共用；将来调整条尺寸需同时改这三处语义而不是只改场景。
+- 回滚仅恢复本卡 View、Builder、正式场景与直接测试差异；回滚后旧文字布局不会自动恢复（Builder 是唯一重建入口）。
+
+## 经验候选
+
+本轮基于已有事实与 diff 检查是否需要 `## 经验候选`：所发现的两点（批处理下 `ScreenCapture` 因小 RenderTarget 不可用、既有跟随用例对空移动路径必然失败）分别是既有环境限制与本卡直接测试类的局部缺陷，均已在上一轮验证记录或本记录中就地写明，未产生新的可复用根因或门禁候选，故不新增经验候选章节。
+
+## 请求复审范围
+
+- 正式场景与运行时两条路径是否都已收口为「无文字、固定宽度细条」，是否存在任何残留文字或文字驱动布局。
+- 删除 `identityText`／`healthText`／`spiritText` 后，是否仍有别的读取者或序列化引用依赖它们（本卡范围内已核对 View、Builder 与两个直接测试类）。
+- 生命比例、低血量颜色、头部跟随、离屏与死亡隐藏、双槽位与射线行为的保持是否满足原验收口径。
+- 双分辨率数值证据与「无 Overlay 像素画面」缺口是否可接受，以及诊断入口 `天章/诊断/采集当前头顶文字` 的处置意见。

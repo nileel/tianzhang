@@ -4,13 +4,13 @@
   "id": "U-GZ-HEALTHBAR-SLIM-01",
   "title": "关中头顶血条精简为无文字细条",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-05 用户明确要求只有血条、没有文字；目标所有者与局部实现边界已定位，完成后交 Codex 独立复审。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
@@ -27,7 +27,11 @@
     "开发管理/任务归档/U-GZ-HEALTHBAR-SLIM-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # U-GZ-HEALTHBAR-SLIM-01 · 关中头顶血条精简为无文字细条

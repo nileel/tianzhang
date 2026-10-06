@@ -5,17 +5,18 @@ using UnityEngine.UI;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    /// <summary>Projects committed resources and provider-owned head anchors into the existing overlay Canvas.</summary>
+    /// <summary>Projects committed health and provider-owned head anchors into the existing overlay Canvas as slim text-free bars.</summary>
     [DefaultExecutionOrder(100)]
     public sealed class CombatUnitHealthBarView : MonoBehaviour
     {
+        /// <summary>Fixed bar size; the slim bar never stretches with the unit name.</summary>
+        public const float BarWidth = 96f;
+        public const float BarHeight = 8f;
+
         [Serializable]
         public sealed class Bar
         {
             public RectTransform root;
-            public Text identityText;
-            public Text healthText;
-            public Text spiritText;
             public Image healthFill;
             [NonSerialized] internal string Id;
             [NonSerialized] internal bool Alive;
@@ -23,8 +24,6 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private Bar[] bars = Array.Empty<Bar>();
         private Camera worldCamera;
-        private Canvas canvas;
-        private float layoutScaleFactor;
         private Static3DCombatUnitPresentationProvider provider;
         private bool configured;
 
@@ -40,22 +39,20 @@ namespace TianZhang.Features.CombatPresentation
             for (int i = 0; i < bars.Length; i++)
             {
                 Bar bar = bars[i];
-                if (bar == null || bar.root == null || bar.identityText == null || bar.healthText == null ||
-                    bar.spiritText == null || bar.healthFill == null || !(bar.root.parent is RectTransform) ||
+                if (bar == null || bar.root == null || bar.healthFill == null || !(bar.root.parent is RectTransform) ||
                     bar.root.GetComponentInParent<Canvas>() != canvas)
                     throw new InvalidOperationException("combat_health_bar_references_invalid");
                 if (i > 0 && bars[0].root == bar.root)
                     throw new InvalidOperationException("combat_health_bar_duplicate_slot");
             }
             this.worldCamera = worldCamera;
-            this.canvas = canvas;
-            layoutScaleFactor = canvas.scaleFactor;
             this.provider = provider;
             foreach (Bar bar in bars)
             {
                 bar.root.anchorMin = new Vector2(0.5f, 0.5f);
                 bar.root.anchorMax = new Vector2(0.5f, 0.5f);
                 bar.root.pivot = new Vector2(0.5f, 0f);
+                bar.root.sizeDelta = new Vector2(BarWidth, BarHeight);
                 foreach (Graphic graphic in bar.root.GetComponentsInChildren<Graphic>(true))
                     graphic.raycastTarget = false;
             }
@@ -113,9 +110,6 @@ namespace TianZhang.Features.CombatPresentation
             }
             bar.Id = value.Id;
             bar.Alive = value.CurrentHealth > 0;
-            bar.identityText.text = value.DisplayName;
-            bar.healthText.text = "生命 " + value.CurrentHealth + "/" + value.MaximumHealth;
-            bar.spiritText.text = "灵力 " + value.CurrentSpirit + "/" + value.MaximumSpirit;
             float ratio = (float)value.CurrentHealth / value.MaximumHealth;
             bar.healthFill.fillAmount = ratio;
             bar.healthFill.color = ratio <= 0.25f ? new Color32(205, 61, 51, 255) : new Color32(78, 162, 103, 255);
@@ -125,8 +119,6 @@ namespace TianZhang.Features.CombatPresentation
         private void LateUpdate()
         {
             if (!configured) return;
-            bool scaleChanged = layoutScaleFactor != canvas.scaleFactor;
-            layoutScaleFactor = canvas.scaleFactor;
             foreach (Bar bar in bars)
             {
                 Vector3 anchor = default;
@@ -144,8 +136,6 @@ namespace TianZhang.Features.CombatPresentation
                     }
                 }
                 bar.root.gameObject.SetActive(visible);
-                // Dynamic Text preferred sizes change with pixelsPerUnit even when its string does not.
-                if (scaleChanged) LayoutRebuilder.MarkLayoutForRebuild(bar.root);
             }
         }
 
@@ -157,9 +147,6 @@ namespace TianZhang.Features.CombatPresentation
             bar.Id = null;
             bar.Alive = false;
             if (bar.root != null) bar.root.gameObject.SetActive(false);
-            if (bar.identityText != null) bar.identityText.text = string.Empty;
-            if (bar.healthText != null) bar.healthText.text = string.Empty;
-            if (bar.spiritText != null) bar.spiritText.text = string.Empty;
             if (bar.healthFill != null) bar.healthFill.fillAmount = 0;
         }
     }

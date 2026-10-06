@@ -41,7 +41,43 @@ namespace TianZhang.Tests.EditMode
                 Assert.IsFalse(scroll.horizontal);
             }
             Assert.AreEqual("UICanvas", Rect("CombatTargetMarker").parent.name);
-            Assert.AreEqual("UICanvas", Rect("CombatUnitHealthBars").parent.name);
+            var healthBars = Rect("CombatUnitHealthBars");
+            Assert.AreEqual("UICanvas", healthBars.parent.name);
+            Assert.IsEmpty(healthBars.GetComponentsInChildren<Text>(true), "Head health bars must stay text-free.");
+            Assert.IsEmpty(healthBars.GetComponentsInChildren<LayoutGroup>(true),
+                "Head health bars must not keep the text-driven layout group.");
+            Assert.IsEmpty(healthBars.GetComponentsInChildren<ContentSizeFitter>(true),
+                "Head health bars must not stretch with their content.");
+            var healthView = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatUnitHealthBarView>()).Single();
+            SerializedProperty healthSlots = new SerializedObject(healthView).FindProperty("bars");
+            Assert.AreEqual(2, healthSlots.arraySize);
+            foreach (string slot in new[] { "UnitHealthBar_0", "UnitHealthBar_1" })
+            {
+                var bar = (RectTransform)healthBars.Find(slot);
+                Assert.NotNull(bar, slot + " must exist under the health bar container.");
+                Assert.IsNull(bar.GetComponent<Image>(), slot + " must not keep the old text panel background.");
+                Assert.AreEqual(new Vector2(CombatUnitHealthBarView.BarWidth, CombatUnitHealthBarView.BarHeight), bar.sizeDelta);
+                Assert.AreEqual(Vector2.one * 0.5f, bar.anchorMin);
+                Assert.AreEqual(Vector2.one * 0.5f, bar.anchorMax);
+                Assert.AreEqual(new Vector2(0.5f, 0f), bar.pivot);
+                Transform track = bar.Find("HealthTrack");
+                Assert.NotNull(track, slot + " must keep its health track.");
+                Assert.NotNull(track.GetComponent<Image>(), slot + " track must stay a graphic.");
+                Transform fill = track.Find("HealthFill");
+                Assert.NotNull(fill, slot + " must keep its health fill under the track.");
+                Assert.NotNull(fill.GetComponent<Image>(), slot + " fill must stay a graphic.");
+                Assert.AreEqual(2, bar.GetComponentsInChildren<Image>(true).Length,
+                    slot + " must keep only its track and fill graphics.");
+            }
+            for (int index = 0; index < healthSlots.arraySize; index++)
+            {
+                SerializedProperty slot = healthSlots.GetArrayElementAtIndex(index);
+                Assert.NotNull(slot.FindPropertyRelative("root").objectReferenceValue, "slot " + index + " root");
+                Assert.NotNull(slot.FindPropertyRelative("healthFill").objectReferenceValue, "slot " + index + " healthFill");
+                Assert.IsNull(slot.FindPropertyRelative("identityText"), "Removed head text must not stay serialized.");
+                Assert.IsNull(slot.FindPropertyRelative("healthText"), "Removed head text must not stay serialized.");
+                Assert.IsNull(slot.FindPropertyRelative("spiritText"), "Removed head text must not stay serialized.");
+            }
             Assert.IsFalse(Rect("CombatLogPanel").gameObject.activeSelf);
             foreach (var component in scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<MonoBehaviour>(true)))
             {
