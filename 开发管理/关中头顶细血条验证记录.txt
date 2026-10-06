@@ -1,5 +1,27 @@
 # U-GZ-HEALTHBAR-SLIM-01 · 关中头顶血条精简为无文字细条验证记录
 
+> 2026-10-06 Codex 定向返工补充：本节以本轮含 Screen Space Overlay 的真实 Game View PNG 取代下文旧记录中“仅场景相机 RenderTexture、未取得 Overlay 像素证据”的结论；旧记录保留为返工前事实。
+
+## 2026-10-06 Codex 返工结果（当前）
+
+- 责任方／模型：Codex，实际模型 `gpt-5.6-terra`（Node REPL 启动元数据核验）；RunId `9f4f36a5-9750-442b-b226-e3ed33488b3c`。本轮只补齐像素证据链：不改 View、Builder、场景、provider、相机或其他 HUD。
+- 模型协作评估：验收缺口唯一且根因明确为旧测试把场景相机 RenderTexture 当作 Overlay 画面；`ScreenCapture.CaptureScreenshot` 可直接取当前 Game View，任务仍为简单、强耦合的小修改。沿用入口单模型，未启动辅助智能体或第二责任会话。
+- 预检：共享入口已绑定 taskId／RunId／任务卡与索引 digest，`matched`、`notice`、`mustRead`、`gatePointers` 均为空；本轮未扩展 expectedPaths、所有者或技术路线。
+- 测试把 `CaptureBattleFrame` 替为 `CaptureOverlayFrame`：拒绝 `GraphicsDeviceType.Null`，以 `ScreenCapture.CaptureScreenshot` 写入唯一临时 PNG，等待文件落盘后断言 PNG 可读且像素宽高精确等于请求的 Game View。它不再使用相机 RenderTexture，因此 PNG 包含 Screen Space Overlay。
+
+| 定向检查 | 命令与结果 |
+|---|---|
+| 图形 PlayMode | `Unity.exe -batchmode -projectPath src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongUnitHealthBarPlayModeTests -testResults C:\\Users\\WINDOWS\\AppData\\Local\\Temp\\tzg-healthbar-overlay-results-9f4f36a5.xml`；4/4 passed、0 failed，result=Passed。 |
+| EditMode 场景引用 | `Unity.exe -batchmode -nographics -projectPath src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.GuanzhongCombatLayoutEditorTests -testResults C:\\Users\\WINDOWS\\AppData\\Local\\Temp\\tzg-healthbar-layout-results-9f4f36a5.xml`；2/2 passed、0 failed，result=Passed。 |
+
+| Game View | 实测 Screen／Canvas | 两个头顶条 RectTransform 尺寸 | 实际 Overlay PNG |
+|---|---|---|---|
+| 1920×1080 | 1920×1080；scaleFactor=1 | 玩家 96.0×8.0；敌人 96.0×8.0 | `C:\\Users\\WINDOWS\\AppData\\Local\\Temp\\DefaultCompany\\src\\tzg-slim-healthbar-overlay-1920x1080-5caaa3f392554c46af27bbd2ad38b0b8.png`（已读取，1920×1080） |
+| 1366×768 | 1366×768；scaleFactor=0.7114583 | 玩家 68.3×5.7；敌人 68.3×5.7 | `C:\\Users\\WINDOWS\\AppData\\Local\\Temp\\DefaultCompany\\src\\tzg-slim-healthbar-overlay-1366x768-5009170af6b148808d0732f2c6e1dc51.png`（已读取，1366×768） |
+
+- 两张 PNG 都显示正式关中战场、两个头顶绿色细血条且无姓名／生命／灵力文字，目标面板同时可见并承载石甲猴的名称、生命 `657/657` 与灵力 `108/108`。这满足本卡所缺的 Overlay 像素证据；不据此代签整体美术体验。
+- 本轮未跑全量 PlayMode／EditMode 套件，未评价最终美术；保留其余既有风险与范围边界。
+
 日期：2026-10-06；责任方／修改方：DeepSeek V4.1 Flash（⚠️ 已修改/未审核；变更范围：头顶血条 View 与 Builder、正式 AdventureScene 重建、PlayMode／EditMode 直接测试）。
 主模型：deepseek-flash（入口默认模型；任务卡无 `executionModel`，未调用辅助模型或子智能体）。RunId：5a7f25d2-03d1-45d4-916f-08770fca835f。
 核对基线：75c3987b97797cd34c0a1763c0bdbaa46135d989；候选分支：codex/automation/deepseek/5a7f25d2-03d1-45d4-916f-08770fca835f/candidate。

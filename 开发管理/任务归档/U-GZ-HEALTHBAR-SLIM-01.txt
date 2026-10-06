@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20261006-REV6DDF0DBC3250 选择 Codex 按未通过审核清单返工",
+  "stateReason": "Codex 已补齐双分辨率 Screen Space Overlay 像素证据并完成归档",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
     "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
@@ -81,3 +81,25 @@
 ## 停止条件
 
 - 目标所有者或刷新链无法证明、需新增视觉资产／修改 provider 或其他 HUD、场景持久化不一致时停止取证；出现“修改后仍未变化”时先取运行时对象、尺寸和最终写入者，不继续猜坐标或叠补丁。
+
+## 完成与复审
+
+- 2026-10-06：Codex 按未通过审核清单的唯一缺口返工。未修改既有头顶血条业务实现；将正式 PlayMode 的场景相机 RenderTexture 取图改为带图形设备的 `ScreenCapture.CaptureScreenshot` Overlay PNG，并明确拒绝 `-nographics` 作为像素证据入口。
+- 定向图形 PlayMode `GuanzhongUnitHealthBarPlayModeTests` 4/4 通过；每张 PNG 可读且像素宽高严格为 1920×1080、1366×768。两张实际图同时显示两个无文字绿色细血条与目标面板详情，详见 开发管理/关中头顶细血条验证记录.txt。
+- 定向 EditMode `GuanzhongCombatLayoutEditorTests` 2/2 通过，正式场景保存后引用、无文字层级与两槽位断言保持。
+- 已移除队列、backlog 与未通过审核投影；DeepSeek 原交接迁入同 ID 交接归档。本卡不评价整体关中美术，未运行全量套件。
+
+## 经验候选
+
+### U-GZ-HEALTHBAR-SLIM-01-UNITY-OVERLAY-EVIDENCE-01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：正式 HUD 的相机 RenderTexture 截图显示战场，却不能证明 Screen Space Overlay 中的头顶条或目标面板。
+- 已证实根因：RenderPipeline 的相机请求只输出相机层；Overlay 由 Game View 合成。`-nographics` 没有可用图形设备，不能作为 Overlay 像素证据入口。
+- 可能复用范围：需要以 PNG 验收 Screen Space Overlay／屏幕空间 HUD 的 Unity 图形 PlayMode 测试。
+- 证据：本轮 `ScreenCapture.CaptureScreenshot` 的两个精确尺寸 PNG、图形 PlayMode 4/4 与定向 EditMode 2/2 结果；测试以 `GraphicsDeviceType.Null` 失败关闭并校验 PNG 可读、宽高精确。
+- 门禁可能：yes

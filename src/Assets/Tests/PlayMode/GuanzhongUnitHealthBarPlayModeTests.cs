@@ -265,7 +265,6 @@ namespace TianZhang.Tests.PlayMode
             AssertResources(playerBar, player.CurrentHealth, player.MaximumHealth);
             AssertResources(enemyBar, enemy.CurrentHealth, enemy.MaximumHealth);
             CombatHudPresenter hud = FindInScene<CombatHudPresenter>();
-            Camera battlefieldCamera = GetField<Camera>(view, "worldCamera");
             CombatTargetView targetView = FindInScene<CombatTargetView>();
             Canvas hudCanvas = FindInScene<Canvas>();
             foreach (int width in new[] { 1920, 1366 })
@@ -289,12 +288,11 @@ namespace TianZhang.Tests.PlayMode
                 StringAssert.Contains(enemyName, targetView.DetailsText);
                 StringAssert.Contains("生命 " + enemy.CurrentHealth + "/" + enemy.MaximumHealth, targetView.DetailsText);
                 StringAssert.Contains("灵力 " + enemy.CurrentSpirit + "/" + enemy.MaximumSpirit, targetView.DetailsText);
-                string framePath = CaptureBattleFrame(battlefieldCamera, width, height);
+                yield return CaptureOverlayFrame(width, height);
                 RectTransform canvasRect = (RectTransform)hudCanvas.transform;
                 TestContext.WriteLine($"Formal slim bar {width}x{height}: screen={Screen.width}x{Screen.height}, " +
                     $"canvasScale={hudCanvas.scaleFactor}, canvasRect={RectText(canvasRect.rect)}, " +
-                    $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, " +
-                    $"slots={bars.Length}, frame={framePath}");
+                    $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, slots={bars.Length}");
             }
             int playerBefore = player.CurrentHealth;
             int enemyBefore = enemy.CurrentHealth;
@@ -424,37 +422,32 @@ namespace TianZhang.Tests.PlayMode
         private static string RectText(Rect rect) =>
             $"{rect.x:F1},{rect.y:F1},{rect.width:F1}x{rect.height:F1}";
 
-        private static string CaptureBattleFrame(Camera camera, int width, int height)
+        private static IEnumerator CaptureOverlayFrame(int width, int height)
         {
-            var target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
-            target.Create();
-            var request = new RenderPipeline.StandardRequest { destination = target };
-            Assert.IsTrue(RenderPipeline.SupportsRenderRequest(camera, request),
-                "The formal battlefield camera must support render requests.");
-            var image = new Texture2D(width, height, TextureFormat.RGB24, false);
-            RenderTexture previous = RenderTexture.active;
-            RenderTexture previousTarget = camera.targetTexture;
+            Assert.AreNotEqual(GraphicsDeviceType.Null, SystemInfo.graphicsDeviceType,
+                "Overlay evidence requires a graphical PlayMode runner, not -nographics.");
+            string path = Path.Combine(Application.temporaryCachePath,
+                "tzg-slim-healthbar-overlay-" + width + "x" + height + "-" + Guid.NewGuid().ToString("N") + ".png");
+            ScreenCapture.CaptureScreenshot(path);
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (!File.Exists(path))
+            {
+                Assert.Less(Time.realtimeSinceStartup, deadline, "Expected a Game View screenshot containing the Overlay.");
+                yield return null;
+            }
+            var image = new Texture2D(2, 2, TextureFormat.RGB24, false);
             try
             {
-                // Batchmode keeps a small game view, so the formal frame comes from the scene camera, not the screen backbuffer.
-                camera.targetTexture = target;
-                RenderPipeline.SubmitRenderRequest(camera, request);
-                RenderTexture.active = target;
-                image.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-                image.Apply();
-                string path = Path.Combine(Application.temporaryCachePath,
-                    "tzg-slim-healthbar-" + width + "x" + height + ".png");
-                File.WriteAllBytes(path, image.EncodeToPNG());
-                return path;
+                Assert.Greater(new FileInfo(path).Length, 0, "Overlay screenshot must not be empty.");
+                Assert.IsTrue(image.LoadImage(File.ReadAllBytes(path)), "Overlay screenshot must be a readable PNG.");
+                Assert.AreEqual(width, image.width, "Overlay screenshot width must match the requested Game View.");
+                Assert.AreEqual(height, image.height, "Overlay screenshot height must match the requested Game View.");
             }
             finally
             {
-                camera.targetTexture = previousTarget;
-                RenderTexture.active = previous;
                 Object.DestroyImmediate(image);
-                target.Release();
-                Object.DestroyImmediate(target);
             }
+            TestContext.WriteLine("Formal Overlay frame " + width + "x" + height + ": " + path);
         }
 
         private static void SetGameSize(int width, int height)

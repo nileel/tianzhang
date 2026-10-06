@@ -1,0 +1,15 @@
+# U-GZ-HEALTHBAR-SLIM-01 · 交接归档
+
+2026-10-06 Codex 已完成同卡定向返工并归档。以下保留已消费交接的关键事实与本轮闭环结果。
+
+## 已消费的 DeepSeek 自动交接
+
+- 交接：`DSH-U-GZ-HEALTHBAR-SLIM-01-5a7f25d2`；候选 `c44f8a39a96ee30a9a2dfd55725c61913509865b`。
+- 该提交已经证明 View、Builder、正式场景与两个直接测试类把头顶层收口为两个固定 `96×8` 的无文字槽位，且保留生命刷新、跟随、隐藏、目标面板详情与无射线阻挡行为。
+- 未通过审核的唯一原因：原 PlayMode 用场景相机 RenderTexture 生成的两张 PNG 不含 Screen Space Overlay，因此没有头顶细血条和目标面板的像素证据；不要求修改既有业务语义或其他 HUD。
+
+## Codex 返工结论
+
+- `GuanzhongUnitHealthBarPlayModeTests` 改用图形 PlayMode 下的 `ScreenCapture.CaptureScreenshot`，拒绝 `GraphicsDeviceType.Null`，并验证 PNG 可读及宽高精确匹配 1920×1080／1366×768。
+- 图形定向 PlayMode 4/4、定向 `GuanzhongCombatLayoutEditorTests` 2/2 均通过。Codex 已实际读取两张 Overlay PNG：两个无文字绿色细血条与显示名称、生命、灵力详情的目标面板同时可见。
+- 本任务完成归档；完整命令、屏幕与条尺寸、PNG 路径和未覆盖范围见 `开发管理/关中头顶细血条验证记录.txt`。
