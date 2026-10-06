@@ -1,0 +1,80 @@
+# D-COMBAT-AP-CONTRACT-01 · 公共合同验证记录
+
+日期：2026-10-06；责任方：Codex；入口主模型：gpt-6.1-sol。
+RunId：ced7a9c0-0e45-48cc-a346-8269a5580784。
+基线：75c3987b97797cd34c0a1763c0bdbaa46135d989。
+候选分支：codex/automation/codex/ced7a9c0-0e45-48cc-a346-8269a5580784/candidate。
+提交绑定：合同、本文、当前任务归档、仅本ID的队列／backlog移除与四项Automation元数据进入同一candidate；提交自身不循环写入最终SHA。正式master重放由共享入口完成。
+
+## 授权、模型组合与预检
+
+- 本卡原子结果是一份公共合同及文档夹具，已批准规则与真实所有者共同输入；不实现运行时，不定案生产数值，不改变任务图。只写六条expectedPaths；没有其他初始dirty改动。
+- 已按 开发管理/AI协作规则.txt#任务卡中的模型协作提示 核对：合同涉及跨所有者和三时钟，语义强关联，需要主责统一判断；沿入口启动证明保持executionModel=gpt-6.1-sol，不另开责任会话，不换模型。本卡指定单主智能体且没有独立委派工作面，未调用辅助模型／子智能体。
+- PowerShell 7、Git、Python 3.12与UTF-8文档编辑、任务卡／文本／空白检查入口实际可用。应用unity-agent-workflows技能仅作模块路由与结构证明；没有运行Unity或从静态源码推断可见功能通过。
+- 已消费入口绑定runId／taskId／卡digest／索引digest的空匹配预检；定位正式角色创建与普通行为生成者后，在本worktree补跑只读预检以核对新增直接调用线索。结果均status=ok，taskId一致，taskCardDigest=fc7846f23c1ef8ed21a9e15b7553abedf36e4731c55d8d1ff6f7121303fff1e4，indexDigest=25e1209fb5fae2cf483af6898bef04f694910c1556c989dd9819829d1dc90e2f；matched／notice／mustRead／gates／gatePointers为空，mustReadChars=0，与原schema 2风险投影一致。没有新增本卡写入路径／代码范围／工作流状态。
+
+## 直接事实与合同逐条映射
+
+| 输入／完整逻辑单元 | 本轮核对结论 | 合同位置 |
+|---|---|---|
+| 批准规格§4～9、§11～12；现行战斗系统第一章，角色属性一级／二级，空间§一.13～17，状态规则§一～五 | 100基础AP、不结转、开始快照；三时钟、返还、Guard、回溯／因价／债务边界一致，未扩能力白名单 | §二、四～七、十 |
+| 实现规划全部叶子所有者／直接前置；当前合同卡及13张blocked代码卡的字段／符号／验收范围 | 只冻结合同；13代码叶逐项给文件、拟新增符号、测试入口及ready准备项，不改其卡头／前置 | §九、十一 |
+| AttackProfiles.csv表头与basic_unarmed、spell_guanshiji、spell_julingshu；CombatContentImporter.ImportAttackProfiles／TryParseAttackProfiles／CopyTo，AttackProfileData字段及验证 | 三ID旧cooldown分别0／10／5；同字段同时给CT惩罚及tick重用。字段分别冻结，攻击费用唯一生产表不变，严格整表预检先于资产写入 | §一～三 |
+| CombatSession.BeginTurn／RecordAction／ValidateCommand／ValidateMove／ValidateSwapSpell；CommandService.Preview／Execute／AdvanceUntilAction；Snapshot的移动／灵力／冷却方法 | 当前有旧phase互斥、独立移力、惩罚覆盖；合同替换为统一AP和求和，继续同一执行链，报价／确认／失败原子性覆盖 | §二、五～六 |
+| Resolver.ResolveAttack／ResolveGuard／ResolveSwapSpell／ApplyCommonReductions／AdvanceActionState；三功法原文相关机制 | 现行Guard最终伤害×0.5不等同防御×1.5；换入60tick／每战2次；守一、符胆的回合结束与雷劫事件分类按L2，不能每子动作增长 | §三、六 |
+| CTBEngine.ChargingTicks／AdvanceUntilAction／ConsumeAction／WaitAction／CompareReadyValues；TurnScheduler包装入口 | 整数刻、同刻先清队列、正常清零、待机保留一半；完全平手尚缺稳定ID，列CORE实现点，没有宣称现行已稳定排序 | §六、十F12～13 |
+| SpatialQueryBoard.InspectEdge／Traverse／FindReachable／FindPath与SpatialQueryTypes；CombatEntryAdapter.SpatialCombatQuery | 原始边长＋入格负担由Spatial唯一生产；Adapter当前整距离取整丢精度。合同逐边定价且统一寻路边权，不建立第二地图／路径缓存 | §四、十F02～04 |
+| CharacterAttributes／CombatModifiers／StateSnapshot／RuntimeProfile的FromDefinition、Capture、FromSnapshot、Restore；CharacterProgressionRef及AbilityLoadout入口 | 独立基础AP／v不能从旧反应或已存来源唯一重建；Character拥有长期字段，Combat仅持会话余额；无已批准AP修正内容时显式空输入 | §二、七 |
+| Characters.csv两行、Enemies.csv五行、Char_Player／Char_Enemy；Spawner.CreatePlayer／CreateEnemy；BattleSim.Character.FinalizeStats及GameData.Base | Unity旧模板M均2，模拟合成角色旧M按境界2～7；逐来源列v候选和理由，候选不由反应继续派生，不混成同一跨端角色 | §三 |
+| CharacterCreationRules.BuildCharacterData、StartMenuSceneInstaller.FromDefinition、SettlementContentImporter.ImportCharacterCreationPointBuy、对应CSV／schema／asset.meta／StartMenuScene引用 | 正式新玩家绕过Characters.csv；真实配置GUID da2a458f00eb427e8b9947e03dfe654b与场景一致。给出DATA／CHAR ready前的精确补齐链 | §九准备项1 |
+| AdventureSceneInstaller.Awake、AdventureSceneBuilder.Build与SceneBuildSupport.AdventureScenePath；EncounterCoordinator.RunCombat／PreviewAction／IsCandidateCurrent／ExecutePlayer／ExecuteCommand／Present／BuildMovement | 当前正式控制／演出输入链明确；普通命令定义注入位置复用组合根与场景；Builder不能重建后丢配置；表现忙碌不作为回合时钟 | §三、五、九准备项4、十F18 |
+| GameSaveSerializer完整类；GameSaveEnvelope.Capture／Restore／HasCharacterPayload与CharacterRecord完整类 | 实际schema3，旧README与错误文字不可信；存长期独立输入确需schema4，旧3玩家缺依据明确拒绝，真正空角色机械迁移；保留1／2玩家拒绝及原子恢复 | §七、十F16 |
+| InventoryStore完整store与其中InventoryGrantUseCase；ContentCatalogData只读物品入口；D-ITEM／D-EQUIP必查与禁止范围 | Grant是发放而非战斗消费，AbilityLoadout不是装备系统；只冻结只读资源／领域准备／同步提交接口位置，不虚构生产物品／装备 | §八 |
+| BattleSim.Combat.Simulate／Simulate2v2Detailed完整主体；Character.ArtCooldown／DivineCooldown；GameData.ArtConfig／DivineConfig；GuanzhongPlaytestAudit.ReadInputs | 旧1v1双方CD随全场单行动递减，2v2无独立CD、CT留溢出；关中审计的三生产ID是另一条已有Unity内核读取链。未知逐内容映射单列待验证，不乘10 | §三、六、九SIM行 |
+| 九模块README／asmdef；GameplayContracts候选／预览／命令接口；旧模块测试与runner参数 | 无禁止的Combat或Presentation反向依赖；新字段沿Adventure桥接与只读DTO；runner不存在-TestFilter，正确边界脚本已定位 | §一、五、九 |
+
+## 本轮静态与算术验证
+
+实际执行只读Python内联审计（PowerShell here-string经python标准输入，不落额外脚本）：
+
+- APC-F01～F18恰好18条且顺序完整，13张blocked代码卡均有核对表行与真实活跃卡。
+- 按CSV实读验证三生产ID冷却0／10／5；解析九模块asmdef，确认Combat与Presentation没有禁依赖；验证基线SchemaVersion=3、正式创建asset GUID及场景引用、九条关键源码／配置／runner路径存在。
+- 整数式核验v3三边99999、2＋1分段一致；压缩／扩张／负担分别10000／40000／30000；极短合法边至少1；v5上限120000可支付6边，移动／攻击穿插余额，10＋30＋0门槛140及反应50的2／3／4整数刻。
+- 有限返还夹具C=28000，三根动作返还18000／2000／0，净费均≥10000；返还来源预算与全角色预算同时受限。最大int输入的两项乘法中间量在long范围内，最终费用仍须checked到int。
+- 实际输出：PASS: 18 document fixtures; 13 downstream code-card entries; 9 module schemas; 3 production cooldown projections; creator GUID/schema/source paths; integer path/CT/refund arithmetic. No runtime or balance tests executed. 进程退出0。
+- git merge-base --is-ancestor 187038b915cc1106d12b95bdfe934ca6128a6dfc HEAD，退出0，L2正式输入在本基线历史中。
+
+没有运行18个运行时夹具；上面的算术与结构检查只验证文档预期及输入路由，不证明效果提交、CD／恢复计数、存档读写或平衡通过。后续运行入口和各夹具预期已在合同§九～十冻结。
+
+## 项目收尾门禁
+
+| 实际命令 | 结果 |
+|---|---|
+| pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-CONTRACT-01 -Postcondition CodexClosedOrNonReady -OutputJson | 退出0，status=ok、cardCount=81、readyCount=2、taskState=completed、postcondition一致；未重复该未变化任务投影检查 |
+| pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理 | 退出0，OK，692 files checked；本文回填后定向检查亦退出0，OK，1 files checked |
+| pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 见下行精确值 | 退出0，OK，5 files checked，fix=False；finalize脚本提交前再检查实际暂存输入 |
+| git diff --cached --check | 退出0，无空白错误；验证结果回填后对最终暂存输入再检查 |
+
+候选必须通过上述门禁再执行用户指定的automation-finalize-commit.ps1 -RequireAutomationMetadata形成唯一提交。脚本自身继续核验现存允许文件空白、路径限定暂存及cached diff；不使用普通git commit替代。
+
+ExpectedPaths实际值：开发管理/统一行动力公共合同.txt|开发管理/D-COMBAT-AP-CONTRACT-01-验证记录.txt|开发管理/任务列表/数值与战斗任务.txt|开发管理/当前任务队列.txt|开发管理/任务归档/D-COMBAT-AP-CONTRACT-01.txt。删除的活跃卡不传给要求现存文件的空白检查；暂存与最终changedPaths保留该源路径。
+
+## 未验证、风险与闭环边界
+
+- 未改docs／CSV／Unity／BattleSim输入，不运行check-data-chain、Unity编译／PlayMode、BattleSim build／run；本轮没有运行时或数值平衡结论。
+- 新schema4／旧3拒绝是冻结合同，尚未实施；旧玩家可加载迁移若被要求仍需明确来源／数值批准，不能回算反应或静默填候选。道具／装备真实生产内容由既有两内容卡决定，不能用技术fixture签收。
+- AP费用／正净费下限／返还预算未定案，旧泛化Art／Divine逐内容CD映射待核定，初始v为候选；下游ready前须收口显式试跑输入、正式创建和场景生成者、真实直接调用者的精确路径并重新预检，不改变任务图。
+- 只归档本卡并移除本ID队列／backlog行；全部下游具名前置、父项与其他ready行保留，待正式master结果后由后续QueueMaintenance处理。不调用runtime／锁／集成／automation管理，不写其他worktree。
+- 经验候选判断仅用本轮事实／diff／验证：双冷却、反应派生、旧存档与创建路由已在设计输入中指出，本轮无新的独立根因／门禁候选，不写空经验候选章节。
+- 技能参考已加载：unity-agent-workflows的project-structure-discovery.md、modular-architecture.md、ai-workflows.md、unity-validation.md；项目没有UNITY_STRUCTURE映射，按九模块README／asmdef与源码现查，不新增持久结构文档。没有接触非授权系统或生成美术资产。
+
+## 2026-10-06 人工集成核验
+
+- 负责人明确要求修复自动化阻塞；本次由Codex（request metadata：gpt-6-astra）承担人工集成控制，原gpt-6.1-sol候选的合同语义、数值边界和实施证据保持不变。
+- 原run于13:38停在attention_required，原因hourly_revalidation_required。候选c5f56d1182c7517a6e67c4b3aed1969aacbbc4b5的唯一父提交为75c3987b97797cd34c0a1763c0bdbaa46135d989；runtime、候选分支、干净worktree及六条changedPaths完全一致，任务卡digest仍为fc7846f23c1ef8ed21a9e15b7553abedf36e4731c55d8d1ff6f7121303fff1e4。
+- 最新master为41b72780a63fba212dff14b84d46605699dc490f。其相对原base与本卡授权路径的唯一交集是当前任务队列.txt：DeepSeek将U-GZ-HEALTHBAR-SLIM-01转codex_review，本候选只删除D-COMBAT-AP-CONTRACT-01行；两项修改没有共同任务语义。此次停止符合既有整路径保护，不修改共享内核或弱化保护。
+- 在.worktrees/manual/ap-contract-integration-20261006从最新master建立独立人工工作区；原candidate及其worktree保持只读留证。预检再次返回status=ok、相同taskCardDigest／indexDigest、零matched／mustRead／gates，与schema 2风险投影一致。
+- 按六条授权路径重新应用候选；合同、归档、backlog及原验证正文与候选逐字节一致，只在最新队列删除本ID，并追加本节核验记录。两项Unity待复审行及其顺序、任务卡、业务提交完整保留，不提前解锁下游。
+- 在该工作区执行check-task-cards.ps1 -TaskId D-COMBAT-AP-CONTRACT-01 -Postcondition CodexClosedOrNonReady -OutputJson，退出0，cardCount=81、readyCount=2、taskState=completed。首次调用误带仅供QueueMaintenanceReadySchema2Guard的BaseCommit参数，被入口校验拒绝；移除该无效参数后通过，未据此修改项目或检查器。
+- 正式提交前执行审核文本检查；automation-finalize-commit.ps1 -RequireAutomationMetadata承担限定路径的暂存前空白、暂存后diff和唯一正式提交。提交后必须重查原run与主分支，以既有CompleteRun失败关闭合同精确释放原attention_required占用并保留原证据，再通过invoke-project-integration.ps1持同一排他锁fast-forward。失败run的关闭不伪称自动执行成功，业务完成以正式提交及completed归档为准。
+- 不重复未变化的合同算术／结构检查，不运行Unity或BattleSim；本次修复仅处理共享队列投影和人工集成，既有未验证项继续有效。原运行和最终集成结果由本次工具输出及私有留证记录承载。

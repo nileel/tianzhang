@@ -1,0 +1,270 @@
+# 统一行动力公共合同
+
+日期：2026-10-06；合同任务：D-COMBAT-AP-CONTRACT-01；源码输入：75c3987b97797cd34c0a1763c0bdbaa46135d989。
+批准输入：docs/superpowers/specs/2026-10-05-combat-action-points-design.md §4～9、§11～12；L2 同步正式提交：187038b915cc1106d12b95bdfe934ca6128a6dfc。
+
+本文冻结后续实现的字段、单位、所有者、事务与验证预期，不表示 Unity／BattleSim 已实现。具体 AP 费用、减耗／返还预算、初始 v 和成长强度仍待验证；本文夹具不能写入生产表作为定案证据。活跃卡决定实施权限，本文不授权写入下游路径或改变任务图。
+
+## 一、事实源与所有者
+
+| 边界 | 唯一生产／写入所有者 | 消费与方向 |
+|---|---|---|
+| 攻击定义 | src/Assets/DataConfig/AttackProfiles.csv 的 attackProfileId 行，经 CombatContentImporter.ImportAttackProfiles／TryParseAttackProfiles／AttackProfileImportRow.CopyTo 生成 AttackProfileData | Adventure.CombatEntryAdapter 投影为纯 CombatAttackProfile；BattleSim 只读同一生产定义。Spells／Skills 只保留内容、授权与引用，不生产第二份攻击费用 |
+| 角色长期输入 | CharacterData 显式定义；CharacterRuntimeProfile 的 Attributes／CombatModifiers／Progression／AbilityLoadout 各自保有原职责 | CharacterStateSnapshot → AdventureUnitSpawner → CombatantSnapshot；Character 不持有 AP 余额、CT、场景或战斗冷却 |
+| 普通命令定义 | CombatSession 内的普通行为定义，由现有会话创建者显式注入 | Guard／SwapSpell 由现有 Combat 命令所有者解释；不伪装成攻击 profile，不另建执行器 |
+| 合法边与路径 | SpatialQueryBoard.InspectEdge／Traverse／FindPath／FindReachable | CombatEntryAdapter.SpatialCombatQuery 桥接 ICombatSpatialQuery；报价、可达性与提交消费同一边费和同一选中路径 |
+| 回合、费用、结果 | CombatSession、CombatCommandService、CombatantSnapshot、CombatActionResolver；CT 唯一调度者仍为 CombatTurnScheduler → Turns.CTBEngine | Adventure 只调用权威入口并投影；敌我同规则 |
+| 库存 | src/Assets/Scripts/Modules/World/InventoryStore.cs 内 InventoryStore 与 InventoryGrantUseCase；现有 Grant 只有发放能力 | Adventure 桥接 World；后续消费能力仍由 InventoryStore 唯一替换库存。Combat 不读取或写入 World 对象 |
+| 长期保存 | CharacterRecord／GameSaveEnvelope／GameSaveSerializer，领域先验证、Persistence 编解码 | 沿现有新对象恢复→整体发布；不增加战斗中途保存 |
+| 正式显示／输入 | Adventure.EncounterCoordinator 发布 Gameplay.Contracts 不可变 DTO；CombatPresentation 经 ICombatCommandHandler／ICombatActionPreviewHandler 请求 | CombatPresentation 不引用 Combat／Character；按钮、移动费用、轴预览均不自行计算规则费用 |
+
+现行九模块 README 与 asmdef 均已核对。Persistence README 的 schema 1、Serializer 的旧 schema 2 错误文字不是版本事实；实际 SchemaVersion=3。Combat 只依赖 Foundation／Spatial／Turns，Gameplay.Contracts 只依赖 Foundation，Presentation 只依赖 Foundation／Gameplay.Contracts／Unity UI 与 InputSystem。新增字段保持这些方向；不得引入 Combat→World／Character／Gameplay.Contracts 或 Presentation→Combat／Character。
+
+## 二、单位、类型与严格缺失处理
+
+CSV／Content 用 lowerCamelCase，纯运行时／DTO 对应 PascalCase；下表的名称与单位是合同。AP 精度常量 S=1000，AP_ref=100，基础上限为 100000 AP 最小单位。后缀 Units 表示整数最小单位，不能直接显示为整数 AP；显示除以1000，保留最多三位小数。
+
+| 字段 | 类型／单位／合法范围 | 唯一生产者与消费者 | 缺失／序列化 |
+|---|---|---|---|
+| actionPointCostUnits | int，AP 最小单位，主动收益攻击 >0；≤int.MaxValue | AttackProfiles → AttackProfileData → CombatAttackProfile → CommandService／BattleSim | 新表头必填整数；零、负、分数、溢出或旧列代用整批拒绝；只入配置资产，不入角色存档 |
+| minimumNetCostUnits | int，AP最小单位，主动收益动作>0且≤基础费用 | 同一攻击行或普通行为定义 → CommandService减耗／返还 | 必填正下限；来源修正不得降低此下限，未知生产值标待验证而非默认1；只入配置，不入临时账本 |
+| ctPenalty | int，CT，0～int.MaxValue−100；回合累计也不得超过该界 | 同一攻击行；普通行为显式定义 → CommandService → TurnScheduler | 0 必须显式声明；不得从重用 CD 推导；配置持有，不保存临时累计 |
+| reuseCooldownTicks | int，全局整数刻，0～int.MaxValue | 同一攻击行／能力原型 → CombatantSnapshot 唯一冷却账本／BattleSim | 必填；不能读旧回合 CD 作默认；存档不保存会话 CD，局部回溯仍按 L2 白名单 |
+| actionPointMaximumUnits | int，AP 最小单位，>0，≤int.MaxValue | CharacterData → CharacterAttributes／snapshot → Adventure → CombatantSnapshot | 显式长期基础输入；缺失或0拒绝角色创建／恢复，不夹成100000；保存归 CharacterRecord |
+| movementEfficiencyMilliUnits | int，每100基准AP的普通等效距离×1000，0～int.MaxValue；v=该值/1000 | CharacterData → CharacterAttributes／snapshot → Adventure → CombatantSnapshot | 必填；0合法但禁止自主移动，负／缺失拒绝；保存归 CharacterRecord；与地图 K 无关 |
+| actionEconomyInputsPresent | bool，字段存在标记，必须true | Character 长期输入构建／CharacterRecord | 用于区别合法 v=0 与缺失字段；不得用v>0判断存在；新存档缺标记拒绝 |
+| ActionPointLimitAtTurnStartUnits | int，AP 最小单位，合法有效上限 | CombatSession.BeginTurn 快照 | Combat 临时字段；回合途中不改，不序列化、不回溯 |
+| ActionPointsRemainingUnits | int，0～本回合快照上限 | BeginTurn 发放，CommandService 成功提交扣／返还，结束清0 | 同一角色一个余额；不保留 MovePoints 作为第二预算；不序列化、不回溯 |
+| PendingCtPenalty | int，累计CT，0～int.MaxValue−100 | 成功根命令的 ctPenalty 求和 | 只由 CombatSession.RecordAction 写入；失败不改；结束结一次，不序列化、不回溯 |
+| TurnSequence／StateVersion | long，非负、递增且checked | CombatSession；TurnSequence 只在新个人回合递增，StateVersion 在权威事实成功改变时递增 | 报价失效证据；显示刷新不能重新发AP；会话临时值，不写存档 |
+| GlobalTick | int，非负全局整数刻，checked | 唯一 CTBEngine.CurrentTick，模拟器同合同 | 不是动作数或演出秒；不得以每命令调用推进；会话临时值 |
+| sourceInstanceId／sourceDefinitionId | 非空稳定string，Ordinal比较 | 原有成长／装备／能力来源 → CharacterCombatModifiers 的行动经济来源记录 | sourceInstanceId 唯一；未知定义、冲突重复或缺叠加合同拒绝；可重建来源存其输入，不重复存有效值 |
+| abilityInstanceId | 非空稳定string；无共享实例时使用 actorId＋profileId 的会话唯一键 | 现有能力装配／来源 → 一份资源、CD、次数账本 | 已声明共享时缺失拒绝；不能因换外显profile复制；不是新增金丹内容 |
+
+Characters.csv 的两行与 Enemies.csv 的五行新增前两项长期数值列；EnemyData.combatTemplate 是角色值唯一投影，不在 EnemyData 再复制一套。Char_Player／Char_Enemy 及正式新建玩家不来自这两行 CSV，必须由其真实创建所有者显式提供同单位输入，不以 C# 默认字段值补齐。
+
+修正输入记录位于既有 CharacterCombatModifiers.cs，冻结为 ActionEconomyModifierInput；各字段的生产者均为 sourceDefinitionId 指向的既有、显式声明行动经济效果，Character 只验证／投影，Combat 只消费不可变标量副本：
+
+| 字段 | 类型、单位、范围 | 消费与保存 |
+|---|---|---|
+| actionPointMaximumBonusUnits | int，AP最小单位，可为负；checked聚合后有效上限>0 | 下个人回合上限；可由装备／功法输入重建的增量不单独保存 |
+| movementEfficiencyBonusMilliUnits | int，距离×1000，可为负；有效v≥0 | 每次移动读取；由同一来源重建，不持久化地图单位 |
+| actionKind／profileId | 受控命令枚举／可选稳定ID，至少有合法匹配范围 | 限定减耗与返还；未知类别或未知非空ID拒绝，不自动匹配全部行为 |
+| fixedReductionUnits | int，AP最小单位，≥0 | 动作报价固定减耗；路径移动不消费此项 |
+| retainedCostPermille | int，保留比例千分比，0～1000；1000无比例减耗 | 同类来源先按已有互斥／叠加合同聚合，不擅自连续相乘 |
+| ctPenaltyReduction／reuseCooldownReductionTicks | int，非负CT／非负全局tick，各不超过其原声明值 | 仅原型明确授权时分别减对应量，结果非负；没有来源声明时不产生修正，不能跨量纲复制 |
+| minimumNetCostUnits | int，AP最小单位，>0且不大于实付费用 | 夹限与返还共同使用；具体生产下限待验证 |
+| refundOnEvent／refundUnits | 既有受控成功事件／int AP最小单位≥0 | 必须声明根动作及条件；返还事件本身不作新根动作 |
+| refundLimitPerOwnTurn／refundBudgetPerOwnTurnUnits | int≥0／int AP最小单位≥0；有正返还时两者均须>0 | 本人回合次数与总预算；换术／换装不重置 |
+
+无行动经济修正时显式空数组，返还预算为0，不构造无来源默认效果。暂未有获准生产来源时只承载协议与夹具，不生产新功法／装备效果。无法从现有已存来源重建的合法独立成长输入才加入 CharacterRecord 的 actionEconomyModifierInputs 数组；序列化同上述字段和两项来源ID，恢复时先验证全数组及引用，再整体发布。Combat 的使用次数、已返还总量、根动作结算记录始终不保存。
+
+## 三、普通行为、生产数值与迁移边界
+
+CombatSession.cs 内冻结 CombatOrdinaryActionDefinition（Kind、ActionPointCostUnits、CtPenalty、ReuseCooldownTicks、MinimumNetCostUnits）；它只描述 Guard／SwapSpell 等现有非攻击行为。Wait／EndTurn 明确0费、0惩罚／重用CD；Move 只由路径定价。Guard／SwapSpell 为正费，当前额外CT惩罚投影为0；换入术法重用CD保持60 tick，每战更换上限保持2。
+
+普通行为参数沿现有会话创建链传入，正式唯一配置位置为 AdventureScene.unity 的 AdventureSceneInstaller 序列化普通行为定义，再由 CombatEntryAdapter.TryCreateSession 注入，不在按钮、AI或Resolver各写一份常量。没有正费定义时拒绝建立正式会话。此位置复用现有组合根，不创建新表／组件／执行器；U-COMBAT-AP-FLOW-01 与 U-COMBAT-AP-TUNING-01 准备ready前须补齐该现有场景路径及其真正生成者，见§九。本文不写场景配置或生产费用。
+
+攻击表只用 actionPointCostUnits、ctPenalty、reuseCooldownTicks 替换旧 cooldownTicks 的双职责。严格新表不同时接受旧／新列，不以 FormerlySerializedAs 将一旧字段同时映射到两新字段。既有资产由同ID严格导入更新，GUID保持；SpellData／DivineSkillData 的遗留 cooldownTicks 不再回填权威攻击费用，若仍有独立消费者，先定位并在下游ready准备中冻结该消费者的路径和单位，不能静默迁移。
+
+### 逐ID冷却投影
+
+| ID／来源 | Unity旧值与真实用途 | 冻结初次字段投影 | BattleSim旧“回合CD”的证据／迁移 |
+|---|---|---|---|
+| basic_unarmed | cooldownTicks=0；CommandService轴惩罚0，Resolver不启动CD；resourceCost=0 | ctPenalty=0，reuseCooldownTicks=0；AP具体正费待验证 | GameData.UnarmedBasicAttack 无CD字段，普攻不启 artCd／divineCd；投影0／0有依据 |
+| spell_guanshiji | cooldownTicks=10；CT门槛增加10，同时重用CD10刻；MP12 | ctPenalty=10，reuseCooldownTicks=10；AP正费待验证 | GuanzhongPlaytestAudit.ReadInputs 已直接读取此生产ID的10并调用Unity纯内核；Combat.Simulate 的 ArtCooldown默认3不属于该ID，不可乘10、照抄或映射3→30 |
+| spell_julingshu | cooldownTicks=5；CT惩罚5与重用5刻；自用MP0、他用MP20 | ctPenalty=5，reuseCooldownTicks=5；AP正费待验证，自／他用MP差异保留 | 同一关中只读审计读取该ID的5；旧Simulate／2v2没有该ID的“聚灵回合CD”，标签为“不存在逐ID旧值”，新入口直接读权威5刻 |
+| Character.ArtCooldown／DivineCooldown、GameData.ArtConfig／DivineConfig.Cooldown | 不属于上面三ID；1v1双方每次全场单行动入口减1，金丹账本 TickCooldowns 也在该处调用 | 每一个被选择的既有内容／abilityInstanceId须有明确CT与tick新值 | 旧默认3／5及各具名Config的3／5仅旧输入；CT惩罚缺对应旧量。标签“待逐内容映射／验证”，无通用换算；未映射的生产组合不能签收新AP平衡 |
+| Simulate2v2Detailed | 无独立技能CD账本；按Style选伤害类型，不能证明已迁移術法CD | 同一profile／能力实例字段与1v1同源 | “旧字段缺失”不是新值0；不得借此免冷却 |
+| SwapSpell | Resolver换入设置60刻；Snapshot默认每战2次 | 交换定义 AP正费待验证、ctPenalty=0；换入CD=max(原剩余,60) | 已共享实例的账本继续唯一，换出／换入不清原CD或次数 |
+
+10／5／60是已有Unity语义的迁移保持值，不是新平衡结论。GuanzhongPlaytestAudit 的生产内核审计与旧两个泛化模拟入口必须分别举证；前者已读CSV不能证明后两者同单位。
+
+### 独立v候选映射
+
+以下是逐来源候选，不是反应公式。候选数值用于下游准备时核定；获准试跑时须以显式字段及输入摘要登记，生产定案由 N-COMBAT-AP-BALANCE-01／TUNING 承担。AP基础100来自批准规格，不由v或反应生成。
+
+| 角色来源 | 已读旧输入 | 独立v候选／MilliUnits | 理由与剩余边界 |
+|---|---|---|---|
+| 正式新建玩家 CharacterCreationRules.BuildCharacterData | reaction由先天神识生成；旧Spawner夹限产生M；角色定义没有v | v=2／2000 | 保留当前练气创建玩家的最小普通移动距离作为迁移候选；新建时显式写入，改变反应不再改变v；其他创建范围须另核定 |
+| Char_Player.asset | reaction=14，旧M=2 | 2／2000 | 保持这个模板旧距离，不称其等同Characters.csv太一修士 |
+| Char_Enemy.asset | reaction=12，旧M=2 | 2／2000 | 保持独立旧模板输入；不能冒充石甲兽生产模板 |
+| Characters.csv::char_taiyixiushi | reaction=12，旧M=2 | 2／2000 | 初次候选只保持本行机械距离，不从反应养成派生 |
+| Characters.csv::char_sanxiuqiangdao | reaction=10，旧M=2 | 2／2000 | 同上，独立行字段 |
+| Enemies.csv::enemy_shijiahou／Char_Enemy_enemy_shijiahou.asset | reaction=6，旧M=2；唯一当前关中生产敌人 | 2／2000 | 保持当前正式敌人的移动基线，和玩家分别生产 |
+| Enemies.csv::enemy_fengsun | reaction=20，旧M=2 | 2／2000 | 显式候选，远程AI标签不授权更高v |
+| Enemies.csv::enemy_yanweihu | reaction=14，旧M=2 | 2／2000 | 显式候选，术法不自动提高移动效率 |
+| Enemies.csv::enemy_xueyingmoxiu | reaction=14，旧M=2 | 2／2000 | 境界筑基不自动套旧L2移力区间；初值另待实跑 |
+| Enemies.csv::enemy_huangyesanxiu | reaction=10，旧M=2 | 2／2000 | 本行候选保持机械距离，不因此开放非生产模板内容 |
+| BattleSim合成角色::凡人／练气／筑基／金丹／元婴／化神 | FinalizeStats直接Primary[移力]=GameData.Base[realm].移力，分别2／3／4／5／6／7 | 分别2／3／4／5／6／7，即2000／3000／4000／5000／6000／7000 | 是独立旧境界输入的试跑候选，不是Unity角色ID映射，不随反应、灵根倍率或功法旧移力列隐式生成 |
+
+本表逐项区分角色ID／定义与战斗actorId（player／enemy）。跨端比较同一生产角色时必须读相同显式输入，不能一端用练气合成v3、另一端用关中v2再称已对齐。没有可确定定义来源的旧玩家／新增角色标“待来源核定”，不得套2、100或反应公式。
+
+## 四、路径原始边费与AP报价
+
+Spatial 保有K=SpatialQueryLimits.UnitsPerRange（int>0）和有界MaxQueryRange；基础普通边长为K。每条合法有向边记录 From／To（HexCoord）、MetricDistanceUnits（int≥1）和进入目标格 MovementBurdenUnits（int≥0）；d_e=checked(二者之和)。原始距离、移动负担分别保留，不把两者当攻击射程。Path不含起点，按现有FindPath顺序包含经过格及终点；无变化目的地拒绝，不计免费收益移动。
+
+ICombatSpatialQuery.QueryMovement／FindReachable 的预算改为 ActionPointsRemainingUnits，并显式接收当前有效 MovementEfficiencyMilliUnits；CombatMovementQueryResult 扩为不可变原始边列表、K、ActionPointCostUnits及选中路径。SpatialQueryTypes.cs 冻结 SpatialMovementEdgeCost（From、To、MetricDistanceUnits、MovementBurdenUnits）和 SpatialMovementPathResult（Path、Edges、UnitsPerRange、ActionPointCostUnits、Reason）。这些是现有查询边界的数据，不是第二地图、缓存或寻路器。
+
+v=movementEfficiencyMilliUnits/1000；概念量v_u=K×v。不得先整数截断v_u或使用float。等价精确整数式为：
+
+edgeAP_u = max(1, floor(100 × S × d_e × 1000 / (K × movementEfficiencyMilliUnits)))
+pathAP_u = checked(Σ edgeAP_u)
+
+乘法与除法中间量用checked long；最终费用必须可表示为int且不超预算，溢出返回稳定数据错误，不绕成负值或夹限。v=0先拒绝自主移动，不进入除法。每条边单独取整，再求和；不执行现有Adapter的(cost+K−1)/K，也不在命令末尾再取整。普通移动优惠只并入v，不按段数固定减耗／返还。
+
+FindReachable／FindPath／选中路径／报价使用Traverse同一个合法边遍历和同一AP边权；保留原用途距离查询，不把原始距离最短路径直接当AP最便宜路径（逐边取整后可能不同）。预算直接用AP最小单位，不先反算整格预算裁掉压缩边。相等费用按现有确定性六向遍历与FrontierEntry的坐标次序处理，不增加第二选择策略。
+
+确认必须重查占位、形态、高度、有向边、环境版本、K、v及完整选中路径；同一路线／v／负担的分段之和完全一致，插入施法不重置舍入。事实变化拒绝旧报价，重新选择才形成新报价，不能偷偷换更便宜路线。强制位移不扣目标AP；移动术法只付自身动作成本，只有原型明确声明的额外自主路径段才追加边费。
+
+## 五、同源费用、修正与原子提交
+
+扩展现有 CombatCommandPreview 为唯一报价对象，不再增加预览执行器。它由 CombatCommandService.Preview（沿CombatSession.ValidateCommand）生产，Validate／合法候选／Execute复用同一规则；Gameplay DTO只复制，不保存Combat对象引用。
+
+| 报价字段 | 类型／合法值 | 生产、缺失与消费 |
+|---|---|---|
+| ActorId、Kind、TargetId、ProfileId、Destination、SlotIndex | 稳定ID／受控枚举／可选HexCoord／int槽位 | 现有CombatCommand输入；按具体动作要求非空或合法，未知引用拒绝 |
+| TurnSequence、StateVersion | long≥0 | Session当前值，Execute须精确相等；缺失不作为通配 |
+| ContextVersion | long≥0 | EncounterCoordinator已有commandContextVersion，正式Confirm重查；内核与表现上下文分别校验，不因Present增版本重启回合 |
+| ActionPointCostUnits、MinimumNetCostUnits | int≥0／付费收益动作>0 | CommandService据唯一定义与当前修正生产；Move由路径结果生产；非法输入不返回可确认报价 |
+| SpiritCost、ItemQuantityCost、ItemId | int MP≥0／int数量≥0／需要时非空ID | 聚灵按当前目标自／他用规则；物品来自后续合同授权定义；任一不足整体拒绝 |
+| CtPenalty、ReuseCooldownTicks、AbilityInstanceId | int非负CT／int非负tick／稳定账本键 | 同一动作定义；不得用一个值代两个职责 |
+| MovementPath、MovementEdges、UnitsPerRange、MovementEfficiencyMilliUnits | 不可变路径与边；int K>0／int v≥0 | 移动时完整提供，其他动作显式空；确认验证每条边，不只比较总价 |
+| IsLegal、RejectionReason、RemainsInTurn | bool／稳定原因string／bool | 失败原因非空；结束能力独立于其他行为合法性。0余额成功动作后RemainsInTurn=false |
+| ConditionalTurnEndCt、ConditionalNextThreshold、ConditionalTicksUntilReady | 与现有CT快照同型／CT／long整数刻 | 使用PendingCtPenalty＋候选成功动作惩罚，展示“若此时完成该动作并结束”；实际轴快照另取当前Session，不推进真实时间 |
+
+CT当前值继续使用现有float边界（待机可保留半CT），反应为每全局刻整数CT输入，非正反应在创建处拒绝而不是让新输入依赖旧Register夹限。时间与CD仍是整数刻；轴预览使用ceil并复用现有非就绪角色至少等待1刻的ChargingTicks语义。
+
+非路径减耗顺序：基础费→固定减耗→保留比例→minimumNetCostUnits正夹限→最小单位向上取整。有效minimumNetCostUnits取动作定义与匹配来源下限的最大值；导入／来源验证保证每一匹配下限不超过该动作基础费。比例计算保留整数分子／分母到最后：C=max(minimumNetCostUnits, ceil(max(0,base−fixed)×retainedCostPermille/1000))。多来源只有在已有叠加合同明确时先聚合；同一sourceInstanceId只计一次，不由MP减耗推导AP减耗。CT／tick修正也只能作用于各自明确量纲，不能套AP折扣。
+
+成功根动作返还 R=min(满足条件的声明量, 本人剩余总预算, 该来源剩余预算, C−minimumNetCostUnits, 回合快照上限−扣费后余额)，各项均非负；按sourceInstanceId、TurnSequence、rootActionId计一次成功触发，同时扣该来源次数、来源预算和全角色总预算。本人开始快照来源的次数／预算，全角色总预算为各合法唯一来源预算的checked和；途中新增来源下回合才取得预算，移除／重新装入同来源保留本回合原使用记录。同实例换profile、换装备或改目标不创建新额度。返还／派生／免费自动响应不是付费根动作，不能递归；所有可重复收益主动命令净支出C−R≥正下限。普通路径移动不触发动作段优惠；合法免费主动收益若有原型，须另有有限次数合同，本轮不新增这类生产内容。
+
+事务顺序冻结如下，仍沿现有唯一Execute链：
+
+1. 纯读取验证actor／就绪个人回合、报价版本、命令身份、目标／完整路径、授权／控制／冷却、全部费用与次数、checked惩罚和结果可提交性；预览与失败确认不取随机数。
+2. 在任何写入前准备全部资源与结果候选；攻击只有通过全部校验后才取确定性rolls。物品／装备候选须由Adventure与其现有领域所有者准备完成，不能先扣库存再让Combat尝试执行。
+3. 同步无yield的权威提交：完整扣AP／MP／库存／次数，成功收益动作先退出Guard，应用已准备结果、启动唯一CD、累加CT惩罚，结算根动作返还／事件与版本。提交阶段不再包含能业务拒绝的步骤；后续物品／装备合同若无法证明此条件，停止准备ready，不增加补偿／重试层。
+4. 成功后发布已提交投影并演出；AP=0、死亡或战斗终结进入唯一结束入口。取消、陈旧／重复确认、非法输入、任一资源不足、准备失败保持AP／MP／库存／位置／Guard／CD／CT惩罚／计数及随机源不变。
+
+未命中、合法治疗／聚灵目标已满属于成功结果，照常付费与加惩罚；合法提交后状态写入被祛禁阻止属于L2§一.11的部分结果，其他结果继续、费用不退。不得把这两类结果误判为事务失败。重复旧报价拒绝；冷却0时新报价允许再次使用同动作，不设通用次数上限。
+
+## 六、三时钟、回合事件与状态
+
+事件由原所有者在明确边界调用，下面名称是核对点，不要求新事件总线、调度框架或自由字符串注册。
+
+| 时钟／核对点 | 唯一入口与顺序 | 不允许的替代 |
+|---|---|---|
+| GlobalTickAdvanced | CTBEngine推进下一整数刻；存活者CT加反应，重用CD按实际TicksElapsed减到0；清完同刻队列才再推进 | 命令、输入等待、演出秒、快照刷新或他人子动作不能减CD |
+| OwnTurnStarted | 新就绪角色→清Guard→本人开始状态／DOT／控制／到期→若仍活则HP／MP恢复一次→快照上限和有限返还预算→可行动者发AP；控制跳过AP=0 | 再次Advance当前角色返回0刻、不得重发AP／恢复／额度；开始死亡不恢复或复活 |
+| RootActionCommitted | 一个命令全部目标／效果共享一个rootActionId；动作、命中、受击依原型触发 | 多目标不多扣费，不刷新每回合一次账本；移动事后事件按整段命令一次 |
+| OwnTurnEnded | 本人结束效果／持续／计数一次→清AP→正常CT=0、nextThreshold=100＋累计惩罚→释放控制权 | AP耗尽、主动结束、控制跳过重复回调不得多结算；结束没有额外恢复 |
+| WaitEnded | 无收益动作且非控制跳过才可待机；结束事件一次，CT保留50%，门槛100，AP清0 | 成功移动／攻击／防御／换术／道具／换装后不可待机；取消仍可待机 |
+| CombatTerminated | 原结果所有者终结，清会话预算／姿态；长期资源沿原结果提交链 | 不新增回合、继续恢复、保存临时AP或把终结当新的可付费命令 |
+
+就绪顺序保留反应降序、CT降序，并在完全平手时按Ordinal稳定战斗ID升序；CTBEngine现有CompareReadyValues缺最后一项，CORE负责补齐，两个模拟入口用相同顺序。这是确定性平手合同，不是宣称现行源码已有该行为。
+
+持续N个人回合按受影响角色后续结束计：本人当前回合施加时当前结束不减，下一本人结束首次减；他人回合施加时目标下一本人结束首次减。持续tick只读全局刻。眩晕跳过、定身仅禁自主移动、封灵禁对应施法；AP或返还不解除控制。
+
+旧AdvanceActionState必须按原文分类而非按出手统一增加：抱元守一经“本回合未移动、回合结束＋1”按本人结束一次，并记录成功自愿移动；云篆度人经“回合结束＋1”按本人结束一次，“符箓施放消耗”按对应术法根动作；九霄雷劫录受伤叠层、对应出手消耗按原型结果／动作。拒绝、未造成伤害、多目标合并及其他条件以各原文为准；不凭旧方法名开放多倍叠层，不顺带迁移未选中的篇章生产参数。
+
+普通Guard只在成功激活时收费，重激活拒绝且不延长；肉防／魂防各×1.5进入原伤害公式，不保留最终伤害×0.5作为等价实现。成功移动／攻击／施法／道具／换术／换装在其效果前退出；失败／取消不退出，EndTurn保留，下一本人开始／死亡／离场清除。
+
+特殊时空边界保持L2：AP余额、快照上限、累计CT惩罚及返还／回合额度不进入回溯白名单；外部已提交成本重放不再次扣AP／累计CT。因价不得改AP／v／CT／CD；果先因后按原债务记录分别保留AP、CT惩罚和tickCD，不把补因改成新回合或提前结果白名单扩张。此合同不实现新时空能力。
+
+## 七、长期输入可重建性与保存合同
+
+源码判断：CharacterRecord存角色原始属性、modifier标量、装配和Progression引用，没有独立AP／v，也没有能够唯一回查原CharacterData的定义ID。正式创建者以先天生成定义，runtime characterId为player；这个ID不是CSV角色ID。独立可成长AP／v不能从现有reaction、gongFaId或realmMultiplier唯一重建。因此保存其基础长期输入是必需的，不为了临时余额版本化。
+
+冻结新写入schema为4：CharacterRecord增加actionEconomyInputsPresent、actionPointMaximumUnits、movementEfficiencyMilliUnits，以及确实不可由已存来源重建的actionEconomyModifierInputs；数组保存§二字段。有效装备／功法派生值由来源重建，不和基础值重复累加。新增字段也进入HasCharacterPayload检查；hasPlayer=false但携带任一新字段／来源时仍拒绝，不能隐藏角色payload。
+
+旧档合同按以下明确迁移／拒绝，不删除档案，不读写用户真实档：
+
+| 输入schema／条件 | 处理 | 原因与边界 |
+|---|---|---|
+| 4，新字段完整且合法 | 按现有GameSaveEnvelope.Restore构造所有新领域对象，整体成功才发布；往返幂等 | 合法v=0可存；AP上限必须正；引用／任一字段失败不替换任何live owner |
+| 4，缺字段／存在标记false／未知来源／溢出 | 拒绝，稳定原因action_economy_save_invalid | 不把JSON缺失导致的0解释为合法不可移动，不补100000／2000 |
+| 3，hasPlayer=true | 拒绝，稳定原因legacy_action_economy_input_missing | 旧payload缺唯一v来源和新成长输入；本合同未授权凭反应回算或把候选v写入旧档。保留原文件；以后若获得逐来源迁移批准，须在原保存卡准备阶段明确修订此合同，不能加静默兼容分支 |
+| 3，真正无player／cultivation payload | 仅将schemaVersion改为4，再通过所有现有恢复验证 | 不生成玩家／AP／v；伪装hasPlayer=false的旧payload仍拒绝 |
+| 1／2，有玩家 | 保持LegacyFoundationPurpleMansionSchemaIncompatible拒绝 | AP迁移不放宽原三阶段道基证据边界 |
+| 1／2，真正空角色会话 | 复用既有无角色机械迁移到当前版本4，再验证 | 不猜道基或行动经济输入，不改槽位删除流程 |
+| 未知schema、坏JSON、presence矛盾 | 拒绝 | 不重试、降级、覆盖或删除 |
+
+该旧schema3拒绝是无法证明长期输入时的保存边界，未声称旧玩家已成功迁移。SAVE卡须验证可用的新档往返及旧档拒绝证据；任何要求保留旧玩家可加载而又没有明确映射的准备属于负责人决定，不能用夹具遮掩。
+
+## 八、Item／Equipment的窄接口位置
+
+两张后续内容合同卡决定真实允许ID、效果、目标、资格、槽位、实例、费用与写回时点，本卡不制造药物／武器或认定材料可战斗使用。InventoryGrantUseCase就在InventoryStore.cs中；不存在独立同名源文件。AbilityLoadout只管术法／神通，不能充当装备库存。
+
+| 窄接口位置／拟新增符号 | 本合同冻结的输入与结果 | 后续卡仍须补齐 |
+|---|---|---|
+| CombatSession.cs::ICombatExternalResourceQuery | 只读稳定itemId／instanceId／数量／资源版本与资格标量；不传World／Character引用；缺失命令数据拒绝 | ITEM／EQUIP由Adventure实现桥接，领域唯一所有者准备候选；不让Combat调用外部可失败写入 |
+| InventoryStore.cs::TryPrepareCombatConsumption | 完整验证允许item、正数量、库存、版本后返回不可变候选；消费提交仍由Store唯一替换 | D-ITEM冻结真实itemId、效果与可取得入口；当前item_lingshi_low／item_shijia_piece无战斗效果，不作为生产验收道具 |
+| CharacterRuntimeProfile.cs::TryPrepareEquipmentChange | 稳定装备实例／主槽位、资格、属性来源与普攻profile引用的整体候选；无变化拒绝不收费 | D-EQUIP冻结真实装备／槽位、库存关系和持久化字段；现有MainEquipmentBasicAttackProfileId仅是绑定，不是完整装备系统 |
+| EncounterCoordinator.cs::ExecuteCommand／FormalEncounterResult | 消费领域准备结果，保证§五同步提交全部成功，随后发布；长期资源／装配由现有结果所有者提交与保存 | 两卡明确本轮中立即写长期所有者还是战后提交的唯一时点，不允许重复扣除／写回；无法证明原子性时停止 |
+| ICombatCommandHandler.cs／CombatPresentationContracts.cs | 后续加入UseItem／SwapEquipment的稳定ID候选；继续同源AP／其他资源报价、取消／陈旧确认规则 | 内容与精确资源路径冻结后才接正式UI；不扩背包／打造／商店系统 |
+
+换装备不改变本回合AP快照或发放、不刷新返还账本；新v从下一次移动报价读取。相同abilityInstanceId保持原CD／资源／次数；换術沿既有SwapSpell补正式槽位候选，不建立新装配系统。所有候选在§五提交前准备完成，不允许“扣库存失败后补AP”式补偿层。
+
+## 九、下游代码卡文件／新增符号／验收核对表
+
+本节只供维护者临近ready消费。未修改任何下游卡、blockedBy或backlog。表中“新增”是拟实现合同符号；基线不存在不冒称已上线。已有字面量路径以卡头为准；这里发现的补齐项必须先在该卡准备阶段更新expectedPaths、核对完整卡和模型组合、重跑预检。新增Unity文件及新目录须同步.meta，不允许执行中扩目录授权。
+
+路径前缀约定：以下表内C=src/Assets/Scripts/Combat/，Ch=src/Assets/Scripts/Modules/Character/，Co=src/Assets/Scripts/Modules/Content/，A=src/Assets/Scripts/Modules/Features/Adventure/，G=src/Assets/Scripts/Modules/GameplayContracts/，P=src/Assets/Scripts/Modules/Features/CombatPresentation/，E=src/Assets/Tests/EditMode/，PM=src/Assets/Tests/PlayMode/。每个前缀加文件名对应一条精确字面量路径，不代表目录授权。
+
+| blocked代码卡 | 精确文件与拟新增／修改符号 | 测试入口／准备要求 |
+|---|---|---|
+| U-COMBAT-AP-DATA-01 | Co/AttackProfileData.cs::actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks；Co/CharacterData.cs::actionPointMaximumUnits／movementEfficiencyMilliUnits；Co/EnemyData.cs::combatTemplate；src/Assets/Scripts/Editor/CombatContentImporter.cs::AttackProfileColumns／TryParseAttackProfiles／CopyTo；CharacterContentImporter.cs::ParseCharacterDefinitions、AdventureContentImporter.cs敌人模板投影（均同Editor前缀） | E/CombatActionPointImportTests.cs（新增，含.meta）、ContentImporterArchitectureTests.cs、AdventureContentImporterTests.cs；三攻击及两角色／五敌人逐ID投影，非法整表不写asset；AP正费候选须在ready准备中明确，不用本文技术夹具作生产费 |
+| U-COMBAT-AP-CHAR-01 | Ch/CharacterAttributes.cs／CharacterStateSnapshot.cs／CharacterRuntimeProfile.cs::长期字段、Capture／FromSnapshot／Restore；Ch/CharacterCombatModifiers.cs::ActionEconomyModifierInput；Ch/CharacterProgressionRef.cs只持来源；Ch/AbilityLoadout.cs保留唯一能力实例 | E/CharacterActionPointStateTests.cs（新增，含.meta）、CharacterStateTests.cs；补齐正式创建输入见下文，先整体验证再写入；不建立成长树 |
+| U-COMBAT-AP-SAVE-01 | src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs::SchemaVersion=4／旧3迁移拒绝；同目录GameSaveEnvelope.cs::CharacterRecord／HasCharacterPayload／Restore | E/GameSaveEnvelopeTests.cs／GameSaveSlotStoreTests.cs；新档往返、v0／缺字段区分、旧3及1／2边界、失败live owner不变；不得修改删除功能 |
+| U-COMBAT-AP-MOVE-01 | src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs::SpatialMovementEdgeCost／SpatialMovementPathResult；SpatialQueryBoard.cs::Traverse AP边权（同Spatial前缀）；C/CombatSession.cs::ICombatSpatialQuery／CombatMovementQueryResult；A/CombatEntryAdapter.cs::SpatialCombatQuery | E/CombatActionPointMovementTests.cs（新增，含.meta）、SpatialQueryBoardTests.cs／CombatRuntimeKernelTests.cs；AP与原始距离各用途分离，原始边／路径同源；直接调用者补齐见下文 |
+| U-COMBAT-AP-CORE-01 | C/CombatSession.cs::BeginTurn／RecordAction／FinishTurn、TurnSequence／StateVersion／CombatOrdinaryActionDefinition；C/CombatantSnapshot.cs::AP及唯一账本；C/CombatCommandService.cs::CombatCommandPreview／Preview／Execute／AdvanceUntilAction；C/CombatActionResolver.cs::费用与Guard／逐事件；C/CombatTurnScheduler.cs及C/Turns/CTBEngine.cs::平手排序／累计门槛；C/CombatCommand.cs、CombatAttackProfile.cs、CombatActionResult.cs、CombatLegalActionService.cs同步合同（均C前缀） | E/CombatActionPointKernelTests.cs（新增，含.meta）、CombatRuntimeKernelTests.cs；§十全矩阵。直接构造profile／snapshot／session的调用点须在ready准备冻结，不以旧默认值兼容新合同 |
+| N-COMBAT-AP-SIM-01 | simulations/BattleSim/Combat.cs::Simulate／Simulate2v2Detailed、个人回合与三时钟；同目录Character.cs::独立长期AP／v与实例CD、GameData.cs::只读投影、Battlefield.cs::共享原始边AP查询、BattleSimSelfTests.cs::共享夹具、combat-parity-cases.json；GuanzhongPlaytestAudit.cs／StageCombatReport.cs／G2AttributionAudit.cs／Program.cs直接入口（均同目录） | BattleSimSelfTests新增RunActionPointContractCases，1v1与2v2分别观测而非只查胜率；未映射Config／实例单列，不隐式3／5倍乘；迁移后build与受影响运行，不复刻Unity整图 |
+| U-COMBAT-AP-FLOW-01 | A/AdventureUnitSpawner.cs::CreatePlayer／CreateEnemy显式AP／v；A/CombatEntryAdapter.cs::普通定义注入；A/EncounterCoordinator.cs::RunCombat／ExecuteCommand／Present／BuildMovement／敌方合法候选；C/EnemyAI.cs／CombatLegalActionService.cs；src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::普通定义接线 | PM/GuanzhongActionPointFlowPlayModeTests.cs（新增，含.meta）、GuanzhongMovementPlayModeTests.cs／GuanzhongStarterArtsPlayModeTests.cs；准备时补src/Assets/Scenes/AdventureScene.unity，保持正式唯一Static3D provider；演出结束继续，预算有限，无合法收益动作确定性结束 |
+| U-COMBAT-AP-HUD-01 | G/CombatPresentationContracts.cs::AP／费用／独立合法性DTO；G/ICombatCommandHandler.cs；P/CombatCommandInput.cs／CombatActionBarView.cs／CombatMovementView.cs／CombatActionPreviewView.cs／CombatTimelineView.cs／CombatHudPresenter.cs／CombatHudView.cs；A/EncounterCoordinator.cs::PreviewAction／IsCandidateCurrent／投影 | PM/GuanzhongCombatActionPreviewPlayModeTests.cs／GuanzhongCombatTimelinePlayModeTests.cs、E/CombatUnitPresentationContractsTests.cs；轴条件预测、AP三位精度、结束与其他按钮独立，不改头顶血条／动画资产 |
+| U-COMBAT-AP-ITEM-01 | src/Assets/Scripts/Modules/World/InventoryStore.cs::TryPrepareCombatConsumption；Co/ItemData.cs；C/CombatCommand.cs／CombatSession.cs／CombatCommandService.cs／CombatLegalActionService.cs::UseItem；A/EncounterCoordinator.cs／FormalEncounterResult.cs；G/ICombatCommandHandler.cs／CombatPresentationContracts.cs；P/CombatActionBarView.cs／CombatCommandInput.cs／CombatActionPreviewView.cs | E/CombatActionPointItemTests.cs、PM/GuanzhongCombatItemPlayModeTests.cs（均新增含.meta）；先消费D-ITEM冻结ID／资源字面量／持久化时点；原子失败矩阵与真实可取得生产入口分证据 |
+| U-COMBAT-AP-EQUIP-01 | Ch/CharacterRuntimeProfile.cs／CharacterStateSnapshot.cs::TryPrepareEquipmentChange／来源；src/Assets/Scripts/Modules/World/InventoryStore.cs；Co/ItemData.cs；Persistence的CharacterRecord；C/CombatCommand.cs／CombatSession.cs／CombatCommandService.cs／CombatLegalActionService.cs::SwapEquipment；A/AdventureUnitSpawner.cs／EncounterCoordinator.cs／FormalEncounterResult.cs；同G、P三正式输入文件 | E/CombatActionPointEquipmentTests.cs、PM/GuanzhongCombatEquipmentPlayModeTests.cs（均新增含.meta）；D-EQUIP真实两装备／槽位／路径先冻结，验证AP不重发、v下次报价、来源／CD不重复与保存 |
+| U-COMBAT-AP-SWAP-01 | Ch/AbilityLoadout.cs、C/CombatCommandService.cs／CombatSession.cs／CombatLegalActionService.cs::SwapSpell候选；A/EncounterCoordinator.cs::RequestSwapSpell；G/ICombatCommandHandler.cs／CombatPresentationContracts.cs::SlotIndex；P/CombatActionBarView.cs／CombatCommandInput.cs／CombatActionPreviewView.cs | PM/GuanzhongCombatSwapSpellPlayModeTests.cs（新增含.meta）；2次／60tick、相同或重复装配拒绝、第三次拒绝且AP不变；不替代EQUIP |
+| U-COMBAT-AP-TUNING-01 | src/Assets/DataConfig/AttackProfiles.csv／Characters.csv／Enemies.csv及各既有资产与Importer（按本卡完整expectedPaths）；普通行为生产位置AdventureScene.unity／AdventureSceneInstaller、正式创建显式输入需补精确路径；开发管理/统一行动力生产参数对照.txt | 正式数值定案→逐ID导入／只读投影与输入摘要；缺冻结内容路径不ready，参数变化使相关早前运行证据失效；不改算法 |
+| U-COMBAT-AP-SCENE-01 | PM/GuanzhongUnifiedActionPointAcceptanceTests.cs（新增含.meta）及GuanzhongMovementPlayModeTests.cs／GuanzhongCombatActionPreviewPlayModeTests.cs／GuanzhongCombatTimelinePlayModeTests.cs；E/GuanzhongFormalEndToEndTests.cs | 同最终输入的1920×1080／1366×768实际场景证据，全部命令／三时钟／敌方终止／保存；只验收，失败退回单一所有者；不在本卡叠实现补丁 |
+
+准备时必须消费的直接调用点补齐：
+
+1. CHAR／DATA的正式创建链：src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData → src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::CharacterRuntimeProfile.FromDefinition。明确生产链为 src/Assets/DataConfig/CharacterCreationPointBuy.csv::default → src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy → src/Assets/Scripts/Modules/Content/CharacterCreationPointBuyConfig.cs → src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset（现有.meta GUID da2a458f00eb427e8b9947e03dfe654b）→ src/Assets/Scenes/StartMenuScene.unity 的pointBuyConfig引用。DATA准备时补CSV、Importer、schema、现有asset路径，新增两字段在同configId的各行必须一致、整表验证；CHAR准备时补BuildCharacterData读取字段，StartMenuSceneInstaller只读调用核对。src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs::PointBuyConfigAssetPath指同资产，不新增第二配置。新字段不改变先天点购规则。E/CharacterStateTests.cs::FormalCreationVisibleRootSurvivesRuntimeCaptureAndReconstruction核对完整创建输入。Char_Player／Char_Enemy现有资产不是Characters.csv对应行，DATA需查明生成／维护来源后逐个显式投影，不能刷成另一个角色。
+2. MOVE修改ICombatSpatialQuery签名的实际实现替身为 E/CombatRuntimeKernelTests.cs::FixedRangeQuery、PM/GuanzhongBasicAttackPlayModeTests.cs::AlwaysInRangeCombatSpatialQuery、PM/GuanzhongCombatTimelinePlayModeTests.cs::TimelineSpatialQuery、simulations/BattleSim/GuanzhongPlaytestAudit.cs::AuditSpace；实际调用者为C/CombatSession.cs::ValidateMove、A/CombatEntryAdapter.cs::SpatialCombatQuery、A/EncounterCoordinator.cs::BuildMovement。CORE的CombatAttackProfile／CombatantSnapshot／CombatSession构造变更直接影响A/CombatEntryAdapter.cs／AdventureUnitSpawner.cs、E/AdventureNodeDispatchTests.cs／CombatRuntimeKernelTests.cs、PM/GuanzhongBasicAttackPlayModeTests.cs／GuanzhongCombatTimelinePlayModeTests.cs及模拟器关中只读审计。维护者转ready前对实际符号全引用定位，补编译适配路径；只适配字段，不抢下游个人回合／HUD责任。
+3. DATA／CORE不能为了省上述准备保留反应派生、旧移力预算、cooldownTicks双用途或隐式默认构造支路。共享文件按一卡一个主责与排他集成合同处理，不增加业务前置或改变当前拓扑。
+4. 普通行为场景生成者已定位到 src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::Build，它创建AdventureSceneInstaller；FLOW／TUNING准备时补此精确路径及src/Assets/Scenes/AdventureScene.unity。Builder只复制显式已冻结定义输入，不内置第二份默认费用；缺输入拒绝重建，不能重建场景后让新增字段回到0仍判正式可用。现有SceneBuildSupport.AdventureScenePath确认同一场景，保持其GUID。
+
+实际验证入口：tools/run-unity-editmode-tests.ps1、tools/run-unity-playmode-tests.ps1均支持-ProjectPath／-ResultXmlPath／-ValidateResultOnly，没有-TestFilter参数；定向需求只能使用当轮实际可用runner。模块边界入口是tools/check-unity-assembly-boundaries.ps1与E/AssemblyBoundaryEditorTests.cs，不存在tools/check-assembly-boundaries.ps1。BattleSim在执行者自己的worktree restore（仅assets缺失时）→Release --no-restore build→规定运行；不能借其他worktree缓存。
+
+## 十、可复用文档夹具与验收预期
+
+统一夹具标识APC-F01～F18；这里全部是技术输入，未接入生产、未跑Unity／BattleSim，参数没有平衡结论。所有成功／失败都记录actorId、TurnSequence、GlobalTick、AP前后、MP／库存、位置、CD、累计惩罚、恢复／触发计数；成功命令共享根ID，跨端比较这些观测而非只比最终赢家。
+
+| 夹具 | 输入／步骤 | 确定预期与后续入口 |
+|---|---|---|
+| APC-F01 非法输入 | 缺列／空AP／负AP／0主动费／负CD／未知profile／整数溢出；角色AP0、缺v标记、v负；同来源冲突重复 | 整表无asset部分写入；创建／恢复无部分发布。合法v0可加载但移动拒绝；DATA／CHAR／SAVE |
+| APC-F02 同路分段 | K1000、vMilli3000，三普通边d_e1000；整路与2＋1段、段间插合法施法 | 每边33333，路径99999 AP单位=99.999AP；预算100000可达第三边，99998不能提交整路；不推进tick。MOVE／CORE／SIM |
+| APC-F03 原始负担／极端 | K1000、vMilli5000；压缩边d_e500、扩张边2000、普通1000＋负担500；极短d_e1、vMilli int.MaxValue；checked输入溢出 | 分别10000／40000／30000；极短正边费1，非法边／占位／高度仍拒绝。算术溢出拒绝不变资源。MOVE |
+| APC-F04 上限与v | vMilli5000，普通距离1；上限100000→120000；途中再换装为更高上限 | 每边20000不随AP上限涨价；本回合上限／余额不补发，下回合才发新上限；v变化下一报价读取。CHAR／MOVE／CORE／EQUIP |
+| APC-F05 穿插／多动作 | AP100000、v5普通边20000；技术普攻40000/CD0，技术术法30000/CD0/MP足 | 移→攻及攻→移均余40000；移→术→移余30000；两普攻余20000；同回合／0新tick，不因旧phase拒绝。CORE／FLOW／SIM／SCENE |
+| APC-F06 累加CT | 两技术术法AP30000各一次，CT惩罚10／30，后普攻AP40000惩罚0 | 任意顺序AP0，自动结束一次，CT0／门槛140；反应50的此时结束预期3整数刻（实际后续刻另推进）。CORE／SIM／HUD |
+| APC-F07 独立CD | 技术技能AP30000、CD5；第一次成功后移动与另一技能，再尝试同技能 | 本回合CD仍5，同技能拒绝；下1全局刻变4。CD0新报价可重复；共享两外显同实例不能绕过。CORE／SIM |
+| APC-F08 失败／失效／重复 | AP不足、MP不足、库存不足、目标死亡、占位／v改变、旧ContextVersion／StateVersion／TurnSequence、取消与重复旧报价；准备效果失败 | AP／MP／库存／位置／Guard／CD／惩罚／次数／随机源整体不变，个人回合不结束；同源原因。CORE／ITEM／EQUIP／HUD／SCENE |
+| APC-F09 已执行结果 | 已合法攻击未命中；聚灵自用MP0／他用MP20目标已满；状态结果被写入禁令拦截 | AP及既有MP照扣，启动CD／加惩罚一次；状态阻止不退整个命令。CORE／ITEM／SIM |
+| APC-F10 开始／跳过／死亡 | HP50/100、MP10/30，技术恢复HP7/MP5；三子动作／重复Advance；控制跳过；开始DOT致死 | 活者开始仅HP57／MP15一次；跳过仍恢复且AP0／正常结束，不能待机；DOT死者不恢复。CORE／SIM |
+| APC-F11 持续／旧触发 | 状态N2分别在本人当前回合与他人回合施加；多动作；守一无移动／有移动、符胆结束及符箓消耗、雷劫受伤／出手 | 本人当前施加的当前结束仍2，之后1／0；他人施加在目标下一结束变1；每回合额度不随动作刷新，事件分类按§六原文。CORE／SIM |
+| APC-F12 结束／待机／同刻 | 未花AP主动结束；未收益待机；移动后待机；四活者反应60从CT0、稳定IDs a,b,c,d | 正常结束CT0；首次就绪CT120待机留60／门槛100；移动后待机拒绝；tick2四者依序各得回合，清同刻队列前不推进tick3。CORE／SIM |
+| APC-F13 首动／轴单位 | A反应10、B50，CT0／门槛100；门槛130／180、反应50 | B在tick2先动，不能旧1v1初始0平手令A先动；门槛130／180分别3／4刻。CORE／SIM／HUD |
+| APC-F14 Guard | 正费激活、重激活、失败移动、成功攻击／移动、结束、下本人开始、死亡 | 重激活／失败不扣不退出；成功收益先退出；结束保留；下本人开始／死亡清。防御属性×1.5，无最终伤害×0.5。CORE／SCENE |
+| APC-F15 减耗／有限返还 | base40000、fixed5000、retained800‰、minimumNet10000；同来源声明返还50000、本人总预算20000、次数2，上限100000 | C28000；首次R18000、净10000，第二次R2000用尽总预算，第三次R0；同根重复／返还链／换装／改目标不多领；无AP无限循环。CORE／CHAR／SIM |
+| APC-F16 存档往返 | 新schema4技术角色AP120000、vMilli3500／另例0；无来源空数组；JSON缺标记／坏来源／伪空payload；旧3／1／2 | 新档完整往返且幂等，v0不被误判缺失；失败不替换live owners；旧档按§七矩阵；JSON无临时余额／惩罚／Guard／路径。SAVE |
+| APC-F17 缺失行为接口 | 技术item（明确fixture标识，不是生产ID）库存2／用1；技术equipment变上限和v；换术三次与冷却 | 整体成功只扣一次，任一准备失败全部不变；换装不补AP／洗CD，换术第3次拒绝、换入≥60tick。ITEM／EQUIP／SWAP另需真实获准生产内容 |
+| APC-F18 正式投影／敌方 | 玩家AP足，规则成功后provider忙碌→演出完成；取消／切目标／刷新；敌方多动作到无合法收益动作 | 忙碌只防重入、结束后继续同回合；显示费用同源且轴标条件，预览不消费随机；敌方净AP严格减少且确定性结束；实际启动commit及两分辨率证据另由SCENE取得 |
+
+F02／03的距离／负担只是技术边，F05／06／15／16／17的AP、恢复、返还与物品／装备都不是生产参数。生产逐ID数值与v候选、未知CD映射必须单独列已获准试跑输入；BattleSim迁移后实跑才能定角色强度，Unity才能验场景路径／库存／输入／演出。初始未知生产费不允许借夹具补齐导入。
+
+## 十一、交付边界与准备剩余项
+
+本合同冻结结构与语义，公共边界有真实所有者，三现有攻击旧CT／tick投影有依据，角色v候选逐来源列出，长期保存必要性与旧schema边界明确，全部blocked代码叶有符号和验证入口。新增数值／内容决定、正式创建配置资产定位、签名直接调用点、普通行为场景生成者与准确资源路径须由有权维护者在相应卡ready前收口；本轮不替下游造内容、解除前置或提升队列。
+
+AP费用／净费下限／返还预算及未映射的旧Art／Divine配置仍标待验证；文档夹具不等于代码通过，schema4及旧3拒绝尚未实现，用户“移动后不能出手”尚未复现。冻结合同不关闭完整AP父项、数值平衡或用户运行时问题。
