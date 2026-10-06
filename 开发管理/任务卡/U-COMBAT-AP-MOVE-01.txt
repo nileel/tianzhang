@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-COMBAT-AP-MOVE-01 的冻结公共合同要求本卡修改 ICombatSpatialQuery 签名（预算改为 AP 最小单位并显式接收 MovementEfficiencyMilliUnits），但该接口的实现替身与调用者分布在 PM 测试、BattleSim 审计、CombatLegalActionService 与 EncounterCoordinator（均不在本卡 CandidatePaths），且当前代码库不存在显式 v 输入（零命中，旧移力仍由反应派生），无法在卡内同时满足「移除 adapter 整数格精度损失」与「不迁移个人回合」；本卡应如何处置？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-MOVEPATH",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
@@ -91,6 +91,14 @@
     "taskContextDigest": "429f7640c74f7774e69ca35dd71295489c829f5a0c9ee8e9a834ba715838b786",
     "createdAt": "2026-10-07T01:56:09.9267717+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261007-MOVEPATH",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "6a4134db61292292f2d572d1f6f0e20bc4be1fd0bb78e386d2856659dfe0ab51"
   }
 }
 ---TASK-BODY---
