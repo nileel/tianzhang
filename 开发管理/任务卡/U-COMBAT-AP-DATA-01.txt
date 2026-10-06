@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261006-DATA04",
+  "stateReason": "等待负责人决定：DEC-20261006-DATA04 的 A 回复已由本轮恢复通道真实执行，但该通道只把卡恢复成 ready 并重放 checkpoint，不写卡：实测卡头 expectedPaths 仍是原有 34 条、六条必需路径仍不在授权内，卡内仍无任何冻结值（AP 正费候选、cooldownTicks 去留、import_csv.ps1 处置）。本 run 的 candidate changed paths 被卡头授权限制，无法写入该六条路径；DeepSeek 也无费用授权与内容解冻职责。请决定由谁在仓库内真实落笔改卡（或改走拆卡／保持 blocked）。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -56,15 +56,15 @@
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "U-COMBAT-AP-DATA-01",
-    "sourceRunId": "4d9acb82-105b-44b9-8aca-c1ae0e9c2c40",
+    "sourceRunId": "8b8bfef1-9aee-4319-b06a-4b650d58c7b7",
     "owner": "deepseek",
     "route": "external_execute",
-    "decisionId": "DEC-20261006-DATA04",
-    "question": "U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时严格导入。DEC-20261006-DATA03 回复 A（补齐授权保卡、由维护方实际落笔）后，本轮恢复 run 实测卡头 expectedPaths 仍 34 条逐字未变、卡内仍无任何冻结值，A 第三次未落地。本轮首次直读证实：回复通道与 owner run 都不具备改卡能力——finalizer 只 stage／commit 传入 -ExpectedPaths 内的路径，共享入口要求 candidate changed paths ⊆ CandidatePaths，回复恢复只做 ResumeReady＋cherry-pick --no-commit 且不区分 A／B／C。而六条缺失路径（SettlementContentImporter.cs、AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv、BattleSimSelfTests.cs、check-data-chain.ps1）与三项冻结（AP 正费候选、cooldownTicks 去留、import_csv.ps1 处置）缺一不可，硬写会同时打断攻击表旧表头断言、BattleSim 自检、check-data-chain 错误级列检查与 Enemies.csv 精确列校验。请决定由谁落笔，以及是否改走拆卡。",
+    "decisionId": "DEC-20261007-DATA05",
+    "question": "DEC-20261006-DATA04 的 A 回复已由本轮恢复通道真实执行，但该通道只把卡恢复成 ready 并重放 checkpoint，不写卡：实测卡头 expectedPaths 仍是原有 34 条、六条必需路径仍不在授权内，卡内仍无任何冻结值（AP 正费候选、cooldownTicks 去留、import_csv.ps1 处置）。本 run 的 candidate changed paths 被卡头授权限制，无法写入该六条路径；DeepSeek 也无费用授权与内容解冻职责。请决定由谁在仓库内真实落笔改卡（或改走拆卡／保持 blocked）。",
     "options": [
       {
         "key": "A",
-        "label": "补齐授权保卡并由维护方真实落笔：由人工维护者（负责人本人，或负责人指派的一次性 Codex 维护会话）在仓库内按验证记录第五节逐字增补六条字面量路径（若删除 AttackProfileData.cooldownTicks 再加 CombatEntryAdapter.cs）、在卡内 ready 准备正文冻结 AP 正费候选（basic_unarmed actionPointCostUnits ≤ 50000 单位＝50 AP，minimumNetCostUnits >0 且不大于基础费）、旧 cooldownTicks 去留与 import_csv.ps1 处置，并按第六节删除卡头 automationCheckpoint／automationReply、保持 dispatchState=ready；下一次 run 一次完成三攻击＋两角色＋五敌人。注意：再次仅回复 A 不会产生任何卡变化，必须有维护方在仓库内真实落笔。"
+        "label": "补齐授权保卡并由维护方真实落笔：由人工维护者（负责人本人，或负责人指派的一次性 Codex 维护会话）在仓库内按验证记录第五节逐字增补六条字面量路径（若删除 AttackProfileData.cooldownTicks 再加 CombatEntryAdapter.cs）、在卡内 ready 准备正文冻结 AP 正费候选（basic_unarmed actionPointCostUnits ≤ 50000 单位＝50 AP，minimumNetCostUnits >0 且不大于基础费）、旧 cooldownTicks 去留与 import_csv.ps1 处置，并按第六节删除卡头 automationCheckpoint／automationReply、保持 dispatchState=ready。"
       },
       {
         "key": "B",
@@ -76,49 +76,40 @@
       }
     ],
     "recommendedOption": "A",
-    "impactSummary": "选 A 只需维护方一次真实落笔：本轮已把六条字面量路径、三项冻结与重新入队步骤写成可逐字照抄的文本（验证记录第五、六节），落笔后本卡仍是一个原子结果，下一次 run 一次完成三攻击＋两角色＋五敌人。关键约束是回复通道与 owner run 都无法改卡（本轮已直读证实），三次回复 A 均因无人落笔而空转；若继续只回复不落笔，缺口不会消失且本卡继续占用队列位置。选 B 需 Codex 规划上下文建卡，拆分边界应按本轮证据为「敌人链／攻击表（含模拟器与检查器）／角色表」。选 C 使本卡继续占用 blocked，攻击表、角色表与敌人链都无法推进，下游解锁继续顺延。本轮 checkpoint 没有业务变化需要合并，唯一新增文件是验证记录。",
+    "impactSummary": "回复通道本轮确实被执行了（恢复成 ready 并重放 checkpoint），但卡头仍 34 条、无冻结值，因此再次停在同一个业务写入前停止点。选 A 需维护方在仓库内真实落笔六条路径与三项冻结并删除卡头 checkpoint 字段，落笔后本卡仍是一个原子结果，下一次 run 一次完成三攻击＋两角色＋五敌人；选 B 由 Codex 规划上下文按敌人链／攻击表／角色表拆三张叶子卡；选 C 保持 blocked 并先更正合同§九。不落笔则本卡继续占用队首，六张下游卡继续顺延；本轮 checkpoint 无业务变化需要合并，唯一新增是验证记录。",
     "plainSummary": {
-      "situation": "这张卡要把三攻击、两角色、五敌人的行动力数据一次性严格导入。你第三次选了 A（补路径、冻结费用），但这次开工时卡头一个字都没改，expectedPaths 还是原来 34 条；本轮还查实，回复通道和这个 run 都没有改卡的权限，只回复选项永远不会改卡。",
-      "impact": "照现在的授权硬写，仓库会同时出现攻击表旧表头断言失败、BattleSim 自检失败、check-data-chain 直接失败（错误级）和敌人表精确列校验失败，五条敌人模板的行动力上限与位移效率只能停在 0；不写则本卡一行业务代码都落不下去。这个缺口已连续四轮没变。",
-      "action": "请让维护方这次真的在仓库里改卡：补上六条路径（含 BattleSimSelfTests.cs 与 check-data-chain.ps1）、冻结 AP 正费候选和旧 cooldownTicks 去留——验证记录第五、六节有可逐字照抄的文本和重新入队步骤。只回复选项不会改卡；或选 B 交给 Codex 拆卡，或选 C 先保持 blocked。"
+      "action": "请让维护方这次真的在仓库里改卡：补六条路径、冻结 AP 正费候选和旧 cooldownTicks 去留，验证记录第五、六节可逐字照抄；或选 B 交给 Codex 拆卡，或选 C 先保持 blocked。",
+      "impact": "缺口已连续五轮未解，这一轮又没有写入任何数据；六张下游卡继续顺延，且本轮 run 证明只回复选项不会改变卡头。",
+      "situation": "你第四次选了 A（补路径、冻结费用），本轮 run 就是这次回复的真实执行：共享入口只把卡恢复成 ready 并重放 checkpoint，卡头仍是原来 34 条、卡内仍无冻结值。"
     },
-    "checkpointCommit": "f90d513d7fa75310793f23ea7dec8f3800f2101e",
-    "baseCommit": "56f1f89542b160cf68b7515394655f98298528ab",
-    "branch": "codex/automation/deepseek/4d9acb82-105b-44b9-8aca-c1ae0e9c2c40/candidate",
+    "checkpointCommit": "9b2235e4cf12a4f58d181d665ff5b7fd2ed71888",
+    "baseCommit": "228f77af7aa6539c1cccc39e767fedc85fd5251c",
+    "branch": "codex/automation/deepseek/8b8bfef1-9aee-4319-b06a-4b650d58c7b7/candidate",
     "changedPaths": [
       "开发管理/U-COMBAT-AP-DATA-01-验证记录.txt"
     ],
     "verified": [
-      "卡头实测（只读）：sed -n '14,49p' 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt | grep -n 'SettlementContentImporter|AttackProfileDataTests|ContentCatalogDataTests|fixture|BattleSimSelfTests|check-data-chain' 零命中，expectedPaths 仍 34 条逐字未变；卡内 grep 'actionPointCostUnits=|actionPointMaximumUnits=|movementEfficiencyMilliUnits=|冻结' 只命中 checkpoint 问答正文与停止条件原文「迁移值未被冻结…时停止」，无任何冻结数值。DEC-20261006-DATA03 回复 A 第三次未落地。",
-      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-DATA-01 -Postcondition ExternalDispatchReady -ExpectedOwner deepseek -OutputJson 退出 0，status=ok、cardCount=79、readyCount=2、taskState=ready、postcondition 一致；该次调用的 expectedPaths 投影自身即证明仍是 34 条、不含本次要求的任何新增路径。",
-      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理 退出 0，OK，696 files checked。",
-      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 开发管理/U-COMBAT-AP-DATA-01-验证记录.txt 退出 0，OK，1 files checked，fix=False；automation-finalize-commit.ps1 提交前对实际暂存输入复验同一结论，并在同一次提交内执行 git -c core.whitespace=-blank-at-eol diff --cached --check 通过。",
-      "checkpoint 提交形态实测：HEAD=f90d513d7fa75310793f23ea7dec8f3800f2101e、HEAD^=56f1f89542b160cf68b7515394655f98298528ab、git rev-list --count HEAD^..HEAD=1、branch=codex/automation/deepseek/4d9acb82-105b-44b9-8aca-c1ae0e9c2c40/candidate、git -c core.quotepath=false diff --name-only --no-renames HEAD^..HEAD 恰为 开发管理/U-COMBAT-AP-DATA-01-验证记录.txt、git status --porcelain -uall 为空。",
-      "攻击链出路径严格校验本轮直读复验：CombatContentImporter.cs:55-63 AttackProfileColumns 38 项（:61 含 cooldownTicks）、:388-390 表头 SequenceEqual 严格等值；AttackProfileDataTests.cs:34-46 硬编码旧 38 列表头、grep -c cooldownTicks=9（:95/:119/:162/:343/:349/:378/:475/:504）；fixture 与生产表表头实测均 38 列；BattleSimSelfTests.cs:1189 AttackProfileHeaders、:1576-1581 headers.SequenceEqual(...) 抛 attack_profile_header_not_exact、:111 套件 basic-unarmed-production-d-combat-prod-01、:1424 读生产 AttackProfiles.csv；check-data-chain.ps1:18-34 Add-Finding 无豁免转 Add-Error、:494 ATTACK_PROFILE_HEADER_NOT_EXACT、:866 38 列白名单、:938 退出 1、data-chain-warning-waivers.json 实测 []。",
-      "敌人链本轮直读复验：SettlementContentImporter.cs:49-55 ContentEnemyColumns、:435 ReadContentTable、:688 CsvTableReader.RequireExactColumns、:817/:895/:904 提交 Assets/Data/Characters/Char_Enemy_<enemyId>.asset；Enemies.csv 生产表头实测 25 列；ContentCatalogDataTests.cs:19 常量指向生产 Enemies.csv 并经同一 ParseContentCatalog；CharacterContentImporter.cs:180 用 RequireColumns（角色表加列本身在允许路径内，但仍缺冻结值）。",
-      "机械能力边界本轮直读复验（本轮新增结论）：automation-finalize-commit.ps1 只 stage／commit 传入 -ExpectedPaths 内的路径（:202-244），invoke-deepseek-responsibility.ps1 的 Assert-CandidateEvidence／Assert-DecisionCheckpoint 要求 actual changed paths ⊆ CandidatePaths，invoke-hourly-owner.ps1:1310-1311 只校验 OPTION_ACCEPTED／CUSTOM_ACCEPTED 而不区分 A／B／C、:1326-1350 恢复只做 ResumeReady + cherry-pick --no-commit；故六条缺失路径在本 run 内不可提交，任何选项回复都不会改卡。",
-      "模型协作评估在业务写入前完成：单主智能体＋入口主模型 deepseek-flash；本轮为有界只读诊断加单文档写入、无独立并行工作面；未启动第二责任会话，未派生任何子智能体，未使用 RequireAutomationMetadata，未操作 runtime 或集成锁。"
+      "卡头只读实测：sed 读授权块为原有 34 条、六条关键词零命中；grep 冻结值只命中 checkpoint 问答正文与停止条件原文；git diff HEAD~1..HEAD 显示最近卡变化只是入口状态投影（10 insertions／2 deletions）。",
+      "本轮 run 即 DEC-20261006-DATA04 回复 A 的执行：入口以 cherry-pick --no-commit 重放 f90d513d 的验证记录，卡头仍保留 automationCheckpoint／automationReply，证明回复只恢复 ready、不写卡。",
+      "生产表头本轮实测：AttackProfiles.csv 38 列且 cooldownTicks 在第 18 列、Enemies.csv 25 列、Characters.csv 19 列；CombatContentImporter.cs:55-63 AttackProfileColumns 含 cooldownTicks 且 :388-390 严格等值；SettlementContentImporter.cs:49-55 ContentEnemyColumns 25 项且 :688 RequireExactColumns；tools/import_csv.ps1:332 Import-Enemies 仍是第二手工写入者。",
+      "pwsh tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-DATA-01 -Postcondition ExternalDispatchReady -ExpectedOwner deepseek -OutputJson 退出 0，status=ok、taskState=ready、expectedPaths 投影 34 条。",
+      "pwsh tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理 退出 0，OK，699 files checked。",
+      "pwsh tools/check-pending-whitespace.ps1 -ExpectedPaths 开发管理/U-COMBAT-AP-DATA-01-验证记录.txt 退出 0，OK，fix=False；finalizer 提交前复验同结论并执行 git -c core.whitespace=-blank-at-eol diff --cached --check 通过。",
+      "提交形态实测：HEAD=9b2235e4cf12a4f58d181d665ff5b7fd2ed71888、HEAD^=228f77af7aa6539c1cccc39e767fedc85fd5251c、rev-list --count=1、changed paths 恰为 开发管理/U-COMBAT-AP-DATA-01-验证记录.txt、git status --porcelain -uall 为空。",
+      "模型协作评估在业务写入前完成：单主智能体＋入口主模型 deepseek-flash；本轮为有界只读诊断加单文档写入，无独立并行工作面；未派生任何子智能体，未使用 RequireAutomationMetadata，未操作 runtime 或集成锁。",
+      "共享入口预检：{\"matched\":[],\"notice\":[],\"mustRead\":[],\"gatePointers\":[]}，无 mustRead 正文与门禁指针可消费。"
     ],
     "unverified": [
-      "未修改 AttackProfiles.csv／Characters.csv／Enemies.csv、任何 ScriptableObject asset、CombatContentImporter／CharacterContentImporter／AttackProfileData／CharacterData／EnemyData，因此没有「合法数据导入前后逐 ID 对齐」「每类非法输入均无部分 asset 写入」「现有引用 GUID 不漂移」三类证据。",
-      "未运行 Unity EditMode／PlayMode（本轮 diff 只有一处文档变化，按卡内「不因纯文档变更跑 Unity」不运行 runner）；未运行 check-data-chain（无 docs／CSV／Unity 数据变化）、未运行 check-unity-assembly-boundaries、未运行 BattleSim build／run。",
+      "未修改 AttackProfiles.csv／Characters.csv／Enemies.csv、任何 ScriptableObject asset 与三个导入器／数据类，故没有「合法数据导入前后逐 ID 对齐」「每类非法输入均无部分 asset 写入」「现有引用 GUID 不漂移」三类证据。",
+      "未运行 Unity EditMode／PlayMode、check-data-chain、check-unity-assembly-boundaries 与 BattleSim build／run（本轮 diff 只有一处文档）。",
       "未创建 src/Assets/Tests/EditMode/CombatActionPointImportTests.cs 及其 .meta，本卡定向导入测试入口仍不存在。",
-      "预测的失败面（AttackProfileDataTests 多条用例、AttackProfiles.fixture.csv、BattleSim 自检 attack_profile_header_not_exact、check-data-chain 的 ATTACK_PROFILE_HEADER_NOT_EXACT／CSV_SCHEMA_* 错误级结论、Enemies.csv 精确列校验抛 InvalidDataException）均由源码与脚本的严格校验静态推导，未实机跑红复现。",
-      "卡内提到的 gpt-6.1-sol／gpt-6-astra 辅助在当前原生子智能体工具中不受支持，按 AI协作规则记录为「未执行该模型辅助」，未伪造调用证据。",
-      "「回复通道与 owner run 均不能改卡」由本轮直读脚本与连续三轮实测观察得出，未由第三方独立复核。"
+      "预测失败面（AttackProfileDataTests 多条用例、AttackProfiles.fixture.csv、BattleSim 自检、check-data-chain 错误级结论、Enemies.csv 精确列校验）由源码与脚本严格校验静态推导，未实机跑红复现。",
+      "「回复通道不能改卡」由本轮与前三轮实测加共享入口源码直读得出，未由第三方独立复核。"
     ],
-    "residualRisk": "若在授权补齐前强行迁移，仓库会同时出现多组新增失败面：攻击表旧 38 列表头断言（AttackProfileDataTests.cs 多条用例＋AttackProfiles.fixture.csv）、BattleSim 自检 attack_profile_header_not_exact、check-data-chain 的 ATTACK_PROFILE_HEADER_NOT_EXACT 与 CSV_SCHEMA_* 错误级结论（退出 1），以及 Enemies.csv 精确列校验抛 InvalidDataException（连带 ContentImportCoordinator.ImportAll 与 ContentCatalogDataTests 失败）；五条敌人模板的 actionPointMaximumUnits／movementEfficiencyMilliUnits 只能停在 0。本轮继续未写入该中间状态。本卡已连续四轮停在同一处授权／数值缺口（DEC-20261006-DATA01、DATA02、DATA03 三次回复 A 均未落卡），而回复选项这个动作本身不会改卡；本轮已把落笔内容写成可逐字照抄的文本与重新入队步骤，但落笔仍需具备仓库写权限的维护方，缺口未解前本卡会继续占用队列位置，U-COMBAT-AP-CHAR-01／CORE／SIM 等下游解锁继续顺延。合同§九对敌人模板所有者与 AdventureContentImporter.cs 的定位仍是错的，未更正前按合同准备 ready 会重复同一偏差。tools/import_csv.ps1::Import-Enemies 是同一组敌人 asset 的第二手工写入者，未处置前迁移结果可被手工重跑覆盖。以上失败面均为静态核对结论，未实机跑红复现。",
+    "residualRisk": "若在授权补齐前强行迁移，仓库会同时出现攻击表旧 38 列表头断言失败、BattleSim 自检 attack_profile_header_not_exact、check-data-chain 的 ATTACK_PROFILE_HEADER_NOT_EXACT／CSV_SCHEMA_* 错误级结论（退出 1）与 Enemies.csv 精确列校验抛 InvalidDataException，五条敌人模板的 actionPointMaximumUnits／movementEfficiencyMilliUnits 只能停在 0；本轮继续未写入该中间状态。本卡已连续五轮停在同一处授权／数值缺口，回复选项这个动作本身不会改卡（本轮 run 即为该回复的执行结果，只恢复 ready 并重放 checkpoint）。卡头只要保留 automationCheckpoint，旧回复在摘要相等时会被反复重放，本卡继续占用队首，U-COMBAT-AP-CHAR-01／CORE／SIM 等六张下游卡继续顺延。合同§九对敌人模板所有者与 AdventureContentImporter.cs 的定位仍是错的，未更正前按合同准备的 ready 会重复同一偏差。tools/import_csv.ps1::Import-Enemies 是同一组敌人 asset 的第二手工写入者，未处置前迁移结果可被手工重跑覆盖。以上失败面均为静态核对结论，未实机跑红复现。",
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
-    "createdAt": "2026-10-06T23:56:21.2865774+08:00",
+    "createdAt": "2026-10-07T00:47:53.0393944+08:00",
     "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20261006-DATA04",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "16c6ece85e99cd206d50811035ecfbfa80a87cc2ca81ab49ed4cb9e58ea17afc"
   }
 }
 ---TASK-BODY---
