@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时严格导入；敌人模板的真实生成者 src/Assets/Scripts/Editor/SettlementContentImporter.cs 与三个旧 schema 验证输入（AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv）都不在允许路径，攻击表 AP 正费候选与旧 cooldownTicks 去留也仍未冻结。上一轮 DEC-20261006-DATA01 已回复 A（扩路径保卡），但实测任务卡只改了 dispatchState／stateReason／automationReply，expectedPaths 34 条逐字未变，A 的前置一条都没落地；且由于 checkpoint 恢复把 expectedPaths 计入 taskContextDigest，扩路径无法靠回复决策卡机械完成，必须在卡不处于 pending_decision 时另行写入。请选择补齐授权的路线。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261006-DATA02",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -108,8 +108,16 @@
     ],
     "residualRisk": "若在授权补齐前强行迁移，仓库会同时出现两组新增失败面：攻击表旧 38 列表头断言（AttackProfileDataTests.cs 五条用例＋AttackProfiles.fixture.csv）与 Enemies.csv 精确列校验（SettlementContentImporter.cs:688 抛 InvalidDataException，连带 ContentImportCoordinator.ImportAll 与 ContentCatalogDataTests 失败），且五条敌人模板的 actionPointMaximumUnits／movementEfficiencyMilliUnits 只能停在 0；本轮继续未写入该中间状态，风险仅在后续未授权实施时出现。本卡已连续两轮停在同一处授权／数值缺口，第二次的回复 A 未被机械环节落地；若维护者仍只回复选项而不落卡，缺口不会自行消失，本卡会继续占用队列位置，下游解锁继续顺延。合同§九对敌人模板所有者与 AdventureContentImporter.cs 的定位仍是错的，未更正前按合同准备 ready 会重复同一偏差。tools/import_csv.ps1::Import-Enemies 是被手工重新运行时会把同一组 Char_Enemy_enemy_*.asset 按旧位置列整体重写、抹掉 AP／v 的第二写入者，本轮未处置。以上均为静态核对结论，五条既有用例的失败未实机跑红复现。",
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
-    "createdAt": "2026-10-06T21:55:34.6251850+08:00",
+    "createdAt": "2026-10-06T21:55:34.625185+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261006-DATA02",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "0828d05c3ae3a924bdd61b2864160a24ab30a534854a4b5bb3f6dcfd3ffc4c3e"
   }
 }
 ---TASK-BODY---

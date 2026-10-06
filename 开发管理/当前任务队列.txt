@@ -5,4 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-COMBAT-AP-DATA-01 | external_execute | deepseek | P1 | data | migration | 统一行动力生产数据与严格导入 | 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt |
 | U-COMBAT-AP-MOVE-01 | external_execute | deepseek | P1 | unity | implementation | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
