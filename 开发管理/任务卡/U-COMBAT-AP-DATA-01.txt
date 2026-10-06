@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：本卡第六次停在同一处授权／数值缺口：DEC-20261007-DATA05 的 A 回复与 DATA01～DATA04 一样未落地。本轮实测卡头仍 34 条路径（六条必需路径零命中）、任务卡对 HEAD 零差异、卡内仍无任何冻结值；且本轮 prompt 明确禁止修改任务卡，故 A 要求的落笔（改 expectedPaths、写冻结值、删卡头 checkpoint 字段）在任何 DeepSeek 自动 run 内都无法执行——缺口不是「是否批准」，而是执行器授权范围与批准对象不相交。请决定实际落笔方与后续路线。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-DATA06",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -112,6 +112,14 @@
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
     "createdAt": "2026-10-07T04:52:58.9349623+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261007-DATA06",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "B",
+    "source": "feishu_card",
+    "evidenceHash": "c9270d19ab673e728fea8fbacea7989bc59b2fc2ee5e4b819f7a125c9bac534b"
   }
 }
 ---TASK-BODY---
