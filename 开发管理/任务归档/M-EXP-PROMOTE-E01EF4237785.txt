@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-HEALTHBAR-SLIM-01/U-GZ-HEALTHBAR-SLIM-01-UNITY-OVERLAY-EVIDENCE-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-07：独立核验来源候选并晋级为 EXP-UNITY-011；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-HEALTHBAR-SLIM-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-07 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-011`。来源候选、正式图形 PlayMode 4/4、定向 EditMode 2/2 和两张精确尺寸 PNG 直接证实：相机 RenderTexture 只含相机层，不能证明 Screen Space Overlay；`-nographics` 无可用图形设备。以图形 runner 的 `ScreenCapture.CaptureScreenshot` 读取可验证的 Game View 合成 PNG，才同时取得两个无文字细血条和目标面板像素证据。
+- 去重与边界：`EXP-UNITY-012` 已覆盖 Unity 直启时快照恢复、实测分辨率及图形／无图形证据边界，但未规定相机 RenderTexture 与 Screen Space Overlay 的合成边界或 Overlay 的取图方式；其他 active Unity 经验分别覆盖场景 Builder、程序集、探索命令、UGUI 文本、Canvas 重排或局部重建，不覆盖该根因。新经验仅适用于以 PNG 证明 Screen Space Overlay 的 PlayMode 验收；World Space／Screen Space Camera Canvas、无像素验收或不涉及 Overlay 合成的验证排除。未新增门禁。
+- 模型协作：简单：来源候选、直接验证记录、现有经验边界与确定性回链可独立核验；主模型经 Node REPL 实测为 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

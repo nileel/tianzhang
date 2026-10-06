@@ -1,0 +1,25 @@
+# EXP-UNITY-011 · Screen Space Overlay 像素证据须取 Game View 合成画面
+
+## 状态
+
+active；最后核验日期：2026-10-07；事实源：`U-GZ-HEALTHBAR-SLIM-01-UNITY-OVERLAY-EVIDENCE-01`、`U-GZ-HEALTHBAR-SLIM-01` 的图形 PlayMode 4/4、定向 EditMode 2/2 与双分辨率 Overlay PNG 记录。
+
+## 开工前
+
+适用：PlayMode 验收须以 PNG 证明 `RenderMode.ScreenSpaceOverlay` 中的 HUD、头顶条或面板可见。先确认 Canvas 确为 Screen Space Overlay；用带图形设备的 runner 从 Game View 合成结果取图，并校验 PNG 可读、宽高等于实际 Game View。相机 RenderTexture 只能证明相机层，`-nographics` 的 `GraphicsDeviceType.Null` 不能证明 Overlay 像素。World Space 或 Screen Space Camera Canvas、无像素验收的功能测试，以及不涉及 Overlay 合成的截图任务排除；Canvas 模式、截图 API、图形 runner 或 UI 合成链变化时停止引用并重新核验。
+
+## 正确处理
+
+在图形 PlayMode 中先拒绝 `GraphicsDeviceType.Null`，再以 `ScreenCapture.CaptureScreenshot` 写出唯一临时 PNG；等待文件落盘，读取并断言非空、可解码以及像素尺寸与请求的 Game View 一致。将画面观察与已有功能断言一并记录，确认 Overlay 元素确实进入 Game View 合成画面。若只需要相机世界层，保留相机 RenderTexture 验证而不要把它主张为 Overlay 证据。
+
+## 根因与弯路
+
+把正式 HUD 的相机 RenderTexture 当作整屏画面时，PNG 虽有战场，却缺少由 Game View 合成的 Screen Space Overlay，因而无法证明头顶条或目标面板。`-nographics` 没有图形设备，也不能补足这一像素证据；只有改取图形 Game View 合成结果才能闭合证据链。
+
+## 证据
+
+来源任务的 `GuanzhongUnitHealthBarPlayModeTests` 在 1920×1080 与 1366×768 均以 `ScreenCapture.CaptureScreenshot` 写出可读取的 PNG；图形 PlayMode 4/4、定向 EditMode 2/2 通过。`开发管理/关中头顶细血条验证记录.txt` 记录两张 PNG 都显示两个无文字绿色细血条与包含名称、生命和灵力详情的目标面板，并记录了精确 Screen、Canvas 与 PNG 尺寸。
+
+## 失效条件
+
+`RenderMode.ScreenSpaceOverlay` 的合成责任、`ScreenCapture.CaptureScreenshot`、图形 PlayMode runner、PNG 校验方式或目标 HUD 的验收入口被替换，或者 UI 不再由 Game View 合成时，停止引用并重新核验。

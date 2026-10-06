@@ -440,6 +440,32 @@
       "lastVerified": "2026-10-06"
     },
     {
+      "id": "EXP-UNITY-011",
+      "title": "Screen Space Overlay 像素证据须取 Game View 合成画面",
+      "preflightSummary": "以 PNG 验收 Screen Space Overlay 时，须用有图形设备的 Game View 合成截图；相机 RenderTexture 与 -nographics 不能证明 Overlay 像素。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "RenderMode.ScreenSpaceOverlay",
+        "Screen Space Overlay",
+        "ScreenCapture.CaptureScreenshot"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-011.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-07"
+    },
+    {
       "id": "EXP-UNITY-012",
       "title": "Unity Game View 验证须实测并恢复快照",
       "preflightSummary": "直接启动 Unity 且以 Game View 截图验收时，复用快照恢复，并让图形／无图形证据分别只主张实际结果。",
