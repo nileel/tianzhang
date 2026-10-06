@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：DEC-20261006-DATA04 的 A 回复已由本轮恢复通道真实执行，但该通道只把卡恢复成 ready 并重放 checkpoint，不写卡：实测卡头 expectedPaths 仍是原有 34 条、六条必需路径仍不在授权内，卡内仍无任何冻结值（AP 正费候选、cooldownTicks 去留、import_csv.ps1 处置）。本 run 的 candidate changed paths 被卡头授权限制，无法写入该六条路径；DeepSeek 也无费用授权与内容解冻职责。请决定由谁在仓库内真实落笔改卡（或改走拆卡／保持 blocked）。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-DATA05",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -110,6 +110,14 @@
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
     "createdAt": "2026-10-07T00:47:53.0393944+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261007-DATA05",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "8e142a56568e3847ab85f9774a4ed6db712686af2de1130315a0122c6132e4c0"
   }
 }
 ---TASK-BODY---
