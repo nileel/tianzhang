@@ -13,7 +13,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| D-COMBAT-AP-CONTRACT-01 | P1 | codex | 阻塞 | D-COMBAT-AP-RULES-01 | 统一行动力公共单位与接口合同冻结 | 开发管理/任务卡/D-COMBAT-AP-CONTRACT-01.txt |
+| D-COMBAT-AP-CONTRACT-01 | P1 | codex | 已排队 | — | 统一行动力公共单位与接口合同冻结 | 开发管理/任务卡/D-COMBAT-AP-CONTRACT-01.txt |
 | D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
 | D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
 | U-COMBAT-AP-DATA-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-CONTRACT-01 | 统一行动力生产数据与严格导入 | 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt |
