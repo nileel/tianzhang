@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时迁移，但卡头只授权了三条导入器路径；敌人模板的真实生成者 src/Assets/Scripts/Editor/SettlementContentImporter.cs 与三个旧 schema 验证输入（AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv）都不在允许路径，且攻击表 AP 正费候选与旧 cooldownTicks 字段去留尚未冻结。请选择补齐授权的方式。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261006-DATA01",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -107,6 +107,14 @@
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
     "createdAt": "2026-10-06T20:52:46.4319803+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261006-DATA01",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "ced5ef3032f0b6957945d2ac878b308bb919acba85aff974e7806b7f6bbbb4ac"
   }
 }
 ---TASK-BODY---

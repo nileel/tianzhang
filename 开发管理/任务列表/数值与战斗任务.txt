@@ -15,7 +15,7 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
 | D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
-| U-COMBAT-AP-DATA-01 | P1 | deepseek | 待决定 | — | 统一行动力生产数据与严格导入 | 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt |
+| U-COMBAT-AP-DATA-01 | P1 | deepseek | 已排队 | — | 统一行动力生产数据与严格导入 | 开发管理/任务卡/U-COMBAT-AP-DATA-01.txt |
 | U-COMBAT-AP-CHAR-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01 | 角色长期行动力成长与快照 | 开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt |
 | U-COMBAT-AP-SAVE-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-CHAR-01 | 行动力长期输入保存与恢复 | 开发管理/任务卡/U-COMBAT-AP-SAVE-01.txt |
 | U-COMBAT-AP-MOVE-01 | P1 | deepseek | 已排队 | — | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
