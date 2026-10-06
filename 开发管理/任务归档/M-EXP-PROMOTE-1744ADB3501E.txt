@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-SAVE-DELETE-01/U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-07：独立核验来源候选并晋级为 EXP-UNITY-012；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-SAVE-DELETE-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-07 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-012`。来源候选和复审记录直接证实：直接启动 Unity 未调用既有字节快照恢复，令 `ShaderGraphSettings.asset` 产生非预期行尾空白；无图形 UI 测试虽然循环目标标签，实际 `Screen` 恒为640×480。复用既有快照恢复后，有图形定向测试4/4以 `Screen`／PNG 实测的1920×1080、1366×768通过，无图形1/1仅声明实际视口。
+- 去重与边界：现有 active 的 `EXP-UNITY-001` 仅覆盖正式场景 Builder 保存链，`EXP-UNITY-002` 仅覆盖程序集边界，`EXP-UNITY-005` 覆盖探索返回门禁，`EXP-UNITY-006`／`EXP-UNITY-008`／`EXP-UNITY-009`／`EXP-UNITY-010` 覆盖特定 UGUI 文本或重建接缝，均不覆盖直接 Unity 验证的快照恢复与图形／无图形实际分辨率证据。本经验仅限需 Game View 截图的 PlayMode 定向验证；不新增门禁，候选门禁可能留待独立事项。
+- 模型协作：简单：来源候选、直接验证记录、既有经验边界与确定性回链均可直接核验；主模型经 Node REPL 实测为 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

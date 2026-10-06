@@ -1,0 +1,25 @@
+# EXP-UNITY-012 · Unity Game View 验证须实测并恢复快照
+
+## 状态
+
+active；最后核验日期：2026-10-07；事实源：`U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01`、`U-GZ-SAVE-DELETE-01` 的图形／无图形定向验证及复审记录。
+
+## 开工前
+
+适用：直接启动 Unity 并需 Game View 截图的 PlayMode 定向验证。先复用 runner 快照；有图形设备才切换尺寸并断言 Screen/PNG 宽高，无图形声明视口。不得把 nographics 的640×480或目标标签当证据，退出后只保留预期差异。非UI画面、未直启 Unity 或不要求目标尺寸的任务排除；runner 或 Game View API 改变时重新核验。
+
+## 正确处理
+
+先确认所需的是目标分辨率画面还是无图形功能验证。直接启动 Unity 前后复用既有 runner 的项目字节快照恢复流程；有图形设备时以既有 `GameViewSizes` 实际切换尺寸，并同时记录 `Screen`、PNG 宽高和可读画面。无图形定向测试只断言实际视口与功能结果，明确不能替代目标分辨率截图；进程退出后检查工作树只剩预期差异。
+
+## 根因与弯路
+
+直接启动 Unity 没有调用既有字节快照恢复，`ShaderGraphSettings.asset` 的空 `m_Name` 字段被重写为行尾空白，导致工作区干净门禁拒绝候选。原 UI 测试在 `-nographics` 下循环目标尺寸标签，却始终只得到 640×480 的 `Screen`，因而把意图标签误作实际画面证据。两项都源于定向 runner 未把环境恢复和实际运行输出绑定到验收结论。
+
+## 证据
+
+来源候选 `U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01`；失败 run `e3784387-2b04-4655-8e7e-c2fca341f20a` 与候选 `59af92870944cadf232055ae088f4e279aebe350`。`开发管理/关中存档删除验证记录.txt` 记录：有图形定向 PlayMode 4/4 通过，1920×1080 与1366×768的 `Screen`、PNG 宽高一致；无图形定向 1/1 只证明实际视口；Unity 退出后调用既有快照恢复，仅保留预期测试差异。
+
+## 失效条件
+
+`tools/run-unity-playmode-tests.ps1` 的快照恢复、Unity 启动方式、`GameViewSizes`／Game View API、截图生成方式或目标 UI 验收入口被替换时，停止引用并重新核验。

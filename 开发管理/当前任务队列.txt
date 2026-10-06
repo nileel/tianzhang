@@ -6,5 +6,4 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | U-COMBAT-AP-MOVE-01 | external_execute | deepseek | P1 | unity | implementation | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
-| M-EXP-PROMOTE-1744ADB3501E | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01 | 开发管理/任务卡/M-EXP-PROMOTE-1744ADB3501E.txt |
 | M-EXP-PROMOTE-E01EF4237785 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-HEALTHBAR-SLIM-01-UNITY-OVERLAY-EVIDENCE-01 | 开发管理/任务卡/M-EXP-PROMOTE-E01EF4237785.txt |

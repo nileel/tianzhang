@@ -438,6 +438,34 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-010.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-06"
+    },
+    {
+      "id": "EXP-UNITY-012",
+      "title": "Unity Game View 验证须实测并恢复快照",
+      "preflightSummary": "直接启动 Unity 且以 Game View 截图验收时，复用快照恢复，并让图形／无图形证据分别只主张实际结果。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "SetGameSize",
+        "GameViewSizes",
+        "Screen.width",
+        "Screen.height",
+        "Game View"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-012.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-07"
     }
   ],
   "gates": []
