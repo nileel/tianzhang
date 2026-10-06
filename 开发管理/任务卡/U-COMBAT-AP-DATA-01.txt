@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时严格导入。DEC-20261006-DATA03 回复 A（补齐授权保卡、由维护方实际落笔）后，本轮恢复 run 实测卡头 expectedPaths 仍 34 条逐字未变、卡内仍无任何冻结值，A 第三次未落地。本轮首次直读证实：回复通道与 owner run 都不具备改卡能力——finalizer 只 stage／commit 传入 -ExpectedPaths 内的路径，共享入口要求 candidate changed paths ⊆ CandidatePaths，回复恢复只做 ResumeReady＋cherry-pick --no-commit 且不区分 A／B／C。而六条缺失路径（SettlementContentImporter.cs、AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv、BattleSimSelfTests.cs、check-data-chain.ps1）与三项冻结（AP 正费候选、cooldownTicks 去留、import_csv.ps1 处置）缺一不可，硬写会同时打断攻击表旧表头断言、BattleSim 自检、check-data-chain 错误级列检查与 Enemies.csv 精确列校验。请决定由谁落笔，以及是否改走拆卡。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261006-DATA04",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -111,6 +111,14 @@
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
     "createdAt": "2026-10-06T23:56:21.2865774+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261006-DATA04",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "16c6ece85e99cd206d50811035ecfbfa80a87cc2ca81ab49ed4cb9e58ea17afc"
   }
 }
 ---TASK-BODY---
