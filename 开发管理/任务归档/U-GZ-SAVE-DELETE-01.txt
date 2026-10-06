@@ -102,8 +102,8 @@
 
 ### U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-1744ADB3501E
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

@@ -93,8 +93,8 @@
 
 ### U-GZ-HEALTHBAR-SLIM-01-UNITY-OVERLAY-EVIDENCE-01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-E01EF4237785
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity
