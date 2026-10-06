@@ -6,5 +6,5 @@
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
 | D-COMBAT-AP-CONTRACT-01 | codex_execute | codex | P1 | management | design | 统一行动力公共单位与接口合同冻结 | 开发管理/任务卡/D-COMBAT-AP-CONTRACT-01.txt |
-| U-GZ-SAVE-DELETE-01 | external_execute | deepseek | P1 | unity | implementation | 关中开始菜单存档删除与确认 | 开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt |
+| U-GZ-SAVE-DELETE-01 | codex_review | codex | P1 | unity | implementation | 关中开始菜单存档删除与确认 | 开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt |
 | U-GZ-HEALTHBAR-SLIM-01 | external_execute | deepseek | P1 | unity | implementation | 关中头顶血条精简为无文字细条 | 开发管理/任务卡/U-GZ-HEALTHBAR-SLIM-01.txt |

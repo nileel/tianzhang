@@ -1,0 +1,86 @@
+# U-GZ-SAVE-DELETE-01 · 关中开始菜单单槽位删除闭环验证记录
+
+日期：2026-10-06；责任方／修改方：DeepSeek V4.1 Flash（⚠️ 已修改/未审核；变更范围：GameSaveSlotStore 单槽位删除、host/controller/view 接线、Builder 与正式场景确认面板、EditMode 与 PlayMode 测试）。
+主模型：deepseek-flash（入口默认模型）。RunId：85ab878a-adb2-4f1c-9548-e5f6e2924773。
+核对基线：01dd245e6a4b2fcf4a67664d566cc74e4424bed1。候选分支：codex/automation/deepseek/85ab878a-adb2-4f1c-9548-e5f6e2924773/candidate。
+提交绑定：本记录与业务差异包含于同一个 candidate；最终 SHA 以共享入口及 git 提交为准，不在提交自身写入循环 SHA。
+审核状态：待 Codex 复审；本记录不预填任何审核结论。
+
+## 授权、模型协作与预检
+
+- 直接事实：任务卡 U-GZ-SAVE-DELETE-01 的必查范围、实施范围、禁止项与验证；`UNITY_STRUCTURE.runtime.md#正式场景与所有者`（StartMenu 的 Installer 与 Feature 所有者、`GameBootstrap` 只创建并保持 GameRuntime 与存档槽位适配器）；`开发管理/开发-技术经验.txt#Unity 开发经验`（场景生成只走 Editor Builder，不手写 .unity YAML；UI 挂同一 UICanvas）。
+- 模型协作评估（业务写入前）：目标与语义已由卡冻结（单槽位删除、确认/取消、损坏槽位可删、合成错误行不提供删除、活动槽位引用清理）；无跨所有者依赖，改动收敛在 Store→Bootstrap→Installer(host)→Controller→View→Builder→Scene 单一调用链；无既有失败或证据冲突；错误影响为单文件删除但有路径校验兜底；验收明确（EditMode + PlayMode + 边界检查）。结论：有界实现，沿用入口默认单模型 deepseek-flash，不调用辅助智能体——调用链强耦合、共享 host 契约与活动槽位状态，按 `AGENTS.md`「任务粒度与子智能体」由主智能体直接处理。与卡中「模型协作」结论一致，未越过原范围与停止条件。
+- 实际能力核对（写入前）：PowerShell 7.6.5 可用；Unity `6000.3.18f1` 位于 `C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe`；EditMode／PlayMode 测试入口可用；临时目录测试可用（`Path.GetTempPath()`）。**截图能力不可用**：两个 runner 均以 `-nographics` 批处理运行，`Screen` 分辨率不可强设，实际测量为 640×480（见「未验证」）。
+- 预检：共享入口已按 runId／taskId／任务卡 digest／索引 digest 精确绑定本次实时预检，`matched`、`notice`、`mustRead`、`gatePointers` 均空，与卡头 `riskPreflight` 的 `explicitRefs`／`matched`／`gates` 空数组一致；允许路径、领域、事实源与技术路线均未扩展。
+- 原子结果：正式 `StartMenuScene` 可确认删除一个指定槽位；取消与失败不误删；成功立即刷新并移除对应行；最后一个槽位删除后显示空列表提示；损坏槽位可清理；已删除槽位不会被旧活动槽位引用重建。
+
+## 实现与所有者
+
+| 位置 | 归属与变化 |
+|---|---|
+| `GameSaveSlotStore.cs` | 唯一文件适配所有者。新增 `Delete(slotId)`：复用 `TryGetSlotPath` 的合法 ID 与目录内路径校验，只删除该槽位对应的单个 JSON；不解析负载，故损坏档可删。新增 `GameSaveSlotDeleteResult` 与稳定失败原因 `DeleteFailed=8`；无通配、无递归、无跨目录删除。 |
+| `GameBootstrap.cs` | 现有组合根。新增 `DeleteSlot(slotId)`：委托 Store 删除，且仅当成功且 `activeSlotId` 指向该槽位时清空该引用。 |
+| `StartMenuSceneInstaller.cs` | 实现 `IPlayerEntryHost.DeletePlayer`；`ListSlots` 为真实槽位置 `CanDelete=true`，目录级失败合成的 `slots_unavailable` 行置 `CanDelete=false`。 |
+| `IPlayerEntryHost.cs` | `PlayerSlotSummary` 增加 `CanDelete`（与 `CanLoad` 分离，损坏档可删但不可读）；接口增加 `DeletePlayer`。 |
+| `StartMenuController.cs` | 新增 `DeletePlayer`：失败保留列表与存档并显示中文原因，成功才 `RefreshSlots()`。 |
+| `StartMenuView.cs` | 每行在载入按钮内追加右侧 `DeleteSlot_<id>` 删除按钮；新增确认面板（确认／取消）、`CanDelete` 缺省不加删除动作；复用既有 Canvas／字体／按钮风格。 |
+| `StartMenuSceneBuilder.cs` | 新增 `BuildDeleteConfirmation`，`Build()` 调用它；新增增量入口 `天章/场景/增加开始菜单删除确认面板`（与既有 `RebuildSaveSlotList`／`RebuildOriginSelection` 同型），用于在当前正式场景上最小化落盘。 |
+| `StartMenuScene.unity` | 经上述 Builder 保存并重开验证：新增 `SaveDeleteConfirmPanel`（子级 `DeleteConfirmText`／`ConfirmDeleteButton`「确认删除」／`CancelDeleteButton`「取消」，初始 inactive）。 |
+
+未改保存 schema、角色创建与加载语义；未实现自动清理、批量删除、云同步或回收站；未重构保存工作流；未触碰战斗、血条、行动力、养成。
+
+## 验证命令与结果
+
+| 检查 | 命令 | 结果 |
+|---|---|---|
+| 正式场景重建 | `Unity.exe -batchmode -nographics -projectPath src -executeMethod TianZhang.Editor.StartMenuSceneBuilder.RebuildSaveDeleteConfirmation` | 退出码 0；仅新增确认面板对象与 4 个 View 引用，无对象被删除 |
+| EditMode（全量，卡指定入口） | `pwsh -File tools/run-unity-editmode-tests.ps1` | total=590，passed=583，failed=7，skipped=0；7 项与本卡无关（见下） |
+| PlayMode（全量，卡指定入口） | `pwsh -File tools/run-unity-playmode-tests.ps1` | total=75，passed=43，failed=31，skipped=1；失败与本卡无关（见下） |
+| PlayMode（本卡定向） | `Unity.exe -batchmode -nographics -projectPath src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.StartMenuSaveDeletionPlayModeTests -testResults <xml>`，再以 `tools/run-unity-playmode-tests.ps1 -ValidateResultOnly` 校验 | total=4，passed=4，failed=0，skipped=0，result=Passed；校验退出码 0 |
+| 公共接口／程序集边界 | `pwsh -File tools/check-unity-assembly-boundaries.ps1` | OK（assemblies=19，asmrefs=2） |
+| 审核文本 | `pwsh -File tools/check-review-text.ps1 -Paths 开发管理` | OK（687 files） |
+| 行尾空白（暂存前） | `pwsh -File tools/check-pending-whitespace.ps1 -ExpectedPaths <本轮 12 个路径>` | OK（12 files） |
+| Git 暂存检查 | `git diff --cached --check`（由 `tools/automation-finalize-commit.ps1` 执行） | 通过 |
+
+### 本卡测试覆盖
+
+- EditMode `GameSaveSlotStoreTests`（新增 7 项，全部通过）：仅删除目标槽位且其他槽位逐字节不变、非槽位文件与同名目录不受影响；非法 ID／`..` 穿越／带扩展名／超长／中文 ID 被拒且原槽位逐字节保留；槽位不存在返回 `SlotNotFound` 且不创建目录；目录不可用（同名文件占位）返回 `SlotNotFound` 且占位文件保留；损坏与旧 schema 槽位不可读但可删；文件被独占锁定时返回 `DeleteFailed` 且文件逐字节保留。
+- EditMode `FeatureCompositionEditorTests`（新增 3 项，全部通过）：删除经注入 host 契约；真实槽位（可读与不可读）均出现删除按钮，目录级合成行不出现；取消不触达 host、确认才以正确槽位 ID 触达；失败时保留行并显示中文原因。
+- PlayMode `StartMenuSaveDeletionPlayModeTests`（新增 4 项，全部通过，全部基于正式 `StartMenuScene` 与真实指针事件 + 射线命中校验）：取消后两槽位文件逐字节不变且行保留，确认后仅目标文件消失、行即时消失、剩余槽位标签与可载入状态正确且行中心射线仍命中该行按钮（守住既有 `SaveSlot_<id>` 点击契约）；删除最后一个槽位后 `EmptySaveText` 显示、容器子级为 0，且 `SaveActiveSlot()` 由基线可写变为失败、被删文件未被重建；损坏槽位行不可载入但可删除，其余槽位保留；确认界面文案包含存档编号、可读角色名与「不可恢复」，两轮目标分辨率下文案不截断、确认／取消／行删除按钮均在屏内且可命中。
+
+## 已验证
+
+- `GameSaveSlotStore.Delete` 的单槽位语义：只删目标 JSON，其他槽位逐字节不变；非法 ID 与路径穿越被拒；不存在与文件系统失败有稳定结果；损坏／旧 schema 档可删；不产生通配、递归或跨目录删除。
+- 取消路径不写文件、不触达 host；只有确认才调用删除；成功即时重枚举并移除行，最后一个槽位删除后显示空状态。
+- 删除失败保留列表与存档，并显示中文失败原因。
+- 损坏（不可读）真实槽位仍提供删除动作；目录级合成错误行不提供删除动作。
+- 活动槽位引用处理：删除成功后 `activeSlotId` 不再指向该槽位，后续 `SaveActiveSlot()` 失败且不会重建被删文件（含删除前「可写」基线对照）。
+- 正式场景接线：`StartMenuView` 的 4 个新序列化引用分别解析到 `SaveDeleteConfirmPanel`（初始 inactive）、`DeleteConfirmText`、`ConfirmDeleteButton`、`CancelDeleteButton`；`SceneArchitectureEditorTests` 全部通过。
+- 公共接口改动后程序集边界检查、审核文本检查、行尾空白检查均通过。
+
+## 未验证
+
+- **1920×1080 与 1366×768 的实测可读确认界面**：卡要求记录这两个分辨率的确认界面，但两个 runner 都是 `-nographics`，实测 `Screen.width×height` 恒为 640×480；强设分辨率不可行——`SetGameSize` 走 `EditorWindow.GetWindow(GameView)`，在无图形设备时输出 `No graphic device is available to initialize the view.` 并直接判失败。因此本轮只断言与分辨率无关的画布空间条件（文案 `preferredHeight=39` ≤ 其 110 画布单位高的文本框；画布按 1920×1080 参考等比缩放，故在参考尺度放得下即在 1366×768 也放得下），**未取得 1920×1080／1366×768 的实测界面或像素截图证据**。证据行（含实测屏尺寸、scale、面板与按钮世界坐标、文案原文）写入 `%TEMP%\tzg-startmenu-save-deletion-ui-evidence.txt`，未落在仓库内。
+- 全量 PlayMode 与本卡相关的失败（`GuanzhongNavigationTextPlayModeTests`、`GuanzhongPlaytestFlowPlayModeTests`、`GuanzhongCombatLayoutPlayModeTests`）在到达存档行点击前即因同一 `SetGameSize` 限制失败，故「新增删除按钮后既有读档点击仍可用」只有本卡定向用例中的行中心射线校验作为证据，未取得这些既有用例的端到端通过。
+- 7 项 EditMode 与 31 项 PlayMode 失败**未在基线提交上复跑对照**，因此本记录不把它们断言为「基线已失败」这一已证实事实；仅给出与本候选路径不相交的定位证据（见下）。
+- 未做像素级视觉验收；未评价最终美术与体验。
+
+## 与卡无关的既有失败（环境性，供复审参考）
+
+- `CombatUnitPresentationProfileEditorTests`（2 项）与 `ClothWideSleeveExperimentEditorTests`（1 项）：要求 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/`、`assets/source/characters/cloth-wide-sleeve-pilot/` 下的冻结外部素材；`git ls-files` 显示这两个目录**未被 Git 跟踪**，在本 linked worktree 中不存在。候选差异无法产生这些文件。
+- `BattleAnimationSpritePresentationEditorTests`、`GuanzhongFormalEndToEndTests`、`GuanzhongFormalUiTextTests`、`CombatUnitPresentationProfileEditorTests`（校验顺序 1 项）：分别涉及 AdventureScene 探针组、遭遇战数值快照与战斗文本解析，均不在本候选改动路径上；`AdventureScene.unity` 本轮未被修改。
+- PlayMode 侧除同一 `SetGameSize` 限制外，另有 3D 表现 provider（`AssertFormalProviderUnit` 取不到单位）与战斗 HUD 标签重叠等失败，同属本轮未改动的表现链。
+
+## 残留风险
+
+- `StartMenuScene.unity` 本轮由当前 Unity 版本整体重新序列化：语义上只新增确认面板 4 个对象与 4 个 View 引用，但 fileID 与文档顺序发生变化，且去除了 Unity 新写入的 86 处空值行尾空格（`m_Name: `／`m_Text: `，基线为 0 处）。diff 因此大于纯增量，复审请以对象与引用解析结果为准。
+- 防止「删档被重建」目前只覆盖 `GameBootstrap.SaveActiveSlot` 这一条写入路径；若将来出现第二个 `activeSlotId` 写入者或直接以槽位 ID 写盘的路径，需同步清理引用。
+- `DeleteSlot` 的活动槽位比较使用 `OrdinalIgnoreCase`，与 Store 既有 `TryGetSlotPath` 的 Windows 大小写不敏感路径判定保持一致；在大小写敏感文件系统上该行为需重新裁决。
+- 回滚限本卡代码、场景与测试差异；功能回滚不恢复玩家已确认删除的数据。本轮验收全程使用任务临时目录，未触碰真实玩家存档。
+
+## 请求复审范围
+
+- 文件边界：是否只删除合法槽位对应的单个 JSON，无通配／递归／跨目录。
+- 取消与失败行为：取消不写文件、失败不误删不假报成功、中文原因可读。
+- 活动槽位引用清理是否足以阻止旧引用重建被删文件，且不越界删除其他槽位或重建会话机制。
+- 真实 UI 证据是否足以支撑「确认后列表即时刷新、最后一项显示空状态、损坏槽位可清理」，以及 1920×1080／1366×768 实测缺口的处置意见。

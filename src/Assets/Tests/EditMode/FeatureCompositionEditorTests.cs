@@ -14,6 +14,7 @@ using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace TianZhang.Tests
 {
@@ -215,6 +216,149 @@ namespace TianZhang.Tests
             }
         }
 
+        [Test]
+        public void ExistingPlayerDeletionUsesTheInjectedEntryContract()
+        {
+            var go = new GameObject("StartMenuControllerDeleteTest");
+            try
+            {
+                var controller = go.AddComponent<StartMenuController>();
+                var host = new RecordingEntryHost();
+                controller.Configure(host, null, null);
+
+                controller.DeletePlayer("slot_existing");
+
+                Assert.AreEqual("slot_existing", host.DeletedSlotId);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void SlotRowDeletionRequiresConfirmationAndCancelNeverCallsTheHost()
+        {
+            var root = new GameObject("StartMenuViewDeleteTest");
+            try
+            {
+                var view = root.AddComponent<StartMenuView>();
+                var container = new GameObject("SlotContainer", typeof(RectTransform));
+                container.transform.SetParent(root.transform, false);
+                var panel = new GameObject("DeleteConfirmPanel", typeof(RectTransform));
+                panel.transform.SetParent(root.transform, false);
+                Text message = CreateText(panel.transform, "DeleteConfirmText");
+                Button confirm = CreateButton(panel.transform, "ConfirmDeleteButton");
+                Button cancel = CreateButton(panel.transform, "CancelDeleteButton");
+                SetPrivateField(view, "slotContainer", container.transform);
+                SetPrivateField(view, "deleteConfirmPanel", panel);
+                SetPrivateField(view, "deleteConfirmText", message);
+                SetPrivateField(view, "deleteConfirmButton", confirm);
+                SetPrivateField(view, "deleteCancelButton", cancel);
+
+                var deleted = new List<string>();
+                view.Configure(() => { }, _ => { }, deleted.Add);
+                view.ShowSlots(new[]
+                {
+                    new PlayerSlotSummary("slot_keep", "保留角色", true, true, null),
+                    new PlayerSlotSummary("broken", null, false, true, "InvalidSaveData"),
+                    new PlayerSlotSummary("slots_unavailable", null, false, false, "DirectoryUnavailable"),
+                });
+
+                Button keepDelete = DeleteButton(container.transform, "slot_keep");
+                Button brokenDelete = DeleteButton(container.transform, "broken");
+                Assert.IsNotNull(keepDelete, "a readable slot must expose its own delete action");
+                Assert.IsNotNull(brokenDelete, "an unreadable real slot must still be deletable");
+                Assert.IsNull(
+                    DeleteButton(container.transform, "slots_unavailable"),
+                    "a directory-level synthetic row must not offer deletion");
+
+                keepDelete.onClick.Invoke();
+                Assert.IsTrue(panel.activeSelf);
+                StringAssert.Contains("slot_keep", message.text);
+                StringAssert.Contains("保留角色", message.text);
+                StringAssert.Contains("不可恢复", message.text);
+
+                cancel.onClick.Invoke();
+                Assert.IsFalse(panel.activeSelf);
+                Assert.IsEmpty(deleted, "cancelling a deletion must not reach the host");
+
+                brokenDelete.onClick.Invoke();
+                Assert.IsTrue(panel.activeSelf);
+                StringAssert.Contains("broken", message.text);
+                StringAssert.Contains("无法读取", message.text);
+                confirm.onClick.Invoke();
+                Assert.IsFalse(panel.activeSelf);
+                CollectionAssert.AreEqual(new[] { "broken" }, deleted);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void FailedSlotDeletionKeepsTheRowsAndReportsTheReasonInChinese()
+        {
+            var root = new GameObject("StartMenuDeleteFailureTest");
+            try
+            {
+                var view = root.AddComponent<StartMenuView>();
+                var container = new GameObject("SlotContainer", typeof(RectTransform));
+                container.transform.SetParent(root.transform, false);
+                var panel = new GameObject("DeleteConfirmPanel", typeof(RectTransform));
+                panel.transform.SetParent(root.transform, false);
+                SetPrivateField(view, "slotContainer", container.transform);
+                SetPrivateField(view, "deleteConfirmPanel", panel);
+                SetPrivateField(view, "deleteConfirmText", CreateText(panel.transform, "DeleteConfirmText"));
+                Button confirm = CreateButton(panel.transform, "ConfirmDeleteButton");
+                SetPrivateField(view, "deleteConfirmButton", confirm);
+                SetPrivateField(view, "deleteCancelButton", CreateButton(panel.transform, "CancelDeleteButton"));
+                Text failure = CreateText(root.transform, "FailureText");
+                SetPrivateField(view, "failureText", failure);
+
+                var host = new RecordingEntryHost
+                {
+                    DeleteResult = PlayerEntryResult.Failed("DeleteFailed"),
+                };
+                var controller = root.AddComponent<StartMenuController>();
+                controller.Configure(host, view, null);
+                controller.RefreshSlots();
+
+                controller.DeletePlayer("slot_keep");
+
+                Assert.AreEqual(1, host.DeleteCount);
+                StringAssert.Contains("删除存档失败", failure.text);
+                StringAssert.Contains("保留", failure.text);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static Text CreateText(Transform parent, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            return go.GetComponent<Text>();
+        }
+
+        private static Button CreateButton(Transform parent, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            return go.GetComponent<Button>();
+        }
+
+        private static Button DeleteButton(Transform container, string slotId)
+        {
+            Transform row = container.Find("SaveSlot_" + slotId);
+            if (row == null) return null;
+            Transform button = row.Find("DeleteSlot_" + slotId);
+            return button == null ? null : button.GetComponent<Button>();
+        }
+
         private static string CreateTemporaryDirectoryPath()
         {
             return Path.Combine(
@@ -249,6 +393,9 @@ namespace TianZhang.Tests
         private sealed class RecordingEntryHost : IPlayerEntryHost
         {
             public string LoadedSlotId { get; private set; }
+            public string DeletedSlotId { get; private set; }
+            public int DeleteCount { get; private set; }
+            public PlayerEntryResult DeleteResult { get; set; } = PlayerEntryResult.Success();
             public IReadOnlyList<PlayerSlotSummary> ListSlots() => new PlayerSlotSummary[0];
             public PlayerEntryResult CreateNewPlayer(string slotId, CharacterData profile, string startNodeId) =>
                 PlayerEntryResult.Success();
@@ -256,6 +403,12 @@ namespace TianZhang.Tests
             {
                 LoadedSlotId = slotId;
                 return PlayerEntryResult.Success();
+            }
+            public PlayerEntryResult DeletePlayer(string slotId)
+            {
+                DeletedSlotId = slotId;
+                DeleteCount++;
+                return DeleteResult;
             }
         }
     }

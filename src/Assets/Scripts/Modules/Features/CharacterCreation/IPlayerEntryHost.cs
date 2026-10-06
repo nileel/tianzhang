@@ -6,17 +6,24 @@ namespace TianZhang.Features.CharacterCreation
 {
     public sealed class PlayerSlotSummary
     {
-        public PlayerSlotSummary(string slotId, string displayName, bool canLoad, string failureReason)
+        public PlayerSlotSummary(
+            string slotId,
+            string displayName,
+            bool canLoad,
+            bool canDelete,
+            string failureReason)
         {
             SlotId = slotId;
             DisplayName = displayName;
             CanLoad = canLoad;
+            CanDelete = canDelete;
             FailureReason = failureReason;
         }
 
         public string SlotId { get; }
         public string DisplayName { get; }
         public bool CanLoad { get; }
+        public bool CanDelete { get; }
         public string FailureReason { get; }
     }
 
@@ -40,5 +47,6 @@ namespace TianZhang.Features.CharacterCreation
         IReadOnlyList<PlayerSlotSummary> ListSlots();
         PlayerEntryResult CreateNewPlayer(string slotId, CharacterData profile, string startNodeId);
         PlayerEntryResult LoadPlayer(string slotId);
+        PlayerEntryResult DeletePlayer(string slotId);
     }
 }

@@ -1,4 +1,4 @@
-﻿# 场景与 Unity 任务列表（✅ 已审核）
+# 场景与 Unity 任务列表（✅ 已审核）
 
 - 2026-09-28：石甲兽 ASSET-02 出图故障已定位并修复；本人批准清理十视图后，首次 FBX 导出与工厂空场景回读通过，source 按哈希交付并归档。双 Profile 卡两个前置均已解除，完成 schema 2/五项冻结输入/模型协作准备后进入 ready；正式接线继续等待 Profile 验收。
 
@@ -66,7 +66,7 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-GZ-SAVE-DELETE-01 | P1 | deepseek | 已排队 | — | 关中开始菜单存档删除与确认 | 开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt |
+| U-GZ-SAVE-DELETE-01 | P1 | codex | 已排队 | — | 关中开始菜单存档删除与确认 | 开发管理/任务卡/U-GZ-SAVE-DELETE-01.txt |
 | U-GZ-HEALTHBAR-SLIM-01 | P1 | deepseek | 已排队 | — | 关中头顶血条精简为无文字细条 | 开发管理/任务卡/U-GZ-HEALTHBAR-SLIM-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |

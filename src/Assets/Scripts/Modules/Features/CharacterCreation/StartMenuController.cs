@@ -24,7 +24,7 @@ namespace TianZhang.Features.CharacterCreation
         private void Start()
         {
             if (host == null) return;
-            view?.Configure(OpenNewPlayer, LoadPlayer);
+            view?.Configure(OpenNewPlayer, LoadPlayer, DeletePlayer);
             RefreshSlots();
         }
 
@@ -43,6 +43,32 @@ namespace TianZhang.Features.CharacterCreation
         {
             PlayerEntryResult result = host.LoadPlayer(slotId);
             if (!result.Succeeded) view?.ShowFailure(result.FailureReason);
+        }
+
+        /// <summary>
+        /// Removes one confirmed slot. A failure keeps the existing list and the stored file intact,
+        /// and only a confirmed success re-enumerates so the removed row disappears immediately.
+        /// </summary>
+        public void DeletePlayer(string slotId)
+        {
+            PlayerEntryResult result = host.DeletePlayer(slotId);
+            if (!result.Succeeded)
+            {
+                view?.ShowFailure(DescribeDeleteFailure(result.FailureReason));
+                return;
+            }
+            RefreshSlots();
+        }
+
+        private static string DescribeDeleteFailure(string reason)
+        {
+            switch (reason)
+            {
+                case "InvalidSlotId": return "存档编号无效，未删除任何存档。";
+                case "SlotNotFound": return "存档不存在，可能已被删除。";
+                case "DeleteFailed": return "删除存档失败，存档仍保留。";
+                default: return "删除存档失败：" + reason;
+            }
         }
 
         public void CompleteNewPlayer(string slotId, CharacterData profile, string startNodeId)

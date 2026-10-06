@@ -15,6 +15,7 @@ namespace TianZhang.Infrastructure.Persistence
         InvalidSaveData = 5,
         MissingPlayerPayload = 6,
         WriteFailed = 7,
+        DeleteFailed = 8,
     }
 
     public sealed class GameSaveSlotSummary
@@ -118,6 +119,28 @@ namespace TianZhang.Infrastructure.Persistence
         public static GameSaveSlotWriteResult Failed(GameSaveSlotFailureReason failureReason)
         {
             return new GameSaveSlotWriteResult(false, failureReason);
+        }
+    }
+
+    public sealed class GameSaveSlotDeleteResult
+    {
+        private GameSaveSlotDeleteResult(bool succeeded, GameSaveSlotFailureReason failureReason)
+        {
+            Succeeded = succeeded;
+            FailureReason = failureReason;
+        }
+
+        public bool Succeeded { get; }
+        public GameSaveSlotFailureReason FailureReason { get; }
+
+        public static GameSaveSlotDeleteResult Success()
+        {
+            return new GameSaveSlotDeleteResult(true, GameSaveSlotFailureReason.None);
+        }
+
+        public static GameSaveSlotDeleteResult Failed(GameSaveSlotFailureReason failureReason)
+        {
+            return new GameSaveSlotDeleteResult(false, failureReason);
         }
     }
 
@@ -262,6 +285,28 @@ namespace TianZhang.Infrastructure.Persistence
             finally
             {
                 TryDeleteTemporaryFile(temporaryPath);
+            }
+        }
+
+        /// <summary>
+        /// Removes exactly one slot file resolved from a validated slot id.
+        /// Deletion never parses the payload, so an unreadable slot can still be cleared.
+        /// </summary>
+        public GameSaveSlotDeleteResult Delete(string slotId)
+        {
+            if (!TryGetSlotPath(slotId, out string slotPath))
+                return GameSaveSlotDeleteResult.Failed(GameSaveSlotFailureReason.InvalidSlotId);
+            if (!File.Exists(slotPath))
+                return GameSaveSlotDeleteResult.Failed(GameSaveSlotFailureReason.SlotNotFound);
+
+            try
+            {
+                File.Delete(slotPath);
+                return GameSaveSlotDeleteResult.Success();
+            }
+            catch (Exception exception) when (IsFileSystemFailure(exception))
+            {
+                return GameSaveSlotDeleteResult.Failed(GameSaveSlotFailureReason.DeleteFailed);
             }
         }
 

@@ -62,9 +62,15 @@ namespace TianZhang.Bootstrap
             GameSaveSlotListResult result = bootstrap.SlotStore.ListSlots();
             if (!result.Succeeded)
             {
+                // A directory-level failure has no real slot file behind it, so deletion stays closed.
                 return new[]
                 {
-                    new PlayerSlotSummary("slots_unavailable", null, false, result.FailureReason.ToString()),
+                    new PlayerSlotSummary(
+                        "slots_unavailable",
+                        null,
+                        false,
+                        false,
+                        result.FailureReason.ToString()),
                 };
             }
 
@@ -75,6 +81,7 @@ namespace TianZhang.Bootstrap
                     slot.SlotId,
                     slot.CharacterDisplayName,
                     slot.IsReadable,
+                    true,
                     slot.FailureReason == GameSaveSlotFailureReason.None
                         ? null
                         : slot.FailureReason.ToString()));
@@ -137,6 +144,14 @@ namespace TianZhang.Bootstrap
                 Debug.LogException(exception);
                 return PlayerEntryResult.Failed("save_restore_failed");
             }
+        }
+
+        public PlayerEntryResult DeletePlayer(string slotId)
+        {
+            GameSaveSlotDeleteResult result = bootstrap.DeleteSlot(slotId);
+            return result.Succeeded
+                ? PlayerEntryResult.Success()
+                : PlayerEntryResult.Failed(result.FailureReason.ToString());
         }
 
         private static string ResolveScene(NavigationStateSnapshot navigation)

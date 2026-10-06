@@ -4,13 +4,13 @@
   "id": "U-GZ-SAVE-DELETE-01",
   "title": "关中开始菜单存档删除与确认",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-10-05 用户试玩反馈并明确要求建立任务；存档删除范围、所有者与验收已冻结，完成后交 Codex 独立复审。",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs",
@@ -34,7 +34,11 @@
     "开发管理/任务归档/U-GZ-SAVE-DELETE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # U-GZ-SAVE-DELETE-01 · 关中开始菜单存档删除与确认

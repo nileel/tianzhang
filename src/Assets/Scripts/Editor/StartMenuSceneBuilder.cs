@@ -54,6 +54,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(menuView, "emptyText", emptyText);
             SceneBuildSupport.SetObject(menuView, "failureText", menuFailure);
             BuildSaveSlotList(menuView, menuPanel);
+            BuildDeleteConfirmation(menuView, canvas);
             SceneBuildSupport.SetObject(creationView, "panel", creationPanel);
             SceneBuildSupport.SetObject(creationView, "slotIdInput", slotInput);
             SceneBuildSupport.SetObject(creationView, "characterNameInput", nameInput);
@@ -107,6 +108,43 @@ namespace TianZhang.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene))
                 throw new System.InvalidOperationException("start_menu_scene_save_failed");
+        }
+
+        [MenuItem("天章/场景/增加开始菜单删除确认面板")]
+        public static void RebuildSaveDeleteConfirmation()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.StartMenuScenePath, OpenSceneMode.Single);
+            StartMenuView view = Object.FindFirstObjectByType<StartMenuView>(FindObjectsInactive.Include);
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            if (view == null || canvas == null)
+                throw new System.InvalidOperationException("start_menu_delete_confirmation_owner_missing");
+            Transform previous = canvas.transform.Find("SaveDeleteConfirmPanel");
+            if (previous != null) Object.DestroyImmediate(previous.gameObject);
+            BuildDeleteConfirmation(view, canvas);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+                throw new System.InvalidOperationException("start_menu_scene_save_failed");
+        }
+
+        private static void BuildDeleteConfirmation(StartMenuView view, Canvas canvas)
+        {
+            GameObject panel = SceneBuildSupport.CreatePanel(
+                "SaveDeleteConfirmPanel",
+                canvas.transform,
+                new Vector2(0.32f, 0.3f),
+                new Vector2(0.68f, 0.7f));
+            SceneBuildSupport.AddVerticalLayout(panel);
+            Text message = SceneBuildSupport.CreateText("DeleteConfirmText", panel.transform, string.Empty, 18);
+            LayoutElement messageLayout = message.gameObject.AddComponent<LayoutElement>();
+            messageLayout.minHeight = messageLayout.preferredHeight = 110f;
+            messageLayout.flexibleHeight = 0f;
+            Button confirm = SceneBuildSupport.CreateButton("ConfirmDeleteButton", panel.transform, "确认删除", out _);
+            Button cancel = SceneBuildSupport.CreateButton("CancelDeleteButton", panel.transform, "取消", out _);
+            panel.SetActive(false);
+            SceneBuildSupport.SetObject(view, "deleteConfirmPanel", panel);
+            SceneBuildSupport.SetObject(view, "deleteConfirmText", message);
+            SceneBuildSupport.SetObject(view, "deleteConfirmButton", confirm);
+            SceneBuildSupport.SetObject(view, "deleteCancelButton", cancel);
         }
 
         private static void BuildSaveSlotList(StartMenuView view, GameObject panel)

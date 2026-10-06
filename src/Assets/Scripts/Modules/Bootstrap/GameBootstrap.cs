@@ -56,6 +56,18 @@ namespace TianZhang.Bootstrap
             return SlotStore.Write(activeSlotId, Runtime.CaptureSave());
         }
 
+        /// <summary>
+        /// Deletes one slot and drops the active-slot reference that pointed at it, so a later
+        /// <see cref="SaveActiveSlot"/> cannot recreate the file the player just removed.
+        /// </summary>
+        public GameSaveSlotDeleteResult DeleteSlot(string slotId)
+        {
+            GameSaveSlotDeleteResult result = SlotStore.Delete(slotId);
+            if (result.Succeeded && string.Equals(activeSlotId, slotId, StringComparison.OrdinalIgnoreCase))
+                activeSlotId = null;
+            return result;
+        }
+
         private void Awake()
         {
             if (instance != null && instance != this)

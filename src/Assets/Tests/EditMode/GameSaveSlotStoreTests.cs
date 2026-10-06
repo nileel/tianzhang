@@ -163,6 +163,118 @@ namespace TianZhang.Tests
             Assert.That(write.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.DirectoryUnavailable));
         }
 
+        [Test]
+        public void DeletingOneSlotRemovesOnlyThatSlotAndLeavesEveryOtherFileIntact()
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_b", CreateEnvelope("player_b", "乙角色")).Succeeded, Is.True);
+            string keptPath = Path.Combine(temporaryDirectory, "slot_b.json");
+            byte[] keptBefore = File.ReadAllBytes(keptPath);
+            string notePath = Path.Combine(temporaryDirectory, "notes.txt");
+            File.WriteAllText(notePath, "非槽位文件");
+            string siblingDirectory = Path.Combine(temporaryDirectory, "slot_c.json");
+            Directory.CreateDirectory(siblingDirectory);
+
+            GameSaveSlotDeleteResult delete = store.Delete("slot_a");
+
+            Assert.That(delete.Succeeded, Is.True);
+            Assert.That(delete.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.None));
+            Assert.That(File.Exists(Path.Combine(temporaryDirectory, "slot_a.json")), Is.False);
+            Assert.That(File.ReadAllBytes(keptPath), Is.EqualTo(keptBefore));
+            Assert.That(File.ReadAllText(notePath), Is.EqualTo("非槽位文件"));
+            Assert.That(Directory.Exists(siblingDirectory), Is.True);
+            Assert.That(
+                store.ListSlots().Slots.Select(slot => slot.SlotId),
+                Is.EqualTo(new[] { "slot_b" }));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("../slot_a")]
+        [TestCase("..\\slot_a")]
+        [TestCase("slot_a/../slot_a")]
+        [TestCase("slot_a.json")]
+        [TestCase("含中文")]
+        public void DeleteRejectsInvalidSlotIdsAndKeepsTheStoredSlot(string slotId)
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
+            string slotPath = Path.Combine(temporaryDirectory, "slot_a.json");
+            byte[] before = File.ReadAllBytes(slotPath);
+
+            GameSaveSlotDeleteResult delete = store.Delete(slotId);
+
+            Assert.That(delete.Succeeded, Is.False);
+            Assert.That(delete.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.InvalidSlotId));
+            Assert.That(File.ReadAllBytes(slotPath), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void DeleteReportsMissingSlotsWithoutCreatingTheDirectoryOrAnyFile()
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+
+            GameSaveSlotDeleteResult missing = store.Delete("slot_a");
+
+            Assert.That(missing.Succeeded, Is.False);
+            Assert.That(missing.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.SlotNotFound));
+            Assert.That(Directory.Exists(temporaryDirectory), Is.False);
+        }
+
+        [Test]
+        public void DeleteAgainstAnUnavailableDirectoryKeepsTheBlockingFileAndReportsSlotNotFound()
+        {
+            string blockedPath = Path.Combine(temporaryDirectory, "blocked");
+            Directory.CreateDirectory(temporaryDirectory);
+            File.WriteAllText(blockedPath, "not a directory");
+            var store = new GameSaveSlotStore(blockedPath);
+
+            GameSaveSlotDeleteResult delete = store.Delete("slot_a");
+
+            Assert.That(delete.Succeeded, Is.False);
+            Assert.That(delete.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.SlotNotFound));
+            Assert.That(File.ReadAllText(blockedPath), Is.EqualTo("not a directory"));
+        }
+
+        [Test]
+        public void CorruptAndLegacySlotsStayUnreadableButCanStillBeDeleted()
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+            Directory.CreateDirectory(temporaryDirectory);
+            File.WriteAllText(Path.Combine(temporaryDirectory, "broken.json"), "not-json");
+            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":4}");
+            Assert.That(store.Read("broken").Succeeded, Is.False);
+            Assert.That(store.Read("old").Succeeded, Is.False);
+
+            GameSaveSlotDeleteResult broken = store.Delete("broken");
+            GameSaveSlotDeleteResult legacy = store.Delete("old");
+
+            Assert.That(broken.Succeeded, Is.True);
+            Assert.That(legacy.Succeeded, Is.True);
+            Assert.That(Directory.GetFiles(temporaryDirectory, "*.json"), Is.Empty);
+            Assert.That(store.ListSlots().Slots, Is.Empty);
+        }
+
+        [Test]
+        public void LockedSlotFileReportsDeleteFailedAndSurvivesByteForByte()
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
+            string slotPath = Path.Combine(temporaryDirectory, "slot_a.json");
+            byte[] before = File.ReadAllBytes(slotPath);
+
+            GameSaveSlotDeleteResult delete;
+            using (new FileStream(slotPath, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                delete = store.Delete("slot_a");
+            }
+
+            Assert.That(delete.Succeeded, Is.False);
+            Assert.That(delete.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.DeleteFailed));
+            Assert.That(File.ReadAllBytes(slotPath), Is.EqualTo(before));
+        }
+
         private static GameSaveSlotSummary Find(GameSaveSlotListResult list, string slotId)
         {
             return list.Slots.Single(slot => slot.SlotId == slotId);
