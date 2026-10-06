@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时严格导入。DEC-20261006-DATA02 已回复 A（补四条路径并冻结 AP 候选），但本轮实测卡头 expectedPaths 仍 34 条逐字未变、卡内 ready 准备正文也未冻结任何值，A 第二次未落地；机制上 feishu_card 回复只能表达选项，机械环节只做「恢复 ready + cherry-pick checkpoint」，改卡必须由具备仓库写权限的维护方真实落笔。本轮首次查明 A 原先列的四条路径本身仍不充分：攻击表表头迁移还会打断 simulations/BattleSim/BattleSimSelfTests.cs 的严格表头等值校验（attack_profile_header_not_exact）与 tools/check-data-chain.ps1:493 的错误级有序 38 列检查（错误级，会退出 1，非上一轮所记的警告），敌人链还需要 ContentCatalogDataTests.cs。请选择补齐授权与落笔责任的路线。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261006-DATA03",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -111,8 +111,16 @@
     ],
     "residualRisk": "若在授权补齐前强行迁移，仓库会同时出现多组新增失败面：攻击表旧 38 列表头断言（AttackProfileDataTests.cs 多条用例＋AttackProfiles.fixture.csv）、BattleSim 自检 attack_profile_header_not_exact、check-data-chain.ps1 的 ATTACK_PROFILE_HEADER_NOT_EXACT 与 CSV_SCHEMA_* 错误级结论（退出 1），以及 Enemies.csv 精确列校验抛 InvalidDataException（连带 ContentImportCoordinator.ImportAll 与 ContentCatalogDataTests 失败）；五条敌人模板的 actionPointMaximumUnits／movementEfficiencyMilliUnits 只能停在 0。本轮继续未写入该中间状态，风险仅在后续未授权实施时出现。本卡已连续三轮停在同一处授权／数值缺口（DEC-20261006-DATA01、DEC-20261006-DATA02 两次回复 A 均未落卡），而回复选项这个动作本身不会改卡，缺口不会自行消失，本卡会继续占用队列位置，U-COMBAT-AP-CHAR-01／CORE／SIM 等下游解锁继续顺延。合同§九对敌人模板所有者与 AdventureContentImporter.cs 的定位仍是错的，未更正前按合同准备 ready 会重复同一偏差。tools/import_csv.ps1::Import-Enemies 是同一组敌人 asset 的第二手工写入者，未处置前迁移结果可被手工重跑覆盖。以上失败面均为静态核对结论，未实机跑红复现。",
     "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
-    "createdAt": "2026-10-06T22:54:55.8890080+08:00",
+    "createdAt": "2026-10-06T22:54:55.889008+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261006-DATA03",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "a86efa48911ee3047f70eb1c11acbaaabd27db0749f52fade60e9b0435ff63d5"
   }
 }
 ---TASK-BODY---
