@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP-CONTRACT-01"
-  ],
-  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "公共合同已正式完成；三条 AttackProfiles 生产行、现有角色／敌人输入、严格导入器与字面量 expectedPaths 已核验，schema 2 风险预检为 ok（零命中／零门禁），可由既定 external_execute/deepseek 执行。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -63,7 +61,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：现有三攻击和已存在角色／敌人定义能严格导入显式 AP、双时间字段及独立 v。
-- 直接前置：D-COMBAT-AP-CONTRACT-01
+- 直接前置已完成；当前无剩余具名前置。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围
@@ -84,8 +82,14 @@
 
 ## 模型协作
 
-- 主责 DeepSeek V4.1 Flash，冻结合同内实施；Codex 独立复审，不自审。当前blocked，临近ready按真实接口／失败影响重新评估复杂度与执行能力。
+- 2026-10-06 ready 评估：三条 AttackProfiles 生产行及角色／敌人导入链均为已存在的明确输入，任务只在冻结合同内迁移严格导入与现有 asset；跨 CSV、asset 和导入器，属于有界实施，主责保持 DeepSeek V4.1 Flash，完成后由 Codex 独立复审，不自审。
 - 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+
+## 2026-10-06 ready 准备核验
+
+- 已核对公共合同的 completed 归档且无同 ID 活跃卡；本卡具名前置已移除。当前 `AttackProfiles.csv` 仍严格只有 `basic_unarmed`、`spell_guanshiji`、`spell_julingshu` 三条生产行；`Characters.csv` 两条角色行和 `Enemies.csv` 目标敌人行均存在。
+- 已扫描 `AttackProfileData`、`CharacterData`、`EnemyData` 与三条导入器链；既有 expectedPaths 已覆盖字段、三张生产 asset、角色／敌人 asset、导入器与定向测试，没有新增运行时所有者或写入路径。
+- 已运行 `get-experience-risk-preflight.ps1 -TaskId U-COMBAT-AP-DATA-01`：status=ok，explicitRefs、matched、gates 和 gatePointers 均为空，与 schema 2 投影一致；无 mustRead 正文可消费。
 
 ## 验证
 
