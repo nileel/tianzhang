@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "公共合同已正式完成；三条 AttackProfiles 生产行、现有角色／敌人输入、严格导入器与字面量 expectedPaths 已核验，schema 2 风险预检为 ok（零命中／零门禁），可由既定 external_execute/deepseek 执行。",
+  "stateReason": "等待负责人决定：U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时迁移，但卡头只授权了三条导入器路径；敌人模板的真实生成者 src/Assets/Scripts/Editor/SettlementContentImporter.cs 与三个旧 schema 验证输入（AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv）都不在允许路径，且攻击表 AP 正费候选与旧 cooldownTicks 字段去留尚未冻结。请选择补齐授权的方式。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -52,6 +52,61 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
+  },
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-COMBAT-AP-DATA-01",
+    "sourceRunId": "0dea187a-cca4-4f8a-8e36-889c974f7ade",
+    "owner": "deepseek",
+    "route": "external_execute",
+    "decisionId": "DEC-20261006-DATA01",
+    "question": "U-COMBAT-AP-DATA-01 的原子结果需要三攻击＋Characters.csv 两行＋Enemies.csv 五行同时迁移，但卡头只授权了三条导入器路径；敌人模板的真实生成者 src/Assets/Scripts/Editor/SettlementContentImporter.cs 与三个旧 schema 验证输入（AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv）都不在允许路径，且攻击表 AP 正费候选与旧 cooldownTicks 字段去留尚未冻结。请选择补齐授权的方式。",
+    "options": [
+      {
+        "key": "A",
+        "label": "扩路径保卡：把 SettlementContentImporter.cs、AttackProfileDataTests.cs、ContentCatalogDataTests.cs、Fixtures/AttackProfiles.fixture.csv 补进 expectedPaths，同时冻结攻击表 actionPointCostUnits／minimumNetCostUnits 生产候选与旧 cooldownTicks 去留，重跑风险预检后恢复 ready，本卡一次完成三攻击＋两角色＋五敌人"
+      },
+      {
+        "key": "B",
+        "label": "拆卡：把敌人模板投影（Enemies.csv 五行、SettlementContentImporter.cs、五条 Char_Enemy_enemy_*.asset、ContentCatalogDataTests.cs）拆成独立叶卡，本卡缩为攻击表＋Characters.csv 两行，由 Codex 规划上下文一次性建卡并保持父项拓扑"
+      },
+      {
+        "key": "C",
+        "label": "保持 blocked：先更正合同§九 U-COMBAT-AP-DATA-01 行的所有者定位（AdventureContentImporter.cs 改为 SettlementContentImporter.cs）与 W3 边界，再重新准备 ready；本轮不吸收任何业务变化"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "选 A 只需维护者补四条字面量路径并冻结 AP 正费候选与 cooldownTicks 去留，本卡仍是一个原子结果，不需要新建卡或改父项拓扑；选 B 要把敌人链拆成新叶子，需要 Codex 规划上下文建卡并调整本卡范围与队列投影；选 C 使本卡继续占用 blocked，攻击表与角色表都无法推进，下游 U-COMBAT-AP-CHAR-01／CORE／SIM 的解锁时间继续顺延。任一路线在本轮 checkpoint 中都没有业务变化需要合并，唯一新增文件是验证记录。",
+    "plainSummary": {
+      "situation": "本卡要把三攻击、两角色、五敌人的行动力数据做严格导入，但卡头只授权了三个导入器文件；敌人模板其实由 SettlementContentImporter.cs 生成，它和三个存放旧表头的测试／fixture 都不在允许路径，写入会直接让这些检查失败。",
+      "impact": "照原路径硬写，仓库会同时出现攻击表旧表头断言与敌人表精确列校验两组失败，五条敌人模板的行动力上限和位移效率只能停在 0；不写则本卡一行业务代码都落不下去。",
+      "action": "请选 A 扩四条路径并冻结攻击表行动力费用候选与旧 cooldownTicks 去留，选 B 把敌人链拆成独立卡，或选 C 先把卡保持 blocked 并更正合同里的所有者定位。"
+    },
+    "checkpointCommit": "738c337b22ee5ae7445f9401ae2263854384b8d1",
+    "baseCommit": "8f98acb97c8c2a41aa85888662d27541edd7d3e0",
+    "branch": "codex/automation/deepseek/0dea187a-cca4-4f8a-8e36-889c974f7ade/candidate",
+    "changedPaths": [
+      "开发管理/U-COMBAT-AP-DATA-01-验证记录.txt"
+    ],
+    "verified": [
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-DATA-01 -Postcondition ExternalDispatchReady -ExpectedOwner deepseek -OutputJson 退出 0，status=ok、cardCount=79、readyCount=2、taskState=ready、postcondition 一致",
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理 退出 0，OK，695 files checked；新增本文后定向复查退出 0，OK，1 files checked",
+      "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 开发管理/U-COMBAT-AP-DATA-01-验证记录.txt 退出 0，OK，1 files checked，fix=False；automation-finalize-commit.ps1 提交前复验同一结论",
+      "静态核对（awk／grep 只读，退出 0）：Enemies.csv 表头 25 列与 SettlementContentImporter.cs:49-55 的 ContentEnemyColumns 25 项严格相等，且 :688 调用 CsvTableReader.RequireExactColumns 要求列数与列名完全一致；AttackProfiles.csv 表头、CombatContentImporter.AttackProfileColumns、AttackProfileDataTests.cs:34-45 内联表头、AttackProfiles.fixture.csv 表头均为 38 列",
+      "定位受影响的五条既有用例（AttackProfileDataTests.cs:32／76／325／441／487）与 CombatEntryAdapter.cs:117 的 profile.cooldownTicks 位置传参；两份合同、卡头 expectedPaths 与真实源码所有者逐项比对完成",
+      "checkpoint 提交后核验：HEAD=738c337b22ee5ae7445f9401ae2263854384b8d1、branch=codex/automation/deepseek/0dea187a-cca4-4f8a-8e36-889c974f7ade/candidate、rev-list --count base..HEAD=1、HEAD^=8f98acb97c8c2a41aa85888662d27541edd7d3e0、git status --porcelain --untracked-files=all 为空、changedPaths 恰为本文一处"
+    ],
+    "unverified": [
+      "未运行 Unity EditMode／PlayMode：本轮 diff 只有一处文档变化，按卡内「不因纯文档变更跑Unity」不运行 runner，因此「三攻击及两角色／五敌人逐 ID 投影」证据在本轮不存在",
+      "未做「合法数据导入前后逐 ID 对齐」「每类非法输入均无部分 asset 写入」「现有引用 GUID 不漂移」三类验证",
+      "未运行 check-data-chain（本轮无 docs／CSV／Unity 数据变化）、未运行 check-unity-assembly-boundaries、未运行 BattleSim build／run",
+      "未创建 src/Assets/Tests/EditMode/CombatActionPointImportTests.cs 及其 .meta，本卡定向导入测试入口在本轮不存在",
+      "五条既有用例会因攻击表换列／Enemies.csv 加列而失败，是依据源码严格表头校验（TryParseAttackProfiles 的 SequenceEqual、RequireExactColumns）静态推导，未实机跑红复现"
+    ],
+    "residualRisk": "若在授权补齐前强行迁移，仓库会同时出现两组新增失败面：攻击表旧 38 列表头断言（AttackProfileDataTests.cs 五条用例＋AttackProfiles.fixture.csv）与 Enemies.csv 精确列校验（SettlementContentImporter.cs:688 抛 InvalidDataException，连带 ContentImportCoordinator.ImportAll 与 ContentCatalogDataTests 失败），且五条敌人模板的 actionPointMaximumUnits／movementEfficiencyMilliUnits 只能停在 0。本轮按停止条件未写入该中间状态，风险仅在后续未授权实施时出现。另有两项必须在写入前冻结：旧 AttackProfileData.cooldownTicks 字段去留（删除会因 CombatEntryAdapter.cs:117 编译失败，而该文件不在允许路径；保留则留下无人生产却仍被消费的旧成本字段），以及攻击表 actionPointCostUnits／minimumNetCostUnits 的生产候选；合同§十技术夹具值不得当作生产费。合同§九写的「AdventureContentImporter.cs 敌人模板投影」与实际源码（自 e2dc528e 起位于 SettlementContentImporter.cs）不符，合同文件不在本卡允许路径，需由有权维护者更正。",
+    "taskContextDigest": "51bda69faf42b3666235aa59631aa013fce7d49b54691da9478ca9d0dfbefb3a",
+    "createdAt": "2026-10-06T20:52:46.4319803+08:00",
+    "queueIndex": 0
   }
 }
 ---TASK-BODY---
