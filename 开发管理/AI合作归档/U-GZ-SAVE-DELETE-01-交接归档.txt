@@ -1,0 +1,16 @@
+# U-GZ-SAVE-DELETE-01 · 交接归档
+
+2026-10-06 Codex 复审通过；以下为已消费交接原文，历史未审核标记保留。
+
+### DSH-U-GZ-SAVE-DELETE-01-85ab878a · DeepSeek 自动交接（⚠️ 未审核）
+
+- 方向：任务 U-GZ-SAVE-DELETE-01 的原子正式结果等待 Codex 独立复审。
+- 任务：U-GZ-SAVE-DELETE-01
+- 候选提交：1dcf32720bbfd0cab8b8651820acdb48b0023a8b
+- 正式提交：与本交接、pending_review 投影处于同一原子提交。
+- 修改文件：开发管理/关中存档删除验证记录.txt、src/Assets/Scenes/StartMenuScene.unity、src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs、src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs、src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs、src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs、src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs、src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuView.cs、src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs、src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs、src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs、src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs、src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs.meta
+- 已验证：GameSaveSlotStore.Delete 只删除目标槽位对应的单个 JSON，其他槽位与非槽位文件逐字节不变，同名目录不受影响；非法 ID 与路径穿越与带扩展名与超长与中文 ID 被拒并保留原槽位；槽位不存在返回 SlotNotFound 且不创建目录；文件被独占锁定时返回 DeleteFailed 且文件逐字节保留；损坏与旧 schema 槽位不可读但可删（EditMode 新增用例全部通过）；删除先确认：取消不触达 host 且不写文件，确认才以正确槽位 ID 调用删除；删除失败保留列表与存档并显示中文失败原因；目录级合成行不提供删除动作，损坏真实槽位提供删除动作（EditMode 新增用例全部通过）；正式 StartMenuScene 真实指针流程：取消后两槽位文件逐字节不变且行保留，确认后仅目标文件消失且行即时消失，剩余槽位可读且行中心射线仍命中该行按钮，删除最后一项后显示空状态；删除后 SaveActiveSlot 由删除前可写变为失败且被删文件未被重建（PlayMode 定向 4 项全部通过并经 tools/run-unity-playmode-tests.ps1 -ValidateResultOnly 校验为 Passed）；正式场景接线：StartMenuScene 经原 Builder 保存并重开，StartMenuView 四个新序列化引用分别解析到 SaveDeleteConfirmPanel（初始 inactive）与 DeleteConfirmText 与 ConfirmDeleteButton 与 CancelDeleteButton，SceneArchitectureEditorTests 全部通过；公共接口改动后的 tools/check-unity-assembly-boundaries.ps1 与 tools/check-review-text.ps1 与 tools/check-data-chain.ps1 与 tools/check-pending-whitespace.ps1 与 git diff --cached --check 均通过
+- 未验证：1920×1080 与 1366×768 的实测可读确认界面：两个 runner 均为 -nographics，实测 Screen 恒为 640×480，强设分辨率不可行（SetGameSize 走 EditorWindow.GetWindow 在无图形设备时输出 No graphic device is available to initialize the view 并直接判失败），故仅断言与分辨率无关的画布空间条件（文案 preferredHeight 39 ≤ 其 110 画布单位文本框，画布按 1920×1080 参考等比缩放），未取得这两个分辨率的实测界面或像素截图；7 项 EditMode 与 31 项 PlayMode 既有失败未在基线提交上复跑对照，因此未断言其为基线已失败；只确认其代码路径与本候选改动不相交，其中 3 项要求未被 Git 跟踪且在本 worktree 不存在的 assets/source 冻结素材；新增删除按钮后既有读档点击仍可用，仅由本卡定向用例的行中心射线校验覆盖；依赖 SaveSlot_ 行点击的既有 PlayMode 用例（GuanzhongNavigationText 与 GuanzhongPlaytestFlow 与 GuanzhongCombatLayout）在到达该步前即因同一分辨率限制失败，未取得其端到端通过；未做像素级视觉验收，未评价最终美术与体验
+- 残留风险：StartMenuScene.unity 由当前 Unity 版本整体重新序列化，语义上仅新增确认面板 4 个对象与 4 个 View 引用，但 fileID 与文档顺序变化，并去除了 Unity 新写入的 86 处空值行尾空格（基线为 0 处），故 diff 大于纯增量，复审请以对象与引用解析结果为准；防止删档被重建目前只覆盖 GameBootstrap.SaveActiveSlot 这一条写入路径，将来出现第二个 activeSlotId 写入者或直接以槽位 ID 写盘的路径需同步清理引用；DeleteSlot 的活动槽位比较使用 OrdinalIgnoreCase，与 Store 既有 TryGetSlotPath 的 Windows 大小写不敏感路径判定保持一致，在大小写敏感文件系统上需重新裁决；回滚限本卡代码与场景与测试差异，功能回滚不恢复玩家已确认删除的数据，本轮验收全程使用任务临时目录未触碰真实存档。
+- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
+- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。

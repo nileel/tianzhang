@@ -204,9 +204,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(File.Exists(Path.Combine(directory, "del_ok.json")));
         }
 
-        // This runner is -nographics, so Screen resolution cannot be forced (EditorWindow.GetWindow(GameView)
-        // fails without a graphic device). The measured claims below are therefore the resolution-independent
-        // ones: the confirmation stays active, complete, unclipped and pointer-reachable.
+        // Headless runs validate only their actual viewport; graphical runs also retain both required UI frames.
         [UnityTest]
         public IEnumerator DeleteConfirmationStaysReadableAndReachableWithoutClipping()
         {
@@ -215,10 +213,23 @@ namespace TianZhang.Tests.PlayMode
             yield return RefreshMenu();
             var evidence = new List<string>();
 
-            foreach (int targetWidth in new[] { 1920, 1366 })
+            bool hasGraphics = SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null;
+            Vector2Int[] sizes = hasGraphics
+                ? new[] { new Vector2Int(1920, 1080), new Vector2Int(1366, 768) }
+                : new[] { new Vector2Int(Screen.width, Screen.height) };
+            string evidenceDirectory = Path.Combine(Path.GetTempPath(),
+                "TianZhang.StartMenuSaveDeletionEvidence", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(evidenceDirectory);
+
+            foreach (Vector2Int size in sizes)
             {
-                int targetHeight = targetWidth == 1920 ? 1080 : 768;
+                int targetWidth = size.x;
+                int targetHeight = size.y;
+                if (hasGraphics) SetGameSize(targetWidth, targetHeight);
                 yield return null;
+                yield return null;
+                Assert.AreEqual(targetWidth, Screen.width, "Actual viewport width must match the evidence.");
+                Assert.AreEqual(targetHeight, Screen.height, "Actual viewport height must match the evidence.");
                 Canvas.ForceUpdateCanvases();
 
                 yield return Click(DeleteButton("del_wide"));
@@ -232,8 +243,6 @@ namespace TianZhang.Tests.PlayMode
                 StringAssert.Contains("del_wide", message.text);
                 StringAssert.Contains("宽屏角色名", message.text);
                 StringAssert.Contains("不可恢复", message.text);
-                // The HUD canvas scales uniformly from the 1920x1080 reference, so a text that fits its
-                // box in canvas space fits at 1920x1080 and 1366x768 alike.
                 Assert.LessOrEqual(
                     message.preferredHeight,
                     message.rectTransform.rect.height + .1f,
@@ -256,14 +265,50 @@ namespace TianZhang.Tests.PlayMode
                     " rowDelete=" + Corners(DeleteButton("del_wide").transform));
                 Log(evidence[evidence.Count - 1]);
 
+                if (hasGraphics)
+                {
+                    string framePath = Path.Combine(evidenceDirectory,
+                        "confirmation-" + targetWidth + "x" + targetHeight + ".png");
+                    ScreenCapture.CaptureScreenshot(framePath);
+                    float deadline = Time.realtimeSinceStartup + 10;
+                    while (!File.Exists(framePath))
+                    {
+                        Assert.Less(Time.realtimeSinceStartup, deadline, "Expected actual Game View screenshot.");
+                        yield return null;
+                    }
+                    TestContext.WriteLine("UI frame: " + framePath);
+                }
+
                 yield return Click(cancel);
                 Assert.IsFalse(Find("SaveDeleteConfirmPanel").gameObject.activeSelf);
                 Assert.IsTrue(File.Exists(Path.Combine(directory, "del_wide.json")));
             }
 
-            string path = Path.Combine(Path.GetTempPath(), "tzg-startmenu-save-deletion-ui-evidence.txt");
+            string path = Path.Combine(evidenceDirectory, "ui-evidence.txt");
             File.WriteAllText(path, string.Join("\n", evidence));
             Log("UI evidence: " + path);
+            TestContext.WriteLine("UI evidence: " + path);
+        }
+
+        private static void SetGameSize(int width, int height)
+        {
+#if UNITY_EDITOR
+            var assembly = typeof(UnityEditor.Editor).Assembly;
+            var sizesType = assembly.GetType("UnityEditor.GameViewSizes");
+            var sizes = sizesType.BaseType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            var group = sizesType.GetMethod("GetGroup").Invoke(sizes, new object[] { 0 });
+            var sizeType = assembly.GetType("UnityEditor.GameViewSize");
+            var kind = assembly.GetType("UnityEditor.GameViewSizeType");
+            var size = Activator.CreateInstance(sizeType, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null,
+                new object[] { Enum.ToObject(kind, 1), width, height, "Save deletion validation" }, null);
+            group.GetType().GetMethod("AddCustomSize").Invoke(group, new[] { size });
+            int count = (int)group.GetType().GetMethod("GetTotalCount").Invoke(group, null);
+            var game = UnityEditor.EditorWindow.GetWindow(assembly.GetType("UnityEditor.GameView"));
+            game.GetType().GetProperty("selectedSizeIndex", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(game, count - 1);
+#else
+            Screen.SetResolution(width, height, false);
+#endif
         }
 
         private void WriteSlot(GameBootstrap bootstrap, string slotId, string characterId, string displayName)

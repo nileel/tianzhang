@@ -1,12 +1,27 @@
 # U-GZ-SAVE-DELETE-01 · 关中开始菜单单槽位删除闭环验证记录
 
-日期：2026-10-06；责任方／修改方：DeepSeek V4.1 Flash（⚠️ 已修改/未审核；变更范围：GameSaveSlotStore 单槽位删除、host/controller/view 接线、Builder 与正式场景确认面板、EditMode 与 PlayMode 测试）。
+日期：2026-10-06；原实现责任方：DeepSeek V4.1 Flash（2026-10-06 Codex 已复审通过；原变更范围：GameSaveSlotStore 单槽位删除、host/controller/view 接线、Builder 与正式场景确认面板、EditMode 与 PlayMode 测试）。
 主模型：deepseek-flash（入口默认模型）。RunId：85ab878a-adb2-4f1c-9548-e5f6e2924773。
 核对基线：01dd245e6a4b2fcf4a67664d566cc74e4424bed1。候选分支：codex/automation/deepseek/85ab878a-adb2-4f1c-9548-e5f6e2924773/candidate。
 提交绑定：本记录与业务差异包含于同一个 candidate；最终 SHA 以共享入口及 git 提交为准，不在提交自身写入循环 SHA。
-审核状态：待 Codex 复审；本记录不预填任何审核结论。
+审核状态：2026-10-06 Codex 独立复审通过；原交付验证缺口由下节实测补齐。后文保留当时事实。
 
-## 授权、模型协作与预检
+
+## 2026-10-06 Codex 人工补测与复审结论
+
+- 审核对象：正式提交 `75c3987b97797cd34c0a1763c0bdbaa46135d989`；结论：通过。人工补测基线为 `cde34b12eef3be70f1e75a33e826fc3de097e7e2`，业务代码和正式场景未再修改。
+- 自动化失败原因：run `e3784387-2b04-4655-8e7e-c2fca341f20a` 形成了管理候选 `59af92870944cadf232055ae088f4e279aebe350`，但 Unity 将 ShaderGraphSettings.asset 的空 m_Name 字段加了行尾空格，被工作区干净门禁拒绝。原复审还有双分辨率实测缺口；本轮分别处理，没有放宽门禁。
+- 最小修复：仅修改既有 StartMenuSaveDeletionPlayModeTests UI 方法。有图形设备时实际切换两种 Game View 尺寸、断言 Screen 宽高并截图；无图形设备时只验证实际视口，不再循环未运行的目标标签。尺寸设置沿用既有 PlayMode 的 GameViewSizes 方法。
+- 图形命令：Unity.exe -projectPath <worktree>/src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.StartMenuSaveDeletionPlayModeTests -testResults <xml> -logFile <log>，不带 -batchmode/-nographics。Start-Process 使用 -PassThru -WindowStyle Hidden，等待退出后调用现有 tools/run-unity-playmode-tests.ps1 的字节快照恢复函数。未新增正式 runner。
+- 图形结果：4/4 Passed，failed=0、skipped=0、Unity exit=0，项目 -ValidateResultOnly 校验通过。覆盖取消保持两槽位逐字节不变、确认只删目标槽位、列表刷新、剩余槽位可读、损坏档可删、最后一项空状态与活动槽位不重建。
+- 无图形结果：同一 UI 方法加 -batchmode -nographics 定向验证，1/1 Passed、Unity exit=0、结果校验通过。只证明实际视口，不充当目标分辨率截图。
+- UI 实测：1920×1080 的 Screen 和 PNG 均为1920×1080，canvasScale=1，preferredHeight=41≤110；1366×768 的 Screen 和 PNG 均为1366×768，canvasScale=0.7114583，preferredHeight=39.36≤110。人工检查两帧：存档编号、角色名、不可恢复提示和确认／取消按钮均完整可读且无裁切；按钮射线命中和可达断言通过。
+- 本地原始证据目录：D:/天章游戏开发/.codex/automation-state/tzg-hourly-controller-runtime/manual-backups/e3784387-20261006-evidence/，含 PNG、ui-evidence.txt、两次 XML/log 和验证脚本。1920 PNG SHA-256：48a4b88b30eeb1c195bd0b7a0e2505fbe73be89ce928fd6337a5750e534cf250；1366 PNG：c0b174fabbd39d6312787d2fb829fbf14a33a13daf1cf1b8f9601d9f1ef7e133。
+- 独立代码核验：Store 复用合法 ID 与目录内路径校验，只对一个 JSON 调用 File.Delete；取消不触达 host，失败不刷新或假报成功；仅成功且匹配的 activeSlotId 被清空。沿 Store→Bootstrap→Installer→Controller→View 核对，保存 schema 与角色加载语义不变。EditMode 边界与取消／失败用例沿用原交付通过证据，相关输入未变，不重复全量运行。
+- 协作与门禁：单主智能体处理有界验证缺口，无子智能体；preflight 任务卡 digest 与失败 run 一致，matched/mustRead/gates 为空，未扩展允许路径。加载技能参考 cleanup-and-git、unity-validation、ui-and-visual-assets、runtime-owner-proof；事实地图为 UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.ui.md。
+- 边界：只使用唯一临时存档目录，未操作真实存档；不声称全量 Unity 测试或其他流程通过，不评价最终美术。原失败候选、残留与 runtime 快照保留；本轮 Unity 退出后只有预期测试差异。
+
+## 原交付：授权、模型协作与预检
 
 - 直接事实：任务卡 U-GZ-SAVE-DELETE-01 的必查范围、实施范围、禁止项与验证；`UNITY_STRUCTURE.runtime.md#正式场景与所有者`（StartMenu 的 Installer 与 Feature 所有者、`GameBootstrap` 只创建并保持 GameRuntime 与存档槽位适配器）；`开发管理/开发-技术经验.txt#Unity 开发经验`（场景生成只走 Editor Builder，不手写 .unity YAML；UI 挂同一 UICanvas）。
 - 模型协作评估（业务写入前）：目标与语义已由卡冻结（单槽位删除、确认/取消、损坏槽位可删、合成错误行不提供删除、活动槽位引用清理）；无跨所有者依赖，改动收敛在 Store→Bootstrap→Installer(host)→Controller→View→Builder→Scene 单一调用链；无既有失败或证据冲突；错误影响为单文件删除但有路径校验兜底；验收明确（EditMode + PlayMode + 边界检查）。结论：有界实现，沿用入口默认单模型 deepseek-flash，不调用辅助智能体——调用链强耦合、共享 host 契约与活动槽位状态，按 `AGENTS.md`「任务粒度与子智能体」由主智能体直接处理。与卡中「模型协作」结论一致，未越过原范围与停止条件。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立复审通过，双分辨率真实 UI 证据补齐并完成归档",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSlotStore.cs",
     "src/Assets/Scripts/Modules/Features/CharacterCreation/IPlayerEntryHost.cs",
@@ -90,3 +90,25 @@
 ## 停止条件
 
 - 需要改 schema、跨保存目录、自动／批量删除、重建保存所有者或使用真实玩家存档验证时停止；路径或直接依赖扩展先重跑预检。真实错误尚未定位时不叠加重试／兜底。
+
+## 完成与复审
+
+- 2026-10-06：正式提交 `75c3987b97797cd34c0a1763c0bdbaa46135d989` 独立复审通过；保留业务代码和场景，仅补齐既有测试的真实分辨率断言与截图。
+- 图形定向 PlayMode 4/4、无图形 UI 定向1/1通过，1920×1080与1366×768原始PNG、实测宽高、文案与按钮可达证据齐全；见开发管理/关中存档删除验证记录.txt。
+- 原失败 run e3784387-2b04-4655-8e7e-c2fca341f20a 的候选及残留保留；本轮等待 Unity 退出后恢复原字节，未关闭用户主项目 Unity。
+- 同一卡完成归档，移除其队列和 backlog 行，当前交接原文迁入同 ID 归档。
+
+## 经验候选
+
+### U-GZ-SAVE-DELETE-01-UNITY-VALIDATION-01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：Unity 复审候选被工作区不干净门禁拒绝，无图形测试循环目标尺寸却未产生对应实测画面。
+- 已证实根因：直接启动的 Unity 重写 ShaderGraphSettings.asset 空字段行尾，未使用已有快照恢复；原 UI 测试只记录目标标签，实际 Screen 为640×480。
+- 可能复用范围：隔离 worktree 内 Unity 定向验证及需要实际 Game View 分辨率证据的 UI 任务。
+- 证据：run e3784387-2b04-4655-8e7e-c2fca341f20a、候选59af92870944cadf232055ae088f4e279aebe350、关中存档删除验证记录及图形4/4和无图形1/1结果；进程退出后恢复字节快照，仅留下预期测试差异。
+- 门禁可能：yes
