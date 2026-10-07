@@ -8,9 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：负责人已选 A（扩大 expectedPaths 并按合同 §四 完整迁移接口签名与预算），但本轮只读核对证明 A 在当前冻结边界内不可执行：A 所需的 GuanzhongBasicAttackPlayModeTests.cs、GuanzhongCombatTimelinePlayModeTests.cs、simulations/BattleSim/GuanzhongPlaytestAudit.cs、CombatLegalActionService.cs、EncounterCoordinator.cs、GuanzhongMovementPlayModeTests.cs 六条路径均不在本 run CandidatePaths 与任务卡 expectedPaths 内（3 个接口实现替身与 5 处调用者会使 Unity 测试程序集与 BattleSim 编译同时失败），且 A 自带的「须先具备真实 v 来源」不成立（MovementEfficiency 等符号全库零命中，CombatantSnapshot 仍只有整数 MovePoints，旧移力仍由反应派生）。A 若只扩路径仍留占位 v，A 无法闭环时本卡应如何处置？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-MOVEPATH2",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
@@ -91,6 +91,14 @@
     "taskContextDigest": "429f7640c74f7774e69ca35dd71295489c829f5a0c9ee8e9a834ba715838b786",
     "createdAt": "2026-10-07T05:52:14.6687497+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261007-MOVEPATH2",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "B",
+    "source": "feishu_card",
+    "evidenceHash": "bfa665ea82162740e9363fc10d29844363e808369574da44e5a50db5660fdbe0"
   }
 }
 ---TASK-BODY---
