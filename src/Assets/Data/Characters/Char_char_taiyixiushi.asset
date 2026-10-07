@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
-  m_Name: Char_char_taiyixiushi
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.CharacterData
   charName: "\u592A\u4E00\u4FEE\u58EB"
   baseLevel: 1
   rootBone: 10
@@ -20,6 +20,7 @@ MonoBehaviour:
   mind: 14
   reaction: 12
   talent: 14
+  fortune: 10
   hpBonus: 0
   mpBonus: 0
   physAtkBonus: 0
@@ -35,6 +36,7 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 3
   realmMultiplier: 1.5
+  realmStage:
   gongFaName: "\u62B1\u5143\u5B88\u4E00\u7ECF"
   equippedSpells:
   - spell_xuanshuizhou
@@ -45,5 +47,50 @@ MonoBehaviour:
   - skill_zhengqisuozhi
   availableSpells: []
   availableSkills: []
+  mainEquipmentBasicAttackProfileId:
+  unarmedBasicAttackProfileId:
+  innatePurchasePointsLimit: 0
+  innatePurchasePointsUsed: 0
+  creationBudgetLimit: 0
+  creationBudgetUsed: 0
+  creationBudgetRefunded: 0
+  originId:
+  fateTagIds: []
+  craftSkillIds: []
+  craftSkillLevels:
+  visibleRootId:
+  visibleRootKind:
+  visibleRootGrade:
+  visibleRootElement:
+  visibleRootMotherElement:
+  visibleRootCultivationMultiplier: 1
+  visibleRootMpMultiplier: 1
+  visibleRootRealmCap:
+  visibleRootRegionAffinity:
+  visibleRootLearnTags: []
+  hiddenRootSeedId:
+  hiddenRootId:
+  hiddenRootKind:
+  hiddenRootGrade:
+  hiddenRootElement:
+  hiddenRootMotherElement:
+  hiddenRootCultivationMultiplier: 0
+  hiddenRootMpMultiplier: 1
+  hiddenRootRealmCap:
+  hiddenRootRegionAffinity:
+  hiddenRootLearnTags: []
+  hiddenRootState:
+  hiddenRootRollSeed: 0
   maxSpellSlots: 0
   maxSkillSlots: 0
+  foundationPurpleMansionState: {fileID: 0}
+  developedMansions: []
+  targetPosition:
+  positionOccupationState:
+  danXiangId:
+  danPivotRole:
+  mansionBindings: []
+  danArtifactForm:
+  legacyDanJiType:
+  actionPointMaximumUnits: 100000
+  movementEfficiencyMilliUnits: 2000

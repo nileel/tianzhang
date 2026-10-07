@@ -110,5 +110,10 @@ namespace TianZhang.Entity
         public string[] mansionBindings;       // 紫府神通绑定府位
         public string danArtifactForm = "";    // 丹器显化形态
         public string legacyDanJiType = "";    // 旧 danJiType 兼容读取字段
+
+        [Header("行动力长期输入（统一行动力公共合同）")]
+        // 两项都是显式长期基础输入，不设 C# 数值兜底；缺失由拥有创建／恢复的消费者拒绝。
+        public int actionPointMaximumUnits;       // AP 最小单位上限，>0；S=1000，显示除以 1000
+        public int movementEfficiencyMilliUnits;  // 每 100 基准 AP 的普通等效距离 ×1000，>=0；合法 0 表示禁止自主移动
     }
 }

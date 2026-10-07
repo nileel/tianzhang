@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using TianZhang.Editor;
+using TianZhang.Entity;
 
 namespace TianZhang.Tests
 {
@@ -176,6 +178,206 @@ namespace TianZhang.Tests
                     path);
             }
         }
+
+        private static readonly string[] CharacterActionEconomyAssetPaths =
+        {
+            "Assets/Data/Characters/Char_char_taiyixiushi.asset",
+            "Assets/Data/Characters/Char_char_sanxiuqiangdao.asset",
+            "Assets/Data/Characters/Char_Player.asset",
+            "Assets/Data/Characters/Char_Enemy.asset",
+        };
+
+        private const int FrozenActionPointMaximumUnits = 100000;
+        private const int FrozenMovementEfficiencyMilliUnits = 2000;
+
+        [Test]
+        public void CharacterImportWritesFrozenActionEconomyInputsAndKeepsEveryOtherFieldAndGuid()
+        {
+            var guidsBefore = CharacterActionEconomyAssetPaths.ToDictionary(
+                path => path, AssetDatabase.AssetPathToGUID, StringComparer.Ordinal);
+            var othersBefore = CharacterActionEconomyAssetPaths.ToDictionary(
+                path => path,
+                path => DescribeCharacterWithoutActionEconomy(LoadCharacter(path)),
+                StringComparer.Ordinal);
+
+            CharacterContentImporter.ImportCharacterDefinitions();
+
+            foreach (string assetPath in CharacterActionEconomyAssetPaths)
+            {
+                CharacterData asset = LoadCharacter(assetPath);
+                Assert.That(asset.actionPointMaximumUnits, Is.EqualTo(FrozenActionPointMaximumUnits), assetPath);
+                Assert.That(asset.movementEfficiencyMilliUnits, Is.EqualTo(FrozenMovementEfficiencyMilliUnits), assetPath);
+                Assert.That(AssetDatabase.AssetPathToGUID(assetPath), Is.EqualTo(guidsBefore[assetPath]), assetPath);
+                Assert.That(DescribeCharacterWithoutActionEconomy(asset), Is.EqualTo(othersBefore[assetPath]), assetPath);
+            }
+        }
+
+        [Test]
+        public void RepeatedCharacterImportKeepsTheWholeCharacterDirectoryAndGuidsStable()
+        {
+            string charactersRoot = Path.Combine(Application.dataPath, "Data", "Characters");
+
+            CharacterContentImporter.ImportCharacterDefinitions();
+            var first = SnapshotAssets(new[] { charactersRoot });
+            var guidsBefore = CharacterActionEconomyAssetPaths.ToDictionary(
+                path => path, AssetDatabase.AssetPathToGUID, StringComparer.Ordinal);
+
+            CharacterContentImporter.ImportCharacterDefinitions();
+            var second = SnapshotAssets(new[] { charactersRoot });
+
+            CollectionAssert.AreEquivalent(first.Keys, second.Keys);
+            foreach (string path in first.Keys)
+                CollectionAssert.AreEqual(first[path], second[path], path);
+            foreach (string assetPath in CharacterActionEconomyAssetPaths)
+                Assert.That(AssetDatabase.AssetPathToGUID(assetPath), Is.EqualTo(guidsBefore[assetPath]), assetPath);
+        }
+
+        [TestCase("", "2000", TestName = "CharacterImportRejectsEmptyActionPointMaximum")]
+        [TestCase("0", "2000", TestName = "CharacterImportRejectsZeroActionPointMaximum")]
+        [TestCase("-1", "2000", TestName = "CharacterImportRejectsNegativeActionPointMaximum")]
+        [TestCase("2.5", "2000", TestName = "CharacterImportRejectsFractionalActionPointMaximum")]
+        [TestCase("2147483648", "2000", TestName = "CharacterImportRejectsOverflowingActionPointMaximum")]
+        [TestCase("100000", "-1", TestName = "CharacterImportRejectsNegativeMovementEfficiency")]
+        [TestCase("100000", "1.5", TestName = "CharacterImportRejectsFractionalMovementEfficiency")]
+        [TestCase("100000", "4294967296", TestName = "CharacterImportRejectsOverflowingMovementEfficiency")]
+        [TestCase("100000", "", TestName = "CharacterImportRejectsEmptyMovementEfficiency")]
+        public void CharacterImportRejectsInvalidActionEconomyRowsWithoutWritingAnyAsset(
+            string actionPointMaximumUnits,
+            string movementEfficiencyMilliUnits)
+        {
+            AssertCharacterCsvRejectedWithoutWritingAssets(
+                "," + actionPointMaximumUnits + "," + movementEfficiencyMilliUnits);
+        }
+
+        [TestCase(",100000", TestName = "CharacterImportRejectsShortActionEconomyRowTail")]
+        [TestCase(",100000,2000,999", TestName = "CharacterImportRejectsExtraActionEconomyColumn")]
+        public void CharacterImportRejectsRowWidthMismatchWithoutWritingAnyAsset(string rowTail)
+        {
+            AssertCharacterCsvRejectedWithoutWritingAssets(rowTail);
+        }
+
+        [Test]
+        public void CharacterImportAcceptsLegalZeroMovementEfficiency()
+        {
+            string csvPath = Path.Combine(Application.dataPath, "DataConfig", "Characters.csv");
+            byte[] originalCsv = File.ReadAllBytes(csvPath);
+            try
+            {
+                File.WriteAllText(csvPath, BuildCharacterCsv(",100000,0"));
+                CharacterContentImporter.ImportCharacterDefinitions();
+
+                foreach (string id in new[] { "char_taiyixiushi", "char_sanxiuqiangdao" })
+                {
+                    CharacterData asset = LoadCharacter($"Assets/Data/Characters/Char_{id}.asset");
+                    Assert.That(asset.actionPointMaximumUnits, Is.EqualTo(FrozenActionPointMaximumUnits), id);
+                    Assert.That(asset.movementEfficiencyMilliUnits, Is.EqualTo(0), id);
+                }
+
+                // 独立模板持有自己的冻结算入，不随 Characters.csv 变化。
+                Assert.That(
+                    LoadCharacter("Assets/Data/Characters/Char_Player.asset").movementEfficiencyMilliUnits,
+                    Is.EqualTo(FrozenMovementEfficiencyMilliUnits));
+            }
+            finally
+            {
+                File.WriteAllBytes(csvPath, originalCsv);
+                CharacterContentImporter.ImportCharacterDefinitions();
+            }
+        }
+
+        [Test]
+        public void CharacterImportWithoutAnIndependentTemplateWritesNoAsset()
+        {
+            const string missingAssetPath = "Assets/Data/Characters/Char_Enemy.asset";
+            string missingFullPath = Path.Combine(Application.dataPath, "Data", "Characters", "Char_Enemy.asset");
+            byte[] assetBytes = File.ReadAllBytes(missingFullPath);
+            byte[] metaBytes = File.ReadAllBytes(missingFullPath + ".meta");
+            var othersBefore = CharacterActionEconomyAssetPaths
+                .Where(path => !string.Equals(path, missingAssetPath, StringComparison.Ordinal))
+                .ToDictionary(path => path, path => File.ReadAllBytes(ToAbsolutePath(path)), StringComparer.Ordinal);
+
+            Dictionary<string, byte[]> othersAfterFailure = null;
+            try
+            {
+                Assert.That(AssetDatabase.DeleteAsset(missingAssetPath), Is.True);
+                Assert.Throws<InvalidDataException>(() => CharacterContentImporter.ImportCharacterDefinitions());
+                othersAfterFailure = othersBefore.Keys.ToDictionary(
+                    path => path, path => File.ReadAllBytes(ToAbsolutePath(path)), StringComparer.Ordinal);
+            }
+            finally
+            {
+                File.WriteAllBytes(missingFullPath, assetBytes);
+                File.WriteAllBytes(missingFullPath + ".meta", metaBytes);
+                AssetDatabase.ImportAsset(missingAssetPath, ImportAssetOptions.ForceUpdate);
+            }
+
+            Assert.That(othersAfterFailure, Is.Not.Null);
+            foreach (string path in othersBefore.Keys)
+                CollectionAssert.AreEqual(othersBefore[path], othersAfterFailure[path], path);
+        }
+
+        private void AssertCharacterCsvRejectedWithoutWritingAssets(string rowTail)
+        {
+            string csvPath = Path.Combine(Application.dataPath, "DataConfig", "Characters.csv");
+            byte[] originalCsv = File.ReadAllBytes(csvPath);
+            var othersBefore = CharacterActionEconomyAssetPaths.ToDictionary(
+                path => path, path => File.ReadAllBytes(ToAbsolutePath(path)), StringComparer.Ordinal);
+
+            try
+            {
+                File.WriteAllText(csvPath, BuildCharacterCsv(rowTail));
+                Assert.Throws<InvalidDataException>(() => CharacterContentImporter.ImportCharacterDefinitions());
+            }
+            finally
+            {
+                File.WriteAllBytes(csvPath, originalCsv);
+            }
+
+            foreach (string path in othersBefore.Keys)
+                CollectionAssert.AreEqual(othersBefore[path], File.ReadAllBytes(ToAbsolutePath(path)), path);
+        }
+
+        /// <summary>把两行 CSV 的尾部两列替换为给定尾串，用于构造非法整表输入。</summary>
+        private static string BuildCharacterCsv(string rowTail)
+        {
+            string csvPath = Path.Combine(Application.dataPath, "DataConfig", "Characters.csv");
+            var rows = new List<string>();
+            foreach (string line in File.ReadAllLines(csvPath))
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#") || line.StartsWith("name,"))
+                {
+                    rows.Add(line);
+                    continue;
+                }
+
+                string[] columns = line.Split(',');
+                Assert.That(columns.Length, Is.EqualTo(21), line);
+                rows.Add(string.Join(",", columns.Take(19)) + rowTail);
+            }
+
+            return string.Join(Environment.NewLine, rows) + Environment.NewLine;
+        }
+
+        private static CharacterData LoadCharacter(string assetPath)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<CharacterData>(assetPath);
+            Assert.That(asset, Is.Not.Null, assetPath);
+            return asset;
+        }
+
+        /// <summary>
+        /// 本轮唯一允许变化的字段是两项长期行动力输入；归一化后比较其余全部序列化字段。
+        /// </summary>
+        private static string DescribeCharacterWithoutActionEconomy(CharacterData data)
+        {
+            string json = EditorJsonUtility.ToJson(data);
+            json = Regex.Replace(json, ",\"actionPointMaximumUnits\":[^,}]*", string.Empty);
+            json = Regex.Replace(json, ",\"movementEfficiencyMilliUnits\":[^,}]*", string.Empty);
+            return json;
+        }
+
+        private static string ToAbsolutePath(string assetPath) =>
+            Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length).Replace('/', Path.DirectorySeparatorChar));
 
         private static string ReadEditorSource(string typeName)
         {

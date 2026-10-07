@@ -1,4 +1,4 @@
 ﻿# 角色配置表（所有文本字段使用 Language.csv 中的 ID）
-name,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,gongFaName,equippedSpells,equippedSkills
-char_taiyixiushi,1.5,10,10,16,14,12,14,5,0,13,0,0,5,15,3,gongfa_baoyuanshouyi,spell_xuanshuizhou|spell_canglangji|spell_anshenfu,skill_jiuzhuanhuandan|skill_zhengqisuozhi
-char_sanxiuqiangdao,1.5,14,14,10,10,10,8,10,20,5,0,5,8,20,0,,spell_xuanshuizhou|spell_canglangji,
+name,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,gongFaName,equippedSpells,equippedSkills,actionPointMaximumUnits,movementEfficiencyMilliUnits
+char_taiyixiushi,1.5,10,10,16,14,12,14,5,0,13,0,0,5,15,3,gongfa_baoyuanshouyi,spell_xuanshuizhou|spell_canglangji|spell_anshenfu,skill_jiuzhuanhuandan|skill_zhengqisuozhi,100000,2000
+char_sanxiuqiangdao,1.5,14,14,10,10,10,8,10,20,5,0,5,8,20,0,,spell_xuanshuizhou|spell_canglangji,,100000,2000

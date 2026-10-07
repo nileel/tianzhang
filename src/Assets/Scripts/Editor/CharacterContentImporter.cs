@@ -177,12 +177,13 @@ namespace TianZhang.Editor
             {
                 var headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
                 var headers = CsvTableReader.FindHeader(lines);
-                CsvTableReader.RequireColumns(headers, sourceName,
+                CsvTableReader.RequireExactColumns(headers, sourceName,
                     "name", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
                     "reaction", "talent", "blockRate", "blockReduction",
                     "soulShieldRate", "soulShieldReduction", "dodgeRate",
                     "critRate", "critDamage", "hitRateBonus", "gongFaName",
-                    "equippedSpells", "equippedSkills");
+                    "equippedSpells", "equippedSkills",
+                    "actionPointMaximumUnits", "movementEfficiencyMilliUnits");
 
                 var ids = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var line in lines.Skip(headerLineIndex + 1))
@@ -195,10 +196,10 @@ namespace TianZhang.Editor
                     }
 
                     var columns = CsvTableReader.ParseRow(line);
-                    if (columns.Length < headers.Length)
+                    if (columns.Length != headers.Length)
                     {
                         throw new InvalidDataException(
-                            $"{sourceName} row has {columns.Length} columns; expected at least {headers.Length}.");
+                            $"{sourceName} row has {columns.Length} columns; expected exactly {headers.Length}.");
                     }
 
                     var id = CsvTableReader.GetRequiredValue(headers, columns, "name", sourceName);
@@ -229,6 +230,10 @@ namespace TianZhang.Editor
                     asset.equippedSpells = equippedSpells.Length > 0 ? equippedSpells.Split('|') : Array.Empty<string>();
                     var equippedSkills = CsvTableReader.GetValueOrDefault(headers, columns, "equippedSkills", "");
                     asset.equippedSkills = equippedSkills.Length > 0 ? equippedSkills.Split('|') : Array.Empty<string>();
+                    asset.actionPointMaximumUnits = ParseActionEconomyInteger(
+                        headers, columns, "actionPointMaximumUnits", sourceName, 1);
+                    asset.movementEfficiencyMilliUnits = ParseActionEconomyInteger(
+                        headers, columns, "movementEfficiencyMilliUnits", sourceName, 0);
                 }
 
                 return projected.ToArray();
@@ -238,6 +243,78 @@ namespace TianZhang.Editor
                 foreach (var asset in projected)
                     UnityEngine.Object.DestroyImmediate(asset);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 严格解析长期行动力整数列：空列由 GetRequiredValue 拒绝，分数、指数写法与 32 位溢出在此拒绝，
+        /// 再按下限校验范围，不做四舍五入、截断或兜底。
+        /// </summary>
+        private static int ParseActionEconomyInteger(
+            string[] headers,
+            string[] columns,
+            string columnName,
+            string sourceName,
+            int minimum)
+        {
+            string raw = CsvTableReader.GetRequiredValue(headers, columns, columnName, sourceName);
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+                throw new InvalidDataException(
+                    $"{sourceName} column '{columnName}' must be a 32-bit integer: '{raw}'.");
+            if (value < minimum)
+                throw new InvalidDataException(
+                    $"{sourceName} column '{columnName}' must be >= {minimum}: '{value}'.");
+
+            return value;
+        }
+
+        // 方案 A 冻结的两个独立角色模板输入；这两个资产各自是独立序列化模板，不是 Characters.csv 人物行的别名。
+        private static readonly (string AssetPath, int ActionPointMaximumUnits, int MovementEfficiencyMilliUnits)[]
+            IndependentActionEconomyInputs =
+            {
+                ("Assets/Data/Characters/Char_Player.asset", 100000, 2000),
+                ("Assets/Data/Characters/Char_Enemy.asset", 100000, 2000),
+            };
+
+        /// <summary>
+        /// 只解析并验证两个独立模板目标是否存在、冻结输入是否合法；不修改任何资产。
+        /// </summary>
+        private static CharacterData[] ResolveIndependentActionEconomyTargets()
+        {
+            var targets = new List<CharacterData>(IndependentActionEconomyInputs.Length);
+            foreach (var input in IndependentActionEconomyInputs)
+            {
+                if (input.ActionPointMaximumUnits <= 0)
+                    throw new InvalidDataException(
+                        $"{input.AssetPath} action point maximum input must be positive: {input.ActionPointMaximumUnits}.");
+                if (input.MovementEfficiencyMilliUnits < 0)
+                    throw new InvalidDataException(
+                        $"{input.AssetPath} movement efficiency input must not be negative: {input.MovementEfficiencyMilliUnits}.");
+
+                var target = AssetDatabase.LoadAssetAtPath<CharacterData>(input.AssetPath);
+                if (target == null)
+                    throw new InvalidDataException($"Independent character template was not found: {input.AssetPath}.");
+
+                targets.Add(target);
+            }
+
+            return targets.ToArray();
+        }
+
+        /// <summary>
+        /// 仅把两个独立模板的长期行动力字段写成冻结输入：不新建资产、不 CopySerialized 替换成 CSV 角色、
+        /// 不按 reaction 派生，其余字段、引用与 GUID 全部保留。
+        /// </summary>
+        private static void ImportIndependentActionEconomyInputs(IReadOnlyList<CharacterData> targets)
+        {
+            for (var index = 0; index < IndependentActionEconomyInputs.Length; index++)
+            {
+                var input = IndependentActionEconomyInputs[index];
+                CharacterData target = targets[index];
+                target.actionPointMaximumUnits = input.ActionPointMaximumUnits;
+                target.movementEfficiencyMilliUnits = input.MovementEfficiencyMilliUnits;
+                EditorUtility.SetDirty(target);
+                AssetDatabase.SaveAssetIfDirty(target);
             }
         }
 
@@ -259,6 +336,9 @@ namespace TianZhang.Editor
                 .Select(columns => CsvTableReader.GetRequiredValue(headers, columns, "name", path))
                 .ToArray();
 
+            // 整表验证与两个独立模板验证都在任何资产写入之前完成。
+            var independentTargets = ResolveIndependentActionEconomyTargets();
+
             try
             {
                 for (var index = 0; index < assets.Length; index++)
@@ -276,6 +356,7 @@ namespace TianZhang.Editor
                     {
                         EditorUtility.CopySerialized(asset, existing);
                         EditorUtility.SetDirty(existing);
+                        AssetDatabase.SaveAssetIfDirty(existing);
                     }
                     Debug.Log($"  角色: {asset.charName} ← {assetPath}");
                 }
@@ -288,6 +369,8 @@ namespace TianZhang.Editor
                         UnityEngine.Object.DestroyImmediate(asset);
                 }
             }
+
+            ImportIndependentActionEconomyInputs(independentTargets);
         }
 
     }

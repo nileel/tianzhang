@@ -2,6 +2,10 @@
 # 导表工具 — CSV → Unity .asset 文件
 # 用法: .\tools\import_csv.ps1
 #       或 .\tools\import_csv.ps1 -Target spells
+#       或 .\tools\import_csv.ps1 -Target skills
+#       或 .\tools\import_csv.ps1 -Target gongfa
+#       或 .\tools\import_csv.ps1 -Target enemies
+# characters / all 已停用：角色内容改用 Unity 的 CharacterContentImporter。
 # ============================================================
 param(
     [string]$Target = "all",  # all | gongfa | spells | skills | characters | enemies
@@ -9,6 +13,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+# ═══ 已停用 Target 的前置拒绝（早于 Language 加载与任何资产写入） ═══
+# 旧 Import-Characters 按列号重写整份 YAML 并 Write-Meta(New-Guid)，会丢弃
+# actionPointMaximumUnits / movementEfficiencyMilliUnits 并重写既有 ID 资产 GUID。
+# 角色内容唯一写入者是 Unity 的 CharacterContentImporter.ParseCharacterDefinitions / ImportCharacters。
+# all 也必须在此拒绝：它会在写完功法／术法／神通／敌人后才走到角色分支。
+if ($Target -eq 'characters' -or $Target -eq 'all') {
+    throw "import_csv.ps1 已停用 Target '$Target'：旧 Import-Characters 写入体会丢弃长期行动力字段并重写既有 GUID。角色定义请使用 Unity 的 CharacterContentImporter.ImportCharacterDefinitions（菜单：天章/内容/导入角色定义）。"
+}
+
 $Root = Split-Path -Parent $PSScriptRoot
 $DataConfig = Join-Path $Root "src\Assets\DataConfig"
 $DataOut = Join-Path $Root "src\Assets\Data"
@@ -37,6 +51,10 @@ function T($id) {
     if ($lang.ContainsKey($id)) { return $lang[$id] }
     return $id
 }
+
+# Unity .meta 与生成资产要求 userData／assetBundleName／assetBundleVariant／m_EditorClassIdentifier
+# 的空值行保留行尾空格；用表达式写出这些字节，源文件本身不留行尾空白，输出与原来逐字节一致。
+$UnityEmptyValueSpace = [char]32
 
 # ═══ 工具函数 ═══
 function ParseCSV($line) {
@@ -74,9 +92,9 @@ guid: $guid
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:$UnityEmptyValueSpace
+  assetBundleName:$UnityEmptyValueSpace
+  assetBundleVariant:$UnityEmptyValueSpace
 "@
     [System.IO.File]::WriteAllText($metaPath, $meta, [System.Text.UTF8Encoding]::new($true))
 }
@@ -96,7 +114,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: $guid, type: 3}
   m_Name: $name
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:$UnityEmptyValueSpace
 "@
 }
 
@@ -279,54 +297,9 @@ function Import-Skills {
 }
 
 function Import-Characters {
-    Write-Host "  导入角色..."
-    $csv = Join-Path $DataConfig "Characters.csv"
-    if (-not (Test-Path $csv)) { Write-Host "  [跳过] 文件不存在"; return }
-    $lines = Get-Content $csv -Encoding UTF8 | Where-Object { $_ -notmatch '^\s*(#|$)' } | Select-Object -Skip 1
-    foreach ($line in $lines) {
-        $cols = ParseCSV $line
-        if ($cols.Length -lt 19) { continue }
-        $nameId = $cols[0].Trim()
-        $fileName = "Char_$nameId"
-        $path = Join-Path $DataOut "Characters\$fileName.asset"
-        $name = T $nameId
-        $gongFa = if ($cols[16]) { T $cols[16] } else { "" }
-        $eqSpells = if ($cols[17]) { ($cols[17].Split('|') | ForEach-Object { "`"- " + (Esc-YAML $_) + "`"" }) -join "`n" } else { "[]" }
-        $eqSkills = if ($cols[18]) { ($cols[18].Split('|') | ForEach-Object { "`"- " + (Esc-YAML $_) + "`"" }) -join "`n" } else { "[]" }
-
-        $asset = (Make-AssetHeader $GUID_Char $fileName) + @"
-  charName: "$(Esc-YAML $name)"
-  baseLevel: 1
-  rootBone: $($cols[2])
-  physique: $($cols[3])
-  spirit: $($cols[4])
-  mind: $($cols[5])
-  reaction: $($cols[6])
-  talent: $($cols[7])
-  hpBonus: 0
-  mpBonus: 0
-  physAtkBonus: 0
-  magAtkBonus: 0
-  physDefBonus: 0
-  magDefBonus: 0
-  blockRate: $($cols[8])
-  blockReduction: $($cols[9])
-  soulShieldRate: $($cols[10])
-  soulShieldReduction: $($cols[11])
-  dodgeRate: $($cols[12])
-  critRate: $($cols[13])
-  critDamage: $($cols[14])
-  hitRateBonus: $($cols[15])
-  realmMultiplier: $($cols[1])
-  gongFaName: "$(Esc-YAML $gongFa)"
-  equippedSpells:
-$eqSpells
-  equippedSkills:
-$eqSkills
-"@
-        Write-Asset $path $asset
-        Write-Meta $path (New-Guid)
-    }
+    # 旧写入体已停用：整份 YAML 重写 + Write-Meta(New-Guid) 会丢弃长期行动力字段并重写既有 GUID。
+    # 直接调用本函数同样终止，不提供绕过 guard 的旧结构写入。
+    throw "Import-Characters 已停用：角色内容唯一写入者是 Unity 的 CharacterContentImporter.ImportCharacterDefinitions。"
 }
 
 function Import-Enemies {
