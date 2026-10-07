@@ -105,3 +105,12 @@
 - 负责人将最后敌人叶转交 Codex；五敌人显式长期输入、严格导入、旧写入体停用和 CSV／asset 对齐完成，相关 EditMode 18/18 通过；全量 7 项失败在修改前基线完全复现，见敌人叶验证记录。
 - 准备卡 completed，角色与攻击叶已独立复审归档；敌人叶本轮自有完成，U-COMBAT-AP-DATA-01 同轮汇总归档。上述表格其余行保留原工作图，不替代活跃任务卡。
 - 下游仍按既有维护规则准备，不因数据迁移完成就宣称 AP 回合内核、角色成长或数值平衡完成。
+
+## CHAR／SAVE完整交付与ready维护（2026-10-08）
+
+- 负责人本轮要求将具备条件的任务转ready，并明确确认新建玩家上限100 AP（100000单位）、v=2（2000单位）写入现有创角链。
+- 源码显示CharacterRecord.Restore直接构造CharacterAttributesSnapshot，角色必填字段与保存分批实施会形成缺字段中间版本或无来源兼容。负责人因此批准CHAR统一实施创建→Character→快照→schema4保存及全部相关验证，SAVE只保留同轮验收收口；这是对上方原始工作图W4边界的明确调整。
+- U-COMBAT-AP-CHAR-01保持deepseek／external_execute、P1，直接DATA前置已完成，当前ready；允许路径已冻结到既有创角CSV／config／asset／Importer、Character所有者、直接构造适配、两保存文件及受影响fixture。
+- U-COMBAT-AP-SAVE-01改为codex／codex_execute、verification的blocked汇总，业务路径收回，永不独立ready；CHAR的Codex独立复审同轮核验保存矩阵并归档两卡，只形成一个业务candidate。下游ITEM／EQUIP／SCENE仍等SAVE正式收口，不提前解锁。
+- CORE、SIM、TUNING只移除已正式归档的DATA前置，保留其余依赖；CHAR完成仍不能代替CORE行动力多动作、SIM迁移或角色平衡。
+- 本轮仅准备任务、记录批准与同步管理事实；未修改生产代码／CSV／asset，未宣称schema4或AP运行时已经实现。实时预检、任务投影与审核文本按现行规则核对。

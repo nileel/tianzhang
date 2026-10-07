@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-COMBAT-AP-DATA-01",
     "U-COMBAT-AP-CORE-01"
   ],
-  "stateReason": "MOVE已按确认的B范围复核归档；仍等待U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01正式完成，临近ready再冻结输入／调用点并重跑风险预检。",
+  "stateReason": "2026-10-08 DATA汇总已于88476e2a正式完成并移除；仍等待U-COMBAT-AP-CORE-01正式完成；临近ready再核定输入／直接调用点并重跑风险预检。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/Character.cs",
@@ -51,7 +50,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：Simulate 与 Simulate2v2Detailed 使用同一批准的个人回合／AP／CT／CD语义并输出可比观测。
-- 直接前置：U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01；MOVE报价原语已按B范围复核归档。
+- 直接前置：U-COMBAT-AP-CORE-01；DATA与MOVE已正式归档。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 - 2026-10-07 DATA攻击叶只严格迁移41列、四字段及GuanzhongPlaytestAudit.LoadProductionInputs／VerifyRejectedCommands与自检读取；该audit消费Unity纯内核，不证明本卡两个泛化入口已迁移。旧ArtConfig／DivineConfig.Cooldown仍是回合数，对非零CT／tick或聚灵恢复无法表达的生产组合继续明确拒绝。本SIM在临近ready逐内容／abilityInstanceId收口输入与单位，不把九来源v2映射成各境界合成输入、不弱化拒绝或塞tick回旧Cooldown；AP多动作、三时钟与泛化双入口由本卡完成，直接前置／状态保持。

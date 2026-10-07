@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-COMBAT-AP-CHAR-01 | external_execute | deepseek | P1 | unity | implementation | 角色长期行动力成长与快照 | 开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt |
+| M-EXP-OBSERVE-20-01 | codex_execute | codex | P2 | management | verification | 技术与工作流 20 任务观察报告 | 开发管理/任务卡/M-EXP-OBSERVE-20-01.txt |

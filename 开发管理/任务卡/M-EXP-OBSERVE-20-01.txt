@@ -1,6 +1,6 @@
 ---TASK-META---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "M-EXP-OBSERVE-20-01",
   "title": "技术与工作流 20 任务观察报告",
   "priority": "P2",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "2026-09-27补证：正式激活后19个固定技术域完成任务均找到可绑定的执行前schema 2预检证据；截至b48905a687582462ee4e4e8b5652b2e8b74b38f7无新增合格完成任务，距20项仍差1项，继续blocked。",
+  "stateReason": "2026-10-08已核实第20项A-GZ-UI-FONT-ASSET-01于8c2350d9完成；原会话217预检早于269业务写入，digest与完成前schema2卡一致，固定样本已满20。只准备观察报告，不提前解锁六张后继。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -31,7 +31,13 @@
     "开发管理/任务归档/M-EXP-EXT-NUMERIC-01.txt",
     "开发管理/任务卡/M-EXP-PREFLIGHT-CLOSE-01.txt"
   ],
-  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt"
+  "sourceBacklog": "开发管理/任务列表/管理与自动化任务.txt",
+  "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
 }
 ---TASK-BODY---
 # M-EXP-OBSERVE-20-01 · 技术与工作流 20 任务观察报告
@@ -102,3 +108,19 @@
 - 六项归档卡均为 `schemaVersion=2` 且预检命中与 `riskPreflight.matched` 一致；五项零命中是真实结果。五项9月5日预检的 `indexDigest` 均为 `d46db414950ffe1f9ab8baa482bf8b8bc872feeed571eed704edf551e02b2769`，U-GZ-ART-BATTLEFIELD-01 为 `4d35e55ef2280ee9ae58b122a4cefcde1f4013186fda2a4497a82ee26e9a102c`。原13项加本轮六项，共19个合格样本。
 - 从原核对锚点 `17006b836df9e2c14090c855c6e9e702e1cda82f` 到当前主线 `b48905a687582462ee4e4e8b5652b2e8b74b38f7`，`开发管理/任务归档/` 无新增完成归档。活动中的 `A-GZ-UI-FONT-ASSET-01` run 为 `attention_required`，不能计为完成。
 - 固定口径仍差1个后续真实合格完成任务。观察报告不启动，六张门禁／扩域后继继续 blocked；现有本卡已足够记录缺口，不新建任务卡，不要求用户人工补造样本。
+
+## 2026-10-08 第20项补齐与ready准备
+
+- 本轮用户要求将全部具备条件任务转ready。原19项补证保持，沿b48905a687582462ee4e4e8b5652b2e8b74b38f7后的完成归档时间检查，第一个新增完成归档即A-GZ-UI-FONT-ASSET-01；domain=unity，schemaVersion=2，完成提交8c2350d9014b7177d84e1c63e80dc97c052bf24e，时间2026-09-27 20:35:09 +08:00。其前无新增完成归档，故固定第20项确定，不取后来任务替换样本。
+- 实际手动完成会话：C:/Users/WINDOWS/.codex/sessions/2026/09/27/rollout-2026-09-27T20-20-05-01a0e2ce-e697-76d3-8b6a-f1491700e826.jsonl。CommandExecution ordinal 217在12:23:43.950Z成功运行get-experience-risk-preflight.ps1，status=ok、exit=0；首项项目业务写入ordinal 269于12:25:06.387Z复制字体与许可证，exit=0；均处在同一gz-font-asset-recovery独立worktree。不是把失败自动run当完成证据。
+- 预检taskCardDigest=73dc21725d54bb1aaa76f6368a53f9215c4d76b3689bde9e2598fd8354a369ec；indexDigest=86caf96d5b879903527cb2e687338fc076bfbea554a851b9a44cd6d93d7f2bdf；matched／mustRead／gates均空、mustReadChars=0。对8c2350d9^中的原活跃卡去UTF-8 BOM、规范LF后重算SHA256完全相等，schema2投影同为空；不以当前卡或重新跑预检替代历史证据。
+- 既有私有preflight-results/fd6d3668-2998-47ed-a62d-173c981e1df5.json可交叉核对同digest，但该自动run是失败终态；实际纳入依据是上述后续手动预检、业务顺序和正式完成。
+- 原19项加此项恰好20。已知预检绑定与可重算入口齐全，升级schema2并转ready；本轮没有执行观察报告、计算最终成本／误报或作continue／stop决定。执行时只核对这20项与其关联候选，不扫后来归档补结论；发现缺失仍按本卡原停止合同处理。
+- 必查规格精确入口：docs/superpowers/specs/2026-08-24-preventive-experience-memory-system-design.md的“效果指标与停止条件”“第三阶段”；基线为docs/superpowers/plans/preventive-experience-memory-system-read-only-trial-report.md。已有私有原始会话及preflight-results均只读，不修改自动化runtime。
+- ready准备风险预检按当前卡、索引及路径实时重算；业务实施前仍须重跑、核对投影并消费mustRead。现有输出路径、六张后继及关闭卡的管理范围保持，不能因为样本已满直接提升后继。
+
+## 模型协作
+
+- 复杂度为有界证据归纳：固定20个来源与成本阈值，可按提交／原始执行记录复算；当前不存在证据冲突或新的风险判定语义。Codex主模型由executionModel固定gpt-6.1-sol，建议high，单主智能体统一样本顺序、指标和continue／stop结论。
+- 无需额外模型或子智能体；样本口径、指标与结论相互依赖，不能拆开裁决。发现关键证据冲突或无法满足原停止条件时按既有合同停止，不另开取证任务、替换样本或擅改阈值。
+- 写前核对Git、PowerShell7、只读原始会话／preflight-results与报告写入能力；实际调用和未核实项写入本报告既有验证部分，不用模型名称代替证据。

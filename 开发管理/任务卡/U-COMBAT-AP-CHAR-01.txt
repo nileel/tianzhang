@@ -8,11 +8,9 @@
   "owner": "deepseek",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-DATA-01"
-  ],
-  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "DATA汇总已于88476e2a正式完成；2026-10-08负责人确认新建玩家100 AP／v=2并批准CHAR统一实施创角、角色快照与schema4保存恢复，SAVE仅同轮验收汇总；路径、验收和模型分工已冻结。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -30,7 +28,25 @@
     "开发管理/未通过审核清单.txt",
     "开发管理/AI合作沟通.txt",
     "开发管理/AI合作归档/U-COMBAT-AP-CHAR-01-交接归档.txt",
-    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs.meta"
+    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs.meta",
+    "src/Assets/DataConfig/CharacterCreationPointBuy.csv",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Modules/Content/CharacterCreationPointBuyConfig.cs",
+    "src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs",
+    "开发管理/任务卡/U-COMBAT-AP-SAVE-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-SAVE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -44,46 +60,58 @@
 
 ## 来源与当前边界
 
-- 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
-- 原子结果：Character 单一所有者承载可重建的 AP 上限／独立 v／有界修正输入，并保持快照原子恢复。
-- 直接前置：U-COMBAT-AP-DATA-01
-- 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
-
-- 2026-10-07 DATA准备方案A只确认两CSV角色、五敌人、两个独立模板的AP上限100000／vMilli2000；没有批准正式新建玩家BuildCharacterData的输入。两个独立模板由CharacterContentImporter仅更新两字段。正式创建仍在本卡临近ready按公共合同§九核定CharacterCreationPointBuy.csv→SettlementContentImporter.ImportCharacterCreationPointBuy→CharacterCreationPointBuyConfig／既有asset→BuildCharacterData的显式输入、精确路径与验证；不得套九来源值或C#默认。本次不补未冻结生产值、不改路径／前置或提升ready。
+- 父项P-COMBAT-AP-01；依据已批准行动力设计及公共合同§二／三／七／九。DATA汇总及三叶已正式归档，完成锚点88476e2a2e588e57754171febde401156fd2cfee；直接前置已清空。
+- 单一原子结果：正式新建玩家与已有角色的显式长期AP／独立v／有界来源输入，从创建进入Character唯一所有者，经快照与schema4保存往返不丢失，失败不部分发布。
+- 2026-10-08负责人明确确认“新建玩家采用100 AP（100000单位）、v=2（2000单位），并写入现有创角配置链”；同时批准“合并实施，SAVE保留收口”。仅冻结初始输入与完整交付边界，不代表数值平衡通过。
+- 根因：GameSaveEnvelope.CharacterRecord.Restore直接构造CharacterAttributesSnapshot；若角色构造先严格化而保存后做，中间版本会缺字段，保留旧构造又形成无来源默认。原SAVE业务与测试并入本卡，一个主责、worktree和candidate；SAVE为blocked汇总，由本卡Codex独立复审同轮关闭，永不单独ready。
+- 本卡当前原子性检查已完成；其他后继继续等待真实完成，不因ready或外部candidate提前解锁。
 
 ## 必查范围
 
-- docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
-- 公共合同长期字段；CharacterRuntimeProfile、CharacterAttributes、CharacterCombatModifiers、CharacterStateSnapshot 的构建／Capture／Restore；CharacterProgressionRef 和 AbilityLoadout 的直接输入；Content 新字段及现有角色创建调用。
-- 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md的长期属性／成长／快照／保存章节；开发管理/统一行动力公共合同.txt§二／三／七／九及长期输入验收；开发管理/统一行动力实现规划.txt的CHAR／SAVE调整。
+- CharacterRuntimeProfile、CharacterAttributes、CharacterCombatModifiers、CharacterStateSnapshot完整构建／Capture／Restore，以及CharacterProgressionRef／AbilityLoadout直接来源。CharacterData已有两字段，只读消费DATA结果。
+- 创角：CharacterCreationPointBuy.csv::default→SettlementContentImporter.ImportCharacterCreationPointBuy→CharacterCreationPointBuyConfig→Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset→CharacterCreationRules.BuildCharacterData→StartMenuSceneInstaller.CharacterRuntimeProfile.FromDefinition。
+- 保存：GameSaveEnvelope.CharacterRecord／HasCharacterPayload／Restore、GameSaveSerializer.SchemaVersion／迁移／错误原因；GameSaveSlotStore只读核对。
+- 只读核对StartMenuSceneBuilder.PointBuyConfigAssetPath与StartMenuScene.unity现有pointBuyConfig引用；GuanzhongCombatNavigationGuardPlayModeTests／GuanzhongTacticalCameraPlayModeTests消费创角，GuanzhongStarterArtsPlayModeTests消费现有模板和CharacterRecord.Capture。按符号读直接逻辑，不扫其他backlog。
 
 ## 实施范围
 
-- 只增加冻结的长期参数投影、来源去重和校验，不保存战斗 AP 余额。按既有成长所有者整合上限、v、动作减耗／有限返还来源，禁从 MP 折扣自动推导 AP 折扣；不添加整套成长内容。所有默认值来自批准的显式数据；恢复先验证整体再写入。
-- 验证证据写入 开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+- Character承载基础actionPointMaximumUnits、movementEfficiencyMilliUnits及存在语义；上限>0、v>=0、int溢出拒绝。新构造显式必填，不保留缺字段默认构造，不从reaction或MP折扣推导。Capture完整；Restore先整体验证身份、属性、资源、装配、成长及新输入，再写入，失败保留全部live状态。
+- ActionEconomyModifierInput落在既有CharacterCombatModifiers.cs，字段、ID去重、范围与引用依公共合同§二；无生产来源时显式空数组、返还预算0。仅承载协议及合法／非法夹具，不新增成长树、装备效果或来源注册系统。
+- 创角CSV在原8列表头末尾增加actionPointMaximumUnits、movementEfficiencyMilliUnits两必填列；default现有3行均100000／2000。同configId两值一致，全部行验证成功后才写asset；缺列、空值、负值、AP零、溢出、不一致或坏后行不得部分更新。保留点购配置、合法cost range和原重复校验；SettlementContentImporter只改此方法及其专用校验，不改其他导入。
+- CharacterCreationPointBuyConfig加上述显式字段，既有asset写批准值并保留GUID da2a458f00eb427e8b9947e03dfe654b；BuildCharacterData读取配置，不在C#补100000／2000，不新建配置、不重建场景、不改点购规则。
+- AdventureUnitSpawner仅适配直接CharacterAttributes构造，从现有CharacterData传两值；不接战斗AP、不改Combat快照／回合／移动规则，仍归CORE。
+- 保存统一实施公共合同§七：schema4写存在标记、两基础值及不可重建修正来源，HasCharacterPayload纳入新字段；schema3有玩家拒绝legacy_action_economy_input_missing，真正空角色／cultivation payload机械迁移4；schema1／2保持既有有玩家拒绝，真正空角色沿原迁移；schema4非法输入拒绝action_economy_save_invalid。合法v0与缺失区分，不保存余额、临时CT、回合／返还使用账本。
+- 卡头既有直接调用测试仅补显式fixture输入与本合同断言，保持原用途。新增CharacterActionPointStateTests及.meta按冻结路径；不新增其他Unity文件或目录。证据统一写开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt。
+- SAVE卡／归档路径仅供共享收尾和Codex同轮复审汇总；DeepSeek业务candidate不改任务卡、队列或backlog，不自审。
 
 ## 禁止项
 
-- 不修改自动化脚本、runtime、调度机制或模型配置；不实现未授权内容，不用兜底、兼容执行器和重试层掩盖失败。
-- 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
+- 不改自动化、runtime、调度／模型配置或asmdef；不新增兼容执行器、默认补值、重试层或第二配置。
+- 不存战斗中途状态，不删除／覆盖用户真实档，不改GameSaveSlotStore删除功能。
+- 不顺带实施CORE／FLOW／HUD／ITEM／EQUIP，不让Character反向引用Combat／World，不以功能验证代替平衡。
 
 ## 模型协作
 
-- 主责 DeepSeek V4.1 Flash，冻结合同内实施；Codex 独立复审，不自审。当前blocked，临近ready按真实接口／失败影响重新评估复杂度与执行能力。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 有界但涉及长期输入与保存原子性；失败影响明确，生产初值、schema迁移、唯一来源和调用边界已冻结，无待裁决语义。
+- 主责DeepSeek V4.1 Flash单主智能体实施，Codex独立复审完整差异与同一输入证据并汇总SAVE；创建→快照→保存强耦合，没有独立写入工作面，不预设子智能体。
+- 业务写前核对实际工具、Unity 6000.3.18f1／现有runner／临时存档能力，运行实时预检、消费mustRead并核对schema2投影。新冲突需要改公共语义时停止交有权维护者，不自行换模型、拆卡或扩边。
 
 ## 验证
 
-- 玩家／NPC 同字段；正／零／负／溢出边界、同来源不重复、snapshot 往返和失败无部分恢复；现有角色创建测试不失效。
-- 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
-- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+- 正式default CSV导入既有asset，BuildCharacterData→FromDefinition→Capture→FromSnapshot得到100000／2000；改reaction不改v，原点购／可见灵根不变。逐种非法CSV失败前后asset字节与GUID不变，合法导入幂等。
+- 玩家／NPC同字段；AP正／零／负／溢出，v零／负／溢出，缺存在语义，同来源重复／冲突及未知引用；snapshot往返不重复累加；任一子快照失败时identity、attributes、resources、loadout、progression与新输入全部不变。
+- 临时目录schema4新档／重复往返、v0、缺字段／坏来源／伪装无玩家payload、schema3有玩家拒绝与空角色迁移、schema1／2既有拒绝；失败不替换live owner，序列化无临时AP账本；槽位删除用例保持。不读写真实档。
+- 在任务worktree的src运行tools/run-unity-editmode-tests.ps1；重点核对CharacterCreationTests、CharacterStateTests、CharacterActionPointStateTests、ContentCatalogDataTests、GameSaveEnvelopeTests、GameSaveSlotStoreTests和已列直接fixture。受影响正式创角／保存PlayMode经现有runner验证，记录命令、退出、XML与输入摘要；无相关差异不扩跑其他PlayMode／BattleSim。已有7项EditMode失败见DATA敌人叶验证记录，不能豁免新增失败。
+- 公共边界运行tools/check-unity-assembly-boundaries.ps1；CSV／Unity数据运行tools/check-data-chain.ps1；管理运行check-task-cards及check-review-text；暂存前check-pending-whitespace、暂存后git diff --cached --check。
 
 ## 完成条件
 
-- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
-- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+- 同一candidate交付正式创建→Character→snapshot→schema4保存的完整长期输入往返，全部验收有本轮证据，不以fixture代替生产完成。
+- DeepSeek先交Codex独立复审；通过时同轮核验SAVE保存矩阵并将两卡归档，任一未通过则CHAR按原流程、SAVE继续blocked，不另做第二次实现。
+- 归档前仅以已有事实判断经验候选：外部provisional、Codex确认pending；无候选不写空章节。
 
 ## 停止条件
 
-- 需要新增成长树／道具实例／战斗存档，或 Character 反向依赖 Combat／World 时停止。
-- 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+- 需要新增成长树／生产修正来源／装备库存、Character反向依赖Combat／World、BattleSim平衡、真实存档迁移／删除、战斗中途保存或未批准旧档语义时停止。
+- 新路径、调用者、符号实体或技术路线出现时暂停业务写入并重跑预检；不得以默认值、旧构造或放宽测试绕过。不原子或需跨边界叠补丁时保留现场、不生成candidate。
