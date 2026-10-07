@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20261007-REV875747A259B0 选择 Codex 按未通过审核清单返工",
+  "stateReason": "自动责任方确认阻塞：missing_authoritative_movement_efficiency_source",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
