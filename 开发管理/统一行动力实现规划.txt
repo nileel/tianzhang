@@ -4,8 +4,8 @@
 
 ## 本次范围与事实
 
-- 已完成设计归档 D-COMBAT-AP-01；本次建立汇总父项 P-COMBAT-AP-01 和19张叶子卡，只做任务管理，不修改规则正文、CSV或运行时。
-- 首批仅 D-COMBAT-AP-RULES-01 ready；其余18张按真实前置blocked。后续合同完成再按既有维护规则准备下游，不执行blocked卡，也不让父项反复拆卡。
+- 已完成设计归档 D-COMBAT-AP-01；2026-10-05 初始建立汇总父项 P-COMBAT-AP-01 和19张叶子卡，只做任务管理，不修改规则正文、CSV或运行时。
+- 2026-10-05 首批仅 D-COMBAT-AP-RULES-01 ready；其余18张按真实前置blocked。后续合同完成再按既有维护规则准备下游，不执行blocked卡，也不让父项反复拆卡。
 - 三个现有生产攻击是 basic_unarmed、spell_guanshiji、spell_julingshu；没有Divine生产行。AttackProfiles是唯一攻击成本生产者。
 - Combat保持纯规则，不反向依赖World／Character／GameplayContracts；Adventure承担桥接；CombatPresentation通过GameplayContracts读不可变投影。Character拥有长期属性，World.InventoryStore拥有库存；AbilityLoadout只管理术法／神通，不能当作装备库存。
 - InventoryStore现有能力是发放，没有战斗使用命令。Items目前只有灵石和石甲碎片，没有战斗效果。换装也只有主装备普攻profile绑定，缺正式槽位／实例／写回链；两个独立内容合同卡先冻结真实可用内容。缺失不可推导决定时明确请求负责人决定，不能虚构可用品来验收。
@@ -14,7 +14,7 @@
 
 ## 完整任务图
 
-下表列全部已知叶子，不以W标签代替调度ID。每张卡有字面量路径、必查符号、原子结果、验证和停止条件。
+下表列原始工作图与已完成的 DATA 局部拆分，不以W标签代替调度ID。每张卡有字面量路径、必查符号、原子结果、验证和停止条件。
 
 | 任务 | 结果 | 主责／路由 | 直接前置 | 初始状态 |
 |---|---|---|---|---|
@@ -22,7 +22,11 @@
 | D-COMBAT-AP-CONTRACT-01 | 统一行动力公共单位与接口合同冻结 | codex／codex_execute | D-COMBAT-AP-RULES-01 | blocked |
 | D-COMBAT-AP-ITEM-01 | 战斗道具首批内容与原子使用合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
 | D-COMBAT-AP-EQUIP-01 | 战斗换装备首批资格与写回合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
-| U-COMBAT-AP-DATA-01 | 统一行动力生产数据与严格导入 | deepseek／external_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
+| U-COMBAT-AP-DATA-01 | 生产数据汇总，永不执行 | codex／codex_execute | U-COMBAT-AP-DATA-CHAR-01、U-COMBAT-AP-DATA-ENEMY-01、U-COMBAT-AP-DATA-ATTACK-01 | blocked |
+| D-COMBAT-AP-DATA-PREP-01 | 候选确认与三叶执行边界冻结 | codex／codex_execute | — | ready（2026-10-07） |
+| U-COMBAT-AP-DATA-CHAR-01 | 两角色与独立模板长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
+| U-COMBAT-AP-DATA-ENEMY-01 | 五敌人长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01、U-COMBAT-AP-DATA-CHAR-01 | blocked |
+| U-COMBAT-AP-DATA-ATTACK-01 | 三攻击新成本与双时间字段严格迁移 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
 | U-COMBAT-AP-CHAR-01 | 角色长期行动力成长与快照 | deepseek／external_execute | U-COMBAT-AP-DATA-01 | blocked |
 | U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
 | U-COMBAT-AP-MOVE-01 | 合法路径到行动力的定点报价 | deepseek／external_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
@@ -40,6 +44,16 @@
 
 主干：规则→公共合同→数据／角色／移动→内核→BattleSim与正式控制→HUD→缺失行为／换术；数值定案→生产参数回填；最终场景验收汇合全部实际输入与行为→交付闭环→汇总父项归档。
 道具／换装合同与代码是已知的独立结果，已全部建卡；合同还未冻结的具体生产资源路径必须在下游转ready前补齐，当前禁止用通配授权或在执行时猜ID。
+
+## U-COMBAT-AP-DATA-01 人工拆分与恢复
+
+- 2026-10-07：已认证 DEC-20261007-DATA06=B 要求由 Codex 一次拆为三张业务叶；当次恢复入口仍将父项恢复给 DeepSeek，责任方停止为 task_requires_decomposition。旧 checkpoint 文档造成封装器 clean-worktree 校验失败，后续触发仅报告 existing_run；证据与 run 关闭见自动工作流状态。
+- 当前 DATA 完整子图：D-COMBAT-AP-DATA-PREP-01 → U-COMBAT-AP-DATA-CHAR-01 → U-COMBAT-AP-DATA-ENEMY-01；D-COMBAT-AP-DATA-PREP-01 → U-COMBAT-AP-DATA-ATTACK-01；三业务叶全部独立复审通过 → U-COMBAT-AP-DATA-01 汇总关闭。准备卡也必须完成，不把尚未确认的候选当作已冻结。
+- 首批 ready 只有 D-COMBAT-AP-DATA-PREP-01，依据负责人本次“由 Codex 后续提出候选值供我确认”；它不写生产数据。三实施叶均 blocked，不因原始 B 回复再次恢复父项。
+- 真实所有者：角色 CharacterContentImporter；敌人 SettlementContentImporter；攻击 CombatContentImporter。旧 tools/import_csv.ps1 的角色和敌人分支均可覆盖同一资产，必须在相应叶执行前冻结处置；不能只修敌人遗漏角色。
+- 攻击还需准备直接消费者 CombatEntryAdapter／GuanzhongPlaytestAudit 与现有 CORE 的接口边界。当前纯 Combat 单一 CooldownTicks 同时作为 CT／CD，不允许把新字段重新并回该值；也不得让攻击叶反依赖 CORE 形成循环。准备卡只冻结既有三叶与直接依赖，不自动新增一套执行机制。
+- 其他下游继续依赖 DATA 汇总项；本次没有解除业务前置。最后一张业务叶由 Codex 复审时核验三叶 completed，按其授权路径一并归档 DATA；父项永不进入执行队列、不再逐轮拆分。
+- 本次只做管理恢复／完整拆分。AP 数值、Unity 实现和 BattleSim 输入均未改变；原失败 worktree／checkpoint 保留，无新业务 candidate。
 
 ## W工作包对应
 

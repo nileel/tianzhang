@@ -14,6 +14,9 @@
 
 ## 当前人工阻塞与恢复所有权
 
+- 2026-10-07：DeepSeek run 0f0cc1c4-acc3-489b-8b09-6065a73602b3（U-COMBAT-AP-DATA-01）于 06:48 停在 attention_required；后续 existing_run 是既有保护性报告。已核验 DEC-20261007-DATA06 的认证回复为 B，实际 CLI 终态为 blocked/task_requires_decomposition（session 3fe3713c-cca9-4165-bda0-a34aa5ba7a7b）。共享入口重放 checkpoint 95cb1c80129495f6a4b64caa9f1842e35f6cb186 的验证记录后，wrapper 在 blocked/failed 分支要求工作区完全干净，于是覆盖为 deepseek_terminal_worktree_invalid。HEAD 与 base 均为 eba4cd098e16fccd470d990c9ee67c749862c488；唯一 staged 文档与旧 checkpoint 精确相同，unstaged 为空、无本轮业务提交／candidate／canonical、无责任进程、集成锁空闲。按原 reason 精确 CompleteRun 返回 RUN_COMPLETED，category=failed、detailCode=manual_decomposition_required_checkpoint_retained；原 worktree／index／branch／checkpoint 全部保留，脱敏快照见本机私有 manual-backups/20261007-deepseek-existing-run。只关闭失败 run，不发送业务成功通知。
+- 同次人工处置已落实 B 的三叶拆分，父项移出 ready 并删除旧 checkpoint／reply 字段，避免重新消费旧回复；新增 D-COMBAT-AP-DATA-PREP-01 承接负责人当前“由 Codex 后续提出候选值供我确认”。三张实施叶保持 blocked，仅准备卡 ready；参数和直接消费者未冻结前不运行生产迁移。本次只改管理事实，不修改 wrapper、runtime schema、自动重试或模型配置；定时器处理期间临时暂停，收尾按原配置恢复。
+
 - 2026-09-27：`D-JD-COMBO-SCOPE-01` 的 `DEC-20260921-CD08014CC7679C` 请求仅有发送前快照，未查到服务方受理请求或有效回复；负责人已在当前 Codex 对话直接选择 A，并要求解决。按人工选择记录“渡火引线”单项候选，移除旧 `automationCheckpoint`，不制造 `automationReply` 或调用自动恢复；原 checkpoint 提交 `4888a905` 及请求快照保留为取证线索。D 卡改为等待媒介输入与 BattleSim 费用容量两张前置卡，首张已入队；`C-JD-COMBO-01` 继续阻塞，正式配方未生产。
 
 - 2026-09-22：人工核验 Codex run 544cd2f5-9591-431b-b109-0690b998fba7 与 DeepSeek run 8aa55a15-c93a-4f0e-aa20-973add3a9b05。前者在 QueueMaintenance 错用普通 needs_decision，后者 decisionId 使用 CHK 而非既有 DEC 格式；均未形成已受理决策或可集成业务结果。已按原 reason 精确 CompleteRun 为 failed/manual_failed_checkpoint_retained，两份干净的失败 worktree、分支及单提交原样保留；事前身份、摘要、提交和进程证据保存在本机 private manual-backups/20260922-decision-contracts。已逐项吸收维护记录中的已完成前置核对，B/C/D取得窗口冲突退队。修复只约束责任方输出 schema 与提示词，不新增恢复状态或自动重试。用户随后明确三阶段及筑基学习门槛，决定已记入对应卡，业务迁移由独立规划承接。实时启停及 canary 结果以工具与本机证据为准。

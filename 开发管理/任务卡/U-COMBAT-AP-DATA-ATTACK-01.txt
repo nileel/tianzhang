@@ -1,0 +1,96 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP-DATA-ATTACK-01",
+  "title": "三攻击行动力与双时间字段严格迁移",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "data",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-DATA-PREP-01"
+  ],
+  "stateReason": "等待逐 ID AP 正费／净费下限确认及冷却直接消费者、CORE 集成次序冻结；现有单一 CooldownTicks 无法承载严格双时间分离，不得简单转 ready 或反向依赖 CORE 造环。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "tools/check-data-chain.ps1",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "开发管理/U-COMBAT-AP-DATA-ATTACK-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-ATTACK-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-ATTACK-01.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-COMBAT-AP-DATA-ATTACK-01-交接归档.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-01.txt",
+    "开发管理/统一行动力实现规划.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-AP-DATA-ATTACK-01 · 三攻击行动力与双时间字段严格迁移
+
+## 来源与当前边界
+
+- 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
+- 本次仅建立 blocked 卡；本文已知路径是待 ready 核定基线，不授权临场扩边。业务交付由 DeepSeek 执行后交 Codex 独立复审，不自审。
+
+## 禁止项
+
+- 不改自动化脚本、runtime、模型或调度；不以默认值、兼容列、重试层掩盖未冻结输入。
+- 不新增生产 ID、第二成本表或运行时结算；不把功能校验或迁移候选称为数值平衡。
+
+## 模型协作
+
+- 当前是尚缺冻结输入的 blocked 实施卡，主责保持 DeepSeek V4.1 Flash。待临近 ready 时按准备卡确认结果重新评估复杂度、工具与验证；不因文件数单独升级模型。
+- 无预设子智能体；边界清楚后由一个主智能体统一实施、验证和形成唯一 candidate，Codex 独立复审。
+
+## 验证
+
+- 使用 tools/run-unity-editmode-tests.ps1 验证实际 owner worktree；已有生成 csproj 时可快速编译，不跨 worktree 复制工程投影。公共程序集边界变化才补 tools/check-unity-assembly-boundaries.ps1。
+- CSV／asset 变化运行 tools/check-data-chain.ps1；管理变化运行 check-task-cards／check-review-text；暂存前运行 check-pending-whitespace，暂存后 git diff --cached --check。
+- 逐 ID 对齐、非法整表在任何 asset 写入前拒绝、重复导入无语义变化、既有 GUID 不漂移；不得用手改 asset 代替导入链证据。
+- 外部结果转 codex_review；最后一张迁移叶由 Codex 复审核对其他两叶和准备卡 completed 后，以已列路径一并关闭父项 U-COMBAT-AP-DATA-01，不把父项重新排队。
+
+## 停止条件
+
+- 候选／下限未确认、旧写入者未处置、需新符号／消费者／路径或违反下列具体所有者边界时停止；由准备方先落卡并重跑风险预检，执行器不临场扩大授权。
+
+## 必查范围
+
+- 公共合同§二／三／九与 AttackProfiles.csv 三行：basic_unarmed、spell_guanshiji、spell_julingshu；不新增 Divine 行。CT／CD 保持值分别 0/0、10/10、5/5；具体 AP／净费下限仍由准备卡请求确认。
+- src/Assets/Scripts/Modules/Content/AttackProfileData.cs::TryValidate；src/Assets/Scripts/Editor/CombatContentImporter.cs::AttackProfileColumns／TryParseAttackProfiles／AttackProfileImportRow.CopyTo／ImportAttackProfiles。
+- AttackProfileDataTests.cs、Fixtures/AttackProfiles.fixture.csv 的旧38列与逐 ID 测试；simulations/BattleSim/BattleSimSelfTests.cs::AttackProfileHeaders 及两个现有攻击数据 suite；tools/check-data-chain.ps1 的 ATTACK_PROFILE_HEADER_NOT_EXACT 校验段与 AttackProfiles schema。
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles（旧 profile.cooldownTicks）；simulations/BattleSim/GuanzhongPlaytestAudit.cs::ReadInputs（旧 CSV cooldownTicks）。
+- 只读 src/Assets/Scripts/Combat/CombatAttackProfile.cs、CombatCommandService.cs、CombatActionResolver.cs 的单一 CooldownTicks 及 U-COMBAT-AP-CORE-01 原依赖，先证明准备卡冻结的接口切片已经成立。
+
+## 实施范围
+
+- 唯一结果：三生产攻击以确认的 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks 新合同严格导入同 ID asset，并使现有直接数据消费者和校验同一输入通过。
+- 新表头、fixture、三 asset、Unity 测试、BattleSim 自检、data-chain 同步；整批拒绝缺列、旧新列并存、负数／分数／溢出、免费主动收益与净费下限越界。
+- 旧字段去除与两个直接适配路径只能按准备卡已冻结的接口边界实施。把新字段之一再投给旧单一 CooldownTicks 仍混用单位；不得以保留旧列或转换兜底过关。
+- 目前卡头12条业务路径不包含纯 Combat 结算修改；若准备发现必须先改纯内核接口，须在本卡 ready 前由 Codex 明确整段最小切片、测试与依赖，不在本叶执行中扩到整个 CORE。不能让本卡 blockedBy CORE，因为 CORE 仍依赖父项。
+
+## 完成条件
+
+- 三行新表与 asset 逐字段一致、GUID 不漂移；合法／非法整表测试通过，实际生产审计不会再读取已删除的旧列。
+- BattleSim 修改后先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim；这只验本次数据消费者，不等同新 AP 战斗平衡。
+- 旧运行时单字段边界按事前冻结切片已闭环；未冻结或需要兼容桥时不得提交 candidate。

@@ -1,0 +1,95 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP-DATA-ENEMY-01",
+  "title": "五敌人长期行动力输入与严格导入",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "data",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP-DATA-PREP-01",
+    "U-COMBAT-AP-DATA-CHAR-01"
+  ],
+  "stateReason": "等待候选与真实所有者 ready 准备，并等待角色叶正式提供 CharacterData 两个长期字段；当前敌人导入所有者为 SettlementContentImporter。",
+  "expectedPaths": [
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "tools/check-data-chain.ps1",
+    "tools/import_csv.ps1",
+    "开发管理/U-COMBAT-AP-DATA-ENEMY-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-ENEMY-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-ENEMY-01.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-COMBAT-AP-DATA-ENEMY-01-交接归档.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-01.txt",
+    "开发管理/统一行动力实现规划.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-AP-DATA-ENEMY-01 · 五敌人长期行动力输入与严格导入
+
+## 来源与当前边界
+
+- 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
+- 本次仅建立 blocked 卡；本文已知路径是待 ready 核定基线，不授权临场扩边。业务交付由 DeepSeek 执行后交 Codex 独立复审，不自审。
+
+## 禁止项
+
+- 不改自动化脚本、runtime、模型或调度；不以默认值、兼容列、重试层掩盖未冻结输入。
+- 不新增生产 ID、第二成本表或运行时结算；不把功能校验或迁移候选称为数值平衡。
+
+## 模型协作
+
+- 当前是尚缺冻结输入的 blocked 实施卡，主责保持 DeepSeek V4.1 Flash。待临近 ready 时按准备卡确认结果重新评估复杂度、工具与验证；不因文件数单独升级模型。
+- 无预设子智能体；边界清楚后由一个主智能体统一实施、验证和形成唯一 candidate，Codex 独立复审。
+
+## 验证
+
+- 使用 tools/run-unity-editmode-tests.ps1 验证实际 owner worktree；已有生成 csproj 时可快速编译，不跨 worktree 复制工程投影。公共程序集边界变化才补 tools/check-unity-assembly-boundaries.ps1。
+- CSV／asset 变化运行 tools/check-data-chain.ps1；管理变化运行 check-task-cards／check-review-text；暂存前运行 check-pending-whitespace，暂存后 git diff --cached --check。
+- 逐 ID 对齐、非法整表在任何 asset 写入前拒绝、重复导入无语义变化、既有 GUID 不漂移；不得用手改 asset 代替导入链证据。
+- 外部结果转 codex_review；最后一张迁移叶由 Codex 复审核对其他两叶和准备卡 completed 后，以已列路径一并关闭父项 U-COMBAT-AP-DATA-01，不把父项重新排队。
+
+## 停止条件
+
+- 候选／下限未确认、旧写入者未处置、需新符号／消费者／路径或违反下列具体所有者边界时停止；由准备方先落卡并重跑风险预检，执行器不临场扩大授权。
+
+## 必查范围
+
+- 公共合同§二长期字段／§三五敌人候选；Enemies.csv 表头与五条 enemy_* 行；五条 Char_Enemy_enemy_*.asset 的精确路径已列卡头；Enemy_enemy_shijiahou.asset::combatTemplate 与 GUID。
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ContentEnemyColumns／ParseEnemyRows／ReadContentTable／UpsertCharacterTemplate／CharacterTemplateMatches／ImportContentCatalog；src/Assets/Scripts/Modules/Content/EnemyData.cs::combatTemplate 只读。
+- ContentCatalogDataTests.cs 的生产预览、非法表与 GUID 测试；tools/check-data-chain.ps1::$schemas.Enemies／Test-FormalContentCatalog；tools/import_csv.ps1::Import-Enemies／all 分派。
+- CharacterData 长期字段从角色叶消费；AdventureContentImporter 不是本链所有者，不沿原父卡误指修改它。
+
+## 实施范围
+
+- 唯一结果：五行 Enemies 显式长期输入严格投影到五个 CharacterData 模板；EnemyData.combatTemplate 继续为唯一引用，不复制第二套 AP／v。
+- 整表精确列、所有行数值与引用先验证再写 asset；新增字段同步 UpsertCharacterTemplate 与 CharacterTemplateMatches，避免字段被漏写或错误判为无变化。
+- 不把当前非关中行自动升级为正式内容；保留 contentScope 与现有引用语义，不新建 EnemyData 生产 ID。
+- 同步 data-chain 的敌人严格列及相关资产断言；在现有 ContentCatalogDataTests 覆盖全五行与无部分写入、合法 v=0、重复导入和 GUID。
+- 按准备卡冻结策略处置旧 Import-Enemies 及 all 入口，保留角色叶已经完成的角色分支处置，不另建 PowerShell 新导入器。
+
+## 完成条件
+
+- 五个模板与各 CSV 源行的新值精确一致、石甲兽引用 GUID 保持；失败输入不写任何 asset，合法导入可重复。
+- 不改攻击 schema、角色字段定义、关中内容范围或运行时结算。

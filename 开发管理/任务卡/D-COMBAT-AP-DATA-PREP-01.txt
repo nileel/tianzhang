@@ -1,0 +1,92 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP-DATA-PREP-01",
+  "title": "提出行动力迁移候选并冻结三叶执行边界",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "decision",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "负责人于 2026-10-07 当前对话要求由 Codex 后续提出候选值供确认；本卡只完成候选确认与三叶 ready 准备，不写生产数据。",
+  "expectedPaths": [
+    "开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP-DATA-PREP-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP-DATA-PREP-01.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/D-COMBAT-AP-DATA-PREP-01-交接归档.txt",
+    "开发管理/统一行动力公共合同.txt",
+    "开发管理/统一行动力实现规划.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-CHAR-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-CHAR-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-ENEMY-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-ENEMY-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-DATA-ATTACK-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-DATA-ATTACK-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-CORE-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt",
+    "开发管理/任务卡/N-COMBAT-AP-SIM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP-DATA-PREP-01 · 提出行动力迁移候选并冻结三叶执行边界
+
+## 来源与当前边界
+
+- 来源：DEC-20261007-DATA06=B 与负责人 2026-10-07 当前对话“由 Codex 后续提出候选值供我确认”。父项 U-COMBAT-AP-DATA-01 已一次拆完三张业务叶，不再拆整份 backlog。
+- 唯一结果：候选值经负责人确认且三叶的输入、所有者、字面量路径、直接消费者、验收和停止条件可确定性调度。此卡不修改任何生产 CSV、代码、asset 或自动化控制面。
+- 已批准 AP 精度 S=1000、基础上限 100000；三攻击 CT／重用刻保持 0/0、10/10、5/5。v=2000 目前是逐来源迁移候选；三个攻击的 actionPointCostUnits／minimumNetCostUnits 没有具体生产定价，不得当作已批准或从夹具抄入。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md#5／6／7／9／11／12；开发管理/统一行动力公共合同.txt#二／三／九／十一；三叶完整卡。
+- 攻击直接链：AttackProfiles.csv 三 ID；src/Assets/Scripts/Modules/Content/AttackProfileData.cs；src/Assets/Scripts/Editor/CombatContentImporter.cs::AttackProfileColumns、TryParseAttackProfiles、AttackProfileImportRow.CopyTo；src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles；src/Assets/Scripts/Combat/CombatAttackProfile.cs 的 CooldownTicks；CombatCommandService 与 CombatActionResolver 的 CT／重用消费者；simulations/BattleSim/GuanzhongPlaytestAudit.cs::ReadInputs。
+- 角色／敌人链：CharacterContentImporter.ParseCharacterDefinitions／ImportCharacters；SettlementContentImporter.ParseEnemyRows／UpsertCharacterTemplate／CharacterTemplateMatches；CharacterData；Characters.csv 两行、Enemies.csv 五行、Char_Player／Char_Enemy；tools/import_csv.ps1::Import-Characters／Import-Enemies 及 all 分派。具体完整路径见三叶卡，代码只读。
+- 直接依赖：U-COMBAT-AP-CORE-01 当前依赖 DATA／CHAR／MOVE，不能反向让攻击叶依赖 CORE 造环。只查本父项和上述直接依赖，不分析其他 backlog。
+
+## 实施范围
+
+- 在本卡验证记录中提出两组完整、可比较、单位明确的候选（每个攻击基础 AP／净费下限；两角色、五敌人、两个独立模板的长期输入），说明来源、合法性、多动作算术条件与未验证项；向负责人请求确认，不自行批准生产费用。
+- 候选只供迁移试跑，不宣称角色平衡；实际平衡仍由 N-COMBAT-AP-BALANCE-01 用迁移后的 BattleSim 验证。若提出强度或平衡结论，必须先有对应实际运行；现行模拟器尚不支持的新 AP 语义不能伪称跑过。
+- 技术准备同时冻结旧 cooldownTicks 严格移除的直接消费者和现有 CORE 集成次序：当前 CombatAttackProfile 一个 CooldownTicks 同时用于 CT 与 CD，GuanzhongPlaytestAudit 还直接读旧 CSV 列；不得仅改 adapter 再把两单位并回一值，不得以保留兼容双字段绕过。若现有三叶与直接 CORE 的边界无法安全闭环，明确报告该停止条件，不实施、不继续零散扩卡。
+- 为角色／敌人的旧 tools/import_csv.ps1 写入分支冻结停用或同步策略；默认优先保留现有 Unity 唯一导入器，不能留下可覆盖新字段或重写 GUID 的第二写入者。
+- 确认后把完整数值、路径、验证、输入摘要和允许的接口变化写入公共合同对应段与三叶正文；重算风险投影。只将前置确已完成的叶子转 ready 并按既有顺序入队；敌人叶继续等角色字段。父项永不 ready。
+- 本卡需要负责人决定时按现有 needs_decision 合同提交干净 checkpoint；A/B 只能表示本 Codex 卡能够直接落笔的两套候选，C 保持业务阻塞，不把“转给另一个 owner／要求他人改卡”包装成普通同 owner 自动继续。确认前不解除三叶前置。
+
+## 禁止项
+
+- 不运行生产导入、不改 runtime／wrapper／automation 配置、不启动 DeepSeek、不修改玩法实现；不默认 minimumNetCostUnits=1、不根据反应派生 v。
+- 不以现有失败日志自述取代源码，不把候选算术合法称为强度合理；不顺带改其他已批准语义。
+
+## 模型协作
+
+- 复杂准备：已有多次回复未落地、生产与纯内核冷却边界冲突。Codex 主模型 gpt-6.1-sol；统一处理候选、授权和投影，无写入委派。
+- 只有 CORE 接口切片仍存在独立关键冲突时，按 AI协作规则可请求 gpt-6-astra/high 只读核对上述冷却消费者和直接卡，返回符号、依赖与停止条件；工具不支持则如实记录，不换主模型、不造辅助证据。
+
+## 验证
+
+- 给候选逐 ID 表、S=1000 换算、正净费与上限约束、已批准 100 AP 内重复普攻的可达算术；不冒充 BattleSim。
+- 只对管理差异运行 tools/check-task-cards.ps1、tools/check-review-text.ps1 与本次 expectedPaths 空白检查；三叶转 ready 前实时运行 tools/get-experience-risk-preflight.ps1 并消费 mustRead／门禁。
+- 不改 docs／CSV／Unity 不跑 data-chain、Unity、BattleSim；若要作平衡判断则停止当前纯准备范围，先取得相应正式验证，不扩模拟器作为默认前置。
+
+## 完成条件
+
+- 负责人确认的候选已真实落入合同／三叶，而非只记录一条回复；直接消费者与集成次序已冻结，无循环依赖或新增未授权写入面。
+- 本卡归档、三叶移除本前置；有真实就绪叶则入队，其他保持准确阻塞。本卡不能以“已提出但尚未确认”归档完成。
+
+## 停止条件
+
+- 负责人未确认时用一次 needs_decision 等待，不循环重问；输入不足、接口需新架构或超出三叶／直接依赖边界时停止并说明，不制造兼容补丁。
