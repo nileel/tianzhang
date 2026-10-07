@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "Codex 独立复审通过：四个角色资产均由严格导入链写入冻结行动力输入，非法整表不写入，旧 PowerShell 角色写入者已停用。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
     "src/Assets/DataConfig/Characters.csv",
