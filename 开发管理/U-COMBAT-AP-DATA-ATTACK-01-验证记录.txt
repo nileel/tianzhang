@@ -1,6 +1,6 @@
 # U-COMBAT-AP-DATA-ATTACK-01 · 三攻击行动力与双时间字段严格迁移
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：AttackProfileData 以 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks 四字段替换旧 cooldownTicks、AttackProfiles.csv 41 列精确表头与三行生产值、CombatContentImporter 严格解析与整表先验证后写同 ID asset、三生产 asset 由真实导入链重写且 GUID 不变、fixture 与三个 Unity 测试文件、CombatAttackProfile 必填构造与四只读属性及两处时间读取切片（CombatCommandService／CombatActionResolver／EncounterCoordinator／CombatEntryAdapter）、BattleSim 自检与关中只读审计、tools/check-data-chain.ps1 攻击 schema。待 Codex 复审。
+✅ 已完成/复审通过；审核方：Codex。
 
 ## 一、本轮身份与范围
 
