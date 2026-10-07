@@ -1,0 +1,174 @@
+# D-COMBAT-AP-DATA-PREP-01 · 行动力迁移候选与执行边界
+
+## 2026-10-07 人工恢复补记
+
+- 当前授权以任务卡 automationReply 为准：DEC-20261007-CD6FFCC3F187D9 已接受负责人选项 A（feishu_card），证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d；正文中的“尚未选择／待确认”是原 checkpoint 形成时的历史状态，不要求重复确认。
+- 17:12 的新 run 2d7acef7-05f7-47c3-9d22-d2fbc675d11d 已重放 checkpoint 332f29c7e1c94c89596d323c4d724285afe7b665，但单文件路径被共享入口序列化为字符串，接收端在启动模型前以 codex_resume_context_invalid 拒绝；没有形成 candidate 或新增业务提交。
+- 人工核对该 checkpoint 的父提交、分支、路径及暂存／工作区内容完全一致后，将原输入保留到主线供下一次新会话读取；原失败 worktree 与私有回复／上下文继续保留。共享入口仅修正路径集合的数组形状，不增加恢复状态或重试机制。
+- 本次仅修复调度阻塞并保留已确认输入；准备卡仍为 codex_execute/codex/ready，公共合同、三叶任务及生产数据尚未按 A 落地，不代表准备任务完成或数值平衡通过。
+
+## 本轮身份、范围与决策状态
+
+- 日期：2026-10-07；责任方 Codex；主模型 gpt-6.1-sol，以共享入口传入的启动证明为准。
+- RunId：831f9e2e-afb4-463f-b5d8-4fb95114183c；基线：25a422f072583ca24922df4f9bf17b6663325eb8。
+- 本轮只在指定 owner worktree 提出完整候选与技术准备，形成一次 needs_decision checkpoint。负责人尚未选择；本文数值均为待确认迁移试跑输入，未批准、未导入、未作平衡定案。
+- 当前任务卡、三业务叶、父项、直接下游、队列和 backlog 均保持原生命周期与具名前置。本 checkpoint 不归档准备卡、不移除任何 blockedBy、不把叶子转 ready。状态转换由共享入口处理。
+- 模型协作评估：本卡跨 Content／Adventure／Combat／BattleSim，但实际问题是一条严格字段迁移链及其既有消费者，需主责统一冻结签名与依赖。源码已给出唯一消费者与窄切片，没有仍需独立裁决的 CORE 接口冲突；沿用入口 gpt-6.1-sol 单主模型，无写入委派，未执行 gpt-6-astra/high 辅助。原生工具具备只读辅助能力，本轮不为已查明边界增加调用，不启动第二责任会话。
+
+## 一、已批准规则与候选来源
+
+- 事实源：规格 docs/superpowers/specs/2026-10-05-combat-action-points-design.md §5／6／7／9／11／12；公共合同§二／三／九／十一；三叶及 U-COMBAT-AP-CORE-01、U-COMBAT-AP-CHAR-01、N-COMBAT-AP-SIM-01 的完整活跃卡。实现规划只用于核对同一 DATA 子图。
+- 已批准：S=1000，即 1 AP=1000 最小单位；基础上限 100 AP=100000 最小单位；移动分子始终为100；独立 v；CT 与全局 tick 重用冷却分离。不是根据反应或境界自动生成新值。
+- 旧 AttackProfiles.csv 三行只有 cooldownTicks：basic_unarmed=0、spell_guanshiji=10、spell_julingshu=5。源码证明其同时参与 CT 与重用；两套候选均保留已冻结的 0/0、10/10、5/5。
+- AP 基础费用和 minimumNetCostUnits 没有旧生产对应值。下列 A／B 是 Codex 为满足可比较迁移试跑与多动作预算提出的新候选，不是从公共合同§十技术夹具抄出的生产定价，也不从 MP、伤害倍率或冷却推算 AP。
+- 两角色 CSV、五敌人 CSV 和两个独立模板的 reaction 分别见下表；AdventureUnitSpawner.CreatePlayer／CreateEnemy 的旧 Mathf.Clamp(Mathf.RoundToInt(reaction/20f),2,8) 在这九项输入上均产生 M=2。候选逐项显式写 v=2；迁移后改变 reaction 不再重新生成 v。旧公式仅为本次来源证据。
+
+## 二、两套完整攻击候选
+
+以下前三个数值列均为整数 AP 最小单位；括号内是 AP 显示值。CT 与重用刻是另外两种单位。聚灵对自己／对他人的 AP 定价相同，原 MP 差异保持。
+
+| 方案 | attackProfileId | actionPointCostUnits | minimumNetCostUnits | ctPenalty（CT） | reuseCooldownTicks（全局刻） | 原其他资源约束 |
+|---|---|---|---|---|---|---|
+| A | basic_unarmed | 50000（50 AP） | 25000（25 AP） | 0 | 0 | none／0；原绑定与射程保持 |
+| A | spell_guanshiji | 50000（50 AP） | 25000（25 AP） | 10 | 10 | MP12；原资格、效果与射程保持 |
+| A | spell_julingshu | 25000（25 AP） | 12500（12.5 AP） | 5 | 5 | 自用MP0、他用MP20；恢复参数保持 |
+| B | basic_unarmed | 35000（35 AP） | 15000（15 AP） | 0 | 0 | none／0；原绑定与射程保持 |
+| B | spell_guanshiji | 60000（60 AP） | 20000（20 AP） | 10 | 10 | MP12；原资格、效果与射程保持 |
+| B | spell_julingshu | 30000（30 AP） | 10000（10 AP） | 5 | 5 | 自用MP0、他用MP20；恢复参数保持 |
+
+- A 的选择依据：一次普通距离1移动是50 AP，普攻与贯石击候选也为50 AP，便于以半个基础预算检查移动穿插与两次普攻；聚灵为25 AP。净费下限分别取基础费的一半，是明确提出的试跑约束，不是既有批准减耗效果。
+- B 的选择依据：普攻35 AP、贯石击60 AP、聚灵30 AP，使两次普攻后保留30 AP，术法组合占90 AP；下限15／20／10 AP 保留不同的有限减耗空间。这只是另一组可比较预算，不能据此宣称术法强度或构筑优劣。
+- 两套都满足 0<minimumNetCostUnits≤actionPointCostUnits≤100000，均为 int 整数；CT均在0～2147483547，重用刻均非负。未增加任何减耗／返还来源，当前仍显式空来源与0返还预算；下限本身不自动产生折扣。
+
+## 三、两套完整长期输入（共同部分）
+
+A／B 在每一行都采用同一对候选，选择差异只在攻击费用。两个独立模板保持自己的旧属性／装配，不当作 CSV 两行或关中敌人。
+
+| 来源／稳定ID或独立资产 | 原 reaction | A actionPointMaximumUnits | A movementEfficiencyMilliUnits | B actionPointMaximumUnits | B movementEfficiencyMilliUnits | 目标资产 |
+|---|---|---|---|---|---|---|
+| Characters.csv::char_taiyixiushi | 12 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_char_taiyixiushi.asset |
+| Characters.csv::char_sanxiuqiangdao | 10 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset |
+| Enemies.csv::enemy_shijiahou | 6 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset |
+| Enemies.csv::enemy_fengsun | 20 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset |
+| Enemies.csv::enemy_yanweihu | 14 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset |
+| Enemies.csv::enemy_xueyingmoxiu | 14 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset |
+| Enemies.csv::enemy_huangyesanxiu | 10 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset |
+| 独立 Char_Player | 14 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Player.asset |
+| 独立 Char_Enemy | 12 | 100000 | 2000 | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy.asset |
+
+- 每项上限=100 AP，v=2000/1000=2 普通等效距离／100基准AP；有正上限且 v≥0，无溢出。敌人仍只有 enemy_shijiahou 属于 guanzhong 正式目录；其余四模板不因填写字段而开放新内容。
+- 新建玩家、BattleSim各境界合成角色与旧存档不属于上述九项。本文不批准它们的新生产输入，也不以这九项替代它们的来源核定。正式创建 BuildCharacterData 的显式配置链仍须在既有 U-COMBAT-AP-CHAR-01 临近 ready 时完成，不能在本次数据导入中给所有新建角色补默认值。
+
+## 四、可达算术与证据边界
+
+条件：100000初始余额、无修正来源，普通合法边 d_e=K，vMilli=2000。每边费 max(1,floor(100×1000×d_e×1000/(K×2000)))=50000。只有本段普通边假设才使用下表；有负担或压缩边须读实际路径。
+
+| 组合 | A 费用／余额（最小单位） | B 费用／余额（最小单位） |
+|---|---|---|
+| 两次普攻 | 100000／0 | 70000／30000 |
+| 距离1移动→普攻或普攻→移动 | 100000／0 | 85000／15000 |
+| 贯石击→聚灵或反序 | 75000／25000 | 90000／10000 |
+| 距离1移动→聚灵 | 75000／25000 | 80000／20000 |
+| 距离2全移动 | 100000／0 | 100000／0 |
+
+- 两普攻在同个人回合／0新增tick上的预算可达性以普攻CT0／重用0为条件，还需活目标、授权、范围、控制与后续 CORE 的多动作实现。当前旧内核仍有单次行动 phase，本文没有声称现行游戏已能执行这些组合。
+- 贯石击与聚灵是不同能力的组合，CT合计15，正常结束的规则门槛应为115；各自正重用刻10／5表示同一技能不能在0新增tick下再用。算术余额充足不绕过独立CD、MP与装配资格。
+- 主动净费下限严格为正，因此有限100000预算不能支持无限收益循环；当前无折扣时仍付基础费。返还实例、触发次数、来源预算等只按已批准合同由后续CORE实现，本文没有生成生产返还内容。
+- 未运行新AP BattleSim或Unity。以上仅为整数算术与源码静态路由证据；角色强度、胜率、聚灵收益与成长平衡仍交 N-COMBAT-AP-BALANCE-01 在迁移后的输入上实际运行。
+
+## 五、三叶共同技术准备
+
+### 角色叶：唯一导入器与两个独立模板
+
+- 唯一写入者保留 src/Assets/Scripts/Editor/CharacterContentImporter.cs::ParseCharacterDefinitions／ImportCharacters；数据定义为 src/Assets/Scripts/Modules/Content/CharacterData.cs 的两个必填长期字段，不设C#数值默认。
+- Characters.csv 在当前19列尾部依次追加 actionPointMaximumUnits、movementEfficiencyMilliUnits，冻结为21列精确表头和精确行宽；完整两行先验证再写资产。上限>0；v=0合法；空、负、分数和int溢出整表拒绝。不能仅沿用 RequireColumns 的宽松缺列／多列接受方式。
+- 现有 ImportCharacters 只按 CSV ID 写 Char_<ID>.asset，不能覆盖 Char_Player／Char_Enemy。对源码／tools检索未发现这两个独立模板的现存生成器；其最近修改为提交 b715cc8243218196844cd7664c00f463faddc6ef 的既有资源。它们的维护输入是各自现有序列化资产，不是CSV人物别名。
+- 在同一 CharacterContentImporter 内增加有界方法 ImportIndependentActionEconomyInputs：只用上述两个精确资产路径与各自经确认的两个字段值，经AssetDatabase加载、整体校验后仅设置这两字段并SetDirty／SaveAssets，保留旧属性、引用和GUID；不新建模板，不使用CopySerialized把它们替换成CSV角色。该方法纳入 ImportCharacters 已有入口，先验证全部CSV行、两个目标存在及待写值，再开始任何写入；无反应派生、无缺值兜底、无第二导入组件。两个候选在这里的显式迁移值相同。
+- 角色叶原有业务字面量路径不变；新私有方法仍在已授权文件内。ContentImporterArchitectureTests 覆盖CSV两行、两个独立模板保留其他字段／GUID、合法v0、非法末行不写四资产、重复导入幂等及旧写入者处置。不得以手改asset取代导入链证据。
+
+### 敌人叶：真实所有者与依赖
+
+- 唯一写入者 src/Assets/Scripts/Editor/SettlementContentImporter.cs；完整链为 ContentEnemyColumns→ReadContentTable→ParseEnemyRows→BuildEnemyTemplate→ImportContentCatalog／UpsertCharacterTemplate，字段相等判断为 CharacterTemplateMatches。
+- Enemies.csv 在当前25列尾部按相同顺序追加两字段，冻结为27列；全五行先严格校验。BuildEnemyTemplate、UpsertCharacterTemplate、CharacterTemplateMatches 都同步两字段，避免写入遗漏或误判幂等。EnemyData.combatTemplate 继续唯一引用，不复制AP／v。
+- 五模板与现有 Enemy_enemy_shijiahou.asset 引用保留；tools/check-data-chain.ps1 的 Enemies schema／Test-FormalContentCatalog 及 ContentCatalogDataTests 同步。只读 EnemyData.cs，不改 AdventureContentImporter，不新建正式敌人ID。
+- 此叶仍需角色叶正式提供CharacterData字段。确认候选也不满足此代码前置；不得提前ready。
+
+### 两个旧PowerShell写入分支
+
+- tools/import_csv.ps1::Import-Characters／Import-Enemies 均使用列号生成整份YAML，随后 Write-Meta(path,New-Guid)，会丢弃新字段并重写现有GUID；all分派调用二者。保留它们会留下第二写入者，根因已查明。
+- 冻结停用方案，不同步另一套导入器：角色叶将 Import-Characters 的写入体替换为明确终止错误，说明改用 CharacterContentImporter.ImportCharacterDefinitions；敌人叶随后同样停用 Import-Enemies，指向 SettlementContentImporter.ImportContentCatalog。禁止绕过guard直接调用旧函数。
+- 对所停用的 characters／enemies Target 以及 all，在脚本主流程任何目录创建、Language加载或其他表写入前检查并终止；因此all不会先写功法／术法再失败。角色叶先停用characters与all，不改仍在等待迁移的enemies分支；敌人叶再停用enemies并保留前次处置。DryRun也不提供旧结构写入预览。gongfa／spells／skills显式Target仍按原有行为。
+- 同一tools/import_csv.ps1由两个叶依次处理；敌人叶真实依赖角色叶，已有顺序足够，不增加调度器、锁或新任务。验证显式Target／all拒绝且文件无改动，用既有Unity导入器验证新输入。
+
+## 六、攻击叶与CORE的无环接口切片
+
+### 已查明的全部旧单字段直接消费者
+
+| 精确路径与完整逻辑单元 | 现有用途 | 严格迁移方向 |
+|---|---|---|
+| src/Assets/Scripts/Modules/Content/AttackProfileData.cs::字段／TryValidate | cooldownTicks配置及合法性 | 四必填新字段，旧字段删除 |
+| src/Assets/Scripts/Editor/CombatContentImporter.cs::AttackProfileColumns／TryParseAttackProfiles／ParseAttackProfileRow／AttackProfileImportRow.CopyTo／ImportAttackProfiles | 38列、整表验证、同ID写asset | 旧列原位置替换为actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks，成为41列；不接受旧新并存 |
+| src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles | 把旧content字段投给纯profile | 四新字段逐项传入，不回并为单值 |
+| src/Assets/Scripts/Combat/CombatAttackProfile.cs::构造／属性 | 同一个CooldownTicks属性 | 删除旧参数／属性，四项required构造输入与同名PascalCase只读属性 |
+| src/Assets/Scripts/Combat/CombatCommandService.cs::Preview／Execute | 两处用CooldownTicks作CT惩罚 | 两处只读CtPenalty；此切片不改个人回合phase／累加算法 |
+| src/Assets/Scripts/Combat/CombatActionResolver.cs::ResolveAttack | SetCooldown(profile.Id,CooldownTicks) | 只读ReuseCooldownTicks启动原有全局刻账本 |
+| src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::BuildArtActions | 旧CooldownTicks传给CombatArtActionSnapshot | 只传CtPenalty；其现有CooldownPenalty字段在CombatActionBarView显示为CT +，不是重用CD |
+| simulations/BattleSim/GuanzhongPlaytestAudit.cs::LoadProductionInputs／VerifyRejectedCommands | 直接读CSV旧列，且恢复用例把旧属性与PendingCooldownPenalty比较 | 严格读四新列，CT断言读CtPenalty，重用断言读ReuseCooldownTicks |
+
+- 任务卡导航写的 GuanzhongPlaytestAudit.ReadInputs 在当前源码不存在；真实入口是 LoadProductionInputs，检查入口是 VerifyRejectedCommands。按真实符号冻结，不新造ReadInputs。BattleSimSelfTests也直接读旧列，是已授权的既有自检路径。
+- CombatSession 的 ValidateAttack 查 actor.GetCooldown(profile.Id)，LegalActionService 枚举profile；它们未读删除属性、不构造profile，此次只读核对，旧冷却存量仍是全局tick，不需要为字段分离修改这些文件。
+- SpellData／DivineSkillData／Spells.csv／Skills.csv 的遗留cooldownTicks保持原独立内容链，不能回填四新权威攻击字段。本切片不要求删除仓库中所有同名字串。
+
+### 严格构造签名与调用点
+
+- CombatAttackProfile 构造固定为 id、kind、effect、minimumRange、maximumRange、actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks，随后接当前其他可选效果／MP／qualification参数。四新参数不设默认，不留旧构造重载。Validate保证正AP／正下限且下限≤基础费、ct≤int.MaxValue−100、重用≥0；新属性 ActionPointCostUnits／MinimumNetCostUnits／CtPenalty／ReuseCooldownTicks。
+- 直接构造调用点全引用检索结果只有：CombatEntryAdapter.TryProjectProfiles、GuanzhongPlaytestAudit.LoadProductionInputs、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs、src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs、src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs。测试每次构造显式提供四值，旧具名cooldownTicks参数拆成独立CT／重用值；未声明的技术profile也不得借默认值通过。
+- GuanzhongStarterArtsPlayModeTests 只读生产profile与现有CT状态，列为相关验证，不是需要改签名的构造者。CombatPresentationContracts 与 CombatActionBarView 只核对现有CT投影含义，不改HUD合同或UI。
+- AP字段先只进入严格数据／不可变profile。生产扣费与多动作、CT累计、回合恢复／结束仍由后续CORE实现；阶段性通过仅代表严格输入和双时间消费者已迁移，不代表统一AP玩法已完成。不得提前给旧内核补一套AP执行器。
+
+### 攻击叶ready前必须补齐的七条业务路径
+
+在本卡经确认恢复时，把以下七条精确路径补入 U-COMBAT-AP-DATA-ATTACK-01.expectedPaths及正文，连同原12条业务路径一起冻结；本 checkpoint 只登记方案，尚未改卡。
+
+1. src/Assets/Scripts/Combat/CombatAttackProfile.cs
+2. src/Assets/Scripts/Combat/CombatCommandService.cs
+3. src/Assets/Scripts/Combat/CombatActionResolver.cs
+4. src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+5. src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
+6. src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+7. src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs
+
+没有新增Unity文件，故不新增.meta路径；各既有.meta作为GUID保持的只读证据。不得让本叶改CombatSession／CombatantSnapshot／TurnScheduler／CTBEngine的AP算法，或抢先接入HUD。
+
+### 既有BattleSim自检与验收
+
+- BattleSimSelfTests.AttackProfileHeaders、ValidateAttackProfileTable及两个既有攻击数据suite改为41列与四新字段。其旧GameData.ArtConfig／DivineConfig.Cooldown仍为泛化回合数，不能把新ReuseCooldownTicks直接塞入该字段后称已对齐。
+- 保留未支持的生产语义明确拒绝：旧泛化载体尚不能消费非零CT／tick与聚灵恢复，表结构／整数合法性先独立校验，投影对无法表达的值仍报未解决／不支持，不能删除拒绝来通过测试。零CT／重用的技术fixture可以继续验证旧伤害／范围链，四新字段显式填值；AP只验输入，不宣称旧1v1／2v2已经结算它。
+- 新生产三攻击通过Unity纯Combatprofile的关中只读审计读取；泛化1v1／2v2的AP／三时钟与实例迁移保留给N-COMBAT-AP-SIM-01。两入口证据不能互相替代。
+- 攻击叶测试在既有CombatRuntimeKernelTests增加非相等的CT／重用技术值（如CT7、重用13）证明预览／结束轴只用7、重用账本只用13；仅测生产10/10、5/5不能暴露误并单位。其余旧phase测试只显式适配字段，CORE以后再按新多动作合同调整。
+- 最小充分验收：实际owner worktree的Unity EditMode与因两份PlayMode构造测试变化而要求的PlayMode runner；AttackProfileDataTests覆盖四字段缺失／旧新并存／零负／分数／溢出／下限越界／整表不写、三资产逐ID值与GUID；data-chain更新AttackProfiles schema和三ID预期；BattleSim在本worktree assets缺失时一次restore，随后Release --no-restore build与规定run。没有生成csproj时不借其他worktree投影。
+
+### 原依赖与后续职责
+
+- 原图保持：准备卡→角色叶→敌人叶，准备卡→攻击叶；三叶独立复审通过→DATA汇总归档；CORE继续依赖DATA／CHAR／MOVE。字段接口切片在攻击叶内完成，攻击叶不依赖CORE，因此没有DATA→CORE→攻击叶→DATA的环。
+- 确认后当前Codex准备卡可直接把选中表与共同技术边界落公共合同／三叶／直接CORE正文，明确CORE消费已有四属性，继续实现AP原子结算和CT求和；不交另一owner补卡、不新增机制或再拆父项。敌人叶仍保留角色前置。
+- 正式结果进入master后，后续QueueMaintenance才移除三叶对本taskId的前置并准备ready；本Execution run不得顺带移除下游blockedBy或提升它们。临近ready时以更新后的expectedPaths／符号消费实时预检mustRead与门禁。当前预检不能替代将来的扩大路径预检。
+- CHAR正式新建玩家的既有配置／BuildCharacterData与SIM泛化账本仍在各卡ready门槛，保留待核定事实；此次不批准新的创建输入或未映射Art／Divine成本，不把它们纳入九行表。
+- 输入不足、出现未列直接消费者、需要新架构／兼容桥、切片扩为整个CORE或需在多边界叠补丁时停止，按原任务停止合同报告；不在叶子执行中继续扩路径。
+
+## 七、本轮验证与未验证项
+
+- 实时风险预检已运行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId D-COMBAT-AP-DATA-PREP-01，exit 0／status ok；taskCardDigest=e7ceb0c97531896415911c5662e4c0f728f1663376b0727f4b9ebef66e6da9cb，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。matched／notice／mustRead／gates／gatePointers均空，与当前schema2 riskPreflight及共享入口预检投影一致。无mustRead正文或门禁入口需补消费。
+- 本轮整数算术：PowerShell独立校验本文实际六攻击行、九长期输入行、正净费与上限、CT／tick逐ID值及五组合；修正首次校验脚本数组表达式的运算优先级错误后exit 0。A组合费用100000／100000／75000／75000／100000，B为70000／85000／90000／80000／100000，均不超过100000；普通边费50000。首次脚本结果未计为通过。
+- 任务卡／投影：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson，exit 0／status ok，83张活跃卡、readyCount=1。没有修改卡／队列输入，不重复运行相同检查；readyCount不是本任务完成或新叶已ready的证明。
+- 提交前对最终本文运行check-review-text；check-pending-whitespace与暂存diff检查由automation-finalize-commit既有入口执行，命令与实际结果进入本checkpoint终态verified。提交只含本文，检查不以任何生产导入作为前置。
+- References loaded：unity-agent-workflows 的 project-structure-discovery.md、content-and-systems.md、ai-workflows.md；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md。所有者证明来自本轮源码与九项实际输入；没有更改非请求系统。
+- 未验证：负责人确认、严格新导入实际运行、Unity新签名编译／行为、CORE新AP多动作、泛化BattleSim新语义与平衡、GUID迁移后的稳定性。本文只能要求后续叶子验证，不能把要求写成通过。
+
+## 八、一次性决策
+
+- 问题：请选择本次迁移试跑候选及共同技术边界；选择A／B只批准本准备卡把候选与接口落入合同／三叶，不代表数值平衡定案。
+- A：半预算攻击方案（推荐）。普攻／贯石击／聚灵基础50／50／25 AP，净费下限25／25／12.5 AP；九项长期输入100 AP／v2，采用本文共同迁移切片与旧写入者停用方案。
+- B：轻普攻方案。普攻／贯石击／聚灵基础35／60／30 AP，净费下限15／20／10 AP；九项长期输入与共同技术边界同A。
+- C：暂不批准迁移候选，保持业务阻塞，不运行生产导入、不解除三叶前置。
+- 推荐A仅因预算检查更直观；两套未有迁移后平衡运行。C或未回复都不能解释为批准，后续只消费共享入口绑定本checkpoint的有效回复。

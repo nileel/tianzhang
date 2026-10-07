@@ -1336,7 +1336,7 @@ function Apply-CheckpointToNewRun {
   $checkpoint = $Restored.checkpoint
   $branchSha = Invoke-GitText $script:root @('rev-parse', [string]$checkpoint.branch) 'checkpoint_branch_invalid'
   if ($branchSha -cne [string]$checkpoint.checkpointCommit -or (Invoke-GitText $script:root @('rev-parse', "$branchSha^")) -cne [string]$checkpoint.baseCommit) { Stop-Hourly 'checkpoint_commit_invalid' }
-  $actual = Get-ChangedPaths $script:root "$($checkpoint.baseCommit)..$branchSha"
+  $actual = @(Get-ChangedPaths $script:root "$($checkpoint.baseCommit)..$branchSha")
   $reported = @($checkpoint.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
   if (($actual -join "`0") -cne ($reported -join "`0")) { Stop-Hourly 'checkpoint_paths_invalid' }
   $task = Read-TaskMetadata $script:root ([string]$Run.taskId)

@@ -94,27 +94,47 @@ function Invoke-TerminalScenario {
 }
 
 function Invoke-ResumeContextScenario {
-  param([ValidateSet('valid', 'missing', 'unknown')][string]$Mode)
+  param([ValidateSet('valid', 'missing', 'unknown', 'scalar')][string]$Mode)
   $scenarioStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-resume-$Mode"
   $scenarioStateRoots.Add($scenarioStateRoot)
   $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $scenarioStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
   $scenarioRun = ($claimOutput[0] | ConvertFrom-Json).run
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$scenarioRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$scenarioRun.candidateBranch, [string]$scenarioRun.worktree, $base) | Out-Null
-  Write-Utf8 -Path (Join-Path ([string]$scenarioRun.worktree) 'fixture/rename-source.txt') -Text 'checkpoint replay fixture'
-  Invoke-Git -Root ([string]$scenarioRun.worktree) -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
-
-  $context = [ordered]@{
-    schemaVersion = 1; taskId = $taskId; decisionId = 'DEC-20260825-RESUMEFIXTURE'
-    replyKind = 'option'; replyValue = 'A'; source = 'feishu_card'; evidenceHash = ('a' * 64)
-    checkpointCommit = $base; checkpointChangedPaths = @('fixture/rename-source.txt')
+  $checkpointWorktree = Join-Path $testRoot "checkpoint-$Mode"
+  $checkpointBranch = "fixture/checkpoint-$Mode"
+  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', $checkpointBranch, $checkpointWorktree, $base) | Out-Null
+  Write-Utf8 -Path (Join-Path $checkpointWorktree 'fixture/rename-source.txt') -Text 'checkpoint replay fixture'
+  Invoke-Git -Root $checkpointWorktree -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
+  Invoke-Git -Root $checkpointWorktree -Arguments @('commit', '-m', 'test: create single-file resume checkpoint') | Out-Null
+  $checkpointCommit = Invoke-Git -Root $checkpointWorktree -Arguments @('rev-parse', 'HEAD')
+  $restored = [pscustomobject]@{
+    taskId = $taskId
+    checkpoint = [pscustomobject]@{
+      branch = $checkpointBranch; checkpointCommit = $checkpointCommit; baseCommit = $base
+      decisionId = 'DEC-20260825-RESUMEFIXTURE'; changedPaths = @('fixture/rename-source.txt')
+    }
+    reply = [pscustomobject]@{ replyKind = 'option'; replyValue = 'A'; source = 'feishu_card'; evidenceHash = ('a' * 64) }
   }
-  if ($Mode -ceq 'valid') { $context['kind'] = 'decision_checkpoint' }
+  $resumePath = & {
+    $ownerAst = [Management.Automation.Language.Parser]::ParseInput($ownerSource, [ref]$null, [ref]$null)
+    foreach ($name in @('Stop-Hourly', 'Normalize-FullPath', 'Invoke-GitText', 'Get-NormalizedTextDigestFromText', 'Read-TaskMetadata', 'Get-ChangedPaths', 'Write-PrivateJson', 'Assert-WorktreePath', 'Apply-CheckpointToNewRun')) {
+      $definition = $ownerAst.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name }, $false)
+      Assert-True ($null -ne $definition) "Checkpoint producer function is missing: $name"
+      . ([scriptblock]::Create($definition.Extent.Text))
+    }
+    $script:root = $mainRoot
+    $script:effectiveStateRoot = $scenarioStateRoot
+    $Owner = 'codex'
+    Apply-CheckpointToNewRun -Run $scenarioRun -Restored $restored
+  }
+  $context = [IO.File]::ReadAllText($resumePath) | ConvertFrom-Json -AsHashtable -Depth 20
+  Assert-True ($context.checkpointChangedPaths -is [array]) 'Single-file checkpoint producer serialized paths as a scalar'
+  Assert-Equal $context.checkpointChangedPaths.Count 1 'Single-file checkpoint producer changed the path count'
+  Assert-Equal $context.checkpointChangedPaths[0] 'fixture/rename-source.txt' 'Checkpoint producer changed the replayed path'
+  if ($Mode -ceq 'missing') { $context.Remove('kind') }
   elseif ($Mode -ceq 'unknown') { $context['kind'] = 'unknown_checkpoint' }
-  $resumeDirectory = Join-Path $scenarioStateRoot 'resume-contexts'
-  [IO.Directory]::CreateDirectory($resumeDirectory) | Out-Null
-  Set-PrivatePathAcl -Path $resumeDirectory -Directory
-  $resumePath = Join-Path $resumeDirectory "$($scenarioRun.runId).json"
+  elseif ($Mode -ceq 'scalar') { $context['checkpointChangedPaths'] = 'fixture/rename-source.txt' }
   Write-Utf8 -Path $resumePath -Text ($context | ConvertTo-Json -Compress -Depth 20)
   Set-PrivatePathAcl -Path $resumePath
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
@@ -436,7 +456,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal ([string]$validResume.Terminal.status) 'completed' "Codex rejected a valid normal checkpoint resume context: $($validResume.Terminal | ConvertTo-Json -Compress -Depth 20)"
   Assert-True $validResume.RunnerStarted 'Codex valid normal checkpoint resume did not reach the runner'
   Assert-True ($validResume.Trace -match '"kind":"decision_checkpoint"') 'Codex resume prompt lost the validated normal checkpoint kind'
-  foreach ($invalidResumeMode in @('missing', 'unknown')) {
+  foreach ($invalidResumeMode in @('missing', 'unknown', 'scalar')) {
     $invalidResume = Invoke-ResumeContextScenario -Mode $invalidResumeMode
     Assert-Equal ([string]$invalidResume.Terminal.status) 'failed' "Codex accepted invalid resume context kind: $invalidResumeMode"
     Assert-Equal ([string]$invalidResume.Terminal.detailCode) 'codex_resume_context_invalid' "Codex resume kind failure code changed: $invalidResumeMode"
