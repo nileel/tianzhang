@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人于 2026-10-07 当前对话要求由 Codex 后续提出候选值供确认；本卡只完成候选确认与三叶 ready 准备，不写生产数据。",
+  "stateReason": "等待负责人决定：请选择行动力迁移试跑候选，并确认记录中的双时间字段迁移与旧PowerShell写入分支停用方案。此次确认不代表数值平衡定案。",
   "expectedPaths": [
     "开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
@@ -39,7 +39,59 @@
     "matched": [],
     "gates": []
   },
-  "executionModel": "gpt-6.1-sol"
+  "executionModel": "gpt-6.1-sol",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-COMBAT-AP-DATA-PREP-01",
+    "sourceRunId": "831f9e2e-afb4-463f-b5d8-4fb95114183c",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261007-CD6FFCC3F187D9",
+    "question": "请选择行动力迁移试跑候选，并确认记录中的双时间字段迁移与旧PowerShell写入分支停用方案。此次确认不代表数值平衡定案。",
+    "options": [
+      {
+        "key": "A",
+        "label": "半预算方案：普攻／贯石击／聚灵费用50／50／25 AP，净费下限25／25／12.5 AP；九来源上限100 AP、v=2。"
+      },
+      {
+        "key": "B",
+        "label": "轻普攻方案：普攻／贯石击／聚灵费用35／60／30 AP，净费下限15／20／10 AP；九来源上限100 AP、v=2。"
+      },
+      {
+        "key": "C",
+        "label": "暂不批准候选，保持业务阻塞和三叶前置。"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "两套均保留CT／重用刻0/0、10/10、5/5，预算内可完成两次普攻。A的半预算组合更便于核验。确认后由本Codex准备卡将候选与共同技术边界写入合同及三叶；生产实现、平衡验证与下游解阻塞仍由后续任务完成。",
+    "plainSummary": {
+      "situation": "请选择行动力迁移试跑候选，并确认记录中的双时间字段迁移与旧PowerShell写入分支停用方案。此次确认不代表数值平衡定案。",
+      "impact": "两套均保留CT／重用刻0/0、10/10、5/5，预算内可完成两次普攻。A的半预算组合更便于核验。确认后由本Codex准备卡将候选与共同技术边界写入合同及三叶；生产实现、平衡验证与下游解阻塞仍由后续任务完成。",
+      "action": "建议选择 A：半预算方案：普攻／贯石击／聚灵费用50／50／25 AP，净费下限25／25／12.5 AP；九来源上限100 AP、v=2。"
+    },
+    "checkpointCommit": "332f29c7e1c94c89596d323c4d724285afe7b665",
+    "baseCommit": "25a422f072583ca24922df4f9bf17b6663325eb8",
+    "branch": "codex/automation/codex/831f9e2e-afb4-463f-b5d8-4fb95114183c/candidate",
+    "changedPaths": [
+      "开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt"
+    ],
+    "verified": [
+      "两套候选的六条攻击行、九条长期输入及五组动作预算整数校验通过。",
+      "实时风险预检通过，命中、必读和门禁均为空，与任务卡投影一致。",
+      "check-task-cards通过：83张活跃卡，readyCount=1。",
+      "check-review-text通过：704个文件。",
+      "automation-finalize-commit空白和暂存差异检查通过。",
+      "checkpoint为基线的唯一直接后继提交，工作树干净；任务生命周期与下游前置未改变。"
+    ],
+    "unverified": [
+      "负责人尚未确认候选。",
+      "新字段导入、Unity编译与行为、迁移后BattleSim和平衡尚未验证。"
+    ],
+    "residualRisk": "候选仅通过算术与静态边界核对；攻击叶仍需按记录补齐七条消费者及测试路径，并在临近ready时重新预检。",
+    "taskContextDigest": "5426f5f5416a856a1350dbc937bdd2807ec3800d520cefaf1e45f7ed1a0a11fb",
+    "createdAt": "2026-10-07T10:27:12.0437663+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-COMBAT-AP-DATA-PREP-01 · 提出行动力迁移候选并冻结三叶执行边界
