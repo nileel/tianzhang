@@ -9,8 +9,8 @@
   "domain": "content",
   "stage": "decision",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-OBSERVE-20-01"],
-  "stateReason": "等待 20 任务 continue；本卡只决定剧情/NPC/功法术法神通等内容经验是否建立独立后续 initiative。",
+  "blockedBy": [],
+  "stateReason": "M-EXP-OBSERVE-20-01 已完成且结论为 stop，未达到本卡要求的 continue；保持阻塞。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-content-domain-assessment.md",
     "开发管理/任务列表/管理与自动化任务.txt",

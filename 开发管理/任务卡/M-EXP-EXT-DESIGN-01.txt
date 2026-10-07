@@ -9,8 +9,8 @@
   "domain": "management",
   "stage": "decision",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-OBSERVE-20-01"],
-  "stateReason": "等待 20 任务 continue；本卡只决定设计经验域是否值得建立独立后续 initiative，不创建设计经验或修改首期索引。",
+  "blockedBy": [],
+  "stateReason": "M-EXP-OBSERVE-20-01 已完成且结论为 stop，未达到本卡要求的 continue；保持阻塞。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-design-domain-assessment.md",
     "开发管理/任务列表/管理与自动化任务.txt",

@@ -9,8 +9,8 @@
   "domain": "automation",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-OBSERVE-20-01"],
-  "stateReason": "等待 20 任务 continue 结论；只把 EXP-AUTO-001 绑定到已有稳定 PowerShell 7 检查器，不新建第二检查器。",
+  "blockedBy": [],
+  "stateReason": "M-EXP-OBSERVE-20-01 已完成且结论为 stop，未达到本卡要求的 continue；保持阻塞。",
   "expectedPaths": [
     "开发管理/经验库/风险索引.json",
     "开发管理/经验库/经验卡/EXP-AUTO-001.txt",

@@ -9,8 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": ["M-EXP-OBSERVE-20-01"],
-  "stateReason": "等待 20 任务 continue 结论；为现有程序集边界检查器补独立 fixture 测试后再升级 EXP-UNITY-002。",
+  "blockedBy": [],
+  "stateReason": "M-EXP-OBSERVE-20-01 已完成且结论为 stop，未达到本卡要求的 continue；保持阻塞。",
   "expectedPaths": [
     "tools/check-unity-assembly-boundaries.ps1",
     "tools/test-check-unity-assembly-boundaries.ps1",
