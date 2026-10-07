@@ -23,7 +23,7 @@
 | D-COMBAT-AP-ITEM-01 | 战斗道具首批内容与原子使用合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
 | D-COMBAT-AP-EQUIP-01 | 战斗换装备首批资格与写回合同 | codex／codex_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
 | U-COMBAT-AP-DATA-01 | 生产数据汇总，永不执行 | codex／codex_execute | U-COMBAT-AP-DATA-CHAR-01、U-COMBAT-AP-DATA-ENEMY-01、U-COMBAT-AP-DATA-ATTACK-01 | blocked |
-| D-COMBAT-AP-DATA-PREP-01 | 候选确认与三叶执行边界冻结 | codex／codex_execute | — | ready（2026-10-07） |
+| D-COMBAT-AP-DATA-PREP-01 | 方案A确认与三叶执行边界已冻结 | codex／codex_execute | — | completed候选（2026-10-07；正式结果待共享入口集成） |
 | U-COMBAT-AP-DATA-CHAR-01 | 两角色与独立模板长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
 | U-COMBAT-AP-DATA-ENEMY-01 | 五敌人长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01、U-COMBAT-AP-DATA-CHAR-01 | blocked |
 | U-COMBAT-AP-DATA-ATTACK-01 | 三攻击新成本与双时间字段严格迁移 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
@@ -54,6 +54,13 @@
 - 攻击还需准备直接消费者 CombatEntryAdapter／GuanzhongPlaytestAudit 与现有 CORE 的接口边界。当前纯 Combat 单一 CooldownTicks 同时作为 CT／CD，不允许把新字段重新并回该值；也不得让攻击叶反依赖 CORE 形成循环。准备卡只冻结既有三叶与直接依赖，不自动新增一套执行机制。
 - 其他下游继续依赖 DATA 汇总项；本次没有解除业务前置。最后一张业务叶由 Codex 复审时核验三叶 completed，按其授权路径一并归档 DATA；父项永不进入执行队列、不再逐轮拆分。
 - 本次只做管理恢复／完整拆分。AP 数值、Unity 实现和 BattleSim 输入均未改变；原失败 worktree／checkpoint 保留，无新业务 candidate。
+
+## DATA 准备结果（2026-10-07）
+
+- 负责人已确认 DEC-20261007-CD6FFCC3F187D9=A（feishu_card；证据摘要38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d）；准备卡本candidate完成归档。公共合同§三及三叶正文已落入三攻击50000／50000／25000费用、25000／25000／12500净费下限，CT／tick为0/0、10/10、5/5；九来源上限100000、vMilli2000。批准仅迁移试跑，不是数值平衡。
+- 角色／敌人唯一导入器和严格21／27列表头、独立模板仅两字段更新、旧PowerShell分支停用已冻结。攻击叶19条业务路径包含七条pure profile／CT／CD与测试切片，四required输入不留旧构造；CORE后续消费既有四属性完成AP事务与累计，无反向依赖或新增机制。
+- 本Execution仅移除准备卡自己的队列／backlog行；三叶与其他卡的blockedBy、route、owner、dispatchState及backlog前置保持。结果进入master后QueueMaintenance才解准备前置与处理ready；敌人仍等角色。DATA汇总仍blocked、永不ready，由最后叶Codex复审核对三叶及准备正式归档后关闭。
+- 三叶实时风险预检均ok，matched／mustRead／gates为空；新建玩家与泛化SIM剩余映射在各卡临近ready收口。本轮无生产代码／CSV／asset变化，不运行Unity或BattleSim，不关闭用户运行时问题。
 
 ## W工作包对应
 

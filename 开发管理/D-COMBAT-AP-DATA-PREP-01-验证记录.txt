@@ -1,5 +1,28 @@
 # D-COMBAT-AP-DATA-PREP-01 · 行动力迁移候选与执行边界
 
+## 2026-10-07 方案 A 落卡与完成候选（当前结果）
+
+- TaskId：D-COMBAT-AP-DATA-PREP-01；RunId：d4350e6b-d248-4ee3-84dd-d7e0ea6510ee；基线063113ff4ff7cb8e45ea26b4a0a763f37f06fc65。主模型gpt-6.1-sol，以共享入口经codex exec -m传入的启动证明为准，责任方Codex；不使用历史checkpoint的run身份冒充本轮。
+- 已消费任务卡automationReply：DEC-20261007-CD6FFCC3F187D9=A、OPTION_ACCEPTED、feishu_card；证据摘要38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d。批准同时覆盖方案A数值、双时间接口切片及旧PowerShell写入分支停用，不需要再次确认。下文A／B比较与“待确认”表述是原checkpoint历史，不是当前授权状态。
+- 唯一结果：已确认输入、允许路径、直接消费者、验收与停止条件落入公共合同§二／三／九／十一和三叶正文；准备卡已移至精确completed归档，移除自己队列／backlog行。按本轮入口，三叶及其他下游的blockedBy／route／owner／dispatchState和backlog具名前置保持；master正式集成后才由QueueMaintenance维护前置／ready。敌人仍等角色字段，DATA父项仅汇总、永不ready。
+- 输入摘要：S=1000；basic_unarmed=(50000,25000,0,0)、spell_guanshiji=(50000,25000,10,10)、spell_julingshu=(25000,12500,5,5)，顺序为基础AP／净费下限／CT／全局重用tick；下文九项长期来源各=(100000,2000)，顺序为上限／vMilli。完整逐ID表已写合同与叶卡，不把正式新建玩家或模拟器合成境界算进九项。
+- 数值输入摘要SHA256=7c6a233658ceca28f5c4e88717360ae9b9fab69194b34e44f6160d32a5bd640f；取键scale=1000、attacks=三ID四元组、longTerm=合同九精确来源二元组，以UTF-8 JSON、键排序、无空白序列化计算，不含接口／代码／运行结果；没有建立新的状态或配置。
+- 源码复核确认：CombatAttackProfile.CooldownTicks同时流向CommandService两CT读取、Resolver重用账本、EncounterCoordinator的CT显示；audit真实符号LoadProductionInputs／VerifyRejectedCommands。已冻结四required构造和分量消费者，不留旧字段／兼容签名；攻击叶补齐七条现存精确路径，共19条业务路径，全部直接构造适配纳入，同CT7／重用13的隔离测试入口冻结。
+- 角色／敌人导入唯一所有者仍为CharacterContentImporter／SettlementContentImporter，严格21／27列、整表验证先写入；独立两个模板仅通过同角色Importer更新两字段，其他属性／引用／GUID保持；敌人同步BuildEnemyTemplate／UpsertCharacterTemplate／CharacterTemplateMatches。旧PowerShell函数会丢字段且Write-Meta(New-Guid)，冻结为函数和Target（含all／DryRun）写前明确停用，无第二导入器。
+- 无环次序：准备→角色→敌人，准备→攻击；三叶独立复审→DATA关闭；CORE仍依赖DATA／CHAR／MOVE并消费已有四属性，实现AP事务、多动作和CT求和。本轮接口切片不改phase／AP算法；CHAR创建输入、SIM泛化回合单位剩余映射仍在原卡ready门槛。未扩大三叶之外的代码实现或新增架构。
+- 原子性／模型协作：既有回复与源码使本轮结果确定，是单一准备闭环；不需要独立CORE语义裁决，保持gpt-6.1-sol单主模型。原生工具支持只读辅助覆盖，但触发条件未成立，未调用gpt-6-astra/high或其他辅助，不启动第二责任会话。没有写入委派。
+
+### 本轮实际验证与限制
+
+- 共享入口已绑定并验证本任务写前风险预检，matched／notice／mustRead／gatePointers为空。本轮只在指定worktree写候选允许的管理路径，没有调用runtime／集成／自动化管理或其他worktree。
+- 三叶扩大／冻结后分别执行 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId <对应叶ID>，均exit0、status=ok，matched／notice／mustRead／gates／gatePointers空，与各schema2 riskPreflight三个空数组一致，无门禁正文需补消费。indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；角色taskCardDigest=73125c2971cd2a3ac49904d1eff7918d1a58618edb8c72a30a34bcc5b38a0001，敌人=0708f99d00cce6835fb21865948dd2aceaeb80066bc91f6677b85a28f753921a，攻击=a27d141714d5c03fb0f9b256f1448f802edd76412088c63300e4b15d03076d48。后续准备ready必须再次核验当时输入，不复用本轮作为执行预检。
+- Python只读核对合同和三叶实际表：三攻击四元组、九来源二元组完全一致；正费／下限／上限／CT与tick合法，普通边50000，五组预算100000／100000／75000／75000／100000。确认七新增路径存在、攻击19业务路径、三叶生命周期与blockedBy及backlog前置和基线逐字一致，父项及CORE／CHAR／SIM卡头未变；exit0。这是算术与静态合同验证，不是BattleSim平衡运行。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-DATA-PREP-01 -Postcondition CodexClosedOrNonReady -OutputJson：exit0、status=ok、taskState=completed，82活跃卡、readyCount=1；唯一保留ready项是原有MOVE复审，未领取或分析其审核材料。
+- 最终审核文本使用 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理；路径限定暂存前check-pending-whitespace和暂存后git diff --cached --check由automation-finalize-commit执行。实际结果随本candidate终态verified，不提前把待执行检查写成通过；以上已通过且输入未变的检查不重复运行。
+- References loaded：unity-agent-workflows/SKILL.md及project-structure-discovery.md、content-and-systems.md；Project maps：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md。源码／CSV／模板只读，非请求系统没有写入。
+- 未验证：严格新导入、Unity新签名编译／行为、AP多动作与CT累计、迁移后GUID保持、泛化BattleSim新语义与角色平衡。本轮无生产CSV／代码／asset或docs变化，不跑data-chain、Unity或BattleSim。正式结果仍由共享入口在最新master重放／验证；本candidate不冒称已集成。
+- 收尾只检查已有事实／diff，没有新增模型调用或经验系统变更；本轮没有新增经验候选，不写空章节。
+
 ## 2026-10-07 人工恢复补记
 
 - 当前授权以任务卡 automationReply 为准：DEC-20261007-CD6FFCC3F187D9 已接受负责人选项 A（feishu_card），证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d；正文中的“尚未选择／待确认”是原 checkpoint 形成时的历史状态，不要求重复确认。
@@ -7,7 +30,7 @@
 - 人工核对该 checkpoint 的父提交、分支、路径及暂存／工作区内容完全一致后，将原输入保留到主线供下一次新会话读取；原失败 worktree 与私有回复／上下文继续保留。共享入口仅修正路径集合的数组形状，不增加恢复状态或重试机制。
 - 本次仅修复调度阻塞并保留已确认输入；准备卡仍为 codex_execute/codex/ready，公共合同、三叶任务及生产数据尚未按 A 落地，不代表准备任务完成或数值平衡通过。
 
-## 本轮身份、范围与决策状态
+## 历史checkpoint身份、范围与决策状态
 
 - 日期：2026-10-07；责任方 Codex；主模型 gpt-6.1-sol，以共享入口传入的启动证明为准。
 - RunId：831f9e2e-afb4-463f-b5d8-4fb95114183c；基线：25a422f072583ca24922df4f9bf17b6663325eb8。
@@ -156,7 +179,7 @@ A／B 在每一行都采用同一对候选，选择差异只在攻击费用。�
 - CHAR正式新建玩家的既有配置／BuildCharacterData与SIM泛化账本仍在各卡ready门槛，保留待核定事实；此次不批准新的创建输入或未映射Art／Divine成本，不把它们纳入九行表。
 - 输入不足、出现未列直接消费者、需要新架构／兼容桥、切片扩为整个CORE或需在多边界叠补丁时停止，按原任务停止合同报告；不在叶子执行中继续扩路径。
 
-## 七、本轮验证与未验证项
+## 七、历史checkpoint验证与未验证项
 
 - 实时风险预检已运行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId D-COMBAT-AP-DATA-PREP-01，exit 0／status ok；taskCardDigest=e7ceb0c97531896415911c5662e4c0f728f1663376b0727f4b9ebef66e6da9cb，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。matched／notice／mustRead／gates／gatePointers均空，与当前schema2 riskPreflight及共享入口预检投影一致。无mustRead正文或门禁入口需补消费。
 - 本轮整数算术：PowerShell独立校验本文实际六攻击行、九长期输入行、正净费与上限、CT／tick逐ID值及五组合；修正首次校验脚本数组表达式的运算优先级错误后exit 0。A组合费用100000／100000／75000／75000／100000，B为70000／85000／90000／80000／100000，均不超过100000；普通边费50000。首次脚本结果未计为通过。

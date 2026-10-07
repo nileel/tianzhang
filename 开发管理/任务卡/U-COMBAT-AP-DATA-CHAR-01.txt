@@ -12,7 +12,7 @@
   "blockedBy": [
     "D-COMBAT-AP-DATA-PREP-01"
   ],
-  "stateReason": "等待 D-COMBAT-AP-DATA-PREP-01 确认逐来源长期输入、冻结旧 Import-Characters 写入处置并完成 ready 准备；不得把 v 候选视为已批准生产值。",
+  "stateReason": "方案 A 长期输入与旧角色写入分支停用边界已冻结；等待 D-COMBAT-AP-DATA-PREP-01 正式进入 master 后由 QueueMaintenance 核验前置与风险门禁，当前保持 blocked。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
     "src/Assets/DataConfig/Characters.csv",
@@ -48,7 +48,9 @@
 ## 来源与当前边界
 
 - 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
-- 本次仅建立 blocked 卡；本文已知路径是待 ready 核定基线，不授权临场扩边。业务交付由 DeepSeek 执行后交 Codex 独立复审，不自审。
+- 2026-10-07 准备输入已冻结：负责人回复 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d），确认方案 A 的迁移试跑数值、双时间字段切片及旧 PowerShell 写入分支停用；不代表数值平衡定案。
+- 本 Execution candidate 保留本卡 blockedBy／route／owner／dispatchState；仅正式结果进入 master 后，后续 QueueMaintenance 才移除准备卡前置、同步 backlog 并消费实时风险门禁判断 ready。
+- 本卡仅实施下列冻结输入与已有字面量路径；DeepSeek 执行后交 Codex 独立复审，不自审。
 
 ## 禁止项
 
@@ -88,3 +90,21 @@
 
 - 两行 CSV、两个独立模板均有真实确认输入；角色实际导入通过并保留 GUID；旧角色写入分支不再覆盖新字段，既有非角色导入行为不受影响。
 - 未改角色成长、运行时创建、战斗 AP 余额或保存；这些下游只有父项整体完成后按原依赖推进。
+
+## 冻结输入与接口（方案 A）
+
+S=1000；以下数值都是整数最小单位，AP 上限100000=100 AP，vMilli2000对应v=2。独立模板不是CSV人物别名。
+
+| 来源 | actionPointMaximumUnits | movementEfficiencyMilliUnits | 精确目标 |
+|---|---|---|---|
+| Characters.csv::char_taiyixiushi | 100000 | 2000 | src/Assets/Data/Characters/Char_char_taiyixiushi.asset |
+| Characters.csv::char_sanxiuqiangdao | 100000 | 2000 | src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset |
+| 独立Char_Player | 100000 | 2000 | src/Assets/Data/Characters/Char_Player.asset |
+| 独立Char_Enemy | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy.asset |
+
+- CharacterData 新增两个 int 字段，不设数值默认；AP上限>0、vMilli>=0，合法v=0不作缺失。CSV当前19列尾部依次追加 actionPointMaximumUnits、movementEfficiencyMilliUnits，形成21列精确表头／精确行宽；所有行验证完成后才写任何asset。空、负、分数、溢出和额外列整表拒绝；不在本叶对尚未迁移敌人全局启用运行时拒绝。
+- 角色唯一写入者仍是 CharacterContentImporter.ParseCharacterDefinitions／ImportCharacters。CSV行继续只生成同ID资产；不改变既有属性、装配或其他字段语义。
+- 两个独立模板没有现存生成器，维护输入为其既有序列化资产。在同一 CharacterContentImporter 内新增有界私有方法 ImportIndependentActionEconomyInputs，纳入既有 ImportCharacters 入口：显式声明上表两个精确资产与各自确认值，先验证全CSV、两个目标存在和待写值，再开始写入；仅更新独立模板的这两个字段、SetDirty／SaveAssets，保留其他字段、引用与GUID，不新建资产、不CopySerialized替换成CSV角色、不按reaction派生。
+- tools/import_csv.ps1 的 Import-Characters 写入体改为明确终止错误，指向 CharacterContentImporter.ImportCharacterDefinitions；characters／all（含DryRun）在Language加载或任何其他写入前拒绝，all不得先写其他表。显式enemies仍由等待迁移的旧分支处理，本叶不修改其写入体；gongfa／spells／skills显式Target行为保持。函数直接调用也必须拒绝，不能只加分派guard。
+- 现有 ContentImporterArchitectureTests 增加全四资产输入、非法末行／缺独立目标不写任何asset、合法v0、重复导入、原非AP字段与GUID保持；核验停用Target及all无文件变化。生产资产必须经真实导入验证，不能手改asset代替。没有新增Unity文件，不扩.meta写入面。
+- 新建玩家BuildCharacterData、Character运行时快照／成长与战斗AP余额不在本叶；九来源以外的输入仍须其既有下游卡临近ready收口。风险投影按本卡实时预检重算，未来转ready再核验。

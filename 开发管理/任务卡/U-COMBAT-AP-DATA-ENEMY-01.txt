@@ -13,7 +13,7 @@
     "D-COMBAT-AP-DATA-PREP-01",
     "U-COMBAT-AP-DATA-CHAR-01"
   ],
-  "stateReason": "等待候选与真实所有者 ready 准备，并等待角色叶正式提供 CharacterData 两个长期字段；当前敌人导入所有者为 SettlementContentImporter。",
+  "stateReason": "方案 A 五敌人输入与旧敌人写入分支停用边界已冻结；等待 D-COMBAT-AP-DATA-PREP-01 正式进入 master 后维护前置，并等待 U-COMBAT-AP-DATA-CHAR-01 正式提供 CharacterData 两字段。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
@@ -51,7 +51,9 @@
 ## 来源与当前边界
 
 - 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
-- 本次仅建立 blocked 卡；本文已知路径是待 ready 核定基线，不授权临场扩边。业务交付由 DeepSeek 执行后交 Codex 独立复审，不自审。
+- 2026-10-07 准备输入已冻结：负责人回复 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d），确认方案 A 的迁移试跑数值、双时间字段切片及旧 PowerShell 写入分支停用；不代表数值平衡定案。
+- 本 Execution candidate 保留本卡 blockedBy／route／owner／dispatchState；仅正式结果进入 master 后，后续 QueueMaintenance 才移除准备卡前置、同步 backlog 并消费实时风险门禁判断 ready。
+- 本卡仅实施下列冻结输入与已有字面量路径；DeepSeek 执行后交 Codex 独立复审，不自审。
 
 ## 禁止项
 
@@ -93,3 +95,21 @@
 
 - 五个模板与各 CSV 源行的新值精确一致、石甲兽引用 GUID 保持；失败输入不写任何 asset，合法导入可重复。
 - 不改攻击 schema、角色字段定义、关中内容范围或运行时结算。
+
+## 冻结输入与接口（方案 A）
+
+S=1000；AP上限100000=100 AP，vMilli2000对应v=2；全五行均必填，不把非关中模板变为正式内容。
+
+| Enemies.csv::name | actionPointMaximumUnits | movementEfficiencyMilliUnits | 精确目标 |
+|---|---|---|---|
+| enemy_shijiahou | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset |
+| enemy_fengsun | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset |
+| enemy_yanweihu | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset |
+| enemy_xueyingmoxiu | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset |
+| enemy_huangyesanxiu | 100000 | 2000 | src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset |
+
+- 复用角色叶提供的CharacterData字段，不改其定义，不在EnemyData复制AP／v；EnemyData.combatTemplate保持唯一引用。Enemies当前25列尾部依次追加 actionPointMaximumUnits、movementEfficiencyMilliUnits，形成27列精确表头／行宽；全部行与引用先验证，AP上限>0、vMilli>=0，空／负／分数／溢出／额外列整表拒绝，v0合法。
+- 真实唯一导入器是 SettlementContentImporter：ContentEnemyColumns→ReadContentTable→ParseEnemyRows→BuildEnemyTemplate→ImportContentCatalog／UpsertCharacterTemplate；CharacterTemplateMatches同步两字段，避免漏写或错误判为无变化。BuildEnemyTemplate是本叶同文件内直接投影，不遗漏。只读EnemyData.cs，不改AdventureContentImporter。
+- 保持五模板其他字段、contentScope及石甲兽Enemy资产combatTemplate引用／GUID；不新建生产ID。tools/check-data-chain.ps1同步Enemies严格schema与Test-FormalContentCatalog资产断言；ContentCatalogDataTests覆盖全五行、非法末行不部分写、合法v0、重复导入和GUID。
+- tools/import_csv.ps1 的 Import-Enemies 写入体停用，明确指向 SettlementContentImporter.ImportContentCatalog；enemies／all（含DryRun）在Language加载或任何写入前拒绝，直接调用函数也拒绝。保留角色叶已完成的characters／all处置，gongfa／spells／skills显式Target行为保持，不另建PowerShell导入器。
+- 本叶实际依赖角色叶正式提供字段并经Codex复审；批准候选不消除该代码前置。不存在新Unity文件，既有.meta只读核对GUID。风险投影按本卡实时预检重算，未来转ready再核验。

@@ -1,4 +1,4 @@
----TASK-META---
+﻿---TASK-META---
 {
   "schemaVersion": 2,
   "id": "D-COMBAT-AP-DATA-PREP-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-CD6FFCC3F187D9",
+  "stateReason": "负责人方案A已核验并落入合同、三叶及直接依赖边界；纯准备完成。按本轮Execution入口保留下游具名前置，正式集成后QueueMaintenance再解阻塞。",
   "expectedPaths": [
     "开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
@@ -108,7 +108,7 @@
 
 - 来源：DEC-20261007-DATA06=B 与负责人 2026-10-07 当前对话“由 Codex 后续提出候选值供我确认”。父项 U-COMBAT-AP-DATA-01 已一次拆完三张业务叶，不再拆整份 backlog。
 - 唯一结果：候选值经负责人确认且三叶的输入、所有者、字面量路径、直接消费者、验收和停止条件可确定性调度。此卡不修改任何生产 CSV、代码、asset 或自动化控制面。
-- 已批准 AP 精度 S=1000、基础上限 100000；三攻击 CT／重用刻保持 0/0、10/10、5/5。v=2000 目前是逐来源迁移候选；三个攻击的 actionPointCostUnits／minimumNetCostUnits 没有具体生产定价，不得当作已批准或从夹具抄入。
+- AP精度S=1000、基础上限100000；三攻击CT／重用刻保持0/0、10/10、5/5。负责人现已确认方案A三攻击费用50000／50000／25000、净费下限25000／25000／12500与九来源上限100000／vMilli2000，用于迁移试跑；不从夹具抄入或宣称平衡定案。
 
 ## 必查范围
 
@@ -145,8 +145,16 @@
 ## 完成条件
 
 - 负责人确认的候选已真实落入合同／三叶，而非只记录一条回复；直接消费者与集成次序已冻结，无循环依赖或新增未授权写入面。
-- 本卡归档、三叶移除本前置；有真实就绪叶则入队，其他保持准确阻塞。本卡不能以“已提出但尚未确认”归档完成。
+- 本卡在确认值与三叶边界真实落笔后归档。原要求同步移除三叶前置／ready受本轮Execution入口限制覆盖：具名前置继续保留，正式结果进入master后后续QueueMaintenance再处理；本轮不提升、重排或关闭下游。不能以“已提出但尚未确认”归档完成。
 
 ## 停止条件
 
 - 负责人未确认时用一次 needs_decision 等待，不循环重问；输入不足、接口需新架构或超出三叶／直接依赖边界时停止并说明，不制造兼容补丁。
+
+## 完成结果与验证入口（2026-10-07）
+
+- 已核验 DEC-20261007-CD6FFCC3F187D9=A（feishu_card；证据摘要38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d）；证据在保留的automationReply／checkpoint和本卡验证记录。合同§二／三／九／十一、三叶逐ID表与路径／消费者／接口／验收真实落笔；未更改生产CSV、代码、asset、runtime或其他worktree。
+- 攻击窄切片补齐7路径，role／enemy长期输入与旧写入分支处置冻结；不需要新增架构、兼容桥或独立辅助裁决。主模型保持入口gpt-6.1-sol，原生工具能力已核对，单主责完成、无辅助模型调用。
+- 三叶riskPreflight实时ok且零命中，与schema2三个空数组一致；保持原owner／route／dispatchState／blockedBy。DATA父项永不ready，原下游图无环。
+- 本轮验证命令与实际结果见开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt及candidate终态verified；未运行未变化的Unity／BattleSim，功能与平衡仍是后续验收。
+- 收尾经验候选检查只用本轮已读事实与diff：已查明问题与复用边界均收在验证记录的既有技术准备中，本轮没有新增经验候选，不写空章节。

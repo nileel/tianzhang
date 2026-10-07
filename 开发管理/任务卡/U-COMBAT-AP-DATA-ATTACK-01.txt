@@ -12,7 +12,7 @@
   "blockedBy": [
     "D-COMBAT-AP-DATA-PREP-01"
   ],
-  "stateReason": "等待逐 ID AP 正费／净费下限确认及冷却直接消费者、CORE 集成次序冻结；现有单一 CooldownTicks 无法承载严格双时间分离，不得简单转 ready 或反向依赖 CORE 造环。",
+  "stateReason": "方案 A 三攻击费用与双时间接口切片已冻结；等待 D-COMBAT-AP-DATA-PREP-01 正式进入 master 后由 QueueMaintenance 核验前置与风险门禁；不反向依赖 CORE。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/DataConfig/AttackProfiles.csv",
@@ -26,6 +26,13 @@
     "tools/check-data-chain.ps1",
     "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "开发管理/U-COMBAT-AP-DATA-ATTACK-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
@@ -51,7 +58,9 @@
 ## 来源与当前边界
 
 - 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
-- 本次仅建立 blocked 卡；本文已知路径是待 ready 核定基线，不授权临场扩边。业务交付由 DeepSeek 执行后交 Codex 独立复审，不自审。
+- 2026-10-07 准备输入已冻结：负责人回复 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d），确认方案 A 的迁移试跑数值、双时间字段切片及旧 PowerShell 写入分支停用；不代表数值平衡定案。
+- 本 Execution candidate 保留本卡 blockedBy／route／owner／dispatchState；仅正式结果进入 master 后，后续 QueueMaintenance 才移除准备卡前置、同步 backlog 并消费实时风险门禁判断 ready。
+- 本卡冻结为严格数据与直接接口迁移这一个结果，19条业务字面量路径包含原12条及以下7条有界切片路径；DeepSeek 执行后交 Codex 独立复审，不自审。
 
 ## 禁止项
 
@@ -76,21 +85,51 @@
 
 ## 必查范围
 
-- 公共合同§二／三／九与 AttackProfiles.csv 三行：basic_unarmed、spell_guanshiji、spell_julingshu；不新增 Divine 行。CT／CD 保持值分别 0/0、10/10、5/5；具体 AP／净费下限仍由准备卡请求确认。
+- 公共合同§二／三／九与 AttackProfiles.csv 三行：basic_unarmed、spell_guanshiji、spell_julingshu；不新增 Divine 行。CT／CD 保持值分别 0/0、10/10、5/5；AP／净费下限已按下表确认。
 - src/Assets/Scripts/Modules/Content/AttackProfileData.cs::TryValidate；src/Assets/Scripts/Editor/CombatContentImporter.cs::AttackProfileColumns／TryParseAttackProfiles／AttackProfileImportRow.CopyTo／ImportAttackProfiles。
 - AttackProfileDataTests.cs、Fixtures/AttackProfiles.fixture.csv 的旧38列与逐 ID 测试；simulations/BattleSim/BattleSimSelfTests.cs::AttackProfileHeaders 及两个现有攻击数据 suite；tools/check-data-chain.ps1 的 ATTACK_PROFILE_HEADER_NOT_EXACT 校验段与 AttackProfiles schema。
-- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles（旧 profile.cooldownTicks）；simulations/BattleSim/GuanzhongPlaytestAudit.cs::ReadInputs（旧 CSV cooldownTicks）。
-- 只读 src/Assets/Scripts/Combat/CombatAttackProfile.cs、CombatCommandService.cs、CombatActionResolver.cs 的单一 CooldownTicks 及 U-COMBAT-AP-CORE-01 原依赖，先证明准备卡冻结的接口切片已经成立。
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles（旧 profile.cooldownTicks）；simulations/BattleSim/GuanzhongPlaytestAudit.cs::LoadProductionInputs／VerifyRejectedCommands（旧 CSV cooldownTicks）。
+- 完整读取下列冻结接口切片、五条直接构造文件与其测试；只读核对 U-COMBAT-AP-CORE-01 原依赖及 CombatSession 冷却账本，不改后续AP算法。
 
 ## 实施范围
 
 - 唯一结果：三生产攻击以确认的 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks 新合同严格导入同 ID asset，并使现有直接数据消费者和校验同一输入通过。
 - 新表头、fixture、三 asset、Unity 测试、BattleSim 自检、data-chain 同步；整批拒绝缺列、旧新列并存、负数／分数／溢出、免费主动收益与净费下限越界。
 - 旧字段去除与两个直接适配路径只能按准备卡已冻结的接口边界实施。把新字段之一再投给旧单一 CooldownTicks 仍混用单位；不得以保留旧列或转换兜底过关。
-- 目前卡头12条业务路径不包含纯 Combat 结算修改；若准备发现必须先改纯内核接口，须在本卡 ready 前由 Codex 明确整段最小切片、测试与依赖，不在本叶执行中扩到整个 CORE。不能让本卡 blockedBy CORE，因为 CORE 仍依赖父项。
+- 卡头已补齐下列7条直接接口／测试路径；只修改四字段构造及CT／重用读取，不修改纯内核AP结算、phase或累计算法。不能让本卡 blockedBy CORE，因为 CORE 仍依赖父项。
 
 ## 完成条件
 
 - 三行新表与 asset 逐字段一致、GUID 不漂移；合法／非法整表测试通过，实际生产审计不会再读取已删除的旧列。
 - BattleSim 修改后先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim；这只验本次数据消费者，不等同新 AP 战斗平衡。
 - 旧运行时单字段边界按事前冻结切片已闭环；未冻结或需要兼容桥时不得提交 candidate。
+
+## 冻结输入与接口（方案 A）
+
+S=1000；费用／下限单位均为整数AP最小单位，CT与重用刻独立。不新增Divine生产行，保留MP、资格、射程、效果和绑定。
+
+| attackProfileId | actionPointCostUnits | minimumNetCostUnits | ctPenalty | reuseCooldownTicks |
+|---|---|---|---|---|
+| basic_unarmed | 50000 | 25000 | 0 | 0 |
+| spell_guanshiji | 50000 | 25000 | 10 | 10 |
+| spell_julingshu | 25000 | 12500 | 5 | 5 |
+
+- 100000预算、无修正来源时，两次普攻费用100000，贯石击加聚灵费用75000；这只证明算术可达性，真正多动作由CORE实现。下限>0且<=基础费；ctPenalty范围0..int.MaxValue-100，reuseCooldownTicks>=0；所有四字段必填整数，不采用minimumNetCostUnits=1兜底。
+- AttackProfiles.csv旧38列中cooldownTicks原位置替换为 actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks，形成41列精确表头；删除旧Content字段／导入行字段及asset序列化字段，不接受旧新并存、不用FormerlySerializedAs或兼容重载。AttackProfileColumns、TryParseAttackProfiles、ParseAttackProfileRow、AttackProfileImportRow.CopyTo、ImportAttackProfiles同步；整表先验证再写同IDasset，保持GUID。fixture、AttackProfileDataTests及data-chain严格schema同步。
+- CombatAttackProfile构造必填顺序固定为 id、kind、effect、minimumRange、maximumRange、actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks，随后接现有其他可选效果／MP／qualification参数；新增只读属性 ActionPointCostUnits、MinimumNetCostUnits、CtPenalty、ReuseCooldownTicks，四值严格验证。删除旧cooldownTicks参数及CooldownTicks属性，无默认或旧签名兼容。AP在本叶仅持有／投影，不扣费。
+
+| 新增精确业务路径 | 唯一允许切片 |
+|---|---|
+| src/Assets/Scripts/Combat/CombatAttackProfile.cs | 上述required构造、验证与四属性 |
+| src/Assets/Scripts/Combat/CombatCommandService.cs | Preview／Execute两处CT读取改CtPenalty，保留phase／RecordAction算法 |
+| src/Assets/Scripts/Combat/CombatActionResolver.cs | ResolveAttack只以ReuseCooldownTicks启动原全局刻冷却账本 |
+| src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs | BuildArtActions只投影CtPenalty到既有CT显示字段 |
+| src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs | 所有构造显式四输入及不相等CT7／重用13的隔离测试 |
+| src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs | 所有构造显式四输入，不改正式行为责任 |
+| src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs | 所有构造显式四输入，轴断言只读CT |
+
+- 既有CombatEntryAdapter.TryProjectProfiles四项分别传入；GuanzhongPlaytestAudit.LoadProductionInputs严格读取新四列，不把空值当0或旧CSV列回填，VerifyRejectedCommands的轴断言用CtPenalty、重用账本断言用ReuseCooldownTicks。ReadInputs在当前源码不存在，不新造该符号。直接构造文件仅adapter、该audit及表内三测试文件；其他消费者如CombatSession、LegalActionService不读删除属性，保持只读。
+- EncounterCoordinator的CombatArtActionSnapshot.CooldownPenalty现显示为CT +；本叶只换其来源，不修改GameplayContracts／HUD。SpellData／DivineSkillData／Spells／Skills旧字段属独立内容链，不用于新权威攻击字段，不在本叶删除。
+- BattleSimSelfTests.AttackProfileHeaders／ValidateAttackProfileTable及两个攻击数据suite同步41列、四字段整数合法性；旧GameData.ArtConfig／DivineConfig.Cooldown为泛化回合数，不投进新tick字段。保留对不能表达的非零CT／tick与聚灵恢复语义的明确拒绝；零CT／重用技术fixture可验旧算法，不能弱化拒绝以制造迁移通过。泛化AP双入口仍由N-COMBAT-AP-SIM-01负责。
+- 最小充分验收为owner worktree的Unity EditMode与PlayMode runner（两份PlayMode构造变化）、data-chain、BattleSim一次必要restore后Release --no-restore build与规定run。增加CT7／重用13技术例，证明轴只用7、账本只用13；生产10/10、5/5不足以证明隔离。非法末行不写、四字段缺失／旧新并存／零负／分数／溢出／下限越界、逐IDasset与GUID、重复导入均需实际证据；GuanzhongStarterArtsPlayModeTests为现有相关验证，不新增其写入权限。
+- 接口切片先完成并独立复审，三叶完成后DATA汇总关闭；CORE继续依赖DATA／CHAR／MOVE并消费四属性，实现AP事务、多动作、CT求和与个人回合时点。禁止修改CombatSession／CombatantSnapshot／TurnScheduler／CTBEngine等AP算法，禁止反向依赖CORE造环；需新消费者、架构或未列路径则停止。风险投影按扩大后的本卡实时预检重算，未来转ready再核验。

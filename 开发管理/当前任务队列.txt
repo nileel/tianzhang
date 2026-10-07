@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-COMBAT-AP-DATA-PREP-01 | codex_execute | codex | P1 | management | decision | 提出行动力迁移候选并冻结三叶执行边界 | 开发管理/任务卡/D-COMBAT-AP-DATA-PREP-01.txt |
 | U-COMBAT-AP-MOVE-01 | codex_review | codex | P1 | unity | implementation | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
