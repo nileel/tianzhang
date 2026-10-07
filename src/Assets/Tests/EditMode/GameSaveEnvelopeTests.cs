@@ -47,7 +47,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaThreeDefaultNavigationRoundTripRemainsCanonical()
+        public void CurrentSchemaDefaultNavigationRoundTripRemainsCanonical()
         {
             var source = new GameRuntime();
             string first = source.CaptureSaveJson();
@@ -59,7 +59,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void VisibleRootFactsRoundTripThroughSchemaThreeJsonWithoutChangingLoadout()
+        public void VisibleRootFactsRoundTripThroughCurrentSchemaJsonWithoutChangingLoadout()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             definition.visibleRootId = "root_water_middle";
@@ -87,7 +87,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaThreeJsonWithoutVisibleRootFieldsKeepsUnknownRootAndExistingSpells()
+        public void CurrentSchemaJsonWithoutVisibleRootFieldsKeepsUnknownRootAndExistingSpells()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             definition.visibleRootId = "root_water_middle";
@@ -102,7 +102,8 @@ namespace TianZhang.Tests
             StringAssert.DoesNotContain("visibleRootId", legacyJson);
             StringAssert.DoesNotContain("visibleRootGrade", legacyJson);
             StringAssert.DoesNotContain("visibleRootElement", legacyJson);
-            Assert.That(GameSaveSerializer.Deserialize(legacyJson).schemaVersion, Is.EqualTo(3));
+            Assert.That(GameSaveSerializer.Deserialize(legacyJson).schemaVersion,
+                Is.EqualTo(GameSaveSerializer.SchemaVersion));
             var restored = new GameRuntime();
 
             restored.RestoreSaveJson(legacyJson, catalog);
@@ -220,7 +221,7 @@ namespace TianZhang.Tests
             AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
         }
 
-        [TestCase("{\"schemaVersion\":4}")]
+        [TestCase("{\"schemaVersion\":0}")]
         [TestCase("{\"schemaVersion\":99}")]
         [TestCase("not-json")]
         public void LegacyUnknownAndInvalidJsonFailClosed(string json)
@@ -235,6 +236,8 @@ namespace TianZhang.Tests
             definition.charName = "显式加成角色";
             definition.realmMultiplier = 1f;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.actionPointMaximumUnits = 100000;
+            definition.movementEfficiencyMilliUnits = 2000;
             definition.hpBonus = 12.4f;
             definition.mpBonus = 7.6f;
             definition.physAtkBonus = 3.2f;
@@ -380,6 +383,222 @@ namespace TianZhang.Tests
             Assert.That(roundTrip.npcs[0].cultivationState.foundationState.completionMansionCapacity, Is.EqualTo(1));
         }
 
+        [Test]
+        public void SchemaFourRoundTripKeepsLongTermActionEconomyInputsWithoutTemporaryLedgers()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            GameSaveEnvelope save = source.CaptureSave();
+            Assert.That(save.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            Assert.That(save.player.actionEconomyInputsPresent, Is.True);
+            Assert.That(save.player.actionPointMaximumUnits, Is.EqualTo(100000));
+            Assert.That(save.player.movementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(save.player.actionEconomyModifierInputs, Is.Empty);
+
+            string json = source.CaptureSaveJson();
+            StringAssert.DoesNotContain("actionPointsRemaining", json);
+            StringAssert.DoesNotContain("pendingCtPenalty", json);
+            StringAssert.DoesNotContain("actionPointLimitAtTurnStart", json);
+            StringAssert.DoesNotContain("refundBudgetUsed", json);
+            StringAssert.DoesNotContain("turnSequence", json);
+
+            var restored = new GameRuntime();
+            restored.RestoreSaveJson(json, catalog);
+            GameSaveEnvelope roundTrip = restored.CaptureSave();
+
+            Assert.That(roundTrip.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            Assert.That(roundTrip.player.actionPointMaximumUnits, Is.EqualTo(100000));
+            Assert.That(roundTrip.player.movementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(roundTrip.player.actionEconomyInputsPresent, Is.True);
+            Assert.That(restored.Player.Attributes.ActionPointMaximumUnits, Is.EqualTo(100000));
+            Assert.That(restored.Player.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(restored.CaptureSaveJson(), Is.EqualTo(json));
+        }
+
+        [Test]
+        public void SchemaFourKeepsALegalZeroMovementEfficiencyApartFromAMissingInput()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            definition.movementEfficiencyMilliUnits = 0;
+            runtime.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            GameSaveEnvelope save = runtime.CaptureSave();
+
+            Assert.That(save.player.movementEfficiencyMilliUnits, Is.EqualTo(0));
+            Assert.That(save.player.actionEconomyInputsPresent, Is.True);
+
+            var restored = new GameRuntime();
+            restored.RestoreSaveJson(JsonUtility.ToJson(save), catalog);
+
+            Assert.That(restored.Player.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(0));
+            Assert.That(restored.Player.Attributes.ActionEconomyInputsPresent, Is.True);
+        }
+
+        [Test]
+        public void SchemaFourCharacterPayloadWithMissingOrInvalidActionEconomyInputsFailsClosed()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+
+            AssertRecordRejected(runtime, player => player.actionEconomyInputsPresent = false);
+            AssertRecordRejected(runtime, player => player.actionPointMaximumUnits = 0);
+            AssertRecordRejected(runtime, player => player.actionPointMaximumUnits = -100000);
+            AssertRecordRejected(runtime, player => player.movementEfficiencyMilliUnits = -1);
+            AssertRecordRejected(runtime, player => player.actionEconomyModifierInputs = new[]
+            {
+                new ActionEconomyModifierRecord
+                {
+                    sourceInstanceId = "gear_a",
+                    sourceDefinitionId = "definition_a",
+                    actionKind = 99,
+                    retainedCostPermille = 0,
+                    minimumNetCostUnits = 1,
+                    refundOnEvent = (int)ActionEconomyModifierInput.SuccessEvent.None,
+                },
+            });
+            AssertRecordRejected(runtime, player => player.actionEconomyModifierInputs = new[]
+            {
+                new ActionEconomyModifierRecord
+                {
+                    sourceInstanceId = "gear_a",
+                    sourceDefinitionId = "definition_a",
+                    actionKind = (int)ActionEconomyModifierInput.CommandKind.Guard,
+                    retainedCostPermille = 0,
+                    minimumNetCostUnits = 1,
+                    refundOnEvent = (int)ActionEconomyModifierInput.SuccessEvent.RootActionCommitted,
+                    refundUnits = 5000,
+                    refundLimitPerOwnTurn = 0,
+                    refundBudgetPerOwnTurnUnits = 0,
+                },
+            });
+        }
+
+        [Test]
+        public void SchemaFourRejectsDuplicateActionEconomySourceInstances()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            invalid.player.actionEconomyModifierInputs = new[]
+            {
+                CreateModifierRecord("gear_a"),
+                CreateModifierRecord("gear_a"),
+            };
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [Test]
+        public void SchemaFourDeclaredActionEconomySourcesRoundTripThroughTheEnvelope()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope save = runtime.CaptureSave();
+            save.player.actionEconomyModifierInputs = new[] { CreateModifierRecord("gear_a") };
+            save.player.actionEconomyModifierInputs[0].actionPointMaximumBonusUnits = 20000;
+            save.player.actionEconomyModifierInputs[0].movementEfficiencyBonusMilliUnits = -500;
+            save.player.actionEconomyModifierInputs[0].retainedCostPermille = 800;
+            save.player.actionEconomyModifierInputs[0].minimumNetCostUnits = 5000;
+
+            var restored = new GameRuntime();
+            restored.RestoreSave(save, catalog);
+            GameSaveEnvelope roundTrip = restored.CaptureSave();
+
+            Assert.That(roundTrip.player.actionEconomyModifierInputs.Length, Is.EqualTo(1));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].sourceInstanceId, Is.EqualTo("gear_a"));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].sourceDefinitionId, Is.EqualTo("definition_a"));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].actionPointMaximumBonusUnits, Is.EqualTo(20000));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].movementEfficiencyBonusMilliUnits, Is.EqualTo(-500));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].retainedCostPermille, Is.EqualTo(800));
+            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].minimumNetCostUnits, Is.EqualTo(5000));
+            Assert.That(restored.Player.CombatModifiers.ActionEconomyInputs.Count, Is.EqualTo(1));
+            Assert.That(restored.Player.CombatModifiers.ActionEconomyInputs[0].SourceInstanceId, Is.EqualTo("gear_a"));
+        }
+
+        [Test]
+        public void PlayerPayloadWithOnlyActionEconomyInputsFailsClosed()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            GameSaveEnvelope invalid = new GameRuntime().CaptureSave();
+            invalid.hasPlayer = false;
+            invalid.player = new CharacterRecord
+            {
+                actionEconomyInputsPresent = true,
+                actionPointMaximumUnits = 100000,
+            };
+
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
+        [Test]
+        public void SchemaThreePlayerPayloadIsRejectedForMissingActionEconomyInputs()
+        {
+            GameRuntime source = CreateRuntimeWithInventory();
+            GameSaveEnvelope legacy = source.CaptureSave();
+            legacy.schemaVersion = GameSaveSerializer.LegacyActionEconomySchemaVersion;
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+                GameSaveSerializer.Deserialize(JsonUtility.ToJson(legacy)));
+            StringAssert.StartsWith(GameSaveSerializer.LegacyActionEconomyInputMissing + ":", exception.Message);
+        }
+
+        [Test]
+        public void SchemaThreeEmptySessionMigratesMechanicallyToTheCurrentSchema()
+        {
+            GameSaveEnvelope empty = new GameRuntime().CaptureSave();
+            Assert.That(empty.hasPlayer, Is.False);
+            empty.schemaVersion = GameSaveSerializer.LegacyActionEconomySchemaVersion;
+
+            GameSaveEnvelope migrated = GameSaveSerializer.Deserialize(JsonUtility.ToJson(empty));
+            Assert.That(migrated.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+
+            var restored = new GameRuntime();
+            restored.RestoreSave(migrated, null);
+
+            Assert.That(restored.Player, Is.Null);
+            Assert.That(restored.Cultivation, Is.Null);
+            Assert.That(restored.CaptureSave().player, Is.Null);
+        }
+
+        [Test]
+        public void SchemaThreePayloadHidingBehindAMissingPlayerFlagIsStillRejected()
+        {
+            GameRuntime runtime = CreateRuntimeWithInventory();
+            string baseline = runtime.CaptureSaveJson();
+            GameSaveEnvelope hidden = new GameRuntime().CaptureSave();
+            hidden.hasPlayer = false;
+            hidden.player = new CharacterRecord
+            {
+                characterId = "legacy",
+                displayName = "旧档",
+                actionEconomyInputsPresent = true,
+                actionPointMaximumUnits = 100000,
+                movementEfficiencyMilliUnits = 2000,
+            };
+            hidden.schemaVersion = GameSaveSerializer.LegacyActionEconomySchemaVersion;
+
+            GameSaveEnvelope migrated = GameSaveSerializer.Deserialize(JsonUtility.ToJson(hidden));
+            Assert.That(migrated.schemaVersion, Is.EqualTo(GameSaveSerializer.SchemaVersion));
+            Assert.Throws<System.ArgumentException>(() => runtime.RestoreSave(migrated, catalog));
+
+            Assert.That(runtime.CaptureSaveJson(), Is.EqualTo(baseline));
+        }
+
+        private static ActionEconomyModifierRecord CreateModifierRecord(string sourceInstanceId)
+        {
+            return new ActionEconomyModifierRecord
+            {
+                sourceInstanceId = sourceInstanceId,
+                sourceDefinitionId = "definition_a",
+                actionKind = (int)ActionEconomyModifierInput.CommandKind.Guard,
+                retainedCostPermille = 0,
+                minimumNetCostUnits = 1,
+                refundOnEvent = (int)ActionEconomyModifierInput.SuccessEvent.None,
+            };
+        }
+
+        private void AssertRecordRejected(GameRuntime runtime, System.Action<CharacterRecord> mutate)
+        {
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            mutate(invalid.player);
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+        }
+
         private void AssertRestoreFailsWithoutChangingRuntime(
             GameRuntime runtime,
             GameSaveEnvelope invalid)
@@ -397,6 +616,8 @@ namespace TianZhang.Tests
             definition.charName = "存档角色";
             definition.realmMultiplier = 1f;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.actionPointMaximumUnits = 100000;
+            definition.movementEfficiencyMilliUnits = 2000;
             item = ScriptableObject.CreateInstance<ItemData>();
             item.itemId = "item_test";
             item.contentScope = InventoryGrantUseCase.ProductionContentScope;

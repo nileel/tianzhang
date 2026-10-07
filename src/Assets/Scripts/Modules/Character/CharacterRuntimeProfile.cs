@@ -67,7 +67,10 @@ namespace TianZhang.Character
                     snapshot.Attributes.Mind,
                     snapshot.Attributes.Reaction,
                     snapshot.Attributes.Talent,
-                    snapshot.Attributes.Fortune),
+                    snapshot.Attributes.Fortune,
+                    snapshot.Attributes.ActionPointMaximumUnits,
+                    snapshot.Attributes.MovementEfficiencyMilliUnits,
+                    snapshot.Attributes.ActionEconomyInputsPresent),
                 new CharacterResources(
                     snapshot.Resources.MaximumHealth,
                     snapshot.Resources.CurrentHealth,
@@ -102,6 +105,7 @@ namespace TianZhang.Character
         public void Restore(CharacterStateSnapshot snapshot)
         {
             if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
+            RequireRestorable(snapshot);
             Identity.Restore(snapshot.Identity); Attributes.Restore(snapshot.Attributes); Resources.Restore(snapshot.Resources);
             AbilityLoadout.Restore(snapshot.AbilityLoadout); Progression.Restore(snapshot.Progression);
             CombatModifiers = snapshot.CombatModifiers;
@@ -111,6 +115,58 @@ namespace TianZhang.Character
             VisibleRootId = snapshot.VisibleRootId;
             VisibleRootGrade = snapshot.VisibleRootGrade;
             VisibleRootElement = snapshot.VisibleRootElement;
+        }
+
+        /// <summary>
+        /// Full validation of the incoming aggregate before any live field is written, so a failed restore
+        /// keeps identity, attributes, resources, loadout, progression and the long-term inputs untouched.
+        /// </summary>
+        private static void RequireRestorable(CharacterStateSnapshot snapshot)
+        {
+            if (string.IsNullOrWhiteSpace(snapshot.Identity.CharacterId) ||
+                string.IsNullOrWhiteSpace(snapshot.Identity.DisplayName))
+            {
+                throw new System.ArgumentException("Character identity is invalid.", nameof(snapshot));
+            }
+            if (snapshot.Resources.MaximumHealth < 0 || snapshot.Resources.CurrentHealth < 0 ||
+                snapshot.Resources.CurrentHealth > snapshot.Resources.MaximumHealth ||
+                snapshot.Resources.MaximumSpirit < 0 || snapshot.Resources.CurrentSpirit < 0 ||
+                snapshot.Resources.CurrentSpirit > snapshot.Resources.MaximumSpirit)
+            {
+                throw new System.ArgumentException("Character resources are invalid.", nameof(snapshot));
+            }
+            if (snapshot.AbilityLoadout.SpellSlots < 0 || snapshot.AbilityLoadout.SkillSlots < 0 ||
+                !IsEquippedSubsetOfKnown(snapshot.AbilityLoadout.EquippedSpells, snapshot.AbilityLoadout.KnownSpells,
+                    snapshot.AbilityLoadout.SpellSlots) ||
+                !IsEquippedSubsetOfKnown(snapshot.AbilityLoadout.EquippedSkills, snapshot.AbilityLoadout.KnownSkills,
+                    snapshot.AbilityLoadout.SkillSlots))
+            {
+                throw new System.ArgumentException("Character ability loadout is invalid.", nameof(snapshot));
+            }
+            if (!(snapshot.Progression.RealmMultiplier > 0f) ||
+                float.IsNaN(snapshot.Progression.RealmMultiplier) ||
+                float.IsInfinity(snapshot.Progression.RealmMultiplier))
+            {
+                throw new System.ArgumentException("Character progression is invalid.", nameof(snapshot));
+            }
+            CharacterAttributes.RequireActionPointMaximumUnits(snapshot.Attributes.ActionPointMaximumUnits);
+            CharacterAttributes.RequireMovementEfficiencyMilliUnits(snapshot.Attributes.MovementEfficiencyMilliUnits);
+            CharacterAttributes.RequireActionEconomyInputsPresent(snapshot.Attributes.ActionEconomyInputsPresent);
+        }
+
+        private static bool IsEquippedSubsetOfKnown(string[] equipped, string[] known, int slots)
+        {
+            equipped = equipped ?? new string[0];
+            known = known ?? new string[0];
+            if (equipped.Length > slots) return false;
+            var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
+            var knownSet = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
+            foreach (string value in known) if (!string.IsNullOrWhiteSpace(value)) knownSet.Add(value);
+            foreach (string value in equipped)
+            {
+                if (string.IsNullOrWhiteSpace(value) || !seen.Add(value) || !knownSet.Contains(value)) return false;
+            }
+            return true;
         }
     }
 }

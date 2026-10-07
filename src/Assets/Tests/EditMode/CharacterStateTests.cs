@@ -29,7 +29,7 @@ namespace TianZhang.Tests
         {
             var modifiers = new CharacterCombatModifiers(
                 12.4f, 7.6f, 3.2f, 4.8f, 1.1f, 2.9f,
-                15f, 25f, 10f, 20f, 5f, 8f, 15f, 3f);
+                15f, 25f, 10f, 20f, 5f, 8f, 15f, 3f, new ActionEconomyModifierInput[0]);
 
             Assert.That(modifiers.HpBonus, Is.EqualTo(12.4f));
             Assert.That(modifiers.MpBonus, Is.EqualTo(7.6f));
@@ -73,6 +73,7 @@ namespace TianZhang.Tests
             Assert.That(modifiers.CritRate, Is.EqualTo(0f));
             Assert.That(modifiers.CritDamage, Is.EqualTo(0f));
             Assert.That(modifiers.HitRateBonus, Is.EqualTo(0f));
+            Assert.That(modifiers.ActionEconomyInputs, Is.Empty);
         }
 
         [Test]
@@ -99,6 +100,17 @@ namespace TianZhang.Tests
                 Assert.That(restored.VisibleRootElement, Is.EqualTo(snapshot.VisibleRootElement));
                 Assert.That(restored.Capture().AbilityLoadout.KnownSpells, Is.EqualTo(snapshot.AbilityLoadout.KnownSpells));
                 Assert.That(restored.Capture().AbilityLoadout.EquippedSpells, Is.EqualTo(snapshot.AbilityLoadout.EquippedSpells));
+
+                // The formal creation chain carries the approved long-term action economy inputs, not a C# default.
+                Assert.That(definition.actionPointMaximumUnits, Is.EqualTo(100000));
+                Assert.That(definition.movementEfficiencyMilliUnits, Is.EqualTo(2000));
+                Assert.That(snapshot.Attributes.ActionEconomyInputsPresent, Is.True);
+                Assert.That(snapshot.Attributes.ActionPointMaximumUnits, Is.EqualTo(100000));
+                Assert.That(snapshot.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+                Assert.That(restored.Attributes.ActionPointMaximumUnits, Is.EqualTo(100000));
+                Assert.That(restored.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+                Assert.That(restored.Attributes.ActionEconomyInputsPresent, Is.True);
+                Assert.That(restored.CombatModifiers.ActionEconomyInputs, Is.Empty);
             }
             finally
             {
@@ -115,6 +127,8 @@ namespace TianZhang.Tests
                 definition.visibleRootId = "root_water_middle";
                 definition.visibleRootGrade = "中品";
                 definition.visibleRootElement = "水";
+                definition.actionPointMaximumUnits = 100000;
+                definition.movementEfficiencyMilliUnits = 2000;
                 CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition);
                 CharacterStateSnapshot before = profile.Capture();
                 var replacement = new CharacterStateSnapshot(

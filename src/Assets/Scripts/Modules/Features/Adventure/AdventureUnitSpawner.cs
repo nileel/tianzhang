@@ -112,7 +112,10 @@ namespace TianZhang.Features.Adventure
                 source.Attributes.Mind,
                 source.Attributes.Reaction,
                 source.Attributes.Talent,
-                source.Attributes.Fortune);
+                source.Attributes.Fortune,
+                source.Attributes.ActionPointMaximumUnits,
+                source.Attributes.MovementEfficiencyMilliUnits,
+                source.Attributes.ActionEconomyInputsPresent);
             CharacterDerivedAttributes derived = attributes.Derive(
                 source.Progression.RealmMultiplier,
                 source.CombatModifiers.ToAttributeBonuses());

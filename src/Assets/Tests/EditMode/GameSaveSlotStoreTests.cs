@@ -127,7 +127,8 @@ namespace TianZhang.Tests
             var store = new GameSaveSlotStore(temporaryDirectory);
             Assert.That(store.Write("valid", CreateEnvelope("player", "可读角色")).Succeeded, Is.True);
             File.WriteAllText(Path.Combine(temporaryDirectory, "broken.json"), "not-json");
-            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":4}");
+            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"),
+                "{\"schemaVersion\":3,\"hasPlayer\":true,\"player\":{\"characterId\":\"legacy\",\"displayName\":\"旧档\"}}");
             File.WriteAllText(Path.Combine(temporaryDirectory, "empty.json"), "{\"schemaVersion\":1,\"hasPlayer\":false}");
             File.WriteAllText(Path.Combine(temporaryDirectory, "legacy-player.json"),
                 "{\"schemaVersion\":2,\"hasPlayer\":true,\"player\":{\"characterId\":\"legacy\",\"displayName\":\"旧档\"}}");
@@ -243,7 +244,7 @@ namespace TianZhang.Tests
             var store = new GameSaveSlotStore(temporaryDirectory);
             Directory.CreateDirectory(temporaryDirectory);
             File.WriteAllText(Path.Combine(temporaryDirectory, "broken.json"), "not-json");
-            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":4}");
+            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":5}");
             Assert.That(store.Read("broken").Succeeded, Is.False);
             Assert.That(store.Read("old").Succeeded, Is.False);
 
@@ -285,6 +286,8 @@ namespace TianZhang.Tests
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
             definition.charName = displayName;
             definition.realmMultiplier = 1f;
+            definition.actionPointMaximumUnits = 100000;
+            definition.movementEfficiencyMilliUnits = 2000;
             ownedObjects.Add(definition);
 
             var runtime = new GameRuntime();

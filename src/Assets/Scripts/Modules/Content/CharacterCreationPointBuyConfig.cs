@@ -12,6 +12,10 @@ namespace TianZhang.Game.CharacterCreation
         public int maxValue;
         public CostRange[] costRanges = new CostRange[0];
 
+        // 统一行动力公共合同的长期基础输入：显式声明，不在 C# 补值；缺失或 0 由创角与恢复拒绝。
+        public int actionPointMaximumUnits;       // AP 最小单位上限，>0；S=1000
+        public int movementEfficiencyMilliUnits;  // 每 100 基准 AP 的普通等效距离 ×1000，>=0
+
         [Serializable]
         public struct CostRange
         {

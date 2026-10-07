@@ -142,7 +142,9 @@ namespace TianZhang.Infrastructure.Persistence
                  record.blockRate != 0f || record.blockReduction != 0f ||
                  record.soulShieldRate != 0f || record.soulShieldReduction != 0f ||
                  record.dodgeRate != 0f || record.critRate != 0f ||
-                 record.critDamage != 0f || record.hitRateBonus != 0f);
+                 record.critDamage != 0f || record.hitRateBonus != 0f ||
+                 record.actionEconomyInputsPresent || record.actionPointMaximumUnits != 0 ||
+                 record.movementEfficiencyMilliUnits != 0 || HasItems(record.actionEconomyModifierInputs));
         }
 
         private static bool HasCultivationPayload(CultivationRecord record)
@@ -343,6 +345,12 @@ namespace TianZhang.Infrastructure.Persistence
         public float critRate;
         public float critDamage;
         public float hitRateBonus;
+        // 长期行动力输入（公共合同§七）：只保存基础长期输入与不可重建的修正来源；
+        // 不保存 AP 余额、临时 CT、回合／返还使用账本。
+        public bool actionEconomyInputsPresent;
+        public int actionPointMaximumUnits;
+        public int movementEfficiencyMilliUnits;
+        public ActionEconomyModifierRecord[] actionEconomyModifierInputs;
 
         public static CharacterRecord Capture(CharacterStateSnapshot snapshot)
         {
@@ -390,7 +398,20 @@ namespace TianZhang.Infrastructure.Persistence
                 critRate = snapshot.CombatModifiers.CritRate,
                 critDamage = snapshot.CombatModifiers.CritDamage,
                 hitRateBonus = snapshot.CombatModifiers.HitRateBonus,
+                actionEconomyInputsPresent = snapshot.Attributes.ActionEconomyInputsPresent,
+                actionPointMaximumUnits = snapshot.Attributes.ActionPointMaximumUnits,
+                movementEfficiencyMilliUnits = snapshot.Attributes.MovementEfficiencyMilliUnits,
+                actionEconomyModifierInputs = CaptureActionEconomyModifierInputs(snapshot.CombatModifiers.ActionEconomyInputs),
             };
+        }
+
+        private static ActionEconomyModifierRecord[] CaptureActionEconomyModifierInputs(
+            IReadOnlyList<ActionEconomyModifierInput> inputs)
+        {
+            var records = new List<ActionEconomyModifierRecord>();
+            foreach (ActionEconomyModifierInput input in inputs)
+                records.Add(ActionEconomyModifierRecord.Capture(input));
+            return records.ToArray();
         }
 
         public CharacterStateSnapshot Restore()
@@ -402,9 +423,17 @@ namespace TianZhang.Infrastructure.Persistence
             {
                 throw new ArgumentException("Character record is invalid.");
             }
+            if (!actionEconomyInputsPresent || actionPointMaximumUnits <= 0 || movementEfficiencyMilliUnits < 0)
+            {
+                throw new ArgumentException(
+                    GameSaveSerializer.ActionEconomySaveInvalid +
+                    ": action economy inputs are missing, the presence marker is false, or a value is out of range.");
+            }
+            CharacterCombatModifiers combatModifiers = RestoreCombatModifiers();
             return new CharacterStateSnapshot(
                 new CharacterIdentitySnapshot(characterId, displayName),
-                new CharacterAttributesSnapshot(rootBone, physique, spirit, mind, reaction, talent, fortune),
+                new CharacterAttributesSnapshot(rootBone, physique, spirit, mind, reaction, talent, fortune,
+                    actionPointMaximumUnits, movementEfficiencyMilliUnits, actionEconomyInputsPresent),
                 new CharacterResourcesSnapshot(maximumHealth, currentHealth, maximumSpirit, currentSpirit),
                 new AbilityLoadoutSnapshot(
                     knownSpells ?? new string[0],
@@ -414,25 +443,129 @@ namespace TianZhang.Infrastructure.Persistence
                     spellSlots,
                     skillSlots),
                 new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier),
-                new CharacterCombatModifiers(
-                    hpBonus,
-                    mpBonus,
-                    physAtkBonus,
-                    magAtkBonus,
-                    physDefBonus,
-                    magDefBonus,
-                    blockRate,
-                    blockReduction,
-                    soulShieldRate,
-                    soulShieldReduction,
-                    dodgeRate,
-                    critRate,
-                    critDamage,
-                    hitRateBonus),
+                combatModifiers,
                 mainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId,
                 appearanceProfileId,
                 visibleRootId, visibleRootGrade, visibleRootElement);
+        }
+
+        /// <summary>
+        /// Rebuilds the declared long-term correction sources. Every source is validated before the whole
+        /// array is published, so a bad entry leaves the caller's live state untouched.
+        /// </summary>
+        private CharacterCombatModifiers RestoreCombatModifiers()
+        {
+            var inputs = new List<ActionEconomyModifierInput>();
+            foreach (ActionEconomyModifierRecord record in actionEconomyModifierInputs ?? new ActionEconomyModifierRecord[0])
+            {
+                if (record == null)
+                {
+                    throw new ArgumentException(
+                        GameSaveSerializer.ActionEconomySaveInvalid + ": an action economy modifier input is missing.");
+                }
+                inputs.Add(record.Restore());
+            }
+            try
+            {
+                CharacterCombatModifiers.ValidateActionEconomyInputs(inputs);
+            }
+            catch (ArgumentException exception)
+            {
+                throw new ArgumentException(
+                    GameSaveSerializer.ActionEconomySaveInvalid + ": " + exception.Message, exception);
+            }
+            return new CharacterCombatModifiers(
+                hpBonus,
+                mpBonus,
+                physAtkBonus,
+                magAtkBonus,
+                physDefBonus,
+                magDefBonus,
+                blockRate,
+                blockReduction,
+                soulShieldRate,
+                soulShieldReduction,
+                dodgeRate,
+                critRate,
+                critDamage,
+                hitRateBonus,
+                inputs);
+        }
+    }
+
+    /// <summary>
+    /// Persistence projection of one frozen <see cref="ActionEconomyModifierInput"/>. Every field is a long-term
+    /// declaration of the named source; no runtime balance, turn ledger or usage count is stored here.
+    /// </summary>
+    [Serializable]
+    public sealed class ActionEconomyModifierRecord
+    {
+        public string sourceInstanceId;
+        public string sourceDefinitionId;
+        public int actionKind;
+        public string profileId;
+        public int actionPointMaximumBonusUnits;
+        public int movementEfficiencyBonusMilliUnits;
+        public int fixedReductionUnits;
+        public int retainedCostPermille;
+        public int ctPenaltyReduction;
+        public int reuseCooldownReductionTicks;
+        public int minimumNetCostUnits;
+        public int refundOnEvent;
+        public int refundUnits;
+        public int refundLimitPerOwnTurn;
+        public int refundBudgetPerOwnTurnUnits;
+
+        public static ActionEconomyModifierRecord Capture(ActionEconomyModifierInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            return new ActionEconomyModifierRecord
+            {
+                sourceInstanceId = input.SourceInstanceId,
+                sourceDefinitionId = input.SourceDefinitionId,
+                actionKind = (int)input.ActionKind,
+                profileId = input.ProfileId,
+                actionPointMaximumBonusUnits = input.ActionPointMaximumBonusUnits,
+                movementEfficiencyBonusMilliUnits = input.MovementEfficiencyBonusMilliUnits,
+                fixedReductionUnits = input.FixedReductionUnits,
+                retainedCostPermille = input.RetainedCostPermille,
+                ctPenaltyReduction = input.CtPenaltyReduction,
+                reuseCooldownReductionTicks = input.ReuseCooldownReductionTicks,
+                minimumNetCostUnits = input.MinimumNetCostUnits,
+                refundOnEvent = (int)input.RefundOnEvent,
+                refundUnits = input.RefundUnits,
+                refundLimitPerOwnTurn = input.RefundLimitPerOwnTurn,
+                refundBudgetPerOwnTurnUnits = input.RefundBudgetPerOwnTurnUnits,
+            };
+        }
+
+        public ActionEconomyModifierInput Restore()
+        {
+            try
+            {
+                return new ActionEconomyModifierInput(
+                    sourceInstanceId,
+                    sourceDefinitionId,
+                    (ActionEconomyModifierInput.CommandKind)actionKind,
+                    profileId,
+                    actionPointMaximumBonusUnits,
+                    movementEfficiencyBonusMilliUnits,
+                    fixedReductionUnits,
+                    retainedCostPermille,
+                    ctPenaltyReduction,
+                    reuseCooldownReductionTicks,
+                    minimumNetCostUnits,
+                    (ActionEconomyModifierInput.SuccessEvent)refundOnEvent,
+                    refundUnits,
+                    refundLimitPerOwnTurn,
+                    refundBudgetPerOwnTurnUnits);
+            }
+            catch (ArgumentException exception)
+            {
+                throw new ArgumentException(
+                    GameSaveSerializer.ActionEconomySaveInvalid + ": " + exception.Message, exception);
+            }
         }
     }
 

@@ -25,6 +25,8 @@ namespace TianZhang.Tests
             definition = ScriptableObject.CreateInstance<CharacterData>();
             definition.charName = "测试角色";
             definition.realmMultiplier = 1f;
+            definition.actionPointMaximumUnits = 100000;
+            definition.movementEfficiencyMilliUnits = 2000;
 
             runtime.BeginNewGame(
                 CharacterRuntimeProfile.FromDefinition("player", definition),

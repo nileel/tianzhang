@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c5a593930184c47bbd043b8d82f6224, type: 3}
   m_Name: CharacterCreationPointBuyConfig
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   purchasePointLimit: 25
   minValue: 3
   baseValue: 3
@@ -26,3 +26,5 @@ MonoBehaviour:
   - fromValue: 13
     toValue: 15
     costPerLevel: 3
+  actionPointMaximumUnits: 100000
+  movementEfficiencyMilliUnits: 2000

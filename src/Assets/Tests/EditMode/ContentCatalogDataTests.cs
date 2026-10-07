@@ -5,6 +5,7 @@ using NUnit.Framework;
 using TianZhang.Content;
 using TianZhang.Editor;
 using TianZhang.Entity;
+using TianZhang.Game.CharacterCreation;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,6 +18,8 @@ namespace TianZhang.Tests
         private const string ItemsPath = "Assets/DataConfig/Items.csv";
         private const string BountiesPath = "Assets/DataConfig/Bounties.csv";
         private const string EnemiesPath = "Assets/DataConfig/Enemies.csv";
+        private const string PointBuyPath = "Assets/DataConfig/CharacterCreationPointBuy.csv";
+        private const string PointBuyAssetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
         private static readonly string[] EnemyIds =
         {
             "enemy_shijiahou", "enemy_fengsun", "enemy_yanweihu",
@@ -272,6 +275,146 @@ namespace TianZhang.Tests
                 columns[index] = value;
                 return string.Join(",", columns);
             }).ToArray();
+        }
+
+        [Test]
+        public void PointBuyCsvImportWritesTheApprovedLongTermInputsAndStaysIdempotent()
+        {
+            var originalCsv = File.ReadAllBytes(ToAbsolutePath(PointBuyPath));
+            var originalAsset = File.ReadAllBytes(ToProjectPath(PointBuyAssetPath));
+            string assetGuid = AssetDatabase.AssetPathToGUID(PointBuyAssetPath);
+            try
+            {
+                SettlementContentImporter.ImportCharacterCreationPointBuy();
+                AssetDatabase.ImportAsset(PointBuyAssetPath, ImportAssetOptions.ForceSynchronousImport);
+                var config = AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(PointBuyAssetPath);
+                Assert.IsNotNull(config);
+                Assert.AreEqual(100000, config.actionPointMaximumUnits);
+                Assert.AreEqual(2000, config.movementEfficiencyMilliUnits);
+                Assert.AreEqual(25, config.purchasePointLimit);
+                Assert.AreEqual(3, config.minValue);
+                Assert.AreEqual(3, config.baseValue);
+                Assert.AreEqual(15, config.maxValue);
+                Assert.AreEqual(3, config.costRanges.Length);
+                Assert.AreEqual(1, config.CostForLevel(4));
+                Assert.AreEqual(2, config.CostForLevel(9));
+                Assert.AreEqual(3, config.CostForLevel(13));
+                byte[] firstImport = File.ReadAllBytes(ToProjectPath(PointBuyAssetPath));
+
+                SettlementContentImporter.ImportCharacterCreationPointBuy();
+                AssetDatabase.ImportAsset(PointBuyAssetPath, ImportAssetOptions.ForceSynchronousImport);
+                CollectionAssert.AreEqual(firstImport, File.ReadAllBytes(ToProjectPath(PointBuyAssetPath)));
+                Assert.AreEqual(assetGuid, AssetDatabase.AssetPathToGUID(PointBuyAssetPath));
+                Assert.AreEqual(100000,
+                    AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(PointBuyAssetPath).actionPointMaximumUnits);
+            }
+            finally
+            {
+                File.WriteAllBytes(ToAbsolutePath(PointBuyPath), originalCsv);
+                File.WriteAllBytes(ToProjectPath(PointBuyAssetPath), originalAsset);
+                AssetDatabase.ImportAsset(PointBuyAssetPath, ImportAssetOptions.ForceSynchronousImport);
+            }
+        }
+
+        [TestCase("actionPointMaximumUnits", "")]
+        [TestCase("actionPointMaximumUnits", "0")]
+        [TestCase("actionPointMaximumUnits", "-1")]
+        [TestCase("actionPointMaximumUnits", "100000.5")]
+        [TestCase("actionPointMaximumUnits", "2147483648")]
+        [TestCase("movementEfficiencyMilliUnits", "")]
+        [TestCase("movementEfficiencyMilliUnits", "-1")]
+        [TestCase("movementEfficiencyMilliUnits", "0.5")]
+        [TestCase("movementEfficiencyMilliUnits", "2147483648")]
+        [TestCase("extraColumn", "unexpected")]
+        [TestCase("missingColumn", "movementEfficiencyMilliUnits")]
+        public void InvalidPointBuyRowRejectsTheWholeImportBeforeAnyAssetWrite(string field, string value)
+        {
+            var originalCsv = File.ReadAllBytes(ToAbsolutePath(PointBuyPath));
+            var originalAsset = File.ReadAllBytes(ToProjectPath(PointBuyAssetPath));
+            string assetGuid = AssetDatabase.AssetPathToGUID(PointBuyAssetPath);
+            try
+            {
+                var lines = ReadDataFile(PointBuyPath);
+                if (field == "extraColumn")
+                {
+                    lines = lines.Select(line => line.StartsWith("default,", StringComparison.Ordinal)
+                        ? line + "," + value
+                        : line).ToArray();
+                }
+                else if (field == "missingColumn")
+                {
+                    lines = lines.Select(line => line.StartsWith("#", StringComparison.Ordinal)
+                        ? line
+                        : string.Join(",", line.Split(',').Take(line.Split(',').Length - 1))).ToArray();
+                }
+                else
+                {
+                    lines = WithPointBuyInput(lines, field, value);
+                }
+                File.WriteAllLines(ToAbsolutePath(PointBuyPath), lines);
+
+                Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ImportCharacterCreationPointBuy());
+                CollectionAssert.AreEqual(originalAsset, File.ReadAllBytes(ToProjectPath(PointBuyAssetPath)));
+                Assert.AreEqual(assetGuid, AssetDatabase.AssetPathToGUID(PointBuyAssetPath));
+                Assert.AreEqual(100000, AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(
+                    PointBuyAssetPath).actionPointMaximumUnits);
+                Assert.AreEqual(2000, AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(
+                    PointBuyAssetPath).movementEfficiencyMilliUnits);
+            }
+            finally
+            {
+                File.WriteAllBytes(ToAbsolutePath(PointBuyPath), originalCsv);
+            }
+        }
+
+        [Test]
+        public void PointBuyRowsWithConflictingLongTermInputsAreRejected()
+        {
+            var originalCsv = File.ReadAllBytes(ToAbsolutePath(PointBuyPath));
+            var originalAsset = File.ReadAllBytes(ToProjectPath(PointBuyAssetPath));
+            string assetGuid = AssetDatabase.AssetPathToGUID(PointBuyAssetPath);
+            try
+            {
+                // Only the last default row disagrees, so a partial write would silently keep the first value.
+                var lines = ReadDataFile(PointBuyPath).ToArray();
+                int last = Array.FindLastIndex(lines, line => line.StartsWith("default,", StringComparison.Ordinal));
+                Assert.GreaterOrEqual(last, 0);
+                var columns = lines[last].Split(',');
+                int index = Array.IndexOf(ReadDataFile(PointBuyPath)
+                    .First(line => line.StartsWith("configId,", StringComparison.Ordinal)).Split(','), "actionPointMaximumUnits");
+                Assert.GreaterOrEqual(index, 0);
+                columns[index] = "100001";
+                lines[last] = string.Join(",", columns);
+                File.WriteAllLines(ToAbsolutePath(PointBuyPath), lines);
+
+                Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ImportCharacterCreationPointBuy());
+                CollectionAssert.AreEqual(originalAsset, File.ReadAllBytes(ToProjectPath(PointBuyAssetPath)));
+                Assert.AreEqual(assetGuid, AssetDatabase.AssetPathToGUID(PointBuyAssetPath));
+            }
+            finally
+            {
+                File.WriteAllBytes(ToAbsolutePath(PointBuyPath), originalCsv);
+            }
+        }
+
+        private static string[] WithPointBuyInput(string[] lines, string field, string value)
+        {
+            var header = lines.First(line => line.StartsWith("configId,", StringComparison.Ordinal)).Split(',');
+            int index = Array.IndexOf(header, field);
+            Assert.GreaterOrEqual(index, 0);
+            return lines.Select(line =>
+            {
+                if (!line.StartsWith("default,", StringComparison.Ordinal))
+                    return line;
+                var columns = line.Split(',');
+                columns[index] = value;
+                return string.Join(",", columns);
+            }).ToArray();
+        }
+
+        private static string ToProjectPath(string assetsRelativePath)
+        {
+            return Path.Combine(Application.dataPath, assetsRelativePath.Substring("Assets/".Length));
         }
 
         [Test]

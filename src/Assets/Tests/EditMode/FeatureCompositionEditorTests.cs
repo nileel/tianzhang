@@ -97,6 +97,8 @@ namespace TianZhang.Tests
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "旧档角色";
                 profile.realmMultiplier = 1f;
+                profile.actionPointMaximumUnits = 100000;
+                profile.movementEfficiencyMilliUnits = 2000;
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.BeginNewGame(
                     CharacterRuntimeProfile.FromDefinition("player", profile),
@@ -139,6 +141,8 @@ namespace TianZhang.Tests
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "坏目标旧档";
                 profile.realmMultiplier = 1f;
+                profile.actionPointMaximumUnits = 100000;
+                profile.movementEfficiencyMilliUnits = 2000;
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.BeginNewGame(
                     CharacterRuntimeProfile.FromDefinition("player", profile),

@@ -233,6 +233,8 @@ namespace TianZhang.Tests.EditMode
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
+            playerData.actionPointMaximumUnits = 100000;
+            playerData.movementEfficiencyMilliUnits = 2000;
             playerData.unarmedBasicAttackProfileId = "basic_unarmed";
             playerData.gongFaName = "抱元守一经";
             playerData.hpBonus = 12.4f;
@@ -246,6 +248,8 @@ namespace TianZhang.Tests.EditMode
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
+            enemyTemplate.actionPointMaximumUnits = 100000;
+            enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
             enemyTemplate.gongFaName = "gongfa_baoyuanshouyi";
             enemyTemplate.blockRate = 10f;
@@ -302,12 +306,16 @@ namespace TianZhang.Tests.EditMode
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
+            playerData.actionPointMaximumUnits = 100000;
+            playerData.movementEfficiencyMilliUnits = 2000;
             playerData.unarmedBasicAttackProfileId = "basic_unarmed";
             playerData.gongFaName = "未知功法";
 
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
+            enemyTemplate.actionPointMaximumUnits = 100000;
+            enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
             enemyTemplate.gongFaName = "未知功法";
 
@@ -364,12 +372,16 @@ namespace TianZhang.Tests.EditMode
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
             playerData.charName = "玩家";
+            playerData.actionPointMaximumUnits = 100000;
+            playerData.movementEfficiencyMilliUnits = 2000;
             playerData.mainEquipmentBasicAttackProfileId = main;
             playerData.unarmedBasicAttackProfileId = unarmed;
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.actionPointMaximumUnits = 100000;
+            enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
             enemy.combatTemplate = enemyTemplate;
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
@@ -402,11 +414,15 @@ namespace TianZhang.Tests.EditMode
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
             playerData.charName = "玩家";
+            playerData.actionPointMaximumUnits = 100000;
+            playerData.movementEfficiencyMilliUnits = 2000;
             playerData.unarmedBasicAttackProfileId = "basic_unarmed";
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.actionPointMaximumUnits = 100000;
+            enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.mainEquipmentBasicAttackProfileId = main;
             enemyTemplate.unarmedBasicAttackProfileId = unarmed;
             enemy.combatTemplate = enemyTemplate;

@@ -27,11 +27,26 @@ namespace TianZhang.Features.CharacterCreation
                 return result;
             }
 
+            ValidateLongTermActionEconomyInputs(pointBuyConfig, result);
             ValidateInnate(draft.Innate, pointBuyConfig, result);
             ValidateCreationBudget(draft, result);
             ValidateCraftSkills(draft, result);
 
             return result;
+        }
+
+        /// <summary>
+        /// 正式新建玩家的长期行动力输入来自点购配置本身；缺失或 0 直接拒绝创建，不在 C# 补值。
+        /// </summary>
+        private static void ValidateLongTermActionEconomyInputs(
+            CharacterCreationPointBuyConfig pointBuyConfig,
+            CharacterCreationValidationResult result)
+        {
+            if (pointBuyConfig.actionPointMaximumUnits <= 0)
+                result.Errors.Add("点购配置缺少正式新建玩家的行动力上限。");
+
+            if (pointBuyConfig.movementEfficiencyMilliUnits < 0)
+                result.Errors.Add("点购配置缺少正式新建玩家的移动效率。");
         }
 
         public static CharacterData BuildCharacterData(
@@ -67,6 +82,10 @@ namespace TianZhang.Features.CharacterCreation
             }
             // 角色装配所有者显式绑定生产无装备普攻档案；战斗调用点不再补默认值。
             profile.unarmedBasicAttackProfileId = CharacterCreationCatalog.BasicUnarmedAttackProfileId;
+
+            // 长期行动力基础输入读自点购配置，不在 C# 补 100000／2000，也不从反应或灵力派生。
+            profile.actionPointMaximumUnits = pointBuyConfig.actionPointMaximumUnits;
+            profile.movementEfficiencyMilliUnits = pointBuyConfig.movementEfficiencyMilliUnits;
 
             profile.rootBone = innate.RootBone;
             profile.physique = innate.RootBone;

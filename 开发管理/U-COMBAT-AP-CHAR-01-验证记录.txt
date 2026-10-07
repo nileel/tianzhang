@@ -1,0 +1,86 @@
+# U-COMBAT-AP-CHAR-01 角色长期行动力成长与快照验证记录
+
+日期：2026-10-08。任务：U-COMBAT-AP-CHAR-01（角色长期行动力成长与快照，含 SAVE 同轮收口）。身份／修改方：DeepSeek V4.1 Flash（本机 http://127.0.0.1:15721 同源 gateway，model=deepseek-flash）。本文只记录本轮实际证据，未预填 Codex 复审结论。
+
+## 身份、范围与模型协作评估
+
+- 基线提交 1b5f0cb3d386abc57f12af4cebf7b6122e3461bb；worktree D:/天章游戏开发/.worktrees/automation/0a7edd98-19b7-44ce-aebb-5adbcb43ea84/deepseek；分支 codex/automation/deepseek/0a7edd98-19b7-44ce-aebb-5adbcb43ea84/candidate。未修改主工作区、runtime、任务卡、队列、backlog 或 AI合作沟通。
+- 共享入口预检（绑定 runId／taskId／任务卡 digest／索引 digest）：matched／notice／mustRead／gatePointers 均为空，与任务卡 schema 2 riskPreflight 投影一致，无待消费门禁。
+- 复杂度评估（业务写入前）：目标与语义已由公共合同§二／三／七／九与任务卡冻结，无待裁决语义；但创建→Character→快照→schema4 保存是同一条强耦合写链，不存在互不重叠的独立写入工作面。结论：主责 DeepSeek V4.1 Flash 单主智能体实施，不派发写入子智能体，不派发第二模型或第二责任会话；Codex 独立复审完整差异并汇总 SAVE。
+- 实际工具能力核对：pwsh 7 可用；Unity 6000.3.18f1 可用；tools/run-unity-editmode-tests.ps1 与 tools/run-unity-playmode-tests.ps1 均可用且无 -TestFilter 参数；tools/check-data-chain.ps1、tools/check-unity-assembly-boundaries.ps1、tools/check-task-cards.ps1、tools/check-review-text.ps1、tools/check-pending-whitespace.ps1 可用。
+- 辅助调用证据：本轮仅派发 1 个只读符号探查子智能体用于枚举改造符号的全部构造／调用点（CharacterAttributes、CharacterAttributesSnapshot、CharacterStateSnapshot、CharacterRuntimeProfile、CharacterCombatModifiers、CharacterRecord、GameSaveSerializer.SchemaVersion、CharacterCreationPointBuyConfig、BuildCharacterData、AdventureSpawnSet）。该辅助只读、未写入任何文件，其结果已由主智能体用自己的 rg 检索独立复核一致；主智能体统一复核完整 diff、运行全部验证并形成唯一 candidate。
+
+## 输入与所有者
+
+- 创建链（唯一写入者）：src/Assets/DataConfig/CharacterCreationPointBuy.csv::default（10 列表头，3 行显式 100000／2000）→ SettlementContentImporter.ImportCharacterCreationPointBuy → CharacterCreationPointBuyConfig → src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset（GUID 未变）→ CharacterCreationRules.BuildCharacterData → StartMenuSceneInstaller.CharacterRuntimeProfile.FromDefinition。StartMenuSceneInstaller 与 StartMenuSceneBuilder.PointBuyConfigAssetPath 未改，仍是只读消费同一资产。
+- Character 所有者：CharacterAttributes／CharacterAttributesSnapshot 承载 actionPointMaximumUnits、movementEfficiencyMilliUnits 与 actionEconomyInputsPresent；CharacterCombatModifiers 承载 ActionEconomyModifierInput 数组；CharacterRuntimeProfile.Capture／FromSnapshot／Restore 统一发布。
+- 保存所有者：GameSaveSerializer（SchemaVersion=4、旧档迁移／拒绝）与 GameSaveEnvelope.CharacterRecord／HasCharacterPayload／Restore；GameSaveSlotStore 只读核对，未改删除功能。
+- 直接构造适配：AdventureUnitSpawner 只按新签名传两值，未接战斗 AP、未改 Combat 快照／回合／移动规则（仍归 CORE）。
+
+## 实现结果（按实施范围）
+
+- AP 上限 >0、v>=0、缺存在语义与 Int32 溢出四类都在 Character 边界拒绝：构造参数取 long 以便拒绝超出 Int32 的输入，越界即 ArgumentOutOfRangeException／ArgumentException，不夹成 100000、不从 reaction 或 MP 推导、不保留缺字段默认构造。
+- 新存档显式存在标记：actionEconomyInputsPresent 必须为 true，用于区分合法 v=0 与缺失字段；不得用 v>0 判断存在。
+- ActionEconomyModifierInput 落在既有 CharacterCombatModifiers.cs，字段依公共合同§二（含受控命令枚举与受控成功事件，均为该类型的嵌套类型，未新增第二个公开协议符号）；校验非空稳定 ID、sourceInstanceId 去重、各字段范围、正返还必须同时声明根动作事件／本人回合次数／本人回合总预算。无生产来源时显式空数组，返还预算由空数组表达为 0；未新增成长树、装备效果或来源注册系统。未知定义解析属消费侧匹配规则，Character 不建立来源注册表（合同§九明确不新增注册系统）。
+- Capture 完整；Restore 先整体验证身份、属性（含两项新输入）、资源、装配、成长，再逐项写入；任一子项失败时 identity、attributes、resources、loadout、progression 与新输入全部不变（新用例断言）。
+- 创角 CSV 在原 8 列表头末尾追加两必填列；default 三行均 100000／2000；同 configId 全部行必须一致；缺列、空值、分数、负值、AP 零、溢出、行宽不符、坏后行、值不一致一律在任何 asset 写入前整批拒绝；合法导入成功后才写 asset 并保存（本方法补 AssetDatabase.SaveAssets，确保既有 asset 真正落盘）。点购配置、costRanges 与既有 configId 过滤行为保持。
+- BuildCharacterData 读配置写两值，不在 C# 补 100000／2000；CharacterCreationRules.Validate 增加配置缺失时的创建拒绝（不改变点购规则本身）。
+- schema4：CharacterRecord 增 actionEconomyInputsPresent／actionPointMaximumUnits／movementEfficiencyMilliUnits／actionEconomyModifierInputs，并进入 HasCharacterPayload；schema3 有玩家拒绝 legacy_action_economy_input_missing，真正空角色会话机械迁移到 4 并再过原有恢复验证，伪装 hasPlayer=false 的 payload 仍按 presence 矛盾拒绝；schema1／2 既有拒绝不变；schema4 缺字段／存在标记 false／未知来源／越界拒绝 action_economy_save_invalid。序列化只含长期输入，无余额、临时 CT、回合或返还使用账本。
+
+## Unity 与数据证据
+
+- 正式 default CSV 导入既有 asset（真实导入器，非手改）：`"C:/Program Files/Unity/Hub/Editor/6000.3.18f1/Editor/Unity.exe" -batchmode -nographics -quit -projectPath <worktree>/src -executeMethod TianZhang.Editor.SettlementContentImporter.ImportCharacterCreationPointBuy -logFile C:/Users/WINDOWS/AppData/Local/Temp/tzg-char-import.log`，exit=0。asset 由导入链写回 actionPointMaximumUnits: 100000、movementEfficiencyMilliUnits: 2000，purchasePointLimit=25、minValue=3、baseValue=3、maxValue=15 与三条 costRange 逐项保持，GUID da2a458f00eb427e8b9947e03dfe654b 未变。Unity 顺带在 ProjectSettings/ShaderGraphSettings.asset 写入一处空值行尾空格，已按原始字节恢复，未进入候选。既有 asset 的 `m_EditorClassIdentifier: ` 行尾空格是 Unity 序列化惯例（多份已提交 asset 相同），为通过提交门禁按项目既有做法用 check-pending-whitespace.ps1 -Fix 归一化为无空格；该行语义不变（空字符串），asset 的两个新字段与其余点购字段逐项未变。
+- EditMode 全量：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-char-editmode.xml`；test-run total=698 passed=691 failed=7 inconclusive=0 skipped=0 result=Failed(Child)，因既有 7 项失败 runner 按全或无合同返回非零（exit 2）。日志 C:/Users/WINDOWS/AppData/Local/Temp/tzg-editmode-test-runner.log。
+- EditMode 计数：上一轮 DATA 敌人叶登记为 656，本轮 698，增量为 42 项新增用例（CharacterActionPointStateTests 20 + GameSaveEnvelopeTests 9 + ContentCatalogDataTests 13），无删除、无跳过；691 = 649 + 42。
+- 本轮重点用例逐类全过：CharacterActionPointStateTests 20/20（新增文件，含 .meta）、GameSaveEnvelopeTests 40/40、ContentCatalogDataTests 31/31、GameSaveSlotStoreTests 24/24、CharacterCreationRuleTests 26/26、CharacterStateTests 5/5、GameRuntimeTests 8/8、FeatureCompositionEditorTests 9/9。
+- 用例覆盖：AP 合法（1／100000／int.MaxValue）、零／负／溢出拒绝；v 合法（0／2000／int.MaxValue）、负／溢出拒绝；缺存在语义与「v=0 但有标记」对照；定义缺两字段时 FromDefinition 与 FromDefinition→CharacterRuntimeProfile 都拒绝且不回落批准值；Capture→Restore→Capture 不重复累加；身份／资源／装配／成长四类非法子快照分别 Restore 失败后 17 项 live 字段与两项新输入逐项不变；来源协议的空 ID、重复 sourceInstanceId、各字段越界、未知 actionKind／refundOnEvent、正返还缺次数或预算全部拒绝，合法正返还通过；无来源时 ActionEconomyInputs 为空数组。
+- 保存矩阵用例：schema4 新档往返幂等且 JSON 不含 actionPointsRemaining／pendingCtPenalty／actionPointLimitAtTurnStart／refundBudgetUsed／turnSequence；合法 v=0 不被误判为缺失；缺标记／AP 零／AP 负／v 负／未知 actionKind／正返还缺预算／重复来源逐项以 ArgumentException 失败且不替换 live owner；声明来源经信封往返逐字段一致并进入 restored.Player.CombatModifiers.ActionEconomyInputs；hasPlayer=false 但只携带新字段仍拒绝；schema3 有玩家拒绝 legacy_action_economy_input_missing；schema3 空会话机械迁移到 4 并恢复为空玩家；schema3 伪装无玩家 payload 仍拒绝且 live 状态逐字节不变；schema1／2 有玩家仍按原拒绝；未知 schema 与坏 JSON 仍拒绝。
+- 创建链用例：ContentCatalogDataTests 以真实 CSV＋真实导入器证明 100000／2000 与点购字段落盘、重复导入字节一致且 GUID 不变；11 种非法单行（AP 空／0／负／小数／溢出，v 空／负／小数／溢出，多列，缺列）整批拒绝且 asset 字节与 GUID 完全不变；仅最后一行 AP 不一致时同样整批拒绝、不部分更新。CharacterStateTests.FormalCreationVisibleRootSurvivesRuntimeCaptureAndReconstruction 已按合同补入完整创建输入断言（100000／2000／存在标记／空修正数组）。
+- PlayMode 全量：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-char-playmode.xml`；total=75 passed=44 failed=30 inconclusive=0 skipped=1。与本环境最近一次登记的同入口全量结果 C:/Users/WINDOWS/AppData/Local/Temp/tzg-playmode-attack.xml（75/44/30/1）逐名对照：失败集合与跳过集合完全一致，无新增失败家族、也无消失项。
+- 本卡受影响的正式创角／保存 PlayMode：StartMenuSaveDeletionPlayModeTests 4/4 通过（CancelKeepsBothSlotsAndConfirmDeletesOnlyTheRequestedOne、CorruptSlotRowIsDeletableWithoutBeingLoadable、DeleteConfirmationStaysReadableAndReachableWithoutClipping、DeletingTheLastSlotShowsTheEmptyStateAndStopsTheActiveSlotFromRebuildingIt），即真实 StartMenuScene 下的建角色→写档→读档→删除链在 schema4 下仍完整。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK；GongFa=29/29、Spells=84/84、Skills=31/31、language keys=613。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：OK；assemblies=19、asmrefs=2。Character 未反向引用 Combat／World／Presentation，Persistence 仍只依赖既有方向。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson`：status=ok、cardCount=77、readyCount=2；本 candidate 未改任务卡、队列或 backlog。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`：OK（详见交接证据给出的文件计数）。
+- 暂存前 `tools/check-pending-whitespace.ps1 -ExpectedPaths <本轮改动文件>` 与暂存后 `git -c core.whitespace=-blank-at-eol diff --cached --check` 由 automation-finalize-commit.ps1 执行并通过；未 stage 无关改动。
+
+## 已确认的基线失败（非本轮引入）
+
+EditMode 7 项与本卡无关，逐项名称与消息与 开发管理/U-COMBAT-AP-DATA-ENEMY-01-验证记录.txt 登记基线逐字相同：
+
+| 用例 | 本轮观测 |
+|---|---|
+| ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings | worktree 缺可编辑 Blender 原包 |
+| BattleAnimationSpritePresentationEditorTests.AdventureScenePersistsTheIsolatedBattleAnimationProbeGroup | VisualBaselineBoard 预期 1、实际 0 |
+| CombatUnitPresentationProfileEditorTests.BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently | 缺批准的石甲兽 FBX 原包 |
+| CombatUnitPresentationProfileEditorTests.FormalProfileSetHasNoFuYuanDependency | 同上 |
+| CombatUnitPresentationProfileEditorTests.StaticProfileSetFailsClosedForPartialMissingPrefabMaterialAndDirectionContract | 预期 static_3d_profile_prefab_material_or_mesh_missing，实际 static_3d_profile_feedback_missing |
+| GuanzhongFormalEndToEndTests.FormalAdventureSpawnerPreservesPlayerAndStoneArmorBeastCombatSnapshots | 预期 839，实际 657 |
+| GuanzhongFormalUiTextTests.AdventureActionLogTranslatesCommandAndPreservesCustomName(Art) | 预期含「术法」，实际仍是未本地化 key |
+
+PlayMode 30 项失败与本卡路径不相交：集中在无图形设备／分辨率 SetGameSize 限制、3D 表现 provider fixture 缺失与 VisualBaselineBoard 缺失，逐名与本环境基线一致。
+
+## 未验证
+
+- 战斗运行时行动力接入：CombatSession 余额、多动作、CT 累计、按 v 的移动报价属 CORE／MOVE；本轮只交付长期输入与保存往返，未接通该运行时链路。
+- 数值平衡：100000／2000 是负责人 2026-10-08 批准的显式初始输入，本轮未运行 BattleSim，不构成行动经济平衡结论。
+- 旧玩家档迁移：schema3 有玩家按合同拒绝，本轮未提供、也未批准任何逐来源映射；旧档玩家仍不可加载。
+- ActionEconomyModifierInput 的消费侧语义（减耗顺序、返还触发、上限聚合与战斗内使用账本）属 CORE；本轮只有协议、范围与夹具，无生产来源，未验证任何实际减耗或返还效果。
+- GameSaveSlotStore 只做了读取侧核对：它仍只检查玩家载荷存在性，不调用领域 Restore；本轮未改其行为，也未把它的读取结果当作领域验证。
+- PlayMode 全量未在本 worktree 重跑同名基线对照（候选不可回退到基线），采用同环境最近登记结果的逐名对照。
+
+## 残留风险
+
+- Character 边界把两项长期输入做成了必填参数，任何仍以默认 CharacterData 直接构造 CharacterRuntimeProfile／CharacterAttributes 的调用点会立即失败。本轮已按符号检索更新全部直接构造测试（含 EditMode 与 StartMenuSaveDeletionPlayModeTests 的 fixture）；不在 CandidatePaths 内、且不在本轮符号检索结果中的间接构造点若存在，会在其自身任务中暴露，属预期失败而非静默降级。
+- ActionEconomyModifierInput.CommandKind 是从既有 CombatCommandKind 镜像到 Character 的受控命令词汇（Character 不得引用 Combat）。CORE 接通时必须显式映射两套枚举；本轮未建立映射，也未把镜像当作已统一。
+- CharacterCombatModifiers 的公开构造函数由 14 参变为 15 参必填数组（Empty 与 FromDefinition 已同步）。任何未列出的第三方构造点会编译期失败，不会静默使用空数组。
+- 新用例 ContentCatalogDataTests.PointBuyCsvImportWritesTheApprovedLongTermInputsAndStaysIdempotent 以「asset 已含 100000／2000」为前提断言失败路径不部分更新；该前提由本次提交的 asset 提供，若后续有人把 asset 回退而 CSV 不回退，该断言会失败——这是期望的门禁行为。
+- PlayMode 全量套件在本自动化 worktree 固定存在大量图形／场景 fixture 环境失败，runner 为全或无合同，套件结果不能单独作为通过判据，必须结合定向用例与基线对照阅读。
+
+## 经验候选
+
+- 现象：把存档 SchemaVersion 从 3 提升到 4 时，测试里以字面量 `{"schemaVersion":4}` 表达的「未知／不支持 schema」夹具会在版本提升后静默变成合法当前档，原断言（期望 InvalidDataException）随之失效；测试方法名里的版本号也会变成过期事实。
+- 已证实根因：schema 号既是生产常量又被测试当作「未来版本」占位；两者共用同一数字空间，版本推进时不会编译失败，只会语义漂移。
+- 证据：本轮 GameSaveEnvelopeTests.LegacyUnknownAndInvalidJsonFailClosed 的 `{"schemaVersion":4}` 用例、GameSaveSlotStoreTests 两处 `old.json` 字面量、三处方法名中的 SchemaThree，以及 GameSaveEnvelopeTests 中 `Is.EqualTo(3)` 的显式断言；均为本轮实际改动点。
+- 可能复用范围：任何版本化契约（存档 schema、资源 schema、导入表 schema）的版本推进。
+- 门禁可能：仅作为经验候选记录，不新增风险索引条目、不分配正式经验 ID、不建立整理任务。

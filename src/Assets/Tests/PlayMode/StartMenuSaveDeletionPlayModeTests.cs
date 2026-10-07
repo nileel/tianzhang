@@ -145,6 +145,8 @@ namespace TianZhang.Tests.PlayMode
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             profile.charName = "唯一角色";
             profile.realmMultiplier = 1f;
+            profile.actionPointMaximumUnits = 100000;
+            profile.movementEfficiencyMilliUnits = 2000;
             ownedObjects.Add(profile);
             GameBootstrap.RequireRuntime().BeginNewGame(
                 CharacterRuntimeProfile.FromDefinition("player_only", profile),
@@ -316,6 +318,8 @@ namespace TianZhang.Tests.PlayMode
             var definition = ScriptableObject.CreateInstance<CharacterData>();
             definition.charName = displayName;
             definition.realmMultiplier = 1f;
+            definition.actionPointMaximumUnits = 100000;
+            definition.movementEfficiencyMilliUnits = 2000;
             ownedObjects.Add(definition);
             var runtime = new GameRuntime();
             runtime.BeginNewGame(

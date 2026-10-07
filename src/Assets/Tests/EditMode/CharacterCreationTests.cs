@@ -437,6 +437,8 @@ namespace TianZhang.Tests
             config.minValue = 3;
             config.baseValue = 3;
             config.maxValue = 15;
+            config.actionPointMaximumUnits = 100000;
+            config.movementEfficiencyMilliUnits = 2000;
             config.costRanges = new[]
             {
                 new CharacterCreationPointBuyConfig.CostRange

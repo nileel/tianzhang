@@ -1830,20 +1830,66 @@ namespace TianZhang.Editor
             var headers = CsvTableReader.FindHeader(lines);
             CsvTableReader.RequireColumns(headers, path,
                 "configId", "purchasePointLimit", "minValue", "baseValue", "maxValue",
-                "fromValue", "toValue", "costPerLevel");
+                "fromValue", "toValue", "costPerLevel",
+                "actionPointMaximumUnits", "movementEfficiencyMilliUnits");
 
-            var rows = lines
+            var dataRows = lines
                 .Skip(headerLineIndex + 1)
                 .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
                 .Select(CsvTableReader.ParseRow)
-                .Where(cols => cols.Length >= headers.Length
-                    && CsvTableReader.GetRequiredValue(headers, cols, "configId", path) == "default")
+                .ToArray();
+
+            // 表头宽度是整表合同；坏行、缺列或多列都在写 asset 前整批拒绝。
+            foreach (var row in dataRows)
+            {
+                if (row.Length != headers.Length)
+                {
+                    throw new InvalidDataException(
+                        $"{path} row has {row.Length} columns; expected exactly {headers.Length}.");
+                }
+            }
+
+            var rows = dataRows
+                .Where(cols => CsvTableReader.GetRequiredValue(headers, cols, "configId", path) == "default")
                 .ToArray();
 
             if (rows.Length == 0)
             {
                 Debug.LogError("[SettlementContentImporter] CharacterCreationPointBuy.csv missing default config rows.");
                 return;
+            }
+
+            // 全部行解析并验证成功后才允许写 asset，失败时既有 asset 与 GUID 保持不变。
+            var first = rows[0];
+            int purchasePointLimit = ParseRequiredIntColumn(headers, first, path, "purchasePointLimit");
+            int minValue = ParseRequiredIntColumn(headers, first, path, "minValue");
+            int baseValue = ParseRequiredIntColumn(headers, first, path, "baseValue");
+            int maxValue = ParseRequiredIntColumn(headers, first, path, "maxValue");
+            var costRanges = new CharacterCreationPointBuyConfig.CostRange[rows.Length];
+            for (var index = 0; index < rows.Length; index++)
+            {
+                costRanges[index] = new CharacterCreationPointBuyConfig.CostRange
+                {
+                    fromValue = ParseRequiredIntColumn(headers, rows[index], path, "fromValue"),
+                    toValue = ParseRequiredIntColumn(headers, rows[index], path, "toValue"),
+                    costPerLevel = ParseRequiredIntColumn(headers, rows[index], path, "costPerLevel"),
+                };
+            }
+
+            int actionPointMaximumUnits = ParseRequiredIntColumn(headers, first, path, "actionPointMaximumUnits");
+            int movementEfficiencyMilliUnits = ParseRequiredIntColumn(headers, first, path, "movementEfficiencyMilliUnits");
+            RequireLongTermActionEconomyInput(actionPointMaximumUnits, movementEfficiencyMilliUnits, path);
+            for (var index = 1; index < rows.Length; index++)
+            {
+                // 同一 configId 的全部行必须声明同一组合法长期输入，冲突或非法行整批拒绝。
+                int rowMaximum = ParseRequiredIntColumn(headers, rows[index], path, "actionPointMaximumUnits");
+                int rowEfficiency = ParseRequiredIntColumn(headers, rows[index], path, "movementEfficiencyMilliUnits");
+                RequireLongTermActionEconomyInput(rowMaximum, rowEfficiency, path);
+                if (rowMaximum != actionPointMaximumUnits || rowEfficiency != movementEfficiencyMilliUnits)
+                {
+                    throw new InvalidDataException(
+                        $"{path} declares conflicting action economy inputs for config 'default'.");
+                }
             }
 
             string assetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
@@ -1854,24 +1900,53 @@ namespace TianZhang.Editor
             if (isNew)
                 asset = ScriptableObject.CreateInstance<CharacterCreationPointBuyConfig>();
 
-            var first = rows[0];
-            asset.purchasePointLimit = int.Parse(CsvTableReader.GetRequiredValue(headers, first, "purchasePointLimit", path));
-            asset.minValue = int.Parse(CsvTableReader.GetRequiredValue(headers, first, "minValue", path));
-            asset.baseValue = int.Parse(CsvTableReader.GetRequiredValue(headers, first, "baseValue", path));
-            asset.maxValue = int.Parse(CsvTableReader.GetRequiredValue(headers, first, "maxValue", path));
-            asset.costRanges = rows.Select(cols => new CharacterCreationPointBuyConfig.CostRange
-            {
-                fromValue = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "fromValue", path)),
-                toValue = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "toValue", path)),
-                costPerLevel = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "costPerLevel", path))
-            }).ToArray();
+            asset.purchasePointLimit = purchasePointLimit;
+            asset.minValue = minValue;
+            asset.baseValue = baseValue;
+            asset.maxValue = maxValue;
+            asset.costRanges = costRanges;
+            asset.actionPointMaximumUnits = actionPointMaximumUnits;
+            asset.movementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
 
             if (isNew)
                 AssetDatabase.CreateAsset(asset, assetPath);
             else
                 EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
 
             Debug.Log($"  角色创建点购配置: {asset.purchasePointLimit}点 ← {assetPath}");
+        }
+
+        /// <summary>解析一个必填整数列；空值、分数与超出 Int32 的溢出值都在写入前拒绝。</summary>
+        private static int ParseRequiredIntColumn(string[] headers, string[] columns, string path, string columnName)
+        {
+            string raw = CsvTableReader.GetRequiredValue(headers, columns, columnName, path);
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
+            {
+                throw new InvalidDataException(
+                    $"{path} '{columnName}' must be an Int32 value; '{raw}' was rejected.");
+            }
+
+            return value;
+        }
+
+        /// <summary>验证长期行动力基础输入；上限必须为正、v 必须非负。</summary>
+        private static void RequireLongTermActionEconomyInput(
+            int actionPointMaximumUnits,
+            int movementEfficiencyMilliUnits,
+            string path)
+        {
+            if (actionPointMaximumUnits <= 0)
+            {
+                throw new InvalidDataException(
+                    $"{path} requires a positive actionPointMaximumUnits; zero and negative values are rejected.");
+            }
+
+            if (movementEfficiencyMilliUnits < 0)
+            {
+                throw new InvalidDataException(
+                    $"{path} requires a non-negative movementEfficiencyMilliUnits.");
+            }
         }
         [MenuItem("天章/导入敌人配置")]
         public static void ImportEnemies()
