@@ -261,6 +261,20 @@ function Test-FormalContentCatalog {
     }
   }
 
+  foreach ($row in $Enemies.Rows) {
+    foreach ($field in @('actionPointMaximumUnits', 'movementEfficiencyMilliUnits')) {
+      $value = 0
+      $minimum = if ($field -ceq 'actionPointMaximumUnits') { 1 } else { 0 }
+      if (-not [int]::TryParse([string]$row.$field, [Globalization.NumberStyles]::Integer, [Globalization.CultureInfo]::InvariantCulture, [ref]$value) -or $value -lt $minimum) {
+        Add-Finding 'ENEMY_ACTION_ECONOMY_INVALID' "$($row.name):$field" "Enemy input must be an explicit Int32 >= $minimum."
+        continue
+      }
+      Test-FormalContentAsset "EnemyTemplate:$($row.name)" "src/Assets/Data/Characters/Char_Enemy_$($row.name).asset" @{
+        $field = $value.ToString([Globalization.CultureInfo]::InvariantCulture)
+      }
+    }
+  }
+
   Test-FormalContentAsset 'Settlement:guanzhong_city' 'src/Assets/Data/Settlements/Settlement_guanzhong_city.asset' @{
     settlementId = 'guanzhong_city'; contentScope = 'content_scope_production'; displayNameKey = 'settlement_guanzhong_city'
   }
@@ -866,7 +880,7 @@ $schemas = [ordered]@{
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
-  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits')
   AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','actionPointCostUnits','minimumNetCostUnits','ctPenalty','reuseCooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
   EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')

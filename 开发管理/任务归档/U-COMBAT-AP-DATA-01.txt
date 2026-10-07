@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-DATA-ENEMY-01"
-  ],
-  "stateReason": "DEC-20261007-DATA06 已接受 B，2026-10-07 人工一次性拆为三张迁移叶子；仅汇总、永不 ready。参数与接口准备由 D-COMBAT-AP-DATA-PREP-01 承接，三叶独立复审通过后由最后一项 Codex 复审一并关闭。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-08：准备卡和角色、攻击叶已完成；负责人转交 Codex 的敌人叶完成严格导入与验证，三叶结果齐备，由最后叶同轮关闭本汇总项。",
   "expectedPaths": [
     "开发管理/任务卡/U-COMBAT-AP-DATA-01.txt",
     "开发管理/任务归档/U-COMBAT-AP-DATA-01.txt",
@@ -75,3 +73,8 @@
 ## 停止条件
 
 - 任一叶未复审、候选未确认、接口边界未冻结或来源冲突时保持 blocked；禁止重新恢复为 external_execute/ready。
+
+## 本轮收口（2026-10-08）
+
+- 负责人将最后敌人叶改派 Codex，自有执行与验证完成后收口；角色与攻击叶的 Codex 独立复审及准备卡 completed 已逐项核验。三迁移叶与准备卡均已归档。敌人证据见 开发管理/U-COMBAT-AP-DATA-ENEMY-01-验证记录.txt。
+- 本父项只关闭数据迁移汇总；未代替后续角色成长、保存、回合内核或平衡验收，也不在本轮扩大为队列维护。

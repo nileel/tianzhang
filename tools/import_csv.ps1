@@ -4,7 +4,7 @@
 #       或 .\tools\import_csv.ps1 -Target spells
 #       或 .\tools\import_csv.ps1 -Target skills
 #       或 .\tools\import_csv.ps1 -Target gongfa
-#       或 .\tools\import_csv.ps1 -Target enemies
+# enemies 已停用：敌人内容改用 Unity 的 SettlementContentImporter.ImportContentCatalog。
 # characters / all 已停用：角色内容改用 Unity 的 CharacterContentImporter。
 # ============================================================
 param(
@@ -18,7 +18,10 @@ $ErrorActionPreference = "Stop"
 # 旧 Import-Characters 按列号重写整份 YAML 并 Write-Meta(New-Guid)，会丢弃
 # actionPointMaximumUnits / movementEfficiencyMilliUnits 并重写既有 ID 资产 GUID。
 # 角色内容唯一写入者是 Unity 的 CharacterContentImporter.ParseCharacterDefinitions / ImportCharacters。
-# all 也必须在此拒绝：它会在写完功法／术法／神通／敌人后才走到角色分支。
+# all 在此拒绝，避免先写功法／术法／神通再遇到已停用分支。
+if ($Target -eq 'enemies' -or $Target -eq 'all') {
+    throw "import_csv.ps1 已停用 Target '$Target'：敌人请使用 Unity 的 SettlementContentImporter.ImportContentCatalog；角色请使用 CharacterContentImporter.ImportCharacterDefinitions。"
+}
 if ($Target -eq 'characters' -or $Target -eq 'all') {
     throw "import_csv.ps1 已停用 Target '$Target'：旧 Import-Characters 写入体会丢弃长期行动力字段并重写既有 GUID。角色定义请使用 Unity 的 CharacterContentImporter.ImportCharacterDefinitions（菜单：天章/内容/导入角色定义）。"
 }
@@ -303,52 +306,8 @@ function Import-Characters {
 }
 
 function Import-Enemies {
-    Write-Host "  导入敌人..."
-    $csv = Join-Path $DataConfig "Enemies.csv"
-    if (-not (Test-Path $csv)) { Write-Host "  [跳过] 文件不存在"; return }
-    $lines = Get-Content $csv -Encoding UTF8 | Where-Object { $_ -notmatch '^\s*(#|$)' } | Select-Object -Skip 1
-    foreach ($line in $lines) {
-        $cols = ParseCSV $line
-        if ($cols.Length -lt 22) { continue }
-        $nameId = $cols[0].Trim()
-        $fileName = "Char_Enemy_$nameId"
-        $path = Join-Path $DataOut "Characters\$fileName.asset"
-        $name = T $nameId
-        $eqSpells = if ($cols[19]) { ($cols[19].Split('|') | ForEach-Object { "`"- " + (Esc-YAML $_) + "`"" }) -join "`n" } else { "[]" }
-
-        $asset = (Make-AssetHeader $GUID_Char $fileName) + @"
-  charName: "$(Esc-YAML $name)"
-  baseLevel: 1
-  rootBone: $($cols[5])
-  physique: $($cols[6])
-  spirit: $($cols[7])
-  mind: $($cols[8])
-  reaction: $($cols[9])
-  talent: $($cols[10])
-  hpBonus: 0
-  mpBonus: 0
-  physAtkBonus: 0
-  magAtkBonus: 0
-  physDefBonus: 0
-  magDefBonus: 0
-  blockRate: $($cols[11])
-  blockReduction: $($cols[12])
-  soulShieldRate: $($cols[13])
-  soulShieldReduction: $($cols[14])
-  dodgeRate: $($cols[15])
-  critRate: $($cols[16])
-  critDamage: $($cols[17])
-  hitRateBonus: $($cols[18])
-  realmMultiplier: $($cols[4])
-  gongFaName: ""
-  equippedSpells:
-$eqSpells
-  equippedSkills:
-[]
-"@
-        Write-Asset $path $asset
-        Write-Meta $path (New-Guid)
-    }
+    # 直接调用也拒绝旧 YAML／GUID 写入，不绕过唯一 Unity 导入器。
+    throw "Import-Enemies 已停用：敌人内容唯一写入者是 Unity 的 SettlementContentImporter.ImportContentCatalog。"
 }
 
 # ═══ 主流程 ═══

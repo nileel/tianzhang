@@ -1,0 +1,42 @@
+# 五敌人长期行动力输入与严格导入验证记录
+
+日期：2026-10-08。任务：U-COMBAT-AP-DATA-ENEMY-01。负责人本轮明确转交 Codex；本轮由当前 Codex 单模型实施、复核和验证，未调用子智能体。范围、输入和停止条件沿用原卡，未改战斗运行时或数值平衡结论。
+
+## 输入与所有者
+
+- 基线：52af2a32；任务 worktree：D:/天章游戏开发/.worktrees/combat-ap-enemy-20261008；分支：codex/combat-ap-enemy-20261008。
+- 转交后的执行前风险预检 status=ok；taskId=U-COMBAT-AP-DATA-ENEMY-01；taskCardDigest=7e1a1f5004ed2e1e09f01743c7f3542a8b4b38686fd8aff864644163648ff6ad；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched／mustRead／gates 均为空，与 schema 2 riskPreflight 投影一致，无待执行门禁。
+- 唯一写入链：Enemies.csv → SettlementContentImporter.ReadContentTable／ParseEnemyRows／BuildEnemyTemplate → UpsertCharacterTemplate；CharacterTemplateMatches 同步比较两字段。ParseContentCatalog 完成整表与引用校验后才进入 CommitContentCatalog；EnemyData.combatTemplate 仍是唯一角色模板引用。
+- 五个 enemy_* 行均显式 actionPointMaximumUnits=100000、movementEfficiencyMilliUnits=2000；表头和行宽由 25 增为 27。AP 要求正 Int32，v 要求非负 Int32，空、负、分数、溢出与列数错误拒绝，v=0 合法。
+- tools/import_csv.ps1 的旧敌人 YAML／随机 GUID 写入体已停用；enemies／all 含 DryRun 在 Language 加载前拒绝，直接 Import-Enemies 也拒绝。原 characters 停用和 gongfa／spells／skills 显式分派保留。
+
+## Unity 与数据证据
+
+- 实际工作区用 Unity 6000.3.18f1 batchmode 调用 TianZhang.Editor.SettlementContentImporter.ImportContentCatalog，exit=0，日志包含正式内容目录导入完成。五个资产由真实导入器生成，没有手填 AP 资产来替代导入。
+- 导入日志：C:/Users/WINDOWS/AppData/Local/Temp/tzg-enemy-20261008-import.log。
+- 运行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/combat-ap-enemy-20261008/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-enemy-20261008-editmode.xml。
+- 全量 EditMode：656 项，649 通过，7 失败，0 跳过；不宣称全量通过。本任务 ContentCatalogDataTests 18/18 通过，包括全五行输入、9 种非法数值、额外列、缺列、非法末行阻止前面合法行及全部 asset／meta 写入、逐 ID 不同合法值实际回读、v=0、重复导入字节一致，以及石甲兽引用和五模板 GUID 保持。
+- 对全量失败在同一 worktree 使用 git 基线输入单独复验：14 项，7 通过、7 失败；七个失败的完整名称及错误消息与候选逐字相同。验证后将候选 Unity 输入按原始字节恢复，未把基线验证生成的资源留入差异。
+- 基线结果：C:/Users/WINDOWS/AppData/Local/Temp/tzg-enemy-20261008-baseline.xml；日志同目录 tzg-enemy-20261008-baseline.log。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：OK；GongFa=29/29、Spells=84/84、Skills=31/31、language keys=613。新增五敌人逐行合法范围与 CSV／asset 对齐检查。
+- 6 种旧脚本入口组合（enemies／all／characters × 正常／DryRun）均以非零状态在 Language／主流程输出前拒绝；Import-Enemies 函数单独调用同样拒绝。
+- 五模板所有原有序列化字段逐项与基线比较一致，五份 .meta 字节哈希一致；非关中旧模板新增的其他序列化项为 Unity 对现有 CharacterData 默认字段的保存。石甲兽 EnemyData 文件不变，无新生产 ID，无 contentScope 扩展。
+- Unity 顺带改写的 AdventureMap、Settlement 和 ShaderGraphSettings 仅为空值尾空格，已在隔离工作区恢复，未修改相关业务。
+
+## 已确认的基线失败
+
+| 用例 | 基线与本轮相同的失败 |
+|---|---|
+| ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings | worktree 缺可编辑 Blender 原包 |
+| BattleAnimationSpritePresentationEditorTests.AdventureScenePersistsTheIsolatedBattleAnimationProbeGroup | VisualBaselineBoard 数量预期 1，实际 0 |
+| CombatUnitPresentationProfileEditorTests.BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently | worktree 缺批准的石甲兽 FBX 原包 |
+| CombatUnitPresentationProfileEditorTests.FormalProfileSetHasNoFuYuanDependency | 同上 |
+| CombatUnitPresentationProfileEditorTests.StaticProfileSetFailsClosedForPartialMissingPrefabMaterialAndDirectionContract | 预期 static_3d_profile_prefab_material_or_mesh_missing，实际 static_3d_profile_feedback_missing |
+| GuanzhongFormalEndToEndTests.FormalAdventureSpawnerPreservesPlayerAndStoneArmorBeastCombatSnapshots | 预期 839，实际 657 |
+| GuanzhongFormalUiTextTests.AdventureActionLogTranslatesCommandAndPreservesCustomName 的 Art 用例 | 预期包含“术法”，实际输出仍含 attack_profile_basic_unarmed 等 key |
+
+## 收口与限制
+
+- D-COMBAT-AP-DATA-PREP-01 已 completed；角色叶 U-COMBAT-AP-DATA-CHAR-01、攻击叶 U-COMBAT-AP-DATA-ATTACK-01 均为 Codex 独立复审后的 completed 归档。本敌人叶按本轮改派作为 Codex 自有任务完成，按卡内授权一并归档 DATA 汇总父项。
+- 此次仅完成数据迁移。角色长期成长／快照、回合内核、BattleSim 迁移、正式场景最终验收仍属于原下游任务。本轮没有运行 BattleSim，不宣称已完成行动经济数值平衡或修复“移动后不能行动”。
+- 收尾以现有 diff 和证据检查经验候选：本轮是已冻结迁移合同的实现，无需新增经验候选。

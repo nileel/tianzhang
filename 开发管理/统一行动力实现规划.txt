@@ -25,7 +25,7 @@
 | U-COMBAT-AP-DATA-01 | 生产数据汇总，永不执行 | codex／codex_execute | U-COMBAT-AP-DATA-CHAR-01、U-COMBAT-AP-DATA-ENEMY-01、U-COMBAT-AP-DATA-ATTACK-01 | blocked |
 | D-COMBAT-AP-DATA-PREP-01 | 方案A确认与三叶执行边界已冻结 | codex／codex_execute | — | completed候选（2026-10-07；正式结果待共享入口集成） |
 | U-COMBAT-AP-DATA-CHAR-01 | 两角色与独立模板长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
-| U-COMBAT-AP-DATA-ENEMY-01 | 五敌人长期输入严格导入 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01、U-COMBAT-AP-DATA-CHAR-01 | blocked |
+| U-COMBAT-AP-DATA-ENEMY-01 | 五敌人长期输入严格导入 | codex／codex_execute（2026-10-08负责人转交） | D-COMBAT-AP-DATA-PREP-01、U-COMBAT-AP-DATA-CHAR-01 | completed（2026-10-08） |
 | U-COMBAT-AP-DATA-ATTACK-01 | 三攻击新成本与双时间字段严格迁移 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
 | U-COMBAT-AP-CHAR-01 | 角色长期行动力成长与快照 | deepseek／external_execute | U-COMBAT-AP-DATA-01 | blocked |
 | U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
@@ -99,3 +99,9 @@
 - 全部20张新卡运行风险预检；首张ready卡matched／gates为空，与schema 2投影一致。模拟迁移卡命中EXP-BS-001、EXP-BS-003，已写入投影；执行前仍须按最新输入重跑并消费正文。
 - 拓扑与路径核对：20张新卡全部可由父项追溯，19张叶子，无循环，唯一首批ready正确；所有新增Unity测试预留对应.meta，路径为字面量；Codex叶子显式指定gpt-6.1-sol。
 - check-review-text通过（675文件）；check-data-chain通过（功法29、术法84、神通31，语言key 613）。暂存前空白检查和暂存后diff检查按本次正式提交执行。
+
+## DATA 迁移最终收口（2026-10-08）
+
+- 负责人将最后敌人叶转交 Codex；五敌人显式长期输入、严格导入、旧写入体停用和 CSV／asset 对齐完成，相关 EditMode 18/18 通过；全量 7 项失败在修改前基线完全复现，见敌人叶验证记录。
+- 准备卡 completed，角色与攻击叶已独立复审归档；敌人叶本轮自有完成，U-COMBAT-AP-DATA-01 同轮汇总归档。上述表格其余行保留原工作图，不替代活跃任务卡。
+- 下游仍按既有维护规则准备，不因数据迁移完成就宣称 AP 回合内核、角色成长或数值平衡完成。

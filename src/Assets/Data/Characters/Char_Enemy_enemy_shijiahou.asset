@@ -87,3 +87,5 @@ MonoBehaviour:
   mansionBindings: []
   danArtifactForm:
   legacyDanJiType:
+  actionPointMaximumUnits: 100000
+  movementEfficiencyMilliUnits: 2000

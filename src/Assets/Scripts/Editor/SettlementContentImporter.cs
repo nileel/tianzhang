@@ -51,7 +51,8 @@ namespace TianZhang.Editor
             "name", "type", "aiType", "realm", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
-            "contentScope", "dropEntries", "unarmedBasicAttackProfileId"
+            "contentScope", "dropEntries", "unarmedBasicAttackProfileId",
+            "actionPointMaximumUnits", "movementEfficiencyMilliUnits"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -481,7 +482,16 @@ namespace TianZhang.Editor
             Dictionary<string, string> language,
             string sourceName)
         {
+            var actionPointMaximumUnits = ParsePositiveInteger(
+                Required(table, row, "actionPointMaximumUnits"), sourceName, "actionPointMaximumUnits");
+            var movementEfficiencyMilliUnits = ParseInteger(
+                Required(table, row, "movementEfficiencyMilliUnits"), sourceName, "movementEfficiencyMilliUnits");
+            if (movementEfficiencyMilliUnits < 0)
+                throw new InvalidDataException($"{sourceName} movementEfficiencyMilliUnits must be nonnegative.");
+
             var template = ScriptableObject.CreateInstance<CharacterData>();
+            template.actionPointMaximumUnits = actionPointMaximumUnits;
+            template.movementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
             var displayNameKey = RequiredLanguageKey(language, Required(table, row, "name"), sourceName, "enemy displayNameKey");
             template.charName = language[displayNameKey];
             template.realmMultiplier = ParseFloat(Required(table, row, "realmMultiplier"), sourceName, "realmMultiplier");
@@ -961,6 +971,8 @@ namespace TianZhang.Editor
                 return target;
 
             target.charName = source.charName;
+            target.actionPointMaximumUnits = source.actionPointMaximumUnits;
+            target.movementEfficiencyMilliUnits = source.movementEfficiencyMilliUnits;
             target.realmMultiplier = source.realmMultiplier;
             target.rootBone = source.rootBone;
             target.physique = source.physique;
@@ -986,6 +998,8 @@ namespace TianZhang.Editor
         private static bool CharacterTemplateMatches(CharacterData source, CharacterData target)
         {
             return target.charName == source.charName &&
+                   target.actionPointMaximumUnits == source.actionPointMaximumUnits &&
+                   target.movementEfficiencyMilliUnits == source.movementEfficiencyMilliUnits &&
                    target.realmMultiplier == source.realmMultiplier &&
                    target.rootBone == source.rootBone &&
                    target.physique == source.physique &&

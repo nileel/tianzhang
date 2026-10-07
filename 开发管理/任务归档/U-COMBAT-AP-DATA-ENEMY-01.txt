@@ -4,13 +4,13 @@
   "id": "U-COMBAT-AP-DATA-ENEMY-01",
   "title": "五敌人长期行动力输入与严格导入",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "U-COMBAT-AP-DATA-CHAR-01 已经 Codex 独立复审并完成归档，CharacterData 两字段已正式提供；方案 A 五敌人输入与旧敌人写入分支停用边界已冻结。本轮风险预检 status=ok，零命中、零门禁，满足 ready。",
+  "stateReason": "2026-10-08：负责人转交 Codex 后完成五敌人严格导入；相关 Unity 测试18/18通过、数据链通过、GUID保持。全量7项失败已在修改前基线逐项复现；同轮收口 DATA 父项。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
@@ -50,7 +50,7 @@
 - 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。D-COMBAT-AP-DATA-PREP-01 已完成归档且已由本轮 QueueMaintenance 核验；U-COMBAT-AP-DATA-CHAR-01 也已经 Codex 独立复审并完成归档，正式提供 CharacterData 两字段。
 - 2026-10-07 准备输入已冻结：负责人回复 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d），确认方案 A 的迁移试跑数值、双时间字段切片及旧 PowerShell 写入分支停用；不代表数值平衡定案。
 - 2026-10-08 QueueMaintenance 已移除完成角色叶前置；实时风险预检返回 status=ok、零命中、零门禁，本卡同步 backlog 与队列进入 ready。
-- 本卡仅实施下列冻结输入与已有字面量路径；DeepSeek 执行后交 Codex 独立复审，不自审。
+- 2026-10-08：负责人在当前对话明确将本卡转交 Codex 执行；主责改为 codex／codex_execute，冻结输入、允许路径、验证和停止条件保持。Codex 完成实施与最终验证后按自有任务收口。
 
 ## 禁止项
 
@@ -59,7 +59,7 @@
 
 ## 模型协作
 
-- 2026-10-08 QueueMaintenance 评估：角色前置已经正式提供字段，五敌人输入、字面量路径、直接消费者、验证和停止条件均已冻结；这是简单有界实施，没有可独立改变结论的根因诊断或证据冲突。保留 DeepSeek V4.1 Flash 单模型执行，Codex 独立复审。
+- 2026-10-08 转交评估：角色前置已经正式提供字段，五敌人输入、字面量路径、直接消费者、验证和停止条件均已冻结；这是简单有界实施，没有可独立改变结论的根因诊断或证据冲突。按负责人当次指派，由当前 Codex 单模型执行并统一复核完整差异和最终验证。
 - 不启用原生只读辅助或第二责任会话；由一个执行主责统一实施、验证和形成唯一 candidate，不能因文件数量单独升级组合。
 
 ## 验证
@@ -67,7 +67,7 @@
 - 使用 tools/run-unity-editmode-tests.ps1 验证实际 owner worktree；已有生成 csproj 时可快速编译，不跨 worktree 复制工程投影。公共程序集边界变化才补 tools/check-unity-assembly-boundaries.ps1。
 - CSV／asset 变化运行 tools/check-data-chain.ps1；管理变化运行 check-task-cards／check-review-text；暂存前运行 check-pending-whitespace，暂存后 git diff --cached --check。
 - 逐 ID 对齐、非法整表在任何 asset 写入前拒绝、重复导入无语义变化、既有 GUID 不漂移；不得用手改 asset 代替导入链证据。
-- 外部结果转 codex_review；最后一张迁移叶由 Codex 复审核对其他两叶和准备卡 completed 后，以已列路径一并关闭父项 U-COMBAT-AP-DATA-01，不把父项重新排队。
+- 本卡由 Codex 自有执行，验证通过后完成归档；同时核对其他两叶已由 Codex 独立复审且准备卡 completed，以已列路径一并关闭父项 U-COMBAT-AP-DATA-01，不把父项重新排队。
 
 ## 停止条件
 
@@ -110,3 +110,7 @@ S=1000；AP上限100000=100 AP，vMilli2000对应v=2；全五行均必填，不�
 - 保持五模板其他字段、contentScope及石甲兽Enemy资产combatTemplate引用／GUID；不新建生产ID。tools/check-data-chain.ps1同步Enemies严格schema与Test-FormalContentCatalog资产断言；ContentCatalogDataTests覆盖全五行、非法末行不部分写、合法v0、重复导入和GUID。
 - tools/import_csv.ps1 的 Import-Enemies 写入体停用，明确指向 SettlementContentImporter.ImportContentCatalog；enemies／all（含DryRun）在Language加载或任何写入前拒绝，直接调用函数也拒绝。保留角色叶已完成的characters／all处置，gongfa／spells／skills显式Target行为保持，不另建PowerShell导入器。
 - 本叶所依赖的角色叶已经正式提供字段并经 Codex 复审；不存在新Unity文件，既有.meta只读核对GUID。本轮实时预检已重算并返回零命中、零门禁。
+
+## 本轮完成
+
+- 2026-10-08：由 Codex 完成并最终验证，证据见 开发管理/U-COMBAT-AP-DATA-ENEMY-01-验证记录.txt；全量基线失败与本任务验收分别记录，不宣称全量回归通过。

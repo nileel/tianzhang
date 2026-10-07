@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
   m_Name: Char_Enemy_enemy_yanweihu
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   charName: "\u7130\u5C3E\u72D0"
   baseLevel: 1
   rootBone: 8
@@ -20,6 +20,7 @@ MonoBehaviour:
   mind: 12
   reaction: 14
   talent: 8
+  fortune: 10
   hpBonus: 0
   mpBonus: 0
   physAtkBonus: 0
@@ -35,11 +36,57 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 5
   realmMultiplier: 1.3
-  gongFaName: 
+  realmStage:
+  gongFaName:
   equippedSpells:
   - spell_liuhuolingfu
   equippedSkills: []
   availableSpells: []
   availableSkills: []
+  mainEquipmentBasicAttackProfileId:
+  unarmedBasicAttackProfileId:
+  innatePurchasePointsLimit: 0
+  innatePurchasePointsUsed: 0
+  creationBudgetLimit: 0
+  creationBudgetUsed: 0
+  creationBudgetRefunded: 0
+  originId:
+  fateTagIds: []
+  craftSkillIds: []
+  craftSkillLevels:
+  visibleRootId:
+  visibleRootKind:
+  visibleRootGrade:
+  visibleRootElement:
+  visibleRootMotherElement:
+  visibleRootCultivationMultiplier: 1
+  visibleRootMpMultiplier: 1
+  visibleRootRealmCap:
+  visibleRootRegionAffinity:
+  visibleRootLearnTags: []
+  hiddenRootSeedId:
+  hiddenRootId:
+  hiddenRootKind:
+  hiddenRootGrade:
+  hiddenRootElement:
+  hiddenRootMotherElement:
+  hiddenRootCultivationMultiplier: 0
+  hiddenRootMpMultiplier: 1
+  hiddenRootRealmCap:
+  hiddenRootRegionAffinity:
+  hiddenRootLearnTags: []
+  hiddenRootState:
+  hiddenRootRollSeed: 0
   maxSpellSlots: 0
   maxSkillSlots: 0
+  foundationPurpleMansionState: {fileID: 0}
+  developedMansions: []
+  targetPosition:
+  positionOccupationState:
+  danXiangId:
+  danPivotRole:
+  mansionBindings: []
+  danArtifactForm:
+  legacyDanJiType:
+  actionPointMaximumUnits: 100000
+  movementEfficiencyMilliUnits: 2000

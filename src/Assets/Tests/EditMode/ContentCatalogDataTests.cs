@@ -17,6 +17,11 @@ namespace TianZhang.Tests
         private const string ItemsPath = "Assets/DataConfig/Items.csv";
         private const string BountiesPath = "Assets/DataConfig/Bounties.csv";
         private const string EnemiesPath = "Assets/DataConfig/Enemies.csv";
+        private static readonly string[] EnemyIds =
+        {
+            "enemy_shijiahou", "enemy_fengsun", "enemy_yanweihu",
+            "enemy_xueyingmoxiu", "enemy_huangyesanxiu"
+        };
 
         [Test]
         public void FormalContentCsvBuildsExactlyTheApprovedFourDomainProjections()
@@ -142,6 +147,131 @@ namespace TianZhang.Tests
                 File.WriteAllBytes(ToAbsolutePath(BountiesPath), originalBountyCsv);
                 AssetDatabase.ImportAsset(BountiesPath, ImportAssetOptions.ForceSynchronousImport);
             }
+        }
+
+        [Test]
+        public void AllFiveEnemyTemplatesHaveExplicitProductionActionEconomyInputs()
+        {
+            var preview = ParseProductionPreview();
+            try
+            {
+                CollectionAssert.AreEquivalent(EnemyIds, preview.enemyTemplateIds);
+                Assert.AreEqual(EnemyIds.Length, preview.enemyTemplates.Length);
+                foreach (var template in preview.enemyTemplates)
+                {
+                    Assert.AreEqual(100000, template.actionPointMaximumUnits);
+                    Assert.AreEqual(2000, template.movementEfficiencyMilliUnits);
+                }
+                Assert.AreEqual(1, preview.enemies.Length);
+            }
+            finally
+            {
+                DestroyPreview(preview);
+            }
+        }
+
+        [TestCase("actionPointMaximumUnits", "")]
+        [TestCase("actionPointMaximumUnits", "0")]
+        [TestCase("actionPointMaximumUnits", "-1")]
+        [TestCase("actionPointMaximumUnits", "1.5")]
+        [TestCase("actionPointMaximumUnits", "2147483648")]
+        [TestCase("movementEfficiencyMilliUnits", "")]
+        [TestCase("movementEfficiencyMilliUnits", "-1")]
+        [TestCase("movementEfficiencyMilliUnits", "0.5")]
+        [TestCase("movementEfficiencyMilliUnits", "2147483648")]
+        [TestCase("extraColumn", "unexpected")]
+        [TestCase("missingColumn", "movementEfficiencyMilliUnits")]
+        public void InvalidLastEnemyRowRejectsWholeImportBeforeAnyAssetWrite(string field, string value)
+        {
+            var originalCsv = File.ReadAllBytes(ToAbsolutePath(EnemiesPath));
+            var assetBytes = Directory.GetFiles(Application.dataPath, "*.asset", SearchOption.AllDirectories)
+                .ToDictionary(path => path, File.ReadAllBytes);
+            var metaBytes = Directory.GetFiles(Application.dataPath, "*.asset.meta", SearchOption.AllDirectories)
+                .ToDictionary(path => path, File.ReadAllBytes);
+            try
+            {
+                var lines = WithEnemyInput(ReadDataFile(EnemiesPath), EnemyIds[0], "actionPointMaximumUnits", "100001");
+                if (field == "extraColumn")
+                    lines = lines.Select(line => line.StartsWith(EnemyIds[4] + ",", StringComparison.Ordinal) ? line + "," + value : line).ToArray();
+                else if (field == "missingColumn")
+                    lines = lines.Select(line => line.StartsWith("#", StringComparison.Ordinal) ? line : string.Join(",", line.Split(',').Take(line.Split(',').Length - 1))).ToArray();
+                else
+                    lines = WithEnemyInput(lines, EnemyIds[4], field, value);
+                File.WriteAllLines(ToAbsolutePath(EnemiesPath), lines);
+
+                Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ImportContentCatalog());
+                CollectionAssert.AreEquivalent(assetBytes.Keys,
+                    Directory.GetFiles(Application.dataPath, "*.asset", SearchOption.AllDirectories));
+                foreach (var entry in assetBytes.Concat(metaBytes))
+                    CollectionAssert.AreEqual(entry.Value, File.ReadAllBytes(entry.Key), entry.Key);
+                var firstTemplate = AssetDatabase.LoadAssetAtPath<CharacterData>(
+                    "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+                Assert.AreEqual(100000, firstTemplate.actionPointMaximumUnits);
+            }
+            finally
+            {
+                File.WriteAllBytes(ToAbsolutePath(EnemiesPath), originalCsv);
+            }
+        }
+
+        [Test]
+        public void EnemyInputChangesPersistByIdWithZeroMovementAndRepeatWithoutGuidChanges()
+        {
+            var originalCsv = File.ReadAllBytes(ToAbsolutePath(EnemiesPath));
+            var paths = EnemyIds.Select(id => $"Assets/Data/Characters/Char_Enemy_{id}.asset").ToArray();
+            var guids = paths.Select(AssetDatabase.AssetPathToGUID).ToArray();
+            const string enemyPath = "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset";
+            var enemyGuid = AssetDatabase.AssetPathToGUID(enemyPath);
+            try
+            {
+                var lines = ReadDataFile(EnemiesPath);
+                for (var index = 0; index < EnemyIds.Length; index++)
+                {
+                    lines = WithEnemyInput(lines, EnemyIds[index], "actionPointMaximumUnits", (100001 + index).ToString());
+                    lines = WithEnemyInput(lines, EnemyIds[index], "movementEfficiencyMilliUnits", index.ToString());
+                }
+                File.WriteAllLines(ToAbsolutePath(EnemiesPath), lines);
+                SettlementContentImporter.ImportContentCatalog();
+
+                for (var index = 0; index < paths.Length; index++)
+                {
+                    AssetDatabase.ImportAsset(paths[index], ImportAssetOptions.ForceSynchronousImport);
+                    var template = AssetDatabase.LoadAssetAtPath<CharacterData>(paths[index]);
+                    Assert.AreEqual(100001 + index, template.actionPointMaximumUnits, EnemyIds[index]);
+                    Assert.AreEqual(index, template.movementEfficiencyMilliUnits, EnemyIds[index]);
+                    Assert.AreEqual(guids[index], AssetDatabase.AssetPathToGUID(paths[index]));
+                }
+                var bytesAfterFirstImport = paths.Select(File.ReadAllBytes).ToArray();
+                SettlementContentImporter.ImportContentCatalog();
+                for (var index = 0; index < paths.Length; index++)
+                {
+                    CollectionAssert.AreEqual(bytesAfterFirstImport[index], File.ReadAllBytes(paths[index]));
+                    Assert.AreEqual(guids[index], AssetDatabase.AssetPathToGUID(paths[index]));
+                }
+                Assert.AreEqual(enemyGuid, AssetDatabase.AssetPathToGUID(enemyPath));
+                Assert.AreSame(AssetDatabase.LoadAssetAtPath<CharacterData>(paths[0]),
+                    AssetDatabase.LoadAssetAtPath<EnemyData>(enemyPath).combatTemplate);
+            }
+            finally
+            {
+                File.WriteAllBytes(ToAbsolutePath(EnemiesPath), originalCsv);
+                SettlementContentImporter.ImportContentCatalog();
+            }
+        }
+
+        private static string[] WithEnemyInput(string[] lines, string enemyId, string field, string value)
+        {
+            var header = lines.First(line => line.StartsWith("name,", StringComparison.Ordinal)).Split(',');
+            int index = Array.IndexOf(header, field);
+            Assert.GreaterOrEqual(index, 0);
+            return lines.Select(line =>
+            {
+                if (!line.StartsWith(enemyId + ",", StringComparison.Ordinal))
+                    return line;
+                var columns = line.Split(',');
+                columns[index] = value;
+                return string.Join(",", columns);
+            }).ToArray();
         }
 
         [Test]
