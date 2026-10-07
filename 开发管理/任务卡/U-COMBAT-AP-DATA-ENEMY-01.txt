@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-COMBAT-AP-DATA-PREP-01",
     "U-COMBAT-AP-DATA-CHAR-01"
   ],
-  "stateReason": "方案 A 五敌人输入与旧敌人写入分支停用边界已冻结；等待 D-COMBAT-AP-DATA-PREP-01 正式进入 master 后维护前置，并等待 U-COMBAT-AP-DATA-CHAR-01 正式提供 CharacterData 两字段。",
+  "stateReason": "D-COMBAT-AP-DATA-PREP-01 已完成归档且本轮已核验；方案 A 五敌人输入与旧敌人写入分支停用边界已冻结，仍须等待 U-COMBAT-AP-DATA-CHAR-01 正式提供 CharacterData 两字段后才能重新判断 ready。",
   "expectedPaths": [
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
@@ -50,9 +49,9 @@
 
 ## 来源与当前边界
 
-- 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。具体执行必须等 D-COMBAT-AP-DATA-PREP-01 把负责人确认的候选、完整路径与接口处理真实落卡。
+- 来源：2026-10-07 DEC-20261007-DATA06=B；父项 U-COMBAT-AP-DATA-01 的一次性完整拆分。D-COMBAT-AP-DATA-PREP-01 已完成归档且已由本轮 QueueMaintenance 核验；具体执行仍须等 U-COMBAT-AP-DATA-CHAR-01 正式提供 CharacterData 两字段。
 - 2026-10-07 准备输入已冻结：负责人回复 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d），确认方案 A 的迁移试跑数值、双时间字段切片及旧 PowerShell 写入分支停用；不代表数值平衡定案。
-- 本 Execution candidate 保留本卡 blockedBy／route／owner／dispatchState；仅正式结果进入 master 后，后续 QueueMaintenance 才移除准备卡前置、同步 backlog 并消费实时风险门禁判断 ready。
+- 2026-10-07 QueueMaintenance 已移除完成准备卡前置；本卡仍因 U-COMBAT-AP-DATA-CHAR-01 保持 blocked，待该唯一剩余前置完成后再同步 backlog 并消费实时风险门禁判断 ready。
 - 本卡仅实施下列冻结输入与已有字面量路径；DeepSeek 执行后交 Codex 独立复审，不自审。
 
 ## 禁止项
@@ -62,7 +61,7 @@
 
 ## 模型协作
 
-- 当前是尚缺冻结输入的 blocked 实施卡，主责保持 DeepSeek V4.1 Flash。待临近 ready 时按准备卡确认结果重新评估复杂度、工具与验证；不因文件数单独升级模型。
+- 当前因 U-COMBAT-AP-DATA-CHAR-01 尚未正式提供 CharacterData 字段而保持 blocked，主责保持 DeepSeek V4.1 Flash。待该前置完成、临近 ready 时按已冻结输入重新评估复杂度、工具与验证；不因文件数单独升级模型。
 - 无预设子智能体；边界清楚后由一个主智能体统一实施、验证和形成唯一 candidate，Codex 独立复审。
 
 ## 验证
