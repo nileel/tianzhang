@@ -1,0 +1,142 @@
+# U-COMBAT-AP-MOVE-01 · 合法路径到行动力的定点报价 验证记录
+
+⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：本验证记录（决策 checkpoint 证据）；未写入任何业务代码、任务卡、队列或审核投影。
+
+日期：2026-10-07；责任方：DeepSeek V4.1 Flash；主模型：deepseek-flash（入口默认单模型）。
+RunId：44b25eb6-8abd-4b3e-999f-c6c1cce68aa9；任务：U-COMBAT-AP-MOVE-01；route=external_execute；owner=deepseek；dispatchState=ready。
+候选分支：codex/automation/deepseek/44b25eb6-8abd-4b3e-999f-c6c1cce68aa9/candidate；本 run 起始 HEAD=fa130a6e345030f6d273952f1c762cf1976c727e（父 a6389b49），工作树起始仅有共享入口机械重放的同一验证记录已暂存，无其他未提交改动。
+回复上下文：本 run 由共享入口在最新 master 机械重放上一轮决策 checkpoint（DEC-20261007-MOVEPATH，checkpointCommit=0fc4be94551c440d15590c5b4355720c3b4734bd）后启动；该 checkpoint 不在当前分支历史（merge-base --is-ancestor 返回非祖先），其业务内容只以重放方式到达，本轮不恢复旧模型会话。
+
+## 本轮身份与边界
+
+- 实际身份与修改方：DeepSeek V4.1 Flash。判据：进程 `ANTHROPIC_BASE_URL=http://127.0.0.1:15721`，属 CLAUDE.md 规定的同源 gateway，实际身份与修改方统一为 DeepSeek V4.1 Flash，模型 deepseek-flash。
+- 负责人回复为选项 A（replyKind=option，replyValue=A，结果 OPTION_ACCEPTED，来源 feishu_card，evidenceHash 已由共享入口核验）。本记录只核对该回复在本仓库当前事实上是否可执行，不提新授权。
+- 只做实施前只读事实核对与只读检查；未写入业务路径，未暂存业务差异，未改任务卡、队列、backlog、归档、runtime、另一 worktree 或分支。
+
+## 模型协作评估（开发管理/AI协作规则.txt#任务卡中的模型协作提示）
+
+- 复杂度：卡头已冻结单一原子结果、所有者、路径与验证入口；本轮实际工作为“已批准选项在冻结路径集内是否闭环”的授权与边界判断，不是可拆分工作面。
+- 组合：沿用入口默认单模型 DeepSeek V4.1 Flash 单主智能体。未调用辅助模型或子智能体：本轮无互不依赖的只读工作面，检索与核对均为同一逻辑单元内的连续判断，任务卡亦明确不预设子智能体；故无辅助调用证据可记，也不启动实验性 agent team。
+- 实际能力：PowerShell 7、Git、只读 `grep`/`git` 与项目检查入口 `tools/check-task-cards.ps1`、`tools/check-review-text.ps1` 可用；本卡代码侧证据需 Unity／BattleSim 编译面，本轮无业务差异故不触发。
+
+## 已运行检查
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`：OK（cards=79 ready=1）。当前队列唯一 ready 卡仍为本卡，投影未被本轮改动。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`：OK（700 files checked，含本文件）。
+- `git log --oneline`／`git rev-list --parents -n 1 HEAD`／`git worktree list`：确认本 run 起始 HEAD=fa130a6e、父 a6389b49、分支与 worktree 与 runId 一致，candidate 未领先或落后其他分支事实。
+- `git status --porcelain`／`git diff --cached --name-only`：确认工作树无未暂存改动，暂存区精确为 开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt 一项，无无关改动。
+- 只读符号定位与零命中共 4 组，结果见下节，均以命令原文与行号记录。
+
+## 停止原因（只读证据）
+
+已批准的选项 A 在当前冻结边界内不可执行，依据如下两节。
+
+### 一、选项 A 所需的路径集不在本 run 的可执行路径内
+
+- 本 run 给定 CandidatePaths 为 11 条：SpatialQueryBoard.cs、SpatialQueryTypes.cs、CombatSession.cs、CombatEntryAdapter.cs、SpatialQueryBoardTests.cs、CombatRuntimeKernelTests.cs、CombatActionPointMovementTests.cs、U-COMBAT-AP-MOVE-01-验证记录.txt、未通过审核清单.txt、AI合作归档/U-COMBAT-AP-MOVE-01-交接归档.txt、CombatActionPointMovementTests.cs.meta。
+- 任务卡 expectedPaths 仍为 16 条同一集合（含 开发管理/任务列表/数值与战斗任务.txt、当前任务队列.txt、任务卡/U-COMBAT-AP-MOVE-01.txt、任务归档/U-COMBAT-AP-MOVE-01.txt、AI合作沟通.txt），未随回复 A 增加任何代码路径。
+- 选项 A 正文要求纳入的 6 条路径均不在上述集合：src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs、src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs、simulations/BattleSim/GuanzhongPlaytestAudit.cs、src/Assets/Scripts/Combat/CombatLegalActionService.cs、src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs、src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs。只读确认这 6 个文件均存在，故“不存在需新建”不是可省的理由。
+- `grep -rn "ICombatSpatialQuery" src/ simulations/` 只读结果：接口定义 src/Assets/Scripts/Combat/CombatSession.cs:41（构造参数 :71、属性 :124）；实现恰 5 处——卡内 CombatEntryAdapter.cs:137、CombatRuntimeKernelTests.cs:1416；卡外 GuanzhongBasicAttackPlayModeTests.cs:1056、GuanzhongCombatTimelinePlayModeTests.cs:688、simulations/BattleSim/GuanzhongPlaytestAudit.cs:271。卡外调用者：GuanzhongBasicAttackPlayModeTests.cs:218,228,264、GuanzhongCombatTimelinePlayModeTests.cs:228、CombatLegalActionService.cs:65、EncounterCoordinator.cs:356、GuanzhongMovementPlayModeTests.cs:111。
+- C# 接口成员改签名会使全部实现与调用点同时编译不过；其中 3 个实现在卡外，`tools/run-unity-editmode-tests.ps1` 需整工程（含 PlayMode 测试程序集）编译通过才产出结果 XML。故在冻结路径内无法形成可编译、可验证的差异；按卡头“不在执行中自行扩边”与 automation 边界，本轮不扩 expectedPaths、不写入卡外路径。
+
+### 二、选项 A 自带的“须先具备真实 v 来源”条件不成立
+
+- `grep -rn "MovementEfficiency" src/ simulations/`：零命中。
+- `grep -rn "ActionPointsRemainingUnits" src/ simulations/`：零命中。
+- `grep -rn "SpatialMovementEdgeCost\|SpatialMovementPathResult" src/ simulations/`：零命中。
+- `grep -rn "actionPointMaximumUnits\|movementEfficiencyMilliUnits\|actionEconomyInputsPresent" src/Assets/Scripts/ src/Assets/DataConfig/`：零命中，即 U-COMBAT-AP-DATA-01／CHAR-01 的长期字段也尚未落地。
+- 现有唯一移力仍是整数格：CombatantSnapshot.cs:102-103 只有 MaximumMovePoints／MovePoints（:141 ResetMovePoints、:148-152 按整数扣减）；当前接口签名 CombatSession.cs:44-52 的预算参数名为 `movementPoints`，FindReachable 返回 `IReadOnlyDictionary<HexCoord, int>`。
+- 卡内 Adapter 的精度损失点已确认：CombatEntryAdapter.cs:159 `int movementCost = (cost + board.UnitsPerRange - 1) / board.UnitsPerRange;`，正是合同 §四 要求移除的 (cost+K−1)/K 取整。
+- 合同对 v 无官方默认：开发管理/统一行动力公共合同.txt#二 要求 movementEfficiencyMilliUnits 必填、缺失／负值拒绝；#四 要求接口显式接收当前有效值；#九 直接调用点补齐第 3 条禁止保留反应派生或隐式默认支路。旧派生处 AdventureUnitSpawner.cs:131 仍在（`Mathf.Clamp(Mathf.RoundToInt(source.Attributes.Reaction / 20f), 2, 8)`）。合同 §九 的逐来源 v 候选表明确“候选数值用于下游准备时核定”，生产定案属 N-COMBAT-AP-BALANCE-01／TUNING。
+- 因此若在冻结路径内迁移签名，真实调用点只能填占位 v（语义不实的兼容值），或改用反应派生（合同 §三、§九 明令禁止，且 U-COMBAT-AP-CHAR-01 责任）。两者均不可接受；“真实 v 来源”本身在卡外（CHAR 长期字段 → AdventureUnitSpawner → CombatantSnapshot → Session），属 Adapter 之外的第二组路径。
+- 结论：选项 A 的两项前置（完整迁移所需的卡外路径集、真实 v 来源）在本 run 均不成立，继续实施只能产生占位值或不可编译差异，属卡内“发现不原子或需跨多个边界叠补丁，停止保留现场”的停止条件。按 automation 合同停在此处并生成新决策，不猜测、不写入、不提交业务差异。
+
+## 未运行
+
+- 未运行 tools/run-unity-editmode-tests.ps1／tools/run-unity-playmode-tests.ps1：本轮无业务差异可验证；跨边界编译结论来自接口实现／调用点只读定位与 C# 语义，不冒充运行时通过。
+- 未运行 BattleSim `dotnet build`／`dotnet run`：未修改模拟器输入。
+- 未运行 tools/check-data-chain.ps1：无 docs／CSV／Unity 数据差异。
+- 未运行 tools/check-unity-assembly-boundaries.ps1：未产生程序集引用变化。
+- 未运行 tools/check-pending-whitespace.ps1 与 `git diff --cached --check` 的独立结论：本 checkpoint 的暂存由 tools/automation-finalize-commit.ps1 统一执行暂存前空白检查、暂存后 `git diff --cached --check` 与外部索引不变校验；其实际结果以工具输出为准，本记录不代填通过。
+- 未读取审核材料：任务卡 stateReason 为“负责人回复已核验，恢复原任务：DEC-20261007-MOVEPATH”，未命名 REV-* 条目或复审退回，按 开发管理/审核入口.txt 路由不命中。
+
+## 残留风险
+
+- 选项 A 若按“只扩 expectedPaths”执行，仍缺真实 v 来源；在 v 落地前完成签名迁移会在真实调用点留下占位值或第二预算来源，属合同 §四／§九禁止的兼容路径，且会同时破坏 Unity 测试程序集与 BattleSim 编译面。
+- 本卡继续滞留会造成 W5 定点报价与下游 CORE 解锁延后；队列当前唯一 ready 卡仍为本卡，不推进即队列整体停顿。
+- 本轮未取证的事实：跨边界编译破坏为静态推导，未做实际编译破坏实验；合同 §九 的 v 候选值未经 BattleSim 试跑核定。
+
+## 处置
+
+- 按卡内停止条件与 automation 决策 checkpoint 合同停止，生成新决策 checkpoint（仅含本记录），不改任务生命周期、不扩 expectedPaths、不改父项拓扑；等待负责人就本记录的三个选项选择后，由共享入口恢复并重跑。
+
+---
+
+## 2026-10-07 第二轮（DEC-20261007-MOVEPATH2=B 恢复执行）
+
+⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：Spatial 定点报价原语、Combat 边界结果形状与其定向测试（3 个业务文件、3 个测试文件、本记录）；未改任务卡、队列、backlog、归档、AI合作沟通、runtime、主工作区或另一分支。
+
+日期：2026-10-07；责任方：DeepSeek V4.1 Flash；主模型：deepseek-flash（入口默认单模型）。
+RunId：a6ec13ce-3b6d-4c61-9ffd-e929e47fceb2；任务：U-COMBAT-AP-MOVE-01；route=external_execute；owner=deepseek；dispatchState=ready。
+候选分支：codex/automation/deepseek/a6ec13ce-3b6d-4c61-9ffd-e929e47fceb2/candidate；本 run 起始 HEAD=0b4fbfb92f4fc143ab3f47d4c508c059243cee91（父 e37be614）。
+回复上下文：负责人回复为选项 B（replyKind=option，replyValue=B，结果 OPTION_ACCEPTED，来源 feishu_card，evidenceHash=bfa665ea82162740e9363fc10d29844363e808369574da44e5a50db5660fdbe0，checkpointCommit=1adb7a96bc772e7176d9fb9dbcab158f5c76e805，checkpointChangedPaths 精确为本记录一条）；本 run 起始工作树只含共享入口机械重放的同一记录，未恢复旧模型会话。
+
+### 本轮身份与边界
+
+- 实际身份与修改方：DeepSeek V4.1 Flash。判据：进程 `ANTHROPIC_BASE_URL=http://127.0.0.1:15721`，属 CLAUDE.md 规定的同源 gateway，模型 deepseek-flash。
+- 按 B 收窄执行：本卡只交付 Spatial 定点报价原语与 Combat 边界结果形状；`ICombatSpatialQuery` 三个方法签名保持不变，按 AP 最小单位接收预算与当前有效 `MovementEfficiencyMilliUnits` 的接口迁移，连同卡外 3 个实现替身（GuanzhongBasicAttackPlayModeTests、GuanzhongCombatTimelinePlayModeTests、BattleSim GuanzhongPlaytestAudit）与 5 处调用者路径集，留给 U-COMBAT-AP-CORE-01 准备阶段补齐。
+- 因此本轮不写入任何卡外路径、不扩 `expectedPaths`、不创建占位 v 或第二预算来源；业务差异精确为本记录列表的 3 个业务文件与 3 个定向测试文件（新增测试含 `.meta`）。
+
+### 模型协作评估（开发管理/AI协作规则.txt#任务卡中的模型协作提示）
+
+- 复杂度：卡头已冻结单一原子结果、所有者、允许路径、停止条件与验证入口；本轮为有界定点算术实现加类型形状扩展，无开放语义、无既有失败证据冲突、无跨所有者裁决，属简单有界实施。
+- 组合：沿用入口默认单模型 DeepSeek V4.1 Flash 单主智能体，不预设辅助模型。未调用辅助模型或子智能体：本轮无互不依赖的独立只读工作面（算术与边界形状属同一逻辑单元），任务卡亦明确不预设；故无辅助调用证据可记，也不启动实验性 agent team。完成后交 Codex 独立复审，不自审。
+- 能力与记录：实际可用工具为 PowerShell 7、Git、dotnet 10 SDK（仅用于仓库外临时编译校验）、`tools/` 各检查入口与 `tools/run-unity-editmode-tests.ps1`（Unity 6000.3.18f1 实际存在并成功启动）。未核实项记入下方「未运行」。
+
+### 本轮实现内容
+
+- `src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs`：新增合同 §四冻结的 `SpatialMovementEdgeCost`（From／To／MetricDistanceUnits／MovementBurdenUnits，`DistanceUnits` 为 checked 之和）与 `SpatialMovementPathResult`（Path／Edges／UnitsPerRange／ActionPointCostUnits／Reason，Path 不含起点）；新增稳定原因 `destination_unchanged`、`movement_efficiency_zero`、`action_point_cost_overflow`。
+- `src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs`：`Traverse` 增加可选 AP 边权与原始边记录；AP 边权按 §四 `max(1, floor(AP_ref × S × d_e × 1000 / (K × v_milli)))`，中间量 checked long，逐边取整后求和，不在路径末尾二次取整；新增 `QueryMovementPath`（同一边遍历与同一 AP 边权的选中路径与报价）与 `FindReachableWithinActionPoints`（同一 AP 边权的可达预览）；v=0 拒绝自主移动且不进入除法，负值／负预算抛 `ArgumentOutOfRangeException`，d_e 或费用溢出以 `action_point_cost_overflow` 稳定拒绝。原距离语义（`QueryMetricDistance`／`FindReachable`／`FindPath`／`ResolveForcedMovement`）保持原样：距离分支表达式逐字未变，强制位移仍只走原始度量且不扣 AP。
+- `src/Assets/Scripts/Combat/CombatSession.cs`：`CombatMovementQueryResult` 增加可选的原边／K／AP 费用字段（`MovementEdges`／`UnitsPerRange`／`ActionPointCostUnits`），并保留原 4 参构造与 `MovementCost`，既有 5 处实现（含 3 处卡外）与调用者无需改动即可编译；`ActionPointCostUnits=0` 明确表示「本边界尚未按 AP 定价」，合法可达路径的 AP 报价每条边至少 1 最小单位故不为 0。
+- 定向测试：新增 `src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs`（含 `.meta`，13 例：APC-F02 逐边取整与预算边界、整路与 2+1 分段一致、APC-F03 压缩／扩张／负担边、极短正边费 1、溢出稳定拒绝、v=0、负值数据错误、无变化目的地、预算不重定价、v 变化重定价、占位与实体障碍、强制位移不扣 AP、Combat 边界结果形状）；`SpatialQueryBoardTests.cs` 增 1 例（可达预览与路径报价同一 AP 边权、攻击射程仍读原始距离）；`CombatRuntimeKernelTests.cs` 增 1 例（携带原边与 AP 费用的结果不改变内核旧整数格费用与回合状态）。
+- 明确未改：`CombatEntryAdapter.cs` 保留旧 `(cost + K − 1) / K` 精度损失与整数格预算，因为 B 已把接口预算与 v 迁移划给 CORE；该处仍是待迁移边界，不是本轮的完成项。
+
+### 已运行检查（实际命令与结果）
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1`：OK（cards=83 ready=1，本卡仍为唯一 ready，投影未被本轮改动）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`：OK（704 files checked）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`：OK（GongFa=29/29；Spells=84/84；Skills=31/31；language keys 613）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`：OK（assemblies=19，asmrefs=2；本轮新增 Spatial 公开符号与 Combat 引用未越界）。
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <本 worktree>/src -ResultXmlPath <系统临时目录>/tzg-move01-editmode.xml`：test-run total=605 passed=598 failed=7 inconclusive=0 skipped=0；本轮新增／修改的 15 例全部 Passed。因既有 7 项失败，runner 按全或无合同返回非零；失败集合与基线逐项同名（见下）。
+- 基线对照（同一 worktree、同一工程、同一 runner）：把 5 个已修改的跟踪文件临时恢复为 `HEAD` 内容、移开 2 个新增文件后重跑同一 runner（结果 XML 另存系统临时目录），得 total=590 passed=583 failed=7，失败集合与本轮完全一致；随后从备份逐文件恢复并 `sha256sum -c` 全部 OK，`git status --porcelain` 与对照前完全一致。结论：7 项失败在本 run 起始 HEAD 上已经存在，非本轮差异造成。
+- 既有失败的环境证据：其中 4 项要求 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx` 等可编辑源，该目录被 `.gitignore:77 assets/source/` 忽略且任何提交都不含（`git log --all -- <path>` 为空，仅存在于主工作区），自动化 worktree 必然缺失；其余 3 项（AdventureScene 的 VisualBaselineBoard 对象缺失、石甲兽 `MaximumHealth` 期望 839 实得 657、正式战报文案未取到本地化字符串）在基线同样失败。以上均不在本轮差异路径上。
+- 仓库外临时编译与算术复核（位于系统临时目录，未写入 RepositoryRoot、不进入 Git、提交后删除）：以 dotnet 单独编译 `HexCoord.cs`／`SpatialQueryTypes.cs`／`SpatialQueryBoard.cs` 并复算 F02／F03 全部期望值（33333×3=99999、10000／40000／30000、极短边 1、溢出、v=0、占位、强制位移、K=2 板的 25000／50000），输出 `ALL CHECKS PASSED`；作为提交前快速证伪，不替代 Unity 结果。
+- 暂存前空白检查与暂存后 `git diff --cached --check` 由 `tools/automation-finalize-commit.ps1` 统一执行，其实际输出为准，本记录不代填通过。
+
+### 未运行
+
+- 未运行 `tools/run-unity-playmode-tests.ps1`：本轮无 PlayMode 路径差异，且关中 PlayMode 用例依赖卡外实现替身与迁移后的接口签名。
+- 未运行 BattleSim `dotnet build`／`dotnet run`：未修改模拟器输入，`simulations/` 无差异。
+- 未运行 `tools/automation-finalize-commit.ps1` 之外的提交路径校验以外的检查；未运行 `tools/check-asset-versioning.ps1`：未改动既有资产或 `.meta` 版本边界（仅新增一个测试与其 `.meta`）。
+- 未取得真实生产 v 来源与 AP 预算迁移的运行时证据：`ICombatSpatialQuery` 仍按整数格预算，`CombatEntryAdapter` 仍执行 `(cost+K−1)/K`；这些属 U-COMBAT-AP-CORE-01 准备阶段范围，本轮不称已迁移。
+- 未验证 APC-F02「段间插入合法施法不重置舍入」的整段战斗表现与 APC-F04 的「回合上限／余额不补发」：两者需要 CORE 的个人回合内核，本轮只在 Spatial 层证明逐边定价与分段求和一致。
+- 未读取审核材料：stateReason 为负责人回复已核验（DEC-20261007-MOVEPATH2），未命名 REV-* 条目或复审退回，按 开发管理/审核入口.txt 路由不命中。
+
+### 残留风险
+
+- 本卡交付的是原语与边界形状，未接通生产：`CombatMovementQueryResult` 的 AP 费用字段在正式链路上仍为 0（未定价），`CombatEntryAdapter` 的整数格精度损失仍在；在 CORE 迁移接口签名与 v 之前，行动力移动尚未在生产路径生效，不能据此宣称用户可见的移动计费已改变。
+- 新增的两个 Spatial 公开查询入口目前只被定向测试消费，尚无生产调用者；若 CORE 准备阶段改变单位或签名约定，需同步这两处与本记录。
+- EditMode 全量套件在当前自动化 worktree 环境固定有 7 项既有失败（4 项依赖被忽略的 `assets/source/` 资产），runner 为全或无合同，因此本环境的套件结果不能单独作为通过判据，必须结合基线对照与定向用例证据阅读。
+- 未取证的算术边界：`d_e` 与费用都接近 int 上界时的组合行为只按单边用例取证，未做整图极端路径穷举；v 取值与 K 的极端组合（如 K=1 且 v=1）只覆盖溢出拒绝分支。
+
+## 经验候选
+
+### CAND-U-COMBAT-AP-MOVE-01-01
+
+- collectionState: provisional
+- 经验领域：unity
+- 现象：自动化 owner worktree 中 `tools/run-unity-editmode-tests.ps1` 全量套件在当前 HEAD 固定出现 7 项失败并以非零退出，容易被误判为本轮差异造成或误判为环境阻塞。
+- 已证实根因：7 项失败在本 run 起始 HEAD 上已存在（同 worktree 基线对照 590/583/7 与本轮 605/598/7 的失败集合逐项同名）；其中 4 项要求 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx` 等可编辑源，而 `assets/source/` 被 `.gitignore:77` 忽略、任何提交都不含，自动化 worktree 必然缺失；其余 3 项为场景对象、敌人模板数值期望与本地化文案的既有不一致。
+- 可能复用范围：任何在 linked worktree 中运行 Unity EditMode 全量套件并需要区分「本轮差异造成的失败」与「既有失败」的任务；做法是先把本轮改动文件临时恢复为 HEAD 并在同一 worktree 重跑同一 runner 取得基线，再逐文件恢复并用 sha256 与 `git status --porcelain` 证明现场复原。runner 是全或无，不能只看退出码。
+- 证据：本轮两次结果 XML（605/598/7 与 590/583/7，失败集合逐项同名）、`.gitignore:77` 与 `git log --all -- assets/source/characters/combat-pieces/shijiahou-static-3d-v2` 空结果、恢复后 `sha256sum -c` 全部 OK 与 `git status --porcelain` 与对照前一致。
+- 门禁可能：yes

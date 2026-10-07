@@ -5,6 +5,12 @@ namespace TianZhang.Spatial
 {
     public sealed class SpatialQueryBoard
     {
+        /// <summary>AP 精度 S：1 点行动力等于该数量的 AP 最小单位（统一行动力公共合同 §二）。</summary>
+        public const int ActionPointUnitsPerPoint = 1000;
+
+        /// <summary>AP_ref：移动定价固定分子（统一行动力公共合同 §四）；AP 上限不进入分子。</summary>
+        public const int MovementPriceReferenceActionPoints = 100;
+
         private readonly Dictionary<HexCoord, SpatialCellRules> cells;
         private readonly Dictionary<SpatialDirectedEdge, SpatialEdgeRules> edges;
         private readonly SpatialQueryLimits limits;
@@ -223,6 +229,98 @@ namespace TianZhang.Spatial
             return path;
         }
 
+        /// <summary>
+        /// 一条合法移动路径的定点行动力报价（统一行动力公共合同 §四）。与 FindReachableWithinActionPoints
+        /// 使用同一个合法边遍历和同一 AP 边权：每条正费合法边 max(1, floor(AP_ref × S × d_e × 1000 / (K × v_milli)))，
+        /// 逐边取整后求和，不在路径末尾再次取整。d_e 已含边长与进入目标格的移动负担。
+        /// v_milli=0 拒绝自主移动且不进入除法；负值为数据错误；中间量用 checked long，费用不可表示为 int 或超预算时稳定拒绝。
+        /// </summary>
+        public SpatialMovementPathResult QueryMovementPath(
+            HexCoord start,
+            HexCoord target,
+            int actionPointBudgetUnits,
+            int movementEfficiencyMilliUnits,
+            IReadOnlyCollection<HexCoord> occupied = null)
+        {
+            if (actionPointBudgetUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(actionPointBudgetUnits));
+            if (movementEfficiencyMilliUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+            if (movementEfficiencyMilliUnits == 0)
+                return UnpricedMovementPath(SpatialQueryReasons.MovementEfficiencyZero);
+            if (start == target)
+                return UnpricedMovementPath(SpatialQueryReasons.DestinationUnchanged);
+
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
+            blocked?.Remove(start);
+            var traversal = Traverse(
+                start,
+                SpatialQueryKind.Movement,
+                actionPointBudgetUnits,
+                blocked,
+                ulong.MaxValue,
+                target,
+                null,
+                new ActionPointEdgeWeight(limits.UnitsPerRange, movementEfficiencyMilliUnits),
+                true);
+            if (!traversal.Costs.ContainsKey(target))
+            {
+                return UnpricedMovementPath(
+                    traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
+            }
+
+            var path = new List<HexCoord>();
+            var edges = new List<SpatialMovementEdgeCost>();
+            var current = target;
+            while (current != start)
+            {
+                path.Add(current);
+                edges.Add(traversal.MovementEdges[current]);
+                current = traversal.Previous[current];
+            }
+            path.Reverse();
+            edges.Reverse();
+            return new SpatialMovementPathResult(
+                path,
+                edges,
+                limits.UnitsPerRange,
+                traversal.Costs[target],
+                SpatialQueryReasons.Ok);
+        }
+
+        /// <summary>
+        /// 与 QueryMovementPath 同一边遍历、同一 AP 边权的可达集合；预算与报价均为 AP 最小单位，
+        /// 不先反算整格预算裁掉压缩边。v_milli=0 拒绝自主移动，返回空集合而不进入除法。
+        /// </summary>
+        public IReadOnlyDictionary<HexCoord, int> FindReachableWithinActionPoints(
+            HexCoord start,
+            int actionPointBudgetUnits,
+            int movementEfficiencyMilliUnits,
+            IReadOnlyCollection<HexCoord> occupied = null)
+        {
+            if (actionPointBudgetUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(actionPointBudgetUnits));
+            if (movementEfficiencyMilliUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+            if (movementEfficiencyMilliUnits == 0)
+                return new Dictionary<HexCoord, int>();
+
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
+            blocked?.Remove(start);
+            return Traverse(
+                start,
+                SpatialQueryKind.Movement,
+                actionPointBudgetUnits,
+                blocked,
+                ulong.MaxValue,
+                null,
+                null,
+                new ActionPointEdgeWeight(limits.UnitsPerRange, movementEfficiencyMilliUnits)).Costs;
+        }
+
+        private SpatialMovementPathResult UnpricedMovementPath(string reason) =>
+            new SpatialMovementPathResult(null, null, limits.UnitsPerRange, 0, reason);
+
         public SpatialLineOfSightResult QueryLineOfSight(
             HexCoord source,
             HexCoord target,
@@ -290,12 +388,17 @@ namespace TianZhang.Spatial
             HashSet<HexCoord> blocked,
             ulong activeEffectBlockers,
             HexCoord? stopAt,
-            Func<HexCoord, bool> canTraverse)
+            Func<HexCoord, bool> canTraverse,
+            ActionPointEdgeWeight? actionPointWeight = null,
+            bool recordMovementEdges = false)
         {
             var costs = new Dictionary<HexCoord, int>();
             var previous = new Dictionary<HexCoord, HexCoord>();
+            var movementEdges = recordMovementEdges
+                ? new Dictionary<HexCoord, SpatialMovementEdgeCost>()
+                : null;
             if (!cells.ContainsKey(start) || blocked?.Contains(start) == true || canTraverse?.Invoke(start) == false)
-                return new TraversalResult(costs, previous, SpatialQueryReasons.MissingCell);
+                return new TraversalResult(costs, previous, movementEdges, SpatialQueryReasons.MissingCell);
 
             var frontier = new List<FrontierEntry> { new FrontierEntry(start, 0) };
             costs[start] = 0;
@@ -325,16 +428,48 @@ namespace TianZhang.Spatial
                     int movementBurden = kind == SpatialQueryKind.Movement
                         ? cells[neighbor].MovementBurdenUnits
                         : 0;
-                    int nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
+                    int nextCost;
+                    if (actionPointWeight.HasValue)
+                    {
+                        if (!actionPointWeight.Value.TryGetEdgeCostUnits(
+                                edge.MetricDistanceUnits,
+                                movementBurden,
+                                out int edgeCostUnits))
+                        {
+                            if (firstRejection == null)
+                                firstRejection = SpatialQueryReasons.ActionPointCostOverflow;
+                            continue;
+                        }
+                        long pricedCost = (long)currentCost + edgeCostUnits;
+                        if (pricedCost > int.MaxValue)
+                        {
+                            if (firstRejection == null)
+                                firstRejection = SpatialQueryReasons.ActionPointCostOverflow;
+                            continue;
+                        }
+                        nextCost = (int)pricedCost;
+                    }
+                    else
+                    {
+                        nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
+                    }
                     if (nextCost > budgetUnits ||
                         (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))
                         continue;
                     costs[neighbor] = nextCost;
                     previous[neighbor] = currentEntry.Coord;
+                    if (movementEdges != null)
+                    {
+                        movementEdges[neighbor] = new SpatialMovementEdgeCost(
+                            currentEntry.Coord,
+                            neighbor,
+                            edge.MetricDistanceUnits,
+                            movementBurden);
+                    }
                     frontier.Add(new FrontierEntry(neighbor, nextCost));
                 }
             }
-            return new TraversalResult(costs, previous, firstRejection);
+            return new TraversalResult(costs, previous, movementEdges, firstRejection);
         }
 
         private static FrontierEntry DequeueMinimum(List<FrontierEntry> frontier)
@@ -409,20 +544,65 @@ namespace TianZhang.Spatial
             }
         }
 
+        /// <summary>
+        /// 统一行动力公共合同 §四的定点 AP 边权：每条正费合法边的 u = max(1, floor(AP_ref × S × d_e × 1000 / (K × v_milli)))。
+        /// 中间量用 checked long；d_e 不可表示为 int 或费用超过 int 时返回 false，由调用方稳定拒绝。
+        /// </summary>
+        private readonly struct ActionPointEdgeWeight
+        {
+            public ActionPointEdgeWeight(int unitsPerRange, int movementEfficiencyMilliUnits)
+            {
+                if (unitsPerRange < 1)
+                    throw new ArgumentOutOfRangeException(nameof(unitsPerRange));
+                if (movementEfficiencyMilliUnits < 1)
+                    throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+                UnitsPerRange = unitsPerRange;
+                MovementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
+            }
+
+            public int UnitsPerRange { get; }
+            public int MovementEfficiencyMilliUnits { get; }
+
+            public bool TryGetEdgeCostUnits(
+                int metricDistanceUnits,
+                int movementBurdenUnits,
+                out int costUnits)
+            {
+                costUnits = 0;
+                long distanceUnits = checked((long)metricDistanceUnits + movementBurdenUnits);
+                if (distanceUnits > int.MaxValue)
+                    return false;
+                long numerator = checked(
+                    (long)MovementPriceReferenceActionPoints *
+                    ActionPointUnitsPerPoint *
+                    distanceUnits *
+                    1000L);
+                long denominator = checked((long)UnitsPerRange * MovementEfficiencyMilliUnits);
+                long cost = numerator / denominator;
+                if (cost > int.MaxValue)
+                    return false;
+                costUnits = cost < 1 ? 1 : (int)cost;
+                return true;
+            }
+        }
+
         private sealed class TraversalResult
         {
             public TraversalResult(
                 Dictionary<HexCoord, int> costs,
                 Dictionary<HexCoord, HexCoord> previous,
+                Dictionary<HexCoord, SpatialMovementEdgeCost> movementEdges,
                 string firstRejection)
             {
                 Costs = costs;
                 Previous = previous;
+                MovementEdges = movementEdges;
                 FirstRejection = firstRejection;
             }
 
             public Dictionary<HexCoord, int> Costs { get; }
             public Dictionary<HexCoord, HexCoord> Previous { get; }
+            public Dictionary<HexCoord, SpatialMovementEdgeCost> MovementEdges { get; }
             public string FirstRejection { get; }
         }
     }

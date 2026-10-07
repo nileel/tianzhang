@@ -243,6 +243,33 @@ namespace TianZhang.Tests.EditMode
             }
         }
 
+        [Test]
+        public void ActionPointReachabilityAndQuoteShareOneEdgeWeightWhileMetricDistanceStaysSeparate()
+        {
+            var board = CreateBoard(
+                new[] { Origin, East, EastTwo },
+                new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(1, true, true),
+                    [new SpatialDirectedEdge(East, EastTwo)] = new SpatialEdgeRules(1, true, true),
+                });
+
+            SpatialMovementPathResult priced = board.QueryMovementPath(
+                Origin, EastTwo, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
+            IReadOnlyDictionary<HexCoord, int> reachable = board.FindReachableWithinActionPoints(
+                Origin, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
+
+            Assert.AreEqual(SpatialQueryReasons.Ok, priced.Reason);
+            Assert.AreEqual(50000, priced.ActionPointCostUnits);
+            Assert.AreEqual(2, priced.Edges.Count);
+            Assert.AreEqual(0, reachable[Origin]);
+            Assert.AreEqual(25000, reachable[East]);
+            Assert.AreEqual(priced.ActionPointCostUnits, reachable[EastTwo],
+                "Reachability preview and the selected path quote use the same AP edge weight.");
+            Assert.AreEqual(2, board.QueryMetricDistance(Origin, EastTwo, SpatialQueryKind.Attack).DistanceUnits,
+                "Attack range keeps the raw metric distance and never reads the AP price.");
+        }
+
         private static SpatialQueryBoard CreateBoard(
             IEnumerable<HexCoord> coords,
             IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges)

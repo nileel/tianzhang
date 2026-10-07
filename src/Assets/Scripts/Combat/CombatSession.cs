@@ -23,21 +23,50 @@ namespace TianZhang.Combat
             bool isReachable,
             string reason,
             IReadOnlyList<HexCoord> path,
-            int movementCost)
+            int movementCost,
+            IReadOnlyList<SpatialMovementEdgeCost> movementEdges = null,
+            int unitsPerRange = 0,
+            int actionPointCostUnits = 0)
         {
             IsReachable = isReachable;
             Reason = reason ?? string.Empty;
             Path = path ?? Array.Empty<HexCoord>();
             MovementCost = movementCost;
+            MovementEdges = movementEdges ?? Array.Empty<SpatialMovementEdgeCost>();
+            UnitsPerRange = unitsPerRange;
+            ActionPointCostUnits = actionPointCostUnits;
         }
 
         public bool IsReachable { get; }
         public string Reason { get; }
+
+        /// <summary>所选路径的经过格与终点，不含起点；按现有 FindPath 顺序。</summary>
         public IReadOnlyList<HexCoord> Path { get; }
+
+        /// <summary>旧整数格预算消耗；预算与 v 迁移落地前仍由 CombatSession.ValidateMove 消费。</summary>
         public int MovementCost { get; }
+
+        /// <summary>
+        /// Path 的原始有向边度量，与 Path 一一对应（统一行动力公共合同 §四）；同一路径来源，不另建寻路。
+        /// 无 AP 报价载荷时为空，表示本边界尚未按 AP 定价。
+        /// </summary>
+        public IReadOnlyList<SpatialMovementEdgeCost> MovementEdges { get; }
+
+        /// <summary>报价板的 K=SpatialQueryLimits.UnitsPerRange；无原始边载荷时为 0。</summary>
+        public int UnitsPerRange { get; }
+
+        /// <summary>
+        /// Path 的 AP 最小单位费用。0 表示本边界未按 AP 定价：预算与 v 迁移由 U-COMBAT-AP-CORE-01
+        /// 准备阶段补齐；合法可达路径的 AP 报价每条边至少 1 最小单位，故不会是 0。
+        /// </summary>
+        public int ActionPointCostUnits { get; }
     }
 
-    /// <summary>Combat receives spatial facts through this narrow query boundary.</summary>
+    /// <summary>
+    /// Combat receives spatial facts through this narrow query boundary. 移动预算仍为旧整数格单位；
+    /// 按 AP 最小单位接收预算与当前有效 MovementEfficiencyMilliUnits 的签名迁移由 U-COMBAT-AP-CORE-01
+    /// 准备阶段连同其实现替身与调用者路径集补齐，本卡保持签名不变。
+    /// </summary>
     public interface ICombatSpatialQuery
     {
         CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange);

@@ -22,7 +22,7 @@
 | U-COMBAT-AP-DATA-ATTACK-01 | P1 | deepseek | 阻塞 | D-COMBAT-AP-DATA-PREP-01 | 三攻击行动力与双时间字段严格迁移 | 开发管理/任务卡/U-COMBAT-AP-DATA-ATTACK-01.txt |
 | U-COMBAT-AP-CHAR-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01 | 角色长期行动力成长与快照 | 开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt |
 | U-COMBAT-AP-SAVE-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-CHAR-01 | 行动力长期输入保存与恢复 | 开发管理/任务卡/U-COMBAT-AP-SAVE-01.txt |
-| U-COMBAT-AP-MOVE-01 | P1 | deepseek | 已排队 | — | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
+| U-COMBAT-AP-MOVE-01 | P1 | codex | 已排队 | — | 合法路径到行动力的定点报价 | 开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt |
 | U-COMBAT-AP-CORE-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01、U-COMBAT-AP-MOVE-01 | 统一行动力个人回合内核 | 开发管理/任务卡/U-COMBAT-AP-CORE-01.txt |
 | N-COMBAT-AP-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-DATA-01、U-COMBAT-AP-MOVE-01、U-COMBAT-AP-CORE-01 | BattleSim双入口行动力语义迁移 | 开发管理/任务卡/N-COMBAT-AP-SIM-01.txt |
 | U-COMBAT-AP-FLOW-01 | P1 | deepseek | 阻塞 | U-COMBAT-AP-CORE-01 | 关中正式战斗控制与敌方多动作 | 开发管理/任务卡/U-COMBAT-AP-FLOW-01.txt |

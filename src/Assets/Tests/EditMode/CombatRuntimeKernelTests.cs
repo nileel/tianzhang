@@ -284,6 +284,47 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts()
+        {
+            HexCoord origin = new HexCoord(0, 0), first = new HexCoord(1, 0);
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, movePoints: 3);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(3, 0), 1, 100, 20, 10);
+            var movement = new CombatMovementQueryResult(
+                true,
+                SpatialQueryReasons.Ok,
+                new[] { first },
+                movementCost: 2,
+                new[] { new SpatialMovementEdgeCost(origin, first, metricDistanceUnits: 800, movementBurdenUnits: 200) },
+                unitsPerRange: 1000,
+                actionPointCostUnits: 100000);
+            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            {
+                [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                {
+                    [first] = movement,
+                },
+            });
+            CombatSession session = CreateSession(new[] { player, enemy }, query);
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+
+            CombatActionResult result = service.Execute(
+                session,
+                new CombatCommand(CombatCommandKind.Move, player.Id, destination: first));
+
+            Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+            Assert.That(result.MovementCost, Is.EqualTo(2),
+                "The kernel still consumes the integer grid cost until U-COMBAT-AP-CORE-01 migrates the budget.");
+            Assert.That(player.MovePoints, Is.EqualTo(1));
+            Assert.That(player.Position, Is.EqualTo(first));
+            Assert.That(session.PendingCooldownPenalty, Is.Zero);
+            Assert.That(movement.MovementEdges.Count, Is.EqualTo(1));
+            Assert.That(movement.MovementEdges[0].DistanceUnits, Is.EqualTo(1000));
+            Assert.That(movement.UnitsPerRange, Is.EqualTo(1000));
+            Assert.That(movement.ActionPointCostUnits, Is.EqualTo(100000));
+        }
+
+        [Test]
         public void ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn()
         {
             HexCoord origin = new HexCoord(0, 0), first = new HexCoord(1, 0), second = new HexCoord(1, 1);

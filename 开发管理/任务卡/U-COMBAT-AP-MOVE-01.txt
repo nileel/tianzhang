@@ -4,13 +4,13 @@
   "id": "U-COMBAT-AP-MOVE-01",
   "title": "合法路径到行动力的定点报价",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_review",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-MOVEPATH2",
+  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
@@ -34,71 +34,6 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
-  },
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "U-COMBAT-AP-MOVE-01",
-    "sourceRunId": "44b25eb6-8abd-4b3e-999f-c6c1cce68aa9",
-    "owner": "deepseek",
-    "route": "external_execute",
-    "decisionId": "DEC-20261007-MOVEPATH2",
-    "question": "负责人已选 A（扩大 expectedPaths 并按合同 §四 完整迁移接口签名与预算），但本轮只读核对证明 A 在当前冻结边界内不可执行：A 所需的 GuanzhongBasicAttackPlayModeTests.cs、GuanzhongCombatTimelinePlayModeTests.cs、simulations/BattleSim/GuanzhongPlaytestAudit.cs、CombatLegalActionService.cs、EncounterCoordinator.cs、GuanzhongMovementPlayModeTests.cs 六条路径均不在本 run CandidatePaths 与任务卡 expectedPaths 内（3 个接口实现替身与 5 处调用者会使 Unity 测试程序集与 BattleSim 编译同时失败），且 A 自带的「须先具备真实 v 来源」不成立（MovementEfficiency 等符号全库零命中，CombatantSnapshot 仍只有整数 MovePoints，旧移力仍由反应派生）。A 若只扩路径仍留占位 v，A 无法闭环时本卡应如何处置？",
-    "options": [
-      {
-        "key": "A",
-        "label": "扩充本卡到 A 的完整路径集与 v 来源链：expectedPaths 纳入两个 PM 实现替身、BattleSim GuanzhongPlaytestAudit、CombatLegalActionService、EncounterCoordinator、GuanzhongMovementPlayModeTests，以及 CHAR 的长期字段→AdventureUnitSpawner→CombatantSnapshot→Session 的 v 传递链，由维护者补齐并重跑预检后再执行，A 的「真实 v 来源」条件同时满足"
-      },
-      {
-        "key": "B",
-        "label": "本卡收窄为 Spatial 定点报价原语（SpatialMovementEdgeCost／SpatialMovementPathResult＋AP 边权遍历）与 Combat 边界结果形状（原始边／K／AP 费用字段），保持现有 ICombatSpatialQuery 签名不变，接口预算与 v 迁移连同其路径集交由 U-COMBAT-AP-CORE-01 准备阶段补齐"
-      },
-      {
-        "key": "C",
-        "label": "本卡保持阻塞，等 U-COMBAT-AP-CHAR-01 提供显式 v 来源后，由维护者补齐全部实现替身与调用者路径、重跑风险预检再转 ready"
-      }
-    ],
-    "recommendedOption": "B",
-    "impactSummary": "影响=队列唯一 ready 卡停顿，W5 定点报价与 CORE 解锁延后；边界=接口签名迁移必须与真实 v 来源同时具备，执行中不自行扩 expectedPaths，占位 v 或第二预算来源不可接受",
-    "plainSummary": {
-      "situation": "本卡要改的战斗空间查询接口，还有 3 个测试替身和 3 处调用者在本轮允许修改的文件之外，一改签名 Unity 测试和战斗模拟器都会编译不过；而且整个项目里仍然没有角色的位移效率数值（全库零命中），合同禁止编造默认值。因此负责人上一轮选的「扩大文件范围并完整迁移」在当前边界内跑不起来：只扩文件也补不上缺失的数值来源。",
-      "impact": "本轮只提交了证据记录并停下，没有改任何业务代码；队列唯一 ready 卡继续停顿，定点报价和下游内核解锁都会延后。",
-      "action": "请选择处理方式：A 把文件范围连同数值来源链一起补齐后再执行；B 本卡只做空间层定点报价与战斗边界结果形状、签名不动，接口与数值迁移交给内核卡；C 等角色卡给出位移效率数值后再做。"
-    },
-    "checkpointCommit": "1adb7a96bc772e7176d9fb9dbcab158f5c76e805",
-    "baseCommit": "fa130a6e345030f6d273952f1c762cf1976c727e",
-    "branch": "codex/automation/deepseek/44b25eb6-8abd-4b3e-999f-c6c1cce68aa9/candidate",
-    "changedPaths": [
-      "开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt"
-    ],
-    "verified": [
-      "checkpoint 提交 1adb7a96bc772e7176d9fb9dbcab158f5c76e805 的唯一父提交为 fa130a6e345030f6d273952f1c762cf1976c727e，git rev-list --count HEAD~1..HEAD = 1，为本 run 起始 HEAD 的唯一直接后继；工作树提交后 git status --porcelain 为空",
-      "变更路径精确为 开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt 一条，属卡头 expectedPaths／本 run CandidatePaths 合法路径；未写入任何业务路径、任务卡、队列、backlog、归档或审核投影",
-      "tools/check-task-cards.ps1 无目标全局检查 OK（cards=79 ready=1），本卡仍为队列唯一 ready，投影未被本轮改动",
-      "tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理 OK（700 files checked，含本文件）",
-      "tools/check-pending-whitespace.ps1 对本轮唯一预期路径 OK（1 files checked）；checkpoint 由 tools/automation-finalize-commit.ps1 完成暂存前空白检查、暂存后 git diff --cached --check 与外部索引不变校验后提交",
-      "只读证据（选项 A 路径不在冻结边界）：grep -rn ICombatSpatialQuery src/ simulations/ 显示接口定义 CombatSession.cs:41，实现恰 5 处——卡内 CombatEntryAdapter.cs:137、CombatRuntimeKernelTests.cs:1416；卡外 GuanzhongBasicAttackPlayModeTests.cs:1056、GuanzhongCombatTimelinePlayModeTests.cs:688、simulations/BattleSim/GuanzhongPlaytestAudit.cs:271；卡外调用者 GuanzhongBasicAttackPlayModeTests.cs:218,228,264、GuanzhongCombatTimelinePlayModeTests.cs:228、CombatLegalActionService.cs:65、EncounterCoordinator.cs:356、GuanzhongMovementPlayModeTests.cs:111；六个被点名文件经只读确认均存在，非缺失可省",
-      "只读证据（选项 A 的 v 前置不成立）：grep -rn MovementEfficiency src/ simulations/、ActionPointsRemainingUnits、SpatialMovementEdgeCost|SpatialMovementPathResult、actionPointMaximumUnits|movementEfficiencyMilliUnits|actionEconomyInputsPresent 均为零命中；CombatantSnapshot.cs:102-103 仅 MaximumMovePoints／MovePoints；旧移力派生 AdventureUnitSpawner.cs:131 仍在；卡内精度损失点确认为 CombatEntryAdapter.cs:159 的 (cost + board.UnitsPerRange - 1) / board.UnitsPerRange"
-    ],
-    "unverified": [
-      "未实施任何业务差异：Spatial AP 定点报价原语（SpatialMovementEdgeCost／SpatialMovementPathResult）、CombatMovementQueryResult 扩展、ICombatSpatialQuery 签名与预算迁移、adapter 精度损失移除均未写入；本卡原子结果未达成",
-      "未运行 tools/run-unity-editmode-tests.ps1 与 tools/run-unity-playmode-tests.ps1：本轮无业务差异可验证；跨边界编译破坏结论为静态推导，未做实际编译破坏实验",
-      "未运行 BattleSim dotnet build／dotnet run：未修改模拟器输入",
-      "未运行 tools/check-data-chain.ps1 与 tools/check-unity-assembly-boundaries.ps1：无数据链路与程序集引用差异",
-      "未读取审核材料：stateReason 为负责人回复已核验，未命名 REV-* 条目或复审退回，按 开发管理/审核入口.txt 路由不命中",
-      "未取证合同 §九 的逐来源 v 候选值（2／2000 等）是否经 BattleSim 试跑核定，本记录不称其已定案"
-    ],
-    "residualRisk": "队列当前唯一 ready 卡仍为本卡，继续停滞会使 W5 定点报价与下游 U-COMBAT-AP-CORE-01 解锁整体延后。若按选项 A 在执行中自行扩边，会在卡外真实调用点留下占位 v 或第二预算来源（合同 §四／§九 明令禁止的兼容路径），并同时破坏 Unity 测试程序集与 BattleSim 编译面；若越过接口签名直接按 AP 计价写回现有整数格预算，会把 AP 最小单位与格数混用造成语义回归。本卡 expectedPaths 与 CandidatePaths 均需由有权维护者在转 ready 前扩充并重跑预检，执行中不自行扩边。",
-    "taskContextDigest": "429f7640c74f7774e69ca35dd71295489c829f5a0c9ee8e9a834ba715838b786",
-    "createdAt": "2026-10-07T05:52:14.6687497+08:00",
-    "queueIndex": 0
-  },
-  "automationReply": {
-    "decisionId": "DEC-20261007-MOVEPATH2",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "B",
-    "source": "feishu_card",
-    "evidenceHash": "bfa665ea82162740e9363fc10d29844363e808369574da44e5a50db5660fdbe0"
   }
 }
 ---TASK-BODY---
