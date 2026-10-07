@@ -100,8 +100,11 @@ internal static class GuanzhongPlaytestAudit
             CombatAttackEffect effect = row["effectType"] switch { "physical" => CombatAttackEffect.Physical, "restore_spirit" => CombatAttackEffect.RestoreSpirit, _ => throw new InvalidDataException("Unsupported audit effect.") };
             float Number(string key, float empty = 0) => string.IsNullOrEmpty(row[key]) ? empty : Parse(row[key]);
             return new CombatAttackProfile(id, basic ? CombatAttackKind.Basic : CombatAttackKind.Art, effect,
-                (int)Number("minCastRange"), (int)Number("maxCastRange"), Number("physicalDamageMultiplier"), Number("soulDamageMultiplier"),
-                (int)Number("healAmount"), (int)Number("resourceCost"), (int)Number("cooldownTicks"), row["damageElementId"],
+                (int)Number("minCastRange"), (int)Number("maxCastRange"),
+                RequireAttackCostInt(row, "actionPointCostUnits"), RequireAttackCostInt(row, "minimumNetCostUnits"),
+                RequireAttackCostInt(row, "ctPenalty"), RequireAttackCostInt(row, "reuseCooldownTicks"),
+                Number("physicalDamageMultiplier"), Number("soulDamageMultiplier"),
+                (int)Number("healAmount"), (int)Number("resourceCost"), row["damageElementId"],
                 Number("defensePenetration"), Number("spiritRecoveryMultiplier"), (int)Number("minimumSpiritRecovery"),
                 (int)Number("otherTargetResourceCost"), Number("otherTargetRecoveryMultiplier", 1),
                 basic ? null : (stage, rootElement, grade) => AbilityRequirementPolicy.IsSatisfied(stage, rootElement, grade, realm, element));
@@ -217,15 +220,19 @@ internal static class GuanzhongPlaytestAudit
             Require(result.Succeeded && draws == 0 && result.SpiritRecoveries.Single().ActualRecovery == expected &&
                 result.SpiritSpent == profile.GetSpiritCost(self) && target.CurrentSpirit == before + expected &&
                 p.CurrentSpirit == actorBefore - profile.GetSpiritCost(self) + (self ? expected : 0) &&
-                s.PendingCooldownPenalty == profile.CooldownTicks, "Recovery mismatch: " + scenario);
-            checks.Add(scenario + ":actual=" + expected + ":cost=" + result.SpiritSpent + ":rng=0");
+                s.PendingCooldownPenalty == profile.CtPenalty &&
+                p.GetCooldown(Recovery) == profile.ReuseCooldownTicks, "Recovery mismatch: " + scenario);
+            checks.Add(scenario + ":actual=" + expected + ":cost=" + result.SpiritSpent +
+                ":ct=" + profile.CtPenalty + ":reuse=" + profile.ReuseCooldownTicks + ":rng=0");
         }
         {
             var s = Ready(); s.Combatants.TryGet("player", out var p); s.Combatants.TryGet("enemy", out var e);
             var attack = input.Profiles.Single(x => x.Id == Attack);
             p.SetSpirit(p.MaximumSpirit, attack.SpiritCost);
             int draws = 0;
-            Require(Execute(s, new CombatCommand(CombatCommandKind.Art, p.Id, e.Id, Attack), service, new Random(1), ref draws).Succeeded && p.CurrentSpirit == 0 && draws == 4,
+            Require(Execute(s, new CombatCommand(CombatCommandKind.Art, p.Id, e.Id, Attack), service, new Random(1), ref draws).Succeeded &&
+                p.CurrentSpirit == 0 && draws == 4 && s.PendingCooldownPenalty == attack.CtPenalty &&
+                p.GetCooldown(Attack) == attack.ReuseCooldownTicks,
                 "Legal attack did not exhaust exact resource.");
             // Isolated resource control: enemy guards so the next player command can prove exhaustion.
             Require(service.Execute(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)).Succeeded, "Controlled turn end failed.");
@@ -264,6 +271,18 @@ internal static class GuanzhongPlaytestAudit
     static int I(JsonElement value, string field) => value.GetProperty(field).GetInt32();
     static float F(JsonElement value, string field) => value.GetProperty(field).GetSingle();
     static float Parse(string text) => float.Parse(text, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// 统一行动力四列必须显式存在且为合法整数：空值不当 0，也不回填已删除的旧 CSV 列。
+    /// 直接构造 CombatAttackProfile 会再按合同复核范围（正费、下限、CT 上界与非负重用刻）。
+    /// </summary>
+    static int RequireAttackCostInt(IReadOnlyDictionary<string, string> row, string field)
+    {
+        Require(row.TryGetValue(field, out string raw), "Missing production column: " + field);
+        Require(int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed),
+            "Non-integer production value: " + field);
+        return parsed;
+    }
     static string Hash(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text.Replace("\r\n", "\n")))).ToLowerInvariant();
     static double Median(IEnumerable<int> values) { var a = values.Order().ToArray(); return a.Length == 0 ? 0 : (a[(a.Length - 1) / 2] + a[a.Length / 2]) / 2d; }
     static void Require(bool condition, string message) { if (!condition) throw new InvalidDataException(message); }

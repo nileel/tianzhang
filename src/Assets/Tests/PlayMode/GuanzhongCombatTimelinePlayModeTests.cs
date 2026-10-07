@@ -634,7 +634,7 @@ namespace TianZhang.Tests.PlayMode
             var session = new CombatSession(new[] { player, enemy }, new[]
             {
                 new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
-                    physicalMultiplier: 1f, cooldownTicks: 30),
+                    1, 1, 30, 0, physicalMultiplier: 1f),
             }, new TimelineSpatialQuery());
             var service = new CombatCommandService();
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo(player.Id));

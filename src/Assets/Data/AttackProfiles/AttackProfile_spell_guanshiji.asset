@@ -33,7 +33,10 @@ MonoBehaviour:
   otherTargetRecoveryMultiplier: 0
   resourceKind: 2
   resourceCost: 12
-  cooldownTicks: 10
+  actionPointCostUnits: 50000
+  minimumNetCostUnits: 25000
+  ctPenalty: 10
+  reuseCooldownTicks: 10
   minCastRange: 1
   maxCastRange: 1
   targetingMode: 1

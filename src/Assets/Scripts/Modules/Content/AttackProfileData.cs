@@ -117,10 +117,14 @@ namespace TianZhang.Combat
         public int otherTargetResourceCost;
         public float otherTargetRecoveryMultiplier;
 
-        [Header("资源、冷却与距离")]
+        [Header("资源、行动力与距离")]
         public AttackResourceKind resourceKind;
         public int resourceCost;
-        public int cooldownTicks;
+        // 统一行动力公共合同：四个字段替换旧单一 cooldownTicks，单位各自独立且均为必填整数。
+        public int actionPointCostUnits;   // AP 最小单位，主动收益攻击 >0；S=1000
+        public int minimumNetCostUnits;    // AP 最小单位，>0 且 <= actionPointCostUnits
+        public int ctPenalty;              // CT，0～int.MaxValue-100
+        public int reuseCooldownTicks;     // 全局整数刻重用冷却，>=0
         public int minCastRange;
         public int maxCastRange;
 
@@ -156,10 +160,20 @@ namespace TianZhang.Combat
                 effectType == AttackEffectType.Unknown ||
                 resourceKind == AttackResourceKind.Unknown ||
                 targetingMode == AttackTargetingMode.Unknown ||
-                resourceCost < 0 || cooldownTicks < 0 || minCastRange < 0 ||
+                resourceCost < 0 || minCastRange < 0 ||
                 maxCastRange < minCastRange)
             {
                 reason = "attack_profile_required_field_invalid";
+                return false;
+            }
+
+            // 免费主动收益与越界下限必须整批拒绝；0/负/分数/溢出都在导入期先行失败，
+            // 这里只复核已投影的整数，不提供任何兜底默认。
+            if (actionPointCostUnits <= 0 || minimumNetCostUnits <= 0 ||
+                minimumNetCostUnits > actionPointCostUnits ||
+                ctPenalty < 0 || ctPenalty > int.MaxValue - 100 || reuseCooldownTicks < 0)
+            {
+                reason = "attack_profile_action_cost_contract_invalid";
                 return false;
             }
 
@@ -191,7 +205,8 @@ namespace TianZhang.Combat
                     !string.IsNullOrEmpty(sourceAffiliation) ||
                     !string.IsNullOrEmpty(realmRequirementId) ||
                     !string.IsNullOrEmpty(elementRequirementId) ||
-                    resourceKind != AttackResourceKind.None || resourceCost != 0 || cooldownTicks != 0)
+                    resourceKind != AttackResourceKind.None || resourceCost != 0 ||
+                    ctPenalty != 0 || reuseCooldownTicks != 0)
                 {
                     reason = "basic_attack_profile_contract_invalid";
                     return false;

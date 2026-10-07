@@ -491,23 +491,27 @@ function Test-FormalProjectionSceneReference {
 function Test-FormalAttackProfileProjection {
   param([object]$Table, [string[]]$LanguageIds)
   if (($Table.Headers -join ',') -cne ($schemas.AttackProfiles -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_HEADER_NOT_EXACT' 'AttackProfiles' 'Header must match the ordered 38-column contract.'
+    Add-Finding 'ATTACK_PROFILE_HEADER_NOT_EXACT' 'AttackProfiles' 'Header must match the ordered 41-column contract.'
   }
   $expectedRows = @{
     basic_unarmed = @{
       attackProfileId='basic_unarmed'; displayNameKey='attack_profile_basic_unarmed'; profileKind='basic'; basicBindingKind='unarmed_fallback'
       effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
-      cooldownTicks='0'; minCastRange='1'; maxCastRange='1'; targetingMode='single'
+      actionPointCostUnits='50000'; minimumNetCostUnits='25000'; ctPenalty='0'; reuseCooldownTicks='0'
+      minCastRange='1'; maxCastRange='1'; targetingMode='single'
     }
     spell_guanshiji = @{
       attackProfileId='spell_guanshiji'; displayNameKey='spell_guanshiji'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
       realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='physical'; damageElementId='element_none'
-      physicalDamageMultiplier='1.2'; resourceKind='mp'; resourceCost='12'; cooldownTicks='10'; minCastRange='1'; maxCastRange='1'; targetingMode='single'
+      physicalDamageMultiplier='1.2'; resourceKind='mp'; resourceCost='12'
+      actionPointCostUnits='50000'; minimumNetCostUnits='25000'; ctPenalty='10'; reuseCooldownTicks='10'
+      minCastRange='1'; maxCastRange='1'; targetingMode='single'
     }
     spell_julingshu = @{
       attackProfileId='spell_julingshu'; displayNameKey='spell_julingshu'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
       realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='restore_spirit'; resourceKind='mp'; resourceCost='0'
-      cooldownTicks='5'; minCastRange='0'; maxCastRange='2'; targetingMode='single'; spiritRecoveryMultiplier='0.5'
+      actionPointCostUnits='25000'; minimumNetCostUnits='12500'; ctPenalty='5'; reuseCooldownTicks='5'
+      minCastRange='0'; maxCastRange='2'; targetingMode='single'; spiritRecoveryMultiplier='0.5'
       minimumSpiritRecovery='5'; otherTargetResourceCost='20'; otherTargetRecoveryMultiplier='0.5'
     }
   }
@@ -863,7 +867,7 @@ $schemas = [ordered]@{
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId')
-  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','cooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
+  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','actionPointCostUnits','minimumNetCostUnits','ctPenalty','reuseCooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
   EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')

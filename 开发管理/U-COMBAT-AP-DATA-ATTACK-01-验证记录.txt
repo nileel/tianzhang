@@ -1,0 +1,72 @@
+# U-COMBAT-AP-DATA-ATTACK-01 · 三攻击行动力与双时间字段严格迁移
+
+⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：AttackProfileData 以 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks 四字段替换旧 cooldownTicks、AttackProfiles.csv 41 列精确表头与三行生产值、CombatContentImporter 严格解析与整表先验证后写同 ID asset、三生产 asset 由真实导入链重写且 GUID 不变、fixture 与三个 Unity 测试文件、CombatAttackProfile 必填构造与四只读属性及两处时间读取切片（CombatCommandService／CombatActionResolver／EncounterCoordinator／CombatEntryAdapter）、BattleSim 自检与关中只读审计、tools/check-data-chain.ps1 攻击 schema。待 Codex 复审。
+
+## 一、本轮身份与范围
+
+- TaskId：U-COMBAT-AP-DATA-ATTACK-01；RunId：e49b05f2-66aa-4ff4-906e-49ea2bac5fa2；baseCommit：86058082f6dce5c20e09de77f0c5b473d01e96ee；worktree：.worktrees/automation/e49b05f2-66aa-4ff4-906e-49ea2bac5fa2/deepseek；candidate branch：codex/automation/deepseek/e49b05f2-66aa-4ff4-906e-49ea2bac5fa2/candidate。
+- 身份与修改方：DeepSeek V4.1 Flash；本进程 ANTHROPIC_BASE_URL=http://127.0.0.1:15721（同源 gateway），实际模型 deepseek-flash，未自称 Codex 或 Claude。
+- 只处理给定 taskId：未重新扫描队列、未另选或 claim 任务、未读取或修改 runtime、未启动／暂停／管理 Codex automation、未取集成锁、未推送、未自审。candidate 未修改任务卡、当前队列、backlog、未通过审核清单、AI合作沟通与交接归档。
+- 冻结输入取自任务卡「冻结输入与接口（方案 A）」、开发管理/统一行动力公共合同.txt §二／§三／§九 与负责人确认 DEC-20261007-CD6FFCC3F187D9=A（证据摘要 38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d）。S=1000；三攻击 50000/25000/0/0、50000/25000/10/10、25000/12500/5/5；未新增 Divine 行，未改 MP、资格、射程、效果与绑定。
+- 修改前实时风险预检与本卡 schema 2 投影一致（零命中、零门禁），实际命中集合未扩展。
+
+## 二、模型协作评估（业务写入前）
+
+- 依据 开发管理/AI协作规则.txt#任务卡中的模型协作提示 与 U-COMBAT-AP-DATA-ATTACK-01#模型协作：本轮是三攻击数值、四字段接口切片、允许路径、直接消费者与停止条件均已冻结的有界实施，唯一结果是「三生产攻击以新合同严格导入同 ID asset，并使现有直接数据消费者和校验同一输入通过」；没有可独立改变结论的根因诊断、跨所有者语义裁决或证据冲突。
+- 结论：沿用入口主模型 deepseek-flash 单模型执行，不启用额外模型辅助或子智能体；实际调用子智能体 0 次，未伪造模型调用证据。
+- 工具能力核对：本会话原生子智能体工具实际暴露的模型覆盖仅为 sonnet／opus／haiku／fable，不提供 gpt-6.1-sol 或 gpt-6-astra/high；卡内组合本就未要求辅助，故记录「未执行该模型辅助」，未换端点、未重启、未启动第二责任会话。
+- 未创建写入委派；全部差异由主智能体统一复核并形成唯一 candidate。
+
+## 三、实施结果
+
+- src/Assets/Scripts/Modules/Content/AttackProfileData.cs：删除单一 cooldownTicks，在 resourceCost 与原 minCastRange 之间按合同顺序新增 actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks；TryValidate 新增四值合同块（基础费 >0、0<下限≤基础费、CT 0..int.MaxValue-100、重用刻 ≥0，失败码 attack_profile_action_cost_contract_invalid），不设任何 C# 数值兜底。普攻原有「零 MP／零冷却」不变量按新字段等价保留为 ctPenalty==0 且 reuseCooldownTicks==0（未弱化既有拒绝）。
+- src/Assets/DataConfig/AttackProfiles.csv：在旧 cooldownTicks 原位置（第 18 列）替换为四个新列，形成 41 列精确表头；三行按方案 A 写入 50000/25000/0/0、50000/25000/10/10、25000/12500/5/5；其余 38 列逐字节不变，无 BOM、行尾仍为 LF。
+- src/Assets/Scripts/Editor/CombatContentImporter.cs：AttackProfileColumns 同步 41 列；AttackProfileImportRow 以四个字段替换 CooldownTicks 并在 CopyTo 中逐个投影；ParseAttackProfileRow 新增必填解析（ParsePositiveInt 拒绝空／零／负／分数／溢出，ParseCtPenalty 拒绝越界，ParseNonNegativeInt 处理重用刻）与 minimumNetCostUnits ≤ actionPointCostUnits 的整表交叉校验；Basic 分支的失败码 basic_attack_resource_or_cooldown_invalid 覆盖 MP／资源费／CT／重用刻四项。整表解析与绑定／路径校验全部完成后才进入写 asset 循环，保持同 ID 更新与 GUID。
+- 三个生产 asset（AttackProfile_basic_unarmed／AttackProfile_spell_guanshiji／AttackProfile_spell_julingshu）：由 Unity 真实菜单入口 ImportAttackProfiles 写回，非手改 asset；`cooldownTicks` 行被四个新字段行替换，其余字段不变。
+- src/Assets/Scripts/Combat/CombatAttackProfile.cs：构造顺序冻结为 id、kind、effect、minimumRange、maximumRange、actionPointCostUnits、minimumNetCostUnits、ctPenalty、reuseCooldownTicks，随后为原有可选效果／MP／qualification 参数；四值 required，无默认值、无旧签名重载；新增只读属性 ActionPointCostUnits／MinimumNetCostUnits／CtPenalty／ReuseCooldownTicks并各自验证范围；删除 CooldownTicks 属性。
+- 两处时间读取切片：CombatCommandService.Preview 与 Execute 只取 CtPenalty（phase／预览／RecordAction 算法未动）；CombatActionResolver.ResolveAttack 只以 ReuseCooldownTicks 启动既有全局刻冷却账本。
+- 投影切片：EncounterCoordinator.BuildArtActions 只把 CtPenalty 投影到既有 CombatArtActionSnapshot 显示字段（未改 GameplayContracts／HUD）；CombatEntryAdapter.TryProjectProfiles 顺序传入四值。
+- 未改：CombatSession／CombatantSnapshot／TurnScheduler／CTBEngine 等 AP 算法，未新增符号、消费者、路径或目录；反转依赖未出现，本卡不依赖 CORE。
+- 未改独立内容链：SpellData／DivineSkillData／Spells／Skills 的旧 cooldownTicks 与 tools/import_csv.ps1 的 gongfa／spells／skills／enemies 分支保持原状。
+
+## 四、实际验证与结果
+
+| 验证 | 命令 | 实际结果 |
+|---|---|---|
+| 真实导入（生产 asset 由导入链产生，非手改） | Unity 6000.3.18f1 batchmode `-projectPath <worktree>/src -executeMethod TianZhang.Editor.CombatContentImporter.ImportAttackProfiles -quit` | exit 0；日志 `[AttackProfiles] 已严格导入 3 个攻击档案`；三个 asset 由该次真实导入写回 |
+| 逐 ID 字段与 GUID 保持 | `git diff src/Assets/Data/AttackProfiles/` 与 `git status --short src/Assets/Data/AttackProfiles/*.meta` | 三个 asset 各 4 增 1 删，仅 cooldownTicks 行换为四个新字段行；`.meta` 0 条改动，GUID 仍为 4c65a0a3f37a8c54a93ca75086a6a2a1／60ca361e62e57fa4d8de2ce04f269382／e09511b0bf790504187bcb58e2cf15a6 |
+| 行尾空白（Unity 重序列化归一化） | `pwsh -File tools/check-pending-whitespace.ps1 -Fix -ExpectedPaths <三个 asset>` | Unity 当前版本写回时引入了空值行尾空格，按项目既有做法用同一工具归一化；随后 `-Fix=False` 复核 19 个变更文件 OK |
+| BattleSim 还原与构建 | `dotnet restore simulations/BattleSim`（本 worktree 无 obj）→ `dotnet build -c Release --no-restore simulations/BattleSim` | 0 警告 0 错误 |
+| BattleSim 攻击数据自检 | `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test attack-profile-d-combat-02` | `SELFTEST attack-profile-d-combat-02 PASS`（41 列 fixture 正例逐字段投影 + 新增四列负例） |
+| BattleSim 普攻生产行自检 | `dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test basic-unarmed-production-d-combat-prod-01` | `SELFTEST basic-unarmed-production-d-combat-prod-01 PASS`（含 50000／25000／0／0 逐项断言） |
+| BattleSim 规定默认运行 | `dotnet run --no-build -c Release --project simulations/BattleSim` | exit 0，560 行完整默认矩阵输出 |
+| 关中生产只读审计（新四列读取与两轴断言） | `dotnet run --no-build -c Release --project simulations/BattleSim -- --guanzhong-playtest --input 开发管理/关中首战普通角色输入.json` | exit 0；`checks` 内四个聚灵场景均为 `ct=5:reuse=5`，受控耗尽场景通过 `PendingCooldownPenalty==CtPenalty` 与 `GetCooldown==ReuseCooldownTicks` 两轴断言；三策略各 200 局无 Ongoing |
+| Unity EditMode（全量，卡指定入口） | `pwsh -File tools/run-unity-editmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath <系统临时目录>/tzg-editmode-attack2.xml` | test-run total=643 passed=636 failed=7 inconclusive=0 skipped=0；本轮新增／改写用例全部 Passed（AttackProfileDataTests 47 项、CombatRuntimeKernelTests 53 项全过）；因既有 7 项失败，runner 按全或无合同返回非零 |
+| EditMode 既有失败基线对照 | 同上 XML 失败集合逐项比对已登记基线 开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt（同 worktree 同 runner 基线 590/583/7）与 开发管理/U-COMBAT-AP-DATA-CHAR-01-验证记录.txt（620/613/7） | 失败集合逐项同名且仍为 7 项：4 项要求被 `.gitignore` 忽略的 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/*.fbx` 等可编辑源，其余 3 项为 AdventureScene `VisualBaselineBoard` 对象缺失、石甲兽 `MaximumHealth` 期望 839 实得 657、正式战报文案未取到本地化字符串；合计 643=620+23、636=613+23，新增用例数与差值精确相符，无本轮新失败 |
+| Unity PlayMode（全量，卡指定入口） | `pwsh -File tools/run-unity-playmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath <系统临时目录>/tzg-playmode-attack.xml` | total=75 passed=44 failed=30 inconclusive=0 skipped=1；失败数不高于已登记环境基线 75/43/31/1（开发管理/关中存档删除验证记录.txt），未出现新增失败家族 |
+| PlayMode 两份构造变化定向证据 | 同上 XML 逐项 | 两个被修改构造点的直接消费者均 Passed：`GuanzhongBasicAttackPlayModeTests.FormalStartMenuSessionSupportsBothMoveActionOrdersAndProjectsTheCanonicalPath`（多行构造）与 `GuanzhongBasicAttackPlayModeTests.CombatEntryRejectsMissingCommittedProfiles`（双 profile 构造）、`GuanzhongCombatTimelinePlayModeTests.MovementAndPendingActionKeepActualCtUntilTheExplicitEndTurnSettlement`（CT 轴断言） |
+| 数据链路 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1` | exit 0，`check-data-chain: OK`（GongFa=29/29、Spells=84/84、Skills=31/31、language keys=613）；41 列攻击 schema、三行投影、三 asset 字段与 AdventureScene GUID 引用全部通过 |
+| 任务投影 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -OutputJson` | exit 0，status=ok、cardCount=81、readyCount=1；本轮未改任务卡与队列投影 |
+| 审核文本 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1` | OK（706 files checked） |
+| 行尾空白（暂存前） | `pwsh -File tools/check-pending-whitespace.ps1 -ExpectedPaths <本轮 19 个变更文件>` | OK（19 files checked；fix=False） |
+
+- 新增／改写测试覆盖（EditMode 净增 23 例，全部 Passed）：41 列精确表头与行宽、旧 38 列表头与 42 列新旧并存表头均整批拒绝、四字段逐列缺列／零／负／分数／32 位溢出／上限越界／净费超基础费失败关闭、fixture 内不相等的 CT=7 与重用=13 分别落到 profile.ctPenalty 与 reuseCooldownTicks、普攻非零 CT／重用刻仍整批拒绝、生产三行逐 ID 对齐新值与 asset 逐个字段一致、非法整表（末行净费越界）不写任何 asset 且三 asset 字节与 GUID 全不变、重复导入后字节／GUID／四值稳定、CombatRuntimeKernelTests 新增 CT7／重用13 隔离例证明预览与结算的轴只用 7、账本只用 13（生产 10/10、5/5 不足以证明隔离）。
+- BattleSim 侧：AttackProfileHeaders／ValidateAttackProfileTable 同步 41 列并校验四字段整数合法性；既有 GameData.ArtConfig／DivineConfig.Cooldown 作为泛化回合数固定投影 0，不回填新刻字段；对不能表达的非零 CT／重用刻仍以 battlesim_cooldown_unit_unresolved 明确拒绝（零 CT／重用 fixture 继续验证旧算法），未弱化拒绝。
+
+## 五、未验证与残留风险
+
+- 未验证：运行时 AP 余额、多动作、CT 求和与个人回合时点——属 U-COMBAT-AP-CORE-01；本叶只持有／投影四属性，不扣费、不改 CombatSession／CombatantSnapshot／TurnScheduler／CTBEngine。
+- 未验证：数值平衡。三攻击 50000／25000／0／0、50000／25000／10／10、25000／12500／5／5 是负责人已确认的迁移试跑输入（不代表平衡定案）；本叶未跑平衡结论，未复刻新 AP 语义。
+- 未验证：正式新建玩家、未映射的旧 Art／Divine 配置与泛化 AP 双入口——分别属 U-COMBAT-AP-CHAR-01 与 N-COMBAT-AP-SIM-01。
+- 未验证：PlayMode 全量套件未做「本 worktree 同名基线重跑」对照。runner 无 -TestFilter，本轮以已登记环境基线（75/43/31/1）与失败家族（无图形设备／1920·1366 期望 321／VisualBaselineBoard fixture 缺失／石甲兽 839 vs 657）判定；失败总数由 31 降至 30，两个被修改文件的失败点均落在 3D 渲染对象与 UI 文本几何断言上，与四个整数字段无因果关系，但名称级逐项基线对照未执行。
+- 残留风险：三个 `.asset` 由 Unity 当前版本整体重写（含空值行尾空格），本轮按项目既有做法用 `tools/check-pending-whitespace.ps1 -Fix` 归一化；后续任何再次用 Unity 写回这些 asset 的责任方需重复同一归一化，否则会在提交门禁处失败。
+- 残留风险：Unity 本次运行顺带改写了非候选路径 `src/ProjectSettings/ShaderGraphSettings.asset`（仅 `m_Name:` 行尾空格）；因该路径不在本卡授权范围，已按单文件恢复到 HEAD 逐字节内容（文件级还原，非分支／worktree 操作，未丢弃任何候选差异），未进入改动集合。
+- 残留风险：PlayMode 全量套件在本自动化 worktree 固定存在大量图形／场景 fixture 环境失败，runner 为全或无合同，套件结果不能单独作为通过判据，必须结合定向用例与基线对照阅读。
+- 残留风险：`simulations/BattleSim/bin/Release/` 由本轮规定构建产生且未受 Git 跟踪；为避免在 worktree 留下未跟踪现场，提交前已删除该生成目录（不影响已运行的验证结论）。
+- 收尾只检查已有事实、diff 与验证，没有新增模型调用或经验系统变更；本轮没有新增经验候选，不写空章节。
+
+## 六、交接
+
+- 结果转 codex_review/codex/ready，由 Codex 独立复审；本记录不自审、不预填复审结论。
+- candidate 的 changed paths 是候选路径的子集，未触碰共享任务生命周期、队列、backlog、审核清单与 AI合作沟通；交接登记与 pending review 投影由共享入口在正式提交中形成。
+- 复审建议入口：三 asset 的字段级 diff 与 GUID、`check-data-chain.ps1`、BattleSim 两个攻击自检与关中审计 checks 行、EditMode XML 中 AttackProfileDataTests／CombatRuntimeKernelTests 的 Passed 集合，以及 §五 所列未验证项。

@@ -414,9 +414,11 @@ namespace TianZhang.Tests.PlayMode
                 new[]
                 {
                     new CombatAttackProfile(
-                        "basic_unarmed", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                        "basic_unarmed", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 50000, 25000, 0, 0,
+                        physicalMultiplier: 1f),
                     new CombatAttackProfile(
-                        "foreign_basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                        "foreign_basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 50000, 25000, 0, 0,
+                        physicalMultiplier: 1f),
                 },
                 new AlwaysInRangeCombatSpatialQuery());
 
@@ -569,6 +571,10 @@ namespace TianZhang.Tests.PlayMode
                         CombatAttackEffect.Physical,
                         1,
                         1,
+                        50000,
+                        25000,
+                        0,
+                        0,
                         physicalMultiplier: 1f),
                 },
                 new AlwaysInRangeCombatSpatialQuery());

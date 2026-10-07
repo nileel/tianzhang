@@ -29,11 +29,14 @@ namespace TianZhang.Combat
             CombatAttackEffect effect,
             int minimumRange,
             int maximumRange,
+            int actionPointCostUnits,
+            int minimumNetCostUnits,
+            int ctPenalty,
+            int reuseCooldownTicks,
             float physicalMultiplier = 0f,
             float soulMultiplier = 0f,
             int healAmount = 0,
             int spiritCost = 0,
-            int cooldownTicks = 0,
             string damageElement = "",
             float soulDefensePenetration = 0f,
             float spiritRecoveryMultiplier = 0f,
@@ -44,8 +47,17 @@ namespace TianZhang.Combat
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Attack profile ID is required.", nameof(id));
-            if (minimumRange < 0 || maximumRange < minimumRange || spiritCost < 0 || cooldownTicks < 0 || healAmount < 0)
+            if (minimumRange < 0 || maximumRange < minimumRange || spiritCost < 0 || healAmount < 0)
                 throw new ArgumentOutOfRangeException(nameof(minimumRange));
+            // 统一行动力公共合同：四值以各自单位严格验证，不设默认、不从另一字段推导。
+            if (actionPointCostUnits <= 0)
+                throw new ArgumentOutOfRangeException(nameof(actionPointCostUnits));
+            if (minimumNetCostUnits <= 0 || minimumNetCostUnits > actionPointCostUnits)
+                throw new ArgumentOutOfRangeException(nameof(minimumNetCostUnits));
+            if (ctPenalty < 0 || ctPenalty > int.MaxValue - 100)
+                throw new ArgumentOutOfRangeException(nameof(ctPenalty));
+            if (reuseCooldownTicks < 0)
+                throw new ArgumentOutOfRangeException(nameof(reuseCooldownTicks));
             if (float.IsNaN(spiritRecoveryMultiplier) || float.IsInfinity(spiritRecoveryMultiplier) ||
                 spiritRecoveryMultiplier < 0f || minimumSpiritRecovery < 0 || otherTargetSpiritCost < 0 ||
                 float.IsNaN(otherTargetSpiritRecoveryMultiplier) || float.IsInfinity(otherTargetSpiritRecoveryMultiplier) ||
@@ -57,11 +69,14 @@ namespace TianZhang.Combat
             Effect = effect;
             MinimumRange = minimumRange;
             MaximumRange = maximumRange;
+            ActionPointCostUnits = actionPointCostUnits;
+            MinimumNetCostUnits = minimumNetCostUnits;
+            CtPenalty = ctPenalty;
+            ReuseCooldownTicks = reuseCooldownTicks;
             PhysicalMultiplier = physicalMultiplier;
             SoulMultiplier = soulMultiplier;
             HealAmount = healAmount;
             SpiritCost = spiritCost;
-            CooldownTicks = cooldownTicks;
             DamageElement = damageElement ?? string.Empty;
             SoulDefensePenetration = soulDefensePenetration;
             SpiritRecoveryMultiplier = spiritRecoveryMultiplier;
@@ -76,11 +91,14 @@ namespace TianZhang.Combat
         public CombatAttackEffect Effect { get; }
         public int MinimumRange { get; }
         public int MaximumRange { get; }
+        public int ActionPointCostUnits { get; }
+        public int MinimumNetCostUnits { get; }
+        public int CtPenalty { get; }
+        public int ReuseCooldownTicks { get; }
         public float PhysicalMultiplier { get; }
         public float SoulMultiplier { get; }
         public int HealAmount { get; }
         public int SpiritCost { get; }
-        public int CooldownTicks { get; }
         public string DamageElement { get; }
         public float SoulDefensePenetration { get; }
         public float SpiritRecoveryMultiplier { get; }

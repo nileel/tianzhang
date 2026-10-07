@@ -91,8 +91,9 @@ namespace TianZhang.Combat
                 CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
                 result = CombatActionResult.AttackSuccess(spiritCost, damage);
             }
-            if (profile.CooldownTicks > 0)
-                actor.SetCooldown(profile.Id, profile.CooldownTicks);
+            // 全局刻重用冷却账本只由 reuseCooldownTicks 启动；CT 惩罚由 CommandService 单独累计。
+            if (profile.ReuseCooldownTicks > 0)
+                actor.SetCooldown(profile.Id, profile.ReuseCooldownTicks);
             return result;
         }
 

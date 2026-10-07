@@ -377,7 +377,8 @@ namespace TianZhang.Features.Adventure
                 if (profile?.Effect == CombatAttackEffect.RestoreSpirit)
                     AddTarget(player, playerDisplayName);
                 if (enemy != null) AddTarget(enemy, resolveText(spawned.EnemyData.displayNameKey));
-                actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CooldownTicks ?? 0, targets));
+                // 仅把 CT 投影到既有显示字段；重用冷却账本由 Resolver 单独维护。
+                actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets));
 
                 void AddTarget(CombatantSnapshot target, string name)
                 {

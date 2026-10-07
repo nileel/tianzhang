@@ -58,7 +58,8 @@ namespace TianZhang.Editor
             "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
             "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
             "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
-            "cooldownTicks", "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
+            "actionPointCostUnits", "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks",
+            "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
             "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
             "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
             "isDomain", "isBloodline", "specialEffectTextKey",
@@ -302,7 +303,10 @@ namespace TianZhang.Editor
             public float OtherTargetRecoveryMultiplier;
             public AttackResourceKind ResourceKind;
             public int ResourceCost;
-            public int CooldownTicks;
+            public int ActionPointCostUnits;
+            public int MinimumNetCostUnits;
+            public int CtPenalty;
+            public int ReuseCooldownTicks;
             public int MinCastRange;
             public int MaxCastRange;
             public AttackTargetingMode TargetingMode;
@@ -343,7 +347,10 @@ namespace TianZhang.Editor
                 asset.otherTargetRecoveryMultiplier = OtherTargetRecoveryMultiplier;
                 asset.resourceKind = ResourceKind;
                 asset.resourceCost = ResourceCost;
-                asset.cooldownTicks = CooldownTicks;
+                asset.actionPointCostUnits = ActionPointCostUnits;
+                asset.minimumNetCostUnits = MinimumNetCostUnits;
+                asset.ctPenalty = CtPenalty;
+                asset.reuseCooldownTicks = ReuseCooldownTicks;
                 asset.minCastRange = MinCastRange;
                 asset.maxCastRange = MaxCastRange;
                 asset.targetingMode = TargetingMode;
@@ -459,7 +466,10 @@ namespace TianZhang.Editor
                 EffectType = ParseAttackEffectType(Required("effectType")),
                 ResourceKind = ParseAttackResourceKind(Required("resourceKind")),
                 ResourceCost = ParseNonNegativeInt(Required("resourceCost"), "resourceCost"),
-                CooldownTicks = ParseNonNegativeInt(Required("cooldownTicks"), "cooldownTicks"),
+                ActionPointCostUnits = ParsePositiveInt(Required("actionPointCostUnits"), "actionPointCostUnits"),
+                MinimumNetCostUnits = ParsePositiveInt(Required("minimumNetCostUnits"), "minimumNetCostUnits"),
+                CtPenalty = ParseCtPenalty(Required("ctPenalty")),
+                ReuseCooldownTicks = ParseNonNegativeInt(Required("reuseCooldownTicks"), "reuseCooldownTicks"),
                 MinCastRange = ParseNonNegativeInt(Required("minCastRange"), "minCastRange"),
                 MaxCastRange = ParseNonNegativeInt(Required("maxCastRange"), "maxCastRange"),
                 TargetingMode = ParseAttackTargetingMode(Required("targetingMode")),
@@ -471,6 +481,9 @@ namespace TianZhang.Editor
                 throw new InvalidDataException("attack_profile_display_key_unknown");
             if (row.MaxCastRange < row.MinCastRange)
                 throw new InvalidDataException("attack_profile_cast_range_invalid");
+            // 净费下限必须为正且不超过基础费用；没有 1 兜底，也不允许用修正把它降到 0。
+            if (row.MinimumNetCostUnits > row.ActionPointCostUnits)
+                throw new InvalidDataException("attack_profile_minimumNetCostUnits_exceeds_actionPointCostUnits");
 
             if (row.ProfileKind == AttackProfileKind.Basic)
             {
@@ -479,7 +492,9 @@ namespace TianZhang.Editor
                 RequireEmpty("sourceAffiliation");
                 RequireEmpty("realmRequirementId");
                 RequireEmpty("elementRequirementId");
-                if (row.ResourceKind != AttackResourceKind.None || row.ResourceCost != 0 || row.CooldownTicks != 0)
+                // 旧单一 cooldownTicks 的双职责拆开后，普攻仍必须显式声明零 CT 与零重用刻。
+                if (row.ResourceKind != AttackResourceKind.None || row.ResourceCost != 0 ||
+                    row.CtPenalty != 0 || row.ReuseCooldownTicks != 0)
                     throw new InvalidDataException("basic_attack_resource_or_cooldown_invalid");
             }
             else
@@ -834,6 +849,25 @@ namespace TianZhang.Editor
         {
             if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed < 0)
                 throw new InvalidDataException($"attack_profile_{fieldName}_invalid");
+            return parsed;
+        }
+
+        /// <summary>主动收益费用与净费下限必须严格大于 0；空列、分数、指数与溢出同样在此失败关闭。</summary>
+        private static int ParsePositiveInt(string value, string fieldName)
+        {
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed <= 0)
+                throw new InvalidDataException($"attack_profile_{fieldName}_invalid");
+            return parsed;
+        }
+
+        /// <summary>CT 惩罚上界与公共合同一致：0～int.MaxValue-100，回合累计也不得越过该界。</summary>
+        private static int ParseCtPenalty(string value)
+        {
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) ||
+                parsed < 0 || parsed > int.MaxValue - 100)
+            {
+                throw new InvalidDataException("attack_profile_ctPenalty_invalid");
+            }
             return parsed;
         }
 

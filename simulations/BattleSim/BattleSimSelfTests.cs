@@ -1192,7 +1192,8 @@ static class BattleSimSelfTests
         "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
         "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
         "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
-        "cooldownTicks", "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
+        "actionPointCostUnits", "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks",
+        "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
         "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
         "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
         "isDomain", "isBloodline", "specialEffectTextKey",
@@ -1219,6 +1220,10 @@ static class BattleSimSelfTests
     static void RunAttackProfileDCombat02()
     {
         const string fixtureName = "AttackProfiles.fixture.csv";
+        // 攻击表已用 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks
+        // 取代旧双职责 cooldownTicks；既有 GameData.ArtConfig／DivineConfig.Cooldown 只是泛化
+        // 回合数，仓库没有权威的回合↔整数刻换算，因此该字段固定投影 0，不从新四列回填。
+        const int GeneralizedTurnCooldown = 0;
         var rawFixtureLines = File.ReadAllLines(Path.Combine(
                 FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fixtureName))
             .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
@@ -1250,7 +1255,7 @@ static class BattleSimSelfTests
             "神魂",
             ParseDouble(artSingle["soulDamageMultiplier"]),
             ParseInt(artSingle["resourceCost"]),
-            ParseInt(artSingle["cooldownTicks"]),
+            GeneralizedTurnCooldown,
             GameData.NormalizeElement(artSingle["damageElementId"]),
             ParseInt(artSingle["minCastRange"]),
             ParseInt(artSingle["maxCastRange"]));
@@ -1262,7 +1267,7 @@ static class BattleSimSelfTests
             "神魂",
             ParseDouble(artCircle["soulDamageMultiplier"]),
             ParseInt(artCircle["resourceCost"]),
-            ParseInt(artCircle["cooldownTicks"]),
+            GeneralizedTurnCooldown,
             GameData.NormalizeElement(artCircle["damageElementId"]),
             ParseInt(artCircle["minCastRange"]),
             ParseInt(artCircle["maxCastRange"]),
@@ -1289,7 +1294,7 @@ static class BattleSimSelfTests
             "神魂",
             ParseDouble(artFan["soulDamageMultiplier"]),
             ParseInt(artFan["resourceCost"]),
-            ParseInt(artFan["cooldownTicks"]),
+            GeneralizedTurnCooldown,
             GameData.NormalizeElement(artFan["damageElementId"]),
             ParseInt(artFan["minCastRange"]),
             ParseInt(artFan["maxCastRange"]),
@@ -1316,7 +1321,7 @@ static class BattleSimSelfTests
             "物理",
             ParseDouble(divineLine["physicalDamageMultiplier"]),
             ParseDouble(divineLine["defensePenetration"]),
-            ParseInt(divineLine["cooldownTicks"]),
+            GeneralizedTurnCooldown,
             GameData.NormalizeElement(divineLine["damageElementId"]),
             ParseInt(divineLine["minCastRange"]),
             ParseInt(divineLine["maxCastRange"]),
@@ -1405,7 +1410,22 @@ static class BattleSimSelfTests
         AssertTableRejected(TableWith(MutateRowLine(divineLineLine, "areaEffectBlockers", "sight_blocked")), "attack_profile_area_blocker_invalid");
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedFactions", "neutral")), "attack_profile_areaAllowedFactions_invalid");
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedStates", "ghost")), "attack_profile_areaAllowedStates_invalid");
-        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "cooldownTicks", "4")), "battlesim_cooldown_unit_unresolved");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "ctPenalty", "4")), "battlesim_cooldown_unit_unresolved");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "reuseCooldownTicks", "4")), "battlesim_cooldown_unit_unresolved");
+        // 统一行动力四列的整数合法性：零／负主动费、越界净费下限、分数、溢出与 CT 上界。
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "0")), "attack_profile_actionPointCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "-1")), "attack_profile_actionPointCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "2.5")), "attack_profile_actionPointCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "2147483648")), "attack_profile_actionPointCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "minimumNetCostUnits", "")), "attack_profile_minimumNetCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "minimumNetCostUnits", "0")), "attack_profile_minimumNetCostUnits_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "minimumNetCostUnits", "99999")), "attack_profile_minimumNetCostUnits_exceeds_actionPointCostUnits");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "ctPenalty", "-1")), "attack_profile_ctPenalty_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "ctPenalty", "2147483548")), "attack_profile_ctPenalty_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "reuseCooldownTicks", "-1")), "attack_profile_reuseCooldownTicks_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "reuseCooldownTicks", "3.5")), "attack_profile_reuseCooldownTicks_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(basicMainLine, "ctPenalty", "1")), "basic_attack_resource_or_cooldown_invalid");
+        AssertTableRejected(TableWith(MutateRowLine(basicMainLine, "reuseCooldownTicks", "1")), "basic_attack_resource_or_cooldown_invalid");
         // 单目标混入范围列：只把单目标行填入一个范围列。
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "areaCenterKind", "caster")), "single_target_area_fields_present");
         // 未支持效果语义：heal 行在既有 BattleSim 载体上没有对应字段。
@@ -1447,7 +1467,10 @@ static class BattleSimSelfTests
         AssertEqual(ParseInt(row["maxCastRange"]), GameData.UnarmedBasicAttack.MaxRange, "max range migration");
         AssertEqual("none", row["resourceKind"], "basic_unarmed resource kind");
         AssertEqual(0, ParseInt(row["resourceCost"]), "basic_unarmed resource cost");
-        AssertEqual(0, ParseInt(row["cooldownTicks"]), "basic_unarmed cooldown");
+        AssertEqual(50000, ParseInt(row["actionPointCostUnits"]), "basic_unarmed action point cost");
+        AssertEqual(25000, ParseInt(row["minimumNetCostUnits"]), "basic_unarmed minimum net cost");
+        AssertEqual(0, ParseInt(row["ctPenalty"]), "basic_unarmed ct penalty");
+        AssertEqual(0, ParseInt(row["reuseCooldownTicks"]), "basic_unarmed reuse cooldown");
         AssertEqual("single", row["targetingMode"], "basic_unarmed targeting mode");
         AssertEqual(1, ParseInt(row["minCastRange"]), "basic_unarmed min cast range");
         AssertEqual(1, ParseInt(row["maxCastRange"]), "basic_unarmed max cast range");
@@ -1510,7 +1533,11 @@ static class BattleSimSelfTests
         AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
         AssertEqual(ParseDouble(row["soulDamageMultiplier"]), profile.Mult, $"{label} mult");
         AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
-        AssertEqual(ParseInt(row["cooldownTicks"]), profile.Cooldown, $"{label} cooldown");
+        // 泛化回合 CD 与新的 CT／重用刻是两个量纲：该载体固定 0，不接收新四列。
+        AssertEqual(0, profile.Cooldown, $"{label} generalized turn cooldown");
+        AssertEqual("0", row["ctPenalty"], $"{label} ctPenalty must stay zero for the generalized carrier");
+        AssertEqual("0", row["reuseCooldownTicks"], $"{label} reuse ticks must stay zero for the generalized carrier");
+        AssertActionCostColumnsAreUsable(row, label);
         AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
         AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
@@ -1525,10 +1552,23 @@ static class BattleSimSelfTests
         AssertEqual(ParseDouble(row["physicalDamageMultiplier"]), profile.Mult, $"{label} mult");
         AssertEqual(ParseDouble(row["defensePenetration"]), profile.DefPen, $"{label} defense penetration");
         AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
-        AssertEqual(ParseInt(row["cooldownTicks"]), profile.Cooldown, $"{label} cooldown");
+        AssertEqual(0, profile.Cooldown, $"{label} generalized turn cooldown");
+        AssertEqual("0", row["ctPenalty"], $"{label} ctPenalty must stay zero for the generalized carrier");
+        AssertEqual("0", row["reuseCooldownTicks"], $"{label} reuse ticks must stay zero for the generalized carrier");
+        AssertActionCostColumnsAreUsable(row, label);
         AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
         AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
+    }
+
+    /// <summary>四个新列的整数合法性：主动费与净费下限为整数且 0 &lt; 下限 ≤ 基础费。</summary>
+    static void AssertActionCostColumnsAreUsable(IReadOnlyDictionary<string, string> row, string label)
+    {
+        int cost = ParseInt(row["actionPointCostUnits"]);
+        int minimum = ParseInt(row["minimumNetCostUnits"]);
+        AssertEqual(true, cost > 0, $"{label} action point cost must be positive");
+        AssertEqual(true, minimum > 0 && minimum <= cost, $"{label} minimum net cost must be positive and bounded by the base cost");
+        AssertEqual(true, ParseInt(row["reuseCooldownTicks"]) >= 0, $"{label} reuse ticks must not be negative");
     }
 
     static void AssertAreaProjection(
@@ -1603,15 +1643,29 @@ static class BattleSimSelfTests
                 "realm_jindan" or "realm_yuanying" or "realm_huashen"))
                 throw new InvalidOperationException("attack_profile_requirement_reference_unknown");
 
+            // 四个统一行动力字段逐行整数合法性：主动费与净费下限为正且 0 < 下限 <= 基础费，
+            // CT 在 0..int.MaxValue-100，重用刻非负；空值、分数与 32 位溢出都在此失败。
+            if (!ParsePositiveInt(row["actionPointCostUnits"]))
+                throw new InvalidOperationException("attack_profile_actionPointCostUnits_invalid");
+            if (!ParsePositiveInt(row["minimumNetCostUnits"]))
+                throw new InvalidOperationException("attack_profile_minimumNetCostUnits_invalid");
+            if (ParseInt(row["minimumNetCostUnits"]) > ParseInt(row["actionPointCostUnits"]))
+                throw new InvalidOperationException("attack_profile_minimumNetCostUnits_exceeds_actionPointCostUnits");
+            if (!ParseCtPenalty(row["ctPenalty"]))
+                throw new InvalidOperationException("attack_profile_ctPenalty_invalid");
+            if (!ParseNonNegativeInt(row["reuseCooldownTicks"], "reuseCooldownTicks"))
+                throw new InvalidOperationException("attack_profile_reuseCooldownTicks_invalid");
+
             if (profileKind == "basic")
             {
-                if (row["resourceKind"] != "none" || row["resourceCost"] != "0" || row["cooldownTicks"] != "0")
+                if (row["resourceKind"] != "none" || row["resourceCost"] != "0" ||
+                    row["ctPenalty"] != "0" || row["reuseCooldownTicks"] != "0")
                     throw new InvalidOperationException("basic_attack_resource_or_cooldown_invalid");
             }
-            else if (row["cooldownTicks"] != "0")
+            else if (row["ctPenalty"] != "0" || row["reuseCooldownTicks"] != "0")
             {
-                // 契约固定 CSV 的 cooldownTicks 为规范值，但仓库尚无 BattleSim 回合与 Unity 刻的
-                // 权威换算；BattleSim 投影遇到非零 cooldownTicks 必须失败，不能读取旧回合默认值。
+                // 既有 BattleSim 载体的 Cooldown 是泛化回合数，仓库没有回合与 Unity 整数刻的
+                // 权威换算；非零 CT／重用刻必须失败，不能把刻填回泛化回合 Cooldown 通过。
                 throw new InvalidOperationException("battlesim_cooldown_unit_unresolved");
             }
 
@@ -1643,8 +1697,6 @@ static class BattleSimSelfTests
                 throw new InvalidOperationException("attack_profile_resource_kind_invalid");
             if (!ParseNonNegativeInt(row["resourceCost"], "resourceCost"))
                 throw new InvalidOperationException("attack_profile_resourceCost_invalid");
-            if (!ParseNonNegativeInt(row["cooldownTicks"], "cooldownTicks"))
-                throw new InvalidOperationException("attack_profile_cooldownTicks_invalid");
 
             int minCastRange = ParseInt(row["minCastRange"]);
             int maxCastRange = ParseInt(row["maxCastRange"]);
@@ -1715,6 +1767,18 @@ static class BattleSimSelfTests
     static bool ParseNonNegativeInt(string value, string fieldName)
     {
         return int.TryParse(value, out int parsed) && parsed >= 0;
+    }
+
+    /// <summary>统一行动力的主动费与净费下限：严格大于 0，空值／分数／溢出都失败。</summary>
+    static bool ParsePositiveInt(string value)
+    {
+        return int.TryParse(value, out int parsed) && parsed > 0;
+    }
+
+    /// <summary>CT 惩罚上界与公共合同一致：0～int.MaxValue-100。</summary>
+    static bool ParseCtPenalty(string value)
+    {
+        return int.TryParse(value, out int parsed) && parsed >= 0 && parsed <= int.MaxValue - 100;
     }
 
     static bool ParseNonNegativeDouble(string value, string fieldName)

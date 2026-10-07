@@ -39,7 +39,7 @@ namespace TianZhang.Combat
                 if (session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
                 {
                     cost = profile.GetSpiritCost(command.ActorId == command.TargetId);
-                    penalty = profile.CooldownTicks;
+                    penalty = profile.CtPenalty;
                 }
             // Movement has its own preview/confirmation and cannot predict an unchosen action.
             bool supported = command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or
@@ -89,7 +89,7 @@ namespace TianZhang.Combat
             if ((command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
                 !string.IsNullOrEmpty(command.ProfileId) &&
                 session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
-                cooldownPenalty = profile.CooldownTicks;
+                cooldownPenalty = profile.CtPenalty;
             session.RecordAction(cooldownPenalty);
             if (session.IsFinished || (session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor) && actor.MovePoints == 0))
                 EndTurn(session, command.ActorId);

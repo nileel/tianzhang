@@ -372,7 +372,7 @@ namespace TianZhang.Tests.EditMode
             CombatSession session = CreateSession(new[] { player, enemy },
                 new FixedRangeQuery(true, movementBySource: CreateMovementMap(origin, destination, new[] { destination }, 1)),
                 new[] { new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
-                    physicalMultiplier: 1f, cooldownTicks: 150) });
+                    1, 1, 150, 0, physicalMultiplier: 1f) });
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
             AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.EndTurn, player.Id));
@@ -496,14 +496,14 @@ namespace TianZhang.Tests.EditMode
                 new FixedRangeQuery(true),
                 new[]
                 {
-                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
-                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
-                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("equipped_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
+                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
+                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
                 });
             var service = new CombatCommandService();
 
@@ -554,13 +554,13 @@ namespace TianZhang.Tests.EditMode
                 new FixedRangeQuery(true),
                 new[]
                 {
-                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
-                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
-                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
-                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                    new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
+                    new CombatAttackProfile("foreign", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
+                    new CombatAttackProfile("both_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("equipped_only_art", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("both_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
+                    new CombatAttackProfile("known_only_divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
                 });
             var service = new CombatCommandService();
             var legalActions = new CombatLegalActionService(service);
@@ -682,9 +682,9 @@ namespace TianZhang.Tests.EditMode
                 "xuangan", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 300, 50, realmMultiplier: 6f);
             xuangan.GongFaId = "南华玄感录";
             var soul = new CombatAttackProfile(
-                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f);
             var physical = new CombatAttackProfile(
-                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f);
 
             int normalSoul = ResolveAttack(normal, CreateNeutralTarget("normal_soul"), soul).FinalDamage;
             int xuanganSoul = ResolveAttack(xuangan, CreateNeutralTarget("xuangan_soul"), soul).FinalDamage;
@@ -701,9 +701,9 @@ namespace TianZhang.Tests.EditMode
         public void HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth()
         {
             var physical = new CombatAttackProfile(
-                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f);
             var soul = new CombatAttackProfile(
-                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f);
             CombatantSnapshot physicalActor = CreateCombatant(
                 "physical_actor", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
             CombatantSnapshot soulActor = CreateCombatant(
@@ -727,7 +727,7 @@ namespace TianZhang.Tests.EditMode
         public void LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes()
         {
             var physical = new CombatAttackProfile(
-                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f);
             CombatantSnapshot baseActor = CreateCombatant(
                 "base", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
             baseActor.GongFaId = "九霄雷劫录";
@@ -748,7 +748,7 @@ namespace TianZhang.Tests.EditMode
         public void FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap()
         {
             var soul = new CombatAttackProfile(
-                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f);
             CombatantSnapshot actor = CreateCombatant(
                 "actor", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
             CombatantSnapshot partialShouyi = CreateNeutralTarget("partial_shouyi", realmMultiplier: 6f);
@@ -774,7 +774,7 @@ namespace TianZhang.Tests.EditMode
         public void FullFudanUsesItsProjectedCapForPenetrationAndPostActionState()
         {
             var soul = new CombatAttackProfile(
-                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f);
+                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f);
             CombatantSnapshot partial = CreateCombatant(
                 "partial", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
             partial.GongFaId = "云篆度人经";
@@ -796,7 +796,7 @@ namespace TianZhang.Tests.EditMode
         public void ActionStateAdvancesToProjectedShouyiAndFudanCaps()
         {
             var physical = new CombatAttackProfile(
-                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f);
+                "physical", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f);
             CombatantSnapshot shouyi = CreateCombatant(
                 "shouyi", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10, realmMultiplier: 3f);
             shouyi.GongFaId = "抱元守一经";
@@ -1094,7 +1094,7 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 20);
             enemy.Facing = enemy.Position.DirectionTo(player.Position);
             var profile = new CombatAttackProfile("spell_guanshiji", CombatAttackKind.Art, CombatAttackEffect.Physical,
-                1, 1, physicalMultiplier: 1.2f, spiritCost: 12, cooldownTicks: 10);
+                1, 1, 50000, 25000, 10, 10, physicalMultiplier: 1.2f, spiritCost: 12);
             CombatSession session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true), new[] { profile });
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
@@ -1112,11 +1112,52 @@ namespace TianZhang.Tests.EditMode
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
         }
 
+        /// <summary>
+        /// 公共合同要求 CT 轴与重用账本各自只读自己的字段。用不相等的 7 与 13 作为技术输入，
+        /// 证明轴只用 ctPenalty、账本只用 reuseCooldownTicks；生产 10/10 与 5/5 无法证明隔离。
+        /// </summary>
+        [Test]
+        public void CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly()
+        {
+            const int ctPenalty = 7;
+            const int reuseCooldownTicks = 13;
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0),
+                100, 100, 40, 20, movePoints: 1,
+                equippedArtProfileIds: new[] { "spell_guanshiji" }, availableArtProfileIds: new[] { "spell_guanshiji" });
+            player.SetSpirit(100, 12);
+            CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 1000, 20, 20);
+            enemy.Facing = enemy.Position.DirectionTo(player.Position);
+            var profile = new CombatAttackProfile("spell_guanshiji", CombatAttackKind.Art, CombatAttackEffect.Physical,
+                1, 1, 50000, 25000, ctPenalty, reuseCooldownTicks, physicalMultiplier: 1.2f, spiritCost: 12);
+            CombatSession session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true), new[] { profile });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+
+            Assert.That(profile.ActionPointCostUnits, Is.EqualTo(50000));
+            Assert.That(profile.MinimumNetCostUnits, Is.EqualTo(25000));
+            Assert.That(profile.CtPenalty, Is.EqualTo(ctPenalty));
+            Assert.That(profile.ReuseCooldownTicks, Is.EqualTo(reuseCooldownTicks));
+
+            var command = new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, profile.Id);
+            Assert.That(service.Preview(session, command).CooldownPenalty, Is.EqualTo(ctPenalty),
+                "preview axis must read ctPenalty only");
+            Assert.That(player.GetCooldown(profile.Id), Is.Zero,
+                "preview must not start the reuse ledger");
+
+            Assert.That(service.Execute(session,
+                new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, profile.Id,
+                    new CombatResolutionRolls(0f, 100f, 100f, 100f))).Succeeded, Is.True);
+            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(ctPenalty),
+                "settled CT accumulation must read ctPenalty only");
+            Assert.That(player.GetCooldown(profile.Id), Is.EqualTo(reuseCooldownTicks),
+                "reuse ledger must read reuseCooldownTicks only");
+        }
+
         private static CombatAttackProfile CreateSpiritRecoveryProfile(int selfCost = 0,
             Func<string, string, string, bool> qualification = null)
         {
             return new CombatAttackProfile("restore", CombatAttackKind.Art, CombatAttackEffect.RestoreSpirit,
-                0, 2, spiritCost: selfCost, cooldownTicks: 5,
+                0, 2, 25000, 12500, 5, 5, spiritCost: selfCost,
                 spiritRecoveryMultiplier: 0.5f, minimumSpiritRecovery: 5, otherTargetSpiritCost: 20,
                 otherTargetSpiritRecoveryMultiplier: 0.5f, qualification: qualification);
         }
@@ -1154,7 +1195,8 @@ namespace TianZhang.Tests.EditMode
             target.Facing = target.Position.DirectionTo(actor.Position);
 
             var profile = new CombatAttackProfile(
-                "basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: multiplier);
+                "basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0,
+                physicalMultiplier: multiplier);
             CombatSession session = CreateSession(
                 new[] { actor, target }, new FixedRangeQuery(true), new[] { profile });
             CombatTurnAdvance advance = new CombatCommandService().AdvanceUntilAction(session);
@@ -1255,7 +1297,7 @@ namespace TianZhang.Tests.EditMode
                     new HexCoord(1, 0), enemySpeed, 1000, 20, 10) }, new FixedRangeQuery(true), new[]
                 {
                     new CombatAttackProfile("preview_art", CombatAttackKind.Art, CombatAttackEffect.Soul,
-                        1, 1, soulMultiplier: 1, spiritCost: 12, cooldownTicks: penalty),
+                        1, 1, 1, 1, penalty, 0, soulMultiplier: 1, spiritCost: 12),
                 });
             }
             CombatSession live = MakeSession(), actual = MakeSession();
@@ -1322,7 +1364,7 @@ namespace TianZhang.Tests.EditMode
         {
             return new CombatSession(combatants, profiles ?? new[]
             {
-                new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
+                new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
             }, query);
         }
 
@@ -1431,11 +1473,11 @@ namespace TianZhang.Tests.EditMode
         {
             var profiles = new List<CombatAttackProfile>
             {
-                new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, physicalMultiplier: 1f),
-                new CombatAttackProfile("divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f),
+                new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
+                new CombatAttackProfile("divine", CombatAttackKind.Divine, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f),
             };
             foreach (string id in artProfileIds)
-                profiles.Add(new CombatAttackProfile(id, CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, soulMultiplier: 1f));
+                profiles.Add(new CombatAttackProfile(id, CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f));
             return profiles;
         }
 
