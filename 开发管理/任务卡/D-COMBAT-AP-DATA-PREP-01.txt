@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "decision",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：请选择行动力迁移试跑候选，并确认记录中的双时间字段迁移与旧PowerShell写入分支停用方案。此次确认不代表数值平衡定案。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261007-CD6FFCC3F187D9",
   "expectedPaths": [
     "开发管理/D-COMBAT-AP-DATA-PREP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
@@ -91,6 +91,14 @@
     "taskContextDigest": "5426f5f5416a856a1350dbc937bdd2807ec3800d520cefaf1e45f7ed1a0a11fb",
     "createdAt": "2026-10-07T10:27:12.0437663+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261007-CD6FFCC3F187D9",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d"
   }
 }
 ---TASK-BODY---
