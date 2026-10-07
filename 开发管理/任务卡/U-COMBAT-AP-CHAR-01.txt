@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-10-08 Codex 复审部分通过：ActionEconomyModifierInput 与 CharacterRecord.Restore 只校验来源 ID 非空，未拒绝未知 sourceDefinitionId 或非空 profileId，尚未满足公共合同的未知引用拒绝和恢复前验证引用；保留业务候选，等待定向返工。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -115,3 +115,10 @@
 
 - 需要新增成长树／生产修正来源／装备库存、Character反向依赖Combat／World、BattleSim平衡、真实存档迁移／删除、战斗中途保存或未批准旧档语义时停止。
 - 新路径、调用者、符号实体或技术路线出现时暂停业务写入并重跑预检；不得以默认值、旧构造或放宽测试绕过。不原子或需跨边界叠补丁时保留现场、不生成candidate。
+
+## 2026-10-08 Codex 复审结论
+
+- 审核对象：正式提交 `186af4d78c31cf726d1af219ed63f0f1d307eee6`；结论：部分通过，仍需返工。
+- 已确认创建链、Character 长期字段、快照和 schema4 基础输入往返符合当前验收；独立 EditMode 复跑为 698 项中 691 通过、7 项既有无关失败，数据链和程序集边界检查通过。
+- 缺口：`ActionEconomyModifierInput` 将 `sourceDefinitionId` 与非空 `profileId` 当作任意非空字符串接受，`CharacterRecord.Restore` 也未在发布前校验其是否指向已知来源。公共合同§二要求未知定义／未知非空 ID 拒绝，§七要求恢复先验证全部引用；本卡验收也明确要求未知引用拒绝。现有测试仅覆盖未知枚举值，不覆盖未知来源 ID 或 profile ID。
+- 不在本轮修改业务语义。返工必须先证明合法来源／引用校验的既有所有者和不新增来源注册系统的边界，再补齐拒绝行为与同一保存往返证据；SAVE 及下游前置保持不变。
