@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-08已核实第20项A-GZ-UI-FONT-ASSET-01于8c2350d9完成；原会话217预检早于269业务写入，digest与完成前schema2卡一致，固定样本已满20。只准备观察报告，不提前解锁六张后继。",
+  "stateReason": "2026-10-08：已完成固定20任务观察报告，读取阈值通过但无确证预防案例，结论stop；本轮只归档观察卡，六张后继和关闭卡前置按固定入口边界保留，正式进入master后由QueueMaintenance收口。",
   "expectedPaths": [
     "docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md",
     "开发管理/任务列表/管理与自动化任务.txt",
@@ -124,3 +124,13 @@
 - 复杂度为有界证据归纳：固定20个来源与成本阈值，可按提交／原始执行记录复算；当前不存在证据冲突或新的风险判定语义。Codex主模型由executionModel固定gpt-6.1-sol，建议high，单主智能体统一样本顺序、指标和continue／stop结论。
 - 无需额外模型或子智能体；样本口径、指标与结论相互依赖，不能拆开裁决。发现关键证据冲突或无法满足原停止条件时按既有合同停止，不另开取证任务、替换样本或擅改阈值。
 - 写前核对Git、PowerShell7、只读原始会话／preflight-results与报告写入能力；实际调用和未核实项写入本报告既有验证部分，不用模型名称代替证据。
+
+## 2026-10-08 完成记录
+
+- 产物：docs/superpowers/plans/preventive-experience-memory-system-20-task-observation.md；恰好20项的首次完成SHA、时间、schema2投影、执行前taskCardDigest／indexDigest、原始预检与Git输入均已核对，并提供只读复算代码。U-GZ-ART-BATTLEFIELD-01以195df642首次完成计数，72b7e85f仅为同卡视觉返修，不增加样本。
+- 指标：16项零命中，4个相关高置信命中，误报0/4；must_read最大1、必读最大316字符、总1018字符；token代理合计2154、平均107.70、最大273。主表matcher均ok，notice／gates均0；不以主表零失败掩盖未留存的尝试。
+- 结论stop：没有可回指原定错误路线被预检纠正的案例；三张关联独立整理任务产生真实维护成本，尚不能证明成本不高于避免的返工。样本内新候选1条，pending→collected为23196秒；另两条仅按样本内整理卡关联回链，未扩大样本。生产collector失败至少1次及两次诊断失败分别保留，不声称人工修正后的补收等于无需干预的自动恢复。
+- 当前入口明确要求非QueueMaintenance保留所有下游具名前置且不得关闭／提升下游，优先于本卡原直接处理六卡的动作；因此本候选只完成报告和观察卡闭环。正式结果进入master后，QueueMaintenance依stop结论处理六张观察未授权实施归档与关闭卡前置，本轮不执行其内容。
+- 模型与能力核对：入口启动证明gpt-6.1-sol，单主模型，无独立复杂工作面、未调用辅助；实际使用Git、PowerShell7.6.5、Python3.12及只读历史预检／JSONL。当前run／taskId和两项digest与共享预检绑定一致，matched／mustRead／gates为空，未改已claim摘要或索引。
+- 验证入口：报告内只读复算、check-task-cards、check-review-text -Paths docs,开发管理、相关docs数据链及预期路径whitespace／cached diff；实际结果记入本轮候选提交Verify元数据。相关业务输入未变，不重跑历史Unity／BattleSim或collector。
+- 本轮只依据已有事实、diff和验证检查经验候选；没有新增已证实的可复用业务根因，不写空候选节。
