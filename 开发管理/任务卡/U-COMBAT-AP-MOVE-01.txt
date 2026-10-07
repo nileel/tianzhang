@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "DeepSeek 候选已形成正式业务提交，等待 Codex 独立复审",
+  "stateReason": "2026-10-07 Codex 复审正式提交 e5565408d51612af9945b91ffcd1b1760512c884：Spatial 定点报价原语与定向测试通过，但任务卡要求移除 CombatEntryAdapter 的整数格取整并接通同源报价；该路径未改且正式链路仍未定价，结论为部分通过，等待定向返工。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
     "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",

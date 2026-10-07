@@ -6,6 +6,11 @@
 
 ## 当前未通过/待复核、待复审项
 
+### U-COMBAT-AP-MOVE-01 · 合法路径到行动力的定点报价
+
+- 审核对象：正式提交 `e5565408d51612af9945b91ffcd1b1760512c884`；结论：部分通过，仍需返工。
+- `SpatialQueryBoard` 的逐边定点报价、原始边结果与15项定向 EditMode 用例均成立；但任务卡实施范围仍要求移除 `CombatEntryAdapter.SpatialCombatQuery.QueryMovement` 的 `(cost + K - 1) / K` 整数格取整。该正式提交未修改 adapter，生产 `CombatMovementQueryResult.ActionPointCostUnits` 仍为0，故原始边未传入正式同源 AP 报价，不能满足本卡原子结果。
+
 ### C-FPD-SPELL-01A · 古修术法升格迁移：北冥引、扶摇、无待
 
 - 审核对象：正式提交 `b4938be901adc635025ac75f2d1a4e2ba8094b4a`；结论：部分通过，仍需返工。
