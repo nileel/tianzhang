@@ -172,6 +172,8 @@ Unity 现有反应生成移力只作为迁移基线证据。建议一次性提�
 
 ## 10. 已知迁移工作包、职责与依赖
 
+2026-10-07负责人确认DEC-20261007-MOVEPATH2=B：W5／MOVE只交付报价原语与边界结果，接口预算与v迁移交W6／CORE；W8／FLOW消费已接通的显式输入完成正式控制。最终§6计费语义不变，不以W5完成代替正式移动接通。
+
 以下 W 标签保留为方案工作包；2026-10-05 已在独立规划中建立汇总父项 `P-COMBAT-AP-01` 与全部 19 张已知叶子卡，W→任务 ID 映射、依赖和首批 ready 见 `开发管理/统一行动力实现规划.txt`。每叶的执行事实以对应活跃任务卡为准，父项仅汇总、不再领取或逐轮拆分。代码叶子由冻结合同内的 DeepSeek 实施、Codex 独立复审；公共语义／规划由 Codex 负责，不由辅助意见签收。
 
 | 包 | 单独可判断结果与所有者 | 预计工作面／验收入口 | 依赖 |
@@ -181,8 +183,8 @@ Unity 现有反应生成移力只作为迁移基线证据。建议一次性提�
 | W2 公共合同／数据 schema | Codex 冻结单位、费用与长期成长边界 | AttackProfiles、角色成长、GameplayContracts、存档合同；生产者／消费者覆盖、非法输入矩阵 | W0、W1 |
 | W3 数据及严格导入 | Content／Editor 所有者，DeepSeek＋Codex 复审 | CSV、AttackProfile／Spell／Divine／Character 数据、CombatContentImporter、相关 asset／meta；导入前整表校验与数据链 | W2 |
 | W4 长期角色／保存链 | Character／Persistence 所有者，DeepSeek＋Codex 复审 | CharacterRuntimeProfile／snapshot／成长来源、CharacterRecord、GameSaveSerializer；合法新档往返、既有旧档边界、原子恢复 | W2 |
-| W5 空间到 AP 路径精度 | Spatial 所有者，DeepSeek＋Codex 复审 | SpatialQueryBoard、ICombatSpatialQuery、CombatEntryAdapter；合法边、压缩／扩张、负担、分段一致、同源预览 | W2 |
-| W6 个人回合与内核 | Combat 所有者，DeepSeek＋Codex 复审 | CombatSession／Snapshot／CommandService／Resolver、CTBEngine；§12 的无 UI 确定性用例、所有旧命令 | W3、W4、W5 |
+| W5 空间 AP 报价原语 | Spatial 所有者，DeepSeek＋Codex 复审 | SpatialQueryBoard的同源AP边权与路径、CombatMovementQueryResult结果形状；合法边、压缩／扩张、负担、分段一致；按已批准B方案保留现有查询签名 | W2 |
+| W6 个人回合与内核 | Combat 所有者，DeepSeek＋Codex 复审 | CombatSession／Snapshot／CommandService／Resolver、CTBEngine；承接ICombatSpatialQuery的AP预算／有效v、CombatEntryAdapter接通及Adventure显式输入与直接调用适配；§12 的无 UI 确定性用例、所有旧命令 | W3、W4、W5 |
 | W7 BattleSim 两入口迁移 | BattleSim 所有者，DeepSeek＋Codex 复审 | Combat.Simulate／Simulate2v2Detailed、Character、self-tests、能力唯一账本；三时钟／费用观测和跨端相同夹具 | W2、W3；对齐 W6 的冻结合同 |
 | W8 正式控制器与敌方决策 | Adventure 所有者，DeepSeek＋Codex 复审 | AdventureUnitSpawner、EncounterCoordinator、legalActions／enemyPolicy；敌我同费、多动作、不可行动时确定性结束、演出后继续 | W6 |
 | W9 HUD／移动／动作预览 | CombatPresentation 所有者，DeepSeek＋Codex 复审 | GameplayContracts、CommandInput、ActionBar、Movement／Preview／Timeline views、Language；剩余 AP、AP／MP／CT费用、独立合法性、取消／陈旧确认 | W2、W6、W8 |

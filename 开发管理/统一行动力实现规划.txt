@@ -29,9 +29,9 @@
 | U-COMBAT-AP-DATA-ATTACK-01 | 三攻击新成本与双时间字段严格迁移 | deepseek／external_execute | D-COMBAT-AP-DATA-PREP-01 | blocked |
 | U-COMBAT-AP-CHAR-01 | 角色长期行动力成长与快照 | deepseek／external_execute | U-COMBAT-AP-DATA-01 | blocked |
 | U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
-| U-COMBAT-AP-MOVE-01 | 合法路径到行动力的定点报价 | deepseek／external_execute | D-COMBAT-AP-CONTRACT-01 | blocked |
-| U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01、U-COMBAT-AP-MOVE-01 | blocked |
-| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-MOVE-01、U-COMBAT-AP-CORE-01 | blocked |
+| U-COMBAT-AP-MOVE-01 | 移动行动力报价原语与边界结果（B范围） | codex／codex_review | — | completed（2026-10-07按B复核） |
+| U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01 | blocked |
+| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01 | blocked |
 | U-COMBAT-AP-FLOW-01 | 关中正式战斗控制与敌方多动作 | deepseek／external_execute | U-COMBAT-AP-CORE-01 | blocked |
 | U-COMBAT-AP-HUD-01 | 行动力HUD与同源费用预览 | deepseek／external_execute | U-COMBAT-AP-FLOW-01 | blocked |
 | U-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | deepseek／external_execute | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
@@ -62,10 +62,17 @@
 - 本Execution仅移除准备卡自己的队列／backlog行；三叶与其他卡的blockedBy、route、owner、dispatchState及backlog前置保持。结果进入master后QueueMaintenance才解准备前置与处理ready；敌人仍等角色。DATA汇总仍blocked、永不ready，由最后叶Codex复审核对三叶及准备正式归档后关闭。
 - 三叶实时风险预检均ok，matched／mustRead／gates为空；新建玩家与泛化SIM剩余映射在各卡临近ready收口。本轮无生产代码／CSV／asset变化，不运行Unity或BattleSim，不关闭用户运行时问题。
 
+## MOVE 的 B 方案收口
+
+- 2026-10-07按已接受的DEC-20261007-MOVEPATH2=B及负责人当前“处理”指令，将MOVE范围修正为Spatial定点报价原语和Combat边界结果。原正式提交e5565408d51612af9945b91ffcd1b1760512c884已具备该结果；原复审的唯一退回项是B已移交的正式adapter接通，现按B独立复核通过并归档。
+- CORE承担AP空间接口、有效v传递、adapter与全部直接实现／调用点的同步迁移，输入依赖DATA及CHAR；卡头补九个已定位路径，临近ready再核对完整真实输入／调用链并消费风险预检。不从FLOW反向取得v，不为MOVE补占位值，也不扩大本轮为运行时代码实施。
+- FLOW保留正式战斗循环、敌方多动作和演出结束继续，消费CORE显式输入；SIM继续等待DATA／CORE。只移除CORE与SIM对已完成MOVE的具名前置，其他依赖不动。
+- 原始Codex复审XML中15项MOVE用例通过；全量605/598/7与原基线590/583/7失败集合相同。MOVE原语／结果形状未变；等待攻击叶93e65969集成后，又直接核验其最新EditMode XML中的15项MOVE用例全部通过。7项既有失败未被本轮修复，正式AP移动尚未接通。
+
 ## W工作包对应
 
 - W0：设计批准已完成，本次完整规划完成。
-- W1→D-COMBAT-AP-RULES-01；W2→D-COMBAT-AP-CONTRACT-01；W3→U-COMBAT-AP-DATA-01；W4→U-COMBAT-AP-CHAR-01、U-COMBAT-AP-SAVE-01；W5→U-COMBAT-AP-MOVE-01；W6→U-COMBAT-AP-CORE-01；W7→N-COMBAT-AP-SIM-01。
+- W1→D-COMBAT-AP-RULES-01；W2→D-COMBAT-AP-CONTRACT-01；W3→U-COMBAT-AP-DATA-01；W4→U-COMBAT-AP-CHAR-01、U-COMBAT-AP-SAVE-01；W5报价原语→U-COMBAT-AP-MOVE-01；W5接口预算／v迁移及W6→U-COMBAT-AP-CORE-01；W7→N-COMBAT-AP-SIM-01。
 - W8→U-COMBAT-AP-FLOW-01；W9→U-COMBAT-AP-HUD-01；W10a→D-COMBAT-AP-ITEM-01、U-COMBAT-AP-ITEM-01；W10b→D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-EQUIP-01、U-COMBAT-AP-SWAP-01。
 - W12→N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-TUNING-01；W11→U-COMBAT-AP-SCENE-01（最终生产输入后验收，避免用旧参数证据关闭）；W13→D-COMBAT-AP-CLOSE-01。
 

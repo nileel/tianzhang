@@ -42,19 +42,6 @@
 - 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
 - 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
 
-### DSH-U-COMBAT-AP-MOVE-01-a6ec13ce · DeepSeek 自动交接（⚠️ 未审核）
-
-- 方向：任务 U-COMBAT-AP-MOVE-01 的原子正式结果等待 Codex 独立复审。
-- 任务：U-COMBAT-AP-MOVE-01
-- 候选提交：94e1b1f0751f597c4c666de1ee850faf2d45a6a5
-- 正式提交：与本交接、pending_review 投影处于同一原子提交。
-- 修改文件：开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt、src/Assets/Scripts/Combat/CombatSession.cs、src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs、src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs、src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs、src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs.meta、src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs、src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs
-- 已验证：候选提交 94e1b1f0751f597c4c666de1ee850faf2d45a6a5 的唯一父提交为 0b4fbfb92f4fc143ab3f47d4c508c059243cee91（本 run 起始 HEAD，直接后继）；git -c core.quotepath=false diff --name-only --no-renames 0b4fbfb9..HEAD 精确为 8 条预期路径，全部落在本 run CandidatePaths 内；git status --porcelain 为空；tools/check-task-cards.ps1 OK（cards=83 ready=1，本卡仍为唯一 ready）；tools/check-review-text.ps1 OK（704 files checked）；tools/check-data-chain.ps1 OK（GongFa=29/29、Spells=84/84、Skills=31/31、language keys 613）；tools/check-unity-assembly-boundaries.ps1 OK（assemblies=19、asmrefs=2）；tools/run-unity-editmode-tests.ps1（Unity 6000.3.18f1）：test-run total=605 passed=598 failed=7 inconclusive=0 skipped=0；本轮新增／修改的 15 例（新文件 13 例 + SpatialQueryBoardTests 1 例 + CombatRuntimeKernelTests 1 例）全部 Passed；既有失败基线对照：同一 worktree、同一工程、同一 runner，把 5 个已改跟踪文件临时恢复为 HEAD 内容并移开 2 个新增文件后重跑得 total=590 passed=583 failed=7，失败集合与本轮逐项同名；随后从备份逐文件恢复并 sha256sum -c 全 OK，git status --porcelain 与对照前完全一致，确认 7 项失败为本 run 起始 HEAD 已有、非本轮差异；既有失败的环境证据：其中 4 项要求 assets/source/characters/combat-pieces/shijiahou-static-3d-v2/*.fbx 等可编辑源，该目录被 .gitignore:77 忽略且任何提交都不含（git log --all 为空），自动化 worktree 必然缺失；其余 3 项为 AdventureScene 的 VisualBaselineBoard 对象缺失、石甲兽 MaximumHealth 期望 839 实得 657、正式战报文案未取到本地化字符串，基线同样失败；提交前仓库外临时编译与算术复核（系统临时目录，未写入 RepositoryRoot、不进入 Git、事后已删除）：dotnet 单独编译 HexCoord/SpatialQueryTypes/SpatialQueryBoard 并复算 APC-F02／F03 期望值（33333×3=99999、10000／40000／30000、极短正边费 1、溢出稳定拒绝、v=0 拒绝、占位与实体障碍、强制位移 2000 度量不扣 AP、K=2 板 25000／50000），输出 ALL CHECKS PASSED；提交由 tools/automation-finalize-commit.ps1 完成：暂存前 check-pending-whitespace OK（8 files），暂存后 git -c core.whitespace=-blank-at-eol diff --cached --check 通过，外部索引不变校验通过（首次运行因本记录末尾多一个空行被拒，已修正后重跑成功）
-- 未验证：未接通生产：CombatMovementQueryResult 的 ActionPointCostUnits 在正式链路仍为 0，CombatEntryAdapter 的 (cost+K−1)/K 与整数格预算未改（按 B 属 U-COMBAT-AP-CORE-01 准备阶段）；未运行 tools/run-unity-playmode-tests.ps1（无 PlayMode 路径差异）与 BattleSim dotnet build/run（simulations/ 无差异）；未运行 tools/check-asset-versioning.ps1（未改动既有资产）；未验证 APC-F02 段间插入施法不重置舍入与 APC-F04 回合上限／余额不补发：两者需 CORE 的个人回合内核，本轮只在 Spatial 层证明逐边定价与分段求和一致；未取得真实 v 来源证据：全库仍无 movementEfficiencyMilliUnits／ActionPointsRemainingUnits／actionPointMaximumUnits 命中
-- 残留风险：本卡交付原语与边界形状而非生产接通：CombatMovementQueryResult 的 AP 费用字段在正式链路仍为 0，CombatEntryAdapter 仍执行整数格 (cost+K−1)/K，故行动力移动在生产路径尚未生效，不能宣称用户可见的移动计费已改变。两个新增 Spatial 查询入口目前只被定向测试消费，CORE 若改变单位或签名约定需同步。EditMode 全量套件在当前自动化 worktree 固定有 7 项既有失败（4 项依赖被 .gitignore:77 忽略的 assets/source 资产），runner 为全或无合同，需结合基线对照阅读。极端组合（d_e 与费用同时接近 int 上界、K=1 且 v=1）只按单边用例取证，未做整图穷举。
-- 请求判断：请 Codex 按审核入口复审 master 实际原子结果。
-- 建议下一步：通过则关闭原任务并解锁依赖；不通过则按同一卡定向返工。
-
 ### DSH-U-COMBAT-AP-DATA-ATTACK-01-e49b05f2 · DeepSeek 自动交接（⚠️ 未审核）
 
 - 方向：任务 U-COMBAT-AP-DATA-ATTACK-01 的原子正式结果等待 Codex 独立复审。

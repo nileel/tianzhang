@@ -1,6 +1,6 @@
 # U-COMBAT-AP-MOVE-01 · 合法路径到行动力的定点报价 验证记录
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：本验证记录（决策 checkpoint 证据）；未写入任何业务代码、任务卡、队列或审核投影。
+审核完成；审核方：Codex；2026-10-07按已确认B方案复核原提交通过。以下两轮保留为历史取证；当前验收范围、原始XML核验与残留边界见文末「B方案复核」。
 
 日期：2026-10-07；责任方：DeepSeek V4.1 Flash；主模型：deepseek-flash（入口默认单模型）。
 RunId：44b25eb6-8abd-4b3e-999f-c6c1cce68aa9；任务：U-COMBAT-AP-MOVE-01；route=external_execute；owner=deepseek；dispatchState=ready。
@@ -74,7 +74,7 @@ RunId：44b25eb6-8abd-4b3e-999f-c6c1cce68aa9；任务：U-COMBAT-AP-MOVE-01；ro
 
 ## 2026-10-07 第二轮（DEC-20261007-MOVEPATH2=B 恢复执行）
 
-⚠️ 已修改/未审核；修改方：DeepSeek V4.1 Flash；变更范围：Spatial 定点报价原语、Combat 边界结果形状与其定向测试（3 个业务文件、3 个测试文件、本记录）；未改任务卡、队列、backlog、归档、AI合作沟通、runtime、主工作区或另一分支。
+历史执行记录；修改方：DeepSeek V4.1 Flash；本轮原语、边界结果及测试由Codex按已确认B方案复核通过；生产接通仍由CORE承接。
 
 日期：2026-10-07；责任方：DeepSeek V4.1 Flash；主模型：deepseek-flash（入口默认单模型）。
 RunId：a6ec13ce-3b6d-4c61-9ffd-e929e47fceb2；任务：U-COMBAT-AP-MOVE-01；route=external_execute；owner=deepseek；dispatchState=ready。
@@ -129,14 +129,40 @@ RunId：a6ec13ce-3b6d-4c61-9ffd-e929e47fceb2；任务：U-COMBAT-AP-MOVE-01；ro
 - EditMode 全量套件在当前自动化 worktree 环境固定有 7 项既有失败（4 项依赖被忽略的 `assets/source/` 资产），runner 为全或无合同，因此本环境的套件结果不能单独作为通过判据，必须结合基线对照与定向用例证据阅读。
 - 未取证的算术边界：`d_e` 与费用都接近 int 上界时的组合行为只按单边用例取证，未做整图极端路径穷举；v 取值与 K 的极端组合（如 K=1 且 v=1）只覆盖溢出拒绝分支。
 
+## 2026-10-07 B方案复核
+
+- 负责人当前要求“处理”。本轮在 `.worktrees/manual/fix-move-scope-20261007`（起点86058082f6dce5c20e09de77f0c5b473d01e96ee）按用户已接受的DEC-20261007-MOVEPATH2=B处理任务范围与复审冲突，不实施后续运行时迁移。
+- 决定证据：`git show 0b4fbfb92f4fc143ab3f47d4c508c059243cee91:开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt` 的B选项明示「原语／结果形状，旧查询签名保持；接口预算／v迁移交CORE准备」。automationReply为OPTION_ACCEPTED/B，本机accepted-replies同decisionId亦为B。
+- 根因：执行方按B只交付原语，但原任务卡／公共合同任务分工未同步，875747a2复审按旧范围将未改adapter判为返工项；后续6989cd1b运行按该项返工而缺真实v来源，5962f841仅机械转blocked。接受回复及切换ready不等于语义边界已完成更新。
+- 审核对象：正式提交 `e5565408d51612af9945b91ffcd1b1760512c884`；结论：按B范围通过。完整核对3个业务文件的差异、Traverse／AP边权及结果形状、13+1+1用例；没有发现阻止原语交付的问题。检查固定分子、每边取整、路径／边对应、同源可达、负担／占位／溢出拒绝与旧距离用途隔离；无新架构／状态／地图。
+- 起点源码新鲜度：`git diff --quiet e5565408 86058082 -- src/Assets/Scripts/Modules/Spatial src/Assets/Scripts/Combat src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs`退出0。该对比证明本轮起点输入未变；等待期间的新攻击接口适配按下条最新XML核验。本轮未再运行Unity或BattleSim。
+- 直接读取原始XML并以断言核对：独立复审 `C:/Users/WINDOWS/AppData/Local/Temp/tzg-codex-review-u-combat-ap-move-01-editmode.xml`，2026-10-07 11:17:37Z，605总数／598通过／7失败；13个CombatActionPointMovementTests，加MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts和ActionPointReachabilityAndQuoteShareOneEdgeWeightWhileMetricDistanceStaysSeparate，15项均Passed。SHA256=`27682dba7a961b2c9657d0e2984dca648918c07cb8a63b6a894c4249a6caa67d`。
+- 基线 `C:/Users/WINDOWS/AppData/Local/Temp/tzg-move01-baseline.xml`：590／583／7，SHA256=`8d2476938b8fab69936f542a9543d2c5e7e70dfdc6521f44c079e2a1dc2d16d9`。原执行 `tzg-move01-editmode.xml`：605／598／7，SHA256=`5b0ae8d83ae0f40a0e396246765dc8d9ae4004208696d009660183a0eb48d2b9`。三个XML的7个失败全名集合一致；7项既有失败仍存在，不称全量套件通过。
+- 范围同步：规格W5/W6、公共合同§四／§九、实现规划与MOVE归档一致。CORE补9个已定位调用／构造路径，承接AP预算、有效v传递与adapter；FLOW消费CORE结果。CORE／SIM只解除MOVE前置，仍等待各自其他前置，未转ready。移动旧整格取整与正式AP载荷0仍是CORE未完成工作，不是本轮生产接通结果。
+- 集成基线更新：等待并保留DeepSeek攻击叶正式提交93e65969b297143f74decc2e0d53ca7c0116706d后，手动处理AI合作沟通中的旧MOVE段删除／新ATTACK段追加冲突，断言新交接与其他交接原文全部保留。MOVE的Spatial／CombatSession结果形状及两个直接测试文件相对e5565408未变；CombatRuntimeKernelTests随攻击构造适配，因此不再以整个Combat目录旧相等性替代最新证明。直接读取该正式提交验证记录所指的 `C:/Users/WINDOWS/AppData/Local/Temp/tzg-editmode-attack2.xml`：643／636／7，15项MOVE用例全部Passed，SHA256=`d434833132391add529db35fb506c3d74e9af00d20ca1daee7cef3fb8428e2d6`；只消费本卡用例，不代替攻击卡独立复审。
+- 风险预检：写前MOVE及扩大管理范围后均ok，matched／mustRead／gates／gatePointers为空；最终MOVE归档与CORE预检同为零命中，与schema2投影一致。indexDigest=`0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942`。无需消费额外正文或执行门禁。
+- 本轮只修改管理事实与规格分工、归档当前交接；不改代码、CSV、asset、runtime、automation或其他任务成果。Unity验证技能及UNITY_STRUCTURE／runtime地图仅用于范围核对；无运行时画面取证／数值平衡结论。
+- 提交门禁采用check-task-cards、check-review-text、check-data-chain（规格分工变化）、check-pending-whitespace及git diff --cached --check；实际结果记录在本次提交Verify正文，不以本条预填通过。
+
 ## 经验候选
 
 ### CAND-U-COMBAT-AP-MOVE-01-01
 
-- collectionState: provisional
+- collectionState: pending
 - 经验领域：unity
 - 现象：自动化 owner worktree 中 `tools/run-unity-editmode-tests.ps1` 全量套件在当前 HEAD 固定出现 7 项失败并以非零退出，容易被误判为本轮差异造成或误判为环境阻塞。
 - 已证实根因：7 项失败在本 run 起始 HEAD 上已存在（同 worktree 基线对照 590/583/7 与本轮 605/598/7 的失败集合逐项同名）；其中 4 项要求 `assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx` 等可编辑源，而 `assets/source/` 被 `.gitignore:77` 忽略、任何提交都不含，自动化 worktree 必然缺失；其余 3 项为场景对象、敌人模板数值期望与本地化文案的既有不一致。
 - 可能复用范围：任何在 linked worktree 中运行 Unity EditMode 全量套件并需要区分「本轮差异造成的失败」与「既有失败」的任务；做法是先把本轮改动文件临时恢复为 HEAD 并在同一 worktree 重跑同一 runner 取得基线，再逐文件恢复并用 sha256 与 `git status --porcelain` 证明现场复原。runner 是全或无，不能只看退出码。
 - 证据：本轮两次结果 XML（605/598/7 与 590/583/7，失败集合逐项同名）、`.gitignore:77` 与 `git log --all -- assets/source/characters/combat-pieces/shijiahou-static-3d-v2` 空结果、恢复后 `sha256sum -c` 全部 OK 与 `git status --porcelain` 与对照前一致。
+- 门禁可能：yes
+
+
+### CAND-U-COMBAT-AP-MOVE-01-02
+
+- collectionState: pending
+- 经验领域：management
+- 现象：已确认收窄范围的任务按新边界交付，复审却按原边界退回，重新执行再次因被移交的前置缺失而阻塞。
+- 已证实根因：DEC-20261007-MOVEPATH2=B被接受后，回复上下文进入执行方，但活跃任务卡的原子结果／验收及CORE承接未同步；执行与复审消费了不同的范围。
+- 可能复用范围：负责人决定改变任务范围、责任或依赖的恢复与人工维护；恢复ready前同时核对当前卡和直接承接卡，再以同一范围验收，不把状态转换当成语义准备完成。
+- 证据：0b4fbfb9中的B选项及OPTION_ACCEPTED/B；e5565408只提交原语；875747a2仅按adapter未迁移退回；5962f841按missing_authoritative_movement_efficiency_source转blocked；本轮按B核对原始XML15项通过。
 - 门禁可能：yes

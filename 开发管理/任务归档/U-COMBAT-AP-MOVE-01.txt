@@ -1,0 +1,97 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP-MOVE-01",
+  "title": "移动行动力报价原语与边界结果",
+  "priority": "P1",
+  "route": "codex_review",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "Codex按已确认DEC-20261007-MOVEPATH2=B独立复核原报价原语与边界结果通过；正式接口／预算／v迁移已明确由CORE承接，原越界验收退回项关闭。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs",
+    "开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP-MOVE-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP-MOVE-01.txt",
+    "开发管理/未通过审核清单.txt",
+    "开发管理/AI合作沟通.txt",
+    "开发管理/AI合作归档/U-COMBAT-AP-MOVE-01-交接归档.txt",
+    "src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs.meta",
+    "开发管理/任务卡/U-COMBAT-AP-CORE-01.txt",
+    "开发管理/任务卡/N-COMBAT-AP-SIM-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-FLOW-01.txt",
+    "开发管理/统一行动力公共合同.txt",
+    "开发管理/统一行动力实现规划.txt",
+    "docs/superpowers/specs/2026-10-05-combat-action-points-design.md"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-AP-MOVE-01 · 移动行动力报价原语与边界结果
+
+## 来源与当前边界
+
+- 父项 P-COMBAT-AP-01。负责人已确认 DEC-20261007-MOVEPATH2=B：本卡收窄为 Spatial 定点报价原语与 Combat 边界结果形状，ICombatSpatialQuery 签名保持不变，接口预算与 v 迁移连同路径集由 U-COMBAT-AP-CORE-01 准备阶段补齐。
+- 证据：提交 0b4fbfb92f4fc143ab3f47d4c508c059243cee91 中本卡 automationCheckpoint.options.B 与 automationReply（OPTION_ACCEPTED、replyValue=B）；本机 accepted-replies 的同 decisionId 记录一致。2026-10-07 负责人在当前对话要求“处理”，授权落实已确认边界并复核现有成果。
+- 原子结果：同一 Spatial 合法边遍历按 AP 边权生成可达集合和路径报价，保留原始边／K／费用及 Combat 结果形状；同一路线、v、负担下整路与分段求和一致。
+- 无剩余具名前置。真实角色 v 生产链、Combat AP 余额、正式接口接通及个人回合不是本卡完成前置；它们由 CORE 在 DATA／CHAR 完成后一起迁移。不得把本卡通过称为正式游戏已按 AP 移动。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-05-combat-action-points-design.md#6. 移动成本与位移成长（建议）；开发管理/统一行动力公共合同.txt#四、#九及 MOVE／CORE 分工；开发管理/统一行动力实现规划.txt#MOVE 的 B 方案收口。
+- SpatialQueryBoard.QueryMovementPath／FindReachableWithinActionPoints／Traverse／ActionPointEdgeWeight；SpatialQueryTypes.SpatialMovementEdgeCost／SpatialMovementPathResult；CombatSession.cs::CombatMovementQueryResult。
+- CombatActionPointMovementTests 全部13例、SpatialQueryBoardTests 的同源可达用例、CombatRuntimeKernelTests 的边界载荷用例。ICombatSpatialQuery、CombatEntryAdapter及其真实调用者仅核对未迁移边界。
+
+## 实施范围
+
+- 复用 Traverse 的合法边遍历，逐边 max(1,floor(100*S*d_e*1000/(K*vMilli))) 后求和；checked long 中间量，int 费用溢出稳定拒绝；v=0拒绝自主移动，负值拒绝。预算只控制可达，不进入定价分子。
+- 保存 Path、原始有向边的距离与移动负担、K、AP最小单位费用；可达预览与路径报价使用同一AP边权；原距离／射程／强制位移用途不变。
+- 保持旧 ICombatSpatialQuery 签名和正式 adapter 的整数格预算，CombatMovementQueryResult 的未定价载荷仍显式为空／0。这是 B 批准的阶段边界，只在 CORE 迁移时撤销，不能作为正式完成的兼容方案。
+- 本轮只校正管理／规格中的任务分工并复核已有提交，不新增业务代码。证据写入既有验证记录；expectedPaths补入CORE／SIM／FLOW任务卡、公共合同、实现规划与原规格，其他路径不授权。
+
+## 禁止项
+
+- 不创建占位v、反应派生的新v、第二预算／寻路／缓存或新执行器。
+- 不修改自动化脚本、runtime、调度、模型配置或无关业务；不恢复失败run或重放旧checkpoint。
+
+## 模型协作
+
+- 本轮为已认证决定与验收边界的冲突复核，Codex 单主责按原提交、原始XML与当前代码闭环；决定、分工和证据属于同一紧耦合判断，无独立委派工作面，不调用辅助模型或子智能体。
+- 已核验 PowerShell 7、Git、风险预检、原始 Unity EditMode XML及管理检查工具；Unity未重跑的原因写入验证记录，不把旧XML称为本轮执行结果。
+
+## 验证
+
+- 原提交 e5565408d51612af9945b91ffcd1b1760512c884 与本轮起点86058082的相关代码及测试无差异；最终基于93e65969，MOVE原语／结果形状未变，攻击接口适配后的最新XML也有15项MOVE用例通过。读取原执行与独立复审XML，确认13+1+1用例全通过，7项全量失败与基线同名；逐边取整、99.999 AP、分段、压缩／扩张／负担、溢出、v变化／零／负、预算、占位、强制位移和边界形状均有证据。
+- 本轮运行任务卡投影、审核文本、数据链（规格变化）、预期路径空白与暂存后diff检查。相关输入未变，不重复Unity或BattleSim；无场景接通或数值平衡结论。
+
+## 完成条件
+
+- Codex按B范围独立复核原语与边界结果通过；归档本卡，清除原范围造成的未通过项，迁移同ID交接原文。
+- CORE明确承接接口预算、显式v传递、适配器与全部直接调用点，保留DATA／CHAR前置；FLOW只消费该结果完成正式控制／演出。解除CORE与SIM对本卡的已完成前置，不提前提升ready。
+
+## 停止条件
+
+- 原报价实现／用例存在新的实质缺陷，或B回复、提交、源码／XML证据不一致时，保留blocked，不以修文档掩盖业务失败。
+- 接口迁移需要未列路径、未确认输入或职责扩张时由CORE准备方先收口；不在本卡补写生产链。
+
+## 2026-10-07 复核结论
+
+- 审核对象：正式提交 e5565408d51612af9945b91ffcd1b1760512c884；结论：按B范围通过。原875747a2复审退回项属于未同步的旧任务范围；本次不撤销正式接通要求，而将其保留在CORE验收。
+- MOVE原语／结果形状相对原提交无差异；原独立复审与93e65969攻击接口适配后的XML中13+1+1用例均全通过，基线7项失败同名。证据、哈希及本轮管理检查见 开发管理/U-COMBAT-AP-MOVE-01-验证记录.txt。
+- CORE／SIM仍blocked；未修改生产代码、参数、自动化或运行时，未声明场景AP移动已完成。
