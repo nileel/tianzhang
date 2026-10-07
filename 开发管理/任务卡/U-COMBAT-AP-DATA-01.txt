@@ -10,9 +10,7 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-COMBAT-AP-DATA-CHAR-01",
-    "U-COMBAT-AP-DATA-ENEMY-01",
-    "U-COMBAT-AP-DATA-ATTACK-01"
+    "U-COMBAT-AP-DATA-ENEMY-01"
   ],
   "stateReason": "DEC-20261007-DATA06 已接受 B，2026-10-07 人工一次性拆为三张迁移叶子；仅汇总、永不 ready。参数与接口准备由 D-COMBAT-AP-DATA-PREP-01 承接，三叶独立复审通过后由最后一项 Codex 复审一并关闭。",
   "expectedPaths": [
@@ -42,7 +40,7 @@
 - 原 ready 卡漏列严格校验器与真实敌人导入器，生产 AP 正费未冻结，攻击旧冷却还有直接消费者。原卡不满足原子执行合同；本卡自此只汇总，永不进入执行队列、不生成 candidate、不再逐轮拆卡。
 - 参数确认前置：D-COMBAT-AP-DATA-PREP-01。负责人已确认DEC-20261007-CD6FFCC3F187D9=A（feishu_card；证据摘要38dd4aa43005110cb445df2af29421614afccccd9fd42346f615e9ce4d65ea7d）；方案A与三叶完整边界已写入公共合同及叶卡。该准备candidate归档但不实施生产迁移，正式结果进入master后由QueueMaintenance维护具名前置。
 - 三叶：U-COMBAT-AP-DATA-CHAR-01（CharacterData／两角色与两个独立模板）、U-COMBAT-AP-DATA-ENEMY-01（SettlementContentImporter／五敌人）、U-COMBAT-AP-DATA-ATTACK-01（三攻击及其严格校验／直接消费者）。敌人叶依赖角色叶新增字段；攻击叶不反向依赖 CORE，避免 CORE 原先依赖本汇总项形成环。
-- 初始首批ready仅准备卡；当前准备candidate完成，三张实施叶仍全部blocked且具名前置保持。下游 U-COMBAT-AP-CHAR-01／CORE／SIM／TUNING 对本卡的既有依赖继续有效，不把部分数据交付当全量完成。
+- 角色与攻击叶已经由 Codex 独立复审并完成归档；敌人叶是唯一未完成的实施叶，已按其自身实时预检进入 ready。下游 U-COMBAT-AP-CHAR-01／CORE／SIM／TUNING 对本卡的既有依赖继续有效，不把部分数据交付当全量完成。
 
 ## 必查范围
 
