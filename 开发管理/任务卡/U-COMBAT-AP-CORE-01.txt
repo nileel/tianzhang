@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "2026-10-08：负责人已选A并授权处理恢复；两处显示／输入路径、实施边界及验证已补齐。沿用原决策及已接受的A回复，交既有checkpoint入口重新重放；不要求新决定。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CDA2ACBFFA8FC4",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
