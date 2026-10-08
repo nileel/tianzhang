@@ -4,15 +4,15 @@
   "id": "U-COMBAT-AP-FLOW-01",
   "title": "关中正式战斗控制与敌方多动作",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
     "U-COMBAT-AP-CORE-01"
   ],
-  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "stateReason": "等待直接前置正式完成；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
@@ -72,19 +72,19 @@
 
 ## 模型协作
 
-- 主责 DeepSeek V4.1 Flash，冻结合同内实施；Codex 独立复审，不自审。当前blocked，临近ready按真实接口／失败影响重新评估复杂度与执行能力。
+- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。当前blocked，临近ready按真实接口／失败影响评估复杂度、主模型与必要辅助组合，并核对执行能力。
 - 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
 
 ## 验证
 
 - 正式场景玩家移动后施法、敌方多动作与无合法动作终结；拒绝演出中重复输入，完成后有AP可继续；记录实际启动版本与owner链。场景功能费用验证不要求额外BattleSim复刻。
 - 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
-- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
+- 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及Codex自有任务收尾按项目现行合同执行，记录实际命令／结果，不伪造通过。
 
 ## 完成条件
 
-- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
-- 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
+- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；Codex完成必要验证并正式归档后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 归档前仅用已有事实检查经验候选，不额外模型调用；按Codex自有完成任务规则写pending；无候选不写空章节。
 
 ## 停止条件
 

@@ -30,15 +30,15 @@
 | U-COMBAT-AP-CHAR-01 | 角色长期行动力成长与快照 | deepseek／external_execute | U-COMBAT-AP-DATA-01 | blocked |
 | U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
 | U-COMBAT-AP-MOVE-01 | 移动行动力报价原语与边界结果（B范围） | codex／codex_review | — | completed（2026-10-07按B复核） |
-| U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01 | blocked |
-| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | deepseek／external_execute | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01 | blocked |
-| U-COMBAT-AP-FLOW-01 | 关中正式战斗控制与敌方多动作 | deepseek／external_execute | U-COMBAT-AP-CORE-01 | blocked |
-| U-COMBAT-AP-HUD-01 | 行动力HUD与同源费用预览 | deepseek／external_execute | U-COMBAT-AP-FLOW-01 | blocked |
-| U-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | deepseek／external_execute | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
-| U-COMBAT-AP-EQUIP-01 | 战斗换装备统一费用与长期写回 | deepseek／external_execute | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
-| U-COMBAT-AP-SWAP-01 | 战斗换术正式入口与费用预览 | deepseek／external_execute | U-COMBAT-AP-HUD-01 | blocked |
+| U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01 | blocked |
+| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01 | blocked |
+| U-COMBAT-AP-FLOW-01 | 关中正式战斗控制与敌方多动作 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-CORE-01 | blocked |
+| U-COMBAT-AP-HUD-01 | 行动力HUD与同源费用预览 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-FLOW-01 | blocked |
+| U-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | codex／codex_execute（2026-10-08负责人转交） | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
+| U-COMBAT-AP-EQUIP-01 | 战斗换装备统一费用与长期写回 | codex／codex_execute（2026-10-08负责人转交） | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
+| U-COMBAT-AP-SWAP-01 | 战斗换术正式入口与费用预览 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-HUD-01 | blocked |
 | N-COMBAT-AP-BALANCE-01 | 行动经济与成长预算实跑定案 | codex／codex_execute | N-COMBAT-AP-SIM-01、U-COMBAT-AP-CORE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01 | blocked |
-| U-COMBAT-AP-TUNING-01 | 行动力已验证参数回填生产链 | deepseek／external_execute | N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-DATA-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01 | blocked |
+| U-COMBAT-AP-TUNING-01 | 行动力已验证参数回填生产链 | codex／codex_execute（2026-10-08负责人转交） | N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-DATA-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01 | blocked |
 | U-COMBAT-AP-SCENE-01 | 统一行动力正式场景最终验收 | codex／codex_execute | U-COMBAT-AP-TUNING-01、U-COMBAT-AP-SAVE-01、U-COMBAT-AP-FLOW-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01、U-COMBAT-AP-SWAP-01 | blocked |
 | D-COMBAT-AP-CLOSE-01 | 统一行动力交付闭环与父项关闭 | codex／codex_execute | U-COMBAT-AP-SCENE-01、N-COMBAT-AP-BALANCE-01 | blocked |
 
@@ -114,3 +114,8 @@
 - U-COMBAT-AP-SAVE-01改为codex／codex_execute、verification的blocked汇总，业务路径收回，永不独立ready；CHAR的Codex独立复审同轮核验保存矩阵并归档两卡，只形成一个业务candidate。下游ITEM／EQUIP／SCENE仍等SAVE正式收口，不提前解锁。
 - CORE、SIM、TUNING只移除已正式归档的DATA前置，保留其余依赖；CHAR完成仍不能代替CORE行动力多动作、SIM迁移或角色平衡。
 - 本轮仅准备任务、记录批准与同步管理事实；未修改生产代码／CSV／asset，未宣称schema4或AP运行时已经实现。实时预检、任务投影与审核文本按现行规则核对。
+
+## 后续八项主责转交（2026-10-08）
+
+- 负责人在当前对话明确将CORE、SIM、FLOW、HUD、ITEM、EQUIP、SWAP、TUNING八项全部转交Codex；对应活跃任务卡统一为codex／codex_execute，backlog同步。Codex在各卡冻结范围内实施、复核、验证并正式归档。
+- 八项仍为blocked；既有blockedBy、授权路径、业务验收与停止条件保持，满足原有前置和ready准备要求后再入队。临近ready按实际接口与风险评估主模型和必要辅助组合，本次不预分析或实施业务。
