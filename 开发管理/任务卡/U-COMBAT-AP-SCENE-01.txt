@@ -12,10 +12,9 @@
   "blockedBy": [
     "U-COMBAT-AP-TUNING-01",
     "U-COMBAT-AP-ITEM-01",
-    "U-COMBAT-AP-EQUIP-01",
-    "U-COMBAT-AP-SWAP-01"
+    "U-COMBAT-AP-EQUIP-01"
   ],
-  "stateReason": "2026-10-09 HUD已正式完成并移除；仍等待TUNING、ITEM、EQUIP、SWAP四项正式完成，最终场景验收尚无完整实现与生产输入。",
+  "stateReason": "2026-10-09 HUD与SWAP已正式完成并移除；仍等待TUNING、ITEM、EQUIP三项正式完成，最终场景验收尚无完整实现与生产输入。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
