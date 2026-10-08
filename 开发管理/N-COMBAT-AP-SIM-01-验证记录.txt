@@ -1,0 +1,661 @@
+# N-COMBAT-AP-SIM-01 验证记录
+
+日期：2026-10-09（Asia/Hong_Kong）。
+执行目录：D:/天章游戏开发/.worktrees/automation/5ee19690-adcd-4583-8461-2a66f68c8bf8/codex。
+验证基线HEAD：853a6c3b4e36f6b30603ee26eaff38964a73b120；最终提交由主智能体统一形成，以下SHA256绑定本轮实际构建的源码。
+本轮为负责人明确要求的人工子智能体修复；原自动CLI执行模型gpt-6.1-sol/high及3000秒超时为历史事实，不将其冒充本轮模型核验。未恢复旧CLI，未改模型配置、自动化脚本或runtime。
+
+## 修复与范围
+
+原现场六个源码文件的双入口/AP/CT/CD迁移实现予以保留。本轮先对包括最后追加waiting/moving测试的完整终态构建与验证；16项测试通过后，默认完整运行暴露明显重复寻路成本。
+
+已确认根因：Combat.ResolvePaidPlan对每个可达候选先调用QueryRange（其内部以MaxQueryRange计算并返回原始Attack距离），随后又无条件调用QueryMetricDistance重新Traverse；金丹获准v=48扩大候选集。原范围查询已有完整缓存，但第二次遍历绕过该结果。
+最小修改：同一方法复用QueryRange的IsInRange与DistanceUnits，去掉重复Metric查询；范围技能仍依原Area命中列表判合法，Gap仍使用原Attack度量。未新增缓存、策略、超时、重试或限速。所有输入、排序、AP路径报价及提交规则不变。
+
+本轮默认修复前采样：01:36:06+08:00，PID34612墙钟191.378秒、CPU187.297秒、工作集136933376字节、4线程，仍在首个金丹矩阵。主智能体审阅并批准上述复用后，核验进程exe精确等于本worktree Release/BattleSim.exe再终止；终止时墙钟236.662秒、CPU231.344秒。该未完成运行因修复而人为终止，既不记通过，也不冒充业务测试失败。
+
+## 风险预检及合同
+
+主智能体本轮重跑成功的taskCardDigest=6b806a9e535661a2b8bff122f4e3282068166713ddd6f81f40186f8d6c8bc68c；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。
+子智能体读取完整任务卡，核对schema2 riskPreflight matched=[EXP-BS-001,EXP-BS-003]、gates=[]一致，消费两经验正文。遵守先Release build再--no-build运行；双方初始化、动作、受击/控制、本人结束与超时结算由同一RunBattle链执行并有交换侧回归。性能修复只复用既有同方法已读取依赖，不新增路径/所有者/技术路线。
+
+正式试跑输入SHA256：
+- docs/角色养成/术法神通数值模板.txt：9c6c0eb09f92633a37938f950772db854992799cd94078fd492b3f9fbd14630b
+- docs/角色养成/功法数值模板.txt：69ce40cfea199c009a368afe25122db613f9889823bd30821cbfef002f920b8b
+- src/Assets/DataConfig/AttackProfiles.csv：1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f
+
+模板TZ_EFFECT_BUDGET@0.1/A、GF-GROWTH-AP@0.1/A由原文单一来源解析；三项生产攻击由CSV解析。全流程仍限定现有RealmOrder凡人～金丹，未借高阶模板扩大玩家输入。临时巽卦、场景物体/地表/节点、未授权主动组合均不以本报告宣称生产接入。观察ReductionUnits/RefundUnits为0，表示本轮获准组合无减耗/返还来源，不宣称新增修正能力已实现。
+
+## 最终源码SHA256
+
+| 文件 | SHA256 |
+|---|---|
+| simulations/BattleSim/Combat.cs | 75afca631a87970518f3ee127b474eaeb507bb5402fa72d46e761294f905fa27 |
+| simulations/BattleSim/Character.cs | 751d2096c8e3d9075f2a971e741e5e60bf71c8e2fb362d6d7948dd080299b552 |
+| simulations/BattleSim/GameData.cs | 9e6a65bccfd06c7b93e51909ac0c8d24ed8b7f9108c652b75395ddc179e644db |
+| simulations/BattleSim/Battlefield.cs | 19fcf921167caf4cd0d3b463b8452b0a663ecd74ce73257d7911f589cbfe2cb6 |
+| simulations/BattleSim/BattleSimSelfTests.cs | 01e20a87d4b4f07e86980573a4f14caa6b92cee959daa7fced959a3f2b3ba392 |
+| simulations/BattleSim/Program.cs | 693919e7d96afed1739641f1de921b8e7aa9460ca139c54fb74730ffb077ffe1 |
+
+## 最终命令与结论
+
+1. dotnet build -c Release --no-restore simulations/BattleSim
+   成功，0警告/0错误；MSBuild报告耗时00:00:01.23。
+2. dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test <下列suite>
+   16项均exit=0。性能修复前后的action-economy输出JSON 84375字符逐字符完全一致（含种子、输入hash、双入口逐动作、CT、生产聚灵、交换侧、共享账本、待机/移动轨迹）；未删字段或放宽断言。
+3. dotnet run --no-build -c Release --project simulations/BattleSim
+   最终完整运行exit=0，覆盖金丹/筑基/紫府、压制、2v2及练气快照等原默认入口；Program报告至金丹矩阵完成累计2973ms。该Stopwatch在此停止，不能将2973ms称为整次运行耗时；整次运行未另设秒表。最终输出在下方完整保留，不为补计时重复已通过运行。
+
+这些运行证明迁移功能与可比观测，不是角色数值平衡定案。原默认矩阵里的NA（金丹样本不足）与未接入声明保留，不以本次exit=0消除其原有范围限制。
+
+## 自测原始结果
+
+SELFTEST action-economy-n-combat-ap-sim-01 PASS
+SELFTEST ct-reaction-tq052 PASS
+SELFTEST state-rewind-causal-n-state-01 PASS
+SELFTEST growth-integrity-tq044 PASS
+SELFTEST battlefield-foundation-n-dist-01 PASS
+SELFTEST position-control-n-dist-02 PASS
+SELFTEST group-positioning-n-group-01 PASS
+SELFTEST group-area-targeting-n-group-02 PASS
+SELFTEST attack-profile-d-combat-02 PASS
+SELFTEST basic-unarmed-production-d-combat-prod-01 PASS
+SELFTEST group-action-priority-n-group-02 PASS
+SELFTEST duel-bounds PASS
+SELFTEST combat-parity-v1 PASS
+SELFTEST element-v510 PASS
+SELFTEST g2-reproducibility-tq055 PASS
+SELFTEST golden-core-assembly-n-jd-rule-01a PASS
+
+## 固定种子逐动作完整轨迹
+
+种子20260712。duel与group比较只归一化演员下标及冷却键角色前缀，group另有两个HP=0非活动队友；24条事件分别完全一致。以下JSON直接来自最终已构建二进制，并与性能修复前输出逐字符相同。JSON共84375字符，其UTF-8（不含行尾）SHA256=2224152ece50a07d78a14545e9072f5ad39edd5cefac96dd9f4863c23c897733。
+
+{"seed":20260712,"inputs":{"effects":"9c6c0eb09f92633a37938f950772db854992799cd94078fd492b3f9fbd14630b","growth":"69ce40cfea199c009a368afe25122db613f9889823bd30821cbfef002f920b8b","attacks":"1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f"},"dualEntryFixture":"adjacent 50/50 speed, 100 AP, v0, two inactive group partners; normalized actor indices only","duel":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9991],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9982],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9982],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9982],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9991,9982],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,9982],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9982],"SpiritByActor":[100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9982],"SpiritByActor":[100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,9973],"SpiritByActor":[100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,9964],"SpiritByActor":[100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9964],"SpiritByActor":[100,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9964],"SpiritByActor":[100,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9973,9964],"SpiritByActor":[100,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,9964],"SpiritByActor":[100,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,9964],"SpiritByActor":[100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,9964],"SpiritByActor":[100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,9955],"SpiritByActor":[100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,9946],"SpiritByActor":[100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,9946],"SpiritByActor":[100,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":6,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,9946],"SpiritByActor":[100,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9955,9946],"SpiritByActor":[100,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9946,9946],"SpiritByActor":[100,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":6,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9946,9946],"SpiritByActor":[100,100]}],"group":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,0,10000,0],"SpiritByActor":[100,100,100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,0,9991,0],"SpiritByActor":[100,100,100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":2,"ActorIndex":2,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":2,"ActorIndex":2,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9991,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":2,"ActorIndex":2,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":2,"ActorIndex":2,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,0,9982,0],"SpiritByActor":[100,100,100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,0,9973,0],"SpiritByActor":[100,100,100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":4,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9982,"HealthAfter":9982,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":4,"ActorIndex":2,"GlobalTick":4,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":4,"ActorIndex":2,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9973,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":4,"ActorIndex":2,"GlobalTick":4,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":4,"ActorIndex":2,"GlobalTick":4,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,0,9964,0],"SpiritByActor":[100,100,100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,0,9955,0],"SpiritByActor":[100,100,100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9964,0,9946,0],"SpiritByActor":[100,100,100,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":6,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9964,"HealthAfter":9964,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,0,9946,0],"SpiritByActor":[100,100,100,100]},{"Turn":6,"ActorIndex":2,"GlobalTick":6,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9964,0,9946,0],"SpiritByActor":[100,100,100,100]},{"Turn":6,"ActorIndex":2,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9955,0,9946,0],"SpiritByActor":[100,100,100,100]},{"Turn":6,"ActorIndex":2,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-2:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9946,0,9946,0],"SpiritByActor":[100,100,100,100]},{"Turn":6,"ActorIndex":2,"GlobalTick":6,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-2:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9946,0,9946,0],"SpiritByActor":[100,100,100,100]}],"ct":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:MagicArt":0,"actor-0:ct-basic-fixture":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"MagicArt","AbilityInstanceId":"actor-0:MagicArt","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:MagicArt":10,"actor-0:ct-basic-fixture":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[10000,9880],"SpiritByActor":[80,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"ct-basic-fixture","AbilityInstanceId":"actor-0:ct-basic-fixture","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":40,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:MagicArt":10,"actor-0:ct-basic-fixture":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"fixture","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":40,"ChargeTime":0,"NextThreshold":140,"Cooldowns":{"actor-0:MagicArt":10,"actor-0:ct-basic-fixture":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":50,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":1,"GlobalTick":3,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":1,"GlobalTick":3,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":50,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":4,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9871,"HealthAfter":9871,"PendingCtPenalty":0,"ChargeTime":50,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":5,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":140,"Cooldowns":{"actor-0:MagicArt":7,"actor-0:ct-basic-fixture":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9871],"SpiritByActor":[80,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":5,"Event":"action_committed","DefinitionRef":"ct-basic-fixture","AbilityInstanceId":"actor-0:ct-basic-fixture","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":30,"ChargeTime":150,"NextThreshold":140,"Cooldowns":{"actor-0:MagicArt":7,"actor-0:ct-basic-fixture":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"fixture","HealthByActor":[10000,9862],"SpiritByActor":[80,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":5,"Event":"action_committed","DefinitionRef":"ct-basic-fixture","AbilityInstanceId":"actor-0:ct-basic-fixture","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":60,"ChargeTime":150,"NextThreshold":140,"Cooldowns":{"actor-0:MagicArt":7,"actor-0:ct-basic-fixture":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"fixture","HealthByActor":[10000,9853],"SpiritByActor":[80,100]},{"Turn":5,"ActorIndex":0,"GlobalTick":5,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":60,"ChargeTime":0,"NextThreshold":160,"Cooldowns":{"actor-0:MagicArt":7,"actor-0:ct-basic-fixture":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9853],"SpiritByActor":[80,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":5,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9853,"HealthAfter":9853,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9853],"SpiritByActor":[80,100]},{"Turn":6,"ActorIndex":1,"GlobalTick":5,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9853,"HealthAfter":9853,"PendingCtPenalty":0,"ChargeTime":50,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9853],"SpiritByActor":[80,100]}],"production":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":20,"SpiritAfter":20,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:spell_guanshiji":0,"actor-0:spell_julingshu":0,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[20,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"spell_guanshiji","AbilityInstanceId":"actor-0:spell_guanshiji","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":20,"SpiritAfter":8,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:spell_guanshiji":10,"actor-0:spell_julingshu":0,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9989],"SpiritByActor":[8,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"spell_julingshu","AbilityInstanceId":"actor-0:spell_julingshu","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":25000,"CostUnits":25000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":8,"SpiritAfter":20,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":15,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:spell_guanshiji":10,"actor-0:spell_julingshu":5,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9989],"SpiritByActor":[20,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":25000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":20,"SpiritAfter":20,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":15,"ChargeTime":0,"NextThreshold":115,"Cooldowns":{"actor-0:spell_guanshiji":10,"actor-0:spell_julingshu":5,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9989],"SpiritByActor":[20,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9989,"HealthAfter":9989,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9989],"SpiritByActor":[20,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9989,"HealthAfter":9989,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9991,9989],"SpiritByActor":[20,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9989,"HealthAfter":9989,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,9989],"SpiritByActor":[20,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9989,"HealthAfter":9989,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9989],"SpiritByActor":[20,100]}],"symmetry":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":0,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"WaterArt","AbilityInstanceId":"actor-0:WaterArt","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[10000,9988],"SpiritByActor":[80,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9979],"SpiritByActor":[80,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":0,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9979],"SpiritByActor":[80,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":3,"Event":"own_turn_started_control_skip","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9979,"HealthAfter":9986,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":0,"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":2,"Stunned":true,"InputVersion":"","HealthByActor":[10000,9986],"SpiritByActor":[80,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":3,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9986,"HealthAfter":9986,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":0,"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":2,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9986],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":5,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9986],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":5,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9977],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":5,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9968],"SpiritByActor":[80,100]},{"Turn":3,"ActorIndex":0,"GlobalTick":5,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9968],"SpiritByActor":[80,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":6,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9968,"HealthAfter":9975,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":0,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":3,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9975],"SpiritByActor":[80,100]},{"Turn":4,"ActorIndex":1,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"YuqingLeijieArt","AbilityInstanceId":"actor-1:YuqingLeijieArt","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":75,"HealthBefore":9975,"HealthAfter":9975,"PendingCtPenalty":10,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":10,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[9982,9975],"SpiritByActor":[80,75]},{"Turn":4,"ActorIndex":1,"GlobalTick":6,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9975,"HealthAfter":9975,"PendingCtPenalty":10,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":10,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9973,9975],"SpiritByActor":[80,75]},{"Turn":4,"ActorIndex":1,"GlobalTick":6,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9975,"HealthAfter":9975,"PendingCtPenalty":10,"ChargeTime":0,"NextThreshold":110,"Cooldowns":{"actor-1:YuqingLeijieArt":10,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9973,9975],"SpiritByActor":[80,75]},{"Turn":5,"ActorIndex":0,"GlobalTick":7,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9973,"HealthAfter":9973,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":5,"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9973,9975],"SpiritByActor":[80,75]},{"Turn":5,"ActorIndex":0,"GlobalTick":7,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9973,"HealthAfter":9973,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":5,"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9973,9966],"SpiritByActor":[80,75]},{"Turn":5,"ActorIndex":0,"GlobalTick":7,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9973,"HealthAfter":9973,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":5,"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9973,9957],"SpiritByActor":[80,75]},{"Turn":5,"ActorIndex":0,"GlobalTick":7,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":5,"actor-0:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9957],"SpiritByActor":[80,75]},{"Turn":6,"ActorIndex":0,"GlobalTick":9,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":3,"actor-0:basic_unarmed":0},"OwnTurns":4,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9957],"SpiritByActor":[80,75]},{"Turn":6,"ActorIndex":0,"GlobalTick":9,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":3,"actor-0:basic_unarmed":0},"OwnTurns":4,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9948],"SpiritByActor":[80,75]},{"Turn":6,"ActorIndex":0,"GlobalTick":9,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":3,"actor-0:basic_unarmed":0},"OwnTurns":4,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9939],"SpiritByActor":[80,75]},{"Turn":6,"ActorIndex":0,"GlobalTick":9,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":3,"actor-0:basic_unarmed":0},"OwnTurns":4,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9939],"SpiritByActor":[80,75]},{"Turn":7,"ActorIndex":1,"GlobalTick":9,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9939,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":110,"Cooldowns":{"actor-1:YuqingLeijieArt":7,"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":3,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9946],"SpiritByActor":[80,75]},{"Turn":7,"ActorIndex":1,"GlobalTick":9,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":110,"Cooldowns":{"actor-1:YuqingLeijieArt":7,"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9987,9946],"SpiritByActor":[80,75]},{"Turn":7,"ActorIndex":1,"GlobalTick":9,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":110,"Cooldowns":{"actor-1:YuqingLeijieArt":7,"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9978,9946],"SpiritByActor":[80,75]},{"Turn":7,"ActorIndex":1,"GlobalTick":9,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9946,"HealthAfter":9946,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":7,"actor-1:basic_unarmed":0},"OwnTurns":3,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9978,9946],"SpiritByActor":[80,75]},{"Turn":8,"ActorIndex":0,"GlobalTick":11,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9978,"HealthAfter":9978,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":1,"actor-0:basic_unarmed":0},"OwnTurns":5,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9978,9946],"SpiritByActor":[80,75]},{"Turn":8,"ActorIndex":0,"GlobalTick":11,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9978,"HealthAfter":9978,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":1,"actor-0:basic_unarmed":0},"OwnTurns":5,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9978,9937],"SpiritByActor":[80,75]},{"Turn":8,"ActorIndex":0,"GlobalTick":11,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9978,"HealthAfter":9978,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":1,"actor-0:basic_unarmed":0},"OwnTurns":5,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9978,9928],"SpiritByActor":[80,75]},{"Turn":8,"ActorIndex":0,"GlobalTick":11,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":1,"actor-0:basic_unarmed":0},"OwnTurns":5,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9928],"SpiritByActor":[80,75]},{"Turn":9,"ActorIndex":1,"GlobalTick":12,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9928,"HealthAfter":9935,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":4,"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":2,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9935],"SpiritByActor":[80,75]},{"Turn":9,"ActorIndex":1,"GlobalTick":12,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9935,"HealthAfter":9935,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":4,"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9988,9935],"SpiritByActor":[80,75]},{"Turn":9,"ActorIndex":1,"GlobalTick":12,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9935,"HealthAfter":9935,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":4,"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9979,9935],"SpiritByActor":[80,75]},{"Turn":9,"ActorIndex":1,"GlobalTick":12,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9935,"HealthAfter":9935,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":4,"actor-1:basic_unarmed":0},"OwnTurns":4,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9979,9935],"SpiritByActor":[80,75]},{"Turn":10,"ActorIndex":0,"GlobalTick":13,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":9979,"HealthAfter":9979,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":0,"actor-0:basic_unarmed":0},"OwnTurns":6,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9979,9935],"SpiritByActor":[80,75]},{"Turn":10,"ActorIndex":0,"GlobalTick":13,"Event":"action_committed","DefinitionRef":"WaterArt","AbilityInstanceId":"actor-0:WaterArt","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":60,"HealthBefore":9979,"HealthAfter":9979,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":6,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[9979,9923],"SpiritByActor":[60,75]},{"Turn":10,"ActorIndex":0,"GlobalTick":13,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":9979,"HealthAfter":9979,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":6,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9979,9914],"SpiritByActor":[60,75]},{"Turn":10,"ActorIndex":0,"GlobalTick":13,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":0,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":10,"actor-0:basic_unarmed":0},"OwnTurns":6,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9914],"SpiritByActor":[60,75]},{"Turn":11,"ActorIndex":1,"GlobalTick":15,"Event":"own_turn_started_control_skip","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9914,"HealthAfter":9921,"PendingCtPenalty":0,"ChargeTime":147,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":1,"actor-1:basic_unarmed":0},"OwnTurns":5,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":2,"Stunned":true,"InputVersion":"","HealthByActor":[10000,9921],"SpiritByActor":[60,75]},{"Turn":11,"ActorIndex":1,"GlobalTick":15,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":75,"SpiritAfter":75,"HealthBefore":9921,"HealthAfter":9921,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:YuqingLeijieArt":1,"actor-1:basic_unarmed":0},"OwnTurns":5,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":2,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9921],"SpiritByActor":[60,75]},{"Turn":12,"ActorIndex":0,"GlobalTick":16,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":7,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9921],"SpiritByActor":[60,75]},{"Turn":12,"ActorIndex":0,"GlobalTick":16,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":7,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9912],"SpiritByActor":[60,75]},{"Turn":12,"ActorIndex":0,"GlobalTick":16,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":150,"NextThreshold":110,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":7,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9903],"SpiritByActor":[60,75]},{"Turn":12,"ActorIndex":0,"GlobalTick":16,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":60,"SpiritAfter":60,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:WaterArt":7,"actor-0:basic_unarmed":0},"OwnTurns":7,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9903],"SpiritByActor":[60,75]}],"shared":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":150000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"guardian_ming":0,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"PhysicalDivine","AbilityInstanceId":"guardian_ming","ActionPointsBeforeUnits":150000,"ActionPointsRemainingUnits":75000,"CostUnits":75000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"guardian_ming":20,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[10000,9985],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-0:basic_unarmed","ActionPointsBeforeUnits":75000,"ActionPointsRemainingUnits":25000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0,"guardian_ming":20},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,9976],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":25000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0,"guardian_ming":20},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9976],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9976,"HealthAfter":9976,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,9976],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9976,"HealthAfter":9976,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9991,9976],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"basic_unarmed","AbilityInstanceId":"actor-1:basic_unarmed","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9976,"HealthAfter":9976,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[9982,9976],"SpiritByActor":[100,100]},{"Turn":2,"ActorIndex":1,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":9976,"HealthAfter":9976,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":2,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[9982,9976],"SpiritByActor":[100,100]}],"allyRecovery":[{"Turn":1,"ActorIndex":1,"GlobalTick":1,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:MagicArt":0,"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,10000,10000],"SpiritByActor":[100,100,100,100]},{"Turn":1,"ActorIndex":1,"GlobalTick":1,"Event":"action_committed","DefinitionRef":"MagicArt","AbilityInstanceId":"actor-1:MagicArt","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":50000,"CostUnits":50000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:MagicArt":10,"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"TZ_EFFECT_BUDGET@0.1/A","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[100,80,100,100]},{"Turn":1,"ActorIndex":1,"GlobalTick":1,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":50000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":10,"ChargeTime":0,"NextThreshold":110,"Cooldowns":{"actor-1:MagicArt":10,"actor-1:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[100,80,100,100]},{"Turn":2,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":102,"NextThreshold":100,"Cooldowns":{"actor-0:spell_julingshu":0,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[100,80,100,100]},{"Turn":2,"ActorIndex":0,"GlobalTick":2,"Event":"action_committed","DefinitionRef":"spell_julingshu","AbilityInstanceId":"actor-0:spell_julingshu","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":75000,"CostUnits":25000,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":5,"ChargeTime":102,"NextThreshold":100,"Cooldowns":{"actor-0:spell_julingshu":5,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"AttackProfiles.csv:1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[80,86,100,100]},{"Turn":2,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":75000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":80,"SpiritAfter":80,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":5,"ChargeTime":0,"NextThreshold":105,"Cooldowns":{"actor-0:spell_julingshu":5,"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[80,86,100,100]},{"Turn":3,"ActorIndex":1,"GlobalTick":3,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":86,"SpiritAfter":86,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":200,"NextThreshold":110,"Cooldowns":{"actor-1:MagicArt":8,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[80,86,100,100]},{"Turn":3,"ActorIndex":1,"GlobalTick":3,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":86,"SpiritAfter":86,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-1:MagicArt":8,"actor-1:basic_unarmed":0},"OwnTurns":2,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000,9880,10000],"SpiritByActor":[80,86,100,100]}],"waiting":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"wait_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":50,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]}],"moving":[{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_started","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":0,"ActionPointsRemainingUnits":100000,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":0,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"move_committed","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":100000,"ActionPointsRemainingUnits":1,"CostUnits":99999,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":100,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]},{"Turn":1,"ActorIndex":0,"GlobalTick":2,"Event":"own_turn_ended","DefinitionRef":"","AbilityInstanceId":"","ActionPointsBeforeUnits":1,"ActionPointsRemainingUnits":0,"CostUnits":0,"ReductionUnits":0,"RefundUnits":0,"SpiritBefore":100,"SpiritAfter":100,"HealthBefore":10000,"HealthAfter":10000,"PendingCtPenalty":0,"ChargeTime":0,"NextThreshold":100,"Cooldowns":{"actor-0:basic_unarmed":0},"OwnTurns":1,"CommittedActions":1,"Shouyi":0,"Fudan":0,"Leijie":0,"Stunned":false,"InputVersion":"","HealthByActor":[10000,10000],"SpiritByActor":[100,100]}]}
+
+## 默认完整运行原始输出
+
+【三阶段成长与筑基入门预算审计（N-FPD-STAGE-03）】
+  旧输入：每部功法筑基五段成长；三阶段份额=30%/32%/38%，运行时以同一分配结算筑基／开府／圆满。
+  守恒容差：1E-009；八属性不迁移旧移力列；独立v读取GF-GROWTH-AP@0.1/A。
+  战斗观测：回合数=全场个人回合数；动作不推进全局整数刻，AP余额不结转；结果仅供迁移试跑，不作为平衡定案。
+  行动经济输入SHA256：效果=9c6c0eb09f92633a37938f950772db854992799cd94078fd492b3f9fbd14630b；成长=69ce40cfea199c009a368afe25122db613f9889823bd30821cbfef002f920b8b；攻击=1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f
+  物·纯战     旧总=HP=665.00 MP=290.00 肉攻=250.00 神攻=210.00 肉防=210.00 神防=165.00 反应=100.00 神识=8.50
+    筑基=HP=200.00 MP=87.00 肉攻=75.00 神攻=63.00 肉防=63.00 神防=50.00 反应=30.00 神识=2.55
+    开府=HP=213.00 MP=93.00 肉攻=80.00 神攻=67.00 肉防=67.00 神防=53.00 反应=32.00 神识=2.72
+    圆满=HP=252.00 MP=110.00 肉攻=95.00 神攻=80.00 肉防=80.00 神防=62.00 反应=38.00 神识=3.23
+  法·纯战     旧总=HP=200.00 MP=150.00 肉攻=75.00 神攻=115.00 肉防=65.00 神防=100.00 反应=40.00 神识=5.00
+    筑基=HP=60.00 MP=45.00 肉攻=23.00 神攻=35.00 肉防=20.00 神防=30.00 反应=12.00 神识=1.00
+    开府=HP=64.00 MP=48.00 肉攻=24.00 神攻=37.00 肉防=21.00 神防=32.00 反应=13.00 神识=2.00
+    圆满=HP=76.00 MP=57.00 肉攻=28.00 神攻=43.00 肉防=24.00 神防=38.00 反应=15.00 神识=2.00
+  太一·符修    旧总=HP=235.00 MP=115.00 肉攻=65.00 神攻=100.00 肉防=65.00 神防=85.00 反应=40.00 神识=6.50
+    筑基=HP=71.00 MP=35.00 肉攻=20.00 神攻=30.00 肉防=20.00 神防=26.00 反应=12.00 神识=1.95
+    开府=HP=75.00 MP=37.00 肉攻=21.00 神攻=32.00 肉防=21.00 神防=27.00 反应=13.00 神识=2.08
+    圆满=HP=89.00 MP=43.00 肉攻=24.00 神攻=38.00 肉防=24.00 神防=32.00 反应=15.00 神识=2.47
+  练气出口：道基成长贡献=0，迁移前后差值=0（21 Build）。
+  金丹入口：每个 Build 的筑基累计成长总额守恒，最大原始差值≤1E-009。
+  行动经济逐来源：AP基础100000／功法增量0，临时v=0（本报告未装配巽卦）；v为千分单位。
+    疾雷破山经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=疾雷破山经；节点=筑基:3；合法篇章=淬锋
+    含弘光大典：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=含弘光大典；节点=练气:9,筑基:3；合法篇章=含章,筑基厚德
+    白屋青云录：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=白屋青云录；节点=凡人:1,练气:9,筑基:3；合法篇章=白屋,练气寒窗,筑基破茧
+    混元同尘典：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=混元同尘典；节点=筑基:3；合法篇章=
+    抱元守一经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=抱元守一经；节点=练气:9,筑基:3；合法篇章=练气守一,筑基抱元
+    万物不迁法：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=万物不迁法；节点=筑基:3；合法篇章=
+    秋水游心经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=秋水游心经；节点=凡人:1,练气:9,筑基:3；合法篇章=练气观水,筑基知海
+    云篆度人经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=云篆度人经；节点=筑基:3；合法篇章=筑基灵宝
+    不真自虚法：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=不真自虚法；节点=筑基:3；合法篇章=
+    心无性有法：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=心无性有法；节点=筑基:3；合法篇章=筑基虚照
+    九霄雷劫录：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=九霄雷劫录；节点=筑基:3；合法篇章=筑基引雷
+    苦行剑典：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=4000；有效v=16000；来源=苦行剑典；节点=练气:9,筑基:3；合法篇章=练气磨剑,筑基断陇
+    雷池淬体功：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=雷池淬体功；节点=凡人:1,练气:9,筑基:3；合法篇章=凡人感雷,练气引雷,筑基淬体
+    南华玄感录：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=南华玄感录；节点=练气:9,筑基:3；合法篇章=练气无心,筑基即色
+    绳墨正法录：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=绳墨正法录；节点=练气:9,筑基:3；合法篇章=练气法度,筑基绳墨
+    南华阐衍典：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=南华阐衍典；节点=筑基:3；合法篇章=
+    太易山藏经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=太易山藏经；节点=筑基:3；合法篇章=
+    玄牝道藏：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=玄牝道藏；节点=筑基:3；合法篇章=
+    空无般若经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=空无般若经；节点=筑基:3；合法篇章=
+    万法都箓经：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=万法都箓经；节点=筑基:3；合法篇章=
+    正一盟威箓：版本=GF-GROWTH-AP@0.1/A；基础v=12000；功法v=0；有效v=12000；来源=正一盟威箓；节点=筑基:3；合法篇章=
+  六部新增入门预算（供 D-FPD-GONGFA-03 同步 docs/CSV/asset）：
+    南华阐衍典：筑基=HP=26.00 MP=35.00 肉攻=11.00 神攻=26.00 肉防=9.00 神防=20.00 反应=12.00 神识=1.05；开府=HP=27.00 MP=37.00 肉攻=11.00 神攻=27.00 肉防=10.00 神防=21.00 反应=13.00 神识=1.12；圆满=HP=32.00 MP=43.00 肉攻=13.00 神攻=32.00 肉防=11.00 神防=24.00 反应=15.00 神识=1.33
+    太易山藏经：筑基=HP=80.00 MP=35.00 肉攻=30.00 神攻=26.00 肉防=26.00 神防=20.00 反应=12.00 神识=1.05；开府=HP=85.00 MP=37.00 肉攻=32.00 神攻=27.00 肉防=27.00 神防=21.00 反应=13.00 神识=1.12；圆满=HP=100.00 MP=43.00 肉攻=38.00 神攻=32.00 肉防=32.00 神防=24.00 反应=15.00 神识=1.33
+    玄牝道藏：筑基=HP=80.00 MP=35.00 肉攻=30.00 神攻=26.00 肉防=26.00 神防=20.00 反应=12.00 神识=1.05；开府=HP=85.00 MP=37.00 肉攻=32.00 神攻=27.00 肉防=27.00 神防=21.00 反应=13.00 神识=1.12；圆满=HP=100.00 MP=43.00 肉攻=38.00 神攻=32.00 肉防=32.00 神防=24.00 反应=15.00 神识=1.33
+    空无般若经：筑基=HP=80.00 MP=35.00 肉攻=30.00 神攻=26.00 肉防=26.00 神防=20.00 反应=12.00 神识=1.05；开府=HP=85.00 MP=37.00 肉攻=32.00 神攻=27.00 肉防=27.00 神防=21.00 反应=13.00 神识=1.12；圆满=HP=100.00 MP=43.00 肉攻=38.00 神攻=32.00 肉防=32.00 神防=24.00 反应=15.00 神识=1.33
+    万法都箓经：筑基=HP=26.00 MP=71.00 肉攻=11.00 神攻=31.00 肉防=9.00 神防=33.00 反应=15.00 神识=2.55；开府=HP=27.00 MP=75.00 肉攻=11.00 神攻=34.00 肉防=10.00 神防=35.00 反应=16.00 神识=2.72；圆满=HP=32.00 MP=89.00 肉攻=13.00 神攻=40.00 肉防=11.00 神防=42.00 反应=19.00 神识=3.23
+    正一盟威箓：筑基=HP=50.00 MP=71.00 肉攻=20.00 神攻=31.00 肉防=15.00 神防=33.00 反应=15.00 神识=2.55；开府=HP=53.00 MP=75.00 肉攻=21.00 神攻=34.00 肉防=16.00 神防=35.00 反应=16.00 神识=2.72；圆满=HP=62.00 MP=89.00 肉攻=24.00 神攻=40.00 肉防=19.00 神防=42.00 反应=19.00 神识=3.23
+  实际角色结算：21 Build 逐阶段八属性一致；六部入门功法 HP、非整数神识、权重回退、跨境索引和重复结算 PASS；太易 HP 累计=80/165/265。
+  核心曲线：normalizedMagnitude=start + (max-start) × progress^1.20
+    筑基：progress=0.000，normalizedMagnitude=0.300
+    开府：progress=0.500，normalizedMagnitude=0.605
+    圆满：progress=1.000，normalizedMagnitude=1.000
+  结论：PASS；曲线只提供连续数值参数，非数值效果仍须显式阶段条件，不产生功法专属机制、槽位、位格或丹相。
+
+【五府府体预算审计（N-FPD-MANSION-01）】
+  共同预算：每座完整紫府=1.00 预算分；五府总上限=5.00。预算分只用于本审计，不是运行时资源、槽位或倍率。
+  差异参数／目标指标：
+    命府：activationThreshold=30%～40% 最大生命类资源；recoveryAmount=8%～12% 最大生命类资源；指标：一次允许伤害结算后的恢复不超过 12% 最大生命类资源。
+    魂府：interceptableStatusTags=2～3 个既有状态标签；excludedStatusTags 至少 1 个；指标：每次仅阻止一项符合标签的待写入状态。
+    识府：revealRangeModifier=0～+1 格；revealFieldSet=1～2 个既有字段；指标：只揭示当前合法侦知查询内的信息。
+    悟府：eligibleActionTags=1 个主动修炼标签；progressModifier=8%～12%；指标：单次合法主动修炼进度修正不超过 12%。
+    运府：revealFieldSet=1～2 个既有线索字段；selectionScope=当前候选集；指标：只揭示已合法生成候选的线索，不改变候选或概率。
+  代表 Build（1～5 府边际）：
+    1府·均衡    府体=命府             累计=1.00 边际=1.00 术/神通槽/位/丹相=0/0/0/0
+    2府·均衡    府体=命府+魂府          累计=2.00 边际=1.00 术/神通槽/位/丹相=0/0/0/0
+    3府·均衡    府体=命府+魂府+识府       累计=3.00 边际=1.00 术/神通槽/位/丹相=0/0/0/0
+    4府·均衡    府体=命府+魂府+识府+悟府    累计=4.00 边际=1.00 术/神通槽/位/丹相=0/0/0/0
+    5府·均衡    府体=命府+魂府+识府+悟府+运府 累计=5.00 边际=1.00 术/神通槽/位/丹相=0/0/0/0
+  五类极端样例：
+    命府极端     根骨=15 预算=1.00 术/神通槽/位/丹相=0/0/0/0
+    魂府极端     魂魄=15 预算=1.00 术/神通槽/位/丹相=0/0/0/0
+    识府极端     神识=15 预算=1.00 术/神通槽/位/丹相=0/0/0/0
+    悟府极端     资质=15 预算=1.00 术/神通槽/位/丹相=0/0/0/0
+    运府极端     气运=15 预算=1.00 术/神通槽/位/丹相=0/0/0/0
+  软亲和回归：成本系数 0.80 与 1.20 均为 5.00 预算分；建成后最终强度不变。
+  结论：PASS；第四、第五府各保留 1.00 预算分收益，且不增加术法槽、神通槽、稳定位格或丹相。
+
+【全部紫府输入与主辅预算审计（N-FPD-DANXIANG-01）】
+  固定口径：完整紫府输入=1.00/府；主承载=1.00/位；每位辅助连接池上限=0.25。辅助只组织既有实例，不新增普通效果槽或运行账本。
+  1～5 府 × 1～3 稳定位格：
+    1府×1位：输入=1.00，主=1.00，辅=0.00（0 引用），账本=1，组合表现≤1，槽/第二丹相=0/0
+    1府×2位：不成立（缺少第 2 项独立主承载）；不生成临时稳定席位。
+    1府×3位：不成立（缺少第 3 项独立主承载）；不生成临时稳定席位。
+    2府×1位：输入=2.00，主=1.00，辅=0.25（1 引用），账本=2，组合表现≤1，槽/第二丹相=0/0
+    2府×2位：输入=2.00，主=2.00，辅=0.50（2 引用），账本=2，组合表现≤2，槽/第二丹相=0/0
+    2府×3位：不成立（缺少第 3 项独立主承载）；不生成临时稳定席位。
+    3府×1位：输入=3.00，主=1.00，辅=0.25（2 引用），账本=3，组合表现≤1，槽/第二丹相=0/0
+    3府×2位：输入=3.00，主=2.00，辅=0.50（4 引用），账本=3，组合表现≤2，槽/第二丹相=0/0
+    3府×3位：输入=3.00，主=3.00，辅=0.75（6 引用），账本=3，组合表现≤3，槽/第二丹相=0/0
+    4府×1位：输入=4.00，主=1.00，辅=0.25（3 引用），账本=4，组合表现≤1，槽/第二丹相=0/0
+    4府×2位：输入=4.00，主=2.00，辅=0.50（6 引用），账本=4，组合表现≤2，槽/第二丹相=0/0
+    4府×3位：输入=4.00，主=3.00，辅=0.75（9 引用），账本=4，组合表现≤3，槽/第二丹相=0/0
+    5府×1位：输入=5.00，主=1.00，辅=0.25（4 引用），账本=5，组合表现≤1，槽/第二丹相=0/0
+    5府×2位：输入=5.00，主=2.00，辅=0.50（8 引用），账本=5，组合表现≤2，槽/第二丹相=0/0
+    5府×3位：输入=5.00，主=3.00，辅=0.75（12 引用），账本=5，组合表现≤3，槽/第二丹相=0/0
+  多处引用／安全重铸：guardian_1 跨丹相、主承载和两处辅助后资源=70、冷却=2；guardian_5 安全重铸后沿用资源=89、冷却=4。结论：PASS。
+  第四、第五府保持完整输入与辅助连接；不会生成第四稳定位格、第二丹相或额外普通效果槽。
+
+【金丹槽位与丹枢显式加成审计（N-SLOT-01）】
+  筑基基准：术法=5，普通神通=2；每个稳定实位最多一条显式丹枢槽位绑定，单条固定 +1。术法额外上限=3，普通神通额外上限=2。
+  1～5 府 × 1～3 稳定位格：未配置显式绑定时维持基准；府数、辅助引用和临时状态不自动产生槽位。
+    1府×1位：无绑定=5/2，显式预算≤1，术法≤6，普通神通≤3。
+    1府×2位：不成立（缺少第 2 项独立主承载）；槽位输出=0。
+    1府×3位：不成立（缺少第 3 项独立主承载）；槽位输出=0。
+    2府×1位：无绑定=5/2，显式预算≤1，术法≤6，普通神通≤3。
+    2府×2位：无绑定=5/2，显式预算≤2，术法≤7，普通神通≤4。
+    2府×3位：不成立（缺少第 3 项独立主承载）；槽位输出=0。
+    3府×1位：无绑定=5/2，显式预算≤1，术法≤6，普通神通≤3。
+    3府×2位：无绑定=5/2，显式预算≤2，术法≤7，普通神通≤4。
+    3府×3位：无绑定=5/2，显式预算≤3，术法≤8，普通神通≤4。
+    4府×1位：无绑定=5/2，显式预算≤1，术法≤6，普通神通≤3。
+    4府×2位：无绑定=5/2，显式预算≤2，术法≤7，普通神通≤4。
+    4府×3位：无绑定=5/2，显式预算≤3，术法≤8，普通神通≤4。
+    5府×1位：无绑定=5/2，显式预算≤1，术法≤6，普通神通≤3。
+    5府×2位：无绑定=5/2，显式预算≤2，术法≤7，普通神通≤4。
+    5府×3位：无绑定=5/2，显式预算≤3，术法≤8，普通神通≤4。
+  拒绝回归：+2、未声明接口、效果类别不符、辅助实例冒充主承载、同一实位双绑、普通神通 +3 均被拒绝。
+  结论：PASS；只有稳定实位的显式丹枢接口可按 +1 分配术法／普通神通容量，最终上限为 8／4；第四、第五府和辅助连接不自动增槽。
+  本审计只锁定设计输入与数值阈值，不创建运行时数据字段、位格、丹相、账本或伤害结算。
+
+【养基、筑府与闭关周期审计（N-FPD-CULTIVATE-01）】
+  固定周期：30 日（每年 12 周期）；凡人至练气九品=120 周期，筑基考验=6 周期，养基每阶段=24 周期。
+  府胚=18 周期，开府考验=3 周期；资源成本=练气准备 1/周期、筑基考验 2/周期、养基 1/周期、府胚 2/周期、开府 4/周期。
+  主动／闭关边界：单周期=30 日、养基进度+1；闭关在剩余 1 个周期资源时停止。
+    下品·无扩府     容量=1，承载=1，阶段=3，完整紫府=1，可结丹=True，累计=14.25 年。
+    中品·天然一府    容量=1，承载=1，阶段=3，完整紫府=1，可结丹=True，累计=12.25 年。
+    上品·天然二府    容量=2，承载=2，阶段=3，完整紫府=2，可结丹=True，累计=16.00 年。
+    极品·天然三府    容量=3，承载=3，阶段=3，完整紫府=3，可结丹=True，累计=19.75 年。
+    极品·一层扩府    容量=4，承载=4，阶段=3，完整紫府=4，可结丹=True，累计=23.50 年。
+    极品·两层扩府    容量=5，承载=5，阶段=3，完整紫府=5，可结丹=True，累计=27.25 年。
+  时间／资源目标：凡人起点至第一座完整紫府=147 周期=12.25 年，累计资源=180。
+  开府失败回退：保留府胚 9/18，伤势=20；恢复 4 周期后补回 9 周期，重试成功且不生成残缺紫府。
+  结论：PASS；下／中／上／极品灵根和 0～5 容量均覆盖，0 容量先扩府、容量 1 开府即圆满、圆满后扩府不回退，闭关不预支资源或重复结算。
+
+【NPC 修炼行动权重审计（N-FPD-NPC-01）】
+  唯一投影：profile=npc-cultivation-production-v1；sourceContentHash=8f9e1e7c6154d6b1bcbae301cf8e0fd219fd258565d43a1a55ec84cd8d9ec1b9；并列裁定=actionStableId 词典序升序。
+  场景：资源充足=证位(130)；资源不足=养基；寿元紧迫=降低风险阈值；低主观胜算=拒绝；同分=词典序稳定。结论：PASS。
+
+修炼模拟 (20种子 x 200轮, 灵根=中品, 功法=上品)...
+完成
+
+【道基品质分布】
+Build      无道基    黄品     玄品     地品     天品     平均凝聚值
+----------------------------------------------------
+  物·纯战        0     0     3    17     0       59
+  物·均衡        0     0     3    17     0       57
+  物·修炼        0     0     2    18     0       59
+  肉盾型         0     0     1    19     0       63
+  法·纯战        0     0     3    17     0       59
+  法·均衡        0     0     2    18     0       59
+  法·修炼        0     0     3    17     0       59
+  灵修型         0     0     2    18     0       61
+  水·散修        0     0     6    14     0       59
+  太一·法修       0     0     4    16     0       59
+  太一·符修       0     0     4    16     0       60
+  太虚·魂修       0     0     4    16     0       59
+  太虚·均衡       0     0     3    17     0       58
+  太虚·宿慧       0     0     7    13     0       58
+  玉清·剑修       0     0     4    16     0       58
+  玉清·雷修       0     0     2    18     0       64
+  玉清·雷劫       0     0     4    16     0       58
+  玉清·苦行       0     0     2    18     0       61
+  玉清·雷体       0     0     3    17     0       60
+  太虚·玄感       0     0     5    15     0       57
+  混元·正法       0     0     1    19     0       59
+
+【金丹成丹状态分布（TQ-013B/TQ-015C兼容层）】
+Build      未成丹    暂寄     敕封     自然     平均判定值    主要丹性     主要位格
+------------------------------------------------------------------------------
+  物·纯战       20       0      0      0          0 -        -
+  物·均衡        8       0      6      6         90 土        土·源位（安忍地）
+  物·修炼        0       0      3     17         95 木        木·源位（报春根）
+  肉盾型        20       0      0      0          0 -        -
+  法·纯战       20       0      0      0          0 -        -
+  法·均衡        5       0      4     11         94 火        火·化位（周天焰）
+  法·修炼        0       0      9     11         92 火        火·化位（周天焰）
+  灵修型        20       0      0      0          0 -        -
+  水·散修        3       0      8      9         91 木        木·源位（报春根）
+  太一·法修       6       0      7      7         90 火        火·化位（周天焰）
+  太一·符修      20       0      0      0          0 -        -
+  太虚·魂修      20       0      0      0          0 -        -
+  太虚·均衡      12       0      4      4         90 火        火·化位（周天焰）
+  太虚·宿慧       3       0      9      8         88 火        火·化位（周天焰）
+  玉清·剑修      20       0      0      0          0 -        -
+  玉清·雷修      20       0      0      0          0 -        -
+  玉清·雷劫      20       0      0      0          0 -        -
+  玉清·苦行       3       0      4     13         93 土        土·源位（安忍地）
+  玉清·雷体      20       0      0      0          0 -        -
+  太虚·玄感       7       0      8      5         89 土        土·源位（安忍地）
+  混元·正法      20       0      0      0          0 -        -
+
+【席位证位候选状态分布】
+Build      自然候选     待争席      受敕承位     暂寄     已占据      主要最终状态
+--------------------------------------------------------------------------
+  物·纯战          0        0        0      0        0 未成丹
+  物·均衡          6        6        6      0        0 未成丹
+  物·修炼         17       17        3      0        0 未占据
+  肉盾型           0        0        0      0        0 未成丹
+  法·纯战          0        0        0      0        0 未成丹
+  法·均衡         11       11        4      0        0 未占据
+  法·修炼         11       11        9      0        0 未占据
+  灵修型           0        0        0      0        0 未成丹
+  水·散修          9        9        8      0        0 未占据
+  太一·法修         7        7        7      0        0 未占据
+  太一·符修         0        0        0      0        0 未成丹
+  太虚·魂修         0        0        0      0        0 未成丹
+  太虚·均衡         4        4        4      0        0 未成丹
+  太虚·宿慧         8        8        9      0        0 受敕承位
+  玉清·剑修         0        0        0      0        0 未成丹
+  玉清·雷修         0        0        0      0        0 未成丹
+  玉清·雷劫         0        0        0      0        0 未成丹
+  玉清·苦行        13       13        4      0        0 未占据
+  玉清·雷体         0        0        0      0        0 未成丹
+  太虚·玄感         5        5        8      0        0 受敕承位
+  混元·正法         0        0        0      0        0 未成丹
+  说明：自然丹籍列只表示成丹类型；自然候选/待争席均未占据。
+  世界级协调器只返回继续或唯一就绪；位格注册表在原子绑定后才确认占据或返回固定拒绝原因。
+
+【席位竞争样本统计（TQ-015C-6按位格汇总）】
+SeatName           样本     自然候选     待争席      敕封     暂寄     未成丹    NA原因           紫府未接入
+------------------------------------------------------------------------------------------------------
+  火·化位（周天焰）          74       41       41     33      0      0 样本可用               74/74  未接入
+  木·源位（报春根）          37       26       26     11      0      0 样本可用               37/37  未接入
+  土·源位（安忍地）          42       24       24     18      0      0 样本可用               42/42  未接入
+  未成丹/无目标席位         267        0        0      0      0    267 未成丹               267/267 未接入
+  说明：本表只按目标 SeatName 汇总样本分布与 NA 原因；不结算席位胜者，不改变成丹阈值、战斗倍率或金丹样本筛选规则。
+
+【紫府神通/府位闭环输入状态（TQ-015C-4占位字段）】
+Build      神通数      府位覆盖     闭环状态     资格说明
+------------------------------------------------------------------
+  物·纯战        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  物·均衡        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  物·修炼        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  肉盾型         0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  法·纯战        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  法·均衡        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  法·修炼        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  灵修型         0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  水·散修        0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太一·法修       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太一·符修       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太虚·魂修       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太虚·均衡       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太虚·宿慧       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  玉清·剑修       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  玉清·雷修       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  玉清·雷劫       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  玉清·苦行       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  玉清·雷体       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  太虚·玄感       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  混元·正法       0.0      0.0 未接入      未接入紫府神通/府位闭环，阈值待验证
+  说明：本表只记录紫府神通、府位覆盖和闭环输入状态；当前阈值待验证，不参与成丹、争席或战斗倍率。
+
+【详细境界分布】
+  物·纯战    : 圆满(20)
+  物·均衡    : 初结金丹(12), 圆满(8)
+  物·修炼    : 初结金丹(20)
+  肉盾型     : 圆满(20)
+  法·纯战    : 圆满(20)
+  法·均衡    : 初结金丹(15), 圆满(5)
+  法·修炼    : 初结金丹(20)
+  灵修型     : 圆满(20)
+  水·散修    : 初结金丹(17), 圆满(3)
+  太一·法修   : 初结金丹(14), 圆满(6)
+  太一·符修   : 圆满(20)
+  太虚·魂修   : 圆满(20)
+  太虚·均衡   : 初结金丹(8), 圆满(12)
+  太虚·宿慧   : 初结金丹(17), 圆满(3)
+  玉清·剑修   : 圆满(20)
+  玉清·雷修   : 圆满(20)
+  玉清·雷劫   : 圆满(20)
+  玉清·苦行   : 初结金丹(17), 圆满(3)
+  玉清·雷体   : 圆满(20)
+  太虚·玄感   : 初结金丹(13), 圆满(7)
+  混元·正法   : 圆满(20)
+
+【境界 & 属性分布】
+Build      资质    练气%     筑基%     金丹%     平均HP    成长率
+-----------------------------------------------------------------
+  物·纯战        6      0%    100%      0%    1525  根骨15极限
+  物·均衡       14      0%     40%     60%    5530  五维均衡8
+  物·修炼       25      0%      0%    100%    8228  资质15倾斜
+  肉盾型         8      0%    100%      0%    1508  根骨15极限
+  法·纯战        8      0%    100%      0%     841  魂魄15极限
+  法·均衡       18      0%     25%     75%    6016  五维均衡8
+  法·修炼       26      0%      0%    100%    7659  资质15倾斜
+  灵修型        11      0%    100%      0%     939  魂魄15极限
+  水·散修       19      0%     15%     85%    6826  资质9气运8
+  太一·法修      16      0%     30%     70%    5483  魂魄12资质9
+  太一·符修      10      0%    100%      0%     849  神识15极限
+  太虚·魂修       9      0%    100%      0%     922  魂魄15极限
+  太虚·均衡      16      0%     60%     40%    3649  魂魄9气运8
+  太虚·宿慧      21      0%     15%     85%    6596  神识12资质9
+  玉清·剑修       6      0%    100%      0%    1525  根骨15极限
+  玉清·雷修       6      0%    100%      0%    1507  根骨12魂魄9
+  玉清·雷劫       9      0%    100%      0%     883  根骨11神识10
+  玉清·苦行      17      0%     15%     85%    6921  神识12资质9
+  玉清·雷体       9      0%    100%      0%     899  根骨15极限
+  太虚·玄感      14      0%     35%     65%    5489  魂魄12神识8
+  混元·正法       9      0%    100%      0%     879  根骨10神识10
+
+【金丹样本数】
+  物·纯战    : 0/20
+  物·均衡    : 12/20
+  物·修炼    : 20/20
+  肉盾型     : 0/20
+  法·纯战    : 0/20
+  法·均衡    : 15/20
+  法·修炼    : 20/20
+  灵修型     : 0/20
+  水·散修    : 17/20
+  太一·法修   : 14/20
+  太一·符修   : 0/20
+  太虚·魂修   : 0/20
+  太虚·均衡   : 8/20
+  太虚·宿慧   : 17/20
+  玉清·剑修   : 0/20
+  玉清·雷修   : 0/20
+  玉清·雷劫   : 0/20
+  玉清·苦行   : 17/20
+  玉清·雷体   : 0/20
+  太虚·玄感   : 13/20
+  混元·正法   : 0/20
+正在计算 21x21 金丹同境矩阵...
+
+================================================================================
+  修炼后金丹同境战斗胜率矩阵 (仅统计双方均为金丹的样本, 100轮, 2973ms)
+================================================================================
+
+          物·纯战    物·均衡    物·修炼    肉盾型     法·纯战    法·均衡    法·修炼    灵修型     水·散修    太一·法修   太一·符修   太虚·魂修   太虚·均衡   太虚·宿慧   玉清·剑修   玉清·雷修   玉清·雷劫   玉清·苦行   玉清·雷体   太虚·玄感   混元·正法
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+物·纯战      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+物·均衡      NA      ---     WK  20% NA      NA      CR 100% CR 100% NA      WK  13% CR  97% NA      NA      CR  99% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+物·修炼      NA      CR  80% ---     NA      NA      CR 100% CR 100% NA      WK  24% CR 100% NA      NA      CR 100% CR 100% NA      NA      NA      CR 100% NA      CR  99% NA
+肉盾型       NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+法·纯战      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+法·均衡      NA      WK   0% WK   0% NA      NA      ---     FV  64% NA      WK   0% WK   6% NA      NA      WK  25% WK  20% NA      NA      NA      EV  59% NA      WK  26% NA
+法·修炼      NA      WK   0% WK   0% NA      NA      WK  36% ---     NA      WK   0% WK   5% NA      NA      WK  28% WK  24% NA      NA      NA      EV  52% NA      WK  16% NA
+灵修型       NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+水·散修      NA      CR  87% FV  76% NA      NA      CR 100% CR 100% NA      ---     CR 100% NA      NA      CR 100% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+太一·法修     NA      WK   3% WK   0% NA      NA      CR  94% CR  95% NA      WK   0% ---     NA      NA      FV  70% CR  84% NA      NA      NA      CR 100% NA      CR  84% NA
+太一·符修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+太虚·魂修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA
+太虚·均衡     NA      WK   1% WK   0% NA      NA      FV  75% FV  72% NA      WK   0% WK  30% NA      NA      ---     EV  43% NA      NA      NA      CR  81% NA      WK  34% NA
+太虚·宿慧     NA      WK   0% WK   0% NA      NA      CR  80% FV  76% NA      WK   0% WK  16% NA      NA      EV  57% ---     NA      NA      NA      FV  68% NA      WK  23% NA
+玉清·剑修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA
+玉清·雷修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA
+玉清·雷劫     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA
+玉清·苦行     NA      WK   0% WK   0% NA      NA      EV  41% EV  48% NA      WK   0% WK   0% NA      NA      WK  19% WK  32% NA      NA      NA      ---     NA      EV  52% NA
+玉清·雷体     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA
+太虚·玄感     NA      WK   0% WK   1% NA      NA      FV  74% CR  84% NA      WK   0% WK  16% NA      NA      FV  66% FV  77% NA      NA      NA      EV  48% NA      ---     NA
+混元·正法     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---
+  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足
+
+【筑基样本数】
+  物·纯战    : 20/20
+  物·均衡    : 8/20
+  物·修炼    : 0/20
+  肉盾型     : 20/20
+  法·纯战    : 20/20
+  法·均衡    : 5/20
+  法·修炼    : 0/20
+  灵修型     : 20/20
+  水·散修    : 3/20
+  太一·法修   : 6/20
+  太一·符修   : 20/20
+  太虚·魂修   : 20/20
+  太虚·均衡   : 12/20
+  太虚·宿慧   : 3/20
+  玉清·剑修   : 20/20
+  玉清·雷修   : 20/20
+  玉清·雷劫   : 20/20
+  玉清·苦行   : 3/20
+  玉清·雷体   : 20/20
+  太虚·玄感   : 7/20
+  混元·正法   : 20/20
+正在计算 21x21 筑基同境矩阵...
+
+================================================================================
+  筑基同境战斗胜率矩阵（筑基三阶段混合样本）
+================================================================================
+
+          物·纯战    物·均衡    物·修炼    肉盾型     法·纯战    法·均衡    法·修炼    灵修型     水·散修    太一·法修   太一·符修   太虚·魂修   太虚·均衡   太虚·宿慧   玉清·剑修   玉清·雷修   玉清·雷劫   玉清·苦行   玉清·雷体   太虚·玄感   混元·正法
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+物·纯战      ---     CR 100% NA      EV  46% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% WK  25% WK  19% CR 100% CR 100% CR 100% CR 100% CR 100%
+物·均衡      WK   0% ---     NA      WK   0% CR 100% CR 100% NA      CR 100% CR  96% CR 100% CR 100% CR 100% CR 100% CR 100% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+物·修炼      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+肉盾型       EV  54% CR 100% NA      ---     CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% WK   7% WK  11% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·纯战      WK   0% WK   0% NA      WK   0% ---     EV  51% NA      WK  27% WK   0% EV  51% CR 100% WK   0% WK  32% EV  41% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·均衡      WK   0% WK   0% NA      WK   0% EV  49% ---     NA      WK  13% WK   0% EV  50% CR 100% WK   1% EV  45% EV  50% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·修炼      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+灵修型       WK   0% WK   0% NA      WK   0% FV  73% CR  87% NA      ---     WK   0% FV  73% CR 100% WK   2% CR  85% CR  86% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+水·散修      WK   0% WK   4% NA      WK   0% CR 100% CR 100% NA      CR 100% ---     CR 100% CR 100% CR 100% CR 100% CR 100% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太一·法修     WK   0% WK   0% NA      WK   0% EV  49% EV  50% NA      WK  27% WK   0% ---     CR 100% WK   2% EV  46% FV  76% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太一·符修     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% ---     WK   0% WK   0% WK   0% WK   0% WK   0% WK   4% CR  99% WK   6% FV  77% FV  68%
+太虚·魂修     WK   0% WK   0% NA      WK   0% CR 100% CR  99% NA      CR  98% WK   0% CR  98% CR 100% ---     CR  97% CR  94% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太虚·均衡     WK   0% WK   0% NA      WK   0% FV  68% EV  55% NA      WK  15% WK   0% EV  54% CR 100% WK   3% ---     EV  58% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太虚·宿慧     WK   0% WK   0% NA      WK   0% EV  59% EV  50% NA      WK  14% WK   0% WK  24% CR 100% WK   6% EV  42% ---     WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·剑修     FV  75% CR 100% NA      CR  93% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% ---     EV  43% CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·雷修     CR  81% CR 100% NA      CR  89% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% EV  57% ---     CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·雷劫     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% CR  96% WK   0% WK   0% WK   0% WK   0% WK   0% ---     CR  90% FV  65% CR  82% CR  91%
+玉清·苦行     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK   1% WK   0% WK   0% WK   0% WK   0% WK   0% WK  10% ---     WK  10% WK  14% WK  12%
+玉清·雷体     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% CR  94% WK   0% WK   0% WK   0% WK   0% WK   0% WK  35% CR  90% ---     CR  91% CR  89%
+太虚·玄感     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK  23% WK   0% WK   0% WK   0% WK   0% WK   0% WK  18% CR  86% WK   9% ---     FV  63%
+混元·正法     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK  32% WK   0% WK   0% WK   0% WK   0% WK   0% WK   9% CR  88% WK  11% WK  37% ---
+  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=样本不足
+  说明：本表只验证筑基主游戏期 Build 差异，不引入紫府/金丹新倍率或改变金丹样本筛选。
+
+【紫府圆满样本数】
+  物·纯战    : 20/20
+  物·均衡    : 8/20
+  物·修炼    : 0/20
+  肉盾型     : 20/20
+  法·纯战    : 20/20
+  法·均衡    : 5/20
+  法·修炼    : 0/20
+  灵修型     : 20/20
+  水·散修    : 3/20
+  太一·法修   : 6/20
+  太一·符修   : 20/20
+  太虚·魂修   : 20/20
+  太虚·均衡   : 12/20
+  太虚·宿慧   : 3/20
+  玉清·剑修   : 20/20
+  玉清·雷修   : 20/20
+  玉清·雷劫   : 20/20
+  玉清·苦行   : 3/20
+  玉清·雷体   : 20/20
+  太虚·玄感   : 7/20
+  混元·正法   : 20/20
+正在计算 21x21 紫府圆满同境矩阵...
+
+================================================================================
+  紫府圆满同境战斗胜率矩阵
+================================================================================
+
+          物·纯战    物·均衡    物·修炼    肉盾型     法·纯战    法·均衡    法·修炼    灵修型     水·散修    太一·法修   太一·符修   太虚·魂修   太虚·均衡   太虚·宿慧   玉清·剑修   玉清·雷修   玉清·雷劫   玉清·苦行   玉清·雷体   太虚·玄感   混元·正法
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+物·纯战      ---     CR 100% NA      EV  45% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% WK  30% WK  26% CR 100% CR 100% CR 100% CR 100% CR 100%
+物·均衡      WK   0% ---     NA      WK   1% CR 100% CR 100% NA      CR 100% CR  93% CR 100% CR 100% CR 100% CR 100% CR 100% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+物·修炼      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+肉盾型       EV  55% CR  99% NA      ---     CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% WK  12% WK   6% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·纯战      WK   0% WK   0% NA      WK   0% ---     EV  51% NA      WK  28% WK   0% EV  50% CR 100% WK   0% WK  35% EV  42% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·均衡      WK   0% WK   0% NA      WK   0% EV  49% ---     NA      WK   9% WK   0% EV  46% CR 100% WK   0% EV  49% EV  46% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+法·修炼      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+灵修型       WK   0% WK   0% NA      WK   0% FV  72% CR  91% NA      ---     WK   0% FV  74% CR 100% WK   1% CR  85% CR  92% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+水·散修      WK   0% WK   7% NA      WK   0% CR 100% CR 100% NA      CR 100% ---     CR 100% CR 100% CR 100% CR 100% CR 100% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太一·法修     WK   0% WK   0% NA      WK   0% EV  50% EV  54% NA      WK  26% WK   0% ---     CR 100% WK   1% WK  33% FV  76% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太一·符修     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% ---     WK   0% WK   0% WK   0% WK   0% WK   0% WK   1% CR 100% WK   4% FV  79% FV  69%
+太虚·魂修     WK   0% WK   0% NA      WK   0% CR 100% CR 100% NA      CR  99% WK   0% CR  99% CR 100% ---     CR  94% CR  93% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太虚·均衡     WK   0% WK   0% NA      WK   0% FV  65% EV  51% NA      WK  15% WK   0% FV  67% CR 100% WK   6% ---     EV  57% WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+太虚·宿慧     WK   0% WK   0% NA      WK   0% EV  58% EV  54% NA      WK   8% WK   0% WK  24% CR 100% WK   7% EV  43% ---     WK   0% WK   0% CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·剑修     FV  70% CR 100% NA      CR  88% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% ---     EV  55% CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·雷修     FV  74% CR 100% NA      CR  94% CR 100% CR 100% NA      CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% CR 100% EV  45% ---     CR 100% CR 100% CR 100% CR 100% CR 100%
+玉清·雷劫     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% CR  99% WK   0% WK   0% WK   0% WK   0% WK   0% ---     CR  94% FV  70% CR  91% CR  94%
+玉清·苦行     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK   0% WK   0% WK   0% WK   0% WK   0% WK   0% WK   6% ---     WK  11% WK  12% WK   9%
+玉清·雷体     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% CR  96% WK   0% WK   0% WK   0% WK   0% WK   0% WK  30% CR  89% ---     CR  85% CR  89%
+太虚·玄感     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK  21% WK   0% WK   0% WK   0% WK   0% WK   0% WK   9% CR  88% WK  15% ---     EV  57%
+混元·正法     WK   0% WK   0% NA      WK   0% WK   0% WK   0% NA      WK   0% WK   0% WK   0% WK  31% WK   0% WK   0% WK   0% WK   0% WK   0% WK   6% CR  91% WK  11% EV  43% ---
+  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=样本不足
+
+【紫府圆满 vs 金丹初期压制战】
+Build      紫府样本     金丹样本     紫府胜率     削位15     强扫最佳         平均回合     出口%     主要出口
+----------------------------------------------------------------------------------------------
+  物·纯战         20        0       NA       NA NA                 NA      NA -
+  物·均衡          8       12     0.0%       NA NA               1.2      0% NA
+  物·修炼          0       20       NA       NA NA                 NA      NA -
+  肉盾型          20        0       NA       NA NA                 NA      NA -
+  法·纯战         20        0       NA       NA NA                 NA      NA -
+  法·均衡          5       15     0.0%       NA NA               1.1      0% NA
+  法·修炼          0       20       NA       NA NA                 NA      NA -
+  灵修型          20        0       NA       NA NA                 NA      NA -
+  水·散修          3       17     0.0%       NA NA               1.4      0% NA
+  太一·法修         6       14     0.0%       NA NA               1.0      0% NA
+  太一·符修        20        0       NA       NA NA                 NA      NA -
+  太虚·魂修        20        0       NA       NA NA                 NA      NA -
+  太虚·均衡        12        8     0.0%       NA NA               1.0      0% NA
+  太虚·宿慧         3       17     0.0%       NA NA               1.0      0% NA
+  玉清·剑修        20        0       NA       NA NA                 NA      NA -
+  玉清·雷修        20        0       NA       NA NA                 NA      NA -
+  玉清·雷劫        20        0       NA       NA NA                 NA      NA -
+  玉清·苦行         3       17     0.0%       NA NA               1.0      0% NA
+  玉清·雷体        20        0       NA       NA NA                 NA      NA -
+  太虚·玄感         7       13     0.0%       NA NA               1.0      0% NA
+  混元·正法        20        0       NA       NA NA                 NA      NA -
+  说明：同 Build 内紫府圆满挑战金丹初期，验证金丹压制是否明显但仍保留战术出口。
+  出口统计只分类削位/破府/封丹/阵法/剧情条件，不修改默认战斗结算、成丹阈值或金丹倍率。
+  削位15沿用旧开关口径；强扫最佳扫描削位15/30/45+封丹，只压低金丹MP、禁用金丹神通，不提升紫府HP/攻击。
+
+================================================================================
+  2v2 群战胜率矩阵 (同Build两人组队，仅金丹样本)
+================================================================================
+
+          物·纯战    物·均衡    物·修炼    肉盾型     法·纯战    法·均衡    法·修炼    灵修型     水·散修    太一·法修   太一·符修   太虚·魂修   太虚·均衡   太虚·宿慧   玉清·剑修   玉清·雷修   玉清·雷劫   玉清·苦行   玉清·雷体   太虚·玄感   混元·正法
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+物·纯战      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+物·均衡      NA      ---     WK   4% NA      NA      CR 100% CR 100% NA      WK  21% CR 100% NA      NA      CR 100% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+物·修炼      NA      CR  96% ---     NA      NA      CR 100% CR 100% NA      EV  59% CR 100% NA      NA      CR 100% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+肉盾型       NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+法·纯战      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+法·均衡      NA      WK   0% WK   0% NA      NA      ---     CR  93% NA      WK   0% WK  29% NA      NA      CR  92% CR  87% NA      NA      NA      CR  80% NA      EV  46% NA
+法·修炼      NA      WK   0% WK   0% NA      NA      WK   7% ---     NA      WK   0% WK   0% NA      NA      WK   4% WK  18% NA      NA      NA      CR  88% NA      EV  46% NA
+灵修型       NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+水·散修      NA      FV  79% EV  41% NA      NA      CR 100% CR 100% NA      ---     CR 100% NA      NA      CR 100% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+太一·法修     NA      WK   0% WK   0% NA      NA      FV  71% CR 100% NA      WK   0% ---     NA      NA      CR  92% CR 100% NA      NA      NA      CR 100% NA      CR 100% NA
+太一·符修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA
+太虚·魂修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA      NA      NA      NA
+太虚·均衡     NA      WK   0% WK   0% NA      NA      WK   8% CR  96% NA      WK   0% WK   8% NA      NA      ---     CR  88% NA      NA      NA      CR  83% NA      CR  83% NA
+太虚·宿慧     NA      WK   0% WK   0% NA      NA      WK  13% CR  82% NA      WK   0% WK   0% NA      NA      WK  12% ---     NA      NA      NA      CR  82% NA      FV  69% NA
+玉清·剑修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA      NA
+玉清·雷修     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA      NA
+玉清·雷劫     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA      NA      NA
+玉清·苦行     NA      WK   0% WK   0% NA      NA      WK  20% WK  12% NA      WK   0% WK   0% NA      NA      WK  17% WK  18% NA      NA      NA      ---     NA      CR 100% NA
+玉清·雷体     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---     NA      NA
+太虚·玄感     NA      WK   0% WK   0% NA      NA      EV  54% EV  54% NA      WK   0% WK   0% NA      NA      WK  17% WK  31% NA      NA      NA      WK   0% NA      ---     NA
+混元·正法     NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      NA      ---
+  CR=碾压 FV=优势 EV=均势 WK=劣势 NA=金丹样本不足
+
+【1v1 vs 2v2 增益对比】
+Build      1v1%    2v2%    增益
+----------------------------------
+  物·纯战        NA     NA      NA
+  物·均衡      81.0%  80.6%   -0.4%
+  物·修炼      89.2%  95.0%   +5.7%
+  肉盾型         NA     NA      NA
+  法·纯战        NA     NA      NA
+  法·均衡      22.2%  47.4%  +25.2%
+  法·修炼      17.9%  18.1%   +0.2%
+  灵修型         NA     NA      NA
+  水·散修      95.9%  91.1%   -4.7%
+  太一·法修     58.9%  62.6%   +3.7%
+  太一·符修       NA     NA      NA
+  太虚·魂修       NA     NA      NA
+  太虚·均衡     37.3%  40.7%   +3.4%
+  太虚·宿慧     35.6%  28.9%   -6.7%
+  玉清·剑修       NA     NA      NA
+  玉清·雷修       NA     NA      NA
+  玉清·雷劫       NA     NA      NA
+  玉清·苦行     21.3%  18.5%   -2.9%
+  玉清·雷体       NA     NA      NA
+  太虚·玄感     40.7%  17.2%  -23.4%
+  混元·正法       NA     NA      NA
+
+================================================================================
+
+[练气快照 同境对战]
+  练气角色境界分布:
+    物·纯战    : 练气6层(6), 练气7层(14)
+    物·均衡    : 练气7层(20)
+    物·修炼    : 练气7层(1), 练气8层(19)
+    肉盾型     : 练气6层(4), 练气7层(16)
+    法·纯战    : 练气7层(20)
+    法·均衡    : 练气7层(20)
+    法·修炼    : 练气7层(3), 练气8层(17)
+    灵修型     : 练气6层(3), 练气7层(17)
+    水·散修    : 练气7层(20)
+    太一·法修   : 练气7层(20)
+    太一·符修   : 练气6层(1), 练气7层(19)
+    太虚·魂修   : 练气6层(2), 练气7层(18)
+    太虚·均衡   : 练气7层(20)
+    太虚·宿慧   : 练气7层(20)
+    玉清·剑修   : 练气6层(1), 练气7层(19)
+    玉清·雷修   : 练气6层(1), 练气7层(19)
+    玉清·雷劫   : 练气6层(3), 练气7层(17)
+    玉清·苦行   : 练气7层(20)
+    玉清·雷体   : 练气6层(3), 练气7层(17)
+    太虚·玄感   : 练气7层(20)
+    混元·正法   : 练气6层(3), 练气7层(17)
+  练气同境平均回合数: 5.1 (样本=10500场)
+  筑基同境平均回合数: 5.0 (样本=7494场)
+
+
+【金丹同境平均战斗回合数（含术法/神通）】
+（每对Build取前5个角色互搏，每场5轮）
+
+  总平均回合数: 11.4 (样本=2250场)
+
+【调试：物·均衡 vs 物·纯战 属性对比（seed=0）】
+  物·均衡 (圆满) 道基=地品(57) 金丹=未成丹(0): HP=1301 MP=396 肉攻=387 神攻=344 肉防=314 神防=217 反应=123  二级: 格挡率=12 格挡减伤率=10 魂盾率=12 魂盾减伤率=10 闪避率=4 命中率=0 暴击率=6 暴击伤害=14
+  物·纯战 (圆满) 道基=地品(73) 金丹=未成丹(0): HP=1525 MP=453 肉攻=480 神攻=391 肉防=384 神防=302 反应=184  二级: 格挡率=12 格挡减伤率=10 魂盾率=0 魂盾减伤率=0 闪避率=2 命中率=12 暴击率=9 暴击伤害=10
+  均衡先手: 0%  纯战先手: 0%  均: 0%
+  v3.5: 属性双轨成长 + 道基品级（凝聚值判定+功法上下限钳制）
+================================================================================

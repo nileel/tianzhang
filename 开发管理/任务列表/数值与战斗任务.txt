@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-10-09：N-COMBAT-AP-SIM-01人工修复超时现场并完成双入口行动力迁移；Release构建、16项自测与默认完整运行通过，选位重复寻路已消除。证据见开发管理/N-COMBAT-AP-SIM-01-验证记录.txt，归档见开发管理/任务归档/N-COMBAT-AP-SIM-01.txt；数值平衡尚未定案，下游具名前置保留待维护。
+
 - 2026-10-08：DATA、CHAR及SAVE已完成；正式新建玩家100 AP／v=2，经创角→快照→schema4保存往返。CORE已完成统一个人回合内核与正式输入接线，Guard／SwapSpell均按已批准50 AP迁移试跑；不代表后继FLOW／HUD／SIM及最终场景或数值平衡完成。
 
 - 2026-10-08人工接手完成：82ca885a失联run已关闭；负责人明确授权当前模型承接保留工作区，CORE完成并归档至 开发管理/任务归档/U-COMBAT-AP-CORE-01.txt，不再冻结。验证与两项原基线失败见 开发管理/U-COMBAT-AP-CORE-01-验证记录.txt；本轮未顺带准备下游卡。
@@ -19,7 +21,6 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
 | D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
-| N-COMBAT-AP-SIM-01 | P1 | codex | 已排队 | — | BattleSim双入口行动力语义迁移 | 开发管理/任务卡/N-COMBAT-AP-SIM-01.txt |
 | U-COMBAT-AP-HUD-01 | P1 | codex | 已排队 | — | 行动力HUD与同源费用预览 | 开发管理/任务卡/U-COMBAT-AP-HUD-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01 | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
 | U-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01 | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |

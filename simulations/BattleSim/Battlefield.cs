@@ -201,6 +201,7 @@ sealed class HexBattlefield
     readonly SharedSpatial.SpatialQueryBoard spatialBoard;
     readonly Dictionary<(HexCoord Source, HexCoord Target, int MinRange, int MaxRange, SpatialQueryKind Kind, bool RequireLineOfSight), RangeQueryResult> rangeQueryCache = new();
     readonly Dictionary<(HexCoord Start, HexCoord Target, int MovementBudget, int MinRange, int MaxRange), HexCoord> attackPositionCache = new();
+    readonly Dictionary<(HexCoord Start, int Budget, int V, string Occupied), IReadOnlyDictionary<HexCoord, int>> actionReachableCache = new();
 
     public int MetricUnitsPerRange => environmentRules.UnitsPerRange;
 
@@ -324,6 +325,29 @@ sealed class HexBattlefield
             .FindReachable(ToSpatial(start), movementBudget, occupiedSpatial)
             .ToDictionary(entry => FromSpatial(entry.Key), entry => entry.Value);
     }
+
+    internal IReadOnlyDictionary<HexCoord, int> FindReachableWithinActionPoints(
+        HexCoord start, int actionPointBudgetUnits, int movementEfficiencyMilliUnits,
+        IReadOnlyCollection<HexCoord> occupied = null)
+    {
+        // Like rangeQueryCache, this belongs to the immutable spatial board built by the constructor.
+        // Occupancy is part of the key, so another actor moving or dying cannot reuse an old quote.
+        string occupancy = string.Join(";", (occupied ?? Array.Empty<HexCoord>()).Distinct()
+            .OrderBy(coord => coord.Q).ThenBy(coord => coord.R).Select(coord => $"{coord.Q},{coord.R}"));
+        var key = (start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupancy);
+        if (actionReachableCache.TryGetValue(key, out var cached)) return cached;
+        var result = spatialBoard.FindReachableWithinActionPoints(ToSpatial(start), actionPointBudgetUnits,
+            movementEfficiencyMilliUnits, occupied?.Select(ToSpatial).ToArray())
+            .ToDictionary(entry => FromSpatial(entry.Key), entry => entry.Value);
+        actionReachableCache.Add(key, result);
+        return result;
+    }
+
+    internal SharedSpatial.SpatialMovementPathResult QueryMovementPath(
+        HexCoord start, HexCoord target, int actionPointBudgetUnits, int movementEfficiencyMilliUnits,
+        IReadOnlyCollection<HexCoord> occupied = null) => spatialBoard.QueryMovementPath(
+        ToSpatial(start), ToSpatial(target), actionPointBudgetUnits, movementEfficiencyMilliUnits,
+        occupied?.Select(ToSpatial).ToArray());
 
     public RangeQueryResult QueryRange(
         HexCoord source,

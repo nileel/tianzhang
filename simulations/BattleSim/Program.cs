@@ -781,7 +781,9 @@ class Program
 
         Console.WriteLine("【三阶段成长与筑基入门预算审计（N-FPD-STAGE-03）】");
         Console.WriteLine("  旧输入：每部功法筑基五段成长；三阶段份额=30%/32%/38%，运行时以同一分配结算筑基／开府／圆满。");
-        Console.WriteLine($"  守恒容差：{tolerance:E0}；移力按现行固定境界值处理，不迁移旧五段的非运行时增量。");
+        Console.WriteLine($"  守恒容差：{tolerance:E0}；八属性不迁移旧移力列；独立v读取GF-GROWTH-AP@0.1/A。");
+        Console.WriteLine("  战斗观测：回合数=全场个人回合数；动作不推进全局整数刻，AP余额不结转；结果仅供迁移试跑，不作为平衡定案。");
+        Console.WriteLine($"  行动经济输入SHA256：效果={GameData.InputHash("docs/角色养成/术法神通数值模板.txt")}；成长={GameData.InputHash("docs/角色养成/功法数值模板.txt")}；攻击={GameData.InputHash("src/Assets/DataConfig/AttackProfiles.csv")}");
 
         int auditedBuilds = 0;
         foreach (var build in BuildDefs)
@@ -814,6 +816,12 @@ class Program
         Console.WriteLine($"  金丹入口：每个 Build 的筑基累计成长总额守恒，最大原始差值≤{tolerance:E0}。");
 
         string[] entryBudgetNames = ["南华阐衍典", "太易山藏经", "玄牝道藏", "空无般若经", "万法都箓经", "正一盟威箓"];
+        Console.WriteLine("  行动经济逐来源：AP基础100000／功法增量0，临时v=0（本报告未装配巽卦）；v为千分单位。");
+        foreach (string name in BuildDefs.Select(build => build.GongFaName).Concat(entryBudgetNames).Distinct())
+        {
+            var movement = GameData.ProjectMovement("筑基", 2, name);
+            Console.WriteLine($"    {name}：版本={movement.Version}；基础v={movement.BaseMilliUnits}；功法v={movement.GongFaMilliUnits}；有效v={movement.EffectiveMilliUnits}；来源={movement.Source}；节点={movement.Nodes}；合法篇章={string.Join(",", movement.UnlockedChapters)}");
+        }
         Console.WriteLine("  六部新增入门预算（供 D-FPD-GONGFA-03 同步 docs/CSV/asset）：");
         foreach (string name in entryBudgetNames)
         {

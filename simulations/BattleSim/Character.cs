@@ -40,6 +40,34 @@ class Character
     public string GongFaName = "";
     // 后续由主战法宝数据链路覆盖；无装备时使用徒手兜底。
     public GameData.AttackProfile BasicAttackProfile = GameData.UnarmedBasicAttack;
+    // Long-term scalar inputs belong to the existing stat owner. Existing exact stat clones
+    // therefore preserve them without a separate fallback or another source of defaults.
+    public bool ActionEconomyInputsPresent => Primary.ContainsKey("AP上限单位") && Primary.ContainsKey("移动效率千分单位");
+    public int ActionPointMaximumUnits => Primary["AP上限单位"];
+    public int MovementEfficiencyMilliUnits => Primary["移动效率千分单位"];
+    public GameData.MovementInput MovementInput => Primary.ContainsKey("行动经济模板输入") ? GameData.ProjectMovement(Realm, SubIndex, GongFaName) : null;
+    public GameData.ActionEconomyCost ArtCost => ArtName.Length == 0 ? null : GameData.AbilityCostByName(ArtName);
+    public GameData.ActionEconomyCost DivineCost => DivineName.Length == 0 ? null : GameData.AbilityCostByName(DivineName);
+    // Explicit production loadout; generic Config names never impersonate these profile IDs.
+    public IReadOnlyList<string> ProductionArtIds { get; private set; } = Array.Empty<string>();
+    public int HealthRecoveryPerOwnTurn { get; set; }
+    public int SpiritRecoveryPerOwnTurn { get; set; }
+
+    internal void SetActionEconomyInputs(int maximumUnits, int movementMilliUnits)
+    {
+        if (maximumUnits <= 0 || movementMilliUnits < 0)
+            throw new ArgumentOutOfRangeException(nameof(maximumUnits));
+        Primary["AP上限单位"] = maximumUnits;
+        Primary["移动效率千分单位"] = movementMilliUnits;
+    }
+
+    internal void EquipProductionArts(params string[] profileIds)
+    {
+        if (profileIds.Distinct(StringComparer.Ordinal).Count() != profileIds.Length ||
+            profileIds.Any(id => id == "basic_unarmed" || !GameData.ProductionAttacks.ContainsKey(id)))
+            throw new ArgumentException("Unknown or duplicate production art.");
+        ProductionArtIds = Array.AsReadOnly((string[])profileIds.Clone());
+    }
     // v4.1: 术法与神通
     public string ArtName = "";          // 术法名称
     public string ArtType = "";          // "物理" or "神魂"
@@ -160,7 +188,11 @@ class Character
         Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
         Primary["神防"] = (int)Math.Round((rb.神防 + SubGrowthSum("神防", realm, subIdx, weights, GongFaName) + Innate["魂魄"] * rf.防 * weights["魂魄"]) * sm);
         Primary["反应"] = (int)Math.Round((rb.反应 + SubGrowthSum("反应", realm, subIdx, weights, GongFaName) + (Innate["根骨"] * weights["根骨"] + Innate["魂魄"] * weights["魂魄"] + Innate["神识"] * weights["神识"]) * rf.反应 / 3.0) * sm);
-        Primary["移力"] = rb.移力;
+        var movementInput = GameData.ProjectMovement(realm, subIdx, GongFaName);
+        Primary["行动经济模板输入"] = 1;
+        SetActionEconomyInputs(movementInput.ActionPointMaximumUnits, movementInput.EffectiveMilliUnits);
+        // Legacy display only; combat movement consumes the independent integer input above.
+        Primary["移力"] = MovementEfficiencyMilliUnits / 1000;
         Primary["神识"] = (int)Math.Round((rb.神识 + SubGrowthSum("神识", realm, subIdx, weights, GongFaName) + Innate["神识"] * rf.神识 * weights["神识"]) * sm);
 
         // 二级属性
@@ -251,10 +283,13 @@ class Character
     {
         var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
         ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown; ArtMinRange = artCfg.MinRange; ArtMaxRange = artCfg.MaxRange;
+        ArtCost.Validate();
+        DivineName = "";
         if (Realm == "金丹" && FormedState == "成丹" && !string.IsNullOrEmpty(DanJiType))
         {
             var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
             DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown; DivineMinRange = divCfg.MinRange; DivineMaxRange = divCfg.MaxRange;
+            DivineCost.Validate();
         }
     }
 

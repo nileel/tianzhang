@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-08 D-COMBAT-AP-EFFECT-01与D-COMBAT-AP-GROWTH-01均已正式归档；获准试跑输入、双入口字面量路径与风险预检已核对，本卡进入ready等待执行。",
+  "stateReason": "2026-10-09负责人授权人工子智能体修复超时现场；保留双入口迁移并消除选位重复寻路，Release构建、16项自测及默认完整运行通过，逐动作轨迹不变。功能迁移完成，数值平衡仍由BALANCE任务定案。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/Character.cs",
@@ -93,3 +93,26 @@
 
 - 旧单位缺依据、需要猜生产数值或复刻正式Unity场景时停止；不能保留两套可切换执行器。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-09 人工修复与完成
+
+- 原自动runId=5ee19690-adcd-4583-8461-2a66f68c8bf8，baseCommit=853a6c3b4e36f6b30603ee26eaff38964a73b120，任务摘要6b806a9e535661a2b8bff122f4e3282068166713ddd6f81f40186f8d6c8bc68c。原gpt-6.1-sol/high会话在3000秒责任时限结束，未形成candidate或正式提交；六个源码修改保留在原隔离worktree。
+- 负责人本轮明确要求用子智能体分别修复。人工主智能体通过Node requestMeta核实为gpt-6-astra；BattleSim子智能体继承主会话，仅写冻结的源码与验证记录，不改卡、队列、runtime或创建提交。主智能体统一复核全部差异、源码SHA256、输入与轨迹证据并负责正式收口；未恢复旧CLI或改动模型配置。
+- Simulate、SimulateDetailed、Simulate2v2、Simulate2v2Detailed共用RunBattle；AP多动作、同刻顺序、独立整数刻CD、唯一实例账本、待机与正常结束、双方状态及生产攻击/聚灵消费按获准输入接入。GameData从两批准模板与AttackProfiles.csv读取同源输入，保留当前凡人至金丹全流程边界。
+- 本轮新增修复仅在Combat.ResolvePaidPlan复用既有QueryRange的IsInRange与DistanceUnits，删除重复QueryMetricDistance遍历；没有新增缓存、超时兜底、执行器或选择策略。修复前默认运行236.662秒仍未完成首个金丹矩阵；修复后Program至金丹矩阵完成累计2973ms，默认全流程退出0，后者总墙钟未单独计时。
+- Release构建0警告0错误；16项自测全部通过；性能修复前后84375字符逐动作JSON完全一致，SHA256=2224152ece50a07d78a14545e9072f5ad39edd5cefac96dd9f4863c23c897733。完整命令、原始输出、输入与最终源码摘要见开发管理/N-COMBAT-AP-SIM-01-验证记录.txt。
+- 本卡完成迁移功能验收，不形成数值平衡结论；未改Unity场景、生产配置、其他任务或下游具名前置。后继依赖由后续有权维护按归档事实处理。
+
+## 经验候选
+
+### CAND-N-COMBAT-AP-SIM-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：battlesim
+- 现象：双入口迁移的定向自测通过，但默认金丹矩阵长时间占用CPU，自动责任轮次在收尾前超时。
+- 已证实根因：ResolvePaidPlan逐可达格先通过QueryRange得到完整原始距离，随后仍调用QueryMetricDistance重新Traverse；更高v扩大候选集，使重复计算累积。查询结果已足够计算合法性与Gap，无需再次寻路。
+- 可能复用范围：已有完整查询结果与稳定排序的模拟器候选评估；先核对返回值在出范围/不可达时的语义，再在同一方法复用，不以加缓存或放宽时限替代根因判断。
+- 证据：本卡验证记录中的236.662秒未完成采样、修复后金丹矩阵累计2973ms、默认完整退出0、16项自测与84375字符逐动作轨迹完全相同；Combat.ResolvePaidPlan局部复用差异。
+- 门禁可能：no

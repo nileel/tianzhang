@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using TianZhang.Editor;
 
 namespace BattleSim;
 
@@ -431,7 +436,13 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         string Element,
         int MinRange,
         int MaxRange,
-        AreaTargetingConfig AreaTargeting = null);
+        AreaTargetingConfig AreaTargeting = null,
+        ActionEconomyCost Cost = null,
+        int SpiritCost = 0,
+        int OtherTargetSpiritCost = 0,
+        decimal SpiritRecoveryMultiplier = 0,
+        int MinimumSpiritRecovery = 0,
+        decimal OtherTargetRecoveryMultiplier = 1);
     public record ArtConfig(
         string Name,
         string Type,
@@ -441,7 +452,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         string Element = "",
         int MinRange = 1,
         int MaxRange = 1,
-        AreaTargetingConfig AreaTargeting = null);
+        AreaTargetingConfig AreaTargeting = null,
+        ActionEconomyCost Cost = null);
     public record DivineConfig(
         string Name,
         string Type,
@@ -452,12 +464,187 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         int MinRange = 1,
         int MaxRange = 1,
         AreaTargetingConfig AreaTargeting = null,
-        int MPCost = 0);
+        int MPCost = 0,
+        ActionEconomyCost Cost = null);
     public readonly record struct ElementMatch(double DamageMultiplier, double CritRateBonus, double CritDamageBonus);
     public static readonly ForcedMovementConfig BreakFormationChargeKnockback = new("破阵冲锋·击退", 1);
     public static readonly MovementControlConfig RootedControl = new("定身", true);
     public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土", 1, 1);
-    public static readonly AttackProfile UnarmedBasicAttack = new("徒手", "物理", 1.0, "", 1, 1);
+    public static AttackProfile UnarmedBasicAttack => ProductionAttacks["basic_unarmed"];
+
+    // The approved documents remain the parameter source. These are read-only projections,
+    // shared by both simulation entries, not separately editable copies of their tables.
+    public sealed record ActionEconomyCost(string DefinitionRef, string Version,
+        int ActionPointCostUnits, int MinimumNetCostUnits, int CtPenalty, int ReuseCooldownTicks, string Name = "")
+    {
+        public void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(DefinitionRef) || string.IsNullOrWhiteSpace(Version) ||
+                ActionPointCostUnits <= 0 || MinimumNetCostUnits <= 0 || MinimumNetCostUnits > ActionPointCostUnits ||
+                CtPenalty < 0 || CtPenalty > int.MaxValue - 100 || ReuseCooldownTicks < 0)
+                throw new InvalidDataException("action_economy_cost_invalid");
+        }
+    }
+
+    public sealed record MovementInput(string Version, int BaseMilliUnits, int GongFaMilliUnits,
+        int ActionPointMaximumUnits, string Source, string Nodes, IReadOnlyList<string> UnlockedChapters)
+    {
+        public int EffectiveMilliUnits => checked(BaseMilliUnits + GongFaMilliUnits);
+    }
+
+    static string RepositoryFile(string relative)
+    {
+        string root = Directory.GetCurrentDirectory();
+        while (root != null && !File.Exists(Path.Combine(root, ".git")) && !Directory.Exists(Path.Combine(root, ".git")))
+            root = Path.GetDirectoryName(root);
+        if (root == null) throw new InvalidDataException("BattleSim must run inside its source worktree.");
+        return Path.Combine(root, relative);
+    }
+
+    internal static string InputHash(string relative) =>
+        Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(RepositoryFile(relative)))).ToLowerInvariant();
+
+    static string ReadApprovedTemplate(string relative, string identity)
+    {
+        string text = File.ReadAllText(RepositoryFile(relative));
+        if (!text.Contains(identity, StringComparison.Ordinal))
+            throw new InvalidDataException("approved_action_economy_template_version_missing");
+        return text;
+    }
+
+    static IEnumerable<string[]> TemplateRows(string text, string section)
+    {
+        int start = text.IndexOf(section, StringComparison.Ordinal);
+        if (start < 0) throw new InvalidDataException("action_economy_template_section_missing");
+        string body = text.Substring(start + section.Length);
+        int end = body.IndexOf("\n##", StringComparison.Ordinal);
+        if (end >= 0) body = body.Substring(0, end);
+        return body.Split('\n').Where(line => line.TrimStart().StartsWith('|'))
+            .Select(line => line.Trim().Trim('|').Split('|').Select(cell => cell.Trim()).ToArray())
+            .Where(row => row.Length > 1 && !row[0].StartsWith('-')).Skip(1).ToArray();
+    }
+
+    const string EffectTemplatePath = "docs/角色养成/术法神通数值模板.txt";
+    const string GrowthTemplatePath = "docs/角色养成/功法数值模板.txt";
+    static readonly Lazy<IReadOnlyDictionary<string, ActionEconomyCost>> approvedAbilityCosts = new(() =>
+    {
+        var text = ReadApprovedTemplate(EffectTemplatePath, "模板ID：TZ_EFFECT_BUDGET；试跑版本：0.1；");
+        var costs = new Dictionary<string, ActionEconomyCost>(StringComparer.Ordinal);
+        foreach (var row in TemplateRows(text, "### 8.1 原始配置与完整成本候选"))
+        {
+            var values = row[2].Split('／').Select(value => int.Parse(value, CultureInfo.InvariantCulture)).ToArray();
+            if (values.Length != 4) throw new InvalidDataException("action_economy_template_cost_invalid");
+            string id = row[0].Split(' ')[0];
+            var cost = new ActionEconomyCost(id, "TZ_EFFECT_BUDGET@0.1/A", values[0], values[1], values[2], values[3], row[0].Substring(id.Length).Trim());
+            cost.Validate();
+            costs.Add(id, cost);
+        }
+        if (costs.Count != 16) throw new InvalidDataException("action_economy_ability_mapping_incomplete");
+        // The extra active action is explicitly mapped in §8.3, outside the Config table.
+        var kuxing = TemplateRows(text, "### 8.3 配置外入口、功法来源与装配实例")
+            .Single(row => row[0].StartsWith("KuxingAction ", StringComparison.Ordinal))[1];
+        int Read(string marker) => int.Parse(System.Text.RegularExpressions.Regex.Match(kuxing, marker + "([0-9]+)").Groups[1].Value, CultureInfo.InvariantCulture);
+        costs.Add("KuxingAction", new("KuxingAction", "TZ_EFFECT_BUDGET@0.1/A", Read("AP"), Read("净"), Read("CT"), Read("CD")));
+        costs["KuxingAction"].Validate();
+        return costs;
+    });
+    internal static ActionEconomyCost AbilityCost(string definitionRef) => approvedAbilityCosts.Value.TryGetValue(definitionRef, out var cost)
+        ? cost : throw new InvalidDataException("action_economy_ability_mapping_missing: " + definitionRef);
+
+    internal static ActionEconomyCost AbilityCostByName(string name) => approvedAbilityCosts.Value.Values
+        .SingleOrDefault(cost => cost.Name == name) ?? throw new InvalidDataException("action_economy_ability_mapping_missing: " + name);
+
+    static readonly Lazy<(Dictionary<string, int> Bases, Dictionary<string, string[]> GongFa, decimal M, decimal[] Shares)> approvedGrowth = new(() =>
+    {
+        var text = ReadApprovedTemplate(GrowthTemplatePath, "参数集：A");
+        if (!text.Contains("模板ID：GF-GROWTH-AP；版本：0.1；参数集：A；", StringComparison.Ordinal)) throw new InvalidDataException("growth_template_version_missing");
+        var bases = TemplateRows(text, "## 三、基础曲线与决策输入")
+            .ToDictionary(row => row[0], row => int.Parse(row[1].Split('／')[1], CultureInfo.InvariantCulture), StringComparer.Ordinal);
+        var gongFa = TemplateRows(text, "## 五、SIM逐功法输入映射")
+            .ToDictionary(row => row[0].Split('／')[0], row => row, StringComparer.Ordinal);
+        var movement = TemplateRows(text, "## 四、移动档位、节点与叠加").Single(row => row[0] == "M");
+        var m = movement[1].Split('×')[0];
+        var shares = System.Text.RegularExpressions.Regex.Matches(movement[2], "([0-9]+)%").Cast<System.Text.RegularExpressions.Match>()
+            .Select(match => decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) / 100m).ToArray();
+        if (shares.Length != 3 || shares.Sum() != 1m) throw new InvalidDataException("growth_node_shares_invalid");
+        if (bases.Count != 6 || gongFa.Count != 21) throw new InvalidDataException("growth_template_mapping_incomplete");
+        return (bases, gongFa, decimal.Parse(m, CultureInfo.InvariantCulture), shares);
+    });
+
+    internal static MovementInput ProjectMovement(string realm, int subIndex, string gongFaName)
+    {
+        var source = approvedGrowth.Value;
+        if (!RealmOrder.Contains(realm) || subIndex < 0 || subIndex >= Sublevels[realm])
+            throw new InvalidDataException("unsupported_full_simulation_growth_input");
+        string[] mapping = null;
+        if (!string.IsNullOrEmpty(gongFaName) && !source.GongFa.TryGetValue(gongFaName, out mapping))
+            throw new InvalidDataException("action_economy_gongfa_mapping_missing");
+        decimal bonus = 0;
+        var nodes = new List<string>();
+        var chapters = new List<string>();
+        if (mapping != null)
+        {
+            // Only the current gongfa is a source; rebuild exact totals instead of adding a cached total.
+            string minimumRealm = mapping[3].Split('；')[0].Substring(0, 2);
+            int minimum = Array.IndexOf(RealmOrder, minimumRealm);
+            if (minimum < 0) throw new InvalidDataException("growth_learning_requirement_missing");
+            int current = Array.IndexOf(RealmOrder, realm);
+            for (int i = minimum; i <= current; i++)
+            {
+                string nodeRealm = RealmOrder[i];
+                int completed = i == current ? subIndex + 1 : Sublevels[nodeRealm];
+                nodes.Add(nodeRealm + ":" + completed);
+                if (mapping[4].StartsWith("M；", StringComparison.Ordinal) && nodeRealm != "凡人")
+                {
+                    decimal fraction = nodeRealm == "练气" ? completed / (decimal)Sublevels[nodeRealm] : source.Shares.Take(completed).Sum();
+                    bonus += source.Bases[nodeRealm] / 1000m * source.M * fraction;
+                }
+            }
+            // Keep the actual qualification declaration with each applicable chapter, not TotalSubs/4+1.
+            foreach (string part in mapping[3].Split(new[] { '；', '→' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string initial = part.StartsWith(minimumRealm, StringComparison.Ordinal) ? part.Substring(2) : part;
+                if (initial.Length == 0 || initial is "境" or "可学" || initial.StartsWith("且", StringComparison.Ordinal)) continue;
+                int required = minimum;
+                foreach (string candidateRealm in source.Bases.Keys)
+                    if (part.Contains(candidateRealm, StringComparison.Ordinal)) required = Array.IndexOf(new[] { "凡人", "练气", "筑基", "金丹", "元婴", "化神" }, candidateRealm);
+                if (current >= required) chapters.Add(part);
+            }
+        }
+        return new("GF-GROWTH-AP@0.1/A", source.Bases[realm], checked((int)decimal.Floor(bonus * 1000)),
+            100000, gongFaName ?? "", string.Join(",", nodes), chapters.AsReadOnly());
+    }
+
+    static readonly Lazy<IReadOnlyDictionary<string, AttackProfile>> productionAttacks = new(() =>
+    {
+        const string relative = "src/Assets/DataConfig/AttackProfiles.csv";
+        var lines = CsvTableReader.ReadRequired(RepositoryFile(relative));
+        var header = CsvTableReader.FindHeader(lines);
+        if (header.Length != 41 || header.Contains("cooldownTicks")) throw new InvalidDataException("attack_profile_schema_invalid");
+        var result = new Dictionary<string, AttackProfile>(StringComparer.Ordinal);
+        foreach (string line in lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1).Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#')))
+        {
+            var columns = CsvTableReader.ParseRow(line);
+            if (columns.Length != header.Length) throw new InvalidDataException("attack_profile_row_invalid");
+            string Value(string key) => columns[Array.IndexOf(header, key)];
+            int Number(string key) => int.Parse(Value(key), CultureInfo.InvariantCulture);
+            string id = Value("attackProfileId");
+            var cost = new ActionEconomyCost(id, "AttackProfiles.csv:" + InputHash(relative), Number("actionPointCostUnits"), Number("minimumNetCostUnits"), Number("ctPenalty"), Number("reuseCooldownTicks"));
+            cost.Validate();
+            string type = Value("effectType") switch { "physical" => "物理", "restore_spirit" => "恢复灵力", _ => throw new InvalidDataException("unsupported_production_attack_effect") };
+            double mult = type == "物理" ? double.Parse(Value("physicalDamageMultiplier"), CultureInfo.InvariantCulture) : 0;
+            bool recovery = type == "恢复灵力";
+            decimal Decimal(string key) => decimal.Parse(Value(key), CultureInfo.InvariantCulture);
+            result.Add(id, new(id == "basic_unarmed" ? "徒手" : id, type, mult, NormalizeElement(Value("damageElementId")), Number("minCastRange"), Number("maxCastRange"), Cost: cost,
+                SpiritCost: Number("resourceCost"), OtherTargetSpiritCost: recovery ? Number("otherTargetResourceCost") : 0,
+                SpiritRecoveryMultiplier: recovery ? Decimal("spiritRecoveryMultiplier") : 0, MinimumSpiritRecovery: recovery ? Number("minimumSpiritRecovery") : 0,
+                OtherTargetRecoveryMultiplier: recovery ? Decimal("otherTargetRecoveryMultiplier") : 1));
+        }
+        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" }.Order()))
+            throw new InvalidDataException("production_attack_mapping_incomplete");
+        return result;
+    });
+    internal static IReadOnlyDictionary<string, AttackProfile> ProductionAttacks => productionAttacks.Value;
 
     // ═══════════════════════════════════════
     // v5.1: 功法小境界成长表（来源：docs/角色养成/功法/）

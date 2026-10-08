@@ -12,6 +12,8 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "action-economy-n-combat-ap-sim-01")
+            return RunChecked(suite, RunActionEconomyNCombatApSim01);
         if (suite == "realm-tq013a")
             return RunChecked(suite, RunRealmTq013A);
 
@@ -139,9 +141,179 @@ static class BattleSimSelfTests
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"SELFTEST {suite} FAIL: {ex.Message}");
+            Console.Error.WriteLine($"SELFTEST {suite} FAIL: {ex}");
             return 1;
         }
+    }
+
+    static void RunActionEconomyNCombatApSim01()
+    {
+        var board = new HexBattlefield();
+        var adjacent = new[] { new HexCoord(0, 0), new HexCoord(1, 0) };
+        Character Fixture(string name, int speed = 50)
+        {
+            var c = GroupTestCharacter(name, speed, hp: 10000, attack: 100, movement: 0);
+            c.Primary["MP"] = 100; c.Primary["神攻"] = 100; c.Primary["神识"] = 25;
+            return c;
+        }
+        var a = Fixture("ap-a");
+        var b = Fixture("ap-b");
+        Combat.ResetDeterministicRandom();
+        var duel = Combat.SimulateDetailed(board, a, b, adjacent, turnLimit: 6);
+        var first = duel.Economy.Where(e => e.Turn == 1 && e.Event == "action_committed").ToArray();
+        AssertEqual(2, first.Length, "100 AP pays for two actual basic attacks");
+        AssertSequence(new[] { 50000, 0 }, first.Select(e => e.ActionPointsRemainingUnits).ToArray(), "AP decreases without reissuing");
+        AssertEqual(true, first.All(e => e.GlobalTick == 2 && e.CostUnits == 50000 && e.ReductionUnits == 0 && e.RefundUnits == 0), "commands do not advance time or invent modifiers");
+        AssertSequence(new[] { 0, 1 }, duel.Economy.Where(e => e.Event == "own_turn_started").Take(2).Select(e => e.ActorIndex).ToArray(), "stable-ID ready order");
+        AssertEqual(2, duel.Economy.First(e => e.Event == "own_turn_started" && e.ActorIndex == 1).GlobalTick, "same-tick queue drains before charging");
+        AssertEqual(true, duel.Economy.Where(e => e.Event == "own_turn_ended").All(e => e.ActionPointsRemainingUnits == 0 && e.ChargeTime == 0), "normal end clears both budgets and overshoot");
+
+        var deadA = Fixture("inactive-a"); deadA.Primary["HP"] = 0;
+        var deadB = Fixture("inactive-b"); deadB.Primary["HP"] = 0;
+        var groupPositions = new[] { adjacent[0], new HexCoord(0, 1), adjacent[1], new HexCoord(1, -1) };
+        Combat.ResetDeterministicRandom();
+        var group = Combat.Simulate2v2Detailed(board, a, deadA, b, deadB, groupPositions, turnLimit: 6);
+        object Comparable(Combat.ActionEconomyObservation e, bool isGroup) => new
+        {
+            e.Turn, actor = isGroup && e.ActorIndex == 2 ? 1 : e.ActorIndex,
+            e.GlobalTick, e.Event, e.DefinitionRef, e.ActionPointsBeforeUnits, e.ActionPointsRemainingUnits,
+            e.CostUnits, e.ReductionUnits, e.RefundUnits, e.SpiritBefore, e.SpiritAfter, e.HealthBefore, e.HealthAfter,
+            e.PendingCtPenalty, e.ChargeTime, e.NextThreshold, e.OwnTurns, e.CommittedActions,
+            cooldowns = e.Cooldowns.OrderBy(k => k.Key).Select(k => new { id = k.Key.Substring(k.Key.IndexOf(':') + 1), k.Value }).ToArray()
+        };
+        AssertEqual(JsonSerializer.Serialize(duel.Economy.Select(e => Comparable(e, false))),
+            JsonSerializer.Serialize(group.Economy.Select(e => Comparable(e, true))), "both public detailed entries execute identical per-command trajectories with inactive partners");
+        AssertEqual(duel.GlobalTick, group.GlobalTick, "entry parity includes integer time");
+        AssertEqual(duel.WinnerTeam, group.WinnerTeam, "entry parity includes timeout settlement");
+
+        Combat.ResetDeterministicRandom();
+        var waiting = Combat.SimulateDetailed(board, Fixture("wait-actor"), Fixture("wait-target", 1),
+            new[] { new HexCoord(0, 0), new HexCoord(6, 0) }, turnLimit: 1);
+        var waitEnd = waiting.Economy.Last();
+        AssertEqual("wait_ended", waitEnd.Event, "no committed command permits waiting");
+        AssertEqual(50f, waitEnd.ChargeTime, "waiting keeps exactly half the ready CT");
+        AssertEqual(100f, waitEnd.NextThreshold, "waiting resets the threshold without a penalty");
+        AssertEqual(0, waitEnd.ActionPointsRemainingUnits, "waiting discards the AP balance");
+        var mover = Fixture("move-actor"); mover.SetActionEconomyInputs(100000, 3000);
+        Combat.ResetDeterministicRandom();
+        var moving = Combat.SimulateDetailed(board, mover, Fixture("move-target", 1),
+            new[] { new HexCoord(0, 0), new HexCoord(6, 0) }, turnLimit: 1);
+        AssertEqual(99999, moving.Economy.Single(e => e.Event == "move_committed").CostUnits,
+            "an actual movement command commits the native path quote");
+        AssertEqual("own_turn_ended", moving.Economy.Last().Event, "successful movement prevents wait retention");
+        AssertEqual(0f, moving.Economy.Last().ChargeTime, "movement-only normal end clears CT");
+
+        var mage = Fixture("ct-mage"); mage.Style = "magic"; mage.AssignArts();
+        mage.BasicAttackProfile = new("ct-basic-fixture", "物理", 1, "", 1, 2,
+            Cost: new("ct-basic-fixture", "fixture", 50000, 50000, 30, 0));
+        Combat.ResetDeterministicRandom();
+        var penalties = Combat.SimulateDetailed(board, mage, Fixture("ct-target"),
+            new[] { new HexCoord(0, 0), new HexCoord(2, 0) }, turnLimit: 6);
+        var penaltyActions = penalties.Economy.Where(e => e.Turn == 1 && e.Event == "action_committed").ToArray();
+        AssertSequence(new[] { "MagicArt", "ct-basic-fixture" }, penaltyActions.Select(e => e.DefinitionRef).ToArray(), "actual actions combine distinct CT penalties");
+        var penaltyEnd = penalties.Economy.Single(e => e.Turn == 1 && e.Event == "own_turn_ended");
+        AssertEqual(40, penaltyEnd.PendingCtPenalty, "CT penalties sum across commands");
+        AssertEqual(140f, penaltyEnd.NextThreshold, "one end settles 100+10+30");
+        AssertEqual(10, penaltyEnd.Cooldowns["actor-0:MagicArt"], "the second command does not tick the first ability cooldown");
+        var nextMageStart = penalties.Economy.First(e => e.ActorIndex == 0 && e.OwnTurns == 2 && e.Event == "own_turn_started");
+        AssertEqual(Math.Max(0, 10 - (nextMageStart.GlobalTick - penaltyEnd.GlobalTick)),
+            nextMageStart.Cooldowns["actor-0:MagicArt"], "cooldown decrements by actual elapsed ticks");
+
+        var production = Fixture("production-three"); production.Primary["MP"] = 20; production.Innate["魂魄"] = 25;
+        production.EquipProductionArts("spell_guanshiji", "spell_julingshu");
+        Combat.ResetDeterministicRandom();
+        var productionRun = Combat.SimulateDetailed(board, production, Fixture("production-target"), adjacent, turnLimit: 2);
+        var productionActions = productionRun.Economy.Where(e => e.Turn == 1 && e.Event == "action_committed").ToArray();
+        AssertSequence(new[] { "spell_guanshiji", "spell_julingshu" }, productionActions.Select(e => e.DefinitionRef).ToArray(), "production attack and recovery are actually selected by the generic entry");
+        AssertEqual((20, 8), (productionActions[0].SpiritBefore, productionActions[0].SpiritAfter), "production attack spends exactly CSV MP");
+        AssertEqual((8, 20), (productionActions[1].SpiritBefore, productionActions[1].SpiritAfter), "production self recovery uses raw spirit and caps at maximum");
+        AssertEqual(25000, productionActions[1].ActionPointsRemainingUnits, "production recovery has independent 25 AP cost");
+        var healer = Fixture("other-recovery", 51); healer.Innate["魂魄"] = 25; healer.EquipProductionArts("spell_julingshu");
+        var allyCaster = Fixture("ally-caster", 100); allyCaster.Style = "magic"; allyCaster.AssignArts();
+        Combat.ResetDeterministicRandom();
+        var allyRecovery = Combat.Simulate2v2Detailed(board, healer, allyCaster, Fixture("ally-enemy-a", 1), Fixture("ally-enemy-b", 1),
+            new[] { new HexCoord(0, 0), new HexCoord(0, 1), new HexCoord(2, 1), new HexCoord(2, 0) }, turnLimit: 3);
+        var otherRecovery = allyRecovery.Economy.First(e => e.ActorIndex == 0 && e.DefinitionRef == "spell_julingshu");
+        AssertEqual((100, 80), (otherRecovery.SpiritBefore, otherRecovery.SpiritAfter), "ally recovery spends the production 20 MP");
+        AssertEqual(86, otherRecovery.SpiritByActor[1], "ally recovery applies the production half output after raw-spirit calculation");
+
+        var path = board.QueryMovementPath(new(0, 0), new(3, 0), 100000, 3000);
+        AssertEqual(99999, path.ActionPointCostUnits, "three ordinary edges at v3 fit 100 AP");
+        int split = board.QueryMovementPath(new(0, 0), new(1, 0), 100000, 3000).ActionPointCostUnits +
+            board.QueryMovementPath(new(1, 0), new(3, 0), 100000, 3000).ActionPointCostUnits;
+        AssertEqual(path.ActionPointCostUnits, split, "movement commands do not reset edge rounding");
+        AssertEqual(TianZhang.Spatial.SpatialQueryReasons.MovementEfficiencyZero,
+            board.QueryMovementPath(new(0, 0), new(1, 0), 100000, 0).Reason, "v0 is legal but cannot voluntarily move");
+        AssertEqual(1, board.QueryMovementPath(new(0, 0), new(1, 0), 100000, int.MaxValue).ActionPointCostUnits, "positive edge minimum is one unit, not one AP");
+        AssertEqual(true, board.FindReachableWithinActionPoints(new(0, 0), 100000, 3000).ContainsKey(new(1, 0)), "initial path is reachable");
+        AssertEqual(false, board.FindReachableWithinActionPoints(new(0, 0), 100000, 3000, new[] { new HexCoord(1, 0) }).ContainsKey(new(1, 0)), "new occupancy invalidates reachable input");
+        AssertEqual(true, board.FindReachableWithinActionPoints(new(0, 0), 100000, 3000).ContainsKey(new(1, 0)), "removing occupancy restores actual reachability");
+        AssertEqual(false, board.FindReachableWithinActionPoints(new(0, 0), 1000, 3000).ContainsKey(new(1, 0)), "changing AP cannot reuse a larger budget result");
+
+        AssertEqual(4111, GameData.ProjectMovement("练气", 0, "苦行剑典").EffectiveMilliUnits, "exact first ninth projected once");
+        AssertEqual(5000, GameData.ProjectMovement("练气", 8, "苦行剑典").EffectiveMilliUnits, "nine exact ninths reach one whole bonus");
+        AssertEqual(14860, GameData.ProjectMovement("筑基", 1, "苦行剑典").EffectiveMilliUnits, "prior nodes plus current 30/32 share");
+        AssertEqual(64000, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "approved golden-core cumulative movement");
+        AssertEqual(48000, GameData.ProjectMovement("金丹", 2, "含弘光大典").EffectiveMilliUnits, "switching gongfa removes its passive movement");
+        AssertEqual(64000, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "rebuilding does not double grant old nodes");
+        AssertEqual(true, GameData.ProjectMovement("练气", 0, "抱元守一经").UnlockedChapters.Contains("练气守一"), "the first legal chapter is recorded");
+        AssertEqual(0, GameData.ProjectMovement("筑基", 0, "万物不迁法").UnlockedChapters.Count, "learning eligibility does not unlock the golden-core chapter early");
+        bool unknownRejected = false;
+        try { GameData.ProjectMovement("练气", 0, "unknown"); } catch (InvalidDataException) { unknownRejected = true; }
+        AssertEqual(true, unknownRejected, "unknown gongfa never gets a default movement curve");
+        var missing = Fixture("missing-input"); missing.Primary.Remove("AP上限单位");
+        bool missingRejected = false;
+        try { Combat.SimulateDetailed(board, missing, b, adjacent, 1); } catch (InvalidOperationException e) { missingRejected = e.Message == "action_economy_character_input_invalid"; }
+        AssertEqual(true, missingRejected, "missing long-term AP is rejected rather than filled");
+
+        Character Water() { var c = Fixture("water", 50); c.GongFaName = "秋水游心经"; c.Style = "water_physical"; c.Primary["神识"] = 100; c.AssignArts(); return c; }
+        Character Lightning() { var c = Fixture("lightning", 49); c.Realm = "筑基"; c.GongFaName = "九霄雷劫录"; c.Style = "yuqing_leijie"; c.HealthRecoveryPerOwnTurn = 7; c.AssignArts(); return c; }
+        Combat.ResetDeterministicRandom();
+        var forward = Combat.SimulateDetailed(board, Water(), Lightning(), adjacent, 12);
+        Combat.ResetDeterministicRandom();
+        var reverse = Combat.SimulateDetailed(board, Lightning(), Water(), adjacent.Reverse().ToArray(), 12);
+        object StateSymmetry(Combat.ActionEconomyObservation e, bool swapped) => new
+        {
+            e.Turn, actor = swapped ? 1 - e.ActorIndex : e.ActorIndex, e.Event, e.GlobalTick,
+            e.DefinitionRef, e.CostUnits, e.SpiritAfter, e.HealthAfter, e.Shouyi, e.Fudan, e.Leijie, e.Stunned, e.OwnTurns
+        };
+        AssertEqual(JsonSerializer.Serialize(forward.Economy.Select(e => StateSymmetry(e, false))),
+            JsonSerializer.Serialize(reverse.Economy.Select(e => StateSymmetry(e, true))), "water control and received lightning stacks are symmetric after swapping sides");
+        AssertEqual(true, forward.Economy.Any(e => e.ActorIndex == 1 && e.Leijie > 0), "positive received damage adds a lightning stack");
+        AssertEqual(true, forward.Economy.Any(e => e.Event == "own_turn_started_control_skip"), "water stun skips an entire actual own turn");
+        AssertEqual(true, forward.Economy.Where(e => e.Event == "own_turn_started_control_skip").All(e => e.ActionPointsRemainingUnits == 0), "controlled turns cannot obtain AP or wait retention");
+        AssertEqual(true, forward.Economy.Where(e => e.Event == "own_turn_started_control_skip").All(e => e.HealthAfter == Math.Min(10000, e.HealthBefore + 7)), "control skips still receive one declared own-start recovery");
+
+        var assembly = GoldenCoreAssembly.Create(LoadGoldenCoreFixture("jd.valid.three-mansion-three-seats"));
+        var sharedActor = Fixture("shared-instance"); sharedActor.Realm = "金丹"; sharedActor.FormedState = "成丹"; sharedActor.DanJiType = "fixture";
+        sharedActor.AssignArts(); sharedActor.SetActionEconomyInputs(150000, 0);
+        sharedActor.AssignGoldenCoreAssembly(assembly, "guardian_ming", "guardian_ming");
+        Combat.ResetDeterministicRandom();
+        var sharedRun = Combat.SimulateDetailed(board, sharedActor, Fixture("shared-target"), adjacent, 2);
+        AssertEqual(1, sharedRun.Economy.Count(e => e.Turn == 1 && e.Event == "action_committed" && e.AbilityInstanceId == "guardian_ming"), "two external forms share one actual cooldown ledger");
+        AssertEqual(20, sharedRun.Economy.First(e => e.Event == "own_turn_ended").Cooldowns["guardian_ming"], "shared ledger is not double ticked by forms");
+
+        var shouyi = Fixture("shouyi"); shouyi.Realm = "金丹"; shouyi.GongFaName = "抱元守一经";
+        Combat.ResetDeterministicRandom();
+        var shouyiRun = Combat.SimulateDetailed(board, shouyi, Fixture("passive-target", 1), adjacent, 1);
+        AssertEqual(3, shouyiRun.Economy.Last().Shouyi, "two attacks grant only one own-end stack");
+        var fuxiu = Fixture("fudan"); fuxiu.Realm = "筑基"; fuxiu.GongFaName = "云篆度人经";
+        Combat.ResetDeterministicRandom();
+        var fudanRun = Combat.SimulateDetailed(board, fuxiu, Fixture("fudan-target", 1), adjacent, 1);
+        AssertEqual(1, fudanRun.Economy.Last().Fudan, "two basic attacks grant one own-end symbol stack");
+        var waterHeal = Fixture("own-heal", 50); waterHeal.GongFaName = "秋水游心经";
+        Combat.ResetDeterministicRandom();
+        var healRun = Combat.SimulateDetailed(board, waterHeal, Fixture("heal-attacker", 100), adjacent, 4);
+        AssertEqual(true, healRun.Economy.Where(e => e.ActorIndex == 0 && e.Event == "action_committed").All(e => e.HealthBefore == e.HealthAfter), "multiple child actions do not repeat the end-of-turn heal");
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            seed = 20260712,
+            inputs = new { effects = GameData.InputHash("docs/角色养成/术法神通数值模板.txt"), growth = GameData.InputHash("docs/角色养成/功法数值模板.txt"), attacks = GameData.InputHash("src/Assets/DataConfig/AttackProfiles.csv") },
+            dualEntryFixture = "adjacent 50/50 speed, 100 AP, v0, two inactive group partners; normalized actor indices only",
+            duel = duel.Economy, group = group.Economy, ct = penalties.Economy, production = productionRun.Economy,
+            symmetry = forward.Economy, shared = sharedRun.Economy, allyRecovery = allyRecovery.Economy
+            , waiting = waiting.Economy, moving = moving.Economy
+        }));
     }
 
     static void RunRealmTq013A()
@@ -1220,9 +1392,7 @@ static class BattleSimSelfTests
     static void RunAttackProfileDCombat02()
     {
         const string fixtureName = "AttackProfiles.fixture.csv";
-        // 攻击表已用 actionPointCostUnits／minimumNetCostUnits／ctPenalty／reuseCooldownTicks
-        // 取代旧双职责 cooldownTicks；既有 GameData.ArtConfig／DivineConfig.Cooldown 只是泛化
-        // 回合数，仓库没有权威的回合↔整数刻换算，因此该字段固定投影 0，不从新四列回填。
+        // 旧 Cooldown 留作历史输入，本 suite 不把全局刻回填进去；四个新字段进入独立 Cost。
         const int GeneralizedTurnCooldown = 0;
         var rawFixtureLines = File.ReadAllLines(Path.Combine(
                 FindRepositoryRoot(), "src", "Assets", "Tests", "EditMode", "Fixtures", fixtureName))
@@ -1238,6 +1408,8 @@ static class BattleSimSelfTests
         var artCircle = rows.Single(row => row["attackProfileId"] == "art_fixture_circle");
         var artFan = rows.Single(row => row["attackProfileId"] == "art_fixture_fan");
         var divineLine = rows.Single(row => row["attackProfileId"] == "divine_fixture_line");
+        GameData.ActionEconomyCost Cost(IReadOnlyDictionary<string, string> row) => new(row["attackProfileId"], "fixture",
+            ParseInt(row["actionPointCostUnits"]), ParseInt(row["minimumNetCostUnits"]), ParseInt(row["ctPenalty"]), ParseInt(row["reuseCooldownTicks"]));
 
         // 正例：同一 CSV 行逐字段投影到既有三类载体（basic -> AttackProfile，
         // art -> ArtConfig，divine -> DivineConfig），不读取任何旧 GameData 静态配置。
@@ -1248,6 +1420,7 @@ static class BattleSimSelfTests
             GameData.NormalizeElement(basicMain["damageElementId"]),
             ParseInt(basicMain["minCastRange"]),
             ParseInt(basicMain["maxCastRange"]));
+        basicProfile = basicProfile with { Cost = Cost(basicMain) };
         AssertBasicProjection(basicMain, basicProfile, "basic_fixture_main");
 
         var artSingleProfile = new GameData.ArtConfig(
@@ -1259,6 +1432,7 @@ static class BattleSimSelfTests
             GameData.NormalizeElement(artSingle["damageElementId"]),
             ParseInt(artSingle["minCastRange"]),
             ParseInt(artSingle["maxCastRange"]));
+        artSingleProfile = artSingleProfile with { Cost = Cost(artSingle) };
         AssertArtProjection(artSingle, artSingleProfile, "art_fixture_single");
         AssertEqual((GameData.AreaTargetingConfig)null, artSingleProfile.AreaTargeting, "art_fixture_single must be single target");
 
@@ -1286,6 +1460,7 @@ static class BattleSimSelfTests
                 ParseAreaEffectBlockers(artCircle["areaEffectBlockers"]),
                 ParseAreaTargetFactions(artCircle["areaAllowedFactions"]),
                 ParseAreaTargetStates(artCircle["areaAllowedStates"])));
+        artCircleProfile = artCircleProfile with { Cost = Cost(artCircle) };
         AssertArtProjection(artCircle, artCircleProfile, "art_fixture_circle");
         AssertAreaProjection(artCircle, artCircleProfile.AreaTargeting, "art_fixture_circle");
 
@@ -1313,6 +1488,7 @@ static class BattleSimSelfTests
                 ParseAreaEffectBlockers(artFan["areaEffectBlockers"]),
                 ParseAreaTargetFactions(artFan["areaAllowedFactions"]),
                 ParseAreaTargetStates(artFan["areaAllowedStates"])));
+        artFanProfile = artFanProfile with { Cost = Cost(artFan) };
         AssertArtProjection(artFan, artFanProfile, "art_fixture_fan");
         AssertAreaProjection(artFan, artFanProfile.AreaTargeting, "art_fixture_fan");
 
@@ -1341,6 +1517,7 @@ static class BattleSimSelfTests
                 ParseAreaTargetFactions(divineLine["areaAllowedFactions"]),
                 ParseAreaTargetStates(divineLine["areaAllowedStates"])),
             MPCost: ParseInt(divineLine["resourceCost"]));
+        divineLineProfile = divineLineProfile with { Cost = Cost(divineLine) };
         AssertDivineProjection(divineLine, divineLineProfile, "divine_fixture_line");
         AssertAreaProjection(divineLine, divineLineProfile.AreaTargeting, "divine_fixture_line");
 
@@ -1410,8 +1587,8 @@ static class BattleSimSelfTests
         AssertTableRejected(TableWith(MutateRowLine(divineLineLine, "areaEffectBlockers", "sight_blocked")), "attack_profile_area_blocker_invalid");
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedFactions", "neutral")), "attack_profile_areaAllowedFactions_invalid");
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "areaAllowedStates", "ghost")), "attack_profile_areaAllowedStates_invalid");
-        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "ctPenalty", "4")), "battlesim_cooldown_unit_unresolved");
-        AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "reuseCooldownTicks", "4")), "battlesim_cooldown_unit_unresolved");
+        ValidateAttackProfileTable(TableWith(MutateRowLine(artSingleLine, "ctPenalty", "4")));
+        ValidateAttackProfileTable(TableWith(MutateRowLine(artSingleLine, "reuseCooldownTicks", "4")));
         // 统一行动力四列的整数合法性：零／负主动费、越界净费下限、分数、溢出与 CT 上界。
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "0")), "attack_profile_actionPointCostUnits_invalid");
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "actionPointCostUnits", "-1")), "attack_profile_actionPointCostUnits_invalid");
@@ -1523,6 +1700,7 @@ static class BattleSimSelfTests
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
         AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
         AssertEqual((GameData.AreaTargetingConfig)null, profile.AreaTargeting, $"{label} must be single target");
+        AssertCostProjection(row, profile.Cost, label);
     }
 
     static void AssertArtProjection(
@@ -1533,10 +1711,9 @@ static class BattleSimSelfTests
         AssertEqual(row["attackProfileId"], profile.Name, $"{label} id");
         AssertEqual(ParseDouble(row["soulDamageMultiplier"]), profile.Mult, $"{label} mult");
         AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
-        // 泛化回合 CD 与新的 CT／重用刻是两个量纲：该载体固定 0，不接收新四列。
+        // 遗留回合 CD 不参与执行；新 Cost 独立保有 AP／CT／全局刻。
         AssertEqual(0, profile.Cooldown, $"{label} generalized turn cooldown");
-        AssertEqual("0", row["ctPenalty"], $"{label} ctPenalty must stay zero for the generalized carrier");
-        AssertEqual("0", row["reuseCooldownTicks"], $"{label} reuse ticks must stay zero for the generalized carrier");
+        AssertCostProjection(row, profile.Cost, label);
         AssertActionCostColumnsAreUsable(row, label);
         AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
@@ -1553,12 +1730,20 @@ static class BattleSimSelfTests
         AssertEqual(ParseDouble(row["defensePenetration"]), profile.DefPen, $"{label} defense penetration");
         AssertEqual(ParseInt(row["resourceCost"]), profile.MPCost, $"{label} resource cost");
         AssertEqual(0, profile.Cooldown, $"{label} generalized turn cooldown");
-        AssertEqual("0", row["ctPenalty"], $"{label} ctPenalty must stay zero for the generalized carrier");
-        AssertEqual("0", row["reuseCooldownTicks"], $"{label} reuse ticks must stay zero for the generalized carrier");
+        AssertCostProjection(row, profile.Cost, label);
         AssertActionCostColumnsAreUsable(row, label);
         AssertEqual(GameData.NormalizeElement(row["damageElementId"]), profile.Element, $"{label} element");
         AssertEqual(ParseInt(row["minCastRange"]), profile.MinRange, $"{label} min range");
         AssertEqual(ParseInt(row["maxCastRange"]), profile.MaxRange, $"{label} max range");
+    }
+
+    static void AssertCostProjection(IReadOnlyDictionary<string, string> row, GameData.ActionEconomyCost cost, string label)
+    {
+        cost.Validate();
+        AssertEqual(ParseInt(row["actionPointCostUnits"]), cost.ActionPointCostUnits, label + " AP");
+        AssertEqual(ParseInt(row["minimumNetCostUnits"]), cost.MinimumNetCostUnits, label + " net minimum");
+        AssertEqual(ParseInt(row["ctPenalty"]), cost.CtPenalty, label + " CT");
+        AssertEqual(ParseInt(row["reuseCooldownTicks"]), cost.ReuseCooldownTicks, label + " global ticks");
     }
 
     /// <summary>四个新列的整数合法性：主动费与净费下限为整数且 0 &lt; 下限 ≤ 基础费。</summary>
@@ -1661,12 +1846,6 @@ static class BattleSimSelfTests
                 if (row["resourceKind"] != "none" || row["resourceCost"] != "0" ||
                     row["ctPenalty"] != "0" || row["reuseCooldownTicks"] != "0")
                     throw new InvalidOperationException("basic_attack_resource_or_cooldown_invalid");
-            }
-            else if (row["ctPenalty"] != "0" || row["reuseCooldownTicks"] != "0")
-            {
-                // 既有 BattleSim 载体的 Cooldown 是泛化回合数，仓库没有回合与 Unity 整数刻的
-                // 权威换算；非零 CT／重用刻必须失败，不能把刻填回泛化回合 Cooldown 通过。
-                throw new InvalidOperationException("battlesim_cooldown_unit_unresolved");
             }
 
             // 效果、资源与冷却、距离合法性对每一行生效（含单目标），
@@ -2208,6 +2387,7 @@ static class BattleSimSelfTests
             character.Primary["神防"] = 0;
             character.Primary["反应"] = 20;
             character.Primary["移力"] = 6;
+            character.SetActionEconomyInputs(100000, 6000);
         }
         left.Secondary["暴击率"] = 50;
         right.Secondary["闪避率"] = 20;
@@ -2620,7 +2800,7 @@ static class BattleSimSelfTests
             "area-observation-a1",
             reaction: 100,
             hp: 10000,
-            attack: 1,
+            attack: 1000,
             movement: 0);
         areaActor.BasicAttackProfile = new GameData.AttackProfile(
             "fixture-area-basic",
@@ -2636,7 +2816,7 @@ static class BattleSimSelfTests
                 MaxCastRange = 6,
                 Shape = areaConfig.Shape with { Radius = 1, InnerRadius = 0 },
                 EffectBlockers = GameData.AreaEffectBlocker.None,
-            });
+            }, Cost: new("fixture-observed-circle", "fixture", 50000, 50000, 0, 0));
         var sightBlockedGroupBattlefield = new HexBattlefield(
             cells: new Dictionary<HexCoord, HexCellRules>
             {
@@ -2655,14 +2835,20 @@ static class BattleSimSelfTests
             GroupTestCharacter("area-observation-b1", reaction: 1, hp: 10000, attack: 1, movement: 0),
             GroupTestCharacter("area-observation-b2", reaction: 1, hp: 10000, attack: 1, movement: 0));
         var observedAreaAction = areaRound.Actions.First(action => action.ActorIndex == 0);
+        AssertEqual(14, sightBlockedGroupBattlefield.QueryAreaEffectDistance(Combat.InitialGroupPositions[0],
+            Combat.InitialGroupPositions[2], GameData.AreaEffectBlocker.None).DistanceUnits,
+            "entity obstacle makes the first center seven actual range units away even without sight blocking");
         AssertEqual(
-            Combat.InitialGroupPositions[2],
+            Combat.InitialGroupPositions[3],
             observedAreaAction.AreaCenter,
             "formal 2v2 records the resolved target-cell area center without ordinary sight");
         AssertSequence(
             new[] { 2, 3 },
             observedAreaAction.AreaHitTargetIndexes,
             "formal 2v2 records every legal enemy hit by the configured area");
+        var areaCommit = areaRound.Economy.First(e => e.ActorIndex == 0 && e.Event == "action_committed");
+        AssertEqual(50000, areaCommit.CostUnits, "one area root command pays once for both targets");
+        AssertSequence(new[] { 9500, 9500 }, areaCommit.HealthByActor.Skip(2).ToArray(), "the selected area actually settles both enemy hits");
         AssertEqual("", observedAreaAction.AreaRejectionReason,
             "formal 2v2 records no rejection for a legal area action");
 
@@ -2788,8 +2974,8 @@ static class BattleSimSelfTests
             GroupTestCharacter("priority-a2", reaction: 1, hp: 10000, attack: 1, movement: 6),
             GroupTestCharacter("priority-b1", reaction: 1, hp: 10000, attack: 1, movement: 6),
             GroupTestCharacter("priority-b2", reaction: 1, hp: 10000, attack: 1, movement: 6));
-        var observedPriority = observedRound.Actions[0].TargetSelectionPriority
-            ?? throw new InvalidOperationException("2v2 selection priority is observable");
+        var observedPriority = observedRound.Actions.First(action => action.TargetSelectionPriority != null)
+            .TargetSelectionPriority.Value;
         AssertEqual(Combat.GroupActionSettlementEvidenceStatus.Unavailable,
             observedPriority.SettlementEvidenceStatus,
             "selection-period 2v2 candidates do not claim resolved settlement evidence");
@@ -2868,8 +3054,8 @@ static class BattleSimSelfTests
             GroupTestCharacter("b1", reaction: 20, hp: 10000, attack: 1, movement: 6),
             GroupTestCharacter("b2", reaction: 20, hp: 10000, attack: 1, movement: 6));
         AssertSequence(new[] { 0, 1, 2, 3 },
-            orderedRound.Actions.Take(4).Select(action => action.ActorIndex).ToArray(),
-            "equal CT resolves in fixed input order");
+            orderedRound.Economy.Where(action => action.Event == "own_turn_started").Take(4).Select(action => action.ActorIndex).ToArray(),
+            "equal CT resolves in stable actor ID order without advancing between ready actors");
         AssertEqual(true, orderedRound.Actions[0].ReachablePositions.Count > 0,
             "each action exposes its reachable cells");
         AssertEqual(true, orderedRound.Actions.All(action =>
@@ -3236,6 +3422,7 @@ static class BattleSimSelfTests
         character.Primary["神防"] = 0;
         character.Primary["反应"] = reaction;
         character.Primary["移力"] = 6;
+        character.SetActionEconomyInputs(100000, 12000);
         return character;
     }
 
@@ -3251,8 +3438,9 @@ static class BattleSimSelfTests
         character.Primary["神防"] = 0;
         character.Primary["反应"] = 10;
         character.Primary["移力"] = 0;
+        character.SetActionEconomyInputs(100000, 0);
         character.BasicAttackProfile = ranged
-            ? new GameData.AttackProfile("timeout-ranged", "物理", 1.0, "", 1, 6)
+            ? new GameData.AttackProfile("timeout-ranged", "物理", 1.0, "", 1, 6, Cost: new("timeout-ranged", "fixture", 50000, 50000, 0, 0))
             : GameData.UnarmedBasicAttack;
         return character;
     }
@@ -3283,6 +3471,7 @@ static class BattleSimSelfTests
         character.Primary["肉攻"] = attack;
         character.Primary["肉防"] = 1000;
         character.Primary["移力"] = movement;
+        character.SetActionEconomyInputs(100000, checked(movement * 1000));
         return character;
     }
 
