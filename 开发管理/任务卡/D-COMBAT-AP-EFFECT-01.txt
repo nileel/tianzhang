@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：任务卡要求负责人确认后才能关闭：是否批准候选模板及迁移试跑输入，包括水系控制改用神识差值对抗？",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CD1C694827D0FC",
   "expectedPaths": [
     "docs/角色养成/术法神通数值模板.txt",
     "docs/角色养成/术法设计规范.txt",
@@ -93,6 +93,14 @@
     "taskContextDigest": "5e15d308dd285e3081cb30d3469b74eff8fd8641009ab1024b109bcaf2c4791b",
     "createdAt": "2026-10-08T22:15:06.7897692+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261008-CD1C694827D0FC",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "667aad5f778fb3b1a475c64bb73985268a3bfcadb5b63b719d09eeb79674ca72"
   }
 }
 ---TASK-BODY---
