@@ -112,7 +112,7 @@ function New-TerminalSchema {
       options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label', 'targetState'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
       impactSummary = @{ type = 'string' }
-      plainSummary = @{ type = 'object'; description = 'Schema filler for model output. The deterministic wrapper derives the direct-decision summary from validated semantic fields.'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
+      plainSummary = @{ type = 'object'; description = 'For needs_decision and maintenance_decision, the model must write three plain-language explanations for a nontechnical owner. The wrapper preserves them; it does not translate or copy professional fields. Other statuses use empty strings.'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
       detailCode = @{ type = 'string' }
     }
     required = @()
@@ -229,10 +229,11 @@ function New-Prompt {
       'QueueMaintenance 写入白名单仅为：开发管理/当前任务队列.txt、开发管理/任务卡/<ID>.txt、开发管理/任务列表/<分线>.txt、开发管理/设计-当前状态.txt、开发管理/设计-下一步建议.txt、开发管理/开发-下一步建议.txt、开发管理/自动工作流状态.txt。开发管理/任务归档/不在白名单；归档只用于读取前置完成证据，不得创建或修改归档，也不得移动活跃任务卡到归档。汇总父项的前置已完成不等于父项已验收；保留活跃卡，按其完整完成条件、用户接受条件和现有关闭责任方记录剩余条件，不在维护轮次代替验收或宣布完成。'
       'QueueMaintenance 不返回 needs_decision，也不创建普通开发 checkpoint。符合上述维护型决策条件时必须返回 maintenance_decision、非空 decisionTaskId、完整 plainSummary 以及与正式 finalizer 提交一致的 result/impact/verify/plain。'
     } else {
-      '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption 和 impactSummary。direct needs_decision 的 decisionId 返回空字符串，plainSummary 三字段返回空字符串；固定 wrapper 会从 run/checkpoint 身份与上述已校验语义字段确定性生成它们。checkpoint 不得改变任务生命周期。'
+      '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption、impactSummary 和完整 plainSummary。direct needs_decision 的 decisionId 返回空字符串；固定 wrapper 只从 run/checkpoint 身份确定性生成决策编号，原样保留模型撰写的 plainSummary。checkpoint 不得改变任务生命周期。'
     })
+    'needs_decision 和 maintenance_decision 的 plainSummary 必须由本轮责任方依据同一事实同步撰写，面向不懂代码和内部工作流的负责人：situation 解释实际卡在哪里、为什么需要负责人决定；impact 解释 A/B/C 对游戏、成本、风险、进度或后续方向的实际区别；action 用一句话说明推荐选择及理由，或何种偏好下选择其他项。每项非空、单行、不超过 200 个 Unicode code point；不得直接复制专业问题、影响说明或选项标签，不使用代码符号、路径、提交号、内部状态名和未解释的缩写，无法避免的术语须在同一句中解释。发送前自行检查：只读这三句，负责人能否知道出了什么问题、各选项有什么区别、应该怎么选；不得夸大已完成或已验证的结果。'
     '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
-    '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组，plainSummary 填三个空字符串；固定 wrapper 只按实际 status 核验必需字段。'
+    '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组；仅非 needs_decision／maintenance_decision 状态的 plainSummary 填三个空字符串。固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
   ) -join "`n"
 }
@@ -324,12 +325,13 @@ function Assert-Decision {
   foreach ($value in @($options | ForEach-Object { [string]$_.label }) + @([string]$Terminal.question, [string]$Terminal.impactSummary)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' } }
   $recommendedOption = [string]$Terminal.recommendedOption
   if ($recommendedOption -cnotin @('A', 'B', 'C')) { Stop-Candidate 'codex_decision_invalid' }
-  $recommendedLabel = [string](@($options | Where-Object { [string]$_.key -ceq $recommendedOption })[0].label)
   $decisionId = Get-DirectDecisionId -Run $Run -CheckpointCommit $commit
-  $plainSummary = [ordered]@{
-    situation = [string]$Terminal.question
-    impact = [string]$Terminal.impactSummary
-    action = "建议选择 $recommendedOption：$recommendedLabel"
+  $plainSummary = [ordered]@{}
+  foreach ($field in @('situation', 'impact', 'action')) {
+    if ($null -eq $Terminal.plainSummary -or $Terminal.plainSummary.PSObject.Properties.Name -cnotcontains $field) { Stop-Candidate 'codex_decision_invalid' }
+    $value = $Terminal.plainSummary.$field
+    if ($value -isnot [string] -or [string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' }
+    $plainSummary[$field] = $value
   }
   [ordered]@{
     category = 'decision_checkpoint'; decisionId = $decisionId; question = [string]$Terminal.question

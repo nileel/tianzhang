@@ -271,7 +271,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     [IO.File]::WriteAllBytes($queuePath, $originalQueue)
   } elseif ($mode -ceq 'blocked-dirty') {
     [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/dirty.txt'), 'dirty blocker fixture', [Text.UTF8Encoding]::new($false))
-  } elseif ($mode -cin @('checkpoint-valid', 'checkpoint-empty-mechanical', 'checkpoint-empty-label', 'checkpoint-invalid-recommended', 'checkpoint-head-changed', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
+  } elseif ($mode -cin @('checkpoint-valid', 'checkpoint-empty-id', 'checkpoint-empty-situation', 'checkpoint-empty-impact', 'checkpoint-empty-action', 'checkpoint-missing-summary', 'checkpoint-empty-label', 'checkpoint-invalid-recommended', 'checkpoint-head-changed', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc')) {
     $sourcePath = Join-Path ([Environment]::CurrentDirectory) 'fixture/rename-source.txt'
     [IO.File]::WriteAllText($sourcePath, 'checkpoint fixture', [Text.UTF8Encoding]::new($false))
     & git add -- 'fixture/rename-source.txt'
@@ -292,11 +292,13 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
     status = 'needs_decision'; identity = 'Codex'; model = $model; candidateCommit = $candidateCommit; expectedTransition = ''
     changedPaths = $changedPaths; verified = @('fixture evidence'); unverified = @('owner decision')
     residualRisk = 'fixture only'; result = ''; impact = ''; verify = ''; plain = ''
-    decisionId = $(if ($mode -ceq 'checkpoint-empty-mechanical') { '' } else { 'DEC-20260811-CANDIDATEFIXTURE' }); question = 'Choose the fixture outcome.'; options = $options
+    decisionId = $(if ($mode -ceq 'checkpoint-empty-id') { '' } else { 'DEC-20260811-CANDIDATEFIXTURE' }); question = 'Choose the fixture outcome.'; options = $options
     recommendedOption = $(if ($mode -ceq 'checkpoint-invalid-recommended') { 'D' } else { 'A' }); impactSummary = 'fixture impact'
-    plainSummary = $(if ($mode -ceq 'checkpoint-empty-mechanical') { [ordered]@{ situation = ''; impact = ''; action = '' } } else { [ordered]@{ situation = 'fixture situation'; impact = 'fixture impact'; action = 'choose A' } })
+    plainSummary = [ordered]@{ situation = '角色还有行动力，攻击按钮却不能点；修好按钮需要你同意扩大本次修改范围。'; impact = 'A 本次一起修好；B 另建任务修复并调整顺序；C 暂停开发。'; action = '建议选 A，把这两处必要修复一起做完。' }
     detailCode = 'combat_core_switch_contract_incomplete'
   }
+  if ($mode -cmatch '^checkpoint-empty-(situation|impact|action)$') { $terminal.plainSummary[$Matches[1]] = ' ' }
+  if ($mode -ceq 'checkpoint-missing-summary') { $terminal.Remove('plainSummary') }
 } elseif ($env:TZG_FAKE_CODEX_DIRTY_FAILURE -eq '1') {
   $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
   [IO.File]::WriteAllText($queuePath, ([IO.File]::ReadAllText($queuePath) + "`n<!-- dirty failure fixture -->"), [Text.UTF8Encoding]::new($false))
@@ -409,7 +411,9 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-True ($trace -match '不得把 result=、impact=、verify=、plain= 写入对应参数值') 'Codex candidate prompt did not reject JSON field prefixes inside metadata parameter values'
   Assert-True ($trace -notmatch '四值必须逐字满足以下格式[^\r\n]*result=问题=') 'Codex candidate prompt retained the ambiguous prefixed metadata grammar'
   Assert-True ($trace -match '技术失败同样先恢复工作树到本轮初始状态') 'Codex candidate prompt omitted the clean technical-failure boundary'
-  Assert-True ($trace -match 'direct needs_decision 的 decisionId 返回空字符串' -and $trace -match '固定 wrapper 会从 run/checkpoint 身份') 'Codex candidate prompt omitted deterministic direct-decision ownership'
+  Assert-True ($trace -match 'direct needs_decision 的 decisionId 返回空字符串' -and $trace -match '固定 wrapper 只从 run/checkpoint 身份确定性生成决策编号') 'Codex candidate prompt omitted deterministic direct-decision ID ownership'
+  Assert-True ($trace.Contains('plainSummary 必须由本轮责任方依据同一事实同步撰写') -and $trace.Contains('不得直接复制专业问题、影响说明或选项标签')) 'Codex candidate prompt omitted model-authored plain-language explanations'
+  Assert-True (-not $trace.Contains('plainSummary 三字段返回空字符串')) 'Codex candidate prompt still asks for empty decision explanations'
   Assert-True ($trace -match '缺少 obj/project\.assets\.json' -and $trace -match '先在同一 worktree 对该项目执行一次 dotnet restore' -and $trace -match '不得改用主工作区、其他 worktree 或其 obj/bin 缓存') 'Codex candidate prompt omitted the fresh-worktree restore boundary'
   Assert-True ($trace -match '必须与该提交的四个元数据值逐字一致') 'Codex candidate prompt omitted terminal/commit value synchronization'
   Assert-True ($trace -match "BaseCommit: $base") 'Codex candidate prompt omitted the exact base commit'
@@ -435,17 +439,26 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $validCheckpoint = Invoke-TerminalScenario -Mode 'checkpoint-valid'
   Assert-Equal ([string]$validCheckpoint.Terminal.status) 'needs_decision' 'Codex valid direct checkpoint no longer pauses for decision'
   Assert-Equal ([string]$validCheckpoint.Terminal.candidateResult.category) 'decision_checkpoint' 'Codex valid checkpoint category changed'
+  Assert-Equal ([string]$validCheckpoint.Terminal.candidateResult.plainSummary.situation) '角色还有行动力，攻击按钮却不能点；修好按钮需要你同意扩大本次修改范围。' 'Codex overwrote the model-authored situation with the professional question'
+  Assert-Equal ([string]$validCheckpoint.Terminal.candidateResult.plainSummary.impact) 'A 本次一起修好；B 另建任务修复并调整顺序；C 暂停开发。' 'Codex overwrote the model-authored choice comparison with the professional impact'
+  Assert-Equal ([string]$validCheckpoint.Terminal.candidateResult.plainSummary.action) '建议选 A，把这两处必要修复一起做完。' 'Codex overwrote the model-authored recommendation with an option label'
   Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('rev-list', '--count', "$base..HEAD")) '1' 'Codex valid checkpoint is not the unique direct successor'
   Assert-Equal (Invoke-Git -Root ([string]$validCheckpoint.Run.worktree) -Arguments @('status', '--porcelain=v1', '--untracked-files=all')) '' 'Codex valid checkpoint worktree is dirty'
 
-  $normalizedCheckpoint = Invoke-TerminalScenario -Mode 'checkpoint-empty-mechanical'
+  $normalizedCheckpoint = Invoke-TerminalScenario -Mode 'checkpoint-empty-id'
   $normalizedCommit = Invoke-Git -Root ([string]$normalizedCheckpoint.Run.worktree) -Arguments @('rev-parse', 'HEAD')
   $expectedDecisionId = Get-ExpectedDirectDecisionId -TaskId $taskId -Run $normalizedCheckpoint.Run -CheckpointCommit $normalizedCommit
-  Assert-Equal ([string]$normalizedCheckpoint.Terminal.status) 'needs_decision' 'Codex did not normalize empty direct-decision mechanical fields'
+  Assert-Equal ([string]$normalizedCheckpoint.Terminal.status) 'needs_decision' 'Codex did not generate an empty direct-decision ID'
   Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.decisionId) $expectedDecisionId 'Codex direct decision ID is not deterministic'
-  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.situation) 'Choose the fixture outcome.' 'Codex direct decision situation summary mismatch'
-  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.impact) 'fixture impact' 'Codex direct decision impact summary mismatch'
-  Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.action) '建议选择 A：option A' 'Codex direct decision action summary mismatch'
+  foreach ($field in @('situation', 'impact', 'action')) {
+    Assert-Equal ([string]$normalizedCheckpoint.Terminal.candidateResult.plainSummary.$field) ([string]$validCheckpoint.Terminal.candidateResult.plainSummary.$field) "Codex decision ID generation changed the plain summary: $field"
+  }
+
+  foreach ($invalidMode in @('checkpoint-empty-situation', 'checkpoint-empty-impact', 'checkpoint-empty-action', 'checkpoint-missing-summary')) {
+    $invalidSummary = Invoke-TerminalScenario -Mode $invalidMode
+    Assert-Equal ([string]$invalidSummary.Terminal.status) 'failed' "Codex accepted missing plain-language content: $invalidMode"
+    Assert-True ($invalidSummary.Terminal.PSObject.Properties.Name -cnotcontains 'candidateResult') "Codex fabricated a decision for missing plain-language content: $invalidMode"
+  }
 
   foreach ($invalidMode in @('checkpoint-head-changed', 'blocked-dirty', 'checkpoint-fake-sha', 'checkpoint-wrong-path', 'checkpoint-incomplete-abc', 'checkpoint-empty-label', 'checkpoint-invalid-recommended')) {
     $invalidCheckpoint = Invoke-TerminalScenario -Mode $invalidMode
