@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "2026-10-08直接前置均已完成；负责人确认Guard/SwapSpell各50 AP试跑，普通行为配置与会话创建接线由CORE持有，输入、直接调用路径及验证边界已冻结，可由Codex执行。",
+  "stateReason": "等待负责人决定：EndTurn按合同在回合开始合法，但旧显示和输入以CanEndTurn禁用其他动作，已在PlayMode复现。任务卡冻结路径不含CombatActionBarView.cs和CombatCommandInput.cs，按停止条件已保留checkpoint。请选择如何调整交付边界。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -78,6 +78,91 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
+  },
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-COMBAT-AP-CORE-01",
+    "sourceRunId": "60e51e43-57f1-4020-90e2-287f56182eed",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261008-CDA2ACBFFA8FC4",
+    "question": "EndTurn按合同在回合开始合法，但旧显示和输入以CanEndTurn禁用其他动作，已在PlayMode复现。任务卡冻结路径不含CombatActionBarView.cs和CombatCommandInput.cs，按停止条件已保留checkpoint。请选择如何调整交付边界。",
+    "options": [
+      {
+        "key": "A",
+        "label": "由规划入口将两处显示／输入的最小解耦纳入CORE，重新冻结路径与验证并预检后继续"
+      },
+      {
+        "key": "B",
+        "label": "维持CORE无UI边界，独立准备显示／输入前置任务并调整交付依赖后继续"
+      },
+      {
+        "key": "C",
+        "label": "保持阻塞并保留checkpoint，暂不继续"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "checkpoint保留允许范围内的AP内核、正式配置及直接调用适配。A集中处理已证实的两处耦合；B需要重新规划依赖。两者均须先调整冻结任务，再补齐失败验证；任务尚未关闭或集成。",
+    "plainSummary": {
+      "situation": "EndTurn按合同在回合开始合法，但旧显示和输入以CanEndTurn禁用其他动作，已在PlayMode复现。任务卡冻结路径不含CombatActionBarView.cs和CombatCommandInput.cs，按停止条件已保留checkpoint。请选择如何调整交付边界。",
+      "impact": "checkpoint保留允许范围内的AP内核、正式配置及直接调用适配。A集中处理已证实的两处耦合；B需要重新规划依赖。两者均须先调整冻结任务，再补齐失败验证；任务尚未关闭或集成。",
+      "action": "建议选择 A：由规划入口将两处显示／输入的最小解耦纳入CORE，重新冻结路径与验证并预检后继续"
+    },
+    "checkpointCommit": "6aaafa01f147e853e11aaaa09301fd28c180ad33",
+    "baseCommit": "3dafe954b48802a4690724789bf20f44b7091459",
+    "branch": "codex/automation/codex/60e51e43-57f1-4020-90e2-287f56182eed/candidate",
+    "changedPaths": [
+      "开发管理/U-COMBAT-AP-CORE-01-验证记录.txt",
+      "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+      "src/Assets/Scenes/AdventureScene.unity",
+      "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+      "src/Assets/Scripts/Combat/CombatActionResult.cs",
+      "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+      "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+      "src/Assets/Scripts/Combat/CombatCommand.cs",
+      "src/Assets/Scripts/Combat/CombatCommandService.cs",
+      "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+      "src/Assets/Scripts/Combat/CombatSession.cs",
+      "src/Assets/Scripts/Combat/Turns/CTBEngine.cs",
+      "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+      "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+      "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+      "src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs",
+      "src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs.meta",
+      "src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs",
+      "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs",
+      "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+      "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs"
+    ],
+    "verified": [
+      "新增 AP 内核用例23/23通过；正式普通行为配置及重载幂等用例1/1通过。",
+      "同一 worktree 的 BattleSim restore、Release --no-restore build、--no-build run 均成功，构建0警告、0错误。",
+      "PlayMode 复现范围冲突：玩家AP=100000、AcceptsCommands=true、CanEndTurn=true，术法按钮禁用且点击后Preview=null。",
+      "程序集边界、数据链路、任务卡及审核文本检查通过；刷新风险预检未命中新增门禁。",
+      "32路径空白检查和staged diff检查通过；checkpoint为基线唯一直接后继，工作树干净，任务生命周期未改变。",
+      "changedPaths直接取自规定的基线到HEAD、--no-renames命令。"
+    ],
+    "unverified": [
+      "全量EditMode：730项中708通过、22失败；旧断言及夹具迁移尚未完成。",
+      "受影响PlayMode：所运行1项失败；其他PlayMode未运行，最终场景验收未完成。",
+      "卡外CombatActionBarView.cs和CombatCommandInput.cs尚未修改。",
+      "FLOW敌方多动作、演出继续及HUD后继交付未完成；本次BattleSim运行不证明AP双入口迁移或平衡结论。"
+    ],
+    "residualRisk": "当前正式场景动作按钮和候选生成受阻，相关验证仍失败；checkpoint不能作为完成结果集成。",
+    "taskContextDigest": "580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2",
+    "createdAt": "2026-10-08T14:57:07.0774009+08:00",
+    "queueIndex": 0
   }
 }
 ---TASK-BODY---
