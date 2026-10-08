@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-COMBAT-AP-EFFECT-01 | codex_execute | codex | P1 | content | design | 术法与神通标准效果预算模板 | 开发管理/任务卡/D-COMBAT-AP-EFFECT-01.txt |

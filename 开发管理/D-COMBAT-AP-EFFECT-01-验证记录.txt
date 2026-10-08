@@ -1,0 +1,154 @@
+# D-COMBAT-AP-EFFECT-01 设计与完成验证记录
+
+当前结果：2026-10-08负责人回复A已核验，本轮完成批准记录、引用同步与当前任务归档；原checkpoint验证和决策过程作为历史证据保留，当前完成证据见§六。
+
+## 原checkpoint记录（历史）
+
+日期：2026-10-08；责任方：Codex；主模型：gpt-6.1-sol（共享入口启动证明，executionModel同值）。
+RunId：950d480c-79a3-49af-9dd6-e53bdcb26d88；base：c7bce2d8ad9d50e3e904d67bf4874ae9c4aedba5。
+本轮结果：完整候选设计checkpoint，needs_decision。不归档、不改任务卡／队列／backlog，不移除任何下游具名前置。任务卡的负责人确认条件尚未满足。
+
+## 一、执行边界、复杂度与预检
+
+按AI协作规则“任务卡中的模型协作提示”核对：本卡为跨主动／被动、控制时钟、共享实例的复杂设计，强耦合合同由入口gpt-6.1-sol单主责统一形成，无独立辅助问题，不启第二责任会话或子智能体。实际可用能力为只读源码与文本、文档编辑、算术核对、项目检查和唯一checkpoint提交；没有把缺少新AP入口当作旧模拟平衡证据。
+共享入口冻结预检为空。按只读发现的实际内容导入／运行时消费链补核预检，命令：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId D-COMBAT-AP-EFFECT-01
+返回status=ok；taskCardDigest=c88e54d96b50a2e76488fd5edeae038f807d24877d803d5d033aad215f033e7e；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched／mustRead／gates／gatePointers均空，与schema2投影一致，无必读正文或缺门禁。补核过程中任务输入和允许写入路径不变，仅补充既有导入与消费所有者的事实，不扩写代码。
+
+## 二、核对的事实与差异
+
+- 新模板给出独立的内容品级、获取难度与施用者境界，4×3完整候选效率表；AP／MP瓶颈公式、分别支付、边际与峰值；普通效果单位／时钟／范围／命中／保护／叠加；51个特殊效果ID的原权限与不能通用兑换的范围；组合权重与被动频率、覆盖率、原资源和账本。
+- GameData全部8对16个静态Config的名称、通道、倍率、MP、穿防、元素、范围逐字段对照；Divine构造第4参数确认为穿防，不误记MP。全表新AP／下限／CT／tick均完整但待批准，不按旧3／5推导刻数。
+- 21个BuildDef逐Style映射与别名；配置外Kuxing主动入口有完整候选成本与原HP规则；guardian_1～5确认为结构账本夹具，未伪称五项实际技能；6行生产格式fixture分别保留原成本与范围，未擅改测试断言。
+- 旧1v1在全场单次行动递减双方CD；2v2计划实际消费BasicAttackProfile而非配置Art／Divine。不能把映射表称作两个入口已经迁移。
+- 旧1v1 A侧水系10%眩晕和对方受击雷劫叠层分支在B侧缺失；候选水控明确提出双方共用神识差值公式，而非宣称当前源码对称。本轮不修该代码，SIM后续须验证交换双方的一致性。
+- 聚灵术用施用者原魂魄，不是神识或神攻；CombatActionResolver::ResolveAttack先max最低量、再乘环境和他用倍率、再floor。普通环境基准魂魄25，自用12／他用6；节点自用25／他用12，保留生产参数。
+- 三项已批准生产攻击只读对照；两类规范、模板和L1增加候选引用；公共合同只增加待批准来源指针，没有新增“已确认”参数。本轮没有生产CSV、asset、Unity或模拟器差异。
+- 现用输出保值例外有源码依据、权重与冻结有理系数；通用参数调整仍传播，不靠重新倒算系数锁死旧值。例外不是平衡签收，水系长寿命叠层与35%减伤尤其需实跑校准。
+
+## 三、算术与来源覆盖检查
+
+在当前worktree执行下列PowerShell单次内联Python检查，无仓库测试文件或缓存复用：
+
+@'
+import re, csv, math
+from pathlib import Path
+root=Path('.')
+doc=(root/'docs/角色养成/术法神通数值模板.txt').read_text(encoding='utf-8-sig')
+source=(root/'simulations/BattleSim/GameData.cs').read_text(encoding='utf-8-sig')
+matrix=(root/'docs/基础设定/元婴锚点与金丹位格矩阵.txt').read_text(encoding='utf-8-sig')
+ids=set(re.findall(r'^\| ([A-Z][A-Z_]+) \|',matrix,re.M))
+assert len(ids)==51, len(ids)
+assert all(re.search(r'\b'+i+r'\b',doc) for i in ids)
+configs=re.findall(r'public static readonly (ArtConfig|DivineConfig) (\w+) = new\(([^;]+)\);',source)
+assert len(configs)==16, len(configs)
+for kind,key,args in configs:
+    row=re.search(r'^\| '+key+r' (.+?) \| (.+?) \| (\d+)／(\d+)／(\d+)／(\d+) \| (.+?) \|$',doc,re.M)
+    assert row,key
+    fields=next(csv.reader([args],skipinitialspace=True))
+    name,channel,old_mult=fields[:3]
+    assert row[1]==name,(key,row[1],name)
+    mp=int(fields[3]) if kind=='ArtConfig' else 0
+    pen=0 if kind=='ArtConfig' else float(fields[3])
+    source_element=fields[5] or '无'
+    assert row[2].split('／')[0]==channel,key
+    assert abs(float(row[2].split('／')[1])-float(old_mult))<1e-12,key
+    assert float(row[2].split('／')[2])==mp,key
+    assert float(row[2].split('／')[3])==pen,key
+    assert row[2].split('／')[4]==fields[6]+'～'+fields[7],key
+    assert row[2].split('／')[5]==source_element,key
+    assert tuple(map(int,row.group(3,4,5,6)))==((50000,50000,10,10) if kind=='ArtConfig' else (75000,75000,0,20)),key
+    U=min(50/25,1+mp/20) if kind=='ArtConfig' else 75/25
+    w=.8 if key=='WaterArt' else .5 if key=='WaterDivine' else 1
+    k=.65 if channel=='物理' else .5525
+    legacy=float(old_mult)*(1+pen/100)/(k*U*w)
+    derived=k*U*w*legacy/(1+pen/100)
+    assert abs(derived-float(old_mult))<1e-12,key
+    changed=.60*U*w*legacy/(1+pen/100) if channel=='物理' else derived
+    if key=='PhysicalArt': assert abs(changed-1.2)<1e-12
+    assert int(row[3])>0 and int(row[4])<=int(row[3])
+for mp,expected in [(0,.65),(10,.975),(20,1.3),(40,1.3)]:
+    assert abs(.65*min(2,1+mp/20)-expected)<1e-12
+for ap,expected in [(25,.65),(37.5,.975),(50,1.3),(75,1.3)]:
+    assert abs(.65*min(ap/25,2)-expected)<1e-12
+for G,H,value in [(1,1,1.3),(1.25,1.1,1.7875),(1.75,1.2,2.73)]:
+    assert abs(.65*2*G*H-value)<1e-12
+assert abs((.5+2/15+1/6+.2)-1)<1e-12
+assert abs(2*.2-4*.1*1)<1e-12
+assert abs(3*2/15-4*.1*1)<1e-12
+assert abs(.10*.6*(35/6)-.35)<1e-12
+assert math.floor(max(5,25*.5))==12
+assert math.floor(max(5,25*.5)*.5)==6
+assert math.floor(max(5,25*.5)*2)==25
+assert math.floor(max(5,25*.5)*2*.5)==12
+fixtures=root/'src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv'
+rows=list(csv.DictReader(line for line in fixtures.read_text(encoding='utf-8-sig').splitlines() if not line.startswith('#') and line.strip()))
+assert len(rows)==6
+for row in rows:
+    pattern='／'.join(row[key] for key in ['actionPointCostUnits','minimumNetCostUnits','resourceCost','ctPenalty','reuseCooldownTicks'])
+    assert pattern in doc,row['attackProfileId']
+print('PASS: 51 effect IDs, 16 Config source tuples/costs/legacy derivations, 6 fixture cost tuples, resource bottlenecks, grade/rarity examples, combination/control budgets, parameter propagation, 4 production recovery examples')
+'@ | python -
+
+结果：退出码0，全部断言通过。该检查证明列举与代表算术，不证明命中／控制／持续的运行时实现、角色强度或批量导入。
+
+补充算术检查（只验证新增的血剑气回收派生与12格完整效率表）：初次Python二进制浮点计算0.3×3再除3，在实付HP=30时floor少算1点，断言失败；这是候选派生算术的精度问题，不是本轮运行时修复。模板§三明确精确十进制／有理式计算后才取整，随后使用下列精确有理数检查，不重复已通过的16配置／51ID范围：
+
+@'
+from pathlib import Path
+from fractions import Fraction as F
+import re, math
+text=Path('docs/角色养成/术法神通数值模板.txt').read_text(encoding='utf-8-sig')
+for q,g in [(1,F(1)),(2,F('1.25')),(3,F('1.5')),(4,F('1.75'))]:
+    cells=re.search(r'^\| Q'+str(q)+r'[^|]+\| (.+?) \| (.+?) \| (.+?) \|$',text,re.M)
+    assert cells
+    for value,h in zip(cells.groups(),[F(1),F('1.1'),F('1.2')]): assert F(value)==g*h
+for mult in map(F,['1.5','1.8','2.2','2.8','3.5']):
+    legacy=mult/(F('.65')*3*F('.7'))
+    assert F('.65')*3*F('.7')*legacy==mult
+for paid in [0,1,10,30,100]:
+    assert math.floor(paid*(F('.3')*3)/3)==math.floor(paid*F('.3'))
+print('PASS: 12 grade/rarity cells, 5 Kuxing realm multiplier derivations, exact Kuxing initial recovery including zero HP payment')
+'@ | python -
+
+最终结果以本轮实际工具返回为准；未通过则不提交。首次失败已如实保留，不当作验证通过。
+
+## 四、项目检查与未验证范围
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-EFFECT-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute -OutputJson
+结果：status=ok，cardCount=74，readyCount=2，taskState=ready；checkpoint保留claim任务原生命周期。
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+结果：check-data-chain: OK，GongFa=29/29、Spells=84/84、Skills=31/31、language keys=613。
+
+提交前另运行审核文本、允许路径待暂存空白与暂存差异空白检查，准确命令：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths 'docs/角色养成/术法神通数值模板.txt|docs/角色养成/术法设计规范.txt|docs/角色养成/神通设计规范.txt|docs/角色养成/术法/术法设计.txt|docs/角色养成/神通/神通设计.txt|docs/角色养成/养成事实速查.txt|开发管理/统一行动力公共合同.txt|开发管理/D-COMBAT-AP-EFFECT-01-验证记录.txt'
+git diff --cached --check
+结果以本轮实际工具返回与最终verified字段为准；任一失败不提交候选。
+
+空白检查首次传入整个12路径授权集合，因本checkpoint不归档、归档文件不存在而返回Missing path；没有为通过工具擅建归档。最终命令按本轮实际8个改动文件检查，均属于冻结允许集合。finalizer仍传入用户规定的完整12路径允许集合，脚本只暂存实际改动。
+
+未验证：新AP模拟／Unity消费、真实角色数值平衡、控制对抗实跑、特殊机制效率、批量生产与自动重算、负责人批准。未改模拟器且没有讨论角色平衡结论，不运行旧BattleSim来伪证新AP表，也不执行无关dotnet构建或借用其他worktree缓存。
+
+## 五、决策与后续边界
+
+任务卡完成条件明文要求“负责人已确认模板与候选试跑输入”；当前批准证据为空，所以交付可审阅方案后按既有needs_decision合同停止。A批准有限稀有效率与完整迁移候选；B同结构同映射但稀有度只表示获取难度；C暂缓。具体内容与变化见模板§十。
+恢复轮只按实际回复更新批准来源与候选版本，再核对本卡完成条件；不宣布已平衡。当前正式三攻击、GROWTH责任、SIM真实迁移和所有下游状态／依赖均保留。现用机制例外与源码左右分支差异只作为本任务验证证据，不建新任务、经验索引或自动化状态。
+
+## 六、批准回复执行与完成验证（2026-10-08）
+
+责任方Codex；入口核验主模型gpt-6.1-sol；RunId=699cc187-35c3-4f74-84a4-20616faaf99e；BaseCommit=7869ec32e2d8b346ccc118b0858e41c6915b1899。按AI协作规则重新评估：本轮仅应用已核验选择A、同步批准指针和关闭当前任务，语义已冻结，沿用入口单模型，无独立辅助问题，不启子智能体或第二责任会话。实际工具能力为只读Git／文本、受限文档修改及项目检查／唯一candidate；消费入口绑定当前run／task／digest的空预检，matched／notice／mustRead／gatePointers均空，没有新增路径、符号或技术路线。
+
+批准依据：DEC-20261008-CD1C694827D0FC=A；来源feishu_card；evidenceHash=667aad5f778fb3b1a475c64bb73985268a3bfcadb5b63b719d09eeb79674ca72；checkpoint=33a9678e9479a7020eec4217e366c2f65e4f695b。已核对当前任务卡automationReply与上述绑定逐项一致，未消费其他决策。维持TZ_EFFECT_BUDGET@0.1及全部系数、表格、成本、权重、具名例外；模板状态、两类规范／模板、L1及公共合同同步批准事实。任务卡归档完成、只移除自身队列／backlog行；全部下游状态和具名前置保留。
+
+最小充分验证：逐行比较本轮批准前后模板所有表格和§一～九全部数值，完全一致；git diff --name-only 33a9678e9479a7020eec4217e366c2f65e4f695b HEAD -- simulations/BattleSim src/Assets/DataConfig/AttackProfiles.csv src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv docs/基础设定 无输出，原算术与来源检查的相关输入未变化，因此不重复原已通过的51ID／16配置／6夹具及12格／精确有理数检查。当前检查证明批准绑定与参数未变，不把历史检查算作本轮实跑。
+
+本轮项目检查命令：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-EFFECT-01 -Postcondition CodexClosedOrNonReady -OutputJson
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1
+
+结果：check-task-cards退出码0，status=ok、cardCount=73、readyCount=0、taskState=completed；check-review-text退出码0，718文件通过；check-data-chain退出码0，GongFa=29/29、Spells=84/84、Skills=31/31、language keys=613。任务检查初次误传BaseCommit、第二次误传ExpectedRoute，被参数约束分别拒绝，未执行业务检查；按脚本合同去除两个不适用于关闭后置条件的参数后上述检查通过，没有修改检查器或业务输入以绕过。暂存前按实际存在的11个改动文件运行check-pending-whitespace（移动源已不存在，删除路径由Git差异检查），暂存后运行git diff --cached --check；指定finalizer再核验路径／空白与元数据并只形成唯一candidate。最终提交与空白结果以本轮工具返回和终态verified为准。
+
+未验证：新AP的BattleSim双入口和Unity消费、控制对抗／特殊机制实跑、角色数值平衡、批量生产与自动重算。未修改模拟器，不运行旧BattleSim或无关构建来冒充新AP证据。残余风险包括旧双边分支差异、水系长寿命叠层与减伤效率，以及完整SIM准备仍依赖GROWTH；均不扩大本卡实现。收尾依据已有事实检查无新增经验候选，不建经验整理任务、不修改索引。
