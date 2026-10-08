@@ -1,0 +1,85 @@
+# D-COMBAT-AP-GROWTH-01 验证记录
+
+## 首轮checkpoint记录（历史，后续批准与归档见末节）
+
+日期：2026-10-08；RunId：351cda2d-f7eb-4c6b-be47-22194843abc5。
+基线：28e7aa37366a4c723a738cd2b13ad1f21ab3243c；当前owner worktree内实施，未操作runtime、集成、其他worktree或其他任务。
+结果类型：待负责人确认的设计checkpoint，非任务完成归档；活跃任务卡、队列、backlog及下游具名前置均保持原样。
+
+## 执行前范围与模型协作
+
+- 消费共享入口已绑定本run／task／卡digest／风险索引digest的预检证明：matched／notice／mustRead／gatePointers均为空；没有新增超出expectedPaths的写入或技术路线。
+- 核对《AI协作规则》“任务卡中的模型协作提示”与卡内模型协作。主模型gpt-6.1-sol以首条adapter启动证明为准；未更换主模型、未启动第二责任会话。复杂设计由同一主责统一功法节点、预算与曲线，职责强耦合、无需要独立委派的问题，因此未调用辅助模型；卡建议high，实际推理强度没有工具返回证明，不声称已核验。
+- 单一原子结果是独立功法数值合同及SIM输入映射；读文本／只读源码、精确算术和checkpoint提交能力可用。没有新AP双入口的平衡证据，未调用旧模拟替新曲线签字。
+- 应用brainstorming技能的上下文、方案比较和文档自检；用户当次明确要求先形成完整方案并按needs_decision提交，因此先写可审阅候选，再在最终结构化结果请求具体输入批准，不增加额外审批或实现计划文件。
+
+## 已证实事实与提案边界
+
+- 《功法设计》只允许同时修炼一门；现行BuildDef／Character.GongFaName也是单功法输入。求和合同保留唯一合法来源集合，不扩大同时修多门权限。
+- FinalizeStats直接Primary[移力]=GameData.Base[realm].移力；SubGrowthSum不消费历史移力增量。旧2／3／4／5／6／7只作为已否决候选及旧实现证据。
+- BuildDefs有21个Build／15部不同功法；RunFoundationGrowthAudit额外消费6部，独立模板表精确覆盖合计21部，未扫描其他backlog或全库生产。
+- 逐表行通过只读Python提取源码功法键、审计列表并与新模板21行集合相等比较；逐路径检查原文品级、纯度、每日灵力成长和学习门槛，与新表逐字段一致。代表篇章与成长表已按原文检查；学习和后续篇章解锁分离。
+- 候选A基础2／4／12／48／240／1440；B为2／6／24／120／720／5040。共同参数：苦行M=每境界基础×0.25，其他20部长期Z=0；太易巽临时v+1候选；21部功法AP上限增量全部0。元婴／化神仅NPC／远期。
+- 保留三阶段八属性合同、原品级／属性倾向／纯度速度取舍；没有替换已有专属成长表或五部已登记回退，未重定术法／神通成本。存量差异明确留在原范围。
+- 九来源及新建玩家v2／AP100保持试跑快照；设计不修改Unity、CSV、资产、旧档或当前生产修正来源空集合门禁。
+
+## 合同与算术核对
+
+采用Python标准库Fraction精确有理数，无浮点近似。基础、节点、跨境界累计、最终vMilli向下取整、逐边AP费用按独立模板公式计算；这些是文档合同核对，不是游戏或SIM实现测试。
+
+| 核对项 | A结果 | B结果 |
+|---|---|---|
+| 苦行练气第1节点，vMilli／普通边AP单位 | 4111／24324 | 6166／16217 |
+| 练气九节点末，vMilli | 5000 | 7500 |
+| 苦行筑基开府，vMilli／普通边AP单位 | 14860／6729 | 29220／3422 |
+| 苦行金丹圆满，vMilli／普通边AP单位 | 64000／1562 | 157500／634 |
+| 苦行化神四节点末，仅远期，vMilli／普通边AP单位 | 1876000／53 | 6517500／15 |
+| 上行极短正边d_e=1、K1000 | 每边1单位=0.001 AP | 每边1单位=0.001 AP |
+
+- Fraction断言练气九个节点累计恰为本境界预算，三阶段份额之和为1；不是累加9个截断0.111。最高候选vMilli6517500小于int.MaxValue。
+- 模板变化例只作合同：M从0.25变0.30，A苦行筑基开府15.432、金丹圆满67.2；20部Z与AP不变。未批准0.30、未实现自动联动。
+- 文本自检：每来源／节点只贡献一次，篇章不重复加值；废功失去M，金丹A转Z为48、转回相同合法M为64；同阶Z与M有区别，AP不随v生成。去重／转化是设计规则自检，尚无运行时实现证据。
+- 高阶地图通达边界、MaxQueryRange查询边界、逐边最小费用饱和与整数溢出拒绝已列明，不新增压缩或速度上限。没有宣称验证任一具体地图。
+
+算术复现入口：在当前worktree使用Python标准库Fraction，按《功法数值模板》§四、§五M档表与§六公式即可重建上表；本轮执行的精确计算等价于下列片段（方案B替换base即可）：
+
+```python
+from fractions import Fraction as F
+base = [2, 4, 12, 48, 240, 1440]
+shares = [F(30, 100), F(32, 100), F(38, 100)]
+for realm, k in [(1, 1), (1, 9), (2, 2), (3, 3), (5, 4)]:
+    prior = sum(F(b, 4) for b in base[1:realm])
+    portion = F(k, 9) if realm == 1 else sum(shares[:k]) if realm in (2, 3) else F(k, 4)
+    v = F(base[realm]) + prior + F(base[realm], 4) * portion
+    milli = (v * 1000).numerator // (v * 1000).denominator
+    print(realm, k, milli, max(1, 100000000 // milli))
+```
+
+## 仓库检查与收尾入口
+
+- 已通过：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-GROWTH-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute -OutputJson`；cardCount74、readyCount1、本卡仍ready。首次命令漏传ExpectedRoute时参数检查拒绝，没有业务验证结论，补齐参数后通过。
+- 已通过：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`；GongFa29/29、Spells84/84、Skills31/31、language keys613。只证明现有数据链检查，无新输入生产落地证明。
+- 收尾检查入口：`tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`；新增验证记录和最终文本纳入检查，实际结果以本轮终态verified为准。
+- 暂存前由`tools/automation-finalize-commit.ps1`对本轮changedExistingFiles执行`check-pending-whitespace.ps1`，暂存后执行cached whitespace检查；另按任务要求执行原始`git diff --cached --check`。路径限定与单一直接后继提交由finalizer和最终base..HEAD证据核验，不用普通git commit替代。
+
+## 未验证与需要决定
+
+- 负责人尚未确认具体曲线、M系数和巽卦候选移动值，故不归档本卡，不移除下游前置，不登记已批准试跑输入。
+- 未运行新AP BattleSim、Unity场景／地图、存档往返或全库自动派生；没有修改模拟器，不进行dotnet build／restore或旧入口平衡试跑。
+- 去重、转化、八属性与篇章真实运行、生产修正来源合法化、批量版本联动仍须后续所有者在冻结范围内实现／验证；六部仅筑基审计与高阶旧主动未映射组合不获完整角色试跑许可。
+- 决策A：批准推荐基础曲线与共同功法输入用于迁移试跑；B：批准更强爆发曲线与相同共同功法输入；C：暂不批准，保留方案待修订。A／B均不构成角色数值平衡定案，C不把已否决旧合成曲线恢复成合法输入。
+- 不写经验候选：本轮是已有方向下的设计提案，未发现可另立的已证实实现故障根因；没有任务完成归档行为。
+
+## 决策A收口与完成归档（2026-10-08）
+
+- 当前RunId：9f0e4510-fab9-47c3-9712-975aa223c78b；基线d473e79829e3e38a32f09b4e6377be53d6f5937e；只在入口指定owner worktree实施、验证和形成唯一candidate，不调用runtime、不集成、不修改其他worktree或其他任务。
+- 共享入口已机械核验并重放checkpoint c947061b3e3bde274f4c78d5a882e8ce895e211b；对应回复DEC-20261008-CDABAC95B7223C=A，来源feishu_card，证据摘要a2d2f5d8f5ddc5a3e635d2fba4ae658055fd7062b493e558af4f4674d79bad74。本轮只消费该决策，不恢复旧模型会话。
+- 执行前重新核对《AI协作规则》“任务卡中的模型协作提示”及卡内组合：本轮是已冻结方案的批准记录与生命周期收口，语义明确、没有独立复杂问题，沿用入口传入gpt-6.1-sol单主模型；文本／只读源码、原生编辑与路径限定提交能力可用，未启动辅助或第二责任会话。预检证明绑定本run／task／卡digest／索引digest，matched／notice／mustRead／gatePointers均空；没有新增路径、所有者或技术路线。
+- GF-GROWTH-AP由0.1-candidate提升为0.1／A，基础v=2／4／12／48／240／1440；苦行M=0.25及合法节点、其余20部长期Z=0、太易巽临时+1、基础AP100与21部功法上限增量0均按原checkpoint冻结。B只留未批准比较列；M=0.30只留变更算术例，不纳入批准。同步规范、模板、L1及公共合同，审批依据可追溯。
+- 通过git diff 28e7aa37366a4c723a738cd2b13ad1f21ab3243c..HEAD核对本卡直接源码、功法原文与角色数值／战斗规则均未变化；本轮复核FinalizeStats、SubGrowthSum、Base、SubGrowthBase、BuildDefs及生成调用，原21部映射、篇章资格、三阶段与算术证据继续适用，未重复已通过且输入未变的原文扫描和算术运行。
+- 当前任务完成设计与试跑输入批准，移入精确任务归档，移除自身backlog及队列行；其他任务的blockedBy及backlog具名前置原样保留，正式进入master后由后续QueueMaintenance处理。
+- 本轮已通过：只读Python比较checkpoint与现文§三～六的全部数值序列，确认曲线、节点、映射数值与代表例未变；归档卡仅dispatchState／stateReason及完成正文变化，checkpoint／reply及其他元数据保持，队列和backlog只删除本卡行，下游具名前置原样保留。
+- 已通过：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-GROWTH-01 -Postcondition CodexClosedOrNonReady -OutputJson`，taskState=completed、cardCount72、readyCount0；`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1`，GongFa29/29、Spells84/84、Skills31/31、language keys613。
+- 最终收尾入口：`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理`；指定finalizer暂存前check-pending-whitespace、暂存后cached whitespace检查与`git diff --cached --check`。具体收尾结果以本轮终态verified为准；唯一提交、精确base..HEAD路径与九字段元数据另核验。
+- 未验证：新AP BattleSim角色平衡与Unity地图体验、去重／转化与真实篇章消费、生产／存档接入及批量派生联动。没有修改模拟器，不运行旧入口或dotnet构建假签新参数；元婴／化神仅NPC与远期，未映射高阶主动组合仍不具备完整试跑许可。高阶地图通达与极短边最低费用饱和风险保留。
+- 归档前仅凭本轮已有事实、diff和验证检查经验候选：批准记录与收口没有新增可复用故障根因或门禁候选，不写空章节，不另建整理任务。
