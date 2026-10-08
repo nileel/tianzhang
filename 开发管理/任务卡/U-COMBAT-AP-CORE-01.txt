@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CDA2ACBFFA8FC4",
+  "stateReason": "2026-10-08：负责人已选A并授权处理恢复；两处显示／输入路径、实施边界及验证已补齐。沿用原决策及已接受的A回复，交既有checkpoint入口重新重放；不要求新决定。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -54,7 +54,9 @@
     "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs",
-    "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "automationInputs": [
@@ -160,7 +162,7 @@
       "FLOW敌方多动作、演出继续及HUD后继交付未完成；本次BattleSim运行不证明AP双入口迁移或平衡结论。"
     ],
     "residualRisk": "当前正式场景动作按钮和候选生成受阻，相关验证仍失败；checkpoint不能作为完成结果集成。",
-    "taskContextDigest": "580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2",
+    "taskContextDigest": "d1fa595fb79499d17213db370171beb04c9e6dd4a636ecf438bf0466b456ee38",
     "createdAt": "2026-10-08T14:57:07.0774009+08:00",
     "queueIndex": 0
   },
@@ -179,7 +181,7 @@
 ## 来源与当前边界
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
-- 原子结果：纯 Combat 内核的一个个人回合支持合法多动作，并只在个人回合边界推进三时钟账本。
+- 原子结果：Combat 内核的一个个人回合支持合法多动作，并只在个人回合边界推进三时钟账本；正式按钮与输入不再因可以结束回合而阻断内核已允许的动作。
 - 直接前置：已全部完成；DATA、MOVE及CHAR已有正式归档，CHAR完成提交8c0f3d3ea915b0415c82986369ce521197b51c7a。下述会话创建输入边界也已冻结，不再等待CHAR或FLOW。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
@@ -202,15 +204,24 @@
 - 场景唯一生成者为AdventureSceneBuilder，复用其既有SerializedObject写入方式，只增加/更新普通行为字段；禁止全场景重建、手写场景YAML或替换表现provider。现有AdventureScene GUID=e3e595b673eb98142a11436e06fe54c6，场景其他引用和布局不变；FeatureCompositionEditorTests验证正式序列化值、重载和幂等。
 - 负责人2026-10-08明确“先都是50ap吧”：Guard与SwapSpell的ActionPointCostUnits均为50000。当前无合法减耗／返还来源，初次MinimumNetCostUnits同为50000，净付费50 AP；后续有获准修正来源时再核定折扣下限，不在本卡新增折扣。CT均为0，Guard重用0，换入术法保留max(原剩余,60 tick)/每战2次的既有边界。此值仅获准迁移试跑，不代表数值平衡。不得把技术夹具值写入生产字段、保留无参/缺值默认构造或允许正式会话因本次迁移整体失效。
 
+## 2026-10-08 决策 A 落地与恢复
+
+- 负责人已通过飞书对 DEC-20261008-CDA2ACBFFA8FC4 选择 A，本轮又明确授权处理恢复。唯一新增业务范围是 CombatActionBarView.Present 与 CombatCommandInput.CanAct 的最小解耦，两条字面量路径已加入 expectedPaths；这项工作随 CORE 交付，不再等待 HUD。
+- 已证实链路为 EncounterCoordinator.Present → CombatHudSnapshot → CombatCommandInput.SetContext／CombatActionBarView.Present。CanEndTurn 只表示可以结束回合，不能作为普攻、防御、术法、神通及术法目标选择的统一禁止条件；仍保留 AcceptsCommands、角色回合／演出忙碌约束、术法目标 CanExecute 和既有 PreviewAction／ConfirmAction 权威校验。不得在显示层另建费用或合法性规则，不把内核的 EndTurn 在回合开始改为非法。
+- 仅修复上述已复现的旧条件冲突，不重做 UI、不增加 DTO 字段、不改布局或待机／结束的控件结构。AP／费用显示、各命令完整禁用原因和条件时间轴仍归 HUD；正式循环、敌方多动作及演出后继续仍归 FLOW。出现其他所有者或新字段需求按原停止条件处理。
+- 失败 run 81c2faf8-0ec1-481b-9ae6-d044f2626d37 只读核对后报告 task_scope_not_refrozen_after_reply；外层因原 checkpoint 重放留下暂存修改而报 codex_failed_dirty_worktree。32 条路径与原 checkpoint 逐项相同，无本轮新增业务差异、无新验证／提交；失败 worktree 原样保留，不作为新 checkpoint 或已完成结果。
+- 恢复继续使用原 checkpoint 6aaafa01f147e853e11aaaa09301fd28c180ad33、原 sourceRunId／branch 和原 A 回复证据。原 taskContextDigest 为 580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2；本轮仅按已批准的两条新增路径重新计算当前上下文摘要，决策内容、提交、回复及其 evidenceHash 不变。pending_decision 是既有恢复入口的暂态，原 A 已接受，无需再发卡或再次选择。
+
 ## 必查范围
 
 - docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
 - 公共合同全部命令／时点／事务夹具；CombatSession、CommandService、TurnScheduler、Turns/CTBEngine、ActionResolver、LegalActionService 与全部直接测试；状态／恢复／能力实例共享账本。
+- CombatActionBarView.Present、CombatCommandInput.CanAct／Configure／SetContext／Choose、EncounterCoordinator.Present 与 GuanzhongCombatActionPreviewPlayModeTests.ConfirmOnceAndRejectStaleOrUnaffordableCandidates；只消费既有显示快照与权威预览／确认接口。
 - 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
 
 ## 实施范围
 
-- 统一 AP、MP、CD、次数、CT 累计的报价／校验／原子提交；攻击未命中仍付费，取消／失效／不合法不变更。覆盖所有现有命令 BasicAttack／Art／Divine／Guard／Wait／Move／SwapSpell／EndTurn；移除旧 MoveThenAction／ActionThenMove 的互斥限制，保留动画之外纯规则可持续行动。开始／结束／跳过／死亡只结一次，恢复与持续不按子动作重复。按合同实现普通Guard与有限减耗／返还，累计CT惩罚不会被后续0覆盖。范围为无UI确定性内核及上述必需的正式会话配置／输入接线；FLOW控制循环、敌方多动作与演出继续不在本卡，道具／换装新增命令分别由其叶子承载。
+- 统一 AP、MP、CD、次数、CT 累计的报价／校验／原子提交；攻击未命中仍付费，取消／失效／不合法不变更。覆盖所有现有命令 BasicAttack／Art／Divine／Guard／Wait／Move／SwapSpell／EndTurn；移除旧 MoveThenAction／ActionThenMove 的互斥限制，保留动画之外纯规则可持续行动。开始／结束／跳过／死亡只结一次，恢复与持续不按子动作重复。按合同实现普通Guard与有限减耗／返还，累计CT惩罚不会被后续0覆盖。范围为确定性内核、上述必需的正式会话配置／输入接线及决策A批准的两处显示／输入条件解耦；FLOW控制循环、敌方多动作与演出继续不在本卡，道具／换装新增命令分别由其叶子承载。
 - 验证证据写入 开发管理/U-COMBAT-AP-CORE-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
 
 ## 禁止项
@@ -225,6 +236,7 @@
 
 ## 验证
 
+- 新增两处解耦的最小验收：正式场景玩家回合开始、AP充足且 CanEndTurn=true 时，可用术法按钮仍可点击，点击能生成对应 Preview／Candidate；结束命令同时保持合法。演出忙碌／非玩家回合／不可执行目标继续拒绝，预览取消／陈旧确认不扣费。优先在已有 GuanzhongCombatActionPreviewPlayModeTests 与 GuanzhongStarterArtsPlayModeTests 中覆盖，不另建验证框架；这不替代 FLOW 的演出后多动作验收。
 - 核验正式AdventureScene的Guard／SwapSpell均显式序列化50000费用及50000净费下限，配置经Installer→adapter→session实际可达；缺定义、零／负费或非法下限拒绝创建，合法正式输入可成功创建。FeatureCompositionEditorTests覆盖目标字段重载／幂等，场景GUID、其他引用及布局不变；不以纯fixture替代正式配置证据。
 - 接口迁移后需owner worktree的Unity EditMode／受影响PlayMode与程序集边界检查，以及BattleSim Release build／run验证审计入口编译适配；技术夹具证明正式空间adapter不再整格取整、v=0拒绝、同源预览／提交、分段中插入施法不重置舍入。场景连续动作与演出验收仍由FLOW／SCENE承担。
 

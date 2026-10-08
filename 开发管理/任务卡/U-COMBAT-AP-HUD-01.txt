@@ -65,6 +65,7 @@
 
 ## 实施范围
 
+- 2026-10-08负责人对DEC-20261008-CDA2ACBFFA8FC4选择A：ActionBar.Present／CommandInput.CanAct不再以CanEndTurn统一禁用其他动作的两处最小修复前移到CORE。本卡消费其已验证结果，继续负责下述各命令完整合法性显示、AP／费用和条件时间轴；依赖与其他范围不变，不重复要求CORE等待HUD。
 - 各命令独立合法性，不用CanEndTurn替代“其他动作不可用”；显示AP／MP／CT惩罚／独立CD，动作累计后的时间轴标为“若现在结束”的条件预测。移动标记费用用同源路径；选目标、取消和纯预览无状态写入。复用正式Canvas／字体／布局；本卡只接已存在命令，后续道具／换装／换术接入同一通道。
 - 验证证据写入 开发管理/U-COMBAT-AP-HUD-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
 
