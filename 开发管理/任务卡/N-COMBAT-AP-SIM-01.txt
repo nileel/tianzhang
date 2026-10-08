@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-08已核对U-COMBAT-AP-CORE-01完成归档；实时路径扫描未发现卡外直接所有者，风险预检命中EXP-BS-001、EXP-BS-003且无门禁，满足ready准备。",
+  "stateReason": "自动责任方确认阻塞：combat_action_economy_inputs_unmapped",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/Character.cs",
