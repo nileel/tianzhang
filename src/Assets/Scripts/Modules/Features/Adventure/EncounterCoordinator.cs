@@ -260,7 +260,7 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                     {
                         IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
-                        CombatCommand command = session.TurnPhase == CombatTurnPhase.ActionThenMove
+                        CombatCommand command = session.HasCommittedBenefit
                             ? legal.FirstOrDefault(action => action.Kind == CombatCommandKind.EndTurn)
                             : enemyPolicy.ChooseAction(legal);
                         if (command == null)
@@ -349,11 +349,11 @@ namespace TianZhang.Features.Adventure
         {
             if (player == null) return null;
             var options = new List<CombatMovementOption>();
-            if (acceptsCommands && player.MovePoints > 0)
+            if (acceptsCommands && player.ActionPointsRemainingUnits > 0)
             {
                 var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id)
                     .Select(unit => unit.Position).ToArray();
-                foreach (var cell in session.SpatialQuery.FindReachable(player.Position, player.MovePoints, occupied))
+                foreach (var cell in session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, occupied))
                 {
                     CombatActionResult validation = session.ValidateCommand(new CombatCommand(
                         CombatCommandKind.Move, player.Id, destination: cell.Key));
@@ -362,7 +362,7 @@ namespace TianZhang.Features.Adventure
                             validation.MovementPath.Select(ToPresentationHex).ToArray()));
                 }
             }
-            return new CombatMovementSnapshot(ToPresentationHex(player.Position), player.MovePoints,
+            return new CombatMovementSnapshot(ToPresentationHex(player.Position), player.ActionPointsRemainingUnits,
                 session.TurnPhase.ToString(), options);
         }
 

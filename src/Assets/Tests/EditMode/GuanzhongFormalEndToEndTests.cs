@@ -97,7 +97,7 @@ namespace TianZhang.Tests.EditMode
                 input,
                 hud,
                 encounters,
-                new CombatEntryAdapter(),
+                new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }),
                 runtime,
                 runtime.Bounties,
                 runtime.InventoryGrants,
@@ -185,9 +185,9 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(player.Resources.MaximumSpirit, spawned.Player.MaximumSpirit);
             Assert.AreEqual(player.Resources.CurrentSpirit, spawned.Player.CurrentSpirit);
             Assert.AreEqual(player.Progression.RealmMultiplier, spawned.Player.RealmMultiplier);
-            Assert.AreEqual(
-                Mathf.Clamp(Mathf.RoundToInt(player.Attributes.Reaction / 20f), 2, 8),
-                spawned.Player.MovePoints);
+            Assert.AreEqual(0, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(player.Attributes.ActionPointMaximumUnits, spawned.Player.ActionPointMaximumUnits);
+            Assert.AreEqual(player.Attributes.MovementEfficiencyMilliUnits, spawned.Player.MovementEfficiencyMilliUnits);
             CollectionAssert.IsEmpty(spawned.Player.EquippedArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Player.AvailableArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Player.EquippedDivineProfileIds);
@@ -208,7 +208,9 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(67, spawned.Enemy.PhysicalDefense);
             Assert.AreEqual(25, spawned.Enemy.SoulDefense);
             Assert.AreEqual(1.2f, spawned.Enemy.RealmMultiplier);
-            Assert.AreEqual(2, spawned.Enemy.MovePoints);
+            Assert.AreEqual(0, spawned.Enemy.ActionPointsRemainingUnits);
+            Assert.AreEqual(100000, spawned.Enemy.ActionPointMaximumUnits);
+            Assert.AreEqual(2000, spawned.Enemy.MovementEfficiencyMilliUnits);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.AvailableArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedDivineProfileIds);

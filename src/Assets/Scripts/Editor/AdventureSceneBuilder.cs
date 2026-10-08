@@ -27,6 +27,36 @@ namespace TianZhang.Editor
             { -1, 1, 0 }, { 0, 1, 1 }, { 1, -1, 0 }, { 0, -1, 0 },
         };
 
+        private static void ConfigureOrdinaryCombatActions(AdventureSceneInstaller installer)
+        {
+            var serialized = new SerializedObject(installer);
+            SerializedProperty definitions = serialized.FindProperty("ordinaryActions");
+            definitions.arraySize = 2;
+            for (int index = 0; index < 2; index++)
+            {
+                SerializedProperty definition = definitions.GetArrayElementAtIndex(index);
+                definition.FindPropertyRelative("Kind").intValue = (int)(index == 0 ? CombatCommandKind.Guard : CombatCommandKind.SwapSpell);
+                definition.FindPropertyRelative("ActionPointCostUnits").intValue = 50000;
+                definition.FindPropertyRelative("MinimumNetCostUnits").intValue = 50000;
+                definition.FindPropertyRelative("CtPenalty").intValue = 0;
+                definition.FindPropertyRelative("ReuseCooldownTicks").intValue = index == 0 ? 0 : 60;
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        public static void UpdateOrdinaryCombatActions()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            AdventureSceneInstaller installer = null;
+            foreach (GameObject root in scene.GetRootGameObjects())
+                if (root.TryGetComponent(out AdventureSceneInstaller found)) installer = found;
+            if (installer == null) throw new InvalidOperationException("adventure_installer_missing");
+            ConfigureOrdinaryCombatActions(installer);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("AdventureScene save failed.");
+        }
+
         [MenuItem("天章/场景/重建冒险")]
         public static void Build()
         {
@@ -34,6 +64,7 @@ namespace TianZhang.Editor
             // This legacy plane intersects the approved terrain's deep rock walls.
             GameObject.Find("VisualBackdrop").SetActive(false);
             AdventureSceneInstaller installer = root.AddComponent<AdventureSceneInstaller>();
+            ConfigureOrdinaryCombatActions(installer);
             AdventureController controller = root.AddComponent<AdventureController>();
             AdventureInputController input = root.AddComponent<AdventureInputController>();
             AdventureHudPresenter adventureHud = root.AddComponent<AdventureHudPresenter>();

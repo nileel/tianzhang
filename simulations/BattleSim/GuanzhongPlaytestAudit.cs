@@ -119,8 +119,7 @@ internal static class GuanzhongPlaytestAudit
         string[] List(string field) => v.GetProperty(field).EnumerateArray().Select(x => x.GetString()).ToArray();
         var actor = new CombatantSnapshot(S(v, "id"), side == "player" ? CombatTeam.Player : CombatTeam.Enemy,
             new UnityHexCoord(I(v, "q"), I(v, "r")), I(v, "speed"), I(v, "maximumHealth"), I(v, "currentHealth"),
-            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), F(v, "realmMultiplier"),
-            I(v, "maximumMovePoints"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId"),
+            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), I(v, "actionPointMaximumUnits"), I(v, "movementEfficiencyMilliUnits"), F(v, "realmMultiplier"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId"),
             rawSpirit: I(v, "rawSpirit"), realmStage: S(v, "realmStage"), visibleRootElement: S(v, "visibleRootElement"), visibleRootGrade: S(v, "visibleRootGrade"))
         {
             BlockRate = F(c, "blockRate"), BlockReduction = F(c, "blockReduction"), SoulShieldRate = F(c, "soulShieldRate"),
@@ -132,7 +131,7 @@ internal static class GuanzhongPlaytestAudit
         return actor;
     }
 
-    static CombatSession Session(Inputs input) => new(new[] { Snapshot(input, "player"), Snapshot(input, "enemy") }, input.Profiles, new AuditSpace());
+    static CombatSession Session(Inputs input) => new(new[] { Snapshot(input, "player"), Snapshot(input, "enemy") }, input.Profiles, new AuditSpace(), new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
 
     static RunResult RunSeed(Inputs input, int seed, string strategy)
     {
@@ -163,7 +162,7 @@ internal static class GuanzhongPlaytestAudit
             actions++; if (isPlayer) playerActions++; else enemyActions++;
             if (command.ProfileId == Attack) attacks++;
             if (command.ProfileId == Recovery) recoveries++;
-            if (session.TurnPhase == CombatTurnPhase.ActionThenMove)
+            if (session.HasCommittedBenefit)
                 Require(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, actor.Id)).Succeeded, "EndTurn failed.");
         }
         return new RunResult(seed, strategy, new CombatResultBuilder().Build(session).Outcome.ToString(), actions,
@@ -220,7 +219,7 @@ internal static class GuanzhongPlaytestAudit
             Require(result.Succeeded && draws == 0 && result.SpiritRecoveries.Single().ActualRecovery == expected &&
                 result.SpiritSpent == profile.GetSpiritCost(self) && target.CurrentSpirit == before + expected &&
                 p.CurrentSpirit == actorBefore - profile.GetSpiritCost(self) + (self ? expected : 0) &&
-                s.PendingCooldownPenalty == profile.CtPenalty &&
+                s.PendingCtPenalty == profile.CtPenalty &&
                 p.GetCooldown(Recovery) == profile.ReuseCooldownTicks, "Recovery mismatch: " + scenario);
             checks.Add(scenario + ":actual=" + expected + ":cost=" + result.SpiritSpent +
                 ":ct=" + profile.CtPenalty + ":reuse=" + profile.ReuseCooldownTicks + ":rng=0");
@@ -231,7 +230,7 @@ internal static class GuanzhongPlaytestAudit
             p.SetSpirit(p.MaximumSpirit, attack.SpiritCost);
             int draws = 0;
             Require(Execute(s, new CombatCommand(CombatCommandKind.Art, p.Id, e.Id, Attack), service, new Random(1), ref draws).Succeeded &&
-                p.CurrentSpirit == 0 && draws == 4 && s.PendingCooldownPenalty == attack.CtPenalty &&
+                p.CurrentSpirit == 0 && draws == 4 && s.PendingCtPenalty == attack.CtPenalty &&
                 p.GetCooldown(Attack) == attack.ReuseCooldownTicks,
                 "Legal attack did not exhaust exact resource.");
             // Isolated resource control: enemy guards so the next player command can prove exhaustion.
@@ -253,9 +252,9 @@ internal static class GuanzhongPlaytestAudit
 
     static string State(CombatSession session) => JsonSerializer.Serialize(new
     {
-        session.CurrentActorId, session.TurnPhase, session.PendingCooldownPenalty,
+        session.CurrentActorId, session.TurnPhase, session.PendingCtPenalty,
         turn = session.TurnScheduler.GetSnapshot(session.Combatants.All),
-        actors = session.Combatants.All.Select(p => new { p.Id, p.CurrentHealth, p.CurrentSpirit, p.Position, p.MovePoints, p.Facing, p.IsGuarding, p.Cooldowns })
+        actors = session.Combatants.All.Select(p => new { p.Id, p.CurrentHealth, p.CurrentSpirit, p.Position, p.ActionPointsRemainingUnits, p.Facing, p.IsGuarding, p.Cooldowns })
     });
     static IEnumerable<Dictionary<string, string>> ReadRows(string path)
     {
@@ -303,7 +302,7 @@ internal static class GuanzhongPlaytestAudit
         }
         public CombatRangeQueryResult QueryRange(UnityHexCoord source, UnityHexCoord target, int minimumRange, int maximumRange)
         { var r = board.QueryRangeEntry(source, target, minimumRange, maximumRange, TianZhang.Spatial.SpatialQueryKind.Attack, true); return new CombatRangeQueryResult(r.IsInRange, r.Reason); }
-        public CombatMovementQueryResult QueryMovement(UnityHexCoord source, UnityHexCoord destination, int movementPoints, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
-        public IReadOnlyDictionary<UnityHexCoord, int> FindReachable(UnityHexCoord source, int movementPoints, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
+        public CombatMovementQueryResult QueryMovement(UnityHexCoord source, UnityHexCoord destination, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
+        public IReadOnlyDictionary<UnityHexCoord, int> FindReachable(UnityHexCoord source, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
     }
 }

@@ -16,25 +16,37 @@ namespace TianZhang.Combat
             return new CombatCommandService(this).Execute(session, command);
         }
 
-        internal CombatActionResult ResolveValidated(
+        internal CombatActionResult PrepareValidated(
             CombatSession session,
             CombatCommand command,
-            CombatActionResult validation)
+            CombatActionResult validation,
+            int reuseCooldownTicks,
+            out Action commit)
         {
-            if (!session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor))
-                return CombatActionResult.Rejected("combat_session_actor_invalid");
-            return command.Kind switch
+            commit = null;
+            session.Combatants.TryGet(command.ActorId, out CombatantSnapshot originalActor);
+            var actor = originalActor.CopyForResolution();
+            session.Combatants.TryGet(command.TargetId, out CombatantSnapshot originalTarget);
+            var target = originalTarget == originalActor ? actor : originalTarget?.CopyForResolution();
+            if (command.Kind is not (CombatCommandKind.Guard or CombatCommandKind.Wait or CombatCommandKind.EndTurn))
+                actor.IsGuarding = false;
+            CombatActionResult result = command.Kind switch
             {
                 CombatCommandKind.Guard => ResolveGuard(actor),
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
-                CombatCommandKind.BasicAttack => ResolveAttack(session, command, actor, CombatAttackKind.Basic),
-                CombatCommandKind.Art => ResolveAttack(session, command, actor, CombatAttackKind.Art),
-                CombatCommandKind.Divine => ResolveAttack(session, command, actor, CombatAttackKind.Divine),
+                CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine =>
+                    ResolveAttack(session, command, actor, target, reuseCooldownTicks),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
-                CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command),
+                CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
+            if (result.Succeeded) commit = () =>
+            {
+                originalActor.CommitResolvedState(actor);
+                if (originalTarget != null && originalTarget != originalActor) originalTarget.CommitResolvedState(target);
+            };
+            return result;
         }
 
         private static CombatActionResult ResolveGuard(CombatantSnapshot actor)
@@ -52,10 +64,10 @@ namespace TianZhang.Combat
             return validation;
         }
 
-        private static CombatActionResult ResolveSwapSpell(CombatantSnapshot actor, CombatCommand command)
+        private static CombatActionResult ResolveSwapSpell(CombatantSnapshot actor, CombatCommand command, int cooldown)
         {
             actor.SwapEquippedArt(command.SlotIndex, command.ProfileId);
-            actor.SetCooldown(command.ProfileId, 60);
+            actor.SetCooldown(command.ProfileId, Math.Max(actor.GetCooldown(command.ProfileId), cooldown));
             return CombatActionResult.Success();
         }
 
@@ -63,12 +75,10 @@ namespace TianZhang.Combat
             CombatSession session,
             CombatCommand command,
             CombatantSnapshot actor,
-            CombatAttackKind expectedKind)
+            CombatantSnapshot target,
+            int cooldown)
         {
-            if (!session.Combatants.TryGet(command.TargetId, out CombatantSnapshot target) ||
-                !session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile) ||
-                profile.Kind != expectedKind)
-                return CombatActionResult.Rejected("combat_command_validation_changed");
+            session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile);
 
             bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
             int spiritCost = profile.GetSpiritCost(targetsSelf);
@@ -77,10 +87,10 @@ namespace TianZhang.Combat
             CombatActionResult result;
             if (profile.Effect == CombatAttackEffect.RestoreSpirit)
             {
-                int requestedRecovery = (int)Math.Floor(Math.Max(profile.MinimumSpiritRecovery,
+                int requestedRecovery = checked((int)Math.Floor(Math.Max(profile.MinimumSpiritRecovery,
                     actor.RawSpirit * (double)profile.SpiritRecoveryMultiplier) *
                     session.SpiritRecoveryEnvironmentMultiplier *
-                    (targetsSelf ? 1f : profile.OtherTargetSpiritRecoveryMultiplier));
+                    (targetsSelf ? 1f : profile.OtherTargetSpiritRecoveryMultiplier)));
                 int before = target.CurrentSpirit;
                 target.RestoreSpirit(requestedRecovery);
                 result = CombatActionResult.SpiritRecoverySuccess(spiritCost,
@@ -92,8 +102,7 @@ namespace TianZhang.Combat
                 result = CombatActionResult.AttackSuccess(spiritCost, damage);
             }
             // 全局刻重用冷却账本只由 reuseCooldownTicks 启动；CT 惩罚由 CommandService 单独累计。
-            if (profile.ReuseCooldownTicks > 0)
-                actor.SetCooldown(profile.Id, profile.ReuseCooldownTicks);
+            if (cooldown > 0) actor.SetCooldown(profile.Id, cooldown);
             return result;
         }
 
@@ -119,9 +128,8 @@ namespace TianZhang.Combat
                         target.ReceiveDamage(physical.FinalDamage);
                     if (soul.IsHit)
                         target.ReceiveDamage(soul.FinalDamage);
-                    AdvanceActionState(actor);
                     return new CombatDamageResult(
-                        physical.FinalDamage + soul.FinalDamage,
+                        checked(physical.FinalDamage + soul.FinalDamage),
                         physical.IsHit || soul.IsHit,
                         physical.IsCritical || soul.IsCritical,
                         physical.IsBlocked,
@@ -157,11 +165,9 @@ namespace TianZhang.Combat
                 damage *= BlockReductionMultiplier(target.BlockReduction);
             damage = ApplyCommonReductions(damage, target);
 
-            int finalDamage = Math.Max(1, (int)Math.Round(damage, MidpointRounding.AwayFromZero));
+            int finalDamage = Math.Max(1, checked((int)Math.Round(damage, MidpointRounding.AwayFromZero)));
             if (applyDamage)
                 target.ReceiveDamage(finalDamage);
-            if (advanceAction)
-                AdvanceActionState(actor);
             return new CombatDamageResult(finalDamage, true, critical, blocked, false);
         }
 
@@ -178,7 +184,8 @@ namespace TianZhang.Combat
 
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
             bool critical = rolls.CriticalPercent < actor.CriticalRate + element.CriticalRateBonus;
-            FudanBonus fudan = ConsumeFudanForSoulAction(actor);
+            FudanBonus fudan = profile.Kind == CombatAttackKind.Art && profile.IsTalisman
+                ? ConsumeFudanForSoulAction(actor) : new FudanBonus(1f, 0f);
             float shouyiMultiplier = actor.GongFaId == "抱元守一经" ? 1f + actor.ShouyiStacks * 0.05f : 1f;
             float multiplier = profile.SoulMultiplier * shouyiMultiplier * fudan.DamageMultiplier *
                 (critical ? BaseCriticalMultiplier + (actor.CriticalDamage + element.CriticalDamageBonus) / 100f : 1f);
@@ -199,11 +206,9 @@ namespace TianZhang.Combat
                 damage *= 1f - Clamp(target.SoulShieldReduction, 0f, 100f) / 100f;
             damage = ApplyCommonReductions(damage, target);
 
-            int finalDamage = Math.Max(1, (int)Math.Round(damage, MidpointRounding.AwayFromZero));
+            int finalDamage = Math.Max(1, checked((int)Math.Round(damage, MidpointRounding.AwayFromZero)));
             if (applyDamage)
                 target.ReceiveDamage(finalDamage);
-            if (advanceAction)
-                AdvanceActionState(actor);
             return new CombatDamageResult(finalDamage, true, critical, false, soulShielded);
         }
 
@@ -242,22 +247,12 @@ namespace TianZhang.Combat
 
         private static float ApplyCommonReductions(float damage, CombatantSnapshot target)
         {
-            if (target.IsGuarding)
-                damage *= 0.5f;
             if (target.GongFaId == "抱元守一经" && target.ShouyiStacks > 0 && damage > 0f)
             {
                 damage *= 0.8f;
                 target.ShouyiStacks--;
             }
             return damage;
-        }
-
-        private static void AdvanceActionState(CombatantSnapshot actor)
-        {
-            if (actor.GongFaId == CombatGongFaRules.ShouyiGongFaId)
-                actor.ShouyiStacks = Math.Min(actor.ShouyiStacks + 1, actor.MaximumShouyiStacks);
-            if (actor.GongFaId == CombatGongFaRules.FudanGongFaId)
-                actor.FudanStacks = Math.Min(actor.FudanStacks + 1, actor.MaximumFudanStacks);
         }
 
         private static float ConsumeLeijieForPhysicalAction(CombatantSnapshot actor)

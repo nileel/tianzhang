@@ -4,6 +4,58 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
+    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime }
+
+    public sealed class CombatOwnTurnStatus
+    {
+        internal CombatOwnTurnStatus(CombatStatusKind kind, int ends, int damage, bool defer)
+        { Kind = kind; RemainingOwnTurnEnds = ends; DamagePerStart = damage; DeferCurrentEnd = defer; }
+        public CombatStatusKind Kind { get; }
+        public int RemainingOwnTurnEnds { get; internal set; }
+        public int DamagePerStart { get; }
+        internal bool DeferCurrentEnd { get; set; }
+    }
+
+    /// <summary>Scalar protocol projection; production currently passes an explicit empty source list.
+    /// Overlapping sources require a separately approved stacking contract and are rejected by Session.</summary>
+    public sealed class CombatActionEconomyModifier
+    {
+        public CombatActionEconomyModifier(string sourceInstanceId, string sourceDefinitionId,
+            CombatCommandKind kind, string profileId, int fixedReductionUnits, int retainedCostPermille,
+            int minimumNetCostUnits, int ctPenaltyReduction, int reuseCooldownReductionTicks,
+            int refundUnits, int refundLimitPerOwnTurn, int refundBudgetPerOwnTurnUnits)
+        {
+            if (string.IsNullOrWhiteSpace(sourceInstanceId) || string.IsNullOrWhiteSpace(sourceDefinitionId) ||
+                kind is CombatCommandKind.Move or CombatCommandKind.Wait or CombatCommandKind.EndTurn ||
+                !Enum.IsDefined(typeof(CombatCommandKind), kind) || fixedReductionUnits < 0 ||
+                retainedCostPermille < 0 || retainedCostPermille > 1000 || minimumNetCostUnits <= 0 ||
+                ctPenaltyReduction < 0 || reuseCooldownReductionTicks < 0 || refundUnits < 0 ||
+                refundLimitPerOwnTurn < 0 || refundBudgetPerOwnTurnUnits < 0 ||
+                (refundUnits > 0 && (refundLimitPerOwnTurn == 0 || refundBudgetPerOwnTurnUnits == 0)))
+                throw new ArgumentException("Invalid action economy source.");
+            SourceInstanceId = sourceInstanceId; SourceDefinitionId = sourceDefinitionId;
+            Kind = kind; ProfileId = profileId ?? string.Empty;
+            FixedReductionUnits = fixedReductionUnits; RetainedCostPermille = retainedCostPermille;
+            MinimumNetCostUnits = minimumNetCostUnits; CtPenaltyReduction = ctPenaltyReduction;
+            ReuseCooldownReductionTicks = reuseCooldownReductionTicks; RefundUnits = refundUnits;
+            RefundLimitPerOwnTurn = refundLimitPerOwnTurn; RefundBudgetPerOwnTurnUnits = refundBudgetPerOwnTurnUnits;
+        }
+        public string SourceInstanceId { get; }
+        public string SourceDefinitionId { get; }
+        public CombatCommandKind Kind { get; }
+        public string ProfileId { get; }
+        public int FixedReductionUnits { get; }
+        public int RetainedCostPermille { get; }
+        public int MinimumNetCostUnits { get; }
+        public int CtPenaltyReduction { get; }
+        public int ReuseCooldownReductionTicks { get; }
+        public int RefundUnits { get; }
+        public int RefundLimitPerOwnTurn { get; }
+        public int RefundBudgetPerOwnTurnUnits { get; }
+        internal bool Matches(CombatCommandKind kind, string profile) => Kind == kind &&
+            (ProfileId.Length == 0 || string.Equals(ProfileId, profile, StringComparison.Ordinal));
+    }
+
     public enum CombatTeam
     {
         Player,
@@ -16,8 +68,8 @@ namespace TianZhang.Combat
     /// </summary>
     public sealed class CombatantSnapshot
     {
-        private readonly Dictionary<string, int> cooldowns = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly List<string> equippedArtProfileIds;
+        private Dictionary<string, int> cooldowns = new Dictionary<string, int>(StringComparer.Ordinal);
+        private List<string> equippedArtProfileIds;
         private readonly List<string> availableArtProfileIds;
         private readonly List<string> equippedDivineProfileIds;
         private readonly List<string> availableDivineProfileIds;
@@ -33,8 +85,9 @@ namespace TianZhang.Combat
             int soulAttack,
             int physicalDefense,
             int soulDefense,
+            int actionPointMaximumUnits,
+            int movementEfficiencyMilliUnits,
             float realmMultiplier = 1f,
-            int movePoints = 0,
             IEnumerable<string> equippedArtProfileIds = null,
             IEnumerable<string> availableArtProfileIds = null,
             int maxCombatSwaps = 2,
@@ -45,21 +98,25 @@ namespace TianZhang.Combat
             int rawSpirit = 0,
             string realmStage = null,
             string visibleRootElement = null,
-            string visibleRootGrade = null)
+            string visibleRootGrade = null,
+            IEnumerable<CombatActionEconomyModifier> actionEconomyModifiers = null,
+            IReadOnlyDictionary<string, string> abilityInstanceIds = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
             if (maximumHealth <= 0 || currentHealth < 0 || currentHealth > maximumHealth)
                 throw new ArgumentOutOfRangeException(nameof(currentHealth));
-            if (movePoints < 0 || maxCombatSwaps < 0 || combatSwapsUsed < 0 || combatSwapsUsed > maxCombatSwaps)
-                throw new ArgumentOutOfRangeException(nameof(movePoints));
+            if (actionPointMaximumUnits <= 0 || movementEfficiencyMilliUnits < 0 || speed <= 0)
+                throw new ArgumentOutOfRangeException(nameof(actionPointMaximumUnits));
+            if (maxCombatSwaps < 0 || combatSwapsUsed < 0 || combatSwapsUsed > maxCombatSwaps)
+                throw new ArgumentOutOfRangeException(nameof(maxCombatSwaps));
             if (rawSpirit < 0)
                 throw new ArgumentOutOfRangeException(nameof(rawSpirit));
 
             Id = id;
             Team = team;
             Position = position;
-            Speed = Math.Max(1, speed);
+            Speed = speed;
             MaximumHealth = maximumHealth;
             CurrentHealth = currentHealth;
             PhysicalAttack = physicalAttack;
@@ -67,8 +124,21 @@ namespace TianZhang.Combat
             PhysicalDefense = physicalDefense;
             SoulDefense = soulDefense;
             RealmMultiplier = Math.Max(1f, realmMultiplier);
-            MaximumMovePoints = movePoints;
-            MovePoints = movePoints;
+            ActionPointMaximumUnits = actionPointMaximumUnits;
+            MovementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
+            ActionEconomyModifiers = new List<CombatActionEconomyModifier>(actionEconomyModifiers ??
+                Array.Empty<CombatActionEconomyModifier>()).AsReadOnly();
+            this.abilityInstanceIds = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var pair in abilityInstanceIds ?? new Dictionary<string, string>())
+            {
+                if (string.IsNullOrWhiteSpace(pair.Key) || string.IsNullOrWhiteSpace(pair.Value))
+                    throw new ArgumentException("Shared ability identities must be explicit.", nameof(abilityInstanceIds));
+                this.abilityInstanceIds.Add(pair.Key, pair.Value);
+            }
+            var sources = new HashSet<string>(StringComparer.Ordinal);
+            foreach (CombatActionEconomyModifier modifier in ActionEconomyModifiers)
+                if (modifier == null || !sources.Add(modifier.SourceInstanceId))
+                    throw new ArgumentException("Action economy sources must be unique.", nameof(actionEconomyModifiers));
             this.equippedArtProfileIds = CreateProfileIdList(equippedArtProfileIds);
             this.availableArtProfileIds = CreateProfileIdList(availableArtProfileIds);
             this.equippedDivineProfileIds = CreateProfileIdList(equippedDivineProfileIds);
@@ -99,8 +169,30 @@ namespace TianZhang.Combat
         public string RealmStage { get; }
         public string VisibleRootElement { get; }
         public string VisibleRootGrade { get; }
-        public int MaximumMovePoints { get; }
-        public int MovePoints { get; private set; }
+        public int ActionPointMaximumUnits { get; }
+        public int MovementEfficiencyMilliUnits { get; }
+        public int ActionPointLimitAtTurnStartUnits { get; private set; }
+        public int ActionPointsRemainingUnits { get; private set; }
+        public IReadOnlyList<CombatActionEconomyModifier> ActionEconomyModifiers { get; }
+        public int HealthRecoveryPerOwnTurn { get; set; }
+        public int SpiritRecoveryPerOwnTurn { get; set; }
+        public int OwnTurnsStarted { get; private set; }
+        public int OwnTurnsEnded { get; private set; }
+        public bool HasMovedThisTurn { get; private set; }
+        internal bool OwnTurnActive { get; private set; }
+        private readonly Dictionary<string, string> abilityInstanceIds;
+        private Dictionary<string, (int count, int remaining)> refunds = new Dictionary<string, (int, int)>(StringComparer.Ordinal);
+        private readonly List<CombatOwnTurnStatus> statuses = new List<CombatOwnTurnStatus>();
+        public IReadOnlyList<CombatOwnTurnStatus> Statuses => statuses.AsReadOnly();
+        public bool HasStatus(CombatStatusKind kind) => statuses.Exists(status => status.Kind == kind);
+
+        public void ApplyStatus(CombatStatusKind kind, int ownTurnEnds, int damagePerStart = 0)
+        {
+            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || ownTurnEnds <= 0 || damagePerStart < 0)
+                throw new ArgumentOutOfRangeException(nameof(ownTurnEnds));
+            statuses.RemoveAll(status => status.Kind == kind);
+            statuses.Add(new CombatOwnTurnStatus(kind, ownTurnEnds, damagePerStart, OwnTurnActive));
+        }
         public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
         public IReadOnlyList<string> AvailableArtProfileIds => availableArtProfileIds.AsReadOnly();
         public string BasicAttackProfileId { get; set; }
@@ -138,18 +230,75 @@ namespace TianZhang.Combat
             Position = position;
         }
 
-        internal void ResetMovePoints()
+        internal bool BeginOwnTurn()
         {
-            MovePoints = MaximumMovePoints;
+            OwnTurnActive = true;
+            OwnTurnsStarted = checked(OwnTurnsStarted + 1);
+            IsGuarding = false;
+            HasMovedThisTurn = false;
+            foreach (CombatOwnTurnStatus status in statuses)
+                if (status.DamagePerStart > 0) ReceiveDamage(status.DamagePerStart);
+            if (!IsAlive) return false;
+            RestoreHealth(HealthRecoveryPerOwnTurn);
+            RestoreSpirit(SpiritRecoveryPerOwnTurn);
+            ActionPointLimitAtTurnStartUnits = ActionPointMaximumUnits;
+            refunds.Clear();
+            foreach (CombatActionEconomyModifier modifier in ActionEconomyModifiers)
+                refunds.Add(modifier.SourceInstanceId, (0, modifier.RefundBudgetPerOwnTurnUnits));
+            ActionPointsRemainingUnits = HasStatus(CombatStatusKind.Stun) ? 0 : ActionPointLimitAtTurnStartUnits;
+            return ActionPointsRemainingUnits > 0;
+        }
+
+        internal void EndOwnTurn()
+        {
+            if (!OwnTurnActive) return;
+            OwnTurnActive = false;
+            OwnTurnsEnded = checked(OwnTurnsEnded + 1);
+            if (IsAlive && GongFaId == CombatGongFaRules.ShouyiGongFaId && !HasMovedThisTurn)
+                ShouyiStacks = Math.Min(ShouyiStacks + 1, MaximumShouyiStacks);
+            if (IsAlive && GongFaId == CombatGongFaRules.FudanGongFaId)
+                FudanStacks = Math.Min(FudanStacks + 1, MaximumFudanStacks);
+            foreach (CombatOwnTurnStatus status in statuses)
+            {
+                if (status.DeferCurrentEnd) status.DeferCurrentEnd = false;
+                else status.RemainingOwnTurnEnds--;
+            }
+            statuses.RemoveAll(status => status.RemainingOwnTurnEnds == 0);
+            ClearActionPoints();
+        }
+
+        internal void ClearActionPoints()
+        {
+            ActionPointsRemainingUnits = 0;
+            refunds.Clear();
+        }
+
+        internal void SpendActionPoints(int cost) => ActionPointsRemainingUnits -= cost;
+
+        internal int RefundActionPoints(CombatActionEconomyModifier modifier, int paid, int minimum)
+        {
+            if (modifier == null || modifier.RefundUnits == 0) return 0;
+            var ledger = refunds[modifier.SourceInstanceId];
+            if (ledger.count >= modifier.RefundLimitPerOwnTurn) return 0;
+            int refund = QuoteRefund(modifier, paid, minimum, ActionPointsRemainingUnits);
+            refunds[modifier.SourceInstanceId] = (ledger.count + 1, ledger.remaining - refund);
+            ActionPointsRemainingUnits += refund;
+            return refund;
+        }
+
+        internal int QuoteRefund(CombatActionEconomyModifier modifier, int paid, int minimum, int remainingAfterCost)
+        {
+            if (modifier == null || modifier.RefundUnits == 0 || !refunds.TryGetValue(modifier.SourceInstanceId, out var ledger) ||
+                ledger.count >= modifier.RefundLimitPerOwnTurn) return 0;
+            return Math.Min(modifier.RefundUnits, Math.Min(ledger.remaining,
+                Math.Min(paid - minimum, ActionPointLimitAtTurnStartUnits - remainingAfterCost)));
         }
 
         internal void CommitMovement(HexCoord destination, int cost, int facing)
         {
-            if (cost < 0 || cost > MovePoints)
-                throw new ArgumentOutOfRangeException(nameof(cost));
             if (facing < 0 || facing >= HexCoord.Directions.Length)
                 throw new ArgumentOutOfRangeException(nameof(facing));
-            MovePoints -= cost;
+            HasMovedThisTurn = true;
             Facing = facing;
             Position = destination;
         }
@@ -192,14 +341,38 @@ namespace TianZhang.Combat
         {
             if (string.IsNullOrWhiteSpace(profileId))
                 throw new ArgumentException("Profile ID is required.", nameof(profileId));
-            cooldowns[profileId] = Math.Max(0, ticks);
+            if (ticks < 0) throw new ArgumentOutOfRangeException(nameof(ticks));
+            cooldowns[GetAbilityInstanceId(profileId)] = ticks;
         }
 
         public int GetCooldown(string profileId)
         {
-            return !string.IsNullOrWhiteSpace(profileId) && cooldowns.TryGetValue(profileId, out int ticks)
+            return !string.IsNullOrWhiteSpace(profileId) && cooldowns.TryGetValue(GetAbilityInstanceId(profileId), out int ticks)
                 ? ticks
                 : 0;
+        }
+
+        public string GetAbilityInstanceId(string profileId) =>
+            abilityInstanceIds.TryGetValue(profileId, out string instance) ? instance : Id + ":" + profileId;
+
+        /// <summary>Private preparation copy; no prepared result is published before the command gate commits.</summary>
+        internal CombatantSnapshot CopyForResolution()
+        {
+            var copy = (CombatantSnapshot)MemberwiseClone();
+            copy.cooldowns = new Dictionary<string, int>(cooldowns, StringComparer.Ordinal);
+            copy.equippedArtProfileIds = new List<string>(equippedArtProfileIds);
+            copy.refunds = new Dictionary<string, (int, int)>(refunds, StringComparer.Ordinal);
+            return copy;
+        }
+
+        internal void CommitResolvedState(CombatantSnapshot prepared)
+        {
+            CurrentHealth = prepared.CurrentHealth; CurrentSpirit = prepared.CurrentSpirit;
+            ShouyiStacks = prepared.ShouyiStacks; FudanStacks = prepared.FudanStacks; LeijieStacks = prepared.LeijieStacks;
+            IsGuarding = prepared.IsGuarding; HasMovedThisTurn = prepared.HasMovedThisTurn;
+            Position = prepared.Position; Facing = prepared.Facing; CombatSwapsUsed = prepared.CombatSwapsUsed;
+            cooldowns = prepared.cooldowns; equippedArtProfileIds = prepared.equippedArtProfileIds;
+            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); }
         }
 
         public void AdvanceCooldowns(int ticks)
@@ -221,18 +394,19 @@ namespace TianZhang.Combat
             if (damage > 0 && GongFaId == CombatGongFaRules.LeijieGongFaId)
                 LeijieStacks = Math.Min(LeijieStacks + 1, MaximumLeijieStacks);
             CurrentHealth = Math.Max(0, CurrentHealth - damage);
+            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); }
         }
 
         public float DefenseMultiplier(bool physical)
         {
-            return CombatGongFaRules.DefenseMultiplier(this, physical);
+            return CombatGongFaRules.DefenseMultiplier(this, physical) * (IsGuarding ? 1.5f : 1f);
         }
 
         public void RestoreHealth(int amount)
         {
             if (amount < 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
-            CurrentHealth = Math.Min(MaximumHealth, CurrentHealth + amount);
+            CurrentHealth += Math.Min(amount, MaximumHealth - CurrentHealth);
         }
 
         private static List<string> CreateProfileIdList(IEnumerable<string> profileIds)

@@ -149,10 +149,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
             Assert.That(random.Count, Is.EqualTo(rolls + 4));
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(10));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(10));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             StringAssert.Contains("消耗灵力 12", sink.Logs.Last());
-            yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
+            yield return WaitForPlayerTurn(CombatTurnPhase.Active);
             Assert.That(actionBar.WaitButton.interactable, Is.True);
             StringAssert.Contains("结束行动", actionBar.WaitButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.WaitButton.onClick.Invoke();
@@ -173,7 +173,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(enemyHealth));
                 AssertRecoveryProjection(spawned.Player.Id, recovery, rolls);
                 StringAssert.Contains("消耗灵力 0", sink.Logs.Last());
-                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
+                yield return WaitForPlayerTurn(CombatTurnPhase.Active);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
             }
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(spawned.Player.MaximumSpirit));
@@ -192,7 +192,7 @@ namespace TianZhang.Tests.PlayMode
             AssertRecoveryProjection(spawned.Enemy.Id, 0, rolls);
             StringAssert.Contains("恢复灵力 0", sink.Logs.Last());
             StringAssert.Contains("消耗灵力 20", sink.Logs.Last());
-            yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
+            yield return WaitForPlayerTurn(CombatTurnPhase.Active);
             ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
         }
 
@@ -215,7 +215,7 @@ namespace TianZhang.Tests.PlayMode
                 ((ICombatCommandHandler)encounter).RequestArt(spawned.Player.Id, spawned.Player.Id, RecoveryId);
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(spawned.Player.MaximumSpirit));
                 AssertRecoveryProjection(spawned.Player.Id, 1, rolls);
-                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
+                yield return WaitForPlayerTurn(CombatTurnPhase.Active);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
 
                 yield return WaitForPlayerTurn();
@@ -228,7 +228,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(spawned.Enemy.CurrentSpirit, Is.EqualTo(targetMana + expected));
                 AssertRecoveryProjection(spawned.Enemy.Id, expected, rolls);
                 StringAssert.Contains("消耗灵力 20", sink.Logs.Last());
-                yield return WaitForPlayerTurn(CombatTurnPhase.ActionThenMove);
+                yield return WaitForPlayerTurn(CombatTurnPhase.Active);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
             }
         }
@@ -362,8 +362,8 @@ namespace TianZhang.Tests.PlayMode
         private void AssertRecoveryProjection(string targetId, int amount, int previousRolls)
         {
             Assert.That(random.Count, Is.EqualTo(previousRolls), "RestoreSpirit must not sample attack rolls.");
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(5));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(5));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             CombatUnitPresentationTargetResult target = unitPort.Events.Last(value =>
                 value.ActorCombatantId == spawned.Player.Id && value.PresentationEvent == CombatUnitPresentationEvent.Cast).TargetResults.Single();
             Assert.That(target.CombatantId, Is.EqualTo(targetId));
@@ -375,19 +375,19 @@ namespace TianZhang.Tests.PlayMode
         private void AssertRejectedWithoutConsumption(Action request)
         {
             int[] before = { spawned.Player.CurrentHealth, spawned.Player.CurrentSpirit, spawned.Enemy.CurrentHealth,
-                spawned.Enemy.CurrentSpirit, spawned.Player.MovePoints, session.TurnScheduler.CurrentTick,
-                session.PendingCooldownPenalty, random.Count, unitPort.Events.Count };
+                spawned.Enemy.CurrentSpirit, spawned.Player.ActionPointsRemainingUnits, session.TurnScheduler.CurrentTick,
+                session.PendingCtPenalty, random.Count, unitPort.Events.Count };
             string actor = session.CurrentActorId;
             CombatTurnPhase phase = session.TurnPhase;
             request();
             Assert.That(new[] { spawned.Player.CurrentHealth, spawned.Player.CurrentSpirit, spawned.Enemy.CurrentHealth,
-                spawned.Enemy.CurrentSpirit, spawned.Player.MovePoints, session.TurnScheduler.CurrentTick,
-                session.PendingCooldownPenalty, random.Count, unitPort.Events.Count }, Is.EqualTo(before));
+                spawned.Enemy.CurrentSpirit, spawned.Player.ActionPointsRemainingUnits, session.TurnScheduler.CurrentTick,
+                session.PendingCtPenalty, random.Count, unitPort.Events.Count }, Is.EqualTo(before));
             Assert.That(session.CurrentActorId, Is.EqualTo(actor));
             Assert.That(session.TurnPhase, Is.EqualTo(phase));
         }
 
-        private IEnumerator WaitForPlayerTurn(CombatTurnPhase phase = CombatTurnPhase.MoveThenAction)
+        private IEnumerator WaitForPlayerTurn(CombatTurnPhase phase = CombatTurnPhase.Active)
         {
             float deadline = Time.realtimeSinceStartup + 10f;
             while (Time.realtimeSinceStartup < deadline)
@@ -515,7 +515,7 @@ namespace TianZhang.Tests.PlayMode
             var state = new VisibleActionEvidence
             {
                 frame = Time.frameCount, width = Screen.width, height = Screen.height,
-                tick = liveSession.TurnScheduler.CurrentTick, pendingCooldown = liveSession.PendingCooldownPenalty,
+                tick = liveSession.TurnScheduler.CurrentTick, pendingCooldown = liveSession.PendingCtPenalty,
                 phase = liveSession.TurnPhase.ToString(), actor = liveSession.CurrentActorId,
                 busy = liveEncounter.IsPresenting, player = CombatInputEvidence.Capture(liveSpawned.Player),
                 enemy = CombatInputEvidence.Capture(liveSpawned.Enemy),
@@ -563,7 +563,7 @@ namespace TianZhang.Tests.PlayMode
         {
             public string id, realmStage, visibleRootElement, visibleRootGrade, basicAttackProfileId;
             public int q, r, speed, maximumHealth, currentHealth, maximumSpirit, currentSpirit;
-            public int rawSpirit, physicalAttack, soulAttack, physicalDefense, soulDefense, maximumMovePoints;
+            public int rawSpirit, physicalAttack, soulAttack, physicalDefense, soulDefense, actionPointMaximumUnits, movementEfficiencyMilliUnits;
             public float realmMultiplier;
             public string[] knownArts, equippedArts;
             public static CombatInputEvidence Capture(CombatantSnapshot value) => new CombatInputEvidence
@@ -572,7 +572,7 @@ namespace TianZhang.Tests.PlayMode
                 maximumHealth = value.MaximumHealth, currentHealth = value.CurrentHealth,
                 maximumSpirit = value.MaximumSpirit, currentSpirit = value.CurrentSpirit,
                 rawSpirit = value.RawSpirit, physicalAttack = value.PhysicalAttack, soulAttack = value.SoulAttack,
-                physicalDefense = value.PhysicalDefense, soulDefense = value.SoulDefense, maximumMovePoints = value.MaximumMovePoints,
+                physicalDefense = value.PhysicalDefense, soulDefense = value.SoulDefense, actionPointMaximumUnits = value.ActionPointMaximumUnits, movementEfficiencyMilliUnits = value.MovementEfficiencyMilliUnits,
                 realmMultiplier = value.RealmMultiplier, realmStage = value.RealmStage,
                 visibleRootElement = value.VisibleRootElement, visibleRootGrade = value.VisibleRootGrade,
                 basicAttackProfileId = value.BasicAttackProfileId,

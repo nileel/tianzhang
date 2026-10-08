@@ -57,12 +57,12 @@ namespace TianZhang.Combat
 
         private void AddMoves(CombatSession session, CombatantSnapshot actor, ICollection<CombatCommand> actions)
         {
-            if (actor.MovePoints <= 0)
+            if (actor.ActionPointsRemainingUnits <= 0 || actor.MovementEfficiencyMilliUnits == 0)
                 return;
 
             IReadOnlyCollection<HexCoord> occupied = session.GetOccupiedPositionsExcept(actor.Id);
             foreach (HexCoord destination in session.SpatialQuery
-                         .FindReachable(actor.Position, actor.MovePoints, occupied)
+                         .FindReachable(actor.Position, actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, occupied)
                          .Keys
                          .Where(destination => destination != actor.Position)
                          .OrderBy(destination => destination.Q)

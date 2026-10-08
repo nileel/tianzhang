@@ -1,0 +1,48 @@
+# U-COMBAT-AP-CORE-01 · 人工完成验证记录
+
+日期：2026-10-08。当前负责人授权gpt-6-astra单主智能体承接原工作区；主线基线38d8a688b20670f0a4f5c8faee57be98403bccd7。
+工作区：D:/天章游戏开发/.worktrees/automation/82ca885a-6a00-4fcc-8839-7056a9262655/codex。
+结论：CORE原子结果完成；全量EditMode通过，相关PlayMode业务用例通过，两个无关的原基线失败原样保留并单独复现。不宣称PlayMode全套全绿，也不替代FLOW／HUD／SIM／BALANCE与最终场景验收。
+
+## 承接与根因
+
+- 原runId=82ca885a-6a00-4fcc-8839-7056a9262655进程已退出，runtime仍为developing、没有candidate；这造成existing_run。已按既有合同关闭残留run并保留原工作区，未修改调度器、runtime格式或模型配置。具体进程终止原因没有足够证据。
+- 原32路径checkpoint为6aaafa01f147e853e11aaaa09301fd28c180ad33；另有两处已批准按钮条件修改。本轮先把最新master fast-forward到保留worktree，再统一复核并完成。
+- 负责人明确“你直接做了吧，别冻结了”，覆盖原模型限制；requestMeta实际gpt-6-astra。没有委派、第二责任会话或旧会话恢复。
+- 风险预检status=ok；taskCardDigest=57e470343370303fe7d24d23d3fba8fedcd21c59077ec9eb9111fb573ac3a6cd；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched／mustRead／gates／gatePointers均为空，与schema2投影一致。
+- 决策A的原根因：EndTurn在开始即合法，旧CombatActionBarView.Present和CombatCommandInput.CanAct把CanEndTurn当作动作已用标记，导致AP=100000、AcceptsCommands=true时术法按钮仍禁用。两处仅解除该条件，保留输入接受、演出锁、目标合法性与预览／确认权威校验。
+
+## 交付范围
+
+- Snapshot显式接收AP上限与v；个人回合一次发放、结束清零，移除生产旧移动点／reaction派生。生产修正来源显式为空。
+- Session／CommandService支持共享AP多动作、报价版本、原子效果准备／收费、有限返还、冷却与次数账本、CT累加、正净费与溢出拒绝。未命中收费，失效／非法报价不改变权威状态。
+- 开始DOT／控制／恢复与结束持续各一次；Guard双防×1.5、成功收益退出、下次开始／死亡清除；守一／符胆以个人回合结束计数，符类施法才消费符胆。
+- Spatial adapter保留原始边逐段计费，显式v=0不可移动；同源报价与提交，插入施法不重置舍入。
+- 正式AdventureSceneInstaller→CombatEntryAdapter→CombatSession传递普通定义，Guard／SwapSpell均为50000费用及50000净费下限、CT0，Guard CD0／SwapSpell CD60。场景生成器定向SerializedObject写入，最终场景diff仅新增11行，GUID／布局／其他引用未改。
+- 直接测试迁移旧单动作、整数移动点、待机时机、同刻排序与显式AP输入。正式测试操作策略改为按当前权威合法性选择动作，不再把CanEndTurn当作必须结束的信号。未改正式敌方控制循环的多动作策略或新增HUD字段。
+
+## 验证与原始证据
+
+以下相对路径均基于上述owner worktree。原始XML保留每次真实结果，最终索引只按同名用例关联最后一次运行，没有删除失败结果。
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultXmlPath <worktree>/src/Logs/ap-core-manual-editmode.xml：退出0，730/730，失败0、跳过0。包含23项AP内核与正式普通定义的加载／重载幂等验证。
+- PlayMode使用现有tools/run-unity-playmode-tests.ps1的临时副本，保持文件快照保护／结果检查，仅加入-testFilter限定卡内8个受影响类。需要截图的测试去掉-nographics，仍使用-batchmode和相同Unity6000.3.18f1；未改仓库runner。临时脚本在C:/Users/WINDOWS/AppData/Local/Temp/ap-core-playmode-*.ps1。
+- 首次无图形运行34项23通过11失败（src/Logs/ap-core-manual-playmode.xml）；其中截图测试因无图形设备无法运行，不能据此判断业务。
+- 图形运行34项28通过6失败（src/Logs/ap-core-manual-playmode-graphics.xml）；迁移共享预算／结束时点后仅重跑失败相关用例，5项中2通过（ap-core-manual-playmode-remaining.xml）；最后3项全部通过、runner退出0（ap-core-manual-playmode-final.xml）。
+- 去重最终35项中33通过、2项原基线失败；逐项来源见src/Logs/ap-core-playmode-evidence-index.json。已有通过且相关输入未变的用例不重复。目标面板旧失败与其后的AP移动段分成独立用例，原断言保留，后者通过。
+- 正式1366／1920胜利与失败流程均通过，覆盖自然点击、预览取消／确认、移动绕障、战斗返回、悬赏领取及存档读档。截图与权威状态在src/Logs/flow/；已查看1366正式术法预览图。胜利最终证据目录20261008-171638-1366-victory及20261008-171710-1920-victory；失败证据20261008-170904-1366-defeat及20261008-170921-1920-defeat。
+- dotnet build -c Release --no-restore simulations/BattleSim：初次因当前worktree缺project.assets.json失败；同worktree执行dotnet restore后再build退出0，0警告／0错误。dotnet run --no-build -c Release --project simulations/BattleSim退出0，完整日志src/Logs/ap-core-battlesim.txt。只证明规定入口适配，未据此宣称AP双入口或数值平衡完成。
+- tools/check-unity-assembly-boundaries.ps1：通过，19程序集、2 asmref。tools/check-data-chain.ps1：通过，功法29／术法84／神通31、语言key613。
+- 已验证33个业务／测试文件的字节SHA256清单：src/Logs/ap-core-validated-files.sha256；该清单按Git路径排序、LF连接后的SHA256=5af747d903e123142d2d3bfb32e07b587b5d22bb6f1efcbb8a49b784e7a90f6e。后续管理归档不改变业务验证输入。
+
+## 原基线失败与后继边界
+
+- FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads：AssertFormalProviderUnit按MeshRenderer自身名称查找Static3DCombatBase为空；生产底座根与子renderer结构不匹配旧断言。未改AP的3dafe954基线同一方法同样失败，证据src/Logs/ap-core-baseline-provider.xml。
+- UiMovementAndPresentationArbitrateWithoutDoubleTrigger：点击目标面板关闭后仍选中player；同一3dafe954基线复现于同一断言，证据src/Logs/ap-core-baseline-ui.xml（2项中该项失败、旧移动用例通过）。未修改目标选择生产所有者，也未放宽其断言。
+- 基线复现工作区D:/天章游戏开发/.worktrees/manual-unity-baseline-20261008保持干净；两个失败不归因于CORE，不计为本次通过。最终场景、UI完整性仍有这两项已知风险。
+- 原失联冻结历史只作追溯；当前CORE完成归档并移出队列／backlog。本轮不维护下游卡，不使用原失败run发送成功通知。
+
+## 收尾
+
+- check-task-cards.ps1 -TaskId U-COMBAT-AP-CORE-01 -Postcondition CodexClosedOrNonReady -OutputJson：status=ok，completed，73活跃卡／ready0。check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：714文件通过。check-pending-whitespace.ps1对36个实际存在改动文件通过；删除的活跃卡不当作现存文件。暂存集合全部属于原expectedPaths，git diff --cached --check通过。
+- 最终从主工作区重新Show，确认两个run均空、进程持有型集成锁空闲、master及本卡／队列事实未被其他写入改变；通过tools/invoke-project-integration.ps1持同一锁fast-forward。

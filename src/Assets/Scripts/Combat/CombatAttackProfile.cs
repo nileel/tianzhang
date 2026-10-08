@@ -43,10 +43,15 @@ namespace TianZhang.Combat
             int minimumSpiritRecovery = 0,
             int otherTargetSpiritCost = 0,
             float otherTargetSpiritRecoveryMultiplier = 1f,
-            Func<string, string, string, bool> qualification = null)
+            Func<string, string, string, bool> qualification = null,
+            bool isTalisman = false)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Attack profile ID is required.", nameof(id));
+            if (!Enum.IsDefined(typeof(CombatAttackKind), kind) || !Enum.IsDefined(typeof(CombatAttackEffect), effect) ||
+                float.IsNaN(physicalMultiplier) || float.IsInfinity(physicalMultiplier) || physicalMultiplier < 0 ||
+                float.IsNaN(soulMultiplier) || float.IsInfinity(soulMultiplier) || soulMultiplier < 0)
+                throw new ArgumentException("Invalid attack effect or multiplier.");
             if (minimumRange < 0 || maximumRange < minimumRange || spiritCost < 0 || healAmount < 0)
                 throw new ArgumentOutOfRangeException(nameof(minimumRange));
             // 统一行动力公共合同：四值以各自单位严格验证，不设默认、不从另一字段推导。
@@ -84,6 +89,7 @@ namespace TianZhang.Combat
             OtherTargetSpiritCost = otherTargetSpiritCost;
             OtherTargetSpiritRecoveryMultiplier = otherTargetSpiritRecoveryMultiplier;
             this.qualification = qualification;
+            IsTalisman = isTalisman;
         }
 
         public string Id { get; }
@@ -104,6 +110,7 @@ namespace TianZhang.Combat
         public float SpiritRecoveryMultiplier { get; }
         public int MinimumSpiritRecovery { get; }
         public int OtherTargetSpiritCost { get; }
+        public bool IsTalisman { get; }
         public float OtherTargetSpiritRecoveryMultiplier { get; }
 
         public bool MeetsRequirements(string realmStage, string rootElement, string rootGrade) =>

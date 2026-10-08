@@ -67,7 +67,7 @@ namespace TianZhang.Features.CombatPresentation
         public void Present(CombatHudSnapshot snapshot, string firstArtTargetId, string secondArtTargetId)
         {
             bool visible = snapshot != null && snapshot.AcceptsCommands;
-            bool canAct = visible && !snapshot.CanEndTurn;
+            bool canAct = visible;
             root?.SetActive(snapshot != null);
             SetEnabled(basicAttackButton, canAct);
             SetEnabled(guardButton, canAct);

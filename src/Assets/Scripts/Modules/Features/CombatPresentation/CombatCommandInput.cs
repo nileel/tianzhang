@@ -132,7 +132,7 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Present(null);
         }
 
-        private bool CanAct => acceptsCommands && (snapshot == null || !snapshot.CanEndTurn);
+        private bool CanAct => acceptsCommands;
 
         private CombatArtActionSnapshot GetArt(int index) =>
             snapshot != null && snapshot.ArtActions.Count > index ? snapshot.ArtActions[index] : null;

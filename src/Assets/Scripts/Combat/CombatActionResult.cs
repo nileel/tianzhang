@@ -46,7 +46,12 @@ namespace TianZhang.Combat
             int movementCost,
             int movementFacing = -1,
             int spiritSpent = 0,
-            IReadOnlyList<CombatSpiritRecoveryResult> spiritRecoveries = null)
+            IReadOnlyList<CombatSpiritRecoveryResult> spiritRecoveries = null,
+            IReadOnlyList<SpatialMovementEdgeCost> movementEdges = null,
+            int unitsPerRange = 0,
+            int actionPointSpentUnits = 0,
+            int actionPointRefundUnits = 0,
+            long rootActionId = 0)
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
@@ -60,6 +65,11 @@ namespace TianZhang.Combat
             SpiritRecoveries = spiritRecoveries == null
                 ? Array.Empty<CombatSpiritRecoveryResult>()
                 : new List<CombatSpiritRecoveryResult>(spiritRecoveries).AsReadOnly();
+            MovementEdges = new List<SpatialMovementEdgeCost>(movementEdges ?? Array.Empty<SpatialMovementEdgeCost>()).AsReadOnly();
+            UnitsPerRange = unitsPerRange;
+            ActionPointSpentUnits = actionPointSpentUnits;
+            ActionPointRefundUnits = actionPointRefundUnits;
+            RootActionId = rootActionId;
         }
 
         public bool Succeeded { get; }
@@ -70,15 +80,26 @@ namespace TianZhang.Combat
         public int MovementFacing { get; }
         public int SpiritSpent { get; }
         public IReadOnlyList<CombatSpiritRecoveryResult> SpiritRecoveries { get; }
+        public IReadOnlyList<SpatialMovementEdgeCost> MovementEdges { get; }
+        public int UnitsPerRange { get; }
+        public int ActionPointSpentUnits { get; }
+        public int ActionPointRefundUnits { get; }
+        public long RootActionId { get; }
+
+        internal CombatActionResult WithPayment(int spent, int refund, long root) => new CombatActionResult(
+            Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
+            SpiritRecoveries, MovementEdges, UnitsPerRange, spent, refund, root);
 
         public static CombatActionResult Success(params CombatDamageResult[] damage)
         {
             return new CombatActionResult(true, string.Empty, damage, null, 0);
         }
 
-        public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost, int movementFacing = -1)
+        public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost, int movementFacing = -1,
+            IReadOnlyList<SpatialMovementEdgeCost> movementEdges = null, int unitsPerRange = 0)
         {
-            return new CombatActionResult(true, string.Empty, null, path, movementCost, movementFacing);
+            return new CombatActionResult(true, string.Empty, null, path, movementCost, movementFacing,
+                movementEdges: movementEdges, unitsPerRange: unitsPerRange);
         }
 
         public static CombatActionResult AttackSuccess(int spiritSpent, params CombatDamageResult[] damage)

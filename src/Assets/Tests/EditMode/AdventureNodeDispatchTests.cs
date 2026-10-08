@@ -121,7 +121,7 @@ namespace TianZhang.Tests
                 EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                     "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
 
-                Assert.IsTrue(new CombatEntryAdapter().TryCreateSession(
+                Assert.IsTrue(new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }).TryCreateSession(
                     spawned, new[] { basic }, environment, out CombatSession session, out string reason), reason);
                 var service = new CombatCommandService();
                 CombatTurnAdvance turn = service.AdvanceUntilAction(session);
@@ -276,9 +276,23 @@ namespace TianZhang.Tests
             HexCoord position,
             int reaction)
         {
-            var result = new CombatantSnapshot(
-                id, team, position, reaction, 100, 100, 20, 0, 0, 0, 1f, 4,
-                new string[0], new string[0], 0, 0);
+            var result = new CombatantSnapshot(id,
+                team,
+                position,
+                reaction,
+                100,
+                100,
+                20,
+                0,
+                0,
+                0,
+                100000,
+                2000,
+                1f,
+                new string[0],
+                new string[0],
+                0,
+                0);
             result.SetSpirit(10, 10);
             return result;
         }

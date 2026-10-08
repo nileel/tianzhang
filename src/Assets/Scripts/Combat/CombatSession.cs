@@ -23,16 +23,14 @@ namespace TianZhang.Combat
             bool isReachable,
             string reason,
             IReadOnlyList<HexCoord> path,
-            int movementCost,
-            IReadOnlyList<SpatialMovementEdgeCost> movementEdges = null,
-            int unitsPerRange = 0,
-            int actionPointCostUnits = 0)
+            IReadOnlyList<SpatialMovementEdgeCost> movementEdges,
+            int unitsPerRange,
+            int actionPointCostUnits)
         {
             IsReachable = isReachable;
             Reason = reason ?? string.Empty;
-            Path = path ?? Array.Empty<HexCoord>();
-            MovementCost = movementCost;
-            MovementEdges = movementEdges ?? Array.Empty<SpatialMovementEdgeCost>();
+            Path = new List<HexCoord>(path ?? Array.Empty<HexCoord>()).AsReadOnly();
+            MovementEdges = new List<SpatialMovementEdgeCost>(movementEdges ?? Array.Empty<SpatialMovementEdgeCost>()).AsReadOnly();
             UnitsPerRange = unitsPerRange;
             ActionPointCostUnits = actionPointCostUnits;
         }
@@ -43,29 +41,23 @@ namespace TianZhang.Combat
         /// <summary>所选路径的经过格与终点，不含起点；按现有 FindPath 顺序。</summary>
         public IReadOnlyList<HexCoord> Path { get; }
 
-        /// <summary>旧整数格预算消耗；预算与 v 迁移落地前仍由 CombatSession.ValidateMove 消费。</summary>
-        public int MovementCost { get; }
-
         /// <summary>
         /// Path 的原始有向边度量，与 Path 一一对应（统一行动力公共合同 §四）；同一路径来源，不另建寻路。
-        /// 无 AP 报价载荷时为空，表示本边界尚未按 AP 定价。
+        /// 合法移动必须完整提供同源边载荷。
         /// </summary>
         public IReadOnlyList<SpatialMovementEdgeCost> MovementEdges { get; }
 
-        /// <summary>报价板的 K=SpatialQueryLimits.UnitsPerRange；无原始边载荷时为 0。</summary>
+        /// <summary>报价板的 K=SpatialQueryLimits.UnitsPerRange。</summary>
         public int UnitsPerRange { get; }
 
         /// <summary>
-        /// Path 的 AP 最小单位费用。0 表示本边界未按 AP 定价：预算与 v 迁移由 U-COMBAT-AP-CORE-01
-        /// 准备阶段补齐；合法可达路径的 AP 报价每条边至少 1 最小单位，故不会是 0。
+        /// Path 的 AP 最小单位费用；合法路径的每条边至少收费 1 单位。
         /// </summary>
         public int ActionPointCostUnits { get; }
     }
 
     /// <summary>
-    /// Combat receives spatial facts through this narrow query boundary. 移动预算仍为旧整数格单位；
-    /// 按 AP 最小单位接收预算与当前有效 MovementEfficiencyMilliUnits 的签名迁移由 U-COMBAT-AP-CORE-01
-    /// 准备阶段连同其实现替身与调用者路径集补齐，本卡保持签名不变。
+    /// Combat receives spatial facts through this narrow AP budget / effective v boundary.
     /// </summary>
     public interface ICombatSpatialQuery
     {
@@ -73,19 +65,42 @@ namespace TianZhang.Combat
         CombatMovementQueryResult QueryMovement(
             HexCoord source,
             HexCoord destination,
-            int movementPoints,
+            int actionPointBudgetUnits,
+            int movementEfficiencyMilliUnits,
             IReadOnlyCollection<HexCoord> occupied);
         IReadOnlyDictionary<HexCoord, int> FindReachable(
             HexCoord source,
-            int movementPoints,
+            int actionPointBudgetUnits,
+            int movementEfficiencyMilliUnits,
             IReadOnlyCollection<HexCoord> occupied);
     }
 
     public enum CombatTurnPhase
     {
-        MoveThenAction,
-        ActionThenMove,
+        Active,
         Finished,
+    }
+
+    [Serializable]
+    public sealed class CombatOrdinaryActionDefinition
+    {
+        public CombatCommandKind Kind;
+        public int ActionPointCostUnits;
+        public int MinimumNetCostUnits;
+        public int CtPenalty;
+        public int ReuseCooldownTicks;
+
+        public CombatOrdinaryActionDefinition(CombatCommandKind kind, int cost, int minimum, int penalty, int cooldown)
+        { Kind = kind; ActionPointCostUnits = cost; MinimumNetCostUnits = minimum; CtPenalty = penalty; ReuseCooldownTicks = cooldown; }
+
+        internal CombatOrdinaryActionDefinition CopyValidated()
+        {
+            if (Kind is not (CombatCommandKind.Guard or CombatCommandKind.SwapSpell) || ActionPointCostUnits <= 0 ||
+                MinimumNetCostUnits <= 0 || MinimumNetCostUnits > ActionPointCostUnits ||
+                CtPenalty != 0 || (Kind == CombatCommandKind.Guard ? ReuseCooldownTicks != 0 : ReuseCooldownTicks != 60))
+                throw new ArgumentException("Invalid ordinary action definition.");
+            return new CombatOrdinaryActionDefinition(Kind, ActionPointCostUnits, MinimumNetCostUnits, CtPenalty, ReuseCooldownTicks);
+        }
     }
 
     /// <summary>Pure session aggregate; it has no scene registration or production composition role.</summary>
@@ -93,11 +108,14 @@ namespace TianZhang.Combat
     {
         private readonly Dictionary<string, CombatAttackProfile> profiles;
         private readonly List<CombatAttackProfile> orderedProfiles;
+        private readonly Dictionary<CombatCommandKind, CombatOrdinaryActionDefinition> ordinary =
+            new Dictionary<CombatCommandKind, CombatOrdinaryActionDefinition>();
 
         public CombatSession(
             IEnumerable<CombatantSnapshot> combatants,
             IEnumerable<CombatAttackProfile> attackProfiles,
             ICombatSpatialQuery spatialQuery,
+            IEnumerable<CombatOrdinaryActionDefinition> ordinaryActions,
             float spiritRecoveryEnvironmentMultiplier = 1f)
         {
             if (spatialQuery == null)
@@ -117,6 +135,14 @@ namespace TianZhang.Combat
                 orderedProfiles.Add(profile);
             }
 
+            if (ordinaryActions == null) throw new ArgumentNullException(nameof(ordinaryActions));
+            foreach (CombatOrdinaryActionDefinition definition in ordinaryActions)
+                if (definition == null || !ordinary.TryAdd(definition.Kind, definition.CopyValidated()))
+                    throw new ArgumentException("Ordinary actions must have unique non-null definitions.", nameof(ordinaryActions));
+            if (!ordinary.ContainsKey(CombatCommandKind.Guard) || !ordinary.ContainsKey(CombatCommandKind.SwapSpell))
+                throw new ArgumentException("Guard and SwapSpell definitions are required.", nameof(ordinaryActions));
+            foreach (CombatantSnapshot actor in Combatants.All) ValidateModifiers(actor);
+
             SpatialQuery = spatialQuery;
             SpiritRecoveryEnvironmentMultiplier = spiritRecoveryEnvironmentMultiplier;
             TurnScheduler = new CombatTurnScheduler(Combatants.All);
@@ -124,29 +150,83 @@ namespace TianZhang.Combat
 
         public string CurrentActorId { get; private set; } = string.Empty;
         public CombatTurnPhase TurnPhase { get; private set; } = CombatTurnPhase.Finished;
-        public int PendingCooldownPenalty { get; private set; }
+        public int PendingCtPenalty { get; private set; }
+        public long TurnSequence { get; private set; }
+        public long StateVersion { get; private set; }
+        public bool HasCommittedBenefit { get; private set; }
         internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
             !Combatants.HasLivingMembers(CombatTeam.Enemy);
 
-        internal void BeginTurn(CombatantSnapshot actor)
+        internal bool BeginTurn(CombatantSnapshot actor)
         {
             CurrentActorId = actor.Id;
-            TurnPhase = CombatTurnPhase.MoveThenAction;
-            PendingCooldownPenalty = 0;
-            actor.ResetMovePoints();
+            TurnPhase = CombatTurnPhase.Active;
+            PendingCtPenalty = 0;
+            HasCommittedBenefit = false;
+            TurnSequence = checked(TurnSequence + 1);
+            StateVersion = checked(StateVersion + 1);
+            return actor.BeginOwnTurn();
         }
 
-        internal void RecordAction(int cooldownPenalty)
+        internal void RecordAction(int ctPenalty)
         {
-            PendingCooldownPenalty = cooldownPenalty;
-            TurnPhase = CombatTurnPhase.ActionThenMove;
+            PendingCtPenalty = checked(PendingCtPenalty + ctPenalty);
+            HasCommittedBenefit = true;
+            StateVersion = checked(StateVersion + 1);
         }
 
         internal void FinishTurn()
         {
+            if (Combatants.TryGet(CurrentActorId, out CombatantSnapshot actor)) actor.EndOwnTurn();
+            if (TurnPhase != CombatTurnPhase.Finished) StateVersion = checked(StateVersion + 1);
             CurrentActorId = string.Empty;
             TurnPhase = CombatTurnPhase.Finished;
-            PendingCooldownPenalty = 0;
+            PendingCtPenalty = 0;
+        }
+
+        internal void Terminate()
+        {
+            FinishTurn();
+            foreach (CombatantSnapshot actor in Combatants.All) { actor.ClearActionPoints(); actor.IsGuarding = false; }
+        }
+
+        internal CombatOrdinaryActionDefinition GetOrdinary(CombatCommandKind kind) => ordinary[kind];
+
+        private void ValidateModifiers(CombatantSnapshot actor)
+        {
+            if (actor.HealthRecoveryPerOwnTurn < 0 || actor.SpiritRecoveryPerOwnTurn < 0)
+                throw new ArgumentException("Recovery inputs cannot be negative.");
+            long budget = 0;
+            foreach (CombatActionEconomyModifier modifier in actor.ActionEconomyModifiers)
+            {
+                budget = checked(budget + modifier.RefundBudgetPerOwnTurnUnits);
+                if (budget > int.MaxValue) throw new ArgumentException("Refund budget overflow.");
+                bool matched = false;
+                foreach (CombatAttackProfile profile in orderedProfiles)
+                {
+                    CombatCommandKind kind = profile.Kind == CombatAttackKind.Basic ? CombatCommandKind.BasicAttack :
+                        profile.Kind == CombatAttackKind.Art ? CombatCommandKind.Art : CombatCommandKind.Divine;
+                    if (!modifier.Matches(kind, profile.Id)) continue;
+                    matched = true;
+                    ValidateModifierScope(actor, modifier, kind, profile.Id, profile.ActionPointCostUnits, profile.CtPenalty, profile.ReuseCooldownTicks);
+                }
+                foreach (var pair in ordinary)
+                {
+                    if (!modifier.Matches(pair.Key, string.Empty)) continue;
+                    matched = true;
+                    ValidateModifierScope(actor, modifier, pair.Key, string.Empty, pair.Value.ActionPointCostUnits,
+                        pair.Value.CtPenalty, pair.Value.ReuseCooldownTicks);
+                }
+                if (!matched) throw new ArgumentException("Unknown action economy scope.");
+            }
+        }
+
+        private static void ValidateModifierScope(CombatantSnapshot actor, CombatActionEconomyModifier modifier,
+            CombatCommandKind kind, string profile, int cost, int ct, int cd)
+        {
+            if (modifier.MinimumNetCostUnits > cost || modifier.CtPenaltyReduction > ct || modifier.ReuseCooldownReductionTicks > cd ||
+                actor.ActionEconomyModifiers.Count(value => value.Matches(kind, profile)) != 1)
+                throw new ArgumentException("Invalid or overlapping action economy scope.");
         }
 
         public CombatantRegistry Combatants { get; }
@@ -163,6 +243,9 @@ namespace TianZhang.Combat
 
         /// <summary>Single side-effect-free command validation entry shared by resolution and action discovery.</summary>
         public CombatActionResult ValidateCommand(CombatCommand command)
+            => new CombatCommandService().Validate(this, command);
+
+        internal CombatActionResult ValidateRules(CombatCommand command)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
@@ -176,16 +259,13 @@ namespace TianZhang.Combat
             if (!TurnScheduler.IsReady(actor.Id))
                 return CombatActionResult.Rejected("combat_turn_not_ready");
 
-            if ((command.Kind == CombatCommandKind.EndTurn && TurnPhase != CombatTurnPhase.ActionThenMove) ||
-                (command.Kind != CombatCommandKind.EndTurn && command.Kind != CombatCommandKind.Move &&
-                 TurnPhase != CombatTurnPhase.MoveThenAction))
-                return CombatActionResult.Rejected("combat_turn_phase_invalid");
+            if (actor.HasStatus(CombatStatusKind.Stun)) return CombatActionResult.Rejected("combat_actor_stunned");
 
             return command.Kind switch
             {
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
-                CombatCommandKind.Guard => CombatActionResult.Success(),
-                CombatCommandKind.Wait => CombatActionResult.Success(),
+                CombatCommandKind.Guard => actor.IsGuarding ? CombatActionResult.Rejected("combat_guard_already_active") : CombatActionResult.Success(),
+                CombatCommandKind.Wait => HasCommittedBenefit ? CombatActionResult.Rejected("combat_wait_after_benefit") : CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack => ValidateAttack(command, actor, CombatAttackKind.Basic),
                 CombatCommandKind.Art => ValidateAttack(command, actor, CombatAttackKind.Art),
                 CombatCommandKind.Divine => ValidateAttack(command, actor, CombatAttackKind.Divine),
@@ -213,6 +293,8 @@ namespace TianZhang.Combat
         {
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
+            if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))
+                return CombatActionResult.Rejected("combat_spirit_sealed");
             if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
                 (profile.Effect != CombatAttackEffect.RestoreSpirit && target.Team == actor.Team))
                 return CombatActionResult.Rejected("combat_session_target_invalid");
@@ -260,8 +342,9 @@ namespace TianZhang.Combat
         {
             if (!command.Destination.HasValue || command.Destination.Value == actor.Position)
                 return CombatActionResult.Rejected("combat_move_destination_invalid");
-            if (actor.MovePoints <= 0)
-                return CombatActionResult.Rejected("combat_move_points_exhausted");
+            if (actor.HasStatus(CombatStatusKind.Immobilize)) return CombatActionResult.Rejected("combat_actor_immobilized");
+            if (actor.MovementEfficiencyMilliUnits == 0) return CombatActionResult.Rejected("movement_efficiency_zero");
+            if (actor.ActionPointsRemainingUnits <= 0) return CombatActionResult.Rejected("action_points_insufficient");
 
             IReadOnlyCollection<HexCoord> occupied = GetOccupiedPositionsExcept(actor.Id);
             if (occupied.Contains(command.Destination.Value))
@@ -270,22 +353,43 @@ namespace TianZhang.Combat
             CombatMovementQueryResult movement = SpatialQuery.QueryMovement(
                 actor.Position,
                 command.Destination.Value,
-                actor.MovePoints,
+                actor.ActionPointsRemainingUnits,
+                actor.MovementEfficiencyMilliUnits,
                 occupied);
             if (!movement.IsReachable || movement.Path.Count == 0 ||
                 movement.Path[movement.Path.Count - 1] != command.Destination.Value ||
-                movement.MovementCost < 0 || movement.MovementCost > actor.MovePoints)
+                movement.UnitsPerRange <= 0 || movement.MovementEdges.Count != movement.Path.Count ||
+                movement.ActionPointCostUnits <= 0 || movement.ActionPointCostUnits > actor.ActionPointsRemainingUnits)
             {
                 return CombatActionResult.Rejected(
                     string.IsNullOrEmpty(movement.Reason) ? "combat_move_path_invalid" : movement.Reason);
             }
+            try
+            {
+                int cost = 0;
+                HexCoord from = actor.Position;
+                for (int index = 0; index < movement.Path.Count; index++)
+                {
+                    SpatialMovementEdgeCost edge = movement.MovementEdges[index];
+                    if (edge.From != from || edge.To != movement.Path[index] || from.DirectionTo(edge.To) < 0 ||
+                        edge.MetricDistanceUnits <= 0 || edge.MovementBurdenUnits < 0 || occupied.Contains(edge.To))
+                        return CombatActionResult.Rejected("combat_move_path_invalid");
+                    long numerator = checked(100000000L * checked(edge.MetricDistanceUnits + (long)edge.MovementBurdenUnits));
+                    long denominator = checked((long)movement.UnitsPerRange * actor.MovementEfficiencyMilliUnits);
+                    cost = checked(cost + checked((int)Math.Max(1L, numerator / denominator)));
+                    from = edge.To;
+                }
+                if (cost != movement.ActionPointCostUnits) return CombatActionResult.Rejected("combat_move_quote_invalid");
+            }
+            catch (OverflowException) { return CombatActionResult.Rejected("combat_move_cost_overflow"); }
             HexCoord previous = movement.Path.Count == 1
                 ? actor.Position
                 : movement.Path[movement.Path.Count - 2];
             int facing = previous.DirectionTo(movement.Path[movement.Path.Count - 1]);
             if (facing < 0)
                 return CombatActionResult.Rejected("combat_move_path_invalid");
-            return CombatActionResult.MovementSuccess(movement.Path, movement.MovementCost, facing);
+            return CombatActionResult.MovementSuccess(movement.Path, movement.ActionPointCostUnits, facing,
+                movement.MovementEdges, movement.UnitsPerRange);
         }
 
         private CombatActionResult ValidateSwapSpell(CombatCommand command, CombatantSnapshot actor)

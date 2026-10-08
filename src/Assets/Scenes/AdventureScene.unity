@@ -2757,6 +2757,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4c65a0a3f37a8c54a93ca75086a6a2a1, type: 2}
   - {fileID: 11400000, guid: 60ca361e62e57fa4d8de2ce04f269382, type: 2}
   - {fileID: 11400000, guid: e09511b0bf790504187bcb58e2cf15a6, type: 2}
+  ordinaryActions:
+  - Kind: 3
+    ActionPointCostUnits: 50000
+    MinimumNetCostUnits: 50000
+    CtPenalty: 0
+    ReuseCooldownTicks: 0
+  - Kind: 6
+    ActionPointCostUnits: 50000
+    MinimumNetCostUnits: 50000
+    CtPenalty: 0
+    ReuseCooldownTicks: 60
   combatPresentationProfileCatalog: {fileID: 11400000, guid: 9d54dd01da65e1649a3197ca7e2fbe78, type: 2}
   controller: {fileID: 458967861}
   input: {fileID: 458967860}

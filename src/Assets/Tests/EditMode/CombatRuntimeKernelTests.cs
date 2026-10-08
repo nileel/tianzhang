@@ -33,7 +33,8 @@ namespace TianZhang.Tests.EditMode
             Assert.That(result.Damage.Count, Is.EqualTo(1));
             Assert.That(result.Damage[0].FinalDamage, Is.EqualTo(35));
             Assert.That(enemy.CurrentHealth, Is.EqualTo(65));
-            Assert.That(session.TurnScheduler.IsReady("player"), Is.False);
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(99999));
+            Assert.That(session.TurnScheduler.IsReady("player"), Is.True);
         }
 
         [Test]
@@ -58,7 +59,7 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void MoveUsesTheCanonicalSpatialPathAndOnlyConsumesMovementPoints()
+        public void MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints()
         {
             HexCoord origin = new HexCoord(0, 0);
             HexCoord destination = new HexCoord(0, 1);
@@ -80,13 +81,13 @@ namespace TianZhang.Tests.EditMode
 
             Assert.That(result.Succeeded, Is.True, result.RejectionReason);
             Assert.That(result.MovementPath, Is.EqualTo(new[] { new HexCoord(1, 0), destination }));
-            Assert.That(result.MovementCost, Is.EqualTo(2));
+            Assert.That(result.MovementCost, Is.EqualTo(20000));
             Assert.That(player.Position, Is.EqualTo(destination));
-            Assert.That(player.MaximumMovePoints, Is.EqualTo(2));
-            Assert.That(player.MovePoints, Is.Zero);
+            Assert.That(player.ActionPointMaximumUnits, Is.EqualTo(100000));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(80000));
             Assert.That(player.Facing, Is.EqualTo(new HexCoord(1, 0).DirectionTo(destination)));
             Assert.That(session.TurnScheduler.IsReady(player.Id), Is.True);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.MoveThenAction));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack,
                 player.Id, enemy.Id, "basic")).Succeeded, Is.True);
         }
@@ -146,9 +147,10 @@ namespace TianZhang.Tests.EditMode
 
             Assert.That(swapped.Succeeded, Is.True, swapped.RejectionReason);
             Assert.That(player.EquippedArtProfileIds[0], Is.EqualTo("new_art"));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(50000));
             Assert.That(player.CombatSwapsUsed, Is.EqualTo(1));
             Assert.That(player.GetCooldown("new_art"), Is.EqualTo(60));
-            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
+            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.True);
         }
 
         [Test]
@@ -231,12 +233,12 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void PlayerAndAiReceiveTheSameSevenLegalCommandKinds()
+        public void PlayerAndAiReceiveTheSameEightLegalCommandKinds()
         {
             HexCoord playerOrigin = new HexCoord(0, 0);
             HexCoord enemyOrigin = new HexCoord(1, 0);
             CombatantSnapshot player = CreateCombatant(
-                "player", CombatTeam.Player, playerOrigin, 100, 100, 20, 10, movePoints: 1,
+                "player", CombatTeam.Player, playerOrigin, 101, 100, 20, 10, movePoints: 1,
                 equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" },
                 equippedDivineProfileIds: new[] { "divine" }, availableDivineProfileIds: new[] { "divine" });
             CombatantSnapshot enemy = CreateCombatant(
@@ -247,11 +249,21 @@ namespace TianZhang.Tests.EditMode
             {
                 [playerOrigin] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(true, string.Empty, new[] { new HexCoord(-1, 0) }, 1),
+                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(true,
+                string.Empty,
+                new[] { new HexCoord(-1, 0) },
+                null,
+                1000,
+                (1) * 10000),
                 },
                 [enemyOrigin] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true, string.Empty, new[] { new HexCoord(2, 0) }, 1),
+                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true,
+                string.Empty,
+                new[] { new HexCoord(2, 0) },
+                null,
+                1000,
+                (1) * 10000),
                 },
             });
             CombatSession session = CreateSession(new[] { player, enemy }, query, CreateProfiles("art", "backup_art"));
@@ -277,6 +289,7 @@ namespace TianZhang.Tests.EditMode
                 CombatCommandKind.Wait,
                 CombatCommandKind.Move,
                 CombatCommandKind.SwapSpell,
+                CombatCommandKind.EndTurn,
             };
 
             CollectionAssert.AreEquivalent(expected, playerKinds);
@@ -289,14 +302,12 @@ namespace TianZhang.Tests.EditMode
             HexCoord origin = new HexCoord(0, 0), first = new HexCoord(1, 0);
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, movePoints: 3);
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(3, 0), 1, 100, 20, 10);
-            var movement = new CombatMovementQueryResult(
-                true,
+            var movement = new CombatMovementQueryResult(true,
                 SpatialQueryReasons.Ok,
                 new[] { first },
-                movementCost: 2,
                 new[] { new SpatialMovementEdgeCost(origin, first, metricDistanceUnits: 800, movementBurdenUnits: 200) },
                 unitsPerRange: 1000,
-                actionPointCostUnits: 100000);
+                actionPointCostUnits: 33333);
             var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
             {
                 [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
@@ -313,15 +324,14 @@ namespace TianZhang.Tests.EditMode
                 new CombatCommand(CombatCommandKind.Move, player.Id, destination: first));
 
             Assert.That(result.Succeeded, Is.True, result.RejectionReason);
-            Assert.That(result.MovementCost, Is.EqualTo(2),
-                "The kernel still consumes the integer grid cost until U-COMBAT-AP-CORE-01 migrates the budget.");
-            Assert.That(player.MovePoints, Is.EqualTo(1));
+            Assert.That(result.MovementCost, Is.EqualTo(33333));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(66667));
             Assert.That(player.Position, Is.EqualTo(first));
-            Assert.That(session.PendingCooldownPenalty, Is.Zero);
+            Assert.That(session.PendingCtPenalty, Is.Zero);
             Assert.That(movement.MovementEdges.Count, Is.EqualTo(1));
             Assert.That(movement.MovementEdges[0].DistanceUnits, Is.EqualTo(1000));
             Assert.That(movement.UnitsPerRange, Is.EqualTo(1000));
-            Assert.That(movement.ActionPointCostUnits, Is.EqualTo(100000));
+            Assert.That(movement.ActionPointCostUnits, Is.EqualTo(33333));
         }
 
         [Test]
@@ -334,33 +344,43 @@ namespace TianZhang.Tests.EditMode
             {
                 [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [first] = new CombatMovementQueryResult(true, "", new[] { first }, 2),
+                    [first] = new CombatMovementQueryResult(true,
+                "",
+                new[] { first },
+                null,
+                1000,
+                (7) * 10000),
                 },
                 [first] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [second] = new CombatMovementQueryResult(true, "", new[] { second }, 1),
+                    [second] = new CombatMovementQueryResult(true,
+                "",
+                new[] { second },
+                null,
+                1000,
+                (3) * 10000),
                 },
             });
             CombatSession session = CreateSession(new[] { player, enemy }, query);
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
             int tick = session.TurnScheduler.CurrentTick;
-            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: first)).MovementCost, Is.EqualTo(2));
-            Assert.That(player.MovePoints, Is.EqualTo(1), "Cost comes from Spatial, rather than the number of path entries.");
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: first)).MovementCost, Is.EqualTo(70000));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(30000), "Cost comes from Spatial, rather than the number of path entries.");
             CombatTurnAdvance repeatedAdvance = service.AdvanceUntilAction(session);
             Assert.That(repeatedAdvance.ActorId, Is.EqualTo(player.Id));
             Assert.That(repeatedAdvance.TicksElapsed, Is.Zero);
-            Assert.That(player.MovePoints, Is.EqualTo(1));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(30000));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: second)).Succeeded, Is.True);
-            Assert.That(player.MovePoints, Is.Zero);
+            Assert.That(player.ActionPointsRemainingUnits, Is.Zero);
             Assert.That(player.Facing, Is.EqualTo(first.DirectionTo(second)));
             Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
-            Assert.That(session.PendingCooldownPenalty, Is.Zero);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.MoveThenAction));
+            Assert.That(session.PendingCtPenalty, Is.Zero);
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
             AssertRejectedWithoutTurnMutation(service, session, player,
                 new CombatCommand(CombatCommandKind.Move, player.Id, destination: origin));
-            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, "basic")).Succeeded, Is.True,
-                "Exhausted movement must leave the action available.");
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, "basic")).Succeeded, Is.False,
+                "Exhausting the shared action-point budget ends the turn.");
         }
 
         [Test]
@@ -372,22 +392,22 @@ namespace TianZhang.Tests.EditMode
             CombatSession session = CreateSession(new[] { player, enemy },
                 new FixedRangeQuery(true, movementBySource: CreateMovementMap(origin, destination, new[] { destination }, 1)),
                 new[] { new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
-                    1, 1, 150, 0, physicalMultiplier: 1f) });
+                    40000, 40000, 150, 10, physicalMultiplier: 1f) });
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
-            AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.EndTurn, player.Id));
+            Assert.That(service.Validate(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, "basic")).Succeeded, Is.True);
             int healthAfterAttack = enemy.CurrentHealth;
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(150));
-            Assert.That(player.MovePoints, Is.EqualTo(2));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(150));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(60000));
             AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, "basic"));
             AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.Wait, player.Id));
             Assert.That(enemy.CurrentHealth, Is.EqualTo(healthAfterAttack));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: destination)).Succeeded, Is.True);
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(150));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
-            Assert.That(player.MovePoints, Is.EqualTo(1));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(150));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(50000));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
             Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
@@ -395,11 +415,12 @@ namespace TianZhang.Tests.EditMode
             CombatTurnAdvance next = service.AdvanceUntilAction(session);
             Assert.That(next.ActorId, Is.EqualTo(player.Id));
             Assert.That(next.TicksElapsed, Is.EqualTo(3), "The saved 150 CT penalty must survive a repeated EndTurn rejection.");
-            Assert.That(player.MovePoints, Is.EqualTo(player.MaximumMovePoints));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(player.ActionPointMaximumUnits));
+            Assert.That(player.GetCooldown("basic"), Is.EqualTo(7));
         }
 
         [Test]
-        public void WaitAfterMovementPreservesHalfCtAndCannotReplaceAnAlreadyUsedAction()
+        public void WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting()
         {
             HexCoord origin = new HexCoord(0, 0), destination = new HexCoord(0, 1);
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 50, 100, 20, 10, movePoints: 2);
@@ -408,12 +429,14 @@ namespace TianZhang.Tests.EditMode
                 new FixedRangeQuery(true, movementBySource: CreateMovementMap(origin, destination, new[] { destination }, 1)));
             var service = new CombatCommandService();
             Assert.That(service.AdvanceUntilAction(session).TicksElapsed, Is.EqualTo(2));
-            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: destination)).Succeeded, Is.True);
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Wait, player.Id)).Succeeded, Is.True);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
             AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.Wait, player.Id));
             Assert.That(service.AdvanceUntilAction(session).TicksElapsed, Is.EqualTo(1));
-            Assert.That(player.MovePoints, Is.EqualTo(2));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(100000));
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id, destination: destination)).Succeeded, Is.True);
+            AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.Wait, player.Id));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(90000));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Guard, player.Id)).Succeeded, Is.True);
             AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(CombatCommandKind.Wait, player.Id));
         }
@@ -422,7 +445,7 @@ namespace TianZhang.Tests.EditMode
         public void RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources()
         {
             HexCoord origin = new HexCoord(0, 0);
-            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, movePoints: 2);
+            CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 101, 100, 20, 10, movePoints: 2);
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 100, 100, 20, 10, movePoints: 2);
             CombatantSnapshot ally = CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 2), 1, 100, 20, 10);
             CombatantSnapshot otherEnemy = CreateCombatant("other_enemy", CombatTeam.Enemy, new HexCoord(2, 2), 1, 100, 20, 10);
@@ -430,14 +453,39 @@ namespace TianZhang.Tests.EditMode
             {
                 [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [new HexCoord(0, 1)] = new CombatMovementQueryResult(true, "", new[] { new HexCoord(0, 1) }, 3),
-                    [new HexCoord(2, 1)] = new CombatMovementQueryResult(false, "declared_obstacle", null, 0),
-                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(false, "declared_board_boundary", null, 0),
-                    [new HexCoord(1, -1)] = new CombatMovementQueryResult(false, "declared_blocked_edge", null, 0),
+                    [new HexCoord(0, 1)] = new CombatMovementQueryResult(true,
+                "",
+                new[] { new HexCoord(0, 1) },
+                null,
+                1000,
+                (11) * 10000),
+                    [new HexCoord(2, 1)] = new CombatMovementQueryResult(false,
+                "declared_obstacle",
+                null,
+                null,
+                1000,
+                (0) * 10000),
+                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(false,
+                "declared_board_boundary",
+                null,
+                null,
+                1000,
+                (0) * 10000),
+                    [new HexCoord(1, -1)] = new CombatMovementQueryResult(false,
+                "declared_blocked_edge",
+                null,
+                null,
+                1000,
+                (0) * 10000),
                 },
                 [enemy.Position] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true, "", new[] { new HexCoord(2, 0) }, 1),
+                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true,
+                "",
+                new[] { new HexCoord(2, 0) },
+                null,
+                1000,
+                (1) * 10000),
                 },
             });
             CombatSession session = CreateSession(new[] { player, ally, enemy, otherEnemy }, query);
@@ -452,9 +500,9 @@ namespace TianZhang.Tests.EditMode
                 AssertRejectedWithoutTurnMutation(service, session, player, new CombatCommand(kind, player.Id, destination: new HexCoord(0, 1)));
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo(enemy.Id));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, enemy.Id, destination: new HexCoord(2, 0))).Succeeded, Is.True);
-            Assert.That(enemy.MovePoints, Is.EqualTo(1));
+            Assert.That(enemy.ActionPointsRemainingUnits, Is.EqualTo(90000));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Guard, enemy.Id)).Succeeded, Is.True);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, enemy.Id)).Succeeded, Is.True);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
         }
@@ -463,8 +511,8 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot actor, CombatCommand command)
         {
             HexCoord position = actor.Position;
-            int facing = actor.Facing, movement = actor.MovePoints, tick = session.TurnScheduler.CurrentTick;
-            int penalty = session.PendingCooldownPenalty;
+            int facing = actor.Facing, movement = actor.ActionPointsRemainingUnits, tick = session.TurnScheduler.CurrentTick;
+            int penalty = session.PendingCtPenalty;
             string current = session.CurrentActorId;
             CombatTurnPhase phase = session.TurnPhase;
             bool ready = session.TurnScheduler.IsReady(actor.Id);
@@ -472,12 +520,12 @@ namespace TianZhang.Tests.EditMode
             Assert.That(result.Succeeded, Is.False, command.Kind + " unexpectedly succeeded.");
             Assert.That(actor.Position, Is.EqualTo(position));
             Assert.That(actor.Facing, Is.EqualTo(facing));
-            Assert.That(actor.MovePoints, Is.EqualTo(movement));
+            Assert.That(actor.ActionPointsRemainingUnits, Is.EqualTo(movement));
             Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
             Assert.That(session.TurnScheduler.IsReady(actor.Id), Is.EqualTo(ready));
             Assert.That(session.CurrentActorId, Is.EqualTo(current));
             Assert.That(session.TurnPhase, Is.EqualTo(phase));
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(penalty));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(penalty));
         }
 
         [Test]
@@ -774,13 +822,13 @@ namespace TianZhang.Tests.EditMode
         public void FullFudanUsesItsProjectedCapForPenetrationAndPostActionState()
         {
             var soul = new CombatAttackProfile(
-                "soul", CombatAttackKind.Basic, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f);
+                "soul", CombatAttackKind.Art, CombatAttackEffect.Soul, 1, 1, 1, 1, 0, 0, soulMultiplier: 1f, isTalisman: true);
             CombatantSnapshot partial = CreateCombatant(
-                "partial", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+                "partial", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f, equippedArtProfileIds: new[] { "soul" }, availableArtProfileIds: new[] { "soul" });
             partial.GongFaId = "云篆度人经";
             partial.FudanStacks = 4;
             CombatantSnapshot full = CreateCombatant(
-                "full", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f);
+                "full", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 200, 50, realmMultiplier: 6f, equippedArtProfileIds: new[] { "soul" }, availableArtProfileIds: new[] { "soul" });
             full.GongFaId = "云篆度人经";
             full.FudanStacks = 5;
 
@@ -927,8 +975,11 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
             player.SetSpirit(100, 40);
             enemy.SetSpirit(100, 10);
-            var session = new CombatSession(new[] { player, enemy }, new[] { CreateSpiritRecoveryProfile() },
-                new FixedRangeQuery(true, enforceDeclaredRange: true), factor);
+            var session = new CombatSession(new[] { player, enemy },
+                new[] { CreateSpiritRecoveryProfile() },
+                new FixedRangeQuery(true, enforceDeclaredRange: true),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) },
+                factor);
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
             int tick = session.TurnScheduler.CurrentTick;
@@ -951,8 +1002,8 @@ namespace TianZhang.Tests.EditMode
             Assert.That(player.CurrentHealth, Is.EqualTo(100));
             Assert.That(enemy.CurrentHealth, Is.EqualTo(100));
             Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(5));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(5));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
             Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.False);
@@ -986,8 +1037,9 @@ namespace TianZhang.Tests.EditMode
             Assert.That(result.SpiritSpent, Is.EqualTo(self ? selfCost : 20));
             Assert.That(result.SpiritRecoveries.Single().ActualRecovery, Is.EqualTo(actualRecovery));
             Assert.That(target.CurrentSpirit, Is.EqualTo(finalSpirit));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
-            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.False);
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(session.TurnScheduler.IsReady(player.Id), Is.True);
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(75000));
             if (!self) Assert.That(player.CurrentSpirit, Is.Zero);
         }
 
@@ -1081,7 +1133,10 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10);
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
             Assert.Throws<ArgumentOutOfRangeException>(() => new CombatSession(new[] { player, enemy },
-                new[] { CreateSpiritRecoveryProfile() }, new FixedRangeQuery(true), factor));
+                new[] { CreateSpiritRecoveryProfile() },
+                new FixedRangeQuery(true),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) },
+                factor));
         }
 
         [Test]
@@ -1108,8 +1163,8 @@ namespace TianZhang.Tests.EditMode
             Assert.That(result.SpiritRecoveries, Is.Empty);
             Assert.That(result.SpiritSpent, Is.EqualTo(12));
             Assert.That(player.CurrentSpirit, Is.Zero);
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(10));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(10));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
         }
 
         /// <summary>
@@ -1139,7 +1194,7 @@ namespace TianZhang.Tests.EditMode
             Assert.That(profile.ReuseCooldownTicks, Is.EqualTo(reuseCooldownTicks));
 
             var command = new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, profile.Id);
-            Assert.That(service.Preview(session, command).CooldownPenalty, Is.EqualTo(ctPenalty),
+            Assert.That(service.Preview(session, command).CtPenalty, Is.EqualTo(ctPenalty),
                 "preview axis must read ctPenalty only");
             Assert.That(player.GetCooldown(profile.Id), Is.Zero,
                 "preview must not start the reuse ledger");
@@ -1147,7 +1202,7 @@ namespace TianZhang.Tests.EditMode
             Assert.That(service.Execute(session,
                 new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, profile.Id,
                     new CombatResolutionRolls(0f, 100f, 100f, 100f))).Succeeded, Is.True);
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(ctPenalty),
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(ctPenalty),
                 "settled CT accumulation must read ctPenalty only");
             Assert.That(player.GetCooldown(profile.Id), Is.EqualTo(reuseCooldownTicks),
                 "reuse ledger must read reuseCooldownTicks only");
@@ -1301,8 +1356,12 @@ namespace TianZhang.Tests.EditMode
                 });
             }
             CombatSession live = MakeSession(), actual = MakeSession();
-            Assert.AreEqual("player", service.AdvanceUntilAction(live).ActorId);
-            Assert.AreEqual("player", service.AdvanceUntilAction(actual).ActorId);
+            foreach (CombatSession current in new[] { live, actual })
+            {
+                if (service.AdvanceUntilAction(current).ActorId == "enemy")
+                    Assert.IsTrue(service.Execute(current, new CombatCommand(CombatCommandKind.EndTurn, "enemy")).Succeeded);
+                Assert.AreEqual("player", service.AdvanceUntilAction(current).ActorId);
+            }
             var command = new CombatCommand(wait ? CombatCommandKind.Wait : CombatCommandKind.Art,
                 "player", "enemy", "preview_art");
             string before = PreviewState(live);
@@ -1316,9 +1375,10 @@ namespace TianZhang.Tests.EditMode
             if (!wait)
             {
                 Assert.IsTrue(preview.RemainsInTurn);
-                Assert.AreEqual(CombatTurnPhase.ActionThenMove, actual.TurnPhase);
+                Assert.AreEqual(CombatTurnPhase.Active, actual.TurnPhase);
                 var end = new CombatCommand(CombatCommandKind.EndTurn, "player");
-                Assert.AreEqual(penalty, service.Preview(actual, end).CooldownPenalty);
+                Assert.AreEqual(penalty, actual.PendingCtPenalty);
+                Assert.AreEqual(0, service.Preview(actual, end).CtPenalty);
                 Assert.IsTrue(service.Execute(actual, end).Succeeded);
             }
             CombatTurnSnapshot settled = actual.TurnScheduler.GetSnapshot(actual.Combatants.All);
@@ -1350,11 +1410,11 @@ namespace TianZhang.Tests.EditMode
         private static string PreviewState(CombatSession session)
         {
             CombatTurnSnapshot s = session.TurnScheduler.GetSnapshot(session.Combatants.All);
-            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCooldownPenalty + ":" + s.CurrentTick +
+            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCtPenalty + ":" + s.CurrentTick +
                 string.Join(";", s.Units.Select(u => u.Id + ":" + u.ChargeTime + ":" + u.NextActionThreshold + ":" + u.IsReady)) +
                 string.Join(",", s.ReadyQueueIds) + string.Join(",", s.ChargingUnitIds) +
                 string.Join(";", session.Combatants.All.Select(u => u.Id + ":" + u.CurrentHealth + ":" + u.CurrentSpirit +
-                    ":" + u.MovePoints + ":" + u.Position + ":" + u.GetCooldown("preview_art")));
+                    ":" + u.ActionPointsRemainingUnits + ":" + u.Position + ":" + u.GetCooldown("preview_art")));
         }
 
         private static CombatSession CreateSession(
@@ -1362,10 +1422,13 @@ namespace TianZhang.Tests.EditMode
             ICombatSpatialQuery query,
             IReadOnlyList<CombatAttackProfile> profiles = null)
         {
-            return new CombatSession(combatants, profiles ?? new[]
+            return new CombatSession(combatants,
+                profiles ?? new[]
             {
                 new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
-            }, query);
+            },
+                query,
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
         }
 
         private static CombatantSnapshot CreateCombatant(
@@ -1389,8 +1452,7 @@ namespace TianZhang.Tests.EditMode
             string visibleRootElement = null,
             string visibleRootGrade = null)
         {
-            return new CombatantSnapshot(
-                id,
+            return new CombatantSnapshot(id,
                 team,
                 position,
                 speed,
@@ -1400,8 +1462,9 @@ namespace TianZhang.Tests.EditMode
                 attack,
                 defense,
                 defense,
+                100000,
+                movePoints * 1000,
                 realmMultiplier: realmMultiplier,
-                movePoints: movePoints,
                 equippedArtProfileIds: equippedArtProfileIds,
                 availableArtProfileIds: availableArtProfileIds,
                 combatSwapsUsed: combatSwapsUsed,
@@ -1424,7 +1487,7 @@ namespace TianZhang.Tests.EditMode
             float realmMultiplier = 6f)
         {
             return CreateCombatant(
-                id, CombatTeam.Enemy, new HexCoord(1, 0), 10, health, 20, defense,
+                id, CombatTeam.Enemy, new HexCoord(1, 0), 1, health, 20, defense,
                 realmMultiplier: realmMultiplier);
         }
 
@@ -1466,6 +1529,9 @@ namespace TianZhang.Tests.EditMode
                     new CombatResolutionRolls(0f, 100f, 100f, 100f)));
             Assert.That(result.Succeeded, Is.True, result.RejectionReason);
             Assert.That(result.Damage.Count, Is.EqualTo(1));
+            if (session.TurnPhase == CombatTurnPhase.Active)
+                Assert.That(new CombatCommandService().Execute(session,
+                    new CombatCommand(CombatCommandKind.EndTurn, actor.Id)).Succeeded, Is.True);
             return result.Damage[0];
         }
 
@@ -1491,7 +1557,12 @@ namespace TianZhang.Tests.EditMode
             {
                 [source] = new Dictionary<HexCoord, CombatMovementQueryResult>
                 {
-                    [destination] = new CombatMovementQueryResult(true, string.Empty, path, movementCost),
+                    [destination] = new CombatMovementQueryResult(true,
+                string.Empty,
+                path,
+                null,
+                1000,
+                (movementCost) * 10000),
                 },
             };
         }
@@ -1527,19 +1598,40 @@ namespace TianZhang.Tests.EditMode
                 HexCoord source,
                 HexCoord destination,
                 int movementPoints,
+                int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied)
             {
                 if (!movementBySource.TryGetValue(source, out IReadOnlyDictionary<HexCoord, CombatMovementQueryResult> moves) ||
                     !moves.TryGetValue(destination, out CombatMovementQueryResult movement))
-                    return new CombatMovementQueryResult(false, "declared_move_path_blocker", null, 0);
-                if (occupied.Contains(destination) || movement.MovementCost > movementPoints)
-                    return new CombatMovementQueryResult(false, "declared_move_budget_or_occupancy", null, 0);
-                return movement;
+                    return new CombatMovementQueryResult(false,
+                "declared_move_path_blocker",
+                null,
+                null,
+                1000,
+                (0) * 10000);
+                if (occupied.Contains(destination) || movement.ActionPointCostUnits > movementPoints)
+                    return new CombatMovementQueryResult(false,
+                "declared_move_budget_or_occupancy",
+                null,
+                null,
+                1000,
+                (0) * 10000);
+                if (movement.MovementEdges.Count > 0) return movement;
+                var edges = new List<SpatialMovementEdgeCost>();
+                HexCoord previous = source;
+                foreach (HexCoord step in movement.Path)
+                {
+                    int metric = checked((int)Math.Max(1L, (long)movement.ActionPointCostUnits * movementEfficiencyMilliUnits / 100000 / movement.Path.Count));
+                    edges.Add(new SpatialMovementEdgeCost(previous, step, metric, 0));
+                    previous = step;
+                }
+                return new CombatMovementQueryResult(true, movement.Reason, movement.Path, edges, 1000, movement.ActionPointCostUnits);
             }
 
             public IReadOnlyDictionary<HexCoord, int> FindReachable(
                 HexCoord source,
                 int movementPoints,
+                int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied)
             {
                 var reachable = new Dictionary<HexCoord, int>();
@@ -1548,8 +1640,8 @@ namespace TianZhang.Tests.EditMode
 
                 foreach (KeyValuePair<HexCoord, CombatMovementQueryResult> entry in moves)
                 {
-                    if (!occupied.Contains(entry.Key) && entry.Value.IsReachable && entry.Value.MovementCost <= movementPoints)
-                        reachable.Add(entry.Key, entry.Value.MovementCost);
+                    if (!occupied.Contains(entry.Key) && entry.Value.IsReachable && entry.Value.ActionPointCostUnits <= movementPoints)
+                        reachable.Add(entry.Key, entry.Value.ActionPointCostUnits);
                 }
                 return reachable;
             }

@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "frozen",
-  "executionModel": "gpt-6.1-sol",
+  "dispatchState": "completed",
+  "executionModel": "gpt-6-astra",
   "blockedBy": [],
-  "stateReason": "2026-10-08人工处置失联run：保留82ca885a工作区的34路径未完成修改，暂停自动领取，待原模型人工核验并完成收口；原A决策仍有效。",
+  "stateReason": "2026-10-08负责人授权gpt-6-astra人工接手完成；AP内核、显式输入及决策A按钮解耦已验收。EditMode730/730，相关PlayMode33通过，另2项原基线失败有复现证据；BattleSim构建与运行成功。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -212,7 +212,7 @@
 - 失败 run 81c2faf8-0ec1-481b-9ae6-d044f2626d37 只读核对后报告 task_scope_not_refrozen_after_reply；外层因原 checkpoint 重放留下暂存修改而报 codex_failed_dirty_worktree。32 条路径与原 checkpoint 逐项相同，无本轮新增业务差异、无新验证／提交；失败 worktree 原样保留，不作为新 checkpoint 或已完成结果。
 - 恢复继续使用原 checkpoint 6aaafa01f147e853e11aaaa09301fd28c180ad33、原 sourceRunId／branch 和原 A 回复证据。原 taskContextDigest 为 580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2；本轮仅按已批准的两条新增路径重新计算当前上下文摘要，决策内容、提交、回复及其 evidenceHash 不变。pending_decision 是既有恢复入口的暂态，原 A 已接受，无需再发卡或再次选择。
 
-## 2026-10-08 失联现场与人工接手边界
+## 2026-10-08 失联现场与人工接手边界（历史处置）
 
 - 负责人明确要求处理 existing_run。原 runId=82ca885a-6a00-4fcc-8839-7056a9262655，owner=codex，baseCommit=aba8a4f31d0b4d69afb06e8692f1eaeb78006e6a，claim taskCardDigest=e6828770432ff9924901110831a9a62d8f729a26da2b957cad8933004a4f6fbe。进程已退出，runtime仍停在developing；没有candidate、canonical或结构化终态。
 - 15:34:48手动恢复对话启动共享入口，15:35:54未等待终态即结束；子会话01a11a6f-f98e-7d80-b8a2-3414be2541e7最后记录为15:36:52。证据只能确认执行中断，不能证明具体终止进程的原因；不得把超时、模型失败或人为取消写成已证实根因。
@@ -239,6 +239,8 @@
 - 不改其他任务的业务逻辑；共享文件按真实依赖和排他集成合同处理，不因共享路径伪造业务前置。
 
 ## 模型协作
+
+- 2026-10-08负责人在失联处置后明确“你直接做了吧，别冻结了”，授权当前requestMeta已核实的gpt-6-astra单主智能体人工接手原工作区并完成。此当次授权替代下述原自动执行模型限制；原run已关闭，不恢复旧模型会话，不启动新的自动责任方。
 
 - 2026-10-08负责人明确将本卡转交Codex；准备ready评估为复杂但有界的共享事务迁移，主模型gpt-6.1-sol，建议high推理：报价／提交、三时钟和构造输入强耦合，须同一主责统一复核全部diff、正式输入及最终验证。
 - 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
@@ -268,3 +270,24 @@
 - owner worktree 的完整 EditMode 套件需要可编辑宽袖源文件、已批准石甲兽 FBX／贴图及五个反馈音效。五个反馈音效已被 Git 跟踪；其余三个源文件已通过卡头 automationInputs 冻结字节数与 SHA-256，下一轮由既有共享入口校验并物化为只读副本；只作既有验证输入，不授权修改素材或扩大 CORE 业务范围。
 - 本轮独立基线修复同步旧敌人快照（已批准657 HP／78物攻）、正式场景排除技术展示板、完整表现配置夹具与实际术法名称断言。未修改生产实现、场景或数值。
 - 在 .worktrees/manual-unity-baseline-20261008 运行 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-baseline-fix-20261008.xml，退出0；706/706通过，失败0、跳过0。日志和XML保留于该worktree的src/Logs/baseline-fix-20261008。只证明既有基线修复，不代表CORE业务完成；已通过且输入未变的PlayMode与BattleSim不重复运行。
+
+## 2026-10-08 人工完成
+
+- 负责人当次“你直接做了吧，别冻结了”授权已落实：原保留工作区承接最新master后，由gpt-6-astra统一复核、完成直接测试迁移及决策A两处条件解耦；不再以原模型差异冻结，不启动新的自动责任会话。上文checkpoint未完成列表和失联冻结说明仅为历史，现状以本段及验证记录为准。
+- EditMode730/730；受影响PlayMode去重35项中33通过，2项在未修改AP的3dafe954基线同样失败（旧底座渲染器名称、目标面板关闭点击），原断言保留，未修改其生产所有者；AP移动段另行保留真实输入验证并通过，不宣称全套PlayMode全绿。正式1366／1920胜败、领取奖励、存档读档流程通过。BattleSim Release build零警告零错误，规定run退出0。
+- 完成的是CORE内核、正式会话输入和两处按钮／输入解耦。FLOW、HUD、SIM及最终场景／平衡叶仍按各自合同处理，本轮不改下游任务卡或提前宣称整体行动力迁移完成。
+- 详细命令、原始XML路径、基线复现和验证输入指纹见 开发管理/U-COMBAT-AP-CORE-01-验证记录.txt。
+
+## 经验候选
+
+### CORE-ENDTURN-CAPABILITY-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：回合开始AP充足且AcceptsCommands=true，但术法按钮禁用、点击不产生预览。
+- 已证实根因：旧UI和输入把CanEndTurn能力字段当作已使用动作的阶段标志；内核允许随时结束后，该条件在开始也为true。
+- 可能复用范围：内核阶段或命令合法性合同变化时的显示快照消费者与输入门禁迁移。
+- 证据：CombatActionBarView.Present与CombatCommandInput.CanAct各一处最小解耦；GuanzhongCombatActionPreviewPlayModeTests.ConfirmOnceAndRejectStaleOrUnaffordableCandidates正式场景通过，见本卡验证记录。
+- 门禁可能：yes

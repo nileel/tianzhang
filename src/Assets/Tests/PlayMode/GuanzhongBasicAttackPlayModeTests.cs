@@ -206,7 +206,7 @@ namespace TianZhang.Tests.PlayMode
             var recording = new ForwardingPresentationPort(provider);
             SetPrivateField(encounter, "unitPresentation", recording);
             AssertFormalBattlefieldPresentation();
-            Assert.GreaterOrEqual(player.MaximumMovePoints, 2);
+            Assert.AreEqual(100000, player.ActionPointMaximumUnits);
 
             yield return WaitForPlayerTurn(encounter, session, player.Id);
             int tickBeforeMove = session.TurnScheduler.CurrentTick;
@@ -214,67 +214,62 @@ namespace TianZhang.Tests.PlayMode
                      { enemy.Position, new HexCoord(2, 1), new HexCoord(-1, 0), new HexCoord(5, 5) })
             {
                 HexCoord positionBefore = player.Position;
-                int remainingBefore = player.MovePoints, facingBefore = player.Facing;
+                int remainingBefore = player.ActionPointsRemainingUnits, facingBefore = player.Facing;
                 Assert.IsFalse(session.SpatialQuery.QueryMovement(positionBefore, rejectedDestination,
-                    remainingBefore, new[] { enemy.Position }).IsReachable);
+                    remainingBefore, player.MovementEfficiencyMilliUnits, new[] { enemy.Position }).IsReachable);
                 ((ICombatCommandHandler)encounter).RequestMove(player.Id, rejectedDestination.Q, rejectedDestination.R);
                 Assert.That(player.Position, Is.EqualTo(positionBefore));
-                Assert.AreEqual(remainingBefore, player.MovePoints);
+                Assert.AreEqual(remainingBefore, player.ActionPointsRemainingUnits);
                 Assert.AreEqual(facingBefore, player.Facing);
                 Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
-                Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+                Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             }
             HexCoord firstDestination = new HexCoord(0, 1);
             CombatMovementQueryResult firstPath = session.SpatialQuery.QueryMovement(
-                player.Position, firstDestination, player.MovePoints, new[] { enemy.Position });
+                player.Position, firstDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
             Assert.IsTrue(firstPath.IsReachable, firstPath.Reason);
-            int movementBefore = player.MovePoints;
+            int movementBefore = player.ActionPointsRemainingUnits;
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, firstDestination.Q, firstDestination.R);
             Assert.That(player.Position, Is.EqualTo(firstDestination));
-            Assert.AreEqual(movementBefore - firstPath.MovementCost, player.MovePoints);
-            Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+            Assert.AreEqual(movementBefore - firstPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, firstPath);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase,
-                "Moving first must leave a real action and its remaining movement available.");
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase,
+                "The 50000 movement plus 50000 attack exhausts the shared budget.");
+            Assert.AreEqual(0, player.ActionPointsRemainingUnits);
             Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject playerRoot));
             Vector3 startedAttackScale = playerRoot.transform.localScale;
             Assert.AreNotEqual(Vector3.one, startedAttackScale, "The actual provider must have started its attack presentation.");
             int eventsBeforeEnd = recording.Events.Count;
             encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase, "EndTurn must be rejected during the attack.");
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase, "EndTurn during presentation cannot settle again.");
             Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale);
-            yield return WaitForMovementPresentation(encounter);
-            encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
-            Assert.AreEqual(eventsBeforeEnd, recording.Events.Count, "EndTurn must not create an Idle presentation event.");
+            yield return WaitForPlayerTurn(encounter, session, player.Id);
+            Assert.IsFalse(recording.Events.Skip(eventsBeforeEnd).Any(value =>
+                value.PresentationEvent == CombatUnitPresentationEvent.Idle), "Turn exhaustion must not add an Idle event.");
             Assert.AreEqual(Vector3.one, playerRoot.transform.localScale, "The attack must finish before EndTurn is accepted.");
-            int penaltyAfterEnd = session.PendingCooldownPenalty;
-            encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(penaltyAfterEnd, session.PendingCooldownPenalty);
 
             yield return WaitForPlayerTurn(encounter, session, player.Id);
-            Assert.AreEqual(player.MaximumMovePoints, player.MovePoints);
+            Assert.AreEqual(player.ActionPointMaximumUnits, player.ActionPointsRemainingUnits);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
             HexCoord secondDestination = new HexCoord(0, 0);
             CombatMovementQueryResult secondPath = session.SpatialQuery.QueryMovement(
-                player.Position, secondDestination, player.MovePoints, new[] { enemy.Position });
+                player.Position, secondDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
             Assert.IsTrue(secondPath.IsReachable, secondPath.Reason);
-            movementBefore = player.MovePoints;
+            movementBefore = player.ActionPointsRemainingUnits;
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, secondDestination.Q, secondDestination.R);
             Assert.That(player.Position, Is.EqualTo(secondDestination));
-            Assert.AreEqual(movementBefore - secondPath.MovementCost, player.MovePoints);
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            Assert.AreEqual(movementBefore - secondPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, secondPath);
-            encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
-            TestContext.WriteLine($"Formal movement: firstCost={firstPath.MovementCost}, secondCost={secondPath.MovementCost}, " +
-                $"maxMovement={player.MaximumMovePoints}, final={player.Position}, facing={player.Facing}");
+            TestContext.WriteLine($"Formal movement: firstCost={firstPath.ActionPointCostUnits}, secondCost={secondPath.ActionPointCostUnits}, " +
+                $"maxMovement={player.ActionPointMaximumUnits}, final={player.Position}, facing={player.Facing}");
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
             yield return WaitForScene(GameplaySceneNames.StartMenu);
         }
@@ -291,7 +286,7 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline;)
             {
                 Assert.IsTrue(encounter != null && encounter.IsRunning, "Formal combat ended before the movement scenario completed.");
-                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.MoveThenAction && !encounter.IsPresenting)
+                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.Active && !encounter.IsPresenting)
                     yield break;
                 yield return null;
             }
@@ -387,9 +382,19 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator UnauthorizedBasicAttackDoesNotConsumeCombatSamples()
         {
-            CombatantSnapshot player = new CombatantSnapshot(
-                "player", CombatTeam.Player, new HexCoord(0, 0), 100,
-                500, 500, 60, 0, 0, 0, 1f, 0)
+            CombatantSnapshot player = new CombatantSnapshot("player",
+                CombatTeam.Player,
+                new HexCoord(0, 0),
+                100,
+                500,
+                500,
+                60,
+                0,
+                0,
+                0,
+                100000,
+                2000,
+                1f)
             {
                 CriticalRate = 50f,
                 DodgeRate = 50f,
@@ -398,9 +403,19 @@ namespace TianZhang.Tests.PlayMode
                 Facing = 0,
                 BasicAttackProfileId = "basic_unarmed",
             };
-            CombatantSnapshot enemy = new CombatantSnapshot(
-                "enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1,
-                500, 500, 60, 0, 0, 0, 1f, 0)
+            CombatantSnapshot enemy = new CombatantSnapshot("enemy",
+                CombatTeam.Enemy,
+                new HexCoord(1, 0),
+                1,
+                500,
+                500,
+                60,
+                0,
+                0,
+                0,
+                100000,
+                2000,
+                1f)
             {
                 CriticalRate = 50f,
                 DodgeRate = 50f,
@@ -409,8 +424,7 @@ namespace TianZhang.Tests.PlayMode
                 Facing = 3,
                 BasicAttackProfileId = "basic_unarmed",
             };
-            CombatSession session = new CombatSession(
-                new[] { player, enemy },
+            CombatSession session = new CombatSession(new[] { player, enemy },
                 new[]
                 {
                     new CombatAttackProfile(
@@ -420,7 +434,8 @@ namespace TianZhang.Tests.PlayMode
                         "foreign_basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 50000, 25000, 0, 0,
                         physicalMultiplier: 1f),
                 },
-                new AlwaysInRangeCombatSpatialQuery());
+                new AlwaysInRangeCombatSpatialQuery(),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
 
             var source = new SequenceCombatRandomSource();
             EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
@@ -457,7 +472,7 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator CombatEntryRejectsMissingCommittedProfiles()
         {
-            var adapter = new CombatEntryAdapter();
+            var adapter = new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
             bool created = adapter.TryCreateSession(
                 null,
                 new AttackProfileData[0],
@@ -539,9 +554,19 @@ namespace TianZhang.Tests.PlayMode
             out CombatantSnapshot player,
             out CombatantSnapshot enemy)
         {
-            player = new CombatantSnapshot(
-                "player", CombatTeam.Player, new HexCoord(0, 0), playerSpeed,
-                500, 500, 60, 0, 0, 0, 1f, 0)
+            player = new CombatantSnapshot("player",
+                CombatTeam.Player,
+                new HexCoord(0, 0),
+                playerSpeed,
+                500,
+                500,
+                60,
+                0,
+                0,
+                0,
+                100000,
+                2000,
+                1f)
             {
                 CriticalRate = 50f,
                 DodgeRate = 50f,
@@ -550,9 +575,19 @@ namespace TianZhang.Tests.PlayMode
                 Facing = 0,
                 BasicAttackProfileId = "basic_unarmed",
             };
-            enemy = new CombatantSnapshot(
-                "enemy", CombatTeam.Enemy, new HexCoord(1, 0), enemySpeed,
-                500, 500, 60, 0, 0, 0, 1f, 0)
+            enemy = new CombatantSnapshot("enemy",
+                CombatTeam.Enemy,
+                new HexCoord(1, 0),
+                enemySpeed,
+                500,
+                500,
+                60,
+                0,
+                0,
+                0,
+                100000,
+                2000,
+                1f)
             {
                 CriticalRate = 50f,
                 DodgeRate = 50f,
@@ -561,8 +596,7 @@ namespace TianZhang.Tests.PlayMode
                 Facing = 3,
                 BasicAttackProfileId = "basic_unarmed",
             };
-            return new CombatSession(
-                new[] { player, enemy },
+            return new CombatSession(new[] { player, enemy },
                 new[]
                 {
                     new CombatAttackProfile(
@@ -577,7 +611,8 @@ namespace TianZhang.Tests.PlayMode
                         0,
                         physicalMultiplier: 1f),
                 },
-                new AlwaysInRangeCombatSpatialQuery());
+                new AlwaysInRangeCombatSpatialQuery(),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
         }
 
         private static IEnumerator WaitForScene(string sceneName)
@@ -1071,12 +1106,19 @@ namespace TianZhang.Tests.PlayMode
                 HexCoord source,
                 HexCoord destination,
                 int movementPoints,
+                int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied) =>
-                new CombatMovementQueryResult(false, "movement_not_used", null, 0);
+                new CombatMovementQueryResult(false,
+                "movement_not_used",
+                null,
+                null,
+                1000,
+                (0) * 10000);
 
             public IReadOnlyDictionary<HexCoord, int> FindReachable(
                 HexCoord source,
                 int movementPoints,
+                int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
         }
     }

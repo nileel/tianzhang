@@ -50,6 +50,11 @@ namespace TianZhang.Features.Adventure
                 reason = "adventure_player_missing";
                 return false;
             }
+            if (!player.Attributes.ActionEconomyInputsPresent || player.CombatModifiers.ActionEconomyInputs.Count != 0)
+            {
+                reason = "adventure_action_economy_inputs_invalid";
+                return false;
+            }
             if (catalog == null || encounterNode == null ||
                 !catalog.TryGetEnemy(encounterNode.contentId, out EnemyData enemyData) ||
                 enemyData.combatTemplate == null)
@@ -130,15 +135,17 @@ namespace TianZhang.Features.Adventure
                 derived.MagicAttack,
                 derived.PhysicalDefense,
                 derived.MagicDefense,
+                source.Attributes.ActionPointMaximumUnits,
+                source.Attributes.MovementEfficiencyMilliUnits,
                 source.Progression.RealmMultiplier,
-                Mathf.Clamp(Mathf.RoundToInt(source.Attributes.Reaction / 20f), 2, 8),
                 equippedArtProfileIds: source.AbilityLoadout.EquippedSpells,
                 availableArtProfileIds: source.AbilityLoadout.KnownSpells,
                 basicAttackProfileId: basicAttackProfileId,
                 rawSpirit: source.Attributes.Spirit,
                 realmStage: source.Progression.RealmStage,
                 visibleRootElement: source.VisibleRootElement,
-                visibleRootGrade: source.VisibleRootGrade)
+                visibleRootGrade: source.VisibleRootGrade,
+                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>())
             {
                 BlockRate = source.CombatModifiers.BlockRate,
                 BlockReduction = source.CombatModifiers.BlockReduction,
@@ -172,13 +179,15 @@ namespace TianZhang.Features.Adventure
                 derived.MagicAttack,
                 derived.PhysicalDefense,
                 derived.MagicDefense,
+                attributes.ActionPointMaximumUnits,
+                attributes.MovementEfficiencyMilliUnits,
                 realmMultiplier,
-                Mathf.Clamp(Mathf.RoundToInt(attributes.Reaction / 20f), 2, 8),
                 basicAttackProfileId: basicAttackProfileId,
                 rawSpirit: attributes.Spirit,
                 realmStage: source.realmStage,
                 visibleRootElement: source.visibleRootElement,
-                visibleRootGrade: source.visibleRootGrade)
+                visibleRootGrade: source.visibleRootGrade,
+                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>())
             {
                 BlockRate = combatModifiers.BlockRate,
                 BlockReduction = combatModifiers.BlockReduction,

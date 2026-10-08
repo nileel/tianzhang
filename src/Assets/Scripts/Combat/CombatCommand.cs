@@ -41,10 +41,12 @@ namespace TianZhang.Combat
             string profileId = null,
             CombatResolutionRolls rolls = default,
             HexCoord? destination = null,
-            int slotIndex = -1)
+            int slotIndex = -1,
+            long contextVersion = 0)
         {
             if (string.IsNullOrWhiteSpace(actorId))
                 throw new ArgumentException("Actor ID is required.", nameof(actorId));
+            if (contextVersion < 0) throw new ArgumentOutOfRangeException(nameof(contextVersion));
             Kind = kind;
             ActorId = actorId;
             TargetId = targetId ?? string.Empty;
@@ -52,6 +54,7 @@ namespace TianZhang.Combat
             Rolls = rolls;
             Destination = destination;
             SlotIndex = slotIndex;
+            ContextVersion = contextVersion;
         }
 
         public CombatCommandKind Kind { get; }
@@ -61,5 +64,6 @@ namespace TianZhang.Combat
         public CombatResolutionRolls Rolls { get; }
         public HexCoord? Destination { get; }
         public int SlotIndex { get; }
+        public long ContextVersion { get; }
     }
 }

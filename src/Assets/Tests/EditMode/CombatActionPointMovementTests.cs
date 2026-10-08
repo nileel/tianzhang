@@ -285,11 +285,9 @@ namespace TianZhang.Tests.EditMode
             var target = new HexCoord(3, 0);
             SpatialMovementPathResult quote = board.QueryMovementPath(Origin, target, 100000, 3000);
 
-            var boundary = new CombatMovementQueryResult(
-                true,
+            var boundary = new CombatMovementQueryResult(true,
                 SpatialQueryReasons.Ok,
                 quote.Path,
-                movementCost: 3,
                 quote.Edges,
                 quote.UnitsPerRange,
                 quote.ActionPointCostUnits);
@@ -306,10 +304,7 @@ namespace TianZhang.Tests.EditMode
                 Assert.AreEqual(quote.Edges[index].MovementBurdenUnits, boundary.MovementEdges[index].MovementBurdenUnits);
             }
 
-            var unpriced = new CombatMovementQueryResult(true, string.Empty, quote.Path, 3);
-            Assert.IsEmpty(unpriced.MovementEdges, "A boundary without an AP payload stays explicitly empty.");
-            Assert.AreEqual(0, unpriced.UnitsPerRange);
-            Assert.AreEqual(0, unpriced.ActionPointCostUnits);
+
         }
 
         private static int SingleEdgeCostUnits(

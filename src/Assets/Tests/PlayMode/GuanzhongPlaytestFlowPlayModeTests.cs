@@ -160,6 +160,9 @@ namespace TianZhang.Tests.PlayMode
                     string.Join(";", detour.Select(p => p.Q + "," + p.R)));
                 yield return Capture("static-obstacle-detour-complete");
                 yield return FinishActionAndTurn();
+                // Return in budgeted turns: the enemy may have moved while the detour consumed AP.
+                yield return MoveTo(1, 1);
+                yield return FinishActionAndTurn();
                 // Return through legal movement to the enemy's actual melee neighborhood.
                 var approach = hud.Snapshot.Movement.Options.Where(o =>
                     HexDistance(o.Destination.Q, o.Destination.R, enemy.Position.Q, enemy.Position.R) == 1)
@@ -178,8 +181,10 @@ namespace TianZhang.Tests.PlayMode
                     yield return CaptureLongLog();
                     longLogCaptured = true;
                 }
-                Button action = hud.Snapshot.CanEndTurn || !victory ? bar.WaitButton :
-                    (bar.ArtButton.interactable ? bar.ArtButton : bar.BasicAttackButton);
+                bool canAttack = session.ValidateCommand(new CombatCommand(CombatCommandKind.BasicAttack,
+                    player.Id, enemy.Id, player.BasicAttackProfileId)).Succeeded;
+                Button action = !victory ? bar.WaitButton : bar.ArtButton.interactable ? bar.ArtButton :
+                    canAttack ? bar.BasicAttackButton : bar.WaitButton;
                 yield return Action(action);
                 commands++;
             }
@@ -252,12 +257,12 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator FinishActionAndTurn()
         {
             yield return Ready();
-            if (!hud.Snapshot.CanEndTurn && bar.ArtButton.interactable)
+            if (!session.HasCommittedBenefit && bar.ArtButton.interactable)
             {
                 yield return Action(bar.ArtButton);
                 yield return Ready();
             }
-            if (hud.Snapshot.CanEndTurn || !bar.ArtButton.interactable)
+            if (session.TurnPhase == CombatTurnPhase.Active)
             {
                 yield return Action(bar.WaitButton);
                 yield return Ready();
@@ -366,10 +371,10 @@ namespace TianZhang.Tests.PlayMode
         {
             if (session == null) return SceneManager.GetActiveScene().name;
             var turns = session.TurnScheduler.GetSnapshot(session.Combatants.All);
-            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCooldownPenalty + ":" + turns.CurrentTick + ":" +
+            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCtPenalty + ":" + turns.CurrentTick + ":" +
                 string.Join(";", turns.Units.Select(u => u.Id + ":" + u.ChargeTime + ":" + u.NextActionThreshold + ":" + u.IsReady)) +
                 string.Join(";", session.Combatants.All.Select(u => u.Id + ":HP" + u.CurrentHealth + ":MP" + u.CurrentSpirit + ":move" +
-                    u.MovePoints + ":" + u.Position + ":" + u.Facing + ":" + u.IsGuarding + ":" + string.Join(",", u.EquippedArtProfileIds.Select(u.GetCooldown))));
+                    u.ActionPointsRemainingUnits + ":" + u.Position + ":" + u.Facing + ":" + u.IsGuarding + ":" + string.Join(",", u.EquippedArtProfileIds.Select(u.GetCooldown))));
         }
         private void Log(string message)
         {

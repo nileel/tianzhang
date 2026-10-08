@@ -1,3 +1,10 @@
+using System.Linq;
+using TianZhang.Combat;
+using TianZhang.Features.Adventure;
+using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Spatial;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +27,61 @@ namespace TianZhang.Tests
 {
     public sealed class FeatureCompositionEditorTests
     {
+        [Test]
+        public void FormalOrdinaryDefinitionsReloadIdempotentlyAndReachTheSession()
+        {
+            const string scenePath = "Assets/Scenes/AdventureScene.unity";
+            string path = Path.Combine(Application.dataPath, "Scenes", "AdventureScene.unity");
+            string ReadScene() => string.Join("\n", File.ReadAllText(path).Split('\n').Select(line => line.TrimEnd()));
+            string original = ReadScene();
+            string guid = AssetDatabase.AssetPathToGUID(scenePath);
+            TianZhang.Editor.AdventureSceneBuilder.UpdateOrdinaryCombatActions();
+            Assert.AreEqual(original, ReadScene(), "Targeted migration must be idempotent after its initial save.");
+            TianZhang.Editor.AdventureSceneBuilder.UpdateOrdinaryCombatActions();
+            Assert.AreEqual(original, ReadScene());
+            Assert.AreEqual("e3e595b673eb98142a11436e06fe54c6", guid);
+            Assert.AreEqual(guid, AssetDatabase.AssetPathToGUID(scenePath));
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            AdventureSceneInstaller installer = null;
+            foreach (GameObject root in scene.GetRootGameObjects())
+                if (root.TryGetComponent(out AdventureSceneInstaller found)) installer = found;
+            Assert.IsNotNull(installer);
+            object Field(string name) => typeof(AdventureSceneInstaller).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(installer);
+            var ordinary = (CombatOrdinaryActionDefinition[])Field("ordinaryActions");
+            Assert.AreEqual(2, ordinary.Length);
+            foreach (var definition in ordinary)
+            {
+                Assert.AreEqual(50000, definition.ActionPointCostUnits); Assert.AreEqual(50000, definition.MinimumNetCostUnits);
+                Assert.AreEqual(0, definition.CtPenalty);
+                Assert.AreEqual(definition.Kind == CombatCommandKind.Guard ? 0 : 60, definition.ReuseCooldownTicks);
+            }
+            var player = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0,0), 100,
+                100,100,20,20,10,10,100000,2000, basicAttackProfileId: "basic_unarmed");
+            var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1,0), 1,
+                100,100,20,20,10,10,100000,2000, basicAttackProfileId: "basic_unarmed");
+            var spawned = new AdventureSpawnSet(player, enemy, null, "basic_unarmed", "basic_unarmed", Array.Empty<string>());
+            var profiles = (AttackProfileData[])Field("attackProfiles");
+            var environment = (EnvironmentProfileAsset)Field("environmentProfile");
+            Assert.IsTrue(new CombatEntryAdapter(ordinary).TryCreateSession(spawned, profiles, environment, out var session, out var reason), reason);
+            var service = new CombatCommandService(); Assert.AreEqual(player.Id, service.AdvanceUntilAction(session).ActorId);
+            var guard = new CombatCommand(CombatCommandKind.Guard, player.Id);
+            Assert.AreEqual(50000, service.Preview(session, guard).ActionPointCostUnits);
+            Assert.IsTrue(service.Execute(session, guard).Succeeded); Assert.AreEqual(50000, player.ActionPointsRemainingUnits);
+            foreach (var invalid in new[]
+            {
+                Array.Empty<CombatOrdinaryActionDefinition>(),
+                new[] { ordinary[0] },
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,0,1,0,0),ordinary[1] },
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,-1,1,0,0),ordinary[1] },
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,50000,50001,0,0),ordinary[1] },
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,50000,0,0,0),ordinary[1] },
+            })
+            {
+                Assert.IsFalse(new CombatEntryAdapter(invalid).TryCreateSession(spawned,profiles,environment,out var rejected,out reason));
+                Assert.IsNull(rejected); StringAssert.StartsWith("combat_session_setup_invalid:",reason);
+            }
+        }
+
         [Test]
         public void FeaturesDoNotReferenceBootstrapOrSiblingFeatureNamespaces()
         {

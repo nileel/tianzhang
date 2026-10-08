@@ -17,6 +17,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private ContentCatalogData contentCatalog;
         [SerializeField] private EnvironmentProfileAsset environmentProfile;
         [SerializeField] private AttackProfileData[] attackProfiles = Array.Empty<AttackProfileData>();
+        [SerializeField] private CombatOrdinaryActionDefinition[] ordinaryActions = Array.Empty<CombatOrdinaryActionDefinition>();
         [SerializeField] private CombatUnitPresentationProfileCatalogData combatPresentationProfileCatalog;
 
         [Header("Adventure")]
@@ -116,7 +117,7 @@ namespace TianZhang.Bootstrap
                     input,
                     adventureHud,
                     encounterCoordinator,
-                    new CombatEntryAdapter(),
+                    new CombatEntryAdapter(ordinaryActions),
                     runtime,
                     runtime.Bounties,
                     runtime.InventoryGrants,

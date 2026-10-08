@@ -226,24 +226,23 @@ namespace TianZhang.Tests.PlayMode
             ICombatCommandHandler commands = encounter;
             CombatTurnSnapshot beforeMove = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             CombatMovementQueryResult path = session.SpatialQuery.QueryMovement(spawned.Player.Position, new HexCoord(0, 1),
-                spawned.Player.MovePoints, new[] { spawned.Enemy.Position });
+                spawned.Player.ActionPointsRemainingUnits, spawned.Player.MovementEfficiencyMilliUnits, new[] { spawned.Enemy.Position });
             Assert.That(path.IsReachable, Is.True, path.Reason);
             commands.RequestMove(spawned.Player.Id, 0, 1);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.MoveThenAction));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             AssertSameSchedulerSnapshot(beforeMove, session.TurnScheduler.GetSnapshot(session.Combatants.All));
             Assert.That(captured.Latest.Timeline.CurrentActorId, Is.EqualTo(spawned.Player.Id));
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
             Assert.That(encounter.IsPresenting, Is.False);
             commands.RequestGuard(spawned.Player.Id);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
-            AssertSameSchedulerSnapshot(beforeMove, session.TurnScheduler.GetSnapshot(session.Combatants.All));
-            Assert.That(captured.Latest.Timeline.CurrentActorId, Is.EqualTo(spawned.Player.Id));
-            int tick = session.TurnScheduler.CurrentTick;
-            commands.RequestGuard(spawned.Player.Id);
-            Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
-            Assert.That(captured.Latest.Timeline.CurrentActorId, Is.EqualTo(spawned.Player.Id));
-            commands.RequestEndTurn(spawned.Player.Id);
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.Zero);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            CombatTurnSnapshot exhausted = session.TurnScheduler.GetSnapshot(session.Combatants.All);
+            Assert.That(exhausted.CurrentTick, Is.EqualTo(beforeMove.CurrentTick));
+            Assert.That(Unit(exhausted, spawned.Player.Id).NextActionThreshold, Is.EqualTo(100f));
+            commands.RequestGuard(spawned.Player.Id);
+            commands.RequestEndTurn(spawned.Player.Id);
+            AssertSameSchedulerSnapshot(exhausted, session.TurnScheduler.GetSnapshot(session.Combatants.All));
             Assert.That(captured.Latest.Timeline.CurrentActorId, Is.Null.Or.Empty);
             Assert.That(captured.Latest.Timeline.Entries.All(entry => !entry.IsCurrent), Is.True);
             yield return WaitForTimelinePlayer(encounter, session, spawned.Player.Id);
@@ -255,9 +254,9 @@ namespace TianZhang.Tests.PlayMode
 
             for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && encounter != null && encounter.IsRunning;)
             {
-                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.MoveThenAction)
+                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.Active)
                     commands.RequestBasicAttack(spawned.Player.Id, spawned.Enemy.Id);
-                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.ActionThenMove)
+                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.Active)
                     commands.RequestEndTurn(spawned.Player.Id);
                 yield return null;
             }
@@ -310,7 +309,7 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline;)
             {
                 Assert.That(encounter != null && encounter.IsRunning, Is.True);
-                if (!encounter.IsPresenting && session.CurrentActorId == id && session.TurnPhase == CombatTurnPhase.MoveThenAction) yield break;
+                if (!encounter.IsPresenting && session.CurrentActorId == id && session.TurnPhase == CombatTurnPhase.Active) yield break;
                 yield return null;
             }
             Assert.Fail("The actual scheduler did not yield the player's turn.");
@@ -631,33 +630,36 @@ namespace TianZhang.Tests.PlayMode
         {
             CombatantSnapshot player = CreateTimelineCombatant("player", CombatTeam.Player, 100, movePoints: 3);
             CombatantSnapshot enemy = CreateTimelineCombatant("enemy", CombatTeam.Enemy, 1);
-            var session = new CombatSession(new[] { player, enemy }, new[]
+            var session = new CombatSession(new[] { player, enemy },
+                new[]
             {
                 new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
-                    1, 1, 30, 0, physicalMultiplier: 1f),
-            }, new TimelineSpatialQuery());
+                    1, 1, 30, 10, physicalMultiplier: 1f),
+            },
+                new TimelineSpatialQuery(),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
             var service = new CombatCommandService();
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo(player.Id));
             CombatTurnSnapshot before = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id,
                 destination: new HexCoord(0, 1))).Succeeded, Is.True);
             Assert.That(session.CurrentActorId, Is.EqualTo(player.Id));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.MoveThenAction));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             AssertSameSchedulerSnapshot(before, session.TurnScheduler.GetSnapshot(session.Combatants.All));
 
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack,
                 player.Id, enemy.Id, "basic")).Succeeded, Is.True);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
-            Assert.That(session.PendingCooldownPenalty, Is.EqualTo(30));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(session.PendingCtPenalty, Is.EqualTo(30));
             AssertSameSchedulerSnapshot(before, session.TurnScheduler.GetSnapshot(session.Combatants.All));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack,
                 player.Id, enemy.Id, "basic")).Succeeded, Is.False);
             AssertSameSchedulerSnapshot(before, session.TurnScheduler.GetSnapshot(session.Combatants.All));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.Move, player.Id,
                 destination: new HexCoord(0, 0))).Succeeded, Is.True);
-            Assert.That(player.MovePoints, Is.EqualTo(1));
+            Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(59999));
             Assert.That(session.CurrentActorId, Is.EqualTo(player.Id));
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.ActionThenMove));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             AssertSameSchedulerSnapshot(before, session.TurnScheduler.GetSnapshot(session.Combatants.All));
 
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
@@ -682,18 +684,30 @@ namespace TianZhang.Tests.PlayMode
         }
 
         private static CombatantSnapshot CreateTimelineCombatant(string id, CombatTeam team, int speed, int movePoints = 0) =>
-            new CombatantSnapshot(id, team, new HexCoord(team == CombatTeam.Player ? 0 : 1, 0), speed,
-                100, 100, 10, 10, 10, 10, movePoints: movePoints, basicAttackProfileId: "basic");
+            new CombatantSnapshot(id,
+                team,
+                new HexCoord(team == CombatTeam.Player ? 0 : 1, 0),
+                speed,
+                100,
+                100,
+                10,
+                10,
+                10,
+                10,
+                100000,
+                movePoints * 1000,
+                basicAttackProfileId: "basic");
 
         private sealed class TimelineSpatialQuery : ICombatSpatialQuery
         {
             public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange) =>
                 new CombatRangeQueryResult(source.Distance(target) >= minimumRange && source.Distance(target) <= maximumRange, "target_out_of_range");
-            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord destination, int movementPoints,
-                IReadOnlyCollection<HexCoord> occupied) => new CombatMovementQueryResult(
-                    source.Distance(destination) == 1 && movementPoints >= 1 && !occupied.Contains(destination),
-                    string.Empty, new[] { destination }, 1);
+            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord destination, int budget,
+                int v, IReadOnlyCollection<HexCoord> occupied) => new CombatMovementQueryResult(
+                    source.Distance(destination) == 1 && v > 0 && budget >= 20000 && !occupied.Contains(destination),
+                    string.Empty, new[] { destination }, new[] { new SpatialMovementEdgeCost(source, destination, v / 5, 0) }, 1000, 20000);
             public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int movementPoints,
+                int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
         }
     }

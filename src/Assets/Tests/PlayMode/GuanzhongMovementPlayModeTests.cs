@@ -101,25 +101,26 @@ namespace TianZhang.Tests.PlayMode
             CombatantSnapshot player = spawned.Player, enemy = spawned.Enemy;
             Static3DCombatUnitPresentationProvider provider = Find<Static3DCombatUnitPresentationProvider>();
 
-            for (int frame = 0; frame < 600 && (session.CurrentActorId != "player" || encounter.IsPresenting); frame++) yield return null;
+            for (float deadline = Time.realtimeSinceStartup + 15f; Time.realtimeSinceStartup < deadline &&
+                (session.CurrentActorId != "player" || encounter.IsPresenting);) yield return null;
             Assert.AreEqual("player", session.CurrentActorId);
             CombatCommandInput commandInput = Find<CombatCommandInput>();
             CombatActionBarView bar = Find<CombatActionBarView>();
             CombatMovementView movement = Find<CombatMovementView>();
             CombatHudSnapshot snapshot = Get<CombatHudSnapshot>(commandInput, "snapshot");
             Assert.NotNull(snapshot.Movement);
-            var expected = session.SpatialQuery.FindReachable(player.Position, player.MovePoints, new[] { enemy.Position })
+            var expected = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position })
                 .Keys.Where(hex => hex != player.Position).Select(hex => new Vector2Int(hex.Q, hex.R)).ToArray();
             CollectionAssert.AreEquivalent(expected, snapshot.Movement.Options.Select(option => Key(option.Destination)).ToArray());
             HexCoord original = player.Position;
-            int originalPoints = player.MovePoints, originalTick = session.TurnScheduler.CurrentTick;
+            int originalPoints = player.ActionPointsRemainingUnits, originalTick = session.TurnScheduler.CurrentTick;
             bar.MoveButton.onClick.Invoke();
             Assert.IsTrue(movement.IsSelecting);
             CollectionAssert.AreEquivalent(expected, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
             bar.CancelMoveButton.onClick.Invoke();
             Assert.IsFalse(movement.IsSelecting);
             Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.MovePoints);
+            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
             bar.MoveButton.onClick.Invoke();
             Camera camera = Get<Camera>(movement, "battlefieldCamera");
             var destination = new CombatUnitPresentationHex(0, 1);
@@ -160,7 +161,7 @@ namespace TianZhang.Tests.PlayMode
             yield return null;
             Assert.NotNull(movement.Selected);
             Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.MovePoints);
+            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
             LineRenderer previewLine = Get<LineRenderer>(movement, "pathLine");
             Assert.AreEqual(movement.Selected.Path.Count + 1, previewLine.positionCount);
             for (int index = 0; index < movement.Selected.Path.Count; index++)
@@ -175,10 +176,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNull(movement.Selected);
             Assert.IsFalse(movement.IsSelecting);
             Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.MovePoints);
+            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
             Assert.AreEqual(originalFacing, player.Facing);
             Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
-            Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             bar.MoveButton.onClick.Invoke();
             foreach (HexCoord invalid in new[] { original, enemy.Position, new HexCoord(2, 1), new HexCoord(5, 5), new HexCoord(-20, -20) })
             {
@@ -188,7 +189,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsNull(movement.Selected, "Illegal cells must not become pending moves.");
                 Assert.IsFalse(bar.ConfirmMoveButton.interactable);
                 Assert.AreEqual(original, player.Position);
-                Assert.AreEqual(originalPoints, player.MovePoints);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
                 Assert.AreEqual(originalFacing, player.Facing);
                 Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
             }
@@ -201,16 +202,16 @@ namespace TianZhang.Tests.PlayMode
             bar.ConfirmMoveButton.onClick.Invoke();
             Assert.IsTrue(encounter.IsPresenting);
             Assert.AreEqual(new HexCoord(0, 1), player.Position);
-            Assert.AreEqual(originalPoints - option.Cost, player.MovePoints);
+            Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits);
             Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
             Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject root));
             Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(new CombatUnitPresentationHex(original.Q, original.R)), root.transform.position);
             encounter.RequestGuard("player");
             encounter.RequestEndTurn("player");
             encounter.RequestMove("player", 0, 0);
-            Assert.AreEqual(CombatTurnPhase.MoveThenAction, session.TurnPhase);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             Assert.AreEqual(new HexCoord(0, 1), player.Position);
-            Assert.AreEqual(originalPoints - option.Cost, player.MovePoints);
+            Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits);
             Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
             Assert.AreEqual(validation.MovementFacing, player.Facing);
             Assert.IsFalse(bar.MoveButton.interactable);
@@ -221,13 +222,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(worldPoint, root.transform.position);
             Assert.AreEqual(Vector3.one, root.transform.localScale);
             Assert.AreEqual(0.04f, root.transform.Find("Static3DCombatBase").localPosition.y, 0.0001f);
-            encounter.RequestGuard("player");
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
             Assert.AreEqual("结束行动", Get<Text>(bar, "waitLabel").text);
-            bar.WaitButton.onClick.Invoke();
-            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
+            encounter.RequestGuard("player");
+            Assert.AreEqual(0, player.ActionPointsRemainingUnits);
             Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
-            TestContext.WriteLine($"MOVE scene: options={expected.Length}, cost={option.Cost}, points={player.MovePoints}, root={root.transform.position}, button={moveRect.rect}");
+            TestContext.WriteLine($"MOVE scene: options={expected.Length}, cost={option.Cost}, points={player.ActionPointsRemainingUnits}, root={root.transform.position}, button={moveRect.rect}");
         }
 
 #if UNITY_EDITOR
@@ -277,7 +276,7 @@ namespace TianZhang.Tests.PlayMode
                 {
                     width = Screen.width, height = Screen.height, phase = session.TurnPhase.ToString(),
                     scene = SceneManager.GetActiveScene().name, actor = session.CurrentActorId,
-                    tick = session.TurnScheduler.CurrentTick, points = player.MovePoints, q = player.Position.Q, r = player.Position.R,
+                    tick = session.TurnScheduler.CurrentTick, points = player.ActionPointsRemainingUnits, q = player.Position.Q, r = player.Position.R,
                     hp = player.CurrentHealth, mp = player.CurrentSpirit, enemyHp = enemy.CurrentHealth,
                     busy = encounter.IsPresenting, running = encounter.IsRunning,
                     activeUnits = provider.ActiveCombatantCount, rootActive = root != null && root.activeInHierarchy,

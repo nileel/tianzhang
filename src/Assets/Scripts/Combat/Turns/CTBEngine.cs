@@ -136,8 +136,8 @@ namespace TianZhang.Combat.Turns
                         return new CTBAdvance(queuedId, ticks);
                 }
 
-                CurrentTick++;
-                ticks++;
+                CurrentTick = checked(CurrentTick + 1);
+                ticks = checked(ticks + 1);
                 var ready = new List<UnitState>();
                 foreach (UnitState state in units.Values)
                 {
@@ -163,6 +163,8 @@ namespace TianZhang.Combat.Turns
 
         public void ConsumeAction(string unitId, int cooldownPenalty)
         {
+            if (cooldownPenalty < 0 || cooldownPenalty > int.MaxValue - 100)
+                throw new ArgumentOutOfRangeException(nameof(cooldownPenalty));
             UnitState state = GetUnit(unitId);
             state.ChargeTime = 0f;
             state.NextActionThreshold = ActionThreshold + Math.Max(0, cooldownPenalty);
@@ -179,14 +181,16 @@ namespace TianZhang.Combat.Turns
 
         private static int CompareReadyUnits(UnitState left, UnitState right)
         {
-            return CompareReadyValues(left.Speed, left.ChargeTime, right.Speed, right.ChargeTime);
+            int order = CompareReadyValues(left.Speed, left.ChargeTime, right.Speed, right.ChargeTime);
+            return order != 0 ? order : StringComparer.Ordinal.Compare(left.Id, right.Id);
         }
 
         private static int CompareChargingUnits(ChargingCandidate left, ChargingCandidate right)
         {
             int ticks = left.TicksUntilReady.CompareTo(right.TicksUntilReady);
-            return ticks != 0 ? ticks : CompareReadyValues(left.Speed, left.ArrivalChargeTime,
+            int order = ticks != 0 ? ticks : CompareReadyValues(left.Speed, left.ArrivalChargeTime,
                 right.Speed, right.ArrivalChargeTime);
+            return order != 0 ? order : StringComparer.Ordinal.Compare(left.Id, right.Id);
         }
 
         private static int CompareReadyValues(int leftSpeed, float leftChargeTime, int rightSpeed, float rightChargeTime)

@@ -178,17 +178,23 @@ namespace TianZhang.Tests.PlayMode
             yield return Click(WorldPoint(spawned.Enemy.Id));
             yield return Click(new Vector2(Screen.width * 0.5f, Screen.height * 0.95f));
             AssertSelection(null);
+        }
+
+        [UnityTest]
+        public IEnumerator ActionPointMovementAndPresentationArbitrateWithoutDoubleTrigger()
+        {
             yield return Click(WorldPoint(spawned.Player.Id));
+            AssertSelection(spawned.Player.Id);
             CombatMovementView movement = Find<CombatMovementView>();
             CombatActionBarView bar = Find<CombatActionBarView>();
             HexCoord before = spawned.Player.Position;
-            int points = spawned.Player.MovePoints;
+            int points = spawned.Player.ActionPointsRemainingUnits;
             bar.MoveButton.onClick.Invoke();
             yield return Click(WorldPoint(spawned.Enemy.Id));
             Assert.IsTrue(movement.IsSelecting);
             AssertSelection(spawned.Player.Id);
             Assert.AreEqual(before, spawned.Player.Position);
-            CombatMovementOption option = presenter.Snapshot.Movement.Options.First(value => value.Cost == 1);
+            CombatMovementOption option = presenter.Snapshot.Movement.Options.First(value => value.Cost == 50000);
             Vector3 tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + option.Destination.Q + "_" + option.Destination.R).position;
             yield return Click(Camera.main.WorldToScreenPoint(tile));
             Assert.NotNull(movement.Selected);
@@ -197,7 +203,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.NotNull(movement.Selected, "Inspecting must not call SetContext and erase the movement candidate.");
             bar.CancelMoveButton.onClick.Invoke();
             Assert.AreEqual(before, spawned.Player.Position);
-            Assert.AreEqual(points, spawned.Player.MovePoints);
+            Assert.AreEqual(points, spawned.Player.ActionPointsRemainingUnits);
             bar.MoveButton.onClick.Invoke();
             yield return Click(Camera.main.WorldToScreenPoint(tile));
             bar.ConfirmMoveButton.onClick.Invoke();
@@ -209,7 +215,7 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
             Assert.IsFalse(encounter.IsPresenting);
             Assert.AreEqual(new HexCoord(option.Destination.Q, option.Destination.R), spawned.Player.Position);
-            Assert.AreEqual(points - option.Cost, spawned.Player.MovePoints);
+            Assert.AreEqual(points - option.Cost, spawned.Player.ActionPointsRemainingUnits);
             yield return null;
             AssertMarker();
         }

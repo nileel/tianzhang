@@ -163,13 +163,17 @@ namespace TianZhang.Tests.PlayMode
             int mp = spawned.Player.CurrentSpirit, rolls = random.Count;
             bar.ArtButton.onClick.Invoke();
             CombatActionCandidate old = input.Candidate;
+            var hud = Get<CombatHudSnapshot>(input, "snapshot");
+            Assert.IsNotNull(input.Preview, "AP-start: actor=" + session.CurrentActorId +
+                "; AP=" + spawned.Player.ActionPointsRemainingUnits + "; accepts=" + hud.AcceptsCommands +
+                "; canEnd=" + hud.CanEndTurn + "; artEnabled=" + bar.ArtButton.interactable);
             Assert.AreEqual(12, input.Preview.SpiritCost);
             Assert.AreEqual(110, input.Preview.Threshold);
             view.ConfirmButton.onClick.Invoke();
             view.ConfirmButton.onClick.Invoke();
             Assert.AreEqual(mp - 12, spawned.Player.CurrentSpirit);
             Assert.AreEqual(rolls + 4, random.Count);
-            Assert.AreEqual(CombatTurnPhase.ActionThenMove, session.TurnPhase);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             Assert.IsNull(input.Candidate);
             Assert.IsNull(timeline.Prediction);
             string after = State();
@@ -239,7 +243,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator HideWaitAndDeadTargetUseRealValidation()
+        public IEnumerator HideEndTurnAndDeadTargetUseRealValidation()
         {
             CombatCommandInput input = Find<CombatCommandInput>();
             CombatActionBarView bar = Find<CombatActionBarView>();
@@ -252,7 +256,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(before, State());
             presenter.Present(prior);
             bar.WaitButton.onClick.Invoke();
-            Assert.AreEqual(CombatActionKind.Wait, input.Candidate.Kind);
+            Assert.AreEqual(CombatActionKind.EndTurn, input.Candidate.Kind);
             var expected = input.Preview;
             Assert.IsNotNull(timeline.Prediction);
             StringAssert.Contains("顺位未定", Get<Text>(timeline, "predictionText").text);
@@ -286,12 +290,12 @@ namespace TianZhang.Tests.PlayMode
         private string State()
         {
             var turns = session.TurnScheduler.GetSnapshot(session.Combatants.All);
-            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCooldownPenalty + ":" +
+            return session.CurrentActorId + ":" + session.TurnPhase + ":" + session.PendingCtPenalty + ":" +
                 turns.CurrentTick + ":" + random.Count + ":" +
                 string.Join(";", turns.Units.Select(u => u.Id + ":" + u.ChargeTime + ":" + u.NextActionThreshold + ":" + u.IsReady)) +
                 string.Join(",", turns.ReadyQueueIds) + string.Join(",", turns.ChargingUnitIds) +
                 string.Join(";", session.Combatants.All.Select(u => u.Id + ":" + u.CurrentHealth + ":" + u.CurrentSpirit + ":" +
-                    u.MovePoints + ":" + u.Position + ":" + u.Facing + ":" + u.IsGuarding + ":" +
+                    u.ActionPointsRemainingUnits + ":" + u.Position + ":" + u.Facing + ":" + u.IsGuarding + ":" +
                     string.Join(",", u.EquippedArtProfileIds.Select(u.GetCooldown))));
         }
 
@@ -333,7 +337,7 @@ namespace TianZhang.Tests.PlayMode
                 cost = value?.SpiritCost ?? -1, ct = value?.SettledCt ?? -1, threshold = value?.Threshold ?? -1,
                 ticks = value?.TicksUntilReady ?? -1, summary = summary.text,
                 textSize = summary.rectTransform.rect.size, preferredHeight = summary.preferredHeight,
-                resources = string.Join(";", live.Combatants.All.Select(u => u.Id + ":HP" + u.CurrentHealth + ":MP" + u.CurrentSpirit + ":move" + u.MovePoints)),
+                resources = string.Join(";", live.Combatants.All.Select(u => u.Id + ":HP" + u.CurrentHealth + ":MP" + u.CurrentSpirit + ":move" + u.ActionPointsRemainingUnits)),
                 turns = string.Join(";", live.TurnScheduler.GetSnapshot(live.Combatants.All).Units.Select(u => u.Id + ":" + u.ChargeTime + "/" + u.NextActionThreshold)),
                 previewCorners = new Vector3[4], confirmCorners = new Vector3[4], cancelCorners = new Vector3[4],
                 canvasScale = summary.canvas.scaleFactor,
