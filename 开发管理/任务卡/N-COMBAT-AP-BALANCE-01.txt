@@ -10,7 +10,6 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "N-COMBAT-AP-SIM-01",
     "D-COMBAT-AP-ITEM-01",
     "D-COMBAT-AP-EQUIP-01"
   ],
@@ -42,7 +41,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：用实际BattleSim运行选择可复现的AP成本、CT／CD映射、初始v及有限成长预算。
-- 直接前置：N-COMBAT-AP-SIM-01、U-COMBAT-AP-CORE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01
+- 直接前置：U-COMBAT-AP-CORE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围

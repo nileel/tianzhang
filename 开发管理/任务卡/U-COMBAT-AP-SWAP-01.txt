@@ -6,13 +6,12 @@
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
+  "executionModel": "gpt-6.1-sol",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-HUD-01"
-  ],
-  "stateReason": "等待直接前置正式完成；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-09 HUD已正式完成；公共合同和实时路径扫描已冻结换术候选、槽位、预览、正式场景与定向PlayMode范围，风险预检零命中且无门禁，具备执行条件。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/AbilityLoadout.cs",
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
@@ -24,6 +23,8 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
     "src/Assets/DataConfig/Language.csv",
     "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
     "开发管理/U-COMBAT-AP-SWAP-01-验证记录.txt",
@@ -50,7 +51,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：已有SwapSpell从正式UI可预览和确认，按AP、每战次数及换入冷却执行。
-- 直接前置：U-COMBAT-AP-HUD-01
+- 直接前置：无；HUD已于2026-10-09正式完成。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围
@@ -71,8 +72,8 @@
 
 ## 模型协作
 
-- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。当前blocked，临近ready按真实接口／失败影响评估复杂度、主模型与必要辅助组合，并核对执行能力。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 2026-10-09准备评估：有界实现。已有内核的换术验证、候选与槽位需接入现有展示转换和正式场景按钮，但这些接口与场景序列化相互依赖，适合由同一主责收口；卡头指定 GPT-6.1 Sol（gpt-6.1-sol）、medium。
+- 不启动辅助模型：没有可与正式接口和场景验收分离的只读裁决面。已核对实时路径、Unity定向PlayMode入口和风险预检；预检零命中、无门禁。执行前重跑实时预检，出现新路径、所有者或技术路线时按停止条件处理，不降级重试。
 
 ## 验证
 
