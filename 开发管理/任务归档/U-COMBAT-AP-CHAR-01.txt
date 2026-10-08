@@ -136,9 +136,12 @@
 
 ### CAND-U-COMBAT-AP-CHAR-01-01
 - collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
 - 经验领域：unity
 - 现象：格式合法的行动经济修正夹具被允许进入角色与存档，复审发现未知定义未拒绝，自动返工又因缺来源校验所有者停止。
 - 已证实根因：将协议字段校验等同于生产来源授权，并把恢复前必须完成的引用检查推迟给消费侧；当前获准生产来源为空却仍接受任意字符串。
-- 证据：原提交186af4d78c31cf726d1af219ed63f0f1d307eee6的CharacterCombatModifiers；run488252c8-c405-4cdf-9856-c1189eaff728阻塞码；本轮CharacterActionPointStateTests与GameSaveEnvelopeTests新增8项拒绝用例全部通过。
 - 可能复用范围：先交付协议、后接真实来源的角色modifier与持久化输入；格式夹具不能作为生产引用合法性证明。
+- 证据：原提交186af4d78c31cf726d1af219ed63f0f1d307eee6的CharacterCombatModifiers；run488252c8-c405-4cdf-9856-c1189eaff728阻塞码；本轮CharacterActionPointStateTests与GameSaveEnvelopeTests新增8项拒绝用例全部通过。
 - 门禁可能：yes
