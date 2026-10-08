@@ -9,8 +9,9 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "ready",
+  "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "2026-10-08 CHAR与SAVE已完成归档；本轮核对已批准合同、当前直接调用点、冻结路径和风险预检后满足ready合同。",
+  "stateReason": "2026-10-08直接前置均已完成；负责人确认Guard/SwapSpell各50 AP试跑，普通行为配置与会话创建接线由CORE持有，输入、直接调用路径及验证边界已冻结，可由Codex执行。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -38,11 +39,21 @@
     "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
     "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
     "src/Assets/Tests/EditMode/CombatActionPointMovementTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
@@ -59,19 +70,27 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：纯 Combat 内核的一个个人回合支持合法多动作，并只在个人回合边界推进三时钟账本。
-- 直接前置已全部完成：DATA、MOVE、CHAR与SAVE均已正式归档。
+- 直接前置：已全部完成；DATA、MOVE及CHAR已有正式归档，CHAR完成提交8c0f3d3ea915b0415c82986369ce521197b51c7a。下述会话创建输入边界也已冻结，不再等待CHAR或FLOW。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
-- 2026-10-07 DATA准备已冻结：攻击叶先严格迁移CombatAttackProfile四required输入／只读属性ActionPointCostUnits、MinimumNetCostUnits、CtPenalty、ReuseCooldownTicks，并分别更改CommandService两CT读取、Resolver重用读取与coordinator的CT显示来源。此窄切片保持旧phase／RecordAction算法；本CORE从已复审的四字段继续实施AP报价、原子扣费／返还、多动作、CT求和及个人回合时点，不重新创建旧CooldownTicks或兼容签名。MOVE报价原语已按B复核归档；DATA／CHAR现已正式归档，攻击叶不反向依赖CORE。
+- 2026-10-07 DATA准备已冻结：攻击叶先严格迁移CombatAttackProfile四required输入／只读属性ActionPointCostUnits、MinimumNetCostUnits、CtPenalty、ReuseCooldownTicks，并分别更改CommandService两CT读取、Resolver重用读取与coordinator的CT显示来源。此窄切片保持旧phase／RecordAction算法；本CORE从已复审的四字段继续实施AP报价、原子扣费／返还、多动作、CT求和及个人回合时点，不重新创建旧CooldownTicks或兼容签名。MOVE报价原语已按B复核归档，DATA／CHAR现已正式完成；攻击叶不反向依赖CORE。
 
 ## 承接 MOVE 已确认的 B 方案
 
 - DEC-20261007-MOVEPATH2=B把ICombatSpatialQuery的AP预算／有效v签名、生产adapter接通及全部直接实现／调用点迁移交本卡准备和实施；MOVE只交付Spatial原语与Combat结果形状，不再等待本卡生产接通后才能归档。
-- 前置仍为DATA完整交付与CHAR长期字段／快照。ready前必须核到CharacterStateSnapshot当前有效AP上限／v和CharacterData敌人输入，通过AdventureUnitSpawner.CreatePlayer／CreateEnemy显式投到CombatantSnapshot，再由Session传给查询；缺任何一段或正式新建玩家输入未冻结就保持blocked，不填默认v、不以reaction/20派生、不反向依赖FLOW造环。
+- DATA完整交付与CHAR长期字段／快照已核实。实施时将CharacterStateSnapshot当前有效AP上限／v和CharacterData敌人输入，通过AdventureUnitSpawner.CreatePlayer／CreateEnemy显式投到CombatantSnapshot，再由Session传给查询；正式新建玩家输入已冻结，不填默认v、不以reaction/20派生、不反向依赖FLOW造环。
 - 本次补入卡头的九个既有路径仅用于空间接口／snapshot构造的同步适配：CombatEntryAdapter.SpatialCombatQuery移除整格取整，QueryMovement与FindReachable分别调用MOVE的两个AP原语；CombatSession.ValidateMove、CombatLegalActionService和EncounterCoordinator.BuildMovement读取同一AP余额与有效v；AdventureUnitSpawner仅传显式长期输入，不改养成计算。
 - 四个测试／审计实现替身为CombatRuntimeKernelTests.FixedRangeQuery、GuanzhongBasicAttackPlayModeTests.AlwaysInRangeCombatSpatialQuery、GuanzhongCombatTimelinePlayModeTests.TimelineSpatialQuery、GuanzhongPlaytestAudit.AuditSpace；连同GuanzhongMovementPlayModeTests、AdventureNodeDispatchTests与CombatActionPointMovementTests的直接调用／构造一起适配。GuanzhongPlaytestAudit仅做同源接口和输入传递，不实现SIM双入口。
 - CORE完成时不保留旧整数MovePoints预算、未定价0载荷或反应派生作为兼容支路。FLOW保留正式coordinator循环、敌方多动作和演出后的继续；CORE只做其接口／预算读取适配，不先宣告FLOW场景验收完成。
-- 临近ready再按实际全引用补齐冻结输入、路径与模型协作并重跑风险预检；当前仍blocked，本次路径补全不代表已具备执行条件。
+- 2026-10-08已按实际全引用补齐冻结输入、路径与模型协作；执行者仍须在业务写入前消费实时风险预检，新增路径或语义改变时按停止条件处理。
+
+## 2026-10-08 后置任务可执行性核对
+
+- CharacterStateSnapshot.Attributes已提供显式ActionPointMaximumUnits、MovementEfficiencyMilliUnits及存在标记；AdventureUnitSpawner.CreatePlayer可直接消费，CreateEnemy经CharacterAttributes.FromDefinition读取已批准敌人数据。CORE实施时移除当前reaction/20旧移动派生，不需要重新批准100000/2000或再等待保存卡。当前合法生产修正为空，直接消费CHAR空来源，不造来源注册表。
+- 实时调用扫描确认原卡漏列5个直接旧接口测试：GuanzhongFormalEndToEndTests的MovePoints断言，以及GuanzhongCombatActionPreviewPlayModeTests、GuanzhongCombatTargetSelectionPlayModeTests、GuanzhongStarterArtsPlayModeTests、GuanzhongPlaytestFlowPlayModeTests的旧phase/余额读取。已补卡头精确路径，仅授权接口及同一语义断言迁移，不借此完成后继场景功能或放宽验证。
+- 已定位公共合同§三/九的准备缺口：普通定义必须随CORE构造合同同时接入，而不等后继FLOW。正式链固定AdventureScene.unity的AdventureSceneInstaller序列化值→Awake创建CombatEntryAdapter时显式传入普通定义→TryCreateSession→CombatSession；通过现有adapter传递，不扩大AdventureController/AdventureSession职责或增加第二配置。新增必填构造输入的直接调用测试还包括GuanzhongCombatNavigationGuardPlayModeTests，已列卡头。
+- 场景唯一生成者为AdventureSceneBuilder，复用其既有SerializedObject写入方式，只增加/更新普通行为字段；禁止全场景重建、手写场景YAML或替换表现provider。现有AdventureScene GUID=e3e595b673eb98142a11436e06fe54c6，场景其他引用和布局不变；FeatureCompositionEditorTests验证正式序列化值、重载和幂等。
+- 负责人2026-10-08明确“先都是50ap吧”：Guard与SwapSpell的ActionPointCostUnits均为50000。当前无合法减耗／返还来源，初次MinimumNetCostUnits同为50000，净付费50 AP；后续有获准修正来源时再核定折扣下限，不在本卡新增折扣。CT均为0，Guard重用0，换入术法保留max(原剩余,60 tick)/每战2次的既有边界。此值仅获准迁移试跑，不代表数值平衡。不得把技术夹具值写入生产字段、保留无参/缺值默认构造或允许正式会话因本次迁移整体失效。
 
 ## 必查范围
 
@@ -81,7 +100,7 @@
 
 ## 实施范围
 
-- 统一 AP、MP、CD、次数、CT 累计的报价／校验／原子提交；攻击未命中仍付费，取消／失效／不合法不变更。覆盖所有现有命令 BasicAttack／Art／Divine／Guard／Wait／Move／SwapSpell／EndTurn；移除旧 MoveThenAction／ActionThenMove 的互斥限制，保留动画之外纯规则可持续行动。开始／结束／跳过／死亡只结一次，恢复与持续不按子动作重复。按合同实现普通Guard与有限减耗／返还，累计CT惩罚不会被后续0覆盖。仅无UI确定性内核；道具／换装新增命令分别由其叶子承载。
+- 统一 AP、MP、CD、次数、CT 累计的报价／校验／原子提交；攻击未命中仍付费，取消／失效／不合法不变更。覆盖所有现有命令 BasicAttack／Art／Divine／Guard／Wait／Move／SwapSpell／EndTurn；移除旧 MoveThenAction／ActionThenMove 的互斥限制，保留动画之外纯规则可持续行动。开始／结束／跳过／死亡只结一次，恢复与持续不按子动作重复。按合同实现普通Guard与有限减耗／返还，累计CT惩罚不会被后续0覆盖。范围为无UI确定性内核及上述必需的正式会话配置／输入接线；FLOW控制循环、敌方多动作与演出继续不在本卡，道具／换装新增命令分别由其叶子承载。
 - 验证证据写入 开发管理/U-COMBAT-AP-CORE-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
 
 ## 禁止项
@@ -91,11 +110,12 @@
 
 ## 模型协作
 
-- 2026-10-08本轮准备评估：复杂实施（Combat内核、Adventure输入适配、空间接口、Unity测试与BattleSim审计共同受冻结合同约束）；当前直接调用点与路径已重新核对，未发现可与主实现独立分离的只读诊断问题。
-- 沿用入口默认单主模型，不启动辅助模型或第二责任会话；主责统一实施、复核和验证。执行前仍须按实际工具与门禁能力重跑实时预检并消费其正文；若出现独立复杂根因工作面，再按AI协作规则选择原生只读辅助，不临时降级或重试。
+- 2026-10-08负责人明确将本卡转交Codex；准备ready评估为复杂但有界的共享事务迁移，主模型gpt-6.1-sol，建议high推理：报价／提交、三时钟和构造输入强耦合，须同一主责统一复核全部diff、正式输入及最终验证。
+- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
 
 ## 验证
 
+- 核验正式AdventureScene的Guard／SwapSpell均显式序列化50000费用及50000净费下限，配置经Installer→adapter→session实际可达；缺定义、零／负费或非法下限拒绝创建，合法正式输入可成功创建。FeatureCompositionEditorTests覆盖目标字段重载／幂等，场景GUID、其他引用及布局不变；不以纯fixture替代正式配置证据。
 - 接口迁移后需owner worktree的Unity EditMode／受影响PlayMode与程序集边界检查，以及BattleSim Release build／run验证审计入口编译适配；技术夹具证明正式空间adapter不再整格取整、v=0拒绝、同源预览／提交、分段中插入施法不重置舍入。场景连续动作与演出验收仍由FLOW／SCENE承担。
 
 - 规格§12的无UI用例：移动-施法-移动、多攻击、独立CD、MP不足、失效重复提交、AP耗尽／主动结束／移动后不能待机、控制跳过、恢复和状态一次、防御退出、同能力唯一账本、正净费无无限循环。纯技术夹具覆盖100内两次合法动作。

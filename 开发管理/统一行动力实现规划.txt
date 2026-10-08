@@ -69,6 +69,13 @@
 - FLOW保留正式战斗循环、敌方多动作和演出结束继续，消费CORE显式输入；SIM继续等待DATA／CORE。只移除CORE与SIM对已完成MOVE的具名前置，其他依赖不动。
 - 原始Codex复审XML中15项MOVE用例通过；全量605/598/7与原基线590/583/7失败集合相同。MOVE原语／结果形状未变；等待攻击叶93e65969集成后，又直接核验其最新EditMode XML中的15项MOVE用例全部通过。7项既有失败未被本轮修复，正式AP移动尚未接通。
 
+## CHAR／SAVE 下游准备（2026-10-08）
+
+- CHAR／SAVE已在8c0f3d3ea915b0415c82986369ce521197b51c7a正式完成并归档；上表历史工作图不替代当前任务卡。CORE、ITEM、EQUIP、SCENE的已完成直接依赖已清除。
+- 负责人明确“先都是50ap吧”：Guard／SwapSpell各50000单位试跑；当前无合法减耗／返还来源，初次净费下限同为50000。只批准迁移试跑，后续BALANCE实跑及TUNING定案仍保留。
+- CORE持有普通定义、AdventureSceneInstaller序列化输入、CombatEntryAdapter构造注入及CombatSession完整创建链；AdventureSceneBuilder仅定向更新已冻结普通字段，场景GUID／其他引用／布局保持。直接接口测试、正式配置重载及幂等验证路径已落卡，CORE转ready，主模型gpt-6.1-sol，统一复核。
+- FLOW消费CORE的输入及普通定义，保留正式控制循环、敌方多动作和演出结束继续，不再为CORE提供反向配置前置。ITEM仍等D-ITEM／HUD，EQUIP仍等D-EQUIP／HUD，SCENE仍等TUNING／FLOW／HUD／ITEM／EQUIP／SWAP；这些卡保持blocked。没有提前执行CORE或宣布运行时AP完成。
+
 ## W工作包对应
 
 - W0：设计批准已完成，本次完整规划完成。

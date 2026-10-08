@@ -13,7 +13,7 @@
     "D-COMBAT-AP-EQUIP-01",
     "U-COMBAT-AP-HUD-01"
   ],
-  "stateReason": "等待直接前置正式完成；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "stateReason": "2026-10-08 SAVE已于8c0f3d3e完成并移除；仍等待D-COMBAT-AP-EQUIP-01的正式装备/槽位/写回合同及U-COMBAT-AP-HUD-01，不能以SAVE完成替代装备输入冻结。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -63,7 +63,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：冻结首批装备在战斗中合法替换、付AP并正确影响后续动作及长期恢复。
-- 直接前置：D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01
+- 直接前置：D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01；SAVE已于8c0f3d3e完成。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围
