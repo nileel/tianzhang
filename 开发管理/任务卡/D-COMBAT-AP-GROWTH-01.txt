@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-08负责人确认功法独立模板、v采用境界基础＋功法加成及高阶爆发增长；设计边界与路径已冻结、实时预检通过，可先形成完整候选方案；具体试跑参数确认前不得关闭。",
+  "stateReason": "等待负责人决定：任务卡要求具体输入确认后才能关闭。是否批准《功法数值模板》0.1-candidate用于迁移试跑？A基础v为2／4／12／48／240／1440，B为2／6／24／120／720／5040；共同输入为苦行剑典每境界基础25%的节点加成、其余20部长期加成0、巽卦临时+1、功法AP上限加成0。元婴／化神仅NPC与远期。",
   "expectedPaths": [
     "docs/角色养成/功法数值模板.txt",
     "docs/角色养成/功法设计规范.txt",
@@ -25,7 +25,70 @@
     "开发管理/任务归档/D-COMBAT-AP-GROWTH-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-COMBAT-AP-GROWTH-01",
+    "sourceRunId": "351cda2d-f7eb-4c6b-be47-22194843abc5",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261008-CDABAC95B7223C",
+    "question": "任务卡要求具体输入确认后才能关闭。是否批准《功法数值模板》0.1-candidate用于迁移试跑？A基础v为2／4／12／48／240／1440，B为2／6／24／120／720／5040；共同输入为苦行剑典每境界基础25%的节点加成、其余20部长期加成0、巽卦临时+1、功法AP上限加成0。元婴／化神仅NPC与远期。",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准A：采用推荐曲线及共同功法输入试跑"
+      },
+      {
+        "key": "B",
+        "label": "批准B：采用更强爆发曲线及共同功法输入试跑"
+      },
+      {
+        "key": "C",
+        "label": "暂不批准具体数值，保留方案待调整"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A基础金丹为凡人的24倍，B为60倍；B更容易提前达到地图通达边界。C暂缓迁移试跑。A／B仅批准试跑输入，均不构成平衡定案，既有九来源和新建玩家快照保持。",
+    "plainSummary": {
+      "situation": "功法独立成长方案已经写好，但每个境界能走多远和功法多加多少还没有确定，需要你选定第一次试跑的数值。",
+      "impact": "A已让高阶移动大幅增长，较晚出现一回合走遍地图的情况；B增长更猛，更容易提前走遍地图；C暂缓试跑，先调整方案，三者都没有平衡定案。",
+      "action": "建议先选A测试，它已体现高境界的爆发增长，也方便观察移动专长的差异；若更重视高阶横跨地图的体验可选B。"
+    },
+    "checkpointCommit": "c947061b3e3bde274f4c78d5a882e8ce895e211b",
+    "baseCommit": "28e7aa37366a4c723a738cd2b13ad1f21ab3243c",
+    "branch": "codex/automation/codex/351cda2d-f7eb-4c6b-be47-22194843abc5/candidate",
+    "changedPaths": [
+      "开发管理/统一行动力公共合同.txt",
+      "开发管理/D-COMBAT-AP-GROWTH-01-验证记录.txt",
+      "docs/角色养成/功法/功法设计.txt",
+      "docs/角色养成/功法设计规范.txt",
+      "docs/角色养成/功法数值模板.txt",
+      "docs/角色养成/养成事实速查.txt"
+    ],
+    "verified": [
+      "21部功法映射与源码消费集合一致，品级、纯度、每日成长及学习门槛对应原文",
+      "精确节点累计、vMilli取整、代表移动费用及参数联动算术通过",
+      "check-task-cards通过，本卡保持ready",
+      "check-review-text通过，检查718个文件",
+      "check-data-chain通过",
+      "check-pending-whitespace及git diff --cached --check通过",
+      "finalizer创建唯一直接后继提交，元数据一致，工作树干净"
+    ],
+    "unverified": [
+      "负责人具体试跑输入批准",
+      "新AP BattleSim角色平衡与Unity地图体验",
+      "生产接入、运行时去重转化、存档及批量派生联动"
+    ],
+    "residualRisk": "高阶移动可能提前达到地图通达边界，极短边会触及最低费用；候选尚未实跑。高阶旧主动组合仍有未映射参数，不能据此签收完整角色平衡。",
+    "taskContextDigest": "c0647e4095fac6458ee01a7c7fb2dadf4274c051c8c9473ff6ec6e77f2c22ffa",
+    "createdAt": "2026-10-08T22:30:26.0572985+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-COMBAT-AP-GROWTH-01 · 功法独立数值模板与位移成长输入
