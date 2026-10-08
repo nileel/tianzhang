@@ -199,11 +199,11 @@ namespace TianZhang.Tests.EditMode
 
             Assert.AreEqual(new HexCoord(encounter.q, encounter.r), spawned.Enemy.Position);
             Assert.AreEqual(6, spawned.Enemy.Speed);
-            Assert.AreEqual(839, spawned.Enemy.MaximumHealth);
-            Assert.AreEqual(839, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(657, spawned.Enemy.MaximumHealth);
+            Assert.AreEqual(657, spawned.Enemy.CurrentHealth);
             Assert.AreEqual(108, spawned.Enemy.MaximumSpirit);
             Assert.AreEqual(108, spawned.Enemy.CurrentSpirit);
-            Assert.AreEqual(108, spawned.Enemy.PhysicalAttack);
+            Assert.AreEqual(78, spawned.Enemy.PhysicalAttack);
             Assert.AreEqual(36, spawned.Enemy.SoulAttack);
             Assert.AreEqual(67, spawned.Enemy.PhysicalDefense);
             Assert.AreEqual(25, spawned.Enemy.SoulDefense);

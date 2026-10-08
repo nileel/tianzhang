@@ -102,6 +102,12 @@ namespace TianZhang.Tests.EditMode
             missingMaterial.GetComponent<MeshRenderer>().sharedMaterial = null;
             try
             {
+                Assert.IsTrue(Static3DCombatUnitPresentationProfileSet.TryValidateProfiles(new[]
+                {
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId, validPrefab),
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, secondValidPrefab),
+                }, out string validReason), validReason);
+
                 Assert.IsFalse(Static3DCombatUnitPresentationProfileSet.TryValidateProfiles(new[]
                 {
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId, missingMaterial),
@@ -146,6 +152,10 @@ namespace TianZhang.Tests.EditMode
 
         private static Static3DCombatUnitPresentationProfile CreateValidProfile(string profileId, GameObject prefab)
         {
+            var saved = AssetDatabase.LoadAssetAtPath<Static3DCombatUnitPresentationProfileSet>(
+                FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath);
+            Assert.IsNotNull(saved);
+            Assert.IsTrue(saved.TryGetProfile(profileId, out Static3DCombatUnitPresentationProfile approved));
             return new Static3DCombatUnitPresentationProfile
             {
                 presentationProfileId = profileId,
@@ -155,6 +165,12 @@ namespace TianZhang.Tests.EditMode
                 approvedBoundsMin = new Vector3(-1f, 0f, -1f),
                 approvedBoundsMax = new Vector3(1f, 1f, 1f),
                 sixDirectionYawDegrees = (int[])Static3DCombatUnitPresentationProfileSet.RequiredSixDirectionYawDegrees.Clone(),
+                combatFeedback = approved.combatFeedback,
+                combatBasePrefab = approved.combatBasePrefab,
+                approvedBaseModelAssetPath = approved.approvedBaseModelAssetPath,
+                approvedBaseModelSha256 = approved.approvedBaseModelSha256,
+                combatBaseBoundsMin = approved.combatBaseBoundsMin,
+                combatBaseBoundsMax = approved.combatBaseBoundsMax,
             };
         }
 

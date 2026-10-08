@@ -57,6 +57,23 @@
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/cloth-wide-sleeve-pilot/TZ_ClothWideSleevePilot_v001.blend",
+      "bytes": 576092,
+      "sha256": "5773beefefd1c4de02ba80b3f3b12f39bdd084adfe600477adeb9730ca255f65"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
+      "bytes": 24929388,
+      "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_basecolor.png",
+      "bytes": 22800947,
+      "sha256": "7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac"
+    }
+  ],
   "riskPreflight": {
     "explicitRefs": [],
     "matched": [],
@@ -131,3 +148,9 @@
 
 - 内核需要依赖World／Character／GameplayContracts、另建执行器、新增主动内容或改变公共合同未决语义时停止；不能用减少按钮掩盖内核失败。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-08 基线修复与验证输入
+
+- owner worktree 的完整 EditMode 套件需要可编辑宽袖源文件、已批准石甲兽 FBX／贴图及五个反馈音效。五个反馈音效已被 Git 跟踪；其余三个源文件已通过卡头 automationInputs 冻结字节数与 SHA-256，下一轮由既有共享入口校验并物化为只读副本；只作既有验证输入，不授权修改素材或扩大 CORE 业务范围。
+- 本轮独立基线修复同步旧敌人快照（已批准657 HP／78物攻）、正式场景排除技术展示板、完整表现配置夹具与实际术法名称断言。未修改生产实现、场景或数值。
+- 在 .worktrees/manual-unity-baseline-20261008 运行 pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-baseline-fix-20261008.xml，退出0；706/706通过，失败0、跳过0。日志和XML保留于该worktree的src/Logs/baseline-fix-20261008。只证明既有基线修复，不代表CORE业务完成；已通过且输入未变的PlayMode与BattleSim不重复运行。

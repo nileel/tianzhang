@@ -270,7 +270,7 @@ namespace TianZhang.Tests
             }
         }
         [TestCase(TianZhang.Combat.CombatCommandKind.BasicAttack, "combat_command_basic_attack")]
-        [TestCase(TianZhang.Combat.CombatCommandKind.Art, "combat_command_art")]
+        [TestCase(TianZhang.Combat.CombatCommandKind.Art, "spell_guanshiji")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Divine, "combat_command_divine")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Guard, "combat_command_guard")]
         [TestCase(TianZhang.Combat.CombatCommandKind.Wait, "combat_command_wait")]
@@ -286,9 +286,11 @@ namespace TianZhang.Tests
             try
             {
                 var coordinator = host.AddComponent<TianZhang.Features.Adventure.EncounterCoordinator>();
-                coordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"));
+                coordinator.ConfigureText(UiText.Resolve, reason => UiText.ReasonDisplay(reason, "操作未完成"),
+                    profileId => UiText.Resolve("spell_" + profileId));
                 const string playerName = "修士 enemy_shijiahou attack_profile_basic_unarmed";
-                var command = new TianZhang.Combat.CombatCommand(kind, "player", "enemy", "basic_unarmed");
+                string profileId = kind == TianZhang.Combat.CombatCommandKind.Art ? "guanshiji" : "basic_unarmed";
+                var command = new TianZhang.Combat.CombatCommand(kind, "player", "enemy", profileId);
                 var result = TianZhang.Combat.CombatActionResult.Success(
                     new TianZhang.Combat.CombatDamageResult(12, true, false, false, false));
                 string message = ActionMessage(coordinator, playerName, command, result);
@@ -296,7 +298,7 @@ namespace TianZhang.Tests
                 StringAssert.Contains(commandName, message);
                 StringAssert.Contains("伤害 12", message);
                 Assert.AreEqual(kind, command.Kind);
-                Assert.AreEqual("basic_unarmed", command.ProfileId);
+                Assert.AreEqual(profileId, command.ProfileId);
                 Assert.AreEqual("enemy", command.TargetId);
             }
             finally

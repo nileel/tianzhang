@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Security.Cryptography;
 using NUnit.Framework;
@@ -88,37 +88,16 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void AdventureScenePersistsTheIsolatedBattleAnimationProbeGroup()
+        public void FormalAdventureSceneExcludesTheBattleAnimationProbeGroup()
         {
             Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
-            Transform board = FindSingle(scene, BattleAnimationSpriteProbeMatrix.BoardName);
-            Transform group = board.Find(BattleAnimationSpriteProbeMatrix.GroupName);
-            Assert.IsNotNull(group);
-            Assert.IsFalse(group.gameObject.activeSelf);
-            Assert.IsFalse(board.Find(TacticalSpriteProbeMatrix.GroupName).gameObject.activeSelf);
-
-            int[,] expectations =
-            {
-                { 1, 0, 1, 90 }, { 1, -1, 0, 150 }, { 0, -1, 0, 210 },
-                { -1, 0, 1, 270 }, { -1, 1, 0, 330 }, { 0, 1, 1, 30 },
-            };
-            for (int direction = 0; direction < 6; direction++)
-            {
-                Transform probe = group.Find(BattleAnimationSpriteProbeMatrix.ProbePrefix + direction);
-                Assert.IsNotNull(probe);
-                Assert.Less(Vector3.Distance(probe.localPosition,
-                    HexToVisualPosition(expectations[direction, 0], expectations[direction, 1],
-                        HeightForLevel(expectations[direction, 2]))), 0.001f);
-                Assert.Less(Quaternion.Angle(probe.localRotation,
-                    Quaternion.Euler(0f, expectations[direction, 3], 0f)), 0.01f);
-                BattleAnimationSpritePresentationController controller = probe.GetComponent<BattleAnimationSpritePresentationController>();
-                Assert.IsNotNull(controller);
-                SerializedProperty activeDirection = new SerializedObject(controller).FindProperty("activeDirection");
-                Assert.AreEqual(direction, activeDirection.intValue);
-                SpriteRenderer renderer = probe.GetComponentInChildren<SpriteRenderer>(true);
-                Assert.IsNotNull(renderer);
-                Assert.AreEqual(VisualBaselineBuilder.BattleAnimationSpriteName(0, direction, 0), renderer.sprite.name);
-            }
+            Transform[] transforms = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray();
+            Assert.IsFalse(transforms.Any(item => item.name == BattleAnimationSpriteProbeMatrix.BoardName));
+            Assert.IsFalse(transforms.Any(item => item.name == BattleAnimationSpriteProbeMatrix.GroupName));
+            Assert.IsFalse(transforms.Any(item => item.GetComponent<BattleAnimationSpritePresentationController>() != null));
+            CollectionAssert.DoesNotContain(AssetDatabase.GetDependencies(SceneBuildSupport.AdventureScenePath, true),
+                VisualBaselineBuilder.BattleAnimationSpritePrefabPath);
         }
 
         private static string PilotDirectory() => Path.GetFullPath(Path.Combine(
@@ -161,16 +140,6 @@ namespace TianZhang.Tests.EditMode
             }
         }
 
-        private static Transform FindSingle(Scene scene, string name)
-        {
-            var matches = new List<Transform>();
-            foreach (GameObject root in scene.GetRootGameObjects())
-                foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
-                    if (transform.name == name) matches.Add(transform);
-            Assert.AreEqual(1, matches.Count, "Expected exactly one object named " + name + ".");
-            return matches[0];
-        }
-
         private static string ComputeSha256(string path)
         {
             using (var stream = File.OpenRead(path))
@@ -190,11 +159,6 @@ namespace TianZhang.Tests.EditMode
 
         private static int ReadBigEndianInt32(byte[] bytes, int offset) =>
             (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
-
-        private static float HeightForLevel(int heightLevel) => 0.34f + heightLevel * 0.28f;
-
-        private static Vector3 HexToVisualPosition(int q, int r, float y) =>
-            new Vector3(q + r * 0.5f, y, r * 0.8660254f + 1f);
 
         [Serializable]
         private sealed class BattleAnimationManifest { public BattleAnimationStates states; }
