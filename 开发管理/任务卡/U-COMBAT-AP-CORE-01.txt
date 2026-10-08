@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "frozen",
   "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CDA2ACBFFA8FC4",
+  "stateReason": "2026-10-08人工处置失联run：保留82ca885a工作区的34路径未完成修改，暂停自动领取，待原模型人工核验并完成收口；原A决策仍有效。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -211,6 +211,15 @@
 - 仅修复上述已复现的旧条件冲突，不重做 UI、不增加 DTO 字段、不改布局或待机／结束的控件结构。AP／费用显示、各命令完整禁用原因和条件时间轴仍归 HUD；正式循环、敌方多动作及演出后继续仍归 FLOW。出现其他所有者或新字段需求按原停止条件处理。
 - 失败 run 81c2faf8-0ec1-481b-9ae6-d044f2626d37 只读核对后报告 task_scope_not_refrozen_after_reply；外层因原 checkpoint 重放留下暂存修改而报 codex_failed_dirty_worktree。32 条路径与原 checkpoint 逐项相同，无本轮新增业务差异、无新验证／提交；失败 worktree 原样保留，不作为新 checkpoint 或已完成结果。
 - 恢复继续使用原 checkpoint 6aaafa01f147e853e11aaaa09301fd28c180ad33、原 sourceRunId／branch 和原 A 回复证据。原 taskContextDigest 为 580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2；本轮仅按已批准的两条新增路径重新计算当前上下文摘要，决策内容、提交、回复及其 evidenceHash 不变。pending_decision 是既有恢复入口的暂态，原 A 已接受，无需再发卡或再次选择。
+
+## 2026-10-08 失联现场与人工接手边界
+
+- 负责人明确要求处理 existing_run。原 runId=82ca885a-6a00-4fcc-8839-7056a9262655，owner=codex，baseCommit=aba8a4f31d0b4d69afb06e8692f1eaeb78006e6a，claim taskCardDigest=e6828770432ff9924901110831a9a62d8f729a26da2b957cad8933004a4f6fbe。进程已退出，runtime仍停在developing；没有candidate、canonical或结构化终态。
+- 15:34:48手动恢复对话启动共享入口，15:35:54未等待终态即结束；子会话01a11a6f-f98e-7d80-b8a2-3414be2541e7最后记录为15:36:52。证据只能确认执行中断，不能证明具体终止进程的原因；不得把超时、模型失败或人为取消写成已证实根因。
+- 完整保留 .worktrees/automation/82ca885a-6a00-4fcc-8839-7056a9262655/codex，分支codex/automation/codex/82ca885a-6a00-4fcc-8839-7056a9262655/candidate，HEAD仍等于上述baseCommit。32个暂存路径与原checkpoint对应业务内容一致，另有CombatActionBarView.cs和CombatCommandInput.cs两处未暂存条件解耦；不清理、不重放、不当作完成成果集成。
+- 34个修改文件按git diff HEAD --name-only顺序，用UTF-8编码的“文件SHA256小写 + 空格 + 仓库相对路径”逐行以LF连接后计算SHA256，保留指纹33651f5734c5c9122ba2faf54683a40191998975372445a27804c4edd7b8e474。没有本轮EditMode结果XML，旧checkpoint的22项EditMode失败及未完成PlayMode仍须接手者核验。
+- 本次仅进行管理收口：冻结本卡、同步backlog并移出ready队列；以现有attention_required/failed精确关闭合同处理残留run并保留工作区。此说明不构成业务完成、决策checkpoint或自动恢复入口，不重新发送决策卡或成功通知。
+- 原A回复与executionModel=gpt-6.1-sol保持不变。本次管理会话requestMeta核实为gpt-6-astra，未代替原主模型实施Unity业务。后续由符合模型协作要求的人工上下文核对全部保留差异和验收；不得直接改回ready触发普通失败重跑，也不得恢复旧模型会话。收口前不解除下游依赖。
 
 ## 必查范围
 
