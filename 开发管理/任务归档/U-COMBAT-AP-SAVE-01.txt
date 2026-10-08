@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-CHAR-01"
-  ],
-  "stateReason": "2026-10-08负责人批准业务实施合入CHAR；本卡只由CHAR的Codex独立复审同轮核对保存矩阵并归档，保持blocked，永不单独进入执行队列。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-08随CHAR引用校验返工完成保存矩阵核验；schema4空来源往返、非法来源拒绝、旧档边界和失败不发布证据通过，同轮归档，无独立实施。",
   "expectedPaths": [
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
@@ -65,3 +63,9 @@
 ## 停止条件
 
 - 缺证据、CHAR未通过、需修实现或改旧档语义时继续blocked，退回CHAR既有流程，不单独ready或绕过保存矩阵。
+
+## 同轮验收完成
+
+- 2026-10-08 Codex处理CHAR自动返工阻塞后完成本汇总：GameSaveEnvelopeTests44/44、GameSaveSlotStoreTests24/24、StartMenuSaveDeletionPlayModeTests4/4通过。
+- schema4基础AP／v及空来源往返、合法v0、缺字段／非法来源／伪装payload拒绝、schema3玩家拒绝与空会话迁移、schema1／2既有边界均由CHAR同一轮证据覆盖；未知来源及profile在恢复发布前返回action_economy_save_invalid，live引用与完整JSON不变。
+- 证据统一见开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt#Codex 引用校验返工（2026-10-08）；不新增保存实现、验证机制或独立candidate，不触碰真实存档。全量基线失败按同一记录保留，不伪报全量通过。

@@ -485,29 +485,55 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaFourDeclaredActionEconomySourcesRoundTripThroughTheEnvelope()
+        public void ActionEconomyProtocolFixtureRoundTripsWithoutPublishingARuntimeCharacter()
+        {
+            ActionEconomyModifierRecord record = CreateModifierRecord("gear_a");
+            record.actionPointMaximumBonusUnits = 20000;
+            record.movementEfficiencyBonusMilliUnits = -500;
+            record.retainedCostPermille = 800;
+            record.minimumNetCostUnits = 5000;
+
+            ActionEconomyModifierRecord restored = JsonUtility.FromJson<ActionEconomyModifierRecord>(
+                JsonUtility.ToJson(record));
+            ActionEconomyModifierRecord roundTrip = ActionEconomyModifierRecord.Capture(restored.Restore());
+
+            Assert.That(JsonUtility.ToJson(roundTrip), Is.EqualTo(JsonUtility.ToJson(record)));
+        }
+
+        [TestCase("unknown_source", null)]
+        [TestCase("unknown_source", "unknown_profile")]
+        [TestCase("definition_a", "unknown_profile")]
+        [TestCase("basic_unarmed", "basic_unarmed")]
+        public void SchemaFourRejectsUnapprovedReferencesBeforeReplacingAnyLiveOwner(string sourceId, string profileId)
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
-            GameSaveEnvelope save = runtime.CaptureSave();
-            save.player.actionEconomyModifierInputs = new[] { CreateModifierRecord("gear_a") };
-            save.player.actionEconomyModifierInputs[0].actionPointMaximumBonusUnits = 20000;
-            save.player.actionEconomyModifierInputs[0].movementEfficiencyBonusMilliUnits = -500;
-            save.player.actionEconomyModifierInputs[0].retainedCostPermille = 800;
-            save.player.actionEconomyModifierInputs[0].minimumNetCostUnits = 5000;
+            string baseline = runtime.CaptureSaveJson();
+            var player = runtime.Player;
+            var inventoryGrants = runtime.InventoryGrants;
+            var cultivation = runtime.Cultivation;
+            var worldClock = runtime.WorldClock;
+            var bounties = runtime.Bounties;
+            var charters = runtime.Charters;
+            GameSaveEnvelope invalid = runtime.CaptureSave();
+            ActionEconomyModifierRecord record = CreateModifierRecord("gear_a");
+            record.sourceDefinitionId = sourceId;
+            record.profileId = profileId;
+            invalid.player.actionEconomyModifierInputs = new[] { record };
 
-            var restored = new GameRuntime();
-            restored.RestoreSave(save, catalog);
-            GameSaveEnvelope roundTrip = restored.CaptureSave();
+            System.ArgumentException direct = Assert.Throws<System.ArgumentException>(() => invalid.player.Restore());
+            StringAssert.StartsWith(GameSaveSerializer.ActionEconomySaveInvalid + ":", direct.Message);
+            AssertRestoreFailsWithoutChangingRuntime(runtime, invalid);
+            System.ArgumentException json = Assert.Throws<System.ArgumentException>(() =>
+                runtime.RestoreSaveJson(JsonUtility.ToJson(invalid), catalog));
+            StringAssert.StartsWith(GameSaveSerializer.ActionEconomySaveInvalid + ":", json.Message);
 
-            Assert.That(roundTrip.player.actionEconomyModifierInputs.Length, Is.EqualTo(1));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].sourceInstanceId, Is.EqualTo("gear_a"));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].sourceDefinitionId, Is.EqualTo("definition_a"));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].actionPointMaximumBonusUnits, Is.EqualTo(20000));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].movementEfficiencyBonusMilliUnits, Is.EqualTo(-500));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].retainedCostPermille, Is.EqualTo(800));
-            Assert.That(roundTrip.player.actionEconomyModifierInputs[0].minimumNetCostUnits, Is.EqualTo(5000));
-            Assert.That(restored.Player.CombatModifiers.ActionEconomyInputs.Count, Is.EqualTo(1));
-            Assert.That(restored.Player.CombatModifiers.ActionEconomyInputs[0].SourceInstanceId, Is.EqualTo("gear_a"));
+            Assert.That(runtime.Player, Is.SameAs(player));
+            Assert.That(runtime.InventoryGrants, Is.SameAs(inventoryGrants));
+            Assert.That(runtime.Cultivation, Is.SameAs(cultivation));
+            Assert.That(runtime.WorldClock, Is.SameAs(worldClock));
+            Assert.That(runtime.Bounties, Is.SameAs(bounties));
+            Assert.That(runtime.Charters, Is.SameAs(charters));
+            Assert.That(runtime.CaptureSaveJson(), Is.EqualTo(baseline));
         }
 
         [Test]

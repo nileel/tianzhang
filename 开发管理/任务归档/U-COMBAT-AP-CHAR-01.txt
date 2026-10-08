@@ -8,10 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：action_economy_reference_owner_missing",
+  "stateReason": "2026-10-08负责人授权Codex修复引用校验阻塞；当前获准来源为空，角色及保存入口拒绝非空修正，直接验收通过且无新增基线失败；CHAR与SAVE同轮完成。",
   "expectedPaths": [
+    "开发管理/统一行动力公共合同.txt",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
     "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
@@ -93,8 +94,9 @@
 
 ## 模型协作
 
-- 有界但涉及长期输入与保存原子性；失败影响明确，生产初值、schema迁移、唯一来源和调用边界已冻结，无待裁决语义。
-- 主责DeepSeek V4.1 Flash单主智能体实施，Codex独立复审完整差异与同一输入证据并汇总SAVE；创建→快照→保存强耦合，没有独立写入工作面，不预设子智能体。
+- 2026-10-08负责人要求处理自动返工阻塞，本轮由Codex单主智能体修复并核验原外部交付；引用合法性与保存原子性强耦合，无独立委派工作面，不新增模型调用。
+- 本轮冻结：当前获准行动经济修正来源集合为空。ActionEconomyModifierInput仅承载格式／范围协议与技术夹具，不构成来源获准证明；CharacterCombatModifiers在发布前拒绝任意非空修正数组，CharacterRecord.Restore复用同一入口并返回action_economy_save_invalid。已有攻击profile或功法ID的存在不等于获准修正来源，不新增来源注册系统或测试白名单。
+- 合法协议夹具仍可构造并断言字段；正式Character与schema4只验空来源往返及非空／未知来源、未知profile拒绝。未来引入真实修正来源时须由其内容所有者同时冻结来源与profile匹配校验，再替换此处空集合边界，不由CORE消费者兜底接受。
 - 业务写前核对实际工具、Unity 6000.3.18f1／现有runner／临时存档能力，运行实时预检、消费mustRead并核对schema2投影。新冲突需要改公共语义时停止交有权维护者，不自行换模型、拆卡或扩边。
 
 ## 验证
@@ -116,9 +118,27 @@
 - 需要新增成长树／生产修正来源／装备库存、Character反向依赖Combat／World、BattleSim平衡、真实存档迁移／删除、战斗中途保存或未批准旧档语义时停止。
 - 新路径、调用者、符号实体或技术路线出现时暂停业务写入并重跑预检；不得以默认值、旧构造或放宽测试绕过。不原子或需跨边界叠补丁时保留现场、不生成candidate。
 
-## 2026-10-08 Codex 复审结论
+## 2026-10-08 Codex 首次复审记录（下节返工已关闭）
 
 - 审核对象：正式提交 `186af4d78c31cf726d1af219ed63f0f1d307eee6`；结论：部分通过，仍需返工。
 - 已确认创建链、Character 长期字段、快照和 schema4 基础输入往返符合当前验收；独立 EditMode 复跑为 698 项中 691 通过、7 项既有无关失败，数据链和程序集边界检查通过。
 - 缺口：`ActionEconomyModifierInput` 将 `sourceDefinitionId` 与非空 `profileId` 当作任意非空字符串接受，`CharacterRecord.Restore` 也未在发布前校验其是否指向已知来源。公共合同§二要求未知定义／未知非空 ID 拒绝，§七要求恢复先验证全部引用；本卡验收也明确要求未知引用拒绝。现有测试仅覆盖未知枚举值，不覆盖未知来源 ID 或 profile ID。
 - 不在本轮修改业务语义。返工必须先证明合法来源／引用校验的既有所有者和不新增来源注册系统的边界，再补齐拒绝行为与同一保存往返证据；SAVE 及下游前置保持不变。
+
+## 本轮完成
+
+- 负责人明确要求处理自动返工blocked；Codex已在原有Character校验入口落实当前获准来源为空的拒绝边界，公共合同同步澄清。无新注册系统、无夹具白名单，未知引用在保存恢复发布前以action_economy_save_invalid拒绝。
+- 原外部交付186af4d78c31cf726d1af219ed63f0f1d307eee6的创建／基础长期属性／快照／schema4保存已在首次独立复审确认，本轮修复唯一未通过项并完成回归。结论：通过；SAVE同轮核验归档。详见开发管理/U-COMBAT-AP-CHAR-01-验证记录.txt#Codex 引用校验返工（2026-10-08）。
+- EditMode706项中699通过、7项既有失败，失败集合与首次Codex复审完全一致；直接Character24/24、保存44/44、槽位24/24及创建／数据链用例全部通过。PlayMode75/44/30/1与原基线同名集合一致，正式创角／存档删除4/4通过。未宣称全量通过或数值平衡完成。
+- CORE等其他后继保留既有依赖投影，由正式集成后的队列维护读取本归档处理；本轮不提前解锁或实施。
+
+## 经验候选
+
+### CAND-U-COMBAT-AP-CHAR-01-01
+- collectionState: pending
+- 经验领域：unity
+- 现象：格式合法的行动经济修正夹具被允许进入角色与存档，复审发现未知定义未拒绝，自动返工又因缺来源校验所有者停止。
+- 已证实根因：将协议字段校验等同于生产来源授权，并把恢复前必须完成的引用检查推迟给消费侧；当前获准生产来源为空却仍接受任意字符串。
+- 证据：原提交186af4d78c31cf726d1af219ed63f0f1d307eee6的CharacterCombatModifiers；run488252c8-c405-4cdf-9856-c1189eaff728阻塞码；本轮CharacterActionPointStateTests与GameSaveEnvelopeTests新增8项拒绝用例全部通过。
+- 可能复用范围：先交付协议、后接真实来源的角色modifier与持久化输入；格式夹具不能作为生产引用合法性证明。
+- 门禁可能：yes

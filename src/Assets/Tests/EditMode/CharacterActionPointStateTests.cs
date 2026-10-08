@@ -178,10 +178,11 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void DeclaredSourceRangesAndIdentityAreValidatedBeforeItIsAccepted()
+        public void OnlyEmptySourcesAreAcceptedByTheCharacterOwner()
         {
             ActionEconomyModifierInput valid = CreateInput("gear_a", "definition_a");
-            CharacterCombatModifiers.ValidateActionEconomyInputs(new[] { valid });
+            Assert.Throws<ArgumentException>(() =>
+                CharacterCombatModifiers.ValidateActionEconomyInputs(new[] { valid }));
             CharacterCombatModifiers.ValidateActionEconomyInputs(new ActionEconomyModifierInput[0]);
             CharacterCombatModifiers.ValidateActionEconomyInputs(null);
 
@@ -227,18 +228,29 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void DeclaredSourcesAreProjectedByIdentityAndNotMutatedByTheModifierOwner()
+        public void ProtocolFixtureKeepsItsFieldsWithoutAuthorizingAProductionSource()
         {
             ActionEconomyModifierInput input = CreateInput("gear_a", "definition_a");
-            var modifiers = new CharacterCombatModifiers(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f,
-                new[] { input });
+            Assert.That(input.SourceInstanceId, Is.EqualTo("gear_a"));
+            Assert.That(input.SourceDefinitionId, Is.EqualTo("definition_a"));
+            Assert.That(input.ActionKind, Is.EqualTo(ActionEconomyModifierInput.CommandKind.Guard));
+            Assert.That(input.ProfileId, Is.Null);
+            Assert.That(input.MinimumNetCostUnits, Is.EqualTo(1));
+        }
 
-            Assert.That(modifiers.ActionEconomyInputs.Count, Is.EqualTo(1));
-            Assert.That(modifiers.ActionEconomyInputs[0].SourceInstanceId, Is.EqualTo("gear_a"));
-            Assert.That(modifiers.ActionEconomyInputs[0].SourceDefinitionId, Is.EqualTo("definition_a"));
-            Assert.That(modifiers.ActionEconomyInputs[0].ActionKind, Is.EqualTo(ActionEconomyModifierInput.CommandKind.Guard));
-            Assert.That(modifiers.ActionEconomyInputs[0].ProfileId, Is.Null);
-            Assert.That(modifiers.ActionEconomyInputs[0].MinimumNetCostUnits, Is.EqualTo(1));
+        [TestCase("unknown_source", null)]
+        [TestCase("unknown_source", "unknown_profile")]
+        [TestCase("definition_a", "basic_unarmed")]
+        [TestCase("basic_unarmed", "basic_unarmed")]
+        public void NonEmptySourcesCannotEnterCharacterEvenWithAnExistingAttackId(string sourceId, string profileId)
+        {
+            ActionEconomyModifierInput input = CreateInput("instance_a", sourceId, profileId: profileId);
+
+            Assert.Throws<ArgumentException>(() =>
+                CharacterCombatModifiers.ValidateActionEconomyInputs(new[] { input }));
+            Assert.Throws<ArgumentException>(() =>
+                new CharacterCombatModifiers(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f,
+                    new[] { input }));
         }
 
         private static void AssertRejectedWithoutAnyChange(
@@ -330,13 +342,14 @@ namespace TianZhang.Tests
             ActionEconomyModifierInput.CommandKind actionKind = ActionEconomyModifierInput.CommandKind.Guard,
             ActionEconomyModifierInput.SuccessEvent refundOnEvent = ActionEconomyModifierInput.SuccessEvent.None,
             int refundLimitPerOwnTurn = 0,
-            int refundBudgetPerOwnTurnUnits = 0)
+            int refundBudgetPerOwnTurnUnits = 0,
+            string profileId = null)
         {
             return new ActionEconomyModifierInput(
                 sourceInstanceId,
                 sourceDefinitionId,
                 actionKind,
-                null,
+                profileId,
                 0,
                 0,
                 fixedReductionUnits,

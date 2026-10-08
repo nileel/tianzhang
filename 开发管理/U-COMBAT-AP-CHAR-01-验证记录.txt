@@ -1,6 +1,6 @@
 # U-COMBAT-AP-CHAR-01 角色长期行动力成长与快照验证记录
 
-日期：2026-10-08。任务：U-COMBAT-AP-CHAR-01（角色长期行动力成长与快照，含 SAVE 同轮收口）。身份／修改方：DeepSeek V4.1 Flash（本机 http://127.0.0.1:15721 同源 gateway，model=deepseek-flash）。本文只记录本轮实际证据，未预填 Codex 复审结论。
+日期：2026-10-08。任务：U-COMBAT-AP-CHAR-01（角色长期行动力成长与快照，含 SAVE 同轮收口）。下文保留 DeepSeek V4.1 Flash 原交付证据；本次 Codex 返工的最新结论见文末“Codex 引用校验返工”。原记录中的声明来源进入正式角色／存档成功用例已被本次拒绝边界取代，不能再作为当前合法来源证明。
 
 ## 身份、范围与模型协作评估
 
@@ -84,3 +84,18 @@ PlayMode 30 项失败与本卡路径不相交：集中在无图形设备／分�
 - 证据：本轮 GameSaveEnvelopeTests.LegacyUnknownAndInvalidJsonFailClosed 的 `{"schemaVersion":4}` 用例、GameSaveSlotStoreTests 两处 `old.json` 字面量、三处方法名中的 SchemaThree，以及 GameSaveEnvelopeTests 中 `Is.EqualTo(3)` 的显式断言；均为本轮实际改动点。
 - 可能复用范围：任何版本化契约（存档 schema、资源 schema、导入表 schema）的版本推进。
 - 门禁可能：仅作为经验候选记录，不新增风险索引条目、不分配正式经验 ID、不建立整理任务。
+
+## Codex 引用校验返工（2026-10-08）
+
+- 授权：负责人要求处理会话01a11913-63d0-7410-be8d-75a2ba128fa1的blocked问题。原run=488252c8-c405-4cdf-9856-c1189eaff728，阻塞码action_economy_reference_owner_missing；该run已关闭。手动修复从512588dbdcc0996bfe0899e911ae55232bff4ef0建立.worktrees/manual-ap-reference-20261008，不恢复旧run或旧模型会话。
+- 根因：CharacterCombatModifiers将任意格式合法的sourceDefinitionId/profileId放行，并把未知定义检查错误推迟给消费者；CharacterRecord.Restore复用这条不完整校验链。ContentCatalogData、CharacterProgressionRef、AbilityLoadout及现有Content定义没有已批准的行动经济修正来源声明。合同“暂未有获准生产来源时只承载协议与夹具”意味着当前合法生产来源集合为空，不能把definition_a等技术夹具或已有攻击ID当合法来源。
+- 最小修复：在既有CharacterCombatModifiers构造／ValidateActionEconomyInputs的共同入口保留空值、重复与字段检查后拒绝非空数组；CharacterRecord.Restore原有异常包装自然给出action_economy_save_invalid。无需修改Persistence、构造签名、asmdef、场景、CSV、生产值或schema。单条协议记录仍支持字段夹具往返，但不能发布到正式Character或恢复会话；未来真实来源的内容任务须连同引用和匹配校验一起准备，不建立注册系统或测试白名单。
+- 模型协作：本轮由Codex单主智能体处理原外部交付的有界返工；代码门禁、保存原子性及合同澄清强耦合，没有独立委派工作面，未调用辅助模型。实际工具为PowerShell 7、Git与Unity 6000.3.18f1现有runner。
+- 写前预检：首次原卡digest=214f41a01df1c9ec1f2e6950807b8bc04b9fba14de73519698cc35038ad7a193；增加公共合同路径并冻结空来源边界后重跑，digest=9a6760d8fc212408ef8962c4386f878615b91974535607cda171d6a71105d9d4；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。两次status=ok，matched/mustRead/gates/gatePointers均为空，与schema2投影一致，无缺门禁。
+- Unity EditMode命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/manual-ap-reference-20261008/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-ap-reference-editmode.xml。最终XML为706/699/7/0/0（total/passed/failed/inconclusive/skipped）；Unity exit=2、runner exit=1，因为既有7项失败，全量不宣称通过。与C:/Users/WINDOWS/AppData/Local/Temp/tzg-codex-review-U-COMBAT-AP-CHAR-01-editmode.xml逐名比较失败集合差异为0。
+- 直接验收全部通过：CharacterActionPointStateTests 24/24、GameSaveEnvelopeTests 44/44、GameSaveSlotStoreTests 24/24、CharacterCreationRuleTests 26/26、CharacterStateTests 5/5、ContentCatalogDataTests 31/31、GameRuntimeTests 8/8、FeatureCompositionEditorTests 9/9。新增8项覆盖未知来源、未知profile、已有攻击ID冒充来源；Character入口、CharacterRecord.Restore、GameRuntime.RestoreSave和JSON恢复均拒绝，错误码正确，玩家／修炼／世界时钟／背包用例／悬赏／册界引用及整个存档JSON不变。
+- 首次编译发现新增测试误用不存在的GameRuntime.Inventory公共属性，已按真实所有者改为InventoryGrants并补其他公开领域引用断言；随后上述完整运行通过编译，无生产修复叠加。
+- check-unity-assembly-boundaries.ps1通过（19 assemblies、2 asmrefs）；check-data-chain.ps1通过（GongFa29/29、Spells84/84、Skills31/31、language613）。原186af4d78c31cf726d1af219ed63f0f1d307eee6到修复基线的src无差异，已确认的原创建／保存证据继续有效。
+- 本轮不做BattleSim平衡结论；100000／2000初始值未变。Combat的余额、修正消费、CT和装备来源仍归原后续任务。既有旧玩家档拒绝边界和真实存档均未修改。
+- Unity PlayMode命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/manual-ap-reference-20261008/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-ap-reference-playmode.xml。XML为75/44/30/0/1，Unity exit=2、runner exit=1；与C:/Users/WINDOWS/AppData/Local/Temp/tzg-char-playmode.xml逐名比较失败／跳过集合差异为0。正式StartMenuSaveDeletionPlayModeTests4/4通过，真实创角→保存→读取／删除入口未回归。
+- 结论：本轮引用校验返工通过，原部分通过项已修复，CHAR与SAVE同轮完成；原外部交接迁入对应交接归档，未通过清单移除本项。全量套件仍有上述既有失败，不作为全量通过报告。

@@ -6,12 +6,6 @@
 
 ## 当前未通过/待复核、待复审项
 
-### U-COMBAT-AP-CHAR-01 · 角色长期行动力成长与快照
-
-- 审核对象：正式提交 `186af4d78c31cf726d1af219ed63f0f1d307eee6`；结论：部分通过，仍需返工。
-- `ActionEconomyModifierInput` 和 `CharacterRecord.Restore` 只校验 sourceDefinitionId/profileId 的非空或枚举范围，没有在整体发布前拒绝未知来源定义或未知非空 profile 引用。此项不符合 `开发管理/统一行动力公共合同.txt`§二的未知定义／未知非空 ID 拒绝、§七的恢复前验证引用，以及本卡的未知引用验收。
-- 保留现有业务候选；返工前先定位已批准的合法来源／引用校验所有者，证明不新增来源注册系统，随后补齐未知来源 ID、未知 profile ID 的拒绝用例与 schema4 保存往返证据。当前任务保持 blocked，SAVE 与所有具名前置引用不变。
-
 ### C-FPD-SPELL-01A · 古修术法升格迁移：北冥引、扶摇、无待
 
 - 审核对象：正式提交 `b4938be901adc635025ac75f2d1a4e2ba8094b4a`；结论：部分通过，仍需返工。

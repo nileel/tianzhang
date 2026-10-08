@@ -10,7 +10,8 @@ namespace TianZhang.Character
     /// into battle. It stores raw floats verbatim; the six first-order bonuses are rounded to integers only
     /// when consumed by <see cref="CharacterAttributes.Derive"/>.
     /// The action economy modifier inputs are the frozen long-term correction protocol; Character owns only
-    /// their declaration, ranges and identity de-duplication, never a growth tree, an effect or a source registry.
+    /// their validation, never a growth tree, an effect or a source registry. No modifier source definitions
+    /// are approved yet, so only empty inputs may enter a runtime character.
     /// </summary>
     public sealed class CharacterCombatModifiers
     {
@@ -109,7 +110,8 @@ namespace TianZhang.Character
         /// <summary>
         /// Validates the frozen action economy protocol: non-empty stable identity strings, one entry per
         /// <c>sourceInstanceId</c>, and no positive refund without both a per-turn count and a per-turn budget.
-        /// Unknown definitions are a consumer-side matching rule; Character owns no source registry.
+        /// No action economy modifier source definitions are currently approved. Protocol-only fixtures
+        /// may construct ActionEconomyModifierInput, but non-empty inputs cannot enter Character or a restored save.
         /// </summary>
         public static void ValidateActionEconomyInputs(IEnumerable<ActionEconomyModifierInput> inputs)
         {
@@ -133,7 +135,13 @@ namespace TianZhang.Character
                 }
                 copy.Add(input);
             }
-            return copy.Count == 0 ? NoActionEconomyInputs : copy.ToArray();
+            if (copy.Count > 0)
+            {
+                throw new ArgumentException(
+                    "No action economy modifier source definitions are approved: " + copy[0].SourceDefinitionId + ".",
+                    nameof(inputs));
+            }
+            return NoActionEconomyInputs;
         }
     }
 

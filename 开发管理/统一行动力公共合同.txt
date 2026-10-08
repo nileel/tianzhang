@@ -59,6 +59,8 @@ Characters.csv 的两行与 Enemies.csv 的五行新增上述 actionPointMaximum
 
 无行动经济修正时显式空数组，返还预算为0，不构造无来源默认效果。暂未有获准生产来源时只承载协议与夹具，不生产新功法／装备效果。无法从现有已存来源重建的合法独立成长输入才加入 CharacterRecord 的 actionEconomyModifierInputs 数组；序列化同上述字段和两项来源ID，恢复时先验证全数组及引用，再整体发布。Combat 的使用次数、已返还总量、根动作结算记录始终不保存。
 
+2026-10-08 CHAR返工澄清：当前获准修正来源集合为空，合法性门禁由既有CharacterCombatModifiers.ValidateActionEconomyInputs及其构造入口持有；任意非空修正数组都必须在Character发布前拒绝，CharacterRecord.Restore复用该门禁并以action_economy_save_invalid拒绝。ActionEconomyModifierInput及单条保存记录可用于格式／范围／字段往返夹具，但构造成功不构成合法生产来源，夹具不得进入正式角色或恢复会话。已有攻击profile、功法或装备ID存在也不能证明它声明了行动经济修正；不设测试ID白名单、不新增注册系统、不把未知引用推迟给Combat消费者。未来获准真实来源时，须由对应内容所有者同时冻结来源定义、profile匹配与叠加校验入口后替换空集合门禁；本轮不提前实现该后续系统。
+
 ## 三、普通行为、生产数值与迁移边界
 
 CombatSession.cs 内冻结 CombatOrdinaryActionDefinition（Kind、ActionPointCostUnits、CtPenalty、ReuseCooldownTicks、MinimumNetCostUnits）；它只描述 Guard／SwapSpell 等现有非攻击行为。Wait／EndTurn 明确0费、0惩罚／重用CD；Move 只由路径定价。Guard／SwapSpell 为正费，当前额外CT惩罚投影为0；换入术法重用CD保持60 tick，每战更换上限保持2。

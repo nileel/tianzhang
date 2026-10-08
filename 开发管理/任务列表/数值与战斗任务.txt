@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- 2026-10-08：DATA已完成；负责人确认正式新建玩家100 AP／v=2，并批准CHAR统一实施创角→快照→schema4保存，SAVE仅同轮验收汇总且永不单独ready。CHAR复审部分通过，因未知行动经济来源引用未拒绝而移出队列等待返工；CORE／SIM／TUNING的既有依赖保持。
+- 2026-10-08：DATA、CHAR及SAVE已完成；正式新建玩家100 AP／v=2，经创角→快照→schema4保存往返。CHAR引用校验返工已拒绝当前未获准的非空修正来源，直接验收通过、无新增基线失败；CORE／SIM／TUNING的既有依赖投影待后续队列维护处理，未宣称运行时AP或数值平衡完成。
 
 - 玩家主线收束为凡人、练气九品、道基筑基／开府／圆满三阶段、金丹三阶段；旧筑基五段仅是 BattleSim 的可追溯预算输入。元婴/化神为 NPC/远期扩展。
 - G2 已由 TQ-055 关闭：当前距离模型基线的 21 Build 金丹覆盖、极端归因与出口结论见 `开发管理/任务归档/2026-07-12-TQ-055-G2覆盖与极端结果重验归档.txt`。
@@ -17,8 +17,6 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
 | D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
-| U-COMBAT-AP-CHAR-01 | P1 | codex | 阻塞 | — | 角色长期行动力成长与快照 | 开发管理/任务卡/U-COMBAT-AP-CHAR-01.txt |
-| U-COMBAT-AP-SAVE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-CHAR-01 | 行动力长期输入保存验收汇总 | 开发管理/任务卡/U-COMBAT-AP-SAVE-01.txt |
 | U-COMBAT-AP-CORE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-CHAR-01 | 统一行动力个人回合内核 | 开发管理/任务卡/U-COMBAT-AP-CORE-01.txt |
 | N-COMBAT-AP-SIM-01 | P1 | codex | 阻塞 | U-COMBAT-AP-CORE-01 | BattleSim双入口行动力语义迁移 | 开发管理/任务卡/N-COMBAT-AP-SIM-01.txt |
 | U-COMBAT-AP-FLOW-01 | P1 | codex | 阻塞 | U-COMBAT-AP-CORE-01 | 关中正式战斗控制与敌方多动作 | 开发管理/任务卡/U-COMBAT-AP-FLOW-01.txt |
