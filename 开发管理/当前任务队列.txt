@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| D-COMBAT-AP-GROWTH-01 | codex_execute | codex | P1 | content | design | 功法独立数值模板与位移成长输入 | 开发管理/任务卡/D-COMBAT-AP-GROWTH-01.txt |

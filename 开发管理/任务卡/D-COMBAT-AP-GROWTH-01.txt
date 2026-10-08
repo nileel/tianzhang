@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：任务卡要求具体输入确认后才能关闭。是否批准《功法数值模板》0.1-candidate用于迁移试跑？A基础v为2／4／12／48／240／1440，B为2／6／24／120／720／5040；共同输入为苦行剑典每境界基础25%的节点加成、其余20部长期加成0、巽卦临时+1、功法AP上限加成0。元婴／化神仅NPC与远期。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CDABAC95B7223C",
   "expectedPaths": [
     "docs/角色养成/功法数值模板.txt",
     "docs/角色养成/功法设计规范.txt",
@@ -88,6 +88,14 @@
     "taskContextDigest": "c0647e4095fac6458ee01a7c7fb2dadf4274c051c8c9473ff6ec6e77f2c22ffa",
     "createdAt": "2026-10-08T22:30:26.0572985+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261008-CDABAC95B7223C",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "a2d2f5d8f5ddc5a3e635d2fba4ae658055fd7062b493e558af4f4674d79bad74"
   }
 }
 ---TASK-BODY---
