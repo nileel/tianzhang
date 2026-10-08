@@ -26,6 +26,8 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button confirmMoveButton;
         [SerializeField] private Button cancelMoveButton;
         [SerializeField] private Text movementLabel;
+        [SerializeField] private Button swapSpellButton;
+        public Button SwapSpellButton => swapSpellButton;
         public Button MoveButton => moveButton;
         public Button ConfirmMoveButton => confirmMoveButton;
         public Button CancelMoveButton => cancelMoveButton;
@@ -50,6 +52,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             root?.SetActive(visible);
             SetEnabled(secondArtButton, false);
+            SetEnabled(swapSpellButton, false);
             SetEnabled(secondArtTargetButton, false);
             if (secondArtLabel != null) secondArtLabel.text = "术法";
             if (secondArtTargetLabel != null) secondArtTargetLabel.text = "目标：—";
@@ -69,6 +72,10 @@ namespace TianZhang.Features.CombatPresentation
             bool visible = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             bool canAct = visible;
             root?.SetActive(snapshot != null);
+            CombatActionPreviewSnapshot swap = snapshot?.FindAction(CombatActionKind.SwapSpell);
+            SetEnabled(swapSpellButton, canAct && swap != null);
+            if (swapSpellButton != null)
+                swapSpellButton.GetComponentInChildren<Text>().text = "换术\n剩余 " + (swap?.CombatSwapsRemaining ?? 0) + " 次";
             string basicReason = PresentAction(snapshot?.FindAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
             string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
             string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),

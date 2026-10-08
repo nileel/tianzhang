@@ -1,0 +1,71 @@
+# U-COMBAT-AP-SWAP-01 · 战斗换术正式入口与费用预览验证
+
+日期：2026-10-09；责任方：Codex；入口传入主模型：gpt-6.1-sol。
+RunId：7ca47011-a12f-4e44-9502-177f566ece3b；基线：95ec1aacb45eabe9b8b77c49e7afba3bb6760dea。
+所有实施、Unity 生成、测试及 candidate 均在该 run 的 codex worktree；正式重放与集成由共享入口负责。
+
+## 模型与冻结边界
+
+- 按 AI协作规则的模型协作提示复核：单一换术结果，现有内核、展示合同、场景序列化及测试强耦合，由入口指定 gpt-6.1-sol 统一实施和复核；未启动辅助模型或第二责任会话。
+- 消费共享入口已绑定 runId/taskId/任务卡及索引 digest 的预检：matched、notice、mustRead、gatePointers 均为空，卡头 riskPreflight 一致；本轮无新增授权路径、内容类型或领域所有者。
+- 只接入既有 SwapSpell。费用仍取正式场景普通行为定义 50000 AP 最小单位（50 AP），每战默认上限 2，换入冷却 max(原剩余,60 tick)，CT 惩罚 0。不新增装配系统、术法、装备或数值平衡结论。
+
+## 已证实缺口与实现
+
+- 内核已处理候选资格、槽位、AP、每战次数、唯一能力冷却账本和成功退出 Guard。缺口为 Gameplay.Contracts 未表达 SwapSpell 和槽位，正式动作条无入口，预览转换未映射该命令。
+- 正式所有者链：AdventureScene 的 AdventureRoot/CombatActionBarView → CombatHotbar/CombatActionBar/SwapSpellButton → CombatCommandInput.BeginSwapSpell/选择槽位或术法 → EncounterCoordinator.PreviewAction/ProjectQuote → CombatCommandService.Preview；确认经同一协调者提交原始 CombatCommandPreview，复用 Execute 的会话、回合、状态版本、命令身份、Facts 和费用复核。
+- 候选与槽位来自该角色的 AvailableArtProfileIds/EquippedArtProfileIds；所有组合投影包含权威非法原因，选择及取消不触碰战斗资源。报价显示实际换入冷却，不把已有 90 tick 报成 60。
+- SceneBuilder.RebuildCombatSwapSpell 只添加和接线三个按钮、收窄同动作条状态文字；完整场景创建和预览重建也维护同一接线。场景按 YAML 对象逐项比较：30 个新增对象段，仅 5 个既有对象段发生语义变化，无删除对象。Unity 导入自动改写的无关 ProjectSettings 已还原。
+- 已复核完整代码 diff；Combat/Character/Presentation 的依赖方向保持原状，未修改长期装配、保存或换装备职责。
+
+## 正式输入与夹具边界
+
+- 使用正式 StartMenu → 小族子弟创角 → World → 关中 Settlement → 正式 AdventureScene → 石甲兽遭遇链，读取生产 basic_unarmed、spell_guanshiji（贯石击）、spell_julingshu（聚灵术）及普通行为定义。
+- 小族子弟默认两术均装配；实测四个槽位/候选组合均因无变化或已装配而不可确认。寒门散修未授予术法，本轮不改变出身内容或虚构备用术法。
+- 完整换术用例在进入 Adventure 前使用现有 AbilityLoadout.UnequipSpell 准备“一术装配、一术备用”的合法角色输入；Adventure 仍使用正式不可变快照和场景，没有替换会话或注入虚构术法。该输入准备属于测试夹具，不声称本轮新增了游戏内战前装配 UI。
+- 为覆盖保留较长冷却，用现有 snapshot API 准备 90/80 tick；为等待真实全局 tick 耗尽冷却，测试周期性恢复生命保证夹具存活。恢复生命只服务冷却功能验证，不能作为战斗平衡证据。
+
+## 实际运行与结果
+
+Unity：C:/Program Files/Unity/Hub/Editor/6000.3.18f1/Editor/Unity.exe。
+ProjectPath：当前 worktree 的 src；所有日志、截图、结果 XML 均为忽略的本地验证产物。
+
+1. 场景生成：Unity -batchmode -nographics -projectPath <本 worktree/src> -executeMethod TianZhang.Editor.AdventureSceneBuilder.RebuildCombatSwapSpell -quit -logFile <TEMP/tzg-swap-builder-7ca47011.log>；退出 0，保存正式 AdventureScene。
+2. 最终 PlayMode：Unity -batchmode -projectPath <本 worktree/src> -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongCombatSwapSpellPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatActionPreviewPlayModeTests -testResults <TEMP/tzg-swap-final-playmode-7ca47011.xml> -logFile <TEMP/tzg-swap-final-playmode-7ca47011.log>；8/8 passed，0 failed/inconclusive/skipped，32.935 秒。
+3. 定向 EditMode：Unity -batchmode -nographics -projectPath <本 worktree/src> -runTests -testPlatform EditMode -testFilter SpellSwap;OrdinaryActionsChargeTheirExplicitDefinition;SharedAbilityCooldownIsUniqueAndOnlyGlobalTicksReduceIt;GuardExitsOnlyForSuccessfulBenefitAndPersistsThroughEnd -testResults <TEMP/tzg-swap-editmode-7ca47011.xml> -logFile <TEMP/tzg-swap-editmode-7ca47011.log>；7/7 passed，0 failed/inconclusive/skipped。
+4. 两份 XML 分别通过 tools/run-unity-playmode-tests.ps1 和 tools/run-unity-editmode-tests.ps1 的 -ValidateResultOnly -ResultXmlPath 检查；均退出 0。最终两个 Unity 日志无编译错误。
+5. pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1；通过（19 assemblies、2 asmrefs）。
+6. pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1；通过（GongFa 29/29、Spells 84/84、Skills 31/31，625 language keys）。相关输入未变，未重复该检查，也未运行无关 BattleSim。
+
+换术用例覆盖：两槽位与真实候选选择；非法 ID/槽位、同术、已装配、取消；冷却事实改变后原报价拒绝；25 AP 不足报价不可确认；50 AP 严格扣一次、MP/CT/随机源不变；成功退出 Guard；回合中不刷新 AP；第二次换术及第三次拒绝；换出/换入账本保留；真实全局 tick 耗尽冷却后术法按生产费用/CD 执行。既有五个行动预览测试同时通过。
+
+调试运行：首轮 0/3（测试漏选小族子弟）；第二轮 1/3（备用输入准备晚于 Adventure 捕获角色快照）；定位正式创建与快照所有者后只修测试准备顺序，第三轮 3/3。随后发现换术摘要复用攻击信息导致原因需滚动，先用定向只读运行记录尺寸，再收短换术摘要，最终运行 8/8。未改业务规则掩盖这些准备或显示问题。
+
+## 实际可见与尺寸证据
+
+- 截图及记录：src/Logs/swap/default-1920.png/.txt、default-1366.png/.txt、legal.png/.txt；已实际打开检查图片。1920×1080、1366×768 均显示换术入口、槽位、候选、50 AP、剩余次数及拒绝原因；合法截图显示 Guard 状态下换入 90 tick。
+- 运行时 UICanvas/ScreenSpaceOverlay；1366×768 canvas scale=0.7114583。摘要宽 1051，原 preferredHeight=122.284 超过 viewport height=99.90；收短后 preferredHeight=91.362。摘要屏幕角点 (263.95,262.82)～(1011.69,327.82) 位于视口 (263.95,256.74)～(1011.69,327.82) 内；无转换 API、布局坐标或镜头补丁。
+- 新按钮文本 preferredWidth/preferredHeight 与实际 rect、屏幕边界均通过断言；费用、合法原因及合法预测与同一权威报价一致。
+
+## 收尾与剩余边界
+
+- 当前任务归档并只移除本 taskId 的队列/backlog 行；直接下游对 U-COMBAT-AP-SWAP-01 的具名前置引用全部保留，等待正式 master 结果后的 QueueMaintenance。
+- 默认小族子弟全部术法已装配，没有可换入的备用；这是正式输入事实。入口和确认链已在合法备用装配状态实测，本轮没有新增术法学习/战前装配界面，也不代表统一 AP 的装备、道具、最终全场景或平衡任务完成。
+- candidate 未集成 master；提交含本记录及下列输入/产物 SHA-256。临时 XML/PNG 不纳入 Git，可按上述定向命令重现。
+
+## 输入与产物摘要
+- src/Assets/DataConfig/AttackProfiles.csv SHA-256=1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f
+- src/Assets/DataConfig/Language.csv SHA-256=f61617227a5cbe4fc395f9fcc8355df92ffe73540892e873a58defe4053a5b06
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs SHA-256=0e315fc82494af69b9b5913dc85e3f08174af13fdfde7fbf2ebb4967b2f336cd
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs SHA-256=1a1f74979d9851d44aa43452b05f4bb907b1ce2ec97ac774207ececb1d10c6d5
+- src/Assets/Scenes/AdventureScene.unity SHA-256=49b49cdbaf91ccf65c0bb1528105685f16023027e1897acc63b5b591c6581bda
+- src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs SHA-256=0f7f63b37f3f9060dba2ed18404bc10087aa8fa332af4b29d832a612ed1490c2
+- TEMP/tzg-swap-final-playmode-7ca47011.xml SHA-256=bcb6668bfde55eb224d004b025c22018e3fea96683acfec19b831fad2575dc5e
+- TEMP/tzg-swap-editmode-7ca47011.xml SHA-256=ca6a22a6d33544eb6e5ceeb8c462d2a017971f5d0197aa645d8076e9df7969ea
+
+## 项目收尾门禁
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-SWAP-01 -Postcondition CodexClosedOrNonReady -OutputJson：通过；taskState=completed，cardCount=69，readyCount=0。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：通过，722 文件。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-pending-whitespace.ps1 -ExpectedPaths <本轮15个实际存在的变更文件>：通过；场景的Unity空值行尾改写已先用同脚本-Fix规范化，语义不变。
+- 暂存与唯一提交使用共享入口给定的 automation-finalize-commit.ps1 -RequireAutomationMetadata 合同；candidate 的完整SHA及无重命名压缩的16路径集合由最终结构化回复绑定，正式集成仍由共享入口负责。

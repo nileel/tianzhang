@@ -680,7 +680,7 @@ combat_move_destination_invalid,移动终点不可用
 combat_move_points_exhausted,移动力不足
 combat_move_destination_occupied,移动终点已被占据
 combat_move_path_invalid,没有可通行的路径
-combat_swap_limit_reached,本次行动已更换术法
+combat_swap_limit_reached,本战换术次数已用尽
 combat_swap_slot_invalid,术法栏位不可用
 combat_swap_candidate_unavailable,尚未获得该术法
 combat_swap_same_profile,该栏位已装配此术法

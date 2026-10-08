@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,8 @@ namespace TianZhang.Features.CombatPresentation
             timeline = axis;
             Bind(view.ConfirmButton, ConfirmCandidate);
             Bind(view.CancelButton, CancelCandidate);
+            Bind(view.SwapSlotButton, SelectNextSwapSlot);
+            Bind(view.SwapCandidateButton, SelectNextSwapCandidate);
         }
 
         public void CancelCandidate()
@@ -39,12 +42,12 @@ namespace TianZhang.Features.CombatPresentation
             previewHandler.ConfirmAction(selected);
         }
 
-        private void Choose(CombatActionKind kind, string target = null, string profile = null)
+        private void Choose(CombatActionKind kind, string target = null, string profile = null, int slot = -1)
         {
             if (!CanAct || snapshot == null || previewHandler == null) return;
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
-                snapshot.CommandContextVersion));
+                snapshot.CommandContextVersion, slotIndex: slot));
             previewView?.Present(Preview);
             timeline?.PresentPrediction(Preview);
         }
@@ -77,6 +80,7 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);
             Bind(actionBar?.DivineButton, () => { if (CanAct) Choose(CombatActionKind.Divine, targetId, divineProfileId); });
             Bind(actionBar?.GuardButton, () => { if (CanAct) Choose(CombatActionKind.Guard); });
+            Bind(actionBar?.SwapSpellButton, BeginSwapSpell);
             Bind(actionBar?.WaitButton, () =>
             {
                 if (!acceptsCommands) return;
@@ -133,6 +137,34 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         private bool CanAct => acceptsCommands && snapshot != null && !snapshot.IsPresenting;
+
+        private void BeginSwapSpell()
+        {
+            if (!CanAct) return;
+            var options = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell).ToArray();
+            CombatActionCandidate choice = (options.FirstOrDefault(action => action.CanConfirm) ?? options.FirstOrDefault())?.Candidate;
+            if (choice != null) Choose(CombatActionKind.SwapSpell, profile: choice.ProfileId, slot: choice.SlotIndex);
+        }
+
+        private void SelectNextSwapSlot()
+        {
+            if (!CanAct || Candidate?.Kind != CombatActionKind.SwapSpell) return;
+            int[] slots = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell)
+                .Select(action => action.Candidate.SlotIndex).Distinct().ToArray();
+            if (slots.Length == 0) return;
+            int next = (Array.IndexOf(slots, Candidate.SlotIndex) + 1) % slots.Length;
+            Choose(CombatActionKind.SwapSpell, profile: Candidate.ProfileId, slot: slots[next]);
+        }
+
+        private void SelectNextSwapCandidate()
+        {
+            if (!CanAct || Candidate?.Kind != CombatActionKind.SwapSpell) return;
+            string[] profiles = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell)
+                .Select(action => action.Candidate.ProfileId).Distinct().ToArray();
+            if (profiles.Length == 0) return;
+            int next = (Array.IndexOf(profiles, Candidate.ProfileId) + 1) % profiles.Length;
+            Choose(CombatActionKind.SwapSpell, profile: profiles[next], slot: Candidate.SlotIndex);
+        }
 
         private CombatArtActionSnapshot GetArt(int index) =>
             snapshot != null && snapshot.ArtActions.Count > index ? snapshot.ArtActions[index] : null;

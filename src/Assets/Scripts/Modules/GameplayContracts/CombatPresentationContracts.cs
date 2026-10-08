@@ -14,19 +14,20 @@ namespace TianZhang.Gameplay.Contracts
         public bool Completed { get; }
     }
 
-    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move }
+    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move, SwapSpell }
 
     public sealed class CombatActionCandidate
     {
         public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion,
             CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
-            IReadOnlyList<CombatUnitPresentationHex> movementPath = null)
+            IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1)
         {
             Kind = kind;
             ActorId = actorId;
             TargetId = targetId;
             ProfileId = profileId;
             ContextVersion = contextVersion;
+            SlotIndex = slotIndex;
             Destination = destination;
             MovementCostUnits = movementCostUnits;
             MovementPath = movementPath == null ? Array.Empty<CombatUnitPresentationHex>() :
@@ -37,6 +38,7 @@ namespace TianZhang.Gameplay.Contracts
         public string TargetId { get; }
         public string ProfileId { get; }
         public long ContextVersion { get; }
+        public int SlotIndex { get; }
         public CombatUnitPresentationHex? Destination { get; }
         public int MovementCostUnits { get; }
         public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
@@ -47,7 +49,8 @@ namespace TianZhang.Gameplay.Contracts
         public CombatActionPreviewSnapshot(CombatActionCandidate candidate, string actionName, string actorName,
             string targetName, bool canConfirm, string reason, int spiritCost, bool remainsInTurn,
             float settledCt, float threshold, long ticksUntilReady, int actionPointCostUnits = 0,
-            int ctPenalty = 0, int reuseCooldownTicks = 0, int remainingCooldownTicks = 0)
+            int ctPenalty = 0, int reuseCooldownTicks = 0, int remainingCooldownTicks = 0,
+            string replacedSpellName = "", int combatSwapsRemaining = 0)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -64,6 +67,8 @@ namespace TianZhang.Gameplay.Contracts
             CtPenalty = ctPenalty;
             ReuseCooldownTicks = reuseCooldownTicks;
             RemainingCooldownTicks = remainingCooldownTicks;
+            ReplacedSpellName = replacedSpellName;
+            CombatSwapsRemaining = combatSwapsRemaining;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -80,6 +85,8 @@ namespace TianZhang.Gameplay.Contracts
         public int CtPenalty { get; }
         public int ReuseCooldownTicks { get; }
         public int RemainingCooldownTicks { get; }
+        public string ReplacedSpellName { get; }
+        public int CombatSwapsRemaining { get; }
     }
 
     public enum CombatUnitPresentationEvent

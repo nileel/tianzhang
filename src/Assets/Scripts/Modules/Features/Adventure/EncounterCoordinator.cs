@@ -52,6 +52,7 @@ namespace TianZhang.Features.Adventure
         private Func<string, string> displayProfile = value => value;
         private string playerDisplayName;
         private long commandContextVersion;
+        private CombatCommandPreview swapPreview;
 
         public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay,
             Func<string, string> profileDisplay = null)
@@ -144,6 +145,7 @@ namespace TianZhang.Features.Adventure
             CombatCommand command = ToCommand(candidate);
             string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
             CombatCommandPreview preview = string.IsNullOrEmpty(reason) ? commandService.Preview(session, command) : null;
+            swapPreview = candidate.Kind == CombatActionKind.SwapSpell ? preview : null;
             return ProjectQuote(candidate, command, preview, reason);
         }
 
@@ -158,6 +160,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.Wait => "待机",
                 CombatActionKind.EndTurn => "结束行动",
                 CombatActionKind.Move => "移动",
+                CombatActionKind.SwapSpell => "换入" + displayProfile(command.ProfileId),
                 _ => displayProfile(command.ProfileId),
             };
             string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
@@ -166,15 +169,21 @@ namespace TianZhang.Features.Adventure
             var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
-                candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null);
-            int remainingCooldown = session != null && session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor)
-                ? actor.GetCooldown(command.ProfileId) : 0;
+                candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
+                candidate.SlotIndex);
+            CombatantSnapshot actor = null;
+            session?.Combatants.TryGet(command.ActorId, out actor);
+            int remainingCooldown = actor?.GetCooldown(command.ProfileId) ?? 0;
+            string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
+                candidate.SlotIndex >= 0 && candidate.SlotIndex < actor.EquippedArtProfileIds.Count
+                ? displayProfile(actor.EquippedArtProfileIds[candidate.SlotIndex]) : string.Empty;
             return new CombatActionPreviewSnapshot(resolved, name, playerDisplayName, targetName,
                 preview != null && preview.Validation.Succeeded, reason, preview?.SpiritCost ?? 0,
                 preview?.RemainsInTurn ?? false, preview?.Turn?.ChargeTime ?? 0,
                 preview?.Turn?.NextActionThreshold ?? 0, preview?.Turn?.TicksUntilReady ?? 0,
                 preview?.ActionPointCostUnits ?? 0, preview?.CtPenalty ?? 0,
-                preview?.ReuseCooldownTicks ?? 0, remainingCooldown);
+                preview?.ReuseCooldownTicks ?? 0, remainingCooldown, replaced,
+                actor == null ? 0 : Math.Max(0, actor.MaxCombatSwaps - actor.CombatSwapsUsed));
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)
@@ -197,6 +206,18 @@ namespace TianZhang.Features.Adventure
                     return;
                 }
             }
+            if (candidate.Kind == CombatActionKind.SwapSpell)
+            {
+                CombatCommandPreview quote = swapPreview;
+                swapPreview = null;
+                if (quote == null)
+                {
+                    presentation?.AppendLog(displayReason("combat_quote_stale"));
+                    return;
+                }
+                ExecutePlayer(ToCommand(candidate), quote);
+                return;
+            }
             ExecutePlayer(ToCommand(candidate));
         }
 
@@ -215,6 +236,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.Wait => CombatCommandKind.Wait,
                 CombatActionKind.EndTurn => CombatCommandKind.EndTurn,
                 CombatActionKind.Move => CombatCommandKind.Move,
+                CombatActionKind.SwapSpell => CombatCommandKind.SwapSpell,
                 _ => throw new ArgumentOutOfRangeException(nameof(candidate)),
             };
             string profile = candidate.Kind == CombatActionKind.BasicAttack ? spawned?.PlayerBasicProfileId : candidate.ProfileId;
@@ -222,7 +244,7 @@ namespace TianZhang.Features.Adventure
                 ? new TianZhang.Spatial.HexCoord(candidate.Destination.Value.Q, candidate.Destination.Value.R)
                 : (TianZhang.Spatial.HexCoord?)null;
             return new CombatCommand(kind, candidate.ActorId, candidate.TargetId, profile,
-                destination: destination, contextVersion: candidate.ContextVersion);
+                destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion);
         }
 
         public void RequestBasicAttack(string actorId, string targetId)
@@ -306,17 +328,17 @@ namespace TianZhang.Features.Adventure
             Complete(resultBuilder.Build(session).Outcome);
         }
 
-        private void ExecutePlayer(CombatCommand command)
+        private void ExecutePlayer(CombatCommand command, CombatCommandPreview quote = null)
         {
             if (!acceptsPlayerCommand || IsPresenting || session == null || command == null ||
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
-            CombatActionResult result = ExecuteCommand(command);
+            CombatActionResult result = ExecuteCommand(command, quote);
             presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
                 resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
         }
 
-        private CombatActionResult ExecuteCommand(CombatCommand command)
+        private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
         {
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
             session.Combatants.TryGet(command.TargetId, out CombatantSnapshot targetBefore);
@@ -345,7 +367,8 @@ namespace TianZhang.Features.Adventure
                     command.SlotIndex,
                     command.ContextVersion);
             }
-            CombatActionResult result = commandService.Execute(session, command);
+            CombatActionResult result = quote == null ? commandService.Execute(session, command) :
+                commandService.Execute(session, command, quote);
             if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
                 ProjectPresentation(command, result, actorBefore, actorStart, targetBefore);
             return result;
@@ -437,11 +460,14 @@ namespace TianZhang.Features.Adventure
             Add(CombatActionKind.Wait);
             Add(CombatActionKind.EndTurn);
             foreach (string profileId in spawned.PlayerDivineProfileIds) Add(CombatActionKind.Divine, enemy?.Id, profileId);
+            for (int slot = 0; slot < player.EquippedArtProfileIds.Count; slot++)
+                foreach (string profileId in player.AvailableArtProfileIds)
+                    Add(CombatActionKind.SwapSpell, profile: profileId, slot: slot);
             return actions;
 
-            void Add(CombatActionKind kind, string target = null, string profile = null)
+            void Add(CombatActionKind kind, string target = null, string profile = null, int slot = -1)
             {
-                var candidate = new CombatActionCandidate(kind, player.Id, target, profile, commandContextVersion);
+                var candidate = new CombatActionCandidate(kind, player.Id, target, profile, commandContextVersion, slotIndex: slot);
                 CombatCommand command = ToCommand(candidate);
                 actions.Add(ProjectQuote(candidate, command, commandService.Preview(session, command)));
             }

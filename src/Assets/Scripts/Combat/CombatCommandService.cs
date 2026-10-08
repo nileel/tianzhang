@@ -88,6 +88,8 @@ namespace TianZhang.Combat
                     penalty -= modifier.CtPenaltyReduction; cooldown -= modifier.ReuseCooldownReductionTicks;
                 }
             }
+            if (actor != null && command.Kind == CombatCommandKind.SwapSpell)
+                cooldown = Math.Max(actor.GetCooldown(command.ProfileId), cooldown);
             if (validation.Succeeded && actor.ActionPointsRemainingUnits < cost)
                 validation = CombatActionResult.Rejected("action_points_insufficient");
             if (validation.Succeeded && penalty > int.MaxValue - 100 - session.PendingCtPenalty)

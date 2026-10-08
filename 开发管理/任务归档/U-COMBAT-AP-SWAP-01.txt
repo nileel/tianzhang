@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-09 HUD已正式完成；公共合同和实时路径扫描已冻结换术候选、槽位、预览、正式场景与定向PlayMode范围，风险预检零命中且无门禁，具备执行条件。",
+  "stateReason": "2026-10-09 Codex完成正式换术入口与权威费用预览；PlayMode 8/8、EditMode 7/7及程序集/数据链验证通过。归档形成candidate，正式重放与集成由共享入口负责。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/AbilityLoadout.cs",
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
@@ -90,3 +90,18 @@
 
 - 需要建立新装配系统或扩写术法内容时停止；不修改换装备独立任务。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 完成记录（2026-10-09）
+
+- Codex / gpt-6.1-sol 单模型完成既有换术入口、槽位/候选选择、实际冷却与每战次数预览及原报价确认；保持50 AP、每战2次、换入至少60 tick，成功退出Guard。
+- 正式输入、夹具边界、实际命令和结果见 开发管理/U-COMBAT-AP-SWAP-01-验证记录.txt；PlayMode 8/8、EditMode 7/7，两个分辨率截图已检查。
+- 当前任务从队列和本分线backlog移除；下游具名前置仍保留，正式master集成后由QueueMaintenance维护。本归档属于唯一candidate，不声称已集成。
+
+## 经验候选
+
+- 状态：pending。
+- 现象：新动作增加槽位/次数说明后，正式预览的拒绝原因落在滚动视口下方。
+- 已证实根因：换术复用攻击摘要并重复冷却说明及无关伤害信息，使文本preferredHeight=122.284超过viewport height=99.90。
+- 证据：本任务验证记录及src/Logs/swap两分辨率截图；收短后preferredHeight=91.362，最终8个PlayMode用例通过。
+- 可能复用范围：向既有动作预览添加新内容时，在正式运行时同时检查费用和拒绝原因的可见性。
+- 门禁可能：记录文本preferredHeight、viewport及最终屏幕角点，并断言关键摘要无需滚动；本轮不查重、不分配正式经验ID、不修改风险索引。

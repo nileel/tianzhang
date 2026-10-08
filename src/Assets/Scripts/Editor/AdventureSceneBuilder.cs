@@ -225,7 +225,8 @@ namespace TianZhang.Editor
             PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 378, 92, 216, 44);
             PlaceLayoutRect(LayoutObject(actions, "SecondArtTargetButton"), 606, 92, 216, 44);
             PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
-            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 252, 8, 570, 76);
+            PlaceLayoutRect(LayoutObject(actions, "SwapSpellButton"), 252, 8, 114, 68);
+            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 378, 8, 444, 76);
             foreach (Text text in actions.GetComponentsInChildren<Text>(true)) text.fontSize = 20;
 
             RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
@@ -389,6 +390,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(view, "summary", summary);
             SceneBuildSupport.SetObject(view, "confirmButton", confirm);
             SceneBuildSupport.SetObject(view, "cancelButton", cancel);
+            BuildSwapSelectors(row.transform, view);
             SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatActionPreviewView", view);
             Transform rail = canvas.transform.Find("CombatTimelineRoot");
             if (rail == null) throw new InvalidOperationException("Preview requires the formal timeline.");
@@ -404,6 +406,39 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionText", prediction);
             prediction.gameObject.SetActive(false);
             panel.SetActive(false);
+        }
+
+        [MenuItem("天章/场景/接入关中战斗换术")]
+        public static void RebuildCombatSwapSpell()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas")?.GetComponent<Canvas>();
+            if (root == null || canvas == null) throw new InvalidOperationException("Adventure swap owners are missing.");
+            CombatActionBarView bar = root.GetComponent<CombatActionBarView>();
+            Transform actions = ((GameObject)new SerializedObject(bar).FindProperty("root").objectReferenceValue).transform;
+            Button swap = LayoutButton(actions, "SwapSpellButton", "换术");
+            SceneBuildSupport.SetObject(bar, "swapSpellButton", swap);
+            PlaceLayoutRect(swap.GetComponent<RectTransform>(), 252, 8, 114, 68);
+            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 378, 8, 444, 76);
+            BuildSwapSelectors(LayoutObject(canvas.transform, "CombatActionPreviewRoot/PreviewActions"),
+                root.GetComponent<CombatActionPreviewView>());
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
+        private static void BuildSwapSelectors(Transform row, CombatActionPreviewView view)
+        {
+            Button slot = LayoutButton(row, "SwapSlotButton", "选择槽位");
+            Button candidate = LayoutButton(row, "SwapCandidateButton", "选择术法");
+            slot.transform.SetSiblingIndex(0);
+            candidate.transform.SetSiblingIndex(1);
+            foreach (Button button in new[] { slot, candidate })
+            {
+                button.GetComponentInChildren<Text>().fontSize = 18;
+                button.gameObject.SetActive(false);
+            }
+            SceneBuildSupport.SetObject(view, "swapSlotButton", slot);
+            SceneBuildSupport.SetObject(view, "swapCandidateButton", candidate);
         }
 
         [MenuItem("天章/场景/接入关中目标联动")]
@@ -741,7 +776,8 @@ namespace TianZhang.Editor
             Button divine = SceneBuildSupport.CreateButton("DivineButton", actionRoot.transform, "神通", out Text divineLabel);
             Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
             Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out Text waitLabel);
-            foreach (Button button in new[] { basic, art, secondArt, target, divine, guard, wait })
+            Button swap = SceneBuildSupport.CreateButton("SwapSpellButton", actionRoot.transform, "换术", out _);
+            foreach (Button button in new[] { basic, art, secondArt, target, divine, guard, wait, swap })
             {
                 SettlementSceneBuilder.ApplyButtonSkin(button);
                 SettlementSceneBuilder.SetHeight(button.gameObject, 44);
@@ -767,6 +803,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(actionBar, "divineLabel", divineLabel);
             SceneBuildSupport.SetObject(actionBar, "guardButton", guard);
             SceneBuildSupport.SetObject(actionBar, "waitButton", wait);
+            SceneBuildSupport.SetObject(actionBar, "swapSpellButton", swap);
             SceneBuildSupport.SetObject(actionBar, "waitLabel", waitLabel);
             SceneBuildSupport.SetObject(actionBar, "actionStatusLabel", status);
             return actionRoot;
