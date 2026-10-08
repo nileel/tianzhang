@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "负责人已通过 DEC-20261008-REVFAFD8B351D01 选择 Codex 按未通过审核清单返工",
+  "stateReason": "自动责任方确认阻塞：action_economy_reference_owner_missing",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
