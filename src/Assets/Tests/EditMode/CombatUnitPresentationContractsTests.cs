@@ -73,6 +73,40 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void HudCopiesAbilityListsAndMovementCandidatesWithoutMutableRuleObjects()
+        {
+            var arts = new[] { "art" };
+            var divines = new[] { "divine" };
+            var path = new[] { new CombatUnitPresentationHex(0, 1) };
+            var candidate = new CombatActionCandidate(CombatActionKind.Move, "player", null, null, 12,
+                path[0], 33333, path);
+            var quote = new CombatActionPreviewSnapshot(candidate, "移动", "角色", "自身", true, "", 0, true,
+                0, 115, 3, actionPointCostUnits: 33333, ctPenalty: 0, reuseCooldownTicks: 0);
+            var actions = new[] { quote };
+            var hud = new CombatHudSnapshot(null, null, "行动", true, arts, divines, actions: actions,
+                actionPointLimitUnits: 100000, pendingCtPenalty: 15);
+            arts[0] = divines[0] = "changed";
+            path[0] = new CombatUnitPresentationHex(2, 2);
+            actions[0] = null;
+            Assert.That(hud.ArtProfileIds.Single(), Is.EqualTo("art"));
+            Assert.That(hud.DivineProfileIds.Single(), Is.EqualTo("divine"));
+            Assert.That(hud.Actions.Single(), Is.SameAs(quote));
+            Assert.That(candidate.MovementPath.Single().R, Is.EqualTo(1));
+            Assert.That(candidate.Destination.Value.R, Is.EqualTo(1));
+            Assert.That(quote.ActionPointCostUnits, Is.EqualTo(33333));
+            Assert.Throws<NotSupportedException>(() => ((System.Collections.Generic.IList<string>)hud.ArtProfileIds)[0] = "other");
+            Assert.Throws<NotSupportedException>(() => ((System.Collections.Generic.IList<CombatActionPreviewSnapshot>)hud.Actions).Clear());
+            foreach (Type dto in new[] { typeof(CombatActionCandidate), typeof(CombatActionPreviewSnapshot),
+                typeof(CombatMovementOption), typeof(CombatHudSnapshot), typeof(CombatArtTargetSnapshot) })
+            {
+                Assert.That(dto.GetProperties().All(property => !property.CanWrite), Is.True, dto.Name);
+                Assert.That(dto.GetFields().Length, Is.Zero, dto.Name);
+                Assert.That(dto.GetProperties().All(property => !property.PropertyType.Namespace.StartsWith("TianZhang.Combat") &&
+                    !property.PropertyType.Namespace.StartsWith("TianZhang.Character")), Is.True, dto.Name);
+            }
+        }
+
+        [Test]
         public void GameplayContractHasNoCombatOrUnityImplementationDependency()
         {
             string source = File.ReadAllText(Path.Combine(

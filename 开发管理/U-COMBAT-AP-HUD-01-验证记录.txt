@@ -1,0 +1,92 @@
+# U-COMBAT-AP-HUD-01 验证记录
+
+日期：2026-10-09。责任方：Codex；主模型：gpt-6.1-sol，依据共享入口通过codex exec -m传入的模型启动证明。
+RunId：4ef41029-42e3-400c-9d91-bedd373d3f61。
+工作目录：D:\天章游戏开发\.worktrees\automation\4ef41029-42e3-400c-9d91-bedd373d3f61\codex。
+分支：codex/automation/codex/4ef41029-42e3-400c-9d91-bedd373d3f61/candidate。
+启动基线：7192c0262f0155d3dafd169363900d9ab18165cf。
+
+## 范围、模型协作与预检
+
+- 本卡原子结果是正式HUD的真实AP、同源命令费用、独立合法性和条件时间轴；没有改角色数值、普通行为定义、动画、模型、头顶血条、场景或自动化。
+- 展示合同、输入、Coordinator投影和场景验收共享同一接口，按已冻结方案使用单主模型；没有独立辅助工作面，未启动辅助模型或第二责任会话。
+- 消费共享入口绑定run／task／digest的零命中预检，并在实施前执行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId U-COMBAT-AP-HUD-01。
+- 预检status=ok；taskCardDigest=ffd60a06c22f2f51ad1e4af20aac6809ac22b08fb0fde3157b7ffddc6f52dd81；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。matched／notice／mustRead／gates／gatePointers均空，schema 2风险投影一致，无门禁；没有新增允许路径或技术路线。
+- 已读unity-agent-workflows。References loaded：runtime-owner-proof、ui-and-visual-assets、screenshot-text-owner、runtime-visible-output、unity-validation、project-structure-discovery、modular-architecture、ai-workflows、content-and-systems。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md；以实际源码和PlayMode为事实源。
+
+## 正式所有者、根因与修改
+
+- 唯一正式场景是AdventureScene；其AdventureSceneInstaller.Awake读取序列化Canvas／字体／视图，注入EncounterCoordinator、CombatHudPresenter、CommandInput及唯一Static3D provider。没有创建第二Canvas或场景，也没有改共享SceneBuildSupport／UI皮肤。
+- 精确文本／对象检索：旧“移力”→UICanvas/CombatHudRoot/CombatHotbar/CombatActionBar/MovementControls/MovementStatus；费用按钮→同一CombatActionBar下BasicAttackButton／GuardButton／ArtButton／SecondArtButton；ActionPreviewSummary→CombatActionPreviewRoot/PreviewBody；条件标记→CombatTimelineRoot/ConditionalNextMarker。
+- 创建者为AdventureSceneBuilder.BuildCombatMovement／BuildStarterArtActionBar／BuildCombatActionPreview／BuildCombatLayout；运行时写入者为ActionBar.Present／PresentMovement、ActionPreviewView.Present和TimelineView.PresentPrediction。Presenter.Present→CommandInput.SetContext负责刷新。旧构建文案会被这些正式写入者覆盖，故没有修改Builder或场景；头顶血条、目标详情和战报不是本次AP费用文字所有者。
+- 内核CommandService已经有唯一报价，但BuildArtActions仍从profile拆取MP／CT，基本动作按钮只看统一可输入状态，MovementStatus直接显示AP最小单位且叫“移力”，预览没有AP／独立CD。费用和合法性投影缺失是本次根因，没有重做费用计算或回合内核。
+- 所有动作和术法目标分别经CommandService.Preview投影，复制AP／MP／CT惩罚／新启动CD／当前剩余CD／条件回合末CT；Art目标费用亦同源。基本动作、术法、神通、防御与结束控件分别消费自己报价的合法性；结束能力不代替其他动作合法性。沿用既有待机／结束复用控件，不新增命令或装配系统。
+- Movement选项经同一Preview取得费用及路径，候选复制目的地、完整路径、费用和当前ContextVersion。确认先拒绝旧上下文，再拒绝费用／路径不符；输入清掉选定候选后提交，重复点击没有第二次提交。没有从Presenter写Combat或另建执行器。
+- AP只做单位显示转换：1000最小单位=1 AP，最多三位小数。正式余额、回合快照上限和累计CT来自Session／Combatant；动作条显示费用与禁用原因，预览明确区分CT惩罚和技能CD，时间轴标为动作完成并结束后的条件预测，不推进实际时间。
+- 命令生成随机rolls时继续复制ContextVersion；UI DTO仅持有标量、稳定ID和只读副本。Art／Divine列表也复制，不持有Combat／Character可变对象；本轮合同5项EditMode测试全过。
+- Coordinator由既有投影职责扩充同源报价投影，618行；合同440行；既有PlayMode测试文件527行。未增加新的生产类、模块依赖或职责所有者。没有本轮新图报告，不声称通过God Node／80边计数门；用实时asmdef边界检查和源所有者证明。
+
+## Unity命令与结果
+
+Unity版本6000.3.18f1，所有运行只使用本worktree的src及其生成缓存。
+
+1. pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath 'D:/天章游戏开发/.worktrees/automation/4ef41029-42e3-400c-9d91-bedd373d3f61/codex/src' -ResultXmlPath 'D:/天章游戏开发/.worktrees/automation/4ef41029-42e3-400c-9d91-bedd373d3f61/codex/src/Logs/ap-hud-editmode.xml'
+   脚本编译成功；731项／728通过／3失败／0跳过；runner退出1，Unity退出2。CombatUnitPresentationContractsTests 5/5通过。三个失败为宽袖实验缺旁置Blender源，以及两个棋子配置测试缺原始石甲兽FBX；不在本卡输入／允许路径内，未补素材或改测试。
+
+2. 图形验收使用当前Unity Test Framework自带CLI runner，包内TestStarter和SettingsBuilder核实了runTests／testFilter参数。现有PowerShell PlayMode runner固定batchmode／nographics且没有filter，不能替代本卡两分辨率实画面；未改runner。
+   公共实际参数：Start-Process -FilePath 'C:/Program Files/Unity/Hub/Editor/6000.3.18f1/Editor/Unity.exe' -ArgumentList @('-runTests','-projectPath',$taskProject,'-testPlatform','PlayMode','-testFilter',<下列filter>,'-testResults',<本worktree src/Logs下XML>,'-logFile',<同名log>) -WindowStyle Hidden -PassThru。
+   $taskProject是上述worktree的src绝对路径；未传batchmode／nographics。每次等待实际退出，前后以原字节快照保护所有tracked Assets／ProjectSettings，没有把Unity自动改写纳入candidate。
+
+| XML文件 | 实际testFilter | 结果 |
+|---|---|---|
+| ap-hud-graphical.xml | GuanzhongCombatActionPreviewPlayModeTests\|GuanzhongActionPointFlowPlayModeTests\|GuanzhongMovementPlayModeTests\|GuanzhongCombatTimelinePlayModeTests\|GuanzhongCombatLayoutPlayModeTests | 24项，19通过／5失败；其中新用例误写贯石击30 AP（生产为50 AP）、移动文案不含原“消耗”，另3项见基线 |
+| ap-hud-baseline-graphical.xml | GuanzhongCombatLayoutPlayModeTests.VictoryReturnsAt\|GuanzhongCombatTimelinePlayModeTests.FormalDefaultStartMenuRoute | 启动SHA的原始字节源码，3项均失败；名称与错误正文同首轮的那3项精确相同；finally恢复本轮源码 |
+| ap-hud-final-graphical.xml | GuanzhongCombatActionPreviewPlayModeTests.HudShowsAuthoritativeCostsAndInterleavedActionsAtBothResolutions\|GuanzhongMovementPlayModeTests | 2项均失败：防御费用文字超高；结束文字多了0 AP而触发既有精确文本检查 |
+| ap-hud-geometry.xml | 同上一行 | 移动1项通过；双分辨率的行为检查完成，最终文字门失败，取得全部文本数值和四张实际截图 |
+| ap-hud-accepted.xml | GuanzhongCombatActionPreviewPlayModeTests.HudShowsAuthoritativeCostsAndInterleavedActionsAtBothResolutions | 字符串缩短／防御字号修复后1/1通过，Unity退出0 |
+| ap-hud-final.xml | GuanzhongCombatActionPreviewPlayModeTests\|GuanzhongMovementPlayModeTests | 最终命令上下文复制复核后6/6通过，0失败／0跳过，Unity退出0 |
+
+- 最终6项覆盖候选／目标／移动选择取消、MP不足／目标死亡、旧确认、重复确认、演出忙碌、退出生命周期和正式两分辨率费用／AP刷新。此前首轮通过的FLOW三项、轴纯投影／调度和布局可达性证据按未变输入复用；不为文字收口重复整套检查。
+- 最终XML断言total=passed=6、result=Passed；基线比较用Compare-Object核对3个失败的fullname及failure.message.InnerText，差异为0。
+
+## 正式场景观测与画面
+
+- 两种尺寸均由StartMenu→正式小族创角→World→关中Settlement→接悬赏→Adventure进入石甲兽遭遇；读取真实生产AP／攻击定义，未改费用、角色、敌人或场景资产。随机源是明确的测试依赖注入，用于复现输入／取消／随机消费；本轮不宣称普通随机游玩或全战斗最终验收。
+- 1920×1080：聚灵术自用先花25 AP，再真实鼠标选格／确认移动花50 AP；1366×768：先移50 AP，再聚灵术25 AP。均保持turn=1／tick=13，余25000单位=25 AP，累计CT=5、聚灵术剩余CD=5。子动作和预览未推进全局刻，结束候选门槛105。
+- 起始贯石击显示50 AP／12 MP、CT惩罚10、技能CD10刻，分别与权威报价比较；自用聚灵术25 AP／0 MP。动画忙碌时所有实际提交控件禁用，结束后重新按剩余AP和CD刷新；余25 AP时普攻／贯石击／防御不可用，结束仍可选。
+- 当前AP、MP、HP、位置、Guard、CD、累计惩罚、轴状态和随机调用计数在目标选择／取消、旧动作／旧移动确认、忙碌及重复确认后保持不变。移动费用标签和候选路径与同源Quote一致，正式鼠标选定格再确认，没有fixture冒称生产移动。
+- 最终四张ScreenCapture截图均已实际查看：src/Logs/ap-hud/initial-1920.png、after-actions-1920.png、initial-1366.png、after-actions-1366.png。费用、剩余AP、禁用原因、条件标记和确认／取消可读可达；预览正文沿既有滚动区域，未改布局／锚点／相机／字体资源。
+- 数值证据：UICanvas为ScreenSpaceOverlay；1920 scale=1，1366 scale=0.7114583。GuardButton/Label源与输出同一Canvas，无坐标转换；rect=82×36，1920屏幕角(849,143)～(931,179)，1366为(604.03,101.73)～(662.37,127.34)。旧20号“防御 · 50 AP”preferredWidth=111／112.445、preferredHeight=58／56.223，确实裁断；不是坐标错误。
+- 修复后仅防御费行缩为“防御50AP”、同一字体18号；1366 preferredWidth=77.306、preferredHeight=23.895，保持原82×36。聚灵术原“25 AP / 0 MP · CD 5”在1366宽186.94超出184，三行高84.334超出60；缩为“25AP / 0MP · CD5”后宽170.073、高56.223，保持184×60。其他费用文字、状态和条件标记高度检查全部通过。
+
+## 未通过范围与残留边界
+
+- 全量EditMode三项缺源素材失败仍存在：ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings；CombatUnitPresentationProfileEditorTests.BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently；同类FormalProfileSetHasNoFuYuanDependency。源码编译和本卡DTO检查通过，不把731项写成全通过。
+- 两个VictoryReturnsAt1366／1920基线用例写死敌人当前HP=839，实际正式首个玩家回合为657；FormalDefaultStartMenuRouteProjectsActualTimelineThroughMoveGuardWaitDeathAndReentry基线要求既有轴标签字号≤18，实际20。以启动SHA原字节复跑确认三个同名／同错误基线失败；没有改敌人、头顶血条、轴条目字号或该测试断言来吞掉失败。
+- 没有跑全量PlayMode或BattleSim，没有角色强度结论，没有新增道具／换装／换术。后续任务的具名前置保持，正式结果入master后由QueueMaintenance维护。
+- 截图／XML／几何记录是本worktree忽略产物，本记录保留输入hash、实际观测和结果；最终candidate绑定本记录和被验证源码，正式集成由共享入口完成。
+
+## 证据SHA-256
+
+- EncounterCoordinator.cs：A8973CCBB4D35A38DBC8337FE9CD815A158A7C09409ACE95B7FB6431A047C1B1。
+- CombatActionBarView.cs：BE875CA1406C2D997CDCB8AC3F3660E167A2A5830AFBB41F99D574FBE2F0E0B5。
+- CombatPresentationContracts.cs：50DCEF36E0AEC13EDFFDF56F6C9431498672491828CC53D03EDE9B329B176683。
+- CombatUnitPresentationContractsTests.cs：E671E4D84681B596152BBD9B43C906ED5508E291FAFBB3BCDBE0504004703E8E。
+- GuanzhongCombatActionPreviewPlayModeTests.cs：1D0EFFA09CC491390C4A759D09A8D5FE8C57E3A5434F7CE9BB8229D07A16D07F。
+- ap-hud-editmode.xml：2C13A3C03E1993A8494AD9F86ABEB4C2D0FDF1C2C1B19A858CEA279426F5F087。
+- ap-hud-baseline-graphical.xml：2AFFD813887AF4CD62E0BC6F51C7151A00B32B9C4FC1436BADEFB0436566D7BF。
+- ap-hud-final.xml：33CA849C2B602441B97A90F11D1094B3F3A957F7EBEA46D54BFC38DD46C8AEC2。
+- initial-1920.png：69F608909EC3CC04FC640B141A640A6E5F2255940F6D317BCDEAA166965BEBC5。
+- after-actions-1920.png：7D5A2082CA7D8160E848EE6EC3C4948203E7FDC509FE8FE7FB7DB92A985062AB。
+- initial-1366.png：177C48E25E87098E734D1BD4C977A7C3A754BE9DE017A5833D34730A97D6E749。
+- after-actions-1366.png：70C61DCC738A09315E6BFD8306C30600BD39E0C72869119A1C612F0811E8A5B7。
+
+## 检查与归档
+
+- check-unity-assembly-boundaries：退出0，19 assemblies／2 asmrefs。
+- check-data-chain：退出0，GongFa=29/29、Spells=84/84、Skills=31/31，language keys=625。
+- Codex自产结果只归档本任务、删除同ID队列／backlog行；其他任务、拓扑、runtime和worktree未改。
+- 归档前仅用本轮已有事实／diff／验证形成一项pending经验候选，记录在本任务归档；不查重、不分配经验ID、不建整理卡、不改风险索引。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-HUD-01 -Postcondition CodexClosedOrNonReady -OutputJson：退出0，taskState=completed、readyCount=0、cardCount=70。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：退出0，721 files checked。
+- 空白检查按实际存在的变更文件执行check-pending-whitespace，删除源由git diff --check及暂存后git diff --cached --check覆盖；路径限定提交仅使用规定automation-finalize-commit.ps1与RequireAutomationMetadata，最终结果以候选提交元数据为准。

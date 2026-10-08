@@ -698,3 +698,15 @@ attack_profile_requirements_not_met,境界或灵根不满足要求
 spirit_recovery_profile_contract_invalid,灵力恢复配置不可用
 non_recovery_fields_present,术法效果配置不一致
 spirit_recovery_environment_not_configured,灵力恢复环境尚未配置
+action_points_insufficient,行动力不足
+combat_guard_already_active,已处于防御姿态
+combat_wait_after_benefit,已行动，不能待机
+combat_actor_stunned,眩晕中，无法行动
+combat_actor_immobilized,定身中，无法移动
+combat_spirit_sealed,封灵中，无法施法
+movement_efficiency_zero,当前无法移动
+combat_quote_stale,行动状态已变化，请重新选择
+combat_ct_penalty_overflow,累计行动惩罚超出上限
+combat_effect_overflow,行动结果超出上限
+combat_move_quote_invalid,移动费用已变化，请重新选择
+combat_move_cost_overflow,移动费用超出上限

@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-08 U-COMBAT-AP-FLOW-01已正式归档；公共合同、实际HUD路径与风险预检已核对，本卡进入ready等待执行。",
+  "stateReason": "2026-10-09 Codex完成正式HUD同源AP费用、独立合法性和条件时间轴；最终预览与移动PlayMode 6/6及两分辨率画面通过。全量EditMode素材缺失与三个图形基线失败保留，见本任务验证记录。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
@@ -93,3 +93,28 @@
 
 - 要重做整套UI、修改角色模型／动画／头顶血条、创建第二费用计算或从Presenter写Combat时停止。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 完成与验证结果（2026-10-09）
+
+- 本run按入口证明使用gpt-6.1-sol，冻结接口／投影／场景验收紧密相关，由单主模型完成；复核零命中预检，无新增路径或所有者。
+- 正式HUD显示真实剩余AP／上限和累计CT；各动作分别读取CommandService同源费用／合法性，预览区分AP、MP、CT惩罚、技能CD和当前CD。结束控件不统一禁用其他动作，时间轴标为完成当前候选并结束后的条件预测。
+- 移动选项复制同源路径／费用和当前上下文，经既有确认通道拒绝旧上下文及费用／路径改变；取消、目标选择、忙碌及重复确认不部分扣费。DTO不持有Combat／Character可变对象；没有修改生产费用、内核、角色、场景、模型／动画或头顶血条。
+- 最终预览／移动PlayMode 6/6通过；1920×1080和1366×768实际截图及文字高度检查通过。两种动作顺序均同turn=1／tick=13，移动50 AP与聚灵术25 AP后余25 AP，累计CT=5、独立CD=5，结束候选门槛105。
+- EditMode 731项中728通过，本轮DTO 5/5通过；三个素材来源缺失失败未关闭。另三个图形测试的基线失败以启动SHA原字节复跑，名称和错误正文精确相同，未修改其所有者或断言。未跑全量PlayMode／BattleSim，不形成数值平衡结论。
+- 详细命令、画面／数值、源码和结果hash见开发管理/U-COMBAT-AP-HUD-01-验证记录.txt。只移除自身队列／backlog行；下游具名前置保持，由正式结果进入master后的QueueMaintenance维护。
+- 收尾仅以本轮已有事实形成下列pending候选；没有查重、经验ID、整理卡或风险索引修改。
+
+## 经验候选
+
+### U-COMBAT-AP-HUD-01-C01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：正式按钮加入同源费用后发生文字裁断；聚灵术费用在1920可容纳，1366画布缩放时额外换行。
+- 已证实根因：防御Label固定82×36而费用行20号字宽111、高58；1366聚灵术费用行宽186.94超过184，换成三行高84.334超过60。字体按实际像素缩放的度量使贴边长行不能只凭1920结果验收。
+- 可能复用范围：现有Canvas固定按钮中追加费用、冷却或本地化文字时的双分辨率验收；先核对正式创建／刷新写入者与真实文字区域，再缩短字符串或做所有者内的局部字号调整。
+- 证据：本任务验证记录及ap-hud-geometry.xml的两分辨率数值；原布局保持，防御18号缩写后1366宽77.306、高23.895，聚灵术缩写后宽170.073、高56.223；最终ap-hud-final.xml 6/6通过且四张实际截图已查看。
+- 门禁可能：yes

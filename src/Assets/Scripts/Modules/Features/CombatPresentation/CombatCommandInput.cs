@@ -33,7 +33,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void ConfirmCandidate()
         {
-            if (!isActiveAndEnabled || Preview == null || !Preview.CanConfirm) return;
+            if (!isActiveAndEnabled || !CanAct || Preview == null || !Preview.CanConfirm) return;
             CombatActionCandidate selected = Candidate;
             CancelCandidate();
             previewHandler.ConfirmAction(selected);
@@ -41,7 +41,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void Choose(CombatActionKind kind, string target = null, string profile = null)
         {
-            if (!acceptsCommands || snapshot == null || previewHandler == null) return;
+            if (!CanAct || snapshot == null || previewHandler == null) return;
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
                 snapshot.CommandContextVersion));
@@ -132,7 +132,7 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Present(null);
         }
 
-        private bool CanAct => acceptsCommands;
+        private bool CanAct => acceptsCommands && snapshot != null && !snapshot.IsPresenting;
 
         private CombatArtActionSnapshot GetArt(int index) =>
             snapshot != null && snapshot.ArtActions.Count > index ? snapshot.ArtActions[index] : null;

@@ -14,30 +14,40 @@ namespace TianZhang.Gameplay.Contracts
         public bool Completed { get; }
     }
 
-    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn }
+    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move }
 
     public sealed class CombatActionCandidate
     {
-        public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion)
+        public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion,
+            CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
+            IReadOnlyList<CombatUnitPresentationHex> movementPath = null)
         {
             Kind = kind;
             ActorId = actorId;
             TargetId = targetId;
             ProfileId = profileId;
             ContextVersion = contextVersion;
+            Destination = destination;
+            MovementCostUnits = movementCostUnits;
+            MovementPath = movementPath == null ? Array.Empty<CombatUnitPresentationHex>() :
+                new List<CombatUnitPresentationHex>(movementPath).AsReadOnly();
         }
         public CombatActionKind Kind { get; }
         public string ActorId { get; }
         public string TargetId { get; }
         public string ProfileId { get; }
         public long ContextVersion { get; }
+        public CombatUnitPresentationHex? Destination { get; }
+        public int MovementCostUnits { get; }
+        public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
 
     public sealed class CombatActionPreviewSnapshot
     {
         public CombatActionPreviewSnapshot(CombatActionCandidate candidate, string actionName, string actorName,
             string targetName, bool canConfirm, string reason, int spiritCost, bool remainsInTurn,
-            float settledCt, float threshold, long ticksUntilReady)
+            float settledCt, float threshold, long ticksUntilReady, int actionPointCostUnits = 0,
+            int ctPenalty = 0, int reuseCooldownTicks = 0, int remainingCooldownTicks = 0)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -50,6 +60,10 @@ namespace TianZhang.Gameplay.Contracts
             SettledCt = settledCt;
             Threshold = threshold;
             TicksUntilReady = ticksUntilReady;
+            ActionPointCostUnits = actionPointCostUnits;
+            CtPenalty = ctPenalty;
+            ReuseCooldownTicks = reuseCooldownTicks;
+            RemainingCooldownTicks = remainingCooldownTicks;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -62,6 +76,10 @@ namespace TianZhang.Gameplay.Contracts
         public float SettledCt { get; }
         public float Threshold { get; }
         public long TicksUntilReady { get; }
+        public int ActionPointCostUnits { get; }
+        public int CtPenalty { get; }
+        public int ReuseCooldownTicks { get; }
+        public int RemainingCooldownTicks { get; }
     }
 
     public enum CombatUnitPresentationEvent
@@ -198,15 +216,18 @@ namespace TianZhang.Gameplay.Contracts
     [Serializable]
     public sealed class CombatMovementOption
     {
-        public CombatMovementOption(CombatUnitPresentationHex destination, int cost, IReadOnlyList<CombatUnitPresentationHex> path)
+        public CombatMovementOption(CombatUnitPresentationHex destination, int cost, IReadOnlyList<CombatUnitPresentationHex> path,
+            CombatActionCandidate candidate = null)
         {
             Destination = destination;
             Cost = cost;
             Path = new List<CombatUnitPresentationHex>(path).AsReadOnly();
+            Candidate = candidate;
         }
         public CombatUnitPresentationHex Destination { get; }
         public int Cost { get; }
         public IReadOnlyList<CombatUnitPresentationHex> Path { get; }
+        public CombatActionCandidate Candidate { get; }
     }
 
     [Serializable]
@@ -265,13 +286,15 @@ namespace TianZhang.Gameplay.Contracts
     [Serializable]
     public sealed class CombatArtTargetSnapshot
     {
-        public CombatArtTargetSnapshot(string id, string displayName, int spiritCost, bool canExecute, string rejectionReason)
+        public CombatArtTargetSnapshot(string id, string displayName, int spiritCost, bool canExecute, string rejectionReason,
+            CombatActionPreviewSnapshot quote = null)
         {
             Id = id;
             DisplayName = displayName;
             SpiritCost = spiritCost;
             CanExecute = canExecute;
             RejectionReason = rejectionReason ?? string.Empty;
+            Quote = quote;
         }
 
         public string Id { get; }
@@ -279,6 +302,7 @@ namespace TianZhang.Gameplay.Contracts
         public int SpiritCost { get; }
         public bool CanExecute { get; }
         public string RejectionReason { get; }
+        public CombatActionPreviewSnapshot Quote { get; }
     }
 
     [Serializable]
@@ -359,21 +383,26 @@ namespace TianZhang.Gameplay.Contracts
             CombatMovementSnapshot movement = null,
             bool isPresenting = false,
             IReadOnlyList<CombatArtActionSnapshot> artActions = null,
-            long commandContextVersion = 0)
+            long commandContextVersion = 0, IReadOnlyList<CombatActionPreviewSnapshot> actions = null,
+            int actionPointLimitUnits = 0, int pendingCtPenalty = 0)
         {
             CommandContextVersion = commandContextVersion;
             Player = player;
             Enemy = enemy;
             TurnText = turnText;
             AcceptsCommands = acceptsCommands;
-            ArtProfileIds = artProfileIds ?? Array.Empty<string>();
-            DivineProfileIds = divineProfileIds ?? Array.Empty<string>();
+            ArtProfileIds = artProfileIds == null ? Array.Empty<string>() : new List<string>(artProfileIds).AsReadOnly();
+            DivineProfileIds = divineProfileIds == null ? Array.Empty<string>() : new List<string>(divineProfileIds).AsReadOnly();
             ArtActions = artActions == null ? Array.Empty<CombatArtActionSnapshot>() :
                 new List<CombatArtActionSnapshot>(artActions).AsReadOnly();
             CanEndTurn = canEndTurn;
             Timeline = timeline;
             Movement = movement;
             IsPresenting = isPresenting;
+            Actions = actions == null ? Array.Empty<CombatActionPreviewSnapshot>() :
+                new List<CombatActionPreviewSnapshot>(actions).AsReadOnly();
+            ActionPointLimitUnits = actionPointLimitUnits;
+            PendingCtPenalty = pendingCtPenalty;
         }
 
         public long CommandContextVersion { get; }
@@ -388,6 +417,17 @@ namespace TianZhang.Gameplay.Contracts
         public CombatTimelineSnapshot Timeline { get; }
         public CombatMovementSnapshot Movement { get; }
         public bool IsPresenting { get; }
+        public IReadOnlyList<CombatActionPreviewSnapshot> Actions { get; }
+        public int ActionPointLimitUnits { get; }
+        public int PendingCtPenalty { get; }
+
+        public CombatActionPreviewSnapshot FindAction(CombatActionKind kind, string profileId = null)
+        {
+            foreach (CombatActionPreviewSnapshot action in Actions)
+                if (action.Candidate.Kind == kind && (profileId == null || action.Candidate.ProfileId == profileId))
+                    return action;
+            return null;
+        }
     }
 
     public interface ICombatPresentationSink

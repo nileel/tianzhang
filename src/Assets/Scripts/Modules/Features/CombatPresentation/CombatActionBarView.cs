@@ -66,17 +66,16 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Present(CombatHudSnapshot snapshot, string firstArtTargetId, string secondArtTargetId)
         {
-            bool visible = snapshot != null && snapshot.AcceptsCommands;
+            bool visible = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             bool canAct = visible;
             root?.SetActive(snapshot != null);
-            SetEnabled(basicAttackButton, canAct);
-            SetEnabled(guardButton, canAct);
-            SetEnabled(waitButton, visible);
-            if (waitLabel != null) waitLabel.text = snapshot != null && snapshot.CanEndTurn ? "结束行动" : "待机";
+            string basicReason = PresentAction(snapshot?.FindAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
+            string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
+            string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),
+                waitButton, canAct);
             string divineId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             if (divineButton != null) divineButton.gameObject.SetActive(!string.IsNullOrWhiteSpace(divineId));
-            SetEnabled(divineButton, canAct && !string.IsNullOrWhiteSpace(divineId));
-            if (divineLabel != null) divineLabel.text = string.IsNullOrWhiteSpace(divineId) ? "神通" : displayProfile(divineId);
+            string divineReason = PresentAction(snapshot?.FindAction(CombatActionKind.Divine, divineId), divineButton, canAct);
 
             CombatArtActionSnapshot first = snapshot != null && snapshot.ArtActions.Count > 0 ? snapshot.ArtActions[0] : null;
             CombatArtActionSnapshot second = snapshot != null && snapshot.ArtActions.Count > 1 ? snapshot.ArtActions[1] : null;
@@ -88,8 +87,10 @@ namespace TianZhang.Features.CombatPresentation
                 secondArtTargetLabel.text = secondTarget == null ? "目标：—" : "目标：" +
                     (secondTarget.Id == snapshot.Player?.Id ? "自身" : secondTarget.DisplayName);
             if (actionStatusLabel != null)
-                actionStatusLabel.text = !visible ? string.Empty : firstReason +
-                    (!string.IsNullOrEmpty(firstReason) && !string.IsNullOrEmpty(secondReason) ? "；" : string.Empty) + secondReason;
+                actionStatusLabel.text = snapshot == null ? string.Empty :
+                    (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
+                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason },
+                        reason => !string.IsNullOrEmpty(reason))));
         }
 
         private string PresentArt(CombatArtActionSnapshot art, string targetId, Button button, Text label, bool canAct)
@@ -99,13 +100,36 @@ namespace TianZhang.Features.CombatPresentation
             if (label != null)
             {
                 label.text = art == null ? "术法" : art.DisplayName + "\n" +
-                    (target == null ? string.Empty : target.SpiritCost + " MP · ") + "CT +" + art.CooldownPenalty;
+                    (target?.Quote == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(target.Quote.ActionPointCostUnits) +
+                    "AP / " + target.Quote.SpiritCost + "MP") +
+                    (target?.Quote?.RemainingCooldownTicks > 0 ? " · CD" + target.Quote.RemainingCooldownTicks : string.Empty);
             }
             if (art == null) return string.Empty;
             if (target == null) return art.DisplayName + "：无可选目标";
             return target.CanExecute || string.IsNullOrEmpty(target.RejectionReason)
                 ? string.Empty
                 : art.DisplayName + "：" + displayReason(target.RejectionReason);
+        }
+
+        private string PresentAction(CombatActionPreviewSnapshot quote, Button button, bool canAct)
+        {
+            SetEnabled(button, canAct && quote != null && quote.CanConfirm);
+            if (quote == null) return string.Empty;
+            Text label = button == null ? null : button.GetComponentInChildren<Text>();
+            if (label != null)
+            {
+                string cost = CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + "AP" +
+                    (quote.SpiritCost > 0 ? " / " + quote.SpiritCost + "MP" : string.Empty);
+                label.text = quote.Candidate.Kind switch
+                {
+                    CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
+                    CombatActionKind.Guard => quote.ActionName + cost,
+                    _ => quote.ActionName + "\n" + cost,
+                };
+                // The formal Guard label is 82x36; the measured 20pt cost line exceeds its width.
+                if (quote.Candidate.Kind == CombatActionKind.Guard) label.fontSize = 18;
+            }
+            return quote.CanConfirm ? string.Empty : quote.ActionName + "：" + quote.Reason;
         }
 
         private static CombatArtTargetSnapshot FindTarget(CombatArtActionSnapshot art, string targetId)
@@ -129,8 +153,10 @@ namespace TianZhang.Features.CombatPresentation
             if (cancelMoveButton != null) cancelMoveButton.gameObject.SetActive(selecting);
             CombatMovementOption shown = preview ?? selected;
             if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
-                "移力 " + snapshot.Movement.RemainingPoints + (shown == null ?
-                    (selecting ? " · 选择目的地" : string.Empty) : " · 消耗 " + shown.Cost + (selected == null ? " · 点击选定" : " · 确认后移动"));
+                "AP " + CombatActionPreviewView.FormatActionPoints(snapshot.Movement.RemainingPoints) + "/" +
+                CombatActionPreviewView.FormatActionPoints(snapshot.ActionPointLimitUnits) + " · 累计 CT +" + snapshot.PendingCtPenalty +
+                (shown == null ? (selecting ? "\n选择目的地" : string.Empty) : "\n消耗 " +
+                CombatActionPreviewView.FormatActionPoints(shown.Cost) + " AP" + (selected == null ? " · 点击选定" : " · 确认后移动"));
         }
 
         private static void SetEnabled(Button button, bool enabled)

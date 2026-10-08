@@ -30,7 +30,7 @@ namespace TianZhang.Features.CombatPresentation
             Prediction = value != null && value.CanConfirm ? value : null;
             if (predictionRoot != null) predictionRoot.SetActive(Prediction != null);
             if (predictionText != null) predictionText.text = Prediction == null ? string.Empty :
-                "◇ 自身下次\n+" + value.TicksUntilReady + " 刻\n顺位未定";
+                "◇ 若此动作\n完成并结束\n+" + value.TicksUntilReady + " 刻\n顺位未定";
         }
 
         private CombatTimelineSnapshot snapshot;

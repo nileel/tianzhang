@@ -25,7 +25,7 @@ namespace TianZhang.Features.CombatPresentation
         private readonly Dictionary<Vector2Int, LineRenderer> highlights = new Dictionary<Vector2Int, LineRenderer>();
         private readonly Dictionary<Vector2Int, Vector3> centers = new Dictionary<Vector2Int, Vector3>();
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
-        private ICombatCommandHandler handler;
+        private ICombatActionPreviewHandler previewHandler;
         private CombatActionBarView actionBar;
         private CombatHudSnapshot snapshot;
         private CombatMovementOption selected;
@@ -38,7 +38,9 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Configure(ICombatCommandHandler commands, CombatActionBarView bar)
         {
-            handler = commands ?? throw new ArgumentNullException(nameof(commands));
+            if (commands == null) throw new ArgumentNullException(nameof(commands));
+            previewHandler = commands as ICombatActionPreviewHandler ??
+                throw new ArgumentException("Movement requires the authoritative preview boundary.", nameof(commands));
             actionBar = bar != null ? bar : throw new ArgumentNullException(nameof(bar));
             if (battlefieldCamera == null || cells.Length == 0 || reachableMaterial == null || selectedMaterial == null)
                 throw new InvalidOperationException("combat_movement_scene_references_missing");
@@ -95,9 +97,8 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (!CanInput || !IsSelecting || selected == null) return;
             CombatMovementOption committed = selected;
-            string actor = snapshot.Player.Id;
             ClearSelection();
-            handler.RequestMove(actor, committed.Destination.Q, committed.Destination.R);
+            previewHandler.ConfirmAction(committed.Candidate);
         }
 
         private void LateUpdate()

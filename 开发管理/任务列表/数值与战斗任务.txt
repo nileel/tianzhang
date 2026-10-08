@@ -21,7 +21,6 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
 | D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
-| U-COMBAT-AP-HUD-01 | P1 | codex | 已排队 | — | 行动力HUD与同源费用预览 | 开发管理/任务卡/U-COMBAT-AP-HUD-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01 | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
 | U-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-HUD-01 | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
 | U-COMBAT-AP-SWAP-01 | P1 | codex | 阻塞 | U-COMBAT-AP-HUD-01 | 战斗换术正式入口与费用预览 | 开发管理/任务卡/U-COMBAT-AP-SWAP-01.txt |

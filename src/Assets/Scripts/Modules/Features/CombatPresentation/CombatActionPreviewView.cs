@@ -15,6 +15,7 @@ namespace TianZhang.Features.CombatPresentation
         public Button ConfirmButton => confirmButton;
         public Button CancelButton => cancelButton;
         public bool IsVisible => root != null && root.activeSelf;
+        public static string FormatActionPoints(int units) => (units / 1000m).ToString("0.###", CultureInfo.InvariantCulture);
 
         public void Present(CombatActionPreviewSnapshot value)
         {
@@ -25,8 +26,10 @@ namespace TianZhang.Features.CombatPresentation
             if (value == null) { summary.text = string.Empty; return; }
             string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
-            summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName + " · 灵力消耗 " + value.SpiritCost +
-                (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "施行后仍可移动；结束本回合后" : "确认结束本回合后") +
+            summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
+                "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT 惩罚 +" +
+                value.CtPenalty + " · 技能 CD " + value.ReuseCooldownTicks + " 刻（剩 " + value.RemainingCooldownTicks + "）" +
+                (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "施行后仍可行动；若现在结束" : "确认结束本回合后") +
                 " CT " + ct + "/" + threshold + " · 自身下次约 +" + value.TicksUntilReady + " 刻（顺位未定）" +
                 "\n条件：双方存活，速度与CT无后续干预。伤害 / 命中：未探明。" : "\n不可施行：" + value.Reason);
         }

@@ -43,6 +43,7 @@ namespace TianZhang.Tests.PlayMode
         private CombatSession session;
         private CombatRandom random;
         private AdventureSpawnSet spawned;
+        private readonly System.Collections.Generic.List<string> layoutFailures = new System.Collections.Generic.List<string>();
 
         [UnitySetUp]
         public IEnumerator EnterFormalEncounter()
@@ -117,6 +118,166 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
             yield return null;
             // Keep task validation save evidence.
+        }
+
+        [UnityTest]
+        public IEnumerator HudShowsAuthoritativeCostsAndInterleavedActionsAtBothResolutions()
+        {
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.That(Screen.width, Is.EqualTo(width));
+                var bar = Find<CombatActionBarView>();
+                var input = Find<CombatCommandInput>();
+                var view = Find<CombatActionPreviewView>();
+                var move = Find<CombatMovementView>();
+                var service = new CombatCommandService();
+                long turn = session.TurnSequence;
+                int tick = session.TurnScheduler.CurrentTick;
+                string initial = State();
+                Assert.That(presenter.Snapshot.Movement.RemainingPoints, Is.EqualTo(spawned.Player.ActionPointsRemainingUnits));
+                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 100/100"));
+                Assert.That(bar.BasicAttackButton.interactable && bar.GuardButton.interactable && bar.ArtButton.interactable, Is.True);
+                Assert.That(bar.WaitButton.interactable && presenter.Snapshot.CanEndTurn, Is.True);
+                bar.ArtButton.onClick.Invoke();
+                CombatCommandPreview authority = service.Preview(session, new CombatCommand(CombatCommandKind.Art,
+                    "player", "enemy", input.Candidate.ProfileId));
+                Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(authority.ActionPointCostUnits));
+                Assert.That(input.Preview.SpiritCost, Is.EqualTo(authority.SpiritCost));
+                Assert.That(input.Preview.CtPenalty, Is.EqualTo(authority.CtPenalty));
+                Assert.That(input.Preview.ReuseCooldownTicks, Is.EqualTo(authority.ReuseCooldownTicks));
+                Assert.That(Get<Text>(view, "summary").text, Does.Contain(
+                    CombatActionPreviewView.FormatActionPoints(authority.ActionPointCostUnits) + " AP / " + authority.SpiritCost + " MP"));
+                Assert.That(Get<Text>(timeline, "predictionText").text, Does.Contain("完成并结束"));
+                Assert.That(input.Preview.Threshold, Is.EqualTo(110));
+                yield return CaptureHud("initial-" + width);
+                view.CancelButton.onClick.Invoke();
+                bar.MoveButton.onClick.Invoke();
+                Assert.That(move.IsSelecting, Is.True);
+                bar.CancelMoveButton.onClick.Invoke();
+                Assert.That(State(), Is.EqualTo(initial), "All preview/selection/cancel operations must be read-only.");
+                CombatActionCandidate oldMove = presenter.Snapshot.Movement.Options.First().Candidate;
+
+                if (width == 1366) yield return MoveThroughHud();
+                bar.SecondArtButton.onClick.Invoke();
+                Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(25000));
+                Assert.That(input.Preview.SpiritCost, Is.Zero);
+                int ap = spawned.Player.ActionPointsRemainingUnits;
+                var oldAction = input.Candidate;
+                input.ConfirmCandidate();
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - 25000));
+                Assert.That(presenter.Snapshot.IsPresenting, Is.True);
+                Assert.That(bar.ArtButton.interactable || bar.GuardButton.interactable || bar.MoveButton.interactable, Is.False);
+                string busy = State();
+                input.ConfirmCandidate(); encounter.ConfirmAction(oldAction); encounter.ConfirmAction(oldMove);
+                Assert.That(State(), Is.EqualTo(busy));
+                yield return Ready();
+                Assert.That(bar.SecondArtButton.interactable, Is.False);
+                Assert.That(presenter.Snapshot.ArtActions[1].Targets[0].Quote.RemainingCooldownTicks, Is.EqualTo(5));
+                if (width == 1920) yield return MoveThroughHud();
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
+                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 25/100"));
+                Assert.That(presenter.Snapshot.PendingCtPenalty, Is.EqualTo(5));
+                Assert.That(bar.BasicAttackButton.interactable || bar.ArtButton.interactable || bar.GuardButton.interactable, Is.False);
+                Assert.That(bar.WaitButton.interactable, Is.True, "End turn legality must not disable or enable other actions.");
+                Assert.That(spawned.Player.GetCooldown("spell_julingshu"), Is.EqualTo(5));
+                Assert.That(session.TurnSequence, Is.EqualTo(turn));
+                Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
+                string settledActions = State();
+                encounter.ConfirmAction(oldMove); encounter.ConfirmAction(oldAction);
+                Assert.That(State(), Is.EqualTo(settledActions), "Old action and movement confirmations cannot be repriced/submitted.");
+                bar.WaitButton.onClick.Invoke();
+                Assert.That(input.Preview.ActionPointCostUnits, Is.Zero);
+                Assert.That(input.Preview.Threshold, Is.EqualTo(105));
+                yield return CaptureHud("after-actions-" + width);
+                view.CancelButton.onClick.Invoke();
+                Assert.That(State(), Is.EqualTo(settledActions));
+                TestContext.WriteLine($"AP HUD {Screen.width}x{Screen.height}: turn={turn}, tick={tick}, AP=25000, CT penalty=5, cooldown=5; busy/cancel/stale/repeated inputs unchanged.");
+            }
+            Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
+        }
+
+        private IEnumerator MoveThroughHud()
+        {
+            var bar = Find<CombatActionBarView>();
+            var move = Find<CombatMovementView>();
+            var option = presenter.Snapshot.Movement.Options.Single(value => value.Destination.Q == 0 && value.Destination.R == 1);
+            CombatCommandPreview quote = new CombatCommandService().Preview(session,
+                new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
+            Assert.That(option.Cost, Is.EqualTo(quote.ActionPointCostUnits));
+            Assert.That(option.Candidate.MovementPath.Select(p => new HexCoord(p.Q, p.R)), Is.EqualTo(quote.MovementPath));
+            string before = State();
+            int ap = spawned.Player.ActionPointsRemainingUnits;
+            bar.MoveButton.onClick.Invoke();
+            Vector3 world = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(move, "centers")[new Vector2Int(0, 1)];
+            Vector2 point = Get<Camera>(move, "battlefieldCamera").WorldToScreenPoint(world);
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+            Assert.That(move.Selected, Is.SameAs(option));
+            Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 50 AP"));
+            Assert.That(State(), Is.EqualTo(before));
+            bar.ConfirmMoveButton.onClick.Invoke(); bar.ConfirmMoveButton.onClick.Invoke();
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
+            Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)));
+            yield return Ready();
+        }
+
+        private IEnumerator CaptureHud(string label)
+        {
+            Canvas.ForceUpdateCanvases();
+            var bar = Find<CombatActionBarView>();
+            var preview = Find<CombatActionPreviewView>();
+            var texts = new[] { Get<Text>(bar, "movementLabel"), Get<Text>(bar, "actionStatusLabel"),
+                bar.BasicAttackButton.GetComponentInChildren<Text>(), bar.GuardButton.GetComponentInChildren<Text>(),
+                bar.WaitButton.GetComponentInChildren<Text>(), bar.ArtButton.GetComponentInChildren<Text>(),
+                bar.SecondArtButton.GetComponentInChildren<Text>(), Get<Text>(timeline, "predictionText") };
+            foreach (Text text in texts.Where(text => text.gameObject.activeInHierarchy))
+                if (text.preferredHeight > text.rectTransform.rect.height + .1f)
+                    layoutFailures.Add(Screen.width + ": " + TextGeometry(text));
+            string directory = Path.Combine(Application.dataPath, "../Logs/ap-hud");
+            Directory.CreateDirectory(directory);
+            string stem = Path.Combine(directory, label);
+            File.WriteAllText(stem + ".txt", "formal scene=" + SceneManager.GetActiveScene().name +
+                "; resolution=" + Screen.width + "x" + Screen.height + "; state=" + State() + "\n" +
+                string.Join("\n", texts.Select(TextGeometry)) + "\npreview=" + Get<Text>(preview, "summary").text);
+            ScreenCapture.CaptureScreenshot(stem + ".png");
+            for (int frame = 0; frame < 4; frame++) yield return null;
+        }
+
+        private static string TextGeometry(Text text)
+        {
+            string hierarchy = text.name;
+            for (Transform parent = text.transform.parent; parent != null; parent = parent.parent) hierarchy = parent.name + "/" + hierarchy;
+            var corners = new Vector3[4]; text.rectTransform.GetWorldCorners(corners);
+            var settings = text.GetGenerationSettings(Vector2.zero);
+            float compactWidth = text.cachedTextGeneratorForLayout.GetPreferredWidth("防御50AP", settings) / text.pixelsPerUnit;
+            return hierarchy + "=" + text.text + "; rect=" + text.rectTransform.rect + "; preferredHeight=" + text.preferredHeight +
+                "; preferredWidth=" + text.preferredWidth + "; font=" + text.font.name + "; fontSize=" + text.fontSize +
+                "; compactGuardWidth=" + compactWidth + "; canvas=" + text.canvas.name + "/" + text.canvas.renderMode +
+                "; scale=" + text.canvas.scaleFactor + "; screenCorners=" + string.Join("/", corners.Select(corner => corner.ToString("F2")));
+        }
+
+        private static void SetGameSize(int width, int height)
+        {
+#if UNITY_EDITOR
+            var assembly = typeof(UnityEditor.Editor).Assembly;
+            var sizesType = assembly.GetType("UnityEditor.GameViewSizes");
+            var sizes = sizesType.BaseType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            var group = sizesType.GetMethod("GetGroup").Invoke(sizes, new object[] { 0 });
+            var size = Activator.CreateInstance(assembly.GetType("UnityEditor.GameViewSize"),
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null,
+                new object[] { Enum.ToObject(assembly.GetType("UnityEditor.GameViewSizeType"), 1), width, height, "AP HUD validation" }, null);
+            group.GetType().GetMethod("AddCustomSize").Invoke(group, new[] { size });
+            int count = (int)group.GetType().GetMethod("GetTotalCount").Invoke(group, null);
+            var game = UnityEditor.EditorWindow.GetWindow(assembly.GetType("UnityEditor.GameView"));
+            game.GetType().GetProperty("selectedSizeIndex", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).SetValue(game, count - 1);
+#else
+            Screen.SetResolution(width, height, false);
+#endif
         }
 
         [UnityTest]
