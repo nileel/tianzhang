@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-08负责人授权建立术法／神通标准模板前置；设计边界与路径已冻结、实时预检通过，可先形成完整候选方案；具体试跑参数确认前不得关闭。",
+  "stateReason": "等待负责人决定：任务卡要求负责人确认后才能关闭：是否批准候选模板及迁移试跑输入，包括水系控制改用神识差值对抗？",
   "expectedPaths": [
     "docs/角色养成/术法神通数值模板.txt",
     "docs/角色养成/术法设计规范.txt",
@@ -27,7 +27,73 @@
     "开发管理/任务归档/D-COMBAT-AP-EFFECT-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] }
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-COMBAT-AP-EFFECT-01",
+    "sourceRunId": "950d480c-79a3-49af-9dd6-e53bdcb26d88",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261008-CD1C694827D0FC",
+    "question": "任务卡要求负责人确认后才能关闭：是否批准候选模板及迁移试跑输入，包括水系控制改用神识差值对抗？",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准推荐方案：稀有度提供最多20%效率增幅，采用完整迁移输入与具名例外"
+      },
+      {
+        "key": "B",
+        "label": "批准同一结构与迁移输入，但稀有度仅表示获取难度，不增加效率"
+      },
+      {
+        "key": "C",
+        "label": "暂不批准，保留候选稿并等待修改方向"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A采用完整候选效率表；B将稀有系数统一为1，现用泛化项均为常见档，首轮基础映射不变；C暂缓。A/B均保留三项生产批准值，仅批准设计与迁移试跑，不签收平衡或批量接入。",
+    "plainSummary": {
+      "situation": "术法和神通的成本换算草案及试跑输入已准备好，但强度系数、冷却和旧技能的过渡例外还需要您确认，才能继续。",
+      "impact": "A让同成本的稀有技能最多多出20%基础效果；B不因稀有而增加效率；C暂缓。A和B都保留旧技能的首轮伤害对照值，仍需实际战斗验证。",
+      "action": "建议选A，先用有限增幅试跑；若希望稀有度只影响获得难度，就选B。"
+    },
+    "checkpointCommit": "33a9678e9479a7020eec4217e366c2f65e4f695b",
+    "baseCommit": "c7bce2d8ad9d50e3e904d67bf4874ae9c4aedba5",
+    "branch": "codex/automation/codex/950d480c-79a3-49af-9dd6-e53bdcb26d88/candidate",
+    "changedPaths": [
+      "开发管理/统一行动力公共合同.txt",
+      "开发管理/D-COMBAT-AP-EFFECT-01-验证记录.txt",
+      "docs/角色养成/神通/神通设计.txt",
+      "docs/角色养成/神通设计规范.txt",
+      "docs/角色养成/术法/术法设计.txt",
+      "docs/角色养成/术法设计规范.txt",
+      "docs/角色养成/术法神通数值模板.txt",
+      "docs/角色养成/养成事实速查.txt"
+    ],
+    "verified": [
+      "51个特殊效果ID覆盖、16项Config原始字段与派生算术、6行夹具成本核对通过",
+      "12格品级与稀有度表、双资源瓶颈、组合预算、参数调整传播及精确取整检查通过",
+      "check-task-cards：CodexDispatchReady通过，任务生命周期未改",
+      "check-review-text：718文件检查通过",
+      "check-data-chain通过",
+      "check-pending-whitespace：8个实际改动文件通过；git diff --cached --check通过",
+      "指定finalizer提交成功；工作树干净；唯一提交直接继承指定BaseCommit；提交元数据一致"
+    ],
+    "unverified": [
+      "负责人对模板系数、迁移输入及水系对抗公式的批准",
+      "新AP的BattleSim与Unity运行时消费",
+      "角色平衡及特殊机制效率",
+      "批量生产、导入与自动重算实现"
+    ],
+    "residualRisk": "候选参数尚未批准或实跑；保留旧输出的具名例外不代表平衡。旧模拟器存在双边分支差异，组战尚未实际消费Art／Divine；完整SIM准备仍依赖GROWTH输入。",
+    "taskContextDigest": "5e15d308dd285e3081cb30d3469b74eff8fd8641009ab1024b109bcaf2c4791b",
+    "createdAt": "2026-10-08T22:15:06.7897692+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-COMBAT-AP-EFFECT-01 · 术法与神通标准效果预算模板
