@@ -8,10 +8,10 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "executionModel": "gpt-6.1-sol",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：EndTurn按合同在回合开始合法，但旧显示和输入以CanEndTurn禁用其他动作，已在PlayMode复现。任务卡冻结路径不含CombatActionBarView.cs和CombatCommandInput.cs，按停止条件已保留checkpoint。请选择如何调整交付边界。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261008-CDA2ACBFFA8FC4",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -163,6 +163,14 @@
     "taskContextDigest": "580f0a58893df87a9ea6b72c92fd64bab16ba1c20c5ff47daccbd651df748ef2",
     "createdAt": "2026-10-08T14:57:07.0774009+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261008-CDA2ACBFFA8FC4",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "cf72f665c5cc5caf6240d966f5a81530803fca0850172fffcdd3fd90108fd170"
   }
 }
 ---TASK-BODY---
