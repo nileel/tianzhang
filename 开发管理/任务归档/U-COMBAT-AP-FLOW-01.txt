@@ -9,9 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-08已核对U-COMBAT-AP-CORE-01完成归档；实时路径扫描覆盖正式循环、敌方候选与演出门禁，风险预检无命中且无门禁，满足ready准备。",
+  "stateReason": "2026-10-08 Codex完成关中正式控制循环：移除敌方首次收益后强制结束分支，相关PlayMode 7项通过；全量30项既有失败和1项跳过未关闭，证据见本任务验证记录。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
@@ -89,3 +89,13 @@
 
 - “移动后不能出手”未复现不宣布根因；若定位为表现资源或非本链问题，留证据停止，不跨入动画资产或血条任务。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 完成与验证结果（2026-10-08）
+
+- 主模型按共享入口启动证明为gpt-6.1-sol；控制循环、候选及演出门禁为同一状态链，无独立辅助工作面，由Codex单模型统一实施和复核。消费入口绑定本run／task／digest的零命中预检，无新增路径或跨域所有者。
+- 正式场景基线确认敌方只做一次动作即终结；根因为RunCombat以HasCommittedBenefit强制选EndTurn。最小修改为每次演出完成后继续交给既有同源合法候选和原AI选招偏好。
+- 玩家移动50000单位后聚灵术25000单位，仍在turn=1／tick=13且余25000；演出中输入及旧确认均拒绝。本次未复现“移动后不能出手”，不把敌方修复写作该反馈根因。
+- 石甲兽正式输入不变，同turn=2／tick=17连续两次普攻，AP从100000到50000再到0，每次动作前演出均空闲。受控场景仅临时禁用攻击并定身，防御后余50000且无合法收益动作时确定性结束。
+- 新增3项FLOW与既有移动1项／起始术法3项共7项全部通过；程序集边界、数据链及管理／空白检查见开发管理/U-COMBAT-AP-FLOW-01-验证记录.txt。全量PlayMode为79项／48通过／30失败／1跳过，30项失败集合与修复前未涉及本卡的基线精确相同，不宣称全量通过。
+- 本candidate只归档本任务、移除同ID队列和backlog行；下游具名前置保留，由正式结果进入master后的QueueMaintenance处理。未关闭数值平衡、HUD或最终两分辨率场景验收。
+- 收尾仅以本轮事实与diff评估经验候选；本次是一处既有多动作合同的控制分支修正，未形成另需沉淀的经验候选。

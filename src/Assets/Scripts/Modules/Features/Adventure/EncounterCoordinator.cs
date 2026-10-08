@@ -260,9 +260,7 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                     {
                         IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
-                        CombatCommand command = session.HasCommittedBenefit
-                            ? legal.FirstOrDefault(action => action.Kind == CombatCommandKind.EndTurn)
-                            : enemyPolicy.ChooseAction(legal);
+                        CombatCommand command = enemyPolicy.ChooseAction(legal);
                         if (command == null)
                             throw new InvalidOperationException("combat_enemy_turn_has_no_legal_command");
                         CombatActionResult result = ExecuteCommand(command);

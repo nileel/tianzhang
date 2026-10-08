@@ -1,0 +1,100 @@
+# U-COMBAT-AP-FLOW-01 验证记录
+
+日期：2026-10-08。责任方：Codex；模型：gpt-6.1-sol，依据共享入口首条启动证明，不以子会话unknown代替已核验证明。
+RunId：089b0e9e-299d-4c53-b556-f9ec9ded5dd4。
+工作目录：D:\天章游戏开发\.worktrees\automation\089b0e9e-299d-4c53-b556-f9ec9ded5dd4\codex。
+分支：codex/automation/codex/089b0e9e-299d-4c53-b556-f9ec9ded5dd4/candidate。
+启动基线：5e3f18f907b071ad8cf672f92845426db6812407。
+
+## 范围、模型协作与预检
+
+- 原子结果：正式关中战斗按同源AP合法性连续动作，演出完成后继续个人回合。循环、候选和演出共享状态，由卡头指定主模型单独实施；未启动辅助模型或第二责任会话。
+- 消费共享入口绑定runId／taskId／任务卡digest／索引digest的预检：matched、notice、mustRead、gatePointers均空；风险投影一致，无门禁。没有新增允许路径、改变技术路线或跨入其他所有者。
+- 已读技能unity-agent-workflows；References loaded：runtime-owner-proof、unity-validation、project-structure-discovery、modular-architecture、ai-workflows、content-and-systems。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md；旧结构图只用于导航，实际行为以当前源码和PlayMode为准。
+- 非请求系统写入：无。未改场景、模型、动画、普通行为费用、角色生产输入、纯内核、HUD或BattleSim。
+
+## 运行时所有者与根因
+
+- AdventureScene.unity序列化AdventureSceneInstaller，encounterCoordinator={fileID:458967857}，脚本GUID=35dd6100dbf4d8349bf9083b031b42a6。
+- Installer.Awake显式注入ordinaryActions→CombatEntryAdapter→CombatSession，绑定唯一Static3DCombatUnitPresentationProvider→EncounterCoordinator；AdventureController.BeginEncounter经EncounterNodeHandler进入同一TryBegin／RunCombat。
+- AdventureUnitSpawner.CreatePlayer／CreateEnemy消费显式长期AP上限和v。正式本轮玩家及石甲兽均100000单位／vMilli2000，没有反应/20派生支路。Guard／SwapSpell普通配置由CORE交付，本轮只消费。
+- 纯内核已允许个人回合内多动作；演出忙碌由Static3D provider的movement／actionRecovery／feedback状态共同投影，玩家命令和旧ContextVersion在Coordinator拒绝。没有额外状态、兜底或重试层。
+- 修复前正式场景中，敌方多动作测试稳定失败：期望至少2次，实际1次。根因是RunCombat在HasCommittedBenefit为true时强制选EndTurn，不再调用原AI策略。
+- 最小修复：移除该条件，每次原有演出等待结束后重新调用CombatLegalActionService.GetLegalActions，再由既有enemyPolicy.ChooseAction选择。原Art→Divine→Basic→Move等偏好不变；没有合法收益动作时既有Wait／EndTurn确定性终结。费用和正净费下限仍由同一内核保证有限性。
+- “移动后不能出手”本轮未复现：修改控制器前的正式场景测试已证明玩家移动后可施法，不把敌方根因归给用户该反馈。未接触表现资源或血条任务。
+
+## Unity命令与实际结果
+
+以下三次均在本worktree使用同一现有runner，Unity版本6000.3.18f1；runner内部为batchmode／nographics，未借用其他工作区缓存。
+
+1. pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath 'D:\天章游戏开发\.worktrees\automation\089b0e9e-299d-4c53-b556-f9ec9ded5dd4\codex\src' -ResultXmlPath 'D:\天章游戏开发\.worktrees\automation\089b0e9e-299d-4c53-b556-f9ec9ded5dd4\codex\src\Logs\ap-flow-baseline.xml'
+   79项／45通过／33失败／1跳过，runner退出1、Unity退出2。新增3项当时因测试未包含隐藏创建面板而未进入战斗，已在测试Find辅助中采用项目既有FindObjectsInactive.Include方式修正；30项其他失败为本轮修改前已有证据。不能把这次新增用例失败当作业务根因。
+2. 同命令，ResultXmlPath改为本worktree的src/Logs/ap-flow-baseline-corrected.xml。
+   控制器保持基线实现，79项／47通过／31失败／1跳过，runner退出1、Unity退出2。新增玩家连续动作、受控终结通过，新增正式敌方多动作失败（实际1次）；相关7项为6通过／1失败。
+3. 同命令，ResultXmlPath改为本worktree的src/Logs/ap-flow-final.xml。
+   控制器最小修改后，79项／48通过／30失败／1跳过，runner退出1、Unity退出2。相关7项全部Passed。全量并未通过，保留准确失败范围。
+
+实际XML断言命令：以[xml]Get-Content读取baseline-corrected及final；SelectNodes选择GuanzhongActionPointFlowPlayModeTests、GuanzhongMovementPlayModeTests、GuanzhongStarterArtsPlayModeTests，断言数量恰为7且result均Passed；排序两份XML中不含ActionPointFlow的失败fullname，以Compare-Object断言差异数量为0。结果：7/7通过，其他30项失败集合精确相同，无新增失败。
+
+### 绑定证据SHA-256
+
+- EncounterCoordinator.cs：7EAD54536DA430A4A90CA9B91A79ED330968179919F03E715C11D02E6C9844B5。
+- GuanzhongActionPointFlowPlayModeTests.cs：154CDEF517C0F1D01073527644712F0FF4607D6FF7509F74C3428BA35F2AEDA8。
+- src/Logs/ap-flow-baseline-corrected.xml：01005F1D217A27A5E15CE1ECA535EBE0F295EFDDBD64D3A054E0609704AB57A1。
+- src/Logs/ap-flow-final.xml：9C2480DE03E1F84C1850338929802B89E532680A69DD783BC757038B4CA53E73。
+- XML为本worktree忽略产物；本记录保留同源输入hash、版本、结果及关键观测。唯一candidate包含被验证的代码／测试输入；正式结果由共享入口重放，不在本轮自行集成。
+
+## 关键场景观测
+
+- FormalPlayerMovesThenCastsInTheSameTurnAfterPresentation：正式新建小族玩家进入World→Settlement→Adventure；turn=1、tick=13，移动花50000、聚灵术花25000，余25000；仍Active，CT惩罚5。忙碌期间施法、移动、结束及重复确认不改StateVersion／AP；演出完成AcceptsCommands恢复，旧ContextVersion仍拒绝，新确认可提交，同技能全局刻CD仍生效。
+- FormalEnemyRecomputesCandidatesAndCommitsMultiplePositiveCostActions：正式石甲兽、未改生产数据，turn=2、tick=17，Attack后AP50000，再Attack后AP0；两次动作前busyBefore=False。AP严格下降，同回合且同全局刻；第二次候选已按剩余AP重算，耗尽后自动终结。
+- ControlledFormalEnemyEndsWithResidualPointsWhenNoBenefitIsLegal：仅运行时fixture临时清空石甲兽普攻授权并ApplyStatus(Immobilize,2)，不改资产。一次Guard后余50000，无合法收益命令，确定性EndTurn并进入player turn=3；防御姿态保留。此项是终结边界夹具，不冒充生产状态。
+- GuanzhongMovementPlayModeTests的正式实际按钮／鼠标确认用例1项通过；GuanzhongStarterArtsPlayModeTests的正式出身／起始术法／环境夹具3项通过。
+- 新测试文件不足500行；Coordinator原有超过500行，本轮只删两行条件分支，没有增加责任或依赖。不新增hub／程序集边界。
+
+## 其他检查与闭环
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1：退出0，19 assemblies／2 asmrefs，OK。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：退出0，docs/csv=29/29、84/84、31/31，613 language keys，OK。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP-FLOW-01 -Postcondition CodexClosedOrNonReady -OutputJson：退出0，taskState=completed、readyCount=2、cardCount=74，OK。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：退出0，717 files checked，OK。
+- check-pending-whitespace第一次误传整个允许集合，因已移动的活跃卡和未创建的交接归档报Missing path；不创建占位文件。改用本轮7个实际存在的修改文件，删除源路径另由git diff --check及暂存后git diff --cached --check检查；提交只包含本轮8个增删路径。
+- 本轮只归档本任务并删自身queue／backlog行。其他任务对FLOW的具名前置保持，等待正式结果进入master后的QueueMaintenance处理。
+- 本轮没有需要独立保留的经验候选，不写空章节。
+
+## 未通过基线与后续边界
+
+全量PlayMode的30项既有失败及1项跳过仍存在；失败主要涉及缺失visual baseline fixture、无图形设备下分辨率／输入／布局验收、已有静态表现和旧场景假设。下列失败名称来自修复前后精确相同的XML集合。本任务不跨这些所有者修补，也不称为全量通过。
+
+- TianZhang.Tests.PlayMode.BattleAnimationSpritePresentationPlayModeTests.BattleAnimationRouteIsExplicitAndMutuallyExclusive
+- TianZhang.Tests.PlayMode.BattleAnimationSpritePresentationPlayModeTests.EveryStateDirectionAndManifestEventFramePlaysThenResetsWithoutRuleOwners
+- TianZhang.Tests.PlayMode.BattleVisualComparisonPlayModeTests.ComparisonButtonsSwitchSymmetricRoutesAndReplayEverySharedEvent
+- TianZhang.Tests.PlayMode.BattleVisualComparisonPlayModeTests.TwoDimensionalMotionModeDefaultsToPureFramesAndSwitchesWithoutRootResidue
+- TianZhang.Tests.PlayMode.GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads
+- TianZhang.Tests.PlayMode.GuanzhongCombatFeedbackPlayModeTests.ApprovedProfilesShareFiveCuesAndProjectAllSixEventsWithoutResiduals
+- TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.DefeatReturnsAt1366
+- TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.DefeatReturnsAt1920
+- TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.RealControlsRemainReachableWithDetailsPreviewAndLongLog
+- TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.VictoryReturnsAt1366
+- TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.VictoryReturnsAt1920
+- TianZhang.Tests.PlayMode.GuanzhongCombatTargetSelectionPlayModeTests.UiMovementAndPresentationArbitrateWithoutDoubleTrigger
+- TianZhang.Tests.PlayMode.GuanzhongCombatTimelinePlayModeTests.FormalDefaultStartMenuRouteProjectsActualTimelineThroughMoveGuardWaitDeathAndReentry
+- TianZhang.Tests.PlayMode.GuanzhongNavigationTextPlayModeTests.Navigation1366
+- TianZhang.Tests.PlayMode.GuanzhongNavigationTextPlayModeTests.Navigation1920
+- TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Defeat1366
+- TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Defeat1920
+- TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Victory1366
+- TianZhang.Tests.PlayMode.GuanzhongPlaytestFlowPlayModeTests.Victory1920
+- TianZhang.Tests.PlayMode.GuanzhongTacticalCameraPlayModeTests.AutomaticLateUpdateUsesUnscaledFrameTime
+- TianZhang.Tests.PlayMode.GuanzhongTacticalCameraPlayModeTests.KeyboardAndArrowMovementHaveEqualSpeedAndNormalizedDiagonal
+- TianZhang.Tests.PlayMode.GuanzhongTacticalCameraPlayModeTests.KeyboardFocusClampsToRealRendererBoundsAndReturnsFromEdge
+- TianZhang.Tests.PlayMode.GuanzhongTacticalCameraPlayModeTests.MiddleMouseDragMovesGroundPlaneAndDisableClearsDrag
+- TianZhang.Tests.PlayMode.GuanzhongTacticalCameraPlayModeTests.UiPointerAndInputFieldFocusDoNotPanOrStartDrag
+- TianZhang.Tests.PlayMode.GuanzhongUnitHealthBarPlayModeTests.FormalStartMenuRouteInjectsHealthBarsAndFeedsRealCombatResources
+- TianZhang.Tests.PlayMode.StaticChessPresentationPlayModeTests.Fixed1920By1080MatrixSamplesFrozenEventTimesAndRestoresOnlyTheRoot
+- TianZhang.Tests.PlayMode.TacticalSpritePresentationPlayModeTests.ApprovedVisualTransformsPersistWithRuntimeNumericProof
+- TianZhang.Tests.PlayMode.TacticalSpritePresentationPlayModeTests.IdlePresentationStaysStatic
+- TianZhang.Tests.PlayMode.TacticalSpritePresentationPlayModeTests.TacticalSpriteRootAdvancesAndResetsAcrossRealFrames
+- TianZhang.Tests.PlayMode.TacticalSpritePresentationPlayModeTests.TacticalSpriteRouteSwitchIsMutuallyExclusive
+
+最终生产参数／角色平衡、HUD及1920×1080／1366×768画面最终验收仍由后续冻结任务承担；本轮未跑BattleSim，不形成强度结论。
