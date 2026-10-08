@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-COMBAT-AP-SIM-01 | codex_execute | codex | P1 | battlesim | migration | BattleSim双入口行动力语义迁移 | 开发管理/任务卡/N-COMBAT-AP-SIM-01.txt |
+| U-COMBAT-AP-HUD-01 | codex_execute | codex | P1 | unity | implementation | 行动力HUD与同源费用预览 | 开发管理/任务卡/U-COMBAT-AP-HUD-01.txt |

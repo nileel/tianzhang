@@ -9,12 +9,9 @@
   "executionModel": "gpt-6.1-sol",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP-EFFECT-01",
-    "D-COMBAT-AP-GROWTH-01"
-  ],
-  "stateReason": "combat_action_economy_inputs_unmapped：等待术法／神通标准模板及功法独立模板两张前置正式完成，确认逐技能AP／MP／CT／tick与境界基础＋功法加成的v试跑输入后，再核对本卡路径和实时预检准备ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-08 D-COMBAT-AP-EFFECT-01与D-COMBAT-AP-GROWTH-01均已正式归档；获准试跑输入、双入口字面量路径与风险预检已核对，本卡进入ready等待执行。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/Character.cs",
