@@ -6,13 +6,12 @@
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
+  "executionModel": "gpt-6.1-sol",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-CORE-01"
-  ],
-  "stateReason": "等待直接前置正式完成；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-08已核对U-COMBAT-AP-CORE-01完成归档；实时路径扫描覆盖正式循环、敌方候选与演出门禁，风险预检无命中且无门禁，满足ready准备。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
@@ -72,8 +71,8 @@
 
 ## 模型协作
 
-- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。当前blocked，临近ready按真实接口／失败影响评估复杂度、主模型与必要辅助组合，并核对执行能力。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 2026-10-08负责人明确将本卡转交Codex。复杂：正式战斗循环、敌方多动作和演出防重入共享同一运行时状态，需在实机场景验证；主模型指定GPT-6.1 Sol（gpt-6.1-sol）、high，由Codex在冻结合同内实施并统一复核。
+- 当前无可独立的只读问题：循环控制、命令合法性和演出边界必须结合同一状态链判断，故不启动辅助模型。已核对本会话具备预检与Unity验证入口，风险预检无命中、无门禁；执行者写入前仍须重跑实时预检，模型不可用或新路径出现按原停止条件处理，不降级重试。
 
 ## 验证
 
