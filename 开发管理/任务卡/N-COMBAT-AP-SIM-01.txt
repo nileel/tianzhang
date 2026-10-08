@@ -10,8 +10,11 @@
   "domain": "battlesim",
   "stage": "migration",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：combat_action_economy_inputs_unmapped",
+  "blockedBy": [
+    "D-COMBAT-AP-EFFECT-01",
+    "D-COMBAT-AP-GROWTH-01"
+  ],
+  "stateReason": "combat_action_economy_inputs_unmapped：等待术法／神通标准模板及功法独立模板两张前置正式完成，确认逐技能AP／MP／CT／tick与境界基础＋功法加成的v试跑输入后，再核对本卡路径和实时预检准备ready。",
   "expectedPaths": [
     "simulations/BattleSim/Combat.cs",
     "simulations/BattleSim/Character.cs",
@@ -49,15 +52,18 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：Simulate 与 Simulate2v2Detailed 使用同一批准的个人回合／AP／CT／CD语义并输出可比观测。
-- 直接前置：U-COMBAT-AP-CORE-01；DATA与MOVE已正式归档。
+- 直接前置：D-COMBAT-AP-EFFECT-01、D-COMBAT-AP-GROWTH-01；CORE、DATA与MOVE已正式归档。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 - 2026-10-07 DATA攻击叶只严格迁移41列、四字段及GuanzhongPlaytestAudit.LoadProductionInputs／VerifyRejectedCommands与自检读取；该audit消费Unity纯内核，不证明本卡两个泛化入口已迁移。旧ArtConfig／DivineConfig.Cooldown仍是回合数，对非零CT／tick或聚灵恢复无法表达的生产组合继续明确拒绝。本SIM在临近ready逐内容／abilityInstanceId收口输入与单位，不把九来源v2映射成各境界合成输入、不弱化拒绝或塞tick回旧Cooldown；AP多动作、三时钟与泛化双入口由本卡完成，直接前置／状态保持。
+
+- 2026-10-08负责人否决合成v的2／3／4／5／6／7候选，明确长期v＝境界基础值＋功法已解锁加成，越高境界越有爆发式增长；术法／神通共用数值模板，功法独立模板。前置两卡分别交付获准试跑的完整映射；本卡不自行定新系数、不套九来源v2。具体批量生产工具和全库内容迁移不在本卡范围，前置模板中的单一来源合同在临近ready核对真实接入路径，不能用静态复制多份参数假称已统一。
 
 ## 必查范围
 
 - docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
 - 公共合同逐ID冷却迁移；Combat.Simulate／Simulate2v2Detailed、Character、GameData 和能力实例账本；Battlefield 原始距离；BattleSimSelfTests、combat-parity-cases.json；Program现有报告入口。
+- 两前置正式交付的docs/角色养成/术法神通数值模板.txt与docs/角色养成/功法数值模板.txt中的获准试跑映射、版本和未纳入范围；未交付前不假定模板已存在或参数已获批。
 - 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
 
 ## 实施范围

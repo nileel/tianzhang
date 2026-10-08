@@ -31,7 +31,9 @@
 | U-COMBAT-AP-SAVE-01 | 行动力长期输入保存与恢复 | deepseek／external_execute | U-COMBAT-AP-CHAR-01 | blocked |
 | U-COMBAT-AP-MOVE-01 | 移动行动力报价原语与边界结果（B范围） | codex／codex_review | — | completed（2026-10-07按B复核） |
 | U-COMBAT-AP-CORE-01 | 统一行动力个人回合内核 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CHAR-01 | blocked |
-| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-DATA-01、U-COMBAT-AP-CORE-01 | blocked |
+| D-COMBAT-AP-EFFECT-01 | 术法与神通标准效果预算模板 | codex／codex_execute | — | ready（2026-10-08补充前置） |
+| D-COMBAT-AP-GROWTH-01 | 功法独立数值模板与位移成长输入 | codex／codex_execute | — | ready（2026-10-08补充前置） |
+| N-COMBAT-AP-SIM-01 | BattleSim双入口行动力语义迁移 | codex／codex_execute（2026-10-08负责人转交） | D-COMBAT-AP-EFFECT-01、D-COMBAT-AP-GROWTH-01（DATA／CORE已完成） | blocked |
 | U-COMBAT-AP-FLOW-01 | 关中正式战斗控制与敌方多动作 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-CORE-01 | blocked |
 | U-COMBAT-AP-HUD-01 | 行动力HUD与同源费用预览 | codex／codex_execute（2026-10-08负责人转交） | U-COMBAT-AP-FLOW-01 | blocked |
 | U-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | codex／codex_execute（2026-10-08负责人转交） | D-COMBAT-AP-ITEM-01、U-COMBAT-AP-HUD-01、U-COMBAT-AP-SAVE-01 | blocked |
@@ -43,6 +45,7 @@
 | D-COMBAT-AP-CLOSE-01 | 统一行动力交付闭环与父项关闭 | codex／codex_execute | U-COMBAT-AP-SCENE-01、N-COMBAT-AP-BALANCE-01 | blocked |
 
 主干：规则→公共合同→数据／角色／移动→内核→BattleSim与正式控制→HUD→缺失行为／换术；数值定案→生产参数回填；最终场景验收汇合全部实际输入与行为→交付闭环→汇总父项归档。
+2026-10-08输入准备补充：术法／神通标准模板与功法独立模板各自形成获准试跑映射→SIM双入口迁移→既有BALANCE实跑定案。两设计卡互不依赖，模板中的具体候选需负责人确认，不能以旧单动作模拟证明新AP平衡。功法卡包含境界基础＋功法加成的高阶爆发式v成长；EFFECT卡不覆盖功法。批量数值派生、模板修改传播与全库迁移的设计合同纳入模板交付，但不以本次建卡或文档交付冒充生产自动联动已完成。父项仍须等待模板前置和原有全部叶子实际闭环，永不重新领取。
 道具／换装合同与代码是已知的独立结果，已全部建卡；合同还未冻结的具体生产资源路径必须在下游转ready前补齐，当前禁止用通配授权或在执行时猜ID。
 
 ## U-COMBAT-AP-DATA-01 人工拆分与恢复
