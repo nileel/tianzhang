@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-09负责人批准两处BattleSim生产读取入口随换装完成最小数据适配；精确路径、验证与后续SIM职责已冻结，重新风险预检后恢复ready。",
+  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
