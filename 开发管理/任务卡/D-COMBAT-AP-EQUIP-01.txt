@@ -7,11 +7,14 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "content",
-  "stage": "decision",
-  "dispatchState": "blocked",
+  "stage": "design",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "公共合同已正式完成；现有实现仅有主装备普攻档案绑定，缺正式装备库存、槽位与长期写回所有者，首批装备身份与闭环仍须负责人内容决定。",
+  "stateReason": "2026-10-09负责人确认铁剑／铁刀两件基础主手武器、战斗互换及保存，取得入口为练气角色初始物资；授权补齐内容定义与换装合同。直接前置已完成，进入Codex设计队列；数值定案与Unity实现仍由原下游任务承担。",
   "expectedPaths": [
+    "docs/道具/武器/铁剑.txt",
+    "docs/道具/武器/铁刀.txt",
+    "docs/道具/道具事实速查.txt",
     "开发管理/统一行动力换装合同.txt",
     "开发管理/D-COMBAT-AP-EQUIP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
@@ -33,7 +36,7 @@
 ## 来源与当前边界
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
-- 原子结果：冻结一个有实际来源的战斗装备更换闭环：装备资格、槽位、战斗投影与长期写回。
+- 原子结果：交付铁剑／铁刀两个独立L2定义及同一个主手换装闭环合同，冻结资格、库存、战斗普攻投影与长期写回，供既有数值与Unity任务消费。
 - 直接前置已完成；当前无剩余具名前置。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
@@ -41,11 +44,17 @@
 
 - docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
 - 战斗系统的更换武器／法宝；CharacterRuntimeProfile.MainEquipmentBasicAttackProfileId、AbilityLoadout（仅术法／神通）、InventoryStore、ItemData、CharacterRecord；AttackProfiles 三生产 ID 与 AdventureUnitSpawner。
+- docs/道具/道具事实速查.txt#四、武器预留行及docs/道具/道具设计规范.txt的适用边界；武器按本卡身份／资格／主槽位／库存／普攻／取得／保存字段建档，不把丹药模板或四品消耗品效果机械套到基础武器。
+- 初始物资入口：src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData，src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::CreateNewPlayer及GameRuntime.BeginNewGame直接调用链；物品生产者src/Assets/Scripts/Editor/SettlementContentImporter.cs，攻击生产者src/Assets/Scripts/Editor/CombatContentImporter.cs与src/Assets/DataConfig/AttackProfiles.csv。
+- 下游开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt与N-COMBAT-AP-BALANCE-01.txt的边界、前置和验收；代码只定位合同的真实所有者，不在本卡实施。
 - 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
 
 ## 实施范围
 
-- 当前只有主装备普攻档案绑定，没有完整装备库存／槽位／切换所有者，不能称 AbilityLoadout 为装备系统。只对首批战斗换装冻结身份、资格、库存关系、主槽位、属性／攻击投影和原子写回；AP 上限本回合不重发，v 下次移动读取，退出防御，同一能力实例不洗冷却／返还额度。已有事实不足以指定正式装备时进入具体负责人决定，不推导出广义装备系统、背包界面或新武器内容授权。记录批准后的精确内容和实现路径供下游准备。
+- 在docs/道具/武器/铁剑.txt、铁刀.txt分别交付内容定义，同步道具事实速查的武器条目与路径指针。内容限两件基础主手武器；冻结稳定定义ID、实例身份、练气新角色初始取得、主手槽资格、库存关系和各自普攻档案引用，不借此扩成通用装备体系。
+- 在统一行动力换装合同中核对现有主装备绑定与库存／保存直接所有者，冻结唯一装配所有者、两件武器的有效互换、默认装配、无变化拒绝及唯一持久化时点；AbilityLoadout仍只管理术法／神通。两件武器须有可验证的普攻投影差异，不以更名或空装备切徒手当作交付。
+- 给出普攻差异与换装正AP费用等必要数值候选，逐项标为待N-COMBAT-AP-BALANCE-01实际运行验证，不在设计卡宣称强度已平衡，也不把下游数值验证反挂成本卡前置。首批不新增AP上限／移动效率／返还效果；仍遵守换装不重发本回合AP、不洗能力CD／额度、成功退出Guard的公共规则。U-COMBAT-AP-EQUIP-01验功能，U-COMBAT-AP-TUNING-01回填已定案参数。
+- 合同附下游字面量路径清单：两item及各普攻的Items.csv／Language.csv／AttackProfiles.csv行，SettlementContentImporter／CombatContentImporter、ItemData／ContentCatalogData、逐ID的物品／攻击asset及.meta、初始发放、Character装配／World库存／Persistence保存、正式战斗入口和测试。只记录到合同，待下游转ready时由有权维护者补齐expectedPaths并重跑风险预检；本卡不改CSV、Unity代码／资源、BattleSim或下游卡。
 - 验证证据写入 开发管理/D-COMBAT-AP-EQUIP-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
 
 ## 禁止项
@@ -55,26 +64,32 @@
 
 ## 模型协作
 
-- 主责 GPT-6.1 Sol（gpt-6.1-sol），建议 high；承担语义合同或最终判定，不将结论交给实现者自审。当前blocked，临近ready基于直接事实重新评估。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 复杂度：有界的两武器内容与单主手槽跨库存／角色／战斗／保存合同设计；用户已冻结范围，须统一证明装配身份与原子写回。主模型按executionModel使用gpt-6.1-sol，建议high。
+- 单主智能体核对同一换装闭环的L2、直接调用链与验收矩阵，无独立辅助工作面，不另开模型。执行前核对文件检索和管理检查能力，消费实时风险预检；实际证据与未核实项写既有验证记录，不把模型名当验证证明。
 
 ## 2026-10-06 解阻塞核验
 
 - 已核对公共合同的 completed 归档且无同 ID 活跃卡；本卡的具名前置已移除。
 - 当前只有主装备普攻档案绑定；`AbilityLoadout` 只管理术法／神通，尚无装备库存、槽位、实例或长期写回所有者。现有事实不能确定首批装备身份或闭环，须先取得负责人内容决定，继续 blocked。
 
+## 2026-10-09 负责人确认与重新ready
+
+- 本次对话负责人对推荐范围明确回复“确认”：新增铁剑、铁刀两件基础主手武器；支持战斗中互换、普攻随装备变化、保存装备状态，首批只做主手槽；经练气角色初始物资取得。授权补齐内容定义、任务合同并将满足条件的卡放回自动队列。此前缺装备身份与取得范围的阻塞由本条解除。
+- 初始发放合同限定练气新角色各获一件，两件均有真实库存身份；由本卡明确默认主手及备选关系，并随初始存档保存，读档／重进场景不补发。不变更角色境界、不对已有存档做未授权补发或迁移。
+- 不新增第三件武器、护甲／饰品／法宝槽、强化／打造、独立装备或背包界面、商店、世界掉落、武器美术生产。已有正式战斗动作入口承载后续最小换装交互；既有实现／数值卡继续等待本卡正式完成。
+
 ## 验证
 
-- 入选装备及获得入口可追溯；不满足资格／重复装备／无变化／失败／取消的 AP 与库存结果有明确合同；存档恢复能够保持装备身份。
+- 两份L2、L1指针、稳定ID与初始取得合同一致；两件武器有普攻差异与候选值状态说明。验收矩阵覆盖有效互换、无资格／不在库存／相同装备／取消／陈旧确认、AP不重发、库存不丢失或复制、初始发放与保存身份。以文档和真实调用链验合同，场景功能与数值分别由下游验收。
 - 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
 - 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及独立复审按项目现行合同执行，记录实际命令／结果，不伪造通过。
 
 ## 完成条件
 
-- 上述原子结果和验证入口全部达成，证据绑定正式输入／提交；外部执行先交Codex独立复审，通过后才解除下游依赖。未完成不把临时fixture称为生产完成。
+- 两武器定义、L1指针、单主手换装合同、候选参数与下游字面量交付清单完整且一致，管理／文本／数据链路检查通过后由Codex归档；不以本卡完成宣称Unity可用或数值已定案。之后由既有维护流程准备下游ready。
 - 归档前仅用已有事实检查经验候选，不额外模型调用；按现行规则写pending／provisional或不写空章节。
 
 ## 停止条件
 
-- 新增正式装备、槽位体系、强化／打造、独立装备 UI 或世界掉落需额外决策时停止；不得用空装备↔同一徒手档案作为正式成功验收。
+- 超出已批准铁剑／铁刀、单主手槽与练气初始物资入口，或需要强化／打造、额外槽位、独立装备UI、世界掉落时停止并提出具体决定；授权内的两武器定义与最小换装合同不再以“尚未授权新装备”为由阻塞。不得用空装备↔同一徒手档案作为正式成功验收。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。

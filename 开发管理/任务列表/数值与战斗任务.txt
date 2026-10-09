@@ -19,8 +19,8 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| D-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
-| D-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
+| D-COMBAT-AP-ITEM-01 | P1 | codex | 已排队 | — | 战斗道具首批内容与原子使用合同 | 开发管理/任务卡/D-COMBAT-AP-ITEM-01.txt |
+| D-COMBAT-AP-EQUIP-01 | P1 | codex | 已排队 | — | 战斗换装备首批资格与写回合同 | 开发管理/任务卡/D-COMBAT-AP-EQUIP-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 阻塞 | D-COMBAT-AP-ITEM-01 | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
 | U-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-EQUIP-01 | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
 | N-COMBAT-AP-BALANCE-01 | P1 | codex | 阻塞 | D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01 | 行动经济与成长预算实跑定案 | 开发管理/任务卡/N-COMBAT-AP-BALANCE-01.txt |
