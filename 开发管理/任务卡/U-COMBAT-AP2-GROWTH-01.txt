@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：任务卡停止条件要求新增所有者或路径时暂停。完整验收需要补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三条战斗路径；请选择继续范围。",
+  "stateReason": "负责人回复已核验，恢复原任务：DEC-20261010-CD28FDC451DE4D",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -137,6 +137,14 @@
     "taskContextDigest": "30260b528dbbb27a66f8752962ec134c30fcf71a4f4cd5f617e4d6e520219a63",
     "createdAt": "2026-10-10T03:26:25.6580749+08:00",
     "queueIndex": 0
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261010-CD28FDC451DE4D",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "e5071c302f22901ef0f8849ed71ca66352f87406245066ff388c7c27705a6ac7"
   }
 }
 ---TASK-BODY---
