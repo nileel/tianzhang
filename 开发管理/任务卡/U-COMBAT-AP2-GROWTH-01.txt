@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "U-COMBAT-AP2-GROWTH-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "CONFIG已于2dfd3aa4正式完成；按冻结成长/旧档合同核对现有调用链并补齐导入测试路径，重新预检后进入ready。",
+  "stateReason": "等待负责人决定：任务卡停止条件要求新增所有者或路径时暂停。完整验收需要补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三条战斗路径；请选择继续范围。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -87,7 +87,57 @@
     "matched": [],
     "gates": []
   },
-  "executionModel": "gpt-6.1-sol"
+  "executionModel": "gpt-6.1-sol",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-COMBAT-AP2-GROWTH-01",
+    "sourceRunId": "07caf2c4-6043-4504-a892-3134bc7bcd52",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261010-CD28FDC451DE4D",
+    "question": "任务卡停止条件要求新增所有者或路径时暂停。完整验收需要补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三条战斗路径；请选择继续范围。",
+    "options": [
+      {
+        "key": "A",
+        "label": "批准补充三个战斗路径，重新冻结并预检后完成原合同"
+      },
+      {
+        "key": "B",
+        "label": "明确缩小本卡验收为战斗外成长与入战重建，战斗内同步另行规划"
+      },
+      {
+        "key": "C",
+        "label": "暂停实施，先重新确认战斗期间成长的玩法边界"
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A保留原验收，增加必要战斗同步与旧报价失效验证；B减少本轮范围，但保留战斗期间使用旧AP/v的缺口；C暂停推进。checkpoint仅含证据，不改变任务生命周期。",
+    "plainSummary": {
+      "situation": "修为提升后的新行动预算和移动效率无法传到正在进行的战斗，现有授权没有覆盖负责更新战斗的代码。",
+      "impact": "A补上战斗同步并完成原要求；B先完成创建、存读档和入战前更新，战斗期间仍用旧值；C暂停实施，先确认玩法边界。",
+      "action": "建议选A，保留已确认玩法并补齐必要范围；若希望先交付战斗外成长，可选B。"
+    },
+    "checkpointCommit": "6fa95e6fd3a61a695710f2e99330918562dd1ca2",
+    "baseCommit": "7b494f9fd078718724934bbee67e2d21dc2aa2c4",
+    "branch": "codex/automation/codex/07caf2c4-6043-4504-a892-3134bc7bcd52/candidate",
+    "changedPaths": [
+      "开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt"
+    ],
+    "verified": [
+      "实际模型元数据为 gpt-6.1-sol。",
+      "源码确认战斗 AP/v 为只读快照，现有成长变更无法刷新下一回合预算和移动报价。",
+      "业务草稿全部回滚；代码、数据、任务卡和队列保持基线。",
+      "文档检查、暂存前空白检查及 git diff --cached --check 通过。",
+      "checkpoint 是基线的唯一直接后继提交，工作树干净，changedPaths 使用指定命令生成。"
+    ],
+    "unverified": [
+      "成长实现、旧档迁移、Unity 编译及 EditMode/PlayMode 验收尚未完成。"
+    ],
+    "residualRisk": "仅提交定位证据。完整验收需要当前未授权的战斗快照、Session 和 EncounterCoordinator 写入路径。",
+    "taskContextDigest": "30260b528dbbb27a66f8752962ec134c30fcf71a4f4cd5f617e4d6e520219a63",
+    "createdAt": "2026-10-10T03:26:25.6580749+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # U-COMBAT-AP2-GROWTH-01 · 角色境界AP与移动效率成长接入
