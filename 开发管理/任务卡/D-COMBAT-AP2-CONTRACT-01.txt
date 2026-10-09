@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP2-RULES-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-09已核对D-COMBAT-AP2-RULES-01于1499d68a正式完成归档；新L2规则、合同产物、下游路径维护范围及验收入口明确，移除唯一前置并完成ready准备。",
   "expectedPaths": [
     "开发管理/境界行动力成长配置合同.txt",
     "开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt",
@@ -46,11 +44,12 @@
 
 - 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
 - 原子结果：冻结一个可由下游直接执行的字段、映射和所有者合同，并补齐所有已知叶子的精确路径；不再次逐张拆任务。
-- 直接前置：D-COMBAT-AP2-RULES-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+- 直接前置：无；D-COMBAT-AP2-RULES-01已在1499d68a正式完成归档且无同ID活跃卡。本卡只交付配置与接入合同及已列下游卡的精确路径准备，不实施代码、配表或资产。
 
 ## 必查范围
 
 - docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；新规则L2相关章节；现有统一行动力公共合同、换装合同及道具合同；CombatCommandService.Preview/Execute；CombatantSnapshot.BeginOwnTurn/CopyForResolution/CommitResolvedState；CombatEntryAdapter.TryProjectProfiles；AdventureUnitSpawner.ResolveBasicAttackBinding；CharacterProgressionRef、CharacterCreationRules、GameSaveEnvelope及直接调用者；GameData.ProjectMovement/BuildAbilities与Combat主循环。
+- 新规则的正式L2入口：docs/角色养成/功法数值模板.txt#九、境界AP与移动新标准（AP-GROWTH@0.1）；docs/角色养成/术法神通数值模板.txt#十一、固定能力档与现用内容新标准（AP-GROWTH@0.1）。RULES归档与验证记录用于核对迁移覆盖和旧输入投影不变，不替代上述L2。
 - 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
 
 ## 实施范围
@@ -76,6 +75,13 @@
 - 映射覆盖每个现用入口，字段读写与asset/meta路径闭合；状态/成长缺口均有明确有限所有者和验收；下游卡仅准备授权路径/门禁，不提前ready；check-task-cards及check-review-text。
 - 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
 - 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 2026-10-09 前置完成后的ready准备
+
+- 已核对RULES的completed归档、正式提交1499d68a及验证记录：新标准进入两模板独立段，当前旧BattleSim有效输入保持不变。不存在待负责人选择的参数方案，本卡可据已授权初值冻结实现合同。
+- 自建卡基线eaa10e03到本轮核对的3c90c2bc，src与simulations没有业务差异，已定位的运行所有者及状态/成长缺口仍适用；合同须明确切换唯一CSV的时点，不能混用新费用和旧算法。
+- 原子结果仍是一份统一接入合同和对应下游路径准备；expectedPaths只含合同、记录、指定下游卡及本卡管理投影，不与当前无关工作区改动重叠。本卡不因需要完成合同而反向等待CONFIG，不新增任务或拓扑。
+- 主模型保持gpt-6.1-sol/high；只读角色/保存与SIM映射辅助按实际独立问题使用。本轮唯一预检入口返回status=ok，matched/mustRead/gates为空，schema 2投影一致；执行时仍按项目规定工作区重新核对。
 
 ## 完成条件
 
