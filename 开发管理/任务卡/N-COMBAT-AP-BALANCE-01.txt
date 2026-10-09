@@ -8,12 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP-ITEM-01",
-    "D-COMBAT-AP-EQUIP-01"
-  ],
-  "stateReason": "等待直接前置正式完成（外部执行还需Codex独立复审）；依赖解除时按公共合同冻结本卡路径、输入与风险门禁后再判断ready。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01与D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡；本卡路径、输入和风险门禁已核对，风险预检零命中且无门禁，现已ready。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -62,8 +59,14 @@
 
 ## 模型协作
 
-- 主责 GPT-6.1 Sol（gpt-6.1-sol），建议 high；承担语义合同或最终判定，不将结论交给实现者自审。当前blocked，临近ready基于直接事实重新评估。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 复杂度：已冻结的行动经济合同须以真实BattleSim矩阵作最终数值判定，结论直接影响后续生产参数。主模型为卡头指定的gpt-6.1-sol，建议high。
+- 单主智能体读取运行结果并定案；当前没有可独立分离的只读问题，故不调用辅助模型。执行前复跑并消费风险预检，实际运行和未核实项写入既有验证记录。
+
+## 2026-10-09 前置完成后的准备
+
+- 已核对D-COMBAT-AP-ITEM-01与D-COMBAT-AP-EQUIP-01的完成归档，二者均无同ID活跃卡；本卡的两个具名前置已移除。
+- 实时核对BattleSim的Program、BattleSimSelfTests、GameData和StageCombatReport仍是本卡冻结的唯一模拟实现／矩阵／报告路径；数值定案和验证记录路径不变。无外部工作面、内容决定、项目闸门或事实冲突剩余，待风险预检合法后可进入ready。
+- 本轮风险预检status=ok，explicitRefs、matched和gates均为空，门禁指针无缺失；已按固定排序入队，执行前仍须按当前输入重跑预检。
 
 ## 验证
 

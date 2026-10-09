@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP-EQUIP-01"
-  ],
-  "stateReason": "2026-10-09 HUD已正式完成并移除；仍等待D-COMBAT-AP-EQUIP-01冻结正式装备、槽位和写回合同，不能以HUD或SAVE完成替代装备输入冻结。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-09已确认D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡；正式装备、单主手槽和写回合同的真实所有者与字面量路径已冻结，风险预检零命中且无门禁，现已ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -20,16 +18,37 @@
     "src/Assets/Scripts/Modules/Content/ItemData.cs",
     "src/Assets/DataConfig/Items.csv",
     "src/Assets/DataConfig/Language.csv",
-    "src/Assets/Scripts/Editor/AdventureContentImporter.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Modules/Content/ContentCatalogData.cs",
+    "src/Assets/Data/Items/Item_item_iron_sword.asset",
+    "src/Assets/Data/Items/Item_item_iron_sword.asset.meta",
+    "src/Assets/Data/Items/Item_item_iron_blade.asset",
+    "src/Assets/Data/Items/Item_item_iron_blade.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
     "src/Assets/Scripts/Combat/CombatCommand.cs",
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
     "src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs",
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
@@ -49,6 +68,7 @@
     "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "executionModel": "gpt-6.1-sol",
   "riskPreflight": {
     "explicitRefs": [],
     "matched": [],
@@ -83,8 +103,14 @@
 
 ## 模型协作
 
-- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。当前blocked，临近ready按真实接口／失败影响评估复杂度、主模型与必要辅助组合，并核对执行能力。
-- 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
+- 复杂度：单主手装备同时跨内容导入、库存、角色长期状态、战斗事务、保存和动作条，错误会破坏长期装备状态。主模型指定gpt-6.1-sol，建议high。
+- 合同已经冻结两个生产ID、唯一写回者和完整测试面，当前无独立辅助问题；由单主智能体统一实施及复核。执行前核对Unity与测试工具并消费实时风险预检。
+
+## 2026-10-09 前置完成后的准备
+
+- 已核对D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡，移除唯一具名前置。
+- 按换装合同逐项冻结铁剑和铁刀的Items／Language／AttackProfiles、两导入器、资产、初始发放、主手快照与保存、Combat→Adventure桥接、AdventureScene序列化、展示合同和测试路径；移除错误的AdventureContentImporter。合同已冻结资格、实例证明、唯一提交和停止边界，无剩余外部决定，待风险预检合法后可进入ready。
+- 本轮风险预检status=ok，explicitRefs、matched和gates均为空，门禁指针无缺失；已按固定排序入队，执行前仍须按当前输入重跑预检。
 
 ## 验证
 

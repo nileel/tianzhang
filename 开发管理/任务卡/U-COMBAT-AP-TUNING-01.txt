@@ -11,12 +11,10 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "N-COMBAT-AP-BALANCE-01",
-    "D-COMBAT-AP-ITEM-01",
-    "D-COMBAT-AP-EQUIP-01",
     "U-COMBAT-AP-ITEM-01",
     "U-COMBAT-AP-EQUIP-01"
   ],
-  "stateReason": "2026-10-08 DATA汇总已于88476e2a正式完成并移除；仍等待N-COMBAT-AP-BALANCE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01正式完成；临近ready再核定输入／直接调用点并重跑风险预检。",
+  "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01与D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡；仍等待N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01正式完成，临近ready再核定输入／直接调用点并重跑风险预检。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
