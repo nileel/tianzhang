@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-09已补齐换装数据链检查的精确授权与适配边界，重新核验直接验证依赖和风险预检后恢复ready；业务实现仍待执行。",
+  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
   "expectedPaths": [
     "tools/check-data-chain.ps1",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
