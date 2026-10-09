@@ -101,8 +101,10 @@ namespace TianZhang.Combat
             CombatActionResult result;
             if (profile.Effect == CombatAttackEffect.RestoreSpirit)
             {
+                int sourceSpirit = profile.RuleMetadata == null ? actor.RawSpirit :
+                    Math.Min(actor.RawSpirit, profile.RuleMetadata.Tier.RawSpiritRecoveryCapacity);
                 int requestedRecovery = checked((int)Math.Floor(Math.Max(profile.MinimumSpiritRecovery,
-                    actor.RawSpirit * (double)profile.SpiritRecoveryMultiplier) *
+                    sourceSpirit * (double)profile.SpiritRecoveryMultiplier) *
                     session.SpiritRecoveryEnvironmentMultiplier *
                     (targetsSelf ? 1f : profile.OtherTargetSpiritRecoveryMultiplier)));
                 int before = target.CurrentSpirit;
@@ -169,7 +171,9 @@ namespace TianZhang.Combat
             float multiplier = profile.PhysicalMultiplier * ConsumeLeijieForPhysicalAction(actor) *
                 (critical ? CriticalMultiplier(actor.CriticalDamage, element.CriticalDamageBonus) : 1f);
             int effectiveDefense = (int)Math.Round(target.PhysicalDefense * target.DefenseMultiplier(physical: true));
-            float damage = CalculateLineDamage(actor.PhysicalAttack, effectiveDefense, 0f, multiplier,
+            int attack = profile.RuleMetadata == null ? actor.PhysicalAttack :
+                Math.Min(actor.PhysicalAttack, profile.RuleMetadata.Tier.PhysicalAttackCapacity);
+            float damage = CalculateLineDamage(attack, effectiveDefense, 0f, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
             damage *= FacingDamageModifier(target, actor);
 
@@ -210,7 +214,9 @@ namespace TianZhang.Combat
                 target.LeijieStacks == target.MaximumLeijieStacks)
                 effectiveDefense *= 0.8f;
             effectiveDefense *= 1f - Clamp(profile.SoulDefensePenetration + fudan.SoulDefensePenetration, 0f, 100f) / 100f;
-            float damage = CalculateLineDamage(actor.SoulAttack + actor.MindStrengthBonus,
+            int attack = profile.RuleMetadata == null ? actor.SoulAttack + actor.MindStrengthBonus :
+                (int)Math.Min((long)actor.SoulAttack + actor.MindStrengthBonus, profile.RuleMetadata.Tier.SoulAttackCapacity);
+            float damage = CalculateLineDamage(attack,
                 (int)Math.Round(effectiveDefense), soulResist, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
 

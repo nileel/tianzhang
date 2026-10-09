@@ -1,0 +1,33 @@
+# U-COMBAT-AP2-POTENCY-01 验证记录
+
+日期：2026-10-10；基线：b44514d7fbd6194454b423a692aeab879fc62963。
+任务工作区：D:/天章游戏开发/.worktrees/ap2-potency-20261010。
+
+## 领取与范围
+
+- 负责人要求再领取一项，按当前队列选择首项POTENCY；卡为codex_execute/codex/ready，前置CONFIG已归档。启动前schema 5 Show的两个owner run为空，主工作区已有总结与美术改动不属于本轮。
+- 规则事实为境界行动力成长配置合同第三/六节及设计规格9.2；唯一结果是既有攻击/聚灵结算消费固定能力档承载，保留原目标防御、普通伤害境界规则及固定Heal量。CONFIG已完成费用预算派生，本轮不重复加倍率，不扩展状态、重复费用算法或来源属性治疗/护盾引擎。
+- 主对话Node REPL实际元数据为gpt-6-astra。按任务卡gpt-6.1-sol/high，由/root/ap2_potency_impl子智能体独占卡内业务/测试字面量路径；主责独占管理文件、最终复核与唯一提交/集成。子智能体不得改卡、提交或操作runtime/锁；子智能体Node REPL实际返回gpt-6.1-sol，high以本轮spawn参数留证。
+- 工作区写前预检status=ok，taskCardDigest=d2d7fdecf3f61be433689fe03f178042e38c4b64d2d444fc58ac9701e1ba8e85，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/mustRead/gates为空，与schema 2投影一致。
+
+## 运行所有者与验证边界
+
+- 正式链：ContentCatalog的CombatRuleSet.asset与AttackProfileData，经AdventureSceneInstaller/CombatEntryAdapter投影为CombatAttackProfile.RuleMetadata.Tier，进入CombatSession→CombatCommandService→CombatActionResolver。Resolver在准备副本中结算后按既有事务发布。
+- 已确认缺口：物理ResolvePhysical、神魂ResolveSoul及聚灵ResolveAttack直接使用完整角色属性，未消费配置容量。伤害公式CalculateLineDamage内部两处A共用一个输入，在调用前截断即可保持同源；目标D沿原计算。
+- 沿现有Combat纯运行程序集与EditMode测试程序集，不新增asmdef/运行时所有者。BattleSim.csproj直接链接Resolver，需要共享源码编译证明；完整AP2数值模拟/平衡仍归SIM/BALANCE。
+- 使用unity-agent-workflows，已读project-structure-discovery、content-and-systems、ai-workflows、unity-validation、cleanup-and-git。无现成UNITY_STRUCTURE映射，依据当前源码/asmdef和Unity6000.3.18f1项目版本定位；本轮不涉及UI布局、图片、场景序列化修改或视觉验收。
+
+## 实施与验证结果
+
+- 运行时代码仅CombatActionResolver三处输入调整：物理攻击取固定档PhysicalAttackCapacity；神魂将SoulAttack与MindStrengthBonus以Int64相加后取SoulAttackCapacity；聚灵魂魄取RawSpiritRecoveryCapacity后沿原最低恢复/环境/目标倍率/floor及目标MP余量。既有无RuleMetadata的历史独立夹具沿原行为，正式四个合法动作已有CONFIG元数据，不创建默认档位或第二参数源。
+- 新增CombatAbilityCapacityTests.cs及.meta，共19项。实际生产贯石击/铁剑/铁刀通过CombatEntryAdapter→CombatSession→事务结算验证高属性时各得79/65/82伤害；同档105/480/2160攻击不误截，派生倍率保持1.2；高目标防御保留，两通道与混合、神攻加成/溢出、聚灵12/6/25/12及余量、固定Heal300均覆盖。配置变体仅在内存构造合法摘要/派生倍率，经同一Adapter证明预算和容量同源改变，不写CSV/生产asset。
+- 主责独立读取首轮editmode-results.xml：21/21通过，其中新增19项及既有AttackProfileDataTests生产/夹具投影2项。首轮filter少写CombatRuntimeKernelTests的EditMode命名空间，未执行该类；补跑正确全名后kernel-editmode-results.xml为68/68通过。合计89个不同用例，0失败、0跳过。
+- 重复调用仅验证伤害、声明基础费和派生倍率不随连续执行增长；附加费计数/实付序列尚属REPEAT，不能把本轮测试写成附加费联验通过。主责复核后移除锁死未来合法费用序列的断言；该方法单独复验，不重复其余已通过测试。
+- BattleSim初次--no-restore因新worktree无project.assets.json报NETSDK1004；执行一次dotnet restore simulations/BattleSim后，dotnet build -c Release --no-restore simulations/BattleSim通过，0警告0错误。随后dotnet run --no-build -c Release --project simulations/BattleSim完整运行退出0；主责读取日志确认末尾最终统计。仅为既有默认运行回归，不声明完整AP2模拟/平衡完成。
+- 原生Unity使用6000.3.18f1，-batchmode -nographics -projectPath本工作区/src -runTests -testPlatform EditMode -testFilter指定类/方法。证据根为C:/Users/WINDOWS/AppData/Local/Temp/tianzhang-ap2-potency-evidence，包含两轮XML/log、实际参数txt及BattleSim restore/build/run日志。未修改模拟器源文件、CSV、生产资产、场景或UI；本任务以实际EditMode执行证明结算，PlayMode画面/最终场景另归SCENE。
+
+## 最终收尾
+
+- 主责读取repeat-editmode-results.xml确认最后修改方法1/1通过；最终仍为89个不同用例全部通过，不把重跑一项累计成90个不同用例。battlesim-run-exit.txt记录实际退出0。
+- 子智能体停止写入且无本工作区Unity/测试进程后，仅恢复Unity自动产生的ShaderGraphSettings.asset之m_Name尾空格；没有恢复任何业务或主工作区人工改动。主责复核Resolver完整diff与新测试全文，未发现其他运行时改动或超出expectedPaths的文件。
+- 新增测试无需新程序集引用；最大触及源码为既有Resolver，未超过500行，不扩大运行时职责。无额外经验候选；按卡路径归档并移除队列/backlog行，最终管理和空白检查绑定本轮提交结果。

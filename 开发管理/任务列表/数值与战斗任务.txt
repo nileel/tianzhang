@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-10-10：U-COMBAT-AP2-POTENCY-01完成固定档物理/神魂攻击及聚灵魂魄承载；原生Unity定向89/89通过，最终测试边界单项复验通过，BattleSim Release构建和默认运行通过。任务已归档，STATUS等下游状态另按维护规则核对；不代表完整AP2平衡完成。
+
 - 2026-10-10状态刷新：CONFIG/EQUIP/ITEM完成事实与归档无冲突；GROWTH、REPEAT、POTENCY、WEAPON四卡完成直接接口/路径准备后转ready。TUNING只等待AP2-BALANCE，SCENE只等待TUNING与AP2-PREVIEW。现有P1同等待批次按高优先级可达下游数排序：POTENCY为8，其余为7，再按稳定ID，固定队列为POTENCY→GROWTH→REPEAT→WEAPON。共享逻辑单元逐项实施和集成，本轮只维护状态，不执行新叶子。
 
 - 2026-10-10：U-COMBAT-AP2-CONFIG-01完成三表/59列攻击表、唯一规则资产与正式配置注入，并经负责人批准补齐BattleSim最小编译和新表读取。EditMode153/153、Release构建及默认run和直接自测通过；PlayMode10/11的既有底座名称断言限制见同ID验证记录。本卡已归档，完整新规则算法/数值平衡仍待后续叶子，正式提交2dfd3aa4已进入master，本轮按维护规则处理直接下游。
@@ -38,7 +40,6 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP2-GROWTH-01 | P1 | codex | 已排队 | — | 角色境界AP与移动效率成长接入 | 开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt |
 | U-COMBAT-AP2-REPEAT-01 | P1 | codex | 已排队 | — | 零冷却能力连续使用AP报价与提交 | 开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt |
-| U-COMBAT-AP2-POTENCY-01 | P1 | codex | 已排队 | — | 固定能力档费用参照与属性承载 | 开发管理/任务卡/U-COMBAT-AP2-POTENCY-01.txt |
 | U-COMBAT-AP2-STATUS-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-POTENCY-01 | 百分比状态与概率强控境界修正接入 | 开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt |
 | U-COMBAT-AP2-WEAPON-01 | P1 | codex | 已排队 | — | 移除空手普攻与武器资格迁移 | 开发管理/任务卡/U-COMBAT-AP2-WEAPON-01.txt |
 | N-COMBAT-AP2-SIM-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01 | BattleSim双入口境界行动经济迁移 | 开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt |

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "CONFIG已于2dfd3aa4正式完成；已核对共享规则、直接消费者、精确路径及风险预检，按冻结合同进入ready。",
+  "stateReason": "2026-10-10固定能力档承载完成；89项定向EditMode通过，最终收窄测试1/1复验通过，BattleSim Release构建及默认运行通过。附加重复费用与完整新平衡仍归后续叶子。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
@@ -89,3 +89,9 @@
 
 - CONFIG归档与master提交2dfd3aa4一致，无同ID活跃卡冲突；直接前置已解除。现有单一结果、所有者、expectedPaths、验证与停止条件继续适用。风险预检matched/mustRead/gates均为空，schema 2投影一致。执行前仍按当前卡重新预检。
 - 已定位CombatAttackProfile.RuleMetadata.Tier及CombatActionResolver.ResolvePhysical/ResolveSoul/ResolveAttack：物理、神魂及聚灵来源值均有既有入口，CONFIG已完成预算派生，消费固定档承载无需新增公式所有者。保留既有路径与gpt-6.1-sol/high主责；仅出现预算证据冲突时，对本卡Resolver/RuleMetadata只读核查，不新增生产内容或完整平衡验证。
+
+## 2026-10-10 完成签收
+
+- 正式固定Tier已在Resolver物理/神魂攻击及聚灵来源值生效；目标真实防御、普通伤害境界倍率、固定Heal与费用预算派生保持原合同，运行时不新增常量。gpt-6.1-sol/high子智能体实施，主责统一复核diff、实际XML及唯一提交。
+- 验证：新增19项、生产/夹具投影2项、既有内核68项全部通过；最后修改重复测试边界后单方法1/1通过。Release build为0警告0错误，默认run实际退出0。详见开发管理/U-COMBAT-AP2-POTENCY-01-验证记录.txt。
+- 本轮只完成本卡，未实施REPEAT/STATUS或全量平衡；下游解除具名前置另按状态维护规则处理。依据本轮事实未发现需新增的经验候选。
