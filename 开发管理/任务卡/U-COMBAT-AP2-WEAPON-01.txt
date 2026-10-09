@@ -28,6 +28,8 @@
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "tools/check-data-chain.ps1",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -166,3 +168,7 @@
 - AdventureScene仍引用待删徒手asset的GUID 4c65a0a3f37a8c54a93ca75086a6a2a1，仅移除该引用，不重建场景。AttackProfiles参与sourceDigest，删行后必须同次重导CombatRuleSet.asset及原卡四合法攻击资产，保留GUID。新增asset/meta授权覆盖该确定性投影。
 - CONFIG的CombatRuleSetDataTests、EQUIP/ITEM、FormalEndToEnd、FormalUiText、StarterArts测试仍直接载入或断言徒手生产asset，补齐其精确路径，只迁移相关夹具/合法动作断言，保留严格未知ID拒绝、GUID及整批零写入测试。历史架构基线字符串不属于生产引用，不扩大清理。
 - ready前重跑更新路径后的风险预检；执行前再次消费正文。与GROWTH等任务共享的角色/保存/测试逻辑单元不得并行写入；按固定队列逐项实施与集成，不以共享文件伪造新业务依赖。若需新增玩法、生产武器或完整模拟改造，仍按既有停止条件返回。
+
+## 2026-10-10 非前置卡点补充
+
+- 正式Layout胜负测试与Timeline死亡/重入测试仍调用默认玩家/石甲兽的徒手普攻，补入两个直接消费者路径，随本卡迁移无武器资格下的测试操作。保留实际结算、返回、死亡过滤、保存/重入断言；测试专用输入须显式标记，不能将临时武器或改血当正式生产可玩性证据，不新增生产攻击内容。

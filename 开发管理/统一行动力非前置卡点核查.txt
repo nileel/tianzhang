@@ -1,0 +1,43 @@
+# 统一行动力非前置卡点核查
+
+## 范围与依据
+
+- 2026-10-10负责人要求检查剩余任务除前置以外的阻塞并先处理；基线为master的bbd8c5d4f1095e537412e48b670d6e1e581d7ea5。范围限定P-COMBAT-AP-01剩余叶子与直接验证消费者，没有扩查其他backlog。
+- 主责在.worktrees/ap2-blocker-audit-20261010隔离处理。两条子智能体工作面分别核对SIM/BALANCE/TUNING和PREVIEW/SCENE/CLOSE，默认只读；验收辅助随后仅获BasicAttack测试单路径写入。辅助额度耗尽后由主责接手原生Unity测试、复核和统一提交，没有另派任务或更改自动化runtime。
+- 本轮代码差异仅在三个既有PlayMode测试，生产算法、源表、参数、场景与资产没有修改。路径准备不等于相关叶子业务已完成。
+
+## 任务核查与处理
+
+| 任务 | 非前置条件及处理 | 状态 |
+|---|---|---|
+| GROWTH、REPEAT | 已冻结实现接口和允许路径；POTENCY新测试没有锁住后续重复费序列，未发现此次范围内新的独立阻塞 | 保留ready及既有相对顺序 |
+| STATUS | POTENCY已正式完成但旧blockedBy未清；合法候选服务仍滤掉自/友Buff，Stage共享内核缺第五独立控制样本授权。补齐两个精确路径、可达链验收与边界，现有合同已有三测试实体、状态数值/时点/发布语义 | 重新预检后ready，插在原三项之后 |
+| WEAPON | Layout胜负和Timeline死亡重入仍依赖徒手普攻，原卡漏两条直接测试消费者路径 | 补路径并约束迁移，保持ready |
+| SIM | 旧算法与读取链属于已有前置及SIM本体，没有证据要求额外扩模拟器或等待新决定 | 保留原前置 |
+| BALANCE | 两条实际生产配置测试固化初值，合法四表调参会触发失败 | 补CombatAbilityCapacityTests/CombatRuleSetDataTests路径，限定同步定案预期或完整显式夹具；保留SIM前置 |
+| TUNING | 已批准活血丹生成资产/meta漏列，旧最终回填措辞可能被误读为可新增药物/普通费用定案 | 补资产路径；明确保留80/3和UseItem30/Swap25，AP2-BALANCE只定四张战斗表；保留BALANCE前置 |
+| PREVIEW | 当前正式HUD消费者、双分辨率捕获入口及Unity工具可定位，未发现额外内容审批条件 | 保留四个实现前置；工具存在不代表视觉验收通过 |
+| SCENE | 正式流程/布局测试入口漏列，且现有测试有过期观察和操作假设 | 补BasicAttack/Layout路径，修复见下一节；仍等最终TUNING/PREVIEW输入 |
+| CLOSE、父项 | 最终实际体验确认是既有明确关闭条件 | 待可体验版本交付再取得负责人结论；当前不伪造确认、不提前关父项、不阻塞ready实现 |
+
+STATUS与既有三项同为P1、下游解锁量7，按本次重新ready等待时间插在GROWTH→REPEAT→WEAPON之后。所有五张expectedPaths变化卡均重新预检，matched/mustRead/gates为空且与schema 2投影一致。STATUS执行模型仍为gpt-6.1-sol/high，其他owner/route/model不改。
+
+## 已证实的测试根因与最小修复
+
+1. BasicAttack正式链按根物体名寻找MeshRenderer，且读取无材质索引的属性块；真实Static3DCombatUnitPresentationProvider.CreateFactionBase在根下的renderer、材质槽1写阵营色。改为从命名根找子renderer并读取槽1，保留恰好两renderer和阵营颜色断言。
+2. 同一正式链固定600帧驱动战斗；实跑失败时actor=enemy、phase=Active、presenting=True、tick=17，正常演出尚未结束。改为复用既有演出锁等待并采用同文件/相邻测试使用的有界实时时限，锁释放后才结束回合；没有改动演出速度、跳过结算或放宽最终保存/奖励断言。
+3. Layout两个胜利测试把敌人当前/最大生命固定839，当前生产实跑为657。改为断言入战满血、仅临时会话降为1、最大生命不变，并序列化比较正式模板前后不变；不修改生产血量。旧操作把CanEndTurn视作必须待机，导致连续9次待机后仍不满足“一次真实攻击获胜”；改为当前可用普攻按钮优先，保留一次确认、真实返回和悬赏进度断言。
+4. Timeline以preferredHeight<=18判断单行；真实行框20、可见字形高16，generatedLines=1，距头像6像素。移除过期固定行框阈值，保留实际行数、字形存在、完整容纳、宽度及不与头像相交的几何断言，没有改生产UI布局。
+
+## 验证
+
+- 原生Unity 6000.3.18f1，使用-batchmode -projectPath <worktree>/src -runTests -testPlatform PlayMode -testFilter <精确方法集合> -testResults <证据XML> -logFile <证据日志>；视觉几何诊断与最终复验启用真实图形设备，没有以-nographics结果签视觉。
+- 证据目录：C:/Users/WINDOWS/AppData/Local/Temp/tianzhang-ap2-blocker-audit-evidence/。formal-feature-chain与acceptance-diagnostic保留初次失败；acceptance-corrected记录定位过程与Timeline完整通过；acceptance-final记录最后三个受影响方法结果：两个VictoryReturns通过，FormalFeatureSceneChain在返回聚落后仍为Accepted，未达到ObjectiveCompleted。最终4个定向方法中3个通过、1个仍失败，不能宣称整条正式验收链已通过。
+- 定向范围仅上述4个历史失败/直接受影响方法，没有重复无变化的EditMode、BattleSim或全套Unity测试。本轮不是AP2最终生产数值/场景验收。
+- 管理检查：check-task-cards的STATUS CodexDispatchReady通过，71张卡、4项ready；check-review-text通过。最终文本更新后统一复核，暂存前check-pending-whitespace、暂存后git diff --cached --check。
+
+## 保留风险与停止边界
+
+- FormalFeatureSceneChain的底座观察和演出等待已修正，但当前创角/生产参数/普攻驱动下，实际返回后悬赏没有完成。此次证据不能区分结局、测试策略与真实奖励链根因，更不能静态定性为数值失衡。根因尚未确证，停止继续叠加测试补丁，不把Accepted改成可接受、不强制成功、不削弱生产敌人。
+- SCENE卡已记录该真实失败，最终输入就绪后必须先核对实际战斗结果、合法操作和奖励链；若证实运行时错误，按卡面退回单一根因所有者，不能以本次维护授权跨边界修业务。WEAPON还须迁移所有旧徒手驱动；不能复用当前3个通过结果签最终无空手版本。
+- 此项验收风险与最后负责人实际体验确认均未清除。本轮完成已证实的路径/陈旧断言卡点处理，没有宣称清空所有未来失败或完成整个父项。

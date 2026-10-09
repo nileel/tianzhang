@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-POTENCY-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "POTENCY已于bbd8c5d4完成归档并进入master；配置合同已冻结状态实体与发布链，本轮补齐合法目标枚举和共享内核第五随机样本路径，重新预检后进入ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
@@ -32,7 +30,9 @@
     "src/Assets/Scripts/Combat/CombatSession.cs",
     "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv",
     "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv.meta",
-    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "simulations/BattleSim/StageCombatReport.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -66,6 +66,13 @@
 - 合同第二/六节冻结精确窄载荷列、fixture_percent_attack_up/fixture_percent_defense_down/fixture_probability_stun三测试实体和CSV严格解析→实际Adapter→命令→Resolver准备副本→Snapshot发布完整链。Buff自/友、Debuff/强控敌方，独立ControlRoll，EncounterCoordinator实际合法命令取第五独立样本，不复用命中随机；statuses当前共享列表必须深复制每条记录再成功发布。四攻防属性总峰值/固定档/C/持续与免疫有限接入，概率属性15百分点只作门禁，不新造内容；水系真实泛化消费者归SIM，不自动迁Spells旧库或新增玩家技能。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
+## 2026-10-10 ready准备与非前置卡点核查
+
+- POTENCY正式完成，前置归档与master一致；合同已冻结三测试实体、施受阵营、C与峰值、第五独立ControlRoll、持续和深复制发布语义，不需要新增玩家技能或再等内容定案。
+- CombatLegalActionService.AddTargetedAttacks当前除RestoreSpirit外跳过同阵营，必须随本卡打通Buff自/友合法候选，候选和提交共用同一目标约束，不能只改Adapter/Session而留下不可达入口。
+- StageCombatReport共享内核入口当前只构造四个roll；本卡仅按合同补第五独立控制随机样本并验证，完整成长/重复费/状态矩阵仍归SIM。EncounterCoordinator同时验证真实第五样本和免疫/失败不错误发布；上述入口由同一主责复核，保持一个candidate。
+- 新CombatRealmStatusTests覆盖候选→命令→状态发布，不能仅对Resolver孤立调用。重新ready后等待时间从本次事件起算，保留现有三项相对顺序。
+
 ## 禁止项
 
 - 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
@@ -73,7 +80,7 @@
 
 ## 模型协作
 
-- 状态语义与当前缺消费链，gpt-6.1-sol/high；有界只读辅助可检查正式调用是否可达，主责统一最小实现。
+- 复杂实现：状态需跨合法候选、投影、命令、准备副本和正式发布保持同一语义，gpt-6.1-sol/high；有界只读辅助可检查正式调用是否可达，主责统一最小实现。
 - 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
 
 ## 验证

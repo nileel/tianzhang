@@ -75,7 +75,9 @@
     "src/Assets/Data/CombatRuleSet.asset.meta",
     "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
-    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta"
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
+    "src/Assets/Data/Items/Item_item_huoxue_dan.asset",
+    "src/Assets/Data/Items/Item_item_huoxue_dan.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -111,6 +113,13 @@
 
 - 合同第八/九节明确最终发布读取AP2-BALANCE唯一输入摘要；新增三表/CombatRuleSet/catalog和四合法攻击生成路径已经冻结，删除旧basic_unarmed发布目标。Characters/Enemies/创角只按权威realm与来源投影，物品/武器沿ITEM/EQUIP既有授权，本卡不改变资格、节点、算法或Importer schema。实际物品/装备产物临近ready以直接前置正式结果核对；任何最终源表差异返回受影响BALANCE验证。SettlementContentImporter为真实敌人/物品导入者，不按错误AdventureContentImporter路径实施。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
+
+## 2026-10-10 非前置卡点准备
+
+- 补齐已批准活血丹的生成资产及.meta路径，沿SettlementContentImporter发布并核对既有Items输入；没有新增物品授权。
+- AP2-BALANCE本次只定案三张规则表和AttackProfiles，不含药物/普通行为新参数。保留ITEM/EQUIP已发布的活血丹恢复80、初始3及UseItem30AP、SwapEquipment25AP；不把旧合同的最终回填措辞理解为可以顺带调药物或换装数值。
+- SettlementContentImporter与check-data-chain的80/3门禁及AdventureSceneBuilder的30/25生产者当前一致，本轮不放宽。将来若另获这些参数的新定案，须先同步冻结门禁、生成器、场景、资产和L2路径及验证，不能只改asset让重建恢复旧值。
+- 本卡仍等待AP2-BALANCE真实输入摘要；没有新增“药物待定案”阻塞。
 
 ## 禁止项
 

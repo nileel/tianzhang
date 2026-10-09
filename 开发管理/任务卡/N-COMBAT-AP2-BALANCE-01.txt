@@ -42,7 +42,9 @@
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
-    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta"
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -76,6 +78,12 @@
 
 - 合同第八/九节冻结真实新方案矩阵和四表摘要。只在三张配置CSV/AttackProfiles调参并经既有导入器同步派生资产；允许路径包含该生成物而不授算法/Importer写入。同境/高境固定低档/恢复控制/被动/长战与参数敏感性分别报告；静态算术与旧报告不签平衡。首次实跑前确认SIM双入口真实读取相同版本，不为guardian夹具或reserved高阶能力扩内容。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
+
+## 2026-10-10 非前置卡点准备
+
+- 已核对CONFIG/POTENCY正式实现：CombatAbilityCapacityTests读取真实生产配置，但固化120承载、伤害79/65/82、聚灵恢复12/6/25/12和费用50000等；CombatRuleSetDataTests参数变体只改部分输入，却固定断言倍率.75和恢复CD20。合法四表调参会影响这些既有断言，补入两条精确测试路径。
+- 仅允许随本卡真实定案同步预期，或将变体构造为完整显式夹具；保留承载作用于两处来源A、真实目标D不截断、重复支付不放大效果及GUID/sourceDigest/幂等验证。不得简单删除失败断言、修改算法或伪造新定案；调参后运行受影响定向EditMode。
+- 本次只消除测试路径缺口，保留SIM真实前置；临近ready仍核对SIM最终证据和风险投影。
 
 ## 禁止项
 

@@ -113,11 +113,12 @@ namespace TianZhang.Tests.PlayMode
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
             ICombatCommandHandler combatCommands = encounter;
-            for (int frame = 0;
-                 frame < 600 && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;
-                 frame++)
+            for (float deadline = Time.realtimeSinceStartup + 60f;
+                 Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
             {
                 combatCommands.RequestBasicAttack("player", "enemy");
+                yield return WaitForMovementPresentation(encounter);
+                if (SceneManager.GetActiveScene().name != GameplaySceneNames.Adventure) break;
                 encounter.RequestEndTurn("player");
                 yield return null;
             }
@@ -729,10 +730,12 @@ namespace TianZhang.Tests.PlayMode
             MeshRenderer[] renderers = unit.GetComponentsInChildren<MeshRenderer>(true);
             Assert.AreEqual(2, renderers.Length, "The provider must create exactly the approved body and independent base.");
             int baseColorId = Shader.PropertyToID("_BaseColor");
-            MeshRenderer baseRenderer = System.Array.Find(renderers, item => item.name == "Static3DCombatBase");
+            Transform baseRoot = unit.transform.Find("Static3DCombatBase");
+            Assert.IsNotNull(baseRoot);
+            MeshRenderer baseRenderer = baseRoot.GetComponentInChildren<MeshRenderer>();
             Assert.IsNotNull(baseRenderer);
             var properties = new MaterialPropertyBlock();
-            baseRenderer.GetPropertyBlock(properties);
+            baseRenderer.GetPropertyBlock(properties, 1);
             Color actual = properties.GetColor(baseColorId);
             Assert.That(actual.r, Is.EqualTo(expectedBaseColor.r).Within(0.001f));
             Assert.That(actual.g, Is.EqualTo(expectedBaseColor.g).Within(0.001f));

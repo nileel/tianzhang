@@ -13,11 +13,13 @@
     "U-COMBAT-AP-TUNING-01",
     "U-COMBAT-AP2-PREVIEW-01"
   ],
-  "stateReason": "ITEM/EQUIP已正式完成；仍等待U-COMBAT-AP-TUNING-01最终生产输入及U-COMBAT-AP2-PREVIEW-01，新费用/成长/无空手场景尚未验收。",
+  "stateReason": "仍等待TUNING最终生产输入及AP2-PREVIEW；当前BasicAttack正式流程返回后悬赏未完成的实跑失败尚未解除，最终场景验收须先核对实际结局/策略/奖励链，不得复用旧结果签通过。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongUnifiedActionPointAcceptanceTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
     "开发管理/统一行动力场景验收记录.txt",
@@ -88,3 +90,9 @@
 ## 2026-10-10 依赖状态维护
 
 - ITEM已于c20bade6、EQUIP已于f15a2a49完成归档并进入master，清除两项旧blockedBy；保留卡头所列真实前置，未进入ready、未执行本卡业务。
+
+## 2026-10-10 非前置验收卡点核查
+
+- 正式Bootstrap→悬赏→战斗→领取→保存/载入链和1920/1366胜负返回测试是本卡直接验收入口，补齐BasicAttack/Layout两条测试路径。现阶段过期断言修复与实跑见开发管理/统一行动力非前置卡点核查.txt；不能用此次旧输入测试代替AP2最终摘要、最终功能或双分辨率完整视觉验收。
+- WEAPON负责无空手后的测试操作迁移，SCENE只按最终生产输入复验，不恢复徒手或追加生产内容。发现真实所有者错误仍返回根因卡，不在验收卡修补多个业务边界。
+- 本次4个受影响方法中，两个Layout胜利返回与Timeline完整流程通过；BasicAttack正式链已返回聚落，但悬赏为Accepted而非ObjectiveCompleted，仍失败。不能断言是平衡或奖励逻辑根因，验收前需读取实际结果、合法动作与悬赏回调证据；未解除前不得标场景通过。

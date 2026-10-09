@@ -124,11 +124,16 @@ namespace TianZhang.Tests.PlayMode
             if (victory)
             {
                 Assert.IsTrue(session.Combatants.TryGet("enemy", out var enemy));
-                Assert.AreEqual(839, enemy.CurrentHealth, "Formal enemy data must remain unchanged");
+                var spawned = (AdventureSpawnSet)typeof(EncounterCoordinator).GetField("spawned", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+                string sourceBefore = JsonUtility.ToJson(spawned.EnemyData.combatTemplate);
+                int maximumHealth = enemy.MaximumHealth;
+                Assert.Greater(maximumHealth, 1);
+                Assert.AreEqual(maximumHealth, enemy.CurrentHealth, "The formal enemy must start at full health");
                 enemy.ReceiveDamage(enemy.CurrentHealth - 1);
                 Assert.AreEqual(1, enemy.CurrentHealth);
-                Assert.AreEqual(839, enemy.MaximumHealth);
-                Debug.Log("LAYOUT controlled victory: temporary enemy HP 839 -> 1; maximum remains 839");
+                Assert.AreEqual(maximumHealth, enemy.MaximumHealth);
+                Assert.AreEqual(sourceBefore, JsonUtility.ToJson(spawned.EnemyData.combatTemplate), "Temporary encounter damage must not change the formal enemy source");
+                Debug.Log("LAYOUT controlled victory: temporary enemy HP " + maximumHealth + " -> 1; maximum remains " + maximumHealth);
             }
             coordinator.SetCombatResolutionRandomSource(new OutcomeCoverageRandom(session, victory));
             presenter.InspectTarget("enemy");
@@ -150,7 +155,7 @@ namespace TianZhang.Tests.PlayMode
                     Capture((victory ? "victory" : "defeat") + "-long-log-" + width);
                     capturedLongLog = true;
                 }
-                Button action = snapshot.CanEndTurn || !victory ? bar.WaitButton : bar.BasicAttackButton;
+                Button action = victory && bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
                 yield return Click(action);
                 Assert.IsTrue(preview.IsVisible);
                 Assert.IsTrue(preview.ConfirmButton.interactable);
