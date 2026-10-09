@@ -1,0 +1,169 @@
+# 统一行动力换装合同
+
+日期：2026-10-09；设计任务：D-COMBAT-AP-EQUIP-01；源码输入：e791f5d1f94a7a962b039b43f97911874d0b8f68。
+负责人已确认铁剑／铁刀、单主手槽、战斗互换与保存、练气新角色初始取得。本文冻结一个换装闭环，不表示 Unity 已可用或数值已平衡；不授权修改下游卡或路径。
+
+## 一、真实输入与首批内容
+
+- L2：docs/道具/武器/铁剑.txt、docs/道具/武器/铁刀.txt；L1：docs/道具/道具事实速查.txt#四、武器行。
+- 公共语义：开发管理/统一行动力公共合同.txt#五、同源费用、修正与原子提交、#七、长期输入可重建性与保存合同、#八、Item／Equipment的窄接口位置。
+- L2 战斗语义：docs/基础设定/战斗系统.txt#第一章 的行动回合内操作、成本声明与原子提交；与本合同的正AP、Guard退出、失败零变化及上限不重发一致。
+- 当前 CharacterRuntimeProfile 仅有 MainEquipmentBasicAttackProfileId／UnarmedBasicAttackProfileId；AbilityLoadout 只管术法／神通。InventoryStore 按 itemId 保存数量；InventoryGrantUseCase.Grant 全批验证后替换库存，无现行装备实例管理。
+- Items.csv 现只有灵石／石甲碎片；SettlementContentImporter.ParseItemRows／ValidateApprovedItem 严格限定这两行、maxStack=99。两武器接入须由同一导入器显式扩充获准集合与字段，保留原两物品，不新增通用装备表。
+- AttackProfiles.csv 现有 basic_unarmed、spell_guanshiji、spell_julingshu 三生产 ID；本合同新增两个独立主装备普攻，原三行不因换装改值。
+
+| 内容 | 定义 ID | 主手普攻 ID | 默认关系 |
+|---|---|---|---|
+| 铁剑 | item_iron_sword | basic_iron_sword | 新角色默认主手 |
+| 铁刀 | item_iron_blade | basic_iron_blade | 新角色库存备选 |
+
+两件均为 content_scope_production、itemCategory=weapon、maxStack=1；equipmentSlotId=main_hand，equipmentRealmRequirementId=realm_lianqi，equipmentBasicAttackProfileId 指向各自上表值。练气／筑基／金丹／元婴／化神满足最低境界，凡人／未知值拒绝；不附灵根、门派、能力槽或属性要求。Character 在自己的准备入口验证境界，不能套 AbilityRequirementPolicy.IsSatisfied 的灵根品级门禁：该门禁实际还要求合法可见灵根，超出本武器资格。
+
+非武器原两行的三个 equipment 字段显式为空，原类别／maxStack保持；未知类别、第三件武器、缺引用、非 basic／main_equipment 档案整批拒绝。字段扩充、语言引用、资产位置、交叉引用和全部行须在任何资产写入前验证。Settlement 与 Combat 仍各自拥有现行导入职责，目录只提供查询，导入幂等且既有 GUID 不变。
+
+## 二、库存、实例与主手保存字段
+
+首批不支持同定义多件、交易、丢弃、损坏、强化或换出库存。InventoryStore 的数量仍是拥有总量，包含已装配的一件；两武器拥有数量各为1。换装只改变主手引用，库存零扣除；不得把“装备中”与“背包中”分别再存一份数量。
+
+- 在同一存档内，唯一实例键为 CharacterId + ":initial:" + itemId，Ordinal 比较。正式玩家键分别为 player:initial:item_iron_sword、player:initial:item_iron_blade；同键跨存档没有身份关系。
+- World.InventoryStore 在只读装备查询中以角色身份、获准 itemId、恰为1的拥有数量证明该实例存在；无需泛化实例表或给材料增加实例身份。缺失／数量不为1／他人键／未知键均不能装配；maxStack=1同时拒绝第二次发放，不靠覆盖原数量实现幂等补发。
+- 库存当前没有版本字段；下游在同一 InventoryStore 冻结 Version 为非负 long，成功 Replace／Restore 时 checked 递增，拒绝与只读查询不递增。只读外部资源投影携带此版本，确认须精确相等；版本是运行时陈旧证据，不写存档。换装不替换库存，因此不递增库存版本。
+- CharacterRuntimeProfile／CharacterStateSnapshot 新增 MainEquipmentItemId、MainEquipmentInstanceId；CharacterRecord 对应 mainEquipmentItemId、mainEquipmentInstanceId。main_hand 是首批唯一槽位常量，不另建槽位集合。
+- MainEquipmentBasicAttackProfileId 为上述装配解析出来的投影；保留现有记录字段时必须与 ItemData 引用完全一致，不能把它当作独立装配输入。装备模式的 UnarmedBasicAttackProfileId 为空，保持 AdventureUnitSpawner.ResolveBasicAttackBinding 当前“二者必须且只能有一个”的合同。
+- 已有合法徒手模式仍为 MainEquipmentItemId／MainEquipmentInstanceId／MainEquipmentBasicAttackProfileId 均空、UnarmedBasicAttackProfileId=basic_unarmed；缺新字符串视为无装备引用，不替旧角色生成装备。带主装备普攻却缺定义／实例、同时有两个普攻绑定、实例与库存不符均拒绝。
+- schemaVersion 保持现行4；只增加主手引用字段，不迁移已有档、不补发。GameSaveEnvelope.HasCharacterPayload 同步识别新字段；伪装 hasPlayer=false 的装备负载继续拒绝。原 schema1／2／3 的既有拒绝与真正空会话处理不放宽。
+- GameSaveEnvelope.Restore 先构造新角色与库存，再交叉验证主手定义、实例、拥有数量、境界、档案引用；全部成功后才由 GameRuntime.RestoreSave 整体替换 live owners。非法装备输入使用稳定原因 equipment_save_invalid，保留原存档与原 live state，不回退徒手。临时 AP／CT／CD／次数／报价版本不写存档。
+
+## 三、所有者与唯一写回时点
+
+| 职责 | 现有所有者及本闭环位置 | 冻结边界 |
+|---|---|---|
+| 内容与引用 | ItemData／SettlementContentImporter；AttackProfileData／CombatContentImporter；ContentCatalogData | Items 引用 AttackProfiles；不在物品或角色重复保存攻击倍率／费用 |
+| 拥有与实例存在证明 | World.InventoryStore；InventoryGrantUseCase 初始全批发放 | 首批实例由单件拥有事实唯一定位，换装不写库存 |
+| 长期主手 | CharacterRuntimeProfile.TryPrepareEquipmentChange 与同一所有者的候选提交 | 唯一装配写入者，完整候选含新主手定义／实例／普攻投影；AbilityLoadout 不参与 |
+| 战斗报价／AP／规则投影 | CombatSession／CombatCommandService／CombatantSnapshot | SwapEquipment 为普通付费收益命令；只消费不可变资格／实例／库存版本事实，不引用 World／Character |
+| 同步桥接 | Adventure.EncounterCoordinator.ExecuteCommand；AdventureSceneInstaller 显式注入 runtime.Player 与只读库存查询 | 先准备所有结果，再在同一同步无 yield 提交中更新 AP、战斗普攻、长期主手；不另开执行器 |
+| 长期快照与磁盘 | CharacterRecord／GameSaveEnvelope；既有 GameBootstrap.SaveActiveSlot | 后续非战斗保存捕获当前主手；不增加战斗中途保存或第二自动保存入口 |
+
+唯一长期写回时点选定为每次成功 SwapEquipment 的同步提交，初始默认装配另由新角色初始化一次形成。不保留战斗影子装配、战后装配补交或失败补偿队列。FormalEncounterResult 当前只持胜负／掉落，EncounterCoordinator.Complete 当前销毁会话后调用 AdventureController.ResolveEncounter；这条结果链不再次提交装备，胜利／失败／离场都保留最后一次成功装配。提交前失败、取消或未确认退出不改变长期主手。
+
+既有正式入口只向 AdventureController／Coordinator 传 player.Capture()，且 GameRuntime 的库存为私有字段；下游必须经现有组合根显式接入长期所有者及窄查询，不能从 UI 取全局 runtime，也不能以快照替换冒充写回。Character 不持 AP 余额／场景，Combat 不反向依赖 Character／World，CombatPresentation 仍只消费 Gameplay.Contracts DTO。
+
+AdventureSpawnSet.PlayerBasicProfileId 是入场只读缓存；下游须让正式普攻候选、RequestBasicAttack 和 ToCommand 读成功换装后的 CombatantSnapshot.BasicAttackProfileId，不能继续使用旧缓存。AdventureUnitSpawner 负责重新进场投影，CombatEntryAdapter 提供两个真实生产档案。不得靠重建会话／重开回合刷新普攻。
+
+## 四、初始发放与恢复
+
+当前真实链为 CharacterCreationRules.BuildCharacterData（realmStage=练气、unarmed=basic_unarmed）→ StartMenuSceneInstaller.CreateNewPlayer → CharacterRuntimeProfile.FromDefinition("player", profile) → GameRuntime.BeginNewGame／Initialize（建立空库存）→ SlotStore.Write(runtime.CaptureSave())。
+
+下游在这条链复用现有组合根与领域准备入口：新角色及空库存先作为候选，World 全批准备两物品各1，Character 验证后默认装备铁剑并清空活动徒手绑定，全部通过才发布并写首次存档。缺生产目录、任一物品／攻击档案、资格或发放失败均不开始新游戏，不只发一件。Bootstrap 只组织调用，身份与资格验证归 Character／World；BuildCharacterData 不承担库存发放。
+
+只在获准练气新角色入口执行一次；GameRuntime 构造／Clear、RestoreSave、场景 Awake／TryBegin 均不发放。CreateNewPlayer 首次写盘失败保持其现有 Clear／不激活槽位合同。角色境界、出身、点购和能力装配不因发武器改变；不改已有角色或旧档。初始盘内两件拥有数量均1、主手铁剑；换成铁刀后沿既有据点“保存返回菜单”入口 SaveActiveSlot，读档与重新进入 Adventure 均保持同一主手与两件数量。
+
+## 五、同源报价与原子提交
+
+1. 只接受当前玩家个人回合、有效 main_hand、获准且与当前不同的实例；不支持卸空／第三件／无资格／非库存装备。UI 用既有动作入口列出另一件、预览、确认、取消，不扩独立背包界面。
+2. Preview／合法候选／Execute 共用 CombatCommandService 及 Character.TryPrepareEquipmentChange 校验。报价携带 actor、slot、itemId、instanceId、解析的 profileId、TurnSequence、StateVersion、ContextVersion 与本次只读库存事实版本；外部资源用公共合同 ICombatExternalResourceQuery 投影，不传可变领域引用。
+3. 确认重查当前角色／主手／库存、实例资格、三版本、AP 和普通行为参数，准备 Character 候选与 Combat 结果候选。库存不变也必须验证仍拥有，不以预览时数量代替确认。无变化拒绝；预览、取消、拒绝不取随机数、不改变任何账本。
+4. 只有全部准备成功且保证提交阶段无业务拒绝时，沿同一 ExecuteCommand 同步提交：扣一次 AP，成功收益动作先退出 Guard，更新唯一长期主手及战斗普攻引用，记录 CT／收益动作／版本，再发布 DTO。中间不 yield／演出／重新校验或调用可失败外部写入；保存、装配、显示不再二次扣费。不能先 commandService.Execute 成功扣费后再 TryEquip；无法证明此顺序时停止下游 ready 准备。
+5. AP、回合开始上限、MP、位置、角色攻防、位移效率、行动经济修正、所有术法／神通 CD／每战次数／返还预算均按公共合同保持；只扣本次换装费。成功换装计收益动作，不再可 Wait；不足／取消／陈旧确认不退出 Guard、不改任何状态。
+6. 不通过重新 FromDefinition／Restore 整个角色、重建 Combatant 或重新 BeginTurn 更新主手；同一能力实例账本不因换回武器重建。AP 为0时沿既有唯一结束入口，不能把换装与强制结束绑定。
+
+## 六、候选参数与下游分工
+
+S=1000，100 AP=100000 最小单位。以下倍率与 AP 费／净费下限均仅为候选，逐项待 N-COMBAT-AP-BALANCE-01 实际 BattleSim 运行验证；本卡不运行数值平衡，也不声称已获生产平衡定案。
+
+| 行为／档案 | physicalDamageMultiplier 候选 | ActionPointCostUnits 候选 | MinimumNetCostUnits 候选 | 固定功能约束 |
+|---|---|---|---|---|
+| basic_iron_sword | 1.0 | 40000（40 AP） | 40000 | 单体物理、无属性、距离1、MP0、CT0、重用0 |
+| basic_iron_blade | 1.25 | 50000（50 AP） | 50000 | 单体物理、无属性、距离1、MP0、CT0、重用0 |
+| SwapEquipment（双向统一） | 不适用 | 25000（25 AP） | 25000 | MP0、CT0、重用0、库存扣除0、无额外次数上限 |
+
+两个 basic 档案使用 basicBindingKind=main_equipment；contentScope／sourceAffiliation／realmRequirementId／elementRequirementId 为空，装备资格只在 Item／Character 边界校验，符合现行 CombatContentImporter／AttackProfileData 对 basic 的严格要求。damageElementId=element_none，targetingMode=single，minCastRange=maxCastRange=1，defensePenetration=0；其余魂伤／治疗／buff／范围／神通／聚灵专用字段为空，不新增效果分支。
+
+普攻唯一参数生产者为 AttackProfiles.csv；SwapEquipment 唯一参数生产者沿公共合同是 AdventureSceneInstaller 的 ordinaryActions 序列化定义，由 AdventureSceneBuilder 写入正式 AdventureScene，CombatEntryAdapter 注入会话；不进 Items 第二份费表、不写 UI 常量。初始无获准减耗／返还来源，候选净费下限等于基础费；两武器不增加任何 ActionEconomyModifierInput，原空集合门禁保持。
+
+N-COMBAT-AP-BALANCE-01 按同一动作费用抽象评估两普攻逐ID与换装费，记录100 AP内连击／换装后攻击组合、净支出、相对变化与局限；不复刻库存／场景、不反挂本卡前置。U-COMBAT-AP-EQUIP-01 可据显式候选验功能，但不得宣布平衡；U-COMBAT-AP-TUNING-01 在正式定案后按原所有者回填参数。本卡不改这三张任务卡、blockedBy 或队列投影。
+
+## 七、验收矩阵
+
+下表为下游必须证明的行为，不是本卡运行结果。费用算例只使用上表候选；具体收费以后继实跑定案为准。
+
+| 场景 | 预期证据 | 验收所有者 |
+|---|---|---|
+| 初始取得 | 练气新角色两件各1，默认铁剑；首次盘内同身份；写盘失败不激活，缺任一引用／发放失败不发布半成品 | U-EQUIP 创角／保存功能 |
+| 剑→刀→剑 | 各扣25000一次；主手实例／普攻逐次变为刀／剑；拥有数量始终各1，角色其他属性不叠加 | U-EQUIP EditMode＋正式 PlayMode |
+| 后续普攻 | 同属性同目标按对应倍率／费报价，实际采用新profile；各独立档案可查询、无旧缓存；100AP下剑可连续2次、刀2次，换刀后剩75AP可刀攻1次；80AP时剑可2次、刀1次，证明费用差异 | U-EQUIP 功能；N-BALANCE 评价 |
+| 无变化／资格／所有权 | 当前实例、凡人／未知境界、缺库存／数量错误、他人实例／第三件／错误槽位均拒绝；AP／库存／主手／Guard／CD／CT／版本／随机源保持 | U-EQUIP |
+| 不足／取消／陈旧确认 | 余额24999拒绝；取消零变化；预览后AP／主手／库存／上下文改变，旧报价及重复确认拒绝；换回亦须新报价 | U-EQUIP |
+| Guard／回合与能力 | 成功换装先退出Guard并失去Wait资格；失败不退出；AP不重发、回合上限不改、术法／神通CD／额度不重置，返还来源仍空；0AP沿唯一结束入口 | U-EQUIP |
+| 胜利／失败／再进场 | 保留最后成功主手，FormalEncounterResult不重复装配／收费；再进场投影同ID、库存无增减 | U-EQUIP 正式场景 |
+| 保存与坏档 | 两方向各完成既有保存入口→读档→进场往返；不存在战斗中途写盘。未知物品／实例错配／无库存／档案不符／双绑定／隐藏payload拒绝且live owners不变；旧合法徒手档无补发／无迁移 | U-EQUIP Persistence |
+| 输入与导入 | 两份L2、三张CSV对应行及assets一致；语言可解析、全表拒绝不部分写、重复导入GUID稳定，正式场景引用两攻击、动作DTO显示同源费 | U-EQUIP；U-TUNING 最终参数 |
+
+## 八、下游字面量路径交付清单
+
+此节只记录下游临近 ready 必须核对的精确路径，不能代替其 expectedPaths 授权。先由有权维护者完整读 U-COMBAT-AP-EQUIP-01、补齐所需路径、重跑风险预检；本卡不写 src／CSV／asset／BattleSim／下游任务卡。既有文件的.meta仅在确有修改时写；新文件必须同时冻结.meta。当前两资产目录已经存在，无新目录.meta。
+
+生产行／字段：
+- src/Assets/DataConfig/Items.csv：item_iron_sword、item_iron_blade 两行及 equipmentSlotId／equipmentRealmRequirementId／equipmentBasicAttackProfileId 表头；原两行追加空字段。
+- src/Assets/DataConfig/Language.csv：item_iron_sword（铁剑）、item_iron_sword_description（铁剑L2描述）、item_iron_blade（铁刀）、item_iron_blade_description（铁刀L2描述）、attack_profile_basic_iron_sword（铁剑普攻）、attack_profile_basic_iron_blade（铁刀普攻）、combat_command_swap_equipment（换装备）；新增拒绝原因键 equipment_no_change（已装备该武器）、equipment_not_owned（未拥有该武器）、equipment_instance_invalid（武器身份无效）、equipment_qualification_invalid（境界不满足装备要求）、equipment_slot_invalid（主手槽无效）、equipment_definition_invalid（武器定义无效）、equipment_save_invalid（装备存档无效）。不足AP／陈旧确认复用现有同源拒绝原因显示，不改全局翻译体系。
+- src/Assets/DataConfig/AttackProfiles.csv：basic_iron_sword、basic_iron_blade 两行；保持原三ID。
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs：字段／获准集合／ParseItemRows／ValidateApprovedItem／CopyItem／目录与引用验证。
+- src/Assets/Scripts/Editor/CombatContentImporter.cs：同一攻击生产者生成两个 main_equipment basic 行；沿现有严格校验，不扩大能力表。
+- src/Assets/Scripts/Modules/Content/ItemData.cs：三 equipment 字段；src/Assets/Scripts/Modules/Content/ContentCatalogData.cs：只读装备定义／引用校验入口。
+- src/Assets/Data/Items/Item_item_iron_sword.asset
+- src/Assets/Data/Items/Item_item_iron_sword.asset.meta
+- src/Assets/Data/Items/Item_item_iron_blade.asset
+- src/Assets/Data/Items/Item_item_iron_blade.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta
+
+初始发放／装配／库存／保存：
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs：核对练气创建与默认徒手输入，初始物资装配不侵入点购。
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs：CreateNewPlayer 正式发放／初始保存接线。
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs：新角色候选／领域初始化及只读库存接线，RestoreSave 整体发布。
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs：唯一主手字段／TryPrepareEquipmentChange／候选提交／Capture／Restore。
+- src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs：主手定义／实例快照。
+- src/Assets/Scripts/Modules/World/InventoryStore.cs：单件拥有与实例只读查询、发放验证及资源版本投影；不新增通用背包系统。
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs：CharacterRecord 两引用字段、HasCharacterPayload、角色／库存交叉恢复验证。
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs：equipment_save_invalid 原因与现有版本边界，schema不升级、不迁移旧装备。
+
+正式战斗／UI／配置：
+- src/Assets/Scripts/Combat/CombatCommand.cs
+- src/Assets/Scripts/Combat/CombatCommandService.cs
+- src/Assets/Scripts/Combat/CombatSession.cs
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs
+- src/Assets/Scripts/Combat/CombatantSnapshot.cs
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+- src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs：核对结果没有第二装配写入；无需为装备追加战后补交字段。
+- src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
+- src/Assets/Scenes/AdventureScene.unity
+- src/Assets/Scenes/AdventureScene.unity.meta
+- src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs
+
+测试：
+- src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs
+- src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs.meta
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs.meta
+- src/Assets/Tests/EditMode/ContentCatalogDataTests.cs：现行“两物品／全部99”断言只按新增获准武器更新，材料／掉落断言保持。
+- src/Assets/Tests/EditMode/AttackProfileDataTests.cs
+- src/Assets/Tests/EditMode/CharacterStateTests.cs
+- src/Assets/Tests/EditMode/CharacterCreationTests.cs
+- src/Assets/Tests/EditMode/GameRuntimeTests.cs
+- src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs
+- src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+
+只读直接保存链另含 GameBootstrap.cs::SaveActiveSlot、SettlementSceneInstaller.cs::SaveAndReturnToMenu；本合同不要求修改它们。不需新增装备类、asmdef、目录或通用注册器；临近ready发现额外真实调用者、改架构或无法证明同步提交时，按原停止合同处理，不能在实施中叠兜底。

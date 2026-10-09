@@ -1,0 +1,38 @@
+# 铁刀
+
+日期：2026-10-09；设计任务：D-COMBAT-AP-EQUIP-01。内容定义已冻结，Unity 尚未接入；数值为待实跑候选。
+
+## 身份
+
+- 稳定定义 ID：item_iron_blade；名称键：item_iron_blade；描述键：item_iron_blade_description。
+- 描述：练气新修士随身的基础铁刀，单次劈击较重，装在主手使用。
+- 分类：weapon；生产范围：content_scope_production；maxStack=1。基础武器不套用丹药／天材地宝四品消耗品模板，无消耗品效果、售价、打造或强化定义。
+- 实例身份：在一个存档的玩家库存中，同一定义只允许一件；实例键为 CharacterId + ":initial:" + itemId。正式玩家铁刀键为 player:initial:item_iron_blade；不跨存档比较实例，不以显示名称识别装备。
+
+## 资格与主槽位
+
+- 唯一槽位：main_hand（主手）。练气及已定义的更高境界可装配；凡人、未知境界拒绝。生产资格键 equipmentRealmRequirementId=realm_lianqi。
+- 不要求门派、灵根、功法或术法；不占 AbilityLoadout 的术法／神通槽。
+- 唯一装配所有者为 CharacterRuntimeProfile；本件装备时主手定义／实例引用均须指向本件，普攻投影引用 basic_iron_blade。
+- 不额外修改角色攻防、AP 上限、位移效率、减耗或返还；差异全部由普攻档案承载。
+
+## 库存与互换
+
+- World.InventoryStore 记录拥有数量，包括已装备的一件；装配只是引用，换装不扣除、移出、复制或重新发放库存。
+- 本件数量必须恰为1，且实例键与所属角色、定义吻合，才可从铁剑换入本件。与当前同实例重复装配、缺库存、无资格或错误槽位均拒绝且不收费。
+- 首批有效互换只为铁剑与铁刀之间互换，不提供卸空主手或第三件装备。
+
+## 普攻与数值候选
+
+- 档案 ID／显示键：basic_iron_blade／attack_profile_basic_iron_blade；profileKind=basic，basicBindingKind=main_equipment，effectType=physical，damageElementId=element_none，targetingMode=single，minCastRange=maxCastRange=1。
+- 待 N-COMBAT-AP-BALANCE-01 实际运行验证：physicalDamageMultiplier=1.25；actionPointCostUnits=50000（50 AP）；minimumNetCostUnits=50000（50 AP）。单次倍率较铁剑高、费用较多，形成可测的动作选择差异；未宣称强度已平衡。
+- ctPenalty=0、reuseCooldownTicks=0、resourceKind=none、resourceCost=0；无穿透、范围效果、额外属性或特效。保持现有基础攻击的零 CT／零重用冷却合同。
+- 换入费用候选：25000（25 AP），净费下限同值；不是本件普攻费。两方向费用统一由换装行为定义生产，不在物品上另存一份。
+
+## 取得与保存
+
+- 仅练气新角色初始物资各发铁剑／铁刀一件；本件为库存备选，铁剑为默认主手。完整发放与装配验证成功后，随 CreateNewPlayer 的首次存档一起保存；不变更角色境界。
+- 读档、进入或重进场景均不补发；已有存档不获补发或装备迁移。既有合法徒手角色保持其原状态，不能作为首批换装成功样本。
+- CharacterRecord 保存主手定义／实例引用，既有主装备普攻字段与本件档案交叉验证；InventoryRecord 保存拥有数量。恢复先校验两者一致，再整体发布。
+- 成功换装当次同步更新长期装配所有者及 Combat 普攻投影，战后不重复写回；磁盘保存仅沿既有非战斗保存入口，不增加战斗中途存档。
+- 完整闭环、候选参数状态与下游精确路径见 开发管理/统一行动力换装合同.txt。

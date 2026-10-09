@@ -1,0 +1,55 @@
+# D-COMBAT-AP-EQUIP-01 验证记录
+
+日期：2026-10-09；RunId：325c18ba-0b33-463f-88e7-4893a6cb5fbf；基线：e791f5d1f94a7a962b039b43f97911874d0b8f68。
+工作树：.worktrees/automation/325c18ba-0b33-463f-88e7-4893a6cb5fbf/codex；candidate 分支：codex/automation/codex/325c18ba-0b33-463f-88e7-4893a6cb5fbf/candidate。
+
+## 执行与模型协作核对
+
+- 主责 Codex，主模型 gpt-6.1-sol，以共享入口传入的 -m 启动证明为准；不以子会话 unknown 再阻塞，不更换主模型、不启动第二责任会话。
+- 已读取 AI协作规则#任务卡中的模型协作提示与本卡模型协作：两件内容和同一主手闭环强耦合，所有者、库存、战斗与保存必须统一判断，无独立辅助工作面；采用单主智能体。实际工具具备 rg、完整源文件读取、PowerShell7、限定路径编辑与Git检查能力，未委派子智能体。
+- 入口绑定的风险预检 matched／notice／mustRead／gatePointers 均为空；本卡 schema2 riskPreflight explicitRefs／matched／gates 同为空，无正文待消费或门禁入口缺失。自身 expectedPaths 未扩充，源码读取及下游清单属本卡明确必查范围，不写下游路径。
+- 应用 brainstorming 与 unity-agent-workflows 的上下文／所有者／数据优先核对；负责人已在本卡确认内容范围并授权补齐合同，本轮按此授权完成设计，不重复请求许可或进入 Unity 实现。
+
+## 事实源与直接所有者证据
+
+| 证据入口 | 实际读取结论与本轮决定 |
+|---|---|
+| 活跃任务卡及2026-10-09负责人确认 | 仅铁剑／铁刀、单主手、练气初始物资、互换与保存；不做已有档补发／迁移、第三件或独立装备UI |
+| combat-action-points-design §6～9；统一行动力实现规划的所有者／EQUIP依赖行；公共合同§五／七／八 | 同源正AP、资格、原子提交、失败零变化、Guard退出、AP不重发；允许后续装备合同选择立即长期写回，本卡选成功当次写回 |
+| docs/基础设定/战斗系统.txt 第一章；道具设计规范概述／品级／效果绑定；道具事实速查武器预留行 | 战斗规则一致；武器不套丹药四品模板，补两份独立L2并替换预留行 |
+| CharacterRuntimeProfile 构造／FromDefinition／FromSnapshot／Capture／Restore；CharacterStateSnapshot；AbilityLoadout | 仅有主装备普攻引用，无装备实例；装配归Character，能力装配仍只管术法／神通 |
+| InventoryStore 的完整数量／Replace／Capture／Restore单元及 InventoryGrantUseCase.Grant | 拥有按ID计数，成功批量验证后替换；选择每定义单件的唯一初始实例键，装备只是拥有项引用，换装数量不变；新增资源版本是下游待实现合同 |
+| ItemData；SettlementContentImporter.ParseItemRows／ValidateApprovedItem／CommitContentCatalog；ContentCatalogData.TryGetItem | 当前严格两物品及maxStack99；两武器需同一生产者显式扩集合、字段和资产；目录不成为装配所有者 |
+| AttackProfiles.csv表头与三生产行；CombatContentImporter的basic解析／角色绑定验证／逐ID资产路径；AttackProfileData的basic校验 | basic要求main_equipment、无能力资格元数据、零MP／CT／重用；新两行遵守，原三行不改 |
+| CombatElementFacts.cs::AbilityRequirementPolicy.IsSatisfied | 能力门禁另要求灵根品级；本武器不套用它制造额外资格，Character只验明示境界 |
+| CharacterCreationRules.BuildCharacterData；StartMenuSceneInstaller.CreateNewPlayer；GameRuntime.BeginNewGame／Initialize／CaptureSave／RestoreSave | 正式练气创建，当前空库存＋徒手；下游在首次存档前全批发两件并默认铁剑，Bootstrap只接线；读档与场景入口不发放 |
+| AdventureUnitSpawner.TrySpawn／ResolveBasicAttackBinding／AdventureSpawnSet；CombatEntryAdapter.TryCreateSession；EncounterCoordinator.TryBegin／ToCommand／RequestBasicAttack／ExecuteCommand／Complete；AdventureSceneInstaller.Awake | 入场只有快照、普攻ID缓存；需显式注入长期装配所有者／库存窄查询，成功后动作改读Combat当前档案，不能重建回合刷新 |
+| FormalEncounterResult.TryCreate；AdventureController.ResolveEncounter | 当前结果是胜负／掉落；不把此结果链扩成第二装配写回，避免胜利／失败重复扣费或丢状态 |
+| GameSaveEnvelope.Restore／HasCharacterPayload／RestoreInventory／CharacterRecord；GameSaveSerializer；GameBootstrap.SaveActiveSlot；SettlementSceneInstaller.SaveAndReturnToMenu | 当前schema4，新引用沿角色记录保存并交叉库存恢复；保留既有合法徒手档，无补发／迁移；磁盘仍只沿既有非战斗入口 |
+| U-COMBAT-AP-EQUIP-01与N-COMBAT-AP-BALANCE-01完整卡 | 功能与数值各验各的；下游须在ready前补精确资产／meta／调用链并重跑预检。本轮未修改它们或移除具名前置 |
+
+## 文档交付自查
+
+- 两份L2及合同一致：item_iron_sword／basic_iron_sword 默认主手，item_iron_blade／basic_iron_blade 库存备选；各一件，main_hand，最低练气，无灵根／能力槽要求。
+- 实例键由角色＋初始标识＋定义唯一定位，存档内数量恰为1；长期主手归Character，拥有归World，Combat只持标量投影。换装不扣库存，无复制或丢失途径合同。
+- 候选逐项明示：剑倍率1.0／40AP／下限40AP，刀1.25／50AP／下限50AP，双向换装25AP／下限25AP；全部待N-BALANCE实跑，不以定额费用或数值差异证明强度。
+- 验收矩阵覆盖有效互换、新普攻差异、无资格／无库存／同装备／取消／不足／陈旧确认、Guard、AP不重发、CD／额度保持、初始发放、胜负／重进场景与保存往返／坏档整体拒绝。
+- 下游清单包含三张CSV逐ID行、两个现有导入器、Item／Catalog、四新资产各自meta、初始创建、Character／World／Persistence、正式组合根／战斗／动作UI／场景Builder及测试；只在合同记录，没有修改下游expectedPaths或新增卡。
+- 本轮未改代码、CSV、Unity资源、模拟器或自动化；不运行Unity／BattleSim，不把文档预期当作运行证明。
+
+## 检查与结果
+
+- 写入前管理检查：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-EQUIP-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute -OutputJson；通过，cardCount=69、readyCount=2。首次调用漏ExpectedRoute，脚本明确拒绝；补齐规定参数后通过，没有更改项目输入掩盖失败。
+- 完成态管理、文本、数据链路与暂存检查记录在下方本轮实际结果中；最终SHA以candidate提交为准。
+- 文本检查：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理,docs/道具/武器/铁剑.txt,docs/道具/武器/铁刀.txt,docs/道具/道具事实速查.txt；通过，727 files checked。
+- 数据链路：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1；通过，GongFa=29/29、Spells=84/84、Skills=31/31、language keys=625。此检查不把尚未生产的两个武器CSV／asset视为已经存在；它证明本轮文档变化未破坏现有数据链。
+- 归档后管理检查：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-EQUIP-01 -Postcondition CodexClosedOrNonReady -OutputJson；通过，cardCount=68、readyCount=1、taskState=completed。一次误加仅维护门支持的BaseCommit参数被脚本拒绝，移除不适用参数后通过；未修改规则绕过门禁。
+- 归档与L1来源说明变化后复查同一文本命令：通过，727 files checked；原有历史行的审核日期与新增武器设计状态分别说明。
+- 会话内一致性断言通过：逐武器定义／普攻／AP候选／main_hand／realm_lianqi／maxStack／换装费用在L2与合同一致；合同列出的源码／CSV／既有资源路径实际存在，明确待新建的四资产及两测试均有各自meta；归档除dispatchState／stateReason外的冻结卡头逐字段与base完全一致。断言初版把csv扩展名截成cs造成误报，修正检查表达式后通过，未据误报修改内容。
+- 空白／暂存与提交采用 tools/automation-finalize-commit.ps1 的限定ExpectedPaths及RequireAutomationMetadata；该脚本在暂存前调用check-pending-whitespace，暂存后执行cached diff --check，通过后才创建单一candidate。最终提交命令及结果由本轮执行输出和candidate元数据绑定，不在正文预填SHA。
+
+## 验证边界与经验判断
+
+- 未验证：Unity实际发放／装配／收费／普攻／保存往返，以及BattleSim平衡。合同提供可执行验收，不等同已实现。
+- 剩余风险：下游须在ready准备中证明跨Character与Combat的同步提交无业务失败步骤；初始单件身份不可扩作多件武器体系。冻结参数可能随N-BALANCE实跑调整，由U-TUNING回填。
+- 仅用本轮已有事实检查经验候选：本轮交付是授权内缺失内容及合同冻结，没有已复现修复根因或新的通用门禁证据；不写空经验候选章节，不改经验索引或创建整理任务。
