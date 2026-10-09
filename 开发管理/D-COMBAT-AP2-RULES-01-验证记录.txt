@@ -1,0 +1,68 @@
+# D-COMBAT-AP2-RULES-01 验证记录
+
+日期：2026-10-09；主责：Codex；模型：gpt-6.1-sol（共享入口executionModel与codex exec -m启动证明）；基线：eaa10e0336cef4cf48284ef6a78d3a87f6558916。
+本轮只在run 1b09db05-70f8-481b-ae62-34a56fb5c0d1的candidate worktree实施；未领取其他任务、操作runtime、集成或修改其他worktree。
+
+## 写入前范围与模型协作核对
+
+任务为已冻结设计的有界迁移，所有者、允许路径、停止条件与验收明确。按AI协作规则的模型协作提示，由入口主模型统一处理相互关联规则；没有独立冲突工作面，无辅助调用、无写入委派。原生shell、PowerShell7、Python3.12、dotnet10与只读程序集反射可满足验收，未启动第二责任会话。共享入口预检绑定同一run/task/card/index，matched／mustRead／gates为空，与卡头schema2投影一致；未新增允许路径、代码、资源、原型、运行时接口或所有者。
+
+## 设计覆盖与规则算术
+
+- 新设计源为规格第9.1～9.5节；两模板的新独立段分别是功法§九、术法神通§十一。同步战斗第一章、三规范／三模板、两术法、两武器及三张L1指针；L1不复制新数值。
+- 覆盖6境界AP/v、21功法Z/M及临时巽卦相对换算、3固定能力档、双资源/恢复参照、承载、5档状态C与总峰值、4类CD、16泛化项、水系表外组件、Kuxing特殊主动、3旧生产映射与2武器。魂魄25/50/100、反应30/120/500为授权首轮承载初值，有来源理由；未据此新增高阶生产实例。
+- Python Fraction精确重算通过：50AP第14次累计987.5、第15次1062.5；300预算第4次237.5、第5次312.5；低阶10%自增益min(1460,120)×.1=12，同境高档146。练气/筑基/金丹基础CD分别0、短4/1/1、强控12/3/3、恢复16/4/4；16项新表逐行断言成本/MP/CT/CD与完整分类一致。
+- 六境界AP×v/100保持2/4/12/48/240/1440；苦行筑基开府相对换算有效v=743/150，金丹圆满6.4，全预算理论距离14.86/64；最终vMilli4953/6400，原M系数与份额不重算。
+- 水控基础10%跨境得到2.5%/5%/10%/15%/20%；水系减防最多3层并受30%总峰值及属性承载，川流之势普通减伤由旧35%纳入30%峰值，L=35/6冻结。聚灵魂魄25的普通自身/他人12/6、节点25/12MP保持原分支算术。
+- 以上只称规则算术。功能、角色平衡与操作体验没有在新算法中验证；未跑新参数旧算法的平衡报告。
+
+## 当前BattleSim有效输入前后完全一致
+
+直接读取GameData.cs的ReadApprovedTemplate／TemplateRows、approvedAbilityCosts、approvedGrowth、AbilityCost／ProjectMovement及Program／Character／Combat相关直接消费入口。TemplateRows使用首个标题，截到后续第一个换行##，跳过表头；8.1成本读row[2]四整数，8.3只读取Kuxing成本列；成长读三／四／五指定表。
+环境准备：本worktree初始缺obj/project.assets.json，先执行一次 dotnet restore simulations/BattleSim，然后 dotnet build -c Release --no-restore simulations/BattleSim；均退出0，构建0警告0错误。未借主工作区或其他worktree缓存。
+前后探针均以PowerShell7载入本worktree Release/net10.0/BattleSim.dll，反射调用现有AbilityCost／ProjectMovement读取17动作和21功法各合法模拟境界/节点的336项移动投影，并读取approvedGrowth.Value中的6基础、21原映射行、M与节点份额；不替换解析器或改运行逻辑。完整规范化JSON逐字相同，SHA256=10e91d6cc754aa8f74b279ee0d7d8d8600556db30ebf6464a31e38627904e115。临时探针只用于本次验证，不提交、不建新运行组件。
+另从git基线读取原文，按GameData的同一窗口规则比较功法三／四／五与术法8.1／8.3共5完整窗口，正文/表/标题前后完全相同。版本字符串TZ_EFFECT_BUDGET@0.1/A与GF-GROWTH-AP@0.1/A均保持。
+
+### 实际读取的17动作旧成本
+
+| definitionRef | 版本 | APUnits／净下限／CT／CD |
+|---|---|---|
+| KuxingAction | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／0 |
+| MagicArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| MagicDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| PhysicalArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| PhysicalDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| TaixuArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| TaixuDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| TaiyiArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| TaiyiDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| TaiyiFuxiuArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| TaiyiFuxiuDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| WaterArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| WaterDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| YuqingArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| YuqingDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+| YuqingLeijieArt | TZ_EFFECT_BUDGET@0.1/A | 50000／50000／10／10 |
+| YuqingLeijieDivine | TZ_EFFECT_BUDGET@0.1/A | 75000／75000／0／20 |
+
+基础vMilli：{"凡人":2000,"练气":4000,"筑基":12000,"金丹":48000,"元婴":240000,"化神":1440000}；M=0.25，筑基/金丹份额=.30/.32/.38。
+21完整映射键：白屋青云录、抱元守一经、不真自虚法、含弘光大典、混元同尘典、疾雷破山经、九霄雷劫录、空无般若经、苦行剑典、雷池淬体功、南华阐衍典、南华玄感录、秋水游心经、绳墨正法录、太易山藏经、万法都箓经、万物不迁法、心无性有法、玄牝道藏、云篆度人经、正一盟威箓。每行全部5列参与前后完整快照比较，非仅比较键名。
+
+生产AttackProfiles.csv未修改，SHA256=1e4e5cc66bdbf52884104bd11f2982da60f7630e2e7a4fec86340511534f687f；旧basic_unarmed仍是待迁移输入，无删除、旧档迁移或隐式装备补发。
+
+## 已执行验证
+
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test action-economy-n-combat-ap-sim-01：退出0，SELFTEST action-economy-n-combat-ap-sim-01 PASS。现有测试走真实GameData读取入口，含双入口时钟/成本、生产恢复、功法来源与节点投影；仅证明旧有效输入及功能未被文档迁移改变，不证明新版连发、无空手或承载已实现。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：退出0，check-data-chain: OK；GongFa29/29、Spells84/84、Skills31/31、language keys625。
+- check-review-text、check-task-cards的本卡完成后置条件、check-pending-whitespace与暂存diff检查在收尾执行，结果见本节补记。
+
+## 结果与边界
+
+本卡完成设计规则与现用内容标准迁移，当前旧运行输入不变。未改配表/代码/Unity资产、未全库迁移、未扩展NPC能力档或新增内容原型。其他卡及backlog的具名前置D-COMBAT-AP2-RULES-01保持；正式进入master后由后续QueueMaintenance判断下游准备。后续配置合同冻结唯一生产表/精确字段与定点规则，再由原所有者实现并实跑新方案平衡与Unity体验。
+收尾仅用本轮事实/diff/验证检查经验候选：此次是批准规则的正常迁移，没有新增已证实故障根因，不写空经验候选章节。
+## 收尾检查补记
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP2-RULES-01 -Postcondition CodexClosedOrNonReady -OutputJson：退出0，status=ok、taskState=completed、cardCount=76、readyCount=2；只移除本卡投影，下游具名前置未移除。
+- 最终复核补充了泛化定义的固定三元组身份、Kuxing固定档倍率及反应增量对应承载的明确口径，均在新独立规则段；旧解析窗口、代码/CSV、实际有效输入未变化，已通过的旧入口自测与数据链检查按最小验证规则复用，不重复运行。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：退出0，check-review-text: OK，741文件。此后补记只有本轮命令与结果，不改审核语义。
+- 暂存前check-pending-whitespace与暂存后git diff --cached --check由本轮收尾命令执行；automation-finalize-commit再按合同验证并形成唯一candidate，结果绑定该提交的Verify元数据及本轮工具退出码。无关路径不暂存。
