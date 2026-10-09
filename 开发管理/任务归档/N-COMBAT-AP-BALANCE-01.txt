@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01与D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡；本卡路径、输入和风险门禁已核对，风险预检零命中且无门禁，现已ready。",
+  "stateReason": "2026-10-09完成新AP矩阵501行证据、首批成本与有限成长定案；Release构建、默认实跑与行动经济自测通过。本任务归档，下游具名前置继续保留。",
   "expectedPaths": [
     "simulations/BattleSim/Program.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
@@ -83,3 +83,11 @@
 
 - 需要改变战斗语义、未知生产内容强度、追加全局数值重平衡或复刻场景物体时停止；未运行不签定案。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-09 Codex完成结果
+
+- 原子结果：统一行动力数值定案.txt冻结三攻击AP50／50／25及原CT／CD、初始玩家AP100／v2、合成A曲线、21部AP零增量／有限移动预算；道具80恢复／30AP／3颗、剑40／刀50／换装25保留候选，减耗／返还生产来源仍空。
+- 实际证据：开发管理/N-COMBAT-AP-BALANCE-01-验证记录.txt，含输入及源代码digest、全部378构筑行、106纯费用行、9移动行、8边界行，共501条证据；100种子固定流不当作全库统计平衡。
+- Release构建0警告0错误、--ap-balance退出0／AP_BALANCE_PASS、action-economy-n-combat-ap-sim-01自测PASS、默认完整run退出0。项目管理／文本与提交前检查见验证记录。
+- 不改变战斗结算内核、生产模板／CSV、Unity、其他任务卡或父项。真实道具／装备事务、库存／保存、场景表现及生产回填尚未验收；本卡归档不关闭这些任务或移除下游对本ID的具名前置。
+- 主模型gpt-6.1-sol由入口启动证明确认；按原模型协作单主模型完成，未调用辅助智能体。预检空命中已消费，未增加门禁／路径／风险系统状态；收尾只以已有事实检查，无新经验候选。

@@ -147,6 +147,9 @@ class Program
     {
         Combat.ResetDeterministicRandom();
 
+        if (args.Length == 1 && args[0] == "--ap-balance")
+            return ActionEconomyBalanceReport.Run(BuildDefs);
+
         if (args.Length >= 1 && args[0] == "--guanzhong-playtest")
             return GuanzhongPlaytestAudit.Run(args);
 
