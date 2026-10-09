@@ -1,6 +1,7 @@
-# 首批正式物品生产投影；不包含价格、用途或库存状态。
-itemId,displayNameKey,descriptionKey,contentScope,itemCategory,maxStack,equipmentSlotId,equipmentRealmRequirementId,equipmentBasicAttackProfileId
-item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99,,,
-item_shijia_piece,item_shijia_piece,item_shijia_piece_description,content_scope_production,monster_material,99,,,
-item_iron_sword,item_iron_sword,item_iron_sword_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_sword
-item_iron_blade,item_iron_blade,item_iron_blade_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_blade
+# 首批正式物品生产投影；含获准药物的战斗参数，不包含价格或库存状态。
+itemId,displayNameKey,descriptionKey,contentScope,itemCategory,maxStack,equipmentSlotId,equipmentRealmRequirementId,equipmentBasicAttackProfileId,combatUseEffectId,combatUseRealmId,combatUseTargetMode,combatUseHealthRecovery,initialGrantQuantity
+item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99,,,,,,,,
+item_shijia_piece,item_shijia_piece,item_shijia_piece_description,content_scope_production,monster_material,99,,,,,,,,
+item_iron_sword,item_iron_sword,item_iron_sword_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_sword,,,,,
+item_iron_blade,item_iron_blade,item_iron_blade_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_blade,,,,,
+item_huoxue_dan,item_huoxue_dan,item_huoxue_dan_description,content_scope_production,pill,99,,,,restore_current_health,realm_lianqi,self,80,3

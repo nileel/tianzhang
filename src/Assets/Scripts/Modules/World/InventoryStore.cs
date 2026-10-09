@@ -11,6 +11,34 @@ namespace TianZhang.World
 
         public long Version { get; private set; }
 
+        /// <summary>Prepare the entire replacement before either combat or inventory is published.</summary>
+        public bool TryPrepareCombatConsumption(ContentCatalogData catalog, string itemId, int quantity,
+            long expectedVersion, out Action apply, out string reason)
+        {
+            apply = null;
+            reason = "item_definition_invalid";
+            if (catalog == null || !catalog.TryGetItem(itemId, out ItemData item) || !item.IsApprovedCombatItem) return false;
+            if (quantity != 1) { reason = "item_quantity_invalid"; return false; }
+            if (expectedVersion != Version) { reason = "combat_quote_stale"; return false; }
+            var replacement = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var pair in quantities)
+            {
+                if (pair.Value <= 0 || !catalog.TryGetItem(pair.Key, out ItemData existing) ||
+                    existing.contentScope != InventoryGrantUseCase.ProductionContentScope ||
+                    existing.maxStack <= 0 || pair.Value > existing.maxStack) return false;
+                replacement.Add(pair.Key, pair.Value);
+            }
+            if (GetQuantity(itemId) < quantity) { reason = "item_insufficient"; return false; }
+            long nextVersion;
+            try { nextVersion = checked(Version + 1); }
+            catch (OverflowException) { reason = "combat_effect_overflow"; return false; }
+            if (replacement[itemId] == quantity) replacement.Remove(itemId);
+            else replacement[itemId] -= quantity;
+            apply = () => { quantities = replacement; Version = nextVersion; };
+            reason = null;
+            return true;
+        }
+
         public bool OwnsEquipmentInstance(string characterId, string itemId, string instanceId) =>
             !string.IsNullOrWhiteSpace(characterId) && (itemId == "item_iron_sword" || itemId == "item_iron_blade") &&
             string.Equals(instanceId, characterId + ":initial:" + itemId, StringComparison.Ordinal) && GetQuantity(itemId) == 1;

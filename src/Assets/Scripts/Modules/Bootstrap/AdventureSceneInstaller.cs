@@ -102,6 +102,9 @@ namespace TianZhang.Bootstrap
                 combatHudPresenter.ConfigureTargets(combatTargetView, static3DUnitPresentationProvider, combatMovementView);
                 combatTargetInput.Configure(battlefieldCamera, static3DUnitPresentationProvider, combatHudPresenter);
                 encounterCoordinator.ConfigureEquipment(runtime.Player, contentCatalog, runtime.OwnsEquipmentInstance, () => runtime.InventoryVersion);
+                encounterCoordinator.ConfigureItems(runtime.GetItemQuantity,
+                    (string itemId, int quantity, long version, out Action apply, out string reason) =>
+                        runtime.TryPrepareCombatConsumption(contentCatalog, itemId, quantity, version, out apply, out reason));
                 encounterCoordinator.Configure(
                     combatHudPresenter,
                     static3DUnitPresentationProvider,

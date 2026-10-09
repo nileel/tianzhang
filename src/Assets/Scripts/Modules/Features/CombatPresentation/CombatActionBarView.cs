@@ -30,6 +30,8 @@ namespace TianZhang.Features.CombatPresentation
         public Button SwapSpellButton => swapSpellButton;
         [SerializeField] private Button swapEquipmentButton;
         public Button SwapEquipmentButton => swapEquipmentButton;
+        [SerializeField] private Button useItemButton;
+        public Button UseItemButton => useItemButton;
         public Button MoveButton => moveButton;
         public Button ConfirmMoveButton => confirmMoveButton;
         public Button CancelMoveButton => cancelMoveButton;
@@ -56,6 +58,7 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(secondArtButton, false);
             SetEnabled(swapSpellButton, false);
             SetEnabled(swapEquipmentButton, false);
+            SetEnabled(useItemButton, false);
             SetEnabled(secondArtTargetButton, false);
             if (secondArtLabel != null) secondArtLabel.text = "术法";
             if (secondArtTargetLabel != null) secondArtTargetLabel.text = "目标：—";
@@ -80,6 +83,7 @@ namespace TianZhang.Features.CombatPresentation
             if (swapSpellButton != null)
                 swapSpellButton.GetComponentInChildren<Text>().text = "换术\n剩余 " + (swap?.CombatSwapsRemaining ?? 0) + " 次";
             string equipmentReason = PresentAction(snapshot?.FindAction(CombatActionKind.SwapEquipment), swapEquipmentButton, canAct);
+            string itemReason = PresentAction(snapshot?.FindAction(CombatActionKind.UseItem), useItemButton, canAct);
             string basicReason = PresentAction(snapshot?.FindAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
             string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
             string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),
@@ -100,7 +104,7 @@ namespace TianZhang.Features.CombatPresentation
             if (actionStatusLabel != null)
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
-                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, equipmentReason },
+                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, equipmentReason, itemReason },
                         reason => !string.IsNullOrEmpty(reason))));
         }
 
@@ -133,6 +137,7 @@ namespace TianZhang.Features.CombatPresentation
                     (quote.SpiritCost > 0 ? " / " + quote.SpiritCost + "MP" : string.Empty);
                 label.text = quote.Candidate.Kind switch
                 {
+                    CombatActionKind.UseItem => quote.ActionName + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
                     CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
                     CombatActionKind.Guard => quote.ActionName + cost,
                     _ => quote.ActionName + "\n" + cost,

@@ -58,6 +58,36 @@ namespace TianZhang.Features.Adventure
         private ContentCatalogData equipmentCatalog;
         private Func<string, string, string, bool> ownsEquipment;
         private Func<long> inventoryVersion;
+        private Func<string, int> itemQuantity;
+        public delegate bool PrepareItemConsumption(string itemId, int quantity, long version, out Action apply, out string reason);
+        private PrepareItemConsumption prepareItemConsumption;
+
+        public void ConfigureItems(Func<string, int> quantity, PrepareItemConsumption prepare)
+        {
+            itemQuantity = quantity ?? throw new ArgumentNullException(nameof(quantity));
+            prepareItemConsumption = prepare ?? throw new ArgumentNullException(nameof(prepare));
+        }
+
+        public CombatItemResource QueryItem(CombatCommand command)
+        {
+            if (equipmentOwner == null || equipmentCatalog == null || itemQuantity == null ||
+                !equipmentCatalog.TryGetCombatItem(command.ItemId, out ItemData item))
+                return new CombatItemResource(0, 0, 0, null, "item_definition_invalid");
+            string reason = command.ActorId != equipmentOwner.Identity.CharacterId ||
+                equipmentOwner.Progression.RealmStage != "练气" ? "item_qualification_invalid" : null;
+            string facts = string.Join("|", item.itemId, item.displayNameKey, item.descriptionKey, item.contentScope,
+                item.itemCategory, item.maxStack, item.combatUseEffectId, item.combatUseRealmId,
+                item.combatUseTargetMode, item.combatUseHealthRecovery, item.initialGrantQuantity,
+                equipmentOwner.Identity.CharacterId, equipmentOwner.Progression.RealmStage);
+            return new CombatItemResource(inventoryVersion(), itemQuantity(item.itemId), item.combatUseHealthRecovery, facts, reason);
+        }
+
+        public IReadOnlyList<CombatCommand> GetItemCandidates(string actorId) =>
+            itemQuantity == null ? Array.Empty<CombatCommand>() : new[]
+            {
+                new CombatCommand(CombatCommandKind.UseItem, actorId, actorId, contextVersion: commandContextVersion,
+                    itemId: "item_huoxue_dan"),
+            };
 
         public void ConfigureEquipment(CharacterRuntimeProfile owner, ContentCatalogData catalog,
             Func<string, string, string, bool> owns, Func<long> version)
@@ -190,7 +220,7 @@ namespace TianZhang.Features.Adventure
             CombatCommand command = ToCommand(candidate);
             string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
             CombatCommandPreview preview = string.IsNullOrEmpty(reason) ? commandService.Preview(session, command) : null;
-            swapPreview = candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment ? preview : null;
+            swapPreview = candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment or CombatActionKind.UseItem ? preview : null;
             return ProjectQuote(candidate, command, preview, reason);
         }
 
@@ -207,6 +237,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.Move => "移动",
                 CombatActionKind.SwapSpell => "换入" + displayProfile(command.ProfileId),
                 CombatActionKind.SwapEquipment => "装备" + resolveText(command.ItemId),
+                CombatActionKind.UseItem => resolveText(command.ItemId),
                 _ => displayProfile(command.ProfileId),
             };
             string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
@@ -229,7 +260,9 @@ namespace TianZhang.Features.Adventure
                 preview?.Turn?.NextActionThreshold ?? 0, preview?.Turn?.TicksUntilReady ?? 0,
                 preview?.ActionPointCostUnits ?? 0, preview?.CtPenalty ?? 0,
                 preview?.ReuseCooldownTicks ?? 0, remainingCooldown, replaced,
-                actor == null ? 0 : Math.Max(0, actor.MaxCombatSwaps - actor.CombatSwapsUsed));
+                actor == null ? 0 : Math.Max(0, actor.MaxCombatSwaps - actor.CombatSwapsUsed),
+                preview?.ItemQuantityCost ?? 0, preview?.ItemAvailableQuantity ?? 0,
+                preview?.ItemHealthRecovery ?? 0, preview?.ExpectedHealthRecovery ?? 0, preview?.InventoryVersion ?? 0);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)
@@ -252,7 +285,7 @@ namespace TianZhang.Features.Adventure
                     return;
                 }
             }
-            if (candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment)
+            if (candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment or CombatActionKind.UseItem)
             {
                 CombatCommandPreview quote = swapPreview;
                 swapPreview = null;
@@ -284,6 +317,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.Move => CombatCommandKind.Move,
                 CombatActionKind.SwapSpell => CombatCommandKind.SwapSpell,
                 CombatActionKind.SwapEquipment => CombatCommandKind.SwapEquipment,
+                CombatActionKind.UseItem => CombatCommandKind.UseItem,
                 _ => throw new ArgumentOutOfRangeException(nameof(candidate)),
             };
             string profile = candidate.Kind == CombatActionKind.BasicAttack ? CurrentBasicProfile(candidate.ActorId) : candidate.ProfileId;
@@ -417,7 +451,19 @@ namespace TianZhang.Features.Adventure
                     command.ContextVersion);
             }
             CombatActionResult result;
-            if (command.Kind == CombatCommandKind.SwapEquipment)
+            if (command.Kind == CombatCommandKind.UseItem)
+            {
+                CombatCommandPreview itemQuote = quote ?? commandService.Preview(session, command);
+                result = commandService.Prepare(session, command, itemQuote, out Action commitCombat);
+                if (!result.Succeeded) return result;
+                if (prepareItemConsumption == null) return CombatActionResult.Rejected("item_definition_invalid");
+                if (!prepareItemConsumption(command.ItemId, command.ItemQuantityCost, itemQuote.InventoryVersion,
+                    out Action commitInventory, out string reason)) return CombatActionResult.Rejected(reason);
+                // No yield or publication between applying the two fully prepared candidates.
+                commitCombat();
+                commitInventory();
+            }
+            else if (command.Kind == CombatCommandKind.SwapEquipment)
             {
                 if (!equipmentOwner.TryPrepareEquipmentChange(equipmentCatalog, command.EquipmentSlotId, command.ItemId,
                     command.InstanceId, ownsEquipment(command.ActorId, command.ItemId, command.InstanceId),
@@ -521,6 +567,12 @@ namespace TianZhang.Features.Adventure
             Add(CombatActionKind.Guard);
             Add(CombatActionKind.Wait);
             Add(CombatActionKind.EndTurn);
+            foreach (CombatCommand item in GetItemCandidates(player.Id))
+            {
+                var candidate = new CombatActionCandidate(CombatActionKind.UseItem, player.Id, player.Id, null,
+                    commandContextVersion, itemId: item.ItemId);
+                actions.Add(ProjectQuote(candidate, item, commandService.Preview(session, item)));
+            }
             foreach (CombatCommand equipment in GetEquipmentCandidates(player.Id))
             {
                 var candidate = new CombatActionCandidate(CombatActionKind.SwapEquipment, player.Id, null, equipment.ProfileId,
@@ -698,9 +750,11 @@ namespace TianZhang.Features.Adventure
                 CombatCommandKind.Move => "combat_command_move",
                 CombatCommandKind.SwapSpell => "combat_command_swap_spell",
                 CombatCommandKind.SwapEquipment => "combat_command_swap_equipment",
+                CombatCommandKind.UseItem => "combat_command_use_item",
                 _ => throw new ArgumentOutOfRangeException(nameof(command.Kind)),
             });
             if (command.Kind == CombatCommandKind.Art) commandName = displayProfile(command.ProfileId);
+            if (command.Kind == CombatCommandKind.UseItem) commandName += "：" + resolveText(command.ItemId);
             if (result.SpiritRecoveries.Count > 0)
                 return actor + "：" + commandName + "，恢复灵力 " + result.SpiritRecoveries.Sum(item => item.ActualRecovery) +
                     "，消耗灵力 " + result.SpiritSpent;

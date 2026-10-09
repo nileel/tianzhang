@@ -49,7 +49,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(50, enemy.dropEntries.Single(entry => entry.itemId == "item_lingshi_low").dropChancePercent);
 
                 CollectionAssert.AreEquivalent(
-                    new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade" },
+                    new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" },
                     preview.items.Select(item => item.itemId));
                 Assert.IsTrue(preview.items.All(item => item.maxStack == (item.IsApprovedEquipment ? 1 : 99)));
 

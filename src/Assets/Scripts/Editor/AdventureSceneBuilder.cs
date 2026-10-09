@@ -31,13 +31,13 @@ namespace TianZhang.Editor
         {
             var serialized = new SerializedObject(installer);
             SerializedProperty definitions = serialized.FindProperty("ordinaryActions");
-            definitions.arraySize = 3;
-            for (int index = 0; index < 3; index++)
+            definitions.arraySize = 4;
+            for (int index = 0; index < 4; index++)
             {
                 SerializedProperty definition = definitions.GetArrayElementAtIndex(index);
-                definition.FindPropertyRelative("Kind").intValue = (int)(index == 0 ? CombatCommandKind.Guard : index == 1 ? CombatCommandKind.SwapSpell : CombatCommandKind.SwapEquipment);
-                definition.FindPropertyRelative("ActionPointCostUnits").intValue = index == 2 ? 25000 : 50000;
-                definition.FindPropertyRelative("MinimumNetCostUnits").intValue = index == 2 ? 25000 : 50000;
+                definition.FindPropertyRelative("Kind").intValue = (int)(index == 0 ? CombatCommandKind.Guard : index == 1 ? CombatCommandKind.SwapSpell : index == 2 ? CombatCommandKind.SwapEquipment : CombatCommandKind.UseItem);
+                definition.FindPropertyRelative("ActionPointCostUnits").intValue = index == 3 ? 30000 : index == 2 ? 25000 : 50000;
+                definition.FindPropertyRelative("MinimumNetCostUnits").intValue = index == 3 ? 30000 : index == 2 ? 25000 : 50000;
                 definition.FindPropertyRelative("CtPenalty").intValue = 0;
                 definition.FindPropertyRelative("ReuseCooldownTicks").intValue = index == 1 ? 60 : 0;
             }
@@ -58,7 +58,16 @@ namespace TianZhang.Editor
             Button button = LayoutButton(actions, "SwapEquipmentButton", "换装备");
             SceneBuildSupport.SetObject(bar, "swapEquipmentButton", button);
             PlaceLayoutRect(button.GetComponent<RectTransform>(), 378, 8, 114, 68);
-            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 504, 8, 318, 76);
+            Button item = LayoutButton(actions, "UseItemButton", "使用道具");
+            SceneBuildSupport.SetObject(bar, "useItemButton", item);
+            Text itemLabel = item.GetComponentInChildren<Text>();
+            itemLabel.rectTransform.offsetMin = new Vector2(12, 4);
+            itemLabel.rectTransform.offsetMax = new Vector2(-12, -4);
+            RectTransform equipment = button.GetComponent<RectTransform>();
+            float itemX = equipment.anchoredPosition.x + equipment.rect.width + 12;
+            PlaceLayoutRect(item.GetComponent<RectTransform>(), itemX, equipment.anchoredPosition.y, equipment.rect.width, equipment.rect.height);
+            float statusX = itemX + equipment.rect.width + 12;
+            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), statusX, 8, 822 - statusX, 76);
         }
 
         public static void UpdateOrdinaryCombatActions()

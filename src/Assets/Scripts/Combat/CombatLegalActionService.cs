@@ -35,8 +35,12 @@ namespace TianZhang.Combat
             AddMoves(session, actor, actions);
             AddSpellSwaps(session, actor, actions);
             if (session.ExternalResources != null)
+            {
                 foreach (CombatCommand candidate in session.ExternalResources.GetEquipmentCandidates(actor.Id))
                     AddIfValid(session, candidate, actions);
+                foreach (CombatCommand candidate in session.ExternalResources.GetItemCandidates(actor.Id))
+                    AddIfValid(session, candidate, actions);
+            }
             return actions;
         }
 

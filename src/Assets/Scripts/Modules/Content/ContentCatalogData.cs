@@ -88,6 +88,9 @@ namespace TianZhang.Content
             return TryFind(items, itemId, value => value.itemId, out item);
         }
 
+        public bool TryGetCombatItem(string itemId, out ItemData item) =>
+            TryGetItem(itemId, out item) && item.IsApprovedCombatItem;
+
         [SerializeField] private TianZhang.Combat.AttackProfileData[] equipmentAttackProfiles = Array.Empty<TianZhang.Combat.AttackProfileData>();
 
         public void SetEquipmentAttackProfiles(TianZhang.Combat.AttackProfileData[] profiles) =>

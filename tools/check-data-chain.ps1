@@ -201,7 +201,7 @@ function Test-FormalContentCatalog {
 
   $expectedIds = @{
     Settlements = @('guanzhong_city')
-    Items = @('item_lingshi_low', 'item_shijia_piece', 'item_iron_sword', 'item_iron_blade')
+    Items = @('item_lingshi_low', 'item_shijia_piece', 'item_iron_sword', 'item_iron_blade', 'item_huoxue_dan')
     Bounties = @('bounty_guanzhong_shijiahou')
   }
   foreach ($kind in $expectedIds.Keys) {
@@ -224,6 +224,8 @@ function Test-FormalContentCatalog {
     'item_shijia_piece',
     'item_lingshi_low_description',
     'item_shijia_piece_description',
+    'item_huoxue_dan', 'item_huoxue_dan_description', 'combat_command_use_item',
+    'item_definition_invalid', 'item_qualification_invalid', 'item_target_invalid', 'item_quantity_invalid', 'item_insufficient',
     'enemy_shijiahou',
     'desc_enemy_shijiahou',
     'bounty_guanzhong_shijiahou_title',
@@ -249,10 +251,11 @@ function Test-FormalContentCatalog {
   foreach ($item in $Items.Rows) {
     $id = [string]$item.itemId
     $weapon = $id -cin @('item_iron_sword', 'item_iron_blade')
+    $medicine = $id -ceq 'item_huoxue_dan'
     $fields = @{
       itemId=$id; displayNameKey=$id; descriptionKey="${id}_description"; contentScope='content_scope_production'
       maxStack=$(if ($weapon) { '1' } else { '99' })
-      itemCategory=$(if ($weapon) { 'weapon' } elseif ($id -ceq 'item_lingshi_low') { 'basic_resource' } else { 'monster_material' })
+      itemCategory=$(if ($weapon) { 'weapon' } elseif ($medicine) { 'pill' } elseif ($id -ceq 'item_lingshi_low') { 'basic_resource' } else { 'monster_material' })
       equipmentSlotId=$(if ($weapon) { 'main_hand' } else { '' })
       equipmentRealmRequirementId=$(if ($weapon) { 'realm_lianqi' } else { '' })
       equipmentBasicAttackProfileId=$(if ($weapon) { $id.Replace('item_', 'basic_') } else { '' })
@@ -264,6 +267,19 @@ function Test-FormalContentCatalog {
       if ($key -notin $LanguageIds) { Add-Finding 'FORMAL_CONTENT_LANGUAGE_MISSING' $key 'Item language is required.' }
     }
     Test-FormalProjectionAssetFields "Item:$id" "src/Assets/Data/Items/Item_$id.asset" $fields
+    $medicineFields = @{
+      combatUseEffectId=$(if ($medicine) { 'restore_current_health' } else { '' })
+      combatUseRealmId=$(if ($medicine) { 'realm_lianqi' } else { '' })
+      combatUseTargetMode=$(if ($medicine) { 'self' } else { '' })
+      combatUseHealthRecovery=$(if ($medicine) { '80' } else { '' })
+      initialGrantQuantity=$(if ($medicine) { '3' } else { '' })
+    }
+    foreach ($field in $medicineFields.Keys) {
+      if ([string]$item.$field -cne [string]$medicineFields[$field]) {
+        Add-Finding 'FORMAL_ITEM_PROJECTION_INVALID' "${id}:$field" 'Medicine fields must match the approved projection; other CSV rows must be empty.'
+      }
+    }
+    if ($medicine) { Test-FormalProjectionAssetFields "Item:$id" "src/Assets/Data/Items/Item_$id.asset" $medicineFields }
     $meta = Join-Path $root "src/Assets/Data/Items/Item_$id.asset.meta"
     if (Test-Path -LiteralPath $meta) {
       $guid = [regex]::Match((Get-Content -Raw -LiteralPath $meta), '(?m)^guid: ([a-f0-9]{32})').Groups[1].Value
@@ -916,7 +932,7 @@ $schemas = [ordered]@{
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
-  Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId')
+  Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits')
   AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','actionPointCostUnits','minimumNetCostUnits','ctPenalty','reuseCooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
@@ -932,7 +948,7 @@ $tables = [ordered]@{
   Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
   Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
   Settlements = Get-CsvTable 'src/Assets/DataConfig/Settlements.csv' $schemas.Settlements @() @('content_scope_production')
-  Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId') @('content_scope_production')
+  Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity') @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
   AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')

@@ -48,10 +48,10 @@ namespace TianZhang.Tests
             Assert.IsNotNull(installer);
             object Field(string name) => typeof(AdventureSceneInstaller).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(installer);
             var ordinary = (CombatOrdinaryActionDefinition[])Field("ordinaryActions");
-            Assert.AreEqual(3, ordinary.Length);
+            Assert.AreEqual(4, ordinary.Length);
             foreach (var definition in ordinary)
             {
-                int cost = definition.Kind == CombatCommandKind.SwapEquipment ? 25000 : 50000;
+                int cost = definition.Kind == CombatCommandKind.UseItem ? 30000 : definition.Kind == CombatCommandKind.SwapEquipment ? 25000 : 50000;
                 Assert.AreEqual(cost, definition.ActionPointCostUnits); Assert.AreEqual(cost, definition.MinimumNetCostUnits);
                 Assert.AreEqual(0, definition.CtPenalty);
                 Assert.AreEqual(definition.Kind == CombatCommandKind.SwapSpell ? 60 : 0, definition.ReuseCooldownTicks);

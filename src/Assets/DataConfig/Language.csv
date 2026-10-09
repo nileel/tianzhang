@@ -724,3 +724,11 @@ equipment_qualification_invalid,境界不满足装备要求
 equipment_slot_invalid,主手槽无效
 equipment_definition_invalid,武器定义无效
 equipment_save_invalid,装备存档无效
+item_huoxue_dan,活血丹
+item_huoxue_dan_description,练气修士随身备下的伤损丹药，服后补回当下耗损的气血。仅疗伤，不增长生命上限，也不助突破。
+combat_command_use_item,使用道具
+item_definition_invalid,药物定义无效
+item_qualification_invalid,仅存活练气修士可用
+item_target_invalid,只能对自身使用
+item_quantity_invalid,每次只能使用一颗
+item_insufficient,丹药数量不足

@@ -14,7 +14,7 @@ namespace TianZhang.Gameplay.Contracts
         public bool Completed { get; }
     }
 
-    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move, SwapSpell, SwapEquipment }
+    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move, SwapSpell, SwapEquipment, UseItem }
 
     public sealed class CombatActionCandidate
     {
@@ -55,7 +55,8 @@ namespace TianZhang.Gameplay.Contracts
             string targetName, bool canConfirm, string reason, int spiritCost, bool remainsInTurn,
             float settledCt, float threshold, long ticksUntilReady, int actionPointCostUnits = 0,
             int ctPenalty = 0, int reuseCooldownTicks = 0, int remainingCooldownTicks = 0,
-            string replacedSpellName = "", int combatSwapsRemaining = 0)
+            string replacedSpellName = "", int combatSwapsRemaining = 0, int itemQuantityCost = 0,
+            int itemAvailableQuantity = 0, int itemHealthRecovery = 0, int expectedHealthRecovery = 0, long inventoryVersion = 0)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -74,6 +75,8 @@ namespace TianZhang.Gameplay.Contracts
             RemainingCooldownTicks = remainingCooldownTicks;
             ReplacedSpellName = replacedSpellName;
             CombatSwapsRemaining = combatSwapsRemaining;
+            ItemQuantityCost = itemQuantityCost; ItemAvailableQuantity = itemAvailableQuantity;
+            ItemHealthRecovery = itemHealthRecovery; ExpectedHealthRecovery = expectedHealthRecovery; InventoryVersion = inventoryVersion;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -92,6 +95,11 @@ namespace TianZhang.Gameplay.Contracts
         public int RemainingCooldownTicks { get; }
         public string ReplacedSpellName { get; }
         public int CombatSwapsRemaining { get; }
+        public int ItemQuantityCost { get; }
+        public int ItemAvailableQuantity { get; }
+        public int ItemHealthRecovery { get; }
+        public int ExpectedHealthRecovery { get; }
+        public long InventoryVersion { get; }
     }
 
     public enum CombatUnitPresentationEvent

@@ -47,6 +47,10 @@ namespace TianZhang.Bootstrap
         }
 
         public long InventoryVersion => inventory.Version;
+        public int GetItemQuantity(string itemId) => inventory.GetQuantity(itemId);
+        public bool TryPrepareCombatConsumption(ContentCatalogData catalog, string itemId, int quantity,
+            long version, out Action apply, out string reason) =>
+            inventory.TryPrepareCombatConsumption(catalog, itemId, quantity, version, out apply, out reason);
         public bool OwnsEquipmentInstance(string actorId, string itemId, string instanceId) =>
             inventory.OwnsEquipmentInstance(actorId, itemId, instanceId);
 
@@ -57,9 +61,12 @@ namespace TianZhang.Bootstrap
             if (player.Progression.RealmStage != "练气" || catalog == null ||
                 !catalog.TryGetEquipment("item_iron_sword", out _) || !catalog.TryGetEquipment("item_iron_blade", out _))
                 throw new InvalidOperationException("equipment_definition_invalid");
+            if (!catalog.TryGetCombatItem("item_huoxue_dan", out ItemData medicine))
+                throw new InvalidOperationException("item_definition_invalid");
             var candidateInventory = new InventoryStore();
             var grant = new InventoryGrantUseCase(candidateInventory).Grant(catalog, new[]
-            { new InventoryGrantRequest("item_iron_sword", 1), new InventoryGrantRequest("item_iron_blade", 1) });
+            { new InventoryGrantRequest("item_iron_sword", 1), new InventoryGrantRequest("item_iron_blade", 1),
+                new InventoryGrantRequest(medicine.itemId, medicine.initialGrantQuantity) });
             if (!grant.Applied) throw new InvalidOperationException("equipment_not_owned");
             string instance = player.Identity.CharacterId + ":initial:item_iron_sword";
             if (!player.TryPrepareEquipmentChange(catalog, "main_hand", "item_iron_sword", instance,

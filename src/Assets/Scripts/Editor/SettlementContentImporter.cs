@@ -38,7 +38,8 @@ namespace TianZhang.Editor
         private static readonly string[] ContentItemColumns =
         {
             "itemId", "displayNameKey", "descriptionKey", "contentScope", "itemCategory", "maxStack",
-            "equipmentSlotId", "equipmentRealmRequirementId", "equipmentBasicAttackProfileId"
+            "equipmentSlotId", "equipmentRealmRequirementId", "equipmentBasicAttackProfileId",
+            "combatUseEffectId", "combatUseRealmId", "combatUseTargetMode", "combatUseHealthRecovery", "initialGrantQuantity"
         };
 
         private static readonly string[] ContentBountyColumns =
@@ -404,18 +405,28 @@ namespace TianZhang.Editor
                 item.equipmentSlotId = Value(table, row, "equipmentSlotId");
                 item.equipmentRealmRequirementId = Value(table, row, "equipmentRealmRequirementId");
                 item.equipmentBasicAttackProfileId = Value(table, row, "equipmentBasicAttackProfileId");
+                item.combatUseEffectId = Value(table, row, "combatUseEffectId");
+                item.combatUseRealmId = Value(table, row, "combatUseRealmId");
+                item.combatUseTargetMode = Value(table, row, "combatUseTargetMode");
+                string recovery = Value(table, row, "combatUseHealthRecovery"), initial = Value(table, row, "initialGrantQuantity");
+                if (item.itemId != "item_huoxue_dan" && (recovery.Length != 0 || initial.Length != 0))
+                    throw new InvalidDataException($"{sourceName} non-medicine fields must be empty.");
+                item.combatUseHealthRecovery = recovery.Length == 0 ? 0 : ParsePositiveInteger(recovery, sourceName, "combatUseHealthRecovery");
+                item.initialGrantQuantity = initial.Length == 0 ? 0 : ParsePositiveInteger(initial, sourceName, "initialGrantQuantity");
                 ValidateApprovedItem(item, sourceName);
                 items.Add(item);
             }
 
-            if (items.Count != 4 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade" }))
-                throw new InvalidDataException($"{sourceName} must contain only the four approved formal item rows.");
+            if (items.Count != 5 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" }))
+                throw new InvalidDataException($"{sourceName} must contain only the five approved formal item rows.");
 
             return items.OrderBy(item => item.itemId, StringComparer.Ordinal).ToArray();
         }
 
         private static void ValidateApprovedItem(ItemData item, string sourceName)
         {
+            if (item.IsApprovedCombatItem && item.combatUseHealthRecovery == 80 && item.initialGrantQuantity == 3) return;
+            if (item.HasCombatUseFields) throw new InvalidDataException($"{sourceName} has invalid medicine fields.");
             if (item.IsApprovedEquipment && item.displayNameKey == item.itemId && item.descriptionKey == item.itemId + "_description") return;
             if (!string.IsNullOrEmpty(item.equipmentSlotId) || !string.IsNullOrEmpty(item.equipmentRealmRequirementId) ||
                 !string.IsNullOrEmpty(item.equipmentBasicAttackProfileId))
@@ -1130,6 +1141,11 @@ namespace TianZhang.Editor
             target.equipmentSlotId = source.equipmentSlotId;
             target.equipmentRealmRequirementId = source.equipmentRealmRequirementId;
             target.equipmentBasicAttackProfileId = source.equipmentBasicAttackProfileId;
+            target.combatUseEffectId = source.combatUseEffectId;
+            target.combatUseRealmId = source.combatUseRealmId;
+            target.combatUseTargetMode = source.combatUseTargetMode;
+            target.combatUseHealthRecovery = source.combatUseHealthRecovery;
+            target.initialGrantQuantity = source.initialGrantQuantity;
         }
 
         private static void CopyBounty(BountyData source, BountyData target)

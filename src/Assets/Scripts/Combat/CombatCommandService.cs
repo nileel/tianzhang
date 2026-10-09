@@ -13,6 +13,9 @@ namespace TianZhang.Combat
             Session = session; Command = command; Validation = validation; ActionPointCostUnits = cost;
             MinimumNetCostUnits = minimum; SpiritCost = spirit; CtPenalty = penalty; ReuseCooldownTicks = cooldown;
             EquipmentFacts = command.Kind == CombatCommandKind.SwapEquipment ? session.ExternalResources?.QueryEquipment(command)?.Facts : null;
+            ItemResource = command.Kind == CombatCommandKind.UseItem ? session.ExternalResources?.QueryItem(command) : null;
+            ItemHealthRecovery = ItemResource?.HealthRecovery ?? 0;
+            ExpectedHealthRecovery = ActorHealthRecovery(session, command, ItemHealthRecovery);
             Modifier = modifier; Facts = facts; RemainsInTurn = remains; Turn = turn;
             TurnSequence = session.TurnSequence; StateVersion = session.StateVersion;
             MovementEfficiencyMilliUnits = session.Combatants.TryGet(command.ActorId, out var actor) ? actor.MovementEfficiencyMilliUnits : 0;
@@ -23,6 +26,16 @@ namespace TianZhang.Combat
         internal CombatActionEconomyModifier Modifier { get; }
         internal string Facts { get; }
         internal string EquipmentFacts { get; }
+        internal CombatItemResource ItemResource { get; }
+        public string ItemId => Command.ItemId;
+        public int ItemQuantityCost => Command.Kind == CombatCommandKind.UseItem ? Command.ItemQuantityCost : 0;
+        public int ItemAvailableQuantity => ItemResource?.Quantity ?? 0;
+        public long InventoryVersion => ItemResource?.Version ?? 0;
+        public int ItemHealthRecovery { get; }
+        public int ExpectedHealthRecovery { get; }
+        private static int ActorHealthRecovery(CombatSession session, CombatCommand command, int requested) =>
+            session.Combatants.TryGet(command.ActorId, out var actor) && actor.IsAlive
+                ? Math.Min(requested, actor.MaximumHealth - actor.CurrentHealth) : 0;
         public string ActorId => Command.ActorId;
         public CombatCommandKind Kind => Command.Kind;
         public string TargetId => Command.TargetId;
@@ -70,6 +83,11 @@ namespace TianZhang.Combat
                     spirit = profile.GetSpiritCost(command.ActorId == command.TargetId);
                     penalty = profile.CtPenalty; cooldown = profile.ReuseCooldownTicks;
                 }
+            }
+            else if (command.Kind == CombatCommandKind.UseItem && session.TryGetOrdinary(command.Kind, out var itemDefinition))
+            {
+                cost = itemDefinition.ActionPointCostUnits; minimum = itemDefinition.MinimumNetCostUnits;
+                penalty = itemDefinition.CtPenalty; cooldown = itemDefinition.ReuseCooldownTicks;
             }
             else if (command.Kind is CombatCommandKind.Guard or CombatCommandKind.SwapSpell ||
                 command.Kind == CombatCommandKind.SwapEquipment && validation.Succeeded)
@@ -130,6 +148,8 @@ namespace TianZhang.Combat
                 quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
                 quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
                 quote.Command.InstanceId != command.InstanceId ||
+                quote.Command.ItemQuantityCost != command.ItemQuantityCost ||
+                (command.Kind == CombatCommandKind.UseItem && quote.ItemResource?.Facts != session.ExternalResources?.QueryItem(command)?.Facts) ||
                 (command.Kind == CombatCommandKind.SwapEquipment && quote.EquipmentFacts != session.ExternalResources?.QueryEquipment(command)?.Facts))
                 return CombatActionResult.Rejected("combat_quote_stale");
             if (!quote.IsLegal) return quote.Validation;

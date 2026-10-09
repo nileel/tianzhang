@@ -1,0 +1,51 @@
+# U-COMBAT-AP-ITEM-01 · 验证记录
+
+2026-10-10；责任方 Codex；主模型 gpt-6.1-sol（共享入口启动证明），无辅助模型。
+RunId：9fe21d7c-4795-4cb7-b843-386eb55e1cbe。
+基线：f15a2a49f8a3a4c7131895e96fb2f5672803b2ba。
+工作区：D:\天章游戏开发\.worktrees\automation\9fe21d7c-4795-4cb7-b843-386eb55e1cbe\codex。
+本记录与业务差异、任务归档在同一个 candidate 中提交；candidate 的完整 SHA 由提交元数据和共享入口绑定。本轮未操作其他 worktree、自动化 runtime 或正式集成。
+
+## 事实与模型协作核对
+
+- 读取任务卡、统一行动力道具合同、公共合同的事务／Guard／窄接口章节、设计规格的成本与原子提交章节、实现规划的所有者约束。
+- 任务为冻结合同下的单一正式道具结果；库存、战斗规则、输入、初始发放和保存强耦合，由指定主模型统一实施与复核，无独立辅助问题。Unity 6000.3.18f1 和原生测试工具可用。
+- 消费共享入口绑定本 run／task／任务卡与索引 digest 的预检：matched、notice、mustRead、gatePointers 均为空，与原 schema 2 riskPreflight 的空命中／空门禁一致。未新增授权路径或改变技术路线。
+
+## 实现与真实所有者
+
+- Items.csv 五个药物字段生成唯一 item_huoxue_dan 定义；Language、ItemData、SettlementContentImporter 和 ContentCatalog 保留铁剑／铁刀与材料，完整表先验证再导入，非药物 CSV 的药物字段必须为空。
+- 当前候选：恢复当前生命 80，初始 3 颗，maxStack 99；正式普通行为定义为 30000／30000 AP 单位、CT 惩罚 0、冷却 0。这些是功能试跑输入，不是数值平衡结论。
+- InventoryStore 准备完整库存替换及 checked 后继版本；最后一颗消费后移除条目。Adventure 先取得 CombatCommandService.Prepare 的纯战斗候选及库存候选，然后同步应用，无 yield、补偿或再次可拒绝的业务步骤。World 仍唯一写库存，Combat 不引用 World／Content／Character。
+- 报价绑定药物身份、完整定义、数量、同一库存版本、身份／境界及原有战斗版本与事实；每次消耗一颗，自身目标，练气且存活，失败保持全部资源。药物恢复沿原 resolver 副本准备，成功先退出 Guard，满血照常收费且不能待机。库存耗尽的只读报价仍显示定义中的 30 AP。
+- StartMenu.CreateNewPlayer 已使用 BeginEquippedNewGame；沿已有完整初始 Grant 合并药物与两件武器，不另做第二次发放。通用 BeginNewGame／Initialize／RestoreSave 不发药；首次写盘失败仍按原入口清空新 runtime，不激活新槽位。
+- 成功使用直接改同一长期库存；FormalEncounterResult／AdventureController 无第二次药物扣除。仍由城镇 SaveAndReturnToMenu→SaveActiveSlot 保存 schema 4 库存，不保存临时战斗生命／AP／CT／CD。
+- 可见入口：AdventureScene→AdventureSceneInstaller→EncounterCoordinator→Gameplay.Contracts 不可变报价→CombatActionBarView／CombatCommandInput→CombatActionPreviewView；确认返回同一 EncounterCoordinator.ExecuteCommand。场景通过 AdventureSceneBuilder.UpdateOrdinaryCombatActions 保存，既有 GUID 保持。
+
+## 运行验证
+
+命令均在本 worktree 执行；Unity CLI 的 projectPath 为本 worktree 的 src。
+
+1. 场景生成：Unity -batchmode -nographics -quit -executeMethod TianZhang.Editor.AdventureSceneBuilder.UpdateOrdinaryCombatActions；最终退出 0。没有手工维护场景 YAML。
+2. 首轮 tools/run-unity-editmode-tests.ps1：788 项，785 通过、3 失败；新增道具测试 32/32，库存／保存／内容／战斗费用相关测试 174/174 通过。
+3. 最终受影响 EditMode：Unity -batchmode -nographics -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.CombatActionPointItemTests;TianZhang.Tests.EditMode.CombatActionPointKernelTests;TianZhang.Tests.EditMode.CombatActionPointEquipmentTests;TianZhang.Tests.ContentCatalogDataTests;TianZhang.Tests.FeatureCompositionEditorTests；121/121 通过，退出 0；使用现有 runner 的 ValidateResultOnly 验证完整 XML。范围包含道具 32、内核 25、换装 31、目录 23、场景组合 10。运行前保护 Unity tracked Assets／ProjectSettings，退出后恢复测试导入的临时写入。
+4. 最终正式道具 PlayMode：Unity -batchmode -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongCombatItemPlayModeTests；5/5 通过，退出 0；现有 tools/run-unity-playmode-tests.ps1 -ValidateResultOnly 验证 XML。覆盖取消／其他库存发放后旧报价拒绝、受伤真实按钮用药、旧确认零变化、胜利与失败回城保存读档、初次写盘失败清空、不含药的 schema 4 存档不补发。
+5. EditMode 原子矩阵：HP 50／200→130，180→200，满血→满血，均扣 AP 30000／药一颗；MP／位置／上限／其他 CD／全局刻不变。重复与陈旧、错误身份／境界／目标／数量、材料／武器／未知 ID、死亡／眩晕／错误回合、AP 29999／30000、三次新报价／空库存、完整库存非法与版本溢出均通过。药物不取随机数；正式测试比较玩家回合开始后的实际随机计数，避免将敌方先手混为药物调用。
+6. PlayMode 验证首次盘面含 3 颗；用药后长期库存 2；战后尚未保存的盘面仍 3；城镇保存后读档 2，再进冒险仍 2。临时战斗伤势为明示 fixture，生产取得、动作条、确认与保存为真实入口。
+7. 新按钮运行时数字：CombatActionBar／UICanvas、ScreenSpaceOverlay、scaleFactor 0.3333333、无相机转换，UseItemButton 本地位置 (504,8)、外框 114×68；world corners (361.67,21.78)→(399.67,44.44)。按钮文字区域 90×60，GuanzhongChinese／20，实际需要 87×54；相邻换装 (378,8)／114×68，状态文字 (630,8)／192×76，没有重叠。首轮探针发现原文字区 82×60 导致高度 81；已只把新按钮内边距由 16 改为 12，正式回归通过。刷新所有者为 CombatActionBarView.PresentAction；未改共享皮肤或其他按钮。
+
+结果 XML：系统临时目录 tzg-item-final-editmode.xml、tzg-item-final-playmode.xml；首次全量结果为 tzg-item-editmode.xml、tzg-item-playmode.xml。最终命令、输入及结果随本记录与 candidate 绑定，不把首轮失败写成通过。
+
+## 全量运行的范围外限制
+
+- 首轮全量 EditMode 三个失败：ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings 缺实验旁 Blender 源；CombatUnitPresentationProfileEditorTests 的 BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently／FormalProfileSetHasNoFuYuanDependency 缺当前 worktree 的批准 Shijiahou 源 FBX。未触碰这些测试或补造源资产。
+- 首轮默认 headless 全量 PlayMode：88 项，51 通过、36 失败、1 跳过。包含未激活视觉实验夹具查找失败、图形设备／321 像素批处理窗口、相机与布局断言、既有攻击档案集合假设、旧反馈状态断言；未把它认定为全量通过。新增道具的首轮三项失败先是测试误把敌方先手伤势和随机调用视为零，修正实际前值后发现新按钮文字区溢出；最终五项正式道具测试已全部通过。范围外图形／美术／其他功能未据此扩修。
+- 未运行 BattleSim；本卡只证明正式道具功能及库存／保存原子性，不签署候选数值强度或最终参数。
+- Unity 临时重序列化的 ProjectSettings 空值空格已恢复，其他非授权导入写入由保护快照恢复；不将这些输出提交。
+
+## 收尾
+
+- 项目检查实际通过：check-data-chain（647 语言键）、check-unity-assembly-boundaries（19 程序集／2 asmref）、check-task-cards -TaskId U-COMBAT-AP-ITEM-01 -Postcondition CodexClosedOrNonReady（73 活跃卡／0 ready）、check-review-text（745 文件）。暂存前 check-pending-whitespace 已检查 34 个存在的改动文件，并清理 Unity 场景与药物 asset 的空值行尾空格；git diff --check 通过。暂存后检查与完整 candidate SHA 由 finalizer 和终态输出绑定。
+- 只移除本任务队列／backlog 行并将同一卡归档；保留下游 blockedBy 及 backlog 的具名前置，未重新排队或提升下游。
+- 已用本轮事实检查经验候选；文字区测量属于现有 Unity 技能的门禁，本轮不新增经验候选、索引或整理任务。
+- References loaded：project-structure-discovery、content-and-systems、ai-workflows、unity-validation、runtime-owner-proof、ui-and-visual-assets、serialized-persistence、modular-architecture、runtime-visible-output、runtime-numeric-proof、screenshot-text-owner。Project maps loaded：UNITY_STRUCTURE 及 runtime／content／assemblies／ui。未改非请求系统，没有新的运行时组件、asmdef 或资源目录。

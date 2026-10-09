@@ -95,7 +95,7 @@ namespace TianZhang.Combat
 
         internal CombatOrdinaryActionDefinition CopyValidated()
         {
-            if (Kind is not (CombatCommandKind.Guard or CombatCommandKind.SwapSpell or CombatCommandKind.SwapEquipment) || ActionPointCostUnits <= 0 ||
+            if (Kind is not (CombatCommandKind.Guard or CombatCommandKind.SwapSpell or CombatCommandKind.SwapEquipment or CombatCommandKind.UseItem) || ActionPointCostUnits <= 0 ||
                 MinimumNetCostUnits <= 0 || MinimumNetCostUnits > ActionPointCostUnits ||
                 CtPenalty != 0 || (Kind == CombatCommandKind.SwapSpell ? ReuseCooldownTicks != 60 : ReuseCooldownTicks != 0))
                 throw new ArgumentException("Invalid ordinary action definition.");
@@ -108,6 +108,20 @@ namespace TianZhang.Combat
     {
         CombatEquipmentResource QueryEquipment(CombatCommand command);
         IReadOnlyList<CombatCommand> GetEquipmentCandidates(string actorId);
+        CombatItemResource QueryItem(CombatCommand command);
+        IReadOnlyList<CombatCommand> GetItemCandidates(string actorId);
+    }
+
+    public sealed class CombatItemResource
+    {
+        public CombatItemResource(long version, int quantity, int healthRecovery, string definitionFacts, string reason)
+        { Version = version; Quantity = quantity; HealthRecovery = healthRecovery; DefinitionFacts = definitionFacts; Reason = reason; }
+        public long Version { get; }
+        public int Quantity { get; }
+        public int HealthRecovery { get; }
+        public string DefinitionFacts { get; }
+        public string Reason { get; }
+        internal string Facts => string.Join("|", Version, Quantity, HealthRecovery, DefinitionFacts, Reason);
     }
 
     public sealed class CombatEquipmentResource
@@ -211,6 +225,7 @@ namespace TianZhang.Combat
         }
 
         internal CombatOrdinaryActionDefinition GetOrdinary(CombatCommandKind kind) => ordinary[kind];
+        internal bool TryGetOrdinary(CombatCommandKind kind, out CombatOrdinaryActionDefinition definition) => ordinary.TryGetValue(kind, out definition);
 
         private void ValidateModifiers(CombatantSnapshot actor)
         {
@@ -292,6 +307,7 @@ namespace TianZhang.Combat
                 CombatCommandKind.Move => ValidateMove(command, actor),
                 CombatCommandKind.SwapSpell => ValidateSwapSpell(command, actor),
                 CombatCommandKind.SwapEquipment => ValidateEquipment(command, actor),
+                CombatCommandKind.UseItem => ValidateItem(command, actor),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
         }
@@ -306,6 +322,19 @@ namespace TianZhang.Combat
             if (resource.ProfileId != command.ProfileId || !TryGetProfile(command.ProfileId, out var profile) ||
                 profile.Kind != CombatAttackKind.Basic)
                 return CombatActionResult.Rejected("equipment_definition_invalid");
+            return CombatActionResult.Success();
+        }
+
+        private CombatActionResult ValidateItem(CombatCommand command, CombatantSnapshot actor)
+        {
+            if (actor.Team != CombatTeam.Player || !ordinary.ContainsKey(CombatCommandKind.UseItem) || ExternalResources == null)
+                return CombatActionResult.Rejected("item_definition_invalid");
+            if (command.TargetId != actor.Id) return CombatActionResult.Rejected("item_target_invalid");
+            if (command.ItemQuantityCost != 1) return CombatActionResult.Rejected("item_quantity_invalid");
+            CombatItemResource resource = ExternalResources.QueryItem(command);
+            if (resource == null || resource.HealthRecovery <= 0) return CombatActionResult.Rejected("item_definition_invalid");
+            if (!string.IsNullOrEmpty(resource.Reason)) return CombatActionResult.Rejected(resource.Reason);
+            if (resource.Quantity < 1) return CombatActionResult.Rejected("item_insufficient");
             return CombatActionResult.Success();
         }
 

@@ -14,6 +14,7 @@ namespace TianZhang.Combat
         SwapSpell,
         EndTurn,
         SwapEquipment,
+        UseItem,
     }
 
     /// <summary>Fixed roll values make a command replayable without a runtime random source.</summary>
@@ -43,7 +44,8 @@ namespace TianZhang.Combat
             CombatResolutionRolls rolls = default,
             HexCoord? destination = null,
             int slotIndex = -1,
-            long contextVersion = 0, string equipmentSlotId = null, string itemId = null, string instanceId = null)
+            long contextVersion = 0, string equipmentSlotId = null, string itemId = null, string instanceId = null,
+            int itemQuantityCost = 1)
         {
             if (string.IsNullOrWhiteSpace(actorId))
                 throw new ArgumentException("Actor ID is required.", nameof(actorId));
@@ -59,7 +61,10 @@ namespace TianZhang.Combat
             EquipmentSlotId = equipmentSlotId ?? string.Empty;
             ItemId = itemId ?? string.Empty;
             InstanceId = instanceId ?? string.Empty;
+            ItemQuantityCost = itemQuantityCost;
         }
+
+        public int ItemQuantityCost { get; }
 
         public string EquipmentSlotId { get; }
         public string ItemId { get; }

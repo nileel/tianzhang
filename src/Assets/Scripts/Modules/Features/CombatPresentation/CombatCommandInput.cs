@@ -81,6 +81,16 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.DivineButton, () => { if (CanAct) Choose(CombatActionKind.Divine, targetId, divineProfileId); });
             Bind(actionBar?.GuardButton, () => { if (CanAct) Choose(CombatActionKind.Guard); });
             Bind(actionBar?.SwapSpellButton, BeginSwapSpell);
+            Bind(actionBar?.UseItemButton, () =>
+            {
+                if (!CanAct) return;
+                var choice = snapshot.FindAction(CombatActionKind.UseItem)?.Candidate;
+                if (choice == null) return;
+                movementView?.Cancel();
+                Preview = previewHandler.PreviewAction(choice);
+                previewView?.Present(Preview);
+                timeline?.PresentPrediction(Preview);
+            });
             Bind(actionBar?.SwapEquipmentButton, () =>
             {
                 if (!CanAct) return;

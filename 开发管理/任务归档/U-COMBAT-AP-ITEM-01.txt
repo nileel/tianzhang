@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01完成归档且无同ID活跃卡；正式道具合同的真实所有者与字面量路径已冻结，风险预检零命中且无门禁，现已ready。",
+  "stateReason": "2026-10-10正式道具实现与受影响EditMode 121/121、正式PlayMode 5/5通过；全量范围外限制见本任务验证记录；随唯一candidate归档，未解除下游前置。",
   "expectedPaths": [
     "tools/check-data-chain.ps1",
     "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
@@ -125,3 +125,10 @@
 
 - 无获准生产ID／内容或需要增加新效果解释器时停止，不以两种无战斗用途的材料充数。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-10 Codex 完成
+
+- 活血丹正式内容、创角初始发放、同源报价、库存与战斗原子提交、动作条入口及战后保存读档已接通。
+- 最终受影响EditMode 121/121、正式道具PlayMode 5/5通过；首轮全量范围外失败如实记录。
+- 验证及边界：开发管理/U-COMBAT-AP-ITEM-01-验证记录.txt；候选数值仍待后续实跑，不修改下游依赖。
+- 经验候选检查已完成，无新增候选。

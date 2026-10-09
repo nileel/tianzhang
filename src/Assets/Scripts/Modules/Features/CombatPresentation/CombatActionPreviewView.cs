@@ -38,6 +38,17 @@ namespace TianZhang.Features.CombatPresentation
             }
             string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
+            if (value.Candidate.Kind == CombatActionKind.UseItem)
+            {
+                summary.text = value.ActorName + " · " + value.ActionName + " → 自身\n费用 " +
+                    FormatActionPoints(value.ActionPointCostUnits) + " AP · 消耗 " + value.ItemQuantityCost +
+                    " 颗（持有 " + value.ItemAvailableQuantity + "）· CT +" + value.CtPenalty +
+                    " · 冷却 " + value.ReuseCooldownTicks + " 刻\n生命恢复 " + value.ExpectedHealthRecovery +
+                    " / 药效 " + value.ItemHealthRecovery +
+                    (value.CanConfirm ? "\n成功后退出防御；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束") :
+                        "\n不可施行：" + value.Reason);
+                return;
+            }
             if (swapping)
             {
                 summary.text = value.ActorName + " · 槽位 " + (value.Candidate.SlotIndex + 1) + "：" + value.ReplacedSpellName +
