@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-10-09 22:20后人工处置：EQUIP基于4d8f608f再次在写入前停止，新增证据为GameData及GuanzhongPlaytestAudit的旧三ID限制，前次验证路径筛查未覆盖这两处BattleSim实际消费者。负责人已批准两入口对新增武器的最小数据读取适配及自测随EQUIP发布，完整AP2模拟迁移仍归N-COMBAT-AP2-SIM-01；对应两卡已冻结边界和验证，EQUIP重新预检后恢复ready，SIM保持原前置和blocked。本轮为管理修复，未改生产数据或模拟算法。
+
 - 2026-10-09验证路径专项排查：筛查75张活跃卡的状态与允许路径，沿直接数据链核对EQUIP、ITEM、AP2-CONFIG、AP2-GROWTH、AP2-WEAPON、AP2-PREVIEW、AP2-BALANCE及TUNING。确认并补齐EQUIP／ITEM／CONFIG／WEAPON的检查器或既有测试授权；EQUIP重新预检后恢复ready，ITEM保持ready，其他具名前置与状态不变。GROWTH现有AP/v检查按CSV实际值比对、PREVIEW只新增语言说明，未证实同类必改遗漏。BALANCE／TUNING须在临近ready按CONFIG最终检查实现核对数值断言：若仍固化旧费用／冷却而阻断合法调参，届时按定案来源补齐检查器与受影响测试路径；本轮不猜测未来实现或预授数值语义修改。其余卡未发现同一正式物品／攻击表变更链线索，不代表已完成各任务的全部实现依赖审计。
 
 - 2026-10-09：负责人授权境界AP成长初版定标与实施建卡；标准见docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9节，完整新增11叶及复用交付链见实现规划追加图。AP2-RULES已于1499d68a正式完成归档；AP2-CONTRACT本轮完成三表/运行时接入合同及十张下游卡精确路径准备，证据见同ID验证记录和归档，其余新增叶的具名前置与阻塞状态保留待正式进入master后维护。新方案尚未运行时接入或平衡定案，旧BALANCE只作旧基线。
@@ -31,7 +33,7 @@
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 已排队 | — | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
-| U-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
+| U-COMBAT-AP-EQUIP-01 | P1 | codex | 已排队 | — | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
 | U-COMBAT-AP2-CONFIG-01 | P1 | codex | 阻塞 | D-COMBAT-AP2-CONTRACT-01 | 境界行动力参数表与共享配置投影 | 开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt |
 | U-COMBAT-AP2-GROWTH-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 角色境界AP与移动效率成长接入 | 开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt |
 | U-COMBAT-AP2-REPEAT-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 零冷却能力连续使用AP报价与提交 | 开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt |

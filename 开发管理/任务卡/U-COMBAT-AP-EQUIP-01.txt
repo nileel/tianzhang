@@ -8,10 +8,13 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-09负责人批准两处BattleSim生产读取入口随换装完成最小数据适配；精确路径、验证与后续SIM职责已冻结，重新风险预检后恢复ready。",
   "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
     "tools/check-data-chain.ps1",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -94,6 +97,7 @@
 
 - docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
 - 开发管理/统一行动力换装合同.txt 的首批身份／槽位／属性／路径及测试清单；CharacterRuntimeProfile主装备绑定；World库存与Persistence长期恢复；Combat快照及Adventure投影；公共报价和正式UI。
+- 共享AttackProfiles.csv的直接消费者：GameData.productionAttacks／ProductionAttacks及UnarmedBasicAttack、GuanzhongPlaytestAudit.LoadProductionInputs；核对Program的既有入口、StageCombatReport的具名ID读取与BattleSimSelfTests对应自测。仅前述卡头三文件获准写入，其余调用入口只读。
 - 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
 
 ## 实施范围
@@ -109,7 +113,7 @@
 ## 模型协作
 
 - 复杂度：单主手装备同时跨内容导入、库存、角色长期状态、战斗事务、保存和动作条，错误会破坏长期装备状态。主模型指定gpt-6.1-sol，建议high。
-- 合同已经冻结两个生产ID、唯一写回者和完整测试面，当前无独立辅助问题；由单主智能体统一实施及复核。执行前核对Unity与测试工具并消费实时风险预检。
+- 合同已经冻结两个生产ID、唯一写回者和测试面；2026-10-09负责人批准的BattleSim扩展仅为同批CSV的两个直接读取入口及定向回归，与生产行绑定，不承担独立数值裁决。仍由gpt-6.1-sol/high单主智能体统一实施及复核；执行前核对Unity与dotnet工具并消费实时风险预检。
 
 ## 2026-10-09 前置完成后的准备
 
@@ -138,9 +142,18 @@
 - 授权该脚本仅按换装合同扩充两武器、三个装备字段、语言／asset字段／场景引用与获准攻击集合；完整校验装备身份及引用、非装备行字段为空，保留未知ID／未知列／坏字段／缺引用拒绝和材料掉落检查。保留届时已正式发布的道具及AP2字段，不改其他规则，不删除检查或增加waiver。
 - 同步核对本卡既有ContentCatalogDataTests、AttackProfileDataTests、FeatureCompositionEditorTests与正式普攻测试授权；本轮只修任务准备，不提前改生产数据或验证脚本，不将恢复ready称为功能完成。扩充后重新运行风险预检并核对schema 2投影，执行轮仍消费实时预检。
 
+## 2026-10-09 BattleSim直接消费者边界确认
+
+- 22:20自动执行基于4d8f608fc5087b477071c014307a8c5d6f77f084，在业务写入前返回expected_paths_incomplete，runId=af0f8162-0d2e-4a01-95b2-21fa14e1369e；无业务差异或candidate，原run已关闭并清理。真实GameData ID集合检查的只读探针证明原三行通过、加入两武器后触发production_attack_mapping_incomplete；GuanzhongPlaytestAudit.LoadProductionInputs同样拒绝五行。
+- 负责人已明确批准将两入口接收新增武器生产数据的最小适配及相关验证归入本卡。GameData.cs与GuanzhongPlaytestAudit.cs只调整已批准生产集合和必要字段投影，BattleSimSelfTests.cs只覆盖两入口的五行读取、武器费用／倍率／绑定投影及非法输入拒绝；不重构读取框架，不增加重试、旧新集合兼容分支或第二参数源。
+- 本卡发布阶段的准确集合为basic_unarmed、spell_guanshiji、spell_julingshu、basic_iron_sword、basic_iron_blade；两武器按同次提交的CSV唯一值读取，保留重复ID／未知ID／缺失必需行／非法成本及字段拒绝。原三行、既有具名取值和未装备模拟角色行为保持；不让新增武器自动授予角色、不实施模拟内换装／库存，不删除徒手，不提前接入AP2成长、重复费用或状态算法。
+- 完整AP2生产四ID、无默认徒手及新规则模拟迁移仍归N-COMBAT-AP2-SIM-01及其前置；本卡不依赖该后续任务解除当前五行加载障碍。若仅扩充获准数据读取仍需改变选招／角色绑定／数值算法或新增所有者，停止并报告，不能通过继续加路径扩大本次批准。
+- 本轮只冻结上述执行授权与验收；不提前写入两武器CSV或修改模拟器。实际适配须与装备生产行在同一执行结果中验证和发布。
+
 ## 验证
 
 - 两件真实获准装备的有效替换、无变化／无资格／不足／取消／陈旧确认均正确收费；回合中加上限不重发AP、属性来源不叠加、战后保存往返和攻击档案合法。
+- 修改BattleSim后，在本任务worktree先运行dotnet build -c Release --no-restore simulations/BattleSim，成功后运行dotnet run --no-build -c Release --project simulations/BattleSim；再以现有自测入口验证两处真实读取路径的合法五行、缺行／多行／重复ID／非法成本拒绝和新武器字段与CSV一致。保留旧三个ID的行为回归；只截取或复写ID谓词的探针不能替代加载器及入口验证。关中读取使用与同一worktree匹配的合法输入，证据缺失不得声称入口通过；不把读取回归称为装备数值平衡定案。
 - 仅执行与本轮差异相关的最小充分检查：项目管理／文档运行check-task-cards、check-review-text；docs／CSV／Unity数据变化才运行check-data-chain。Unity代码按现有runner编译／测试，公共边界变化检查assembly boundaries；不因纯文档变更跑Unity或BattleSim。
 - 暂存前check-pending-whitespace，暂存后git diff --cached --check；隔离、提交、自动candidate及Codex自有任务收尾按项目现行合同执行，记录实际命令／结果，不伪造通过。
 
