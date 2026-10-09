@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-09已补齐换装合同要求的三项既有测试路径，解除expected_paths_incomplete；扩充后风险预检status=ok、零命中且无门禁，恢复ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -56,6 +56,9 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
     "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
@@ -88,7 +91,7 @@
 ## 必查范围
 
 - docs/superpowers/specs/2026-10-05-combat-action-points-design.md 的本卡对应章节、开发管理/统一行动力实现规划.txt 的依赖与所有者说明；开发管理/统一行动力公共合同.txt。
-- 换装合同首批身份／槽位／属性／路径；CharacterRuntimeProfile主装备绑定；World库存与Persistence长期恢复；Combat快照及Adventure投影；公共报价和正式UI。
+- 开发管理/统一行动力换装合同.txt 的首批身份／槽位／属性／路径及测试清单；CharacterRuntimeProfile主装备绑定；World库存与Persistence长期恢复；Combat快照及Adventure投影；公共报价和正式UI。
 - 先检索符号／ID／章节，再读目标完整逻辑单元与直接调用者；不得扫描其他backlog或以摘要替代事实源。
 
 ## 实施范围
@@ -111,6 +114,12 @@
 - 已核对D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡，移除唯一具名前置。
 - 按换装合同逐项冻结铁剑和铁刀的Items／Language／AttackProfiles、两导入器、资产、初始发放、主手快照与保存、Combat→Adventure桥接、AdventureScene序列化、展示合同和测试路径；移除错误的AdventureContentImporter。合同已冻结资格、实例证明、唯一提交和停止边界，无剩余外部决定，待风险预检合法后可进入ready。
 - 本轮风险预检status=ok，explicitRefs、matched和gates均为空，门禁指针无缺失；已按固定排序入队，执行前仍须按当前输入重跑预检。
+
+## 2026-10-09 路径遗漏修复
+
+- 17:16自动执行在业务写入前返回expected_paths_incomplete；原因是准备ready时未把换装合同测试清单中的必要既有文件纳入expectedPaths。本轮补齐ContentCatalogDataTests.cs、AttackProfileDataTests.cs、GuanzhongBasicAttackPlayModeTests.cs，不改变原子结果、主责或执行模型。
+- 三项测试仅适配本卡新增武器引起的正式物品集合／堆叠上限、攻击档案集合及默认铁剑40 AP普攻后的余额／回合断言；保留原材料／掉落和其他行为验证，不放宽断言掩盖实现错误。
+- 扩充路径后重跑get-experience-risk-preflight：status=ok，matched／mustRead／gates均为空，schema 2投影保持三个空数组；恢复ready并同步backlog和固定队列。该记录只证明任务准备修复，装备实现与Unity验收仍由执行轮次完成。
 
 ## 验证
 
