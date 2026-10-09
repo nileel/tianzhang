@@ -46,6 +46,31 @@ namespace TianZhang.Bootstrap
             Initialize(player, cultivation, startNodeId);
         }
 
+        public long InventoryVersion => inventory.Version;
+        public bool OwnsEquipmentInstance(string actorId, string itemId, string instanceId) =>
+            inventory.OwnsEquipmentInstance(actorId, itemId, instanceId);
+
+        public void BeginEquippedNewGame(CharacterRuntimeProfile player, CultivationState cultivation,
+            string startNodeId, ContentCatalogData catalog)
+        {
+            if (player == null || cultivation == null) throw new ArgumentNullException(nameof(player));
+            if (player.Progression.RealmStage != "练气" || catalog == null ||
+                !catalog.TryGetEquipment("item_iron_sword", out _) || !catalog.TryGetEquipment("item_iron_blade", out _))
+                throw new InvalidOperationException("equipment_definition_invalid");
+            var candidateInventory = new InventoryStore();
+            var grant = new InventoryGrantUseCase(candidateInventory).Grant(catalog, new[]
+            { new InventoryGrantRequest("item_iron_sword", 1), new InventoryGrantRequest("item_iron_blade", 1) });
+            if (!grant.Applied) throw new InvalidOperationException("equipment_not_owned");
+            string instance = player.Identity.CharacterId + ":initial:item_iron_sword";
+            if (!player.TryPrepareEquipmentChange(catalog, "main_hand", "item_iron_sword", instance,
+                candidateInventory.OwnsEquipmentInstance(player.Identity.CharacterId, "item_iron_sword", instance),
+                out Action commit, out string reason)) throw new InvalidOperationException(reason);
+            commit();
+            Initialize(player, cultivation, startNodeId);
+            inventory = candidateInventory;
+            BindUseCases();
+        }
+
         public void Clear()
         {
             Initialize(null, null, DefaultWorldNodeId);

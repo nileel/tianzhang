@@ -88,6 +88,26 @@ namespace TianZhang.Content
             return TryFind(items, itemId, value => value.itemId, out item);
         }
 
+        [SerializeField] private TianZhang.Combat.AttackProfileData[] equipmentAttackProfiles = Array.Empty<TianZhang.Combat.AttackProfileData>();
+
+        public void SetEquipmentAttackProfiles(TianZhang.Combat.AttackProfileData[] profiles) =>
+            equipmentAttackProfiles = profiles == null ? Array.Empty<TianZhang.Combat.AttackProfileData>() :
+                (TianZhang.Combat.AttackProfileData[])profiles.Clone();
+
+        public bool TryGetEquipment(string itemId, out ItemData item)
+        {
+            if (!TryGetItem(itemId, out item) || !item.IsApprovedEquipment) return false;
+            TianZhang.Combat.AttackProfileData found = null;
+            foreach (var profile in equipmentAttackProfiles)
+            {
+                if (profile == null || profile.attackProfileId != item.equipmentBasicAttackProfileId) continue;
+                if (found != null) return false;
+                found = profile;
+            }
+            return found != null && found.profileKind == TianZhang.Combat.AttackProfileKind.Basic &&
+                found.basicBindingKind == TianZhang.Combat.BasicAttackBindingKind.MainEquipment && found.TryValidate(out _);
+        }
+
         public bool TryGetBounty(string bountyId, out BountyData bounty)
         {
             return TryFind(bounties, bountyId, value => value.bountyId, out bounty);

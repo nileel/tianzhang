@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "负责人指定手动完成；装备事务、长期保存、正式场景往返及共享生产读取通过，证据见本卡验证记录",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
@@ -26,6 +26,8 @@
     "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
     "src/Assets/Scripts/Editor/CombatContentImporter.cs",
     "src/Assets/Scripts/Modules/Content/ContentCatalogData.cs",
+    "src/Assets/Data/Items/Item_item_lingshi_low.asset",
+    "src/Assets/Data/Items/Item_item_shijia_piece.asset",
     "src/Assets/Data/Items/Item_item_iron_sword.asset",
     "src/Assets/Data/Items/Item_item_iron_sword.asset.meta",
     "src/Assets/Data/Items/Item_item_iron_blade.asset",
@@ -40,6 +42,7 @@
     "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
     "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
     "src/Assets/Scripts/Combat/CombatCommand.cs",
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatSession.cs",
@@ -166,3 +169,35 @@
 
 - 缺正式装备／槽位决定、需要强化打造或全背包UI、跨未知长期所有者时停止。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-09 负责人指定手动接手
+
+- 用户明确要求排查23:17对话阻塞并直接完成本任务。核实原run已关闭、无业务写入；本次在独立worktree完成，不重新派回小时入口。
+- 原因：CombatCommandService唯一效果准备入口CombatActionResolver.PrepareValidated未授权且没有SwapEquipment分支。补齐该既有所有者路径；不新增执行器、工作流或装备体系。原已批准设计继续适用。
+- 保持blocked调度投影直至手动完成，防止自动化重复领取；最终统一验证并归档。
+
+- Unity实际导入确认原两物品asset必须显式保存三个空装备字段，与合同要求一致；补齐这两个既有资产字面量路径。其他攻击、据点和项目设置只产生编辑器空白变化，不纳入交付。
+
+
+## 2026-10-09 手动完成
+
+- 在codex/u-combat-ap-equip-manual独立worktree完成。补齐真实Resolver所有者和原两物品asset序列化路径后实施同一原子结果，未修改工作流、其他任务或下游依赖。
+- 两件初始物品、主手资格／拥有证明、统一25 AP换装、双方候选同步提交、后续普攻绑定、正式动作条与保存交叉验证已接通；BattleSim两个实际读取入口接受同批五行并保留非法输入拒绝。
+- FeatureCompositionEditorTests两项保存fixture补上原本遗漏的合法basic_unarmed绑定，以保持其保存／导航测试语义；既有旧普攻用例按新铁剑40 AP修正余额和显式结束要求。未放宽测试断言。
+- 证据：开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt。相关EditMode最新结果去重204/204；最终装备正式PlayMode两场景2/2，旧移动／攻击顺序回归通过。旧完整链中的美术底座Renderer命名断言仍失败，单独记录，不伪称全套PlayMode通过。
+- 已运行BattleSim构建、默认实跑和两真实加载器定向自测；数据链、程序集边界通过。候选费用只证明本卡功能，不作平衡结论或AP2发布。
+- 完成归档并仅移除本卡backlog行；队列原无本卡，无需修改。
+
+## 经验候选
+
+### CAND-U-COMBAT-AP-EQUIP-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：management
+- 现象：本卡多次恢复ready后，自动执行仍在业务写入前报expected_paths_incomplete；23:17轮遗漏CombatActionResolver.cs。
+- 已证实根因：准备边界补齐了测试、静态检查及CSV消费者，但没有沿CombatCommandService的实际准备调用追到PrepareValidated效果所有者；该方法必须新增换装分支却未被授权。
+- 可能复用范围：已冻结动作合同转ready时，对现有命令服务、效果准备器、提交器及直接数据消费者的字面量路径核对。
+- 证据：本卡2026-10-09各次路径补齐记录；开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt；同提交CombatActionResolver.PrepareValidated差异。
+- 门禁可能：no

@@ -442,7 +442,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         int OtherTargetSpiritCost = 0,
         decimal SpiritRecoveryMultiplier = 0,
         int MinimumSpiritRecovery = 0,
-        decimal OtherTargetRecoveryMultiplier = 1);
+        decimal OtherTargetRecoveryMultiplier = 1, string BasicBindingKind = "");
     public record ArtConfig(
         string Name,
         string Type,
@@ -616,9 +616,11 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     }
 
     static readonly Lazy<IReadOnlyDictionary<string, AttackProfile>> productionAttacks = new(() =>
+        LoadProductionAttacks(RepositoryFile("src/Assets/DataConfig/AttackProfiles.csv")));
+
+    internal static IReadOnlyDictionary<string, AttackProfile> LoadProductionAttacks(string path)
     {
-        const string relative = "src/Assets/DataConfig/AttackProfiles.csv";
-        var lines = CsvTableReader.ReadRequired(RepositoryFile(relative));
+        var lines = CsvTableReader.ReadRequired(path);
         var header = CsvTableReader.FindHeader(lines);
         if (header.Length != 41 || header.Contains("cooldownTicks")) throw new InvalidDataException("attack_profile_schema_invalid");
         var result = new Dictionary<string, AttackProfile>(StringComparer.Ordinal);
@@ -629,7 +631,17 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             string Value(string key) => columns[Array.IndexOf(header, key)];
             int Number(string key) => int.Parse(Value(key), CultureInfo.InvariantCulture);
             string id = Value("attackProfileId");
-            var cost = new ActionEconomyCost(id, "AttackProfiles.csv:" + InputHash(relative), Number("actionPointCostUnits"), Number("minimumNetCostUnits"), Number("ctPenalty"), Number("reuseCooldownTicks"));
+            if (id is "basic_iron_sword" or "basic_iron_blade")
+            {
+                if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" ||
+                    Value("effectType") != "physical" || Value("resourceKind") != "none" || Number("resourceCost") != 0 ||
+                    Number("ctPenalty") != 0 || Number("reuseCooldownTicks") != 0 ||
+                    Value("targetingMode") != "single" || Number("minCastRange") != 1 || Number("maxCastRange") != 1 ||
+                    !double.TryParse(Value("physicalDamageMultiplier"), NumberStyles.Float, CultureInfo.InvariantCulture, out double multiplier) ||
+                    !double.IsFinite(multiplier) || multiplier <= 0)
+                    throw new InvalidDataException("production_equipment_attack_invalid");
+            }
+            var cost = new ActionEconomyCost(id, "AttackProfiles.csv:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant(), Number("actionPointCostUnits"), Number("minimumNetCostUnits"), Number("ctPenalty"), Number("reuseCooldownTicks"));
             cost.Validate();
             string type = Value("effectType") switch { "physical" => "物理", "restore_spirit" => "恢复灵力", _ => throw new InvalidDataException("unsupported_production_attack_effect") };
             double mult = type == "物理" ? double.Parse(Value("physicalDamageMultiplier"), CultureInfo.InvariantCulture) : 0;
@@ -638,12 +650,12 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             result.Add(id, new(id == "basic_unarmed" ? "徒手" : id, type, mult, NormalizeElement(Value("damageElementId")), Number("minCastRange"), Number("maxCastRange"), Cost: cost,
                 SpiritCost: Number("resourceCost"), OtherTargetSpiritCost: recovery ? Number("otherTargetResourceCost") : 0,
                 SpiritRecoveryMultiplier: recovery ? Decimal("spiritRecoveryMultiplier") : 0, MinimumSpiritRecovery: recovery ? Number("minimumSpiritRecovery") : 0,
-                OtherTargetRecoveryMultiplier: recovery ? Decimal("otherTargetRecoveryMultiplier") : 1));
+                OtherTargetRecoveryMultiplier: recovery ? Decimal("otherTargetRecoveryMultiplier") : 1, BasicBindingKind: Value("basicBindingKind")));
         }
-        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" }.Order()))
+        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }.Order()))
             throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
-    });
+    }
     internal static IReadOnlyDictionary<string, AttackProfile> ProductionAttacks => productionAttacks.Value;
 
     // ═══════════════════════════════════════

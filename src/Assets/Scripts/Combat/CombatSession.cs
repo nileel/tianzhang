@@ -95,12 +95,30 @@ namespace TianZhang.Combat
 
         internal CombatOrdinaryActionDefinition CopyValidated()
         {
-            if (Kind is not (CombatCommandKind.Guard or CombatCommandKind.SwapSpell) || ActionPointCostUnits <= 0 ||
+            if (Kind is not (CombatCommandKind.Guard or CombatCommandKind.SwapSpell or CombatCommandKind.SwapEquipment) || ActionPointCostUnits <= 0 ||
                 MinimumNetCostUnits <= 0 || MinimumNetCostUnits > ActionPointCostUnits ||
-                CtPenalty != 0 || (Kind == CombatCommandKind.Guard ? ReuseCooldownTicks != 0 : ReuseCooldownTicks != 60))
+                CtPenalty != 0 || (Kind == CombatCommandKind.SwapSpell ? ReuseCooldownTicks != 60 : ReuseCooldownTicks != 0))
                 throw new ArgumentException("Invalid ordinary action definition.");
             return new CombatOrdinaryActionDefinition(Kind, ActionPointCostUnits, MinimumNetCostUnits, CtPenalty, ReuseCooldownTicks);
         }
+    }
+
+    /// <summary>Immutable external facts only; the owning bridge commits its prepared domain state.</summary>
+    public interface ICombatExternalResourceQuery
+    {
+        CombatEquipmentResource QueryEquipment(CombatCommand command);
+        IReadOnlyList<CombatCommand> GetEquipmentCandidates(string actorId);
+    }
+
+    public sealed class CombatEquipmentResource
+    {
+        public CombatEquipmentResource(long version, string currentInstanceId, string profileId, string reason)
+        { Version = version; CurrentInstanceId = currentInstanceId; ProfileId = profileId; Reason = reason; }
+        public long Version { get; }
+        public string CurrentInstanceId { get; }
+        public string ProfileId { get; }
+        public string Reason { get; }
+        internal string Facts => string.Join("|", Version, CurrentInstanceId, ProfileId, Reason);
     }
 
     /// <summary>Pure session aggregate; it has no scene registration or production composition role.</summary>
@@ -147,6 +165,8 @@ namespace TianZhang.Combat
             SpiritRecoveryEnvironmentMultiplier = spiritRecoveryEnvironmentMultiplier;
             TurnScheduler = new CombatTurnScheduler(Combatants.All);
         }
+
+        public ICombatExternalResourceQuery ExternalResources { get; set; }
 
         public string CurrentActorId { get; private set; } = string.Empty;
         public CombatTurnPhase TurnPhase { get; private set; } = CombatTurnPhase.Finished;
@@ -271,8 +291,22 @@ namespace TianZhang.Combat
                 CombatCommandKind.Divine => ValidateAttack(command, actor, CombatAttackKind.Divine),
                 CombatCommandKind.Move => ValidateMove(command, actor),
                 CombatCommandKind.SwapSpell => ValidateSwapSpell(command, actor),
+                CombatCommandKind.SwapEquipment => ValidateEquipment(command, actor),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
+        }
+
+        private CombatActionResult ValidateEquipment(CombatCommand command, CombatantSnapshot actor)
+        {
+            if (actor.Team != CombatTeam.Player || !ordinary.ContainsKey(CombatCommandKind.SwapEquipment) || ExternalResources == null)
+                return CombatActionResult.Rejected("equipment_definition_invalid");
+            CombatEquipmentResource resource = ExternalResources.QueryEquipment(command);
+            if (resource == null) return CombatActionResult.Rejected("equipment_definition_invalid");
+            if (!string.IsNullOrEmpty(resource.Reason)) return CombatActionResult.Rejected(resource.Reason);
+            if (resource.ProfileId != command.ProfileId || !TryGetProfile(command.ProfileId, out var profile) ||
+                profile.Kind != CombatAttackKind.Basic)
+                return CombatActionResult.Rejected("equipment_definition_invalid");
+            return CombatActionResult.Success();
         }
 
         internal IReadOnlyCollection<HexCoord> GetOccupiedPositionsExcept(string combatantId)

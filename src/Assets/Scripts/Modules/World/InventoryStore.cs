@@ -9,6 +9,12 @@ namespace TianZhang.World
         private Dictionary<string, int> quantities =
             new Dictionary<string, int>(StringComparer.Ordinal);
 
+        public long Version { get; private set; }
+
+        public bool OwnsEquipmentInstance(string characterId, string itemId, string instanceId) =>
+            !string.IsNullOrWhiteSpace(characterId) && (itemId == "item_iron_sword" || itemId == "item_iron_blade") &&
+            string.Equals(instanceId, characterId + ":initial:" + itemId, StringComparison.Ordinal) && GetQuantity(itemId) == 1;
+
         public int GetQuantity(string itemId)
         {
             int value;
@@ -30,7 +36,9 @@ namespace TianZhang.World
                 }
                 replacement.Add(entry.ItemId, entry.Quantity);
             }
+            long nextVersion = checked(Version + 1);
             quantities = replacement;
+            Version = nextVersion;
         }
 
         public InventoryStoreSnapshot Capture()

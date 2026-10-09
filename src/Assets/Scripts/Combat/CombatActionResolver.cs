@@ -39,6 +39,7 @@ namespace TianZhang.Combat
                     ResolveAttack(session, command, actor, target, reuseCooldownTicks),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
                 CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
+                CombatCommandKind.SwapEquipment => ResolveEquipment(actor, command),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
             if (result.Succeeded) commit = () =>
@@ -47,6 +48,12 @@ namespace TianZhang.Combat
                 if (originalTarget != null && originalTarget != originalActor) originalTarget.CommitResolvedState(target);
             };
             return result;
+        }
+
+        private static CombatActionResult ResolveEquipment(CombatantSnapshot actor, CombatCommand command)
+        {
+            actor.BasicAttackProfileId = command.ProfileId;
+            return CombatActionResult.Success();
         }
 
         private static CombatActionResult ResolveGuard(CombatantSnapshot actor)

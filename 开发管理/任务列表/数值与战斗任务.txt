@@ -33,7 +33,6 @@
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 已排队 | — | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
-| U-COMBAT-AP-EQUIP-01 | P1 | codex | 阻塞 | — | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
 | U-COMBAT-AP2-CONFIG-01 | P1 | codex | 阻塞 | D-COMBAT-AP2-CONTRACT-01 | 境界行动力参数表与共享配置投影 | 开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt |
 | U-COMBAT-AP2-GROWTH-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 角色境界AP与移动效率成长接入 | 开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt |
 | U-COMBAT-AP2-REPEAT-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 零冷却能力连续使用AP报价与提交 | 开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt |

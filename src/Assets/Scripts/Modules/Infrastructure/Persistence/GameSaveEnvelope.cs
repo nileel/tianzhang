@@ -79,6 +79,9 @@ namespace TianZhang.Infrastructure.Persistence
             }
             else if (HasCharacterPayload(player) || HasCultivationPayload(cultivation))
             {
+                if (!string.IsNullOrEmpty(player?.mainEquipmentItemId) || !string.IsNullOrEmpty(player?.mainEquipmentInstanceId) ||
+                    !string.IsNullOrEmpty(player?.mainEquipmentBasicAttackProfileId))
+                    throw new ArgumentException(GameSaveSerializer.EquipmentSaveInvalid);
                 throw new ArgumentException("Player state presence is inconsistent.");
             }
 
@@ -91,7 +94,13 @@ namespace TianZhang.Infrastructure.Persistence
             var restoredQuests = new QuestStore();
             restoredQuests.Restore(RestoreQuests(quests));
             var restoredInventory = new InventoryStore();
-            restoredInventory.Restore(RestoreInventory(inventory, catalog));
+            try { restoredInventory.Restore(RestoreInventory(inventory, catalog)); }
+            catch (ArgumentException) when (!string.IsNullOrEmpty(restoredPlayer?.MainEquipmentItemId))
+            { throw new ArgumentException(GameSaveSerializer.EquipmentSaveInvalid); }
+            if (restoredPlayer != null && !restoredPlayer.ValidateEquipmentState(catalog,
+                restoredInventory.OwnsEquipmentInstance(restoredPlayer.Identity.CharacterId,
+                    restoredPlayer.MainEquipmentItemId, restoredPlayer.MainEquipmentInstanceId)))
+                throw new ArgumentException(GameSaveSerializer.EquipmentSaveInvalid);
             var restoredNpcs = new NpcStore();
             restoredNpcs.Restore(RestoreNpcs(npcs));
             var restoredBounties = new BountyStore();
@@ -127,6 +136,8 @@ namespace TianZhang.Infrastructure.Persistence
                  HasItems(record.knownSpells) || HasItems(record.knownSkills) ||
                  HasItems(record.equippedSpells) || HasItems(record.equippedSkills) ||
                  record.spellSlots != 0 || record.skillSlots != 0 ||
+                 !string.IsNullOrEmpty(record.mainEquipmentItemId) ||
+                 !string.IsNullOrEmpty(record.mainEquipmentInstanceId) ||
                  !string.IsNullOrEmpty(record.mainEquipmentBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.unarmedBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.appearanceProfileId) ||
@@ -322,6 +333,8 @@ namespace TianZhang.Infrastructure.Persistence
         public string[] equippedSkills;
         public int spellSlots;
         public int skillSlots;
+        public string mainEquipmentItemId;
+        public string mainEquipmentInstanceId;
         public string mainEquipmentBasicAttackProfileId;
         public string unarmedBasicAttackProfileId;
         public string appearanceProfileId;
@@ -375,6 +388,8 @@ namespace TianZhang.Infrastructure.Persistence
                 equippedSkills = snapshot.AbilityLoadout.EquippedSkills,
                 spellSlots = snapshot.AbilityLoadout.SpellSlots,
                 skillSlots = snapshot.AbilityLoadout.SkillSlots,
+                mainEquipmentItemId = snapshot.MainEquipmentItemId,
+                mainEquipmentInstanceId = snapshot.MainEquipmentInstanceId,
                 mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId,
                 appearanceProfileId = snapshot.AppearanceProfileId,
@@ -447,7 +462,7 @@ namespace TianZhang.Infrastructure.Persistence
                 mainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId,
                 appearanceProfileId,
-                visibleRootId, visibleRootGrade, visibleRootElement);
+                visibleRootId, visibleRootGrade, visibleRootElement, mainEquipmentItemId, mainEquipmentInstanceId);
         }
 
         /// <summary>

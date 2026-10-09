@@ -48,12 +48,13 @@ namespace TianZhang.Tests
             Assert.IsNotNull(installer);
             object Field(string name) => typeof(AdventureSceneInstaller).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(installer);
             var ordinary = (CombatOrdinaryActionDefinition[])Field("ordinaryActions");
-            Assert.AreEqual(2, ordinary.Length);
+            Assert.AreEqual(3, ordinary.Length);
             foreach (var definition in ordinary)
             {
-                Assert.AreEqual(50000, definition.ActionPointCostUnits); Assert.AreEqual(50000, definition.MinimumNetCostUnits);
+                int cost = definition.Kind == CombatCommandKind.SwapEquipment ? 25000 : 50000;
+                Assert.AreEqual(cost, definition.ActionPointCostUnits); Assert.AreEqual(cost, definition.MinimumNetCostUnits);
                 Assert.AreEqual(0, definition.CtPenalty);
-                Assert.AreEqual(definition.Kind == CombatCommandKind.Guard ? 0 : 60, definition.ReuseCooldownTicks);
+                Assert.AreEqual(definition.Kind == CombatCommandKind.SwapSpell ? 60 : 0, definition.ReuseCooldownTicks);
             }
             var player = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0,0), 100,
                 100,100,20,20,10,10,100000,2000, basicAttackProfileId: "basic_unarmed");
@@ -158,6 +159,7 @@ namespace TianZhang.Tests
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "旧档角色";
+                profile.unarmedBasicAttackProfileId = "basic_unarmed";
                 profile.realmMultiplier = 1f;
                 profile.actionPointMaximumUnits = 100000;
                 profile.movementEfficiencyMilliUnits = 2000;
@@ -202,6 +204,7 @@ namespace TianZhang.Tests
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "坏目标旧档";
+                profile.unarmedBasicAttackProfileId = "basic_unarmed";
                 profile.realmMultiplier = 1f;
                 profile.actionPointMaximumUnits = 100000;
                 profile.movementEfficiencyMilliUnits = 2000;

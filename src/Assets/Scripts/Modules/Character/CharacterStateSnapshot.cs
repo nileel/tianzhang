@@ -7,7 +7,8 @@ namespace TianZhang.Character
             CharacterResourcesSnapshot resources, AbilityLoadoutSnapshot abilityLoadout, CharacterProgressionSnapshot progression,
             CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId,
-            string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null)
+            string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null,
+            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -15,6 +16,8 @@ namespace TianZhang.Character
             AbilityLoadout = abilityLoadout ?? throw new System.ArgumentNullException(nameof(abilityLoadout));
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
             CombatModifiers = combatModifiers ?? throw new System.ArgumentNullException(nameof(combatModifiers));
+            MainEquipmentItemId = mainEquipmentItemId;
+            MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
@@ -30,6 +33,8 @@ namespace TianZhang.Character
         public AbilityLoadoutSnapshot AbilityLoadout { get; }
         public CharacterProgressionSnapshot Progression { get; }
         public CharacterCombatModifiers CombatModifiers { get; }
+        public string MainEquipmentItemId { get; }
+        public string MainEquipmentInstanceId { get; }
         public string MainEquipmentBasicAttackProfileId { get; }
         public string UnarmedBasicAttackProfileId { get; }
         public string AppearanceProfileId { get; }

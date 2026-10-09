@@ -1,0 +1,54 @@
+# U-COMBAT-AP-EQUIP-01 战斗换装备验证记录
+
+日期：2026-10-09（香港时间）。本记录与装备实现、任务归档在同一提交交付；提交身份以 git log -- 开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt 为准。
+基线：850f072d548d34e59e454ab0e2d33ca4dddfe641。
+隔离工作区：D:/天章游戏开发/.worktrees/u-combat-ap-equip-manual；分支：codex/u-combat-ap-equip-manual。单主智能体实施、复核、验证，没有子智能体或第二 candidate。
+
+## 阻塞原因与处理
+
+- 用户指定排查对话01a1213d-578a-7ec2-852a-f41acd4c1cb8并直接完成任务。原自动run为3de6a980-83c9-42b2-99a9-dc7e634d4ca1，业务写入前以expected_paths_incomplete关闭，无candidate。
+- 实际遗漏是CombatCommandService的效果准备所有者CombatActionResolver.cs：PrepareValidated没有SwapEquipment分支，且该路径未进expectedPaths。此前补测试、数据链和BattleSim路径，仍未覆盖这段真正的执行依赖。
+- 本次补齐该既有文件以及Unity实际导入必需的原两物品asset路径；沿原合同实施，没有另建执行器或调整自动化。手动实施期间任务保持blocked以免重复领取。
+- 写入前及边界补齐后的实时预检均为ok；最终业务写入所用taskCardDigest=94eb0c2f7d066c9e2f48a0c445a32dc381749faa964ed81e7a2a24d558a84d8a，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched、mustRead、gates、gatePointers均为空，与schema 2投影一致。
+
+## 最终实现与所有者
+
+- Items.csv新增铁剑、铁刀和三个装备字段，AttackProfiles.csv保留原三行并新增basic_iron_sword／basic_iron_blade。两者为main_equipment普攻，分别40000／50000 AP、1／1.25物理倍率；换装25000 AP、CT/CD为0。全部是既有合同的功能验证候选，不是平衡定案，也不提前实施AP2。
+- 练气新角色候选一次取得两件各1，默认铁剑；实例身份为player:initial:<itemId>。库存包含已装备物品，换装不消耗或补发。StartMenu既有写盘失败清理和成功后ActivateSlot顺序保持；正式PlayMode证明首次创建和后续往返，失败清理分支本轮以完整方法检查确认。
+- CharacterRuntimeProfile拥有长期主手；InventoryStore提供拥有证明和版本；Combat只接收只读外部事实。EncounterCoordinator先准备长期与战斗两份候选，再在同一同步调用中提交；拒绝和陈旧报价不发布任一候选。
+- CombatActionResolver修改已准备快照的普攻绑定，CommandService沿统一付款／返还／结束入口提交。换装不重发AP、不改回合开始上限、不重置术法CD或换术次数、不推进全局tick；成功退出Guard，0AP结束当前行动。后续普攻读取当前战斗快照，消除旧spawn缓存。
+- 保存仍为schema 4；新增两引用并交叉验证定义、实例、库存、资格与攻击绑定。坏档以equipment_save_invalid拒绝，原live owners不变；旧合法徒手档保持原样，不补装备。
+- AdventureScene通过既有Builder定向更新真实动作条、预览、同源收费和引用。BattleSim只适配两个共享CSV直接读取入口和定向回归，不给模拟角色自动授武器，不实现模拟内换装。
+
+## Unity验证
+
+Unity 6000.3.18f1；真实批处理导入入口TianZhang.Editor.AdventureSceneBuilder.UpdateEquipmentContent执行成功，日志位于工作区equipment-import.log。导入幂等、GUID和整表失败不部分写入由既有测试覆盖。
+
+本轮按受影响类／方法使用Unity -batchmode -projectPath <worktree>/src -runTests -testPlatform EditMode|PlayMode -testFilter <相关类或方法> -testResults <XML>，结果经tools/run-unity-editmode-tests.ps1及tools/run-unity-playmode-tests.ps1的-ValidateResultOnly校验。图形场景验收不使用-nographics。
+
+XML证据均保留于工作区src/Logs/equipment/（本地验证产物，不入版本库）：
+- equipment-editmode.xml：首次199项，197通过；两项旧保存fixture未声明合法徒手绑定。补齐fixture的basic_unarmed，不修改其保存／导航断言；equipment-editmode-followup.xml两项通过。
+- equipment-costs.xml：新增100／80 AP下两种武器连击费用4项通过。
+- equipment-final-editmode.xml：最终装备专项及行动力内核48/48通过，包括新增长期主手变化使旧报价失效。按各用例最新结果去重，本轮相关EditMode共204/204通过。
+- 覆盖剑→刀→剑、库存各1、费用各25 AP、24999不足、取消、同物品／错误槽位／未知物品／他人实例／非法境界、库存和AP变化、重复确认、CD与回合账本保持、0AP结束、武器次数差异、两种保存往返、六类坏档及旧徒手不补发。
+- equipment-graphics-playmode.xml：最终正常图形模式2/2通过；正式创角→世界→据点接任务→冒险战斗→剑胜利或刀战败→据点保存→菜单读档→再次入场，保留最后主手、原角色owner与精确库存。使用真实UI确认／取消；战败使用明确的临死血量fixture。
+- equipment-final-playmode.xml中的FormalStartMenuSessionSupportsBothMoveActionOrdersAndProjectsTheCanonicalPath通过：铁剑40 AP后剩余10 AP继续行动，显式结束后才能进入下回合。该轮另一个失败来自误加-nographics导致截图窗口无图形设备，已由上项正常图形模式重跑取代。
+- 本轮相关PlayMode去重11项，最终10通过、1项既有美术断言失败：GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads要求MeshRenderer本身名为Static3DCombatBase；现行未改动的美术提供者把此名赋给prefab根并取子MeshRenderer。失败发生在旧美术检查，未改美术实现或放宽该断言；装备专项完整正式链均通过，不宣称全套PlayMode全绿。
+- 早期胜利fixture按6000帧截止，在高帧率批处理中提前超时；改为60秒实际时间等待后通过。没有为测试加入生产重试或兜底。
+
+截图：src/Logs/equipment/preview-1366-blade.png与preview-1920-sword.png已实际查看；两种分辨率换装按钮、25 AP费用、预览与确认／取消完整可见，原普攻40 AP正确。文件名剑／刀指往返场景；截图都在初始换入铁刀预览时获取。本任务仅验新增装备UI，不作整体美术验收。
+
+## BattleSim与静态检查
+
+- dotnet build -c Release --no-restore simulations/BattleSim：通过，0错误／0警告。
+- dotnet run --no-build -c Release --project simulations/BattleSim：exit 0；默认实跑日志equipment-battlesim.log保留于工作区，原具名角色输入保持。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test equipment-production：通过。调用GameData.LoadProductionAttacks和GuanzhongPlaytestAudit.LoadProductionInputs两处真实加载器；五行生产值／费用／倍率／绑定一致，每入口拒绝10种缺行、多行、重复及非法成本／字段变体，共20次拒绝。未用裁剪ID谓词替代真实入口。
+- tools/check-data-chain.ps1：通过；严格四物品、五攻击、材料空装备字段、语言、asset及场景引用。
+- tools/check-unity-assembly-boundaries.ps1：通过；未新建asmdef或运行时组件文件。
+- check-task-cards.ps1 -TaskId U-COMBAT-AP-EQUIP-01 -Postcondition CodexClosedOrNonReady -OutputJson：ok，74活跃卡、1项ready，本卡completed。check-review-text：744文件通过；check-pending-whitespace：52个本轮实际文件通过。
+- 已执行git diff --cached --check：仅四个Unity新asset.meta的12处语义空值尾随空格被报告。按开发-技术经验.txt的.meta规则保留，并沿既有automation-finalize-commit.ps1同样的git -c core.whitespace=-blank-at-eol diff --cached --check通过；没有忽略其他文件尾随空格。
+
+## 差异收口
+
+Unity导入／测试产生的原三攻击、五敌人、据点和ProjectSettings空白变化逐一确认仅为空白后恢复；保留新增装备字段和真实场景修改。XML与截图保留在隔离工作区。主工作区既有summary_state、设计总结和浮渊美术未纳入提交。
+本卡完成后移入精确归档并移除自己的backlog行；原队列不含本卡，不改变其他卡、下游依赖或自动化runtime。最终通过项目统一集成锁fast-forward发布。

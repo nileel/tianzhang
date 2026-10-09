@@ -201,7 +201,7 @@ function Test-FormalContentCatalog {
 
   $expectedIds = @{
     Settlements = @('guanzhong_city')
-    Items = @('item_lingshi_low', 'item_shijia_piece')
+    Items = @('item_lingshi_low', 'item_shijia_piece', 'item_iron_sword', 'item_iron_blade')
     Bounties = @('bounty_guanzhong_shijiahou')
   }
   foreach ($kind in $expectedIds.Keys) {
@@ -244,6 +244,32 @@ function Test-FormalContentCatalog {
     if (-not $itemsById.ContainsKey($itemId) -or $itemsById[$itemId].contentScope -cne 'content_scope_production' -or $itemsById[$itemId].maxStack -cne '99') {
       Add-Finding 'FORMAL_ITEM_PROJECTION_INVALID' $itemId 'Item production scope or maxStack differs from the approved parameter decision.'
     }
+  }
+
+  foreach ($item in $Items.Rows) {
+    $id = [string]$item.itemId
+    $weapon = $id -cin @('item_iron_sword', 'item_iron_blade')
+    $fields = @{
+      itemId=$id; displayNameKey=$id; descriptionKey="${id}_description"; contentScope='content_scope_production'
+      maxStack=$(if ($weapon) { '1' } else { '99' })
+      itemCategory=$(if ($weapon) { 'weapon' } elseif ($id -ceq 'item_lingshi_low') { 'basic_resource' } else { 'monster_material' })
+      equipmentSlotId=$(if ($weapon) { 'main_hand' } else { '' })
+      equipmentRealmRequirementId=$(if ($weapon) { 'realm_lianqi' } else { '' })
+      equipmentBasicAttackProfileId=$(if ($weapon) { $id.Replace('item_', 'basic_') } else { '' })
+    }
+    foreach ($field in $fields.Keys) {
+      if ([string]$item.$field -cne [string]$fields[$field]) { Add-Finding 'FORMAL_ITEM_PROJECTION_INVALID' "${id}:$field" 'Item field differs from its approved projection.' }
+    }
+    foreach ($key in @($id, "${id}_description")) {
+      if ($key -notin $LanguageIds) { Add-Finding 'FORMAL_CONTENT_LANGUAGE_MISSING' $key 'Item language is required.' }
+    }
+    Test-FormalProjectionAssetFields "Item:$id" "src/Assets/Data/Items/Item_$id.asset" $fields
+    $meta = Join-Path $root "src/Assets/Data/Items/Item_$id.asset.meta"
+    if (Test-Path -LiteralPath $meta) {
+      $guid = [regex]::Match((Get-Content -Raw -LiteralPath $meta), '(?m)^guid: ([a-f0-9]{32})').Groups[1].Value
+      $catalog = Get-Content -Raw -LiteralPath (Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset')
+      if (-not $guid -or $catalog -notmatch $guid) { Add-Finding 'FORMAL_ITEM_CATALOG_REFERENCE_MISSING' $id 'Catalog must reference each production item.' }
+    } else { Add-Finding 'FORMAL_ITEM_META_MISSING' $id 'Item asset GUID is required.' }
   }
 
   $bounty = @($Bounties.Rows | Where-Object { $_.bountyId -ceq 'bounty_guanzhong_shijiahou' })
@@ -508,6 +534,18 @@ function Test-FormalAttackProfileProjection {
     Add-Finding 'ATTACK_PROFILE_HEADER_NOT_EXACT' 'AttackProfiles' 'Header must match the ordered 41-column contract.'
   }
   $expectedRows = @{
+    basic_iron_sword = @{
+      attackProfileId='basic_iron_sword'; displayNameKey='attack_profile_basic_iron_sword'; profileKind='basic'; basicBindingKind='main_equipment'
+      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
+      actionPointCostUnits='40000'; minimumNetCostUnits='40000'; ctPenalty='0'; reuseCooldownTicks='0'
+      minCastRange='1'; maxCastRange='1'; targetingMode='single'
+    }
+    basic_iron_blade = @{
+      attackProfileId='basic_iron_blade'; displayNameKey='attack_profile_basic_iron_blade'; profileKind='basic'; basicBindingKind='main_equipment'
+      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.25'; resourceKind='none'; resourceCost='0'
+      actionPointCostUnits='50000'; minimumNetCostUnits='50000'; ctPenalty='0'; reuseCooldownTicks='0'
+      minCastRange='1'; maxCastRange='1'; targetingMode='single'
+    }
     basic_unarmed = @{
       attackProfileId='basic_unarmed'; displayNameKey='attack_profile_basic_unarmed'; profileKind='basic'; basicBindingKind='unarmed_fallback'
       effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
@@ -530,17 +568,17 @@ function Test-FormalAttackProfileProjection {
     }
   }
   $rows = @($Table.Rows)
-  if ($rows.Count -ne 3 -or (@($rows.attackProfileId | Sort-Object) -join ',') -cne (@($expectedRows.Keys | Sort-Object) -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly basic_unarmed, spell_guanshiji and spell_julingshu once each.'
+  if ($rows.Count -ne 5 -or (@($rows.attackProfileId | Sort-Object) -join ',') -cne (@($expectedRows.Keys | Sort-Object) -join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly the five approved attack IDs once each.'
     return
   }
   $assetDir = Join-Path $root 'src/Assets/Data/AttackProfiles'
   $expectedAssetNames = @($expectedRows.Keys | ForEach-Object { "AttackProfile_$_.asset" } | Sort-Object)
   $actualAssetNames = if (Test-Path -LiteralPath $assetDir -PathType Container) { @(Get-ChildItem -LiteralPath $assetDir -File -Filter *.asset | Select-Object -ExpandProperty Name | Sort-Object) } else { @() }
   if (($actualAssetNames -join ',') -cne ($expectedAssetNames -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Production directory must contain exactly the three canonical assets.'
+    Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Production directory must contain exactly the five canonical assets.'
   }
-  $names = @{ basic_unarmed='徒手'; spell_guanshiji='贯石击'; spell_julingshu='聚灵术' }
+  $names = @{ basic_iron_sword='铁剑普攻'; basic_iron_blade='铁刀普攻'; basic_unarmed='徒手'; spell_guanshiji='贯石击'; spell_julingshu='聚灵术' }
   $languagePath = Join-Path $root 'src/Assets/DataConfig/Language.csv'
   $stringFields = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey')
   $enumFields = @('profileKind','basicBindingKind','effectType','resourceKind','targetingMode','areaCenterKind','areaShapeKind','areaEffectBlockers','areaAllowedFactions','areaAllowedStates')
@@ -567,10 +605,10 @@ function Test-FormalAttackProfileProjection {
       $fields[$field] = if ($expected.ContainsKey($field)) { [double]::Parse([string]$expected[$field], [Globalization.CultureInfo]::InvariantCulture) } elseif ($field -ceq 'areaFacing') { -1 } else { 0 }
     }
     foreach ($field in $enumFields) { $fields[$field] = 0 }
-    $fields.profileKind = if ($id -ceq 'basic_unarmed') { 1 } else { 2 }
-    $fields.basicBindingKind = if ($id -ceq 'basic_unarmed') { 2 } else { 0 }
+    $fields.profileKind = if ($row.profileKind -ceq 'basic') { 1 } else { 2 }
+    $fields.basicBindingKind = if ($id -ceq 'basic_unarmed') { 2 } elseif ($row.basicBindingKind -ceq 'main_equipment') { 1 } else { 0 }
     $fields.effectType = if ($id -ceq 'spell_julingshu') { 8 } else { 1 }
-    $fields.resourceKind = if ($id -ceq 'basic_unarmed') { 1 } else { 2 }
+    $fields.resourceKind = if ($row.profileKind -ceq 'basic') { 1 } else { 2 }
     $fields.targetingMode = 1
     $assetPath = "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset"
     Test-FormalProjectionAssetFields $id $assetPath $fields
@@ -878,7 +916,7 @@ $schemas = [ordered]@{
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
   Skills = @('name','type','minRange','maxRange','mpCost','cooldownTicks','damageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','isDomain','isBloodline','specialEffectDesc','element','realmReq','sourceAffiliation','contentScope')
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
-  Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack')
+  Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits')
   AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','actionPointCostUnits','minimumNetCostUnits','ctPenalty','reuseCooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
@@ -894,7 +932,7 @@ $tables = [ordered]@{
   Spells = Get-CsvTable 'src/Assets/DataConfig/Spells.csv' $schemas.Spells
   Skills = Get-CsvTable 'src/Assets/DataConfig/Skills.csv' $schemas.Skills
   Settlements = Get-CsvTable 'src/Assets/DataConfig/Settlements.csv' $schemas.Settlements @() @('content_scope_production')
-  Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @() @('content_scope_production')
+  Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId') @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
   AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')

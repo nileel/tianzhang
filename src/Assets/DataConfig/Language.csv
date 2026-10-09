@@ -710,3 +710,17 @@ combat_ct_penalty_overflow,累计行动惩罚超出上限
 combat_effect_overflow,行动结果超出上限
 combat_move_quote_invalid,移动费用已变化，请重新选择
 combat_move_cost_overflow,移动费用超出上限
+item_iron_sword,铁剑
+item_iron_sword_description,寻常铁制长剑，无额外属性，装在主手使用。
+item_iron_blade,铁刀
+item_iron_blade_description,寻常铁制长刀，出击较重，装在主手使用。
+attack_profile_basic_iron_sword,铁剑普攻
+attack_profile_basic_iron_blade,铁刀普攻
+combat_command_swap_equipment,换装备
+equipment_no_change,已装备该武器
+equipment_not_owned,未拥有该武器
+equipment_instance_invalid,武器身份无效
+equipment_qualification_invalid,境界不满足装备要求
+equipment_slot_invalid,主手槽无效
+equipment_definition_invalid,武器定义无效
+equipment_save_invalid,装备存档无效

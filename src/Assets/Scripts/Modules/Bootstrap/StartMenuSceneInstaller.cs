@@ -98,10 +98,10 @@ namespace TianZhang.Bootstrap
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             try
             {
-                runtime.BeginNewGame(
+                runtime.BeginEquippedNewGame(
                     CharacterRuntimeProfile.FromDefinition("player", profile),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),
-                    startNodeId);
+                    startNodeId, contentCatalog);
                 GameSaveSlotWriteResult write = bootstrap.SlotStore.Write(slotId, runtime.CaptureSave());
                 if (!write.Succeeded)
                 {

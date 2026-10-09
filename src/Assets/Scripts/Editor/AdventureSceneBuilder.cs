@@ -31,17 +31,34 @@ namespace TianZhang.Editor
         {
             var serialized = new SerializedObject(installer);
             SerializedProperty definitions = serialized.FindProperty("ordinaryActions");
-            definitions.arraySize = 2;
-            for (int index = 0; index < 2; index++)
+            definitions.arraySize = 3;
+            for (int index = 0; index < 3; index++)
             {
                 SerializedProperty definition = definitions.GetArrayElementAtIndex(index);
-                definition.FindPropertyRelative("Kind").intValue = (int)(index == 0 ? CombatCommandKind.Guard : CombatCommandKind.SwapSpell);
-                definition.FindPropertyRelative("ActionPointCostUnits").intValue = 50000;
-                definition.FindPropertyRelative("MinimumNetCostUnits").intValue = 50000;
+                definition.FindPropertyRelative("Kind").intValue = (int)(index == 0 ? CombatCommandKind.Guard : index == 1 ? CombatCommandKind.SwapSpell : CombatCommandKind.SwapEquipment);
+                definition.FindPropertyRelative("ActionPointCostUnits").intValue = index == 2 ? 25000 : 50000;
+                definition.FindPropertyRelative("MinimumNetCostUnits").intValue = index == 2 ? 25000 : 50000;
                 definition.FindPropertyRelative("CtPenalty").intValue = 0;
-                definition.FindPropertyRelative("ReuseCooldownTicks").intValue = index == 0 ? 0 : 60;
+                definition.FindPropertyRelative("ReuseCooldownTicks").intValue = index == 1 ? 60 : 0;
             }
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        public static void UpdateEquipmentContent()
+        {
+            CombatContentImporter.ImportAttackProfiles();
+            SettlementContentImporter.ImportContentCatalog();
+            UpdateOrdinaryCombatActions();
+        }
+
+        private static void ConfigureEquipmentButton(GameObject root)
+        {
+            var bar = root.GetComponent<CombatActionBarView>();
+            Transform actions = ((GameObject)new SerializedObject(bar).FindProperty("root").objectReferenceValue).transform;
+            Button button = LayoutButton(actions, "SwapEquipmentButton", "换装备");
+            SceneBuildSupport.SetObject(bar, "swapEquipmentButton", button);
+            PlaceLayoutRect(button.GetComponent<RectTransform>(), 378, 8, 114, 68);
+            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 504, 8, 318, 76);
         }
 
         public static void UpdateOrdinaryCombatActions()
@@ -52,6 +69,8 @@ namespace TianZhang.Editor
                 if (root.TryGetComponent(out AdventureSceneInstaller found)) installer = found;
             if (installer == null) throw new InvalidOperationException("adventure_installer_missing");
             ConfigureOrdinaryCombatActions(installer);
+            ConfigureEquipmentButton(installer.gameObject);
+            SceneBuildSupport.SetObjects(installer, "attackProfiles", LoadAttackProfiles());
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("AdventureScene save failed.");
@@ -226,7 +245,7 @@ namespace TianZhang.Editor
             PlaceLayoutRect(LayoutObject(actions, "SecondArtTargetButton"), 606, 92, 216, 44);
             PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
             PlaceLayoutRect(LayoutObject(actions, "SwapSpellButton"), 252, 8, 114, 68);
-            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 378, 8, 444, 76);
+            ConfigureEquipmentButton(root);
             foreach (Text text in actions.GetComponentsInChildren<Text>(true)) text.fontSize = 20;
 
             RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
@@ -420,7 +439,7 @@ namespace TianZhang.Editor
             Button swap = LayoutButton(actions, "SwapSpellButton", "换术");
             SceneBuildSupport.SetObject(bar, "swapSpellButton", swap);
             PlaceLayoutRect(swap.GetComponent<RectTransform>(), 252, 8, 114, 68);
-            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), 378, 8, 444, 76);
+            ConfigureEquipmentButton(root);
             BuildSwapSelectors(LayoutObject(canvas.transform, "CombatActionPreviewRoot/PreviewActions"),
                 root.GetComponent<CombatActionPreviewView>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);

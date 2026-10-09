@@ -12,6 +12,7 @@ namespace TianZhang.Combat
         {
             Session = session; Command = command; Validation = validation; ActionPointCostUnits = cost;
             MinimumNetCostUnits = minimum; SpiritCost = spirit; CtPenalty = penalty; ReuseCooldownTicks = cooldown;
+            EquipmentFacts = command.Kind == CombatCommandKind.SwapEquipment ? session.ExternalResources?.QueryEquipment(command)?.Facts : null;
             Modifier = modifier; Facts = facts; RemainsInTurn = remains; Turn = turn;
             TurnSequence = session.TurnSequence; StateVersion = session.StateVersion;
             MovementEfficiencyMilliUnits = session.Combatants.TryGet(command.ActorId, out var actor) ? actor.MovementEfficiencyMilliUnits : 0;
@@ -21,6 +22,7 @@ namespace TianZhang.Combat
         internal CombatCommand Command { get; }
         internal CombatActionEconomyModifier Modifier { get; }
         internal string Facts { get; }
+        internal string EquipmentFacts { get; }
         public string ActorId => Command.ActorId;
         public CombatCommandKind Kind => Command.Kind;
         public string TargetId => Command.TargetId;
@@ -69,7 +71,8 @@ namespace TianZhang.Combat
                     penalty = profile.CtPenalty; cooldown = profile.ReuseCooldownTicks;
                 }
             }
-            else if (command.Kind is CombatCommandKind.Guard or CombatCommandKind.SwapSpell)
+            else if (command.Kind is CombatCommandKind.Guard or CombatCommandKind.SwapSpell ||
+                command.Kind == CombatCommandKind.SwapEquipment && validation.Succeeded)
             {
                 var definition = session.GetOrdinary(command.Kind);
                 cost = definition.ActionPointCostUnits; minimum = definition.MinimumNetCostUnits;
@@ -92,6 +95,8 @@ namespace TianZhang.Combat
                 cooldown = Math.Max(actor.GetCooldown(command.ProfileId), cooldown);
             if (validation.Succeeded && actor.ActionPointsRemainingUnits < cost)
                 validation = CombatActionResult.Rejected("action_points_insufficient");
+            if (validation.Succeeded && session.StateVersion >= long.MaxValue - 2)
+                validation = CombatActionResult.Rejected("combat_effect_overflow");
             if (validation.Succeeded && penalty > int.MaxValue - 100 - session.PendingCtPenalty)
                 validation = CombatActionResult.Rejected("combat_ct_penalty_overflow");
             bool terminal = command.Kind is CombatCommandKind.Wait or CombatCommandKind.EndTurn;
@@ -109,11 +114,23 @@ namespace TianZhang.Combat
         /// <summary>Confirmation of an existing quote is exact; an old quote is never a wildcard.</summary>
         public CombatActionResult Execute(CombatSession session, CombatCommand command, CombatCommandPreview quote)
         {
+            CombatActionResult result = Prepare(session, command, quote, out Action commit);
+            if (result.Succeeded) commit();
+            return result;
+        }
+
+        /// <summary>Prepare all combat effects before an owning bridge publishes its other prepared domain state.</summary>
+        public CombatActionResult Prepare(CombatSession session, CombatCommand command, CombatCommandPreview quote, out Action apply)
+        {
+            apply = null;
             if (session == null || command == null || quote == null) throw new ArgumentNullException(nameof(quote));
             if (quote.Session != session || quote.TurnSequence != session.TurnSequence || quote.StateVersion != session.StateVersion ||
                 quote.ActorId != command.ActorId || quote.Kind != command.Kind || quote.TargetId != command.TargetId ||
                 quote.ProfileId != command.ProfileId || quote.Destination != command.Destination || quote.SlotIndex != command.SlotIndex ||
-                quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session))
+                quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
+                quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
+                quote.Command.InstanceId != command.InstanceId ||
+                (command.Kind == CombatCommandKind.SwapEquipment && quote.EquipmentFacts != session.ExternalResources?.QueryEquipment(command)?.Facts))
                 return CombatActionResult.Rejected("combat_quote_stale");
             if (!quote.IsLegal) return quote.Validation;
             CombatCommandPreview current = Preview(session, command);
@@ -129,19 +146,24 @@ namespace TianZhang.Combat
             catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
             if (!result.Succeeded) return result;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
-            actor.SpendActionPoints(current.ActionPointCostUnits);
-            commit();
-            int refund = actor.RefundActionPoints(current.Modifier, current.ActionPointCostUnits, current.MinimumNetCostUnits);
-            if (command.Kind == CombatCommandKind.Wait)
-            { session.TurnScheduler.Wait(actor.Id); session.FinishTurn(); }
-            else if (command.Kind == CombatCommandKind.EndTurn) EndTurn(session, actor.Id);
-            else
+            int quotedRefund = actor.QuoteRefund(current.Modifier, current.ActionPointCostUnits, current.MinimumNetCostUnits,
+                actor.ActionPointsRemainingUnits - current.ActionPointCostUnits);
+            apply = () =>
             {
-                session.RecordAction(current.CtPenalty);
-                if (session.IsFinished) { EndTurn(session, actor.Id); session.Terminate(); }
-                else if (actor.ActionPointsRemainingUnits == 0 || !actor.IsAlive) EndTurn(session, actor.Id);
-            }
-            return result.WithPayment(current.ActionPointCostUnits, refund, current.StateVersion + 1);
+                actor.SpendActionPoints(current.ActionPointCostUnits);
+                commit();
+                actor.RefundActionPoints(current.Modifier, current.ActionPointCostUnits, current.MinimumNetCostUnits);
+                if (command.Kind == CombatCommandKind.Wait)
+                { session.TurnScheduler.Wait(actor.Id); session.FinishTurn(); }
+                else if (command.Kind == CombatCommandKind.EndTurn) EndTurn(session, actor.Id);
+                else
+                {
+                    session.RecordAction(current.CtPenalty);
+                    if (session.IsFinished) { EndTurn(session, actor.Id); session.Terminate(); }
+                    else if (actor.ActionPointsRemainingUnits == 0 || !actor.IsAlive) EndTurn(session, actor.Id);
+                }
+            };
+            return result.WithPayment(current.ActionPointCostUnits, quotedRefund, current.StateVersion + 1);
         }
 
         public CombatActionResult Validate(CombatSession session, CombatCommand command) => Preview(session, command).Validation;

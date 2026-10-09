@@ -14,13 +14,14 @@ namespace TianZhang.Gameplay.Contracts
         public bool Completed { get; }
     }
 
-    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move, SwapSpell }
+    public enum CombatActionKind { BasicAttack, Art, Divine, Guard, Wait, EndTurn, Move, SwapSpell, SwapEquipment }
 
     public sealed class CombatActionCandidate
     {
         public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion,
             CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
-            IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1)
+            IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1,
+            string equipmentSlotId = null, string itemId = null, string instanceId = null)
         {
             Kind = kind;
             ActorId = actorId;
@@ -28,11 +29,15 @@ namespace TianZhang.Gameplay.Contracts
             ProfileId = profileId;
             ContextVersion = contextVersion;
             SlotIndex = slotIndex;
+            EquipmentSlotId = equipmentSlotId; ItemId = itemId; InstanceId = instanceId;
             Destination = destination;
             MovementCostUnits = movementCostUnits;
             MovementPath = movementPath == null ? Array.Empty<CombatUnitPresentationHex>() :
                 new List<CombatUnitPresentationHex>(movementPath).AsReadOnly();
         }
+        public string EquipmentSlotId { get; }
+        public string ItemId { get; }
+        public string InstanceId { get; }
         public CombatActionKind Kind { get; }
         public string ActorId { get; }
         public string TargetId { get; }

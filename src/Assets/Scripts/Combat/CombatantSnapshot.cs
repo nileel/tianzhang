@@ -367,6 +367,7 @@ namespace TianZhang.Combat
 
         internal void CommitResolvedState(CombatantSnapshot prepared)
         {
+            BasicAttackProfileId = prepared.BasicAttackProfileId;
             CurrentHealth = prepared.CurrentHealth; CurrentSpirit = prepared.CurrentSpirit;
             ShouyiStacks = prepared.ShouyiStacks; FudanStacks = prepared.FudanStacks; LeijieStacks = prepared.LeijieStacks;
             IsGuarding = prepared.IsGuarding; HasMovedThisTurn = prepared.HasMovedThisTurn;

@@ -9,7 +9,8 @@ namespace TianZhang.Character
         public CharacterRuntimeProfile(CharacterIdentity identity, CharacterAttributes attributes, CharacterResources resources,
             AbilityLoadout abilityLoadout, CharacterProgressionRef progression, CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId,
-            string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null)
+            string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null,
+            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -17,6 +18,8 @@ namespace TianZhang.Character
             AbilityLoadout = abilityLoadout ?? throw new System.ArgumentNullException(nameof(abilityLoadout));
             Progression = progression ?? throw new System.ArgumentNullException(nameof(progression));
             CombatModifiers = combatModifiers ?? throw new System.ArgumentNullException(nameof(combatModifiers));
+            MainEquipmentItemId = mainEquipmentItemId;
+            MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
@@ -29,12 +32,59 @@ namespace TianZhang.Character
         public CharacterIdentity Identity { get; } public CharacterAttributes Attributes { get; }
         public CharacterResources Resources { get; } public AbilityLoadout AbilityLoadout { get; }
         public CharacterProgressionRef Progression { get; } public CharacterCombatModifiers CombatModifiers { get; private set; }
+        public string MainEquipmentItemId { get; private set; }
+        public string MainEquipmentInstanceId { get; private set; }
         public string MainEquipmentBasicAttackProfileId { get; private set; }
         public string UnarmedBasicAttackProfileId { get; private set; }
         public string AppearanceProfileId { get; private set; }
         public string VisibleRootId { get; private set; }
         public string VisibleRootGrade { get; private set; }
         public string VisibleRootElement { get; private set; }
+
+        public bool TryPrepareEquipmentChange(ContentCatalogData catalog, string slotId, string itemId,
+            string instanceId, bool instanceOwned, out System.Action commit, out string reason)
+        {
+            commit = null;
+            if (!ValidateEquipment(catalog, slotId, itemId, instanceId, instanceOwned, out ItemData item, out reason)) return false;
+            if (MainEquipmentItemId == itemId && MainEquipmentInstanceId == instanceId)
+            { reason = "equipment_no_change"; return false; }
+            string profileId = item.equipmentBasicAttackProfileId;
+            commit = () =>
+            {
+                MainEquipmentItemId = itemId;
+                MainEquipmentInstanceId = instanceId;
+                MainEquipmentBasicAttackProfileId = profileId;
+                UnarmedBasicAttackProfileId = string.Empty;
+            };
+            return true;
+        }
+
+        public bool ValidateEquipmentState(ContentCatalogData catalog, bool instanceOwned)
+        {
+            if (string.IsNullOrEmpty(MainEquipmentItemId) && string.IsNullOrEmpty(MainEquipmentInstanceId))
+                return string.IsNullOrEmpty(MainEquipmentBasicAttackProfileId) && UnarmedBasicAttackProfileId == "basic_unarmed";
+            return string.IsNullOrEmpty(UnarmedBasicAttackProfileId) &&
+                ValidateEquipment(catalog, "main_hand", MainEquipmentItemId, MainEquipmentInstanceId, instanceOwned, out ItemData item, out _) &&
+                MainEquipmentBasicAttackProfileId == item.equipmentBasicAttackProfileId;
+        }
+
+        private bool ValidateEquipment(ContentCatalogData catalog, string slotId, string itemId, string instanceId,
+            bool instanceOwned, out ItemData item, out string reason)
+        {
+            item = null;
+            reason = "equipment_slot_invalid";
+            if (slotId != "main_hand") return false;
+            reason = "equipment_definition_invalid";
+            if (catalog == null || !catalog.TryGetEquipment(itemId, out item)) return false;
+            reason = "equipment_instance_invalid";
+            if (!string.Equals(instanceId, Identity.CharacterId + ":initial:" + itemId, System.StringComparison.Ordinal)) return false;
+            reason = "equipment_not_owned";
+            if (!instanceOwned) return false;
+            reason = "equipment_qualification_invalid";
+            if (Progression.RealmStage is not ("练气" or "筑基" or "金丹" or "元婴" or "化神")) return false;
+            reason = null;
+            return true;
+        }
 
         public static CharacterRuntimeProfile FromDefinition(string characterId, CharacterData definition)
         {
@@ -89,7 +139,8 @@ namespace TianZhang.Character
                 snapshot.MainEquipmentBasicAttackProfileId,
                 snapshot.UnarmedBasicAttackProfileId,
                 snapshot.AppearanceProfileId,
-                snapshot.VisibleRootId, snapshot.VisibleRootGrade, snapshot.VisibleRootElement);
+                snapshot.VisibleRootId, snapshot.VisibleRootGrade, snapshot.VisibleRootElement,
+                snapshot.MainEquipmentItemId, snapshot.MainEquipmentInstanceId);
             profile.Restore(snapshot);
             return profile;
         }
@@ -100,7 +151,7 @@ namespace TianZhang.Character
                 Identity.Capture(), Attributes.Capture(), Resources.Capture(), AbilityLoadout.Capture(), Progression.Capture(),
                 CombatModifiers,
                 MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId,
-                VisibleRootId, VisibleRootGrade, VisibleRootElement);
+                VisibleRootId, VisibleRootGrade, VisibleRootElement, MainEquipmentItemId, MainEquipmentInstanceId);
         }
         public void Restore(CharacterStateSnapshot snapshot)
         {
@@ -109,6 +160,8 @@ namespace TianZhang.Character
             Identity.Restore(snapshot.Identity); Attributes.Restore(snapshot.Attributes); Resources.Restore(snapshot.Resources);
             AbilityLoadout.Restore(snapshot.AbilityLoadout); Progression.Restore(snapshot.Progression);
             CombatModifiers = snapshot.CombatModifiers;
+            MainEquipmentItemId = snapshot.MainEquipmentItemId;
+            MainEquipmentInstanceId = snapshot.MainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
             UnarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
             AppearanceProfileId = snapshot.AppearanceProfileId;

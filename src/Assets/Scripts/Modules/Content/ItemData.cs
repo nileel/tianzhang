@@ -11,5 +11,14 @@ namespace TianZhang.Content
         public string contentScope;
         public string itemCategory;
         public int maxStack;
+        public string equipmentSlotId;
+        public string equipmentRealmRequirementId;
+        public string equipmentBasicAttackProfileId;
+
+        public bool IsApprovedEquipment => contentScope == "content_scope_production" &&
+            itemCategory == "weapon" && maxStack == 1 && equipmentSlotId == "main_hand" &&
+            equipmentRealmRequirementId == "realm_lianqi" &&
+            ((itemId == "item_iron_sword" && equipmentBasicAttackProfileId == "basic_iron_sword") ||
+             (itemId == "item_iron_blade" && equipmentBasicAttackProfileId == "basic_iron_blade"));
     }
 }

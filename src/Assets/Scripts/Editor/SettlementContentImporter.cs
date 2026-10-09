@@ -37,7 +37,8 @@ namespace TianZhang.Editor
 
         private static readonly string[] ContentItemColumns =
         {
-            "itemId", "displayNameKey", "descriptionKey", "contentScope", "itemCategory", "maxStack"
+            "itemId", "displayNameKey", "descriptionKey", "contentScope", "itemCategory", "maxStack",
+            "equipmentSlotId", "equipmentRealmRequirementId", "equipmentBasicAttackProfileId"
         };
 
         private static readonly string[] ContentBountyColumns =
@@ -178,7 +179,8 @@ namespace TianZhang.Editor
             {
                 AppearanceProfileData[] appearanceProfiles = LoadAppearanceProfiles();
                 ValidateContentAssetLocations(preview);
-                CommitContentCatalog(preview, appearanceProfiles);
+                var equipmentProfiles = LoadEquipmentProfiles(preview);
+                CommitContentCatalog(preview, appearanceProfiles, equipmentProfiles);
                 Debug.Log("[SettlementContentImporter] 正式内容目录导入完成");
             }
             finally
@@ -399,18 +401,25 @@ namespace TianZhang.Editor
                 item.contentScope = Required(table, row, "contentScope");
                 item.itemCategory = Required(table, row, "itemCategory");
                 item.maxStack = ParsePositiveInteger(Required(table, row, "maxStack"), sourceName, "maxStack");
+                item.equipmentSlotId = Value(table, row, "equipmentSlotId");
+                item.equipmentRealmRequirementId = Value(table, row, "equipmentRealmRequirementId");
+                item.equipmentBasicAttackProfileId = Value(table, row, "equipmentBasicAttackProfileId");
                 ValidateApprovedItem(item, sourceName);
                 items.Add(item);
             }
 
-            if (items.Count != 2 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece" }))
-                throw new InvalidDataException($"{sourceName} must contain only the two approved formal item rows.");
+            if (items.Count != 4 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade" }))
+                throw new InvalidDataException($"{sourceName} must contain only the four approved formal item rows.");
 
             return items.OrderBy(item => item.itemId, StringComparer.Ordinal).ToArray();
         }
 
         private static void ValidateApprovedItem(ItemData item, string sourceName)
         {
+            if (item.IsApprovedEquipment && item.displayNameKey == item.itemId && item.descriptionKey == item.itemId + "_description") return;
+            if (!string.IsNullOrEmpty(item.equipmentSlotId) || !string.IsNullOrEmpty(item.equipmentRealmRequirementId) ||
+                !string.IsNullOrEmpty(item.equipmentBasicAttackProfileId))
+                throw new InvalidDataException($"{sourceName} has invalid equipment fields.");
             if (item.contentScope != ContentScopeProduction || item.maxStack != 99)
                 throw new InvalidDataException($"{sourceName} item '{item.itemId}' has an unapproved production scope or maxStack.");
 
@@ -898,9 +907,34 @@ namespace TianZhang.Editor
             }
         }
 
+        private static TianZhang.Combat.AttackProfileData[] LoadEquipmentProfiles(ContentCatalogImportPreview preview)
+        {
+            var language = ParseContentLanguage(ReadRequiredContentFile("Assets/DataConfig/Language.csv"), "Language.csv");
+            if (!CombatContentImporter.TryBuildAttackProfileProjection(ReadRequiredContentFile("Assets/DataConfig/AttackProfiles.csv"),
+                language.Keys.ToArray(), out var projected, out string reason)) throw new InvalidDataException(reason);
+            try
+            {
+                var result = new List<TianZhang.Combat.AttackProfileData>();
+                foreach (ItemData item in preview.items.Where(value => value.IsApprovedEquipment))
+                {
+                    var row = projected.SingleOrDefault(value => value.attackProfileId == item.equipmentBasicAttackProfileId);
+                    var asset = AssetDatabase.LoadAssetAtPath<TianZhang.Combat.AttackProfileData>(
+                        $"Assets/Data/AttackProfiles/AttackProfile_{item.equipmentBasicAttackProfileId}.asset");
+                    if (row == null || asset == null || !asset.TryValidate(out _) ||
+                        row.profileKind != TianZhang.Combat.AttackProfileKind.Basic ||
+                        row.basicBindingKind != TianZhang.Combat.BasicAttackBindingKind.MainEquipment ||
+                        JsonUtility.ToJson(row) != JsonUtility.ToJson(asset))
+                        throw new InvalidDataException("equipment_definition_invalid");
+                    result.Add(asset);
+                }
+                return result.ToArray();
+            }
+            finally { foreach (var profile in projected) UnityEngine.Object.DestroyImmediate(profile); }
+        }
+
         private static void CommitContentCatalog(
             ContentCatalogImportPreview preview,
-            AppearanceProfileData[] appearanceProfiles)
+            AppearanceProfileData[] appearanceProfiles, TianZhang.Combat.AttackProfileData[] equipmentProfiles)
         {
             const string characterPath = "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset";
             var existingCharacterGuid = AssetDatabase.AssetPathToGUID(characterPath);
@@ -939,6 +973,7 @@ namespace TianZhang.Editor
                 var catalog = UpsertCatalogAsset("Assets/Data/ContentCatalog/ContentCatalog.asset");
                 catalog.ReplaceEntries(settlements, enemies, items, bounties);
                 catalog.SetAppearanceProfiles(appearanceProfiles);
+                catalog.SetEquipmentAttackProfiles(equipmentProfiles);
                 // 内容目录只保存唯一静态目录的单一引用；缺失或非法时导入失败关闭。
                 catalog.SetCharterRuleStaticCatalog(LoadCharterRuleStaticCatalog());
                 EditorUtility.SetDirty(catalog);
@@ -1092,6 +1127,9 @@ namespace TianZhang.Editor
             target.contentScope = source.contentScope;
             target.itemCategory = source.itemCategory;
             target.maxStack = source.maxStack;
+            target.equipmentSlotId = source.equipmentSlotId;
+            target.equipmentRealmRequirementId = source.equipmentRealmRequirementId;
+            target.equipmentBasicAttackProfileId = source.equipmentBasicAttackProfileId;
         }
 
         private static void CopyBounty(BountyData source, BountyData target)

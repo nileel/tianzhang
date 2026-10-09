@@ -49,9 +49,9 @@ namespace TianZhang.Tests
                 Assert.AreEqual(50, enemy.dropEntries.Single(entry => entry.itemId == "item_lingshi_low").dropChancePercent);
 
                 CollectionAssert.AreEquivalent(
-                    new[] { "item_lingshi_low", "item_shijia_piece" },
+                    new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade" },
                     preview.items.Select(item => item.itemId));
-                Assert.IsTrue(preview.items.All(item => item.maxStack == 99));
+                Assert.IsTrue(preview.items.All(item => item.maxStack == (item.IsApprovedEquipment ? 1 : 99)));
 
                 Assert.AreEqual(1, preview.bounties.Length);
                 var bounty = preview.bounties[0];
@@ -98,7 +98,7 @@ namespace TianZhang.Tests
 
             var duplicateItems = items.Concat(new[]
             {
-                "item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99"
+                "item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_production,basic_resource,99,,,"
             }).ToArray();
             Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ParseContentCatalog(
                 language, settlements, duplicateItems, bounties, enemies));

@@ -33,7 +33,7 @@ namespace TianZhang.Features.Adventure
         public float NextPercent() => (float)(random.NextDouble() * 100d);
     }
 
-    public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler, ICombatActionPreviewHandler
+    public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler, ICombatActionPreviewHandler, ICombatExternalResourceQuery
     {
         private readonly CombatCommandService commandService = new CombatCommandService();
         private readonly CombatResultBuilder resultBuilder = new CombatResultBuilder();
@@ -53,6 +53,50 @@ namespace TianZhang.Features.Adventure
         private string playerDisplayName;
         private long commandContextVersion;
         private CombatCommandPreview swapPreview;
+
+        private CharacterRuntimeProfile equipmentOwner;
+        private ContentCatalogData equipmentCatalog;
+        private Func<string, string, string, bool> ownsEquipment;
+        private Func<long> inventoryVersion;
+
+        public void ConfigureEquipment(CharacterRuntimeProfile owner, ContentCatalogData catalog,
+            Func<string, string, string, bool> owns, Func<long> version)
+        {
+            equipmentOwner = owner ?? throw new ArgumentNullException(nameof(owner));
+            equipmentCatalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+            ownsEquipment = owns ?? throw new ArgumentNullException(nameof(owns));
+            inventoryVersion = version ?? throw new ArgumentNullException(nameof(version));
+        }
+
+        public CombatEquipmentResource QueryEquipment(CombatCommand command)
+        {
+            string reason = "equipment_definition_invalid";
+            if (equipmentOwner == null || command.ActorId != equipmentOwner.Identity.CharacterId)
+                return new CombatEquipmentResource(0, null, null, reason);
+            if (string.IsNullOrEmpty(equipmentOwner.MainEquipmentItemId) ||
+                !equipmentOwner.ValidateEquipmentState(equipmentCatalog, ownsEquipment(command.ActorId,
+                    equipmentOwner.MainEquipmentItemId, equipmentOwner.MainEquipmentInstanceId)))
+                return new CombatEquipmentResource(inventoryVersion(), equipmentOwner.MainEquipmentInstanceId, null, "equipment_definition_invalid");
+            equipmentOwner.TryPrepareEquipmentChange(equipmentCatalog, command.EquipmentSlotId, command.ItemId,
+                command.InstanceId, ownsEquipment(command.ActorId, command.ItemId, command.InstanceId), out _, out reason);
+            equipmentCatalog.TryGetEquipment(command.ItemId, out ItemData item);
+            return new CombatEquipmentResource(inventoryVersion(), equipmentOwner.MainEquipmentInstanceId,
+                item?.equipmentBasicAttackProfileId, reason);
+        }
+
+        public IReadOnlyList<CombatCommand> GetEquipmentCandidates(string actorId)
+        {
+            var candidates = new List<CombatCommand>();
+            if (equipmentOwner == null || actorId != equipmentOwner.Identity.CharacterId) return candidates;
+            foreach (string id in new[] { "item_iron_sword", "item_iron_blade" })
+            {
+                if (id == equipmentOwner.MainEquipmentItemId || !equipmentCatalog.TryGetEquipment(id, out ItemData item)) continue;
+                candidates.Add(new CombatCommand(CombatCommandKind.SwapEquipment, actorId,
+                    profileId: item.equipmentBasicAttackProfileId, contextVersion: commandContextVersion,
+                    equipmentSlotId: "main_hand", itemId: id, instanceId: actorId + ":initial:" + id));
+            }
+            return candidates;
+        }
 
         public void ConfigureText(Func<string, string> resolve, Func<string, string> reasonDisplay,
             Func<string, string> profileDisplay = null)
@@ -118,6 +162,7 @@ namespace TianZhang.Features.Adventure
                 spawned = null;
                 return false;
             }
+            session.ExternalResources = this;
             try
             {
                 unitPresentation.Prepare(descriptors);
@@ -145,7 +190,7 @@ namespace TianZhang.Features.Adventure
             CombatCommand command = ToCommand(candidate);
             string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
             CombatCommandPreview preview = string.IsNullOrEmpty(reason) ? commandService.Preview(session, command) : null;
-            swapPreview = candidate.Kind == CombatActionKind.SwapSpell ? preview : null;
+            swapPreview = candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment ? preview : null;
             return ProjectQuote(candidate, command, preview, reason);
         }
 
@@ -161,6 +206,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.EndTurn => "结束行动",
                 CombatActionKind.Move => "移动",
                 CombatActionKind.SwapSpell => "换入" + displayProfile(command.ProfileId),
+                CombatActionKind.SwapEquipment => "装备" + resolveText(command.ItemId),
                 _ => displayProfile(command.ProfileId),
             };
             string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
@@ -170,7 +216,7 @@ namespace TianZhang.Features.Adventure
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
                 candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
-                candidate.SlotIndex);
+                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId);
             CombatantSnapshot actor = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
             int remainingCooldown = actor?.GetCooldown(command.ProfileId) ?? 0;
@@ -206,7 +252,7 @@ namespace TianZhang.Features.Adventure
                     return;
                 }
             }
-            if (candidate.Kind == CombatActionKind.SwapSpell)
+            if (candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment)
             {
                 CombatCommandPreview quote = swapPreview;
                 swapPreview = null;
@@ -237,21 +283,24 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.EndTurn => CombatCommandKind.EndTurn,
                 CombatActionKind.Move => CombatCommandKind.Move,
                 CombatActionKind.SwapSpell => CombatCommandKind.SwapSpell,
+                CombatActionKind.SwapEquipment => CombatCommandKind.SwapEquipment,
                 _ => throw new ArgumentOutOfRangeException(nameof(candidate)),
             };
-            string profile = candidate.Kind == CombatActionKind.BasicAttack ? spawned?.PlayerBasicProfileId : candidate.ProfileId;
+            string profile = candidate.Kind == CombatActionKind.BasicAttack ? CurrentBasicProfile(candidate.ActorId) : candidate.ProfileId;
             var destination = candidate.Destination.HasValue
                 ? new TianZhang.Spatial.HexCoord(candidate.Destination.Value.Q, candidate.Destination.Value.R)
                 : (TianZhang.Spatial.HexCoord?)null;
             return new CombatCommand(kind, candidate.ActorId, candidate.TargetId, profile,
-                destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion);
+                destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion,
+                equipmentSlotId: candidate.EquipmentSlotId, itemId: candidate.ItemId, instanceId: candidate.InstanceId);
         }
+
+        private string CurrentBasicProfile(string actorId) => session != null && session.Combatants.TryGet(actorId, out var actor)
+            ? actor.BasicAttackProfileId : null;
 
         public void RequestBasicAttack(string actorId, string targetId)
         {
-            string profileId = string.Equals(actorId, "player", StringComparison.Ordinal)
-                ? spawned?.PlayerBasicProfileId
-                : spawned?.EnemyBasicProfileId;
+            string profileId = CurrentBasicProfile(actorId);
             ExecutePlayer(new CombatCommand(CombatCommandKind.BasicAttack, actorId, targetId, profileId));
         }
 
@@ -367,8 +416,21 @@ namespace TianZhang.Features.Adventure
                     command.SlotIndex,
                     command.ContextVersion);
             }
-            CombatActionResult result = quote == null ? commandService.Execute(session, command) :
-                commandService.Execute(session, command, quote);
+            CombatActionResult result;
+            if (command.Kind == CombatCommandKind.SwapEquipment)
+            {
+                if (!equipmentOwner.TryPrepareEquipmentChange(equipmentCatalog, command.EquipmentSlotId, command.ItemId,
+                    command.InstanceId, ownsEquipment(command.ActorId, command.ItemId, command.InstanceId),
+                    out Action commitEquipment, out string reason)) return CombatActionResult.Rejected(reason);
+                result = commandService.Prepare(session, command, quote ?? commandService.Preview(session, command), out Action commitCombat);
+                if (result.Succeeded)
+                {
+                    // Both candidates are complete. These synchronous assignments have no remaining business rejection.
+                    commitCombat();
+                    commitEquipment();
+                }
+            }
+            else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
             if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
                 ProjectPresentation(command, result, actorBefore, actorStart, targetBefore);
             return result;
@@ -459,6 +521,12 @@ namespace TianZhang.Features.Adventure
             Add(CombatActionKind.Guard);
             Add(CombatActionKind.Wait);
             Add(CombatActionKind.EndTurn);
+            foreach (CombatCommand equipment in GetEquipmentCandidates(player.Id))
+            {
+                var candidate = new CombatActionCandidate(CombatActionKind.SwapEquipment, player.Id, null, equipment.ProfileId,
+                    commandContextVersion, equipmentSlotId: equipment.EquipmentSlotId, itemId: equipment.ItemId, instanceId: equipment.InstanceId);
+                actions.Add(ProjectQuote(candidate, equipment, commandService.Preview(session, equipment)));
+            }
             foreach (string profileId in spawned.PlayerDivineProfileIds) Add(CombatActionKind.Divine, enemy?.Id, profileId);
             for (int slot = 0; slot < player.EquippedArtProfileIds.Count; slot++)
                 foreach (string profileId in player.AvailableArtProfileIds)
@@ -629,6 +697,7 @@ namespace TianZhang.Features.Adventure
                 CombatCommandKind.EndTurn => "combat_command_end_turn",
                 CombatCommandKind.Move => "combat_command_move",
                 CombatCommandKind.SwapSpell => "combat_command_swap_spell",
+                CombatCommandKind.SwapEquipment => "combat_command_swap_equipment",
                 _ => throw new ArgumentOutOfRangeException(nameof(command.Kind)),
             });
             if (command.Kind == CombatCommandKind.Art) commandName = displayProfile(command.ProfileId);

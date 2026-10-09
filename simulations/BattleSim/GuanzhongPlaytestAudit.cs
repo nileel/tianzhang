@@ -93,6 +93,7 @@ internal static class GuanzhongPlaytestAudit
         }
         JsonElement player = evidence.GetProperty("player");
         Require(I(player, "maximumHealth") == 571 && I(player, "maximumSpirit") == 180 && I(player, "physicalAttack") == 60 && I(player, "physicalDefense") == 42, "Player delivery changed.");
+        GameData.LoadProductionAttacks(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
         var profiles = ReadRows(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv")).Select(row =>
         {
             string id = row["attackProfileId"], realm = row["realmRequirementId"], element = row["elementRequirementId"];
@@ -109,7 +110,7 @@ internal static class GuanzhongPlaytestAudit
                 (int)Number("otherTargetResourceCost"), Number("otherTargetRecoveryMultiplier", 1),
                 basic ? null : (stage, rootElement, grade) => AbilityRequirementPolicy.IsSatisfied(stage, rootElement, grade, realm, element));
         }).ToArray();
-        Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { "basic_unarmed", Attack, Recovery }.Order()), "Unexpected production profiles.");
+        Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { "basic_unarmed", Attack, Recovery, "basic_iron_sword", "basic_iron_blade" }.Order()), "Unexpected production profiles.");
         return new Inputs(evidence, profiles, root, I(character, "rootBone"), Hash(text));
     }
 

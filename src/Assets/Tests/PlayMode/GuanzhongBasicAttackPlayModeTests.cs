@@ -237,17 +237,19 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, firstPath);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase,
-                "The 50000 movement plus 50000 attack exhausts the shared budget.");
-            Assert.AreEqual(0, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase,
+                "The 50000 movement plus the equipped sword's 40000 attack leaves 10000 AP.");
+            Assert.AreEqual(10000, player.ActionPointsRemainingUnits);
             Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject playerRoot));
             Vector3 startedAttackScale = playerRoot.transform.localScale;
             Assert.AreNotEqual(Vector3.one, startedAttackScale, "The actual provider must have started its attack presentation.");
             int eventsBeforeEnd = recording.Events.Count;
             encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase, "EndTurn during presentation cannot settle again.");
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase, "EndTurn during presentation must not consume the remaining 10000 AP.");
             Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale);
-            yield return WaitForPlayerTurn(encounter, session, player.Id);
+            yield return WaitForMovementPresentation(encounter);
+            encounter.RequestEndTurn(player.Id);
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             Assert.IsFalse(recording.Events.Skip(eventsBeforeEnd).Any(value =>
                 value.PresentationEvent == CombatUnitPresentationEvent.Idle), "Turn exhaustion must not add an Idle event.");
             Assert.AreEqual(Vector3.one, playerRoot.transform.localScale, "The attack must finish before EndTurn is accepted.");
@@ -265,7 +267,8 @@ namespace TianZhang.Tests.PlayMode
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, secondDestination.Q, secondDestination.R);
             Assert.That(player.Position, Is.EqualTo(secondDestination));
             Assert.AreEqual(movementBefore - secondPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+            Assert.AreEqual(10000, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, secondPath);
             TestContext.WriteLine($"Formal movement: firstCost={firstPath.ActionPointCostUnits}, secondCost={secondPath.ActionPointCostUnits}, " +
@@ -445,7 +448,9 @@ namespace TianZhang.Tests.PlayMode
             SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(
                 player, enemy, enemyData, "foreign_basic", "basic_unarmed", Array.Empty<string>()));
 
-            ((ICombatCommandHandler)coordinator).RequestBasicAttack("player", "enemy");
+            var rejected = (CombatActionResult)typeof(EncounterCoordinator).GetMethod("ExecuteCommand", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(coordinator, new object[] { new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", "foreign_basic"), null });
+            Assert.IsFalse(rejected.Succeeded);
             Assert.AreEqual(0, source.Count, "An unauthorized attack consumed combat samples.");
 
             Object.Destroy(host);

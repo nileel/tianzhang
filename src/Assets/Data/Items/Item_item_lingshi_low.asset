@@ -18,3 +18,6 @@ MonoBehaviour:
   contentScope: content_scope_production
   itemCategory: basic_resource
   maxStack: 99
+  equipmentSlotId:
+  equipmentRealmRequirementId:
+  equipmentBasicAttackProfileId:

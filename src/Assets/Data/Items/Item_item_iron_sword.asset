@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a001282d41cc4f489a3dd734de44fa3, type: 3}
+  m_Name: Item_item_iron_sword
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Content.ItemData
+  itemId: item_iron_sword
+  displayNameKey: item_iron_sword
+  descriptionKey: item_iron_sword_description
+  contentScope: content_scope_production
+  itemCategory: weapon
+  maxStack: 1
+  equipmentSlotId: main_hand
+  equipmentRealmRequirementId: realm_lianqi
+  equipmentBasicAttackProfileId: basic_iron_sword

@@ -12,6 +12,7 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "equipment-production") return RunChecked(suite, RunEquipmentProduction);
         if (suite == "action-economy-n-combat-ap-sim-01")
             return RunChecked(suite, RunActionEconomyNCombatApSim01);
         if (suite == "realm-tq013a")
@@ -1654,6 +1655,73 @@ static class BattleSimSelfTests
 
         AssertEqual(GameData.UnarmedBasicAttack.Name, "徒手", "UnarmedBasicAttack display name source");
         AssertEqual(ReadLanguageCsv()[row["displayNameKey"]], GameData.UnarmedBasicAttack.Name, "display key resolves to 徒手");
+    }
+
+    static void RunEquipmentProduction()
+    {
+        string root = FindRepositoryRoot();
+        string temporary = Path.Combine(Path.GetTempPath(), "tzg-equipment-" + Guid.NewGuid().ToString("N"));
+        string data = Path.Combine(temporary, "src/Assets/DataConfig");
+        Directory.CreateDirectory(data);
+        string attacks = Path.Combine(data, "AttackProfiles.csv");
+        string input = Path.Combine(temporary, "ordinary-input.json");
+        File.Copy(Path.Combine(root, "开发管理/关中首战普通角色输入.json"), input);
+        File.Copy(Path.Combine(root, "src/Assets/DataConfig/Enemies.csv"), Path.Combine(data, "Enemies.csv"));
+        string[] baseline = File.ReadAllLines(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
+        MethodInfo audit = typeof(GuanzhongPlaytestAudit).GetMethod("LoadProductionInputs", BindingFlags.Static | BindingFlags.NonPublic);
+        TianZhang.Combat.CombatAttackProfile[] LoadAudit()
+        {
+            object result = audit.Invoke(null, new object[] { input, null });
+            return (TianZhang.Combat.CombatAttackProfile[])result.GetType().GetProperty("Profiles").GetValue(result);
+        }
+        try
+        {
+            File.WriteAllLines(attacks, baseline);
+            var loaded = GameData.LoadProductionAttacks(attacks);
+            var projected = LoadAudit();
+            AssertEqual(5, loaded.Count, "real production loader five rows");
+            AssertEqual(5, projected.Length, "real audit loader five rows");
+            foreach (string id in new[] { "basic_iron_sword", "basic_iron_blade" })
+            {
+                var row = ReadCsvRows("src/Assets/DataConfig/AttackProfiles.csv").Single(value => value["attackProfileId"] == id);
+                var actual = loaded[id]; var combat = projected.Single(value => value.Id == id);
+                AssertEqual(row["basicBindingKind"], actual.BasicBindingKind, id + " binding");
+                AssertEqual(int.Parse(row["actionPointCostUnits"]), actual.Cost.ActionPointCostUnits, id + " cost");
+                AssertEqual(int.Parse(row["minimumNetCostUnits"]), actual.Cost.MinimumNetCostUnits, id + " floor");
+                AssertEqual(double.Parse(row["physicalDamageMultiplier"], System.Globalization.CultureInfo.InvariantCulture), actual.Mult, id + " multiplier");
+                AssertEqual(actual.Cost.ActionPointCostUnits, combat.ActionPointCostUnits, id + " audit cost");
+                AssertEqual((float)actual.Mult, combat.PhysicalMultiplier, id + " audit multiplier");
+            }
+            AssertEqual(50000, loaded["basic_unarmed"].Cost.ActionPointCostUnits, "legacy unarmed unchanged");
+            AssertEqual(12, loaded["spell_guanshiji"].SpiritCost, "legacy attack unchanged");
+            AssertEqual(0.5m, loaded["spell_julingshu"].SpiritRecoveryMultiplier, "legacy recovery unchanged");
+            string header = baseline.First(value => value.StartsWith("attackProfileId,"));
+            string blade = baseline.Single(value => value.StartsWith("basic_iron_blade,"));
+            var variants = new List<string[]>
+            {
+                baseline.Where(value => !value.StartsWith("basic_iron_blade,")).ToArray(),
+                baseline.Concat(new[] { blade }).ToArray(),
+                baseline.Concat(new[] { blade.Replace("basic_iron_blade", "unknown_attack") }).ToArray(),
+            };
+            foreach (var change in new[] { ("actionPointCostUnits", "0"), ("actionPointCostUnits", "-1"),
+                ("actionPointCostUnits", "1.5"), ("minimumNetCostUnits", "999999"), ("reuseCooldownTicks", "-1"),
+                ("basicBindingKind", "unarmed_fallback"), ("physicalDamageMultiplier", "NaN") })
+            {
+                var columns = blade.Split(','); columns[Array.IndexOf(header.Split(','), change.Item1)] = change.Item2;
+                variants.Add(baseline.Select(value => value == blade ? string.Join(",", columns) : value).ToArray());
+            }
+            foreach (string[] variant in variants)
+            {
+                File.WriteAllLines(attacks, variant);
+                bool mainRejected = false, auditRejected = false;
+                try { GameData.LoadProductionAttacks(attacks); } catch (Exception) { mainRejected = true; }
+                try { LoadAudit(); } catch (TargetInvocationException) { auditRejected = true; }
+                AssertEqual(true, mainRejected, "real loader rejects invalid input");
+                AssertEqual(true, auditRejected, "audit entry rejects invalid input");
+            }
+            Console.WriteLine("equipment-production: both real loaders accepted five production rows and rejected " + variants.Count + " malformed inputs each.");
+        }
+        finally { Directory.Delete(temporary, true); }
     }
 
     static IReadOnlyList<Dictionary<string, string>> ReadCsvRows(string relativePath)

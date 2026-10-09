@@ -7,6 +7,7 @@ namespace TianZhang.Infrastructure.Persistence
 {
     public static class GameSaveSerializer
     {
+        public const string EquipmentSaveInvalid = "equipment_save_invalid";
         public const int SchemaVersion = 4;
         public const int LegacySchemaVersion = 1;
         public const int LegacyFoundationPurpleMansionSchemaVersion = 2;

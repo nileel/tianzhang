@@ -5,3 +5,5 @@ attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceA
 basic_unarmed,attack_profile_basic_unarmed,basic,unarmed_fallback,,,,,physical,element_none,1.0,,,,,none,0,50000,25000,0,0,1,1,single,,,,,,,,,,,,,,,,,
 spell_guanshiji,spell_guanshiji,art,,player,faction_sanxiu,realm_lianqi,element_none,physical,element_none,1.2,,,,,mp,12,50000,25000,10,10,1,1,single,,,,,,,,,,,,,,,,,
 spell_julingshu,spell_julingshu,art,,player,faction_sanxiu,realm_lianqi,element_none,restore_spirit,,,,,,,mp,0,25000,12500,5,5,0,2,single,,,,,,,,,,,,,,0.5,5,20,0.5
+basic_iron_sword,attack_profile_basic_iron_sword,basic,main_equipment,,,,,physical,element_none,1.0,,,,,none,0,40000,40000,0,0,1,1,single,,,,,,,,,,,,,,,,,
+basic_iron_blade,attack_profile_basic_iron_blade,basic,main_equipment,,,,,physical,element_none,1.25,,,,,none,0,50000,50000,0,0,1,1,single,,,,,,,,,,,,,,,,,

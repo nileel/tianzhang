@@ -473,8 +473,8 @@ namespace TianZhang.Tests
                 reason);
             try
             {
-                Assert.AreEqual(3, projected.Length);
-                CollectionAssert.AreEquivalent(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" },
+                Assert.AreEqual(5, projected.Length);
+                CollectionAssert.AreEquivalent(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" },
                     projected.Select(item => item.attackProfileId).ToArray());
                 var byId = projected.ToDictionary(item => item.attackProfileId);
                 var strike = byId["spell_guanshiji"];
@@ -699,7 +699,7 @@ namespace TianZhang.Tests
             }
             Assert.IsTrue(
                 CombatContentImporter.TryValidateAttackProfileAssetIdProjection(
-                    new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu" }, out var idReason),
+                    new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }, out var idReason),
                 idReason);
 
             // 石甲兽模板 asset 显式引用同一档案：导入绑定校验必须通过（ImportAttackProfiles 已成功）。
