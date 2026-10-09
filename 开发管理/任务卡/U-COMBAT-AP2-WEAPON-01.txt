@@ -15,6 +15,9 @@
   ],
   "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
   "expectedPaths": [
+    "tools/check-data-chain.ps1",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -110,6 +113,12 @@
 
 - 合同第七节逐实体冻结无空手政策：当前正式玩家和石甲兽都无真实武器，石甲兽无术法，取消徒手后保留既有移动/防御/待机/结束回合，不伪造攻击。沿EQUIP真实主手/库存/练气资格保留合法装备，凡人不提前获得练气武器；无装备旧档不补发。删除basic_unarmed行及asset/meta、清旧模板/场景运行引用，旧保存槽读归空写空，本卡不再增加保存版本；EQUIP未完成时保持原blocked。两武器档位/费用按合同三节，既有GUID不变；如需要石甲兽攻击内容或凡人新武器，命中停止条件。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
+
+## 2026-10-09 同类验证路径核查
+
+- 现check-data-chain强制三攻击集合／徒手asset及石甲兽徒手绑定；AttackProfileDataTests的生产集合、非法行变异和真实导入测试直接读取basic_unarmed；FeatureCompositionEditorTests的正式场景注入测试以该ID构造双方。与本卡删除徒手生产行／asset和无武器可入战合同冲突，补齐三文件授权。
+- 仅按已完成前置及本卡无空手合同适配合法攻击集合、敌人／场景绑定与对应反例；保留严格导入、GUID、费用／冷却、非法绑定及会话拒绝验证，新增无武器可入战但不可普攻的对应断言，不删除失败测试、不伪造武器或放宽未知ID。普通行为定义沿届时正式结果保留。
+- 本轮保持blocked与两项具名前置，不提前迁移数据；临近ready按前置实际输出核对场景引用、生产测试和风险门禁。
 
 ## 禁止项
 

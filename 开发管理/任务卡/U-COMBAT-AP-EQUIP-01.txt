@@ -8,10 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-09已补齐换装数据链检查的精确授权与适配边界，重新核验直接验证依赖和风险预检后恢复ready；业务实现仍待执行。",
   "expectedPaths": [
+    "tools/check-data-chain.ps1",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
     "src/Assets/Scripts/Modules/World/InventoryStore.cs",
@@ -129,6 +130,13 @@
 - 补齐src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs的授权；仅按本卡新增换装定义适配动作集合及逐种费用／冷却断言，保留Guard／SwapSpell既有断言、场景幂等／GUID、会话注入和非法配置拒绝验证，不放宽断言。
 - 本轮仅修复任务准备，保持原子结果、所有者和gpt-6.1-sol单模型方案；装备业务与Unity验收由后续执行轮次完成。
 - 扩充路径后风险预检status=ok，matched／mustRead／gates／gatePointers均为空，schema 2投影保持三个空数组；同步backlog并恢复ready队列位置。
+
+## 2026-10-09 数据链验证路径补齐
+
+- 21:15自动执行在业务写入前返回expected_paths_incomplete，runId=f87a9d21-c0de-4b18-911d-09ac58c58a79；无业务差异或candidate，原run已关闭并清理。
+- 根因：tools/check-data-chain.ps1的Test-FormalContentCatalog仍只接受两物品，Items schema仍只有六列；Test-FormalAttackProfileProjection仍要求原三攻击及对应asset／语言／枚举投影。内存加入两武器行已复现ATTACK_PROFILE_ROW_SET_INVALID，原基线检查通过。
+- 授权该脚本仅按换装合同扩充两武器、三个装备字段、语言／asset字段／场景引用与获准攻击集合；完整校验装备身份及引用、非装备行字段为空，保留未知ID／未知列／坏字段／缺引用拒绝和材料掉落检查。保留届时已正式发布的道具及AP2字段，不改其他规则，不删除检查或增加waiver。
+- 同步核对本卡既有ContentCatalogDataTests、AttackProfileDataTests、FeatureCompositionEditorTests与正式普攻测试授权；本轮只修任务准备，不提前改生产数据或验证脚本，不将恢复ready称为功能完成。扩充后重新运行风险预检并核对schema 2投影，执行轮仍消费实时预检。
 
 ## 验证
 

@@ -14,6 +14,7 @@
   ],
   "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
   "expectedPaths": [
+    "tools/check-data-chain.ps1",
     "src/Assets/DataConfig/RealmCombatGrowth.csv",
     "src/Assets/DataConfig/RealmCombatGrowth.csv.meta",
     "src/Assets/DataConfig/CombatActionEconomyRules.csv",
@@ -85,6 +86,11 @@
 
 - 合同已冻结三表schema1、AP-GROWTH@0.1、51个显式泛化测试三元组与真实AttackProfiles唯一源。按开发管理/境界行动力成长配置合同.txt第二/三节实现严格解析、载荷字段、唯一CombatRuleSet资产和现有ContentCatalog绑定；旧徒手仅历史行，后由WEAPON删除。新增引用由AdventureSceneInstaller/CombatEntryAdapter/CombatSession显式传递，缺配置拒绝，无双版本开关；不实现报价/成长/状态算法。当前正式两术法资产随导入更新；两武器由EQUIP实际结果提供后再由WEAPON对齐。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
+
+## 2026-10-09 同类验证路径核查
+
+- 配置合同2.4及第六节要求新增AttackProfiles规则／承载／状态列、可空冷却覆写及派生字段；现check-data-chain的41列精确表头、必填reuseCooldownTicks和旧固定输出会拒绝这一合法迁移。补齐tools/check-data-chain.ps1，仅允许按本卡冻结schema和唯一参数源适配字段、派生投影、版本／摘要及三表到asset引用检查。
+- 保持严格未知字段／非法值／缺引用拒绝，不将数值定案写成检查器中的第二参数源，不用跳过检查或waiver通过。同步保留届时EQUIP／ITEM已发布行，不能要求其尚未实现的内容提前存在。本轮保持blocked及原blockedBy；临近ready仍核对真实前置、直接消费者和风险门禁。
 
 ## 禁止项
 

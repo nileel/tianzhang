@@ -12,6 +12,9 @@
   "blockedBy": [],
   "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01完成归档且无同ID活跃卡；正式道具合同的真实所有者与字面量路径已冻结，风险预检零命中且无门禁，现已ready。",
   "expectedPaths": [
+    "tools/check-data-chain.ps1",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
     "src/Assets/Scripts/Modules/World/InventoryStore.cs",
     "src/Assets/Scripts/Modules/Content/ItemData.cs",
     "src/Assets/DataConfig/Items.csv",
@@ -100,6 +103,12 @@
 - 已核对D-COMBAT-AP-ITEM-01完成归档且无同ID活跃卡，移除唯一具名前置。
 - 按道具合同逐项冻结item_huoxue_dan的Items／Language、SettlementContentImporter、目录资产、创角发放、InventoryStore、Combat→Adventure桥接、AdventureScene序列化、展示合同和测试路径；移除错误的AdventureContentImporter。合同已明确生产ID、资格、原子提交和停止边界，无剩余外部决定，待风险预检合法后可进入ready。
 - 本轮风险预检status=ok，explicitRefs、matched和gates均为空，门禁指针无缺失；已按固定排序入队，执行前仍须按当前输入重跑预检。
+
+## 2026-10-09 同类验证路径核查
+
+- 随EQUIP阻塞排查核对正式道具合同与直接测试：check-data-chain的两物品集合／六列表头会拒绝活血丹及五个药物字段；ContentCatalogDataTests::FormalContentCsvBuildsExactlyTheApprovedFourDomainProjections仍断言只有两物品；FeatureCompositionEditorTests::FormalOrdinaryDefinitionsReloadIdempotentlyAndReachTheSession仍断言两普通动作均50000、非Guard冷却60，无法接受UseItem的30000／30000／0。三文件此前均未授权，本轮补齐。
+- check-data-chain仅适配获准item_huoxue_dan、五个药物字段及其语言／asset投影，验证资格／药效／初始量与非药物空字段；两测试仅适配正式物品集合和逐动作成本／冷却，并保留整表拒绝、GUID、材料掉落、Guard／SwapSpell、会话注入和非法配置验证。保留届时已发布的武器字段／行／动作，不覆盖其他任务结果，不放宽检查或添加waiver。
+- 本轮不执行道具业务；原有ready、主责、模型和直接依赖保持，路径扩大后重新运行风险预检并核对schema 2投影。
 
 ## 验证
 
