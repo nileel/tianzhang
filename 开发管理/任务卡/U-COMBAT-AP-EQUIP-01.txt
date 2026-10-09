@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-09已补齐FeatureCompositionEditorTests.cs正式动作配置测试路径，解除本轮expected_paths_incomplete；扩充后风险预检status=ok、零命中且无门禁，恢复ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -59,6 +59,7 @@
     "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
     "开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
@@ -120,6 +121,14 @@
 - 17:16自动执行在业务写入前返回expected_paths_incomplete；原因是准备ready时未把换装合同测试清单中的必要既有文件纳入expectedPaths。本轮补齐ContentCatalogDataTests.cs、AttackProfileDataTests.cs、GuanzhongBasicAttackPlayModeTests.cs，不改变原子结果、主责或执行模型。
 - 三项测试仅适配本卡新增武器引起的正式物品集合／堆叠上限、攻击档案集合及默认铁剑40 AP普攻后的余额／回合断言；保留原材料／掉落和其他行为验证，不放宽断言掩盖实现错误。
 - 扩充路径后重跑get-experience-risk-preflight：status=ok，matched／mustRead／gates均为空，schema 2投影保持三个空数组；恢复ready并同步backlog和固定队列。该记录只证明任务准备修复，装备实现与Unity验收仍由执行轮次完成。
+
+## 2026-10-09 正式动作配置测试路径补齐
+
+- 19:21自动执行在业务写入前再次返回expected_paths_incomplete，runId=cfbbd232-15d7-4cdb-a556-022748232364；无业务差异或candidate，运行已关闭并清理。
+- 已核对FeatureCompositionEditorTests.cs::FormalOrdinaryDefinitionsReloadIdempotentlyAndReachTheSession完整方法：现行断言ordinaryActions恰好两项、费用及净费下限全部50000，非Guard冷却为60；换装合同要求新增费用／净费下限25000、冷却0的SwapEquipment，需同步适配该测试。此前三项测试路径修复未覆盖正式动作配置的直接测试。
+- 补齐src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs的授权；仅按本卡新增换装定义适配动作集合及逐种费用／冷却断言，保留Guard／SwapSpell既有断言、场景幂等／GUID、会话注入和非法配置拒绝验证，不放宽断言。
+- 本轮仅修复任务准备，保持原子结果、所有者和gpt-6.1-sol单模型方案；装备业务与Unity验收由后续执行轮次完成。
+- 扩充路径后风险预检status=ok，matched／mustRead／gates／gatePointers均为空，schema 2投影保持三个空数组；同步backlog并恢复ready队列位置。
 
 ## 验证
 
