@@ -1,0 +1,85 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "N-COMBAT-AP2-BALANCE-01",
+  "title": "境界AP成长初版参数实跑与定案",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "battlesim",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "N-COMBAT-AP2-SIM-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "simulations/BattleSim/StageCombatReport.cs",
+    "simulations/BattleSim/Program.cs",
+    "src/Assets/DataConfig/RealmCombatGrowth.csv",
+    "src/Assets/DataConfig/RealmCombatGrowth.csv.meta",
+    "src/Assets/DataConfig/CombatActionEconomyRules.csv",
+    "src/Assets/DataConfig/CombatActionEconomyRules.csv.meta",
+    "src/Assets/DataConfig/CombatEffectTierRules.csv",
+    "src/Assets/DataConfig/CombatEffectTierRules.csv.meta",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "开发管理/境界行动力成长数值定案.txt",
+    "开发管理/N-COMBAT-AP2-BALANCE-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt",
+    "开发管理/任务归档/N-COMBAT-AP2-BALANCE-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# N-COMBAT-AP2-BALANCE-01 · 境界AP成长初版参数实跑与定案
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：在新语义实跑下确定可发布参数，绑定唯一输入摘要，并明确优势、失衡或待调整项。
+- 直接前置：N-COMBAT-AP2-SIM-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；本规格第9节算术标准；新规则模板/配置合同；SIM正式记录；旧N-COMBAT-AP-BALANCE-01仅供基线对照；当前生产表与映射。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 测试100/300/1000 AP及附近候选、状态系数/上限、CD档与费用/承载；对比同境同招/组合，高境低阶武器/术法、冷却空档、AP/MP长战、恢复循环、强控与被动频率。记录每本人回合动作/输出/净MP、控制有效率、战斗tick与胜率。参数只能改本卡列定生产表；算法错误回根因卡。
+- 不要求所有流派等强：纯伤同阶基准仍约2个完整预算动作；低阶廉价可多发但不能无条件在同阶输出/控制/续航全面优于同档；同一动作无无成本无限循环。优势在明确对局成立即可，偏离先归因。对AP、承载和冷却分别做局部敏感性，不把动作数当胜率。
+- 只写expectedPaths；验证证据写开发管理/N-COMBAT-AP2-BALANCE-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 数值结论高影响，gpt-6.1-sol/high；存在优势归因冲突时可gpt-6-astra/high只读审查特定矩阵输入与反例，不替代真实BattleSim。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- Release build --no-restore及默认run；新方案矩阵和相关行动经济自测，固定种子/21构筑必要覆盖并报告平局与极端；配置摘要/输出/最终值可复现。AP/v位移等量、14发算术另核对。控制时长看实际tick，不能将3tick当三个本人回合。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 新规则未真实接入、不受支持的高阶NPC缺证据、需要改算法或内容原型时不宣称定案；证据缺失保持blocked并定位来源。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

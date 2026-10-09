@@ -1,0 +1,90 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-WEAPON-01",
+  "title": "移除空手普攻与武器资格迁移",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-CONFIG-01",
+    "U-COMBAT-AP-EQUIP-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Content/CharacterData.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/DataConfig/Characters.csv",
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "开发管理/U-COMBAT-AP2-WEAPON-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-WEAPON-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-WEAPON-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-WEAPON-01 · 移除空手普攻与武器资格迁移
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：所有普攻由实际武器绑定，无装备可入战但不可普攻，现有角色与旧保存按冻结政策迁移。
+- 直接前置：U-COMBAT-AP2-CONFIG-01、U-COMBAT-AP-EQUIP-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；新配置合同无空手与旧档政策；已完成EQUIP结果/换装合同；ResolveBasicAttackBinding/CreatePlayer/CreateEnemy、CombatSession.GetAuthorizationFailure及保存绑定。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 移除 unarmed_fallback 的生产可用路径和无绑定拒绝入战行为；角色已合法装备保留，旧档没有武器不补发、不伪造绑定。按合同逐ID迁移实际玩家/敌人/生成asset及测试；不新增拳套或爪实例。把普攻动作不可用原因交既有动作投影，不复制费用规则。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-WEAPON-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 绑定与旧档迁移，gpt-6.1-sol/high单主责，临近ready按EQUIP实际结果冻结asset/meta精确路径。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 有武器可普攻，无武器可移动/施法但不能普攻，旧档及重开后相同；玩家与默认敌人绑定逐ID闭合；不出现隐式空手回退、双武器费用或装备重复发放。相关角色/保存/场景定向验证。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 合同缺NPC绑定或旧档政策、需要新增武器内容时停止；不撤回已完成EQUIP功能，不以额外发物兜底。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

@@ -10,11 +10,11 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "N-COMBAT-AP-BALANCE-01",
+    "N-COMBAT-AP2-BALANCE-01",
     "U-COMBAT-AP-ITEM-01",
     "U-COMBAT-AP-EQUIP-01"
   ],
-  "stateReason": "2026-10-09已确认D-COMBAT-AP-ITEM-01与D-COMBAT-AP-EQUIP-01完成归档且无同ID活跃卡；仍等待N-COMBAT-AP-BALANCE-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01正式完成，临近ready再核定输入／直接调用点并重跑风险预检。",
+  "stateReason": "旧N-COMBAT-AP-BALANCE-01已正式归档，但不覆盖新增规则；等待AP2-BALANCE新定案及ITEM/EQUIP完成，再按AP2配置合同冻结最终生产路径/摘要。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -62,9 +62,11 @@
 
 ## 来源与当前边界
 
+- 2026-10-09发布目标更新为AP-GROWTH@0.1；直接前置以卡头为准。新定案唯一入口为开发管理/境界行动力成长数值定案.txt，旧统一行动力数值定案仅保留旧版本基线。AP2-CONTRACT负责准备本卡精确新配置/资产路径，不能按原basic_unarmed生产输入发布；本卡只做最终导入、生产投影与摘要，不改算法。AP2-BALANCE直接使用同一源表，若本卡改了已定案输入必须回数值叶重验。
+
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：将有实跑证据的最终参数逐ID回填唯一生产者并导入，建立最终输入摘要。
-- 直接前置：N-COMBAT-AP-BALANCE-01、D-COMBAT-AP-ITEM-01、D-COMBAT-AP-EQUIP-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01；DATA与MOVE已正式归档。
+- 直接前置：N-COMBAT-AP2-BALANCE-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围

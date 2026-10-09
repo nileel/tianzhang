@@ -129,3 +129,37 @@
 
 - 负责人在当前对话明确将CORE、SIM、FLOW、HUD、ITEM、EQUIP、SWAP、TUNING八项全部转交Codex；对应活跃任务卡统一为codex／codex_execute，backlog同步。Codex在各卡冻结范围内实施、复核、验证并正式归档。
 - 八项仍为blocked；既有blockedBy、授权路径、业务验收与停止条件保持，满足原有前置和ready准备要求后再入队。临近ready按实际接口与风险评估主模型和必要辅助组合，本次不预分析或实施业务。
+
+
+## 2026-10-09 境界 AP 成长追加实施图
+
+负责人本次明确要求建实施任务，并授权先行计算标准。初版数值与依据见 docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；这里记录任务边界。以上各节保留历史规划，当前执行状态以活跃卡/完成归档为准。本次完整新增11叶，复用既有TUNING→SCENE→CLOSE→父项，不另建交付父项。
+
+| ID | 独立结果 | 直接前置 | 当前状态 |
+|---|---|---|---|
+| D-COMBAT-AP2-RULES-01 | 境界行动力新规则与现用内容标准迁移 | 无 | ready |
+| D-COMBAT-AP2-CONTRACT-01 | 境界行动力配表与运行时接入合同 | D-COMBAT-AP2-RULES-01 | blocked |
+| U-COMBAT-AP2-CONFIG-01 | 境界行动力参数表与共享配置投影 | D-COMBAT-AP2-CONTRACT-01 | blocked |
+| U-COMBAT-AP2-GROWTH-01 | 角色境界AP与移动效率成长接入 | U-COMBAT-AP2-CONFIG-01 | blocked |
+| U-COMBAT-AP2-REPEAT-01 | 零冷却能力连续使用AP报价与提交 | U-COMBAT-AP2-CONFIG-01 | blocked |
+| U-COMBAT-AP2-POTENCY-01 | 固定能力档费用参照与属性承载 | U-COMBAT-AP2-CONFIG-01 | blocked |
+| U-COMBAT-AP2-STATUS-01 | 百分比状态与概率强控境界修正接入 | U-COMBAT-AP2-POTENCY-01 | blocked |
+| U-COMBAT-AP2-WEAPON-01 | 移除空手普攻与武器资格迁移 | U-COMBAT-AP2-CONFIG-01、U-COMBAT-AP-EQUIP-01 | blocked |
+| N-COMBAT-AP2-SIM-01 | BattleSim双入口境界行动经济迁移 | U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01 | blocked |
+| N-COMBAT-AP2-BALANCE-01 | 境界AP成长初版参数实跑与定案 | N-COMBAT-AP2-SIM-01 | blocked |
+| U-COMBAT-AP2-PREVIEW-01 | 连续施法费用冷却与武器资格显示 | U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01 | blocked |
+
+
+DAG：RULES→CONTRACT→CONFIG；CONFIG→GROWTH/REPEAT/POTENCY/WEAPON，POTENCY→STATUS，WEAPON另等原EQUIP。GROWTH/REPEAT/STATUS/WEAPON→SIM与PREVIEW，SIM→BALANCE。BALANCE及原ITEM/EQUIP→原TUNING；TUNING/PREVIEW及原ITEM/EQUIP→原SCENE；SCENE/BALANCE→原CLOSE→原父项。通过STATUS传递POTENCY，通过CONFIG传递规范与合同，无悬空业务叶。
+
+- 首批新增ready仅D-COMBAT-AP2-RULES-01，P1且解锁全部新增叶，插入队列前列；已有EQUIP、ITEM相对次序及其最新状态保留。其他新叶blocked，不因建卡视作实现。
+- 每张卡为一个可独立验收结果，owner=codex；主模型gpt-6.1-sol，具体复杂度/辅助与实际工具核对写各卡。父项永不领取、自动worker不逐张拆分。
+- 旧装备合同保留“徒手回退”的已批准功能基线，但新WEAPON在EQUIP完成后执行明确迁移，避免改写正在排队的旧实现边界。未装备不隐式补发；具体旧保存/敌人ID由CONTRACT冻结。
+- 配置合同一次确定全部新类型、表头、生产ID、注入点和精确asset/meta路径，并准备所有已知blocked卡。当前已有成长数据类型无完整运行消费者，正式Buff/Debuff未接入状态producer，这两个缺口都由独立叶交付，不假定可直接改参数。
+- 当前16泛化、KuxingAction、水系表外状态与生产术法/武器属于本轮；未接入的其他实例遵循模板后续生产，不新增通用特效引擎。技能的固定档位不得随施法者升级偷偷改变。
+- 参数表只有一个可编辑生产源，Unity与BattleSim共享版本/摘要；冷却仍全局整数tick，不增加个人回合CD机制。NPC高阶AP仅留可配置占位，不据此开放玩家成长。
+- 本次只做设计补充、建卡和直接下游依赖维护。旧BattleSim实跑只证明旧规则；新参数的角色平衡由AP2-BALANCE完成。初值100/300/1000 AP、重复倍率1/1/1.25/1.5和冷却表不是完整平衡通过证据。
+
+追加后的关闭条件：原已完成叶证据仍有效、所有11新叶及剩余原功能/发布/场景叶正式完成；最终生产表与新实跑及场景证据同一摘要；创建/恢复/成长、无空手、状态、费用报价实付均闭合；负责人实际体验确认。CLOSE核验全部图后才将自身与父项归档。验证记录见 开发管理/境界行动力成长建卡记录.txt。
+
+- 规则迁移过渡：GameData当前直接解析两份数值模板；RULES保留既有版本/解析表为具名旧输入，新标准置独立段并验证旧投影不变。SIM切换唯一CSV时才启用新数值语义，不允许中途新费用配旧算法。

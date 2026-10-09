@@ -1,0 +1,83 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-STATUS-01",
+  "title": "百分比状态与概率强控境界修正接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-POTENCY-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs.meta",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "开发管理/U-COMBAT-AP2-STATUS-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-STATUS-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-STATUS-01 · 百分比状态与概率强控境界修正接入
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：正式能力状态施加链消费施受双方境界与能力承载，百分比增减和概率强控按合同修正。
+- 直接前置：U-COMBAT-AP2-POTENCY-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；配置合同最小状态载荷/正式接入及水系例外；CombatEntryAdapter.TryProjectProfiles当前过滤；CombatAttackEffect、CombatActionResolver实际调用；CombatantSnapshot.ApplyStatus与状态时点/免疫。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 先打通合同冻结的百分比攻防和概率强控窄入口，再接入C=.25/.5/1/1.5/2、30%/15百分点/90%峰值；高阶自用低阶buff也按目标未增益基础属性与能力承载求增量。概率只修正概率，不改控制时长；具体数值效果排除；原层数/覆盖语义结合总峰值，禁99层无界普通例外。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-STATUS-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 状态语义与当前缺消费链，gpt-6.1-sol/high；有界只读辅助可检查正式调用是否可达，主责统一最小实现。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 低→高、同境、高→低、低阶自增益、概率修正后无旧保底、免疫、同层多次/刷新/持续、正负向；真实投影→命令→状态施加链而非孤立调用测试；双方一致。定向EditMode/编译；生产场景留SCENE。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 配置合同尚未冻结效果producer或首批实体时不能ready；不创造通用状态引擎，不把未接入ApplyStatus称生产完成。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

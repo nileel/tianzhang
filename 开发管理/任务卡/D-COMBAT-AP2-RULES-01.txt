@@ -1,0 +1,91 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP2-RULES-01",
+  "title": "境界行动力新规则与现用内容标准迁移",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "content",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-09负责人授权建卡与首轮参数定标；规则源、对应模板及现用内容映射已定位，本卡仅迁移设计规则。",
+  "expectedPaths": [
+    "docs/基础设定/战斗系统.txt",
+    "docs/角色养成/功法数值模板.txt",
+    "docs/角色养成/术法神通数值模板.txt",
+    "docs/角色养成/功法设计规范.txt",
+    "docs/角色养成/术法设计规范.txt",
+    "docs/角色养成/神通设计规范.txt",
+    "docs/角色养成/功法/功法设计.txt",
+    "docs/角色养成/术法/术法设计.txt",
+    "docs/角色养成/神通/神通设计.txt",
+    "docs/角色养成/术法/散修/贯石击.txt",
+    "docs/角色养成/术法/散修/聚灵术.txt",
+    "docs/道具/武器/铁剑.txt",
+    "docs/道具/武器/铁刀.txt",
+    "docs/角色养成/养成事实速查.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "docs/道具/道具事实速查.txt",
+    "开发管理/D-COMBAT-AP2-RULES-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP2-RULES-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP2-RULES-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP2-RULES-01 · 境界行动力新规则与现用内容标准迁移
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：把已批准结构与负责人授权计算的 AP-GROWTH@0.1 初值统一写入现行 L2 模板及正在使用的内容，明确新规范与现行运行版本的适用边界。
+- 直接前置：无。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；docs/角色养成/养成事实速查.txt 与 docs/基础设定/设定事实速查.txt 的相关指针；战斗系统第一章；功法数值模板第三、四节；术法神通数值模板第三、四、八、九节；三类设计规范／模板对应成本、成长、约束与新增检查清单；贯石击、聚灵术、铁剑、铁刀完整对应规则段。
+- simulations/BattleSim/GameData.cs::ReadApprovedTemplate/TemplateRows/approvedAbilityCosts/approvedGrowth 当前直接解析模板，须核对精确版本、标题、表列和首个匹配位置。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 按规格第9节迁入100/300/1000 AP、v分配、固定能力档、费用参照、承载、状态境界系数、冷却分类和重复费用；保留CTB整数时钟与灵力独立资源。一次覆盖16项泛化输入、WaterArt/WaterDivine表外状态、KuxingAction特殊主动、原三生产攻击及两武器L2；凡人100/v2不变。将 basic_unarmed 标为待迁移旧生产输入，不当场删除数据。
+- 明确泛化同档版本与低档对照的固定身份；既有迁移系数不随新AP重算。水系普通百分比例外、低阶自增益承载与恢复参照须逐项对齐；具体CD按实际效果归类。更新L1仅保留指针。其余未接入内容后续生产按模板迁移，本卡不批量改115项、不添加同名L2尚未实现附加效果。
+- 过渡策略固定：在两份数值模板保留当前解析所需的具名旧输入，版本字符串、功法第三/四/五节表与术法8.1/8.3的解析标题/行/列/数值暂不改动。新版标准放独立规则段并明确待新配置切换生效；不把新表放入旧解析窗口。SIM切换唯一CSV生产源后，旧输入只作历史，不再参与运行。此为分阶段迁移，不新增运行时兼容分支。
+- 只写expectedPaths；验证证据写开发管理/D-COMBAT-AP2-RULES-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 有界规则迁移；主模型gpt-6.1-sol/high。主责统一裁定；如发现模板互相冲突，可用同模型只读核查冲突的精确规则段，无写入委派。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 核对9.1～9.5表与全套映射无矛盾；重算14次50AP=987.5、低阶自增益12与固定档CD，均只称规则算术。check-data-chain、check-review-text及任务投影；两份模板是当前运行输入：本轮必须证明GameData所取版本/17动作成本/6境界基值/21功法映射及移动M参数前后完全一致，并以既有BattleSim读取入口做最小投影核验；如任何有效输入变化立即停止，不用“纯文档”跳过，也不在本卡跑新参数旧算法的平衡。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 需新增内容原型、改动配表或运行时、扩大到所有术法实例时停止；已授权的初版参数选择无需再次请示，但不能宣称新数值平衡已通过。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

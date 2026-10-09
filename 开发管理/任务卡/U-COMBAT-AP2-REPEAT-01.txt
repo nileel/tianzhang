@@ -1,0 +1,77 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-REPEAT-01",
+  "title": "零冷却能力连续使用AP报价与提交",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-CONFIG-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Combat/CombatCommandService.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs",
+    "开发管理/U-COMBAT-AP2-REPEAT-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-REPEAT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-REPEAT-01 · 零冷却能力连续使用AP报价与提交
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：Unity权威报价与实付按同一个人回合次数应用1/1/1.25/1.5封顶，且计数只随成功动作提交。
+- 直接前置：U-COMBAT-AP2-CONFIG-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；配置合同实例/费用次序；CombatCommandService.Preview/Execute与效果准备/扣费/提交；CombatantSnapshot.BeginOwnTurn/GetAbilityInstanceId/CopyForResolution/CommitResolvedState；现有能力冷却实例键。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 按真实能力实例保存当回合成功次数；所有武器普攻共用角色普攻计数，换装不清零；零CD主动适用，移动/道具/换装排除。基础净费按既有减耗求出后乘本次倍率并向上取整；复制解析与commit账本一致，预览不写。下一本人回合重置，不由移动、换目标、换术或重装实例洗次数。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-REPEAT-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 有界事务逻辑，gpt-6.1-sol/high单主责；强耦合报价/提交不拆写入。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 20AP序列20/20/25/30；取消拒绝不计、合法未命中计、多目标只计一次、实例跨表现共享、换武器沿用次数；AP不足不得提交部分状态，前后预览/实付/余额一致；双方同义、下回合归零；定向内核测试及编译。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 新增减耗来源、被动主动化、通用次数上限或改变三时钟均超出范围；未知实例身份返回合同，不另加计数兜底。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

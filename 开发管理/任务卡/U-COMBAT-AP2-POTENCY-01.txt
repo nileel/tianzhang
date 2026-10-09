@@ -1,0 +1,82 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-POTENCY-01",
+  "title": "固定能力档费用参照与属性承载",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-CONFIG-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs.meta",
+    "开发管理/U-COMBAT-AP2-POTENCY-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-POTENCY-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-POTENCY-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-POTENCY-01 · 固定能力档费用参照与属性承载
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：动作按固定能力档派生成本预算与属性承载，高境使用低阶动作不能无限继承高阶属性。
+- 直接前置：U-COMBAT-AP2-CONFIG-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；配置合同能力档/公式位置；术法神通数值模板预算与组件；CombatAttackProfile、CombatActionResolver.ResolvePhysical/ResolveSoul/ResolveAttack、CombatEntryAdapter。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 使用A_ref25/75/250、B_MP20/160/1600与对应属性上限；重复额外AP不增加效果U，高阶费用不再次放大迁移倍率。攻击公式所有使用者攻击输入一致截断，目标真实防御不截断；固定量恢复/护盾等只对合同明确的来源属性应用对应上限，无额外状态境界系数。武器提供其档位费用与承载，配置可调。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-POTENCY-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 有界数值语义，gpt-6.1-sol/high；实现前可独立只读复核双预算/重复费用无二次增益，主责验证。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 同阶能力不被默认误截，低阶能力高境使用按120等上限；A²/(A+D)两处同A；改表后预算/承载同源变化；数值功能样例与EditMode可证明公式正确，完整角色平衡交BALANCE。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 未知效果类型/公式入口或需要全技能引擎时停止；不得用新L系数倒算保住所有旧伤害。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

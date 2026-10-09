@@ -1,0 +1,88 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-AP2-CONTRACT-01",
+  "title": "境界行动力配表与运行时接入合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-AP2-RULES-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "开发管理/境界行动力成长配置合同.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-POTENCY-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-WEAPON-01.txt",
+    "开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt",
+    "开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt",
+    "开发管理/D-COMBAT-AP2-CONTRACT-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-AP2-CONTRACT-01.txt",
+    "开发管理/任务归档/D-COMBAT-AP2-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-AP2-CONTRACT-01 · 境界行动力配表与运行时接入合同
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：冻结一个可由下游直接执行的字段、映射和所有者合同，并补齐所有已知叶子的精确路径；不再次逐张拆任务。
+- 直接前置：D-COMBAT-AP2-RULES-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；新规则L2相关章节；现有统一行动力公共合同、换装合同及道具合同；CombatCommandService.Preview/Execute；CombatantSnapshot.BeginOwnTurn/CopyForResolution/CommitResolvedState；CombatEntryAdapter.TryProjectProfiles；AdventureUnitSpawner.ResolveBasicAttackBinding；CharacterProgressionRef、CharacterCreationRules、GameSaveEnvelope及直接调用者；GameData.ProjectMovement/BuildAbilities与Combat主循环。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 沿现有Content和Combat模块冻结三张小表RealmCombatGrowth、CombatActionEconomyRules、CombatEffectTierRules及AttackProfiles的档位／分类引用；字段名、版本、单位、取整、逐ID唯一源、缺行拒绝、生成资产和Unity/BattleSim投影完整列明。配置类/资产候选路径见CONFIG卡，确认或修订下游expectedPaths并重新预检，不引入配置框架或asmdef。
+- 成长现无完整GetGrowth运行消费者；选定最小角色派生入口，覆盖创建/现有境界变化/恢复，保存按权威境界重建派生AP/v，不新做完整修炼系统。状态正式生产链目前跳过Buff/Debuff，必须冻结百分比攻防与概率强控的最小效果载荷和调用链，含对称测试；不以孤立ApplyStatus验收。
+- 无空手政策：不补发新装备、不隐式给旧档造武器；已有合法主手保留，无武器仍可入战但无普攻。明确现有默认敌人/玩家各自实际武器或合法其他动作绑定，旧字段处置及是否需要保存版本变更；需新增武器原型才停止。
+- 逐项冻结16泛化+Kuxing+水系状态+当前生产武器/术法映射；现有减耗先求基础净费再乘重复倍率、ceil到AP单位，能力实例/跨武器账本与提交原子性；AP上限变化不得补发当前回合预算。配置只读投影供运行时，UI不得重算。
+- 只写expectedPaths；验证证据写开发管理/D-COMBAT-AP2-CONTRACT-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 跨所有者合同，主模型gpt-6.1-sol/high；可各用一个同模型只读核查角色/保存边界与BattleSim双入口映射，返回符号及缺口；主责统一字段/路径和最终合同。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 映射覆盖每个现用入口，字段读写与asset/meta路径闭合；状态/成长缺口均有明确有限所有者和验收；下游卡仅准备授权路径/门禁，不提前ready；check-task-cards及check-review-text。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 需要新修炼系统、通用状态引擎、全物品迁移或新增未经本方案授权内容时停止；不得靠猜测入口、隐式默认值或第二生产者补齐。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

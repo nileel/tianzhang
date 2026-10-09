@@ -1,0 +1,83 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-PREVIEW-01",
+  "title": "连续施法费用冷却与武器资格显示",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-GROWTH-01",
+    "U-COMBAT-AP2-REPEAT-01",
+    "U-COMBAT-AP2-STATUS-01",
+    "U-COMBAT-AP2-WEAPON-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-PREVIEW-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-PREVIEW-01 · 连续施法费用冷却与武器资格显示
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：正式动作栏与预览显示本次真实AP报价、剩余冷却和无武器资格，提交后及时刷新。
+- 直接前置：U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；EncounterCoordinator.BuildActions/ProjectQuote；CombatPresentationContracts；ActionBarView.PresentAction/PreviewView.Present及真实输入所有者；引用内核报价而非UI重算。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 同源展示大AP上限/余额、零CD同招下一次费用与正CD剩余tick；无武器普攻不可用且原因明确。换武器沿角色既有普攻计数刷新费用，取消预览无副作用。不增加自动连发/自动连招或新HUD架构。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 有界显示接线，gpt-6.1-sol/medium单主责，实际运行验证不可由只读审查替代。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 真实AdventureScene/Bootstrap入口验证首次/第三/第四次报价与实付一致、换武器/换技能、取消、下本人回合重置、无武器；1920×1080与1366×768不截断1000AP，正式可见截图和PlayMode；最终全链验收另归SCENE。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 报价与运行时不一致先回费用/资格所有者，不在UI打补丁；缺实际画面不能凭Prefab字段或测试夹具签视觉通过。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。

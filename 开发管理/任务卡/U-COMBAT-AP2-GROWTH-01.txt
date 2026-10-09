@@ -1,0 +1,88 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-GROWTH-01",
+  "title": "角色境界AP与移动效率成长接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-AP2-CONFIG-01"
+  ],
+  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs.meta",
+    "开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-GROWTH-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-COMBAT-AP2-GROWTH-01 · 角色境界AP与移动效率成长接入
+
+## 来源与当前边界
+
+- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
+- 原子结果：从权威境界及获准功法输入重建角色AP/v，使创建、变化和保存恢复都消费同一成长配置。
+- 直接前置：U-COMBAT-AP2-CONFIG-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；配置合同成长/保存段；CharacterAttributes.FromDefinition；CharacterProgressionRef、CharacterCreationRules.BuildCharacterData、CharacterContentImporter.IndependentActionEconomyInputs及保存恢复直接构造者；GongFaGrowthData实际消费者；AdventureUnitSpawner。
+- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。
+
+## 实施范围
+
+- 按固定境界表投影100/100/300/1000 AP与2/4/4/4.8 v，阶段明确映射；功法AP增量仍0，原移动加成按比例换算。仅接入已存在权威进阶状态变更与快照重建，不创建完整修炼进阶流程。当前回合上限变化不重新发放AP；旧档按合同重建，避免存档中旧派生值覆盖新表。
+- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 禁止项
+
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
+
+## 模型协作
+
+- 角色与保存语义高影响，gpt-6.1-sol/high；有独立旧档反例时可同模型只读核查恢复调用链，主责统一实现与验证。
+- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
+
+## 验证
+
+- 创建/境界变更/保存往返结果一致，凡人100/v2；AP×v/100基准2/4/12/48，苦行加成不双放大；本人开始发放与回合中变更边界；定向角色/保存EditMode及编译。
+- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。
+- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。
+
+## 完成条件
+
+- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。
+- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。
+
+## 停止条件
+
+- 真实成长或恢复调用者超出合同、需要完整修炼新功能时停止；不得只改静态CharacterData后声称玩家成长完成。
+- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
