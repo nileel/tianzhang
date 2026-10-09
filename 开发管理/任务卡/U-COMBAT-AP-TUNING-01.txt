@@ -24,8 +24,6 @@
     "src/Assets/DataConfig/Enemies.csv",
     "src/Assets/Scripts/Editor/CombatContentImporter.cs",
     "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
-    "src/Assets/Scripts/Editor/AdventureContentImporter.cs",
-    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
     "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset",
@@ -48,7 +46,38 @@
     "开发管理/任务归档/U-COMBAT-AP-TUNING-01.txt",
     "开发管理/未通过审核清单.txt",
     "开发管理/AI合作沟通.txt",
-    "开发管理/AI合作归档/U-COMBAT-AP-TUNING-01-交接归档.txt"
+    "开发管理/AI合作归档/U-COMBAT-AP-TUNING-01-交接归档.txt",
+    "src/Assets/DataConfig/RealmCombatGrowth.csv",
+    "src/Assets/DataConfig/CombatActionEconomyRules.csv",
+    "src/Assets/DataConfig/CombatEffectTierRules.csv",
+    "src/Assets/Data/CombatRuleSet.asset",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv.meta",
+    "src/Assets/DataConfig/Characters.csv.meta",
+    "src/Assets/DataConfig/Enemies.csv.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
+    "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset.meta",
+    "src/Assets/Data/Characters/Char_char_taiyixiushi.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta",
+    "src/Assets/Data/Characters/Char_Player.asset.meta",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/DataConfig/Items.csv.meta",
+    "src/Assets/DataConfig/RealmCombatGrowth.csv.meta",
+    "src/Assets/DataConfig/CombatActionEconomyRules.csv.meta",
+    "src/Assets/DataConfig/CombatEffectTierRules.csv.meta",
+    "src/Assets/Data/CombatRuleSet.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -79,6 +108,11 @@
 
 - 只按已批准表做参数发布，不改算法或临时调参；核对单一生产者到Unity／BattleSim读取投影逐字段一致。准备ready时以合同补齐真正入选物品／装备资源及新行为定义字面量路径，未批准映射不回填。记录最终摘要，凡早前输入不同的功能或平衡证据失效，交后续场景验收；若发布差异超出定案输入，回到数值卡而不是静态签平衡。
 - 验证证据写入 开发管理/U-COMBAT-AP-TUNING-01-验证记录.txt；只使用卡头expectedPaths，不以正文目录名授权目录写入。新增Unity资源必须精确列出.meta，必要新目录.meta也须在ready前冻结。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同第八/九节明确最终发布读取AP2-BALANCE唯一输入摘要；新增三表/CombatRuleSet/catalog和四合法攻击生成路径已经冻结，删除旧basic_unarmed发布目标。Characters/Enemies/创角只按权威realm与来源投影，物品/武器沿ITEM/EQUIP既有授权，本卡不改变资格、节点、算法或Importer schema。实际物品/装备产物临近ready以直接前置正式结果核对；任何最终源表差异返回受影响BALANCE验证。SettlementContentImporter为真实敌人/物品导入者，不按错误AdventureContentImporter路径实施。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 

@@ -39,7 +39,20 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt",
-    "开发管理/任务归档/U-COMBAT-AP2-CONFIG-01.txt"
+    "开发管理/任务归档/U-COMBAT-AP2-CONFIG-01.txt",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
+    "src/Assets/DataConfig/AttackProfiles.csv.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -67,6 +80,11 @@
 
 - 实现冻结小表与必要类型/生成资产/引用，包含AP/v、AP/MP参照、能力属性上限、状态系数与峰值、重复曲线、CD分类和逐项覆写。对费用基础值与派生值只保留一个可编辑来源，保存派生版本/摘要。Char_Player/Char_Enemy现有硬编码AP/v例外由合同指向配置，成长叶完成使用；本卡只提供严格类型与正式注入。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-CONFIG-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同已冻结三表schema1、AP-GROWTH@0.1、51个显式泛化测试三元组与真实AttackProfiles唯一源。按开发管理/境界行动力成长配置合同.txt第二/三节实现严格解析、载荷字段、唯一CombatRuleSet资产和现有ContentCatalog绑定；旧徒手仅历史行，后由WEAPON删除。新增引用由AdventureSceneInstaller/CombatEntryAdapter/CombatSession显式传递，缺配置拒绝，无双版本开关；不实现报价/成长/状态算法。当前正式两术法资产随导入更新；两武器由EQUIP实际结果提供后再由WEAPON对齐。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 

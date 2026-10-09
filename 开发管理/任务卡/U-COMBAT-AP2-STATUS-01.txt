@@ -27,7 +27,12 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt",
-    "开发管理/任务归档/U-COMBAT-AP2-STATUS-01.txt"
+    "开发管理/任务归档/U-COMBAT-AP2-STATUS-01.txt",
+    "src/Assets/Scripts/Combat/CombatCommand.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv",
+    "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -55,6 +60,11 @@
 
 - 先打通合同冻结的百分比攻防和概率强控窄入口，再接入C=.25/.5/1/1.5/2、30%/15百分点/90%峰值；高阶自用低阶buff也按目标未增益基础属性与能力承载求增量。概率只修正概率，不改控制时长；具体数值效果排除；原层数/覆盖语义结合总峰值，禁99层无界普通例外。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-STATUS-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同第二/六节冻结精确窄载荷列、fixture_percent_attack_up/fixture_percent_defense_down/fixture_probability_stun三测试实体和CSV严格解析→实际Adapter→命令→Resolver准备副本→Snapshot发布完整链。Buff自/友、Debuff/强控敌方，独立ControlRoll，EncounterCoordinator实际合法命令取第五独立样本，不复用命中随机；statuses当前共享列表必须深复制每条记录再成功发布。四攻防属性总峰值/固定档/C/持续与免疫有限接入，概率属性15百分点只作门禁，不新造内容；水系真实泛化消费者归SIM，不自动迁Spells旧库或新增玩家技能。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 

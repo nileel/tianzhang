@@ -32,7 +32,46 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt",
-    "开发管理/任务归档/U-COMBAT-AP2-GROWTH-01.txt"
+    "开发管理/任务归档/U-COMBAT-AP2-GROWTH-01.txt",
+    "src/Assets/Scripts/Modules/Content/CharacterData.cs",
+    "src/Assets/Scripts/Modules/Content/CharacterCreationPointBuyConfig.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationManager.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/DataConfig/Characters.csv",
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/DataConfig/CharacterCreationPointBuy.csv",
+    "src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset",
+    "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset",
+    "src/Assets/Data/Characters/Char_char_taiyixiushi.asset",
+    "src/Assets/Data/Characters/Char_Player.asset",
+    "src/Assets/Data/Characters/Char_Enemy.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset",
+    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs",
+    "src/Assets/DataConfig/Characters.csv.meta",
+    "src/Assets/DataConfig/Enemies.csv.meta",
+    "src/Assets/DataConfig/CharacterCreationPointBuy.csv.meta",
+    "src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset.meta",
+    "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset.meta",
+    "src/Assets/Data/Characters/Char_char_taiyixiushi.asset.meta",
+    "src/Assets/Data/Characters/Char_Player.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -60,6 +99,11 @@
 
 - 按固定境界表投影100/100/300/1000 AP与2/4/4/4.8 v，阶段明确映射；功法AP增量仍0，原移动加成按比例换算。仅接入已存在权威进阶状态变更与快照重建，不创建完整修炼进阶流程。当前回合上限变化不重新发放AP；旧档按合同重建，避免存档中旧派生值覆盖新表。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同第四节冻结唯一聚合派生与有限movementGrowthSources权威节点输入；源码没有玩家进阶生产者，不新增修炼流程。创建/FromSnapshot/Restore/Progression变更边界消费同一配置；正式创建按新L2为凡人100AP/v2，先天攻防与既有术法不重调，练气资格不提前。Characters两行显式练气，Enemies沿realm列，独立Char_Player凡人/Char_Enemy练气，AP/v列改为派生校验，五现有敌人模板按已知realm更新。保存新schema5，旧4仅合法明确境界/原字段迁空来源并重建AP/v，空境界拒绝；1/2/3既有有玩家拒绝不放宽，整体失败无发布。真实GetGrowth修炼流程不在验收范围，合法M节点通过现有聚合入口验证。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 

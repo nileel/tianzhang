@@ -27,7 +27,9 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt",
-    "开发管理/任务归档/U-COMBAT-AP2-PREVIEW-01.txt"
+    "开发管理/任务归档/U-COMBAT-AP2-PREVIEW-01.txt",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/DataConfig/Language.csv.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -55,6 +57,11 @@
 
 - 同源展示大AP上限/余额、零CD同招下一次费用与正CD剩余tick；无武器普攻不可用且原因明确。换武器沿角色既有普攻计数刷新费用，取消预览无副作用。不增加自动连发/自动连招或新HUD架构。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同第五/八节冻结ProjectQuote映射的本次实付、成功次数/重复乘数、规则摘要、固定档和剩余全局tick；BuildActions接权威无武器原因，Language仅提供说明。UI不重算费用或造假普攻档；成功提交/换装/本人开始后重新投影，取消不变。保持原场景入口和两分辨率实际截图验收，不增加自动连招。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 

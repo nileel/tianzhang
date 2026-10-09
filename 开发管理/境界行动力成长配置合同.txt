@@ -1,0 +1,204 @@
+﻿# 境界行动力成长配置合同
+
+日期：2026-10-09；责任任务：D-COMBAT-AP2-CONTRACT-01；源码基线：c1eb571f033357623b9226ac67af7d30421bb479；规则版本：AP-GROWTH@0.1；配置schemaVersion=1。
+
+批准规则读取 docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md §9、docs/角色养成/功法数值模板.txt §九、docs/角色养成/术法神通数值模板.txt §十一。本文冻结字段、逐项映射、有限实现所有者和验收，不表示代码、生产表或平衡已经完成。公共合同的三时钟、移动边费、原子提交和有限来源仍适用；本版本覆盖其旧境界AP/v、徒手、对应CT/CD及具名效果参数。道具与换装仍由各自合同负责。
+
+## 一、实际所有者与唯一源
+
+| 对象 | 唯一源与写入者 | 只读消费者 |
+|---|---|---|
+| 境界基础与移动节点参数 | src/Assets/DataConfig/RealmCombatGrowth.csv；CombatContentImporter整表校验 | CombatRuleSetData、Character角色派生；GameData.ProjectMovement |
+| 行动经济、状态公共参数与泛化测试定义 | src/Assets/DataConfig/CombatActionEconomyRules.csv；同一导入器 | 纯CombatRuleSet、报价/状态；BattleSim测试定义 |
+| 三个固定能力档参照与承载 | src/Assets/DataConfig/CombatEffectTierRules.csv；同一导入器 | 固定档效果与冷却投影 |
+| 真实生产攻击 | src/Assets/DataConfig/AttackProfiles.csv；同一导入器 | AttackProfileData→CombatEntryAdapter→CombatAttackProfile；BattleSim真实生产投影 |
+| 角色境界与合法移动来源 | CharacterProgressionRef/CharacterProgressionSnapshot，由CharacterRuntimeProfile聚合验证后发布 | CharacterAttributes、Capture、AdventureUnitSpawner；存档只编码权威输入 |
+| 回合报价和提交 | CombatCommandService.Preview/Execute；CombatantSnapshot个人账本；CombatActionResolver准备副本 | EncounterCoordinator.ProjectQuote/BuildActions→Gameplay.Contracts→CombatPresentation |
+| 全模拟 | Combat.CreateAbilities→RunBattle→SettleAttack，1v1/2v2双方共用 | StageCombatReport统计；Program选择入口 |
+| 共享内核模拟 | StageCombatReport中ActionEconomyBalanceReport.Profiles/Snapshot/NativeBattle→CombatSession/CombatCommandService | 与全模拟分别验证，不能互相代替 |
+
+当前没有GameData.BuildAbilities，后续按Combat.CreateAbilities实施。当前GetGrowth没有角色成长运行消费者；玩家没有独立进阶生产流程，现有变更边界只有Progression.Restore及聚合Restore。当前状态投影跳过Buff/Debuff，Resolver不调用ApplyStatus；statuses准备副本还共享列表。下文明确补齐这些有限缺口，不新增修炼系统、事件总线、配置框架或asmdef。
+
+## 二、配置与资产合同
+
+三个新CSV使用UTF-8、InvariantCulture、精确表头、同一schemaVersion=1与ruleSetVersion=AP-GROWTH@0.1。标识Ordinal区分大小写。普通整数拒绝分数、指数、负值和溢出；statusRelativePermille为唯一有符号比例例外，范围-1000～1000且不得为0；有理数numerator/denominator分母严格正，先约分，计算用checked Int64，最终目标值检查Int32。新增量的取整统一：AP基础派生/实付ceil至最小单位，v所有合法来源聚合后floor至vMilli一次，CD/容量为整数不四舍五入；百分比攻防增量保留精确有理数至同属性汇总及总峰值后Round(AwayFromZero)到属性整数一次，概率保持精确比例与独立0～100样本比较，不先取整概率。原伤害最终Round(AwayFromZero)、原防御中间取整、聚灵/生命费/条件回复的floor沿其实际公式，不顺带改旧伤害算法。空列只在下列明确允许处合法；0和空不能互换。未知版本、重复键、缺行、非法档/引用、非法概率或乘数整批拒绝，任何asset写入前完成全部验证。
+
+正式资产只有 src/Assets/Data/CombatRuleSet.asset 及.meta，类型为 src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs 及.meta；纯投影为 src/Assets/Scripts/Combat/CombatRuleSet.cs 及.meta。Content类型保存版本、三张表的明确行数组、sourceDigest；纯类型不引用Unity、Content或Character。Editor使用纯解析结果复制到Content；Adventure从Content按同一字段构建纯只读投影；Character只读取Content的已验证标量，不反向依赖Combat。BattleSim显式链接纯类型和既有CsvTableReader源码，读取同一四张CSV，不读生成asset或另外一份数值表。
+
+ContentCatalogData增加combatRuleSet引用，指向上述唯一asset；既有 src/Assets/Data/ContentCatalog/ContentCatalog.asset 同步绑定，GUID保持。StartMenuSceneInstaller从其现有catalog将成长配置显式传给CharacterCreationController→CharacterCreationManager→CharacterCreationRules.BuildCharacterData，并接入GameRuntime的显式成长配置，GameRuntime.RestoreSave向恢复链传递配置；AdventureSceneInstaller从其现有catalog接入Spawner和CombatEntryAdapter，后者把只读规则传给CombatSession。缺引用/摘要/版本拒绝正式创建、恢复或入战，不用Resources搜索、全局可变配置、AP100或无限承载兜底。CONFIG负责数据与引用，GROWTH/REPEAT等分别完成实际消费者，不为过渡阶段建立新模式开关。
+
+sourceDigest为四文件按仓库相对路径Ordinal排序，逐项连接“路径、LF、该文件原始字节SHA256、LF”后UTF-8 SHA256。资产、Unity投影和BattleSim报告携带同一摘要；有意的测试参数变体另报该变体摘要。版本是语义版本，摘要是参数身份，二者不能互相替代。修改CSV后一次导入更新全部相关生成资产和引用；先校验后写入，同ID原地更新、GUID稳定，重复导入幂等。
+
+### 2.1 RealmCombatGrowth精确表头与六行
+
+schemaVersion,ruleSetVersion,realmId,realmOrder,usageScope,actionPointMaximumUnits,baseMovementEfficiencyMilliUnits,legacyBaseMovementEfficiencyMilliUnits,movementNodeWeightNumerators,movementNodeWeightDenominator
+
+| realmId | order | usageScope | APUnits | baseVMilli | legacyVMilli | 节点分子列表/分母 |
+|---|---:|---|---:|---:|---:|---|
+| realm_fanren | 0 | player | 100000 | 2000 | 2000 | 空/1，无移动节点 |
+| realm_lianqi | 1 | player | 100000 | 4000 | 4000 | 1\|1\|1\|1\|1\|1\|1\|1\|1 /9 |
+| realm_zhuji | 2 | player | 300000 | 4000 | 12000 | 30\|32\|38 /100 |
+| realm_jindan | 3 | player | 1000000 | 4800 | 48000 | 30\|32\|38 /100 |
+| realm_yuanying | 4 | reserved | 3000000 | 8000 | 240000 | 1\|1\|1\|1 /4 |
+| realm_huashen | 5 | reserved | 12000000 | 12000 | 1440000 | 1\|1\|1\|1 /4 |
+
+列表是本境界固定有序节点权重，不是任意规则表达式；非凡人权重总和必须为1。legacyVMilli仅为旧获准节点换算参照，不生产第二个运行基础v。练气九品、筑基/开府/圆满、金丹初结/温养/圆满均映射其大境界行；旧筑基五段不映射新玩家进度。明确境界ID及现有中文大境界/规范阶段标签由闭合映射转换，未知或空拒绝，绝不从realmMultiplier/反应推境界。reserved行不开放玩家或新增高阶能力。
+
+### 2.2 CombatEffectTierRules精确表头与三行
+
+schemaVersion,ruleSetVersion,abilityTierId,realmId,actionPointReferenceUnits,spiritBudgetReference,physicalAttackCapacity,soulAttackCapacity,physicalDefenseCapacity,soulDefenseCapacity,recoverySoulAttackCapacity,rawSpiritRecoveryCapacity,reactionCapacity,referenceTurnIntervalTicks
+
+| abilityTierId | realmId | A_ref单位 | B_MP | 肉攻/神攻/肉防/神防/恢复神攻各上限 | 聚灵魂魄上限 | 反应上限 | 参考tick |
+|---|---|---:|---:|---:|---:|---:|
+| tier_lianqi | realm_lianqi | 25000 | 20 | 120 | 25 | 30 | 4 |
+| tier_zhuji | realm_zhuji | 75000 | 160 | 500 | 50 | 120 | 1 |
+| tier_jindan | realm_jindan | 250000 | 1600 | 2400 | 100 | 500 | 1 |
+
+AP1000单位为1AP，v1000单位为1v，MP/属性按现有整数资源/属性单位；概率比例1=100%，permille1000=1，不把既有百分数roll的0～100当0～1。A_ref初值=境界AP/4，是唯一可编辑档位参照，不让运行时再生产另一个可编辑A_ref；导入记录两表参照关系，调参若有意偏离必须在BALANCE报告说明。凡人武器可引用tier_lianqi，仍保留武器自身装备资格，不能据此授施法资格。
+
+### 2.3 CombatActionEconomyRules精确表头
+
+schemaVersion,ruleSetVersion,recordKind,definitionRef,abilityTierId,repeatFirstPermille,repeatSecondPermille,repeatThirdPermille,repeatCappedPermille,realmBelowTwoPermille,realmBelowOnePermille,realmEqualPermille,realmAboveOnePermille,realmAboveTwoPermille,relativeStatusLimitPermille,probabilityPointLimitPermille,strongControlLimitPermille,burstCooldownMultiplier,controlCooldownMultiplier,recoveryCooldownMultiplier,movementBudgetNumerator,movementBudgetDenominator,waterBaseChancePermille,waterMinimumChancePermille,waterMindDifferenceDivisor,waterDefensePerStackPermille,waterDefenseMaxStacks,waterReductionMigrationNumerator,waterReductionMigrationDenominator,actionPointFactorNumerator,actionPointFactorDenominator,spiritFactorNumerator,spiritFactorDenominator,actionPointCostOverrideUnits,minimumNetCostOverrideUnits,spiritCostOverride,ctPenalty,cooldownClass,reuseCooldownOverrideTicks,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator
+
+这是一个固定schema的两种行，不是自由key/value配置。global唯一行：recordKind=global、definitionRef=action_economy、abilityTierId空；从repeatFirstPermille至waterReductionMigrationDenominator必填，其余动作列全空。初值按列顺序为1000/1000/1250/1500、250/500/1000/1500/2000、300/150/900、1/3/4、1/4、100/50/50/50/3/35/6。前四重复乘数正且不递减；相对/百分点/强控上限分别不超过1000/1000/1000，强控初值900；水最低概率只夹p_base，修正后不得再夹回最低值。
+
+test_action行：global参数列全空；definitionRef取§三的17项，每项三个明确abilityTierId，共51行，复合唯一键(ruleSetVersion,definitionRef,abilityTierId)。费用倍率与damageMigration/weight为必填有理数；四个Override列可空，ctPenalty和cooldownClass必填。AP=ceil(A_ref×APfactor)或唯一非空AP覆写；MP=ceil(B_MP×MPfactor)或唯一非空MP覆写；minimum空时等于声明基础AP，非空必须正且≤基础AP。CD=固定档referenceTurnIntervalTicks×分类系数，非空覆写替代该结果；basic_repeat系数0、burst/control/recovery读global三个系数。checked乘积，最终AP/CD不得溢出。覆写后不再加原公式值；CT独立0～int.MaxValue-100。
+
+测试定义三元组不是新生产ID，不加到玩家内容catalog/Spells/Skills，不自动授予资格；泛化试验、同档与固定练气低档对照在入口显式选择三元组。真实生产费用不在这51行复制，继续唯一来自AttackProfiles。
+
+### 2.4 AttackProfiles字段处置
+
+保留原表其他字段，增加ruleSetVersion、abilityTierId、cooldownClass、effectBudgetMode、efficiencyNumerator、efficiencyDenominator、damageMigrationNumerator、damageMigrationDenominator、damageWeightNumerator、damageWeightDenominator；原reuseCooldownTicks列改为可空逐项覆写，非空是明确覆写，不能与派生CD再累加。actionPointCostUnits/minimumNetCostUnits/resourceCost及其他目标费用仍是本行唯一声明，不用角色境界重算。生成AttackProfileData与纯CombatAttackProfile保存解析后的ReuseCooldownTicks和固定档承载引用、版本/摘要；这些是派生只读值。buffMultiplier不足以推断属性，§六明确新窄载荷列。damage_budget模式的伤害行必须给E、L及伤害权重有理数，原physicalDamageMultiplier/soulDamageMultiplier对应结果列必须空，导入按k×U×权重×L及原穿防预算修正生成输出；贯石击E=1、L=15/13、权重1，初值仍1.2。fixed_weapon模式保留显式武器倍率，E/L/权重列空，不随费用重派生；prototype_restore保留聚灵具名魂魄公式，三组列空；status_only供纯状态载荷，fixed_output只供原明确固定healAmount等量值，不能成为缺承载的替代。所有模式按实际effect严格匹配，未知模式拒绝。这样生产伤害也保存派生关系，不消费正文里的L常量作为第二源。CONFIG只添加载荷schema和严格校验，不实现状态算法或创造生产技能。旧cooldownTicks/SpellData/DivineSkillData不得回写权威成本。
+
+CONFIG先用当前三行完成新schema导入：basic_unarmed只保留明确的legacy_unarmed分类，abilityTierId为空，沿旧值标为待WEAPON删除的历史输入，禁止将它作为AP-GROWTH合法动作；两术法按§三新值生成。EQUIP完成后WEAPON同批移除该行/asset/meta并纳入两武器引用。本过程不用运行时双版本/旧算法兼容分支。CONFIG原子导入是四表新参数唯一源切换点；从该刻起旧成本/成长文档解析结果与旧算法报告不再适用于新参数。各消费者完成前仅是未完成实施，不能称混合旧算法的新规则已经上线；SIM/最终TUNING/SCENE各自按完成后的全链摘要验证。
+
+## 三、逐项成本、分类和迁移映射
+
+下面三档数字是练气/筑基/金丹顺序，均CT0。Art的APfactor=2/1，MPfactor常规1/1、原25MP项5/4；Divine与Kuxing APfactor=3/1、MPfactor=0/1；净费无覆写即基础。固定档不会随使用者升境变化。
+
+| definitionRef | AP | MP | cooldownClass/CD | 通道/旧倍率/穿防；元素；范围 |
+|---|---|---|---|---|
+| PhysicalArt | 50/150/500 | 20/160/1600 | basic_repeat/0 | 肉1.3/0；土；1～1 |
+| MagicArt | 同上 | 同上 | basic_repeat/0 | 神1.2/0；无；2～4 |
+| WaterArt | 同上 | 同上 | control/12/3/3 | 肉1.25/0；水；1～3；概率强控 |
+| TaiyiArt | 同上 | 25/200/2000 | basic_repeat/0 | 神1.4/0；无；2～4 |
+| TaiyiFuxiuArt | 同上 | 20/160/1600 | basic_repeat/0 | 神0.5/0；风；2～4；仅当前纯伤 |
+| TaixuArt | 同上 | 25/200/2000 | basic_repeat/0 | 神1.5/0；暗；2～4 |
+| YuqingArt | 同上 | 25/200/2000 | basic_repeat/0 | 肉1.5/0；雷；1～3 |
+| YuqingLeijieArt | 同上 | 25/200/2000 | basic_repeat/0 | 肉1.4/0；雷；1～3 |
+| PhysicalDivine | 75/225/750 | 0 | burst/4/1/1 | 肉1.5/10；土；1～1 |
+| MagicDivine | 同上 | 0 | burst/4/1/1 | 神1.4/10；无；2～4 |
+| WaterDivine | 同上 | 0 | control/12/3/3 | 肉1.5/10；水；1～3；强控/印记/川流 |
+| TaiyiDivine | 同上 | 0 | burst/4/1/1 | 神1.8/15；无；2～4 |
+| TaiyiFuxiuDivine | 同上 | 0 | burst/4/1/1 | 神1.5/20；土；2～4；仅当前爆发 |
+| TaixuDivine | 同上 | 0 | burst/4/1/1 | 神1.8/15；暗；2～4 |
+| YuqingDivine | 同上 | 0 | burst/4/1/1 | 肉1.8/15；金；1～3 |
+| YuqingLeijieDivine | 同上 | 0 | burst/4/1/1 | 肉1.6/15；雷；1～3 |
+| KuxingAction | 75/225/750 | 0 | basic_repeat/0 | 肉1.5/1.8/2.2固定档；原特殊生命费/资格保留 |
+
+damageMigration的首轮精确有理值按旧获准常数一次写入51行：L=旧倍率×(1+穿防/100)/(k×U_old×w_damage)，肉k=65/100、神k=221/400，Art旧U=2、Divine旧U=3；Kuxing旧U=3且w=7/10。WaterArt伤害权重4/5；WaterDivine伤害1/2；Kuxing7/10；其余1。同档的三行L相同，Kuxing按三个旧倍率分别写入；L不随新AP/MP重算。水强控权重Art1/5、Divine2/15，印记1/6、川流1/5为冻结的具名组件分账，p_ref=1/10只作旧预算参照，不随实际概率变小增加预算。
+
+效果预算U=E×min(a/A_ref,1+m/B_MP)，原无MP主动神通U=E×a/A_ref；生产贯石击E=1，a=50000、m=12，U=1.6，L=15/13。固定纯伤倍率由对应k、U、组件权重和冻结L派生；重复实付不进入U。现有Q/R/E、资格、穿防、范围、特殊生命费用与触发定义沿原获准原型，不自动扩展同名L2完整效果。
+
+| 当前真实ID | 固定档/基础AP/净下限/MP/CT/CD | 处置 |
+|---|---|---|
+| spell_guanshiji | 练气/50/25/12/0/0 | basic_repeat；肉攻承载120，倍率初值1.2；不新增强化/升格 |
+| spell_julingshu | 练气/25/12.5/自0他20/5/16 | recovery；魂魄承载25，原floor(max(5,魂魄×.5)×环境×对象)；不改成按使用者MP比例 |
+| basic_iron_sword / item_iron_sword | 练气/40/40/0/0/0 | basic_repeat；肉攻120、倍率1；真实主手提供 |
+| basic_iron_blade / item_iron_blade | 练气/50/50/0/0/0 | basic_repeat；肉攻120、倍率1.25；同角色共用普攻账本 |
+| basic_unarmed | 无合法固定档 | WEAPON删除，不能作为无装备fallback |
+
+两武器筑基/金丹费用仅是参照120/400与150/500，不创建高档生产ID/asset/装备。神通资格仍由Character.AssignArts的成丹与原来源判定，不因测试档授予。21构筑Style路由：physical→Physical，magic/既有默认→Magic，water_physical→Water，taiyi→Taiyi，taiyi_fuxiu→TaiyiFuxiu，taixu/taixu_xuangan→Taixu，yuqing/yuqing_kuxing→Yuqing，yuqing_leijie→YuqingLeijie；未知Style拒绝，不能把未知输入当合法默认。guardian_1～5只是结构夹具。
+
+## 四、最小角色成长与恢复
+
+GROWTH在CharacterRuntimeProfile内集中派生逻辑，创建FromDefinition、FromSnapshot/Restore及原Progression.Restore变更边界共用；Progression只持权威输入，Progression.Restore收为聚合内部调用，CharacterRuntimeProfile是唯一进度/派生AP/v准备与发布入口；公开改变进度必须经该聚合入口，不能留下“境界已变、AP/v未变”的窗口。没有现成玩家突破调用者，本卡不创建突破按钮、训练日循环或完整GetGrowth修炼消费者；验收覆盖上述真实聚合入口及其生产创建/恢复调用链，不把未来进阶功能说成完成。
+
+必要输入补在既有CharacterProgressionRef.cs/CharacterStateSnapshot.cs逻辑单元：movementGrowthInputsPresent及movementGrowthSources数组；每条含sourceInstanceId、gongFaId、chapterId、realmId、completedNodeIndices（从1开始、严格排序不重复）。记录已合法解锁事实，不存累计v；当前最多一门在修功法，源按实例+节点去重，一致重复只计一次、冲突重复拒绝。实际功法身份用已有Language ID/规范名闭合对应；学习门槛/篇章与L2§五21项一一校验，gongFaId只有名称不证明任何节点解锁。没有生产训练者时创建来源数组明确空；测试可通过同一聚合入口提供已经核验的有限节点事实，不因此制造玩家新解锁。废功/转换移除旧在修来源并按合法新来源重建；不累加旧缓存、不改八属性永久成长。
+
+闭合映射中只有苦行剑典为M；疾雷破山经、含弘光大典、白屋青云录、混元同尘典、抱元守一经、万物不迁法、秋水游心经、云篆度人经、不真自虚法、心无性有法、九霄雷劫录、雷池淬体功、南华玄感录、绳墨正法录、南华阐衍典、太易山藏经、玄牝道藏、空无般若经、万法都箓经、正一盟威箓均Z。Z贡献及所有功法AP增量显式0；未知键拒绝。身份、篇章和学习门槛沿L2，不从历史movePoints列授新移动来源。
+
+M先按global的1/4、Realm的legacy基础与各合法节点权重求旧累计精确v，再乘当前baseVMilli/当前legacyVMilli换算；所有合法来源聚合后最终vMilli只floor一次。AP来自当前境界行，不乘反应/功法/realmMultiplier。苦行练气九节点v5000、筑基开府4953、筑基圆满5333、金丹圆满6400；M消失时金丹4800，转回同节点6400。太易山藏经只有真实易数解锁且当前巽卦效果存在才投影临时+100vMilli（金丹）；没有正式巽卦消费者时不增加自动触发或存长期值，SIM具名夹具可验证已有实际效果输入。
+
+明确境界生产：Characters.csv新增realmId，char_taiyixiushi/char_sanxiuqiangdao明确realm_lianqi，原属性倍数不作为其推导依据；Enemies.csv沿既有realm列，SettlementContentImporter.BuildEnemyTemplate写明确境界，UpsertCharacterTemplate/CharacterTemplateMatches同步复制/比较realmStage；现ParseEnemyRows先为CSV五行生成templates，仅enemies正式catalog要求石甲兽一项，五行分别四练气与血影筑基，不新增或恢复敌人行。CharacterContentImporter的Char_Player独立模板冻结realm_fanren、Char_Enemy冻结realm_lianqi，只更新境界及派生AP/v，保留其他独立字段/GUID。角色/敌人CSV现有AP/v列及点购配置同名列只作导入的派生一致性校验列，不再独立编辑；Importer从唯一Realm表重建，不读取旧硬编码100000/2000。两角色、五敌人模板逐已列路径刷新，reserved敌人不因此接入场景。
+
+正式BuildCharacterData按新L2改为凡人100AP/v2，初始移动来源空；其他先天、出身和属性倍率保持既有输入，不借本卡重调攻防。既有小宗族已知术法保留，但凡人仍不满足练气施法资格；不伪造练气标签使其可用。新建玩家获得铁剑的练气条件仍沿EQUIP，凡人不提前取得/装备；已有合法装备旧玩家保留。将来需要正式凡人攻击内容或进阶玩法另行授权，本合同不造武器/突破流程。
+
+### 保存决定
+
+GROWTH新增权威节点来源而非只保存派生AP/v，所以新写入schemaVersion=5；必要记录为上述presence和来源数组，现有realmStage仍为权威境界，AP/v旧字段保留为校验/重建后的快照。CharacterRecord.Capture/Restore、HasCharacterPayload及GameRuntime.RestoreSave整体恢复都覆盖新字段；没有玩家却携带来源/标记拒绝；不得先清掉hasPlayer=false下的负载使其绕过HasCharacterPayload。恢复先验证原字段/引用，再按当前配置重建派生AP/v，准备所有领域对象全部成功才发布；非法/空境界或来源、溢出、presence矛盾拒绝，不改变live对象。
+
+GameSaveSerializer.Deserialize只做版本/结构迁移并保留原值，不独自判定catalog引用；GameSaveEnvelope.Restore收到已验证配置与原装备查询，检查境界/引用/来源并重建，GameRuntime全部成功才发布。schema4旧玩家只有明确合法境界、合法原AP/v及既有装备/引用时可机械迁移5，movementGrowthInputsPresent=true且movementGrowthSources=[]：旧系统没有移动节点生产者，不能从gongFaId补节点；旧派生值不覆盖新表。境界为空的旧玩家拒绝，不根据player/倍数推断。schema1/2/3有玩家维持既有拒绝；真正无角色/修炼负载的空会话沿现有政策迁到5再验证。未知schema/坏JSON拒绝，保留原档，不操作用户真实存档、不增加兼容执行器。取消空手本身不另升版本：保留unarmedBasicAttackProfileId废弃槽，WEAPON读时归空、写时空，真实主手字段按EQUIP保留。
+
+战斗中ActionPointLimitAtTurnStartUnits与当前余额不随长期AP上限变化重发；下一本人开始才快照新上限，余额不结转。装备仍不赠当前回合预算。v按当前合法来源重建后用于下一次权威移动报价，陈旧报价拒绝。Character不保存AP余额、回合次数、CT/CD或临时状态。
+
+## 五、重复费用、实例与事务
+
+REPEAT在CombatantSnapshot增加本回合成功次数账本：非普攻键是真实abilityInstanceId，普攻键是角色的一份basicAttack次数。同实例多profile/表现及重装共键；武器实例不进入普攻次数键，换武器用当前基础费和原次数。定义三元组与实例ID分开，使用者升境/换目标不能制造实例。既有GetAbilityInstanceId对未显式实例映射的actor:profile只适用于已证明唯一且单表现的实例；多表现必须注入已存在真实同实例ID，未知映射拒绝，不添加洗次数fallback。
+
+资格：Basic/Art/Divine主动且解析后ReuseCooldownTicks=0才套重复；Move/Guard/SwapSpell/UseItem/SwapEquipment、正CD、被动、自动触发排除。n=已成功次数+1；m取global1/1/1.25/1.5，第4次以后保持最后值，无通用次数上限。
+
+先按公共合同求基础净费B=max(minimum,ceil(max(0,base-fixed)×retainedPermille/1000))；本次C=ceil(B×mPermille/1000)。下限用于求B，不能在乘数后把附加费抵消；不对上次费用复利。现生产无获准AP减耗/返还来源，数组仍空。已有有限返还接口不新授来源；若技术夹具用返还，重复附加费不扩大原可返额度，以B而非C求原公共合同的可返上限，并保持原次数/总预算及净费门禁。
+
+Preview只读，报价字段精确为CommittedUseCount（已成功次数）、RepeatMultiplierPermille、RuleSetVersion、RuleSetSourceDigest、AbilityTierId及既有StateVersion/TurnSequence/AbilityInstanceId，ActionPointCostUnits仍是本次实付。Execute在取随机数/准备效果前复核同一报价和当前次数。准备副本深复制冷却、状态、重复账本及原可变集合；拒绝、AP/MP不足、陈旧确认不改变任何项。准备成功后单一同步提交扣费、发布结果、启动CD、计成功次数一次、累加CT/版本；不能先提交状态再发现计数溢出。合法未命中/目标资源已满仍计一次；取消/拒绝不计；多目标/派生共享一个根动作只付费计一次。
+
+现PrepareValidated的commit会复制效果字段，SpendActionPoints在commit前进行；实现必须确认CommitResolvedState不覆盖已付AP/重复账本，或将扣费和计数一并置入已准备副本后整体发布。只用现有事务入口，不另建执行器/补偿重试。BeginOwnTurn唯一重置重复次数，ClearActionPoints/移动/结束预览/换术/换装不制造新个人回合。CT/CD/本人被动仍按公共合同时点，14次连发不等于14次回合恢复。
+
+## 六、固定档承载和最小状态载荷
+
+POTENCY：物理/神魂公式中施术者有效A先min(A,固定档对应攻击承载)，A²/(A+D)的两处A使用同一值；目标真实D不截断。保留普通伤害境界规则，不额外乘状态C。Heal固定healAmount是明确量值，不当成无上限施术属性；来源属性治疗/护盾按明确recoverySoulAttackCapacity截神攻，新增其他来源属性必须先有原型合同。聚灵魂魄先截25再原式：普通自身12/他人6，节点自身25/他人12，最后截目标MP余量。
+
+STATUS只打通百分比攻防及概率Stun窄链；不批迁旧Spells/Skills，不新增生产玩家技能。AttackProfiles新增精确列：statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest。原buffMultiplier对新buff/debuff必须空，防止两份比例；stat相对载荷仅buff/debuff必填：statusAttributeId为physical_attack/soul_attack/physical_defense/soul_defense，比例非零、buff正/debuff负，持续正，首批普通属性测试原型层上限固定1、刷新枚举replace_stronger（同来源同statusId更强替换并用新期限，弱者不刷新强者，等强保留原期限）；不开放通用stack，其他原型仍须自己的获准合并合同；statusId非空稳定。controlUsesMindContest严格0/1，controlChancePermille为0～1000；带强控的伤害行必须明确两列，其他行为空。强控只Stun、下一整本人回合、不叠不刷新；无任意脚本效果字符串或通用注册器。
+
+解析器为本次具名窄原型写明固定元数据：正属性BUFF、负属性/Stun DEBUFF，攻击标签ATTRIBUTE|OFFENSE、防御ATTRIBUTE|DEFENSE、Stun ACTION|CONTROL；removalPolicy=NORMAL，sourceRef是真实来源实例，自施SELF_ABILITY、他施OTHER_ABILITY，持续按本人结束并于战斗结束清除。这些是已声明原型规则，不按友敌意图猜极性；水系同样记录对应独立statusId及元数据。来源实例、施加者境界、固定档、目标未增益基础属性、施加时点由不可变载荷和真实命令补齐。CombatAttackEffect增加对应Buff/Debuff投影；CombatEntryAdapter不再跳过这两种合法载荷；CombatSession.ValidateAttack明确buff只自/友、debuff及伤害强控只敌，沿资格/目标/射程/封灵校验。CombatResolutionRolls增加独立ControlRoll百分数0～100，不能复用命中roll；EncounterCoordinator现取四个NextPercent的真实生产调用补独立第五样本，Stage共享内核同理，不能让默认0代替新roll；随机只在完整合法命令准备时取得，预览/拒绝不耗随机。
+
+完整链：严格CSV解析→AttackProfileData→实际CombatEntryAdapter→CombatAttackProfile→CombatSession合法性→CombatCommandService→Resolver准备副本→Snapshot状态发布→后续攻防消费者/本人时点。STATUS测试实体明确fixture_percent_attack_up、fixture_percent_defense_down、fixture_probability_stun，经同一严格解析和正式Adapter/命令入口创建临时测试定义，镜像交换敌我；前两fixture为art/status_only，tier_lianqi，25AP/净25/MP0/CT0/burst CD4，比例分别+100/-100permille、持续2、层1/replace_stronger；强控fixture为art/physical/damage_budget，练气20AP/净20/MP0/CT0/control CD12，E=1、L=25/13、伤害权重1、概率100permille且不走神识对抗，正伤害后独立roll判定、Stun一整本人回合/no_refresh。具名测试资格/范围显式声明，测试加载不授正式玩家。不是新生产ID，不进正式catalog/CSV。生产现有四动作本身没有这些状态，不把夹具覆盖说成玩家状态内容已投产；水系具名消费者是SIM的WaterArt/WaterDivine，不偷渡同名L2全部效果。
+
+C按施受大境界序号差读global五档；属性总增量=clamp(基础比例×C,±30%)×min(目标未增益基础属性,固定档对应承载)。同来源叠层只按原声明，先聚合总比例再峰值，不逐层截后无限累加；实现只支持上述四属性，概率属性15个百分点门禁在配置/载荷验证中冻结，不因该常量新增命中/闪避buff内容。具体数值不套C；AP/v/CT/CD没有新来源。self低阶增益仍C=1但截承载；1460肉攻练气10%只增12，金丹档增146。
+
+水控p_base=clamp(.10+(施神识-目标神识)/50,.05,.90)，再p_final=clamp(p_base×C,0,.90)，不加旧保底、不延长。命中且正伤害、玄同免疫、已有Stun不叠不刷新沿原定义。WaterDivine印记最多3层，每层5%，总比例min(.05×层×C,.30)，再乘min(目标未增益肉防,来源固定档承载)；记录来源/档/施加者境界，不只存层数。川流基础比例=.10×U_reduction×35/6，再C并截30%，自益C=1；下一次正伤害消费、重施覆盖一次、战斗结束清除，不套HP容量。多来源不由本合同新增叠加权。
+
+statuses当前readonly列表在MemberwiseClone后共享且CommitResolvedState不发布，STATUS必须深复制每条可变记录并在唯一成功提交发布；ApplyStatus孤立测试不合格。状态时长、本人当前施加延迟扣结束次数、免疫/祛禁/死亡清理沿公共合同；强控跳过仍恢复原HP/MP、AP0，下一正常本人回合可动。
+
+Kuxing保持原HP>2、生命比例练气10%/筑基15%/金丹20%、至少留1、筑基起低血目标×1.3、忽略格挡、下一物理受击肉防代价30%及金丹原自益份额；U_recovery=(3/10)U_current，满足金丹资格后回复floor(实付HP×U_recovery/3)，初版U=3恰为原30%回复；资格/生命比例按使用者原境界，伤害L按固定档，低档测试不能提前授高阶机制，重复AP不增生命回复预算。
+
+## 七、无空手与实际角色绑定
+
+WEAPON沿EQUIP已经形成的真实主手实例/库存/资格投影授权，合法主手保留；无主手空绑定可以入战但普攻不可用。旧unarmed字段清空且不能投影，basic_unarmed行及asset/meta删除；同时解除Spawner恰好一个绑定和SettlementContentImporter强制石甲兽徒手的旧约束。保留已存在铁剑/铁刀，不发额外物品、不造爪/拳套，不给敌人绑定玩家库存武器。
+
+| 实际实体 | 当前事实 | 无空手后合同 |
+|---|---|---|
+| 正式新建player | 当前仅basic_unarmed，小宗族起源有两术法，其余无攻击能力 | 取消徒手；按GROWTH凡人创建，不越练气门槛；合法移动/Guard/Wait/EndTurn仍可用，日后已满足练气且EQUIP合法主手才普攻 |
+| 合法已装备旧玩家 | EQUIP正式结果证明的主手实例 | 库存/实例/引用保留，不重发武器；普攻按当前武器档与公共次数 |
+| 旧无装备玩家 | 只有徒手字段或双空 | 可入战，无普攻；已合法且满足资格的其他术法/非攻击动作保留 |
+| enemy_shijiahou | Enemies唯一guanzhong正式敌人，basic_unarmed，主手与equippedSpells空 | 无武器/术法攻击；保留现LegalActionAI移动/防御/待机/结束回合，不能伪装为已有爪攻击 |
+| Char_Player/Char_Enemy、两CSV人物、其余敌人模板 | 当前独立/保留模板，不是全部正式场景实体 | 逐已列asset移除旧徒手引用，其他合法动作沿原定义；不授武器、不接入保留敌人 |
+
+石甲兽失去攻击能力是已批准无空手且不新增武器政策的实际结果，不称完成新的敌人攻防体验。若验收另要求它有攻击或凡人立即持练气武器，需负责人授权新内容/资格政策，按停止条件结束，不能隐式绑定。首批正式场景完整体验仍由SCENE及父项关闭条件核定。
+
+## 八、叶子职责、路径与验收闭合
+
+本次只修改已授权十张下游卡的精确expectedPaths与合同准备段，保留所有route/owner/dispatchState/blockedBy及backlog具名前置。每卡列出的新增Unity文件/资源同时列.meta；修改既有asset不改GUID。表schema与资产写入由CONFIG；同路径的后续算法修改由相应叶负责，语义不因路径重合重做。执行/转ready前各自按最终expectedPaths重新风险预检。
+
+| 叶子 | 有限结果/新增真实所有者 | 最小验收 |
+|---|---|---|
+| CONFIG | 三表+固定类型/asset+catalog绑定、AttackProfiles引用/载荷schema | 四表整批拒绝/零写入、往返/GUID、版本/摘要、改参投影变化；不签算法/平衡 |
+| GROWTH | 聚合派生/权威节点输入、创建/Restore边界、实际Importer与Bootstrap/Persistence调用 | 六境界/合法玩家范围、苦行节点精确累计、Z/去重/废功；真实创建/保存5/旧4迁移或拒绝原子；当前回合不补AP |
+| REPEAT | Snapshot账本、CommandService报价/提交；Session注入规则 | 20/20/25/30；预览不写、取消/拒绝不计、未命中计、跨表现/跨武器、下本人回合重置、失败零部分状态 |
+| POTENCY | Resolver所有攻击输入与聚灵来源承载；只读固定档 | A²两处同截断、目标D不截、低阶/同阶、重复费不增U、聚灵12/6/25/12 |
+| STATUS | importer载荷/Adapter/目标/独立roll/Resolver/深复制发布 | 完整正式链的正负/自益/敌我对称；C五档、总峰值/持续/免疫、失败无漏写；不签新状态内容投产 |
+| WEAPON | 创建/旧档/Importer/Spawner/Session/Coordinator与现有asset引用 | 有主手合法、无主手可入战/不可普攻；库存不增、恢复不还徒手、石甲兽回合合法结束 |
+| SIM | GameData四表、Combat.CreateAbilities与RunBattle、Stage共享内核、SelfTests/csproj | 两入口分别含双方/2v2/根动作一次支付计数、Kuxing/水状态/本人被动频率、显式固定低档；Release build→默认run及行动经济自测 |
+| BALANCE | Stage/Program矩阵与四表参数；生成资产以相同摘要导入 | 同境连发/组合、高境低档、长战MP/控制/恢复、被动、AP/承载/CD各局部敏感性；算法错退原叶，不调L掩盖 |
+| PREVIEW | 现有不可变DTO/Coordinator/动作栏/预览 | 第1/3/4次真实报价/实付、武器沿旧次数、取消/下回合/CD剩余tick/无武器原因；两分辨率真实画面 |
+| TUNING | 最终四表/生成资产/引用与已有物品参数发布 | 最终表摘要与BALANCE完全一致、一导入同步；差异输入返回数值验收，不改算法或补新内容 |
+
+BattleSim新可调输入从GameData旧approvedAbilityCosts/approvedGrowth对应的成本、基础v/M节点参数读取窗口切到四表；其他原八属性GongFaTables/原型与具名预算来源不批改，21身份/资格映射保留为闭合结构。真实生产读所有合法ID，不再“恰好三ID”。报告必须区分泛化测试定义、真实生产档、旧规则基线。调参只改唯一表，派生asset需同步；BALANCE允许重新导入生成资产，但不改算法/Importer修缺口。
+
+PREVIEW将上述新增只读字段逐一投影到既有CombatActionPreviewSnapshot，沿用RemainingCooldownTicks与RejectionReason。仅消费Preview的实付、成功次数/乘数、固定档/CD与权威不可用原因，ProjectQuote映射DTO，UI不重算费用/次数/状态。BuildActions无武器普攻不可用原因通过既有Language表键提供，不能让UI造假profile；动态更新在成功提交/换装/本人开始后从同一权威快照发布。额外自动连招不在范围。
+
+## 九、切换、验证和停止边界
+
+本合同签收只要求原文/源码映射、字段/来源/生成路径闭合、下游授权准备及管理检查，不要求运行未实现的新算法。新方案实现后才进行SIM功能与BALANCE数值实跑，最后TUNING生产摘要和SCENE体验，父项不在本轮关闭。纯合同算术不是角色平衡结论，旧报告不能签新费/新承载。
+
+下游表输入变化后只重验受影响范围；在自己的worktree缺project.assets.json时restore一次，再规定Release --no-restore build→默认--no-build run。Unity实际运行/截图只由相应叶取证；配置与功能测试不代替画面/平衡。若需要新修炼流程、状态通用引擎、全物品/115内容迁移、新武器/高阶生产身份或未批准资格变化，停止，不加默认/重试/兼容分支。本合同不改变任务拓扑或自动化控制面。

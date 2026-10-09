@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- 2026-10-09：负责人授权境界AP成长初版定标与实施建卡；标准见docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9节，完整新增11叶及复用交付链见实现规划追加图。AP2-RULES已于1499d68a正式完成归档，AP2-CONTRACT完成前置与风险核对后进入ready，其余新增叶继续等待真实依赖；新方案尚未运行时接入或平衡定案，旧BALANCE只作旧基线。
+- 2026-10-09：负责人授权境界AP成长初版定标与实施建卡；标准见docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9节，完整新增11叶及复用交付链见实现规划追加图。AP2-RULES已于1499d68a正式完成归档；AP2-CONTRACT本轮完成三表/运行时接入合同及十张下游卡精确路径准备，证据见同ID验证记录和归档，其余新增叶的具名前置与阻塞状态保留待正式进入master后维护。新方案尚未运行时接入或平衡定案，旧BALANCE只作旧基线。
 
 
 - 2026-10-09：N-COMBAT-AP-BALANCE-01完成501行新AP行动经济实跑与首批数值定案，Release构建、行动经济自测、默认完整run通过；首批费用与有限成长边界见开发管理/统一行动力数值定案.txt，全部证据见开发管理/N-COMBAT-AP-BALANCE-01-验证记录.txt及同ID归档。Unity道具／装备功能、生产回填及最终场景仍待各自验收，下游具名前置保留，进入master后由后续维护核对。
@@ -30,7 +30,6 @@
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP-ITEM-01 | P1 | codex | 已排队 | — | 战斗道具统一费用与库存提交 | 开发管理/任务卡/U-COMBAT-AP-ITEM-01.txt |
 | U-COMBAT-AP-EQUIP-01 | P1 | codex | 已排队 | — | 战斗换装备统一费用与长期写回 | 开发管理/任务卡/U-COMBAT-AP-EQUIP-01.txt |
-| D-COMBAT-AP2-CONTRACT-01 | P1 | codex | 已排队 | — | 境界行动力配表与运行时接入合同 | 开发管理/任务卡/D-COMBAT-AP2-CONTRACT-01.txt |
 | U-COMBAT-AP2-CONFIG-01 | P1 | codex | 阻塞 | D-COMBAT-AP2-CONTRACT-01 | 境界行动力参数表与共享配置投影 | 开发管理/任务卡/U-COMBAT-AP2-CONFIG-01.txt |
 | U-COMBAT-AP2-GROWTH-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 角色境界AP与移动效率成长接入 | 开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt |
 | U-COMBAT-AP2-REPEAT-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-CONFIG-01 | 零冷却能力连续使用AP报价与提交 | 开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt |

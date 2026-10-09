@@ -1,0 +1,39 @@
+# D-COMBAT-AP2-CONTRACT-01 验证记录
+
+日期：2026-10-09；主责：Codex；主模型：gpt-6.1-sol（共享入口冻结executionModel、codex exec -m与首条启动证明）；基线：c1eb571f033357623b9226ac67af7d30421bb479。
+RunId：e5ddb616-8a4c-4df5-aa5e-ba7c528aa83c；唯一candidate worktree/branch按入口提供，未调用runtime、集成、领取其他任务或修改其他worktree。
+
+## 写前原子性、授权与模型协作
+
+- 原子结果是一份跨现有所有者的配置/接入合同和十张已知下游卡路径准备；不写src、simulations、CSV或asset，不新增任务/拓扑。卡头预检已由共享入口绑定run/task/card/index验证，matched/mustRead/gatePointers为空，与schema2风险投影一致。
+- 已读取AI协作规则“任务卡中的模型协作提示”，主模型保持入口值。按本卡明确的独立只读工作面调用原生辅助：/root/character_boundaries核查角色/保存/无空手；/root/sim_mapping核查SIM双入口/17映射/状态链。无模型覆盖、无第二责任会话，工具会话标识即上述任务名；辅助继承主会话，其独立实际模型/推理强度工具未另证实，标为未核实。两辅助未写文件、未改任务/队列/提交/runtime，未派生。主责逐源码复核意见和完整差异，最终验证/唯一candidate统一承担。
+- 使用unity-agent-workflows核查模块及运行所有者；加载project-structure-discovery、content-and-systems、ai-workflows引用及UNITY_STRUCTURE.md/content，实际所有者以实时源码而非结构摘要为准。本轮不改Unity结构/asmdef，不签可见输出。需求及首轮参数已经获得授权，本轮不重新启动产品方案选择。
+
+## 直接事实与合同收口
+
+- 新设计源是规格§9、功法L2§九、术法神通L2§十一；状态元数据及写入保护按战斗状态与时空因果结算规则§一，动作/三时钟/事务/保存基线按公共、换装、道具合同。
+- 实际SIM选招符号是Combat.CreateAbilities；全模拟1v1/2v2均RunBattle，StageCombatReport另有共享CombatSession入口。17测试定义显式固定三档共51三元组，不是新增生产ID；真实成本与输出仍AttackProfiles唯一源，伤害预算模式保存E/L/权重，武器保持自身显式倍率，聚灵保留具名公式。
+- 三固定schema表分别10、14、43列；唯一CombatRuleSet资产及现有catalog引用；单位、精确有理数、AP ceil/v floor/状态增量取整、固定档CD、缺行/坏引用整批拒绝、四表版本/字节摘要与生成路径闭合。没有新通用配置框架或双版本运行分支。
+- 角色现有进度只有功法/境界，没有已解锁移动节点生产者；合同冻结聚合内部进度变更及最小权威节点记录，创建/恢复/现有变更同派生。新记录要求schema5；旧4明确境界和合法字段才迁空节点来源，旧派生AP/v不覆盖新表；空境界拒绝，不操作真实用户档。正式凡人创建/练气资格与旧合法装备分别明确，未实现完整修炼流程。
+- 辅助一度将“唯一正式敌人”理解为“CSV只有一行”；主责直接读取证明CSV仍五行，ParseEnemyRows先为五行创建templates，只有enemies正式catalog限制为石甲兽一项。最终合同从五行明确realm投影五模板，没有用倍数猜境界、恢复旧行或扩大正式敌人集合；BuildEnemyTemplate/Upsert/Matches同时处理realmStage。
+- Buff/Debuff投影当前跳过，状态列表在准备副本中共享；合同明确有限载荷、完整正式Adapter→命令→准备/发布链、状态深复制、目标合法性及EncounterCoordinator第五独立ControlRoll生产者。百分比属性/强控三个具名fixture不进入正式玩家内容；水系实际泛化消费者归SIM。单独ApplyStatus测试不足。
+- 当前玩家/石甲兽都没有真实武器；石甲兽无术法。无空手后可入战、不可普攻，保留现有非攻击动作与合法结束回合，不补装备/爪攻击；真实主手及旧保存槽按合同迁移，完整体验留SCENE。
+
+## 已执行的最小充分验证
+
+1. 对十张准备后的卡逐一执行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/get-experience-risk-preflight.ps1 -TaskId <对应ID>，全部退出0/status=ok。索引digest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。九卡零命中；SIM保留EXP-BS-001，mustRead193字符、无gates/gatePointers。已消费正文：修改BattleSim且要求Release build/--no-build run时先成功build再run，文档/未改输入不触发。本轮只读模拟器，未跑旧矩阵。
+2. SIM必查符号准备段进一步精确为GameData.ProjectMovement/productionAttacks；Combat.CreateAbilities后，仅重算该变化卡预检，仍status=ok；最终卡digest=78b541deb7df2ed302f70d6559ef7f133225cca1d76d291414a86227214b23b4。其他未变化检查不重复。
+3. 临时Python检查从git基线读取十卡，逐项比较id/route/owner/dispatchState/blockedBy/stateReason/executionModel/riskPreflight，完全相同；expectedPaths无重复，13个尚待创建的Unity文件均有对应.meta且父目录存在。首轮检查错误地要求未来.meta已经存在，修正检查器为配对授权判据后通过，项目文件无需修补。
+4. Python Fraction精确算术通过：20AP序列20/20/25/30，100预算4次共95；50AP在100/300/1000预算为2/4/14次，实付100/237.5/987.5；500AP在1000预算2次。苦行练气九节点5000、筑基开府4953、筑基圆满5333、金丹圆满6400vMilli；控制10%五系数2.5/5/10/15/20%，低阶自益12与同档146、贯石击L=15/13、水减伤旧35%再截30%相容。三表精确表头无重复列，17映射齐全。只证明合同算术，不是角色平衡实跑。
+
+5. tools/check-task-cards.ps1 -TaskId D-COMBAT-AP2-CONTRACT-01 -Postcondition CodexClosedOrNonReady -OutputJson退出0/status=ok，cardCount=75、readyCount=2、taskState=completed；tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理退出0，743个文件检查通过。已复核本轮完整变更，队列/backlog只移除当前任务，下游状态与具名前置保留。
+
+6. 提交前check-pending-whitespace对15个现存授权文件退出0/OK；首次包含已归档删除源时按脚本合同报Missing path，随后只核对现存文件。归档删除源仍保留在提交授权及最终no-renames差异中。正式finalizer负责限定暂存、git diff --cached --check及唯一candidate提交，结果以提交输出为准。
+
+本轮src/simulations/docs/CSV/asset输入没有变化，不运行Unity编译/PlayMode、BattleSim build/run或check-data-chain。后续各叶必须按真实实现与最终摘要验收，不能复用本轮算术签功能/平衡。
+
+## 结果、边界与后续
+
+完成配置合同及十张下游卡的允许路径/有限验收准备，当前任务移入归档并仅移除自身queue/backlog行。下游具名前置、状态与队列相对次序不变；正式结果进入master后由后续QueueMaintenance判断准备/ready，本轮不解锁下游。
+游戏代码、参数运行输入和资产均未修改；新方案尚未接入/数值定案，凡人无武器及石甲兽无攻击的体验边界需后续场景按授权验证。正式结果由共享入口最新master重放，本轮只形成一个直接后继candidate。
+收尾仅用已有事实/diff/验证检查经验候选：本轮是合同准备，没有完成新故障修复；潜在状态事务缺口作为下游明确验收，不将未发生/未验证问题写成正式经验，也不写空章节。

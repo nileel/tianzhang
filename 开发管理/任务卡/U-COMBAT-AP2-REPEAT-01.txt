@@ -21,7 +21,9 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt",
-    "开发管理/任务归档/U-COMBAT-AP2-REPEAT-01.txt"
+    "开发管理/任务归档/U-COMBAT-AP2-REPEAT-01.txt",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -49,6 +51,11 @@
 
 - 按真实能力实例保存当回合成功次数；所有武器普攻共用角色普攻计数，换装不清零；零CD主动适用，移动/道具/换装排除。基础净费按既有减耗求出后乘本次倍率并向上取整；复制解析与commit账本一致，预览不写。下一本人回合重置，不由移动、换目标、换术或重装实例洗次数。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-REPEAT-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
+
+## 2026-10-09 配置合同与精确路径准备
+
+- 合同第五节冻结真实实例账本、角色共用普攻次数、同源B后乘m的向上取整及准备/提交顺序。只在BeginOwnTurn重置，准备副本深复制账本；失败不漏计、不取随机数，commit不得覆盖已付AP/计数。公共有限返还技术夹具不扩大附加费可返额度；生产来源仍为空。本卡以CONFIG提供规则完成消费者，不造第二执行入口。
+- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 
