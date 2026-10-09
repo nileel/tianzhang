@@ -1,0 +1,173 @@
+# 统一行动力道具合同
+
+日期：2026-10-09；设计任务：D-COMBAT-AP-ITEM-01；源码输入：e74dc361ffb2979a9340bd03bf79fb0421a87350。
+负责人已确认新增一种练气自用疗伤丹药，经练气新角色初始物资取得。本合同冻结该物品的生产身份、资格、原子使用与保存时点；不表示 Unity 已可用或数值已平衡，不授权修改下游卡及其路径。
+
+## 一、内容与真实所有者
+
+- 唯一新增 L2：docs/道具/丹药/练气疗伤丹药.txt；稳定 ID=item_huoxue_dan，药名活血丹，下品丹药；L1 指针：docs/道具/道具事实速查.txt#五、练气疗伤丹药行。
+- 使用语义沿开发管理/统一行动力公共合同.txt#五、同源费用、修正与原子提交、#六、三时钟、回合事件与状态、#八、Item／Equipment的窄接口位置。公共CT／CD／Guard／失败／合法无收益语义不变。
+- 当前 Items.csv 只有 item_lingshi_low 与 item_shijia_piece，无战斗效果。SettlementContentImporter.ParseItemRows／ValidateApprovedItem 限定两行与 maxStack=99；接药必须显式扩充这个获准集合，不能只添CSV行或改 AdventureContentImporter。
+- ItemData 当前只有身份、语言、scope、category与maxStack；ContentCatalogData.TryGetItem 只提供查询。InventoryGrantUseCase 位于 InventoryStore.cs，Grant 只发放，不接受负数量消费。
+- 当前 CombatCommand／CombatSession／CombatCommandService／CombatActionResolver 无 UseItem。既有 resolver.PrepareValidated→service.Execute 是候选准备与同步提交链，不另建道具执行器。CombatantSnapshot.RestoreHealth 已按缺失生命截断，但自身不防复活，必须先在命令入口拒绝死亡使用。
+- CharacterCreationRules.BuildCharacterData 明确 realmStage=练气；StartMenuSceneInstaller.CreateNewPlayer 调 BeginNewGame 后首次写盘，GameRuntime.Initialize 建空库存。药物初始发放接在这条创建链，不能放进 RestoreSave、Initialize 的通用调用或场景 Awake。
+- FormalEncounterResult 只持胜负／掉落；EncounterCoordinator.Complete 清会话后调用 AdventureController.ResolveEncounter，结果回场景不自动保存。既有保存为 SettlementSceneInstaller.SaveAndReturnToMenu→GameBootstrap.SaveActiveSlot→GameRuntime.CaptureSave→GameSaveEnvelope，实际 schemaVersion=4。
+
+| 边界 | 唯一所有者与冻结方向 |
+|---|---|
+| 药物内容、恢复量与初始数量 | Items.csv→SettlementContentImporter→ItemData→ContentCatalogData；不在UI／角色／战斗常量重复生产 |
+| UseItem费用、CT及CD | 正式 AdventureScene 的 AdventureSceneInstaller.ordinaryActions→CombatEntryAdapter→CombatSession 的 CombatOrdinaryActionDefinition；沿公共普通行为配置位置，不在Items复制第二份AP费 |
+| 库存发放与消费 | World.InventoryStore唯一替换；InventoryGrantUseCase负责初始发放，TryPrepareCombatConsumption负责完整消费候选 |
+| 资格与桥接 | Adventure由注入的当前玩家境界、只读药物定义及库存事实构建标量投影；不套术法灵根／能力槽门禁 |
+| 战斗AP、当前生命及回合 | CombatSession／CombatCommandService／CombatActionResolver／CombatantSnapshot；只接纯标量与准备完成的结果，不引用World／Character／Content对象 |
+| 正式输入与演出 | Gameplay.Contracts稳定ID／不可变报价→CombatPresentation；确认进入同一EncounterCoordinator.ExecuteCommand链 |
+| 长期库存快照与磁盘 | GameRuntime持有库存；GameSaveEnvelope捕获／验证恢复；既有GameBootstrap.SaveActiveSlot写盘 |
+
+不把本药伪装成术法、攻击profile或永久属性来源，不创建通用效果DSL／药方／商店／掉落／新背包。已冻结铁剑／铁刀合同独立；下游准备时须保留届时已经正式发布的武器字段／行，不能用本卡的“两行”源码快照覆盖后继物品。
+
+## 二、单项定义、资格与同源报价
+
+生产身份：item_huoxue_dan、displayNameKey=item_huoxue_dan、descriptionKey=item_huoxue_dan_description、contentScope=content_scope_production、itemCategory=pill，maxStack候选99。
+
+Items／ItemData增补下列平铺字段；非本药行显式为空，既有装备专用字段在本药行显式为空。不以缺字段默认生成药效，不把空值解释为零恢复或免费药物。
+
+| 字段 | 本药值／单位／校验 |
+|---|---|
+| combatUseEffectId | restore_current_health；首批仅此单效果，未知值拒绝 |
+| combatUseRealmId | realm_lianqi；实际使用者必须正好练气，不是“练气及以上” |
+| combatUseTargetMode | self；TargetId=ActorId且非空，不隐式修正错误目标 |
+| combatUseHealthRecovery | 正整数当前生命候选80；不得改生命上限，缺失／非正／溢出拒绝 |
+| initialGrantQuantity | 正整数候选3，且≤maxStack；只消费于新练气角色创建，不读档补发 |
+
+一次命令固定消耗1颗，无灵力费。未知药物、非production定义、材料／武器冒充药物、错误字段组合、缺语言／目录引用均拒绝。导入前完整校验全部行与交叉引用，失败不写任何asset；重复导入保留GUID。
+
+UseItem普通行为显式候选：ActionPointCostUnits=30000、MinimumNetCostUnits=30000；CtPenalty=0、ReuseCooldownTicks=0。前两项待数值定案，后两项为本次功能约束。会话须拒绝缺定义、基础费≤0、净费下限≤0或大于基础费；现有Guard／SwapSpell配置保持。
+
+资格：只允许本人的就绪个人回合、存活的练气使用者、自身目标、允许主动使用道具的当前控制状态、至少1颗库存、足够AP、未结束的会话。各练气品级均可用，不要求灵根、门派、功法或装配槽。凡人、筑基及以上、未知境界、死亡／离场、其他目标、他人库存、缺会话／错误回合均拒绝。不得直接用不防复活的RestoreHealth绕过资格。
+
+唯一报价仍为 CombatCommandService.Preview 的 CombatCommandPreview；UseItem需携带 ItemId、ItemQuantityCost=1、恢复量及截断后恢复预期、库存版本，连同已有 ActorId／TargetId／Kind／ContextVersion／TurnSequence／StateVersion／AP净费／CT／CD。Gameplay DTO仅复制当前报价和可用数量；按钮不算费用、不扣库存、不直接回血。预览纯读取，不取随机数，不推进时间。
+
+库存版本沿同一 InventoryStore.Version 非负long：成功库存替换／恢复时checked递增，查询／拒绝不递增；复用换装合同同一字段，不另建“药物版本”。报价精确绑定该值，任何物品发放／消费／恢复都能使旧报价失效，不能只比较本药数量；版本不写存档。确认同时复查身份／境界／控制、目标生命、药物定义、全部版本与费用；恢复量或费用发生变化，旧报价拒绝，重新选择才形成新报价。
+
+## 三、准备与唯一原子提交
+
+唯一库存写回时点为每次成功 UseItem 的同步权威提交，当场扣一颗；没有战斗影子库存或战后消费清单。失败／取消不替换库存。MP、位置、生命上限、装配、其他能力冷却和额度均不因本药变化。
+
+1. EncounterCoordinator确认已有报价及当前上下文；同源Validate／Preview先校验第二节所有事实。ICombatExternalResourceQuery只投影稳定ID／数量／资源版本／资格标量，不能暴露World对象或外部可失败写入。
+2. World.InventoryStore.TryPrepareCombatConsumption验证获准itemId、恰为1的用量、完整当前库存、预期Version及checked后继版本，准备完整替换状态；数量1减为0时删除该条目，不保留quantity=0的非法存档记录。此阶段不写live库存。
+3. 沿CombatActionResolver.PrepareValidated及CombatCommandService既有准备阶段，构造存活actor的完整结果副本：先退出Guard，再令CurrentHealth增加min(恢复量,MaximumHealth−CurrentHealth)。准备AP扣费、根动作记录、所有版本及回合结果；全部可能业务拒绝／溢出在写入前完成。活血丹无随机命中，预览、成功和失败均不消耗随机源。
+4. Adventure桥接把领域消费候选与同一Combat准备结果接到既有同步提交边界；无yield、无异步、无中间发布。提交仅应用已验证的库存替换及Combat结果、完整AP扣费与动作／版本记录，不能再调用可业务拒绝的Grant／库存重新校验／效果准备。InventoryStore提交仍是唯一库存写入者，Combat只应用已准备的纯规则结果。不能先Execute成功后再尝试扣药，也不能先扣药后让Combat尝试执行。
+5. 成功后一次发布库存／生命／AP投影再演出；HasCommittedBenefit成立，不能待机。AP尚余则继续本个人回合，AP耗尽／死亡／会话终结走既有唯一结束入口；不因服药重发AP、重复回合恢复或提前推进CT／CD。
+
+所有拒绝保持AP、MP、库存／版本、当前生命／上限、Guard、位置、CD、累计CT惩罚、次数、回合版本及随机源不变。满血且其他条件合法时是成功无收益：仍扣1颗及完整AP、退出Guard、记录成功根动作与版本；不能把它当取消。旧确认成功一次后，原报价因会话／库存版本改变拒绝；冷却0时允许新报价再次使用，无通用一次使用上限。
+
+下游在ready准备和实现中必须证明库存与Combat结果可在同一不可拒绝的同步提交中应用；若做不到则按既有停止条件停止，不增加补偿、重试或并列执行器。本合同只冻结这一证明义务，不声称现行代码已经具备消费事务。
+
+## 四、初始发放与持久化
+
+- BuildCharacterData只生成角色，药物发放不侵入点购规则。CreateNewPlayer在BeginNewGame建立新角色／空库存后，按实际练气资格和正式ContentCatalog解析本药，调用现有InventoryGrants.Grant一次，数量取initialGrantQuantity候选3，然后再执行原有SlotStore.Write(slotId,runtime.CaptureSave())。
+- 药物定义／数量／发放／初始写盘任一失败，不激活该slot、不进入世界；沿当前CreateNewPlayer清理未成功的新runtime并返回失败，不保留半套初始物资。不吞失败、不补发重试；若届时已接入其他初始物资，在同一次完整初始Grant中组合药物，不重复调用发放来掩盖失败。
+- 初次成功存档必须含该ID及完整初始数量；LoadPlayer→RestoreSave只恢复存档库存。已有合法schema4档缺该ID仍合法且数量为0，不迁移、不补3颗、不提升境界。新建凡人／其他境界不发本药。
+- 战斗成功消费立即反映在GameRuntime同一个长期InventoryStore。胜利、失败、离场及再次进场都保留已经消费的数量；未确认退出零消费。FormalEncounterResult／AdventureController只处理原有结果与掉落，不再次扣药、不新增本药掉落。
+- 磁盘时点沿既有非战斗保存：战后回场景，再通过现有城镇保存返回主菜单入口触发SaveActiveSlot，捕获最新库存一次；随后LoadPlayer应读到剩余数量。场景返回本身不是已写盘，本卡不增加战斗中途保存或自动保存入口；退出而未保存时仍加载最近一次存档，不宣称崩溃恢复保证。
+- GameSaveEnvelope.InventoryRecord已有itemId／quantity，保持schema4，不添加已发药标记或消费日志。恢复未知ID、重复ID、负数／零数量、超maxStack或缺目录引用时沿现有整体失败边界，不发布部分live owners；空库存合法。初始发放只由新建流程发生，故无需新增补发状态。
+- 疗伤只修改本战斗CombatantSnapshot.CurrentHealth；不增加Character长期资源写回或保存字段。库存保存不应把临时生命、AP／CT／CD／冷却／报价带入存档；本药不是培元丹的永久生命增益。
+
+## 五、候选试跑与最终发布
+
+| 参数 | 候选 | 试跑依据／必须验证的取舍 | 状态 |
+|---|---|---|---|
+| 当前生命恢复 | 80 | 固定量有明确上限与溢出截断；比较低／中／高生命上限及受伤程度，不假定同百分比收益 | 待N-COMBAT-AP-BALANCE-01实际运行 |
+| AP基础费 | 30000（30AP） | 100AP下服药→既有40AP普攻余30AP；两次服药→普攻恰100AP，允许攻击／疗伤取舍 | 待N-COMBAT-AP-BALANCE-01实际运行 |
+| AP最小净费 | 30000 | 当前无获准减耗／返还，净费同基础费，不能免费无限回复 | 待N-COMBAT-AP-BALANCE-01实际运行 |
+| 初始数量 | 3 | 初始总恢复上界240且仅一次发放，提供有限重复样本；比较1／3／5颗的遭遇收益与消耗压力 | 待N-COMBAT-AP-BALANCE-01实际运行 |
+| maxStack | 99 | 与现有库存一致，3≤99；只开放初始取得，不以容量99声称可无限补给 | 待N-COMBAT-AP-BALANCE-01核对容量边界 |
+
+功能约束固定为每次1颗、MP0、CT0、重用0、自用即时恢复，无新修正来源。候选80并不来自培元丹永久HP+80的平衡结论；两者效果不同。当前角色MaxHealth由CharacterAttributes.Derive按根骨、境界和长期加成生成，故恢复量须对实际构筑核定；本轮不凭文本比例判断强度。
+
+下游N-BALANCE至少按相同显式抽象动作边界记录无药基线与本药候选的受影响1v1／2v2样本、恢复实际量／溢出量、用药次数、AP与动作数、CT／时间代价、胜负／剩余资源及正净支出；固定种子、参数与控制／死亡／满血边界。80／30AP／3颗为首选候选，恢复40／120、费用20／40AP、数量1／5为围绕它的敏感性输入，分别改一个参数查取舍；这些同样待实际运行验证，不是新获准药物。无需BattleSim复刻库存UI、初始保存或地图对象，也不把下游实跑反挂成本卡前置。
+
+U-COMBAT-AP-ITEM-01验证候选下的正式功能与保存，N-COMBAT-AP-BALANCE-01实跑并定案，U-COMBAT-AP-TUNING-01再把最终恢复量／费／下限／初始量／容量回填原Items／普通行为配置及L2候选表，更新受影响功能证据。候选可以显式导入供功能试跑，不得标为强度已平衡或最终生产值。本卡不修改下游任务卡、blockedBy或其backlog前置。
+
+## 六、验收矩阵
+
+以下为合同预期，尚未运行Unity或BattleSim。失败行的“零变化”指第三节全部资源、状态、版本与随机源。
+
+| 场景 | 完整预期 | 下游证据 |
+|---|---|---|
+| 受伤成功 | 技术夹具HP50／上限200、AP100000、药3；恢复后HP130、AP70000、药2，库存与会话各成功变更一次；MP／上限／位置不变 | U-ITEM原子EditMode＋正式PlayMode |
+| 接近满血 | HP180／200，实际恢复20；药与AP全额消耗，无护盾／永久加成 | U-ITEM |
+| 满血但合法 | HP200／200仍成功，恢复0、扣药1／AP30000，退出Guard、不能Wait | U-ITEM；合法无收益语义 |
+| 库存不足／错误数量 | 药0、未知药／材料ID或用量0／2均拒绝，零变化；最后1颗成功后删除条目，空库存可保存恢复 | U-ITEM库存＋保存 |
+| AP不足／精确边界 | AP29999拒绝；AP30000成功耗尽，唯一结束个人回合，不重复推进／恢复 | U-ITEM |
+| 死亡／离场／错误目标 | HP0不能恢复；敌人／队友／缺目标／TargetId≠ActorId、已离场均拒绝，零变化 | U-ITEM |
+| 错误资格／控制／回合 | 凡人／筑基及以上／未知境界、非本人回合、会话结束、禁止主动道具状态拒绝；练气九品符合其余条件可用 | U-ITEM |
+| 取消 | 选择药物／自用预览后取消，资源／Guard／版本／随机源全不变，不发生演出或保存 | U-ITEM正式输入 |
+| 重复／陈旧确认 | 同报价连续确认仅首个成功；预览后库存其他ID发放、药数量／目标生命／资格／AP／上下文／回合／定义变化均拒绝旧报价，零部分扣除；可新报价重新确认 | U-ITEM |
+| 重复合法使用 | 100AP与药3可用三次余10AP，至多实际恢复240；各次新报价、各扣1颗，CD0不追加一次上限，第四次无药拒绝 | U-ITEM功能；N-BALANCE强度 |
+| Guard与时间 | 成功用药先退出Guard；失败／取消保留；CT惩罚0，不推进全局刻或其他CD，不重发AP／返还次数 | U-ITEM |
+| 任一准备失败 | 库存候选版本溢出、非法完整库存、Combat候选或费用结果不可提交均在任何live写入前拒绝，零变化 | U-ITEM故障夹具 |
+| 初始取得／写盘 | 新练气角色只有一次候选3颗，首次存档一致；缺定义／发放失败／首次写盘失败不激活slot；非练气不发 | U-ITEM创角链 |
+| 读档／重进／旧档 | 首次读档仍3，使用后场景重进仍2；已存档无药不补发／不升境界 | U-ITEM正式场景 |
+| 战后保存 | 成功用药后胜利或失败回城，结果不再扣药；各走既有保存返回菜单→读档，药2一致；不把回场景日志当写盘证明 | U-ITEM保存往返 |
+| 坏档／最终参数 | 未知／重复／零负数量／超栈拒绝且live owners不变；定案后CSV／asset／场景配置／报价与L2一致 | U-ITEM；U-TUNING |
+
+## 七、下游字面量路径交付清单
+
+只记录U-COMBAT-AP-ITEM-01临近ready须由有权维护者完整读卡后冻结的精确路径，不代替expectedPaths授权。本卡不写这些路径；当前下游误列AdventureContentImporter且缺真实物品导入／初始发放／保存接线路径，须在正式结果进入master后准备卡片并重跑预检。已有目录均存在，不需新目录.meta；新药asset与新测试须同时冻结.meta。已有文件的.meta只在确需修改时纳入。
+
+生产行、语言与资源：
+- src/Assets/DataConfig/Items.csv：item_huoxue_dan行及第二节五字段；保留现行材料和届时已正式发布的装备行／字段。
+- src/Assets/DataConfig/Language.csv：item_huoxue_dan（活血丹）、item_huoxue_dan_description（L2说明）、combat_command_use_item（使用道具）；新增拒绝键item_definition_invalid（药物定义无效）、item_qualification_invalid（仅存活练气修士可用）、item_target_invalid（只能对自身使用）、item_quantity_invalid（每次只能使用一颗）、item_insufficient（丹药数量不足）。AP不足／控制／陈旧确认复用既有同源原因。
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs：ParseItemRows／ValidateApprovedItem／CopyItem、语言与完整导入校验；不是AdventureContentImporter。
+- src/Assets/Scripts/Modules/Content/ItemData.cs
+- src/Assets/Scripts/Modules/Content/ContentCatalogData.cs
+- src/Assets/Data/Items/Item_item_huoxue_dan.asset
+- src/Assets/Data/Items/Item_item_huoxue_dan.asset.meta
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta
+
+初始发放、库存与保存：
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs：核对BuildCharacterData练气创建；发药不写入点购逻辑。
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs：CreateNewPlayer初始发放后首次保存、失败清理；LoadPlayer无补发。
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs：InventoryStore唯一持有与窄边界桥接；Initialize／RestoreSave不得发药。
+- src/Assets/Scripts/Modules/World/InventoryStore.cs：Grant既有入口、Version与TryPrepareCombatConsumption／候选提交。
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs：CaptureInventory／RestoreInventory与整体恢复；不新增药物存档字段。
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs：核对schema4／旧档边界，本合同不要求升级。
+- src/Assets/Scripts/Modules/Bootstrap/GameBootstrap.cs：核对SaveActiveSlot原保存所有者。
+- src/Assets/Scripts/Modules/Bootstrap/SettlementSceneInstaller.cs：核对SaveAndReturnToMenu原磁盘时点。
+
+正式战斗、配置与输入：
+- src/Assets/Scripts/Combat/CombatCommand.cs
+- src/Assets/Scripts/Combat/CombatCommandService.cs
+- src/Assets/Scripts/Combat/CombatSession.cs
+- src/Assets/Scripts/Combat/CombatActionResolver.cs
+- src/Assets/Scripts/Combat/CombatantSnapshot.cs
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs：只核对结果与库存注入，不能二次扣药。
+- src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs：只核对原掉落／胜负，无药物补交。
+- src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs：正式定义／库存／资格标量注入。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs：UseItem普通定义及正式序列化接线。
+- src/Assets/Scenes/AdventureScene.unity
+- src/Assets/Scenes/AdventureScene.unity.meta
+- src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs
+
+测试：
+- src/Assets/Tests/EditMode/CombatActionPointItemTests.cs
+- src/Assets/Tests/EditMode/CombatActionPointItemTests.cs.meta
+- src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs.meta
+- src/Assets/Tests/EditMode/ContentCatalogDataTests.cs：生产集合／完整导入／GUID断言随已正式发布内容更新，材料掉落保持。
+- src/Assets/Tests/EditMode/CharacterCreationTests.cs
+- src/Assets/Tests/EditMode/GameRuntimeTests.cs
+- src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs
+- src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs
+- src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+
+上述核对用路径不必机械产生diff；准备ready时只冻结实际需要修改的完整字面量集合，包含新增asset／测试的.meta。N-BALANCE与U-TUNING仍按各自现行卡准备，不在本卡改其授权路径。所需窄候选类型放在原所有者文件内，不新增独立脚本／asmdef／目录／注册器；发现额外直接所有者、无法同步原子提交或超出单药及初始取得范围时按原停止合同处理。

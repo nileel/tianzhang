@@ -1,0 +1,50 @@
+# D-COMBAT-AP-ITEM-01 · 设计与合同验证记录
+
+2026-10-09；责任方Codex；runId=12ec633d-63bd-471f-a6f6-38a45ef8861d；基线e74dc361ffb2979a9340bd03bf79fb0421a87350。只在本run专属worktree实施，唯一candidate由共享入口后续重放，不调用runtime／集成或管理其他worktree。
+
+## 范围、模型与预检
+
+- 原子结果：一种练气自用活血丹的独立L2、L1指针、初始取得及库存／AP／效果原子使用合同。恢复量、费、数量均为候选，不实施Unity／CSV／资源／BattleSim，不改下游卡或具名前置。
+- 已读取AI协作规则“任务卡中的模型协作提示”。本轮内容已获负责人授权，跨库存／战斗／保存的语义需要同一主责完整核对，无可独立委派的工作面；按卡使用入口实际传入CLI的gpt-6.1-sol单模型，不调用辅助模型／第二责任会话。模型身份依据本轮共享入口启动证明，不以提示词名称当业务验证；CLI未提供推理强度的独立核验证据。
+- 实际能力：rg与完整逻辑单元读取、典籍网页原文检索、apply_patch、PowerShell7管理／文本／数据链检查及指定finalizer均可用。采用brainstorming的范围与设计自查，以及unity-agent-workflows的真实所有者证明；负责人已明确授权本卡设计与候选参数，不再次请求相同授权。
+- 已消费共享入口绑定的零命中预检。发现实际消费／结果／保存所有者后，业务写入前于同一worktree执行一次tools/get-experience-risk-preflight.ps1 -TaskId D-COMBAT-AP-ITEM-01，exit0、status=ok、taskId精确匹配，matched／notice／mustRead／gates／gatePointers均空；与schema2 riskPreflight三个空数组一致，无需读取额外正文或执行门禁。
+- 重算taskCardDigest=be3d36e06d3dc820147eb60dac29382bddeb7347bac4cfa9b9eb248fa714be22，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942。expectedPaths、执行路线与模型配置均未扩充；卡片只在最终归档时更新完成状态。
+
+## 事实源与调用链证据
+
+| 核对对象 | 原文／完整逻辑单元 | 本轮查明事实 |
+|---|---|---|
+| 批准语义与任务图 | combat-action-points-design §7.1／7.3／8／9／10／12；统一行动力公共合同§一／三／五／六／七／八；统一行动力实现规划的所有者与ITEM／BALANCE／TUNING拓扑 | 失败零变化、合法满血全额扣费、成功用药退出Guard；设计与实现／数值任务独立，不反挂数值前置 |
+| 丹药规范 | 道具事实速查→道具设计规范的概述／品级／效果绑定／完整丹药模板／设计约束；丹药/练气.txt完整三药单元 | 原有三种，新增第四种且独立文件；三字典籍药名、下品、仅练气，不改突破／永久成长药物 |
+| 名称 | 2026-10-09网页原文核对《仙授理伤续断秘方》“又治伤损方论·活血丹” | 确有同名伤损药方，非杜撰；链接与游戏化边界写入L2，没有把药方映射为数值结论 |
+| 物品导入 | Items.csv完整表头／两行；ItemData完整类型；SettlementContentImporter.ParseItemRows／ValidateApprovedItem／CommitContentCatalog／CopyItem；ContentCatalogData.TryGetItem／ReplaceEntries | 当前只有两种材料，严格白名单且全为99；唯一导入者是SettlementContentImporter，输出Item_<itemId>.asset并写ContentCatalog，不是下游卡当前误列的AdventureContentImporter |
+| 库存 | InventoryStore与同文件InventoryGrantUseCase完整逻辑 | Grant全批验证后Replace，只支持正发放；尚无消费／版本；冻结TryPrepareCombatConsumption、同一Version及零数量删除，不用负Grant或战后补扣 |
+| 战斗准备 | CombatCommandService.Preview／Execute；CombatActionResolver.PrepareValidated；CombatSession普通定义；CombatantSnapshot.RestoreHealth／CommitResolvedState；EncounterCoordinator.ExecuteCommand／Complete | 已有准备副本→AP扣费→结果提交链，但无UseItem；恢复方法本身不防复活；须在资格入口拒绝死亡，库存与Combat准备后同步提交的证明由U-ITEM承担 |
+| 新建与读档 | CharacterCreationRules.BuildCharacterData；StartMenuSceneInstaller.CreateNewPlayer／LoadPlayer；GameRuntime.BeginNewGame／Initialize／CaptureSave／RestoreSave | 实际新角色练气；新建先空库存后首次写盘、成功才激活slot；读档整体恢复，不经发放入口；初始药只接CreateNewPlayer保存前 |
+| 战后与持久化 | AdventureSceneInstaller注入；AdventureController.ResolveEncounter；FormalEncounterResult；SettlementSceneInstaller.SaveAndReturnToMenu；GameBootstrap.SaveActiveSlot；GameSaveEnvelope.CaptureInventory／RestoreInventory；GameSaveSerializer.SchemaVersion | 结果只处理胜负／掉落及回场景，没有自动战后保存；冻结当场扣库存，后续既有非战斗保存写盘，无战后再扣或中途保存；实际schema4 |
+| 下游边界 | U-COMBAT-AP-ITEM-01与N-COMBAT-AP-BALANCE-01完整卡；换装合同的同一库存版本／初始Grant／普通行为／保存边界 | U-ITEM验生产可取得入口与原子功能；N-BALANCE实跑抽象角色数值；U-TUNING回填定案参数。下游现缺真实导入／初始／资源精确路径，已在合同列明供正式集成后维护准备 |
+
+命名原文：[仙授理伤续断秘方·活血丹](https://zh.wikisource.org/zh-hant/仙授理傷續斷秘方#活血丹)。本轮只引用名称和材料意象，未将典籍陈述当作游戏效果验证。
+
+## 交付自查
+
+- 唯一新增ID=item_huoxue_dan；独立L2具完整八模板字段与单条平铺绑定；练气三药加本药共四种，目录文件总数由5改6，L1只保留摘要／章节指针。
+- L2与合同一致：候选恢复80、AP30000、净费下限30000、初始3、容量99；结构性用量1、MP0、CT0、CD0。候选及敏感性输入均逐项待N-BALANCE，未运行／未签平衡定案；80不是复用培元丹永久成长的数值结论。
+- 库存唯一当次写入；Combat只消费标量，World／Character无反向依赖；预览纯读、完整准备后无yield提交、满血合法付费、死亡拒绝、陈旧／重复确认拒绝。16行预期矩阵分别覆盖资源、错误目标／资格、取消、初始保存、战后保存与坏档，不把合同预期写成Unity通过。
+- Items药物字段与普通行为费用分属唯一原生产者，未另建费用表／执行器／组件／效果DSL；无商店、掉落、复活或第二种药物。
+- 合同列明CSV实体／语言键、真实Settlement导入器、ItemData／目录、药物asset与.meta、实际初始发放与保存所有者、战斗准备与正式输入／配置／测试路径；已存在目录，不需新目录.meta。仅为下游ready准备的清单，不据此在本卡修改src。
+- 原下游blockedBy与backlog具名前置未移除；只删除本卡自己的ready／backlog行并移至精确归档。收尾按已有事实判断：本轮是授权内容与合同设计，没有新的已复现失败根因，未生成空经验候选章节。
+
+## 未验证与残留风险
+
+未运行Unity／BattleSim：本轮只有文档设计，代码／数值输入未修改。正式UseItem、库存不可拒绝同步提交、正式自用UI、创角首次保存、消费后的战后保存往返及候选强度须由原下游验收；本卡完成不能代替这些证据。
+
+现行回场景不自动写盘，需既有保存返回菜单入口；不承诺未保存退出／崩溃后的药物消耗恢复。后续同时接入武器时须共享同一InventoryStore.Version和完整初始Grant，不能覆盖正式物品集合或另建药物版本；正式结果进入master后再准备下游expectedPaths和风险预检。
+
+## 实际检查结果
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-AP-ITEM-01 -Postcondition CodexClosedOrNonReady -OutputJson：exit0，status=ok，taskState=completed，cardCount=67，readyCount=0。仅证明本卡归档与管理投影一致，不处理下游ready。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理,docs/道具/丹药/练气疗伤丹药.txt,docs/道具/道具事实速查.txt：exit0，OK，728 files checked。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：exit0，check-data-chain: OK；GongFa=29/29、Spells=84/84、Skills=31/31、language keys=625。docs有变化故运行一次，不把现有生产表计数当本药已接入证明。
+- Python内存只读核对脚本：exit0；合同46条精确下游路径无重复，既有所有者均存在，新药asset／EditMode测试／PlayMode测试三文件均配有.meta路径；丹药目录确为6文件，活跃卡已移至精确completed归档。
+- 暂存前空白与暂存后差异门禁由本轮指定tools/automation-finalize-commit.ps1在同一提交调用内强制运行；返回candidate SHA才表示提交及门禁完成。最后从基线到HEAD按--no-renames计算移动源／目标全量changedPaths；提交外无额外项目写入。
