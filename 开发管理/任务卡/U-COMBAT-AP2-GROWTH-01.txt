@@ -8,12 +8,20 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-CONFIG-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "CONFIG已于2dfd3aa4正式完成；按冻结成长/旧档合同核对现有调用链并补齐导入测试路径，重新预检后进入ready。",
   "expectedPaths": [
+    "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs",
     "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
     "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
@@ -130,3 +138,10 @@
 
 - 真实成长或恢复调用者超出合同、需要完整修炼新功能时停止；不得只改静态CharacterData后声称玩家成长完成。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 ready核验
+
+- CONFIG已在master的2dfd3aa4完成归档，无同ID活跃冲突，解除唯一前置。核对Character/Content/Bootstrap现有程序集边界：Bootstrap已有Combat、Character、Content引用，Character已有Content；沿现有Bootstrap/Importer向角色所有者提供经校验的成长输入，不增加Character对Combat的反向依赖或新配置框架。
+- 补齐ContentImporterArchitectureTests.cs：现有固定v=2000及CSV合法零v断言须随realm派生校验合同更新，保留整批失败零写入、GUID及幂等验证。其他已列角色、创角、保存和Importer路径仍承接同一聚合结果。保存schema5及旧4规则已冻结，不等待新的修炼系统。
+- 复杂度为角色/保存语义高影响，保持gpt-6.1-sol/high主责；只有出现旧档恢复证据冲突时，对已列Snapshot/Serializer调用链启动gpt-6-astra/high只读辅助，返回拒绝或恢复反例；主责统一差异、最终验证和单一提交。风险投影以本轮更新路径后的只读预检为准；执行前须重新消费正文。
+- 补齐既有GameRuntime/FeatureComposition/GuanzhongFormalEndToEnd、EQUIP/ITEM及四个PlayMode直接构造/恢复测试。当前夹具存在空境界、练气仍用v=2000、正式创角被断言为练气等旧输入；只按凡人创建、显式规则注入和已批准资格政策更新，不能通过提前授练气维持旧断言。新增10个既有测试路径，不新增测试框架或业务所有者。

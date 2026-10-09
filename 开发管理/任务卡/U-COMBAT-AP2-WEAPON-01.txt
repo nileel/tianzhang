@@ -8,13 +8,26 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-CONFIG-01",
-    "U-COMBAT-AP-EQUIP-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "CONFIG的2dfd3aa4及EQUIP的f15a2a49已完成；已冻结无空手直接生产消费者、场景引用、摘要重导和测试迁移路径，重新预检后进入ready。",
   "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/StageCombatReport.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "src/Assets/Data/CombatRuleSet.asset",
+    "src/Assets/Data/CombatRuleSet.asset.meta",
+    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
     "tools/check-data-chain.ps1",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -145,3 +158,11 @@
 
 - 合同缺NPC绑定或旧档政策、需要新增武器内容时停止；不撤回已完成EQUIP功能，不以额外发物兜底。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 ready核验与直接消费者收口
+
+- CONFIG/EQUIP均完成归档并进入master，无同ID活跃冲突，清空两项前置。原子结果仍为已批准的无真实武器不产生普攻，现有资格、库存和旧档政策保持；gpt-6.1-sol/high单主责统一复核全部迁移与单一提交。
+- GameData.UnarmedBasicAttack及五ID读取、Character默认绑定、Combat.CreateAbilities无条件解引用、StageCombatReport生产徒手输入、GuanzhongPlaytestAudit集合/默认普攻和BattleSimSelfTests均直接依赖被删行，补齐六个既有BattleSim文件。只迁移生产四ID、无绑定不造普攻、已有选招合法结束及对应反例；旧规则夹具须显式测试输入并标明旧基线，不能伪造生产武器、默认给铁剑或保留隐式徒手。完整AP2成长/重复费/承载/状态仍归SIM，不重调平衡。Release build通过后默认run及受影响生产/动作自测必须通过。
+- AdventureScene仍引用待删徒手asset的GUID 4c65a0a3f37a8c54a93ca75086a6a2a1，仅移除该引用，不重建场景。AttackProfiles参与sourceDigest，删行后必须同次重导CombatRuleSet.asset及原卡四合法攻击资产，保留GUID。新增asset/meta授权覆盖该确定性投影。
+- CONFIG的CombatRuleSetDataTests、EQUIP/ITEM、FormalEndToEnd、FormalUiText、StarterArts测试仍直接载入或断言徒手生产asset，补齐其精确路径，只迁移相关夹具/合法动作断言，保留严格未知ID拒绝、GUID及整批零写入测试。历史架构基线字符串不属于生产引用，不扩大清理。
+- ready前重跑更新路径后的风险预检；执行前再次消费正文。与GROWTH等任务共享的角色/保存/测试逻辑单元不得并行写入；按固定队列逐项实施与集成，不以共享文件伪造新业务依赖。若需新增玩法、生产武器或完整模拟改造，仍按既有停止条件返回。

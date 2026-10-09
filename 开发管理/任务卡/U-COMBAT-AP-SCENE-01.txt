@@ -11,11 +11,9 @@
   "dispatchState": "blocked",
   "blockedBy": [
     "U-COMBAT-AP-TUNING-01",
-    "U-COMBAT-AP2-PREVIEW-01",
-    "U-COMBAT-AP-ITEM-01",
-    "U-COMBAT-AP-EQUIP-01"
+    "U-COMBAT-AP2-PREVIEW-01"
   ],
-  "stateReason": "等待新方案最终TUNING与AP2-PREVIEW及既有ITEM/EQUIP；旧HUD/SWAP已完成，不代表新费用/成长/无空手场景已验收。",
+  "stateReason": "ITEM/EQUIP已正式完成；仍等待U-COMBAT-AP-TUNING-01最终生产输入及U-COMBAT-AP2-PREVIEW-01，新费用/成长/无空手场景尚未验收。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
@@ -47,7 +45,7 @@
 
 - 来源：2026-10-05 负责人批准 D-COMBAT-AP-01 后明确要求执行下一步；父项 P-COMBAT-AP-01，完整拓扑见 开发管理/统一行动力实现规划.txt。
 - 原子结果：最终生产输入下正式AdventureScene通过全部统一行动力功能与可见操作验收。
-- 直接前置：U-COMBAT-AP-TUNING-01、U-COMBAT-AP2-PREVIEW-01、U-COMBAT-AP-ITEM-01、U-COMBAT-AP-EQUIP-01。
+- 直接前置：U-COMBAT-AP-TUNING-01、U-COMBAT-AP2-PREVIEW-01。
 - 本卡只执行一个结果；父项不允许被领取。blocked卡列当前已查明的字面量路径；前置改变接口或产生确定资源ID时，由有权维护者在转ready前补齐并重跑预检，不在执行中自行扩边，也不逐张另拆已知子任务。
 
 ## 必查范围
@@ -86,3 +84,7 @@
 
 - 缺Unity运行能力／最终输入／正式内容或任何未复现的问题需处理时不能判通过；视觉失败定位实际owner后回原实现卡，不增加BattleSim场景复制。
 - 新路径、直接所有者或技术路线超出合同先暂停并重跑预检；发现不原子或需跨多个边界叠补丁，停止保留现场，不生成candidate、不改父项拓扑。
+
+## 2026-10-10 依赖状态维护
+
+- ITEM已于c20bade6、EQUIP已于f15a2a49完成归档并进入master，清除两项旧blockedBy；保留卡头所列真实前置，未进入ready、未执行本卡业务。

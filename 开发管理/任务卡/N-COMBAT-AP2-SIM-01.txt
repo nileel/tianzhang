@@ -56,7 +56,7 @@
 
 ## 实施范围
 
-- 用生产CSV替代新可调参数的代码常量/解析docs第二真源；按前置正式结果迁移生产ID集合和默认Unarmed假设。全模拟接入AP/v成长、固定能力档/承载、重复费用/计数、冷却、状态境界系数、原特殊费用。普通1v1/2v2双方及多目标根动作只付一次、计一次；被动按原频率/额度不得随14次动作意外倍增。此叶不重调平衡参数、不复刻Unity地图/物品场景。
+- 用生产CSV替代新可调参数的代码常量/解析docs第二真源；核对WEAPON正式结果的生产四ID集合和无默认Unarmed输入，消费其直接读取迁移。全模拟接入AP/v成长、固定能力档/承载、重复费用/计数、冷却、状态境界系数、原特殊费用。普通1v1/2v2双方及多目标根动作只付一次、计一次；被动按原频率/额度不得随14次动作意外倍增。此叶不重调平衡参数、不复刻Unity地图/物品场景。
 - 只写expectedPaths；验证证据写开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
 
 ## 2026-10-09 配置合同与精确路径准备
@@ -66,13 +66,13 @@
 
 ## 2026-10-09 与EQUIP的数据读取职责分界
 
-- 负责人批准U-COMBAT-AP-EQUIP-01在发布两武器行的同次结果中，完成GameData.productionAttacks和GuanzhongPlaytestAudit.LoadProductionInputs对原三行加两武器的最小严格读取适配及相关回归，避免把当前输入加载障碍留给依赖EQUIP的后续SIM任务。此项仍待EQUIP执行，不视为已完成。
-- 本卡保持原blockedBy／blocked，消费前置正式结果后完成AP2配置、生产四ID、默认徒手移除与完整模拟语义；不恢复旧三ID限制、不重复领取EQUIP的加载适配，也不将其五行读取回归视为AP2算法或平衡证据。临近ready按实际前置重新核对全部直接消费者与精确路径。
+- 负责人批准U-COMBAT-AP-EQUIP-01在发布两武器行的同次结果中，完成GameData.productionAttacks和GuanzhongPlaytestAudit.LoadProductionInputs对原三行加两武器的最小严格读取适配及相关回归，避免把当前输入加载障碍留给依赖EQUIP的后续SIM任务。该最小读取适配已随EQUIP的f15a2a49完成并归档。
+- 本卡保持原blockedBy／blocked，消费前置正式结果后完成AP2配置及完整模拟语义，并验证WEAPON提供的生产四ID与无默认徒手输入；不恢复旧三ID限制、不重复领取EQUIP的加载适配，也不将其五行读取回归视为AP2算法或平衡证据。临近ready按实际前置重新核对全部直接消费者与精确路径。
 
 ## 2026-10-10 与CONFIG的共享编译及生产读取职责分界
 
-- 负责人在CONFIG实施中批准最小适配：CONFIG同次结果包含BattleSim.csproj链接新增纯CombatRuleSet、GameData与GuanzhongPlaytestAudit读取新59列及四表派生冷却/伤害/摘要、对应自测；避免CONFIG发布后已有共享源码编译及生产读取立即失败。此段为获准执行边界，不预填CONFIG完成结论。
-- 本卡仍承担全模拟与共享内核的完整AP/v成长、重复费用、固定档承载、状态境界系数及最终无徒手输入迁移，route/owner/blockedBy/blocked保持。消费CONFIG正式结果，不重做最小新表读取，不把CONFIG的编译/读取回归当成完整AP2算法或平衡证据。
+- 负责人在CONFIG实施中批准最小适配：CONFIG同次结果包含BattleSim.csproj链接新增纯CombatRuleSet、GameData与GuanzhongPlaytestAudit读取新59列及四表派生冷却/伤害/摘要、对应自测；避免CONFIG发布后已有共享源码编译及生产读取立即失败。该最小编译与读取适配已随CONFIG的2dfd3aa4完成并归档。
+- 本卡仍承担全模拟与共享内核的完整AP/v成长、重复费用、固定档承载、状态境界系数及最终无徒手输入一致性验证，route/owner/blockedBy/blocked保持。消费CONFIG正式结果，不重做最小新表读取，不把CONFIG的编译/读取回归当成完整AP2算法或平衡证据。
 
 ## 禁止项
 
@@ -99,3 +99,8 @@
 
 - 只共享源码而全模拟仍旧、生产映射缺失或需扩Unity场景模型时不能通过；超出数值抽象边界回合同。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 WEAPON直接生产消费者准备
+
+- WEAPON进入ready前已查明删除生产basic_unarmed会直接破坏GameData、Character、Combat.CreateAbilities、StageCombatReport及GuanzhongPlaytestAudit。按既有无真实武器不可普攻政策，将这些直接消费者和对应BattleSimSelfTests的最小无空手迁移随WEAPON同次完成，不能让已发布表等待本卡才恢复可读/可运行。WEAPON仅准备ready，本段不预填完成结论。
+- 本卡消费WEAPON最终四ID及无绑定输入，不重做该最小迁移；仍统一承担AP/v成长、重复费用、固定档承载、状态境界、双方/2v2/被动等完整模拟与新规则验证。当前route/owner/blockedBy/blocked保持。

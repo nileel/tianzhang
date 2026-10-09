@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-CONFIG-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "CONFIG已于2dfd3aa4正式完成；已核对共享规则、直接消费者、精确路径及风险预检，按冻结合同进入ready。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
@@ -86,3 +84,8 @@
 
 - 未知效果类型/公式入口或需要全技能引擎时停止；不得用新L系数倒算保住所有旧伤害。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 ready核验
+
+- CONFIG归档与master提交2dfd3aa4一致，无同ID活跃卡冲突；直接前置已解除。现有单一结果、所有者、expectedPaths、验证与停止条件继续适用。风险预检matched/mustRead/gates均为空，schema 2投影一致。执行前仍按当前卡重新预检。
+- 已定位CombatAttackProfile.RuleMetadata.Tier及CombatActionResolver.ResolvePhysical/ResolveSoul/ResolveAttack：物理、神魂及聚灵来源值均有既有入口，CONFIG已完成预算派生，消费固定档承载无需新增公式所有者。保留既有路径与gpt-6.1-sol/high主责；仅出现预算证据冲突时，对本卡Resolver/RuleMetadata只读核查，不新增生产内容或完整平衡验证。
