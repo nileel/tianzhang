@@ -16,6 +16,16 @@ namespace TianZhang.Content
         [SerializeField] private CharterSiteData[] charterSites = Array.Empty<CharterSiteData>();
         [SerializeField] private AdventureMapData[] adventureMaps = Array.Empty<AdventureMapData>();
 
+        [SerializeField] private CombatRuleSetData combatRuleSet;
+        public CombatRuleSetData CombatRuleSet => combatRuleSet;
+        public void SetCombatRuleSet(CombatRuleSetData rules) => combatRuleSet = rules;
+        public bool TryGetCombatRuleSet(out CombatRuleSetData rules, out string reason)
+        {
+            rules = combatRuleSet;
+            if (rules == null) { reason = "combat_rule_set_missing"; return false; }
+            return rules.TryValidateIdentity(out reason);
+        }
+
         public CharterRuleStaticCatalogData CharterRuleStaticCatalog => charterRuleStaticCatalog;
 
         /// <summary>

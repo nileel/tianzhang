@@ -146,6 +146,27 @@ namespace TianZhang.Combat
         public bool isBloodline;
         public string specialEffectTextKey;
 
+        [Header("AP-GROWTH只读派生与窄载荷")]
+        public string ruleSetVersion;
+        public string abilityTierId;
+        public string cooldownClass;
+        public string effectBudgetMode;
+        public int efficiencyNumerator;
+        public int efficiencyDenominator;
+        public int damageMigrationNumerator;
+        public int damageMigrationDenominator;
+        public int damageWeightNumerator;
+        public int damageWeightDenominator;
+        public string statusId;
+        public string statusAttributeId;
+        public int statusRelativePermille;
+        public int statusDurationOwnTurnEnds;
+        public int statusStackLimit;
+        public string statusRefreshPolicy;
+        public int controlChancePermille;
+        public bool controlUsesMindContest;
+        public string ruleSetSourceDigest;
+
         public bool TryValidate(out string reason)
         {
             if (string.IsNullOrWhiteSpace(attackProfileId) ||
@@ -160,6 +181,8 @@ namespace TianZhang.Combat
                 effectType == AttackEffectType.Unknown ||
                 resourceKind == AttackResourceKind.Unknown ||
                 targetingMode == AttackTargetingMode.Unknown ||
+                float.IsNaN(physicalDamageMultiplier) || float.IsInfinity(physicalDamageMultiplier) || physicalDamageMultiplier < 0f ||
+                float.IsNaN(soulDamageMultiplier) || float.IsInfinity(soulDamageMultiplier) || soulDamageMultiplier < 0f ||
                 resourceCost < 0 || minCastRange < 0 ||
                 maxCastRange < minCastRange)
             {
@@ -177,6 +200,50 @@ namespace TianZhang.Combat
                 return false;
             }
 
+            if (!string.IsNullOrEmpty(ruleSetVersion) &&
+                (ruleSetVersion != "AP-GROWTH@0.1" || ruleSetSourceDigest == null ||
+                 !System.Text.RegularExpressions.Regex.IsMatch(ruleSetSourceDigest, "^[a-f0-9]{64}$")))
+            { reason = "attack_profile_rule_identity_invalid"; return false; }
+            if (!string.IsNullOrEmpty(ruleSetVersion))
+            {
+                bool legacy = effectBudgetMode == "legacy_unarmed";
+                if (legacy)
+                {
+                    if (profileKind != AttackProfileKind.Basic || basicBindingKind != BasicAttackBindingKind.UnarmedFallback ||
+                        cooldownClass != "legacy_unarmed" || !string.IsNullOrEmpty(abilityTierId))
+                    { reason = "attack_profile_legacy_unarmed_invalid"; return false; }
+                }
+                else if (!(abilityTierId is "tier_lianqi" or "tier_zhuji" or "tier_jindan") ||
+                    !(cooldownClass is "basic_repeat" or "burst" or "control" or "recovery"))
+                { reason = "attack_profile_rule_reference_invalid"; return false; }
+                bool damage = effectType is AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid;
+                bool status = effectType is AttackEffectType.Buff or AttackEffectType.Debuff;
+                if (!(legacy && damage || effectBudgetMode == "fixed_weapon" && damage && basicBindingKind == BasicAttackBindingKind.MainEquipment ||
+                      effectBudgetMode == "damage_budget" && damage && profileKind != AttackProfileKind.Basic ||
+                      effectBudgetMode == "prototype_restore" && effectType == AttackEffectType.RestoreSpirit ||
+                      effectBudgetMode == "status_only" && status || effectBudgetMode == "fixed_output" && effectType == AttackEffectType.Heal))
+                { reason = "attack_profile_effect_budget_mode_invalid"; return false; }
+                bool budget = effectBudgetMode == "damage_budget";
+                if (budget ? efficiencyNumerator <= 0 || efficiencyDenominator <= 0 || damageMigrationNumerator <= 0 ||
+                    damageMigrationDenominator <= 0 || damageWeightNumerator <= 0 || damageWeightDenominator <= 0 :
+                    efficiencyNumerator != 0 || efficiencyDenominator != 0 || damageMigrationNumerator != 0 ||
+                    damageMigrationDenominator != 0 || damageWeightNumerator != 0 || damageWeightDenominator != 0)
+                { reason = "attack_profile_budget_ratio_invalid"; return false; }
+                if (status)
+                {
+                    if (string.IsNullOrWhiteSpace(statusId) || !System.Text.RegularExpressions.Regex.IsMatch(statusId, "^[a-z][a-z0-9_]*$") ||
+                        !(statusAttributeId is "physical_attack" or "soul_attack" or "physical_defense" or "soul_defense") ||
+                        statusRelativePermille == 0 || statusRelativePermille < -1000 || statusRelativePermille > 1000 ||
+                        (effectType == AttackEffectType.Buff) != (statusRelativePermille > 0) || statusDurationOwnTurnEnds <= 0 ||
+                        statusStackLimit != 1 || statusRefreshPolicy != "replace_stronger" || buffMultiplier != 0f)
+                    { reason = "attack_profile_status_payload_invalid"; return false; }
+                }
+                else if (!string.IsNullOrEmpty(statusId) || !string.IsNullOrEmpty(statusAttributeId) || statusRelativePermille != 0 ||
+                         statusDurationOwnTurnEnds != 0 || statusStackLimit != 0 || !string.IsNullOrEmpty(statusRefreshPolicy))
+                { reason = "attack_profile_non_status_fields_present"; return false; }
+                if (controlChancePermille < 0 || controlChancePermille > 1000 || (!damage && (controlChancePermille != 0 || controlUsesMindContest)))
+                { reason = "attack_profile_control_probability_invalid"; return false; }
+            }
             if (effectType == AttackEffectType.RestoreSpirit)
             {
                 if (float.IsNaN(spiritRecoveryMultiplier) || float.IsInfinity(spiritRecoveryMultiplier) ||

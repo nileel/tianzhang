@@ -1,0 +1,55 @@
+# U-COMBAT-AP2-CONFIG-01 验证记录
+
+日期：2026-10-10；本轮基线：c20bade6c8113476d191ba4026abe3906a5760db。
+任务工作区：D:/天章游戏开发/.worktrees/ap2-config-20261010。
+当前阶段：配置与最小共享读取实现完成，主责已复核直接验证与归档投影；正式提交及集成按本轮Git结果绑定。
+
+## ready准备与模型协作
+
+- 负责人明确要求将CONFIG转ready并由对应模型子智能体制作。唯一前置D-COMBAT-AP2-CONTRACT-01在master的d31e17c2正式归档；EQUIP的f15a2a49与ITEM的c20bade6均已集成。无同ID活跃前置卡，未存在待决策配置语义。
+- 启动前schema 5 Show确认codex/deepseek两个owner run为空。主工作区已有的总结与美术改动不属于本任务，业务在独立linked worktree实施。
+- 原子结果仍是冻结合同的三表、AttackProfiles扩展、严格导入、单一配置asset及显式只读运行投影；不实现成长、重复费、状态和能力承载算法。
+- readiness核查发现两武器已进入生产表，按合同既有规则补齐两asset及.meta共四条路径；完整检索Adapter构造者后补齐七个既有测试路径，仅用于显式配置注入及既有测试语义适配。
+- 工具spawn_agent指定gpt-6.1-sol、reasoning_effort=medium、fork_turns=none，会话名/root/ap2_config_impl。子智能体独占本卡expectedPaths中的src业务路径及tools/check-data-chain.ps1；主责独占管理文件、复核、正式提交与集成，子智能体不操作runtime/锁、任务投影或Git提交。
+- 子智能体通过Node REPL实际读取nodeRepl.requestMeta['x-codex-turn-metadata'].model返回gpt-6.1-sol；medium以本轮spawn请求参数留证，不把它称为元数据已返回的强度。
+- 工作区预检返回status=ok，taskId=U-COMBAT-AP2-CONFIG-01，taskCardDigest=cef5ff73eede427435593fb61af9c749a7c363db8cb9d792bfa468cd138c3ceb，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/mustRead/gates均为空，与schema 2投影一致。
+- check-task-cards.ps1 -TaskId U-COMBAT-AP2-CONFIG-01 -Postcondition CodexDispatchReady -ExpectedRoute codex_execute -OutputJson通过：73张活跃卡，readyCount=1。
+
+## 所有者与验证边界
+
+- CSV由CombatContentImporter经既有CsvTableReader分词，纯CombatRuleSet接收已解析行并严格验证；Content只保存已验证数据，不添加程序集反向引用。
+- 正式引用链为ContentCatalogData→AdventureSceneInstaller→CombatEntryAdapter→CombatSession。缺配置须拒绝正式入战，纯Session独立测试不生成默认配置，不新增算法版本分支。
+- 四表必须全部验证通过才写单一规则asset、五个攻击asset及catalog；同ID保留GUID，参数变化同步派生投影与四文件摘要。后续BattleSim迁移仍归AP2-SIM。
+- 项目没有查到UNITY_STRUCTURE映射，使用当前asmdef、导入器、Content类型、Adapter和正式Installer作结构证据。已加载unity-agent-workflows及project-structure-discovery、content-and-systems、ai-workflows、modular-architecture、runtime-owner-proof、serialized-persistence和unity-validation引用。
+- 验证采用本卡直接EditMode及必要Adapter调用测试、正式导入零写入/GUID/幂等与改参投影测试、data-chain、程序集边界和管理检查。不重跑与输入无关的BattleSim角色平衡，也不以配置测试代替最终场景验收。
+
+## 实施中发现的直接读取边界与批准
+
+- 共享CombatAttackProfile/CombatSession新增纯CombatRuleSet引用后，BattleSim.csproj显式Compile列表未包含新类型；GameData.LoadProductionAttacks仍强制41列并直接解析允许为空的新CD覆写/派生倍率。主责确认这是直接编译及生产读取缺口后，已停止子智能体写入并保留现场，没有擅自搬类型、增加兼容分支或执行完整SIM迁移。
+- 负责人明确回复“批准最小适配，继续完成 CONFIG（推荐）”。据此仅加入BattleSim.csproj、GameData.cs、GuanzhongPlaytestAudit.cs、BattleSimSelfTests.cs，管理同步N-COMBAT-AP2-SIM-01职责段；SIM原路由、主责、blocked和全部前置保持。
+- 更新后CONFIG预检status=ok，taskCardDigest=fe5a305aa5dfd5cf17a489c9d526d352c7b71a836c265396a4d376c5dabe7613；索引digest未变，matched/mustRead/gates为空。SIM预检匹配EXP-BS-001，已读取“修改BattleSim必须先Release build成功再run”的正文，无门禁入口。CONFIG ready检查再次通过73/1。
+- 同一gpt-6.1-sol子智能体恢复已批准写入；构建成功后运行默认BattleSim及生产读取自测，本轮仅证明新表读取和现有入口回归，不宣称新增AP2模拟算法或数值平衡。
+
+## 中间验证
+
+- 首次Unity批处理编译及CombatContentImporter.ImportAttackProfiles正式导入成功，输出5个攻击档案，日志src/Temp/ap2-config-import.log。该次结果不替代最终定向测试。
+- 首次定向EditMode在新增测试的表达式lambda处编译失败，已定位并修正；后续最终定向运行153/153通过。首次日志不作为通过证明。
+
+## 最终实现与验证
+
+- 三表含六境界、三固定能力档、一个global和51个显式测试定义；AttackProfiles扩为59列，全部五行保留已批准身份。严格头部/字段/引用校验及checked约分计算共享CombatRuleSet；checker复用同一规则类型与派生方法，不另存参数表或公式。
+- 唯一CombatRuleSet.asset与catalog绑定、五个攻击asset及正式Adventure→Adapter→Session规则注入完成。正式四动作保存固定档/版本/摘要，legacy_unarmed沿明确历史边界无RuleMetadata，删除仍归WEAPON。缺规则、坏比例和坏序列化资产明确拒绝，无默认配置/双版本机制。
+- 主责独立读取最终XML：ap2-config-editmode-final.xml为Passed，153 total / 153 passed / 0 failed / 0 skipped。覆盖四表非法输入整批拒绝且全部目标asset字节/GUID不变、改参数后伤害/CD和摘要同步、重复导入幂等、正式Session及四profile元数据、缺配置与坏asset拒绝、既有道具/装备及正式组合入口。原生Unity编译和实际资产导入均已发生，未手改生成csproj。
+- PlayMode共11项，10通过、1失败。失败为GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads的既有Static3DCombatBase MeshRenderer名称断言。未修改的CreateFactionBase重命名实例根，再取子MeshRenderer；断言却按根名查找子renderer。本卡该测试文件仅适配Adapter参数，未改底座创建、prefab或此断言；不把11项写成全部通过，也不据此宣称最终场景体验验收。
+- BattleSim先restore一次，再dotnet build -c Release --no-restore simulations/BattleSim：0警告、0错误。之后dotnet run --no-build -c Release --project simulations/BattleSim完整结束，实际exit_code=0；主责读取外部最终日志，已含最终统计与结尾分隔符。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test equipment-production与--self-test attack-profile-d-combat-02通过。前者两个真实读端分别接受5条生产记录、拒绝13种坏攻击输入，并在同一自测中拒绝三张坏规则源；GameData与GuanzhongPlaytestAudit共用新表派生CD/伤害及摘要。
+- 证据根：C:/Users/WINDOWS/AppData/Local/Temp/tianzhang-ap2-config-evidence。包含ap2-config-editmode-final.xml/.log、ap2-config-playmode.xml/.log、ap2-config-battlesim-build.log、ap2-config-battlesim-default.log及.exit.txt、ap2-config-battlesim-equipment-production.log、ap2-config-battlesim-fixture.log。早期project Temp会被Unity清理，最终证据已置于项目外；默认运行取最终退出后完整日志，不以运行中旧exit文件签收。
+- 四张源CSV均受.gitattributes中src/** eol=lf约束，原始字节摘要不会因正式检出换行变化而漂移。没有修改未请求的战斗成长/重复费/状态算法或美术系统。
+- 经验候选仅根据本轮已证实的跨读取/编译边界遗漏记录在任务归档，不新增模型调用、正式经验ID、风险索引或整理任务。
+
+## 主责收尾核验
+
+- 子智能体停止业务写入且无Unity/测试进程后，主责精确恢复其测试产生的AdventureScene.unity、ProjectSettings.asset、ShaderGraphSettings.asset三条范围外改动；基线为独立worktree初始clean HEAD，主工作区人工改动未进入此工作区。
+- 恢复正式场景后运行check-data-chain再次通过：GongFa29/29、Spells84/84、Skills31/31、647语言键。程序集边界检查通过：19程序集、2 asmref。
+- CONFIG归档后check-task-cards -Postcondition CodexClosedOrNonReady通过：72活跃卡、0 ready、CONFIG=completed；check-review-text通过746文件。47条真实新增/修改/删除路径均属于负责人确认后的expectedPaths，没有范围外文件。
+- 暂存前check-pending-whitespace检查46个存在文件，机械清除Unity六个生成asset空值行和Importer空白行的尾空格后通过；未改CSV字节或业务语义，git diff --check通过。暂存后git diff --cached --check由本轮最后提交命令核验；不重复语义输入未变化的Unity/BattleSim运行。签收限于配置及最小读取，PlayMode的单一既有底座断言限制继续保留。

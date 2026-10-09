@@ -51,6 +51,8 @@ namespace TianZhang.Bootstrap
             {
                 RequireReference(languageTable, "adventure_language_table_missing");
                 RequireReference(contentCatalog, "adventure_content_catalog_missing");
+                if (!contentCatalog.TryGetCombatRuleSet(out var combatRules, out string ruleReason))
+                    throw new InvalidOperationException(ruleReason);
                 RequireReference(environmentProfile, "adventure_environment_missing");
                 RequireReference(combatPresentationProfileCatalog, "adventure_presentation_catalog_missing");
                 if (!combatPresentationProfileCatalog.TryValidate(out _))
@@ -121,7 +123,7 @@ namespace TianZhang.Bootstrap
                     input,
                     adventureHud,
                     encounterCoordinator,
-                    new CombatEntryAdapter(ordinaryActions),
+                    new CombatEntryAdapter(ordinaryActions, combatRules),
                     runtime,
                     runtime.Bounties,
                     runtime.InventoryGrants,

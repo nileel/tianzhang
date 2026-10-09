@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatCommand.cs" Link="Combat\CombatCommand.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatRuleSet.cs" Link="Combat\CombatRuleSet.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatAttackProfile.cs" Link="Combat\CombatAttackProfile.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatantSnapshot.cs" Link="Combat\CombatantSnapshot.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatantRegistry.cs" Link="Combat\CombatantRegistry.cs" />

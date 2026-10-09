@@ -18,6 +18,40 @@ namespace TianZhang.Combat
         RestoreSpirit,
     }
 
+    /// <summary>Resolved fixed-tier reference and declared narrow payload; no combat algorithms.</summary>
+    public sealed class CombatAttackRuleMetadata
+    {
+        public string RuleSetVersion { get; }
+        public string SourceDigest { get; }
+        public CombatRuleSet.EffectTier Tier { get; }
+        public string CooldownClass { get; }
+        public string EffectBudgetMode { get; }
+        public CombatRuleRatio? Efficiency { get; }
+        public CombatRuleRatio? DamageMigration { get; }
+        public CombatRuleRatio? DamageWeight { get; }
+        public string StatusId { get; }
+        public string StatusAttributeId { get; }
+        public int StatusRelativePermille { get; }
+        public int StatusDurationOwnTurnEnds { get; }
+        public int StatusStackLimit { get; }
+        public string StatusRefreshPolicy { get; }
+        public int ControlChancePermille { get; }
+        public bool ControlUsesMindContest { get; }
+        public CombatAttackRuleMetadata(string version, string digest, CombatRuleSet.EffectTier tier,
+            string cooldownClass, string effectBudgetMode, CombatRuleRatio? efficiency,
+            CombatRuleRatio? migration, CombatRuleRatio? weight, string statusId, string attribute,
+            int relative, int duration, int stackLimit, string refresh, int controlChance, bool mindContest)
+        {
+            if (version != CombatRuleSet.Version || digest == null || !System.Text.RegularExpressions.Regex.IsMatch(digest, "^[a-f0-9]{64}$") || tier == null)
+                throw new ArgumentException("attack_rule_identity_invalid");
+            RuleSetVersion = version; SourceDigest = digest; Tier = tier; CooldownClass = cooldownClass;
+            EffectBudgetMode = effectBudgetMode; Efficiency = efficiency; DamageMigration = migration; DamageWeight = weight;
+            StatusId = statusId; StatusAttributeId = attribute; StatusRelativePermille = relative;
+            StatusDurationOwnTurnEnds = duration; StatusStackLimit = stackLimit; StatusRefreshPolicy = refresh;
+            ControlChancePermille = controlChance; ControlUsesMindContest = mindContest;
+        }
+    }
+
     /// <summary>Immutable non-Unity projection of one resolved attack profile.</summary>
     public sealed class CombatAttackProfile
     {
@@ -44,7 +78,8 @@ namespace TianZhang.Combat
             int otherTargetSpiritCost = 0,
             float otherTargetSpiritRecoveryMultiplier = 1f,
             Func<string, string, string, bool> qualification = null,
-            bool isTalisman = false)
+            bool isTalisman = false,
+            CombatAttackRuleMetadata ruleMetadata = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Attack profile ID is required.", nameof(id));
@@ -90,8 +125,10 @@ namespace TianZhang.Combat
             OtherTargetSpiritRecoveryMultiplier = otherTargetSpiritRecoveryMultiplier;
             this.qualification = qualification;
             IsTalisman = isTalisman;
+            RuleMetadata = ruleMetadata;
         }
 
+        public CombatAttackRuleMetadata RuleMetadata { get; }
         public string Id { get; }
         public CombatAttackKind Kind { get; }
         public CombatAttackEffect Effect { get; }

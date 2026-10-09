@@ -62,7 +62,7 @@ namespace TianZhang.Tests.EditMode
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.UseItem, 30000, 30000, 0, 0) });
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
-            Assert.IsTrue(new CombatEntryAdapter(ordinary).TryCreateSession(spawn, profiles, environment, out session, out var reason), reason);
+            Assert.IsTrue(new CombatEntryAdapter(ordinary, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(spawn, profiles, environment, out session, out var reason), reason);
             session.ExternalResources = bridge; Set(bridge, "session", session); Set(bridge, "unitPresentation", new NoPresentation());
             Assert.AreEqual("player", service.AdvanceUntilAction(session).ActorId);
         }

@@ -53,3 +53,22 @@ MonoBehaviour:
   isDomain: 0
   isBloodline: 0
   specialEffectTextKey:
+  ruleSetVersion: AP-GROWTH@0.1
+  abilityTierId: tier_lianqi
+  cooldownClass: basic_repeat
+  effectBudgetMode: fixed_weapon
+  efficiencyNumerator: 0
+  efficiencyDenominator: 0
+  damageMigrationNumerator: 0
+  damageMigrationDenominator: 0
+  damageWeightNumerator: 0
+  damageWeightDenominator: 0
+  statusId:
+  statusAttributeId:
+  statusRelativePermille: 0
+  statusDurationOwnTurnEnds: 0
+  statusStackLimit: 0
+  statusRefreshPolicy:
+  controlChancePermille: 0
+  controlUsesMindContest: 0
+  ruleSetSourceDigest: 0acdd4b9ba73ca9cb24917acaff587427ece3c362762aae918eebaca9548ed1f

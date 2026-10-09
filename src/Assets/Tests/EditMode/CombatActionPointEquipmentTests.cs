@@ -52,7 +52,7 @@ namespace TianZhang.Tests.EditMode
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.SwapEquipment, 25000, 25000, 0, 0) });
-            Assert.IsTrue(new CombatEntryAdapter(ordinary).TryCreateSession(spawn, profiles, environment, out session, out var reason), reason);
+            Assert.IsTrue(new CombatEntryAdapter(ordinary, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(spawn, profiles, environment, out session, out var reason), reason);
             session.ExternalResources = bridge;
             typeof(EncounterCoordinator).GetField("unitPresentation", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(bridge, new NoPresentation());
             typeof(EncounterCoordinator).GetField("session", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(bridge, session);

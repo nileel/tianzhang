@@ -63,7 +63,29 @@ namespace TianZhang.Tests
             var spawned = new AdventureSpawnSet(player, enemy, null, "basic_unarmed", "basic_unarmed", Array.Empty<string>());
             var profiles = (AttackProfileData[])Field("attackProfiles");
             var environment = (EnvironmentProfileAsset)Field("environmentProfile");
-            Assert.IsTrue(new CombatEntryAdapter(ordinary).TryCreateSession(spawned, profiles, environment, out var session, out var reason), reason);
+            Assert.IsTrue(new CombatEntryAdapter(ordinary, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(spawned, profiles, environment, out var session, out var reason), reason);
+            var ruleData = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+            Assert.IsNotNull(session.RuleSet);
+            Assert.AreEqual(ruleData.sourceDigest,session.RuleSet.SourceDigest);
+            foreach (var profile in session.AttackProfiles)
+            {
+                if (profile.Id == "basic_unarmed") { Assert.IsNull(profile.RuleMetadata); continue; }
+                Assert.IsNotNull(profile.RuleMetadata);
+                Assert.AreEqual("tier_lianqi",profile.RuleMetadata.Tier.AbilityTierId);
+                Assert.AreEqual(ruleData.sourceDigest,profile.RuleMetadata.SourceDigest);
+                Assert.AreEqual(ruleData.ruleSetVersion,profile.RuleMetadata.RuleSetVersion);
+            }
+            var badProfile = UnityEngine.Object.Instantiate(profiles.First(value => value.attackProfileId == "spell_guanshiji"));
+            try
+            {
+                badProfile.efficiencyDenominator=0;
+                Assert.IsFalse(new CombatEntryAdapter(ordinary,ruleData).TryCreateSession(spawned,new[] {badProfile},environment,out var rejected,out reason));
+                Assert.IsNull(rejected); Assert.AreEqual("attack_profile_budget_ratio_invalid",reason);
+                badProfile.efficiencyDenominator=1; badProfile.physicalDamageMultiplier=float.NaN;
+                Assert.IsFalse(new CombatEntryAdapter(ordinary,ruleData).TryCreateSession(spawned,new[] {badProfile},environment,out rejected,out reason));
+                Assert.IsNull(rejected); Assert.AreEqual("attack_profile_required_field_invalid",reason);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(badProfile); }
             var service = new CombatCommandService(); Assert.AreEqual(player.Id, service.AdvanceUntilAction(session).ActorId);
             var guard = new CombatCommand(CombatCommandKind.Guard, player.Id);
             Assert.AreEqual(50000, service.Preview(session, guard).ActionPointCostUnits);
@@ -78,7 +100,7 @@ namespace TianZhang.Tests
                 new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,50000,0,0,0),ordinary[1] },
             })
             {
-                Assert.IsFalse(new CombatEntryAdapter(invalid).TryCreateSession(spawned,profiles,environment,out var rejected,out reason));
+                Assert.IsFalse(new CombatEntryAdapter(invalid, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(spawned,profiles,environment,out var rejected,out reason));
                 Assert.IsNull(rejected); StringAssert.StartsWith("combat_session_setup_invalid:",reason);
             }
         }

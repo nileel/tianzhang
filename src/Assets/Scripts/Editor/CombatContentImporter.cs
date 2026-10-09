@@ -52,19 +52,7 @@ namespace TianZhang.Editor
 
         /// <summary>解析文本 ID → 显示文本</summary>
         static string T(string id) => LoadLanguage().TryGetValue(id, out var text) ? text : id;
-        private static readonly string[] AttackProfileColumns =
-        {
-            "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind",
-            "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
-            "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
-            "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
-            "actionPointCostUnits", "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks",
-            "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
-            "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
-            "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
-            "isDomain", "isBloodline", "specialEffectTextKey",
-            "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost", "otherTargetRecoveryMultiplier",
-        };
+        private static readonly string[] AttackProfileColumns = CombatRuleSet.AttackColumns;
 
         [MenuItem("天章/导入术法配置")]
         public static void ImportSpells()
@@ -150,7 +138,9 @@ namespace TianZhang.Editor
                 return;
             }
 
-            if (!ValidateCharacterBasicAttackBindings(rows, out reason) ||
+            if (!TryReadCombatRuleSet(out var ruleSet, out reason) ||
+                !ValidateRuleSetAssetAndCatalog(out reason) ||
+                !ValidateCharacterBasicAttackBindings(rows, out reason) ||
                 !ValidateAttackProfileAssetPaths(rows, out reason))
             {
                 Debug.LogError($"[AttackProfiles] {reason}");
@@ -160,6 +150,7 @@ namespace TianZhang.Editor
             AssetDatabase.StartAssetEditing();
             try
             {
+                WriteCombatRuleSet(ruleSet);
                 foreach (var row in rows)
                 {
                     string assetPath = $"Assets/Data/AttackProfiles/AttackProfile_{row.AttackProfileId}.asset";
@@ -324,8 +315,47 @@ namespace TianZhang.Editor
             public bool IsBloodline;
             public string SpecialEffectTextKey;
 
+            public string RuleSetVersion;
+            public string AbilityTierId;
+            public string CooldownClass;
+            public string EffectBudgetMode;
+            public int EfficiencyNumerator;
+            public int EfficiencyDenominator;
+            public int DamageMigrationNumerator;
+            public int DamageMigrationDenominator;
+            public int DamageWeightNumerator;
+            public int DamageWeightDenominator;
+            public string StatusId;
+            public string StatusAttributeId;
+            public int StatusRelativePermille;
+            public int StatusDurationOwnTurnEnds;
+            public int StatusStackLimit;
+            public string StatusRefreshPolicy;
+            public int ControlChancePermille;
+            public bool ControlUsesMindContest;
+            public string RuleSetSourceDigest;
+
             public void CopyTo(AttackProfileData asset)
             {
+                asset.ruleSetVersion = RuleSetVersion;
+                asset.abilityTierId = AbilityTierId;
+                asset.cooldownClass = CooldownClass;
+                asset.effectBudgetMode = EffectBudgetMode;
+                asset.efficiencyNumerator = EfficiencyNumerator;
+                asset.efficiencyDenominator = EfficiencyDenominator;
+                asset.damageMigrationNumerator = DamageMigrationNumerator;
+                asset.damageMigrationDenominator = DamageMigrationDenominator;
+                asset.damageWeightNumerator = DamageWeightNumerator;
+                asset.damageWeightDenominator = DamageWeightDenominator;
+                asset.statusId = StatusId;
+                asset.statusAttributeId = StatusAttributeId;
+                asset.statusRelativePermille = StatusRelativePermille;
+                asset.statusDurationOwnTurnEnds = StatusDurationOwnTurnEnds;
+                asset.statusStackLimit = StatusStackLimit;
+                asset.statusRefreshPolicy = StatusRefreshPolicy;
+                asset.controlChancePermille = ControlChancePermille;
+                asset.controlUsesMindContest = ControlUsesMindContest;
+                asset.ruleSetSourceDigest = RuleSetSourceDigest;
                 asset.attackProfileId = AttackProfileId;
                 asset.displayNameKey = DisplayNameKey;
                 asset.profileKind = ProfileKind;
@@ -400,6 +430,7 @@ namespace TianZhang.Editor
                 return false;
             }
 
+            if (!TryReadCombatRuleSet(out var ruleSet, out reason)) return false;
             var ids = new HashSet<string>(StringComparer.Ordinal);
             for (int lineNumber = headerLineIndex + 1; lineNumber < lines.Length; lineNumber++)
             {
@@ -416,12 +447,12 @@ namespace TianZhang.Editor
 
                 try
                 {
-                    var row = ParseAttackProfileRow(headers, columns, sourceName, languageKeys);
+                    var row = ParseAttackProfileRow(headers, columns, sourceName, languageKeys, ruleSet);
                     if (!ids.Add(row.AttackProfileId))
                         throw new InvalidDataException("attack_profile_id_duplicate");
                     rows.Add(row);
                 }
-                catch (InvalidDataException exception)
+                catch (Exception exception) when (exception is InvalidDataException || exception is OverflowException)
                 {
                     reason = $"{exception.Message}:line_{lineNumber + 1}";
                     rows.Clear();
@@ -442,7 +473,7 @@ namespace TianZhang.Editor
             string[] headers,
             string[] columns,
             string sourceName,
-            IReadOnlyCollection<string> languageKeys)
+            IReadOnlyCollection<string> languageKeys, CombatRuleSet ruleSet)
         {
             string Value(string name) => GetAttackProfileValue(headers, columns, name, sourceName);
             string Required(string name)
@@ -469,7 +500,7 @@ namespace TianZhang.Editor
                 ActionPointCostUnits = ParsePositiveInt(Required("actionPointCostUnits"), "actionPointCostUnits"),
                 MinimumNetCostUnits = ParsePositiveInt(Required("minimumNetCostUnits"), "minimumNetCostUnits"),
                 CtPenalty = ParseCtPenalty(Required("ctPenalty")),
-                ReuseCooldownTicks = ParseNonNegativeInt(Required("reuseCooldownTicks"), "reuseCooldownTicks"),
+                ReuseCooldownTicks = 0,
                 MinCastRange = ParseNonNegativeInt(Required("minCastRange"), "minCastRange"),
                 MaxCastRange = ParseNonNegativeInt(Required("maxCastRange"), "maxCastRange"),
                 TargetingMode = ParseAttackTargetingMode(Required("targetingMode")),
@@ -512,7 +543,40 @@ namespace TianZhang.Editor
                 }
             }
 
+            row.RuleSetVersion = Required("ruleSetVersion");
+            row.RuleSetSourceDigest = ruleSet.SourceDigest;
+            if (row.RuleSetVersion != CombatRuleSet.Version) throw new InvalidDataException("attack_profile_rule_version_unknown");
+            row.AbilityTierId = Value("abilityTierId"); row.CooldownClass = Required("cooldownClass");
+            row.EffectBudgetMode = Required("effectBudgetMode");
+            bool legacy = row.BasicBindingKind == BasicAttackBindingKind.UnarmedFallback;
+            if (legacy)
+            {
+                if (row.AbilityTierId != "" || row.CooldownClass != "legacy_unarmed" || row.EffectBudgetMode != "legacy_unarmed")
+                    throw new InvalidDataException("attack_profile_legacy_unarmed_invalid");
+                row.ReuseCooldownTicks = ParseNonNegativeInt(Required("reuseCooldownTicks"), "reuseCooldownTicks");
+            }
+            else
+            {
+                ruleSet.GetTier(Required("abilityTierId"));
+                row.ReuseCooldownTicks = ruleSet.ResolveCooldown(row.AbilityTierId, row.CooldownClass,
+                    Value("reuseCooldownTicks") == "" ? (int?)null : ParseNonNegativeInt(Value("reuseCooldownTicks"), "reuseCooldownTicks"));
+            }
+            bool budget = row.EffectBudgetMode == "damage_budget";
+            foreach (string field in new[] { "efficiencyNumerator", "efficiencyDenominator", "damageMigrationNumerator", "damageMigrationDenominator", "damageWeightNumerator", "damageWeightDenominator" })
+                if (!budget) RequireEmpty(field);
+            if (budget)
+            {
+                row.EfficiencyNumerator = ParsePositiveInt(Required("efficiencyNumerator"), "efficiencyNumerator");
+                row.EfficiencyDenominator = ParsePositiveInt(Required("efficiencyDenominator"), "efficiencyDenominator");
+                row.DamageMigrationNumerator = ParsePositiveInt(Required("damageMigrationNumerator"), "damageMigrationNumerator");
+                row.DamageMigrationDenominator = ParsePositiveInt(Required("damageMigrationDenominator"), "damageMigrationDenominator");
+                row.DamageWeightNumerator = ParsePositiveInt(Required("damageWeightNumerator"), "damageWeightNumerator");
+                row.DamageWeightDenominator = ParsePositiveInt(Required("damageWeightDenominator"), "damageWeightDenominator");
+            }
+            if (row.ProfileKind == AttackProfileKind.Basic && row.ReuseCooldownTicks != 0)
+                throw new InvalidDataException("basic_attack_resource_or_cooldown_invalid");
             ParseAttackEffectFields(row, Value, Required, RequireEmpty);
+            ResolveAttackRuleFields(row, ruleSet, Value, Required, RequireEmpty);
             ParseAttackTargetingFields(row, Value, Required, RequireEmpty);
 
             if (row.ProfileKind == AttackProfileKind.Divine)
@@ -567,11 +631,11 @@ namespace TianZhang.Editor
             }
             bool physical = row.EffectType is AttackEffectType.Physical or AttackEffectType.Hybrid;
             bool magic = row.EffectType is AttackEffectType.Magic or AttackEffectType.Hybrid;
-            if (physical)
+            if (physical && row.EffectBudgetMode != "damage_budget")
                 row.PhysicalDamageMultiplier = ParseNonNegativeFloat(required("physicalDamageMultiplier"), "physicalDamageMultiplier");
             else
                 requireEmpty("physicalDamageMultiplier");
-            if (magic)
+            if (magic && row.EffectBudgetMode != "damage_budget")
                 row.SoulDamageMultiplier = ParseNonNegativeFloat(required("soulDamageMultiplier"), "soulDamageMultiplier");
             else
                 requireEmpty("soulDamageMultiplier");
@@ -595,10 +659,7 @@ namespace TianZhang.Editor
                 row.HealAmount = ParseNonNegativeInt(required("healAmount"), "healAmount");
             else
                 requireEmpty("healAmount");
-            if (row.EffectType is AttackEffectType.Buff or AttackEffectType.Debuff)
-                row.BuffMultiplier = ParseNonNegativeFloat(required("buffMultiplier"), "buffMultiplier");
-            else
-                requireEmpty("buffMultiplier");
+            requireEmpty("buffMultiplier");
         }
 
         private static void ParseAttackTargetingFields(
@@ -714,6 +775,192 @@ namespace TianZhang.Editor
 
             reason = string.Empty;
             return true;
+        }
+
+        private static readonly string[] RuleSourcePaths =
+        {
+            "src/Assets/DataConfig/AttackProfiles.csv", "src/Assets/DataConfig/CombatActionEconomyRules.csv",
+            "src/Assets/DataConfig/CombatEffectTierRules.csv", "src/Assets/DataConfig/RealmCombatGrowth.csv",
+        };
+        public static string[][] TokenizeRuleTable(string[] lines) => lines
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"))
+            .Select(CsvTableReader.ParseRow).ToArray();
+        public static bool TryReadCombatRuleSet(out CombatRuleSet rules, out string reason)
+        {
+            rules = null;
+            try
+            {
+                var sources = RuleSourcePaths.ToDictionary(path => path, path => File.ReadAllBytes(path.Substring(4)), StringComparer.Ordinal);
+                rules = CombatRuleSet.Parse(TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[3].Substring(4))),
+                    TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[2].Substring(4))),
+                    TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[1].Substring(4))), CombatRuleSet.ComputeSourceDigest(sources));
+                reason = null; return true;
+            }
+            catch (Exception exception) when (exception is InvalidDataException || exception is IOException || exception is OverflowException)
+            { reason = exception.Message; return false; }
+        }
+        private static bool ValidateRuleSetAssetAndCatalog(out string reason)
+        {
+            const string path = "Assets/Data/CombatRuleSet.asset";
+            if (AssetDatabase.LoadMainAssetAtPath(path) != null && AssetDatabase.LoadAssetAtPath<CombatRuleSetData>(path) == null)
+            { reason = "combat_rule_asset_type_conflict"; return false; }
+            foreach (string guid in AssetDatabase.FindAssets("t:CombatRuleSetData"))
+                if (AssetDatabase.GUIDToAssetPath(guid) != path) { reason = "combat_rule_asset_duplicate"; return false; }
+            if (AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset") == null)
+            { reason = "combat_rule_catalog_missing"; return false; }
+            reason = null; return true;
+        }
+        private static void WriteCombatRuleSet(CombatRuleSet rules)
+        {
+            const string path = "Assets/Data/CombatRuleSet.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<CombatRuleSetData>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            asset.schemaVersion = CombatRuleSet.SchemaVersion; asset.ruleSetVersion = rules.RuleSetVersion;
+            asset.sourceDigest = rules.SourceDigest;
+            asset.realms = rules.Realms.Select(row => new CombatRuleSetData.RealmRow
+            {
+                realmId = row.RealmId,
+                realmOrder = row.RealmOrder,
+                usageScope = row.UsageScope,
+                actionPointMaximumUnits = row.ActionPointMaximumUnits,
+                baseMovementEfficiencyMilliUnits = row.BaseMovementEfficiencyMilliUnits,
+                legacyBaseMovementEfficiencyMilliUnits = row.LegacyBaseMovementEfficiencyMilliUnits,
+                movementNodeWeightNumerators = row.MovementNodeWeightNumerators .ToArray(),
+                movementNodeWeightDenominator = row.MovementNodeWeightDenominator,
+            }).ToArray();
+            asset.tiers = rules.Tiers.Select(row => new CombatRuleSetData.TierRow
+            {
+                abilityTierId = row.AbilityTierId,
+                realmId = row.RealmId,
+                actionPointReferenceUnits = row.ActionPointReferenceUnits,
+                spiritBudgetReference = row.SpiritBudgetReference,
+                physicalAttackCapacity = row.PhysicalAttackCapacity,
+                soulAttackCapacity = row.SoulAttackCapacity,
+                physicalDefenseCapacity = row.PhysicalDefenseCapacity,
+                soulDefenseCapacity = row.SoulDefenseCapacity,
+                recoverySoulAttackCapacity = row.RecoverySoulAttackCapacity,
+                rawSpiritRecoveryCapacity = row.RawSpiritRecoveryCapacity,
+                reactionCapacity = row.ReactionCapacity,
+                referenceTurnIntervalTicks = row.ReferenceTurnIntervalTicks,
+            }).ToArray();
+            asset.economy = rules.Economy.Select(row => new CombatRuleSetData.EconomyRow
+            {
+                recordKind = row.RecordKind,
+                definitionRef = row.DefinitionRef,
+                abilityTierId = row.AbilityTierId,
+                repeatFirstPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RepeatFirstPermille },
+                repeatSecondPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RepeatSecondPermille },
+                repeatThirdPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RepeatThirdPermille },
+                repeatCappedPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RepeatCappedPermille },
+                realmBelowTwoPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RealmBelowTwoPermille },
+                realmBelowOnePermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RealmBelowOnePermille },
+                realmEqualPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RealmEqualPermille },
+                realmAboveOnePermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RealmAboveOnePermille },
+                realmAboveTwoPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RealmAboveTwoPermille },
+                relativeStatusLimitPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RelativeStatusLimitPermille },
+                probabilityPointLimitPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.ProbabilityPointLimitPermille },
+                strongControlLimitPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.StrongControlLimitPermille },
+                burstCooldownMultiplier = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.BurstCooldownMultiplier },
+                controlCooldownMultiplier = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.ControlCooldownMultiplier },
+                recoveryCooldownMultiplier = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.RecoveryCooldownMultiplier },
+                movementBudgetNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.MovementBudgetNumerator },
+                movementBudgetDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.MovementBudgetDenominator },
+                waterBaseChancePermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterBaseChancePermille },
+                waterMinimumChancePermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterMinimumChancePermille },
+                waterMindDifferenceDivisor = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterMindDifferenceDivisor },
+                waterDefensePerStackPermille = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterDefensePerStackPermille },
+                waterDefenseMaxStacks = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterDefenseMaxStacks },
+                waterReductionMigrationNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterReductionMigrationNumerator },
+                waterReductionMigrationDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "global", value = row.WaterReductionMigrationDenominator },
+                actionPointFactorNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.ActionPointFactorNumerator },
+                actionPointFactorDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.ActionPointFactorDenominator },
+                spiritFactorNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.SpiritFactorNumerator },
+                spiritFactorDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.SpiritFactorDenominator },
+                actionPointCostOverrideUnits = new CombatRuleSetData.OptionalInteger { present = row.ActionPointCostOverrideUnits.HasValue, value = row.ActionPointCostOverrideUnits.GetValueOrDefault() },
+                minimumNetCostOverrideUnits = new CombatRuleSetData.OptionalInteger { present = row.MinimumNetCostOverrideUnits.HasValue, value = row.MinimumNetCostOverrideUnits.GetValueOrDefault() },
+                spiritCostOverride = new CombatRuleSetData.OptionalInteger { present = row.SpiritCostOverride.HasValue, value = row.SpiritCostOverride.GetValueOrDefault() },
+                ctPenalty = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.CtPenalty },
+                cooldownClass = row.CooldownClass,
+                reuseCooldownOverrideTicks = new CombatRuleSetData.OptionalInteger { present = row.ReuseCooldownOverrideTicks.HasValue, value = row.ReuseCooldownOverrideTicks.GetValueOrDefault() },
+                damageMigrationNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.DamageMigrationNumerator },
+                damageMigrationDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.DamageMigrationDenominator },
+                damageWeightNumerator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.DamageWeightNumerator },
+                damageWeightDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.DamageWeightDenominator },
+            }).ToArray();
+
+            EditorUtility.SetDirty(asset);
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
+            catalog.SetCombatRuleSet(asset); EditorUtility.SetDirty(catalog);
+        }
+        private static void ResolveAttackRuleFields(AttackProfileImportRow row, CombatRuleSet rules,
+            Func<string, string> value, Func<string, string> required, Action<string> empty)
+        {
+            if (row.EffectBudgetMode == "damage_budget")
+            {
+                var reduced = new CombatRuleRatio(row.EfficiencyNumerator, row.EfficiencyDenominator);
+                row.EfficiencyNumerator = checked((int)reduced.Numerator); row.EfficiencyDenominator = checked((int)reduced.Denominator);
+            }
+            if (row.EffectBudgetMode == "damage_budget")
+            {
+                var reduced = new CombatRuleRatio(row.DamageMigrationNumerator, row.DamageMigrationDenominator);
+                row.DamageMigrationNumerator = checked((int)reduced.Numerator); row.DamageMigrationDenominator = checked((int)reduced.Denominator);
+            }
+            if (row.EffectBudgetMode == "damage_budget")
+            {
+                var reduced = new CombatRuleRatio(row.DamageWeightNumerator, row.DamageWeightDenominator);
+                row.DamageWeightNumerator = checked((int)reduced.Numerator); row.DamageWeightDenominator = checked((int)reduced.Denominator);
+            }
+            bool damage = row.EffectType is AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid;
+            bool status = row.EffectType is AttackEffectType.Buff or AttackEffectType.Debuff;
+            if (!(row.EffectBudgetMode == "legacy_unarmed" && row.BasicBindingKind == BasicAttackBindingKind.UnarmedFallback && damage ||
+                  row.EffectBudgetMode == "fixed_weapon" && row.BasicBindingKind == BasicAttackBindingKind.MainEquipment && damage ||
+                  row.EffectBudgetMode == "damage_budget" && row.ProfileKind != AttackProfileKind.Basic && damage ||
+                  row.EffectBudgetMode == "prototype_restore" && row.EffectType == AttackEffectType.RestoreSpirit ||
+                  row.EffectBudgetMode == "status_only" && status ||
+                  row.EffectBudgetMode == "fixed_output" && row.EffectType == AttackEffectType.Heal))
+                throw new InvalidDataException("attack_profile_effect_budget_mode_invalid");
+            if (row.EffectBudgetMode == "damage_budget")
+            {
+                float Resolve(bool soul) => rules.ResolveDamageMultiplier(row.AbilityTierId, row.ActionPointCostUnits, row.ResourceCost,
+                    row.ProfileKind == AttackProfileKind.Divine && row.ResourceCost == 0,
+                    new CombatRuleRatio(row.EfficiencyNumerator, row.EfficiencyDenominator),
+                    new CombatRuleRatio(row.DamageMigrationNumerator, row.DamageMigrationDenominator),
+                    new CombatRuleRatio(row.DamageWeightNumerator, row.DamageWeightDenominator),
+                    CombatRuleRatio.FromDecimal(value("defensePenetration") == "" ? "0" : value("defensePenetration")), soul);
+                if (row.EffectType is AttackEffectType.Physical or AttackEffectType.Hybrid) row.PhysicalDamageMultiplier = Resolve(false);
+                if (row.EffectType is AttackEffectType.Magic or AttackEffectType.Hybrid) row.SoulDamageMultiplier = Resolve(true);
+            }
+            if (status)
+            {
+                row.StatusId = required("statusId"); row.StatusAttributeId = required("statusAttributeId");
+                if (!System.Text.RegularExpressions.Regex.IsMatch(row.StatusId, "^[a-z][a-z0-9_]*$") ||
+                    !new[] { "physical_attack", "soul_attack", "physical_defense", "soul_defense" }.Contains(row.StatusAttributeId, StringComparer.Ordinal))
+                    throw new InvalidDataException("attack_profile_status_identity_invalid");
+                string relative = required("statusRelativePermille");
+                if (!System.Text.RegularExpressions.Regex.IsMatch(relative, "^-?[0-9]+$") ||
+                    !int.TryParse(relative, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out row.StatusRelativePermille) ||
+                    row.StatusRelativePermille == 0 || row.StatusRelativePermille < -1000 || row.StatusRelativePermille > 1000 ||
+                    (row.EffectType == AttackEffectType.Buff) != (row.StatusRelativePermille > 0))
+                    throw new InvalidDataException("attack_profile_status_relative_invalid");
+                row.StatusDurationOwnTurnEnds = ParsePositiveInt(required("statusDurationOwnTurnEnds"), "statusDurationOwnTurnEnds");
+                row.StatusStackLimit = ParsePositiveInt(required("statusStackLimit"), "statusStackLimit");
+                row.StatusRefreshPolicy = required("statusRefreshPolicy");
+                if (row.StatusStackLimit != 1 || row.StatusRefreshPolicy != "replace_stronger")
+                    throw new InvalidDataException("attack_profile_status_stack_invalid");
+            }
+            else foreach (string field in new[] { "statusId", "statusAttributeId", "statusRelativePermille", "statusDurationOwnTurnEnds", "statusStackLimit", "statusRefreshPolicy" }) empty(field);
+            bool control = value("controlChancePermille") != "" || value("controlUsesMindContest") != "";
+            if (control)
+            {
+                if (!damage) throw new InvalidDataException("attack_profile_control_effect_invalid");
+                row.ControlChancePermille = ParseNonNegativeInt(required("controlChancePermille"), "controlChancePermille");
+                row.ControlUsesMindContest = ParseStrictBool(required("controlUsesMindContest"), "controlUsesMindContest");
+                if (row.ControlChancePermille > 1000) throw new InvalidDataException("attack_profile_control_probability_invalid");
+            }
         }
 
         private static string GetAttackProfileValue(string[] headers, string[] columns, string name, string sourceName)
@@ -847,7 +1094,7 @@ namespace TianZhang.Editor
 
         private static int ParseNonNegativeInt(string value, string fieldName)
         {
-            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed < 0)
+            if (value.Any(c => c < '0' || c > '9') || !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed < 0)
                 throw new InvalidDataException($"attack_profile_{fieldName}_invalid");
             return parsed;
         }
@@ -855,7 +1102,7 @@ namespace TianZhang.Editor
         /// <summary>主动收益费用与净费下限必须严格大于 0；空列、分数、指数与溢出同样在此失败关闭。</summary>
         private static int ParsePositiveInt(string value, string fieldName)
         {
-            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed <= 0)
+            if (value.Any(c => c < '0' || c > '9') || !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed <= 0)
                 throw new InvalidDataException($"attack_profile_{fieldName}_invalid");
             return parsed;
         }
@@ -863,7 +1110,7 @@ namespace TianZhang.Editor
         /// <summary>CT 惩罚上界与公共合同一致：0～int.MaxValue-100，回合累计也不得越过该界。</summary>
         private static int ParseCtPenalty(string value)
         {
-            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) ||
+            if (value.Any(c => c < '0' || c > '9') || !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) ||
                 parsed < 0 || parsed > int.MaxValue - 100)
             {
                 throw new InvalidDataException("attack_profile_ctPenalty_invalid");

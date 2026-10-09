@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using TianZhang.World;
+using TianZhang.Combat;
 
 namespace BattleSim;
 
@@ -1359,20 +1360,8 @@ static class BattleSimSelfTests
             Array.Empty<string>());
     }
 
-    static readonly string[] AttackProfileHeaders =
-    {
-        "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind",
-        "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
-        "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
-        "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
-        "actionPointCostUnits", "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks",
-        "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
-        "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
-        "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
-        "isDomain", "isBloodline", "specialEffectTextKey",
-        "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost",
-        "otherTargetRecoveryMultiplier",
-    };
+    static readonly string[] AttackProfileHeaders = CombatRuleSet.AttackColumns;
+    static readonly string[] RecoveryFixtureFields = { "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost", "otherTargetRecoveryMultiplier" };
 
     static IReadOnlyList<Dictionary<string, string>> ReadFixtureRows(string fileName)
     {
@@ -1385,8 +1374,16 @@ static class BattleSimSelfTests
             var values = line.Split(',');
             if (values.Length != headers.Length)
                 throw new InvalidOperationException($"{fileName} has a malformed CSV row.");
-            return headers.Select((header, index) => (header, value: values[index]))
+            var row = headers.Select((header, index) => (header, value: values[index]))
                 .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
+            if (fileName == "AttackProfiles.fixture.csv" && row["effectBudgetMode"] == "damage_budget")
+            {
+                var rules = GameData.LoadProductionRuleSet(Path.Combine(FindRepositoryRoot(),"src/Assets/DataConfig/AttackProfiles.csv"));
+                float physical = GameData.ResolveAttackMultiplier(row,rules,false), soul = GameData.ResolveAttackMultiplier(row,rules,true);
+                row["physicalDamageMultiplier"] = row["effectType"] is "physical" or "hybrid" ? physical.ToString("R",System.Globalization.CultureInfo.InvariantCulture) : "";
+                row["soulDamageMultiplier"] = row["effectType"] is "magic" or "hybrid" ? soul.ToString("R",System.Globalization.CultureInfo.InvariantCulture) : "";
+            }
+            return row;
         }).ToArray();
     }
 
@@ -1609,7 +1606,7 @@ static class BattleSimSelfTests
         // 未支持效果语义：heal 行在既有 BattleSim 载体上没有对应字段。
         AssertTableRejected(TableWith(MutateRowLine(artCircleLine, "effectType", "heal")), "unsupported_effect_semantics");
         AssertTableRejected(TableWith(MutateRowLine(artSingleLine, "effectType", "restore_spirit")), "unsupported_effect_semantics");
-        foreach (string field in AttackProfileHeaders.TakeLast(4))
+        foreach (string field in RecoveryFixtureFields)
             AssertTableRejected(TableWith(MutateRowLine(artSingleLine, field, "0")), "unsupported_effect_semantics");
     }
 
@@ -1667,6 +1664,8 @@ static class BattleSimSelfTests
         string input = Path.Combine(temporary, "ordinary-input.json");
         File.Copy(Path.Combine(root, "开发管理/关中首战普通角色输入.json"), input);
         File.Copy(Path.Combine(root, "src/Assets/DataConfig/Enemies.csv"), Path.Combine(data, "Enemies.csv"));
+        foreach (string name in new[] { "RealmCombatGrowth","CombatEffectTierRules","CombatActionEconomyRules" })
+            File.Copy(Path.Combine(root,"src/Assets/DataConfig/"+name+".csv"),Path.Combine(data,name+".csv"));
         string[] baseline = File.ReadAllLines(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
         MethodInfo audit = typeof(GuanzhongPlaytestAudit).GetMethod("LoadProductionInputs", BindingFlags.Static | BindingFlags.NonPublic);
         TianZhang.Combat.CombatAttackProfile[] LoadAudit()
@@ -1695,6 +1694,15 @@ static class BattleSimSelfTests
             AssertEqual(50000, loaded["basic_unarmed"].Cost.ActionPointCostUnits, "legacy unarmed unchanged");
             AssertEqual(12, loaded["spell_guanshiji"].SpiritCost, "legacy attack unchanged");
             AssertEqual(0.5m, loaded["spell_julingshu"].SpiritRecoveryMultiplier, "legacy recovery unchanged");
+            var rules = GameData.LoadProductionRuleSet(attacks);
+            AssertEqual("AP-GROWTH@0.1",rules.RuleSetVersion,"production rule version");
+            AssertEqual(52,rules.Economy.Count,"51 explicit action triples plus global");
+            AssertEqual(0,loaded["spell_guanshiji"].Cost.CtPenalty,"new guanshiji CT");
+            AssertEqual(0,loaded["spell_guanshiji"].Cost.ReuseCooldownTicks,"new guanshiji CD");
+            AssertEqual(16,loaded["spell_julingshu"].Cost.ReuseCooldownTicks,"derived recovery CD");
+            foreach (var entry in loaded.Values) AssertEqual(rules.SourceDigest,entry.RuleSetSourceDigest,"shared production digest");
+            foreach (var profile in projected.Where(value => value.Id != "basic_unarmed"))
+                AssertEqual(rules.SourceDigest,profile.RuleMetadata.SourceDigest,"audit metadata digest");
             string header = baseline.First(value => value.StartsWith("attackProfileId,"));
             string blade = baseline.Single(value => value.StartsWith("basic_iron_blade,"));
             var variants = new List<string[]>
@@ -1705,7 +1713,8 @@ static class BattleSimSelfTests
             };
             foreach (var change in new[] { ("actionPointCostUnits", "0"), ("actionPointCostUnits", "-1"),
                 ("actionPointCostUnits", "1.5"), ("minimumNetCostUnits", "999999"), ("reuseCooldownTicks", "-1"),
-                ("basicBindingKind", "unarmed_fallback"), ("physicalDamageMultiplier", "NaN") })
+                ("basicBindingKind", "unarmed_fallback"), ("physicalDamageMultiplier", "NaN"),
+                ("cooldownClass", "typo"), ("abilityTierId", "tier_unknown"), ("ruleSetVersion", "unknown") })
             {
                 var columns = blade.Split(','); columns[Array.IndexOf(header.Split(','), change.Item1)] = change.Item2;
                 variants.Add(baseline.Select(value => value == blade ? string.Join(",", columns) : value).ToArray());
@@ -1718,6 +1727,23 @@ static class BattleSimSelfTests
                 try { LoadAudit(); } catch (TargetInvocationException) { auditRejected = true; }
                 AssertEqual(true, mainRejected, "real loader rejects invalid input");
                 AssertEqual(true, auditRejected, "audit entry rejects invalid input");
+            }
+            File.WriteAllLines(attacks,baseline);
+            foreach (var invalid in new[] { ("RealmCombatGrowth","baseMovementEfficiencyMilliUnits","0"),
+                ("CombatEffectTierRules","abilityTierId","tier_unknown"), ("CombatActionEconomyRules","repeatThirdPermille","1") })
+            {
+                string rulePath = Path.Combine(data,invalid.Item1+".csv"); byte[] original = File.ReadAllBytes(rulePath);
+                try
+                {
+                    var lines = File.ReadAllLines(rulePath); int hi = TianZhang.Editor.CsvTableReader.FindHeaderIndex(lines);
+                    var row = lines[hi+1].Split(','); row[Array.IndexOf(lines[hi].Split(','),invalid.Item2)] = invalid.Item3;
+                    lines[hi+1] = string.Join(",",row); File.WriteAllLines(rulePath,lines);
+                    bool mainRejected=false,auditRejected=false;
+                    try { GameData.LoadProductionAttacks(attacks); } catch (InvalidDataException) { mainRejected=true; }
+                    try { LoadAudit(); } catch (TargetInvocationException) { auditRejected=true; }
+                    AssertEqual(true,mainRejected,"bad rule source main"); AssertEqual(true,auditRejected,"bad rule source audit");
+                }
+                finally { File.WriteAllBytes(rulePath,original); }
             }
             Console.WriteLine("equipment-production: both real loaders accepted five production rows and rejected " + variants.Count + " malformed inputs each.");
         }
@@ -1882,7 +1908,7 @@ static class BattleSimSelfTests
                 .ToDictionary(pair => pair.header, pair => pair.value, StringComparer.Ordinal);
 
             // 旧投影无恢复/他人费用语义；新增四列必须严格留空，不能丢列。
-            if (AttackProfileHeaders.TakeLast(4).Any(field => row[field] != ""))
+            if (RecoveryFixtureFields.Any(field => row[field] != ""))
                 throw new InvalidOperationException("unsupported_effect_semantics");
 
             string profileKind = row["profileKind"];
@@ -1923,9 +1949,9 @@ static class BattleSimSelfTests
             {
                 if (string.IsNullOrEmpty(row["damageElementId"]) || !IsKnownElement(row["damageElementId"]))
                     throw new InvalidOperationException("attack_profile_damage_element_unknown");
-                if (effectType is "physical" or "hybrid" && !ParseNonNegativeDouble(row["physicalDamageMultiplier"], "physicalDamageMultiplier"))
+                if (row["effectBudgetMode"] != "damage_budget" && effectType is "physical" or "hybrid" && !ParseNonNegativeDouble(row["physicalDamageMultiplier"], "physicalDamageMultiplier"))
                     throw new InvalidOperationException("attack_profile_physicalDamageMultiplier_invalid");
-                if (effectType is "magic" or "hybrid" && !ParseNonNegativeDouble(row["soulDamageMultiplier"], "soulDamageMultiplier"))
+                if (row["effectBudgetMode"] != "damage_budget" && effectType is "magic" or "hybrid" && !ParseNonNegativeDouble(row["soulDamageMultiplier"], "soulDamageMultiplier"))
                     throw new InvalidOperationException("attack_profile_soulDamageMultiplier_invalid");
             }
             else if (effectType is "heal" or "buff" or "debuff" or "movement" or "restore_spirit")

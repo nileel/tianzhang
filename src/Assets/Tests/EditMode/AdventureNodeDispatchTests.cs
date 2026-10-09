@@ -121,7 +121,7 @@ namespace TianZhang.Tests
                 EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                     "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
 
-                Assert.IsTrue(new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }).TryCreateSession(
+                Assert.IsTrue(new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(
                     spawned, new[] { basic }, environment, out CombatSession session, out string reason), reason);
                 var service = new CombatCommandService();
                 CombatTurnAdvance turn = service.AdvanceUntilAction(session);

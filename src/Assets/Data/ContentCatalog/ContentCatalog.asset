@@ -31,6 +31,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d22b5344c9094d70a4755bec21554c95, type: 2}
   adventureMaps:
   - {fileID: 11400000, guid: a85ad96d32238ad4e8672be239348a44, type: 2}
+  combatRuleSet: {fileID: 11400000, guid: a597af4c6e37dab4883746e206254f60, type: 2}
   equipmentAttackProfiles:
   - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}
   - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}

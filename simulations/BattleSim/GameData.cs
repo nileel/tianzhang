@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using TianZhang.Editor;
+using TianZhang.Combat;
 
 namespace BattleSim;
 
@@ -442,7 +443,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         int OtherTargetSpiritCost = 0,
         decimal SpiritRecoveryMultiplier = 0,
         int MinimumSpiritRecovery = 0,
-        decimal OtherTargetRecoveryMultiplier = 1, string BasicBindingKind = "");
+        decimal OtherTargetRecoveryMultiplier = 1, string BasicBindingKind = "",
+        string RuleSetVersion = "", string RuleSetSourceDigest = "", string AbilityTierId = "", string EffectBudgetMode = "");
     public record ArtConfig(
         string Name,
         string Type,
@@ -618,41 +620,96 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     static readonly Lazy<IReadOnlyDictionary<string, AttackProfile>> productionAttacks = new(() =>
         LoadProductionAttacks(RepositoryFile("src/Assets/DataConfig/AttackProfiles.csv")));
 
+    internal static CombatRuleSet LoadProductionRuleSet(string attackPath)
+    {
+        string data = Path.GetDirectoryName(attackPath);
+        var names = new[] { "AttackProfiles", "RealmCombatGrowth", "CombatEffectTierRules", "CombatActionEconomyRules" };
+        var sources = names.ToDictionary(name => "src/Assets/DataConfig/" + name + ".csv",
+            name => File.ReadAllBytes(Path.Combine(data, name + ".csv")), StringComparer.Ordinal);
+        string[][] Table(string name) => CsvTableReader.ReadRequired(Path.Combine(data, name + ".csv"))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#')).Select(CsvTableReader.ParseRow).ToArray();
+        return CombatRuleSet.Parse(Table("RealmCombatGrowth"), Table("CombatEffectTierRules"), Table("CombatActionEconomyRules"),
+            CombatRuleSet.ComputeSourceDigest(sources));
+    }
+    internal static float ResolveAttackMultiplier(IReadOnlyDictionary<string, string> row, CombatRuleSet rules, bool soul)
+    {
+        string field = soul ? "soulDamageMultiplier" : "physicalDamageMultiplier";
+        if (row["effectBudgetMode"] == "damage_budget")
+        {
+            if (row["physicalDamageMultiplier"] != "" || row["soulDamageMultiplier"] != "")
+                throw new InvalidDataException("attack_profile_derived_damage_must_be_empty");
+            CombatRuleRatio Ratio(string prefix) => new(CombatRuleSet.Integer(row[prefix + "Numerator"], true),
+                CombatRuleSet.Integer(row[prefix + "Denominator"], true));
+            return rules.ResolveDamageMultiplier(row["abilityTierId"], CombatRuleSet.Integer(row["actionPointCostUnits"], true),
+                CombatRuleSet.Integer(row["resourceCost"]), row["profileKind"] == "divine" && row["resourceCost"] == "0",
+                Ratio("efficiency"), Ratio("damageMigration"), Ratio("damageWeight"),
+                CombatRuleRatio.FromDecimal(row["defensePenetration"] == "" ? "0" : row["defensePenetration"]), soul);
+        }
+        bool applicable = soul ? row["effectType"] is "magic" or "hybrid" : row["effectType"] is "physical" or "hybrid";
+        if (!applicable)
+        {
+            if (row[field] != "") throw new InvalidDataException("attack_profile_inapplicable_damage_present");
+            return 0;
+        }
+        if (row[field] == "") throw new InvalidDataException("attack_profile_required_multiplier_missing");
+        if (!float.TryParse(row[field], NumberStyles.Float, CultureInfo.InvariantCulture, out float value) ||
+            float.IsNaN(value) || float.IsInfinity(value) || value < 0) throw new InvalidDataException("attack_profile_multiplier_invalid");
+        return value;
+    }
     internal static IReadOnlyDictionary<string, AttackProfile> LoadProductionAttacks(string path)
     {
-        var lines = CsvTableReader.ReadRequired(path);
-        var header = CsvTableReader.FindHeader(lines);
-        if (header.Length != 41 || header.Contains("cooldownTicks")) throw new InvalidDataException("attack_profile_schema_invalid");
+        var lines = CsvTableReader.ReadRequired(path); var header = CsvTableReader.FindHeader(lines);
+        if (!header.SequenceEqual(CombatRuleSet.AttackColumns, StringComparer.Ordinal)) throw new InvalidDataException("attack_profile_schema_invalid");
+        var rules = LoadProductionRuleSet(path);
         var result = new Dictionary<string, AttackProfile>(StringComparer.Ordinal);
         foreach (string line in lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1).Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#')))
         {
             var columns = CsvTableReader.ParseRow(line);
             if (columns.Length != header.Length) throw new InvalidDataException("attack_profile_row_invalid");
-            string Value(string key) => columns[Array.IndexOf(header, key)];
-            int Number(string key) => int.Parse(Value(key), CultureInfo.InvariantCulture);
-            string id = Value("attackProfileId");
+            var row = header.Select((key,index) => (key,value:columns[index])).ToDictionary(pair => pair.key,pair => pair.value,StringComparer.Ordinal);
+            string Value(string key) => row[key]; int Number(string key) => CombatRuleSet.Integer(Value(key));
+            string id = Value("attackProfileId"), mode = Value("effectBudgetMode");
+            if (Value("ruleSetVersion") != rules.RuleSetVersion) throw new InvalidDataException("attack_profile_rule_version_unknown");
+            int cooldown;
+            if (mode == "legacy_unarmed")
+            {
+                if (id != "basic_unarmed" || Value("abilityTierId") != "" || Value("cooldownClass") != "legacy_unarmed" || Value("basicBindingKind") != "unarmed_fallback")
+                    throw new InvalidDataException("attack_profile_legacy_unarmed_invalid");
+                cooldown = Number("reuseCooldownTicks");
+            }
+            else cooldown = rules.ResolveCooldown(Value("abilityTierId"),Value("cooldownClass"),Value("reuseCooldownTicks") == "" ? null : Number("reuseCooldownTicks"));
             if (id is "basic_iron_sword" or "basic_iron_blade")
             {
-                if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" ||
+                if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" || mode != "fixed_weapon" ||
                     Value("effectType") != "physical" || Value("resourceKind") != "none" || Number("resourceCost") != 0 ||
-                    Number("ctPenalty") != 0 || Number("reuseCooldownTicks") != 0 ||
-                    Value("targetingMode") != "single" || Number("minCastRange") != 1 || Number("maxCastRange") != 1 ||
-                    !double.TryParse(Value("physicalDamageMultiplier"), NumberStyles.Float, CultureInfo.InvariantCulture, out double multiplier) ||
-                    !double.IsFinite(multiplier) || multiplier <= 0)
+                    Number("ctPenalty") != 0 || cooldown != 0 || Value("targetingMode") != "single" ||
+                    Number("minCastRange") != 1 || Number("maxCastRange") != 1 || Value("physicalDamageMultiplier") == "" || ResolveAttackMultiplier(row,rules,false) <= 0)
                     throw new InvalidDataException("production_equipment_attack_invalid");
             }
-            var cost = new ActionEconomyCost(id, "AttackProfiles.csv:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant(), Number("actionPointCostUnits"), Number("minimumNetCostUnits"), Number("ctPenalty"), Number("reuseCooldownTicks"));
+            if (mode != "damage_budget" && new[] { "efficiencyNumerator","efficiencyDenominator","damageMigrationNumerator","damageMigrationDenominator","damageWeightNumerator","damageWeightDenominator" }.Any(key => Value(key) != ""))
+                throw new InvalidDataException("attack_profile_non_budget_fields_present");
+            bool recovery = Value("effectType") == "restore_spirit";
+            if (!(mode == "legacy_unarmed" || mode == "fixed_weapon" || mode == "damage_budget" && Value("effectType") == "physical" || mode == "prototype_restore" && recovery))
+                throw new InvalidDataException("unsupported_production_attack_effect");
+            if (Number("minCastRange") > Number("maxCastRange")) throw new InvalidDataException("attack_profile_cast_range_invalid");
+            if (new[] { "statusId","statusAttributeId","statusRelativePermille","statusDurationOwnTurnEnds","statusStackLimit","statusRefreshPolicy" }.Any(key => Value(key) != ""))
+                throw new InvalidDataException("unsupported_production_status_payload");
+            if ((Value("controlChancePermille") != "") != (Value("controlUsesMindContest") != "") ||
+                (Value("controlChancePermille") != "" && Number("controlChancePermille") > 1000) ||
+                (Value("controlUsesMindContest") is not ("" or "0" or "1"))) throw new InvalidDataException("attack_profile_control_probability_invalid");
+            var cost = new ActionEconomyCost(id, rules.RuleSetVersion + ":" + rules.SourceDigest, Number("actionPointCostUnits"), Number("minimumNetCostUnits"), Number("ctPenalty"), cooldown);
             cost.Validate();
-            string type = Value("effectType") switch { "physical" => "物理", "restore_spirit" => "恢复灵力", _ => throw new InvalidDataException("unsupported_production_attack_effect") };
-            double mult = type == "物理" ? double.Parse(Value("physicalDamageMultiplier"), CultureInfo.InvariantCulture) : 0;
-            bool recovery = type == "恢复灵力";
-            decimal Decimal(string key) => decimal.Parse(Value(key), CultureInfo.InvariantCulture);
-            result.Add(id, new(id == "basic_unarmed" ? "徒手" : id, type, mult, NormalizeElement(Value("damageElementId")), Number("minCastRange"), Number("maxCastRange"), Cost: cost,
-                SpiritCost: Number("resourceCost"), OtherTargetSpiritCost: recovery ? Number("otherTargetResourceCost") : 0,
-                SpiritRecoveryMultiplier: recovery ? Decimal("spiritRecoveryMultiplier") : 0, MinimumSpiritRecovery: recovery ? Number("minimumSpiritRecovery") : 0,
-                OtherTargetRecoveryMultiplier: recovery ? Decimal("otherTargetRecoveryMultiplier") : 1, BasicBindingKind: Value("basicBindingKind")));
+            double multiplier = recovery ? 0 : ResolveAttackMultiplier(row,rules,false);
+            decimal Decimal(string key) => decimal.Parse(Value(key),CultureInfo.InvariantCulture);
+            if (recovery && (mode != "prototype_restore" || Value("physicalDamageMultiplier") != "" || Value("soulDamageMultiplier") != "" || Decimal("spiritRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") > 1))
+                throw new InvalidDataException("production_recovery_invalid");
+            result.Add(id,new(id == "basic_unarmed" ? "徒手" : id,recovery ? "恢复灵力" : "物理",multiplier,NormalizeElement(Value("damageElementId")),Number("minCastRange"),Number("maxCastRange"),Cost:cost,
+                SpiritCost:Number("resourceCost"),OtherTargetSpiritCost:recovery ? Number("otherTargetResourceCost") : 0,
+                SpiritRecoveryMultiplier:recovery ? Decimal("spiritRecoveryMultiplier") : 0,MinimumSpiritRecovery:recovery ? Number("minimumSpiritRecovery") : 0,
+                OtherTargetRecoveryMultiplier:recovery ? Decimal("otherTargetRecoveryMultiplier") : 1,BasicBindingKind:Value("basicBindingKind"),
+                RuleSetVersion:rules.RuleSetVersion,RuleSetSourceDigest:rules.SourceDigest,AbilityTierId:Value("abilityTierId"),EffectBudgetMode:mode));
         }
-        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }.Order()))
+        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed","spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order()))
             throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
     }

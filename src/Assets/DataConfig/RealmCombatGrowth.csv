@@ -1,0 +1,7 @@
+schemaVersion,ruleSetVersion,realmId,realmOrder,usageScope,actionPointMaximumUnits,baseMovementEfficiencyMilliUnits,legacyBaseMovementEfficiencyMilliUnits,movementNodeWeightNumerators,movementNodeWeightDenominator
+1,AP-GROWTH@0.1,realm_fanren,0,player,100000,2000,2000,,1
+1,AP-GROWTH@0.1,realm_lianqi,1,player,100000,4000,4000,1|1|1|1|1|1|1|1|1,9
+1,AP-GROWTH@0.1,realm_zhuji,2,player,300000,4000,12000,30|32|38,100
+1,AP-GROWTH@0.1,realm_jindan,3,player,1000000,4800,48000,30|32|38,100
+1,AP-GROWTH@0.1,realm_yuanying,4,reserved,3000000,8000,240000,1|1|1|1,4
+1,AP-GROWTH@0.1,realm_huashen,5,reserved,12000000,12000,1440000,1|1|1|1,4

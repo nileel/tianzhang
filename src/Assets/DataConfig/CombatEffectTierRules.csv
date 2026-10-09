@@ -1,0 +1,4 @@
+schemaVersion,ruleSetVersion,abilityTierId,realmId,actionPointReferenceUnits,spiritBudgetReference,physicalAttackCapacity,soulAttackCapacity,physicalDefenseCapacity,soulDefenseCapacity,recoverySoulAttackCapacity,rawSpiritRecoveryCapacity,reactionCapacity,referenceTurnIntervalTicks
+1,AP-GROWTH@0.1,tier_lianqi,realm_lianqi,25000,20,120,120,120,120,120,25,30,4
+1,AP-GROWTH@0.1,tier_zhuji,realm_zhuji,75000,160,500,500,500,500,500,50,120,1
+1,AP-GROWTH@0.1,tier_jindan,realm_jindan,250000,1600,2400,2400,2400,2400,2400,100,500,1

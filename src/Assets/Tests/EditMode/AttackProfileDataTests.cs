@@ -32,20 +32,11 @@ namespace TianZhang.Tests
         [Test]
         public void StrictCsvValidationRejectsNonExactRowsWithoutWritingAssets()
         {
-            string header = string.Join(",", new[]
-            {
-                "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind",
-                "contentScope", "sourceAffiliation", "realmRequirementId", "elementRequirementId",
-                "effectType", "damageElementId", "physicalDamageMultiplier", "soulDamageMultiplier",
-                "healAmount", "buffMultiplier", "defensePenetration", "resourceKind", "resourceCost",
-                "actionPointCostUnits", "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks",
-                "minCastRange", "maxCastRange", "targetingMode", "areaCenterKind",
-                "areaShapeKind", "areaRadius", "areaLength", "areaFanHalfAngleSteps", "areaFacing",
-                "areaInnerRadius", "areaEffectBlockers", "areaAllowedFactions", "areaAllowedStates",
-                "isDomain", "isBloodline", "specialEffectTextKey",
-                "spiritRecoveryMultiplier", "minimumSpiritRecovery", "otherTargetResourceCost", "otherTargetRecoveryMultiplier",
-            });
-            var valid = new string[41];
+            string header = File.ReadAllLines(ProductionAbsolutePath()).First(line => line.StartsWith("attackProfileId,"));
+            var valid = new string[header.Split(',').Length];
+            void Field(string name, string value) => valid[Array.IndexOf(header.Split(','), name)] = value;
+            Field("ruleSetVersion", "AP-GROWTH@0.1"); Field("abilityTierId", "tier_lianqi");
+            Field("cooldownClass", "basic_repeat"); Field("effectBudgetMode", "fixed_weapon");
             valid[0] = "basic_test";
             valid[1] = "name_test";
             valid[2] = "basic";
@@ -84,18 +75,18 @@ namespace TianZhang.Tests
             string header = File.ReadAllLines(ProductionAbsolutePath())
                 .First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
             var columns = header.Split(',').ToList();
-            Assert.AreEqual(41, columns.Count);
+            Assert.AreEqual(59, columns.Count);
             Assert.AreEqual(17, columns.IndexOf("actionPointCostUnits"));
 
             string[] legacyColumns = columns.Where(name => name is not (
                 "actionPointCostUnits" or "minimumNetCostUnits" or "ctPenalty" or "reuseCooldownTicks"))
                 .ToList().ToArray();
             legacyColumns = legacyColumns.Take(17).Concat(new[] { "cooldownTicks" }).Concat(legacyColumns.Skip(17)).ToArray();
-            Assert.AreEqual(38, legacyColumns.Length);
+            Assert.AreEqual(56, legacyColumns.Length);
 
             string[] coexistingColumns = columns.Take(21).Concat(new[] { "cooldownTicks" })
                 .Concat(columns.Skip(21)).ToArray();
-            Assert.AreEqual(42, coexistingColumns.Length);
+            Assert.AreEqual(60, coexistingColumns.Length);
 
             foreach (string[] rejected in new[] { legacyColumns, coexistingColumns })
             {
@@ -282,7 +273,7 @@ namespace TianZhang.Tests
 
             var nonNumericMult = (string[])fixtureColumns.Clone();
             Set(nonNumericMult, "soulDamageMultiplier", "abc");
-            AssertRejects(nonNumericMult, "attack_profile_soulDamageMultiplier_invalid");
+            AssertRejects(nonNumericMult, "attack_profile_soulDamageMultiplier_must_be_empty");
 
             var wrongKindFields = (string[])basicColumns.Clone();
             Set(wrongKindFields, "contentScope", "player");
@@ -338,7 +329,6 @@ namespace TianZhang.Tests
         [TestCase("ctPenalty", "1.5", "attack_profile_ctPenalty_invalid")]
         [TestCase("ctPenalty", "2147483548", "attack_profile_ctPenalty_invalid")]
         [TestCase("ctPenalty", "2147483648", "attack_profile_ctPenalty_invalid")]
-        [TestCase("reuseCooldownTicks", "", "attack_profile_required_reuseCooldownTicks_missing")]
         [TestCase("reuseCooldownTicks", "-1", "attack_profile_reuseCooldownTicks_invalid")]
         [TestCase("reuseCooldownTicks", "3.5", "attack_profile_reuseCooldownTicks_invalid")]
         [TestCase("reuseCooldownTicks", "4294967296", "attack_profile_reuseCooldownTicks_invalid")]
@@ -484,8 +474,8 @@ namespace TianZhang.Tests
                 Assert.AreEqual(12, strike.resourceCost);
                 Assert.AreEqual(50000, strike.actionPointCostUnits);
                 Assert.AreEqual(25000, strike.minimumNetCostUnits);
-                Assert.AreEqual(10, strike.ctPenalty);
-                Assert.AreEqual(10, strike.reuseCooldownTicks);
+                Assert.AreEqual(0, strike.ctPenalty);
+                Assert.AreEqual(0, strike.reuseCooldownTicks);
                 Assert.AreEqual(1, strike.minCastRange);
                 Assert.AreEqual(1, strike.maxCastRange);
                 var recovery = byId["spell_julingshu"];
@@ -494,7 +484,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(25000, recovery.actionPointCostUnits);
                 Assert.AreEqual(12500, recovery.minimumNetCostUnits);
                 Assert.AreEqual(5, recovery.ctPenalty);
-                Assert.AreEqual(5, recovery.reuseCooldownTicks);
+                Assert.AreEqual(16, recovery.reuseCooldownTicks);
                 Assert.AreEqual(0, recovery.minCastRange);
                 Assert.AreEqual(2, recovery.maxCastRange);
                 Assert.AreEqual(0.5f, recovery.spiritRecoveryMultiplier);
@@ -681,7 +671,7 @@ namespace TianZhang.Tests
                     Assert.AreEqual(25000, art.actionPointCostUnits);
                     Assert.AreEqual(12500, art.minimumNetCostUnits);
                     Assert.AreEqual(5, art.ctPenalty);
-                    Assert.AreEqual(5, art.reuseCooldownTicks);
+                    Assert.AreEqual(16, art.reuseCooldownTicks);
                 }
                 else
                 {
@@ -693,8 +683,8 @@ namespace TianZhang.Tests
                     Assert.AreEqual(0f, art.otherTargetRecoveryMultiplier);
                     Assert.AreEqual(50000, art.actionPointCostUnits);
                     Assert.AreEqual(25000, art.minimumNetCostUnits);
-                    Assert.AreEqual(10, art.ctPenalty);
-                    Assert.AreEqual(10, art.reuseCooldownTicks);
+                    Assert.AreEqual(0, art.ctPenalty);
+                    Assert.AreEqual(0, art.reuseCooldownTicks);
                 }
             }
             Assert.IsTrue(
@@ -720,6 +710,8 @@ namespace TianZhang.Tests
             "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
             "Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
             "Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+            "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+            "Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
         };
 
         /// <summary>
@@ -784,8 +776,8 @@ namespace TianZhang.Tests
             var expected = new Dictionary<string, int[]>(StringComparer.Ordinal)
             {
                 ["AttackProfile_basic_unarmed.asset"] = new[] { 50000, 25000, 0, 0 },
-                ["AttackProfile_spell_guanshiji.asset"] = new[] { 50000, 25000, 10, 10 },
-                ["AttackProfile_spell_julingshu.asset"] = new[] { 25000, 12500, 5, 5 },
+                ["AttackProfile_spell_guanshiji.asset"] = new[] { 50000, 25000, 0, 0 },
+                ["AttackProfile_spell_julingshu.asset"] = new[] { 25000, 12500, 5, 16 },
             };
             foreach (var pair in expected)
             {

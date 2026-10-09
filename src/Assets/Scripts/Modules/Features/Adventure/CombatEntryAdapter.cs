@@ -11,8 +11,23 @@ namespace TianZhang.Features.Adventure
     public sealed class CombatEntryAdapter
     {
         private readonly CombatOrdinaryActionDefinition[] ordinaryActions;
-        public CombatEntryAdapter(IEnumerable<CombatOrdinaryActionDefinition> ordinaryActions)
+        private readonly CombatRuleSet rules;
+        private readonly string ruleFailure;
+        public CombatEntryAdapter(IEnumerable<CombatOrdinaryActionDefinition> ordinaryActions, CombatRuleSetData ruleData)
         {
+            if (ruleData == null) ruleFailure = "combat_rule_set_missing";
+            else if (!ruleData.TryValidateIdentity(out ruleFailure)) { }
+            else
+            {
+                try
+                {
+                    rules = CombatRuleSet.Parse(new[] { CombatRuleSet.RealmColumns }.Concat(ruleData.ExportRealms()).ToArray(),
+                        new[] { CombatRuleSet.TierColumns }.Concat(ruleData.ExportTiers()).ToArray(),
+                        new[] { CombatRuleSet.EconomyColumns }.Concat(ruleData.ExportEconomy()).ToArray(), ruleData.sourceDigest);
+                }
+                catch (Exception exception) when (exception is System.IO.InvalidDataException || exception is OverflowException || exception is ArgumentException)
+                { ruleFailure = "combat_rule_set_invalid:" + exception.Message; }
+            }
             this.ordinaryActions = ordinaryActions?.Select(value => value == null ? null :
                 new CombatOrdinaryActionDefinition(value.Kind, value.ActionPointCostUnits,
                     value.MinimumNetCostUnits, value.CtPenalty, value.ReuseCooldownTicks)).ToArray();
@@ -26,6 +41,7 @@ namespace TianZhang.Features.Adventure
             out string reason)
         {
             session = null;
+            if (rules == null) { reason = ruleFailure ?? "combat_rule_set_missing"; return false; }
             if (spawned == null)
             {
                 reason = "adventure_spawn_set_missing";
@@ -70,7 +86,7 @@ namespace TianZhang.Features.Adventure
                         SpiritRecoveryEnvironment.Ordinary => 1f,
                         SpiritRecoveryEnvironment.SpiritVeinNode or SpiritRecoveryEnvironment.BlessedLand => 2f,
                         _ => throw new ArgumentException("spirit_recovery_environment_not_configured"),
-                    });
+                    }, rules);
                 reason = null;
                 return true;
             }
@@ -81,7 +97,7 @@ namespace TianZhang.Features.Adventure
             }
         }
 
-        private static bool TryProjectProfiles(
+        private bool TryProjectProfiles(
             AttackProfileData[] inputs,
             out IReadOnlyList<CombatAttackProfile> profiles,
             out string reason)
@@ -89,8 +105,14 @@ namespace TianZhang.Features.Adventure
             var result = new List<CombatAttackProfile>();
             foreach (AttackProfileData profile in inputs ?? Array.Empty<AttackProfileData>())
             {
-                if (profile == null || !profile.TryValidate(out _) || profile.targetingMode != AttackTargetingMode.Single)
-                    continue;
+                if (profile == null) { profiles = null; reason = "attack_profile_missing"; return false; }
+                if (!profile.TryValidate(out reason)) { profiles = null; return false; }
+                if (profile.targetingMode != AttackTargetingMode.Single) continue;
+                bool legacy = profile.cooldownClass == "legacy_unarmed";
+                if (profile.ruleSetVersion != rules.RuleSetVersion || profile.ruleSetSourceDigest != rules.SourceDigest ||
+                    (!legacy && !rules.Tiers.Any(tier => tier.AbilityTierId == profile.abilityTierId)) ||
+                    (legacy && (profile.basicBindingKind != BasicAttackBindingKind.UnarmedFallback || profile.effectBudgetMode != "legacy_unarmed" || !string.IsNullOrEmpty(profile.abilityTierId))))
+                { profiles = null; reason = "attack_profile_rule_reference_invalid"; return false; }
                 CombatAttackEffect effect = profile.effectType switch
                 {
                     AttackEffectType.Physical => CombatAttackEffect.Physical,
@@ -133,7 +155,13 @@ namespace TianZhang.Features.Adventure
                     profile.minimumSpiritRecovery,
                     profile.otherTargetResourceCost,
                     profile.otherTargetRecoveryMultiplier,
-                    qualification));
+                    qualification, ruleMetadata: legacy ? null : new CombatAttackRuleMetadata(profile.ruleSetVersion, profile.ruleSetSourceDigest,
+                        rules.GetTier(profile.abilityTierId), profile.cooldownClass, profile.effectBudgetMode,
+                        profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.efficiencyNumerator, profile.efficiencyDenominator) : (CombatRuleRatio?)null,
+                        profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.damageMigrationNumerator, profile.damageMigrationDenominator) : (CombatRuleRatio?)null,
+                        profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.damageWeightNumerator, profile.damageWeightDenominator) : (CombatRuleRatio?)null,
+                        profile.statusId, profile.statusAttributeId, profile.statusRelativePermille, profile.statusDurationOwnTurnEnds,
+                        profile.statusStackLimit, profile.statusRefreshPolicy, profile.controlChancePermille, profile.controlUsesMindContest)));
             }
             if (result.Count == 0 || result.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() != result.Count)
             {

@@ -58,6 +58,8 @@ internal static class GuanzhongPlaytestAudit
             {
                 mode = candidate.HasValue ? "candidate-clone" : "production", rootBone = input.RootBone,
                 inputSha256 = input.Hash, seedStart, seedCount = 200,
+                ruleSetVersion = input.Profiles.First(p => p.Id == Attack).RuleMetadata.RuleSetVersion,
+                sourceDigest = input.Profiles.First(p => p.Id == Attack).RuleMetadata.SourceDigest,
                 spatialScope = "Stationary adjacent (0,0)/(1,0), original Facing=0/0; no movement or map simulation; player back attack follows production snapshot.",
                 profilesSha256 = Hash(File.ReadAllText(Path.Combine(input.Root, "src/Assets/DataConfig/AttackProfiles.csv"))),
                 checks, summary, runs
@@ -93,22 +95,30 @@ internal static class GuanzhongPlaytestAudit
         }
         JsonElement player = evidence.GetProperty("player");
         Require(I(player, "maximumHealth") == 571 && I(player, "maximumSpirit") == 180 && I(player, "physicalAttack") == 60 && I(player, "physicalDefense") == 42, "Player delivery changed.");
-        GameData.LoadProductionAttacks(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
+        var production = GameData.LoadProductionAttacks(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
+        var rules = GameData.LoadProductionRuleSet(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
         var profiles = ReadRows(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv")).Select(row =>
         {
             string id = row["attackProfileId"], realm = row["realmRequirementId"], element = row["elementRequirementId"];
+            var resolved = production[id];
             bool basic = row["profileKind"] == "basic";
             CombatAttackEffect effect = row["effectType"] switch { "physical" => CombatAttackEffect.Physical, "restore_spirit" => CombatAttackEffect.RestoreSpirit, _ => throw new InvalidDataException("Unsupported audit effect.") };
             float Number(string key, float empty = 0) => string.IsNullOrEmpty(row[key]) ? empty : Parse(row[key]);
             return new CombatAttackProfile(id, basic ? CombatAttackKind.Basic : CombatAttackKind.Art, effect,
                 (int)Number("minCastRange"), (int)Number("maxCastRange"),
                 RequireAttackCostInt(row, "actionPointCostUnits"), RequireAttackCostInt(row, "minimumNetCostUnits"),
-                RequireAttackCostInt(row, "ctPenalty"), RequireAttackCostInt(row, "reuseCooldownTicks"),
-                Number("physicalDamageMultiplier"), Number("soulDamageMultiplier"),
+                resolved.Cost.CtPenalty, resolved.Cost.ReuseCooldownTicks,
+                (float)resolved.Mult, 0,
                 (int)Number("healAmount"), (int)Number("resourceCost"), row["damageElementId"],
                 Number("defensePenetration"), Number("spiritRecoveryMultiplier"), (int)Number("minimumSpiritRecovery"),
                 (int)Number("otherTargetResourceCost"), Number("otherTargetRecoveryMultiplier", 1),
-                basic ? null : (stage, rootElement, grade) => AbilityRequirementPolicy.IsSatisfied(stage, rootElement, grade, realm, element));
+                basic ? null : (stage, rootElement, grade) => AbilityRequirementPolicy.IsSatisfied(stage, rootElement, grade, realm, element),
+                ruleMetadata: resolved.EffectBudgetMode == "legacy_unarmed" ? null : new CombatAttackRuleMetadata(rules.RuleSetVersion,rules.SourceDigest,
+                    rules.GetTier(resolved.AbilityTierId),row["cooldownClass"],resolved.EffectBudgetMode,
+                    resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("efficiencyNumerator"),(int)Number("efficiencyDenominator")) : null,
+                    resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageMigrationNumerator"),(int)Number("damageMigrationDenominator")) : null,
+                    resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageWeightNumerator"),(int)Number("damageWeightDenominator")) : null,
+                    "","",0,0,0,"",(int)Number("controlChancePermille"),row["controlUsesMindContest"] == "1"));
         }).ToArray();
         Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { "basic_unarmed", Attack, Recovery, "basic_iron_sword", "basic_iron_blade" }.Order()), "Unexpected production profiles.");
         return new Inputs(evidence, profiles, root, I(character, "rootBone"), Hash(text));

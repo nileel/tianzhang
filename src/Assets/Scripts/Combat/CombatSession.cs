@@ -148,12 +148,14 @@ namespace TianZhang.Combat
             IEnumerable<CombatAttackProfile> attackProfiles,
             ICombatSpatialQuery spatialQuery,
             IEnumerable<CombatOrdinaryActionDefinition> ordinaryActions,
-            float spiritRecoveryEnvironmentMultiplier = 1f)
+            float spiritRecoveryEnvironmentMultiplier = 1f,
+            CombatRuleSet ruleSet = null)
         {
             if (spatialQuery == null)
                 throw new ArgumentNullException(nameof(spatialQuery));
             if (spiritRecoveryEnvironmentMultiplier != 1f && spiritRecoveryEnvironmentMultiplier != 2f)
                 throw new ArgumentOutOfRangeException(nameof(spiritRecoveryEnvironmentMultiplier));
+            RuleSet = ruleSet;
             Combatants = new CombatantRegistry(combatants);
             ValidateSideCardinality(Combatants.All);
             profiles = new Dictionary<string, CombatAttackProfile>(StringComparer.Ordinal);
@@ -180,6 +182,7 @@ namespace TianZhang.Combat
             TurnScheduler = new CombatTurnScheduler(Combatants.All);
         }
 
+        public CombatRuleSet RuleSet { get; }
         public ICombatExternalResourceQuery ExternalResources { get; set; }
 
         public string CurrentActorId { get; private set; } = string.Empty;

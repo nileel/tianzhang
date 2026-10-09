@@ -69,6 +69,11 @@
 - 负责人批准U-COMBAT-AP-EQUIP-01在发布两武器行的同次结果中，完成GameData.productionAttacks和GuanzhongPlaytestAudit.LoadProductionInputs对原三行加两武器的最小严格读取适配及相关回归，避免把当前输入加载障碍留给依赖EQUIP的后续SIM任务。此项仍待EQUIP执行，不视为已完成。
 - 本卡保持原blockedBy／blocked，消费前置正式结果后完成AP2配置、生产四ID、默认徒手移除与完整模拟语义；不恢复旧三ID限制、不重复领取EQUIP的加载适配，也不将其五行读取回归视为AP2算法或平衡证据。临近ready按实际前置重新核对全部直接消费者与精确路径。
 
+## 2026-10-10 与CONFIG的共享编译及生产读取职责分界
+
+- 负责人在CONFIG实施中批准最小适配：CONFIG同次结果包含BattleSim.csproj链接新增纯CombatRuleSet、GameData与GuanzhongPlaytestAudit读取新59列及四表派生冷却/伤害/摘要、对应自测；避免CONFIG发布后已有共享源码编译及生产读取立即失败。此段为获准执行边界，不预填CONFIG完成结论。
+- 本卡仍承担全模拟与共享内核的完整AP/v成长、重复费用、固定档承载、状态境界系数及最终无徒手输入迁移，route/owner/blockedBy/blocked保持。消费CONFIG正式结果，不重做最小新表读取，不把CONFIG的编译/读取回归当成完整AP2算法或平衡证据。
+
 ## 禁止项
 
 - 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。

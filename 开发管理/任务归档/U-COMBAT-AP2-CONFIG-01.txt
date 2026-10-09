@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-AP2-CONTRACT-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-10配置与获准的BattleSim最小读取适配完成；Unity定向EditMode153/153、Release构建、默认运行及直接读取自测通过。PlayMode10/11的既有底座断言限制见验证记录。主责统一签收归档，完整新算法及下游ready准备另由相应任务处理。",
   "expectedPaths": [
     "tools/check-data-chain.ps1",
     "src/Assets/DataConfig/RealmCombatGrowth.csv",
@@ -53,7 +51,23 @@
     "src/Assets/Tests/EditMode/Fixtures/AttackProfiles.fixture.csv.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
-    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta"
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -92,6 +106,22 @@
 - 配置合同2.4及第六节要求新增AttackProfiles规则／承载／状态列、可空冷却覆写及派生字段；现check-data-chain的41列精确表头、必填reuseCooldownTicks和旧固定输出会拒绝这一合法迁移。补齐tools/check-data-chain.ps1，仅允许按本卡冻结schema和唯一参数源适配字段、派生投影、版本／摘要及三表到asset引用检查。
 - 保持严格未知字段／非法值／缺引用拒绝，不将数值定案写成检查器中的第二参数源，不用跳过检查或waiver通过。同步保留届时EQUIP／ITEM已发布行，不能要求其尚未实现的内容提前存在。本轮保持blocked及原blockedBy；临近ready仍核对真实前置、直接消费者和风险门禁。
 
+## 2026-10-10 前置完成后的ready准备
+
+- 唯一前置D-COMBAT-AP2-CONTRACT-01已在master的d31e17c2正式归档；EQUIP的f15a2a49与ITEM的c20bade6亦已集成。没有待负责人选择的配置语义，移除已完成合同前置。
+- 当前AttackProfiles已有五行。CONFIG按合同第二、三节迁移全部五行的字段、版本与四表摘要，补齐两武器asset及.meta授权，保留40/50 AP、1/1.25倍率及原GUID；旧徒手只标legacy_unarmed，删除及无武器行为仍归WEAPON，不将已存在武器退回未实现状态。
+- 实际所有者为CombatContentImporter四表全验证后统一写入，Content仅保存已验证投影；AdventureSceneInstaller经CombatEntryAdapter向CombatSession显式注入纯规则。CONFIG不实现成长、重复报价、状态及承载算法，不引入配置框架或新asmdef。
+- 已穷尽检索CombatEntryAdapter直接构造者，补齐七个既有EditMode/PlayMode测试路径，仅适配显式规则注入及本卡合法参数投影；不扩展对应场景或功能行为。既有AttackProfiles.fixture.csv按冻结schema迁移，保留测试原型的既有语义。
+- 本轮按用户指定由gpt-6.1-sol/medium子智能体独占expectedPaths中的业务路径实现；主责独占管理投影并复核完整diff、最终验证和提交。仅此一卡、一个工作区，子智能体不操作runtime或集成锁、不另领任务、不提交、不派生。模型请求与工具实际可核实结果记入验证记录。
+- 在任务worktree对更新后的同一卡重跑风险预检并消费正文，通过schema 2投影与ready检查后才开始业务写入。验收仍为四表严格拒绝且零写入、GUID稳定与幂等、参数改变的投影/摘要同步、直接EditMode及数据链检查。
+
+## 2026-10-10 负责人批准共享编译与生产读取最小适配
+
+- 写入中复核确认BattleSim.csproj显式链接已修改的CombatAttackProfile/CombatSession，却未包含其新增CombatRuleSet依赖；GameData生产读取仍锁旧41列，并直接解析新schema中允许为空的冷却覆写和伤害结果列。已暂停业务写入并报告，负责人明确批准最小适配后继续。
+- 在同一卡加入BattleSim.csproj的纯类型源码引用，GameData.LoadProductionAttacks与GuanzhongPlaytestAudit.LoadProductionInputs仅消费本卡同一四表、派生冷却/伤害和版本摘要；BattleSimSelfTests随之更新严格读取、坏行和现有行为回归。不得用旧表副本、默认值、双版本分支或直接跳过检查绕过。
+- 原子结果仍为新配置可编译、可导入、可读取；完整AP/v成长、连续施法计数、固定档承载、状态修正及无武器模拟仍归N-COMBAT-AP2-SIM-01。后者保持blocked和原具名前置，仅同步此职责说明；本卡实跑不称新方案算法或平衡已完成。
+- 主责更新授权并重新风险预检后恢复同一子智能体，追加四条模拟器路径供其独占；管理卡仍由主责写。验收增加Release --no-restore构建、默认--no-build运行和受影响生产读取自测；缺project.assets.json时先restore一次。
+
 ## 禁止项
 
 - 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
@@ -117,3 +147,24 @@
 
 - 合同未冻结schema/注入路径或需要新配置框架则保持blocked；本卡不顺带实现成长/费用/状态算法或重新定平衡。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 完成记录
+
+- 实际gpt-6.1-sol子智能体按本卡冻结路径制作，主责统一复核并签收。三表、59列生产攻击表、唯一规则资产、五攻击资产、catalog与正式Session只读注入完成；缺行/非法引用/坏资产明确拒绝，四表摘要与生成投影一致。
+- 写入中发现BattleSim直接编译与读取边界遗漏后先暂停，负责人批准四个模拟器文件最小适配后重新预检并继续；完整成长/连续费用/状态算法仍归AP2-SIM，未修改相关模拟循环。
+- 最终EditMode153/153；BattleSim Release构建0警告0错、默认run退出0、equipment-production及attack-profile-d-combat-02自测通过。PlayMode10/11，既有静态底座根与子renderer名称断言失败保留说明，不宣称最终场景已验收。完整证据见开发管理/U-COMBAT-AP2-CONFIG-01-验证记录.txt。
+- 仅移除本卡队列/backlog投影并归档；未提前提升下游、未关闭父项。TUNING仍需AP2-BALANCE，SCENE仍需TUNING/AP2-PREVIEW；其中已完成ITEM/EQUIP的依赖清理不属于本卡。
+
+## 经验候选
+
+### CAND-U-COMBAT-AP2-CONFIG-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：data
+- 现象：配置源表升级已通过Unity首次导入，但BattleSim既有生产入口仍固定旧41列/非空派生字段，共享源码还漏新纯类型链接，需暂停并取得最小范围修订授权。
+- 已证实根因：临近ready检查覆盖了Unity直接构造者，却未同步枚举同源CSV的两个实际模拟读取入口及显式Compile链接；把这些即时读取/编译义务误留给后置完整算法迁移任务。
+- 可能复用范围：多个执行端共享CSV或源码时的schema升级、配置生产者任务、BattleSim显式源码链接及临近ready路径冻结。
+- 证据：本卡“负责人批准共享编译与生产读取最小适配”、同ID验证记录；BattleSim.csproj、GameData.LoadProductionAttacks、GuanzhongPlaytestAudit.LoadProductionInputs及两入口拒绝矩阵。
+- 门禁可能：yes

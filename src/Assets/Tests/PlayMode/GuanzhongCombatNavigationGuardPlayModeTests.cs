@@ -64,7 +64,7 @@ namespace TianZhang.Tests.PlayMode
                 string loadedScene = null;
                 controller.Configure(catalog, map, runtime.Player.Capture(), environment,
                     System.Array.Empty<AttackProfileData>(), new AdventureMapLoader(), spawner, input, hud,
-                    encounters, new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }), runtime, runtime.Bounties, runtime.InventoryGrants,
+                    encounters, new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")), runtime, runtime.Bounties, runtime.InventoryGrants,
                     scene => { loads++; loadedScene = scene; });
                 controller.SetEncounterRandomSource(new ZeroRandomSource());
                 typeof(AdventureController).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, null);

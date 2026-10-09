@@ -544,91 +544,118 @@ function Test-FormalProjectionSceneReference {
   }
 }
 
-function Test-FormalAttackProfileProjection {
-  param([object]$Table, [string[]]$LanguageIds)
-  if (($Table.Headers -join ',') -cne ($schemas.AttackProfiles -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_HEADER_NOT_EXACT' 'AttackProfiles' 'Header must match the ordered 41-column contract.'
-  }
-  $expectedRows = @{
-    basic_iron_sword = @{
-      attackProfileId='basic_iron_sword'; displayNameKey='attack_profile_basic_iron_sword'; profileKind='basic'; basicBindingKind='main_equipment'
-      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
-      actionPointCostUnits='40000'; minimumNetCostUnits='40000'; ctPenalty='0'; reuseCooldownTicks='0'
-      minCastRange='1'; maxCastRange='1'; targetingMode='single'
+# Reuse the non-Unity strict schema; this checker has no separate numeric parameter table.
+function Get-CombatRuleTokenTable {
+  param([object]$Table)
+  $result = [Collections.Generic.List[string[]]]::new()
+  $result.Add([string[]]$Table.Headers)
+  foreach ($row in $Table.Rows) { $result.Add([string[]]@($Table.Headers | ForEach-Object { [string]$row.PSObject.Properties[$_].Value })) }
+  return ,$result
+}
+function Test-CombatRuleSetProjection {
+  try {
+    $sources = [Collections.Generic.Dictionary[string,byte[]]]::new([StringComparer]::Ordinal)
+    foreach ($name in @('AttackProfiles','RealmCombatGrowth','CombatEffectTierRules','CombatActionEconomyRules')) {
+      $relative = "src/Assets/DataConfig/$name.csv"; $sources.Add($relative, [IO.File]::ReadAllBytes((Join-Path $root $relative)))
     }
-    basic_iron_blade = @{
-      attackProfileId='basic_iron_blade'; displayNameKey='attack_profile_basic_iron_blade'; profileKind='basic'; basicBindingKind='main_equipment'
-      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.25'; resourceKind='none'; resourceCost='0'
-      actionPointCostUnits='50000'; minimumNetCostUnits='50000'; ctPenalty='0'; reuseCooldownTicks='0'
-      minCastRange='1'; maxCastRange='1'; targetingMode='single'
-    }
-    basic_unarmed = @{
-      attackProfileId='basic_unarmed'; displayNameKey='attack_profile_basic_unarmed'; profileKind='basic'; basicBindingKind='unarmed_fallback'
-      effectType='physical'; damageElementId='element_none'; physicalDamageMultiplier='1.0'; resourceKind='none'; resourceCost='0'
-      actionPointCostUnits='50000'; minimumNetCostUnits='25000'; ctPenalty='0'; reuseCooldownTicks='0'
-      minCastRange='1'; maxCastRange='1'; targetingMode='single'
-    }
-    spell_guanshiji = @{
-      attackProfileId='spell_guanshiji'; displayNameKey='spell_guanshiji'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
-      realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='physical'; damageElementId='element_none'
-      physicalDamageMultiplier='1.2'; resourceKind='mp'; resourceCost='12'
-      actionPointCostUnits='50000'; minimumNetCostUnits='25000'; ctPenalty='10'; reuseCooldownTicks='10'
-      minCastRange='1'; maxCastRange='1'; targetingMode='single'
-    }
-    spell_julingshu = @{
-      attackProfileId='spell_julingshu'; displayNameKey='spell_julingshu'; profileKind='art'; contentScope='player'; sourceAffiliation='faction_sanxiu'
-      realmRequirementId='realm_lianqi'; elementRequirementId='element_none'; effectType='restore_spirit'; resourceKind='mp'; resourceCost='0'
-      actionPointCostUnits='25000'; minimumNetCostUnits='12500'; ctPenalty='5'; reuseCooldownTicks='5'
-      minCastRange='0'; maxCastRange='2'; targetingMode='single'; spiritRecoveryMultiplier='0.5'
-      minimumSpiritRecovery='5'; otherTargetResourceCost='20'; otherTargetRecoveryMultiplier='0.5'
-    }
-  }
-  $rows = @($Table.Rows)
-  if ($rows.Count -ne 5 -or (@($rows.attackProfileId | Sort-Object) -join ',') -cne (@($expectedRows.Keys | Sort-Object) -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'CSV must contain exactly the five approved attack IDs once each.'
-    return
-  }
-  $assetDir = Join-Path $root 'src/Assets/Data/AttackProfiles'
-  $expectedAssetNames = @($expectedRows.Keys | ForEach-Object { "AttackProfile_$_.asset" } | Sort-Object)
-  $actualAssetNames = if (Test-Path -LiteralPath $assetDir -PathType Container) { @(Get-ChildItem -LiteralPath $assetDir -File -Filter *.asset | Select-Object -ExpandProperty Name | Sort-Object) } else { @() }
-  if (($actualAssetNames -join ',') -cne ($expectedAssetNames -join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Production directory must contain exactly the five canonical assets.'
-  }
-  $names = @{ basic_iron_sword='铁剑普攻'; basic_iron_blade='铁刀普攻'; basic_unarmed='徒手'; spell_guanshiji='贯石击'; spell_julingshu='聚灵术' }
-  $languagePath = Join-Path $root 'src/Assets/DataConfig/Language.csv'
-  $stringFields = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey')
-  $enumFields = @('profileKind','basicBindingKind','effectType','resourceKind','targetingMode','areaCenterKind','areaShapeKind','areaEffectBlockers','areaAllowedFactions','areaAllowedStates')
-  foreach ($row in $rows) {
-    $id = [string]$row.attackProfileId
-    $expected = $expectedRows[$id]
-    foreach ($field in $schemas.AttackProfiles) {
-      $value = [string]$row.PSObject.Properties[$field].Value
-      $required = if ($expected.ContainsKey($field)) { [string]$expected[$field] } else { '' }
-      if ($value -cne $required) {
-        Add-Finding 'ATTACK_PROFILE_PROJECTION_INVALID' "${id}:$field" "CSV field must equal '$required' (unused fields must be empty)."
+    $rules = [TianZhang.Combat.CombatRuleSet]::Parse((Get-CombatRuleTokenTable $tables.RealmCombatGrowth),
+      (Get-CombatRuleTokenTable $tables.CombatEffectTierRules),(Get-CombatRuleTokenTable $tables.CombatActionEconomyRules),
+      [TianZhang.Combat.CombatRuleSet]::ComputeSourceDigest($sources))
+  } catch { Add-Finding 'COMBAT_RULE_SOURCE_INVALID' 'CombatRuleSet' $_.Exception.Message; return $null }
+  $path = 'src/Assets/Data/CombatRuleSet.asset'
+  Test-FormalProjectionAssetFields 'CombatRuleSet' $path @{schemaVersion=1;ruleSetVersion=$rules.RuleSetVersion;sourceDigest=$rules.SourceDigest}
+  $full = Join-Path $root $path
+  if (Test-Path -LiteralPath $full) {
+    $text = [IO.File]::ReadAllText($full)
+    foreach ($entry in @(@{Name='realms';Rows=$rules.Realms;Start='realmId'},@{Name='tiers';Rows=$rules.Tiers;Start='abilityTierId'},@{Name='economy';Rows=$rules.Economy;Start='recordKind'})) {
+      $blocks = @([regex]::Matches($text,"(?ms)^  - $($entry.Start): .*?(?=^  - $($entry.Start):|^  [a-zA-Z]+:|\z)"))
+      if ($blocks.Count -ne $entry.Rows.Count) { Add-Finding 'COMBAT_RULE_ASSET_ROWS_INVALID' $entry.Name 'Generated row count must equal validated source.'; continue }
+      for ($i=0;$i -lt $blocks.Count;$i++) {
+        $row = $entry.Rows[$i]
+        foreach ($property in $row.GetType().GetProperties()) {
+          $field = [char]::ToLowerInvariant($property.Name[0]) + $property.Name.Substring(1); $value = $property.GetValue($row)
+          if ($field -ceq 'movementNodeWeightNumerators') { $value = (@($value | ForEach-Object { [Convert]::ToHexString([BitConverter]::GetBytes([int]$_)).ToLowerInvariant() }) -join '') }
+          if ($entry.Name -ceq 'economy' -and $field -notin @('recordKind','definitionRef','abilityTierId','cooldownClass')) {
+            $column = [Array]::IndexOf([TianZhang.Combat.CombatRuleSet]::EconomyColumns,$field)
+            $present = if ($property.PropertyType -eq [Nullable[int]]) { $null -ne $value } else { ($row.RecordKind -ceq 'global') -eq ($column -lt 29) }
+            $expected = if ($null -eq $value) { 0 } else { $value }
+            $pattern = "(?m)^    ${field}:\s*\r?\n      present: $([int]$present)\r?\n      value: $expected\s*$"
+          } else {
+            $expected = if ($null -eq $value) { '' } else { [Convert]::ToString($value,[Globalization.CultureInfo]::InvariantCulture) }
+            $pattern = "(?m)^  (?:- |  )${field}: *$([regex]::Escape($expected))\s*$"
+          }
+          if (-not [regex]::IsMatch($blocks[$i].Value,$pattern)) { Add-Finding 'COMBAT_RULE_ASSET_FIELD_MISMATCH' "$($entry.Name):${i}:$field" 'Generated row must equal the validated reduced source.' }
+        }
       }
     }
-    $displayKey = [string]$row.displayNameKey
-    if ($displayKey -notin $LanguageIds) { Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' $id 'displayNameKey must exist in Language.csv.' }
-    $displayLines = @(Get-Content -LiteralPath $languagePath -Encoding UTF8 | Where-Object { $_.StartsWith($displayKey + ',') })
-    if ($displayLines.Count -ne 1 -or (($displayLines[0] -split ',',2)[1].Trim() -cne $names[$id])) {
-      Add-Finding 'ATTACK_PROFILE_LANGUAGE_TEXT_INVALID' $id "Language value must be '$($names[$id])'."
+  }
+  $meta = Join-Path $root ($path+'.meta')
+  if (-not (Test-Path $meta)) { Add-Finding 'COMBAT_RULE_META_MISSING' 'CombatRuleSet' 'Canonical metadata is required.' }
+  else {
+    $guid = @(Select-String -LiteralPath $meta -Pattern '^guid: ([a-f0-9]{32})$').Matches
+    if ($guid.Count -ne 1 -or -not (Select-String -LiteralPath (Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset') -Pattern "^  combatRuleSet: \{fileID: 11400000, guid: $($guid[0].Groups[1].Value), type: 2\}$" -Quiet)) {
+      Add-Finding 'COMBAT_RULE_CATALOG_REFERENCE_INVALID' 'CombatRuleSet' 'Catalog must explicitly reference the canonical rule asset.'
     }
-    $fields = @{}
-    foreach ($field in $stringFields) { $fields[$field] = if ($expected.ContainsKey($field)) { [string]$expected[$field] } else { '' } }
-    foreach ($field in $schemas.AttackProfiles) {
-      if ($field -in $stringFields -or $field -in $enumFields) { continue }
-      $fields[$field] = if ($expected.ContainsKey($field)) { [double]::Parse([string]$expected[$field], [Globalization.CultureInfo]::InvariantCulture) } elseif ($field -ceq 'areaFacing') { -1 } else { 0 }
-    }
-    foreach ($field in $enumFields) { $fields[$field] = 0 }
-    $fields.profileKind = if ($row.profileKind -ceq 'basic') { 1 } else { 2 }
-    $fields.basicBindingKind = if ($id -ceq 'basic_unarmed') { 2 } elseif ($row.basicBindingKind -ceq 'main_equipment') { 1 } else { 0 }
-    $fields.effectType = if ($id -ceq 'spell_julingshu') { 8 } else { 1 }
-    $fields.resourceKind = if ($row.profileKind -ceq 'basic') { 1 } else { 2 }
-    $fields.targetingMode = 1
-    $assetPath = "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset"
-    Test-FormalProjectionAssetFields $id $assetPath $fields
-    Test-FormalProjectionSceneReference $id $assetPath
+  }
+  return $rules
+}
+function Test-FormalAttackProfileProjection {
+  param([object]$Table,[string[]]$LanguageIds)
+  $rules = Test-CombatRuleSetProjection; if ($null -eq $rules) { return }
+  $ids = @('basic_unarmed','spell_guanshiji','spell_julingshu','basic_iron_sword','basic_iron_blade'); $rows = @($Table.Rows)
+  if ($rows.Count -ne 5 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly five approved IDs are required.'; return
+  }
+  $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
+  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the five canonical assets are required.' }
+  $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy')
+  $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_fallback=2};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2}}
+  foreach ($row in $rows) {
+    $id = [string]$row.attackProfileId; $fields = @{}
+    if ($row.displayNameKey -notin $LanguageIds) { Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' $id 'Unknown display key.' }
+    try {
+      foreach ($field in $schemas.AttackProfiles) {
+        $value = [string]$row.PSObject.Properties[$field].Value
+        if ($field -in $strings) { $fields[$field] = $value }
+        elseif ($enums.ContainsKey($field)) {
+          if ($value -and -not $enums[$field].ContainsKey($value)) { throw "Unknown $field" }
+          $fields[$field] = if ($value) { $enums[$field][$value] } else { 0 }
+        } else { $fields[$field] = if ($value) { [double]::Parse($value,[Globalization.CultureInfo]::InvariantCulture) } elseif ($field -ceq 'areaFacing') { -1 } else { 0 } }
+      }
+      if ($row.ruleSetVersion -cne $rules.RuleSetVersion) { throw 'Unknown rule version.' }
+      foreach ($field in @('actionPointCostUnits','minimumNetCostUnits','ctPenalty','resourceCost','minCastRange','maxCastRange')) {
+        $fields[$field] = [TianZhang.Combat.CombatRuleSet]::Integer([string]$row.$field,$field -in @('actionPointCostUnits','minimumNetCostUnits'))
+      }
+      if ($fields.minimumNetCostUnits -gt $fields.actionPointCostUnits -or $fields.ctPenalty -gt [int]::MaxValue-100 -or $fields.minCastRange -gt $fields.maxCastRange) { throw 'Invalid cost or range.' }
+      $fields.ruleSetSourceDigest = $rules.SourceDigest
+      if ($row.effectBudgetMode -ceq 'legacy_unarmed') {
+        if ($id -cne 'basic_unarmed' -or $row.abilityTierId -or $row.cooldownClass -cne 'legacy_unarmed' -or $row.basicBindingKind -cne 'unarmed_fallback') { throw 'Invalid historical row.' }
+        $fields.reuseCooldownTicks = [TianZhang.Combat.CombatRuleSet]::Integer([string]$row.reuseCooldownTicks,$false)
+      } else {
+        $tier = $rules.GetTier([string]$row.abilityTierId)
+        $override = if ([string]$row.reuseCooldownTicks -ceq '') { $null } else { [TianZhang.Combat.CombatRuleSet]::Integer([string]$row.reuseCooldownTicks,$false) }
+        $fields.reuseCooldownTicks = $rules.ResolveCooldown($row.abilityTierId,$row.cooldownClass,$override)
+      }
+      if ($row.effectBudgetMode -ceq 'damage_budget') {
+        if ($row.physicalDamageMultiplier -or $row.soulDamageMultiplier) { throw 'Derived damage columns must be empty.' }
+        $pairs = @{}
+        foreach ($prefix in @('efficiency','damageMigration','damageWeight')) {
+          $num = [TianZhang.Combat.CombatRuleSet]::Integer([string]$row.($prefix+'Numerator'),$true); $den = [TianZhang.Combat.CombatRuleSet]::Integer([string]$row.($prefix+'Denominator'),$true)
+          $pairs[$prefix] = [TianZhang.Combat.CombatRuleRatio]::new($num,$den); $fields[$prefix+'Numerator'] = $pairs[$prefix].Numerator; $fields[$prefix+'Denominator'] = $pairs[$prefix].Denominator
+        }
+        $penetration = [TianZhang.Combat.CombatRuleRatio]::FromDecimal($(if ($row.defensePenetration) {$row.defensePenetration} else {'0'}))
+        $noMpDivine = $row.profileKind -ceq 'divine' -and $fields.resourceCost -eq 0
+        $physical = $rules.ResolveDamageMultiplier($row.abilityTierId,$fields.actionPointCostUnits,$fields.resourceCost,$noMpDivine,
+          $pairs.efficiency,$pairs.damageMigration,$pairs.damageWeight,$penetration,$false)
+        $soul = $rules.ResolveDamageMultiplier($row.abilityTierId,$fields.actionPointCostUnits,$fields.resourceCost,$noMpDivine,
+          $pairs.efficiency,$pairs.damageMigration,$pairs.damageWeight,$penetration,$true)
+        $fields.physicalDamageMultiplier = if ($row.effectType -in @('physical','hybrid')) { [double]$physical.ToString('R',[Globalization.CultureInfo]::InvariantCulture) } else { 0 }
+        $fields.soulDamageMultiplier = if ($row.effectType -in @('magic','hybrid')) { [double]$soul.ToString('R',[Globalization.CultureInfo]::InvariantCulture) } else { 0 }
+      } elseif ($row.effectBudgetMode -notin @('legacy_unarmed','fixed_weapon','prototype_restore','status_only','fixed_output')) { throw 'Unknown budget mode.' }
+      if ($row.controlChancePermille -and ($row.controlChancePermille -notmatch '^\d+$' -or [long]$row.controlChancePermille -gt 1000)) { throw 'Invalid control probability.' }
+    } catch { Add-Finding 'ATTACK_PROFILE_SOURCE_INVALID' $id $_.Exception.Message; continue }
+    Test-FormalProjectionAssetFields $id "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset" $fields
+    Test-FormalProjectionSceneReference $id "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset"
   }
 }
 
@@ -927,6 +954,8 @@ function Load-Waivers {
 }
 
 $waivers = Load-Waivers
+$combatRuleSource = Join-Path $root 'src/Assets/Scripts/Combat/CombatRuleSet.cs'
+if (-not ('TianZhang.Combat.CombatRuleSet' -as [type])) { Add-Type -TypeDefinition ([IO.File]::ReadAllText($combatRuleSource)) }
 $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
@@ -935,7 +964,10 @@ $schemas = [ordered]@{
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
   Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits')
-  AttackProfiles = @('attackProfileId','displayNameKey','profileKind','basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','effectType','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','resourceKind','resourceCost','actionPointCostUnits','minimumNetCostUnits','ctPenalty','reuseCooldownTicks','minCastRange','maxCastRange','targetingMode','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
+  RealmCombatGrowth = [TianZhang.Combat.CombatRuleSet]::RealmColumns
+  CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns
+  CombatActionEconomyRules = [TianZhang.Combat.CombatRuleSet]::EconomyColumns
+  AttackProfiles = [TianZhang.Combat.CombatRuleSet]::AttackColumns
   EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
@@ -951,7 +983,10 @@ $tables = [ordered]@{
   Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity') @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
-  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier')
+  RealmCombatGrowth = Get-CsvTable 'src/Assets/DataConfig/RealmCombatGrowth.csv' $schemas.RealmCombatGrowth @('movementNodeWeightNumerators')
+  CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
+  CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })
+  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites

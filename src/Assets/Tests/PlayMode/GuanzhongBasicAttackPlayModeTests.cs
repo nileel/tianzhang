@@ -477,7 +477,7 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator CombatEntryRejectsMissingCommittedProfiles()
         {
-            var adapter = new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
+            var adapter = new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
             bool created = adapter.TryCreateSession(
                 null,
                 new AttackProfileData[0],
