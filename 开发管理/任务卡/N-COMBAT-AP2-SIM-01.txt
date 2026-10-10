@@ -8,14 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-GROWTH-01",
-    "U-COMBAT-AP2-REPEAT-01",
-    "U-COMBAT-AP2-STATUS-01",
-    "U-COMBAT-AP2-WEAPON-01"
-  ],
-  "stateReason": "等待直接前置正式完成；配置合同冻结新增类型/资源与精确路径后，临近ready重新核对所有者与风险门禁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "四项直接前置均已完成归档；路径扫描与风险预检完成，具备执行条件。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
