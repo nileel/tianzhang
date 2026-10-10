@@ -40,6 +40,8 @@ namespace TianZhang.Tests
                 new[] { CombatRuleSet.EconomyColumns }.Concat(asset.ExportEconomy()).ToArray(), asset.sourceDigest);
             Assert.That(projected.Realms.Count, Is.EqualTo(6)); Assert.That(projected.Tiers.Count, Is.EqualTo(3));
             Assert.That(projected.Economy.Count, Is.EqualTo(52));
+            Assert.That(asset.unarmedRows, Is.Empty);
+            Assert.That(projected.UnarmedRows, Is.Empty);
             foreach (string id in CombatRuleSet.DefinitionIds)
                 Assert.That(projected.Economy.Count(row => row.DefinitionRef == id), Is.EqualTo(3), id);
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
@@ -99,6 +101,52 @@ namespace TianZhang.Tests
             Assert.That(rules.Economy[1].ActionPointFactorNumerator, Is.EqualTo(2));
             Assert.That(rules.Economy[1].ActionPointFactorDenominator, Is.EqualTo(1));
         }
+
+        [Test]
+        public void BodyMappingRoundTripsAndRejectsMalformedSerializedRows()
+        {
+            var rules = AttackProfileDataTests.UnarmedFixtureRules(AttackProfileDataTests.UnarmedFixtureLines());
+            var data = AttackProfileDataTests.UnarmedFixtureRuleData(rules);
+            try
+            {
+                Assert.That(data.TryValidateIdentity(out string reason), Is.True, reason);
+                var projected = Parse().WithUnarmedRows(data.unarmedRows.Select(row => new CombatRuleSet.UnarmedRow(
+                    row.familyId, row.realmId, row.profileId, row.abilityTierId, row.actionPointCostUnits,
+                    row.minimumNetCostUnits, row.physicalAttackCapacity)));
+                Assert.That(projected.UnarmedRows.Select(row => row.ProfileId), Is.EqualTo(rules.UnarmedRows.Select(row => row.ProfileId)));
+                var rows = data.unarmedRows;
+                data.unarmedRows = rows.Take(4).ToArray(); Assert.That(data.TryValidateIdentity(out _), Is.False);
+                data.unarmedRows = rows.Concat(new[] { rows[0] }).ToArray(); Assert.That(data.TryValidateIdentity(out _), Is.False);
+                data.unarmedRows = rows; rows[1].familyId = "body_shijiahou"; Assert.That(data.TryValidateIdentity(out _), Is.False);
+                rows[1].familyId = "body_human";
+                rows[0].physicalAttackCapacity = 120; Assert.That(data.TryValidateIdentity(out _), Is.False);
+                rows[0].physicalAttackCapacity = 30; rows[0].minimumNetCostUnits = 20001; Assert.That(data.TryValidateIdentity(out _), Is.False);
+                rows[0].minimumNetCostUnits = 20000; rows[0].abilityTierId = "tier_jindan"; Assert.That(data.TryValidateIdentity(out _), Is.False);
+                rows[0].abilityTierId = "tier_lianqi"; data.unarmedRows = null; Assert.That(data.TryValidateIdentity(out _), Is.False);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(data); }
+        }
+        [Test]
+        public void InvalidBodySourceRejectsBeforeAnyAssetWrites()
+        {
+            var bytes = AssetPaths.ToDictionary(path => path, File.ReadAllBytes);
+            var guids = AssetPaths.ToDictionary(path => path, AssetDatabase.AssetPathToGUID);
+            byte[] original = File.ReadAllBytes(SourcePaths[3]);
+            try
+            {
+                var lines = AttackProfileDataTests.UnarmedFixtureLines();
+                File.WriteAllText(SourcePaths[3], string.Join("\n", lines.Take(5)) + "\n");
+                LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("unarmed_mapping_incomplete"));
+                CombatContentImporter.ImportAttackProfiles();
+            }
+            finally { File.WriteAllBytes(SourcePaths[3], original); }
+            foreach (string path in AssetPaths)
+            {
+                CollectionAssert.AreEqual(bytes[path], File.ReadAllBytes(path), path);
+                Assert.That(AssetDatabase.AssetPathToGUID(path), Is.EqualTo(guids[path]), path);
+            }
+        }
+
         [Test]
         public void MissingOrMalformedAssetRejectsFormalEntryWithoutGlobalFallback()
         {
@@ -132,6 +180,9 @@ namespace TianZhang.Tests
         [TestCase(2, "repeatFirstPermille", "0")]
         [TestCase(3, "controlChancePermille", "1001")]
         [TestCase(3, "cooldownClass", "unknown")]
+        [TestCase(3, "attackSchemaVersion", "1")]
+        [TestCase(3, "unarmedFamilyId", "body_human")]
+        [TestCase(3, "unarmedPhysicalAttackCapacity", "0")]
         public void EveryBadSourceRejectsBeforeAllAssetWritesAndKeepsGuids(int source, string field, string value)
         {
             var bytes = AssetPaths.ToDictionary(path => path, File.ReadAllBytes);
@@ -145,7 +196,7 @@ namespace TianZhang.Tests
                 string[] row = CsvTableReader.ParseRow(lines[rowIndex]);
                 row[Array.IndexOf(CsvTableReader.ParseRow(lines[header]), field)] = value;
                 lines[rowIndex] = string.Join(",", row); File.WriteAllText(SourcePaths[source], string.Join("\n", lines) + "\n");
-                LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("(combat_rule_|attack_profile_)"));
+                LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("(combat_rule_|attack_profile_|attack_schema_|non_unarmed_)"));
                 CombatContentImporter.ImportAttackProfiles();
             }
             finally { File.WriteAllBytes(SourcePaths[source], original); }

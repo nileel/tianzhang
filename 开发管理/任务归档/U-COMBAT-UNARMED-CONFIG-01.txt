@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "U-COMBAT-UNARMED-CONFIG-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "D-COMBAT-UNARMED-CONTRACT-01与N-COMBAT-AP2-SIM-01均已完成归档；合同已冻结精确字段、生产ID、生成物与.meta，风险预检无命中，可按既定范围实施。",
+  "stateReason": "配置schema2、五档fixture同源投影及严格拒绝完成；Unity143项、BattleSim加载自测与默认运行通过，归档等待共享入口重放；正式空手仍由RUNTIME启用。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs",
@@ -101,3 +101,24 @@
 - 按接入合同§三实现AttackProfiles精确表头attackSchemaVersion=2和unarmedFamilyId/unarmedRealmId/unarmedPhysicalAttackCapacity；原四行仅新增版本/空列，四旧攻击及CombatRuleSet同批重导摘要，正式角色仍无新攻击。没有新CSV/类型文件/asmdef。
 - CONFIG在既有规则类型内提供UnarmedRow映射，新增UnarmedBody绑定枚举、fixed_unarmed严格校验及CombatAttackRuleMetadata显式族/境界/肉攻承载；Adapter传递、Resolver选择新承载属于本卡fixture闭环，不授生产角色资格。新五档用明确fixture经严格解析→Adapter→命令→Resolver验证；费用/承载不写死候选常量，其他档案仍读原Tier。
 - 实际N-COMBAT-AP2-SIM-01已completed归档，本卡仍保留该具名前置；不改其已获准A方案特殊原型。本卡支持结果与RUNTIME启用分别验收，生产四ID读取/默认程序保持，整批拒绝及生成GUID/幂等检查覆盖新表头。
+
+## 2026-10-11 Codex完成与验收
+
+- 完成冻结schema2、派生UnarmedRow、严格来源/费用/承载/完整性校验、Unity/BattleSim同源摘要及Adapter→命令→Resolver fixture闭环。正式四行只新增版本/空列，四旧asset及规则重导；无生产空手资格、角色/保存/装备/敌人变更。
+- Unity143/143定向EditMode、BattleSim Release构建/默认运行及unarmed-config/equipment-production自测、数据链与程序集边界通过。生产摘要6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447，两端fixture摘要b57ea66e9c81d9f0d677d6d79942bc17abd504b85482a37555e7812b604a291a。
+- 主模型按入口证明gpt-6.1-sol；有界配置单主责，无辅助。详细输入、首次失败根因与修正、验证命令及限制见开发管理/U-COMBAT-UNARMED-CONFIG-01-验证记录.txt。
+- 仅当前任务归档、移除自身调度投影；下游对本卡的前置引用继续保留，等待正式master结果后由QueueMaintenance核对。没有集成、启用生产空手、平衡定案或关闭父项。
+
+## 经验候选
+
+### CAND-U-COMBAT-UNARMED-CONFIG-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：data
+- 现象：按原始字节计算同源摘要时，Unity导入与工作树检查可在CRLF源上通过，但Git的CSV行尾规范化会使提交后的源字节与已生成asset摘要不一致。
+- 已证实根因：Windows文本写入把源改为CRLF，而仓库CSV的Git存储行尾为LF；摘要读取工作树原始字节，尚未按Git过滤后字节生成资产，两个输入字节集合不同。
+- 可能复用范围：以原始CSV/文本字节生成摘要的跨端配置、Unity派生资产及Git行尾规范化提交。
+- 证据：本卡验证记录“发现与修正”；首次CRLF生产摘要31add96a98bf0f61a4ebd1d0e555097a8cb5223d3ffa0a1886f3c14104220738；源恢复LF后原生重导摘要6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447，最终143项及数据链通过。
+- 门禁可能：yes

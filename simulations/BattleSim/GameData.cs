@@ -444,7 +444,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         decimal SpiritRecoveryMultiplier = 0,
         int MinimumSpiritRecovery = 0,
         decimal OtherTargetRecoveryMultiplier = 1, string BasicBindingKind = "",
-        string RuleSetVersion = "", string RuleSetSourceDigest = "", string AbilityTierId = "", string EffectBudgetMode = "");
+        string RuleSetVersion = "", string RuleSetSourceDigest = "", string AbilityTierId = "", string EffectBudgetMode = "",
+        int AttackSchemaVersion = 0, string UnarmedFamilyId = "", string UnarmedRealmId = "", int UnarmedPhysicalAttackCapacity = 0);
     public record ArtConfig(
         string Name,
         string Type,
@@ -676,7 +677,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         string[][] Table(string name) => CsvTableReader.ReadRequired(Path.Combine(data, name + ".csv"))
             .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#')).Select(CsvTableReader.ParseRow).ToArray();
         return CombatRuleSet.Parse(Table("RealmCombatGrowth"), Table("CombatEffectTierRules"), Table("CombatActionEconomyRules"),
-            CombatRuleSet.ComputeSourceDigest(sources));
+            CombatRuleSet.ComputeSourceDigest(sources)).WithUnarmedRows(CombatRuleSet.ParseUnarmedRows(Table("AttackProfiles")));
     }
     internal static float ResolveAttackMultiplier(IReadOnlyDictionary<string, string> row, CombatRuleSet rules, bool soul)
     {
@@ -705,6 +706,14 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     }
     internal static IReadOnlyDictionary<string, AttackProfile> LoadProductionAttacks(string path)
     {
+        var result = LoadAttackProfileProjection(path);
+        if (!result.Keys.Order(StringComparer.Ordinal).SequenceEqual(new[] { "spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order(StringComparer.Ordinal)))
+            throw new InvalidDataException("production_attack_mapping_incomplete");
+        return result;
+    }
+    // Explicit fixture entry; the production caller retains its frozen four-ID contract.
+    internal static IReadOnlyDictionary<string, AttackProfile> LoadAttackProfileProjection(string path)
+    {
         var lines = CsvTableReader.ReadRequired(path); var header = CsvTableReader.FindHeader(lines);
         if (!header.SequenceEqual(CombatRuleSet.AttackColumns, StringComparer.Ordinal)) throw new InvalidDataException("attack_profile_schema_invalid");
         var rules = LoadProductionRuleSet(path);
@@ -729,7 +738,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             if (mode != "damage_budget" && new[] { "efficiencyNumerator","efficiencyDenominator","damageMigrationNumerator","damageMigrationDenominator","damageWeightNumerator","damageWeightDenominator" }.Any(key => Value(key) != ""))
                 throw new InvalidDataException("attack_profile_non_budget_fields_present");
             bool recovery = Value("effectType") == "restore_spirit";
-            if (!(mode == "fixed_weapon" || mode == "damage_budget" && Value("effectType") == "physical" || mode == "prototype_restore" && recovery))
+            if (!(mode is "fixed_weapon" or "fixed_unarmed" || mode == "damage_budget" && Value("effectType") == "physical" || mode == "prototype_restore" && recovery))
                 throw new InvalidDataException("unsupported_production_attack_effect");
             if (Number("minCastRange") > Number("maxCastRange")) throw new InvalidDataException("attack_profile_cast_range_invalid");
             if (new[] { "statusId","statusAttributeId","statusRelativePermille","statusDurationOwnTurnEnds","statusStackLimit","statusRefreshPolicy" }.Any(key => Value(key) != ""))
@@ -747,10 +756,10 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
                 SpiritCost:Number("resourceCost"),OtherTargetSpiritCost:recovery ? Number("otherTargetResourceCost") : 0,
                 SpiritRecoveryMultiplier:recovery ? Decimal("spiritRecoveryMultiplier") : 0,MinimumSpiritRecovery:recovery ? Number("minimumSpiritRecovery") : 0,
                 OtherTargetRecoveryMultiplier:recovery ? Decimal("otherTargetRecoveryMultiplier") : 1,BasicBindingKind:Value("basicBindingKind"),
-                RuleSetVersion:rules.RuleSetVersion,RuleSetSourceDigest:rules.SourceDigest,AbilityTierId:Value("abilityTierId"),EffectBudgetMode:mode));
+                RuleSetVersion:rules.RuleSetVersion,RuleSetSourceDigest:rules.SourceDigest,AbilityTierId:Value("abilityTierId"),EffectBudgetMode:mode,
+                AttackSchemaVersion:Number("attackSchemaVersion"),UnarmedFamilyId:Value("unarmedFamilyId"),UnarmedRealmId:Value("unarmedRealmId"),
+                UnarmedPhysicalAttackCapacity:mode == "fixed_unarmed" ? Number("unarmedPhysicalAttackCapacity") : 0));
         }
-        if (!result.Keys.Order().SequenceEqual(new[] { "spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order()))
-            throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
     }
     internal static IReadOnlyDictionary<string, AttackProfile> ProductionAttacks => productionAttacks.Value;

@@ -71,4 +71,8 @@ MonoBehaviour:
   statusRefreshPolicy:
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: d3387a3baa6f012d685501686fb5a58615e528dac09945c005186c3f34365838
+  ruleSetSourceDigest: 6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447
+  attackSchemaVersion: 2
+  unarmedFamilyId:
+  unarmedRealmId:
+  unarmedPhysicalAttackCapacity: 0

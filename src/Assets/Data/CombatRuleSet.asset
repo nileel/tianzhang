@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TianZhang.Content::TianZhang.Content.CombatRuleSetData
   schemaVersion: 1
   ruleSetVersion: AP-GROWTH@0.1
-  sourceDigest: d3387a3baa6f012d685501686fb5a58615e528dac09945c005186c3f34365838
+  sourceDigest: 6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447
   realms:
   - realmId: realm_fanren
     realmOrder: 0
@@ -6082,3 +6082,4 @@ MonoBehaviour:
     damageWeightDenominator:
       present: 1
       value: 10
+  unarmedRows: []

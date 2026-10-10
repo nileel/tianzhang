@@ -14,13 +14,44 @@ namespace TianZhang.Content
         public RealmRow[] realms = Array.Empty<RealmRow>();
         public TierRow[] tiers = Array.Empty<TierRow>();
         public EconomyRow[] economy = Array.Empty<EconomyRow>();
+        public UnarmedRow[] unarmedRows = Array.Empty<UnarmedRow>();
         public bool TryValidateIdentity(out string reason)
         {
             bool valid = schemaVersion == 1 && ruleSetVersion == "AP-GROWTH@0.1" &&
                 sourceDigest != null && System.Text.RegularExpressions.Regex.IsMatch(sourceDigest, "^[a-f0-9]{64}$") &&
                 realms != null && realms.Length == 6 && tiers != null && tiers.Length == 3 && economy != null && economy.Length == 52 &&
-                realms.All(row => row != null && row.movementNodeWeightNumerators != null) && tiers.All(row => row != null) && economy.All(row => row != null);
+                realms.All(row => row != null && row.movementNodeWeightNumerators != null) && tiers.All(row => row != null) && economy.All(row => row != null) &&
+                unarmedRows != null && unarmedRows.All(row => row != null && row.TryValidate()) &&
+                (unarmedRows.Length == 0 || unarmedRows.Length == 5 &&
+                 unarmedRows.Select(row => row.profileId).Distinct(StringComparer.Ordinal).Count() == 5 &&
+                 unarmedRows.Select(row => row.familyId + "|" + row.realmId).Distinct(StringComparer.Ordinal).Count() == 5 &&
+                 HumanGrowthIncreases());
             reason = valid ? null : "combat_rule_set_invalid"; return valid;
+        }
+        private bool HumanGrowthIncreases()
+        {
+            string[] ids = { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan" };
+            var rows = ids.Select(id => unarmedRows.SingleOrDefault(row => row.familyId == "body_human" && row.realmId == id)).ToArray();
+            return rows.All(row => row != null) && rows.Skip(1).Select((row, index) =>
+                row.actionPointCostUnits > rows[index].actionPointCostUnits && row.physicalAttackCapacity > rows[index].physicalAttackCapacity).All(value => value);
+        }
+        [Serializable] public sealed class UnarmedRow
+        {
+            public string familyId;
+            public string realmId;
+            public string profileId;
+            public string abilityTierId;
+            public int actionPointCostUnits;
+            public int minimumNetCostUnits;
+            public int physicalAttackCapacity;
+            public bool TryValidate()
+            {
+                bool human = familyId == "body_human" && realmId is "realm_fanren" or "realm_lianqi" or "realm_zhuji" or "realm_jindan";
+                bool beast = familyId == "body_shijiahou" && realmId == "realm_lianqi";
+                return (human || beast) && profileId == "basic_" + familyId + "_" + realmId.Substring(6) &&
+                    abilityTierId == (realmId == "realm_fanren" ? "tier_lianqi" : "tier_" + realmId.Substring(6)) &&
+                    actionPointCostUnits > 0 && minimumNetCostUnits > 0 && minimumNetCostUnits <= actionPointCostUnits && physicalAttackCapacity > 0;
+            }
         }
         public string[][] ExportRealms() => realms.Select(row => row.Columns(schemaVersion, ruleSetVersion)).ToArray();
         public string[][] ExportTiers() => tiers.Select(row => row.Columns(schemaVersion, ruleSetVersion)).ToArray();

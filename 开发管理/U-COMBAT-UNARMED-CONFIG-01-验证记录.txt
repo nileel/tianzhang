@@ -1,0 +1,45 @@
+# U-COMBAT-UNARMED-CONFIG-01 · 配置与严格加载验证记录
+
+日期：2026-10-11；TaskId：U-COMBAT-UNARMED-CONFIG-01；RunId：32ca509d-6895-456d-a20c-8a2c9999e0a6；BaseCommit：7054b4a48d56f2769b51fbbf224b39378ba8b8ac。
+
+## 授权、事实与结构
+
+- 主模型采用共享入口启动证明gpt-6.1-sol，保持冻结executionModel；配置合同与消费者边界明确、无独立辅助问题，单主责完成实现、完整diff复核和验证，无子智能体、第二责任会话、runtime、集成锁或其他worktree操作。
+- 完整读取空手普攻成长接入合同全部字段、版本、五行稳定身份、投影与负向矩阵；成长设计第3/5/8节；原N-COMBAT-AP2-SIM-01正式归档completed和A方案完成证据。该原SIM的四ID读取及有限特殊原型保持。
+- 入口风险预检与写入前同卡只读复核一致：status=ok；taskCardDigest=ae0b70a1b6a7875c684563cfa8b811bb423b4391f7c56ffc5ac330599c561dff；indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/notice/mustRead/gates/gatePointers均为空，与schema2投影一致。没有新增路径或技术路线。
+- 实际所有者链：AttackProfiles.csv→CombatRuleSet.ParseUnarmedRows与导入行校验→AttackProfileData/CombatRuleSetData→CombatEntryAdapter→CombatAttackRuleMetadata→CombatCommandService预览/提交→CombatActionResolver物理承载选择；BattleSim.LoadProductionRuleSet及LoadAttackProfileProjection消费同一共享解析和四文件摘要。
+- 使用unity-agent-workflows。加载UNITY_STRUCTURE.md/content/assemblies；技能参考project-structure-discovery、content-and-systems、ai-workflows、unity-validation、runtime-owner-proof、serialized-persistence、cleanup-and-git。读取Content/Combat真实asmdef与直接所有者；Content仅依赖Foundation，纯规则仍在Combat，Data不反向引用Combat；未增文件/asmdef或修改场景。较大既有源码为CombatContentImporter 1254行、GameData 3065行、BattleSimSelfTests 4115行；本轮仅原所有者的具名配置/测试单元，无架构迁移或图重构。
+
+## 实现与生产边界
+
+- AttackProfiles精确63列表头新增attackSchemaVersion=2及族/境界/肉攻承载三列；四旧行只追加版本与空列，旧业务字段逐列保持。三个公共规则表schemaVersion=1与AP-GROWTH@0.1不变。
+- UnarmedBody追加枚举保留旧枚举序号；legacy_unarmed/basic_unarmed拒绝。fixed_unarmed只允许五个族/境界/ID/Tier对应关系，纯物理、合法名称键、单体近战、零资源/CT/CD；费用与承载正Int32，净下限不高于基础费；任何非适用列即使写0也拒绝。候选费用、承载和倍率没有写入解析器常量。
+- CombatRuleSet.UnarmedRow与CombatRuleSetData.UnarmedRow均为已校验攻击行的派生映射；非空集合必须五档完整、ID及族档唯一，人形凡人→练气→筑基→金丹费用和承载严格递增；未知族、保留高阶、石甲兽借人形档、缺档都拒绝。CONFIG正式映射显式为空，不授予角色攻击资格。
+- 导入器和BattleSim使用同一原始行schema门禁，Unity额外保留语言、字段及asset引用校验；整表与引用校验在任何asset写入前完成。显式fixture可传已解析同源规则，生产导入不使用fixture参数；GameData生产包装仍严格锁原四ID，fixture加载入口不接入默认角色选招。
+- Adapter核对摘要、Tier、完整五档profile覆盖及每档费用/承载与映射一致，只读传递元数据。Resolver仅fixed_unarmed读显式肉攻承载，其他档仍读原Tier；同一截取后A进入原公式的两处A，目标实际D和原取整、面向、境界规则保持。
+- Unity原生导入重生成四旧攻击与CombatRuleSet；.meta/GUID保持；四表最终生产sourceDigest=6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447。四旧攻击资产和规则资产均携此摘要，攻击schema为2、空手列空/0、规则unarmedRows=[]。
+- fixture仅测试代码或Temp临时输入，五行没有进入正式CSV/asset/catalog。未修改创角、角色成长/存档、装备/敌人绑定、生产攻击授权、时钟或重复乘数；正式角色仍不能据本卡宣称已能空手攻击。
+
+## 实跑证据
+
+- 当前worktree缺obj/project.assets.json，执行一次dotnet restore simulations/BattleSim作环境准备；dotnet build -c Release --no-restore simulations/BattleSim通过，0错误/0警告。未借主目录或其他worktree缓存。
+- dotnet run --no-build -c Release --project simulations/BattleSim默认运行退出0；最终LF源再次运行退出0，报告Temp/U-COMBAT-UNARMED-CONFIG-01/BattleSim-default-LF.txt。默认运行证明当前四生产ID可读，不作新角色平衡结论。
+- --self-test unarmed-config：PASS。显式五档费用20000/25000/75000/250000/25000单位、承载30/120/500/2400/120；40项非法fixture分别在共享规则读取与攻击投影中拒绝。覆盖版本/旧头、缺档/重复、族/境界/ID/Tier来源、非递增、空/0/负/分数/指数/溢出、非法倍率、非适用字段、绑定/资源/CT/CD/距离。合法五档fixture不能经过生产四ID包装；可调凡人20001/承载60/倍率1.1读取成功且摘要改变。
+- --self-test equipment-production：PASS，两真实读取入口继续接受四生产攻击，各拒绝13项旧反例；旧剑/刀成本、倍率、贯石击/聚灵术数据保持。最终LF输入下重验两套加载自测通过。
+- Unity 6000.3.18f1原生batchmode/nographics，projectPath为本worktree/src；testPlatform=EditMode；testFilter为AttackProfileDataTests、CombatRuleSetDataTests、CombatAbilityCapacityTests。最终EditMode-LF.xml：143/143通过，0失败/跳过/不确定；完整源码编译成功。
+- Unity与BattleSim同一五档fixture的四文件sourceDigest逐字一致：b57ea66e9c81d9f0d677d6d79942bc17abd504b85482a37555e7812b604a291a。五档从严格解析→Data→Adapter→预览→正式命令→Resolver实测；高肉攻、D=100时伤害7/65/417/2304/65，凡人D=1000为1，证明凡人不借120承载且目标防御不截取。四次重复实付按1000/1000/1250/1500而伤害不增长；测试使用显式充足AP预算，仅验证功能，不声明各境界正式攻击次数。
+- 可调凡人fixture20001基础/净费、承载60、倍率1.1，正式预览/实付20001/20001/25002/30002单位，伤害始终25；证明单次向上取整、参数可调及重复附加费不扩效果。Adapter拒绝缺profile、缺映射、摘要错或承载与映射不一致。
+- 原四武器/术法承载与恢复定向回归通过；非法整表零asset写入和GUID保持、新表头重复导入幂等通过。check-unity-assembly-boundaries通过19程序集/2 asmref；check-data-chain通过，功法29/29、术法84/84、神通31/31，language keys647。
+
+## 发现与修正
+
+- 首轮Unity142项中4项失败：三个拒绝日志断言只含旧前缀，未消费新attack_schema/non_unarmed拒绝；金丹四次测试预算仅1000000单位，小于所需1187500。修正对应测试日志期望与显式预算，不放宽生产门禁、不改算法；相关58项复验通过，最终143项全通过。
+- 写CSV时Windows文本写入产生CRLF，首次asset摘要为31add96a98bf0f61a4ebd1d0e555097a8cb5223d3ffa0a1886f3c14104220738，而Git规定CSV以LF存储。提交前核对原始字节与HEAD行尾，确认根因；恢复源LF并原生重导、重跑同源加载/默认程序/Unity测试，最终摘要为上述6515值。摘要算法未改变，也未加入行尾兼容分支。
+- Unity产生的ShaderGraphSettings空字段空格是非目标生成噪声，已精确恢复初始版本；五个目标资产的空字段尾空格通过既有check-pending-whitespace -Fix规范化，保留全部字段值；缓存、报告和生成项目均留忽略目录。
+
+## 收口与限制
+
+- 只归档本卡completed并移除本卡队列/backlog行；所有下游具名前置继续保留，没有提升或重排其他任务，没有关闭父项。正式结果由共享入口重放，当前不集成。
+- 管理检查使用check-task-cards -TaskId U-COMBAT-UNARMED-CONFIG-01 -Postcondition CodexClosedOrNonReady及check-review-text；提交前check-pending-whitespace，暂存后git diff --cached --check；candidate通过automation-finalize-commit -RequireAutomationMetadata形成。
+- 本轮据已证实字节/摘要差异记录一个pending经验候选于归档卡，不查重、不分配正式经验ID、不建整理任务、不改风险索引。
+- 未验收正式角色创建/成长/保存迁移、场景可玩空手、Unity点击/动画体验或新空手角色平衡；这些按合同交RUNTIME、SIM、BALANCE与SCENE各叶。无新增运行时可见UI或坐标修改，不需要本卡PlayMode画面结论。

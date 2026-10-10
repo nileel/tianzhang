@@ -24,6 +24,9 @@ namespace TianZhang.Features.Adventure
                     rules = CombatRuleSet.Parse(new[] { CombatRuleSet.RealmColumns }.Concat(ruleData.ExportRealms()).ToArray(),
                         new[] { CombatRuleSet.TierColumns }.Concat(ruleData.ExportTiers()).ToArray(),
                         new[] { CombatRuleSet.EconomyColumns }.Concat(ruleData.ExportEconomy()).ToArray(), ruleData.sourceDigest);
+                    rules = rules.WithUnarmedRows(ruleData.unarmedRows.Select(row => new CombatRuleSet.UnarmedRow(
+                        row.familyId, row.realmId, row.profileId, row.abilityTierId, row.actionPointCostUnits,
+                        row.minimumNetCostUnits, row.physicalAttackCapacity)));
                 }
                 catch (Exception exception) when (exception is System.IO.InvalidDataException || exception is OverflowException || exception is ArgumentException)
                 { ruleFailure = "combat_rule_set_invalid:" + exception.Message; }
@@ -114,8 +117,16 @@ namespace TianZhang.Features.Adventure
                 if (profile.targetingMode != AttackTargetingMode.Single) continue;
                 if (profile.ruleSetVersion != rules.RuleSetVersion || profile.ruleSetSourceDigest != rules.SourceDigest ||
                     !rules.Tiers.Any(tier => tier.AbilityTierId == profile.abilityTierId) ||
-                    (profile.profileKind == AttackProfileKind.Basic && profile.basicBindingKind != BasicAttackBindingKind.MainEquipment))
+                    (profile.profileKind == AttackProfileKind.Basic && profile.basicBindingKind is not (BasicAttackBindingKind.MainEquipment or BasicAttackBindingKind.UnarmedBody)))
                 { profiles = null; reason = "attack_profile_rule_reference_invalid"; return false; }
+                if (profile.effectBudgetMode == "fixed_unarmed")
+                {
+                    var mapping = rules.UnarmedRows.SingleOrDefault(row => row.FamilyId == profile.unarmedFamilyId && row.RealmId == profile.unarmedRealmId);
+                    if (mapping == null || mapping.ProfileId != profile.attackProfileId || mapping.AbilityTierId != profile.abilityTierId ||
+                        mapping.ActionPointCostUnits != profile.actionPointCostUnits || mapping.MinimumNetCostUnits != profile.minimumNetCostUnits ||
+                        mapping.PhysicalAttackCapacity != profile.unarmedPhysicalAttackCapacity)
+                    { profiles = null; reason = "attack_profile_unarmed_mapping_invalid"; return false; }
+                }
                 CombatAttackEffect effect = profile.effectType switch
                 {
                     AttackEffectType.Physical => CombatAttackEffect.Physical,
@@ -166,7 +177,9 @@ namespace TianZhang.Features.Adventure
                         profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.damageMigrationNumerator, profile.damageMigrationDenominator) : (CombatRuleRatio?)null,
                         profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.damageWeightNumerator, profile.damageWeightDenominator) : (CombatRuleRatio?)null,
                         profile.statusId, profile.statusAttributeId, profile.statusRelativePermille, profile.statusDurationOwnTurnEnds,
-                        profile.statusStackLimit, profile.statusRefreshPolicy, profile.controlChancePermille, profile.controlUsesMindContest)));
+                        profile.statusStackLimit, profile.statusRefreshPolicy, profile.controlChancePermille, profile.controlUsesMindContest,
+                        unarmedFamilyId: profile.unarmedFamilyId, unarmedRealmId: profile.unarmedRealmId,
+                        unarmedPhysicalAttackCapacity: profile.unarmedPhysicalAttackCapacity)));
             }
             if (result.Count == 0 || result.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() != result.Count)
             {
@@ -174,6 +187,8 @@ namespace TianZhang.Features.Adventure
                 reason = "combat_session_attack_profile_invalid";
                 return false;
             }
+            if (rules.UnarmedRows.Any(row => !result.Any(profile => profile.Id == row.ProfileId && profile.RuleMetadata.EffectBudgetMode == "fixed_unarmed")))
+            { profiles = null; reason = "attack_profile_unarmed_mapping_incomplete"; return false; }
             profiles = result;
             reason = null;
             return true;

@@ -35,6 +35,7 @@ namespace TianZhang.Tests
             string header = File.ReadAllLines(ProductionAbsolutePath()).First(line => line.StartsWith("attackProfileId,"));
             var valid = new string[header.Split(',').Length];
             void Field(string name, string value) => valid[Array.IndexOf(header.Split(','), name)] = value;
+            Field("attackSchemaVersion", "2");
             Field("ruleSetVersion", "AP-GROWTH@0.1"); Field("abilityTierId", "tier_lianqi");
             Field("cooldownClass", "basic_repeat"); Field("effectBudgetMode", "fixed_weapon");
             valid[0] = "basic_test";
@@ -75,18 +76,18 @@ namespace TianZhang.Tests
             string header = File.ReadAllLines(ProductionAbsolutePath())
                 .First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
             var columns = header.Split(',').ToList();
-            Assert.AreEqual(59, columns.Count);
+            Assert.AreEqual(63, columns.Count);
             Assert.AreEqual(17, columns.IndexOf("actionPointCostUnits"));
 
             string[] legacyColumns = columns.Where(name => name is not (
                 "actionPointCostUnits" or "minimumNetCostUnits" or "ctPenalty" or "reuseCooldownTicks"))
                 .ToList().ToArray();
             legacyColumns = legacyColumns.Take(17).Concat(new[] { "cooldownTicks" }).Concat(legacyColumns.Skip(17)).ToArray();
-            Assert.AreEqual(56, legacyColumns.Length);
+            Assert.AreEqual(60, legacyColumns.Length);
 
             string[] coexistingColumns = columns.Take(21).Concat(new[] { "cooldownTicks" })
                 .Concat(columns.Skip(21)).ToArray();
-            Assert.AreEqual(60, coexistingColumns.Length);
+            Assert.AreEqual(64, coexistingColumns.Length);
 
             foreach (string[] rejected in new[] { legacyColumns, coexistingColumns })
             {
@@ -430,15 +431,164 @@ namespace TianZhang.Tests
             }
         }
 
+
+        public static string[] UnarmedFixtureLines()
+        {
+            var production = File.ReadAllLines(ProductionAbsolutePath());
+            string header = production.Single(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
+            var fields = header.Split(',');
+            var baseline = production.Single(line => line.StartsWith("basic_iron_sword,", StringComparison.Ordinal)).Split(',');
+            var rows = new List<string> { header };
+            foreach (var entry in new[] {
+                ("body_human", "realm_fanren", "tier_lianqi", 20000, 30),
+                ("body_human", "realm_lianqi", "tier_lianqi", 25000, 120),
+                ("body_human", "realm_zhuji", "tier_zhuji", 75000, 500),
+                ("body_human", "realm_jindan", "tier_jindan", 250000, 2400),
+                ("body_shijiahou", "realm_lianqi", "tier_lianqi", 25000, 120) })
+            {
+                var row = (string[])baseline.Clone();
+                void Set(string key, string value) => row[Array.IndexOf(fields, key)] = value;
+                Set("attackProfileId", "basic_" + entry.Item1 + "_" + entry.Item2.Substring(6));
+                Set("displayNameKey", "attack_profile_" + entry.Item1);
+                Set("basicBindingKind", "unarmed_body"); Set("effectBudgetMode", "fixed_unarmed");
+                Set("abilityTierId", entry.Item3); Set("unarmedFamilyId", entry.Item1); Set("unarmedRealmId", entry.Item2);
+                Set("actionPointCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                Set("minimumNetCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                Set("unarmedPhysicalAttackCapacity", entry.Item5.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                Set("physicalDamageMultiplier", "1"); Set("reuseCooldownTicks", "0");
+                rows.Add(string.Join(",", row));
+            }
+            return rows.ToArray();
+        }
+        public static string[] UnarmedKeys => new[] { "attack_profile_body_human", "attack_profile_body_shijiahou" };
+        public static CombatRuleSet UnarmedFixtureRules(string[] lines)
+        {
+            var sources = new[] { "RealmCombatGrowth", "CombatEffectTierRules", "CombatActionEconomyRules", "AttackProfiles" }
+                .ToDictionary(name => "src/Assets/DataConfig/" + name + ".csv",
+                    name => File.ReadAllBytes(Path.Combine(Application.dataPath, "DataConfig", name + ".csv")), StringComparer.Ordinal);
+            sources["src/Assets/DataConfig/AttackProfiles.csv"] = System.Text.Encoding.UTF8.GetBytes(string.Join("\n", lines) + "\n");
+            string[][] Table(string name) => CombatContentImporter.TokenizeRuleTable(File.ReadAllLines("Assets/DataConfig/" + name + ".csv"));
+            return CombatRuleSet.Parse(Table("RealmCombatGrowth"), Table("CombatEffectTierRules"), Table("CombatActionEconomyRules"),
+                CombatRuleSet.ComputeSourceDigest(sources)).WithUnarmedRows(CombatRuleSet.ParseUnarmedRows(CombatContentImporter.TokenizeRuleTable(lines)));
+        }
+        public static TianZhang.Content.CombatRuleSetData UnarmedFixtureRuleData(CombatRuleSet rules)
+        {
+            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
+            data.sourceDigest = rules.SourceDigest;
+            data.unarmedRows = rules.UnarmedRows.Select(row => new TianZhang.Content.CombatRuleSetData.UnarmedRow
+            {
+                familyId = row.FamilyId, realmId = row.RealmId, profileId = row.ProfileId, abilityTierId = row.AbilityTierId,
+                actionPointCostUnits = row.ActionPointCostUnits, minimumNetCostUnits = row.MinimumNetCostUnits,
+                physicalAttackCapacity = row.PhysicalAttackCapacity,
+            }).ToArray();
+            return data;
+        }
+        [Test]
+        public void FiveExplicitBodyRowsShareTheirSourceDigestAndKeepProductionAtFour()
+        {
+            var lines = UnarmedFixtureLines(); var rules = UnarmedFixtureRules(lines);
+            TestContext.WriteLine("unarmed-config fixture sourceDigest=" + rules.SourceDigest);
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(lines, UnarmedKeys, out var projected, out string reason, rules), Is.True, reason);
+            profiles.AddRange(projected);
+            foreach (var profile in projected)
+            {
+                var mapping = rules.GetUnarmed(profile.unarmedFamilyId, profile.unarmedRealmId);
+                Assert.That(profile.attackSchemaVersion, Is.EqualTo(2));
+                Assert.That(profile.ruleSetSourceDigest, Is.EqualTo(rules.SourceDigest));
+                Assert.That(profile.actionPointCostUnits, Is.EqualTo(mapping.ActionPointCostUnits));
+                Assert.That(profile.minimumNetCostUnits, Is.EqualTo(mapping.MinimumNetCostUnits));
+                Assert.That(profile.unarmedPhysicalAttackCapacity, Is.EqualTo(mapping.PhysicalAttackCapacity));
+                Assert.That(profile.TryValidate(out reason), Is.True, reason);
+            }
+            Assert.That(projected.Single(row => row.unarmedRealmId == "realm_fanren").unarmedPhysicalAttackCapacity, Is.EqualTo(30));
+            Assert.That(CombatContentImporter.TryReadCombatRuleSet(out var production, out reason), Is.True, reason);
+            Assert.That(production.UnarmedRows, Is.Empty);
+            Assert.That(CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(ProductionAbsolutePath())).Length, Is.EqualTo(5));
+            Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_human", "realm_yuanying"));
+            Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_shijiahou", "realm_zhuji"));
+        }
+        [TestCase("attackSchemaVersion", "")]
+        [TestCase("attackSchemaVersion", "1")]
+        [TestCase("unarmedFamilyId", "")]
+        [TestCase("unarmedFamilyId", "body_unknown")]
+        [TestCase("unarmedRealmId", "realm_yuanying")]
+        [TestCase("attackProfileId", "basic_unarmed")]
+        [TestCase("attackProfileId", "basic_body_human_lianqi")]
+        [TestCase("abilityTierId", "tier_zhuji")]
+        [TestCase("basicBindingKind", "main_equipment")]
+        [TestCase("effectBudgetMode", "fixed_weapon")]
+        [TestCase("displayNameKey", "attack_profile_body_shijiahou")]
+        [TestCase("unarmedPhysicalAttackCapacity", "")]
+        [TestCase("unarmedPhysicalAttackCapacity", "0")]
+        [TestCase("unarmedPhysicalAttackCapacity", "-1")]
+        [TestCase("unarmedPhysicalAttackCapacity", "1.5")]
+        [TestCase("unarmedPhysicalAttackCapacity", "1e2")]
+        [TestCase("unarmedPhysicalAttackCapacity", "2147483648")]
+        [TestCase("actionPointCostUnits", "0")]
+        [TestCase("actionPointCostUnits", "1.5")]
+        [TestCase("minimumNetCostUnits", "20001")]
+        [TestCase("physicalDamageMultiplier", "NaN")]
+        [TestCase("physicalDamageMultiplier", "Infinity")]
+        [TestCase("physicalDamageMultiplier", "0")]
+        [TestCase("defensePenetration", "0")]
+        [TestCase("controlChancePermille", "0")]
+        [TestCase("controlUsesMindContest", "0")]
+        [TestCase("isDomain", "0")]
+        [TestCase("statusId", "status_test")]
+        [TestCase("efficiencyNumerator", "1")]
+        [TestCase("spiritRecoveryMultiplier", "0")]
+        [TestCase("soulDamageMultiplier", "0")]
+        [TestCase("resourceCost", "1")]
+        [TestCase("ctPenalty", "1")]
+        [TestCase("reuseCooldownTicks", "")]
+        [TestCase("reuseCooldownTicks", "1")]
+        [TestCase("minCastRange", "0")]
+        [TestCase("sourceAffiliation", "body_human")]
+        public void BadBodyRowRejectsTheWholeFixture(string field, string value)
+        {
+            var lines = UnarmedFixtureLines(); var row = lines[1].Split(',');
+            row[Array.IndexOf(lines[0].Split(','), field)] = value; lines[1] = string.Join(",", row);
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(lines, UnarmedKeys, out var rejected, out _), Is.False);
+            Assert.That(rejected, Is.Empty);
+            Assert.Throws<InvalidDataException>(() => CombatRuleSet.ParseUnarmedRows(CombatContentImporter.TokenizeRuleTable(lines)));
+        }
+        [Test]
+        public void MissingDuplicateNonIncreasingAndOldHeaderBodyFixturesFailClosed()
+        {
+            var lines = UnarmedFixtureLines();
+            var variants = new List<string[]> { lines.Take(5).ToArray(), lines.Concat(new[] { lines[1] }).ToArray() };
+            foreach (string field in new[] { "actionPointCostUnits", "unarmedPhysicalAttackCapacity" })
+            {
+                var changed = (string[])lines.Clone(); var row = changed[1].Split(',');
+                row[Array.IndexOf(lines[0].Split(','), field)] = field == "actionPointCostUnits" ? "25000" : "120";
+                changed[1] = string.Join(",", row); variants.Add(changed);
+            }
+            variants.Add(lines.Select(line => string.Join(",", line.Split(',').Take(59))).ToArray());
+            foreach (var variant in variants)
+            {
+                Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(variant, UnarmedKeys, out var rejected, out _), Is.False);
+                Assert.That(rejected, Is.Empty);
+            }
+            var production = File.ReadAllLines(ProductionAbsolutePath());
+            string header = production.Single(line => line.StartsWith("attackProfileId,"));
+            var weapon = production.Single(line => line.StartsWith("basic_iron_sword,")).Split(',');
+            weapon[Array.IndexOf(header.Split(','), "unarmedPhysicalAttackCapacity")] = "0";
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(new[] { header, string.Join(",", weapon) }, ProductionLanguageKeys(), out _, out _), Is.False);
+        }
+
         // The historical unarmed fixture is a rejection input, never part of the current valid set.
-        private static string[] CurrentFixtureLines() => File.ReadAllLines(FixtureAbsolutePath())
+        private static string[] UpgradeHistoricalFixture(string[] lines) => lines.Select(line =>
+            string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") ? line :
+            line + (line.StartsWith("attackProfileId,", StringComparison.Ordinal)
+                ? ",attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity" : ",2,,,")).ToArray();
+        private static string[] CurrentFixtureLines() => UpgradeHistoricalFixture(File.ReadAllLines(FixtureAbsolutePath()))
             .Where(line => !line.StartsWith("basic_fixture_unarmed,", StringComparison.Ordinal)).ToArray();
 
         [Test]
         public void HistoricalUnarmedFixtureCannotEnterTheImporter()
         {
             Assert.IsFalse(CombatContentImporter.TryBuildAttackProfileProjection(
-                File.ReadAllLines(FixtureAbsolutePath()), LanguageFixtureKeys(), out var rejected, out var reason));
+                UpgradeHistoricalFixture(File.ReadAllLines(FixtureAbsolutePath())), LanguageFixtureKeys(), out var rejected, out var reason));
             Assert.IsEmpty(rejected);
             StringAssert.StartsWith("basic_attack_binding_kind_invalid", reason);
         }

@@ -13,6 +13,7 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "unarmed-config") return RunChecked(suite, RunUnarmedConfig);
         if (suite == "ap2") return RunChecked(suite,RunAp2);
         if (suite == "equipment-production") return RunChecked(suite, RunEquipmentProduction);
         if (suite == "action-economy-n-combat-ap-sim-01")
@@ -1794,6 +1795,106 @@ static class BattleSimSelfTests
     // Explicit old-rule test fixture; never installed by production Character.Create.
     static GameData.AttackProfile LegacyBasicFixture => new("fixture-legacy-basic", "物理", 1, "", 1, 1,
         Cost: new("fixture-legacy-basic", "fixture-old-rule", 50000, 25000, 0, 0));
+
+
+    static void RunUnarmedConfig()
+    {
+        string root = FindRepositoryRoot();
+        string data = Path.Combine(root, "Temp", "unarmed-config-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(data);
+        string attackPath = Path.Combine(data, "AttackProfiles.csv");
+        foreach (string name in new[] { "RealmCombatGrowth", "CombatEffectTierRules", "CombatActionEconomyRules" })
+            File.Copy(Path.Combine(root, "src/Assets/DataConfig/" + name + ".csv"), Path.Combine(data, name + ".csv"));
+        var production = File.ReadAllLines(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
+        string header = production.Single(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
+        string[] fields = header.Split(',');
+        var baseline = production.Single(line => line.StartsWith("basic_iron_sword,", StringComparison.Ordinal)).Split(',');
+        var fixture = new List<string> { header };
+        foreach (var entry in new[] {
+            ("body_human", "realm_fanren", "tier_lianqi", 20000, 30),
+            ("body_human", "realm_lianqi", "tier_lianqi", 25000, 120),
+            ("body_human", "realm_zhuji", "tier_zhuji", 75000, 500),
+            ("body_human", "realm_jindan", "tier_jindan", 250000, 2400),
+            ("body_shijiahou", "realm_lianqi", "tier_lianqi", 25000, 120) })
+        {
+            var row = (string[])baseline.Clone();
+            void Set(string key, string value) => row[Array.IndexOf(fields, key)] = value;
+            Set("attackProfileId", "basic_" + entry.Item1 + "_" + entry.Item2.Substring(6));
+            Set("displayNameKey", "attack_profile_" + entry.Item1); Set("basicBindingKind", "unarmed_body");
+            Set("effectBudgetMode", "fixed_unarmed"); Set("abilityTierId", entry.Item3);
+            Set("unarmedFamilyId", entry.Item1); Set("unarmedRealmId", entry.Item2);
+            Set("actionPointCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            Set("minimumNetCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            Set("unarmedPhysicalAttackCapacity", entry.Item5.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            Set("physicalDamageMultiplier", "1"); Set("reuseCooldownTicks", "0");
+            fixture.Add(string.Join(",", row));
+        }
+        void Write(IEnumerable<string> lines) => File.WriteAllText(attackPath, string.Join("\n", lines) + "\n", new System.Text.UTF8Encoding(false));
+        bool Rejects(Action action) { try { action(); return false; } catch (InvalidDataException) { return true; } }
+        try
+        {
+            Write(fixture);
+            var rules = GameData.LoadProductionRuleSet(attackPath);
+            var profiles = GameData.LoadAttackProfileProjection(attackPath);
+            AssertEqual(5, profiles.Count, "explicit fixture body rows");
+            foreach (var profile in profiles.Values)
+            {
+                var mapping = rules.GetUnarmed(profile.UnarmedFamilyId, profile.UnarmedRealmId);
+                AssertEqual(mapping.ProfileId, profile.Name, "profile identity");
+                AssertEqual(mapping.ActionPointCostUnits, profile.Cost.ActionPointCostUnits, "same-row fee");
+                AssertEqual(mapping.MinimumNetCostUnits, profile.Cost.MinimumNetCostUnits, "same-row net floor");
+                AssertEqual(mapping.PhysicalAttackCapacity, profile.UnarmedPhysicalAttackCapacity, "same-row capacity");
+                AssertEqual(rules.SourceDigest, profile.RuleSetSourceDigest, "four-source fixture digest");
+                AssertEqual(2, profile.AttackSchemaVersion, "attack schema version");
+                AssertEqual(1d, profile.Mult, "declared physical multiplier");
+            }
+            Console.WriteLine("unarmed-config fixture sourceDigest=" + rules.SourceDigest);
+            AssertEqual(true, Rejects(() => GameData.LoadProductionAttacks(attackPath)), "fixture cannot enable production body content");
+            AssertEqual(true, Rejects(() => rules.GetUnarmed("body_shijiahou", "realm_zhuji")), "beast cannot borrow human realm");
+            AssertEqual(true, Rejects(() => rules.GetUnarmed("body_human", "realm_yuanying")), "reserved realm grants no body row");
+            var variants = new List<string[]> { fixture.Take(5).ToArray(), fixture.Concat(new[] { fixture[1] }).ToArray(),
+                fixture.Select(line => string.Join(",", line.Split(',').Take(59))).ToArray() };
+            foreach (var change in new[] {
+                ("attackSchemaVersion", ""), ("attackSchemaVersion", "1"), ("unarmedFamilyId", ""), ("unarmedFamilyId", "body_unknown"),
+                ("unarmedRealmId", "realm_yuanying"), ("attackProfileId", "basic_unarmed"), ("abilityTierId", "tier_zhuji"),
+                ("basicBindingKind", "main_equipment"), ("effectBudgetMode", "legacy_unarmed"), ("displayNameKey", "attack_profile_body_shijiahou"),
+                ("unarmedPhysicalAttackCapacity", ""), ("unarmedPhysicalAttackCapacity", "0"), ("unarmedPhysicalAttackCapacity", "-1"),
+                ("unarmedPhysicalAttackCapacity", "1.5"), ("unarmedPhysicalAttackCapacity", "1e2"), ("unarmedPhysicalAttackCapacity", "2147483648"),
+                ("unarmedPhysicalAttackCapacity", "120"), ("actionPointCostUnits", "25000"), ("actionPointCostUnits", "0"), ("minimumNetCostUnits", "20001"),
+                ("physicalDamageMultiplier", "NaN"), ("physicalDamageMultiplier", "Infinity"), ("physicalDamageMultiplier", "0"),
+                ("defensePenetration", "0"), ("controlChancePermille", "0"), ("controlUsesMindContest", "0"), ("statusId", "status_test"),
+                ("isBloodline", "0"), ("efficiencyNumerator", "1"), ("spiritRecoveryMultiplier", "0"), ("soulDamageMultiplier", "0"),
+                ("resourceCost", "1"), ("ctPenalty", "1"), ("reuseCooldownTicks", ""), ("reuseCooldownTicks", "1"),
+                ("minCastRange", "0"), ("sourceAffiliation", "body_human") })
+            {
+                var changed = fixture.ToArray(); var row = changed[1].Split(','); row[Array.IndexOf(fields, change.Item1)] = change.Item2;
+                changed[1] = string.Join(",", row); variants.Add(changed);
+            }
+            foreach (var variant in variants)
+            {
+                Write(variant);
+                AssertEqual(true, Rejects(() => GameData.LoadProductionRuleSet(attackPath)), "shared body schema rejects malformed fixture");
+                AssertEqual(true, Rejects(() => GameData.LoadAttackProfileProjection(attackPath)), "projection rejects malformed fixture");
+            }
+            var adjustable = fixture.ToArray(); var first = adjustable[1].Split(',');
+            first[Array.IndexOf(fields, "actionPointCostUnits")] = first[Array.IndexOf(fields, "minimumNetCostUnits")] = "20001";
+            first[Array.IndexOf(fields, "unarmedPhysicalAttackCapacity")] = "60"; first[Array.IndexOf(fields, "physicalDamageMultiplier")] = "1.1";
+            adjustable[1] = string.Join(",", first); Write(adjustable);
+            var adjusted = GameData.LoadAttackProfileProjection(attackPath)["basic_body_human_fanren"];
+            AssertEqual(20001, adjusted.Cost.ActionPointCostUnits, "fee remains editable in its sole row");
+            AssertEqual(60, adjusted.UnarmedPhysicalAttackCapacity, "capacity is not a parser constant");
+            AssertEqual((double)1.1f, adjusted.Mult, "multiplier is not a parser constant");
+            AssertEqual(false, adjusted.RuleSetSourceDigest == rules.SourceDigest, "parameter change updates digest");
+            Write(production);
+            AssertEqual(4, GameData.LoadProductionAttacks(attackPath).Count, "unchanged four production IDs");
+            AssertEqual(0, GameData.LoadProductionRuleSet(attackPath).UnarmedRows.Count, "no production body mapping");
+            var wrong = production.Where(line => !line.StartsWith('#')).ToArray(); var weapon = wrong[3].Split(',');
+            weapon[Array.IndexOf(fields, "unarmedPhysicalAttackCapacity")] = "0"; wrong[3] = string.Join(",", weapon); Write(wrong);
+            AssertEqual(true, Rejects(() => GameData.LoadProductionAttacks(attackPath)), "even zero foreign body field is rejected");
+            Console.WriteLine("unarmed-config: five explicit rows, " + variants.Count + " invalid fixtures and unchanged production accepted.");
+        }
+        finally { Directory.Delete(data, true); }
+    }
 
     static void RunEquipmentProduction()
     {

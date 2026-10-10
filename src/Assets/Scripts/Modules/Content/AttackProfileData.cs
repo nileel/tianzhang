@@ -17,6 +17,7 @@ namespace TianZhang.Combat
         Unknown,
         MainEquipment,
         UnarmedFallback,
+        UnarmedBody,
     }
 
     public enum AttackEffectType
@@ -166,9 +167,38 @@ namespace TianZhang.Combat
         public int controlChancePermille;
         public bool controlUsesMindContest;
         public string ruleSetSourceDigest;
+        public int attackSchemaVersion;
+        public string unarmedFamilyId;
+        public string unarmedRealmId;
+        public int unarmedPhysicalAttackCapacity;
 
         public bool TryValidate(out string reason)
         {
+            if (attackSchemaVersion != 2)
+            { reason = "attack_schema_version_unknown"; return false; }
+            if (attackProfileId == "basic_unarmed" || basicBindingKind == BasicAttackBindingKind.UnarmedFallback || effectBudgetMode == "legacy_unarmed")
+            { reason = "legacy_unarmed_rejected"; return false; }
+            bool unarmed = effectBudgetMode == "fixed_unarmed";
+            if (unarmed)
+            {
+                bool human = unarmedFamilyId == "body_human" && unarmedRealmId is "realm_fanren" or "realm_lianqi" or "realm_zhuji" or "realm_jindan";
+                bool beast = unarmedFamilyId == "body_shijiahou" && unarmedRealmId == "realm_lianqi";
+                if (!(human || beast) || attackProfileId != "basic_" + unarmedFamilyId + "_" + unarmedRealmId.Substring(6) ||
+                    abilityTierId != (unarmedRealmId == "realm_fanren" ? "tier_lianqi" : "tier_" + unarmedRealmId.Substring(6)) ||
+                    unarmedPhysicalAttackCapacity <= 0)
+                { reason = "unarmed_identity_or_capacity_invalid"; return false; }
+                if (ruleSetVersion != "AP-GROWTH@0.1" || profileKind != AttackProfileKind.Basic ||
+                    basicBindingKind != BasicAttackBindingKind.UnarmedBody || cooldownClass != "basic_repeat" ||
+                    displayNameKey != "attack_profile_" + unarmedFamilyId ||
+                    effectType != AttackEffectType.Physical || damageElementId != "element_none" || physicalDamageMultiplier <= 0 ||
+                    soulDamageMultiplier != 0 || healAmount != 0 || buffMultiplier != 0 || defensePenetration != 0 ||
+                    targetingMode != AttackTargetingMode.Single || minCastRange != 1 || maxCastRange != 1 ||
+                    controlChancePermille != 0 || controlUsesMindContest)
+                { reason = "fixed_unarmed_contract_invalid"; return false; }
+            }
+            else if (basicBindingKind == BasicAttackBindingKind.UnarmedBody || !string.IsNullOrEmpty(unarmedFamilyId) ||
+                !string.IsNullOrEmpty(unarmedRealmId) || unarmedPhysicalAttackCapacity != 0)
+            { reason = "non_unarmed_fields_present"; return false; }
             if (string.IsNullOrWhiteSpace(attackProfileId) ||
                 !System.Text.RegularExpressions.Regex.IsMatch(attackProfileId, "^[a-z][a-z0-9_]*$"))
             {
@@ -206,19 +236,12 @@ namespace TianZhang.Combat
             { reason = "attack_profile_rule_identity_invalid"; return false; }
             if (!string.IsNullOrEmpty(ruleSetVersion))
             {
-                bool legacy = effectBudgetMode == "legacy_unarmed";
-                if (legacy)
-                {
-                    if (profileKind != AttackProfileKind.Basic || basicBindingKind != BasicAttackBindingKind.UnarmedFallback ||
-                        cooldownClass != "legacy_unarmed" || !string.IsNullOrEmpty(abilityTierId))
-                    { reason = "attack_profile_legacy_unarmed_invalid"; return false; }
-                }
-                else if (!(abilityTierId is "tier_lianqi" or "tier_zhuji" or "tier_jindan") ||
+                if (!(abilityTierId is "tier_lianqi" or "tier_zhuji" or "tier_jindan") ||
                     !(cooldownClass is "basic_repeat" or "burst" or "control" or "recovery"))
                 { reason = "attack_profile_rule_reference_invalid"; return false; }
                 bool damage = effectType is AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid;
                 bool status = effectType is AttackEffectType.Buff or AttackEffectType.Debuff;
-                if (!(legacy && damage || effectBudgetMode == "fixed_weapon" && damage && basicBindingKind == BasicAttackBindingKind.MainEquipment ||
+                if (!(unarmed || effectBudgetMode == "fixed_weapon" && damage && basicBindingKind == BasicAttackBindingKind.MainEquipment ||
                       effectBudgetMode == "damage_budget" && damage && profileKind != AttackProfileKind.Basic ||
                       effectBudgetMode == "prototype_restore" && effectType == AttackEffectType.RestoreSpirit ||
                       effectBudgetMode == "status_only" && status || effectBudgetMode == "fixed_output" && effectType == AttackEffectType.Heal))

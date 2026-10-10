@@ -13,7 +13,8 @@ namespace TianZhang.Combat
     {
         public const string Version = "AP-GROWTH@0.1";
         public const int SchemaVersion = 1;
-        public static readonly string[] AttackColumns = "attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,actionPointCostUnits,minimumNetCostUnits,ctPenalty,reuseCooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey,spiritRecoveryMultiplier,minimumSpiritRecovery,otherTargetResourceCost,otherTargetRecoveryMultiplier,ruleSetVersion,abilityTierId,cooldownClass,effectBudgetMode,efficiencyNumerator,efficiencyDenominator,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator,statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest".Split(',');
+        public const int AttackSchemaVersion = 2;
+        public static readonly string[] AttackColumns = "attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,actionPointCostUnits,minimumNetCostUnits,ctPenalty,reuseCooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey,spiritRecoveryMultiplier,minimumSpiritRecovery,otherTargetResourceCost,otherTargetRecoveryMultiplier,ruleSetVersion,abilityTierId,cooldownClass,effectBudgetMode,efficiencyNumerator,efficiencyDenominator,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator,statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest,attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity".Split(',');
         public static readonly string[] RealmColumns = "schemaVersion,ruleSetVersion,realmId,realmOrder,usageScope,actionPointMaximumUnits,baseMovementEfficiencyMilliUnits,legacyBaseMovementEfficiencyMilliUnits,movementNodeWeightNumerators,movementNodeWeightDenominator".Split(',');
         public static readonly string[] TierColumns = "schemaVersion,ruleSetVersion,abilityTierId,realmId,actionPointReferenceUnits,spiritBudgetReference,physicalAttackCapacity,soulAttackCapacity,physicalDefenseCapacity,soulDefenseCapacity,recoverySoulAttackCapacity,rawSpiritRecoveryCapacity,reactionCapacity,referenceTurnIntervalTicks".Split(',');
         public static readonly string[] EconomyColumns = "schemaVersion,ruleSetVersion,recordKind,definitionRef,abilityTierId,repeatFirstPermille,repeatSecondPermille,repeatThirdPermille,repeatCappedPermille,realmBelowTwoPermille,realmBelowOnePermille,realmEqualPermille,realmAboveOnePermille,realmAboveTwoPermille,relativeStatusLimitPermille,probabilityPointLimitPermille,strongControlLimitPermille,burstCooldownMultiplier,controlCooldownMultiplier,recoveryCooldownMultiplier,movementBudgetNumerator,movementBudgetDenominator,waterBaseChancePermille,waterMinimumChancePermille,waterMindDifferenceDivisor,waterDefensePerStackPermille,waterDefenseMaxStacks,waterReductionMigrationNumerator,waterReductionMigrationDenominator,actionPointFactorNumerator,actionPointFactorDenominator,spiritFactorNumerator,spiritFactorDenominator,actionPointCostOverrideUnits,minimumNetCostOverrideUnits,spiritCostOverride,ctPenalty,cooldownClass,reuseCooldownOverrideTicks,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator".Split(',');
@@ -21,14 +22,111 @@ namespace TianZhang.Combat
         public IReadOnlyList<RealmGrowth> Realms { get; }
         public IReadOnlyList<EffectTier> Tiers { get; }
         public IReadOnlyList<EconomyDefinition> Economy { get; }
+        public IReadOnlyList<UnarmedRow> UnarmedRows { get; }
         public EconomyDefinition Global => Economy.Single(row => row.RecordKind == "global");
         public string RuleSetVersion => Version;
         public string SourceDigest { get; }
 
-        private CombatRuleSet(RealmGrowth[] realms, EffectTier[] tiers, EconomyDefinition[] economy, string digest)
+        private CombatRuleSet(RealmGrowth[] realms, EffectTier[] tiers, EconomyDefinition[] economy, string digest,
+            UnarmedRow[] unarmedRows = null)
         {
             Realms = Array.AsReadOnly(realms); Tiers = Array.AsReadOnly(tiers);
             Economy = Array.AsReadOnly(economy); SourceDigest = digest;
+            UnarmedRows = Array.AsReadOnly(ValidateUnarmedRows(unarmedRows ?? Array.Empty<UnarmedRow>()));
+        }
+        public CombatRuleSet WithUnarmedRows(IEnumerable<UnarmedRow> rows) =>
+            new CombatRuleSet(Realms.ToArray(), Tiers.ToArray(), Economy.ToArray(), SourceDigest,
+                rows?.ToArray() ?? throw new InvalidDataException("unarmed_rows_missing"));
+        public UnarmedRow GetUnarmed(string familyId, string realmId) =>
+            UnarmedRows.SingleOrDefault(row => row.FamilyId == familyId && row.RealmId == realmId)
+            ?? throw new InvalidDataException("unarmed_mapping_missing");
+
+        // Same raw schema gate for Unity import, BattleSim and the data-chain checker.
+        // Parameters belong only to AttackProfiles; this is a read-only derived mapping.
+        public static UnarmedRow[] ParseUnarmedRows(IReadOnlyList<string[]> table)
+        {
+            if (table == null || table.Count < 2 || !table[0].SequenceEqual(AttackColumns, StringComparer.Ordinal))
+                throw new InvalidDataException("attack_profile_header_not_exact");
+            var result = new List<UnarmedRow>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var row in table.Skip(1))
+            {
+                if (row == null || row.Length != AttackColumns.Length)
+                    throw new InvalidDataException("attack_profile_short_or_extra_row");
+                string V(string field) => row[Array.IndexOf(AttackColumns, field)];
+                if (V("attackSchemaVersion") != "2") throw new InvalidDataException("attack_schema_version_unknown");
+                if (!ids.Add(V("attackProfileId"))) throw new InvalidDataException("attack_profile_id_duplicate");
+                if (V("attackProfileId") == "basic_unarmed" || V("effectBudgetMode") == "legacy_unarmed")
+                    throw new InvalidDataException("legacy_unarmed_rejected");
+                if (V("effectBudgetMode") != "fixed_unarmed")
+                {
+                    if (V("basicBindingKind") == "unarmed_body" || V("unarmedFamilyId") != "" ||
+                        V("unarmedRealmId") != "" || V("unarmedPhysicalAttackCapacity") != "")
+                        throw new InvalidDataException("non_unarmed_fields_present");
+                    continue;
+                }
+                var mapping = new UnarmedRow(V("unarmedFamilyId"), V("unarmedRealmId"), V("attackProfileId"),
+                    V("abilityTierId"), Integer(V("actionPointCostUnits"), true), Integer(V("minimumNetCostUnits"), true),
+                    Integer(V("unarmedPhysicalAttackCapacity"), true));
+                if (V("ruleSetVersion") != Version || V("profileKind") != "basic" || V("basicBindingKind") != "unarmed_body" ||
+                    V("displayNameKey") != "attack_profile_" + mapping.FamilyId ||
+                    V("effectType") != "physical" || V("damageElementId") != "element_none" || V("resourceKind") != "none" ||
+                    Integer(V("resourceCost")) != 0 || Integer(V("ctPenalty")) != 0 || Integer(V("reuseCooldownTicks")) != 0 ||
+                    Integer(V("minCastRange")) != 1 || Integer(V("maxCastRange")) != 1 ||
+                    V("targetingMode") != "single" || V("cooldownClass") != "basic_repeat" ||
+                    !float.TryParse(V("physicalDamageMultiplier"), NumberStyles.Float, CultureInfo.InvariantCulture, out float multiplier) ||
+                    float.IsNaN(multiplier) || float.IsInfinity(multiplier) || multiplier <= 0)
+                    throw new InvalidDataException("fixed_unarmed_contract_invalid");
+                string[] allowed = { "attackProfileId", "displayNameKey", "profileKind", "basicBindingKind", "effectType",
+                    "damageElementId", "physicalDamageMultiplier", "resourceKind", "resourceCost", "actionPointCostUnits",
+                    "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks", "minCastRange", "maxCastRange", "targetingMode",
+                    "ruleSetVersion", "abilityTierId", "cooldownClass", "effectBudgetMode", "attackSchemaVersion",
+                    "unarmedFamilyId", "unarmedRealmId", "unarmedPhysicalAttackCapacity" };
+                if (AttackColumns.Where(field => !allowed.Contains(field, StringComparer.Ordinal)).Any(field => V(field) != ""))
+                    throw new InvalidDataException("fixed_unarmed_foreign_fields_present");
+                result.Add(mapping);
+            }
+            return ValidateUnarmedRows(result.ToArray());
+        }
+        private static UnarmedRow[] ValidateUnarmedRows(UnarmedRow[] rows)
+        {
+            if (rows.Any(row => row == null) || rows.Select(row => row.ProfileId).Distinct(StringComparer.Ordinal).Count() != rows.Length ||
+                rows.Select(row => row.FamilyId + "|" + row.RealmId).Distinct(StringComparer.Ordinal).Count() != rows.Length)
+                throw new InvalidDataException("unarmed_mapping_duplicate_or_null");
+            if (rows.Length == 0) return rows; // CONFIG production has no body attacks yet.
+            if (rows.Length != 5) throw new InvalidDataException("unarmed_mapping_incomplete");
+            string[] realms = { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan" };
+            var human = realms.Select(realm => rows.SingleOrDefault(row => row.FamilyId == "body_human" && row.RealmId == realm)).ToArray();
+            if (human.Any(row => row == null) || !rows.Any(row => row.FamilyId == "body_shijiahou" && row.RealmId == "realm_lianqi"))
+                throw new InvalidDataException("unarmed_mapping_incomplete");
+            for (int index = 1; index < human.Length; index++)
+                if (human[index].ActionPointCostUnits <= human[index - 1].ActionPointCostUnits ||
+                    human[index].PhysicalAttackCapacity <= human[index - 1].PhysicalAttackCapacity)
+                    throw new InvalidDataException("unarmed_growth_not_increasing");
+            return rows;
+        }
+        public sealed class UnarmedRow
+        {
+            public string FamilyId { get; }
+            public string RealmId { get; }
+            public string ProfileId { get; }
+            public string AbilityTierId { get; }
+            public int ActionPointCostUnits { get; }
+            public int MinimumNetCostUnits { get; }
+            public int PhysicalAttackCapacity { get; }
+            public UnarmedRow(string familyId, string realmId, string profileId, string abilityTierId,
+                int actionPointCostUnits, int minimumNetCostUnits, int physicalAttackCapacity)
+            {
+                bool human = familyId == "body_human" && new[] { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan" }.Contains(realmId, StringComparer.Ordinal);
+                bool beast = familyId == "body_shijiahou" && realmId == "realm_lianqi";
+                if (!(human || beast) || profileId != "basic_" + familyId + "_" + realmId.Substring(6) ||
+                    abilityTierId != (realmId == "realm_fanren" ? "tier_lianqi" : "tier_" + realmId.Substring(6)))
+                    throw new InvalidDataException("unarmed_identity_invalid");
+                if (actionPointCostUnits <= 0 || minimumNetCostUnits <= 0 || minimumNetCostUnits > actionPointCostUnits || physicalAttackCapacity <= 0)
+                    throw new InvalidDataException("unarmed_cost_or_capacity_invalid");
+                FamilyId = familyId; RealmId = realmId; ProfileId = profileId; AbilityTierId = abilityTierId;
+                ActionPointCostUnits = actionPointCostUnits; MinimumNetCostUnits = minimumNetCostUnits; PhysicalAttackCapacity = physicalAttackCapacity;
+            }
         }
         public EffectTier GetTier(string id) => Tiers.SingleOrDefault(row => row.AbilityTierId == id)
             ?? throw new InvalidDataException("combat_rule_tier_reference_unknown");

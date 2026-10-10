@@ -196,6 +196,94 @@ namespace TianZhang.Tests.EditMode
             Assert.That(target.CurrentHealth, Is.EqualTo(99300));
         }
 
+
+        [TestCase("basic_body_human_fanren", 30, 7)]
+        [TestCase("basic_body_human_lianqi", 120, 65)]
+        [TestCase("basic_body_human_zhuji", 500, 417)]
+        [TestCase("basic_body_human_jindan", 2400, 2304)]
+        [TestCase("basic_body_shijiahou_lianqi", 120, 65)]
+        public void ExplicitBodyFixtureFlowsThroughAdapterCommandsAndItsOwnCapacity(string id, int capacity, int damage)
+        {
+            var lines = AttackProfileDataTests.UnarmedFixtureLines(); var rules = AttackProfileDataTests.UnarmedFixtureRules(lines);
+            var data = AttackProfileDataTests.UnarmedFixtureRuleData(rules); temporary.Add(data);
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(lines, AttackProfileDataTests.UnarmedKeys,
+                out var profiles, out string reason, rules), Is.True, reason); temporary.AddRange(profiles);
+            var profile = profiles.Single(row => row.attackProfileId == id);
+            var session = Ready(Actor(10000, 0, basic: id, actionPoints: 2000000), Target(100), profile, rules: data, additionalProfiles: profiles);
+            Assert.That(session.TryGetProfile(id, out var projected), Is.True);
+            Assert.That(projected.RuleMetadata.SourceDigest, Is.EqualTo(rules.SourceDigest));
+            Assert.That(projected.RuleMetadata.UnarmedPhysicalAttackCapacity, Is.EqualTo(capacity));
+            Assert.That(projected.RuleMetadata.UnarmedFamilyId, Is.EqualTo(profile.unarmedFamilyId));
+            Assert.That(projected.RuleMetadata.UnarmedRealmId, Is.EqualTo(profile.unarmedRealmId));
+            foreach (int multiplier in new[] { 1000, 1000, 1250, 1500 })
+            {
+                var command = new CombatCommand(CombatCommandKind.BasicAttack, "actor", "target", id, Rolls);
+                var preview = service.Preview(session, command);
+                Assert.That(preview.IsLegal, Is.True, preview.Validation.RejectionReason);
+                var result = service.Execute(session, command, preview);
+                Assert.That(result.ActionPointSpentUnits, Is.EqualTo(preview.ActionPointCostUnits));
+                Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+                Assert.That(result.ActionPointSpentUnits, Is.EqualTo(CombatRuleSet.CeilRatio(profile.actionPointCostUnits, multiplier, 1000)));
+                Assert.That(result.Damage.Single().FinalDamage, Is.EqualTo(damage));
+            }
+            Assert.That(data.TryValidateIdentity(out reason), Is.True, reason);
+        }
+
+        [Test]
+        public void BodyParametersStayDataDrivenAndFractionalRepeatFeesCeilOnce()
+        {
+            var lines = AttackProfileDataTests.UnarmedFixtureLines(); var row = lines[1].Split(','); var fields = lines[0].Split(',');
+            row[Array.IndexOf(fields, "actionPointCostUnits")] = row[Array.IndexOf(fields, "minimumNetCostUnits")] = "20001";
+            row[Array.IndexOf(fields, "unarmedPhysicalAttackCapacity")] = "60";
+            row[Array.IndexOf(fields, "physicalDamageMultiplier")] = "1.1"; lines[1] = string.Join(",", row);
+            var rules = AttackProfileDataTests.UnarmedFixtureRules(lines);
+            var data = AttackProfileDataTests.UnarmedFixtureRuleData(rules); temporary.Add(data);
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(lines, AttackProfileDataTests.UnarmedKeys,
+                out var profiles, out string reason, rules), Is.True, reason); temporary.AddRange(profiles);
+            var profile = profiles.Single(value => value.unarmedRealmId == "realm_fanren");
+            var session = Ready(Actor(10000, 0, basic: profile.attackProfileId), Target(100), profile, rules: data, additionalProfiles: profiles);
+            foreach (int cost in new[] { 20001, 20001, 25002, 30002 })
+            {
+                var command = new CombatCommand(CombatCommandKind.BasicAttack, "actor", "target", profile.attackProfileId, Rolls);
+                var preview = service.Preview(session, command);
+                Assert.That(preview.ActionPointCostUnits, Is.EqualTo(cost));
+                var result = service.Execute(session, command, preview);
+                Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+                Assert.That(result.ActionPointSpentUnits, Is.EqualTo(cost));
+                Assert.That(result.Damage.Single().FinalDamage, Is.EqualTo(25));
+            }
+        }
+
+        [Test]
+        public void BodyFixtureKeepsActualDefenseAndRejectsMissingProfilesMappingsAndDigest()
+        {
+            var lines = AttackProfileDataTests.UnarmedFixtureLines(); var rules = AttackProfileDataTests.UnarmedFixtureRules(lines);
+            var data = AttackProfileDataTests.UnarmedFixtureRuleData(rules); temporary.Add(data);
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(lines, AttackProfileDataTests.UnarmedKeys,
+                out var profiles, out string reason, rules), Is.True, reason); temporary.AddRange(profiles);
+            var profile = profiles.Single(row => row.unarmedRealmId == "realm_fanren");
+            var session = Ready(Actor(10000, 0, basic: profile.attackProfileId), Target(1000), profile, rules: data, additionalProfiles: profiles);
+            Assert.That(Attack(session, profile).Damage.Single().FinalDamage, Is.EqualTo(1));
+            var actor = Actor(10000, 0, basic: profile.attackProfileId); var target = Target(100);
+            var spawned = new AdventureSpawnSet(actor, target, null, actor.BasicAttackProfileId, target.BasicAttackProfileId, Array.Empty<string>());
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            var adapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), data);
+            Assert.That(adapter.TryCreateSession(spawned, profiles.Take(4).ToArray(), environment, out _, out reason), Is.False);
+            Assert.That(reason, Is.EqualTo("attack_profile_unarmed_mapping_incomplete"));
+            profile.ruleSetSourceDigest = new string('b', 64);
+            Assert.That(adapter.TryCreateSession(spawned, profiles, environment, out _, out reason), Is.False);
+            Assert.That(reason, Is.EqualTo("attack_profile_rule_reference_invalid"));
+            profile.ruleSetSourceDigest = rules.SourceDigest;
+            profile.unarmedPhysicalAttackCapacity = 31;
+            Assert.That(adapter.TryCreateSession(spawned, profiles, environment, out _, out reason), Is.False);
+            Assert.That(reason, Is.EqualTo("attack_profile_unarmed_mapping_invalid"));
+            profile.unarmedPhysicalAttackCapacity = 30;
+            var productionAdapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
+            profile.ruleSetSourceDigest = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset").sourceDigest;
+            Assert.That(productionAdapter.TryCreateSession(spawned, profiles, environment, out _, out reason), Is.False);
+            Assert.That(reason, Is.EqualTo("attack_profile_unarmed_mapping_invalid"));
+        }
+
         private T Copy<T>(T value) where T : Object
         {
             T copy = Object.Instantiate(value);
@@ -219,10 +307,10 @@ namespace TianZhang.Tests.EditMode
             return profiles.Single();
         }
 
-        private static CombatantSnapshot Actor(int physical, int soul, int rawSpirit = 25, float realm = 1, string basic = "basic_iron_sword")
+        private static CombatantSnapshot Actor(int physical, int soul, int rawSpirit = 25, float realm = 1, string basic = "basic_iron_sword", int actionPoints = 1000000)
         {
             var actor = new CombatantSnapshot("actor", CombatTeam.Player, new HexCoord(0, 0), 100, 100000, 100000,
-                physical, soul, 100, 100, 1000000, 4000, realmMultiplier: realm,
+                physical, soul, 100, 100, actionPoints, 4000, realmMultiplier: realm,
                 basicAttackProfileId: basic, equippedArtProfileIds: new[] { Guanshiji, Julingshu },
                 availableArtProfileIds: new[] { Guanshiji, Julingshu }, rawSpirit: rawSpirit,
                 realmStage: "金丹", visibleRootElement: "土", visibleRootGrade: "下品");
@@ -235,14 +323,14 @@ namespace TianZhang.Tests.EditMode
             100000, 4000, realmMultiplier: realm) { Facing = 3 };
 
         private CombatSession Ready(CombatantSnapshot actor, CombatantSnapshot target, AttackProfileData profile,
-            bool node = false, CombatRuleSetData rules = null)
+            bool node = false, CombatRuleSetData rules = null, AttackProfileData[] additionalProfiles = null)
         {
             var environment = Copy(AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset"));
             environment.spiritRecoveryEnvironment = node ? SpiritRecoveryEnvironment.SpiritVeinNode : SpiritRecoveryEnvironment.Ordinary;
             var adapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), rules ??
                 AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
-            var profiles = new List<AttackProfileData> { profile };
+            var profiles = additionalProfiles == null ? new List<AttackProfileData> { profile } : new List<AttackProfileData>(additionalProfiles);
             foreach (string basicId in new[] { actor.BasicAttackProfileId,target.BasicAttackProfileId }.Where(id => !string.IsNullOrEmpty(id)).Distinct())
                 if (profiles.All(p => p.attackProfileId != basicId)) profiles.Add(ProductionProfile(basicId));
             Assert.That(adapter.TryCreateSession(new AdventureSpawnSet(actor, target, null, actor.BasicAttackProfileId,

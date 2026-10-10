@@ -560,13 +560,14 @@ function Test-CombatRuleSetProjection {
     }
     $rules = [TianZhang.Combat.CombatRuleSet]::Parse((Get-CombatRuleTokenTable $tables.RealmCombatGrowth),
       (Get-CombatRuleTokenTable $tables.CombatEffectTierRules),(Get-CombatRuleTokenTable $tables.CombatActionEconomyRules),
-      [TianZhang.Combat.CombatRuleSet]::ComputeSourceDigest($sources))
+      [TianZhang.Combat.CombatRuleSet]::ComputeSourceDigest($sources)).WithUnarmedRows([TianZhang.Combat.CombatRuleSet]::ParseUnarmedRows((Get-CombatRuleTokenTable $tables.AttackProfiles)))
   } catch { Add-Finding 'COMBAT_RULE_SOURCE_INVALID' 'CombatRuleSet' $_.Exception.Message; return $null }
   $path = 'src/Assets/Data/CombatRuleSet.asset'
   Test-FormalProjectionAssetFields 'CombatRuleSet' $path @{schemaVersion=1;ruleSetVersion=$rules.RuleSetVersion;sourceDigest=$rules.SourceDigest}
   $full = Join-Path $root $path
   if (Test-Path -LiteralPath $full) {
     $text = [IO.File]::ReadAllText($full)
+    if ($rules.UnarmedRows.Count -ne 0 -or $text -notmatch '(?m)^  unarmedRows: \[\]\r?$') { Add-Finding 'COMBAT_RULE_UNARMED_PROJECTION_INVALID' 'CombatRuleSet' 'CONFIG production requires an explicit empty derived body mapping.' }
     foreach ($entry in @(@{Name='realms';Rows=$rules.Realms;Start='realmId'},@{Name='tiers';Rows=$rules.Tiers;Start='abilityTierId'},@{Name='economy';Rows=$rules.Economy;Start='recordKind'})) {
       $blocks = @([regex]::Matches($text,"(?ms)^  - $($entry.Start): .*?(?=^  - $($entry.Start):|^  [a-zA-Z]+:|\z)"))
       if ($blocks.Count -ne $entry.Rows.Count) { Add-Finding 'COMBAT_RULE_ASSET_ROWS_INVALID' $entry.Name 'Generated row count must equal validated source.'; continue }
@@ -608,7 +609,7 @@ function Test-FormalAttackProfileProjection {
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
   if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the four canonical assets are required.' }
-  $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy')
+  $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
   $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2}}
   foreach ($row in $rows) {
     $id = [string]$row.attackProfileId; $fields = @{}
@@ -981,7 +982,7 @@ $tables = [ordered]@{
   RealmCombatGrowth = Get-CsvTable 'src/Assets/DataConfig/RealmCombatGrowth.csv' $schemas.RealmCombatGrowth @('movementNodeWeightNumerators')
   CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
   CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })
-  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest')
+  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest','unarmedFamilyId','unarmedRealmId','unarmedPhysicalAttackCapacity')
   EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites

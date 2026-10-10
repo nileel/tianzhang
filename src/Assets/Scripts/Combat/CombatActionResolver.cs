@@ -245,7 +245,8 @@ namespace TianZhang.Combat
             int effectiveDefense = (int)Math.Round(Math.Max(0, target.PhysicalDefense - target.ConsumeKuxingDefenseDebt()) * target.DefenseMultiplier(physical: true));
             effectiveDefense = (int)Math.Round(effectiveDefense * (1f - Clamp(profile.SoulDefensePenetration, 0f, 100f) / 100f));
             int attack = profile.RuleMetadata == null ? actor.PhysicalAttack :
-                Math.Min(actor.PhysicalAttack, profile.RuleMetadata.Tier.PhysicalAttackCapacity);
+                Math.Min(actor.PhysicalAttack, profile.RuleMetadata.EffectBudgetMode == "fixed_unarmed" ?
+                    profile.RuleMetadata.UnarmedPhysicalAttackCapacity : profile.RuleMetadata.Tier.PhysicalAttackCapacity);
             float damage = CalculateLineDamage(attack, effectiveDefense, 0f, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
             damage *= FacingDamageModifier(target, actor);

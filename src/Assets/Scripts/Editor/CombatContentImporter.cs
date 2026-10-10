@@ -196,10 +196,11 @@ namespace TianZhang.Editor
             string[] lines,
             IReadOnlyCollection<string> languageKeys,
             out AttackProfileData[] profiles,
-            out string reason)
+            out string reason,
+            CombatRuleSet fixtureRules = null)
         {
             profiles = Array.Empty<AttackProfileData>();
-            if (!TryParseAttackProfiles(lines, languageKeys, "AttackProfiles.fixture.csv", out var rows, out reason))
+            if (!TryParseAttackProfiles(lines, languageKeys, "AttackProfiles.fixture.csv", out var rows, out reason, fixtureRules))
                 return false;
 
             var created = new List<AttackProfileData>();
@@ -334,6 +335,10 @@ namespace TianZhang.Editor
             public int ControlChancePermille;
             public bool ControlUsesMindContest;
             public string RuleSetSourceDigest;
+            public int AttackSchemaVersion;
+            public string UnarmedFamilyId;
+            public string UnarmedRealmId;
+            public int UnarmedPhysicalAttackCapacity;
 
             public void CopyTo(AttackProfileData asset)
             {
@@ -356,6 +361,10 @@ namespace TianZhang.Editor
                 asset.controlChancePermille = ControlChancePermille;
                 asset.controlUsesMindContest = ControlUsesMindContest;
                 asset.ruleSetSourceDigest = RuleSetSourceDigest;
+                asset.attackSchemaVersion = AttackSchemaVersion;
+                asset.unarmedFamilyId = UnarmedFamilyId;
+                asset.unarmedRealmId = UnarmedRealmId;
+                asset.unarmedPhysicalAttackCapacity = UnarmedPhysicalAttackCapacity;
                 asset.attackProfileId = AttackProfileId;
                 asset.displayNameKey = DisplayNameKey;
                 asset.profileKind = ProfileKind;
@@ -405,7 +414,8 @@ namespace TianZhang.Editor
             IReadOnlyCollection<string> languageKeys,
             string sourceName,
             out List<AttackProfileImportRow> rows,
-            out string reason)
+            out string reason,
+            CombatRuleSet fixtureRules = null)
         {
             rows = new List<AttackProfileImportRow>();
             reason = string.Empty;
@@ -430,7 +440,8 @@ namespace TianZhang.Editor
                 return false;
             }
 
-            if (!TryReadCombatRuleSet(out var ruleSet, out reason)) return false;
+            var ruleSet = fixtureRules;
+            if (ruleSet == null && !TryReadCombatRuleSet(out ruleSet, out reason)) return false;
             var ids = new HashSet<string>(StringComparer.Ordinal);
             for (int lineNumber = headerLineIndex + 1; lineNumber < lines.Length; lineNumber++)
             {
@@ -465,7 +476,9 @@ namespace TianZhang.Editor
                 reason = "attack_profile_rows_missing";
                 return false;
             }
-
+            try { CombatRuleSet.ParseUnarmedRows(TokenizeRuleTable(lines)); }
+            catch (InvalidDataException exception)
+            { reason = exception.Message; rows.Clear(); return false; }
             return true;
         }
 
@@ -548,6 +561,16 @@ namespace TianZhang.Editor
             if (row.RuleSetVersion != CombatRuleSet.Version) throw new InvalidDataException("attack_profile_rule_version_unknown");
             row.AbilityTierId = Value("abilityTierId"); row.CooldownClass = Required("cooldownClass");
             row.EffectBudgetMode = Required("effectBudgetMode");
+            row.AttackSchemaVersion = ParsePositiveInt(Required("attackSchemaVersion"), "attackSchemaVersion");
+            if (row.EffectBudgetMode == "fixed_unarmed")
+            {
+                row.UnarmedFamilyId = Required("unarmedFamilyId"); row.UnarmedRealmId = Required("unarmedRealmId");
+                row.UnarmedPhysicalAttackCapacity = ParsePositiveInt(Required("unarmedPhysicalAttackCapacity"), "unarmedPhysicalAttackCapacity");
+            }
+            else
+            {
+                RequireEmpty("unarmedFamilyId"); RequireEmpty("unarmedRealmId"); RequireEmpty("unarmedPhysicalAttackCapacity");
+            }
             ruleSet.GetTier(Required("abilityTierId"));
             row.ReuseCooldownTicks = ruleSet.ResolveCooldown(row.AbilityTierId, row.CooldownClass,
                 Value("reuseCooldownTicks") == "" ? (int?)null : ParseNonNegativeInt(Value("reuseCooldownTicks"), "reuseCooldownTicks"));
@@ -783,6 +806,8 @@ namespace TianZhang.Editor
                 rules = CombatRuleSet.Parse(TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[3].Substring(4))),
                     TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[2].Substring(4))),
                     TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[1].Substring(4))), CombatRuleSet.ComputeSourceDigest(sources));
+                rules = rules.WithUnarmedRows(CombatRuleSet.ParseUnarmedRows(
+                    TokenizeRuleTable(File.ReadAllLines(RuleSourcePaths[0].Substring(4)))));
                 reason = null; return true;
             }
             catch (Exception exception) when (exception is InvalidDataException || exception is IOException || exception is OverflowException)
@@ -810,6 +835,12 @@ namespace TianZhang.Editor
             }
             asset.schemaVersion = CombatRuleSet.SchemaVersion; asset.ruleSetVersion = rules.RuleSetVersion;
             asset.sourceDigest = rules.SourceDigest;
+            asset.unarmedRows = rules.UnarmedRows.Select(row => new CombatRuleSetData.UnarmedRow
+            {
+                familyId = row.FamilyId, realmId = row.RealmId, profileId = row.ProfileId, abilityTierId = row.AbilityTierId,
+                actionPointCostUnits = row.ActionPointCostUnits, minimumNetCostUnits = row.MinimumNetCostUnits,
+                physicalAttackCapacity = row.PhysicalAttackCapacity,
+            }).ToArray();
             asset.realms = rules.Realms.Select(row => new CombatRuleSetData.RealmRow
             {
                 realmId = row.RealmId,
@@ -906,6 +937,7 @@ namespace TianZhang.Editor
             bool damage = row.EffectType is AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid;
             bool status = row.EffectType is AttackEffectType.Buff or AttackEffectType.Debuff;
             if (!(row.EffectBudgetMode == "fixed_weapon" && row.BasicBindingKind == BasicAttackBindingKind.MainEquipment && damage ||
+                  row.EffectBudgetMode == "fixed_unarmed" && row.BasicBindingKind == BasicAttackBindingKind.UnarmedBody && row.EffectType == AttackEffectType.Physical ||
                   row.EffectBudgetMode == "damage_budget" && row.ProfileKind != AttackProfileKind.Basic && damage ||
                   row.EffectBudgetMode == "prototype_restore" && row.EffectType == AttackEffectType.RestoreSpirit ||
                   row.EffectBudgetMode == "status_only" && status ||
@@ -970,6 +1002,7 @@ namespace TianZhang.Editor
         private static BasicAttackBindingKind ParseBasicAttackBindingKind(string value) => value switch
         {
             "main_equipment" => BasicAttackBindingKind.MainEquipment,
+            "unarmed_body" => BasicAttackBindingKind.UnarmedBody,
             _ => throw new InvalidDataException("basic_attack_binding_kind_invalid"),
         };
 
