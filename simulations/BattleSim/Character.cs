@@ -46,8 +46,12 @@ class Character
     public int ActionPointMaximumUnits => Primary["AP上限单位"];
     public int MovementEfficiencyMilliUnits => Primary["移动效率千分单位"];
     public GameData.MovementInput MovementInput => Primary.ContainsKey("行动经济模板输入") ? GameData.ProjectMovement(Realm, SubIndex, GongFaName) : null;
-    public GameData.ActionEconomyCost ArtCost => ArtName.Length == 0 ? null : GameData.AbilityCostByName(ArtName);
-    public GameData.ActionEconomyCost DivineCost => DivineName.Length == 0 ? null : GameData.AbilityCostByName(DivineName);
+    public GameData.ActionEconomyCost ArtCost => ArtName.Length == 0 ? null : GameData.AbilityCost(GameData.DefinitionForStyle(Style,false),AbilityTierId);
+    public GameData.ActionEconomyCost DivineCost => DivineName.Length == 0 ? null : GameData.AbilityCost(GameData.DefinitionForStyle(Style,true),AbilityTierId);
+    // The entry explicitly chooses same-tier or locked-Qi comparison; character realm never rewrites an instance tier.
+    public string FixedTestAbilityTierId = "";
+    public string AbilityTierId => FixedTestAbilityTierId.Length == 0 ?
+        throw new InvalidOperationException("simulation_fixed_ability_tier_missing") : FixedTestAbilityTierId;
     // Explicit production loadout; generic Config names never impersonate these profile IDs.
     public IReadOnlyList<string> ProductionArtIds { get; private set; } = Array.Empty<string>();
     public int HealthRecoveryPerOwnTurn { get; set; }
@@ -281,14 +285,19 @@ class Character
     // v4.1: 根据风格和境界分配术法与神通
     public void AssignArts()
     {
-        var artCfg = Style switch { "water_physical" => GameData.WaterArt, "physical" => GameData.PhysicalArt, "taiyi_fuxiu" => GameData.TaiyiFuxiuArt, "taiyi" => GameData.TaiyiArt, "taixu" => GameData.TaixuArt, "taixu_xuangan" => GameData.TaixuArt, "yuqing" => GameData.YuqingArt, "yuqing_kuxing" => GameData.YuqingArt, "yuqing_leijie" => GameData.YuqingLeijieArt, _ => GameData.MagicArt };
-        ArtName = artCfg.Name; ArtType = artCfg.Type; ArtElement = artCfg.Element; ArtMult = artCfg.Mult; ArtMPCost = artCfg.MPCost; ArtCooldown = artCfg.Cooldown; ArtMinRange = artCfg.MinRange; ArtMaxRange = artCfg.MaxRange;
+        if (Realm == "凡人") { ArtName = ""; DivineName = ""; return; }
+        if (FixedTestAbilityTierId.Length == 0) FixedTestAbilityTierId = GameData.TierForRealm(Realm);
+        var art = GameData.GenericProfile(GameData.DefinitionForStyle(Style,false),AbilityTierId);
+        ArtName = art.Name; ArtType = art.Type; ArtElement = art.Element; ArtMult = art.Mult;
+        ArtMPCost = art.SpiritCost; ArtCooldown = art.Cost.ReuseCooldownTicks; ArtMinRange = art.MinRange; ArtMaxRange = art.MaxRange;
         ArtCost.Validate();
         DivineName = "";
         if (Realm == "金丹" && FormedState == "成丹" && !string.IsNullOrEmpty(DanJiType))
         {
-            var divCfg = Style switch { "water_physical" => GameData.WaterDivine, "physical" => GameData.PhysicalDivine, "taiyi_fuxiu" => GameData.TaiyiFuxiuDivine, "taiyi" => GameData.TaiyiDivine, "taixu" => GameData.TaixuDivine, "taixu_xuangan" => GameData.TaixuDivine, "yuqing" => GameData.YuqingDivine, "yuqing_kuxing" => GameData.YuqingDivine, "yuqing_leijie" => GameData.YuqingLeijieDivine, _ => GameData.MagicDivine };
-            DivineName = divCfg.Name; DivineType = divCfg.Type; DivineElement = divCfg.Element; DivineMult = divCfg.Mult; DivineDefPen = divCfg.DefPen; DivineCooldown = divCfg.Cooldown; DivineMinRange = divCfg.MinRange; DivineMaxRange = divCfg.MaxRange;
+            var divine = GameData.GenericProfile(GameData.DefinitionForStyle(Style,true),AbilityTierId);
+            DivineName = divine.Name; DivineType = divine.Type; DivineElement = divine.Element; DivineMult = divine.Mult;
+            DivineCooldown = divine.Cost.ReuseCooldownTicks; DivineMinRange = divine.MinRange; DivineMaxRange = divine.MaxRange;
+            DivineDefPen = Style switch { "physical" or "magic" or "water_physical" => 10, "taiyi_fuxiu" => 20, _ => 15 };
             DivineCost.Validate();
         }
     }

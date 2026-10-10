@@ -1,0 +1,72 @@
+# N-COMBAT-AP2-SIM-01 验证记录
+
+历史checkpoint（RunId=0794aaa0-8b9b-4cad-ad9f-ef1332e91260）：当时发现双入口特殊原型与允许路径不闭合，未完成实现。负责人已通过DEC-20261010-CDDB1DE646A49B选择A；以下旧记录保留为决策证据，本次继续执行结果见文末。
+
+## 执行与模型协作
+
+- TaskId=N-COMBAT-AP2-SIM-01；RunId=0794aaa0-8b9b-4cad-ad9f-ef1332e91260；初始HEAD=660e403082fb050fbe1d36e3be08ea5fd8346eea。
+- 当前linked worktree及candidate分支与共享入口证明一致；初始git status为空。未领取其他任务、调用runtime、管理自动化、集成或操作其他worktree。
+- 主模型按共享入口启动证明为gpt-6.1-sol，不启动第二责任会话。当前为双入口有界迁移，按卡中模型协作提示调用同模型继承上下文的原生只读辅助/root/readonly_kernel，核对Stage共享内核接口、固定档、随机与拒绝边界；工具返回会话标识，但未独立核实辅助实际模型/推理强度，不把请求或继承声明当证明。辅助没有写入、修改任务投影或提交。
+- 入口预检已绑定本run/任务卡/索引digest：matched=EXP-BS-001，notice和gatePointers为空；已消费mustRead正文。修改BattleSim须先Release build成功再run，不能引用主工作区obj/bin。本轮停在范围核查，不执行源码验收命令。
+
+## 已核实的事实与根因
+
+- 已读当前完整任务卡、配置合同第三/六/八节、批准设计相关规则和第9节，并核对GROWTH、REPEAT、STATUS、WEAPON归档的正式接口及验证记录。前置完成不等于本卡双入口验收已经成立。
+- 全模拟真实链为Character.FinalizeStats/AssignArts→Combat.CreateAbilities→RunBattle→SettleAttack。GameData.approvedAbilityCosts仍解析旧模板8.1/8.3成本，approvedGrowth仍读取旧基础v/M参数；RunBattle选招、预留移动预算及支付都直接使用基础AP，未接重复报价。SettleAttack存在Kuxing生命费、下一物防代价、金丹回复，以及WaterDivine印记/川流的旧消费者。
+- 共享入口真实链为StageCombatReport.ActionEconomyBalanceReport.Profiles/Snapshot/NativeBattle→CombatSession→CombatCommandService→CombatActionResolver.PrepareValidated/ResolveAttack→CombatantSnapshot.CommitResolvedState。Stage的NativeCase明确是旧规则灵敏度夹具，Session尚未传四表规则；不能将其旧报告当作AP2证据。
+- 共享源码已支持四表CombatRuleSet、重复报价/准备后单一发布、固定档攻击与聚灵承载、百分比属性状态、独立第五控制样本、神识对抗与境界系数；这些接口可直接消费，毋须重做前置实现。
+- 但CombatAttackRuleMetadata没有Kuxing生命费/条件回复/忽略格挡/下一物防代价载荷；CombatantSnapshot状态种类只有Stun、Immobilize、SealSpirit、DamageOverTime、Attribute、Xuantong，没有具名水印记与川流消费状态。ResolveAttack只实现普通伤害、固定恢复、百分比状态与Stun，没有这些特殊原型的准备、支付或消费分支。
+- 主责完整检查ResolveAttack和PrepareValidated，并复核对src/Assets/Scripts/Combat的具名符号搜索；辅助独立返回相同缺口。不能将Kuxing或WaterDivine仅作为普通伤害profile投影后宣称完整效果迁移，也不能在Stage绕开共享准备/发布事务附加效果。
+- 配置合同第八节SIM验收写“两入口分别含双方/2v2/根动作一次支付计数、Kuxing/水状态/本人被动频率、显式固定低档”；当前允许路径仅BattleSim及本任务管理文件，不含上述共享内核所有者。需负责人确定是补齐共享特殊原型，还是明确将这些特殊原型仅在全模拟验收。
+- 面积攻击当前只存在全模拟AreaTargeting；共享Profile/Command/Resolver为单目标。本次A/B合同都明确全模拟验证面积根动作一次付费计数、Stage验证单目标1v1/2v2根动作，不扩Unity地图/面积执行器。
+
+## 停止与工作树处理
+
+- 命中本卡“新所有者/路径/字段或实现路线越界时暂停写入”停止条件。没有自行扩src路径、放宽验收、新增通用机制或改写已claim任务摘要。
+- 核对期间开始的GameData四表投影草稿未经构建；发现共享特殊原型缺口后已精确恢复该文件到初始HEAD。它不进入checkpoint，也不作为已实现或已验证证据。
+- checkpoint只新增本验证记录；当前任务卡、队列、backlog及所有下游引用不变。共享入口收到选择后才可应用完整范围合同、重新预检和置ready。
+- A建议：在本卡补齐共享内核有限Kuxing/WaterDivine特殊原型及对应测试，保留双入口完整验收；增加四个共享源码与三个现有EditMode测试路径，不新增生产内容或CSV字段。
+- B替代：保持现有路径；共享入口只验收四个真实生产ID、普通泛化伤害/水控/恢复及已有状态链，明确拒绝Kuxing/WaterDivine泛化输入；全模拟仍完成全部51三元组及全部特殊原型。双入口特殊效果一致性不在此路线完成，不据此关闭父项或该方向后续验收。
+- C：保持阻塞，等待重备合同，不实施。A/B完整taskBody和expectedPaths随终态返回，不提前应用。
+
+## 验证与限制
+
+- 本轮仅源码/合同核查及checkpoint文本验证；没有BattleSim Release构建/运行、Unity编译/测试、AP2角色平衡、生产场景体验或新算法通过结论。
+- A/B/C完整范围已用check-task-cards.ps1 -TaskId N-COMBAT-AP2-SIM-01 -Postcondition CheckpointScope -DecisionContextPath Temp/N-COMBAT-AP2-SIM-01-decision-context.json -OutputJson在内存中校验，返回status=ok；没有应用选项或改变生命周期。
+- 审核文本、whitespace及暂存diff检查按本验证记录定向执行，具体结果以本轮工具返回和终态verified为准。checkpoint通过现有automation-finalize-commit.ps1路径限定提交；正常完成的九字段业务完成合同不用于将本次等待决定伪装成实现完成。
+- 无已完成实施和实跑根因证据，不创建经验候选、不查重、不改风险索引。
+
+
+## A方案继续执行与完成核验（2026-10-10）
+
+- TaskId=N-COMBAT-AP2-SIM-01；RunId=f082031f-a613-45c2-85e5-fd555582633e；BaseCommit=1bfc94c6a5b1f5603d951fd554958585e214fbad。初始只有共享入口重放并暂存的本验证记录；不恢复旧会话。A回复仅消费DEC-20261010-CDDB1DE646A49B，reply证据hash为5eb314e23babe8c98e5ff19cd6e692d39a37e18354c7a03f343964d68efe696f。
+- 主模型使用入口启动证明gpt-6.1-sol，保持executionModel。复杂度评估：双入口有界迁移，但规则、实例与事务强耦合，由同一主责统一实施和复核；本轮不调用子智能体或第二责任会话。没有领取其他任务、操作runtime、automation、集成锁或其他worktree。
+- 已消费EXP-BS-001开工前全文。当前worktree只restore一次BattleSim环境，构建必须成功后才run。重新只读预检status=ok，taskCardDigest=98adc8a1d3a92b8f7a718c583e5f0a0119ee0c4c4b67d88e413757c394488137，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched=[EXP-BS-001]，notice/gates/gatePointers为空，吻合schema2投影。允许路径和技术边界没有扩充。
+- 必查已落实：配置合同第三至六、八、九节、批准设计相关规则与第9节，GROWTH/REPEAT/STATUS/WEAPON四张直接前置归档，以及CONFIG/EQUIP的只读配置与真实装备授权分界。读取了实际GameData、Character、Combat、Stage和共享Session→CommandService→Resolver→Snapshot完整目标单元及对应测试。Unity结构使用UNITY_STRUCTURE.md与程序集索引；技能参考已加载unity-validation/content-and-systems，未新增文件、asmdef或场景。
+
+## 真实输入与实施结果
+
+- 四表唯一输入为src/Assets/DataConfig/AttackProfiles.csv、RealmCombatGrowth.csv、CombatEffectTierRules.csv、CombatActionEconomyRules.csv；ruleSetVersion=AP-GROWTH@0.1，sourceDigest=d3387a3baa6f012d685501686fb5a58615e528dac09945c005186c3f34365838。未修改四表参数、生产asset或schema。
+- GameData不再解析旧术法成本、基础v、M系数和节点比例；四表负责AP/MP、固定档、伤害预算、CT/CD、成长和状态系数。旧功法文本只保留21项身份、学习门槛和篇章声明；未来元婴/化神篇章不提前授予。唯一M身份为苦行剑典，其数字仍来自四表。
+- 成长输出：凡人/练气/筑基/金丹为100/100/300/1000 AP，基础v为2/4/4/4.8；苦行练气末5、筑基开府4.953、筑基末5.333、金丹末6.4。固定测试实例在AssignArts首次授权时冻结档位；升境本身不改成本。入口显式same-tier或locked-qi，51测试三元组没有写入玩家catalog。
+- 全模拟沿原CreateAbilities→RunBattle→SettleAttack，选招、移动预留和最终实付统一按成功次数报价，普攻共用角色账本、其他动作按原实例，只有本人开始清零；正CD仍只随整数全局tick下降。生产读取四ID：basic_iron_sword、basic_iron_blade、spell_guanshiji、spell_julingshu，无装备不补空手。
+- Stage新增--ap2入口，读取同一四表并投影实际AP/v、境界、魂魄、神识、授权装配与实例；使用Preview→准备副本→单一发布，没有Stage外置生命/状态旁路。旧NativeCase报告标记LEGACY_NATIVE_SENSITIVITY_ONLY，不作新平衡证据。
+- 共享内核仅增加批准的有限原型载荷与三种窄状态。苦行：原境界10%/15%/20%生命费、HP>2门禁、忽略格挡、筑基起低血加成、下一物理命中消耗30%原肉防代价；金丹回复基于基础效果预算，不按重复AP扩张。水：独立第五控制样本、神识对抗与C，最多三层印记按总比例和固定档防御承载计算，保留来源实例/境界/档；川流覆盖一次并在下一正伤害消费。深复制与成功发布复用既有状态事务，拒绝、取消和溢出不付费或漏状态。没有新增跨来源叠加授权。
+
+## 实跑命令与验收证据
+
+- 环境准备：dotnet restore simulations/BattleSim，仅当前worktree一次。Release：dotnet build -c Release --no-restore simulations/BattleSim，最终0错误、0警告；随后dotnet run --no-build -c Release --project simulations/BattleSim，默认完整运行退出0。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test ap2：PASS。51三元组在全模拟实际支付/结算与共享正式命令中逐项运行；剑普攻费用40/40/50/60/60 AP与成功次数0/1/2/3/4相符。三境界苦行首次剩余HP9000/8500/8600，低练气档保持原境界资格；全模拟低血目标伤害26/34/34，共享19/25/25，均沿各自既有普通伤害公式。水层峰值三层、练气档承载120、同境界总减防18、川流30%重施覆盖/一次消费均实测。
+- 同一自测还覆盖：固定实例不随升境变档；无装备拒绝；合法未命中计数；根面积命中两目标但只付40AP、只计一次；Stage组战单目标根动作一次支付；全模拟下一物理受击消费苦行代价；两入口被动本人时点不随子动作倍增；共享准备取消不泄生命/状态。必要恢复、低档与源身份均使用真实规则引用。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test action-economy-n-combat-ap-sim-01：PASS。沿既有双入口轨迹、移动、CT/CD、控制跳过、原实例、本人频率与额度测试，旧断言按新费用更新；普通术法零CD会在慢速治疗者出手前连发，不保留旧一次施法假设。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --ap2 same-tier 与 --ap2 locked-qi：分别退出0，分别252行，覆盖21构筑×练气/筑基/金丹×1v1/2v2×双方镜像。共享提交分别1216/21148次，每次检查报价/实付和命令不推进tick；完整报告头保留同一四表摘要。两种入口范围分别为全模拟既有地图/面积、Stage相邻单目标夹具，不混为Unity地图验收。
+- Unity 6000.3.18f1原生batchmode/nographics，projectPath为本worktree/src，testPlatform=EditMode，testFilter为CombatActionPointKernelTests、CombatRealmStatusTests、CombatAbilityCapacityTests三组。最终191项全部通过；新增低血资格3项也有独立3/3通过记录。测试实际包含资格/生命拒绝、取消/陈旧/溢出零写入、四次重复生命预算不增、物理命中消费代价、水层五档C与总峰值/来源/深复制/重施/未命中保留/正伤害消费/死亡清理，以及现有独立第五样本、状态、重复费用与承载回归。
+- 初轮失败如实保留：Release缺namespace导入已修；并发报告运行时重建apphost被自身进程锁住，等待报告退出后才重新build成功，不借外部缓存。Unity夹具最初List未转数组导致编译失败；随后188项中8项失败，根因分别为把术法当基本武器绑定、变体规则混用原摘要武器和测试误判快慢角色的ready队列。修正均在批准测试文件内：声明正确武器/传完整绑定profile；不需要武器的规则变体显式无装备；按已有调度规则构造双方ready顺序。未放宽生产授权、改调度器或排除失败断言。188/188及新增3/3已通过，最后三组含全部191项再验通过。
+- 管理检查check-task-cards/check-review-text、数据链check-data-chain、暂存前check-pending-whitespace及暂存后git diff --cached --check均按本轮实际路径执行通过。check-data-chain数量为功法29/29、术法84/84、神通31/31，language keys647。
+
+## 完成边界与交付
+
+- 本次仅归档N-COMBAT-AP2-SIM-01、移除自身队列/backlog行。下游空手配置/模拟、AP2平衡等具名前置继续保留，不提升下游、不关闭父项，正式master后由QueueMaintenance处理。
+- 双入口批准的行动经济及有限特殊原型已完成；当前矩阵只证明算法/功能执行与实验可复现，不签最终角色平衡、全量L2迁移、UI或正式场景体验。普通伤害的既有公式/面向/防御通道差异仍保留，不宣称两入口伤害数字逐项相等。共享面积执行器、未批准内容/资格和通用状态引擎均未新增。
+- 最终候选由指定automation-finalize-commit.ps1 -RequireAutomationMetadata形成，唯一candidate只交共享入口，不在本轮集成。原始报告/XML留本worktree忽略目录Temp，持久证据为本文件中的输入摘要、命令、场景和检查结果，可按入口重跑。原有脚本/项目链接已足够，BattleSim.csproj无须修改。
+- 本轮仅按已有diff和验证判断经验候选；已具名夹具准备问题与当前迁移测试没有形成新的独立经验合同，不建空候选节，不查重、不分配正式经验ID、不改经验索引。

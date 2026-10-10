@@ -36,7 +36,7 @@ namespace TianZhang.Tests.EditMode
         public void ProductionAttacksUseTheirFixedTierForHighRealmActors(string id, int expected)
         {
             AttackProfileData profile = ProductionProfile(id);
-            var actor = Actor(2160, 2160, realm: 6, basic: id);
+            var actor = Actor(2160, 2160, realm: 6, basic: profile.profileKind == AttackProfileKind.Basic ? id : "basic_iron_sword");
             var target = Target(100, realm: 6);
             CombatSession session = Ready(actor, target, profile);
             Assert.That(session.TryGetProfile(id, out var projected), Is.True);
@@ -164,7 +164,7 @@ namespace TianZhang.Tests.EditMode
                 new CombatRuleRatio(attack.damageMigrationNumerator, attack.damageMigrationDenominator),
                 new CombatRuleRatio(attack.damageWeightNumerator, attack.damageWeightDenominator), new CombatRuleRatio(0, 1), false);
             Assert.That(attack.physicalDamageMultiplier, Is.EqualTo(0.75f).Within(0.00001f));
-            var session = Ready(Actor(2160, 2160), Target(100), attack, rules: rules);
+            var session = Ready(Actor(2160, 2160, basic: ""), Target(100), attack, rules: rules);
             Assert.That(session.TryGetProfile(Guanshiji, out var projected), Is.True);
             Assert.That(projected.RuleMetadata.SourceDigest, Is.EqualTo(rules.sourceDigest));
             Assert.That(projected.RuleMetadata.Tier.ActionPointReferenceUnits, Is.EqualTo(50000));
@@ -173,7 +173,7 @@ namespace TianZhang.Tests.EditMode
             Assert.That(Attack(session, attack).Damage.Single().FinalDamage, Is.EqualTo(17));
             var restore = Copy(ProductionProfile(Julingshu));
             restore.ruleSetSourceDigest = rules.sourceDigest;
-            var actor = Actor(0, 0, rawSpirit: 100);
+            var actor = Actor(0, 0, rawSpirit: 100, basic: "");
             actor.SetSpirit(100, 50);
             Assert.That(Attack(Ready(actor, Target(0), restore, rules: rules), restore, true)
                 .SpiritRecoveries.Single().RequestedRecovery, Is.EqualTo(5));
@@ -242,8 +242,11 @@ namespace TianZhang.Tests.EditMode
             environment.spiritRecoveryEnvironment = node ? SpiritRecoveryEnvironment.SpiritVeinNode : SpiritRecoveryEnvironment.Ordinary;
             var adapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), rules ??
                 AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
+            var profiles = new List<AttackProfileData> { profile };
+            foreach (string basicId in new[] { actor.BasicAttackProfileId,target.BasicAttackProfileId }.Where(id => !string.IsNullOrEmpty(id)).Distinct())
+                if (profiles.All(p => p.attackProfileId != basicId)) profiles.Add(ProductionProfile(basicId));
             Assert.That(adapter.TryCreateSession(new AdventureSpawnSet(actor, target, null, actor.BasicAttackProfileId,
-                target.BasicAttackProfileId, Array.Empty<string>()), new[] { profile }, environment, out var session, out string reason), Is.True, reason);
+                target.BasicAttackProfileId, Array.Empty<string>()), profiles.ToArray(), environment, out var session, out string reason), Is.True, reason);
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo("actor"));
             return session;
         }

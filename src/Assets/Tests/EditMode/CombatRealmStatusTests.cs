@@ -342,5 +342,55 @@ namespace TianZhang.Tests.EditMode
             Assert.That(samples.Count, Is.EqualTo(10)); Assert.That(target.CurrentHealth, Is.LessThan(before));
             Assert.That(target.HasStatus(CombatStatusKind.Stun), Is.False);
         }
+        [TestCase("化神",995)] [TestCase("元婴",991)] [TestCase("金丹",982)] [TestCase("筑基",973)] [TestCase("练气",964)]
+        public void WaterMarksKeepSourceTierAggregatePeakAndOverwriteOneReduction(string targetRealm,int defense)
+        {
+            var actor=CombatActionPointKernelTests.PrototypeUnit("player",CombatTeam.Player);
+            var target=CombatActionPointKernelTests.PrototypeUnit("enemy",CombatTeam.Enemy,targetRealm,hp:100000);
+            var water=CombatActionPointKernelTests.Prototype("WaterDivine");
+            var session=new CombatSession(new[] { actor,target },new[] { water,CombatActionPointKernelTests.Reply() },
+                new CombatActionPointKernelTests.DirectRange(),CombatActionPointKernelTests.Ordinary(),ruleSet:CombatActionPointKernelTests.Rules());
+            Assert.That(service.AdvanceUntilAction(session).ActorId,Is.EqualTo("player"));
+            for(int i=0;i<4;i++)
+            {
+                actor.AdvanceCooldowns(12);
+                Commit(session,CombatActionPointKernelTests.PrototypeCommand("water"));
+                var mark=target.Statuses.Single(s=>s.Kind==CombatStatusKind.WaterMark);
+                Assert.That(mark.StackCount,Is.EqualTo(Math.Min(i+1,3))); Assert.That(mark.AbilityTierId,Is.EqualTo("tier_lianqi"));
+                Assert.That(mark.SourceRealmOrder,Is.EqualTo(3)); Assert.That(mark.SourceRef,Is.EqualTo("player:water"));
+                Assert.That(actor.Statuses.Count(s=>s.Kind==CombatStatusKind.WaterReduction),Is.EqualTo(1));
+                Assert.That(actor.Statuses.Single().DeltaNumerator,Is.EqualTo(300000));
+            }
+            Assert.That(target.PhysicalDefense,Is.EqualTo(defense));
+            var markCopy=(CombatantSnapshot)Call(target,"CopyForResolution");
+            Assert.That(markCopy.Statuses.Single(),Is.Not.SameAs(target.Statuses.Single()));
+            service.Execute(session,new CombatCommand(CombatCommandKind.EndTurn,actor.Id));
+            Assert.That(service.AdvanceUntilAction(session).ActorId,Is.EqualTo("enemy"));
+            var hit=new CombatCommand(CombatCommandKind.BasicAttack,"enemy","player","reply",new CombatResolutionRolls(0,100,100,100));
+            var miss=new CombatCommand(CombatCommandKind.BasicAttack,"enemy","player","reply",new CombatResolutionRolls(100,100,100,100));
+            actor.DodgeRate=100; Commit(session,miss); Assert.That(actor.HasStatus(CombatStatusKind.WaterReduction),Is.True);
+            actor.DodgeRate=0; Commit(session,hit); Assert.That(actor.HasStatus(CombatStatusKind.WaterReduction),Is.False);
+            int first=session.Combatants.All.Single(a=>a.Id=="player").CurrentHealth;
+            Commit(session,hit); Assert.That(actor.CurrentHealth,Is.LessThan(first));
+            Assert.That(target.HasStatus(CombatStatusKind.WaterMark),Is.True);
+            target.ReceiveDamage(target.CurrentHealth); Assert.That(target.Statuses,Is.Empty);
+        }
+        [Test]
+        public void WaterMissingFifthSampleOrRawMindRejectsTheEntireSpecialRoot()
+        {
+            var actor=CombatActionPointKernelTests.PrototypeUnit("player",CombatTeam.Player);
+            var target=CombatActionPointKernelTests.PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            var session=new CombatSession(new[] { actor,target },new[] { CombatActionPointKernelTests.Prototype("WaterDivine") },
+                new CombatActionPointKernelTests.DirectRange(),CombatActionPointKernelTests.Ordinary(),ruleSet:CombatActionPointKernelTests.Rules());
+            service.AdvanceUntilAction(session);
+            Assert.That(service.Execute(session,CombatActionPointKernelTests.PrototypeCommand("water",control:null)).RejectionReason,Is.EqualTo("combat_control_roll_invalid"));
+            Assert.That(actor.Statuses,Is.Empty); Assert.That(target.Statuses,Is.Empty);
+            Assert.That(actor.CurrentHealth,Is.EqualTo(10000)); Assert.That(target.CurrentHealth,Is.EqualTo(100000));
+            Assert.That(actor.ActionPointsRemainingUnits,Is.EqualTo(1000000)); Assert.That(actor.GetCooldown("water"),Is.Zero);
+            target=CombatActionPointKernelTests.PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000,mind:null);
+            session=new CombatSession(new[] { actor,target },session.AttackProfiles,new CombatActionPointKernelTests.DirectRange(),
+                CombatActionPointKernelTests.Ordinary(),ruleSet:CombatActionPointKernelTests.Rules()); service.AdvanceUntilAction(session);
+            Assert.That(service.Preview(session,CombatActionPointKernelTests.PrototypeCommand("water")).Validation.RejectionReason,Is.EqualTo("combat_raw_mind_missing"));
+        }
     }
 }

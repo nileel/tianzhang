@@ -525,60 +525,106 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             .Where(row => row.Length > 1 && !row[0].StartsWith('-')).Skip(1).ToArray();
     }
 
-    const string EffectTemplatePath = "docs/角色养成/术法神通数值模板.txt";
     const string GrowthTemplatePath = "docs/角色养成/功法数值模板.txt";
-    static readonly Lazy<IReadOnlyDictionary<string, ActionEconomyCost>> approvedAbilityCosts = new(() =>
+    static readonly Lazy<CombatRuleSet> productionRules = new(() =>
+        LoadProductionRuleSet(RepositoryFile("src/Assets/DataConfig/AttackProfiles.csv")));
+    internal static CombatRuleSet Rules => productionRules.Value;
+    internal static string TierForRealm(string realm) => realm switch
     {
-        var text = ReadApprovedTemplate(EffectTemplatePath, "模板ID：TZ_EFFECT_BUDGET；试跑版本：0.1；");
-        var costs = new Dictionary<string, ActionEconomyCost>(StringComparer.Ordinal);
-        foreach (var row in TemplateRows(text, "### 8.1 原始配置与完整成本候选"))
+        "练气" => "tier_lianqi", "筑基" => "tier_zhuji", "金丹" => "tier_jindan",
+        _ => throw new InvalidDataException("simulation_ability_realm_invalid"),
+    };
+    internal static string DefinitionForStyle(string style, bool divine) =>
+        (style switch
         {
-            var values = row[2].Split('／').Select(value => int.Parse(value, CultureInfo.InvariantCulture)).ToArray();
-            if (values.Length != 4) throw new InvalidDataException("action_economy_template_cost_invalid");
-            string id = row[0].Split(' ')[0];
-            var cost = new ActionEconomyCost(id, "TZ_EFFECT_BUDGET@0.1/A", values[0], values[1], values[2], values[3], row[0].Substring(id.Length).Trim());
-            cost.Validate();
-            costs.Add(id, cost);
-        }
-        if (costs.Count != 16) throw new InvalidDataException("action_economy_ability_mapping_incomplete");
-        // The extra active action is explicitly mapped in §8.3, outside the Config table.
-        var kuxing = TemplateRows(text, "### 8.3 配置外入口、功法来源与装配实例")
-            .Single(row => row[0].StartsWith("KuxingAction ", StringComparison.Ordinal))[1];
-        int Read(string marker) => int.Parse(System.Text.RegularExpressions.Regex.Match(kuxing, marker + "([0-9]+)").Groups[1].Value, CultureInfo.InvariantCulture);
-        costs.Add("KuxingAction", new("KuxingAction", "TZ_EFFECT_BUDGET@0.1/A", Read("AP"), Read("净"), Read("CT"), Read("CD")));
-        costs["KuxingAction"].Validate();
-        return costs;
-    });
-    internal static ActionEconomyCost AbilityCost(string definitionRef) => approvedAbilityCosts.Value.TryGetValue(definitionRef, out var cost)
-        ? cost : throw new InvalidDataException("action_economy_ability_mapping_missing: " + definitionRef);
-
-    internal static ActionEconomyCost AbilityCostByName(string name) => approvedAbilityCosts.Value.Values
-        .SingleOrDefault(cost => cost.Name == name) ?? throw new InvalidDataException("action_economy_ability_mapping_missing: " + name);
-
-    static readonly Lazy<(Dictionary<string, int> Bases, Dictionary<string, string[]> GongFa, decimal M, decimal[] Shares)> approvedGrowth = new(() =>
+            "physical" => "Physical", "magic" or "" => "Magic", "water_physical" => "Water",
+            "taiyi" => "Taiyi", "taiyi_fuxiu" => "TaiyiFuxiu", "taixu" or "taixu_xuangan" => "Taixu",
+            "yuqing" or "yuqing_kuxing" => "Yuqing", "yuqing_leijie" => "YuqingLeijie",
+            _ => throw new InvalidDataException("simulation_style_unknown"),
+        }) + (divine ? "Divine" : "Art");
+    internal static CombatRuleSet.EconomyDefinition Definition(string id, string tier) =>
+        Rules.Economy.Single(row => row.RecordKind == "test_action" && row.DefinitionRef == id && row.AbilityTierId == tier);
+    internal static int AbilitySpiritCost(string id, string tier)
     {
-        var text = ReadApprovedTemplate(GrowthTemplatePath, "参数集：A");
-        if (!text.Contains("模板ID：GF-GROWTH-AP；版本：0.1；参数集：A；", StringComparison.Ordinal)) throw new InvalidDataException("growth_template_version_missing");
-        var bases = TemplateRows(text, "## 三、基础曲线与决策输入")
-            .ToDictionary(row => row[0], row => int.Parse(row[1].Split('／')[1], CultureInfo.InvariantCulture), StringComparer.Ordinal);
-        var gongFa = TemplateRows(text, "## 五、SIM逐功法输入映射")
-            .ToDictionary(row => row[0].Split('／')[0], row => row, StringComparer.Ordinal);
-        var movement = TemplateRows(text, "## 四、移动档位、节点与叠加").Single(row => row[0] == "M");
-        var m = movement[1].Split('×')[0];
-        var shares = System.Text.RegularExpressions.Regex.Matches(movement[2], "([0-9]+)%").Cast<System.Text.RegularExpressions.Match>()
-            .Select(match => decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) / 100m).ToArray();
-        if (shares.Length != 3 || shares.Sum() != 1m) throw new InvalidDataException("growth_node_shares_invalid");
-        if (bases.Count != 6 || gongFa.Count != 21) throw new InvalidDataException("growth_template_mapping_incomplete");
-        return (bases, gongFa, decimal.Parse(m, CultureInfo.InvariantCulture), shares);
-    });
+        var row = Definition(id,tier); var capacity = Rules.GetTier(tier);
+        return row.SpiritCostOverride ?? CombatRuleSet.CeilRatio(capacity.SpiritBudgetReference,row.SpiritFactorNumerator,row.SpiritFactorDenominator);
+    }
+    internal static ActionEconomyCost AbilityCost(string id, string tier)
+    {
+        var row = Definition(id,tier); var capacity = Rules.GetTier(tier);
+        int ap = row.ActionPointCostOverrideUnits ?? CombatRuleSet.CeilRatio(capacity.ActionPointReferenceUnits,row.ActionPointFactorNumerator,row.ActionPointFactorDenominator);
+        return new(id,Rules.RuleSetVersion + ":" + Rules.SourceDigest,ap,row.MinimumNetCostOverrideUnits ?? ap,row.CtPenalty,
+            Rules.ResolveCooldown(tier,row.CooldownClass,row.ReuseCooldownOverrideTicks));
+    }
+    internal static decimal AbilityBudget(string id, string tier)
+    {
+        var cost = AbilityCost(id,tier); var capacity = Rules.GetTier(tier);
+        decimal ap = cost.ActionPointCostUnits / (decimal)capacity.ActionPointReferenceUnits;
+        return id.EndsWith("Divine",StringComparison.Ordinal) || id == "KuxingAction" ? ap :
+            Math.Min(ap,1m + AbilitySpiritCost(id,tier) / (decimal)capacity.SpiritBudgetReference);
+    }
+    internal static AttackProfile GenericProfile(string id, string tier)
+    {
+        var row = Definition(id,tier); var cost = AbilityCost(id,tier);
+        ArtConfig art = id switch
+        {
+            "PhysicalArt" => PhysicalArt, "MagicArt" => MagicArt, "WaterArt" => WaterArt,
+            "TaiyiArt" => TaiyiArt, "TaiyiFuxiuArt" => TaiyiFuxiuArt, "TaixuArt" => TaixuArt,
+            "YuqingArt" => YuqingArt, "YuqingLeijieArt" => YuqingLeijieArt, _ => null,
+        };
+        DivineConfig divine = id switch
+        {
+            "PhysicalDivine" => PhysicalDivine, "MagicDivine" => MagicDivine, "WaterDivine" => WaterDivine,
+            "TaiyiDivine" => TaiyiDivine, "TaiyiFuxiuDivine" => TaiyiFuxiuDivine, "TaixuDivine" => TaixuDivine,
+            "YuqingDivine" => YuqingDivine, "YuqingLeijieDivine" => YuqingLeijieDivine, _ => null,
+        };
+        string type = art?.Type ?? divine?.Type ?? "物理";
+        double pen = divine?.DefPen ?? 0;
+        double mult = Rules.ResolveDamageMultiplier(tier,cost.ActionPointCostUnits,AbilitySpiritCost(id,tier),art == null,
+            new(1,1),new(row.DamageMigrationNumerator,row.DamageMigrationDenominator),
+            new(row.DamageWeightNumerator,row.DamageWeightDenominator),CombatRuleRatio.FromDecimal(pen.ToString(CultureInfo.InvariantCulture)),type == "神魂");
+        return new(art?.Name ?? divine?.Name ?? "血剑气",type,mult,art?.Element ?? divine?.Element ?? "",
+            art?.MinRange ?? divine?.MinRange ?? 1,art?.MaxRange ?? divine?.MaxRange ?? 1,
+            Cost:cost,SpiritCost:AbilitySpiritCost(id,tier),RuleSetVersion:Rules.RuleSetVersion,
+            RuleSetSourceDigest:Rules.SourceDigest,AbilityTierId:tier,EffectBudgetMode:"damage_budget");
+    }
+    internal static CombatAttackProfile SharedProfile(AttackProfile p, double penetration = 0)
+    {
+        bool generic = CombatRuleSet.DefinitionIds.Contains(p.Cost.DefinitionRef,StringComparer.Ordinal);
+        string id = generic ? "fixture:" + p.Cost.DefinitionRef + ":" + p.AbilityTierId : p.Cost.DefinitionRef;
+        bool water = p.Cost.DefinitionRef is "WaterArt" or "WaterDivine";
+        var row = generic ? Definition(p.Cost.DefinitionRef,p.AbilityTierId) : null;
+        var payload = new CombatAttackRuleMetadata(Rules.RuleSetVersion,Rules.SourceDigest,Rules.GetTier(p.AbilityTierId),
+            row?.CooldownClass ?? (p.Type == "恢复灵力" ? "recovery" : "basic_repeat"),p.EffectBudgetMode,
+            generic ? new CombatRuleRatio(1,1) : null,
+            generic ? new CombatRuleRatio(row.DamageMigrationNumerator,row.DamageMigrationDenominator) : null,
+            generic ? new CombatRuleRatio(row.DamageWeightNumerator,row.DamageWeightDenominator) : null,
+            "","",0,0,0,"",water ? Rules.Global.WaterBaseChancePermille : 0,water,
+            generic ? p.Cost.DefinitionRef : "",generic ? AbilityBudget(p.Cost.DefinitionRef,p.AbilityTierId) : 0);
+        var kind = p.BasicBindingKind != "" ? CombatAttackKind.Basic :
+            p.Cost.DefinitionRef.EndsWith("Divine",StringComparison.Ordinal) ? CombatAttackKind.Divine : CombatAttackKind.Art;
+        return new(id,kind,p.Type == "恢复灵力" ? CombatAttackEffect.RestoreSpirit : p.Type == "神魂" ? CombatAttackEffect.Soul : CombatAttackEffect.Physical,
+            p.MinRange,p.MaxRange,p.Cost.ActionPointCostUnits,p.Cost.MinimumNetCostUnits,p.Cost.CtPenalty,p.Cost.ReuseCooldownTicks,
+            physicalMultiplier:p.Type == "物理" ? (float)p.Mult : 0,soulMultiplier:p.Type == "神魂" ? (float)p.Mult : 0,
+            spiritCost:p.SpiritCost,damageElement:p.Element,soulDefensePenetration:(float)penetration,
+            spiritRecoveryMultiplier:(float)p.SpiritRecoveryMultiplier,minimumSpiritRecovery:p.MinimumSpiritRecovery,
+            otherTargetSpiritCost:p.OtherTargetSpiritCost,otherTargetSpiritRecoveryMultiplier:(float)p.OtherTargetRecoveryMultiplier,
+            qualification:(realm,element,grade) => kind == CombatAttackKind.Divine ? realm == "金丹" : realm is "练气" or "筑基" or "金丹",
+            isTalisman:p.Cost.DefinitionRef == "TaiyiFuxiuArt",ruleMetadata:payload);
+    }
+    // Only chapter identity/eligibility is read here; all cost/v/M numbers come from the four CSVs.
+    static readonly Lazy<Dictionary<string,string[]>> growthIdentities = new(() =>
+        TemplateRows(ReadApprovedTemplate(GrowthTemplatePath,"参数集：A"),"## 五、SIM逐功法输入映射")
+            .ToDictionary(row => row[0].Split('／')[0],row => row,StringComparer.Ordinal));
 
     internal static MovementInput ProjectMovement(string realm, int subIndex, string gongFaName)
     {
-        var source = approvedGrowth.Value;
+        var source = growthIdentities.Value;
         if (!RealmOrder.Contains(realm) || subIndex < 0 || subIndex >= Sublevels[realm])
             throw new InvalidDataException("unsupported_full_simulation_growth_input");
+        var growth = Rules.Realms.Single(row => row.RealmOrder == Array.IndexOf(RealmOrder,realm));
         string[] mapping = null;
-        if (!string.IsNullOrEmpty(gongFaName) && !source.GongFa.TryGetValue(gongFaName, out mapping))
+        if (!string.IsNullOrEmpty(gongFaName) && !source.TryGetValue(gongFaName, out mapping))
             throw new InvalidDataException("action_economy_gongfa_mapping_missing");
         decimal bonus = 0;
         var nodes = new List<string>();
@@ -595,10 +641,11 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
                 string nodeRealm = RealmOrder[i];
                 int completed = i == current ? subIndex + 1 : Sublevels[nodeRealm];
                 nodes.Add(nodeRealm + ":" + completed);
-                if (mapping[4].StartsWith("M；", StringComparison.Ordinal) && nodeRealm != "凡人")
+                if (gongFaName == "苦行剑典" && nodeRealm != "凡人")
                 {
-                    decimal fraction = nodeRealm == "练气" ? completed / (decimal)Sublevels[nodeRealm] : source.Shares.Take(completed).Sum();
-                    bonus += source.Bases[nodeRealm] / 1000m * source.M * fraction;
+                    var node = Rules.Realms.Single(row => row.RealmOrder == i);
+                    decimal fraction = node.MovementNodeWeightNumerators.Take(completed).Sum() / (decimal)node.MovementNodeWeightDenominator;
+                    bonus += node.LegacyBaseMovementEfficiencyMilliUnits * (decimal)Rules.Global.MovementBudgetNumerator / Rules.Global.MovementBudgetDenominator * fraction;
                 }
             }
             // Keep the actual qualification declaration with each applicable chapter, not TotalSubs/4+1.
@@ -607,13 +654,14 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
                 string initial = part.StartsWith(minimumRealm, StringComparison.Ordinal) ? part.Substring(2) : part;
                 if (initial.Length == 0 || initial is "境" or "可学" || initial.StartsWith("且", StringComparison.Ordinal)) continue;
                 int required = minimum;
-                foreach (string candidateRealm in source.Bases.Keys)
+                foreach (string candidateRealm in new[] { "凡人", "练气", "筑基", "金丹", "元婴", "化神" })
                     if (part.Contains(candidateRealm, StringComparison.Ordinal)) required = Array.IndexOf(new[] { "凡人", "练气", "筑基", "金丹", "元婴", "化神" }, candidateRealm);
                 if (current >= required) chapters.Add(part);
             }
         }
-        return new("GF-GROWTH-AP@0.1/A", source.Bases[realm], checked((int)decimal.Floor(bonus * 1000)),
-            100000, gongFaName ?? "", string.Join(",", nodes), chapters.AsReadOnly());
+        return new(Rules.RuleSetVersion + ":" + Rules.SourceDigest, growth.BaseMovementEfficiencyMilliUnits,
+            checked((int)decimal.Floor(bonus * growth.BaseMovementEfficiencyMilliUnits / growth.LegacyBaseMovementEfficiencyMilliUnits)),
+            growth.ActionPointMaximumUnits, gongFaName ?? "", string.Join(",", nodes), chapters.AsReadOnly());
     }
 
     static readonly Lazy<IReadOnlyDictionary<string, AttackProfile>> productionAttacks = new(() =>

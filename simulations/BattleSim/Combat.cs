@@ -1,4 +1,5 @@
 using System;
+using TianZhang.Combat;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.World;
@@ -111,7 +112,8 @@ static class Combat
         int SpiritBefore, int SpiritAfter, int HealthBefore, int HealthAfter, int PendingCtPenalty,
         float ChargeTime, float NextThreshold, IReadOnlyDictionary<string, int> Cooldowns,
         int OwnTurns, int CommittedActions, int Shouyi, int Fudan, int Leijie, bool Stunned, string InputVersion,
-        IReadOnlyList<int> HealthByActor, IReadOnlyList<int> SpiritByActor);
+        IReadOnlyList<int> HealthByActor, IReadOnlyList<int> SpiritByActor, int CommittedUseCount = 0, int RepeatMultiplierPermille = 1000, string AbilityTierId = "",
+        IReadOnlyList<int> WaterStacksByActor = null, IReadOnlyList<decimal> WaterReductionByActor = null, IReadOnlyList<int> KuxingDebtByActor = null);
 
     internal static void ResetDeterministicRandom() => Rng = new Random(DeterministicRandomSeed);
 
@@ -507,6 +509,18 @@ static class Combat
         internal List<Ability> Abilities;
         // Non-shared abilities use actor+definition; declared assembly instances use their existing ledger only.
         internal readonly Dictionary<string, int> Cooldowns = new(StringComparer.Ordinal);
+        internal readonly Dictionary<string, int> Uses = new(StringComparer.Ordinal);
+        internal string UseKey(Ability a) => a.Kind == BasicAction ? "$basic" : a.Key;
+        internal int UseCount(Ability a) => a.Cost.ReuseCooldownTicks == 0 ? Uses.GetValueOrDefault(UseKey(a)) : 0;
+        internal int RepeatMultiplier(Ability a) => a.Cost.ReuseCooldownTicks != 0 ? 1000 : UseCount(a) switch
+        {
+            0 => GameData.Rules.Global.RepeatFirstPermille, 1 => GameData.Rules.Global.RepeatSecondPermille,
+            2 => GameData.Rules.Global.RepeatThirdPermille, _ => GameData.Rules.Global.RepeatCappedPermille,
+        };
+        internal int Quote(Ability a) => CombatRuleSet.CeilRatio(a.Cost.ActionPointCostUnits,RepeatMultiplier(a),1000);
+        internal int WaterSourceOrder;
+        internal string WaterSourceRef = "", WaterTierId = "";
+        internal decimal WaterReduction;
         internal bool IsAlive => HP > 0 && !Char.IsDead;
         internal int Cooldown(Ability ability) => SharedLedger(ability)?.Cooldown ?? Cooldowns.GetValueOrDefault(ability.Key);
         internal GoldenCoreAbilityRuntimeState SharedLedger(Ability ability) =>
@@ -546,13 +560,13 @@ static class Combat
             result.Add(new(kind, profile, cost, spirit, pen, shared.Length > 0 ? shared : unit.Id + ":" + cost.DefinitionRef, shared));
         }
         if (!string.IsNullOrEmpty(c.DivineName))
-            Add(DivineAction, new(c.DivineName, c.DivineType, c.DivineMult, c.DivineElement, c.DivineMinRange, c.DivineMaxRange),
+            Add(DivineAction, GameData.GenericProfile(GameData.DefinitionForStyle(c.Style,true),c.AbilityTierId),
                 c.DivineCost, 0, c.DivineDefPen, c.DivineAbilityInstanceId);
         if (HasGongFa(unit, "苦行剑典", "练气") && c.Style == "yuqing_kuxing")
-            Add(KuxingAction, new("血剑气", "物理", c.Realm switch { "金丹" => 2.2, "筑基" => 1.8, _ => 1.5 }, "", 1, 1),
-                GameData.AbilityCost("KuxingAction"), 0, 0);
+            Add(KuxingAction, GameData.GenericProfile("KuxingAction",c.AbilityTierId),
+                GameData.AbilityCost("KuxingAction",c.AbilityTierId), 0, 0);
         if (!string.IsNullOrEmpty(c.ArtName))
-            Add(ArtAction, new(c.ArtName, c.ArtType, c.ArtMult, c.ArtElement, c.ArtMinRange, c.ArtMaxRange),
+            Add(ArtAction, GameData.GenericProfile(GameData.DefinitionForStyle(c.Style,false),c.AbilityTierId),
                 c.ArtCost, c.ArtMPCost, 0, c.ArtAbilityInstanceId);
         foreach (string id in c.ProductionArtIds)
         {
@@ -601,7 +615,7 @@ static class Combat
         }
         int turns = 0;
         bool BothTeamsAlive() => units.Where((u, i) => team[i] == 0).Any(u => u.IsAlive) && units.Where((u, i) => team[i] == 1).Any(u => u.IsAlive);
-        void Observe(int actor, string evt, Ability ability = null, int apBefore = 0, int mpBefore = 0, int hpBefore = 0, int cost = 0)
+        void Observe(int actor, string evt, Ability ability = null, int apBefore = 0, int mpBefore = 0, int hpBefore = 0, int cost = 0, int useCount = 0, int repeat = 1000)
         {
             if (!observe) return;
             var u = units[actor];
@@ -609,7 +623,8 @@ static class Combat
             economy.Add(new(turns, actor, scheduler.CurrentTick, evt, ability?.Cost.DefinitionRef ?? "", ability?.Key ?? "",
                 apBefore, u.AP, cost, 0, 0, mpBefore, ability == null ? u.MP : u.Resource(ability), hpBefore, u.HP, u.PendingPenalty,
                 axis.ChargeTime, axis.NextActionThreshold, u.SnapshotCooldowns(), u.OwnTurns, u.Actions, u.Shouyi, u.Fudan, u.LeiJie, u.Stunned, ability?.Cost.Version ?? "",
-                units.Select(unit => unit.HP).ToArray(), units.Select(unit => unit.MP).ToArray()));
+                units.Select(unit => unit.HP).ToArray(), units.Select(unit => unit.MP).ToArray(),useCount,repeat,ability?.Profile.AbilityTierId ?? "",
+                units.Select(unit => unit.Shishui).ToArray(),units.Select(unit => unit.Chuanliu > 0 ? unit.WaterReduction : 0).ToArray(),units.Select(unit => unit.KuxingDefReduction).ToArray()));
         }
         while (BothTeamsAlive() && turns < turnLimit)
         {
@@ -623,7 +638,7 @@ static class Combat
             }
             int actor = Array.FindIndex(units, u => u.Id == advance.UnitId);
             var au = units[actor];
-            turns++; au.OwnTurns++; au.Actions = 0; au.Moved = false; au.PendingPenalty = 0;
+            turns++; au.OwnTurns++; au.Actions = 0; au.Uses.Clear(); au.Moved = false; au.PendingPenalty = 0;
             int hpBeforeStart = au.HP, mpBeforeStart = au.MP;
             if (HasGongFa(au, "南华玄感录", "练气") && au.Stunned &&
                 Rng.NextDouble() < (au.Char.Realm switch { "金丹" => .50, "筑基" => .30, _ => .20 }))
@@ -648,7 +663,7 @@ static class Combat
                 // Each affordable ability competes over actual legal positions; failed candidates do not consume rolls.
                 foreach (var ability in au.Abilities)
                 {
-                    if (ability.Cost.ActionPointCostUnits > au.AP || au.Cooldown(ability) != 0 || au.Resource(ability) < SpiritCost(au, ability) ||
+                    if (au.Quote(ability) > au.AP || au.Cooldown(ability) != 0 || au.Resource(ability) < SpiritCost(au, ability) ||
                         ability.Kind == KuxingAction && au.HP <= 2) continue;
                     if (ability.Profile.Type == "恢复灵力")
                     {
@@ -657,7 +672,7 @@ static class Combat
                             .OrderBy(i => i == actor ? 0 : 1).ThenBy(i => units[i].MP).ThenBy(i => i))
                         {
                             var plan = ally == actor ? new GroupActionPlan(new(au.Position, true), null) :
-                                ResolvePaidPlan(battlefield, units, team, actor, ally, ability, au.AP - ability.Cost.ActionPointCostUnits, occupied);
+                                ResolvePaidPlan(battlefield, units, team, actor, ally, ability, au.AP - au.Quote(ability), occupied);
                             if (!plan.Position.CanAttack) continue;
                             selectedAbility = ability;
                             selection = new(ally, ally == actor ? "selected_self_recovery" : "selected_ally_recovery");
@@ -676,7 +691,7 @@ static class Combat
                         if (team[target] != team[actor] && units[target].IsAlive)
                         {
                             var plan = ResolvePaidPlan(battlefield, units, team, actor, target, ability,
-                                au.AP - ability.Cost.ActionPointCostUnits, occupied);
+                                au.AP - au.Quote(ability), occupied);
                             plans.Add(target, plan);
                             legal = plan.Position.CanAttack;
                             if (legal) settlement = new(turns, actor, target, plan.AreaTargeting?.HitTargetIndexes ?? new[] { target },
@@ -696,7 +711,7 @@ static class Combat
                 {
                     int focus = Enumerable.Range(0, units.Length).Where(i => team[i] != team[actor] && units[i].IsAlive)
                         .OrderBy(i => units[i].HP).ThenBy(i => i).First();
-                    var affordable = au.Abilities.Where(a => a.Cost.ActionPointCostUnits <= au.AP && a.Profile.Type != "恢复灵力").LastOrDefault();
+                    var affordable = au.Abilities.Where(a => au.Quote(a) <= au.AP && a.Profile.Type != "恢复灵力").LastOrDefault();
                     if (affordable != null)
                     {
                         var move = ResolvePaidPlan(battlefield, units, team, actor, focus, affordable, au.AP, occupied);
@@ -718,23 +733,26 @@ static class Combat
                 int targetIndex = selection.TargetIndex;
                 int apBefore = au.AP, mpBefore = au.Resource(a), hpBefore = au.HP;
                 int spiritCost = SpiritCost(au, a, targetIndex != actor);
+                int actualCost = au.Quote(a), useCount = au.UseCount(a), repeat = au.RepeatMultiplier(a);
+                if (useCount == int.MaxValue) throw new InvalidOperationException("action_use_count_overflow");
                 int nextPenalty = checked(au.PendingPenalty + a.Cost.CtPenalty);
-                if (nextPenalty > int.MaxValue - 100 || au.AP < a.Cost.ActionPointCostUnits || au.Resource(a) < spiritCost || au.Cooldown(a) > 0)
+                if (nextPenalty > int.MaxValue - 100 || au.AP < actualCost || au.Resource(a) < spiritCost || au.Cooldown(a) > 0)
                     throw new InvalidOperationException("selected_action_not_committable");
                 au.State.SynchronizeLocalState(CaptureLocalState(au));
                 au.State.RecordOwnActionCheckpoint($"{au.Id}-turn-{au.OwnTurns}-action-{au.Actions + 1}", turns);
-                au.AP -= a.Cost.ActionPointCostUnits;
+                au.AP -= actualCost;
                 if (au.SharedLedger(a) is { } shared)
                 {
                     if (!shared.TrySpendResource(spiritCost)) throw new InvalidOperationException("prepared_shared_resource_commit_failed");
                 }
                 else au.MP -= spiritCost;
                 au.PendingPenalty = nextPenalty; au.Actions++; au.StartCooldown(a);
+                if (a.Cost.ReuseCooldownTicks == 0) au.Uses[au.UseKey(a)] = useCount + 1;
                 if (a.Profile.Type == "恢复灵力")
                 {
                     var target = units[targetIndex];
                     int restored = (int)decimal.Floor(Math.Max(a.Profile.MinimumSpiritRecovery,
-                        au.Char.Innate["魂魄"] * a.Profile.SpiritRecoveryMultiplier) * (targetIndex == actor ? 1 : a.Profile.OtherTargetRecoveryMultiplier));
+                        Math.Min(au.Char.Innate["魂魄"],GameData.Rules.GetTier(a.Profile.AbilityTierId).RawSpiritRecoveryCapacity) * a.Profile.SpiritRecoveryMultiplier) * (targetIndex == actor ? 1 : a.Profile.OtherTargetRecoveryMultiplier));
                     target.MP = Math.Min(target.Char.Primary["MP"], checked(target.MP + restored));
                 }
                 else
@@ -743,7 +761,7 @@ static class Combat
                     SettleAttack(units, team, actor, targets, a);
                 }
                 au.State.SynchronizeLocalState(CaptureLocalState(au)); au.State.CompleteOwnActiveAction();
-                Observe(actor, "action_committed", a, apBefore, mpBefore, hpBefore, a.Cost.ActionPointCostUnits);
+                Observe(actor, "action_committed", a, apBefore, mpBefore, hpBefore, actualCost,useCount,repeat);
                 if (observe) actions.Add(new(turns, actor, start, au.Position, reachable, targetIndex, selection.Reason, selection.Priority, "",
                     selectedPlan.AreaTargeting?.Center, selectedPlan.AreaTargeting?.HitTargetIndexes ?? Array.Empty<int>(),
                     selectedPlan.AreaTargeting?.RejectionReason ?? "", SnapshotOccupiedPositions(units)));
@@ -828,7 +846,7 @@ static class Combat
             decimal costRate = ca.Realm switch { "金丹" => .20m, "筑基" => .15m, _ => .10m };
             int hpCost = Math.Min(au.HP - 1, (int)decimal.Floor(au.HP * costRate));
             au.HP -= hpCost;
-            if (ca.Realm == "金丹") hpRecovery = (int)decimal.Floor(hpCost * .30m);
+            if (ca.Realm == "金丹") hpRecovery = (int)decimal.Floor(hpCost * GameData.AbilityBudget("KuxingAction",ability.Profile.AbilityTierId) / 10m);
             au.KuxingDefReduction = (int)(ca.Primary["肉防"] * .30);
         }
         if (HasGongFa(au, "抱元守一经", "练气") && type == "神魂")
@@ -851,16 +869,32 @@ static class Combat
                 atk += ca.Realm switch { "金丹" => 8, "筑基" => 5, _ => 3 };
             int rawDef = type == "物理" ? cb.Primary["肉防"] : cb.Primary["神防"];
             if (type == "神魂" && HasGongFa(du, "抱元守一经", "金丹") && du.Shouyi == ShouyiMaximum(du)) rawDef = (int)(rawDef * 1.15);
-            if (type == "物理" && du.KuxingDefReduction > 0) { rawDef = Math.Max(0, rawDef - du.KuxingDefReduction); du.KuxingDefReduction = 0; }
-            int def = type == "物理" ? (int)(rawDef * (1 - du.Shishui * .05)) : rawDef;
+            if (type == "物理" && du.KuxingDefReduction > 0) rawDef = Math.Max(0, rawDef - du.KuxingDefReduction);
+            int def = rawDef;
+            if (type == "物理" && du.Shishui > 0)
+            {
+                int coefficient = StatusCoefficient(du.WaterSourceOrder,Array.IndexOf(GameData.RealmOrder,cb.Realm));
+                decimal fraction = Math.Min(GameData.Rules.Global.RelativeStatusLimitPermille / 1000m,
+                    GameData.Rules.Global.WaterDefensePerStackPermille * du.Shishui * coefficient / 1000000m);
+                def = Math.Max(0,rawDef - (int)decimal.Round(fraction * Math.Min(cb.Primary["肉防"],GameData.Rules.GetTier(du.WaterTierId).PhysicalDefenseCapacity),0,MidpointRounding.AwayFromZero));
+            }
             if (type == "神魂" && HasGongFa(du, "九霄雷劫录", "筑基") && du.LeiJie == LeijieMaximum(du)) def = (int)(def * .80);
+            if (ability.Profile.AbilityTierId != "")
+            {
+                var tier = GameData.Rules.GetTier(ability.Profile.AbilityTierId);
+                atk = Math.Min(atk,type == "物理" ? tier.PhysicalAttackCapacity : tier.SoulAttackCapacity);
+            }
             double resist = cb.Secondary.GetValueOrDefault(type == "物理" ? "物抗率" : "魂抗率", 0);
             double targetMult = mult;
             if (ability.Kind == KuxingAction && ca.Realm != "练气" && du.HP < cb.Primary["HP"] * .50) targetMult *= 1.3;
             var element = GameData.GetElementMatch(ability.Profile.Element, ca.GongFaName, cb.GongFaName);
-            int dmg = ApplyDefenses(Dmg(atk, def, resist, ability.DefPen, targetMult * element.DamageMultiplier), ca, cb, type,
+            var samples = CombatSettlementSamples.FromRandom(Rng);
+            double controlRoll = Rng.NextDouble(); // the independent fifth sample, even on a miss
+            var settlement = ResolveDefenseSettlement(Dmg(atk, def, resist, ability.DefPen, targetMult * element.DamageMultiplier), ca, cb, type, samples,
                 ignoreBlock: ability.Kind == KuxingAction, critRateBonus: element.CritRateBonus, critDamageBonus: element.CritDamageBonus);
-            if (du.Chuanliu > 0 && dmg > 0) { dmg = (int)(dmg * .65); du.Chuanliu = 0; }
+            int dmg = settlement.Damage;
+            if (type == "物理" && settlement.Hit) du.KuxingDefReduction = 0;
+            if (du.Chuanliu > 0 && dmg > 0) { dmg = (int)(dmg * (1 - du.WaterReduction)); du.Chuanliu = 0; }
             if (HasGongFa(du, "抱元守一经", "筑基") && du.Shouyi > 0 && dmg > 0) { dmg = (int)(dmg * .80); du.Shouyi--; }
             if (du.Buqian > 0 && dmg > cb.Primary["HP"] * .30) { dmg /= 2; du.Buqian--; }
             int absorbed = Math.Min(du.Shield, dmg); du.Shield -= absorbed; dmg -= absorbed;
@@ -868,15 +902,36 @@ static class Combat
             if (dmg > 0 && HasGongFa(du, "九霄雷劫录", "筑基")) du.LeiJie = Math.Min(du.LeiJie + 1, LeijieMaximum(du));
             if (water && dmg > 0 && du.Xuantong == 0 && !du.Stunned)
             {
-                double chance = Math.Clamp(.10 + (ca.Primary["神识"] - cb.Primary["神识"]) / 50.0, .05, .90);
-                if (Rng.NextDouble() < chance) du.Stunned = true;
+                var global = GameData.Rules.Global;
+                double chance = Math.Clamp(global.WaterBaseChancePermille / 1000.0 + (ca.Primary["神识"] - cb.Primary["神识"]) / (double)global.WaterMindDifferenceDivisor,
+                    global.WaterMinimumChancePermille / 1000.0,global.StrongControlLimitPermille / 1000.0);
+                chance = Math.Min(chance * StatusCoefficient(Array.IndexOf(GameData.RealmOrder,ca.Realm),Array.IndexOf(GameData.RealmOrder,cb.Realm)) / 1000.0,global.StrongControlLimitPermille / 1000.0);
+                if (controlRoll < chance) du.Stunned = true;
             }
-            if (ability.Cost.DefinitionRef == "WaterDivine") { du.Shishui = Math.Min(3, du.Shishui + 1); au.Chuanliu = 1; }
+            if (ability.Cost.DefinitionRef == "WaterDivine")
+            {
+                if (du.IsAlive && (du.WaterSourceRef == "" || du.WaterSourceRef == ability.Key))
+                {
+                    du.Shishui = Math.Min(GameData.Rules.Global.WaterDefenseMaxStacks, du.Shishui + 1);
+                    du.WaterSourceRef = ability.Key; du.WaterSourceOrder = Array.IndexOf(GameData.RealmOrder,ca.Realm);
+                    du.WaterTierId = ability.Profile.AbilityTierId;
+                }
+                au.Chuanliu = 1;
+                au.WaterReduction = Math.Min(GameData.Rules.Global.RelativeStatusLimitPermille / 1000m,
+                    .10m * (GameData.AbilityBudget("WaterDivine",ability.Profile.AbilityTierId) / 5m) *
+                    GameData.Rules.Global.WaterReductionMigrationNumerator / GameData.Rules.Global.WaterReductionMigrationDenominator);
+            }
             if (du.QiushuiCharges > 0 && du.HP > 0 && du.HP < cb.Primary["HP"] * .30 && dmg > 0)
             { du.Shield = (int)decimal.Floor(du.HP * .30m); du.QiushuiCharges--; }
         }
         if (hpRecovery > 0 && au.IsAlive) au.HP = Math.Min(ca.Primary["HP"], au.HP + hpRecovery);
     }
+
+    static int StatusCoefficient(int source, int target) => (source - target) switch
+    {
+        <= -2 => GameData.Rules.Global.RealmBelowTwoPermille, -1 => GameData.Rules.Global.RealmBelowOnePermille,
+        0 => GameData.Rules.Global.RealmEqualPermille, 1 => GameData.Rules.Global.RealmAboveOnePermille, _ => GameData.Rules.Global.RealmAboveTwoPermille,
+    };
 
     static IReadOnlyList<HexCoord> SnapshotOccupiedPositions(IEnumerable<UnitState> units) =>
         units.Where(unit => unit.IsAlive).Select(unit => unit.Position).ToArray();

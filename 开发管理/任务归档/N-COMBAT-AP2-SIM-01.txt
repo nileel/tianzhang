@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261010-CDDB1DE646A49B/A",
+  "stateReason": "A方案完整实施并通过双入口、自测和定向EditMode验证，归档等待共享入口正式重放。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -196,3 +196,10 @@
 - 只共享源码而全模拟仍旧、生产映射缺失、需复刻Unity场景或越数值抽象边界不能通过。
 - 新所有者/路径/字段或实现路线越界先暂停并重新预检；若需要新增表字段、通用框架、面积执行器、未批准内容或资格，停止回交合同。确认不原子或开始连续跨边界补丁即停止，不动态拆卡、提交半成品或集成。
 - 共享特殊原型若还需上述四文件以外生产所有者、新的表字段或资格政策，则停止，不继续叠加补丁；本选项不授权重做STATUS或所有同名L2效果。
+
+
+## 2026-10-10 完成记录
+
+- A回复按DEC-20261010-CDDB1DE646A49B消费；gpt-6.1-sol单主责在run专属worktree完成双入口四表迁移、固定档与重复费用、有限苦行/水系共享事务，不接入新生产技能或空手。
+- Release build与默认运行、自测ap2/既有行动经济、same-tier与locked-qi各252行矩阵、原生Unity三组191/191 EditMode通过。真实输入摘要、初轮失败根因/修正与边界见开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt。
+- 仅归档本任务并移除自身队列/backlog行；所有下游具名前置引用保留，父项不关闭。新方案数值定案、界面和正式场景由已冻结的后续职责验收。

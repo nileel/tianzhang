@@ -383,7 +383,8 @@ namespace TianZhang.Combat
                 (!actor.RawMindInputsPresent || !target.RawMindInputsPresent))
                 return CombatActionResult.Rejected("combat_raw_mind_missing");
             if (profile.Effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff ||
-                profile.RuleMetadata?.ControlChancePermille > 0 || profile.RuleMetadata?.ControlUsesMindContest == true)
+                profile.RuleMetadata?.ControlChancePermille > 0 || profile.RuleMetadata?.ControlUsesMindContest == true ||
+                profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
             {
                 if (RuleSet == null || !actor.TryGetRealmOrder(RuleSet, out _) || !target.TryGetRealmOrder(RuleSet, out _))
                     return CombatActionResult.Rejected("combat_status_realm_invalid");
@@ -393,6 +394,13 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected(authorizationFailure);
             if (!profile.MeetsRequirements(actor.RealmStage, actor.VisibleRootElement, actor.VisibleRootGrade))
                 return CombatActionResult.Rejected("attack_profile_requirements_not_met");
+            if (profile.RuleMetadata?.PrototypeDefinitionRef == "KuxingAction")
+            {
+                if (RuleSet == null || !actor.TryGetRealmOrder(RuleSet, out int order) || order < 1 || order > 3 ||
+                    actor.GongFaId != "苦行剑典")
+                    return CombatActionResult.Rejected("attack_profile_requirements_not_met");
+                if (actor.CurrentHealth <= 2) return CombatActionResult.Rejected("health_insufficient");
+            }
             if (actor.GetCooldown(profile.Id) > 0)
                 return CombatActionResult.Rejected("attack_profile_cooldown_active");
             bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);

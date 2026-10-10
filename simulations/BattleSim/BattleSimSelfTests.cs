@@ -13,6 +13,7 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "ap2") return RunChecked(suite,RunAp2);
         if (suite == "equipment-production") return RunChecked(suite, RunEquipmentProduction);
         if (suite == "action-economy-n-combat-ap-sim-01")
             return RunChecked(suite, RunActionEconomyNCombatApSim01);
@@ -205,7 +206,7 @@ static class BattleSimSelfTests
         AssertEqual("own_turn_ended", moving.Economy.Last().Event, "successful movement prevents wait retention");
         AssertEqual(0f, moving.Economy.Last().ChargeTime, "movement-only normal end clears CT");
 
-        var mage = Fixture("ct-mage"); mage.Style = "magic"; mage.AssignArts();
+        var mage = Fixture("ct-mage"); mage.Style = "magic"; mage.AssignArts(); mage.Primary["MP"] = 20;
         mage.BasicAttackProfile = new("ct-basic-fixture", "物理", 1, "", 1, 2,
             Cost: new("ct-basic-fixture", "fixture", 50000, 50000, 30, 0));
         Combat.ResetDeterministicRandom();
@@ -214,11 +215,11 @@ static class BattleSimSelfTests
         var penaltyActions = penalties.Economy.Where(e => e.Turn == 1 && e.Event == "action_committed").ToArray();
         AssertSequence(new[] { "MagicArt", "ct-basic-fixture" }, penaltyActions.Select(e => e.DefinitionRef).ToArray(), "actual actions combine distinct CT penalties");
         var penaltyEnd = penalties.Economy.Single(e => e.Turn == 1 && e.Event == "own_turn_ended");
-        AssertEqual(40, penaltyEnd.PendingCtPenalty, "CT penalties sum across commands");
-        AssertEqual(140f, penaltyEnd.NextThreshold, "one end settles 100+10+30");
-        AssertEqual(10, penaltyEnd.Cooldowns["actor-0:MagicArt"], "the second command does not tick the first ability cooldown");
+        AssertEqual(30, penaltyEnd.PendingCtPenalty, "CT penalties sum across commands");
+        AssertEqual(130f, penaltyEnd.NextThreshold, "one end settles 100+10+30");
+        AssertEqual(0, penaltyEnd.Cooldowns["actor-0:MagicArt"], "the second command does not tick the first ability cooldown");
         var nextMageStart = penalties.Economy.First(e => e.ActorIndex == 0 && e.OwnTurns == 2 && e.Event == "own_turn_started");
-        AssertEqual(Math.Max(0, 10 - (nextMageStart.GlobalTick - penaltyEnd.GlobalTick)),
+        AssertEqual(Math.Max(0, 0 - (nextMageStart.GlobalTick - penaltyEnd.GlobalTick)),
             nextMageStart.Cooldowns["actor-0:MagicArt"], "cooldown decrements by actual elapsed ticks");
 
         var production = Fixture("production-three"); production.Primary["MP"] = 20; production.Innate["魂魄"] = 25;
@@ -237,7 +238,7 @@ static class BattleSimSelfTests
             new[] { new HexCoord(0, 0), new HexCoord(0, 1), new HexCoord(2, 1), new HexCoord(2, 0) }, turnLimit: 3);
         var otherRecovery = allyRecovery.Economy.First(e => e.ActorIndex == 0 && e.DefinitionRef == "spell_julingshu");
         AssertEqual((100, 80), (otherRecovery.SpiritBefore, otherRecovery.SpiritAfter), "ally recovery spends the production 20 MP");
-        AssertEqual(86, otherRecovery.SpiritByActor[1], "ally recovery applies the production half output after raw-spirit calculation");
+        AssertEqual(26, otherRecovery.SpiritByActor[1], "four zero-CD casts precede the slow healer, which restores the capped half output");
 
         var path = board.QueryMovementPath(new(0, 0), new(3, 0), 100000, 3000);
         AssertEqual(99999, path.ActionPointCostUnits, "three ordinary edges at v3 fit 100 AP");
@@ -254,10 +255,10 @@ static class BattleSimSelfTests
 
         AssertEqual(4111, GameData.ProjectMovement("练气", 0, "苦行剑典").EffectiveMilliUnits, "exact first ninth projected once");
         AssertEqual(5000, GameData.ProjectMovement("练气", 8, "苦行剑典").EffectiveMilliUnits, "nine exact ninths reach one whole bonus");
-        AssertEqual(14860, GameData.ProjectMovement("筑基", 1, "苦行剑典").EffectiveMilliUnits, "prior nodes plus current 30/32 share");
-        AssertEqual(64000, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "approved golden-core cumulative movement");
-        AssertEqual(48000, GameData.ProjectMovement("金丹", 2, "含弘光大典").EffectiveMilliUnits, "switching gongfa removes its passive movement");
-        AssertEqual(64000, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "rebuilding does not double grant old nodes");
+        AssertEqual(4953, GameData.ProjectMovement("筑基", 1, "苦行剑典").EffectiveMilliUnits, "prior nodes plus current 30/32 share");
+        AssertEqual(6400, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "approved golden-core cumulative movement");
+        AssertEqual(4800, GameData.ProjectMovement("金丹", 2, "含弘光大典").EffectiveMilliUnits, "switching gongfa removes its passive movement");
+        AssertEqual(6400, GameData.ProjectMovement("金丹", 2, "苦行剑典").EffectiveMilliUnits, "rebuilding does not double grant old nodes");
         AssertEqual(true, GameData.ProjectMovement("练气", 0, "抱元守一经").UnlockedChapters.Contains("练气守一"), "the first legal chapter is recorded");
         AssertEqual(0, GameData.ProjectMovement("筑基", 0, "万物不迁法").UnlockedChapters.Count, "learning eligibility does not unlock the golden-core chapter early");
         bool unknownRejected = false;
@@ -268,7 +269,7 @@ static class BattleSimSelfTests
         try { Combat.SimulateDetailed(board, missing, b, adjacent, 1); } catch (InvalidOperationException e) { missingRejected = e.Message == "action_economy_character_input_invalid"; }
         AssertEqual(true, missingRejected, "missing long-term AP is rejected rather than filled");
 
-        Character Water() { var c = Fixture("water", 50); c.GongFaName = "秋水游心经"; c.Style = "water_physical"; c.Primary["神识"] = 100; c.AssignArts(); return c; }
+        Character Water() { var c = Fixture("water", 50); c.GongFaName = "秋水游心经"; c.Style = "water_physical"; c.Realm = "筑基"; c.FixedTestAbilityTierId = "tier_lianqi"; c.Primary["神识"] = 1000; c.AssignArts(); return c; }
         Character Lightning() { var c = Fixture("lightning", 49); c.Realm = "筑基"; c.GongFaName = "九霄雷劫录"; c.Style = "yuqing_leijie"; c.HealthRecoveryPerOwnTurn = 7; c.AssignArts(); return c; }
         Combat.ResetDeterministicRandom();
         var forward = Combat.SimulateDetailed(board, Water(), Lightning(), adjacent, 12);
@@ -288,12 +289,12 @@ static class BattleSimSelfTests
 
         var assembly = GoldenCoreAssembly.Create(LoadGoldenCoreFixture("jd.valid.three-mansion-three-seats"));
         var sharedActor = Fixture("shared-instance"); sharedActor.Realm = "金丹"; sharedActor.FormedState = "成丹"; sharedActor.DanJiType = "fixture";
-        sharedActor.AssignArts(); sharedActor.SetActionEconomyInputs(150000, 0);
+        sharedActor.FixedTestAbilityTierId = "tier_lianqi"; sharedActor.AssignArts(); sharedActor.SetActionEconomyInputs(150000, 0);
         sharedActor.AssignGoldenCoreAssembly(assembly, "guardian_ming", "guardian_ming");
         Combat.ResetDeterministicRandom();
         var sharedRun = Combat.SimulateDetailed(board, sharedActor, Fixture("shared-target"), adjacent, 2);
         AssertEqual(1, sharedRun.Economy.Count(e => e.Turn == 1 && e.Event == "action_committed" && e.AbilityInstanceId == "guardian_ming"), "two external forms share one actual cooldown ledger");
-        AssertEqual(20, sharedRun.Economy.First(e => e.Event == "own_turn_ended").Cooldowns["guardian_ming"], "shared ledger is not double ticked by forms");
+        AssertEqual(4, sharedRun.Economy.First(e => e.Event == "own_turn_ended").Cooldowns["guardian_ming"], "shared ledger is not double ticked by forms");
 
         var shouyi = Fixture("shouyi"); shouyi.Realm = "金丹"; shouyi.GongFaName = "抱元守一经";
         Combat.ResetDeterministicRandom();
@@ -310,12 +311,177 @@ static class BattleSimSelfTests
         Console.WriteLine(JsonSerializer.Serialize(new
         {
             seed = 20260712,
-            inputs = new { effects = GameData.InputHash("docs/角色养成/术法神通数值模板.txt"), growth = GameData.InputHash("docs/角色养成/功法数值模板.txt"), attacks = GameData.InputHash("src/Assets/DataConfig/AttackProfiles.csv") },
+            inputs = new { GameData.Rules.RuleSetVersion,GameData.Rules.SourceDigest },
             dualEntryFixture = "adjacent 50/50 speed, 100 AP, v0, two inactive group partners; normalized actor indices only",
             duel = duel.Economy, group = group.Economy, ct = penalties.Economy, production = productionRun.Economy,
             symmetry = forward.Economy, shared = sharedRun.Economy, allyRecovery = allyRecovery.Economy
             , waiting = waiting.Economy, moving = moving.Economy
         }));
+    }
+
+    internal static Character Ap2Fixture(string realm = "金丹", string style = "physical", string tier = "tier_lianqi", int hp = 10000)
+    {
+        var c = new Character { Name="ap2-fixture",Realm=realm,Style=style,FixedTestAbilityTierId=tier,
+            FormedState=realm=="金丹" ? "成丹" : "",DanJiType=realm=="金丹" ? "explicit-test-qualification" : "",
+            Innate=new() { ["根骨"]=8,["魂魄"]=25,["神识"]=10,["资质"]=8,["气运"]=8 },
+            Primary=new() { ["HP"]=hp,["MP"]=100000,["肉攻"]=5000,["神攻"]=5000,["肉防"]=1000,["神防"]=1000,["反应"]=100,["神识"]=25 } };
+        var movement=GameData.ProjectMovement(realm,realm=="练气" ? 8 : 2,"");
+        c.SetActionEconomyInputs(movement.ActionPointMaximumUnits,movement.EffectiveMilliUnits); c.AssignArts(); return c;
+    }
+    static void RunAp2()
+    {
+        var service=new CombatCommandService(); var board=new HexBattlefield();
+        AssertEqual(51,GameData.Rules.Economy.Count(r=>r.RecordKind=="test_action"),"51 explicit test triples");
+        AssertEqual(4,GameData.ProductionAttacks.Count,"four actual production IDs");
+        AssertEqual(false,GameData.ProjectMovement("金丹",2,"万法都箓经").UnlockedChapters.Any(p=>p.Contains("元婴")),"future chapter is never granted early");
+        AssertEqual(5333,GameData.ProjectMovement("筑基",2,"苦行剑典").EffectiveMilliUnits,"same table cumulative M rescale");
+        foreach (var row in GameData.Rules.Economy.Where(r=>r.RecordKind=="test_action"))
+        {
+            string style=row.DefinitionRef.StartsWith("Physical") ? "physical" : row.DefinitionRef.StartsWith("Water") ? "water_physical" :
+                row.DefinitionRef.StartsWith("TaiyiFuxiu") ? "taiyi_fuxiu" : row.DefinitionRef.StartsWith("Taiyi") ? "taiyi" :
+                row.DefinitionRef.StartsWith("Taixu") ? "taixu" : row.DefinitionRef.StartsWith("YuqingLeijie") ? "yuqing_leijie" :
+                row.DefinitionRef.StartsWith("Yuqing") ? "yuqing" : row.DefinitionRef=="KuxingAction" ? "yuqing_kuxing" : "magic";
+            var actor=Ap2Fixture(style:style,tier:row.AbilityTierId,hp:1000000);
+            if (row.DefinitionRef=="KuxingAction") actor.GongFaName="苦行剑典";
+            if (row.DefinitionRef.EndsWith("Divine") || row.DefinitionRef=="KuxingAction") actor.ArtName="";
+            if (!row.DefinitionRef.EndsWith("Divine")) actor.DivineName="";
+            var target=Ap2Fixture(hp:1000000); target.ArtName=""; target.DivineName=""; target.Primary["反应"]=1;
+            var p=GameData.GenericProfile(row.DefinitionRef,row.AbilityTierId);
+            actor.SetActionEconomyInputs(p.Cost.ActionPointCostUnits,0);
+            Combat.ResetDeterministicRandom();
+            var full=Combat.SimulateDetailed(board,actor,target,new[] { new HexCoord(0,0),new HexCoord(p.MinRange,0) },1);
+            var action=full.Economy.Single(e=>e.Event=="action_committed");
+            AssertEqual(p.Cost.ActionPointCostUnits,action.CostUnits,"full exact base quote "+row.DefinitionRef);
+            AssertEqual(row.AbilityTierId,action.AbilityTierId,"full fixed tier");
+            var shared=Ap2CombatReport.Session(new[] { actor,target },false);
+            shared.Combatants.All.Single(a=>a.Team==CombatTeam.Enemy).SetPosition(new TianZhang.Spatial.HexCoord(p.MinRange,0));
+            AssertEqual("actor-0",service.AdvanceUntilAction(shared).ActorId,"shared current actor");
+            var profile=shared.AttackProfiles.Single();
+            var command=new CombatCommand(profile.Kind==CombatAttackKind.Divine ? CombatCommandKind.Divine : CombatCommandKind.Art,
+                "actor-0","actor-1",profile.Id,new CombatResolutionRolls(0,100,100,100,100));
+            var quote=service.Preview(shared,command);
+            AssertEqual(true,quote.IsLegal,"shared legal triple "+row.DefinitionRef);
+            AssertEqual(p.Cost.ActionPointCostUnits,quote.ActionPointCostUnits,"same CSV quote");
+            var result=service.Execute(shared,command,quote); AssertEqual(true,result.Succeeded,"shared actual triple "+row.DefinitionRef);
+            AssertEqual(p.Cost.ActionPointCostUnits,result.ActionPointSpentUnits,"shared exact payment");
+        }
+        var basicActor=Ap2Fixture(); basicActor.ArtName=""; basicActor.DivineName=""; basicActor.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"];
+        var enemy=Ap2Fixture(hp:1000000); enemy.ArtName=""; enemy.DivineName=""; enemy.Primary["反应"]=1;
+        Combat.ResetDeterministicRandom();
+        var repeated=Combat.SimulateDetailed(board,basicActor,enemy,new[] { new HexCoord(0,0),new HexCoord(1,0) },1);
+        var paid=repeated.Economy.Where(e=>e.Event=="action_committed").ToArray();
+        AssertSequence(new[] { 40000,40000,50000,60000,60000 },paid.Take(5).Select(e=>e.CostUnits).ToArray(),"full 1/2/3/4/cap");
+        AssertSequence(new[] { 0,1,2,3,4 },paid.Take(5).Select(e=>e.CommittedUseCount).ToArray(),"full use count");
+        AssertEqual(true,paid.All(e=>e.ActionPointsBeforeUnits-e.ActionPointsRemainingUnits==e.CostUnits),"full quote/payment identity");
+        var sharedRepeat=Ap2CombatReport.Session(new[] { basicActor,enemy },false); service.AdvanceUntilAction(sharedRepeat);
+        var basicCommand=new CombatCommand(CombatCommandKind.BasicAttack,"actor-0","actor-1","basic_iron_sword",new CombatResolutionRolls(0,100,100,100,100));
+        foreach (int cost in new[] { 40000,40000,50000,60000,60000 })
+        {
+            var q=service.Preview(sharedRepeat,basicCommand); AssertEqual(cost,q.ActionPointCostUnits,"shared cap sequence");
+            AssertEqual(cost,service.Execute(sharedRepeat,basicCommand,q).ActionPointSpentUnits,"shared payment");
+        }
+        var unequipped=Ap2Fixture(); unequipped.ArtName=""; unequipped.DivineName="";
+        var noWeapon=Ap2CombatReport.Session(new[] { unequipped,enemy },false); service.AdvanceUntilAction(noWeapon);
+        AssertEqual("attack_profile_not_authorized",service.Preview(noWeapon,basicCommand).Validation.RejectionReason,"no implicit unarmed");
+        foreach (string realm in new[] { "练气","筑基","金丹" })
+        {
+            var bitter=Ap2Fixture(realm,"yuqing_kuxing"); bitter.GongFaName="苦行剑典"; bitter.ArtName=""; bitter.DivineName=""; bitter.SetActionEconomyInputs(75000,0);
+            Combat.ResetDeterministicRandom();
+            var full=Combat.SimulateDetailed(board,bitter,enemy,new[] { new HexCoord(0,0),new HexCoord(1,0) },1);
+            var e=full.Economy.Single(e=>e.Event=="action_committed");
+            int hp=realm=="练气" ? 9000 : realm=="筑基" ? 8500 : 8600;
+            AssertEqual(hp,e.HealthAfter,"full original realm life fee/recovery budget");
+            AssertEqual(300,e.KuxingDebtByActor[0],"full next physical defense debt");
+            var ss=Ap2CombatReport.Session(new[] { bitter,enemy },false); service.AdvanceUntilAction(ss);
+            var caster=ss.Combatants.All.First(); var p=ss.AttackProfiles.Single();
+            var command=new CombatCommand(CombatCommandKind.Art,caster.Id,"actor-1",p.Id,new CombatResolutionRolls(0,100,0,100,100));
+            var q=service.Preview(ss,command); var prepared=service.Prepare(ss,command,q,out var commit);
+            AssertEqual(true,prepared.Succeeded,"shared Kuxing prepare"); AssertEqual(10000,caster.CurrentHealth,"preparation leaks no health fee");
+            AssertEqual(0,caster.Statuses.Count,"preparation leaks no defense debt"); commit();
+            AssertEqual(hp,caster.CurrentHealth,"shared same original realm life fee"); AssertEqual(true,caster.HasStatus(CombatStatusKind.KuxingDefenseDebt),"shared published debt");
+        }
+        var water=Ap2Fixture(style:"water_physical"); water.ArtName=""; water.SetActionEconomyInputs(1000000,0);
+        var ws=Ap2CombatReport.Session(new[] { water,enemy },false); service.AdvanceUntilAction(ws);
+        var wa=ws.Combatants.All.First(); var wt=ws.Combatants.All.Last(); var wp=ws.AttackProfiles.Single();
+        var waterCommand=new CombatCommand(CombatCommandKind.Divine,wa.Id,wt.Id,wp.Id,new CombatResolutionRolls(0,100,100,100,100));
+        for(int n=0;n<4;n++)
+        {
+            if(n>0) wa.AdvanceCooldowns(12);
+            AssertEqual(true,service.Execute(ws,waterCommand).Succeeded,"shared water root");
+            AssertEqual(Math.Min(3,n+1),wt.Statuses.Single(s=>s.Kind==CombatStatusKind.WaterMark).StackCount,"three layer limit");
+            AssertEqual(1,wa.Statuses.Count(s=>s.Kind==CombatStatusKind.WaterReduction),"reapply overwrites rather than stacks");
+        }
+        AssertEqual(982,wt.PhysicalDefense,"low tier 15 percent reduces only capacity120");
+        AssertEqual("tier_lianqi",wt.Statuses.Single().AbilityTierId,"water source tier retained");
+        var frozen=Ap2Fixture("练气",tier:"tier_lianqi"); frozen.Realm="金丹";
+        AssertEqual("tier_lianqi",frozen.AbilityTierId,"realm change alone never upgrades a granted test instance");
+        AssertEqual(50000,frozen.ArtCost.ActionPointCostUnits,"frozen cost remains from its original tier");
+        var misses=Ap2Fixture(); misses.ArtName=""; misses.DivineName=""; misses.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"];
+        enemy.Secondary["闪避率"]=1000;
+        Combat.ResetDeterministicRandom();
+        var missed=Combat.SimulateDetailed(board,misses,enemy,new[] { new HexCoord(0,0),new HexCoord(1,0) },1);
+        var missPaid=missed.Economy.Where(e=>e.Event=="action_committed").ToArray();
+        AssertEqual(true,missPaid.Any(e=>e.HealthByActor[1]==1000000 && e.CommittedUseCount>0),"legal miss still advances the full root-use count");
+        enemy.Secondary.Clear();
+        foreach (string realm in new[] { "练气","筑基","金丹" })
+        {
+            var caster=Ap2Fixture(realm,"yuqing_kuxing"); caster.GongFaName="苦行剑典"; caster.ArtName=""; caster.DivineName=""; caster.SetActionEconomyInputs(75000,0);
+            var low=Ap2Fixture(style:"yuqing_kuxing"); low.GongFaName="苦行剑典"; low.ArtName=""; low.DivineName=""; low.Primary["反应"]=200;
+            Combat.ResetDeterministicRandom();
+            var battle=Combat.SimulateDetailed(board,caster,low,new[] { new HexCoord(0,0),new HexCoord(1,0) },2);
+            var root=battle.Economy.First(e=>e.ActorIndex==0 && e.Event=="action_committed");
+            int before=battle.Economy.TakeWhile(e=>e!=root).Last().HealthByActor[1];
+            AssertEqual(true,before<5000,"target actually below half after its own life fees");
+            AssertEqual(realm=="练气" ? 26 : 34,before-root.HealthByActor[1],"full fixed-Qi damage uses original realm low-health qualification");
+        }
+        var passive=Ap2Fixture(); passive.ArtName=""; passive.DivineName=""; passive.GongFaName="抱元守一经";
+        passive.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"]; passive.HealthRecoveryPerOwnTurn=7; passive.SpiritRecoveryPerOwnTurn=3;
+        var passiveSession=Ap2CombatReport.Session(new[] { passive,enemy },false); var owner=passiveSession.Combatants.All.First();
+        owner.ReceiveDamage(100); owner.SetSpirit(100,10); service.AdvanceUntilAction(passiveSession);
+        AssertEqual(9907,owner.CurrentHealth,"shared declared health restoration once at own start"); AssertEqual(13,owner.CurrentSpirit,"shared declared spirit restoration once at own start");
+        for(int n=0;n<5;n++) AssertEqual(true,service.Execute(passiveSession,basicCommand).Succeeded,"shared multiple own commands");
+        AssertEqual(9907,owner.CurrentHealth,"shared commands do not multiply passive HP"); AssertEqual(13,owner.CurrentSpirit,"shared commands do not multiply passive MP");
+        service.Execute(passiveSession,new CombatCommand(CombatCommandKind.EndTurn,owner.Id));
+        AssertEqual(3,owner.ShouyiStacks,"shared multiple attacks give one own-end stack, from initial2");
+        var fullWater=Ap2Fixture(style:"water_physical",hp:1000000); fullWater.ArtName=""; fullWater.SetActionEconomyInputs(75000,0);
+        var waterEnemy=Ap2Fixture(hp:1000000); waterEnemy.ArtName=""; waterEnemy.DivineName="";
+        waterEnemy.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"]; waterEnemy.SetActionEconomyInputs(40000,0);
+        Combat.ResetDeterministicRandom();
+        var waterFull=Combat.SimulateDetailed(board,fullWater,waterEnemy,new[] { new HexCoord(0,0),new HexCoord(1,0) },80);
+        var waterRoots=waterFull.Economy.Where(e=>e.DefinitionRef=="WaterDivine" && e.Event=="action_committed").ToArray();
+        AssertEqual(true,waterRoots.Length>=4,"full water reapplication executes after global cooldown");
+        AssertEqual(true,waterRoots.All(e=>e.WaterStacksByActor[1]<=3 && e.WaterReductionByActor[0]==.30m),"full total stack peak and one overwrite");
+        AssertEqual(true,waterFull.Economy.Any(e=>e.ActorIndex==1 && e.Event=="action_committed" && e.WaterReductionByActor[0]==0),"full next positive damage consumes reduction");
+        var bitterDebt=Ap2Fixture(style:"yuqing_kuxing"); bitterDebt.GongFaName="苦行剑典"; bitterDebt.ArtName=""; bitterDebt.DivineName="";
+        bitterDebt.SetActionEconomyInputs(75000,0); Combat.ResetDeterministicRandom();
+        var debtFull=Combat.SimulateDetailed(board,bitterDebt,waterEnemy,new[] { new HexCoord(0,0),new HexCoord(1,0) },2);
+        AssertEqual(300,debtFull.Economy.First(e=>e.ActorIndex==0 && e.Event=="action_committed").KuxingDebtByActor[0],"full published defense debt");
+        AssertEqual(0,debtFull.Economy.First(e=>e.ActorIndex==1 && e.Event=="action_committed").KuxingDebtByActor[0],"full next physical received hit consumes debt");
+        var circle=new GameData.AreaTargetingConfig("ap2-fixture-circle",GameData.AreaCenterKind.TargetCell,1,1,
+            new GameData.AreaShapeConfig(GameData.AreaShapeKind.Circle,1,0,0,null,0),GameData.AreaEffectBlocker.None,
+            GameData.AreaTargetFaction.Enemy,GameData.AreaTargetState.Alive);
+        var areaActor=Ap2Fixture(); areaActor.ArtName=""; areaActor.DivineName=""; areaActor.SetActionEconomyInputs(100000,0);
+        areaActor.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"] with { AreaTargeting=circle };
+        var inactive=Ap2Fixture(); inactive.Primary["HP"]=0; inactive.ArtName=""; inactive.DivineName="";
+        var areaOther=Ap2Fixture(hp:1000000); areaOther.ArtName=""; areaOther.DivineName="";
+        Combat.ResetDeterministicRandom();
+        var area=Combat.Simulate2v2Detailed(board,areaActor,inactive,enemy,areaOther,
+            new[] { new HexCoord(0,0),new HexCoord(0,1),new HexCoord(1,0),new HexCoord(1,-1) },1);
+        AssertEqual(2,area.Actions.Count(a=>a.ActorIndex==0 && a.AreaHitTargetIndexes.Count==2),"full two-target root actually resolves twice");
+        AssertSequence(new[] { 40000,40000 },area.Economy.Where(e=>e.Event=="action_committed").Select(e=>e.CostUnits).ToArray(),"area pays once per root rather than per target");
+        AssertSequence(new[] { 0,1 },area.Economy.Where(e=>e.Event=="action_committed").Select(e=>e.CommittedUseCount).ToArray(),"area counts once per root");
+        areaActor.BasicAttackProfile=GameData.ProductionAttacks["basic_iron_sword"];
+        var sharedGroup=Ap2CombatReport.Session(new[] { areaActor,Ap2Fixture(),enemy,areaOther },true); service.AdvanceUntilAction(sharedGroup);
+        var groupQuote=service.Preview(sharedGroup,basicCommand);
+        var groupTarget=new CombatCommand(CombatCommandKind.BasicAttack,"actor-0","actor-2","basic_iron_sword",new CombatResolutionRolls(0,100,100,100,100));
+        groupQuote=service.Preview(sharedGroup,groupTarget);
+        AssertEqual(40000,service.Execute(sharedGroup,groupTarget,groupQuote).ActionPointSpentUnits,"shared group single target root pays once");
+        AssertEqual(1000000,sharedGroup.Combatants.All.Single(a=>a.Id=="actor-3").CurrentHealth,"shared group does not invent an area payload");
+        // Area root and both team layouts execute the existing full simulation owner.
+        RunGroupAreaTargetingNGroup02();
+        Console.WriteLine(JsonSerializer.Serialize(new { GameData.Rules.RuleSetVersion,GameData.Rules.SourceDigest,
+            triples=51,fullRepeat=paid.Take(5).Select(e=>new { e.CostUnits,e.CommittedUseCount,e.RepeatMultiplierPermille }),
+            fullArea="existing AreaTargeting root",sharedWater=wt.Statuses,coverage="actual full and shared transactions" }));
     }
 
     static void RunRealmTq013A()

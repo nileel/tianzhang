@@ -66,7 +66,7 @@ static class ActionEconomyBalanceReport
 
     internal static int Run(IReadOnlyList<Program.BuildDef> builds)
     {
-        Emit(new { report = "N-COMBAT-AP-BALANCE-01", version = 1, seed = Seed,
+        Emit(new { report = "LEGACY_NATIVE_SENSITIVITY_ONLY", version = 1, seed = Seed,
             combatStreamSeed = 20260712, samplesPerBuildRow = 8, samplesPerNativeRow = 100,
             inputs = new[] { "docs/角色养成/术法神通数值模板.txt", "docs/角色养成/功法数值模板.txt",
                 "src/Assets/DataConfig/AttackProfiles.csv", "开发管理/统一行动力道具合同.txt", "开发管理/统一行动力换装合同.txt" }
@@ -75,7 +75,7 @@ static class ActionEconomyBalanceReport
         ProductionMatrix();
         BudgetMatrix();
         ItemEquipmentMatrix(builds);
-        Emit(new { result = "AP_BALANCE_PASS", kernelChanged = false });
+        Emit(new { result = "LEGACY_FIXTURE_ONLY_NOT_AP2_BALANCE", kernelChanged = true });
         return 0;
     }
 
@@ -369,5 +369,134 @@ static class ActionEconomyBalanceReport
             Emit(new { matrix = "item-boundary", initialHp = hp, stun, count, restored,
                 overflow = 80 * count - restored, pillsLeft = pills, apLeft = actor.ActionPointsRemainingUnits });
         }
+    }
+}
+
+// AP2 entry uses the same four-table projection and the actual shared command transaction.
+static class Ap2CombatReport
+{
+    internal sealed class Space : ICombatSpatialQuery
+    {
+        public CombatRangeQueryResult QueryRange(NativeHex a, NativeHex b, int min, int max)
+        {
+            int d = (Math.Abs(a.Q-b.Q)+Math.Abs(a.R-b.R)+Math.Abs(a.Q+a.R-b.Q-b.R))/2;
+            return new(d >= min && d <= max,"target_out_of_range");
+        }
+        public CombatMovementQueryResult QueryMovement(NativeHex a, NativeHex b, int ap, int v, IReadOnlyCollection<NativeHex> occupied)
+            => throw new NotSupportedException("AP2 adjacent fixture has no movement command.");
+        public IReadOnlyDictionary<NativeHex,int> FindReachable(NativeHex a,int ap,int v,IReadOnlyCollection<NativeHex> occupied)
+            => throw new NotSupportedException("AP2 adjacent fixture has no movement command.");
+    }
+    internal static CombatOrdinaryActionDefinition[] Ordinary() => new[] {
+        new CombatOrdinaryActionDefinition(CombatCommandKind.Guard,50000,50000,0,0),
+        new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell,50000,50000,0,60) };
+    internal static CombatAttackProfile[] Profiles(Character c)
+    {
+        var profiles = new List<CombatAttackProfile>();
+        if (c.ArtName != "") profiles.Add(GameData.SharedProfile(GameData.GenericProfile(GameData.DefinitionForStyle(c.Style,false),c.AbilityTierId)));
+        if (c.DivineName != "") profiles.Add(GameData.SharedProfile(GameData.GenericProfile(GameData.DefinitionForStyle(c.Style,true),c.AbilityTierId),c.DivineDefPen));
+        if (c.GongFaName == "苦行剑典" && c.Style == "yuqing_kuxing" && c.Realm != "凡人")
+            profiles.Add(GameData.SharedProfile(GameData.GenericProfile("KuxingAction",c.AbilityTierId)));
+        profiles.AddRange(c.ProductionArtIds.Select(id => GameData.SharedProfile(GameData.ProductionAttacks[id])));
+        if (c.BasicAttackProfile != null) profiles.Add(GameData.SharedProfile(c.BasicAttackProfile));
+        return profiles.ToArray();
+    }
+    internal static CombatantSnapshot Snapshot(string id, CombatTeam team, Character c, NativeHex position)
+    {
+        var profiles = Profiles(c);
+        var arts = profiles.Where(p => p.Kind == CombatAttackKind.Art).Select(p => p.Id).ToArray();
+        var divine = profiles.Where(p => p.Kind == CombatAttackKind.Divine).Select(p => p.Id).ToArray();
+        var instances = profiles.ToDictionary(p => p.Id,p =>
+            p.Kind == CombatAttackKind.Divine && c.DivineAbilityInstanceId != "" ? c.DivineAbilityInstanceId :
+            p.RuleMetadata.PrototypeDefinitionRef == GameData.DefinitionForStyle(c.Style,false) && c.ArtAbilityInstanceId != "" ? c.ArtAbilityInstanceId :
+            id + ":" + (p.RuleMetadata.PrototypeDefinitionRef == "" ? p.Id : p.RuleMetadata.PrototypeDefinitionRef));
+        var actor = new CombatantSnapshot(id,team,position,c.Primary["反应"],c.Primary["HP"],c.IsDead ? 0 : c.Primary["HP"],
+            c.Primary["肉攻"],c.Primary["神攻"],c.Primary["肉防"],c.Primary["神防"],c.ActionPointMaximumUnits,c.MovementEfficiencyMilliUnits,
+            realmMultiplier:c.Realm switch { "金丹" => 6f,"筑基" => 3f,_ => 1f },
+            equippedArtProfileIds:arts,availableArtProfileIds:arts,basicAttackProfileId:profiles.SingleOrDefault(p => p.Kind == CombatAttackKind.Basic)?.Id,
+            equippedDivineProfileIds:divine,availableDivineProfileIds:divine,rawSpirit:c.Innate["魂魄"],realmStage:c.Realm,
+            abilityInstanceIds:instances,rawMind:c.Primary["神识"])
+        {
+            GongFaId = c.GongFaName,GongFaElement = GameData.NormalizeElement(GameData.GongFaElements.GetValueOrDefault(c.GongFaName,"")),
+            HealthRecoveryPerOwnTurn = c.HealthRecoveryPerOwnTurn,SpiritRecoveryPerOwnTurn = c.SpiritRecoveryPerOwnTurn,
+            HitRateBonus = (float)c.Secondary.GetValueOrDefault("命中率",0),DodgeRate = (float)c.Secondary.GetValueOrDefault("闪避率",0),
+            CriticalRate = (float)c.Secondary.GetValueOrDefault("暴击率",0),CriticalDamage = (float)c.Secondary.GetValueOrDefault("暴击伤害",0),
+            BlockRate = (float)c.Secondary.GetValueOrDefault("格挡率",0),BlockReduction = (float)c.Secondary.GetValueOrDefault("格挡减伤率",0),
+            SoulShieldRate = (float)c.Secondary.GetValueOrDefault("魂盾率",0),SoulShieldReduction = (float)c.Secondary.GetValueOrDefault("魂盾减伤率",0),
+        };
+        actor.SetSpirit(c.Primary["MP"],c.Primary["MP"]);
+        actor.ShouyiStacks = c.GongFaName == "抱元守一经" && c.Realm == "金丹" ? 2 : 0;
+        actor.FudanStacks = c.GongFaName == "云篆度人经" && c.Realm == "金丹" ? 2 : 0;
+        return actor;
+    }
+    internal static CombatSession Session(IReadOnlyList<Character> characters, bool group)
+    {
+        var actors = characters.Select((c,i) => Snapshot("actor-"+i,
+            i < (group ? 2 : 1) ? CombatTeam.Player : CombatTeam.Enemy,c,
+            new NativeHex(i < (group ? 2 : 1) ? 0 : 1,group ? i%2 : 0))).ToArray();
+        foreach (var actor in actors) actor.Facing = actor.Position.DirectionTo(actors.First(a => a.Team != actor.Team).Position);
+        return new CombatSession(actors,characters.SelectMany(Profiles).GroupBy(p => p.Id,StringComparer.Ordinal).Select(g => g.First()),
+            new Space(),Ordinary(),ruleSet:GameData.Rules);
+    }
+    internal static object Battle(IReadOnlyList<Character> characters,bool group,int seed,int turnLimit = 100)
+    {
+        var session = Session(characters,group); var service = new CombatCommandService(); var random = new Random(seed);
+        var trace = new List<object>(); int turns = 0;
+        while (!session.IsFinished && turns < turnLimit)
+        {
+            var next = service.AdvanceUntilAction(session); if (!next.HasActor) break;
+            turns++; var actor = session.Combatants.All.Single(a => a.Id == next.ActorId);
+            while (actor.OwnTurnActive && !session.IsFinished)
+            {
+                var enemy = session.Combatants.All.Where(a => a.Team != actor.Team && a.IsAlive).OrderBy(a => a.CurrentHealth).ThenBy(a => a.Id).First();
+                CombatCommand selected = null; CombatCommandPreview quote = null;
+                foreach (var profile in session.AttackProfiles.OrderBy(p => p.Kind == CombatAttackKind.Divine ? 0 : p.RuleMetadata.PrototypeDefinitionRef == "KuxingAction" ? 1 : p.Kind == CombatAttackKind.Art ? 2 : 3))
+                {
+                    if (profile.Effect == CombatAttackEffect.RestoreSpirit && actor.CurrentSpirit == actor.MaximumSpirit) continue;
+                    var command = new CombatCommand(profile.Kind == CombatAttackKind.Basic ? CombatCommandKind.BasicAttack : profile.Kind == CombatAttackKind.Art ? CombatCommandKind.Art : CombatCommandKind.Divine,
+                        actor.Id,profile.Effect == CombatAttackEffect.RestoreSpirit ? actor.Id : enemy.Id,profile.Id);
+                    var candidate = service.Preview(session,command); if (!candidate.IsLegal) continue;
+                    selected = command; quote = candidate; break;
+                }
+                if (selected == null) break;
+                var rolls = new CombatResolutionRolls((float)random.NextDouble()*100,(float)random.NextDouble()*100,
+                    (float)random.NextDouble()*100,(float)random.NextDouble()*100,(float)random.NextDouble()*100);
+                var resolved = new CombatCommand(selected.Kind,selected.ActorId,selected.TargetId,selected.ProfileId,rolls);
+                // The preview confirmation is bound to identity, not to the private resolution samples.
+                quote = service.Preview(session,resolved);
+                int ap = actor.ActionPointsRemainingUnits,tick = session.TurnScheduler.CurrentTick;
+                var result = service.Execute(session,resolved,quote);
+                if (!result.Succeeded || ap-actor.ActionPointsRemainingUnits < quote.ActionPointCostUnits || tick != session.TurnScheduler.CurrentTick)
+                    throw new InvalidOperationException("ap2_shared_commit:"+result.RejectionReason);
+                trace.Add(new { turns,actor.Id,tick,selected.ProfileId,quote.ActionPointCostUnits,quote.CommittedUseCount,quote.RepeatMultiplierPermille,
+                    quote.AbilityTierId,actor.CurrentHealth,actor.CurrentSpirit,actor.ShouyiStacks,actor.FudanStacks,result.Damage });
+            }
+            if (actor.OwnTurnActive && !session.IsFinished) service.Execute(session,new CombatCommand(CombatCommandKind.EndTurn,actor.Id));
+        }
+        return new { turns,ticks=session.TurnScheduler.CurrentTick,trace,remaining=session.Combatants.All.Select(a => new { a.Id,a.CurrentHealth,a.CurrentSpirit }) };
+    }
+    internal static int Run(IReadOnlyList<Program.BuildDef> builds,string tierMode)
+    {
+        if (tierMode is not ("same-tier" or "locked-qi")) throw new ArgumentException("AP2 mode must be same-tier or locked-qi");
+        Console.WriteLine(JsonSerializer.Serialize(new { report="N-COMBAT-AP2-SIM-01",GameData.Rules.RuleSetVersion,GameData.Rules.SourceDigest,
+            testTriples=GameData.Rules.Economy.Count(r => r.RecordKind=="test_action"),productionIds=GameData.ProductionAttacks.Keys,tierMode }));
+        var board = new HexBattlefield();
+        foreach (string realm in new[] { "练气","筑基","金丹" })
+        for (int i=0;i<builds.Count;i++) foreach (bool group in new[] { false,true }) foreach (bool mirror in new[] { false,true })
+        {
+            Character Build(int n)
+            {
+                var c=ActionEconomyBalanceReport.Build(builds[n%builds.Count],realm);
+                c.FixedTestAbilityTierId=tierMode=="locked-qi" ? "tier_lianqi" : GameData.TierForRealm(realm); c.AssignArts(); return c;
+            }
+            var chars=group ? new[] { Build(i),Build(i+2),Build(i+1),Build(i+3) } : new[] { Build(i),Build(i+1) };
+            if (mirror) chars=group ? new[] { chars[2],chars[3],chars[0],chars[1] } : new[] { chars[1],chars[0] };
+            Combat.ResetDeterministicRandom();
+            var full=group ? Combat.Simulate2v2Detailed(board,chars[0],chars[1],chars[2],chars[3]) : Combat.SimulateDetailed(board,chars[0],chars[1]);
+            Console.WriteLine(JsonSerializer.Serialize(new { realm,build=builds[i].Name,group,mirror,tierMode,
+                full=new { full.WinnerTeam,full.Turns,full.GlobalTick,commands=full.Economy.Count(e=>e.Event=="action_committed"),paid=full.Economy.Sum(e=>e.CostUnits) },
+                shared=Battle(chars,group,20261010+i) }));
+        }
+        return 0;
     }
 }

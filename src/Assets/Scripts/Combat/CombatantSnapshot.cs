@@ -4,7 +4,7 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
-    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime, Attribute, Xuantong }
+    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime, Attribute, Xuantong, WaterMark, WaterReduction, KuxingDefenseDebt }
     public enum CombatStatusPolarity { BUFF, DEBUFF }
     [Flags]
     public enum CombatStatusTags { ATTRIBUTE = 1, OFFENSE = 2, DEFENSE = 4, ACTION = 8, CONTROL = 16 }
@@ -27,6 +27,9 @@ namespace TianZhang.Combat
         public CombatStatusSourceKind SourceKind { get; internal set; }
         public CombatStatusPolarity Polarity { get; internal set; }
         public CombatStatusTags Tags { get; internal set; }
+        public int StackCount { get; internal set; }
+        public int SourceRealmOrder { get; internal set; }
+        public string AbilityTierId { get; internal set; }
         public string RemovalPolicy => "NORMAL";
         internal CombatOwnTurnStatus Copy() => (CombatOwnTurnStatus)MemberwiseClone();
     }
@@ -217,7 +220,7 @@ namespace TianZhang.Combat
         public void ApplyStatus(CombatStatusKind kind, int ownTurnEnds, int damagePerStart = 0,
             string sourceRef = null, bool selfAbility = false)
         {
-            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || kind == CombatStatusKind.Attribute ||
+            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || kind is CombatStatusKind.Attribute or CombatStatusKind.WaterMark or CombatStatusKind.WaterReduction or CombatStatusKind.KuxingDefenseDebt ||
                 ownTurnEnds <= 0 || damagePerStart < 0 ||
                 (kind == CombatStatusKind.Xuantong && (string.IsNullOrWhiteSpace(sourceRef) || damagePerStart != 0)))
                 throw new ArgumentOutOfRangeException(nameof(ownTurnEnds));
@@ -236,6 +239,67 @@ namespace TianZhang.Combat
         }
 
         internal void ClearStatuses() => statuses.Clear();
+
+        internal void ApplyKuxingDefenseDebt(string sourceRef)
+        {
+            statuses.RemoveAll(s => s.Kind == CombatStatusKind.KuxingDefenseDebt);
+            statuses.Add(new CombatOwnTurnStatus(CombatStatusKind.KuxingDefenseDebt, int.MaxValue, 0, false)
+            {
+                StatusId = "prototype_kuxing_defense_debt", SourceRef = sourceRef,
+                SourceKind = CombatStatusSourceKind.SELF_ABILITY, Polarity = CombatStatusPolarity.DEBUFF,
+                Tags = CombatStatusTags.ATTRIBUTE | CombatStatusTags.DEFENSE,
+            });
+        }
+
+        internal int ConsumeKuxingDefenseDebt()
+        {
+            if (!HasStatus(CombatStatusKind.KuxingDefenseDebt)) return 0;
+            statuses.RemoveAll(s => s.Kind == CombatStatusKind.KuxingDefenseDebt);
+            return checked((int)((long)Math.Max(0, BasePhysicalDefense) * 3 / 10));
+        }
+
+        internal void ApplyWaterPrototype(CombatAttackRuleMetadata payload, CombatRuleSet rules,
+            int coefficient, int sourceOrder, string sourceRef, CombatantSnapshot caster)
+        {
+            // A second source has no newly granted stacking permission.
+            var previous = statuses.Find(s => s.Kind == CombatStatusKind.WaterMark);
+            if (IsAlive && (previous == null || previous.SourceRef == sourceRef) &&
+                !statuses.Exists(s => s.Kind == CombatStatusKind.Attribute && s.AttributeId == "physical_defense" && s.SourceRef != sourceRef))
+            {
+                int stacks = Math.Min(rules.Global.WaterDefenseMaxStacks, (previous?.StackCount ?? 0) + 1);
+                long relative = Math.Min((long)rules.Global.RelativeStatusLimitPermille * 1000,
+                    checked((long)rules.Global.WaterDefensePerStackPermille * stacks * coefficient));
+                statuses.RemoveAll(s => s.Kind == CombatStatusKind.WaterMark);
+                statuses.Add(new CombatOwnTurnStatus(CombatStatusKind.WaterMark, int.MaxValue, 0, false)
+                {
+                    StatusId = "prototype_shishui", AttributeId = "physical_defense", StackCount = stacks,
+                    SourceRef = sourceRef, SourceRealmOrder = sourceOrder, AbilityTierId = payload.Tier.AbilityTierId,
+                    DeltaNumerator = -checked(relative * Math.Min(Math.Max(0, BasePhysicalDefense), payload.Tier.PhysicalDefenseCapacity)),
+                    RelativeLimitPermille = rules.Global.RelativeStatusLimitPermille, AttributeCapacity = payload.Tier.PhysicalDefenseCapacity,
+                    SourceKind = CombatStatusSourceKind.OTHER_ABILITY, Polarity = CombatStatusPolarity.DEBUFF,
+                    Tags = CombatStatusTags.ATTRIBUTE | CombatStatusTags.DEFENSE,
+                });
+            }
+            decimal reduction = Math.Min(rules.Global.RelativeStatusLimitPermille,
+                100m * (payload.BaseEffectBudget / 5m) * rules.Global.WaterReductionMigrationNumerator /
+                rules.Global.WaterReductionMigrationDenominator);
+            caster.statuses.RemoveAll(s => s.Kind == CombatStatusKind.WaterReduction);
+            caster.statuses.Add(new CombatOwnTurnStatus(CombatStatusKind.WaterReduction, int.MaxValue, 0, false)
+            {
+                StatusId = "prototype_chuanliu", SourceRef = sourceRef, SourceRealmOrder = sourceOrder,
+                AbilityTierId = payload.Tier.AbilityTierId, DeltaNumerator = checked((long)decimal.Floor(reduction * 1000m)),
+                SourceKind = CombatStatusSourceKind.SELF_ABILITY, Polarity = CombatStatusPolarity.BUFF,
+                Tags = CombatStatusTags.DEFENSE,
+            });
+        }
+
+        internal float ConsumeWaterReduction(float damage)
+        {
+            var state = statuses.Find(s => s.Kind == CombatStatusKind.WaterReduction);
+            if (state == null || damage <= 0) return damage;
+            statuses.Remove(state);
+            return damage * (1f - state.DeltaNumerator / 1000000f);
+        }
 
         // Closed mapping of explicit stage inputs; realm multipliers never determine status potency.
         internal bool TryGetRealmOrder(CombatRuleSet rules, out int order)
@@ -277,7 +341,7 @@ namespace TianZhang.Combat
                 status.StatusId == payload.StatusId && status.SourceRef == sourceRef);
             if (previous != null && Math.Abs(previous.DeltaNumerator) >= Math.Abs(delta)) return;
             // This slice gives no new overlapping-source permission.
-            if (statuses.Exists(status => status.Kind == CombatStatusKind.Attribute &&
+            if (statuses.Exists(status => status.Kind is CombatStatusKind.Attribute or CombatStatusKind.WaterMark &&
                 status.AttributeId == payload.StatusAttributeId && status.SourceRef != sourceRef)) return;
             if (previous != null) statuses.Remove(previous);
             statuses.Add(new CombatOwnTurnStatus(CombatStatusKind.Attribute, payload.StatusDurationOwnTurnEnds, 0, OwnTurnActive)
@@ -299,7 +363,7 @@ namespace TianZhang.Combat
             int limit = 1000;
             int capacity = int.MaxValue;
             foreach (CombatOwnTurnStatus status in statuses)
-                if (status.Kind == CombatStatusKind.Attribute && status.AttributeId == attribute)
+                if (status.Kind is CombatStatusKind.Attribute or CombatStatusKind.WaterMark && status.AttributeId == attribute)
                 {
                     delta = checked(delta + status.DeltaNumerator);
                     limit = Math.Min(limit, status.RelativeLimitPermille);
@@ -385,6 +449,7 @@ namespace TianZhang.Combat
                 FudanStacks = Math.Min(FudanStacks + 1, MaximumFudanStacks);
             foreach (CombatOwnTurnStatus status in statuses)
             {
+                if (status.Kind is CombatStatusKind.WaterMark or CombatStatusKind.WaterReduction or CombatStatusKind.KuxingDefenseDebt) continue;
                 if (status.DeferCurrentEnd) status.DeferCurrentEnd = false;
                 else status.RemainingOwnTurnEnds--;
             }

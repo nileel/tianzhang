@@ -102,6 +102,17 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("combat_control_roll_invalid");
 
             bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
+            bool kuxing = profile.RuleMetadata?.PrototypeDefinitionRef == "KuxingAction";
+            int healthRecovery = 0;
+            if (kuxing)
+            {
+                actor.TryGetRealmOrder(session.RuleSet, out int order);
+                decimal rate = order switch { 3 => .20m, 2 => .15m, _ => .10m };
+                int cost = Math.Min(actor.CurrentHealth - 1, (int)decimal.Floor(actor.CurrentHealth * rate));
+                actor.ReceiveDamage(cost);
+                actor.ApplyKuxingDefenseDebt(actor.GetAbilityInstanceId(profile.Id));
+                if (order == 3) healthRecovery = checked((int)decimal.Floor(cost * profile.RuleMetadata.BaseEffectBudget / 10m));
+            }
             int spiritCost = profile.GetSpiritCost(targetsSelf);
             if (!actor.TryConsumeSpirit(spiritCost))
                 return CombatActionResult.Rejected("spirit_insufficient");
@@ -127,13 +138,22 @@ namespace TianZhang.Combat
             }
             else
             {
-                CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
+                bool lowHealthBonus = false;
+                if (kuxing) { actor.TryGetRealmOrder(session.RuleSet, out int actorOrder); lowHealthBonus = actorOrder >= 2; }
+                CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls, lowHealthBonus);
+                if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
+                {
+                    actor.TryGetRealmOrder(session.RuleSet, out int sourceOrder);
+                    target.ApplyWaterPrototype(profile.RuleMetadata, session.RuleSet, RealmCoefficient(session, actor, target),
+                        sourceOrder, actor.GetAbilityInstanceId(profile.Id), actor);
+                }
                 if (control && damage.IsHit && damage.FinalDamage > 0 && target.IsAlive &&
                     !target.HasStatus(CombatStatusKind.Stun) && !target.HasStatus(CombatStatusKind.Xuantong) &&
                     ControlSucceeds(session, actor, target, profile.RuleMetadata, command.Rolls.ControlRoll.Value))
                     target.ApplyStatus(CombatStatusKind.Stun, 1, sourceRef: actor.GetAbilityInstanceId(profile.Id));
                 result = CombatActionResult.AttackSuccess(spiritCost, damage);
             }
+            if (healthRecovery > 0 && actor.IsAlive) actor.RestoreHealth(healthRecovery);
             // 全局刻重用冷却账本只由 reuseCooldownTicks 启动；CT 惩罚由 CommandService 单独累计。
             if (cooldown > 0) actor.SetCooldown(profile.Id, cooldown);
             return result;
@@ -175,7 +195,7 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatantSnapshot target,
             CombatAttackProfile profile,
-            CombatResolutionRolls rolls)
+            CombatResolutionRolls rolls, bool kuxingLowHealthBonus)
         {
             switch (profile.Effect)
             {
@@ -183,11 +203,11 @@ namespace TianZhang.Combat
                     target.RestoreHealth(profile.HealAmount);
                     return new CombatDamageResult(0, true, false, false, false);
                 case CombatAttackEffect.Physical:
-                    return ResolvePhysical(actor, target, profile, rolls, true, true);
+                    return ResolvePhysical(actor, target, profile, rolls, true, true, kuxingLowHealthBonus);
                 case CombatAttackEffect.Soul:
                     return ResolveSoul(actor, target, profile, rolls, true, true);
                 case CombatAttackEffect.Hybrid:
-                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false);
+                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, kuxingLowHealthBonus);
                     CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false);
                     if (physical.IsHit)
                         target.ReceiveDamage(physical.FinalDamage);
@@ -210,7 +230,7 @@ namespace TianZhang.Combat
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
             bool advanceAction,
-            bool applyDamage)
+            bool applyDamage, bool kuxingLowHealthBonus = false)
         {
             if (!RollHit(actor, target, rolls.HitPercent))
                 return new CombatDamageResult(0, false, false, false, false);
@@ -219,7 +239,11 @@ namespace TianZhang.Combat
             bool critical = rolls.CriticalPercent < actor.CriticalRate + element.CriticalRateBonus;
             float multiplier = profile.PhysicalMultiplier * ConsumeLeijieForPhysicalAction(actor) *
                 (critical ? CriticalMultiplier(actor.CriticalDamage, element.CriticalDamageBonus) : 1f);
-            int effectiveDefense = (int)Math.Round(target.PhysicalDefense * target.DefenseMultiplier(physical: true));
+            bool kuxing = profile.RuleMetadata?.PrototypeDefinitionRef == "KuxingAction";
+            if (kuxingLowHealthBonus && target.CurrentHealth < target.MaximumHealth * .5)
+                multiplier *= 1.3f;
+            int effectiveDefense = (int)Math.Round(Math.Max(0, target.PhysicalDefense - target.ConsumeKuxingDefenseDebt()) * target.DefenseMultiplier(physical: true));
+            effectiveDefense = (int)Math.Round(effectiveDefense * (1f - Clamp(profile.SoulDefensePenetration, 0f, 100f) / 100f));
             int attack = profile.RuleMetadata == null ? actor.PhysicalAttack :
                 Math.Min(actor.PhysicalAttack, profile.RuleMetadata.Tier.PhysicalAttackCapacity);
             float damage = CalculateLineDamage(attack, effectiveDefense, 0f, multiplier,
@@ -227,7 +251,7 @@ namespace TianZhang.Combat
             damage *= FacingDamageModifier(target, actor);
 
             bool backAttack = IsBackAttack(target, actor);
-            bool blocked = !backAttack && rolls.BlockPercent < target.BlockRate;
+            bool blocked = !kuxing && !backAttack && rolls.BlockPercent < target.BlockRate;
             if (blocked)
                 damage *= BlockReductionMultiplier(target.BlockReduction);
             damage = ApplyCommonReductions(damage, target);
@@ -316,6 +340,7 @@ namespace TianZhang.Combat
 
         private static float ApplyCommonReductions(float damage, CombatantSnapshot target)
         {
+            damage = target.ConsumeWaterReduction(damage);
             if (target.GongFaId == "抱元守一经" && target.ShouyiStacks > 0 && damage > 0f)
             {
                 damage *= 0.8f;

@@ -147,6 +147,9 @@ class Program
     {
         Combat.ResetDeterministicRandom();
 
+        if (args.Length == 2 && args[0] == "--ap2")
+            return Ap2CombatReport.Run(BuildDefs,args[1]);
+
         if (args.Length == 1 && args[0] == "--ap-balance")
             return ActionEconomyBalanceReport.Run(BuildDefs);
 
@@ -819,7 +822,7 @@ class Program
         Console.WriteLine($"  金丹入口：每个 Build 的筑基累计成长总额守恒，最大原始差值≤{tolerance:E0}。");
 
         string[] entryBudgetNames = ["南华阐衍典", "太易山藏经", "玄牝道藏", "空无般若经", "万法都箓经", "正一盟威箓"];
-        Console.WriteLine("  行动经济逐来源：AP基础100000／功法增量0，临时v=0（本报告未装配巽卦）；v为千分单位。");
+        Console.WriteLine("  行动经济逐来源：AP按四表境界行／功法增量0，临时v=0（本报告未装配巽卦）；v为千分单位。");
         foreach (string name in BuildDefs.Select(build => build.GongFaName).Concat(entryBudgetNames).Distinct())
         {
             var movement = GameData.ProjectMovement("筑基", 2, name);

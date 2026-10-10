@@ -48,7 +48,6 @@
 | U-COMBAT-UNARMED-CONFIG-01 | P1 | deepseek | 阻塞 | D-COMBAT-UNARMED-CONTRACT-01、N-COMBAT-AP2-SIM-01 | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
 | U-COMBAT-UNARMED-RUNTIME-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-CONFIG-01 | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
 | N-COMBAT-UNARMED-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01、N-COMBAT-AP2-SIM-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
-| N-COMBAT-AP2-SIM-01 | P1 | codex | 已排队 | — | BattleSim双入口境界行动经济迁移 | 开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt |
 | N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-SIM-01、N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
 | U-COMBAT-AP-TUNING-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-BALANCE-01 | 行动力已验证参数回填生产链 | 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt |

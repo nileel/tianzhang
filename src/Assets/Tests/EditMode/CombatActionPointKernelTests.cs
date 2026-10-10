@@ -516,5 +516,100 @@ namespace TianZhang.Tests.EditMode
             p = Actor(); p.GongFaId = "云篆度人经"; s = Ready(p); Commit(s, Hit()); Commit(s, Hit());
             Assert.AreEqual(0, p.FudanStacks); Commit(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)); Assert.AreEqual(1, p.FudanStacks);
         }
+        internal static CombatAttackProfile Prototype(string definition, string tier = "tier_lianqi", decimal budget = 3m)
+        {
+            var rules=Rules(); bool water=definition=="WaterDivine";
+            var payload=new CombatAttackRuleMetadata(rules.RuleSetVersion,rules.SourceDigest,rules.GetTier(tier),
+                water ? "control" : "basic_repeat","damage_budget",new CombatRuleRatio(1,1),new CombatRuleRatio(1,1),new CombatRuleRatio(1,1),
+                "","",0,0,0,"",water ? 100 : 0,water,definition,budget);
+            return new CombatAttackProfile(water ? "water" : "kuxing",water ? CombatAttackKind.Divine : CombatAttackKind.Art,
+                CombatAttackEffect.Physical,1,1,75000,75000,0,water ? 12 : 0,physicalMultiplier:1.5f,ruleMetadata:payload);
+        }
+        internal static CombatantSnapshot PrototypeUnit(string id, CombatTeam team, string stage = "金丹", int hp = 10000, int? mind = 25) =>
+            new CombatantSnapshot(id,team,new HexCoord(id=="player" ? 0 : 1,0),id=="player" ? 200 : 100,
+                hp,hp,5000,5000,1000,1000,1000000,4000,realmStage:stage,rawMind:mind,
+                basicAttackProfileId:"reply",equippedArtProfileIds:new[] { "kuxing" },availableArtProfileIds:new[] { "kuxing" },
+                equippedDivineProfileIds:new[] { "water" },availableDivineProfileIds:new[] { "water" }) { GongFaId="苦行剑典",Facing=id=="player" ? 0 : 3 };
+        internal static CombatAttackProfile Reply() => new CombatAttackProfile("reply",CombatAttackKind.Basic,CombatAttackEffect.Physical,1,1,20000,20000,0,0,physicalMultiplier:1);
+        internal static CombatCommand PrototypeCommand(string id = "kuxing",float hit = 0,float? control = 100) => new CombatCommand(
+            id=="water" ? CombatCommandKind.Divine : CombatCommandKind.Art,"player","enemy",id,new CombatResolutionRolls(hit,100,0,100,control));
+        private CombatSession PrototypeReady(CombatantSnapshot actor, CombatantSnapshot enemy, CombatAttackProfile profile)
+        {
+            var session=new CombatSession(new[] { actor,enemy },new[] { profile,Reply() },new DirectRange(),Ordinary(),ruleSet:Rules());
+            Assert.That(service.AdvanceUntilAction(session).ActorId,Is.EqualTo("player")); return session;
+        }
+        internal sealed class DirectRange : ICombatSpatialQuery
+        {
+            public CombatRangeQueryResult QueryRange(HexCoord a,HexCoord b,int min,int max) => new(true,"");
+            public CombatMovementQueryResult QueryMovement(HexCoord a,HexCoord b,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+            public IReadOnlyDictionary<HexCoord,int> FindReachable(HexCoord a,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+        }
+        [TestCase("练气",9000)] [TestCase("筑基",8500)] [TestCase("金丹",8600)]
+        public void KuxingKeepsOriginalRealmHealthFeeAndBudgetWhileIgnoringBlock(string realm,int hp)
+        {
+            var actor=PrototypeUnit("player",CombatTeam.Player,realm); var enemy=PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            enemy.BlockRate=100; enemy.BlockReduction=100;
+            var session=PrototypeReady(actor,enemy,Prototype("KuxingAction"));
+            var command=PrototypeCommand(); var quote=service.Preview(session,command);
+            Assert.That(actor.CurrentHealth,Is.EqualTo(10000));
+            var result=service.Execute(session,command,quote);
+            Assert.That(result.Succeeded,Is.True,result.RejectionReason); Assert.That(actor.CurrentHealth,Is.EqualTo(hp));
+            Assert.That(result.Damage.Single().IsBlocked,Is.False); Assert.That(actor.HasStatus(CombatStatusKind.KuxingDefenseDebt),Is.True);
+        }
+        [TestCase(false,10000)] [TestCase(true,2)]
+        public void KuxingQualificationAndLifeGateRejectWithoutAnyPayment(bool qualified,int hp)
+        {
+            var actor=PrototypeUnit("player",CombatTeam.Player,hp:hp); if(!qualified) actor.GongFaId="";
+            var session=PrototypeReady(actor,PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000),Prototype("KuxingAction"));
+            var result=service.Execute(session,PrototypeCommand());
+            Assert.That(result.Succeeded,Is.False); Assert.That(actor.CurrentHealth,Is.EqualTo(hp));
+            Assert.That(actor.ActionPointsRemainingUnits,Is.EqualTo(1000000)); Assert.That(actor.Statuses,Is.Empty);
+            Assert.That(service.Preview(session,PrototypeCommand()).CommittedUseCount,Is.Zero); Assert.That(actor.GetCooldown("kuxing"),Is.Zero);
+        }
+        [Test]
+        public void CancelledPreparationAndOverflowPublishNoKuxingEffectOrLedger()
+        {
+            var actor=PrototypeUnit("player",CombatTeam.Player); var enemy=PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            var session=PrototypeReady(actor,enemy,Prototype("KuxingAction")); var command=PrototypeCommand();
+            var q=service.Preview(session,command); Assert.That(service.Prepare(session,command,q,out var apply).Succeeded,Is.True);
+            Assert.That(actor.CurrentHealth,Is.EqualTo(10000)); Assert.That(actor.Statuses,Is.Empty); Assert.That(enemy.CurrentHealth,Is.EqualTo(100000));
+            Assert.That(actor.ActionPointsRemainingUnits,Is.EqualTo(1000000)); Assert.That(service.Preview(session,command).CommittedUseCount,Is.Zero);
+            apply(); Assert.That(actor.CurrentHealth,Is.EqualTo(8600)); Assert.That(service.Execute(session,command,q).RejectionReason,Is.EqualTo("combat_quote_stale"));
+            actor=PrototypeUnit("player",CombatTeam.Player); enemy=PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            session=PrototypeReady(actor,enemy,Prototype("KuxingAction",budget:decimal.MaxValue));
+            Assert.That(service.Execute(session,command).RejectionReason,Is.EqualTo("combat_effect_overflow"));
+            Assert.That(actor.CurrentHealth,Is.EqualTo(10000)); Assert.That(enemy.CurrentHealth,Is.EqualTo(100000));
+            Assert.That(actor.Statuses,Is.Empty); Assert.That(actor.ActionPointsRemainingUnits,Is.EqualTo(1000000));
+            Assert.That(actor.CurrentSpirit,Is.Zero); Assert.That(actor.Cooldowns,Is.Empty);
+            Assert.That(service.Preview(session,command).CommittedUseCount,Is.Zero);
+        }
+        [Test]
+        public void NextPhysicalHitConsumesDebtOnceAndRepeatedApDoesNotIncreaseRecoveryBudget()
+        {
+            var actor=PrototypeUnit("player",CombatTeam.Player); var enemy=PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            var session=PrototypeReady(actor,enemy,Prototype("KuxingAction"));
+            var costs=new List<int>();
+            for(int n=0;n<4;n++)
+            {
+                int before=actor.CurrentHealth; int hpCost=(int)Math.Floor(before*.20m);
+                var result=service.Execute(session,PrototypeCommand()); Assert.That(result.Succeeded,Is.True);
+                costs.Add(result.ActionPointSpentUnits); Assert.That(actor.CurrentHealth,Is.EqualTo(before-hpCost+(int)Math.Floor(hpCost*.30m)));
+                Assert.That(actor.Statuses.Count(s=>s.Kind==CombatStatusKind.KuxingDefenseDebt),Is.EqualTo(1));
+            }
+            Assert.That(costs,Is.EqualTo(new[] { 75000,75000,93750,112500 }));
+            service.Execute(session,new CombatCommand(CombatCommandKind.EndTurn,actor.Id));
+            Assert.That(service.AdvanceUntilAction(session).ActorId,Is.EqualTo("enemy"));
+            var reply=new CombatCommand(CombatCommandKind.BasicAttack,"enemy","player","reply",new CombatResolutionRolls(0,100,100,100));
+            Assert.That(service.Execute(session,reply).Succeeded,Is.True); Assert.That(actor.HasStatus(CombatStatusKind.KuxingDefenseDebt),Is.False);
+        }
+        [TestCase("练气",19)] [TestCase("筑基",25)] [TestCase("金丹",25)]
+        public void LockedLowTierDoesNotGrantEarlyKuxingLowHealthBonus(string realm,int damage)
+        {
+            var actor=PrototypeUnit("player",CombatTeam.Player,realm); var enemy=PrototypeUnit("enemy",CombatTeam.Enemy,hp:100000);
+            enemy.ReceiveDamage(60000);
+            var session=PrototypeReady(actor,enemy,Prototype("KuxingAction"));
+            var result=service.Execute(session,PrototypeCommand()); Assert.That(result.Succeeded,Is.True);
+            Assert.That(result.Damage.Single().FinalDamage,Is.EqualTo(damage));
+        }
     }
 }

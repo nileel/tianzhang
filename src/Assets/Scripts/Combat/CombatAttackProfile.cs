@@ -39,13 +39,22 @@ namespace TianZhang.Combat
         public string StatusRefreshPolicy { get; }
         public int ControlChancePermille { get; }
         public bool ControlUsesMindContest { get; }
+        // Finite SIM prototypes, never inferred from a display name or granted to player content.
+        public string PrototypeDefinitionRef { get; }
+        public decimal BaseEffectBudget { get; }
         public CombatAttackRuleMetadata(string version, string digest, CombatRuleSet.EffectTier tier,
             string cooldownClass, string effectBudgetMode, CombatRuleRatio? efficiency,
             CombatRuleRatio? migration, CombatRuleRatio? weight, string statusId, string attribute,
-            int relative, int duration, int stackLimit, string refresh, int controlChance, bool mindContest)
+            int relative, int duration, int stackLimit, string refresh, int controlChance, bool mindContest,
+            string prototypeDefinitionRef = "", decimal baseEffectBudget = 0)
         {
             if (version != CombatRuleSet.Version || digest == null || !System.Text.RegularExpressions.Regex.IsMatch(digest, "^[a-f0-9]{64}$") || tier == null)
                 throw new ArgumentException("attack_rule_identity_invalid");
+            if (prototypeDefinitionRef != "" &&
+                (Array.IndexOf(CombatRuleSet.DefinitionIds, prototypeDefinitionRef) < 0 || baseEffectBudget <= 0 ||
+                 effectBudgetMode != "damage_budget"))
+                throw new ArgumentException("attack_prototype_payload_invalid");
+            PrototypeDefinitionRef = prototypeDefinitionRef; BaseEffectBudget = baseEffectBudget;
             RuleSetVersion = version; SourceDigest = digest; Tier = tier; CooldownClass = cooldownClass;
             EffectBudgetMode = effectBudgetMode; Efficiency = efficiency; DamageMigration = migration; DamageWeight = weight;
             StatusId = statusId; StatusAttributeId = attribute; StatusRelativePermille = relative;
@@ -114,6 +123,10 @@ namespace TianZhang.Combat
                  ruleMetadata.StatusDurationOwnTurnEnds <= 0 || ruleMetadata.StatusStackLimit != 1 ||
                  ruleMetadata.StatusRefreshPolicy != "replace_stronger"))
                 throw new ArgumentException("combat_status_payload_invalid");
+            if (ruleMetadata?.PrototypeDefinitionRef is "KuxingAction" or "WaterDivine" &&
+                (effect != CombatAttackEffect.Physical ||
+                 kind != (ruleMetadata.PrototypeDefinitionRef == "WaterDivine" ? CombatAttackKind.Divine : CombatAttackKind.Art)))
+                throw new ArgumentException("combat_prototype_effect_invalid");
 
             Id = id;
             Kind = kind;
