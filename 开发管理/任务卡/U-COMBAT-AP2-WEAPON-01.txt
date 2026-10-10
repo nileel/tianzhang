@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "已补齐GuanzhongCombatActionPreviewPlayModeTests.cs及共享夹具迁移边界，更新路径后风险预检通过；原run已关闭，无新增业务前置，恢复ready。",
+  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
