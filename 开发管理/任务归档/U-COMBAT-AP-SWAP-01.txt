@@ -100,8 +100,8 @@
 ## 经验候选
 
 ### CAND-U-COMBAT-AP-SWAP-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-89914547D4CE
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

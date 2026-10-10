@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "U-COMBAT-AP2-CONFIG-01",
@@ -158,8 +158,8 @@
 ## 经验候选
 
 ### CAND-U-COMBAT-AP2-CONFIG-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-749D2FAE3C5F
 - resolution: unresolved
 - experienceId:
 - 经验领域：data

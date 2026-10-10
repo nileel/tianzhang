@@ -135,8 +135,8 @@
 ## 经验候选
 
 ### CAND-U-COMBAT-AP-CHAR-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-A1A2D7DC329A
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

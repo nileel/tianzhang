@@ -108,8 +108,8 @@
 
 ### U-COMBAT-AP-HUD-01-C01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-3B9903A5D499
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

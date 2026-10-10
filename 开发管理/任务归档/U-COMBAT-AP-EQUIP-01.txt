@@ -191,8 +191,8 @@
 ## 经验候选
 
 ### CAND-U-COMBAT-AP-EQUIP-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-57E8FFAB4844
 - resolution: unresolved
 - experienceId:
 - 经验领域：management

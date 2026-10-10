@@ -106,8 +106,8 @@
 ## 经验候选
 
 ### CAND-N-COMBAT-AP-SIM-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-0A5A3BAFF45E
 - resolution: unresolved
 - experienceId:
 - 经验领域：battlesim
