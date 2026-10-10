@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "A 已批准；恢复合同已人工补齐，待共享入口重新冻结范围并预检后执行",
+  "stateReason": "负责人回复已落实范围：DEC-20261010-CD28FDC451DE4D/A",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -79,14 +79,12 @@
     "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta",
     "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta",
     "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta",
-    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta"
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "executionModel": "gpt-6.1-sol",
   "automationCheckpoint": {
     "schemaVersion": 1,
@@ -213,6 +211,11 @@
     "createdAt": "2026-10-10T03:26:25.6580749+08:00",
     "queueIndex": 0
   },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
   "automationReply": {
     "decisionId": "DEC-20261010-CD28FDC451DE4D",
     "result": "OPTION_ACCEPTED",
@@ -278,3 +281,9 @@
 - 补齐ContentImporterArchitectureTests.cs：现有固定v=2000及CSV合法零v断言须随realm派生校验合同更新，保留整批失败零写入、GUID及幂等验证。其他已列角色、创角、保存和Importer路径仍承接同一聚合结果。保存schema5及旧4规则已冻结，不等待新的修炼系统。
 - 复杂度为角色/保存语义高影响，保持gpt-6.1-sol/high主责；只有出现旧档恢复证据冲突时，对已列Snapshot/Serializer调用链启动gpt-6-astra/high只读辅助，返回拒绝或恢复反例；主责统一差异、最终验证和单一提交。风险投影以本轮更新路径后的只读预检为准；执行前须重新消费正文。
 - 补齐既有GameRuntime/FeatureComposition/GuanzhongFormalEndToEnd、EQUIP/ITEM及四个PlayMode直接构造/恢复测试。当前夹具存在空境界、练气仍用v=2000、正式创角被断言为练气等旧输入；只按凡人创建、显式规则注入和已批准资格政策更新，不能通过提前授练气维持旧断言。新增10个既有测试路径，不新增测试框架或业务所有者。
+
+## 2026-10-10 决策 A 范围重新冻结
+
+- 负责人已通过 DEC-20261010-CD28FDC451DE4D 选择 A，批准补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三个现有战斗所有者路径。完整相对路径由本次选项合同写入 expectedPaths；仍只完成本卡原子结果，不新增修炼流程或事件系统。
+- 从角色权威成长结果同步战斗上限与移动效率；回合中不重发当前上限和余额，下一本人开始才使用新上限，移动效率刷新后旧报价失效。保持原保存、创建、恢复与成长验收，使用已冻结的 CombatRealmGrowthTests 等测试路径验证。
+- 本次只是把已批准范围落实到恢复合同。共享入口须先对选中后的路径与正文重新预检，成功后再领取；执行者沿用卡头模型并消费新摘要对应的预检正文，无需再次询问同一 A。
