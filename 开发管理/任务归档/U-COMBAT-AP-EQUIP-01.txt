@@ -193,8 +193,8 @@
 ### CAND-U-COMBAT-AP-EQUIP-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-57E8FFAB4844
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-MGMT-004
 - 经验领域：management
 - 现象：本卡多次恢复ready后，自动执行仍在业务写入前报expected_paths_incomplete；23:17轮遗漏CombatActionResolver.cs。
 - 已证实根因：准备边界补齐了测试、静态检查及CSV消费者，但没有沿CombatCommandService的实际准备调用追到PrepareValidated效果所有者；该方法必须新增换装分支却未被授权。

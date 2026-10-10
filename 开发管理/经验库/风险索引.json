@@ -86,6 +86,29 @@
       "lastVerified": "2026-09-22"
     },
     {
+      "id": "EXP-MGMT-004",
+      "title": "冻结动作路径须覆盖实际准备所有者",
+      "preflightSummary": "变更 CombatCommandService 的冻结动作合同时，先沿实际准备链定位 CombatActionResolver.PrepareValidated 的效果所有者，并将该路径列入 expectedPaths。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [],
+      "stages": [
+        "implementation"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/Combat/CombatCommandService.cs",
+        "src/Assets/Scripts/Modules/Features/Combat/CombatActionResolver.cs"
+      ],
+      "textPatterns": [
+        "CombatCommandService",
+        "PrepareValidated"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-MGMT-004.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
+    },
+    {
       "id": "EXP-BS-001",
       "title": "BattleSim 修改先构建后运行",
       "preflightSummary": "BattleSim 源码或项目入口改动须先通过 Release build，再以 --no-build 运行。",

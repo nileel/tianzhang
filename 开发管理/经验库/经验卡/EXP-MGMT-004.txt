@@ -1,0 +1,30 @@
+# EXP-MGMT-004 · 冻结动作路径须覆盖实际准备所有者
+
+## 状态
+
+active；最后核验日期：2026-10-11；事实源：`U-COMBAT-AP-EQUIP-01` 的 `CAND-U-COMBAT-AP-EQUIP-01-01` 及其验证记录。
+
+## 开工前
+
+适用：变更 `CombatCommandService` 的已冻结动作合同，且任务范围涉及 `CombatActionResolver.PrepareValidated` 或其效果准备链。写入前从命令服务沿实际准备调用追到效果所有者，并同时核对提交器及直接数据消费者；把每个确认的字面量路径列入 `expectedPaths` 后再预检。测试、静态检查或 CSV 消费者不能代替该运行时链。与该命令服务无关的动作、纯 UI 或只读调查排除。
+
+## 根因
+
+换装合同已覆盖测试、静态检查和 CSV 消费者，但没有沿 `CombatCommandService` 的实际准备调用进入 `PrepareValidated`，漏掉了必须新增换装分支的效果所有者，导致自动执行在业务写入前以路径不完整停止。
+
+## 适用与排除
+
+- 适用：冻结或扩展该命令服务的动作效果，且预期改动包含命令服务或效果准备器。
+- 排除：不经过该准备链的功能、纯界面呈现、既有链外的独立数据维护，以及只读调查。
+
+## 正确处理
+
+从命令服务的实际入口追踪到 `PrepareValidated` 和提交器，逐项列出效果所有者、直接数据消费者与测试路径；新增路径或所有者后重新预检，再开始业务写入。
+
+## 证据
+
+`CAND-U-COMBAT-AP-EQUIP-01-01`；`开发管理/U-COMBAT-AP-EQUIP-01-验证记录.txt` 的“阻塞原因与处理”；同次 `CombatActionResolver.PrepareValidated` 换装分支差异。
+
+## 失效条件
+
+`CombatCommandService`、`PrepareValidated` 或动作准备／提交架构不再构成该效果链，或任务预检不再以 `expectedPaths` 授权时，停止引用并重新核验。

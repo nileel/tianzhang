@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP-EQUIP-01/CAND-U-COMBAT-AP-EQUIP-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：独立核验候选并晋级为 EXP-MGMT-004；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP-EQUIP-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-11 完成记录
+
+- 语义裁决：promoted。来源候选的收集前 digest 与冻结值一致；其已证实根因和验证记录表明，遗漏实际效果准备所有者会在业务写入前反复阻断已冻结动作合同，适合作为可复用的开工前检查。
+- 去重与边界：现有 `EXP-MGMT-001` 只约束共享 worktree／正式集成隔离，`EXP-MGMT-002` 只约束归档后置检查；两者均不覆盖命令服务到效果准备所有者的实际调用追踪。`EXP-MGMT-004` 只在 `CombatCommandService` 或 `PrepareValidated` 的冻结实现路径与文本同时命中时提示；不新增门禁。
+- 模型协作：简单：来源直接证据、既有经验边界与验收口径明确；沿用入口默认单模型，无需辅助。
