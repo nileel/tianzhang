@@ -108,8 +108,8 @@
 ### CAND-N-COMBAT-AP-SIM-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-0A5A3BAFF45E
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-BS-006
 - 经验领域：battlesim
 - 现象：双入口迁移的定向自测通过，但默认金丹矩阵长时间占用CPU，自动责任轮次在收尾前超时。
 - 已证实根因：ResolvePaidPlan逐可达格先通过QueryRange得到完整原始距离，随后仍调用QueryMetricDistance重新Traverse；更高v扩大候选集，使重复计算累积。查询结果已足够计算合法性与Gap，无需再次寻路。

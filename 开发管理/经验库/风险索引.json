@@ -220,6 +220,34 @@
       "lastVerified": "2026-08-26"
     },
     {
+      "id": "EXP-BS-006",
+      "title": "BattleSim 候选评估复用范围查询结果",
+      "preflightSummary": "修改群体行动候选评估时，复用同一范围查询的合法性与距离结果；先核对出范围和不可达语义，再保持稳定排序。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "battlesim"
+      ],
+      "stages": [
+        "implementation",
+        "migration",
+        "verification"
+      ],
+      "pathPatterns": [
+        "simulations/BattleSim/Combat.cs"
+      ],
+      "textPatterns": [
+        "ResolvePaidPlan",
+        "QueryRange",
+        "QueryMetricDistance",
+        "DistanceUnits"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-BS-006.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
+    },
+    {
       "id": "EXP-UNITY-001",
       "title": "Unity 正式场景由 Editor builder 重建",
       "preflightSummary": "修改四个正式 Unity 场景时，先核对 Editor builder 的重建与保存链，不手写 YAML。",
