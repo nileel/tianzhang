@@ -15,6 +15,18 @@ namespace TianZhang.Tests
 {
     public sealed class GameSaveSlotStoreTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private readonly List<UnityEngine.Object> ownedObjects = new List<UnityEngine.Object>();
         private string temporaryDirectory;
 
@@ -244,7 +256,7 @@ namespace TianZhang.Tests
             var store = new GameSaveSlotStore(temporaryDirectory);
             Directory.CreateDirectory(temporaryDirectory);
             File.WriteAllText(Path.Combine(temporaryDirectory, "broken.json"), "not-json");
-            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":5}");
+            File.WriteAllText(Path.Combine(temporaryDirectory, "old.json"), "{\"schemaVersion\":6}");
             Assert.That(store.Read("broken").Succeeded, Is.False);
             Assert.That(store.Read("old").Succeeded, Is.False);
 
@@ -284,6 +296,7 @@ namespace TianZhang.Tests
         private GameSaveEnvelope CreateEnvelope(string characterId, string displayName)
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = displayName;
             definition.realmMultiplier = 1f;
             definition.actionPointMaximumUnits = 100000;
@@ -292,7 +305,7 @@ namespace TianZhang.Tests
 
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition(characterId, definition),
+                CharacterRuntimeProfile.FromDefinition(characterId, definition, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             return runtime.CaptureSave();

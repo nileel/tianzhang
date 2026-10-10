@@ -169,8 +169,8 @@ namespace TianZhang.Combat
         public string RealmStage { get; }
         public string VisibleRootElement { get; }
         public string VisibleRootGrade { get; }
-        public int ActionPointMaximumUnits { get; }
-        public int MovementEfficiencyMilliUnits { get; }
+        public int ActionPointMaximumUnits { get; private set; }
+        public int MovementEfficiencyMilliUnits { get; private set; }
         public int ActionPointLimitAtTurnStartUnits { get; private set; }
         public int ActionPointsRemainingUnits { get; private set; }
         public IReadOnlyList<CombatActionEconomyModifier> ActionEconomyModifiers { get; }
@@ -228,6 +228,12 @@ namespace TianZhang.Combat
         public void SetPosition(HexCoord position)
         {
             Position = position;
+        }
+
+        internal void SetLongTermActionEconomy(int maximum, int movement)
+        {
+            ActionPointMaximumUnits = maximum;
+            MovementEfficiencyMilliUnits = movement;
         }
 
         internal bool BeginOwnTurn()

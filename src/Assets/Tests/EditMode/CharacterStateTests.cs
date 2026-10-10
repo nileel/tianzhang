@@ -11,6 +11,18 @@ namespace TianZhang.Tests
 {
     public sealed class CharacterStateTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         [Test]
         public void CharacterResourcesCaptureAndRestoreWithoutCombatState()
         {
@@ -83,15 +95,15 @@ namespace TianZhang.Tests
                 "Data/CharacterCreation/CharacterCreationPointBuyConfig");
             Assert.That(config, Is.Not.Null);
             CharacterData definition = CharacterCreationRules.BuildCharacterData(
-                CharacterCreationCatalog.CreateDefaultDraft(), config);
+                CharacterCreationCatalog.CreateDefaultDraft(), config, GrowthRules);
             try
             {
                 Assert.That(definition.visibleRootId, Is.EqualTo("root_water_middle"));
                 Assert.That(definition.visibleRootGrade, Is.EqualTo("中品"));
                 Assert.That(definition.visibleRootElement, Is.EqualTo("水"));
 
-                CharacterStateSnapshot snapshot = CharacterRuntimeProfile.FromDefinition("player", definition).Capture();
-                CharacterRuntimeProfile restored = CharacterRuntimeProfile.FromSnapshot(snapshot);
+                CharacterStateSnapshot snapshot = CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules).Capture();
+                CharacterRuntimeProfile restored = CharacterRuntimeProfile.FromSnapshot(snapshot, GrowthRules);
                 Assert.That(snapshot.VisibleRootId, Is.EqualTo(definition.visibleRootId));
                 Assert.That(snapshot.VisibleRootGrade, Is.EqualTo(definition.visibleRootGrade));
                 Assert.That(snapshot.VisibleRootElement, Is.EqualTo(definition.visibleRootElement));
@@ -122,6 +134,7 @@ namespace TianZhang.Tests
         public void RestoreReplacesVisibleRootFactsAndLegacySnapshotClearsThemToUnknown()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             try
             {
                 definition.visibleRootId = "root_water_middle";
@@ -129,7 +142,7 @@ namespace TianZhang.Tests
                 definition.visibleRootElement = "水";
                 definition.actionPointMaximumUnits = 100000;
                 definition.movementEfficiencyMilliUnits = 2000;
-                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition);
+                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules);
                 CharacterStateSnapshot before = profile.Capture();
                 var replacement = new CharacterStateSnapshot(
                     before.Identity, before.Attributes, before.Resources, before.AbilityLoadout, before.Progression,

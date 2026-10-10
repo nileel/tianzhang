@@ -13,6 +13,18 @@ namespace TianZhang.Tests
     /// </summary>
     public sealed class CharacterActionPointStateTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private const int ApprovedMaximumUnits = 100000;
         private const int ApprovedEfficiencyMilliUnits = 2000;
 
@@ -23,8 +35,8 @@ namespace TianZhang.Tests
             CharacterData enemyDefinition = CreateDefinition();
             try
             {
-                CharacterAttributes player = CharacterAttributes.FromDefinition(playerDefinition);
-                CharacterAttributes enemy = CharacterAttributes.FromDefinition(enemyDefinition);
+                CharacterAttributes player = CharacterAttributes.FromDefinition(playerDefinition, GrowthRules);
+                CharacterAttributes enemy = CharacterAttributes.FromDefinition(enemyDefinition, GrowthRules);
 
                 Assert.That(player.ActionPointMaximumUnits, Is.EqualTo(ApprovedMaximumUnits));
                 Assert.That(player.MovementEfficiencyMilliUnits, Is.EqualTo(ApprovedEfficiencyMilliUnits));
@@ -94,12 +106,13 @@ namespace TianZhang.Tests
         public void DefinitionWithoutExplicitInputsIsRejectedInsteadOfFallingBackToTheApprovedValues()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             try
             {
                 definition.charName = "缺少长期输入";
                 definition.realmMultiplier = 1f;
-                Assert.Throws<ArgumentOutOfRangeException>(() => CharacterAttributes.FromDefinition(definition));
-                Assert.Throws<ArgumentOutOfRangeException>(() => CharacterRuntimeProfile.FromDefinition("player", definition));
+                Assert.Throws<ArgumentOutOfRangeException>(() => CharacterAttributes.FromDefinition(definition, GrowthRules));
+                Assert.Throws<ArgumentOutOfRangeException>(() => CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules));
             }
             finally
             {
@@ -116,10 +129,10 @@ namespace TianZhang.Tests
                 definition.availableSpells = new[] { "spell_guanshiji" };
                 definition.equippedSpells = new[] { "spell_guanshiji" };
                 definition.maxSpellSlots = 1;
-                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition);
+                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules);
                 CharacterStateSnapshot snapshot = profile.Capture();
 
-                CharacterRuntimeProfile restored = CharacterRuntimeProfile.FromSnapshot(snapshot);
+                CharacterRuntimeProfile restored = CharacterRuntimeProfile.FromSnapshot(snapshot, GrowthRules);
                 CharacterStateSnapshot second = restored.Capture();
 
                 Assert.That(second.Attributes.ActionPointMaximumUnits, Is.EqualTo(ApprovedMaximumUnits));
@@ -144,7 +157,7 @@ namespace TianZhang.Tests
                 definition.availableSpells = new[] { "spell_guanshiji", "spell_julingshu" };
                 definition.equippedSpells = new[] { "spell_guanshiji" };
                 definition.maxSpellSlots = 1;
-                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition);
+                CharacterRuntimeProfile profile = CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules);
                 CharacterStateSnapshot before = profile.Capture();
 
                 AssertRejectedWithoutAnyChange(profile, before, WithResources(before, 500, 900, 100, 50));
@@ -323,6 +336,7 @@ namespace TianZhang.Tests
         private static CharacterData CreateDefinition()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "长期输入角色";
             definition.realmMultiplier = 1f;
             definition.actionPointMaximumUnits = ApprovedMaximumUnits;

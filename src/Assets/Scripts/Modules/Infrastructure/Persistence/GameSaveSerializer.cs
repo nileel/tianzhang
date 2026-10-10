@@ -8,7 +8,8 @@ namespace TianZhang.Infrastructure.Persistence
     public static class GameSaveSerializer
     {
         public const string EquipmentSaveInvalid = "equipment_save_invalid";
-        public const int SchemaVersion = 4;
+        public const int SchemaVersion = 5;
+        public const int LegacyGrowthSchemaVersion = 4;
         public const int LegacySchemaVersion = 1;
         public const int LegacyFoundationPurpleMansionSchemaVersion = 2;
         public const int LegacyActionEconomySchemaVersion = 3;
@@ -46,6 +47,19 @@ namespace TianZhang.Infrastructure.Persistence
             if (envelope.schemaVersion == LegacyActionEconomySchemaVersion)
             {
                 return MigrateLegacyActionEconomySchema(envelope);
+            }
+            if (envelope.schemaVersion == LegacyGrowthSchemaVersion)
+            {
+                if (envelope.player != null && (envelope.player.movementGrowthInputsPresent ||
+                    envelope.player.movementGrowthSources != null && envelope.player.movementGrowthSources.Length != 0))
+                    throw new InvalidDataException("legacy_growth_payload_invalid");
+                if (envelope.hasPlayer && envelope.player != null)
+                {
+                    // No old training producer existed: migrate only the explicit empty source set.
+                    envelope.player.movementGrowthInputsPresent = true;
+                    envelope.player.movementGrowthSources = Array.Empty<MovementGrowthRecord>();
+                }
+                envelope.schemaVersion = SchemaVersion;
             }
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Unsupported save schema: " + envelope.schemaVersion + ".");

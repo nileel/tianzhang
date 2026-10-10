@@ -188,7 +188,7 @@ namespace TianZhang.Tests
         };
 
         private const int FrozenActionPointMaximumUnits = 100000;
-        private const int FrozenMovementEfficiencyMilliUnits = 2000;
+        private const int FrozenMovementEfficiencyMilliUnits = 4000;
 
         [Test]
         public void CharacterImportWritesFrozenActionEconomyInputsAndKeepsEveryOtherFieldAndGuid()
@@ -206,7 +206,7 @@ namespace TianZhang.Tests
             {
                 CharacterData asset = LoadCharacter(assetPath);
                 Assert.That(asset.actionPointMaximumUnits, Is.EqualTo(FrozenActionPointMaximumUnits), assetPath);
-                Assert.That(asset.movementEfficiencyMilliUnits, Is.EqualTo(FrozenMovementEfficiencyMilliUnits), assetPath);
+                Assert.That(asset.movementEfficiencyMilliUnits, Is.EqualTo(assetPath.EndsWith("/Char_Player.asset") ? 2000 : FrozenMovementEfficiencyMilliUnits), assetPath);
                 Assert.That(AssetDatabase.AssetPathToGUID(assetPath), Is.EqualTo(guidsBefore[assetPath]), assetPath);
                 Assert.That(DescribeCharacterWithoutActionEconomy(asset), Is.EqualTo(othersBefore[assetPath]), assetPath);
             }
@@ -257,33 +257,8 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void CharacterImportAcceptsLegalZeroMovementEfficiency()
-        {
-            string csvPath = Path.Combine(Application.dataPath, "DataConfig", "Characters.csv");
-            byte[] originalCsv = File.ReadAllBytes(csvPath);
-            try
-            {
-                File.WriteAllText(csvPath, BuildCharacterCsv(",100000,0"));
-                CharacterContentImporter.ImportCharacterDefinitions();
-
-                foreach (string id in new[] { "char_taiyixiushi", "char_sanxiuqiangdao" })
-                {
-                    CharacterData asset = LoadCharacter($"Assets/Data/Characters/Char_{id}.asset");
-                    Assert.That(asset.actionPointMaximumUnits, Is.EqualTo(FrozenActionPointMaximumUnits), id);
-                    Assert.That(asset.movementEfficiencyMilliUnits, Is.EqualTo(0), id);
-                }
-
-                // 独立模板持有自己的冻结算入，不随 Characters.csv 变化。
-                Assert.That(
-                    LoadCharacter("Assets/Data/Characters/Char_Player.asset").movementEfficiencyMilliUnits,
-                    Is.EqualTo(FrozenMovementEfficiencyMilliUnits));
-            }
-            finally
-            {
-                File.WriteAllBytes(csvPath, originalCsv);
-                CharacterContentImporter.ImportCharacterDefinitions();
-            }
-        }
+        public void CharacterImportRejectsZeroMovementThatDisagreesWithRealmTable()
+        { AssertCharacterCsvRejectedWithoutWritingAssets(",100000,0"); }
 
         [Test]
         public void CharacterImportWithoutAnIndependentTemplateWritesNoAsset()
@@ -351,8 +326,8 @@ namespace TianZhang.Tests
                 }
 
                 string[] columns = line.Split(',');
-                Assert.That(columns.Length, Is.EqualTo(21), line);
-                rows.Add(string.Join(",", columns.Take(19)) + rowTail);
+                Assert.That(columns.Length, Is.EqualTo(22), line);
+                rows.Add(string.Join(",", columns.Take(20)) + rowTail);
             }
 
             return string.Join(Environment.NewLine, rows) + Environment.NewLine;

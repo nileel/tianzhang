@@ -23,6 +23,18 @@ namespace TianZhang.Tests.EditMode
 {
     public sealed class CombatActionPointEquipmentTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private ContentCatalogData catalog;
         private CharacterData definition;
         private GameRuntime runtime;
@@ -36,14 +48,15 @@ namespace TianZhang.Tests.EditMode
         {
             catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "装备验证"; definition.realmStage = "练气"; definition.realmMultiplier = 1;
             definition.actionPointMaximumUnits = 100000; definition.movementEfficiencyMilliUnits = 2000;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
             runtime = new GameRuntime();
-            runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
+            runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
             bridge = new GameObject("EquipmentTestOwner").AddComponent<EncounterCoordinator>();
             bridge.ConfigureEquipment(runtime.Player, catalog, runtime.OwnsEquipmentInstance, () => runtime.InventoryVersion);
-            actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
+            actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 10000, 10000, 60, 0, 10, 10, runtime.Player.Attributes.ActionPointMaximumUnits, runtime.Player.Attributes.MovementEfficiencyMilliUnits,
                 basicAttackProfileId: "basic_iron_sword");
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
                 basicAttackProfileId: "basic_unarmed");
@@ -110,7 +123,15 @@ namespace TianZhang.Tests.EditMode
         [TestCase("凡人")][TestCase("unknown")]
         public void InvalidRealmIsPure(string realm)
         {
-            runtime.Player.Progression.Restore(new CharacterProgressionSnapshot("", realm, 1));
+            if (realm == "unknown")
+            {
+                string unchanged = State();
+                Assert.Throws<ArgumentException>(() => runtime.Player.RestoreProgression(
+                    new CharacterProgressionSnapshot("", realm, 1)));
+                Assert.AreEqual(unchanged, State());
+                return;
+            }
+            runtime.Player.RestoreProgression(new CharacterProgressionSnapshot("", realm, 1));
             string before = State(); Assert.IsFalse(Execute(Swap()).Succeeded); Assert.AreEqual(before, State());
         }
         [Test] public void InsufficientApAndChangedInventoryRejectWithoutPublishingEitherCandidate()
@@ -191,11 +212,12 @@ namespace TianZhang.Tests.EditMode
         }
         [Test] public void LegacyUnarmedPlayerIsNotGrantedWeaponsAndBadInitialCatalogDoesNotPublish()
         {
-            var unarmed = new GameRuntime(); unarmed.BeginNewGame(CharacterRuntimeProfile.FromDefinition("player", definition), CultivationState.CreateEmpty(), "guanzhong_hub");
+            var unarmed = new GameRuntime(); unarmed.BeginNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub");
             string json = unarmed.CaptureSaveJson(); unarmed.RestoreSaveJson(json, catalog); Assert.AreEqual(json, unarmed.CaptureSaveJson());
             Assert.IsFalse(unarmed.OwnsEquipmentInstance("player", Sword, "player:initial:" + Sword));
             var empty = ScriptableObject.CreateInstance<ContentCatalogData>();
-            try { Assert.Throws<InvalidOperationException>(() => unarmed.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition), CultivationState.CreateEmpty(), "guanzhong_hub", empty)); Assert.AreEqual(json, unarmed.CaptureSaveJson()); }
+            empty.SetCombatRuleSet(GrowthRules);
+            try { Assert.Throws<InvalidOperationException>(() => unarmed.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", empty)); Assert.AreEqual(json, unarmed.CaptureSaveJson()); }
             finally { Object.DestroyImmediate(empty); }
         }
         [Test] public void InventoryProofAndVersionRejectMissingForeignOrDuplicateInstances()

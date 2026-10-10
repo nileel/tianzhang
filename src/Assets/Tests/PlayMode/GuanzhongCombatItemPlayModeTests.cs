@@ -46,6 +46,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(creation.SelectOrigin("origin_minor_clan"));
             creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
             creation.Submit(Slot, "战斗用药验证"); yield return SceneReady(GameplaySceneNames.World);
+            var qualifiedRuntime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual("凡人", qualifiedRuntime.Player.Progression.RealmStage);
+            Assert.AreEqual(0, qualifiedRuntime.GetItemQuantity(Item));
+            // Explicitly qualified existing-player fixture; formal creation does not grant equipment or medicine.
+            qualifiedRuntime.Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
+            qualifiedRuntime.BeginEquippedNewGame(qualifiedRuntime.Player, qualifiedRuntime.Cultivation, "guanzhong_hub",
+                UnityEditor.AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
+            Assert.IsTrue(GameBootstrap.RequireInstance().SaveActiveSlot().Succeeded);
             var read = new GameSaveSlotStore(saveDirectory).Read(Slot);
             Assert.IsTrue(read.Succeeded); Assert.AreEqual(3, read.Envelope.inventory.Single(entry => entry.itemId == Item).quantity);
             Assert.AreEqual(3, GameBootstrap.RequireRuntime().GetItemQuantity(Item));

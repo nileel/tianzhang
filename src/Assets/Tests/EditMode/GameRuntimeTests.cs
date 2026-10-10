@@ -10,6 +10,18 @@ namespace TianZhang.Tests
 {
     public sealed class GameRuntimeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private CharacterData definition;
 
         [TearDown]
@@ -23,13 +35,14 @@ namespace TianZhang.Tests
         {
             var runtime = new GameRuntime();
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "测试角色";
             definition.realmMultiplier = 1f;
             definition.actionPointMaximumUnits = 100000;
             definition.movementEfficiencyMilliUnits = 2000;
 
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player", definition),
+                CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             runtime.AdvanceWorldDay();

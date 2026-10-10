@@ -16,6 +16,18 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongTacticalCameraPlayModeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private readonly List<GameObject> temporary = new List<GameObject>();
         private Keyboard keyboard;
         private Mouse mouse;
@@ -237,8 +249,8 @@ namespace TianZhang.Tests.PlayMode
             var config = UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Game.CharacterCreation.CharacterCreationPointBuyConfig>(
                 "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset");
             var profile = TianZhang.Features.CharacterCreation.CharacterCreationManager.CreateProfile(
-                TianZhang.Features.CharacterCreation.CharacterCreationCatalog.CreateDefaultDraft(), config);
-            runtime.BeginNewGame(TianZhang.Character.CharacterRuntimeProfile.FromDefinition("player", profile),
+                TianZhang.Features.CharacterCreation.CharacterCreationCatalog.CreateDefaultDraft(), config, GrowthRules);
+            runtime.BeginNewGame(TianZhang.Character.CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                 TianZhang.Cultivation.CultivationState.FromDefinition(profile.foundationPurpleMansionState), "guanzhong_hub");
             Object.Destroy(profile);
             runtime.EnterWorld("guanzhong_hub");

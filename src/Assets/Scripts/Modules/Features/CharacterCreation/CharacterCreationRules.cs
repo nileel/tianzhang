@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Entity;
+using TianZhang.Content;
+using TianZhang.Character;
 using TianZhang.Game.CharacterCreation;
 using UnityEngine;
 
@@ -51,8 +53,12 @@ namespace TianZhang.Features.CharacterCreation
 
         public static CharacterData BuildCharacterData(
             CharacterCreationDraft draft,
-            CharacterCreationPointBuyConfig pointBuyConfig)
+            CharacterCreationPointBuyConfig pointBuyConfig, CombatRuleSetData growthRules = null)
         {
+            CharacterRuntimeProfile.ProjectActionEconomy(growthRules, new CharacterProgressionSnapshot("", "凡人", 1.5f),
+                out int ap, out int movement);
+            if (pointBuyConfig == null || pointBuyConfig.actionPointMaximumUnits != ap || pointBuyConfig.movementEfficiencyMilliUnits != movement)
+                throw new InvalidOperationException("character_creation_growth_checksum_invalid");
             var validation = Validate(draft, pointBuyConfig);
             if (!validation.IsValid)
                 throw new InvalidOperationException(string.Join("|", validation.Errors));
@@ -68,7 +74,7 @@ namespace TianZhang.Features.CharacterCreation
             profile.charName = string.IsNullOrWhiteSpace(draft.CharacterName) ? "无名修士" : draft.CharacterName;
             profile.baseLevel = 1;
             profile.realmMultiplier = 1.5f;
-            profile.realmStage = "练气";
+            profile.realmStage = "凡人";
             profile.gongFaName = "";
             profile.equippedSpells = new string[0];
             profile.availableSpells = new string[0];
@@ -84,8 +90,8 @@ namespace TianZhang.Features.CharacterCreation
             profile.unarmedBasicAttackProfileId = CharacterCreationCatalog.BasicUnarmedAttackProfileId;
 
             // 长期行动力基础输入读自点购配置，不在 C# 补 100000／2000，也不从反应或灵力派生。
-            profile.actionPointMaximumUnits = pointBuyConfig.actionPointMaximumUnits;
-            profile.movementEfficiencyMilliUnits = pointBuyConfig.movementEfficiencyMilliUnits;
+            profile.actionPointMaximumUnits = ap;
+            profile.movementEfficiencyMilliUnits = movement;
 
             profile.rootBone = innate.RootBone;
             profile.physique = innate.RootBone;

@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 0
   realmMultiplier: 1.5
-  realmStage:
+  realmStage: 凡人
   gongFaName:
   equippedSpells:
   - "\u91D1\u5149\u7834\u5CB3"

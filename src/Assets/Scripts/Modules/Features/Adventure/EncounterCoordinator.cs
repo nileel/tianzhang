@@ -216,6 +216,7 @@ namespace TianZhang.Features.Adventure
 
         public CombatActionPreviewSnapshot PreviewAction(CombatActionCandidate candidate)
         {
+            RefreshGrowth();
             if (candidate == null) return null;
             CombatCommand command = ToCommand(candidate);
             string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
@@ -267,6 +268,7 @@ namespace TianZhang.Features.Adventure
 
         public void ConfirmAction(CombatActionCandidate candidate)
         {
+            RefreshGrowth();
             if (!IsCandidateCurrent(candidate))
             {
                 presentation?.AppendLog("行动状态已变化，请重新选择");
@@ -361,6 +363,7 @@ namespace TianZhang.Features.Adventure
         {
             while (resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
             {
+                RefreshGrowth();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session);
                 if (!advance.HasActor)
                 {
@@ -377,6 +380,7 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing))
                     {
                         yield return null;
+                        if (RefreshGrowth()) Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
                         if (wasPresenting != IsPresenting)
                         {
                             wasPresenting = IsPresenting;
@@ -413,6 +417,7 @@ namespace TianZhang.Features.Adventure
 
         private void ExecutePlayer(CombatCommand command, CombatCommandPreview quote = null)
         {
+            RefreshGrowth();
             if (!acceptsPlayerCommand || IsPresenting || session == null || command == null ||
                 !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
             CombatActionResult result = ExecuteCommand(command, quote);
@@ -482,9 +487,17 @@ namespace TianZhang.Features.Adventure
             return result;
         }
 
+        private bool RefreshGrowth()
+        {
+            if (session == null || equipmentOwner == null) return false;
+            return session.RefreshActionEconomy("player", equipmentOwner.Attributes.ActionPointMaximumUnits,
+                equipmentOwner.Attributes.MovementEfficiencyMilliUnits);
+        }
+
         private void Present(string turnText, bool acceptsCommands)
         {
             if (session == null) return;
+            RefreshGrowth();
             session.Combatants.TryGet("player", out CombatantSnapshot player);
             session.Combatants.TryGet("enemy", out CombatantSnapshot enemy);
             acceptsCommands = acceptsCommands && !IsPresenting;

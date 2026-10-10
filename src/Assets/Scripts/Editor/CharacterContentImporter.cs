@@ -170,15 +170,16 @@ namespace TianZhang.Editor
             }
         }
 
-        public static CharacterData[] ParseCharacterDefinitions(string[] lines, string sourceName)
+        public static CharacterData[] ParseCharacterDefinitions(string[] lines, string sourceName, CombatRuleSetData growthRules = null)
         {
+            growthRules = growthRules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
             var projected = new List<CharacterData>();
             try
             {
                 var headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
                 var headers = CsvTableReader.FindHeader(lines);
                 CsvTableReader.RequireExactColumns(headers, sourceName,
-                    "name", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
+                    "name", "realmId", "realmMultiplier", "rootBone", "physique", "spirit", "mind",
                     "reaction", "talent", "blockRate", "blockReduction",
                     "soulShieldRate", "soulShieldReduction", "dodgeRate",
                     "critRate", "critDamage", "hitRateBonus", "gongFaName",
@@ -209,6 +210,9 @@ namespace TianZhang.Editor
                     var asset = ScriptableObject.CreateInstance<CharacterData>();
                     projected.Add(asset);
                     asset.charName = T(id);
+                    string realmId = CsvTableReader.GetRequiredValue(headers, columns, "realmId", sourceName);
+                    ProjectRealmGrowth(growthRules, realmId, out int ap, out int movement, out string realmStage);
+                    asset.realmStage = realmStage;
                     asset.realmMultiplier = float.Parse(CsvTableReader.GetRequiredValue(headers, columns, "realmMultiplier", sourceName));
                     asset.rootBone = int.Parse(CsvTableReader.GetRequiredValue(headers, columns, "rootBone", sourceName));
                     asset.physique = int.Parse(CsvTableReader.GetRequiredValue(headers, columns, "physique", sourceName));
@@ -234,6 +238,8 @@ namespace TianZhang.Editor
                         headers, columns, "actionPointMaximumUnits", sourceName, 1);
                     asset.movementEfficiencyMilliUnits = ParseActionEconomyInteger(
                         headers, columns, "movementEfficiencyMilliUnits", sourceName, 0);
+                    if (asset.actionPointMaximumUnits != ap || asset.movementEfficiencyMilliUnits != movement)
+                        throw new InvalidDataException(sourceName + ": realm growth checksum mismatch.");
                 }
 
                 return projected.ToArray();
@@ -268,54 +274,49 @@ namespace TianZhang.Editor
             return value;
         }
 
-        // 方案 A 冻结的两个独立角色模板输入；这两个资产各自是独立序列化模板，不是 Characters.csv 人物行的别名。
-        private static readonly (string AssetPath, int ActionPointMaximumUnits, int MovementEfficiencyMilliUnits)[]
-            IndependentActionEconomyInputs =
-            {
-                ("Assets/Data/Characters/Char_Player.asset", 100000, 2000),
-                ("Assets/Data/Characters/Char_Enemy.asset", 100000, 2000),
-            };
-
-        /// <summary>
-        /// 只解析并验证两个独立模板目标是否存在、冻结输入是否合法；不修改任何资产。
-        /// </summary>
+        private static readonly (string AssetPath, string Realm)[] IndependentActionEconomyInputs =
+        {
+            ("Assets/Data/Characters/Char_Player.asset", "realm_fanren"),
+            ("Assets/Data/Characters/Char_Enemy.asset", "realm_lianqi"),
+        };
         private static CharacterData[] ResolveIndependentActionEconomyTargets()
         {
-            var targets = new List<CharacterData>(IndependentActionEconomyInputs.Length);
+            var targets = new List<CharacterData>();
+            var rules = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
             foreach (var input in IndependentActionEconomyInputs)
             {
-                if (input.ActionPointMaximumUnits <= 0)
-                    throw new InvalidDataException(
-                        $"{input.AssetPath} action point maximum input must be positive: {input.ActionPointMaximumUnits}.");
-                if (input.MovementEfficiencyMilliUnits < 0)
-                    throw new InvalidDataException(
-                        $"{input.AssetPath} movement efficiency input must not be negative: {input.MovementEfficiencyMilliUnits}.");
-
+                ProjectRealmGrowth(rules, input.Realm, out _, out _, out _);
                 var target = AssetDatabase.LoadAssetAtPath<CharacterData>(input.AssetPath);
-                if (target == null)
-                    throw new InvalidDataException($"Independent character template was not found: {input.AssetPath}.");
-
+                if (target == null) throw new InvalidDataException("Independent character template missing: " + input.AssetPath);
                 targets.Add(target);
             }
-
             return targets.ToArray();
         }
-
-        /// <summary>
-        /// 仅把两个独立模板的长期行动力字段写成冻结输入：不新建资产、不 CopySerialized 替换成 CSV 角色、
-        /// 不按 reaction 派生，其余字段、引用与 GUID 全部保留。
-        /// </summary>
         private static void ImportIndependentActionEconomyInputs(IReadOnlyList<CharacterData> targets)
         {
-            for (var index = 0; index < IndependentActionEconomyInputs.Length; index++)
+            var rules = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+            for (int i = 0; i < targets.Count; i++)
             {
-                var input = IndependentActionEconomyInputs[index];
-                CharacterData target = targets[index];
-                target.actionPointMaximumUnits = input.ActionPointMaximumUnits;
-                target.movementEfficiencyMilliUnits = input.MovementEfficiencyMilliUnits;
-                EditorUtility.SetDirty(target);
-                AssetDatabase.SaveAssetIfDirty(target);
+                var input = IndependentActionEconomyInputs[i];
+                ProjectRealmGrowth(rules, input.Realm, out int ap, out int movement, out string realmStage);
+                targets[i].realmStage = realmStage;
+                targets[i].actionPointMaximumUnits = ap;
+                targets[i].movementEfficiencyMilliUnits = movement;
+                EditorUtility.SetDirty(targets[i]);
+                AssetDatabase.SaveAssetIfDirty(targets[i]);
             }
+        }
+
+        internal static void ProjectRealmGrowth(CombatRuleSetData data, string realmId, out int ap, out int movement, out string stage)
+        {
+            if (data == null || !data.TryValidateIdentity(out _)) throw new InvalidDataException("combat_rule_set_invalid");
+            var rules = CombatRuleSet.Parse(new[] { CombatRuleSet.RealmColumns }.Concat(data.ExportRealms()).ToArray(),
+                new[] { CombatRuleSet.TierColumns }.Concat(data.ExportTiers()).ToArray(),
+                new[] { CombatRuleSet.EconomyColumns }.Concat(data.ExportEconomy()).ToArray(), data.sourceDigest);
+            var row = rules.Realms.SingleOrDefault(value => value.RealmId == realmId)
+                ?? throw new InvalidDataException("combat_rule_realm_reference_unknown");
+            ap = row.ActionPointMaximumUnits; movement = row.BaseMovementEfficiencyMilliUnits;
+            stage = new[] { "凡人", "练气", "筑基", "金丹", "元婴", "化神" }[row.RealmOrder];
         }
 
         private static void ImportCharacters()

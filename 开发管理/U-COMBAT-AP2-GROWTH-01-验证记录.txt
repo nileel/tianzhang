@@ -1,0 +1,110 @@
+# U-COMBAT-AP2-GROWTH-01 验证记录
+
+日期：2026-10-10；本轮基线：e0a0ad49d8d1d2776543f835a5defa03055c765b；runId：0e795c6b-c7fc-4f19-9f5a-927fcc5b6934。
+本轮结果：负责人DEC-20261010-CDD390C8C97662选择A后的完整成长接入及定向验收完成，详见末节。下文前序checkpoint证据保留为历史，不代表本轮终态。
+
+## 前序checkpoint证据（历史）
+
+## 身份、模型协作与授权
+
+- 共享入口绑定 taskId=U-COMBAT-AP2-GROWTH-01、runId=07caf2c4-6043-4504-a892-3134bc7bcd52，主模型固定 gpt-6.1-sol。Node REPL 读取 nodeRepl.requestMeta 的 x-codex-turn-metadata.model，实际返回 gpt-6.1-sol，与启动证明一致。
+- 已读当前完整任务卡及 AI协作规则的任务卡模型协作提示；角色/保存语义为高影响。此次使用同一主模型，没有启动辅助或第二责任会话；不存在需要跨模型裁决的旧档证据冲突。
+- 消费共享入口已核验的本卡预检：matched、notice、mustRead、gatePointers 均为空。没有自行领取任务、访问 runtime、集成或修改其他 worktree。
+- 已加载 unity-agent-workflows；相关引用为 project-structure-discovery、content-and-systems、ai-workflows、unity-validation。结构证据为 UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md、实际 Character/Content asmdef、聚合、创建、保存、Importer 与 Adventure 调用者。
+
+## 已证实根因与冻结边界
+
+- 冻结合同第四节要求：长期 AP 上限在回合中变化时不重发当前预算，下一本人开始才快照新上限；v 在来源重建后用于下一次权威移动报价，陈旧报价拒绝。任务卡验收同样包含本人开始发放与回合中变更边界。
+- CharacterRuntimeProfile.FromDefinition/FromSnapshot/Restore 目前直接消费角色或快照中的 AP/v；CharacterProgressionRef.Restore 是公开独立写入口，没有与 AP/v 派生的原子联动。现有 GetGrowth 没有玩家生产消费者，不能以新增完整修炼功能补齐。
+- AdventureUnitSpawner.TrySpawn 在入战时创建独立 CombatantSnapshot。其构造函数写入 ActionPointMaximumUnits、MovementEfficiencyMilliUnits；这两个属性只有 get，没有后续写入口。角色聚合重建不会改变已经在 CombatSession 中的对象。
+- CombatSession.BeginTurn 只增加 TurnSequence/StateVersion 后调用 actor.BeginOwnTurn；CombatantSnapshot.BeginOwnTurn 将自己的只读 ActionPointMaximumUnits 复制到 ActionPointLimitAtTurnStartUnits 和余额。因此即使角色聚合升境，下一本人回合也仍发入战时的旧上限。
+- CombatSession 的移动报价直接读取 actor.MovementEfficiencyMilliUnits。EncounterCoordinator 已有角色引用只用于装备与道具查询，未发现成长刷新或依据成长变化更新战斗版本的入口；现有长期成长变化不能使旧报价自然失效。
+- 所需真实写入所有者位于 src/Assets/Scripts/Combat/CombatantSnapshot.cs、src/Assets/Scripts/Combat/CombatSession.cs、src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs。这三条均不在冻结 expectedPaths/CandidatePaths。已有 AdventureSceneInstaller/AdventureUnitSpawner 路径无法写入战斗对象的只读字段，也不能替代 Session 对报价版本和当前回合账本的所有权。
+- 判定：本卡原子目标仍可由一个主责收口，但允许路径没有覆盖完整验收的战斗写入口。按任务卡“新所有者/路径/字段或实现路线越界时暂停写入”及仓库最小修改规则停止，不用反射写只读字段、重建正在运行的战斗、重发 AP 或新增事件系统规避边界。
+
+## checkpoint 与负责人选项
+
+- 实施草稿曾在已授权 Character/创建/保存/Importer/现有测试路径内展开，未运行编译或 Unity 测试；发现上述边界后停止，并将全部 41 条已修改业务路径精确恢复到本轮 clean 基线。草稿不是可验收完成品，不保留或提交未编译代码。
+- checkpoint 仅新增本验证记录。任务卡、backlog、队列、代码、CSV、Unity 资产均保持基线；不宣称创建/成长/旧档迁移已经实现。
+- A（推荐）：批准补充上述三个现有战斗所有者路径，继续本卡的完整合同。只增加从角色权威成长结果到战斗快照的必要同步与旧报价失效，保留当前本人回合上限和余额，下一本人回合才发新预算；不新增修炼流程、事件总线或新执行器。恢复执行前补齐冻结路径与本卡预检，仍形成一个统一 candidate。
+- B：将本卡交付明确缩为创建、现有聚合进度变更、保存恢复及入战重建；战斗内更新上限/v和旧报价失效不算本卡完成证据。须负责人明确改变原验收边界并同步合同，后续战斗内同步另行规划，不在此 checkpoint 自动建卡或宣称原验收已满足。
+- C：保持当前阻塞，先由负责人重新确认战斗期间是否允许成长变化；本轮不继续实现。
+- A 保持已批准游戏语义但需要新增三条现有业务路径及相应定向验证；B 减少本轮实现范围但留下战斗期间成长不生效的已知缺口；C 暂停推进，避免提前选择游戏行为。
+
+## 本轮验证与限制
+
+- 只读核对完整的 CombatantSnapshot 构造字段/只读属性/BeginOwnTurn、CombatSession.BeginTurn 与移动输入、EncounterCoordinator 现有角色查询，以及角色聚合、创建、保存与入战调用链。以上是源码所有权证据，不是运行时验收。
+- 回滚前确认 HEAD 精确等于基线，全部实际 draftPaths 在本卡 expectedPaths 内，且无 untracked 文件；git restore --source=<基线> --worktree -- <精确41路径> 成功，随后 git status --short 为空。
+- 最终对该文档运行 check-review-text、check-pending-whitespace 与 git diff --cached --check；命令结果以本轮工具输出为准。
+- 未运行 Unity 编译/EditMode/PlayMode、成长回合运行验收或存档迁移测试。业务草稿全部撤回，本 checkpoint 没有角色数值变化，故不运行 BattleSim 或 data-chain。
+- 未修改未请求的系统；无已交付代码的残余风险。待解决风险是冻结的战斗内成长验收尚无获准写入路径。
+
+## 2026-10-10 决策 A 后的新 run 与范围停止
+
+- 当前 runId=227f52dd-8ff4-4460-9589-e1e3cec3c5f7，基线317f3e79c3dfcd5e5a19c347879fc1039127fe72。只消费DEC-20261010-CD28FDC451DE4D的A；共享入口重放的旧证据属于初始状态。
+- Node REPL实际model=gpt-6.1-sol，与入口冻结模型精确一致。按任务卡和AI协作规则核对角色/保存高影响，当前原生工具支持辅助，但没有独立旧档事实冲突，本轮由单一主责统一实施和复核，未调用辅助、未启动第二责任会话。
+- 共享入口已核验的预检matched/notice/mustRead/gatePointers为空；只在当前worktree写入已冻结路径，未调用runtime/集成/automation，未改任务卡、队列、backlog及下游前置。
+- 已加载unity-agent-workflows及project-structure-discovery/content-and-systems/ai-workflows/unity-validation；项目映射为UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md。实际Character仅依赖Content/Foundation/Spatial，Editor没有Character直接引用。首次编译证实导入器直引Character不合法，已改用Editor原有Combat纯配置投影，不增加asmdef或配置框架。
+
+### checkpoint 中保留的合法草稿
+
+- CharacterRuntimeProfile集中准备/发布进度与AP/v；原Progression.Restore及Attributes.Restore收为模块内部入口；定义、快照和恢复按Realm表重建。新增有限权威节点来源、presence、身份/篇章/节点校验、精确有理数累计及最终一次floor；不创建训练/突破生产者。
+- 正式创建改凡人、保留原攻防倍率及小族已知术法，不提前练气资格。Bootstrap/创建/恢复/入战显式注入现有成长配置；凡人不获得练气初始装备及药品。角色/敌人表与独立模板境界显式化，AP/v作派生一致性校验；五敌人四练气/一筑基。
+- 保存schema5编码权威来源；旧4结构迁移只补显式空来源，原字段不清除，恢复按当前表重建；空境界、presence/数组不一致等拒绝，准备整体成功前不发布。
+- 已批准三个战斗路径同步长期AP/v、更新Session版本。本人回合已发上限/余额不动，下一本人开始发新上限；旧移动报价拒绝。新CombatRealmGrowthTests的26项全部通过，其中金丹前后旧回合100000上限/50000余额保持、旧50000移动报价拒绝、新20833报价提交、下一本人回合1000000预算均有实际断言。
+- 以上只是已编译草稿，尚未满足完成条件，不应集成或归档。
+
+### 已执行验证与真实限制
+
+- 三次Unity EditMode入口：前两次退出1，分别发现Editor缺Character引用、纯规则不存在GetRealm方法；最后使用实际Realms只读集合并通过全部程序集编译。
+- 最后命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <本worktree>/src -ResultXmlPath <本worktree>/src/Temp/growth-editmode-results.xml。Unity退出2：858项，841通过、17失败、0跳过；新成长26项全部通过。不是全量通过。
+- Unity日志明确记录同次结果写入本worktree的Temp路径及默认C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src/TestResults.xml；Unity退出后Temp结果已被清理，本轮统计读取同次默认结果。后续将结果写到持久的临时输出目录，避免Unity自身清理，仍只运行本worktree项目。
+- 14项相关失败：CharacterCreationTests中的9个控制器Configure夹具未传新配置；EQUIP/ITEM各1个unknown境界夹具仍在独立写入进度（新聚合应拒绝）；GuanzhongFormalEndToEndTests的1项unknown功法旧预期与闭合身份拒绝矛盾；ContentCatalogDataTests中的2项沿旧敌人独立AP/v规则。
+- 3项无关资产环境失败：ClothWideSleeveExperimentEditorTests缺实验.blend；CombatUnitPresentationProfileEditorTests两项缺仓库外部源Shijiahou FBX。未复制其他worktree缓存/源文件或改这些未授权路径。
+- 独立检查：check-unity-assembly-boundaries通过（19 assemblies/2 asmrefs）；check-data-chain通过（GongFa29/29、Spells84/84、Skills31/31、647语言键）。未运行PlayMode；未改模拟器，不以本次算术或功能测试宣称新角色数值平衡，也未重复BattleSim。
+- 现有代码复核另发现万法都箓经元婴篇应为L2的摄法，草稿闭合表尚写符命；恢复实施时在已授权CharacterRuntimeProfile内修正并加强对应来源验收。当前不追加业务修改。
+
+### 新停止事实与负责人选项
+
+- ContentCatalogDataTests.cs::AllFiveEnemyTemplatesHaveExplicitProductionActionEconomyInputs仍逐项断言AP100000/v2000；同文件EnemyInputChangesPersistByIdWithZeroMovementAndRepeatWithoutGuidChanges允许五敌人任意独立AP/v。新合同明确血影筑基AP300000、四练气AP100000、全体v4000，旧独立值必须拒绝且整批零写入，GUID/幂等仍须验证。
+- src/Assets/Tests/EditMode/ContentCatalogDataTests.cs不在当前卡expectedPaths/CandidatePaths。该文件是现有真实敌人导入回归所有者，必须随新派生校验语义更新；不能把上述两项移走、放宽导入或排除相关失败后声称验收完成。
+- 按任务卡停止条件，新验证所有者/路径出现后立即停止业务写入。本checkpoint保留全部已授权、已编译草稿和本证据；未经批准不改上述测试，不改生命周期，不生成completed结果。
+- A推荐：仅补充上述一个现有测试路径，重新冻结/预检，再修正全部相关夹具、L2映射，完成原完整合同与定向EditMode/PlayMode验收。无关源资产缺失单列，不拷贝外部worktree文件或扩大修复。
+- B：暂不扩大路径，暂停，先由负责人判断是否要另行缩小为玩家成长；本次不预先修改原合同或交付敌人变化。
+- C：保留玩家、敌人和存档的完整目标，暂停，先重新规划其验收范围；本次不再实施。
+- 残余风险：草稿未全部验收，不可正式集成；上述相关失败和L2映射仍待恢复后修正。未完成归档，不写经验候选空章节。
+
+## 2026-10-10 决策 A 后最终执行与验收
+
+### 合同、模型与所有权
+
+- 只消费本次decisionId的A和已重放0501a0eace5f078becfd9e8520b83268c078dbf1；初始index tree为3d986f5bedb63f03fb5bfdd1bd6ceaeda57313f1。共享入口明确以codex exec -m传入gpt-6.1-sol，本轮model沿该核验证明。角色/保存高影响但没有独立旧档证据冲突，原生辅助可用但未触发，本轮单一主责，不启动第二责任会话。
+- 消费绑定run/task/card/index的共享预检，四组为空。新增玩家入口校验时重算同一卡只读预检，taskCardDigest=734dc851c52b7fbc5d5e9085dc926275e99d801ac4fec51b12703236402e1a2d、indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/notice/mustRead/gates/gatePointers为空，与schema2投影一致，无门禁入口待补。
+- References loaded：unity-agent-workflows的project-structure-discovery、content-and-systems、ai-workflows、unity-validation。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md；实际模块/asmdef、CSV/asset、Bootstrap注入及直接调用者复核与图一致。
+- 原子结果仍是现有角色聚合从权威境界/节点派生AP/v，创建→快照→保存恢复→入战→现有Coordinator刷新链统一。没有训练生产者，GetGrowth只有声明及导入数据，没有新增修炼系统或太易巽卦生产者。没有修改未请求系统、其他卡、其他worktree、runtime或集成控制。
+
+### 最终实现和新增修正
+
+- 复核全部checkpoint业务diff并保留同一Realm/global配置。正式凡人创建100000 APUnits/vMilli2000，空来源；练气100000/4000、筑基300000/4000、金丹1000000/4800。苦行合法九品5000、筑基开府4953、筑基圆满5333、金丹圆满6400，精确累计后一次floor；20项Z和功法AP增量均0。
+- 读取模板21项身份/学习门槛及其L2篇章表，修正万法元婴摄法；增加合法摄法、旧符命/错境都箓拒绝、合法不同章冲突去重等反例。显式节点、学习门槛、阶段上限、缺配置/溢出和非法来源均拒绝后保留聚合。
+- 玩家槽不能只靠characterId判定资格：保存恢复、BeginNewGame及Spawner的现有入口统一调用RequirePlayerRealm；改为npc_fixture的元婴/化神不能占用玩家槽，合法NPC仍能单独派生保留高阶占位。两项回归覆盖三个入口及整体拒绝不发布。
+- 新schema5保存权威来源；旧4只补显式空来源，不从功法名补节点。验证presence矛盾、隐藏负载、空境界和坏源保持全部live状态。无真实用户存档操作。
+- 五敌人四练气/一筑基；Characters两练气、独立Player凡人/Enemy练气。ContentCatalogDataTests新增AP不一致、v0和v不一致整批零写入反例；原坏末行测试不再先破坏首行而掩盖真正末行校验。合法生产导入、重复导入、GUID及五模板保持通过。
+- 修正创角控制器配置、unknown境界/功法旧预期及明确合格夹具。PlayMode术法夹具复核现有生产目录五项、贯石击CT0和聚灵术CD16；等待真实回合推进冷却后再施法，不清空冷却。等待期间显式准备夹具HP以独立验证施法功能，未改生产恢复/伤害/费用/冷却，不把此场景当角色平衡。现有HUD标签20MP按真实文本校验。
+- 战斗回合数字证据：长期上限100000→1000000、v2000→4800；当前已发100000上限与Guard后的50000余额不变，CT/tick/turn不变；旧50000移动报价拒绝，新20833实付；下一本人开始发1000000且余额不结转。无变化刷新不增加版本。
+
+### 实际命令与结果
+
+- Unity编译及全量EditMode：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <本worktree>/src -ResultXmlPath C:/Users/WINDOWS/AppData/Local/Temp/tzg-growth-0e795c6b-editmode.xml。Unity退出2，867项=864通过+3失败，0跳过；全部相关失败已修正，新CombatRealmGrowthTests32/32；CharacterCreationRuleTests26/26、ContentCatalogDataTests34/34、EQUIP25/25、ITEM32/32、GuanzhongFormalEndToEnd6/6。
+- 3项失败精确为ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings缺.blend；CombatUnitPresentationProfileEditorTests.BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently和FormalProfileSetHasNoFuYuanDependency缺assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx，与checkpoint相同。未隐去这些失败、复制外部worktree素材或修改其断言；不宣称全量通过。
+- 定向PlayMode沿tools/run-unity-playmode-tests.ps1的同一保护/结果校验逻辑，在系统Temp副本只添加-testFilter及隐藏窗口；项目始终本worktree/src，输出XML在Unity不会清理的系统Temp，不写回工具。首轮五组20项：13通过/7失败，真实结果保留tzg-growth-0e795c6b-playmode.xml。
+- 相机五个输入测试的完整方法与BaseCommit逐字相同。术法TearDown加载StartMenu留有EventSystem，camera的UiOwnsInput读取当前EventSystem；独立运行相机组6/6通过，输出tzg-growth-0e795c6b-camera.xml，未改相机业务或输入断言。只证明独立验收通过，联合测试的场景状态干扰仍记录。
+- 两术法场景首个复验0/2：旧CT断言、未等待CD。完整复核现有配置后修正夹具，下一轮1/2通过（ExplicitEnvironmentClonesExerciseOrdinaryVeinAndBlessedRecoveryInTheRealScene），输出tzg-growth-0e795c6b-arts-final.xml；剩余失败仅旧20 MP文本，改按真实20MP后单项1/1通过，输出tzg-growth-0e795c6b-minorclan.xml。不重复已通过且输入未变的用例。
+- 最终20个唯一相关PlayMode用例分批全部通过：用药5、导航2、出身/术法3、相机6、删除4；不是一次联合20/20。创角、保存/加载保持凡人；术法/用药夹具经聚合显式练气，无提前生产授资格。没有最终场景体验/全量PlayMode或新平衡签收。
+- check-unity-assembly-boundaries通过：19 assemblies/2 asmrefs；check-data-chain通过：GongFa29/29、Spells84/84、Skills31/31、647语言键。只改后续PlayMode夹具，数据/程序集输入未变，不重复该检查；未修改BattleSim，不运行其新平衡矩阵。
+- 既有大文件仍保留其原职责：SettlementContentImporter2123行、GameSaveEnvelope798行、EncounterCoordinator780行；新增成长映射在现有CharacterRuntimeProfile，未新增asmdef/反向依赖/公共框架。本卡后置投影、review-text、pending-whitespace、cached diff检查以最终工具结果为准。
+
+### 收尾与残余限制
+
+- 原任务完成归档，仅移除自身队列/backlog行；保留所有其他任务对本ID的具名前置与顺序，不提前提升下游或关闭父项。仅依据已有事实登记pending经验候选，不查重、建整理卡或改风险索引。
+- 最终candidate由共享入口在最新master重放，本轮未集成。残余限制是三项外部美术源缺失和联合PlayMode场景状态干扰；数值平衡、完整修炼、高阶玩家、无空手/新武器及最终场景交付仍不属于本卡。

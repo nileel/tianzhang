@@ -7,10 +7,10 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
-  "stage": "implementation",
-  "dispatchState": "ready",
+  "stage": "verification",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261010-CDD390C8C97662/A",
+  "stateReason": "DEC-20261010-CDD390C8C97662/A范围已落实；成长统一接入及全部相关定向验收完成，环境限制见验证记录。",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -349,3 +349,23 @@
 
 - 新所有者、路径、字段或路线越出合同即暂停写入并重新预检；需要完整修炼功能、非原子拆分或连续跨边界补丁时按既有停止合同处理，不动态拆卡、不叠兜底。
 - 不能完成必要运行验收时不得宣称completed；普通技术失败不能伪装为决策checkpoint。范围决策只按本次明确合同应用，不恢复旧模型会话。
+
+## 2026-10-10 完成记录
+
+- 同一聚合重建创建、进度、快照与schema5恢复的境界AP/v，苦行节点精确累计及21功法闭合来源校验；战斗刷新不重发当前回合AP，下一本人开始发新上限、旧移动报价失效。
+- 本轮gpt-6.1-sol单一主责，负责人A批准的回归路径已纳入。EditMode867项864通过，3项缺外部美术源单列；成长32/32及全部相关回归通过。相关PlayMode20个唯一用例分批通过，独立相机6/6；联合场景状态干扰和历次失败如实保留于同ID验证记录。
+- 只归档本卡及移除其自身队列/backlog行；下游具名前置保留待正式master结果后的QueueMaintenance。未签角色数值平衡或最终场景交付。
+
+## 经验候选
+
+### CAND-U-COMBAT-AP2-GROWTH-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：成长任务先后因现有战斗快照写入口和敌人导入回归所有者未纳入冻结路径而两次停止，待负责人批准后才完成。
+- 已证实根因：只冻结角色派生与生产导入路径，没有把已独立复制的运行时接收对象、其预算/报价版本所有者及同语义直接回归测试一并列入；角色聚合变化无法修改只读战斗上限，旧独立AP/v测试也不能继续充当验收。
+- 可能复用范围：聚合向独立运行快照同步、共享CSV语义迁移及ready前写入/回归所有者枚举。
+- 证据：本卡两次负责人A范围合同、同ID验证记录；CombatantSnapshot/CombatSession/EncounterCoordinator及ContentCatalogDataTests的实际调用/断言；成长32项和最终相关PlayMode分批验收。
+- 门禁可能：yes

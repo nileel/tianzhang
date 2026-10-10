@@ -10,6 +10,18 @@ namespace TianZhang.Tests
 {
     public class CharacterCreationRuleTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private CharacterCreationPointBuyConfig pointBuyConfig;
         private GameObject creationPanel;
         private CharacterCreationController creationController;
@@ -226,7 +238,7 @@ namespace TianZhang.Tests
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.HiddenRootSeedId = "hidden_variant_seed";
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
 
             Assert.AreEqual("Dormant", profile.hiddenRootState);
             Assert.AreEqual("hidden_variant_seed", profile.hiddenRootSeedId);
@@ -254,6 +266,7 @@ namespace TianZhang.Tests
         public void AwakenedHiddenRootJoinsEffectiveRootsAndUsesMultiRootFormula()
         {
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.realmStage = "凡人";
             try
             {
                 profile.visibleRootCultivationMultiplier = 1.0f;
@@ -285,8 +298,8 @@ namespace TianZhang.Tests
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_alchemy", 2));
             draft.CraftSkills.Add(new CraftSkillAllocation("craft_talisman", 1));
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
-            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
 
             Assert.AreEqual("试炼修士", profile.charName);
             Assert.AreEqual(25, profile.innatePurchasePointsUsed);
@@ -306,14 +319,14 @@ namespace TianZhang.Tests
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
 
-            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
+            var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
 
             Assert.AreEqual(
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
                 profile.unarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(profile.mainEquipmentBasicAttackProfileId));
 
-            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
             Assert.AreEqual(
                 CharacterCreationCatalog.BasicUnarmedAttackProfileId,
                 runtime.UnarmedBasicAttackProfileId);
@@ -325,7 +338,7 @@ namespace TianZhang.Tests
         {
             CharacterData profile = CharacterCreationRules.BuildCharacterData(
                 CharacterCreationCatalog.CreateDefaultDraft(),
-                pointBuyConfig);
+                pointBuyConfig, GrowthRules);
             profile.maxSpellSlots = 5;
             profile.maxSkillSlots = 2;
             profile.availableSpells = new[] { "spell_fixture" };
@@ -333,7 +346,7 @@ namespace TianZhang.Tests
             profile.equippedSpells = new[] { "spell_fixture" };
             profile.equippedSkills = new[] { "skill_fixture" };
 
-            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+            CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
 
             Assert.AreEqual(5, runtime.AbilityLoadout.SpellSlots);
             Assert.AreEqual(2, runtime.AbilityLoadout.SkillSlots);
@@ -346,7 +359,7 @@ namespace TianZhang.Tests
         {
             CharacterData profile = CharacterCreationRules.BuildCharacterData(
                 CharacterCreationCatalog.CreateDefaultDraft(),
-                pointBuyConfig);
+                pointBuyConfig, GrowthRules);
 
             Assert.IsTrue(string.IsNullOrEmpty(profile.gongFaName));
             CollectionAssert.IsEmpty(profile.equippedSpells);
@@ -358,7 +371,7 @@ namespace TianZhang.Tests
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.OriginId = "origin_minor_clan";
-            CharacterData profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig);
+            CharacterData profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
             try
             {
                 var expected = new[] { "spell_guanshiji", "spell_julingshu" };
@@ -366,7 +379,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(2, profile.maxSpellSlots);
                 CollectionAssert.AreEqual(expected, profile.availableSpells);
                 CollectionAssert.AreEqual(expected, profile.equippedSpells);
-                CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile);
+                CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.KnownSpells);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.EquippedSpells);
                 Assert.AreEqual("basic_unarmed", runtime.UnarmedBasicAttackProfileId);
@@ -386,10 +399,10 @@ namespace TianZhang.Tests
             hiddenDraft.CharacterName = "基线修士";
             hiddenDraft.HiddenRootSeedId = "hidden_variant_seed";
 
-            CharacterData baselineData = CharacterCreationRules.BuildCharacterData(baselineDraft, pointBuyConfig);
-            CharacterData hiddenData = CharacterCreationRules.BuildCharacterData(hiddenDraft, pointBuyConfig);
-            CharacterRuntimeProfile baseline = CharacterRuntimeProfile.FromDefinition("baseline", baselineData);
-            CharacterRuntimeProfile withDormantHiddenRoot = CharacterRuntimeProfile.FromDefinition("hidden", hiddenData);
+            CharacterData baselineData = CharacterCreationRules.BuildCharacterData(baselineDraft, pointBuyConfig, GrowthRules);
+            CharacterData hiddenData = CharacterCreationRules.BuildCharacterData(hiddenDraft, pointBuyConfig, GrowthRules);
+            CharacterRuntimeProfile baseline = CharacterRuntimeProfile.FromDefinition("baseline", baselineData, GrowthRules);
+            CharacterRuntimeProfile withDormantHiddenRoot = CharacterRuntimeProfile.FromDefinition("hidden", hiddenData, GrowthRules);
             CharacterDerivedAttributes baselineDerived = baseline.Attributes.Derive(
                 baseline.Progression.RealmMultiplier,
                 CharacterAttributeBonuses.Empty);
@@ -427,7 +440,7 @@ namespace TianZhang.Tests
                 submittedSlotId = slot;
                 submittedProfile = profile;
                 submittedStartNodeId = start;
-            });
+            }, GrowthRules);
         }
 
         private static CharacterCreationPointBuyConfig CreatePointBuyConfig()

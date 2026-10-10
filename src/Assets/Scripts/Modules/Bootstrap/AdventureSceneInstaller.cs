@@ -81,6 +81,7 @@ namespace TianZhang.Bootstrap
                 if (!static3DUnitPresentationProvider.TryValidate(out string presentationReason))
                     throw new InvalidOperationException(presentationReason);
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
+                runtime.ConfigureGrowth(contentCatalog.CombatRuleSet);
                 if (runtime.Player == null) throw new InvalidOperationException("adventure_player_missing");
                 if (!contentCatalog.TryGetAdventureMap(
                         runtime.Navigation.AdventureId,

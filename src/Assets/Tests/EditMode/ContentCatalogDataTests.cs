@@ -160,10 +160,13 @@ namespace TianZhang.Tests
             {
                 CollectionAssert.AreEquivalent(EnemyIds, preview.enemyTemplateIds);
                 Assert.AreEqual(EnemyIds.Length, preview.enemyTemplates.Length);
-                foreach (var template in preview.enemyTemplates)
+                for (int index = 0; index < preview.enemyTemplates.Length; index++)
                 {
-                    Assert.AreEqual(100000, template.actionPointMaximumUnits);
-                    Assert.AreEqual(2000, template.movementEfficiencyMilliUnits);
+                    var template = preview.enemyTemplates[index];
+                    bool foundation = preview.enemyTemplateIds[index] == "enemy_xueyingmoxiu";
+                    Assert.AreEqual(foundation ? "筑基" : "练气", template.realmStage);
+                    Assert.AreEqual(foundation ? 300000 : 100000, template.actionPointMaximumUnits);
+                    Assert.AreEqual(4000, template.movementEfficiencyMilliUnits);
                 }
                 Assert.AreEqual(1, preview.enemies.Length);
             }
@@ -175,11 +178,14 @@ namespace TianZhang.Tests
 
         [TestCase("actionPointMaximumUnits", "")]
         [TestCase("actionPointMaximumUnits", "0")]
+        [TestCase("actionPointMaximumUnits", "100001")]
         [TestCase("actionPointMaximumUnits", "-1")]
         [TestCase("actionPointMaximumUnits", "1.5")]
         [TestCase("actionPointMaximumUnits", "2147483648")]
         [TestCase("movementEfficiencyMilliUnits", "")]
         [TestCase("movementEfficiencyMilliUnits", "-1")]
+        [TestCase("movementEfficiencyMilliUnits", "0")]
+        [TestCase("movementEfficiencyMilliUnits", "4001")]
         [TestCase("movementEfficiencyMilliUnits", "0.5")]
         [TestCase("movementEfficiencyMilliUnits", "2147483648")]
         [TestCase("extraColumn", "unexpected")]
@@ -193,7 +199,7 @@ namespace TianZhang.Tests
                 .ToDictionary(path => path, File.ReadAllBytes);
             try
             {
-                var lines = WithEnemyInput(ReadDataFile(EnemiesPath), EnemyIds[0], "actionPointMaximumUnits", "100001");
+                var lines = ReadDataFile(EnemiesPath);
                 if (field == "extraColumn")
                     lines = lines.Select(line => line.StartsWith(EnemyIds[4] + ",", StringComparison.Ordinal) ? line + "," + value : line).ToArray();
                 else if (field == "missingColumn")
@@ -218,7 +224,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void EnemyInputChangesPersistByIdWithZeroMovementAndRepeatWithoutGuidChanges()
+        public void ProductionRealmInputsPersistByIdAndRepeatWithoutGuidChanges()
         {
             var originalCsv = File.ReadAllBytes(ToAbsolutePath(EnemiesPath));
             var paths = EnemyIds.Select(id => $"Assets/Data/Characters/Char_Enemy_{id}.asset").ToArray();
@@ -227,21 +233,14 @@ namespace TianZhang.Tests
             var enemyGuid = AssetDatabase.AssetPathToGUID(enemyPath);
             try
             {
-                var lines = ReadDataFile(EnemiesPath);
-                for (var index = 0; index < EnemyIds.Length; index++)
-                {
-                    lines = WithEnemyInput(lines, EnemyIds[index], "actionPointMaximumUnits", (100001 + index).ToString());
-                    lines = WithEnemyInput(lines, EnemyIds[index], "movementEfficiencyMilliUnits", index.ToString());
-                }
-                File.WriteAllLines(ToAbsolutePath(EnemiesPath), lines);
                 SettlementContentImporter.ImportContentCatalog();
 
                 for (var index = 0; index < paths.Length; index++)
                 {
                     AssetDatabase.ImportAsset(paths[index], ImportAssetOptions.ForceSynchronousImport);
                     var template = AssetDatabase.LoadAssetAtPath<CharacterData>(paths[index]);
-                    Assert.AreEqual(100001 + index, template.actionPointMaximumUnits, EnemyIds[index]);
-                    Assert.AreEqual(index, template.movementEfficiencyMilliUnits, EnemyIds[index]);
+                    Assert.AreEqual(EnemyIds[index] == "enemy_xueyingmoxiu" ? 300000 : 100000, template.actionPointMaximumUnits, EnemyIds[index]);
+                    Assert.AreEqual(4000, template.movementEfficiencyMilliUnits, EnemyIds[index]);
                     Assert.AreEqual(guids[index], AssetDatabase.AssetPathToGUID(paths[index]));
                 }
                 var bytesAfterFirstImport = paths.Select(File.ReadAllBytes).ToArray();

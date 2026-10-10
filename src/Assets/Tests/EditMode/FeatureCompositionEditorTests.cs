@@ -27,6 +27,18 @@ namespace TianZhang.Tests
 {
     public sealed class FeatureCompositionEditorTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         [Test]
         public void FormalOrdinaryDefinitionsReloadIdempotentlyAndReachTheSession()
         {
@@ -175,7 +187,9 @@ namespace TianZhang.Tests
             string directory = CreateTemporaryDirectoryPath();
             var bootstrapObject = new GameObject("GameBootstrapRoundTripTest");
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.realmStage = "凡人";
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             try
             {
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
@@ -187,7 +201,7 @@ namespace TianZhang.Tests
                 profile.movementEfficiencyMilliUnits = 2000;
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.BeginNewGame(
-                    CharacterRuntimeProfile.FromDefinition("player", profile),
+                    CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                     CultivationState.CreateEmpty(),
                     "guanzhong_hub");
                 runtime.EnterSettlement("guanzhong_city");
@@ -219,7 +233,9 @@ namespace TianZhang.Tests
             var bootstrapObject = new GameObject("GameBootstrapInvalidNavigationTest");
             var installerObject = new GameObject("StartMenuInstallerInvalidNavigationTest");
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.realmStage = "凡人";
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             try
             {
                 installerObject.SetActive(false);
@@ -232,7 +248,7 @@ namespace TianZhang.Tests
                 profile.movementEfficiencyMilliUnits = 2000;
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.BeginNewGame(
-                    CharacterRuntimeProfile.FromDefinition("player", profile),
+                    CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                     CultivationState.CreateEmpty(),
                     "guanzhong_hub");
                 runtime.EnterAdventure(
@@ -266,6 +282,7 @@ namespace TianZhang.Tests
         {
             var installerObject = new GameObject("StartMenuInstallerMissingPointBuyConfigTest");
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             try
             {
                 installerObject.SetActive(false);

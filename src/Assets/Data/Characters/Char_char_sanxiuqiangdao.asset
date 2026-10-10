@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 20
   hitRateBonus: 0
   realmMultiplier: 1.5
-  realmStage:
+  realmStage: 练气
   gongFaName:
   equippedSpells:
   - spell_xuanshuizhou
@@ -90,4 +90,4 @@ MonoBehaviour:
   danArtifactForm:
   legacyDanJiType:
   actionPointMaximumUnits: 100000
-  movementEfficiencyMilliUnits: 2000
+  movementEfficiencyMilliUnits: 4000

@@ -59,7 +59,7 @@ namespace TianZhang.Infrastructure.Persistence
             return envelope;
         }
 
-        public RestoredGameState Restore(ContentCatalogData catalog)
+        public RestoredGameState Restore(ContentCatalogData catalog, CombatRuleSetData growthRules = null)
         {
             if (schemaVersion != GameSaveSerializer.SchemaVersion)
                 throw new ArgumentException("Unsupported save schema.", nameof(schemaVersion));
@@ -72,6 +72,7 @@ namespace TianZhang.Infrastructure.Persistence
             {
                 if (player == null || cultivation == null)
                     throw new ArgumentException("Player state presence is inconsistent.");
+                CharacterRuntimeProfile.RequirePlayerRealm(player.realmStage);
                 if (catalog == null ||
                     !catalog.TryGetAppearanceProfile(player.appearanceProfileId, out _) &&
                     !string.Equals(player.appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
@@ -86,7 +87,7 @@ namespace TianZhang.Infrastructure.Persistence
             }
 
             CharacterRuntimeProfile restoredPlayer = hasPlayer
-                ? CharacterRuntimeProfile.FromSnapshot(player.Restore())
+                ? CharacterRuntimeProfile.FromSnapshot(player.Restore(), growthRules ?? catalog?.CombatRuleSet)
                 : null;
             CultivationState restoredCultivation = hasPlayer ? cultivation.Restore() : null;
             var restoredClock = new WorldClockService(1);
@@ -155,7 +156,8 @@ namespace TianZhang.Infrastructure.Persistence
                  record.dodgeRate != 0f || record.critRate != 0f ||
                  record.critDamage != 0f || record.hitRateBonus != 0f ||
                  record.actionEconomyInputsPresent || record.actionPointMaximumUnits != 0 ||
-                 record.movementEfficiencyMilliUnits != 0 || HasItems(record.actionEconomyModifierInputs));
+                 record.movementEfficiencyMilliUnits != 0 || HasItems(record.actionEconomyModifierInputs) ||
+                 record.movementGrowthInputsPresent || HasItems(record.movementGrowthSources));
         }
 
         private static bool HasCultivationPayload(CultivationRecord record)
@@ -312,6 +314,24 @@ namespace TianZhang.Infrastructure.Persistence
     }
 
     [Serializable]
+    public sealed class MovementGrowthRecord
+    {
+        public string sourceInstanceId;
+        public string gongFaId;
+        public string chapterId;
+        public string realmId;
+        public int[] completedNodeIndices;
+        public static MovementGrowthRecord Capture(MovementGrowthSource source)
+        {
+            var nodes = new int[source.CompletedNodeIndices.Count];
+            for (int i = 0; i < nodes.Length; i++) nodes[i] = source.CompletedNodeIndices[i];
+            return new MovementGrowthRecord { sourceInstanceId = source.SourceInstanceId, gongFaId = source.GongFaId,
+                chapterId = source.ChapterId, realmId = source.RealmId, completedNodeIndices = nodes };
+        }
+        public MovementGrowthSource Restore() => new MovementGrowthSource(sourceInstanceId, gongFaId, chapterId, realmId, completedNodeIndices);
+    }
+
+    [Serializable]
     public sealed class CharacterRecord
     {
         public string characterId;
@@ -364,6 +384,8 @@ namespace TianZhang.Infrastructure.Persistence
         public int actionPointMaximumUnits;
         public int movementEfficiencyMilliUnits;
         public ActionEconomyModifierRecord[] actionEconomyModifierInputs;
+        public bool movementGrowthInputsPresent;
+        public MovementGrowthRecord[] movementGrowthSources;
 
         public static CharacterRecord Capture(CharacterStateSnapshot snapshot)
         {
@@ -413,11 +435,32 @@ namespace TianZhang.Infrastructure.Persistence
                 critRate = snapshot.CombatModifiers.CritRate,
                 critDamage = snapshot.CombatModifiers.CritDamage,
                 hitRateBonus = snapshot.CombatModifiers.HitRateBonus,
+                movementGrowthInputsPresent = snapshot.Progression.MovementGrowthInputsPresent,
+                movementGrowthSources = CaptureMovementGrowth(snapshot.Progression.MovementGrowthSources),
                 actionEconomyInputsPresent = snapshot.Attributes.ActionEconomyInputsPresent,
                 actionPointMaximumUnits = snapshot.Attributes.ActionPointMaximumUnits,
                 movementEfficiencyMilliUnits = snapshot.Attributes.MovementEfficiencyMilliUnits,
                 actionEconomyModifierInputs = CaptureActionEconomyModifierInputs(snapshot.CombatModifiers.ActionEconomyInputs),
             };
+        }
+
+        private static MovementGrowthRecord[] CaptureMovementGrowth(IReadOnlyList<MovementGrowthSource> sources)
+        {
+            var result = new List<MovementGrowthRecord>();
+            foreach (var source in sources) result.Add(MovementGrowthRecord.Capture(source));
+            return result.ToArray();
+        }
+        private MovementGrowthSource[] RestoreMovementGrowth()
+        {
+            if (!movementGrowthInputsPresent || movementGrowthSources == null)
+                throw new ArgumentException("character_growth_inputs_invalid");
+            var result = new List<MovementGrowthSource>();
+            foreach (var source in movementGrowthSources)
+            {
+                if (source == null) throw new ArgumentException("character_growth_source_invalid");
+                result.Add(source.Restore());
+            }
+            return result.ToArray();
         }
 
         private static ActionEconomyModifierRecord[] CaptureActionEconomyModifierInputs(
@@ -457,7 +500,7 @@ namespace TianZhang.Infrastructure.Persistence
                     equippedSkills ?? new string[0],
                     spellSlots,
                     skillSlots),
-                new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier),
+                new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier, movementGrowthInputsPresent, RestoreMovementGrowth()),
                 combatModifiers,
                 mainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId,

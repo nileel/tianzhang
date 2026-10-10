@@ -510,8 +510,13 @@ namespace TianZhang.Editor
                 throw new InvalidDataException($"{sourceName} movementEfficiencyMilliUnits must be nonnegative.");
 
             var template = ScriptableObject.CreateInstance<CharacterData>();
+            CharacterContentImporter.ProjectRealmGrowth(AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
+                Required(table, row, "realm"), out int ap, out int movement, out string realmStage);
+            template.realmStage = realmStage;
             template.actionPointMaximumUnits = actionPointMaximumUnits;
             template.movementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
+            if (actionPointMaximumUnits != ap || movementEfficiencyMilliUnits != movement)
+                throw new InvalidDataException(sourceName + ": realm growth checksum mismatch.");
             var displayNameKey = RequiredLanguageKey(language, Required(table, row, "name"), sourceName, "enemy displayNameKey");
             template.charName = language[displayNameKey];
             template.realmMultiplier = ParseFloat(Required(table, row, "realmMultiplier"), sourceName, "realmMultiplier");
@@ -1020,6 +1025,7 @@ namespace TianZhang.Editor
             target.actionPointMaximumUnits = source.actionPointMaximumUnits;
             target.movementEfficiencyMilliUnits = source.movementEfficiencyMilliUnits;
             target.realmMultiplier = source.realmMultiplier;
+            target.realmStage = source.realmStage;
             target.rootBone = source.rootBone;
             target.physique = source.physique;
             target.spirit = source.spirit;
@@ -1047,6 +1053,7 @@ namespace TianZhang.Editor
                    target.actionPointMaximumUnits == source.actionPointMaximumUnits &&
                    target.movementEfficiencyMilliUnits == source.movementEfficiencyMilliUnits &&
                    target.realmMultiplier == source.realmMultiplier &&
+                   target.realmStage == source.realmStage &&
                    target.rootBone == source.rootBone &&
                    target.physique == source.physique &&
                    target.spirit == source.spirit &&
@@ -1945,6 +1952,11 @@ namespace TianZhang.Editor
                         $"{path} declares conflicting action economy inputs for config 'default'.");
                 }
             }
+
+            CharacterContentImporter.ProjectRealmGrowth(AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
+                "realm_fanren", out int ap, out int movement, out _);
+            if (actionPointMaximumUnits != ap || movementEfficiencyMilliUnits != movement)
+                throw new InvalidDataException(path + ": realm growth checksum mismatch.");
 
             string assetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
             AssetCommitter.EnsureDirectory(assetPath);

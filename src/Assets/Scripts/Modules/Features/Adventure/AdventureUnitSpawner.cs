@@ -86,8 +86,18 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
 
-            CombatantSnapshot playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
-            CombatantSnapshot enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic);
+            CombatantSnapshot playerSnapshot;
+            CombatantSnapshot enemySnapshot;
+            try
+            {
+                // Rebuild from authoritative inputs at entry; a stale derived snapshot cannot override the table.
+                CharacterRuntimeProfile.RequirePlayerRealm(player.Progression.RealmStage);
+                player = CharacterRuntimeProfile.FromSnapshot(player, catalog.CombatRuleSet).Capture();
+                playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
+                enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic, catalog.CombatRuleSet);
+            }
+            catch (ArgumentException) { reason = "adventure_growth_inputs_invalid"; return false; }
+            catch (OverflowException) { reason = "adventure_growth_inputs_invalid"; return false; }
             spawned = new AdventureSpawnSet(
                 playerSnapshot,
                 enemySnapshot,
@@ -162,9 +172,9 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position, string basicAttackProfileId)
+        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position, string basicAttackProfileId, CombatRuleSetData growthRules)
         {
-            CharacterAttributes attributes = CharacterAttributes.FromDefinition(source);
+            CharacterAttributes attributes = CharacterAttributes.FromDefinition(source, growthRules);
             CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(source);
             float realmMultiplier = source.realmMultiplier > 0f ? source.realmMultiplier : 1f;
             CharacterDerivedAttributes derived = attributes.Derive(realmMultiplier, combatModifiers.ToAttributeBonuses());

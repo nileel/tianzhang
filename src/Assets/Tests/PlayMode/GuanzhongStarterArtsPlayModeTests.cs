@@ -28,6 +28,18 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongStarterArtsPlayModeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private const string AttackId = "spell_guanshiji", RecoveryId = "spell_julingshu";
         private readonly List<string> saveDirectories = new List<string>();
         private readonly List<EnvironmentProfileAsset> environmentClones = new List<EnvironmentProfileAsset>();
@@ -149,7 +161,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
             Assert.That(random.Count, Is.EqualTo(rolls + 4));
-            Assert.That(session.PendingCtPenalty, Is.EqualTo(10));
+            Assert.That(session.PendingCtPenalty, Is.Zero);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             StringAssert.Contains("消耗灵力 12", sink.Logs.Last());
             yield return WaitForPlayerTurn(CombatTurnPhase.Active);
@@ -161,7 +173,7 @@ namespace TianZhang.Tests.PlayMode
 
             foreach (int recovery in new[] { 5, 5, 2 })
             {
-                yield return WaitForPlayerTurn();
+                yield return WaitForRecoveryTurn();
                 mana = spawned.Player.CurrentSpirit;
                 rolls = random.Count;
                 int enemyHealth = spawned.Enemy.CurrentHealth;
@@ -178,14 +190,14 @@ namespace TianZhang.Tests.PlayMode
             }
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(spawned.Player.MaximumSpirit));
 
-            yield return WaitForPlayerTurn();
+            yield return WaitForRecoveryTurn();
             mana = spawned.Player.CurrentSpirit;
             rolls = random.Count;
             Assert.That(spawned.Enemy.CurrentSpirit, Is.EqualTo(spawned.Enemy.MaximumSpirit));
             actionBar.SecondArtTargetButton.onClick.Invoke();
             StringAssert.Contains(sink.Latest.Enemy.DisplayName,
                 actionBar.SecondArtTargetButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
-            StringAssert.Contains("20 MP", actionBar.SecondArtButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
+            StringAssert.Contains("20MP", actionBar.SecondArtButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.SecondArtButton.onClick.Invoke();
             Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 20));
@@ -218,7 +230,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return WaitForPlayerTurn(CombatTurnPhase.Active);
                 ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
 
-                yield return WaitForPlayerTurn();
+                yield return WaitForRecoveryTurn();
                 spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, 30);
                 spawned.Enemy.SetSpirit(spawned.Enemy.MaximumSpirit, spawned.Enemy.MaximumSpirit - 10);
                 int targetMana = spawned.Enemy.CurrentSpirit, expected = environment == SpiritRecoveryEnvironment.Ordinary ? 2 : 5;
@@ -284,6 +296,9 @@ namespace TianZhang.Tests.PlayMode
             FindInActiveScene<StartMenuController>().LoadPlayer("starter-arts");
             yield return WaitForScene(GameplaySceneNames.World);
             Assert.That(GameBootstrap.RequireRuntime().CaptureSaveJson(), Is.EqualTo(saved));
+            Assert.That(GameBootstrap.RequireRuntime().Player.Progression.RealmStage, Is.EqualTo("凡人"));
+            // This ability fixture explicitly upgrades through the existing aggregate; creation grants no qualification.
+            GameBootstrap.RequireRuntime().Player.RestoreProgression(new CharacterProgressionSnapshot("", "练气", 1.5f));
             source = GameBootstrap.RequireRuntime().Player.Capture();
             Assert.That(new[] { source.Attributes.RootBone, source.Attributes.Spirit, source.Attributes.Mind,
                 source.Attributes.Talent, source.Attributes.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
@@ -329,7 +344,7 @@ namespace TianZhang.Tests.PlayMode
             session = GetPrivateField<CombatSession>(encounter, "session");
             spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             Assert.That(session.AttackProfiles.Select(profile => profile.Id),
-                Is.EquivalentTo(new[] { "basic_unarmed", AttackId, RecoveryId }));
+                Is.EquivalentTo(new[] { "basic_unarmed", "basic_iron_sword", "basic_iron_blade", AttackId, RecoveryId }));
             Assert.That(spawned.Player.RawSpirit, Is.EqualTo(source.Attributes.Spirit));
             Assert.That(spawned.Player.RealmStage, Is.EqualTo(source.Progression.RealmStage));
             Assert.That(spawned.Player.VisibleRootElement, Is.EqualTo(source.VisibleRootElement));
@@ -387,6 +402,24 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(session.TurnPhase, Is.EqualTo(phase));
         }
 
+        private IEnumerator WaitForRecoveryTurn()
+        {
+            yield return WaitForPlayerTurn();
+            int startTick = session.TurnScheduler.CurrentTick;
+            int cooldown = spawned.Player.GetCooldown(RecoveryId);
+            while (spawned.Player.GetCooldown(RecoveryId) > 0)
+            {
+                // Keep this spell functionality fixture alive while real turns advance its production cooldown.
+                // This is explicit fixture HP preparation, not character balance or a production recovery effect.
+                spawned.Player.RestoreHealth(spawned.Player.MaximumHealth);
+                ((ICombatCommandHandler)encounter).RequestEndTurn(spawned.Player.Id);
+                yield return null;
+                yield return WaitForPlayerTurn();
+                Assert.That(session.TurnScheduler.CurrentTick - startTick, Is.LessThan(200));
+            }
+            Assert.That(session.TurnScheduler.CurrentTick - startTick, Is.GreaterThanOrEqualTo(cooldown));
+        }
+
         private IEnumerator WaitForPlayerTurn(CombatTurnPhase phase = CombatTurnPhase.Active)
         {
             float deadline = Time.realtimeSinceStartup + 10f;
@@ -408,7 +441,7 @@ namespace TianZhang.Tests.PlayMode
                 originId = createdOriginId,
                 innate = new[] { source.Attributes.RootBone, source.Attributes.Spirit, source.Attributes.Mind, source.Attributes.Talent, source.Attributes.Fortune },
                 playerCharacter = CharacterRecord.Capture(source),
-                enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition(spawned.Enemy.Id, spawned.EnemyData.combatTemplate).Capture()),
+                enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition(spawned.Enemy.Id, spawned.EnemyData.combatTemplate, GrowthRules).Capture()),
                 enemyId = spawned.EnemyData.enemyId,
                 player = CombatInputEvidence.Capture(spawned.Player),
                 enemy = CombatInputEvidence.Capture(spawned.Enemy),
@@ -440,10 +473,10 @@ namespace TianZhang.Tests.PlayMode
                 {
                     copy.rootBone = rootBone;
                     var enemy = (CombatantSnapshot)factory.Invoke(null, new object[] {
-                        copy, new TianZhang.Spatial.HexCoord(1, 0), copy.unarmedBasicAttackProfileId });
+                        copy, new TianZhang.Spatial.HexCoord(1, 0), copy.unarmedBasicAttackProfileId, GrowthRules });
                     var evidence = JsonUtility.FromJson<OrdinaryInputEvidence>(original);
                     evidence.source = "Player: unchanged SPELLS visible ordinary input; enemy: Unity production CreateEnemy on explicit rootBone candidate clone=" + rootBone;
-                    evidence.enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition("enemy", copy).Capture());
+                    evidence.enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition("enemy", copy, GrowthRules).Capture());
                     evidence.enemy = CombatInputEvidence.Capture(enemy);
                     string json = JsonUtility.ToJson(evidence, true);
                     File.WriteAllText(Path.Combine(directory, "rootbone-" + rootBone + ".json"), json);
@@ -501,7 +534,7 @@ namespace TianZhang.Tests.PlayMode
                 innate = liveInnate,
                 playerCharacter = CharacterRecord.Capture(liveSource),
                 enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition(
-                    liveSpawned.Enemy.Id, liveSpawned.EnemyData.combatTemplate).Capture()),
+                    liveSpawned.Enemy.Id, liveSpawned.EnemyData.combatTemplate, GrowthRules).Capture()),
                 enemyId = liveSpawned.EnemyData.enemyId,
                 player = CombatInputEvidence.Capture(liveSpawned.Player),
                 enemy = CombatInputEvidence.Capture(liveSpawned.Enemy),

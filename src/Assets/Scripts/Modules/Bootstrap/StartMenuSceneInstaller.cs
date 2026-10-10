@@ -35,6 +35,8 @@ namespace TianZhang.Bootstrap
             {
                 RequireReference(contentCatalog, "start_menu_content_catalog_missing");
                 RequireReference(pointBuyConfig, PointBuyConfigMissingReason);
+                if (!contentCatalog.TryGetCombatRuleSet(out _, out string growthReason))
+                    throw new InvalidOperationException(growthReason);
                 RequireReference(startMenuController, "start_menu_controller_missing");
                 RequireReference(startMenuView, "start_menu_view_missing");
                 RequireReference(characterCreationController, "character_creation_controller_missing");
@@ -42,10 +44,11 @@ namespace TianZhang.Bootstrap
                 bootstrap = GameBootstrap.RequireInstance();
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.Clear();
+                runtime.ConfigureGrowth(contentCatalog.CombatRuleSet);
                 characterCreationController.Configure(
                     characterCreationView,
                     pointBuyConfig,
-                    startMenuController.CompleteNewPlayer);
+                    startMenuController.CompleteNewPlayer, contentCatalog.CombatRuleSet);
                 startMenuController.Configure(this, startMenuView, characterCreationController);
             }
             catch (InvalidOperationException exception)
@@ -99,7 +102,7 @@ namespace TianZhang.Bootstrap
             try
             {
                 runtime.BeginEquippedNewGame(
-                    CharacterRuntimeProfile.FromDefinition("player", profile),
+                    CharacterRuntimeProfile.FromDefinition("player", profile, contentCatalog.CombatRuleSet),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),
                     startNodeId, contentCatalog);
                 GameSaveSlotWriteResult write = bootstrap.SlotStore.Write(slotId, runtime.CaptureSave());

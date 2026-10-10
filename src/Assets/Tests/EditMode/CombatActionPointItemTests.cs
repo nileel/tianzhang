@@ -24,6 +24,18 @@ namespace TianZhang.Tests.EditMode
 {
     public sealed class CombatActionPointItemTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private const string Item = "item_huoxue_dan";
         private ContentCatalogData catalog;
         private ItemData medicine;
@@ -42,18 +54,19 @@ namespace TianZhang.Tests.EditMode
             medicine = Object.Instantiate(source);
             Set(catalog, "items", Get<ItemData[]>(catalog, "items").Select(item => item.itemId == Item ? medicine : item).ToArray());
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "道具验证"; definition.realmStage = "练气"; definition.realmMultiplier = 1;
             definition.actionPointMaximumUnits = 100000; definition.movementEfficiencyMilliUnits = 2000;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
             runtime = new GameRuntime();
-            runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
+            runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
             inventory = Get<InventoryStore>(runtime, "inventory");
             bridge = new GameObject("ItemTestOwner").AddComponent<EncounterCoordinator>();
             bridge.ConfigureEquipment(runtime.Player, catalog, runtime.OwnsEquipmentInstance, () => runtime.InventoryVersion);
             bridge.ConfigureItems(runtime.GetItemQuantity, (string id, int count, long version, out Action apply, out string reason) =>
                 runtime.TryPrepareCombatConsumption(catalog, id, count, version, out apply, out reason));
             bridge.SetCombatResolutionRandomSource(new NoRandom());
-            actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 200, 200, 60, 10, 10, 10, 100000, 2000,
+            actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 200, 200, 60, 10, 10, 10, runtime.Player.Attributes.ActionPointMaximumUnits, runtime.Player.Attributes.MovementEfficiencyMilliUnits,
                 basicAttackProfileId: "basic_iron_sword");
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
                 basicAttackProfileId: "basic_unarmed");
@@ -110,7 +123,15 @@ namespace TianZhang.Tests.EditMode
         { actor.IsGuarding = true; string before = State(); Assert.IsFalse(Execute(Use(id, target, count)).Succeeded); Assert.AreEqual(before, State()); }
         [TestCase("凡人")] [TestCase("筑基")] [TestCase("unknown")]
         public void RealmMustBeExactlyLianqi(string realm)
-        { runtime.Player.Progression.Restore(new CharacterProgressionSnapshot("", realm, 1)); string before = State(); Assert.IsFalse(Execute(Use()).Succeeded); Assert.AreEqual(before, State()); }
+        { if (realm == "unknown")
+            {
+                string unchanged = State();
+                Assert.Throws<ArgumentException>(() => runtime.Player.RestoreProgression(
+                    new CharacterProgressionSnapshot("", realm, 1)));
+                Assert.AreEqual(unchanged, State());
+                return;
+            }
+            runtime.Player.RestoreProgression(new CharacterProgressionSnapshot("", realm, 1)); string before = State(); Assert.IsFalse(Execute(Use()).Succeeded); Assert.AreEqual(before, State()); }
         [Test] public void DeathStunOtherTurnAndEndedSessionArePure()
         {
             actor.ApplyStatus(CombatStatusKind.Stun, 1); string before = State(); Assert.IsFalse(Execute(Use()).Succeeded); Assert.AreEqual(before, State());
@@ -147,7 +168,7 @@ namespace TianZhang.Tests.EditMode
             {
                 case "inventory": Assert.IsTrue(runtime.InventoryGrants.Grant(catalog, new[] { new InventoryGrantRequest("item_lingshi_low", 1) }).Applied); break;
                 case "health": actor.ReceiveDamage(1); break;
-                case "realm": runtime.Player.Progression.Restore(new CharacterProgressionSnapshot("", "筑基", 1)); break;
+                case "realm": runtime.Player.RestoreProgression(new CharacterProgressionSnapshot("", "筑基", 1)); break;
                 case "definition": medicine.combatUseHealthRecovery++; break;
                 case "ap": Spend(1); break;
             }
@@ -173,7 +194,7 @@ namespace TianZhang.Tests.EditMode
                 string before = State(); Assert.Throws<ArgumentException>(() => runtime.RestoreSave(bad, catalog)); Assert.AreEqual(before, State());
             }
             medicine.combatUseEffectId = "unknown"; string state = State();
-            Assert.Throws<InvalidOperationException>(() => runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition), CultivationState.CreateEmpty(), "guanzhong_hub", catalog));
+            Assert.Throws<InvalidOperationException>(() => runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", catalog));
             Assert.AreEqual(state, State());
         }
         [TestCase("combatUseHealthRecovery", "0")] [TestCase("combatUseHealthRecovery", "2147483648")]

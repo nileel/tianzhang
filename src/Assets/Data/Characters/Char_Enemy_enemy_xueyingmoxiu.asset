@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 25
   hitRateBonus: 5
   realmMultiplier: 2
-  realmStage:
+  realmStage: 筑基
   gongFaName:
   equippedSpells:
   - spell_anshi
@@ -88,5 +88,5 @@ MonoBehaviour:
   mansionBindings: []
   danArtifactForm:
   legacyDanJiType:
-  actionPointMaximumUnits: 100000
-  movementEfficiencyMilliUnits: 2000
+  actionPointMaximumUnits: 300000
+  movementEfficiencyMilliUnits: 4000

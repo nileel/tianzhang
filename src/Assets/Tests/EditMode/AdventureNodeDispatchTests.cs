@@ -12,11 +12,24 @@ namespace TianZhang.Tests
 {
     public sealed class AdventureNodeDispatchTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         [Test]
         public void NewNodeTypeExtendsThroughHandlerWithoutChangingMapLoader()
         {
             var map = ScriptableObject.CreateInstance<AdventureMapData>();
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             try
             {
                 map.adventureId = "map_extensible";
@@ -68,6 +81,7 @@ namespace TianZhang.Tests
         {
             var map = ScriptableObject.CreateInstance<AdventureMapData>();
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             try
             {
                 var dispatcher = new AdventureNodeDispatcher(new IAdventureNodeHandler[]

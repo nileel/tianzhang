@@ -26,6 +26,18 @@ namespace TianZhang.Tests.PlayMode
     // Formal StartMenuScene, the formal slot store and real pointer input drive every deletion step.
     public sealed class StartMenuSaveDeletionPlayModeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private readonly List<Object> ownedObjects = new List<Object>();
         private Mouse mouse;
         private InputSettings.BackgroundBehavior background;
@@ -143,13 +155,14 @@ namespace TianZhang.Tests.PlayMode
 
             // Negative control: while the slot file still exists this save really does write it.
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.realmStage = "凡人";
             profile.charName = "唯一角色";
             profile.realmMultiplier = 1f;
             profile.actionPointMaximumUnits = 100000;
             profile.movementEfficiencyMilliUnits = 2000;
             ownedObjects.Add(profile);
             GameBootstrap.RequireRuntime().BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player_only", profile),
+                CharacterRuntimeProfile.FromDefinition("player_only", profile, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             bootstrap.ActivateSlot("del_only");
@@ -316,6 +329,7 @@ namespace TianZhang.Tests.PlayMode
         private void WriteSlot(GameBootstrap bootstrap, string slotId, string characterId, string displayName)
         {
             var definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = displayName;
             definition.realmMultiplier = 1f;
             definition.actionPointMaximumUnits = 100000;
@@ -323,7 +337,7 @@ namespace TianZhang.Tests.PlayMode
             ownedObjects.Add(definition);
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition(characterId, definition),
+                CharacterRuntimeProfile.FromDefinition(characterId, definition, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             GameSaveSlotWriteResult write = bootstrap.SlotStore.Write(slotId, runtime.CaptureSave());

@@ -1,5 +1,6 @@
 using System;
 using TianZhang.Entity;
+using TianZhang.Content;
 using TianZhang.Game.CharacterCreation;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace TianZhang.Features.CharacterCreation
     public sealed class CharacterCreationController : MonoBehaviour
     {
         [SerializeField] private CharacterCreationView view;
+        private CombatRuleSetData growthRules;
         private CharacterCreationDraft draft;
         private CharacterCreationPointBuyConfig pointBuyConfig;
         private Action<string, CharacterData, string> completed;
@@ -17,8 +19,9 @@ namespace TianZhang.Features.CharacterCreation
         public void Configure(
             CharacterCreationView characterCreationView,
             CharacterCreationPointBuyConfig characterCreationPointBuyConfig,
-            Action<string, CharacterData, string> onCompleted)
+            Action<string, CharacterData, string> onCompleted, CombatRuleSetData combatGrowthRules = null)
         {
+            growthRules = combatGrowthRules ?? throw new ArgumentNullException(nameof(combatGrowthRules));
             view = characterCreationView;
             pointBuyConfig = characterCreationPointBuyConfig ??
                 throw new ArgumentNullException(nameof(characterCreationPointBuyConfig));
@@ -58,7 +61,7 @@ namespace TianZhang.Features.CharacterCreation
                 return;
             }
 
-            CharacterData profile = CharacterCreationManager.CreateProfile(draft, pointBuyConfig);
+            CharacterData profile = CharacterCreationManager.CreateProfile(draft, pointBuyConfig, growthRules);
             OriginOption origin = CharacterCreationCatalog.FindOrigin(draft.OriginId);
             completed(slotId, profile, origin == null ? "jiangzuo_hub" : origin.StartNodeId);
         }

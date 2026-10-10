@@ -24,6 +24,18 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongCombatNavigationGuardPlayModeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         [UnityTest]
         public IEnumerator VictoryReturnsThroughFormalSettlementOnce() => VerifyFormalReturn(CombatSessionOutcome.Victory);
 
@@ -42,12 +54,12 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(config);
             Assert.IsTrue(catalog.TryGetAdventureMap(FormalEncounterRules.GuanzhongWildAdventureId, out AdventureMapData map));
             Assert.IsTrue(catalog.TryGetEnemy(FormalEncounterRules.ShijiahouEnemyId, out EnemyData enemy));
-            CharacterData profile = CharacterCreationManager.CreateProfile(CharacterCreationCatalog.CreateDefaultDraft(), config);
+            CharacterData profile = CharacterCreationManager.CreateProfile(CharacterCreationCatalog.CreateDefaultDraft(), config, GrowthRules);
             var host = new GameObject("FormalNavigationGuardRuntimeTest");
             try
             {
                 var runtime = new GameRuntime();
-                runtime.BeginNewGame(CharacterRuntimeProfile.FromDefinition("player", profile),
+                runtime.BeginNewGame(CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState), "guanzhong_hub");
                 runtime.EnterWorld("guanzhong_hub");
                 runtime.EnterSettlement("guanzhong_city");

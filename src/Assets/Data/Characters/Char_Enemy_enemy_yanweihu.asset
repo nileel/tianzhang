@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 5
   realmMultiplier: 1.3
-  realmStage:
+  realmStage: 练气
   gongFaName:
   equippedSpells:
   - spell_liuhuolingfu
@@ -89,4 +89,4 @@ MonoBehaviour:
   danArtifactForm:
   legacyDanJiType:
   actionPointMaximumUnits: 100000
-  movementEfficiencyMilliUnits: 2000
+  movementEfficiencyMilliUnits: 4000

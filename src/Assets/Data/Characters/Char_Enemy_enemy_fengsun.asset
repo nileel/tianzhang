@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 20
   hitRateBonus: 0
   realmMultiplier: 1.4
-  realmStage:
+  realmStage: 练气
   gongFaName:
   equippedSpells: []
   equippedSkills: []
@@ -88,4 +88,4 @@ MonoBehaviour:
   danArtifactForm:
   legacyDanJiType:
   actionPointMaximumUnits: 100000
-  movementEfficiencyMilliUnits: 2000
+  movementEfficiencyMilliUnits: 4000

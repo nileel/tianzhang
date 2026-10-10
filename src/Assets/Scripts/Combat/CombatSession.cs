@@ -194,6 +194,18 @@ namespace TianZhang.Combat
         internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
             !Combatants.HasLivingMembers(CombatTeam.Enemy);
 
+        /// <summary>Updates long-term inputs without touching the budget already issued for this turn.</summary>
+        public bool RefreshActionEconomy(string actorId, int maximum, int movement)
+        {
+            if (maximum <= 0 || movement < 0) throw new ArgumentOutOfRangeException(nameof(maximum));
+            if (!Combatants.TryGet(actorId, out var actor)) throw new ArgumentException("combat_actor_missing");
+            if (actor.ActionPointMaximumUnits == maximum && actor.MovementEfficiencyMilliUnits == movement) return false;
+            long nextVersion = checked(StateVersion + 1);
+            actor.SetLongTermActionEconomy(maximum, movement);
+            StateVersion = nextVersion;
+            return true;
+        }
+
         internal bool BeginTurn(CombatantSnapshot actor)
         {
             CurrentActorId = actor.Id;

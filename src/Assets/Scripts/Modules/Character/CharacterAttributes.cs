@@ -1,4 +1,5 @@
 using TianZhang.Entity;
+using TianZhang.Content;
 using UnityEngine;
 
 namespace TianZhang.Character
@@ -43,12 +44,16 @@ namespace TianZhang.Character
         /// <summary>Presence marker that tells a legal v=0 apart from a missing long-term input.</summary>
         public bool ActionEconomyInputsPresent { get; private set; }
 
-        public static CharacterAttributes FromDefinition(CharacterData definition)
+        public static CharacterAttributes FromDefinition(CharacterData definition, CombatRuleSetData growthRules = null)
         {
             if (definition == null) throw new System.ArgumentNullException(nameof(definition));
+            RequireActionPointMaximumUnits(definition.actionPointMaximumUnits);
+            RequireMovementEfficiencyMilliUnits(definition.movementEfficiencyMilliUnits);
+            CharacterRuntimeProfile.ProjectActionEconomy(growthRules, new CharacterProgressionSnapshot(
+                definition.gongFaName, definition.realmStage, definition.realmMultiplier), out int ap, out int movement);
             return new CharacterAttributes(definition.rootBone, definition.physique, definition.spirit,
                 definition.mind, definition.reaction, definition.talent, definition.fortune,
-                definition.actionPointMaximumUnits, definition.movementEfficiencyMilliUnits, true);
+                ap, movement, true);
         }
 
         public CharacterAttributesSnapshot Capture()
@@ -57,7 +62,7 @@ namespace TianZhang.Character
                 ActionPointMaximumUnits, MovementEfficiencyMilliUnits, ActionEconomyInputsPresent);
         }
 
-        public void Restore(CharacterAttributesSnapshot snapshot)
+        internal void Restore(CharacterAttributesSnapshot snapshot)
         {
             if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
             RootBone = snapshot.RootBone; Physique = snapshot.Physique; Spirit = snapshot.Spirit;
@@ -67,6 +72,9 @@ namespace TianZhang.Character
             RequireActionEconomyInputsPresent(snapshot.ActionEconomyInputsPresent);
             ActionEconomyInputsPresent = true;
         }
+
+        internal void SetActionEconomy(int ap, int movement)
+        { ActionPointMaximumUnits = ap; MovementEfficiencyMilliUnits = movement; ActionEconomyInputsPresent = true; }
 
         internal static int RequireActionPointMaximumUnits(long value)
         {

@@ -16,6 +16,13 @@ namespace TianZhang.Bootstrap
         public const string InitialWorldTimeOfDayId = "dawn";
         public const string DefaultWorldNodeId = "jiangzuo_hub";
 
+        private CombatRuleSetData growthRules;
+        public void ConfigureGrowth(CombatRuleSetData rules)
+        {
+            CharacterRuntimeProfile.ProjectActionEconomy(rules, new CharacterProgressionSnapshot("", "凡人", 1f), out _, out _);
+            growthRules = rules;
+        }
+
         private QuestStore quests;
         private InventoryStore inventory;
         private NpcStore npcs;
@@ -43,6 +50,7 @@ namespace TianZhang.Bootstrap
         {
             if (player == null) throw new ArgumentNullException(nameof(player));
             if (cultivation == null) throw new ArgumentNullException(nameof(cultivation));
+            CharacterRuntimeProfile.RequirePlayerRealm(player.Progression.RealmStage);
             Initialize(player, cultivation, startNodeId);
         }
 
@@ -58,7 +66,9 @@ namespace TianZhang.Bootstrap
             string startNodeId, ContentCatalogData catalog)
         {
             if (player == null || cultivation == null) throw new ArgumentNullException(nameof(player));
-            if (player.Progression.RealmStage != "练气" || catalog == null ||
+            if (CharacterRuntimeProfile.ResolveRealmId(player.Progression.RealmStage) == "realm_fanren")
+            { BeginNewGame(player, cultivation, startNodeId); return; }
+            if (CharacterRuntimeProfile.ResolveRealmId(player.Progression.RealmStage) != "realm_lianqi" || catalog == null ||
                 !catalog.TryGetEquipment("item_iron_sword", out _) || !catalog.TryGetEquipment("item_iron_blade", out _))
                 throw new InvalidOperationException("equipment_definition_invalid");
             if (!catalog.TryGetCombatItem("item_huoxue_dan", out ItemData medicine))
@@ -137,7 +147,8 @@ namespace TianZhang.Bootstrap
         public void RestoreSave(GameSaveEnvelope envelope, ContentCatalogData catalog)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            RestoredGameState restored = envelope.Restore(catalog);
+            CombatRuleSetData rules = growthRules ?? catalog?.CombatRuleSet;
+            RestoredGameState restored = envelope.Restore(catalog, rules);
             Player = restored.Player;
             Cultivation = restored.Cultivation;
             WorldClock = restored.WorldClock;

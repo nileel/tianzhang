@@ -25,6 +25,18 @@ namespace TianZhang.Tests.EditMode
 {
     public sealed class GuanzhongFormalEndToEndTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private const string BountyId = "bounty_guanzhong_shijiahou";
         private const string SettlementId = "guanzhong_city";
         private readonly List<Object> temporaryObjects = new List<Object>();
@@ -58,10 +70,10 @@ namespace TianZhang.Tests.EditMode
             CharacterCreationDraft draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.CharacterName = "01G 定向返工";
             draft.OriginId = "origin_minor_clan";
-            CharacterData profile = Track(CharacterCreationManager.CreateProfile(draft, pointBuyConfig));
+            CharacterData profile = Track(CharacterCreationManager.CreateProfile(draft, pointBuyConfig, GrowthRules));
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player", profile),
+                CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                 CultivationState.FromDefinition(profile.foundationPurpleMansionState),
                 "guanzhong_hub");
             Assert.AreEqual(GameplaySceneNames.World, runtime.EnterWorld("guanzhong_hub"));
@@ -163,9 +175,9 @@ namespace TianZhang.Tests.EditMode
                 node.contentId == FormalEncounterRules.ShijiahouEnemyId);
             CharacterData profile = Track(CharacterCreationManager.CreateProfile(
                 CharacterCreationCatalog.CreateDefaultDraft(),
-                pointBuyConfig));
+                pointBuyConfig, GrowthRules));
             CharacterStateSnapshot player = CharacterRuntimeProfile
-                .FromDefinition("player", profile)
+                .FromDefinition("player", profile, GrowthRules)
                 .Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("FormalSnapshotSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
@@ -210,7 +222,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(1.2f, spawned.Enemy.RealmMultiplier);
             Assert.AreEqual(0, spawned.Enemy.ActionPointsRemainingUnits);
             Assert.AreEqual(100000, spawned.Enemy.ActionPointMaximumUnits);
-            Assert.AreEqual(2000, spawned.Enemy.MovementEfficiencyMilliUnits);
+            Assert.AreEqual(4000, spawned.Enemy.MovementEfficiencyMilliUnits);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.AvailableArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedDivineProfileIds);
@@ -233,6 +245,7 @@ namespace TianZhang.Tests.EditMode
         public void SpawnerProjectsExplicitCombatModifiersAndGongFaElementForPlayerAndEnemy()
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
             playerData.actionPointMaximumUnits = 100000;
@@ -248,6 +261,7 @@ namespace TianZhang.Tests.EditMode
             playerData.hitRateBonus = 3f;
 
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.realmStage = "凡人";
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
             enemyTemplate.actionPointMaximumUnits = 100000;
@@ -262,12 +276,13 @@ namespace TianZhang.Tests.EditMode
             enemy.combatTemplate = enemyTemplate;
 
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
             AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_combat_modifier_fixture" };
 
-            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("CombatModifierSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
 
@@ -303,9 +318,10 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void SpawnerLeavesUnknownGongFaElementEmptyForPlayerAndEnemy()
+        public void SpawnerRejectsUnknownGongFaForPlayerAndEnemy()
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
             playerData.actionPointMaximumUnits = 100000;
@@ -314,6 +330,7 @@ namespace TianZhang.Tests.EditMode
             playerData.gongFaName = "未知功法";
 
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.realmStage = "凡人";
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
             enemyTemplate.actionPointMaximumUnits = 100000;
@@ -326,25 +343,27 @@ namespace TianZhang.Tests.EditMode
             enemy.combatTemplate = enemyTemplate;
 
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
             AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_unknown_gongfa_fixture" };
 
-            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            Assert.Throws<System.ArgumentException>(() => CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules));
+            playerData.gongFaName = string.Empty;
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("UnknownGongFaSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
 
-            Assert.IsTrue(spawner.TrySpawn(
+            Assert.IsFalse(spawner.TrySpawn(
                 player,
                 catalog,
                 start,
                 encounter,
                 out AdventureSpawnSet spawned,
-                out string reason), reason);
-
-            Assert.AreEqual(string.Empty, spawned.Player.GongFaElement);
-            Assert.AreEqual(string.Empty, spawned.Enemy.GongFaElement);
+                out string reason));
+            Assert.IsNull(spawned);
+            Assert.AreEqual("adventure_growth_inputs_invalid", reason);
         }
 
         [Test]
@@ -373,6 +392,7 @@ namespace TianZhang.Tests.EditMode
             string expectedBasic)
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.actionPointMaximumUnits = 100000;
             playerData.movementEfficiencyMilliUnits = 2000;
@@ -382,14 +402,16 @@ namespace TianZhang.Tests.EditMode
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.realmStage = "凡人";
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
             enemy.combatTemplate = enemyTemplate;
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
-            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("PlayerBindingSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
             bool ok = spawner.TrySpawn(
@@ -415,6 +437,7 @@ namespace TianZhang.Tests.EditMode
             string expectedBasic)
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.actionPointMaximumUnits = 100000;
             playerData.movementEfficiencyMilliUnits = 2000;
@@ -423,15 +446,17 @@ namespace TianZhang.Tests.EditMode
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.realmStage = "凡人";
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
             enemyTemplate.mainEquipmentBasicAttackProfileId = main;
             enemyTemplate.unarmedBasicAttackProfileId = unarmed;
             enemy.combatTemplate = enemyTemplate;
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
-            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData).Capture();
+            CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("EnemyBindingSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
             bool ok = spawner.TrySpawn(
@@ -478,6 +503,7 @@ namespace TianZhang.Tests.EditMode
                 handler,
             });
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             Assert.IsTrue(new AdventureMapLoader().TryLoad(
                 map,
                 catalog,

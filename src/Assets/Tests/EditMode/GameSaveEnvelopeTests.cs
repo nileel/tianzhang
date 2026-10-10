@@ -14,6 +14,18 @@ namespace TianZhang.Tests
 {
     public sealed class GameSaveEnvelopeTests
     {
+        private static TianZhang.Content.CombatRuleSetData GrowthRules
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+#else
+                throw new System.NotSupportedException("Editor fixture requires the production rule asset.");
+#endif
+            }
+        }
+
         private CharacterData definition;
         private ContentCatalogData catalog;
         private ItemData item;
@@ -68,7 +80,7 @@ namespace TianZhang.Tests
             definition.availableSpells = new[] { "already_known_spell" };
             definition.equippedSpells = new[] { "already_known_spell" };
             definition.maxSpellSlots = 1;
-            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules).Capture());
             GameSaveEnvelope save = source.CaptureSave();
             Assert.That(save.player.visibleRootId, Is.EqualTo(definition.visibleRootId));
             Assert.That(save.player.visibleRootGrade, Is.EqualTo(definition.visibleRootGrade));
@@ -96,7 +108,7 @@ namespace TianZhang.Tests
             definition.availableSpells = new[] { "already_known_spell" };
             definition.equippedSpells = new[] { "already_known_spell" };
             definition.maxSpellSlots = 1;
-            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            source.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules).Capture());
             string legacyJson = System.Text.RegularExpressions.Regex.Replace(source.CaptureSaveJson(),
                 "\"visibleRoot(?:Id|Grade|Element)\"\\s*:\\s*\"[^\"]*\"\\s*,", "");
             StringAssert.DoesNotContain("visibleRootId", legacyJson);
@@ -233,6 +245,7 @@ namespace TianZhang.Tests
         public void ExplicitCombatModifiersRoundTripLosslesslyThroughSaveAndRestore()
         {
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "显式加成角色";
             definition.realmMultiplier = 1f;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
@@ -255,11 +268,12 @@ namespace TianZhang.Tests
             appearance = ScriptableObject.CreateInstance<AppearanceProfileData>();
             appearance.appearanceProfileId = AppearanceProfileData.NoneId;
             catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.SetAppearanceProfiles(new[] { appearance });
 
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player", definition),
+                CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             int expectedMaximumHealth = runtime.Player.Resources.MaximumHealth;
@@ -356,7 +370,7 @@ namespace TianZhang.Tests
         {
             GameRuntime source = CreateRuntimeWithInventory();
             source.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player", definition),
+                CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules),
                 CultivationState.FromFoundationPurpleMansionSaveData(CreateCompleteFoundationSave("player_foundation")),
                 "guanzhong_hub");
             GameSaveEnvelope save = source.CaptureSave();
@@ -384,7 +398,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaFourRoundTripKeepsLongTermActionEconomyInputsWithoutTemporaryLedgers()
+        public void SchemaFiveRoundTripKeepsLongTermActionEconomyInputsWithoutTemporaryLedgers()
         {
             GameRuntime source = CreateRuntimeWithInventory();
             GameSaveEnvelope save = source.CaptureSave();
@@ -415,25 +429,25 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaFourKeepsALegalZeroMovementEfficiencyApartFromAMissingInput()
+        public void SchemaFiveRebuildsMovementFromRealmInsteadOfStoredDerivedZero()
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
             definition.movementEfficiencyMilliUnits = 0;
-            runtime.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition).Capture());
+            runtime.Player.Restore(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules).Capture());
             GameSaveEnvelope save = runtime.CaptureSave();
 
-            Assert.That(save.player.movementEfficiencyMilliUnits, Is.EqualTo(0));
+            Assert.That(save.player.movementEfficiencyMilliUnits, Is.EqualTo(2000));
             Assert.That(save.player.actionEconomyInputsPresent, Is.True);
 
             var restored = new GameRuntime();
             restored.RestoreSaveJson(JsonUtility.ToJson(save), catalog);
 
-            Assert.That(restored.Player.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(0));
+            Assert.That(restored.Player.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
             Assert.That(restored.Player.Attributes.ActionEconomyInputsPresent, Is.True);
         }
 
         [Test]
-        public void SchemaFourCharacterPayloadWithMissingOrInvalidActionEconomyInputsFailsClosed()
+        public void SchemaFiveCharacterPayloadWithMissingOrInvalidActionEconomyInputsFailsClosed()
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
 
@@ -471,7 +485,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void SchemaFourRejectsDuplicateActionEconomySourceInstances()
+        public void SchemaFiveRejectsDuplicateActionEconomySourceInstances()
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
             GameSaveEnvelope invalid = runtime.CaptureSave();
@@ -504,7 +518,7 @@ namespace TianZhang.Tests
         [TestCase("unknown_source", "unknown_profile")]
         [TestCase("definition_a", "unknown_profile")]
         [TestCase("basic_unarmed", "basic_unarmed")]
-        public void SchemaFourRejectsUnapprovedReferencesBeforeReplacingAnyLiveOwner(string sourceId, string profileId)
+        public void SchemaFiveRejectsUnapprovedReferencesBeforeReplacingAnyLiveOwner(string sourceId, string profileId)
         {
             GameRuntime runtime = CreateRuntimeWithInventory();
             string baseline = runtime.CaptureSaveJson();
@@ -639,6 +653,7 @@ namespace TianZhang.Tests
         private GameRuntime CreateRuntimeWithInventory()
         {
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.realmStage = "凡人";
             definition.charName = "存档角色";
             definition.realmMultiplier = 1f;
             definition.unarmedBasicAttackProfileId = "basic_unarmed";
@@ -651,12 +666,13 @@ namespace TianZhang.Tests
             appearance = ScriptableObject.CreateInstance<AppearanceProfileData>();
             appearance.appearanceProfileId = AppearanceProfileData.NoneId;
             catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, null, new[] { item }, null);
             catalog.SetAppearanceProfiles(new[] { appearance });
 
             var runtime = new GameRuntime();
             runtime.BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player", definition),
+                CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             Assert.That(runtime.InventoryGrants.Grant(
