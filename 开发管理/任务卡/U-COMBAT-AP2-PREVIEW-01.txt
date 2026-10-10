@@ -89,3 +89,8 @@
 ## 2026-10-10 空手普攻修订接入
 
 - 原四前置已完成；本卡转blocked并移出ready队列，新增直接前置U-COMBAT-UNARMED-RUNTIME-01。显示当前武器或空手档位的真实费用/承载相关提示与共享普攻次数；空手可用、缺绑定拒绝、成长后报价刷新列入原两分辨率验收。UI不计算肉身档位、不新增切换/卸装或自动连打命令；具体字段/语言路径由CONTRACT在ready前冻结。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 接入合同§七冻结新增只读DTO字段BasicAttackSourceKind、UnarmedRealmId、PhysicalAttackCapacity；ProjectQuote从当前合法profile与权威报价取值，武器时空手境界为空。显示拳脚/撞击、对应肉身境界与承载、本次实付及既有成功次数/乘数/CD，不暴露内部ID、不计算成长或收费。
+- 身体名字键由RUNTIME已有Language.csv生产；本卡新增解释文本沿原Language精确路径，不新增语言资产。业务RefreshGrowth已由RUNTIME完成，本卡只消费更新后快照，测试两分辨率成长刷新/取消/换武器和第1/3/4次报价。缺族或profile的真实拒绝不能被UI制造空手绕过。

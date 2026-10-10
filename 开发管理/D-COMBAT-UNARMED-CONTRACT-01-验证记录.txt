@@ -1,0 +1,45 @@
+# D-COMBAT-UNARMED-CONTRACT-01 验证记录
+
+日期：2026-10-10；runId：d1b25557-e26a-4657-bf71-6f6ed608534c；源码/任务初始基线：135d563b8d9b16035545d3db469b7d1cd8241d92。
+本记录只证明合同与路径准备，不证明空手生产、角色强度或画面已经通过。全部改动位于本run当前codex worktree，无业务代码、生产CSV/asset、真实存档、自动化runtime或其他worktree写入。
+
+## 一、模型、技能与预检
+
+- 主责Codex；主模型gpt-6.1-sol，采用共享入口通过codex exec -m传入的启动证明，不因子会话unknown重阻塞。核对任务卡executionModel与AI协作规则“任务卡中的模型协作提示”一致；映射/保存/启用边界强耦合，单主责可统一判定，无独立辅助工作面。未调用子智能体或第二责任会话，未修改主模型/调度配置。
+- 已消费共享预检matched/notice/mustRead/gatePointers全空，并在新对象/接口冻结前于本worktree调用tools/get-experience-risk-preflight.ps1 -TaskId D-COMBAT-UNARMED-CONTRACT-01。返回taskCardDigest=ac9669080a8a3085ba0b6acd5f7237bb912a56a9f622146b49fc74b151dc7b13、indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942，taskId及schema2风险投影一致，matched/gates仍空，无门禁缺失。
+- 已对本次九张更新卡逐项运行相同只读预检，结果与卡头riskPreflight一致：只有N-COMBAT-UNARMED-SIM-01命中EXP-BS-001，其余全空，所有gates/gatePointers空。消费EXP-BS-001正文：BattleSim源码/入口修改先Release --no-restore build成功再--no-build run，纯文档不触发实跑；相关要求已保留各实现卡。未修改风险索引，也未制造新经验状态。
+- 应用brainstorming的范围/歧义/一致性自查和unity-agent-workflows的实仓所有者/数据优先检查；负责人已授权设计冻结，本轮无业务实现。References loaded：project-structure-discovery.md、content-and-systems.md、ai-workflows.md；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、UNITY_STRUCTURE.runtime.md。没有可见输出修改，运行时数值/截图门禁不在本轮签收范围。
+
+## 二、实际源码所有者证据
+
+- AttackProfileData.TryValidate现仅接受固定武器/非basic预算等既有模式；CombatContentImporter.ParseBasicAttackBindingKind只main_equipment，ValidateCharacterBasicAttackBindings拒绝unarmed。GameData.LoadProductionAttacks严格四ID/四表摘要，SharedProfile为两端共用投影。新表头和新模式必须先严格支持，不是恢复旧一行即可。
+- CharacterRuntimeProfile构造、Capture/Restore、FromDefinition/FromSnapshot、RestoreProgression、TryPrepareEquipmentChange/ValidateEquipmentState和CharacterStateSnapshot现主动丢弃旧徒手引用；Progression.Restore内部，现有GongFaFacts/ResolveRealmId/ProjectActionEconomy为合法身份/境界及成长边界。身体档位沿现有境界，功法已有属性结果作为强化源，不增独立成长系统。
+- 创建直接链：CharacterCreationRules.BuildCharacterData→StartMenuSceneInstaller.CreateNewPlayer→CharacterRuntimeProfile.FromDefinition("player",...,CombatRuleSet)；恢复直接链：GameSaveEnvelope.Restore→FromSnapshot；入场直接链：AdventureUnitSpawner.TrySpawn→FromSnapshot及CreatePlayer/CreateEnemy→CombatEntryAdapter→CombatSession。Spawner当前在成长重派生前选basic，合同明确改为先派生再选，避免陈旧ID。
+- EncounterCoordinator.RefreshGrowth目前只调用CombatSession.RefreshActionEconomy(AP/v)，此方法保持当回合预算且更新StateVersion；合同在RUNTIME冻结realm/有效攻击同次刷新，保留个人回合/余额/次数，不只修创建与入场。EncounterCoordinator.BuildActions/ProjectQuote与ToCommand读取当前actor.BasicAttackProfileId，PREVIEW负责只读DTO/显示，不另算档位或收费。
+- CombatSession.ValidateAttack/GetAuthorizationFailure始终要求当前唯一basic ID；合同保留此授权，将身体来源与主手来源合法并存但主手优先，不开放任意basic。已有角色basicAttack重复账本足以跨五个档位ID及武器共享计数，无新次数层。
+- GameSaveSerializer现schema5，schema4只允许证明空移动来源迁移，1/2/3玩家原拒绝；Serializer和CharacterRecord提前清退役字段。合同保存6冻结有效5/4显式迁移，6严格族输入、退役列校验先于清空、hidden payload、原子恢复及旧程序回滚边界。不访问真实存档。
+- Enemies.csv::enemy_shijiahou现空攻击/练气ai_melee；已有八属性不改，新自身body_shijiahou撞击由唯一AttackProfiles行提供。Character/Settlement/CombatContentImporter、正式生成路径、check-data-chain四ID/石甲兽空引用断言及既有直接测试均查明；五攻击新asset与.meta及全部确定投影/测试已经冻结到RUNTIME等卡。
+- N-COMBAT-AP2-SIM-01已completed归档，负责人A方案包括有限苦行/水系原型，完成记录已有双入口与定向EditMode证据；本轮任务正文的旧pending_decision表述已过时。只在新合同澄清，不改旧SIM归档/决策或旧WEAPON归档，也不把旧结果算作新空手完成。
+
+## 三、合同自查与候选算术
+
+- 唯一源仍为AttackProfiles及既有四文件摘要，没有新CSV/可编辑副表。表头2明确追加版本及族/肉身境界/肉攻承载三列；五个稳定ID、名字键、绑定/模式、严格字段/跨引用与拒绝策略闭合。CONFIG只schema/fixture且旧四生产ID保持；RUNTIME一次启用九ID、完整角色/保存/场景及最小生产读取；UNARMED-SIM再验双入口行为。
+- 人形四境按20/25/75/250AP与30/120/500/2400承载候选；体修不凭流派标签获增益，既有功法属性强化仍受承载。石甲兽自身25AP/120/倍率1；武器仍固定40/50AP及120承载。凡人纯拳4次20+20+25+30=95AP；后三档3次81.25/243.75/812.5AP，第四次总费118.75/356.25/1187.5超预算。仅规则算术，没有BattleSim平衡结论。
+- 已逐实体复核普通/体修/石甲兽、有武器/无武器、成长、旧档、缺族/缺档/非法引用；来源与费用承载唯一。成长/换装不补AP、不清次数，不新增主动切空手、卸装收费、功法、招式或自动连打；CD0/CT0及重复乘数保持。
+- 一次性内存校验输出CONTRACT_CLOSURE_PASS：九卡头route/owner/dispatchState/blockedBy/executionModel/stateReason与初始基线完全相同；原expectedPaths仅加未删；无重复路径，附录与卡头逐项一致；新增五asset及.meta在RUNTIME/BALANCE/TUNING全部闭合；新Unity验收脚本.meta保留；直接DAG无环。未新增可领取父项或拆未知backlog。
+- 仅当前卡completed归档、队列/backlog删除自己的行；其他任务具名前置全部保留。没有准备ready叶；正式master结果后，QueueMaintenance核对前置/完整合同与门禁再准备CONFIG。父项仍blocked。
+
+## 四、实际验证结果
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId D-COMBAT-UNARMED-CONTRACT-01 -Postcondition CodexClosedOrNonReady -OutputJson：退出0，status=ok、cardCount=69、readyCount=0、taskState=completed。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：退出0，check-data-chain: OK；GongFa=29/29、Spells=84/84、Skills=31/31、language keys=647。本轮未改生产数据，结果仅说明文档同步未破坏现有链，不证明九攻击已投产。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理：退出0，check-review-text: OK，761文件检查通过。
+- tools/check-pending-whitespace.ps1按本轮允许集合中现存27文件检查：退出0，OK；git diff --check退出0。原有BOM保留，未附带编码清理。
+- 本轮合同/路径检查不启动BattleSim平衡、Unity编译/实机场景或存档迁移实测；这些归CONFIG/RUNTIME/SIM/BALANCE/PREVIEW/SCENE各自验收，不使用旧报告代签。
+
+## 五、残余风险与经验判断
+
+- 候选费用/承载/石甲兽新伤害尚未实跑，可能需要在已冻结参数范围内调整；固定低档武器与高境空手差异须分别报告，不能声称同档高阶武器已生产。
+- 凡人正式创角可达；高境及体修的具体进度样本必须区分已有生产可达来源与显式合法测试事实，本合同不新造训练/突破入口。保存6代码尚未实现，回滚要保留写入6前原5文件，不逆推进度。
+- BasicAttack悬赏Accepted未完成的既有失败尚未确认根因，恢复攻击不自动算修复；最终SCENE要取真实结果/回调、操作和两分辨率证据，并取得负责人体验确认。
+- 依据本轮已有事实/diff/验证，没有需要提炼的通用经验候选，不创建空经验章节、经验ID、整理卡或新风险规则；不额外调用模型。

@@ -170,7 +170,7 @@ DAG：RULES→CONTRACT→CONFIG；CONFIG→GROWTH/REPEAT/POTENCY/WEAPON，POTENC
 
 | ID | 独立结果 | 直接前置 | 主责／初始状态 |
 |---|---|---|---|
-| D-COMBAT-UNARMED-CONTRACT-01 | 空手肉身档位、费用承载、绑定保存合同与全部下游精确路径 | 无 | codex／ready |
+| D-COMBAT-UNARMED-CONTRACT-01 | 空手肉身档位、费用承载、绑定保存合同与全部下游精确路径 | 无 | codex／completed（本candidate） |
 | U-COMBAT-UNARMED-CONFIG-01 | 严格schema加载与Unity/BattleSim同源投影支持，不启用正式角色 | CONTRACT、N-COMBAT-AP2-SIM-01 | deepseek／blocked |
 | U-COMBAT-UNARMED-RUNTIME-01 | 正式空手生产内容及创建→成长→保存→战斗完整绑定，含最小生产读取适配 | CONFIG | deepseek／blocked |
 | N-COMBAT-UNARMED-SIM-01 | 全模拟/Stage双入口空手成长行为一致 | RUNTIME、N-COMBAT-AP2-SIM-01 | deepseek／blocked |
@@ -184,3 +184,10 @@ DAG：RULES→CONTRACT→CONFIG；CONFIG→GROWTH/REPEAT/POTENCY/WEAPON，POTENC
 - 验证分工：CONFIG严格解析/投影；RUNTIME真实创建/成长/保存/入战及石甲兽攻击；SIM双入口逐动作一致；BALANCE强度/频率/敏感性实跑；PREVIEW权威报价与资格；SCENE实际点击与动画时长、正式流程和两分辨率画面；CLOSE统一摘要与负责人体验。旧BasicAttack悬赏未完成失败继续保留，不能用本次设计直接宣称解除。
 - 最终关闭条件：本图四叶全部正式完成、外部独立复审通过，复用各叶验收已覆盖空手新目标且输入摘要一致，既有失败已定位并解决，负责人确认实际操作体验。无固定低费无限承载、换来源清普攻次数、隐式虚拟武器或自动连打兜底。
 - 本轮为管理规划，未实施代码/配表/场景、未进行新平衡实跑。主责单模型统一核对强耦合的任务拓扑与投影，无需子智能体；结构与消费者从源码和UNITY_STRUCTURE索引核对。验证记录见开发管理/空手普攻成长建卡记录.txt。
+
+## 2026-10-10 CONTRACT交付与本轮状态边界
+
+- 开发管理/空手普攻成长接入合同已冻结人形凡人/练气/筑基/金丹四档与石甲兽独立一档，唯一AttackProfiles表头2、九ID/四文件摘要、当前成长/刷新所有者、武器优先/共享次数、保存6及有效5/4显式迁移。未实施生产内容或实跑，不以设计关闭父项。
+- CONFIG只迁表头/四旧行与摘要、用fixture证明严格支持；RUNTIME一次正式启用九ID/族/保存/创建/成长/入场链及最小生产读取；UNARMED-SIM负责两入口语义。旧AP2-SIM在本基线已completed（A方案有限原型），原具名依赖继续保留，既有特殊效果不重裁决。
+- 全部已知新叶/复用叶的字段、路径/生成物及.meta/验收/停止已经冻结到各卡与合同附录；风险投影重算。仅CONTRACT自身完成归档并移除投影，其他blockedBy/owner/route/dispatchState与顺序保持，未准备新ready叶；正式进入master后的QueueMaintenance完整核对前置再准备CONFIG，不由当前owner管理自动化或接管下游。
+- 最终DAG及父项关闭按合同§七及原规划：所有实现独立复审、双入口/数值/正式两分辨率证据同摘要，既有悬赏失败定位并处理、负责人确认操作/演出体验。无新修炼系统/虚拟武器/主动切空手/自动连打/通用次数上限。

@@ -82,3 +82,8 @@
 - 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
 - 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
 - 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 接入合同§二/三/六冻结九ID与族档映射；全模拟Character/Combat.CreateAbilities与Stage.Profiles/Snapshot/NativeBattle都从GameData同一已验证映射选择，普通/体修同body_human且既有功法肉攻为唯一强化源，石甲兽用正式自身族。当前已归档AP2-SIM的A方案特殊原型保持。
+- 两端按同一fixed_unarmed显式肉攻承载及基础费，动作次数键仍角色basicAttack；覆盖凡人至金丹、变档/武器优先/石甲兽、双方1v1/2v2、坏源与取消/未命中/本人重置。当前单档武器只代表练气档，不新增高阶生产武器。定向自测可沿Program既有模式新增--self-test-unarmed，报告输入摘要/种子/每回合动作/AP/输出，不签平衡。

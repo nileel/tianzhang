@@ -65,7 +65,63 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt",
-    "开发管理/任务归档/U-COMBAT-UNARMED-RUNTIME-01.txt"
+    "开发管理/任务归档/U-COMBAT-UNARMED-RUNTIME-01.txt",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+    "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs",
+    "src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs",
+    "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+    "src/Assets/Tests/EditMode/TacticalGridModelTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
+    "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset",
+    "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset.meta",
+    "src/Assets/Data/Characters/Char_char_taiyixiushi.asset",
+    "src/Assets/Data/Characters/Char_char_taiyixiushi.asset.meta",
+    "src/Assets/Data/Characters/Char_Player.asset",
+    "src/Assets/Data/Characters/Char_Player.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy.asset",
+    "src/Assets/Data/Characters/Char_Enemy.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset",
+    "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset",
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -121,3 +177,11 @@
 - 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
 - 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
 - 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 依接入合同§二至五一次启用五新行/资产/.meta，四旧攻击及角色/敌人/规则/catalog/AdventureScene同批重导（catalog指ContentCatalog.asset）；正式生产九ID与完整族档映射闭合。Char_Player、Char_Enemy与两人物为body_human；石甲兽自身body_shijiahou，其他保留敌人不授新攻击。
+- CharacterData、聚合及Snapshot新增UnarmedAttackFamilyId；派生ID从既有境界/规则映射取得，旧unarmedBasicAttackProfileId仍退役。创建/Restore/RestoreProgression先准备全部字段后发布，装备保身体来源且主手优先，非法装备不回退身体。Spawner先派生成长再选攻击，Session仍只授权当前唯一basic。
+- EncounterCoordinator.RefreshGrowth与Session真实同步入口一并刷新AP/v/realm/有效档案，失效旧报价；不补AP、不清普攻次数。此处业务同步归RUNTIME，完整只读DTO和视图显示归PREVIEW，不能只改入场而漏成长刷新。
+- 保存schema6及4→5→6、5→6严格迁移/6拒绝按合同执行，退役列校验先于清空，失败无live/原文件变化；不修改真实存档。GameData.SharedProfile/LoadProductionAttacks最小读取新字段/九ID；GuanzhongPlaytestAudit只读取真实新身份，旧证据不被自动当新证据。此卡不实现全模拟选招或定案平衡。
+- 精确新增测试路径只授权更新直接创建/快照/保存夹具的显式body_human来源、旧四ID/旧无攻击断言及定向新矩阵；保留伪造源/坏档/原子拒绝。不能批量删断言或用测试武器替代正式场景。既有BasicAttack悬赏失败仍待SCENE查真实结果，不在此卡跨奖励边界修补。

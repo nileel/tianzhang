@@ -44,7 +44,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| D-COMBAT-UNARMED-CONTRACT-01 | P1 | codex | 已排队 | — | 空手普攻肉身成长规则与接入合同 | 开发管理/任务卡/D-COMBAT-UNARMED-CONTRACT-01.txt |
 | U-COMBAT-UNARMED-CONFIG-01 | P1 | deepseek | 阻塞 | D-COMBAT-UNARMED-CONTRACT-01、N-COMBAT-AP2-SIM-01 | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
 | U-COMBAT-UNARMED-RUNTIME-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-CONFIG-01 | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
 | N-COMBAT-UNARMED-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01、N-COMBAT-AP2-SIM-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |

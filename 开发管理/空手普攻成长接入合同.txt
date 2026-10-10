@@ -1,0 +1,443 @@
+# 空手普攻成长接入合同
+
+日期：2026-10-10；责任任务：D-COMBAT-UNARMED-CONTRACT-01；源码基线：135d563b8d9b16035545d3db469b7d1cd8241d92。
+本合同冻结已批准空手方向的最小实现。AP-GROWTH@0.1公共算法保持，AttackProfiles表头升级为attackSchemaVersion=2。数值均为试跑候选，强度由N-COMBAT-AP2-BALANCE-01实跑定案，操作体验由U-COMBAT-AP-SCENE-01及负责人确认。本轮只交文档，不启用业务。
+
+## 一、已核实基线与最小选择
+
+- 当前生产仅贯石击、聚灵术、铁剑、铁刀四攻击；AttackProfileData虽保留UnarmedFallback旧枚举，CombatContentImporter.ParseBasicAttackBindingKind只接受main_equipment，ValidateCharacterBasicAttackBindings拒绝所有unarmed引用。GameData.LoadProductionAttacks锁四ID。
+- CharacterRuntimeProfile构造、Restore、换装和CharacterStateSnapshot主动丢弃旧UnarmedBasicAttackProfileId；GameSaveSerializer版本5读写、CharacterRecord.Capture也清空。Spawner在重新派生成长前选择攻击，且拒绝unarmed；Adapter也只允许主手basic。这些是新目标需修改的真实所有者，不是缺CSV一行。
+- N-COMBAT-AP2-SIM-01在本基线已经completed归档，采用负责人A方案、包括苦行/水系有限原型。原任务卡提及pending_decision是更早的历史状态；本轮不改归档、选项或原特殊效果范围。旧WEAPON归档的移除结果同样保留。
+- 不新增独立肉身等级、修炼循环、功法、装备、招式或通用配置框架。肉身档位就是角色当前合法大境界在下表的映射。普通修士和体修使用同一人形攻击族，体修优势只来自已有功法在八属性/获准属性加成中实际产生的肉攻，不因名字或流派标签多送倍率、减费或档位。
+- 从Definition、FromSnapshot/Restore、RestoreProgression这三个既有聚合边界同时派生AP/v和空手档案；Progression.Restore仍内部。没有新玩家突破生产入口，本合同不声称新增进阶玩法。功法变更用同一既有成长入口和已有属性结果，不建立第二份解锁记录。
+
+## 二、稳定身份、来源及参数候选
+
+| 攻击族unarmedFamilyId | 肉身档位unarmedRealmId | attackProfileId | abilityTierId | 基础AP/净下限单位 | 肉攻承载 | 物理倍率/名称键 |
+|---|---|---|---|---:|---:|---|
+| body_human | realm_fanren | basic_body_human_fanren | tier_lianqi | 20000/20000 | 30 | 1/attack_profile_body_human |
+| body_human | realm_lianqi | basic_body_human_lianqi | tier_lianqi | 25000/25000 | 120 | 1/attack_profile_body_human |
+| body_human | realm_zhuji | basic_body_human_zhuji | tier_zhuji | 75000/75000 | 500 | 1/attack_profile_body_human |
+| body_human | realm_jindan | basic_body_human_jindan | tier_jindan | 250000/250000 | 2400 | 1/attack_profile_body_human |
+| body_shijiahou | realm_lianqi | basic_body_shijiahou_lianqi | tier_lianqi | 25000/25000 | 120 | 1/attack_profile_body_shijiahou |
+
+- 档位键为(攻击族,肉身境界)，不是可积累的肉身等级。沿CharacterRuntimeProfile.ResolveRealmId现有闭合映射：凡人、练气及九品、筑基/开府/圆满、金丹初结/温养/圆满映射四行。未知/空境界拒绝；本次没有元婴/化神空手档，reserved成长行不授新攻击。石甲兽只允许自身族的练气行，不能升境后偷用人形行；其他保留妖兽没有获准新档案，不接入正式攻击。
+- 人形来源由CharacterCreationRules和Characters.csv明确声明body_human；石甲兽由Enemies.csv::enemy_shijiahou明确声明body_shijiahou。任何族/境界无对应行均失败，不以主手存在豁免来源验证，不从名称、反应、realmMultiplier或当前肉攻反推族/档。
+- 凡人30承载与20AP是基础拳脚试跑起点；练气至金丹承载沿原120/500/2400候选，费用取境界AP的1/4，使费用与承载同步成长。凡人100AP仅纯拳可付4次共95AP；后三档仅纯拳均3次共81.25/243.75/812.5AP。此为无移动、无其他消费的算术，不是承诺攻击次数或平衡。石甲兽同档采用25AP/120，倍率1，表现为近身撞击，不拿旧basic_unarmed常量作依据。
+- 全部新行：profileKind=basic、basicBindingKind=unarmed_body、effectBudgetMode=fixed_unarmed、cooldownClass=basic_repeat；effectType=physical、damageElementId=element_none、physicalDamageMultiplier=1、resourceKind=none、resourceCost=0、ctPenalty=0、reuseCooldownTicks=0、minCastRange=maxCastRange=1、targetingMode=single。无穿防、魂伤、范围、状态、控制、生命费或额外被动。基础净下限等于基础费，无新减耗/返还来源。
+- 肉攻输入先min(实际有效肉攻,unarmedPhysicalAttackCapacity)，再进入原物理公式，A²/(A+D)两处同A，真实目标D不截。只有fixed_unarmed取本行承载；其他档案沿原Tier承载。不借tier_lianqi给凡人120承载或练气术法资格。伤害取整和境界规则保持，重复附加实付不增加倍率/效果预算。
+
+## 三、唯一配表、表头与投影
+
+不新增CSV：五个档位都由AttackProfiles.csv的独立行唯一生产费用、承载和映射，人物/敌人表只声明族；没有第二份可编辑AP或承载表。
+
+### 3.1 AttackProfiles精确新表头
+
+attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,actionPointCostUnits,minimumNetCostUnits,ctPenalty,reuseCooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey,spiritRecoveryMultiplier,minimumSpiritRecovery,otherTargetResourceCost,otherTargetRecoveryMultiplier,ruleSetVersion,abilityTierId,cooldownClass,effectBudgetMode,efficiencyNumerator,efficiencyDenominator,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator,statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest,attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity
+
+- 所有行attackSchemaVersion精确2，ruleSetVersion保持AP-GROWTH@0.1。三张公共规则表schemaVersion=1及表头不变；表头迁移是显式一次切换，正式加载不同时接受旧头，不做运行时双版本回退。旧四行新族/境界/承载列全空，数值和其他业务语义保持。
+- 新三列仅fixed_unarmed必填；其basicBindingKind只能unarmed_body，纯物理/单体/零资源/CT0/CD0约束全部严格校验，budget比率/状态/控制/神通/恢复字段必须空，非适用效果列空。unarmedFamilyId闭合集合body_human/body_shijiahou，族+境界与ID逐行等于§二。capacity为严格正Int32，不能空、0、负、分数、指数或溢出；基础/净费沿原正整数和minimum≤base约束。物理倍率有限正值；非空错误不忽略。
+- UTF-8、InvariantCulture、Ordinal ID；重复攻击ID或族+境界拒绝。完整生产新集合恰为原四+新五共九ID，禁止basic_unarmed、legacy_unarmed及未知族。严格族/档映射用于结构验证，费用/承载/倍率由表可调，不把候选常量写进解析器。表中练气→筑基→金丹费用和承载均应严格递增；凡人→练气同样递增，避免只放大承载不提高费。调整不得突破既定族/境界/ID范围。
+- 三公共表+AttackProfiles仍为同四文件摘要：相对路径Ordinal排序，连接路径+LF+原始字节SHA256+LF，再UTF-8 SHA256。表头/行变化重导CombatRuleSet及全部攻击资产，GUID稳定，四旧ID费用/倍率相同但sourceDigest更新。重复导入幂等，整表与跨引用验证完成前零asset写入。
+
+### 3.2 人物及敌人精确新表头
+
+Characters：
+name,realmId,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,gongFaName,equippedSpells,equippedSkills,actionPointMaximumUnits,movementEfficiencyMilliUnits,unarmedAttackFamilyId
+
+Enemies：
+name,type,aiType,realm,realmMultiplier,rootBone,physique,spirit,mind,reaction,talent,blockRate,blockReduction,soulShieldRate,soulShieldReduction,dodgeRate,critRate,critDamage,hitRateBonus,equippedSpells,dropTable,description,contentScope,dropEntries,unarmedBasicAttackProfileId,actionPointMaximumUnits,movementEfficiencyMilliUnits,unarmedAttackFamilyId
+
+- 两人物行均body_human；enemy_shijiahou为body_shijiahou，其余保留敌人行族列显式空且不进入正式目录。Enemies旧unarmedBasicAttackProfileId列只保留为空的退役列，非空拒绝，不拿它直接写新攻击身份。石甲兽现有八属性/掉落/AI不变。
+- CharacterData增加unarmedAttackFamilyId权威输入，旧unarmedBasicAttackProfileId退役为空；Char_Player与既有Char_Enemy人形预览模板明确body_human，石甲兽模板自身族，其余敌人保持无新族。保留模板可静态导入，但空族不能进入本次正式人形/石甲兽创建、恢复或战斗；不能以此给未批准敌人授攻击。
+
+### 3.3 配置与启用责任
+
+- CONFIG在既有CombatRuleSet/CombatRuleSetData中增加有界UnarmedRow只读映射，字段为familyId、realmId、profileId、abilityTierId、actionPointCostUnits、minimumNetCostUnits、physicalAttackCapacity；从已校验攻击行复制。不是新的可编辑表。导入器解析、Data.TryValidate与GameData使用相同校验规则；纯类型不引用Unity/Content/Character。
+- AttackProfileData保存attackSchemaVersion及新三列；CombatAttackRuleMetadata追加UnarmedFamilyId、UnarmedRealmId、UnarmedPhysicalAttackCapacity，仅fixed_unarmed合法且三项齐全，其余全空/0。CONFIG实现Resolver选择该显式肉攻承载与Adapter只读传递、严格拒绝，靠fixture验证，不启用角色。费用仍直接由同一profile声明。
+- CONFIG只升级表头与四旧行、四旧asset/CombatRuleSet摘要；正式UnarmedRows为空。显式五行fixture覆盖完整新映射与消费，fixture不进catalog/正式CSV。RUNTIME一次加入正式五行、全部生成资产、族声明、保存与消费者；正式角色必须验证完整五行映射和九攻击覆盖。不存在新模式开关、缺新行自动旧算法或以空映射为正式人形许可。
+- RUNTIME使GameData默认程序读取九ID及新字段、严格校验和投影，不在此叶实现全模拟成长选招；其最小读取自测/默认运行通过不签双入口一致。N-COMBAT-UNARMED-SIM-01随后在已有完整AP2双入口统一按族/境界选择生产档案并实跑。
+- 生成新资产为src/Assets/Data/AttackProfiles/AttackProfile_<§二ID>.asset及各.meta。名称键attack_profile_body_human=拳脚，attack_profile_body_shijiahou=撞击；不复用旧徒手键授资格。正式catalog、AdventureScene引用九个合法攻击；生成字符/敌人及四旧攻击同批更新，全部精确路径见下游卡头及本文附录。
+
+## 四、角色、装备与战斗快照
+
+- CharacterRuntimeProfile保存UnarmedAttackFamilyId，提供派生UnarmedBasicAttackProfileId；CharacterProgressionRef只持既有realm/gongfa/合法节点，不新增肉身进度。CharacterStateSnapshot追加UnarmedAttackFamilyId并携带只读派生ID；输入快照派生ID必须与族/境界一致，否则拒绝，恢复重派生而不信缓存。
+- 聚合FromDefinition、FromSnapshot/Restore、RestoreProgression先验证全体输入并准备AP/v及新档案，再一次发布；失败保持全部原状态。构造/恢复须有已验证growthRules.UnarmedRows。body_human可带合法主手同时保有身体来源，这表示两种能力可用，不再将其视为双主手；ValidateEquipmentState仍严格校验真实主手的库存、实例、资格和普攻关联。
+- 有合法主手时唯一有效普攻是主手；无主手时是合法派生空手。非法/缺主手引用拒绝整个准备，不退回身体攻击；缺族/映射同样拒绝，不因主手存在忽略。不新增装备中主动切空手、卸装按钮、切换费用或第三件武器。换装不能清空身体来源，不能重建角色/回合/次数。
+- Spawner先用聚合重派生当前输入，再ResolveBasicAttackBinding，避免当前“先选旧ID再更新成长”的陈旧窗口；敌人从自身模板族与realm派生，不碰玩家物品或库存。所有入场basic仍须在传入合法profile集中，CombatSession.GetAuthorizationFailure仍按当前唯一BasicAttackProfileId匹配，不能开放任意basic调用。
+- 既有EncounterCoordinator.RefreshGrowth→CombatSession.RefreshActionEconomy扩为同一次权威同步：AP上限、v、realm及当前有效普攻档案一并验证后发布；身体变档且无主手时更换BasicAttackProfileId，有主手时保持武器。StateVersion/命令上下文失效旧预览；不加新状态或事件总线。战斗更新不改变已经发出的AP余额/回合预算、冷却、资源、位置、既有普攻次数/返还额度/CT。没有新生产突破入口，测试用现有聚合成长边界证明此行为。
+- 预览/提交沿CombatCommandService，不旁路收费。所有武器/空手仍共角色basicAttack次数，换来源/换目标/移动不清零。第1/2/3/4及以后乘1000/1000/1250/1500，先合法基础净费后ceil(B×乘数/1000)至0.001AP，checked Int64再检查Int32；不对上次实付复利。预览/取消/拒绝不计，合法未命中计，BeginOwnTurn唯一清计数。
+- 第三次前成长的算术反例：前两拳练气各25AP后换成筑基档，下一拳93.75AP；变档不让它恢复75AP首拳，也不补预算。武器换来源也同键报价，不改两武器40/50AP及120承载的固定档。
+
+## 五、保存6、迁移与回滚
+
+- GameSaveSerializer.SchemaVersion升6。CharacterRecord新增unarmedAttackFamilyId（权威族），只保存现有境界、功法、合法成长事实及族，不保存派生档位/攻击ID/AP余额/重复次数；退役unarmedBasicAttackProfileId继续写空。GameSaveEnvelope.HasCharacterPayload纳入新字段，hasPlayer=false藏族/角色负载拒绝。
+- 当前schema6有玩家必须有body_human族；缺失、空、未知或body_shijiahou玩家拒绝。恢复在发布任何live owner前检查realm/成长/族/完整映射、主手/库存等所有原约束，按同一聚合重派生。不能从记录中的攻击ID覆盖新映射。旧退役列在6非空直接拒绝。
+- schema5有效旧玩家只迁移到明确body_human：characterId必须player、原成长/行动经济输入有效、境界合法且现有主手一致；迁移前拒绝任何伪造新族字段，退役列只允许空或历史basic_unarmed，其他非空引用拒绝。清退役列并声明人形族，经现有Restore完整验证后才发布。schema4仍先沿原严格规则迁移已证明空移动来源到5，再走该5→6，不额外授节点/装备/功法或改境界。1/2/3有玩家仍按原不兼容理由拒绝；真正无玩家且无隐藏负载的空会话沿原政策可升6，不构造玩家。
+- Serializer在解析后保留原始退役列直到上述校验完成，不能像当前5读档先清空任意值而掩盖非法引用。CharacterRecord/CharacterStateSnapshot也不能提前丢弃新权威族或非法字段。5存档不含有效身体选择的事实，但其合法player/realm足以确定唯一人形映射，不从旧basic_unarmed参数推断新费用。
+- 不操作用户真实档。迁移仅发生内存准备；成功后只在原非战斗保存入口写6，不新增战斗存档、自动覆盖或改槽管理。用临时测试目录证明旧档读→保存6→再读、失败零live变化/原文件字节不变。
+- 回滚边界：保留写6前的5原文件/测试备份；旧5程序拒绝6，不向下改版本继续读，6写入前可回到旧程序和原5档；已写6需恢复原5副本，不能无证据逆推功法进度。本次不新增备份服务、槽位组件或永久兼容执行分支。
+
+## 六、逐实体验收及责任
+
+| 实体/条件 | 必须证明的结果 | 叶子 |
+|---|---|---|
+| 普通修士凡人无装备 | 新建body_human，20AP/承载30拳脚，可命中与结束；不越级发武器/术法 | RUNTIME；SCENE正式入口 |
+| 人形练气/筑基/金丹 | 同源25/75/250AP，承载120/500/2400，成长/恢复/入场一致；非法快照拒绝 | RUNTIME；SIM双入口 |
+| 体修合法强化 | 使用既有功法实际八属性/加成输入，费用与同境人形相同，肉攻按同一承载；仅流派标签不改变结果，废功/换功不残留额外赠值 | RUNTIME输入；SIM功能；BALANCE强度 |
+| 合法主手人形 | 剑/刀优先，身体来源保存但没有主动切换；武器升境仍40/50AP及120承载，换装不发物/清次数 | RUNTIME；PREVIEW |
+| 石甲兽 | body_shijiahou练气撞击25AP/120，已有ai_melee接近→攻击→合法结束；不用玩家武器；保留其八属性和掉落 | RUNTIME正式场景；SIM；BALANCE |
+| 旧5/4玩家 | 明确迁移人形族、保主手/库存/原成长，保存6往返；旧未知引用、伪造族、藏负载失败无部分写入 | RUNTIME |
+| 非法配置/身份 | 缺族、缺档、重复ID/族档、未知/保留高阶、0/分数/溢出、非适用列、摘要错、错绑定与缺profile均拒绝，整批资产零写入 | CONFIG；RUNTIME |
+| 来源/档位改变 | 先两拳再变档/换武器，第3次仍1250；不补AP，预览失效，取消/拒绝不计，未命中计、下本人回合清 | RUNTIME；SIM；PREVIEW |
+| 参数/体验 | 同境空手与现有练气武器对照，高境低档武器单列；已有同档武器仅具名试验参照不造生产ID。报告普通/体修/石甲兽动作数/AP/MP/输出/长战、局部费用/承载敏感性；Unity记录点击/动画累计/总时长 | BALANCE；SCENE |
+
+21构筑仍沿原AP2-SIM批准有限原型。体修样本可从其正式GongFaTables输入选取，生产不可达阶段或节点只能标显式测试样本，不把它说成正式玩家已能突破。两入口分别覆盖1v1/2v2、双方族/档位、报价实付和承载，不用Stage通过代替全模拟。既有悬赏Accepted未完成失败尚未确认根因，RUNTIME恢复攻击不自动解除该失败；SCENE必须取真实结果/回调证据，业务错回实际所有者。
+
+## 七、任务图、原子切换与停止
+
+CONTRACT→CONFIG→RUNTIME→UNARMED-SIM→AP2-BALANCE→TUNING；旧AP2-SIM归档为CONFIG/UNARMED-SIM/BALANCE具名事实前置。RUNTIME→PREVIEW；TUNING+PREVIEW→SCENE；SCENE+BALANCE→CLOSE→父项关闭。完整卡头仍为调度事实，本轮不移除任何下游blockedBy、不提升ready、不改队列顺序；只归档本CONTRACT并移除自身投影。正式进入master后的QueueMaintenance可核对归档和完整合同，再依法准备首个CONFIG。
+
+- CONFIG的可独立结果是schema/加载支持与fixture，不承诺正式角色可用；RUNTIME唯一启用提交必须同时包含九行/资产/目录、创建/成长/保存/敌人绑定、真实直接消费者和最小BattleSim读取，不拆成可发布的半条链。正式默认运行只能按当前完成阶段描述，不以它签未接入的全模拟/Stage行为。
+- 每张实现卡临近ready完整读卡、消费实际前置、重新风险预检和验证工具；expectedPaths全部是精确字面量，不授目录通配。新攻击asset和.meta已逐ID冻结；既有脚本不搬迁，无新asmdef或类型文件，无新目录。
+- PREVIEW只投影权威报价：现有费用/重复次数/乘数/摘要/冷却之外，冻结BasicAttackSourceKind（main_equipment/unarmed_body）、UnarmedRealmId、PhysicalAttackCapacity三项只读字段；Coordinator从当前有效profile填入既有CombatActionPreviewSnapshot。武器时空手境界字段空、承载读原Tier；UI显示拳脚/撞击与对应境界承载及本次费，不自己算档/费，不暴露内部ID。身体名称语言由RUNTIME提供，说明新增语言仍由PREVIEW现有Language路径承接。
+- 如果实现需要新修炼系统、装备中切空手交互、具名新功法/招式、未知高阶档、新生产实体或改变批准时钟/乘数，停止回交决定，不加fallback/重试/通用次数上限。算法缺口回实际叶，不在BALANCE/TUNING/SCENE连补多个边界。
+- 仅合同验收使用任务卡/文本/数据链/whitespace检查；本卡不跑BattleSim平衡或Unity。实现后各叶执行自己的Release build→默认run、自测/EditMode/正式场景证据；输入未变且证据适用的不重复验证。父项只有所有叶正式完成、独立复审、最终同摘要及负责人体验确认才关闭。
+
+## 八、下游精确路径附录
+
+以下清单与各卡expectedPaths逐项对应；生命周期/验证记录路径保留。字段/路径/所有者扩边在执行时仍触发原风险预检与停止合同。本轮只是冻结已知清单，不给其他worktree写入许可。
+
+### U-COMBAT-UNARMED-CONFIG-01
+
+- src/Assets/Scripts/Modules/Content/AttackProfileData.cs
+- src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs
+- src/Assets/Scripts/Editor/CombatContentImporter.cs
+- src/Assets/Scripts/Combat/CombatRuleSet.cs
+- src/Assets/Scripts/Combat/CombatAttackProfile.cs
+- simulations/BattleSim/GameData.cs
+- simulations/BattleSim/BattleSimSelfTests.cs
+- src/Assets/Tests/EditMode/AttackProfileDataTests.cs
+- src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs
+- 开发管理/U-COMBAT-UNARMED-CONFIG-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt
+- 开发管理/任务归档/U-COMBAT-UNARMED-CONFIG-01.txt
+- src/Assets/Scripts/Combat/CombatActionResolver.cs
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs
+- src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs
+- tools/check-data-chain.ps1
+- src/Assets/DataConfig/AttackProfiles.csv
+- src/Assets/DataConfig/AttackProfiles.csv.meta
+- src/Assets/Data/CombatRuleSet.asset
+- src/Assets/Data/CombatRuleSet.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta
+
+### U-COMBAT-UNARMED-RUNTIME-01
+
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs
+- src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs
+- src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs
+- src/Assets/Scripts/Modules/Content/CharacterData.cs
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationCatalog.cs
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs
+- src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs
+- src/Assets/Scripts/Editor/CharacterContentImporter.cs
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs
+- src/Assets/Scripts/Editor/CombatContentImporter.cs
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs
+- src/Assets/Scripts/Combat/CombatSession.cs
+- src/Assets/Scripts/Combat/CombatantSnapshot.cs
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs
+- src/Assets/Scripts/Combat/EnemyAI.cs
+- src/Assets/DataConfig/AttackProfiles.csv
+- src/Assets/DataConfig/Characters.csv
+- src/Assets/DataConfig/Enemies.csv
+- src/Assets/DataConfig/Language.csv
+- src/Assets/Data/CombatRuleSet.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/Scenes/AdventureScene.unity
+- simulations/BattleSim/GameData.cs
+- simulations/BattleSim/GuanzhongPlaytestAudit.cs
+- simulations/BattleSim/BattleSimSelfTests.cs
+- tools/check-data-chain.ps1
+- src/Assets/Tests/EditMode/CharacterStateTests.cs
+- src/Assets/Tests/EditMode/CharacterCreationTests.cs
+- src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs
+- src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs
+- src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs
+- src/Assets/Tests/EditMode/AttackProfileDataTests.cs
+- src/Assets/Tests/EditMode/ContentCatalogDataTests.cs
+- src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs
+- src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+- src/Assets/DataConfig/AttackProfiles.csv.meta
+- src/Assets/DataConfig/Characters.csv.meta
+- src/Assets/DataConfig/Enemies.csv.meta
+- src/Assets/DataConfig/Language.csv.meta
+- src/Assets/Data/CombatRuleSet.asset.meta
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta
+- src/Assets/Scenes/AdventureScene.unity.meta
+- 开发管理/U-COMBAT-UNARMED-RUNTIME-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt
+- 开发管理/任务归档/U-COMBAT-UNARMED-RUNTIME-01.txt
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+- src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs
+- src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs
+- src/Assets/Tests/EditMode/GuanzhongFormalUiTextTests.cs
+- src/Assets/Tests/EditMode/CombatActionPointItemTests.cs
+- src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs
+- src/Assets/Tests/EditMode/AbilityRequirementPolicyTests.cs
+- src/Assets/Tests/EditMode/GameRuntimeTests.cs
+- src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs
+- src/Assets/Tests/EditMode/TacticalGridModelTests.cs
+- src/Assets/Tests/EditMode/CombatRealmStatusTests.cs
+- src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta
+- src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset
+- src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset.meta
+- src/Assets/Data/Characters/Char_char_taiyixiushi.asset
+- src/Assets/Data/Characters/Char_char_taiyixiushi.asset.meta
+- src/Assets/Data/Characters/Char_Player.asset
+- src/Assets/Data/Characters/Char_Player.asset.meta
+- src/Assets/Data/Characters/Char_Enemy.asset
+- src/Assets/Data/Characters/Char_Enemy.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta
+- src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset
+- src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta
+
+### N-COMBAT-UNARMED-SIM-01
+
+- simulations/BattleSim/GameData.cs
+- simulations/BattleSim/Character.cs
+- simulations/BattleSim/Combat.cs
+- simulations/BattleSim/StageCombatReport.cs
+- simulations/BattleSim/GuanzhongPlaytestAudit.cs
+- simulations/BattleSim/Program.cs
+- simulations/BattleSim/BattleSim.csproj
+- simulations/BattleSim/BattleSimSelfTests.cs
+- 开发管理/N-COMBAT-UNARMED-SIM-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt
+- 开发管理/任务归档/N-COMBAT-UNARMED-SIM-01.txt
+
+### U-COMBAT-AP2-PREVIEW-01
+
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- 开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt
+- 开发管理/任务归档/U-COMBAT-AP2-PREVIEW-01.txt
+- src/Assets/DataConfig/Language.csv
+- src/Assets/DataConfig/Language.csv.meta
+
+### N-COMBAT-AP2-BALANCE-01
+
+- simulations/BattleSim/StageCombatReport.cs
+- simulations/BattleSim/Program.cs
+- src/Assets/DataConfig/RealmCombatGrowth.csv
+- src/Assets/DataConfig/RealmCombatGrowth.csv.meta
+- src/Assets/DataConfig/CombatActionEconomyRules.csv
+- src/Assets/DataConfig/CombatActionEconomyRules.csv.meta
+- src/Assets/DataConfig/CombatEffectTierRules.csv
+- src/Assets/DataConfig/CombatEffectTierRules.csv.meta
+- src/Assets/DataConfig/AttackProfiles.csv
+- 开发管理/境界行动力成长数值定案.txt
+- 开发管理/N-COMBAT-AP2-BALANCE-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt
+- 开发管理/任务归档/N-COMBAT-AP2-BALANCE-01.txt
+- simulations/BattleSim/BattleSimSelfTests.cs
+- src/Assets/Data/CombatRuleSet.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/DataConfig/AttackProfiles.csv.meta
+- src/Assets/Data/CombatRuleSet.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta
+- src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs
+- src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta
+
+### U-COMBAT-AP-TUNING-01
+
+- src/Assets/Scripts/Modules/Content/AttackProfileData.cs
+- src/Assets/Scripts/Modules/Content/CharacterData.cs
+- src/Assets/Scripts/Modules/Content/EnemyData.cs
+- src/Assets/DataConfig/AttackProfiles.csv
+- src/Assets/DataConfig/Characters.csv
+- src/Assets/DataConfig/Enemies.csv
+- src/Assets/Scripts/Editor/CombatContentImporter.cs
+- src/Assets/Scripts/Editor/CharacterContentImporter.cs
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset
+- src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset
+- src/Assets/Data/Characters/Char_char_taiyixiushi.asset
+- src/Assets/Data/Characters/Char_Enemy.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset
+- src/Assets/Data/Characters/Char_Player.asset
+- src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset
+- src/Assets/DataConfig/Items.csv
+- src/Assets/Scripts/Modules/Content/ItemData.cs
+- 开发管理/统一行动力生产参数对照.txt
+- 开发管理/U-COMBAT-AP-TUNING-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt
+- 开发管理/任务归档/U-COMBAT-AP-TUNING-01.txt
+- 开发管理/未通过审核清单.txt
+- 开发管理/AI合作沟通.txt
+- 开发管理/AI合作归档/U-COMBAT-AP-TUNING-01-交接归档.txt
+- src/Assets/DataConfig/RealmCombatGrowth.csv
+- src/Assets/DataConfig/CombatActionEconomyRules.csv
+- src/Assets/DataConfig/CombatEffectTierRules.csv
+- src/Assets/Data/CombatRuleSet.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs
+- src/Assets/DataConfig/AttackProfiles.csv.meta
+- src/Assets/DataConfig/Characters.csv.meta
+- src/Assets/DataConfig/Enemies.csv.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta
+- src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset.meta
+- src/Assets/Data/Characters/Char_char_taiyixiushi.asset.meta
+- src/Assets/Data/Characters/Char_Enemy.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset.meta
+- src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta
+- src/Assets/Data/Characters/Char_Player.asset.meta
+- src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta
+- src/Assets/DataConfig/Items.csv.meta
+- src/Assets/DataConfig/RealmCombatGrowth.csv.meta
+- src/Assets/DataConfig/CombatActionEconomyRules.csv.meta
+- src/Assets/DataConfig/CombatEffectTierRules.csv.meta
+- src/Assets/Data/CombatRuleSet.asset.meta
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta
+- src/Assets/Data/Items/Item_item_huoxue_dan.asset
+- src/Assets/Data/Items/Item_item_huoxue_dan.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta
+
+### U-COMBAT-AP-SCENE-01
+
+- src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongUnifiedActionPointAcceptanceTests.cs
+- src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs
+- 开发管理/统一行动力场景验收记录.txt
+- 开发管理/U-COMBAT-AP-SCENE-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt
+- 开发管理/任务归档/U-COMBAT-AP-SCENE-01.txt
+- src/Assets/Tests/PlayMode/GuanzhongUnifiedActionPointAcceptanceTests.cs.meta
+
+### D-COMBAT-AP-CLOSE-01
+
+- 开发管理/统一行动力交付核对.txt
+- 开发管理/统一行动力实现规划.txt
+- 开发管理/任务卡/P-COMBAT-AP-01.txt
+- 开发管理/任务归档/P-COMBAT-AP-01.txt
+- 开发管理/D-COMBAT-AP-CLOSE-01-验证记录.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/D-COMBAT-AP-CLOSE-01.txt
+- 开发管理/任务归档/D-COMBAT-AP-CLOSE-01.txt
+
+### P-COMBAT-AP-01
+
+- 开发管理/统一行动力实现规划.txt
+- 开发管理/任务列表/数值与战斗任务.txt
+- 开发管理/当前任务队列.txt
+- 开发管理/任务卡/P-COMBAT-AP-01.txt
+- 开发管理/任务归档/P-COMBAT-AP-01.txt

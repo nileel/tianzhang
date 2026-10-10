@@ -45,7 +45,17 @@
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
     "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
     "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
-    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs"
+    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -115,3 +125,8 @@
 ## 2026-10-10 空手普攻修订接入
 
 - 新增直接前置N-COMBAT-UNARMED-SIM-01；合并同一平衡矩阵验证各肉身档位空手与同档武器、普通修士与有显式强化来源的体修、石甲兽正式输入。记录每本人回合普攻次数/总动作/AP/输出及敏感性，检查固定低费与无限承载漏洞；不以“打得多”判平衡。候选费用/承载由CONTRACT给出，本卡实跑定案；操作点击和动画时长交SCENE。CONTRACT冻结新增源表/生成物后补齐本卡精确调参路径，保持原参数唯一生产源。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 接入合同§二为候选：人形凡人20AP/30承载、练气25/120、筑基75/500、金丹250/2400；石甲兽25/120、倍率1。参数唯一编辑源仍AttackProfiles等既有四表；新增五asset及.meta已授权，同次导入全攻击/规则摘要。族/境界/ID/表头不可调，费用及承载增长须同时合法。
+- 复用原完整矩阵加普通/体修/石甲兽、成长前后、各境空手与现有练气武器、费用/承载局部敏感性；同档高阶武器只显式参照试验，不能当生产内容。报告每本人回合攻击/总动作/AP/MP/输出与双入口1v1/2v2、长战及被动边界，依据真实输入定案；操作/动画时长归SCENE。

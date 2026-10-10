@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "D-COMBAT-UNARMED-CONTRACT-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "management",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人已批准空手普攻与肉身档位成长方向并要求补齐任务；本卡只冻结接入合同、候选参数和下游精确路径，不实施业务。",
+  "stateReason": "空手接入合同、L2/L1与全部已知下游字段和精确路径已冻结；本卡仅设计交付，运行与平衡由后续叶验收。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md",
     "开发管理/空手普攻成长接入合同.txt",
@@ -99,3 +99,10 @@
 - 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
 - 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
 - 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。
+
+## 2026-10-10 完成记录
+
+- 已交付开发管理/空手普攻成长接入合同.txt：五个身体档案、AttackProfiles表头2、族/境界与费用承载唯一源、主手优先与共享次数、当前成长刷新接口、保存6及有效5/4迁移/回滚边界。候选未实跑，不宣称业务已接入或平衡定案。
+- 已同步设计与对应L2/L1、历史合同覆盖段，补齐九张直接下游/汇总卡的全部已知字段、路径、生成物/.meta、验证和停止；旧AP2-SIM已completed的A方案事实已核对，不改其归档或旧决策。
+- 本轮gpt-6.1-sol单主责，强耦合合同无独立辅助工作面，未启动第二模型/责任会话。验证与源码证据见开发管理/D-COMBAT-UNARMED-CONTRACT-01-验证记录.txt。
+- 仅归档本任务并移除自身队列/backlog行；下游所有具名前置/生命周期/owner/route保留，父项不关闭，正式master结果后的QueueMaintenance再准备CONFIG。依据本轮现有证据未产生需整理的通用经验候选，不写空节。

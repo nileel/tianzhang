@@ -167,3 +167,11 @@ N-COMBAT-AP-BALANCE-01 按同一动作费用抽象评估两普攻逐ID与换装�
 - src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
 
 只读直接保存链另含 GameBootstrap.cs::SaveActiveSlot、SettlementSceneInstaller.cs::SaveAndReturnToMenu；本合同不要求修改它们。不需新增装备类、asmdef、目录或通用注册器；临近ready发现额外真实调用者、改架构或无法证明同步提交时，按原停止合同处理，不能在实施中叠兜底。
+
+## 九、2026-10-10 空手与保存边界覆盖
+
+本合同§一/二/四中的basic_unarmed、徒手与保存4是原EQUIP设计历史；其后WEAPON正式删除，当前保存为5。新空手按开发管理/空手普攻成长接入合同§二至五由RUNTIME一次启用，保存升6并显式迁移有效5/4人形输入，旧攻击ID不复活。两武器资格/实例/库存/换装费用/固定档保持，不重发、不解锁卸装/装备中切空手。
+
+身体族与主手引用可合法并存：前者是固有攻击来源，后者是真实装备。ValidateEquipmentState不得再以有身体来源判双主手；非法主手仍拒绝，不能自动退空手。换装只更新主手，保留身体来源；有主手唯一有效普攻为武器，无主手为按当前境界派生的合法身体档案。所有来源共本角色basicAttack次数，换装或肉身变档不清零、不补当回合AP，下一拳/剑按当前费用和既有次数报价。
+
+旧矩阵“徒手档无迁移/双绑定拒绝”只属原版本，当前接受明确族+合法主手，不接受两个主手或非法族/装备。新功能/保存证据由UNARMED-RUNTIME取证，HUD由PREVIEW、定案由AP2-BALANCE、体验由SCENE；本次合同不修改已完成EQUIP/WEAPON归档或关闭父项。

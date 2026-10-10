@@ -77,7 +77,17 @@
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
     "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta",
     "src/Assets/Data/Items/Item_item_huoxue_dan.asset",
-    "src/Assets/Data/Items/Item_item_huoxue_dan.asset.meta"
+    "src/Assets/Data/Items/Item_item_huoxue_dan.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -154,3 +164,8 @@
 ## 2026-10-10 空手普攻修订接入
 
 - 保持AP2-BALANCE直接前置；最终发布集合包含本次合同定义的空手档位与角色/石甲兽绑定。旧“四合法攻击/删除basic_unarmed发布目标”只描述旧迁移，不限制新合同的合法ID；不得直接恢复旧参数。CONTRACT按新增实际源表及生成物补齐本卡expectedPaths与.meta；只发布最终定案摘要，不改schema/运行算法。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 接入合同§三与附录冻结生产九ID，新增五asset/.meta并在原四表链一次导入；人物族/石甲兽投影、保存6消费者不在本卡实现。不得重建旧basic_unarmed，不在TUNING新增schema或变更算法。
+- 最终值、输入摘要和所有派生值须与AP2-BALANCE定案逐项一致，现有源表如无需改动只核验；输入变化交数值重新实跑。已授权Importer路径只用于原合同确定性发布，不借此增加业务分支。

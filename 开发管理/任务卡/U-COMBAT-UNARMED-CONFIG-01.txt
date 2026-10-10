@@ -28,7 +28,23 @@
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt",
-    "开发管理/任务归档/U-COMBAT-UNARMED-CONFIG-01.txt"
+    "开发管理/任务归档/U-COMBAT-UNARMED-CONFIG-01.txt",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
+    "tools/check-data-chain.ps1",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/DataConfig/AttackProfiles.csv.meta",
+    "src/Assets/Data/CombatRuleSet.asset",
+    "src/Assets/Data/CombatRuleSet.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset.meta",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
@@ -43,7 +59,7 @@
 ## 来源与当前边界
 
 - 原子结果：按空手普攻成长接入合同完成可验证的配置schema、严格加载及Unity/BattleSim同源投影支持；本卡不启用正式空手攻击内容。生产启用由RUNTIME一次完成。
-- 等待CONTRACT及原N-COMBAT-AP2-SIM-01正式完成。旧SIM当前冻结四生产ID与旧读取合同；先完成其已有迁移，再扩展新输入，防止同时改变尚待决定的基线。这是真实数据消费依赖，不是共享文件锁。
+- 等待CONTRACT及原N-COMBAT-AP2-SIM-01正式完成。旧SIM已在本基线完成归档并冻结四生产ID读取及A方案有限原型；扩展新输入前核对其正式完成证据。这是真实数据消费依赖，不是共享文件锁。
 
 ## 必查范围
 
@@ -80,3 +96,9 @@
 - 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
 - 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
 - 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。
+
+## 2026-10-10 空手合同冻结与精确路径
+
+- 按接入合同§三实现AttackProfiles精确表头attackSchemaVersion=2和unarmedFamilyId/unarmedRealmId/unarmedPhysicalAttackCapacity；原四行仅新增版本/空列，四旧攻击及CombatRuleSet同批重导摘要，正式角色仍无新攻击。没有新CSV/类型文件/asmdef。
+- CONFIG在既有规则类型内提供UnarmedRow映射，新增UnarmedBody绑定枚举、fixed_unarmed严格校验及CombatAttackRuleMetadata显式族/境界/肉攻承载；Adapter传递、Resolver选择新承载属于本卡fixture闭环，不授生产角色资格。新五档用明确fixture经严格解析→Adapter→命令→Resolver验证；费用/承载不写死候选常量，其他档案仍读原Tier。
+- 实际N-COMBAT-AP2-SIM-01已completed归档，本卡仍保留该具名前置；不改其已获准A方案特殊原型。本卡支持结果与RUNTIME启用分别验收，生产四ID读取/默认程序保持，整批拒绝及生成GUID/幂等检查覆盖新表头。
