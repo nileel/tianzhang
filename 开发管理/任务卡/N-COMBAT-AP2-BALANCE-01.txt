@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "N-COMBAT-AP2-SIM-01",
     "N-COMBAT-UNARMED-SIM-01"
   ],
-  "stateReason": "等待原AP2-SIM及新增空手双入口适配正式完成；最终定案必须包含普通修士/体修/石甲兽空手成长，不能沿无空手旧输入签平衡。",
+  "stateReason": "N-COMBAT-AP2-SIM-01已完成归档；仍等待新增空手双入口适配N-COMBAT-UNARMED-SIM-01正式完成，最终定案必须包含普通修士/体修/石甲兽空手成长，不能沿无空手旧输入签平衡。",
   "expectedPaths": [
     "simulations/BattleSim/StageCombatReport.cs",
     "simulations/BattleSim/Program.cs",

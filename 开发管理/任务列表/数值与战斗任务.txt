@@ -4,7 +4,7 @@
 
 ## 当前事实
 
-- 2026-10-10空手修订：已完整建立CONTRACT/CONFIG/RUNTIME/SIM四项新叶，复用AP2预览/平衡/回填/场景/闭环；CONTRACT首批ready，PREVIEW改等新RUNTIME并退出队列。原AP2-SIM的pending_decision/checkpoint保持；具体拓扑见统一行动力实现规划的空手追加图。仅建卡，未实现或定案。
+- 2026-10-10空手修订：已完整建立CONTRACT/CONFIG/RUNTIME/SIM四项新叶，复用AP2预览/平衡/回填/场景/闭环；CONTRACT与原AP2-SIM均已完成归档，CONFIG的直接前置已清空并进入队列。RUNTIME仍等待CONFIG，SIM仍等待RUNTIME，平衡、预览、回填、场景和闭环的其余具名前置保持；具体拓扑见统一行动力实现规划的空手追加图。空手功能尚未实现或定案。
 
 - 2026-10-10：U-COMBAT-AP2-REPEAT-01完成零冷却主动的同源重复报价、成功次数及事务提交；原生Unity编译成功，行动力内核38/38、运行时内核68/68和固定档承载19/19通过。本卡已归档，下游具名前置保留待正式master结果后的QueueMaintenance；不代表新方案平衡或最终场景完成。
 
@@ -44,10 +44,10 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| U-COMBAT-UNARMED-CONFIG-01 | P1 | deepseek | 阻塞 | D-COMBAT-UNARMED-CONTRACT-01、N-COMBAT-AP2-SIM-01 | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
+| U-COMBAT-UNARMED-CONFIG-01 | P1 | deepseek | 已排队 | — | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
 | U-COMBAT-UNARMED-RUNTIME-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-CONFIG-01 | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
-| N-COMBAT-UNARMED-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01、N-COMBAT-AP2-SIM-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
-| N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-SIM-01、N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
+| N-COMBAT-UNARMED-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
+| N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
 | U-COMBAT-AP-TUNING-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-BALANCE-01 | 行动力已验证参数回填生产链 | 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt |
 | U-COMBAT-AP-SCENE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-TUNING-01、U-COMBAT-AP2-PREVIEW-01 | 统一行动力正式场景最终验收 | 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt |

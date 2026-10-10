@@ -10,10 +10,9 @@
   "stage": "migration",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-COMBAT-UNARMED-RUNTIME-01",
-    "N-COMBAT-AP2-SIM-01"
+    "U-COMBAT-UNARMED-RUNTIME-01"
   ],
-  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "stateReason": "N-COMBAT-AP2-SIM-01已完成归档；仍等待U-COMBAT-UNARMED-RUNTIME-01正式完成，之后由有权维护者准备ready并重跑风险预检。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",

@@ -8,12 +8,9 @@
   "owner": "deepseek",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-COMBAT-UNARMED-CONTRACT-01",
-    "N-COMBAT-AP2-SIM-01"
-  ],
-  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "D-COMBAT-UNARMED-CONTRACT-01与N-COMBAT-AP2-SIM-01均已完成归档；合同已冻结精确字段、生产ID、生成物与.meta，风险预检无命中，可按既定范围实施。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs",
@@ -73,7 +70,7 @@
 
 ## 模型协作
 
-- 冻结合同后的数据/代码实现默认external_execute/deepseek；blocked阶段待直接前置后核对复杂度与能力，单主责统一实现和验证，Codex独立复审。当前不预设辅助调用。
+- 本轮ready评估：合同、路径和验收均已冻结，任务是有界的数据/代码实现，沿用external_execute/deepseek单主责与Codex独立复审；没有独立只读问题，实际工具能力不要求辅助调用。
 
 ## 验证
 
