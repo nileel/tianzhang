@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP-HUD-01/U-COMBAT-AP-HUD-01-C01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：独立核验来源候选并晋级为 EXP-UNITY-015；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP-HUD-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-11 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-015`。来源候选和正式验证记录量化确认：防御 Label 的固定 82×36 无法容纳 20 号费用文案；聚灵术费用在 1366×768 的宽度 186.94 超过 184，换行后三行高度 84.334 超过 60。缩短费用文案并仅在按钮直接 Label 局部调整字号后，1366×768 的防御为 77.306×23.895、聚灵术为 170.073×56.223，正式图形 PlayMode 6/6 和四张双分辨率截图通过。
+- 去重与边界：`EXP-UNITY-006`、`EXP-UNITY-008` 和 `EXP-UNITY-009` 分别只覆盖单位头顶条、移动状态文字与自动布局头顶条的固定高度／缩放根因；`EXP-UNITY-011` 与 `EXP-UNITY-012` 仅覆盖 Overlay 像素取证和 Game View 实测。它们均不覆盖动作条固定按钮加入费用后宽度、换行与高度共同溢出的边界。新经验限于 `CombatActionBarView.PresentAction`／`PresentArt` 的固定尺寸按钮费用文字；自动布局、TMP、没有文案改动的动作条和其他 HUD 排除。未新增门禁。
+- 模型协作：简单：来源候选、直接验证记录、现有经验边界和确定性回链均可直接核验；入口指定主模型 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

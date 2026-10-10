@@ -520,6 +520,33 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-012.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-07"
+    },
+    {
+      "id": "EXP-UNITY-015",
+      "title": "战斗动作条费用文字须量化双分辨率边界",
+      "preflightSummary": "在战斗动作条固定尺寸按钮加入或调整费用、冷却或本地化文字时，先量化正式文字区域与目标分辨率的 preferredWidth／preferredHeight，再以两种实际 Game View 验收。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs"
+      ],
+      "textPatterns": [
+        "PresentAction",
+        "PresentArt",
+        "fontSize",
+        "ActionPointCostUnits"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-015.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
     }
   ],
   "gates": []

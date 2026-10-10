@@ -110,8 +110,8 @@
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-3B9903A5D499
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-015
 - 经验领域：unity
 - 现象：正式按钮加入同源费用后发生文字裁断；聚灵术费用在1920可容纳，1366画布缩放时额外换行。
 - 已证实根因：防御Label固定82×36而费用行20号字宽111、高58；1366聚灵术费用行宽186.94超过184，换成三行高84.334超过60。字体按实际像素缩放的度量使贴边长行不能只凭1920结果验收。
