@@ -1,0 +1,30 @@
+# EXP-DATA-001 · 共享配置升级须枚举生产读取与显式链接
+
+## 状态
+
+active；最后核验日期：2026-10-11；事实源：`U-COMBAT-AP2-CONFIG-01` 的 `CAND-U-COMBAT-AP2-CONFIG-01-01` 及其验证记录。
+
+## 开工前
+
+仅当升级 `AttackProfiles` 或 `CombatRuleSet` 共享配置且触及 CSV、生产读取端或 BattleSim 编译列表时适用。写入前枚举 Unity 以外的各读取端及类型链接，全部写入 `expectedPaths` 后重跑预检。验证各端接受同一 schema 和可空派生字段；不得用旧列、默认值、影子副本或跳过读取端绕过。纯 UI、只读调查及不共享配置的独立数据排除。
+
+## 根因
+
+配置源表升级已通过 Unity 首次导入，但 BattleSim 的两个生产读取端仍固定旧 41 列并直接解析新 schema 允许为空的字段；共享源码新增 `CombatRuleSet` 引用也未列入显式 Compile 清单。临近 ready 只枚举 Unity 直接构造者，遗漏同源 CSV 的模拟读取和编译义务，须暂停并取得最小适配授权。
+
+## 适用与排除
+
+- 适用：升级 `AttackProfiles`／`CombatRuleSet` 的 schema、派生字段或共享源码类型，且 Unity 与 BattleSim 都消费该配置。
+- 排除：仅修改不共享的 Unity 显示、独立测试夹具、只读分析，以及不改变生产读取或显式链接的业务规则。
+
+## 正确处理
+
+从权威配置表沿实际生产路径枚举 Unity 导入与每个 BattleSim 读取端，并核对项目文件的显式源码链接。将命中的读取、类型和测试路径冻结后重跑预检；用同一 schema 验证合法读取、坏行拒绝和派生字段，再按 build 后 run 的顺序验证模拟器。
+
+## 证据
+
+`CAND-U-COMBAT-AP2-CONFIG-01-01`；`开发管理/U-COMBAT-AP2-CONFIG-01-验证记录.txt` 的“实施中发现的直接读取边界与批准”与“最终实现与验证”；`BattleSim.csproj`、`GameData.LoadProductionAttacks`、`GuanzhongPlaytestAudit.LoadProductionInputs` 的同次差异和生产读取自测。
+
+## 失效条件
+
+`AttackProfiles`／`CombatRuleSet` 不再由 Unity 与 BattleSim 共同消费，BattleSim 不再使用显式源码链接，或生产读取收敛为已验证的单一入口时，停止引用并重新核验读取与编译合同。

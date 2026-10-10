@@ -160,8 +160,8 @@
 ### CAND-U-COMBAT-AP2-CONFIG-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-749D2FAE3C5F
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-DATA-001
 - 经验领域：data
 - 现象：配置源表升级已通过Unity首次导入，但BattleSim既有生产入口仍固定旧41列/非空派生字段，共享源码还漏新纯类型链接，需暂停并取得最小范围修订授权。
 - 已证实根因：临近ready检查覆盖了Unity直接构造者，却未同步枚举同源CSV的两个实际模拟读取入口及显式Compile链接；把这些即时读取/编译义务误留给后置完整算法迁移任务。

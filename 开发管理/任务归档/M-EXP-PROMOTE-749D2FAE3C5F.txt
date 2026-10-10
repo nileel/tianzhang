@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP2-CONFIG-01/CAND-U-COMBAT-AP2-CONFIG-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：独立核验候选并晋级为 EXP-DATA-001；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP2-CONFIG-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-11 完成记录
+
+- 语义裁决：promoted 为 `EXP-DATA-001`。来源验证记录直接证实，Unity 已能导入升级后的共享配置时，BattleSim 的两个生产读取端仍锁旧 41 列／非空派生字段，且显式 Compile 清单遗漏新增纯类型；最小适配后 Release 构建、默认运行及两个生产读取自测通过。
+- 去重与边界：现有 `EXP-BS-001` 只约束 BattleSim 源码修改后的 build／run 顺序，`EXP-UNITY-002` 只约束 Unity asmdef 与生成投影依赖，均不覆盖共享配置的全部生产读取端和显式源码链接枚举。新经验仅在具名配置、读取端或项目链接路径同时相关时触发；不新增门禁。
+- 模型协作：简单：来源候选、直接验证记录、现有经验边界和确定性回链均可核验；沿用入口默认单模型，未调用辅助。

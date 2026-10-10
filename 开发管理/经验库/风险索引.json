@@ -271,6 +271,37 @@
       "lastVerified": "2026-10-11"
     },
     {
+      "id": "EXP-DATA-001",
+      "title": "共享配置升级须枚举生产读取与显式链接",
+      "preflightSummary": "升级 AttackProfiles 或 CombatRuleSet 的共享配置时，先枚举所有生产读取端与显式编译链接，再冻结路径并验证。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "data"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/DataConfig/AttackProfiles.csv",
+        "src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs",
+        "simulations/BattleSim/BattleSim.csproj",
+        "simulations/BattleSim/GameData.cs",
+        "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
+      ],
+      "textPatterns": [
+        "AttackProfiles",
+        "CombatRuleSet",
+        "LoadProductionAttacks",
+        "LoadProductionInputs"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-DATA-001.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
+    },
+    {
       "id": "EXP-UNITY-001",
       "title": "Unity 正式场景由 Editor builder 重建",
       "preflightSummary": "修改四个正式 Unity 场景时，先核对 Editor builder 的重建与保存链，不手写 YAML。",
