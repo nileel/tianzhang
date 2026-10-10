@@ -42,3 +42,5 @@
 - 最小补正：在现有 checker 增加只读 CheckpointScope 入口，调用同一个 Get-Card 解析器；共享入口在创建状态分支前执行，PauseDecision 检查全部选项、ResumeReady 检查选中项。没有新 runtime 状态、重试层或分支自动清理。用户已批准最小修复，本次仅纠正当前 A 的一个标题，不改变语义、路径、决策编号和已接受回复证据。
 - 回归覆盖：错误必需标题、错误 H1 在发送决策前被拒绝；旧的已批准错误正文连续两次恢复不创建分支；即使已有历史残留分支，也仍返回原始正文校验错误。合法正文通过同一检查后，继续经过真实状态分支、正式 ready 提交与 fast-forward、风险预检、checkpoint 重放和候选提交；仅模型执行由确定性夹具代替。
 - 原 state-resumeready-fa0b6fae6ee9 经核验仍指向 fa0b6fae，工作树干净；业务 checkpoint 分支仍指向 0501a0ea。保留这两个证据，不删除业务现场；修复提交进入 master 后，正式入口将按新的 master 创建对应状态分支。
+- 验证结果：test-check-task-cards、test-hourly-decision-checkpoint、test-invoke-codex-candidate -ResumeOnly 均通过；目标任务投影、管理文本及路径限定 whitespace/cached 检查通过。修复提交 a8827354 已经同一集成锁进入 master。Codex 真实 Canary verified（gpt-6-astra）；DeepSeek Canary 返回 hourly_canary_identity_failed，保持其原 PAUSED。
+- 正式 RunOnce 已消费同一 A，形成 e0a0ad49 ready 提交并启动 0e795c6b-c7fc-4f19-9f5a-927fcc5b6934。新预检 taskCardDigest=734dc851c52b7fbc5d5e9085dc926275e99d801ac4fec51b12703236402e1a2d，与 runtime 一致；resume-context 保留 DEC-20261010-CDD390C8C97662、A、原 evidenceHash 和 checkpoint 0501a0ea。Codex 定时触发已恢复原 ACTIVE。此处证明决策恢复已通过，业务验收和最终集成仍由正在执行的新 run 完成。
