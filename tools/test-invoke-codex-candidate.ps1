@@ -1,5 +1,7 @@
 #requires -Version 7.0
 
+param([switch]$ResumeOnly)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -49,6 +51,7 @@ $qmCompletedStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$test
 $failureStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-failure"
 $pathMismatchStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-path-mismatch"
 $reviewStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-review"
+$negativeStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-negative"
 $wrapperPath = Join-Path $PSScriptRoot 'invoke-codex-candidate.ps1'
 $wrapperAst = [Management.Automation.Language.Parser]::ParseFile($wrapperPath, [ref]$null, [ref]$null)
 $queuePathGuard = $wrapperAst.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Test-QueueMaintenancePath' }, $false)
@@ -94,25 +97,70 @@ function Invoke-TerminalScenario {
 }
 
 function Invoke-ResumeContextScenario {
-  param([ValidateSet('valid', 'missing', 'unknown', 'scalar')][string]$Mode)
+  param([ValidateSet('valid', 'refrozen', 'missing', 'unknown', 'scalar', 'blocked', 'failed', 'tampered', 'staged-tampered', 'untracked')][string]$Mode)
   $scenarioStateRoot = Join-Path $approvedState "tzg-codex-candidate-test-$testId-resume-$Mode"
   $scenarioStateRoots.Add($scenarioStateRoot)
+  if ($Mode -ceq 'refrozen') {
+    $flowRoot = Join-Path $testRoot 'refrozen-repository'
+    Invoke-Git -Root $mainRoot -Arguments @('clone', '--no-hardlinks', '.', $flowRoot) | Out-Null
+    $mainRoot = $flowRoot
+    Invoke-Git -Root $mainRoot -Arguments @('config', 'user.name', 'Refreeze Test') | Out-Null
+    Invoke-Git -Root $mainRoot -Arguments @('config', 'user.email', 'refreeze@example.invalid') | Out-Null
+    Invoke-Git -Root $mainRoot -Arguments @('config', 'core.longPaths', 'true') | Out-Null
+    $cardPath = Join-Path $mainRoot "开发管理/任务卡/$taskId.txt"
+    $cardText = [IO.File]::ReadAllText($cardPath)
+    $meta = [regex]::Match($cardText, '(?ms)---TASK-META---\r?\n(.*?)\r?\n---TASK-BODY---').Groups[1].Value | ConvertFrom-Json -Depth 50
+    $body = ($cardText -split '---TASK-BODY---\r?\n',2)[1]
+    $stateAst = [Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'set-task-automation-state.ps1'), [ref]$null, [ref]$null)
+    $getDigest = $stateAst.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -ceq 'Get-TaskContextDigest'},$false)
+    . ([scriptblock]::Create($getDigest.Extent.Text))
+    $options = @(
+      @{key='A';label='Add approved file';targetState='ready';expectedPaths=@($meta.expectedPaths)+@('fixture/approved-scope.txt');taskBody=$body+"`n## Selected scope`nWrite and verify fixture/approved-scope.txt.`n"},
+      @{key='B';label='Keep scope';targetState='ready';expectedPaths=@($meta.expectedPaths);taskBody=$body},
+      @{key='C';label='Stop';targetState='blocked';expectedPaths=@();taskBody=''}
+    )
+    $checkpointBase = $base
+    $checkpointWorktree = Join-Path $testRoot 'checkpoint-refrozen'
+    $checkpointBranch = 'fixture/checkpoint-refrozen'
+    Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', $checkpointBranch, $checkpointWorktree, $base) | Out-Null
+    Write-Utf8 (Join-Path $checkpointWorktree 'fixture/rename-source.txt') 'checkpoint replay fixture'
+    Invoke-Git -Root $checkpointWorktree -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
+    Invoke-Git -Root $checkpointWorktree -Arguments @('commit', '-m', 'test: freeze decision checkpoint') | Out-Null
+    $checkpointCommit = Invoke-Git -Root $checkpointWorktree -Arguments @('rev-parse', 'HEAD')
+    $pause = @{schemaVersion=1;taskId=$taskId;sourceRunId='fixture-run';owner='codex';route='codex_execute';decisionId='DEC-20261010-REFREEZE';question='Approve additional file?';options=$options;recommendedOption='A';impactSummary='Fixture scope';plainSummary=@{situation='Needs a file';impact='Test only';action='Choose A'};checkpointCommit=$base;baseCommit=$base;branch='fixture/checkpoint';changedPaths=@('fixture/rename-source.txt');verified=@('fixture');unverified=@();residualRisk='none';taskContextDigest=(Get-TaskContextDigest $meta);createdAt='2026-10-10T00:00:00+08:00'}
+    $pause.checkpointCommit = $checkpointCommit; $pause.branch = $checkpointBranch
+    $contextFile = Join-Path $testRoot 'refreeze-context.json'
+    Write-Utf8 $contextFile ($pause|ConvertTo-Json -Depth 50)
+    $stateTool = Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
+    $pauseResult = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $stateTool -Action PauseDecision -RepositoryRoot $mainRoot -TaskId $taskId -ContextPath $contextFile)
+    Assert-Equal $LASTEXITCODE 0 'Full-chain pause failed'
+    Write-Utf8 $contextFile (@{schemaVersion=1;taskId=$taskId;decisionId=$pause.decisionId;result='OPTION_ACCEPTED';replyKind='option';replyValue='A';source='feishu_card';evidenceHash=('a'*64)}|ConvertTo-Json)
+    $resumeResult = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $stateTool -Action ResumeReady -RepositoryRoot $mainRoot -TaskId $taskId -ContextPath $contextFile)
+    Assert-Equal $LASTEXITCODE 0 "Full-chain scope resume failed: $resumeResult"
+    Invoke-Git -Root $mainRoot -Arguments @('add', '--', "开发管理/任务卡/$taskId.txt",'开发管理/当前任务队列.txt','开发管理/任务列表/自动化任务.txt') | Out-Null
+    Invoke-Git -Root $mainRoot -Arguments @('commit', '-m', 'test: refreeze approved decision scope') | Out-Null
+    $base = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
+    $digest = Get-TextDigest $cardPath
+  }
   $claimOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $runtimePath -Action ClaimRun -StateRoot $scenarioStateRoot -Owner codex -TaskId $taskId -Route codex_execute -RepositoryRoot $mainRoot -MainBranch master -BaseCommit $base -TaskCardDigest $digest)
   $scenarioRun = ($claimOutput[0] | ConvertFrom-Json).run
   [IO.Directory]::CreateDirectory((Split-Path -Parent ([string]$scenarioRun.worktree))) | Out-Null
   Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', [string]$scenarioRun.candidateBranch, [string]$scenarioRun.worktree, $base) | Out-Null
-  $checkpointWorktree = Join-Path $testRoot "checkpoint-$Mode"
-  $checkpointBranch = "fixture/checkpoint-$Mode"
-  Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', $checkpointBranch, $checkpointWorktree, $base) | Out-Null
-  Write-Utf8 -Path (Join-Path $checkpointWorktree 'fixture/rename-source.txt') -Text 'checkpoint replay fixture'
-  Invoke-Git -Root $checkpointWorktree -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
-  Invoke-Git -Root $checkpointWorktree -Arguments @('commit', '-m', 'test: create single-file resume checkpoint') | Out-Null
-  $checkpointCommit = Invoke-Git -Root $checkpointWorktree -Arguments @('rev-parse', 'HEAD')
+  if ($Mode -cne 'refrozen') {
+    $checkpointBase = $base
+    $checkpointWorktree = Join-Path $testRoot "checkpoint-$Mode"
+    $checkpointBranch = "fixture/checkpoint-$Mode"
+    Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '-b', $checkpointBranch, $checkpointWorktree, $base) | Out-Null
+    Write-Utf8 -Path (Join-Path $checkpointWorktree 'fixture/rename-source.txt') -Text 'checkpoint replay fixture'
+    Invoke-Git -Root $checkpointWorktree -Arguments @('add', '--', 'fixture/rename-source.txt') | Out-Null
+    Invoke-Git -Root $checkpointWorktree -Arguments @('commit', '-m', 'test: create single-file resume checkpoint') | Out-Null
+    $checkpointCommit = Invoke-Git -Root $checkpointWorktree -Arguments @('rev-parse', 'HEAD')
+  }
   $restored = [pscustomobject]@{
     taskId = $taskId
     checkpoint = [pscustomobject]@{
-      branch = $checkpointBranch; checkpointCommit = $checkpointCommit; baseCommit = $base
-      decisionId = 'DEC-20260825-RESUMEFIXTURE'; changedPaths = @('fixture/rename-source.txt')
+      branch = $checkpointBranch; checkpointCommit = $checkpointCommit; baseCommit = $checkpointBase
+      decisionId = $(if($Mode -ceq 'refrozen'){$pause.decisionId}else{'DEC-20260825-RESUMEFIXTURE'}); changedPaths = @('fixture/rename-source.txt')
     }
     reply = [pscustomobject]@{ replyKind = 'option'; replyValue = 'A'; source = 'feishu_card'; evidenceHash = ('a' * 64) }
   }
@@ -139,7 +187,22 @@ function Invoke-ResumeContextScenario {
   Set-PrivatePathAcl -Path $resumePath
   Remove-Item -LiteralPath $tracePath -Force -ErrorAction SilentlyContinue
   $preflightPath = Write-PreflightResult -StateRoot $scenarioStateRoot -RunIdValue ([string]$scenarioRun.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
+  if ($Mode -ceq 'refrozen') {
+    $preflightPath = & {
+      $ownerAst = [Management.Automation.Language.Parser]::ParseInput($ownerSource,[ref]$null,[ref]$null)
+      foreach ($name in @('Stop-Hourly','Normalize-FullPath','Get-NormalizedTextDigestFromText','Read-TaskMetadata','Read-RunTaskMetadata','Write-PrivateJson','Invoke-ExperiencePreflight')) {
+        $f=$ownerAst.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -ceq $name},$false)
+        . ([scriptblock]::Create($f.Extent.Text))
+      }
+      $script:effectiveStateRoot=$scenarioStateRoot
+      $Owner='codex'
+      $matcherPath=Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1'
+      Invoke-ExperiencePreflight -Run $scenarioRun
+    }
+  }
+  if ($Mode -cin @('blocked', 'failed', 'tampered', 'staged-tampered', 'untracked')) { $env:TZG_FAKE_CODEX_TERMINAL_MODE = "resume-$Mode" }
   $scenarioOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$scenarioRun.worktree) -TaskId $taskId -RunId ([string]$scenarioRun.runId) -Model 'test-codex-model' -StateRoot $scenarioStateRoot -ResumeContextPath $resumePath -PreflightResultPath $preflightPath -ResponsibilityTimeoutSeconds 30)
+  $env:TZG_FAKE_CODEX_TERMINAL_MODE = $null
   Assert-Equal $scenarioOutput.Count 1 "Codex resume context output count mismatch: $Mode"
   [pscustomobject]@{
     Terminal = ($scenarioOutput[0] | ConvertFrom-Json -Depth 50)
@@ -260,11 +323,16 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $candidateCommit = ''
   $changedPaths = @()
   $options = @(
-    [ordered]@{ key = 'A'; label = 'option A'; targetState = 'ready' },
-    [ordered]@{ key = 'B'; label = 'option B'; targetState = 'ready' },
-    [ordered]@{ key = 'C'; label = 'option C'; targetState = 'blocked' }
+    [ordered]@{ key = 'A'; label = 'option A'; targetState = 'ready'; expectedPaths = @('fixture/rename-source.txt'); taskBody = '# fixture A' },
+    [ordered]@{ key = 'B'; label = 'option B'; targetState = 'ready'; expectedPaths = @('fixture/rename-source.txt'); taskBody = '# fixture B' },
+    [ordered]@{ key = 'C'; label = 'option C'; targetState = 'blocked'; expectedPaths = @(); taskBody = '' }
   )
-  if ($mode -ceq 'blocked-restored') {
+  if ($mode -like 'resume-*') {
+    if ($mode -cin @('resume-tampered','resume-staged-tampered')) {
+      [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/rename-source.txt'), 'tampered checkpoint')
+      if ($mode -ceq 'resume-staged-tampered') { & git add -- 'fixture/rename-source.txt' }
+    } elseif ($mode -ceq 'resume-untracked') { [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/untracked.txt'), 'new data') }
+  } elseif ($mode -ceq 'blocked-restored') {
     $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
     $originalQueue = [IO.File]::ReadAllBytes($queuePath)
     [IO.File]::WriteAllText($queuePath, ([IO.File]::ReadAllText($queuePath) + "`n<!-- restored blocker fixture -->"), [Text.UTF8Encoding]::new($false))
@@ -299,6 +367,7 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   }
   if ($mode -cmatch '^checkpoint-empty-(situation|impact|action)$') { $terminal.plainSummary[$Matches[1]] = ' ' }
   if ($mode -ceq 'checkpoint-missing-summary') { $terminal.Remove('plainSummary') }
+  if ($mode -like 'resume-*') { $terminal.status = if ($mode -ceq 'resume-failed') { 'failed' } else { 'blocked' } }
 } elseif ($env:TZG_FAKE_CODEX_DIRTY_FAILURE -eq '1') {
   $queuePath = Join-Path ([Environment]::CurrentDirectory) '开发管理/当前任务队列.txt'
   [IO.File]::WriteAllText($queuePath, ([IO.File]::ReadAllText($queuePath) + "`n<!-- dirty failure fixture -->"), [Text.UTF8Encoding]::new($false))
@@ -354,6 +423,10 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   $verifyText = '验证=任务投影检查通过；后续=等待固定入口集成'
   $plainText = '发生=测试任务被标记为暂不可执行；影响=只验证自动流程；需要=无需处理'
   $paths = "fixture/rename-source.txt|fixture/rename-target.txt|开发管理/任务列表/自动化任务.txt|开发管理/当前任务队列.txt|开发管理/任务卡/$taskId.txt"
+  if ($prompt -match 'CandidatePaths: [^\r\n]*fixture/approved-scope\.txt') {
+    [IO.File]::WriteAllText((Join-Path ([Environment]::CurrentDirectory) 'fixture/approved-scope.txt'), 'approved scope executed')
+    $paths += '|fixture/approved-scope.txt'
+  }
   $commit = [string](& pwsh -NoProfile -ExecutionPolicy Bypass -File tools/automation-finalize-commit.ps1 `
     -RepositoryRoot ([Environment]::CurrentDirectory) -ExpectedPaths $paths `
     -CommitMessage 'test: close Codex candidate fixture' -RequireAutomationMetadata `
@@ -377,6 +450,13 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Write-Utf8 -Path (Join-Path $fakeBin 'codex.cmd') -Text "@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"%~dp0fake-codex.ps1`" %*"
   $env:PATH = "$fakeBin;$originalPath"
   $env:TZG_FAKE_CODEX_TRACE = $tracePath
+  if ($ResumeOnly) {
+    $refrozen = Invoke-ResumeContextScenario -Mode 'refrozen'
+    Assert-Equal $refrozen.Terminal.status 'completed' "Refrozen full chain failed: $($refrozen.Terminal|ConvertTo-Json -Compress -Depth 30)"
+    Assert-True (@($refrozen.Terminal.candidateResult.changedPaths) -ccontains 'fixture/approved-scope.txt') 'Approved scope was not executed'
+    Write-Output 'test-invoke-codex-candidate -ResumeOnly: OK'
+    return
+  }
   $mainPreflightPath = Write-PreflightResult -StateRoot $stateRoot -RunIdValue ([string]$run.runId) -TaskIdValue $taskId -TaskCardDigest $digest -IndexDigest $indexDigest
   $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $wrapperPath -Action Candidate -Route Execution -RepositoryRoot ([string]$run.worktree) -TaskId $taskId -RunId ([string]$run.runId) -Model 'test-codex-model' -StateRoot $stateRoot -PreflightResultPath $mainPreflightPath -ResponsibilityTimeoutSeconds 30)
   Assert-Equal $LASTEXITCODE 0 'Codex candidate wrapper process failed'
@@ -469,6 +549,19 @@ if ($prompt.Contains('[TZG_CODEX_CANARY]')) {
   Assert-Equal ([string]$validResume.Terminal.status) 'completed' "Codex rejected a valid normal checkpoint resume context: $($validResume.Terminal | ConvertTo-Json -Compress -Depth 20)"
   Assert-True $validResume.RunnerStarted 'Codex valid normal checkpoint resume did not reach the runner'
   Assert-True ($validResume.Trace -match '"kind":"decision_checkpoint"') 'Codex resume prompt lost the validated normal checkpoint kind'
+  $refrozen = Invoke-ResumeContextScenario -Mode 'refrozen'
+  Assert-Equal $refrozen.Terminal.status 'completed' "Refrozen full chain failed: $($refrozen.Terminal|ConvertTo-Json -Compress -Depth 30)"
+  Assert-True (@($refrozen.Terminal.candidateResult.changedPaths) -ccontains 'fixture/approved-scope.txt') 'Approved file did not reach the actual candidate commit'
+  Assert-True ($refrozen.Trace -match 'CandidatePaths: [^\r\n]*fixture/approved-scope\.txt') 'Refrozen paths did not reach the execution prompt'
+  foreach ($mode in @('blocked', 'failed')) {
+    $resumedFailure = Invoke-ResumeContextScenario -Mode $mode
+    Assert-Equal $resumedFailure.Terminal.status $mode 'Unchanged checkpoint was classified as dirty'
+    Assert-Equal $resumedFailure.Terminal.detailCode 'combat_core_switch_contract_incomplete' 'Checkpoint masked original failure'
+  }
+  foreach ($mode in @('tampered', 'staged-tampered', 'untracked')) {
+    $resumedFailure = Invoke-ResumeContextScenario -Mode $mode
+    Assert-Equal $resumedFailure.Terminal.detailCode 'codex_failed_dirty_worktree' 'Actual checkpoint mutation was accepted'
+  }
   foreach ($invalidResumeMode in @('missing', 'unknown', 'scalar')) {
     $invalidResume = Invoke-ResumeContextScenario -Mode $invalidResumeMode
     Assert-Equal ([string]$invalidResume.Terminal.status) 'failed' "Codex accepted invalid resume context kind: $invalidResumeMode"

@@ -28,5 +28,6 @@
 
 - decision checkpoint 不是普通失败恢复。它必须具有干净 checkpoint 提交和结构化决策合同，精确绑定 taskId、decisionId、baseCommit、branch、SHA、授权路径、验证证据与任务摘要。
 - 共享入口已把任务转换为 `pending_decision` 或 `waiting_reply` 并关闭原 run 后，长连接桥只负责接收和鉴权回复；没有有效回复时不推进。
-- 有效回复到达后，下一次对应 owner 调用可机械恢复原 route／owner／`ready` 投影，并从最新 `master` 创建新 run、新 worktree 与新模型会话，通过 `cherry-pick --no-commit` 吸收 checkpoint。旧模型会话不恢复。
+- 有效选项回复到达后，下一次对应 owner 调用先按该选项冻结的 expectedPaths／taskBody 重新准备同一卡并运行风险预检，成功后才恢复原 route／owner／ready 投影；暂停选项保持 blocked。旧决策缺少范围合同或自定义回复没有明确冻结范围时，普通管理上下文依据已批准事实补齐，不要求负责人重复批准同一范围，也不得直接以旧路径置 ready。
+- 从重新冻结的最新 master 创建新 run、新 worktree 与新模型会话，通过 cherry-pick --no-commit 吸收 checkpoint。旧模型会话不恢复。失败判断应证明现场是否偏离本轮初始状态；未变化的重放内容不是本轮新增业务修改，保留其原始原因和证据。
 - checkpoint worktree 只有在新 run 成功吸收并完成正常安全集成、且精确清理合同满足后才删除。普通崩溃、残留、冲突、验证失败或拒绝 fast-forward 不能进入此路径。

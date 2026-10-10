@@ -109,7 +109,7 @@ function New-TerminalSchema {
       decisionId = @{ type = 'string'; pattern = '^(?:|DEC-[0-9]{8}-[A-Z0-9]+)$'; description = 'Schema filler. Direct and maintenance decisions return an empty string; the deterministic wrapper owns the final decision ID.' }
       decisionTaskId = @{ type = 'string' }
       question = @{ type = 'string' }
-      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') } }; required = @('key', 'label', 'targetState'); additionalProperties = $false } }
+      options = @{ type = 'array'; maxItems = 3; items = @{ type = 'object'; properties = @{ key = @{ type = 'string' }; label = @{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') }; expectedPaths = @{ type = 'array'; items = @{ type = 'string' } }; taskBody = @{ type = 'string' } }; required = @('key', 'label', 'targetState', 'expectedPaths', 'taskBody'); additionalProperties = $false } }
       recommendedOption = @{ type = 'string' }
       impactSummary = @{ type = 'string' }
       plainSummary = @{ type = 'object'; description = 'For needs_decision and maintenance_decision, the model must write three plain-language explanations for a nontechnical owner. The wrapper preserves them; it does not translate or copy professional fields. Other statuses use empty strings.'; properties = @{ situation = @{ type = 'string' }; impact = @{ type = 'string' }; action = @{ type = 'string' } }; required = @('situation', 'impact', 'action'); additionalProperties = $false }
@@ -232,7 +232,8 @@ function New-Prompt {
       '开发中确需负责人决定时立即停止猜测，将当前合法修改整理为一个干净、唯一、直接后继 checkpoint 提交；返回 needs_decision、提交 SHA、精确 paths、验证/风险，以及 question、按 A/B/C 排序的三个非空 option label、recommendedOption、impactSummary 和完整 plainSummary。direct needs_decision 的 decisionId 返回空字符串；固定 wrapper 只从 run/checkpoint 身份确定性生成决策编号，原样保留模型撰写的 plainSummary。checkpoint 不得改变任务生命周期。'
     })
     'needs_decision 和 maintenance_decision 的 plainSummary 必须由本轮责任方依据同一事实同步撰写，面向不懂代码和内部工作流的负责人：situation 解释实际卡在哪里、为什么需要负责人决定；impact 解释 A/B/C 对游戏、成本、风险、进度或后续方向的实际区别；action 用一句话说明推荐选择及理由，或何种偏好下选择其他项。每项非空、单行、不超过 200 个 Unicode code point；不得直接复制专业问题、影响说明或选项标签，不使用代码符号、路径、提交号、内部状态名和未解释的缩写，无法避免的术语须在同一句中解释。发送前自行检查：只读这三句，负责人能否知道出了什么问题、各选项有什么区别、应该怎么选；不得夸大已完成或已验证的结果。'
-    '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。'
+    '普通 needs_decision 每个选项必须含 targetState、expectedPaths、taskBody。可执行选项 targetState=ready，expectedPaths 是选择后完整精确路径集（含 checkpoint 和生命周期路径），taskBody 是选择后完整任务正文（保留必查、实施、验证、完成、停止等章节），即使范围不变也须完整填写；范围变化必须反映在路径和正文中。暂停选项 targetState=blocked，expectedPaths=[]、taskBody=""。这些只是等待批准的合同，不能提前实施或修改当前任务卡。收到选择后共享入口会应用相应合同并重新预检，成功后才置 ready；不解析选项 label 来猜路径。maintenance_decision 的这两个范围字段填空，由既有维护阶段准备。'
+    '业务 blocker 且没有合法 checkpoint 时恢复工作树到本轮初始状态并返回 blocked/detailCode。技术失败同样先恢复工作树到本轮初始状态，再返回 failed/detailCode；普通失败不得伪装为 decision checkpoint。已重放 checkpoint 属于初始状态，保持其暂存内容不变。'
     '严格终态 schema 要求每个字段都出现。当前 status 不使用的字符串和数组填空字符串或空数组；仅非 needs_decision／maintenance_decision 状态的 plainSummary 填三个空字符串。固定 wrapper 只按实际 status 核验必需字段。'
     '除 QueueMaintenance 的 no_candidate 外，最终只输出符合 schema 的 JSON 对象。'
   ) -join "`n"
@@ -325,6 +326,11 @@ function Assert-Decision {
   foreach ($value in @($options | ForEach-Object { [string]$_.label }) + @([string]$Terminal.question, [string]$Terminal.impactSummary)) { if ([string]::IsNullOrWhiteSpace($value)) { Stop-Candidate 'codex_decision_invalid' } }
   $recommendedOption = [string]$Terminal.recommendedOption
   if ($recommendedOption -cnotin @('A', 'B', 'C')) { Stop-Candidate 'codex_decision_invalid' }
+  foreach ($option in $options) {
+    foreach ($field in @('targetState', 'expectedPaths', 'taskBody')) { if ($option.PSObject.Properties.Name -cnotcontains $field) { Stop-Candidate 'codex_decision_scope_invalid' } }
+    if ([string]$option.targetState -cnotin @('ready', 'blocked') -or $option.expectedPaths -isnot [array] -or $option.taskBody -isnot [string]) { Stop-Candidate 'codex_decision_scope_invalid' }
+    if ([string]$option.targetState -ceq 'ready' -and (@($option.expectedPaths).Count -eq 0 -or [string]::IsNullOrWhiteSpace($option.taskBody))) { Stop-Candidate 'codex_decision_scope_invalid' }
+  }
   $decisionId = Get-DirectDecisionId -Run $Run -CheckpointCommit $commit
   $plainSummary = [ordered]@{}
   foreach ($field in @('situation', 'impact', 'action')) {
@@ -335,7 +341,7 @@ function Assert-Decision {
   }
   [ordered]@{
     category = 'decision_checkpoint'; decisionId = $decisionId; question = [string]$Terminal.question
-    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } }); recommendedOption = $recommendedOption
+    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label; targetState = [string]$_.targetState; expectedPaths = @($_.expectedPaths); taskBody = [string]$_.taskBody } }); recommendedOption = $recommendedOption
     impactSummary = [string]$Terminal.impactSummary; plainSummary = $plainSummary
     checkpointCommit = $commit; baseCommit = $baseCommit; branch = (Invoke-GitText @('branch', '--show-current')); changedPaths = $actual
     verified = @($Terminal.verified | ForEach-Object { [string]$_ }); unverified = @($Terminal.unverified | ForEach-Object { [string]$_ }); residualRisk = [string]$Terminal.residualRisk
@@ -440,6 +446,9 @@ try {
     if ($Route -cne 'QueueMaintenance') {
       $preflightResult = Read-PreflightResult -ExpectedTaskCardDigest ([string]$run.taskCardDigest)
     }
+    $initialIndex = Invoke-GitText @('write-tree')
+    $initialWorktreeDiff = Invoke-GitText @('diff', '--binary', '--no-ext-diff')
+    $initialStatus = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
     $runOutput = Invoke-Runner -Prompt (New-Prompt -Run $run -ResumeContext $resume -CandidatePaths $expectedPaths -PreflightResult $preflightResult)
     $terminal = $runOutput.Terminal
     if ([string]$runOutput.Runner.status -cne 'ok' -or [string]$terminal.identity -cne 'Codex' -or [string]$terminal.model -cne $Model) { Stop-Candidate 'codex_runner_failed' }
@@ -499,7 +508,7 @@ try {
       }
       { $_ -cin @('blocked', 'failed') } {
         if ($head -cne [string]$run.baseCommit) { Stop-Candidate 'codex_failed_head_changed' }
-        if (-not [string]::IsNullOrWhiteSpace($status)) { Stop-Candidate 'codex_failed_dirty_worktree' }
+        if ($status -cne $initialStatus -or (Invoke-GitText @('write-tree')) -cne $initialIndex -or (Invoke-GitText @('diff', '--binary', '--no-ext-diff')) -cne $initialWorktreeDiff) { Stop-Candidate 'codex_failed_dirty_worktree' }
         if ([string]::IsNullOrWhiteSpace([string]$terminal.detailCode)) { Stop-Candidate 'codex_terminal_invalid' }
         $result = [ordered]@{ status = [string]$terminal.status; taskId = $TaskId; runId = $RunId; sessionId = [string]$runOutput.Runner.sessionId; detailCode = [string]$terminal.detailCode }
       }

@@ -95,6 +95,8 @@ function Write-Table {
 
 function Find-RowIndex { param([object]$Table, [string]$Id) $matches = @(for ($i = 0; $i -lt $Table.Rows.Count; $i++) { if ([string]$Table.Rows[$i][0] -ceq $Id) { $i } }); if ($matches.Count -gt 1) { throw 'Duplicate table row' }; if ($matches.Count -eq 0) { return -1 }; [int]$matches[0] }
 
+$resumeOriginal = @{}
+$failureCode = 'task_automation_state_failed'
 try {
   $root = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $RepositoryRoot).Path).TrimEnd('\', '/')
   if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { throw 'Repository root is invalid' }
@@ -132,15 +134,61 @@ try {
       $checkpoint = $meta.automationCheckpoint
       if ([string]$checkpoint.decisionId -cne [string]$context.decisionId -or [string]$checkpoint.taskContextDigest -cne (Get-TaskContextDigest $meta)) { throw 'Reply binding is invalid' }
       foreach ($name in @('result', 'replyKind', 'replyValue', 'source', 'evidenceHash')) { if ([string]::IsNullOrWhiteSpace([string]$context.$name)) { throw 'Reply evidence is incomplete' } }
+      # A reply authorizes the selected frozen contract, not arbitrary model-inferred paths.
+      $failureCode = 'checkpoint_scope_contract_missing'
+      if ([string]$context.result -cne 'OPTION_ACCEPTED' -or [string]$context.replyKind -cne 'option') { throw 'A custom reply requires manual scope preparation' }
+      $selected = @($checkpoint.options | Where-Object { [string]$_.key -ceq [string]$context.replyValue })
+      if ($selected.Count -ne 1) { throw 'Selected option is missing' }
+      $option = $selected[0]
+      foreach ($field in @('targetState', 'expectedPaths', 'taskBody')) { if ($option.PSObject.Properties.Name -cnotcontains $field) { throw 'Selected option has no frozen scope' } }
+      $failureCode = 'checkpoint_scope_contract_invalid'
+      if ([string]$option.targetState -cnotin @('ready', 'blocked') -or $option.expectedPaths -isnot [array] -or $option.taskBody -isnot [string]) { throw 'Invalid selected scope' }
+      if ([string]$option.targetState -ceq 'ready') {
+        $paths = @($option.expectedPaths)
+        if ($paths.Count -eq 0 -or [string]::IsNullOrWhiteSpace($option.taskBody) -or ($option.taskBody -match '---TASK-(META|BODY)---')) { throw 'Incomplete selected scope' }
+        $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($path in $paths) {
+          if ($path -isnot [string] -or [string]::IsNullOrWhiteSpace($path) -or $path -cne $path.Trim() -or
+              [IO.Path]::IsPathRooted($path) -or $path -match '[\\:*?\[\]\x00-\x1F\x7F]' -or
+              @($path.Split('/') | Where-Object { $_ -in @('', '.', '..', '.git', '.worktrees') }).Count -gt 0 -or
+              [string]::IsNullOrEmpty([IO.Path]::GetExtension($path)) -or -not $seen.Add($path)) { throw 'Invalid scope path' }
+        }
+        foreach ($path in @($checkpoint.changedPaths) + @("开发管理/任务卡/$TaskId.txt", "开发管理/任务归档/$TaskId.txt", '开发管理/当前任务队列.txt', [string]$meta.sourceBacklog)) {
+          if ($paths -cnotcontains $path) { throw 'Scope excludes checkpoint or lifecycle path' }
+        }
+        foreach ($path in @($cardPath, $queuePath, $backlogPath)) { $resumeOriginal[$path] = [IO.File]::ReadAllBytes($path) }
+        $meta.expectedPaths = $paths
+        $card.Body = $option.taskBody
+        # Keep pending_decision out of the queue until the new scope passes preflight.
+        $meta.schemaVersion = 2
+        $refs = @(if ($meta.PSObject.Properties.Name -contains 'riskPreflight') { $meta.riskPreflight.explicitRefs })
+        $meta | Add-Member -NotePropertyName riskPreflight -NotePropertyValue ([ordered]@{ explicitRefs = $refs; matched = @(); gates = @() }) -Force
+        Write-Card -Path $cardPath -Metadata $meta -Body $card.Body
+        $failureCode = 'checkpoint_scope_preflight_failed'
+        $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools/get-experience-risk-preflight.ps1') -RepositoryRoot $root -TaskId $TaskId 2>$null)
+        if ($LASTEXITCODE -ne 0 -or $output.Count -ne 1) { throw 'Scope preflight failed' }
+        $preflight = $output[0] | ConvertFrom-Json -Depth 100
+        if ([string]$preflight.status -cne 'ok' -or [string]$preflight.taskId -cne $TaskId -or
+            [string]$preflight.taskCardDigest -cne (Get-NormalizedTextDigest $cardPath) -or [int]$preflight.mustReadChars -gt 600) { throw 'Scope preflight binding failed' }
+        foreach ($gate in @($preflight.gates)) {
+          $pointers = @($preflight.gatePointers | Where-Object { [string]$_.id -ceq [string]$gate -and -not [string]::IsNullOrWhiteSpace([string]$_.instructionRef) })
+          if ($pointers.Count -ne 1) { throw 'Scope preflight gate is missing' }
+        }
+        $meta.riskPreflight.matched = @($preflight.matched)
+        $meta.riskPreflight.gates = @($preflight.gates)
+      }
       $reply = [ordered]@{ decisionId = [string]$context.decisionId; result = [string]$context.result; replyKind = [string]$context.replyKind; replyValue = [string]$context.replyValue; source = [string]$context.source; evidenceHash = [string]$context.evidenceHash }
       $meta | Add-Member -NotePropertyName automationReply -NotePropertyValue $reply -Force
-      $meta.dispatchState = 'ready'
-      $meta.stateReason = "负责人回复已核验，恢复原任务：$([string]$context.decisionId)"
-      $row = @([string]$meta.id, [string]$meta.route, [string]$meta.owner, [string]$meta.priority, [string]$meta.domain, [string]$meta.stage, [string]$meta.title, "开发管理/任务卡/$TaskId.txt")
-      $insert = [Math]::Min([Math]::Max(0, [int]$checkpoint.queueIndex), $queue.Rows.Count)
-      $queue.Rows.Insert($insert, $row)
+      $meta.dispatchState = [string]$option.targetState
+      $meta.stateReason = "负责人回复已落实范围：$([string]$context.decisionId)/$([string]$context.replyValue)"
+      if ($meta.dispatchState -ceq 'ready') {
+        $row = @([string]$meta.id, [string]$meta.route, [string]$meta.owner, [string]$meta.priority, [string]$meta.domain, [string]$meta.stage, [string]$meta.title, "开发管理/任务卡/$TaskId.txt")
+        $insert = [Math]::Min([Math]::Max(0, [int]$checkpoint.queueIndex), $queue.Rows.Count)
+        $queue.Rows.Insert($insert, $row)
+      }
       $backlog.Rows[$backlogIndex][2] = [string]$meta.owner
-      $backlog.Rows[$backlogIndex][3] = '已排队'
+      $backlog.Rows[$backlogIndex][3] = if ($meta.dispatchState -ceq 'ready') { '已排队' } else { '阻塞' }
+      $failureCode = 'checkpoint_scope_projection_failed'
     }
     'Block' {
       if ([string]$meta.dispatchState -cne 'ready' -or $queueIndex -lt 0 -or [string]::IsNullOrWhiteSpace([string]$context.detailCode)) { throw 'Block precondition failed' }
@@ -277,7 +325,7 @@ try {
     $checkArgs += @('-Postcondition', $(if ([string]$meta.dispatchState -ceq 'ready') { 'MaintenanceResolvedReady' } else { 'MaintenanceResolvedBlocked' }))
   } elseif ($Action -ceq 'ExpireMaintenanceDecision') {
     $checkArgs += $(if ([string]$context.detailCode -ceq 'maintenance_decision_expired') { @('-Postcondition', 'MaintenanceExpiredBlocked') } else { @('-Postcondition', 'CodexClosedOrNonReady') })
-  } elseif ($Action -notin @('ResumeReady', 'RequeueReview')) {
+  } elseif ($Action -notin @('ResumeReady', 'RequeueReview') -or [string]$meta.dispatchState -cne 'ready') {
     $checkArgs += @('-Postcondition', 'CodexClosedOrNonReady')
   } elseif ([string]$meta.owner -ceq 'codex') {
     $checkArgs += @('-Postcondition', 'CodexDispatchReady', '-ExpectedRoute', [string]$meta.route)
@@ -289,6 +337,7 @@ try {
   if ($LASTEXITCODE -ne 0 -or $check.Count -ne 1) { throw 'Task projection validation failed' }
   [Console]::Out.WriteLine(([ordered]@{ status = 'updated'; taskId = $TaskId; dispatchState = [string]$meta.dispatchState; changedPaths = @("开发管理/任务卡/$TaskId.txt", '开发管理/当前任务队列.txt', [string]$meta.sourceBacklog) } | ConvertTo-Json -Compress))
 } catch {
-  [Console]::Out.WriteLine(([ordered]@{ status = 'failed'; taskId = $TaskId; detailCode = 'task_automation_state_failed' } | ConvertTo-Json -Compress))
+  foreach ($entry in $resumeOriginal.GetEnumerator()) { [IO.File]::WriteAllBytes($entry.Key, $entry.Value) }
+  [Console]::Out.WriteLine(([ordered]@{ status = 'failed'; taskId = $TaskId; detailCode = $failureCode } | ConvertTo-Json -Compress))
   exit 1
 }

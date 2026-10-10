@@ -207,6 +207,7 @@ function New-CandidatePrompt {
     'Return only the supplied structured object. completed requires the full candidate SHA, exact changed paths, verified/unverified arrays, residual risk, and the four finalizer-ready metadata values.'
     'Use expectedTransition=codex_review/codex/ready. The four finalizer-ready values must use these exact single-line forms: result="问题=...；完成=...", impact="影响=...；边界=...", verify="验证=...；后续=...", and plain="发生=...；影响=...；需要=...".'
     'If a decision becomes necessary, stop guessing, create one clean direct-successor checkpoint commit containing only legal CandidatePaths, and return needs_decision with its SHA, exact paths, verification/risk evidence, and the complete three-option decision card fields. Do not change task lifecycle in the checkpoint.'
+    'Each decision option must include targetState, expectedPaths and taskBody. For ready, supply the complete selected literal path set (including checkpoint and lifecycle paths) and complete task body with scope, verification and stop conditions, even when unchanged. For blocked, use empty paths/body. These are proposals for approval, not permission to implement them now. The shared entry applies only the selected contract and reruns preflight before ready; it never infers paths from labels.'
     'For needs_decision, decisionId must match ^DEC-[0-9]{8}-[A-Z0-9]+$, for example DEC-20260922-SPELL01D. Use the decision date and an uppercase alphanumeric suffix; do not use CHK identifiers, task IDs with hyphens, or an empty string.'
     'blocked or failed must restore the worktree to its initial state and return a stable detailCode. Ordinary failure must not masquerade as a decision checkpoint.'
   ) -join "`n"
@@ -259,8 +260,8 @@ function New-TerminalSchema {
         type = 'array'; minItems = 3; maxItems = 3
         items = [ordered]@{
           type = 'object'
-          properties = [ordered]@{ key = [ordered]@{ type = 'string'; enum = @('A', 'B', 'C') }; label = [ordered]@{ type = 'string' } }
-          required = @('key', 'label'); additionalProperties = $false
+          properties = [ordered]@{ key = [ordered]@{ type = 'string'; enum = @('A', 'B', 'C') }; label = [ordered]@{ type = 'string' }; targetState = @{ type = 'string'; enum = @('ready', 'blocked') }; expectedPaths = @{ type = 'array'; items = @{ type = 'string' } }; taskBody = @{ type = 'string' } }
+          required = @('key', 'label', 'targetState', 'expectedPaths', 'taskBody'); additionalProperties = $false
         }
       }
       recommendedOption = [ordered]@{ type = 'string'; enum = @('A', 'B', 'C') }
@@ -430,6 +431,11 @@ function Assert-DecisionCheckpoint {
   $options = @($Terminal.options)
   if ($options.Count -ne 3 -or (@($options | ForEach-Object { [string]$_.key }) -join '') -cne 'ABC') { Stop-DeepSeek 'deepseek_decision_invalid' }
   foreach ($option in $options) { Assert-StableText -Value ([string]$option.label) -DetailCode 'deepseek_decision_invalid' }
+  foreach ($option in $options) {
+    foreach ($field in @('targetState', 'expectedPaths', 'taskBody')) { if ($option.PSObject.Properties.Name -cnotcontains $field) { Stop-DeepSeek 'deepseek_decision_scope_invalid' } }
+    if ([string]$option.targetState -cnotin @('ready', 'blocked') -or $option.expectedPaths -isnot [array] -or $option.taskBody -isnot [string]) { Stop-DeepSeek 'deepseek_decision_scope_invalid' }
+    if ([string]$option.targetState -ceq 'ready' -and (@($option.expectedPaths).Count -eq 0 -or [string]::IsNullOrWhiteSpace($option.taskBody))) { Stop-DeepSeek 'deepseek_decision_scope_invalid' }
+  }
   foreach ($value in @(
       [string]$Terminal.decisionId, [string]$Terminal.question, [string]$Terminal.recommendedOption,
       [string]$Terminal.impactSummary, [string]$Terminal.plainSummary.situation,
@@ -437,7 +443,7 @@ function Assert-DecisionCheckpoint {
     )) { Assert-StableText -Value $value -DetailCode 'deepseek_decision_invalid' }
   [ordered]@{
     category = 'decision_checkpoint'; decisionId = [string]$Terminal.decisionId; question = [string]$Terminal.question
-    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label } })
+    options = @($options | ForEach-Object { [ordered]@{ key = [string]$_.key; label = [string]$_.label; targetState = [string]$_.targetState; expectedPaths = @($_.expectedPaths); taskBody = [string]$_.taskBody } })
     recommendedOption = [string]$Terminal.recommendedOption; impactSummary = [string]$Terminal.impactSummary; plainSummary = $Terminal.plainSummary
     checkpointCommit = $commit; baseCommit = $BaseCommit; branch = $CandidateBranch; changedPaths = $actual
     verified = @($Terminal.verified | ForEach-Object { [string]$_ }); unverified = @($Terminal.unverified | ForEach-Object { [string]$_ }); residualRisk = [string]$Terminal.residualRisk
@@ -514,6 +520,9 @@ try {
     $script:stage = 'preflight'
     $preflightResult = Read-PreflightResult -ExpectedTaskCardDigest ([string]$run.taskCardDigest)
     $script:stage = 'candidate_cli'
+    $initialIndex = Invoke-GitText @('write-tree')
+    $initialWorktreeDiff = Invoke-GitText @('diff', '--binary', '--no-ext-diff')
+    $initialStatus = Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')
     $terminal = Invoke-ClaudeSession -Executable $claudeCommands[0].Source -Prompt (New-CandidatePrompt -CandidatePaths $candidatePaths -ResumeContext $resumeContext -PreflightResult $preflightResult)
     $script:stage = 'candidate_evidence'
     switch ([string]$terminal.status) {
@@ -535,7 +544,10 @@ try {
       { $_ -cin @('blocked', 'failed') } {
         if ($terminal.PSObject.Properties.Name -cnotcontains 'detailCode') { Stop-DeepSeek 'deepseek_invalid_terminal' }
         Assert-StableText -Value ([string]$terminal.detailCode) -DetailCode 'deepseek_invalid_terminal'
-        if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne [string]$run.baseCommit -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-DeepSeek 'deepseek_terminal_worktree_invalid' }
+        if ((Invoke-GitText @('rev-parse', 'HEAD')) -cne [string]$run.baseCommit -or
+            (Invoke-GitText @('status', '--porcelain=v1', '--untracked-files=all')) -cne $initialStatus -or
+            (Invoke-GitText @('write-tree')) -cne $initialIndex -or
+            (Invoke-GitText @('diff', '--binary', '--no-ext-diff')) -cne $initialWorktreeDiff) { Stop-DeepSeek 'deepseek_terminal_worktree_invalid' }
         $result = [ordered]@{ status = [string]$terminal.status; taskId = $TaskId; runId = $RunId; sessionId = $capturedSessionId; detailCode = [string]$terminal.detailCode }
       }
       default { Stop-DeepSeek 'deepseek_invalid_terminal' }

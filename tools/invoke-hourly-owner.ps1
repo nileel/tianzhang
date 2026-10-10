@@ -769,10 +769,13 @@ function Integrate-StateTransition {
     $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-$Mode.json" $Context
     $actionName = if ($Mode -ceq 'PauseDecision') { 'PauseDecision' } elseif ($Mode -ceq 'ResumeReady') { 'ResumeReady' } elseif ($Mode -ceq 'ResolveMaintenanceDecision') { 'ResolveMaintenanceDecision' } else { 'Block' }
     $projectionTaskId = if ($Mode -ceq 'ResolveMaintenanceDecision') { [string]$Context.taskId } else { [string]$Run.taskId }
-    $projection = Invoke-JsonTool $taskStatePath @('-Action', $actionName, '-RepositoryRoot', $worktree, '-TaskId', $projectionTaskId, '-ContextPath', $contextPath) 'hourly_state_projection_failed'
-    if ([string]$projection.status -cne 'updated') { Stop-Hourly 'hourly_state_projection_failed' }
+    $projection = Invoke-JsonTool $taskStatePath @('-Action', $actionName, '-RepositoryRoot', $worktree, '-TaskId', $projectionTaskId, '-ContextPath', $contextPath) 'hourly_state_projection_failed' -AllowedExitCodes @(0, 1)
+    if ([string]$projection.status -cne 'updated') {
+      if ($Mode -ceq 'ResumeReady' -and [string]$projection.detailCode -cmatch '^checkpoint_scope_[a-z_]+$') { Stop-Hourly ([string]$projection.detailCode) }
+      Stop-Hourly 'hourly_state_projection_failed'
+    }
     $paths = @($projection.changedPaths | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    $stateText = if ($Mode -ceq 'PauseDecision') { 'pending_decision' } elseif ($Mode -ceq 'ResumeReady') { 'ready' } elseif ($Mode -ceq 'ResolveMaintenanceDecision') { [string]$projection.dispatchState } else { 'blocked' }
+    $stateText = if ($Mode -ceq 'PauseDecision') { 'pending_decision' } elseif ($Mode -cin @('ResumeReady', 'ResolveMaintenanceDecision')) { [string]$projection.dispatchState } else { 'blocked' }
     $formalHead = Invoke-Finalizer $worktree @{
       ExpectedPaths = $paths -join '|'; CommitMessage = "chore($($Run.taskId)): set automation state $stateText"
       RequireAutomationMetadata = $true; AutomationTask = [string]$Run.taskId; AutomationState = 'completed'
@@ -1437,7 +1440,10 @@ try {
       }
       $answered = if ($null -eq $final) { Find-AnsweredCheckpoint } else { [ordered]@{ status = 'none' } }
       $restored = $null
-      if ([string]$answered.status -ceq 'answered') { $restored = Restore-AnsweredCheckpoint $answered }
+      if ([string]$answered.status -ceq 'answered') {
+        $restored = Restore-AnsweredCheckpoint $answered
+        if ([string]$restored.status -cne 'restored') { $final = $restored }
+      }
       elseif ([string]$answered.status -ceq 'attention_required') { $final = $answered }
       $selection = $null
       if ($null -eq $final) {
@@ -1542,6 +1548,12 @@ try {
             $final = $transition
           }
           'blocked' {
+            if ($null -ne $resumeContext) {
+              # Replayed evidence is still the initial state; retain it rather than requiring a clean state-transition worktree.
+              Set-Attention $run "$($script:adapter.identity) responsibility ended with blocked/$([string]$candidate.detailCode)"
+              $final = [ordered]@{ status = 'attention_required'; owner = $Owner; taskId = $run.taskId; runId = $run.runId; detailCode = [string]$candidate.detailCode }
+              break
+            }
             $context = New-StateTransitionContext -Run $run -Mode Block -Candidate $candidate
             $transition = Integrate-StateTransition -Run $run -Mode Block -Context $context
             $run.canonicalBranch = [string]$transition.stateBranch

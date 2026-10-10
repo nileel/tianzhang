@@ -207,6 +207,7 @@ if ($prompt.Contains('[TZG_DEEPSEEK_WINDOWS_CANARY]')) {
     options = @(@{ key = 'A'; label = 'Option A' }, @{ key = 'B'; label = 'Option B' }, @{ key = 'C'; label = 'Option C' }); recommendedOption = 'A'
     impactSummary = 'fixture'; plainSummary = [ordered]@{ situation = 'fixture'; impact = 'fixture'; action = 'fixture' }
   }
+  foreach ($option in $decisionTerminal.options) { $option.targetState = 'ready'; $option.expectedPaths = @('fixtures/business.txt'); $option.taskBody = '# complete fixture task' }
   Assert-True (Test-ConditionalRequiredSchema -Schema $terminalSchema -Terminal $decisionTerminal) 'Decision terminal schema rejected its full contract'
   $schemaJson = $terminalSchema | ConvertTo-Json -Depth 50 -Compress
   Assert-True (Test-Json -Json ($completedTerminal | ConvertTo-Json -Depth 20 -Compress) -Schema $schemaJson) 'Complete schema rejected valid finalizer metadata'

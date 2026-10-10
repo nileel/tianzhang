@@ -1,0 +1,31 @@
+# 决策恢复范围冻结修复 · 2026-10-10
+
+## 授权与根因
+
+- 负责人在本轮明确授权：最小修复决策恢复、重新冻结范围与预检、修正 checkpoint 脏工作树误判、验证完整链路并恢复 U-COMBAT-AP2-GROWTH-01。
+- 失败 run：b5fd5bc2-999d-49e6-983f-675c6c078c23。原始 CLI 终态为 blocked/approved_scope_not_refrozen；wrapper 覆盖为 codex_failed_dirty_worktree。
+- DEC-20261010-CD28FDC451DE4D 的 A 已接受，但 ResumeReady 只修改调度投影，未落实获批的三个战斗路径。模型没有实施业务或创建 candidate。
+- 现场唯一暂存文件为该任务验证记录，index、工作文件和 checkpoint 6fa95e6fd3a61a695710f2e99330918562dd1ca2 的 Git blob 均为 2d6f2a1c07b28eaba20fbf23073eba0555138378；HEAD 等于冻结 base 5efa63b0f0db916e2f35e2c5451a3f6fcfe1b5c5。
+
+## 已批准的最小实现
+
+- 沿用现有 option、ResumeReady、状态 worktree 和 schema 5；不新增执行器、runtime 状态、重试或自动推断路径。
+- 普通 checkpoint 选项携带 targetState、完整 expectedPaths、完整 taskBody。两端 wrapper 保留该合同；未批准前业务白名单仍为原卡。
+- ResumeReady 仅应用选中合同，先准备仍未入队的任务卡，再调用唯一风险预检并写入 schema 2 投影，最后检查任务投影并提交 ready；blocked 选项不入队。准备失败精确恢复原任务卡、队列和对应 backlog，保留原始 checkpoint_scope_* 原因。
+- 缺少合同的旧决策、自定义回复不猜范围，由人工按已批准事实准备。本次只补齐已经选中的 A，不代替负责人选择其他方案。
+- wrapper 比较启动与失败终态的 index tree、未暂存二进制 diff 和完整 Git 状态；原样重放不是新业务修改，新增文件或同路径内容变化仍拒绝。重放后的 blocker 保留证据和原始原因，不强行执行要求干净工作树的状态提交。
+
+## 验证
+
+- test-hourly-decision-checkpoint：通过。验证新增路径与正文落卡、新路径触发风险重新匹配、预检失败无部分 ready、缺合同与非法路径拒绝、C 不入队。
+- test-invoke-codex-candidate：首轮完整套件通过，包括原 checkpoint 的 blocked/failed 保留真实 detailCode，以及未暂存篡改、已暂存篡改、新 untracked 文件仍被拒绝。
+- test-invoke-codex-candidate -ResumeOnly：完整恢复夹具，真实状态脚本、风险 matcher、ClaimRun、checkpoint 重放和 wrapper；仅模型进程由确定性夹具替代，断言新授权文件实际进入 candidate，不能只以 ready 投影判通过。
+- test-invoke-deepseek-responsibility、test-hourly-experience-preflight、test-hourly-attention-notification：通过。
+- 修复测试夹具中过期 schema 1 ready 输入；克隆的长临时路径 fixture 显式开启 core.longPaths。生产工作流未引入长路径兼容分支。
+- 编译/Unity/BattleSim 不在本次工作流修复验证范围；原业务任务恢复后仍须按任务卡完成自身验证。
+
+## 恢复记录
+
+- 修复期间 Codex automation 已暂停；DeepSeek automation 原本已暂停，保持其原状态。
+- 旧失败 worktree 和原始 checkpoint 保留，未通过删除现场来消除报错。
+- 真实 Canary、正式集成和重新执行的结果在完成后追加。
