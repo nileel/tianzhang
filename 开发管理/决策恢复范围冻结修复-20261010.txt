@@ -28,4 +28,8 @@
 
 - 修复期间 Codex automation 已暂停；DeepSeek automation 原本已暂停，保持其原状态。
 - 旧失败 worktree 和原始 checkpoint 保留，未通过删除现场来消除报错。
-- 真实 Canary、正式集成和重新执行的结果在完成后追加。
+- 修复提交 3db3d72a 已通过 invoke-project-integration 的同一排他锁 fast-forward 到 master。
+- 首次从嵌套手动 worktree 发起的两个 Canary 均在 worktree 创建阶段失败，未启动模型；从主工作区正式入口重做。Codex 真实 Canary 已 verified（gpt-6-astra），privateState=isolated，主工作区 HEAD 与状态未变，探针自动清理成功。
+- DeepSeek 真实 Canary 未 verified：approvedLocalGatewayConfigured=false，15721 端口无监听。没有修改其配置或反复重试，保持原有 PAUSED；两个 wrapper 的确定性测试均通过。
+- 旧失败 run 在再次核对进程、base/HEAD、branch、唯一初始暂存记录和空 candidate/canonical 后，按 CompleteRun 的 failed/ExpectedRecoveryReason 精确合同关闭，原失败 worktree 保留。没有发送任务成功通知。
+- 本轮人工仅为已批准 A 补齐三个新增路径与完整任务正文，把任务送回原决策待应用位置；保留原 decisionId、checkpoint、已接受回复及其 evidenceHash。后续正式入口消费同一 A，先重新冻结与预检再启动新 run，不重复发决策。
