@@ -601,6 +601,33 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-015.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-11"
+    },
+    {
+      "id": "EXP-UNITY-016",
+      "title": "战斗动作预览摘要须量化拒绝原因可见性",
+      "preflightSummary": "扩展战斗动作预览摘要时，量化摘要高度、滚动视口和拒绝原因的最终屏幕边界，并在目标分辨率验证无需滚动。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs"
+      ],
+      "textPatterns": [
+        "CombatActionPreviewView",
+        "ActionPreview",
+        "SwapSpell",
+        "拒绝原因"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-016.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
     }
   ],
   "gates": []

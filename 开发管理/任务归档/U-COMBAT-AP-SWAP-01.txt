@@ -102,8 +102,8 @@
 ### CAND-U-COMBAT-AP-SWAP-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-89914547D4CE
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-016
 - 经验领域：unity
 - 现象：新动作增加槽位/次数说明后，正式预览的拒绝原因落在滚动视口下方。
 - 已证实根因：换术复用攻击摘要并重复冷却说明及无关伤害信息，使文本preferredHeight=122.284超过viewport height=99.90。

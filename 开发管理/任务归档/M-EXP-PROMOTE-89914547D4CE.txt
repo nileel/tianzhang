@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP-SWAP-01/CAND-U-COMBAT-AP-SWAP-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：Codex 独立核验 CAND-U-COMBAT-AP-SWAP-01-01 的正式运行时尺寸、两种分辨率截图及测试证据；既有 active 经验未覆盖动作预览滚动视口内的拒绝原因可见性，故创建 EXP-UNITY-016 并登记为 active。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP-SWAP-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -64,6 +64,13 @@
 ## 完成条件
 
 - 候选以 promoted／duplicate／rejected 之一真实闭环；来源候选、整理归档、风险索引／经验卡按所选终态一致。
+
+## 完成记录（2026-10-11）
+
+- 结论：promoted。来源候选的 `preferredHeight`、视口高度、最终屏幕角点、两种分辨率截图及 PlayMode 8/8 直接证明风险；现有 `EXP-UNITY-015` 只覆盖固定尺寸动作条按钮的费用文字，不覆盖滚动动作预览中的拒绝原因，故不重复。
+- 已以预留 ID 创建 `EXP-UNITY-016`，仅登记精确预览路径与文本触发条件；没有新增门禁，因现有证据尚不足以形成稳定的确定性检查器。
+- 模型协作：本轮是单一候选的证据对照、重复边界和固定格式登记，语义明确且验收可由现有记录完成；沿用入口 gpt-5.6-terra 单模型，未启动辅助模型或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-UNITY-016`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。
 
 ## 停止条件
 
