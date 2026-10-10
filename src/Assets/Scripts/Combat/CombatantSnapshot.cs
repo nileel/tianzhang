@@ -182,7 +182,10 @@ namespace TianZhang.Combat
         internal bool OwnTurnActive { get; private set; }
         private readonly Dictionary<string, string> abilityInstanceIds;
         private Dictionary<string, (int count, int remaining)> refunds = new Dictionary<string, (int, int)>(StringComparer.Ordinal);
-        private readonly List<CombatOwnTurnStatus> statuses = new List<CombatOwnTurnStatus>();
+        private List<CombatOwnTurnStatus> statuses = new List<CombatOwnTurnStatus>();
+        private Dictionary<string, int> committedAbilityUses = new Dictionary<string, int>(StringComparer.Ordinal);
+        internal int CommittedBasicAttackUses { get; private set; }
+        internal IReadOnlyDictionary<string, int> CommittedAbilityUses => committedAbilityUses;
         public IReadOnlyList<CombatOwnTurnStatus> Statuses => statuses.AsReadOnly();
         public bool HasStatus(CombatStatusKind kind) => statuses.Exists(status => status.Kind == kind);
 
@@ -242,6 +245,8 @@ namespace TianZhang.Combat
             OwnTurnsStarted = checked(OwnTurnsStarted + 1);
             IsGuarding = false;
             HasMovedThisTurn = false;
+            CommittedBasicAttackUses = 0;
+            committedAbilityUses.Clear();
             foreach (CombatOwnTurnStatus status in statuses)
                 if (status.DamagePerStart > 0) ReceiveDamage(status.DamagePerStart);
             if (!IsAlive) return false;
@@ -361,6 +366,16 @@ namespace TianZhang.Combat
         public string GetAbilityInstanceId(string profileId) =>
             abilityInstanceIds.TryGetValue(profileId, out string instance) ? instance : Id + ":" + profileId;
 
+        internal int GetCommittedUseCount(CombatCommandKind kind, string profileId) =>
+            kind == CombatCommandKind.BasicAttack ? CommittedBasicAttackUses :
+            committedAbilityUses.TryGetValue(GetAbilityInstanceId(profileId), out int count) ? count : 0;
+
+        internal void RecordCommittedUse(CombatCommandKind kind, string profileId, int count)
+        {
+            if (kind == CombatCommandKind.BasicAttack) CommittedBasicAttackUses = count;
+            else committedAbilityUses[GetAbilityInstanceId(profileId)] = count;
+        }
+
         /// <summary>Private preparation copy; no prepared result is published before the command gate commits.</summary>
         internal CombatantSnapshot CopyForResolution()
         {
@@ -368,6 +383,9 @@ namespace TianZhang.Combat
             copy.cooldowns = new Dictionary<string, int>(cooldowns, StringComparer.Ordinal);
             copy.equippedArtProfileIds = new List<string>(equippedArtProfileIds);
             copy.refunds = new Dictionary<string, (int, int)>(refunds, StringComparer.Ordinal);
+            copy.committedAbilityUses = new Dictionary<string, int>(committedAbilityUses, StringComparer.Ordinal);
+            copy.statuses = statuses.ConvertAll(status => new CombatOwnTurnStatus(status.Kind,
+                status.RemainingOwnTurnEnds, status.DamagePerStart, status.DeferCurrentEnd));
             return copy;
         }
 
@@ -379,6 +397,8 @@ namespace TianZhang.Combat
             IsGuarding = prepared.IsGuarding; HasMovedThisTurn = prepared.HasMovedThisTurn;
             Position = prepared.Position; Facing = prepared.Facing; CombatSwapsUsed = prepared.CombatSwapsUsed;
             cooldowns = prepared.cooldowns; equippedArtProfileIds = prepared.equippedArtProfileIds;
+            statuses = prepared.statuses;
+            // Payment, refund and successful-use ledgers belong to the command gate, not the effect copy.
             if (!IsAlive) { IsGuarding = false; ClearActionPoints(); }
         }
 

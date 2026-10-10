@@ -979,7 +979,7 @@ namespace TianZhang.Tests.EditMode
                 new[] { CreateSpiritRecoveryProfile() },
                 new FixedRangeQuery(true, enforceDeclaredRange: true),
                 new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) },
-                factor);
+                factor, CombatActionPointKernelTests.Rules());
             var service = new CombatCommandService();
             service.AdvanceUntilAction(session);
             int tick = session.TurnScheduler.CurrentTick;
@@ -1428,7 +1428,8 @@ namespace TianZhang.Tests.EditMode
                 new CombatAttackProfile("basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, physicalMultiplier: 1f),
             },
                 query,
-                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) },
+                ruleSet: CombatActionPointKernelTests.Rules());
         }
 
         private static CombatantSnapshot CreateCombatant(

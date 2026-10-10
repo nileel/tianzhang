@@ -8,7 +8,7 @@ namespace TianZhang.Combat
     {
         internal CombatCommandPreview(CombatSession session, CombatCommand command, CombatActionResult validation,
             int cost, int minimum, int spirit, int penalty, int cooldown, CombatActionEconomyModifier modifier,
-            string facts, bool remains, CombatTurnPreview turn)
+            string facts, bool remains, CombatTurnPreview turn, int baseNetCost, bool repeats, int count, int multiplier)
         {
             Session = session; Command = command; Validation = validation; ActionPointCostUnits = cost;
             MinimumNetCostUnits = minimum; SpiritCost = spirit; CtPenalty = penalty; ReuseCooldownTicks = cooldown;
@@ -17,6 +17,12 @@ namespace TianZhang.Combat
             ItemHealthRecovery = ItemResource?.HealthRecovery ?? 0;
             ExpectedHealthRecovery = ActorHealthRecovery(session, command, ItemHealthRecovery);
             Modifier = modifier; Facts = facts; RemainsInTurn = remains; Turn = turn;
+            BaseNetCostUnits = baseNetCost; AppliesRepeatCost = repeats;
+            CommittedUseCount = count; RepeatMultiplierPermille = multiplier;
+            RuleSetVersion = session.RuleSet?.RuleSetVersion ?? string.Empty;
+            RuleSetSourceDigest = session.RuleSet?.SourceDigest ?? string.Empty;
+            AbilityTierId = session.TryGetProfile(command.ProfileId, out var profile)
+                ? profile.RuleMetadata?.Tier.AbilityTierId ?? string.Empty : string.Empty;
             TurnSequence = session.TurnSequence; StateVersion = session.StateVersion;
             MovementEfficiencyMilliUnits = session.Combatants.TryGet(command.ActorId, out var actor) ? actor.MovementEfficiencyMilliUnits : 0;
             AbilityInstanceId = actor == null || command.ProfileId.Length == 0 ? string.Empty : actor.GetAbilityInstanceId(command.ProfileId);
@@ -25,6 +31,8 @@ namespace TianZhang.Combat
         internal CombatCommand Command { get; }
         internal CombatActionEconomyModifier Modifier { get; }
         internal string Facts { get; }
+        internal int BaseNetCostUnits { get; }
+        internal bool AppliesRepeatCost { get; }
         internal string EquipmentFacts { get; }
         internal CombatItemResource ItemResource { get; }
         public string ItemId => Command.ItemId;
@@ -54,6 +62,11 @@ namespace TianZhang.Combat
         public int CtPenalty { get; }
         public int ReuseCooldownTicks { get; }
         public string AbilityInstanceId { get; }
+        public int CommittedUseCount { get; }
+        public int RepeatMultiplierPermille { get; }
+        public string RuleSetVersion { get; }
+        public string RuleSetSourceDigest { get; }
+        public string AbilityTierId { get; }
         public System.Collections.Generic.IReadOnlyList<HexCoord> MovementPath => Validation.MovementPath;
         public System.Collections.Generic.IReadOnlyList<SpatialMovementEdgeCost> MovementEdges => Validation.MovementEdges;
         public int UnitsPerRange => Validation.UnitsPerRange;
@@ -111,6 +124,28 @@ namespace TianZhang.Combat
             }
             if (actor != null && command.Kind == CombatCommandKind.SwapSpell)
                 cooldown = Math.Max(actor.GetCooldown(command.ProfileId), cooldown);
+            int baseNetCost = cost, count = 0, multiplier = 1000;
+            bool repeats = actor != null && cooldown == 0 &&
+                command.Kind is (CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
+                session.TryGetProfile(command.ProfileId, out _);
+            if (repeats)
+            {
+                count = actor.GetCommittedUseCount(command.Kind, command.ProfileId);
+                if (session.RuleSet == null)
+                    validation = CombatActionResult.Rejected("combat_rule_set_missing");
+                else
+                {
+                    var rules = session.RuleSet.Global;
+                    multiplier = count switch
+                    {
+                        0 => rules.RepeatFirstPermille, 1 => rules.RepeatSecondPermille,
+                        2 => rules.RepeatThirdPermille, _ => rules.RepeatCappedPermille,
+                    };
+                    try { cost = checked((int)(((long)baseNetCost * multiplier + 999L) / 1000L)); }
+                    catch (OverflowException) { validation = CombatActionResult.Rejected("combat_effect_overflow"); }
+                }
+                if (count == int.MaxValue) validation = CombatActionResult.Rejected("combat_effect_overflow");
+            }
             if (validation.Succeeded && actor.ActionPointsRemainingUnits < cost)
                 validation = CombatActionResult.Rejected("action_points_insufficient");
             if (validation.Succeeded && session.StateVersion >= long.MaxValue - 2)
@@ -119,11 +154,11 @@ namespace TianZhang.Combat
                 validation = CombatActionResult.Rejected("combat_ct_penalty_overflow");
             bool terminal = command.Kind is CombatCommandKind.Wait or CombatCommandKind.EndTurn;
             bool remains = validation.Succeeded && !terminal && actor.ActionPointsRemainingUnits - cost +
-                actor.QuoteRefund(modifier, cost, minimum, actor.ActionPointsRemainingUnits - cost) > 0;
+                actor.QuoteRefund(modifier, baseNetCost, minimum, actor.ActionPointsRemainingUnits - cost) > 0;
             CombatTurnPreview turn = validation.Succeeded ? session.TurnScheduler.PreviewTurnEnd(command.ActorId,
                 session.PendingCtPenalty + penalty, command.Kind == CombatCommandKind.Wait, session.Combatants.All) : null;
             return new CombatCommandPreview(session, command, validation, cost, minimum, spirit, penalty, cooldown,
-                modifier, Facts(session), remains, turn);
+                modifier, Facts(session), remains, turn, baseNetCost, repeats, count, multiplier);
         }
 
         /// <summary>Immediate authority requests form a fresh quote and commit it without yielding.</summary>
@@ -156,6 +191,9 @@ namespace TianZhang.Combat
             CombatCommandPreview current = Preview(session, command);
             if (!current.IsLegal) return current.Validation;
             if (quote.ActionPointCostUnits != current.ActionPointCostUnits || quote.MinimumNetCostUnits != current.MinimumNetCostUnits ||
+                quote.CommittedUseCount != current.CommittedUseCount || quote.RepeatMultiplierPermille != current.RepeatMultiplierPermille ||
+                quote.AbilityInstanceId != current.AbilityInstanceId || quote.AbilityTierId != current.AbilityTierId ||
+                quote.RuleSetVersion != current.RuleSetVersion || quote.RuleSetSourceDigest != current.RuleSetSourceDigest ||
                 quote.SpiritCost != current.SpiritCost || quote.CtPenalty != current.CtPenalty || quote.ReuseCooldownTicks != current.ReuseCooldownTicks ||
                 quote.UnitsPerRange != current.UnitsPerRange || !quote.MovementPath.SequenceEqual(current.MovementPath) ||
                 !quote.MovementEdges.SequenceEqual(current.MovementEdges))
@@ -166,13 +204,15 @@ namespace TianZhang.Combat
             catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
             if (!result.Succeeded) return result;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
-            int quotedRefund = actor.QuoteRefund(current.Modifier, current.ActionPointCostUnits, current.MinimumNetCostUnits,
+            int quotedRefund = actor.QuoteRefund(current.Modifier, current.BaseNetCostUnits, current.MinimumNetCostUnits,
                 actor.ActionPointsRemainingUnits - current.ActionPointCostUnits);
             apply = () =>
             {
                 actor.SpendActionPoints(current.ActionPointCostUnits);
                 commit();
-                actor.RefundActionPoints(current.Modifier, current.ActionPointCostUnits, current.MinimumNetCostUnits);
+                if (current.AppliesRepeatCost)
+                    actor.RecordCommittedUse(command.Kind, command.ProfileId, current.CommittedUseCount + 1);
+                actor.RefundActionPoints(current.Modifier, current.BaseNetCostUnits, current.MinimumNetCostUnits);
                 if (command.Kind == CombatCommandKind.Wait)
                 { session.TurnScheduler.Wait(actor.Id); session.FinishTurn(); }
                 else if (command.Kind == CombatCommandKind.EndTurn) EndTurn(session, actor.Id);
@@ -225,6 +265,8 @@ namespace TianZhang.Combat
             string.Join("|", actor.Id, actor.Position, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
                 actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing,
                 actor.BasicAttackProfileId, actor.CombatSwapsUsed, actor.GongFaId, actor.GongFaElement,
+                actor.CommittedBasicAttackUses,
+                string.Join(",", actor.CommittedAbilityUses.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + ":" + pair.Value)),
                 actor.ShouyiStacks, actor.FudanStacks, actor.LeijieStacks, actor.BlockRate, actor.BlockReduction,
                 actor.SoulShieldRate, actor.SoulShieldReduction, actor.DodgeRate, actor.CriticalRate, actor.CriticalDamage,
                 actor.HitRateBonus, string.Join(",", actor.EquippedArtProfileIds), string.Join(",", actor.EquippedDivineProfileIds),

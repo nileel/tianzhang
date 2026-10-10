@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "U-COMBAT-AP2-REPEAT-01",
@@ -7,10 +7,10 @@
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
-  "stage": "implementation",
-  "dispatchState": "ready",
+  "stage": "verification",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "CONFIG已于2dfd3aa4正式完成；已核对共享规则、直接消费者、精确路径及风险预检，按冻结合同进入ready。",
+  "stateReason": "零冷却主动重复费报价与实付闭环；125个不同定向功能用例通过，证据见同ID验证记录。",
   "expectedPaths": [
     "src/Assets/Scripts/Combat/CombatCommandService.cs",
     "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
@@ -85,3 +85,9 @@
 
 - CONFIG归档与master提交2dfd3aa4一致，无同ID活跃卡冲突；直接前置已解除。现有单一结果、所有者、expectedPaths、验证与停止条件继续适用。风险预检matched/mustRead/gates均为空，schema 2投影一致。执行前仍按当前卡重新预检。
 - 已定位CombatCommandService.Preview/Prepare、CombatantSnapshot.BeginOwnTurn/GetAbilityInstanceId/CopyForResolution/CommitResolvedState及CombatSession.RuleSet。global重复倍率与版本摘要已由CONFIG注入；现有路径足以承接报价、账本、提交及内核测试，无需新配置或第二事务入口。有界但强耦合，沿gpt-6.1-sol/high单主责，不拆写入。
+
+## 2026-10-10 完成记录
+
+- 同一根命令按真实实例/角色普攻次数报价和成功计数，20AP序列20/20/25/30封顶；有限返还不抵消附加费，取消/拒绝不计、合法未命中计，下一本人回合重置。
+- 原生Unity编译成功；行动力内核38/38、运行时内核68/68、固定档承载19/19通过，首轮两处新测试夹具失败及最小修正如实见开发管理/U-COMBAT-AP2-REPEAT-01-验证记录.txt。
+- gpt-6.1-sol单一主责，未改模拟器或生产数据，未签角色平衡、界面显示或最终场景体验。仅归档本卡并移除自身队列/backlog行，下游具名前置引用保留等待正式master结果后的QueueMaintenance。

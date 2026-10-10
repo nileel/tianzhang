@@ -1,0 +1,47 @@
+# U-COMBAT-AP2-REPEAT-01 验证记录
+
+## 执行身份与边界
+
+- 日期：2026-10-10；TaskId：U-COMBAT-AP2-REPEAT-01；RunId：849fbfc2-81ee-4947-a48a-063724546583；基线：50034db0f45bf92b45b3795a67f9f9f524a03996。
+- 共享入口启动证明与卡头executionModel均为gpt-6.1-sol，主模型保持该值。报价、准备与提交是同一有界事务，无独立复杂诊断工作面，按卡头模型协作采用单主责，未调用辅助或第二责任会话。
+- 初始git status --short为空；仅当前owner worktree实施。共享入口已核验绑定本run/task及卡/索引digest的风险结果，matched/notice/mustRead/gatePointers均为空，与schema 2投影一致。未改变路径、所有者、路线、外部调用者或任务结果边界。
+- 事实源：批准设计第5、9节；境界行动力成长配置合同第五节；现行CombatCommandService、CombatantSnapshot、CombatSession及直接Resolver/EncounterCoordinator/CombatEntryAdapter调用。
+
+## 根因与实现
+
+- CONFIG已将global重复乘数注入Session.RuleSet，但Preview只做基础减耗，Snapshot没有成功次数账本，因此第三次及之后仍报基础费。
+- 普攻使用角色独立计数；术法/神通沿既有真实GetAbilityInstanceId计数，同实例表现共键，不增加未知实例fallback。仅解析后CD为0的主动攻击适用；移动、防御、道具、换术、换装和正CD排除。
+- 基础净费B仍按既有减耗/正下限求出，实付C=ceil(B×global倍率/1000)，不复利。有限技术返还以B计算可返上限，重复附加费不增加返还额度；生产修饰来源仍为空。
+- 报价增加CommittedUseCount、RepeatMultiplierPermille、RuleSetVersion、RuleSetSourceDigest、AbilityTierId，继续复核本人回合、状态版本、实例、目标与其他费用/路径事实。次数纳入报价事实，费用/次数溢出及缺规则在效果准备前拒绝。
+- BeginOwnTurn唯一重置次数；准备副本深复制重复账本及状态对象。效果提交不覆盖实付AP、返还和成功次数账本，单一提交门在发布效果后记录一次成功动作；取消准备不发布，合法未命中计数，拒绝/陈旧报价不计。
+- 未新增执行入口、配置机制、生产内容或asmdef。CombatSession原注入边界足够，无需修改该文件。两个原有内核测试直接注入真实配置；纯移动/回合夹具不要求攻击配置，缺配置主动攻击明确拒绝。
+
+## 真实输入与功能证据
+
+- Unity 6000.3.18f1；读取现有CombatRuleSet.asset，规则版本AP-GROWTH@0.1，摘要0acdd4b9ba73ca9cb24917acaff587427ece3c362762aae918eebaca9548ed1f。
+- 20AP的普攻、术法、神通分别验证20/20/25/30及之后封顶；400AP连续14次实付395AP，余5AP拒绝第15次。反复预览不变更余额/次数，也不推进tick或重复本人恢复。
+- 取消准备、无效目标、陈旧/重复报价、MP/AP不足、效果/费用/计数溢出不提交部分状态；合法未命中照付/照计。双队伍独立计数、换目标、移动、换其他招式、同实例换入/换回、换武器不洗次数；下一本人开始重置。已结束但未开启新本人回合时保留原次数。
+- 当前Resolver只提供单目标命令；次数位于根命令提交门，不按Damage结果遍历，Hybrid物理/神魂两个派生结算只计一个根动作。未新增多目标解析器，也未宣称实跑不存在的多目标生产能力。
+- 覆盖1000最小单位的向上取整、最低净费不抵消附加费、基础减耗后再乘倍率、有限返还额度/次数/总预算，以及内存配置参数变体同源摘要。原倍率变体摘要等于生产摘要；真正改倍率时摘要变化。
+- 状态/次数准备副本隔离验证；权威预览、实付、余额及成功次数一致，固定档伤害/效果预算不因重复实付增加。
+
+## 编译与测试
+
+- 在当前worktree通过隐藏Unity进程执行：Unity.exe -batchmode -nographics -projectPath <当前worktree>/src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.CombatActionPointKernelTests;TianZhang.Tests.EditMode.CombatRuntimeKernelTests;TianZhang.Tests.EditMode.CombatAbilityCapacityTests -testResults <当前worktree>/src/Temp/ap2-repeat/editmode.xml -logFile <当前worktree>/src/Temp/ap2-repeat/editmode.log。
+- 首轮原生编译成功，125项中123通过、2失败。运行时内核68/68、固定档承载19/19均通过；两项失败仅来自新夹具的单向棋盘阻断反向攻击及原倍率摘要不变的错误预期。修正测试棋盘为双向和摘要断言，并让计数溢出夹具使用小费用以独立隔离计数边界，没有叠加业务补丁。
+- 最终只复验变化影响的CombatActionPointKernelTests，命令与上轮相同但testFilter仅此类，输出src/Temp/ap2-repeat/editmode-final.xml及editmode-final.log：Unity exit=0、Passed、38/38、0 failed/skipped。同轮原生编译全部测试程序集，源代码无编译错误。运行时68项和承载19项的相关输入未变，不重复运行；125个不同功能用例均有通过证据。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ValidateResultOnly -ResultXmlPath src/Temp/ap2-repeat/editmode-final.xml通过；独立读取首轮XML核对两套复用fixture均为Passed且0 failed。
+- Unity前后按现有runner方式保存并恢复当前worktree已跟踪Assets/ProjectSettings字节；git status证明无生成资产/场景/设置改动。所有XML、日志和Library/Temp留在本worktree忽略目录，不进入candidate。
+
+## 完成与验证边界
+
+- 仅归档本任务、移除其自身队列及backlog行；其他卡和backlog的具名前置引用继续保留，待正式结果进入master后由QueueMaintenance处理。
+- 未改BattleSim，不重复其构建/运行；本轮是Unity场景功能内核验收，不作角色数值平衡结论。未修改docs/CSV/Unity数据资产，check-data-chain不触发。界面字段显示和最终PlayMode/游戏体验属于后续叶子。
+- 已加载unity-agent-workflows及project-structure-discovery、content-and-systems、ai-workflows、unity-validation、cleanup-and-git参考；读取UNITY_STRUCTURE.md和UNITY_STRUCTURE.runtime.md。运行时所有者链为CombatEntryAdapter→Session规则注入→EncounterCoordinator→CommandService→Snapshot/Resolver；未改未请求系统或跨模块依赖。
+- 本轮现象是冻结新功能尚无消费者，没有新增可复用故障经验候选；不创建空经验章节。
+
+## 管理投影检查
+
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1 -TaskId U-COMBAT-AP2-REPEAT-01 -Postcondition CodexClosedOrNonReady -OutputJson：status=ok、69张活跃卡、readyCount=2、本任务completed。
+- pwsh -NoProfile -ExecutionPolicy Bypass -Command 调用check-review-text.ps1并以数组传入AGENTS.md、CLAUDE.md、开发管理：751文件通过。
+- git diff --check通过；未改变其他队列顺序或下游具名前置，当前9条真实新增/修改/删除路径均在冻结允许集合内。正式提交由指定automation-finalize-commit.ps1门处理暂存与提交元数据，唯一candidate留给共享入口重放。
