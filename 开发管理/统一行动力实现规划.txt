@@ -163,3 +163,24 @@ DAG：RULES→CONTRACT→CONFIG；CONFIG→GROWTH/REPEAT/POTENCY/WEAPON，POTENC
 追加后的关闭条件：原已完成叶证据仍有效、所有11新叶及剩余原功能/发布/场景叶正式完成；最终生产表与新实跑及场景证据同一摘要；创建/恢复/成长、无空手、状态、费用报价实付均闭合；负责人实际体验确认。CLOSE核验全部图后才将自身与父项归档。验证记录见 开发管理/境界行动力成长建卡记录.txt。
 
 - 规则迁移过渡：GameData当前直接解析两份数值模板；RULES保留既有版本/解析表为具名旧输入，新标准置独立段并验证旧投影不变。SIM切换唯一CSV时才启用新数值语义，不允许中途新费用配旧算法。
+
+## 2026-10-10 空手普攻肉身成长追加实施图
+
+负责人已批准普通修士、体修和妖兽恢复空手普攻，基础AP费用与承载随肉身档位成长，并要求补齐任务。本次规划一次建立全部四个已知缺失叶子，复用既有PREVIEW/BALANCE/TUNING/SCENE/CLOSE，不新增父项，不重开已完成WEAPON归档。上方“无空手”是旧版本实施历史；新目标以成长设计第3/10节和本图为准。具体参数由CONTRACT提供试跑候选、BALANCE实际运行定案。
+
+| ID | 独立结果 | 直接前置 | 主责／初始状态 |
+|---|---|---|---|
+| D-COMBAT-UNARMED-CONTRACT-01 | 空手肉身档位、费用承载、绑定保存合同与全部下游精确路径 | 无 | codex／ready |
+| U-COMBAT-UNARMED-CONFIG-01 | 严格schema加载与Unity/BattleSim同源投影支持，不启用正式角色 | CONTRACT、N-COMBAT-AP2-SIM-01 | deepseek／blocked |
+| U-COMBAT-UNARMED-RUNTIME-01 | 正式空手生产内容及创建→成长→保存→战斗完整绑定，含最小生产读取适配 | CONFIG | deepseek／blocked |
+| N-COMBAT-UNARMED-SIM-01 | 全模拟/Stage双入口空手成长行为一致 | RUNTIME、N-COMBAT-AP2-SIM-01 | deepseek／blocked |
+
+本节CONTRACT/CONFIG/RUNTIME分别指上述同前缀新叶。DAG：CONTRACT＋原AP2-SIM→CONFIG→RUNTIME→新UNARMED-SIM→原AP2-BALANCE→原TUNING→原SCENE→原CLOSE→原P-COMBAT-AP-01；RUNTIME→原AP2-PREVIEW→原SCENE。原AP2-BALANCE仍保留原AP2-SIM直接前置；既有其他未完成前置与失败证据不删除。
+
+- 首批ready仅CONTRACT；PREVIEW原“无武器不可普攻”目标已被替代，改等RUNTIME并移出队列，避免继续实现旧资格。现有各卡owner/route不重派；新增冻结合同后的三项实现按当前分工规则由DeepSeek执行，Codex独立复审后才解锁下游。
+- 原AP2-SIM保留pending_decision与完整checkpoint，不替负责人选择特殊效果接口方案。CONFIG依赖其正式完成，是因为原SIM仍消费冻结的四ID输入与旧解析合同；新的输入支持/生产启用在其后执行，防止悄悄改变待选基线。CONTRACT可以先设计，但必须将新合同与该旧实现范围明确隔开，不改旧checkpoint卡。
+- CONFIG只交付严格配置支持和fixture投影；RUNTIME一次启用生产攻击/档位/角色/存档/场景及最小生产读取，不形成只有数据没有绑定的可发布半成品。新SIM完成全模拟/共享入口语义，BALANCE随后统一定案，不另造第二参数源或重复平衡任务。
+- 本轮冻结职责与已知路径；CONTRACT在同一次设计交付中冻结字段/资源ID、补齐所有新生成物及.meta、直接消费者测试和所有相关下游路径并重算风险投影，blocked卡不能据当前基线提前执行。新资源未冻结不写虚构路径，不授权目录通配。
+- 验证分工：CONFIG严格解析/投影；RUNTIME真实创建/成长/保存/入战及石甲兽攻击；SIM双入口逐动作一致；BALANCE强度/频率/敏感性实跑；PREVIEW权威报价与资格；SCENE实际点击与动画时长、正式流程和两分辨率画面；CLOSE统一摘要与负责人体验。旧BasicAttack悬赏未完成失败继续保留，不能用本次设计直接宣称解除。
+- 最终关闭条件：本图四叶全部正式完成、外部独立复审通过，复用各叶验收已覆盖空手新目标且输入摘要一致，既有失败已定位并解决，负责人确认实际操作体验。无固定低费无限承载、换来源清普攻次数、隐式虚拟武器或自动连打兜底。
+- 本轮为管理规划，未实施代码/配表/场景、未进行新平衡实跑。主责单模型统一核对强耦合的任务拓扑与投影，无需子智能体；结构与消费者从源码和UNITY_STRUCTURE索引核对。验证记录见开发管理/空手普攻成长建卡记录.txt。

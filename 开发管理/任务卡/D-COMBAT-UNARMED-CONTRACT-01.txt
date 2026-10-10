@@ -1,0 +1,101 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-COMBAT-UNARMED-CONTRACT-01",
+  "title": "空手普攻肉身成长规则与接入合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "management",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "负责人已批准空手普攻与肉身档位成长方向并要求补齐任务；本卡只冻结接入合同、候选参数和下游精确路径，不实施业务。",
+  "expectedPaths": [
+    "docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md",
+    "开发管理/空手普攻成长接入合同.txt",
+    "开发管理/境界行动力成长配置合同.txt",
+    "开发管理/统一行动力换装合同.txt",
+    "开发管理/统一行动力实现规划.txt",
+    "docs/基础设定/战斗系统.txt",
+    "docs/基础设定/设定事实速查.txt",
+    "docs/角色养成/功法数值模板.txt",
+    "docs/角色养成/养成事实速查.txt",
+    "docs/道具/武器/铁剑.txt",
+    "docs/道具/武器/铁刀.txt",
+    "docs/道具/道具事实速查.txt",
+    "docs/怪物/关陇玄域/石甲兽.txt",
+    "docs/怪物/怪物事实速查.txt",
+    "开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt",
+    "开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt",
+    "开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt",
+    "开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt",
+    "开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt",
+    "开发管理/任务卡/D-COMBAT-AP-CLOSE-01.txt",
+    "开发管理/任务卡/P-COMBAT-AP-01.txt",
+    "开发管理/D-COMBAT-UNARMED-CONTRACT-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-COMBAT-UNARMED-CONTRACT-01.txt",
+    "开发管理/任务归档/D-COMBAT-UNARMED-CONTRACT-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# D-COMBAT-UNARMED-CONTRACT-01 · 空手普攻肉身成长规则与接入合同
+
+## 来源与当前边界
+
+- 来源：负责人2026-10-10批准恢复普通修士/体修/妖兽空手普攻，基础AP费用与承载随肉身档位成长，并追问补齐实施任务。事实源为成长设计第3、5、8、10节；本卡不重新请求已经批准的方向。
+- 原子结果：一份可直接执行的空手普攻成长接入合同，附对应L2规则与全部已知下游的字段、路径、依赖、验证和停止条件；父项继续为P-COMBAT-AP-01，不新增可领取父项。
+- 无业务前置；尚未定案的是肉身档位映射、候选参数及接口，由本设计卡完成最小方案。参数仅为试跑候选，最终强度归既有N-COMBAT-AP2-BALANCE-01。
+
+## 必查范围
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md#3/#5/#8/#10；docs/基础设定/战斗系统.txt#八；功法数值模板的境界成长章节；铁剑/铁刀的普攻与保存段；石甲兽的战斗识别。按各L1指针读取对应L2，不读取整个功法目录。
+- 开发管理/境界行动力成长配置合同.txt#三/#四/#五/#七/#八；统一行动力换装合同的资格/主槽位/保存；U-COMBAT-AP2-WEAPON-01完成归档及本次四叶/直接下游活跃卡。N-COMBAT-AP2-SIM-01仅核对现有pending_decision边界，不改checkpoint或替用户选择。
+- 只读核对AttackProfileData.TryValidate、CombatContentImporter.ParseBasicAttackBindingKind/ValidateCharacterBasicAttackBindings、GameData.LoadProductionAttacks；CharacterRuntimeProfile创建/恢复/成长/装备校验、CharacterStateSnapshot、CharacterProgressionRef；GameSaveEnvelope/Serializer、CharacterCreationRules、AdventureUnitSpawner.ResolveBasicAttackBinding、CombatSession普攻授权、EncounterCoordinator.BuildActions/ProjectQuote及直接调用者。
+
+## 实施范围
+
+- 沿现有境界/功法输入明确肉身档位取得与更新来源，冻结凡人/练气/筑基/金丹及石甲兽的空手攻击身份、AP/承载候选、最小费用、取整、CD0/CT0与共享次数。普通修士也有空手攻击；体修强化有显式来源，不凭流派名字送属性，不新增修炼进度系统或具名新功法/多段招式。
+- 冻结装备与空手的选择规则。优先满足无装备可攻击的最小闭环；装备时主动切空手、卸装命令或新收费若需要额外交互裁决，明确留在本次范围外，不使基础空手恢复依赖新装备操作。已有武器费用和承载仍固定档位。
+- 沿唯一配表链确定精确表头/版本、稳定ID、档位映射、生成物/.meta、Unity与BattleSim只读投影；缺失/非法配置拒绝。允许为候选做算术，不宣称平衡；费用/承载随肉身档位一起更新，不能固定低费无限放大伤害。
+- 冻结创角→Character→成长→战斗快照→保存恢复，以及旧unarmed废弃字段的显式迁移、版本和回滚边界；不盲目恢复旧basic_unarmed或修改用户真实档。石甲兽使用自身攻击档案，不装备玩家物品。武器/空手同回合共享计数，换来源不重置、不额外发AP。
+- 更新对应L2与L1指针，旧配置合同注明旧AP2-SIM的冻结实施基线及新增合同的适用边界；新空手目标由本次新增叶承接，不改旧SIM的pending_decision内容、选项或状态。已完成WEAPON归档作为旧规则事实保留。
+- 在同一次合同交付中补齐CONFIG/RUNTIME/SIM及既有PREVIEW/BALANCE/TUNING/SCENE的全部已知expectedPaths和.meta并重算风险投影。CONFIG只支持schema/加载，不启用正式角色；RUNTIME启用生产内容并覆盖最小数据读取兼容；新SIM负责双入口行为一致。不得把原子启用链拆成可发布的半成品，不新拆未知backlog。
+
+## 模型协作
+
+- 跨事实源产品/公共接口合同由Codex主责，executionModel=gpt-6.1-sol，建议high。设计映射、迁移及任务准备强耦合，本卡单主智能体统一裁决，无需辅助；新业务实现叶默认DeepSeek，独立复审归Codex。
+- 执行前核对实际工具与风险正文；只读源码证明接入点，不要求运行Unity或把辅助意见当作平衡证明。
+
+## 验证
+
+- 逐实体对照普通修士/体修/石甲兽的有武器、无武器、成长、旧档、非法引用；核对费用与承载来源唯一，普攻共享计数无清零入口；确认全部新叶及复用叶的职责/路径/依赖完整且无环。
+- 候选参数列明依据和未实跑范围；检查说明、配置入口和逐ID生成物闭合。仅文档与任务检查，不为本卡启动BattleSim平衡或Unity场景。
+
+## 完成条件
+
+- 合同不留阻止实施的字段/映射/保存决定；全部新叶已存在且边界可独立验收，首个满足前置的叶可依法准备ready。L2与L1同步，旧运行事实与新目标明确区分；不以完成设计关闭父项。
+
+## 停止条件
+
+- 若必须新增独立成长系统、装备交互、功法原型，或改变当前批准范围之外的产品语义，停止并说明具体决定；不得用自动连打或通用上限替代费用成长，也不裁决旧SIM的待选特殊原型方案。
+
+## 禁止项
+
+- 只写卡头expectedPaths；blocked卡现有路径是已查明定位基线，新资源及其.meta须由CONTRACT一次冻结到对应卡后才能ready。直接所有者、路径或技术路线变化时先暂停并重新风险预检；若不再原子或需要连续跨边界补丁，停止回交规划，不由执行者逐张拆卡。
+- 不新增虚拟武器、独立肉身等级系统、自动连打、自动连招或通用攻击次数上限；不修改原个人回合/tick、重复费用乘数、物品发放或武器固定档位。不操作用户真实存档，不借缺配置补通用徒手或无限承载。
+- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；外部责任方不改任务卡/队列/backlog，不自审，不集成。外部结果经Codex独立复审正式归档后才解除下游依赖；Codex任务由主责统一复核及收口。
+- 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
+- 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
+- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。

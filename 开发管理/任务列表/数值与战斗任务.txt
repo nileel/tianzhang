@@ -4,6 +4,8 @@
 
 ## 当前事实
 
+- 2026-10-10空手修订：已完整建立CONTRACT/CONFIG/RUNTIME/SIM四项新叶，复用AP2预览/平衡/回填/场景/闭环；CONTRACT首批ready，PREVIEW改等新RUNTIME并退出队列。原AP2-SIM的pending_decision/checkpoint保持；具体拓扑见统一行动力实现规划的空手追加图。仅建卡，未实现或定案。
+
 - 2026-10-10：U-COMBAT-AP2-REPEAT-01完成零冷却主动的同源重复报价、成功次数及事务提交；原生Unity编译成功，行动力内核38/38、运行时内核68/68和固定档承载19/19通过。本卡已归档，下游具名前置保留待正式master结果后的QueueMaintenance；不代表新方案平衡或最终场景完成。
 
 - 2026-10-10非前置卡点核查：补齐STATUS/BALANCE/TUNING/WEAPON/SCENE的已证实路径与职责缺口；POTENCY完成后STATUS转ready，按本次等待时间插入既有三项之后，队列为GROWTH→REPEAT→WEAPON→STATUS。现存正式场景测试的过期断言/操作假设单独修复并实跑，范围、证据和最终体验确认边界见开发管理/统一行动力非前置卡点核查.txt；不提前完成其他叶子。
@@ -42,9 +44,13 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
+| D-COMBAT-UNARMED-CONTRACT-01 | P1 | codex | 已排队 | — | 空手普攻肉身成长规则与接入合同 | 开发管理/任务卡/D-COMBAT-UNARMED-CONTRACT-01.txt |
+| U-COMBAT-UNARMED-CONFIG-01 | P1 | deepseek | 阻塞 | D-COMBAT-UNARMED-CONTRACT-01、N-COMBAT-AP2-SIM-01 | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
+| U-COMBAT-UNARMED-RUNTIME-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-CONFIG-01 | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
+| N-COMBAT-UNARMED-SIM-01 | P1 | deepseek | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01、N-COMBAT-AP2-SIM-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
 | N-COMBAT-AP2-SIM-01 | P1 | codex | 待决定 | — | BattleSim双入口境界行动经济迁移 | 开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt |
-| N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
-| U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 已排队 | — | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
+| N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-SIM-01、N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
+| U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
 | U-COMBAT-AP-TUNING-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-BALANCE-01 | 行动力已验证参数回填生产链 | 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt |
 | U-COMBAT-AP-SCENE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-TUNING-01、U-COMBAT-AP2-PREVIEW-01 | 统一行动力正式场景最终验收 | 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt |
 | D-COMBAT-AP-CLOSE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-SCENE-01、N-COMBAT-AP2-BALANCE-01 | 统一行动力交付闭环与父项关闭 | 开发管理/任务卡/D-COMBAT-AP-CLOSE-01.txt |

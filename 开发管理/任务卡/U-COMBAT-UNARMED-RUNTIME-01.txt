@@ -1,0 +1,123 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-UNARMED-RUNTIME-01",
+  "title": "空手普攻角色成长保存与正式战斗接入",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "unity",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-UNARMED-CONFIG-01"
+  ],
+  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
+    "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
+    "src/Assets/Scripts/Modules/Content/CharacterData.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationCatalog.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+    "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+    "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+    "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "src/Assets/Scripts/Combat/EnemyAI.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/DataConfig/Characters.csv",
+    "src/Assets/DataConfig/Enemies.csv",
+    "src/Assets/DataConfig/Language.csv",
+    "src/Assets/Data/CombatRuleSet.asset",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "tools/check-data-chain.ps1",
+    "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/DataConfig/AttackProfiles.csv.meta",
+    "src/Assets/DataConfig/Characters.csv.meta",
+    "src/Assets/DataConfig/Enemies.csv.meta",
+    "src/Assets/DataConfig/Language.csv.meta",
+    "src/Assets/Data/CombatRuleSet.asset.meta",
+    "src/Assets/Data/ContentCatalog/ContentCatalog.asset.meta",
+    "src/Assets/Scenes/AdventureScene.unity.meta",
+    "开发管理/U-COMBAT-UNARMED-RUNTIME-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt",
+    "开发管理/任务归档/U-COMBAT-UNARMED-RUNTIME-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-UNARMED-RUNTIME-01 · 空手普攻角色成长保存与正式战斗接入
+
+## 来源与当前边界
+
+- 原子结果：合同定义的普通修士/体修与石甲兽，在创建、肉身档位更新、保存恢复和正式入战后均有正确的空手攻击绑定、费用及承载。生产内容与全部拒绝旧徒手的真实消费者在同一candidate启用，不发布只加CSV却无法入战的中间态。
+- 只消费CONTRACT与CONFIG正式结果；已完成WEAPON归档不改写。当前路径仅是已证实基线，具体攻击ID/资产及.meta由CONTRACT冻结后才能ready。
+
+## 必查范围
+
+- 空手普攻成长接入合同的角色映射、档位更新、保存/版本、内容ID和验证矩阵；角色/石甲兽直接L2，不用旧basic_unarmed值代替新参数。
+- CharacterRuntimeProfile.CreatePlayer/CreateEnemy/Restore及成长/装备所有者、CharacterStateSnapshot/CharacterProgressionRef、GameSaveEnvelope/Serializer；CharacterCreationRules/Catalog及直接调用者。
+- Character/Settlement/CombatContentImporter、AttackProfiles/Characters/Enemies与实际生成物；AdventureSceneBuilder→AdventureUnitSpawner.ResolveBasicAttackBinding→CombatEntryAdapter→CombatSession授权/CombatLegalActionService；EnemyAI现有合法选招。GameData与GuanzhongPlaytestAudit的生产集合/旧basic_unarmed丢弃逻辑。
+
+## 实施范围
+
+- 一次启用合同冻结的生产攻击/角色档位映射、正式catalog与场景引用，普通修士与体修无需武器也能攻击，石甲兽使用自己的身体攻击；不添加背包武器，不改已合法装备的资格/库存/固定档位。
+- 空手费用和承载从同一权威肉身档位派生，覆盖创建、现有成长入口、快照及恢复；仅按合同处理旧废弃槽/保存版本，非法或缺少来源失败，不手改真实存档或发装备。改变档位不补当回合AP、不清普攻次数。
+- 接现有普攻授权/报价/提交和角色共享重复账本；HUD完整报价显示归既有PREVIEW，本卡不改视图架构。AI沿现有合法动作选择恢复身体攻击，不能把只移动/防御的石甲兽当完成。
+- 为生产新行随批更新GameData/GuanzhongPlaytestAudit最小加载和角色映射以及严格检查器/直接测试，使默认程序可读取新内容；不在本卡实现全模拟空手成长算法或签角色平衡。新SIM负责双入口语义一致。
+
+## 模型协作
+
+- 合同冻结后的角色/保存纵向接入默认external_execute/deepseek，Codex独立复审。blocked阶段不猜保存方案；临近ready核对公共接口、回滚及真实Unity工具。创建/成长/恢复强耦合，单主责统一改写和验证，不并行写同一所有者。
+
+## 验证
+
+- 定向EditMode覆盖创角、合法装备/无装备、成长前后费用与承载同步、旧档往返、非法/缺失引用及提交无漏写；空手/武器共享次数和本人回合重置，武器能力固定档不随角色偷偷升级。
+- 实际AdventureScene/Bootstrap证明玩家与石甲兽均可空手普攻，费用预览/实付一致且能结束敌方回合；保存后重入仍正确。不能用临时武器、改血或测试档案代替正式生产证明，最终体验仍归SCENE。
+- 合同列定的创建/保存/成长/装备/数据/场景测试，数据链、模块边界与Unity编译；BattleSim最低读取/默认运行通过，完整双入口和平衡不在本卡签收。
+
+## 完成条件
+
+- 正式生产角色的创建→成长→保存→入战空手链闭合并经独立复审通过，记录绑定与输入摘要；角色攻击不依赖虚拟武器，已有装备路径不回退。
+
+## 停止条件
+
+- 需要新装备操作、新修炼系统、未冻结档位/资源或跨多个未授权所有者叠补丁时停止；缺真实Unity场景/保存证据不通过。平衡问题交BALANCE，不擅自调规则或假造攻击。
+
+## 禁止项
+
+- 只写卡头expectedPaths；blocked卡现有路径是已查明定位基线，新资源及其.meta须由CONTRACT一次冻结到对应卡后才能ready。直接所有者、路径或技术路线变化时先暂停并重新风险预检；若不再原子或需要连续跨边界补丁，停止回交规划，不由执行者逐张拆卡。
+- 不新增虚拟武器、独立肉身等级系统、自动连打、自动连招或通用攻击次数上限；不修改原个人回合/tick、重复费用乘数、物品发放或武器固定档位。不操作用户真实存档，不借缺配置补通用徒手或无限承载。
+- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；外部责任方不改任务卡/队列/backlog，不自审，不集成。外部结果经Codex独立复审正式归档后才解除下游依赖；Codex任务由主责统一复核及收口。
+- 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
+- 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
+- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。

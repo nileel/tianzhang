@@ -1,0 +1,84 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "N-COMBAT-UNARMED-SIM-01",
+  "title": "BattleSim双入口空手成长与攻击绑定适配",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "battlesim",
+  "stage": "migration",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-UNARMED-RUNTIME-01",
+    "N-COMBAT-AP2-SIM-01"
+  ],
+  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "expectedPaths": [
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/Character.cs",
+    "simulations/BattleSim/Combat.cs",
+    "simulations/BattleSim/StageCombatReport.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "simulations/BattleSim/Program.cs",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "开发管理/N-COMBAT-UNARMED-SIM-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt",
+    "开发管理/任务归档/N-COMBAT-UNARMED-SIM-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-BS-001"
+    ],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# N-COMBAT-UNARMED-SIM-01 · BattleSim双入口空手成长与攻击绑定适配
+
+## 来源与当前边界
+
+- 原子结果：在原AP2-SIM正式完成的双入口上，同源读取新空手生产输入并实现肉身档位、费用/承载及共享普攻计数一致；数值是否合理仍由既有AP2-BALANCE判断。
+- 不重开原SIM的特殊效果决策，不更改其已批准范围。RUNTIME只负责最小生产读取，完整全模拟/Stage行为由本卡接入。
+
+## 必查范围
+
+- 空手普攻成长接入合同与RUNTIME正式输入/验证记录；原AP2-SIM完成归档/实际选择后的证据；成长设计第3/5/8节。
+- GameData.LoadProductionAttacks、Character.FinalizeStats/AssignArts/BasicAttackProfile，Combat.CreateAbilities/UnitState/RunBattle/SettleAttack，StageCombatReport.Profiles/Snapshot/NativeBattle及GuanzhongPlaytestAudit实际生产角色映射、Program与自测入口。
+
+## 实施范围
+
+- 两入口读取相同空手生产ID、肉身档位与规则摘要；普通修士/体修使用显式来源，石甲兽使用正式敌人输入，不以名字猜流派或回落固定Unarmed常量。保留原SIM已有特殊原型范围。
+- 同境、成长前后、无武器/武器对照及双入口1v1/2v2覆盖空手费用/承载、普攻共享次数、拒绝不扣/不计、本人重置；固定低档武器不跟随升级。不得在Stage旁路扣费或另造算法。
+- 为后续平衡输出每个人回合动作数、AP支出、输出与输入摘要；只提供证据，不调正式参数、不把功能一致当平衡通过、不复制Unity地图和动画。
+
+## 模型协作
+
+- 明确合同下的模拟器迁移默认external_execute/deepseek，Codex独立复审；blocked，临近ready按两入口正式接口核对复杂度与能力。单主责统一差异/最终验证；无必须并行的工作面，不预设辅助。
+
+## 验证
+
+- Release构建、默认运行、空手成长定向自测及两入口对应矩阵；记录正式源表摘要、档位/来源、种子、动作数/费用/效果与错误拒绝，保留1v1/2v2原有范围。
+- 同参数两端逐动作费用/承载一致；如存在原入口明确未支持的特殊原型，按原SIM实际批准范围报告，不能借本卡静默扩充或隐藏差异。
+
+## 完成条件
+
+- 两入口的空手绑定/成长/费用/承载/重复账本均有可复现证据并经Codex独立复审；将同源输入交既有AP2-BALANCE。
+
+## 停止条件
+
+- 若必须改Unity共享内核或原SIM未决特殊原型才可实现，停止回交合同；不跨边界补丁、不改权威生产参数凑结果。
+
+## 禁止项
+
+- 只写卡头expectedPaths；blocked卡现有路径是已查明定位基线，新资源及其.meta须由CONTRACT一次冻结到对应卡后才能ready。直接所有者、路径或技术路线变化时先暂停并重新风险预检；若不再原子或需要连续跨边界补丁，停止回交规划，不由执行者逐张拆卡。
+- 不新增虚拟武器、独立肉身等级系统、自动连打、自动连招或通用攻击次数上限；不修改原个人回合/tick、重复费用乘数、物品发放或武器固定档位。不操作用户真实存档，不借缺配置补通用徒手或无限承载。
+- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；外部责任方不改任务卡/队列/backlog，不自审，不集成。外部结果经Codex独立复审正式归档后才解除下游依赖；Codex任务由主责统一复核及收口。
+- 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
+- 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
+- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。

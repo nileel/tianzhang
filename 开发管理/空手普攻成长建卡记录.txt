@@ -1,0 +1,33 @@
+# 空手普攻成长建卡记录
+
+日期：2026-10-10。
+范围：负责人批准空手普攻随肉身档位成长后，补齐实施任务与直接下游依赖；不实施代码、生产参数、场景或角色平衡。
+
+## 事实与规划结果
+
+- 旧U-COMBAT-AP2-WEAPON-01已经完成并归档，记录生产徒手移除、旧保存槽归空和石甲兽仅剩非攻击动作。本次恢复空手是新设计，不改旧归档事实。
+- 源码核对：AdventureUnitSpawner.ResolveBasicAttackBinding遇到unarmed返回null；CharacterRuntimeProfile/CharacterStateSnapshot清空该字段；SettlementContentImporter拒绝敌人unarmed引用；CombatContentImporter对普攻只接受main_equipment/fixed_weapon；GameData.LoadProductionAttacks也有固定武器/生产集合限制。仅修改设计文本不足以落地，必须覆盖数据、角色绑定/保存及模拟消费者。
+- 一次新增D-COMBAT-UNARMED-CONTRACT-01、U-COMBAT-UNARMED-CONFIG-01、U-COMBAT-UNARMED-RUNTIME-01、N-COMBAT-UNARMED-SIM-01四叶；CONTRACT为唯一ready，其余等待真实前置。已同步队列、数值与战斗backlog及原实现规划，未扫描或重排其他backlog。
+- PREVIEW从ready转blocked，等RUNTIME后展示空手/武器权威资格和报价；BALANCE增加新SIM前置；TUNING、SCENE、CLOSE、父项补齐发布、点击/动画时长和关闭要求。没有重复建立数值平衡/最终验收卡，父项仍永不ready。
+- 原N-COMBAT-AP2-SIM-01的pending_decision、问题、选项与checkpoint完全保留。新CONFIG等待它正式完成，是为了在原四ID/旧输入迁移完成后再扩展schema与生产内容；本轮不替负责人选择共享特殊效果接口方案。
+- CONTRACT负责一次性冻结候选参数、来源映射、保存和全部下游精确资源/meta路径。当前blocked实现卡只有已查明的字面量路径基线，不授权目录写入，不得提前执行。最终强度必须运行BattleSim，Unity实际操作体验另验。
+
+## 范围、协作与隔离
+
+- 本次管理任务由主智能体单独处理：产品合同、依赖和任务投影强耦合，无需子智能体。未发起辅助模型调用，不以模型名称冒充实际身份核验。
+- 新设计卡codex_execute/codex，executionModel=gpt-6.1-sol；新冻结合同后的三项实现默认external_execute/deepseek，Codex独立复审。旧卡owner/route不重派。
+- 已读取unity-agent-workflows及project-structure-discovery、content-and-systems、ai-workflows和unity-validation相关部分；结构索引读取UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md，并以实际源码核对消费者。只有管理/设计文本写入，没有Unity运行时修改或实机验收声明。
+- 写入前schema5 Show返回两个run均为空，进程持有型集成锁状态none，允许本次非纯1/2的手动管理写入主工作区。无关的.agents/summary_state.json、设计总结.txt及角色生成图片目录保持原样。
+
+## 验证
+
+- 写入前check-task-cards通过：67张活跃卡、1张ready。修改后检查通过：71张活跃卡、1张ready。
+- 四张新卡均运行唯一风险预检并与schema2投影一致；新SIM命中EXP-BS-001，已消费“先Release build成功再run”正文；其余新卡零命中，全部无额外gates。六张改动的直接下游卡预检均为ok、零命中。
+- 最终新卡taskCardDigest：CONTRACT=ac9669080a8a3085ba0b6acd5f7237bb912a56a9f622146b49fc74b151dc7b13；CONFIG=3fc4b20f23d455614f37dc30a3c5ce7f1755bd5ef1d53990cd5bfbc71fcbfe5d；RUNTIME=c2cb145cb4b86b2ef7de7fa163b862efdf3340f1be64cfe080e53867b8466acf；新SIM=e342116cddb268841f28a080dfb5bc1717fa61e994cdf9ef8295bd040aef19c7。若任务文本变化，此摘要不可复用。
+- check-review-text通过，757文件；check-data-chain通过，GongFa=29/29、Spells=84/84、Skills=31/31、Language=647。
+- 已核对原SIM待决策卡及旧WEAPON归档无diff。仅管理与设计变更，本轮不运行Unity或BattleSim，不宣称新功能已完成。
+
+## 剩余边界
+
+- 首个可执行任务是CONTRACT；参数与技术接口尚待该卡冻结。新实现还受原AP2-SIM既有待决策约束，不能以建卡解除该问题。
+- 旧BasicAttack正式流程返回后悬赏仍为Accepted的失败保留在SCENE，不推定恢复空手就能自动解决；最终关闭需要相同生产摘要的数值/场景证据及负责人体验确认。

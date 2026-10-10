@@ -1,0 +1,82 @@
+﻿---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-UNARMED-CONFIG-01",
+  "title": "空手普攻成长配置与严格加载支持",
+  "priority": "P1",
+  "route": "external_execute",
+  "owner": "deepseek",
+  "domain": "data",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-COMBAT-UNARMED-CONTRACT-01",
+    "N-COMBAT-AP2-SIM-01"
+  ],
+  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/Scripts/Modules/Content/CombatRuleSetData.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Combat/CombatRuleSet.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuleSetDataTests.cs",
+    "开发管理/U-COMBAT-UNARMED-CONFIG-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt",
+    "开发管理/任务归档/U-COMBAT-UNARMED-CONFIG-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-UNARMED-CONFIG-01 · 空手普攻成长配置与严格加载支持
+
+## 来源与当前边界
+
+- 原子结果：按空手普攻成长接入合同完成可验证的配置schema、严格加载及Unity/BattleSim同源投影支持；本卡不启用正式空手攻击内容。生产启用由RUNTIME一次完成。
+- 等待CONTRACT及原N-COMBAT-AP2-SIM-01正式完成。旧SIM当前冻结四生产ID与旧读取合同；先完成其已有迁移，再扩展新输入，防止同时改变尚待决定的基线。这是真实数据消费依赖，不是共享文件锁。
+
+## 必查范围
+
+- 开发管理/空手普攻成长接入合同.txt全部字段、ID、版本、投影和负向矩阵；成长设计第3/5/8节；原SIM正式证据。
+- AttackProfileData.TryValidate、CombatContentImporter的basicBindingKind/effectBudgetMode与角色引用验证、CombatRuleSetData/CombatRuleSet、CombatAttackProfile元数据；GameData.LoadProductionRuleSet/LoadProductionAttacks及直接共享投影、对应定向测试。
+
+## 实施范围
+
+- 严格实现合同冻结的最小配置表示、肉身档位费用/承载解析和缺失/非法引用拒绝；Unity与BattleSim共享同一源与摘要，不引入第二参数源或运行时兼容分支。
+- 本卡仅通过显式fixture验证新配置，不新增正式攻击行、不改创角/存档/敌人绑定、不更改现有武器或术法行为；正式生成物/新类型确有需要时由CONTRACT在ready前冻结，禁止自行扩边。
+
+## 模型协作
+
+- 冻结合同后的数据/代码实现默认external_execute/deepseek；blocked阶段待直接前置后核对复杂度与能力，单主责统一实现和验证，Codex独立复审。当前不预设辅助调用。
+
+## 验证
+
+- AttackProfileDataTests/CombatRuleSetDataTests定向正反例：档位缺失、非法费用/承载、来源错误、重复ID、摘要/取整、旧武器结果保持；Unity编译及共享模块边界。
+- BattleSim Release构建、默认运行及对应加载自测；fixture与正式输入区分，现有生产四ID不改变，不能把加载支持称作角色能空手攻击。
+
+## 完成条件
+
+- 同一合同输入在两端投影一致，严格拒绝反例通过，旧正式内容保持可读；独立复审通过后交RUNTIME启用。
+
+## 停止条件
+
+- 需要改正式角色/保存、启用生产攻击或更改战斗算法才可完成时停止回交合同；不把两端不同参数或隐式默认包装成完成。
+
+## 禁止项
+
+- 只写卡头expectedPaths；blocked卡现有路径是已查明定位基线，新资源及其.meta须由CONTRACT一次冻结到对应卡后才能ready。直接所有者、路径或技术路线变化时先暂停并重新风险预检；若不再原子或需要连续跨边界补丁，停止回交规划，不由执行者逐张拆卡。
+- 不新增虚拟武器、独立肉身等级系统、自动连打、自动连招或通用攻击次数上限；不修改原个人回合/tick、重复费用乘数、物品发放或武器固定档位。不操作用户真实存档，不借缺配置补通用徒手或无限承载。
+- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；外部责任方不改任务卡/队列/backlog，不自审，不集成。外部结果经Codex独立复审正式归档后才解除下游依赖；Codex任务由主责统一复核及收口。
+- 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
+- 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
+- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。

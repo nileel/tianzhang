@@ -8,9 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
-  "blockedBy": [],
-  "stateReason": "四项直接前置均已完成归档；路径扫描与风险预检完成，具备执行条件。",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-COMBAT-UNARMED-RUNTIME-01"
+  ],
+  "stateReason": "负责人批准空手普攻成长，原无武器资格目标已被替代；等待U-COMBAT-UNARMED-RUNTIME-01正式完成后消费新权威绑定与报价。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -40,7 +42,7 @@
 ## 来源与当前边界
 
 - 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。
-- 原子结果：正式动作栏与预览显示本次真实AP报价、剩余冷却和无武器资格，提交后及时刷新。
+- 原子结果：正式动作栏与预览显示本次真实AP报价、剩余冷却和武器/空手普攻资格，提交后及时刷新。
 - 直接前置：U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。
 
 ## 必查范围
@@ -50,17 +52,17 @@
 
 ## 实施范围
 
-- 同源展示大AP上限/余额、零CD同招下一次费用与正CD剩余tick；无武器普攻不可用且原因明确。换武器沿角色既有普攻计数刷新费用，取消预览无副作用。不增加自动连发/自动连招或新HUD架构。
+- 同源展示大AP上限/余额、零CD同招下一次费用与正CD剩余tick；无武器且具有合法空手档案时普攻可用；缺失/非法绑定的拒绝原因明确。换武器沿角色既有普攻计数刷新费用，取消预览无副作用。不增加自动连发/自动连招或新HUD架构。
 - 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。
 
 ## 2026-10-09 配置合同与精确路径准备
 
-- 合同第五/八节冻结ProjectQuote映射的本次实付、成功次数/重复乘数、规则摘要、固定档和剩余全局tick；BuildActions接权威无武器原因，Language仅提供说明。UI不重算费用或造假普攻档；成功提交/换装/本人开始后重新投影，取消不变。保持原场景入口和两分辨率实际截图验收，不增加自动连招。
+- 合同第五/八节冻结ProjectQuote映射的本次实付、成功次数/重复乘数、规则摘要、固定档和剩余全局tick；BuildActions接权威普攻绑定/资格及拒绝原因，Language仅提供说明。UI不重算费用或造假普攻档；成功提交/换装/本人开始后重新投影，取消不变。保持原场景入口和两分辨率实际截图验收，不增加自动连招。
 - 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。
 
 ## 禁止项
 
-- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
+- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、缺配置隐式补空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。
 - 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。
 
 ## 模型协作
@@ -83,3 +85,7 @@
 
 - 报价与运行时不一致先回费用/资格所有者，不在UI打补丁；缺实际画面不能凭Prefab字段或测试夹具签视觉通过。
 - 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。
+
+## 2026-10-10 空手普攻修订接入
+
+- 原四前置已完成；本卡转blocked并移出ready队列，新增直接前置U-COMBAT-UNARMED-RUNTIME-01。显示当前武器或空手档位的真实费用/承载相关提示与共享普攻次数；空手可用、缺绑定拒绝、成长后报价刷新列入原两分辨率验收。UI不计算肉身档位、不新增切换/卸装或自动连打命令；具体字段/语言路径由CONTRACT在ready前冻结。
