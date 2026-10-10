@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| N-COMBAT-AP2-SIM-01 | codex_execute | codex | P1 | battlesim | migration | BattleSim双入口境界行动经济迁移 | 开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | codex_execute | codex | P1 | unity | implementation | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |

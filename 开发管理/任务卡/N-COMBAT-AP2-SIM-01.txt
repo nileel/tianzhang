@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "N-COMBAT-AP2-SIM-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "四项直接前置均已完成归档；路径扫描与风险预检完成，具备执行条件。",
+  "stateReason": "等待负责人决定：共享内核缺少苦行剑气生命代价及逝水印记、川流消费接口，而合同要求双入口覆盖这些效果。是否扩充共享内核路径完成完整验收，或明确收窄共享入口验收？",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -33,7 +33,103 @@
     ],
     "gates": []
   },
-  "executionModel": "gpt-6.1-sol"
+  "executionModel": "gpt-6.1-sol",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "N-COMBAT-AP2-SIM-01",
+    "sourceRunId": "0794aaa0-8b9b-4cad-ad9f-ef1332e91260",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261010-CDDB1DE646A49B",
+    "question": "共享内核缺少苦行剑气生命代价及逝水印记、川流消费接口，而合同要求双入口覆盖这些效果。是否扩充共享内核路径完成完整验收，或明确收窄共享入口验收？",
+    "options": [
+      {
+        "key": "A",
+        "label": "扩充共享内核路径，完成双入口特殊原型",
+        "targetState": "ready",
+        "expectedPaths": [
+          "simulations/BattleSim/GameData.cs",
+          "simulations/BattleSim/Character.cs",
+          "simulations/BattleSim/Combat.cs",
+          "simulations/BattleSim/StageCombatReport.cs",
+          "simulations/BattleSim/Program.cs",
+          "simulations/BattleSim/BattleSim.csproj",
+          "开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt",
+          "开发管理/任务列表/数值与战斗任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt",
+          "开发管理/任务归档/N-COMBAT-AP2-SIM-01.txt",
+          "simulations/BattleSim/BattleSimSelfTests.cs",
+          "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+          "src/Assets/Scripts/Combat/CombatSession.cs",
+          "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+          "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+          "src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs",
+          "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs",
+          "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs"
+        ],
+        "taskBody": "# N-COMBAT-AP2-SIM-01 · BattleSim双入口境界行动经济迁移\n\n## 来源与当前边界\n\n- 来源：负责人2026-10-09批准的AP-GROWTH@0.1初版、配置合同与父项P-COMBAT-AP-01。四项直接前置GROWTH、REPEAT、STATUS、WEAPON已完成归档；消费CONFIG/EQUIP正式编译与生产读取适配，不重复实施这些前置。\n- 本轮checkpoint仅保存开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt中的接口缺口证据，未迁移算法。选择后只使用入口应用的完整expectedPaths，重新风险预检后实施；同一taskId、owner run、worktree与唯一candidate，不改自动化控制面。\n\n## 必查范围\n\n- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md相关规则及第9节；开发管理/境界行动力成长配置合同.txt第三、四、五、六、八、九节；四项直接前置归档合同/正式结果及CONFIG、EQUIP生产读取职责分界。\n- GameData.ProjectMovement/productionAttacks及旧approvedAbilityCosts/approvedGrowth；Character.FinalizeStats/AssignArts和直接调用者；Combat.CreateAbilities、UnitState、Ability、RunBattle的1v1/2v2选招/支付/SettleAttack；StageCombatReport的Profiles/Snapshot/NativeBattle、Program入口、BattleSimSelfTests及csproj共享源码。\n- CombatRuleSet、CombatSession.ValidateAttack、CombatCommandService.Preview/Execute、CombatActionResolver.PrepareValidated/ResolveAttack、CombatAttackRuleMetadata、CombatantSnapshot的状态/CopyForResolution/CommitResolvedState及本人时点，定位实际接口和对应测试。按符号/ID定位后读取完整目标逻辑单元，不读全backlog，不用摘要替代原文。\n\n## 实施范围\n\n- GameData新可调输入只读取同一四张生产CSV及同一sourceDigest，停止从旧docs解析成本/基础v/M参数；其他八属性/原型与21功法资格、章节身份保留。核对生产四ID和无默认Unarmed输入，不恢复旧三ID限制或重做WEAPON迁移。\n- 全模拟完成AP/v成长、固定能力档与承载、重复费用/计数、整数tick冷却、状态境界系数和原特殊费用。同档及锁练气档在入口显式选择，51泛化测试三元组不冒充生产玩家技能。双方与2v2、多目标根动作只付一次计一次；被动按原本人时点/频率/额度，不随连发倍增；保留Kuxing生命费/资格/低血加成/下一物防代价/金丹回复预算、水层总峰值/来源档位/川流覆盖消费及独立水控样本。\n- Stage共享入口读取同一四表摘要，投影真实AP/v、境界、魂魄、神识、已授权能力实例/负载与本人恢复，使用现有Preview→准备副本→单一发布，不在Stage旁路扣生命或附加状态。旧NativeCase历史灵敏度夹具明确标识，不能作为AP2算法或新平衡证据。\n- 面积攻击仅在全模拟既有AreaTargeting验证根动作；Stage验证现有单目标1v1/2v2根动作，不新增共享面积载荷/执行器或复刻Unity地图。验证记录仍写本任务同一文件。\n- 选项A批准补齐共享内核有限KuxingAction/WaterDivine原型：元数据明确泛化定义身份与固定档/基础预算；Session预览保持真实资格与生命门禁；Resolver在既有准备副本中完成生命费用、忽略格挡、条件伤害与金丹回复、下一物防代价、具来源/施加者境界/固定档的最多三层逝水及川流下一正伤害消费/重施覆盖。Snapshot深复制并在成功提交唯一发布相关窄状态，拒绝/溢出不扣AP/MP/HP、不计数、不启动CD或漏写状态；保留生命费用按使用者原境界、伤害按固定档，重复AP不增加效果预算。\n- 新增授权业务路径恰为src/Assets/Scripts/Combat/CombatAttackProfile.cs、CombatSession.cs、CombatActionResolver.cs、CombatantSnapshot.cs四文件及src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs、CombatRealmStatusTests.cs、CombatAbilityCapacityTests.cs三个现有测试。没有新增文件/meta、表schema或生产技能；这些共享改动只补本卡具名窄原型，不接入其他Unity场景内容。\n\n## 禁止项\n\n- 不改个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式装备、无限承载、重试或兼容分支，不批量重构或新增通用状态引擎。\n- 不重调平衡参数、不新增CSV字段/生产ID/武器/玩家资格，不接入所有同名L2内容，不改其他叶业务或下游blockedBy/backlog引用，不提升下游、不关闭父项。只写选项批准后的精确expectedPaths。\n\n## 模型协作\n\n- gpt-6.1-sol主模型保持入口值；双入口迁移由主责统一审阅完整diff、验证及单一candidate。确有独立问题时使用原生同模型只读辅助，记录请求/会话标识及可核实结果；辅助不写入、不改卡/队列、不提交、不操作runtime/锁、不派生。不支持或不能核实辅助模型时明确记录，不能代替运行证据。\n\n## 验证\n\n- 同一worktree若缺obj/project.assets.json，先执行一次dotnet restore simulations/BattleSim，再dotnet build -c Release --no-restore simulations/BattleSim成功后执行dotnet run --no-build -c Release --project simulations/BattleSim；不使用主工作区或其他worktree缓存。\n- 新增必要BattleSim自测并运行已有行动经济及新的AP2入口，记录四表版本/摘要、51三元组、同档/锁练气、两个入口双方/2v2；覆盖报价实付、第1/2/3/4次及封顶、移动/换目标不清计数、未命中计数、拒绝/取消/预览不计、本人重置、冷却只随tick、无装备、完整链拒绝无漏写、承载及独立随机。全模拟面积两目标根动作一次付费/计数，Stage单目标组战一次付费/计数；不能互相代替入口证据。\n- 两入口分别验证Kuxing生命费/下次物防代价/金丹回复/低档与资格、水层总峰值/川流覆盖和一次消费/神识对抗/控制独立第五样本，以及本人被动频率和额度。不得只测普通伤害profile替代完整特殊效果。\n- 对修改的共享逻辑运行Unity EditMode CombatActionPointKernelTests、CombatRealmStatusTests、CombatAbilityCapacityTests。复核已知承载夹具入战武器绑定问题，在批准测试文件内修复对应夹具，不放宽生产授权；所有受影响断言通过后才完成。源码只使用本卡授权的四个共享文件，不扩大其他生产投影。\n- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据路径变化时check-data-chain。暂存前check-pending-whitespace，暂存后git diff --cached --check。按风险采用最小充分范围，输入未变不重复已通过检查。\n\n## 完成条件\n\n- 两个入口使用同一四表新规则，含上述全部有限特殊原型，完成Release/default及定向自测/EditMode。双入口完整验收与批准路径闭合，禁止Stage外置效果旁路。\n- 记录真实输入、命令、结果与限制；不是只交中间夹具。完成时归档同一任务、只移除本任务队列/backlog行，保留下游具名前置，正式master结果后才由QueueMaintenance处理下游。经验候选只用本轮已有事实，有则pending，无则不建空节。\n\n## 停止条件\n\n- 只共享源码而全模拟仍旧、生产映射缺失、需复刻Unity场景或越数值抽象边界不能通过。\n- 新所有者/路径/字段或实现路线越界先暂停并重新预检；若需要新增表字段、通用框架、面积执行器、未批准内容或资格，停止回交合同。确认不原子或开始连续跨边界补丁即停止，不动态拆卡、提交半成品或集成。\n- 共享特殊原型若还需上述四文件以外生产所有者、新的表字段或资格政策，则停止，不继续叠加补丁；本选项不授权重做STATUS或所有同名L2效果。\n"
+      },
+      {
+        "key": "B",
+        "label": "保持现有路径，明确共享入口的有限验收",
+        "targetState": "ready",
+        "expectedPaths": [
+          "simulations/BattleSim/GameData.cs",
+          "simulations/BattleSim/Character.cs",
+          "simulations/BattleSim/Combat.cs",
+          "simulations/BattleSim/StageCombatReport.cs",
+          "simulations/BattleSim/Program.cs",
+          "simulations/BattleSim/BattleSim.csproj",
+          "开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt",
+          "开发管理/任务列表/数值与战斗任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt",
+          "开发管理/任务归档/N-COMBAT-AP2-SIM-01.txt",
+          "simulations/BattleSim/BattleSimSelfTests.cs"
+        ],
+        "taskBody": "# N-COMBAT-AP2-SIM-01 · BattleSim双入口境界行动经济迁移\n\n## 来源与当前边界\n\n- 来源：负责人2026-10-09批准的AP-GROWTH@0.1初版、配置合同与父项P-COMBAT-AP-01。四项直接前置GROWTH、REPEAT、STATUS、WEAPON已完成归档；消费CONFIG/EQUIP正式编译与生产读取适配，不重复实施这些前置。\n- 本轮checkpoint仅保存开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt中的接口缺口证据，未迁移算法。选择后只使用入口应用的完整expectedPaths，重新风险预检后实施；同一taskId、owner run、worktree与唯一candidate，不改自动化控制面。\n\n## 必查范围\n\n- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md相关规则及第9节；开发管理/境界行动力成长配置合同.txt第三、四、五、六、八、九节；四项直接前置归档合同/正式结果及CONFIG、EQUIP生产读取职责分界。\n- GameData.ProjectMovement/productionAttacks及旧approvedAbilityCosts/approvedGrowth；Character.FinalizeStats/AssignArts和直接调用者；Combat.CreateAbilities、UnitState、Ability、RunBattle的1v1/2v2选招/支付/SettleAttack；StageCombatReport的Profiles/Snapshot/NativeBattle、Program入口、BattleSimSelfTests及csproj共享源码。\n- CombatRuleSet、CombatSession.ValidateAttack、CombatCommandService.Preview/Execute、CombatActionResolver.PrepareValidated/ResolveAttack、CombatAttackRuleMetadata、CombatantSnapshot的状态/CopyForResolution/CommitResolvedState及本人时点，定位实际接口和对应测试。按符号/ID定位后读取完整目标逻辑单元，不读全backlog，不用摘要替代原文。\n\n## 实施范围\n\n- GameData新可调输入只读取同一四张生产CSV及同一sourceDigest，停止从旧docs解析成本/基础v/M参数；其他八属性/原型与21功法资格、章节身份保留。核对生产四ID和无默认Unarmed输入，不恢复旧三ID限制或重做WEAPON迁移。\n- 全模拟完成AP/v成长、固定能力档与承载、重复费用/计数、整数tick冷却、状态境界系数和原特殊费用。同档及锁练气档在入口显式选择，51泛化测试三元组不冒充生产玩家技能。双方与2v2、多目标根动作只付一次计一次；被动按原本人时点/频率/额度，不随连发倍增；保留Kuxing生命费/资格/低血加成/下一物防代价/金丹回复预算、水层总峰值/来源档位/川流覆盖消费及独立水控样本。\n- Stage共享入口读取同一四表摘要，投影真实AP/v、境界、魂魄、神识、已授权能力实例/负载与本人恢复，使用现有Preview→准备副本→单一发布，不在Stage旁路扣生命或附加状态。旧NativeCase历史灵敏度夹具明确标识，不能作为AP2算法或新平衡证据。\n- 面积攻击仅在全模拟既有AreaTargeting验证根动作；Stage验证现有单目标1v1/2v2根动作，不新增共享面积载荷/执行器或复刻Unity地图。验证记录仍写本任务同一文件。\n- 选项B明确收窄共享入口验收：Stage覆盖四个真实生产ID、其余15项普通泛化定义的三个明确档（含WaterArt独立水控）及已有百分比状态窄链。Stage遇到KuxingAction或WaterDivine泛化输入必须明确拒绝，不能仅投影普通伤害或在共享事务外补特殊效果。全模拟仍完整消费51三元组、Kuxing与WaterDivine原特殊语义。\n- 保持原expectedPaths，不修改src共享内核或Unity测试/资产；原合同第八节“两入口分别含Kuxing/水状态”的表述在本卡明确改为“全模拟完整特殊原型，Stage仅上述已具接口的动作及状态”。这一范围例外只适用于本叶，缺失的共享特殊效果仍如实列为未完成，不冒充父项或后续完整一致性验收通过。\n\n## 禁止项\n\n- 不改个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式装备、无限承载、重试或兼容分支，不批量重构或新增通用状态引擎。\n- 不重调平衡参数、不新增CSV字段/生产ID/武器/玩家资格，不接入所有同名L2内容，不改其他叶业务或下游blockedBy/backlog引用，不提升下游、不关闭父项。只写选项批准后的精确expectedPaths。\n\n## 模型协作\n\n- gpt-6.1-sol主模型保持入口值；双入口迁移由主责统一审阅完整diff、验证及单一candidate。确有独立问题时使用原生同模型只读辅助，记录请求/会话标识及可核实结果；辅助不写入、不改卡/队列、不提交、不操作runtime/锁、不派生。不支持或不能核实辅助模型时明确记录，不能代替运行证据。\n\n## 验证\n\n- 同一worktree若缺obj/project.assets.json，先执行一次dotnet restore simulations/BattleSim，再dotnet build -c Release --no-restore simulations/BattleSim成功后执行dotnet run --no-build -c Release --project simulations/BattleSim；不使用主工作区或其他worktree缓存。\n- 新增必要BattleSim自测并运行已有行动经济及新的AP2入口，记录四表版本/摘要、51三元组、同档/锁练气、两个入口双方/2v2；覆盖报价实付、第1/2/3/4次及封顶、移动/换目标不清计数、未命中计数、拒绝/取消/预览不计、本人重置、冷却只随tick、无装备、完整链拒绝无漏写、承载及独立随机。全模拟面积两目标根动作一次付费/计数，Stage单目标组战一次付费/计数；不能互相代替入口证据。\n- 全模拟实际验证Kuxing生命费/下一物防代价/金丹回复、水层总峰值/川流覆盖消费及本人被动频率；Stage实际验证四真实ID、15泛化定义三档、原神识水控与状态链，并验证两项未支持特殊定义明确拒绝且无随机/AP/MP/HP/CD/计数/状态变化。不运行或声称完成共享特殊原型。\n- 本选项只改BattleSim，不要求无变化Unity源码重新编译或EditMode；BattleSim链接的共享逻辑仍须通过Release和Stage真实命令测试。\n- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据路径变化时check-data-chain。暂存前check-pending-whitespace，暂存后git diff --cached --check。按风险采用最小充分范围，输入未变不重复已通过检查。\n\n## 完成条件\n\n- 全模拟完整新规则与特殊原型通过；Stage在明确收窄集合内使用同一四表、固定档及命令事务并拒绝未支持定义。报告逐项标明覆盖差异、特殊效果双入口一致性尚未完成；不能以本叶归档关闭该方向验收或父项。\n- 记录真实输入、命令、结果与限制；不是只交中间夹具。完成时归档同一任务、只移除本任务队列/backlog行，保留下游具名前置，正式master结果后才由QueueMaintenance处理下游。经验候选只用本轮已有事实，有则pending，无则不建空节。\n\n## 停止条件\n\n- 只共享源码而全模拟仍旧、生产映射缺失、需复刻Unity场景或越数值抽象边界不能通过。\n- 新所有者/路径/字段或实现路线越界先暂停并重新预检；若需要新增表字段、通用框架、面积执行器、未批准内容或资格，停止回交合同。确认不原子或开始连续跨边界补丁即停止，不动态拆卡、提交半成品或集成。\n- 若Stage发现上述收窄集合仍需修改src所有者或新增接口，则停止回交范围；不能把Kuxing/WaterDivine默默降成普通伤害。\n"
+      },
+      {
+        "key": "C",
+        "label": "保持阻塞，等待重新准备合同",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A增加四个共享源码和三个现有测试路径，保留完整双入口特殊效果验收，但增加实现与回归工作；B保持现有路径，共享入口明确拒绝两项特殊动作，双入口效果覆盖仍有差异；C暂停实施。三者均不新增生产技能、修改平衡参数或关闭父项。",
+    "plainSummary": {
+      "situation": "两套战斗模拟中，只有一套已有苦行剑气的生命代价和水系附加效果；要让两边完整一致，需要修改当前任务尚未允许修改的代码。",
+      "impact": "A补齐两边效果，需要更多开发和测试；B先完成现有范围，但另一套模拟暂时不能使用这两类特殊动作；C暂停，等待重新安排。",
+      "action": "推荐A，保留原定的完整一致性目标；若更重视先完成较小范围，可选B并接受特殊效果仍有缺口。"
+    },
+    "checkpointCommit": "1c690aafa60cf0f4d22d5d6d19ddda0b8348f365",
+    "baseCommit": "660e403082fb050fbe1d36e3be08ea5fd8346eea",
+    "branch": "codex/automation/codex/0794aaa0-8b9b-4cad-ad9f-ef1332e91260/candidate",
+    "changedPaths": [
+      "开发管理/N-COMBAT-AP2-SIM-01-验证记录.txt"
+    ],
+    "verified": [
+      "已核对共享内核与全模拟完整调用链：共享内核缺少Kuxing生命费用、下一物防代价、条件回复及WaterDivine印记/川流接口",
+      "A/B/C完整范围合同通过check-task-cards.ps1 CheckpointScope，status=ok",
+      "check-review-text通过，检查1个文件",
+      "finalizer执行check-pending-whitespace及暂存diff检查通过",
+      "未验证GameData草稿已恢复；业务源码、任务卡、队列和backlog均未改变",
+      "checkpoint为BaseCommit的唯一直接后继提交，工作树干净",
+      "changedPaths由指定base..HEAD --no-renames命令直接生成"
+    ],
+    "unverified": [
+      "未完成AP2双入口算法迁移",
+      "未运行BattleSim构建、默认运行或新算法自测",
+      "未运行Unity测试、角色平衡或生产场景验收"
+    ],
+    "residualRisk": "现有允许路径不包含缺失特殊原型的共享内核所有者；将这些动作仅映射为普通伤害会丢失效果，Stage旁路处理则不能证明共享事务一致性。checkpoint仅记录证据。",
+    "taskContextDigest": "b4a59f66c6bca5b28bbc28ff4460c95099c3a10c2796efbf3fdfc68a8617bb2c",
+    "createdAt": "2026-10-10T21:27:55.9543539+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # N-COMBAT-AP2-SIM-01 · BattleSim双入口境界行动经济迁移
