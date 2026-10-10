@@ -55,7 +55,7 @@ namespace TianZhang.Combat
             {
                 foreach (CombatantSnapshot target in session.Combatants.All)
                 {
-                    if (!target.IsAlive || (profile.Effect != CombatAttackEffect.RestoreSpirit && target.Team == actor.Team))
+                    if (!target.IsAlive || !profile.AllowsTarget(actor.Team, target.Team))
                         continue;
                     AddIfValid(session, new CombatCommand(commandKind, actor.Id, target.Id, profile.Id), actions);
                 }

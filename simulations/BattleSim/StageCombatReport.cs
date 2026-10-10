@@ -230,10 +230,13 @@ static class ActionEconomyBalanceReport
                 { profile = "spell_guanshiji"; kind = CombatCommandKind.Art; }
                 else if (player && policy == "production" && actor.CurrentSpirit < 12 && Legal("spell_julingshu", actor.Id))
                 { profile = "spell_julingshu"; targetId = actor.Id; kind = CombatCommandKind.Art; }
-                var command = new CombatCommand(kind, actor.Id, targetId, profile,
-                    new CombatResolutionRolls((float)random.NextDouble() * 100, (float)random.NextDouble() * 100, 100, 100));
+                var command = new CombatCommand(kind, actor.Id, targetId, profile);
                 var quote = service.Preview(session, command);
                 if (!quote.IsLegal) break;
+                if (profiles.Single(value => value.Id == profile).Effect is CombatAttackEffect.Physical or CombatAttackEffect.Soul or CombatAttackEffect.Hybrid)
+                    command = new CombatCommand(kind, actor.Id, targetId, profile,
+                        new CombatResolutionRolls((float)random.NextDouble() * 100, (float)random.NextDouble() * 100,
+                            (float)random.NextDouble() * 100, (float)random.NextDouble() * 100, (float)random.NextDouble() * 100));
                 int beforeMp = actor.CurrentSpirit;
                 int tick = session.TurnScheduler.CurrentTick;
                 var result = service.Execute(session, command, quote);

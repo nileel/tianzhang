@@ -1,0 +1,103 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-COMBAT-AP2-STATUS-01",
+  "title": "百分比状态与概率强控境界修正接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-10负责人选项A状态窄链完成；最终定向EditMode203/203、BattleSim Release构建和默认运行通过；旧承载夹具17项入战绑定失败单独记录，未放宽门禁；不解锁下游、不关闭父项。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Scripts/Combat/CombatActionResolver.cs",
+    "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs",
+    "src/Assets/Tests/EditMode/CombatRealmStatusTests.cs.meta",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "开发管理/U-COMBAT-AP2-STATUS-01-验证记录.txt",
+    "开发管理/任务列表/数值与战斗任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt",
+    "开发管理/任务归档/U-COMBAT-AP2-STATUS-01.txt",
+    "src/Assets/Scripts/Combat/CombatCommand.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv",
+    "src/Assets/Tests/EditMode/Fixtures/RealmStatuses.fixture.csv.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Combat/CombatLegalActionService.cs",
+    "simulations/BattleSim/StageCombatReport.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
+  "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-COMBAT-AP2-STATUS-01 · 百分比状态与概率强控境界修正接入
+
+## 来源与当前边界
+
+- 来源：负责人2026-10-09授权及docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9节；父项P-COMBAT-AP-01，直接前置U-COMBAT-AP2-POTENCY-01已经完成。
+- 决策前调查证据：开发管理/U-COMBAT-AP2-STATUS-01-验证记录.txt。本卡只有状态施加完整链这一原子结果；不领取其他任务，不移除下游具名前置，不改变父项或自动化runtime。
+- 选择A后授权：补齐正式角色原始神识投影和有限时限玄同免疫输入/消费。新增允许路径仅src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs；原expectedPaths全部保留。本卡不实现玄同自动净化触发，免疫测试显式施加时限输入，不能声称玩家已能获得玄同。
+
+## 必查范围
+
+- 先定位再读取完整目标逻辑单元：上述设计第9节、开发管理/境界行动力成长配置合同.txt第二及六节、CombatContentImporter载荷解析、AttackProfileData.TryValidate、CombatEntryAdapter.TryProjectProfiles、CombatAttackRuleMetadata、CombatLegalActionService.AddTargetedAttacks、CombatSession.ValidateAttack、CombatCommandService报价/准备/提交、CombatActionResolver.ResolveAttack、CombatantSnapshot属性/状态/本人时点/深复制/发布。
+- 查EncounterCoordinator.ExecuteCommand真实随机来源及StageCombatReport共享内核的合法性与随机样本；查docs/基础设定/战斗状态与时空因果结算规则.txt相关元数据、持续与写入边界。禁止用摘要代替原文，不读整个backlog。
+- 完整读AdventureUnitSpawner.CreatePlayer/CreateEnemy与CharacterAttributes.Derive，确认原始Mind来自角色权威输入；读南华玄感录游玄段和BattleSim实际玄同/水控逻辑，仅作规则对照，不改全模拟。
+
+## 实施范围
+
+- 严格CSV解析→临时AttackProfileData→实际Adapter→合法候选→命令→准备副本→Snapshot成功发布→后续攻防和本人时点。fixture_percent_attack_up、fixture_percent_defense_down、fixture_probability_stun均来自RealmStatuses.fixture.csv，不进生产catalog，不授玩家新技能。
+- 前两测试实体art/status_only、tier_lianqi、25AP/净25/MP0/CT0/burst CD4、比例+100/-100permille、持续2、层1/replace_stronger；强控实体art/physical/damage_budget、练气20AP/净20/MP0/CT0/control CD12、E=1、L=25/13、权重1、基础概率100permille且controlUsesMindContest=false。资格和范围显式填写。
+- Buff只自/友、Debuff及伤害控制只敌；候选与命令共用目标规则，保留资格、距离、封灵和资源检查。ControlRoll为独立第五0～100百分数样本；EncounterCoordinator和Stage只在完整合法命令准备时采样，预览及拒绝不得消耗随机，不复用命中样本。
+- 按显式施受大境界序号差读取global五档C=.25/.5/1/1.5/2；不从RealmMultiplier猜境界。四攻防状态增量=clamp(基础比例×C,±配置相对峰值)×min(目标未增益基础属性,能力对应承载)。配置初值30%，概率属性15个百分点只作门禁，不新增命中/闪避状态；具体固定量不乘C。精确比例保留到同属性汇总/总峰值后一次Round(AwayFromZero)。
+- 同来源同statusId仅更强替换并用新期限；弱者和等强不刷新。首批层上限1，不开放通用stack、多来源新增叠加权限或99层例外。元数据固定极性、ATTRIBUTE及OFFENSE/DEFENSE标签、NORMAL解除、真实能力实例sourceRef与SELF_ABILITY/OTHER_ABILITY；不得从阵营猜极性。
+- 控制须命中且正伤害；最终概率clamp(p_base×C,0,配置强控峰值)，初值90%，修正后无旧保底；Stun下一整本人回合，不叠不刷新，不延长。本人被跳过仍按原规则恢复HP/MP、AP0，下一正常本人回合可动。
+- 复用已经存在的statuses逐条深复制与CommitResolvedState发布，为新增可变记录补足复制。准备期间不泄漏，失败无部分写入；本人当前施加延迟扣结束次数、死亡与战斗结束清理按合同。水系真实泛化生产者与普通印记/川流消费者仍归SIM。
+- 只写卡头expectedPaths列出的路径；验证证据延续同一验证记录。共享入口批准应用本选项后先重做风险预检并消费mustRead，不自行改变卡头或使用其他worktree。
+- 冻结新增输入：CombatantSnapshot提供RawMind及RawMindInputsPresent，构造器以可空rawMind区分未提供与合法0；Spawner玩家/敌人从source.Attributes.Mind/attributes.Mind传入，不用神攻、神防、RawSpirit或MindStrengthBonus替代。需要神识对抗但任一方缺权威输入时整体拒绝准备；无对抗固定概率不需要该输入。神识强度按原功法额外值在对抗时显式加入，不改变基础攻防。
+- controlUsesMindContest=true先按global水系基础概率/最低概率/差值除数/强控峰值形成p_base，再乘C并截峰值，无修正后保底；默认参数为.10、.05、50、.90。其变体必须走严格解析和真实Adapter/命令链。
+- 冻结有限免疫：在既有本人回合状态列表增加CombatStatusKind.Xuantong这一带期限的玄同控制免疫输入，固定BUFF、ACTION|CONTROL、NORMAL元数据和明确来源实例，复用ApplyStatus和深复制/发布/本人结束/死亡/战斗结束边界，不建立新引擎。免疫生效期间阻止Stun写入，命中伤害、AP/MP/CD仍成功结算；不能由GongFaId直接授永久免疫。玄同自动净化生产者和祛禁写入禁令生产者均不属本卡，不把显式输入测试称生产者验收。
+
+## 禁止项
+
+- 不创造通用状态/祛禁引擎，不批迁Spells/Skills，不新增玩家技能、武器或高阶内容；未实现的状态生产者不冒称完成。
+- 不改变个人回合/全局tick，不加默认空手、隐式装备、无限承载或通用动作次数上限；不修改其他叶子的业务逻辑，不改变自动化runtime，不提交半成品。
+- 功能测试和源码算术不是新方案角色平衡或生产场景验收。
+
+## 模型协作
+
+- 强耦合状态链使用gpt-6.1-sol主模型统一复核；业务写入前核对卡头executionModel、原生能力、复杂度和风险正文。有界辅助仅按AI协作规则只读，不改卡/队列、不提交、不操作runtime或派生子智能体；没有独立工作面不强制辅助。
+
+## 验证
+
+- 定向EditMode及Unity编译；真实CSV投影→Adapter→合法候选→命令→状态发布→后续攻防，镜像交换双方；覆盖五档C、四属性正负向、30%总峰值、1460肉攻低阶自增益12与金丹档146、强弱/等强替换、同层多次、本人当前延迟扣时长、完整回合Stun和下一正常回合。
+- 测独立第五样本、预览/拒绝不耗随机、未命中/无正伤害不控制、已有Stun不刷新、准备未提交/拒绝/溢出不漏写、死亡/战斗结束清理；生产场景留SCENE。
+- 修改Stage后在同一worktree先dotnet build -c Release --no-restore simulations/BattleSim，再dotnet run --no-build -c Release --project simulations/BattleSim；缺obj/project.assets.json先同项目restore一次，不用外部缓存；不扩充SIM矩阵。
+- 管理投影check-task-cards/check-review-text；CSV/Unity数据相关变更check-data-chain；暂存前check-pending-whitespace，暂存后git diff --cached --check。输入不变不重复已经通过的同范围验证。
+- 增补真实Spawner双边原始神识投影、神识对抗后跨境低于旧5%且不抬回、概率90%峰值、缺神识输入整体拒绝；真实EncounterCoordinator第五样本与有限玄同免疫输入阻止控制但不退伤害/成本，期限不延长、失败不发布。无需实现自动净化生产者。
+
+## 完成条件
+
+- 本选项冻结的完整原子结果和验收达成，记录真实命令/输入/结果与未实现边界，不能只交孤立Resolver测试或夹具。
+- 成功后只归档同一卡、移除本任务backlog与队列行；保留下游具名前置，只有进入master后的QueueMaintenance再判断解锁。
+- 归档前仅依据本轮事实/diff/验证检查经验候选，有则pending，无则不建空章节；形成一个路径限定candidate，由共享入口集成。
+
+## 停止条件
+
+- 新所有者、路径、未声明字段或技术路线越界时暂停写入并按既有合同重新预检；不自行扩路径或改claim摘要。发现不原子、职责冲突、连续跨边界补丁时停止，不动态拆卡或提交实施candidate。
+- 缺少明确producer/资格/互斥叠加合同、试图从派生属性反推权威输入、需完整玄同自动净化/水系生产迁移/通用祛禁或新状态内容时停止。
+- 缺运行证据不算通过；不得以调整验收文字掩盖实现或验证失败。

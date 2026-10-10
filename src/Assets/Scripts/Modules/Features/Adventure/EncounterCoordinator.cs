@@ -438,9 +438,10 @@ namespace TianZhang.Features.Adventure
                 return validation;
             if ((command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
                 session.TryGetProfile(command.ProfileId, out CombatAttackProfile sampledProfile) &&
-                sampledProfile.Effect != CombatAttackEffect.RestoreSpirit)
+                sampledProfile.Effect is CombatAttackEffect.Physical or CombatAttackEffect.Soul or CombatAttackEffect.Hybrid)
             {
                 var rolls = new CombatResolutionRolls(
+                    combatRandomSource.NextPercent(),
                     combatRandomSource.NextPercent(),
                     combatRandomSource.NextPercent(),
                     combatRandomSource.NextPercent(),

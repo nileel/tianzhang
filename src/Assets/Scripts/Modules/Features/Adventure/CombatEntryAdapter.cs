@@ -123,6 +123,8 @@ namespace TianZhang.Features.Adventure
                     AttackEffectType.Hybrid => CombatAttackEffect.Hybrid,
                     AttackEffectType.Heal => CombatAttackEffect.Heal,
                     AttackEffectType.RestoreSpirit => CombatAttackEffect.RestoreSpirit,
+                    AttackEffectType.Buff => CombatAttackEffect.Buff,
+                    AttackEffectType.Debuff => CombatAttackEffect.Debuff,
                     _ => (CombatAttackEffect)(-1),
                 };
                 if ((int)effect < 0) continue;

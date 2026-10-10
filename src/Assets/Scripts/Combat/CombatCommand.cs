@@ -20,18 +20,21 @@ namespace TianZhang.Combat
     /// <summary>Fixed roll values make a command replayable without a runtime random source.</summary>
     public readonly struct CombatResolutionRolls
     {
-        public CombatResolutionRolls(float hitPercent, float criticalPercent, float blockPercent, float soulShieldPercent)
+        public CombatResolutionRolls(float hitPercent, float criticalPercent, float blockPercent, float soulShieldPercent,
+            float? controlRoll = null)
         {
             HitPercent = hitPercent;
             CriticalPercent = criticalPercent;
             BlockPercent = blockPercent;
             SoulShieldPercent = soulShieldPercent;
+            ControlRoll = controlRoll;
         }
 
         public float HitPercent { get; }
         public float CriticalPercent { get; }
         public float BlockPercent { get; }
         public float SoulShieldPercent { get; }
+        public float? ControlRoll { get; }
     }
 
     public sealed class CombatCommand

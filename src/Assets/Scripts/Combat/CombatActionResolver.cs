@@ -94,6 +94,13 @@ namespace TianZhang.Combat
         {
             session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile);
 
+            bool control = profile.RuleMetadata != null &&
+                (profile.RuleMetadata.ControlChancePermille > 0 || profile.RuleMetadata.ControlUsesMindContest);
+            if (control && (!command.Rolls.ControlRoll.HasValue ||
+                float.IsNaN(command.Rolls.ControlRoll.Value) || float.IsInfinity(command.Rolls.ControlRoll.Value) ||
+                command.Rolls.ControlRoll.Value < 0 || command.Rolls.ControlRoll.Value > 100))
+                return CombatActionResult.Rejected("combat_control_roll_invalid");
+
             bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
             int spiritCost = profile.GetSpiritCost(targetsSelf);
             if (!actor.TryConsumeSpirit(spiritCost))
@@ -112,14 +119,56 @@ namespace TianZhang.Combat
                 result = CombatActionResult.SpiritRecoverySuccess(spiritCost,
                     new CombatSpiritRecoveryResult(target.Id, requestedRecovery, target.CurrentSpirit - before));
             }
+            else if (profile.Effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff)
+            {
+                target.ApplyAttributeStatus(profile.RuleMetadata, RealmCoefficient(session, actor, target),
+                    session.RuleSet.Global.RelativeStatusLimitPermille, actor.GetAbilityInstanceId(profile.Id), targetsSelf);
+                result = CombatActionResult.AttackSuccess(spiritCost, new CombatDamageResult(0, true, false, false, false));
+            }
             else
             {
                 CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls);
+                if (control && damage.IsHit && damage.FinalDamage > 0 && target.IsAlive &&
+                    !target.HasStatus(CombatStatusKind.Stun) && !target.HasStatus(CombatStatusKind.Xuantong) &&
+                    ControlSucceeds(session, actor, target, profile.RuleMetadata, command.Rolls.ControlRoll.Value))
+                    target.ApplyStatus(CombatStatusKind.Stun, 1, sourceRef: actor.GetAbilityInstanceId(profile.Id));
                 result = CombatActionResult.AttackSuccess(spiritCost, damage);
             }
             // 全局刻重用冷却账本只由 reuseCooldownTicks 启动；CT 惩罚由 CommandService 单独累计。
             if (cooldown > 0) actor.SetCooldown(profile.Id, cooldown);
             return result;
+        }
+
+        private static int RealmCoefficient(CombatSession session, CombatantSnapshot actor, CombatantSnapshot target)
+        {
+            actor.TryGetRealmOrder(session.RuleSet, out int sourceOrder);
+            target.TryGetRealmOrder(session.RuleSet, out int targetOrder);
+            var global = session.RuleSet.Global;
+            return (sourceOrder - targetOrder) switch
+            {
+                <= -2 => global.RealmBelowTwoPermille, -1 => global.RealmBelowOnePermille,
+                0 => global.RealmEqualPermille, 1 => global.RealmAboveOnePermille, _ => global.RealmAboveTwoPermille,
+            };
+        }
+
+        private static bool ControlSucceeds(CombatSession session, CombatantSnapshot actor, CombatantSnapshot target,
+            CombatAttackRuleMetadata payload, float roll)
+        {
+            var global = session.RuleSet.Global;
+            long divisor = payload.ControlUsesMindContest ? global.WaterMindDifferenceDivisor : 1;
+            long numerator = payload.ControlChancePermille;
+            if (payload.ControlUsesMindContest)
+            {
+                long difference = (long)actor.RawMind + actor.MindStrengthBonus - target.RawMind - target.MindStrengthBonus;
+                numerator = checked(global.WaterBaseChancePermille * divisor + difference * 1000);
+                numerator = Math.Max(global.WaterMinimumChancePermille * divisor,
+                    Math.Min(global.StrongControlLimitPermille * divisor, numerator));
+            }
+            long denominator = checked(1000000L * divisor);
+            numerator = Math.Min(checked(numerator * RealmCoefficient(session, actor, target)),
+                checked(global.StrongControlLimitPermille * divisor * 1000));
+            // Compare the unrounded rational with the independent percentage sample; no post-C floor.
+            return (decimal)roll * denominator < (decimal)numerator * 100;
         }
 
         private static CombatDamageResult ResolveEffect(

@@ -1,0 +1,94 @@
+# U-COMBAT-AP2-STATUS-01 · 执行前合同缺口证据
+
+日期：2026-10-10
+基线：fbf51a6609f61d45dbda2789163c7b8ddada06b3
+RunId：e03194d1-987c-4dfb-bf92-10d4d110839d
+结论：等待负责人冻结状态输入与免疫验收边界；本轮只提交此调查证据，不修改业务代码、任务卡、队列或任务生命周期，不宣称状态链实施完成。
+
+## 身份、预检与模型协作
+
+- 共享入口启动证明：主模型gpt-6.1-sol，以入口传入值为准；未启动第二责任会话。
+- 入口预检绑定同一runId/taskId/任务卡及索引digest，matched、notice、mustRead、gatePointers均为空。
+- 本卡为复杂、强耦合状态链：配置→投影→合法候选→命令→准备副本→状态发布→后续属性/本人回合。单一主责统一调查，未调用辅助模型；当前问题是冻结输入合同缺失，不是需要独立模型意见才能判断的证据冲突。
+- 应用unity-agent-workflows；读取结构索引及runtime/content/assemblies聚焦图、project-structure-discovery/content-and-systems/ai-workflows/modular-architecture/unity-validation参考。原任务已批准设计与精确路径，本轮不另建方案或扩大实施范围。
+
+## 已查明的调用链
+
+1. CombatContentImporter.TryBuildAttackProfileProjection按精确AttackProfiles表头读取规则、解析行并投影AttackProfileData；ResolveAttackRuleFields允许damage行显式controlChancePermille和controlUsesMindContest，后者严格0/1。
+2. AttackProfileData.TryValidate接受上述概率与神识对抗标志；CombatEntryAdapter.TryProjectProfiles将它们写入CombatAttackRuleMetadata，但Buff/Debuff当前被effect映射过滤。
+3. CombatLegalActionService.AddTargetedAttacks和CombatSession.ValidateAttack当前除RestoreSpirit外排除同阵营；Buff自/友合法入口尚未打通。
+4. CombatActionResolver.ResolveAttack尚未施加属性状态或概率Stun；EncounterCoordinator.ExecuteCommand合法性检查后取得四个随机样本，未取得独立第五控制样本。
+5. CombatantSnapshot.CopyForResolution当前已经逐条深复制statuses；CommitResolvedState也已经发布prepared.statuses。此处前置代码已补齐，不能按合同旧描述重复修复；新增属性状态仍须复用同一成功发布边界并验证。
+
+## 输入与免疫缺口
+
+### 神识输入
+
+- AdventureUnitSpawner.CreatePlayer的角色权威输入包含source.Attributes.Mind；CreateEnemy的CharacterAttributes也有Mind。但两者构造CombatantSnapshot时均未传入原始神识。
+- CombatantSnapshot只有RawSpirit、四个派生攻防、RealmStage等值，没有原始神识字段。MindStrengthBonus是功法附加值，不是角色原始神识。
+- CharacterAttributes.Derive完整公式明确：神攻来自Spirit×境界×5及加成，神防来自Mind×境界×3.5及加成。不能用神攻替代神识，也不能从带加成、已取整的神防反推原始神识。
+- 配置合同§六明确先神识对抗，再乘境界C且不抬回旧最低概率；同节将WaterArt/WaterDivine真实泛化消费者留给SIM。本卡需要明确：正式Adapter接受的controlUsesMindContest=true载荷，是本轮补齐输入后消费，还是本轮明确拒绝且不算状态链完成范围。不能默默忽略该标志。
+- 完整投影修复需新增明确原始神识输入并修改AdventureUnitSpawner.cs；该文件不在当前expectedPaths中。
+
+### 玄同免疫
+
+- 当前CombatStatusKind只有Stun、Immobilize、SealSpirit、DamageOverTime；Snapshot无带期限的玄同控制免疫记录，也无祛禁输入。现有GongFaId/MindStrengthBonus不能证明玄同正在生效。
+- docs/角色养成/功法/太虚观/南华玄感录.txt的游玄段：清除减益时才获得一回合玄同免疫；不能把修炼该功法等同于永久免疫。
+- simulations/BattleSim/Combat.cs的RunBattle实际存在净化成功→金丹Xuantong=1→本人期限递减，以及water正伤害时du.Xuantong==0的检查。该生产者不属于本卡；Stage共享内核不能用全模拟的字段代替自己的Snapshot输入。
+- 本卡ready准备段明确要求EncounterCoordinator验证免疫和失败不错误发布，但未冻结有限免疫输入的字段/时点，也未区分免疫消费者验收与玄同自动触发生产者验收。需要冻结一个可执行边界，不能新增通用状态引擎或顺带移植玄同净化被动。
+
+## 停止依据与待选合同
+
+- 当前任务停止条件：新所有者/路径/字段或实现路线越界时暂停写入并重新预检。
+- A建议：补齐原始神识的真实角色投影，新增有限、带本人结束期限的玄同免疫输入及消费规则；在实际Adapter/候选/命令/发布链验证神识对抗与免疫。只新增Spawner这一业务路径；玄同净化自动触发、水系真实生产者仍留给后续，测试施加免疫输入不冒充玩家已经能获得玄同。
+- B替代：本轮只消费无神识对抗的固定概率载荷；Adapter明确拒绝controlUsesMindContest=true，收窄验收为百分比攻防、固定概率Stun、候选/第五样本/持续/失败原子性。不实现或宣称神识对抗、玄同免疫或祛禁；这会缩小原卡验收，必须负责人批准。
+- C：保持阻塞，等待重新准备合同；不实施。
+- A/B的完整taskBody和精确expectedPaths随结构化决策返回；当前卡、队列、主责与生命周期保持原样。选择后由共享入口应用合同并重做风险预检，不能提前修改当前卡。
+
+## 验证与限制
+
+- 只读检查：git status --short初始为空；HEAD与入口BaseCommit一致，branch与CandidateBranch一致。
+- 已完整读取目标方法、Snapshot状态逻辑、角色派生公式和SIM玄同/水控逻辑；上文为源码与合同核对事实。
+- 本轮没有业务代码/CSV/Unity资产变化，不运行Unity编译、EditMode或BattleSim；源码调查不作为运行时功能或角色平衡通过证据。
+- checkpoint只允许本验证记录；提交前执行定向check-review-text/check-pending-whitespace，暂存后git diff --cached --check，最终核对差异与生命周期未变。
+- A/B/C完整选项合同已用check-task-cards.ps1 -TaskId U-COMBAT-AP2-STATUS-01 -Postcondition CheckpointScope -DecisionContextPath本run专属临时JSON -OutputJson在内存中校验，返回status=ok；未改当前卡或提前发布ready，选择后仍须重新预检。
+- 不创建经验候选：目前是范围合同缺口，未完成实施与运行验证，不据此形成已验证的开发修复经验。
+
+## 本次选项A实施与完成（替代上方原run的等待结论）
+
+- 日期：2026-10-10；RunId=f67dc376-1c2a-4383-986d-bdb1acca1e90；BaseCommit=14f5f03a9dbfdf791af7d9e96010d962123fb30f。
+- 负责人回复只用于DEC-20261010-CD2835A50BF3BB/A，入口已机械应用完整A合同并重新预检；本轮没有恢复旧模型会话，也没有改写已claim的范围。
+- 主模型沿用入口真实启动证明gpt-6.1-sol；强耦合状态链由同一主责统一实施、审阅完整差异和最终验证，没有独立辅助工作面，未调用辅助模型或第二责任会话。入口预检matched/notice/mustRead/gatePointers均为空，与卡头schema 2风险投影一致。
+
+### 实际所有者、结构与实施
+
+- 读取unity-agent-workflows及project-structure-discovery、content-and-systems、ai-workflows、modular-architecture、unity-validation参考；读取UNITY_STRUCTURE索引及runtime/content/assemblies图，再以本轮源码核验。沿现有Content→Adventure→Combat投影方向，没有新程序集、通用状态引擎或其他Feature依赖。
+- 正式链为CombatContentImporter严格解析→AttackProfileData→CombatEntryAdapter→CombatLegalActionService/CombatSession→CombatCommandService→CombatActionResolver准备副本→CommitResolvedState→四攻防读取与本人开始/结束。原严格载荷解析已存在，因此没有改写Importer、AttackProfileData或生产表。
+- Buff/Debuff现在被实际Adapter投影；候选和命令共用AllowsTarget规则，Buff只自/友，Debuff/伤害只敌，原资格、射程、封灵与资源检查保留。
+- 新属性记录仍存在既有statuses列表中，记录固定极性、ATTRIBUTE及OFFENSE/DEFENSE标签、NORMAL、真实能力实例sourceRef与SELF_ABILITY/OTHER_ABILITY。同来源同statusId仅更强替换并使用新期限；弱者/等强不刷新，首批每ID一层，不新增多来源叠加权限。
+- 施受境界按显式RealmStage闭合映射到同一规则表realmOrder；读取global五档C。四属性基于未增益基础值及固定档承载，使用百万分母保留精确增量，汇总及承载/30%总峰值后一次AwayFromZero取整。1460肉攻的10%自益练气档只增12，金丹档增146。审阅时补足同来源多ID汇总仍受固定档承载的总峰值，新增1460→1496测试证明该边界。
+- 新记录仅有标量与不可变字符串；每条记录独立复制，成功提交才发布。死亡清理同时避免本人开始DoT迭代时修改原列表；战斗结束清理状态。准备、拒绝及溢出测试确认没有部分写入或扣费。
+- CombatResolutionRolls第五ControlRoll为独立0～100样本，缺失/非法时拒绝准备，不用默认0替代。EncounterCoordinator在合法伤害命令通过校验后取五次样本；Stage将Preview放在采样之前，并同样取得五个独立样本。状态与恢复不消耗这些伤害样本。
+- Stun仅命中、正伤害、目标存活且无已有Stun/玄同时写入；期限为下一整本人回合，不叠不刷新。本人被跳过仍按旧时点恢复HP/MP、AP0；真实调度器随后返回下一正常本人回合。
+- Spawner玩家/敌人分别传source.Attributes.Mind/attributes.Mind；RawMindInputsPresent区分缺失与合法0，不反推派生神攻/神防。神识对抗先读global水系基础/最低概率/差值除数/强控峰值，并加入原功法神识强度额外值，再乘C且不抬回旧5%保底；以精确有理数比较独立样本。缺任一方权威输入整体拒绝。
+- Xuantong是显式施加、具来源且带本人期限的BUFF/ACTION|CONTROL/NORMAL输入；有效时只阻止Stun，伤害、AP/MP和CD照常成功。现有输入不延长，深复制、发布、本人期限、死亡和战斗结束复用既有边界；功法身份不授永久免疫。
+- 新测试文件346行；既有Snapshot658行、Coordinator781行，仅扩展原有状态桶/既有采样职责，没有新增controller/service责任组，不为本任务进行结构重构或刷新全图。
+
+### 最终验证命令与结果
+
+- Unity 6000.3.18f1在本worktree的src项目运行：-batchmode -nographics -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.CombatRealmStatusTests;TianZhang.Tests.AttackProfileDataTests;TianZhang.Tests.EditMode.CombatActionPointKernelTests。
+- 最终Temp/U-COMBAT-AP2-STATUS-01-final.xml：203/203通过、0失败；其中状态链118、严格导入47、既有AP内核38。编译无error CS。最终XML SHA256=50b261c34ffdba00be35bf9a02f25173fae3f2c5159ba66212561ce43c137141。
+- 状态覆盖：五档C×四属性×正负向×双方镜像共80组，实际Adapter投影、合法候选、命令发布及后续物理/神魂伤害；还包括严格非法载荷、单次精确汇总/峰值、强弱/等强替换、同层重复、当前本人结束延迟、Stun真实调度恢复、独立第五样本、预览/非法目标零采样、准备/拒绝/溢出、死亡/结束清理、神识对抗/缺失、90%峰值、实际Spawner双边神识和实际Coordinator有限免疫消费。
+- 第一次额外运行CombatAbilityCapacityTests时19项中2通过、17在Ready入战前以combat_session_basic_attack_binding_invalid失败。该夹具Actor默认声明basic_iron_sword，却只向Adapter传一个术法profile；基线和当前Adapter的对应装备绑定门禁一致，本轮diff只新增Buff/Debuff投影。该历史夹具缺陷不属于允许路径，未改测试或放宽生产门禁，也不宣称该夹具通过；本卡原子结果由上述最终203项验证。
+- 首次缺少simulations/BattleSim/obj/project.assets.json，已在同一worktree执行一次dotnet restore simulations/BattleSim作为环境准备，没有使用其他worktree或外部obj/bin。
+- 最终dotnet build -c Release --no-restore simulations/BattleSim：退出0，0警告、0错误。随后dotnet run --no-build -c Release --project simulations/BattleSim：退出0，完成既有默认矩阵；最终完整输出保存在Temp/U-COMBAT-AP2-STATUS-01-battlesim-final.log。未扩充SIM矩阵、未据此冻结新角色平衡结论。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：OK，GongFa29/29、Spells84/84、Skills31/31、647语言键；check-unity-assembly-boundaries.ps1：OK，19程序集、2 asmref。
+- 生产规则摘要d3387a3baa6f012d685501686fb5a58615e528dac09945c005186c3f34365838保持；RealmStatuses.fixture.csv SHA256=590a5dc5fa02f952c5f3da06219f8b53ba92c5ca7ae506462c943d5c0403d240。仅创建测试CSV/脚本及对应meta；未加入生产catalog，也未授玩家技能。Unity测试产生的生产asset/ProjectSettings尾空格重写已按基线恢复，不纳入candidate。
+
+### 交付边界与收尾
+
+- 完成A合同状态窄链；只归档本卡及移除本任务队列/backlog行。SIM/PREVIEW等下游的具名前置引用原样保留，正式进入master后再由QueueMaintenance判断解锁；父项与其他任务未变。
+- 未运行PlayMode/生产场景画面验收；玄同自动净化触发、祛禁生产者、水系泛化生产消费者、最终新方案数值平衡仍属于后续。显式免疫测试只证明输入/消费，不代表玩家已能获得玄同。
+- 本轮按冻结规则完成实现，没有新增经验候选；不为既有合同重复建经验、不查重或更改风险索引。
+- 收尾检查已通过：同卡CodexClosedOrNonReady postcondition和全局任务投影均OK（67张活跃卡、readyCount=0）；check-review-text检查753文件OK；预期集合中仍存在的21个文件check-pending-whitespace通过；暂存19个实际差异路径后git diff --cached --check通过。首次将已删除的活跃卡也传入whitespace检查时脚本报告Missing path，改为检查仍存在的文件；删除源继续保留在暂存、candidate范围及最终--no-renames changedPaths中，没有删减范围。
+- 唯一candidate使用入口指定automation-finalize-commit.ps1及四项精确元数据生成，共享入口负责正式重放与集成；本轮不执行runtime管理或集成。

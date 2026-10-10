@@ -4,7 +4,11 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
-    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime }
+    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime, Attribute, Xuantong }
+    public enum CombatStatusPolarity { BUFF, DEBUFF }
+    [Flags]
+    public enum CombatStatusTags { ATTRIBUTE = 1, OFFENSE = 2, DEFENSE = 4, ACTION = 8, CONTROL = 16 }
+    public enum CombatStatusSourceKind { SELF_ABILITY, OTHER_ABILITY }
 
     public sealed class CombatOwnTurnStatus
     {
@@ -14,6 +18,17 @@ namespace TianZhang.Combat
         public int RemainingOwnTurnEnds { get; internal set; }
         public int DamagePerStart { get; }
         internal bool DeferCurrentEnd { get; set; }
+        public string StatusId { get; internal set; }
+        public string AttributeId { get; internal set; }
+        public long DeltaNumerator { get; internal set; }
+        public int RelativeLimitPermille { get; internal set; }
+        public int AttributeCapacity { get; internal set; }
+        public string SourceRef { get; internal set; }
+        public CombatStatusSourceKind SourceKind { get; internal set; }
+        public CombatStatusPolarity Polarity { get; internal set; }
+        public CombatStatusTags Tags { get; internal set; }
+        public string RemovalPolicy => "NORMAL";
+        internal CombatOwnTurnStatus Copy() => (CombatOwnTurnStatus)MemberwiseClone();
     }
 
     /// <summary>Scalar protocol projection; production currently passes an explicit empty source list.
@@ -100,7 +115,8 @@ namespace TianZhang.Combat
             string visibleRootElement = null,
             string visibleRootGrade = null,
             IEnumerable<CombatActionEconomyModifier> actionEconomyModifiers = null,
-            IReadOnlyDictionary<string, string> abilityInstanceIds = null)
+            IReadOnlyDictionary<string, string> abilityInstanceIds = null,
+            int? rawMind = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
@@ -112,6 +128,7 @@ namespace TianZhang.Combat
                 throw new ArgumentOutOfRangeException(nameof(maxCombatSwaps));
             if (rawSpirit < 0)
                 throw new ArgumentOutOfRangeException(nameof(rawSpirit));
+            if (rawMind < 0) throw new ArgumentOutOfRangeException(nameof(rawMind));
 
             Id = id;
             Team = team;
@@ -119,10 +136,10 @@ namespace TianZhang.Combat
             Speed = speed;
             MaximumHealth = maximumHealth;
             CurrentHealth = currentHealth;
-            PhysicalAttack = physicalAttack;
-            SoulAttack = soulAttack;
-            PhysicalDefense = physicalDefense;
-            SoulDefense = soulDefense;
+            BasePhysicalAttack = physicalAttack;
+            BaseSoulAttack = soulAttack;
+            BasePhysicalDefense = physicalDefense;
+            BaseSoulDefense = soulDefense;
             RealmMultiplier = Math.Max(1f, realmMultiplier);
             ActionPointMaximumUnits = actionPointMaximumUnits;
             MovementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
@@ -147,6 +164,8 @@ namespace TianZhang.Combat
             MaxCombatSwaps = maxCombatSwaps;
             CombatSwapsUsed = combatSwapsUsed;
             RawSpirit = rawSpirit;
+            RawMind = rawMind.GetValueOrDefault();
+            RawMindInputsPresent = rawMind.HasValue;
             RealmStage = realmStage;
             VisibleRootElement = visibleRootElement;
             VisibleRootGrade = visibleRootGrade;
@@ -160,12 +179,18 @@ namespace TianZhang.Combat
         public int CurrentHealth { get; private set; }
         public int MaximumSpirit { get; set; }
         public int CurrentSpirit { get; private set; }
-        public int PhysicalAttack { get; }
-        public int SoulAttack { get; }
-        public int PhysicalDefense { get; }
-        public int SoulDefense { get; }
+        public int BasePhysicalAttack { get; }
+        public int BaseSoulAttack { get; }
+        public int BasePhysicalDefense { get; }
+        public int BaseSoulDefense { get; }
+        public int PhysicalAttack => EffectiveAttribute("physical_attack", BasePhysicalAttack);
+        public int SoulAttack => EffectiveAttribute("soul_attack", BaseSoulAttack);
+        public int PhysicalDefense => EffectiveAttribute("physical_defense", BasePhysicalDefense);
+        public int SoulDefense => EffectiveAttribute("soul_defense", BaseSoulDefense);
         public float RealmMultiplier { get; }
         public int RawSpirit { get; }
+        public int RawMind { get; }
+        public bool RawMindInputsPresent { get; }
         public string RealmStage { get; }
         public string VisibleRootElement { get; }
         public string VisibleRootGrade { get; }
@@ -189,12 +214,101 @@ namespace TianZhang.Combat
         public IReadOnlyList<CombatOwnTurnStatus> Statuses => statuses.AsReadOnly();
         public bool HasStatus(CombatStatusKind kind) => statuses.Exists(status => status.Kind == kind);
 
-        public void ApplyStatus(CombatStatusKind kind, int ownTurnEnds, int damagePerStart = 0)
+        public void ApplyStatus(CombatStatusKind kind, int ownTurnEnds, int damagePerStart = 0,
+            string sourceRef = null, bool selfAbility = false)
         {
-            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || ownTurnEnds <= 0 || damagePerStart < 0)
+            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || kind == CombatStatusKind.Attribute ||
+                ownTurnEnds <= 0 || damagePerStart < 0 ||
+                (kind == CombatStatusKind.Xuantong && (string.IsNullOrWhiteSpace(sourceRef) || damagePerStart != 0)))
                 throw new ArgumentOutOfRangeException(nameof(ownTurnEnds));
+            if (!IsAlive || kind == CombatStatusKind.Stun &&
+                (HasStatus(CombatStatusKind.Stun) || HasStatus(CombatStatusKind.Xuantong))) return;
+            if (kind == CombatStatusKind.Xuantong && HasStatus(kind)) return;
             statuses.RemoveAll(status => status.Kind == kind);
-            statuses.Add(new CombatOwnTurnStatus(kind, ownTurnEnds, damagePerStart, OwnTurnActive));
+            statuses.Add(new CombatOwnTurnStatus(kind, ownTurnEnds, damagePerStart, OwnTurnActive)
+            {
+                StatusId = kind == CombatStatusKind.Xuantong ? "xuantong" : kind.ToString(),
+                SourceRef = sourceRef,
+                SourceKind = selfAbility ? CombatStatusSourceKind.SELF_ABILITY : CombatStatusSourceKind.OTHER_ABILITY,
+                Polarity = kind == CombatStatusKind.Xuantong ? CombatStatusPolarity.BUFF : CombatStatusPolarity.DEBUFF,
+                Tags = CombatStatusTags.ACTION | CombatStatusTags.CONTROL,
+            });
+        }
+
+        internal void ClearStatuses() => statuses.Clear();
+
+        // Closed mapping of explicit stage inputs; realm multipliers never determine status potency.
+        internal bool TryGetRealmOrder(CombatRuleSet rules, out int order)
+        {
+            string id = RealmStage switch
+            {
+                "凡人" => "realm_fanren", "练气" => "realm_lianqi",
+                "筑基" or "筑基开府" or "开府" or "筑基圆满" => "realm_zhuji",
+                "金丹" or "金丹初结" or "金丹温养" or "金丹圆满" => "realm_jindan",
+                "元婴" => "realm_yuanying", "化神" => "realm_huashen",
+                _ => RealmStage,
+            };
+            foreach (char grade in "一二三四五六七八九")
+                if (RealmStage == "练气" + grade + "品") id = "realm_lianqi";
+            foreach (var realm in rules.Realms)
+                if (realm.RealmId == id) { order = realm.RealmOrder; return true; }
+            order = 0; return false;
+        }
+
+        internal void ApplyAttributeStatus(CombatAttackRuleMetadata payload, int coefficient,
+            int limit, string sourceRef, bool selfAbility)
+        {
+            if (!IsAlive) return;
+            int basis = payload.StatusAttributeId switch
+            {
+                "physical_attack" => BasePhysicalAttack, "soul_attack" => BaseSoulAttack,
+                "physical_defense" => BasePhysicalDefense, "soul_defense" => BaseSoulDefense,
+                _ => throw new ArgumentException("combat_status_attribute_invalid"),
+            };
+            int capacity = payload.StatusAttributeId switch
+            {
+                "physical_attack" => payload.Tier.PhysicalAttackCapacity, "soul_attack" => payload.Tier.SoulAttackCapacity,
+                "physical_defense" => payload.Tier.PhysicalDefenseCapacity, _ => payload.Tier.SoulDefenseCapacity,
+            };
+            long relative = Math.Max(-(long)limit * 1000, Math.Min((long)limit * 1000,
+                checked((long)payload.StatusRelativePermille * coefficient)));
+            long delta = checked(relative * Math.Min(Math.Max(0, basis), capacity));
+            CombatOwnTurnStatus previous = statuses.Find(status => status.Kind == CombatStatusKind.Attribute &&
+                status.StatusId == payload.StatusId && status.SourceRef == sourceRef);
+            if (previous != null && Math.Abs(previous.DeltaNumerator) >= Math.Abs(delta)) return;
+            // This slice gives no new overlapping-source permission.
+            if (statuses.Exists(status => status.Kind == CombatStatusKind.Attribute &&
+                status.AttributeId == payload.StatusAttributeId && status.SourceRef != sourceRef)) return;
+            if (previous != null) statuses.Remove(previous);
+            statuses.Add(new CombatOwnTurnStatus(CombatStatusKind.Attribute, payload.StatusDurationOwnTurnEnds, 0, OwnTurnActive)
+            {
+                StatusId = payload.StatusId, AttributeId = payload.StatusAttributeId, DeltaNumerator = delta,
+                RelativeLimitPermille = limit, AttributeCapacity = capacity, SourceRef = sourceRef,
+                SourceKind = selfAbility ? CombatStatusSourceKind.SELF_ABILITY : CombatStatusSourceKind.OTHER_ABILITY,
+                Polarity = relative > 0 ? CombatStatusPolarity.BUFF : CombatStatusPolarity.DEBUFF,
+                Tags = CombatStatusTags.ATTRIBUTE | (payload.StatusAttributeId.EndsWith("attack", StringComparison.Ordinal)
+                    ? CombatStatusTags.OFFENSE : CombatStatusTags.DEFENSE),
+            });
+            // Detect overflow on the private preparation copy, before any publication or payment.
+            _ = EffectiveAttribute(payload.StatusAttributeId, basis);
+        }
+
+        private int EffectiveAttribute(string attribute, int basis)
+        {
+            long delta = 0;
+            int limit = 1000;
+            int capacity = int.MaxValue;
+            foreach (CombatOwnTurnStatus status in statuses)
+                if (status.Kind == CombatStatusKind.Attribute && status.AttributeId == attribute)
+                {
+                    delta = checked(delta + status.DeltaNumerator);
+                    limit = Math.Min(limit, status.RelativeLimitPermille);
+                    capacity = Math.Min(capacity, status.AttributeCapacity);
+                }
+            long peak = checked((long)Math.Min(Math.Max(0, basis), capacity) * limit * 1000);
+            delta = Math.Max(-peak, Math.Min(peak, delta));
+            long rounded = (Math.Abs(delta) + 500000) / 1000000;
+            return checked((int)Math.Max(0, basis + (delta < 0 ? -rounded : rounded)));
         }
         public IReadOnlyList<string> EquippedArtProfileIds => equippedArtProfileIds.AsReadOnly();
         public IReadOnlyList<string> AvailableArtProfileIds => availableArtProfileIds.AsReadOnly();
@@ -247,7 +361,7 @@ namespace TianZhang.Combat
             HasMovedThisTurn = false;
             CommittedBasicAttackUses = 0;
             committedAbilityUses.Clear();
-            foreach (CombatOwnTurnStatus status in statuses)
+            foreach (CombatOwnTurnStatus status in statuses.ToArray())
                 if (status.DamagePerStart > 0) ReceiveDamage(status.DamagePerStart);
             if (!IsAlive) return false;
             RestoreHealth(HealthRecoveryPerOwnTurn);
@@ -384,8 +498,7 @@ namespace TianZhang.Combat
             copy.equippedArtProfileIds = new List<string>(equippedArtProfileIds);
             copy.refunds = new Dictionary<string, (int, int)>(refunds, StringComparer.Ordinal);
             copy.committedAbilityUses = new Dictionary<string, int>(committedAbilityUses, StringComparer.Ordinal);
-            copy.statuses = statuses.ConvertAll(status => new CombatOwnTurnStatus(status.Kind,
-                status.RemainingOwnTurnEnds, status.DamagePerStart, status.DeferCurrentEnd));
+            copy.statuses = statuses.ConvertAll(status => status.Copy());
             return copy;
         }
 
@@ -399,7 +512,7 @@ namespace TianZhang.Combat
             cooldowns = prepared.cooldowns; equippedArtProfileIds = prepared.equippedArtProfileIds;
             statuses = prepared.statuses;
             // Payment, refund and successful-use ledgers belong to the command gate, not the effect copy.
-            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); }
+            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); ClearStatuses(); }
         }
 
         public void AdvanceCooldowns(int ticks)
@@ -421,7 +534,7 @@ namespace TianZhang.Combat
             if (damage > 0 && GongFaId == CombatGongFaRules.LeijieGongFaId)
                 LeijieStacks = Math.Min(LeijieStacks + 1, MaximumLeijieStacks);
             CurrentHealth = Math.Max(0, CurrentHealth - damage);
-            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); }
+            if (!IsAlive) { IsGuarding = false; ClearActionPoints(); ClearStatuses(); }
         }
 
         public float DefenseMultiplier(bool physical)

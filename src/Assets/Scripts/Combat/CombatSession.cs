@@ -236,7 +236,8 @@ namespace TianZhang.Combat
         internal void Terminate()
         {
             FinishTurn();
-            foreach (CombatantSnapshot actor in Combatants.All) { actor.ClearActionPoints(); actor.IsGuarding = false; }
+            foreach (CombatantSnapshot actor in Combatants.All)
+            { actor.ClearActionPoints(); actor.IsGuarding = false; actor.ClearStatuses(); }
         }
 
         internal CombatOrdinaryActionDefinition GetOrdinary(CombatCommandKind kind) => ordinary[kind];
@@ -376,8 +377,17 @@ namespace TianZhang.Combat
             if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))
                 return CombatActionResult.Rejected("combat_spirit_sealed");
             if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
-                (profile.Effect != CombatAttackEffect.RestoreSpirit && target.Team == actor.Team))
+                !profile.AllowsTarget(actor.Team, target.Team))
                 return CombatActionResult.Rejected("combat_session_target_invalid");
+            if (profile.RuleMetadata?.ControlUsesMindContest == true &&
+                (!actor.RawMindInputsPresent || !target.RawMindInputsPresent))
+                return CombatActionResult.Rejected("combat_raw_mind_missing");
+            if (profile.Effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff ||
+                profile.RuleMetadata?.ControlChancePermille > 0 || profile.RuleMetadata?.ControlUsesMindContest == true)
+            {
+                if (RuleSet == null || !actor.TryGetRealmOrder(RuleSet, out _) || !target.TryGetRealmOrder(RuleSet, out _))
+                    return CombatActionResult.Rejected("combat_status_realm_invalid");
+            }
             string authorizationFailure = GetAuthorizationFailure(actor, profile);
             if (!string.IsNullOrEmpty(authorizationFailure))
                 return CombatActionResult.Rejected(authorizationFailure);

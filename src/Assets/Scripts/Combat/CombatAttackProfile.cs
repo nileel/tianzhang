@@ -16,6 +16,8 @@ namespace TianZhang.Combat
         Hybrid,
         Heal,
         RestoreSpirit,
+        Buff,
+        Debuff,
     }
 
     /// <summary>Resolved fixed-tier reference and declared narrow payload; no combat algorithms.</summary>
@@ -103,6 +105,15 @@ namespace TianZhang.Combat
                 float.IsNaN(otherTargetSpiritRecoveryMultiplier) || float.IsInfinity(otherTargetSpiritRecoveryMultiplier) ||
                 otherTargetSpiritRecoveryMultiplier < 0f)
                 throw new ArgumentOutOfRangeException(nameof(spiritRecoveryMultiplier));
+            if (effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff &&
+                (ruleMetadata == null || ruleMetadata.EffectBudgetMode != "status_only" ||
+                 string.IsNullOrWhiteSpace(ruleMetadata.StatusId) ||
+                 !(ruleMetadata.StatusAttributeId is "physical_attack" or "soul_attack" or "physical_defense" or "soul_defense") ||
+                 ruleMetadata.StatusRelativePermille == 0 || Math.Abs((long)ruleMetadata.StatusRelativePermille) > 1000 ||
+                 (effect == CombatAttackEffect.Buff) != (ruleMetadata.StatusRelativePermille > 0) ||
+                 ruleMetadata.StatusDurationOwnTurnEnds <= 0 || ruleMetadata.StatusStackLimit != 1 ||
+                 ruleMetadata.StatusRefreshPolicy != "replace_stronger"))
+                throw new ArgumentException("combat_status_payload_invalid");
 
             Id = id;
             Kind = kind;
@@ -155,5 +166,12 @@ namespace TianZhang.Combat
 
         public int GetSpiritCost(bool targetsSelf) =>
             Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf ? OtherTargetSpiritCost : SpiritCost;
+
+        public bool AllowsTarget(CombatTeam actor, CombatTeam target) => Effect switch
+        {
+            CombatAttackEffect.RestoreSpirit => true,
+            CombatAttackEffect.Buff => actor == target,
+            _ => actor != target,
+        };
     }
 }
