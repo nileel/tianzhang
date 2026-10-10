@@ -99,9 +99,14 @@
 
 ## 经验候选
 
-- 状态：pending。
+### CAND-U-COMBAT-AP-SWAP-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
 - 现象：新动作增加槽位/次数说明后，正式预览的拒绝原因落在滚动视口下方。
 - 已证实根因：换术复用攻击摘要并重复冷却说明及无关伤害信息，使文本preferredHeight=122.284超过viewport height=99.90。
+- 可能复用范围：向既有动作预览添加新内容时，在正式运行时同时检查费用和拒绝原因的可见性；可记录文本preferredHeight、viewport及最终屏幕角点，并断言关键摘要无需滚动。
 - 证据：本任务验证记录及src/Logs/swap两分辨率截图；收短后preferredHeight=91.362，最终8个PlayMode用例通过。
-- 可能复用范围：向既有动作预览添加新内容时，在正式运行时同时检查费用和拒绝原因的可见性。
-- 门禁可能：记录文本preferredHeight、viewport及最终屏幕角点，并断言关键摘要无需滚动；本轮不查重、不分配正式经验ID、不修改风险索引。
+- 门禁可能：yes

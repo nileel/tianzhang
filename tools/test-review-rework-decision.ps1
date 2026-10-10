@@ -83,6 +83,7 @@ $scriptPath = Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
 try {
   [IO.Directory]::CreateDirectory((Join-Path $root 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $root 'tools\check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'experience-candidate-format.ps1') -Destination (Join-Path $root 'tools\experience-candidate-format.ps1')
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $root 'tools/get-experience-risk-preflight.ps1')
   Write-Utf8 (Join-Path $root '开发管理/经验库/风险索引.json') '{"schemaVersion":1,"experiences":[],"gates":[]}'
   & git -C $root init -q
@@ -146,6 +147,7 @@ try {
   try {
     [IO.Directory]::CreateDirectory((Join-Path $integrationRoot 'tools')) | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $integrationRoot 'tools\check-task-cards.ps1')
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'experience-candidate-format.ps1') -Destination (Join-Path $integrationRoot 'tools\experience-candidate-format.ps1')
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $integrationRoot 'tools/get-experience-risk-preflight.ps1')
     Write-Utf8 (Join-Path $integrationRoot '开发管理/经验库/风险索引.json') '{"schemaVersion":1,"experiences":[],"gates":[]}'
     & git -C $integrationRoot init -q -b master

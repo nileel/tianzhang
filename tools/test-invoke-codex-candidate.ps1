@@ -238,7 +238,7 @@ function Invoke-ResumeContextScenario {
 try {
   [IO.Directory]::CreateDirectory((Join-Path $mainRoot 'tools')) | Out-Null
   [IO.Directory]::CreateDirectory($fakeBin) | Out-Null
-  foreach ($tool in @('automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1', 'private-path-acl.ps1')) {
+  foreach ($tool in @('automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1', 'check-task-cards.ps1', 'experience-candidate-format.ps1', 'get-experience-risk-preflight.ps1', 'private-path-acl.ps1')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $tool) -Destination (Join-Path $mainRoot "tools/$tool")
   }
   Write-Utf8 -Path (Join-Path $mainRoot '.gitignore') -Text ".worktrees/`n"

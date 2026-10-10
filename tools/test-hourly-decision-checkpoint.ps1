@@ -57,6 +57,7 @@ $scriptPath=Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
 try{
   [IO.Directory]::CreateDirectory((Join-Path $root 'tools'))|Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $root 'tools\check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'experience-candidate-format.ps1') -Destination (Join-Path $root 'tools\experience-candidate-format.ps1')
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $root 'tools/get-experience-risk-preflight.ps1')
   Write-Utf8 (Join-Path $root '开发管理/经验库/风险索引.json') '{"schemaVersion":1,"experiences":[{"id":"EXP-AUTO-900","title":"New scope risk","preflightSummary":"Check approved source","status":"active","level":"notice","triggerMode":"path","domains":[],"stages":[],"pathPatterns":["src/approved.cs"],"textPatterns":[],"detailRef":"","gateRefs":[],"lastVerified":"2026-10-10"}],"gates":[]}'
   & git -C $root init -q; & git -C $root config user.name 'Decision Test'; & git -C $root config user.email 'decision@example.invalid'

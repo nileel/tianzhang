@@ -110,7 +110,7 @@ function New-Fixture {
   [IO.Directory]::CreateDirectory($root)|Out-Null; $script:fixtures.Add($root)
   foreach ($dir in @('tools','开发管理/任务卡','开发管理/任务归档','开发管理/任务列表','开发管理/经验库/经验卡')) { [IO.Directory]::CreateDirectory((Join-Path $root $dir))|Out-Null }
   foreach ($tool in @(
-    'invoke-daily-experience-candidate-collector.ps1','get-experience-risk-preflight.ps1','check-task-cards.ps1',
+    'invoke-daily-experience-candidate-collector.ps1','get-experience-risk-preflight.ps1','check-task-cards.ps1', 'experience-candidate-format.ps1',
     'check-review-text.ps1','check-pending-whitespace.ps1','automation-finalize-commit.ps1','automation-commit-metadata.ps1',
     'invoke-project-integration.ps1','hourly-integration-lock.ps1'
   )) { Copy-Item -LiteralPath (Join-Path $script:toolRoot $tool) -Destination (Join-Path $root "tools/$tool") }
@@ -213,7 +213,21 @@ try {
   Write-Utf8 (Join-Path $invalid '开发管理/任务归档/SRC-INVALID.txt') (New-ArchiveText 'SRC-INVALID' @((New-CandidateBlock 'CAND-SRC-INVALID-01' -InvalidMissingEvidence)))
   $invalidHead=Commit-All $invalid 'test: add invalid candidate' '2026-08-30T10:00:00+08:00'; $invalidRun=Invoke-Collector $invalid
   Assert-True ($invalidRun.ExitCode -ne 0) 'invalid candidate unexpectedly succeeded'; Assert-Equal $invalidRun.Json.detailCode 'daily_collector_candidate_invalid' 'invalid candidate code mismatch'
+  Assert-Equal $invalidRun.Json.candidateError.sourcePath '开发管理/任务归档/SRC-INVALID.txt' 'missing source path diagnostic'
+  Assert-Equal $invalidRun.Json.candidateError.candidateId 'CAND-SRC-INVALID-01' 'missing candidate diagnostic'
+  Assert-Equal $invalidRun.Json.candidateError.field 'evidence' 'missing field diagnostic'
+  Assert-True ($invalidRun.Json.candidateError.line -gt 0) 'missing line diagnostic'
   Assert-Equal (Invoke-Git $invalid @('rev-parse','HEAD')) $invalidHead 'invalid candidate formed a formal commit'
+
+  # Regression: a prose-only candidate used to reach the daily job without a location.
+  Write-Utf8 (Join-Path $invalid '开发管理/任务归档/SRC-INVALID.txt') (New-ArchiveText 'SRC-INVALID' @('- 状态：pending。', '- 现象：预览被截断。'))
+  $invalidHead=Commit-All $invalid 'test: reproduce missing candidate heading' '2026-08-30T11:00:00+08:00'
+  $missingHeading=Invoke-Collector $invalid
+  Assert-True ($missingHeading.ExitCode -ne 0) 'missing heading unexpectedly succeeded'
+  Assert-Equal $missingHeading.Json.detailCode 'daily_collector_candidate_invalid' 'missing heading code mismatch'
+  Assert-Equal $missingHeading.Json.candidateError.sourcePath '开发管理/任务归档/SRC-INVALID.txt' 'missing heading source mismatch'
+  Assert-Equal $missingHeading.Json.candidateError.field 'candidateId' 'missing heading field mismatch'
+  Assert-Equal (Invoke-Git $invalid @('rev-parse','HEAD')) $invalidHead 'missing heading changed HEAD'
 
   # Stable task id collision fails the whole batch.
   $taskCollision=New-Fixture; $collisionSource='SRC-TASK-COLLISION'; $collisionCandidate='CAND-SRC-TASK-COLLISION-01'; $collisionTask=Get-PromotionTaskId $collisionSource $collisionCandidate

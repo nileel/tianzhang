@@ -16,7 +16,7 @@ $originalCheckerTrace = $env:TZG_MAINTENANCE_CHECK_TRACE
 try {
   [IO.Directory]::CreateDirectory($toolsRoot) | Out-Null
   foreach ($name in @(
-      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1', 'set-task-automation-state.ps1',
+      'invoke-hourly-owner.ps1', 'hourly-automation-lease.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'experience-candidate-format.ps1', 'get-experience-risk-preflight.ps1', 'set-task-automation-state.ps1',
       'set-task-pending-review.ps1', 'automation-finalize-commit.ps1', 'automation-commit-metadata.ps1', 'check-pending-whitespace.ps1',
       'send-feishu-notification.ps1', 'private-path-acl.ps1', 'hourly-integration-lock.ps1', 'hourly-owner-adapter.ps1'
     )) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $toolsRoot $name) }

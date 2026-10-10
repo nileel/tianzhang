@@ -9,6 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'experience-candidate-format.ps1')
 
 $script:root = $null
 $script:baseCommit = $null
@@ -36,12 +37,6 @@ function Write-Utf8Text {
   $parent = Split-Path -Parent $Path
   if (-not (Test-Path -LiteralPath $parent -PathType Container)) { [IO.Directory]::CreateDirectory($parent) | Out-Null }
   [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($false))
-}
-
-function Get-NormalizedDigest {
-  param([string]$Text)
-  $normalized = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
-  [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($normalized))).ToLowerInvariant()
 }
 
 function Invoke-Native {
@@ -93,88 +88,6 @@ function Get-TaskDocument {
   [pscustomobject]@{ Metadata = $metadata; Body = $Text.Substring($bodyMarkers[0].Index + $bodyMarkers[0].Length) }
 }
 
-function Get-CandidateBlocks {
-  param([string]$Text, [string]$SourceTaskId)
-  $normalized = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
-  $lines = @($normalized -split "`n")
-  $sections = @()
-  for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -ceq '## 经验候选') { $sections += $i } }
-  if ($sections.Count -eq 0) { return @() }
-  if ($sections.Count -ne 1) { Stop-Collector 'daily_collector_candidate_invalid' }
-  $sectionStart = $sections[0]
-  $sectionEnd = $lines.Count
-  for ($i = $sectionStart + 1; $i -lt $lines.Count; $i++) {
-    if ($lines[$i] -cmatch '^##\s') { $sectionEnd = $i; break }
-  }
-  $headings = @()
-  for ($i = $sectionStart + 1; $i -lt $sectionEnd; $i++) { if ($lines[$i] -cmatch '^###\s') { $headings += $i } }
-  if ($headings.Count -eq 0) { Stop-Collector 'daily_collector_candidate_invalid' }
-  $expectedFields = @(
-    [pscustomobject]@{ Name = 'collectionState'; Pattern = '^- collectionState:\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'promotionTaskId'; Pattern = '^- promotionTaskId:\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'resolution'; Pattern = '^- resolution:\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'experienceId'; Pattern = '^- experienceId:\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'domain'; Pattern = '^- 经验领域：\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'symptom'; Pattern = '^- 现象：\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'rootCause'; Pattern = '^- 已证实根因：\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'reuseScope'; Pattern = '^- 可能复用范围：\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'evidence'; Pattern = '^- 证据：\s*(?<value>.*)$' },
-    [pscustomobject]@{ Name = 'gatePossible'; Pattern = '^- 门禁可能：\s*(?<value>.*)$' }
-  )
-  $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-  $result = [Collections.Generic.List[object]]::new()
-  for ($h = 0; $h -lt $headings.Count; $h++) {
-    $start = $headings[$h]
-    $end = if ($h + 1 -lt $headings.Count) { $headings[$h + 1] } else { $sectionEnd }
-    $candidateId = $lines[$start].Substring(4)
-    if ($candidateId -cne $candidateId.Trim() -or $candidateId -cnotmatch '^[A-Z0-9][A-Z0-9._-]{2,160}$' -or -not $seen.Add($candidateId)) {
-      Stop-Collector 'daily_collector_candidate_invalid'
-    }
-    $contentIndexes = @()
-    for ($i = $start + 1; $i -lt $end; $i++) { if (-not [string]::IsNullOrWhiteSpace($lines[$i])) { $contentIndexes += $i } }
-    if ($contentIndexes.Count -ne $expectedFields.Count) { Stop-Collector 'daily_collector_candidate_invalid' }
-    $values = [ordered]@{}
-    for ($i = 0; $i -lt $expectedFields.Count; $i++) {
-      $match = [regex]::Match($lines[$contentIndexes[$i]], $expectedFields[$i].Pattern, [Text.RegularExpressions.RegexOptions]::CultureInvariant)
-      if (-not $match.Success) { Stop-Collector 'daily_collector_candidate_invalid' }
-      $value = $match.Groups['value'].Value
-      if ($value -cne $value.Trim()) { Stop-Collector 'daily_collector_candidate_invalid' }
-      $values[$expectedFields[$i].Name] = $value
-    }
-    if ($values.collectionState -cnotin @('provisional', 'pending', 'collected') -or
-        $values.resolution -cnotin @('unresolved', 'promoted', 'duplicate', 'rejected') -or
-        $values.domain -cnotin @('automation', 'management', 'unity', 'battlesim', 'data', 'design', 'content', 'numeric') -or
-        $values.gatePossible -cnotin @('yes', 'no') -or
-        @(@($values.symptom, $values.rootCause, $values.reuseScope, $values.evidence) | Where-Object { [string]::IsNullOrWhiteSpace([string]$_) }).Count -ne 0) {
-      Stop-Collector 'daily_collector_candidate_invalid'
-    }
-    if ($values.collectionState -cin @('provisional', 'pending')) {
-      if (-not [string]::IsNullOrEmpty($values.promotionTaskId) -or $values.resolution -cne 'unresolved' -or -not [string]::IsNullOrEmpty($values.experienceId)) {
-        Stop-Collector 'daily_collector_candidate_invalid'
-      }
-    } else {
-      if ([string]::IsNullOrWhiteSpace($values.promotionTaskId)) { Stop-Collector 'daily_collector_candidate_invalid' }
-      if ($values.resolution -cin @('promoted', 'duplicate')) {
-        if ($values.experienceId -cnotmatch '^EXP-(UNITY|BS|DATA|CONTENT|MGMT|AUTO)-\d{3}$') { Stop-Collector 'daily_collector_candidate_invalid' }
-      } elseif (-not [string]::IsNullOrEmpty($values.experienceId)) {
-        Stop-Collector 'daily_collector_candidate_invalid'
-      }
-    }
-    $blockText = ($lines[$start..($end - 1)] -join "`n").TrimEnd("`n")
-    $result.Add([pscustomobject]@{
-      SourceTaskId = $SourceTaskId
-      CandidateId = $candidateId
-      Digest = Get-NormalizedDigest $blockText
-      StartLine = $start
-      EndLine = $end
-      StateLine = $contentIndexes[0]
-      PromotionLine = $contentIndexes[1]
-      Values = [pscustomobject]$values
-    })
-  }
-  @($result)
-}
-
 function Get-HongKongTimeZone {
   foreach ($id in @('Asia/Hong_Kong', 'China Standard Time')) {
     try { return [TimeZoneInfo]::FindSystemTimeZoneById($id) } catch { }
@@ -200,7 +113,7 @@ function Get-ArchiveCandidatesAtCommit {
     }
     $archiveDate = [TimeZoneInfo]::ConvertTime($archiveMoment, (Get-HongKongTimeZone)).Date
     if ($archiveDate -gt $LatestDate) { continue }
-    foreach ($candidate in @(Get-CandidateBlocks -Text $text -SourceTaskId $sourceTaskId)) {
+    foreach ($candidate in @(Get-CandidateBlocks -Text $text -SourceTaskId $sourceTaskId -SourcePath $path)) {
       if ([string]$candidate.Values.collectionState -cne 'pending') { continue }
       $items.Add([pscustomobject]@{
         SourcePath = $path
@@ -380,7 +293,7 @@ function Invoke-Validation {
 
 function Write-Terminal {
   param([object]$Result, [int]$ExitCode)
-  [Console]::Out.WriteLine(($Result | ConvertTo-Json -Compress -Depth 20))
+  [Console]::Out.WriteLine(($Result | ConvertTo-Json -Compress -Depth 20 -EscapeHandling EscapeNonAscii))
   exit $ExitCode
 }
 
@@ -444,7 +357,7 @@ try {
     $sourceId = [IO.Path]::GetFileNameWithoutExtension($sourcePath)
     try {
       $document = Get-TaskDocument -Text $text -ExpectedId $sourceId -RequireCompleted $true
-      $blocks = @(Get-CandidateBlocks -Text $text -SourceTaskId $sourceId)
+      $blocks = @(Get-CandidateBlocks -Text $text -SourceTaskId $sourceId -SourcePath $sourcePath)
     } catch {
       Stop-Collector 'daily_collector_source_changed'
     }
@@ -491,7 +404,7 @@ try {
   foreach ($group in $bySource) {
     $sourcePath = [string]$group.Name
     $updatedText = Read-Utf8Text (Join-Path $script:worktree $sourcePath)
-    $updatedBlocks = @(Get-CandidateBlocks -Text $updatedText -SourceTaskId ([IO.Path]::GetFileNameWithoutExtension($sourcePath)))
+    $updatedBlocks = @(Get-CandidateBlocks -Text $updatedText -SourceTaskId ([IO.Path]::GetFileNameWithoutExtension($sourcePath)) -SourcePath $sourcePath)
     foreach ($item in @($group.Group)) {
       $updated = @($updatedBlocks | Where-Object { $_.CandidateId -ceq $item.CandidateId })
       if ($updated.Count -ne 1 -or [string]$updated[0].Values.collectionState -cne 'collected' -or [string]$updated[0].Values.promotionTaskId -cne [string]$item.TaskId) {
@@ -554,6 +467,7 @@ try {
 } catch {
   $detailCode = if ($_.Exception.Data.Contains('DetailCode')) { [string]$_.Exception.Data['DetailCode'] } else { 'daily_collector_unexpected_failure' }
   $result = [ordered]@{ status = 'failed'; category = 'failed'; detailCode = $detailCode }
+  if ($_.Exception.Data.Contains('candidateError')) { $result.candidateError = $_.Exception.Data['candidateError'] }
   if (-not [string]::IsNullOrWhiteSpace($script:baseCommit)) { $result.baseCommit = $script:baseCommit }
   if (-not [string]::IsNullOrWhiteSpace($script:worktree) -and (Test-Path -LiteralPath $script:worktree)) {
     $result.worktreeRetained = $true; $result.worktree = $script:worktree; $result.branch = $script:branch

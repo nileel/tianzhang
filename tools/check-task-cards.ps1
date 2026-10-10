@@ -20,6 +20,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'experience-candidate-format.ps1')
 
 function Assert-Contract {
   param([bool]$Condition, [string]$Message)
@@ -332,6 +333,7 @@ function Get-Card {
   foreach ($heading in @('来源与当前边界', '必查范围', '实施范围', '禁止项', '验证', '完成条件', '停止条件')) {
     Assert-Contract ([regex]::IsMatch($body, '(?m)^' + [regex]::Escape("## $heading") + '\r?$')) "missing body heading '$heading': $Path"
   }
+  $null = Get-CandidateBlocks -Text $text -SourceTaskId ([string]$metadata.id) -SourcePath $Path
   [pscustomobject]@{ Metadata = $metadata; Path = $Path }
 }
 

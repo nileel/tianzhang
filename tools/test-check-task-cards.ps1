@@ -871,6 +871,50 @@ try {
   $schema2Archive = Invoke-Checker $schema2ArchiveRoot @('-TaskId', 'T-READY-01', '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson')
   Assert-True ($schema2Archive.ExitCode -eq 0) "schema 2 completed archive should pass without recompute: $($schema2Archive.Output)"
 
+  # Candidate format is checked by the same parser before a completed archive is accepted.
+  $candidateSection = @'
+## 经验候选
+
+### CAND-T-READY-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：拒绝原因落在滚动视口下方。
+- 已证实根因：摘要文本高度超过视口高度。
+- 可能复用范围：既有动作预览新增摘要内容。
+- 证据：正式预览运行尺寸与截图。
+- 门禁可能：yes
+'@
+  $candidateArchivePath = Join-Path $schema2ArchiveRoot '开发管理/任务归档/T-READY-01.txt'
+  $candidateArchiveBase = Get-CardText -Metadata $schema2Completed
+  $candidateOverrides = @('-TaskId', 'T-READY-01', '-Postcondition', 'CodexClosedOrNonReady', '-OutputJson')
+  foreach ($state in @('pending', 'provisional')) {
+    Write-Utf8 $candidateArchivePath ($candidateArchiveBase + "`n" + $candidateSection.Replace('collectionState: pending', "collectionState: $state"))
+    $accepted = Invoke-Checker $schema2ArchiveRoot $candidateOverrides
+    Assert-True ($accepted.ExitCode -eq 0) "valid $state candidate format rejected: $($accepted.Output)"
+  }
+  $candidateCases = @(
+    @{ Name='missing candidate heading'; Field='candidateId'; Text="## 经验候选`n`n- 状态：pending。`n- 现象：预览被截断。" },
+    @{ Name='missing evidence'; Field='evidence'; Text=($candidateSection -replace '(?m)^- 证据：.*\r?\n', '') },
+    @{ Name='freeform gate flag'; Field='gatePossible'; Text=$candidateSection.Replace('门禁可能：yes', '门禁可能：检查摘要高度') },
+    @{ Name='pending with backlink'; Field='promotionTaskId'; Text=$candidateSection.Replace('- promotionTaskId:', '- promotionTaskId: M-EXP-PROMOTE-000000000001') },
+    @{ Name='duplicate ID'; Field='candidateId'; Text=($candidateSection + "`n" + $candidateSection.Substring($candidateSection.IndexOf('### '))) },
+    @{ Name='extra field'; Field='fields'; Text=($candidateSection + "`n- extra: unexpected") }
+  )
+  foreach ($case in $candidateCases) {
+    Write-Utf8 $candidateArchivePath ($candidateArchiveBase + "`n" + $case.Text)
+    $rejected = Invoke-Checker $schema2ArchiveRoot $candidateOverrides
+    Assert-True ($rejected.ExitCode -ne 0) "$($case.Name) archive should fail before completion"
+    Assert-True ($rejected.Output.Contains($candidateArchivePath)) "$($case.Name) missing source path: $($rejected.Output)"
+    Assert-True ($rejected.Output.Contains("$($case.Field):")) "$($case.Name) missing field: $($rejected.Output)"
+  }
+  Write-Utf8 $candidateArchivePath ($candidateArchiveBase + "`n" + $candidateSection)
+  $activeCandidatePath = Join-Path $schema2ArchiveRoot '开发管理/任务卡/T-BLOCKED-01.txt'
+  Write-Utf8 $activeCandidatePath ((Get-CardText -Metadata $schema2ArchiveFixture.Blocked) + "`n" + $candidateCases[0].Text)
+  Assert-Failure 'active candidate is validated too' $schema2ArchiveRoot 'candidateId: missing ### <candidateId> heading'
+
   Write-Output 'test-check-task-cards: PASS'
 } finally {
   if (Test-Path -LiteralPath $tempRoot) {

@@ -26,6 +26,7 @@ function New-Fixture {
   param([string]$Root)
   [IO.Directory]::CreateDirectory((Join-Path $Root 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $Root 'tools/check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'experience-candidate-format.ps1') -Destination (Join-Path $Root 'tools/experience-candidate-format.ps1')
   & git -C $Root init -q
   $meta = [ordered]@{
     schemaVersion = 1; id = 'T-MAINT-01'; title = '维护型决策测试'; priority = 'P1'; route = 'codex_execute'; owner = 'codex'

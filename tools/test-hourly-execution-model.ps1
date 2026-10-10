@@ -24,7 +24,7 @@ $stateRoot = Join-Path $approvedState "hourly-execution-model-test-$testId"
 $oldMutation = $env:TZG_MODEL_TEST_MUTATE_CARD
 $scripts = @(
   'invoke-hourly-owner.ps1', 'hourly-owner-adapter.ps1', 'hourly-automation-lease.ps1', 'hourly-integration-lock.ps1',
-  'private-path-acl.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'get-experience-risk-preflight.ps1',
+  'private-path-acl.ps1', 'select-hourly-task.ps1', 'check-task-cards.ps1', 'experience-candidate-format.ps1', 'get-experience-risk-preflight.ps1',
   'set-task-automation-state.ps1', 'automation-finalize-commit.ps1', 'check-pending-whitespace.ps1'
 )
 $probe = @'

@@ -55,6 +55,7 @@ $originalForcedPostcondition = $env:TZG_SELECTOR_FORCE_BAD_POSTCONDITION
 try {
   [IO.Directory]::CreateDirectory((Join-Path $testRoot 'tools')) | Out-Null
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'check-task-cards.ps1') -Destination (Join-Path $testRoot 'tools/check-task-cards.ps1')
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'experience-candidate-format.ps1') -Destination (Join-Path $testRoot 'tools/experience-candidate-format.ps1')
   Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'get-experience-risk-preflight.ps1') -Destination (Join-Path $testRoot 'tools/get-experience-risk-preflight.ps1')
   Move-Item -LiteralPath (Join-Path $testRoot 'tools/check-task-cards.ps1') -Destination (Join-Path $testRoot 'tools/check-task-cards-core.ps1')
   $checkerWrapper = @'
