@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "已补齐GuanzhongCombatActionPreviewPlayModeTests.cs及共享夹具迁移边界，更新路径后风险预检通过；原run已关闭，无新增业务前置，恢复ready。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -30,6 +30,7 @@
     "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
     "tools/check-data-chain.ps1",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -142,7 +143,7 @@
 
 ## 模型协作
 
-- 绑定与旧档迁移，gpt-6.1-sol/high单主责，临近ready按EQUIP实际结果冻结asset/meta精确路径。
+- 绑定与旧档迁移，gpt-6.1-sol/high单主责；EQUIP实际结果及本轮遗漏的直接测试消费者已冻结。迁移与共享入场夹具强耦合，由同一主责统一复核，无需辅助智能体。
 - 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。
 
 ## 验证
@@ -172,3 +173,10 @@
 ## 2026-10-10 非前置卡点补充
 
 - 正式Layout胜负测试与Timeline死亡/重入测试仍调用默认玩家/石甲兽的徒手普攻，补入两个直接消费者路径，随本卡迁移无武器资格下的测试操作。保留实际结算、返回、死亡过滤、保存/重入断言；测试专用输入须显式标记，不能将临时武器或改血当正式生产可玩性证据，不新增生产攻击内容。
+
+## 2026-10-10 expected_paths_incomplete 修复
+
+- 原run 654e852e-7923-45ea-91a9-8c34b1daf668在实施中发现GuanzhongCombatActionPreviewPlayModeTests.cs未列入expectedPaths，返回blocked且无candidate；1181576c仅提交阻塞投影，原run已关闭、worktree已清理，业务验证未完成。
+- 已核实该文件EnterFormalEncounter创建正式默认玩家，HudShowsAuthoritativeCostsAndInterleavedActionsAtBothResolutions第143行仍断言普攻可用，且GuanzhongCombatLayoutPlayModeTests复用其入场夹具。补入既有测试文件精确路径，不新增文件或修改.meta；相关basic_unarmed、普攻按钮断言及夹具直接调用者的PlayMode命中其余均已在原允许路径内。
+- 执行时同时核对该测试完整方法与共享入场夹具，按无主手不可普攻及真实境界施法资格迁移断言；需要攻击/施法的交互测试使用明确标记、满足既有资格的测试输入，与默认凡人无武器场景的资格断言分别验证，不给正式玩家或敌人补发装备。保留权威报价、取消无写入、忙碌拒绝、过期/重复确认及两分辨率检查，不以删测试消除冲突，不接管PREVIEW的新费用显示实现。
+- 本轮只修复允许路径和任务调度投影；更新后重新风险预检及CodexDispatchReady检查通过才恢复ready。业务实施、Unity PlayMode和BattleSim结果仍由后续执行记录，不将本次管理检查视作业务验收。
