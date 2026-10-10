@@ -19,7 +19,8 @@ namespace TianZhang.Character
             MainEquipmentItemId = mainEquipmentItemId;
             MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
-            UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
+            // Retained save slot: obsolete unarmed references never become runtime bindings.
+            UnarmedBasicAttackProfileId = string.Empty;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
                 ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
                 : appearanceProfileId;

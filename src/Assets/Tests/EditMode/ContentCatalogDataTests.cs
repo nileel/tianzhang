@@ -66,7 +66,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void FormalEnemyTemplateExplicitlyBindsTheBasicUnarmedAttackProfile()
+        public void FormalEnemyTemplateHasNoWeaponOrUnarmedBinding()
         {
             var preview = ParseProductionPreview();
             try
@@ -74,7 +74,7 @@ namespace TianZhang.Tests
                 var enemy = preview.enemies[0];
                 Assert.AreEqual("enemy_shijiahou", enemy.enemyId);
                 var template = preview.enemyTemplates.Single(candidate => candidate == enemy.combatTemplate);
-                Assert.AreEqual("basic_unarmed", template.unarmedBasicAttackProfileId);
+                Assert.IsTrue(string.IsNullOrEmpty(template.unarmedBasicAttackProfileId));
                 Assert.IsTrue(string.IsNullOrEmpty(template.mainEquipmentBasicAttackProfileId));
             }
             finally

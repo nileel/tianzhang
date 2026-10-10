@@ -175,6 +175,7 @@ namespace TianZhang.Tests.PlayMode
                 creation.Draft.Innate.Aptitude, creation.Draft.Innate.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
             creation.Submit("formal-timeline", "默认行动轴验证");
             yield return WaitForTimelineScene(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = FindTimelineOwner<WorldMapController>();
             Assert.That(world.SelectNode("guanzhong_hub"), Is.True);
             Assert.That(world.SelectedNode.displayName, Is.EqualTo("关陇玄域"));
@@ -200,6 +201,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(FindTimelineOwner<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
             CombatSession session = GetTimelineField<CombatSession>(encounter, "session");
             AdventureSpawnSet spawned = GetTimelineField<AdventureSpawnSet>(encounter, "spawned");
+            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             yield return WaitForTimelinePlayer(encounter, session, spawned.Player.Id);
             Assert.That(exploration.activeSelf, Is.False);
             Assert.That(GetTimelineField<GameObject>(view, "root").activeSelf, Is.True);
@@ -235,7 +237,9 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
             Assert.That(encounter.IsPresenting, Is.False);
             commands.RequestGuard(spawned.Player.Id);
-            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.Zero);
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            commands.RequestEndTurn(spawned.Player.Id);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
             CombatTurnSnapshot exhausted = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             Assert.That(exhausted.CurrentTick, Is.EqualTo(beforeMove.CurrentTick));

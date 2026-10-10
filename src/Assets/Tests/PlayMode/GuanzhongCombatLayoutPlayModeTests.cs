@@ -135,6 +135,11 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(sourceBefore, JsonUtility.ToJson(spawned.EnemyData.combatTemplate), "Temporary encounter damage must not change the formal enemy source");
                 Debug.Log("LAYOUT controlled victory: temporary enemy HP " + maximumHealth + " -> 1; maximum remains " + maximumHealth);
             }
+            if (!victory)
+            {
+                Assert.IsTrue(session.Combatants.TryGet("enemy", out var outcomeEnemy));
+                GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(outcomeEnemy);
+            }
             coordinator.SetCombatResolutionRandomSource(new OutcomeCoverageRandom(session, victory));
             presenter.InspectTarget("enemy");
             yield return Click(Rect("ToggleLogButton").GetComponent<Button>());

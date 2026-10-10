@@ -68,6 +68,7 @@ namespace TianZhang.Tests.PlayMode
                 creation.Draft.Innate.Aptitude, creation.Draft.Innate.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
             creation.Submit("formal-preview", "行动预览验证");
             yield return SceneReady(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = Find<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();
@@ -100,6 +101,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(Find<AdventureInputController>().SelectNode("shijiahou_encounter"));
             session = Get<CombatSession>(encounter, "session");
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
             Assert.IsTrue(presenter.CanInspect);
         }
@@ -152,7 +154,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(Get<Text>(view, "summary").text, Does.Contain(
                     CombatActionPreviewView.FormatActionPoints(authority.ActionPointCostUnits) + " AP / " + authority.SpiritCost + " MP"));
                 Assert.That(Get<Text>(timeline, "predictionText").text, Does.Contain("完成并结束"));
-                Assert.That(input.Preview.Threshold, Is.EqualTo(110));
+                Assert.That(input.Preview.Threshold, Is.EqualTo(100));
                 yield return CaptureHud("initial-" + width);
                 view.CancelButton.onClick.Invoke();
                 bar.MoveButton.onClick.Invoke();
@@ -176,14 +178,15 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(State(), Is.EqualTo(busy));
                 yield return Ready();
                 Assert.That(bar.SecondArtButton.interactable, Is.False);
-                Assert.That(presenter.Snapshot.ArtActions[1].Targets[0].Quote.RemainingCooldownTicks, Is.EqualTo(5));
+                Assert.That(presenter.Snapshot.ArtActions[1].Targets[0].Quote.RemainingCooldownTicks, Is.EqualTo(16));
                 if (width == 1920) yield return MoveThroughHud();
-                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
-                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 25/100"));
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(50000));
+                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 50/100"));
                 Assert.That(presenter.Snapshot.PendingCtPenalty, Is.EqualTo(5));
-                Assert.That(bar.BasicAttackButton.interactable || bar.ArtButton.interactable || bar.GuardButton.interactable, Is.False);
+                Assert.That(bar.BasicAttackButton.interactable, Is.EqualTo(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanConfirm));
+                Assert.That(bar.GuardButton.interactable, Is.True);
                 Assert.That(bar.WaitButton.interactable, Is.True, "End turn legality must not disable or enable other actions.");
-                Assert.That(spawned.Player.GetCooldown("spell_julingshu"), Is.EqualTo(5));
+                Assert.That(spawned.Player.GetCooldown("spell_julingshu"), Is.EqualTo(16));
                 Assert.That(session.TurnSequence, Is.EqualTo(turn));
                 Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
                 string settledActions = State();
@@ -195,7 +198,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return CaptureHud("after-actions-" + width);
                 view.CancelButton.onClick.Invoke();
                 Assert.That(State(), Is.EqualTo(settledActions));
-                TestContext.WriteLine($"AP HUD {Screen.width}x{Screen.height}: turn={turn}, tick={tick}, AP=25000, CT penalty=5, cooldown=5; busy/cancel/stale/repeated inputs unchanged.");
+                TestContext.WriteLine($"AP HUD {Screen.width}x{Screen.height}: turn={turn}, tick={tick}, AP=50000, CT penalty=5, cooldown=16; busy/cancel/stale/repeated inputs unchanged.");
             }
             Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
         }
@@ -218,7 +221,7 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
             Assert.That(move.Selected, Is.SameAs(option));
-            Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 50 AP"));
+            Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 25 AP"));
             Assert.That(State(), Is.EqualTo(before));
             bar.ConfirmMoveButton.onClick.Invoke(); bar.ConfirmMoveButton.onClick.Invoke();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
@@ -329,7 +332,7 @@ namespace TianZhang.Tests.PlayMode
                 "; AP=" + spawned.Player.ActionPointsRemainingUnits + "; accepts=" + hud.AcceptsCommands +
                 "; canEnd=" + hud.CanEndTurn + "; artEnabled=" + bar.ArtButton.interactable);
             Assert.AreEqual(12, input.Preview.SpiritCost);
-            Assert.AreEqual(110, input.Preview.Threshold);
+            Assert.AreEqual(100, input.Preview.Threshold);
             view.ConfirmButton.onClick.Invoke();
             view.ConfirmButton.onClick.Invoke();
             Assert.AreEqual(mp - 12, spawned.Player.CurrentSpirit);
@@ -360,8 +363,16 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
             encounter.RequestEndTurn("player");
             yield return Ready();
+            // The production recovery cooldown is 16 ticks, not the historical five.
+            for (int turns = 0; spawned.Player.GetCooldown("spell_julingshu") > 0 && turns < 16; turns++)
+            {
+                encounter.RequestEndTurn("player");
+                yield return Ready();
+            }
+            Assert.Zero(spawned.Player.GetCooldown("spell_julingshu"));
             bar.SecondArtTargetButton.onClick.Invoke();
             bar.SecondArtButton.onClick.Invoke();
+            Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
             CombatActionCandidate costly = input.Candidate;
             Assert.IsNotNull(costly);
             spawned.Player.TryConsumeSpirit(spawned.Player.CurrentSpirit);
@@ -430,6 +441,7 @@ namespace TianZhang.Tests.PlayMode
             bar.ArtButton.onClick.Invoke();
             var attack = input.Candidate;
             Assert.IsNotNull(attack);
+            Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
             spawned.Enemy.ReceiveDamage(spawned.Enemy.CurrentHealth);
             before = State();
             Assert.IsFalse(encounter.PreviewAction(attack).CanConfirm);

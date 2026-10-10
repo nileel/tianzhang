@@ -28,6 +28,42 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongBasicAttackPlayModeTests
     {
+        // Explicit qualified-player fixture for damage/UI/save tests. Never called by production creation.
+        public static void PrepareEquippedPlayerFixture()
+        {
+            var runtime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual("凡人", runtime.Player.Progression.RealmStage);
+            Assert.IsTrue(string.IsNullOrEmpty(runtime.Player.MainEquipmentBasicAttackProfileId));
+            Assert.IsTrue(string.IsNullOrEmpty(runtime.Player.UnarmedBasicAttackProfileId));
+            Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
+            runtime.Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
+            runtime.BeginEquippedNewGame(runtime.Player, runtime.Cultivation, "guanzhong_hub",
+                UnityEditor.AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
+            Assert.AreEqual("basic_iron_sword", runtime.Player.MainEquipmentBasicAttackProfileId);
+        }
+
+        // Only the temporary combat snapshot is armed to exercise real death and defeat settlement.
+        // The production enemy template remains unarmed; this is not production enemy-content evidence.
+        public static void ArmEnemyOutcomeFixture(CombatantSnapshot enemy)
+        {
+            Assert.IsTrue(string.IsNullOrEmpty(enemy.BasicAttackProfileId));
+            enemy.BasicAttackProfileId = "basic_iron_sword";
+        }
+
+        // Deterministic outcome input for settlement/save coverage, not balance evidence.
+        public sealed class OutcomeFixtureRandom : ICombatResolutionRandomSource
+        {
+            private readonly CombatSession session;
+            private readonly bool victory;
+            private int roll;
+            public OutcomeFixtureRandom(CombatSession session, bool victory) { this.session = session; this.victory = victory; }
+            public float NextPercent()
+            {
+                bool hit = victory ? session.CurrentActorId == "player" : session.CurrentActorId == "enemy";
+                return roll++ % 4 == 0 && hit ? 0 : 99;
+            }
+        }
+
         private const string BountyId = "bounty_guanzhong_shijiahou";
         private const string SettlementId = "guanzhong_city";
         private const string AdventureId = "guanzhong_wild";
@@ -45,7 +81,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads()
+        public IEnumerator UnarmedProductionPlayerEntersMovesGuardsAndCannotAttack()
         {
             Screen.SetResolution(1920, 1080, false);
             GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
@@ -104,11 +140,111 @@ namespace TianZhang.Tests.PlayMode
             adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
             Assert.IsTrue(adventureInput.SelectNode("shijiahou_encounter"));
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
+            var session = GetPrivateField<CombatSession>(encounter, "session");
+            var spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
+            yield return WaitForPlayerTurn(encounter, session, spawned.Player.Id);
+            Assert.IsEmpty(spawned.Player.BasicAttackProfileId);
+            Assert.IsEmpty(spawned.Enemy.BasicAttackProfileId);
+            var service = new CombatCommandService();
+            foreach (string profile in new[] { "", "basic_unarmed", "basic_iron_sword", "missing" })
+            {
+                var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", profile));
+                Assert.IsFalse(quote.IsLegal);
+                Assert.AreEqual("attack_profile_not_authorized", quote.RejectionReason);
+            }
+            int hp = spawned.Enemy.CurrentHealth, ap = spawned.Player.ActionPointsRemainingUnits;
+            encounter.RequestBasicAttack("player", "enemy");
+            Assert.AreEqual(hp, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            var guard = service.Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
+            Assert.IsTrue(guard.IsLegal, guard.RejectionReason);
+            var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
+            Assert.IsTrue(move.IsLegal, move.RejectionReason);
+            encounter.RequestMove("player", 0, 1);
+            Assert.AreEqual(ap - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
+            yield return WaitForMovementPresentation(encounter);
+            encounter.RequestEndTurn("player");
+            yield return WaitForPlayerTurn(encounter, session, "player");
+            Assert.AreEqual(hp, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
+            Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_blade"));
+            Assert.IsEmpty(runtime.Player.UnarmedBasicAttackProfileId);
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
+            yield return WaitForScene(GameplaySceneNames.StartMenu);
+        }
+
+        [UnityTest]
+        public IEnumerator FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads()
+        {
+            Screen.SetResolution(1920, 1080, false);
+            GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
+            if (staleBootstrap != null)
+            {
+                Object.Destroy(staleBootstrap.gameObject);
+                yield return null;
+            }
+
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
+            yield return WaitForScene(GameplaySceneNames.StartMenu);
+
+            GameBootstrap bootstrap = GameBootstrap.RequireInstance();
+            temporarySaveDirectory = Path.Combine(
+                Application.temporaryCachePath,
+                "TianZhang-01G-" + Guid.NewGuid().ToString("N"));
+            SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(temporarySaveDirectory));
+            const string slotId = "formal-01g";
+            CharacterCreationController creation = FindInActiveScene<CharacterCreationController>();
+            Assert.IsNotNull(creation, "StartMenu must expose the CharacterCreation feature owner.");
+            creation.Open();
+            creation.Draft.OriginId = "origin_minor_clan";
+            creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
+            creation.Submit(slotId, "01G 正式薄切片");
+            yield return WaitForScene(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
+
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            Assert.IsNotNull(runtime.Player);
+            Assert.AreEqual("guanzhong_hub", runtime.Navigation.WorldNodeId);
+            WorldMapController world = FindInActiveScene<WorldMapController>();
+            Assert.IsNotNull(world, "WorldScene must expose the WorldMap feature owner.");
+            Assert.IsTrue(world.SelectNode("guanzhong_hub"));
+            world.EnterSelectedLocation();
+            yield return WaitForScene(GameplaySceneNames.Settlement);
+
+            SettlementController settlement = FindInActiveScene<SettlementController>();
+            Assert.IsNotNull(settlement, "SettlementScene must expose the Settlement feature owner.");
+            Assert.AreEqual(SettlementId, settlement.CurrentSettlementId);
+            ContentCatalogData catalog = GetPrivateField<ContentCatalogData>(settlement, "contentCatalog");
+            BountyBoardView board = FindInActiveScene<BountyBoardView>();
+            Assert.IsNotNull(board, "SettlementScene must expose the bounty board view.");
+            board.Show(catalog, SettlementId, runtime.Bounties);
+            board.SubmitAccept(BountyId);
+            Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
+
+            Assert.IsTrue(settlement.EnterAdventure(AdventureId));
+            yield return WaitForScene(GameplaySceneNames.Adventure);
+            AdventureController adventure = FindInActiveScene<AdventureController>();
+            AdventureInputController adventureInput = FindInActiveScene<AdventureInputController>();
+            EncounterCoordinator encounter = FindInActiveScene<EncounterCoordinator>();
+            Assert.IsNotNull(adventure);
+            Assert.IsNotNull(adventureInput);
+            Assert.IsNotNull(encounter);
+            yield return WaitForAdventureReady(adventure);
+            AssertAdventureNodeButtonReadable("shijiahou_encounter");
+            adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
+            Assert.IsTrue(adventureInput.SelectNode("shijiahou_encounter"));
+            Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             Assert.IsNotNull(provider, "AdventureScene must bind the single formal static-3D provider.");
             AssertFormalProviderUnit(provider, "player", Color.cyan);
             AssertFormalProviderUnit(provider, "enemy", Color.red);
             AssertFormalBattlefieldPresentation();
+            var outcome = GetPrivateField<AdventureSpawnSet>(encounter, "spawned").Enemy;
+            ArmEnemyOutcomeFixture(outcome);
+            yield return WaitForPlayerTurn(encounter, GetPrivateField<CombatSession>(encounter, "session"), "player");
+            outcome.ReceiveDamage(outcome.CurrentHealth - 1); // Explicit one-hit settlement fixture.
+            encounter.SetCombatResolutionRandomSource(new OutcomeFixtureRandom(
+                GetPrivateField<CombatSession>(encounter, "session"), true));
             yield return null;
 
             Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
@@ -183,6 +319,7 @@ namespace TianZhang.Tests.PlayMode
             creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
             creation.Submit("formal-move-rule", "移动规则验证");
             yield return WaitForScene(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = FindInActiveScene<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();
@@ -239,14 +376,14 @@ namespace TianZhang.Tests.PlayMode
             AssertFormalMovementProjection(recording, provider, player, firstPath);
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase,
-                "The 50000 movement plus the equipped sword's 40000 attack leaves 10000 AP.");
-            Assert.AreEqual(10000, player.ActionPointsRemainingUnits);
+                "A legal movement followed by the equipped sword leaves the quoted remainder.");
+            Assert.AreEqual(player.ActionPointMaximumUnits - 40000 - firstPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
             Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject playerRoot));
             Vector3 startedAttackScale = playerRoot.transform.localScale;
             Assert.AreNotEqual(Vector3.one, startedAttackScale, "The actual provider must have started its attack presentation.");
             int eventsBeforeEnd = recording.Events.Count;
             encounter.RequestEndTurn(player.Id);
-            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase, "EndTurn during presentation must not consume the remaining 10000 AP.");
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase, "EndTurn during presentation must not consume the remaining AP.");
             Assert.AreEqual(startedAttackScale, playerRoot.transform.localScale);
             yield return WaitForMovementPresentation(encounter);
             encounter.RequestEndTurn(player.Id);
@@ -268,7 +405,7 @@ namespace TianZhang.Tests.PlayMode
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, secondDestination.Q, secondDestination.R);
             Assert.That(player.Position, Is.EqualTo(secondDestination));
             Assert.AreEqual(movementBefore - secondPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(10000, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(player.ActionPointMaximumUnits - 40000 - secondPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, secondPath);
@@ -439,7 +576,7 @@ namespace TianZhang.Tests.PlayMode
                         physicalMultiplier: 1f),
                 },
                 new AlwaysInRangeCombatSpatialQuery(),
-                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, ruleSet: SamplerRules());
 
             var source = new SequenceCombatRandomSource();
             EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
@@ -554,6 +691,14 @@ namespace TianZhang.Tests.PlayMode
             return coordinator;
         }
 
+        private static CombatRuleSet SamplerRules()
+        {
+            var data = UnityEditor.AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+            return CombatRuleSet.Parse(new[] { CombatRuleSet.RealmColumns }.Concat(data.ExportRealms()).ToArray(),
+                new[] { CombatRuleSet.TierColumns }.Concat(data.ExportTiers()).ToArray(),
+                new[] { CombatRuleSet.EconomyColumns }.Concat(data.ExportEconomy()).ToArray(), data.sourceDigest);
+        }
+
         private static CombatSession CreateCombatSession(
             int playerSpeed,
             int enemySpeed,
@@ -618,7 +763,7 @@ namespace TianZhang.Tests.PlayMode
                         physicalMultiplier: 1f),
                 },
                 new AlwaysInRangeCombatSpatialQuery(),
-                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) });
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, ruleSet: SamplerRules());
         }
 
         private static IEnumerator WaitForScene(string sceneName)

@@ -206,8 +206,8 @@ namespace TianZhang.Tests.EditMode
             CollectionAssert.IsEmpty(spawned.Player.AvailableDivineProfileIds);
             Assert.AreEqual(2, spawned.Player.MaxCombatSwaps);
             Assert.AreEqual(0, spawned.Player.CombatSwapsUsed);
-            Assert.AreEqual(CharacterCreationCatalog.BasicUnarmedAttackProfileId, spawned.PlayerBasicProfileId);
-            Assert.AreEqual(CharacterCreationCatalog.BasicUnarmedAttackProfileId, spawned.Player.BasicAttackProfileId);
+            Assert.AreEqual(string.Empty, spawned.PlayerBasicProfileId);
+            Assert.AreEqual(string.Empty, spawned.Player.BasicAttackProfileId);
 
             Assert.AreEqual(new HexCoord(encounter.q, encounter.r), spawned.Enemy.Position);
             Assert.AreEqual(6, spawned.Enemy.Speed);
@@ -237,8 +237,8 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(5f, spawned.Enemy.CriticalRate);
             Assert.AreEqual(10f, spawned.Enemy.CriticalDamage);
             Assert.AreEqual(0f, spawned.Enemy.HitRateBonus);
-            Assert.AreEqual("basic_unarmed", spawned.EnemyBasicProfileId);
-            Assert.AreEqual("basic_unarmed", spawned.Enemy.BasicAttackProfileId);
+            Assert.AreEqual(string.Empty, spawned.EnemyBasicProfileId);
+            Assert.AreEqual(string.Empty, spawned.Enemy.BasicAttackProfileId);
         }
 
         [Test]
@@ -266,7 +266,7 @@ namespace TianZhang.Tests.EditMode
             enemyTemplate.realmMultiplier = 1f;
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
-            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemyTemplate.unarmedBasicAttackProfileId = string.Empty;
             enemyTemplate.gongFaName = "gongfa_baoyuanshouyi";
             enemyTemplate.blockRate = 10f;
             enemyTemplate.blockReduction = 20f;
@@ -335,7 +335,7 @@ namespace TianZhang.Tests.EditMode
             enemyTemplate.realmMultiplier = 1f;
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
-            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemyTemplate.unarmedBasicAttackProfileId = string.Empty;
             enemyTemplate.gongFaName = "未知功法";
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
@@ -373,13 +373,13 @@ namespace TianZhang.Tests.EditMode
             AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_basic_binding_fixture" };
 
             AssertPlayerBinding(start, encounter, "basic_main", "", true, "basic_main");
-            AssertPlayerBinding(start, encounter, "", "basic_unarmed", true, "basic_unarmed");
-            AssertPlayerBinding(start, encounter, "", "", false, null);
-            AssertPlayerBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
+            AssertPlayerBinding(start, encounter, "", "basic_unarmed", true, string.Empty);
+            AssertPlayerBinding(start, encounter, "", "", true, string.Empty);
+            AssertPlayerBinding(start, encounter, "basic_main", "basic_unarmed", true, "basic_main");
 
             AssertEnemyBinding(start, encounter, "basic_main", "", true, "basic_main");
-            AssertEnemyBinding(start, encounter, "", "basic_unarmed", true, "basic_unarmed");
-            AssertEnemyBinding(start, encounter, "", "", false, null);
+            AssertEnemyBinding(start, encounter, "", "basic_unarmed", false, null);
+            AssertEnemyBinding(start, encounter, "", "", true, string.Empty);
             AssertEnemyBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
         }
 
@@ -405,7 +405,7 @@ namespace TianZhang.Tests.EditMode
             enemyTemplate.realmStage = "凡人";
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
-            enemyTemplate.unarmedBasicAttackProfileId = "basic_unarmed";
+            enemyTemplate.unarmedBasicAttackProfileId = string.Empty;
             enemy.combatTemplate = enemyTemplate;
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
             catalog.SetCombatRuleSet(GrowthRules);

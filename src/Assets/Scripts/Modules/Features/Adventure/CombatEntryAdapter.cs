@@ -48,6 +48,10 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!TryProjectProfiles(attackProfiles, out var profiles, out reason)) return false;
+            foreach (CombatantSnapshot actor in new[] { spawned.Player, spawned.Enemy })
+                if (!string.IsNullOrEmpty(actor.BasicAttackProfileId) &&
+                    !profiles.Any(profile => profile.Id == actor.BasicAttackProfileId && profile.Kind == CombatAttackKind.Basic))
+                { reason = "combat_session_basic_attack_binding_invalid"; return false; }
 
             if (environmentProfile == null ||
                 environmentProfile.battlefieldCells == null ||
@@ -108,10 +112,9 @@ namespace TianZhang.Features.Adventure
                 if (profile == null) { profiles = null; reason = "attack_profile_missing"; return false; }
                 if (!profile.TryValidate(out reason)) { profiles = null; return false; }
                 if (profile.targetingMode != AttackTargetingMode.Single) continue;
-                bool legacy = profile.cooldownClass == "legacy_unarmed";
                 if (profile.ruleSetVersion != rules.RuleSetVersion || profile.ruleSetSourceDigest != rules.SourceDigest ||
-                    (!legacy && !rules.Tiers.Any(tier => tier.AbilityTierId == profile.abilityTierId)) ||
-                    (legacy && (profile.basicBindingKind != BasicAttackBindingKind.UnarmedFallback || profile.effectBudgetMode != "legacy_unarmed" || !string.IsNullOrEmpty(profile.abilityTierId))))
+                    !rules.Tiers.Any(tier => tier.AbilityTierId == profile.abilityTierId) ||
+                    (profile.profileKind == AttackProfileKind.Basic && profile.basicBindingKind != BasicAttackBindingKind.MainEquipment))
                 { profiles = null; reason = "attack_profile_rule_reference_invalid"; return false; }
                 CombatAttackEffect effect = profile.effectType switch
                 {
@@ -155,7 +158,7 @@ namespace TianZhang.Features.Adventure
                     profile.minimumSpiritRecovery,
                     profile.otherTargetResourceCost,
                     profile.otherTargetRecoveryMultiplier,
-                    qualification, ruleMetadata: legacy ? null : new CombatAttackRuleMetadata(profile.ruleSetVersion, profile.ruleSetSourceDigest,
+                    qualification, ruleMetadata: new CombatAttackRuleMetadata(profile.ruleSetVersion, profile.ruleSetSourceDigest,
                         rules.GetTier(profile.abilityTierId), profile.cooldownClass, profile.effectBudgetMode,
                         profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.efficiencyNumerator, profile.efficiencyDenominator) : (CombatRuleRatio?)null,
                         profile.effectBudgetMode == "damage_budget" ? new CombatRuleRatio(profile.damageMigrationNumerator, profile.damageMigrationDenominator) : (CombatRuleRatio?)null,

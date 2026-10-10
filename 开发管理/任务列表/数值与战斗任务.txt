@@ -43,7 +43,6 @@
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP2-STATUS-01 | P1 | codex | 待决定 | — | 百分比状态与概率强控境界修正接入 | 开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt |
-| U-COMBAT-AP2-WEAPON-01 | P1 | codex | 阻塞 | — | 移除空手普攻与武器资格迁移 | 开发管理/任务卡/U-COMBAT-AP2-WEAPON-01.txt |
 | N-COMBAT-AP2-SIM-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01 | BattleSim双入口境界行动经济迁移 | 开发管理/任务卡/N-COMBAT-AP2-SIM-01.txt |
 | N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-AP2-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-GROWTH-01、U-COMBAT-AP2-REPEAT-01、U-COMBAT-AP2-STATUS-01、U-COMBAT-AP2-WEAPON-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |

@@ -113,14 +113,14 @@ internal static class GuanzhongPlaytestAudit
                 Number("defensePenetration"), Number("spiritRecoveryMultiplier"), (int)Number("minimumSpiritRecovery"),
                 (int)Number("otherTargetResourceCost"), Number("otherTargetRecoveryMultiplier", 1),
                 basic ? null : (stage, rootElement, grade) => AbilityRequirementPolicy.IsSatisfied(stage, rootElement, grade, realm, element),
-                ruleMetadata: resolved.EffectBudgetMode == "legacy_unarmed" ? null : new CombatAttackRuleMetadata(rules.RuleSetVersion,rules.SourceDigest,
+                ruleMetadata: new CombatAttackRuleMetadata(rules.RuleSetVersion,rules.SourceDigest,
                     rules.GetTier(resolved.AbilityTierId),row["cooldownClass"],resolved.EffectBudgetMode,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("efficiencyNumerator"),(int)Number("efficiencyDenominator")) : null,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageMigrationNumerator"),(int)Number("damageMigrationDenominator")) : null,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageWeightNumerator"),(int)Number("damageWeightDenominator")) : null,
                     "","",0,0,0,"",(int)Number("controlChancePermille"),row["controlUsesMindContest"] == "1"));
         }).ToArray();
-        Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { "basic_unarmed", Attack, Recovery, "basic_iron_sword", "basic_iron_blade" }.Order()), "Unexpected production profiles.");
+        Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { Attack, Recovery, "basic_iron_sword", "basic_iron_blade" }.Order()), "Unexpected production profiles.");
         return new Inputs(evidence, profiles, root, I(character, "rootBone"), Hash(text));
     }
 
@@ -130,7 +130,7 @@ internal static class GuanzhongPlaytestAudit
         string[] List(string field) => v.GetProperty(field).EnumerateArray().Select(x => x.GetString()).ToArray();
         var actor = new CombatantSnapshot(S(v, "id"), side == "player" ? CombatTeam.Player : CombatTeam.Enemy,
             new UnityHexCoord(I(v, "q"), I(v, "r")), I(v, "speed"), I(v, "maximumHealth"), I(v, "currentHealth"),
-            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), I(v, "actionPointMaximumUnits"), I(v, "movementEfficiencyMilliUnits"), F(v, "realmMultiplier"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId"),
+            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), I(v, "actionPointMaximumUnits"), I(v, "movementEfficiencyMilliUnits"), F(v, "realmMultiplier"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId") == "basic_unarmed" ? string.Empty : S(v, "basicAttackProfileId"),
             rawSpirit: I(v, "rawSpirit"), realmStage: S(v, "realmStage"), visibleRootElement: S(v, "visibleRootElement"), visibleRootGrade: S(v, "visibleRootGrade"))
         {
             BlockRate = F(c, "blockRate"), BlockReduction = F(c, "blockReduction"), SoulShieldRate = F(c, "soulShieldRate"),
@@ -156,7 +156,9 @@ internal static class GuanzhongPlaytestAudit
             Require(advance.HasActor, "No action available.");
             bool isPlayer = advance.ActorId == player.Id;
             var actor = isPlayer ? player : enemy; var target = isPlayer ? enemy : player;
-            var command = new CombatCommand(CombatCommandKind.BasicAttack, actor.Id, target.Id, actor.BasicAttackProfileId);
+            var command = new CombatCommand(CombatCommandKind.Wait, actor.Id);
+            if (!string.IsNullOrEmpty(actor.BasicAttackProfileId))
+                command = new CombatCommand(CombatCommandKind.BasicAttack, actor.Id, target.Id, actor.BasicAttackProfileId);
             if (isPlayer && strategy != "basic")
             {
                 var art = new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, Attack);

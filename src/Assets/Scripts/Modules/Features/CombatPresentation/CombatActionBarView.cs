@@ -142,8 +142,8 @@ namespace TianZhang.Features.CombatPresentation
                     CombatActionKind.Guard => quote.ActionName + cost,
                     _ => quote.ActionName + "\n" + cost,
                 };
-                // The formal Guard label is 82x36; the measured 20pt cost line exceeds its width.
-                if (quote.Candidate.Kind == CombatActionKind.Guard) label.fontSize = 18;
+                // The formal Guard (82x36) and item (90x60) labels overflow at 20pt.
+                if (quote.Candidate.Kind is CombatActionKind.Guard or CombatActionKind.UseItem) label.fontSize = 18;
             }
             return quote.CanConfirm ? string.Empty : quote.ActionName + "：" + quote.Reason;
         }

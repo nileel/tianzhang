@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TianZhang.Content::TianZhang.Content.CombatRuleSetData
   schemaVersion: 1
   ruleSetVersion: AP-GROWTH@0.1
-  sourceDigest: 0acdd4b9ba73ca9cb24917acaff587427ece3c362762aae918eebaca9548ed1f
+  sourceDigest: d3387a3baa6f012d685501686fb5a58615e528dac09945c005186c3f34365838
   realms:
   - realmId: realm_fanren
     realmOrder: 0

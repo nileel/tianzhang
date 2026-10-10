@@ -1610,49 +1610,24 @@ static class BattleSimSelfTests
             AssertTableRejected(TableWith(MutateRowLine(artSingleLine, field, "0")), "unsupported_effect_semantics");
     }
 
-    /// <summary>
-    /// D-COMBAT-PROD-01：只证明生产 AttackProfiles.csv 的 basic_unarmed 行逐字段等于
-    /// GameData.UnarmedBasicAttack 的迁移值；不切换任何 BattleSim 生产消费者。
-    /// </summary>
+    // WEAPON: production has four explicit profiles and no default basic attack.
     static void RunBasicUnarmedProductionDCombatProd01()
     {
-        const string profilePath = "src/Assets/DataConfig/AttackProfiles.csv";
-        var lines = File.ReadAllLines(Path.Combine(FindRepositoryRoot(), profilePath))
-            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
-            .ToArray();
-        var basicUnarmedLines = lines.Skip(1)
-            .Where(line => line.Split(',')[0] == "basic_unarmed")
-            .ToArray();
-        AssertEqual(1, basicUnarmedLines.Length, "AttackProfiles.csv basic_unarmed row count");
-        // 本迁移检查只消费普攻行；其他正式术法不投影到旧 BattleSim 载体。
-        ValidateAttackProfileTable(lines.Take(1).Concat(basicUnarmedLines).ToArray());
-        var rows = ReadCsvRows(profilePath);
-        var row = rows.Single(entry => entry["attackProfileId"] == "basic_unarmed");
-
-        AssertEqual("basic", row["profileKind"], "basic_unarmed profile kind");
-        AssertEqual("unarmed_fallback", row["basicBindingKind"], "basic_unarmed binding kind");
-        AssertEqual("physical", row["effectType"], "basic_unarmed effect type");
-        AssertEqual("element_none", row["damageElementId"], "basic_unarmed damage element");
-
-        // 迁移字段与 GameData.UnarmedBasicAttack 逐项一致（名称经生产 Language 键解析）。
-        AssertEqual(GameData.UnarmedBasicAttack.Type, "物理", "UnarmedBasicAttack type source");
-        AssertEqual(ParseDouble(row["physicalDamageMultiplier"]), GameData.UnarmedBasicAttack.Mult, "physical multiplier migration");
-        AssertEqual(GameData.NormalizeElement(row["damageElementId"]), GameData.UnarmedBasicAttack.Element, "element migration");
-        AssertEqual(ParseInt(row["minCastRange"]), GameData.UnarmedBasicAttack.MinRange, "min range migration");
-        AssertEqual(ParseInt(row["maxCastRange"]), GameData.UnarmedBasicAttack.MaxRange, "max range migration");
-        AssertEqual("none", row["resourceKind"], "basic_unarmed resource kind");
-        AssertEqual(0, ParseInt(row["resourceCost"]), "basic_unarmed resource cost");
-        AssertEqual(50000, ParseInt(row["actionPointCostUnits"]), "basic_unarmed action point cost");
-        AssertEqual(25000, ParseInt(row["minimumNetCostUnits"]), "basic_unarmed minimum net cost");
-        AssertEqual(0, ParseInt(row["ctPenalty"]), "basic_unarmed ct penalty");
-        AssertEqual(0, ParseInt(row["reuseCooldownTicks"]), "basic_unarmed reuse cooldown");
-        AssertEqual("single", row["targetingMode"], "basic_unarmed targeting mode");
-        AssertEqual(1, ParseInt(row["minCastRange"]), "basic_unarmed min cast range");
-        AssertEqual(1, ParseInt(row["maxCastRange"]), "basic_unarmed max cast range");
-
-        AssertEqual(GameData.UnarmedBasicAttack.Name, "徒手", "UnarmedBasicAttack display name source");
-        AssertEqual(ReadLanguageCsv()[row["displayNameKey"]], GameData.UnarmedBasicAttack.Name, "display key resolves to 徒手");
+        var rows = ReadCsvRows("src/Assets/DataConfig/AttackProfiles.csv");
+        AssertEqual(false, rows.Any(row => row["attackProfileId"] == "basic_unarmed" || row["basicBindingKind"] == "unarmed_fallback"), "no production unarmed row");
+        AssertEqual(4, GameData.ProductionAttacks.Count, "four current production profiles");
+        var actor = CtTestCharacter("no-weapon", 20);
+        var enemy = CtTestCharacter("no-weapon-enemy", 10);
+        actor.BasicAttackProfile = enemy.BasicAttackProfile = null;
+        var battle = Combat.SimulateDetailed(new HexBattlefield(), actor, enemy, new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 4);
+        AssertEqual(false, battle.Economy.Any(value => value.Event == "action_committed"), "no weapon means no fabricated attack");
+        AssertEqual(true, battle.Economy.Any(value => value.Event == "own_turn_started"), "unequipped actors still enter turns");
+        AssertEqual(-1, Combat.SelectAction(new HexBattlefield(), new(0,0), new(1,0), false,1,1,false,false,1,1,null,out _,out _), "no attack selection ends legally");
     }
+
+    // Explicit old-rule test fixture; never installed by production Character.Create.
+    static GameData.AttackProfile LegacyBasicFixture => new("fixture-legacy-basic", "物理", 1, "", 1, 1,
+        Cost: new("fixture-legacy-basic", "fixture-old-rule", 50000, 25000, 0, 0));
 
     static void RunEquipmentProduction()
     {
@@ -1678,8 +1653,8 @@ static class BattleSimSelfTests
             File.WriteAllLines(attacks, baseline);
             var loaded = GameData.LoadProductionAttacks(attacks);
             var projected = LoadAudit();
-            AssertEqual(5, loaded.Count, "real production loader five rows");
-            AssertEqual(5, projected.Length, "real audit loader five rows");
+            AssertEqual(4, loaded.Count, "real production loader four rows");
+            AssertEqual(4, projected.Length, "real audit loader four rows");
             foreach (string id in new[] { "basic_iron_sword", "basic_iron_blade" })
             {
                 var row = ReadCsvRows("src/Assets/DataConfig/AttackProfiles.csv").Single(value => value["attackProfileId"] == id);
@@ -1691,7 +1666,7 @@ static class BattleSimSelfTests
                 AssertEqual(actual.Cost.ActionPointCostUnits, combat.ActionPointCostUnits, id + " audit cost");
                 AssertEqual((float)actual.Mult, combat.PhysicalMultiplier, id + " audit multiplier");
             }
-            AssertEqual(50000, loaded["basic_unarmed"].Cost.ActionPointCostUnits, "legacy unarmed unchanged");
+            AssertEqual(false, loaded.ContainsKey("basic_unarmed"), "unarmed removed");
             AssertEqual(12, loaded["spell_guanshiji"].SpiritCost, "legacy attack unchanged");
             AssertEqual(0.5m, loaded["spell_julingshu"].SpiritRecoveryMultiplier, "legacy recovery unchanged");
             var rules = GameData.LoadProductionRuleSet(attacks);
@@ -1701,7 +1676,7 @@ static class BattleSimSelfTests
             AssertEqual(0,loaded["spell_guanshiji"].Cost.ReuseCooldownTicks,"new guanshiji CD");
             AssertEqual(16,loaded["spell_julingshu"].Cost.ReuseCooldownTicks,"derived recovery CD");
             foreach (var entry in loaded.Values) AssertEqual(rules.SourceDigest,entry.RuleSetSourceDigest,"shared production digest");
-            foreach (var profile in projected.Where(value => value.Id != "basic_unarmed"))
+            foreach (var profile in projected)
                 AssertEqual(rules.SourceDigest,profile.RuleMetadata.SourceDigest,"audit metadata digest");
             string header = baseline.First(value => value.StartsWith("attackProfileId,"));
             string blade = baseline.Single(value => value.StartsWith("basic_iron_blade,"));
@@ -1745,7 +1720,7 @@ static class BattleSimSelfTests
                 }
                 finally { File.WriteAllBytes(rulePath,original); }
             }
-            Console.WriteLine("equipment-production: both real loaders accepted five production rows and rejected " + variants.Count + " malformed inputs each.");
+            Console.WriteLine("equipment-production: both real loaders accepted four production rows and rejected " + variants.Count + " malformed inputs each.");
         }
         finally { Directory.Delete(temporary, true); }
     }
@@ -2495,7 +2470,7 @@ static class BattleSimSelfTests
 
     static void RunDistanceModelTq055()
     {
-        var unarmed = GameData.UnarmedBasicAttack;
+        var unarmed = LegacyBasicFixture;
         AssertEqual(1, unarmed.MinRange, "unarmed basic attack minimum range");
         AssertEqual(1, unarmed.MaxRange, "unarmed basic attack maximum range");
         AssertEqual(2, GameData.TaiyiFuxiuArt.MinRange, "symbol art keeps an independent minimum range");
@@ -2503,7 +2478,7 @@ static class BattleSimSelfTests
         AssertEqual(1, GameData.WaterDivine.MinRange, "water divine keeps an independent minimum range");
         AssertEqual(3, GameData.WaterDivine.MaxRange, "water divine keeps an independent maximum range");
         var character = Character.Create("basic-profile", new() { ["根骨"] = 1, ["魂魄"] = 1, ["神识"] = 1, ["资质"] = 1, ["气运"] = 1 }, "physical");
-        AssertEqual(GameData.UnarmedBasicAttack, character.BasicAttackProfile, "unequipped character uses unarmed basic attack profile");
+        AssertEqual<GameData.AttackProfile>(null, character.BasicAttackProfile, "unequipped character has no basic attack");
         character.BasicAttackProfile = new("测试主战法宝", "神魂", 1.1, "火", 2, 3);
         AssertEqual(3, character.BasicAttackProfile.MaxRange, "main combat artifact profile replaces unarmed fallback");
         var battlefield = new HexBattlefield();
@@ -2511,11 +2486,11 @@ static class BattleSimSelfTests
         AssertEqual(new HexCoord(5, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 5, 1, 1), "melee moves before attacking");
         AssertEqual(new HexCoord(4, 0), battlefield.FindAttackPosition(new HexCoord(5, 0), new HexCoord(6, 0), 3, 2, 4), "minimum range forces retreat");
         AssertEqual(new HexCoord(0, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 0, 2, 4), "zero movement keeps position");
-        int selected = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(4, 0), true, 1, 1, false, true, 2, 4, GameData.UnarmedBasicAttack,
+        int selected = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(4, 0), true, 1, 1, false, true, 2, 4, LegacyBasicFixture,
             out int selectedMinRange, out int selectedMaxRange);
         AssertEqual(Combat.ArtAction, selected, "legal art takes priority over out-of-range divine");
         AssertEqual((2, 4), (selectedMinRange, selectedMaxRange), "selected art range is retained for movement");
-        int longRangeAction = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(6, 0), false, 1, 1, false, true, 2, 6, GameData.UnarmedBasicAttack,
+        int longRangeAction = Combat.SelectAction(battlefield, new HexCoord(0, 0), new HexCoord(6, 0), false, 1, 1, false, true, 2, 6, LegacyBasicFixture,
             out int longRangeMin, out int longRangeMax);
         AssertEqual(Combat.ArtAction, longRangeAction, "opening-range art is selected without a close-range fallback");
         AssertEqual(new HexCoord(0, 0), battlefield.FindAttackPosition(new HexCoord(0, 0), new HexCoord(6, 0), 5, longRangeMin, longRangeMax), "opening-range art needs no movement before casting");
@@ -3517,6 +3492,7 @@ static class BattleSimSelfTests
         character.Primary["反应"] = reaction;
         character.Primary["移力"] = 6;
         character.SetActionEconomyInputs(100000, 12000);
+        character.BasicAttackProfile = LegacyBasicFixture;
         return character;
     }
 
@@ -3535,7 +3511,7 @@ static class BattleSimSelfTests
         character.SetActionEconomyInputs(100000, 0);
         character.BasicAttackProfile = ranged
             ? new GameData.AttackProfile("timeout-ranged", "物理", 1.0, "", 1, 6, Cost: new("timeout-ranged", "fixture", 50000, 50000, 0, 0))
-            : GameData.UnarmedBasicAttack;
+            : LegacyBasicFixture;
         return character;
     }
 

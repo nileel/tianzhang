@@ -66,6 +66,7 @@ namespace TianZhang.Tests.PlayMode
                 creation.Draft.Innate.Aptitude, creation.Draft.Innate.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
             creation.Submit("formal-target", "目标联动验证");
             yield return SceneReady(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = Find<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();

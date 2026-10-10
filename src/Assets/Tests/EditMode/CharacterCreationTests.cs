@@ -315,20 +315,20 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void NewPlayerProfileExplicitlyBindsTheBasicUnarmedFallbackProfile()
+        public void NewPlayerProfileHasNoWeaponOrUnarmedBinding()
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
 
             var profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
 
             Assert.AreEqual(
-                CharacterCreationCatalog.BasicUnarmedAttackProfileId,
+                string.Empty,
                 profile.unarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(profile.mainEquipmentBasicAttackProfileId));
 
             CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
             Assert.AreEqual(
-                CharacterCreationCatalog.BasicUnarmedAttackProfileId,
+                string.Empty,
                 runtime.UnarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(runtime.MainEquipmentBasicAttackProfileId));
         }
@@ -382,7 +382,7 @@ namespace TianZhang.Tests
                 CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.KnownSpells);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.EquippedSpells);
-                Assert.AreEqual("basic_unarmed", runtime.UnarmedBasicAttackProfileId);
+                Assert.AreEqual(string.Empty, runtime.UnarmedBasicAttackProfileId);
             }
             finally
             {

@@ -54,7 +54,7 @@ namespace TianZhang.Tests
             Assert.That(restored.Player.Identity.CharacterId, Is.EqualTo("player"));
             Assert.That(restored.Navigation.AdventureId, Is.EqualTo("adventure_test"));
             Assert.That(restored.CaptureSave().inventory[0].quantity, Is.EqualTo(2));
-            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo("basic_unarmed"));
+            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo(string.Empty));
             Assert.That(restored.Player.AppearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
         }
 
@@ -68,6 +68,28 @@ namespace TianZhang.Tests
             restored.RestoreSaveJson(first, null);
 
             Assert.That(restored.CaptureSaveJson(), Is.EqualTo(first));
+        }
+
+        [Test]
+        public void OldUnarmedSaveNormalizesWithoutGrantingEquipmentAndRemainsEmptyAfterReload()
+        {
+            var source = CreateRuntimeWithInventory();
+            var old = source.CaptureSave();
+            old.player.unarmedBasicAttackProfileId = "basic_unarmed";
+            string oldJson = JsonUtility.ToJson(old);
+            var migrated = GameSaveSerializer.Deserialize(oldJson);
+            Assert.That(migrated.player.unarmedBasicAttackProfileId, Is.Empty);
+            var restored = new GameRuntime();
+            restored.RestoreSave(migrated, catalog);
+            Assert.That(restored.Player.MainEquipmentBasicAttackProfileId, Is.Null.Or.Empty);
+            Assert.That(restored.Player.MainEquipmentItemId, Is.Null.Or.Empty);
+            Assert.That(restored.Player.MainEquipmentInstanceId, Is.Null.Or.Empty);
+            Assert.That(restored.GetItemQuantity("item_iron_sword"), Is.Zero);
+            Assert.That(restored.GetItemQuantity("item_iron_blade"), Is.Zero);
+            string current = restored.CaptureSaveJson();
+            restored.RestoreSaveJson(current, catalog);
+            Assert.That(restored.CaptureSaveJson(), Is.EqualTo(current));
+            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.Empty);
         }
 
         [Test]

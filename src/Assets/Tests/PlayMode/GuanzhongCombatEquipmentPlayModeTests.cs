@@ -50,6 +50,7 @@ namespace TianZhang.Tests.PlayMode
             creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
             creation.Submit("formal-swap", "战斗换装验证");
             yield return SceneReady(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = Find<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();
@@ -154,6 +155,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(40000, hud.Snapshot.FindAction(CombatActionKind.BasicAttack).ActionPointCostUnits);
             }
             string expected = defeat ? "item_iron_blade" : "item_iron_sword";
+            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             if (defeat) spawned.Player.ReceiveDamage(spawned.Player.CurrentHealth - 1); // explicit near-death combat fixture
             for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
             {
@@ -195,7 +197,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(encounter.IsPresenting, Is.False);
         }
 
-        private static void SetGameSize(int width, int height)
+        public static void SetGameSize(int width, int height)
         {
 #if UNITY_EDITOR
             var assembly = typeof(UnityEditor.Editor).Assembly;

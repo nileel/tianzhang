@@ -536,8 +536,10 @@ namespace TianZhang.Editor
             template.hitRateBonus = ParseFloat(Required(table, row, "hitRateBonus"), sourceName, "hitRateBonus");
             template.equippedSpells = ParseOptionalStableIdList(Value(table, row, "equippedSpells"), sourceName, "equippedSpells");
             template.equippedSkills = Array.Empty<string>();
-            // 敌人模板基础攻击外键由本表显式给出；石甲兽行引用生产 basic_unarmed 档案。
+            // 保留旧列但拒绝徒手引用；没有真实武器的敌人仍可入战。
             template.unarmedBasicAttackProfileId = Value(table, row, "unarmedBasicAttackProfileId");
+            if (!string.IsNullOrEmpty(template.unarmedBasicAttackProfileId))
+                throw new InvalidDataException("enemy_unarmed_binding_obsolete");
             return template;
         }
 
@@ -581,8 +583,8 @@ namespace TianZhang.Editor
                 enemy.realmId != "realm_lianqi" ||
                 enemy.dropEntries.Length != 2 ||
                 enemy.combatTemplate == null ||
-                enemy.combatTemplate.unarmedBasicAttackProfileId !=
-                CharacterCreationCatalog.BasicUnarmedAttackProfileId)
+                !string.IsNullOrEmpty(enemy.combatTemplate.unarmedBasicAttackProfileId) ||
+                !string.IsNullOrEmpty(enemy.combatTemplate.mainEquipmentBasicAttackProfileId))
             {
                 throw new InvalidDataException($"{sourceName} does not match the approved '{ShijiahouEnemyId}' projection.");
             }

@@ -101,14 +101,14 @@ namespace TianZhang.Tests
         [Test]
         public void FixtureRowsProjectExplicitlyWithoutWritingAssets()
         {
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             Assert.IsTrue(
                 CombatContentImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),
                 reason);
             try
             {
-                Assert.AreEqual(6, projected.Length);
+                Assert.AreEqual(5, projected.Length);
                 var byId = projected.ToDictionary(profile => profile.attackProfileId, StringComparer.Ordinal);
                 var main = byId["basic_fixture_main"];
                 Assert.AreEqual(AttackProfileKind.Basic, main.profileKind);
@@ -127,10 +127,6 @@ namespace TianZhang.Tests
                 Assert.AreEqual(AttackTargetingMode.Single, main.targetingMode);
                 Assert.AreEqual(AttackAreaShapeKind.Unknown, main.areaShapeKind);
                 Assert.AreEqual(-1, main.areaFacing);
-
-                var unarmed = byId["basic_fixture_unarmed"];
-                Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, unarmed.basicBindingKind);
-                Assert.AreEqual(0.9f, unarmed.physicalDamageMultiplier, 0.0001f);
 
                 var artSingle = byId["art_fixture_single"];
                 Assert.AreEqual(AttackProfileKind.Art, artSingle.profileKind);
@@ -216,7 +212,7 @@ namespace TianZhang.Tests
         [Test]
         public void FixtureRowVariantsShareOnePerColumnMutationFailureWithNoPartialProjection()
         {
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             var fixtureLine = lines.First(line => line.StartsWith("art_fixture_single,", System.StringComparison.Ordinal));
             var fixtureColumns = fixtureLine.Split(',');
@@ -337,7 +333,7 @@ namespace TianZhang.Tests
             string value,
             string expectedReason)
         {
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             string header = lines.First(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'));
             string[] columns = header.Split(',');
@@ -353,7 +349,7 @@ namespace TianZhang.Tests
         [Test]
         public void CtAndReuseColumnsAreReadIndependentlyPerRow()
         {
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             string header = lines.First(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'));
             string[] columns = header.Split(',');
@@ -394,7 +390,7 @@ namespace TianZhang.Tests
             // 普攻必须显式声明零 CT 与零重用刻：任一非零都整表拒绝。
             foreach (string field in new[] { "ctPenalty", "reuseCooldownTicks" })
             {
-                var basic = lines.First(line => line.StartsWith("basic_fixture_unarmed,", StringComparison.Ordinal)).Split(',');
+                var basic = lines.First(line => line.StartsWith("basic_fixture_main,", StringComparison.Ordinal)).Split(',');
                 basic[Array.IndexOf(columns, field)] = "1";
                 Assert.IsFalse(
                     CombatContentImporter.TryValidateAttackProfileCsv(
@@ -407,7 +403,7 @@ namespace TianZhang.Tests
         [Test]
         public void ProjectionFailureLeavesNoPartialAssetAndNoFallbackDefaults()
         {
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             var duplicateLines = lines.Concat(new[] { lines.First(line => line.StartsWith("art_fixture_single,", System.StringComparison.Ordinal)) }).ToArray();
             Assert.IsFalse(
@@ -432,6 +428,19 @@ namespace TianZhang.Tests
                 foreach (var profile in single)
                     UnityEngine.Object.DestroyImmediate(profile);
             }
+        }
+
+        // The historical unarmed fixture is a rejection input, never part of the current valid set.
+        private static string[] CurrentFixtureLines() => File.ReadAllLines(FixtureAbsolutePath())
+            .Where(line => !line.StartsWith("basic_fixture_unarmed,", StringComparison.Ordinal)).ToArray();
+
+        [Test]
+        public void HistoricalUnarmedFixtureCannotEnterTheImporter()
+        {
+            Assert.IsFalse(CombatContentImporter.TryBuildAttackProfileProjection(
+                File.ReadAllLines(FixtureAbsolutePath()), LanguageFixtureKeys(), out var rejected, out var reason));
+            Assert.IsEmpty(rejected);
+            StringAssert.StartsWith("basic_attack_binding_kind_invalid", reason);
         }
 
         private static string FixtureAbsolutePath()
@@ -463,8 +472,8 @@ namespace TianZhang.Tests
                 reason);
             try
             {
-                Assert.AreEqual(5, projected.Length);
-                CollectionAssert.AreEquivalent(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" },
+                Assert.AreEqual(4, projected.Length);
+                CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" },
                     projected.Select(item => item.attackProfileId).ToArray());
                 var byId = projected.ToDictionary(item => item.attackProfileId);
                 var strike = byId["spell_guanshiji"];
@@ -502,19 +511,19 @@ namespace TianZhang.Tests
                     Assert.AreEqual(AttackResourceKind.Mp, art.resourceKind);
                     Assert.AreEqual(AttackTargetingMode.Single, art.targetingMode);
                 }
-                var profile = byId["basic_unarmed"];
-                Assert.AreEqual("basic_unarmed", profile.attackProfileId);
-                Assert.AreEqual("attack_profile_basic_unarmed", profile.displayNameKey);
+                var profile = byId["basic_iron_sword"];
+                Assert.AreEqual("basic_iron_sword", profile.attackProfileId);
+                Assert.AreEqual("attack_profile_basic_iron_sword", profile.displayNameKey);
                 Assert.AreEqual(AttackProfileKind.Basic, profile.profileKind);
-                Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, profile.basicBindingKind);
+                Assert.AreEqual(BasicAttackBindingKind.MainEquipment, profile.basicBindingKind);
                 Assert.AreEqual(AttackEffectType.Physical, profile.effectType);
                 Assert.AreEqual("element_none", profile.damageElementId);
                 Assert.AreEqual(1f, profile.physicalDamageMultiplier, 0.0001f);
                 Assert.AreEqual(0f, profile.soulDamageMultiplier, 0.0001f);
                 Assert.AreEqual(AttackResourceKind.None, profile.resourceKind);
                 Assert.AreEqual(0, profile.resourceCost);
-                Assert.AreEqual(50000, profile.actionPointCostUnits);
-                Assert.AreEqual(25000, profile.minimumNetCostUnits);
+                Assert.AreEqual(40000, profile.actionPointCostUnits);
+                Assert.AreEqual(40000, profile.minimumNetCostUnits);
                 Assert.AreEqual(0, profile.ctPenalty);
                 Assert.AreEqual(0, profile.reuseCooldownTicks);
                 Assert.AreEqual(1, profile.minCastRange);
@@ -529,7 +538,7 @@ namespace TianZhang.Tests
                 Assert.IsTrue(string.IsNullOrEmpty(profile.specialEffectTextKey));
                 Assert.IsFalse(profile.isDomain);
                 Assert.IsFalse(profile.isBloodline);
-                Assert.AreEqual("徒手", ProductionLanguageValue(profile.displayNameKey), "display key must resolve to 徒手");
+                Assert.AreEqual("铁剑普攻", ProductionLanguageValue(profile.displayNameKey), "display key must resolve to 铁剑");
             }
             finally
             {
@@ -571,7 +580,7 @@ namespace TianZhang.Tests
         {
             var lines = File.ReadAllLines(ProductionAbsolutePath());
             string header = lines.First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
-            var row = lines.First(line => line.StartsWith("basic_unarmed,", StringComparison.Ordinal)).Split(',');
+            var row = lines.First(line => line.StartsWith("basic_iron_sword,", StringComparison.Ordinal)).Split(',');
             row[Array.IndexOf(header.Split(','), field)] = "0";
             Assert.IsFalse(CombatContentImporter.TryValidateAttackProfileCsv(new[] { header, string.Join(",", row) },
                 ProductionLanguageKeys(), out string reason));
@@ -579,12 +588,12 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ProductionBasicUnarmedRowFailsClosedOnIllegalMutations()
+        public void ProductionWeaponRowFailsClosedOnIllegalMutations()
         {
             var lines = File.ReadAllLines(ProductionAbsolutePath());
             var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
             string header = lines.First(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'));
-            string row = lines.First(line => line.StartsWith("basic_unarmed,", System.StringComparison.Ordinal));
+            string row = lines.First(line => line.StartsWith("basic_iron_sword,", System.StringComparison.Ordinal));
             string[] columns = header.Split(',');
 
             string Mutate(string field, string value, string source = null)
@@ -629,25 +638,25 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ProductionImportWritesCanonicalBasicUnarmedAssetAndValidatesBindings()
+        public void ProductionImportWritesCanonicalWeaponAssetAndValidatesBindings()
         {
             // 真实导入：整表、语言键、asset ID 与绑定种类全部合法时生成/更新规范路径 asset。
             CombatContentImporter.ImportAttackProfiles();
 
-            const string assetPath = "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset";
+            const string assetPath = "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset";
             var asset = AssetDatabase.LoadAssetAtPath<AttackProfileData>(assetPath);
-            Assert.IsNotNull(asset, "production import must generate the canonical basic_unarmed asset");
-            Assert.AreEqual("basic_unarmed", asset.attackProfileId);
-            Assert.AreEqual("attack_profile_basic_unarmed", asset.displayNameKey);
+            Assert.IsNotNull(asset, "production import must generate the canonical basic_iron_sword asset");
+            Assert.AreEqual("basic_iron_sword", asset.attackProfileId);
+            Assert.AreEqual("attack_profile_basic_iron_sword", asset.displayNameKey);
             Assert.AreEqual(AttackProfileKind.Basic, asset.profileKind);
-            Assert.AreEqual(BasicAttackBindingKind.UnarmedFallback, asset.basicBindingKind);
+            Assert.AreEqual(BasicAttackBindingKind.MainEquipment, asset.basicBindingKind);
             Assert.AreEqual(AttackEffectType.Physical, asset.effectType);
             Assert.AreEqual("element_none", asset.damageElementId);
             Assert.AreEqual(1f, asset.physicalDamageMultiplier, 0.0001f);
             Assert.AreEqual(AttackResourceKind.None, asset.resourceKind);
             Assert.AreEqual(0, asset.resourceCost);
-            Assert.AreEqual(50000, asset.actionPointCostUnits);
-            Assert.AreEqual(25000, asset.minimumNetCostUnits);
+            Assert.AreEqual(40000, asset.actionPointCostUnits);
+            Assert.AreEqual(40000, asset.minimumNetCostUnits);
             Assert.AreEqual(0, asset.ctPenalty);
             Assert.AreEqual(0, asset.reuseCooldownTicks);
             Assert.AreEqual(1, asset.minCastRange);
@@ -689,14 +698,14 @@ namespace TianZhang.Tests
             }
             Assert.IsTrue(
                 CombatContentImporter.TryValidateAttackProfileAssetIdProjection(
-                    new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }, out var idReason),
+                    new[] { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }, out var idReason),
                 idReason);
 
             // 石甲兽模板 asset 显式引用同一档案：导入绑定校验必须通过（ImportAttackProfiles 已成功）。
             var shijiahou = AssetDatabase.LoadAssetAtPath<CharacterData>(
                 "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
             Assert.IsNotNull(shijiahou);
-            Assert.AreEqual("basic_unarmed", shijiahou.unarmedBasicAttackProfileId);
+            Assert.IsTrue(string.IsNullOrEmpty(shijiahou.unarmedBasicAttackProfileId));
             Assert.IsTrue(string.IsNullOrEmpty(shijiahou.mainEquipmentBasicAttackProfileId));
         }
 
@@ -707,7 +716,6 @@ namespace TianZhang.Tests
 
         private static readonly string[] ProductionAttackProfileAssetPaths =
         {
-            "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset",
             "Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
             "Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
             "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
@@ -775,7 +783,8 @@ namespace TianZhang.Tests
 
             var expected = new Dictionary<string, int[]>(StringComparer.Ordinal)
             {
-                ["AttackProfile_basic_unarmed.asset"] = new[] { 50000, 25000, 0, 0 },
+                ["AttackProfile_basic_iron_sword.asset"] = new[] { 40000, 40000, 0, 0 },
+                ["AttackProfile_basic_iron_blade.asset"] = new[] { 50000, 50000, 0, 0 },
                 ["AttackProfile_spell_guanshiji.asset"] = new[] { 50000, 25000, 0, 0 },
                 ["AttackProfile_spell_julingshu.asset"] = new[] { 25000, 12500, 5, 16 },
             };
@@ -826,7 +835,7 @@ namespace TianZhang.Tests
             AssetDatabase.DeleteAsset(strayAssetPath);
             AssetDatabase.Refresh();
 
-            var lines = File.ReadAllLines(FixtureAbsolutePath());
+            var lines = CurrentFixtureLines();
             var languageKeys = new HashSet<string>(LanguageFixtureKeys(), StringComparer.Ordinal);
             Assert.IsTrue(
                 CombatContentImporter.TryBuildAttackProfileProjection(lines, languageKeys, out var projected, out var reason),

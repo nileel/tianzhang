@@ -69,9 +69,9 @@ namespace TianZhang.Tests.EditMode
             actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 200, 200, 60, 10, 10, 10, runtime.Player.Attributes.ActionPointMaximumUnits, runtime.Player.Attributes.MovementEfficiencyMilliUnits,
                 basicAttackProfileId: "basic_iron_sword");
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
-                basicAttackProfileId: "basic_unarmed");
-            var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", "basic_unarmed", Array.Empty<string>());
-            var profiles = new[] { "basic_unarmed", "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
+                basicAttackProfileId: string.Empty);
+            var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", string.Empty, Array.Empty<string>());
+            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.UseItem, 30000, 30000, 0, 0) });
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");

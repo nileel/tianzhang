@@ -86,8 +86,8 @@ namespace TianZhang.Features.CharacterCreation
                 profile.availableSpells = new[] { "spell_guanshiji", "spell_julingshu" };
                 profile.equippedSpells = (string[])profile.availableSpells.Clone();
             }
-            // 角色装配所有者显式绑定生产无装备普攻档案；战斗调用点不再补默认值。
-            profile.unarmedBasicAttackProfileId = CharacterCreationCatalog.BasicUnarmedAttackProfileId;
+            // 新角色没有主手；无装备不产生普攻，也不补发武器。
+            profile.unarmedBasicAttackProfileId = string.Empty;
 
             // 长期行动力基础输入读自点购配置，不在 C# 补 100000／2000，也不从反应或灵力派生。
             profile.actionPointMaximumUnits = ap;

@@ -19,7 +19,7 @@ namespace TianZhang.Tests
         private static string[] SourcePaths => new[] { "RealmCombatGrowth", "CombatEffectTierRules", "CombatActionEconomyRules", "AttackProfiles" }
             .Select(name => "Assets/DataConfig/" + name + ".csv").ToArray();
         private static string[] AssetPaths => new[] { RuleAsset, "Assets/Data/ContentCatalog/ContentCatalog.asset" }
-            .Concat(new[] { "basic_unarmed", "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }
+            .Concat(new[] { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" }
                 .Select(id => "Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
         private static string[][] Table(int index) => CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(SourcePaths[index]));
         private static CombatRuleSet Parse(string[][] realm = null, string[][] tier = null, string[][] economy = null) =>
@@ -118,7 +118,7 @@ namespace TianZhang.Tests
         [Test]
         public void BadSerializedAttackRatioHasAnExplicitValidationRejection()
         {
-            var copy = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<AttackProfileData>(AssetPaths[3]));
+            var copy = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset"));
             try
             {
                 copy.efficiencyDenominator = 0;
@@ -171,9 +171,9 @@ namespace TianZhang.Tests
                 CombatContentImporter.ImportAttackProfiles();
                 var asset = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>(RuleAsset);
                 Assert.That(asset.sourceDigest, Is.Not.EqualTo(originalDigest));
-                var strike = AssetDatabase.LoadAssetAtPath<AttackProfileData>(AssetPaths[3]);
+                var strike = AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset");
                 Assert.That(strike.physicalDamageMultiplier, Is.EqualTo(.75f).Within(.00001f));
-                var recovery = AssetDatabase.LoadAssetAtPath<AttackProfileData>(AssetPaths[4]);
+                var recovery = AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset");
                 Assert.That(recovery.reuseCooldownTicks, Is.EqualTo(20));
                 foreach (string attackPath in AssetPaths.Skip(2))
                     Assert.That(AssetDatabase.LoadAssetAtPath<AttackProfileData>(attackPath).ruleSetSourceDigest, Is.EqualTo(asset.sourceDigest));

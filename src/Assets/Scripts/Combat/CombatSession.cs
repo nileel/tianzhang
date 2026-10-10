@@ -369,6 +369,8 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatAttackKind expectedKind)
         {
+            if (expectedKind == CombatAttackKind.Basic && string.IsNullOrEmpty(actor.BasicAttackProfileId))
+                return CombatActionResult.Rejected("attack_profile_not_authorized");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
             if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))

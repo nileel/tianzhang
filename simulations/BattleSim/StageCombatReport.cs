@@ -144,15 +144,15 @@ static class ActionEconomyBalanceReport
         int Heals, int Restored, int Overflow, int PillsLeft, int Swaps, int Ct, int Hp, int EnemyHp, int Mp, bool Timeout,
         int Basics, int Guanshi, int Recoveries);
 
+    // Explicit old-rule sensitivity fixture; not production weapon authorization or AP2 balance proof.
     static CombatAttackProfile[] Profiles(NativeCase c)
     {
-        var basic = GameData.ProductionAttacks["basic_unarmed"];
         var attack = GameData.ProductionAttacks["spell_guanshiji"];
         var recovery = GameData.ProductionAttacks["spell_julingshu"];
         return new[]
         {
-            new CombatAttackProfile("basic_unarmed", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
-                c.BasicCost, c.BasicMinimum, basic.Cost.CtPenalty, basic.Cost.ReuseCooldownTicks, physicalMultiplier: c.BasicMultiplier),
+            new CombatAttackProfile("fixture-legacy-basic", CombatAttackKind.Basic, CombatAttackEffect.Physical, 1, 1,
+                c.BasicCost, c.BasicMinimum, 0, 0, physicalMultiplier: c.BasicMultiplier),
             new CombatAttackProfile("spell_guanshiji", CombatAttackKind.Art, CombatAttackEffect.Physical, 1, 1,
                 c.GuanshiCost, attack.Cost.MinimumNetCostUnits, c.GuanshiCt, c.GuanshiCd,
                 physicalMultiplier: (float)attack.Mult, spiritCost: attack.SpiritCost),
@@ -173,7 +173,7 @@ static class ActionEconomyBalanceReport
             source.Primary["肉防"], source.Primary["神防"], endowed ? c.Maximum : 100000, 0,
             equippedArtProfileIds: new[] { "spell_guanshiji", "spell_julingshu" },
             availableArtProfileIds: new[] { "spell_guanshiji", "spell_julingshu" },
-            basicAttackProfileId: endowed ? "basic_unarmed" : "fixture-control-basic", rawSpirit: source.Innate["魂魄"], realmStage: "练气",
+            basicAttackProfileId: endowed ? "fixture-legacy-basic" : "fixture-control-basic", rawSpirit: source.Innate["魂魄"], realmStage: "练气",
             actionEconomyModifiers: endowed && c.Modifier != null ? new[] { c.Modifier } : Array.Empty<CombatActionEconomyModifier>())
         { HitRateBonus = (float)source.Secondary.GetValueOrDefault("命中率", 0) };
     }
@@ -246,7 +246,7 @@ static class ActionEconomyBalanceReport
                 {
                     actions++; paid += quote.ActionPointCostUnits; refunds += refund;
                     spent += Math.Max(0, beforeMp - actor.CurrentSpirit); ct += quote.CtPenalty;
-                    if (profile == "basic_unarmed") basics++;
+                    if (profile == "fixture-legacy-basic") basics++;
                     if (profile == "spell_guanshiji") guanshi++;
                     if (profile == "spell_julingshu") recoveries++;
                 }
@@ -304,11 +304,11 @@ static class ActionEconomyBalanceReport
             foreach (int speed in new[] { 25, 50, 100 })
                 NativeRow("speed", Neutral(), new("speed" + speed), group, "basic", speed);
             foreach (var modifier in new[] {
-                new CombatActionEconomyModifier("fixed10", "fixture", CombatCommandKind.BasicAttack, "basic_unarmed", 10000, 1000, 25000, 0, 0, 0, 0, 0),
-                new("retained80", "fixture", CombatCommandKind.BasicAttack, "basic_unarmed", 0, 800, 25000, 0, 0, 0, 0, 0),
-                new("floor25", "fixture", CombatCommandKind.BasicAttack, "basic_unarmed", 0, 0, 25000, 0, 0, 0, 0, 0),
-                new("refund10x2", "fixture", CombatCommandKind.BasicAttack, "basic_unarmed", 0, 1000, 25000, 0, 0, 10000, 2, 20000),
-                new("refund-stress", "fixture", CombatCommandKind.BasicAttack, "basic_unarmed", 0, 1000, 25000, 0, 0, int.MaxValue, int.MaxValue, 1000000) })
+                new CombatActionEconomyModifier("fixed10", "fixture", CombatCommandKind.BasicAttack, "fixture-legacy-basic", 10000, 1000, 25000, 0, 0, 0, 0, 0),
+                new("retained80", "fixture", CombatCommandKind.BasicAttack, "fixture-legacy-basic", 0, 800, 25000, 0, 0, 0, 0, 0),
+                new("floor25", "fixture", CombatCommandKind.BasicAttack, "fixture-legacy-basic", 0, 0, 25000, 0, 0, 0, 0, 0),
+                new("refund10x2", "fixture", CombatCommandKind.BasicAttack, "fixture-legacy-basic", 0, 1000, 25000, 0, 0, 10000, 2, 20000),
+                new("refund-stress", "fixture", CombatCommandKind.BasicAttack, "fixture-legacy-basic", 0, 1000, 25000, 0, 0, int.MaxValue, int.MaxValue, 1000000) })
                 NativeRow("modifier", Neutral(), new(modifier.SourceInstanceId, Modifier: modifier), group, "basic");
         }
         var board = new HexBattlefield();

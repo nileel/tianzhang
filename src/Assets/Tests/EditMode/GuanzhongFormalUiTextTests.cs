@@ -339,7 +339,7 @@ namespace TianZhang.Tests
         {
             UiText.Load(LoadLanguageTable());
             var profile = AssetDatabase.LoadAssetAtPath<TianZhang.Combat.AttackProfileData>(
-                "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
+                "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset");
             Assert.IsNotNull(profile);
             var host = new GameObject("ActionBarTextTest");
             var labelHost = new GameObject("ArtLabel", typeof(RectTransform), typeof(Text));
@@ -352,13 +352,13 @@ namespace TianZhang.Tests
                 SetField(view, "artButton", buttonHost.GetComponent<Button>());
                 view.ConfigureText(id => id == profile.attackProfileId ? UiText.Resolve(profile.displayNameKey) : id);
                 view.Present(true, profile.attackProfileId, null);
-                Assert.AreEqual("徒手", label.text);
+                Assert.AreEqual("铁剑普攻", label.text);
                 Assert.IsTrue(buttonHost.GetComponent<Button>().interactable);
                 view.Present(true, null, null);
                 Assert.AreEqual("术法", label.text);
                 Assert.IsFalse(buttonHost.GetComponent<Button>().interactable);
-                Assert.AreEqual("basic_unarmed", profile.attackProfileId);
-                Assert.AreEqual("attack_profile_basic_unarmed", profile.displayNameKey);
+                Assert.AreEqual("basic_iron_sword", profile.attackProfileId);
+                Assert.AreEqual("attack_profile_basic_iron_sword", profile.displayNameKey);
             }
             finally
             {

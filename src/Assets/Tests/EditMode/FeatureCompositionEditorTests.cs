@@ -69,10 +69,10 @@ namespace TianZhang.Tests
                 Assert.AreEqual(definition.Kind == CombatCommandKind.SwapSpell ? 60 : 0, definition.ReuseCooldownTicks);
             }
             var player = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0,0), 100,
-                100,100,20,20,10,10,100000,2000, basicAttackProfileId: "basic_unarmed");
+                100,100,20,20,10,10,100000,2000, basicAttackProfileId: string.Empty);
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1,0), 1,
-                100,100,20,20,10,10,100000,2000, basicAttackProfileId: "basic_unarmed");
-            var spawned = new AdventureSpawnSet(player, enemy, null, "basic_unarmed", "basic_unarmed", Array.Empty<string>());
+                100,100,20,20,10,10,100000,2000, basicAttackProfileId: string.Empty);
+            var spawned = new AdventureSpawnSet(player, enemy, null, string.Empty, string.Empty, Array.Empty<string>());
             var profiles = (AttackProfileData[])Field("attackProfiles");
             var environment = (EnvironmentProfileAsset)Field("environmentProfile");
             Assert.IsTrue(new CombatEntryAdapter(ordinary, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(spawned, profiles, environment, out var session, out var reason), reason);
@@ -81,7 +81,6 @@ namespace TianZhang.Tests
             Assert.AreEqual(ruleData.sourceDigest,session.RuleSet.SourceDigest);
             foreach (var profile in session.AttackProfiles)
             {
-                if (profile.Id == "basic_unarmed") { Assert.IsNull(profile.RuleMetadata); continue; }
                 Assert.IsNotNull(profile.RuleMetadata);
                 Assert.AreEqual("tier_lianqi",profile.RuleMetadata.Tier.AbilityTierId);
                 Assert.AreEqual(ruleData.sourceDigest,profile.RuleMetadata.SourceDigest);

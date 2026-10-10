@@ -228,11 +228,12 @@ static class Combat
             (Kind: DivineAction, Ready: divineReady, MinRange: divineMinRange, MaxRange: divineMaxRange),
             (Kind: KuxingAction, Ready: kuxingReady, MinRange: 1, MaxRange: 1),
             (Kind: ArtAction, Ready: artReady, MinRange: artMinRange, MaxRange: artMaxRange),
-            (Kind: BasicAction, Ready: true, MinRange: basicAttack.MinRange, MaxRange: basicAttack.MaxRange),
+            (Kind: BasicAction, Ready: basicAttack != null, MinRange: basicAttack?.MinRange ?? 0, MaxRange: basicAttack?.MaxRange ?? 0),
         };
         var selected = actions.FirstOrDefault(action => action.Ready && CanAttack(battlefield, attacker, defender, action.MinRange, action.MaxRange));
         if (!selected.Ready)
-            selected = actions.First(action => action.Ready);
+            selected = actions.FirstOrDefault(action => action.Ready);
+        if (!selected.Ready) { minRange = maxRange = 0; return -1; }
         minRange = selected.MinRange;
         maxRange = selected.MaxRange;
         return selected.Kind;
@@ -559,7 +560,8 @@ static class Combat
             if (c.Realm == "凡人") throw new InvalidOperationException("production_art_qualification_invalid");
             Add(ArtAction, profile, profile.Cost, profile.SpiritCost, 0);
         }
-        Add(BasicAction, c.BasicAttackProfile, c.BasicAttackProfile.Cost, c.BasicAttackProfile.SpiritCost, 0);
+        if (c.BasicAttackProfile != null)
+            Add(BasicAction, c.BasicAttackProfile, c.BasicAttackProfile.Cost, c.BasicAttackProfile.SpiritCost, 0);
         return result;
     }
 

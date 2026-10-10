@@ -472,7 +472,6 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
     public static readonly ForcedMovementConfig BreakFormationChargeKnockback = new("破阵冲锋·击退", 1);
     public static readonly MovementControlConfig RootedControl = new("定身", true);
     public static readonly ArtConfig PhysicalArt = new("裂石拳", "物理", 1.3, 20, 3, "土", 1, 1);
-    public static AttackProfile UnarmedBasicAttack => ProductionAttacks["basic_unarmed"];
 
     // The approved documents remain the parameter source. These are read-only projections,
     // shared by both simulation entries, not separately editable copies of their tables.
@@ -670,14 +669,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             string Value(string key) => row[key]; int Number(string key) => CombatRuleSet.Integer(Value(key));
             string id = Value("attackProfileId"), mode = Value("effectBudgetMode");
             if (Value("ruleSetVersion") != rules.RuleSetVersion) throw new InvalidDataException("attack_profile_rule_version_unknown");
-            int cooldown;
-            if (mode == "legacy_unarmed")
-            {
-                if (id != "basic_unarmed" || Value("abilityTierId") != "" || Value("cooldownClass") != "legacy_unarmed" || Value("basicBindingKind") != "unarmed_fallback")
-                    throw new InvalidDataException("attack_profile_legacy_unarmed_invalid");
-                cooldown = Number("reuseCooldownTicks");
-            }
-            else cooldown = rules.ResolveCooldown(Value("abilityTierId"),Value("cooldownClass"),Value("reuseCooldownTicks") == "" ? null : Number("reuseCooldownTicks"));
+            int cooldown = rules.ResolveCooldown(Value("abilityTierId"),Value("cooldownClass"),Value("reuseCooldownTicks") == "" ? null : Number("reuseCooldownTicks"));
             if (id is "basic_iron_sword" or "basic_iron_blade")
             {
                 if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" || mode != "fixed_weapon" ||
@@ -689,7 +681,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             if (mode != "damage_budget" && new[] { "efficiencyNumerator","efficiencyDenominator","damageMigrationNumerator","damageMigrationDenominator","damageWeightNumerator","damageWeightDenominator" }.Any(key => Value(key) != ""))
                 throw new InvalidDataException("attack_profile_non_budget_fields_present");
             bool recovery = Value("effectType") == "restore_spirit";
-            if (!(mode == "legacy_unarmed" || mode == "fixed_weapon" || mode == "damage_budget" && Value("effectType") == "physical" || mode == "prototype_restore" && recovery))
+            if (!(mode == "fixed_weapon" || mode == "damage_budget" && Value("effectType") == "physical" || mode == "prototype_restore" && recovery))
                 throw new InvalidDataException("unsupported_production_attack_effect");
             if (Number("minCastRange") > Number("maxCastRange")) throw new InvalidDataException("attack_profile_cast_range_invalid");
             if (new[] { "statusId","statusAttributeId","statusRelativePermille","statusDurationOwnTurnEnds","statusStackLimit","statusRefreshPolicy" }.Any(key => Value(key) != ""))
@@ -703,13 +695,13 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             decimal Decimal(string key) => decimal.Parse(Value(key),CultureInfo.InvariantCulture);
             if (recovery && (mode != "prototype_restore" || Value("physicalDamageMultiplier") != "" || Value("soulDamageMultiplier") != "" || Decimal("spiritRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") > 1))
                 throw new InvalidDataException("production_recovery_invalid");
-            result.Add(id,new(id == "basic_unarmed" ? "徒手" : id,recovery ? "恢复灵力" : "物理",multiplier,NormalizeElement(Value("damageElementId")),Number("minCastRange"),Number("maxCastRange"),Cost:cost,
+            result.Add(id,new(id,recovery ? "恢复灵力" : "物理",multiplier,NormalizeElement(Value("damageElementId")),Number("minCastRange"),Number("maxCastRange"),Cost:cost,
                 SpiritCost:Number("resourceCost"),OtherTargetSpiritCost:recovery ? Number("otherTargetResourceCost") : 0,
                 SpiritRecoveryMultiplier:recovery ? Decimal("spiritRecoveryMultiplier") : 0,MinimumSpiritRecovery:recovery ? Number("minimumSpiritRecovery") : 0,
                 OtherTargetRecoveryMultiplier:recovery ? Decimal("otherTargetRecoveryMultiplier") : 1,BasicBindingKind:Value("basicBindingKind"),
                 RuleSetVersion:rules.RuleSetVersion,RuleSetSourceDigest:rules.SourceDigest,AbilityTierId:Value("abilityTierId"),EffectBudgetMode:mode));
         }
-        if (!result.Keys.Order().SequenceEqual(new[] { "basic_unarmed","spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order()))
+        if (!result.Keys.Order().SequenceEqual(new[] { "spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order()))
             throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
     }

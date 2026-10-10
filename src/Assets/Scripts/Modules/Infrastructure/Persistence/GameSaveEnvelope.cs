@@ -413,7 +413,7 @@ namespace TianZhang.Infrastructure.Persistence
                 mainEquipmentItemId = snapshot.MainEquipmentItemId,
                 mainEquipmentInstanceId = snapshot.MainEquipmentInstanceId,
                 mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId,
-                unarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId,
+                unarmedBasicAttackProfileId = string.Empty,
                 appearanceProfileId = snapshot.AppearanceProfileId,
                 visibleRootId = snapshot.VisibleRootId,
                 visibleRootGrade = snapshot.VisibleRootGrade,
@@ -503,7 +503,7 @@ namespace TianZhang.Infrastructure.Persistence
                 new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier, movementGrowthInputsPresent, RestoreMovementGrowth()),
                 combatModifiers,
                 mainEquipmentBasicAttackProfileId,
-                unarmedBasicAttackProfileId,
+                string.Empty,
                 appearanceProfileId,
                 visibleRootId, visibleRootGrade, visibleRootElement, mainEquipmentItemId, mainEquipmentInstanceId);
         }

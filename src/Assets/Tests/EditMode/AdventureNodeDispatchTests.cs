@@ -126,12 +126,12 @@ namespace TianZhang.Tests
             {
                 var player = Combatant("player", CombatTeam.Player, new HexCoord(0, 0), 20);
                 var enemy = Combatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1);
-                player.BasicAttackProfileId = "basic_unarmed";
-                enemy.BasicAttackProfileId = "basic_unarmed";
+                player.BasicAttackProfileId = "basic_iron_sword";
+                enemy.BasicAttackProfileId = "basic_iron_sword";
                 var spawned = new AdventureSpawnSet(
-                    player, enemy, enemyData, "basic_unarmed", "basic_unarmed", null);
+                    player, enemy, enemyData, "basic_iron_sword", "basic_iron_sword", null);
                 AttackProfileData basic = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
-                    "Assets/Data/AttackProfiles/AttackProfile_basic_unarmed.asset");
+                    "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset");
                 EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                     "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
 
@@ -142,7 +142,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual("player", turn.ActorId);
                 CombatActionResult result = service.Execute(
                     session,
-                    new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", "basic_unarmed"));
+                    new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", "basic_iron_sword"));
                 Assert.IsTrue(result.Succeeded, result.RejectionReason);
                 Assert.That(enemy.CurrentHealth, Is.LessThan(enemy.MaximumHealth));
             }

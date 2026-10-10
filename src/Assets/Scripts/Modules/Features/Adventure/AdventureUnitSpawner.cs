@@ -113,9 +113,9 @@ namespace TianZhang.Features.Adventure
         {
             bool hasMain = !string.IsNullOrWhiteSpace(mainEquipment);
             bool hasUnarmed = !string.IsNullOrWhiteSpace(unarmed);
-            if (hasMain == hasUnarmed)
+            if (hasUnarmed)
                 return null;
-            return hasMain ? mainEquipment : unarmed;
+            return hasMain ? mainEquipment : string.Empty;
         }
 
         private static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position, string basicAttackProfileId)

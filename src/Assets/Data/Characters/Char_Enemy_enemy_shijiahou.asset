@@ -43,7 +43,7 @@ MonoBehaviour:
   availableSpells: []
   availableSkills: []
   mainEquipmentBasicAttackProfileId:
-  unarmedBasicAttackProfileId: basic_unarmed
+  unarmedBasicAttackProfileId:
   innatePurchasePointsLimit: 0
   innatePurchasePointsUsed: 0
   creationBudgetLimit: 0

@@ -27,6 +27,8 @@ namespace TianZhang.Infrastructure.Persistence
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Only save schema " + SchemaVersion + " can be serialized.");
+            if (envelope.hasPlayer && envelope.player != null)
+                envelope.player.unarmedBasicAttackProfileId = string.Empty;
             string json = JsonUtility.ToJson(envelope);
             if (string.IsNullOrWhiteSpace(json)) throw new InvalidDataException("Save serialization returned no data.");
             return json;
@@ -63,6 +65,8 @@ namespace TianZhang.Infrastructure.Persistence
             }
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Unsupported save schema: " + envelope.schemaVersion + ".");
+            if (envelope.hasPlayer && envelope.player != null)
+                envelope.player.unarmedBasicAttackProfileId = string.Empty;
             return envelope;
         }
 

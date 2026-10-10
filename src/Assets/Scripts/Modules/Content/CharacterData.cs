@@ -54,7 +54,7 @@ namespace TianZhang.Entity
         public string[] availableSkills;   // 已学会的全部神通
 
         [Header("基础攻击绑定")]
-        // 两槽均为 attackProfileId 外键；必须恰有一个由角色数据显式填写。
+        // Only a real main-hand weapon supplies a basic attack. The obsolete unarmed slot remains empty.
         public string mainEquipmentBasicAttackProfileId = "";
         public string unarmedBasicAttackProfileId = "";
 

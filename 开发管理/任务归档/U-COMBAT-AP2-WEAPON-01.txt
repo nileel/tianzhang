@@ -8,10 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "负责人授权手动完成；生产徒手移除、武器与旧档迁移及道具标签修复验收通过，完成归档。",
   "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
     "simulations/BattleSim/Combat.cs",
@@ -31,6 +32,11 @@
     "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs",
     "tools/check-data-chain.ps1",
     "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -180,3 +186,11 @@
 - 已核实该文件EnterFormalEncounter创建正式默认玩家，HudShowsAuthoritativeCostsAndInterleavedActionsAtBothResolutions第143行仍断言普攻可用，且GuanzhongCombatLayoutPlayModeTests复用其入场夹具。补入既有测试文件精确路径，不新增文件或修改.meta；相关basic_unarmed、普攻按钮断言及夹具直接调用者的PlayMode命中其余均已在原允许路径内。
 - 执行时同时核对该测试完整方法与共享入场夹具，按无主手不可普攻及真实境界施法资格迁移断言；需要攻击/施法的交互测试使用明确标记、满足既有资格的测试输入，与默认凡人无武器场景的资格断言分别验证，不给正式玩家或敌人补发装备。保留权威报价、取消无写入、忙碌拒绝、过期/重复确认及两分辨率检查，不以删测试消除冲突，不接管PREVIEW的新费用显示实现。
 - 本轮只修复允许路径和任务调度投影；更新后重新风险预检及CodexDispatchReady检查通过才恢复ready。业务实施、Unity PlayMode和BattleSim结果仍由后续执行记录，不将本次管理检查视作业务验收。
+
+## 2026-10-10 手动完成与验收
+
+- 负责人要求直接完成以避免重复自动化，并明确批准所有待确认项。补齐五个直接 PlayMode 消费者及 CombatActionBarView.cs 精确路径；每次扩边后先完成风险预检再写入。
+- 生产徒手行/资产/场景引用已移除；无主手可入战但不可普攻，旧档槽读写归空，不新增武器或补发装备。真实装备与库存保持；石甲兽继续使用已有非攻击动作。
+- 道具标签既有 20 号字体越界经实测确认，授权后仅将 UseItem 字号设为 18；1920/1366 两分辨率检查通过。
+- EditMode 357/357、PlayMode 52/52 唯一测试通过；BattleSim Release 构建、默认运行及三个受影响自测通过；数据链路检查通过。相关输入未改变的验证不重复执行。
+- 完整事实、夹具边界、预检摘要和日志路径见 开发管理/U-COMBAT-AP2-WEAPON-01-验证记录.txt。本卡完成归档，只移除自己的 backlog 投影，不提升其他任务，不修改自动化 runtime。

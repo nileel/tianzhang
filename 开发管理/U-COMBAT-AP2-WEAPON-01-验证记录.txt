@@ -1,0 +1,46 @@
+# U-COMBAT-AP2-WEAPON-01 验证记录
+
+日期：2026-10-10
+状态：迁移与负责人授权的道具标签修复已完成，全部定向业务验证通过，原任务完成归档。
+
+## 执行与隔离
+
+- 负责人要求直接完成原任务，避免自动化重复消耗。初始基线 master：fbf51a6609f61d45dbda2789163c7b8ddada06b3；收口前已 fast-forward 同步 c627300abd8cef61e43b01095e6ad442f37df34e，保留其 STATUS 管理投影。
+- 工作区：.worktrees/manual/weapon-migration-complete；分支：codex/weapon-migration-complete。实施期间原卡保持 blocked，不恢复 ready，不启动新自动化；验收后归档。
+- 已复核两个 owner run 均为空。主工作区原有 .agents/summary_state.json、设计总结.txt 和立绘目录改动未触碰。
+- 补齐原卡遗漏的五个直接 PlayMode 消费者后完成风险预检；taskCardDigest=85bb41ffca570005c575275539444aa61e392344e70d9d45c5f24e48bcb85f92，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/mustRead/gates 均为空。
+
+## 业务结果
+
+- 删除 basic_unarmed 生产 CSV 行、asset/meta 与 AdventureScene 引用；同步四个合法攻击资产和 CombatRuleSet 摘要，保留其 GUID。
+- 新建玩家没有武器绑定；旧保存的 unarmed 槽在读取、运行快照和写出时归空，schema 仍为 5，不补发装备。合法已装备玩家的真实主手、库存和实例继续保留。
+- 无主手可入战，但普通攻击权威校验返回 attack_profile_not_authorized；普通行动和满足资格的术法沿既有规则。正式凡人仍不能越过练气施法资格。
+- 石甲兽旧徒手绑定清空；无武器、无术法的正式石甲兽按既有 LegalActionAI 移动、防御、待机、结束行动，不新增攻击内容。
+- BattleSim 读取四个生产攻击，无装备角色不构造基本攻击能力；旧规则敏感性与采样输入明确为测试夹具，不作为 AP2 角色平衡结论。
+- 数据检查器原本以非空正则读取敌人字段，不能接受合同要求的空绑定；现允许空标量并继续精确比较值。
+
+## 测试输入边界
+
+- 正式新建凡人无武器测试使用真实创建、场景、会话与命令入口，没有补发物品；验证无主手、旧徒手 ID、其他武器 ID 和未知 ID 都不能伪造攻击。
+- 伤害、胜负、界面、保存测试使用明确标记的练气装备夹具；敌人攻击只赋给临时会话快照。部分结算夹具使用临时低血量或闪避/固定随机输入。它们验证流程，不证明正式无武器玩家与石甲兽能正常对战或新的数值平衡。
+- 实际场景显示、移动绕路、忙碌拒绝、取消无写入、过期/重复确认、胜负返回、奖励和存档重载断言保留。场景保存通过 Unity API；已撤回无关 ProjectSettings 与语义未变的角色序列化差异。
+- 1366px 保存列表顶边实测为 538.966736 / 538.9667，差 0.000036px；边界断言使用 0.001px 浮点容差，仍通过真实鼠标点击加载。
+
+## 已执行验证
+
+- dotnet build -c Release --no-restore simulations/BattleSim：通过，0 warning / 0 error。
+- dotnet run --no-build -c Release --project simulations/BattleSim：默认入口通过；日志为 simulations/BattleSim/weapon-default-run.log。
+- BattleSim 自测 equipment-production、action-economy-n-combat-ap-sim-01、basic-unarmed-production-d-combat-prod-01：通过。最后一个历史套件名保留，但断言已改为生产无徒手、四攻击集合、无装备不提交攻击且合法进入回合。
+- Unity 6000.3.18f1 定向 EditMode：357 个唯一测试全部通过。首轮 357 项中 297 通过；修正旧绑定、数组下标与场景资产排序夹具后，对受影响的 100 项复测全部通过。证据：src/Logs/U-COMBAT-AP2-WEAPON-01/weapon-edit.xml、weapon-edit-fixed.xml。
+- Unity PlayMode：52 个唯一测试全部通过；最后两项道具结算/保存测试修复标签后 2/2 通过。按测试全名保留最新结果合并计算，不把复测次数计入测试总数。证据：src/Logs/U-COMBAT-AP2-WEAPON-01/weapon-play.xml、weapon-play-fixed.xml、weapon-play-outcomes.xml、weapon-play-flow-final.xml、weapon-item-final.xml。
+- 最后一轮场景链及两分辨率胜负/保存流程 5/5 通过；两个分辨率各自的真实截图、交互日志和保存证据位于 src/Logs/U-COMBAT-AP2-WEAPON-01/flow/20261010-181104-1366-defeat、20261010-181120-1920-defeat、20261010-181136-1366-victory、20261010-181214-1920-victory。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1：通过。生产数据输入没有再改变，不重复同范围运行。
+- 最终 CodexClosedOrNonReady 检查通过（68 张活跃卡，本卡 completed）；审核文本检查通过（752 文件）；whitespace 检查通过（54 个存在文件）；git diff --cached --check 通过。57 个变化路径（归档按删除与新增分别计数）均在归档卡 expectedPaths 内。
+
+## 授权补充与收口
+
+- 负责人明确回复“你刚刚问的问题答案都是允许”，批准补入 CombatActionBarView.cs 及修复道具标签。写入前重新风险预检：taskCardDigest=5e4e65c28ab88c9d94802c3e8bdc2419719019509be172ed84b9b2b387500a3f，indexDigest=0384c35146b6d50fae0239637156added4431498deffe85ac261d95d49d48942；matched/mustRead/gates 均为空，与卡头投影一致。
+- 已证实 owner 为 CombatActionBarView.PresentAction。UseItem 文本“活血丹 ×2 / 30AP”在 20 号字体下 preferredWidth=96，超过 90×60 容器；仅将 UseItem 字号设为 18，沿用既有 Guard 处理方式。
+- 1920 下 preferredWidth/Height=87/52；1366 下约 81.5227/47.78917，均在 90×60 内。两项道具测试均完成两个分辨率的布局检查和结算保存段；截图位于 src/Logs/U-COMBAT-AP2-WEAPON-01/weapon-item-ui/item-{1366|1920}-{victory|defeat}.png。
+- 原卡归档并移除自身 backlog 行；下游任务保持原状态。自动化配置和 runtime 未修改，已通过且输入未变的业务检查不重复运行。
+- 本轮已有事实与差异未形成需新增的经验候选。

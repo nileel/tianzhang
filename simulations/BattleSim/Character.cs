@@ -38,8 +38,8 @@ class Character
     public double DanJiArtAffinityMult { get; set; } = 1.0;
     // v5.1: 功法名称（用于读取实际小境界成长表）
     public string GongFaName = "";
-    // 后续由主战法宝数据链路覆盖；无装备时使用徒手兜底。
-    public GameData.AttackProfile BasicAttackProfile = GameData.UnarmedBasicAttack;
+    // Only an explicitly equipped weapon supplies a basic attack; unequipped characters have none.
+    public GameData.AttackProfile BasicAttackProfile;
     // Long-term scalar inputs belong to the existing stat owner. Existing exact stat clones
     // therefore preserve them without a separate fallback or another source of defaults.
     public bool ActionEconomyInputsPresent => Primary.ContainsKey("AP上限单位") && Primary.ContainsKey("移动效率千分单位");
@@ -64,7 +64,7 @@ class Character
     internal void EquipProductionArts(params string[] profileIds)
     {
         if (profileIds.Distinct(StringComparer.Ordinal).Count() != profileIds.Length ||
-            profileIds.Any(id => id == "basic_unarmed" || !GameData.ProductionAttacks.ContainsKey(id)))
+            profileIds.Any(id => !GameData.ProductionAttacks.TryGetValue(id, out var profile) || profile.BasicBindingKind != ""))
             throw new ArgumentException("Unknown or duplicate production art.");
         ProductionArtIds = Array.AsReadOnly((string[])profileIds.Clone());
     }

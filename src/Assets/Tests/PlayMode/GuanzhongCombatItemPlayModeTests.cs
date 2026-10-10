@@ -37,6 +37,8 @@ namespace TianZhang.Tests.PlayMode
 
         [UnitySetUp] public IEnumerator EnterFormalAdventure()
         {
+            GuanzhongCombatEquipmentPlayModeTests.SetGameSize(1920, 1080);
+            yield return null;
             var stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
             SceneManager.LoadScene(GameplaySceneNames.StartMenu); yield return SceneReady(GameplaySceneNames.StartMenu);
@@ -144,7 +146,17 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(spirit, spawned.Player.CurrentSpirit); Assert.AreEqual(tick, session.TurnScheduler.CurrentTick);
             Assert.AreEqual(turn, session.TurnSequence); Assert.AreEqual(randomBefore, random.Count); Assert.IsFalse(spawned.Player.IsGuarding);
             string before = State(); encounter.ConfirmAction(old); Assert.AreEqual(before, State());
-            AssertButtonBounds();
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                AssertButtonBounds();
+                string evidence = Path.Combine(Application.dataPath, "../Logs/weapon-item-ui");
+                Directory.CreateDirectory(evidence);
+                ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "item-" + width + (defeat ? "-defeat" : "-victory") + ".png"));
+                for (int frame = 0; frame < 3; frame++) yield return null;
+            }
+            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             if (defeat) spawned.Player.ReceiveDamage(spawned.Player.CurrentHealth - 1);
             for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
             {

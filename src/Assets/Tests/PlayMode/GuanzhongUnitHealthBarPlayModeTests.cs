@@ -228,6 +228,7 @@ namespace TianZhang.Tests.PlayMode
             creation.Draft.OriginId = "origin_minor_clan";
             creation.Submit("hp-wiring", "血条接线验证");
             yield return WaitForScene(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             WorldMapController world = FindInScene<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();

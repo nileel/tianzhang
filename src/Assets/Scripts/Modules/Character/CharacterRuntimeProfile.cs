@@ -24,7 +24,7 @@ namespace TianZhang.Character
             MainEquipmentItemId = mainEquipmentItemId;
             MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
-            UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
+            UnarmedBasicAttackProfileId = string.Empty;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
                 ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
                 : appearanceProfileId;
@@ -69,7 +69,7 @@ namespace TianZhang.Character
         public bool ValidateEquipmentState(ContentCatalogData catalog, bool instanceOwned)
         {
             if (string.IsNullOrEmpty(MainEquipmentItemId) && string.IsNullOrEmpty(MainEquipmentInstanceId))
-                return string.IsNullOrEmpty(MainEquipmentBasicAttackProfileId) && UnarmedBasicAttackProfileId == "basic_unarmed";
+                return string.IsNullOrEmpty(MainEquipmentBasicAttackProfileId) && string.IsNullOrEmpty(UnarmedBasicAttackProfileId);
             return string.IsNullOrEmpty(UnarmedBasicAttackProfileId) &&
                 ValidateEquipment(catalog, "main_hand", MainEquipmentItemId, MainEquipmentInstanceId, instanceOwned, out ItemData item, out _) &&
                 MainEquipmentBasicAttackProfileId == item.equipmentBasicAttackProfileId;
@@ -173,7 +173,7 @@ namespace TianZhang.Character
             MainEquipmentItemId = snapshot.MainEquipmentItemId;
             MainEquipmentInstanceId = snapshot.MainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
-            UnarmedBasicAttackProfileId = snapshot.UnarmedBasicAttackProfileId;
+            UnarmedBasicAttackProfileId = string.Empty;
             AppearanceProfileId = snapshot.AppearanceProfileId;
             VisibleRootId = snapshot.VisibleRootId;
             VisibleRootGrade = snapshot.VisibleRootGrade;

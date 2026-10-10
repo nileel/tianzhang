@@ -59,9 +59,9 @@ namespace TianZhang.Tests.EditMode
             actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 10000, 10000, 60, 0, 10, 10, runtime.Player.Attributes.ActionPointMaximumUnits, runtime.Player.Attributes.MovementEfficiencyMilliUnits,
                 basicAttackProfileId: "basic_iron_sword");
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
-                basicAttackProfileId: "basic_unarmed");
-            var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", "basic_unarmed", Array.Empty<string>());
-            var profiles = new[] { "basic_unarmed", "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
+                basicAttackProfileId: string.Empty);
+            var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", string.Empty, Array.Empty<string>());
+            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.SwapEquipment, 25000, 25000, 0, 0) });
@@ -194,7 +194,7 @@ namespace TianZhang.Tests.EditMode
             Assert.IsTrue(loaded.OwnsEquipmentInstance("player", item, "player:initial:" + item));
             Assert.IsFalse(runtime.InventoryGrants.Grant(catalog, new[] { new InventoryGrantRequest(item, 1) }).Applied);
         }
-        [TestCase("item")][TestCase("instance")][TestCase("profile")][TestCase("double")][TestCase("inventory")][TestCase("hidden")]
+        [TestCase("item")][TestCase("instance")][TestCase("profile")][TestCase("inventory")][TestCase("hidden")]
         public void BadSaveDoesNotReplaceLiveOwners(string kind)
         {
             var envelope = runtime.CaptureSave(); var owner = runtime.Player; string before = runtime.CaptureSaveJson();
@@ -203,7 +203,6 @@ namespace TianZhang.Tests.EditMode
                 case "item": envelope.player.mainEquipmentItemId = "unknown"; break;
                 case "instance": envelope.player.mainEquipmentInstanceId = "other:initial:" + Sword; break;
                 case "profile": envelope.player.mainEquipmentBasicAttackProfileId = "basic_iron_blade"; break;
-                case "double": envelope.player.unarmedBasicAttackProfileId = "basic_unarmed"; break;
                 case "inventory": envelope.inventory = envelope.inventory.Where(value => value.itemId != Sword).ToArray(); break;
                 case "hidden": envelope.hasPlayer = false; break;
             }

@@ -300,6 +300,7 @@ namespace TianZhang.Editor
                 var input = IndependentActionEconomyInputs[i];
                 ProjectRealmGrowth(rules, input.Realm, out int ap, out int movement, out string realmStage);
                 targets[i].realmStage = realmStage;
+                targets[i].unarmedBasicAttackProfileId = string.Empty;
                 targets[i].actionPointMaximumUnits = ap;
                 targets[i].movementEfficiencyMilliUnits = movement;
                 EditorUtility.SetDirty(targets[i]);

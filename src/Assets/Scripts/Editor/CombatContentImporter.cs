@@ -548,19 +548,9 @@ namespace TianZhang.Editor
             if (row.RuleSetVersion != CombatRuleSet.Version) throw new InvalidDataException("attack_profile_rule_version_unknown");
             row.AbilityTierId = Value("abilityTierId"); row.CooldownClass = Required("cooldownClass");
             row.EffectBudgetMode = Required("effectBudgetMode");
-            bool legacy = row.BasicBindingKind == BasicAttackBindingKind.UnarmedFallback;
-            if (legacy)
-            {
-                if (row.AbilityTierId != "" || row.CooldownClass != "legacy_unarmed" || row.EffectBudgetMode != "legacy_unarmed")
-                    throw new InvalidDataException("attack_profile_legacy_unarmed_invalid");
-                row.ReuseCooldownTicks = ParseNonNegativeInt(Required("reuseCooldownTicks"), "reuseCooldownTicks");
-            }
-            else
-            {
-                ruleSet.GetTier(Required("abilityTierId"));
-                row.ReuseCooldownTicks = ruleSet.ResolveCooldown(row.AbilityTierId, row.CooldownClass,
-                    Value("reuseCooldownTicks") == "" ? (int?)null : ParseNonNegativeInt(Value("reuseCooldownTicks"), "reuseCooldownTicks"));
-            }
+            ruleSet.GetTier(Required("abilityTierId"));
+            row.ReuseCooldownTicks = ruleSet.ResolveCooldown(row.AbilityTierId, row.CooldownClass,
+                Value("reuseCooldownTicks") == "" ? (int?)null : ParseNonNegativeInt(Value("reuseCooldownTicks"), "reuseCooldownTicks"));
             bool budget = row.EffectBudgetMode == "damage_budget";
             foreach (string field in new[] { "efficiencyNumerator", "efficiencyDenominator", "damageMigrationNumerator", "damageMigrationDenominator", "damageWeightNumerator", "damageWeightDenominator" })
                 if (!budget) RequireEmpty(field);
@@ -711,7 +701,7 @@ namespace TianZhang.Editor
                 bool hasUnarmed = !string.IsNullOrWhiteSpace(character.unarmedBasicAttackProfileId);
                 if (!hasMain && !hasUnarmed)
                     continue;
-                if (hasMain == hasUnarmed)
+                if (hasUnarmed)
                 {
                     reason = "basic_attack_binding_missing_or_ambiguous";
                     return false;
@@ -727,8 +717,7 @@ namespace TianZhang.Editor
                 }
 
                 bool bindingMatches = profile.ProfileKind == AttackProfileKind.Basic &&
-                    (hasMain && profile.BasicBindingKind == BasicAttackBindingKind.MainEquipment ||
-                     hasUnarmed && profile.BasicBindingKind == BasicAttackBindingKind.UnarmedFallback);
+                    profile.BasicBindingKind == BasicAttackBindingKind.MainEquipment;
                 if (!bindingMatches)
                 {
                     reason = "basic_attack_profile_binding_kind_invalid";
@@ -916,8 +905,7 @@ namespace TianZhang.Editor
             }
             bool damage = row.EffectType is AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid;
             bool status = row.EffectType is AttackEffectType.Buff or AttackEffectType.Debuff;
-            if (!(row.EffectBudgetMode == "legacy_unarmed" && row.BasicBindingKind == BasicAttackBindingKind.UnarmedFallback && damage ||
-                  row.EffectBudgetMode == "fixed_weapon" && row.BasicBindingKind == BasicAttackBindingKind.MainEquipment && damage ||
+            if (!(row.EffectBudgetMode == "fixed_weapon" && row.BasicBindingKind == BasicAttackBindingKind.MainEquipment && damage ||
                   row.EffectBudgetMode == "damage_budget" && row.ProfileKind != AttackProfileKind.Basic && damage ||
                   row.EffectBudgetMode == "prototype_restore" && row.EffectType == AttackEffectType.RestoreSpirit ||
                   row.EffectBudgetMode == "status_only" && status ||
@@ -982,7 +970,6 @@ namespace TianZhang.Editor
         private static BasicAttackBindingKind ParseBasicAttackBindingKind(string value) => value switch
         {
             "main_equipment" => BasicAttackBindingKind.MainEquipment,
-            "unarmed_fallback" => BasicAttackBindingKind.UnarmedFallback,
             _ => throw new InvalidDataException("basic_attack_binding_kind_invalid"),
         };
 

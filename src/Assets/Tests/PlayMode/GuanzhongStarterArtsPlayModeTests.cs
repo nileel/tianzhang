@@ -344,7 +344,7 @@ namespace TianZhang.Tests.PlayMode
             session = GetPrivateField<CombatSession>(encounter, "session");
             spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             Assert.That(session.AttackProfiles.Select(profile => profile.Id),
-                Is.EquivalentTo(new[] { "basic_unarmed", "basic_iron_sword", "basic_iron_blade", AttackId, RecoveryId }));
+                Is.EquivalentTo(new[] { "basic_iron_sword", "basic_iron_blade", AttackId, RecoveryId }));
             Assert.That(spawned.Player.RawSpirit, Is.EqualTo(source.Attributes.Spirit));
             Assert.That(spawned.Player.RealmStage, Is.EqualTo(source.Progression.RealmStage));
             Assert.That(spawned.Player.VisibleRootElement, Is.EqualTo(source.VisibleRootElement));

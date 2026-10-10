@@ -12,6 +12,7 @@ using TianZhang.Features.CharacterCreation;
 using TianZhang.Features.CombatPresentation;
 using TianZhang.Features.Settlement;
 using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -23,7 +24,7 @@ using Object = UnityEngine.Object;
 
 namespace TianZhang.Tests.PlayMode
 {
-    // Formal scenes and production state; this fixture supplies pointer events and observations only.
+    // Formal scene interaction with explicit qualified-player and enemy-attack fixtures; not production playability evidence.
     public sealed class GuanzhongPlaytestFlowPlayModeTests
     {
         private Mouse mouse;
@@ -62,7 +63,10 @@ namespace TianZhang.Tests.PlayMode
             yield return SceneReady(GameplaySceneNames.StartMenu);
             Assert.AreEqual(width, Screen.width);
             string slot = "flow-" + width + "-" + Guid.NewGuid().ToString("N").Substring(0, 8);
-            Log("productionSaveDirectory=" + Path.Combine(Application.persistentDataPath, "SaveSlots") + " slot=" + slot);
+            string saveDirectory = Path.Combine(directory, "saves");
+            typeof(GameBootstrap).GetField("slotStore", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(GameBootstrap.RequireInstance(), new GameSaveSlotStore(saveDirectory));
+            Log("fixtureSaveDirectory=" + saveDirectory + " slot=" + slot);
             yield return Click(Button("NewPlayerButton"));
             yield return Click(Find<CharacterCreationView>().GetOriginButton("origin_minor_clan"));
             var draft = Find<CharacterCreationController>().Draft;
@@ -73,6 +77,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Capture("creation");
             yield return Click(Button("CreatePlayerButton"));
             yield return SceneReady(GameplaySceneNames.World);
+            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
             yield return Click(Button("WorldNodeButton_1"));
             yield return Capture("world-selected");
             yield return Click(Button("EnterLocationButton"));
@@ -97,7 +102,11 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
             Assert.IsTrue(session.Combatants.TryGet("player", out var player));
             Assert.IsTrue(session.Combatants.TryGet("enemy", out var enemy));
-            Assert.AreEqual(571, player.MaximumHealth);
+            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(enemy);
+            // Keep the path/log/save scenario alive; a 99 roll alone still hits a zero-dodge actor.
+            if (victory) player.DodgeRate = 100f;
+            encounter.SetCombatResolutionRandomSource(new GuanzhongBasicAttackPlayModeTests.OutcomeFixtureRandom(session, victory));
+            Assert.AreEqual(GameBootstrap.RequireRuntime().Player.Resources.MaximumHealth, player.MaximumHealth);
             Assert.AreEqual(657, enemy.MaximumHealth);
             Assert.AreEqual(78, enemy.PhysicalAttack);
             CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu" }, player.EquippedArtProfileIds);
@@ -301,7 +310,10 @@ namespace TianZhang.Tests.PlayMode
                 Canvas.ForceUpdateCanvases();
                 var view = new Vector3[4]; scroll.viewport.GetWorldCorners(view);
                 var row = new Vector3[4]; button.GetComponent<RectTransform>().GetWorldCorners(row);
-                if (row[0].y >= view[0].y && row[2].y <= view[2].y) yield break;
+                if (step == 0) Log("slotBounds bottom=" + row[0].y.ToString("R") + "/" + view[0].y.ToString("R") +
+                    " top=" + row[2].y.ToString("R") + "/" + view[2].y.ToString("R"));
+                // At 1366px the aligned top edges differ by 0.000036px after canvas scaling.
+                if (row[0].y >= view[0].y - .001f && row[2].y <= view[2].y + .001f) yield break;
                 Vector2 point = (view[0] + view[2]) * .5f;
                 float direction = row[0].y < view[0].y ? -1 : 1;
                 InputSystem.QueueStateEvent(mouse, new MouseState { position = point, scroll = new Vector2(0, direction) });
