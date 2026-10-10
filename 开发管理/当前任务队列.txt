@@ -5,6 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-COMBAT-AP2-GROWTH-01 | codex_execute | codex | P1 | unity | implementation | 角色境界AP与移动效率成长接入 | 开发管理/任务卡/U-COMBAT-AP2-GROWTH-01.txt |
 | U-COMBAT-AP2-REPEAT-01 | codex_execute | codex | P1 | unity | implementation | 零冷却能力连续使用AP报价与提交 | 开发管理/任务卡/U-COMBAT-AP2-REPEAT-01.txt |
 | U-COMBAT-AP2-WEAPON-01 | codex_execute | codex | P1 | unity | migration | 移除空手普攻与武器资格迁移 | 开发管理/任务卡/U-COMBAT-AP2-WEAPON-01.txt |
 | U-COMBAT-AP2-STATUS-01 | codex_execute | codex | P1 | unity | implementation | 百分比状态与概率强控境界修正接入 | 开发管理/任务卡/U-COMBAT-AP2-STATUS-01.txt |
