@@ -102,7 +102,7 @@ CONTRACT→CONFIG→RUNTIME→UNARMED-SIM→AP2-BALANCE→TUNING；旧AP2-SIM归
 - 每张实现卡临近ready完整读卡、消费实际前置、重新风险预检和验证工具；expectedPaths全部是精确字面量，不授目录通配。新攻击asset和.meta已逐ID冻结；既有脚本不搬迁，无新asmdef或类型文件，无新目录。
 - PREVIEW只投影权威报价：现有费用/重复次数/乘数/摘要/冷却之外，冻结BasicAttackSourceKind（main_equipment/unarmed_body）、UnarmedRealmId、PhysicalAttackCapacity三项只读字段；Coordinator从当前有效profile填入既有CombatActionPreviewSnapshot。武器时空手境界字段空、承载读原Tier；UI显示拳脚/撞击与对应境界承载及本次费，不自己算档/费，不暴露内部ID。身体名称语言由RUNTIME提供，说明新增语言仍由PREVIEW现有Language路径承接。
 - 如果实现需要新修炼系统、装备中切空手交互、具名新功法/招式、未知高阶档、新生产实体或改变批准时钟/乘数，停止回交决定，不加fallback/重试/通用次数上限。算法缺口回实际叶，不在BALANCE/TUNING/SCENE连补多个边界。
-- 仅合同验收使用任务卡/文本/数据链/whitespace检查；本卡不跑BattleSim平衡或Unity。实现后各叶执行自己的Release build→默认run、自测/EditMode/正式场景证据；输入未变且证据适用的不重复验证。父项只有所有叶正式完成、独立复审、最终同摘要及负责人体验确认才关闭。
+- 仅合同验收使用任务卡/文本/数据链/whitespace检查；本卡不跑BattleSim平衡或Unity。实现后各叶执行自己的Release build→默认run、自测/EditMode/正式场景证据；输入未变且证据适用的不重复验证。父项只有所有叶正式完成、Codex自有任务完成必要验证（外部结果须独立复审）、最终同摘要及负责人体验确认才关闭。2026-10-11负责人已将本批三项实现转交Codex，按自有任务收口；本合同业务边界不变。
 
 ## 八、下游精确路径附录
 

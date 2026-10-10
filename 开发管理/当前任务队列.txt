@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-COMBAT-UNARMED-CONFIG-01 | external_execute | deepseek | P1 | data | implementation | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |
+| U-COMBAT-UNARMED-CONFIG-01 | codex_execute | codex | P1 | data | implementation | 空手普攻成长配置与严格加载支持 | 开发管理/任务卡/U-COMBAT-UNARMED-CONFIG-01.txt |

@@ -191,3 +191,9 @@ DAG：RULES→CONTRACT→CONFIG；CONFIG→GROWTH/REPEAT/POTENCY/WEAPON，POTENC
 - CONFIG只迁表头/四旧行与摘要、用fixture证明严格支持；RUNTIME一次正式启用九ID/族/保存/创建/成长/入场链及最小生产读取；UNARMED-SIM负责两入口语义。旧AP2-SIM在本基线已completed（A方案有限原型），原具名依赖继续保留，既有特殊效果不重裁决。
 - 全部已知新叶/复用叶的字段、路径/生成物及.meta/验收/停止已经冻结到各卡与合同附录；风险投影重算。仅CONTRACT自身完成归档并移除投影，其他blockedBy/owner/route/dispatchState与顺序保持，未准备新ready叶；正式进入master后的QueueMaintenance完整核对前置再准备CONFIG，不由当前owner管理自动化或接管下游。
 - 最终DAG及父项关闭按合同§七及原规划：所有实现独立复审、双入口/数值/正式两分辨率证据同摘要，既有悬赏失败定位并处理、负责人确认操作/演出体验。无新修炼系统/虚拟武器/主动切空手/自动连打/通用次数上限。
+
+## 2026-10-11 空手任务主责转交
+
+- 负责人明确要求本批任务全部转给Codex。CONTRACT已由Codex完成归档，保持完成事实；CONFIG、RUNTIME、UNARMED-SIM三张活跃实现卡改为codex_execute/codex，executionModel=gpt-6.1-sol。上方建卡时的DeepSeek分配与外部交复审安排由本条替代，其他历史任务分工不变。
+- CONFIG保持ready及原队列位置；RUNTIME保持blocked并等待CONFIG，UNARMED-SIM保持blocked并等待RUNTIME。全部expectedPaths、业务合同、验证和停止条件保持；不执行业务、不解除依赖、不修改自动化runtime。
+- 三卡按Codex自有任务实施、复核完整差异、运行必要验证并正式归档，不再生成DeepSeek交接或自动转codex_review；数值实跑、正式场景、既有失败及负责人体验等父项关闭条件保持。

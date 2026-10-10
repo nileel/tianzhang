@@ -4,8 +4,8 @@
   "id": "U-COMBAT-UNARMED-CONFIG-01",
   "title": "空手普攻成长配置与严格加载支持",
   "priority": "P1",
-  "route": "external_execute",
-  "owner": "deepseek",
+  "route": "codex_execute",
+  "owner": "codex",
   "domain": "data",
   "stage": "implementation",
   "dispatchState": "ready",
@@ -48,7 +48,8 @@
     "explicitRefs": [],
     "matched": [],
     "gates": []
-  }
+  },
+  "executionModel": "gpt-6.1-sol"
 }
 ---TASK-BODY---
 # U-COMBAT-UNARMED-CONFIG-01 · 空手普攻成长配置与严格加载支持
@@ -70,7 +71,8 @@
 
 ## 模型协作
 
-- 本轮ready评估：合同、路径和验收均已冻结，任务是有界的数据/代码实现，沿用external_execute/deepseek单主责与Codex独立复审；没有独立只读问题，实际工具能力不要求辅助调用。
+- 2026-10-11负责人明确将本批任务全部转交Codex；本卡使用codex_execute/codex，executionModel=gpt-6.1-sol。有界配置/加载实现，建议medium；合同、路径和验收已冻结，保持ready。没有独立只读问题，无需辅助。
+- Codex按原冻结范围实施、复核完整diff和最终验证并正式归档；不再走DeepSeek交付后转codex_review的流程。原依赖、路径、验收和停止条件保持，执行前核对实际工具与风险预检。
 
 ## 验证
 
@@ -79,7 +81,7 @@
 
 ## 完成条件
 
-- 同一合同输入在两端投影一致，严格拒绝反例通过，旧正式内容保持可读；独立复审通过后交RUNTIME启用。
+- 同一合同输入在两端投影一致，严格拒绝反例通过，旧正式内容保持可读；Codex完成验证并正式归档后交RUNTIME启用。
 
 ## 停止条件
 
@@ -89,10 +91,10 @@
 
 - 只写卡头expectedPaths；blocked卡现有路径是已查明定位基线，新资源及其.meta须由CONTRACT一次冻结到对应卡后才能ready。直接所有者、路径或技术路线变化时先暂停并重新风险预检；若不再原子或需要连续跨边界补丁，停止回交规划，不由执行者逐张拆卡。
 - 不新增虚拟武器、独立肉身等级系统、自动连打、自动连招或通用攻击次数上限；不修改原个人回合/tick、重复费用乘数、物品发放或武器固定档位。不操作用户真实存档，不借缺配置补通用徒手或无限承载。
-- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；外部责任方不改任务卡/队列/backlog，不自审，不集成。外部结果经Codex独立复审正式归档后才解除下游依赖；Codex任务由主责统一复核及收口。
+- 不修改自动化runtime、checkpoint、模型配置或其他叶子的业务逻辑；本卡由Codex在冻结范围内实施、验证与收口，正式归档后才解除下游依赖；不接管其他任务或自动化控制面。
 - 执行前消费本卡风险预检正文，按现行worktree与路径限定提交规则操作。修改模拟器先运行dotnet build -c Release --no-restore simulations/BattleSim，通过后dotnet run --no-build -c Release --project simulations/BattleSim；缺本worktree还原输入时先执行一次restore。
 - 文档/管理验证用check-task-cards、check-review-text；docs/CSV/Unity数据变化用check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；只运行本卡最小充分验证，不以功能测试或旧报告宣称新平衡。
-- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex使用pending、外部交复审使用provisional，无候选不写空节。
+- 证据写本卡验证记录；归档前仅据本轮既有事实检查经验候选，Codex自有完成任务使用pending，无候选不写空节。
 
 ## 2026-10-10 空手合同冻结与精确路径
 
