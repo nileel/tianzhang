@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261010-CD28FDC451DE4D/A",
+  "stateReason": "等待负责人决定：任务卡要求发现新所有者或路径时暂停。敌人导入的两项旧回归位于未授权的 src/Assets/Tests/EditMode/ContentCatalogDataTests.cs，仍要求独立AP/v旧规则。是否补充这一个测试路径，重新冻结并预检后完成原合同？",
   "expectedPaths": [
     "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
     "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
@@ -86,18 +86,23 @@
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "U-COMBAT-AP2-GROWTH-01",
-    "sourceRunId": "07caf2c4-6043-4504-a892-3134bc7bcd52",
+    "sourceRunId": "227f52dd-8ff4-4460-9589-e1e3cec3c5f7",
     "owner": "codex",
     "route": "codex_execute",
-    "decisionId": "DEC-20261010-CD28FDC451DE4D",
-    "question": "任务卡停止条件要求新增所有者或路径时暂停。完整验收需要补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三条战斗路径；请选择继续范围。",
+    "decisionId": "DEC-20261010-CDD390C8C97662",
+    "question": "任务卡要求发现新所有者或路径时暂停。敌人导入的两项旧回归位于未授权的 src/Assets/Tests/EditMode/ContentCatalogDataTests.cs，仍要求独立AP/v旧规则。是否补充这一个测试路径，重新冻结并预检后完成原合同？",
     "options": [
       {
         "key": "A",
-        "label": "批准补充三个战斗路径，重新冻结并预检后完成原合同",
+        "label": "批准补充一份敌人回归测试，继续完成原合同",
         "targetState": "ready",
         "expectedPaths": [
           "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
@@ -170,59 +175,103 @@
           "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset.meta",
           "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
           "src/Assets/Scripts/Combat/CombatSession.cs",
-          "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
+          "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+          "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs"
         ],
-        "taskBody": "# U-COMBAT-AP2-GROWTH-01 · 角色境界AP与移动效率成长接入\n\n## 来源与当前边界\n\n- 2026-10-09负责人要求建立实施任务，并授权先计算AP曲线、境界系数和冷却初值，支持配表快速调整。依据：docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 第9节；父项P-COMBAT-AP-01，完整图见开发管理/统一行动力实现规划.txt追加实施图。\n- 原子结果：从权威境界及获准功法输入重建角色AP/v，使创建、变化和保存恢复都消费同一成长配置。\n- 直接前置：U-COMBAT-AP2-CONFIG-01。本卡只负责上述结果；blocked卡路径是当前定位基线，前置合同完成后由有权维护者补齐新类型/资源/测试及.meta并重跑预检，不能执行中自行扩边。\n\n## 必查范围\n\n- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md 中本卡相关规则及第9节；配置合同成长/保存段；CharacterAttributes.FromDefinition；CharacterProgressionRef、CharacterCreationRules.BuildCharacterData、CharacterContentImporter.IndependentActionEconomyInputs及保存恢复直接构造者；GongFaGrowthData实际消费者；AdventureUnitSpawner。\n- 先按符号、稳定ID和章节定位，再读目标完整逻辑单元及直接调用者；不读全backlog，不用速查摘要代替原文。\n\n## 实施范围\n\n- 按固定境界表投影100/100/300/1000 AP与2/4/4/4.8 v，阶段明确映射；功法AP增量仍0，原移动加成按比例换算。仅接入已存在权威进阶状态变更与快照重建，不创建完整修炼进阶流程。当前回合上限变化不重新发放AP；旧档按合同重建，避免存档中旧派生值覆盖新表。\n- 只写expectedPaths；验证证据写开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt。下游提升ready另按现行维护规则，本卡不领取父项、不改调度或自动化runtime。\n\n## 2026-10-09 配置合同与精确路径准备\n\n- 合同第四节冻结唯一聚合派生与有限movementGrowthSources权威节点输入；源码没有玩家进阶生产者，不新增修炼流程。创建/FromSnapshot/Restore/Progression变更边界消费同一配置；正式创建按新L2为凡人100AP/v2，先天攻防与既有术法不重调，练气资格不提前。Characters两行显式练气，Enemies沿realm列，独立Char_Player凡人/Char_Enemy练气，AP/v列改为派生校验，五现有敌人模板按已知realm更新。保存新schema5，旧4仅合法明确境界/原字段迁空来源并重建AP/v，空境界拒绝；1/2/3既有有玩家拒绝不放宽，整体失败无发布。真实GetGrowth修炼流程不在验收范围，合法M节点通过现有聚合入口验证。\n- 本轮仅准备expectedPaths及上述有限验收事实，调度/主责/具名前置不变；正式进入master后由后续有权维护者完整读卡并重做ready判断与风险门禁。精确路径授权以卡头为准，不以合同目录替代。\n\n## 禁止项\n\n- 不改变批准的个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不将具名旧映射误称全量内容已接入。\n- 不修改其他叶子的业务逻辑，不批量重构；不将功能测试、旧规则报告或本次算术当作新方案角色平衡。\n\n## 模型协作\n\n- 角色与保存语义高影响，gpt-6.1-sol/high；有独立旧档反例时可同模型只读核查恢复调用链，主责统一实现与验证。\n- 执行前核对复杂度、卡头executionModel、原生工具能力和风险正文；辅助默认只读，不另领taskId、不改卡/队列、不提交、不再派生。主责复核完整diff、最终验证及唯一candidate。blocked卡临近ready据实际接口重评。\n\n## 验证\n\n- 创建/境界变更/保存往返结果一致，凡人100/v2；AP×v/100基准2/4/12/48，苦行加成不双放大；本人开始发放与回合中变更边界；定向角色/保存EditMode及编译。\n- 代码按直接影响范围编译/测试；修改模拟器必须先 dotnet build -c Release --no-restore simulations/BattleSim，再 dotnet run --no-build -c Release --project simulations/BattleSim。只有输入不变且证据仍适用才复用，不重复同范围已通过检查。\n- 管理投影运行check-task-cards/check-review-text；docs/CSV/Unity数据变化运行check-data-chain。暂存前check-pending-whitespace、暂存后git diff --cached --check；按现行隔离与提交合同执行。\n\n## 完成条件\n\n- 原子结果及对应验收全部达成，记录真实输入/命令/结果；不可只交中间夹具。正式归档后才解锁下游。\n- 归档前仅用本轮已有事实检查经验候选，有则pending，无则不建空章节。\n\n## 停止条件\n\n- 真实成长或恢复调用者超出合同、需要完整修炼新功能时停止；不得只改静态CharacterData后声称玩家成长完成。\n- 新所有者/路径/字段或实现路线越界时暂停写入并重新预检；发现不原子、需连续跨边界补丁则停止保留现场，不提交candidate，不由worker动态拆卡。\n\n## 2026-10-10 ready核验\n\n- CONFIG已在master的2dfd3aa4完成归档，无同ID活跃冲突，解除唯一前置。核对Character/Content/Bootstrap现有程序集边界：Bootstrap已有Combat、Character、Content引用，Character已有Content；沿现有Bootstrap/Importer向角色所有者提供经校验的成长输入，不增加Character对Combat的反向依赖或新配置框架。\n- 补齐ContentImporterArchitectureTests.cs：现有固定v=2000及CSV合法零v断言须随realm派生校验合同更新，保留整批失败零写入、GUID及幂等验证。其他已列角色、创角、保存和Importer路径仍承接同一聚合结果。保存schema5及旧4规则已冻结，不等待新的修炼系统。\n- 复杂度为角色/保存语义高影响，保持gpt-6.1-sol/high主责；只有出现旧档恢复证据冲突时，对已列Snapshot/Serializer调用链启动gpt-6-astra/high只读辅助，返回拒绝或恢复反例；主责统一差异、最终验证和单一提交。风险投影以本轮更新路径后的只读预检为准；执行前须重新消费正文。\n- 补齐既有GameRuntime/FeatureComposition/GuanzhongFormalEndToEnd、EQUIP/ITEM及四个PlayMode直接构造/恢复测试。当前夹具存在空境界、练气仍用v=2000、正式创角被断言为练气等旧输入；只按凡人创建、显式规则注入和已批准资格政策更新，不能通过提前授练气维持旧断言。新增10个既有测试路径，不新增测试框架或业务所有者。\n\n## 2026-10-10 决策 A 范围重新冻结\n\n- 负责人已通过 DEC-20261010-CD28FDC451DE4D 选择 A，批准补充 CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs 三个现有战斗所有者路径。完整相对路径由本次选项合同写入 expectedPaths；仍只完成本卡原子结果，不新增修炼流程或事件系统。\n- 从角色权威成长结果同步战斗上限与移动效率；回合中不重发当前上限和余额，下一本人开始才使用新上限，移动效率刷新后旧报价失效。保持原保存、创建、恢复与成长验收，使用已冻结的 CombatRealmGrowthTests 等测试路径验证。\n- 本次只是把已批准范围落实到恢复合同。共享入口须先对选中后的路径与正文重新预检，成功后再领取；执行者沿用卡头模型并消费新摘要对应的预检正文，无需再次询问同一 A。\n"
+        "taskBody": "# U-COMBAT-AP2-GROWTH-01 · 角色境界AP与移动效率成长接入\n\n## 来源与原子结果\n\n- 依据docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9节及开发管理/境界行动力成长配置合同.txt第四节；父项P-COMBAT-AP-01，直接前置U-COMBAT-AP2-CONFIG-01已完成。\n- 原子结果：从权威境界和获准功法节点重建角色AP/v，创建、进度变化、保存恢复及战斗内同步消费同一成长配置。不新增完整修炼流程。\n- 保留此前决策A批准的CombatantSnapshot.cs、CombatSession.cs、EncounterCoordinator.cs；本次仅补充ContentCatalogDataTests.cs这一现有敌人导入回归路径。\n\n## 必查范围\n\n- 规格第9节、配置合同成长/保存段、docs/角色养成/功法数值模板.txt中21项身份、学习门槛、篇章和节点映射，以及任务相关L2原文。\n- CharacterAttributes.FromDefinition、CharacterProgressionRef、CharacterRuntimeProfile、CharacterStateSnapshot、CharacterCreationRules.BuildCharacterData、CharacterContentImporter及SettlementContentImporter的实际导入单元、GongFaGrowthData实际消费者、AdventureUnitSpawner。\n- GameSaveSerializer、GameSaveEnvelope及GameRuntime的整体恢复链；Bootstrap现有catalog注入链；战斗快照、Session版本、本人开始发放、移动报价及EncounterCoordinator刷新调用者。\n- ContentCatalogDataTests.cs的AllFiveEnemyTemplatesHaveExplicitProductionActionEconomyInputs、EnemyInputChangesPersistByIdWithZeroMovementAndRepeatWithoutGuidChanges及其完整辅助单元；其余已列直接构造、创建、保存及PlayMode夹具。\n- 先定位后读取完整目标逻辑单元，不读全backlog，不以摘要代替原文。\n\n## 实施范围\n\n- 只写expectedPaths，证据写开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt。共享入口批准新合同并重新预检后，吸收checkpoint草稿继续，未通过验收不得当作成品。\n- 凡人/练气/筑基/金丹投影100/100/300/1000 AP和2/4/4/4.8 v；规范小阶段映射同一大境界行。元婴/化神仅NPC或远期占位，不开放玩家。未知、空境界及旧筑基五段拒绝，不从倍率或反应推境界。\n- CharacterRuntimeProfile集中准备并发布权威进度和派生AP/v；Progression.Restore收为聚合内部调用，公开进度变化经聚合入口。创建FromDefinition、FromSnapshot/Restore共用配置，恢复失败不得部分发布。\n- 保存movementGrowthInputsPresent及movementGrowthSources，每项包含sourceInstanceId、gongFaId、chapterId、realmId、completedNodeIndices；节点从1开始严格排序不重复。最多一门在修功法，一致重复只计一次，冲突重复拒绝。验证闭合身份、篇章、学习门槛和明确阶段边界，不从功法名或旧movePoints授予节点。\n- 苦行剑典为唯一M，其余20项Z长期增量0，全部功法AP增量0。按同源global系数、legacy基础和合法节点权重求旧精确累计，再乘当前基础/legacy基础；聚合后vMilli只floor一次，checked溢出拒绝。废功/转换移除旧来源重建，不累加缓存，不改八属性永久成长。太易巽卦没有正式消费者时不新增自动触发或长期来源。\n- 正式创建凡人100AP/v2、来源显式空；保留原先天攻防、出身和已知术法，凡人不提前获得练气施法或装备资格。合法旧装备沿既有规则恢复。\n- Characters两行显式练气，Enemies沿现有realm列；独立Char_Player凡人、Char_Enemy练气。五敌人四练气、一筑基，不新增敌人或catalog行。AP/v列及点购同名列仅校验唯一Realm表派生值，错误整批零写入，保持GUID和重复导入幂等。\n- 沿现有Bootstrap向创建、角色恢复和入战注入配置；缺引用、版本或摘要拒绝，不建立全局可变配置、Resources搜索或默认AP/v兜底。Editor没有Character直接引用，沿其已有Combat纯规则投影校验空来源境界基础，不新增asmdef或反向依赖。\n- 新保存schema5，记录权威来源，旧派生字段只保留为合法原字段及重建快照。旧4只有合法明确境界、原AP/v及装备/引用时结构迁移为presence=true、来源空；不得从gongFaId补节点。空境界拒绝，旧1/2/3有玩家维持拒绝，真正空会话沿既有政策验证。hasPlayer=false的负载不得清掉后绕过验证，全部领域对象准备成功才发布，不操作用户真实存档。\n- 战斗同步长期AP上限和v，保留当前本人回合已经发放的上限和余额，下一本人开始才使用新上限且余额不结转；v刷新使陈旧移动报价失效，不重建正在运行的战斗、不新增事件系统。\n\n## 回归修正\n\n- 更新新增ContentCatalogDataTests.cs：五敌人按显式realm校验派生值；独立修改AP/v不一致应拒绝且整批零写入，保留GUID、幂等和合法生产导入验证。不得排除这两项相关失败后宣称完成。\n- 修正checkpoint中其余已授权旧夹具：控制器Configure显式传配置，unknown境界改为聚合拒绝断言，unknown功法按闭合身份拒绝；正式创建保持凡人，能力/装备测试用明确合格夹具，不借测试提前授资格。\n- 按L2修正万法都箓经元婴摄法篇映射，核对其余闭合篇章并补必要来源反例。\n\n## 禁止项\n\n- 不改变个人回合/全局tick边界，不添加通用次数上限、默认空手、隐式发装备或无限承载兜底；不批量重构、不改其他叶子逻辑。\n- 不把功能测试、规则算术或旧报告当作新角色平衡。不修改模拟器，不接入未批准高阶玩家、武器或完整训练流程。\n- 不修改其他任务的blockedBy、队列顺序或下游状态，不领取其他任务、不操作runtime/集成/automation或其他worktree。\n\n## 模型协作\n\n- 角色/保存语义高影响，主模型保持gpt-6.1-sol；核对实际工具能力和共享入口预检正文。没有独立证据冲突时单一主责统一实现、完整diff和最终验证。\n- 只有出现独立旧档恢复证据冲突时按现行规则选择原生只读辅助，限定既有Snapshot/Serializer调用链；辅助不得写卡、队列、提交、管理runtime或派生。对外一个taskId、owner run、worktree和candidate。\n\n## 验证\n\n- 创建、境界变更、来源转换、快照及保存往返一致，凡人100/v2，AP×v/100为2/4/12/48；苦行练气5000、筑基开府4953、筑基圆满5333、金丹圆满6400，去重且不双放大。\n- 验证非法来源、阶段、空境界、presence矛盾、溢出和坏旧档整体拒绝，保留全部live对象；玩家reserved行不得通过任意身份绕过。\n- 验证本人开始发放、回合中保持上限/余额、下一本人回合使用新上限、刷新v后旧报价拒绝及新报价实付一致。\n- 在当前worktree运行Unity编译和直接影响范围EditMode；完成所改PlayMode夹具的相关场景验证。结果输出放到Unity不会清理的临时目录，不跨worktree复制obj/bin/源资产。已通过且输入未变的检查不重复。\n- checkpoint全量858项中841通过、17失败；新成长26项通过。修正14项相关失败；3项缺外部Blender/FBX源文件的无关失败单列，仅在有证据时从定向验收区分，不扩大修复或隐去相关失败。\n- 程序集边界、管理投影check-task-cards/check-review-text、数据变化check-data-chain，暂存前check-pending-whitespace、暂存后git diff --cached --check。修改模拟器才按既有规则build再run，本卡不修改模拟器。\n\n## 完成条件\n\n- 原子结果及对应定向验收全部达成，记录真实输入、命令、结果和剩余环境限制，不以已编译草稿或中间夹具归档。\n- 同一任务卡完成归档，并只同步其自身backlog和队列条目；其他任务具名前置继续保留，正式结果进入master后由后续QueueMaintenance处理。\n- 归档前只用本轮已有事实检查经验候选，有则pending，无则不写空章节；形成唯一candidate，由共享入口正式重放。\n\n## 停止条件\n\n- 新所有者、路径、字段或路线越出合同即暂停写入并重新预检；需要完整修炼功能、非原子拆分或连续跨边界补丁时按既有停止合同处理，不动态拆卡、不叠兜底。\n- 不能完成必要运行验收时不得宣称completed；普通技术失败不能伪装为决策checkpoint。范围决策只按本次明确合同应用，不恢复旧模型会话。\n"
       },
       {
         "key": "B",
-        "label": "明确缩小本卡验收为战斗外成长与入战重建，战斗内同步另行规划"
+        "label": "暂不扩路径，暂停并先讨论缩小为玩家成长",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
       },
       {
         "key": "C",
-        "label": "暂停实施，先重新确认战斗期间成长的玩法边界"
+        "label": "保留完整目标，暂停并重新规划验收范围",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
       }
     ],
     "recommendedOption": "A",
-    "impactSummary": "A保留原验收，增加必要战斗同步与旧报价失效验证；B减少本轮范围，但保留战斗期间使用旧AP/v的缺口；C暂停推进。checkpoint仅含证据，不改变任务生命周期。",
+    "impactSummary": "A仅增加一个现有测试路径，保留完整玩法合同并继续修正相关失败；B暂停，先讨论缩小交付目标；C保留完整目标，暂停重新规划验收。checkpoint不改变任务生命周期，草稿不作为完成结果集成。",
     "plainSummary": {
-      "situation": "修为提升后的新行动预算和移动效率无法传到正在进行的战斗，现有授权没有覆盖负责更新战斗的代码。",
-      "impact": "A补上战斗同步并完成原要求；B先完成创建、存读档和入战前更新，战斗期间仍用旧值；C暂停实施，先确认玩法边界。",
-      "action": "建议选A，保留已确认玩法并补齐必要范围；若希望先交付战斗外成长，可选B。"
+      "situation": "角色成长代码已能编译，新增检查也通过，但两项敌人检查仍使用旧规则；修正它们需要修改目前未授权的一份文件，所以还不能完成交付。",
+      "impact": "A补充这份检查并继续完成玩家、敌人和存读档接入；B暂停，先讨论是否只做玩家成长；C保留完整目标，暂停重新规划验收。",
+      "action": "建议选A，补齐已有检查可保留确认过的玩法并继续完成；若想缩小目标选B，若希望先重排验证工作选C。"
     },
-    "checkpointCommit": "6fa95e6fd3a61a695710f2e99330918562dd1ca2",
-    "baseCommit": "7b494f9fd078718724934bbee67e2d21dc2aa2c4",
-    "branch": "codex/automation/codex/07caf2c4-6043-4504-a892-3134bc7bcd52/candidate",
+    "checkpointCommit": "0501a0eace5f078becfd9e8520b83268c078dbf1",
+    "baseCommit": "317f3e79c3dfcd5e5a19c347879fc1039127fe72",
+    "branch": "codex/automation/codex/227f52dd-8ff4-4460-9589-e1e3cec3c5f7/candidate",
     "changedPaths": [
-      "开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt"
+      "开发管理/U-COMBAT-AP2-GROWTH-01-验证记录.txt",
+      "src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset",
+      "src/Assets/Data/Characters/Char_char_taiyixiushi.asset",
+      "src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset",
+      "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset",
+      "src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset",
+      "src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset",
+      "src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset",
+      "src/Assets/Data/Characters/Char_Enemy.asset",
+      "src/Assets/Data/Characters/Char_Player.asset",
+      "src/Assets/DataConfig/Characters.csv",
+      "src/Assets/DataConfig/Enemies.csv",
+      "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+      "src/Assets/Scripts/Combat/CombatSession.cs",
+      "src/Assets/Scripts/Editor/CharacterContentImporter.cs",
+      "src/Assets/Scripts/Editor/SettlementContentImporter.cs",
+      "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+      "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
+      "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+      "src/Assets/Scripts/Modules/Character/CharacterAttributes.cs",
+      "src/Assets/Scripts/Modules/Character/CharacterProgressionRef.cs",
+      "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+      "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+      "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationManager.cs",
+      "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+      "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveEnvelope.cs",
+      "src/Assets/Scripts/Modules/Infrastructure/Persistence/GameSaveSerializer.cs",
+      "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+      "src/Assets/Tests/EditMode/CharacterActionPointStateTests.cs",
+      "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+      "src/Assets/Tests/EditMode/CharacterStateTests.cs",
+      "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+      "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+      "src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs",
+      "src/Assets/Tests/EditMode/CombatRealmGrowthTests.cs.meta",
+      "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs",
+      "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+      "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+      "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+      "src/Assets/Tests/EditMode/GameSaveSlotStoreTests.cs",
+      "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongTacticalCameraPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs"
     ],
     "verified": [
-      "实际模型元数据为 gpt-6.1-sol。",
-      "源码确认战斗 AP/v 为只读快照，现有成长变更无法刷新下一回合预算和移动报价。",
-      "业务草稿全部回滚；代码、数据、任务卡和队列保持基线。",
-      "文档检查、暂存前空白检查及 git diff --cached --check 通过。",
-      "checkpoint 是基线的唯一直接后继提交，工作树干净，changedPaths 使用指定命令生成。"
+      "Node REPL 实际模型为 gpt-6.1-sol，与入口证明一致；未调用辅助或第二责任会话。",
+      "Unity 全部程序集编译通过；EditMode 共858项，841通过、17失败、0跳过。",
+      "新增 CombatRealmGrowthTests 26项全部通过，覆盖成长换算、来源去重、原子拒绝、存档重建和战斗回合预算边界。",
+      "check-unity-assembly-boundaries、check-data-chain、check-review-text、48条改动路径的check-pending-whitespace及git diff --cached --check通过。",
+      "唯一checkpoint直接继承指定BaseCommit，工作树干净，任务卡、队列、backlog及下游前置未修改。"
     ],
     "unverified": [
-      "成长实现、旧档迁移、Unity 编译及 EditMode/PlayMode 验收尚未完成。"
+      "14项相关回归失败尚未修正，其中ContentCatalogDataTests.cs的2项需要当前未授权路径。",
+      "3项额外失败来自当前worktree缺少实验Blender和Shijiahou FBX源文件。",
+      "草稿中万法都箓经元婴篇映射尚需按L2从符命修正为摄法。",
+      "未运行PlayMode；未完成全部验收或角色数值平衡验证。"
     ],
-    "residualRisk": "仅提交定位证据。完整验收需要当前未授权的战斗快照、Session 和 EncounterCoordinator 写入路径。",
-    "taskContextDigest": "30260b528dbbb27a66f8752962ec134c30fcf71a4f4cd5f617e4d6e520219a63",
-    "createdAt": "2026-10-10T03:26:25.6580749+08:00",
+    "residualRisk": "checkpoint保留已编译草稿，但尚有相关回归失败和已记录映射问题，不可正式集成。新增测试所有者超出冻结路径，已按任务卡停止条件停止业务写入。",
+    "taskContextDigest": "e4fb2800f0ac8a7a40e6ab8f7b60816bc5388bbb9eeae81d43351e484123a81b",
+    "createdAt": "2026-10-10T09:42:03.8469802+08:00",
     "queueIndex": 0
-  },
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
-  "automationReply": {
-    "decisionId": "DEC-20261010-CD28FDC451DE4D",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "e5071c302f22901ef0f8849ed71ca66352f87406245066ff388c7c27705a6ac7"
   }
 }
 ---TASK-BODY---
