@@ -760,13 +760,17 @@ function Integrate-StateTransition {
   $formalHead = $null
   try {
     $latest = Invoke-GitText $script:root @('rev-parse', 'master')
+    $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-$Mode.json" $Context
+    if ($Mode -cin @('PauseDecision', 'ResumeReady')) {
+      # Reject malformed proposed cards before creating a state branch or sending a decision.
+      $null = Invoke-JsonTool $checkerPath @('-RepositoryRoot', $script:root, '-TaskId', [string]$Run.taskId, '-Postcondition', 'CheckpointScope', '-DecisionContextPath', $contextPath, '-OutputJson') 'checkpoint_scope_projection_failed'
+    }
     $worktree = if ([string]::IsNullOrWhiteSpace($ExistingWorktree)) { Assert-WorktreePath $Run } else { Normalize-FullPath $ExistingWorktree }
     if (-not (Test-Path -LiteralPath $worktree) -or -not [string]::IsNullOrWhiteSpace((Invoke-GitText $worktree @('status', '--porcelain=v1', '--untracked-files=all')))) { Stop-Hourly 'hourly_state_worktree_invalid' }
     $branch = "codex/automation/$Owner/$($Run.runId)/state-$($Mode.ToLowerInvariant())-$($latest.Substring(0, 12))"
     & git -C $script:root show-ref --verify --quiet "refs/heads/$branch" 2>$null
     if ($LASTEXITCODE -eq 0) { Stop-Hourly 'hourly_state_branch_exists' }
     $null = Invoke-GitText $worktree @('switch', '-c', $branch, $latest) 'hourly_state_branch_failed'
-    $contextPath = Write-PrivateJson 'state-transitions' "$($Run.runId)-$Mode.json" $Context
     $actionName = if ($Mode -ceq 'PauseDecision') { 'PauseDecision' } elseif ($Mode -ceq 'ResumeReady') { 'ResumeReady' } elseif ($Mode -ceq 'ResolveMaintenanceDecision') { 'ResolveMaintenanceDecision' } else { 'Block' }
     $projectionTaskId = if ($Mode -ceq 'ResolveMaintenanceDecision') { [string]$Context.taskId } else { [string]$Run.taskId }
     $projection = Invoke-JsonTool $taskStatePath @('-Action', $actionName, '-RepositoryRoot', $worktree, '-TaskId', $projectionTaskId, '-ContextPath', $contextPath) 'hourly_state_projection_failed' -AllowedExitCodes @(0, 1)

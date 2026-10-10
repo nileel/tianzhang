@@ -19,6 +19,38 @@ function Get-ContextDigest {
   [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($json))).ToLowerInvariant()
 }
 function Invoke-State { param([string]$Action,[string]$Task,[string]$Context,[int[]]$Allowed=@(0)) $output=@(& pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Action $Action -RepositoryRoot $root -TaskId $Task -ContextPath $Context 2>$null); Assert-True ($LASTEXITCODE -in $Allowed) "$Action exit code was invalid"; $output[0]|ConvertFrom-Json -Depth 30 }
+function Invoke-ScopeCheck {
+  param([string]$ContextPath, [int]$ExpectedExit = 0)
+  $output = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-task-cards.ps1') -RepositoryRoot $root -TaskId TASK-A -Postcondition CheckpointScope -DecisionContextPath $ContextPath -OutputJson 2>$null)
+  Assert-Equal $LASTEXITCODE $ExpectedExit 'Checkpoint scope validation exit mismatch'
+  if ($ExpectedExit -eq 0) { Assert-Equal ($output[0] | ConvertFrom-Json).status 'ok' 'Checkpoint scope was not accepted' }
+}
+function Assert-TransitionScopeRejected {
+  param([string]$Mode, [object]$Context)
+  & {
+    $ownerAst = [Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'invoke-hourly-owner.ps1'), [ref]$null, [ref]$null)
+    foreach ($name in @('Stop-Hourly', 'Normalize-FullPath', 'Invoke-GitText', 'Invoke-JsonTool', 'Integrate-StateTransition')) {
+      $definition = $ownerAst.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name }, $false)
+      . ([scriptblock]::Create($definition.Extent.Text))
+    }
+    . (Join-Path $PSScriptRoot 'hourly-integration-lock.ps1')
+    # Only the private evidence sink/runtime are fixtures; use the real transition,
+    # Git, integration lock and task-card checker before any state branch is created.
+    function Write-PrivateJson { param($Container, $Name, $Value) $path = Join-Path $root '.git/scope-context.json'; Write-Utf8 $path ($Value | ConvertTo-Json -Depth 100); $path }
+    function Set-Attention { param($Run, $Reason) }
+    $Owner = 'deepseek'; $IntegrationLockTimeoutSeconds = 0
+    $checkerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
+    $run = [pscustomobject]@{runId='run-a';taskId='TASK-A'}
+    $beforeHead = Invoke-GitText $root @('rev-parse', 'HEAD')
+    $beforeBranches = Invoke-GitText $root @('for-each-ref', '--format=%(refname):%(objectname)', 'refs/heads')
+    $detail = ''
+    try { $null = Integrate-StateTransition -Run $run -Mode $Mode -Context $Context -ExistingWorktree $root }
+    catch { $detail = [string]$_.Exception.Data['DetailCode'] }
+    Assert-Equal $detail 'checkpoint_scope_projection_failed' 'Transition did not preserve the malformed-scope reason'
+    Assert-Equal (Invoke-GitText $root @('rev-parse', 'HEAD')) $beforeHead 'Rejected scope changed HEAD'
+    Assert-Equal (Invoke-GitText $root @('for-each-ref', '--format=%(refname):%(objectname)', 'refs/heads')) $beforeBranches 'Rejected scope created a state branch'
+  }
+}
 
 $root=Join-Path ([IO.Path]::GetTempPath()) "tzg-decision-checkpoint-test-$([Guid]::NewGuid().ToString('N'))"
 $scriptPath=Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
@@ -54,6 +86,16 @@ try{
     $option.taskBody = $body + "`n`n## 已批准范围`n仅在 src/approved.cs 完成新增合同并验证。`n"
   }
   Write-Utf8 $pausePath ($pause|ConvertTo-Json -Compress -Depth 20)
+  Invoke-ScopeCheck $pausePath
+  $validBody = $pause.options[0].taskBody
+  foreach ($badBody in @($validBody.Replace('## 来源与当前边界','## 来源与原子结果'), $validBody.Replace('# TASK-A · Checkpoint A','# WRONG · Wrong'))) {
+    $pause.options[0].taskBody = $badBody
+    Write-Utf8 $pausePath ($pause|ConvertTo-Json -Compress -Depth 20)
+    Invoke-ScopeCheck $pausePath 1
+    Assert-TransitionScopeRejected 'PauseDecision' $pause
+  }
+  $pause.options[0].taskBody = $validBody
+  Write-Utf8 $pausePath ($pause|ConvertTo-Json -Compress -Depth 20)
   $paused=Invoke-State 'PauseDecision' 'TASK-A' $pausePath
   Assert-Equal $paused.dispatchState 'pending_decision' 'Pause did not change state'
   $pausedMeta=Read-Meta (Join-Path $root '开发管理\任务卡\TASK-A.txt')
@@ -64,6 +106,23 @@ try{
   $replyPath=Join-Path $root 'reply.json'; Write-Utf8 $replyPath ($reply|ConvertTo-Json -Compress)
   $pendingOriginal = @{}
   foreach ($path in $projectionPaths) { $pendingOriginal[$path] = [IO.File]::ReadAllBytes((Join-Path $root $path)) }
+  $cardPath = Join-Path $root '开发管理/任务卡/TASK-A.txt'
+  $pendingText = [IO.File]::ReadAllText($cardPath)
+  $badMeta = Read-Meta $cardPath
+  $badMeta.automationCheckpoint.options[1].taskBody = $badMeta.automationCheckpoint.options[1].taskBody.Replace('## 来源与当前边界','## 来源与原子结果')
+  $pendingBody = ($pendingText -split '---TASK-BODY---\r?\n',2)[1]
+  Write-Utf8 $cardPath (@('---TASK-META---',($badMeta|ConvertTo-Json -Depth 50),'---TASK-BODY---',$pendingBody) -join "`n")
+  $badPending = [IO.File]::ReadAllBytes($cardPath)
+  Invoke-ScopeCheck $replyPath 1
+  # Two hourly attempts must report the same cause, without creating a branch or ready projection.
+  1..2 | ForEach-Object { Assert-TransitionScopeRejected 'ResumeReady' $reply }
+  $staleBase = [string](& git -C $root rev-parse master)
+  & git -C $root branch "codex/automation/deepseek/run-a/state-resumeready-$($staleBase.Substring(0,12))" $staleBase
+  Assert-Equal $LASTEXITCODE 0 'Could not seed a historical failed state branch'
+  Assert-TransitionScopeRejected 'ResumeReady' $reply
+  Assert-Equal ([Convert]::ToHexString([IO.File]::ReadAllBytes($cardPath))) ([Convert]::ToHexString($badPending)) 'Rejected legacy scope changed the pending card'
+  [IO.File]::WriteAllBytes($cardPath, $pendingOriginal['开发管理\任务卡\TASK-A.txt'])
+  Invoke-ScopeCheck $replyPath
   foreach ($case in @('missing', 'invalid-path')) {
     $cardPath = Join-Path $root '开发管理/任务卡/TASK-A.txt'
     $cardText = [IO.File]::ReadAllText($cardPath)

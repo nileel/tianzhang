@@ -7,8 +7,9 @@ param(
   [string]$QueuePath = '开发管理/当前任务队列.txt',
   [string]$BacklogRoot = '开发管理/任务列表',
   [string]$TaskId,
-  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview', 'MaintenancePendingDecision', 'MaintenanceResolvedReady', 'MaintenanceResolvedBlocked', 'MaintenanceExpiredBlocked', 'QueueMaintenanceReadySchema2Guard')]
+  [ValidateSet('CodexDispatchReady', 'ExternalDispatchReady', 'CodexClosedOrNonReady', 'ExternalPendingReview', 'MaintenancePendingDecision', 'MaintenanceResolvedReady', 'MaintenanceResolvedBlocked', 'MaintenanceExpiredBlocked', 'QueueMaintenanceReadySchema2Guard', 'CheckpointScope')]
   [string]$Postcondition,
+  [string]$DecisionContextPath,
   [string]$BaseCommit,
   [ValidateSet('codex_execute', 'codex_review')]
   [string]$ExpectedRoute,
@@ -347,6 +348,51 @@ try {
   $hasExpectedOwner = -not [string]::IsNullOrWhiteSpace($ExpectedOwner)
   $taskState = $null
   $taskExpectedPaths = $null
+  if ($Postcondition -ceq 'CheckpointScope') {
+    # Validate proposed cards in memory with the same parser used for actual cards.
+    # This does not publish ready or replace the post-approval risk preflight.
+    Assert-Contract ($hasTaskId -and $TaskId -cmatch '^[A-Z][A-Z0-9-]*$' -and -not [string]::IsNullOrWhiteSpace($DecisionContextPath)) 'CheckpointScope requires task and context'
+    Assert-Contract (-not $hasBaseCommit -and -not $hasExpectedRoute -and -not $hasExpectedOwner) 'CheckpointScope has conflicting arguments'
+    $cardPath = Join-Path $repositoryPath "$TaskCardRoot/$TaskId.txt"
+    $metadata = (Get-Card -Path $cardPath).Metadata
+    $context = (Read-Utf8Text $DecisionContextPath) | ConvertFrom-Json -Depth 100
+    Assert-Contract ([string]$context.taskId -ceq $TaskId) 'CheckpointScope task mismatch'
+    if (Test-ObjectField $context 'options') {
+      $options = @($context.options)
+      Assert-Contract ($options.Count -eq 3 -and (@($options | ForEach-Object { [string]$_.key }) -join '') -ceq 'ABC') 'CheckpointScope requires A/B/C'
+      $checkpointPaths = @($context.changedPaths)
+    } else {
+      Assert-Contract ((Test-ObjectField $metadata 'automationCheckpoint') -and [string]$context.result -ceq 'OPTION_ACCEPTED' -and [string]$context.replyKind -ceq 'option') 'CheckpointScope requires an accepted option'
+      Assert-Contract ([string]$context.decisionId -ceq [string]$metadata.automationCheckpoint.decisionId) 'CheckpointScope decision mismatch'
+      $options = @($metadata.automationCheckpoint.options | Where-Object { [string]$_.key -ceq [string]$context.replyValue })
+      Assert-Contract ($options.Count -eq 1) 'CheckpointScope selected option missing'
+      $checkpointPaths = @($metadata.automationCheckpoint.changedPaths)
+    }
+    foreach ($option in $options) {
+      foreach ($field in @('targetState', 'expectedPaths', 'taskBody')) { Assert-Contract (Test-ObjectField $option $field) "CheckpointScope missing $field" }
+      Assert-Contract ([string]$option.targetState -cin @('ready', 'blocked') -and $option.expectedPaths -is [array] -and $option.taskBody -is [string]) 'CheckpointScope invalid option'
+      if ([string]$option.targetState -ceq 'blocked') { continue }
+      $paths = @($option.expectedPaths)
+      Assert-Contract ($paths.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace($option.taskBody)) 'CheckpointScope incomplete ready option'
+      $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+      foreach ($path in $paths) {
+        Assert-Contract ($path -is [string] -and $seen.Add($path) -and $path -notmatch '[\\:\x00-\x1F\x7F]' -and @($path.Split('/') | Where-Object { $_ -in @('', '.git', '.worktrees') }).Count -eq 0) 'CheckpointScope invalid or duplicate path'
+      }
+      foreach ($path in $checkpointPaths + @("开发管理/任务卡/$TaskId.txt", "开发管理/任务归档/$TaskId.txt", $QueuePath, [string]$metadata.sourceBacklog)) {
+        Assert-Contract ($paths -ccontains $path) "CheckpointScope omits required path: $path"
+      }
+      $proposed = ($metadata | ConvertTo-Json -Depth 100) | ConvertFrom-Json -Depth 100
+      $proposed.expectedPaths = $paths
+      $proposed.dispatchState = 'ready'
+      $proposed.PSObject.Properties.Remove('automationCheckpoint')
+      $proposedText = @('---TASK-META---', ($proposed | ConvertTo-Json -Depth 100), '---TASK-BODY---', $option.taskBody) -join "`n"
+      $null = Get-Card -Path $cardPath -Text $proposedText
+    }
+    if ($OutputJson) { [Console]::Out.WriteLine((@{ status = 'ok'; taskId = $TaskId; postcondition = 'CheckpointScope' } | ConvertTo-Json -Compress)) }
+    else { Write-Output 'check-task-cards: OK (checkpoint scope)' }
+    exit 0
+  }
+  Assert-Contract ([string]::IsNullOrWhiteSpace($DecisionContextPath)) 'DecisionContextPath requires CheckpointScope'
   Assert-Contract ($hasTaskId -eq ($hasPostcondition -and -not $isQueueMaintenanceGuard)) 'TaskId is required for task-scoped postconditions and forbidden for QueueMaintenanceReadySchema2Guard'
   if ($isQueueMaintenanceGuard) {
     Assert-Contract $hasBaseCommit 'BaseCommit is required for QueueMaintenanceReadySchema2Guard'

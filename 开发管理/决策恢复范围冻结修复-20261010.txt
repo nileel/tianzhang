@@ -35,3 +35,10 @@
 - 本轮人工仅为已批准 A 补齐三个新增路径与完整任务正文，把任务送回原决策待应用位置；保留原 decisionId、checkpoint、已接受回复及其 evidenceHash。后续正式入口消费同一 A，先重新冻结与预检再启动新 run，不重复发决策。
 - 正式 RunOnce 已消费同一 A，自动生成 317f3e79 ready 投影提交；三条批准路径和完整正文已重新冻结。新 run 227f52dd-8ff4-4460-9589-e1e3cec3c5f7 已进入 developing，使用独立 worktree；启动预检的 taskCardDigest 与 runtime 一致（1f5e51f7ee48f0a4d9e07dff1abf5df8d0c1f9aa9f3f1239659d95790bb3b34b），resume-context 保留原 decisionId、A、evidenceHash 与 checkpoint。
 - Codex 定时触发已恢复原 ACTIVE，原 prompt、周期、模型和通知策略均保留；DeepSeek 仍为原 PAUSED。恢复成功指任务已重新执行，不代表尚在运行的业务任务已完成验收或集成。
+
+## 第二次决策校验遗漏修复
+
+- 新 run 227f52dd 已继续实施并产生 checkpoint 0501a0eace5f078becfd9e8520b83268c078dbf1；第二次决策 DEC-20261010-CDD390C8C97662 申请增加 ContentCatalogDataTests.cs，负责人已接受 A。正文把必需标题“来源与当前边界”写成“来源与原子结果”，原修复只检查正文非空，直到恢复投影才拒绝。该遗漏属于本次修复责任，先前所谓完整链路测试没有覆盖此失败场景。
+- 最小补正：在现有 checker 增加只读 CheckpointScope 入口，调用同一个 Get-Card 解析器；共享入口在创建状态分支前执行，PauseDecision 检查全部选项、ResumeReady 检查选中项。没有新 runtime 状态、重试层或分支自动清理。用户已批准最小修复，本次仅纠正当前 A 的一个标题，不改变语义、路径、决策编号和已接受回复证据。
+- 回归覆盖：错误必需标题、错误 H1 在发送决策前被拒绝；旧的已批准错误正文连续两次恢复不创建分支；即使已有历史残留分支，也仍返回原始正文校验错误。合法正文通过同一检查后，继续经过真实状态分支、正式 ready 提交与 fast-forward、风险预检、checkpoint 重放和候选提交；仅模型执行由确定性夹具代替。
+- 原 state-resumeready-fa0b6fae6ee9 经核验仍指向 fa0b6fae，工作树干净；业务 checkpoint 分支仍指向 0501a0ea。保留这两个证据，不删除业务现场；修复提交进入 master 后，正式入口将按新的 master 创建对应状态分支。

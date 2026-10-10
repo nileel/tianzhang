@@ -135,10 +135,33 @@ function Invoke-ResumeContextScenario {
     $pauseResult = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $stateTool -Action PauseDecision -RepositoryRoot $mainRoot -TaskId $taskId -ContextPath $contextFile)
     Assert-Equal $LASTEXITCODE 0 'Full-chain pause failed'
     Write-Utf8 $contextFile (@{schemaVersion=1;taskId=$taskId;decisionId=$pause.decisionId;result='OPTION_ACCEPTED';replyKind='option';replyValue='A';source='feishu_card';evidenceHash=('a'*64)}|ConvertTo-Json)
-    $resumeResult = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $stateTool -Action ResumeReady -RepositoryRoot $mainRoot -TaskId $taskId -ContextPath $contextFile)
-    Assert-Equal $LASTEXITCODE 0 "Full-chain scope resume failed: $resumeResult"
     Invoke-Git -Root $mainRoot -Arguments @('add', '--', "开发管理/任务卡/$taskId.txt",'开发管理/当前任务队列.txt','开发管理/任务列表/自动化任务.txt') | Out-Null
-    Invoke-Git -Root $mainRoot -Arguments @('commit', '-m', 'test: refreeze approved decision scope') | Out-Null
+    Invoke-Git -Root $mainRoot -Arguments @('commit', '-m', 'test: publish pending decision') | Out-Null
+    $stateWorktree = Join-Path $mainRoot '.worktrees/scope-state'
+    Invoke-Git -Root $mainRoot -Arguments @('worktree', 'add', '--detach', $stateWorktree, 'master') | Out-Null
+    $resumeResult = & {
+      $ownerAst = [Management.Automation.Language.Parser]::ParseInput($ownerSource, [ref]$null, [ref]$null)
+      foreach ($name in @('Stop-Hourly','Normalize-FullPath','Invoke-GitText','Invoke-JsonTool','Write-PrivateJson','Test-PathOverlap','Get-StatusPaths','Test-MainPathConflict','Invoke-Finalizer','Integrate-StateTransition')) {
+        $definition = $ownerAst.Find({param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name}, $false)
+        . ([scriptblock]::Create($definition.Extent.Text))
+      }
+      . (Join-Path $PSScriptRoot 'hourly-integration-lock.ps1')
+      $previousRoot = Get-Variable -Name root -Scope Script -ErrorAction SilentlyContinue
+      try {
+        $script:root = $mainRoot; $script:effectiveStateRoot = $scenarioStateRoot
+        $Owner = 'codex'; $IntegrationLockTimeoutSeconds = 0
+        $checkerPath = Join-Path $PSScriptRoot 'check-task-cards.ps1'
+        $taskStatePath = $stateTool
+        $finalizerPath = Join-Path $PSScriptRoot 'automation-finalize-commit.ps1'
+        $reply = [IO.File]::ReadAllText($contextFile) | ConvertFrom-Json
+        Integrate-StateTransition -Run ([pscustomobject]@{runId='fixture-run';taskId=$taskId}) -Mode ResumeReady -Context $reply -ExistingWorktree $stateWorktree
+      } finally {
+        if ($null -eq $previousRoot) { Remove-Variable -Name root -Scope Script }
+        else { $script:root = $previousRoot.Value }
+      }
+    }
+    Assert-Equal $resumeResult.status 'ready' 'Full-chain shared transition failed'
+    Assert-Equal (Invoke-Git -Root $mainRoot -Arguments @('rev-parse','HEAD')) $resumeResult.formalHead 'Ready projection was not integrated'
     $base = Invoke-Git -Root $mainRoot -Arguments @('rev-parse', 'HEAD')
     $digest = Get-TextDigest $cardPath
   }
