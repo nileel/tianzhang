@@ -33,3 +33,5 @@
 - DeepSeek 真实 Canary 未 verified：approvedLocalGatewayConfigured=false，15721 端口无监听。没有修改其配置或反复重试，保持原有 PAUSED；两个 wrapper 的确定性测试均通过。
 - 旧失败 run 在再次核对进程、base/HEAD、branch、唯一初始暂存记录和空 candidate/canonical 后，按 CompleteRun 的 failed/ExpectedRecoveryReason 精确合同关闭，原失败 worktree 保留。没有发送任务成功通知。
 - 本轮人工仅为已批准 A 补齐三个新增路径与完整任务正文，把任务送回原决策待应用位置；保留原 decisionId、checkpoint、已接受回复及其 evidenceHash。后续正式入口消费同一 A，先重新冻结与预检再启动新 run，不重复发决策。
+- 正式 RunOnce 已消费同一 A，自动生成 317f3e79 ready 投影提交；三条批准路径和完整正文已重新冻结。新 run 227f52dd-8ff4-4460-9589-e1e3cec3c5f7 已进入 developing，使用独立 worktree；启动预检的 taskCardDigest 与 runtime 一致（1f5e51f7ee48f0a4d9e07dff1abf5df8d0c1f9aa9f3f1239659d95790bb3b34b），resume-context 保留原 decisionId、A、evidenceHash 与 checkpoint。
+- Codex 定时触发已恢复原 ACTIVE，原 prompt、周期、模型和通知策略均保留；DeepSeek 仍为原 PAUSED。恢复成功指任务已重新执行，不代表尚在运行的业务任务已完成验收或集成。
