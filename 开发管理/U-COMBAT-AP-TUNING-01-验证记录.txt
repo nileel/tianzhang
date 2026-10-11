@@ -1,0 +1,20 @@
+# U-COMBAT-AP-TUNING-01 验证记录
+
+日期：2026-10-11；任务：U-COMBAT-AP-TUNING-01；执行模型：gpt-5.6-terra。
+
+## 已验证的最终生产投影
+
+- 唯一输入保持 `AP-GROWTH@0.1`；四表摘要为 `e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc`。
+- 当前工作树四表 SHA256 与 `N-COMBAT-AP2-BALANCE-01` 的最终输入逐字节一致：AttackProfiles `7b2b3ce081e6e805340fc52f38bb46962e180d976184a6c3a23696f6ff970597`、RealmCombatGrowth `9a95d5db6672e8e15a8746d377c601a1e24d28ffe8063aecdf7bd0c4c4216b23`、CombatEffectTierRules `86b564b97c92b6ac75e2617d4f99f8ccace3087ec8033faf4bcccf36540fdc91`、CombatActionEconomyRules `6268373c3bdd872d06a406fcdf7f3332dd3a29f79383e353c29dfb04c52246fe`。
+- `check-data-chain.ps1 -FailOnMissingAssets` 重新解析四表，核对 `CombatRuleSet.asset` 的版本、摘要、五个空手派生行及 `ContentCatalog.asset` 引用，并逐字段核对九个获准 AttackProfiles CSV 行和其 canonical asset。检查通过，故确认两术法、两武器、四个人形空手和石甲兽空手均已由唯一生产者投影；未发现缺失资源。
+- 生产参数无需再次写入：本卡输入与直接前置已导入的最终输入相同。复用 `N-COMBAT-AP2-BALANCE-01-验证记录.txt` 的严格导入证据（9 个档案、规则资产和目录引用）及 58 项定向 EditMode 通过结果，不重复未变化的 Unity 导入或 BattleSim 矩阵。
+
+## 本轮检查
+
+- `tools/get-experience-risk-preflight.ps1 -TaskId U-COMBAT-AP-TUNING-01`：通过；taskCardDigest `1d922680e0e9f5c05ea64324a7193875539955b77ef5f3ea7a067f318fb7093b`、indexDigest `89f1e6153a747b1b9dfc15e06e30106877901d6e0e759ccf03ffda8b36a8c899`，matched/notice/mustRead/gates/gatePointers 均为空。
+- `tools/check-data-chain.ps1 -FailOnMissingAssets`：通过；功法 29/29、术法 84/84、神通 31/31、语言键 649。
+
+## 边界与残留风险
+
+- 本轮未改变任何生产数值、算法、Importer、Unity 资产或 BattleSim 输入；仅记录已定案输入的生产一致性并完成本卡归档。
+- 正式场景的点击、动画时长、大地图体验和难度验收仍属下游 `U-COMBAT-AP-SCENE-01`，本记录不将静态投影验证表述为场景验收。

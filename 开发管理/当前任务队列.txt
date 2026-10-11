@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-COMBAT-AP-TUNING-01 | codex_execute | codex | P1 | data | migration | 行动力已验证参数回填生产链 | 开发管理/任务卡/U-COMBAT-AP-TUNING-01.txt |

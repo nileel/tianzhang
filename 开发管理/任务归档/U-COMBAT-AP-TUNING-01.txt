@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "N-COMBAT-AP2-BALANCE-01已完成归档；最终生产路径、输入摘要、验证和停止条件已冻结，可执行已验证参数回填。",
+  "stateReason": "AP-GROWTH@0.1最终四表与九个攻击档案生产投影经当前数据链复核一致；未变化输入复用直接前置的严格导入和EditMode证据，本卡完成归档等待共享入口正式重放。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -167,3 +167,9 @@
 
 - 接入合同§三与附录冻结生产九ID，新增五asset/.meta并在原四表链一次导入；人物族/石甲兽投影、保存6消费者不在本卡实现。不得重建旧basic_unarmed，不在TUNING新增schema或变更算法。
 - 最终值、输入摘要和所有派生值须与AP2-BALANCE定案逐项一致，现有源表如无需改动只核验；输入变化交数值重新实跑。已授权Importer路径只用于原合同确定性发布，不借此增加业务分支。
+
+## 2026-10-11 完成记录
+
+- 已核验AP-GROWTH@0.1四表摘要与直接前置最终输入完全一致；九个获准攻击档案、CombatRuleSet和ContentCatalog的生产投影由数据链逐字段复核通过。
+- 本轮未改参数或算法；因为输入和先前严格导入结果未变，复用N-COMBAT-AP2-BALANCE-01的9档案严格导入及58项定向EditMode证据，不重复BattleSim矩阵或Unity导入。
+- 风险预检及数据链通过，详见开发管理/U-COMBAT-AP-TUNING-01-验证记录.txt；只归档本卡，不解除U-COMBAT-AP-SCENE-01对本卡的具名前置，也不关闭父项。
