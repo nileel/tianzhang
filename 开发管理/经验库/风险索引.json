@@ -606,6 +606,35 @@
       "lastVerified": "2026-10-11"
     },
     {
+      "id": "EXP-UNITY-014",
+      "title": "回合结束能力变更须解耦显示与输入阶段门禁",
+      "preflightSummary": "改变回合结束能力或命令合法性时，检查显示和输入是否误把可结束回合当作已行动阶段。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs"
+      ],
+      "textPatterns": [
+        "CanEndTurn",
+        "AcceptsCommands",
+        "CanAct",
+        "CombatActionBarView.Present",
+        "CombatCommandInput"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-014.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
+    },
+    {
       "id": "EXP-UNITY-015",
       "title": "战斗动作条费用文字须量化双分辨率边界",
       "preflightSummary": "在战斗动作条固定尺寸按钮加入或调整费用、冷却或本地化文字时，先量化正式文字区域与目标分辨率的 preferredWidth／preferredHeight，再以两种实际 Game View 验收。",

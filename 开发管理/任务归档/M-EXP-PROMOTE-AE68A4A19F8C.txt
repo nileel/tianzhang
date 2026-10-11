@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP-CORE-01/CORE-ENDTURN-CAPABILITY-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：独立核验候选并晋级为 EXP-UNITY-014；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP-CORE-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-11 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-014`。来源候选和验证记录证明，统一行动力后 `CanEndTurn` 在个人回合开始即可为真；旧 `CombatActionBarView.Present` 与 `CombatCommandInput.CanAct` 把它误作已行动阶段标志，使 AP=100000、`AcceptsCommands=true` 时术法按钮禁用且不生成预览。两处最小解耦后，输入接受、演出锁、目标合法性和预览／确认权威校验均保留。
+- 去重与边界：`EXP-UNITY-007` 仅处理 EndTurn 的表现投影，`EXP-UNITY-013` 只处理行动经济来源与存档，`EXP-UNITY-015` 和 `EXP-UNITY-016` 分别处理动作条费用文字与预览摘要可见性；均不覆盖能力字段被显示和输入消费者误作阶段状态。新经验只覆盖两个具名消费者在回合结束／命令合法性变化时的阶段门禁迁移；不新增门禁。
+- 模型协作：简单：来源候选、直接验证记录、现有经验边界和确定性回链均可直接核验；入口指定主模型 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

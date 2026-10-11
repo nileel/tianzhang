@@ -283,8 +283,8 @@
 ### CORE-ENDTURN-CAPABILITY-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-AE68A4A19F8C
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-014
 - 经验领域：unity
 - 现象：回合开始AP充足且AcceptsCommands=true，但术法按钮禁用、点击不产生预览。
 - 已证实根因：旧UI和输入把CanEndTurn能力字段当作已使用动作的阶段标志；内核允许随时结束后，该条件在开始也为true。
