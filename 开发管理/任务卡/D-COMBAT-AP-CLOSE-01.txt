@@ -10,10 +10,9 @@
   "stage": "verification",
   "dispatchState": "blocked",
   "blockedBy": [
-    "U-COMBAT-AP-SCENE-01",
-    "N-COMBAT-AP2-BALANCE-01"
+    "U-COMBAT-AP-SCENE-01"
   ],
-  "stateReason": "等待含2026-10-10四项空手新增叶的完整DAG及SCENE/AP2-BALANCE同源最终证据；负责人体验确认后才能关闭。",
+  "stateReason": "等待含2026-10-10四项空手新增叶的完整DAG及SCENE最终证据；负责人体验确认后才能关闭。",
   "expectedPaths": [
     "开发管理/统一行动力交付核对.txt",
     "开发管理/统一行动力实现规划.txt",

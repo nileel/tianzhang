@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-COMBAT-AP2-BALANCE-01"
-  ],
-  "stateReason": "ITEM/EQUIP已正式完成，旧BALANCE不覆盖新增规则；仍等待N-COMBAT-AP2-BALANCE-01新定案，再冻结最终生产路径与摘要。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "N-COMBAT-AP2-BALANCE-01已完成归档；最终生产路径、输入摘要、验证和停止条件已冻结，可执行已验证参数回填。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
     "src/Assets/Scripts/Modules/Content/CharacterData.cs",
@@ -138,7 +136,7 @@
 
 ## 模型协作
 
-- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。当前blocked，临近ready按真实接口／失败影响评估复杂度、主模型与必要辅助组合，并核对执行能力。
+- 2026-10-08负责人明确将本卡转交Codex；由Codex在冻结合同内实施并统一复核。2026-10-11维护核对已完成定案归档、冻结路径与风险预检：简单，沿用入口默认单模型gpt-5.6-terra，无需辅助。
 - 单主智能体完成本卡；目前没有需要独立委派的工作面，不预设子智能体或额外模型调用。执行前核对实际工具与门禁能力，消费本卡实时风险预检正文；自动化只通过卡头executionModel选择Codex模型，不临时降级重试。
 
 ## 验证
