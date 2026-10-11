@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP2-GROWTH-01/CAND-U-COMBAT-AP2-GROWTH-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：独立核验候选并晋级为 EXP-UNITY-017；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP2-GROWTH-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-11 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-017`。来源候选和验证记录证实，角色聚合派生改变后，入战快照、会话预算／报价版本、协调器刷新及敌人导入回归都是已独立存在的实际所有者；遗漏它们曾两次触发停止，随后在最小批准范围内完成并通过相关验收，因此可作为开工前可复用检查。
+- 去重与边界：`EXP-MGMT-004` 仅处理 `CombatCommandService` 至 `PrepareValidated` 的冻结动作准备链，`EXP-UNITY-013` 只处理行动经济来源及保存匹配；两者不覆盖角色聚合到独立战斗快照的同步、回合／报价版本边界与共享 CSV 派生导入回归。新经验限于这些路径和语义同时命中时的所有者枚举；不新增门禁。
+- 模型协作：简单：来源候选、直接验证记录、既有经验边界与确定性回链均可直接核验；入口指定主模型 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

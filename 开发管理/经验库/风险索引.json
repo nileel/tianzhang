@@ -687,6 +687,38 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-016.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-11"
+    },
+    {
+      "id": "EXP-UNITY-017",
+      "title": "聚合成长变更须同步独立战斗快照与导入回归",
+      "preflightSummary": "变更角色聚合派生的 AP 或移动效率，并同步战斗快照或导入派生校验时，先冻结独立接收对象、版本所有者及同语义导入回归。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
+        "src/Assets/Scripts/Combat/CombatantSnapshot.cs",
+        "src/Assets/Scripts/Combat/CombatSession.cs",
+        "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+        "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs"
+      ],
+      "textPatterns": [
+        "CharacterRuntimeProfile",
+        "CombatantSnapshot",
+        "ActionPointMaximumUnits",
+        "MovementEfficiencyMilliUnits",
+        "ContentCatalogDataTests"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-017.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-11"
     }
   ],
   "gates": []

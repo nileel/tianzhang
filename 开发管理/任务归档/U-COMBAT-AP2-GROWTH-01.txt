@@ -361,8 +361,8 @@
 ### CAND-U-COMBAT-AP2-GROWTH-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-C1A6A1EB5C30
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-017
 - 经验领域：unity
 - 现象：成长任务先后因现有战斗快照写入口和敌人导入回归所有者未纳入冻结路径而两次停止，待负责人批准后才完成。
 - 已证实根因：只冻结角色派生与生产导入路径，没有把已独立复制的运行时接收对象、其预算/报价版本所有者及同语义直接回归测试一并列入；角色聚合变化无法修改只读战斗上限，旧独立AP/v测试也不能继续充当验收。
