@@ -460,16 +460,21 @@ static class Ap2CombatReport
             g.Key.Turn,g.Key.ActorIndex,actions=g.Count(e => e.Event == "action_committed"),
             moves=g.Count(e => e.Event == "move_committed"),apUnits=g.Sum(e => e.CostUnits),
             spiritUnits=g.Where(e => e.Event == "action_committed").Sum(e => Math.Max(0,e.SpiritBefore-e.SpiritAfter)),
+            netSpirit=g.Last().SpiritAfter-g.First().SpiritBefore,
             damage=damage.GetValueOrDefault(g.Key.Turn) }).ToArray();
     }
     internal static object Battle(IReadOnlyList<Character> characters,bool group,int seed,int turnLimit = 100)
     {
         var session = Session(characters,group); var service = new CombatCommandService(); var random = new Random(seed);
-        var trace = new List<object>(); var ownTurns = new List<object>(); int turns = 0;
+        var trace = new List<object>(); var ownTurns = new List<object>(); int turns = 0, controls = 0;
+        var basicCounts = new int[characters.Count]; var spiritSpent = new int[characters.Count];
+        var output = new int[characters.Count]; var activeCounts = new int[characters.Count];
         while (!session.IsFinished && turns < turnLimit)
         {
+            var beforeSpirit = session.Combatants.All.ToDictionary(a => a.Id,a => a.CurrentSpirit);
             var next = service.AdvanceUntilAction(session); if (!next.HasActor) break;
             turns++; var actor = session.Combatants.All.Single(a => a.Id == next.ActorId);
+            activeCounts[int.Parse(actor.Id.Split('-')[1])]++;
             int count=0,paid=0,damage=0,spirit=0;
             while (actor.OwnTurnActive && !session.IsFinished)
             {
@@ -490,17 +495,34 @@ static class Ap2CombatReport
                 // The preview confirmation is bound to identity, not to the private resolution samples.
                 quote = service.Preview(session,resolved);
                 int ap = actor.ActionPointsRemainingUnits,tick = session.TurnScheduler.CurrentTick;
+                bool controlled = enemy.HasStatus(CombatStatusKind.Stun);
                 var result = service.Execute(session,resolved,quote);
-                if (!result.Succeeded || ap-actor.ActionPointsRemainingUnits < quote.ActionPointCostUnits || tick != session.TurnScheduler.CurrentTick)
+                if (!result.Succeeded || quote.ActionPointCostUnits <= 0 || result.ActionPointSpentUnits != quote.ActionPointCostUnits ||
+                    (!session.IsFinished && ap-actor.ActionPointsRemainingUnits != quote.ActionPointCostUnits) || tick != session.TurnScheduler.CurrentTick)
                     throw new InvalidOperationException("ap2_shared_commit:"+result.RejectionReason);
                 trace.Add(new { turns,actor.Id,tick,selected.ProfileId,quote.ActionPointCostUnits,quote.CommittedUseCount,quote.RepeatMultiplierPermille,
                     quote.AbilityTierId,actor.CurrentHealth,actor.CurrentSpirit,actor.ShouyiStacks,actor.FudanStacks,result.Damage });
                 count++; paid+=result.ActionPointSpentUnits; damage+=result.Damage.Sum(d => d.FinalDamage); spirit+=result.SpiritSpent;
+                int index = int.Parse(actor.Id.Split('-')[1]);
+                if (selected.Kind == CombatCommandKind.BasicAttack) basicCounts[index]++;
+                spiritSpent[index] += result.SpiritSpent; output[index] += result.Damage.Sum(d => d.FinalDamage);
+                if (!controlled && enemy.HasStatus(CombatStatusKind.Stun)) controls++;
             }
-            ownTurns.Add(new { turns,actor.Id,actions=count,apUnits=paid,spiritUnits=spirit,damage });
+            ownTurns.Add(new { turns,actor.Id,actions=count,apUnits=paid,spiritUnits=spirit,
+                netSpirit=actor.CurrentSpirit-beforeSpirit[actor.Id],damage });
             if (actor.OwnTurnActive && !session.IsFinished) service.Execute(session,new CombatCommand(CombatCommandKind.EndTurn,actor.Id));
         }
-        return new { turns,ticks=session.TurnScheduler.CurrentTick,trace,ownTurns,remaining=session.Combatants.All.Select(a => new { a.Id,a.CurrentHealth,a.CurrentSpirit }) };
+        var all = session.Combatants.All.ToArray(); int teamSize = group ? 2 : 1;
+        bool playerAlive = all.Any(a => a.Team == CombatTeam.Player && a.IsAlive);
+        bool enemyAlive = all.Any(a => a.Team == CombatTeam.Enemy && a.IsAlive);
+        return new { turns,ticks=session.TurnScheduler.CurrentTick,trace,ownTurns,
+            winner = playerAlive && !enemyAlive ? 0 : enemyAlive && !playerAlive ? 1 : -1,
+            timeout = playerAlive && enemyAlive, controls,
+            actors = all.Select((a,i) => new { a.Id, team = i/teamSize, a.OwnTurnsStarted,
+                activeTurns = activeCounts[i],
+                basics = basicCounts[i], spiritSpent = spiritSpent[i], damage = output[i],
+                netSpirit = a.CurrentSpirit-characters[i].Primary["MP"], a.ShouyiStacks,a.FudanStacks }),
+            remaining=all.Select(a => new { a.Id,a.CurrentHealth,a.CurrentSpirit }) };
     }
     internal static int Run(IReadOnlyList<Program.BuildDef> builds,string tierMode)
     {
@@ -527,6 +549,157 @@ static class Ap2CombatReport
                     ownTurns=FullTurnSummary(full,chars,group) },
                 shared=Battle(chars,group,20261010+i) }));
         }
+        return 0;
+    }
+}
+
+// Numeric experiments on the real AP2 entries. No alternate settlement or production parameters.
+static class Ap2BalanceReport
+{
+    const int Seed = 20261011;
+    static void Emit(object value) => Console.WriteLine(JsonSerializer.Serialize(value));
+    static readonly HexCoord[] DuelPositions = { new(0,0), new(1,0) };
+    static readonly HexCoord[] GroupPositions = { new(0,0), new(1,0), new(0,1), new(1,-1) };
+
+    static object FullMetrics(Combat.GroupRoundResult battle, IReadOnlyList<Character> chars, bool group)
+    {
+        int size = group ? 2 : 1;
+        var damage = new int[chars.Count]; var previous = chars.Select(c => c.Primary["HP"]).ToArray();
+        foreach (var e in battle.Economy)
+        {
+            if (e.Event is "action_committed" or "move_committed")
+                if (e.CostUnits <= 0 || e.ActionPointsBeforeUnits-e.ActionPointsRemainingUnits != e.CostUnits)
+                    throw new InvalidOperationException("ap2_balance_nonpositive_or_mismatched_payment");
+            if (e.Event == "action_committed") damage[e.ActorIndex] += Enumerable.Range(0,chars.Count)
+                .Where(i => i/size != e.ActorIndex/size).Sum(i => Math.Max(0,previous[i]-e.HealthByActor[i]));
+            previous = e.HealthByActor.ToArray();
+        }
+        bool timeout = battle.HpRatioA > 0 && battle.HpRatioB > 0;
+        return new { winner = timeout ? -1 : battle.WinnerTeam, timeout, turns = battle.Turns, ticks = battle.GlobalTick,
+            actors = Enumerable.Range(0,chars.Count).Select(i => {
+                var events = battle.Economy.Where(e => e.ActorIndex == i).ToArray();
+                var committed = events.Where(e => e.Event == "action_committed").ToArray();
+                return new { actor = i, team = i/size,
+                    ownTurns = events.Count(e => e.Event is "own_turn_started" or "own_turn_started_control_skip"),
+                    controlSkips = events.Count(e => e.Event == "own_turn_started_control_skip"),
+                    actions = committed.Length, basics = committed.Count(e => e.DefinitionRef.StartsWith("basic_",StringComparison.Ordinal)),
+                    recoveries = committed.Count(e => e.DefinitionRef == "spell_julingshu"),
+                    apUnits = events.Sum(e => e.CostUnits), spiritSpent = committed.Sum(e => Math.Max(0,e.SpiritBefore-e.SpiritAfter)),
+                    netSpirit = (battle.Economy.LastOrDefault()?.SpiritByActor[i] ?? chars[i].Primary["MP"])-chars[i].Primary["MP"],
+                    damage = damage[i], maxShouyi = events.Select(e => e.Shouyi).DefaultIfEmpty().Max(),
+                    maxFudan = events.Select(e => e.Fudan).DefaultIfEmpty().Max(),
+                    maxLeijie = events.Select(e => e.Leijie).DefaultIfEmpty().Max() };
+            }), ownTurns = Ap2CombatReport.FullTurnSummary(battle,chars,group) };
+    }
+
+    static void Row(string matrix, string label, string realm, IReadOnlyList<Character> original, bool group, bool mirror, int sample, int limit = 200)
+    {
+        var chars = original.ToArray();
+        if (mirror) chars = group ? new[] { chars[2],chars[3],chars[0],chars[1] } : new[] { chars[1],chars[0] };
+        var board = new HexBattlefield();
+        var full = group ? Combat.Simulate2v2Detailed(board,chars[0],chars[1],chars[2],chars[3],GroupPositions,limit) :
+            Combat.SimulateDetailed(board,chars[0],chars[1],DuelPositions,limit);
+        var shared = JsonSerializer.SerializeToElement(Ap2CombatReport.Battle(chars,group,Seed+sample,limit));
+        Emit(new { matrix,label,realm,group,mirror,sample,
+            input = chars.Select(c => new { c.Name,c.GongFaName,c.Realm,c.Primary,c.ArtName,c.DivineName,
+                c.ProductionArtIds,fixedAbilityTierId = c.FixedTestAbilityTierId,c.HealthRecoveryPerOwnTurn,c.SpiritRecoveryPerOwnTurn,
+                basic = c.EffectiveBasicAttackProfile,movement = c.MovementInput }),
+            full = FullMetrics(full,chars,group),
+            shared = new { winner = shared.GetProperty("winner"), timeout = shared.GetProperty("timeout"),
+                turns = shared.GetProperty("turns"),ticks = shared.GetProperty("ticks"),controls = shared.GetProperty("controls"),
+                actors = shared.GetProperty("actors"),ownTurns = shared.GetProperty("ownTurns"),
+                paid = shared.GetProperty("trace").EnumerateArray().Sum(t => t.GetProperty("ActionPointCostUnits").GetInt32()),
+                recoveries = shared.GetProperty("trace").EnumerateArray().Count(t => t.GetProperty("ProfileId").GetString() == "spell_julingshu") } });
+    }
+
+    static Character Body(string realm, bool trained = false, string weapon = "")
+    {
+        var c = Character.Create(trained ? "body-trained" : "body-ordinary",Character.InnateKeys.ToDictionary(k => k,_ => 8),"physical");
+        c.GongFaName = trained ? "含弘光大典" : "";
+        var weights = trained ? GameData.WeightsFromGongFa(c.GongFaName) : Character.InnateKeys.ToDictionary(k => k,_ => .2);
+        c.ApplyGrowth(realm,"上品",weights);
+        c.FinalizeStats(realm,realm == "凡人" ? 0 : realm == "练气" ? 8 : 2,"中品",weights);
+        c.FixedTestAbilityTierId = realm == "凡人" ? "tier_lianqi" : GameData.TierForRealm(realm);
+        if (weapon != "") c.BasicAttackProfile = GameData.ProductionAttacks[weapon];
+        // Isolate basic attacks without granting new abilities. Actual growth/defenses/resources stay intact.
+        return c;
+    }
+
+    internal static int Run(IReadOnlyList<Program.BuildDef> builds, bool sensitivity = false)
+    {
+        Combat.ResetDeterministicRandom();
+        int samples = sensitivity ? 2 : 8;
+        Emit(new { report = "N-COMBAT-AP2-BALANCE-01",Seed,fullStreamSeed = 20260712,samples,sensitivity,
+            GameData.Rules.RuleSetVersion,GameData.Rules.SourceDigest,
+            inputs = new[] { "AttackProfiles","RealmCombatGrowth","CombatEffectTierRules","CombatActionEconomyRules","Characters","Enemies" }
+                .ToDictionary(n => n, n => GameData.InputHash("src/Assets/DataConfig/"+n+".csv")),
+            realms = GameData.Rules.Realms,tiers = GameData.Rules.Tiers,global = GameData.Rules.Global,
+            limitations = "fixed adjacent positions; full existing area/policy vs shared single-target/policy; timeout is draw, no HP-ratio win; no Unity click/animation proof" });
+        foreach (string realm in new[] { "练气","筑基","金丹" })
+        foreach (string mode in sensitivity ? new[] { "same-tier","locked-qi" } : new[] { "same-tier","locked-qi","art-led" })
+        for (int i=0;i<builds.Count;i++) foreach (bool group in new[] { false,true })
+        {
+            if (sensitivity && !new[] { 0,4,8,10,17,18 }.Contains(i)) continue;
+            Character Build(int n)
+            {
+                var c = ActionEconomyBalanceReport.Build(builds[n%builds.Count],realm);
+                c.FixedTestAbilityTierId = mode == "locked-qi" ? "tier_lianqi" : GameData.TierForRealm(realm); c.AssignArts();
+                if (mode == "art-led") c.DivineName = "";
+                return c;
+            }
+            var chars = group ? new[] { Build(i),Build(i+2),Build(i+1),Build(i+3) } : new[] { Build(i),Build(i+1) };
+            for (int sample=0;sample<samples;sample++)
+                Row("builds",builds[i].Name+":"+mode,realm,chars,group,sample%2!=0,sample);
+        }
+        foreach (string realm in GameData.RealmOrder)
+        foreach (bool trained in new[] { false,true }) foreach (string weapon in new[] { "","basic_iron_sword","basic_iron_blade" })
+        foreach (bool group in new[] { false,true }) for (int sample=0;sample<samples;sample++)
+        {
+            var chars = group ? new[] { Body(realm,trained,weapon),Body(realm),Body(realm),Body(realm,true) } :
+                new[] { Body(realm,trained,weapon),Body(realm) };
+            Row("body",(trained ? "trained" : "ordinary")+":"+weapon,realm,chars,group,sample%2!=0,sample);
+        }
+        foreach (string realm in new[] { "筑基","金丹" }) foreach (string weapon in new[] { "basic_iron_sword","basic_iron_blade" })
+        foreach (bool group in new[] { false,true }) for (int sample=0;sample<samples;sample++)
+        {
+            Character Reference()
+            {
+                var c = Body(realm,true); var p = GameData.ProductionAttacks[weapon];
+                string id = "basic_fixture_tier_reference_"+weapon+"_"+GameData.TierForRealm(realm);
+                int cost = CombatRuleSet.CeilRatio(GameData.Rules.GetTier(GameData.TierForRealm(realm)).ActionPointReferenceUnits,
+                    p.Cost.ActionPointCostUnits,GameData.Rules.GetTier("tier_lianqi").ActionPointReferenceUnits);
+                c.BasicAttackProfile = p with { Name = id, AbilityTierId = GameData.TierForRealm(realm),
+                    Cost = p.Cost with { DefinitionRef = id, Version = "fixture:AP2-tier-reference",ActionPointCostUnits = cost,MinimumNetCostUnits = cost } };
+                return c;
+            }
+            Row("reference-weapon","EXPERIMENT_ONLY:"+weapon,realm,group ? new[] { Reference(),Body(realm),Body(realm,true),Body(realm) } :
+                new[] { Reference(),Body(realm,true) },group,sample%2!=0,sample);
+        }
+        foreach (string realm in new[] { "练气","筑基","金丹" }) foreach (bool group in new[] { false,true })
+        for (int sample=0;sample<samples;sample++)
+        {
+            Character Recovery()
+            {
+                var c = Body(realm); c.Primary["HP"] *= 20;
+                c.EquipProductionArts("spell_guanshiji","spell_julingshu"); return c;
+            }
+            Character Control()
+            {
+                var c = ActionEconomyBalanceReport.Build(builds.Single(b => b.GongFaName == "秋水游心经"),realm);
+                c.Primary["HP"] *= 20; return c;
+            }
+            Row("long-war","production-recovery-vs-water",realm,group ? new[] { Recovery(),Recovery(),Control(),Control() } :
+                new[] { Recovery(),Control() },group,sample%2!=0,sample,400);
+        }
+        foreach (bool group in new[] { false,true }) for (int sample=0;sample<samples;sample++)
+            Row("stone","formal-input-vs-ordinary","练气",group ? new[] { Body("练气"),Body("练气",true),
+                Character.FromProduction(true,"enemy_shijiahou"),Character.FromProduction(true,"enemy_shijiahou") } :
+                new[] { Body("练气"),Character.FromProduction(true,"enemy_shijiahou") },group,sample%2!=0,sample);
+        foreach (string highRealm in new[] { "筑基","金丹" }) for (int sample=0;sample<samples;sample++)
+            Row("cross-realm","water-status","练气→"+highRealm,new[] {
+                ActionEconomyBalanceReport.Build(builds[8],"练气"),ActionEconomyBalanceReport.Build(builds[8],highRealm) },
+                false,sample%2!=0,sample);
+        Emit(new { result = "AP2_BALANCE_MATRIX_COMPLETE",GameData.Rules.SourceDigest });
         return 0;
     }
 }

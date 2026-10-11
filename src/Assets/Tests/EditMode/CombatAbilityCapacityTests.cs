@@ -294,6 +294,33 @@ namespace TianZhang.Tests.EditMode
         private static AttackProfileData ProductionProfile(string id) =>
             AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset");
 
+        [Test]
+        public void ProductionQiBodyKeepsMoreActionsWhileSwordKeepsHigherBudgetDamage()
+        {
+            (int actions, int damage) Budget(string id)
+            {
+                var profile = ProductionProfile(id);
+                var actor = new CombatantSnapshot("actor", CombatTeam.Player, new HexCoord(0, 0), 100,
+                    100000, 100000, 80, 0, 60, 60, 100000, 4000,
+                    basicAttackProfileId: id, realmStage: "练气");
+                var session = Ready(actor, Target(60), profile);
+                int actions = 0, damage = 0;
+                var command = new CombatCommand(CombatCommandKind.BasicAttack, "actor", "target", id, Rolls);
+                while (service.Preview(session, command).IsLegal)
+                {
+                    var result = service.Execute(session, command);
+                    Assert.That(result.Succeeded, Is.True, result.RejectionReason);
+                    actions++; damage += result.Damage.Single().FinalDamage;
+                }
+                return (actions, damage);
+            }
+            var body = Budget("basic_body_human_lianqi");
+            var sword = Budget("basic_iron_sword");
+            Assert.That(body.actions, Is.EqualTo(3));
+            Assert.That(sword.actions, Is.EqualTo(2));
+            Assert.That(body.damage, Is.LessThan(sword.damage), "Extra punches must not also dominate same-tier weapon output.");
+        }
+
         private AttackProfileData ProjectGuanshiji(params (string field, string value)[] changes)
         {
             string[] lines = File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig", "AttackProfiles.csv"));

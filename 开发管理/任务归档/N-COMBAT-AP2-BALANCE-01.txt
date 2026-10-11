@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "N-COMBAT-AP2-SIM-01与N-COMBAT-UNARMED-SIM-01均已完成归档；空手双入口输入已具备，现可按既有冻结矩阵实跑并定案普通修士、体修与石甲兽空手成长。",
+  "stateReason": "冻结双入口矩阵与14组局部敏感性已实跑；人形练气至金丹拳脚倍率0.65定案并同步生产摘要，验收通过，候选完成归档等待共享入口正式重放。",
   "expectedPaths": [
     "simulations/BattleSim/StageCombatReport.cs",
     "simulations/BattleSim/Program.cs",
@@ -127,3 +127,11 @@
 
 - 接入合同§二为候选：人形凡人20AP/30承载、练气25/120、筑基75/500、金丹250/2400；石甲兽25/120、倍率1。参数唯一编辑源仍AttackProfiles等既有四表；新增五asset及.meta已授权，同次导入全攻击/规则摘要。族/境界/ID/表头不可调，费用及承载增长须同时合法。
 - 复用原完整矩阵加普通/体修/石甲兽、成长前后、各境空手与现有练气武器、费用/承载局部敏感性；同档高阶武器只显式参照试验，不能当生产内容。报告每本人回合攻击/总动作/AP/MP/输出与双入口1v1/2v2、长战及被动边界，依据真实输入定案；操作/动画时长归SCENE。
+
+
+## 2026-10-11 完成记录
+
+- gpt-6.1-sol单主责完成3552场最终双入口及3864场候选双入口试验；仅三个人形修士拳脚倍率1→0.65，保留其他初版参数与身份。
+- 最终四表摘要e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc，规则及九攻击资产原地同步且GUID不变。
+- Release/default、AP2/行动经济/空手自测、58项定向EditMode、数据链与管理/提交门禁完成；输入、命令、结果和限制见本任务验证记录与境界行动力成长数值定案。
+- 只归档自身，保留下游具名前置；不关闭父项，不代替正式场景点击/动画/难度验收。

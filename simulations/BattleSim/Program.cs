@@ -147,6 +147,11 @@ class Program
     {
         Combat.ResetDeterministicRandom();
 
+        if (args.Length == 1 && args[0] == "--ap2-balance")
+            return Ap2BalanceReport.Run(BuildDefs);
+        if (args.Length == 2 && args[0] == "--ap2-balance" && args[1] == "sensitivity")
+            return Ap2BalanceReport.Run(BuildDefs, sensitivity: true);
+
         if (args.Length == 2 && args[0] == "--ap2")
             return Ap2CombatReport.Run(BuildDefs,args[1]);
 

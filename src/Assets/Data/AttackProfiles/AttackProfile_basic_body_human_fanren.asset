@@ -71,7 +71,7 @@ MonoBehaviour:
   statusRefreshPolicy:
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6
+  ruleSetSourceDigest: e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc
   attackSchemaVersion: 2
   unarmedFamilyId: body_human
   unarmedRealmId: realm_fanren

@@ -1,0 +1,99 @@
+﻿# N-COMBAT-AP2-BALANCE-01 验证记录
+
+日期：2026-10-11；RunId=aac743c6-de64-4d1f-bbea-0c2773312eb7；BaseCommit=b9c7f5cd7a25e5eb49bc562359d18ab099222bd0。
+
+## 身份、事实与范围
+
+共享入口按冻结executionModel选定并经codex exec -m传入gpt-6.1-sol；本轮主模型始终保持该值。任务是冻结矩阵内的参数校准，参数、双入口观测与验收强耦合，由Codex单主责复核完整diff、最终验证和唯一candidate，没有独立优势归因冲突需要辅助，未调用子智能体、第二责任会话或其他模型。模型强度请求不作为额外调用证明。
+初始当前worktree清洁、HEAD与入口BaseCommit一致，branch为codex/automation/codex/aac743c6-de64-4d1f-bbea-0c2773312eb7/candidate。仅当前worktree、当前taskId与允许路径；未扫队列选题、操作runtime/锁/集成/自动化或其他worktree。完成时只移除本任务队列/backlog行，下游具名前置不动。
+必查落实：批准设计相关规则及第9节算术/固定档/费用/承载/冷却；配置合同§二至六、八/九与空手覆盖§十；空手合同§二/三/六；AP2-SIM及UNARMED-SIM正式验证记录；旧AP-BALANCE定案只作基线。读取Stage/Program当前完整目标单元、两端支付/结算直接消费者、GameData四表投影、Character合法装配接口、生产行与Importer.ImportAttackProfiles完整单元，以及两组受影响测试。采用unity-agent-workflows，仅加载数据/结构/验证相关规则，不扩场景职责。
+入口预检零命中已消费。新增报告符号后只读复核taskCardDigest=0c88259e4fbb90e6b9d029516007d05259d0592b88e26a6d1b8456564b7260f1、indexDigest=89f1e6153a747b1b9dfc15e06e30106877901d6e0e759ccf03ffda8b36a8c899，matched/notice/mustRead/gates/gatePointers均空，与schema2风险投影一致。允许路径、所有者、内容身份及结算路线未扩充。
+
+## 实施与根因
+
+初版同档拳脚与铁剑同倍率/承载却更低基费，实际三击压过两击。只调AttackProfiles三个人形修士行倍率1→.65；凡人/石甲兽、AP/MP/费用/容量/冷却/系数/版本/schema/ID均保留。不调算法掩盖错误，不创建武器、资格、通用状态或次数上限。
+Program新增--ap2-balance及其sensitivity子入口。Stage在既有真实双入口上观测每本人回合攻击/动作/AP/MP/输出、净MP、控制跳过、tick、终结胜率和显式超时；全模拟仍原Combat，共享仍Preview→Execute。余额在战斗终止时被清零属于放弃余额，实付用Result.ActionPointSpentUnits与quote比较，非终止动作另比较AP差，不把余额清零算成额外支付。没有修改共享内核、GameData、Character或Combat算法。
+EditMode新增真实生产同预算回归，保留承载两处A、真实D不截、重复费不增效果、来源摘要/GUID/幂等及所有既有断言。未删失败断言或放宽生产授权。
+既有Importer.ImportAttackProfiles原地导入规则和九攻击资产，所有.meta/GUID不变；唯一业务差异是三格倍率及十资产摘要。Unity空值尾空格已用既有whitespace工具清理；ShaderGraphSettings的空值空格启动噪声恢复初始字节，不入candidate。
+
+## 最终输入与可复现入口
+
+ruleSetVersion=AP-GROWTH@0.1；sourceDigest=e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc。
+- AttackProfiles.csv SHA256=7b2b3ce081e6e805340fc52f38bb46962e180d976184a6c3a23696f6ff970597
+- RealmCombatGrowth.csv SHA256=9a95d5db6672e8e15a8746d377c601a1e24d28ffe8063aecdf7bd0c4c4216b23
+- CombatEffectTierRules.csv SHA256=86b564b97c92b6ac75e2617d4f99f8ccace3087ec8033faf4bcccf36540fdc91
+- CombatActionEconomyRules.csv SHA256=6268373c3bdd872d06a406fcdf7f3332dd3a29f79383e353c29dfb04c52246fe
+- Characters.csv SHA256=ecd3dfcacfe8a0a8e29b8c2b1bcc5af93234e6270d56c37eb1a09f454dc00ba7
+- Enemies.csv SHA256=5717692dea7ffc22d9de39ebd99078847ce30e8a5a4df18171a325676b46ed31
+- simulations/BattleSim/StageCombatReport.cs SHA256=2d875df97b202944e4509f7a948667857b9176c4abf0b16b90fb776cd101c9e8
+- simulations/BattleSim/Program.cs SHA256=1918166c3c8844ec79f5f485c502bef9baf5f3bdf67af20adefb73af0a3f0584
+- src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs SHA256=1584ee5084b7875f3c1d796bee8fc93359d0efb6b03daf1fde5b9b2ccc4cd7cb
+
+当前worktree首次缺obj/project.assets.json，先一次dotnet restore simulations/BattleSim；之后dotnet build -c Release --no-restore simulations/BattleSim最终0警告0错误，再运行以下最终输入命令。未使用主工作区或其他worktree的obj/bin。
+- dotnet run --no-build -c Release --project simulations/BattleSim：exit0，默认完整流程；原始输出SHA256=887a2644ca0572e6c7c8f5bd6ad63e22e6f5e78b2574df570521a20a861ff380。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --ap2-balance：exit0，3552场成对入口/3554 JSON行，尾标AP2_BALANCE_MATRIX_COMPLETE；报告SHA256=ec4eb41dfd303c92f4cf375eea8c66e076f67c0a0eeef0164ea16e95d8b0d7fd。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test ap2：PASS，51三元组双方实际支付、重复、承载、苦行、水系、原实例/被动/面积根动作。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test action-economy-n-combat-ap-sim-01：PASS，原行动经济/移动/本人时点/冷却边界。
+- dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test-unarmed：PASS，96身体/功法/武器功能组、正式石甲兽双方与组战、成长账本及坏输入；功能夹具不当作数值胜率。
+- Unity 6000.3.18f1 -batchmode -nographics -quit -projectPath 本worktree/src -executeMethod TianZhang.Editor.CombatContentImporter.ImportAttackProfiles：编辑器日志严格导入9档案并以0退出；实际资产与最终CSV摘要一致。
+- 同一原生Unity，-runTests -testPlatform EditMode -testFilter CombatAbilityCapacityTests;CombatRuleSetDataTests：exit0，XML Passed，27+31=58项，失败/跳过0；XML SHA256=e1cd3b1f40e8c211bc1fd792d0dc9dc1148c3e6fe27bd2fee22205bddc31b584。含新增生产比较、真实导入摘要、坏源零写入、变体更新、GUID及重复导入幂等。
+
+从最终四表实际读重复乘数做独立算术：20AP×100预算4次/95AP、×400预算14次/395AP；50AP×100/300/1000预算2/4/14次，支出100/237.5/987.5AP；500AP×1000预算2次/1000AP；AP×v全预算2/4/12/48。全部断言通过，明确ARITHMETIC_PASS_NOT_BALANCE，不代替上述实跑。
+JSON行保留每个人每回合AP/MP/输出、装配/族/档、实际属性及版本。原始报告/XML位于本worktree忽略Temp目录，永久证据为本记录的精确输入、种子、命令、统计与摘要；最终代码/CSV可直接重跑。临时批处理不进入生产或候选。
+
+## 矩阵范围与21构筑汇总
+
+完整最终3552场：构筑3024、身体/剑刀384、高阶武器显式参照64、恢复水控长战48、正式石甲兽16、跨境水系16。每场分别执行全模拟和共享入口，共7104次；二端终结超时均0，不把HP比例优势冒充终结胜利。
+全模拟固定流20260712；共享样本种子20261011至20261018，样本奇数交换双方，8样本行=每侧4次。1v1固定(0,0)/(1,0)，2v2固定菱形(0,0)/(1,0)/(0,1)/(1,-1)。构筑对手按原21有序环相邻，2v2搭配偏移2/3；不是全21×21对手矩阵或统计置信度。
+以下为每个构筑病例等权均值（不是所有行动简单混加），各布局168场；全/共享分列，不能互作远程流派结论。更细身体/体修、长战和石甲兽结果见定案正文。
+
+| 境界/模式/布局 | 场数 | 全/共享胜率% | 全/共享每本人回合动作 | 全/共享每本人回合输出 | 全/共享每本人回合净MP | 全/共享平均tick |
+|---|---:|---:|---:|---:|---:|---:|
+| 练气/same-tier/1v1 | 168 | 47.024/47.619 | 1.945/2.293 | 66.024/73.781 | -12.099/-7.968 | 9.096/8.845 |
+| 练气/same-tier/2v2 | 168 | 50.0/48.81 | 1.858/1.884 | 60.408/65.315 | -9.103/-5.131 | 10.75/9.743 |
+| 练气/locked-qi/1v1 | 168 | 47.619/47.619 | 1.918/2.293 | 65.907/73.781 | -11.846/-7.968 | 9.154/8.845 |
+| 练气/locked-qi/2v2 | 168 | 46.429/48.81 | 1.871/1.884 | 60.17/65.315 | -9.356/-5.131 | 10.798/9.743 |
+| 练气/art-led/1v1 | 168 | 52.381/47.619 | 1.948/2.293 | 65.266/73.781 | -11.835/-7.968 | 9.18/8.845 |
+| 练气/art-led/2v2 | 168 | 48.81/48.81 | 1.891/1.884 | 61.643/65.315 | -9.328/-5.131 | 10.856/9.743 |
+| 筑基/same-tier/1v1 | 168 | 50.0/48.81 | 2.248/2.374 | 320.461/336.679 | -83.214/-53.478 | 3.684/3.704 |
+| 筑基/same-tier/2v2 | 168 | 51.19/49.405 | 1.895/1.983 | 273.555/299.663 | -49.477/-35.259 | 4.185/3.923 |
+| 筑基/locked-qi/1v1 | 168 | 52.976/47.619 | 3.645/3.231 | 219.91/232.766 | -65.895/-31.62 | 4.662/4.585 |
+| 筑基/locked-qi/2v2 | 168 | 55.952/49.405 | 3.663/3.093 | 243.281/245.77 | -70.267/-30.925 | 5.607/5.12 |
+| 筑基/art-led/1v1 | 168 | 48.81/48.81 | 2.258/2.374 | 319.448/336.679 | -81.311/-53.478 | 3.66/3.704 |
+| 筑基/art-led/2v2 | 168 | 55.357/49.405 | 1.897/1.983 | 275.99/299.663 | -47.602/-35.259 | 4.309/3.923 |
+| 金丹/same-tier/1v1 | 168 | 56.548/55.357 | 1.396/2.381 | 1682.861/1869.156 | -14.512/-15.629 | 5.0/4.609 |
+| 金丹/same-tier/2v2 | 168 | 55.357/50.595 | 1.531/2.452 | 1806.024/1949.342 | -10.159/-10.693 | 5.977/5.511 |
+| 金丹/locked-qi/1v1 | 168 | 48.214/47.024 | 10.731/7.198 | 534.987/948.832 | -206.852/-110.347 | 12.744/8.875 |
+| 金丹/locked-qi/2v2 | 168 | 51.19/44.643 | 11.601/7.701 | 476.952/907.302 | -229.177/-121.475 | 13.81/10.524 |
+| 金丹/art-led/1v1 | 168 | 48.81/51.19 | 2.681/2.799 | 1812.143/1824.617 | -560.003/-347.212 | 4.625/4.655 |
+| 金丹/art-led/2v2 | 168 | 50.0/53.571 | 2.592/2.863 | 1813.728/1860.391 | -830.594/-333.644 | 5.97/5.594 |
+
+## 局部敏感性
+
+每变体276场×14=3864场成对入口，共7728次。选六代表构筑，2样本交换双方；同档/锁练气、全部身体/武器、两个布局、长战、正式石甲兽与跨境水系均覆盖。全模拟流与共享种子固定；消费次数可能随参数变动，不将局部胜率噪声包装为最优参数。
+复现：以最终四表字节为基线，一次应用表中指定字段，仅initial/mult060/mult070覆盖三个人形修士倍率；其他变体保持.65。运行dotnet run --no-build -c Release --project simulations/BattleSim -- --ap2-balance sensitivity，随后恢复原字节。费用与承载的乘数改所有五身体行；AP不动A_ref/v；状态不动equal=1和百分点峰值.15；整数乘0.8/1.2后的本轮值均精确整数，不加取整策略。报告末尾均为AP2_BALANCE_MATRIX_COMPLETE，四表跨引用实际解析成功。
+
+| 变体 | 独立变量 | 四表摘要 | 原始报告SHA256 | 全/共享病例等权平均动作每本人回合 |
+|---|---|---|---|---:|
+| initial | 三个人形修士倍率1 | c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6 | f4f9d2dfb66cdea31e51682b186c2f0f78be37f76b00987f40560fa511091206 | 3.868/3.62 |
+| mult060 | 三个人形修士倍率.60 | 7b79fc7c22bc143f536944be2cd0ba9e6db97c6c4b3baddf632e5706b946cc9f | 0315050601be784b85a92f56e8f758ce3526db997d47b76d0be87a8d0b8e459d | 3.913/3.697 |
+| mult065 | 三个人形修士倍率.65，最终输入 | e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc | b4392647d2f5935aa2dca8f19fd232610860c7cd1f47f751210152a5e5c55d08 | 3.89/3.715 |
+| mult070 | 三个人形修士倍率.70 | 249374556f0806337084455317cbf8997d33f128bc91f1ec1df0c13a64cec3a6 | a9e5af205c0eb1be26f682d8f9c685dcf3f68e0c90ba16b949e99cae86fef21e | 3.946/3.72 |
+| ap080 | 练气/筑基/金丹AP=80/240/800，v/A_ref不变 | c76440e48d4b99ab85d8ebf17ced4a1025bea2b01892d916d3a6967ee03d817e | 868e75d618de395fc22e39d98cc9e09a3bc901f55ff5abe5830caa9ee431cd13 | 3.158/2.978 |
+| ap120 | 练气/筑基/金丹AP=120/360/1200，v/A_ref不变 | b7a8621a08b7907140c28e1d6e2cf369aef40866ec2ec9e212e3d9c6b3d117b1 | 331b0cd9dd6a29e58180cddfb4e50111a7d813ceef0397eaec33fae1cbe237d1 | 4.46/4.321 |
+| capacity080 | 档位肉神攻防四列与五身体承载×0.8，恢复承载不变 | 3a09c900671d0b002c4e2f049eb42e19e12b0cc1cd0b4887ed841822c8d62da5 | e11cb84b1104404f57fb8ae7d6ef1388de5f4d92b3427aec33ad2f61cf38c740 | 3.918/3.72 |
+| capacity120 | 档位肉神攻防四列与五身体承载×1.2，恢复承载不变 | 7898fab98e21ea3c248e2f12a125d3c9131810ba0b1b04405870fbac3cc96be6 | 1c557eaef086262e272da629b08edc20ae06af0f982b3b6d2c290b83a1591977 | 3.892/3.716 |
+| cd-short | 爆发/控制/恢复CD系数1/2/3 | 77f218bb4f5a320dd65d73f01d65ad2ebbf5b468454dbe39315c8ce53f6a9977 | 26416a3022180fb6ae20a9f2ae809f8626d5ade31be1638b6d779c5bd206e2c7 | 3.892/3.714 |
+| cd-long | 爆发/控制/恢复CD系数2/4/5 | c108a5f9fb7cedf1d36308559023daf834a2cd2c87db3fe41bdbaf1140b3be9d | f8b54123ab552d3eb9a778b7d327085e3ecfa4449d5974ea9200856ff44d9917 | 3.925/3.719 |
+| status-low | C=.2/.4/1/1.2/1.6，相对峰值.24、强控.75 | 32393d0c2130801460bc9b531acef3957c57db13e61224fdd9d7df885ff5042a | 7dce1ee93455d91de008f62d14b2596c0270a1d3a4a56319623502b1ec5c686e | 3.89/3.715 |
+| status-high | C=.3/.6/1/1.8/2.4，相对峰值.36、强控.95 | fb3942081e4d17c30428b971aaed067177d2159ec5254c4d3ae1079407e77fd3 | 189cc2c510a34e9963536fcc259b3defb2cf71e21c1101bc2385be945c18f1eb | 3.89/3.715 |
+| body-fee080 | 五身体基础/净费×0.8 | 5a901bee399a00fceba5c52012c74fc31cbdcaee07ded7e82bf7560d559ae1a7 | 82cbbfd5e6e46d88da2ca5103ef0a8c2881a7c319845615ef3de608697c96859 | 4.22/4.076 |
+| body-fee120 | 五身体基础/净费×1.2 | 3c643080b553930ce411bdb26a87015248cbd8d8d809aa211297e46df064a68c | 4567cc5085db04e1f3ddbb2a5e35662a52f70e1f7729d2a806aae18ec8b27f12 | 3.705/3.561 |
+
+## 验证边界、过程修正与收尾
+
+首轮报告编译误用ProductionArtIds私有setter，改为既有EquipProductionArts接口，未扩Character职责。初稿严格AP差断言误把终战余额放弃当成支付，查明FinishTurn/Terminate清余额后按真实支付结果修正报告观测，未改结算。被主动结束的旧报告草稿没有完整尾标，未进入任何平衡统计。完整验收只使用上述最终及14份完成报告。
+首次导入编辑器已正常退出0，但PowerShell Start-Process -Wait等候子进程未返回；在确认无Unity编辑器进程且资产导入完成后，仅结束本次等待壳。后续只等实际编辑器PID，58项测试原生退出0。未操作其他工作树、许可服务、runtime或集成锁。
+真实数据链check-data-chain通过，功法29/29、术法84/84、神通31/31、language keys649；管理投影check-task-cards、check-review-text与提交前whitespace/暂存diff检查随最终归档执行，具体提交门禁以本轮工具成功结果为准。清理仅非语义序列化空格，不重复已通过的未变化运行。
+相邻共享夹具不含移动/面积执行器，最低射程2技能无法施放；全模拟仍现有空间/面积/选招。两端既有普通伤害/面向/防御/被动差异保留，特别石甲兽组战结果不同，不能宣称正式场景难度已验收。长战20倍HP是压力输入，恢复方败而资源净支出为负，不把压力池当生产内容。高阶NPC占位、UI、点击/动画总时长和全量L2内容仍在本轮外。
+本轮是在原冻结矩阵内校准批准候选，没有新运行时错误或需要新增门禁的经验事实，收尾不写空经验候选、不查重或修改经验索引。完成只归档本任务并移除其队列/backlog行，下游blockedBy及具名前置继续保留；正式master后由QueueMaintenance处理，不关闭父项。
