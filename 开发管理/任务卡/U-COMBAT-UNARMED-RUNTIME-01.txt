@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：原冻结范围遗漏 ContentImporterArchitectureTests.cs 和 AdventureNodeDispatchTests.cs，已造成13项直接夹具失败。是否补齐这两条测试路径后继续原验收，保持原范围并明确接受这13项缺口，或暂停？",
+  "stateReason": "负责人回复已落实范围：DEC-20261011-CD26BA705C0F9E/A",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -119,14 +119,11 @@
     "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset",
     "src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset.meta",
     "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset",
-    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta"
+    "src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset.meta",
+    "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "executionModel": "gpt-6.1-sol",
   "automationCheckpoint": {
     "schemaVersion": 1,
@@ -473,6 +470,19 @@
     "taskContextDigest": "c30fed6b874df05c21254db22d62742da85fb39a69d81c27cc105f96df5f5f0a",
     "createdAt": "2026-10-11T12:45:51.2118396+08:00",
     "queueIndex": 0
+  },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261011-CD26BA705C0F9E",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "7ff028817f16061f0ea75bf4ae9a2fe22291dc33434d371745d68ef9c9c06693"
   }
 }
 ---TASK-BODY---
@@ -532,3 +542,11 @@
 - EncounterCoordinator.RefreshGrowth与Session真实同步入口一并刷新AP/v/realm/有效档案，失效旧报价；不补AP、不清普攻次数。此处业务同步归RUNTIME，完整只读DTO和视图显示归PREVIEW，不能只改入场而漏成长刷新。
 - 保存schema6及4→5→6、5→6严格迁移/6拒绝按合同执行，退役列校验先于清空，失败无live/原文件变化；不修改真实存档。GameData.SharedProfile/LoadProductionAttacks最小读取新字段/九ID；GuanzhongPlaytestAudit只读取真实新身份，旧证据不被自动当新证据。此卡不实现全模拟选招或定案平衡。
 - 精确新增测试路径只授权更新直接创建/快照/保存夹具的显式body_human来源、旧四ID/旧无攻击断言及定向新矩阵；保留伪造源/坏档/原子拒绝。不能批量删断言或用测试武器替代正式场景。既有BasicAttack悬赏失败仍待SCENE查真实结果，不在此卡跨奖励边界修补。
+
+## 本次决策批准后的范围与继续步骤
+
+- 在原108条精确允许路径之外，只增加 src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs 与 src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs，合计110条；保留 checkpoint 及生命周期路径。结果仍是原单一创建→成长→保存→正式入战链，不新增责任方或其他功能。
+- 消费已重放 checkpoint 和本卡验证记录；重新风险预检后，完整读取上述两份测试的相关逻辑单元。ContentImporterArchitectureTests 的23列夹具必须显式传权威族并保留12项非法输入拒绝断言；AdventureNodeDispatchTests 的正式攻击夹具必须提供完整九档案/五身体映射并保留生产完整性检查。不得为通过测试放松生产校验。
+- 继续完成原实施与验证矩阵，修复允许范围内与本轮有关的失败；1068项中205项失败的现有诊断不是完成证据。两份新增测试的13项失败必须消除，其余相关失败也必须修复。确证无关的缺美术源输入失败单列证据，不宣称全套通过；如再发现范围外直接回归或需要跨未授权所有者，立即停止回交。
+- 必须取得正式玩家和石甲兽身体攻击、敌方回合结束、预览与实付一致及保存重入证据，完成变档保留回合余额/次数并失效旧报价、武器固定档不随成长升级、4→5→6与5→6合法迁移及非法源原子拒绝。不得用测试武器、假数据、删断言或真实玩家存档代替。
+- 全部完成后才按原规则更新本卡、归档、队列和本分线投影，保留其他任务对本任务的具名前置；形成单一完成candidate，正式集成由共享入口处理。其余原必查、模型、验证、完成、停止和禁止条款均保留。
