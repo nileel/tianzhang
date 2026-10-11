@@ -8,17 +8,16 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP2-PREVIEW-01"
-  ],
-  "stateReason": "仍等待AP2-PREVIEW；当前BasicAttack正式流程返回后悬赏未完成的实跑失败尚未解除，最终场景验收须先核对实际结局/策略/奖励链，不得复用旧结果签通过。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-11最终生产输入定向验收通过：35个PlayMode及225个EditMode用例，双分辨率画面、14次施法计时、真实胜负奖励保存链；负责人舒适度确认仍属CLOSE。",
   "expectedPaths": [
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongUnifiedActionPointAcceptanceTests.cs",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
     "开发管理/统一行动力场景验收记录.txt",
@@ -104,3 +103,12 @@
 
 - 接入合同§六/七规定正式Bootstrap→创角/恢复→遭遇→攻击→返回→保存6完整流程；人形/石甲兽必须用九ID正式生产链。体修及高境样本的进度可达性另标，不把显式合法测试样本说成已有生产突破入口。
 - 保留BasicAttack悬赏Accepted而非ObjectiveCompleted失败的实际结果/回调定位；不以设计或恢复攻击直接算修复。1920×1080、1366×768下记录每回合点击/普攻/动画累计与总时长，费用与承载同步、武器优先及次数保持、旧5/4往返证据绑定最终四表摘要；由负责人确认舒适度。既有UnifiedActionPointAcceptanceTests及.meta为唯一计划新验收脚本，不新增运行系统。
+
+## 2026-10-11 直接验收路径准备
+
+- 负责人直接指定手动执行本卡。最终输入实跑暴露既有SwapSpell测试仍以凡人施放练气术法、使用旧CD10和四次采样夹具；补齐该既有测试文件的精确路径，原子结果、业务所有者与生产路径不变。写测试前重新预检，不改资格、费用或冷却规则，不新增验收框架。
+
+## 2026-10-11 完成
+
+- PREVIEW已于a512b9d1正式进入master。本卡实际模型gpt-6-astra，单主责；最终四表摘要、原始失败/复验、35项PlayMode和225项EditMode、两分辨率画面及实测14次施法操作时长见开发管理/U-COMBAT-AP-SCENE-01-验证记录.txt。
+- 默认凡人空手与石甲兽生产流程单独验证；明确区分高境/结局/未命中测试样本，不签自然胜率或操作舒适度。归档本卡并移除自身backlog行，下游CLOSE及父项仍保留待交付核对与负责人实际体验。

@@ -62,6 +62,9 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator BeginEncounter(bool reserveRecovery, bool reserveAttack = false)
         {
             // Existing character-domain API and real production spells; no invented content or session replacement.
+            // New characters are mortal; this spell-functionality fixture explicitly meets the production requirement.
+            GameBootstrap.RequireRuntime().Player.RestoreProgression(
+                new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
             if (reserveRecovery)
                 Assert.IsTrue(GameBootstrap.RequireRuntime().Player.AbilityLoadout.UnequipSpell(Recovery));
             if (reserveAttack)
@@ -209,13 +212,13 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(session.TurnScheduler.CurrentTick - startTick, Is.LessThan(200));
             }
             Assert.That(session.TurnScheduler.CurrentTick - startTick, Is.GreaterThanOrEqualTo(initialCd));
-            Assert.That(bar.ArtButton.interactable, Is.True);
+            Assert.That(bar.ArtButton.interactable, Is.True, hud.Snapshot.ArtActions[0].Targets[0].RejectionReason);
             bar.ArtButton.onClick.Invoke();
             Assert.That(input.Preview.CanConfirm, Is.True);
             int ap = spawned.Player.ActionPointsRemainingUnits;
             input.ConfirmCandidate();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - 50000));
-            Assert.That(spawned.Player.GetCooldown(Attack), Is.EqualTo(10));
+            Assert.That(spawned.Player.GetCooldown(Attack), Is.Zero, "The final production Guanshiji has CD 0.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.EqualTo(2));
         }
 
@@ -230,7 +233,9 @@ namespace TianZhang.Tests.PlayMode
             input.ConfirmCandidate();
             Assert.That(State(), Is.EqualTo(before), "Changed authority facts invalidate the original quote.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
-            bar.ArtButton.onClick.Invoke(); input.ConfirmCandidate();
+            bar.ArtButton.onClick.Invoke();
+            Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+            input.ConfirmCandidate();
             yield return Ready();
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
@@ -335,7 +340,7 @@ namespace TianZhang.Tests.PlayMode
         private sealed class CombatRandom : ICombatResolutionRandomSource
         {
             public int Count { get; private set; }
-            public float NextPercent() => Count++ % 4 == 0 ? 0f : 99f;
+            public float NextPercent() => Count++ % 5 == 0 ? 0f : 99f;
         }
     }
 }

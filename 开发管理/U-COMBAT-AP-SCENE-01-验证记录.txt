@@ -1,0 +1,57 @@
+# U-COMBAT-AP-SCENE-01 验证记录
+
+日期：2026-10-11。负责人直接指定手动Codex执行PREVIEW及SCENE；实际模型gpt-6-astra，单主责。正式入口为StartMenu/Bootstrap→创角→World→Settlement→AdventureScene，运行时仍由AdventureSceneInstaller、EncounterCoordinator及CombatSession负责。未修改业务规则、生产数值、AI、奖励或保存算法。
+
+## 最终输入与预检
+
+起始master=e26021c9054f2d0ec4b5d37d00d355a4ab43df92，PREVIEW正式提交a512b9d1，本记录绑定其后SCENE测试提交。每次正式Unity运行使用本工作区当前源码与既有生产资产。Unity版本6000.3.18f1。
+
+AP-GROWTH@0.1；最终四表摘要e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc。四表SHA256与TUNING/BALANCE逐字节一致：
+- AttackProfiles：7b2b3ce081e6e805340fc52f38bb46962e180d976184a6c3a23696f6ff970597
+- RealmCombatGrowth：9a95d5db6672e8e15a8746d377c601a1e24d28ffe8063aecdf7bd0c4c4216b23
+- CombatEffectTierRules：86b564b97c92b6ac75e2617d4f99f8ccace3087ec8033faf4bcccf36540fdc91
+- CombatActionEconomyRules：6268373c3bdd872d06a406fcdf7f3332dd3a29f79383e353c29dfb04c52246fe
+
+本卡初始预检无命中。实际命令验收暴露既有SwapSpell测试路径遗漏，按状态维护规则暂停测试写入，补齐该单文件路径并重新预检：taskCardDigest=6d4d1e384f8b4f6f87b50d993eb797f5000c4294ddf2485e8d5f8190a28fad93，indexDigest=89f1e6153a747b1b9dfc15e06e30106877901d6e0e759ccf03ffda8b36a8c899，matched/mustRead/gates均空。仍为同一最终场景验收原子结果；没有新增生产所有者或验收框架。
+
+## 实跑结果
+
+使用Unity原生-runTests -projectPath D:\天章游戏开发\src -testPlatform PlayMode或EditMode -testFilter <下列过滤器> -testResults <XML> -logFile <同名log>。图形PlayMode不传-batchmode/-nographics，EditMode传两者。XML/log均在src/Logs，按文件保存失败与后续有效复验，不覆盖成虚假全绿报告。
+
+| 结果文件 | 过滤范围 | 结果 |
+|---|---|---|
+| ap-scene-final.xml | BasicAttack、Movement、Timeline、Layout、Preview既有方法及14次施法 | 23项，17通过、6失败，失败根因与复验见下文 |
+| ap-scene-recheck.xml | Preview.Ap2、HudShows、BasicAttack两项采样、Layout胜负返回 | 10/10通过 |
+| ap-preview-final.xml | Preview.Ap2Weapon、Ap2Unarmed、HudShows；最终预测文案 | 3/3通过 |
+| ap-scene-commands.xml | CombatItem、CombatEquipment、CombatSwapSpell | 10项，8通过、2个过期换术夹具失败 |
+| ap-scene-swap-final.xml | CombatSwapSpell全3项 | 3/3通过 |
+| ap-scene-editmode.xml | GuanzhongFormalEndToEndTests | 6/6通过 |
+| ap-scene-authority.xml | CombatRealmGrowthTests、CombatRealmStatusTests、CombatActionPointKernelTests、保存临时账本排除及旧4/5到6迁移方法 | 219/219通过 |
+
+以每个fullname的最后有效结果合并：35个不同PlayMode用例全通过；225个EditMode用例全通过，0跳过。这是本卡定向验收，不是整个项目全部测试通过。已通过且后续输入未变化的组不重复运行。
+
+原始证据SHA256：ap-preview-final.xml=1a0bf170b9bc8df5b382f57418a2fc163c4868359ac03c59d1f06574492b3d58；ap-scene-recheck.xml=c7e9343fafd73b878d7a8b178ae7f4016b87a18c9ef2f08334c7d5eaa88c7d2f；ap-scene-swap-final.xml=0dfa78a1f6dfba5636d55aeaa94e098862d92ce96dc9eea09f36e80ecac1ae47；ap-scene-authority.xml=066668e28e0798fbc6eacfbe77cca196bfd71ebf76b3fc52349088e4fd56f353。
+
+## 功能覆盖与失败核验
+
+- 正式移动两种顺序、移动→术法→移动、不同术法/多次攻击、Guard、Wait与结束：Movement、BasicAttack、Preview.HudShows、Timeline真实入口通过。演出防重入、完成后继续本人回合、取消/切目标/退出/过期/死亡目标及重复确认不漏扣，既有Preview各方法通过。
+- 凡人/练气/筑基/金丹AP100/100/300/1000及各成长节点v由RealmGrowth同源表测试验证；正式场景覆盖默认凡人、显式练气、成长筑基与显式金丹样本。不能把高境测试注入说成已有生产突破界面。PREVIEW两分辨率核对首次/第三/第四次费用、换剑刀共享次数、成长不补当回合AP、本人开始才恢复新预算。
+- 重复费用前两次×1、第三×1.25、第四起×1.5；取消/拒绝/准备/过期不累次，未命中照付，换目标/多目标派生只记根动作、下本人回合清零，由最终表内核与正式场景双层证明。CD0重复、正CD剩余tick、换术长冷却保留与仅全局tick下降均通过；CD1边界及状态时长归内核定向组，不虚构生产CD1技能。
+- 状态境界、低阶自增益承载及第五控制样本由RealmStatus/Kernel真实Importer→Adapter→规则链验证。这些显式状态夹具不是新增生产术法；现有正式生产ID范围仍为批准九档案。保存测试确认临时AP/CD/次数不进长期档案，合法旧schema4/5读取不写原文件，显式保存6后再次读取稳定。
+- 道具库存、取消/库存变化拒绝、失败初始保存、胜负后显式保存和重入，以及剑/刀换装胜负往返均通过。换术取消、过期报价、AP不足、两次上限、退出Guard、冷却保留与恢复可用通过。
+- 旧BasicAttack悬赏Accepted失败本轮已复验：当前完整流程显式将敌人设为1HP结局夹具，合法胜利后ObjectiveCompleted→Claimed→保存/载入保持；两分辨率胜利/失败返回另各通过。证明奖励回调按真实结局运行，不证明默认角色无需策略就能自然获胜。没有修改奖励代码，也不把历史失败仅凭空手恢复推定为修复。
+- 默认未装备玩家的正式创角→保存→载入→入战实跑仍为basic_body_human_fanren，石甲兽为basic_body_shijiahou_lianqi，预览/实付20AP，敌方有限回合后回到玩家。这个用例不改角色属性、装备、HP或档案；长串施法/成长可视测试则显式把临时双方DodgeRate设100以维持序列，两类证据分别记录。
+
+本轮修复的测试根因：BasicAttack边界采样及Preview/Layout随机夹具仍按4次，而生产已有命中/暴击/格挡/护盾/控制5次；Layout失败返回重复调用已执行的装备夹具；Preview的layoutFailures在NUnit同实例用例间遗留；SwapSpell仍用默认凡人施放要求练气的档案，并断言旧贯石击CD10。仅修正测试准备/断言，保留失败保护。SwapSpell改为明确合法练气样本、CD0和5样本后3/3通过。UI溢出由PREVIEW的直接显示所有者修正，SCENE未修补业务算法。
+
+## 画面与操作时长
+
+正式Game View均为1920×1080及1366×768；截图及数值几何在src/Logs/ap-hud，最终版本实际打开核对武器第3/4次、空手成长拒绝、下本人回合、正CD及14次施法耗尽画面。预览22号三行preferredHeight95/91.36，小于viewport100/99.90；动作条真实1000AP余额、费用、倍率、档位/承载与拒绝原因可见。保留条件CT预测，不承诺固定顺位。
+
+14次贯石击为显式金丹样本，一个本人回合、tick13不变，支出987.5AP/168MP，余额12.5AP；第15次报价75AP且按钮不可用。每回合14次术法、0次普攻，选择+确认28次调用。1920实测演出及帧等待14.080秒、总操作14.086秒；1366为14.094/14.098秒。通过Unity按钮事件与确认入口连续驱动，计时不含人类阅读/思考/移动鼠标；不是用户自然点击计时或“玩起来不累”的结论。
+
+## 收尾边界
+
+该卡功能及画面技术验收通过；操作舒适度和完整DAG交付核对仍由既有D-COMBAT-AP-CLOSE-01收口，父项保持未关闭。没有改变自动化配置/runtime；两owner与集成锁空闲时手动实施、按各卡精确路径提交。生产CSV/场景/规则资产未变，复用TUNING的严格数据链和BALANCE的最终数值证据，不重复BattleSim或导入。Unity顺带产生的ProjectSettings两处空字段尾空格恢复；已有总结及美术文件不纳入提交。
+
+新经验仅使用本轮事实评估；上述夹具过期属于具体输入迁移，UI问题已有EXP-UNITY-015/016覆盖，本轮不新增经验ID/风险索引或额外门禁。

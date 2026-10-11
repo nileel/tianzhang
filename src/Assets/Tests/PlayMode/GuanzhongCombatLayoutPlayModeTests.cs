@@ -138,7 +138,7 @@ namespace TianZhang.Tests.PlayMode
             if (!victory)
             {
                 Assert.IsTrue(session.Combatants.TryGet("enemy", out var outcomeEnemy));
-                GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(outcomeEnemy);
+                Assert.AreEqual("basic_iron_sword", outcomeEnemy.BasicAttackProfileId, "Entry already prepared the outcome fixture.");
             }
             coordinator.SetCombatResolutionRandomSource(new OutcomeCoverageRandom(session, victory));
             presenter.InspectTarget("enemy");
@@ -187,7 +187,7 @@ namespace TianZhang.Tests.PlayMode
             public float NextPercent()
             {
                 bool hit = victory ? session.CurrentActorId == "player" : session.CurrentActorId == "enemy";
-                return roll++ % 4 == 0 && hit ? 0 : 99;
+                return roll++ % 5 == 0 && hit ? 0 : 99;
             }
         }
 

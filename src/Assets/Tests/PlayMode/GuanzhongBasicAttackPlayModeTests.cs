@@ -480,21 +480,21 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator FormalPlayerExecutionSamplesHitCriticalAndBlockThresholds()
         {
-            var hitBoundary = new SequenceCombatRandomSource(50f, 50f, 50f, 50f);
-            var missAboveBoundary = new SequenceCombatRandomSource(51f, 0f, 0f, 0f);
+            var hitBoundary = new SequenceCombatRandomSource(50f, 50f, 50f, 50f, 99f);
+            var missAboveBoundary = new SequenceCombatRandomSource(51f, 0f, 0f, 0f, 99f);
             Assert.Greater(ExecutePlayerBasicAttack(hitBoundary), 0);
             Assert.AreEqual(0, ExecutePlayerBasicAttack(missAboveBoundary));
-            Assert.AreEqual(4, hitBoundary.Count);
-            Assert.AreEqual(4, missAboveBoundary.Count);
+            Assert.AreEqual(5, hitBoundary.Count);
+            Assert.AreEqual(5, missAboveBoundary.Count);
 
-            var criticalBelowBoundary = new SequenceCombatRandomSource(0f, 49f, 99f, 99f);
-            var criticalAtBoundary = new SequenceCombatRandomSource(0f, 50f, 99f, 99f);
+            var criticalBelowBoundary = new SequenceCombatRandomSource(0f, 49f, 99f, 99f, 99f);
+            var criticalAtBoundary = new SequenceCombatRandomSource(0f, 50f, 99f, 99f, 99f);
             int criticalDamage = ExecutePlayerBasicAttack(criticalBelowBoundary);
             int normalDamage = ExecutePlayerBasicAttack(criticalAtBoundary);
             Assert.Greater(criticalDamage, normalDamage);
 
-            var blockBelowBoundary = new SequenceCombatRandomSource(0f, 99f, 49f, 99f);
-            var blockAtBoundary = new SequenceCombatRandomSource(0f, 99f, 50f, 99f);
+            var blockBelowBoundary = new SequenceCombatRandomSource(0f, 99f, 49f, 99f, 99f);
+            var blockAtBoundary = new SequenceCombatRandomSource(0f, 99f, 50f, 99f, 99f);
             int blockedDamage = ExecutePlayerBasicAttack(blockBelowBoundary);
             int unblockedDamage = ExecutePlayerBasicAttack(blockAtBoundary);
             Assert.Less(blockedDamage, unblockedDamage);
@@ -505,7 +505,7 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator FormalEnemyRunCombatBranchUsesTheSharedSampler()
         {
             CombatSession session = CreateCombatSession(1, 100, out CombatantSnapshot player, out CombatantSnapshot enemy);
-            var source = new SequenceCombatRandomSource(50f, 50f, 50f, 50f);
+            var source = new SequenceCombatRandomSource(50f, 50f, 50f, 50f, 99f);
             EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
             SetPrivateField(coordinator, "enemyPolicy", new LegalActionAI());
             MethodInfo runCombat = typeof(EncounterCoordinator).GetMethod(
@@ -518,7 +518,7 @@ namespace TianZhang.Tests.PlayMode
             for (int frame = 0; frame < 10 && source.Count == 0; frame++)
                 yield return null;
 
-            Assert.AreEqual(4, source.Count, "The formal enemy action did not sample exactly four rolls.");
+            Assert.AreEqual(5, source.Count, "The formal enemy action must sample hit, critical, block, shield and control.");
             Assert.Less(player.CurrentHealth, healthBefore);
             coordinator.StopCoroutine(coroutine);
             Object.Destroy(host);
