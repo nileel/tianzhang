@@ -1,4 +1,4 @@
-﻿---TASK-META---
+---TASK-META---
 {
   "schemaVersion": 2,
   "id": "N-COMBAT-UNARMED-SIM-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "U-COMBAT-UNARMED-RUNTIME-01已完成归档；本卡完整合同、精确路径与验证边界仍成立，风险预检通过，已进入队列。",
+  "stateReason": "双入口同源空手成长、费用承载及共享普攻账本已实施并验证；候选完成归档，等待共享入口正式重放。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",
@@ -86,3 +86,9 @@
 
 - 接入合同§二/三/六冻结九ID与族档映射；全模拟Character/Combat.CreateAbilities与Stage.Profiles/Snapshot/NativeBattle都从GameData同一已验证映射选择，普通/体修同body_human且既有功法肉攻为唯一强化源，石甲兽用正式自身族。当前已归档AP2-SIM的A方案特殊原型保持。
 - 两端按同一fixed_unarmed显式肉攻承载及基础费，动作次数键仍角色basicAttack；覆盖凡人至金丹、变档/武器优先/石甲兽、双方1v1/2v2、坏源与取消/未命中/本人重置。当前单档武器只代表练气档，不新增高阶生产武器。定向自测可沿Program既有模式新增--self-test-unarmed，报告输入摘要/种子/每回合动作/AP/输出，不签平衡。
+
+## 2026-10-11 完成记录
+
+- Codex以gpt-6.1-sol单主责完成冻结双入口空手接入；正式九ID、四人形档和石甲兽来源、武器优先、共享重复账本及每回合报告均已核验。
+- Release构建、默认运行、空手自测、原AP2/行动经济与受影响旧入口回归通过；same-tier/locked-qi共504组报告通过。完整证据见开发管理/N-COMBAT-UNARMED-SIM-01-验证记录.txt。
+- 不签新平衡、不改Unity/生产参数；下游具名前置保留，正式重放后由既有维护阶段处理。

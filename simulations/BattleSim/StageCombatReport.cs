@@ -398,7 +398,7 @@ static class Ap2CombatReport
         if (c.GongFaName == "苦行剑典" && c.Style == "yuqing_kuxing" && c.Realm != "凡人")
             profiles.Add(GameData.SharedProfile(GameData.GenericProfile("KuxingAction",c.AbilityTierId)));
         profiles.AddRange(c.ProductionArtIds.Select(id => GameData.SharedProfile(GameData.ProductionAttacks[id])));
-        if (c.BasicAttackProfile != null) profiles.Add(GameData.SharedProfile(c.BasicAttackProfile));
+        profiles.Add(GameData.SharedProfile(c.EffectiveBasicAttackProfile));
         return profiles.ToArray();
     }
     internal static CombatantSnapshot Snapshot(string id, CombatTeam team, Character c, NativeHex position)
@@ -412,7 +412,7 @@ static class Ap2CombatReport
             id + ":" + (p.RuleMetadata.PrototypeDefinitionRef == "" ? p.Id : p.RuleMetadata.PrototypeDefinitionRef));
         var actor = new CombatantSnapshot(id,team,position,c.Primary["反应"],c.Primary["HP"],c.IsDead ? 0 : c.Primary["HP"],
             c.Primary["肉攻"],c.Primary["神攻"],c.Primary["肉防"],c.Primary["神防"],c.ActionPointMaximumUnits,c.MovementEfficiencyMilliUnits,
-            realmMultiplier:c.Realm switch { "金丹" => 6f,"筑基" => 3f,_ => 1f },
+            realmMultiplier:c.ProductionRealmMultiplier ?? (c.Realm switch { "金丹" => 6f,"筑基" => 3f,_ => 1f }),
             equippedArtProfileIds:arts,availableArtProfileIds:arts,basicAttackProfileId:profiles.SingleOrDefault(p => p.Kind == CombatAttackKind.Basic)?.Id,
             equippedDivineProfileIds:divine,availableDivineProfileIds:divine,rawSpirit:c.Innate["魂魄"],realmStage:c.Realm,
             abilityInstanceIds:instances,rawMind:c.Primary["神识"])
@@ -433,19 +433,44 @@ static class Ap2CombatReport
     {
         var actors = characters.Select((c,i) => Snapshot("actor-"+i,
             i < (group ? 2 : 1) ? CombatTeam.Player : CombatTeam.Enemy,c,
-            new NativeHex(i < (group ? 2 : 1) ? 0 : 1,group ? i%2 : 0))).ToArray();
+            group ? new[] { new NativeHex(0,0), new NativeHex(1,0), new NativeHex(0,1), new NativeHex(1,-1) }[i] :
+                new NativeHex(i == 0 ? 0 : 1,0))).ToArray();
         foreach (var actor in actors) actor.Facing = actor.Position.DirectionTo(actors.First(a => a.Team != actor.Team).Position);
-        return new CombatSession(actors,characters.SelectMany(Profiles).GroupBy(p => p.Id,StringComparer.Ordinal).Select(g => g.First()),
+        return new CombatSession(actors,characters.SelectMany(Profiles)
+            .Concat(GameData.ProductionAttacks.Values.Where(p => p.BasicBindingKind != "").Select(p => GameData.SharedProfile(p)))
+            .GroupBy(p => p.Id,StringComparer.Ordinal).Select(g => g.First()),
             new Space(),Ordinary(),ruleSet:GameData.Rules);
+    }
+    internal static void RefreshGrowth(CombatSession session, string actorId, Character c) =>
+        session.RefreshActionEconomy(actorId,c.ActionPointMaximumUnits,c.MovementEfficiencyMilliUnits,c.Realm,c.EffectiveBasicAttackProfile.Cost.DefinitionRef);
+
+    internal static object[] FullTurnSummary(Combat.GroupRoundResult battle, IReadOnlyList<Character> characters, bool group)
+    {
+        var previous = characters.Select(c => c.Primary["HP"]).ToArray();
+        var damage = new Dictionary<int,int>();
+        int teamSize = group ? 2 : 1;
+        foreach (var e in battle.Economy)
+        {
+            if (e.Event == "action_committed")
+                damage[e.Turn] = damage.GetValueOrDefault(e.Turn) + Enumerable.Range(0,characters.Count)
+                    .Where(i => i/teamSize != e.ActorIndex/teamSize).Sum(i => Math.Max(0,previous[i]-e.HealthByActor[i]));
+            previous = e.HealthByActor.ToArray();
+        }
+        return battle.Economy.GroupBy(e => (e.Turn,e.ActorIndex)).Select(g => (object)new {
+            g.Key.Turn,g.Key.ActorIndex,actions=g.Count(e => e.Event == "action_committed"),
+            moves=g.Count(e => e.Event == "move_committed"),apUnits=g.Sum(e => e.CostUnits),
+            spiritUnits=g.Where(e => e.Event == "action_committed").Sum(e => Math.Max(0,e.SpiritBefore-e.SpiritAfter)),
+            damage=damage.GetValueOrDefault(g.Key.Turn) }).ToArray();
     }
     internal static object Battle(IReadOnlyList<Character> characters,bool group,int seed,int turnLimit = 100)
     {
         var session = Session(characters,group); var service = new CombatCommandService(); var random = new Random(seed);
-        var trace = new List<object>(); int turns = 0;
+        var trace = new List<object>(); var ownTurns = new List<object>(); int turns = 0;
         while (!session.IsFinished && turns < turnLimit)
         {
             var next = service.AdvanceUntilAction(session); if (!next.HasActor) break;
             turns++; var actor = session.Combatants.All.Single(a => a.Id == next.ActorId);
+            int count=0,paid=0,damage=0,spirit=0;
             while (actor.OwnTurnActive && !session.IsFinished)
             {
                 var enemy = session.Combatants.All.Where(a => a.Team != actor.Team && a.IsAlive).OrderBy(a => a.CurrentHealth).ThenBy(a => a.Id).First();
@@ -470,10 +495,12 @@ static class Ap2CombatReport
                     throw new InvalidOperationException("ap2_shared_commit:"+result.RejectionReason);
                 trace.Add(new { turns,actor.Id,tick,selected.ProfileId,quote.ActionPointCostUnits,quote.CommittedUseCount,quote.RepeatMultiplierPermille,
                     quote.AbilityTierId,actor.CurrentHealth,actor.CurrentSpirit,actor.ShouyiStacks,actor.FudanStacks,result.Damage });
+                count++; paid+=result.ActionPointSpentUnits; damage+=result.Damage.Sum(d => d.FinalDamage); spirit+=result.SpiritSpent;
             }
+            ownTurns.Add(new { turns,actor.Id,actions=count,apUnits=paid,spiritUnits=spirit,damage });
             if (actor.OwnTurnActive && !session.IsFinished) service.Execute(session,new CombatCommand(CombatCommandKind.EndTurn,actor.Id));
         }
-        return new { turns,ticks=session.TurnScheduler.CurrentTick,trace,remaining=session.Combatants.All.Select(a => new { a.Id,a.CurrentHealth,a.CurrentSpirit }) };
+        return new { turns,ticks=session.TurnScheduler.CurrentTick,trace,ownTurns,remaining=session.Combatants.All.Select(a => new { a.Id,a.CurrentHealth,a.CurrentSpirit }) };
     }
     internal static int Run(IReadOnlyList<Program.BuildDef> builds,string tierMode)
     {
@@ -494,7 +521,10 @@ static class Ap2CombatReport
             Combat.ResetDeterministicRandom();
             var full=group ? Combat.Simulate2v2Detailed(board,chars[0],chars[1],chars[2],chars[3]) : Combat.SimulateDetailed(board,chars[0],chars[1]);
             Console.WriteLine(JsonSerializer.Serialize(new { realm,build=builds[i].Name,group,mirror,tierMode,
-                full=new { full.WinnerTeam,full.Turns,full.GlobalTick,commands=full.Economy.Count(e=>e.Event=="action_committed"),paid=full.Economy.Sum(e=>e.CostUnits) },
+                input=chars.Select(c => new { c.Name,c.Realm,c.GongFaName,c.UnarmedAttackFamilyId,c.Primary,
+                    basic=c.EffectiveBasicAttackProfile,movement=c.MovementInput }),
+                full=new { full.WinnerTeam,full.Turns,full.GlobalTick,commands=full.Economy.Count(e=>e.Event=="action_committed"),paid=full.Economy.Sum(e=>e.CostUnits),
+                    ownTurns=FullTurnSummary(full,chars,group) },
                 shared=Battle(chars,group,20261010+i) }));
         }
         return 0;

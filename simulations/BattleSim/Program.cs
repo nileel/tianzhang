@@ -158,6 +158,8 @@ class Program
 
         if (args.Length == 2 && args[0] == "--self-test")
             return BattleSimSelfTests.Run(args[1]);
+        if (args.Length == 1 && args[0] == "--self-test-unarmed")
+            return BattleSimSelfTests.Run("unarmed");
 
         bool g2Audit = args.Length >= 1 && args[0] == "--g2-audit";
         bool g2Attribution = args.Length >= 1 && args[0] == "--g2-attribution";
@@ -516,6 +518,11 @@ class Program
                 for (int profileIndex = 0; profileIndex < suppressionProfiles.Count; profileIndex++)
                 {
                     var scenario = GoldenCoreSuppressionExitStats.CreateTacticalScenario(z, g, suppressionProfiles[profileIndex]);
+                    // These existing exact-stat clones need the same explicit attack inputs as their sources.
+                    scenario.Zifu.UnarmedAttackFamilyId = z.UnarmedAttackFamilyId;
+                    scenario.Gold.UnarmedAttackFamilyId = g.UnarmedAttackFamilyId;
+                    scenario.Zifu.BasicAttackProfile = z.BasicAttackProfile;
+                    scenario.Gold.BasicAttackProfile = g.BasicAttackProfile;
                     if (scenario.HasActiveSwitch)
                     {
                         var (switchZw, _, _) = Combat.Simulate(scenario.Zifu, scenario.Gold, roundsPerPair);

@@ -13,6 +13,7 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "unarmed") return RunChecked(suite, RunUnarmed);
         if (suite == "unarmed-config") return RunChecked(suite, RunUnarmedConfig);
         if (suite == "ap2") return RunChecked(suite,RunAp2);
         if (suite == "equipment-production") return RunChecked(suite, RunEquipmentProduction);
@@ -322,13 +323,229 @@ static class BattleSimSelfTests
 
     internal static Character Ap2Fixture(string realm = "金丹", string style = "physical", string tier = "tier_lianqi", int hp = 10000)
     {
-        var c = new Character { Name="ap2-fixture",Realm=realm,Style=style,FixedTestAbilityTierId=tier,
+        var c = new Character { Name="ap2-fixture",Realm=realm,Style=style,FixedTestAbilityTierId=tier,UnarmedAttackFamilyId="body_human",
             FormedState=realm=="金丹" ? "成丹" : "",DanJiType=realm=="金丹" ? "explicit-test-qualification" : "",
             Innate=new() { ["根骨"]=8,["魂魄"]=25,["神识"]=10,["资质"]=8,["气运"]=8 },
             Primary=new() { ["HP"]=hp,["MP"]=100000,["肉攻"]=5000,["神攻"]=5000,["肉防"]=1000,["神防"]=1000,["反应"]=100,["神识"]=25 } };
         var movement=GameData.ProjectMovement(realm,realm=="练气" ? 8 : 2,"");
         c.SetActionEconomyInputs(movement.ActionPointMaximumUnits,movement.EffectiveMilliUnits); c.AssignArts(); return c;
     }
+    static Character UnarmedFixture(string realm, bool trained = false)
+    {
+        var c = Character.Create(trained ? "explicit-gongfa-growth" : "ordinary", Character.InnateKeys.ToDictionary(k => k, _ => 8), "physical");
+        c.GongFaName = trained ? "含弘光大典" : "";
+        var weights = trained ? GameData.WeightsFromGongFa(c.GongFaName) : Character.InnateKeys.ToDictionary(k => k, _ => .2);
+        c.FinalizeStats(realm, realm == "凡人" ? 0 : realm == "练气" ? 8 : 2, "中品", weights);
+        // Pure-basic functional fixtures; this does not alter production qualification or parameter rows.
+        c.Primary["HP"] = 1000000; c.Primary["反应"] = 100; c.Secondary.Clear(); c.Secondary["命中率"] = 100;
+        return c;
+    }
+
+    static Combat.UnitState UnarmedUnit(Character c)
+    {
+        var u = new Combat.UnitState { Char = c, Id = "actor-0", AP = c.ActionPointMaximumUnits, Limit = c.ActionPointMaximumUnits };
+        u.Abilities = Combat.CreateAbilities(u); return u;
+    }
+
+    static CombatCommand BodyCommand(CombatantSnapshot actor, string target = "actor-1", bool miss = false) =>
+        new(CombatCommandKind.BasicAttack, actor.Id, target, actor.BasicAttackProfileId,
+            new CombatResolutionRolls(miss ? 100 : 0, 100, 100, 100, 100));
+
+    static void RunUnarmed()
+    {
+        RunUnarmedConfig();
+        Console.WriteLine(JsonSerializer.Serialize(new { report = "N-COMBAT-UNARMED-SIM-01", seed = 20260712, sharedSeed = 20261011,
+            GameData.Rules.RuleSetVersion, GameData.Rules.SourceDigest, ids = GameData.ProductionAttackIds,
+            sources = new[] { "src/Assets/DataConfig/Characters.csv", "src/Assets/DataConfig/Enemies.csv", "src/Assets/DataConfig/AttackProfiles.csv" }
+                .ToDictionary(p => p, GameData.InputHash), balance = "NOT_EVALUATED" }));
+        var service = new CombatCommandService(); var board = new HexBattlefield();
+        // Four body tiers, ordinary / actual gongfa growth, fixed Qi weapons, both sides and layouts.
+        foreach (string realm in GameData.RealmOrder)
+        foreach (bool trained in new[] { false, true })
+        foreach (string weapon in new[] { "", "basic_iron_sword", "basic_iron_blade" })
+        {
+            var c = UnarmedFixture(realm, trained);
+            if (weapon != "") c.BasicAttackProfile = GameData.ProductionAttacks[weapon];
+            var basic = c.EffectiveBasicAttackProfile;
+            AssertEqual(weapon == "" ? "fixed_unarmed" : "fixed_weapon", basic.EffectBudgetMode, "explicit source selection");
+            int capacity = weapon == "" ? basic.UnarmedPhysicalAttackCapacity : GameData.Rules.GetTier(basic.AbilityTierId).PhysicalAttackCapacity;
+            var native = GameData.SharedProfile(basic);
+            AssertEqual(capacity, native.RuleMetadata.EffectBudgetMode == "fixed_unarmed" ? native.RuleMetadata.UnarmedPhysicalAttackCapacity : native.RuleMetadata.Tier.PhysicalAttackCapacity, "same selected capacity");
+            foreach (bool group in new[] { false, true }) foreach (bool mirror in new[] { false, true })
+            {
+                var chars = group ? new[] { c, UnarmedFixture(realm), UnarmedFixture(realm), UnarmedFixture(realm, true) } : new[] { c, UnarmedFixture(realm) };
+                if (mirror) chars = group ? new[] { chars[2], chars[3], chars[0], chars[1] } : new[] { chars[1], chars[0] };
+                Combat.ResetDeterministicRandom();
+                var full = group ? Combat.Simulate2v2Detailed(board, chars[0], chars[1], chars[2], chars[3],
+                    new[] { new HexCoord(0, 0), new HexCoord(1, 0), new HexCoord(0, 1), new HexCoord(1, -1) }, 4) :
+                    Combat.SimulateDetailed(board, chars[0], chars[1], new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 4);
+                foreach (var e in full.Economy.Where(e => e.Event == "action_committed"))
+                {
+                    var selected = chars[e.ActorIndex].EffectiveBasicAttackProfile;
+                    AssertEqual(CombatRuleSet.CeilRatio(selected.Cost.ActionPointCostUnits, e.RepeatMultiplierPermille, 1000), e.CostUnits, "full exact repeat fee");
+                    AssertEqual(e.CostUnits, e.ActionPointsBeforeUnits - e.ActionPointsRemainingUnits, "full paid once");
+                    AssertEqual(selected.AbilityTierId, e.AbilityTierId, "full fixed weapon / body tier");
+                }
+                // Execute corresponding shared transactions on each actor's actual own turns.
+                var session = Ap2CombatReport.Session(chars, group); var sharedTrace = new List<object>();
+                for (int turn = 1; turn <= 4; turn++)
+                {
+                    var next = service.AdvanceUntilAction(session); AssertEqual(true, next.HasActor, "shared matrix owner");
+                    var actor = session.Combatants.All.Single(a => a.Id == next.ActorId);
+                    var target = session.Combatants.All.First(a => a.Team != actor.Team);
+                    int index = int.Parse(actor.Id.Split('-')[1]); var profile = chars[index].EffectiveBasicAttackProfile;
+                    int count = 0, paid = 0, damage = 0;
+                    while (true)
+                    {
+                        var cmd = BodyCommand(actor, target.Id); var quote = service.Preview(session, cmd);
+                        if (!quote.IsLegal) break;
+                        AssertEqual(count, quote.CommittedUseCount, "shared per-own-turn counter");
+                        int multiplier = count < 2 ? 1000 : count == 2 ? 1250 : 1500;
+                        AssertEqual(CombatRuleSet.CeilRatio(profile.Cost.ActionPointCostUnits, multiplier, 1000), quote.ActionPointCostUnits, "shared same CSV quote");
+                        var result = service.Execute(session, cmd, quote); AssertEqual(true, result.Succeeded, "shared matrix commit");
+                        paid += result.ActionPointSpentUnits; damage += result.Damage.Sum(d => d.FinalDamage); count++;
+                    }
+                    sharedTrace.Add(new { turn, actor.Id, actions = count, apUnits = paid, damage });
+                    service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, actor.Id));
+                }
+                var previousHealth = chars.Select(x => x.Primary["HP"]).ToArray();
+                var damageByTurn = new Dictionary<int, int>();
+                foreach (var e in full.Economy)
+                {
+                    if (e.Event == "action_committed") damageByTurn[e.Turn] = damageByTurn.GetValueOrDefault(e.Turn) + previousHealth.Sum() - e.HealthByActor.Sum();
+                    previousHealth = e.HealthByActor.ToArray();
+                }
+                var fullSummary = full.Economy.Where(e => e.Event == "action_committed").GroupBy(e => (e.Turn, e.ActorIndex))
+                    .Select(g => new { g.Key.Turn, g.Key.ActorIndex, actions = g.Count(), apUnits = g.Sum(e => e.CostUnits), damage = damageByTurn[g.Key.Turn] }).ToArray();
+                AssertSequence(fullSummary.Select(g => g.apUnits).ToArray(), sharedTrace.Select(t => JsonSerializer.SerializeToElement(t).GetProperty("apUnits").GetInt32()).ToArray(), "both entries per turn fees");
+                Console.WriteLine(JsonSerializer.Serialize(new { matrix = "body-weapon", realm, trained, weapon, group, mirror,
+                    input = chars.Select(x => new { x.Name, x.UnarmedAttackFamilyId, x.Primary, profile = x.EffectiveBasicAttackProfile }),
+                    full = fullSummary, shared = sharedTrace }));
+            }
+            // Saturation proves both uses of A are clipped; defense stays at its actual input.
+            var targetFixture = UnarmedFixture(realm); targetFixture.Primary["反应"] = 1;
+            c.Primary["肉攻"] = capacity;
+            Combat.ResetDeterministicRandom();
+            var atCap = Combat.SimulateDetailed(board, c, targetFixture, new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 1);
+            c.Primary["肉攻"] = 100000;
+            Combat.ResetDeterministicRandom();
+            var aboveCap = Combat.SimulateDetailed(board, c, targetFixture, new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 1);
+            AssertEqual(atCap.HpRatioB, aboveCap.HpRatioB, "full attack saturation");
+            var firstHit = aboveCap.Economy.First(e => e.Event == "action_committed");
+            AssertEqual(Combat.Dmg(capacity, targetFixture.Primary["肉防"], 0, mult: basic.Mult),
+                targetFixture.Primary["HP"] - firstHit.HealthByActor[1], "full uses exact selected capacity and actual defense");
+            int SharedDamage(int attack)
+            {
+                c.Primary["肉攻"] = attack; var s = Ap2CombatReport.Session(new[] { c, targetFixture }, false);
+                service.AdvanceUntilAction(s); var a = s.Combatants.All.First(); var cmd = BodyCommand(a);
+                return service.Execute(s, cmd, service.Preview(s, cmd)).Damage.Sum(d => d.FinalDamage);
+            }
+            AssertEqual(SharedDamage(capacity), SharedDamage(100000), "shared attack saturation");
+        }
+        RunUnarmedGrowthLedger();
+        var stone = Character.FromProduction(true, "enemy_shijiahou");
+        AssertEqual("body_shijiahou", stone.UnarmedAttackFamilyId, "formal enemy source");
+        AssertEqual("basic_body_shijiahou_lianqi", stone.EffectiveBasicAttackProfile.Cost.DefinitionRef, "formal enemy binding");
+        foreach (string id in new[] { "char_taiyixiushi", "char_sanxiuqiangdao" })
+            AssertEqual("body_human", Character.FromProduction(false, id).UnarmedAttackFamilyId, "formal character source");
+        foreach (bool group in new[] { false, true }) foreach (bool mirror in new[] { false, true })
+        {
+            var human = UnarmedFixture("练气");
+            human.Primary["反应"] = stone.Primary["反应"];
+            var chars = group ? new[] { human, UnarmedFixture("练气", true), stone, Character.FromProduction(true, "enemy_shijiahou") } : new[] { human, stone };
+            if (group) chars[1].Primary["反应"] = stone.Primary["反应"];
+            if (mirror) chars = group ? new[] { chars[2], chars[3], chars[0], chars[1] } : new[] { chars[1], chars[0] };
+            Combat.ResetDeterministicRandom();
+            var full = group ? Combat.Simulate2v2Detailed(board, chars[0], chars[1], chars[2], chars[3], turnLimit: 12) : Combat.SimulateDetailed(board, chars[0], chars[1], turnLimit: 12);
+            AssertEqual(true, full.Economy.Any(e => e.DefinitionRef == "basic_body_shijiahou_lianqi" && e.Event == "action_committed"), "full formal enemy actually attacks");
+            var shared = Ap2CombatReport.Battle(chars, group, 20261011, 12);
+            AssertEqual(true, JsonSerializer.Serialize(shared).Contains("basic_body_shijiahou_lianqi", StringComparison.Ordinal), "shared formal enemy actually attacks");
+            Console.WriteLine(JsonSerializer.Serialize(new { matrix = "formal-enemy", group, mirror, stone.Primary,
+                full = new { ownTurns = Ap2CombatReport.FullTurnSummary(full, chars, group), trace = full.Economy }, shared }));
+        }
+        Console.WriteLine("UNARMED: 96 paired human/weapon layouts, 4 paired formal enemy layouts, growth/ledger/rejection/miss/reset and production config passed; NOT_BALANCE.");
+    }
+
+    static void RunUnarmedGrowthLedger()
+    {
+        var service = new CombatCommandService(); var c = UnarmedFixture("练气"); var target = UnarmedFixture("练气");
+        var session = Ap2CombatReport.Session(new[] { c, target }, false); service.AdvanceUntilAction(session);
+        var actor = session.Combatants.All.First();
+        for (int i = 0; i < 2; i++)
+        {
+            var cmd = BodyCommand(actor); var q = service.Preview(session, cmd);
+            AssertEqual(25000, service.Execute(session, cmd, q).ActionPointSpentUnits, "first two Qi punches");
+        }
+        var old = service.Preview(session, BodyCommand(actor)); int ap = actor.ActionPointsRemainingUnits;
+        var unit = UnarmedUnit(c); var ability = unit.Abilities.Single(); unit.Uses[unit.UseKey(ability)] = 2; unit.AP = ap;
+        c.FinalizeStats("筑基", 0, "中品", Character.InnateKeys.ToDictionary(k => k, _ => .2));
+        Ap2CombatReport.RefreshGrowth(session, actor.Id, c); unit.RefreshBasicAttack();
+        AssertEqual(ap, actor.ActionPointsRemainingUnits, "growth does not issue new AP");
+        AssertEqual(ap, unit.AP, "full growth does not refill AP");
+        AssertEqual(93750, unit.Quote(unit.Abilities.Single()), "full third use takes new body base");
+        AssertEqual(2, unit.UseCount(unit.Abilities.Single()), "full growth preserves count");
+        AssertEqual(93750, service.Preview(session, BodyCommand(actor)).ActionPointCostUnits, "shared third use takes new body base");
+        AssertEqual(false, service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, actor.Id, "actor-1", old.ProfileId), old).Succeeded, "old quote invalidated");
+        c.BasicAttackProfile = GameData.ProductionAttacks["basic_iron_sword"];
+        Ap2CombatReport.RefreshGrowth(session, actor.Id, c); unit.RefreshBasicAttack();
+        var sword = BodyCommand(actor); var sq = service.Preview(session, sword);
+        AssertEqual(50000, sq.ActionPointCostUnits, "third sword shares punch count");
+        AssertEqual(50000, unit.Quote(unit.Abilities.Single()), "full shared basic key");
+        AssertEqual(ap, unit.AP, "full quotes do not spend");
+        AssertEqual(2, unit.UseCount(unit.Abilities.Single()), "full quotes do not count");
+        // Preview/cancellation and illegal target never consume fee or count.
+        var cancelled = service.Preview(session, sword); var invalid = new CombatCommand(CombatCommandKind.BasicAttack, actor.Id, actor.Id, actor.BasicAttackProfileId);
+        AssertEqual(false, service.Execute(session, invalid).Succeeded, "invalid target refused");
+        AssertEqual(ap, actor.ActionPointsRemainingUnits, "refusal and preview do not spend");
+        AssertEqual(2, service.Preview(session, sword).CommittedUseCount, "refusal and preview do not count");
+        AssertEqual(50000, service.Execute(session, sword, sq).ActionPointSpentUnits, "source switch exact spend");
+        service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, actor.Id));
+        for (int i = 0; i < 3; i++)
+        {
+            var next = service.AdvanceUntilAction(session);
+            if (next.ActorId == actor.Id) break;
+            service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, next.ActorId));
+        }
+        AssertEqual(0, service.Preview(session, BodyCommand(actor)).CommittedUseCount, "only actor's next turn resets");
+        foreach (string weapon in new[] { "basic_iron_sword", "basic_iron_blade" })
+        {
+            c.BasicAttackProfile = GameData.ProductionAttacks[weapon];
+            c.FinalizeStats("金丹", 2, "中品", Character.InnateKeys.ToDictionary(k => k, _ => .2));
+            AssertEqual("tier_lianqi", c.EffectiveBasicAttackProfile.AbilityTierId, "weapon does not grow");
+            AssertEqual(weapon == "basic_iron_sword" ? 40000 : 50000, c.EffectiveBasicAttackProfile.Cost.ActionPointCostUnits, "fixed weapon fee");
+        }
+        var miss = UnarmedFixture("练气"); miss.Secondary["命中率"] = -100;
+        var defender = UnarmedFixture("练气"); defender.Primary["反应"] = 1;
+        Combat.ResetDeterministicRandom();
+        var fullMiss = Combat.SimulateDetailed(new HexBattlefield(), miss, defender, new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 1);
+        AssertEqual(1d, fullMiss.HpRatioB, "full legal miss no damage");
+        AssertSequence(new[] { 0, 1, 2 }, fullMiss.Economy.Where(e => e.Event == "action_committed").Select(e => e.CommittedUseCount).ToArray(), "full misses count");
+        var sharedMiss = Ap2CombatReport.Session(new[] { miss, defender }, false); service.AdvanceUntilAction(sharedMiss);
+        var ma = sharedMiss.Combatants.All.First(); var mc = BodyCommand(ma, miss: true); var mq = service.Preview(sharedMiss, mc);
+        AssertEqual(0, service.Execute(sharedMiss, mc, mq).Damage.Sum(d => d.FinalDamage), "shared legal miss");
+        AssertEqual(1, service.Preview(sharedMiss, mc).CommittedUseCount, "shared misses count");
+        // Explicit input failures, including a weapon that must not conceal a missing family.
+        foreach (string family in new[] { "", "unknown", "body_shijiahou" })
+        {
+            var bad = UnarmedFixture("筑基"); bad.UnarmedAttackFamilyId = family; bad.BasicAttackProfile = GameData.ProductionAttacks["basic_iron_sword"];
+            AssertThrows<Exception>(() => Combat.SimulateDetailed(new HexBattlefield(), bad, defender), "full bad body source");
+            AssertThrows<Exception>(() => Ap2CombatReport.Session(new[] { bad, defender }, false), "shared bad body source");
+        }
+        var wrongWeapon = UnarmedFixture("练气"); wrongWeapon.BasicAttackProfile = GameData.ProductionAttacks["spell_guanshiji"];
+        AssertThrows<Exception>(() => { _ = wrongWeapon.EffectiveBasicAttackProfile; }, "wrong main hand does not fallback");
+        wrongWeapon.BasicAttackProfile = GameData.ProductionAttacks["basic_iron_sword"] with { Cost = GameData.ProductionAttacks["basic_iron_sword"].Cost with { DefinitionRef = "missing_weapon" } };
+        AssertThrows<Exception>(() => { _ = wrongWeapon.EffectiveBasicAttackProfile; }, "missing main hand profile rejected");
+        var unknown = UnarmedFixture("练气"); unknown.Realm = "元婴";
+        AssertThrows<Exception>(() => { _ = unknown.EffectiveBasicAttackProfile; }, "reserved body realm rejected");
+        AssertThrows<Exception>(() => Character.FromProduction(true, "enemy_fengsun"), "unapproved enemy family rejected");
+        var rejected = UnarmedFixture("练气"); rejected.SetActionEconomyInputs(100000, 0);
+        var noRange = Combat.SimulateDetailed(new HexBattlefield(), rejected, defender,
+            new[] { new HexCoord(0,0), new HexCoord(3,0) }, 1);
+        AssertEqual(false, noRange.Economy.Any(e => e.Event == "action_committed"), "full out-of-range candidate rejected");
+        AssertEqual(0, noRange.Economy.Sum(e => e.CostUnits), "full rejected candidates spend nothing");
+        AssertEqual(0, noRange.Economy.Last().CommittedActions, "full rejected candidates count nothing");
+    }
+
     static void RunAp2()
     {
         var service=new CombatCommandService(); var board=new HexBattlefield();
@@ -357,7 +574,7 @@ static class BattleSimSelfTests
             var shared=Ap2CombatReport.Session(new[] { actor,target },false);
             shared.Combatants.All.Single(a=>a.Team==CombatTeam.Enemy).SetPosition(new TianZhang.Spatial.HexCoord(p.MinRange,0));
             AssertEqual("actor-0",service.AdvanceUntilAction(shared).ActorId,"shared current actor");
-            var profile=shared.AttackProfiles.Single();
+            var profile=shared.AttackProfiles.Single(p => p.RuleMetadata.PrototypeDefinitionRef == row.DefinitionRef);
             var command=new CombatCommand(profile.Kind==CombatAttackKind.Divine ? CombatCommandKind.Divine : CombatCommandKind.Art,
                 "actor-0","actor-1",profile.Id,new CombatResolutionRolls(0,100,100,100,100));
             var quote=service.Preview(shared,command);
@@ -394,7 +611,7 @@ static class BattleSimSelfTests
             AssertEqual(hp,e.HealthAfter,"full original realm life fee/recovery budget");
             AssertEqual(300,e.KuxingDebtByActor[0],"full next physical defense debt");
             var ss=Ap2CombatReport.Session(new[] { bitter,enemy },false); service.AdvanceUntilAction(ss);
-            var caster=ss.Combatants.All.First(); var p=ss.AttackProfiles.Single();
+            var caster=ss.Combatants.All.First(); var p=ss.AttackProfiles.Single(p => p.RuleMetadata.PrototypeDefinitionRef == "KuxingAction");
             var command=new CombatCommand(CombatCommandKind.Art,caster.Id,"actor-1",p.Id,new CombatResolutionRolls(0,100,0,100,100));
             var q=service.Preview(ss,command); var prepared=service.Prepare(ss,command,q,out var commit);
             AssertEqual(true,prepared.Succeeded,"shared Kuxing prepare"); AssertEqual(10000,caster.CurrentHealth,"preparation leaks no health fee");
@@ -403,7 +620,7 @@ static class BattleSimSelfTests
         }
         var water=Ap2Fixture(style:"water_physical"); water.ArtName=""; water.SetActionEconomyInputs(1000000,0);
         var ws=Ap2CombatReport.Session(new[] { water,enemy },false); service.AdvanceUntilAction(ws);
-        var wa=ws.Combatants.All.First(); var wt=ws.Combatants.All.Last(); var wp=ws.AttackProfiles.Single();
+        var wa=ws.Combatants.All.First(); var wt=ws.Combatants.All.Last(); var wp=ws.AttackProfiles.Single(p => p.RuleMetadata.PrototypeDefinitionRef == "WaterDivine");
         var waterCommand=new CombatCommand(CombatCommandKind.Divine,wa.Id,wt.Id,wp.Id,new CombatResolutionRolls(0,100,100,100,100));
         for(int n=0;n<4;n++)
         {
@@ -1787,7 +2004,7 @@ static class BattleSimSelfTests
         var enemy = CtTestCharacter("no-weapon-enemy", 10);
         actor.BasicAttackProfile = enemy.BasicAttackProfile = null;
         var battle = Combat.SimulateDetailed(new HexBattlefield(), actor, enemy, new[] { new HexCoord(0, 0), new HexCoord(1, 0) }, 4);
-        AssertEqual(false, battle.Economy.Any(value => value.Event == "action_committed"), "no weapon means no fabricated attack");
+        AssertEqual(true, battle.Economy.Any(value => value.Event == "action_committed" && value.DefinitionRef == "basic_body_human_lianqi"), "explicit body replaces retired unarmed constant");
         AssertEqual(true, battle.Economy.Any(value => value.Event == "own_turn_started"), "unequipped actors still enter turns");
         AssertEqual(-1, Combat.SelectAction(new HexBattlefield(), new(0,0), new(1,0), false,1,1,false,false,1,1,null,out _,out _), "no attack selection ends legally");
     }
@@ -2745,7 +2962,7 @@ static class BattleSimSelfTests
         AssertEqual(1, GameData.WaterDivine.MinRange, "water divine keeps an independent minimum range");
         AssertEqual(3, GameData.WaterDivine.MaxRange, "water divine keeps an independent maximum range");
         var character = Character.Create("basic-profile", new() { ["根骨"] = 1, ["魂魄"] = 1, ["神识"] = 1, ["资质"] = 1, ["气运"] = 1 }, "physical");
-        AssertEqual<GameData.AttackProfile>(null, character.BasicAttackProfile, "unequipped character has no basic attack");
+        AssertEqual("basic_body_human_fanren", character.EffectiveBasicAttackProfile.Cost.DefinitionRef, "explicit human creation body source");
         character.BasicAttackProfile = new("测试主战法宝", "神魂", 1.1, "火", 2, 3);
         AssertEqual(3, character.BasicAttackProfile.MaxRange, "main combat artifact profile replaces unarmed fallback");
         var battlefield = new HexBattlefield();

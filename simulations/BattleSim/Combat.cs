@@ -495,7 +495,7 @@ static class Combat
         RunBattle(battlefield, new[] { ca1, ca2, cb1, cb2 }, new[] { 0, 0, 1, 1 },
             positions ?? InitialGroupPositions, turnLimit, observe: true);
 
-    sealed class UnitState
+    internal sealed class UnitState
     {
         internal Character Char;
         internal string Id;
@@ -518,6 +518,14 @@ static class Combat
             2 => GameData.Rules.Global.RepeatThirdPermille, _ => GameData.Rules.Global.RepeatCappedPermille,
         };
         internal int Quote(Ability a) => CombatRuleSet.CeilRatio(a.Cost.ActionPointCostUnits,RepeatMultiplier(a),1000);
+        internal void RefreshBasicAttack()
+        {
+            var profile = Char.EffectiveBasicAttackProfile;
+            int index = Abilities.FindIndex(a => a.Kind == BasicAction);
+            if (index < 0) throw new InvalidOperationException("simulation_basic_binding_missing");
+            Abilities[index] = new(BasicAction, profile, profile.Cost, profile.SpiritCost, 0,
+                Id + ":" + profile.Cost.DefinitionRef, "");
+        }
         internal int WaterSourceOrder;
         internal string WaterSourceRef = "", WaterTierId = "";
         internal decimal WaterReduction;
@@ -539,7 +547,7 @@ static class Combat
         }
     }
 
-    sealed record Ability(int Kind, GameData.AttackProfile Profile, GameData.ActionEconomyCost Cost,
+    internal sealed record Ability(int Kind, GameData.AttackProfile Profile, GameData.ActionEconomyCost Cost,
         int SpiritCost, double DefPen, string Key, string SharedInstanceId);
 
     static bool HasGongFa(UnitState unit, string name, string minimumRealm) =>
@@ -548,7 +556,7 @@ static class Combat
     static int FudanMaximum(UnitState unit) => unit.Char.Realm == "金丹" ? 5 : 3;
     static int LeijieMaximum(UnitState unit) => unit.Char.Realm == "金丹" ? 5 : 3;
 
-    static List<Ability> CreateAbilities(UnitState unit)
+    internal static List<Ability> CreateAbilities(UnitState unit)
     {
         var c = unit.Char;
         var result = new List<Ability>();
@@ -574,8 +582,8 @@ static class Combat
             if (c.Realm == "凡人") throw new InvalidOperationException("production_art_qualification_invalid");
             Add(ArtAction, profile, profile.Cost, profile.SpiritCost, 0);
         }
-        if (c.BasicAttackProfile != null)
-            Add(BasicAction, c.BasicAttackProfile, c.BasicAttackProfile.Cost, c.BasicAttackProfile.SpiritCost, 0);
+        var basic = c.EffectiveBasicAttackProfile;
+        Add(BasicAction, basic, basic.Cost, basic.SpiritCost, 0);
         return result;
     }
 
@@ -656,6 +664,7 @@ static class Combat
             if (skipped) au.Stunned = false;
             while (!skipped && au.AP > 0 && au.IsAlive && BothTeamsAlive())
             {
+                au.RefreshBasicAttack(); // Same actor ledger; source/growth changes never refill AP or reset uses.
                 var occupied = units.Where((u, i) => i != actor && u.IsAlive).Select(u => u.Position).ToArray();
                 Ability selectedAbility = null;
                 GroupActionPlan selectedPlan = default;
@@ -882,7 +891,8 @@ static class Combat
             if (ability.Profile.AbilityTierId != "")
             {
                 var tier = GameData.Rules.GetTier(ability.Profile.AbilityTierId);
-                atk = Math.Min(atk,type == "物理" ? tier.PhysicalAttackCapacity : tier.SoulAttackCapacity);
+                atk = Math.Min(atk, ability.Profile.EffectBudgetMode == "fixed_unarmed" ?
+                    ability.Profile.UnarmedPhysicalAttackCapacity : type == "物理" ? tier.PhysicalAttackCapacity : tier.SoulAttackCapacity);
             }
             double resist = cb.Secondary.GetValueOrDefault(type == "物理" ? "物抗率" : "魂抗率", 0);
             double targetMult = mult;

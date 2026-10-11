@@ -38,8 +38,27 @@ class Character
     public double DanJiArtAffinityMult { get; set; } = 1.0;
     // v5.1: 功法名称（用于读取实际小境界成长表）
     public string GongFaName = "";
-    // Only an explicitly equipped weapon supplies a basic attack; unequipped characters have none.
+    // Explicit main-hand instance; the effective basic is resolved from this and the body source.
     public GameData.AttackProfile BasicAttackProfile;
+    public string UnarmedAttackFamilyId = "";
+    public float? ProductionRealmMultiplier;
+    public GameData.AttackProfile EffectiveBasicAttackProfile => ResolveBasicAttack(Realm);
+
+    GameData.AttackProfile ResolveBasicAttack(string realm)
+    {
+        var body = GameData.BodyAttack(UnarmedAttackFamilyId, realm);
+        if (BasicAttackProfile == null) return body;
+        // Named test fixtures retain their existing scope; production references must be real weapons.
+        if (BasicAttackProfile.Cost != null && GameData.ProductionAttacks.ContainsKey(BasicAttackProfile.Cost.DefinitionRef) &&
+            BasicAttackProfile.BasicBindingKind != "main_equipment")
+            throw new InvalidOperationException("simulation_main_equipment_binding_invalid");
+        if (BasicAttackProfile.EffectBudgetMode == "fixed_unarmed")
+            throw new InvalidOperationException("simulation_body_is_not_equipment");
+        if (BasicAttackProfile.Cost != null && !GameData.ProductionAttacks.ContainsKey(BasicAttackProfile.Cost.DefinitionRef) &&
+            !BasicAttackProfile.Cost.Version.StartsWith("fixture", StringComparison.Ordinal))
+            throw new InvalidOperationException("simulation_main_equipment_profile_missing");
+        return BasicAttackProfile;
+    }
     // Long-term scalar inputs belong to the existing stat owner. Existing exact stat clones
     // therefore preserve them without a separate fallback or another source of defaults.
     public bool ActionEconomyInputsPresent => Primary.ContainsKey("AP上限单位") && Primary.ContainsKey("移动效率千分单位");
@@ -108,8 +127,35 @@ class Character
 
     public static Character Create(string name, Dictionary<string, int> innate, string style)
     {
-        var c = new Character { Name = name, Realm = "凡人", SubIndex = 0, Style = style };
+        // Same explicit human creation source as CharacterCreationRules, independent of name/style.
+        var c = new Character { Name = name, Realm = "凡人", SubIndex = 0, Style = style, UnarmedAttackFamilyId = "body_human" };
         foreach (var k in InnateKeys) c.Innate[k] = innate[k];
+        return c;
+    }
+
+    internal static Character FromProduction(bool enemy, string id)
+    {
+        var row = GameData.ProductionCharacterRow(enemy, id);
+        int Int(string key) => int.Parse(row[key], System.Globalization.CultureInfo.InvariantCulture);
+        float Number(string key) => float.Parse(row[key], System.Globalization.CultureInfo.InvariantCulture);
+        string realmId = row[enemy ? "realm" : "realmId"];
+        var realm = GameData.Rules.Realms.Single(r => r.RealmId == realmId);
+        float multiplier = Number("realmMultiplier");
+        int Round(float value) => checked((int)MathF.Round(value, MidpointRounding.ToEven));
+        // Existing production CharacterAttributes.Calculate projection, without added bonuses.
+        // Synthetic gongfa builds still use FinalizeStats and their actual GongFaTables.
+        var c = new Character { Name = id, Realm = GameData.RealmOrder[realm.RealmOrder], Style = "physical",
+            UnarmedAttackFamilyId = row["unarmedAttackFamilyId"], ProductionRealmMultiplier = multiplier,
+            Innate = new() { ["根骨"] = Int("rootBone"), ["魂魄"] = Int("spirit"), ["神识"] = Int("mind"),
+                ["资质"] = Int("talent"), ["气运"] = 0 },
+            Primary = new() { ["HP"] = Round(MathF.Pow(Int("rootBone"), .75f) * multiplier * 80f),
+                ["MP"] = Round(Int("spirit") * multiplier * 15f), ["肉攻"] = Round(Int("rootBone") * multiplier * 5f),
+                ["神攻"] = Round(Int("spirit") * multiplier * 5f), ["肉防"] = Round(Int("physique") * multiplier * 3.5f),
+                ["神防"] = Round(Int("mind") * multiplier * 3.5f), ["反应"] = Int("reaction"), ["神识"] = Int("mind") } };
+        foreach (var pair in new[] { ("格挡率", "blockRate"), ("格挡减伤率", "blockReduction"), ("魂盾率", "soulShieldRate"),
+            ("魂盾减伤率", "soulShieldReduction"), ("闪避率", "dodgeRate"), ("暴击率", "critRate"),
+            ("暴击伤害", "critDamage"), ("命中率", "hitRateBonus") }) c.Secondary[pair.Item1] = Number(pair.Item2);
+        c.SetActionEconomyInputs(realm.ActionPointMaximumUnits, realm.BaseMovementEfficiencyMilliUnits);
         return c;
     }
 
@@ -178,6 +224,8 @@ class Character
 
     public void FinalizeStats(string realm, int subIdx, string spiritGrade, Dictionary<string, double> weights)
     {
+        ResolveBasicAttack(realm); // Reject bad body/weapon input before publishing growth.
+        var movementInput = GameData.ProjectMovement(realm, subIdx, GongFaName);
         Realm = realm; SubIndex = subIdx;
         var rb = GameData.Base[realm];
         var rf = GameData.Factor[realm];
@@ -192,7 +240,6 @@ class Character
         Primary["肉防"] = (int)Math.Round((rb.肉防 + SubGrowthSum("肉防", realm, subIdx, weights, GongFaName) + Innate["根骨"] * rf.防 * weights["根骨"]) * sm);
         Primary["神防"] = (int)Math.Round((rb.神防 + SubGrowthSum("神防", realm, subIdx, weights, GongFaName) + Innate["魂魄"] * rf.防 * weights["魂魄"]) * sm);
         Primary["反应"] = (int)Math.Round((rb.反应 + SubGrowthSum("反应", realm, subIdx, weights, GongFaName) + (Innate["根骨"] * weights["根骨"] + Innate["魂魄"] * weights["魂魄"] + Innate["神识"] * weights["神识"]) * rf.反应 / 3.0) * sm);
-        var movementInput = GameData.ProjectMovement(realm, subIdx, GongFaName);
         Primary["行动经济模板输入"] = 1;
         SetActionEconomyInputs(movementInput.ActionPointMaximumUnits, movementInput.EffectiveMilliUnits);
         // Legacy display only; combat movement consumes the independent integer input above.

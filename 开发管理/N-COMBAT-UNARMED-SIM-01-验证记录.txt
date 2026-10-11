@@ -1,0 +1,65 @@
+# N-COMBAT-UNARMED-SIM-01 验证记录
+
+日期：2026-10-11；单一候选结果，正式集成由共享入口在最新master重放。
+
+## 模型、事实与范围
+
+入口启动证明指定gpt-6.1-sol，主模型保持该值。双入口绑定及结算强耦合，由Codex单主责实施和复核，没有独立辅助问题，未调用子智能体或第二责任会话。
+工作面仅当前run专属worktree和冻结expectedPaths；未调用runtime、集成、自动化管理或其他worktree。没有修改Unity共享内核、正式CSV/资产、生产参数或其他叶子的业务逻辑。
+必查事实：空手普攻成长接入合同§二/三/四/六；U-COMBAT-UNARMED-RUNTIME-01正式验证；N-COMBAT-AP2-SIM-01归档中的实际A方案及完成证据；功法数值模板§三/五/八/九.4；当前Character/GameData/Combat、Stage双入口及Guanzhong生产映射。
+采用unity-agent-workflows的实际所有者和最小验证原则；已读结构索引、project-structure-discovery与unity-validation。BattleSim.csproj已有共享Combat纯类型链接，本轮没有新模块、链接或组件。
+
+重新只读风险预检：taskId=N-COMBAT-UNARMED-SIM-01；taskCardDigest=cf7627b22323956dd4cd95351a5c2657ff97d393a4eeaf46714bd98347cbcb37；indexDigest=89f1e6153a747b1b9dfc15e06e30106877901d6e0e759ccf03ffda8b36a8c899。matched/mustRead仅EXP-BS-001，notice/gates/gatePointers为空，与卡头一致。已消费“BattleSim修改先build成功再run”的正文。
+
+## 已证实缺口及实施
+
+生产九ID及身体元数据已经由RUNTIME提供；Character仍只读取显式武器字段，没有身体来源选择；Combat.SettleAttack仍统一取能力tier肉攻承载，凡人身体会错用练气120。Stage原先沿共享命令事务，但缺少同源角色绑定。接入后还发现SharedProfile把无属性键规范化为空串，触发共享空手严格门禁；在该适配器保留正式element_none，未改门禁。
+
+Character.Create显式声明body_human，普通和功法强化样本不靠名字或Style猜族。EffectiveBasicAttackProfile先验证族/当前境界，再选择真实主手或身体档案；缺族、未知族/境界、石甲兽越境、错误/缺主手引用都拒绝，不因有武器豁免身体来源。身体不是装备字段。FinalizeStats在发布成长前核验身体/武器及行动经济输入；身体随当前大境界派生，原武器/术法固定档保持。
+GameData.BodyAttack从同一Rules.UnarmedRows与ProductionAttacks选择ID、费用和承载。FromProduction只投影正式Characters/Enemies的族、属性及既有CharacterAttributes.Calculate公式；石甲兽保留正式输入，未用固定旧Unarmed常量。Guanzhong现有正式证据读取已验证相同九ID与族/档，本轮不重复改写该消费者。
+全模拟CreateAbilities与Stage.Profiles/Snapshot均读取同一EffectiveBasicAttackProfile；全模拟fixed_unarmed按该行显式肉攻承载截取A，再进入原A²/(A+D)公式，真实D不截。Stage继续使用CombatCommandService和既有共享承载/扣费算法，没有旁路。
+全模拟在同一UnitState更新有效basic，保留Uses、AP、回合预算与冷却；Stage调用既有RefreshActionEconomy同步来源/档位，失效旧报价且不补发AP。所有武器/身体共basic次数键，预览/取消/拒绝不计，合法未命中计，本人新回合清零。
+Program中既有战术精确属性克隆补传原角色身体族/主手输入，不修改战术开关或克隆所有者。Stage的2v2相邻费用夹具使用四个互不重叠格位，使双方每个人均有相邻敌人；全模拟正式距离/部署未改。
+AP2报告新增每人每回合动作、移动、AP、MP、输出及角色来源摘要；--self-test-unarmed提供空手/武器和正式敌人定向报告。保留原A方案苦行/水系有限原型，不新增原型或生产能力。
+
+## 正式输入摘要
+
+ruleSetVersion=AP-GROWTH@0.1；四表sourceDigest=c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6。
+AttackProfiles.csv SHA256=bb68b772ab0644a5079ea64630a8137846247da7436490cb54cb3438dd340d7e。
+Characters.csv SHA256=ecd3dfcacfe8a0a8e29b8c2b1bcc5af93234e6270d56c37eb1a09f454dc00ba7。
+Enemies.csv SHA256=5717692dea7ffc22d9de39ebd99078847ce30e8a5a4df18171a325676b46ed31。
+九ID：spell_guanshiji、spell_julingshu、basic_iron_sword、basic_iron_blade、basic_body_human_fanren、basic_body_human_lianqi、basic_body_human_zhuji、basic_body_human_jindan、basic_body_shijiahou_lianqi。
+身体族/档/基础AP/承载：人形凡人20/30、练气25/120、筑基75/500、金丹250/2400；石甲兽练气25/120。剑40AP/120、刀50AP/120，均固定tier_lianqi。
+石甲兽正式投影：HP657、MP108、肉攻78、神攻36、肉防67、神防25、反应6、神识6、AP100000单位、v4000单位。正式人物两行均body_human，其他保留敌人空族仍拒绝。
+
+## 实跑验证
+
+本worktree缺obj/project.assets.json，先一次dotnet restore simulations/BattleSim；随后dotnet build -c Release --no-restore simulations/BattleSim。最终构建0警告0错误。一次中间构建与默认运行重叠出现apphost文件占用重试警告；运行结束后后续最终构建无该警告，没有修改构建选项或借其他worktree缓存。
+dotnet run --no-build -c Release --project simulations/BattleSim：exit0，默认全模拟完整结束。后续只有共享报告/自测改动，不重复未变化的默认链。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test-unarmed：PASS。覆盖96组人形/功法成长/剑刀×四境界×1v1/2v2×交换双方的成对入口；4组成对正式石甲兽入口；五身体映射及既有配置40负例。
+各组逐动作基础/重复费与实付相符，两端每回合AP支出一致；饱和样本证明两端承载，另对全模拟第一击验证准确承载和真实防御公式。人形采用既有含弘光大典GongFaTables与权重，肉攻差异来自真实成长；凡人该功法仅显式功能夹具，不授提前学习权限。矩阵用HP1000000、命中加成100和等反应保持回合可观测，不是平衡样本。
+成长账本：练气先两拳各25AP，升筑基下一拳93.75AP，剩余50AP不补发；第三次切剑50AP并保次数。旧报价/非法目标拒绝；预览不扣不计；合法未命中两端照计；下一本人回合归零。全模拟UnitState原账本更新定向核验与实际双方多回合支付轨迹共同覆盖，不宣称存在生产突破玩法。
+坏输入：缺族/未知族、有剑仍缺来源、石甲兽筑基、错误术法作主手、缺武器引用、保留高阶和未批准敌人族拒绝；全模拟不可达且v0的候选无支出/无动作。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test ap2：PASS，原51测试三元组、苦行/水系有限原型、武器重复和范围根动作保持。旧Single断言改为具名原型定位，未删原型验收。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test action-economy-n-combat-ap-sim-01：PASS。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test basic-unarmed-production-d-combat-prod-01：PASS。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test distance-model-tq055：PASS。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --ap2 same-tier：exit0，252组。
+dotnet run --no-build -c Release --project simulations/BattleSim -- --ap2 locked-qi：exit0，252组。
+两模式共504组报告覆盖21构筑×三境界×双布局×交换双方；解析报告证实全模拟/共享每回合摘要缺失数均0。报告保留动作轨迹，不用成功输出签新平衡。
+
+普通人形无武器首回合示例（全模拟种子20260712；共享确定命中样本；伤害两端本例相同）：
+| 境界 | 实际肉攻 | 承载 | 动作数 | AP支出单位 | 输出 |
+|----|----:|----:|----:|----:|----:|
+| 凡人 | 7 | 30 | 4 | 95000 | 16 |
+| 练气 | 42 | 120 | 3 | 81250 | 72 |
+| 筑基 | 192 | 500 | 3 | 243750 | 318 |
+| 金丹 | 1431 | 2400 | 3 | 812500 | 2388 |
+
+复现入口输出JSON行，包括同源摘要、所选档案、每个人每回合动作/AP/伤害。完整过程日志为本机临时文件，不充当永久事实源；上述入口可在候选/重放结果直接重跑。
+
+## 收尾与限制
+
+提交前按任务卡执行check-task-cards的CodexClosedOrNonReady、check-review-text、check-pending-whitespace及git diff --cached --check。docs/CSV/Unity数据未改，不运行无关data-chain或Unity场景检查。
+本任务completed归档并仅移除自身队列/backlog投影；不移除N-COMBAT-AP2-BALANCE-01等其他卡或行对本ID的引用，不重排/补位。
+只验证同源绑定/成长/费用/承载/计数功能和已有特殊范围；两端原一般伤害/被动差异保留并分别输出，不承诺全伤害逐值相同。强度仍待既有AP2-BALANCE实跑定案；场景/动画/操作体验仍待Unity验收。本轮未获得新的可独立复用经验候选，不写空节。

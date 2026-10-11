@@ -608,7 +608,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         return new(id,kind,p.Type == "恢复灵力" ? CombatAttackEffect.RestoreSpirit : p.Type == "神魂" ? CombatAttackEffect.Soul : CombatAttackEffect.Physical,
             p.MinRange,p.MaxRange,p.Cost.ActionPointCostUnits,p.Cost.MinimumNetCostUnits,p.Cost.CtPenalty,p.Cost.ReuseCooldownTicks,
             physicalMultiplier:p.Type == "物理" ? (float)p.Mult : 0,soulMultiplier:p.Type == "神魂" ? (float)p.Mult : 0,
-            spiritCost:p.SpiritCost,damageElement:p.Element,soulDefensePenetration:(float)penetration,
+            spiritCost:p.SpiritCost,damageElement:p.EffectBudgetMode == "fixed_unarmed" ? "element_none" : p.Element,soulDefensePenetration:(float)penetration,
             spiritRecoveryMultiplier:(float)p.SpiritRecoveryMultiplier,minimumSpiritRecovery:p.MinimumSpiritRecovery,
             otherTargetSpiritCost:p.OtherTargetSpiritCost,otherTargetSpiritRecoveryMultiplier:(float)p.OtherTargetRecoveryMultiplier,
             qualification:kind == CombatAttackKind.Basic ? null : (realm,element,grade) => kind == CombatAttackKind.Divine ? realm == "金丹" : realm is "练气" or "筑基" or "金丹",
@@ -766,6 +766,39 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         return result;
     }
     internal static IReadOnlyDictionary<string, AttackProfile> ProductionAttacks => productionAttacks.Value;
+
+    internal static string BodyRealmId(string realm) => realm switch
+    {
+        "凡人" or "realm_fanren" => "realm_fanren",
+        "练气" or "realm_lianqi" => "realm_lianqi",
+        "筑基" or "realm_zhuji" => "realm_zhuji",
+        "金丹" or "realm_jindan" => "realm_jindan",
+        _ => throw new InvalidDataException("simulation_body_realm_invalid"),
+    };
+
+    internal static AttackProfile BodyAttack(string family, string realm)
+    {
+        var row = Rules.GetUnarmed(family, BodyRealmId(realm));
+        var profile = ProductionAttacks[row.ProfileId];
+        if (profile.UnarmedFamilyId != family || profile.UnarmedRealmId != row.RealmId ||
+            profile.Cost.ActionPointCostUnits != row.ActionPointCostUnits ||
+            profile.UnarmedPhysicalAttackCapacity != row.PhysicalAttackCapacity)
+            throw new InvalidDataException("simulation_body_projection_mismatch");
+        return profile;
+    }
+
+    internal static Dictionary<string, string> ProductionCharacterRow(bool enemy, string id)
+    {
+        var lines = CsvTableReader.ReadRequired(RepositoryFile("src/Assets/DataConfig/" + (enemy ? "Enemies" : "Characters") + ".csv"));
+        var header = CsvTableReader.FindHeader(lines);
+        var rows = lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1)
+            .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'))
+            .Select(CsvTableReader.ParseRow).Select(values => header.Select((key, i) => (key, value: values[i]))
+                .ToDictionary(p => p.key, p => p.value, StringComparer.Ordinal));
+        var row = rows.Single(r => r["name"] == id);
+        BodyAttack(row["unarmedAttackFamilyId"], row[enemy ? "realm" : "realmId"]);
+        return row;
+    }
 
     // ═══════════════════════════════════════
     // v5.1: 功法小境界成长表（来源：docs/角色养成/功法/）
