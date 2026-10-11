@@ -12,5 +12,6 @@
 | D-GZ-R2-OBSTACLE-01 | codex_execute | codex | P1 | unity | design | 整格障碍物视觉与资源适配设计 | 开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt |
 | U-GZ-R2-SPAWN-01 | codex_execute | codex | P1 | unity | implementation | 关中首战怪物移至画面右上角出生 | 开发管理/任务卡/U-GZ-R2-SPAWN-01.txt |
 | D-GZ-R2-RANGE-01 | codex_execute | codex | P1 | unity | design | 两件基础武器差异射程设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |
+| D-CONFIG-EDITOR-CONTRACT-01 | codex_execute | codex | P1 | unity | design | Unity配置编辑器字段与保存导入合同 | 开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt |
 | M-EXP-PROMOTE-078A7076A4F2 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-COMBAT-UNARMED-RUNTIME-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-078A7076A4F2.txt |
 | M-EXP-PROMOTE-F88F6E7E7072 | codex_execute | codex | P2 | data | implementation | 经验候选整理：CAND-U-COMBAT-UNARMED-CONFIG-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-F88F6E7E7072.txt |

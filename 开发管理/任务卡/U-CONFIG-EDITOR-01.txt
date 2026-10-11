@@ -1,0 +1,69 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-01",
+  "title": "Unity中文配置编辑器总任务",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "V-CONFIG-EDITOR-01"
+  ],
+  "stateReason": "2026-10-12已完整拆为九项叶子；父项只汇总，最终验收完成后统一关闭。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-01 · Unity中文配置编辑器总任务
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项不进入ready。
+
+## 必查范围
+
+- 开发管理/Unity中文配置编辑器设计与拆分.txt
+
+## 实施范围
+
+仅汇总本规格与九张已建立子任务，不作为执行卡领取，不实施、不继续逐张拆分。覆盖现有22张配置表；所有子任务结果合并且最终验收卡完成后，由验收卡统一归档本父项。
+
+本卡只由最终验收任务关闭，不能直接实施。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+总项不执行，模型字段仅表明总设计责任归属。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+核对九项子任务均完成及22表覆盖矩阵、真实Unity操作、读写/保存/导入证据。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+V-CONFIG-EDITOR-01完成并按批准规格确认所有现有表可中文配置、复合字段免分隔符操作；由该卡同时关闭父项。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。

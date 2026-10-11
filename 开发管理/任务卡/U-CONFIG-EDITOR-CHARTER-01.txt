@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-CHARTER-01",
+  "title": "配置编辑器册界规则与站点双表适配",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CONFIG-EDITOR-CORE-01"
+  ],
+  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-CHARTER-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-CHARTER-01 · 配置编辑器册界规则与站点双表适配
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/CharterRuleDefinitions.csv
+- src/Assets/DataConfig/CharterSites.csv
+- src/Assets/Scripts/Editor/WorldContentImporter.cs::ImportCharterRuleDefinitions
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharterSites
+
+## 实施范围
+
+展开册界规则/站点两表的提交条目、条件/权限、范围/边界、事件、冲突候选和时序字段；中文分组与引用选择保留稳定ID，不把静态配置编辑等同运行时授权或正式提交。严格按现有复合结构编解码，不发明权限默认或填充缺失节点。
+
+当前expectedPaths只授权管理准备；必查源码为候选事实入口。CONTRACT冻结本卡所有实施/测试/导入派生路径及必要.meta后，重算riskPreflight并核对前置，才可转ready。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+两表全部字段和嵌套层覆盖；正负提交、时序/撤销、左右候选不能串位；引用与可选值往返；编辑行为不触发任何游戏状态事务。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+本组各表的全部列和复合子字段均有中文结构化编辑和可逆序列化，通过真实数据往返/非法输入验证，并交付本组校验与导入依赖描述供APPLY消费；不由本组另写独立保存或导入按钮。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。

@@ -1,0 +1,58 @@
+# Unity中文配置编辑器：批准范围与完整拆分
+
+2026-10-12：用户批准在Unity内编辑并保存各表，以可理解的中文表名、字段名和结构化输入替代手工处理CSV及分隔符，并要求本批任务全部交给Codex各模型。这里冻结产品范围及子任务图；具体字段与写盘接口由D-CONFIG-EDITOR-CONTRACT-01形成技术合同。本轮仅建立任务，不代表已开发或运行验收。
+
+## 产品范围
+
+入口采用Unity菜单“天章/配置编辑器”。同一个窗口内左侧选表、中部选已有条目、右侧中文表单；表名、字段名、枚举、复合子字段和帮助说明均使用中文。引用按中文名称检索，同时保留稳定ID供区分重名。AP、距离、比例等按实际使用单位展示并可逆转换，空值和零不能混淆。
+
+覆盖当前22张CSV及全部字段。含分隔符的单元格由编辑器解析成列表、分组、数值、复选框或引用控件，自动序列化；用户不需要学习或输入 |、@、~、;、:、+、>、= 等协议。可增删复合字段内部的条目；首版仅编辑既有整行记录，不增加、复制或删除整条配置记录。稳定键、生成字段及不适用字段按真实语义只读并解释原因；不能把未适配字段伪装成已完成，不能要求用户回到原始分隔符文本框。
+
+草稿在内存修改，支持撤销本次未保存修改、脏标记及关闭提示。保留CSV的表头、注释、必要顺序、空值和未修改内容；无编辑读写应零diff。Language是无普通表头的键值文件，需保留其注释及首条记录。带fixture/expect的测试数据必须与生产配置区分，保留有意存在的负例。
+
+## 保存与应用
+
+CSV继续是唯一配置事实源，中文元数据仅描述显示和编解码。提供“校验并保存”“保存并应用”两个明确操作，分别显示未保存、已保存未应用、应用成功或失败；保存前定位字段错误和外部文件修改，避免覆盖磁盘新内容。
+
+同一业务值的必要镜像自动联动，并在保存前显示受影响项。例如当前凡人移动效率与创角三条default校验镜像须一起变化，不能让用户手工找第二张表；legacy参照不随意改动。复用现有领域导入器及校验，按真实依赖应用；不能以void方法返回或LogError之后的普通日志当成功。
+
+导入失败应明确哪些数据已保存、哪些生成物未成功应用；不得隐瞒部分结果，不建立通用重试、回滚或新运行时配置框架。具体文件写入和导入成功证据由合同任务基于现有代码冻结。真实运行时读取在重新进入对应流程后验证，不承诺未实现的运行中热更新。
+
+## 表格覆盖与所有者
+
+- U-CONFIG-EDITOR-COMBAT-01：RealmCombatGrowth（境界战斗成长）、CombatEffectTierRules（效果层级规则）、CombatActionEconomyRules（行动消耗规则）、AttackProfiles（攻击档案）、Spells（术法）、Skills（技能）、CharacterCreationPointBuy（创角点购）。
+- U-CONFIG-EDITOR-CHARACTER-01：Characters（角色）、Enemies（怪物）、Items（物品）、GongFa（功法）、AppearanceProfiles（外观方案）、Language（显示文本）。
+- U-CONFIG-EDITOR-WORLD-01：Settlements（据点）、Bounties（悬赏）、Adventures（冒险）、EnvironmentProfiles（战场环境）。
+- U-CONFIG-EDITOR-CULTIVATION-01：FoundationPurpleMansionStates（道基与紫府状态）、JindanStaticStates（金丹静态状态）、NpcCultivationActionWeightProfiles（NPC修炼行动权重）。
+- U-CONFIG-EDITOR-CHARTER-01：CharterRuleDefinitions（册界规则）、CharterSites（册界站点）。
+
+当前静态入口包括CsvTableReader，以及Combat、Character、Cultivation、Settlement、Adventure、World各ContentImporter和ContentImportCoordinator。技术合同必须对照真实完整解析方法核对列与复合结构，不用名称猜格式；不在此另建运行时解释器。
+
+## 子任务、模型与依赖
+
+| ID | 结果 | 模型 | 初始状态 | 直接前置 |
+|----|------|------|----------|----------|
+| U-CONFIG-EDITOR-01 | Unity中文配置编辑器总任务 | gpt-6-astra | blocked | V-CONFIG-EDITOR-01 |
+| D-CONFIG-EDITOR-CONTRACT-01 | Unity配置编辑器字段与保存导入合同 | gpt-6-astra | ready | — |
+| U-CONFIG-EDITOR-CORE-01 | Unity配置编辑器窗口与无损编辑基础 | gpt-6.1-sol | blocked | D-CONFIG-EDITOR-CONTRACT-01 |
+| U-CONFIG-EDITOR-COMBAT-01 | 配置编辑器战斗与创角七表适配 | gpt-6.1-sol | blocked | U-CONFIG-EDITOR-CORE-01 |
+| U-CONFIG-EDITOR-CHARACTER-01 | 配置编辑器角色物品与文本六表适配 | gpt-6.1-sol | blocked | U-CONFIG-EDITOR-CORE-01 |
+| U-CONFIG-EDITOR-WORLD-01 | 配置编辑器据点悬赏与环境四表适配 | gpt-6.1-sol | blocked | U-CONFIG-EDITOR-CORE-01 |
+| U-CONFIG-EDITOR-CULTIVATION-01 | 配置编辑器成长状态与NPC策略三表适配 | gpt-6-astra | blocked | U-CONFIG-EDITOR-CORE-01 |
+| U-CONFIG-EDITOR-CHARTER-01 | 配置编辑器册界规则与站点双表适配 | gpt-6-astra | blocked | U-CONFIG-EDITOR-CORE-01 |
+| U-CONFIG-EDITOR-APPLY-01 | 配置编辑器关联保存与导入应用闭环 | gpt-6-astra | blocked | U-CONFIG-EDITOR-CORE-01、U-CONFIG-EDITOR-COMBAT-01、U-CONFIG-EDITOR-CHARACTER-01、U-CONFIG-EDITOR-WORLD-01、U-CONFIG-EDITOR-CULTIVATION-01、U-CONFIG-EDITOR-CHARTER-01 |
+| V-CONFIG-EDITOR-01 | Unity中文配置编辑器全表验收与总任务关闭 | gpt-6-astra | blocked | U-CONFIG-EDITOR-APPLY-01 |
+
+完整依赖：CONTRACT → CORE → 五组适配 → APPLY → V；总任务等待V并由V统一关闭。五组适配共享已冻结接口，职责互不重叠，不因共享队列文件添加虚假业务依赖；实际执行仍遵守一个任务、一个所有者和单一candidate的现有规则。父项只汇总，不可被领取后再次逐张拆分。
+
+首批仅D-CONFIG-EDITOR-CONTRACT-01进入ready，排在原七项P1试玩修复之后、现有P2整理之前；原任务相对顺序不变。其他叶子先保留真实依赖与管理路径，合同完成后补齐其独占字面量代码、测试、生成物和.meta路径；未冻结路径不得执行。依赖满足后按既有维护规则逐项检查runnable，不自动越过门禁。
+
+模型分配理由：Astra负责跨22表语义合同、深层状态/册界结构、保存导入边界与整体验收；Sol负责明确合同下的窗口及三组常规适配。全部route=codex_execute、owner=codex，卡头executionModel是调度事实，正文建议推理强度不等于已配置。官方模型选择资料：https://learn.chatgpt.com/docs/model-selection 。本轮没有调用这些任务的执行模型，也不把可选型号当运行测试证据。
+
+## 验收与停止边界
+
+22表逐项字段覆盖及无修改往返；所有复合结构有编解码验证；五组各有实际编辑/撤销/保存/恢复证据。真实Unity窗口可操作、全中文字段和引用可读，移动效率必要镜像与导入结果正确，错误不能显示成功；Editor代码不进入Player。测试改值全部恢复，不因工具测试提交新游戏平衡数值。
+
+复用现有数据与领域规则，不改存档、战斗逻辑、平衡值、自动化脚本或内容格式；不新增地图绘制、通用脚本编辑器、资产生产与运行时热更新。发现现有解析无法表达批准范围、需要改变业务语义或增加跨域所有者时，保留具体证据回到合同任务，禁止叠加兜底。当前范围已获授权，不重复询问同一批准。
+
+父项关闭条件：九张叶子均按冻结验收完成，V-CONFIG-EDITOR-01确认上述范围无遗漏并归档父项。编译或纯静态审查不能替代真实Unity可用性与保存/应用证据。

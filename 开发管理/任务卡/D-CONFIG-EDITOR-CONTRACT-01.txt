@@ -1,0 +1,94 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-CONFIG-EDITOR-CONTRACT-01",
+  "title": "Unity配置编辑器字段与保存导入合同",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-12用户批准创建工具任务并指定Codex模型；本卡形成22表技术合同和后继冻结边界，可直接执行。",
+  "expectedPaths": [
+    "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
+    "开发管理/任务归档/D-CONFIG-EDITOR-CONTRACT-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/Unity配置编辑器字段与导入合同.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-CORE-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-COMBAT-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-CHARACTER-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
+    "开发管理/任务卡/V-CONFIG-EDITOR-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# D-CONFIG-EDITOR-CONTRACT-01 · Unity配置编辑器字段与保存导入合同
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity中文配置编辑器设计与拆分.txt
+- UNITY_STRUCTURE.content.md
+- src/Assets/Scripts/Editor/README.md
+- src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex
+- src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/WriteCombatRuleSet
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/ImportSpells/ImportSkills
+- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportEnemies
+- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::LoadLanguage
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportContentCatalog
+- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import
+- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles
+- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportFoundationPurpleMansionStates/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles
+- src/Assets/Scripts/Editor/WorldContentImporter.cs::ImportCharterRuleDefinitions
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharterSites
+
+## 实施范围
+
+用户已批准产品范围，本卡做必要的技术合同，不重新询问同一范围。逐一登记22表每个表头、复合子字段的中文语义、单位、可编辑性、稳定键/分组、真实解析所有者、引用和往返编码；Language无表头和fixture负例单列。确定保存草稿/文件冲突检测/必要关联源值联动/导入前校验与明确成功失败证据；检查现有void导入和只LogError返回，不能以函数返回或总导入日志认定成功。冻结Editor专用目录、接口、各后继独占文件及.meta、测试、导入依赖和全部派生路径。全部后继卡已存在，本卡只补齐其直接可冻结执行边界，不再新增拆分循环。若现有导入写盘边界证明超出批准范围，保留具体冲突交负责人，不自建通用事务框架。
+
+唯一业务产物为 开发管理/Unity配置编辑器字段与导入合同.txt；本卡可准备已列出的后继任务卡和投影，不写实现代码。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+本卡ready，执行前核对实际工具能力。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+22张表清单与真实文件一一对应；每个字段/嵌套结构有解析依据，所有者/引用/单位/空零语义齐全；保存与应用状态表和失败边界可检验；九叶依赖无环，CORE白名单含新目录.meta。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+产出唯一完整技术合同并补齐各子卡字面量路径与验收；CORE满足runnable时入队，其他卡保持真实依赖。无新产品决策时按已批准范围直接推进，不再等待重复授权。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。

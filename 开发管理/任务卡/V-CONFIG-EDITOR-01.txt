@@ -1,0 +1,95 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "V-CONFIG-EDITOR-01",
+  "title": "Unity中文配置编辑器全表验收与总任务关闭",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-CONFIG-EDITOR-APPLY-01"
+  ],
+  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "expectedPaths": [
+    "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
+    "开发管理/任务归档/V-CONFIG-EDITOR-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/Unity中文配置编辑器验收记录.txt",
+    "开发管理/任务卡/U-CONFIG-EDITOR-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# V-CONFIG-EDITOR-01 · Unity中文配置编辑器全表验收与总任务关闭
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity中文配置编辑器设计与拆分.txt
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/RealmCombatGrowth.csv
+- src/Assets/DataConfig/CombatEffectTierRules.csv
+- src/Assets/DataConfig/CombatActionEconomyRules.csv
+- src/Assets/DataConfig/AttackProfiles.csv
+- src/Assets/DataConfig/Spells.csv
+- src/Assets/DataConfig/Skills.csv
+- src/Assets/DataConfig/CharacterCreationPointBuy.csv
+- src/Assets/DataConfig/Characters.csv
+- src/Assets/DataConfig/Enemies.csv
+- src/Assets/DataConfig/Items.csv
+- src/Assets/DataConfig/GongFa.csv
+- src/Assets/DataConfig/AppearanceProfiles.csv
+- src/Assets/DataConfig/Language.csv
+- src/Assets/DataConfig/Settlements.csv
+- src/Assets/DataConfig/Bounties.csv
+- src/Assets/DataConfig/Adventures.csv
+- src/Assets/DataConfig/EnvironmentProfiles.csv
+- src/Assets/DataConfig/FoundationPurpleMansionStates.csv
+- src/Assets/DataConfig/JindanStaticStates.csv
+- src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv
+- src/Assets/DataConfig/CharterRuleDefinitions.csv
+- src/Assets/DataConfig/CharterSites.csv
+
+## 实施范围
+
+核对全部22表与字段覆盖矩阵，在Unity按普通用户方式完成选择表/条目、修改/撤销、中文引用、复合列表、保存并应用的代表路径。采集实际Editor窗口及运行时读值证据，验证错误不写坏数据；检查基础与领域代码保持Editor隔离，未修改业务规则。只修复验收记录，不借验收卡跨领域补丁；失败交原叶子返工并保持未完成。全部通过后同一卡归档总任务。
+
+当前expectedPaths只授权管理准备及验收记录；必查源码为候选事实入口。CONTRACT冻结本卡所有实施/测试/导入派生路径及必要.meta后，重算riskPreflight并核对前置，才可转ready。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+22表逐一无编辑往返，所有复合字段编解码测试，5组至少各一条真实修改/恢复，Language特殊格式及生产/fixture区分；移动效率联动、AP显示精度和导入真实结果；相关EditMode/数据链/程序集检查，测试改值全部恢复。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+用户批准范围全部覆盖，无原始分隔符输入要求；实际Unity操作与生产绑定验证可重现，工作区配置恢复证明完整，九叶和父任务均完成归档。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
