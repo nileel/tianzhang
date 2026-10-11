@@ -12,6 +12,7 @@ namespace TianZhang.Features.CharacterCreation
         [SerializeField] private Text summaryText;
         [SerializeField] private Text failureText;
         [SerializeField] private Button createButton;
+        [SerializeField] private Button returnToMenuButton;
         [SerializeField] private Button[] originButtons;
         [SerializeField] private Text[] originLabels;
 
@@ -33,6 +34,16 @@ namespace TianZhang.Features.CharacterCreation
                 if (button == null) continue;
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => selectOrigin(id));
+            }
+        }
+
+        public void ConfigureReturnToMenu(Action returnToMenu)
+        {
+            if (returnToMenu == null) throw new ArgumentNullException(nameof(returnToMenu));
+            if (returnToMenuButton != null)
+            {
+                returnToMenuButton.onClick.RemoveAllListeners();
+                returnToMenuButton.onClick.AddListener(() => returnToMenu());
             }
         }
 

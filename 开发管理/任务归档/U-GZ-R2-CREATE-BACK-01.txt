@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-11用户明确要求排查并分别建卡；当前有界工作面可执行。",
+  "stateReason": "2026-10-12：正式开始菜单场景已接入返回按钮；PlayMode 在1920×1080与1366×768覆盖打开、修改、返回、重开与读档，草稿与既有槽验证通过。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-CREATE-BACK-01.txt",
     "开发管理/任务归档/U-GZ-R2-CREATE-BACK-01.txt",
@@ -63,11 +63,11 @@
 
 2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6-luna冻结。建议推理强度medium，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
 
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+执行评估（2026-10-12）：简单实现，缺失行为位于现有View与Hide接线，正式场景及生成器明确，且有真实场景PlayMode入口；沿用入口指定的gpt-6-luna单模型，无独立只读辅助问题，不调用辅助模型。保留CharacterCreationView.Configure既有签名，独立接入返回回调以避免扩大既有测试调用范围。
 
 ## 验证
 
-复用StartMenuSaveDeletionPlayModeTests增加创角打开→修改草稿→返回→重开→读档路径；1920×1080、1366×768实机检查；相关程序集编译、场景引用检查。
+验证记录（2026-10-12）：Unity 6000.3.18f1 PlayMode `TianZhang.Tests.PlayMode.StartMenuSaveDeletionPlayModeTests.CreationReturnKeepsDraftAndExistingSaveAvailableAtCommonResolutions` 通过；Game View 实际分辨率1920×1080、1366×768均点击返回按钮并复开创角，选定出身和姓名保留，未生成slot1.json，既有return_read.json字节不变；随后主页读档进入World场景且存档未改写。场景加载与按钮指针点击成功，验证序列化引用有效。初次脚本编译发现接口签名改动影响两处原调用；恢复既有Configure签名并分离返回绑定后，程序集编译和PlayMode通过。无辅助模型调用。
 
 管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
 

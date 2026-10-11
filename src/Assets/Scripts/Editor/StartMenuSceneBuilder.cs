@@ -47,6 +47,7 @@ namespace TianZhang.Editor
             Text summary = SceneBuildSupport.CreateText("CreationSummary", creationPanel.transform, string.Empty, 16);
             Text creationFailure = SceneBuildSupport.CreateText("CreationFailure", creationPanel.transform, string.Empty, 16);
             Button createButton = SceneBuildSupport.CreateButton("CreatePlayerButton", creationPanel.transform, "创建并进入游戏", out _);
+            Button returnToMenuButton = SceneBuildSupport.CreateButton("ReturnToMenuButton", creationPanel.transform, "返回主页", out _);
             creationPanel.SetActive(false);
 
             SceneBuildSupport.SetObject(menuView, "newPlayerButton", newButton);
@@ -61,6 +62,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(creationView, "summaryText", summary);
             SceneBuildSupport.SetObject(creationView, "failureText", creationFailure);
             SceneBuildSupport.SetObject(creationView, "createButton", createButton);
+            SceneBuildSupport.SetObject(creationView, "returnToMenuButton", returnToMenuButton);
             BuildOriginSelection(creationView, creationPanel, summary);
             SceneBuildSupport.SetObject(controller, "view", menuView);
             SceneBuildSupport.SetObject(controller, "characterCreation", creationController);

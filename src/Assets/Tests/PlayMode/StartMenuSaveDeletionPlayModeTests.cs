@@ -10,6 +10,7 @@ using TianZhang.Character;
 using TianZhang.Cultivation;
 using TianZhang.Entity;
 using TianZhang.Features.CharacterCreation;
+using TianZhang.Game.CharacterCreation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
@@ -143,6 +144,69 @@ namespace TianZhang.Tests.PlayMode
             VerifyRaycastHits(Find("SaveSlot_del_b").GetComponent<Button>());
             Assert.IsFalse(Find("EmptySaveText").gameObject.activeSelf);
             Log("confirm left " + string.Join(",", SlotNames()));
+        }
+
+        [UnityTest]
+        public IEnumerator CreationReturnKeepsDraftAndExistingSaveAvailableAtCommonResolutions()
+        {
+            GameBootstrap bootstrap = GameBootstrap.RequireInstance();
+            WriteSlot(bootstrap, "return_read", "player", "已有存档");
+            yield return RefreshMenu();
+            string slotPath = Path.Combine(directory, "return_read.json");
+            string draftSlotPath = Path.Combine(directory, "slot1.json");
+            byte[] savedSlotBefore = File.ReadAllBytes(slotPath);
+            CharacterCreationController controller = FindInScene<CharacterCreationController>();
+            CharacterCreationView view = FindInScene<CharacterCreationView>();
+            InputField nameInput = Find("CharacterNameInput").GetComponent<InputField>();
+            GameObject creationPanel = Find("CharacterCreationPanel").gameObject;
+            GameObject menuPanel = Find("StartMenuPanel").gameObject;
+            bool hasGraphics = SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null;
+            Vector2Int[] sizes = hasGraphics
+                ? new[] { new Vector2Int(1920, 1080), new Vector2Int(1366, 768) }
+                : new[] { new Vector2Int(Screen.width, Screen.height) };
+
+            foreach (Vector2Int size in sizes)
+            {
+                if (hasGraphics) SetGameSize(size.x, size.y);
+                yield return null;
+                yield return null;
+                Assert.AreEqual(size.x, Screen.width);
+                Assert.AreEqual(size.y, Screen.height);
+
+                yield return Click(Find("NewPlayerButton").GetComponent<Button>());
+                Canvas.ForceUpdateCanvases();
+                Assert.IsTrue(creationPanel.activeSelf);
+                Assert.IsTrue(menuPanel.activeSelf, "the existing start menu stays behind the creation panel");
+                AssertReachable(Find("ReturnToMenuButton").GetComponent<Button>());
+                nameInput.text = "暂存角色" + size.x;
+                yield return Click(view.GetOriginButton("origin_debt_exile"));
+                CharacterCreationDraft draft = controller.Draft;
+                Assert.AreEqual("origin_debt_exile", draft.OriginId);
+
+                yield return Click(Find("ReturnToMenuButton").GetComponent<Button>());
+                Assert.IsFalse(creationPanel.activeSelf);
+                Assert.IsTrue(menuPanel.activeSelf);
+                Assert.IsNotNull(Find("SaveSlot_return_read"));
+                Assert.That(File.ReadAllBytes(slotPath), Is.EqualTo(savedSlotBefore),
+                    "returning from an unfinished draft must not write or change an existing save");
+                Assert.IsFalse(File.Exists(draftSlotPath), "an unfinished draft must not create a save slot");
+
+                yield return Click(Find("NewPlayerButton").GetComponent<Button>());
+                Assert.AreSame(draft, controller.Draft, "reopening must keep the same session draft");
+                Assert.AreEqual("origin_debt_exile", controller.Draft.OriginId);
+                Assert.AreEqual("暂存角色" + size.x, nameInput.text);
+                yield return Click(Find("ReturnToMenuButton").GetComponent<Button>());
+                Assert.That(File.ReadAllBytes(slotPath), Is.EqualTo(savedSlotBefore));
+                Assert.IsFalse(File.Exists(draftSlotPath));
+            }
+
+            string retainedOrigin = controller.Draft.OriginId;
+            yield return Click(Find("SaveSlot_return_read").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.World);
+            Assert.That(File.ReadAllBytes(slotPath), Is.EqualTo(savedSlotBefore),
+                "loading the preserved save must not rewrite it");
+            Log("creation return resolutions=" + string.Join(",", sizes.Select(size => size.x + "x" + size.y)) +
+                " loaded=return_read draft=" + retainedOrigin);
         }
 
         [UnityTest]

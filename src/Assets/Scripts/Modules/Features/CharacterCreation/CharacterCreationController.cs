@@ -28,6 +28,7 @@ namespace TianZhang.Features.CharacterCreation
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             draft = CharacterCreationCatalog.CreateDefaultDraft();
             view?.Configure(Submit, id => { SelectOrigin(id); });
+            view?.ConfigureReturnToMenu(ReturnToMenu);
         }
 
         public void Open()
@@ -43,6 +44,11 @@ namespace TianZhang.Features.CharacterCreation
             draft.OriginId = originId;
             RefreshOrigin();
             return true;
+        }
+
+        public void ReturnToMenu()
+        {
+            view?.Hide();
         }
 
         private void RefreshOrigin()
