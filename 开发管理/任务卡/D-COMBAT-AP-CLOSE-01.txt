@@ -9,10 +9,8 @@
   "domain": "management",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-AP-SCENE-01"
-  ],
-  "stateReason": "等待含2026-10-10四项空手新增叶的完整DAG及SCENE最终证据；负责人体验确认后才能关闭。",
+  "blockedBy": [],
+  "stateReason": "所有具名前置已有完成归档；仍需按完整DAG统一核验、提供实际体验入口并取得负责人确认，才可关闭。",
   "expectedPaths": [
     "开发管理/统一行动力交付核对.txt",
     "开发管理/统一行动力实现规划.txt",
