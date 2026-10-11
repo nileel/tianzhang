@@ -85,7 +85,7 @@
 | U-GZ-R2-BOUNTY-01 | P1 | codex | 阻塞 | — | 悬赏接取领取按钮交互状态修复 | 开发管理/任务卡/U-GZ-R2-BOUNTY-01.txt |
 | D-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | — | 整格障碍物视觉与资源适配设计 | 开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | D-GZ-R2-OBSTACLE-01 | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
-| U-GZ-R2-SPAWN-01 | P1 | codex | 已排队 | — | 关中首战怪物移至画面右上角出生 | 开发管理/任务卡/U-GZ-R2-SPAWN-01.txt |
+| U-GZ-R2-SPAWN-01 | P1 | codex | 阻塞 | — | 关中首战怪物移至画面右上角出生 | 开发管理/任务卡/U-GZ-R2-SPAWN-01.txt |
 | D-GZ-R2-RANGE-01 | P1 | codex | 已排队 | — | 两件基础武器差异射程设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |
 | D-GZ-R2-RANGE-DATA-01 | P1 | codex | 阻塞 | D-GZ-R2-RANGE-01、U-GZ-R2-EQUIP-01 | 基础武器差异射程数据与实战验证 | 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
