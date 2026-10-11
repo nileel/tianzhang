@@ -137,8 +137,8 @@
 ### CAND-U-COMBAT-AP-CHAR-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-A1A2D7DC329A
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-013
 - 经验领域：unity
 - 现象：格式合法的行动经济修正夹具被允许进入角色与存档，复审发现未知定义未拒绝，自动返工又因缺来源校验所有者停止。
 - 已证实根因：将协议字段校验等同于生产来源授权，并把恢复前必须完成的引用检查推迟给消费侧；当前获准生产来源为空却仍接受任意字符串。

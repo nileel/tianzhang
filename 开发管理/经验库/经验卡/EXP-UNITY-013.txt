@@ -1,0 +1,29 @@
+# EXP-UNITY-013 · 行动经济修正须先冻结授权来源再保存
+
+## 状态
+
+active；最后核验日期：2026-10-11；事实源：`U-COMBAT-AP-CHAR-01` 的角色修正与 schema4 存档验收。
+
+## 开工前
+
+任务在 `CharacterCombatModifiers`、角色存档或恢复链新增／调整 `ActionEconomyModifierInput`、`sourceDefinitionId`、`profileId` 或行动经济修正时，先冻结获准生产来源及其可用档案的明确所有者，再在 `CharacterCombatModifiers` 的统一入口拒绝未知来源、未知非空档案和重复／冲突输入。当前获准生产来源为空时，正式角色与存档只能接受空修正数组；格式合法的测试夹具不构成生产授权。
+
+恢复必须在发布到 live Character 前复用同一引用校验，并在任一引用非法时以 `action_economy_save_invalid` 拒绝而不改变已加载状态。不得由消费侧、默认值或任意非空字符串推断来源合法性。
+
+仅调整基础 AP／移动效率、只构造不进入正式角色或存档的协议夹具，或不触及行动经济修正与其持久化的任务排除。来源注册所有者、修正对象或保存恢复入口改变时停止引用并重新核验。
+
+## 正确处理
+
+先由内容所有者同时定义可用来源与档案匹配，再让 Character 的单一校验入口承载格式、范围和引用合法性。创建、快照恢复和 schema4 读取均在发布前调用该入口；空来源仍显式往返，未来非空来源以相同拒绝矩阵验证未知来源、未知档案、重复和冲突输入，且失败不改 live 状态。
+
+## 根因与弯路
+
+此前把字段格式校验当作生产来源授权，允许任意非空 `sourceDefinitionId` 与 `profileId` 进入角色和存档；恢复又把引用检查推迟给消费侧。当前生产来源为空，故该接受路径既不能证明来源真实存在，也会让持久化数据在发布后才暴露错误。
+
+## 证据
+
+`U-COMBAT-AP-CHAR-01` 的 Codex 复审确认，`CharacterActionPointStateTests` 与 `GameSaveEnvelopeTests` 新增的 8 项拒绝用例全部通过；直接 Character 24/24、保存 44/44、槽位 24/24 通过。正式边界为当前获准来源集合为空：空修正可往返，非空／未知来源在保存恢复前以 `action_economy_save_invalid` 拒绝。
+
+## 失效条件
+
+行动经济的生产来源及档案匹配不再由内容所有者冻结、`CharacterCombatModifiers` 不再是统一校验入口、`GameSaveEnvelope.CharacterRecord.Restore` 不再在发布前验证，或保存 schema／角色修正模型改由其他机制承载时，停止引用并重新核验。

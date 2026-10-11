@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-AP-CHAR-01/CAND-U-COMBAT-AP-CHAR-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-11：Codex 独立核验 CAND-U-COMBAT-AP-CHAR-01-01 的角色修正、保存恢复和拒绝测试证据；既有 active 经验未覆盖生产来源授权与持久化引用校验，故创建 EXP-UNITY-013 并登记为 active。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-AP-CHAR-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -64,6 +64,13 @@
 ## 完成条件
 
 - 候选以 promoted／duplicate／rejected 之一真实闭环；来源候选、整理归档、风险索引／经验卡按所选终态一致。
+
+## 完成记录（2026-10-11）
+
+- 结论：promoted。来源候选的角色修正入口、schema4 恢复边界及 8 项拒绝用例直接证明：协议字段格式不能替代生产来源授权，且引用必须在发布到 live Character 前核验。现有 active 经验未覆盖行动经济修正来源及其持久化，故不重复。
+- 已以预留 ID 创建 `EXP-UNITY-013`，只登记 Character 修正和保存恢复的精确触发条件；没有新增门禁，因未来来源与档案匹配须由内容所有者冻结，现有事实不足以形成稳定的通用检查器。
+- 模型协作：本轮为单一候选的证据核对、重复边界与固定格式登记，语义明确且验收可由现有记录完成；沿用入口 gpt-5.6-terra 单模型，未启动辅助模型或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-UNITY-013`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。
 
 ## 停止条件
 
