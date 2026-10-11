@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-UNARMED-RUNTIME-01"
-  ],
-  "stateReason": "N-COMBAT-AP2-SIM-01已完成归档；仍等待U-COMBAT-UNARMED-RUNTIME-01正式完成，之后由有权维护者准备ready并重跑风险预检。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "U-COMBAT-UNARMED-RUNTIME-01已完成归档；本卡完整合同、精确路径与验证边界仍成立，风险预检通过，已进入队列。",
   "expectedPaths": [
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/Character.cs",

@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-UNARMED-RUNTIME-01"
-  ],
-  "stateReason": "负责人批准空手普攻成长，原无武器资格目标已被替代；等待U-COMBAT-UNARMED-RUNTIME-01正式完成后消费新权威绑定与报价。",
+  "blockedBy": [],
+  "stateReason": "U-COMBAT-UNARMED-RUNTIME-01已完成归档；本轮重新风险预检命中两条必须阅读的Unity经验，共632字，超过600字边界，须先收窄任务范围或调整风险材料，暂不具备ready条件。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -31,7 +29,10 @@
   "sourceBacklog": "开发管理/任务列表/数值与战斗任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-015",
+      "EXP-UNITY-016"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"

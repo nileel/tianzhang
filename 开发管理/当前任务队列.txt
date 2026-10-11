@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-COMBAT-UNARMED-SIM-01 | codex_execute | codex | P1 | battlesim | migration | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
