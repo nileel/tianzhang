@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -102,10 +103,15 @@ namespace TianZhang.Features.CombatPresentation
                 secondArtTargetLabel.text = secondTarget == null ? "目标：—" : "目标：" +
                     (secondTarget.Id == snapshot.Player?.Id ? "自身" : secondTarget.DisplayName);
             if (actionStatusLabel != null)
+            {
+                // The formal 192x76 status area also shows unarmed/equipment rejection reasons.
+                // 20pt overflowed at both target resolutions; keep the complete text at 16pt.
+                actionStatusLabel.fontSize = 16;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
                     string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, equipmentReason, itemReason },
-                        reason => !string.IsNullOrEmpty(reason))));
+                        reason => !string.IsNullOrEmpty(reason)).Distinct()));
+            }
         }
 
         private string PresentArt(CombatArtActionSnapshot art, string targetId, Button button, Text label, bool canAct)
@@ -123,7 +129,7 @@ namespace TianZhang.Features.CombatPresentation
             if (target == null) return art.DisplayName + "：无可选目标";
             return target.CanExecute || string.IsNullOrEmpty(target.RejectionReason)
                 ? string.Empty
-                : art.DisplayName + "：" + displayReason(target.RejectionReason);
+                : displayReason(target.RejectionReason);
         }
 
         private string PresentAction(CombatActionPreviewSnapshot quote, Button button, bool canAct)
@@ -145,7 +151,7 @@ namespace TianZhang.Features.CombatPresentation
                 // The formal Guard (82x36) and item (90x60) labels overflow at 20pt.
                 if (quote.Candidate.Kind is CombatActionKind.Guard or CombatActionKind.UseItem) label.fontSize = 18;
             }
-            return quote.CanConfirm ? string.Empty : quote.ActionName + "：" + quote.Reason;
+            return quote.CanConfirm ? string.Empty : quote.Reason;
         }
 
         private static CombatArtTargetSnapshot FindTarget(CombatArtActionSnapshot art, string targetId)

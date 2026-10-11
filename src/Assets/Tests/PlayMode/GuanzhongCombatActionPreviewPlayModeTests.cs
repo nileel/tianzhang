@@ -45,6 +45,9 @@ namespace TianZhang.Tests.PlayMode
         private AdventureSpawnSet spawned;
         private readonly System.Collections.Generic.List<string> layoutFailures = new System.Collections.Generic.List<string>();
 
+        [SetUp]
+        public void ResetLayoutFailures() => layoutFailures.Clear();
+
         [UnitySetUp]
         public IEnumerator EnterFormalEncounter()
         {
@@ -68,7 +71,12 @@ namespace TianZhang.Tests.PlayMode
                 creation.Draft.Innate.Aptitude, creation.Draft.Innate.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
             creation.Submit("formal-preview", "行动预览验证");
             yield return SceneReady(GameplaySceneNames.World);
-            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
+            bool ap2 = TestContext.CurrentContext.Test.Name.StartsWith("Ap2", StringComparison.Ordinal);
+            bool unarmed = TestContext.CurrentContext.Test.Name.Contains("Unarmed");
+            if (!unarmed) GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
+            if (ap2)
+                GameBootstrap.RequireRuntime().Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot(
+                    "", unarmed ? "练气" : "金丹", unarmed ? 1.5f : 6f));
             WorldMapController world = Find<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();
@@ -101,7 +109,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(Find<AdventureInputController>().SelectNode("shijiahou_encounter"));
             session = Get<CombatSession>(encounter, "session");
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
-            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
+            if (TestContext.CurrentContext.Test.Name.StartsWith("Ap2", StringComparison.Ordinal))
+            {
+                // Explicit temporary miss fixture keeps the production-priced repeat sequence alive.
+                // Neither source template nor production random behavior is changed.
+                random.MissAll = true;
+                spawned.Player.DodgeRate = spawned.Enemy.DodgeRate = 100f;
+            }
+            else GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
             Assert.IsTrue(presenter.CanInspect);
         }
@@ -120,6 +135,197 @@ namespace TianZhang.Tests.PlayMode
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
             yield return null;
             // Keep task validation save evidence.
+        }
+
+        [UnityTest]
+        public IEnumerator Ap2WeaponRepeatQuoteAndCooldownAtBothResolutions()
+        {
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                var bar = Find<CombatActionBarView>();
+                var input = Find<CombatCommandInput>();
+                var view = Find<CombatActionPreviewView>();
+                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("1000/1000"));
+                for (int use = 0; use < 4; use++)
+                {
+                    if (use == 2)
+                    {
+                        bar.SwapEquipmentButton.onClick.Invoke();
+                        Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                        input.ConfirmCandidate();
+                        yield return Ready();
+                    }
+                    bar.BasicAttackButton.onClick.Invoke();
+                    AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
+                    Assert.That(input.Preview.CommittedUseCount, Is.EqualTo(use));
+                    Assert.That(input.Preview.RepeatMultiplierPermille, Is.EqualTo(use < 2 ? 1000 : use == 2 ? 1250 : 1500));
+                    Assert.That(input.Preview.BasicAttackSourceKind, Is.EqualTo("main_equipment"));
+                    Assert.That(input.Preview.UnarmedRealmId, Is.Empty);
+                    Assert.That(input.Preview.PhysicalAttackCapacity, Is.EqualTo(120));
+                    yield return CaptureAp2("weapon-" + width + "-" + (use + 1));
+                    string before = State();
+                    int cost = input.Preview.ActionPointCostUnits, ap = spawned.Player.ActionPointsRemainingUnits;
+                    view.CancelButton.onClick.Invoke();
+                    Assert.That(State(), Is.EqualTo(before));
+                    bar.BasicAttackButton.onClick.Invoke();
+                    Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(cost));
+                    Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                    input.ConfirmCandidate();
+                    Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
+                    yield return Ready();
+                }
+                for (int use = 0; use < 4; use++)
+                {
+                    bar.ArtButton.onClick.Invoke();
+                    AssertAp2Quote(input.Preview, CombatCommandKind.Art);
+                    Assert.That(input.Preview.CommittedUseCount, Is.EqualTo(use));
+                    Assert.That(input.Preview.RepeatMultiplierPermille, Is.EqualTo(use < 2 ? 1000 : use == 2 ? 1250 : 1500));
+                    Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                    int ap = spawned.Player.ActionPointsRemainingUnits, cost = input.Preview.ActionPointCostUnits;
+                    yield return CaptureAp2("spell-" + width + "-" + (use + 1));
+                    input.ConfirmCandidate();
+                    Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
+                    yield return Ready();
+                }
+                bar.SecondArtButton.onClick.Invoke();
+                AssertAp2Quote(input.Preview, CombatCommandKind.Art);
+                input.ConfirmCandidate();
+                yield return Ready();
+                var cooling = presenter.Snapshot.ArtActions[1].Targets[0].Quote;
+                Assert.That(cooling.RemainingCooldownTicks, Is.GreaterThan(0));
+                Assert.That(bar.SecondArtButton.interactable, Is.False);
+                view.Present(cooling);
+                yield return CaptureAp2("cooldown-" + width);
+                encounter.RequestEndTurn("player");
+                yield return Ready();
+                bar.BasicAttackButton.onClick.Invoke();
+                Assert.That(input.Preview.CommittedUseCount, Is.Zero);
+                Assert.That(input.Preview.RepeatMultiplierPermille, Is.EqualTo(1000));
+            }
+            Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
+        }
+
+        [UnityTest]
+        public IEnumerator Ap2UnarmedGrowthAndRejectedQuoteAtBothResolutions()
+        {
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                var bar = Find<CombatActionBarView>();
+                var input = Find<CombatCommandInput>();
+                for (int use = 0; use < 2; use++)
+                {
+                    bar.BasicAttackButton.onClick.Invoke();
+                    AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
+                    Assert.That(input.Preview.ActionName, Is.EqualTo("拳脚"));
+                    Assert.That(input.Preview.BasicAttackSourceKind, Is.EqualTo("unarmed_body"));
+                    Assert.That(input.Preview.UnarmedRealmId, Is.EqualTo("realm_lianqi"));
+                    Assert.That(input.Preview.PhysicalAttackCapacity, Is.EqualTo(120));
+                    Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(25000));
+                    Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                    yield return CaptureAp2("unarmed-" + width + "-" + use);
+                    input.ConfirmCandidate();
+                    yield return Ready();
+                }
+                bar.BasicAttackButton.onClick.Invoke();
+                var stale = input.Candidate;
+                GameBootstrap.RequireRuntime().Player.RestoreProgression(
+                    new TianZhang.Character.CharacterProgressionSnapshot("", "筑基", 3f));
+                encounter.ConfirmAction(stale);
+                int remaining = spawned.Player.ActionPointsRemainingUnits;
+                Assert.That(remaining, Is.EqualTo(50000), "Growth neither refills AP nor confirms an old quote.");
+                input.SetContext(presenter.Snapshot);
+                bar.BasicAttackButton.onClick.Invoke();
+                AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
+                Assert.That(input.Preview.UnarmedRealmId, Is.EqualTo("realm_zhuji"));
+                Assert.That(input.Preview.PhysicalAttackCapacity, Is.EqualTo(500));
+                Assert.That(input.Preview.CommittedUseCount, Is.EqualTo(2));
+                Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(93750));
+                Assert.That(input.Preview.CanConfirm, Is.False);
+                Assert.That(input.Preview.Reason, Does.Contain("行动力不足"));
+                string before = State();
+                input.ConfirmCandidate();
+                Assert.That(State(), Is.EqualTo(before));
+                yield return CaptureAp2("growth-rejected-" + width);
+                input.CancelCandidate();
+                encounter.RequestEndTurn("player");
+                yield return Ready();
+                bar.BasicAttackButton.onClick.Invoke();
+                Assert.That(input.Preview.CommittedUseCount, Is.Zero);
+                Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(75000));
+                Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                yield return CaptureAp2("growth-next-turn-" + width);
+            }
+            Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
+        }
+
+        private void AssertAp2Quote(CombatActionPreviewSnapshot quote, CombatCommandKind kind)
+        {
+            var authority = new CombatCommandService().Preview(session,
+                new CombatCommand(kind, quote.Candidate.ActorId, quote.Candidate.TargetId, quote.Candidate.ProfileId));
+            Assert.That(quote.ActionPointCostUnits, Is.EqualTo(authority.ActionPointCostUnits));
+            Assert.That(quote.CommittedUseCount, Is.EqualTo(authority.CommittedUseCount));
+            Assert.That(quote.RepeatMultiplierPermille, Is.EqualTo(authority.RepeatMultiplierPermille));
+            Assert.That(quote.RuleSetVersion, Is.EqualTo(authority.RuleSetVersion));
+            Assert.That(quote.RuleSetSourceDigest, Is.EqualTo(authority.RuleSetSourceDigest));
+            Assert.That(quote.AbilityTierId, Is.EqualTo(authority.AbilityTierId));
+            TestContext.WriteLine($"AP2 {Screen.width}: {kind} {quote.Candidate.ProfileId}, uses={quote.CommittedUseCount}, multiplier={quote.RepeatMultiplierPermille}, AP={quote.ActionPointCostUnits}, capacity={quote.PhysicalAttackCapacity}, legal={quote.CanConfirm}");
+        }
+
+        [UnityTest]
+        public IEnumerator Ap2FourteenCastsReportActualInputAndPresentationTime()
+        {
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                var bar = Find<CombatActionBarView>();
+                var input = Find<CombatCommandInput>();
+                long turn = session.TurnSequence;
+                int tick = session.TurnScheduler.CurrentTick, mp = spawned.Player.CurrentSpirit, paid = 0;
+                float started = Time.realtimeSinceStartup, presentationSeconds = 0;
+                for (int use = 0; use < 14; use++)
+                {
+                    bar.ArtButton.onClick.Invoke();
+                    Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                    Assert.That(input.Preview.CommittedUseCount, Is.EqualTo(use));
+                    AssertAp2Quote(input.Preview, CombatCommandKind.Art);
+                    paid += input.Preview.ActionPointCostUnits;
+                    float actionStarted = Time.realtimeSinceStartup;
+                    input.ConfirmCandidate();
+                    yield return Ready();
+                    presentationSeconds += Time.realtimeSinceStartup - actionStarted;
+                }
+                Assert.That(paid, Is.EqualTo(987500));
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(12500));
+                Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - 168));
+                Assert.That(session.TurnSequence, Is.EqualTo(turn));
+                Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
+                Assert.That(bar.ArtButton.interactable, Is.False);
+                var rejected = presenter.Snapshot.ArtActions[0].Targets[0].Quote;
+                Assert.That(rejected.ActionPointCostUnits, Is.EqualTo(75000));
+                Find<CombatActionPreviewView>().Present(rejected);
+                TestContext.WriteLine($"SCENE_INPUT width={width}, explicitJindanSample=true, casts=14, selectAndConfirmInvocations=28, basicAttacks=0, paidAP=987.5, remainingAP=12.5, paidMP=168, presentationAndFrameWaitSeconds={presentationSeconds:F3}, totalOperationSeconds={Time.realtimeSinceStartup - started:F3}, turn={turn}, tick={tick}");
+                yield return CaptureAp2("fourteen-casts-" + width);
+            }
+            Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
+        }
+
+        private IEnumerator CaptureAp2(string label)
+        {
+            Canvas.ForceUpdateCanvases();
+            Text text = Get<Text>(Find<CombatActionPreviewView>(), "summary");
+            var viewport = text.GetComponentInParent<ScrollRect>().viewport;
+            if (text.preferredHeight > viewport.rect.height + .1f)
+                layoutFailures.Add(label + ": viewport=" + viewport.rect + "; " + TextGeometry(text));
+            TestContext.WriteLine(label + ": viewport=" + viewport.rect + "; " + TextGeometry(text));
+            yield return CaptureHud("ap2-" + label);
         }
 
         [UnityTest]
@@ -336,7 +542,7 @@ namespace TianZhang.Tests.PlayMode
             view.ConfirmButton.onClick.Invoke();
             view.ConfirmButton.onClick.Invoke();
             Assert.AreEqual(mp - 12, spawned.Player.CurrentSpirit);
-            Assert.AreEqual(rolls + 4, random.Count);
+            Assert.AreEqual(rolls + 5, random.Count);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             Assert.IsNull(input.Candidate);
             Assert.IsNull(timeline.Prediction);
@@ -486,7 +692,8 @@ namespace TianZhang.Tests.PlayMode
         private sealed class CombatRandom : ICombatResolutionRandomSource
         {
             public int Count { get; private set; }
-            public float NextPercent() => Count++ % 4 == 0 ? 0f : 99f;
+            public bool MissAll { get; set; }
+            public float NextPercent() => Count++ % 5 == 0 && !MissAll ? 0f : 99f;
         }
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("天章/验证/记录行动预览现场 %&p")]

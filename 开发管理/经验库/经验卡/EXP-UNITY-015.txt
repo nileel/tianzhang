@@ -6,7 +6,7 @@ active；最后核验日期：2026-10-11；事实源：`U-COMBAT-AP-HUD-01-C01`�
 
 ## 开工前
 
-任务改动 `CombatActionBarView.PresentAction`／`PresentArt`，在固定尺寸的战斗动作条按钮中加入或调整 AP、MP、冷却或本地化费用文字，并出现 `fontSize`、`ActionPointCostUnits`、`PresentAction` 或 `PresentArt` 时，先核对正式运行时写入者和每个目标 Label 的实际 Rect；在 1920×1080 与 1366×768 分别读取最长正式文案的 `preferredWidth`、`preferredHeight` 与换行结果，再验收 Game View。若尺寸不足，只缩短该按钮的费用文案或在其直接所有者内局部调整字号后复验；不得只凭较大分辨率可容纳就认定通过。
+改动 `CombatActionBarView.PresentAction`／`PresentArt` 固定按钮的 AP、MP、冷却或本地化费用文字，且涉及 `fontSize`、`ActionPointCostUnits`、`PresentAction` 或 `PresentArt` 时，先核对正式写入者和 Label Rect；在 1920×1080、1366×768 测量最长文案的 `preferredWidth`、`preferredHeight` 和换行，再验收 Game View。尺寸不足只缩短该按钮费用文案或由直接所有者局部调字号后复验；不得仅凭大分辨率通过。
 
 不涉及固定尺寸动作条按钮的文字、自动布局或 TMP 文字、没有新增或变更费用／冷却／本地化文案的任务排除。按钮尺寸、直接 Label、字体生成方式、Canvas 缩放或正式验证入口被替换时，停止引用并重新核验。
 

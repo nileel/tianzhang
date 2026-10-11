@@ -1,0 +1,31 @@
+# U-COMBAT-AP2-PREVIEW-01 验证记录
+
+## 范围与所有者
+
+2026-10-11负责人直接指定手动Codex执行PREVIEW和后续SCENE；非纯1。起点e26021c9054f2d0ec4b5d37d00d355a4ab43df92，写前schema 5两owner均为空、集成锁none；主工作区既有summary_state、设计总结和未跟踪美术不在本轮范围。实际模型经Node REPL核验为gpt-6-astra；单主责，有界同一UI所有者，不调用辅助模型、不变更自动化模型配置。
+
+正式入口AdventureScene→AdventureSceneInstaller安装CombatCommandInput与CombatActionPreviewView；EncounterCoordinator.ProjectQuote/BuildActions从CombatCommandService权威报价投影，CombatHudPresenter→CombatCommandInput.SetContext刷新动作条并清除旧候选。AdventureSceneBuilder创建的UICanvas/CombatActionPreviewRoot/PreviewBody/ActionPreviewSummary由Present写入；动作栏及ActionStatusText由CombatActionBarView.Present写入。未修改场景、Canvas、相机、字体资源、战斗算法或生产参数。
+
+## 预检与实施
+
+两条经验EXP-UNITY-015/016同时命中。原mustReadChars=632；仅精简015开工前重复措辞，保留匹配、双分辨率、排除、失效和局部修正约束，合计584字符。600字上限、匹配器与风险索引未改；无gate。使用最新卡摘要重新预检后方可收尾。
+
+DTO补齐CommittedUseCount、RepeatMultiplierPermille、RuleSetVersion、RuleSetSourceDigest、AbilityTierId、BasicAttackSourceKind、UnarmedRealmId、PhysicalAttackCapacity及本地化档位说明。ProjectQuote读取当前有效profile及报价，不重算费用和次数；空手显示已有拳脚/撞击名称，武器保留固定档。预览显示本次费用、倍率、次数、剩余全局tick及权威拒绝原因，不向玩家暴露内部ID/摘要。
+
+## 首轮诊断
+
+src/Logs/ap2-preview.xml：2项均失败，禁止作为验收通过。空手功能断言实际完成双分辨率：练气两拳各25000单位；升筑基保留2次，第三次93750且AP余额50000、不补预算，拒绝不变状态；下本人回合恢复75000首拳。
+
+实测预览Rect宽1051，viewport高100/99.90，22号四行preferredHeight=127/122.284；ActionStatusText为192×76，20号完整拒绝说明高87～116。根因为正文行数/固定区域容量，非坐标转换。将预览档位和次数并入首行，保持完整费用/拒绝说明；状态汇总在其直接所有者改16号。第一次金丹重复攻击样本提前击杀敌人；Resolver命中率最高100且roll<=rate，99不保证miss。仅临时测试双方DodgeRate=100配99随机，使合法未命中仍按正式收费，生产模板和随机源不改。这些样本不作角色平衡或自然战斗难度证据。
+
+## 最终验证
+
+Unity 6000.3.18f1，正式Bootstrap→创角→聚落→AdventureScene，原生-runTests -testPlatform PlayMode，不传-batchmode/-nographics。首次失败保留；第二轮ap2-preview-second.xml为2/2通过。扩展SCENE期间发现AP耗尽时动作栏重复列出同一拒绝原因；在本卡同一ActionStatusText所有者按完整原因去重，单个动作报价保留完整拒绝事实，不缩减资格校验。
+
+ap-scene-recheck.xml：10/10通过，包括三项Ap2、既有HudShows及SCENE的采样/胜负返回。最终复核保留预测的存活/速度/CT条件后，ap-preview-final.xml以Ap2Weapon、Ap2Unarmed及HudShows为过滤器，3/3通过。确认/取消/重复确认/过期/死亡目标/移动/退出生命周期其余4项已在ap-scene-final.xml通过，后续变化仅为显示文案与拒绝汇总，没有改输入协议或命令算法。
+
+两分辨率真实数字：铁剑前两次40AP，换刀沿用普攻次数，第三次62.5AP、第四次75AP，承载保持120；贯石击50/50/62.5/75AP，倍率1/1/1.25/1.5。取消不收费/不累次；同源DTO字段逐项等于CombatCommandService报价；当前规则AP-GROWTH@0.1。聚灵术最终实算CD16、剩16刻、CT+5，禁止重复确认；下本人回合普攻计数清零。练气空手25AP/承载120，成长筑基后第三拳93.75AP/承载500，旧候选失效且余额保持50AP；拒绝不修改状态，下本人回合AP300/300、首拳75AP。
+
+最终预览1051×100（1366下高99.90），22号三行正文preferredHeight为95/91.36，完整可见；ActionStatusText为192×76，16号合并原因后完整可见。实际打开并检查ap-hud/ap2-weapon-1366-4.png、ap2-weapon-1920-3.png、ap2-growth-rejected-1920.png及1366版本、ap2-growth-next-turn-1920.png、ap2-cooldown-1366.png、ap2-fourteen-casts两分辨率图。没有裁掉费用/档位/拒绝原因、放大面板或修改字体资产。
+
+模块边界检查通过：19程序集/2 asmref；定向Unity编译通过。生产CSV、规则资产、语言与场景字节未改，最终四表输入与TUNING一致，详见SCENE记录；不重复BattleSim。原始XML/log/PNG在src/Logs（忽略目录）保留，可用本次新增测试重跑；记录及测试源码进入Git。本卡技术交付完成，体验确认属于既有CLOSE，不提前关闭父项。

@@ -251,6 +251,18 @@ namespace TianZhang.Features.Adventure
                 candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId);
             CombatantSnapshot actor = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
+            CombatAttackProfile profile = null;
+            session?.TryGetProfile(command.ProfileId, out profile);
+            CombatAttackRuleMetadata metadata = profile?.RuleMetadata;
+            bool basic = candidate.Kind == CombatActionKind.BasicAttack;
+            bool unarmed = basic && metadata?.EffectBudgetMode == "fixed_unarmed";
+            string sourceKind = basic && profile != null ? (unarmed ? "unarmed_body" : "main_equipment") : string.Empty;
+            string unarmedRealm = unarmed ? metadata.UnarmedRealmId : string.Empty;
+            int capacity = unarmed ? metadata.UnarmedPhysicalAttackCapacity : metadata?.Tier.PhysicalAttackCapacity ?? 0;
+            if (unarmed) name = displayProfile(command.ProfileId);
+            string attackDetail = metadata == null ? string.Empty :
+                resolveText(unarmed ? unarmedRealm : "realm_" + metadata.Tier.AbilityTierId.Substring(5)) +
+                (unarmed ? " · 肉攻承载 " + capacity : basic ? "档 · 肉攻承载 " + capacity : "档");
             int remainingCooldown = actor?.GetCooldown(command.ProfileId) ?? 0;
             string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
                 candidate.SlotIndex >= 0 && candidate.SlotIndex < actor.EquippedArtProfileIds.Count
@@ -263,7 +275,10 @@ namespace TianZhang.Features.Adventure
                 preview?.ReuseCooldownTicks ?? 0, remainingCooldown, replaced,
                 actor == null ? 0 : Math.Max(0, actor.MaxCombatSwaps - actor.CombatSwapsUsed),
                 preview?.ItemQuantityCost ?? 0, preview?.ItemAvailableQuantity ?? 0,
-                preview?.ItemHealthRecovery ?? 0, preview?.ExpectedHealthRecovery ?? 0, preview?.InventoryVersion ?? 0);
+                preview?.ItemHealthRecovery ?? 0, preview?.ExpectedHealthRecovery ?? 0, preview?.InventoryVersion ?? 0,
+                preview?.CommittedUseCount ?? 0, preview?.RepeatMultiplierPermille ?? 1000,
+                preview?.RuleSetVersion ?? string.Empty, preview?.RuleSetSourceDigest ?? string.Empty,
+                preview?.AbilityTierId ?? string.Empty, sourceKind, unarmedRealm, capacity, attackDetail);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)

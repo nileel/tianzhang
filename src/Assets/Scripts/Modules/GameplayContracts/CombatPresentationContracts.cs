@@ -56,7 +56,10 @@ namespace TianZhang.Gameplay.Contracts
             float settledCt, float threshold, long ticksUntilReady, int actionPointCostUnits = 0,
             int ctPenalty = 0, int reuseCooldownTicks = 0, int remainingCooldownTicks = 0,
             string replacedSpellName = "", int combatSwapsRemaining = 0, int itemQuantityCost = 0,
-            int itemAvailableQuantity = 0, int itemHealthRecovery = 0, int expectedHealthRecovery = 0, long inventoryVersion = 0)
+            int itemAvailableQuantity = 0, int itemHealthRecovery = 0, int expectedHealthRecovery = 0, long inventoryVersion = 0,
+            int committedUseCount = 0, int repeatMultiplierPermille = 1000, string ruleSetVersion = "",
+            string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
+            string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "")
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -77,6 +80,10 @@ namespace TianZhang.Gameplay.Contracts
             CombatSwapsRemaining = combatSwapsRemaining;
             ItemQuantityCost = itemQuantityCost; ItemAvailableQuantity = itemAvailableQuantity;
             ItemHealthRecovery = itemHealthRecovery; ExpectedHealthRecovery = expectedHealthRecovery; InventoryVersion = inventoryVersion;
+            CommittedUseCount = committedUseCount; RepeatMultiplierPermille = repeatMultiplierPermille;
+            RuleSetVersion = ruleSetVersion; RuleSetSourceDigest = ruleSetSourceDigest; AbilityTierId = abilityTierId;
+            BasicAttackSourceKind = basicAttackSourceKind; UnarmedRealmId = unarmedRealmId;
+            PhysicalAttackCapacity = physicalAttackCapacity; AttackDetail = attackDetail;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -100,6 +107,15 @@ namespace TianZhang.Gameplay.Contracts
         public int ItemHealthRecovery { get; }
         public int ExpectedHealthRecovery { get; }
         public long InventoryVersion { get; }
+        public int CommittedUseCount { get; }
+        public int RepeatMultiplierPermille { get; }
+        public string RuleSetVersion { get; }
+        public string RuleSetSourceDigest { get; }
+        public string AbilityTierId { get; }
+        public string BasicAttackSourceKind { get; }
+        public string UnarmedRealmId { get; }
+        public int PhysicalAttackCapacity { get; }
+        public string AttackDetail { get; }
     }
 
     public enum CombatUnitPresentationEvent

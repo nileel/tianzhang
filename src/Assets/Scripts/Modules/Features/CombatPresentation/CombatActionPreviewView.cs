@@ -60,12 +60,18 @@ namespace TianZhang.Features.CombatPresentation
                         "\n不可施行：" + value.Reason);
                 return;
             }
+            bool attack = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
+            string repeat = attack && value.ReuseCooldownTicks == 0
+                ? " · 已用" + value.CommittedUseCount + "次 · 本次×" +
+                    (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture)
+                : string.Empty;
             summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
+                (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
                 "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT 惩罚 +" +
-                value.CtPenalty + " · 技能 CD " + value.ReuseCooldownTicks + " 刻（剩 " + value.RemainingCooldownTicks + "）" +
-                (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "施行后仍可行动；若现在结束" : "确认结束本回合后") +
-                " CT " + ct + "/" + threshold + " · 自身下次约 +" + value.TicksUntilReady + " 刻（顺位未定）" +
-                "\n条件：双方存活，速度与CT无后续干预。伤害 / 命中：未探明。" : "\n不可施行：" + value.Reason);
+                value.CtPenalty + " · CD " + value.ReuseCooldownTicks + "（剩 " + value.RemainingCooldownTicks + " 刻）" +
+                (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +
+                    "CT " + ct + "/" + threshold + " · 约+" + value.TicksUntilReady + "刻（双方存活、速度/CT不变，顺位未定）" :
+                    "\n不可施行：" + value.Reason);
         }
     }
 }

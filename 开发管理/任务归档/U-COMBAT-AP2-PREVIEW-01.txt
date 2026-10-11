@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "U-COMBAT-UNARMED-RUNTIME-01已完成归档；本轮重新风险预检命中两条必须阅读的Unity经验，共632字，超过600字边界，须先收窄任务范围或调整风险材料，暂不具备ready条件。",
+  "stateReason": "2026-10-11手动Codex完成权威费用/次数/档位投影、双分辨率完整显示与正式PlayMode验证；预检584字通过，详见同ID验证记录。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
@@ -19,6 +19,7 @@
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
     "开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt",
+    "开发管理/经验库/经验卡/EXP-UNITY-015.txt",
     "开发管理/任务列表/数值与战斗任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt",
@@ -95,3 +96,8 @@
 
 - 接入合同§七冻结新增只读DTO字段BasicAttackSourceKind、UnarmedRealmId、PhysicalAttackCapacity；ProjectQuote从当前合法profile与权威报价取值，武器时空手境界为空。显示拳脚/撞击、对应肉身境界与承载、本次实付及既有成功次数/乘数/CD，不暴露内部ID、不计算成长或收费。
 - 身体名字键由RUNTIME已有Language.csv生产；本卡新增解释文本沿原Language精确路径，不新增语言资产。业务RefreshGrowth已由RUNTIME完成，本卡只消费更新后快照，测试两分辨率成长刷新/取消/换武器和第1/3/4次报价。缺族或profile的真实拒绝不能被UI制造空手绕过。
+
+## 2026-10-11 完成
+
+- 负责人直接指定执行；实际模型gpt-6-astra单主责。费用、次数、规则身份、武器/空手来源、境界及承载只读映射完成；两分辨率真实画面与当前输入通过。最新准备预检taskCardDigest=14e531ec677eb29c3710556117dec0126b22806c2030dd385be185dd17e71693，matched为EXP-UNITY-015/016、mustReadChars=584、无gate。
+- EXP-UNITY-015仅精简重复正文以解除已证实预检阻塞，约束与600字上限未改；补记精确路径。实现、首轮失败数值及最终证据详见开发管理/U-COMBAT-AP2-PREVIEW-01-验证记录.txt。不关闭父项或代替负责人体验确认。
