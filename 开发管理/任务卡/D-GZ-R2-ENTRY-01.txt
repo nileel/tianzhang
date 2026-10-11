@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否批准仅关中小族新档以练气开始试玩，沿用两术法及初始铁剑、铁刀各一件和活血丹三颗？任务卡明确要求开局设计获负责人确认后才能实施，因此本次只提交待批草案。",
+  "stateReason": "负责人回复已落实范围：DEC-20261012-CDAC7E80B6DA67/A",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-ENTRY-01.txt",
     "开发管理/任务归档/D-GZ-R2-ENTRY-01.txt",
@@ -21,11 +21,6 @@
     "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "executionModel": "gpt-6-astra",
   "automationCheckpoint": {
     "schemaVersion": 1,
@@ -99,6 +94,19 @@
     "taskContextDigest": "c0591405840f87ecc75f26e12e2023139600983b9cf8b5d3d31c0d3873706ff5",
     "createdAt": "2026-10-12T00:45:05.1989827+08:00",
     "queueIndex": 0
+  },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261012-CDAC7E80B6DA67",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "100aa9d343b552da789f99c0bb9ce8a4b7c345a86968f3d269bfb7bf2cfb24e9"
   }
 }
 ---TASK-BODY---
@@ -106,47 +114,61 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+负责人选择A后执行：批准开发管理/关中小族开局资格修订合同.txt第三节的关中小族练气试玩新档路线。仅完成设计定稿与两张既有下游卡的实现合同准备，不实施Unity功能，不宣称游戏问题已经修复。checkpoint草案随本轮恢复；其他出身、场景、共享资格和已有存档保持原行为。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
+- 开发管理/关中小族开局资格修订合同.txt完整文件
+- 开发管理/关中第二轮试玩排查与任务拆分.txt第1、5项
+- 开发管理/任务卡/U-GZ-R2-SPELL-01.txt完整文件
+- 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt完整文件
 - src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData
-- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::BeginEquippedNewGame
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationCatalog.cs::Origins
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs::RefreshOrigin
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::CreateNewPlayer/LoadPlayer
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::BeginEquippedNewGame/RestoreSave
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::ProjectActionEconomy
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryBuildProfiles
 - src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack
-- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md#第8至9节
-- docs/道具/武器/铁剑.txt#资格与主槽位、取得与保存
-- docs/道具/武器/铁刀.txt#资格与主槽位、取得与保存
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::QueryEquipment/GetEquipmentCandidates/QueryItem
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentArt
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure
+- src/Assets/DataConfig/AttackProfiles.csv中两术法行、Items.csv中铁剑/铁刀/活血丹行
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第8至9节
+- docs/道具/武器/铁剑.txt、铁刀.txt的资格与主槽位、取得与保存
 - src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs::PrepareEquippedPlayerFixture
+- src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs
+- 开发管理/AI协作规则.txt#任务卡中的模型协作提示
+- 开发管理/状态与建议维护规则.txt中任务卡维护与完成归档章节
 
 ## 实施范围
 
-对应反馈1、5，共同根因只裁决一次。对比：保留凡人开局并补正常成长/领取入口；小族采用明确获批的练气试玩入口；重设初始能力/普通武器资格。先核对现行凡人开局约束及武器规格冲突，再给出最小可玩路线，不能自行把所有出身升级或降低全局资格。冻结小族起始境界、两术法何时可用、初始武器/丹药取得时点、已有存档处理和玩家可见说明。设计待负责人确认时转waiting_reply，不把候选当批准。
+将唯一设计交付开发管理/关中小族开局资格修订合同.txt按负责人选择定稿并记录批准依据。只对正式新建origin_minor_clan且起点guanzhong_hub采用现有“练气”表示，保留level=1、realmMultiplier=1.5、空功法及既有点购/灵根；不新定品级。最终AP、移动和空手档位从当前成长配置投影，保留凡人点购镜像校验职责，不硬编码或回滚用户参数。贯石击、聚灵术沿原练气资格和目标/资源/冷却规则从首战合法可用；初次创建沿BeginEquippedNewGame取得铁剑1、铁刀1、活血丹3，默认铁剑主手，在首次存档前完整初始化。其他出身和旧档不升境、不补发、不迁移；读档/重入不重复发放。创角摘要说明练气试玩、两术法、物资及仅新档生效，旧凡人档明确当前资格限制，不伪造突破或领取入口。
 
-唯一设计交付路径：开发管理/关中小族开局资格修订合同.txt。只在获确认后准备下游ready；仍需回复时按既有waiting_reply合同保留卡片，不以模型自签代替用户决定。
+保留两件具名武器练气资格，凡人普通武器费用参照不构成本批武器的装配或发放授权。把共享开局资格入口与创角说明冻结给U-GZ-R2-SPELL-01；U-GZ-R2-EQUIP-01消费该结果，负责物资显示、首件装配/互换、道具和保存闭环。沿直接调用链一次性为两张卡补齐精确字面量路径、直接测试、必要.meta、实现边界、验证与停止条件；当前卡仅可写已列管理路径，读取源码不构成业务写入授权。
+
+下游blockedBy中的D-GZ-R2-ENTRY-01及其他前置引用全部保留，不提升、重排或关闭下游。只关闭并归档本设计任务、更新其自身backlog与队列投影；待正式结果进入master后，后续QueueMaintenance核对全部前置再准备ready。任务完成前依据本轮事实核对是否有经验候选，无候选不写空章节。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不改变其他出身/场景/全局共享默认行为，不扩展商店、完整背包、技能或成长系统，不改自动化脚本、Unity代码/资源、docs或CSV，不触碰用户存档。不以测试夹具、直接升境、重复调用新档初始化或未运行的验证冒充玩家结果。
 
 ## 模型协作
 
-复杂语义裁决：凡人开局、练气术法与物资资格存在跨事实源冲突，需要先冻结唯一产品口径。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6-astra冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+主责codex，executionModel保持gpt-6-astra。复杂语义已经由本次选择冻结，两个下游共享开局边界由同一主模型统一复核，默认单模型，无独立辅助工作面不派发辅助。核对实际能力，不把正文建议high当作已生效配置。临近ready的下游卡按届时复杂度重新核对组合；保留既有模型配置，不因设计批准跳过经验预检和运行时门禁。
 
 ## 验证
 
-逐项对照创角、资格、发放、保存、真实操作入口；必须列出不调用PrepareEquippedPlayerFixture/RestoreProgression的验收链。这里只做语义/功能设计，不作数值平衡结论。
+逐项对照创角、资格、发放、首件装配、首次保存、读档与真实操作入口；保留合同第五节完整验收链。下游正式菜单→小族新建→城镇→首战必须不调用PrepareEquippedPlayerFixture/RestoreProgression，不直接注入境界/库存。覆盖贯石击合法结算、聚灵术自用、AP/MP不足、越界/资格/目标/冷却拒绝、武器预览取消及确认、丹药受伤使用及满血/零库存拒绝、一次扣费、战后保存读档、重入防重复、旧凡人档和其他出身不变。成功链实际界面与状态由下游Unity PlayMode证明，本轮仅冻结功能设计，不作数值平衡结论。
 
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+管理收尾运行check-task-cards.ps1、check-review-text.ps1；仅实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。未改docs/CSV/Unity不运行check-data-chain.ps1或Unity/BattleSim。共享入口重新预检后消费mustRead与gates，范围或技术路线变化先停写并按规则重新预检。
 
 ## 完成条件
 
-形成一份获确认的开局资格合同；将两个既有下游卡一次性补齐精确路径、实现边界和验收。只关闭设计结果，不声称功能已修复。
+形成带负责人批准依据的唯一开局资格合同；两张既有下游卡均具备精确路径、职责边界、正式入口验收与停止条件，依赖引用和blocked状态保留。仅归档本设计结果，不声称Unity功能已修复或角色数值已经平衡。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+新所有者、需扩大允许路径/新增内容/存档迁移、缺失资源或必要运行时证据、与本次批准语义冲突时暂停并回查根因，不连续叠加补丁。无法在两个既有实现工作面内闭环时交有权规划者重新规划，不临时新建任务或扩大系统。不得自行改成凡人成长、全出身练气或降低共享资格。
