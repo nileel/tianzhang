@@ -387,6 +387,34 @@ try {
   $treeAfter = Get-FileTreeHash $caseRoot
   Assert-True ($treeBefore -ceq $treeAfter) 'case10: matcher must not modify the worktree'
 
+  # ---- 11. 生产经验：装备显示引用不等于回合门禁或成长变更 ----
+  $caseRoot = Join-Path $tempRoot 'case11'
+  $repoRoot = Split-Path -Parent $PSScriptRoot
+  $productionIndex = Get-Content -LiteralPath (Join-Path $repoRoot '开发管理/经验库/风险索引.json') -Raw -Encoding utf8 | ConvertFrom-Json
+  $ids = @('EXP-UNITY-014', 'EXP-UNITY-015', 'EXP-UNITY-016', 'EXP-UNITY-017')
+  $entries = @($productionIndex.experiences | Where-Object { $_.id -cin $ids })
+  Assert-True ($entries.Count -eq 4) 'case11: production experience entries exist'
+  Set-Index $caseRoot (New-Index $entries)
+  foreach ($id in $ids) {
+    Set-ExpCard $caseRoot $id (Get-Content -LiteralPath (Join-Path $repoRoot "开发管理/经验库/经验卡/$id.txt") -Raw -Encoding utf8)
+  }
+  $paths = @(
+    'src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs'
+    'src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs'
+    'src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs'
+  )
+  $references = 'CharacterRuntimeProfile.TryPrepareEquipmentChange/ValidateEquipmentState；CombatCommandInput.Configure/ConfirmCandidate/CancelCandidate；CombatActionBarView.Present/PresentAction；CombatActionPreviewView.Present；CombatantSnapshot；ContentCatalogDataTests。'
+  Set-Card $caseRoot (New-TaskCard -Id 'T-EQUIP-01' -Domain 'unity' -ExpectedPaths $paths -Bichan $references -Shishi '在 EncounterCoordinator.ProjectQuote 与 CombatActionBarView.PresentAction、CombatActionPreviewView.Present 补充物资说明。') 'T-EQUIP-01'
+  $equipment = Invoke-Ok $caseRoot @('-TaskId', 'T-EQUIP-01')
+  Assert-True ($equipment.Json.status -ceq 'ok' -and ($equipment.Json.matched -join ',') -ceq 'EXP-UNITY-015,EXP-UNITY-016') 'case11: equipment display keeps layout risks without unrelated semantic risks'
+  Assert-True ($equipment.Json.mustReadChars -le 600) 'case11: equipment preflight fits the existing budget'
+
+  # 真实风险仍命中；共同适用的三条短文也须能完整返回，不能截断正文或放宽门槛。
+  Set-Card $caseRoot (New-TaskCard -Id 'T-SEMANTICS-01' -Domain 'unity' -ExpectedPaths $paths[0..1] -Bichan 'CanEndTurn、AcceptsCommands、PresentAction、ActionPointMaximumUnits、MovementEfficiencyMilliUnits' -Shishi '变更回合结束能力与 AP派生，校验独立快照。') 'T-SEMANTICS-01'
+  $semantics = Invoke-Ok $caseRoot @('-TaskId', 'T-SEMANTICS-01')
+  Assert-True ($semantics.Json.status -ceq 'ok' -and ($semantics.Json.matched -join ',') -ceq 'EXP-UNITY-014,EXP-UNITY-015,EXP-UNITY-017') 'case11: real turn and growth changes still match'
+  Assert-True ($semantics.Json.mustRead.Count -eq 3 -and $semantics.Json.mustReadChars -le 600) 'case11: three complete production bodies fit the existing budget'
+
   Write-Output 'test-get-experience-risk-preflight: PASS'
 } finally {
   if (Test-Path -LiteralPath $tempRoot) {

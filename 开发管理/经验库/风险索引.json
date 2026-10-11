@@ -627,12 +627,12 @@
         "CanEndTurn",
         "AcceptsCommands",
         "CanAct",
-        "CombatActionBarView.Present",
-        "CombatCommandInput"
+        "回合结束能力",
+        "命令合法性"
       ],
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-014.txt#开工前",
       "gateRefs": [],
-      "lastVerified": "2026-10-11"
+      "lastVerified": "2026-10-12"
     },
     {
       "id": "EXP-UNITY-015",
@@ -710,15 +710,15 @@
         "src/Assets/Tests/EditMode/ContentCatalogDataTests.cs"
       ],
       "textPatterns": [
-        "CharacterRuntimeProfile",
-        "CombatantSnapshot",
         "ActionPointMaximumUnits",
         "MovementEfficiencyMilliUnits",
-        "ContentCatalogDataTests"
+        "AP派生",
+        "AP 派生",
+        "移动效率"
       ],
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-017.txt#开工前",
       "gateRefs": [],
-      "lastVerified": "2026-10-11"
+      "lastVerified": "2026-10-12"
     }
   ],
   "gates": []
