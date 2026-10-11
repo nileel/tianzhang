@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-11用户明确要求排查并分别建卡；当前有界工作面可执行。",
+  "stateReason": "自动责任方确认阻塞：runtime_evidence_missing",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
