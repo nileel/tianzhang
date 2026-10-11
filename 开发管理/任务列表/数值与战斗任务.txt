@@ -47,7 +47,7 @@
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | — | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
-| U-COMBAT-AP-SCENE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-TUNING-01、U-COMBAT-AP2-PREVIEW-01 | 统一行动力正式场景最终验收 | 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt |
+| U-COMBAT-AP-SCENE-01 | P1 | codex | 阻塞 | U-COMBAT-AP2-PREVIEW-01 | 统一行动力正式场景最终验收 | 开发管理/任务卡/U-COMBAT-AP-SCENE-01.txt |
 | D-COMBAT-AP-CLOSE-01 | P1 | codex | 阻塞 | U-COMBAT-AP-SCENE-01 | 统一行动力交付闭环与父项关闭 | 开发管理/任务卡/D-COMBAT-AP-CLOSE-01.txt |
 | N-FPD-REGRESSION-01 | P2 | DeepSeek V4 Pro 0813 执行矩阵；Codex 复审并定案 | 阻塞（D-FPD-MIGRATE-01、C-FPD-GONGFA-01、C-FPD-SPELL-01） | — | 全部内容实例迁移后执行一次合并的养成、21 Build、压阶和丹相回归。 | — |
 | N-SUPPRESS-01 | P2 | Codex | 冻结（仅保留旧审计） | DEC-20260728-NSUPPRESS01AFIELDS=B | 确定性削位与封丹父任务；负责人仅保留旧审计，不授权新结算。 | — |
