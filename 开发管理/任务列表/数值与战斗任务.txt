@@ -6,6 +6,8 @@
 
 - 2026-10-10空手修订：已完整建立CONTRACT/CONFIG/RUNTIME/SIM四项新叶，复用AP2预览/平衡/回填/场景/闭环；CONTRACT与原AP2-SIM均已完成归档，CONFIG的直接前置已清空并进入队列。RUNTIME仍等待CONFIG，SIM仍等待RUNTIME，平衡、预览、回填、场景和闭环的其余具名前置保持；具体拓扑见统一行动力实现规划的空手追加图。空手功能尚未实现或定案。
 
+- 2026-10-11空队列维护：核对`U-COMBAT-UNARMED-CONFIG-01`仅存在完成归档且无活跃卡；RUNTIME的唯一具名前置解除。合同冻结的生产身份、字面量路径和原子边界仍完整，风险预检无命中且通过，RUNTIME进入队列；SIM及其他下游前置保持不变。
+
 - 2026-10-10：U-COMBAT-AP2-REPEAT-01完成零冷却主动的同源重复报价、成功次数及事务提交；原生Unity编译成功，行动力内核38/38、运行时内核68/68和固定档承载19/19通过。本卡已归档，下游具名前置保留待正式master结果后的QueueMaintenance；不代表新方案平衡或最终场景完成。
 
 - 2026-10-10非前置卡点核查：补齐STATUS/BALANCE/TUNING/WEAPON/SCENE的已证实路径与职责缺口；POTENCY完成后STATUS转ready，按本次等待时间插入既有三项之后，队列为GROWTH→REPEAT→WEAPON→STATUS。现存正式场景测试的过期断言/操作假设单独修复并实跑，范围、证据和最终体验确认边界见开发管理/统一行动力非前置卡点核查.txt；不提前完成其他叶子。
@@ -44,7 +46,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| U-COMBAT-UNARMED-RUNTIME-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-CONFIG-01 | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
+| U-COMBAT-UNARMED-RUNTIME-01 | P1 | codex | 已排队 | — | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
 | N-COMBAT-UNARMED-SIM-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
 | N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |

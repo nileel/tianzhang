@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-COMBAT-UNARMED-CONFIG-01"
-  ],
-  "stateReason": "等待卡头直接前置正式完成；合同冻结精确字段、生产ID、生成物与.meta后，由有权维护者准备ready并重跑风险预检。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "U-COMBAT-UNARMED-CONFIG-01已完成归档；合同冻结的字段、生产ID、生成物与.meta及现有路径已核对，风险预检通过，可按既有原子边界执行。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -154,7 +152,8 @@
 
 ## 模型协作
 
-- 2026-10-11负责人明确将本批任务全部转交Codex；本卡使用codex_execute/codex，executionModel=gpt-6.1-sol。角色成长/保存纵向接入，建议high；创建、成长与恢复强耦合，由单主责统一修改和验证。保持blocked，临近ready核对公共接口、回滚及真实Unity能力，不并行写同一所有者。
+- 2026-10-11负责人明确将本批任务全部转交Codex；本卡使用codex_execute/codex，executionModel=gpt-6.1-sol。角色成长/保存纵向接入，建议high；创建、成长与恢复强耦合，由单主责统一修改和验证。临近ready核对公共接口、回滚及真实Unity能力，不并行写同一所有者。
+- 2026-10-11 QueueMaintenance：已核对CONFIG完成归档、合同冻结的五个生产攻击身份及108条精确预期路径；其中12条为本卡应生成的资产、验证记录与归档输出，其余现有路径可用。任务边界和验收仍完整，适合由卡头指定主模型单主责执行；没有独立且有价值的只读辅助问题，无需辅助。
 - Codex按原冻结范围实施、复核完整diff和最终验证并正式归档；不再走DeepSeek交付后转codex_review的流程。原依赖、路径、验收和停止条件保持，执行前核对实际工具与风险预检。
 
 ## 验证
