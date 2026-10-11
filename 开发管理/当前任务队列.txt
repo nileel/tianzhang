@@ -5,3 +5,10 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| D-GZ-R2-ENTRY-01 | codex_execute | codex | P1 | unity | design | 小族开局境界与术法物资资格重设计 | 开发管理/任务卡/D-GZ-R2-ENTRY-01.txt |
+| U-GZ-R2-CREATE-BACK-01 | codex_execute | codex | P1 | unity | implementation | 创建角色界面返回主页 | 开发管理/任务卡/U-GZ-R2-CREATE-BACK-01.txt |
+| D-GZ-R2-EXIT-01 | codex_execute | codex | P1 | unity | design | 战斗主动退出回城语义设计 | 开发管理/任务卡/D-GZ-R2-EXIT-01.txt |
+| U-GZ-R2-BOUNTY-01 | codex_execute | codex | P1 | unity | implementation | 悬赏接取领取按钮交互状态修复 | 开发管理/任务卡/U-GZ-R2-BOUNTY-01.txt |
+| D-GZ-R2-OBSTACLE-01 | codex_execute | codex | P1 | unity | design | 整格障碍物视觉与资源适配设计 | 开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt |
+| U-GZ-R2-SPAWN-01 | codex_execute | codex | P1 | unity | implementation | 关中首战怪物移至画面右上角出生 | 开发管理/任务卡/U-GZ-R2-SPAWN-01.txt |
+| D-GZ-R2-RANGE-01 | codex_execute | codex | P1 | unity | design | 两件基础武器差异射程设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |

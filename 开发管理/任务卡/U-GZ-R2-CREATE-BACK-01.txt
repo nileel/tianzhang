@@ -1,0 +1,75 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-CREATE-BACK-01",
+  "title": "创建角色界面返回主页",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-11用户明确要求排查并分别建卡；当前有界工作面可执行。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-CREATE-BACK-01.txt",
+    "开发管理/任务归档/U-GZ-R2-CREATE-BACK-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs",
+    "src/Assets/Scenes/StartMenuScene.unity",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/PlayMode/StartMenuSaveDeletionPlayModeTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-GZ-R2-CREATE-BACK-01 · 创建角色界面返回主页
+
+## 来源与当前边界
+
+来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+
+## 必查范围
+
+- 开发管理/关中第二轮试玩排查与任务拆分.txt
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs::Configure/Show/Hide
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationController.cs::Open
+- src/Assets/Scripts/Modules/Features/CharacterCreation/StartMenuController.cs::OpenNewPlayer
+- src/Assets/Scripts/Editor/StartMenuSceneBuilder.cs
+- src/Assets/Scenes/StartMenuScene.unity::CharacterCreationPanel
+
+## 实施范围
+
+在现有创角面板接入明确可见的返回主页按钮，复用Hide和当前菜单；返回只关闭草稿面板，保留本次会话草稿，不创建角色、不保存、不删除已有槽。重复打开应可继续编辑。生成器与正式场景同步，不建第二导航服务。
+
+## 禁止项
+
+不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+
+## 模型协作
+
+有界单一结果：入口默认单模型足以统一复核，无需辅助。 执行前核对工具；Unity实机证据不可用时如实记录并保持未完成，不以源码推断通过。
+
+## 验证
+
+复用StartMenuSaveDeletionPlayModeTests增加创角打开→修改草稿→返回→重开→读档路径；1920×1080、1366×768实机检查；相关程序集编译、场景引用检查。
+
+管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+
+## 完成条件
+
+鼠标可返回主页且继续新建/读档；未提交草稿不落盘，已有存档不变化；两种分辨率按钮可见可点。
+
+## 停止条件
+
+发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

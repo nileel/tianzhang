@@ -1,0 +1,73 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-EQUIP-01",
+  "title": "真实开局武器道具取得与装备入口修复",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-GZ-R2-ENTRY-01",
+    "U-GZ-R2-SPELL-01"
+  ],
+  "stateReason": "2026-10-11已完成初步归因，等待具名前置完成及实施路径冻结，不得提前修改业务。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt",
+    "开发管理/任务归档/U-GZ-R2-EQUIP-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-GZ-R2-EQUIP-01 · 真实开局武器道具取得与装备入口修复
+
+## 来源与当前边界
+
+来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+
+## 必查范围
+
+- 开发管理/关中第二轮试玩排查与任务拆分.txt
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::BeginEquippedNewGame
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::QueryEquipment/GetEquipmentCandidates/QueryItem
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure
+- src/Assets/DataConfig/Items.csv::item_iron_sword/item_iron_blade/item_huoxue_dan
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs
+
+## 实施范围
+
+反馈5：在已修正的真实开局资格入口上，使玩家按合同取得铁剑/铁刀/活血丹，界面显示拥有/装备/数量/无资格或无库存原因，提供现有换装备和使用道具→预览→确认链。依赖SPELL卡只因真实开局资格实现由其独占，不能两卡各改一套起始境界。不得扩成完整商店、打造或背包系统；旧档不得无条件补发。
+
+当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
+
+## 禁止项
+
+不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+
+## 模型协作
+
+当前实现边界未冻结，临近ready按批准合同重新评估复杂度与模型组合；本轮只建卡，没有调用辅助。 执行前核对工具；Unity实机证据不可用时如实记录并保持未完成，不以源码推断通过。
+
+## 验证
+
+不使用PrepareEquippedPlayerFixture的正式菜单端到端；物品0/有库存、伤满/受伤、换装拒绝、一次扣费、读档和重入防重复。
+
+管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+
+## 完成条件
+
+真实新档可取得并切换两件武器、受伤时消耗道具；首次保存和读档库存/装备一致；重入不重复发放。无需玩家调用测试代码。
+
+## 停止条件
+
+发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

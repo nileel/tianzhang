@@ -1,0 +1,74 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "D-GZ-R2-ENTRY-01",
+  "title": "小族开局境界与术法物资资格重设计",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "design",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-11用户明确要求排查并分别建卡；当前有界工作面可执行。",
+  "expectedPaths": [
+    "开发管理/任务卡/D-GZ-R2-ENTRY-01.txt",
+    "开发管理/任务归档/D-GZ-R2-ENTRY-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/关中小族开局资格修订合同.txt",
+    "开发管理/任务卡/U-GZ-R2-SPELL-01.txt",
+    "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# D-GZ-R2-ENTRY-01 · 小族开局境界与术法物资资格重设计
+
+## 来源与当前边界
+
+来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+
+## 必查范围
+
+- 开发管理/关中第二轮试玩排查与任务拆分.txt
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::BeginEquippedNewGame
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md#第8至9节
+- docs/道具/武器/铁剑.txt#资格与主槽位、取得与保存
+- docs/道具/武器/铁刀.txt#资格与主槽位、取得与保存
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs::PrepareEquippedPlayerFixture
+
+## 实施范围
+
+对应反馈1、5，共同根因只裁决一次。对比：保留凡人开局并补正常成长/领取入口；小族采用明确获批的练气试玩入口；重设初始能力/普通武器资格。先核对现行凡人开局约束及武器规格冲突，再给出最小可玩路线，不能自行把所有出身升级或降低全局资格。冻结小族起始境界、两术法何时可用、初始武器/丹药取得时点、已有存档处理和玩家可见说明。设计待负责人确认时转waiting_reply，不把候选当批准。
+
+唯一设计交付路径：开发管理/关中小族开局资格修订合同.txt。只在获确认后准备下游ready；仍需回复时按既有waiting_reply合同保留卡片，不以模型自签代替用户决定。
+
+## 禁止项
+
+不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+
+## 模型协作
+
+复杂语义裁决：涉及同一会话及持久化所有者，主责统一处理强耦合事实，主模型沿入口默认；当前没有需并行写入的独立工作面，不派生子智能体。若出现关键事实冲突，按AI协作规则考虑只读gpt-6-astra/high辅助，不能替代产品批准。 执行前核对工具；Unity实机证据不可用时如实记录并保持未完成，不以源码推断通过。
+
+## 验证
+
+逐项对照创角、资格、发放、保存、真实操作入口；必须列出不调用PrepareEquippedPlayerFixture/RestoreProgression的验收链。这里只做语义/功能设计，不作数值平衡结论。
+
+管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+
+## 完成条件
+
+形成一份获确认的开局资格合同；将两个既有下游卡一次性补齐精确路径、实现边界和验收。只关闭设计结果，不声称功能已修复。
+
+## 停止条件
+
+发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

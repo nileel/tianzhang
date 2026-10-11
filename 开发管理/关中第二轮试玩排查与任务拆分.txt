@@ -1,0 +1,99 @@
+# 关中第二轮试玩排查与任务拆分
+
+来源：2026-10-11用户九项试玩反馈及随附战场截图。
+检查基线：master eab9ec5e；本轮只检查当前源码、CSV、已导入asset、场景序列化和既有测试实现，并建立任务；未运行Unity PlayMode，未读取用户存档，未改游戏代码/数值/资产，不把静态归因写成用户会话实机复现。
+写入前schema 5 Show：codex/deepseek均无活动run，integrationLockStatus=none；原有summary_state、设计总结与fuyuan-tripo-p2-tpose改动保留。
+本文件是本轮证据与拆分索引；当前任务事实以各独立任务卡为准，不作为可被领取的汇总父任务。
+
+## 1. 小族两术法无法释放
+
+已证实的源码断点：
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData统一写realmStage=凡人；origin_minor_clan只额外赋予两个已知/已装备术法spell_guanshiji、spell_julingshu，没有改境界。
+- src/Assets/DataConfig/AttackProfiles.csv两行及对应src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset、AttackProfile_spell_julingshu.asset均要求realm_lianqi。
+- CombatEntryAdapter::TryBuildProfiles将要求传给AbilityRequirementPolicy；CombatSession::ValidateAttack在费用/距离检查前调用MeetsRequirements，失败为attack_profile_requirements_not_met。CombatActionBarView::PresentArt按CanExecute禁用按钮。
+- 因此真实新建凡人小族角色即使AP/MP充足，也不具备两术法资格。这是开局发放与使用资格不一致，不能通过给AP/MP加兜底解决。
+- 贯石击当前射程1；聚灵术自用范围包含0，可指定其他对象至2。解除资格问题后仍须各自满足目标、距离、冷却与费用。
+
+测试缺口：GuanzhongCombatTargetSelectionPlayModeTests先调用GuanzhongBasicAttackPlayModeTests::PrepareEquippedPlayerFixture；该方法明确断言凡人/无铁剑，再用RestoreProgression改练气并BeginEquippedNewGame。换术测试也直接写练气。因此相关测试不是“未经测试改造的真实开局可施法”证据。
+任务：D-GZ-R2-ENTRY-01 → U-GZ-R2-SPELL-01。设计先协调凡人开局约束，不直接偷改全局资格。
+
+## 2. 一格50 AP与手动配置入口
+
+当前计算吻合配置，不是显示倍率错误。
+- 唯一当前境界基础值：src/Assets/DataConfig/RealmCombatGrowth.csv，realm_fanren行（第2行）的baseMovementEfficiencyMilliUnits=2000，即移动效率v=2。
+- SpatialQueryBoard::ActionPointEdgeWeight.TryGetEdgeCostUnits使用固定每100 AP参考价、实际有向边距离与地形负担，再除以移动效率。普通无附加负担的一格：100/v AP，所以v=2为50 AP，v=4为25 AP，v=10为10 AP。例子只解释算式，不是平衡推荐。
+- 手动试10 AP/普通格可将该行baseMovementEfficiencyMilliUnits从2000改为10000；legacyBaseMovementEfficiencyMilliUnits是旧成长迁移参照，不是当前基础速度开关，不顺带修改。
+- src/Assets/DataConfig/CharacterCreationPointBuy.csv三条default行的movementEfficiencyMilliUnits也须与凡人基础值一致；目前均2000。只改境界表不改此校验镜像会触发CharacterCreationRules::BuildCharacterData的character_creation_growth_checksum_invalid。
+- 修改CSV后在Unity依次执行“天章 → 导入攻击档案配置”（CombatContentImporter::ImportAttackProfiles，会生成CombatRuleSet及关联派生档案）和“天章 → 导入角色创建点购配置”（SettlementContentImporter::ImportCharacterCreationPointBuy）。
+- 生成资源为src/Assets/Data/CombatRuleSet.asset及src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset；不要仅手改生成asset。重新进入游戏/战斗读取新配置；不要指望正在进行的战斗快照自动刷新。
+- 后续任务验收必须读取届时实际配置，不把本轮2000再次硬编码回去。用户明确本项手动修改，本轮不代调参数、不建立自动调参任务，不作BattleSim平衡结论。
+
+## 3. 创角无返回
+
+CharacterCreationView有Hide()，但Configure只接提交和出身选择，没有返回按钮；CharacterCreationController和StartMenuController也未接取消回调。缺的是入口接线。
+任务：U-GZ-R2-CREATE-BACK-01。复用现有面板Hide，返回不写存档；草稿保留到本次会话重开。
+
+## 4. 战斗无退出
+
+AdventureController::ReturnToSource明确要求CanSelectExplorationNode；战斗态不可用。现有胜负只经ResolveEncounter正式结算返回城镇。GuanzhongCombatNavigationGuardPlayModeTests还验证战斗中return被拒绝，所以不是遗漏调用一次LoadScene即可安全修复。
+任务：D-GZ-R2-EXIT-01 → U-GZ-R2-EXIT-01。冻结主动退出、确认取消、演出中状态、资源保留、无击杀/无掉落/无悬赏奖励与一次导航，复用现有返回目标。
+
+## 5. 有槽位却无武器和道具
+
+不是完全没做，也不是用户漏点某个隐藏装备菜单：
+- StartMenuSceneInstaller::CreateNewPlayer确实调用GameRuntime::BeginEquippedNewGame。
+- BeginEquippedNewGame遇realm_fanren立即走BeginNewGame返回；只有练气分支发铁剑1、铁刀1、活血丹initialGrantQuantity=3，并默认装备铁剑。
+- Items.csv中的两件武器、活血丹均有练气资格；QueryItem还明确拒绝非练气。新建角色统一凡人，因而走不到发放分支。
+- 已有合法练气且持有物品的角色：战斗“换装备”按钮→预览→确认可切铁剑/铁刀；“使用道具”→预览→确认使用活血丹。现有实现不是完整背包/商店；无库存不能凭按钮创造物品，旧档/重进场景不补发。
+- QueryEquipment当前要求已存在主手，首件装配与后续互换必须在设计里一起核对，不能只往空角色库存塞武器。
+- 直接设计事实还有冲突：2026-10-09-combat-ap-growth-and-repeat-cost-design.md第9.1节写凡人普通武器参照练气档；铁剑/铁刀当前L2“资格与主槽位”仍拒绝凡人。ENTRY设计负责裁决可玩路线，实施者不能随意择一绕过。
+
+任务：D-GZ-R2-ENTRY-01 → U-GZ-R2-SPELL-01（真实开局资格）→ U-GZ-R2-EQUIP-01（物资取得/装备/道具）。共享开局规则只由一个任务改，装备结果仍独立验收。
+
+## 6. 悬赏按钮常亮且无交互变化
+
+SettlementSceneBuilder::BuildBountyPanel给accept和claim调用ApplyButtonSkin(primary=true)。该方法把image.sprite、highlightedSprite、pressedSprite、selectedSprite都指向Guanzhong_Button_Selected；SettlementScene序列化亦显示同一个sprite fileID。因此正常/悬停/按下看起来相同。
+BountyBoardView::UpdateButtons又仅根据hasCurrent启用二者，未分别按Available/Accepted/ObjectiveCompleted/Claimed控制可接可领。这是另一处明确的状态展示缺口。
+任务：U-GZ-R2-BOUNTY-01。限定这两个按钮，避免改共享primary导致城镇其他按钮和Adventure全局变化。
+
+## 7. 截图四个小块
+
+确实对应四个不可走地块(2,1)、(3,1)、(2,4)、(3,4)。EnvironmentProfile_env_guanzhong_wild.asset中blocksGroundMove=1、blocksLineOfSight=0。
+AdventureSceneBuilder::BuildGuanzhongBattlefield在这些格创建GuanzhongObstacle_q_r，实例化的是Stair.prefab而非整格障碍物；Stair的MeasuredFbxAlignment带0.4143463缩放与z=-0.40717316偏移。当前场景序列化存在对应实例。
+这是小型石阶资源被用于表达整格不可通行的视觉用途不匹配；数值本身不是“调成某倍一定正确”的证据。本轮没有采集运行时renderer bounds，不凭截图估计修正scale。相邻VisualBaselineOccluder是另一对象，不能误改。
+任务：D-GZ-R2-OBSTACLE-01 → U-GZ-R2-OBSTACLE-01。目标按用户要求居中、整格足迹、明显障碍；需确认源资源和实机边界再改，现有视线规则不自动改变。
+
+## 8. 玩家怪物贴脸出生
+
+Adventures.csv及AdventureMap_guanzhong_wild.asset的start=(0,0)、shijiahou_encounter=(1,0)。AdventureController将当前探索节点和遭遇节点传给AdventureUnitSpawner::TrySpawn；后者直接用这两个坐标产生双方，没有独立远端部署。
+任务：U-GZ-R2-SPAWN-01。保留玩家起点，把怪物放正式相机画面右上角的可走格，先以相机投影核对再修改现有数据。校验不撞障碍、可达、双方有接敌过程；不把轴向最大值未经验证当屏幕右上。
+当前仍是CTB战棋内核；贴脸源自部署数据，并不是CTB被换成另一套回合制系统。
+
+## 9. 武器距离与攻击目标语义
+
+两件现有武器都在AttackProfiles.csv和asset中声明minCastRange=maxCastRange=1，targetingMode=single。
+正式交互是选择具体角色对象：CombatCommandInput形成含TargetId的候选；CombatSession::ValidateAttack要求目标存在、存活且阵营允许，再用目标当前Position做空间射程校验；CombatActionResolver只对该target结算。
+所以：
+- 当前普通攻击与这两门术法不能以空地作为目标空放。
+- 当前普通攻击一次只打一个角色，不会自动扫中同格/邻格多个角色。
+- 配置/空间层存在范围字段和范围查询，不等于正式范围攻击已接通；CombatEntryAdapter::TryBuildProfiles会跳过非Single档案。
+- “加攻击距离”只增加可选目标的距离；“扩大伤害范围/空放/地块选择”是另一项规则和操作设计，用户本轮仅询问现状，不擅自承诺或实现AOE。
+
+任务：D-GZ-R2-RANGE-01 → D-GZ-R2-RANGE-DATA-01；数据/实战卡还依赖U-GZ-R2-EQUIP-01确保真实新角色有可换武器。候选为一件1格、一件2格，具体武器和值由设计冻结，不在排查轮直接改数值。
+
+## 完整依赖与首批顺序
+
+- D-GZ-R2-ENTRY-01 → U-GZ-R2-SPELL-01 → U-GZ-R2-EQUIP-01。
+- D-GZ-R2-EXIT-01 → U-GZ-R2-EXIT-01。
+- D-GZ-R2-OBSTACLE-01 → U-GZ-R2-OBSTACLE-01。
+- D-GZ-R2-RANGE-01 + U-GZ-R2-EQUIP-01 → D-GZ-R2-RANGE-DATA-01。
+- U-GZ-R2-CREATE-BACK-01、U-GZ-R2-BOUNTY-01、U-GZ-R2-SPAWN-01可独立执行。
+- 全部12卡，首批7张ready按用户问题出现顺序入队；5张实施卡保留blocked。没有因共享管理文件建立伪业务依赖。
+- 汇总关闭条件：上述8个独立问题的实施结果均在真实入口验收；第2项用户手动参数按实际输入解释和验证；当前单目标结论已答复，不把未来AOE算作本轮承诺。
+- 此轮不预分析其他backlog、不改现有美术验收父项、不创建Codex侧边栏聊天或发送外部消息。
+
+## 验证范围与余留
+
+源码/资产/场景静态核对完成；真实用户会话版本、存档字段、实际按钮拒绝提示和运行时障碍bounds未采集。下游任务要求正式入口PlayMode/实际图像及必要数值证据。未运行BattleSim，因为本轮未改变或裁定角色数值平衡。
+技能：unity-agent-workflows、brainstorming。已加载runtime-owner-proof、unity-validation；结构索引UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md。后续UI/资源实施按技能路由加载对应引用。
+本轮管理验证：12卡分别运行get-experience-risk-preflight.ps1，全部status=ok，matched/mustRead/gates均为空，schema 2投影一致；check-task-cards.ps1 -OutputJson通过（全仓74张活跃卡、7张ready）；check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理通过（798文件）；check-pending-whitespace.ps1通过（本轮15文件）；git diff --check通过。未改变docs、CSV、Unity资源，故不运行数据链和Unity/BattleSim测试。
