@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261012-CDAC7E80B6DA67/A",
+  "stateReason": "2026-10-12按负责人DEC-20261012-CDAC7E80B6DA67/A完成开局资格合同定稿与两张下游实现合同准备；仅设计完成，Unity实现与实际验收待下游。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-ENTRY-01.txt",
     "开发管理/任务归档/D-GZ-R2-ENTRY-01.txt",
@@ -172,3 +172,19 @@
 ## 停止条件
 
 新所有者、需扩大允许路径/新增内容/存档迁移、缺失资源或必要运行时证据、与本次批准语义冲突时暂停并回查根因，不连续叠加补丁。无法在两个既有实现工作面内闭环时交有权规划者重新规划，不临时新建任务或扩大系统。不得自行改成凡人成长、全出身练气或降低共享资格。
+
+## 本轮完成与验证结果
+
+2026-10-12，责任方Codex；入口模型证明gpt-6-astra；工作面为本run专属candidate分支。原子性与模型评估：批准语义已冻结，唯一结果为目标开局合同及两个顺序实现工作面，默认单模型足以统一复核；未派发辅助、未启动第二责任会话，推理强度未核实。
+
+完成：按任务卡automationReply中的DEC-20261012-CDAC7E80B6DA67/A定稿开发管理/关中小族开局资格修订合同.txt，记录批准依据；首次工作树无草案文件，从卡内具名checkpoint的同路径原文核对后定稿。已重新核对指定源码、CSV、行动经济与武器规格、测试前提；当前术法投影符号为TryProjectProfiles，修正旧TryBuildProfiles导航线索。
+
+U-GZ-R2-SPELL-01及U-GZ-R2-EQUIP-01已补齐精确现存源码/直接测试路径、所有者边界、正式菜单验收与停止条件。均无新Unity文件，无需新增.meta，既有GUID不变；两卡route/owner/executionModel/blocked状态及全部blockedBy保留。只移除本任务自身的backlog/队列行，不解锁或重排下游。
+
+风险预检：当前设计卡在直接依赖核对后重新运行get-experience-risk-preflight.ps1，status=ok，matched/mustRead/gates为空；与入口schema 2投影一致。扩路径后的SPELL命中EXP-UNITY-015，EQUIP命中EXP-UNITY-015和EXP-UNITY-016，均无gate；已消费返回正文，补入双分辨率动作栏/预览文字边界要求并同步riskPreflight。下游正式转ready及执行时仍按既有合同重新预检。
+
+收尾验证入口：check-task-cards.ps1 -TaskId D-GZ-R2-ENTRY-01 -Postcondition CodexClosedOrNonReady -OutputJson（同时检查全局投影及schema 2风险）；check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理；实际七路径check-pending-whitespace.ps1及暂存后git diff --cached --check。最终执行结果由本候选提交Automation Verify和结构化终态记录，不以此命令清单冒充通过记录。
+
+本轮只改管理文本，未运行Unity、BattleSim、dotnet或check-data-chain，未改生产CSV/代码/资源，未访问用户存档。术法可用、物资显示/消费/保存仍须两张下游卡取得正式菜单PlayMode与实际画面/状态后验收，不宣称游戏已修复或数值已平衡。
+
+经验候选检查：本轮沿已知创角/资格及夹具缺口完成批准设计收口，新增文字验收风险已由下游预检现有经验覆盖；无另行提炼的新增经验候选，不写空候选章节、不改经验索引。

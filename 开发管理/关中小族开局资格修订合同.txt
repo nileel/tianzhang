@@ -1,0 +1,89 @@
+# 关中小族开局资格修订合同
+
+任务：D-GZ-R2-ENTRY-01；日期：2026-10-12。
+状态：负责人已批准路线A，设计定稿；Unity尚未实施、未完成游戏验收。
+批准依据：任务卡 automationReply 记录 DEC-20261012-CDAC7E80B6DA67，OPTION_ACCEPTED / A，来源 feishu_card，证据摘要 100aa9d343b552da789f99c0bb9ce8a4b7c345a86968f3d269bfb7bf2cfb24e9。按本轮已冻结任务正文落实，不再次请求相同批准。
+原稿来源：任务卡所指 checkpoint 788896bb2433663081072ffef7681a82ff0eee09 的同路径完整文件；本轮起始工作树未物化该文件，已直接核对该 Git 对象原文后在允许路径定稿，未重放其他改动。
+
+## 一、已核实的根因与事实边界
+
+1. CharacterCreationRules.cs::BuildCharacterData 先按凡人投影行动经济并校验点购配置，随后统一设置 realmStage=凡人、realmMultiplier=1.5。origin_minor_clan 只得到两个已知且已装备的术法和两个术法槽，并未取得练气资格。CharacterCreationCatalog.cs 中该出身的起点为 guanzhong_hub。
+2. AttackProfiles.csv 的 spell_guanshiji、spell_julingshu 均要求 realm_lianqi。CombatEntryAdapter.cs::TryCreateSession 经当前 TryProjectProfiles 传递资格谓词；CombatSession.cs::ValidateAttack 在冷却、灵力、距离检查前执行 MeetsRequirements，不满足时返回 attack_profile_requirements_not_met。拥有术法与可以施放不是同一个条件；提高 AP/MP 不解决境界拒绝。
+3. StartMenuSceneInstaller.cs::CreateNewPlayer 实际调用 BeginEquippedNewGame，成功初始化后才 CaptureSave 并写入所选新档。GameRuntime.cs::BeginEquippedNewGame 对凡人直接调用 BeginNewGame；练气分支才创建库存、发放铁剑1、铁刀1、活血丹 initialGrantQuantity，并准备默认铁剑装配。当前 Items.csv 的活血丹初始数量为3。
+4. Items.csv 的两件武器装配资格及活血丹使用资格均为练气；EncounterCoordinator.cs::QueryItem 还明确要求境界字符串为“练气”。QueryEquipment 要求已经存在合法主手，单独往无装备角色库存塞物资不构成首件装配闭环。现成首次装配入口是 BeginEquippedNewGame。
+5. GameRuntime.cs::RestoreSave 通过 envelope.Restore 恢复保存状态；StartMenuSceneInstaller.cs::LoadPlayer 不调用 BeginEquippedNewGame。因此不得通过读档、场景进入或战斗进入补发来掩盖新档资格问题。
+6. GuanzhongBasicAttackPlayModeTests.cs::PrepareEquippedPlayerFixture 明确先断言凡人和零铁剑，再调用 RestoreProgression 改成练气并重开装备新档。该测试夹具能够验证有资格状态的功能，不能证明真实菜单创角可玩。
+
+直接事实源：以上完整方法、src/Assets/DataConfig/AttackProfiles.csv 与 Items.csv 对应行，以及任务卡指定的设计规范。开发管理/关中第二轮试玩排查与任务拆分.txt 仅作定位线索。本轮没有访问用户存档，没有运行 Unity 或 BattleSim；上述结论是当前源码和数据证据，不是用户会话实机复现。
+
+## 二、语义裁决与路线比较记录
+
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md §9.1 保留凡人新建玩家，§9.2 写凡人普通武器沿用练气费用和承载档、不开练气术法资格。任务索引把武器冲突指向§9.1，实际武器句在§9.2，本稿按原文校正引用。
+- docs/道具/武器/铁剑.txt、铁刀.txt 的“资格与主槽位”明确拒绝凡人，“取得与保存”仅向练气新角色各发一件、不补发旧档。通用费用参照不能直接替代具体装备资格授权。本次批准以小族新档练气起步消解入口冲突，不开放凡人持有装配这两件武器，不改变其他出身的凡人规则。
+- 上述规格中的“尚未接入”是文档当时状态；当前调用链已有发放和装配代码。本稿以当前源码判断功能存在，不把旧状态句当作缺失实现的证据。
+
+路线A：仅关中小族新档采用练气试玩开局。改变这一个入口的起始境界，保留两术法、两件武器和丹药的现有资格、数量与取得入口；其他出身、已有存档和正式凡人成长体系不变。跳过这一试玩入口的凡人成长；负责人已选A批准，须向玩家说明。
+
+路线B：保留凡人开局，先接正常成长，再在达到练气后领取和完成首次装配。两术法在达到练气前显示不可用；物资到达练气并领取成功后保存，一次发放、防重复和领取入口都必须有正式合同。对已检查的创角、城镇、冒险 Feature 代码检索，未发现可直接复用的玩家升境调用，不能声称全仓不存在成长系统，也不能把测试用 RestoreProgression 当作产品入口。这条路线需要另行规划正常成长与领取的所有者、路径和验收，当前两张下游卡不足以直接授权实施；选择它时暂停本任务，待有权规划者重建有界合同。
+
+路线C（比较项，不作为本轮可执行选项）：重设凡人初始能力或普通武器资格。仅放开武器并不能让两门练气术法和活血丹合法；继续放开这些资格会影响共享内容，新建凡人替代品又引入新内容身份、取得与平衡工作。本轮不选择这条复杂度更高的路线，不改全局资格，不虚构替代术法、武器或丹药。
+
+对负责人提供的回复选项为：A批准路线A并继续设计收尾；B坚持路线B、暂停并另行规划；C暂缓调整、保持现状。回复C不代表批准上面的资格重设路线。
+
+## 三、已批准的关中小族练气试玩合同
+
+### 适用与创建
+
+- 仅正式新建 origin_minor_clan、起点 guanzhong_hub 的当前关中试玩入口适用。不是所有出身统一升境，不给其他地区、NPC、旧档或战斗快照加例外。
+- 起始境界使用现有合法表示“练气”；保留当前基础 level=1、realmMultiplier=1.5、空功法、现有属性点购和灵根结果。本稿不新定练气品级、修炼进度或功法，不宣称这种起始数值已经平衡。
+- 行动力、移动与人形空手档位必须按最终境界从既有成长配置投影。保留凡人点购镜像校验的原职责，不能简单把凡人镜像全部改成练气，也不能只换境界字符串、留下凡人派生值。执行时读取届时生产配置；本稿不把旧文档中的 v=2/4 硬编码回去，不覆盖用户手调参数。
+- 两门术法继续已知且装备，首战在合法目标、距离、AP/MP及冷却条件下可用。贯石击选择敌方具体角色，聚灵术可选择自己；不改变射程、效果、费用或资格表，不承诺按钮永远可点。
+
+### 物资与首件装配
+
+- 新档在进入城镇和首次写盘前，经既有 BeginEquippedNewGame 一次取得铁剑1、铁刀1、活血丹3。铁剑是默认主手，铁刀是库存备选；库存含已装备的那一件，不另扣一件。
+- 初始数量沿 Items.csv 的现有定义和发放代码，禁止在界面另写一个数量来源；后续事实发生变化时先核对批准边界。
+- 发放、首件装配和角色状态完成后才沿现有 CreateNewPlayer 保存成功路径进入世界；失败应显示失败，不以半成品进入城镇。
+- 战斗内继续使用“换装备”与“使用道具”→预览→确认。取消或拒绝不扣费、不改库存；成功切换一件武器只结算一次；受伤时成功使用活血丹只消耗一颗。满血、无库存、无资格等原因在实际界面可读。
+- 保留铁剑、铁刀的练气资格。凡人普通武器的通用费用参照不视为这两件具名武器的凡人发放或装配许可；未来若要开放凡人武器，另行裁决其具名内容与资格。
+
+### 已有存档与玩家可见说明
+
+- 只影响新建角色。已有凡人小族档不升境、不补发、不换装备、不迁移；已有合法练气档按原样恢复并保留消耗结果。重进场景、读档、重新进战斗都不重新发物资。
+- 玩家选中小族时，在现有创角摘要中明确显示：“关中小族试玩：练气起步，可使用贯石击与聚灵术；初始铁剑、铁刀各一件，活血丹三颗。仅新建角色生效，已有存档不变。”开始游戏前即可看到。
+- 向已有凡人小族档说明：“当前角色仍为凡人，术法与这批物资需练气资格；本次试玩调整仅对新建角色生效。”不得提示存在尚未实施的突破、领取或补发按钮；体验新入口需另建存档，不能覆盖用户原档。
+- 术法、装备、道具分别显示真实拒绝原因；没有正式凡人成长链之前，不把旧档“仍不可用”写成已经修复。该限制必须随实现交付说明。
+
+## 四、已冻结的下游所有者与准备边界
+
+两张既有实现卡的 expectedPaths 已按当前直接调用链补齐精确字面量路径；这些是将来该卡获准执行后的允许集合，本设计任务不写任何源码。完整实施、验证和停止条件以各卡正文为准。
+
+- U-GZ-R2-SPELL-01 独占 CharacterCreationRules.BuildCharacterData 的起始境界和最终派生值、CharacterCreationView.RefreshOrigin 的创角说明；沿 CharacterCreationController.Submit → StartMenuSceneInstaller.CreateNewPlayer → GameRuntime.BeginEquippedNewGame 的现有调用验证首次初始化，不另造发放入口。通过 EncounterCoordinator 的现有投影、CombatPresentationContracts 和 CombatActionBarView 向旧凡人小族档提供只读资格说明，不改存档、通用错误键或其他出身行为。
+- SPELL 的直接测试工作面为 CharacterCreationTests、GuanzhongStarterArtsPlayModeTests、GuanzhongCombatTargetSelectionPlayModeTests；GuanzhongBasicAttackPlayModeTests 的共享新档夹具改为只核验正式创建结果，不再升境或重发；GuanzhongCombatSwapSpellPlayModeTests 与 GuanzhongCombatItemPlayModeTests 仅同步去除旧新档前提中的强制升境/再初始化。新档成功验收不能调用这些资格夹具，保留独立负向资格测试。
+- U-GZ-R2-EQUIP-01 消费 SPELL 的创角结果，核验既有 StartMenuSceneInstaller / GameRuntime 首件装配及首次保存；物资、装备/数量和拒绝原因由 EncounterCoordinator → CombatPresentationContracts → CombatActionBarView / CombatActionPreviewView 投影，交互由 CombatCommandInput 接入。只可修复上述链中的已证实缺口；保留唯一库存及角色装配所有者，不新增背包、商店或保存格式。
+- EQUIP 的直接测试工作面为 GameRuntimeTests、GameSaveEnvelopeTests、CombatActionPointEquipmentTests、CombatActionPointItemTests、GuanzhongCombatEquipmentPlayModeTests、GuanzhongCombatItemPlayModeTests。后者正文与 SPELL 先完成的创角前提衔接；不再次改境界。共享投影和视图允许按 SPELL → EQUIP 顺序续改各自逻辑，不是并行写入授权。
+- 所列源码与测试文件均为现存文件，未授权新建/移动 Unity 文件，因此无新增 .meta；不得改既有 GUID。需要新文件、场景/Prefab/生成资源、额外所有者或扩路径时停止重新准备，不临时生成文件绕过范围。
+- 两卡保留原 route、owner、executionModel、blocked 状态及全部 blockedBy；本轮只准备合同。正式结果进入 master 后，后续 QueueMaintenance 才核对具名前置和风险投影并准备 ready。当前卡完成只归档自身并从自身 backlog/队列移除。
+- 模型协作评估：批准语义已冻结，唯一结果为开局设计和两个顺序实现合同，主责可统一复核。使用入口证明的 gpt-6-astra 单模型；工具具备文件/Git/PowerShell能力，无独立只读辅助问题，不调用子智能体或第二责任会话；推理强度未核实。下游保留 gpt-6.1-sol 配置，临近 ready 再核对能力和 Unity 门禁。
+
+## 五、正式入口验收链与证据要求
+
+以下是下游必须执行的验收合同，不是本轮通过记录。成功链不得调用 PrepareEquippedPlayerFixture、RestoreProgression，不得直接改角色境界、库存或重开装备新档来替代用户操作。负向边界可用隔离单元测试构造，但不能冒充真实开局成功证据。
+
+1. 使用隔离测试存档目录，从正式启动菜单选择新档→小族子弟→检查创角说明→确认创建→关中城。创建前后采集实际境界、派生AP/移动输入、已知/已装术法、主手定义/实例、库存；首次存档与运行时一致。
+2. 沿正式城镇→野外→首战入口操作。合法敌方目标在当前射程内时，贯石击可预览、确认并按规则结算；聚灵术自用可预览、确认并核对实际资源与冷却。不用确定命中夹具来证明完整玩家入口；如随机未命中，区分合法结算与命中效果，不能假称已命中。
+3. 通过实际界面预览铁剑→铁刀并取消，确认未扣费未切换；再次确认只扣一次且主手/普攻投影同步，库存仍各一件。反向换回同样成立。无库存、无资格、重复装备拒绝且不扣费。
+4. 实战受伤后使用活血丹，核对一次资源扣除、一次库存减少和治疗；取消、满血、无库存、无资格分别拒绝或取消且不消耗。两术法覆盖AP不足、MP不足、越界、非法目标、资格不足及有效冷却的拒绝，核对报价/实付与提示。
+5. 按既有非战斗返回和保存入口保存、退出、读档；核对境界、术法、当前主手/实例与消耗后库存。再次进城、进野外、进战斗，不补发不重复装配。
+6. 用隔离旧凡人小族档验证不升境、不补发、可读限制说明；用既有练气档验证不重置数量和装备；用其他出身新档验证原行为不变。不得对用户现有存档运行迁移或覆盖写入。
+7. 直接 EditMode 检查创建/资格/发放/保存不变量；PlayMode 必须经上述正式入口并保留实际界面与状态证据。未取得运行时证据不得关闭对应实现卡。本稿只设计功能，不得从通过功能测试推导角色数值平衡；如需调整强度，另走 BattleSim 数值事实源。
+
+## 六、本轮证据、验证范围与停止条件
+
+2026-10-12重新核对批准依据、原checkpoint完整草案、创角/资格/发放/首次装配/保存读档调用链、指定CSV行及行动经济第8至9节和两武器资格原文。当前 CombatEntryAdapter 已将旧指针 TryBuildProfiles 改为 TryProjectProfiles；本合同及下游必查按当前符号定位，不为文档旧名添加兼容代码。新增发现的直接读依赖只用于本次授权的下游路径冻结，未扩展当前设计卡写入集合。
+
+当前仍有测试夹具通过升境和再次新档初始化取得资格；它们不能作为正式开局成功证据。第五节是下游验收要求，本轮未运行Unity、BattleSim或修改生产参数，不宣称实际游戏问题已经修复或数值已经平衡。
+
+本轮按任务卡运行管理投影、审核文本和实际路径空白检查；结果记录在 D-GZ-R2-ENTRY-01 归档的本轮验证结果。共享入口当前设计任务风险预检 matched / mustRead / gates 均为空；两张扩展路径后的下游卡另做只读风险匹配并保持schema 2投影一致，之后准备ready仍须重新预检。
+
+发现新的产品语义冲突、额外所有者、需扩大允许路径/新增内容/存档迁移、缺失资源或必要运行时证据时停止并交有权规划者重新准备。不得自行改成凡人成长、全出身练气或降低共享资格，不连续叠加补丁。本轮批准仅足以完成设计与合同准备，不能替代下游实际验收。

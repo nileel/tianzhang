@@ -13,17 +13,33 @@
     "D-GZ-R2-ENTRY-01",
     "U-GZ-R2-SPELL-01"
   ],
-  "stateReason": "2026-10-11已完成初步归因，等待具名前置完成及实施路径冻结，不得提前修改业务。",
+  "stateReason": "2026-10-12负责人已批准小族练气新档设计，本卡路径与验收合同已准备；保留全部具名前置，待正式结果进入master后由QueueMaintenance核对并重新预检，当前不得实施。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt",
     "开发管理/任务归档/U-GZ-R2-EQUIP-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Tests/EditMode/GameRuntimeTests.cs",
+    "src/Assets/Tests/EditMode/GameSaveEnvelopeTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointItemTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-015",
+      "EXP-UNITY-016"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"
@@ -33,46 +49,59 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+来源：2026-10-11试玩反馈5；负责人DEC-20261012-CDAC7E80B6DA67/A已批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01准备本卡合同。本卡尚未实施，blockedBy中的D-GZ-R2-ENTRY-01与U-GZ-R2-SPELL-01全部保留；正式结果进入master后由后续QueueMaintenance核对前置并重新预检，不能直接入队。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::BeginEquippedNewGame
-- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::QueryEquipment/GetEquipmentCandidates/QueryItem
-- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure
-- src/Assets/DataConfig/Items.csv::item_iron_sword/item_iron_blade/item_huoxue_dan
-- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
-- src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs
+- 开发管理/关中小族开局资格修订合同.txt完整文件；开发管理/关中第二轮试玩排查与任务拆分.txt第5项；U-GZ-R2-SPELL-01正式结果的创角资格与说明证据（届时按活跃卡/归档定位）。
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::CreateNewPlayer/LoadPlayer；GameRuntime.cs::BeginEquippedNewGame/CaptureSave/RestoreSave/GetItemQuantity/OwnsEquipmentInstance（同目录）。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::QueryEquipment/GetEquipmentCandidates/QueryItem/ProjectQuote/BuildActions/ConfirmAction；src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::装备与道具资源回调接线。
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::TryPrepareEquipmentChange/ValidateEquipmentState；src/Assets/Scripts/Combat/CombatSession.cs::ValidateEquipment/ValidateItem及实际提交调用链，只读保留既有装配/库存事务所有者。
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatHudSnapshot/CombatActionPreviewSnapshot；src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::Present/PresentAction、CombatActionPreviewView.cs::Present、CombatCommandInput.cs::Configure/ConfirmCandidate/CancelCandidate（后两文件同目录）。
+- src/Assets/DataConfig/Items.csv表头与item_iron_sword/item_iron_blade/item_huoxue_dan；对应已导入资源及Language既有名称/拒绝原因映射只读。
+- docs/道具/武器/铁剑.txt、铁刀.txt的资格与主槽位、库存与互换、取得与保存；docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第8至9节。
+- src/Assets/Tests/EditMode/GameRuntimeTests.cs、GameSaveEnvelopeTests.cs、CombatActionPointEquipmentTests.cs、CombatActionPointItemTests.cs（均同目录）的新档/库存/装配/消费/保存相关完整逻辑单元。
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs::EnterFormalAdventure/RoundTrip；GuanzhongCombatItemPlayModeTests.cs::EnterFormalAdventure/RoundTrip/InitialWriteFailureClearsTheGrantAndDoesNotActivateTheNewSlot/ExistingSchemaFourSaveWithoutMedicineLoadsWithoutAnotherGrant（同目录）。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md及unity-agent-workflows所路由的运行时所有者/可见文本/验证规则。
 
 ## 实施范围
 
-反馈5：在已修正的真实开局资格入口上，使玩家按合同取得铁剑/铁刀/活血丹，界面显示拥有/装备/数量/无资格或无库存原因，提供现有换装备和使用道具→预览→确认链。依赖SPELL卡只因真实开局资格实现由其独占，不能两卡各改一套起始境界。不得扩成完整商店、打造或背包系统；旧档不得无条件补发。
+唯一结果：已批准小族真实新档的初始物资、首件装配、战斗互换/用药和非战斗保存读档构成完整玩家闭环。
 
-当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
+1. 消费SPELL已实现的练气资格，复用CreateNewPlayer→BeginEquippedNewGame→首次CaptureSave/写盘。一次发放铁剑1、铁刀1、活血丹3，默认铁剑主手；拥有数量包含已装的一件。初始化/写盘失败保留既有失败清理，不以半成品进入世界；代码已正确则只增加直接验证，不重写新档管线。
+2. QueryEquipment/GetEquipmentCandidates/QueryItem与既有库存/装配所有者提供真实事实；沿现有只读表现合同、行动栏与预览显示当前主手、备选武器拥有情况、丹药数量、资格不足/无库存/满血等真实原因。允许在既有表现类型中补必要只读投影，禁止另建缓存库存或资格状态；不改变其他场景/出身的默认显示行为。
+3. 使用现有“换装备”/“使用道具”→预览→确认/取消入口。取消、拒绝、过期预览或重复确认不扣费、不切换、不消耗；成功互换只提交一次，角色主手/实例与战斗普攻同步、库存各一；实战受伤后活血丹只扣一颗并按原规则治疗。满血、零库存、无资格、重复装备等拒绝不产生部分提交。
+4. 首件装配必须在首次保存前通过既有BeginEquippedNewGame完成；不放宽QueryEquipment来给旧空主手补装备。战后沿既有非战斗保存入口存盘、读档原样恢复；重进城镇/野外/战斗不重复发放。旧凡人小族档不升境、不补发、不迁移，沿SPELL保留的限制说明；旧合法练气档保留消耗后状态，其他出身不变。
+5. 修改两个现存PlayMode的成功链为正式菜单创建，不调用PrepareEquippedPlayerFixture、RestoreProgression、直接注入库存或重开装备新档。SPELL已同步的Item初始化前提继续保留；负向用例可独立构造库存/资格/过期条件但必须明确为隔离边界，不拿来替代成功链。
+
+expectedPaths为完整精确允许集合；全部Unity文件已存在，没有新文件/目录及.meta改动，不改GUID、不修改场景/Prefab/生成资源。源码只对运行证据确认的缺口做最小修改；不要为使测试变绿去改数值、跳过资格或重发。共享投影/视图按SPELL→EQUIP顺序续改，本卡不得再定义起始境界或创角规则。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不改其他出身/场景/全局默认；不改共享武器/丹药资格、效果、数量配置或费用，不增加卸装、第三件装备、商店、打造、完整背包/成长系统，不触碰用户存档或扩保存schema。不直接修改角色领域、库存领域或Combat内核掩盖尚未定位的缺口；若证据指向这些边界，按停止条件处理。
 
 ## 模型协作
 
-依冻结合同接通物资、首件装配、战斗消耗与保存一致性，使用既有领域所有者。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-前置与实施路径未冻结，继续blocked；临近ready重新核对复杂度与能力，不因已指定模型跳过设计门禁。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+2026-10-12设计准备评估：有界实现，产品语义已由负责人选择A冻结；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头 executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，入口须核实，不把建议当已生效配置。默认单模型，无独立辅助问题，不要求辅助调用；临近ready重新核对复杂度及原生工具能力，不能跳过风险预检与Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本轮仅由gpt-6-astra准备合同，未调用下游模型。
 
 ## 验证
 
-不使用PrepareEquippedPlayerFixture的正式菜单端到端；物品0/有库存、伤满/受伤、换装拒绝、一次扣费、读档和重入防重复。
+- Unity EditMode直接检查GameRuntimeTests、GameSaveEnvelopeTests、CombatActionPointEquipmentTests、CombatActionPointItemTests的相关用例：首次发放与默认主手、资格/库存/重复提交拒绝、一次结算、保存恢复一致；不通过修改存档版本或数据定义制造成功。
+- Unity PlayMode使用GuanzhongCombatEquipmentPlayModeTests、GuanzhongCombatItemPlayModeTests，从正式菜单新档→小族→创角说明→城镇→首战，逐步证明显示、选择、预览、确认、应用、保存、读档与重入。首次磁盘记录必须已含两武器各1、丹药3及铁剑主手，未经测试重写存档。
+- 真实按钮预览铁剑→铁刀并取消，状态/资源/库存不变；再确认只付一次并同步普攻，反向换回亦成立。实战受伤后使用丹药，核对AP/MP、HP、数量与版本；满血/零库存/无资格、取消、过期预览及重复确认不消耗。成功链不得用强制境界、库存、确定命中/直接伤害夹具替代实际玩家过程；可保留独立的确定性事务单测并标注证据性质。
+- 战斗按现有正常胜负结果回城，沿SaveAndReturnToMenu→LoadPlayer保存读档；核对主手/实例、境界、术法与消耗后库存，重入城镇/野外/战斗不补发。覆盖首次写盘失败、旧凡人小族档、旧合法练气档及其他出身新档；不增加尚未获批的战斗中存盘或强退入口。
+- 实际Game View检查创角物资说明、当前装备/拥有/数量/拒绝提示与预览在1920×1080、1366×768均可读且不遮挡确认取消；需要改布局时先取得运行时尺寸/刷新所有者证据，若需场景/新资源则停写重新准备。记录实际截图、状态和测试XML到本worktree src/Logs，不提交运行产物。未取得完整正式入口证据不得完成。
 
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+管理收尾：check-task-cards.ps1、check-review-text.ps1；仅实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。Unity路径变化须运行check-data-chain.ps1。准备ready和执行前按既有流程运行get-experience-risk-preflight.ps1并消费mustRead及gates；新依赖、技术路线或范围变化先停写重新预检。未变输入已通过的检查不重复。本卡只验功能，不从功能检查推导数值平衡；需改强度另走数值任务，不扩充BattleSim复刻场景。
+
+## 本次设计准备验证
+
+2026-10-12扩路径后只读预检命中EXP-UNITY-015、EXP-UNITY-016，gates为空；已消费返回mustRead正文并同步schema 2投影。本轮没有执行Unity或调用下游模型。固定动作栏的费用/冷却/本地化文案须在1920×1080、1366×768测量Label Rect、最长文案preferredWidth/preferredHeight及换行并核验Game View；超限只缩短文案或局部调字号。预览摘要还须量化preferredHeight、视口高度及费用/拒绝原因屏幕角点，保证视口内无需滚动；超高先删重复或无关摘要。布局、字体或验证入口变化须重新核验；临近ready仍重新预检，不用本次结果代替执行时证据。
 
 ## 完成条件
 
-真实新档可取得并切换两件武器、受伤时消耗道具；首次保存和读档库存/装备一致；重入不重复发放。无需玩家调用测试代码。
+真实新档一次取得并默认装配，能够经现有界面互换两武器、受伤时使用丹药；展示与权威状态一致，取消/拒绝无副作用，首次保存及战后保存读档一致、重入防重复、旧档和其他出身不变。全部直接验证与运行时证据齐全；不移除任何下游任务的具名前置引用。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+设计或SPELL前置未正式解锁不得实施；发现新所有者、需扩大路径/新增内容或Unity文件/场景资源、存档迁移、共享资格/数值修改、缺失资源/运行时证据、与批准合同冲突时停写回查并交有权规划者重新准备。不得叠加补发、兼容分支或新状态；无法在既定两卡内闭环不临时新建任务。

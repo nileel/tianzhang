@@ -12,17 +12,30 @@
   "blockedBy": [
     "D-GZ-R2-ENTRY-01"
   ],
-  "stateReason": "2026-10-11已完成初步归因，等待具名前置完成及实施路径冻结，不得提前修改业务。",
+  "stateReason": "2026-10-12负责人已批准小族练气新档设计，本卡路径与验收合同已准备；保留全部具名前置，待正式结果进入master后由QueueMaintenance核对并重新预检，当前不得实施。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPELL-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPELL-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+    "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationView.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Tests/EditMode/CharacterCreationTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-015"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"
@@ -32,45 +45,61 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+来源：2026-10-11试玩反馈1；负责人以DEC-20261012-CDAC7E80B6DA67/A批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01冻结本卡合同，设计见开发管理/关中小族开局资格修订合同.txt第三至五节。本卡尚未实施，保留blocked与具名前置；只在前置正式进入master并经后续QueueMaintenance确认全部条件、重新预检后准备ready。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData
-- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryBuildProfiles
-- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack
-- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentArt
-- src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs
+- 开发管理/关中小族开局资格修订合同.txt完整文件；开发管理/关中第二轮试玩排查与任务拆分.txt第1、5项。
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::BuildCharacterData；CharacterCreationCatalog.cs::Origins（同目录，核对origin_minor_clan与guanzhong_hub）；CharacterCreationController.cs::Submit/RefreshOrigin；CharacterCreationView.cs::RefreshOrigin。
+- src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs::CreateNewPlayer/LoadPlayer；GameRuntime.cs::BeginEquippedNewGame/RestoreSave（同目录，只读复用，不在本卡另写发放/读档）。
+- src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs::ProjectActionEconomy/ResolveUnarmedAttack/FromDefinition。
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryCreateSession/TryProjectProfiles（旧排查中的TryBuildProfiles已改名）；EncounterCoordinator.cs::BuildArtActions/ProjectQuote/Present（同目录）。
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack；src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::Present/PresentArt；CombatCommandInput.cs::Configure/RequestArt（同目录）；src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatHudSnapshot/CombatArtTargetSnapshot。
+- src/Assets/DataConfig/AttackProfiles.csv::spell_guanshiji/spell_julingshu；RealmCombatGrowth.csv::realm_fanren/realm_lianqi、CharacterCreationPointBuy.csv::default（同目录，表头与目标行）；对应生产CombatRuleSet与点购asset只读核验当前输入。
+- docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第8至9节；本次批准仅覆盖小族新档的凡人开局例外。
+- src/Assets/Tests/EditMode/CharacterCreationTests.cs::MinorClanLearnsAndEquipsOnlyTheTwoApprovedStarterArts及默认出身/点购测试。
+- src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs::EnterFormalCombat/FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness；GuanzhongCombatTargetSelectionPlayModeTests.cs::EnterFormalEncounter（同目录）。
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs::PrepareEquippedPlayerFixture及其直接调用者；GuanzhongCombatSwapSpellPlayModeTests.cs::BeginEncounter、GuanzhongCombatItemPlayModeTests.cs::EnterFormalAdventure（同目录，仅创角资格前提）。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md及unity-agent-workflows所路由的运行时所有者/可见文本/验证规则。
 
 ## 实施范围
 
-依据已批准开局合同接通贯石击、聚灵术的正常使用链与明确拒绝提示，保持同一资格校验；修复真实新建角色而非只修改fixture。进入ready前展开所有受影响创角/内容/提示/测试的字面量路径，必要的新Unity文件必须含.meta。
+唯一结果：正式菜单创建的关中小族新角色，沿现有资格校验合法使用两术法；其他出身与旧档不变。
 
-当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
+1. 仅origin_minor_clan且该出身起点为guanzhong_hub的新建分支使用现有“练气”，保留level=1、realmMultiplier=1.5、空功法、点购与灵根。凡人点购镜像校验仍按凡人成长配置执行；通过后再按最终境界投影AP/移动/人形空手档位。不硬编码配置值、不回滚用户参数，不改共享资格、成长算法或CSV。
+2. 保留两术法已知/已装与两个槽位，复用正式Submit→CreateNewPlayer→BeginEquippedNewGame；首次存档前必须已完成现有练气物资初始化，不重复调用初始化。物资完整显示、换装及用药验收归EQUIP；本卡仍须检查首存境界与初始化状态足以承接下游。
+3. CharacterCreationView.RefreshOrigin显示合同第三节的练气试玩、两术法、铁剑/铁刀各一、活血丹三颗及仅新档生效说明。旧凡人小族档通过既有EncounterCoordinator→表现合同→行动栏的只读投影，明确“当前角色仍为凡人，术法与这批物资需练气资格；本次试玩调整仅对新建角色生效”，允许等义可读措辞。限定小族/关中入口，不修改全局错误词条；不假造突破或领取按钮，不写持久化新状态。
+4. 原术法目标、距离、资源、冷却和CanExecute校验保留；如提示投影有缺口，只修本卡允许的投影/视图，不修改Combat判定放宽资格。先证明实际文本创建/刷新所有者，记录界面和状态证据。
+5. 在现存测试文件补齐正式入口与负向边界。成功链不得调用PrepareEquippedPlayerFixture、RestoreProgression、直接改境界/库存或再次BeginEquippedNewGame。共享PrepareEquippedPlayerFixture只可改为核验已正式创建结果，禁止加入凡人/练气两套兼容补发；其他调用者不因此获得真实入口验收结论。同步去除StarterArts、SwapSpell、Item测试中的旧新档强制升境/重发前提；Item只改初始化前提，其物资消费/保存断言由EQUIP继续负责。
+
+expectedPaths为完整精确写入集合；上述其他源码只读定位。全部Unity路径为现存文件，无新建文件/目录或.meta变更，不改GUID。下游共享投影按依赖顺序接续，不并行修改。已证明正确的代码只验证，不为填满路径集合制造改动。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不改其他出身/场景/全局默认，不触碰用户存档、不迁移旧档、不补发，不增商店/背包/成长系统。不得改卡头模型、其他任务依赖或提前实施EQUIP；不以测试夹具或未运行验证冒充玩家结果。无资格旧档仍受限，不宣称已全面修复旧档体验。
 
 ## 模型协作
 
-依冻结合同完成真实创角资格到战斗操作的接入，须纠正fixture掩盖真实入口的验证缺口。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-前置与实施路径未冻结，继续blocked；临近ready重新核对复杂度与能力，不因已指定模型跳过设计门禁。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+2026-10-12设计准备评估：有界实现，产品语义已由负责人选择A冻结；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头 executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，入口须核实，不把建议当已生效配置。默认单模型，无独立辅助问题，不要求辅助调用；临近ready重新核对复杂度及原生工具能力，不能跳过风险预检与Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本轮仅由gpt-6-astra准备合同，未调用下游模型。
 
 ## 验证
 
-正式菜单→小族创角→城镇→首战PlayMode；贯石击合法命中、聚灵术自用、AP/MP不足/越界/资格不足拒绝；直接目标EditMode。不得由测试偷偷升境界或重开有装备游戏来代替真实入口。
+- Unity EditMode直接运行CharacterCreationTests：目标出身/起点限制、其他出身仍凡人、点购校验仍有效、最终境界派生值与当前配置一致、空功法和灵根不变；隔离负向输入不得变成正式成功前提。
+- Unity PlayMode直接运行GuanzhongStarterArtsPlayModeTests与GuanzhongCombatTargetSelectionPlayModeTests的相关正式入口用例，从正式菜单新档按钮→小族选择→创建→城镇→首战；采集创角说明、运行时及首次盘上境界、AP/移动、术法、初始物资/主手。贯石击合法结算与聚灵术自用均经真实按钮预览/确认；随机未命中须与合法结算区分，确定性夹具不能替代实际入口证据。
+- 覆盖AP/MP不足、越界、非法目标、资格不足、有效冷却：拒绝可读且不扣费；预览取消不扣费，报价与实际扣费一致。测试操作移动到合法位置，不注入角色位置/资源来假造成功。
+- 隔离旧凡人小族档验证读档不升境/不补发和实际限制说明；其他出身新档、既有练气档保持原行为；成功链保存退出再读档一致。复核修改的BasicAttack夹具、SwapSpell及Item初始化直接回归；只对新增/失败证据扩大检查。
+- 使用当前worktree Unity项目和项目规定入口，EditMode/PlayMode测试结果XML、实际Game View截图及状态证据保存在本worktree的src/Logs下；正文写明结果路径、测试名与结论，不将运行产物加入提交。未获得实际画面/状态不得完成；不以静态检查或Unity编译替代PlayMode。
 
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+管理收尾：check-task-cards.ps1、check-review-text.ps1；仅实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。Unity路径变化须运行check-data-chain.ps1。准备ready和执行前按既有流程运行get-experience-risk-preflight.ps1并消费mustRead及gates；新依赖、技术路线或范围变化先停写重新预检。未变输入已通过的检查不重复。本卡只验功能，不从功能检查推导数值平衡；需改强度另走数值任务，不扩充BattleSim复刻场景。
+
+## 本次设计准备验证
+
+2026-10-12扩路径后只读预检命中EXP-UNITY-015，gates为空；已消费返回mustRead正文并同步schema 2投影。本轮没有执行Unity或调用下游模型。固定动作栏的费用/冷却/本地化文案须在1920×1080、1366×768测量Label Rect、最长文案preferredWidth/preferredHeight及换行并核验Game View；超限只缩短文案或局部调字号。布局、字体或验证入口变化须重新核验；临近ready仍重新预检，不用本次结果代替执行时证据。
 
 ## 完成条件
 
-从正式菜单新建小族角色按合同到达首战后，两术法在各自合法资格、AP/MP、距离和目标下可预览、确认、结算；非法操作明确提示且不扣费。
+正式菜单新建目标小族角色按合同进入首战，两术法在合法条件下可预览/确认/结算；非法条件提示正确且无副作用。创角说明和旧档限制可读，首存与读档一致，其他出身不变；直接检查与运行时证据齐全。仅关闭本卡，不移除EQUIP等下游的具名前置引用。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+新的所有者或需扩expectedPaths、新Unity文件/资源、内容/数值变化、存档迁移、全局资格变化、缺失资源/必要运行时证据、与批准合同冲突时停写回查并重新准备，不叠加补丁。当前blocked前置未正式解锁不得实施；无法在当前两个既有工作面内闭环交有权规划者，不临时增任务。
