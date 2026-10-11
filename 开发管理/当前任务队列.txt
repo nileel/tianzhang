@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-COMBAT-UNARMED-RUNTIME-01 | codex_execute | codex | P1 | unity | migration | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |

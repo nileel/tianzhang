@@ -46,7 +46,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | P-COMBAT-AP-01 | P1 | codex | 阻塞 | D-COMBAT-AP-CLOSE-01 | 统一行动力完整实现汇总 | 开发管理/任务卡/P-COMBAT-AP-01.txt |
-| U-COMBAT-UNARMED-RUNTIME-01 | P1 | codex | 已排队 | — | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
+| U-COMBAT-UNARMED-RUNTIME-01 | P1 | codex | 待决定 | — | 空手普攻角色成长保存与正式战斗接入 | 开发管理/任务卡/U-COMBAT-UNARMED-RUNTIME-01.txt |
 | N-COMBAT-UNARMED-SIM-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | BattleSim双入口空手成长与攻击绑定适配 | 开发管理/任务卡/N-COMBAT-UNARMED-SIM-01.txt |
 | N-COMBAT-AP2-BALANCE-01 | P1 | codex | 阻塞 | N-COMBAT-UNARMED-SIM-01 | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |
 | U-COMBAT-AP2-PREVIEW-01 | P1 | codex | 阻塞 | U-COMBAT-UNARMED-RUNTIME-01 | 连续施法费用冷却与武器资格显示 | 开发管理/任务卡/U-COMBAT-AP2-PREVIEW-01.txt |
