@@ -5,3 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| N-COMBAT-AP2-BALANCE-01 | codex_execute | codex | P1 | battlesim | verification | 境界AP成长初版参数实跑与定案 | 开发管理/任务卡/N-COMBAT-AP2-BALANCE-01.txt |

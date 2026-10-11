@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "battlesim",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "N-COMBAT-UNARMED-SIM-01"
-  ],
-  "stateReason": "N-COMBAT-AP2-SIM-01已完成归档；仍等待新增空手双入口适配N-COMBAT-UNARMED-SIM-01正式完成，最终定案必须包含普通修士/体修/石甲兽空手成长，不能沿无空手旧输入签平衡。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "N-COMBAT-AP2-SIM-01与N-COMBAT-UNARMED-SIM-01均已完成归档；空手双入口输入已具备，现可按既有冻结矩阵实跑并定案普通修士、体修与石甲兽空手成长。",
   "expectedPaths": [
     "simulations/BattleSim/StageCombatReport.cs",
     "simulations/BattleSim/Program.cs",
