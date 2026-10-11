@@ -13,7 +13,8 @@ namespace TianZhang.Character
             AbilityLoadout abilityLoadout, CharacterProgressionRef progression, CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId,
             string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null,
-            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null, CombatRuleSetData growthRules = null)
+            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null, CombatRuleSetData growthRules = null,
+            string unarmedAttackFamilyId = null)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -24,7 +25,7 @@ namespace TianZhang.Character
             MainEquipmentItemId = mainEquipmentItemId;
             MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
-            UnarmedBasicAttackProfileId = string.Empty;
+            UnarmedAttackFamilyId = unarmedAttackFamilyId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
                 ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
                 : appearanceProfileId;
@@ -43,6 +44,7 @@ namespace TianZhang.Character
         public string MainEquipmentInstanceId { get; private set; }
         public string MainEquipmentBasicAttackProfileId { get; private set; }
         public string UnarmedBasicAttackProfileId { get; private set; }
+        public string UnarmedAttackFamilyId { get; private set; }
         public string AppearanceProfileId { get; private set; }
         public string VisibleRootId { get; private set; }
         public string VisibleRootGrade { get; private set; }
@@ -61,7 +63,6 @@ namespace TianZhang.Character
                 MainEquipmentItemId = itemId;
                 MainEquipmentInstanceId = instanceId;
                 MainEquipmentBasicAttackProfileId = profileId;
-                UnarmedBasicAttackProfileId = string.Empty;
             };
             return true;
         }
@@ -69,8 +70,8 @@ namespace TianZhang.Character
         public bool ValidateEquipmentState(ContentCatalogData catalog, bool instanceOwned)
         {
             if (string.IsNullOrEmpty(MainEquipmentItemId) && string.IsNullOrEmpty(MainEquipmentInstanceId))
-                return string.IsNullOrEmpty(MainEquipmentBasicAttackProfileId) && string.IsNullOrEmpty(UnarmedBasicAttackProfileId);
-            return string.IsNullOrEmpty(UnarmedBasicAttackProfileId) &&
+                return string.IsNullOrEmpty(MainEquipmentBasicAttackProfileId);
+            return
                 ValidateEquipment(catalog, "main_hand", MainEquipmentItemId, MainEquipmentInstanceId, instanceOwned, out ItemData item, out _) &&
                 MainEquipmentBasicAttackProfileId == item.equipmentBasicAttackProfileId;
         }
@@ -96,6 +97,8 @@ namespace TianZhang.Character
         public static CharacterRuntimeProfile FromDefinition(string characterId, CharacterData definition, CombatRuleSetData growthRules = null)
         {
             if (definition == null) throw new System.ArgumentNullException(nameof(definition));
+            if (!string.IsNullOrEmpty(definition.unarmedBasicAttackProfileId))
+                throw new ArgumentException("character_unarmed_binding_obsolete");
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(definition, growthRules);
             CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(definition);
             var progression = new CharacterProgressionRef(definition.gongFaName, definition.realmStage,
@@ -109,7 +112,8 @@ namespace TianZhang.Character
                 new CharacterResources(derived.MaxHealth, derived.MaxHealth, derived.MaxSpirit, derived.MaxSpirit), loadout, progression,
                 combatModifiers,
                 definition.mainEquipmentBasicAttackProfileId, definition.unarmedBasicAttackProfileId, AppearanceProfileData.NoneId,
-                definition.visibleRootId, definition.visibleRootGrade, definition.visibleRootElement, growthRules: growthRules);
+                definition.visibleRootId, definition.visibleRootGrade, definition.visibleRootElement, growthRules: growthRules,
+                unarmedAttackFamilyId: definition.unarmedAttackFamilyId);
         }
 
         public static CharacterRuntimeProfile FromSnapshot(CharacterStateSnapshot snapshot, CombatRuleSetData growthRules = null)
@@ -147,7 +151,7 @@ namespace TianZhang.Character
                 snapshot.UnarmedBasicAttackProfileId,
                 snapshot.AppearanceProfileId,
                 snapshot.VisibleRootId, snapshot.VisibleRootGrade, snapshot.VisibleRootElement,
-                snapshot.MainEquipmentItemId, snapshot.MainEquipmentInstanceId, growthRules);
+                snapshot.MainEquipmentItemId, snapshot.MainEquipmentInstanceId, growthRules, snapshot.UnarmedAttackFamilyId);
             profile.Restore(snapshot);
             return profile;
         }
@@ -158,7 +162,7 @@ namespace TianZhang.Character
                 Identity.Capture(), Attributes.Capture(), Resources.Capture(), AbilityLoadout.Capture(), Progression.Capture(),
                 CombatModifiers,
                 MainEquipmentBasicAttackProfileId, UnarmedBasicAttackProfileId, AppearanceProfileId,
-                VisibleRootId, VisibleRootGrade, VisibleRootElement, MainEquipmentItemId, MainEquipmentInstanceId);
+                VisibleRootId, VisibleRootGrade, VisibleRootElement, MainEquipmentItemId, MainEquipmentInstanceId, UnarmedAttackFamilyId);
         }
         public void Restore(CharacterStateSnapshot snapshot)
         {
@@ -166,6 +170,10 @@ namespace TianZhang.Character
             RequireRestorable(snapshot);
             ProjectActionEconomy(growthRules, snapshot.Progression, out int ap, out int movement);
             RequirePlayerScope(snapshot.Identity.CharacterId, snapshot.Progression.RealmStage);
+            string unarmed = ResolveUnarmedAttack(growthRules, snapshot.UnarmedAttackFamilyId, snapshot.Progression.RealmStage);
+            if (snapshot.Identity.CharacterId == "player" && snapshot.UnarmedAttackFamilyId != "body_human" ||
+                snapshot.UnarmedBasicAttackProfileId != unarmed)
+                throw new ArgumentException("character_unarmed_binding_invalid");
             Identity.Restore(snapshot.Identity); Attributes.Restore(snapshot.Attributes); Resources.Restore(snapshot.Resources);
             AbilityLoadout.Restore(snapshot.AbilityLoadout); Progression.Restore(snapshot.Progression);
             Attributes.SetActionEconomy(ap, movement);
@@ -173,7 +181,8 @@ namespace TianZhang.Character
             MainEquipmentItemId = snapshot.MainEquipmentItemId;
             MainEquipmentInstanceId = snapshot.MainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId;
-            UnarmedBasicAttackProfileId = string.Empty;
+            UnarmedAttackFamilyId = snapshot.UnarmedAttackFamilyId;
+            UnarmedBasicAttackProfileId = unarmed;
             AppearanceProfileId = snapshot.AppearanceProfileId;
             VisibleRootId = snapshot.VisibleRootId;
             VisibleRootGrade = snapshot.VisibleRootGrade;
@@ -221,8 +230,22 @@ namespace TianZhang.Character
         {
             ProjectActionEconomy(growthRules, progression, out int ap, out int movement);
             RequirePlayerScope(Identity.CharacterId, progression.RealmStage);
+            string unarmed = ResolveUnarmedAttack(growthRules, UnarmedAttackFamilyId, progression.RealmStage);
+            if (Identity.CharacterId == "player" && UnarmedAttackFamilyId != "body_human")
+                throw new ArgumentException("character_unarmed_family_invalid");
             Progression.Restore(progression);
             Attributes.SetActionEconomy(ap, movement);
+            UnarmedBasicAttackProfileId = unarmed;
+        }
+
+        public static string ResolveUnarmedAttack(CombatRuleSetData rules, string family, string stage)
+        {
+            if (rules == null || !rules.TryValidateIdentity(out _) || rules.unarmedRows.Length != 5)
+                throw new ArgumentException("character_unarmed_mapping_invalid");
+            string realm = ResolveRealmId(stage);
+            var row = rules.unarmedRows.SingleOrDefault(value => value.familyId == family && value.realmId == realm);
+            if (row == null) throw new ArgumentException("character_unarmed_source_invalid");
+            return row.profileId;
         }
 
         private static readonly string[] RealmIds = { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan", "realm_yuanying", "realm_huashen" };

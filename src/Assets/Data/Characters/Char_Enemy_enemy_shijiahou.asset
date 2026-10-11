@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 10
   hitRateBonus: 0
   realmMultiplier: 1.2
-  realmStage: 练气
+  realmStage: "\u7EC3\u6C14"
   gongFaName:
   equippedSpells: []
   equippedSkills: []
@@ -44,6 +44,7 @@ MonoBehaviour:
   availableSkills: []
   mainEquipmentBasicAttackProfileId:
   unarmedBasicAttackProfileId:
+  unarmedAttackFamilyId: body_shijiahou
   innatePurchasePointsLimit: 0
   innatePurchasePointsUsed: 0
   creationBudgetLimit: 0

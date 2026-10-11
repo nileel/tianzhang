@@ -106,6 +106,7 @@ namespace TianZhang.Tests
         public void DefinitionWithoutExplicitInputsIsRejectedInsteadOfFallingBackToTheApprovedValues()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             try
             {
@@ -330,12 +331,13 @@ namespace TianZhang.Tests
             return new CharacterStateSnapshot(
                 identity, attributes, resources, loadout, progression, source.CombatModifiers,
                 source.MainEquipmentBasicAttackProfileId, source.UnarmedBasicAttackProfileId, source.AppearanceProfileId,
-                source.VisibleRootId, source.VisibleRootGrade, source.VisibleRootElement);
+                source.VisibleRootId, source.VisibleRootGrade, source.VisibleRootElement, unarmedAttackFamilyId: source.UnarmedAttackFamilyId);
         }
 
         private static CharacterData CreateDefinition()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "长期输入角色";
             definition.realmMultiplier = 1f;

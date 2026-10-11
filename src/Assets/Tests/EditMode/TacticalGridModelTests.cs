@@ -404,6 +404,7 @@ namespace TianZhang.Tests
         private FormalFixture CreateFixture()
         {
             var template = Track(ScriptableObject.CreateInstance<CharacterData>());
+            template.unarmedAttackFamilyId = "body_human";
             template.charName = "石甲兽";
 
             var guaranteedItem = CreateItem("item_shijia_piece");

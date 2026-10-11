@@ -333,7 +333,7 @@ static class BattleSimSelfTests
     {
         var service=new CombatCommandService(); var board=new HexBattlefield();
         AssertEqual(51,GameData.Rules.Economy.Count(r=>r.RecordKind=="test_action"),"51 explicit test triples");
-        AssertEqual(4,GameData.ProductionAttacks.Count,"four actual production IDs");
+        AssertEqual(9,GameData.ProductionAttacks.Count,"nine actual production IDs");
         AssertEqual(false,GameData.ProjectMovement("金丹",2,"万法都箓经").UnlockedChapters.Any(p=>p.Contains("元婴")),"future chapter is never granted early");
         AssertEqual(5333,GameData.ProjectMovement("筑基",2,"苦行剑典").EffectiveMilliUnits,"same table cumulative M rescale");
         foreach (var row in GameData.Rules.Economy.Where(r=>r.RecordKind=="test_action"))
@@ -1782,7 +1782,7 @@ static class BattleSimSelfTests
     {
         var rows = ReadCsvRows("src/Assets/DataConfig/AttackProfiles.csv");
         AssertEqual(false, rows.Any(row => row["attackProfileId"] == "basic_unarmed" || row["basicBindingKind"] == "unarmed_fallback"), "no production unarmed row");
-        AssertEqual(4, GameData.ProductionAttacks.Count, "four current production profiles");
+        AssertEqual(9, GameData.ProductionAttacks.Count, "nine current production profiles");
         var actor = CtTestCharacter("no-weapon", 20);
         var enemy = CtTestCharacter("no-weapon-enemy", 10);
         actor.BasicAttackProfile = enemy.BasicAttackProfile = null;
@@ -1886,8 +1886,8 @@ static class BattleSimSelfTests
             AssertEqual((double)1.1f, adjusted.Mult, "multiplier is not a parser constant");
             AssertEqual(false, adjusted.RuleSetSourceDigest == rules.SourceDigest, "parameter change updates digest");
             Write(production);
-            AssertEqual(4, GameData.LoadProductionAttacks(attackPath).Count, "unchanged four production IDs");
-            AssertEqual(0, GameData.LoadProductionRuleSet(attackPath).UnarmedRows.Count, "no production body mapping");
+            AssertEqual(9, GameData.LoadProductionAttacks(attackPath).Count, "nine production IDs");
+            AssertEqual(5, GameData.LoadProductionRuleSet(attackPath).UnarmedRows.Count, "five production body mappings");
             var wrong = production.Where(line => !line.StartsWith('#')).ToArray(); var weapon = wrong[3].Split(',');
             weapon[Array.IndexOf(fields, "unarmedPhysicalAttackCapacity")] = "0"; wrong[3] = string.Join(",", weapon); Write(wrong);
             AssertEqual(true, Rejects(() => GameData.LoadProductionAttacks(attackPath)), "even zero foreign body field is rejected");

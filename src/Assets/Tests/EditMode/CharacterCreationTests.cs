@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System.Linq;
 using TianZhang.Character;
 using TianZhang.Entity;
@@ -266,6 +266,7 @@ namespace TianZhang.Tests
         public void AwakenedHiddenRootJoinsEffectiveRootsAndUsesMultiRootFormula()
         {
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
             try
             {
@@ -328,7 +329,7 @@ namespace TianZhang.Tests
 
             CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
             Assert.AreEqual(
-                string.Empty,
+                "basic_body_human_fanren",
                 runtime.UnarmedBasicAttackProfileId);
             Assert.IsTrue(string.IsNullOrEmpty(runtime.MainEquipmentBasicAttackProfileId));
         }
@@ -382,7 +383,7 @@ namespace TianZhang.Tests
                 CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.KnownSpells);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.EquippedSpells);
-                Assert.AreEqual(string.Empty, runtime.UnarmedBasicAttackProfileId);
+                Assert.AreEqual("basic_body_human_fanren", runtime.UnarmedBasicAttackProfileId);
             }
             finally
             {

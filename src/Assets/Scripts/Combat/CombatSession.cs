@@ -195,13 +195,29 @@ namespace TianZhang.Combat
             !Combatants.HasLivingMembers(CombatTeam.Enemy);
 
         /// <summary>Updates long-term inputs without touching the budget already issued for this turn.</summary>
-        public bool RefreshActionEconomy(string actorId, int maximum, int movement)
+        public bool RefreshActionEconomy(string actorId, int maximum, int movement,
+            string realmStage = null, string basicAttackProfileId = null)
         {
             if (maximum <= 0 || movement < 0) throw new ArgumentOutOfRangeException(nameof(maximum));
             if (!Combatants.TryGet(actorId, out var actor)) throw new ArgumentException("combat_actor_missing");
-            if (actor.ActionPointMaximumUnits == maximum && actor.MovementEfficiencyMilliUnits == movement) return false;
+            string stage = realmStage ?? actor.RealmStage;
+            string basic = basicAttackProfileId ?? actor.BasicAttackProfileId;
+            if (realmStage != null || basicAttackProfileId != null)
+            {
+                var prepared = actor.CopyForResolution();
+                prepared.SetGrowth(maximum, movement, stage, basic);
+                if (RuleSet == null || !prepared.TryGetRealmOrder(RuleSet, out int order) || order > 3 ||
+                    !profiles.TryGetValue(basic, out var profile) || profile.Kind != CombatAttackKind.Basic ||
+                    profile.RuleMetadata == null || profile.RuleMetadata.RuleSetVersion != RuleSet.RuleSetVersion ||
+                    profile.RuleMetadata.SourceDigest != RuleSet.SourceDigest ||
+                    profile.RuleMetadata.EffectBudgetMode == "fixed_unarmed" &&
+                    !RuleSet.UnarmedRows.Any(row => row.ProfileId == basic && row.RealmId == RuleSet.Realms.Single(r => r.RealmOrder == order).RealmId))
+                    throw new ArgumentException("combat_growth_binding_invalid");
+            }
+            if (actor.ActionPointMaximumUnits == maximum && actor.MovementEfficiencyMilliUnits == movement &&
+                actor.RealmStage == stage && actor.BasicAttackProfileId == basic) return false;
             long nextVersion = checked(StateVersion + 1);
-            actor.SetLongTermActionEconomy(maximum, movement);
+            actor.SetGrowth(maximum, movement, stage, basic);
             StateVersion = nextVersion;
             return true;
         }

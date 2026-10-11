@@ -40,7 +40,7 @@ namespace TianZhang.Tests
                 new[] { CombatRuleSet.EconomyColumns }.Concat(asset.ExportEconomy()).ToArray(), asset.sourceDigest);
             Assert.That(projected.Realms.Count, Is.EqualTo(6)); Assert.That(projected.Tiers.Count, Is.EqualTo(3));
             Assert.That(projected.Economy.Count, Is.EqualTo(52));
-            Assert.That(asset.unarmedRows, Is.Empty);
+            Assert.That(asset.unarmedRows.Length, Is.EqualTo(5));
             Assert.That(projected.UnarmedRows, Is.Empty);
             foreach (string id in CombatRuleSet.DefinitionIds)
                 Assert.That(projected.Economy.Count(row => row.DefinitionRef == id), Is.EqualTo(3), id);

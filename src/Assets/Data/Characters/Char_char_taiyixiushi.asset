@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 3
   realmMultiplier: 1.5
-  realmStage: 练气
+  realmStage: "\u7EC3\u6C14"
   gongFaName: "\u62B1\u5143\u5B88\u4E00\u7ECF"
   equippedSpells:
   - spell_xuanshuizhou
@@ -49,6 +49,7 @@ MonoBehaviour:
   availableSkills: []
   mainEquipmentBasicAttackProfileId:
   unarmedBasicAttackProfileId:
+  unarmedAttackFamilyId: body_human
   innatePurchasePointsLimit: 0
   innatePurchasePointsUsed: 0
   creationBudgetLimit: 0

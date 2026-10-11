@@ -57,7 +57,7 @@ namespace TianZhang.Tests
         public void NewSlotRoundTripPreservesCanonicalEnvelopeAndSummary()
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            GameSaveEnvelope envelope = CreateEnvelope("player_a", "初始角色");
+            GameSaveEnvelope envelope = CreateEnvelope("player", "初始角色");
 
             GameSaveSlotWriteResult write = store.Write("slot_a", envelope);
             GameSaveSlotReadResult read = store.Read("slot_a");
@@ -71,7 +71,7 @@ namespace TianZhang.Tests
             Assert.That(list.Succeeded, Is.True);
             Assert.That(list.Slots.Count, Is.EqualTo(1));
             Assert.That(list.Slots[0].SlotId, Is.EqualTo("slot_a"));
-            Assert.That(list.Slots[0].CharacterId, Is.EqualTo("player_a"));
+            Assert.That(list.Slots[0].CharacterId, Is.EqualTo("player"));
             Assert.That(list.Slots[0].CharacterDisplayName, Is.EqualTo("初始角色"));
             Assert.That(list.Slots[0].IsReadable, Is.True);
             Assert.That(list.Slots[0].LastWriteTimeUtc, Is.Not.EqualTo(DateTime.MinValue));
@@ -81,15 +81,15 @@ namespace TianZhang.Tests
         public void ExistingSlotReplacementExposesOnlyTheNewEnvelope()
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            GameSaveEnvelope first = CreateEnvelope("player_a", "旧角色");
-            GameSaveEnvelope second = CreateEnvelope("player_b", "新角色");
+            GameSaveEnvelope first = CreateEnvelope("player", "旧角色");
+            GameSaveEnvelope second = CreateEnvelope("player", "新角色");
 
             Assert.That(store.Write("slot_a", first).Succeeded, Is.True);
             Assert.That(store.Write("slot_a", second).Succeeded, Is.True);
 
             GameSaveSlotReadResult read = store.Read("slot_a");
             Assert.That(read.Succeeded, Is.True);
-            Assert.That(read.Envelope.player.characterId, Is.EqualTo("player_b"));
+            Assert.That(read.Envelope.player.characterId, Is.EqualTo("player"));
             Assert.That(read.Envelope.player.displayName, Is.EqualTo("新角色"));
             Assert.That(Directory.GetFiles(temporaryDirectory, "*.tmp"), Is.Empty);
         }
@@ -98,14 +98,14 @@ namespace TianZhang.Tests
         public void FailedReplacementKeepsTheOriginalFileByteForByte()
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "旧角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player", "旧角色")).Succeeded, Is.True);
             string slotPath = Path.Combine(temporaryDirectory, "slot_a.json");
             byte[] before = File.ReadAllBytes(slotPath);
 
             GameSaveSlotWriteResult write;
             using (new FileStream(slotPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                write = store.Write("slot_a", CreateEnvelope("player_b", "新角色"));
+                write = store.Write("slot_a", CreateEnvelope("player", "新角色"));
             }
 
             Assert.That(write.Succeeded, Is.False);
@@ -180,8 +180,8 @@ namespace TianZhang.Tests
         public void DeletingOneSlotRemovesOnlyThatSlotAndLeavesEveryOtherFileIntact()
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
-            Assert.That(store.Write("slot_b", CreateEnvelope("player_b", "乙角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player", "甲角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_b", CreateEnvelope("player", "乙角色")).Succeeded, Is.True);
             string keptPath = Path.Combine(temporaryDirectory, "slot_b.json");
             byte[] keptBefore = File.ReadAllBytes(keptPath);
             string notePath = Path.Combine(temporaryDirectory, "notes.txt");
@@ -212,7 +212,7 @@ namespace TianZhang.Tests
         public void DeleteRejectsInvalidSlotIdsAndKeepsTheStoredSlot(string slotId)
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player", "甲角色")).Succeeded, Is.True);
             string slotPath = Path.Combine(temporaryDirectory, "slot_a.json");
             byte[] before = File.ReadAllBytes(slotPath);
 
@@ -273,7 +273,7 @@ namespace TianZhang.Tests
         public void LockedSlotFileReportsDeleteFailedAndSurvivesByteForByte()
         {
             var store = new GameSaveSlotStore(temporaryDirectory);
-            Assert.That(store.Write("slot_a", CreateEnvelope("player_a", "甲角色")).Succeeded, Is.True);
+            Assert.That(store.Write("slot_a", CreateEnvelope("player", "甲角色")).Succeeded, Is.True);
             string slotPath = Path.Combine(temporaryDirectory, "slot_a.json");
             byte[] before = File.ReadAllBytes(slotPath);
 
@@ -296,6 +296,7 @@ namespace TianZhang.Tests
         private GameSaveEnvelope CreateEnvelope(string characterId, string displayName)
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = displayName;
             definition.realmMultiplier = 1f;

@@ -1,0 +1,51 @@
+# U-COMBAT-UNARMED-RUNTIME-01 验证记录
+
+日期：2026-10-11；负责人已批准 DEC-20261011-CD26BA705C0F9E 的 A，消费共享入口重放的 checkpoint，完成原单一结果并归档。正式集成仍由共享入口执行。
+
+## 模型、范围与输入
+
+主模型 gpt-6.1-sol；Node REPL 的 x-codex-turn-metadata.model 实际返回同一值。沿入口冻结模型单主责执行；创建、成长、保存与入战强耦合，无独立只读辅助问题，未启动辅助或第二责任会话。
+批准只增加 ContentImporterArchitectureTests.cs 与 AdventureNodeDispatchTests.cs 两条精确路径，合计110条；全部业务差异位于当前 run worktree 和该允许集合。没有调用 runtime、集成、自动化管理或其他 worktree，没有修改真实玩家存档。
+本轮重新运行 get-experience-risk-preflight：taskId正确，taskCardDigest=c5f2887cffae1f096f939ea2ed02207c4c33177ec5b468fc3b4720a3844b3179，indexDigest=89f1e6153a747b1b9dfc15e06e30106877901d6e0e759ccf03ffda8b36a8c899；matched/notice/mustRead/gatePointers为空，与schema2投影一致。
+事实源：空手普攻成长接入合同§二至六、功法数值模板§9.4、石甲兽身体攻击成长合同；UNITY_STRUCTURE及runtime/content映射；unity-agent-workflows的运行时所有者、验证、内容、保存与清理规则。
+
+## 已完成结果与所有者
+
+生产九ID和五个身体映射同批启用；普通人物为body_human，石甲兽为body_shijiahou，其他保留敌人不获准身体族。既有四攻击的费用/倍率保持，身体族不是背包武器。
+CharacterCreationRules → CharacterRuntimeProfile.FromDefinition/Restore/RestoreProgression → CharacterStateSnapshot 是权威链。按当前境界与规则派生身体攻击；创建、更新、恢复先准备后发布，主手仍优先，装备不清身体来源。非法族、缺映射、错误缓存与保留境界拒绝且不漏写。
+保存schema6只保存权威族，派生ID的退役列保持空。4→5→6与5→6仅接受合法玩家、境界及空/basic_unarmed旧槽，先校验再清空；伪造旧族、退役值、缺族、敌人族和隐藏输入拒绝。临时文件测试证明读取不写原档，显式保存后再读稳定；失败保持live所有者和原文件字节。
+正式AdventureSceneInstaller九档案 → AdventureUnitSpawner先派生成长并验证真实装备 → CombatEntryAdapter完整映射 → CombatSession唯一basic授权。EnemyAI沿原合法动作选招，没有新AI策略。非法主手不回退身体攻击。
+EncounterCoordinator.RefreshGrowth → CombatSession.RefreshActionEconomy同步AP上限、v、realm及有效普攻，使旧报价失效，保留本回合已发余额/上限、次数、tick及turn。新矩阵覆盖升境、降档、第三次重复、失败不累次、空手/武器共享账本及本人回合重置；剑/刀成长后仍固定40000/50000费用和120承载，库存不变。
+BattleSim只扩大九ID最低读取、身体元数据传递及旧审计身份拒绝；不实现双入口完整成长，不签角色平衡或最终体验。
+
+## 实际验证
+
+Unity版本6000.3.18f1，编译通过。两份批准新增路径原13项失败已全部通过，生产校验没有放松，非法输入拒绝断言保留。
+权威EditMode：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultXmlPath <当前worktree>/Temp/unarmed-final-editmode.xml。1095总项/1092通过/3失败/0跳过，进程2；所有空手相关组通过。三失败仅为ClothWideSleeve的源.blend缺失，以及CombatUnitPresentationProfile的两个测试缺assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx；失败原文与路径在XML，不删断言、不改为通过。
+正式空手单项PlayMode：Unity -batchmode（启用图形设备，未传-nographics） -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongBasicAttackPlayModeTests.UnarmedProductionPlayerSavesReentersAttacksAndStoneArmorBeastFinishesItsTurn。Temp/unarmed-formal-playmode.xml为1/1通过，进程0。
+最终相关PlayMode同入口筛选正式空手、FormalFeatureSceneChain、CombatEquipment、CombatNavigationGuard、StarterArts及StartMenuSaveDeletion。Temp/unarmed-final-playmode.xml为13总项/12通过/1失败/0跳过，进程2。身体专项、既有完整战斗悬赏保存重入、装备、导航、删除存档及环境恢复案例均通过。唯一失败是StarterArts::FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness第163行旧断言rolls+4、实际+5；基准HEAD同一断言与EncounterCoordinator五次NextPercent调用均已存在，本轮只更新该文件正式九ID集合，未修改采样器或此断言，因此单列为已有采样断言不一致，不宣称整组通过。
+正式身体数字证据：默认合法均衡创角、实际StartMenu→Settlement保存→StartMenu加载→Adventure入战；player=basic_body_human_fanren、enemy=basic_body_shijiahou_lianqi，预览/实付20000，玩家造成15伤害，敌方造成141伤害、攻击3次，turn=1→3回到玩家。用恒定合法随机值隔离随机波动，未修改角色属性/血量/档案、未添加武器，读写仅在独立测试临时存档目录。最终相关运行再次通过该项。
+探索性完整headless PlayMode为91/48通过/42失败/1跳过（Temp/unarmed-playmode.xml），不能作为全套通过。旧四ID和非法保存身份夹具在本轮范围修正后已获得上述重测证据；其余含无图形设备/321宽、缺已移除视觉板、旧AP2费用和五次采样断言等，不扩展到视图、采样或数值调整。BasicAttack采样夹具原四随机值、Layout重复装备夹具均在基准HEAD已有；不将这些失败冒充本任务身体生产证据。
+本worktree缺obj/project.assets.json，先一次dotnet restore simulations/BattleSim。Release --no-restore build通过，0警告0错误；默认dotnet run --no-build -c Release --project simulations/BattleSim返回0。更改最低读取自测后重新build，并运行 -- --self-test unarmed-config通过（五身体映射、40负例）。不签完整双入口/平衡。
+check-unity-assembly-boundaries：OK，19程序集、2 asmref。check-data-chain：OK，GongFa29/29、Spells84/84、Skills31/31、language keys649。
+
+## 生成与摘要
+
+checkpoint重放将CSV依仓库规则规范为LF；旧派生摘要来自CRLF字节，所以出现同源摘要不一致。通过现有AdventureSceneBuilder.RebuildUnarmedBindings的Unity API原生重导，返回0，得到与当前LF一致的sourceDigest=c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6。未手写场景YAML或伪造摘要。Importer顺带重存的无关默认字段和测试临时重序列化均恢复，保留九攻击/规则摘要以及批准的身体/场景引用差异。
+src/Assets/DataConfig/AttackProfiles.csv SHA256=bb68b772ab0644a5079ea64630a8137846247da7436490cb54cb3438dd340d7e
+src/Assets/DataConfig/Characters.csv SHA256=ecd3dfcacfe8a0a8e29b8c2b1bcc5af93234e6270d56c37eb1a09f454dc00ba7
+src/Assets/DataConfig/Enemies.csv SHA256=5717692dea7ffc22d9de39ebd99078847ce30e8a5a4df18171a325676b46ed31
+Temp/unarmed-final-editmode.xml SHA256=5655b9185578d2586a72c403ee5a87b5f3a8bdb0c04312d598649380496ff0e6
+Temp/unarmed-formal-playmode.xml SHA256=ee4b90fce55d5f75f937a61efe67bcc280f8aef339d166f766852520eca6d045
+Temp/unarmed-final-playmode.xml SHA256=447836974b88b90d64c3a0bf8b9a690d686fb5a6d3e1a11d11637bfe528b03ce
+
+## 收尾边界
+
+本任务按completed移入精确归档，仅移除自身队列/backlog行；SIM和PREVIEW等其他卡对本任务的具名前置保留，等待正式master结果后由后续维护处理。
+没有调整武器固定档、普攻重复乘数、回合/tick、奖励边界或数值参数。完整双入口、平衡、HUD报价及最终体验分别留给已有后续任务。美术源文件缺失和已有PlayMode失败如上，不宣称全套绿灯。
+
+## 提交前检查
+
+完整diff复核共70条精确路径（含活跃卡删除与归档新增），全部属于批准的110条集合，无其他worktree或无关文件差异。69个现存变更文件的check-pending-whitespace通过；删除路径由Git追踪，未要求空文件占位。
+check-task-cards -TaskId U-COMBAT-UNARMED-RUNTIME-01 -Postcondition CodexClosedOrNonReady -OutputJson通过：67张卡、readyCount=0、本卡completed。check-review-text通过。
+资产空字段尾空格按项目检查器清理后，check-data-chain再次通过；CSV字节与摘要未变化。默认git diff --cached --check只报告五个新.meta的15行Unity空字段尾空格，按既有检查器保留此序列化格式；finalizer的core.whitespace=-blank-at-eol staged检查承担项目既定检查。

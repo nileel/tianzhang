@@ -134,6 +134,7 @@ namespace TianZhang.Tests
         public void RestoreReplacesVisibleRootFactsAndLegacySnapshotClearsThemToUnknown()
         {
             CharacterData definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             try
             {
@@ -148,7 +149,7 @@ namespace TianZhang.Tests
                     before.Identity, before.Attributes, before.Resources, before.AbilityLoadout, before.Progression,
                     before.CombatModifiers, before.MainEquipmentBasicAttackProfileId,
                     before.UnarmedBasicAttackProfileId, before.AppearanceProfileId,
-                    "root_thunder_high", "上品", "雷");
+                    "root_thunder_high", "上品", "雷", unarmedAttackFamilyId: before.UnarmedAttackFamilyId);
 
                 profile.Restore(replacement);
                 Assert.That(profile.VisibleRootId, Is.EqualTo("root_thunder_high"));
@@ -158,7 +159,7 @@ namespace TianZhang.Tests
                 var legacy = new CharacterStateSnapshot(
                     before.Identity, before.Attributes, before.Resources, before.AbilityLoadout, before.Progression,
                     before.CombatModifiers, before.MainEquipmentBasicAttackProfileId,
-                    before.UnarmedBasicAttackProfileId, before.AppearanceProfileId);
+                    before.UnarmedBasicAttackProfileId, before.AppearanceProfileId, unarmedAttackFamilyId: before.UnarmedAttackFamilyId);
                 profile.Restore(legacy);
                 Assert.That(profile.VisibleRootId, Is.Null);
                 Assert.That(profile.VisibleRootGrade, Is.Null);

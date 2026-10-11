@@ -54,9 +54,10 @@ namespace TianZhang.Entity
         public string[] availableSkills;   // 已学会的全部神通
 
         [Header("基础攻击绑定")]
-        // Only a real main-hand weapon supplies a basic attack. The obsolete unarmed slot remains empty.
+        // Body family is authoritative; the obsolete cached attack slot remains empty.
         public string mainEquipmentBasicAttackProfileId = "";
         public string unarmedBasicAttackProfileId = "";
+        public string unarmedAttackFamilyId = "";
 
         [Header("角色创建")]
         public int innatePurchasePointsLimit;

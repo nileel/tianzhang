@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9d6bc45a77474a9aa5101850d20a36, type: 3}
+  m_Name: AttackProfile_basic_body_shijiahou_lianqi
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Combat.AttackProfileData
+  attackProfileId: basic_body_shijiahou_lianqi
+  displayNameKey: attack_profile_body_shijiahou
+  profileKind: 1
+  basicBindingKind: 3
+  contentScope:
+  sourceAffiliation:
+  realmRequirementId:
+  elementRequirementId:
+  effectType: 1
+  damageElementId: element_none
+  physicalDamageMultiplier: 1
+  soulDamageMultiplier: 0
+  healAmount: 0
+  buffMultiplier: 0
+  defensePenetration: 0
+  spiritRecoveryMultiplier: 0
+  minimumSpiritRecovery: 0
+  otherTargetResourceCost: 0
+  otherTargetRecoveryMultiplier: 0
+  resourceKind: 1
+  resourceCost: 0
+  actionPointCostUnits: 25000
+  minimumNetCostUnits: 25000
+  ctPenalty: 0
+  reuseCooldownTicks: 0
+  minCastRange: 1
+  maxCastRange: 1
+  targetingMode: 1
+  areaCenterKind: 0
+  areaShapeKind: 0
+  areaRadius: 0
+  areaLength: 0
+  areaFanHalfAngleSteps: 0
+  areaFacing: -1
+  areaInnerRadius: 0
+  areaEffectBlockers: 0
+  areaAllowedFactions: 0
+  areaAllowedStates: 0
+  isDomain: 0
+  isBloodline: 0
+  specialEffectTextKey:
+  ruleSetVersion: AP-GROWTH@0.1
+  abilityTierId: tier_lianqi
+  cooldownClass: basic_repeat
+  effectBudgetMode: fixed_unarmed
+  efficiencyNumerator: 0
+  efficiencyDenominator: 0
+  damageMigrationNumerator: 0
+  damageMigrationDenominator: 0
+  damageWeightNumerator: 0
+  damageWeightDenominator: 0
+  statusId:
+  statusAttributeId:
+  statusRelativePermille: 0
+  statusDurationOwnTurnEnds: 0
+  statusStackLimit: 0
+  statusRefreshPolicy:
+  controlChancePermille: 0
+  controlUsesMindContest: 0
+  ruleSetSourceDigest: c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6
+  attackSchemaVersion: 2
+  unarmedFamilyId: body_shijiahou
+  unarmedRealmId: realm_lianqi
+  unarmedPhysicalAttackCapacity: 120

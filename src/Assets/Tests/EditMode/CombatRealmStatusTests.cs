@@ -31,9 +31,11 @@ namespace TianZhang.Tests.EditMode
         private AttackProfileData Project(string id, params (string field, string value)[] changes)
         {
             string[] lines = File.ReadAllLines(Path.Combine(Application.dataPath, "Tests/EditMode/Fixtures/RealmStatuses.fixture.csv"));
-            string[] fields = lines[0].Split(','), row = lines.Single(line => line.StartsWith(id + ",", StringComparison.Ordinal)).Split(',');
+            // Upgrade the explicit schema-1 rejection-era fixture at its input boundary.
+            string header = lines[0] + ",attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity";
+            string[] fields = header.Split(','), row = (lines.Single(line => line.StartsWith(id + ",", StringComparison.Ordinal)) + ",2,,,").Split(',');
             foreach (var change in changes) row[Array.IndexOf(fields, change.field)] = change.value;
-            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(new[] { lines[0], string.Join(",", row) },
+            Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(new[] { header, string.Join(",", row) },
                 new[] { id }, out var profiles, out string reason), Is.True, reason);
             temporary.AddRange(profiles); return profiles.Single();
         }
@@ -48,7 +50,10 @@ namespace TianZhang.Tests.EditMode
             var adapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), Rules);
             var other = target.Team != actor.Team ? target : Unit("opponent", actor.Team == CombatTeam.Player ? CombatTeam.Enemy : CombatTeam.Player);
             Assert.That(adapter.TryCreateSession(new AdventureSpawnSet(actor, other, null, "", "", Array.Empty<string>()),
-                profiles, environment, out var session, out string reason), Is.True, reason);
+                profiles.Concat(new[] { "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji",
+                    "basic_body_human_jindan", "basic_body_shijiahou_lianqi" }.Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>(
+                        "Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset"))).ToArray(),
+                environment, out var session, out string reason), Is.True, reason);
             if (target.Team == actor.Team && target != actor)
                 session = new CombatSession(new[] { actor, target, other, Unit("opponent2", other.Team) },
                     session.AttackProfiles, session.SpatialQuery, CombatActionPointKernelTests.Ordinary(), ruleSet: session.RuleSet);

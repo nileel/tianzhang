@@ -8,7 +8,7 @@ namespace TianZhang.Character
             CharacterCombatModifiers combatModifiers,
             string mainEquipmentBasicAttackProfileId, string unarmedBasicAttackProfileId, string appearanceProfileId,
             string visibleRootId = null, string visibleRootGrade = null, string visibleRootElement = null,
-            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null)
+            string mainEquipmentItemId = null, string mainEquipmentInstanceId = null, string unarmedAttackFamilyId = null)
         {
             Identity = identity ?? throw new System.ArgumentNullException(nameof(identity));
             Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
@@ -19,8 +19,8 @@ namespace TianZhang.Character
             MainEquipmentItemId = mainEquipmentItemId;
             MainEquipmentInstanceId = mainEquipmentInstanceId;
             MainEquipmentBasicAttackProfileId = mainEquipmentBasicAttackProfileId;
-            // Retained save slot: obsolete unarmed references never become runtime bindings.
-            UnarmedBasicAttackProfileId = string.Empty;
+            UnarmedAttackFamilyId = unarmedAttackFamilyId;
+            UnarmedBasicAttackProfileId = unarmedBasicAttackProfileId;
             AppearanceProfileId = string.IsNullOrWhiteSpace(appearanceProfileId)
                 ? throw new System.ArgumentException("Appearance profile ID is required.", nameof(appearanceProfileId))
                 : appearanceProfileId;
@@ -38,6 +38,7 @@ namespace TianZhang.Character
         public string MainEquipmentInstanceId { get; }
         public string MainEquipmentBasicAttackProfileId { get; }
         public string UnarmedBasicAttackProfileId { get; }
+        public string UnarmedAttackFamilyId { get; }
         public string AppearanceProfileId { get; }
         public string VisibleRootId { get; }
         public string VisibleRootGrade { get; }

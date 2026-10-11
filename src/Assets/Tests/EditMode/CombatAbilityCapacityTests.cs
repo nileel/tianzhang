@@ -280,8 +280,8 @@ namespace TianZhang.Tests.EditMode
             profile.unarmedPhysicalAttackCapacity = 30;
             var productionAdapter = new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"));
             profile.ruleSetSourceDigest = AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset").sourceDigest;
-            Assert.That(productionAdapter.TryCreateSession(spawned, profiles, environment, out _, out reason), Is.False);
-            Assert.That(reason, Is.EqualTo("attack_profile_unarmed_mapping_invalid"));
+            foreach (var body in profiles) body.ruleSetSourceDigest = profile.ruleSetSourceDigest;
+            Assert.That(productionAdapter.TryCreateSession(spawned, profiles, environment, out _, out reason), Is.True, reason);
         }
 
         private T Copy<T>(T value) where T : Object
@@ -333,6 +333,14 @@ namespace TianZhang.Tests.EditMode
             var profiles = additionalProfiles == null ? new List<AttackProfileData> { profile } : new List<AttackProfileData>(additionalProfiles);
             foreach (string basicId in new[] { actor.BasicAttackProfileId,target.BasicAttackProfileId }.Where(id => !string.IsNullOrEmpty(id)).Distinct())
                 if (profiles.All(p => p.attackProfileId != basicId)) profiles.Add(ProductionProfile(basicId));
+            var activeRules = rules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+            foreach (var mapping in activeRules.unarmedRows)
+                if (profiles.All(p => p.attackProfileId != mapping.profileId))
+                {
+                    var body = Copy(ProductionProfile(mapping.profileId));
+                    body.ruleSetSourceDigest = activeRules.sourceDigest;
+                    profiles.Add(body);
+                }
             Assert.That(adapter.TryCreateSession(new AdventureSpawnSet(actor, target, null, actor.BasicAttackProfileId,
                 target.BasicAttackProfileId, Array.Empty<string>()), profiles.ToArray(), environment, out var session, out string reason), Is.True, reason);
             Assert.That(service.AdvanceUntilAction(session).ActorId, Is.EqualTo("actor"));

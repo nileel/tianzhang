@@ -48,10 +48,11 @@ namespace TianZhang.Tests.EditMode
         {
             catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "装备验证"; definition.realmStage = "练气"; definition.realmMultiplier = 1;
             definition.actionPointMaximumUnits = 100000; definition.movementEfficiencyMilliUnits = 2000;
-            definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.unarmedBasicAttackProfileId = string.Empty;
             runtime = new GameRuntime();
             runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
             bridge = new GameObject("EquipmentTestOwner").AddComponent<EncounterCoordinator>();
@@ -61,7 +62,9 @@ namespace TianZhang.Tests.EditMode
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
                 basicAttackProfileId: string.Empty);
             var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", string.Empty, Array.Empty<string>());
-            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
+            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu",
+                "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan",
+                "basic_body_shijiahou_lianqi" }
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.SwapEquipment, 25000, 25000, 0, 0) });
@@ -193,6 +196,25 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(json, loaded.CaptureSaveJson()); Assert.AreEqual(item, loaded.Player.MainEquipmentItemId);
             Assert.IsTrue(loaded.OwnsEquipmentInstance("player", item, "player:initial:" + item));
             Assert.IsFalse(runtime.InventoryGrants.Grant(catalog, new[] { new InventoryGrantRequest(item, 1) }).Applied);
+        }
+        [TestCase(Sword, 40000)] [TestCase(Blade, 50000)]
+        public void RealmGrowthPreservesWeaponFixedTierBodySourceAndCurrentTurnBudget(string item, int fee)
+        {
+            if (item == Blade) Assert.IsTrue(Execute(Swap()).Succeeded);
+            int remaining = actor.ActionPointsRemainingUnits; long turn = session.TurnSequence;
+            runtime.Player.RestoreProgression(new CharacterProgressionSnapshot("", "金丹", 1));
+            Assert.IsTrue((bool)typeof(EncounterCoordinator).GetMethod("RefreshGrowth", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(bridge, null));
+            Assert.AreEqual("basic_body_human_jindan", runtime.Player.UnarmedBasicAttackProfileId);
+            Assert.AreEqual("body_human", runtime.Player.UnarmedAttackFamilyId);
+            Assert.AreEqual(item, runtime.Player.MainEquipmentItemId);
+            Assert.AreEqual(item == Sword ? "basic_iron_sword" : "basic_iron_blade", actor.BasicAttackProfileId);
+            Assert.AreEqual(1000000, actor.ActionPointMaximumUnits); Assert.AreEqual(100000, actor.ActionPointLimitAtTurnStartUnits);
+            Assert.AreEqual(remaining, actor.ActionPointsRemainingUnits); Assert.AreEqual(turn, session.TurnSequence);
+            var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", actor.BasicAttackProfileId));
+            Assert.AreEqual(fee, quote.ActionPointCostUnits); Assert.IsTrue(session.TryGetProfile(actor.BasicAttackProfileId, out var weapon));
+            Assert.AreEqual(120, weapon.RuleMetadata.Tier.PhysicalAttackCapacity);
+            Assert.IsTrue(runtime.OwnsEquipmentInstance("player", Sword, "player:initial:" + Sword));
+            Assert.IsTrue(runtime.OwnsEquipmentInstance("player", Blade, "player:initial:" + Blade));
         }
         [TestCase("item")][TestCase("instance")][TestCase("profile")][TestCase("inventory")][TestCase("hidden")]
         public void BadSaveDoesNotReplaceLiveOwners(string kind)

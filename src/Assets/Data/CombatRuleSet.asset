@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TianZhang.Content::TianZhang.Content.CombatRuleSetData
   schemaVersion: 1
   ruleSetVersion: AP-GROWTH@0.1
-  sourceDigest: 6515cf7051e81836664f241ac0bf4de276a4921ee5d3e8b169e567c7c938d447
+  sourceDigest: c39a06bd0ad3271fbbecee9d2a88a989f22a6864399fe746fc321d476677f8b6
   realms:
   - realmId: realm_fanren
     realmOrder: 0
@@ -6082,4 +6082,39 @@ MonoBehaviour:
     damageWeightDenominator:
       present: 1
       value: 10
-  unarmedRows: []
+  unarmedRows:
+  - familyId: body_human
+    realmId: realm_fanren
+    profileId: basic_body_human_fanren
+    abilityTierId: tier_lianqi
+    actionPointCostUnits: 20000
+    minimumNetCostUnits: 20000
+    physicalAttackCapacity: 30
+  - familyId: body_human
+    realmId: realm_lianqi
+    profileId: basic_body_human_lianqi
+    abilityTierId: tier_lianqi
+    actionPointCostUnits: 25000
+    minimumNetCostUnits: 25000
+    physicalAttackCapacity: 120
+  - familyId: body_human
+    realmId: realm_zhuji
+    profileId: basic_body_human_zhuji
+    abilityTierId: tier_zhuji
+    actionPointCostUnits: 75000
+    minimumNetCostUnits: 75000
+    physicalAttackCapacity: 500
+  - familyId: body_human
+    realmId: realm_jindan
+    profileId: basic_body_human_jindan
+    abilityTierId: tier_jindan
+    actionPointCostUnits: 250000
+    minimumNetCostUnits: 250000
+    physicalAttackCapacity: 2400
+  - familyId: body_shijiahou
+    realmId: realm_lianqi
+    profileId: basic_body_shijiahou_lianqi
+    abilityTierId: tier_lianqi
+    actionPointCostUnits: 25000
+    minimumNetCostUnits: 25000
+    physicalAttackCapacity: 120

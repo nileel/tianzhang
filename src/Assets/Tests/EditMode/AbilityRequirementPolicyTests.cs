@@ -55,6 +55,7 @@ namespace TianZhang.Tests
         public void CharacterDefinitionFeedsIdentityRatherThanDamageMultiplierToRequirementPolicy()
         {
             var data = ScriptableObject.CreateInstance<CharacterData>();
+            data.unarmedAttackFamilyId = "body_human";
             try
             {
                 data.visibleRootElement = "雷";

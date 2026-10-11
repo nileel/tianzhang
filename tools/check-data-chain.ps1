@@ -294,11 +294,11 @@ function Test-FormalContentCatalog {
   }
 
   $enemy = @($Enemies.Rows | Where-Object { $_.name -ceq 'enemy_shijiahou' })
-  if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1' -or $enemy[0].unarmedBasicAttackProfileId -cne '') {
+  if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1' -or $enemy[0].unarmedBasicAttackProfileId -cne '' -or $enemy[0].unarmedAttackFamilyId -cne 'body_shijiahou') {
     Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_shijiahou' 'Enemy production scope, structured drop entries or basic attack binding differ from the approved decision.'
   }
   foreach ($row in @($Enemies.Rows | Where-Object { $_.name -cne 'enemy_shijiahou' })) {
-    if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedBasicAttackProfileId)) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedBasicAttackProfileId) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedAttackFamilyId)) {
       Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only enemy_shijiahou may enter the formal content directory or bind the production basic attack.'
     }
   }
@@ -333,7 +333,7 @@ function Test-FormalContentCatalog {
     bountyId = 'bounty_guanzhong_shijiahou'; contentScope = 'content_scope_production'; targetEnemyId = 'enemy_shijiahou'; repeatPolicy = 'one_time'
   }
   Test-FormalContentAsset 'EnemyTemplate:enemy_shijiahou' 'src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset' @{
-    unarmedBasicAttackProfileId = ''
+    unarmedBasicAttackProfileId = ''; unarmedAttackFamilyId = 'body_shijiahou'
   }
   $catalogPath = Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset'
   if (-not (Test-Path -LiteralPath $catalogPath -PathType Leaf)) {
@@ -567,7 +567,16 @@ function Test-CombatRuleSetProjection {
   $full = Join-Path $root $path
   if (Test-Path -LiteralPath $full) {
     $text = [IO.File]::ReadAllText($full)
-    if ($rules.UnarmedRows.Count -ne 0 -or $text -notmatch '(?m)^  unarmedRows: \[\]\r?$') { Add-Finding 'COMBAT_RULE_UNARMED_PROJECTION_INVALID' 'CombatRuleSet' 'CONFIG production requires an explicit empty derived body mapping.' }
+    $bodyBlocks = @([regex]::Matches($text, '(?ms)^  - familyId: .*?(?=^  - familyId:|^  [a-zA-Z]+:|\z)'))
+    if ($rules.UnarmedRows.Count -ne 5 -or $bodyBlocks.Count -ne 5) { Add-Finding 'COMBAT_RULE_UNARMED_PROJECTION_INVALID' 'CombatRuleSet' 'Five derived body mappings are required.' }
+    else {
+      for ($i=0; $i -lt 5; $i++) {
+        $row = $rules.UnarmedRows[$i]
+        foreach ($pair in @(@('familyId',$row.FamilyId),@('realmId',$row.RealmId),@('profileId',$row.ProfileId),@('abilityTierId',$row.AbilityTierId),@('actionPointCostUnits',$row.ActionPointCostUnits),@('minimumNetCostUnits',$row.MinimumNetCostUnits),@('physicalAttackCapacity',$row.PhysicalAttackCapacity))) {
+          if ($bodyBlocks[$i].Value -notmatch ('(?m)^  (?:- |  )'+$pair[0]+': '+[regex]::Escape([string]$pair[1])+'\r?$')) { Add-Finding 'COMBAT_RULE_UNARMED_PROJECTION_INVALID' ([string]$row.ProfileId) 'Generated body mapping differs from source.' }
+        }
+      }
+    }
     foreach ($entry in @(@{Name='realms';Rows=$rules.Realms;Start='realmId'},@{Name='tiers';Rows=$rules.Tiers;Start='abilityTierId'},@{Name='economy';Rows=$rules.Economy;Start='recordKind'})) {
       $blocks = @([regex]::Matches($text,"(?ms)^  - $($entry.Start): .*?(?=^  - $($entry.Start):|^  [a-zA-Z]+:|\z)"))
       if ($blocks.Count -ne $entry.Rows.Count) { Add-Finding 'COMBAT_RULE_ASSET_ROWS_INVALID' $entry.Name 'Generated row count must equal validated source.'; continue }
@@ -603,14 +612,14 @@ function Test-CombatRuleSetProjection {
 function Test-FormalAttackProfileProjection {
   param([object]$Table,[string[]]$LanguageIds)
   $rules = Test-CombatRuleSetProjection; if ($null -eq $rules) { return }
-  $ids = @('spell_guanshiji','spell_julingshu','basic_iron_sword','basic_iron_blade'); $rows = @($Table.Rows)
-  if ($rows.Count -ne 4 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly four approved IDs are required.'; return
+  $ids = @('spell_guanshiji','spell_julingshu','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
+  if ($rows.Count -ne 9 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly nine approved IDs are required.'; return
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
-  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the four canonical assets are required.' }
+  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the nine canonical assets are required.' }
   $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
-  $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2}}
+  $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2}}
   foreach ($row in $rows) {
     $id = [string]$row.attackProfileId; $fields = @{}
     if ($row.displayNameKey -notin $LanguageIds) { Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' $id 'Unknown display key.' }
@@ -647,7 +656,7 @@ function Test-FormalAttackProfileProjection {
           $pairs.efficiency,$pairs.damageMigration,$pairs.damageWeight,$penetration,$true)
         $fields.physicalDamageMultiplier = if ($row.effectType -in @('physical','hybrid')) { [double]$physical.ToString('R',[Globalization.CultureInfo]::InvariantCulture) } else { 0 }
         $fields.soulDamageMultiplier = if ($row.effectType -in @('magic','hybrid')) { [double]$soul.ToString('R',[Globalization.CultureInfo]::InvariantCulture) } else { 0 }
-      } elseif ($row.effectBudgetMode -notin @('fixed_weapon','prototype_restore','status_only','fixed_output')) { throw 'Unknown budget mode.' }
+      } elseif ($row.effectBudgetMode -notin @('fixed_weapon','fixed_unarmed','prototype_restore','status_only','fixed_output')) { throw 'Unknown budget mode.' }
       if ($row.controlChancePermille -and ($row.controlChancePermille -notmatch '^\d+$' -or [long]$row.controlChancePermille -gt 1000)) { throw 'Invalid control probability.' }
     } catch { Add-Finding 'ATTACK_PROFILE_SOURCE_INVALID' $id $_.Exception.Message; continue }
     Test-FormalProjectionAssetFields $id "src/Assets/Data/AttackProfiles/AttackProfile_$id.asset" $fields
@@ -959,7 +968,7 @@ $schemas = [ordered]@{
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
-  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits','unarmedAttackFamilyId')
   RealmCombatGrowth = [TianZhang.Combat.CombatRuleSet]::RealmColumns
   CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns
   CombatActionEconomyRules = [TianZhang.Combat.CombatRuleSet]::EconomyColumns
@@ -978,7 +987,7 @@ $tables = [ordered]@{
   Settlements = Get-CsvTable 'src/Assets/DataConfig/Settlements.csv' $schemas.Settlements @() @('content_scope_production')
   Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity') @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
-  Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId') @('guanzhong')
+  Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId','unarmedAttackFamilyId') @('guanzhong')
   RealmCombatGrowth = Get-CsvTable 'src/Assets/DataConfig/RealmCombatGrowth.csv' $schemas.RealmCombatGrowth @('movementNodeWeightNumerators')
   CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
   CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })

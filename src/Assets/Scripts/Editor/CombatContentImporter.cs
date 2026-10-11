@@ -147,6 +147,9 @@ namespace TianZhang.Editor
                 return;
             }
 
+            if (rows.Count != 9 || ruleSet.UnarmedRows.Count != 5)
+                throw new InvalidDataException("production_attack_mapping_incomplete");
+
             AssetDatabase.StartAssetEditing();
             try
             {
@@ -722,6 +725,13 @@ namespace TianZhang.Editor
 
                 bool hasMain = !string.IsNullOrWhiteSpace(character.mainEquipmentBasicAttackProfileId);
                 bool hasUnarmed = !string.IsNullOrWhiteSpace(character.unarmedBasicAttackProfileId);
+                if (!string.IsNullOrEmpty(character.unarmedAttackFamilyId))
+                {
+                    int order = Array.IndexOf(new[] { "凡人", "练气", "筑基", "金丹", "元婴", "化神" }, character.realmStage);
+                    string realm = order < 0 ? null : new[] { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan", "realm_yuanying", "realm_huashen" }[order];
+                    if (!rows.Any(row => row.UnarmedFamilyId == character.unarmedAttackFamilyId && row.UnarmedRealmId == realm))
+                    { reason = "character_unarmed_source_invalid"; return false; }
+                }
                 if (!hasMain && !hasUnarmed)
                     continue;
                 if (hasUnarmed)

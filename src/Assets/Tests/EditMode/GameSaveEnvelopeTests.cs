@@ -54,7 +54,7 @@ namespace TianZhang.Tests
             Assert.That(restored.Player.Identity.CharacterId, Is.EqualTo("player"));
             Assert.That(restored.Navigation.AdventureId, Is.EqualTo("adventure_test"));
             Assert.That(restored.CaptureSave().inventory[0].quantity, Is.EqualTo(2));
-            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo(string.Empty));
+            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo("basic_body_human_fanren"));
             Assert.That(restored.Player.AppearanceProfileId, Is.EqualTo(AppearanceProfileData.NoneId));
         }
 
@@ -71,10 +71,11 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void OldUnarmedSaveNormalizesWithoutGrantingEquipmentAndRemainsEmptyAfterReload()
+        public void OldUnarmedSaveMigratesHumanSourceWithoutGrantingEquipmentAfterReload()
         {
             var source = CreateRuntimeWithInventory();
             var old = source.CaptureSave();
+            old.schemaVersion = 5; old.player.unarmedAttackFamilyId = null;
             old.player.unarmedBasicAttackProfileId = "basic_unarmed";
             string oldJson = JsonUtility.ToJson(old);
             var migrated = GameSaveSerializer.Deserialize(oldJson);
@@ -89,7 +90,7 @@ namespace TianZhang.Tests
             string current = restored.CaptureSaveJson();
             restored.RestoreSaveJson(current, catalog);
             Assert.That(restored.CaptureSaveJson(), Is.EqualTo(current));
-            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.Empty);
+            Assert.That(restored.Player.UnarmedBasicAttackProfileId, Is.EqualTo("basic_body_human_fanren"));
         }
 
         [Test]
@@ -267,10 +268,11 @@ namespace TianZhang.Tests
         public void ExplicitCombatModifiersRoundTripLosslesslyThroughSaveAndRestore()
         {
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "显式加成角色";
             definition.realmMultiplier = 1f;
-            definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.unarmedBasicAttackProfileId = string.Empty;
             definition.actionPointMaximumUnits = 100000;
             definition.movementEfficiencyMilliUnits = 2000;
             definition.hpBonus = 12.4f;
@@ -672,13 +674,75 @@ namespace TianZhang.Tests
             Assert.That(runtime.CaptureSaveJson(), Is.EqualTo(baseline));
         }
 
+        [TestCase(4, "")] [TestCase(4, "basic_unarmed")]
+        [TestCase(5, "")] [TestCase(5, "basic_unarmed")]
+        public void LegacyBodyMigrationReadsWithoutWritingAndSavesSixForACanonicalSecondRead(int schema, string retired)
+        {
+            var source = CreateRuntimeWithInventory(); var old = source.CaptureSave();
+            old.schemaVersion = schema; old.player.unarmedAttackFamilyId = null; old.player.unarmedBasicAttackProfileId = retired;
+            if (schema == 4) { old.player.movementGrowthInputsPresent = false; old.player.movementGrowthSources = null; }
+            string directory = Path.Combine(Path.GetTempPath(), "TianZhang-BodyMigration-" + System.Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            try
+            {
+                string path = Path.Combine(directory, "body.json"); File.WriteAllText(path, JsonUtility.ToJson(old));
+                byte[] original = File.ReadAllBytes(path); var store = new GameSaveSlotStore(directory);
+                var read = store.Read("body"); Assert.IsTrue(read.Succeeded, read.FailureReason.ToString());
+                CollectionAssert.AreEqual(original, File.ReadAllBytes(path));
+                var loaded = new GameRuntime(); loaded.RestoreSave(read.Envelope, catalog);
+                Assert.AreEqual("body_human", loaded.Player.UnarmedAttackFamilyId);
+                Assert.AreEqual("basic_body_human_fanren", loaded.Player.UnarmedBasicAttackProfileId);
+                Assert.AreEqual(source.GetItemQuantity("item_test"), loaded.GetItemQuantity("item_test"));
+                Assert.AreEqual(0, loaded.GetItemQuantity("item_iron_sword"));
+                Assert.IsTrue(store.Write("body", loaded.CaptureSave()).Succeeded);
+                var second = store.Read("body"); Assert.IsTrue(second.Succeeded);
+                Assert.AreEqual(6, second.Envelope.schemaVersion);
+                Assert.IsEmpty(second.Envelope.player.unarmedBasicAttackProfileId);
+                string canonical = loaded.CaptureSaveJson(); loaded.RestoreSave(second.Envelope, catalog);
+                Assert.AreEqual(canonical, loaded.CaptureSaveJson());
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+        [TestCase(4, "forged-family")] [TestCase(5, "forged-family")] [TestCase(5, "retired")]
+        [TestCase(5, "identity")] [TestCase(5, "realm")] [TestCase(6, "missing-family")]
+        [TestCase(6, "enemy-family")] [TestCase(6, "unknown-family")] [TestCase(6, "retired")]
+        [TestCase(6, "realm")] [TestCase(6, "hidden-family")]
+        public void InvalidBodySavesKeepEveryLiveOwnerAndOriginalFileUnchanged(int schema, string invalid)
+        {
+            var runtime = CreateRuntimeWithInventory(); var owner = runtime.Player; string before = runtime.CaptureSaveJson();
+            var save = runtime.CaptureSave(); save.schemaVersion = schema;
+            if (schema < 6) save.player.unarmedAttackFamilyId = null;
+            if (schema == 4) { save.player.movementGrowthInputsPresent = false; save.player.movementGrowthSources = null; }
+            switch (invalid)
+            {
+                case "forged-family": save.player.unarmedAttackFamilyId = "body_human"; break;
+                case "retired": save.player.unarmedBasicAttackProfileId = "forged_attack"; break;
+                case "identity": save.player.characterId = "enemy"; break;
+                case "realm": save.player.realmStage = "unknown"; break;
+                case "missing-family": save.player.unarmedAttackFamilyId = null; break;
+                case "enemy-family": save.player.unarmedAttackFamilyId = "body_shijiahou"; break;
+                case "unknown-family": save.player.unarmedAttackFamilyId = "unknown"; break;
+                case "hidden-family": save.hasPlayer = false; break;
+            }
+            string path = Path.Combine(Path.GetTempPath(), "TianZhang-InvalidBody-" + System.Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                File.WriteAllText(path, JsonUtility.ToJson(save)); byte[] original = File.ReadAllBytes(path);
+                Assert.Catch(() => runtime.RestoreSaveJson(File.ReadAllText(path), catalog));
+                Assert.AreSame(owner, runtime.Player); Assert.AreEqual(before, runtime.CaptureSaveJson());
+                CollectionAssert.AreEqual(original, File.ReadAllBytes(path));
+            }
+            finally { File.Delete(path); }
+        }
+
         private GameRuntime CreateRuntimeWithInventory()
         {
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "存档角色";
             definition.realmMultiplier = 1f;
-            definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.unarmedBasicAttackProfileId = string.Empty;
             definition.actionPointMaximumUnits = 100000;
             definition.movementEfficiencyMilliUnits = 2000;
             item = ScriptableObject.CreateInstance<ItemData>();

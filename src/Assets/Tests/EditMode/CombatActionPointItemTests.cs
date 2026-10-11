@@ -54,10 +54,11 @@ namespace TianZhang.Tests.EditMode
             medicine = Object.Instantiate(source);
             Set(catalog, "items", Get<ItemData[]>(catalog, "items").Select(item => item.itemId == Item ? medicine : item).ToArray());
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "道具验证"; definition.realmStage = "练气"; definition.realmMultiplier = 1;
             definition.actionPointMaximumUnits = 100000; definition.movementEfficiencyMilliUnits = 2000;
-            definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.unarmedBasicAttackProfileId = string.Empty;
             runtime = new GameRuntime();
             runtime.BeginEquippedNewGame(CharacterRuntimeProfile.FromDefinition("player", definition, GrowthRules), CultivationState.CreateEmpty(), "guanzhong_hub", catalog);
             inventory = Get<InventoryStore>(runtime, "inventory");
@@ -71,7 +72,9 @@ namespace TianZhang.Tests.EditMode
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 10000, 10000, 60, 0, 10, 10, 100000, 2000,
                 basicAttackProfileId: string.Empty);
             var spawn = new AdventureSpawnSet(actor, enemy, null, "basic_iron_sword", string.Empty, Array.Empty<string>());
-            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu" }
+            var profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu",
+                "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan",
+                "basic_body_shijiahou_lianqi" }
                 .Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
             var ordinary = CombatActionPointKernelTests.Ordinary().Concat(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.UseItem, 30000, 30000, 0, 0) });
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");

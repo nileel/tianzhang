@@ -98,8 +98,8 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator CancelKeepsBothSlotsAndConfirmDeletesOnlyTheRequestedOne()
         {
             GameBootstrap bootstrap = GameBootstrap.RequireInstance();
-            WriteSlot(bootstrap, "del_a", "player_a", "甲角色");
-            WriteSlot(bootstrap, "del_b", "player_b", "乙角色");
+            WriteSlot(bootstrap, "del_a", "player", "甲角色");
+            WriteSlot(bootstrap, "del_b", "player", "乙角色");
             yield return RefreshMenu();
             string slotAPath = Path.Combine(directory, "del_a.json");
             string slotBPath = Path.Combine(directory, "del_b.json");
@@ -149,12 +149,13 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator DeletingTheLastSlotShowsTheEmptyStateAndStopsTheActiveSlotFromRebuildingIt()
         {
             GameBootstrap bootstrap = GameBootstrap.RequireInstance();
-            WriteSlot(bootstrap, "del_only", "player_only", "唯一角色");
+            WriteSlot(bootstrap, "del_only", "player", "唯一角色");
             yield return RefreshMenu();
             string slotPath = Path.Combine(directory, "del_only.json");
 
             // Negative control: while the slot file still exists this save really does write it.
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
             profile.charName = "唯一角色";
             profile.realmMultiplier = 1f;
@@ -162,7 +163,7 @@ namespace TianZhang.Tests.PlayMode
             profile.movementEfficiencyMilliUnits = 2000;
             ownedObjects.Add(profile);
             GameBootstrap.RequireRuntime().BeginNewGame(
-                CharacterRuntimeProfile.FromDefinition("player_only", profile, GrowthRules),
+                CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                 CultivationState.CreateEmpty(),
                 "guanzhong_hub");
             bootstrap.ActivateSlot("del_only");
@@ -194,7 +195,7 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator CorruptSlotRowIsDeletableWithoutBeingLoadable()
         {
             GameBootstrap bootstrap = GameBootstrap.RequireInstance();
-            WriteSlot(bootstrap, "del_ok", "player_ok", "正常角色");
+            WriteSlot(bootstrap, "del_ok", "player", "正常角色");
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, "del_broken.json"), "not-json");
             yield return RefreshMenu();
@@ -224,7 +225,7 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator DeleteConfirmationStaysReadableAndReachableWithoutClipping()
         {
             GameBootstrap bootstrap = GameBootstrap.RequireInstance();
-            WriteSlot(bootstrap, "del_wide", "player_wide", "宽屏角色名");
+            WriteSlot(bootstrap, "del_wide", "player", "宽屏角色名");
             yield return RefreshMenu();
             var evidence = new List<string>();
 
@@ -329,6 +330,7 @@ namespace TianZhang.Tests.PlayMode
         private void WriteSlot(GameBootstrap bootstrap, string slotId, string characterId, string displayName)
         {
             var definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = displayName;
             definition.realmMultiplier = 1f;

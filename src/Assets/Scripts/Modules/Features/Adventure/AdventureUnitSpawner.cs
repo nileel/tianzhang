@@ -69,22 +69,8 @@ namespace TianZhang.Features.Adventure
             }
             var playerPosition = new HexCoord(startNode.q, startNode.r);
             var enemyPosition = new HexCoord(encounterNode.q, encounterNode.r);
-            string playerBasic = ResolveBasicAttackBinding(
-                player.MainEquipmentBasicAttackProfileId,
-                player.UnarmedBasicAttackProfileId);
-            if (playerBasic == null)
-            {
-                reason = "adventure_player_basic_attack_binding_invalid";
-                return false;
-            }
-            string enemyBasic = ResolveBasicAttackBinding(
-                enemyData.combatTemplate.mainEquipmentBasicAttackProfileId,
-                enemyData.combatTemplate.unarmedBasicAttackProfileId);
-            if (enemyBasic == null)
-            {
-                reason = "adventure_enemy_basic_attack_binding_invalid";
-                return false;
-            }
+            string playerBasic;
+            string enemyBasic;
 
             CombatantSnapshot playerSnapshot;
             CombatantSnapshot enemySnapshot;
@@ -92,7 +78,15 @@ namespace TianZhang.Features.Adventure
             {
                 // Rebuild from authoritative inputs at entry; a stale derived snapshot cannot override the table.
                 CharacterRuntimeProfile.RequirePlayerRealm(player.Progression.RealmStage);
-                player = CharacterRuntimeProfile.FromSnapshot(player, catalog.CombatRuleSet).Capture();
+                var playerProfile = CharacterRuntimeProfile.FromSnapshot(player, catalog.CombatRuleSet);
+                if (!playerProfile.ValidateEquipmentState(catalog, true))
+                { reason = "adventure_player_basic_attack_binding_invalid"; return false; }
+                player = playerProfile.Capture();
+                var enemyProfile = CharacterRuntimeProfile.FromDefinition("enemy", enemyData.combatTemplate, catalog.CombatRuleSet);
+                if (!enemyProfile.ValidateEquipmentState(catalog, true))
+                { reason = "adventure_enemy_basic_attack_binding_invalid"; return false; }
+                playerBasic = ResolveBasicAttackBinding(player.MainEquipmentBasicAttackProfileId, player.UnarmedBasicAttackProfileId);
+                enemyBasic = ResolveBasicAttackBinding(enemyProfile.MainEquipmentBasicAttackProfileId, enemyProfile.UnarmedBasicAttackProfileId);
                 playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
                 enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic, catalog.CombatRuleSet);
             }
@@ -113,9 +107,8 @@ namespace TianZhang.Features.Adventure
         {
             bool hasMain = !string.IsNullOrWhiteSpace(mainEquipment);
             bool hasUnarmed = !string.IsNullOrWhiteSpace(unarmed);
-            if (hasUnarmed)
-                return null;
-            return hasMain ? mainEquipment : string.Empty;
+            if (!hasUnarmed) throw new ArgumentException("character_unarmed_binding_invalid");
+            return hasMain ? mainEquipment : unarmed;
         }
 
         private static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position, string basicAttackProfileId)

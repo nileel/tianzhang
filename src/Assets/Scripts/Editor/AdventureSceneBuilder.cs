@@ -19,6 +19,23 @@ namespace TianZhang.Editor
 {
     public static class AdventureSceneBuilder
     {
+        /// <summary>Refreshes only the frozen body-attack content and the formal scene's profile references.</summary>
+        public static void RebuildUnarmedBindings()
+        {
+            CombatContentImporter.ImportAttackProfiles();
+            CharacterContentImporter.ImportCharacterDefinitions();
+            SettlementContentImporter.ImportContentCatalog();
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/AdventureScene.unity", OpenSceneMode.Single);
+            AdventureSceneInstaller installer = null;
+            foreach (var root in scene.GetRootGameObjects())
+                if (root.TryGetComponent(out AdventureSceneInstaller found)) installer = found;
+            if (installer == null) throw new InvalidOperationException("Adventure installer missing.");
+            SceneBuildSupport.SetObjects(installer, "attackProfiles", LoadAttackProfiles());
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+        }
+
         private static readonly float[] FacingProbeYaws = { 90f, 150f, 210f, 270f, 330f, 30f };
 
         private static readonly int[,] VisualBaselineCells =

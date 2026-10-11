@@ -8,7 +8,8 @@ namespace TianZhang.Infrastructure.Persistence
     public static class GameSaveSerializer
     {
         public const string EquipmentSaveInvalid = "equipment_save_invalid";
-        public const int SchemaVersion = 5;
+        public const int SchemaVersion = 6;
+        public const int LegacyUnarmedSchemaVersion = 5;
         public const int LegacyGrowthSchemaVersion = 4;
         public const int LegacySchemaVersion = 1;
         public const int LegacyFoundationPurpleMansionSchemaVersion = 2;
@@ -27,8 +28,7 @@ namespace TianZhang.Infrastructure.Persistence
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Only save schema " + SchemaVersion + " can be serialized.");
-            if (envelope.hasPlayer && envelope.player != null)
-                envelope.player.unarmedBasicAttackProfileId = string.Empty;
+            ValidateBodyPayload(envelope);
             string json = JsonUtility.ToJson(envelope);
             if (string.IsNullOrWhiteSpace(json)) throw new InvalidDataException("Save serialization returned no data.");
             return json;
@@ -61,13 +61,45 @@ namespace TianZhang.Infrastructure.Persistence
                     envelope.player.movementGrowthInputsPresent = true;
                     envelope.player.movementGrowthSources = Array.Empty<MovementGrowthRecord>();
                 }
+                envelope.schemaVersion = LegacyUnarmedSchemaVersion;
+            }
+            if (envelope.schemaVersion == LegacyUnarmedSchemaVersion)
+            {
+                if (!string.IsNullOrEmpty(envelope.player?.unarmedAttackFamilyId))
+                    throw new InvalidDataException("legacy_unarmed_family_forged");
+                if (envelope.hasPlayer)
+                {
+                    var player = envelope.player;
+                    if (player == null || player.characterId != "player" || !player.actionEconomyInputsPresent ||
+                        player.actionPointMaximumUnits <= 0 || player.movementEfficiencyMilliUnits < 0 ||
+                        !player.movementGrowthInputsPresent || player.movementGrowthSources == null ||
+                        !string.IsNullOrEmpty(player.unarmedBasicAttackProfileId) && player.unarmedBasicAttackProfileId != "basic_unarmed")
+                        throw new InvalidDataException("legacy_unarmed_save_invalid");
+                    try { TianZhang.Character.CharacterRuntimeProfile.RequirePlayerRealm(player.realmStage); }
+                    catch (ArgumentException exception) { throw new InvalidDataException("legacy_unarmed_save_invalid", exception); }
+                    player.unarmedBasicAttackProfileId = string.Empty;
+                    player.unarmedAttackFamilyId = "body_human";
+                }
                 envelope.schemaVersion = SchemaVersion;
             }
             if (envelope.schemaVersion != SchemaVersion)
                 throw new InvalidDataException("Unsupported save schema: " + envelope.schemaVersion + ".");
-            if (envelope.hasPlayer && envelope.player != null)
-                envelope.player.unarmedBasicAttackProfileId = string.Empty;
+            ValidateBodyPayload(envelope);
             return envelope;
+        }
+
+        private static void ValidateBodyPayload(GameSaveEnvelope envelope)
+        {
+            if (envelope.hasPlayer)
+            {
+                if (envelope.player == null || envelope.player.characterId != "player" ||
+                    envelope.player.unarmedAttackFamilyId != "body_human" ||
+                    !string.IsNullOrEmpty(envelope.player.unarmedBasicAttackProfileId))
+                    throw new InvalidDataException("character_unarmed_save_invalid");
+            }
+            else if (!string.IsNullOrEmpty(envelope.player?.unarmedAttackFamilyId) ||
+                     !string.IsNullOrEmpty(envelope.player?.unarmedBasicAttackProfileId))
+                throw new InvalidDataException("character_unarmed_save_invalid");
         }
 
         private static GameSaveEnvelope MigrateLegacySchema(GameSaveEnvelope envelope)

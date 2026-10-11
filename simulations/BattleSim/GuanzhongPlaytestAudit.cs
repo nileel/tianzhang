@@ -97,6 +97,13 @@ internal static class GuanzhongPlaytestAudit
         Require(I(player, "maximumHealth") == 571 && I(player, "maximumSpirit") == 180 && I(player, "physicalAttack") == 60 && I(player, "physicalDefense") == 42, "Player delivery changed.");
         var production = GameData.LoadProductionAttacks(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
         var rules = GameData.LoadProductionRuleSet(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv"));
+        foreach (string side in new[] { "player", "enemy" })
+        {
+            string family = S(evidence.GetProperty(side + "Character"), "unarmedAttackFamilyId");
+            Require(family == (side == "player" ? "body_human" : "body_shijiahou"), "Stale body source.");
+            string realm = side == "player" ? "realm_fanren" : enemyRow["realm"];
+            Require(S(evidence.GetProperty(side), "basicAttackProfileId") == rules.GetUnarmed(family, realm).ProfileId, "Stale body binding.");
+        }
         var profiles = ReadRows(Path.Combine(root, "src/Assets/DataConfig/AttackProfiles.csv")).Select(row =>
         {
             string id = row["attackProfileId"], realm = row["realmRequirementId"], element = row["elementRequirementId"];
@@ -118,9 +125,10 @@ internal static class GuanzhongPlaytestAudit
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("efficiencyNumerator"),(int)Number("efficiencyDenominator")) : null,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageMigrationNumerator"),(int)Number("damageMigrationDenominator")) : null,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageWeightNumerator"),(int)Number("damageWeightDenominator")) : null,
-                    "","",0,0,0,"",(int)Number("controlChancePermille"),row["controlUsesMindContest"] == "1"));
+                    "","",0,0,0,"",(int)Number("controlChancePermille"),row["controlUsesMindContest"] == "1", unarmedFamilyId:resolved.UnarmedFamilyId,
+                    unarmedRealmId:resolved.UnarmedRealmId, unarmedPhysicalAttackCapacity:resolved.UnarmedPhysicalAttackCapacity));
         }).ToArray();
-        Require(profiles.Select(p => p.Id).Order().SequenceEqual(new[] { Attack, Recovery, "basic_iron_sword", "basic_iron_blade" }.Order()), "Unexpected production profiles.");
+        Require(profiles.Select(p => p.Id).Order().SequenceEqual(GameData.ProductionAttackIds.Order()), "Unexpected production profiles.");
         return new Inputs(evidence, profiles, root, I(character, "rootBone"), Hash(text));
     }
 
@@ -130,7 +138,7 @@ internal static class GuanzhongPlaytestAudit
         string[] List(string field) => v.GetProperty(field).EnumerateArray().Select(x => x.GetString()).ToArray();
         var actor = new CombatantSnapshot(S(v, "id"), side == "player" ? CombatTeam.Player : CombatTeam.Enemy,
             new UnityHexCoord(I(v, "q"), I(v, "r")), I(v, "speed"), I(v, "maximumHealth"), I(v, "currentHealth"),
-            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), I(v, "actionPointMaximumUnits"), I(v, "movementEfficiencyMilliUnits"), F(v, "realmMultiplier"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId") == "basic_unarmed" ? string.Empty : S(v, "basicAttackProfileId"),
+            I(v, "physicalAttack"), I(v, "soulAttack"), I(v, "physicalDefense"), I(v, "soulDefense"), I(v, "actionPointMaximumUnits"), I(v, "movementEfficiencyMilliUnits"), F(v, "realmMultiplier"), List("equippedArts"), List("knownArts"), basicAttackProfileId: S(v, "basicAttackProfileId"),
             rawSpirit: I(v, "rawSpirit"), realmStage: S(v, "realmStage"), visibleRootElement: S(v, "visibleRootElement"), visibleRootGrade: S(v, "visibleRootGrade"))
         {
             BlockRate = F(c, "blockRate"), BlockReduction = F(c, "blockReduction"), SoulShieldRate = F(c, "soulShieldRate"),

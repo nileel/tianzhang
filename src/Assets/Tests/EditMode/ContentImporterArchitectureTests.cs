@@ -312,7 +312,7 @@ namespace TianZhang.Tests
                 CollectionAssert.AreEqual(othersBefore[path], File.ReadAllBytes(ToAbsolutePath(path)), path);
         }
 
-        /// <summary>把两行 CSV 的尾部两列替换为给定尾串，用于构造非法整表输入。</summary>
+        /// <summary>替换行动经济两列，保留显式身体族，用于构造非法整表输入。</summary>
         private static string BuildCharacterCsv(string rowTail)
         {
             string csvPath = Path.Combine(Application.dataPath, "DataConfig", "Characters.csv");
@@ -326,8 +326,9 @@ namespace TianZhang.Tests
                 }
 
                 string[] columns = line.Split(',');
-                Assert.That(columns.Length, Is.EqualTo(22), line);
-                rows.Add(string.Join(",", columns.Take(20)) + rowTail);
+                Assert.That(columns.Length, Is.EqualTo(23), line);
+                Assert.That(columns[22], Is.EqualTo("body_human"), line);
+                rows.Add(string.Join(",", columns.Take(20)) + rowTail + "," + columns[22]);
             }
 
             return string.Join(Environment.NewLine, rows) + Environment.NewLine;

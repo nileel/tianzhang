@@ -484,7 +484,7 @@ namespace TianZhang.Tests
             return data;
         }
         [Test]
-        public void FiveExplicitBodyRowsShareTheirSourceDigestAndKeepProductionAtFour()
+        public void FiveExplicitBodyRowsShareTheirSourceDigestAndProductionAtNine()
         {
             var lines = UnarmedFixtureLines(); var rules = UnarmedFixtureRules(lines);
             TestContext.WriteLine("unarmed-config fixture sourceDigest=" + rules.SourceDigest);
@@ -502,8 +502,8 @@ namespace TianZhang.Tests
             }
             Assert.That(projected.Single(row => row.unarmedRealmId == "realm_fanren").unarmedPhysicalAttackCapacity, Is.EqualTo(30));
             Assert.That(CombatContentImporter.TryReadCombatRuleSet(out var production, out reason), Is.True, reason);
-            Assert.That(production.UnarmedRows, Is.Empty);
-            Assert.That(CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(ProductionAbsolutePath())).Length, Is.EqualTo(5));
+            Assert.That(production.UnarmedRows.Count, Is.EqualTo(5));
+            Assert.That(CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(ProductionAbsolutePath())).Length, Is.EqualTo(10));
             Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_human", "realm_yuanying"));
             Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_shijiahou", "realm_zhuji"));
         }
@@ -613,7 +613,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ProductionAttackProfileCsvProjectsExactlyTheThreeApprovedProfiles()
+        public void ProductionAttackProfileCsvProjectsExactlyTheNineApprovedProfiles()
         {
             var lines = File.ReadAllLines(ProductionAbsolutePath());
             var languageKeys = new HashSet<string>(ProductionLanguageKeys(), StringComparer.Ordinal);
@@ -622,8 +622,10 @@ namespace TianZhang.Tests
                 reason);
             try
             {
-                Assert.AreEqual(4, projected.Length);
-                CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade" },
+                Assert.AreEqual(9, projected.Length);
+                CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade",
+                    "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan",
+                    "basic_body_shijiahou_lianqi" },
                     projected.Select(item => item.attackProfileId).ToArray());
                 var byId = projected.ToDictionary(item => item.attackProfileId);
                 var strike = byId["spell_guanshiji"];

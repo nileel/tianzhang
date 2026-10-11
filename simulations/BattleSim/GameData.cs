@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
@@ -601,7 +601,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             generic ? new CombatRuleRatio(row.DamageMigrationNumerator,row.DamageMigrationDenominator) : null,
             generic ? new CombatRuleRatio(row.DamageWeightNumerator,row.DamageWeightDenominator) : null,
             "","",0,0,0,"",water ? Rules.Global.WaterBaseChancePermille : 0,water,
-            generic ? p.Cost.DefinitionRef : "",generic ? AbilityBudget(p.Cost.DefinitionRef,p.AbilityTierId) : 0);
+            generic ? p.Cost.DefinitionRef : "",generic ? AbilityBudget(p.Cost.DefinitionRef,p.AbilityTierId) : 0,
+            unarmedFamilyId:p.UnarmedFamilyId,unarmedRealmId:p.UnarmedRealmId,unarmedPhysicalAttackCapacity:p.UnarmedPhysicalAttackCapacity);
         var kind = p.BasicBindingKind != "" ? CombatAttackKind.Basic :
             p.Cost.DefinitionRef.EndsWith("Divine",StringComparison.Ordinal) ? CombatAttackKind.Divine : CombatAttackKind.Art;
         return new(id,kind,p.Type == "恢复灵力" ? CombatAttackEffect.RestoreSpirit : p.Type == "神魂" ? CombatAttackEffect.Soul : CombatAttackEffect.Physical,
@@ -610,7 +611,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             spiritCost:p.SpiritCost,damageElement:p.Element,soulDefensePenetration:(float)penetration,
             spiritRecoveryMultiplier:(float)p.SpiritRecoveryMultiplier,minimumSpiritRecovery:p.MinimumSpiritRecovery,
             otherTargetSpiritCost:p.OtherTargetSpiritCost,otherTargetSpiritRecoveryMultiplier:(float)p.OtherTargetRecoveryMultiplier,
-            qualification:(realm,element,grade) => kind == CombatAttackKind.Divine ? realm == "金丹" : realm is "练气" or "筑基" or "金丹",
+            qualification:kind == CombatAttackKind.Basic ? null : (realm,element,grade) => kind == CombatAttackKind.Divine ? realm == "金丹" : realm is "练气" or "筑基" or "金丹",
             isTalisman:p.Cost.DefinitionRef == "TaiyiFuxiuArt",ruleMetadata:payload);
     }
     // Only chapter identity/eligibility is read here; all cost/v/M numbers come from the four CSVs.
@@ -704,14 +705,16 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             float.IsNaN(value) || float.IsInfinity(value) || value < 0) throw new InvalidDataException("attack_profile_multiplier_invalid");
         return value;
     }
+    internal static readonly string[] ProductionAttackIds = { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade",
+        "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan", "basic_body_shijiahou_lianqi" };
     internal static IReadOnlyDictionary<string, AttackProfile> LoadProductionAttacks(string path)
     {
         var result = LoadAttackProfileProjection(path);
-        if (!result.Keys.Order(StringComparer.Ordinal).SequenceEqual(new[] { "spell_guanshiji","spell_julingshu","basic_iron_sword","basic_iron_blade" }.Order(StringComparer.Ordinal)))
+        if (!result.Keys.Order(StringComparer.Ordinal).SequenceEqual(ProductionAttackIds.Order(StringComparer.Ordinal)))
             throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
     }
-    // Explicit fixture entry; the production caller retains its frozen four-ID contract.
+    // Explicit fixture entry; the production caller retains its frozen nine-ID contract.
     internal static IReadOnlyDictionary<string, AttackProfile> LoadAttackProfileProjection(string path)
     {
         var lines = CsvTableReader.ReadRequired(path); var header = CsvTableReader.FindHeader(lines);

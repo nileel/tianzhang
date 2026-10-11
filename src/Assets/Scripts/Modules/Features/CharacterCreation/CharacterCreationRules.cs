@@ -86,8 +86,10 @@ namespace TianZhang.Features.CharacterCreation
                 profile.availableSpells = new[] { "spell_guanshiji", "spell_julingshu" };
                 profile.equippedSpells = (string[])profile.availableSpells.Clone();
             }
-            // 新角色没有主手；无装备不产生普攻，也不补发武器。
+            // 新角色的人形来源显式声明，档位由当前境界和同一攻击表派生。
             profile.unarmedBasicAttackProfileId = string.Empty;
+            profile.unarmedAttackFamilyId = "body_human";
+            CharacterRuntimeProfile.ResolveUnarmedAttack(growthRules, profile.unarmedAttackFamilyId, profile.realmStage);
 
             // 长期行动力基础输入读自点购配置，不在 C# 补 100000／2000，也不从反应或灵力派生。
             profile.actionPointMaximumUnits = ap;

@@ -732,3 +732,5 @@ item_qualification_invalid,仅存活练气修士可用
 item_target_invalid,只能对自身使用
 item_quantity_invalid,每次只能使用一颗
 item_insufficient,丹药数量不足
+attack_profile_body_human,拳脚
+attack_profile_body_shijiahou,撞击

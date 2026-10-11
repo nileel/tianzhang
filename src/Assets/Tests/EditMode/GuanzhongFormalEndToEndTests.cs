@@ -206,8 +206,8 @@ namespace TianZhang.Tests.EditMode
             CollectionAssert.IsEmpty(spawned.Player.AvailableDivineProfileIds);
             Assert.AreEqual(2, spawned.Player.MaxCombatSwaps);
             Assert.AreEqual(0, spawned.Player.CombatSwapsUsed);
-            Assert.AreEqual(string.Empty, spawned.PlayerBasicProfileId);
-            Assert.AreEqual(string.Empty, spawned.Player.BasicAttackProfileId);
+            Assert.AreEqual("basic_body_human_fanren", spawned.PlayerBasicProfileId);
+            Assert.AreEqual("basic_body_human_fanren", spawned.Player.BasicAttackProfileId);
 
             Assert.AreEqual(new HexCoord(encounter.q, encounter.r), spawned.Enemy.Position);
             Assert.AreEqual(6, spawned.Enemy.Speed);
@@ -237,20 +237,21 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(5f, spawned.Enemy.CriticalRate);
             Assert.AreEqual(10f, spawned.Enemy.CriticalDamage);
             Assert.AreEqual(0f, spawned.Enemy.HitRateBonus);
-            Assert.AreEqual(string.Empty, spawned.EnemyBasicProfileId);
-            Assert.AreEqual(string.Empty, spawned.Enemy.BasicAttackProfileId);
+            Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.EnemyBasicProfileId);
+            Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.Enemy.BasicAttackProfileId);
         }
 
         [Test]
         public void SpawnerProjectsExplicitCombatModifiersAndGongFaElementForPlayerAndEnemy()
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.unarmedAttackFamilyId = "body_human";
             playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
             playerData.actionPointMaximumUnits = 100000;
             playerData.movementEfficiencyMilliUnits = 2000;
-            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+            playerData.unarmedBasicAttackProfileId = string.Empty;
             playerData.gongFaName = "抱元守一经";
             playerData.hpBonus = 12.4f;
             playerData.physAtkBonus = 3.2f;
@@ -261,6 +262,7 @@ namespace TianZhang.Tests.EditMode
             playerData.hitRateBonus = 3f;
 
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
@@ -321,15 +323,17 @@ namespace TianZhang.Tests.EditMode
         public void SpawnerRejectsUnknownGongFaForPlayerAndEnemy()
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.unarmedAttackFamilyId = "body_human";
             playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.realmMultiplier = 1f;
             playerData.actionPointMaximumUnits = 100000;
             playerData.movementEfficiencyMilliUnits = 2000;
-            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+            playerData.unarmedBasicAttackProfileId = string.Empty;
             playerData.gongFaName = "未知功法";
 
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";
             enemyTemplate.charName = "敌人";
             enemyTemplate.realmMultiplier = 1f;
@@ -372,14 +376,14 @@ namespace TianZhang.Tests.EditMode
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
             AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_basic_binding_fixture" };
 
-            AssertPlayerBinding(start, encounter, "basic_main", "", true, "basic_main");
-            AssertPlayerBinding(start, encounter, "", "basic_unarmed", true, string.Empty);
-            AssertPlayerBinding(start, encounter, "", "", true, string.Empty);
-            AssertPlayerBinding(start, encounter, "basic_main", "basic_unarmed", true, "basic_main");
+            AssertPlayerBinding(start, encounter, "basic_main", "", false, null);
+            AssertPlayerBinding(start, encounter, "", "basic_unarmed", false, null);
+            AssertPlayerBinding(start, encounter, "", "", true, "basic_body_human_fanren");
+            AssertPlayerBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
 
-            AssertEnemyBinding(start, encounter, "basic_main", "", true, "basic_main");
+            AssertEnemyBinding(start, encounter, "basic_main", "", false, null);
             AssertEnemyBinding(start, encounter, "", "basic_unarmed", false, null);
-            AssertEnemyBinding(start, encounter, "", "", true, string.Empty);
+            AssertEnemyBinding(start, encounter, "", "", true, "basic_body_human_fanren");
             AssertEnemyBinding(start, encounter, "basic_main", "basic_unarmed", false, null);
         }
 
@@ -392,6 +396,7 @@ namespace TianZhang.Tests.EditMode
             string expectedBasic)
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.unarmedAttackFamilyId = "body_human";
             playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.actionPointMaximumUnits = 100000;
@@ -402,6 +407,7 @@ namespace TianZhang.Tests.EditMode
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
@@ -411,6 +417,12 @@ namespace TianZhang.Tests.EditMode
             catalog.SetCombatRuleSet(GrowthRules);
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
+            if (!string.IsNullOrEmpty(unarmed))
+            {
+                Assert.IsFalse(expectSuccess);
+                Assert.Throws<System.ArgumentException>(() => CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules));
+                return;
+            }
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("PlayerBindingSpawner"))
                 .AddComponent<AdventureUnitSpawner>();
@@ -437,15 +449,17 @@ namespace TianZhang.Tests.EditMode
             string expectedBasic)
         {
             CharacterData playerData = Track(ScriptableObject.CreateInstance<CharacterData>());
+            playerData.unarmedAttackFamilyId = "body_human";
             playerData.realmStage = "凡人";
             playerData.charName = "玩家";
             playerData.actionPointMaximumUnits = 100000;
             playerData.movementEfficiencyMilliUnits = 2000;
-            playerData.unarmedBasicAttackProfileId = "basic_unarmed";
+            playerData.unarmedBasicAttackProfileId = string.Empty;
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
+            enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";
             enemyTemplate.actionPointMaximumUnits = 100000;
             enemyTemplate.movementEfficiencyMilliUnits = 2000;
@@ -469,7 +483,7 @@ namespace TianZhang.Tests.EditMode
             else
             {
                 Assert.IsNull(spawned);
-                Assert.AreEqual("adventure_enemy_basic_attack_binding_invalid", reason);
+                Assert.AreEqual(string.IsNullOrEmpty(unarmed) ? "adventure_enemy_basic_attack_binding_invalid" : "adventure_growth_inputs_invalid", reason);
             }
         }
 

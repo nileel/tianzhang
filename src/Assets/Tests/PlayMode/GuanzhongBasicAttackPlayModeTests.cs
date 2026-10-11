@@ -34,7 +34,7 @@ namespace TianZhang.Tests.PlayMode
             var runtime = GameBootstrap.RequireRuntime();
             Assert.AreEqual("凡人", runtime.Player.Progression.RealmStage);
             Assert.IsTrue(string.IsNullOrEmpty(runtime.Player.MainEquipmentBasicAttackProfileId));
-            Assert.IsTrue(string.IsNullOrEmpty(runtime.Player.UnarmedBasicAttackProfileId));
+            Assert.AreEqual("basic_body_human_fanren", runtime.Player.UnarmedBasicAttackProfileId);
             Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
             runtime.Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
             runtime.BeginEquippedNewGame(runtime.Player, runtime.Cultivation, "guanzhong_hub",
@@ -46,7 +46,7 @@ namespace TianZhang.Tests.PlayMode
         // The production enemy template remains unarmed; this is not production enemy-content evidence.
         public static void ArmEnemyOutcomeFixture(CombatantSnapshot enemy)
         {
-            Assert.IsTrue(string.IsNullOrEmpty(enemy.BasicAttackProfileId));
+            Assert.AreEqual("basic_body_shijiahou_lianqi", enemy.BasicAttackProfileId);
             enemy.BasicAttackProfileId = "basic_iron_sword";
         }
 
@@ -81,7 +81,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator UnarmedProductionPlayerEntersMovesGuardsAndCannotAttack()
+        public IEnumerator UnarmedProductionPlayerSavesReentersAttacksAndStoneArmorBeastFinishesItsTurn()
         {
             Screen.SetResolution(1920, 1080, false);
             GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
@@ -104,7 +104,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(creation, "StartMenu must expose the CharacterCreation feature owner.");
             creation.Open();
             creation.Draft.OriginId = "origin_minor_clan";
-            creation.Draft.Innate = new InnateAttributeSet(15, 3, 6, 3, 3);
+            creation.Draft.Innate = InnateAttributeSet.Balanced();
             creation.Submit(slotId, "01G 正式薄切片");
             yield return WaitForScene(GameplaySceneNames.World);
 
@@ -127,6 +127,18 @@ namespace TianZhang.Tests.PlayMode
             board.SubmitAccept(BountyId);
             Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
 
+            Assert.AreEqual("body_human", runtime.Player.UnarmedAttackFamilyId);
+            Assert.AreEqual("basic_body_human_fanren", runtime.Player.UnarmedBasicAttackProfileId);
+            string expectedSave = runtime.CaptureSaveJson();
+            settlement.SaveAndReturnToMenu();
+            yield return WaitForScene(GameplaySceneNames.StartMenu);
+            FindInActiveScene<StartMenuController>().LoadPlayer(slotId);
+            yield return WaitForScene(GameplaySceneNames.Settlement);
+            runtime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual(expectedSave, runtime.CaptureSaveJson());
+            Assert.AreEqual("basic_body_human_fanren", runtime.Player.UnarmedBasicAttackProfileId);
+            settlement = FindInActiveScene<SettlementController>();
+
             Assert.IsTrue(settlement.EnterAdventure(AdventureId));
             yield return WaitForScene(GameplaySceneNames.Adventure);
             AdventureController adventure = FindInActiveScene<AdventureController>();
@@ -138,39 +150,56 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForAdventureReady(adventure);
             AssertAdventureNodeButtonReadable("shijiahou_encounter");
             adventure.SetEncounterRandomSource(new SequenceRandomSource(0, 0));
+            encounter.SetCombatResolutionRandomSource(new BodyAttackProofRandom());
             Assert.IsTrue(adventureInput.SelectNode("shijiahou_encounter"));
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
             var session = GetPrivateField<CombatSession>(encounter, "session");
             var spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             yield return WaitForPlayerTurn(encounter, session, spawned.Player.Id);
-            Assert.IsEmpty(spawned.Player.BasicAttackProfileId);
-            Assert.IsEmpty(spawned.Enemy.BasicAttackProfileId);
+            Assert.AreEqual("basic_body_human_fanren", spawned.Player.BasicAttackProfileId);
+            Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.Enemy.BasicAttackProfileId);
+            var recording = new ForwardingPresentationPort(FindInActiveScene<Static3DCombatUnitPresentationProvider>());
+            SetPrivateField(encounter, "unitPresentation", recording);
             var service = new CombatCommandService();
             foreach (string profile in new[] { "", "basic_unarmed", "basic_iron_sword", "missing" })
             {
                 var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", profile));
                 Assert.IsFalse(quote.IsLegal);
-                Assert.AreEqual("attack_profile_not_authorized", quote.RejectionReason);
+                Assert.AreEqual(profile == "basic_iron_sword" ? "attack_profile_not_authorized" : "attack_profile_unresolved", quote.RejectionReason);
             }
             int hp = spawned.Enemy.CurrentHealth, ap = spawned.Player.ActionPointsRemainingUnits;
+            var punch = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", spawned.Player.BasicAttackProfileId));
+            Assert.IsTrue(punch.IsLegal, punch.RejectionReason); Assert.AreEqual(20000, punch.ActionPointCostUnits);
             encounter.RequestBasicAttack("player", "enemy");
-            Assert.AreEqual(hp, spawned.Enemy.CurrentHealth);
-            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.Less(spawned.Enemy.CurrentHealth, hp);
+            Assert.AreEqual(ap - punch.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
+            yield return WaitForMovementPresentation(encounter);
             var guard = service.Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
             Assert.IsTrue(guard.IsLegal, guard.RejectionReason);
             var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
             Assert.IsTrue(move.IsLegal, move.RejectionReason);
             encounter.RequestMove("player", 0, 1);
-            Assert.AreEqual(ap - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(ap - punch.ActionPointCostUnits - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             yield return WaitForMovementPresentation(encounter);
+            int playerHealth = spawned.Player.CurrentHealth; long priorTurn = session.TurnSequence;
             encounter.RequestEndTurn("player");
             yield return WaitForPlayerTurn(encounter, session, "player");
-            Assert.AreEqual(hp, spawned.Enemy.CurrentHealth);
+            Assert.Less(spawned.Player.CurrentHealth, playerHealth);
+            Assert.Greater(session.TurnSequence, priorTurn);
+            Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == "enemy" && value.PresentationEvent == CombatUnitPresentationEvent.Attack));
+            Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.Enemy.BasicAttackProfileId);
             Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
             Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_blade"));
-            Assert.IsEmpty(runtime.Player.UnarmedBasicAttackProfileId);
+            Assert.AreEqual("basic_body_human_fanren", runtime.Player.UnarmedBasicAttackProfileId);
+            TestContext.WriteLine($"Formal saved body proof: player={spawned.Player.BasicAttackProfileId}, enemy={spawned.Enemy.BasicAttackProfileId}, quoted/paid={punch.ActionPointCostUnits}, playerHit={hp - spawned.Enemy.CurrentHealth}, enemyHit={playerHealth - spawned.Player.CurrentHealth}, enemyAttacks={recording.Events.Count(value => value.ActorCombatantId == "enemy" && value.PresentationEvent == CombatUnitPresentationEvent.Attack)}, turn={priorTurn}->{session.TurnSequence}");
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
             yield return WaitForScene(GameplaySceneNames.StartMenu);
+        }
+
+        // Fixed legal resolution samples make this functional proof repeatable; all character/content inputs are production inputs.
+        private sealed class BodyAttackProofRandom : ICombatResolutionRandomSource
+        {
+            public float NextPercent() => 50f;
         }
 
         [UnityTest]

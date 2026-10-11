@@ -2760,8 +2760,13 @@ MonoBehaviour:
   environmentProfile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6, type: 2}
   attackProfiles:
   - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}
+  - {fileID: 11400000, guid: 3555f4c15eb80314ba125cf22f62f582, type: 2}
+  - {fileID: 11400000, guid: 57e0d2be330d2ff4dbbbccfa2021f02d, type: 2}
+  - {fileID: 11400000, guid: 588f40063e8bb314eace22286ea47728, type: 2}
   - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}
   - {fileID: 11400000, guid: 60ca361e62e57fa4d8de2ce04f269382, type: 2}
+  - {fileID: 11400000, guid: a10a8e22ff5a44545a2cbf651bbe51d1, type: 2}
+  - {fileID: 11400000, guid: abb23574c4939df49b967a2e25d0216a, type: 2}
   - {fileID: 11400000, guid: e09511b0bf790504187bcb58e2cf15a6, type: 2}
   ordinaryActions:
   - Kind: 3

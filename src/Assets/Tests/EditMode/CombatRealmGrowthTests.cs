@@ -12,6 +12,7 @@ using TianZhang.Features.Adventure;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using TianZhang.Infrastructure.Persistence;
+using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Spatial;
 using UnityEditor;
 using UnityEngine;
@@ -30,9 +31,10 @@ namespace TianZhang.Tests.EditMode
             catalog = Object.Instantiate(AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
             catalog.SetCombatRuleSet(rules);
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.charName = "成长验证"; definition.realmStage = "凡人"; definition.realmMultiplier = 1.5f;
             definition.actionPointMaximumUnits = 100000; definition.movementEfficiencyMilliUnits = 2000;
-            definition.unarmedBasicAttackProfileId = "basic_unarmed";
+            definition.unarmedBasicAttackProfileId = string.Empty;
         }
         [TearDown] public void TearDown() { Object.DestroyImmediate(definition); Object.DestroyImmediate(catalog); Object.DestroyImmediate(rules); }
         private CharacterRuntimeProfile Profile() => CharacterRuntimeProfile.FromDefinition("player", definition, rules);
@@ -119,8 +121,8 @@ namespace TianZhang.Tests.EditMode
         {
             var runtime = Runtime(); string before = runtime.CaptureSaveJson();
             definition.realmStage = realm;
-            var npc = CharacterRuntimeProfile.FromDefinition("npc_fixture", definition, rules);
-            Assert.Throws<ArgumentException>(() => runtime.BeginNewGame(npc, CultivationState.CreateEmpty(), "guanzhong_hub"));
+            Assert.Throws<ArgumentException>(() => runtime.BeginNewGame(
+                CharacterRuntimeProfile.FromDefinition("npc_fixture", definition, rules), CultivationState.CreateEmpty(), "guanzhong_hub"));
             Assert.AreEqual(before, runtime.CaptureSaveJson());
             var save = runtime.CaptureSave(); save.player.characterId = "npc_fixture"; save.player.realmStage = realm;
             Assert.Throws<ArgumentException>(() => runtime.RestoreSave(save, catalog));
@@ -129,7 +131,12 @@ namespace TianZhang.Tests.EditMode
             try
             {
                 var spawner = go.AddComponent<AdventureUnitSpawner>();
-                Assert.IsFalse(spawner.TrySpawn(npc.Capture(), catalog,
+                var original = runtime.Player.Capture();
+                var reserved = new CharacterStateSnapshot(new CharacterIdentitySnapshot("npc_fixture", "Reserved"),
+                    original.Attributes, original.Resources, original.AbilityLoadout, Progress(realm), original.CombatModifiers,
+                    original.MainEquipmentBasicAttackProfileId, original.UnarmedBasicAttackProfileId, original.AppearanceProfileId,
+                    unarmedAttackFamilyId: original.UnarmedAttackFamilyId);
+                Assert.IsFalse(spawner.TrySpawn(reserved, catalog,
                     new AdventureNodeData { q = 0, r = 0 },
                     new AdventureNodeData { q = 1, r = 0, contentId = "enemy_shijiahou" }, out var spawn, out var reason));
                 Assert.IsNull(spawn); Assert.AreEqual("adventure_growth_inputs_invalid", reason);
@@ -141,30 +148,33 @@ namespace TianZhang.Tests.EditMode
         [TestCase("都箓", false)]
         public void WanfaYuanyingChapterMustMatchItsExplicitL2Realm(string chapter, bool valid)
         {
-            definition.realmStage = "元婴";
-            var npc = CharacterRuntimeProfile.FromDefinition("npc_fixture", definition, rules);
+            var npc = Profile();
             var input = Progress("元婴", "万法都箓经", Nodes("realm_yuanying", chapter, 1, gongfa: "gongfa_wanfadulujing"));
             string before = JsonUtility.ToJson(CharacterRecord.Capture(npc.Capture()));
             if (valid)
             {
-                npc.RestoreProgression(input);
-                Assert.AreEqual(3000000, npc.Attributes.ActionPointMaximumUnits);
-                Assert.AreEqual(8000, npc.Attributes.MovementEfficiencyMilliUnits);
+                CharacterRuntimeProfile.ProjectActionEconomy(rules, input, out int ap, out int movement);
+                Assert.AreEqual(3000000, ap);
+                Assert.AreEqual(8000, movement);
+                Assert.Throws<ArgumentException>(() => npc.RestoreProgression(input), "Reserved growth does not grant a body attack.");
             }
             else
             {
+                Assert.Throws<ArgumentException>(() => CharacterRuntimeProfile.ProjectActionEconomy(rules, input, out _, out _));
                 Assert.Throws<ArgumentException>(() => npc.RestoreProgression(input));
-                Assert.AreEqual(before, JsonUtility.ToJson(CharacterRecord.Capture(npc.Capture())));
             }
+            Assert.AreEqual(before, JsonUtility.ToJson(CharacterRecord.Capture(npc.Capture())));
         }
         [Test] public void ConflictingDuplicateChapterCannotPublishAnyState()
         {
-            definition.realmStage = "化神";
-            var npc = CharacterRuntimeProfile.FromDefinition("npc_fixture", definition, rules);
+            var npc = Profile();
             string before = JsonUtility.ToJson(CharacterRecord.Capture(npc.Capture()));
             Assert.Throws<ArgumentException>(() => npc.RestoreProgression(Progress("化神", "含弘光大典",
                 Nodes("realm_huashen", "光大", 1, gongfa: "含弘光大典"),
                 Nodes("realm_huashen", "品物", 1, gongfa: "含弘光大典"))));
+            Assert.Throws<ArgumentException>(() => CharacterRuntimeProfile.ProjectActionEconomy(rules, Progress("化神", "含弘光大典",
+                Nodes("realm_huashen", "光大", 1, gongfa: "含弘光大典"),
+                Nodes("realm_huashen", "品物", 1, gongfa: "含弘光大典")), out _, out _));
             Assert.AreEqual(before, JsonUtility.ToJson(CharacterRecord.Capture(npc.Capture())));
         }
         [Test] public void MissingConfigurationAndOverflowAreRejected()
@@ -179,11 +189,89 @@ namespace TianZhang.Tests.EditMode
         }
         private GameRuntime Runtime()
         { var runtime = new GameRuntime(); runtime.ConfigureGrowth(rules); runtime.BeginNewGame(Profile(), CultivationState.CreateEmpty(), "guanzhong_hub"); return runtime; }
+        [TestCase("凡人", "basic_body_human_fanren", 20000, 30)]
+        [TestCase("练气", "basic_body_human_lianqi", 25000, 120)]
+        [TestCase("筑基", "basic_body_human_zhuji", 75000, 500)]
+        [TestCase("金丹圆满", "basic_body_human_jindan", 250000, 2400)]
+        public void HumanBodyCreationGrowthAndRestoreShareTheProductionFeeAndCapacity(string stage, string id, int fee, int capacity)
+        {
+            definition.realmStage = stage;
+            var profile = Profile();
+            Assert.AreEqual("body_human", profile.UnarmedAttackFamilyId);
+            Assert.AreEqual(id, profile.UnarmedBasicAttackProfileId);
+            var attack = AssetDatabase.LoadAssetAtPath<AttackProfileData>("Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset");
+            var row = rules.unarmedRows.Single(value => value.profileId == id);
+            Assert.AreEqual(fee, attack.actionPointCostUnits); Assert.AreEqual(fee, row.actionPointCostUnits);
+            Assert.AreEqual(capacity, attack.unarmedPhysicalAttackCapacity); Assert.AreEqual(capacity, row.physicalAttackCapacity);
+            profile.RestoreProgression(Progress("凡人"));
+            Assert.AreEqual("basic_body_human_fanren", profile.UnarmedBasicAttackProfileId);
+            profile.RestoreProgression(Progress(stage));
+            Assert.AreEqual(id, CharacterRuntimeProfile.FromSnapshot(profile.Capture(), rules).UnarmedBasicAttackProfileId);
+        }
+        [TestCase("")] [TestCase("unknown")] [TestCase("body_shijiahou")] [TestCase("cached-profile")] [TestCase("missing-mapping")]
+        public void InvalidBodySourceCannotPartiallyRestoreTheLiveAggregate(string invalid)
+        {
+            var profile = Profile(); var original = profile.Capture();
+            string before = JsonUtility.ToJson(CharacterRecord.Capture(original));
+            string family = invalid == "cached-profile" || invalid == "missing-mapping" ? "body_human" : invalid;
+            string id = invalid == "cached-profile" ? "basic_body_human_lianqi" : original.UnarmedBasicAttackProfileId;
+            var input = new CharacterStateSnapshot(new CharacterIdentitySnapshot("player", "Must not publish"),
+                original.Attributes, original.Resources, original.AbilityLoadout, original.Progression, original.CombatModifiers,
+                original.MainEquipmentBasicAttackProfileId, id, original.AppearanceProfileId, unarmedAttackFamilyId: family);
+            if (invalid == "missing-mapping") rules.unarmedRows = rules.unarmedRows.Take(4).ToArray();
+            Assert.Throws<ArgumentException>(() => profile.Restore(input));
+            Assert.AreEqual(before, JsonUtility.ToJson(CharacterRecord.Capture(profile.Capture())));
+        }
+        [Test] public void BodyRealmAndWeaponChangesPreserveTheSharedRepeatLedgerAndInvalidateOldQuotes()
+        {
+            definition.realmStage = "练气"; var profile = Profile();
+            var actor = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100,
+                10000, 10000, 100, 0, 10, 10, 100000, 4000, basicAttackProfileId: profile.UnarmedBasicAttackProfileId, realmStage: "练气");
+            var target = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1,
+                10000, 10000, 10, 0, 10, 10, 100000, 4000);
+            var inputs = AssetDatabase.FindAssets("t:AttackProfileData", new[] { "Assets/Data/AttackProfiles" })
+                .Select(guid => AssetDatabase.LoadAssetAtPath<AttackProfileData>(AssetDatabase.GUIDToAssetPath(guid))).ToArray();
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            Assert.IsTrue(new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), rules).TryCreateSession(
+                new AdventureSpawnSet(actor, target, null, actor.BasicAttackProfileId, "", Array.Empty<string>()), inputs,
+                environment, out var session, out string reason), reason);
+            var service = new CombatCommandService(); Assert.AreEqual("player", service.AdvanceUntilAction(session).ActorId);
+            CombatCommand Punch() => new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", actor.BasicAttackProfileId,
+                new CombatResolutionRolls(0, 100, 100, 100));
+            Assert.IsTrue(service.Execute(session, Punch()).Succeeded); Assert.IsTrue(service.Execute(session, Punch()).Succeeded);
+            Assert.AreEqual(50000, actor.ActionPointsRemainingUnits);
+            var oldCommand = Punch(); var oldQuote = service.Preview(session, oldCommand);
+            Assert.AreEqual(31250, oldQuote.ActionPointCostUnits);
+            long turn = session.TurnSequence; int tick = session.TurnScheduler.CurrentTick;
+            profile.RestoreProgression(Progress("筑基"));
+            Assert.IsTrue(session.RefreshActionEconomy("player", profile.Attributes.ActionPointMaximumUnits,
+                profile.Attributes.MovementEfficiencyMilliUnits, profile.Progression.RealmStage, profile.UnarmedBasicAttackProfileId));
+            Assert.AreEqual(50000, actor.ActionPointsRemainingUnits); Assert.AreEqual(100000, actor.ActionPointLimitAtTurnStartUnits);
+            Assert.AreEqual(2, service.Preview(session, Punch()).CommittedUseCount);
+            Assert.AreEqual(turn, session.TurnSequence); Assert.AreEqual(tick, session.TurnScheduler.CurrentTick);
+            Assert.AreEqual("combat_quote_stale", service.Execute(session, oldCommand, oldQuote).RejectionReason);
+            var third = service.Preview(session, Punch());
+            Assert.AreEqual(93750, third.ActionPointCostUnits); Assert.IsFalse(third.IsLegal);
+            Assert.IsFalse(service.Execute(session, Punch()).Succeeded);
+            Assert.AreEqual(2, service.Preview(session, Punch()).CommittedUseCount);
+            session.RefreshActionEconomy("player", 300000, 4000, "筑基", "basic_iron_sword");
+            Assert.AreEqual(50000, service.Preview(session, Punch()).ActionPointCostUnits);
+            Assert.IsTrue(session.TryGetProfile("basic_iron_sword", out var weapon));
+            Assert.AreEqual(120, weapon.RuleMetadata.Tier.PhysicalAttackCapacity);
+            session.RefreshActionEconomy("player", 100000, 4000, "练气", "basic_body_human_lianqi");
+            Assert.IsTrue(service.Execute(session, Punch()).Succeeded);
+            Assert.AreEqual(18750, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(37500, service.Preview(session, Punch()).ActionPointCostUnits);
+            Assert.IsTrue(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, "player")).Succeeded);
+            Assert.AreEqual("player", service.AdvanceUntilAction(session).ActorId);
+            Assert.AreEqual(0, service.Preview(session, Punch()).CommittedUseCount);
+            Assert.AreEqual(25000, service.Preview(session, Punch()).ActionPointCostUnits);
+        }
         [Test] public void SchemaFiveRoundTripKeepsNodesButRebuildsDerivedValues()
         {
             var runtime = Runtime(); runtime.Player.RestoreProgression(Progress("金丹圆满", "苦行剑典", Kuxing(9, 3, 3)));
             var save = GameSaveSerializer.Deserialize(runtime.CaptureSaveJson());
-            Assert.AreEqual(5, save.schemaVersion); Assert.IsTrue(save.player.movementGrowthInputsPresent); Assert.AreEqual(3, save.player.movementGrowthSources.Length);
+            Assert.AreEqual(6, save.schemaVersion); Assert.IsTrue(save.player.movementGrowthInputsPresent); Assert.AreEqual(3, save.player.movementGrowthSources.Length);
             save.player.actionPointMaximumUnits = 1; save.player.movementEfficiencyMilliUnits = 0;
             var restored = new GameRuntime(); restored.RestoreSave(save, catalog);
             Assert.AreEqual(1000000, restored.Player.Attributes.ActionPointMaximumUnits); Assert.AreEqual(6400, restored.Player.Attributes.MovementEfficiencyMilliUnits);
@@ -192,14 +280,14 @@ namespace TianZhang.Tests.EditMode
         }
         [Test] public void SchemaFourMigratesOnlyExplicitLegalRealmAndNoInventedNodes()
         {
-            var runtime = Runtime(); var save = runtime.CaptureSave(); save.schemaVersion = 4;
+            var runtime = Runtime(); var save = runtime.CaptureSave(); save.schemaVersion = 4; save.player.unarmedAttackFamilyId = null;
             save.player.realmStage = "金丹"; save.player.gongFaId = "苦行剑典";
             save.player.movementGrowthInputsPresent = false; save.player.movementGrowthSources = null;
             var migrated = GameSaveSerializer.Deserialize(JsonUtility.ToJson(save));
-            Assert.AreEqual(5, migrated.schemaVersion); Assert.IsTrue(migrated.player.movementGrowthInputsPresent); Assert.IsEmpty(migrated.player.movementGrowthSources);
+            Assert.AreEqual(6, migrated.schemaVersion); Assert.IsTrue(migrated.player.movementGrowthInputsPresent); Assert.IsEmpty(migrated.player.movementGrowthSources);
             runtime.RestoreSave(migrated, catalog); Assert.AreEqual(1000000, runtime.Player.Attributes.ActionPointMaximumUnits); Assert.AreEqual(4800, runtime.Player.Attributes.MovementEfficiencyMilliUnits);
-            save.player.realmStage = ""; var invalid = GameSaveSerializer.Deserialize(JsonUtility.ToJson(save));
-            string before = runtime.CaptureSaveJson(); Assert.Throws<ArgumentException>(() => runtime.RestoreSave(invalid, catalog)); Assert.AreEqual(before, runtime.CaptureSaveJson());
+            save.player.realmStage = ""; string before = runtime.CaptureSaveJson();
+            Assert.Throws<System.IO.InvalidDataException>(() => GameSaveSerializer.Deserialize(JsonUtility.ToJson(save))); Assert.AreEqual(before, runtime.CaptureSaveJson());
         }
         [TestCase("presence")] [TestCase("null-array")] [TestCase("null-source")] [TestCase("hidden-marker")] [TestCase("hidden-source")]
         public void MalformedSaveLeavesEveryLiveOwnerUnchanged(string kind)
@@ -239,7 +327,13 @@ namespace TianZhang.Tests.EditMode
             var player = new CombatantSnapshot("player", CombatTeam.Player, new HexCoord(0, 0), 100, 1000, 1000, 10, 10, 10, 10, 100000, 2000);
             var enemy = new CombatantSnapshot("enemy", CombatTeam.Enemy, new HexCoord(4, 0), 1, 1000, 1000, 10, 10, 10, 10, 100000, 4000);
             var space = (ICombatSpatialQuery)typeof(CombatActionPointKernelTests).GetMethod("ProductionSpace", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
-            var session = new CombatSession(new[] { player, enemy }, Array.Empty<CombatAttackProfile>(), space, CombatActionPointKernelTests.Ordinary());
+            var inputs = AssetDatabase.FindAssets("t:AttackProfileData", new[] { "Assets/Data/AttackProfiles" })
+                .Select(guid => AssetDatabase.LoadAssetAtPath<AttackProfileData>(AssetDatabase.GUIDToAssetPath(guid))).ToArray();
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+            player.BasicAttackProfileId = profile.UnarmedBasicAttackProfileId;
+            Assert.IsTrue(new CombatEntryAdapter(CombatActionPointKernelTests.Ordinary(), rules).TryCreateSession(
+                new AdventureSpawnSet(player, enemy, null, player.BasicAttackProfileId, "", Array.Empty<string>()), inputs,
+                environment, out var session, out string reason), reason);
             Assert.AreEqual("player", service.AdvanceUntilAction(session).ActorId);
             Assert.IsTrue(service.Execute(session, new CombatCommand(CombatCommandKind.Guard, "player")).Succeeded);
             var move = new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(1, 0));

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using TianZhang.Combat;
 using TianZhang.Content;
@@ -130,13 +131,15 @@ namespace TianZhang.Tests
                 enemy.BasicAttackProfileId = "basic_iron_sword";
                 var spawned = new AdventureSpawnSet(
                     player, enemy, enemyData, "basic_iron_sword", "basic_iron_sword", null);
-                AttackProfileData basic = AssetDatabase.LoadAssetAtPath<AttackProfileData>(
-                    "Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset");
+                AttackProfileData[] profiles = new[] { "basic_iron_sword", "basic_iron_blade", "spell_guanshiji", "spell_julingshu",
+                    "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan",
+                    "basic_body_shijiahou_lianqi" }.Select(id => AssetDatabase.LoadAssetAtPath<AttackProfileData>(
+                    "Assets/Data/AttackProfiles/AttackProfile_" + id + ".asset")).ToArray();
                 EnvironmentProfileAsset environment = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
                     "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
 
                 Assert.IsTrue(new CombatEntryAdapter(new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0), new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Content.CombatRuleSetData>("Assets/Data/CombatRuleSet.asset")).TryCreateSession(
-                    spawned, new[] { basic }, environment, out CombatSession session, out string reason), reason);
+                    spawned, profiles, environment, out CombatSession session, out string reason), reason);
                 var service = new CombatCommandService();
                 CombatTurnAdvance turn = service.AdvanceUntilAction(session);
                 Assert.AreEqual("player", turn.ActorId);

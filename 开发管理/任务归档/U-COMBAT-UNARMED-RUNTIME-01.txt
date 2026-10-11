@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "migration",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261011-CD26BA705C0F9E/A",
+  "stateReason": "身体普攻创建成长保存入战链完成；相关EditMode及正式场景证据通过，三项缺美术源与已有PlayMode采样断言失败单列；归档等待共享入口重放。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Character/CharacterRuntimeProfile.cs",
     "src/Assets/Scripts/Modules/Character/CharacterStateSnapshot.cs",
@@ -550,3 +550,23 @@
 - 继续完成原实施与验证矩阵，修复允许范围内与本轮有关的失败；1068项中205项失败的现有诊断不是完成证据。两份新增测试的13项失败必须消除，其余相关失败也必须修复。确证无关的缺美术源输入失败单列证据，不宣称全套通过；如再发现范围外直接回归或需要跨未授权所有者，立即停止回交。
 - 必须取得正式玩家和石甲兽身体攻击、敌方回合结束、预览与实付一致及保存重入证据，完成变档保留回合余额/次数并失效旧报价、武器固定档不随成长升级、4→5→6与5→6合法迁移及非法源原子拒绝。不得用测试武器、假数据、删断言或真实玩家存档代替。
 - 全部完成后才按原规则更新本卡、归档、队列和本分线投影，保留其他任务对本任务的具名前置；形成单一完成candidate，正式集成由共享入口处理。其余原必查、模型、验证、完成、停止和禁止条款均保留。
+## 本轮完成与验证
+
+- 2026-10-11 Codex/gpt-6.1-sol按批准A及重新预检完成单一身体普攻链。九生产档案、五族档映射、schema6严格迁移、成长刷新保余额/次数、主手优先与武器固定档均验证。
+- 正式默认创角保存重入后，玩家body_human凡人支付20000攻击，石甲兽body_shijiahou练气攻击3次并结束回合；无临时武器、改血或假档案。
+- 最终EditMode1095/1092通过/3缺源失败；相关PlayMode13/12通过/1已有四次采样断言失败。最低BattleSim、数据链和模块边界通过，完整平衡与最终体验未签收。详细命令、输入摘要与失败证据见 开发管理/U-COMBAT-UNARMED-RUNTIME-01-验证记录.txt。
+- 只移除本卡队列/backlog行，其他卡具名前置保留；未集成或操作自动化runtime。
+
+## 经验候选
+
+### CAND-U-COMBAT-UNARMED-RUNTIME-01-01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：角色CSV增加权威族列、正式攻击映射增加五行后，旧消费者测试在构造22列数据和单铁剑入战夹具时提前失败，原非法输入断言未执行到。
+- 已证实根因：严格生产完整性要求23列及九正式档案；测试夹具仍保留旧生产结构，两条直接消费者路径未包含于初始允许集合。
+- 可能复用范围：Unity生产表schema或正式ID集合迁移时的直接消费者测试和精确任务路径冻结。
+- 证据：本卡验证记录的checkpoint诊断及负责人批准A；ContentImporterArchitectureTests的12项与AdventureNodeDispatchTests的1项在补齐显式来源/完整生产档案后全部通过，生产校验与拒绝断言均保留。
+- 门禁可能：yes

@@ -492,7 +492,9 @@ namespace TianZhang.Features.Adventure
         {
             if (session == null || equipmentOwner == null) return false;
             return session.RefreshActionEconomy("player", equipmentOwner.Attributes.ActionPointMaximumUnits,
-                equipmentOwner.Attributes.MovementEfficiencyMilliUnits);
+                equipmentOwner.Attributes.MovementEfficiencyMilliUnits, equipmentOwner.Progression.RealmStage,
+                string.IsNullOrEmpty(equipmentOwner.MainEquipmentBasicAttackProfileId)
+                    ? equipmentOwner.UnarmedBasicAttackProfileId : equipmentOwner.MainEquipmentBasicAttackProfileId);
         }
 
         private void Present(string turnText, bool acceptsCommands)

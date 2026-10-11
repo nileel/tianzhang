@@ -82,7 +82,7 @@ namespace TianZhang.Tests
             foreach (var profile in session.AttackProfiles)
             {
                 Assert.IsNotNull(profile.RuleMetadata);
-                Assert.AreEqual("tier_lianqi",profile.RuleMetadata.Tier.AbilityTierId);
+                Assert.That(profile.RuleMetadata.Tier.AbilityTierId, Is.EqualTo(profiles.Single(p => p.attackProfileId == profile.Id).abilityTierId));
                 Assert.AreEqual(ruleData.sourceDigest,profile.RuleMetadata.SourceDigest);
                 Assert.AreEqual(ruleData.ruleSetVersion,profile.RuleMetadata.RuleSetVersion);
             }
@@ -186,6 +186,7 @@ namespace TianZhang.Tests
             string directory = CreateTemporaryDirectoryPath();
             var bootstrapObject = new GameObject("GameBootstrapRoundTripTest");
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
             catalog.SetCombatRuleSet(GrowthRules);
@@ -194,7 +195,7 @@ namespace TianZhang.Tests
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "旧档角色";
-                profile.unarmedBasicAttackProfileId = "basic_unarmed";
+                profile.unarmedBasicAttackProfileId = string.Empty;
                 profile.realmMultiplier = 1f;
                 profile.actionPointMaximumUnits = 100000;
                 profile.movementEfficiencyMilliUnits = 2000;
@@ -232,6 +233,7 @@ namespace TianZhang.Tests
             var bootstrapObject = new GameObject("GameBootstrapInvalidNavigationTest");
             var installerObject = new GameObject("StartMenuInstallerInvalidNavigationTest");
             var profile = ScriptableObject.CreateInstance<CharacterData>();
+            profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
             var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
             catalog.SetCombatRuleSet(GrowthRules);
@@ -241,7 +243,7 @@ namespace TianZhang.Tests
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "坏目标旧档";
-                profile.unarmedBasicAttackProfileId = "basic_unarmed";
+                profile.unarmedBasicAttackProfileId = string.Empty;
                 profile.realmMultiplier = 1f;
                 profile.actionPointMaximumUnits = 100000;
                 profile.movementEfficiencyMilliUnits = 2000;

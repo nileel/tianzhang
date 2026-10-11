@@ -54,7 +54,7 @@ namespace TianZhang.Editor
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
             "contentScope", "dropEntries", "unarmedBasicAttackProfileId",
-            "actionPointMaximumUnits", "movementEfficiencyMilliUnits"
+            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -536,7 +536,13 @@ namespace TianZhang.Editor
             template.hitRateBonus = ParseFloat(Required(table, row, "hitRateBonus"), sourceName, "hitRateBonus");
             template.equippedSpells = ParseOptionalStableIdList(Value(table, row, "equippedSpells"), sourceName, "equippedSpells");
             template.equippedSkills = Array.Empty<string>();
-            // 保留旧列但拒绝徒手引用；没有真实武器的敌人仍可入战。
+            template.unarmedAttackFamilyId = Value(table, row, "unarmedAttackFamilyId");
+            string expectedFamily = Required(table, row, "name") == ShijiahouEnemyId ? "body_shijiahou" : string.Empty;
+            if (template.unarmedAttackFamilyId != expectedFamily) throw new InvalidDataException("enemy_unarmed_family_invalid");
+            if (expectedFamily.Length != 0)
+                CharacterContentImporter.RequireUnarmedSource(
+                    AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"), expectedFamily, Required(table, row, "realm"));
+            // 退役列不授新攻击。
             template.unarmedBasicAttackProfileId = Value(table, row, "unarmedBasicAttackProfileId");
             if (!string.IsNullOrEmpty(template.unarmedBasicAttackProfileId))
                 throw new InvalidDataException("enemy_unarmed_binding_obsolete");
@@ -583,6 +589,7 @@ namespace TianZhang.Editor
                 enemy.realmId != "realm_lianqi" ||
                 enemy.dropEntries.Length != 2 ||
                 enemy.combatTemplate == null ||
+                enemy.combatTemplate.unarmedAttackFamilyId != "body_shijiahou" ||
                 !string.IsNullOrEmpty(enemy.combatTemplate.unarmedBasicAttackProfileId) ||
                 !string.IsNullOrEmpty(enemy.combatTemplate.mainEquipmentBasicAttackProfileId))
             {
@@ -1045,6 +1052,7 @@ namespace TianZhang.Editor
             target.equippedSpells = (string[])source.equippedSpells.Clone();
             target.equippedSkills = Array.Empty<string>();
             target.unarmedBasicAttackProfileId = source.unarmedBasicAttackProfileId;
+            target.unarmedAttackFamilyId = source.unarmedAttackFamilyId;
             EditorUtility.SetDirty(target);
             return target;
         }
@@ -1072,7 +1080,8 @@ namespace TianZhang.Editor
                    target.hitRateBonus == source.hitRateBonus &&
                    target.equippedSpells.SequenceEqual(source.equippedSpells) &&
                    target.equippedSkills.SequenceEqual(source.equippedSkills) &&
-                   target.unarmedBasicAttackProfileId == source.unarmedBasicAttackProfileId;
+                   target.unarmedBasicAttackProfileId == source.unarmedBasicAttackProfileId &&
+                   target.unarmedAttackFamilyId == source.unarmedAttackFamilyId;
         }
 
         private static T UpsertContentAsset<T>(T source, string assetPath, Action<T, T> copy)

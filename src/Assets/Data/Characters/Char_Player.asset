@@ -36,7 +36,7 @@ MonoBehaviour:
   critDamage: 15
   hitRateBonus: 0
   realmMultiplier: 1.5
-  realmStage: 凡人
+  realmStage: "\u51E1\u4EBA"
   gongFaName:
   equippedSpells:
   - "\u91D1\u5149\u7834\u5CB3"
@@ -46,6 +46,7 @@ MonoBehaviour:
   availableSkills: []
   mainEquipmentBasicAttackProfileId:
   unarmedBasicAttackProfileId:
+  unarmedAttackFamilyId: body_human
   innatePurchasePointsLimit: 0
   innatePurchasePointsUsed: 0
   creationBudgetLimit: 0

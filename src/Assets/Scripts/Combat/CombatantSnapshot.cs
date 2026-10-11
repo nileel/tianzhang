@@ -194,7 +194,7 @@ namespace TianZhang.Combat
         public int RawSpirit { get; }
         public int RawMind { get; }
         public bool RawMindInputsPresent { get; }
-        public string RealmStage { get; }
+        public string RealmStage { get; private set; }
         public string VisibleRootElement { get; }
         public string VisibleRootGrade { get; }
         public int ActionPointMaximumUnits { get; private set; }
@@ -415,6 +415,13 @@ namespace TianZhang.Combat
         {
             ActionPointMaximumUnits = maximum;
             MovementEfficiencyMilliUnits = movement;
+        }
+
+        internal void SetGrowth(int maximum, int movement, string realmStage, string basicProfile)
+        {
+            SetLongTermActionEconomy(maximum, movement);
+            RealmStage = realmStage;
+            BasicAttackProfileId = basicProfile;
         }
 
         internal bool BeginOwnTurn()

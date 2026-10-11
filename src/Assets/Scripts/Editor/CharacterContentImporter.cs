@@ -184,7 +184,7 @@ namespace TianZhang.Editor
                     "soulShieldRate", "soulShieldReduction", "dodgeRate",
                     "critRate", "critDamage", "hitRateBonus", "gongFaName",
                     "equippedSpells", "equippedSkills",
-                    "actionPointMaximumUnits", "movementEfficiencyMilliUnits");
+                    "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId");
 
                 var ids = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var line in lines.Skip(headerLineIndex + 1))
@@ -213,6 +213,9 @@ namespace TianZhang.Editor
                     string realmId = CsvTableReader.GetRequiredValue(headers, columns, "realmId", sourceName);
                     ProjectRealmGrowth(growthRules, realmId, out int ap, out int movement, out string realmStage);
                     asset.realmStage = realmStage;
+                    asset.unarmedAttackFamilyId = CsvTableReader.GetRequiredValue(headers, columns, "unarmedAttackFamilyId", sourceName);
+                    if (asset.unarmedAttackFamilyId != "body_human") throw new InvalidDataException("character_unarmed_family_invalid");
+                    RequireUnarmedSource(growthRules, asset.unarmedAttackFamilyId, realmId);
                     asset.realmMultiplier = float.Parse(CsvTableReader.GetRequiredValue(headers, columns, "realmMultiplier", sourceName));
                     asset.rootBone = int.Parse(CsvTableReader.GetRequiredValue(headers, columns, "rootBone", sourceName));
                     asset.physique = int.Parse(CsvTableReader.GetRequiredValue(headers, columns, "physique", sourceName));
@@ -301,11 +304,20 @@ namespace TianZhang.Editor
                 ProjectRealmGrowth(rules, input.Realm, out int ap, out int movement, out string realmStage);
                 targets[i].realmStage = realmStage;
                 targets[i].unarmedBasicAttackProfileId = string.Empty;
+                targets[i].unarmedAttackFamilyId = "body_human";
+                RequireUnarmedSource(rules, targets[i].unarmedAttackFamilyId, input.Realm);
                 targets[i].actionPointMaximumUnits = ap;
                 targets[i].movementEfficiencyMilliUnits = movement;
                 EditorUtility.SetDirty(targets[i]);
                 AssetDatabase.SaveAssetIfDirty(targets[i]);
             }
+        }
+
+        internal static void RequireUnarmedSource(CombatRuleSetData rules, string family, string realmId)
+        {
+            if (rules == null || !rules.TryValidateIdentity(out _) || rules.unarmedRows.Length != 5 ||
+                !rules.unarmedRows.Any(row => row.familyId == family && row.realmId == realmId))
+                throw new InvalidDataException("character_unarmed_source_invalid");
         }
 
         internal static void ProjectRealmGrowth(CombatRuleSetData data, string realmId, out int ap, out int movement, out string stage)

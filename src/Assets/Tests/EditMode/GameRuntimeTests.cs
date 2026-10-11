@@ -35,6 +35,7 @@ namespace TianZhang.Tests
         {
             var runtime = new GameRuntime();
             definition = ScriptableObject.CreateInstance<CharacterData>();
+            definition.unarmedAttackFamilyId = "body_human";
             definition.realmStage = "凡人";
             definition.charName = "测试角色";
             definition.realmMultiplier = 1f;

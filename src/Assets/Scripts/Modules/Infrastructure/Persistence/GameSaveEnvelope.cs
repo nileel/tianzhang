@@ -73,6 +73,9 @@ namespace TianZhang.Infrastructure.Persistence
                 if (player == null || cultivation == null)
                     throw new ArgumentException("Player state presence is inconsistent.");
                 CharacterRuntimeProfile.RequirePlayerRealm(player.realmStage);
+                if (player.characterId != "player" || player.unarmedAttackFamilyId != "body_human" ||
+                    !string.IsNullOrEmpty(player.unarmedBasicAttackProfileId))
+                    throw new ArgumentException("character_unarmed_save_invalid");
                 if (catalog == null ||
                     !catalog.TryGetAppearanceProfile(player.appearanceProfileId, out _) &&
                     !string.Equals(player.appearanceProfileId, AppearanceProfileData.NoneId, StringComparison.Ordinal))
@@ -87,7 +90,7 @@ namespace TianZhang.Infrastructure.Persistence
             }
 
             CharacterRuntimeProfile restoredPlayer = hasPlayer
-                ? CharacterRuntimeProfile.FromSnapshot(player.Restore(), growthRules ?? catalog?.CombatRuleSet)
+                ? CharacterRuntimeProfile.FromSnapshot(player.Restore(growthRules ?? catalog?.CombatRuleSet), growthRules ?? catalog?.CombatRuleSet)
                 : null;
             CultivationState restoredCultivation = hasPlayer ? cultivation.Restore() : null;
             var restoredClock = new WorldClockService(1);
@@ -141,6 +144,7 @@ namespace TianZhang.Infrastructure.Persistence
                  !string.IsNullOrEmpty(record.mainEquipmentInstanceId) ||
                  !string.IsNullOrEmpty(record.mainEquipmentBasicAttackProfileId) ||
                  !string.IsNullOrEmpty(record.unarmedBasicAttackProfileId) ||
+                 !string.IsNullOrEmpty(record.unarmedAttackFamilyId) ||
                  !string.IsNullOrEmpty(record.appearanceProfileId) ||
                  !string.IsNullOrEmpty(record.visibleRootId) ||
                  !string.IsNullOrEmpty(record.visibleRootGrade) ||
@@ -357,6 +361,7 @@ namespace TianZhang.Infrastructure.Persistence
         public string mainEquipmentInstanceId;
         public string mainEquipmentBasicAttackProfileId;
         public string unarmedBasicAttackProfileId;
+        public string unarmedAttackFamilyId;
         public string appearanceProfileId;
         public string visibleRootId;
         public string visibleRootGrade;
@@ -414,6 +419,7 @@ namespace TianZhang.Infrastructure.Persistence
                 mainEquipmentInstanceId = snapshot.MainEquipmentInstanceId,
                 mainEquipmentBasicAttackProfileId = snapshot.MainEquipmentBasicAttackProfileId,
                 unarmedBasicAttackProfileId = string.Empty,
+                unarmedAttackFamilyId = snapshot.UnarmedAttackFamilyId,
                 appearanceProfileId = snapshot.AppearanceProfileId,
                 visibleRootId = snapshot.VisibleRootId,
                 visibleRootGrade = snapshot.VisibleRootGrade,
@@ -472,7 +478,7 @@ namespace TianZhang.Infrastructure.Persistence
             return records.ToArray();
         }
 
-        public CharacterStateSnapshot Restore()
+        public CharacterStateSnapshot Restore(CombatRuleSetData growthRules = null)
         {
             if (string.IsNullOrWhiteSpace(characterId) || string.IsNullOrWhiteSpace(displayName) ||
                 maximumHealth < 0 || currentHealth < 0 || currentHealth > maximumHealth ||
@@ -488,6 +494,9 @@ namespace TianZhang.Infrastructure.Persistence
                     ": action economy inputs are missing, the presence marker is false, or a value is out of range.");
             }
             CharacterCombatModifiers combatModifiers = RestoreCombatModifiers();
+            if (!string.IsNullOrEmpty(unarmedBasicAttackProfileId))
+                throw new ArgumentException("character_unarmed_save_invalid");
+            string bodyAttack = CharacterRuntimeProfile.ResolveUnarmedAttack(growthRules, unarmedAttackFamilyId, realmStage);
             return new CharacterStateSnapshot(
                 new CharacterIdentitySnapshot(characterId, displayName),
                 new CharacterAttributesSnapshot(rootBone, physique, spirit, mind, reaction, talent, fortune,
@@ -503,9 +512,9 @@ namespace TianZhang.Infrastructure.Persistence
                 new CharacterProgressionSnapshot(gongFaId, realmStage, realmMultiplier, movementGrowthInputsPresent, RestoreMovementGrowth()),
                 combatModifiers,
                 mainEquipmentBasicAttackProfileId,
-                string.Empty,
+                bodyAttack,
                 appearanceProfileId,
-                visibleRootId, visibleRootGrade, visibleRootElement, mainEquipmentItemId, mainEquipmentInstanceId);
+                visibleRootId, visibleRootGrade, visibleRootElement, mainEquipmentItemId, mainEquipmentInstanceId, unarmedAttackFamilyId);
         }
 
         /// <summary>
