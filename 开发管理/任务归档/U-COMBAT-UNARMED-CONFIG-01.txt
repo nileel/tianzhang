@@ -112,8 +112,8 @@
 ## 经验候选
 
 ### CAND-U-COMBAT-UNARMED-CONFIG-01-01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-F88F6E7E7072
 - resolution: unresolved
 - experienceId:
 - 经验领域：data
