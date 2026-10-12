@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-UNARMED-RUNTIME-01/CAND-U-COMBAT-UNARMED-RUNTIME-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-13：Codex 独立核验候选并晋级为 EXP-UNITY-018；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-UNARMED-RUNTIME-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,10 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-13 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-018`。来源验证记录直接证实，严格生产完整性已正确要求 23 列和九档案，但两个直接 EditMode 消费者仍构造 22 列／单铁剑旧夹具，令 13 项测试在原非法输入断言前失败；补齐当前权威来源及完整集合后全部通过，生产校验和拒绝断言均保留。
+- 去重与边界：`EXP-DATA-001` 只覆盖 AttackProfiles／CombatRuleSet 的 Unity 与 BattleSim 生产读取端及显式编译链接，并明确排除独立测试夹具；其他 active Unity 经验分别约束场景、程序集、UI、动作或成长快照，均不覆盖严格生产迁移的直接夹具与精确路径冻结。本经验只在生产表结构或正式 ID 集合迁移同时触及直接 EditMode 夹具时触发；不新增门禁。
+- 模型协作：简单：单一候选的直接验证记录、现有经验边界和固定格式回链均可核验；沿用入口 gpt-5.6-terra 单模型，未启动辅助模型或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-UNITY-018`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。

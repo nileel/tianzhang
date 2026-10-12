@@ -719,6 +719,35 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-017.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-12"
+    },
+    {
+      "id": "EXP-UNITY-018",
+      "title": "严格生产迁移须同步直接测试夹具",
+      "preflightSummary": "升级 Unity 生产表结构或正式 ID 集合时，先枚举直接测试夹具并冻结其路径，保持生产完整性和原有拒绝断言后再验证。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/DataConfig/*.csv",
+        "src/Assets/Tests/EditMode/*.cs"
+      ],
+      "textPatterns": [
+        "生产表schema",
+        "生产表结构",
+        "正式ID集合",
+        "生产完整性",
+        "测试夹具"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-018.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-13"
     }
   ],
   "gates": []

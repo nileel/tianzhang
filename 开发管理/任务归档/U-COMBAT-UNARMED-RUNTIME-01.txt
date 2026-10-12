@@ -562,8 +562,8 @@
 ### CAND-U-COMBAT-UNARMED-RUNTIME-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-078A7076A4F2
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-018
 - 经验领域：unity
 - 现象：角色CSV增加权威族列、正式攻击映射增加五行后，旧消费者测试在构造22列数据和单铁剑入战夹具时提前失败，原非法输入断言未执行到。
 - 已证实根因：严格生产完整性要求23列及九正式档案；测试夹具仍保留旧生产结构，两条直接消费者路径未包含于初始允许集合。
