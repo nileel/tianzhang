@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-12自定义回复经当前对话澄清：铁剑竖两格、铁刀横两格，均为两格攻击区域且可命中多个敌人；本卡只重新完成设计合同，下游实现仍blocked。",
+  "stateReason": "等待负责人决定：是否采用随攻击方向旋转的两格方案：剑前后两格、刀在两条相邻方向之间并排两格（刀中心较剑偏30度），禁止无敌人空挥，并将现有关中遭遇设为两只石甲猴、整场奖励只结算一次？A每次自由选方向；B沿用角色当前朝向、移动后转向；C暂缓。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
     "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
@@ -32,13 +32,95 @@
     "gates": []
   },
   "executionModel": "gpt-6.1-sol",
-  "automationReply": {
-    "decisionId": "DEC-20261012-CD34DE1D6D4E25",
-    "result": "CUSTOM_ACCEPTED",
-    "replyKind": "custom",
-    "replyValue": "铁剑竖两格，铁刀横两格",
-    "source": "feishu_card_input",
-    "evidenceHash": "50ab3e21296211ca65d545ca386ef42a3a882a65459f5d41bcde18d0e7a2f4ee"
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-GZ-R2-RANGE-01",
+    "sourceRunId": "65abad60-7014-4d2b-9d98-2b7191b9c672",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261012-CD535A212F9D41",
+    "question": "是否采用随攻击方向旋转的两格方案：剑前后两格、刀在两条相邻方向之间并排两格（刀中心较剑偏30度），禁止无敌人空挥，并将现有关中遭遇设为两只石甲猴、整场奖励只结算一次？A每次自由选方向；B沿用角色当前朝向、移动后转向；C暂缓。",
+    "options": [
+      {
+        "key": "A",
+        "label": "自由选择攻击方向（推荐）",
+        "targetState": "ready",
+        "expectedPaths": [
+          "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
+          "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
+          "开发管理/任务列表/场景与Unity任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/关中武器差异射程合同.txt",
+          "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+          "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+          "开发管理/任务卡/V-GZ-R2-AOE-01.txt"
+        ],
+        "taskBody": "# D-GZ-R2-RANGE-01 · 两件基础武器两格群攻设计\n\n## 来源与当前边界\n\n负责人已确认铁剑竖两格、铁刀横两格为可命中多个敌人的区域攻击；旧单目标差异射程选项和checkpoint 73d1630de7b59ec4f1e42099ee26726e02b038b7只保留调查线索，不恢复旧业务草案。此次选择A后，采用开发管理/关中武器差异射程合同.txt第三节的具体形状、禁止空放、两敌正式遭遇和整场一次奖励提案，以及第四节A的操作；不再把这些已选语义作为待决定事项。唯一结果仍是管理文本设计合同及六张既有子卡接口同步，不执行游戏业务。自动重放本轮合同检查点后核对最新事实，保留原回复和历史证据。\n\n## 必查范围\n\n- 开发管理/关中武器差异射程合同.txt（完整检查点，复核现状后转冻结合同）\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#9. 武器距离与攻击目标语义（历史现状，本次批准优先）\n- docs/道具/武器/铁剑.txt#普攻与数值候选；docs/道具/武器/铁刀.txt#普攻与数值候选\n- src/Assets/DataConfig/AttackProfiles.csv::表头及basic_iron_sword/basic_iron_blade\n- src/Assets/Scripts/Modules/Spatial/HexCoord.cs::Directions；HexCoord.Unity.cs::ToWorld；SpatialQueryBoard.cs::QueryRangeEntry/QueryLineOfSight；SpatialQueryTypes.cs\n- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack/ICombatSpatialQuery；CombatActionResolver.cs::PrepareValidated/ResolveAttack；CombatCommand.cs；CombatCommandService.cs::Preview/Prepare/Execute；CombatantSnapshot.cs::Facing/CommitMovement\n- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles/TryCreateSession；EncounterCoordinator.cs::PreviewAction/ProjectQuote/随机采样/Complete；AdventureUnitSpawner.cs::AdventureSpawnSet/TrySpawn；FormalEncounterResult.cs\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose/ConfirmCandidate；src/Assets/Scripts/Modules/Content/AttackProfileData.cs::形状与校验\n- src/Assets/DataConfig/Adventures.csv::关中节点；EnvironmentProfiles.csv::相关格位；Bounties.csv::关中悬赏\n- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整父项及六张既有子卡对应边界）；各子卡列出的当前所有者及直接调用者\n\n## 实施范围\n\n将检查点改为无待选内容的唯一冻结合同。“竖/横”按攻击方向示意的纵向穿刺/横向挥击，不固定屏幕或地图轴。O为攻击者当前格且不受击，d为六向索引；剑两格为O+D[d]、O+2D[d]；刀两格为O+D[d]、O+D[(d+1)%6]，位于相邻两边的扇区，中心轴比剑轴顺时针偏30度，不补第三格。给出全部六向坐标例子。\n采用A：普攻进入预览后可自由选择六个d，初值为当前CombatantSnapshot.Facing；方向选择不改角色Facing，取消清除本次选择，不需移动转向。\n先预览两格/合法性原因/全部目标和一次费用，再确认重验同一候选；零合法敌人可看但禁确认，无消耗、次数或随机。切武器、回合/朝向/起点/目标/空间状态变化令旧预览失效；取消和演出busy不提交。两格各按现有攻击度量及视线筛选（剑1至2格、刀1格），缺格/边/逆向边、效果阻挡、实体障碍、未配置高差失败关闭；不新增角色身体挡刀或穿透。只收存活敌方，排除友方、自身、尸体，按真实ID去重并Ordinal稳定排序；0/1/多个目标的预览确认与结果逐项说明。\n逐目标独立使用原命中/暴击/格挡/魂盾/控制随机输入及伤害公式；预览不采样，合法确认重验后按目标稳定顺序采样，重放绑定目标与输入。所有目标和费用一起准备、一次提交，失败无部分HP/费用变化；AP/资源/CT/冷却/共享普攻次数均只计一次，合法全部闪避仍计一次。保留两件倍率1.0/1.25、基础和最低净费40000/50000、零CT/重用冷却、资源none/0、现有肉攻承载、资格/库存/换装/保存规则。\n仅现有guanzhong_wild石甲猴遭遇改为两只现有enemy_shijiahou的设计：独立enemy、enemy_2，落点(3,5)/(4,5)，玩家起点(0,0)，原AI和资源不变。最后敌人死亡才胜利，部分死亡继续，玩家死亡按原失败规则；整场只执行一次原掉落/遭遇结果/悬赏事件/回城，不按人数翻倍。剑(2,5)、d0及刀(4,4)、d4覆盖同两敌只是几何例子；正式功能须实际创建、移动、AI及当前目标证据，不以测试注入/暂停AI替代。\n同步QUERY查询、RESOLVE原子结算、ENCOUNTER生命周期、DATA内容链、INPUT操作、V验收六张卡的接口/验收边界；仅在其候选所有者内查明完整业务路径和必要.meta，重跑受影响卡风险预检并消费mustRead、校准schema 2投影。依赖实现结果才能确定的路径继续注明待上游冻结，不猜测文件。六卡继续blocked且保留全部具名前置，父项保持frozen、永不独立ready；不新增子卡、不移除下游前置、不提升或重排任务。设计归档后仅正式集成后的维护判断ready。\n\n## 禁止项\n\n不改代码、docs、CSV、Unity资产/场景、存档、自动化脚本、其他worktree；不实现群攻/空放或扩到其他武器/术法，不更改伤害/费用、敌人AI、地形、波次或全局生成，不把提案/静态检查写成游戏已实现或数值平衡。\n\n## 模型协作\n\n同一个有界设计合同，主模型保持executionModel=gpt-6.1-sol；主责单模型统一复核，当前无需辅助或第二责任会话。业务写入前核对实际工具能力，记录到本轮验证结果；实现卡临近ready再按实际所有者评估。\n\n## 验证\n\n核对两件全部六向恰好两格、方向/起点/中心、0/1/多个敌人、越界/遮挡/友方/死亡/重复身份、预览确认失效、独立随机及一次费用；复核遭遇人数/落点/结束奖励和当前链路缺口。确认六卡blocked并保留前置、父项frozen及本卡生命周期投影一致。消费入口绑定风险预检；范围/所有者变化暂停写入并重跑。\n运行check-task-cards.ps1、check-review-text.ps1和实际改动路径check-pending-whitespace.ps1，暂存后git diff --cached --check；统一pwsh -NoProfile -ExecutionPolicy Bypass -File。仅管理文本，不运行Unity/BattleSim或无关数据链检查。Unity场景功能由下游实测，角色平衡只有BattleSim实跑可裁定，不默认扩充模拟器。\n\n## 完成条件\n\n所选语义成为准确无矛盾的唯一合同，六卡接口/验收与合同一致、精确路径冻结情况真实可追溯且保持阻塞，父项仍冻结；设计卡归档并更新自身backlog/queue，管理检查通过，形成一个候选提交。\n\n## 停止条件\n\n新事实与批准形状/操作/遭遇冲突，发现新的玩家可见未决语义，需超出路径/所有者或业务写入、修改费用/伤害/AI/地形、扩大其他武器或不再原子时立即停止反馈；不重问已批准需求，不叠加补丁、不创建新工作流。"
+      },
+      {
+        "key": "B",
+        "label": "按角色当前朝向攻击，移动后换方向",
+        "targetState": "ready",
+        "expectedPaths": [
+          "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
+          "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
+          "开发管理/任务列表/场景与Unity任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/关中武器差异射程合同.txt",
+          "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+          "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
+          "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+          "开发管理/任务卡/V-GZ-R2-AOE-01.txt"
+        ],
+        "taskBody": "# D-GZ-R2-RANGE-01 · 两件基础武器两格群攻设计\n\n## 来源与当前边界\n\n负责人已确认铁剑竖两格、铁刀横两格为可命中多个敌人的区域攻击；旧单目标差异射程选项和checkpoint 73d1630de7b59ec4f1e42099ee26726e02b038b7只保留调查线索，不恢复旧业务草案。此次选择B后，采用开发管理/关中武器差异射程合同.txt第三节的具体形状、禁止空放、两敌正式遭遇和整场一次奖励提案，以及第四节B的操作；不再把这些已选语义作为待决定事项。唯一结果仍是管理文本设计合同及六张既有子卡接口同步，不执行游戏业务。自动重放本轮合同检查点后核对最新事实，保留原回复和历史证据。\n\n## 必查范围\n\n- 开发管理/关中武器差异射程合同.txt（完整检查点，复核现状后转冻结合同）\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#9. 武器距离与攻击目标语义（历史现状，本次批准优先）\n- docs/道具/武器/铁剑.txt#普攻与数值候选；docs/道具/武器/铁刀.txt#普攻与数值候选\n- src/Assets/DataConfig/AttackProfiles.csv::表头及basic_iron_sword/basic_iron_blade\n- src/Assets/Scripts/Modules/Spatial/HexCoord.cs::Directions；HexCoord.Unity.cs::ToWorld；SpatialQueryBoard.cs::QueryRangeEntry/QueryLineOfSight；SpatialQueryTypes.cs\n- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack/ICombatSpatialQuery；CombatActionResolver.cs::PrepareValidated/ResolveAttack；CombatCommand.cs；CombatCommandService.cs::Preview/Prepare/Execute；CombatantSnapshot.cs::Facing/CommitMovement\n- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles/TryCreateSession；EncounterCoordinator.cs::PreviewAction/ProjectQuote/随机采样/Complete；AdventureUnitSpawner.cs::AdventureSpawnSet/TrySpawn；FormalEncounterResult.cs\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose/ConfirmCandidate；src/Assets/Scripts/Modules/Content/AttackProfileData.cs::形状与校验\n- src/Assets/DataConfig/Adventures.csv::关中节点；EnvironmentProfiles.csv::相关格位；Bounties.csv::关中悬赏\n- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整父项及六张既有子卡对应边界）；各子卡列出的当前所有者及直接调用者\n\n## 实施范围\n\n将检查点改为无待选内容的唯一冻结合同。“竖/横”按攻击方向示意的纵向穿刺/横向挥击，不固定屏幕或地图轴。O为攻击者当前格且不受击，d为六向索引；剑两格为O+D[d]、O+2D[d]；刀两格为O+D[d]、O+D[(d+1)%6]，位于相邻两边的扇区，中心轴比剑轴顺时针偏30度，不补第三格。给出全部六向坐标例子。\n采用B：普攻固定d=当前CombatantSnapshot.Facing，不提供独立方向选择；只能沿现有移动规则改变Facing后重新预览，刀扇区仍为D[d]/D[d+1]，不擅改成对称左右格。\n先预览两格/合法性原因/全部目标和一次费用，再确认重验同一候选；零合法敌人可看但禁确认，无消耗、次数或随机。切武器、回合/朝向/起点/目标/空间状态变化令旧预览失效；取消和演出busy不提交。两格各按现有攻击度量及视线筛选（剑1至2格、刀1格），缺格/边/逆向边、效果阻挡、实体障碍、未配置高差失败关闭；不新增角色身体挡刀或穿透。只收存活敌方，排除友方、自身、尸体，按真实ID去重并Ordinal稳定排序；0/1/多个目标的预览确认与结果逐项说明。\n逐目标独立使用原命中/暴击/格挡/魂盾/控制随机输入及伤害公式；预览不采样，合法确认重验后按目标稳定顺序采样，重放绑定目标与输入。所有目标和费用一起准备、一次提交，失败无部分HP/费用变化；AP/资源/CT/冷却/共享普攻次数均只计一次，合法全部闪避仍计一次。保留两件倍率1.0/1.25、基础和最低净费40000/50000、零CT/重用冷却、资源none/0、现有肉攻承载、资格/库存/换装/保存规则。\n仅现有guanzhong_wild石甲猴遭遇改为两只现有enemy_shijiahou的设计：独立enemy、enemy_2，落点(3,5)/(4,5)，玩家起点(0,0)，原AI和资源不变。最后敌人死亡才胜利，部分死亡继续，玩家死亡按原失败规则；整场只执行一次原掉落/遭遇结果/悬赏事件/回城，不按人数翻倍。剑(2,5)、d0及刀(4,4)、d4覆盖同两敌只是几何例子；正式功能须实际创建、移动、AI及当前目标证据，不以测试注入/暂停AI替代。\n同步QUERY查询、RESOLVE原子结算、ENCOUNTER生命周期、DATA内容链、INPUT操作、V验收六张卡的接口/验收边界；仅在其候选所有者内查明完整业务路径和必要.meta，重跑受影响卡风险预检并消费mustRead、校准schema 2投影。依赖实现结果才能确定的路径继续注明待上游冻结，不猜测文件。六卡继续blocked且保留全部具名前置，父项保持frozen、永不独立ready；不新增子卡、不移除下游前置、不提升或重排任务。设计归档后仅正式集成后的维护判断ready。\n\n## 禁止项\n\n不改代码、docs、CSV、Unity资产/场景、存档、自动化脚本、其他worktree；不实现群攻/空放或扩到其他武器/术法，不更改伤害/费用、敌人AI、地形、波次或全局生成，不把提案/静态检查写成游戏已实现或数值平衡。\n\n## 模型协作\n\n同一个有界设计合同，主模型保持executionModel=gpt-6.1-sol；主责单模型统一复核，当前无需辅助或第二责任会话。业务写入前核对实际工具能力，记录到本轮验证结果；实现卡临近ready再按实际所有者评估。\n\n## 验证\n\n核对两件全部六向恰好两格、方向/起点/中心、0/1/多个敌人、越界/遮挡/友方/死亡/重复身份、预览确认失效、独立随机及一次费用；复核遭遇人数/落点/结束奖励和当前链路缺口。确认六卡blocked并保留前置、父项frozen及本卡生命周期投影一致。消费入口绑定风险预检；范围/所有者变化暂停写入并重跑。\n运行check-task-cards.ps1、check-review-text.ps1和实际改动路径check-pending-whitespace.ps1，暂存后git diff --cached --check；统一pwsh -NoProfile -ExecutionPolicy Bypass -File。仅管理文本，不运行Unity/BattleSim或无关数据链检查。Unity场景功能由下游实测，角色平衡只有BattleSim实跑可裁定，不默认扩充模拟器。\n\n## 完成条件\n\n所选语义成为准确无矛盾的唯一合同，六卡接口/验收与合同一致、精确路径冻结情况真实可追溯且保持阻塞，父项仍冻结；设计卡归档并更新自身backlog/queue，管理检查通过，形成一个候选提交。\n\n## 停止条件\n\n新事实与批准形状/操作/遭遇冲突，发现新的玩家可见未决语义，需超出路径/所有者或业务写入、修改费用/伤害/AI/地形、扩大其他武器或不再原子时立即停止反馈；不重问已批准需求，不叠加补丁、不创建新工作流。"
+      },
+      {
+        "key": "C",
+        "label": "暂缓，保留两格群攻需求",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A/B均批准攻击相对方向下的精确两格形状、禁止空放，以及仅现有关中石甲猴遭遇两敌化且整场奖励一次；区别是A新增自由方向选择，B绑定当前角色Facing并依赖移动转向。A操作更直接，B控件较少但转向承担原移动费用与风险；C保留需求和检查点、暂停设计。所有选项均不把本轮静态调查算作群攻实现或平衡验收。",
+    "plainSummary": {
+      "situation": "已经确认剑刺两格、刀扫两格且能打多个敌人，但六边形棋盘上的摆法、转向操作和能否空挥还没定；游戏目前仍只打一名敌人。",
+      "impact": "A每次可选攻击方向；B需先移动转向；C暂缓。A和B都采用剑前后两格、刀前方并排两格，不空挥，并将现有关中一场战斗设为两只石甲猴、整场只领一次奖励。",
+      "action": "推荐A，方便直接预览和选择攻击区域；希望攻击必须配合移动转向时选B，暂不认可这些具体规则时选C。"
+    },
+    "checkpointCommit": "991c8d8847aa333d642a6fe745d28f6fcb85821c",
+    "baseCommit": "4eb530ecb04bc8e64ea3aa71f1d22b9feb4bf840",
+    "branch": "codex/automation/codex/65abad60-7014-4d2b-9d98-2b7191b9c672/candidate",
+    "changedPaths": [
+      "开发管理/关中武器差异射程合同.txt"
+    ],
+    "verified": [
+      "静态核对格网坐标、攻击选择、范围校验、单目标结算及正式遭遇所有者。",
+      "六个方向的剑两格和刀两格坐标核算通过，刀的两个落点互为邻格。",
+      "check-task-cards.ps1通过：86张活跃卡、4张ready；六张子卡仍blocked并保留前置，父项仍frozen。",
+      "check-task-cards.ps1 -Postcondition CheckpointScope通过，两条可执行选项包含完整正文和精确路径。",
+      "check-review-text.ps1通过，check-pending-whitespace.ps1及git diff --cached --check通过。",
+      "完整差异已复核；唯一提交直接继承指定BaseCommit，工作树干净，提交元数据与返回值一致。",
+      "消费入口空命中风险预检；模型组合核对为主模型单独处理，未调用辅助模型。",
+      "已读取Unity技能的runtime-owner-proof、content-and-systems及unity-validation参考；项目未提供UNITY_STRUCTURE地图。"
+    ],
+    "unverified": [
+      "具体两格摆法、朝向操作、禁止空放及两敌遭遇提案尚待负责人批准。",
+      "未实施或运行Unity区域群攻、正式多敌遭遇及界面验收。",
+      "未运行BattleSim，未裁定群攻收益或两敌遭遇难度平衡。"
+    ],
+    "residualRisk": "合同仍待批准；正式多敌创建、区域选择与逐目标结算未实现，真实玩法中的多目标覆盖和遭遇难度未经实测。",
+    "taskContextDigest": "6a5b4979950d1581ab59d4041b487052cd75dddc8b1d33021d834b39de26e6c8",
+    "createdAt": "2026-10-12T21:33:26.3928350+08:00",
+    "queueIndex": 0
   }
 }
 ---TASK-BODY---
