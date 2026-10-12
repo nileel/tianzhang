@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "V-GZ-R2-AOE-01",
+  "title": "两格群攻正式玩法验收与父项关闭",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-R2-AOE-INPUT-01"
+  ],
+  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "expectedPaths": [
+    "开发管理/任务卡/V-GZ-R2-AOE-01.txt",
+    "开发管理/任务归档/V-GZ-R2-AOE-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
+    "开发管理/任务归档/D-GZ-R2-RANGE-DATA-01.txt",
+    "开发管理/关中两格群攻验收记录.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# V-GZ-R2-AOE-01 · 两格群攻正式玩法验收与父项关闭
+
+## 来源与当前边界
+
+2026-10-12负责人确认“铁剑竖两格、铁刀横两格”为两格攻击区域，可命中多个敌人，并明确要求完整拆卡。本卡属于汇总父项D-GZ-R2-RANGE-DATA-01；唯一可独立验收结果：真实玩家两件武器的区域群攻闭环有可复查验收证据，并据此关闭汇总父项。
+
+## 必查范围
+
+- 开发管理/关中武器差异射程合同.txt（本卡所需已批准规则和接口）
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt#依赖图与关闭条件
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatFeedbackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs
+
+## 实施范围
+
+只负责批准需求的最终验收及管理关闭，不补做其他子卡功能。按正式新档→获得/切换武器→多敌遭遇→区域选择/预览/确认→逐目标结算/演出→胜负/回城完成证据链；局部测试不能替代正式入口。核对所有命名子卡及EQUIP已完成，不凭中间编译或截图判定完成。通过后在同一提交归档本卡及冻结汇总父项，移除各自backlog投影；父项不得独立入队或被领取。
+
+### ready前冻结
+
+依赖：U-GZ-R2-AOE-INPUT-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+
+## 禁止项
+
+不修改未批准武器/术法/场景、用户存档或自动化流程，不新增全局管理器、重试或兼容机制。不改既定伤害/AP/CT参数，不把本功能正确性冒充数值平衡。不得越过上游合同接管其他子卡职责。
+
+## 模型协作
+
+中等：完整场景证据的一致性核验，gpt-6.1-sol建议high；主责单模型复核，不能以模型意见代替Unity实际结果。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+
+## 验证
+
+两件武器分别覆盖0/1/多个合法敌人、边缘/遮挡/友方/重复目标、部分与全部死亡、取消和旧预览失效、费用与使用次数一次提交；提供实际界面图像、格位/目标ID与前后数值证据。复查单目标术法、换装、移动、奖励/回城及存档的直接回归；只跑影响范围内PlayMode与相关EditMode、数据链检查。无新增角色数值平衡结论，若要裁定群攻收益需另按已批准的数值范围运行BattleSim，不扩充模拟器作前置。
+
+本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
+
+## 完成条件
+
+真实玩家两件武器的区域群攻闭环有可复查验收证据，并据此关闭汇总父项。 所需验证通过，有可追溯代码/数据/场景证据；本卡完成归档及backlog/queue投影一致，不提前解锁未满足合同的其他卡。
+
+## 停止条件
+
+任一子卡未完成、正式入口/图像/数值证据缺失或发现业务缺陷时保持blocked并报告对应既有子卡，不在验收卡补功能、不提前关闭父项。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。

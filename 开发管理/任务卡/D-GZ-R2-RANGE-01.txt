@@ -17,7 +17,13 @@
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
     "开发管理/关中武器差异射程合同.txt",
-    "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt"
+    "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+    "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+    "开发管理/任务卡/V-GZ-R2-AOE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -57,7 +63,7 @@
 - src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::PreviewAction
 - src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose
 - src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs::范围查询与方向语义
-- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整卡）
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整汇总卡及其六张子卡的对应边界）
 
 ## 实施范围
 
@@ -67,7 +73,9 @@
 
 保留两件现有单次伤害参数、AP/CT、资源消耗、资格、库存和换装规则；区域多目标的总收益不据此宣称平衡。区分Unity场景功能验证与可抽象角色数值平衡，后者只有BattleSim实跑才能形成结论，不以扩充模拟器作为默认前置。
 
-同步直接下游D-GZ-R2-RANGE-DATA-01的需求来源和范围：旧“只改射程数据、不实现AOE”前提失效，下游继续blocked并保留全部具名前置，不能按旧数据卡直接ready。合同枚举命中的现有所有者和直接验收入口；具体实施若跨多个独立结果，由普通规划上下文按现有原子性规则统一准备，本设计worker不边实施边拆卡。本卡完成只表示设计闭环，不解锁或执行下游业务。
+本批已一次性拆为QUERY、RESOLVE、ENCOUNTER、DATA、INPUT、V六张子卡，完整ID、依赖及关闭条件见D-GZ-R2-RANGE-DATA-01的“依赖图与关闭条件”。该原数据卡现为frozen汇总，永不独立ready；设计worker不得再创建子卡或把父项改回实现卡。合同须同时冻结横竖落点/方向/中心、操作与空目标规则、筛选、逐目标随机和一次费用语义，以及正式多敌验收所需遭遇人数/落点/奖励口径。只为验证两件武器所必需的遭遇，不扩展波次或全局生成。对确实无法由现有事实唯一确定的玩家可见选择请求负责人决定。
+
+设计完成时同步六张既有子卡的对应接口和验收边界，只在各卡候选所有者内枚举已查明的完整业务路径与必要.meta、重跑风险预检；不猜测尚依赖实现结果的路径。各子卡保持blocked并保留前置，正式集成后的维护按已冻结范围判断ready。本卡仅设计闭环，不执行群攻业务、不解冻父项。
 
 ## 禁止项
 
@@ -79,13 +87,13 @@
 
 ## 验证
 
-逐项核对铁剑/铁刀两格图示或坐标例子、横竖参照、0/1/多个敌人、遮挡/越界/友方/重复目标、预览与确认一致性；明确每个尚未实现的能力及实际所有者。核对下游仍blocked且保留前置，不能把范围字段存在当作正式群攻已接通。
+逐项核对铁剑/铁刀两格图示或坐标例子、横竖参照、0/1/多个敌人、遮挡/越界/友方/重复目标、预览与确认一致性；明确每个尚未实现的能力及实际所有者。核对六张子卡仍blocked且保留前置、父项仍frozen，不能把范围字段存在当作正式群攻已接通。
 
 运行check-task-cards.ps1、check-review-text.ps1以及实际改动路径的check-pending-whitespace.ps1，暂存后git diff --cached --check。本卡只写管理文本，不运行游戏或数值验收、不运行无关数据链检查。执行前消费共享入口绑定的风险预检，范围或所有者变化遵守既有停止条件。
 
 ## 完成条件
 
-负责人已确认的两格多目标需求被准确落实为无矛盾的设计合同，横竖落点和操作语义明确，现有链路缺口及Unity/数值验收边界可追溯；直接下游说明与合同一致并保持blocked。本卡归档及backlog/queue投影正确，管理检查通过。
+负责人已确认的两格多目标需求被准确落实为无矛盾的设计合同，横竖落点和操作语义明确，现有链路缺口及Unity/数值验收边界可追溯；六张子卡说明与合同一致并保持blocked，父项保持frozen。本卡归档及backlog/queue投影正确，管理检查通过。
 
 ## 停止条件
 

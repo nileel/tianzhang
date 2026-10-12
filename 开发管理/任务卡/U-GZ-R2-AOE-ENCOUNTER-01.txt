@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-AOE-ENCOUNTER-01",
+  "title": "正式多敌遭遇生命周期与受击演出接入",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-R2-AOE-RESOLVE-01"
+  ],
+  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+    "开发管理/任务归档/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R2-AOE-ENCOUNTER-01 · 正式多敌遭遇生命周期与受击演出接入
+
+## 来源与当前边界
+
+2026-10-12负责人确认“铁剑竖两格、铁刀横两格”为两格攻击区域，可命中多个敌人，并明确要求完整拆卡。本卡属于汇总父项D-GZ-R2-RANGE-DATA-01；唯一可独立验收结果：批准的关中遭遇通过正式入口创建多个独立敌人，驱动回合、受击/死亡表现并正确结束和清理。
+
+## 必查范围
+
+- 开发管理/关中武器差异射程合同.txt（本卡所需已批准规则和接口）
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt#依赖图与关闭条件
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::AdventureSpawnSet/TrySpawn
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryCreateSession
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::TryCreatePresentationDescriptors/ProjectPresentation/Complete
+- src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterNodeHandler.cs
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::棋子与战斗结果合同
+- src/Assets/Scripts/Modules/Content/AdventureMapData.cs
+- src/Assets/Scripts/Editor/AdventureContentImporter.cs
+- src/Assets/DataConfig/Adventures.csv
+- src/Assets/Tests/PlayMode/GuanzhongCombatFeedbackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+
+## 实施范围
+
+修复正式链目前只有spawned.Enemy、固定enemy身份及单个targetBefore表现的限制，沿用现有Spawner/EntryAdapter/Coordinator。敌人集合使用各自稳定实例ID、位置与快照，映射到既有敌人/表现资源；不能把同一enemy对象加入多次。按设计批准的遭遇数量和格位配置接入，未批准时不擅自改关中内容。消费RESOLVE的逐目标结果，正确驱动每个敌人的血条、受击、死亡、时间轴和清理；结束/回城/悬赏或奖励仅按设计的遭遇口径提交一次，不能首个敌人死亡就结算整场。此卡负责一个多敌遭遇生命周期，不添加刷怪波次、随机生成或新怪物种类，不负责玩家攻击区域操作。
+
+### ready前冻结
+
+依赖：U-GZ-R2-AOE-RESOLVE-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+
+## 禁止项
+
+不修改未批准武器/术法/场景、用户存档或自动化流程，不新增全局管理器、重试或兼容机制。不改既定伤害/AP/CT参数，不把本功能正确性冒充数值平衡。不得越过上游合同接管其他子卡职责。
+
+## 模型协作
+
+复杂但同一生命周期：Spawner、Coordinator与表现身份必须统一复核；gpt-6.1-sol建议high，路径冻结后按实际能力决定是否需要只读核对，当前不要求辅助。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+
+## 验证
+
+PlayMode从正式Adventure节点进入批准的多敌遭遇，核对实例ID/位置、全部回合、逐目标反馈、部分死亡仍战斗、全部死亡才完成、清理/回城/奖励次数。真实创建链证据必需，临时向session注入敌人只能算局部测试。run-unity-playmode-tests.ps1按相关现有测试与新增定向用例执行；记录Game画面及关键对象/ID。内容路径变化时运行数据链检查。
+
+本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
+
+## 完成条件
+
+批准的关中遭遇通过正式入口创建多个独立敌人，驱动回合、受击/死亡表现并正确结束和清理。 所需验证通过，有可追溯代码/数据/场景证据；本卡完成归档及backlog/queue投影一致，不提前解锁未满足合同的其他卡。
+
+## 停止条件
+
+设计没有冻结多敌遭遇数据来源/人数/落点/结算口径，或需扩成全局遭遇系统时停止；不得用测试专用敌人注入冒充正式玩家功能。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。

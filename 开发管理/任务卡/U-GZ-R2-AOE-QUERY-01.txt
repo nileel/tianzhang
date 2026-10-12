@@ -1,0 +1,78 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-AOE-QUERY-01",
+  "title": "两格区域与合法目标集合查询",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-GZ-R2-RANGE-01"
+  ],
+  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
+    "开发管理/任务归档/U-GZ-R2-AOE-QUERY-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R2-AOE-QUERY-01 · 两格区域与合法目标集合查询
+
+## 来源与当前边界
+
+2026-10-12负责人确认“铁剑竖两格、铁刀横两格”为两格攻击区域，可命中多个敌人，并明确要求完整拆卡。本卡属于汇总父项D-GZ-R2-RANGE-DATA-01；唯一可独立验收结果：同一无副作用查询从批准的两格落点和战场事实得到确定的格位与合法目标集合，供后续预览和结算共用。
+
+## 必查范围
+
+- 开发管理/关中武器差异射程合同.txt（本卡所需已批准规则和接口）
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt#依赖图与关闭条件
+- src/Assets/Scripts/Modules/Spatial/HexCoord.cs::六向坐标及方向
+- src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs::QueryRangeEntry与视线/阻挡查询
+- src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs::空间查询输入输出
+- src/Assets/Scripts/Combat/CombatAttackProfile.cs::纯运行时攻击档案
+- src/Assets/Scripts/Combat/CombatCommand.cs::CombatCommand
+- src/Assets/Scripts/Combat/CombatSession.cs::ICombatSpatialQuery及ValidateAttack
+- src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs
+- src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
+
+## 实施范围
+
+冻结纯查询输入输出：攻击者、档案、中心/方向与战场快照；输出两格和稳定、去重的合法目标身份。几何、越界、遮挡、阵营及存活筛选遵循设计，不用屏幕坐标冒充格网方向。通用格网逻辑留在Spatial，角色资格留在Combat；不让Spatial依赖Combat、Content或UI。复用已有查询，不复制第二套坐标算法。查询不扣费、不采样随机、不改HP/状态，不接入正式武器或UI。领域对象仅承载本任务必需输入输出，结算提交留给RESOLVE。
+
+### ready前冻结
+
+依赖：D-GZ-R2-RANGE-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+
+## 禁止项
+
+不修改未批准武器/术法/场景、用户存档或自动化流程，不新增全局管理器、重试或兼容机制。不改既定伤害/AP/CT参数，不把本功能正确性冒充数值平衡。不得越过上游合同接管其他子卡职责。
+
+## 模型协作
+
+中等：纯查询与领域筛选是同一个确定性结果；主责单模型统一复核，暂不需要辅助。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+
+## 验证
+
+用EditMode表驱动例子覆盖铁剑/铁刀各批准朝向、恰好两格、边界/遮挡、0/1/多个敌人、友方/死亡排除、重复身份去重及稳定排序；调用前后战斗状态一致，旧单目标查询结果不变。运行run-unity-editmode-tests.ps1及必要程序集边界检查。
+
+本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
+
+## 完成条件
+
+同一无副作用查询从批准的两格落点和战场事实得到确定的格位与合法目标集合，供后续预览和结算共用。 所需验证通过，有可追溯代码/数据/场景证据；本卡完成归档及backlog/queue投影一致，不提前解锁未满足合同的其他卡。
+
+## 停止条件
+
+若设计未明确横竖落点或需要新的内容schema，停止准备并反馈设计；不得实现伤害/扣费或扩成任意技能AOE框架。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。

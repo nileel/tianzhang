@@ -2,23 +2,29 @@
 {
   "schemaVersion": 2,
   "id": "D-GZ-R2-RANGE-DATA-01",
-  "title": "基础武器差异射程数据与实战验证",
+  "title": "两件基础武器两格群攻汇总",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
-  "domain": "data",
-  "stage": "implementation",
-  "dispatchState": "blocked",
+  "domain": "unity",
+  "stage": "verification",
+  "dispatchState": "frozen",
   "blockedBy": [
-    "D-GZ-R2-RANGE-01",
-    "U-GZ-R2-EQUIP-01"
+    "V-GZ-R2-AOE-01"
   ],
-  "stateReason": "2026-10-12负责人明确铁剑竖两格、铁刀横两格且可命中多个敌人；旧单目标射程数据范围已失效，等待D-GZ-R2-RANGE-01重新冻结设计及实施范围，保留全部具名前置，不得直接ready。",
+  "stateReason": "2026-10-12已一次性拆为设计加六个子任务；本卡仅汇总、永不独立ready，由V-GZ-R2-AOE-01验证全部完成后同提交归档。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-RANGE-DATA-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
+    "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
+    "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+    "开发管理/任务卡/V-GZ-R2-AOE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -29,50 +35,61 @@
   "executionModel": "gpt-6.1-sol"
 }
 ---TASK-BODY---
-# D-GZ-R2-RANGE-DATA-01 · 基础武器差异射程数据与实战验证
+# D-GZ-R2-RANGE-DATA-01 · 两件基础武器两格群攻汇总
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。2026-10-12负责人自定义回复“铁剑竖两格，铁刀横两格”，并在修复对话明确为两格攻击区域、可命中多个敌人；本卡旧单目标射程实施前提已失效，当前只保留blocked及具名前置，未实施或宣称PlayMode复现。
+2026-10-12负责人确认铁剑竖两格、铁刀横两格为可命中多个敌人的两格攻击区域，并要求一次性完整拆分。原“差异射程数据与实战验证”已不原子；本卡改为冻结汇总，不执行业务、不独立入队，不允许自动化反复领取后继续拆卡。
+
+本次为静态路径和职责规划，未运行Unity或BattleSim，不能据此声称群攻可用或平衡。只规划当前父项及直接依赖，不扫描其他backlog。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/DataConfig/AttackProfiles.csv::basic_iron_sword/basic_iron_blade
-- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles
-- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose
-- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack
-- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
-- docs/道具/道具事实速查.txt
+- 开发管理/任务卡/D-GZ-R2-RANGE-01.txt（完整设计边界）
+- 开发管理/关中武器差异射程合同.txt（设计完成后成为规则事实）
+- 下表各子卡的范围、验证、停止条件
+- 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt（正式新档获取和切换武器的外部前置）
 
 ## 实施范围
 
-先由D-GZ-R2-RANGE-01完成两格多目标设计。原“只同步射程数据、不实现AOE”不能满足新要求，本卡不得按该旧范围执行；待设计明确目标选择、方向/落点、空间查询、预览/确认与多目标结算的现有所有者后，由普通规划上下文核对原子性并一次性准备全部已知实施依赖。当前不擅自增加业务路径或把多个所有者打包ready。EQUIP前置仍用于真实玩家取得/换武器后的验证；数据、asset/digest和引用同步路径须在对应实施任务ready前冻结。
+仅汇总下表状态和最终验收结果；本卡不拥有游戏业务写入。首次ready叶子只有现有设计卡D-GZ-R2-RANGE-01，保留队首和executionModel=gpt-6.1-sol。六张新卡全部blocked，设计及上游合同尚未冻结的精确业务路径只保留候选指针，不提前授权执行。
 
-当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
+## 依赖图与关闭条件
+
+| ID | 独立结果 | 直接前置 | 本次状态 |
+|----|----------|----------|----------|
+| D-GZ-R2-RANGE-01 | 两格形状、操作、结算和多敌验收场景的批准合同 | — | ready |
+| U-GZ-R2-AOE-QUERY-01 | 两格区域与合法目标集合查询 | D-GZ-R2-RANGE-01 | blocked |
+| U-GZ-R2-AOE-RESOLVE-01 | 多目标攻击原子结算与一次扣费 | U-GZ-R2-AOE-QUERY-01 | blocked |
+| U-GZ-R2-AOE-ENCOUNTER-01 | 正式多敌遭遇生命周期与受击演出接入 | U-GZ-R2-AOE-RESOLVE-01 | blocked |
+| D-GZ-R2-AOE-DATA-01 | 铁剑铁刀两格群攻配置与严格导入 | U-GZ-R2-AOE-RESOLVE-01 | blocked |
+| U-GZ-R2-AOE-INPUT-01 | 两格群攻选择预览与确认操作 | U-GZ-R2-AOE-ENCOUNTER-01、D-GZ-R2-AOE-DATA-01、U-GZ-R2-EQUIP-01 | blocked |
+| V-GZ-R2-AOE-01 | 两格群攻正式玩法验收与父项关闭 | U-GZ-R2-AOE-INPUT-01 | blocked |
+
+依赖：设计 → QUERY → RESOLVE →（ENCOUNTER与DATA）→ INPUT → V；U-GZ-R2-EQUIP-01 → INPUT。分叉基于真实职责：ENCOUNTER消费已冻结多目标结果完成遭遇生命周期，DATA消费已冻结运行时档案完成武器内容链；INPUT需要两者及正式武器取得入口。不存在仅因共享管理文件建立的依赖。
+
+源代码依据：CombatEntryAdapter.TryProjectProfiles跳过非Single；CombatSession.ValidateAttack以一个TargetId校验；CombatActionResolver.PrepareValidated只复制并提交一个target；CombatCommandService.Prepare按一次命令提交AP与次数；AdventureSpawnSet、TryCreateSession和TryCreatePresentationDescriptors只使用Player/Enemy；EncounterCoordinator.ProjectPresentation/Complete按单个敌人或targetBefore驱动表现与退出。因此查询、核心原子结算、正式多敌生命周期、武器内容链、玩家操作和最终验收各有独立结果。
+
+设计卡负责一次性明确两格落点/朝向/中心、选择与空目标操作、筛选和随机规则，以及正式多敌遭遇的数量/落点/结束与奖励口径。没有批准的玩家可见语义不得由子卡猜测。合同一经冻结只准备已建立子卡，不再逐张发现本轮已知功能。
+
+关闭要求：设计及全部六张子卡有各自完成记录，EQUIP已完成；正式入口证明两件武器各命中区域内多个合法敌人、一次费用/次数、逐目标受击与死亡，最后敌人死亡才按批准规则结束；直接回归和验收证据齐全。唯一收尾责任方V-GZ-R2-AOE-01在自身成功提交中同时归档本卡并移除父子backlog投影，父项不转ready。失败保持现有状态，不删依赖冒充完成。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不实施、不领取本父项、不创建额外工作流或后台恢复机制；不将测试注入敌人算正式玩家能力，不扩成所有技能AOE、刷怪波次或全局遭遇框架。
 
 ## 模型协作
 
-多目标需求使原“既定射程参数同步”的复杂度判断失效；当前仅保留阻塞卡，设计完成后由有权规划者按实际所有者、原子结果和验证入口重新评估，不能沿用旧数据卡直接执行。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-前置与实施路径未冻结，继续blocked；临近ready重新核对复杂度与能力，不因已指定模型跳过设计门禁。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+本卡为管理汇总，无独立模型执行轮次；保留既有Codex归属。子任务全部codex_execute/codex、executionModel=gpt-6.1-sol，各卡按具体复杂度记录准备要求；不以预先写入模型名声称已调用或验证。
 
 ## 验证
 
-验收入口随新设计冻结：两格落点/朝向、区域内0/1/多个敌人、遮挡/越界/友方/重复目标、目标死亡/移动及换装后的预览与结算一致性由Unity正式场景验证；可抽象的角色数值平衡由BattleSim实跑，不默认扩充模拟器复刻场景。实际业务路径变化后再运行数据链检查。
-
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+本次运行八张相关卡风险预检及管理投影检查，确认依赖无环、ID存在、仅设计卡ready、父项frozen且不入队。业务验证按子卡；最终V核对图像、实际格位/目标ID、费用与HP变化以及生命周期证据，不需要父项额外重复测试。
 
 ## 完成条件
 
-须先完成设计与原子实施范围重新准备；最终玩家通过正式入口换两件武器，能观察铁剑竖两格、铁刀横两格的攻击区域，并对区域内多个合法敌人结算；预览/确认一致。不得以旧单目标射程通过代替新需求完成。
+仅由V-GZ-R2-AOE-01满足上述关闭要求后同时归档。几何/费用等功能检查不等于角色数值平衡；本批不裁定新群攻收益，若未来要求平衡结论按已批准数值范围运行BattleSim，不默认扩充模拟器复刻场景。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+缺任一子卡/前置/真实验收证据，不关闭父项。新需求越过两件武器的两格区域攻击或发现无法按当前边界独立交付的冲突时，由普通规划上下文重新判断，不让worker继续叠加补丁或临时拆卡。

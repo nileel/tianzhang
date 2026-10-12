@@ -1,0 +1,82 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-AOE-INPUT-01",
+  "title": "两格群攻选择预览与确认操作",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-R2-AOE-ENCOUNTER-01",
+    "D-GZ-R2-AOE-DATA-01",
+    "U-GZ-R2-EQUIP-01"
+  ],
+  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+    "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R2-AOE-INPUT-01 · 两格群攻选择预览与确认操作
+
+## 来源与当前边界
+
+2026-10-12负责人确认“铁剑竖两格、铁刀横两格”为两格攻击区域，可命中多个敌人，并明确要求完整拆卡。本卡属于汇总父项D-GZ-R2-RANGE-DATA-01；唯一可独立验收结果：玩家在正式界面选择铁剑或铁刀的攻击区域，看到准确格位/目标预览，并确认同一份攻击。
+
+## 必查范围
+
+- 开发管理/关中武器差异射程合同.txt（本卡所需已批准规则和接口）
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt#依赖图与关闭条件
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose/ConfirmCandidate及清除选择
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs::Present
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatActionCandidate/CombatActionPreviewSnapshot
+- src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::PreviewAction/ProjectQuote及命令转换
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::格位指针与高光所有者
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs
+
+## 实施范围
+
+按设计已冻结的选敌/选格与方向方式组装候选，经现有ICombatCommandHandler获取领域只读快照；展示准确两格和合法敌人，不在UI另算几何或筛选规则。确认重用同一领域命令/报价；切武器、取消、目标移动/死亡、回合切换和演出busy时清除或拒绝旧选择。保留旧单目标术法操作与移动交互。EQUIP是正式玩家获得两件武器的真实依赖，多敌及武器数据是实际候选列表和区域预览的依赖。此卡不改核心结算、生成敌人或新建通用输入框架。
+
+### ready前冻结
+
+依赖：U-GZ-R2-AOE-ENCOUNTER-01、D-GZ-R2-AOE-DATA-01、U-GZ-R2-EQUIP-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+
+## 禁止项
+
+不修改未批准武器/术法/场景、用户存档或自动化流程，不新增全局管理器、重试或兼容机制。不改既定伤害/AP/CT参数，不把本功能正确性冒充数值平衡。不得越过上游合同接管其他子卡职责。
+
+## 模型协作
+
+中等偏复杂：同一选择-预览-确认闭环，主模型gpt-6.1-sol建议high；使用现有UI运行时证据入口，当前无需辅助。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+
+## 验证
+
+正式新档取得/切换两件武器，选中→预览→取消/确认全过程，记录两格高光、多个目标、实际逐目标结果和一次费用。覆盖不同分辨率、UI指针阻挡、相机移动、回合/武器/目标变化时旧候选失效；用runtime-owner-proof记录显示对象和更新者，禁止只凭编译通过认定高光正确。run-unity-playmode-tests.ps1 -EnableGraphics，按上述相关用例定向执行。
+
+本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
+
+## 完成条件
+
+玩家在正式界面选择铁剑或铁刀的攻击区域，看到准确格位/目标预览，并确认同一份攻击。 所需验证通过，有可追溯代码/数据/场景证据；本卡完成归档及backlog/queue投影一致，不提前解锁未满足合同的其他卡。
+
+## 停止条件
+
+领域快照不能表达批准区域、出现新操作语义或需要UI硬编码目标集合时停止；不得由表现层修改HP/费用或以错误高光连续叠补丁。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
