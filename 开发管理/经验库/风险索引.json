@@ -776,6 +776,32 @@
       "lastVerified": "2026-10-13"
     },
     {
+      "id": "EXP-UNITY-019",
+      "title": "战斗前置功能验收须隔离受控夹具与自然流程",
+      "preflightSummary": "以战斗结算到达 UI 状态时，受控夹具须基于正式命中、容量与结算规则，而非猜测随机样本。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "ICombatResolutionRandomSource",
+        "ObjectiveCompleted",
+        "受控战斗前置"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-019.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-13"
+    },
+    {
       "id": "EXP-UNITY-020",
       "title": "远端部署测试须按实际接敌状态和随机夹具验收",
       "preflightSummary": "调整首战远端部署、AI接敌或相关PlayMode前置时，须以实际格位、行动余量和完整随机判定链验证，不依赖初始相邻或固定坐标。",

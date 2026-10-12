@@ -102,8 +102,8 @@
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-70467702AC21
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-019
 - 经验领域：unity
 - 现象：悬赏按钮功能验收在战斗前置重复战败，尚未进入领奖阶段便以runtime_validation_failed停止。
 - 已证实根因：测试把99随机样本误作必定未命中，未消费基础命中100%、玩家闪避0和凡人徒手攻击容量30等正式规则；增加攻击输入和改变随机样本不能证明此前置成立。
