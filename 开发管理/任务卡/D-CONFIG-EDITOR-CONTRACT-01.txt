@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：已批准的零行表头修正符合Unity当前26列解析器，但必跑的tools/check-data-chain.ps1仍要求旧24列，且该脚本不在允许路径内。是否授权仅同步该脚本的FoundationPurpleMansionStates列声明，或改为首版该表只读，或暂停？",
+  "stateReason": "负责人回复已落实范围：DEC-20261013-CD0DA1648C60CB/A",
   "expectedPaths": [
     "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
     "开发管理/任务归档/D-CONFIG-EDITOR-CONTRACT-01.txt",
@@ -27,15 +27,11 @@
     "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
     "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
     "src/Assets/DataConfig/FoundationPurpleMansionStates.csv",
-    "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta"
+    "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta",
+    "tools/check-data-chain.ps1"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "executionModel": "gpt-6-astra",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "D-CONFIG-EDITOR-CONTRACT-01",
@@ -144,6 +140,19 @@
     "taskContextDigest": "950fd0fa2391e242f0291e69eecdce0a64c0be093b061518bfe201fb505b1447",
     "createdAt": "2026-10-13T00:37:41.7526276+08:00",
     "queueIndex": 0
+  },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261013-CD0DA1648C60CB",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "3f7292a08ffe56b23928b4db0930d83e23cc18d727d673f323e445a210f33d2f"
   }
 }
 ---TASK-BODY---
@@ -151,11 +160,11 @@
 
 ## 来源与当前边界
 
-用户已批准Unity中文配置编辑器及本批Codex模型分配，父项为U-CONFIG-EDITOR-01。产品范围见 开发管理/Unity中文配置编辑器设计与拆分.txt。此前checkpoint仅记录生产道基紫府24列表头与当前26列解析器冲突，合同尚未完成。本选项补充授权：仅将仍为零数据行的生产道基紫府表头对齐当前解析器，不迁移角色内容，不接管D-FPD-MIGRATE-01D。其余产品范围保持原批准的22表覆盖。
+用户已批准Unity中文配置编辑器、本批Codex模型分配及DEC-20261012-CD83794D702467/A的零行表头修正。当前checkpoint已整理22表合同草案、后继路径并修正生产空表为26列，但数据链检查仍使用旧24列，任务未完成。本选项新增授权tools/check-data-chain.ps1，仅同步FoundationPurpleMansionStates的预期列声明；保留原22表产品范围，不迁移角色内容，不接管D-FPD-MIGRATE-01D。
 
 ## 必查范围
 
-- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt中的checkpoint证据。
+- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt完整相关合同及本轮停止证据。
 - UNITY_STRUCTURE.content.md；src/Assets/Scripts/Editor/README.md。
 - src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex。
 - src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll。
@@ -165,39 +174,38 @@
 - src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa/ImportFoundationPurpleMansionStates/ParseFoundationPurpleMansionStates/FoundationPurpleMansionColumns/RequireFoundationPurpleMansionColumns/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles。
 - src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import。
 - src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles/ImportCharterRuleDefinitions。
-- src/Assets/DataConfig/下当前22张CSV的表头、相关数据行及注释。
-- src/Assets/DataConfig/FoundationPurpleMansionStates.csv及其.meta完整文件；src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv表头及相关正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。
-- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对既有内容迁移边界，不修改该分线。
-- 本卡expectedPaths中的父项和全部后继任务卡，修改前读取完整逻辑单元。
+- src/Assets/DataConfig/当前22张CSV表头、相关行及注释；FoundationPurpleMansionStates.csv及.meta完整文件。
+- src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv表头及正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。
+- tools/check-data-chain.ps1::$schemas.FoundationPurpleMansionStates、Get-CsvTable及生产fixture禁止检查，修改前读取完整逻辑单元。
+- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对内容迁移边界。
+- expectedPaths中父项及全部后继卡，修改前完整读取目标逻辑单元。
 
 ## 实施范围
 
-修改前再次确认FoundationPurpleMansionStates.csv没有任何生产数据行。仅把24列表头替换为当前FoundationPurpleMansionColumns的26列及其顺序，保留原注释、编码、换行和零行状态；.meta仅核验并保持原样。不得推导旧值迁移公式、增加生产记录、复制fixture或修改解析器。
+再次确认生产道基紫府表仍为0数据行。保留已批准26列表头，与当前FoundationPurpleMansionColumns和fixture表头同序；保留注释、编码、换行和.meta。仅将tools/check-data-chain.ps1中FoundationPurpleMansionStates的24列字面量声明更新为同一26列，不改变通用检查算法、其他表、fixture禁止规则、告警、豁免或退出码。
 
-随后继续完成唯一技术合同 开发管理/Unity配置编辑器字段与导入合同.txt，替换checkpoint的未冻结结论并保留必要决策依据。逐一登记22表每个表头和复合子字段的中文语义、单位、可编辑性、稳定键与分组、真实解析所有者、引用、空零语义和往返编码。空表须明确显示无已有条目，不为演示增加整行；当前格式结构通过隔离fixture验证计划覆盖。Language无表头，fixture负例单列，不把夹具当生产输入。
+复核并完成唯一合同开发管理/Unity配置编辑器字段与导入合同.txt：22表每列及复合子字段的中文、单位、可编辑性、稳定键、分组、真实所有者、引用、空零和往返编码完整；空表显示无已有条目，结构使用隔离fixture验证；Language无表头，负例不能当生产输入。核对内存草稿、冲突检测、关联源值联动、导入前校验、保存应用状态及逐项成功失败证据，保留void、LogError、全局SaveAssets和部分写盘边界。
 
-确定内存草稿、文件冲突检测、必要关联源值联动、导入前校验、保存与应用状态表及明确成功失败证据。核对void导入、LogError后返回、全局SaveAssets与部分写盘边界，不以返回或总日志认定成功。冻结Editor专用目录、接口、各后继独占文件及.meta、测试、导入依赖和全部派生路径。全部后继已存在，只补齐直接可冻结边界，不新增拆分循环，不写实现代码。
-
-本轮只完成当前卡及其批准产物，不移除其他任务blockedBy或backlog中的当前taskId，不提升、重排或关闭下游。当前任务完成后归档并移除自身队列和backlog投影，CORE继续保留具名前置，正式集成后由QueueMaintenance判断ready。
+复核Editor目录、共享接口、后继独占源码/测试/.meta、导入依赖及全部派生路径；完成必要合同自检，不写编辑器实现代码。只完成并归档当前卡、移除自身队列和backlog行。其他任务blockedBy及backlog中的当前taskId全部保留，不提升、重排或关闭下游；正式结果进入master后由QueueMaintenance处理。
 
 ## 禁止项
 
-不新建配置事实源、运行时解释器、事务框架或自动化机制，不改变游戏规则、存档与平衡；不改源码和生成资产。除明确授权的零行表头外，不修改任何CSV内容或.meta。首版不新增、复制、删除整行配置，不将复合字段退回分隔符文本输入，不增加旧格式兼容分支，不用fixture填充生产角色。
+不新增配置事实源、运行时解释器、事务框架或自动化机制；不改游戏规则、存档和平衡。不增加生产行、不复制fixture为角色、不推导旧值迁移公式、不修改Unity解析器或生成资产。除批准零行表头及指定检查脚本列声明外，不修改CSV、.meta或源码。首版不增删复制整行，不以分隔符文本框替代结构化输入，不加旧格式兼容或检查豁免。
 
 ## 模型协作
 
-主模型固定gpt-6-astra，owner=codex、route=codex_execute。关键跨领域语义由主责统一核对，默认单模型；业务写入前依据直接事实核对复杂度和实际工具能力。仅在存在独立复杂问题且符合AI协作规则时使用原生只读辅助，禁止第二责任会话。建议推理强度high，实际强度需入口证实，不静默换型。
+主模型固定gpt-6-astra，owner=codex、route=codex_execute；业务写入前核对复杂度及真实能力。主责统一复核合同；独立复杂问题才按AI协作规则使用原生只读辅助，禁止第二责任会话或辅助写入。建议high，实际强度须入口证明。
 
 ## 验证
 
-接受本选项后由共享入口重新预检，消费mustRead/gates并核对绑定；范围或路线变化时按规则重新预检。修正前后证明生产数据行均为0，注释、编码、换行和.meta不变，最终表头逐列等于当前解析器及fixture表头；不以空表导入返回证明schema通过。
+接受选项后共享入口对新增脚本路径重新预检，消费mustRead/gates并核对绑定。生产表修正前后0行、注释/编码/换行/.meta保持，生产/Unity解析器/fixture/检查脚本四份列集合及规范顺序一致，不以空表导入返回证明schema通过。
 
-22表清单与真实文件一一对应，每个字段和嵌套结构有解析依据；所有者、引用、单位、空零语义齐全，保存应用状态与失败边界可检验；九叶依赖无环，CORE白名单包含新目录.meta。运行check-task-cards.ps1、check-review-text.ps1、check-data-chain.ps1；暂存前对实际预期路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。采用最小充分验证，不声称未执行的Unity实机验收。
+运行完整check-data-chain.ps1，必须通过，不使用waiver；若仍有其他错误按停止条件处理。核对22表字段/复合结构、保存应用失败边界、九叶依赖无环及CORE目录.meta。运行check-task-cards.ps1、check-review-text.ps1、实际路径check-pending-whitespace.ps1及暂存后git diff --cached --check。已通过且相关输入未变化的验证不重复；不声称Unity实机验收已执行。
 
 ## 完成条件
 
-零行表头与当前解析器一致且无其他配置变化；完整22表合同与后继字面量路径、接口和验收边界全部冻结。仅当前卡按完成合同归档；下游依赖保持，等待正式结果进入master后的维护。批准范围不重复请示。
+零行表头及检查脚本与当前解析器一致且无其他配置变化；数据链检查通过；22表技术合同和后继字面量路径、接口、验收边界完成。仅当前卡归档，全部下游依赖保留。
 
 ## 停止条件
 
-发现道基紫府生产表已有数据行，立即停止，不迁移或覆盖。发现其他未知格式、未覆盖语义、需改变业务规则、新增所有者、突破独占路径或现有导入写盘边界超出批准范围时，保留具体证据交负责人，不叠加兜底。必要工具或证据不足保持未完成，不能用静态检查替代要求的操作证明。
+生产表出现数据行立即停止，不迁移或覆盖。检查脚本需要超出单表列声明的修改、发现其他格式/语义冲突、需改业务规则、新增所有者或突破路径/写盘边界时停止并保留证据。必要工具或证据不足保持未完成，不把失败写成通过，不叠加兜底。
