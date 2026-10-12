@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261012-CD83794D702467/A",
+  "stateReason": "等待负责人决定：已批准的零行表头修正符合Unity当前26列解析器，但必跑的tools/check-data-chain.ps1仍要求旧24列，且该脚本不在允许路径内。是否授权仅同步该脚本的FoundationPurpleMansionStates列声明，或改为首版该表只读，或暂停？",
   "expectedPaths": [
     "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
     "开发管理/任务归档/D-CONFIG-EDITOR-CONTRACT-01.txt",
@@ -31,18 +31,23 @@
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
   "automationCheckpoint": {
     "schemaVersion": 1,
     "taskId": "D-CONFIG-EDITOR-CONTRACT-01",
-    "sourceRunId": "b6e1205f-ae63-4589-8b91-591a9a80069d",
+    "sourceRunId": "dff084cf-460c-47e0-ac69-58f850128b64",
     "owner": "codex",
     "route": "codex_execute",
-    "decisionId": "DEC-20261012-CD83794D702467",
-    "question": "道基紫府生产表仍为旧24列表头，当前解析器要求26列并拒绝旧字段。本卡仅允许文档写入。请选择：授权修正零行表头后继续完整合同，批准首版该表只读，或暂停。",
+    "decisionId": "DEC-20261013-CD0DA1648C60CB",
+    "question": "已批准的零行表头修正符合Unity当前26列解析器，但必跑的tools/check-data-chain.ps1仍要求旧24列，且该脚本不在允许路径内。是否授权仅同步该脚本的FoundationPurpleMansionStates列声明，或改为首版该表只读，或暂停？",
     "options": [
       {
         "key": "A",
-        "label": "授权仅修正空表头，继续完整22表合同",
+        "label": "授权同步检查脚本的26列声明，保留完整范围（推荐）",
         "targetState": "ready",
         "expectedPaths": [
           "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
@@ -60,13 +65,14 @@
           "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
           "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
           "src/Assets/DataConfig/FoundationPurpleMansionStates.csv",
-          "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta"
+          "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta",
+          "tools/check-data-chain.ps1"
         ],
-        "taskBody": "# D-CONFIG-EDITOR-CONTRACT-01 · Unity配置编辑器字段与保存导入合同\n\n## 来源与当前边界\n\n用户已批准Unity中文配置编辑器及本批Codex模型分配，父项为U-CONFIG-EDITOR-01。产品范围见 开发管理/Unity中文配置编辑器设计与拆分.txt。此前checkpoint仅记录生产道基紫府24列表头与当前26列解析器冲突，合同尚未完成。本选项补充授权：仅将仍为零数据行的生产道基紫府表头对齐当前解析器，不迁移角色内容，不接管D-FPD-MIGRATE-01D。其余产品范围保持原批准的22表覆盖。\n\n## 必查范围\n\n- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt中的checkpoint证据。\n- UNITY_STRUCTURE.content.md；src/Assets/Scripts/Editor/README.md。\n- src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex。\n- src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll。\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/WriteCombatRuleSet/ImportSpells/ImportSkills/LoadLanguage。\n- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions。\n- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy/ImportEnemies/ImportContentCatalog/ImportCharterSites。\n- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa/ImportFoundationPurpleMansionStates/ParseFoundationPurpleMansionStates/FoundationPurpleMansionColumns/RequireFoundationPurpleMansionColumns/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles。\n- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import。\n- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles/ImportCharterRuleDefinitions。\n- src/Assets/DataConfig/下当前22张CSV的表头、相关数据行及注释。\n- src/Assets/DataConfig/FoundationPurpleMansionStates.csv及其.meta完整文件；src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv表头及相关正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。\n- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对既有内容迁移边界，不修改该分线。\n- 本卡expectedPaths中的父项和全部后继任务卡，修改前读取完整逻辑单元。\n\n## 实施范围\n\n修改前再次确认FoundationPurpleMansionStates.csv没有任何生产数据行。仅把24列表头替换为当前FoundationPurpleMansionColumns的26列及其顺序，保留原注释、编码、换行和零行状态；.meta仅核验并保持原样。不得推导旧值迁移公式、增加生产记录、复制fixture或修改解析器。\n\n随后继续完成唯一技术合同 开发管理/Unity配置编辑器字段与导入合同.txt，替换checkpoint的未冻结结论并保留必要决策依据。逐一登记22表每个表头和复合子字段的中文语义、单位、可编辑性、稳定键与分组、真实解析所有者、引用、空零语义和往返编码。空表须明确显示无已有条目，不为演示增加整行；当前格式结构通过隔离fixture验证计划覆盖。Language无表头，fixture负例单列，不把夹具当生产输入。\n\n确定内存草稿、文件冲突检测、必要关联源值联动、导入前校验、保存与应用状态表及明确成功失败证据。核对void导入、LogError后返回、全局SaveAssets与部分写盘边界，不以返回或总日志认定成功。冻结Editor专用目录、接口、各后继独占文件及.meta、测试、导入依赖和全部派生路径。全部后继已存在，只补齐直接可冻结边界，不新增拆分循环，不写实现代码。\n\n本轮只完成当前卡及其批准产物，不移除其他任务blockedBy或backlog中的当前taskId，不提升、重排或关闭下游。当前任务完成后归档并移除自身队列和backlog投影，CORE继续保留具名前置，正式集成后由QueueMaintenance判断ready。\n\n## 禁止项\n\n不新建配置事实源、运行时解释器、事务框架或自动化机制，不改变游戏规则、存档与平衡；不改源码和生成资产。除明确授权的零行表头外，不修改任何CSV内容或.meta。首版不新增、复制、删除整行配置，不将复合字段退回分隔符文本输入，不增加旧格式兼容分支，不用fixture填充生产角色。\n\n## 模型协作\n\n主模型固定gpt-6-astra，owner=codex、route=codex_execute。关键跨领域语义由主责统一核对，默认单模型；业务写入前依据直接事实核对复杂度和实际工具能力。仅在存在独立复杂问题且符合AI协作规则时使用原生只读辅助，禁止第二责任会话。建议推理强度high，实际强度需入口证实，不静默换型。\n\n## 验证\n\n接受本选项后由共享入口重新预检，消费mustRead/gates并核对绑定；范围或路线变化时按规则重新预检。修正前后证明生产数据行均为0，注释、编码、换行和.meta不变，最终表头逐列等于当前解析器及fixture表头；不以空表导入返回证明schema通过。\n\n22表清单与真实文件一一对应，每个字段和嵌套结构有解析依据；所有者、引用、单位、空零语义齐全，保存应用状态与失败边界可检验；九叶依赖无环，CORE白名单包含新目录.meta。运行check-task-cards.ps1、check-review-text.ps1、check-data-chain.ps1；暂存前对实际预期路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。采用最小充分验证，不声称未执行的Unity实机验收。\n\n## 完成条件\n\n零行表头与当前解析器一致且无其他配置变化；完整22表合同与后继字面量路径、接口和验收边界全部冻结。仅当前卡按完成合同归档；下游依赖保持，等待正式结果进入master后的维护。批准范围不重复请示。\n\n## 停止条件\n\n发现道基紫府生产表已有数据行，立即停止，不迁移或覆盖。发现其他未知格式、未覆盖语义、需改变业务规则、新增所有者、突破独占路径或现有导入写盘边界超出批准范围时，保留具体证据交负责人，不叠加兜底。必要工具或证据不足保持未完成，不能用静态检查替代要求的操作证明。"
+        "taskBody": "# D-CONFIG-EDITOR-CONTRACT-01 · Unity配置编辑器字段与保存导入合同\n\n## 来源与当前边界\n\n用户已批准Unity中文配置编辑器、本批Codex模型分配及DEC-20261012-CD83794D702467/A的零行表头修正。当前checkpoint已整理22表合同草案、后继路径并修正生产空表为26列，但数据链检查仍使用旧24列，任务未完成。本选项新增授权tools/check-data-chain.ps1，仅同步FoundationPurpleMansionStates的预期列声明；保留原22表产品范围，不迁移角色内容，不接管D-FPD-MIGRATE-01D。\n\n## 必查范围\n\n- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt完整相关合同及本轮停止证据。\n- UNITY_STRUCTURE.content.md；src/Assets/Scripts/Editor/README.md。\n- src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex。\n- src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll。\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/WriteCombatRuleSet/ImportSpells/ImportSkills/LoadLanguage。\n- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions。\n- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy/ImportEnemies/ImportContentCatalog/ImportCharterSites。\n- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa/ImportFoundationPurpleMansionStates/ParseFoundationPurpleMansionStates/FoundationPurpleMansionColumns/RequireFoundationPurpleMansionColumns/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles。\n- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import。\n- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles/ImportCharterRuleDefinitions。\n- src/Assets/DataConfig/当前22张CSV表头、相关行及注释；FoundationPurpleMansionStates.csv及.meta完整文件。\n- src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv表头及正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。\n- tools/check-data-chain.ps1::$schemas.FoundationPurpleMansionStates、Get-CsvTable及生产fixture禁止检查，修改前读取完整逻辑单元。\n- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对内容迁移边界。\n- expectedPaths中父项及全部后继卡，修改前完整读取目标逻辑单元。\n\n## 实施范围\n\n再次确认生产道基紫府表仍为0数据行。保留已批准26列表头，与当前FoundationPurpleMansionColumns和fixture表头同序；保留注释、编码、换行和.meta。仅将tools/check-data-chain.ps1中FoundationPurpleMansionStates的24列字面量声明更新为同一26列，不改变通用检查算法、其他表、fixture禁止规则、告警、豁免或退出码。\n\n复核并完成唯一合同开发管理/Unity配置编辑器字段与导入合同.txt：22表每列及复合子字段的中文、单位、可编辑性、稳定键、分组、真实所有者、引用、空零和往返编码完整；空表显示无已有条目，结构使用隔离fixture验证；Language无表头，负例不能当生产输入。核对内存草稿、冲突检测、关联源值联动、导入前校验、保存应用状态及逐项成功失败证据，保留void、LogError、全局SaveAssets和部分写盘边界。\n\n复核Editor目录、共享接口、后继独占源码/测试/.meta、导入依赖及全部派生路径；完成必要合同自检，不写编辑器实现代码。只完成并归档当前卡、移除自身队列和backlog行。其他任务blockedBy及backlog中的当前taskId全部保留，不提升、重排或关闭下游；正式结果进入master后由QueueMaintenance处理。\n\n## 禁止项\n\n不新增配置事实源、运行时解释器、事务框架或自动化机制；不改游戏规则、存档和平衡。不增加生产行、不复制fixture为角色、不推导旧值迁移公式、不修改Unity解析器或生成资产。除批准零行表头及指定检查脚本列声明外，不修改CSV、.meta或源码。首版不增删复制整行，不以分隔符文本框替代结构化输入，不加旧格式兼容或检查豁免。\n\n## 模型协作\n\n主模型固定gpt-6-astra，owner=codex、route=codex_execute；业务写入前核对复杂度及真实能力。主责统一复核合同；独立复杂问题才按AI协作规则使用原生只读辅助，禁止第二责任会话或辅助写入。建议high，实际强度须入口证明。\n\n## 验证\n\n接受选项后共享入口对新增脚本路径重新预检，消费mustRead/gates并核对绑定。生产表修正前后0行、注释/编码/换行/.meta保持，生产/Unity解析器/fixture/检查脚本四份列集合及规范顺序一致，不以空表导入返回证明schema通过。\n\n运行完整check-data-chain.ps1，必须通过，不使用waiver；若仍有其他错误按停止条件处理。核对22表字段/复合结构、保存应用失败边界、九叶依赖无环及CORE目录.meta。运行check-task-cards.ps1、check-review-text.ps1、实际路径check-pending-whitespace.ps1及暂存后git diff --cached --check。已通过且相关输入未变化的验证不重复；不声称Unity实机验收已执行。\n\n## 完成条件\n\n零行表头及检查脚本与当前解析器一致且无其他配置变化；数据链检查通过；22表技术合同和后继字面量路径、接口、验收边界完成。仅当前卡归档，全部下游依赖保留。\n\n## 停止条件\n\n生产表出现数据行立即停止，不迁移或覆盖。检查脚本需要超出单表列声明的修改、发现其他格式/语义冲突、需改业务规则、新增所有者或突破路径/写盘边界时停止并保留证据。必要工具或证据不足保持未完成，不把失败写成通过，不叠加兜底。"
       },
       {
         "key": "B",
-        "label": "保留旧表，批准首版道基紫府只读",
+        "label": "保留旧检查规则，批准道基紫府生产表只读",
         "targetState": "ready",
         "expectedPaths": [
           "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
@@ -83,63 +89,61 @@
           "开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt",
           "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
           "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
+          "src/Assets/DataConfig/FoundationPurpleMansionStates.csv",
+          "src/Assets/DataConfig/FoundationPurpleMansionStates.csv.meta",
           "开发管理/Unity中文配置编辑器设计与拆分.txt"
         ],
-        "taskBody": "# D-CONFIG-EDITOR-CONTRACT-01 · Unity配置编辑器字段与保存导入合同\n\n## 来源与当前边界\n\n用户已批准Unity中文配置编辑器及本批Codex模型分配，父项为U-CONFIG-EDITOR-01。此前checkpoint记录生产道基紫府24列表头与当前26列解析器冲突，合同尚未完成。本选项批准首版范围例外：22表均展示，道基紫府生产表只读并明确标示旧格式待迁移，其余21表按原批准范围适配。生产CSV保持原样，真实角色内容迁移仍归既有D-FPD-MIGRATE-01D；不再以该表生产可编辑作为本批完成条件。\n\n## 必查范围\n\n- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt中的checkpoint证据。\n- UNITY_STRUCTURE.content.md；src/Assets/Scripts/Editor/README.md。\n- src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex。\n- src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll。\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/WriteCombatRuleSet/ImportSpells/ImportSkills/LoadLanguage。\n- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions。\n- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy/ImportEnemies/ImportContentCatalog/ImportCharterSites。\n- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa/ImportFoundationPurpleMansionStates/ParseFoundationPurpleMansionStates/FoundationPurpleMansionColumns/RequireFoundationPurpleMansionColumns/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles。\n- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import。\n- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles/ImportCharterRuleDefinitions。\n- src/Assets/DataConfig/下当前22张CSV的表头、相关数据行及注释。\n- src/Assets/DataConfig/FoundationPurpleMansionStates.csv完整文件；src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv表头及相关正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。\n- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对既有迁移边界，不修改该分线。\n- 本卡expectedPaths中的父项和全部后继任务卡，修改前读取完整逻辑单元。\n\n## 实施范围\n\n继续完成 开发管理/Unity配置编辑器字段与导入合同.txt，替换checkpoint的未冻结结论。同步 开发管理/Unity中文配置编辑器设计与拆分.txt、父项及CULTIVATION/APPLY/V任务的范围和验收，明确唯一首版例外，不暗示22表均可保存应用。\n\n登记道基紫府24个现存列、3个被拒旧列和5个缺失当前列；现存生产表只读，保留全部字节并显示旧格式待迁移。记录26列当前解析器及复合结构的中文含义和编码，以隔离fixture验证结构，不能宣称生产编辑或导入成功，不构建旧格式转换器。空表不新增整行，后续真实迁移完成后须另行准备启用边界，本任务不自动解除只读。\n\n其余21表逐一登记每个表头和复合子字段的中文语义、单位、可编辑性、稳定键与分组、真实解析所有者、引用、空零语义和往返编码。Language无表头，fixture负例单列，不把夹具当生产输入。\n\n确定草稿、文件冲突检测、必要关联源值联动、导入前校验、保存应用状态表与成功失败证据；只读表不进入可保存变更集。核对void导入、LogError后返回、全局SaveAssets与部分写盘边界，不以调用返回或总日志认定成功。冻结Editor专用目录、接口、后继独占文件及.meta、测试、导入依赖和全部派生路径。全部后继已存在，只补齐直接可冻结边界，不新增拆分循环，不写实现代码。\n\n不移除其他任务blockedBy或backlog中的当前taskId，不提升、重排或关闭下游。当前任务完成后归档并移除自身队列和backlog投影；CORE继续保留具名前置，正式集成后由QueueMaintenance判断ready。\n\n## 禁止项\n\n不修改CSV、源码、.meta或生成资产，不接管内容迁移。不新建配置事实源、运行时解释器、事务框架、自动化机制或旧格式兼容分支，不改变游戏规则、存档与平衡。首版不新增、复制、删除整行配置；可编辑复合字段不得退回分隔符文本输入；不得把道基紫府只读例外扩展到其他未适配字段。\n\n## 模型协作\n\n主模型固定gpt-6-astra，owner=codex、route=codex_execute。跨领域语义由主责统一核对，默认单模型；业务写入前核对复杂度和实际工具能力。仅在独立复杂问题且符合AI协作规则时使用原生只读辅助，禁止第二责任会话。建议推理强度high，实际强度需入口证实，不静默换型。\n\n## 验证\n\n接受本选项后由共享入口重新预检，消费mustRead/gates并核对绑定；范围或路线变化按规则重新预检。证明全部生产CSV与基线字节一致，道基紫府只读例外在设计、合同、父项及相关后继验收中一致，没有生产可编辑或导入成功的虚假结论。\n\n22表展示清单与真实文件一一对应，其余21表字段和嵌套结构有解析依据；道基紫府现存列与当前schema差异完整登记，当前结构验证使用隔离fixture。所有者、引用、单位和空零语义齐全，保存应用状态与失败边界可检验；九叶依赖无环，CORE白名单含新目录.meta。运行check-task-cards.ps1、check-review-text.ps1；暂存前运行check-pending-whitespace.ps1，暂存后git diff --cached --check。只有docs/CSV/Unity数据链路径实际变化才运行check-data-chain.ps1。不得声称未执行的Unity验收。\n\n## 完成条件\n\n形成21表原范围编辑合同及道基紫府明确只读例外，22表展示和覆盖矩阵无遗漏；相关设计、父项、后继任务验收口径一致，全部字面量路径和接口冻结。仅当前卡按完成合同归档，下游保留依赖，正式集成后再维护；不以只读例外宣称原全表编辑范围完成。\n\n## 停止条件\n\n若只读例外仍需修改生产源、运行时或迁移所有者，停止交负责人。发现其他未知格式、未覆盖语义、需改变规则或突破独占路径、导入写盘边界超出批准范围时保留具体证据，不叠加兜底。必要工具或证据不足保持未完成，不用静态检查替代要求的操作证明。"
+        "taskBody": "# D-CONFIG-EDITOR-CONTRACT-01 · Unity配置编辑器字段与保存导入合同\n\n## 来源与当前边界\n\n用户已批准Unity中文配置编辑器及本批Codex模型分配。当前checkpoint按此前A授权修正零行生产表头并整理合同草案，但必跑检查脚本仍要求旧24列。本选项批准替代范围：检查脚本保持原样，生产道基紫府表头恢复为原24列，首版该表只读并显示旧格式待迁移；22表均展示，其余21表按原批准范围适配。该例外改变原全表编辑验收口径，真实角色内容迁移仍归D-FPD-MIGRATE-01D。\n\n## 必查范围\n\n- 开发管理/Unity中文配置编辑器设计与拆分.txt；开发管理/Unity配置编辑器字段与导入合同.txt中的全部相关合同及停止证据。\n- UNITY_STRUCTURE.content.md；src/Assets/Scripts/Editor/README.md。\n- src/Assets/Scripts/Editor/CsvTableReader.cs::ParseRow/FindHeaderIndex。\n- src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll。\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/WriteCombatRuleSet/ImportSpells/ImportSkills/LoadLanguage。\n- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions。\n- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy/ImportEnemies/ImportContentCatalog/ImportCharterSites。\n- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa/ImportFoundationPurpleMansionStates/ParseFoundationPurpleMansionStates/FoundationPurpleMansionColumns/RequireFoundationPurpleMansionColumns/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles。\n- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import。\n- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles/ImportCharterRuleDefinitions。\n- src/Assets/DataConfig/当前22张CSV表头、相关行及注释；FoundationPurpleMansionStates.csv及.meta完整文件；基线d3def4d49c1bca2b68dd9b06790085fabfaa6b81中的原24列表头。\n- src/Assets/Tests/EditMode/Fixtures/FoundationPurpleMansionStates.fixture.csv及相关正负例；src/Assets/Tests/EditMode/FoundationPurpleMansionStateDataTests.cs::ProductionFoundationPurpleMansionCsvHasNoRows。\n- tools/check-data-chain.ps1::$schemas.FoundationPurpleMansionStates及Get-CsvTable，只读核对。\n- 开发管理/任务列表/数据链路任务.txt#D-FPD-MIGRATE-01，仅核对内容迁移边界。\n- expectedPaths中的父项和全部后继任务卡，修改前完整读取目标逻辑单元。\n\n## 实施范围\n\n修改前再次确认道基紫府生产CSV仍为0数据行；仅撤回本checkpoint的表头替换，恢复基线24列，保留注释、编码、换行和.meta。若存在生产行立即停止。检查脚本不修改。\n\n同步更新产品设计、父项、CULTIVATION/APPLY/V及唯一技术合同，明确首版道基紫府生产表只读且不可保存/应用；登记旧24列和当前26列差异，不推导旧数值语义或建立兼容编辑器。当前26列结构以隔离fixture验证，不能声称生产可编辑。其他21表继续完成每列及复合子字段中文、单位、编辑性、键/分组、真实所有者、引用、空零及往返编码；Language无表头，测试负例不作为生产输入。\n\n完成内存草稿、外部冲突、必要关联联动、导入前校验、保存应用状态和逐项证据；核对void、LogError、全局SaveAssets及部分写盘边界。冻结Editor专用目录、共享接口、后继独占源码/测试/.meta、导入依赖及全部派生路径；不写编辑器实现代码。只归档当前卡并移除自身队列/backlog行，保留其他任务blockedBy及backlog中的当前taskId，不提升、重排或关闭下游。\n\n## 禁止项\n\n不改检查脚本、Unity解析器、运行时、业务规则、存档、平衡或生成资产。不新增配置事实源、事务框架、自动化或旧格式兼容。除恢复已批准范围例外对应的零行表头外不修改CSV或.meta；不增加生产行、不复制fixture、不接管内容迁移。首版不新增复制删除整行，不把复合字段退回分隔符输入。\n\n## 模型协作\n\n主模型固定gpt-6-astra，owner=codex、route=codex_execute；业务写入前核对复杂度和实际能力。主责统一复核范围例外与合同，独立复杂问题才按AI协作规则使用原生只读辅助，禁止辅助写入和第二责任会话。建议high，实际强度须入口证实。\n\n## 验证\n\n接受选项后共享入口重新预检，消费mustRead/gates并核对绑定。证明恢复后的生产CSV字节等于指定基线、生产行仍0且.meta不变；证明旧24列与当前26列差异被准确登记。验证22表展示覆盖、道基紫府生产只读例外、其余21表编辑合同和隔离fixture计划，不能把只读算成生产编辑成功。\n\n运行check-data-chain.ps1、check-task-cards.ps1、check-review-text.ps1；暂存前实际路径check-pending-whitespace.ps1，暂存后git diff --cached --check。核对九叶依赖无环、CORE目录.meta齐全、所有下游状态和具名前置不变。采用最小充分验证，不声称未执行的Unity实机验收。\n\n## 完成条件\n\n原24列零行生产文件恢复，检查脚本保持原样且数据链检查通过；22表展示、21表原范围编辑及道基紫府只读例外在设计、合同和相关任务卡一致。后继字面量路径、接口与验收边界完成；仅当前卡归档，下游依赖保留。\n\n## 停止条件\n\n生产表已有数据、基线恢复不再安全、其他未知格式或语义冲突、需要修改业务规则或检查脚本、新增所有者、突破独占路径或写盘边界时停止。工具或证据不足保持未完成，不把静态检查当Unity操作证明，不叠加兜底。"
       },
       {
         "key": "C",
-        "label": "暂停合同，保留冲突证据",
+        "label": "暂停并保留当前证据",
         "targetState": "blocked",
         "expectedPaths": [],
         "taskBody": ""
       }
     ],
     "recommendedOption": "A",
-    "impactSummary": "A仅修正零数据行表头，保留完整产品范围，不迁移角色；B不改生产配置，但首版道基紫府只能查看，需要同步缩减验收范围；C暂停当前合同及后续推进。三者均不改变游戏数值。",
+    "impactSummary": "A仅新增一个检查脚本路径并同步该表列声明，保留已批准的26列及原产品范围；B恢复旧表头、维持脚本，但将首版道基紫府生产表改为只读；C暂停。三者均不迁移角色内容，不修改游戏规则或数值。",
     "plainSummary": {
-      "situation": "道基紫府配置表还是旧格式，程序已经使用新格式；因为表里没有角色记录，旧问题一直被跳过。修正它超出了这次只写方案文档的授权。",
-      "impact": "选择A只修正空表的栏目，继续完整编辑器方案；选择B保留旧表，首版这张表只能查看；选择C暂停。三种选择都不修改现有角色数值。",
-      "action": "建议选择A：表中没有角色记录，只对齐栏目即可继续完整方案，同时保留以后角色内容迁移的独立边界。"
+      "situation": "空配置表已按批准对齐游戏当前读取格式，但项目检查工具仍认旧格式，导致必过检查失败；修改这个工具尚未获得授权，编辑器也还没有开发完成。",
+      "impact": "A增加一处小修改，继续原计划；B保留旧工具，但首版只能查看这张表；C暂停推进。三种选择都不会新增角色或改变游戏数值。",
+      "action": "推荐选A，只同步检查工具对这张表的字段清单，让它与游戏读取格式一致，并保留原定编辑范围。"
     },
-    "checkpointCommit": "80afc81fe1d32364b9996598b740153dc21e638e",
-    "baseCommit": "1d09860fa9abcb7e822a6a267615390b76634abc",
-    "branch": "codex/automation/codex/b6e1205f-ae63-4589-8b91-591a9a80069d/candidate",
+    "checkpointCommit": "ebaa507e79ab5bed8db043331bd836b2a750f79d",
+    "baseCommit": "d3def4d49c1bca2b68dd9b06790085fabfaa6b81",
+    "branch": "codex/automation/codex/dff084cf-460c-47e0-ac69-58f850128b64/candidate",
     "changedPaths": [
-      "开发管理/Unity配置编辑器字段与导入合同.txt"
+      "开发管理/任务卡/U-CONFIG-EDITOR-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-CHARACTER-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-COMBAT-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-CORE-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
+      "开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt",
+      "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
+      "开发管理/Unity配置编辑器字段与导入合同.txt",
+      "src/Assets/DataConfig/FoundationPurpleMansionStates.csv"
     ],
     "verified": [
-      "生产道基紫府表为24列、零数据行；解析器要求26列，明确拒绝其中3个旧列，生产表缺少5个当前列。",
-      "道基紫府fixture表头与当前解析器26列逐列一致。",
-      "已核对空表导入提前返回、直接解析先检查表头的源码控制流。",
-      "check-task-cards.ps1：CodexDispatchReady通过；任务生命周期和下游依赖未改变。",
-      "check-review-text.ps1通过，检查823个文件。",
+      "按已批准A方案修正零行生产表头；26列与Unity解析器及fixture逐列同序一致，修正前后均0数据行，注释、BOM、换行和.meta字节保持不变。",
+      "22表共457个列位置完成字段名覆盖核对；合同草案登记解析所有者、复合结构、保存应用边界和179个当前派生资产路径。",
+      "八张后继卡路径准备后重新预检，全部ok，matched、mustRead和gates均为空。",
+      "下游route、owner、executionModel、dispatchState、blockedBy及stateReason保持不变；当前任务卡、队列和backlog未修改。",
+      "check-task-cards.ps1通过：87张活跃卡、5项ready。",
+      "check-review-text.ps1通过：825个文件。",
       "check-pending-whitespace.ps1及git diff --cached --check通过。",
-      "唯一checkpoint直接继承BaseCommit；工作树干净；changedPaths由指定无重命名命令生成。",
-      "主模型沿用入口证明的gpt-6-astra，单模型执行；已消费共享入口零命中预检结果。"
+      "checkpoint为基线的唯一直接后继提交，提交后工作树干净。"
     ],
     "unverified": [
-      "完整22表字段与嵌套结构合同尚未完成。",
-      "保存状态、完整导入派生路径及后继实施路径尚未冻结。",
-      "未运行Unity导入、EditMode测试或实机操作；本轮证据为静态文件与源码核对。"
+      "check-data-chain.ps1失败：检查脚本仍要求旧24列表头，产生3项缺列和5项未知列错误；该脚本不在当前批准路径内。",
+      "合同未完成归档；Unity窗口、编译、EditMode、保存应用及运行时操作尚未执行。"
     ],
-    "residualRisk": "旧生产表头与当前解析器不一致，空表提前返回掩盖了问题。checkpoint仅保存证据，不能作为最终实施合同；修正表头需要新增配置写入授权，首版只读则需要调整批准范围。",
-    "taskContextDigest": "37e29748a0efafae991bc0f5a324c397367450728cc186999c77b26658cdb8d3",
-    "createdAt": "2026-10-12T23:20:15.8282509+08:00",
+    "residualRisk": "检查脚本与Unity解析器的表头合同冲突尚未解决。当前提交仅保存合法修改和合同草案，不能作为任务完成或后继可执行的证明。",
+    "taskContextDigest": "950fd0fa2391e242f0291e69eecdce0a64c0be093b061518bfe201fb505b1447",
+    "createdAt": "2026-10-13T00:37:41.7526276+08:00",
     "queueIndex": 0
-  },
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
-  "automationReply": {
-    "decisionId": "DEC-20261012-CD83794D702467",
-    "result": "OPTION_ACCEPTED",
-    "replyKind": "option",
-    "replyValue": "A",
-    "source": "feishu_card",
-    "evidenceHash": "c747c197e3269e313820748c21c4938988ded698f5f9736b7aca24e647a0f7d4"
   }
 }
 ---TASK-BODY---
