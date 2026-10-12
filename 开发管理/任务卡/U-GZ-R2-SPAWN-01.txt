@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：task_scope_expansion_required",
+  "stateReason": "2026-10-12负责人授权解除阻塞；隔离Unity双分辨率取证入口实跑2/2通过，输入/测量能力及直接测试范围已冻结，见关中第二轮运行时取证入口。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPAWN-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPAWN-01.txt",
@@ -19,9 +19,21 @@
     "src/Assets/DataConfig/Adventures.csv",
     "src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset",
     "src/Assets/Tests/EditMode/GuanzhongFormalEndToEndTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs.meta",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
-    "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs"
+    "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongPlaytestFlowPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongActionPointFlowPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -40,6 +52,9 @@
 
 ## 必查范围
 
+- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions
+
 - 开发管理/关中第二轮试玩排查与任务拆分.txt
 - src/Assets/DataConfig/Adventures.csv::guanzhong_wild/start/shijiahou_encounter
 - src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset
@@ -50,7 +65,7 @@
 
 ## 实施范围
 
-反馈8：保留玩家左下起点，用正式相机投影确认六乘六战场画面最右上角可用格，再只修改现有shijiahou_encounter坐标源和导入asset。禁止把轴向最大值未经投影验证当画面右上；不另建出生系统。检查当前直接测试是否硬依赖相邻出生；发现额外必须修改的测试先重算风险和范围，不降低验收。
+反馈8：保留玩家左下起点，用正式相机投影确认六乘六战场画面最右上角可用格，再只修改现有shijiahou_encounter坐标源和导入asset。禁止把轴向最大值未经投影验证当画面右上；不另建出生系统。检查当前直接测试是否硬依赖相邻出生；已核对直接测试链并将相关PlayMode测试的精确路径纳入卡头；只允许调整新出生距离影响的正式移动接敌/回合前置，不改其AP、CT、伤害、冷却、背包、血条与生命周期语义断言。依赖分组及验证清单见取证入口的出生点直接测试范围。发现清单外必须修改的测试仍先重算风险和范围，不降低验收。
 
 ## 禁止项
 
@@ -62,11 +77,11 @@
 
 2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
 
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+2026-10-12 本轮只准备取证入口与冻结范围，业务仍由本卡执行；主模型配置保持。默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
 
 ## 验证
 
-首战运行时双方逻辑坐标/屏幕投影/距离/路径证据，两分辨率；移动接敌与射程边界PlayMode，导入数据链；本卡是部署功能验收，不宣称战斗平衡。
+先运行BattlefieldBoundsAndSpawnProjectionAtBothResolutions获取36格当前正式相机投影和可达路径。当前基线(5,5)中心在1920宽画面x=1972.5，已出画面，不可机械选轴向最大值；结合两分辨率、实际单位bounds及HUD遮挡选最右上可用格，保留现有相机与玩家起点。首战运行时双方逻辑坐标/屏幕投影/距离/路径证据，两分辨率；移动接敌与射程边界PlayMode，导入数据链；本卡是部署功能验收，不宣称战斗平衡。
 
 管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
 
@@ -76,4 +91,4 @@
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

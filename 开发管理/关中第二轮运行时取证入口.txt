@@ -1,0 +1,50 @@
+# 关中第二轮运行时取证入口
+
+## 运行入口与边界
+
+用途：U-GZ-R2-BOUNTY-01、D-GZ-R2-OBSTACLE-01、U-GZ-R2-SPAWN-01 的隔离取证与重新 ready 准备。2026-10-12 负责人授权补齐入口和直接测试范围；本次不实施按钮修复、障碍资源替换或出生点变更。
+
+在任务自己的 worktree 根运行（PowerShell 7）：
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath (Join-Path (Get-Location) 'src') -ResultXmlPath (Join-Path (Get-Location) 'src/Logs/gz-r2-entry.xml') -TestFilter TianZhang.Tests.PlayMode.GuanzhongRuntimeEvidencePlayModeTests -EnableGraphics
+
+- 本机入口使用 Unity 6000.3.18f1。新 worktree 不需要预存 Library：Unity 首次启动会导入并编译，不复制主工作区的 Library/csproj、不接管主工作区编辑器。
+- 必须使用 EnableGraphics。默认无图形模式仍用于原有非视觉测试，不用其截图作视觉证据。
+- TestFilter 是 Unity 原生过滤器。只取悬赏时用完整方法名 BountyPointerPipelineAtBothResolutions，只取战场时用 BattlefieldBoundsAndSpawnProjectionAtBothResolutions（前缀仍为 TianZhang.Tests.PlayMode.GuanzhongRuntimeEvidencePlayModeTests.）。
+- 结果 XML 与同名 .log 位于调用者给定路径；截图、文本、原始 mesh JSON 位于 src/Logs/gz-r2-evidence/，均为忽略的取证产物。后续执行必须用自身修改后的 worktree 重跑，不能拿本次基线代替验收。
+- 运行器沿用现有正式资产快照/恢复；测试只创建临时新档，不读取或覆盖用户存档。不得在测试运行期间同时编辑同一 worktree 的 Assets/ProjectSettings。
+- 以 XML 非零测试数、failed=0、实际 Screen 尺寸断言、截图目检和测量正文共同判定入口成功。等待真实资源导入/着色器编译属于首次初始化，不是重试失败业务。取证异常不调整生产资源绕过。
+
+## 取证覆盖与验收区别
+
+悬赏：从正式 StartMenu→World→Settlement 新档链进入，使用 InputSystem 虚拟 Mouse/Keyboard 向正式输入模块送事件，通过 Raycaster/EventSystem 命中真实按钮；不调用 Button.onClick.Invoke、ExecuteEvents 或改按钮监听器。记录 normal/hover/press/release/leave 时的 sprite、interactable、实际 Canvas 比例和焦点，断言指针进入/按下/释放/点击及 Available→Accepted。此为真实运行时输入链的自动化验证，不宣称物理鼠标人工试玩。
+
+悬赏执行卡仍需完成两按钮状态修复及四种悬赏状态、重复操作拒绝、键盘焦点可见性的业务验收；ObjectiveCompleted/Claimed 必须经正式战斗/领取链取得，不把能力基线的通过当成修复完成。允许在同一取证测试中补验收断言。
+
+战场：从正式新档进入 Adventure 首战，读取 CombatMovementView 的正式 battlefieldCamera、EncounterCoordinator 的 session/spawned、36 个 GuanzhongHex 和四个 GuanzhongObstacle。输出世界/屏幕中心、父级、Renderer AABB、朝上三角面包络、原始运行时 Mesh 世界顶点/投影顶点/三角形，以及玩家到各格的只读路径报价。路径报价使用充足查询预算且不改角色 AP；它只能证明拓扑可达，不代替实际逐回合移动接敌。
+
+世界 AABB 投影不等于可见像素轮廓；朝上面包络（normal·up≥0.8）可能包含岩壁台阶，不直接充当地块顶面足迹。原始 mesh JSON 与截图用于辨认实际顶面三角形、接地和遮挡，不凭包络猜 scale。VisualBaselineOccluder 单独标识，不混作目标障碍物。
+
+两项测试均强制实际分辨率 1920×1080 与 1366×768；首轮着色器编译结束后才截图，屏幕尺寸或截图缺失直接失败。不得只调用 Screen.SetResolution 后宣称双分辨率已完成。
+
+## 出生点直接测试范围
+
+任务仍只有“正式关中首战远端部署”一个结果，生产写入限 Adventures.csv 与对应导入 asset；不新增出生系统、不修改相机/CTB/射程语义。以下直接测试允许仅调整新距离引起的移动接敌或回合准备；不得删弱原断言、直接传送两单位、扩大攻击距离或改生产逻辑保住旧测试。
+
+- 原冻结四项：GuanzhongFormalEndToEndTests、GuanzhongBasicAttackPlayModeTests、GuanzhongCombatTargetSelectionPlayModeTests、GuanzhongMovementPlayModeTests。
+- GuanzhongCombatActionPreviewPlayModeTests、GuanzhongStarterArtsPlayModeTests、GuanzhongCombatSwapSpellPlayModeTests：进入首战后立即要求普通攻击/术法可确认、消耗和冷却正确。准备接敌后仍保持原 AP/CT/冷却/效果断言。
+- GuanzhongUnitHealthBarPlayModeTests：资源刷新依赖首战真实伤害；仍须通过合法攻击产生伤害。
+- GuanzhongCombatEquipmentPlayModeTests、GuanzhongCombatItemPlayModeTests、GuanzhongCombatTimelinePlayModeTests：普通攻击收尾驱动胜负、回城、背包与行动轴清理；补接敌前置，保留收尾断言。
+- GuanzhongCombatLayoutPlayModeTests：直接复用行动预览测试入场，胜利用例要求实际一次命中收尾；只调整合法接敌前置，保留一次实际攻击和回城布局断言。
+- GuanzhongPlaytestFlowPlayModeTests：真实按钮施法与障碍绕路后返回近战邻域；根据运行时敌坐标走合法路径，保留绕路、射程拒绝、胜负及回城证明。
+- GuanzhongActionPointFlowPlayModeTests：首个敌回合与动作序列消费正式出生坐标；仅验明/按需调整接敌前置，不能改变多动作同回合和费用语义。
+
+上述精确路径已冻结到 U-GZ-R2-SPAWN-01；其他仅展示文案或按当前资产读取坐标的测试不因此加入可写范围。执行者先跑修改影响的直接测试；验收至少覆盖原冻结项、攻击预览/术法/换术法/血条和胜负收尾链。发现额外所有者或范围仍按原停止条件处理。
+
+## 本次准备证据
+
+隔离目录：D:/天章游戏开发/.worktrees/gz-r2-evidence-ready；基线 03d2c13d84b5b950cf5a852721c3fa70a6d5c059。最终运行于2026-10-12香港时间08:35完成：PlayMode入口2/2通过（战场3.49秒、悬赏1.43秒）；6张PNG头部尺寸与运行时Screen均为预期分辨率，截图已目检，16份原始mesh JSON已产出。两个尺寸下pointerEnter/down/up/click各为1，Keyboard Down经正式输入模块将焦点移至ClaimBountyButton。既有运行器回归11项通过。业务源文件未修改。准备期间主分支推进到d7cd28a6，仅影响另一退出设计任务的管理文件，已fast-forward吸收；Unity验证输入未变化，未重复运行。
+
+- 基线已证实两按钮 normal/hover/press 仍使用 Guanzhong_Button_Selected，Available/Accepted 时两个按钮都可交互。这是待修缺陷的证据，不是通过业务验收。
+- 正式相机 (0,8,-9.58239)、俯角38°、orthographicSize=4；1920×1080 时 (5,5) 格中心投影 x=1972.5，已越出画面。出生点执行必须用两分辨率实际投影、单位 bounds 和 HUD 遮挡选可用格，不能直接取轴向最大值。
+- D-GZ-R2-OBSTACLE-01 的 ready 只表示能够继续测量、设计与请求确认。未获得视觉方向批准前，下游 U-GZ-R2-OBSTACLE-01 继续 blocked。

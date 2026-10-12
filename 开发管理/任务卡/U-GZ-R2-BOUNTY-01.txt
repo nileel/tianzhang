@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：runtime_evidence_unavailable",
+  "stateReason": "2026-10-12负责人授权解除阻塞；隔离Unity双分辨率取证入口实跑2/2通过，输入/测量能力及直接测试范围已冻结，见关中第二轮运行时取证入口。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-BOUNTY-01.txt",
     "开发管理/任务归档/U-GZ-R2-BOUNTY-01.txt",
@@ -20,6 +20,8 @@
     "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs",
     "src/Assets/Scenes/SettlementScene.unity",
     "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs.meta",
     "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
@@ -38,6 +40,9 @@
 来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
 
 ## 必查范围
+
+- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions
 
 - 开发管理/关中第二轮试玩排查与任务拆分.txt
 - src/Assets/Scripts/Editor/SettlementSceneBuilder.cs::BuildBountyPanel/ApplyButtonSkin
@@ -59,11 +64,11 @@
 
 2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度medium，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
 
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+2026-10-12 本轮只准备取证入口与冻结范围，业务仍由本卡执行；主模型配置保持。默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
 
 ## 验证
 
-正式SettlementScene真实鼠标hover/press/release、焦点与四种悬赏状态，双分辨率；BountyBoardViewTests及只改目标按钮引用的diff核查。
+正式SettlementScene通过InputSystem Mouse事件驱动正式Raycaster/EventSystem验证hover/press/release/exit，保持真实按钮监听器与BountyUseCase；禁止直接Button.onClick.Invoke或ExecuteEvents代替输入链。基线入口已覆盖Available→Accepted和两按钮实际sprite/interactable；执行本卡时在允许的取证测试中补齐键盘焦点、ObjectiveCompleted→Claimed、重复接取/领取及禁用断言，完成态仍须由正式战斗流程取得，不用RecordDefeat夹具冒充。两分辨率必须断言实际Screen=1920×1080、1366×768并检查截图。自动输入不宣称物理鼠标人工试玩。运行BountyBoardViewTests及目标按钮引用diff核查。
 
 管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
 
@@ -73,4 +78,4 @@
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

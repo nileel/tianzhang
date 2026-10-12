@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：runtime_evidence_missing",
+  "stateReason": "2026-10-12负责人授权解除阻塞；隔离Unity双分辨率取证入口实跑2/2通过，输入/测量能力及直接测试范围已冻结，见关中第二轮运行时取证入口。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
@@ -36,6 +36,9 @@
 
 ## 必查范围
 
+- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions
+
 - 开发管理/关中第二轮试玩排查与任务拆分.txt
 - src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildGuanzhongBattlefield
 - src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs::BuildAssetsAndScene
@@ -60,11 +63,11 @@
 
 2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6-astra冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
 
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+2026-10-12 本轮只准备取证入口与冻结范围，业务仍由本卡执行；主模型配置保持。默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
 
 ## 验证
 
-实机测量四个GuanzhongObstacle与对应地块；两分辨率可读性方案；既有blocksGroundMove保持，blocksLineOfSight=0不得自行改规则。
+运行取证入口的BattlefieldBoundsAndSpawnProjectionAtBothResolutions；从本轮报告读取四个GuanzhongObstacle与父地块的Renderer世界AABB、朝上三角面包络（normal·up≥0.8）及原始mesh顶点/三角形、屏幕投影、相机与父级，从截图判断接地/居中/可读性。AABB投影不是可见像素轮廓，朝上面包络可能包含岩壁台阶；结合原始mesh和截图辨认实际顶面，不据此猜最终scale；需要精确足迹时沿同一运行时Mesh核对。两分辨率必须断言1920×1080、1366×768；既有blocksGroundMove保持，blocksLineOfSight=0不得自行改规则。取证能力已具备不代表视觉方向已批准；设计方案形成后仍须请求负责人确认，下游U-GZ-R2-OBSTACLE-01继续blocked直到批准。
 
 管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
 
@@ -74,4 +77,4 @@
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。

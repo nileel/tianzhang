@@ -5,6 +5,8 @@ param(
     [string]$UnityExecutable = 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe',
     [string]$ProjectPath,
     [string]$ResultXmlPath,
+    [string]$TestFilter,
+    [switch]$EnableGraphics,
     [ValidateRange(0, 600)]
     [int]$ResultExitGraceSeconds = 30,
     [switch]$ValidateResultOnly
@@ -130,18 +132,19 @@ try {
         Remove-Item -LiteralPath $ResultXmlPath -Force -ErrorAction SilentlyContinue
         $workspaceSnapshot = Get-UnityWorkspaceSnapshot -ProjectPath $resolvedProjectPath
 
-        $logPath = Join-Path ([IO.Path]::GetTempPath()) 'tzg-playmode-test-runner.log'
+        $logPath = [IO.Path]::ChangeExtension([IO.Path]::GetFullPath($ResultXmlPath), '.log')
         $arguments = @(
             '-batchmode',
-            '-nographics',
-            '-projectPath', $resolvedProjectPath,
+            '-projectPath', ('"' + $resolvedProjectPath + '"'),
             '-runTests',
             '-testPlatform', 'PlayMode',
-            '-testResults', $ResultXmlPath,
-            '-logFile', $logPath
+            '-testResults', ('"' + $ResultXmlPath + '"'),
+            '-logFile', ('"' + $logPath + '"')
         )
+        if (-not $EnableGraphics) { $arguments += '-nographics' }
+        if (-not [string]::IsNullOrWhiteSpace($TestFilter)) { $arguments += @('-testFilter', ('"' + $TestFilter + '"')) }
 
-        $process = Start-Process -FilePath $UnityExecutable -ArgumentList $arguments -PassThru
+        $process = Start-Process -FilePath $UnityExecutable -ArgumentList $arguments -WindowStyle Hidden -PassThru
         $validResultObserved = $false
         $stoppedAfterValidResult = $false
         while (-not $process.HasExited) {
