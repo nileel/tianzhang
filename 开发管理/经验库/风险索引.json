@@ -774,6 +774,34 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-018.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-13"
+    },
+    {
+      "id": "EXP-UNITY-020",
+      "title": "远端部署测试须按实际接敌状态和随机夹具验收",
+      "preflightSummary": "调整首战远端部署、AI接敌或相关PlayMode前置时，须以实际格位、行动余量和完整随机判定链验证，不依赖初始相邻或固定坐标。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs",
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "远端部署",
+        "AI接敌",
+        "确定性夹具",
+        "随机序列"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-020.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-13"
     }
   ],
   "gates": []

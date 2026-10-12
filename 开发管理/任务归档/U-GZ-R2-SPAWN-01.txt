@@ -126,8 +126,8 @@
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-50373924A1F9
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-020
 - 经验领域：unity
 - 现象：远端部署后，只结束回合等待敌人邻接的直接测试集中失败。
 - 已证实根因：旧测试依赖初始相邻格及固定移动坐标；真实AI回合移动、攻击后的剩余AP和落点不能保证该假设，四次随机序列夹具还与已增加的第五次判定脱节。

@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-PROMOTE-50373924A1F9 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-R2-SPAWN-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-50373924A1F9.txt |
 | M-EXP-PROMOTE-70467702AC21 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-R2-BOUNTY-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-70467702AC21.txt |
