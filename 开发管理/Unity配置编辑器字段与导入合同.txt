@@ -1,0 +1,543 @@
+# Unity配置编辑器字段与导入合同
+
+## 状态：技术合同完成，编辑器实现与实机验收待后继任务
+
+D-CONFIG-EDITOR-CONTRACT-01，2026-10-13。产品入口、22表覆盖和九叶依赖沿用《Unity中文配置编辑器设计与拆分》。本文件是已完成的Editor显示、编解码、保存与应用技术合同；DEC-20261013-CD0DA1648C60CB/A批准同步检查脚本后，数据链检查已通过。后继是否ready仍由正式集成后的QueueMaintenance核验。它不是新配置事实源。CSV仍为唯一输入，既有领域解析器及其数据类型仍拥有规则。本文中的接口与验收是后继实现要求，本轮没有开发或运行配置窗口。
+
+DEC-20261012-CD83794D702467 的A回复已由入口验证。原checkpoint发现FoundationPurpleMansionStates零数据行生产表为旧24列，当前解析器v2为26列。按A仅替换表头，删除phase/releasedNaturalCapacity/totalMansionCapacity，加入stageId/stageCode/carryingCapacityProfileId/currentMansionCarryingCapacity/completionMansionCapacity并采用解析器顺序；注释、UTF-8字节格式、换行、零行状态及.meta GUID保持。没有旧值迁移公式；生产角色迁移仍归D-FPD-MIGRATE-01D。空表导入提前return，不能作为schema成功证据。
+
+本轮核对基线4b3bf76de1e5f5c9b22b68e05afb7f5a9b32d6be及入口重放的checkpoint。主模型采用入口传入gpt-6-astra；当前是已批准单表列声明同步与既有合同收口，没有独立复杂问题，使用单一主责，不调用辅助或第二责任会话。前轮源码证据对应d3def4d49c1bca2b68dd9b06790085fabfaa6b81，相关src输入至当前HEAD无变化；本轮仍直接复核指定导入入口、CSV读取器及写盘边界。推理强度未由入口证明，不作已配置声明。
+
+结构证据：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、Editor/README.md和TianZhang.Editor.asmdef；Editor仅includePlatforms=Editor，现有EditMode程序集已引用它。新工具全部放在src/Assets/Scripts/Editor/ConfigEditor/，命名空间TianZhang.Editor.ConfigEditor；测试放现有src/Assets/Tests/EditMode/，不建asmdef、不改Player依赖、不改场景。现有CsvTableReader和各领域importer保持原所有者。
+
+## 阅读约定与通用编解码
+
+下文每组“字段=中文”是完整列登记，组内共享同一类型/单位/编辑性/空零规则；特例优先。K=稳定键或版本，只读；R=派生、固定批准值或未使用字段，只读并解释；E=可编辑，仍受现有领域校验；C=满足分支条件才可编辑，不适用时保持空串。未标数字单位的ID/枚举/文本无量纲。引用选择保留ID、显示中文名称与ID，中文重名不可合并；枚举使用显式中文映射，不把原始协议词当最终标签。schemaId/schemaVersion、ruleSetVersion、attackSchemaVersion、fixtureId/expect/fixtureOnlyNumericProfile均只读，未知版本拒绝写盘。
+
+整数保持Int32范围及原解析器的符号约束；不接受浮点截断或溢出。AP最小单位1000=1行动力；行动力字段显示最多三位小数，回转必须整除，无隐式四舍五入。效率MilliUnits显示值=原值/1000，标“移动效率”，普通地表报价由现有移动规则计算，不能当速度或直接距离。Permille显示千分比（可附百分比=原值/10），倍数和分数不混用。Ticks为游戏刻；OwnTurnEnds为自身回合结束次数。旧角色/术法的Rate、Reduction、stunChance为百分点数值，保留原值（20显示20%，不是2000%）；Multiplier为倍数。所有数字控件必须有单位。空值用“未指定/不适用”表达，0为显式零，none为协议枚举，三者不可互换。
+
+CSV层由CORE拥有无损文档模型：保留原始bytes、BOM、逐行行尾、末尾换行、注释/空行、原始单元格切片、列顺序与行顺序；无编辑返回原bytes。仅替换实际改变的单元格；不因解析器排序、约分、Trim或浮点显示而重写未改字段。字典/集合仅在该单元格确实编辑后依协议输出顺序。读取必须与CsvTableReader.ParseRow一致：引号只切换状态并被丢弃，逗号在引号外分列；不支持双引号转义和跨物理行文本。因此编辑输入禁止字面双引号、CR/LF及当前复合层的保留分隔符；包含逗号的合法单元格以一对外层引号包围，空单元格保留空。不能使用RFC双引号转义宣称兼容。测试覆盖逗号、空尾列、注释、BOM与混合行尾；未知列/重复列/畸形引号/列宽不符禁止保存，原bytes仍可查看及撤销。
+
+Language无表头；除注释和空行外每行恰两列，第一条faction_taiyidaoting是数据。其余21表使用当前精确表头，Adventures要求表头在物理第0行，不移动注释到它前面。编辑器严格结构校验是新工具的保存门，不冒称所有旧importer原本都严格。
+
+每张表按稳定键选已有行；复合字段内部可增删，但业务要求固定数量/唯一性的列表仍受对应验证器限制。首版不新增/复制/删除CSV整行、不改稳定键；无记录的生产表显示“无已有条目”，无虚构示例。fixture不进入生产选择器或生产应用；隔离测试可复制fixture到内存并按expect分流，负例必须继续得到对应错误，不能为了保存而修正有意错误。
+
+## 01 RealmCombatGrowth.csv · 境界战斗成长（COMBAT）
+
+键realmId；所有者CombatRuleSet.Parse/RealmGrowth，由CombatContentImporter.TryReadCombatRuleSet→ImportAttackProfiles→WriteCombatRuleSet投影。
+
+- K：schemaVersion=结构版本；ruleSetVersion=规则版本；realmId=境界；realmOrder=境界顺序；usageScope=使用范围（player玩家/reserved预留）。六境界顺序和范围由Parse固定。
+- E正整数：actionPointMaximumUnits=行动力上限（AP）；baseMovementEfficiencyMilliUnits=基础移动效率（千分单位）；movementNodeWeightDenominator=移动节点权重分母。
+- R：legacyBaseMovementEfficiencyMilliUnits=旧成长参照效率，保留对照不联动。
+- E列表：movementNodeWeightNumerators=各成长节点权重分子，正整数以|编码，空串仅凡人合法；练气9项、筑基/金丹3项、元婴/化神4项，非空时总和必须等于分母。节点顺序有意义，不排序。
+
+## 02 CombatEffectTierRules.csv · 效果层级规则（COMBAT）
+
+键abilityTierId；所有者CombatRuleSet.Parse/EffectTier。
+
+- K：schemaVersion=结构版本；ruleSetVersion=规则版本；abilityTierId=术能层级；realmId=对应境界，三层级与境界绑定固定。
+- E必填正整数：actionPointReferenceUnits=参考行动力（AP）；spiritBudgetReference=参考灵力预算（灵力点）；physicalAttackCapacity=物攻容量；soulAttackCapacity=魂攻容量；physicalDefenseCapacity=物防容量；soulDefenseCapacity=魂防容量；recoverySoulAttackCapacity=恢复魂攻容量；rawSpiritRecoveryCapacity=原始灵力恢复容量；reactionCapacity=反应容量（以上均对应属性点）；referenceTurnIntervalTicks=参考行动间隔（刻）。空和0均非法。
+
+## 03 CombatActionEconomyRules.csv · 行动消耗规则（COMBAT）
+
+键(recordKind,definitionRef,abilityTierId)；所有者CombatRuleSet.EconomyDefinition/Parse。1条global全局行+51条test_action参考行动行；test_action是当前规则数据，不能因为名称带test便当测试夹具排除。
+
+- K：schemaVersion=结构版本；ruleSetVersion=规则版本；recordKind=记录类型；definitionRef=行动定义引用（DefinitionIds）；abilityTierId=层级引用（global空，其他引用效果层级）。
+- C仅global，必填正整数千分比：repeatFirstPermille=首次重复系数；repeatSecondPermille=第二次重复系数；repeatThirdPermille=第三次重复系数；repeatCappedPermille=后续重复上限系数；realmBelowTwoPermille=低两境系数；realmBelowOnePermille=低一境系数；realmEqualPermille=同境系数；realmAboveOnePermille=高一境系数；realmAboveTwoPermille=高两境系数；relativeStatusLimitPermille=相对状态上限；probabilityPointLimitPermille=概率点上限；strongControlLimitPermille=强控上限；waterBaseChancePermille=水系基础概率；waterMinimumChancePermille=水系最低概率；waterDefensePerStackPermille=每层水系防御比例。前三重复系数到上限递增，后三类上限和概率按Parse≤1000，最低概率≤基础概率。
+- C仅global，必填正整数：burstCooldownMultiplier=爆发冷却倍数；controlCooldownMultiplier=控制冷却倍数；recoveryCooldownMultiplier=恢复冷却倍数；waterMindDifferenceDivisor=水系心神差除数（属性点）；waterDefenseMaxStacks=水系防御层数上限；movementBudgetNumerator=移动预算分子；movementBudgetDenominator=移动预算分母；waterReductionMigrationNumerator=水系减伤换算分子；waterReductionMigrationDenominator=水系减伤换算分母。两对为无量纲分数，正分母；只读未改值不得被约分。
+- C仅test_action：actionPointFactorNumerator=行动力系数分子（>0）；actionPointFactorDenominator=行动力系数分母（>0）；spiritFactorNumerator=灵力系数分子（≥0）；spiritFactorDenominator=灵力系数分母（>0）；damageMigrationNumerator=伤害换算分子；damageMigrationDenominator=伤害换算分母；damageWeightNumerator=伤害权重分子；damageWeightDenominator=伤害权重分母（后四均>0）。
+- C可选覆写：actionPointCostOverrideUnits=行动力费用覆写；minimumNetCostOverrideUnits=净费下限覆写（AP，最终>0且下限≤费用）；spiritCostOverride=灵力费用覆写（≥0灵力）；reuseCooldownOverrideTicks=重用冷却覆写（≥0刻）。空用规则计算，0不代表未指定。
+- C必填：ctPenalty=行动条惩罚（整数0..Int32.MaxValue-100）；cooldownClass=冷却类别（basic_repeat普通重复/burst爆发/control控制/recovery恢复）。所有不适用分支列严格为空。
+
+## 04 AttackProfiles.csv · 攻击档案（COMBAT）
+
+键attackProfileId，生产9行，其中5条身体攻击。所有者CombatContentImporter.TryParseAttackProfiles/ParseAttackProfileRow/ParseAttackEffectFields/ResolveAttackRuleFields/ParseAttackTargetingFields以及AttackProfileData.TryValidate、CombatRuleSet.ParseUnarmedRows。稳定身份组合不变；依赖四张战斗表、Language及角色绑定。
+
+- K：attackProfileId=攻击档案ID；profileKind=档案类型（basic普攻/art术法/divine神通）；basicBindingKind=普攻绑定（main_equipment主手/unarmed_body身体）；ruleSetVersion=规则版本；attackSchemaVersion=攻击结构版本2；unarmedFamilyId=身体攻击族；unarmedRealmId=身体境界。非身体行后三个身体列除schema外均空。
+- E/C引用：displayNameKey=显示名称（Language）；contentScope=内容范围；sourceAffiliation=来源阵营；realmRequirementId=境界要求；elementRequirementId=灵根要求；abilityTierId=效果层级；specialEffectTextKey=特殊效果说明（Language，可空，仅神通）。basic的范围/阵营/境界/灵根必须空，身体身份对应显示键及层级受固定映射约束。灵根要求由element_*及_or_组合构成，UI为“任一灵根”选择组；element_none表示无要求。
+- E/C枚举：effectType=效果类型（physical物理/magic法术/hybrid混合/heal治疗/buff增益/debuff减益/restore_spirit回灵；movement虽枚举存在但预算组合当前不允许）；damageElementId=伤害元素；resourceKind=资源类型（none无/mp灵力）；targetingMode=目标方式（single单体/area区域）；cooldownClass=冷却类别；effectBudgetMode=效果预算（fixed_weapon武器固定/fixed_unarmed身体固定/damage_budget伤害预算/prototype_restore恢复原型/status_only状态/fixed_output固定输出），严格按ResolveAttackRuleFields允许组合。
+- E数值：resourceCost=资源费用（≥0点）；actionPointCostUnits=基础行动力费（>0 AP）；minimumNetCostUnits=净费下限（>0 AP且≤基础费）；ctPenalty=行动条惩罚；reuseCooldownTicks=重用冷却（空=层级公式、0=显式无冷却）；minCastRange=最小施展距离；maxCastRange=最大施展距离（整数范围单位且最大≥最小）。basic资源、CT与冷却显式0。身体攻击距离固定1，预算规定的不适用列保持空。
+- C效果：physicalDamageMultiplier=物理伤害倍数；soulDamageMultiplier=魂伤倍数（damage_budget两列必须空，仅展示派生预览）；healAmount=治疗量（点，仅治疗）；buffMultiplier=旧增益倍数（R，现行要求空）；defensePenetration=防御穿透值（空按0，但保留区别）；spiritRecoveryMultiplier=自身回灵倍数；minimumSpiritRecovery=最低回灵点；otherTargetResourceCost=对他人回灵费用；otherTargetRecoveryMultiplier=对他人回灵倍数（后四仅restore_spirit，必填非负）。unarmedPhysicalAttackCapacity=身体物攻容量（>0点，仅fixed_unarmed）。
+- C伤害预算正整数分数：efficiencyNumerator=效率分子；efficiencyDenominator=效率分母；damageMigrationNumerator=换算分子；damageMigrationDenominator=换算分母；damageWeightNumerator=权重分子；damageWeightDenominator=权重分母；其他模式这六列空。
+- C区域：areaCenterKind=中心（caster施法者/target_cell目标格）；areaShapeKind=形状（circle圆/line线/fan扇）；areaRadius=外半径；areaLength=长度；areaInnerRadius=内半径（整数空间单位）；areaFanHalfAngleSteps=扇形半角档数；areaFacing=方向（east东/north_east东北/north_west西北/west西/south_west西南/south_east东南，圆为空）；areaEffectBlockers=效果阻挡（none无/directed_edge有向边）；areaAllowedFactions=允许阵营；areaAllowedStates=允许状态。阵营为ally友方/enemy敌方/self自身，状态alive存活/corpse尸体，集合以逗号连接且Ordinal排序，整个CSV单元格加引号；UI复选框。single十个区域列均空。
+- C神通：isDomain=是否领域；isBloodline=是否血脉（0/1，非神通空）。
+- C状态：statusId=状态ID；statusAttributeId=作用属性（physical_attack物攻/soul_attack魂攻/physical_defense物防/soul_defense魂防）；statusRelativePermille=相对变化（有符号千分比，非0，±1000以内，增益正减益负）；statusDurationOwnTurnEnds=持续自身回合结束次数（>0）；statusStackLimit=叠层上限（R固定1）；statusRefreshPolicy=刷新策略（R固定replace_stronger替换更强）。非buff/debuff全部空。
+- C控制：controlChancePermille=控制概率（0..1000）；controlUsesMindContest=是否心神对抗（0/1）；仅伤害效果可用，两列一起空或一起填写。
+
+## 05 Spells.csv · 术法；06 Skills.csv · 神通（COMBAT）
+
+键name（K，Language稳定ID同时用于资产名）；所有者CombatContentImporter.ImportSpells/ImportSkills。非空必填字段下列均E，受ContentScopePolicy与元素解析约束；不由攻击档案反向覆盖这两张独立旧内容表。
+
+共有列：type=效果类型（SpellType整数：0物理/1法术/2治疗/3增益/4减益/5移动/6混合）；minRange=最小距离、maxRange=最大距离（整数范围）；mpCost=灵力费用（点）；cooldownTicks=冷却（刻）；healAmount=治疗量（点）；cannotBlock=不可格挡、cannotDodge=不可闪避、penetratingShield=穿透护盾（0/1）；stunChance=眩晕概率（百分点）；element=作用元素（CombatElementFacts）；realmReq=境界要求、sourceAffiliation=所属来源（ID选择）；contentScope=内容范围（player/reserved等现有ContentScopePolicy值）。
+
+Spells额外列：elementReq=灵根要求（枚举/任一灵根结构组，保留现有字符串身份）；physicalDamageMultiplier=物伤倍数；soulDamageMultiplier=魂伤倍数。
+
+Skills额外列：damageMultiplier=伤害倍数；isDomain=领域、isBloodline=血脉（0/1）；specialEffectDesc=特殊说明（Language引用）。两表无可空数字；0是合法显式零而非缺省。旧importer按行写盘且短行warning后skip；APPLY必须预先整表校验并核对全部预期资产，不能以导入日志成功为准。
+
+## 07 CharacterCreationPointBuy.csv · 创角点购（COMBAT）
+
+按configId分组，目前default三行；稳定行身份=(configId,原始行位置)，位置不随fromValue改动而变。所有者SettlementContentImporter.ImportCharacterCreationPointBuy/RequireLongTermActionEconomyInput。
+
+- K：configId=配置组。
+- E组级必填整数：purchasePointLimit=可购总点数；minValue=属性最小值；baseValue=属性基础值；maxValue=属性最大值。旧入口只消费首行这四列，因此编辑器仅首行一处编辑并把同组重复声明联动为一致值，保留三条费用段。
+- E行级必填整数：fromValue=费用段起值；toValue=费用段止值；costPerLevel=每级费用（点）。按现有CharacterCreationPointBuyConfig费用语义验收，不在工具创造新规则。
+- R镜像：actionPointMaximumUnits=行动力上限；movementEfficiencyMilliUnits=移动效率。全部default行必须等于RealmCombatGrowth的realm_fanren，显示“由境界成长联动”及跳转，不直接编辑。空非法，AP>0，效率≥0且受源成长>0约束。
+
+## 08 Characters.csv · 角色（CHARACTER）
+
+键name（K，Language/资产身份）；所有者CharacterContentImporter.ParseCharacterDefinitions/ProjectRealmGrowth/ImportCharacters。realmId=境界引用（E，仅有合法body_human攻击映射境界）；realmMultiplier=境界倍率（E倍数）；rootBone=根骨、physique=体魄、spirit=灵力属性、mind=心神、reaction=反应、talent=悟性（E整数属性点）；blockRate=格挡率、blockReduction=格挡减伤、soulShieldRate=魂盾率、soulShieldReduction=魂盾减伤、dodgeRate=闪避率、critRate=暴击率、critDamage=暴击伤害加成、hitRateBonus=命中加成（E百分点）；gongFaName=功法引用（E，可空，GongFa.name）；equippedSpells=装备术法、equippedSkills=装备神通（E有序ID列表，以|连接，空=空数组，引用Spells/Skills）；actionPointMaximumUnits=行动力上限、movementEfficiencyMilliUnits=移动效率（R，对应realmId成长镜像）；unarmedAttackFamilyId=身体攻击族（R固定body_human）。所有其他标量必填；非空浮点有限，不能写NaN/Infinity。列表编辑不能改变stable ID。
+
+## 09 Enemies.csv · 怪物（CHARACTER）
+
+键name（K，Language及模板身份）；所有者SettlementContentImporter.ParseEnemyRows/BuildEnemyTemplate/ParseEnemyDropEntries/ValidateApprovedEnemy，经ImportEnemies→ImportContentCatalog，不是独立单表提交。
+
+与Characters同名的realmMultiplier、rootBone、physique、spirit、mind、reaction、talent、blockRate、blockReduction、soulShieldRate、soulShieldReduction、dodgeRate、critRate、critDamage、hitRateBonus、equippedSpells采用相同单位和控件；realm=境界引用。actionPointMaximumUnits、movementEfficiencyMilliUnits是该境界镜像R。unarmedAttackFamilyId=身体攻击族，石甲兽固定body_shijiahou，其他当前行空；unarmedBasicAttackProfileId=退役直接普攻引用，R必须空。
+
+type=怪物类型、aiType=AI策略、description=说明文本、contentScope=正式内容范围、dropEntries=正式掉落（石甲兽为固定批准投影，R；其他行这些正式范围和掉落为空，不自动加入正式目录）。石甲兽realm/type/aiType/description亦由ValidateApprovedEnemy锁定；其他非正式模板不消费这些描述列，R注明未接入。dropEntries以|分项、每项itemId@chance@quantity：物品引用、概率百分点0..100、正整数数量；当前两项批准值固定，仍以结构化只读列表展示。
+
+dropTable=旧掉落候选（R，当前没有正式消费者）；以|分项、:分成旧物品标识和旧数值词元，只展示“旧候选值，未定义为正式概率或数量”。证据：现行导入器仅在表头声明该列，以及docs/superpowers/specs/2026-07-30-guanzhong-enemy-data-contract.md的禁止解释规则；不把旧30/50联动到dropEntries。未知旧词元拒绝编辑，不引入旧格式执行器。
+
+## 10 Items.csv · 物品（CHARACTER）
+
+键itemId；所有者SettlementContentImporter.ParseItemRows/ValidateApprovedItem及ItemData.IsApprovedEquipment/IsApprovedCombatItem。当前5行所有声明被既有批准投影约束，均结构化只读R，显示原因；改Language非锁定文本仍可改展示名称，不开放物品参数越权变更。
+
+itemId=物品ID（K）；displayNameKey=名称文本、descriptionKey=描述文本（Language）；contentScope=内容范围；itemCategory=物品类别；maxStack=堆叠上限（正整数件）；equipmentSlotId=装备槽（main_hand主手）；equipmentRealmRequirementId=装备境界（realm_lianqi）；equipmentBasicAttackProfileId=装备普攻（AttackProfiles引用）；combatUseEffectId=战斗使用效果（restore_current_health恢复当前生命）；combatUseRealmId=使用境界；combatUseTargetMode=使用目标（self自身）；combatUseHealthRecovery=生命恢复量（点）；initialGrantQuantity=初始给予数量（件）。非对应装备/药物字段为空；药物恢复80、初始3，不能把非药物空串改0。结构控件完整不等于改变已批准规则。
+
+## 11 GongFa.csv · 功法（CHARACTER）
+
+本表逐字段及复合编码见下文修炼解析证据；显示适配归CHARACTER，实际导入所有者仍为CultivationContentImporter。
+
+## 12 AppearanceProfiles.csv · 外观方案（CHARACTER）
+
+唯一列appearanceProfileId=外观方案ID（K），唯一允许行none=无外观。所有者CharacterContentImporter.ParseAppearanceProfileDefinitions/ImportAppearanceProfiles；只读说明“当前仅批准无外观方案”，不能创造资源引用。
+
+## 13 Language.csv · 显示文本（CHARACTER）
+
+无普通表头，两列虚拟显示名id=文本ID（K）、zh_CN=中文文本（E非空）。稳定键不重命名，引用显示同步刷新但不改ID。所有者各importer.LoadLanguage，以及SettlementContentImporter.ParseContentLanguage/ValidateApprovedContentLanguage。后者锁定以下6条文本为R：settlement_guanzhong_city、settlement_feature_bounty_board、item_lingshi_low_description、item_shijia_piece_description、bounty_guanzhong_shijiahou_title、bounty_guanzhong_shijiahou_description；ImportCharterSites另将charter_site_old_water_station固定为“旧水驿”，该第7条文本也为R；其余现有文本可编辑。文本变更会影响GongFa/Spells/Skills/Characters中固化的中文字段、正式目录字典及Adventure引用显示；应用必须覆盖这些消费者，并清除各现有_lang缓存（由现有入口重置），不能认为只保存Language即可更新已生成资产。
+
+## 14 Settlements.csv · 据点（WORLD）
+
+键settlementId；所有者SettlementContentImporter.ParseSettlementRows/ParseSettlementFeatures/ValidateApprovedSettlement。唯一关中城全部是现有批准固定投影R：settlementId=据点ID（guanzhong_city，K）；displayNameKey=名称文本（Language）；contentScope=内容范围；settlementType=据点类型；regionId=地域；ownerFactionId=所属势力；visualThemeId=视觉主题；features=据点功能；adventureEntranceIds=冒险入口引用。标量必填无量纲。
+
+features以|分记录，每条featureId~displayNameKey~availability~disabledReasonKey：功能稳定键、名称文本、启用状态、禁用理由文本；enabled理由必须空、disabled理由须有效Language键。当前仅bounty_board~settlement_feature_bounty_board~enabled~。adventureEntranceIds以|连接不重复ID，当前仅guanzhong_wild；现行校验是批准字面量，不是读取Adventures建立外键。
+
+## 15 Bounties.csv · 悬赏（WORLD）
+
+键bountyId；所有者SettlementContentImporter.ParseBountyRows/ParseBountyRewardEntries/ValidateApprovedBounty/ValidateContentCatalogReferences。唯一石甲兽悬赏全部为固定批准投影R：bountyId=悬赏ID（K）；titleKey=标题文本、descriptionKey=描述文本（Language）；contentScope=内容范围；issuerSettlementId=发布据点（Settlements）；objectiveType=目标类型（defeat_enemy击杀）；targetEnemyId=目标敌人（正式Enemies）；requiredCount=击杀数（固定1个）；allowedAdventureId=允许地图（固定guanzhong_wild）；rewardEntries=奖励列表；repeatPolicy=重复策略（one_time一次）。所有标量必填。
+
+rewardEntries以|分记录，itemId@quantity：物品引用与正整数数量，不重复，数量≤对应Items.maxStack；当前固定item_lingshi_low@3。无独立单表导入，和据点同归ImportContentCatalog。
+
+## 16 Adventures.csv · 冒险（WORLD）
+
+键(adventureId,nodeId)；所有者AdventureContentImporter.Parse/Import，节点执行归AdventureNodeDispatcher。
+
+adventureId=地图ID（K分组）；nodeId=节点ID（K组内唯一）；displayNameKey=地图名称文本（E Language候选，同地图各行一致，旧解析允许空）；contentScope=内容范围（E，同组一致，旧解析允许空）；nodeTypeId=节点类型（E必填）；q=轴坐标q、r=轴坐标r（E整数格，可零/负，同图坐标不重复）；contentId=节点内容引用（C依节点类型，起点空、遭遇引用正式Enemy）。同组名称/范围改动联动同图各行。新工具校验中文名称引用和节点处理器/内容合法性，不能把旧Parse仅结构成功当可运行证据。
+
+## 17 EnvironmentProfiles.csv · 战场环境（WORLD）
+
+键profileId（K环境档案ID）；所有者WorldContentImporter.ParseEnvironmentProfiles/ParseEnvironmentProfileRow/ParseQueryLimits/ParseBattlefieldCells等完整Parse方法及EnvironmentProfileDefinition。
+
+- E queryLimits=查询限制：unitsPerRange=每射程度量单位（正整数）；maxQueryRange=最大查询射程（正整数），编码unitsPerRange=<值>;maxQueryRange=<值>，顺序固定，空/0非法。
+- E battlefieldCells=战场格：每项q:r@blocksGroundMove@blocksLineOfSight，以|分项；q/r整数轴坐标、blocksGroundMove地面阻挡、blocksLineOfSight视线阻挡为0/1。按q、r严格递增，重复拒绝；零坐标合法。派生有向边不在CSV：六邻接各双向，距离unitsPerRange，allowsMovement/allowsEffects=true，不把格阻挡改写成边标志。
+- E surfacePrototypeRefs=地表原型引用：非空无重复|列表，现行仅验证引用形状，不虚称已查目录。
+- E phenomenonChannels=现象通道：channel=type+type，通道以;连接；airflow气流、visibility能见度、temperature温度、precipitation降水、suspendedHazard悬浮危险、cloudDischarge云层放电六通道各一次，类型非空不重复。
+- E phenomenonPairs=现象组合：channel:first+second>result，以|分项，中文子字段为通道、第一现象、第二现象、结果；三现象必须在该通道声明，前两不同，无序组合不可正反重复。
+- R elementRelationRefs=五行关系引用：element_wood木、element_fire火、element_earth土、element_metal金、element_water水各一次，以|连接，当前固定集合。
+- E spiritRecoveryEnvironment=回灵环境：ordinary普通、spirit_vein_node灵脉节点、blessed_land福地，必填无缺省。
+
+所有文本引用无数字单位，列表不得把空转none。编辑控件按层选取而非输入协议符。
+
+## 18 FoundationPurpleMansionStates.csv · 道基紫府（CULTIVATION）
+
+生产零行，当前26列v2。所有者CultivationContentImporter.ParseFoundationPurpleMansionStates/RequireFoundationPurpleMansionColumns及FoundationPurpleMansionStateData。ImportFoundationPurpleMansionStates零行提前返回，直接Parse才校验表头。allowFixtures=false时生产行不可带fixture，而ValidateFixtureCarryingCapacity对无fixture行抛FPM_EXTERNAL_REFERENCE_UNRESOLVED；因此不开放生产新增角色，完整结构在隔离fixture验证，不承诺外部数值权威已接入。
+
+- K：schemaId=模式ID（foundationPurpleMansionState）；schemaVersion=模式版本2；characterId=角色ID（全表唯一/输出键）；foundationInstanceId=道基实例ID。
+- E引用：foundationDefinitionId=道基定义；sourceGongFaId=来源功法；phaseBoundarySetId=阶段边界配置；carryingCapacityProfileId=承载配置。当前解析器对多数外部引用仅查字符形状，生产权威缺失不能补造。
+- E stageId=筑基阶段（FOUNDATION筑基/MANSION开府/COMPLETE圆满）；R stageCode=阶段码（10/20/30，随stageId）；E continuousProgress=连续进度（有限浮点原始进度量，不擅设0..100）；E naturalMansionCapacity=天生府容量（0..3府）；E expansionGrants=拓容授予；R expandedMansionCapacity=拓容府数（等于授予数，最多2）；R currentMansionCarryingCapacity=当前承载府数（由承载权威或fixture决定）；C completionMansionCapacity=圆满确认府数（非圆满0，圆满>0且不超容量/已建府数）。
+- E/C结构：mansionStates=五府状态；effectBindings=效果绑定；guardianAbilities=镇府神通；enhancementNodes=强化节点；cultivationActionState=当前修炼行动；closedRetreatPlan=闭关计划；jindanLock=结丹锁及冻结快照（FORMED后快照只读，不改冻结事实）。
+- R测试元信息：fixtureId=样例ID；expect=预期ACCEPT接受/REJECT拒绝；fixtureOnlyNumericProfile=测试数值权威替身。生产三列空或none；fixture须三列齐全。
+
+引用允许字母数字及_-.；空或小写none表示无（None不是none）。列表默认|分项、~分段、内部引用列表+分项；除明确可空外必填。复合字段每个子段如下：
+
+| 字段 | 精确编码与逐段中文 |
+|---|---|
+| expansionGrants | grantId~sourceItemId~capacityEffectBindingId：授予ID、来源物品、容量效果绑定；空/none=0项 |
+| mansionStates未建 | kind~NOT_BUILT：府种、未建状态 |
+| mansionStates胚胎 | kind~EMBRYO~embryoId~sourceSpellId~upgradePlanId~continuousProgress~progressChannelId~relatedActionStateId：府种、胚胎状态、胚胎ID、来源术法、升格方案、连续进度、进度通道、关联行动 |
+| mansionStates建成 | kind~COMPLETE~mansionInstanceId~mansionBodyEffectBindingId~guardianAbilityInstanceId~sourceSpellId~upgradePlanId~sourceSpellDisposition：府种、建成状态、府实例、府体效果、镇府神通实例、来源术法、升格方案、原术处置 |
+| effectBindings | effectBindingId~carrierKind~carrierId~order~trigger~conditions~target~atomicEffectType~parameters：效果ID、载体类型、载体ID、正整数执行序号、触发、条件、目标、原子效果类型、参数；空/none=无绑定 |
+| guardianAbilities | abilityInstanceId~abilityDefinitionId~mansionInstanceId~sourceSpellId~upgradePlanId~sourceSpellDisposition~form~effectBindingIds：神通实例、神通定义、府实例、来源术法、升格方案、原术处置、形式、效果ID列表；空/none=无 |
+| enhancementNodes | nodeId~abilityInstanceId~nodeKind~requirements~effectBindingIds：节点ID、神通实例、节点类型、条件列表、效果列表；空/none=无 |
+| cultivationActionState | actionStateId~actionKind~status~targetRef~fixedCycleDefinitionId~lastStableBoundaryId~committedCycleIds~progressChannelId~numericProfileRefs：行动ID、行动类型、状态、目标、固定周期定义、最后稳定边界、已提交周期列表、进度通道、数值配置列表；空/none=null |
+| closedRetreatPlan | actionStateId~targetRef~stopConditions：行动、目标、停止条件列表；空/none=null |
+| jindanLock | PRE_JINDAN；或FORMED~foundationInstanceId~stageId~stageCode~naturalMansionCapacity~completionMansionCapacity~expansionGrantIds~mansionSnapshots：未结丹；或已成丹、道基实例、冻结阶段、阶段码、天生容量、圆满容量、拓容授予ID列表、五府快照 |
+| fixtureOnlyNumericProfile | phaseBoundarySetId~carryingCapacityProfileId~currentMansionCarryingCapacity：阶段边界配置、承载配置、当前承载府数 |
+
+五府kind=MING命/HUN魂/SHI识/WU物/YUN运，恰各一次。处置RETAIN保留/REPLACE替换/INTERNALIZE内化。载体FOUNDATION道基/MANSION_BODY府体/GUARDIAN_ABILITY镇府神通/ENHANCEMENT_NODE强化节点/EXPANSION_GRANT拓容授予/CULTIVATION_ACTION修炼行动，必须根内存在，同载体order严格递增。授予效果类型MANSION_CAPACITY_PLUS_ONE且载体为对应授予。
+
+conditions/requirements为+列表：普通引用或completeMansion:<府种>，后者须相应府建成；INTER_MANSION节点恰有一个不同自身府的完成要求。parameters为key:value+key:value（参数键、引用值），可none；禁止递归效果包。form=ACTIVE主动/PASSIVE被动/TRIGGERED触发；nodeKind=BEHAVIOR行为/CULTIVATION修炼/RESOURCE资源/INTER_MANSION跨府/SPECIAL特殊，requirements非空。effectBindingIds、committedCycleIds可none，numericProfileRefs非空。
+
+actionKind=FOUNDATION_TRIAL道基试炼/FOUNDATION_NURTURE道基温养/MANSION_EMBRYO_NURTURE府胚温养/MANSION_OPENING_TRIAL开府试炼；status=READY就绪/ACTIVE进行中/PAUSED暂停/COMPLETED完成/FAILED失败/TERMINATED终止。闭关必须对应当前同一行动和目标且未终结；停止条件+列表非空：WAITING_RESPONSE等待响应、INSUFFICIENT_NEXT_CYCLE_RESOURCES下周期资源不足、TARGET_COMPLETED目标完成、ACTION_FAILED行动失败、INJURY_UNRESOLVED伤势未解、ACTION_INVALIDATED行动失效、PLAYER_GUARD玩家保护、CHAPTER_OR_UNLOCK_BOUNDARY篇章或解锁边界、MANUAL_PAUSE手动暂停。
+
+mansionSnapshots内部以+分五府，未建kind:NOT_BUILT，建成kind:COMPLETE:bodyEffectBindingId:guardianAbilityInstanceId。FORMED要求圆满且无胚胎，快照与当前容量、授予集合、五府/府体/神通逐项匹配。各府体固定ID为MANSION_BODY_MING_YUAN_HUIHU、MANSION_BODY_HUN_LINGTAI_DINGPO、MANSION_BODY_SHI_SHENGUAN_RUWEI、MANSION_BODY_WU_WUJI_SHANCHENG、MANSION_BODY_YUN_JIYUAN_SHIZHAO，不作为自由文本。
+
+## 19 JindanStaticStates.csv · 金丹静态根（CULTIVATION）
+
+生产零行；所有者CultivationContentImporter.ParseJindanStaticStates及JindanStaticStateData/对应验证器。生产入口使用空JindanStaticReferenceCatalog，非空生产输入缺外部权威时拒绝；不复制fixture目录作权威。
+
+K：schemaId=模式ID（jindanStaticState）；schemaVersion=版本1；characterId=角色ID。R引用foundationPurpleMansionStateRef=同角色已圆满且FORMED的道基实例；mansionInputs=冻结五府输入，精确匹配Foundation且不能有胚胎。C结构：jindanCoreBinding=唯一金丹核心；danxiang=唯一丹相；stablePositionBindings=稳定位列表（1..3）；abilityLedgerBindings=神通台账归属（每已建府神通恰一条）。R：fixtureId=测试ID；expect=测试预期；fixtureOnlyNumericProfile=测试数值引用（此表是单个引用，不是三段）。生产测试列空/none。
+
+列表|、段~、辅助列表+；除指定none字段外必填。
+
+| 字段 | 精确编码与子字段中文 |
+|---|---|
+| mansionInputs | kind~NOT_BUILT；或kind~COMPLETE~mansionInstanceId~mansionBodyEffectBindingId~guardianAbilityInstanceId~sourceSpellId~upgradePlanId~sourceSpellDisposition；子字段及五府枚举同上，仅允许冻结未建/建成 |
+| jindanCoreBinding | jindanCoreBindingId~jindanInstanceId~boundDanshuCoreId~formationTransactionId~formationVersion：核心绑定ID、金丹实例ID、绑定丹枢核心、结丹事务引用、版本（≥1） |
+| danxiang | danxiangInstanceId~jindanInstanceId~danxiangNameKey~danxingDefinitionId~danxiangPresentationProfileId：丹相实例、金丹实例、名称键、丹性定义（可none）、表现配置。名称键目前只查引用格式，不宣称已查Language |
+| stablePositionBindings | positionId~expectedPositionVersion~roadId~positionType~proofProfileId~equippedBaseEffectId~compatibilityProfileId~primaryCarrierAbilityInstanceId~auxiliaryCarrierAbilityInstanceIds：位ID、期望版本（≥0）、道途、位类型、证明配置、基础效果、相容配置、主载体神通、辅助载体神通列表（可none） |
+| abilityLedgerBindings | abilityInstanceId~resourceDebitLedgerRef~cooldownLedgerRef~chargeLedgerRef~costLedgerRef~conflictReserveLedgerRef~conflictCostProfileId：神通实例、资源扣费账本、冷却账本、充能账本、代价账本、冲突储备账本、冲突费用配置；六引用可none |
+
+positionType=SOURCE源/TRANSFORMATION化/DOMAIN域；位ID和类型各唯一，主载体不重复且不可出现在自身辅助中；载体必须来自已建府。所有外部位/道途/证明/效果/相容及版本需权威目录匹配，辅助顺序保留。非空可变账本全根不可共享；冲突储备与费用配置同时有/无。冻结引用不能作为UI自由生成状态。
+
+## 20 NpcCultivationActionWeightProfiles.csv · NPC修炼策略（CULTIVATION）
+
+键(profileId,recordKind,recordId)，TRIGGER另以triggerStableId区分；所有者CultivationContentImporter.ParseNpcCultivationActionWeightProfiles/ComputeNpcCultivationSourceHash、NpcCultivationActionWeightProfileData及其评分规则。所有记录按原顺序保留，按profile/recordKind中文分组。未知recordKind在旧解析会被忽略，新编辑器必须拒绝；无关列保持空，不把稀疏列补0。
+
+- K：schemaId=模式（npcCultivationActionWeightProfile）；schemaVersion=版本1；profileId=策略组；recordKind=记录类型（MANIFEST清单/ACTION行动/MODIFIER修正/CAP_POLICY封顶/DIMINISHING_POLICY递减/RISK_GATE风险门/TRIGGER触发）；recordId=记录ID；triggerStableId=触发ID（TRIGGER）。MANIFEST.recordId和TRIGGER.recordId不作为运行时计算输入，仍保留身份。
+- MANIFEST：sourceContentHash=来源哈希（R派生）；authorityKind=权威来源（R CSV_SOURCE_SET）；tieBreakPolicy=同分规则（R LEXICOGRAPHIC_ASC按稳定ID升序）。每组恰一清单，全表使用同一hash。
+- ACTION：actionStableId=行动稳定ID（K，五行动FOUNDATION_TRIAL/FOUNDATION_NURTURE/MANSION_EMBRYO_NURTURE/MANSION_OPENING_TRIAL/JINDAN_PROOF各一次）；legalityRuleSetRef=合法性规则集（E非空外部引用）；baseWeight=基础权重点（E有限数可0）；subjectiveRiskGateRef=主观风险门（E空=无，非空同组RISK_GATE）；enabled=启用（E true/false）；actionTotalCapPolicyRef=总分封顶策略（E同组CAP_POLICY）。
+- MODIFIER：actionStableId=所属行动（K引用）；sourceKind=来源（K PERSONALITY性格/SECT门派/REALM_GOAL境界目标/LIFESPAN寿元/RESOURCE资源/ENVIRONMENT环境，按此顺序）；selectorRef=选择条件（E非空，运行上下文）；priorityDelta=优先权增量（E有符号有限权重点）；applicationOrder=同来源顺序（E整数）；capPolicyRef=来源封顶、diminishingPolicyRef=递减策略（E同组引用）；riskThresholdDelta=风险阈值增量（E空按0但保留空，仅寿元来源实际参与）。
+- CAP_POLICY：scope=作用域（E SOURCE_GROUP来源组/ACTION_TOTAL行动总分/RISK_THRESHOLD风险阈值）；minimum=下限、maximum=上限（E有限原始点数，最小≤最大）；appliesAfterSourceKind=应用后来源标记（R，当前运行时未用它排序，可空保留）。
+- DIMINISHING_POLICY：scope=作用域（R SOURCE_GROUP）；inputBasis=输入基准（R当前ABSOLUTE_DELTA绝对增量，运行时实际取绝对值）；activationThreshold=激活阈值（R有限原值，当前运行时未消费）；segments=递减分段（E结构）；outputBound=输出绝对上限（E有限非负权重点）。
+- RISK_GATE：knownEvidenceRefs=已知证据引用（E非空|列表，与上下文选择器匹配）；riskAssessmentRef=主观风险评估引用（E非空，与上下文风险字典匹配）；baseRiskThreshold=基础风险阈值（E有限原始阈值点，不假定百分比）；lifespanCapPolicyRef=寿元风险封顶（E同组CAP_POLICY）。
+
+segments=lower-upper@multiplier，以|分段，子字段“起点/终点/倍率”：首lower=0、后lower=前upper，upper>lower，multiplier≥0。对绝对增量分段积分后封顶再恢复符号，不是跨activationThreshold才启用；控件不提供分隔符编辑。
+
+来源hash算法必须复用当前函数：找到首个非空非#表头并ParseRow，数据按物理顺序跳空/#并ParseRow，仅把各数据行sourceContentHash列清空，再用逗号Join（不Trim、不排序、不重新CSV转义）；表头与全部行用LF连接、无末尾LF，UTF-8无BOM字节SHA-256小写64位。每个MANIFEST写同一全表hash。sourceContentHash表头必须精确大小写，因为Array.IndexOf与RequireExactColumns大小写行为不同。编辑器预览显示hash派生变化，用户不可直接填hash。
+
+## 21 CharterRuleDefinitions.csv · 册界规则（CHARTER）
+
+所有者WorldContentImporter.ParseCharterRuleDefinitions/ParseCharterRuleDefinitionRow及CharterRuleCatalogValidator。唯一已有静态目录Assets/Data/CharterRuleStaticCatalog/CharterRuleStaticCatalog.asset是引用权威，不生成它、不从环境内容推定授权。全部字段必填无量纲，引用拒绝none、非法字符、空项、重复；K ruleEntryId=规则条目ID。
+
+E受目录约束：displayName=名称文本键（目录displayNameKeys，并非直接中文）；ruleFamily=规则族；relationElement=关联五行；compatiblePhenomena=兼容现象（|列表）；positiveCommit=正向提交、negativeCommit=负向提交（目录commits，其现实供给必须可解析）；requiredAuthority=所需权限（authorityRequirements及法宝/组织版本）；requiredNodeTypes=所需节点类型（|列表）；scopeType=作用域类型（SINGLE_NODE单节点/CONNECTED_NODES连接节点/REGIONAL_HUB区域枢纽）；scopeTierCap=作用域上限（NODE节点/AREA片区/REGION区域）；anchorNodeIds=锚定节点（|）；propagationBoundaryProfileId=传播边界档案；currentCoverageSet=当前覆盖（|，须在边界allowedCoverageIds）；affectedWorldVariables=受影响世界变量（|）；conflictProfileId=冲突档案；failurePolicy=失败策略（REJECT拒绝/SUSPEND挂起/SAFE_DOWNGRADE安全降级）；worldEventOutputs=世界事件输出，每条eventId~environmentProfileId（事件引用、环境引用），|分条，引用目录worldEventIds/environmentProfileIds。
+
+positiveCommit等为单个引用选择，不能把静态目录内部提交对象复制到CSV或新增授权字段。
+
+## 22 CharterSites.csv · 册界站点（CHARTER）
+
+所有者SettlementContentImporter.ParseCharterSites/ParseCharterSiteRow/ParseCharterSiteGrant/ParseCharterSiteCandidate/RequireStableCharterSideNotWon及CharterConflictRules.RuleConflictInstance.Decide。协议为扁平列，UI分组不改变写回格式。全部顶层必填；ID仅字母数字_-.、通常不可none；唯一可无的grantRevocationReason必须显式none不能留空。bool精确true/false；整数保持原单位，不臆改为秒/概率/灵力。
+
+基础组：siteId=站点ID（K固定charter_site_old_water_station）；displayNameKey=站点名称（R批准键文本旧水驿）；settlementId=所属据点（R guanzhong_city）；passageCapabilityId=通行能力（R capability_kaihe_jiuzhang_v1）；passageOperatorId=通行操作者、passageTargetId=通行目标（E站点引用）；passageProtocolState=协议状态（R compatible兼容）；passageStructureState=结构状态（R intact完好）；passagePowerState=动力状态（R available可用）；interactionTimeProfileId=交互时间档案（R interaction_time_old_water_station_gate_v1）；recognitionTiming=识别时序（R instant即时）；operationTiming=操作时序（R sustained_guided持续引导）；cancellationPolicy=取消策略（R no_commit_on_cancel取消不提交）。
+
+界印组E引用：facilityId=设施；sealRelicId=界印法宝（目录relicIds）；sealManagerId=界印管理者（不可等于通行操作者）；sealBeneficiaryId=受益者；sealAuthorizationVersionId=组织授权版本（目录）；ruleEntryId=规则条目（目录且对应Definitions资产存在）；ruleEntryOccupancyId=条目占用；nodeOccupancyId=节点占用；jindanConflictEventId=金丹冲突事件；jindanChallengeEventId=金丹挑战事件。
+
+资格组：grantId=跨阶资格（K，所选冲突档案crossTierChallengeGrantIds）；grantDefinitionVersion=资格版本（R正整数且等目录版本）；grantTargetVariableId=目标变量（E目录worldVariableIds）；grantChallengerId=挑战者（E）；grantQualificationSource=来源类型（E JindanProtection金丹护持/YuanyingOrthodoxy元婴正统/DedicatedGreatFormation专用大阵/NarrativeRelic剧情法宝）；grantAllowedOperationId=允许操作（E）；grantTargetId=目标节点（E目录nodeIds）；grantScopeId=作用域（E）；grantBeneficiaryId=受益者（R镜像sealBeneficiaryId）；grantRealityAnchorId=现实锚（E）；grantResourceLedgerRef=资源账本（E）；grantCapacityLedgerRef=容量账本（E）；grantChallengeRuleTier=挑战规则层级（E正整数等级）；grantEffectiveAtTick=生效刻（E非负整数）；grantExpiresAtTick=失效刻（E整数≥生效刻）；grantIsRevoked=已撤销（E bool）；grantRevocationReason=撤销原因（C未撤销none，已撤销非none引用）；grantDisplaySource=展示来源（E引用，现行未查Language）。
+
+左候选：leftCandidateId=左候选ID（K）；leftCandidateTargetVariableId=左目标变量、leftCandidateTargetId=左目标节点（R镜像grant目标）；leftCandidateHasVariableAuthority=左具有变量权限、leftCandidateHasLegalTarget=左具有合法目标、leftCandidateHasActiveContinuousCarrier=左具有持续载体（E bool）；leftCandidatePositionRank=左位格、leftCandidateRealityAnchorRank=左现实锚等级、leftCandidateAlreadyPaidCost=左已付代价、leftCandidateConflictReserve=左冲突储备、leftCandidateSettlementCooldown=左结算冷却（E非负原始整数，0有效）；leftCandidatePulseCost=左单脉冲代价（E正整数）。
+
+右候选：rightCandidateId=右候选ID（K，与左不同）；rightCandidateTargetVariableId=右目标变量、rightCandidateTargetId=右目标节点（R镜像grant目标）；rightCandidateHasVariableAuthority=右具有变量权限、rightCandidateHasLegalTarget=右具有合法目标、rightCandidateHasActiveContinuousCarrier=右具有持续载体（E bool）；rightCandidatePositionRank=右位格、rightCandidateRealityAnchorRank=右现实锚等级、rightCandidateAlreadyPaidCost=右已付代价、rightCandidateConflictReserve=右冲突储备、rightCandidateSettlementCooldown=右结算冷却（E非负原始整数）；rightCandidatePulseCost=右单脉冲代价（E正整数）。
+
+后续事件组：charterCandidateId=册界侧候选（E必须左/右其一）；yuanyingConflictEventId=元婴冲突事件（E站点引用）；yuanyingTargetVariableId=元婴目标变量（E目录）；yuanyingTargetId=元婴目标节点（E目录）；yuanyingScopeId=元婴作用域、yuanyingRealityAnchorId=元婴现实锚（E站点引用）。
+
+完整资格、请求、候选交给共享Decide判定，必须资格有效且明确左右一方胜、胜方不为charterCandidateId；不得固定UI赢家，不触发真实游戏事务。
+
+## 功法复合编码补充（第11表）
+
+所有者CultivationContentImporter.ImportGongFa及GongFaGrowthData。K name=功法ID/Language/资产键。E必填引用：affiliation=门派、grade=品级、elementMain=主属性、elementSub=辅属性，均经Language解析；contentScope=内容范围（player/reserved）。E必填整数星数：starRootBone=根骨倾向、starPhysique=体魄倾向、starSpirit=灵力倾向、starMind=神识倾向、starReaction=反应倾向、starTalent=资质倾向、starFortune=福缘倾向；类型说明1..5，旧importer未限制，编辑器提示并按字段定义校验，不修改生产值。
+
+growth=成长列表（E必填）：realmId[@stageCode]:hp/mp/physAtk/magAtk/physDef/magDef/reaction/movePoints/mindGrowth，|分条。子字段中文为境界、阶段码、每小级生命/灵力/物攻/法攻/物防/法防/反应/移动点/神识增量，保留各自原始增量单位，零表示不增长。仅realm_zhuji可带@10/@20/@30（筑基/开府/圆满），其他阶段码0，(境界,阶段)不重复，节点顺序保留。数值用InvariantCulture有限浮点；旧方法未拒NaN/Infinity，编辑器保存门拒绝。
+
+chapters=篇章列表（E可空）：chapterNameKey:realmKey:soulShieldRate:hitRate:blockRate:critRate:critDamage:dodgeRate:magAtkBonus:magDefBonus[:specialEffectKey]，|分条。子字段为篇章名、解锁境界、魂盾率/命中率/格挡率/暴击率/暴伤/闪避率/法攻/法防加成、可选特殊效果文本；文本引用Language，八个数显示“加成原值”，不擅做0..1或百分比换算。旧方法少于10段跳过、多于11段忽略、浮点用当前文化；新保存门严格10或11段并保证实际解析回转。
+
+空chapters在ImportGongFa的新建临时对象上不赋值，随后EditorUtility.CopySerialized完整复制到已有资产；不能据局部if推断会保留旧篇章。合同以无篇章为语义，不强行区分Unity序列化null与空数组。验收为有篇章→清空→保存应用→读回无篇章→恢复原值；本合同不要求为此修改现有导入行为。
+
+## 草稿、保存与应用合同
+
+### 所有者与接口
+
+CORE只拥有通用无损文档、草稿和窗口，不包含领域规则。每个领域通过IConfigTableProvider.GetTables()提供ConfigTableDefinition；CORE用Unity TypeCache发现实现并按TableId唯一注册，重复ID报错，不要求后续适配者修改中央注册文件。定义最少包含TableId、中文名、CsvPath、HeaderMode、ExactColumns、稳定RowKey、分组字段、字段描述和领域编解码器。字段描述包含Column/中文名/单位/控件/可编辑条件/只读原因/引用源/空值语义；结构节点以List/Group/Scalar组成，禁止把复合值作为原始文本输入。引用源只是CSV/已有权威目录的只读查询，不另存配置副本。
+
+ConfigValue保留原始词元及HasValue（空与零分开）；CsvConfigDocument.Load(bytes)保留行/单元格定位，EncodeEdits(edits)只产生候选bytes而不写盘；ConfigDraftSession保存打开基线hash、完整相关文档快照、编辑列表及最后应用证据。修改通过SetValue(tableId,rowKey,fieldPath,value)，UndoDraft回到最近已保存基线；关闭脏草稿提供继续编辑/放弃，APPLY接入后才提供校验保存。读失败或未适配字段不显示可用保存按钮。
+
+领域编解码器DecodeRow/EncodeRow只负责CSV⇄结构模型；ValidateDraft(snapshot)返回ConfigIssue(TableId,RowKey,FieldPath,中文原因,原领域错误码)，不可写文件/资产。GetLinkedEdits(snapshot)给出确定性的必要镜像，不静默修复非法用户输入。GetImportSteps(changedTables)只报告下面冻结的领域方法和产物，不自行调用。依赖完整源码的领域校验仍归原importer：APPLY在原类型提取可复用的无写盘Preview/Validate入口，生产Import复用同一解析单元，避免复制第二套业务规则。
+
+APPLY独占IConfigApplyService：ValidateAndSave(session)和SaveAndApply(session)，返回ConfigOperationResult，其最小字段为SavedPaths、FailedSavePaths、AppliedPaths、FailedImportStep、Issues、Evidence。CORE通过TypeCache只接一个实现，未实现时明确禁用按钮。方法同步执行，禁止第二保存服务、自动重试、通用事务层或后台状态机。ConfigImportPlan是本次有序方法/输入/产物清单，不持久化成第二事实源。
+
+### 必要关联编辑
+
+1. RealmCombatGrowth.actionPointMaximumUnits/baseMovementEfficiencyMilliUnits改动或Characters.realmId改动时，以完整候选快照的境界行为唯一源：更新所有Characters对应两列；更新所有Enemies对应realm两列；realm_fanren同步CharacterCreationPointBuy所有default行（现3行）。legacyBaseMovementEfficiencyMilliUnits保持原值。预览逐表逐行列出旧/新值，用户只确认保存按钮所示整体变更，不手工补镜像。
+2. CharacterCreationPointBuy的四个组级字段与Adventures的displayNameKey/contentScope只设组级编辑，联动该组现有各行。只变fromValue/toValue/costPerLevel或节点自身值不修改别行。
+3. Foundation的stageCode/expandedMansionCapacity、NPC的sourceContentHash、CharterSites的grantBeneficiaryId及左右目标变量/节点采用上述唯一源；FORMED冻结快照不可自动重算来掩盖非法编辑。只在允许编辑的隔离模型里计算，不能为生产空表创建行。
+4. Language更新中文引用候选显示，稳定ID不变；攻击/规则预算派生值只读预览，CSV原声明空值仍为空，sourceDigest只写派生asset，不能添加CSV列。
+
+### 保存顺序与冲突
+
+打开记录每个相关文件精确bytes的SHA-256；保存前重新读全部修改文件及依赖校验所读文件，比较hash（不只mtime），变化则定位冲突、保留草稿、不覆盖外部新值。提供明确重新加载（丢弃前须确认），不自动合并。校验整个候选快照、引用、版本、行数/稳定键/列结构、必要镜像、规范路径/归一化重名、文件可写性，全部通过才写第一份CSV。
+
+写入以文件为单位：同目录临时文件完成并验证内容后替换目标，保持原编码/未改内容；临时文件精确由本次操作创建并最终清理，不进入资产导入，不能用带.csv临时文件触发Unity导入。多文件顺序为仓库相对路径Ordinal升序；没有跨文件事务保证。若中途IO失败，停止后续文件，显示已保存清单和未保存清单、保留未保存草稿，不自动回滚或重试，不调用任何领域导入。每个成功写入文件更新基线；不把部分成功标成整体成功。失败恢复由用户显式处理已展示文件，原始bytes仅保留本会话作为可检查证据，不建立长期备份系统。
+
+保存阶段只写CSV，不生成资产。“保存并应用”完成全部CSV保存后才进入应用；保存前的纯领域校验不能依赖未更新的旧CombatRuleSet.asset误判镜像，而要把候选四表构造的内存CombatRuleSet投影显式传入。角色与正式内容解析新增同类可选上下文入参时，旧调用语义不变；不得先写临时生产asset来验证。
+
+### 应用顺序、失败与成功证据
+
+应用前禁止Play Mode、编译/资源更新中执行；检查所有已加载持久asset的EditorUtility.IsDirty及当前脏场景，任一存在则阻止应用并列出路径，让用户自行保存/撤销。这是既有全局SaveAssets副作用的前置门，不自动保存用户资产。即使计划内资产已有用户未保存修改也阻止，避免覆盖。应用期间不让窗口继续编辑草稿。若保存已完成但该门未通过，状态为已保存未应用。
+
+先算变更影响闭包并验证全部必需源文件/资产存在、类型、GUID、唯一性及静态引用；尤其CombatRuleSet目录、两个独立角色模板、唯一外观none和册界静态目录必须在首笔资产写入前核验。单个importer内可能逐资产创建或SetDirty、抛错、LogError后return或跳行，StartAssetEditing不是事务；不能假设调用原子。
+
+| 输入变化 | 必须执行的现有方法及依赖闭包（同一方法去重） |
+|---|---|
+| 三张战斗规则或AttackProfiles | Combat.ImportAttackProfiles（同时WriteCombatRuleSet和目录引用）→Character.ImportCharacterDefinitions→Settlement.ImportContentCatalog→Settlement.ImportCharacterCreationPointBuy；角色/敌人镜像CSV须先保存 |
+| Characters或AppearanceProfiles | Character.ImportCharacterDefinitions；Appearance变化还需Settlement.ImportContentCatalog |
+| Enemies/Items/Settlements/Bounties | Settlement.ImportContentCatalog（含全部敌人模板，不只正式敌人） |
+| CharacterCreationPointBuy | Settlement.ImportCharacterCreationPointBuy |
+| GongFa / Spells / Skills | 对应Cultivation.ImportGongFa / Combat.ImportSpells / Combat.ImportSkills |
+| FoundationPurpleMansionStates | Cultivation.ImportFoundationPurpleMansionStates→Cultivation.ImportJindanStaticStates；零生产行不生成角色 |
+| JindanStaticStates | Cultivation.ImportJindanStaticStates，读取Foundation当前源并验证权威 |
+| NpcCultivationActionWeightProfiles | Cultivation.ImportNpcCultivationActionWeightProfiles |
+| CharterRuleDefinitions | World.ImportCharterRuleDefinitions→Settlement.ImportCharterSites→Settlement.ImportContentCatalog |
+| CharterSites | Settlement.ImportCharterSites（同时更新目录） |
+| EnvironmentProfiles | World.ImportEnvironmentProfiles；核验引用它的Adventure环境适配，当前AdventureMap无直接环境字段，不虚构额外写盘 |
+| Adventures | Adventure.Import（同时目录） |
+| Language | Combat.ImportAttackProfiles、Cultivation.ImportGongFa、Combat.ImportSpells、Combat.ImportSkills、Character.ImportCharacterDefinitions、Settlement.ImportContentCatalog、Settlement.ImportCharterSites、Adventure.Import，覆盖固化文本及目录字典/引用显示 |
+
+联合变更固定拓扑次序：NPC、Foundation、Jindan、册界定义、攻击与规则、功法、术法、神通、角色/外观、正式内容目录、册界站点、创角、环境、冒险；选取闭包内步骤。不用ContentImportCoordinator.ImportAll充当成功判据（其未显式导入AttackProfiles且末尾总日志无条件输出），不调用World.Import/Settlement.Import扩大为未列步骤；调用精确方法而非菜单标题。
+
+APPLY对每步绑定日志监听，仅在调用窗口捕获Error/Exception/Assert，并把Warning中短行skip视为覆盖失败；异常或错误后停止后续步骤。日志为失败线索，正向成功必须同时满足：源快照hash未变、所有预期产物类型/稳定ID/数量/完整字段与无写盘投影一致、既有GUID不变、目录引用正确、领域TryValidate通过，以及明确保存后重新加载序列化结果仍匹配。来源digest按CombatRuleSet.ComputeSourceDigest：四源的仓库路径Ordinal排序，各拼路径+LF+源bytes SHA256小写hex+LF，再UTF-8求SHA256；与NPC算法严格区分。
+
+没有自行持久化的计划产物（Cultivation、World方法及Character.ImportAppearanceProfiles的已有外观资产），由APPLY在前置脏资产门通过后对计划内SetDirty结果SaveAssetIfDirty；Character对角色资产逐项SaveAssetIfDirty不能证明外观资产也已落盘；已有SaveAssets入口保留领域语义且用前置门保护无关修改。最小Preview提取归APPLY允许路径，不重构其他系统。无法证明某步写盘边界或产物时失败关闭，不能增加兼容分支。
+
+导入失败记录调用到第几步、之前已验证持久化的资产、当步可能部分更新/未落盘资产及未执行步骤；CSV已保存不撤回，状态明确“已保存，应用失败，存在部分结果”。不得声称回滚/自动恢复或把下一次重试当首次成功。最终成功后记录本会话输入hash及每步证据；下次打开窗口若没有可重建应用证据，显示“已保存，应用未核验”，不能仅凭文件存在显示成功。重新进入创角/战斗/据点/冒险流程才验证新运行时读取，不承诺运行中热更新。
+
+| 事件 | 文件状态 | 窗口结果 |
+|---|---|---|
+| 修改草稿 | 未写 | 未保存，有脏标记 |
+| 校验失败或外部冲突 | 不写第一文件 | 未保存，保留草稿/字段定位 |
+| 多文件中途失败 | 部分文件已写 | 保存失败，列明已保存/未保存，不应用 |
+| 全保存完成 | CSV新基线 | 已保存未应用 |
+| 应用前门失败 | CSV已保存，资产未调用 | 已保存未应用，说明阻止原因 |
+| 导入错误/投影不符/读回不符 | 可能部分资产已更新 | 应用失败，展示逐步边界 |
+| 全部落盘核验通过 | CSV及计划产物一致 | 应用成功；运行时流程验证另列证据 |
+| 应用后又改草稿 | 新草稿未写 | 未保存；旧成功仅属于旧hash |
+
+## 后继独占路径与验证责任
+
+以下路径均为仓库相对路径。每个新增.cs都同时授权同名.cs.meta，CORE额外独占ConfigEditor.meta。源码归属互斥；APPLY/V的CSV和派生资产是串行验收临时改值/恢复范围，不可提交新平衡值，不代表适配任务可改配置。现有importer的.meta保持原GUID。各卡自身管理路径保留；下文产物精确清单同步进入APPLY/V的expectedPaths。
+
+| 所有者 | 独占实现（目录src/Assets/Scripts/Editor/ConfigEditor/） | 独占测试（目录src/Assets/Tests/EditMode/） |
+|---|---|---|
+| CORE | ConfigEditorContracts.cs、CsvConfigDocument.cs、ConfigDraftSession.cs、ConfigFieldGUI.cs、ConfigTableRegistry.cs、ConfigEditorWindow.cs；目录.meta | ConfigEditorCoreTests.cs |
+| COMBAT | CombatRuleTables.cs、CombatAbilityTables.cs、PointBuyTable.cs | ConfigEditorCombatTests.cs |
+| CHARACTER | CharacterTables.cs、GongFaTable.cs | ConfigEditorCharacterTests.cs |
+| WORLD | WorldTables.cs、EnvironmentTable.cs | ConfigEditorWorldTests.cs |
+| CULTIVATION | FoundationTable.cs、JindanTable.cs、NpcPolicyTable.cs | ConfigEditorCultivationTests.cs |
+| CHARTER | CharterRuleTable.cs、CharterSiteTable.cs | ConfigEditorCharterTests.cs |
+| APPLY | ConfigSaveApplyService.cs、ConfigImportPlan.cs | ConfigEditorApplyTests.cs |
+| V | 不修改实现；只写开发管理/Unity中文配置编辑器验收记录.txt及原批准生命周期路径 | 运行前述测试，不新增测试实现 |
+
+APPLY另独占必要无写盘校验接口：src/Assets/Scripts/Editor/CombatContentImporter.cs、CharacterContentImporter.cs、SettlementContentImporter.cs、CultivationContentImporter.cs、AdventureContentImporter.cs、WorldContentImporter.cs及各.meta。只提取/复用无写盘投影、显式上下文参数，完整保留原投影/赋值语义；不修改CombatRuleSet、运行时数据语义、CsvTableReader或Coordinator，不新增领域所有者。CORE禁止启用假保存，领域卡禁止建立保存/导入按钮；五组可各在同一窗口完成内存编辑/撤销，实际写盘测试集中APPLY，V统一用户路径复验。
+
+测试fixture使用已有源的内存副本，不创建Assets测试数据目录、不把夹具导入生产。深层正负fixture逐行按expect分流，并保持负例错误。临时文件IO测试使用系统临时目录且终于清理；实际应用证据在本任务worktree的Unity工程收集，测试前记录CSV/asset/.meta的hash，测试后恢复并证明无额外Git差异，不使用其他worktree缓存。
+
+每叶最小充分验收：CORE验证22源无编辑bytes往返、特殊CSV、草稿撤销/关闭、窗口真实打开与Editor隔离；每组验证全部列名/中文/控件/空零/引用及每个复合子结构合法与非法往返，至少一项真实窗口内存编辑/撤销（只读表解释和零行表空态亦须操作核验）；APPLY验证凡人效率联动全部default/角色/敌人、NPC hash、Language消费者、篇章清空、外部冲突/IO部分失败/LogError/缺资产/无关脏资产拒绝及保存后重进流程读值；V逐表核对22表字段矩阵和五组代表保存/恢复（只读组用真实可编辑字段代表，例如Environment、CharterSite候选），复跑相关EditMode与数据链/程序集检查并关闭父项。空表不能以生产改值取代fixture验证。
+
+九叶依赖固定CONTRACT→CORE→五组→APPLY→V，无环；父项仅汇总等待V。当前卡完成后只归档自身，CORE的D-CONFIG-EDITOR-CONTRACT-01前置及所有下游投影保留，正式结果入master后的QueueMaintenance再核对ready。新增路径已冻结不等于解除前置或已经实现。
+
+## 当前生产导入产物精确清单
+
+以下每行同时包含对应`.meta`身份保护范围；清单基于本轮生产稳定ID。Foundation/Jindan当前零行，没有可生成资产路径，不授权fixture资产进入生产。静态册界目录只读，不在产物中。未来出现新行/新输出时停止并重新冻结路径，不通配放行。
+
+- src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset
+- src/Assets/Data/AppearanceProfiles/AppearanceProfile_none.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset
+- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset
+- src/Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset
+- src/Assets/Data/Characters/Char_Enemy.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_fengsun.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_huangyesanxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_xueyingmoxiu.asset
+- src/Assets/Data/Characters/Char_Enemy_enemy_yanweihu.asset
+- src/Assets/Data/Characters/Char_Player.asset
+- src/Assets/Data/Characters/Char_char_sanxiuqiangdao.asset
+- src/Assets/Data/Characters/Char_char_taiyixiushi.asset
+- src/Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_charter_entry_suifu_diji.asset
+- src/Assets/Data/CharterSites/CharterSite_charter_site_old_water_station.asset
+- src/Assets/Data/CombatRuleSet.asset
+- src/Assets/Data/ContentCatalog/ContentCatalog.asset
+- src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset
+- src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_baiwuqingyun.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_baoyuanshouyi.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_buzhenzixu.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_dadonglianzhenjing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_hanhongguangda.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_hunyuantongchen.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_jiansubaopujing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_jileiposhan.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_jiujiangshuifulu.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_jiuxiaoleijie.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_kongwuborejing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_kuxingjiandian.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_leicnicuiti.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_nanhuachanyandian.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_nanhuadamengshu.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_nanhuaxuangan.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_qiushuiyouxin.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_sandongfajilu.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_shengmozhengfa.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_taiyishancangjing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_taiyixuanyijian.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_taiyiyugedian.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_tongshensanxuanlilu.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_wanfadulujing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_wanwubuqian.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_xinwuxingyou.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_xuanpindaocang.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_yunzhuandurenjing.asset
+- src/Assets/Data/GongFa/GongFa_gongfa_zhengyimengweilu.asset
+- src/Assets/Data/Items/Item_item_huoxue_dan.asset
+- src/Assets/Data/Items/Item_item_iron_blade.asset
+- src/Assets/Data/Items/Item_item_iron_sword.asset
+- src/Assets/Data/Items/Item_item_lingshi_low.asset
+- src/Assets/Data/Items/Item_item_shijia_piece.asset
+- src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset
+- src/Assets/Data/Settlements/Settlement_guanzhong_city.asset
+- src/Assets/Data/Skills/Skill_skill_bumiejinshen.asset
+- src/Assets/Data/Skills/Skill_skill_fayu_wanxiangxuanmen.asset
+- src/Assets/Data/Skills/Skill_skill_jianxintongming.asset
+- src/Assets/Data/Skills/Skill_skill_jiuzhuanhuandan.asset
+- src/Assets/Data/Skills/Skill_skill_jiweizhu.asset
+- src/Assets/Data/Skills/Skill_skill_kuxingshiyue.asset
+- src/Assets/Data/Skills/Skill_skill_lantingyimo.asset
+- src/Assets/Data/Skills/Skill_skill_leijiandianxu.asset
+- src/Assets/Data/Skills/Skill_skill_leijieyimai.asset
+- src/Assets/Data/Skills/Skill_skill_lingguangguanri.asset
+- src/Assets/Data/Skills/Skill_skill_lingyu_wanxiangguiyuan.asset
+- src/Assets/Data/Skills/Skill_skill_mengjiexingzhou.asset
+- src/Assets/Data/Skills/Skill_skill_roushengchengsheng.asset
+- src/Assets/Data/Skills/Skill_skill_shenhunbumie.asset
+- src/Assets/Data/Skills/Skill_skill_shennianguanchuan.asset
+- src/Assets/Data/Skills/Skill_skill_shishuiji.asset
+- src/Assets/Data/Skills/Skill_skill_shuanghuntongti.asset
+- src/Assets/Data/Skills/Skill_skill_suhuilunhui.asset
+- src/Assets/Data/Skills/Skill_skill_suiyue.asset
+- src/Assets/Data/Skills/Skill_skill_sulizhengyi.asset
+- src/Assets/Data/Skills/Skill_skill_tianfuzhenyue.asset
+- src/Assets/Data/Skills/Skill_skill_tianjieyinji.asset
+- src/Assets/Data/Skills/Skill_skill_tiexuejunhun.asset
+- src/Assets/Data/Skills/Skill_skill_tiexuezhengqi.asset
+- src/Assets/Data/Skills/Skill_skill_wanfaguizong.asset
+- src/Assets/Data/Skills/Skill_skill_wanjuntongling.asset
+- src/Assets/Data/Skills/Skill_skill_yinguodaozhuan.asset
+- src/Assets/Data/Skills/Skill_skill_yinguokehen.asset
+- src/Assets/Data/Skills/Skill_skill_yiqiguanshi.asset
+- src/Assets/Data/Skills/Skill_skill_zhanchangzhijue.asset
+- src/Assets/Data/Skills/Skill_skill_zhengqisuozhi.asset
+- src/Assets/Data/Spells/Spell_spell_anshenfu.asset
+- src/Assets/Data/Spells/Spell_spell_beimingyin.asset
+- src/Assets/Data/Spells/Spell_spell_buhuaijinshen.asset
+- src/Assets/Data/Spells/Spell_spell_canglangji.asset
+- src/Assets/Data/Spells/Spell_spell_chuanliujin.asset
+- src/Assets/Data/Spells/Spell_spell_dadaoxuanyin.asset
+- src/Assets/Data/Spells/Spell_spell_dimafengling.asset
+- src/Assets/Data/Spells/Spell_spell_dingshenshu.asset
+- src/Assets/Data/Spells/Spell_spell_fuyao.asset
+- src/Assets/Data/Spells/Spell_spell_guanshiji.asset
+- src/Assets/Data/Spells/Spell_spell_hengshaoqianjun.asset
+- src/Assets/Data/Spells/Spell_spell_huangquanzhaoying.asset
+- src/Assets/Data/Spells/Spell_spell_hufubingce.asset
+- src/Assets/Data/Spells/Spell_spell_hunguibian.asset
+- src/Assets/Data/Spells/Spell_spell_jianbiqingye.asset
+- src/Assets/Data/Spells/Spell_spell_jianganghuti.asset
+- src/Assets/Data/Spells/Spell_spell_jiangliutiandi.asset
+- src/Assets/Data/Spells/Spell_spell_jindaoduanyan.asset
+- src/Assets/Data/Spells/Spell_spell_jingangpoyue.asset
+- src/Assets/Data/Spells/Spell_spell_jinguangpoyue.asset
+- src/Assets/Data/Spells/Spell_spell_jiuxiaoleifa.asset
+- src/Assets/Data/Spells/Spell_spell_jiuxiaotaiyizhan.asset
+- src/Assets/Data/Spells/Spell_spell_jiuyuanhanquan.asset
+- src/Assets/Data/Spells/Spell_spell_jiuzhuandanhuo.asset
+- src/Assets/Data/Spells/Spell_spell_julingshu.asset
+- src/Assets/Data/Spells/Spell_spell_junshirushan.asset
+- src/Assets/Data/Spells/Spell_spell_kuxingjianshi.asset
+- src/Assets/Data/Spells/Spell_spell_leicnicuiti_spell.asset
+- src/Assets/Data/Spells/Spell_spell_leidunbu.asset
+- src/Assets/Data/Spells/Spell_spell_lieshiquan.asset
+- src/Assets/Data/Spells/Spell_spell_lingfumiaofa.asset
+- src/Assets/Data/Spells/Spell_spell_lingguangshan.asset
+- src/Assets/Data/Spells/Spell_spell_liuhuolingfu.asset
+- src/Assets/Data/Spells/Spell_spell_lunhuichanxiang.asset
+- src/Assets/Data/Spells/Spell_spell_mengyanxixin.asset
+- src/Assets/Data/Spells/Spell_spell_menshice.asset
+- src/Assets/Data/Spells/Spell_spell_mingjinhaoling.asset
+- src/Assets/Data/Spells/Spell_spell_mingwei.asset
+- src/Assets/Data/Spells/Spell_spell_naqiguiyuan.asset
+- src/Assets/Data/Spells/Spell_spell_panshizhuang.asset
+- src/Assets/Data/Spells/Spell_spell_pozhenchongfeng.asset
+- src/Assets/Data/Spells/Spell_spell_pozhenci.asset
+- src/Assets/Data/Spells/Spell_spell_qingfengjue.asset
+- src/Assets/Data/Spells/Spell_spell_qiongli.asset
+- src/Assets/Data/Spells/Spell_spell_renhua.asset
+- src/Assets/Data/Spells/Spell_spell_renjianheyi.asset
+- src/Assets/Data/Spells/Spell_spell_rumengjue.asset
+- src/Assets/Data/Spells/Spell_spell_sanqianmengjie.asset
+- src/Assets/Data/Spells/Spell_spell_shennianci.asset
+- src/Assets/Data/Spells/Spell_spell_shoufen.asset
+- src/Assets/Data/Spells/Spell_spell_shouzhen.asset
+- src/Assets/Data/Spells/Spell_spell_shuwurushan.asset
+- src/Assets/Data/Spells/Spell_spell_suhuijuexing.asset
+- src/Assets/Data/Spells/Spell_spell_suodichengcun.asset
+- src/Assets/Data/Spells/Spell_spell_taiqingyuye.asset
+- src/Assets/Data/Spells/Spell_spell_tiangangfuzhen.asset
+- src/Assets/Data/Spells/Spell_spell_tianjieyin.asset
+- src/Assets/Data/Spells/Spell_spell_tianleiyin.asset
+- src/Assets/Data/Spells/Spell_spell_tianshuyunzhuan.asset
+- src/Assets/Data/Spells/Spell_spell_tiegugong.asset
+- src/Assets/Data/Spells/Spell_spell_tiesuolianzhou.asset
+- src/Assets/Data/Spells/Spell_spell_tongbian.asset
+- src/Assets/Data/Spells/Spell_spell_toubianduanliu.asset
+- src/Assets/Data/Spells/Spell_spell_tx_anshi.asset
+- src/Assets/Data/Spells/Spell_spell_wanchengtianwei.asset
+- src/Assets/Data/Spells/Spell_spell_wanjianchaozong.asset
+- src/Assets/Data/Spells/Spell_spell_wanjunyinxian.asset
+- src/Assets/Data/Spells/Spell_spell_wanliuguizong.asset
+- src/Assets/Data/Spells/Spell_spell_wudai.asset
+- src/Assets/Data/Spells/Spell_spell_wuleifuchi.asset
+- src/Assets/Data/Spells/Spell_spell_wuleihongding.asset
+- src/Assets/Data/Spells/Spell_spell_xuanjiatiebi.asset
+- src/Assets/Data/Spells/Spell_spell_xuanshuizhou.asset
+- src/Assets/Data/Spells/Spell_spell_xuanyuanzhengqijue.asset
+- src/Assets/Data/Spells/Spell_spell_yangua.asset
+- src/Assets/Data/Spells/Spell_spell_yehuozhou.asset
+- src/Assets/Data/Spells/Spell_spell_yinguodaoxuan.asset
+- src/Assets/Data/Spells/Spell_spell_yinguosilv.asset
+- src/Assets/Data/Spells/Spell_spell_yinleijue.asset
+- src/Assets/Data/Spells/Spell_spell_yongjiehuilang.asset
+- src/Assets/Data/Spells/Spell_spell_youmingyin.asset
+- src/Assets/Data/Spells/Spell_spell_yufenglingxu.asset
+- src/Assets/Data/Spells/Spell_spell_yuye.asset
+- src/Assets/Data/Spells/Spell_spell_zhenyuefu.asset
+- src/Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset
+
+现有产物目录均保留身份；若预期目录在执行时缺失或出现未列输出，按停止条件处理，不能自动拓宽路径。已有资产缺失的恢复只允许本清单内由既有importer重建，并受保存前依赖检查。
+
+## 决策落实与合同验证
+
+前轮数据链检查的8条错误均由检查脚本仍列旧24列造成：缺phase/releasedNaturalCapacity/totalMansionCapacity，未知stageId/stageCode/carryingCapacityProfileId/currentMansionCarryingCapacity/completionMansionCapacity。负责人已选择DEC-20261013-CD0DA1648C60CB/A，入口重放checkpoint并授权tools/check-data-chain.ps1；本轮仅更新该表的列声明，不改变通用算法、其他表、fixture禁止检查、豁免、告警或退出码。
+
+2026-10-13本轮结果：
+
+- 生产CSV、FoundationPurpleMansionColumns、隔离fixture表头和检查脚本逐列同序一致，共26列；生产修正前后均0数据行，字节比较证明只替换表头，注释、编码、行尾和.meta不变。
+- 完整执行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1，exit=0、check-data-chain: OK；没有新增或使用临时豁免绕过错误。
+- 22张真实CSV共457个列位置（Language计两虚拟列）均有精确字段登记；复合结构、中文单位、空零、稳定键、只读原因和真实领域所有者按上文冻结。源码复核补齐旧水驿名称锁定和外观资产持久化边界，不改变业务规则。
+- 父项及八张后继卡的route、owner、executionModel、dispatchState、blockedBy、stateReason保持基线值；九叶依赖无环，33个.cs路径独占且均配.meta，CORE包含新目录.meta；179个当前派生asset及.meta均存在并纳入APPLY/V的字面量范围。
+- 入口已重新验证本次run/task及卡/索引digest绑定的预检，matched/notice/mustRead/gatePointers均为空，卡头riskPreflight为空投影。本轮未再扩大路径、所有者或技术路线。
+
+当前交付为技术合同和指定空表/检查声明对齐；仅归档当前任务并移除自身队列与backlog行。所有下游具名前置和阻塞投影保留，正式结果进入master后才由QueueMaintenance判断后继。Unity窗口实现、编译、EditMode、实际保存应用和运行时读值均未执行，属于后继验收，不能把本次静态合同及数据链检查作为完整产品可用证明。

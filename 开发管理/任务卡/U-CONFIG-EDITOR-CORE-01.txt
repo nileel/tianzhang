@@ -17,7 +17,22 @@
     "开发管理/任务卡/U-CONFIG-EDITOR-CORE-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CORE-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorContracts.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorContracts.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/CsvConfigDocument.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CsvConfigDocument.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigDraftSession.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigDraftSession.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigFieldGUI.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigFieldGUI.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigTableRegistry.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigTableRegistry.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCoreTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCoreTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "executionModel": "gpt-6.1-sol",
@@ -45,7 +60,7 @@
 
 按合同在Editor程序集实现唯一窗口、表/条目选择、中文控件契约、内存草稿/脏标记/撤销本次修改、数字/枚举/引用/列表/分组基础和可逆CSV文档读写；保持注释、表头、稳定行/列及未改内容。引用候选显示中文并保留原ID；输入禁用真实业务尚未适配的字段。验证与写盘/导入接线由APPLY独占，本卡不写生产配置、不启用假保存按钮。
 
-当前expectedPaths只授权管理准备；必查源码为候选事实入口。CONTRACT冻结本卡所有实施/测试/导入派生路径及必要.meta后，重算riskPreflight并核对前置，才可转ready。
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
 
 ## 禁止项
 
@@ -70,3 +85,9 @@ CSV引号/逗号/空值/注释/行尾及无修改零diff、草稿撤销/关闭�
 ## 停止条件
 
 发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+CORE拥有IConfigTableProvider、ConfigTableDefinition、ConfigValue、ConfigIssue及IConfigApplyService合同，领域由TypeCache按TableId注册；未接入APPLY时禁用保存/应用。目录.meta仅归CORE。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。

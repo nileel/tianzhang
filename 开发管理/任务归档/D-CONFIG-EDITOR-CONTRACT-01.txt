@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261013-CD0DA1648C60CB/A",
+  "stateReason": "2026-10-13按已批准A完成26列检查声明同步、22表技术合同及后继独占路径；数据链通过，仅当前任务归档，下游具名前置保留。",
   "expectedPaths": [
     "开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt",
     "开发管理/任务归档/D-CONFIG-EDITOR-CONTRACT-01.txt",
@@ -209,3 +209,22 @@
 ## 停止条件
 
 生产表出现数据行立即停止，不迁移或覆盖。检查脚本需要超出单表列声明的修改、发现其他格式/语义冲突、需改业务规则、新增所有者或突破路径/写盘边界时停止并保留证据。必要工具或证据不足保持未完成，不把失败写成通过，不叠加兜底。
+
+## 完成记录（2026-10-13）
+
+DEC-20261013-CD0DA1648C60CB/A已落实；model=gpt-6-astra采用共享入口启动证明，当前run为916dfe8b-6632-40b2-88b8-d9467beec92c，基线4b3bf76de1e5f5c9b22b68e05afb7f5a9b32d6be。上方automationCheckpoint保留前轮停止与已消费回复证据，不表示本任务仍待决定。交付见《Unity配置编辑器字段与导入合同》，编辑器产品尚待后继实现及实机验收。
+
+### 本轮模型与范围核对
+
+当前问题根因及A授权明确，单表字面量修改与已重放合同收口强耦合，主责统一复核，无独立复杂辅助问题；本轮不调用子智能体或第二责任会话。主模型固定入口传入值；推理强度未获入口证明。入口已对扩入的脚本路径验证run/task/卡与索引digest绑定的预检，matched/notice/mustRead/gatePointers均为空，与schema 2空riskPreflight投影一致；本轮无新增路径或所有者。
+
+### 已取得证据与验证边界
+
+- 四份schema逐列一致，共26列；生产前后0行，字节断言证明只替换表头、注释/编码/换行/.meta不变。检查脚本除FoundationPurpleMansionStates列声明外无逻辑变化。
+- 完整check-data-chain.ps1已执行：exit=0，check-data-chain: OK；GongFa=29/29、Spells=84/84、Skills=31/31，Language=649。未添加检查豁免。
+- 合同自检：22表457个列位置覆盖，33个.cs路径独占且各有.meta，CORE新目录.meta齐全；179个派生asset及.meta存在且列入APPLY/V。九叶依赖无环，九张父项/后继卡的route/owner/executionModel/dispatchState/blockedBy/stateReason与基线一致。
+- 直接复核CSV读取器、协调器及指定领域导入入口的void/LogError/全局SaveAssets/部分写入边界；补齐Language中旧水驿固定文本、已有外观asset的显式持久化要求，未改源码或业务语义。前轮解析证据的src输入至当前HEAD未变化。
+- 提交前管理门：check-task-cards.ps1 -TaskId D-CONFIG-EDITOR-CONTRACT-01 -Postcondition CodexClosedOrNonReady、check-review-text.ps1、实际变更路径check-pending-whitespace.ps1和暂存后git diff --cached --check；实际通过结果写入本candidate提交元数据。
+- 已读技能参考：runtime-owner-proof、serialized-persistence、unity-validation；项目结构入口：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、Editor/README.md及Editor/EditMode asmdef。本轮无场景、生成资产或Player代码改动。
+
+仅移除本任务自身队列与backlog行；CORE对本任务的具名前置及全部其他下游状态继续保留，正式入master后由QueueMaintenance核验。未运行Unity窗口、编译、EditMode、保存/应用或运行时读值，不以本合同代替后继验收。已依据本轮事实与diff检查经验候选；本轮为既定schema声明同步和合同细节收口，证据已留在本节，不另立缺少独立复用结论的经验候选。

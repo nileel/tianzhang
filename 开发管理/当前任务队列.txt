@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-CONFIG-EDITOR-CONTRACT-01 | codex_execute | codex | P1 | unity | design | Unity配置编辑器字段与保存导入合同 | 开发管理/任务卡/D-CONFIG-EDITOR-CONTRACT-01.txt |
 | M-EXP-PROMOTE-078A7076A4F2 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-COMBAT-UNARMED-RUNTIME-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-078A7076A4F2.txt |
 | M-EXP-PROMOTE-F88F6E7E7072 | codex_execute | codex | P2 | data | implementation | 经验候选整理：CAND-U-COMBAT-UNARMED-CONFIG-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-F88F6E7E7072.txt |
 | M-EXP-PROMOTE-50373924A1F9 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：CAND-U-GZ-R2-SPAWN-01-01 | 开发管理/任务卡/M-EXP-PROMOTE-50373924A1F9.txt |

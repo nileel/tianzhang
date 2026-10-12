@@ -17,7 +17,13 @@
     "开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-WORLD-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor/WorldTables.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/WorldTables.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/EnvironmentTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/EnvironmentTable.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs.meta"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "executionModel": "gpt-6.1-sol",
@@ -49,7 +55,7 @@
 
 完成据点/悬赏/冒险/环境四表。功能、奖励、入口列表与战场格子、现象通道/关系均拆成嵌套表单；坐标为数值列，阻挡为复选框，queryLimits为两个命名数值；自动输出必要稳定排序且不改变领域含义。不增加地图绘制工具、预览场景或另一环境运行时。
 
-当前expectedPaths只授权管理准备；必查源码为候选事实入口。CONTRACT冻结本卡所有实施/测试/导入派生路径及必要.meta后，重算riskPreflight并核对前置，才可转ready。
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
 
 ## 禁止项
 
@@ -74,3 +80,9 @@
 ## 停止条件
 
 发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
