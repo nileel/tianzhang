@@ -1,0 +1,121 @@
+# 关中战斗主动退出合同
+
+任务：D-GZ-R2-EXIT-01；唯一实施后继：U-GZ-R2-EXIT-01。
+日期：2026-10-12；本轮复核基线：03d2c13d84b5b950cf5a852721c3fa70a6d5c059。
+状态：负责人已批准方案A及共同奖励、资源、保存语义，本合同为唯一生效设计；方案B不生效。尚未实现、未完成Unity运行时验收。
+批准依据：DEC-20261012-CD92C5B14D00B7，负责人通过feishu_card回复A；共享入口已机械核验并重放checkpoint 5f7fedfbaffa8e8576545a9d7a63655fe4ec6aad，回复evidenceHash为277e1ec4963825d6e66e56019766adc23950c64e58fb2528dc9fee64e791fbf6。此回复只用于该决策。
+本轮只完成设计归档和后继准备；U-GZ-R2-EXIT-01仍blocked并保留本设计卡具名前置，正式结果进入master后由后续QueueMaintenance重新核对ready条件。
+
+## 一、问题与事实边界
+
+玩家反馈战斗中没有退出入口。现有返回节点是探索操作，不能解除其战斗门禁来实现撤离。
+
+直接设计依据：
+- docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt 的状态转换表：主动退出关中野外不推进悬赏。
+- docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md 第四节：仅正式胜利可记录击败，单场至多一次；主动退出不计数。
+- docs/superpowers/specs/2026-08-27-combat-piece-presentation-modularization-design.md 第4.3节：Adventure通过表现端口清理，不直接销毁具体棋子。
+- 开发管理/关中第二轮试玩排查与任务拆分.txt 第4节：本问题为退出语义设计与独立实施两项，不是简单场景跳转。
+
+本轮源码核对（静态证据，不是实机复现）：
+1. AdventureController.ReturnToSource只接受Exploration；ResolveEncounter用formalEncounterConsumed拒绝重复结算，只有Victory调用BountyUseCase.RecordDefeat和InventoryGrantUseCase.Grant，然后经INavigationUseCase.ReturnToPreviousScene导航。
+2. EncounterCoordinator.RunCombat拥有我方输入门、敌方行动与演出等待；ExecuteCommand先同步提交规则/资源，再发布表现。UseItem将战斗恢复和库存扣除在无yield区间同步提交；SwapEquipment将战斗与CharacterRuntimeProfile换装同步提交。不能中断其中一半。
+3. AdventureSceneInstaller将runtime.Player、库存版本与TryPrepareCombatConsumption接给EncounterCoordinator；入战角色由runtime.Player.Capture传入AdventureController和AdventureUnitSpawner，转换为独立CombatantSnapshot。
+4. 本链路未把战斗HP/MP、AP、CT、冷却、换术槽回写runtime.Player。现有Complete清理表现并调用ResolveEncounter，没有资源快照回写。不得把战斗快照与持久角色混为一谈。
+5. CombatCommandInput.ClearContext撤销输入与候选；EncounterCoordinator.Complete当前会发布胜负且回调结算，因此不能拿Complete(Defeat)充当主动退出。Static3DCombatUnitPresentationProvider.Clear已有单位、移动和动作反馈清理能力。
+6. GameRuntime.ReturnToPreviousScene消费SceneReturnTarget并清除AdventureId；GameRuntime.CaptureSave保存持久角色、库存、悬赏和导航，没有正在进行的CombatSession。SettlementSceneInstaller.SaveAndReturnToMenu经GameBootstrap.SaveActiveSlot写盘；返回城镇的Awake不自动保存。
+7. GuanzhongCombatNavigationGuardPlayModeTests包含胜负各一次回城与战斗中return拒绝断言；其反射设置Combat并直接调用ResolveEncounter，不证明真实撤离按钮或演出期间退出可用。本轮未运行该测试。
+
+## 二、已批准的奖励、资源与保存语义
+
+范围只限正式关中野外guanzhong_wild，从既有返回目标返回；关中城入口的返回目标是guanzhong_city。使用既有导航用例和场景加载委托，不硬编码城镇跳转、不改其他地图/出身默认行为。
+
+探索和战斗期间都有常驻“返回关中城”/“撤离战斗”入口，置于独立于探索面板隐藏逻辑的Adventure场景UI区域。加载失败态不可用；返回中显示“正在返回”，禁用重入。原探索节点return的战斗拒绝门禁保留。
+
+探索点击返回直接沿用现有探索返回语义。战斗允许态点击只打开确认，不结算、不扣费、不移动、不推进回合。确认期间暂停新的玩家/敌方命令与回合推进；不以Time.timeScale控制全局暂停。
+
+确认正文：撤离不计胜负，不推进本场悬赏，也不获得本场掉落。已使用的道具不返还，已确认的换装保留；本场生命与灵力变化不带回城镇。返回后仍需在城镇保存。
+按钮：“确认撤离”“继续战斗”。确认撤离不另收费、不掷逃跑概率、不增加失败惩罚。继续战斗不改变角色、库存、悬赏、导航或规则会话；预览可清除并要求重新选择，不自动执行原候选。
+
+### 奖励与资源提交边界
+
+| 对象 | 撤离结果 | 所有者/理由 |
+| --- | --- | --- |
+| 本场未结算击败、掉落与悬赏进度 | 一律不提交；不抽掉落、不调用击败计数、不生成胜负结果 | AdventureController的正式结算入口保持独占 |
+| 已有悬赏进度、已完成未领奖、历史掉落 | 原样保留，不重置任务、不自动领奖 | 既有BountyUseCase/库存所有者 |
+| 已确认道具消耗 | 保留扣除，退出不返还；只预览未确认则不扣 | GameRuntime库存，ExecuteCommand的同步提交 |
+| 已确认装备切换 | 保留持久角色当前主手，不回滚为入战装备 | CharacterRuntimeProfile |
+| 战斗HP/MP、移动位置、AP、CT、冷却、临时状态与战斗换术 | 随战斗会话丢弃；既有持久角色值原样保留，不额外治疗、不把受伤/消耗写回 | CombatSession/CombatantSnapshot；不扩张为全局战后资源政策 |
+| 经验、货币、道具或其他已在本场外合法提交的状态 | 保留；撤离本身不奖励也不额外惩罚 | 既有持久所有者 |
+
+因此，道具已扣除而其本场治疗不会转写持久HP，这是负责人已接受的两个所有者边界下的明确选择。后续若要求返还道具、带回受伤/灵力消耗或战前回滚，应暂停另行冻结语义，不能在实施卡暗加保存/回滚机制。
+
+## 三、方案A的生效状态表
+
+只在我方可操作、无移动/演出且战斗仍Ongoing时确认撤离。不接受行动中申请，不缓存请求，不增加等待撤离或取消等待流程。
+
+| 状态 | 方案A行为 |
+| --- | --- |
+| Loading/初始化失败 | 不可用，保留已有失败原因 |
+| Exploration | 常驻返回沿用原返回语义 |
+| 我方待命且Ongoing、无演出 | 打开确认，锁定战斗输入；确认期间不推进命令或回合 |
+| 攻击/术法/换术/换装/道具或移动预览，尚未确认 | 撤销候选后打开确认；不发生资源提交 |
+| 我方移动或攻击演出 | 入口可见但禁用，提示“行动演出中，请稍后撤离”；不缓存点击，恢复我方可操作后重新点击 |
+| 敌方行动或敌方演出 | 入口可见但禁用，提示“敌方行动中，请等待你的行动”；不缓存点击 |
+| 无演出但处于回合转换、尚未开放我方输入 | 暂不可用，提示“回合切换中” |
+| 任一阵营已触发胜负，尚在最后演出 | 禁止撤离，等待正式结算；不允许逃避已成立的败北/胜利 |
+| 胜负已结算/Returning | 禁用；走原结算与一次导航，返回中显示“正在返回” |
+| 确认框内“继续战斗” | 关闭确认，恢复合法输入，候选仍清空；规则状态与资源不变，不自动执行原候选 |
+| 连点退出、连点确认、过期候选或迟到回调 | 至多一个确认、一次清理、一次导航；离开后无奖励写入、不改变Returning |
+
+若演出异常不结束，沿用失败停止边界，不添加超时强退或补偿重试。
+
+## 四、所有者与终止顺序
+
+1. AdventureController拥有关中专属退出流程、确认与Returning门禁；EncounterCoordinator只提供当前会话的可退出性、暂停/恢复和无胜负终止能力。Bootstrap装配UI与输入清理回调，Features之间不新增直接兄弟模块依赖。
+2. 接受撤离确认前重新检查会话仍有效、无已成立胜负、无演出、符合方案A且尚未Returning。确认与正式胜负消费共享既有单次终止保护；不伪造CombatSessionOutcome、不构造FormalEncounterResult。
+3. 在无yield的终止步骤先占用Returning/终止保护并撤销命令权限，使迟到ResolveEncounter不能发奖或重新导航；旧回调不得把已返回状态改回Loading。正常胜负重复消费的既有拒绝测试继续保留。
+4. 清空CombatCommandInput候选/移动/目标预览，失效旧commandContextVersion与swapPreview；停掉本会话推进协程，清空会话/生成快照引用。通过现有表现端口Clear移除棋子、动作/移动/反馈；经现有CombatHudPresenter.Hide清空或隐藏HUD、时间轴和目标状态，由Bootstrap接线，不新增兄弟Feature依赖。清理不调用Complete、不发布胜负。
+5. 清理完成后只调用一次navigation.ReturnToPreviousScene，再调用既有loadScene委托。导航/清理失败停止并报告原始原因，不补发结算、不重复加载、不另建回滚机制。
+6. 再次进入关中野外建立新控制器/会话，不复用旧确认、旧预览、旧敌方协程或旧单位。正式胜负路径仍由原所有者处理。
+
+## 五、保存与旧档
+
+撤离仅保留内存中的已提交持久数据并更新导航，不自动写盘。回城后的既有“保存并返回菜单”保存当前状态；保存失败继续走既有错误处理，不显示成功。未保存即关闭游戏仍按原有存档恢复，不能承诺撤离已落盘。
+
+不增存档字段、不迁移schema、不向旧档补发装备/药品、不读写用户实际存档。旧档按现有恢复器进入；若既有导航恢复允许进入Adventure，则创建新探索会话，不恢复未保存战斗或确认框。用隔离测试存档验证“撤离→回城→保存→重新载入”，证明装备/库存/悬赏/导航一致，不把CaptureSave快照当作磁盘成功证据。
+
+## 六、已冻结的后继实施路径
+
+以下实现工作面已按方案A补齐到U-GZ-R2-EXIT-01的字面量expectedPaths、状态表验收和预检要求；本轮只修改管理文本。后继继续保留D-GZ-R2-EXIT-01具名前置，待正式结果进入master后由QueueMaintenance评估ready，不在本轮实施Unity功能。
+
+只使用以下既有文件，不新增组件/新.meta：
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs
+- src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
+- src/Assets/Scenes/AdventureScene.unity
+- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs
+
+后继自身生命周期路径继续包含开发管理/任务卡/U-GZ-R2-EXIT-01.txt、开发管理/任务归档/U-GZ-R2-EXIT-01.txt、开发管理/任务列表/场景与Unity任务.txt、开发管理/当前任务队列.txt。实现前必须核对实际序列化引用、程序集和已有输入/HUD清理接口能否直接复用；需要修改共享CombatPresentation合同、持久化、奖励或新增组件时停止回查，不默认为上述路径已授权扩张。
+
+## 七、验收与停止
+
+设计验收：有效回复已批准方案A及共同资源/保存语义；本合同已移除另一方案的生效歧义，后继已补齐精确路径与测试合同。该设计批准不表示Unity功能已实现或已通过实机验收。
+
+实施验收：
+- 正式入口进入AdventureScene，核对常驻入口在探索、战斗均可见且不随探索面板隐藏；1920×1080、1280×720实机截图验证可读、可点、确认阻挡背后战斗输入。
+- 按状态表逐项操作，包括预览取消、我方移动/攻击演出、敌方连续行动、回合转换、最后一击胜负优先、重复确认、退出与迟到回调；验证不可用时点击不会在后续自动弹框。
+- 对比撤离前后实际持久角色、库存、悬赏与导航：本场奖励增量零；已扣道具不退、已换装备保留、持久HP/MP未回写、未确认资源不变。通过原生合法持有物品的隔离存档补充资源验证，注明前提，不伪装为新凡人默认获得物品。
+- 保留原胜负各一次导航/奖励与战斗return拒绝回归；通过真实按钮和正式会话补充撤离测试，不只反射设置状态。验证重入无旧单位/预览/协程，隔离存档完成实际写盘再加载。
+- Unity相关编译、正式场景序列化检查、针对性PlayMode与数据链按最终实际变更运行；不对本设计文档运行BattleSim或声称角色平衡结论。
+- 管理检查为check-task-cards、check-review-text、改动路径空白检查与暂存diff检查。
+
+停止：后继未获ready授权前不实施；发现所有者/路径需扩张、现有清理端口不足、需要新增保存/回滚/奖励政策、与批准语义冲突或缺失实施运行时证据时停止，不叠加兜底。
+
+## 八、本轮执行与证据限度
+
+共享入口证明主模型gpt-6-astra；按AI协作规则核对后采用单主模型。状态、资源与导航证明互相耦合，没有需独立委派的问题；未启动辅助或第二责任会话。建议推理强度没有可核实启动证明，不宣称已设置high。
+已消费入口绑定预检：matched/notice/mustRead/gatePointers均空；未改风险索引或已claim任务摘要。
+本轮使用技能unity-agent-workflows；References loaded：runtime-owner-proof、unity-validation；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md，结论以本轮源码与上述设计原文为准。
+本轮只读复核运行时所有者；没有Unity代码/资产修改，没有PlayMode、画面或磁盘保存实测。奖励、资源、保存政策已获批准，游戏功能尚未完成。未触及非请求系统。后继范围变化的riskPreflight须在该卡实际重算，不沿用本设计卡零命中结果。

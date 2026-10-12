@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261012-CD92C5B14D00B7/A",
+  "stateReason": "2026-10-12：有效回复DEC-20261012-CD92C5B14D00B7/A已落实到唯一合同，后继精确路径与验收已冻结并重算风险投影；仅完成设计，后继仍blocked并保留具名前置。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-EXIT-01.txt",
     "开发管理/任务归档/D-GZ-R2-EXIT-01.txt",
@@ -165,3 +165,19 @@
 ## 停止条件
 
 有效回复缺失/冲突，发现新所有者、需扩大批准路径/新增组件、需要存档迁移/资源回写/回滚、现有输入或清理端口不足，或与批准语义冲突时停止回查并按既有决策合同处理，不叠加补丁。后继缺Unity运行时证据不得宣称功能验收通过。
+
+## 完成记录
+
+2026-10-12完成设计冻结。负责人feishu_card回复DEC-20261012-CD92C5B14D00B7/A，共享入口核验evidenceHash为277e1ec4963825d6e66e56019766adc23950c64e58fb2528dc9fee64e791fbf6；不重新解释其他决策。合同仅保留方案A生效状态表及获批资源/保存规则。
+U-GZ-R2-EXIT-01已补齐七个既有业务路径和四个生命周期路径、逐状态验收、资源对照、真实入口/双分辨率、隔离存档写盘重载及停止条件；该卡保持codex_execute/codex、executionModel=gpt-6.1-sol、blocked及blockedBy=[D-GZ-R2-EXIT-01]，backlog具名前置保留，不提升、不入队。后续维护须在本设计正式进入master后重新核对ready门禁。
+
+## 本轮验证记录
+
+- 模型启动证明：共享入口实际选定并传入gpt-6-astra；遵循任务卡中的模型协作提示。本轮有界设计收尾，状态/资源/所有者证据相互耦合，单主模型统一核对，未启动辅助或第二责任会话；未核实推理强度，不宣称high生效。
+- 已消费入口绑定本run/taskId的预检，matched/notice/mustRead/gatePointers均空。后继扩大路径后实际重新预检命中EXP-UNITY-005，消费开工前正文，回查输入层与ReturnToSource的探索门禁，gates/gatePointers为空；未沿用本卡零命中，不改风险索引。
+- 已复核任务必查设计原文与源码：ReturnToSource/ResolveEncounter、RunCombat/ExecuteCommand/Complete、安装器资源与UI接线、AdventureHudPresenter、ClearContext/Hide/表现Clear、ReturnToPreviousScene/CaptureSave/SaveAndReturnToMenu、场景生成与正式序列化引用、既有导航PlayMode测试。确认Complete会发布胜负且结算；道具/换装同步提交持久数据，而战斗HP/MP等未回写。合同用无胜负清理并保留原所有者，未发现需要扩大本轮批准路径。
+- 静态UI链：AdventureSceneBuilder生成AdventurePanel并绑定explorationPanel；正式场景AdventureRoot上的安装器接线；CombatHudPresenter.Present随战斗隐藏探索面板，因此后继常驻入口必须独立于该面板。现有ClearContext、Hide和表现Clear可通过Bootstrap复用；未把静态链当可见性验收。
+- 技能unity-agent-workflows；References loaded：runtime-owner-proof、unity-validation；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md。未触及非请求系统。
+- 管理验证入口：tools/check-task-cards.ps1 -TaskId D-GZ-R2-EXIT-01 -Postcondition CodexClosedOrNonReady -OutputJson；tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理；指定automation-finalize-commit.ps1执行六条预期路径的check-pending-whitespace.ps1及暂存git diff --cached --check。实际命令结果随本轮candidate终态返回。
+- 未运行Unity/PlayMode、双分辨率截图、实际保存写盘或BattleSim；仅管理文本变化，不运行data-chain。设计通过不代表游戏功能完成，运行时证据仍由后继提供。
+- 经验候选评估：本轮是获批合同的冻结与后继准备，已有静态事实不足以形成新的经实现验证的可复用根因/门禁结论，不新增经验候选。

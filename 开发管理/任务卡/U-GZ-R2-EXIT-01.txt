@@ -12,17 +12,26 @@
   "blockedBy": [
     "D-GZ-R2-EXIT-01"
   ],
-  "stateReason": "2026-10-11已完成初步归因，等待具名前置完成及实施路径冻结，不得提前修改业务。",
+  "stateReason": "方案A及实施路径已冻结；仍等待D-GZ-R2-EXIT-01正式结果进入master后由QueueMaintenance核对具名前置、风险预检与ready门禁，本轮不解锁。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EXIT-01.txt",
     "开发管理/任务归档/U-GZ-R2-EXIT-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-005"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"
@@ -32,44 +41,89 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+来源：2026-10-11用户九项试玩反馈。唯一生效设计为开发管理/关中战斗主动退出合同.txt：负责人对DEC-20261012-CD92C5B14D00B7回复A，批准仅我方可操作时撤离及共同奖励、资源、保存语义。
+本卡只准备完成，尚未实施或获得Unity运行时验收；保持blocked和blockedBy中的D-GZ-R2-EXIT-01。待设计正式结果进入master后，由后续QueueMaintenance核对前置及ready门禁，不因本次设计批准提前实施。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ReturnToSource/ResolveEncounter
-- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
-- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::ClearContext
-- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs
+- 开发管理/关中战斗主动退出合同.txt全文，尤其方案A状态表、资源对照、终止顺序、保存与旧档。
+- 开发管理/关中第二轮试玩排查与任务拆分.txt第4节。
+- docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt第七节状态表；docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md第四节。
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ReturnToSource/ResolveEncounter/BeginEncounter/Fail及直接调用者。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RunCombat/ExecutePlayer/ExecuteCommand/Complete、输入门禁、ConfigureEquipment/ConfigureItems和表现端口。
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs::Present及UI装配；src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::Awake。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::ClearContext、CombatHudPresenter.cs::Hide、Static3DCombatUnitPresentationProvider.cs::Clear与既有Contracts端口。只读核对，由Bootstrap复用，不扩大兄弟Feature依赖。
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::ReturnToPreviousScene/CaptureSave、SettlementSceneInstaller.cs::SaveAndReturnToMenu；只读核对导航和持久化所有者。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs探索/战斗面板生成及装配；src/Assets/Scenes/AdventureScene.unity直接序列化引用、目标脚本.meta GUID及运行时面板隐藏writer。
+- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs全文：保留胜负各一次结算回城与战斗中return拒绝，补真实会话和按钮路径。
 
 ## 实施范围
 
-按批准合同接入退出按钮、确认/取消与会话清理，复用当前SceneReturnTarget回关中城。不得用直接SceneManager.LoadScene绕过导航和资源所有者。ready前由设计卡补齐实现和测试路径。
+唯一结果：在正式关中野外guanzhong_wild按批准方案A提供常驻返回/撤离入口，并在无胜负结算的清理后一次性回城。
+仅写expectedPaths中的七个既有业务文件和四个生命周期文件；不新建组件或.meta。其他源码仅必查。用AdventureSceneBuilder生成和接线正式场景，保留既有序列化引用，不手改场景YAML或扩大场景生成范围。
 
-当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
+AdventureHudPresenter拥有常驻入口与确认UI，放在不随AdventurePanel隐藏的场景UI区域；AdventureController拥有退出确认、Returning及单次消费；EncounterCoordinator提供当前会话可退出性、确认期暂停/恢复与无胜负终止；AdventureSceneInstaller连接现有输入、HUD和表现清理端口。复用INavigationUseCase与SceneReturnTarget、既有loadScene委托，不硬编码城镇跳转、不直接绕过导航用例。原探索return节点战斗门禁保持。
+确认文案、资源边界和状态表以合同为准；只有我方可操作、无演出、Ongoing才弹框。不新增行动中申请、请求缓存、等待撤离、超时强退或重试。确认期间不推进命令与回合，不以Time.timeScale暂停全局。
+接受确认前重查胜负与会话；先占用Returning/单次终止保护和关闭命令权限，再清候选、commandContextVersion/swapPreview、本会话协程与会话/生成快照引用。通过已有Clear/Hide清理单位、动作/移动/反馈、HUD、目标与时间轴，最后消费返回目标并加载一次。迟到回调不得发奖、重复加载或把Returning改回Loading；不调用Complete(Defeat)、不构造FormalEncounterResult或伪造胜败。取消确认恢复合法输入，候选可清空但不自动执行，规则资源与导航不变。
+
+### 逐状态实施与验收
+
+| 状态 | 必须行为与证据 |
+| --- | --- |
+| Loading/初始化失败 | 入口不可用、保留原始原因，不启动返回或结算 |
+| Exploration | 常驻返回沿用探索返回语义，消费既有返回目标一次 |
+| 我方待命、Ongoing、无演出 | 可打开一个确认框；框内等待不会推进规则、命令或回合，背后输入被阻挡 |
+| 攻击/术法/换术/换装/道具/移动预览 | 先撤销候选再确认；未确认资源不提交；继续战斗后不自动执行旧候选 |
+| 我方移动/攻击演出 | 入口可见但禁用并提示行动演出中；不打断、不缓存，恢复可操作后须重新点击 |
+| 敌方行动/演出（含连续行动） | 可见但禁用并提示等待我方行动；不缓存点击，下一我方行动不自动弹框 |
+| 回合转换、我方输入未开放 | 禁用并提示回合切换中，不插入资源提交步骤 |
+| 最后一击已成立胜负但演出未完 | 正式胜负优先，不能用撤离逃避；等待原结算 |
+| 已结算/Returning | 禁用并显示正在返回；不重复清理或消费导航 |
+| 继续战斗 | 角色、库存、悬赏、规则会话与导航不变；恢复合法输入，候选可清空 |
+| 连点退出/确认、过期候选、迟到回调 | 至多一框、一次清理、一次导航；退出后无奖励写入，无状态倒退 |
+
+### 资源与保存对照
+
+| 对象 | 撤离验收 |
+| --- | --- |
+| 本场击败、掉落、悬赏 | 不计胜负、不抽掉落、不提交击败与进度；本场奖励增量为零 |
+| 原有悬赏与历史掉落 | 原样保留，不重置、不自动领奖 |
+| 已确认道具消耗 | 保留库存扣除，不返还；只预览未确认不扣除 |
+| 已确认换装 | CharacterRuntimeProfile保留当前已提交装备，不回滚入战装备 |
+| 战斗HP/MP/AP/CT、位置、冷却、临时状态、换术 | 随战斗会话丢弃；不写回持久角色、不额外治疗 |
+| 本场外已合法提交数据 | 原样保留，不额外奖惩 |
+| 回城与保存 | 撤离只更新内存与导航，不自动写盘；城镇原保存入口保存；保存失败走原错误处理 |
+| 旧档与重入 | 无schema迁移、无物品补发；既有恢复器创建新探索会话，不恢复未保存战斗或确认框 |
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。不新增HP/MP回写、道具返还、战前回滚、自动保存、逃跑惩罚或公共存档字段。不得修改清单外Contracts、CombatPresentation、GameRuntime或保存所有者；需要时按停止条件回查。
 
 ## 模型协作
 
-依冻结状态表实现退出和清理，重点证明奖励不误发、资源一致及一次回城。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-前置与实施路径未冻结，继续blocked；临近ready重新核对复杂度与能力，不因已指定模型跳过设计门禁。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+依冻结状态表实现退出和清理，重点证明奖励不误发、资源一致及一次回城。当前为一个由主责统一复核状态、所有者、UI和验证的有界结果；临近ready再核对实际复杂度、能力与原子性。
+2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型保持卡头executionModel=gpt-6.1-sol。建议推理强度high，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
+默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则判断辅助，禁止共享写入。当前设计准备未调用该实施模型，不声称已运行；目标模型不可用按既有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
 
 ## 验证
 
-正式AdventureScene各状态实机操作、双分辨率可见性；奖励/库存/持久角色状态前后比对；保留胜负正式回城测试。
-
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+1. 正式入口从StartMenu进入关中城、进入guanzhong_wild并启动真实遭遇；记录正式AdventureScene对象、脚本/装配、运行时writer链。1920×1080与1280×720实机截图核对探索/战斗常驻入口、禁用原因与确认文案可读、按钮可点、模态输入不穿透。不能只验编辑器预览或反射设置Combat状态。
+2. 对上表逐状态操作并记录前后状态：尤其确认期不推进、不可用点击不缓存、胜负已成立优先、取消无规则变化、重复点击与迟到回调不重入。保留既有胜负各一次回城/发奖与return战斗拒绝回归。
+3. 对上表资源逐项比对实际持久角色、库存、悬赏与导航；用合法持有相应装备/道具的隔离测试存档证明已扣道具不退、换装保留、持久HP/MP未回写，注明资格和物品前提，不伪装为凡人默认开局获得物品。预览取消不提交任何资源。
+4. 撤离后重入无旧单位/目标/预览/确认/敌方协程；使用隔离测试存档完成撤离→回城→城镇原入口实际保存→重新加载，核对装备、库存、悬赏和导航。不以CaptureSave内存快照当磁盘成功，不读写用户实际存档。
+5. 运行Unity编译、SceneArchitectureValidator.ValidateForBatchMode正式场景引用检查、tools/run-unity-playmode-tests.ps1的GuanzhongCombatNavigationGuardPlayModeTests针对性测试；按实际代码边界运行tools/check-unity-assembly-boundaries.ps1。场景变化执行tools/check-data-chain.ps1。具体脚本参数先读现有param；没有BattleSim角色数值平衡结论，不为场景资源功能扩展模拟器。
+6. 管理收尾：check-task-cards.ps1、check-review-text.ps1；实际预期路径check-pending-whitespace.ps1，暂存git diff --cached --check。进入ready/选中执行时重新核对唯一风险预检的taskId、任务卡/索引digest、matched/gates与schema 2投影，消费mustRead并确认门禁入口；范围/所有者/技术路线变化先暂停重跑，不沿用本设计卡预检。
 
 ## 完成条件
 
-所有批准允许态可退出且只导航一次；不可退出态有明确反馈；退出不记击杀/发悬赏/掉落，取消不改变状态，重入无旧会话残留。
+仅批准允许态可退出；其他状态有明确禁用反馈且不缓存。确认暂停、取消无规则资源变化、胜负优先；撤离无本场奖励/悬赏提交，已用道具与换装按合同保留，清理后一次回城、重入无旧会话。真实入口双分辨率、资源对照、隔离存档写盘重载、针对性测试及管理检查均有证据。完成后只归档本卡，不顺带解锁其他任务。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+前置未正式完成或卡未ready不得实施。发现新所有者、需扩大字面量路径/新增组件或.meta、现有输入/HUD/表现清理端口不足、需修改共享Contracts/持久化/奖励政策、要求资源回写或回滚/存档迁移、批准语义冲突、缺失资源或运行时证据时停止，回查根因并按既有停止合同处理，不叠加补丁或以静态验证冒充实机通过。
+
+## 设计准备验证记录
+
+2026-10-12：七个业务路径均为既有文件，不涉及创建/移动资产或新增.meta；本卡executionModel、route/owner及blockedBy未改变，未入队。
+范围冻结后已实际运行tools/get-experience-risk-preflight.ps1 -TaskId U-GZ-R2-EXIT-01，命中EXP-UNITY-005，已消费开工前正文，gates/gatePointers为空，无缺失门禁。该经验要求核对探索返回的输入与处理器双门禁：本轮只读复核AdventureInputController.SelectNode通过canSelectExplorationNode阻止战斗中分发，AdventureController.ReturnToSource再次检查CanSelectExplorationNode；后继保留两层限制并用原回归验证，不只依靠按钮禁用。状态模型或返回链变化时须重新核验。
+本记录为设计准备与源码静态证据，不是实施模型运行、PlayMode、双分辨率或磁盘保存验收。
