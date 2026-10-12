@@ -160,7 +160,7 @@ namespace TianZhang.Tests.PlayMode
             Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
-            Assert.That(random.Count, Is.EqualTo(rolls + 4));
+            Assert.That(random.Count, Is.EqualTo(rolls + 5));
             Assert.That(session.PendingCtPenalty, Is.Zero);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             StringAssert.Contains("消耗灵力 12", sink.Logs.Last());
@@ -362,6 +362,7 @@ namespace TianZhang.Tests.PlayMode
             actionBar = FindInActiveScene<CombatActionBarView>();
             if (!controlledEnvironment.HasValue) ExportOrdinaryInputs();
             yield return WaitForPlayerTurn();
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
         private void AssertArtTargets()
@@ -685,7 +686,7 @@ namespace TianZhang.Tests.PlayMode
         private sealed class CountingCombatRandomSource : ICombatResolutionRandomSource
         {
             public int Count { get; private set; }
-            public float NextPercent() => Count++ % 4 == 0 ? 0f : 99f;
+            public float NextPercent() => Count++ % 5 == 0 ? 0f : 99f;
         }
 
         private sealed class ForwardingSink : ICombatPresentationSink

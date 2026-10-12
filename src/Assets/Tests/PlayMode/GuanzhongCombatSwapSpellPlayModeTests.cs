@@ -87,6 +87,7 @@ namespace TianZhang.Tests.PlayMode
             session = Get<CombatSession>(encounter, "session");
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
             yield return Ready();
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
         [UnityTearDown]

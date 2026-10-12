@@ -125,6 +125,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(state, State());
             yield return Capture("target-linked");
             yield return Click(Find<CombatTargetView>().CloseButton);
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
 
             if (victory)
             {
@@ -219,7 +220,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual("Claimed", runtime.Bounties.GetState(Bounty).Status.ToString());
                 Assert.AreEqual(before + 3, Quantity("item_lingshi_low"));
                 string after = runtime.CaptureSaveJson();
-                yield return Click(Button("ClaimBountyButton"));
+                yield return Click(Button("ClaimBountyButton"), expectedInteractable: false);
                 Assert.AreEqual(after, runtime.CaptureSaveJson());
                 Log("duplicateReason=" + Find<BountyBoardView>().LastResultReason);
                 yield return Capture("duplicate-rejected");
@@ -347,11 +348,11 @@ namespace TianZhang.Tests.PlayMode
                 (hud.Snapshot == null || !hud.Snapshot.AcceptsCommands || hud.Snapshot.IsPresenting || encounter.IsPresenting))
             { Assert.Less(Time.realtimeSinceStartup, deadline, "Formal encounter did not yield input"); yield return null; }
         }
-        private IEnumerator Click(Button button)
+        private IEnumerator Click(Button button, bool expectedInteractable = true)
         {
             Canvas.ForceUpdateCanvases();
             Assert.IsTrue(button.gameObject.activeInHierarchy, button.name + " hidden");
-            Assert.IsTrue(button.interactable, button.name + " disabled");
+            Assert.That(button.interactable, Is.EqualTo(expectedInteractable), button.name + " interaction state");
             var corners = new Vector3[4]; button.GetComponent<RectTransform>().GetWorldCorners(corners);
             Assert.GreaterOrEqual(corners[0].x, -1); Assert.GreaterOrEqual(corners[0].y, -1);
             Assert.LessOrEqual(corners[2].x, Screen.width + 1); Assert.LessOrEqual(corners[2].y, Screen.height + 1);

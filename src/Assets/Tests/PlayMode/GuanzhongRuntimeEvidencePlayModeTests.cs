@@ -220,6 +220,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(encounter.IsPresenting, Is.False);
             Assert.That(spawned.Player.BasicAttackProfileId, Is.EqualTo("basic_body_human_fanren"));
             Assert.That(spawned.Enemy.BasicAttackProfileId, Is.EqualTo("basic_body_shijiahou_lianqi"));
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
 
             // Approved 2026-10-12: explicit one-hit combat precondition for UI/settlement coverage.
             // Only this temporary enemy snapshot is weakened. No RecordDefeat or bounty-state injection;
@@ -267,11 +268,26 @@ namespace TianZhang.Tests.PlayMode
             var objects = SceneManager.GetActiveScene().GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray();
             Transform[] cells = objects.Where(item => item.name.StartsWith("GuanzhongHex_", StringComparison.Ordinal)).ToArray();
             Assert.That(cells.Length, Is.EqualTo(36));
+            var provider = Find<Static3DCombatUnitPresentationProvider>();
+            Assert.That(provider.TryGetPresentedUnit("enemy", out GameObject enemyRoot), Is.True);
+            Renderer[] enemyRenderers = enemyRoot.GetComponentsInChildren<Renderer>();
+            Assert.That(enemyRenderers, Is.Not.Empty);
             string[] names = { "GuanzhongObstacle_2_1", "GuanzhongObstacle_3_1", "GuanzhongObstacle_2_4", "GuanzhongObstacle_3_4" };
             foreach (Vector2Int size in Sizes())
             {
                 yield return SetGameSize(size);
                 var lines = new List<string> { Header(), $"camera={PathOf(camera.transform)}; position={camera.transform.position:F5}; rotation={camera.transform.eulerAngles:F5}; ortho={camera.orthographicSize}; pixelRect={camera.pixelRect}; aspect={camera.aspect}" };
+                foreach (Image image in objects.SelectMany(item => item.GetComponents<Image>()).Where(item => item.isActiveAndEnabled && item.color.a > 0))
+                {
+                    var corners = new Vector3[4];
+                    image.rectTransform.GetWorldCorners(corners);
+                    Canvas canvas = image.canvas;
+                    Vector2[] screen = corners.Select(point => RectTransformUtility.WorldToScreenPoint(
+                        canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, point)).ToArray();
+                    Rect rect = Rect.MinMaxRect(screen.Min(p => p.x), screen.Min(p => p.y), screen.Max(p => p.x), screen.Max(p => p.y));
+                    if (rect.width * rect.height > 20000)
+                        lines.Add($"hud={PathOf(image.transform)}; screenRect={rect}; canvas={canvas.renderMode}; scale={canvas.scaleFactor}");
+                }
                 foreach (Transform cell in cells.OrderBy(item => item.name))
                 {
                     string[] coordinate = cell.name.Split('_');
@@ -280,6 +296,18 @@ namespace TianZhang.Tests.PlayMode
                     var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, hex, 10000000,
                         spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>()).Path;
                     lines.Add($"cell={cell.name}; world={cell.position:F5}; screen={camera.WorldToScreenPoint(cell.position):F3}; pathFromPlayer={string.Join("/", path)}");
+                    Vector3 offset = cell.position - enemyRoot.transform.position;
+                    var projected = new List<Vector3>();
+                    foreach (Renderer renderer in enemyRenderers)
+                    {
+                        Bounds bounds = renderer.bounds;
+                        for (int corner = 0; corner < 8; corner++)
+                            projected.Add(camera.WorldToScreenPoint(offset + new Vector3(
+                                (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                                (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                                (corner & 4) == 0 ? bounds.min.z : bounds.max.z)));
+                    }
+                    lines.Add($"candidate={hex}; translatedEnemyBoundsMin=({projected.Min(p => p.x):F3},{projected.Min(p => p.y):F3}); translatedEnemyBoundsMax=({projected.Max(p => p.x):F3},{projected.Max(p => p.y):F3}); fullyOnScreen={projected.All(p => p.x >= 0 && p.x <= Screen.width && p.y >= 0 && p.y <= Screen.height && p.z > 0)}");
                 }
                 foreach (string name in names)
                 {
@@ -295,9 +323,79 @@ namespace TianZhang.Tests.PlayMode
                 {
                     Vector3 world = Static3DCombatUnitPresentationProvider.HexToWorld(new CombatUnitPresentationHex(unit.Position.Q, unit.Position.R));
                     lines.Add($"unit={unit.Id}; logic={unit.Position}; world={world:F5}; screen={camera.WorldToScreenPoint(world):F3}");
+                    Assert.That(provider.TryGetPresentedUnit(unit.Id, out GameObject root), Is.True);
+                    foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>())
+                        lines.Add("unitRenderer=" + RendererState(renderer, camera));
                 }
                 Write("battlefield-" + size.x, lines);
                 yield return Capture("battlefield-" + size.x);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RemoteSpawnRejectsAttackAndMovesIntoContactAtBothResolutions()
+        {
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+                yield return SceneReady(GameplaySceneNames.Adventure);
+                var adventure = Find<AdventureController>();
+                for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+                adventure.SetEncounterRandomSource(new EncounterRandom());
+                Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+                var encounter = Find<EncounterCoordinator>();
+                CombatSession session = Get<CombatSession>(encounter, "session");
+                AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+                yield return SetGameSize(size);
+                Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 0)));
+                Assert.That(spawned.Enemy.Position, Is.EqualTo(new HexCoord(3, 5)));
+                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(8));
+                Camera camera = Get<Camera>(Find<CombatMovementView>(), "battlefieldCamera");
+                var provider = Find<Static3DCombatUnitPresentationProvider>();
+                Assert.That(provider.TryGetVisibleBounds("enemy", out Bounds bounds), Is.True);
+                var corners = new List<Vector3>();
+                for (int corner = 0; corner < 8; corner++)
+                    corners.Add(camera.WorldToScreenPoint(new Vector3(
+                        (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                        (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                        (corner & 4) == 0 ? bounds.min.z : bounds.max.z)));
+                Assert.That(corners.All(p => p.x >= 0 && p.x <= Screen.width && p.y >= 0 && p.y <= Screen.height && p.z > 0), Is.True);
+                Rect enemyRect = Rect.MinMaxRect(corners.Min(p => p.x), corners.Min(p => p.y), corners.Max(p => p.x), corners.Max(p => p.y));
+                Image tracker = Get<GameObject>(Find<CombatBountyTrackerView>(), "root").GetComponent<Image>();
+                Assert.That(tracker, Is.Not.Null);
+                var hudCorners = new Vector3[4];
+                tracker.rectTransform.GetWorldCorners(hudCorners);
+                Assert.That(enemyRect.Overlaps(Rect.MinMaxRect(hudCorners[0].x, hudCorners[0].y, hudCorners[2].x, hudCorners[2].y)), Is.False);
+                var service = new CombatCommandService();
+                var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", spawned.Player.BasicAttackProfileId);
+                var distant = service.Preview(session, attack);
+                Assert.That(distant.IsLegal, Is.False);
+                int ap = spawned.Player.ActionPointsRemainingUnits, health = spawned.Enemy.CurrentHealth;
+                encounter.RequestBasicAttack("player", "enemy");
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
+                Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(health));
+                var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, spawned.Enemy.Position,
+                    10000000, spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>());
+                Assert.That(path.IsReachable, Is.True, path.Reason);
+                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance=8; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
+                yield return Capture("remote-spawn-" + size.x);
+                var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
+                Assert.That(move.IsLegal, Is.True, move.RejectionReason);
+                encounter.RequestMove("player", 0, 1);
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - move.ActionPointCostUnits));
+                for (float deadline = Time.realtimeSinceStartup + 10f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
+                Assert.That(encounter.IsPresenting, Is.False);
+                yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+                Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(3, 5)), "Production AI must advance from its remote spawn.");
+                Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)));
+                var close = service.Preview(session, attack);
+                Assert.That(close.IsLegal, Is.True, close.RejectionReason);
+                ap = spawned.Player.ActionPointsRemainingUnits;
+                encounter.RequestBasicAttack("player", "enemy");
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - close.ActionPointCostUnits));
+                lines.Add($"contact player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={spawned.Player.Position.Distance(spawned.Enemy.Position)}; tick={session.TurnScheduler.CurrentTick}; turn={session.TurnSequence}; legalAttackCost={close.ActionPointCostUnits}");
+                Write("remote-spawn-" + size.x, lines);
             }
         }
 

@@ -295,6 +295,7 @@ namespace TianZhang.Tests.PlayMode
                     $"canvasScale={hudCanvas.scaleFactor}, canvasRect={RectText(canvasRect.rect)}, " +
                     $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, slots={bars.Length}");
             }
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
             int playerBefore = player.CurrentHealth;
             int enemyBefore = enemy.CurrentHealth;
             for (int frame = 0; frame < 180 && player.CurrentHealth == playerBefore && enemy.CurrentHealth == enemyBefore; frame++)

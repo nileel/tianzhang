@@ -119,6 +119,7 @@ namespace TianZhang.Tests.PlayMode
             else GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
             Assert.IsTrue(presenter.CanInspect);
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
         [UnityTearDown]
@@ -413,15 +414,16 @@ namespace TianZhang.Tests.PlayMode
         {
             var bar = Find<CombatActionBarView>();
             var move = Find<CombatMovementView>();
-            var option = presenter.Snapshot.Movement.Options.Single(value => value.Destination.Q == 0 && value.Destination.R == 1);
+            HexCoord destination = GuanzhongBasicAttackPlayModeTests.AdjacentMeleeStep(session);
+            var option = presenter.Snapshot.Movement.Options.Single(value => value.Destination.Q == destination.Q && value.Destination.R == destination.R);
             CombatCommandPreview quote = new CombatCommandService().Preview(session,
-                new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
+                new CombatCommand(CombatCommandKind.Move, "player", destination: destination));
             Assert.That(option.Cost, Is.EqualTo(quote.ActionPointCostUnits));
             Assert.That(option.Candidate.MovementPath.Select(p => new HexCoord(p.Q, p.R)), Is.EqualTo(quote.MovementPath));
             string before = State();
             int ap = spawned.Player.ActionPointsRemainingUnits;
             bar.MoveButton.onClick.Invoke();
-            Vector3 world = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(move, "centers")[new Vector2Int(0, 1)];
+            Vector3 world = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(move, "centers")[new Vector2Int(destination.Q, destination.R)];
             Vector2 point = Get<Camera>(move, "battlefieldCamera").WorldToScreenPoint(world);
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
@@ -431,7 +433,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(State(), Is.EqualTo(before));
             bar.ConfirmMoveButton.onClick.Invoke(); bar.ConfirmMoveButton.onClick.Invoke();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
-            Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)));
+            Assert.That(spawned.Player.Position, Is.EqualTo(destination));
             yield return Ready();
         }
 

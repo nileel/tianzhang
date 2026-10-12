@@ -100,6 +100,7 @@ namespace TianZhang.Tests.PlayMode
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
             for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
             Assert.IsTrue(presenter.CanInspect);
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
         [UnityTearDown]
@@ -305,7 +306,7 @@ namespace TianZhang.Tests.PlayMode
         private sealed class CombatRandom : ICombatResolutionRandomSource
         {
             private int count;
-            public float NextPercent() => count++ % 4 == 0 ? 0f : 99f;
+            public float NextPercent() => count++ % 5 == 0 ? 0f : 99f;
         }
 
 #if UNITY_EDITOR

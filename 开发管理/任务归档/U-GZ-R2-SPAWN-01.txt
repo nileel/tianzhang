@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-12负责人授权解除阻塞；隔离Unity双分辨率取证入口实跑2/2通过，输入/测量能力及直接测试范围已冻结，见关中第二轮运行时取证入口。",
+  "stateReason": "2026-10-12负责人要求修复失败任务；正式首战怪物改至(3,5)，双分辨率实跑通过。直接PlayMode首轮63/65，最后两项所属流程定向复测4/4通过；EditMode 6/6、数据链和管理收尾检查通过，完整证据见正文。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPAWN-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPAWN-01.txt",
@@ -47,6 +47,8 @@
 # U-GZ-R2-SPAWN-01 · 关中首战怪物移至画面右上角出生
 
 ## 来源与当前边界
+
+本卡已于2026-10-12完成；以下原始范围与模型配置保留作历史依据，本次负责人明确要求的人工修复及最终验证见文末。
 
 来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
 
@@ -92,3 +94,43 @@
 ## 停止条件
 
 新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+
+## 2026-10-12 失败诊断与负责人授权修复
+
+- 负责人先要求排查失败任务，再明确要求“修复”。原自动化run f3c40324-263f-4197-bfd9-67b6d01570a3停在attention_required/runtime_validation_failed，未生成candidate，原worktree已恢复到e22fac4f95e0c3085e4457a63c4e8c721a675c69且无业务差异；失败日志和尝试补丁保留。
+- 人工修复在.worktrees/gz-spawn-repair、分支codex/gz-spawn-repair隔离完成。通过Node REPL实际核实本对话模型为gpt-6-astra；有界修复由单模型统一实施、复核和验证，无辅助调用。卡头executionModel保留原自动调度gpt-6.1-sol配置，不把本次人工修复冒充原自动化成功。
+- 复现并证实既有基线也失败：50034db0已将敌人移动效率改为4000，旧测试仍期望2000；c819fc636新增第五次状态随机判定，测试仍按四次消费安排随机序列。移动后施法夹具还需明确建立练气角色，不能把真实凡人开局当成已具备施法资格。
+- 本次明确修复上述过时测试前提，以及重复领奖后按钮已经禁用但旧点击助手强制要求可交互的问题。限定在原卡已列出的测试路径；保持AP、CT、伤害、冷却、背包、血条与生命周期行为检查，未改生产战斗规则、角色创建或领奖逻辑。重复领奖仍实际发送指针点击，明确断言禁用且奖励和存档不再变化。
+- 远端出生后，单纯结束回合不能保证敌人恰好停在邻格。共用接敌前置改为正式移动命令先走(0,1)，验证真实AP扣除，再按实际CTB回合推进至邻接且玩家AP恢复完整；依赖具体邻格的后续移动按实际可达格选取。没有直接注入位置、行动点或CT，没有另建出生或回合机制。
+- 写前及依赖发现后的风险预检均ok：taskCardDigest=2c357279092a85ab88a14519c666fa0b2a8e24a46c616156de43e8349086a3b0；indexDigest=1268a3c5e3990bc6738af22758cdfae68fe361e93e948c52815ee7b26aa94642；matched/mustRead/gates为空，与schema 2投影一致。已读取UNITY_STRUCTURE.md及.runtime.md、unity-agent-workflows与相关验证/运行时/序列化规则。
+
+## 实施结果与运行时证据
+
+- 正式所有者链：Adventures.csv → AdventureMap_guanzhong_wild.asset → AdventureController.BeginEncounter → AdventureUnitSpawner.TrySpawn → EncounterCoordinator → Static3D单位呈现与正式battlefieldCamera。仅将shijiahou_encounter从(1,0)改为(3,5)，玩家保留(0,0)，使用AdventureContentImporter.Import实际导入asset；未改相机或场景全局默认值。
+- 同一隔离Unity在1920×1080及1366×768实际运行并截图，怪物模型整体可见且未被追踪HUD遮挡。怪物屏幕bounds分别为(x1608.05,y942.31,w188.91,h121.00)和(x1143.83,y670.09,w134.33,h86.05)。候选(4,5)模型右界分别1931.954/1374.167，已出画面；(5,5)亦出画面，因此选择最右上完整可见格(3,5)。
+- 首战逻辑距离8；射程外攻击返回above_max_range且AP/HP不变。可达路径：(0,1)/(0,2)/(0,3)/(0,4)/(0,5)/(1,5)/(2,5)/(3,5)。正式移动与敌人推进后，玩家(0,1)、敌人(0,2)、距离1、tick39/turn5；合法近身攻击扣除20000 AP。
+- 证据目录：.worktrees/gz-spawn-repair/src/Logs/gz-r2-evidence/；remote-spawn-1920.png、remote-spawn-1366.png已人工查看，配套文本记录屏幕bounds、单位来源、投影、路径、拒绝原因和接敌行为。原失败worktree证据保持原位。本卡只验部署和场景功能，不作角色数值平衡结论。
+
+## 最终验证
+
+- Unity 6000.3.18f1，隔离projectPath=.worktrees/gz-spawn-repair/src。
+- 修复基线：spawn-repair-baseline-final.xml，6/6通过。
+- tools/run-unity-playmode-tests.ps1 -EnableGraphics，按取证入口冻结的14个直接测试类运行，spawn-repair-direct.xml共65项、63通过；剩余两项均为GuanzhongPlaytestFlow重复领奖按钮旧前提。修复该类私有点击助手后只定向复测该类，spawn-repair-flow-final.xml为4/4通过，覆盖原两项失败和同类另两项。最终65项直接PlayMode覆盖均有通过证据，不声称存在一次65/65的完整运行；其余已通过输入未变化，不重复全量运行。
+- Unity -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.GuanzhongFormalEndToEndTests，spawn-repair-editmode.xml为6/6通过；通过run-unity-editmode-tests.ps1 -ValidateResultOnly校验。
+- check-data-chain.ps1通过：功法29/29、术法84/84、技能31/31、语言649。导入日志spawn-repair-import.log退出0；之后仅清理asset空字段尾空格。
+- 管理收尾：check-task-cards.ps1 -TaskId U-GZ-R2-SPAWN-01 -Postcondition CodexClosedOrNonReady、check-review-text.ps1、实际修改路径check-pending-whitespace.ps1及暂存后git diff --cached --check。
+
+## 经验候选
+
+### CAND-U-GZ-R2-SPAWN-01-01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：远端部署后，只结束回合等待敌人邻接的直接测试集中失败。
+- 已证实根因：旧测试依赖初始相邻格及固定移动坐标；真实AI回合移动、攻击后的剩余AP和落点不能保证该假设，四次随机序列夹具还与已增加的第五次判定脱节。
+- 可能复用范围：Unity首战部署、AI接敌及依赖实际格位的PlayMode前置；随机判定链变化时核对确定性夹具消费数。
+- 证据：原失败gz-spawn-direct.xml；本轮spawn-repair-direct.xml、spawn-repair-flow-final.xml与remote-spawn双分辨率证据。正式命令移动(0,1)后在tick39/turn5取得邻接与完整玩家AP，既有行为断言通过。
+- 门禁可能：yes

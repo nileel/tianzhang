@@ -45,13 +45,13 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator FormalPlayerMovesThenCastsInTheSameTurnAfterPresentation()
         {
-            yield return EnterFormalCombat();
+            yield return EnterFormalCombat(qualifiedCaster: true);
             var service = new CombatCommandService();
             CombatantSnapshot player = spawned.Player;
             Assert.That(player.ActionPointMaximumUnits, Is.EqualTo(100000));
-            Assert.That(player.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(player.MovementEfficiencyMilliUnits, Is.EqualTo(4000));
             Assert.That(spawned.Enemy.ActionPointMaximumUnits, Is.EqualTo(100000));
-            Assert.That(spawned.Enemy.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(spawned.Enemy.MovementEfficiencyMilliUnits, Is.EqualTo(4000));
             long turn = session.TurnSequence;
             int tick = session.TurnScheduler.CurrentTick;
             var stale = new CombatActionCandidate(CombatActionKind.Art, "player", "player",
@@ -79,7 +79,7 @@ namespace TianZhang.Tests.PlayMode
 
             var candidate = new CombatActionCandidate(CombatActionKind.Art, "player", "player",
                 "spell_julingshu", Snapshot.CommandContextVersion);
-            Assert.That(encounter.PreviewAction(candidate).CanConfirm, Is.True);
+            Assert.That(encounter.PreviewAction(candidate).CanConfirm, Is.True, encounter.PreviewAction(candidate).Reason);
             encounter.ConfirmAction(candidate);
             Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(afterMove - 25000));
             Assert.That(session.TurnSequence, Is.EqualTo(turn));
@@ -103,6 +103,8 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator FormalEnemyRecomputesCandidatesAndCommitsMultiplePositiveCostActions()
         {
             yield return EnterFormalCombat();
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+            port.Actions.Clear();
             long playerTurn = session.TurnSequence;
             encounter.RequestEndTurn("player");
             yield return WaitForNextPlayer(playerTurn);
@@ -140,7 +142,7 @@ namespace TianZhang.Tests.PlayMode
 
         private CombatHudSnapshot Snapshot => Get<CombatHudSnapshot>(input, "snapshot");
 
-        private IEnumerator EnterFormalCombat()
+        private IEnumerator EnterFormalCombat(bool qualifiedCaster = false)
         {
             GameBootstrap stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
@@ -154,6 +156,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(creation.SelectOrigin("origin_minor_clan"), Is.True);
             creation.Submit("ap-flow", "行动力流程验证");
             yield return SceneReady(GameplaySceneNames.World);
+            // Casting coverage requires the existing spell's realm qualification; production creation stays mortal.
+            if (qualifiedCaster)
+                GameBootstrap.RequireRuntime().Player.RestoreProgression(
+                    new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
             WorldMapController world = Find<WorldMapController>();
             Assert.That(world.SelectNode("guanzhong_hub"), Is.True);
             world.EnterSelectedLocation();

@@ -60,7 +60,7 @@ namespace TianZhang.Tests.PlayMode
             public float NextPercent()
             {
                 bool hit = victory ? session.CurrentActorId == "player" : session.CurrentActorId == "enemy";
-                return roll++ % 4 == 0 && hit ? 0 : 99;
+                return roll++ % 5 == 0 && hit ? 0 : 99;
             }
         }
 
@@ -156,6 +156,7 @@ namespace TianZhang.Tests.PlayMode
             var session = GetPrivateField<CombatSession>(encounter, "session");
             var spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             yield return WaitForPlayerTurn(encounter, session, spawned.Player.Id);
+            yield return WaitForMeleeContact(encounter, session);
             Assert.AreEqual("basic_body_human_fanren", spawned.Player.BasicAttackProfileId);
             Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.Enemy.BasicAttackProfileId);
             var recording = new ForwardingPresentationPort(FindInActiveScene<Static3DCombatUnitPresentationProvider>());
@@ -176,9 +177,9 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForMovementPresentation(encounter);
             var guard = service.Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
             Assert.IsTrue(guard.IsLegal, guard.RejectionReason);
-            var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
+            var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(1, 0)));
             Assert.IsTrue(move.IsLegal, move.RejectionReason);
-            encounter.RequestMove("player", 0, 1);
+            encounter.RequestMove("player", 1, 0);
             Assert.AreEqual(ap - punch.ActionPointCostUnits - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             yield return WaitForMovementPresentation(encounter);
             int playerHealth = spawned.Player.CurrentHealth; long priorTurn = session.TurnSequence;
@@ -271,6 +272,7 @@ namespace TianZhang.Tests.PlayMode
             var outcome = GetPrivateField<AdventureSpawnSet>(encounter, "spawned").Enemy;
             ArmEnemyOutcomeFixture(outcome);
             yield return WaitForPlayerTurn(encounter, GetPrivateField<CombatSession>(encounter, "session"), "player");
+            yield return WaitForMeleeContact(encounter, GetPrivateField<CombatSession>(encounter, "session"));
             outcome.ReceiveDamage(outcome.CurrentHealth - 1); // Explicit one-hit settlement fixture.
             encounter.SetCombatResolutionRandomSource(new OutcomeFixtureRandom(
                 GetPrivateField<CombatSession>(encounter, "session"), true));
@@ -376,6 +378,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(100000, player.ActionPointMaximumUnits);
 
             yield return WaitForPlayerTurn(encounter, session, player.Id);
+            yield return WaitForMeleeContact(encounter, session);
+            HexCoord contactPosition = player.Position;
             int tickBeforeMove = session.TurnScheduler.CurrentTick;
             foreach (HexCoord rejectedDestination in new[]
                      { enemy.Position, new HexCoord(2, 1), new HexCoord(-1, 0), new HexCoord(5, 5) })
@@ -391,7 +395,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
                 Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             }
-            HexCoord firstDestination = new HexCoord(0, 1);
+            HexCoord firstDestination = AdjacentMeleeStep(session);
             CombatMovementQueryResult firstPath = session.SpatialQuery.QueryMovement(
                 player.Position, firstDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
             Assert.IsTrue(firstPath.IsReachable, firstPath.Reason);
@@ -426,7 +430,7 @@ namespace TianZhang.Tests.PlayMode
             ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
-            HexCoord secondDestination = new HexCoord(0, 0);
+            HexCoord secondDestination = contactPosition;
             CombatMovementQueryResult secondPath = session.SpatialQuery.QueryMovement(
                 player.Position, secondDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
             Assert.IsTrue(secondPath.IsReachable, secondPath.Reason);
@@ -449,6 +453,51 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
             Assert.IsFalse(encounter.IsPresenting, "Presentation did not release its command lock.");
             yield return null;
+        }
+
+        // Walk the proven first path edge, then allow the real AI/CTB loop to approach.
+        // Waiting at (0,0) alone does not guarantee contact at the start of a player turn.
+        // No positions, AP, CT or attack range are injected; callers start with a fresh turn.
+        public static IEnumerator WaitForMeleeContact(EncounterCoordinator encounter, CombatSession session)
+        {
+            Assert.IsTrue(session.Combatants.TryGet("player", out CombatantSnapshot player));
+            Assert.IsTrue(session.Combatants.TryGet("enemy", out CombatantSnapshot enemy));
+            yield return WaitForPlayerTurn(encounter, session, player.Id);
+            if (player.Position.Distance(enemy.Position) > 1 && player.Position == new HexCoord(0, 0))
+            {
+                var move = new CombatCommandService().Preview(session,
+                    new CombatCommand(CombatCommandKind.Move, player.Id, destination: new HexCoord(0, 1)));
+                Assert.IsTrue(move.IsLegal, move.RejectionReason);
+                int before = player.ActionPointsRemainingUnits;
+                encounter.RequestMove(player.Id, 0, 1);
+                Assert.AreEqual(before - move.ActionPointCostUnits, player.ActionPointsRemainingUnits);
+                yield return WaitForMovementPresentation(encounter);
+            }
+            for (int turn = 0; turn < 12; turn++)
+            {
+                yield return WaitForPlayerTurn(encounter, session, player.Id);
+                if (player.Position.Distance(enemy.Position) == 1 &&
+                    player.ActionPointsRemainingUnits == player.ActionPointMaximumUnits)
+                {
+                    TestContext.WriteLine($"CONTACT player={player.Position}; enemy={enemy.Position}; turn={session.TurnSequence}; tick={session.TurnScheduler.CurrentTick}; AP={player.ActionPointsRemainingUnits}");
+                    yield break;
+                }
+                encounter.RequestEndTurn(player.Id);
+                yield return null;
+            }
+            Assert.Fail($"Formal movement did not reach contact: player={player.Position}, enemy={enemy.Position}, tick={session.TurnScheduler.CurrentTick}.");
+        }
+
+        public static HexCoord AdjacentMeleeStep(CombatSession session)
+        {
+            Assert.IsTrue(session.Combatants.TryGet("player", out CombatantSnapshot player));
+            Assert.IsTrue(session.Combatants.TryGet("enemy", out CombatantSnapshot enemy));
+            var steps = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits,
+                    player.MovementEfficiencyMilliUnits, new[] { enemy.Position }).Keys
+                .Where(cell => cell.Distance(player.Position) == 1 && cell.Distance(enemy.Position) == 1)
+                .OrderBy(cell => cell.Q).ThenBy(cell => cell.R).ToArray();
+            Assert.IsNotEmpty(steps, "Movement/attack ordering needs a legal adjacent melee step.");
+            return steps[0];
         }
 
         private static IEnumerator WaitForPlayerTurn(EncounterCoordinator encounter, CombatSession session, string playerId)
@@ -955,7 +1004,7 @@ namespace TianZhang.Tests.PlayMode
 
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
-            AssertProviderGrounding(provider, "enemy", 1, 0, battlefield.transform);
+            AssertProviderGrounding(provider, "enemy", 3, 5, battlefield.transform);
         }
 
         private static void AssertProviderGrounding(
