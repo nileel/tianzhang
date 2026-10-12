@@ -2,15 +2,15 @@
 {
   "schemaVersion": 2,
   "id": "D-GZ-R2-RANGE-01",
-  "title": "两件基础武器差异射程设计",
+  "title": "两件基础武器两格群攻设计",
   "priority": "P1",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：请选择哪件基础武器获得1–2格单目标攻击距离。任务卡D-GZ-R2-RANGE-01明确要求“获确认的两个武器射程值与语义合同”，因此需要负责人选择后才能冻结设计。推荐A。",
+  "stateReason": "2026-10-12自定义回复经当前对话澄清：铁剑竖两格、铁刀横两格，均为两格攻击区域且可命中多个敌人；本卡只重新完成设计合同，下游实现仍blocked。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
     "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
@@ -26,130 +26,67 @@
     "gates": []
   },
   "executionModel": "gpt-6.1-sol",
-  "automationCheckpoint": {
-    "schemaVersion": 1,
-    "taskId": "D-GZ-R2-RANGE-01",
-    "sourceRunId": "b6ee3958-0a99-4a10-b505-9eb3b29b1914",
-    "owner": "codex",
-    "route": "codex_execute",
+  "automationReply": {
     "decisionId": "DEC-20261012-CD34DE1D6D4E25",
-    "question": "请选择哪件基础武器获得1–2格单目标攻击距离。任务卡D-GZ-R2-RANGE-01明确要求“获确认的两个武器射程值与语义合同”，因此需要负责人选择后才能冻结设计。推荐A。",
-    "options": [
-      {
-        "key": "A",
-        "label": "铁剑1–2格，铁刀1格（推荐）",
-        "targetState": "ready",
-        "expectedPaths": [
-          "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
-          "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
-          "开发管理/任务列表/场景与Unity任务.txt",
-          "开发管理/当前任务队列.txt",
-          "开发管理/关中武器差异射程合同.txt",
-          "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt"
-        ],
-        "taskBody": "# D-GZ-R2-RANGE-01 · 两件基础武器差异射程设计\n\n## 来源与当前边界\n\n来源：2026-10-11用户九项试玩反馈，直接证据见开发管理/关中第二轮试玩排查与任务拆分.txt；续办时以负责人通过本任务决策正式选择A的回复为射程授权。吸收同一卡checkpoint的开发管理/关中武器差异射程合同.txt，冻结该方案后完成设计收尾；不执行下游游戏改动，不宣称Unity实机或数值验收完成。\n\n## 必查范围\n\n- 开发管理/关中武器差异射程合同.txt（完整合同）\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#9. 武器距离与攻击目标语义\n- docs/道具/武器/铁剑.txt#普攻与数值候选\n- docs/道具/武器/铁刀.txt#普攻与数值候选\n- docs/道具/道具事实速查.txt#四、武器行\n- src/Assets/DataConfig/AttackProfiles.csv::basic_iron_sword/basic_iron_blade\n- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack\n- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles（原卡TryBuildProfiles在checkpoint基线的实际符号）及空间适配器QueryRange\n- src/Assets/Scripts/Combat/CombatActionResolver.cs::ResolveAttack\n- src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs::QueryRangeEntry/QueryMetricDistance\n- src/Assets/DataConfig/EnvironmentProfiles.csv::env_guanzhong_wild\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/RuleSourcePaths/WriteCombatRuleSet/AttackProfileImportRow.CopyTo\n- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::ProjectQuote\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs::Present\n- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整卡）\n- 开发管理/AI协作规则.txt#任务卡中的模型协作提示及开发管理/状态与建议维护规则.txt的完成归档规则\n\n## 实施范围\n\n负责人已通过选项A批准：铁剑basic_iron_sword的minCastRange=1、maxCastRange=2；铁刀basic_iron_blade的minCastRange=1、maxCastRange=1；targetingMode均为single，长射程包含1至2格，不设仅第2格的环形范围。将合同由草案改为该唯一批准方案，保留来源、距离规则、边界表、玩家文案、同步摘要、验收及未验证边界，另一方案只记作未采用。\n\n沿用当前关中的整数空间度量和通视规则；复用现有档案范围查询，不另建距离算法。玩家说明复用既有行动预览，从当前武器档案生成武器普攻名称、射程和单目标说明；限定这两件武器，不改变空手、术法等其他档案。UI实现和布局实际验证均留给下游。当前正式战斗仍为角色ID单目标，不能空放、不能群攻；选格、空放、多目标另行独立规划。\n\n保留两件伤害、基础及净费用、CT、冷却、库存数量、资格、换装费用、承载和共享普攻次数。此卡只确认体验候选，不形成数值平衡结论；BattleSim实际运行及真实Unity距离验证属于下游验收，不扩充模拟器或改业务数据。\n\n补齐D-GZ-R2-RANGE-DATA-01正文的批准值、数据/资产/引用摘要、UI预览所有者、距离边界验收及准确精确路径。准备路径须按现有严格导入链枚举两件L2、L1、攻击CSV、语言表实际派生路径、规则asset和全部9个档案摘要影响、直接测试及必要.meta；只改下游卡，不触碰这些业务文件。准备中发现新路径/依赖，按既有规则停止写入并重新预检；无法合法冻结时停止报告，禁止猜测路径或提前放宽范围。\n\n唯一设计交付为开发管理/关中武器差异射程合同.txt。只在批准设计及下游同步/验证路径完成后将本卡完成归档，并同步本卡在场景与Unity任务及当前队列中的投影。下游继续blocked，保留blockedBy中的D-GZ-R2-RANGE-01、U-GZ-R2-EQUIP-01和backlog中全部具名前置；本轮不移除、提升、重排或关闭下游，正式结果进入master后交后续QueueMaintenance判断。\n\n## 禁止项\n\n不修改docs、CSV、代码、Unity资产、场景或用户存档；不实施下游游戏行为。不得改变其他出身/场景/共享默认行为，不新增商店、完整背包、技能体系、空放或群攻系统，不操作自动化runtime、其他worktree或集成。不得把静态规则推导、未运行测试、fixture或模型自签写成玩家体验、平衡或负责人批准。\n\n## 模型协作\n\n本次为已批准方案的单合同冻结及直接下游卡准备，由入口冻结的gpt-6.1-sol单模型统一复核；保持codex_execute/codex，不启动第二责任会话。建议high但以入口实际能力证据为准，无证据不声称强度已生效。无独立复杂问题不调用辅助；发现独立证据冲突按AI协作规则重新评估并遵守只读辅助边界。下游卡临近ready仍须按实际所有者和工具能力重新评估，不以本卡模型组合代替其准备门禁。\n\n## 验证\n\n逐项核对批准方案的0格、1格、2格、超射程行为表及单目标语义；零距离空间拒绝与自身阵营拒绝分别说明。核对关中unitsPerRange=2、相邻边metricDistanceUnits=2及通视/障碍沿用规则；确认UI值从当前档案生成，下游射程预览和确认复用当前session规则。\n\n静态核对全部9档案统一摘要的派生路径、原GUID场景引用、保留伤害/AP/CT/数量，并完整复核下游卡的范围和停止条件。检查本卡归档及队列/backlog一致、下游全部具名前置仍保留。未运行Unity/BattleSim明确留给下游，不将本卡设计关闭等同运行时验收通过。\n\n管理检查：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理。本轮实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。当前授权仅管理文本，不因列出候选业务路径而运行数据链或业务测试；若授权与预检合法变更为实际docs/CSV/Unity业务写入则先停止重新准备范围，不在本卡直接实施。消费共享入口绑定同run/task/digest的预检；范围或依赖变化按既有风险门禁重新预检。唯一候选提交使用automation-finalize-commit.ps1 -RequireAutomationMetadata。\n\n## 完成条件\n\n合同明确记录负责人选项A、铁剑1至2格和铁刀1至1格、单角色目标、距离度量、UI说明、保留参数和数据/asset/引用摘要同步及距离边界验证路径；下游卡准备明确且仍blocked并保留具名前置。本卡归档、backlog与queue投影正确，所需管理检查通过。本卡完成仅表示设计获批和下游准备完成，不表示游戏功能或数值平衡已验证。\n\n## 停止条件\n\n批准回复缺失或与选项A矛盾、事实发生冲突、发现新所有者、需要扩大本卡业务路径/新内容/存档迁移、不能枚举派生范围或越过原边界时停止，不以猜测补丁或连续加复杂度处理。下游缺Unity/BattleSim或正式玩家证据不得宣称其验收通过；需要负责人重新裁决时沿用既有checkpoint合同，不自行换射程。"
-      },
-      {
-        "key": "B",
-        "label": "铁剑1格，铁刀1–2格",
-        "targetState": "ready",
-        "expectedPaths": [
-          "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
-          "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
-          "开发管理/任务列表/场景与Unity任务.txt",
-          "开发管理/当前任务队列.txt",
-          "开发管理/关中武器差异射程合同.txt",
-          "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt"
-        ],
-        "taskBody": "# D-GZ-R2-RANGE-01 · 两件基础武器差异射程设计\n\n## 来源与当前边界\n\n来源：2026-10-11用户九项试玩反馈，直接证据见开发管理/关中第二轮试玩排查与任务拆分.txt；续办时以负责人通过本任务决策正式选择B的回复为射程授权。吸收同一卡checkpoint的开发管理/关中武器差异射程合同.txt，冻结该方案后完成设计收尾；不执行下游游戏改动，不宣称Unity实机或数值验收完成。\n\n## 必查范围\n\n- 开发管理/关中武器差异射程合同.txt（完整合同）\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#9. 武器距离与攻击目标语义\n- docs/道具/武器/铁剑.txt#普攻与数值候选\n- docs/道具/武器/铁刀.txt#普攻与数值候选\n- docs/道具/道具事实速查.txt#四、武器行\n- src/Assets/DataConfig/AttackProfiles.csv::basic_iron_sword/basic_iron_blade\n- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack\n- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles（原卡TryBuildProfiles在checkpoint基线的实际符号）及空间适配器QueryRange\n- src/Assets/Scripts/Combat/CombatActionResolver.cs::ResolveAttack\n- src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs::QueryRangeEntry/QueryMetricDistance\n- src/Assets/DataConfig/EnvironmentProfiles.csv::env_guanzhong_wild\n- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/RuleSourcePaths/WriteCombatRuleSet/AttackProfileImportRow.CopyTo\n- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::ProjectQuote\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs::Present\n- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整卡）\n- 开发管理/AI协作规则.txt#任务卡中的模型协作提示及开发管理/状态与建议维护规则.txt的完成归档规则\n\n## 实施范围\n\n负责人已通过选项B批准：铁剑basic_iron_sword的minCastRange=1、maxCastRange=1；铁刀basic_iron_blade的minCastRange=1、maxCastRange=2；targetingMode均为single，长射程包含1至2格，不设仅第2格的环形范围。将合同由草案改为该唯一批准方案，保留来源、距离规则、边界表、玩家文案、同步摘要、验收及未验证边界，另一方案只记作未采用。\n\n沿用当前关中的整数空间度量和通视规则；复用现有档案范围查询，不另建距离算法。玩家说明复用既有行动预览，从当前武器档案生成武器普攻名称、射程和单目标说明；限定这两件武器，不改变空手、术法等其他档案。UI实现和布局实际验证均留给下游。当前正式战斗仍为角色ID单目标，不能空放、不能群攻；选格、空放、多目标另行独立规划。\n\n保留两件伤害、基础及净费用、CT、冷却、库存数量、资格、换装费用、承载和共享普攻次数。此卡只确认体验候选，不形成数值平衡结论；BattleSim实际运行及真实Unity距离验证属于下游验收，不扩充模拟器或改业务数据。\n\n补齐D-GZ-R2-RANGE-DATA-01正文的批准值、数据/资产/引用摘要、UI预览所有者、距离边界验收及准确精确路径。准备路径须按现有严格导入链枚举两件L2、L1、攻击CSV、语言表实际派生路径、规则asset和全部9个档案摘要影响、直接测试及必要.meta；只改下游卡，不触碰这些业务文件。准备中发现新路径/依赖，按既有规则停止写入并重新预检；无法合法冻结时停止报告，禁止猜测路径或提前放宽范围。\n\n唯一设计交付为开发管理/关中武器差异射程合同.txt。只在批准设计及下游同步/验证路径完成后将本卡完成归档，并同步本卡在场景与Unity任务及当前队列中的投影。下游继续blocked，保留blockedBy中的D-GZ-R2-RANGE-01、U-GZ-R2-EQUIP-01和backlog中全部具名前置；本轮不移除、提升、重排或关闭下游，正式结果进入master后交后续QueueMaintenance判断。\n\n## 禁止项\n\n不修改docs、CSV、代码、Unity资产、场景或用户存档；不实施下游游戏行为。不得改变其他出身/场景/共享默认行为，不新增商店、完整背包、技能体系、空放或群攻系统，不操作自动化runtime、其他worktree或集成。不得把静态规则推导、未运行测试、fixture或模型自签写成玩家体验、平衡或负责人批准。\n\n## 模型协作\n\n本次为已批准方案的单合同冻结及直接下游卡准备，由入口冻结的gpt-6.1-sol单模型统一复核；保持codex_execute/codex，不启动第二责任会话。建议high但以入口实际能力证据为准，无证据不声称强度已生效。无独立复杂问题不调用辅助；发现独立证据冲突按AI协作规则重新评估并遵守只读辅助边界。下游卡临近ready仍须按实际所有者和工具能力重新评估，不以本卡模型组合代替其准备门禁。\n\n## 验证\n\n逐项核对批准方案的0格、1格、2格、超射程行为表及单目标语义；零距离空间拒绝与自身阵营拒绝分别说明。核对关中unitsPerRange=2、相邻边metricDistanceUnits=2及通视/障碍沿用规则；确认UI值从当前档案生成，下游射程预览和确认复用当前session规则。\n\n静态核对全部9档案统一摘要的派生路径、原GUID场景引用、保留伤害/AP/CT/数量，并完整复核下游卡的范围和停止条件。检查本卡归档及队列/backlog一致、下游全部具名前置仍保留。未运行Unity/BattleSim明确留给下游，不将本卡设计关闭等同运行时验收通过。\n\n管理检查：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-task-cards.ps1；pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理。本轮实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。当前授权仅管理文本，不因列出候选业务路径而运行数据链或业务测试；若授权与预检合法变更为实际docs/CSV/Unity业务写入则先停止重新准备范围，不在本卡直接实施。消费共享入口绑定同run/task/digest的预检；范围或依赖变化按既有风险门禁重新预检。唯一候选提交使用automation-finalize-commit.ps1 -RequireAutomationMetadata。\n\n## 完成条件\n\n合同明确记录负责人选项B、铁剑1至1格和铁刀1至2格、单角色目标、距离度量、UI说明、保留参数和数据/asset/引用摘要同步及距离边界验证路径；下游卡准备明确且仍blocked并保留具名前置。本卡归档、backlog与queue投影正确，所需管理检查通过。本卡完成仅表示设计获批和下游准备完成，不表示游戏功能或数值平衡已验证。\n\n## 停止条件\n\n批准回复缺失或与选项B矛盾、事实发生冲突、发现新所有者、需要扩大本卡业务路径/新内容/存档迁移、不能枚举派生范围或越过原边界时停止，不以猜测补丁或连续加复杂度处理。下游缺Unity/BattleSim或正式玩家证据不得宣称其验收通过；需要负责人重新裁决时沿用既有checkpoint合同，不自行换射程。"
-      },
-      {
-        "key": "C",
-        "label": "暂停射程设计，保持现有值",
-        "targetState": "blocked",
-        "expectedPaths": [],
-        "taskBody": ""
-      }
-    ],
-    "recommendedOption": "A",
-    "impactSummary": "A让较轻便的铁剑获得1–2格距离，铁刀保留1格重击；B把长距离交给单次伤害较高、费用也较高的铁刀；C暂停并维持两件1格。A/B均不改变伤害、费用、数量或单目标规则，平衡和实际体验留给后续实跑。",
-    "plainSummary": {
-      "situation": "两件基础武器目前都只能攻击相邻目标，差异射程方案已整理，但具体哪件能打到两格还需要你决定；游戏尚未改动。",
-      "impact": "选A让铁剑打得更远，选B让单次伤害较高的铁刀打得更远，两者都保留原伤害和行动消耗，强度尚未验证；选C暂停，继续保持两件一格。",
-      "action": "推荐A，让铁剑较远、铁刀贴近重击；若更希望重刀也能隔一格攻击可选B，暂不确定则选C。"
-    },
-    "checkpointCommit": "73d1630de7b59ec4f1e42099ee26726e02b038b7",
-    "baseCommit": "1e1dc40c08c6dbeb83cd880ae18fe11cb7dbc567",
-    "branch": "codex/automation/codex/b6ee3958-0a99-4a10-b505-9eb3b29b1914/candidate",
-    "changedPaths": [
-      "开发管理/关中武器差异射程合同.txt"
-    ],
-    "verified": [
-      "静态核对两件武器L2正文、攻击CSV、对应asset和正式场景GUID引用，当前均为1格单目标。",
-      "核对ValidateAttack、TryProjectProfiles、ResolveAttack及空间查询：关中1格为2个距离单位，射程沿用通视和障碍规则。",
-      "合同列出零距离、1格、2格和超射程行为，以及全部9个攻击档案的摘要同步范围。",
-      "模型协作评估为有界单合同设计，使用入口冻结的gpt-6.1-sol单模型，未调用辅助。",
-      "check-task-cards.ps1通过：80张活跃卡、4张ready；CheckpointScope检查通过。",
-      "check-review-text.ps1通过：816文件；check-pending-whitespace.ps1和git diff --cached --check通过。",
-      "通过automation-finalize-commit.ps1形成唯一直接后继checkpoint，工作树干净；changedPaths由指定的base..HEAD --no-renames命令生成。"
-    ],
-    "unverified": [
-      "负责人尚未批准长射程归属。",
-      "未运行Unity或正式玩家距离体验验证，游戏数据和行为尚未改变。",
-      "未运行BattleSim，射程收益及数值平衡未验证。",
-      "入口推理强度未获独立工具证明。"
-    ],
-    "residualRisk": "长射程会改变武器战术收益，但当前没有平衡结论；新增预览说明和派生资产同步仍须下游实测。本checkpoint仅保存草案，未改变任务生命周期或下游具名前置。",
-    "taskContextDigest": "2b74e8d9e1ee7206dd5c8e135221bf96207526688ba8493417675592f30dae26",
-    "createdAt": "2026-10-12T17:30:20.6233798+08:00",
-    "queueIndex": 0
+    "result": "CUSTOM_ACCEPTED",
+    "replyKind": "custom",
+    "replyValue": "铁剑竖两格，铁刀横两格",
+    "source": "feishu_card_input",
+    "evidenceHash": "50ab3e21296211ca65d545ca386ef42a3a882a65459f5d41bcde18d0e7a2f4ee"
   }
 }
 ---TASK-BODY---
-# D-GZ-R2-RANGE-01 · 两件基础武器差异射程设计
+# D-GZ-R2-RANGE-01 · 两件基础武器两格群攻设计
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+2026-10-12负责人在决策DEC-20261012-CD34DE1D6D4E25中回复“铁剑竖两格，铁刀横两格”，并在本次修复对话明确选择“两格攻击区域，可命中多个敌人”。这是两件武器的区域攻击设计要求，取代旧卡的一件1格、一件1至2格且仅单目标的候选；不得要求负责人重新在旧A/B方案中选择。
+
+唯一结果是两件武器的区域攻击设计合同。本轮只允许管理文本设计及更新直接下游卡，不能改游戏代码、docs、CSV或Unity资产。当前游戏是否支持多目标以源码为准，批准需求不等于功能已经实现。
+
+旧checkpoint 73d1630de7b59ec4f1e42099ee26726e02b038b7（base 1e1dc40c08c6dbeb83cd880ae18fe11cb7dbc567；原run b6ee3958-0a99-4a10-b505-9eb3b29b1914）仅作为静态调查线索；其中A/B单目标方案已被本次回复取代。分支、worktree与私有回复原件保留，不自动重放旧业务草案；需要复用调查时通过git show读取并逐项核对当前事实。原暂停状态提交为6f5d3c028cb9f5a522e487550d019352826f11b5。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- docs/道具/武器/铁剑.txt#普攻与数值候选
-- docs/道具/武器/铁刀.txt#普攻与数值候选
-- src/Assets/DataConfig/AttackProfiles.csv::basic_iron_sword/basic_iron_blade
+- 开发管理/关中第二轮试玩排查与任务拆分.txt#9. 武器距离与攻击目标语义（历史现状与依赖线索；本次批准范围以上述回复为准）
+- docs/道具/武器/铁剑.txt#普攻与数值候选；docs/道具/武器/铁刀.txt#普攻与数值候选
+- src/Assets/DataConfig/AttackProfiles.csv::basic_iron_sword/basic_iron_blade及范围字段表头
 - src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack
-- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryBuildProfiles
 - src/Assets/Scripts/Combat/CombatActionResolver.cs::ResolveAttack
+- src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryProjectProfiles及空间查询适配
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::PreviewAction
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose
+- src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs::范围查询与方向语义
+- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt（完整卡）
 
 ## 实施范围
 
-反馈9：只为已有铁剑/铁刀形成可体验的不同攻击距离，推荐一件保留1格、另一件允许2格作为候选；明确哪件、最小/最大范围、UI说明、距离测量。当前正式战斗为角色ID单目标，不能空放、普攻不群攻；该问题本轮回答现状，不顺带实现选格/AOE系统。若用户后续选择选格、空放、多目标，须另行独立规划。保留伤害/AP/CT/数量，数值候选须经BattleSim实跑才能有平衡结论。
+在开发管理/关中武器差异射程合同.txt形成铁剑竖向两格、铁刀横向两格、区域内可命中多个敌人的唯一设计合同。明确两格具体落点、方向参照与朝向、起点和中心、选敌或选格操作、预览与确认、遮挡和阵营筛选、重复命中去重，以及区域内零个/一个/多个敌人的行为表。不得把“能打多个敌人”改回单目标距离筛选，也不得从本次批准推导出所有武器或术法都可群攻。
 
-唯一设计交付路径：开发管理/关中武器差异射程合同.txt。只在获确认后准备下游ready；仍需回复时按既有waiting_reply合同保留卡片，不以模型自签代替用户决定。
+首先用当前格网和操作规则检查横竖含义；能从现有事实唯一确定的直接沿用，确有多种玩家可见语义时只询问剩余歧义，不重问已批准的两格多目标方向。是否可空放、如何选朝向尚不能从本次回复单独推导，不擅自当作已批准事实。
+
+保留两件现有单次伤害参数、AP/CT、资源消耗、资格、库存和换装规则；区域多目标的总收益不据此宣称平衡。区分Unity场景功能验证与可抽象角色数值平衡，后者只有BattleSim实跑才能形成结论，不以扩充模拟器作为默认前置。
+
+同步直接下游D-GZ-R2-RANGE-DATA-01的需求来源和范围：旧“只改射程数据、不实现AOE”前提失效，下游继续blocked并保留全部具名前置，不能按旧数据卡直接ready。合同枚举命中的现有所有者和直接验收入口；具体实施若跨多个独立结果，由普通规划上下文按现有原子性规则统一准备，本设计worker不边实施边拆卡。本卡完成只表示设计闭环，不解锁或执行下游业务。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不修改游戏代码、docs、CSV、Unity资产、场景、存档或自动化脚本；不实现两格群攻、空放、背包或其他系统。不伪造A/B选项、不删除原回复/checkpoint证据、不把旧单目标草案作为批准方案。不得把静态检查写成Unity或BattleSim验收。
 
 ## 模型协作
 
-有界设计：两件既有武器的距离差异和边界表，保持单目标及既有费用。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+中等复杂度的有界设计：同一个两格区域攻击合同，涉及现有目标选择、空间查询与结算语义，写入仅限合同及管理投影。主模型保持executionModel=gpt-6.1-sol，建议high但以入口实际证据为准。主责单模型统一核对，当前无需独立辅助或第二责任会话；实现卡临近ready再按实际所有者和能力评估。
 
 ## 验证
 
-列出1格、2格、超射程和零距离的行为表，确认单目标语义；设计不把扩大攻击距离等同范围群攻或已平衡。
+逐项核对铁剑/铁刀两格图示或坐标例子、横竖参照、0/1/多个敌人、遮挡/越界/友方/重复目标、预览与确认一致性；明确每个尚未实现的能力及实际所有者。核对下游仍blocked且保留前置，不能把范围字段存在当作正式群攻已接通。
 
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+运行check-task-cards.ps1、check-review-text.ps1以及实际改动路径的check-pending-whitespace.ps1，暂存后git diff --cached --check。本卡只写管理文本，不运行游戏或数值验收、不运行无关数据链检查。执行前消费共享入口绑定的风险预检，范围或所有者变化遵守既有停止条件。
 
 ## 完成条件
 
-获确认的两个武器射程值与语义合同；补齐数据/asset/引用摘要同步及距离边界验证路径。
+负责人已确认的两格多目标需求被准确落实为无矛盾的设计合同，横竖落点和操作语义明确，现有链路缺口及Unity/数值验收边界可追溯；直接下游说明与合同一致并保持blocked。本卡归档及backlog/queue投影正确，管理检查通过。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+存在无法从事实源确定的玩家可见语义时，仅请求该项决定；不得退回已被取代的A/B方案。需要新增业务写入、实施多个所有者、扩大到其他武器/技能或越过设计边界时停止，不叠加补丁、不创建新工作流。

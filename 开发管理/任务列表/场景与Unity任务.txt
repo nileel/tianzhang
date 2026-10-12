@@ -82,7 +82,7 @@
 | U-GZ-R2-EXIT-01 | P1 | codex | 阻塞 | D-GZ-R2-EXIT-01 | 战斗退出按钮与一次性回城接入 | 开发管理/任务卡/U-GZ-R2-EXIT-01.txt |
 | U-GZ-R2-EQUIP-01 | P1 | codex | 阻塞 | D-GZ-R2-ENTRY-01、U-GZ-R2-SPELL-01 | 真实开局武器道具取得与装备入口修复 | 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | D-GZ-R2-OBSTACLE-01 | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
-| D-GZ-R2-RANGE-01 | P1 | codex | 待决定 | — | 两件基础武器差异射程设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |
+| D-GZ-R2-RANGE-01 | P1 | codex | 已排队 | — | 两件基础武器两格群攻设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |
 | D-GZ-R2-RANGE-DATA-01 | P1 | codex | 阻塞 | D-GZ-R2-RANGE-01、U-GZ-R2-EQUIP-01 | 基础武器差异射程数据与实战验证 | 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |

@@ -52,6 +52,50 @@ function Assert-TransitionScopeRejected {
   }
 }
 
+function Assert-CustomReplyRouting {
+  & {
+    $ownerAst = [Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'invoke-hourly-owner.ps1'), [ref]$null, [ref]$null)
+    foreach ($name in @('Stop-Hourly', 'Get-NormalizedTextDigestFromText', 'Get-TaskAutomationInputs', 'Read-TaskMetadata', 'Get-TaskContextDigest', 'Find-AnsweredCheckpoint')) {
+      $definition = $ownerAst.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name }, $false)
+      . ([scriptblock]::Create($definition.Extent.Text))
+    }
+    $Owner = 'deepseek'; $script:effectiveStateRoot = Join-Path $root '.git/reply-routing'
+    $cardPath = Join-Path $root '开发管理/任务卡/TASK-A.txt'
+    $before = [IO.File]::ReadAllText($cardPath)
+    $custom = [ordered]@{schemaVersion=1;taskId='TASK-A';decisionId='DEC-20260803-TESTA';result='CUSTOM_ACCEPTED';replyKind='custom';replyValue='铁剑竖两格，铁刀横两格';source='feishu_card_input';evidenceHash=('c'*64)}
+    $acceptedPath = Join-Path $script:effectiveStateRoot 'accepted-replies/DEC-20260803-TESTA.json'
+    Write-Utf8 $acceptedPath ($custom | ConvertTo-Json -Compress)
+    $evidence = [IO.File]::ReadAllText($acceptedPath)
+    1..2 | ForEach-Object { Assert-Equal (Find-AnsweredCheckpoint).status 'none' 'Custom reply entered automatic resume or blocked ordinary selection' }
+    Assert-Equal ([IO.File]::ReadAllText($cardPath)) $before 'Custom reply changed the pending task'
+    Assert-Equal ([IO.File]::ReadAllText($acceptedPath)) $evidence 'Custom reply evidence was consumed or changed'
+
+    # An earlier custom reply must not hide a later accepted option for this owner.
+    $laterPath = Join-Path $root '开发管理/任务卡/TASK-C.txt'
+    $laterText = $before.Replace('TASK-A', 'TASK-C').Replace('DEC-20260803-TESTA', 'DEC-20260803-TESTC')
+    Write-Utf8 $laterPath $laterText
+    $later = Read-Meta $laterPath
+    $later.automationCheckpoint.taskContextDigest = Get-TaskContextDigest $later
+    $later.automationCheckpoint.createdAt = '2026-08-04T00:00:00.0000000+00:00'
+    $laterBody = ($laterText -split '---TASK-BODY---\r?\n',2)[1]
+    Write-Utf8 $laterPath (@('---TASK-META---', ($later | ConvertTo-Json -Depth 50), '---TASK-BODY---', $laterBody) -join "`n")
+    $option = [ordered]@{schemaVersion=1;taskId='TASK-C';decisionId='DEC-20260803-TESTC';result='OPTION_ACCEPTED';replyKind='option';replyValue='B';source='feishu_card';evidenceHash=('d'*64)}
+    Write-Utf8 (Join-Path $script:effectiveStateRoot 'accepted-replies/DEC-20260803-TESTC.json') ($option | ConvertTo-Json -Compress)
+    $found = Find-AnsweredCheckpoint
+    Assert-Equal $found.status 'answered' 'A later accepted option was not selected'
+    Assert-Equal $found.task.Metadata.id 'TASK-C' 'Custom reply hid the later checkpoint'
+    Remove-Item -LiteralPath $laterPath
+
+    foreach ($field in @('taskId', 'decisionId', 'replyKind', 'replyValue')) {
+      $invalid = ($custom | ConvertTo-Json -Compress) | ConvertFrom-Json
+      $invalid.$field = ''
+      Write-Utf8 $acceptedPath ($invalid | ConvertTo-Json -Compress)
+      Assert-Equal (Find-AnsweredCheckpoint).detailCode 'checkpoint_reply_invalid' 'Invalid custom reply binding was silently skipped'
+    }
+    Write-Utf8 $acceptedPath $evidence
+  }
+}
+
 $root=Join-Path ([IO.Path]::GetTempPath()) "tzg-decision-checkpoint-test-$([Guid]::NewGuid().ToString('N'))"
 $scriptPath=Join-Path $PSScriptRoot 'set-task-automation-state.ps1'
 try{
@@ -102,6 +146,7 @@ try{
   $pausedMeta=Read-Meta (Join-Path $root '开发管理\任务卡\TASK-A.txt')
   Assert-Equal $pausedMeta.automationCheckpoint.queueIndex 0 'Queue position was not captured'
   Assert-True (-not ([IO.File]::ReadAllText((Join-Path $root '开发管理\当前任务队列.txt')) -match 'TASK-A')) 'Paused task remained in queue'
+  Assert-CustomReplyRouting
 
   $reply=[ordered]@{schemaVersion=1;taskId='TASK-A';decisionId='DEC-20260803-TESTA';result='OPTION_ACCEPTED';replyKind='option';replyValue='B';source='feishu_card';evidenceHash=('c'*64)}
   $replyPath=Join-Path $root 'reply.json'; Write-Utf8 $replyPath ($reply|ConvertTo-Json -Compress)

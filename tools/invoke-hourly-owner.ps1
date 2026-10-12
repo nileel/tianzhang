@@ -1323,6 +1323,14 @@ function Find-AnsweredCheckpoint {
       }
       $acceptedPath = Write-PrivateJson 'accepted-replies' "$($checkpoint.decisionId).json" $reply
     }
+    if ([string]$reply.result -ceq 'CUSTOM_ACCEPTED') {
+      if ([string]$reply.taskId -cne [string]$meta.id -or [string]$reply.decisionId -cne [string]$checkpoint.decisionId -or
+        [string]$reply.replyKind -cne 'custom' -or [string]::IsNullOrWhiteSpace([string]$reply.replyValue)) {
+        return [ordered]@{ status = 'attention_required'; detailCode = 'checkpoint_reply_invalid'; taskId = [string]$meta.id }
+      }
+      # Preserve the reply for manual scope preparation; other tasks may still run.
+      continue
+    }
     return [ordered]@{ status = 'answered'; task = $task; reply = $reply; acceptedPath = $acceptedPath }
   }
   [ordered]@{ status = 'none' }
