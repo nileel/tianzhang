@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-R2-ENTRY-01"
-  ],
-  "stateReason": "2026-10-12负责人已批准小族练气新档设计，本卡路径与验收合同已准备；保留全部具名前置，待正式结果进入master后由QueueMaintenance核对并重新预检，当前不得实施。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对D-GZ-R2-ENTRY-01完成归档；路径、验收合同和风险预检已准备完成。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPELL-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPELL-01.txt",
@@ -45,7 +43,7 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11试玩反馈1；负责人以DEC-20261012-CDAC7E80B6DA67/A批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01冻结本卡合同，设计见开发管理/关中小族开局资格修订合同.txt第三至五节。本卡尚未实施，保留blocked与具名前置；只在前置正式进入master并经后续QueueMaintenance确认全部条件、重新预检后准备ready。
+来源：2026-10-11试玩反馈1；负责人以DEC-20261012-CDAC7E80B6DA67/A批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01冻结本卡合同，设计见开发管理/关中小族开局资格修订合同.txt第三至五节。2026-10-13 QueueMaintenance已核对该前置完成归档，重新预检并消费EXP-UNITY-015开工前说明；本卡现已ready，尚未实施。
 
 ## 必查范围
 
@@ -80,7 +78,7 @@ expectedPaths为完整精确写入集合；上述其他源码只读定位。全�
 
 ## 模型协作
 
-2026-10-12设计准备评估：有界实现，产品语义已由负责人选择A冻结；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头 executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，入口须核实，不把建议当已生效配置。默认单模型，无独立辅助问题，不要求辅助调用；临近ready重新核对复杂度及原生工具能力，不能跳过风险预检与Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本轮仅由gpt-6-astra准备合同，未调用下游模型。
+2026-10-13准备ready复核：有界实现，产品语义已由负责人选择A冻结；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，所需仓库、PowerShell与Unity验证入口可用；无独立辅助问题，不要求辅助调用。已重新预检并消费EXP-UNITY-015开工前说明，不能跳过Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本轮仅由gpt-6-astra准备合同，未调用下游模型。
 
 ## 验证
 

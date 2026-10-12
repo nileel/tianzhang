@@ -10,10 +10,9 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [
-    "D-GZ-R2-ENTRY-01",
     "U-GZ-R2-SPELL-01"
   ],
-  "stateReason": "2026-10-12负责人已批准小族练气新档设计，本卡路径与验收合同已准备；保留全部具名前置，待正式结果进入master后由QueueMaintenance核对并重新预检，当前不得实施。",
+  "stateReason": "2026-10-13已核对D-GZ-R2-ENTRY-01完成归档；本卡仍等待U-GZ-R2-SPELL-01完成，当前不得实施。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt",
     "开发管理/任务归档/U-GZ-R2-EQUIP-01.txt",
@@ -49,7 +48,7 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11试玩反馈5；负责人DEC-20261012-CDAC7E80B6DA67/A已批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01准备本卡合同。本卡尚未实施，blockedBy中的D-GZ-R2-ENTRY-01与U-GZ-R2-SPELL-01全部保留；正式结果进入master后由后续QueueMaintenance核对前置并重新预检，不能直接入队。
+来源：2026-10-11试玩反馈5；负责人DEC-20261012-CDAC7E80B6DA67/A已批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01准备本卡合同。本卡尚未实施；2026-10-13 QueueMaintenance已核对该设计前置完成归档，当前只保留U-GZ-R2-SPELL-01，待其完成后再重新预检，不能直接入队。
 
 ## 必查范围
 

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-R2-EXIT-01"
-  ],
-  "stateReason": "方案A及实施路径已冻结；仍等待D-GZ-R2-EXIT-01正式结果进入master后由QueueMaintenance核对具名前置、风险预检与ready门禁，本轮不解锁。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对D-GZ-R2-EXIT-01完成归档；方案A、实施路径和风险预检均已就绪。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EXIT-01.txt",
     "开发管理/任务归档/U-GZ-R2-EXIT-01.txt",
@@ -42,7 +40,7 @@
 ## 来源与当前边界
 
 来源：2026-10-11用户九项试玩反馈。唯一生效设计为开发管理/关中战斗主动退出合同.txt：负责人对DEC-20261012-CD92C5B14D00B7回复A，批准仅我方可操作时撤离及共同奖励、资源、保存语义。
-本卡只准备完成，尚未实施或获得Unity运行时验收；保持blocked和blockedBy中的D-GZ-R2-EXIT-01。待设计正式结果进入master后，由后续QueueMaintenance核对前置及ready门禁，不因本次设计批准提前实施。
+本卡只准备完成，尚未实施或获得Unity运行时验收。2026-10-13 QueueMaintenance已核对D-GZ-R2-EXIT-01完成归档，重新预检并消费EXP-UNITY-005开工前说明；本卡现已ready。
 
 ## 必查范围
 
@@ -101,9 +99,9 @@ AdventureHudPresenter拥有常驻入口与确认UI，放在不随AdventurePanel�
 
 ## 模型协作
 
-依冻结状态表实现退出和清理，重点证明奖励不误发、资源一致及一次回城。当前为一个由主责统一复核状态、所有者、UI和验证的有界结果；临近ready再核对实际复杂度、能力与原子性。
+依冻结状态表实现退出和清理，重点证明奖励不误发、资源一致及一次回城。2026-10-13准备ready复核确认它仍是由主责统一复核状态、所有者、UI和验证的有界结果；所需仓库、PowerShell与Unity验证入口可用，无独立只读问题，保持单模型。
 2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型保持卡头executionModel=gpt-6.1-sol。建议推理强度high，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则判断辅助，禁止共享写入。当前设计准备未调用该实施模型，不声称已运行；目标模型不可用按既有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则判断辅助，禁止共享写入。已重新预检并消费EXP-UNITY-005开工前说明；当前设计准备未调用该实施模型，不声称已运行；目标模型不可用按既有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
 
 ## 验证
 

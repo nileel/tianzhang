@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-R2-RANGE-01"
-  ],
-  "stateReason": "等待D-GZ-R2-RANGE-01正式集成及后续维护核验；本轮已冻结现有纯查询源码与测试路径，继续blocked并保留具名前置。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对D-GZ-R2-RANGE-01完成归档；纯查询路径、验收合同和风险预检均已就绪。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-QUERY-01.txt",
@@ -66,11 +64,11 @@
 
 复用既有ICombatSpatialQuery.QueryRange逐格校验，不新增接口成员；实际实现者为CombatEntryAdapter内的SpatialCombatQuery、EditMode的FixedRangeQuery以及BattleSim的AuditSpace/AdjacentSpace/Space，保持其现有合同。保留单目标调用；两个敌人的纯查询可用合法2v2快照，不在本卡改变ValidateSideCardinality。新1对2会话由RESOLVE负责。纯档案允许本区域声明不等于正式武器内容已启用；Content字段编码由DATA在上游完成后冻结。
 
-正式设计集成前继续blocked且保留D-GZ-R2-RANGE-01；后续维护须按最新源码和本卡精确集合重新预检再判断ready。需要新增路径/文件、Content schema或改变接口实现者时停止重新冻结，不由执行者临时扩大范围。
+2026-10-13 QueueMaintenance已核对D-GZ-R2-RANGE-01完成归档，并以本卡精确集合重新预检（无命中、无门禁）；本卡现已ready。需要新增路径/文件、Content schema或改变接口实现者时停止重新冻结，不由执行者临时扩大范围。
 
 ### ready前冻结
 
-依赖：D-GZ-R2-RANGE-01。本轮冻结仅限上述七条现存源码/测试及管理生命周期路径；继续blocked，不在设计候选集成前解锁。正式集成后的维护重新核对完整逻辑、直接调用者、风险投影与门禁，再按已有合同判断ready。其余候选只读路径不因列在必查范围而获写入授权。
+本轮冻结仅限上述七条现存源码/测试及管理生命周期路径；2026-10-13已完成归档前置核对、完整逻辑复核与风险投影，现已ready。其余候选只读路径不因列在必查范围而获写入授权。
 
 ## 禁止项
 
@@ -78,7 +76,7 @@
 
 ## 模型协作
 
-中等：纯查询与领域筛选是同一个确定性结果；主责单模型统一复核，暂不需要辅助。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+2026-10-13准备ready复核：纯查询与领域筛选仍是同一个确定性结果；主责单模型统一复核，无独立辅助问题。executionModel保持gpt-6.1-sol；建议强度不是已生效配置，所需仓库、PowerShell、Unity和BattleSim验证入口可用。本次仅准备任务卡，未调用该执行模型开展业务。
 
 ## 验证
 

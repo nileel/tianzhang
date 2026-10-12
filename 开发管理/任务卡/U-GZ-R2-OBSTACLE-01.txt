@@ -9,10 +9,8 @@
   "domain": "unity",
   "stage": "implementation",
   "dispatchState": "blocked",
-  "blockedBy": [
-    "D-GZ-R2-OBSTACLE-01"
-  ],
-  "stateReason": "2026-10-12负责人已批准A整格岩石簇设计；独立岩石源、来源记录、哈希、贴图及具体候选签收尚缺，实施白名单未冻结。保留D-GZ-R2-OBSTACLE-01具名前置，正式结果进入master后仅由QueueMaintenance处理依赖，当前继续blocked。",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对D-GZ-R2-OBSTACLE-01完成归档；独立岩石源、来源记录、哈希、贴图、具体候选签收及实施白名单仍未冻结。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/U-GZ-R2-OBSTACLE-01.txt",
@@ -51,7 +49,7 @@
 
 已批准目标：四格 (2,1)、(3,1)、(2,4)、(3,4) 使用同一独立低矮岩石簇、同向同尺寸，无连续踏步；可见几何 XZ 包围中心距格心≤0.01。相对格心的 |x|、|0.5x+0.8660254z|、|0.5x-0.8660254z| 均≤0.45，六方向达到内缩六边域边界的90%～100%，XZ实体投影覆盖逻辑格面积≥70%；最高点为格心实际地面之上0.60±0.05。按真实地面三角面检查底裙接地与外露边缘，不能用根节点或 Renderer AABB 代替。仅表达不可走，不增加视线遮挡或可站立平台语义。
 
-资源缺口：Guanzhong 当前只有 Tile/Stair，尚无该独立岩石源。须先取得来源记录、具体哈希、贴图及实际候选美术签收，随后才能冻结源/Unity资源与必要.meta精确路径；当前不填写猜测模型scale，不以B石阶包装替代A，不新建生产任务或采购。本次只固定设计与缺口；blockedBy 中 D-GZ-R2-OBSTACLE-01 保留，待正式结果进入master后由QueueMaintenance处理。即使设计前置已归档，缺源和白名单未冻结仍阻止实施。
+资源缺口：Guanzhong 当前只有 Tile/Stair，尚无该独立岩石源。须先取得来源记录、具体哈希、贴图及实际候选美术签收，随后才能冻结源/Unity资源与必要.meta精确路径；当前不填写猜测模型scale，不以B石阶包装替代A，不新建生产任务或采购。2026-10-13 QueueMaintenance已核对D-GZ-R2-OBSTACLE-01完成归档；缺源和白名单未冻结仍阻止实施。
 
 当前expectedPaths仅授权任务准备和管理投影；上列源码为已发现候选所有者，不是未冻结的业务写入授权。前置完成后有权规划者须补齐完整路径、直接测试、必要.meta与riskPreflight后再转ready。
 

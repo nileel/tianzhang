@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "D-CONFIG-EDITOR-CONTRACT-01"
-  ],
-  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对D-CONFIG-EDITOR-CONTRACT-01完成归档；技术合同、实施路径和风险预检均已就绪。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-CORE-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CORE-01.txt",
@@ -60,7 +58,7 @@
 
 按合同在Editor程序集实现唯一窗口、表/条目选择、中文控件契约、内存草稿/脏标记/撤销本次修改、数字/枚举/引用/列表/分组基础和可逆CSV文档读写；保持注释、表头、稳定行/列及未改内容。引用候选显示中文并保留原ID；输入禁用真实业务尚未适配的字段。验证与写盘/导入接线由APPLY独占，本卡不写生产配置、不启用假保存按钮。
 
-2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。QueueMaintenance已核对D-CONFIG-EDITOR-CONTRACT-01完成归档，并重新运行风险预检（无命中、无门禁）；本卡现已ready。
 
 ## 禁止项
 
@@ -70,7 +68,7 @@
 
 有界但含多字段编解码与Unity工具接线，使用Sol在冻结合同下统一实现和复核。 执行主模型由卡头executionModel=gpt-6.1-sol固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
 
-当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+2026-10-13准备ready复核：多字段编解码、Unity编辑器接线和测试仍是同一有界实现，保持卡头gpt-6.1-sol并建议high；所需仓库、PowerShell与验证入口可用，无独立只读问题，无需辅助模型。目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
 
 ## 验证
 
