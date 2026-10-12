@@ -81,7 +81,7 @@
 | U-GZ-R2-SPELL-01 | P1 | codex | 阻塞 | D-GZ-R2-ENTRY-01 | 小族两术法真实开局可用性修复 | 开发管理/任务卡/U-GZ-R2-SPELL-01.txt |
 | U-GZ-R2-EXIT-01 | P1 | codex | 阻塞 | D-GZ-R2-EXIT-01 | 战斗退出按钮与一次性回城接入 | 开发管理/任务卡/U-GZ-R2-EXIT-01.txt |
 | U-GZ-R2-EQUIP-01 | P1 | codex | 阻塞 | D-GZ-R2-ENTRY-01、U-GZ-R2-SPELL-01 | 真实开局武器道具取得与装备入口修复 | 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt |
-| D-GZ-R2-OBSTACLE-01 | P1 | codex | 已排队 | — | 整格障碍物视觉与资源适配设计 | 开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt |
+| D-GZ-R2-OBSTACLE-01 | P1 | codex | 待决定 | — | 整格障碍物视觉与资源适配设计 | 开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | D-GZ-R2-OBSTACLE-01 | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
 | U-GZ-R2-SPAWN-01 | P1 | codex | 已排队 | — | 关中首战怪物移至画面右上角出生 | 开发管理/任务卡/U-GZ-R2-SPAWN-01.txt |
 | D-GZ-R2-RANGE-01 | P1 | codex | 已排队 | — | 两件基础武器差异射程设计 | 开发管理/任务卡/D-GZ-R2-RANGE-01.txt |

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-12负责人授权解除阻塞；隔离Unity双分辨率取证入口实跑2/2通过，输入/测量能力及直接测试范围已冻结，见关中第二轮运行时取证入口。",
+  "stateReason": "等待负责人决定：请选择障碍物视觉方向：A保留整格要求，采用独立岩石簇；B复用居中放大的石阶，接受铺不满整格；C暂停。方案与测量已写入《关中整格障碍物修订合同》。需要确认的直接依据是任务卡“设计方案形成后仍须请求负责人确认”；[brainstorming技能](C:/Users/WINDOWS/.codex/skills/brainstorming/SKILL.md)也要求“ask the user to review the written spec before proceeding”。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
@@ -25,7 +25,85 @@
     "matched": [],
     "gates": []
   },
-  "executionModel": "gpt-6-astra"
+  "executionModel": "gpt-6-astra",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "D-GZ-R2-OBSTACLE-01",
+    "sourceRunId": "968a0696-4d25-444f-afac-2c3c1c31751f",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261012-CDC4324AD8FE34",
+    "question": "请选择障碍物视觉方向：A保留整格要求，采用独立岩石簇；B复用居中放大的石阶，接受铺不满整格；C暂停。方案与测量已写入《关中整格障碍物修订合同》。需要确认的直接依据是任务卡“设计方案形成后仍须请求负责人确认”；[brainstorming技能](C:/Users/WINDOWS/.codex/skills/brainstorming/SKILL.md)也要求“ask the user to review the written spec before proceeding”。",
+    "options": [
+      {
+        "key": "A",
+        "label": "独立整格岩石簇（推荐）；先定设计，待新资产",
+        "targetState": "ready",
+        "expectedPaths": [
+          "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
+          "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
+          "开发管理/任务列表/场景与Unity任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/关中整格障碍物修订合同.txt",
+          "开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt"
+        ],
+        "taskBody": "# D-GZ-R2-OBSTACLE-01 · 整格障碍物视觉与资源适配设计\n\n## 来源与当前边界\n承接本轮设计 checkpoint 和负责人本次选项批准。本卡只冻结设计与下游合同，不实施 Unity 接入；具名前置只有正式结果进入 master 后才由 QueueMaintenance 处理。\n\n## 必查范围\n- 开发管理/关中整格障碍物修订合同.txt：全文及本轮证据附录。\n- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界。\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#7. 截图四个小块。\n- 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt：完整正文。\n- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildGuanzhongBattlefield。\n- src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs::BuildAssetsAndScene。\n- src/Assets/Art/Environments/Guanzhong/Stair.prefab、Tile.prefab。\n- src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset::battlefieldCells。\n- src/Assets/Scenes/AdventureScene.unity::GuanzhongObstacle_2_1/3_1/2_4/3_4。\n- src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs。\n- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions。\n\n## 实施范围\n负责人批准合同 A：保留整格要求，独立低矮六边格岩石簇。固定居中误差≤0.01、内缩六边域半空间上限0.45、六方向边界覆盖90%～100%、实体投影覆盖逻辑格≥70%、顶高为格心地面之上0.60±0.05；底裙接地以真实 mesh 检查。上述为设计目标，不填写不存在源模型的猜测 scale。\n仅更新合同的批准记录和下游卡资源缺口；当前只有 Tile/Stair，没有独立岩石模型。不得据此批准具体候选或采购。下游保持 blocked 及具名前置，写明待来源/哈希/贴图/实物候选签收后才能冻结源资源及 .meta 白名单。不虚构已可用资源，不新建生产任务。设计范围和已证实缺口固定后关闭并归档本设计卡。\n\n## 完成条件\nA 的方向、足迹、高度、用途及验收入口已获本次批准并固定；真实记录新模型尚未取得和后续具体美术批准缺口，下游仍 blocked。完成只指设计闭环，不表示新资产或场景完成。\n\n## 禁止项\n不生成付费资产、不修改 FBX、Unity 代码或资产、HUD、相机、碰撞和视线规则；不触碰用户存档或其他工作区。不移除下游 blockedBy 中本 taskId，不提前提升、重排或关闭下游；本卡关闭只维护自身归档、backlog 行和队列行。不以模型自签代替具体美术候选批准。\n\n## 模型协作\n主责 Codex，executionModel=gpt-6-astra；按入口实际能力核实，单模型统一完成冻结与管理收尾，无独立辅助工作面，不启动第二责任会话。推理强度不凭正文推定。\n\n## 验证\n消费共享入口绑定本卡的风险预检及 mustRead/gates。复核 checkpoint 的四格世界/屏幕中心、Renderer AABB、主顶面三角面与原始 mesh、双分辨率 PNG 尺寸和 XML 1/1。原始证据不可用或相关输入变化时，在本 worktree 按取证入口运行 BattlefieldBoundsAndSpawnProjectionAtBothResolutions -EnableGraphics，实际断言 1920×1080、1366×768，目检截图；否则复用已通过的同输入证据。A/B 尚未接入，不能宣称最终外观通过。保留初始 HUD 遮挡限制，后续实施需既有相机平移的无遮挡截图、mesh 足迹/接地和正式绕行证据。\n运行 check-task-cards.ps1、check-review-text.ps1；实际改动路径 check-pending-whitespace.ps1、暂存后 git diff --cached --check。仅 docs/CSV/Unity 数据变化才运行 check-data-chain.ps1。本卡本身只写冻结 expectedPaths 内的六个管理/合同路径。\n\n## 停止条件\n选择记录与合同冲突、缺失运行时关键证据、需要扩大本卡路径或新增资源生产/新所有者时停止，不猜尺寸或堆补丁。Unity 尚无 Library 时先初始化，启动失败、实际分辨率不符、截图或关键测量缺失时保留真实错误再停止。不得在设计轮实施接入或把下游依赖提前删除。\n"
+      },
+      {
+        "key": "B",
+        "label": "复用居中放大石阶；接受无法铺满整格",
+        "targetState": "ready",
+        "expectedPaths": [
+          "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
+          "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
+          "开发管理/任务列表/场景与Unity任务.txt",
+          "开发管理/当前任务队列.txt",
+          "开发管理/关中整格障碍物修订合同.txt",
+          "开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt"
+        ],
+        "taskBody": "# D-GZ-R2-OBSTACLE-01 · 整格障碍物视觉与资源适配设计\n\n## 来源与当前边界\n承接本轮设计 checkpoint 和负责人本次选项批准。本卡只冻结设计与下游合同，不实施 Unity 接入；具名前置只有正式结果进入 master 后才由 QueueMaintenance 处理。\n\n## 必查范围\n- 开发管理/关中整格障碍物修订合同.txt：全文及本轮证据附录。\n- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界。\n- 开发管理/关中第二轮试玩排查与任务拆分.txt#7. 截图四个小块。\n- 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt：完整正文。\n- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildGuanzhongBattlefield。\n- src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs::BuildAssetsAndScene。\n- src/Assets/Art/Environments/Guanzhong/Stair.prefab、Tile.prefab。\n- src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset::battlefieldCells。\n- src/Assets/Scenes/AdventureScene.unity::GuanzhongObstacle_2_1/3_1/2_4/3_4。\n- src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs。\n- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions。\n\n## 实施范围\n负责人批准合同 B，明确放宽原铺满整格标准：接受居中放大的矩形石阶及周围空地。复用现有 Stair.fbx/材质/贴图，共用 Stair.prefab 不变；未来由独立 ObstacleStair.prefab 包装，子 Stair scale=1.8、localPosition=(0,-0.02,0.7329117)，目标尺寸约0.548989×0.745824、高0.380423。此为已计算候选，后续必须实跑接地与画面。\n只更新设计合同批准记录及下游完整实施正文/expectedPaths，采用合同第7节列出的11条精确路径，包含包装 Prefab/.meta、两个生成器、AdventureScene 和两份直接测试。保留原始 Stair 归一化断言；新增正式包装引用、四格居中/六边半空间包含/接地、保存重开和双分辨率证据。下游仍 blocked，保留本 taskId 前置，禁止提前入队。本轮不创建包装或修改 Unity 文件。\n\n## 完成条件\nB 的足迹折中及现有来源已获本次明确批准；合同与下游完整白名单、验收、停止条件一致。仅归档本设计卡，下游依赖留待 QueueMaintenance 在 master 正式结果后处理；不得称为原整格美术要求达成或最终画面通过。\n\n## 禁止项\n不生成付费资产、不修改 FBX、Unity 代码或资产、HUD、相机、碰撞和视线规则；不触碰用户存档或其他工作区。不移除下游 blockedBy 中本 taskId，不提前提升、重排或关闭下游；本卡关闭只维护自身归档、backlog 行和队列行。不以模型自签代替具体美术候选批准。\n\n## 模型协作\n主责 Codex，executionModel=gpt-6-astra；按入口实际能力核实，单模型统一完成冻结与管理收尾，无独立辅助工作面，不启动第二责任会话。推理强度不凭正文推定。\n\n## 验证\n消费共享入口绑定本卡的风险预检及 mustRead/gates。复核 checkpoint 的四格世界/屏幕中心、Renderer AABB、主顶面三角面与原始 mesh、双分辨率 PNG 尺寸和 XML 1/1。原始证据不可用或相关输入变化时，在本 worktree 按取证入口运行 BattlefieldBoundsAndSpawnProjectionAtBothResolutions -EnableGraphics，实际断言 1920×1080、1366×768，目检截图；否则复用已通过的同输入证据。A/B 尚未接入，不能宣称最终外观通过。保留初始 HUD 遮挡限制，后续实施需既有相机平移的无遮挡截图、mesh 足迹/接地和正式绕行证据。\n运行 check-task-cards.ps1、check-review-text.ps1；实际改动路径 check-pending-whitespace.ps1、暂存后 git diff --cached --check。仅 docs/CSV/Unity 数据变化才运行 check-data-chain.ps1。本卡本身只写冻结 expectedPaths 内的六个管理/合同路径。\n\n## 停止条件\n选择记录与合同冲突、缺失运行时关键证据、需要扩大本卡路径或新增资源生产/新所有者时停止，不猜尺寸或堆补丁。Unity 尚无 Library 时先初始化，启动失败、实际分辨率不符、截图或关键测量缺失时保留真实错误再停止。不得在设计轮实施接入或把下游依赖提前删除。\n"
+      },
+      {
+        "key": "C",
+        "label": "暂不选择，保留现状并暂停",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A保留整格占位目标，但需要后续新资产及具体候选签收；B复用已有石阶、无需新模型，但必须接受不足整格的矩形足迹；C暂停且画面保持现状。A/B本次均只批准设计收尾，不执行资源生产或Unity接入。",
+    "plainSummary": {
+      "situation": "四处挡路的小石阶确实偏离格子中心，尺寸也太小。测量和方案已完成，但决定保留整格目标还是接受较小石阶，需要您确认。",
+      "impact": "A需要后续制作并确认新岩石，时间和成本更多；B省去新模型制作，但放大后仍铺不满格子；C暂时保留现状。当前游戏画面尚未修改。",
+      "action": "推荐选A，保持您要求的整格岩石障碍；若更看重尽快复用现有素材并接受周围留空，可选B。"
+    },
+    "checkpointCommit": "449f65b12f1f9294f1b69563a15821f4baa70932",
+    "baseCommit": "9104802023bff44412c7530c35661ad27e9369d4",
+    "branch": "codex/automation/codex/968a0696-4d25-444f-afac-2c3c1c31751f/candidate",
+    "changedPaths": [
+      "开发管理/关中整格障碍物修订合同.txt"
+    ],
+    "verified": [
+      "正式入口 PlayMode 取证 1/1 通过，实际断言并截图 1920×1080、1366×768；两张截图已目检。",
+      "核对四格父级、世界及屏幕中心、Renderer AABB、朝上面包络和16份原始mesh；确认可见石阶中心偏移约-0.407173，现有尺寸不足以表达整格障碍。",
+      "核对真实地块顶面三角形及支撑边界；两条设计路线明确区分实测事实与待批准目标。",
+      "check-task-cards.ps1 通过；CheckpointScope 校验两个可执行选项的完整路径及任务正文通过。",
+      "check-review-text.ps1 通过，检查815个文件。",
+      "finalizer 的路径限定空白检查及暂存检查通过；最终 git diff --cached --check 通过。",
+      "工作树清洁；唯一提交直接继承指定 BaseCommit；任务卡、队列和下游具名前置未改变。",
+      "changedPaths 已由指定 git diff --name-only --no-renames 命令原样生成。"
+    ],
+    "unverified": [
+      "视觉方向尚未获得负责人批准；A所需独立整格岩石资产尚不存在。",
+      "B仅完成原始mesh上的几何适配计算，尚未在Unity生成候选或验收接地、最终画面。",
+      "初始视角中后方障碍受悬赏面板遮挡；尚未完成四格无遮挡视角和逐回合绕行验收。"
+    ],
+    "residualRisk": "A需要后续取得并签收新资产；B必须明确接受无法铺满整格的折中。现有HUD遮挡不属于本卡修复范围，后续需用既有相机平移补证，不能据基线取证通过宣称最终视觉完成。",
+    "taskContextDigest": "ac6ca5a077c5a032d56ff5c9aa4f50c7c962ec8bddbbb7783c1c145b729afa00",
+    "createdAt": "2026-10-12T11:29:23.2993138+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # D-GZ-R2-OBSTACLE-01 · 整格障碍物视觉与资源适配设计
