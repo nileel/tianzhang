@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：是否批准主动退出合同？A仅在我方可操作时撤离；B允许行动中申请、当前演出结束后确认；C暂缓。A/B共同约定：不发本场奖励，已用道具不退、换装保留，本场生命与灵力变化不带回城镇，回城不自动保存。任务卡明确要求负责人确认，不能由模型代签。",
+  "stateReason": "负责人回复已落实范围：DEC-20261012-CD92C5B14D00B7/A",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-EXIT-01.txt",
     "开发管理/任务归档/D-GZ-R2-EXIT-01.txt",
@@ -20,11 +20,6 @@
     "开发管理/任务卡/U-GZ-R2-EXIT-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "executionModel": "gpt-6-astra",
   "automationCheckpoint": {
     "schemaVersion": 1,
@@ -104,6 +99,19 @@
     "taskContextDigest": "9e535f359924dba487f19233536b132fc4917f3969e43a0262b4fd6b069e39d4",
     "createdAt": "2026-10-12T04:22:06.9054914+08:00",
     "queueIndex": 0
+  },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261012-CD92C5B14D00B7",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "277e1ec4963825d6e66e56019766adc23950c64e58fb2528dc9fee64e791fbf6"
   }
 }
 ---TASK-BODY---
@@ -111,43 +119,49 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+来源：2026-10-11用户九项试玩反馈；本轮决策回复批准开发管理/关中战斗主动退出合同.txt的方案A及共同奖励、资源和保存语义。本卡只完成设计冻结与唯一后继实施卡准备，不实施Unity功能。checkpoint草案不是运行时验收证据。
 
 ## 必查范围
 
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ReturnToSource/ResolveEncounter
-- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs
-- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs
+- 开发管理/关中战斗主动退出合同.txt全文及本轮有效决策回复。
+- 开发管理/关中第二轮试玩排查与任务拆分.txt第4节。
+- 开发管理/任务卡/U-GZ-R2-EXIT-01.txt完整正文。
+- docs/剧情/任务/关中/quest_guanzhong_bounty_shijiahou.txt状态转换表。
+- docs/superpowers/specs/2026-07-30-guanzhong-bounty-data-contract.md第四节。
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ReturnToSource/ResolveEncounter。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RunCombat/ExecuteCommand/Complete及资源配置。
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs和src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs的UI装配。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::ClearContext及现有HUD/表现清理端口。
+- src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs::ReturnToPreviousScene/CaptureSave、src/Assets/Scripts/Modules/Bootstrap/SettlementSceneInstaller.cs::SaveAndReturnToMenu。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs的探索/战斗面板及src/Assets/Scenes/AdventureScene.unity直接引用。
+- src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs。
 
 ## 实施范围
 
-反馈4：现有返回节点明确只允许探索态，不能简单解除门禁。设计常驻退出/撤离入口和确认，冻结演出/移动/敌方行动时的可用性或等待边界，未完成战斗的悬赏/掉落不发奖、现有已提交资源是否保留、取消预览/清理单位/一次导航、旧档与保存边界。优先复用现有返回目标与结算所有者；不以伪造胜利或失败事件实现退出。未决结算提交负责人确认。
-
-唯一设计交付路径：开发管理/关中战斗主动退出合同.txt。只在获确认后准备下游ready；仍需回复时按既有waiting_reply合同保留卡片，不以模型自签代替用户决定。
+把合同标明为负责人已通过有效回复批准的方案A，删除另一方案的生效歧义，保留源码事实与未实机验证声明。
+仅我方可操作、无演出且战斗未分胜负时允许确认撤离；预览先取消；移动/演出、敌方行动及回合转换时入口可见但禁用并解释原因，不缓存请求。
+共同语义：确认期不推进战斗；胜负已成立时正式结算优先；退出不伪造胜败、不提交本场悬赏/掉落。已扣道具不返还、已确认装备切换保留，战斗HP/MP/AP/CT/冷却/换术不回写持久角色。取消不改变规则资源或导航，候选可清空。由原所有者清理会话、输入、单位与表现后一次性消费SceneReturnTarget导航；回城不自动写盘，继续使用城镇原保存入口，无存档迁移。
+为U-GZ-R2-EXIT-01补齐状态表、资源对照、正式入口与双分辨率验收，以及以下精确业务路径：src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs、src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs、src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs、src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs、src/Assets/Scripts/Editor/AdventureSceneBuilder.cs、src/Assets/Scenes/AdventureScene.unity、src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs。保留后继自身任务卡/归档、场景与Unity任务列表和当前任务队列四个生命周期路径；复用现有文件，不新增组件/.meta。
+本设计卡只写当前expectedPaths六个管理文件，源码仅必查。后继保持blocked并保留blockedBy中的D-GZ-R2-EXIT-01，不移除backlog具名前置、不提升或入队。更新后继风险投影时必须使用实际预检，不把本轮零命中沿用为新范围证据；后续QueueMaintenance在正式结果进入master后重新核对ready门禁。
+完成后只归档本设计卡并移除本卡ready投影，不改其他任务生命周期。
 
 ## 禁止项
 
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+不改Unity代码/场景/数据，不改变其他出身/场景/全局默认行为，不扩展商店/背包/技能/自动化，不读写用户实际存档，不把静态分析或测试夹具当正式玩家实测。不得新增HP/MP回写、道具返还、战前回滚、自动保存或逃跑惩罚。
 
 ## 模型协作
 
-高风险状态设计：主动退出涉及已提交资源、悬赏/掉落、演出与一次性导航边界。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6-astra冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-本轮未执行任务，仅更新调度模型；原状态、依赖与队列顺序保持。 默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+执行主模型保持入口按executionModel选定的gpt-6-astra。高风险语义已由有效回复冻结，本轮为有界设计收尾，单主模型统一核对；不要求子智能体，不启动第二责任会话。工具未证明推理强度时不宣称high已生效。后继沿用其冻结模型并在临近ready按实际复杂度重新核对。
 
 ## 验证
 
-状态表覆盖探索、我方待命、预览、移动/演出、敌方行动、胜负已结算、重复点击；核对奖励与资源所有者。
-
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+核对合同覆盖探索、我方待命、预览、移动/演出、敌方行动、回合转换、胜负已成立及已结算、取消、重复点击与迟到回调；奖励/资源/保存所有者与源码一致。核对后继字面量路径存在、范围与状态验收齐全，依赖未移除且未入队。
+消费入口风险预检；后继范围变化须重算其风险投影；check-task-cards.ps1、check-review-text.ps1；预期路径check-pending-whitespace.ps1及暂存git diff --cached --check。仅管理文本变化不运行Unity/BattleSim/data-chain；运行时实测仍由后继完成，不以设计通过冒充游戏验收。
 
 ## 完成条件
 
-一份获确认的主动退出合同，补齐唯一实施卡的字面量路径和状态转换验收。
+有效回复批准的方案A及共同资源/保存语义明确落入唯一合同；唯一后继卡具备精确路径、停止条件与逐状态验收，仍保留本卡前置且blocked；本设计卡正确归档，管理验证通过。
 
 ## 停止条件
 
-发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+有效回复缺失/冲突，发现新所有者、需扩大批准路径/新增组件、需要存档迁移/资源回写/回滚、现有输入或清理端口不足，或与批准语义冲突时停止回查并按既有决策合同处理，不叠加补丁。后继缺Unity运行时证据不得宣称功能验收通过。
