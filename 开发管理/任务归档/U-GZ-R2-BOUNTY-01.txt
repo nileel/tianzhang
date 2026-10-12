@@ -100,8 +100,8 @@
 
 ### CAND-U-GZ-R2-BOUNTY-01-01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-70467702AC21
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

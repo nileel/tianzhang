@@ -124,8 +124,8 @@
 
 ### CAND-U-GZ-R2-SPAWN-01-01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-50373924A1F9
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity
