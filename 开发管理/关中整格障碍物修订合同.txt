@@ -1,0 +1,193 @@
+# 关中整格障碍物修订合同
+
+任务：D-GZ-R2-OBSTACLE-01。2026-10-12 负责人已批准 A：独立低矮六边格岩石簇，保留整格要求。本合同冻结设计方向、足迹、高度、用途及验收入口；不是具体美术候选签收或正式资产交付。设计卡完成归档，U-GZ-R2-OBSTACLE-01 仍 blocked 并保留具名前置；未生成付费资产、未修改 FBX、Unity 代码、场景或资产。
+
+批准记录：DEC-20261012-CDC4324AD8FE34，选项 A，来源 feishu_card；回复证据 SHA-256=1f172e17d1bb00946f8fb0a07312f23881c433352ab871afdd7d32dca79e2324。共享入口已核验并应用对应完整任务合同，续轮 runId=c5d4a766-05d2-49ef-9820-9e01a6607c51，基线=fbd8fa8536f45fe442c72a5167f129cd147a25a7；承接 checkpoint=449f65b12f1f9294f1b69563a15821f4baa70932。B/C 未被选择，以下 B 仅保留方案比较依据，不作为实施授权。
+
+## 1. 结论与根因
+
+四个不可地面进入的格位 (2,1)、(3,1)、(2,4)、(3,4) 当前复用小型 Stair。根节点虽然在格心，可见几何中心相对格心为 (0,0.105673,-0.407173)，世界尺寸仅 X=0.304994、Y=0.211346、Z=0.414346。偏位来自 Stair 的 MeasuredFbxAlignment，而不是格位数据错位。直接放大根节点会同时放大偏位，不能修复居中。
+
+已批准 A：独立六边格岩石簇，保持整格占位要求。现有 Stair 只适合 B 的低成本矩形石阶折中，不能称为原要求已满足；本次未批准该折中。当前源资源中没有可直接接入的独立整格障碍模型，A 的新资源生产与具体候选美术签收仍是后续缺口。
+
+## 2. 所有者与范围锁定
+
+- 正式面：AdventureScene → GuanzhongBattlefield → GuanzhongHex_q_r → GuanzhongObstacle_q_r → MeasuredFbxAlignment → Stair。
+- 创建者：AdventureSceneBuilder.BuildGuanzhongBattlefield 从 EnvironmentProfile_env_guanzhong_wild.asset.battlefieldCells 读取 blocksGroundMove，在四个地块下实例化 GuanzhongTerrainAssetBuilder.StairPrefabPath。源码搜索未发现运行时重写这四个障碍 Transform 的其他所有者。
+- Stair.prefab GUID=590bf37d3b9b5ca4992f31818ab0b98f；内嵌 Stair.fbx GUID=f0c78cfec1445de4bb26954ad0bdefe0。GuanzhongTerrainAssetBuilder.BuildAssetsAndScene 固定其位移 z=-0.407173167、绕 Y -90°、正等比缩放 0.414346305。
+- 地块为 Tile.prefab，内嵌 Tile.fbx GUID=746901f8341134a468146342d43cc2a5；原始层级及规范化保持。父地块根世界坐标 C=(q+0.5r,0.34,1+0.8660254r)，四个 obstacle.localPosition=(0,0,0)、根 scale=(1,1,1)。
+- 正式投影相机来自 CombatMovementView.battlefieldCamera，即 Main Camera，位置 (0,8,-9.58239)、Euler=(38,0,0)、正交 size=4。采集使用 Camera.WorldToScreenPoint，屏幕原点在左下。
+- 排除对象：Tile 是地面而非障碍；VisualBaselineOccluder 由比较板方法创建，不属于四个正式障碍，当前运行时报告中未枚举到该对象。不得修改比较板或其他出身/场景、共用 Stair 原件来解决本问题。
+- 规则保持：上述四格 blocksGroundMove=1、blocksLineOfSight=0；不加 Collider，不以新造型新增视线遮挡、高低差、可站立平台或数值平衡规则。
+
+## 3. checkpoint 基线证据与真实限制
+
+基线：9104802023bff44412c7530c35661ad27e9369d4。owner worktree：D:/天章游戏开发/.worktrees/automation/968a0696-4d25-444f-afac-2c3c1c31751f/codex。
+
+在该 worktree 执行一次：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath (Join-Path (Get-Location) 'src') -ResultXmlPath (Join-Path (Get-Location) 'src/Logs/gz-r2-entry.xml') -TestFilter TianZhang.Tests.PlayMode.GuanzhongRuntimeEvidencePlayModeTests.BattlefieldBoundsAndSpawnProjectionAtBothResolutions -EnableGraphics
+
+Unity 6000.3.18f1 首次初始化后，XML total=1、passed=1、failed=0、result=Passed，测试时长 3.8855108 秒。该单项内部实际断言并采集 1920×1080、1366×768；不是两项测试。正式新档链 StartMenu→World→Settlement→Adventure 首战；没有读取用户存档。运行器已恢复临时资产变化，退出后 Git 工作树无 Unity 源文件差异。
+
+src/Logs/gz-r2-evidence/ 含两张 battlefield PNG、两份同名 TXT 和 16 份逐对象/逐分辨率原始 mesh JSON。1920 报告 UTC=2026-10-12T03:19:28.6235896Z。两张截图已实际目检：前方两块石阶较小且偏向格前沿；(2,4) 部分受悬赏追踪面板遮挡，(3,4) 被面板遮住，不能声称四格在初始画面均清晰可见。生产相机和 HUD 不在本卡修复范围；后续用既有相机平移输入补充无遮挡视角，仍需保留初始视角证据；如果必须修改 HUD/相机代码才能达成要求，应停止另行确认，不能在障碍接入中顺带修。
+
+本轮只读路径报价表中四格无进入路径，其他相关可走格存在绕行路线；这是拓扑证据，不是玩家逐回合绕行验收。未运行 BattleSim；没有裁定角色数值平衡。
+
+模型协作：根据入口启动证明，主模型 gpt-6-astra。测量、资源用途和视觉方向是同一强耦合设计单元，无独立辅助工作面，单模型统一复核；未调用辅助模型，未核实 CLI 推理强度。共享入口已核验本卡预检 matched/mustRead/gates 均为空，本轮不扩大授权路径。
+
+已加载技能参考：unity-agent-workflows 的 runtime-owner-proof、visible-object-identity、asset-source-lock、ui-and-visual-assets、serialized-persistence、unity-validation；结构图 UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md；brainstorming 用于比较方案和保留设计批准门禁。未触及非本任务系统。
+
+## 4. 四格测量
+
+四个 mesh 同源同向。下表尺寸、中心和范围均为世界单位；屏幕坐标为像素，区间是包围盒投影而非可见像素轮廓。
+
+格位 | 父地块根 C | 障碍 renderer 中心 | 障碍世界 AABB min → max
+(2,1) | (2.5,0.34,1.866025) | (2.5,0.445673,1.458852) | (2.347503,0.34,1.251679) → (2.652497,0.551346,1.666026)
+(3,1) | (3.5,0.34,1.866025) | (3.5,0.445673,1.458852) | (3.347503,0.34,1.251679) → (3.652497,0.551346,1.666026)
+(2,4) | (4,0.34,4.464102) | (4,0.445673,4.056929) | (3.847503,0.34,3.849755) → (4.152497,0.551346,4.264102)
+(3,4) | (5,0.34,4.464102) | (5,0.445673,4.056929) | (4.847503,0.34,3.849755) → (5.152497,0.551346,4.264102)
+
+格位 | 根中心屏幕 1920 / 1366 | 障碍 AABB 屏幕 min→max 1920 | 障碍 AABB 屏幕 min→max 1366
+(2,1) | (1297.5,676.645) / (923,481.170) | (1276.913,625.584)→(1318.087,682.505) | (908.360,444.860)→(937.640,485.337)
+(3,1) | (1432.5,676.645) / (1019,481.170) | (1411.913,625.584)→(1453.087,682.505) | (1004.360,444.860)→(1033.640,485.337)
+(2,4) | (1500,892.582) / (1067,634.725) | (1479.413,841.521)→(1520.587,898.442) | (1052.360,598.415)→(1081.640,638.893)
+(3,4) | (1635,892.582) / (1163,634.725) | (1614.413,841.521)→(1655.587,898.442) | (1148.360,598.415)→(1177.640,638.893)
+
+地块范围应分清三类：
+1. Renderer AABB 相对 C：min=(-0.84457,-1.88311,-0.77803)，max=(0.80252,0.09394,0.81268)，包含岩壁及变换后的局部包围盒余量；不是顶面边界。
+2. 原始世界 mesh 所有顶点相对 C：X=[-0.579057,0.539703]，Y=[-1.883111,0.093945]，Z=[-0.598760,0.657478]；仍包含草、岩壁。
+3. 实际主顶面：在原始三角形上按 XZ 重心坐标插值，格心最高交点世界 Y=0.3404328，四格误差小于 0.000001；不是草冠最高点 Y=0.4339446。朝上面全包络包含 Y=-1.26678 的岩壁台阶，不可用于缩放。
+
+为辨认主顶面，离线读取本轮运行时 mesh：选 normal·up≥0.8 且三顶点世界 Y 均位于 [0.31,0.37] 的三角面，共 6818 个。其相对 C 的 XZ 包络为 X=[-0.565115,0.533603]、Z=[-0.595315,0.653949]；这是主顶面高度带证据，不宣称是不含草叶的精确美术轮廓。进一步以格心沿 12 个 XZ 方向与原始三角面投影求交，只保留 Y≥0.30 且从格心连续有支撑的区间，得到实际顶面支撑边界采样（角度从 +X 向 +Z）：
+角度 | 距格心 | 相对 XZ 边界点
+0 | 0.519777 | (0.519777,0)
+30 | 0.620709 | (0.537550,0.310355)
+60 | 0.513097 | (0.256548,0.444355)
+90 | 0.629236 | (0,0.629236)
+120 | 0.548848 | (-0.274424,0.475316)
+150 | 0.635187 | (-0.550088,0.317593)
+180 | 0.537207 | (-0.537207,0)
+210 | 0.622951 | (-0.539491,-0.311476)
+240 | 0.520991 | (-0.260495,-0.451191)
+270 | 0.596362 | (0,-0.596362)
+300 | 0.505275 | (0.252638,-0.437581)
+330 | 0.566941 | (0.490985,-0.283470)
+
+上述采样来自 (2,1)；其余三格网格只平移，同源顶面可复核。它保留不规则边沿，不用外接矩形当六边格。后续精确接地检查仍须遍历实际候选的底面/足迹，不能以 12 点代替连续覆盖证明。
+
+主顶面高度带的屏幕边界 1920：
+(2,1) (1221.209,624.881)→(1369.536,732.108)
+(3,1) (1356.209,624.881)→(1504.536,732.108)
+(2,4) (1423.709,840.818)→(1572.036,948.045)
+(3,4) (1558.709,840.818)→(1707.036,948.045)
+1366 同相机下 X'=683+(X-960)×768/1080，Y'=Y×768/1080；两份原始报告另存实际投影。对新资源不以屏幕包围盒推算 scale。
+
+## 5. 设计与验收基准（随 A 批准冻结）
+
+- 格位和地面不动。居中指可见几何 XZ 包围盒中心与 C.xz 的距离≤0.01，不只检查根节点；四实例同一资源同向同尺寸。
+- 逻辑格中心距为 1，禁止侵入邻格的水平域采用 |x|≤0.5、|0.5x+0.8660254z|≤0.5、|0.5x-0.8660254z|≤0.5（x/z 相对 C）。保留边缘余量的目标域把右侧 0.5 改为 0.45。
+- 顶面不是平面。目标域六顶点在真实地块 mesh 上的最高支撑 Y 约为 0.337937～0.393982，格心为 0.340433。接地按真实三角面与底面相交核对，允许底裙局部埋入；不能以 renderer.bounds.min.y 与根 Y 相等宣布接地。外露边缘不得悬空，草冠局部穿入不当作格位错位。
+- 新旧造型都只是既有不可走格的表现；不挡规则视线、不添加可攀爬/可站立语义。验收需能区分草地、障碍和角色，不以编译通过替代画面。
+- 双分辨率验收保留正式初始镜头，再通过既有平移输入看清四格；记录相机位置、屏幕尺寸、层级、世界/屏幕 mesh 范围和对应截图。初始镜头的 HUD 遮挡应如实报告，不能隐去 HUD 后宣称解决。
+
+## 6. A：独立整格岩石簇（已批准）
+
+用途：只表达这四格不可走，不当楼梯、可站立平台或高墙。造型为低矮、粗糙、无连续踏步的岩石簇，沿六边格展开；石色区别于绿色地面，保留外围细窄地面边缘。以下是已批准的设计目标，不是新资产实测值：
+
+- 可见足迹围绕格心，外轮廓位于上述 0.45 内缩六边域内，六方向均抵达该域边界的 90%～100%；XZ 投影实体覆盖逻辑格面积至少 70%，不靠六个孤立尖点虚报整格。逻辑格面积为 √3/2，内缩六边面积为其 81%。
+- 参考外接尺寸 X=0.90、Z=1.03923；整体底部基准世界 Y≈0.31，用不规则底裙与原顶面衔接；最高点设计为格心顶面之上 0.60±0.05。实际底裙、微调和源模型变换待候选测量确定，禁止现在填猜测 scale。
+- 一份独立资源四处实例化，不改 Tile 或 Stair；不采用拉伸石阶、堆高地块或全局改材质冒充新岩石。
+- 资源状态：本轮仓库 Guanzhong 地形目录只有已存在的 Tile/Stair FBX、材质、贴图、Prefab 及其 .meta；没有此方案的独立岩石源。A 批准仅批准方向、足迹、高度和用途，不批准不存在的具体候选、不授权本卡生成付费资产。
+- 后续资源须通过项目美术流程取得来源记录、具体哈希、贴图和实际候选签收，才冻结源/Unity资源及 .meta 精确路径。缺源时 U-GZ-R2-OBSTACLE-01 继续 blocked，明确记录缺口，不伪造完整可执行资产白名单或提升队列。
+
+## 7. B：复用现有居中石阶（未选择，仅留比较依据）
+
+用途：以较大的居中石块提示不可走，接受仍有石阶形状、不是铺满六边格的视觉。零新模型采购，沿用现有 Stair.fbx、Stair.mat、Stair_basecolor.JPEG；源文件与共用 Stair.prefab 不改。
+
+以本轮全部 63497 个 Stair 世界顶点为输入，去除 XZ 几何中心偏移后计算三个六边形半空间的最大绝对投影，放进 0.45 域的等比上限约为 1.837963。为保留余量，方案采用 1.8；这是 mesh 几何计算的设计候选，尚未在 Unity 中生成或目检。原三角形数 98138；由于半空间线性，顶点全包含亦包含各三角面。
+
+候选变换：以父地块为原点，在新独立 ObstacleStair.prefab 下实例化原 Stair.prefab；该子实例 scale=(1.8,1.8,1.8)，localPosition=(0,-0.02,0.7329117)，不改内嵌 MeasuredFbxAlignment。由原 mesh 推算最终世界尺寸约 X=0.548989、Z=0.745824、高=0.380423，最低 Y=0.32、最高 Y=0.700423，几何 XZ 中心回到格心。接地与画面仍需后续实跑，数值不代替视觉签收。
+
+原模型居中等比放大在不越格约束下无法铺满整格：即使取上限，其 XZ 外接矩形面积也小于逻辑格面积的 50%，实际实体更少；不推荐以非等比拉伸、多个副本堆叠或改碰撞补救。批准 B 即明确改为“居中、放大、保留边缘空地的石阶障碍”，撤回原“铺满整格足迹”完成标准。
+
+仅 B 获批后，下游可冻结如下完整实施白名单（本轮不据此写入）：
+- 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt
+- 开发管理/任务归档/U-GZ-R2-OBSTACLE-01.txt
+- 开发管理/任务列表/场景与Unity任务.txt
+- 开发管理/当前任务队列.txt
+- src/Assets/Art/Environments/Guanzhong/ObstacleStair.prefab
+- src/Assets/Art/Environments/Guanzhong/ObstacleStair.prefab.meta
+- src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs
+- src/Assets/Scenes/AdventureScene.unity
+- src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs
+
+新包装 Prefab 必须由已有地形生成器确定性保存；AdventureSceneBuilder 仅替换四格实例引用。EditMode 既有 Stair 归一化断言保留，正式障碍引用断言改指包装，新增四格居中、包含与重建持久化验证。PlayMode 只扩展 BattlefieldBoundsAndSpawnProjectionAtBothResolutions 的障碍验收、既有输入平移截图及正式绕行，不改悬赏测试。其他 .meta 不需写入，环境数据仅只读核验。
+
+## 8. 批准后执行与停止边界
+
+负责人选 A/B 后，本设计任务仅把所选设计与真实资源情况固定到本合同及下游卡，完成本卡自身管理收尾。A 缺资源则下游仍 blocked；B 虽资源存在也保留 D-GZ-R2-OBSTACLE-01 的具名前置，等待正式结果进入 master 后由 QueueMaintenance 更新依赖和准备 ready。本轮/续轮设计执行均不得移除下游 blockedBy、提升或重排下游，不执行 Unity 接入。
+
+下游实施至少包括：相关场景 EditMode 的生成/保存/重开验证；本取证测试两分辨率真实截图与四格 mesh 中心、足迹、接地；正式路径拒绝进入四格、合法绕行；blocksLineOfSight=0 和 36 格规则保持。需要更多生产所有者、修改共享 Stair/Tile、碰撞、HUD/相机或资源采购时停止，先冻结新的授权范围，不堆兜底。
+
+设计方向批准门禁已由上述负责人 A 回复满足；不重复请求同一批准。批准不覆盖尚不存在的具体美术候选、资源采购或 Unity 接入。下游须待来源记录、具体哈希、贴图和实物候选签收齐全，才能冻结源资源、Unity 资源及 .meta 的完整精确白名单；本卡不新建资源生产任务。
+
+## 9. 验证记录
+
+运行时通过只证明基线取证充分，不证明 A/B 最终造型通过；A 无成品，B 仅离线几何设计，均未执行接入。文档自检覆盖数字来源、事实与提案区分、资源缺口、完整选项边界及禁止提前解锁。
+
+2026-10-12 批准续轮复核：checkpoint 原始证据仍可读取；两张 PNG 的尺寸及 SHA-256、XML 的 SHA-256 和 total=1/passed=1/failed=0 与附录一致，两图再次目检。当前 Stair/Tile FBX 哈希一致；9104802023bff44412c7530c35661ad27e9369d4..HEAD 的 src 与取证运行脚本无差异，复用同输入已通过的 PlayMode，不重新运行 Unity。
+
+16 份原始 mesh 均可解析，顶点/三角形数量、世界包络与离线分析一致；复算四格主顶面高度约 0.3404328 及高度带包络。复现 6818 面统计时须排除叉积长度≤0.00001 的微小三角面再归一化法向；原摘要未写此阈值，不排除时首格为 6854 面，但高度带包络相同。此处补齐复算口径，不更改批准尺寸或接地标准。四格父级、根/可见中心与屏幕投影已与报告核对；36 格及四格不可走、不挡视线仍由现有数据定义。
+
+续轮为明确批准后的简单文档冻结与管理收尾，主模型按入口证明保持 gpt-6-astra；无独立辅助工作面，未调用子智能体，未核实 CLI 推理强度。消费本 run 绑定预检，matched/notice/mustRead/gatePointers 与卡头 riskPreflight 均为空。只维护本设计卡生命周期并更新下游真实资源缺口，不移除其具名前置、不扩充其业务路径、不入队。管理校验结果见本设计任务归档的验证结果。
+
+## 附录：原始报告摘录与文件校验
+
+以下摘录原样保留本轮四格的 Renderer AABB、朝上面包络、父级、原始网格文件名及屏幕投影；朝上面包络不代表纯顶面。
+
+### 1920 实际采集
+
+scene=AdventureScene; resolution=1920x1080; project=D:/天章游戏开发/.worktrees/automation/968a0696-4d25-444f-afac-2c3c1c31751f/codex/src/Assets; utc=2026-10-12T03:19:28.6235896Z
+camera=Main Camera; position=(0.00000, 8.00000, -9.58239); rotation=(38.00000, 0.00000, 0.00000); ortho=4; pixelRect=(x:0.00, y:0.00, width:1920.00, height:1080.00); aspect=1.777778
+obstacle=GuanzhongBattlefield/GuanzhongHex_2_1/GuanzhongObstacle_2_1; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_2_1/GuanzhongObstacle_2_1/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(2.34750, 0.34000, 1.25168); boundsMax=(2.65250, 0.55135, 1.66603); center=(2.50000, 0.44567, 1.45885); screenMin=(1276.913,625.584); screenMax=(1318.087,682.505); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(2.35627, 0.37309, 1.26071); upwardWorldMax=(2.65175, 0.55135, 1.66458); upwardScreenMin=(1278.096,636.573); upwardScreenMax=(1317.986,663.899); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_1_GuanzhongObstacle_2_1_MeasuredFbxAlignment_Stair-1920.json
+tile=GuanzhongBattlefield/GuanzhongHex_2_1/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(1.65543, -1.54311, 1.08800); boundsMax=(3.30252, 0.43394, 2.67870); center=(2.47898, -0.55458, 1.88335); screenMin=(1183.484,411.651); screenMax=(1405.840,754.184); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(1.92350, -1.26678, 1.27071); upwardWorldMax=(3.03360, 0.43394, 2.51998); upwardScreenMin=(1219.673,500.599); upwardScreenMax=(1369.536,736.257); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_1_MeasuredFbxAlignment_Tile-1920.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_3_1/GuanzhongObstacle_3_1; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_3_1/GuanzhongObstacle_3_1/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(3.34750, 0.34000, 1.25168); boundsMax=(3.65250, 0.55135, 1.66603); center=(3.50000, 0.44567, 1.45885); screenMin=(1411.913,625.584); screenMax=(1453.087,682.505); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.35627, 0.37309, 1.26071); upwardWorldMax=(3.65175, 0.55135, 1.66458); upwardScreenMin=(1413.096,636.573); upwardScreenMax=(1452.986,663.899); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_1_GuanzhongObstacle_3_1_MeasuredFbxAlignment_Stair-1920.json
+tile=GuanzhongBattlefield/GuanzhongHex_3_1/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(2.65543, -1.54311, 1.08800); boundsMax=(4.30252, 0.43394, 2.67870); center=(3.47898, -0.55458, 1.88335); screenMin=(1318.484,411.651); screenMax=(1540.840,754.184); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(2.92350, -1.26678, 1.27071); upwardWorldMax=(4.03360, 0.43394, 2.51998); upwardScreenMin=(1354.673,500.599); upwardScreenMax=(1504.536,736.257); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_1_MeasuredFbxAlignment_Tile-1920.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_2_4/GuanzhongObstacle_2_4; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_2_4/GuanzhongObstacle_2_4/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(3.84750, 0.34000, 3.84976); boundsMax=(4.15250, 0.55135, 4.26410); center=(4.00000, 0.44567, 4.05693); screenMin=(1479.413,841.521); screenMax=(1520.587,898.442); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.85627, 0.37309, 3.85878); upwardWorldMax=(4.15175, 0.55135, 4.26266); upwardScreenMin=(1480.596,852.510); upwardScreenMax=(1520.486,879.836); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_4_GuanzhongObstacle_2_4_MeasuredFbxAlignment_Stair-1920.json
+tile=GuanzhongBattlefield/GuanzhongHex_2_4/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(3.15543, -1.54311, 3.68607); boundsMax=(4.80252, 0.43394, 5.27678); center=(3.97898, -0.55458, 4.48143); screenMin=(1385.983,627.588); screenMax=(1608.340,970.121); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.42350, -1.26678, 3.86879); upwardWorldMax=(4.53360, 0.43394, 5.11805); upwardScreenMin=(1422.173,716.537); upwardScreenMax=(1572.036,952.195); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_4_MeasuredFbxAlignment_Tile-1920.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_3_4/GuanzhongObstacle_3_4; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_3_4/GuanzhongObstacle_3_4/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(4.84750, 0.34000, 3.84976); boundsMax=(5.15250, 0.55135, 4.26410); center=(5.00000, 0.44567, 4.05693); screenMin=(1614.413,841.521); screenMax=(1655.587,898.442); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(4.85627, 0.37309, 3.85878); upwardWorldMax=(5.15175, 0.55135, 4.26266); upwardScreenMin=(1615.596,852.510); upwardScreenMax=(1655.486,879.836); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_4_GuanzhongObstacle_3_4_MeasuredFbxAlignment_Stair-1920.json
+tile=GuanzhongBattlefield/GuanzhongHex_3_4/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(4.15543, -1.54311, 3.68607); boundsMax=(5.80252, 0.43394, 5.27678); center=(4.97898, -0.55458, 4.48143); screenMin=(1520.983,627.588); screenMax=(1743.340,970.121); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(4.42350, -1.26678, 3.86879); upwardWorldMax=(5.53360, 0.43394, 5.11805); upwardScreenMin=(1557.173,716.537); upwardScreenMax=(1707.036,952.195); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_4_MeasuredFbxAlignment_Tile-1920.json
+
+### 1366 实际采集
+
+scene=AdventureScene; resolution=1366x768; project=D:/天章游戏开发/.worktrees/automation/968a0696-4d25-444f-afac-2c3c1c31751f/codex/src/Assets; utc=2026-10-12T03:19:29.5335018Z
+camera=Main Camera; position=(0.00000, 8.00000, -9.58239); rotation=(38.00000, 0.00000, 0.00000); ortho=4; pixelRect=(x:0.00, y:0.00, width:1366.00, height:768.00); aspect=1.778646
+obstacle=GuanzhongBattlefield/GuanzhongHex_2_1/GuanzhongObstacle_2_1; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_2_1/GuanzhongObstacle_2_1/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(2.34750, 0.34000, 1.25168); boundsMax=(2.65250, 0.55135, 1.66603); center=(2.50000, 0.44567, 1.45885); screenMin=(908.360,444.860); screenMax=(937.640,485.337); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(2.35627, 0.37309, 1.26071); upwardWorldMax=(2.65175, 0.55135, 1.66458); upwardScreenMin=(909.202,452.674); upwardScreenMax=(937.568,472.106); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_1_GuanzhongObstacle_2_1_MeasuredFbxAlignment_Stair-1366.json
+tile=GuanzhongBattlefield/GuanzhongHex_2_1/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(1.65543, -1.54311, 1.08800); boundsMax=(3.30252, 0.43394, 2.67870); center=(2.47898, -0.55458, 1.88335); screenMin=(841.922,292.730); screenMax=(1000.042,536.309); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(1.92350, -1.26678, 1.27071); upwardWorldMax=(3.03360, 0.43394, 2.51998); upwardScreenMin=(867.656,355.982); upwardScreenMax=(974.226,523.561); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_1_MeasuredFbxAlignment_Tile-1366.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_3_1/GuanzhongObstacle_3_1; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_3_1/GuanzhongObstacle_3_1/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(3.34750, 0.34000, 1.25168); boundsMax=(3.65250, 0.55135, 1.66603); center=(3.50000, 0.44567, 1.45885); screenMin=(1004.360,444.860); screenMax=(1033.640,485.337); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.35627, 0.37309, 1.26071); upwardWorldMax=(3.65175, 0.55135, 1.66458); upwardScreenMin=(1005.202,452.674); upwardScreenMax=(1033.568,472.106); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_1_GuanzhongObstacle_3_1_MeasuredFbxAlignment_Stair-1366.json
+tile=GuanzhongBattlefield/GuanzhongHex_3_1/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(2.65543, -1.54311, 1.08800); boundsMax=(4.30252, 0.43394, 2.67870); center=(3.47898, -0.55458, 1.88335); screenMin=(937.922,292.730); screenMax=(1096.042,536.309); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(2.92350, -1.26678, 1.27071); upwardWorldMax=(4.03360, 0.43394, 2.51998); upwardScreenMin=(963.656,355.982); upwardScreenMax=(1070.226,523.561); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_1_MeasuredFbxAlignment_Tile-1366.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_2_4/GuanzhongObstacle_2_4; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_2_4/GuanzhongObstacle_2_4/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(3.84750, 0.34000, 3.84976); boundsMax=(4.15250, 0.55135, 4.26410); center=(4.00000, 0.44567, 4.05693); screenMin=(1052.360,598.415); screenMax=(1081.640,638.893); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.85627, 0.37309, 3.85878); upwardWorldMax=(4.15175, 0.55135, 4.26266); upwardScreenMin=(1053.202,606.229); upwardScreenMax=(1081.568,625.661); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_4_GuanzhongObstacle_2_4_MeasuredFbxAlignment_Stair-1366.json
+tile=GuanzhongBattlefield/GuanzhongHex_2_4/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(3.15543, -1.54311, 3.68607); boundsMax=(4.80252, 0.43394, 5.27678); center=(3.97898, -0.55458, 4.48143); screenMin=(985.922,446.285); screenMax=(1144.042,689.864); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(3.42350, -1.26678, 3.86879); upwardWorldMax=(4.53360, 0.43394, 5.11805); upwardScreenMin=(1011.656,509.537); upwardScreenMax=(1118.226,677.116); rawMesh=GuanzhongBattlefield_GuanzhongHex_2_4_MeasuredFbxAlignment_Tile-1366.json
+obstacle=GuanzhongBattlefield/GuanzhongHex_3_4/GuanzhongObstacle_3_4; local=(0.00000, 0.00000, 0.00000); scale=(1.00000, 1.00000, 1.00000)
+GuanzhongBattlefield/GuanzhongHex_3_4/GuanzhongObstacle_3_4/MeasuredFbxAlignment/Stair; enabled=True; boundsMin=(4.84750, 0.34000, 3.84976); boundsMax=(5.15250, 0.55135, 4.26410); center=(5.00000, 0.44567, 4.05693); screenMin=(1148.360,598.415); screenMax=(1177.640,638.893); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(4.85627, 0.37309, 3.85878); upwardWorldMax=(5.15175, 0.55135, 4.26266); upwardScreenMin=(1149.202,606.229); upwardScreenMax=(1177.568,625.661); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_4_GuanzhongObstacle_3_4_MeasuredFbxAlignment_Stair-1366.json
+tile=GuanzhongBattlefield/GuanzhongHex_3_4/MeasuredFbxAlignment/Tile; enabled=True; boundsMin=(4.15543, -1.54311, 3.68607); boundsMax=(5.80252, 0.43394, 5.27678); center=(4.97898, -0.55458, 4.48143); screenMin=(1081.922,446.285); screenMax=(1240.042,689.864); upwardSurfaceNormalDotMin=0.8; upwardWorldMin=(4.42350, -1.26678, 3.86879); upwardWorldMax=(5.53360, 0.43394, 5.11805); upwardScreenMin=(1107.656,509.537); upwardScreenMax=(1214.226,677.116); rawMesh=GuanzhongBattlefield_GuanzhongHex_3_4_MeasuredFbxAlignment_Tile-1366.json
+
+src/Logs/gz-r2-evidence/battlefield-1920.png：PNG尺寸=1920×1080；SHA256=4e463c41c4fdb04b09655992845fa35333df229aa9357dcffdfad00812e1f92b。
+
+src/Logs/gz-r2-evidence/battlefield-1366.png：PNG尺寸=1366×768；SHA256=51cab2849af4fd750bb39846c88b8ce2c74a9281118380617609cec855815026。
+src/Logs/gz-r2-entry.xml：SHA256=137de2a268bca04e0d567bb47fcb154d551f4910adbb30a726948bcf76e28ec6。
+src/Assets/Art/Environments/Guanzhong/Stair.fbx：SHA256=d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9。
+src/Assets/Art/Environments/Guanzhong/Tile.fbx：SHA256=504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee。
+
+四个障碍 renderer 中心的屏幕投影由正交投影线性关系取报告 AABB 投影区间中点：1920 下依次 (1297.500,654.045)、(1432.500,654.045)、(1500.000,869.982)、(1635.000,869.982)；1366 下依次 (923.000,465.099)、(1019.000,465.099)、(1067.000,618.654)、(1163.000,618.654)。这是几何包围中心，不是可见像素质心。
+
+离线 mesh 计算产物 obstacle-mesh-analysis.json 与 top-radial-boundary.json 同样位于上述忽略目录，数值与算法摘要已固化在本合同；PNG/原始大 mesh 文件不在本轮 Git 白名单，不提交。

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261012-CDC4324AD8FE34/A",
+  "stateReason": "2026-10-12已按DEC-20261012-CDC4324AD8FE34/A冻结独立整格岩石簇设计并完成归档；新资产尚缺，下游继续blocked且保留具名前置。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
@@ -151,3 +151,17 @@ A 的方向、足迹、高度、用途及验收入口已获本次批准并固定
 
 ## 停止条件
 选择记录与合同冲突、缺失运行时关键证据、需要扩大本卡路径或新增资源生产/新所有者时停止，不猜尺寸或堆补丁。Unity 尚无 Library 时先初始化，启动失败、实际分辨率不符、截图或关键测量缺失时保留真实错误再停止。不得在设计轮实施接入或把下游依赖提前删除。
+
+## 完成记录
+
+2026-10-12 Codex 按负责人已批准选项 A 完成设计闭环。批准记录、共用验收和整格岩石簇目标已固定于 开发管理/关中整格障碍物修订合同.txt；B仅保留比较依据，不作为实施授权。U-GZ-R2-OBSTACLE-01 已记录缺少独立岩石源、来源记录、哈希、贴图、具体候选签收和完整实施白名单；保持blocked、原expectedPaths及blockedBy，不新建生产任务。本卡只从自身backlog和队列移除并归档，不提升或重排下游。完成不表示新资产已交付或Unity画面已修复。
+
+## 验证结果
+
+- 身份/模型：Codex，依据本轮入口启动证明为gpt-6-astra。当前复杂度为简单：批准选择明确，只冻结同一设计结果和管理收尾，无独立辅助问题；现有文件/Git/Python/图像读取工具足够，单模型完成，未调用辅助、未核实CLI推理强度。
+- 预检：消费本run绑定的预检；matched/notice/mustRead/gatePointers为空，与schema 2卡头投影一致，无额外门禁入口。未扩大expectedPaths或引入新生产所有者。
+- 证据：checkpoint的两张PNG尺寸为1920×1080、1366×768，SHA-256与合同附录一致并再次目检；原XML哈希一致且total=1/passed=1/failed=0。16份mesh解析及顶点/三角形数量、世界包络、四格顶面格心高度与高度带包络复核通过；补齐6818面统计的微小三角面过滤阈值，批准尺寸不变。
+- 复用边界：git diff 9104802023bff44412c7530c35661ad27e9369d4 HEAD -- src tools/run-unity-playmode-tests.ps1 无差异；当前Stair/Tile FBX哈希一致，复用原同输入PlayMode，不在新worktree重复初始化运行。基线证据只证明旧场景，后续新资产必须实跑验收。
+- 管理校验通过：任务卡后置条件为completed；审核文本检查815个文件通过。命令：check-task-cards.ps1 -TaskId D-GZ-R2-OBSTACLE-01 -Postcondition CodexClosedOrNonReady、check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理；提交器执行路径限定check-pending-whitespace.ps1及git diff --cached --check。仅六个允许管理/合同路径变化，无docs/CSV/Unity数据变化，不触发check-data-chain.ps1。
+- 技能与地图：unity-agent-workflows及references/unity-validation.md；UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md相关章节。没有Unity业务写入、非请求系统修改或外部工具生产。
+- 遗留：独立岩石候选仍缺；原初始视角HUD遮挡未解决，接入时须按既有相机平移补无遮挡证据并验证接地与正式绕行。本轮只读已有事实/diff检查经验候选，没有新增可独立整理的候选，不写空章节。
