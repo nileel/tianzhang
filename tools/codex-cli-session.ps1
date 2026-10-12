@@ -19,6 +19,7 @@ $resultSessionId = $null
 $detailCode = 'runner_initialization_failed'
 $script:threadStartedCount = 0
 $script:threadStartedId = $null
+$script:turnFailureDetail = $null
 
 try {
   $detailCode = 'runner_argument_invalid'
@@ -51,6 +52,13 @@ try {
       $line = [string]$_
       if ([string]::IsNullOrWhiteSpace($line)) { return }
       try { $event = $line | ConvertFrom-Json -ErrorAction Stop } catch { return }
+      if ([string]$event.type -ceq 'turn.failed') {
+        # Classify only the CLI terminal error; never infer failure from model/tool text.
+        $script:turnFailureDetail = if ([string]$event.error.message -ceq 'Selected model is at capacity. Please try a different model.') {
+          'runner_model_capacity_exceeded'
+        } else { 'runner_codex_failed' }
+        return
+      }
       if ([string]$event.type -cne 'thread.started') { return }
       $script:threadStartedCount++
       $property = $event.PSObject.Properties['thread_id']
@@ -66,9 +74,12 @@ try {
     Pop-Location
   }
 
-  $detailCode = if ($script:threadStartedCount -eq 1) { 'runner_terminal_missing' } else { 'runner_thread_contract_invalid' }
+  $detailCode = if ($script:threadStartedCount -ne 1) { 'runner_thread_contract_invalid' }
+    elseif ($null -ne $script:turnFailureDetail) { $script:turnFailureDetail }
+    elseif ($childExitCode -ne 0) { 'runner_codex_failed' }
+    else { 'runner_terminal_missing' }
   if ($script:threadStartedCount -eq 1 -and -not [string]::IsNullOrWhiteSpace($script:threadStartedId)) { $resultSessionId = $script:threadStartedId }
-  if ($childExitCode -eq 0 -and $null -ne $resultSessionId -and (Test-Path -LiteralPath $OutputLastMessagePath -PathType Leaf)) {
+  if ($childExitCode -eq 0 -and $null -eq $script:turnFailureDetail -and $null -ne $resultSessionId -and (Test-Path -LiteralPath $OutputLastMessagePath -PathType Leaf)) {
     $resultStatus = 'ok'
     $detailCode = $null
     $runnerExitCode = 0
