@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "pending_decision",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "等待负责人决定：请选择障碍物视觉方向：A保留整格要求，采用独立岩石簇；B复用居中放大的石阶，接受铺不满整格；C暂停。方案与测量已写入《关中整格障碍物修订合同》。需要确认的直接依据是任务卡“设计方案形成后仍须请求负责人确认”；[brainstorming技能](C:/Users/WINDOWS/.codex/skills/brainstorming/SKILL.md)也要求“ask the user to review the written spec before proceeding”。",
+  "stateReason": "负责人回复已落实范围：DEC-20261012-CDC4324AD8FE34/A",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-OBSTACLE-01.txt",
     "开发管理/任务归档/D-GZ-R2-OBSTACLE-01.txt",
@@ -20,11 +20,6 @@
     "开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
-  "riskPreflight": {
-    "explicitRefs": [],
-    "matched": [],
-    "gates": []
-  },
   "executionModel": "gpt-6-astra",
   "automationCheckpoint": {
     "schemaVersion": 1,
@@ -103,56 +98,56 @@
     "taskContextDigest": "ac6ca5a077c5a032d56ff5c9aa4f50c7c962ec8bddbbb7783c1c145b729afa00",
     "createdAt": "2026-10-12T11:29:23.2993138+08:00",
     "queueIndex": 0
+  },
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "automationReply": {
+    "decisionId": "DEC-20261012-CDC4324AD8FE34",
+    "result": "OPTION_ACCEPTED",
+    "replyKind": "option",
+    "replyValue": "A",
+    "source": "feishu_card",
+    "evidenceHash": "1f172e17d1bb00946f8fb0a07312f23881c433352ab871afdd7d32dca79e2324"
   }
 }
 ---TASK-BODY---
 # D-GZ-R2-OBSTACLE-01 · 整格障碍物视觉与资源适配设计
 
 ## 来源与当前边界
-
-来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。本轮仅排查建卡，未实施或宣称PlayMode复现。
+承接本轮设计 checkpoint 和负责人本次选项批准。本卡只冻结设计与下游合同，不实施 Unity 接入；具名前置只有正式结果进入 master 后才由 QueueMaintenance 处理。
 
 ## 必查范围
-
-- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界
-- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions
-
-- 开发管理/关中第二轮试玩排查与任务拆分.txt
-- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildGuanzhongBattlefield
-- src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs::BuildAssetsAndScene
-- src/Assets/Art/Environments/Guanzhong/Stair.prefab
-- src/Assets/Art/Environments/Guanzhong/Tile.prefab
-- src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset::battlefieldCells
-- src/Assets/Scenes/AdventureScene.unity::GuanzhongObstacle_2_1/3_1/2_4/3_4
+- 开发管理/关中整格障碍物修订合同.txt：全文及本轮证据附录。
+- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界。
+- 开发管理/关中第二轮试玩排查与任务拆分.txt#7. 截图四个小块。
+- 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt：完整正文。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildGuanzhongBattlefield。
+- src/Assets/Scripts/Editor/GuanzhongTerrainAssetBuilder.cs::BuildAssetsAndScene。
+- src/Assets/Art/Environments/Guanzhong/Stair.prefab、Tile.prefab。
+- src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset::battlefieldCells。
+- src/Assets/Scenes/AdventureScene.unity::GuanzhongObstacle_2_1/3_1/2_4/3_4。
+- src/Assets/Tests/EditMode/GuanzhongBattlefieldBaselineEditorTests.cs。
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions。
 
 ## 实施范围
-
-反馈7：按用户整格、居中、显著障碍物要求设计。先记录正式相机下地块顶面边界、四个障碍renderer bounds/中心/父级/世界及屏幕投影，区分小型Stair资产与地块、VisualBaselineOccluder，禁止凭图猜scale。比较现有资源可接受适配与独立整格资源；固定足迹/高度/接地/占格视觉、资源来源和最终用途，取得视觉方向确认后补齐实施卡资产及.meta白名单。本卡不生成付费资产、不修改FBX。
-
-唯一设计交付路径：开发管理/关中整格障碍物修订合同.txt。只在获确认后准备下游ready；仍需回复时按既有waiting_reply合同保留卡片，不以模型自签代替用户决定。
-
-## 禁止项
-
-不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
-
-## 模型协作
-
-开放视觉判断：需要辨明资源用途、实机边界和整格足迹，不能用常量放大替代设计。
-
-2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6-astra冻结。建议推理强度high，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
-
-2026-10-12 本轮只准备取证入口与冻结范围，业务仍由本卡执行；主模型配置保持。默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
-
-## 验证
-
-运行取证入口的BattlefieldBoundsAndSpawnProjectionAtBothResolutions；从本轮报告读取四个GuanzhongObstacle与父地块的Renderer世界AABB、朝上三角面包络（normal·up≥0.8）及原始mesh顶点/三角形、屏幕投影、相机与父级，从截图判断接地/居中/可读性。AABB投影不是可见像素轮廓，朝上面包络可能包含岩壁台阶；结合原始mesh和截图辨认实际顶面，不据此猜最终scale；需要精确足迹时沿同一运行时Mesh核对。两分辨率必须断言1920×1080、1366×768；既有blocksGroundMove保持，blocksLineOfSight=0不得自行改规则。取证能力已具备不代表视觉方向已批准；设计方案形成后仍须请求负责人确认，下游U-GZ-R2-OBSTACLE-01继续blocked直到批准。
-
-管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+负责人批准合同 A：保留整格要求，独立低矮六边格岩石簇。固定居中误差≤0.01、内缩六边域半空间上限0.45、六方向边界覆盖90%～100%、实体投影覆盖逻辑格≥70%、顶高为格心地面之上0.60±0.05；底裙接地以真实 mesh 检查。上述为设计目标，不填写不存在源模型的猜测 scale。
+仅更新合同的批准记录和下游卡资源缺口；当前只有 Tile/Stair，没有独立岩石模型。不得据此批准具体候选或采购。下游保持 blocked 及具名前置，写明待来源/哈希/贴图/实物候选签收后才能冻结源资源及 .meta 白名单。不虚构已可用资源，不新建生产任务。设计范围和已证实缺口固定后关闭并归档本设计卡。
 
 ## 完成条件
+A 的方向、足迹、高度、用途及验收入口已获本次批准并固定；真实记录新模型尚未取得和后续具体美术批准缺口，下游仍 blocked。完成只指设计闭环，不表示新资产或场景完成。
 
-冻结获确认的整格障碍物方案和实际可用资源，四格具体测量与验收明确；若需新资产但未取得，则实施卡继续blocked并说明真实缺口。
+## 禁止项
+不生成付费资产、不修改 FBX、Unity 代码或资产、HUD、相机、碰撞和视线规则；不触碰用户存档或其他工作区。不移除下游 blockedBy 中本 taskId，不提前提升、重排或关闭下游；本卡关闭只维护自身归档、backlog 行和队列行。不以模型自签代替具体美术候选批准。
+
+## 模型协作
+主责 Codex，executionModel=gpt-6-astra；按入口实际能力核实，单模型统一完成冻结与管理收尾，无独立辅助工作面，不启动第二责任会话。推理强度不凭正文推定。
+
+## 验证
+消费共享入口绑定本卡的风险预检及 mustRead/gates。复核 checkpoint 的四格世界/屏幕中心、Renderer AABB、主顶面三角面与原始 mesh、双分辨率 PNG 尺寸和 XML 1/1。原始证据不可用或相关输入变化时，在本 worktree 按取证入口运行 BattlefieldBoundsAndSpawnProjectionAtBothResolutions -EnableGraphics，实际断言 1920×1080、1366×768，目检截图；否则复用已通过的同输入证据。A/B 尚未接入，不能宣称最终外观通过。保留初始 HUD 遮挡限制，后续实施需既有相机平移的无遮挡截图、mesh 足迹/接地和正式绕行证据。
+运行 check-task-cards.ps1、check-review-text.ps1；实际改动路径 check-pending-whitespace.ps1、暂存后 git diff --cached --check。仅 docs/CSV/Unity 数据变化才运行 check-data-chain.ps1。本卡本身只写冻结 expectedPaths 内的六个管理/合同路径。
 
 ## 停止条件
-
-新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+选择记录与合同冲突、缺失运行时关键证据、需要扩大本卡路径或新增资源生产/新所有者时停止，不猜尺寸或堆补丁。Unity 尚无 Library 时先初始化，启动失败、实际分辨率不符、截图或关键测量缺失时保留真实错误再停止。不得在设计轮实施接入或把下游依赖提前删除。
