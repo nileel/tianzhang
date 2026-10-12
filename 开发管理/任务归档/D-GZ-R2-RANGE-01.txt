@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261012-CD535A212F9D41/A",
+  "stateReason": "负责人A选择已形成唯一冻结合同；六卡接口与验收同步，QUERY现有路径已冻结，六卡仍blocked保留前置、父项仍frozen；仅设计完成。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-RANGE-01.txt",
     "开发管理/任务归档/D-GZ-R2-RANGE-01.txt",
@@ -180,3 +180,16 @@
 ## 停止条件
 
 新事实与批准形状/操作/遭遇冲突，发现新的玩家可见未决语义，需超出路径/所有者或业务写入、修改费用/伤害/AI/地形、扩大其他武器或不再原子时立即停止反馈；不重问已批准需求，不叠加补丁、不创建新工作流。
+## 本轮完成与验证记录
+
+2026-10-12依据automationReply的A选择完成冻结设计。初始worktree未含合同文件，已从卡头具名检查点991c8d8847aa333d642a6fe745d28f6fcb85821c读取完整调查合同，并按本轮源码/配置复核后创建批准版本；原检查点和回复证据完整保留，不重放旧单目标业务草案。
+
+冻结剑O+D[d]/O+2D[d]与刀O+D[d]/O+D[d+1]全部六向、自由六向初值Facing且不改长期Facing、禁止空放、Ordinal目标集合、逐目标随机/原子一次费用，以及仅关中两只石甲猴独立身份/落点/整场一次奖励。查询/结算/遭遇/内容/输入/验收六卡接口和证据边界已同步；发现会话匹配人数限制与Caster中心距离校验，分别准确交给RESOLVE和DATA。QUERY精确现有路径已冻结，其余五卡完整写入集合依赖上游实施结果，仍只授权管理准备。
+
+本卡归档并仅移除自身queue/backlog行；六卡全部继续blocked且原blockedBy完整保留，父项继续frozen、永不独立ready。当前未完成游戏业务、不运行Unity或BattleSim、不裁定平衡；正式集成后的维护才判断后续ready。
+
+已消费入口绑定空命中预检，写前在本worktree重新核对taskId、任务卡digest和索引digest；受影响八卡重新预检均无matched/mustRead/gates，与schema 2投影三个空数组一致。源码只读定位确认了实际所有者和直接调用边界。模型组合核对为同一有界设计、单模型gpt-6.1-sol，PowerShell/Git/源码读取能力可用，无辅助或第二责任会话。已读unity-agent-workflows的runtime-owner-proof/content-and-systems/unity-validation参考及UNITY_STRUCTURE、runtime/content/ui地图。
+
+最终管理验证入口：check-task-cards.ps1 -TaskId D-GZ-R2-RANGE-01 -Postcondition CodexClosedOrNonReady、check-review-text.ps1、实际修改路径check-pending-whitespace.ps1、git diff --cached --check；实际结果写入candidate提交Verify元数据及结构化返回。六向坐标和相关落点为静态核算，不冒充正式玩家可达走法、实机图像或已可用群攻。
+
+经验候选判断：本轮只有已批准设计收口和既有单目标限制的静态证据，没有需另立候选的新增已证实复用经验，未写空章节。

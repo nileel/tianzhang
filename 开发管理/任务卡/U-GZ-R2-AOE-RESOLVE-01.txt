@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-GZ-R2-AOE-QUERY-01"
   ],
-  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-RESOLVE-01.txt",
@@ -42,7 +42,9 @@
 - src/Assets/Scripts/Combat/CombatActionResolver.cs::PrepareValidated/ResolveAttack
 - src/Assets/Scripts/Combat/CombatActionResult.cs::CombatDamageResult/CombatActionResult
 - src/Assets/Scripts/Combat/CombatCommand.cs::CombatResolutionRolls/CombatCommand
-- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack及胜负状态
+- src/Assets/Scripts/Combat/CombatSession.cs::ValidateAttack/ValidateSideCardinality/IsFinished
+- src/Assets/Scripts/Combat/CombatResultBuilder.cs::Build
+- src/Assets/Scripts/Combat/CombatLegalActionService.cs::合法命令枚举
 - src/Assets/Scripts/Combat/CombatantSnapshot.cs::CopyForResolution/CommitResolvedState
 - src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs
 - src/Assets/Tests/EditMode/CombatActionPointKernelTests.cs
@@ -51,6 +53,14 @@
 ## 实施范围
 
 消费QUERY的同一目标集合；每个结果必须关联真实目标ID，不能只返回无法对应角色的伤害总数。扩展既有Preview/Prepare/commit，使多个目标一起准备、一起提交，异常或过期报价不产生部分HP变化或部分扣费。按设计冻结目标遍历和随机采样规则；AP、灵力、CT、共享普攻次数、冷却按一次命令处理，不对每名敌人重复收费。目标移动/死亡、朝向/中心变化及集合变化使旧报价失效。保留旧单目标、恢复、状态术法和换装/用物的规则。此卡只核验核心命令链，不改正式敌人数量、输入界面或武器数据。
+
+### 冻结接口与本轮路径核对
+
+消费QUERY的同一两格、逐格原因和Ordinal去重目标集合，候选绑定攻击者/档案/O/d、回合/上下文及目标和空间事实；确认重验不改成另一个集合。零合法敌人拒绝且不采样、不扣费。每个结果携带真实目标ID与独立的命中/暴击/格挡/魂盾/控制输入；合法全闪避仍一次收费/计数，预览、取消、拒绝不计。全部目标及AP/资源/CT/冷却/共享次数一起准备、一次提交，失败无部分变化。正式随机源由ENCOUNTER按本卡完成接口接入，核心重放绑定目标与输入，不依赖运行时随机服务。
+
+新增1名玩家对2名敌人的纯会话是本卡结果的一部分：当前CombatSession.ValidateSideCardinality只接受匹配1v1/2v2，不能把扩大生成数等同于已接通。核对CombatSession.IsFinished及CombatResultBuilder.Build的胜负投影和TurnScheduler的全部实例调度，保留旧1v1/2v2；最后敌人死亡才胜利、玩家死亡沿原失败语义，不改变AI。
+
+已查明原子提交所有者仍为必查范围中CombatCommandService/CombatActionResolver/CombatActionResult/CombatCommand/CombatSession/CombatantSnapshot及三张EditMode测试。直接调用者为EncounterCoordinator.ExecuteCommand和CombatLegalActionService；前者正式采样/演出由ENCOUNTER接入，后者区域命令合法枚举须在本卡准备时核对。QUERY尚未实现声明/结果的具体符号，故完整源码/测试集合未冻结，expectedPaths继续只授权管理准备；待上游完成后按实际完整方法和调用者列精确路径。需要新Unity文件时必须连同.meta重新冻结，不猜测名称。
 
 ### ready前冻结
 

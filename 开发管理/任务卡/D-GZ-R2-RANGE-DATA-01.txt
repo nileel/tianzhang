@@ -45,20 +45,20 @@
 
 ## 必查范围
 
-- 开发管理/任务卡/D-GZ-R2-RANGE-01.txt（完整设计边界）
+- 开发管理/任务归档/D-GZ-R2-RANGE-01.txt（完整设计边界及A批准证据）
 - 开发管理/关中武器差异射程合同.txt（设计完成后成为规则事实）
 - 下表各子卡的范围、验证、停止条件
 - 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt（正式新档获取和切换武器的外部前置）
 
 ## 实施范围
 
-仅汇总下表状态和最终验收结果；本卡不拥有游戏业务写入。首次ready叶子只有现有设计卡D-GZ-R2-RANGE-01，保留队首和executionModel=gpt-6.1-sol。六张新卡全部blocked，设计及上游合同尚未冻结的精确业务路径只保留候选指针，不提前授权执行。
+仅汇总下表状态和最终验收结果；本卡不拥有游戏业务写入。设计卡D-GZ-R2-RANGE-01已完成A语义冻结并在本候选归档；六卡继续blocked并保留原具名前置。QUERY已冻结现有纯查询源码/测试路径，其余五卡的完整业务路径依赖上游结果，仍只授权管理准备。正式集成后才由维护判断ready，本卡始终frozen、永不独立ready。
 
 ## 依赖图与关闭条件
 
 | ID | 独立结果 | 直接前置 | 本次状态 |
 |----|----------|----------|----------|
-| D-GZ-R2-RANGE-01 | 两格形状、操作、结算和多敌验收场景的批准合同 | — | ready |
+| D-GZ-R2-RANGE-01 | 两格形状、操作、结算和多敌验收场景的批准合同 | — | completed（设计候选） |
 | U-GZ-R2-AOE-QUERY-01 | 两格区域与合法目标集合查询 | D-GZ-R2-RANGE-01 | blocked |
 | U-GZ-R2-AOE-RESOLVE-01 | 多目标攻击原子结算与一次扣费 | U-GZ-R2-AOE-QUERY-01 | blocked |
 | U-GZ-R2-AOE-ENCOUNTER-01 | 正式多敌遭遇生命周期与受击演出接入 | U-GZ-R2-AOE-RESOLVE-01 | blocked |
@@ -68,9 +68,9 @@
 
 依赖：设计 → QUERY → RESOLVE →（ENCOUNTER与DATA）→ INPUT → V；U-GZ-R2-EQUIP-01 → INPUT。分叉基于真实职责：ENCOUNTER消费已冻结多目标结果完成遭遇生命周期，DATA消费已冻结运行时档案完成武器内容链；INPUT需要两者及正式武器取得入口。不存在仅因共享管理文件建立的依赖。
 
-源代码依据：CombatEntryAdapter.TryProjectProfiles跳过非Single；CombatSession.ValidateAttack以一个TargetId校验；CombatActionResolver.PrepareValidated只复制并提交一个target；CombatCommandService.Prepare按一次命令提交AP与次数；AdventureSpawnSet、TryCreateSession和TryCreatePresentationDescriptors只使用Player/Enemy；EncounterCoordinator.ProjectPresentation/Complete按单个敌人或targetBefore驱动表现与退出。因此查询、核心原子结算、正式多敌生命周期、武器内容链、玩家操作和最终验收各有独立结果。
+源代码依据：CombatEntryAdapter.TryProjectProfiles跳过非Single；CombatSession.ValidateAttack以一个TargetId校验；CombatActionResolver.PrepareValidated只复制并提交一个target；CombatSession.ValidateSideCardinality只接受匹配1v1/2v2，RESOLVE须接通批准的1对2会话；CombatCommandService.Prepare按一次命令提交AP与次数；AdventureSpawnSet、TryCreateSession和TryCreatePresentationDescriptors只使用Player/Enemy；EncounterCoordinator.ProjectPresentation/Complete按单个敌人或targetBefore驱动表现与退出。因此查询、核心原子结算、正式多敌生命周期、武器内容链、玩家操作和最终验收各有独立结果。
 
-设计卡负责一次性明确两格落点/朝向/中心、选择与空目标操作、筛选和随机规则，以及正式多敌遭遇的数量/落点/结束与奖励口径。没有批准的玩家可见语义不得由子卡猜测。合同一经冻结只准备已建立子卡，不再逐张发现本轮已知功能。
+设计卡负责一次性明确两格落点/朝向/中心、选择与空目标操作、筛选和随机规则，以及正式多敌遭遇的数量/落点/结束与奖励口径。负责人已选择自由六向操作A，禁止空放，剑/刀各恰好两格，现有关中两只石甲猴且整场一次奖励，完整规则读取冻结合同。没有批准的玩家可见语义不得由子卡猜测。合同一经冻结只准备已建立子卡，不再逐张发现本轮已知功能。
 
 关闭要求：设计及全部六张子卡有各自完成记录，EQUIP已完成；正式入口证明两件武器各命中区域内多个合法敌人、一次费用/次数、逐目标受击与死亡，最后敌人死亡才按批准规则结束；直接回归和验收证据齐全。唯一收尾责任方V-GZ-R2-AOE-01在自身成功提交中同时归档本卡并移除父子backlog投影，父项不转ready。失败保持现有状态，不删依赖冒充完成。
 

@@ -12,12 +12,19 @@
   "blockedBy": [
     "D-GZ-R2-RANGE-01"
   ],
-  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "stateReason": "等待D-GZ-R2-RANGE-01正式集成及后续维护核验；本轮已冻结现有纯查询源码与测试路径，继续blocked并保留具名前置。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-QUERY-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/Spatial/HexCoord.cs",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryTypes.cs",
+    "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
+    "src/Assets/Scripts/Combat/CombatAttackProfile.cs",
+    "src/Assets/Scripts/Combat/CombatSession.cs",
+    "src/Assets/Tests/EditMode/SpatialQueryBoardTests.cs",
+    "src/Assets/Tests/EditMode/CombatRuntimeKernelTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -51,9 +58,19 @@
 
 冻结纯查询输入输出：攻击者、档案、中心/方向与战场快照；输出两格和稳定、去重的合法目标身份。几何、越界、遮挡、阵营及存活筛选遵循设计，不用屏幕坐标冒充格网方向。通用格网逻辑留在Spatial，角色资格留在Combat；不让Spatial依赖Combat、Content或UI。复用已有查询，不复制第二套坐标算法。查询不扣费、不采样随机、不改HP/状态，不接入正式武器或UI。领域对象仅承载本任务必需输入输出，结算提交留给RESOLVE。
 
+### 冻结接口与本轮路径核对
+
+负责人已选择A，采用合同第三节：输入为攻击者/纯档案、当前起点O、本次六向d及只读战场快照；剑O+D[d]/O+2D[d]，刀O+D[d]/O+D[(d+1)%6]。输出保留两格及逐格合法性/原因、存活敌方真实ID去重且Ordinal排序的目标集合。零目标可查询但不授权确认；一格被挡不补格，另一合法格仍参与筛选；无身体挡刀、穿透或新增高差规则。
+
+本轮已冻结expectedPaths中的七条现有业务路径：HexCoord.cs、SpatialQueryTypes.cs、SpatialQueryBoard.cs承载纯几何/空间值；CombatAttackProfile.cs承载最小纯区域声明；CombatSession.cs承载角色筛选及只读结果；SpatialQueryBoardTests.cs、CombatRuntimeKernelTests.cs覆盖查询。全部完整仓库路径见卡头。现有文件及.meta已存在，限定在这些现有逻辑单元内，不创建/移动文件或改.meta。CombatCommand.cs仅作为下游命令调用线索，本卡不负责群攻命令提交或随机。
+
+复用既有ICombatSpatialQuery.QueryRange逐格校验，不新增接口成员；实际实现者为CombatEntryAdapter内的SpatialCombatQuery、EditMode的FixedRangeQuery以及BattleSim的AuditSpace/AdjacentSpace/Space，保持其现有合同。保留单目标调用；两个敌人的纯查询可用合法2v2快照，不在本卡改变ValidateSideCardinality。新1对2会话由RESOLVE负责。纯档案允许本区域声明不等于正式武器内容已启用；Content字段编码由DATA在上游完成后冻结。
+
+正式设计集成前继续blocked且保留D-GZ-R2-RANGE-01；后续维护须按最新源码和本卡精确集合重新预检再判断ready。需要新增路径/文件、Content schema或改变接口实现者时停止重新冻结，不由执行者临时扩大范围。
+
 ### ready前冻结
 
-依赖：D-GZ-R2-RANGE-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+依赖：D-GZ-R2-RANGE-01。本轮冻结仅限上述七条现存源码/测试及管理生命周期路径；继续blocked，不在设计候选集成前解锁。正式集成后的维护重新核对完整逻辑、直接调用者、风险投影与门禁，再按已有合同判断ready。其余候选只读路径不因列在必查范围而获写入授权。
 
 ## 禁止项
 
@@ -65,7 +82,7 @@
 
 ## 验证
 
-用EditMode表驱动例子覆盖铁剑/铁刀各批准朝向、恰好两格、边界/遮挡、0/1/多个敌人、友方/死亡排除、重复身份去重及稳定排序；调用前后战斗状态一致，旧单目标查询结果不变。运行run-unity-editmode-tests.ps1及必要程序集边界检查。
+用EditMode表驱动例子覆盖铁剑/铁刀各批准朝向、恰好两格、边界/遮挡、0/1/多个敌人、友方/死亡排除、重复身份去重及稳定排序；调用前后战斗状态一致，旧单目标查询结果不变。运行run-unity-editmode-tests.ps1定向覆盖SpatialQueryBoardTests和CombatRuntimeKernelTests及必要程序集边界检查。共享纯源码变化时在同一worktree运行dotnet build -c Release --no-restore simulations/BattleSim；缺obj/project.assets.json先一次dotnet restore，不运行数值平衡报告、不修改模拟器。
 
 本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
 
@@ -75,4 +92,4 @@
 
 ## 停止条件
 
-若设计未明确横竖落点或需要新的内容schema，停止准备并反馈设计；不得实现伤害/扣费或扩成任意技能AOE框架。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+若需超出批准两格语义或修改Content schema，停止准备并回交对应所有者；不得实现伤害/扣费或扩成任意技能AOE框架。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。

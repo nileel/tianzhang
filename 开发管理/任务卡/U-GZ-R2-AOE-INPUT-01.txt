@@ -14,7 +14,7 @@
     "D-GZ-R2-AOE-DATA-01",
     "U-GZ-R2-EQUIP-01"
   ],
-  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
@@ -54,6 +54,16 @@
 ## 实施范围
 
 按设计已冻结的选敌/选格与方向方式组装候选，经现有ICombatCommandHandler获取领域只读快照；展示准确两格和合法敌人，不在UI另算几何或筛选规则。确认重用同一领域命令/报价；切武器、取消、目标移动/死亡、回合切换和演出busy时清除或拒绝旧选择。保留旧单目标术法操作与移动交互。EQUIP是正式玩家获得两件武器的真实依赖，多敌及武器数据是实际候选列表和区域预览的依赖。此卡不改核心结算、生成敌人或新建通用输入框架。
+
+### 冻结接口与本轮路径核对
+
+采用合同第三节的A：按普攻进入预览，可自由选择六个d，初值当前Facing；不需移动转向，不改变长期Facing，取消清除方向。O固定当前攻击者格，不选远端中心或单个敌人。展示领域返回的两格、每格合法性/原因、全部Ordinal去重目标和一次费用；零敌人可以看但禁确认，1/多个合法敌人确认同一候选并全部结算。
+
+切武器、回合/朝向/起点/目标或空间状态变化清除或拒绝旧候选，演出busy、取消、无权限不提交且无消耗/次数/随机。保留原单目标术法及移动/换装/用物操作，不让方向控件绕过CanAct和ICombatCommandHandler。选中、显示预览和点击确认分别取证，只有实际HP/费用/次数提交才算应用攻击。
+
+已查明入口CombatCommandInput.Configure/Choose/ConfirmCandidate/SetContext/CancelCandidate；快照/候选在CombatPresentationContracts，预览经ICombatActionPreviewHandler及EncounterCoordinator.PreviewAction/ProjectQuote/ToCommand/ConfirmAction；显示由CombatActionPreviewView.Present、CombatActionBarView和CombatMovementView拥有。新增六向控件与两格高光的持久接线必须核对AdventureSceneBuilder相关重建方法、AdventureSceneInstaller与AdventureScene.unity真实引用及对应.meta，不能只改运行时界面。现有CombatMovementView显示格与相机/指针路径只作定位线索，不复制第二套坐标规则。
+
+等待ENCOUNTER/DATA/EQUIP正式结果后才能确定全部DTO/Builder/场景/测试路径；expectedPaths仍只授权管理准备，保留三个具名前置。准备时明确实际显示对象/父链/空间转换/刷新writer与拒绝原因可见性，PlayMode启用图形取得两种分辨率Game View，不把静态源码或相机单独截图当正式界面验收。
 
 ### ready前冻结
 

@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-GZ-R2-AOE-RESOLVE-01"
   ],
-  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
@@ -54,6 +54,16 @@
 ## 实施范围
 
 按合同同步两件武器L2/L1、攻击CSV和正式档案；现有Area只提供Circle/Line/Fan等字段，先证明能表达批准两格，再冻结确有必要的最小schema修改及校验，不能用扩大扇形等近似偷换恰好两格。TryProjectProfiles目前跳过非Single，须投影到QUERY/RESOLVE定义的运行时合同，未知模式或非法数据失败关闭，不能直接删过滤后无校验放行。沿用CombatContentImporter的严格导入、源摘要和原GUID，枚举所有因摘要变化而重写的攻击asset；未授权其他档案的语义必须不变。此卡不改多敌遭遇数据，不实现UI。
+
+### 冻结接口与本轮路径核对
+
+仅两件档案改为合同第三节的精确两格、以攻击者O起点、本次命令六向d；d可每次自由选择，初值Facing但不写长期Facing。仅存活敌方且禁止空放。保持倍率1.0/1.25、基础/最低净费40000/50000、资源none/0、CT与重用冷却0、肉攻承载120和原共享次数/取得/资格/库存/换装/保存，不修改其他档案语义。
+
+当前AttackProfileData要求Caster中心minCastRange=maxCastRange=0，且Line/Fan要求静态areaFacing；这是中心选择校验，不是剑落点1至2格/刀落点1格的命中校验。后者由QUERY逐格复用现有空间规则。不得把中心射程改成1/2导致拒绝自身O，也不得用静态Facing或三格Fan近似自由方向下的刀两格。待QUERY/RESOLVE完成最小纯档案后，冻结能精确表达上述语义的最小字段/校验；未知模式或非法值在资产发布前失败关闭。
+
+现有内容所有者为必查范围中的L2/L1、AttackProfiles.csv、AttackProfileData、CombatContentImporter.ParseAttackProfileRow/ParseAttackTargetingFields/CopyTo、CombatRuleSet.AttackColumns、CombatEntryAdapter.TryProjectProfiles。ImportAttackProfiles静态确认会写九个攻击asset及CombatRuleSet；CSV改变SourceDigest会影响全部攻击档案，不只铁剑/铁刀。准备时逐条枚举现存Assets/Data/AttackProfiles/AttackProfile_*.asset的真实九个ID、CombatRuleSet.asset、目录引用以及其他随摘要重写的派生文件，保留原GUID；此处星号仅是检索线索，不能进入expectedPaths授权。AdventureScene.unity是否需重写由实际引用/Builder决定，不预先声称需要改场景。
+
+完整内容编码及派生资源写入集合依赖上游结果，expectedPaths继续只授权管理准备，不提前写猜测字段或新文件名。创建/移动资源时必须包含精确.meta/新目录.meta，重算风险预检后才ready。本卡不拥有两敌遭遇数据。
 
 ### ready前冻结
 

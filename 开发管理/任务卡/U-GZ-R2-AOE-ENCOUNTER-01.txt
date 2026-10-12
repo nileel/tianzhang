@@ -12,7 +12,7 @@
   "blockedBy": [
     "U-GZ-R2-AOE-RESOLVE-01"
   ],
-  "stateReason": "2026-10-12群攻专项一次性拆分；等待具名前置与设计合同，当前expectedPaths只授权管理准备，业务路径须按本卡所有者冻结后再ready。",
+  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-ENCOUNTER-01.txt",
@@ -41,7 +41,8 @@
 - src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::AdventureSpawnSet/TrySpawn
 - src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs::TryCreateSession
 - src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::TryCreatePresentationDescriptors/ProjectPresentation/Complete
-- src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs
+- src/Assets/Scripts/Modules/Features/Adventure/FormalEncounterResult.cs::TryCreate
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ResolveEncounter
 - src/Assets/Scripts/Modules/Features/Adventure/EncounterNodeHandler.cs
 - src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::棋子与战斗结果合同
 - src/Assets/Scripts/Modules/Content/AdventureMapData.cs
@@ -55,6 +56,16 @@
 ## 实施范围
 
 修复正式链目前只有spawned.Enemy、固定enemy身份及单个targetBefore表现的限制，沿用现有Spawner/EntryAdapter/Coordinator。敌人集合使用各自稳定实例ID、位置与快照，映射到既有敌人/表现资源；不能把同一enemy对象加入多次。按设计批准的遭遇数量和格位配置接入，未批准时不擅自改关中内容。消费RESOLVE的逐目标结果，正确驱动每个敌人的血条、受击、死亡、时间轴和清理；结束/回城/悬赏或奖励仅按设计的遭遇口径提交一次，不能首个敌人死亡就结算整场。此卡负责一个多敌遭遇生命周期，不添加刷怪波次、随机生成或新怪物种类，不负责玩家攻击区域操作。
+
+### 冻结接口与本轮路径核对
+
+合同第四节已批准：仅guanzhong_wild的shijiahou_encounter使用两只现有enemy_shijiahou，独立enemy、enemy_2，落点(3,5)/(4,5)，玩家(0,0)，原AI/角色/表现资源不变。通过既有Adventure内容链声明数量与落点，不硬编码到通用Spawner、不扩其他遭遇或波次。每个实例进入回合、HUD、时间轴、受击/死亡和清理；部分死亡继续，最后敌人死亡才胜利、玩家死亡沿原失败语义。
+
+消费RESOLVE的逐目标结果及合法候选，确认在随机采样前重验同一候选；按Ordinal目标顺序独立采样五项输入，预览/取消/无目标/过期均不采样。不可把原单份rolls复制给全部目标。整场只一次原掉落、遭遇结果、悬赏事件和回城，不按两只翻倍；重复结束不得重复结算。
+
+已查明创建/生命周期所有者为AdventureUnitSpawner、CombatEntryAdapter.TryCreateSession、EncounterCoordinator.TryBegin/RunCombat/Present/ExecuteCommand/ProjectPresentation/Complete；表现契约为CombatPresentationContracts.cs。EncounterNodeHandler接入AdventureController，后者ResolveEncounter的formalEncounterConsumed门禁消费FormalEncounterResult.TryCreate并提交悬赏/掉落/回城。内容声明由AdventureMapData、AdventureContentImporter和Adventures.csv拥有，现有关中地图派生asset/场景引用须在内容编码冻结后枚举。上述已有指针是只读证据；RESOLVE结果和内容编码尚未形成，完整写入集合及必要.meta待其正式完成后冻结，expectedPaths仍只授权管理准备。
+
+剑O=(2,5)、d0及刀O=(4,4)、d4覆盖同两敌仅作几何例子。PlayMode必须证明正式创建、原AI、实际移动和攻击时当前格位；不得注入/暂停AI代替正式多敌能力。无法形成多目标覆盖则记录并停止，不改AI/地形/费用。
 
 ### ready前冻结
 
