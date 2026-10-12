@@ -28,7 +28,8 @@ using Object = UnityEngine.Object;
 
 namespace TianZhang.Tests.PlayMode
 {
-    // Capability/baseline probes, not acceptance of the pending bounty/obstacle/spawn fixes.
+    // Bounty UI acceptance uses an explicit controlled combat precondition, not player-balance evidence.
+    // Battlefield measurements remain baseline probes for the pending obstacle/spawn tasks.
     // Input goes through InputSystem -> the production EventSystem, never Button.onClick.Invoke.
     public sealed class GuanzhongRuntimeEvidencePlayModeTests
     {
@@ -89,14 +90,7 @@ namespace TianZhang.Tests.PlayMode
                 Canvas.ForceUpdateCanvases();
                 Button accept = Get<Button>(board, "acceptButton");
                 Button claim = Get<Button>(board, "claimButton");
-                var trace = new List<string> { Header(), "input=InputSystem virtual Mouse -> production EventSystem; baseline only" };
-                EventSystem.current.SetSelectedGameObject(accept.gameObject);
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow));
-                yield return null; yield return null;
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-                yield return null;
-                Assert.That(EventSystem.current.currentSelectedGameObject, Is.Not.Null.And.Not.EqualTo(accept.gameObject), "Keyboard navigation must pass through the production input module.");
-                trace.Add("keyboardDownFocus=" + EventSystem.current.currentSelectedGameObject.name);
+                var trace = new List<string> { Header(), "input=InputSystem virtual Mouse/Keyboard -> production EventSystem" };
                 EventSystem.current.SetSelectedGameObject(null);
                 int entered = 0, pressed = 0, released = 0, clicked = 0;
                 var trigger = accept.gameObject.AddComponent<EventTrigger>();
@@ -107,25 +101,150 @@ namespace TianZhang.Tests.PlayMode
                 Vector2 center = RectTransformUtility.WorldToScreenPoint(accept.GetComponentInParent<Canvas>().worldCamera,
                     accept.transform.TransformPoint(((RectTransform)accept.transform).rect.center));
                 yield return Pointer(new Vector2(2, 2), false);
+                AssertButtons(accept, claim, true, false);
+                AssertSprite(accept, "Normal");
                 trace.Add(ButtonState("normal", accept, claim));
+                yield return Capture("bounty-normal-" + size.x);
+                yield return Click(claim);
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Available));
+                Assert.That(board.LastResultReason, Is.Null, "Disabled claim must not dispatch a request.");
                 yield return Pointer(center, false);
                 Assert.That(entered, Is.GreaterThan(0), "Production raycast must reach AcceptBountyButton.");
+                AssertSprite(accept, "Hover");
                 trace.Add(ButtonState("hover", accept, claim));
                 yield return Capture("bounty-hover-" + size.x);
+                yield return Pointer(new Vector2(2, 2), false);
+                AssertSprite(accept, "Normal");
+                EventSystem.current.SetSelectedGameObject(Get<Button>(board, "closeButton").gameObject);
+                yield return KeyPress(Key.UpArrow);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(accept.gameObject), "Keyboard focus must skip the disabled claim button.");
+                AssertSprite(accept, "Selected");
+                trace.Add(ButtonState("keyboard-focus", accept, claim));
+                yield return Capture("bounty-focus-" + size.x);
+                EventSystem.current.SetSelectedGameObject(null);
+                yield return Pointer(center, false);
+                AssertSprite(accept, "Hover");
                 yield return Pointer(center, true);
                 Assert.That(pressed, Is.EqualTo(1));
+                AssertSprite(accept, "Selected");
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Available));
                 trace.Add(ButtonState("press", accept, claim));
+                yield return Capture("bounty-press-" + size.x);
                 yield return Pointer(center, false);
                 Assert.That(released, Is.EqualTo(1));
                 Assert.That(clicked, Is.EqualTo(1));
                 Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Accepted));
+                AssertButtons(accept, claim, false, false);
+                AssertSprite(accept, "Normal");
                 trace.Add(ButtonState("release-accepted", accept, claim));
                 yield return Pointer(new Vector2(2, 2), false);
+                AssertSprite(accept, "Normal");
                 trace.Add(ButtonState("leave", accept, claim));
                 trace.Add($"pointerEnter={entered}; pointerDown={pressed}; pointerUp={released}; pointerClick={clicked}; focus={EventSystem.current.currentSelectedGameObject?.name}");
-                Write("bounty-" + size.x, trace);
+                yield return Click(accept);
+                yield return Click(claim);
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Accepted));
+                Assert.That(board.LastResultReason, Is.Null, "Repeated accept and unfinished claim must not dispatch requests.");
                 yield return Capture("bounty-accepted-" + size.x);
+                yield return CompleteBountyThroughControlledCombat(settlement, trace);
+                yield return SetGameSize(size);
+                settlement = Find<SettlementController>();
+                board = Find<BountyBoardView>();
+                board.Show(Get<ContentCatalogData>(settlement, "contentCatalog"), "guanzhong_city", GameBootstrap.RequireRuntime().Bounties);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                accept = Get<Button>(board, "acceptButton");
+                claim = Get<Button>(board, "claimButton");
+                AssertButtons(accept, claim, false, true);
+                EventSystem.current.SetSelectedGameObject(null);
+                yield return Pointer(new Vector2(2, 2), false);
+                AssertSprite(claim, "Normal");
+                trace.Add(ButtonState("objective-completed", accept, claim));
+                yield return Capture("bounty-completed-" + size.x);
+                EventSystem.current.SetSelectedGameObject(Get<Button>(board, "closeButton").gameObject);
+                yield return KeyPress(Key.UpArrow);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(claim.gameObject));
+                AssertSprite(claim, "Selected");
+                trace.Add(ButtonState("claim-keyboard-focus", accept, claim));
+                yield return Capture("bounty-claim-focus-" + size.x);
+                EventSystem.current.SetSelectedGameObject(null);
+                center = ButtonCenter(claim);
+                yield return Pointer(center, false);
+                AssertSprite(claim, "Hover");
+                trace.Add(ButtonState("claim-hover", accept, claim));
+                yield return Capture("bounty-claim-hover-" + size.x);
+                yield return Pointer(new Vector2(2, 2), false);
+                AssertSprite(claim, "Normal");
+                yield return Pointer(center, false);
+                yield return Pointer(center, true);
+                AssertSprite(claim, "Selected");
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.ObjectiveCompleted));
+                trace.Add(ButtonState("claim-press", accept, claim));
+                yield return Capture("bounty-claim-press-" + size.x);
+                int rewardBefore = GameBootstrap.RequireRuntime().GetItemQuantity("item_lingshi_low");
+                yield return Pointer(center, false);
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Claimed));
+                Assert.That(GameBootstrap.RequireRuntime().GetItemQuantity("item_lingshi_low"), Is.EqualTo(rewardBefore + 3));
+                AssertButtons(accept, claim, false, false);
+                yield return Pointer(new Vector2(2, 2), false);
+                AssertSprite(claim, "Normal");
+                yield return Click(claim);
+                yield return Click(accept);
+                Assert.That(GameBootstrap.RequireRuntime().GetItemQuantity("item_lingshi_low"), Is.EqualTo(rewardBefore + 3), "Repeated claim must not grant another reward.");
+                Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Claimed));
+                Assert.That(board.LastResultReason, Is.Null, "Disabled buttons must not dispatch requests.");
+                trace.Add(ButtonState("claimed-repeat-blocked", accept, claim));
+                yield return Capture("bounty-claimed-" + size.x);
+                Write("bounty-" + size.x, trace);
             }
+        }
+
+        private static IEnumerator CompleteBountyThroughControlledCombat(SettlementController settlement, List<string> trace)
+        {
+            Assert.That(settlement.EnterAdventure("guanzhong_wild"), Is.True);
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+            Assert.That(adventure.CurrentState, Is.EqualTo(AdventureSceneState.Exploration));
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            var encounter = Find<EncounterCoordinator>();
+            Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+            CombatSession session = Get<CombatSession>(encounter, "session");
+            AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            for (float deadline = Time.realtimeSinceStartup + 30f;
+                 Time.realtimeSinceStartup < deadline &&
+                 (session.CurrentActorId != "player" || session.TurnPhase != CombatTurnPhase.Active || encounter.IsPresenting);)
+                yield return null;
+            Assert.That(session.CurrentActorId, Is.EqualTo("player"));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(encounter.IsPresenting, Is.False);
+            Assert.That(spawned.Player.BasicAttackProfileId, Is.EqualTo("basic_body_human_fanren"));
+            Assert.That(spawned.Enemy.BasicAttackProfileId, Is.EqualTo("basic_body_shijiahou_lianqi"));
+
+            // Approved 2026-10-12: explicit one-hit combat precondition for UI/settlement coverage.
+            // Only this temporary enemy snapshot is weakened. No RecordDefeat or bounty-state injection;
+            // the production attack, death, return-to-settlement and bounty settlement still execute.
+            int productionHealth = spawned.Enemy.CurrentHealth;
+            Assert.That(productionHealth, Is.EqualTo(spawned.Enemy.MaximumHealth).And.GreaterThan(1));
+            spawned.Enemy.ReceiveDamage(productionHealth - 1);
+            Assert.That(spawned.Enemy.IsAlive, Is.True);
+            Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Accepted));
+            var quote = new CombatCommandService().Preview(session,
+                new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", spawned.Player.BasicAttackProfileId));
+            Assert.That(quote.IsLegal, Is.True, quote.RejectionReason);
+            encounter.RequestBasicAttack("player", "enemy");
+            Assert.That(spawned.Enemy.CurrentHealth, Is.Zero, "Production attack must deliver the killing blow.");
+            // The production coordinator waits for real-time attack/death presentation before returning.
+            for (float deadline = Time.realtimeSinceStartup + 10f;
+                 Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
+                yield return null;
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            Assert.That(adventure.LastEncounterOutcome, Is.EqualTo(CombatSessionOutcome.Victory));
+            Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.ObjectiveCompleted));
+            Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Progress, Is.EqualTo(1));
+            string evidence = $"controlled-combat-precondition: temporaryEnemyHP={productionHealth}->1; productionAttackHP=0; outcome=Victory; bounty=ObjectiveCompleted; not natural-new-player victory evidence";
+            trace.Add(evidence);
+            TestContext.WriteLine(evidence);
         }
 
         [UnityTest]
@@ -228,6 +347,37 @@ namespace TianZhang.Tests.PlayMode
         {
             InputSystem.QueueStateEvent(mouse, new MouseState { position = position, buttons = (ushort)(down ? 1 : 0) });
             yield return null; yield return null;
+        }
+
+        private static Vector2 ButtonCenter(Button button) => RectTransformUtility.WorldToScreenPoint(
+            button.GetComponentInParent<Canvas>().worldCamera,
+            button.transform.TransformPoint(((RectTransform)button.transform).rect.center));
+
+        private IEnumerator Click(Button button)
+        {
+            Vector2 center = ButtonCenter(button);
+            yield return Pointer(center, false);
+            yield return Pointer(center, true);
+            yield return Pointer(center, false);
+        }
+
+        private IEnumerator KeyPress(Key key)
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+            yield return null; yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+        }
+
+        private static void AssertSprite(Button button, string state) =>
+            Assert.That(button.image.overrideSprite.name, Is.EqualTo("Guanzhong_Button_" + state), button.name);
+
+        private static void AssertButtons(Button accept, Button claim, bool canAccept, bool canClaim)
+        {
+            Assert.That(accept.interactable, Is.EqualTo(canAccept));
+            Assert.That(claim.interactable, Is.EqualTo(canClaim));
+            foreach (Button button in new[] { accept, claim })
+                Assert.That(button.image.color, Is.EqualTo(button.interactable ? Color.white : button.colors.disabledColor), button.name);
         }
 
         private static void Observe(EventTrigger trigger, EventTriggerType type, Action action)

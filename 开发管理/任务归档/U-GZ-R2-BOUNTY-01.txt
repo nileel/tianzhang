@@ -1,0 +1,112 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R2-BOUNTY-01",
+  "title": "悬赏接取领取按钮交互状态修复",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-12人工修复完成；负责人确认受控战斗前置口径，悬赏两按钮状态、完整接取领取及重复操作拦截在1920×1080和1366×768验证通过。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-GZ-R2-BOUNTY-01.txt",
+    "开发管理/任务归档/U-GZ-R2-BOUNTY-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/SettlementSceneBuilder.cs",
+    "src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs",
+    "src/Assets/Scenes/SettlementScene.unity",
+    "src/Assets/Tests/EditMode/BountyBoardViewTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs.meta",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R2-BOUNTY-01 · 悬赏接取领取按钮交互状态修复
+
+## 来源与当前边界
+
+来源：2026-10-11用户九项试玩反馈；直接证据见 开发管理/关中第二轮试玩排查与任务拆分.txt。最初仅排查建卡；2026-10-12按负责人对失败会话的修复请求完成实施与运行时验收，见本卡收尾证据。
+
+## 必查范围
+
+- 开发管理/关中第二轮运行时取证入口.txt#运行入口与边界
+- src/Assets/Tests/PlayMode/GuanzhongRuntimeEvidencePlayModeTests.cs::BountyPointerPipelineAtBothResolutions/BattlefieldBoundsAndSpawnProjectionAtBothResolutions
+
+- 开发管理/关中第二轮试玩排查与任务拆分.txt
+- src/Assets/Scripts/Editor/SettlementSceneBuilder.cs::BuildBountyPanel/ApplyButtonSkin
+- src/Assets/Scripts/Modules/Features/Settlement/BountyBoardView.cs::Refresh/UpdateButtons/SubmitAccept/SubmitClaim
+- src/Assets/Scenes/SettlementScene.unity::AcceptBountyButton/ClaimBountyButton
+- src/Assets/Tests/EditMode/BountyBoardViewTests.cs
+
+## 实施范围
+
+反馈6：限定AcceptBountyButton/ClaimBountyButton，常态Normal、悬停Hover、按下Selected；离开悬停恢复正常，键盘焦点可辨，不使点击后永久冒充悬停。按现有悬赏状态决定可接/可领及禁用反馈，刷新仍来自BountyUseCase。ApplyButtonSkin有城镇/Adventure其他调用，不改全局primary默认语义；只修目标调用或局部模式。生成器及场景同改。
+
+## 禁止项
+
+不改变其他出身/场景/全局共享默认行为，不扩展商店/完整背包/技能体系/自动化脚本，不触碰用户现有存档或无关工作区改动。不用猜测兜底、测试夹具或未运行的验证冒充正式玩家结果。
+
+## 模型协作
+
+有界UI修复：两按钮sprite状态及悬赏可用性，需检查共享皮肤调用但不改全局。
+
+2026-10-12用户明确本批任务均分配给Codex模型：主责codex、route=codex_execute；执行主模型由卡头executionModel=gpt-6.1-sol冻结。建议推理强度medium，现有卡头只配置模型，强度须由执行入口实际设置并核实，不把正文建议当已生效配置。
+
+2026-10-12 本轮只准备取证入口与冻结范围，业务仍由本卡执行；主模型配置保持。默认单模型统一复核，不要求额外辅助调用；确有独立只读问题时才按AI协作规则申请/使用辅助，禁止共享写入。本轮未调用所分配模型，不声称已运行；目标模型不可用按现有失败合同停止，不静默换模型。Unity运行时证据缺失仍不能完成验收。
+
+## 验证
+
+正式SettlementScene通过InputSystem Mouse事件驱动正式Raycaster/EventSystem验证hover/press/release/exit，保持真实按钮监听器与BountyUseCase；禁止直接Button.onClick.Invoke或ExecuteEvents代替输入链。基线入口已覆盖Available→Accepted和两按钮实际sprite/interactable；执行本卡时在允许的取证测试中补齐键盘焦点、ObjectiveCompleted→Claimed、重复接取/领取及禁用断言，完成态仍须由正式战斗流程取得，不用RecordDefeat夹具冒充。两分辨率必须断言实际Screen=1920×1080、1366×768并检查截图。自动输入不宣称物理鼠标人工试玩。运行BountyBoardViewTests及目标按钮引用diff核查。
+
+管理收尾：check-task-cards.ps1、check-review-text.ps1；本轮实际改动路径执行check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据时执行check-data-chain.ps1。选中ready卡后按规则隔离并运行get-experience-risk-preflight.ps1，消费mustRead及gates。
+
+## 完成条件
+
+两个按钮常态/悬停/按下可区分，未完成不能领取、已接不能重复接、领取后不能重复领；非目标按钮保持原行为。
+
+## 停止条件
+
+新建worktree没有Library是尚未初始化，不是不可执行结论；先按取证入口运行本worktree的Unity。取证启动失败、实际分辨率不符、截图未完成或关键测量缺失时保留真实错误再停止。发现新所有者、需要扩大路径/新内容或存档迁移、缺失资源/运行时证据、与批准语义冲突时暂停，回查根因并按既有blocked/waiting_reply合同记录；不得连续叠加补丁。设计前置未获批准不得实施。
+
+## 2026-10-12 人工修复与完成证据
+
+- 来源会话：01a12db1-5289-7123-9b76-bccb439c7091；失败 run：3e248192-6cf4-4055-bb6a-9da72026c6c8；原 detailCode=runtime_validation_failed。原自动会话未形成 candidate，工作树恢复为 db1f7449f63f30c736f4d452dc58443a48f17770；原日志继续保留。
+- 根因：旧验收假定敌方随机值99能保证未命中，但 CombatActionResolver 基础命中100%、新角色闪避0，99仍命中；把角色攻击提高到112也不能绕过 basic_body_human_fanren 的 fixed_unarmed 容量30。原失败日志记录36次攻击后玩家HP=0、敌HP=117，战果Defeat。这里只诊断功能测试前置，不裁定角色平衡。
+- 负责人在本会话明确确认“受控战斗前置”用于按钮功能验收。此授权细化上方验证口径：临时敌人生命657→1，保留凡人徒手玩家和石甲兽正式攻击配置，由一次合法正式攻击击杀，再由正式战斗完成、回城和悬赏结算进入ObjectiveCompleted；不调用RecordDefeat、不直接写悬赏状态，不冒充新建凡人自然获胜。
+- UI所有者：SettlementScene/UICanvas/BountyBoardPanel 的 AcceptBountyButton、ClaimBountyButton；BuildBountyPanel创建皮肤，BountyBoardView.Show/Refresh/UpdateButtons依据BountyUseCase刷新。只将目标调用改为普通皮肤，ApplyButtonSkin共享primary语义、其他城镇/Adventure按钮未改；正式场景只同步两按钮Normal与Hover共4个引用。
+- 状态修复：Available只可接；Accepted两按钮禁用；ObjectiveCompleted只可领；Claimed两按钮禁用。SpriteSwap禁用时应用现有disabledColor；normal=Guanzhong_Button_Normal、hover=Guanzhong_Button_Hover、press及键盘focus=Guanzhong_Button_Selected，离开悬停恢复Normal。
+- 预检：在原隔离工作区运行get-experience-risk-preflight.ps1 -TaskId U-GZ-R2-BOUNTY-01；taskCardDigest=4d76ad39f881cfc621f32fbd1a1f6a09db24d22740cdbb72097b0dcb2b2d9e32，indexDigest=1268a3c5e3990bc6738af22758cdfae68fe361e93e948c52815ee7b26aa94642；matched/mustRead/gates均为空，与schema2投影一致。
+- 执行与协作：本次是负责人直接授权的人工故障修复，由当前Codex单模型统一排查、修复、验证；Node REPL request metadata实测gpt-6-astra，不声称使用原自动卡配置的gpt-6.1-sol，也未更改自动化模型配置、调用第二责任会话或辅助智能体。
+- EditMode：Unity原生-runTests -testPlatform EditMode -testFilter TianZhang.Tests.BountyBoardViewTests，6/6通过。XML：src/Logs/bounty-repair-editmode.xml。生成器、状态和目标皮肤断言均通过；测试运行前快照/运行后恢复tracked Assets及ProjectSettings。相关输入未变化，不重复运行。
+- PlayMode：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath <worktree>/src/Logs/bounty-repair-final.xml -TestFilter TianZhang.Tests.PlayMode.GuanzhongRuntimeEvidencePlayModeTests.BountyPointerPipelineAtBothResolutions -EnableGraphics。1/1通过，单用例内部覆盖1920×1080及1366×768，耗时6.247秒。
+- 双分辨率证据：实际Screen断言通过；20张PNG的IHDR尺寸核对正确，常态/悬停/焦点/按下/禁用/完成/领取截图目检通过。按钮本地Rect=536×56，Canvas scale分别为1与0.7114583。Mouse/Keyboard经正式InputSystem与EventSystem，真实监听器执行Available→Accepted及ObjectiveCompleted→Claimed；奖励只增加3，重复接取/未完成领取/重复领取均未派发请求。证据位于原隔离工作区src/Logs/gz-r2-evidence/bounty-*；这是自动输入证据，不是物理鼠标人工试玩。
+- 验收入口修正：击杀后等待实际场景切换（10秒上限），因为正式EncounterCoordinator要等待实时攻击/死亡演出完成；原SceneReady的180帧不足以覆盖该演出。首次失败保留在bounty-repair-acceptance.xml/.log，修正后的完整通过结果为bounty-repair-final.xml/.log。
+- 数据链路：check-data-chain.ps1通过，GongFa=29/29、Spells=84/84、Skills=31/31、language keys=649；未修改数值、CSV、角色成长、用户存档或战斗生产代码，未运行BattleSim、未作平衡结论。
+- 验证工作区：D:/天章游戏开发/.worktrees/automation/3e248192-6cf4-4055-bb6a-9da72026c6c8/codex。原失败及本次通过证据保留，正式结果通过路径限定提交和项目统一集成锁合回master；本任务从队列/backlog移除并归档。
+
+## 经验候选
+
+### CAND-U-GZ-R2-BOUNTY-01-01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：悬赏按钮功能验收在战斗前置重复战败，尚未进入领奖阶段便以runtime_validation_failed停止。
+- 已证实根因：测试把99随机样本误作必定未命中，未消费基础命中100%、玩家闪避0和凡人徒手攻击容量30等正式规则；增加攻击输入和改变随机样本不能证明此前置成立。
+- 可能复用范围：需要经战斗结算到达UI状态的功能测试，以及使用随机源构造预期结果的集成测试；应显式区分受控前置与自然玩家流程。
+- 证据：原bounty-acceptance.xml为Defeat、36次攻击后玩家0/敌117；经负责人确认受控临时敌HP657→1后，正式攻击击杀/回城/悬赏结算及双分辨率完整按钮验收在bounty-repair-final.xml中通过。
+- 门禁可能：yes

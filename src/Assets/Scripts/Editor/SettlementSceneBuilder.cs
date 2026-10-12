@@ -92,7 +92,7 @@ namespace TianZhang.Editor
             ApplyTextSkin(title, 52);
             ApplyTextSkin(entries, 128, true);
             ApplyTextSkin(result, 64);
-            foreach (Button button in new[] { accept, claim, close }) ApplyButtonSkin(button, button != close);
+            foreach (Button button in new[] { accept, claim, close }) ApplyButtonSkin(button);
             view.Configure(title, entries, result, accept, claim, close);
             panel.SetActive(false);
             return view;

@@ -180,10 +180,18 @@ namespace TianZhang.Features.Settlement
         private void UpdateButtons()
         {
             bool hasCurrent = !string.IsNullOrEmpty(currentBountyId);
-            if (acceptButton != null)
-                acceptButton.interactable = hasCurrent;
-            if (claimButton != null)
-                claimButton.interactable = hasCurrent;
+            BountyStatus status = hasCurrent ? useCase.GetState(currentBountyId).Status : BountyStatus.Available;
+            SetButtonAvailable(acceptButton, hasCurrent && status == BountyStatus.Available);
+            SetButtonAvailable(claimButton, hasCurrent && status == BountyStatus.ObjectiveCompleted);
+        }
+
+        private static void SetButtonAvailable(Button button, bool available)
+        {
+            if (button == null)
+                return;
+            button.interactable = available;
+            // SpriteSwap does not apply ColorBlock's disabled tint.
+            button.image.color = available ? Color.white : button.colors.disabledColor;
         }
 
         private void SetResult(string reason)

@@ -52,10 +52,12 @@ namespace TianZhang.Tests
                 StringAssert.Contains("悬赏板已打开", BoardStatusText().text);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(BountyId).Status);
+                AssertButtons(board, true, false);
 
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
 
                 Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
+                AssertButtons(board, false, false);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
 
@@ -80,10 +82,12 @@ namespace TianZhang.Tests
 
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 目标已完成 | 进度 1/1", BoardEntriesText(board).text);
+                AssertButtons(board, false, true);
 
                 GetBoardButton(board, "claimButton").onClick.Invoke();
 
                 Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
+                AssertButtons(board, false, false);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已领取 | 进度 1/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
                 Assert.AreEqual(3, runtime.CaptureSave().inventory[0].quantity);
@@ -328,6 +332,22 @@ namespace TianZhang.Tests
         {
             var serialized = new SerializedObject(board);
             return serialized.FindProperty(propertyName).objectReferenceValue as Button;
+        }
+
+        private static void AssertButtons(BountyBoardView board, bool canAccept, bool canClaim)
+        {
+            Button accept = GetBoardButton(board, "acceptButton");
+            Button claim = GetBoardButton(board, "claimButton");
+            Assert.AreEqual(canAccept, accept.interactable);
+            Assert.AreEqual(canClaim, claim.interactable);
+            foreach (Button button in new[] { accept, claim })
+            {
+                Assert.AreEqual("Guanzhong_Button_Normal", button.image.sprite.name);
+                Assert.AreEqual("Guanzhong_Button_Hover", button.spriteState.highlightedSprite.name);
+                Assert.AreEqual("Guanzhong_Button_Selected", button.spriteState.pressedSprite.name);
+                Assert.AreEqual("Guanzhong_Button_Selected", button.spriteState.selectedSprite.name);
+                Assert.AreEqual(button.interactable ? Color.white : button.colors.disabledColor, button.image.color);
+            }
         }
 
         private static Text BoardEntriesText(BountyBoardView board)
