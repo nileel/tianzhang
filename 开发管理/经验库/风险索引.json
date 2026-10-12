@@ -302,6 +302,32 @@
       "lastVerified": "2026-10-11"
     },
     {
+      "id": "EXP-DATA-002",
+      "title": "原始字节摘要须与提交内容保持一致",
+      "preflightSummary": "为配置源生成或核验原始字节摘要时，先确认工作树字节与将提交的行尾规范一致，再生成派生资产并复核摘要。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "data"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/DataConfig/*.csv"
+      ],
+      "textPatterns": [
+        "sourceContentHash",
+        "原始字节摘要",
+        "原始字节"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-DATA-002.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-13"
+    },
+    {
       "id": "EXP-UNITY-001",
       "title": "Unity 正式场景由 Editor builder 重建",
       "preflightSummary": "修改四个正式 Unity 场景时，先核对 Editor builder 的重建与保存链，不手写 YAML。",

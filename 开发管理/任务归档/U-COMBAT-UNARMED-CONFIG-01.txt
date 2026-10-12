@@ -114,8 +114,8 @@
 ### CAND-U-COMBAT-UNARMED-CONFIG-01-01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-F88F6E7E7072
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-DATA-002
 - 经验领域：data
 - 现象：按原始字节计算同源摘要时，Unity导入与工作树检查可在CRLF源上通过，但Git的CSV行尾规范化会使提交后的源字节与已生成asset摘要不一致。
 - 已证实根因：Windows文本写入把源改为CRLF，而仓库CSV的Git存储行尾为LF；摘要读取工作树原始字节，尚未按Git过滤后字节生成资产，两个输入字节集合不同。

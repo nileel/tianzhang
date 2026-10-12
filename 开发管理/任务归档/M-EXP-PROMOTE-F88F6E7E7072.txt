@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-COMBAT-UNARMED-CONFIG-01/CAND-U-COMBAT-UNARMED-CONFIG-01-01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-13：Codex 独立核验候选并晋级为 EXP-DATA-002；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-COMBAT-UNARMED-CONFIG-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,10 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-13 完成记录
+
+- 语义裁决：promoted 为 `EXP-DATA-002`。来源候选直接记录了同一原始字节摘要在 CRLF 工作树和 Git 提交后的 LF 内容之间失配的已证实根因、两次摘要及恢复 LF 后的数据链验证，属于可在其他源字节摘要流程复用的配置完整性风险。
+- 去重与边界：`EXP-DATA-001` 只约束共享配置升级时生产读取端和显式编译链接的枚举，未覆盖文本字节、Git 行尾过滤与派生摘要的一致性；其他 active 经验亦未覆盖此跨提交边界。本经验仅匹配原始字节摘要的版本化配置，不新增门禁。
+- 模型协作：简单：单一候选的直接证据、现有经验边界和固定格式回链均可核验；沿用入口 gpt-5.6-terra 单模型，未启动辅助模型或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-DATA-002`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。
