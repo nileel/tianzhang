@@ -59,7 +59,8 @@ namespace TianZhang.Gameplay.Contracts
             int itemAvailableQuantity = 0, int itemHealthRecovery = 0, int expectedHealthRecovery = 0, long inventoryVersion = 0,
             int committedUseCount = 0, int repeatMultiplierPermille = 1000, string ruleSetVersion = "",
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
-            string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "")
+            string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
+            string currentEquipmentName = "", bool? equipmentOwned = null)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -84,6 +85,7 @@ namespace TianZhang.Gameplay.Contracts
             RuleSetVersion = ruleSetVersion; RuleSetSourceDigest = ruleSetSourceDigest; AbilityTierId = abilityTierId;
             BasicAttackSourceKind = basicAttackSourceKind; UnarmedRealmId = unarmedRealmId;
             PhysicalAttackCapacity = physicalAttackCapacity; AttackDetail = attackDetail;
+            CurrentEquipmentName = currentEquipmentName; EquipmentOwned = equipmentOwned;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -116,6 +118,8 @@ namespace TianZhang.Gameplay.Contracts
         public string UnarmedRealmId { get; }
         public int PhysicalAttackCapacity { get; }
         public string AttackDetail { get; }
+        public string CurrentEquipmentName { get; }
+        public bool? EquipmentOwned { get; }
     }
 
     public enum CombatUnitPresentationEvent

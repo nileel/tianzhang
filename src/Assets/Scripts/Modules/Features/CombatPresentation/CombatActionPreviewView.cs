@@ -38,13 +38,20 @@ namespace TianZhang.Features.CombatPresentation
             }
             string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
+            if (value.Candidate.Kind == CombatActionKind.SwapEquipment && value.EquipmentOwned.HasValue)
+            {
+                summary.text = "当前主手：" + value.CurrentEquipmentName + " → " + value.ActionName +
+                    (value.EquipmentOwned.Value ? "（已持有）" : "（未持有）") +
+                    "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP；库存不变" +
+                    (value.CanConfirm ? "\n确认后主手与普攻同步；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束") :
+                        "\n不可施行：" + value.Reason);
+                return;
+            }
             if (value.Candidate.Kind == CombatActionKind.UseItem)
             {
-                summary.text = value.ActorName + " · " + value.ActionName + " → 自身\n费用 " +
-                    FormatActionPoints(value.ActionPointCostUnits) + " AP · 消耗 " + value.ItemQuantityCost +
-                    " 颗（持有 " + value.ItemAvailableQuantity + "）· CT +" + value.CtPenalty +
-                    " · 冷却 " + value.ReuseCooldownTicks + " 刻\n生命恢复 " + value.ExpectedHealthRecovery +
-                    " / 药效 " + value.ItemHealthRecovery +
+                summary.text = value.ActionName + " → 自身 · 持有 " + value.ItemAvailableQuantity + " 颗" +
+                    "\n恢复 " + value.ExpectedHealthRecovery + " / 药效 " + value.ItemHealthRecovery +
+                    " · 消耗 " + value.ItemQuantityCost + " 颗 / " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
                     (value.CanConfirm ? "\n成功后退出防御；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束") :
                         "\n不可施行：" + value.Reason);
                 return;

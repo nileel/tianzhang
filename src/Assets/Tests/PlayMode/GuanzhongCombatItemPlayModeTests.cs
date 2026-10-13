@@ -33,7 +33,6 @@ namespace TianZhang.Tests.PlayMode
         private CombatActionBarView bar;
         private CombatCommandInput input;
         private CombatActionPreviewView preview;
-        private CombatRandom random;
 
         [UnitySetUp] public IEnumerator EnterFormalAdventure()
         {
@@ -64,7 +63,7 @@ namespace TianZhang.Tests.PlayMode
             for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
             Assert.AreEqual(AdventureSceneState.Exploration, adventure.CurrentState);
             adventure.SetEncounterRandomSource(new EncounterRandom());
-            encounter = Find<EncounterCoordinator>(); random = new CombatRandom(); encounter.SetCombatResolutionRandomSource(random);
+            encounter = Find<EncounterCoordinator>();
             bar = Find<CombatActionBarView>(); input = Find<CombatCommandInput>(); preview = Find<CombatActionPreviewView>();
             Assert.IsTrue(Find<AdventureInputController>().SelectNode("shijiahou_encounter"));
             session = Get<CombatSession>(encounter, "session"); spawned = Get<AdventureSpawnSet>(encounter, "spawned");
@@ -80,12 +79,11 @@ namespace TianZhang.Tests.PlayMode
         private string State() => GameBootstrap.RequireRuntime().CaptureSaveJson() + ":" + GameBootstrap.RequireRuntime().InventoryVersion + ":" +
             session.StateVersion + ":" + session.TurnSequence + ":" + session.TurnScheduler.CurrentTick + ":" +
             spawned.Player.CurrentHealth + ":" + spawned.Player.CurrentSpirit + ":" + spawned.Player.ActionPointsRemainingUnits + ":" +
-            spawned.Player.IsGuarding + ":" + session.PendingCtPenalty + ":" + random.Count;
+            spawned.Player.IsGuarding + ":" + session.PendingCtPenalty;
 
         [UnityTest] public IEnumerator CancelAndInventoryChangeRejectWithoutAnyPartialCommit()
         {
             Assert.IsNotNull(bar.UseItemButton); Assert.IsTrue(bar.UseItemButton.interactable);
-            int randomBefore = random.Count;
             string before = State(); bar.UseItemButton.onClick.Invoke();
             Assert.AreEqual(CombatActionKind.UseItem, input.Candidate.Kind); Assert.AreEqual("player", input.Candidate.TargetId);
             Assert.AreEqual(30000, input.Preview.ActionPointCostUnits); Assert.AreEqual(3, input.Preview.ItemAvailableQuantity);
@@ -95,11 +93,49 @@ namespace TianZhang.Tests.PlayMode
             var runtime = GameBootstrap.RequireRuntime(); var catalog = Get<ContentCatalogData>(encounter, "equipmentCatalog");
             Assert.IsTrue(runtime.InventoryGrants.Grant(catalog, new[] { new InventoryGrantRequest("item_lingshi_low", 1) }).Applied);
             before = State(); preview.ConfirmButton.onClick.Invoke(); Assert.AreEqual(before, State());
-            Assert.AreEqual(3, runtime.GetItemQuantity(Item)); Assert.AreEqual(randomBefore, random.Count);
+            Assert.AreEqual(3, runtime.GetItemQuantity(Item));
             yield return null;
         }
-        [UnityTest] public IEnumerator FormalUseSavesAfterVictory() { yield return RoundTrip(false); }
-        [UnityTest] public IEnumerator FormalUseSavesAfterDefeat() { yield return RoundTrip(true); }
+        [UnityTest] public IEnumerator FormalUseSavesAfterNormalCombat() { yield return RoundTrip(false); }
+        [UnityTest] public IEnumerator FormalUseSavesAfterPassiveCombat() { yield return RoundTrip(true); }
+        [UnityTest] public IEnumerator FullHealthUseSucceedsOnceAndZeroStockRejects()
+        {
+            var runtime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual(spawned.Player.MaximumHealth, spawned.Player.CurrentHealth);
+            int health = spawned.Player.CurrentHealth;
+            for (int remaining = 3; remaining > 0; remaining--)
+            {
+                long version = runtime.InventoryVersion, state = session.StateVersion;
+                int ap = spawned.Player.ActionPointsRemainingUnits;
+                bar.UseItemButton.onClick.Invoke();
+                Assert.IsTrue(input.Preview.CanConfirm);
+                Assert.AreEqual(0, input.Preview.ExpectedHealthRecovery);
+                var old = input.Candidate;
+                preview.ConfirmButton.onClick.Invoke(); yield return Ready();
+                Assert.AreEqual(health, spawned.Player.CurrentHealth);
+                Assert.AreEqual(ap - 30000, spawned.Player.ActionPointsRemainingUnits);
+                Assert.AreEqual(remaining - 1, runtime.GetItemQuantity(Item));
+                Assert.AreEqual(version + 1, runtime.InventoryVersion);
+                Assert.AreEqual(state + 1, session.StateVersion);
+                string before = State(); encounter.ConfirmAction(old); Assert.AreEqual(before, State());
+            }
+            Assert.IsFalse(bar.UseItemButton.interactable);
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                string before = State(); bar.UseItemButton.onClick.Invoke();
+                Assert.IsFalse(input.Preview.CanConfirm);
+                StringAssert.Contains("丹药数量不足", input.Preview.Reason);
+                GuanzhongCombatEquipmentPlayModeTests.AssertPreviewBounds(preview, "empty-item-preview");
+                string directory = Path.Combine(Application.dataPath, "../Logs/weapon-item-ui"); Directory.CreateDirectory(directory);
+                ScreenCapture.CaptureScreenshot(Path.Combine(directory, "empty-" + width + ".png"));
+                for (int frame = 0; frame < 3; frame++) yield return null;
+                preview.ConfirmButton.onClick.Invoke(); Assert.AreEqual(before, State());
+                preview.CancelButton.onClick.Invoke();
+            }
+        }
+
         [UnityTest] public IEnumerator InitialWriteFailureClearsTheGrantAndDoesNotActivateTheNewSlot()
         {
             SceneManager.LoadScene(GameplaySceneNames.StartMenu); yield return SceneReady(GameplaySceneNames.StartMenu);
@@ -126,39 +162,42 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator RoundTrip(bool defeat)
         {
             var runtime = GameBootstrap.RequireRuntime();
-            // Explicit injury fixture on the real session; production acquisition and input remain unchanged.
-            spawned.Player.ReceiveDamage(Math.Min(100, spawned.Player.CurrentHealth - 1));
-            spawned.Player.IsGuarding = true;
+            // Pass real turns until the production enemy damages the player; do not control rolls or health.
+            for (float deadline = Time.realtimeSinceStartup + 120f; spawned.Player.CurrentHealth == spawned.Player.MaximumHealth &&
+                Time.realtimeSinceStartup < deadline;)
+            {
+                encounter.RequestEndTurn("player");
+                yield return null;
+                yield return Ready();
+            }
+            Assert.Greater(spawned.Player.CurrentHealth, 0);
+            Assert.Less(spawned.Player.CurrentHealth, spawned.Player.MaximumHealth);
+            Debug.Log("[EquipmentItem] naturally injured HP=" + spawned.Player.CurrentHealth + "/" + spawned.Player.MaximumHealth);
             int health = spawned.Player.CurrentHealth, expected = Math.Min(80, spawned.Player.MaximumHealth - health);
             int spirit = spawned.Player.CurrentSpirit, tick = session.TurnScheduler.CurrentTick;
             long version = runtime.InventoryVersion, turn = session.TurnSequence;
-            int randomBefore = random.Count;
             bar.UseItemButton.onClick.Invoke(); Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
             Assert.AreEqual(expected, input.Preview.ExpectedHealthRecovery);
             var old = input.Candidate; preview.ConfirmButton.onClick.Invoke(); yield return Ready();
             Assert.AreEqual(health + expected, spawned.Player.CurrentHealth); Assert.AreEqual(70000, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(2, runtime.GetItemQuantity(Item)); Assert.AreEqual(version + 1, runtime.InventoryVersion);
             Assert.AreEqual(spirit, spawned.Player.CurrentSpirit); Assert.AreEqual(tick, session.TurnScheduler.CurrentTick);
-            Assert.AreEqual(turn, session.TurnSequence); Assert.AreEqual(randomBefore, random.Count); Assert.IsFalse(spawned.Player.IsGuarding);
+            Assert.AreEqual(turn, session.TurnSequence); Assert.IsFalse(spawned.Player.IsGuarding);
             string before = State(); encounter.ConfirmAction(old); Assert.AreEqual(before, State());
             foreach (int width in new[] { 1920, 1366 })
             {
                 GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 AssertButtonBounds();
+                bar.UseItemButton.onClick.Invoke();
+                GuanzhongCombatEquipmentPlayModeTests.AssertPreviewBounds(preview, "item-preview");
                 string evidence = Path.Combine(Application.dataPath, "../Logs/weapon-item-ui");
                 Directory.CreateDirectory(evidence);
                 ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "item-" + width + (defeat ? "-defeat" : "-victory") + ".png"));
                 for (int frame = 0; frame < 3; frame++) yield return null;
+                preview.CancelButton.onClick.Invoke();
             }
-            GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
-            if (defeat) spawned.Player.ReceiveDamage(spawned.Player.CurrentHealth - 1);
-            for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
-            {
-                if (!defeat) encounter.RequestBasicAttack("player", "enemy");
-                encounter.RequestEndTurn("player"); yield return null;
-            }
-            Assert.AreEqual(GameplaySceneNames.Settlement, SceneManager.GetActiveScene().name);
+            yield return GuanzhongCombatEquipmentPlayModeTests.FinishNaturalCombat(encounter, session, spawned, defeat);
             Assert.AreEqual(2, runtime.GetItemQuantity(Item));
             // Scene return itself has not saved: disk still carries the original grant.
             Assert.AreEqual(3, new GameSaveSlotStore(saveDirectory).Read(Slot).Envelope.inventory.Single(entry => entry.itemId == Item).quantity);
@@ -168,6 +207,16 @@ namespace TianZhang.Tests.PlayMode
             runtime = GameBootstrap.RequireRuntime(); Assert.AreEqual(json, runtime.CaptureSaveJson()); Assert.AreEqual(2, runtime.GetItemQuantity(Item));
             Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild")); yield return SceneReady(GameplaySceneNames.Adventure);
             Assert.AreEqual(2, runtime.GetItemQuantity(Item));
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            Assert.IsTrue(Find<AdventureInputController>().SelectNode("shijiahou_encounter"));
+            encounter = Find<EncounterCoordinator>(); session = Get<CombatSession>(encounter, "session");
+            spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            yield return Ready();
+            Assert.AreEqual(2, runtime.GetItemQuantity(Item));
+            Assert.AreEqual(2, Find<CombatHudPresenter>().Snapshot.FindAction(CombatActionKind.UseItem).ItemAvailableQuantity);
+            Assert.AreEqual("basic_iron_sword", spawned.Player.BasicAttackProfileId);
         }
         private void AssertButtonBounds()
         {
@@ -206,10 +255,6 @@ namespace TianZhang.Tests.PlayMode
         private static T Get<T>(object owner, string field) => (T)owner.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(owner);
         private static void Set(object owner, string field, object value) => owner.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(owner, value);
         private sealed class EncounterRandom : IFormalEncounterRandomSource { public int NextPercent() => 0; }
-        private sealed class CombatRandom : ICombatResolutionRandomSource
-        {
-            public int Count { get; private set; }
-            public float NextPercent() => Count++ % 4 == 0 ? 0f : 99f;
-        }
+
     }
 }

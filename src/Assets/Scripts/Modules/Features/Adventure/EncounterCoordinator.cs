@@ -342,7 +342,11 @@ namespace TianZhang.Features.Adventure
                 preview?.ItemHealthRecovery ?? 0, preview?.ExpectedHealthRecovery ?? 0, preview?.InventoryVersion ?? 0,
                 preview?.CommittedUseCount ?? 0, preview?.RepeatMultiplierPermille ?? 1000,
                 preview?.RuleSetVersion ?? string.Empty, preview?.RuleSetSourceDigest ?? string.Empty,
-                preview?.AbilityTierId ?? string.Empty, sourceKind, unarmedRealm, capacity, attackDetail);
+                preview?.AbilityTierId ?? string.Empty, sourceKind, unarmedRealm, capacity, attackDetail,
+                candidate.Kind == CombatActionKind.SwapEquipment && equipmentOwner != null
+                    ? (string.IsNullOrEmpty(equipmentOwner.MainEquipmentItemId) ? "未装备" : resolveText(equipmentOwner.MainEquipmentItemId)) : string.Empty,
+                candidate.Kind == CombatActionKind.SwapEquipment && ownsEquipment != null
+                    ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)

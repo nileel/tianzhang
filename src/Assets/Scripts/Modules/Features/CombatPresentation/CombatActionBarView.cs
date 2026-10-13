@@ -143,13 +143,17 @@ namespace TianZhang.Features.CombatPresentation
                     (quote.SpiritCost > 0 ? " / " + quote.SpiritCost + "MP" : string.Empty);
                 label.text = quote.Candidate.Kind switch
                 {
+                    CombatActionKind.SwapEquipment when quote.EquipmentOwned.HasValue => quote.ActionName + "\n" +
+                        (quote.EquipmentOwned.Value ? "×1 " : "×0 ") + cost,
                     CombatActionKind.UseItem => quote.ActionName + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
                     CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
                     CombatActionKind.Guard => quote.ActionName + cost,
                     _ => quote.ActionName + "\n" + cost,
                 };
-                // The formal Guard (82x36) and item (90x60) labels overflow at 20pt.
-                if (quote.Candidate.Kind is CombatActionKind.Guard or CombatActionKind.UseItem) label.fontSize = 18;
+                // Guard (82x36), item (90x60), and equipment (82x60) overflow at 20pt.
+                // The equipment ownership/cost line measured 83px and wrapped to 87px high.
+                if (quote.Candidate.Kind is CombatActionKind.Guard or CombatActionKind.UseItem or CombatActionKind.SwapEquipment)
+                    label.fontSize = 18;
             }
             return quote.CanConfirm ? string.Empty : quote.Reason;
         }

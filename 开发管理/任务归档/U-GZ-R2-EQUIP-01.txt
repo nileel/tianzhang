@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13负责人授权按既有药物规则修正满血用药验收；设计与SPELL前置均已完成归档，重新预检后恢复ready。",
+  "stateReason": "2026-10-13手动完成真实开局装备与用药闭环；96项EditMode、11个相关PlayMode及双分辨率界面验收通过。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt",
     "开发管理/任务归档/U-GZ-R2-EQUIP-01.txt",
@@ -104,3 +104,20 @@ expectedPaths为完整精确允许集合；全部Unity文件已存在，没有�
 ## 停止条件
 
 设计或SPELL前置未正式解锁不得实施；发现新所有者、需扩大路径/新增内容或Unity文件/场景资源、存档迁移、共享资格/数值修改、缺失资源/运行时证据、与批准合同冲突时停写回查并交有权规划者重新准备。不得叠加补发、兼容分支或新状态；无法在既定两卡内闭环不临时新建任务。
+
+
+## 本轮实施与验证结果（2026-10-13）
+
+- 主责Codex，负责人明确要求直接完成本卡；沿用有界、耦合工作面的单主责方案，未派生子智能体或第二责任会话。独立worktree为.worktrees/complete-gz-equip，基线e3990885a6173c036e12149d304b9ad29ffc925f。开工前及补充只读表现字段后运行get-experience-risk-preflight.ps1；taskId与卡摘要一致，索引摘要2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff，matched仍为EXP-UNITY-015/016、gates为空，已消费mustRead正文。没有新增路径、运行时所有者、Unity资源或模块依赖。
+- 新档与持久化所有者只读核验：StartMenuSceneInstaller.CreateNewPlayer先调用GameRuntime.BeginEquippedNewGame，再CaptureSave与首次写盘；既有初始化已经一次发放两武器各一、活血丹三颗并装配铁剑。LoadPlayer/RestoreSave不会补发。保持原实现，不增加补发、迁移或库存缓存，不改角色、库存及Combat内核。
+- 可见缺口：换装原预览只显示候选动作，缺少当前主手和拥有事实。EncounterCoordinator.ProjectQuote从现有equipmentOwner与ownsEquipment读取事实，经CombatActionPreviewSnapshot新增只读CurrentEquipmentName/EquipmentOwned传给视图。CombatActionBarView.PresentAction展示候选拥有数量和费用，CombatActionPreviewView.Present展示主手→候选、拥有情况、费用及真实拒绝。AdventureSceneInstaller仍连接唯一库存/装配回调，CombatCommandInput的选择、取消、确认权限及事务边界未修改；无资格、缺库存、重复装备仍由既有所有者拒绝。
+- UI所有者证据：AdventureScene/UICanvas/CombatActionBar/SwapEquipmentButton/Label由AdventureSceneBuilder.ConfigureEquipmentButton创建，序列化至CombatActionBarView；刷新写入者是PresentAction。CombatActionPreviewRoot/PreviewBody/ActionPreviewSummary由BuildCombatActionPreview与既有布局创建，刷新写入者是CombatActionPreviewView.Present。未修改共享工厂、场景、Prefab、坐标、布局或字体资源，只有装备按钮局部字号与目标预览文案变化；无关系统未修改。
+- 运行时尺寸证据：装备Label为82×60，20pt新增拥有/费用行最初preferredWidth=106、preferredHeight=87；缩短后宽83仍换行，因此按实际测量局部改18pt。最终1920×1080为76×52，1366×768为73.08931×47.78917，均完整容纳。道具预览原preferredHeight=127超出100高视口；删除冗余角色名和零CT/CD说明，保留库存、实际恢复、药效、扣药/AP、行动结果及拒绝原因。最终装备/道具/拒绝摘要为95≤100和91.36164≤99.90；文本与费用/拒绝行均在视口内，确认取消按钮位于其下，无需滚动。
+- 两个PlayMode成功链改为正式菜单新档，并核对首次磁盘记录已含两武器各一、活血丹三颗与铁剑实例；不调用PrepareEquippedPlayerFixture、RestoreProgression或再次初始化，不注入库存、血量、敌人攻击档案或确定命中/胜负。保留正式遭遇抽签夹具只用于定位同一首战，不控制战斗随机。正常策略通过现有预览确认普攻与合法移动推进；被动策略结束行动，由生产敌人自然击败。实际记录均有正常胜利与失败回城。
+- 用药实际自然受伤记录为HP879/915，确认后按现有规则恢复并只扣一颗、一次AP与库存版本；满血用药恢复0但正常扣药/AP，原报价重复确认无副作用。零库存、缺武器、过期库存版本的独立负向场景明确标记为隔离边界，未用于替代成功链。EditMode继续覆盖资格、重复装备、Guard退出、不能Wait及原子拒绝。
+- 正式保存/重入证据：两武器互换后主手/实例和普攻同步、库存各一；铁剑与铁刀分别经过自然战斗回城后SaveAndReturnToMenu→LoadPlayer，JSON一致。药物消耗后战后保存为两颗，读档、重进野外与再次进入战斗仍为两颗且HUD投影一致。首次写盘失败、既有练气无药档不补发、旧凡人小族档不升境/不补发、其他出身原规则均通过直接测试或相关创角回归；测试只使用隔离临时存档。
+- EditMode：Unity6000.3.18f1 -batchmode -nographics -runTests -testPlatform EditMode -testFilter "TianZhang.Tests.GameRuntimeTests;TianZhang.Tests.GameSaveEnvelopeTests;TianZhang.Tests.CombatActionPointEquipmentTests;TianZhang.Tests.CombatActionPointItemTests;TianZhang.Tests.CharacterCreationRuleTests"，96/96通过；tools/run-unity-editmode-tests.ps1 -ValidateResultOnly复核通过，结果equip-editmode.xml。
+- 图形PlayMode：tools/run-unity-playmode-tests.ps1 -EnableGraphics -TestFilter按直接类型/失败方法过滤。最终11个不同用例全部通过：equip-formal.xml中的三个未受后续改动影响的用药取消/旧档/写盘失败用例，equip-formal-recheck.xml中的满血/零库存及两个创角/旧凡人回归，equip-final.xml中的三个装备用例，item-reentry-final.xml中的两个用药保存重入用例。早期尺寸失败XML保留；只重跑受改动影响的用例，没有将最初失败结果当作通过。
+- 证据最初位于本worktree的src/Logs，收尾保留至主工作区src/Logs/U-GZ-R2-EQUIP-01-20261013（忽略、不提交）。包含上述XML及.log、equipment、weapon-item-ui、starter-trial下的双分辨率PNG和状态文本。已实际查看创角、装备、用药与拒绝Game View截图；正式UI可读且不遮挡确认取消。
+- check-unity-assembly-boundaries.ps1、check-data-chain.ps1通过；收尾另按本卡执行任务投影、审核文本、允许路径及暂存空白检查。本轮不运行BattleSim，不从功能通过推导数值平衡；正常战斗使用生产随机，验收允许正常胜负，不承诺每次同一胜负。
+- 项目映射已读UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md；技能已读unity-agent-workflows的runtime-owner-proof、unity-validation、ui-and-visual-assets、screenshot-text-owner、project-structure-discovery、content-and-systems、ai-workflows相关规则。最大修改源码EncounterCoordinator约890行，本轮仅在既有ProjectQuote增加只读投影，未增加职责或依赖。经验候选检查：本轮尺寸问题属于已消费门禁覆盖的同一现象，没有新增独立候选。关闭本卡并移除其队列/backlog行，不解锁或修改下游卡的具名前置。
