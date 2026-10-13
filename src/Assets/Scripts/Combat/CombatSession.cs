@@ -380,8 +380,9 @@ namespace TianZhang.Combat
         public CombatActionResult ValidateCommand(CombatCommand command)
             => new CombatCommandService().Validate(this, command);
 
-        internal CombatActionResult ValidateRules(CombatCommand command)
+        internal CombatActionResult ValidateRules(CombatCommand command, out CombatAttackAreaQueryResult attackArea)
         {
+            attackArea = null;
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
             if (!Combatants.TryGet(command.ActorId, out CombatantSnapshot actor) || !actor.IsAlive)
@@ -401,9 +402,9 @@ namespace TianZhang.Combat
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Guard => actor.IsGuarding ? CombatActionResult.Rejected("combat_guard_already_active") : CombatActionResult.Success(),
                 CombatCommandKind.Wait => HasCommittedBenefit ? CombatActionResult.Rejected("combat_wait_after_benefit") : CombatActionResult.Success(),
-                CombatCommandKind.BasicAttack => ValidateAttack(command, actor, CombatAttackKind.Basic),
-                CombatCommandKind.Art => ValidateAttack(command, actor, CombatAttackKind.Art),
-                CombatCommandKind.Divine => ValidateAttack(command, actor, CombatAttackKind.Divine),
+                CombatCommandKind.BasicAttack => ValidateAttack(command, actor, CombatAttackKind.Basic, out attackArea),
+                CombatCommandKind.Art => ValidateAttack(command, actor, CombatAttackKind.Art, out attackArea),
+                CombatCommandKind.Divine => ValidateAttack(command, actor, CombatAttackKind.Divine, out attackArea),
                 CombatCommandKind.Move => ValidateMove(command, actor),
                 CombatCommandKind.SwapSpell => ValidateSwapSpell(command, actor),
                 CombatCommandKind.SwapEquipment => ValidateEquipment(command, actor),
@@ -452,29 +453,50 @@ namespace TianZhang.Combat
         private CombatActionResult ValidateAttack(
             CombatCommand command,
             CombatantSnapshot actor,
-            CombatAttackKind expectedKind)
+            CombatAttackKind expectedKind, out CombatAttackAreaQueryResult attackArea)
         {
+            attackArea = null;
             if (expectedKind == CombatAttackKind.Basic && string.IsNullOrEmpty(actor.BasicAttackProfileId))
                 return CombatActionResult.Rejected("attack_profile_not_authorized");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
-            // Area declarations are query-only until the multi-target settlement contract is implemented.
-            if (profile.Area != CombatAttackArea.Single)
-                return CombatActionResult.Rejected("combat_attack_area_requires_resolution");
             if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))
                 return CombatActionResult.Rejected("combat_spirit_sealed");
-            if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
-                !profile.AllowsTarget(actor.Team, target.Team))
-                return CombatActionResult.Rejected("combat_session_target_invalid");
-            if (profile.RuleMetadata?.ControlUsesMindContest == true &&
-                (!actor.RawMindInputsPresent || !target.RawMindInputsPresent))
-                return CombatActionResult.Rejected("combat_raw_mind_missing");
-            if (profile.Effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff ||
-                profile.RuleMetadata?.ControlChancePermille > 0 || profile.RuleMetadata?.ControlUsesMindContest == true ||
-                profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
+            var targets = new List<CombatantSnapshot>();
+            if (profile.Area != CombatAttackArea.Single)
             {
-                if (RuleSet == null || !actor.TryGetRealmOrder(RuleSet, out _) || !target.TryGetRealmOrder(RuleSet, out _))
-                    return CombatActionResult.Rejected("combat_status_realm_invalid");
+                if (!command.AttackDirection.HasValue || command.AttackDirection.Value is < 0 or > 5)
+                    return CombatActionResult.Rejected("combat_attack_direction_invalid");
+                // An area has no selected individual target or destination/center override.
+                if (command.TargetId.Length != 0 || command.Destination.HasValue)
+                    return CombatActionResult.Rejected("combat_session_target_invalid");
+                try { attackArea = QueryAttackArea(actor.Id, profile.Id, command.AttackDirection.Value); }
+                catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
+                if (attackArea.TargetIds.Count == 0)
+                    return CombatActionResult.Rejected("combat_attack_area_empty");
+                foreach (string id in attackArea.TargetIds)
+                { Combatants.TryGet(id, out var target); targets.Add(target); }
+            }
+            else
+            {
+                if (command.AttackDirection.HasValue || command.TargetRolls.Count != 0 ||
+                    !Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
+                    !profile.AllowsTarget(actor.Team, target.Team))
+                    return CombatActionResult.Rejected("combat_session_target_invalid");
+                targets.Add(target);
+            }
+            foreach (CombatantSnapshot target in targets)
+            {
+                if (profile.RuleMetadata?.ControlUsesMindContest == true &&
+                    (!actor.RawMindInputsPresent || !target.RawMindInputsPresent))
+                    return CombatActionResult.Rejected("combat_raw_mind_missing");
+                if (profile.Effect is CombatAttackEffect.Buff or CombatAttackEffect.Debuff ||
+                    profile.RuleMetadata?.ControlChancePermille > 0 || profile.RuleMetadata?.ControlUsesMindContest == true ||
+                    profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
+                {
+                    if (RuleSet == null || !actor.TryGetRealmOrder(RuleSet, out _) || !target.TryGetRealmOrder(RuleSet, out _))
+                        return CombatActionResult.Rejected("combat_status_realm_invalid");
+                }
             }
             string authorizationFailure = GetAuthorizationFailure(actor, profile);
             if (!string.IsNullOrEmpty(authorizationFailure))
@@ -490,13 +512,16 @@ namespace TianZhang.Combat
             }
             if (actor.GetCooldown(profile.Id) > 0)
                 return CombatActionResult.Rejected("attack_profile_cooldown_active");
-            bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
+            CombatantSnapshot singleTarget = targets[0];
+            bool targetsSelf = string.Equals(actor.Id, singleTarget.Id, StringComparison.Ordinal);
             int spiritCost = profile.GetSpiritCost(targetsSelf);
             if (actor.CurrentSpirit < spiritCost)
                 return CombatActionResult.Rejected("spirit_insufficient");
 
+            if (attackArea != null) return CombatActionResult.Success();
+
             CombatRangeQueryResult range = SpatialQuery.QueryRange(
-                actor.Position, target.Position,
+                actor.Position, singleTarget.Position,
                 profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
                     ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange,
                 profile.MaximumRange);
@@ -605,8 +630,8 @@ namespace TianZhang.Combat
                 else
                     enemies++;
             }
-            if (players is < 1 or > 2 || players != enemies)
-                throw new ArgumentException("Combat sessions require matched 1v1 or 2v2 teams.", nameof(combatants));
+            if (!((players == 1 && enemies is 1 or 2) || (players == 2 && enemies == 2)))
+                throw new ArgumentException("Combat sessions require 1v1, 1v2 or 2v2 teams.", nameof(combatants));
         }
     }
 }

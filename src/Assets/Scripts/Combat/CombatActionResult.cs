@@ -13,6 +13,8 @@ namespace TianZhang.Combat
             IsCritical = isCritical;
             IsBlocked = isBlocked;
             IsSoulShielded = isSoulShielded;
+            TargetId = string.Empty;
+            Rolls = default;
         }
 
         public int FinalDamage { get; }
@@ -20,6 +22,15 @@ namespace TianZhang.Combat
         public bool IsCritical { get; }
         public bool IsBlocked { get; }
         public bool IsSoulShielded { get; }
+        public string TargetId { get; }
+        public CombatResolutionRolls Rolls { get; }
+
+        private CombatDamageResult(CombatDamageResult damage, string targetId, CombatResolutionRolls rolls)
+            : this(damage.FinalDamage, damage.IsHit, damage.IsCritical, damage.IsBlocked, damage.IsSoulShielded)
+        { TargetId = targetId; Rolls = rolls; }
+
+        internal CombatDamageResult ForTarget(string targetId, CombatResolutionRolls rolls) =>
+            new CombatDamageResult(this, targetId, rolls);
     }
 
     public readonly struct CombatSpiritRecoveryResult
@@ -55,7 +66,7 @@ namespace TianZhang.Combat
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
-            Damage = damage ?? Array.Empty<CombatDamageResult>();
+            Damage = new List<CombatDamageResult>(damage ?? Array.Empty<CombatDamageResult>()).AsReadOnly();
             MovementPath = movementPath == null
                 ? Array.Empty<HexCoord>()
                 : new List<HexCoord>(movementPath).AsReadOnly();

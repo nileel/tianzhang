@@ -82,6 +82,107 @@ namespace TianZhang.Tests.EditMode
         private CombatActionResult Commit(CombatSession s, CombatCommand c)
         { var r = service.Execute(s, c); Assert.IsTrue(r.Succeeded, r.RejectionReason); return r; }
 
+        internal static CombatSession AreaSession(CombatAttackArea area = CombatAttackArea.ForwardPair,
+            int ct = 0, int cd = 0, int mp = 0, CombatAttackRuleMetadata metadata = null,
+            ICombatSpatialQuery query = null, bool reverse = false)
+        {
+            var profile = new CombatAttackProfile("area", CombatAttackKind.Basic, CombatAttackEffect.Physical,
+                1, area == CombatAttackArea.ForwardPair ? 2 : 1, 20000, 20000, ct, cd,
+                physicalMultiplier: 1, spiritCost: mp, ruleMetadata: metadata, area: area);
+            var player = AreaUnit("player", CombatTeam.Player, new HexCoord(0, 0));
+            player.SetSpirit(100, 100);
+            var a = AreaUnit("a", CombatTeam.Enemy, new HexCoord(1, 0));
+            var z = AreaUnit("z", CombatTeam.Enemy, area == CombatAttackArea.ForwardPair ? new HexCoord(2, 0) : new HexCoord(1, -1));
+            var session = new CombatSession(reverse ? new[] { z, player, a } : new[] { player, a, z },
+                new[] { profile }, query ?? new DirectRange(), Ordinary(), ruleSet: Rules());
+            Assert.AreEqual("player", new CombatCommandService().AdvanceUntilAction(session).ActorId);
+            return session;
+        }
+        private static CombatantSnapshot AreaUnit(string id, CombatTeam team, HexCoord position) =>
+            new CombatantSnapshot(id, team, position, team == CombatTeam.Player ? 100 : 1,
+                10000, 10000, 20, 20, 0, 0, 500000, 5000, basicAttackProfileId: "area",
+                realmStage: "练气", rawMind: 10) { Facing = team == CombatTeam.Player ? 0 : 3 };
+
+        internal static CombatCommand AreaCommand(CombatSession session, float firstHit = 0, float secondHit = 0) =>
+            new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0,
+                targetRolls: session.QueryAttackArea("player", "area", 0).TargetIds.Select((id, index) =>
+                    new CombatTargetResolutionRolls(id, new CombatResolutionRolls(index == 0 ? firstHit : secondHit,
+                        100, 100, 100, 100))).ToArray());
+
+        [TestCase(false)] [TestCase(true)]
+        public void AreaPaysAndCountsOnceIncludingAllMissesAndCancelledPreparation(bool miss)
+        {
+            var s = AreaSession(mp: 5); s.Combatants.TryGet("player", out var player);
+            foreach (var target in s.Combatants.All.Where(value => value.Team == CombatTeam.Enemy)) target.DodgeRate = 100;
+            var command = AreaCommand(s, miss ? 100 : 0, miss ? 100 : 0);
+            var quote = service.Preview(s, command);
+            Assert.IsTrue(service.Prepare(s, command, quote, out _).Succeeded);
+            Assert.AreEqual(500000, player.ActionPointsRemainingUnits);
+            Assert.AreEqual(100, player.CurrentSpirit);
+            Assert.AreEqual(0, service.Preview(s, command).CommittedUseCount);
+            long turn = s.TurnSequence; int tick = s.TurnScheduler.CurrentTick;
+            foreach (int expected in new[] { 20000, 20000, 25000, 30000 })
+            {
+                int before = player.ActionPointsRemainingUnits;
+                var result = Commit(s, command);
+                Assert.AreEqual(expected, result.ActionPointSpentUnits);
+                Assert.AreEqual(before - expected, player.ActionPointsRemainingUnits);
+                Assert.AreEqual(2, result.Damage.Count);
+                Assert.That(result.Damage.All(value => value.IsHit == !miss), Is.True);
+            }
+            Assert.AreEqual(4, service.Preview(s, command).CommittedUseCount);
+            Assert.AreEqual(80, player.CurrentSpirit);
+            Assert.AreEqual(turn, s.TurnSequence); Assert.AreEqual(tick, s.TurnScheduler.CurrentTick);
+            Commit(s, new CombatCommand(CombatCommandKind.EndTurn, "player"));
+            Assert.AreEqual("player", service.AdvanceUntilAction(s).ActorId);
+            Assert.AreEqual(0, service.Preview(s, command).CommittedUseCount);
+        }
+
+        [Test]
+        public void AreaStartsOneCooldownAndOneCtPenalty()
+        {
+            var s = AreaSession(ct: 7, cd: 10, mp: 5); s.Combatants.TryGet("player", out var player);
+            var result = Commit(s, AreaCommand(s));
+            Assert.AreEqual(20000, result.ActionPointSpentUnits); Assert.AreEqual(5, result.SpiritSpent);
+            Assert.AreEqual(95, player.CurrentSpirit); Assert.AreEqual(10, player.GetCooldown("area"));
+            Assert.AreEqual(7, s.PendingCtPenalty);
+            Assert.AreEqual("attack_profile_cooldown_active", service.Execute(s, AreaCommand(s)).RejectionReason);
+            Assert.AreEqual(480000, player.ActionPointsRemainingUnits); Assert.AreEqual(7, s.PendingCtPenalty);
+        }
+
+        [Test]
+        public void SecondTargetOverflowPublishesNoDamageStacksPaymentOrLedger()
+        {
+            var s = AreaSession(ct: 7, cd: 10, mp: 5); s.Combatants.TryGet("player", out var player);
+            player.GongFaId = "九霄雷劫录"; player.LeijieStacks = 2;
+            player.CriticalRate = 100; player.CriticalDamage = float.MaxValue;
+            var inputs = new[]
+            {
+                new CombatTargetResolutionRolls("a", new CombatResolutionRolls(0, 100, 100, 100, 100)),
+                new CombatTargetResolutionRolls("z", new CombatResolutionRolls(0, 0, 100, 100, 100)),
+            };
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area",
+                attackDirection: 0, targetRolls: inputs);
+            long version = s.StateVersion;
+            Assert.AreEqual("combat_effect_overflow", service.Execute(s, command).RejectionReason);
+            Assert.AreEqual(version, s.StateVersion); Assert.AreEqual(0, s.PendingCtPenalty);
+            Assert.AreEqual(500000, player.ActionPointsRemainingUnits); Assert.AreEqual(100, player.CurrentSpirit);
+            Assert.AreEqual(2, player.LeijieStacks); Assert.AreEqual(0, player.GetCooldown("area"));
+            Assert.That(s.Combatants.All.All(value => value.CurrentHealth == 10000), Is.True);
+            Assert.IsFalse(s.HasCommittedBenefit);
+        }
+
+        [Test]
+        public void AreaActionBonusAppliesToBothTargetsAndConsumesOnce()
+        {
+            var s = AreaSession(); s.Combatants.TryGet("player", out var player);
+            player.GongFaId = "九霄雷劫录"; player.LeijieStacks = 2;
+            var result = Commit(s, AreaCommand(s));
+            Assert.AreEqual(result.Damage[0].FinalDamage, result.Damage[1].FinalDamage);
+            Assert.That(result.Damage[0].FinalDamage, Is.GreaterThan(20));
+            Assert.AreEqual(0, player.LeijieStacks);
+        }
+
         [TestCase(false)] [TestCase(true)]
         public void MoveAndAttackInEitherOrderShareOneBudgetAndOneTurn(bool attackFirst)
         {

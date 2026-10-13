@@ -212,6 +212,27 @@ namespace TianZhang.Tests.EditMode
             Assert.That(service.Execute(session, Command(actor, target, Stun, roll)).RejectionReason, Is.EqualTo("combat_control_roll_invalid"));
             Assert.That(target.CurrentHealth, Is.EqualTo(99900)); Assert.That(target.Statuses, Is.Empty); Assert.That(actor.Cooldowns, Is.Empty);
         }
+
+        [Test]
+        public void AreaControlUsesEachTargetsOwnFifthSampleAndCommitsTogether()
+        {
+            var single = Ready(Unit("player", CombatTeam.Player), Unit("enemy", CombatTeam.Enemy), Project(Stun));
+            Assert.IsTrue(single.TryGetProfile(Stun, out var profile));
+            var session = CombatActionPointKernelTests.AreaSession(metadata: profile.RuleMetadata);
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0,
+                targetRolls: new[]
+                {
+                    new CombatTargetResolutionRolls("a", new CombatResolutionRolls(0, 100, 100, 100, 0)),
+                    new CombatTargetResolutionRolls("z", new CombatResolutionRolls(0, 100, 100, 100, 100)),
+                });
+            var result = service.Prepare(session, command, service.Preview(session, command), out var apply);
+            Assert.IsTrue(result.Succeeded, result.RejectionReason);
+            session.Combatants.TryGet("a", out var a); session.Combatants.TryGet("z", out var z);
+            Assert.IsFalse(a.HasStatus(CombatStatusKind.Stun)); Assert.IsFalse(z.HasStatus(CombatStatusKind.Stun));
+            Assert.AreEqual(10000, a.CurrentHealth); Assert.AreEqual(10000, z.CurrentHealth);
+            apply(); Assert.IsTrue(a.HasStatus(CombatStatusKind.Stun)); Assert.IsFalse(z.HasStatus(CombatStatusKind.Stun));
+            Assert.AreEqual("a", result.Damage[0].TargetId); Assert.AreEqual("z", result.Damage[1].TargetId);
+        }
         [TestCase(false)] [TestCase(true)]
         public void MindContestUsesAuthoritativeInputsAndHasNoOldFloorAfterRealmCorrection(bool missing)
         {

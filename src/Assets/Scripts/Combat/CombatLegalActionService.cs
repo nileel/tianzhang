@@ -53,6 +53,13 @@ namespace TianZhang.Combat
         {
             foreach (CombatAttackProfile profile in session.AttackProfiles.Where(profile => profile.Kind == profileKind))
             {
+                if (profile.Area != CombatAttackArea.Single)
+                {
+                    for (int direction = 0; direction < 6; direction++)
+                        AddIfValid(session, new CombatCommand(commandKind, actor.Id, profileId: profile.Id,
+                            attackDirection: direction), actions);
+                    continue;
+                }
                 foreach (CombatantSnapshot target in session.Combatants.All)
                 {
                     if (!target.IsAlive || !profile.AllowsTarget(actor.Team, target.Team))

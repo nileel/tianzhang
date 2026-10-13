@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13已核对U-GZ-R2-AOE-QUERY-01完成归档；实时路径扫描和风险预检均通过，现可执行。",
+  "stateReason": "2026-10-13完成多目标原子结算、一次费用和1对2纯会话；本卡三组EditMode测试290/290通过，完成归档。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-RESOLVE-01.txt",
@@ -94,3 +94,21 @@ EditMode覆盖多名敌人分别命中/闪避/格挡/死亡、稳定随机重放
 ## 停止条件
 
 原子提交或既有单目标费用语义无法保持、要修改伤害/AP参数或新增通用事务框架时停止；不得按敌人循环调用一次完整Execute来凑群攻。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+
+## 本轮实现与验证结果
+
+2026-10-13，Codex使用共享入口选定并传入CLI的gpt-6.1-sol。写入前复核批准合同、父项关闭条件、完整目标逻辑及EncounterCoordinator直接调用者；目标集合、报价与原子提交是强耦合的同一结果，由单主模型统一实施和复核，无独立辅助问题，不调用子智能体或第二责任会话。实际PowerShell、Git、dotnet及Unity批处理能力可用；未另行声称推理强度已核实。
+
+- CombatCommand增加本次AttackDirection和只读CombatTargetResolutionRolls集合。区域命令不指定个人TargetId或Destination；单目标沿原Rolls接口。预览和合法命令枚举不要求随机输入，确认结算要求按报价TargetIds的Ordinal顺序逐名携带独立五项百分比输入（有限值0至100，控制样本也须提供），缺项、重复、错位或区外ID拒绝。命令复制输入集合，结果的每条CombatDamageResult携带真实TargetId及该目标Rolls，供确定性重放和后续表现消费。
+- CombatCommandPreview.AttackArea保存QUERY的同源攻击者、档案、O/d、两格及逐格原因和完整目标集合。ValidateConfirmation复用Prepare的同一报价重验门，供ENCOUNTER先重验再按稳定ID采样；Prepare再次同步重验，不替换报价集合。角色位置、HP、Facing、回合、上下文、费用事实、格位合法性/原因或目标集合变化使旧报价失效。零合法敌人保留区域可见事实但拒绝确认，不扣费、不计次；核心没有运行时随机源。
+- PrepareValidated复制攻击者和全部目标，在私有副本完成每个目标的伤害、格挡、控制等原规则和一次灵力/冷却准备，全部成功后才返回一个同步commit。CommandService仍唯一提交一次AP、退款、CT和共享次数；任一准备失败不会发布部分HP、状态、叠层、灵力、AP、冷却或CT。区域各目标使用相同的行动前攻击加成，雷劫层数按原命中语义只消耗一次；全部闪避仍一次收费/计次。
+- CombatSession只新增批准的1v2，保留1v1/2v2并拒绝其他规模。CombatResultBuilder和TurnScheduler原实现已按全部存活实例判断与调度，无需修改；测试证明部分死亡仍进行、最后敌人死亡胜利、玩家死亡失败、三个实例均有回合。恢复、状态术法、换装/用物、移动和原单目标的既有用例继续通过。
+- 本worktree初始缺simulations/BattleSim/obj/project.assets.json，先一次dotnet restore simulations/BattleSim/BattleSim.csproj准备环境；dotnet build -c Release --no-restore simulations/BattleSim通过，0警告、0错误。只验证共享源码编译，不运行平衡报告，不修改模拟器或借用其他worktree缓存。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ResultXmlPath指定本卡临时结果文件，已在本worktree的src真实运行。三组任务所需测试290/290通过：CombatRuntimeKernelTests112、CombatActionPointKernelTests53、CombatRealmStatusTests125，均无失败/跳过/未定。新增28例覆盖两种区域独立结果/稳定重放、一次费用/灵力/CT/冷却/计数及全闪避、取消准备、第二目标溢出无部分提交、独立控制、空集合、非法随机绑定、目标/空间/方向/上下文过期、1v2调度与胜负；原单目标/AP/状态回归同时通过。
+- 上述入口默认执行完整EditMode，全量1192项中1188通过、4失败、0跳过。4项范围外环境失败为ClothWideSleeveExperimentEditorTests.SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings缺实验Blender源，ConfigEditorCoreTests.ActualWindowOpensSelectsEditsRendersUndoesAndGuardsClose在-nographics下无图形设备，以及CombatUnitPresentationProfileEditorTests的BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently/FormalProfileSetHasNoFuYuanDependency缺批准石甲猴FBX源。脚本退出1（Unity退出2），不声称全量通过，也不修补这些范围外资产/编辑器。三组相关输入未再变化，保留其实际通过证据，不重复运行。原始XML与日志副本分别在当前worktree忽略的src/Library/U-GZ-R2-AOE-RESOLVE-01-results.xml、src/Temp/U-GZ-R2-AOE-RESOLVE-01-unity.log。
+- check-unity-assembly-boundaries.ps1通过（19程序集、2 asmref）。无新增文件、meta、程序集依赖、数据或场景修改。结构依据为UNITY_STRUCTURE.md/runtime和实时Combat/测试asmdef、源码；已加载技能参考project-structure-discovery、content-and-systems、ai-workflows、unity-validation。完整复核九条业务路径diff；Unity测试入口已恢复受保护源码/资源，最终没有非请求系统差异。
+- 写前get-experience-risk-preflight.ps1返回taskId一致，taskCardDigest=fbd29d082edd791e83623fd9801c29e9b493e4e2c377ef0df0e910a70498ebc9、indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff，matched/mustRead/gates均空，与共享入口及卡头投影一致。本轮既有diff和验证未产生需要另外收集的错误经验候选。
+
+完成收尾只归档本卡并移除自身backlog/queue行；其他任务对本ID的具名前置引用继续保留，不提升或重排下游。运行任务卡CodexClosedOrNonReady后置、审核文本和本轮路径空白检查；按限定路径形成唯一candidate，不执行集成。
+
+未验证边界：正式两敌创建/采样/演出、武器内容投影、六向输入和画面预览、整场奖励/回城、正式玩家闭环与数值平衡仍归后续卡；纯核心结算和1v2会话通过不等于这些正式入口已启用。完整EditMode的4项范围外环境失败仍未解决。

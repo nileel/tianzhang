@@ -8,7 +8,8 @@ namespace TianZhang.Combat
     {
         internal CombatCommandPreview(CombatSession session, CombatCommand command, CombatActionResult validation,
             int cost, int minimum, int spirit, int penalty, int cooldown, CombatActionEconomyModifier modifier,
-            string facts, bool remains, CombatTurnPreview turn, int baseNetCost, bool repeats, int count, int multiplier)
+            string facts, bool remains, CombatTurnPreview turn, int baseNetCost, bool repeats, int count, int multiplier,
+            CombatAttackAreaQueryResult attackArea)
         {
             Session = session; Command = command; Validation = validation; ActionPointCostUnits = cost;
             MinimumNetCostUnits = minimum; SpiritCost = spirit; CtPenalty = penalty; ReuseCooldownTicks = cooldown;
@@ -19,6 +20,7 @@ namespace TianZhang.Combat
             Modifier = modifier; Facts = facts; RemainsInTurn = remains; Turn = turn;
             BaseNetCostUnits = baseNetCost; AppliesRepeatCost = repeats;
             CommittedUseCount = count; RepeatMultiplierPermille = multiplier;
+            AttackArea = attackArea;
             RuleSetVersion = session.RuleSet?.RuleSetVersion ?? string.Empty;
             RuleSetSourceDigest = session.RuleSet?.SourceDigest ?? string.Empty;
             AbilityTierId = session.TryGetProfile(command.ProfileId, out var profile)
@@ -48,6 +50,8 @@ namespace TianZhang.Combat
         public CombatCommandKind Kind => Command.Kind;
         public string TargetId => Command.TargetId;
         public string ProfileId => Command.ProfileId;
+        public int? AttackDirection => Command.AttackDirection;
+        public CombatAttackAreaQueryResult AttackArea { get; }
         public HexCoord? Destination => Command.Destination;
         public int SlotIndex => Command.SlotIndex;
         public long ContextVersion => Command.ContextVersion;
@@ -84,7 +88,7 @@ namespace TianZhang.Combat
         public CombatCommandPreview Preview(CombatSession session, CombatCommand command)
         {
             if (session == null || command == null) throw new ArgumentNullException(session == null ? nameof(session) : nameof(command));
-            CombatActionResult validation = session.ValidateRules(command);
+            CombatActionResult validation = session.ValidateRules(command, out var attackArea);
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
             int cost = 0, minimum = 0, spirit = 0, penalty = 0, cooldown = 0;
             CombatActionEconomyModifier modifier = null;
@@ -158,7 +162,7 @@ namespace TianZhang.Combat
             CombatTurnPreview turn = validation.Succeeded ? session.TurnScheduler.PreviewTurnEnd(command.ActorId,
                 session.PendingCtPenalty + penalty, command.Kind == CombatCommandKind.Wait, session.Combatants.All) : null;
             return new CombatCommandPreview(session, command, validation, cost, minimum, spirit, penalty, cooldown,
-                modifier, Facts(session), remains, turn, baseNetCost, repeats, count, multiplier);
+                modifier, Facts(session), remains, turn, baseNetCost, repeats, count, multiplier, attackArea);
         }
 
         /// <summary>Immediate authority requests form a fresh quote and commit it without yielding.</summary>
@@ -176,31 +180,12 @@ namespace TianZhang.Combat
         public CombatActionResult Prepare(CombatSession session, CombatCommand command, CombatCommandPreview quote, out Action apply)
         {
             apply = null;
-            if (session == null || command == null || quote == null) throw new ArgumentNullException(nameof(quote));
-            if (quote.Session != session || quote.TurnSequence != session.TurnSequence || quote.StateVersion != session.StateVersion ||
-                quote.ActorId != command.ActorId || quote.Kind != command.Kind || quote.TargetId != command.TargetId ||
-                quote.ProfileId != command.ProfileId || quote.Destination != command.Destination || quote.SlotIndex != command.SlotIndex ||
-                quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
-                quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
-                quote.Command.InstanceId != command.InstanceId ||
-                quote.Command.ItemQuantityCost != command.ItemQuantityCost ||
-                (command.Kind == CombatCommandKind.UseItem && quote.ItemResource?.Facts != session.ExternalResources?.QueryItem(command)?.Facts) ||
-                (command.Kind == CombatCommandKind.SwapEquipment && quote.EquipmentFacts != session.ExternalResources?.QueryEquipment(command)?.Facts))
-                return CombatActionResult.Rejected("combat_quote_stale");
-            if (!quote.IsLegal) return quote.Validation;
-            CombatCommandPreview current = Preview(session, command);
-            if (!current.IsLegal) return current.Validation;
-            if (quote.ActionPointCostUnits != current.ActionPointCostUnits || quote.MinimumNetCostUnits != current.MinimumNetCostUnits ||
-                quote.CommittedUseCount != current.CommittedUseCount || quote.RepeatMultiplierPermille != current.RepeatMultiplierPermille ||
-                quote.AbilityInstanceId != current.AbilityInstanceId || quote.AbilityTierId != current.AbilityTierId ||
-                quote.RuleSetVersion != current.RuleSetVersion || quote.RuleSetSourceDigest != current.RuleSetSourceDigest ||
-                quote.SpiritCost != current.SpiritCost || quote.CtPenalty != current.CtPenalty || quote.ReuseCooldownTicks != current.ReuseCooldownTicks ||
-                quote.UnitsPerRange != current.UnitsPerRange || !quote.MovementPath.SequenceEqual(current.MovementPath) ||
-                !quote.MovementEdges.SequenceEqual(current.MovementEdges))
-                return CombatActionResult.Rejected("combat_quote_stale");
+            CombatActionResult confirmation = RevalidateQuote(session, command, quote, out CombatCommandPreview current);
+            if (!confirmation.Succeeded) return confirmation;
             CombatActionResult result;
             Action commit;
-            try { result = resolver.PrepareValidated(session, command, current.Validation, current.ReuseCooldownTicks, out commit); }
+            try { result = resolver.PrepareValidated(session, command, current.Validation, current.ReuseCooldownTicks,
+                current.AttackArea, out commit); }
             catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
             if (!result.Succeeded) return result;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
@@ -224,6 +209,50 @@ namespace TianZhang.Combat
                 }
             };
             return result.WithPayment(current.ActionPointCostUnits, quotedRefund, current.StateVersion + 1);
+        }
+
+        /// <summary>Owning callers must pass this exact quote gate before sampling, then prepare synchronously.</summary>
+        public CombatActionResult ValidateConfirmation(CombatSession session, CombatCommand command, CombatCommandPreview quote) =>
+            RevalidateQuote(session, command, quote, out _);
+
+        private CombatActionResult RevalidateQuote(CombatSession session, CombatCommand command, CombatCommandPreview quote,
+            out CombatCommandPreview current)
+        {
+            current = null;
+            if (session == null || command == null || quote == null) throw new ArgumentNullException(nameof(quote));
+            if (quote.Session != session || quote.TurnSequence != session.TurnSequence || quote.StateVersion != session.StateVersion ||
+                quote.ActorId != command.ActorId || quote.Kind != command.Kind || quote.TargetId != command.TargetId ||
+                quote.ProfileId != command.ProfileId || quote.Destination != command.Destination || quote.SlotIndex != command.SlotIndex ||
+                quote.AttackDirection != command.AttackDirection ||
+                quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
+                quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
+                quote.Command.InstanceId != command.InstanceId ||
+                quote.Command.ItemQuantityCost != command.ItemQuantityCost ||
+                (command.Kind == CombatCommandKind.UseItem && quote.ItemResource?.Facts != session.ExternalResources?.QueryItem(command)?.Facts) ||
+                (command.Kind == CombatCommandKind.SwapEquipment && quote.EquipmentFacts != session.ExternalResources?.QueryEquipment(command)?.Facts))
+                return CombatActionResult.Rejected("combat_quote_stale");
+            if (!quote.IsLegal) return quote.Validation;
+            current = Preview(session, command);
+            if (!SameAttackArea(quote.AttackArea, current.AttackArea))
+                return CombatActionResult.Rejected("combat_quote_stale");
+            if (!current.IsLegal) return current.Validation;
+            if (quote.ActionPointCostUnits != current.ActionPointCostUnits || quote.MinimumNetCostUnits != current.MinimumNetCostUnits ||
+                quote.CommittedUseCount != current.CommittedUseCount || quote.RepeatMultiplierPermille != current.RepeatMultiplierPermille ||
+                quote.AbilityInstanceId != current.AbilityInstanceId || quote.AbilityTierId != current.AbilityTierId ||
+                quote.RuleSetVersion != current.RuleSetVersion || quote.RuleSetSourceDigest != current.RuleSetSourceDigest ||
+                quote.SpiritCost != current.SpiritCost || quote.CtPenalty != current.CtPenalty || quote.ReuseCooldownTicks != current.ReuseCooldownTicks ||
+                quote.UnitsPerRange != current.UnitsPerRange || !quote.MovementPath.SequenceEqual(current.MovementPath) ||
+                !quote.MovementEdges.SequenceEqual(current.MovementEdges))
+                return CombatActionResult.Rejected("combat_quote_stale");
+            return current.Validation;
+        }
+
+        private static bool SameAttackArea(CombatAttackAreaQueryResult quoted, CombatAttackAreaQueryResult current)
+        {
+            if (quoted == null || current == null) return quoted == current;
+            return quoted.ActorId == current.ActorId && quoted.Profile == current.Profile &&
+                quoted.Origin == current.Origin && quoted.Direction == current.Direction &&
+                quoted.TargetIds.SequenceEqual(current.TargetIds) && quoted.Cells.SequenceEqual(current.Cells);
         }
 
         public CombatActionResult Validate(CombatSession session, CombatCommand command) => Preview(session, command).Validation;

@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
-    /// <summary>Pure deterministic projection of the established single-target combat rules.</summary>
+    /// <summary>Prepares deterministic target effects before one command publishes any state.</summary>
     public sealed class CombatActionResolver
     {
         private const float BaseHitRate = 100f;
@@ -21,13 +22,33 @@ namespace TianZhang.Combat
             CombatCommand command,
             CombatActionResult validation,
             int reuseCooldownTicks,
+            CombatAttackAreaQueryResult attackArea,
             out Action commit)
         {
             commit = null;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot originalActor);
             var actor = originalActor.CopyForResolution();
-            session.Combatants.TryGet(command.TargetId, out CombatantSnapshot originalTarget);
-            var target = originalTarget == originalActor ? actor : originalTarget?.CopyForResolution();
+            var originals = new List<CombatantSnapshot>();
+            var targets = new List<CombatantSnapshot>();
+            if (attackArea != null)
+            {
+                if (command.TargetRolls.Count != attackArea.TargetIds.Count)
+                    return CombatActionResult.Rejected("combat_target_rolls_invalid");
+                for (int index = 0; index < attackArea.TargetIds.Count; index++)
+                {
+                    var input = command.TargetRolls[index];
+                    if (input.TargetId != attackArea.TargetIds[index] || !ValidAreaRolls(input.Rolls))
+                        return CombatActionResult.Rejected("combat_target_rolls_invalid");
+                    session.Combatants.TryGet(input.TargetId, out var original);
+                    originals.Add(original);
+                    targets.Add(original.CopyForResolution());
+                }
+            }
+            else if (session.Combatants.TryGet(command.TargetId, out var originalTarget))
+            {
+                originals.Add(originalTarget);
+                targets.Add(originalTarget == originalActor ? actor : originalTarget.CopyForResolution());
+            }
             if (command.Kind is not (CombatCommandKind.Guard or CombatCommandKind.Wait or CombatCommandKind.EndTurn))
                 actor.IsGuarding = false;
             CombatActionResult result = command.Kind switch
@@ -36,7 +57,7 @@ namespace TianZhang.Combat
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine =>
-                    ResolveAttack(session, command, actor, target, reuseCooldownTicks),
+                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, attackArea != null),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
                 CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
                 CombatCommandKind.SwapEquipment => ResolveEquipment(actor, command),
@@ -46,10 +67,19 @@ namespace TianZhang.Combat
             if (result.Succeeded) commit = () =>
             {
                 originalActor.CommitResolvedState(actor);
-                if (originalTarget != null && originalTarget != originalActor) originalTarget.CommitResolvedState(target);
+                for (int index = 0; index < originals.Count; index++)
+                    if (originals[index] != originalActor) originals[index].CommitResolvedState(targets[index]);
             };
             return result;
         }
+
+        private static bool ValidAreaRolls(CombatResolutionRolls rolls) =>
+            ValidPercent(rolls.HitPercent) && ValidPercent(rolls.CriticalPercent) &&
+            ValidPercent(rolls.BlockPercent) && ValidPercent(rolls.SoulShieldPercent) &&
+            rolls.ControlRoll.HasValue && ValidPercent(rolls.ControlRoll.Value);
+
+        private static bool ValidPercent(float value) => !float.IsNaN(value) && !float.IsInfinity(value) &&
+            value >= 0 && value <= 100;
 
         private static CombatActionResult ResolveEquipment(CombatantSnapshot actor, CombatCommand command)
         {
@@ -89,18 +119,18 @@ namespace TianZhang.Combat
             CombatSession session,
             CombatCommand command,
             CombatantSnapshot actor,
-            CombatantSnapshot target,
-            int cooldown)
+            IReadOnlyList<CombatantSnapshot> targets,
+            int cooldown, bool isArea)
         {
             session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile);
 
             bool control = profile.RuleMetadata != null &&
                 (profile.RuleMetadata.ControlChancePermille > 0 || profile.RuleMetadata.ControlUsesMindContest);
-            if (control && (!command.Rolls.ControlRoll.HasValue ||
-                float.IsNaN(command.Rolls.ControlRoll.Value) || float.IsInfinity(command.Rolls.ControlRoll.Value) ||
-                command.Rolls.ControlRoll.Value < 0 || command.Rolls.ControlRoll.Value > 100))
+            if (control && !isArea && (!command.Rolls.ControlRoll.HasValue ||
+                !ValidPercent(command.Rolls.ControlRoll.Value)))
                 return CombatActionResult.Rejected("combat_control_roll_invalid");
 
+            CombatantSnapshot target = targets[0];
             bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
             bool kuxing = profile.RuleMetadata?.PrototypeDefinitionRef == "KuxingAction";
             int healthRecovery = 0;
@@ -134,24 +164,37 @@ namespace TianZhang.Combat
             {
                 target.ApplyAttributeStatus(profile.RuleMetadata, RealmCoefficient(session, actor, target),
                     session.RuleSet.Global.RelativeStatusLimitPermille, actor.GetAbilityInstanceId(profile.Id), targetsSelf);
-                result = CombatActionResult.AttackSuccess(spiritCost, new CombatDamageResult(0, true, false, false, false));
+                result = CombatActionResult.AttackSuccess(spiritCost,
+                    new CombatDamageResult(0, true, false, false, false).ForTarget(target.Id, command.Rolls));
             }
             else
             {
                 bool lowHealthBonus = false;
                 if (kuxing) { actor.TryGetRealmOrder(session.RuleSet, out int actorOrder); lowHealthBonus = actorOrder >= 2; }
-                CombatDamageResult damage = ResolveEffect(actor, target, profile, command.Rolls, lowHealthBonus);
-                if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
+                var damageResults = new List<CombatDamageResult>();
+                // Action bonuses use the same pre-effect source for every area target and are consumed once
+                // if any target hits. An all-miss action preserves the established stack semantics.
+                var source = isArea ? actor.CopyForResolution() : actor;
+                for (int index = 0; index < targets.Count; index++)
                 {
-                    actor.TryGetRealmOrder(session.RuleSet, out int sourceOrder);
-                    target.ApplyWaterPrototype(profile.RuleMetadata, session.RuleSet, RealmCoefficient(session, actor, target),
-                        sourceOrder, actor.GetAbilityInstanceId(profile.Id), actor);
+                    target = targets[index];
+                    var rolls = isArea ? command.TargetRolls[index].Rolls : command.Rolls;
+                    var effectActor = isArea ? source.CopyForResolution() : actor;
+                    CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus);
+                    if (isArea && damage.IsHit) actor.LeijieStacks = effectActor.LeijieStacks;
+                    if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
+                    {
+                        actor.TryGetRealmOrder(session.RuleSet, out int sourceOrder);
+                        target.ApplyWaterPrototype(profile.RuleMetadata, session.RuleSet, RealmCoefficient(session, actor, target),
+                            sourceOrder, actor.GetAbilityInstanceId(profile.Id), actor);
+                    }
+                    if (control && damage.IsHit && damage.FinalDamage > 0 && target.IsAlive &&
+                        !target.HasStatus(CombatStatusKind.Stun) && !target.HasStatus(CombatStatusKind.Xuantong) &&
+                        ControlSucceeds(session, actor, target, profile.RuleMetadata, rolls.ControlRoll.Value))
+                        target.ApplyStatus(CombatStatusKind.Stun, 1, sourceRef: actor.GetAbilityInstanceId(profile.Id));
+                    damageResults.Add(damage.ForTarget(target.Id, rolls));
                 }
-                if (control && damage.IsHit && damage.FinalDamage > 0 && target.IsAlive &&
-                    !target.HasStatus(CombatStatusKind.Stun) && !target.HasStatus(CombatStatusKind.Xuantong) &&
-                    ControlSucceeds(session, actor, target, profile.RuleMetadata, command.Rolls.ControlRoll.Value))
-                    target.ApplyStatus(CombatStatusKind.Stun, 1, sourceRef: actor.GetAbilityInstanceId(profile.Id));
-                result = CombatActionResult.AttackSuccess(spiritCost, damage);
+                result = CombatActionResult.AttackSuccess(spiritCost, damageResults.ToArray());
             }
             if (healthRecovery > 0 && actor.IsAlive) actor.RestoreHealth(healthRecovery);
             // 全局刻重用冷却账本只由 reuseCooldownTicks 启动；CT 惩罚由 CommandService 单独累计。

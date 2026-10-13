@@ -881,13 +881,18 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void SessionRejectsNonMatchingSideCardinality()
+        public void SessionAllowsOneVsTwoButRejectsOtherUnsupportedSideCardinalities()
         {
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10);
             CombatantSnapshot enemyOne = CreateCombatant("enemy_one", CombatTeam.Enemy, new HexCoord(1, 0), 10, 100, 20, 10);
             CombatantSnapshot enemyTwo = CreateCombatant("enemy_two", CombatTeam.Enemy, new HexCoord(2, 0), 10, 100, 20, 10);
 
-            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne, enemyTwo }, new FixedRangeQuery(true)));
+            Assert.DoesNotThrow(() => CreateSession(new[] { player, enemyOne, enemyTwo }, new FixedRangeQuery(true)));
+            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player }, new FixedRangeQuery(true)));
+            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne, enemyTwo,
+                CreateCombatant("third", CombatTeam.Enemy, new HexCoord(3, 0), 10, 100, 20, 10) }, new FixedRangeQuery(true)));
+            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne,
+                CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 10, 100, 20, 10) }, new FixedRangeQuery(true)));
         }
 
         [Test]
@@ -1519,7 +1524,7 @@ namespace TianZhang.Tests.EditMode
             service.AdvanceUntilAction(session);
             string before = AreaQueryState(session);
             var rejected = service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, profile.Id));
-            Assert.AreEqual("combat_attack_area_requires_resolution", rejected.RejectionReason);
+            Assert.AreEqual("combat_attack_direction_invalid", rejected.RejectionReason);
             Assert.AreEqual(before, AreaQueryState(session));
         }
 
@@ -1550,6 +1555,156 @@ namespace TianZhang.Tests.EditMode
             new CombatAttackProfile("area_fixture", CombatAttackKind.Basic, CombatAttackEffect.Physical,
                 1, area == CombatAttackArea.ForwardPair ? 2 : 1, 40000, 40000, 0, 0,
                 physicalMultiplier: 1f, area: area);
+
+        [TestCase(CombatAttackArea.ForwardPair)] [TestCase(CombatAttackArea.AdjacentPair)]
+        public void AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(CombatAttackArea area)
+        {
+            foreach (bool reverse in new[] { false, true })
+            {
+                var s = CombatActionPointKernelTests.AreaSession(area, reverse: reverse);
+                s.Combatants.TryGet("a", out var a); s.Combatants.TryGet("z", out var z);
+                a.BlockRate = 100; a.BlockReduction = 50; z.DodgeRate = 100;
+                var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area",
+                    attackDirection: 0, targetRolls: new[]
+                    {
+                        new CombatTargetResolutionRolls("a", new CombatResolutionRolls(0, 100, 0, 17, 31)),
+                        new CombatTargetResolutionRolls("z", new CombatResolutionRolls(100, 7, 100, 23, 73)),
+                    });
+                var service = new CombatCommandService(); var quote = service.Preview(s, command);
+                CollectionAssert.AreEqual(new[] { "a", "z" }, quote.AttackArea.TargetIds);
+                string before = AreaQueryState(s);
+                var prepared = service.Prepare(s, command, quote, out var apply);
+                Assert.IsTrue(prepared.Succeeded, prepared.RejectionReason); Assert.AreEqual(before, AreaQueryState(s));
+                CollectionAssert.AreEqual(new[] { "a", "z" }, prepared.Damage.Select(value => value.TargetId));
+                Assert.AreEqual(10, prepared.Damage[0].FinalDamage); Assert.IsTrue(prepared.Damage[0].IsBlocked);
+                Assert.IsFalse(prepared.Damage[1].IsHit); Assert.AreEqual(0, prepared.Damage[1].FinalDamage);
+                Assert.AreEqual(31, prepared.Damage[0].Rolls.ControlRoll); Assert.AreEqual(73, prepared.Damage[1].Rolls.ControlRoll);
+                Assert.AreEqual(17, prepared.Damage[0].Rolls.SoulShieldPercent);
+                apply(); Assert.AreEqual(9990, a.CurrentHealth); Assert.AreEqual(10000, z.CurrentHealth);
+            }
+        }
+
+        [Test]
+        public void AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo()
+        {
+            var s = CombatActionPointKernelTests.AreaSession(); var service = new CombatCommandService();
+            s.Combatants.TryGet("a", out var a); s.Combatants.TryGet("z", out var z);
+            a.ReceiveDamage(9985); z.ReceiveDamage(9960);
+            Assert.IsTrue(service.Execute(s, CombatActionPointKernelTests.AreaCommand(s)).Succeeded);
+            Assert.IsFalse(a.IsAlive); Assert.AreEqual(20, z.CurrentHealth);
+            Assert.AreEqual(CombatSessionOutcome.Ongoing, new CombatResultBuilder().Build(s).Outcome);
+            Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            var last = service.Execute(s, CombatActionPointKernelTests.AreaCommand(s));
+            Assert.IsTrue(last.Succeeded); Assert.AreEqual("z", last.Damage.Single().TargetId);
+            Assert.AreEqual(CombatSessionOutcome.Victory, new CombatResultBuilder().Build(s).Outcome);
+            Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase); Assert.IsFalse(service.AdvanceUntilAction(s).HasActor);
+            CollectionAssert.AreEquivalent(new[] { "a", "z" }, new CombatResultBuilder().Build(s).DefeatedCombatantIds);
+
+            s = CombatActionPointKernelTests.AreaSession(); s.Combatants.TryGet("player", out var player);
+            player.ReceiveDamage(10000);
+            Assert.AreEqual(CombatSessionOutcome.Defeat, new CombatResultBuilder().Build(s).Outcome);
+            Assert.IsFalse(service.AdvanceUntilAction(s).HasActor);
+        }
+
+        [Test]
+        public void OneVsTwoSchedulesEveryLivingInstance()
+        {
+            var player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10);
+            var a = CreateCombatant("a", CombatTeam.Enemy, new HexCoord(1, 0), 100, 100, 20, 10);
+            var z = CreateCombatant("z", CombatTeam.Enemy, new HexCoord(2, 0), 100, 100, 20, 10);
+            var s = CreateSession(new[] { player, a, z }, new FixedRangeQuery(true)); var service = new CombatCommandService();
+            var actors = new List<string>();
+            for (int index = 0; index < 3; index++)
+            {
+                string id = service.AdvanceUntilAction(s).ActorId; actors.Add(id);
+                Assert.IsTrue(service.Execute(s, new CombatCommand(CombatCommandKind.EndTurn, id)).Succeeded);
+            }
+            CollectionAssert.AreEquivalent(new[] { "player", "a", "z" }, actors);
+        }
+
+        [TestCase("move")] [TestCase("death")] [TestCase("origin")] [TestCase("facing")]
+        [TestCase("direction")] [TestCase("context")] [TestCase("cell")] [TestCase("reason")]
+        public void AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(string change)
+        {
+            var query = new MutableAreaQuery(); var s = CombatActionPointKernelTests.AreaSession(query: query);
+            var service = new CombatCommandService(); var command = CombatActionPointKernelTests.AreaCommand(s);
+            var quote = service.Preview(s, command); s.Combatants.TryGet("player", out var actor); s.Combatants.TryGet("z", out var z);
+            switch (change)
+            {
+                case "move": z.SetPosition(new HexCoord(3, 0)); break;
+                case "death": z.ReceiveDamage(10000); break;
+                case "origin": actor.SetPosition(new HexCoord(0, 1)); break;
+                case "facing": actor.Facing = 1; break;
+                case "direction": command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 1); break;
+                case "context": command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0, contextVersion: 1); break;
+                case "cell": query.BlockSecond = true; break;
+                case "reason": query.Reason = "changed_space_fact"; break;
+            }
+            string before = AreaQueryState(s); int samples = 0;
+            if (service.ValidateConfirmation(s, command, quote).Succeeded) samples += 10;
+            Assert.AreEqual(0, samples); Assert.AreEqual("combat_quote_stale", service.Execute(s, command, quote).RejectionReason);
+            Assert.AreEqual(before, AreaQueryState(s));
+        }
+
+        [TestCase("missing")] [TestCase("duplicate")] [TestCase("other")] [TestCase("reverse")]
+        public void AreaRequiresExactlyTheQuotedTargetRollBindings(string invalid)
+        {
+            var s = CombatActionPointKernelTests.AreaSession(); var service = new CombatCommandService();
+            var inputs = CombatActionPointKernelTests.AreaCommand(s).TargetRolls.ToList();
+            if (invalid == "missing") inputs.RemoveAt(1);
+            if (invalid == "duplicate") inputs[1] = inputs[0];
+            if (invalid == "other") inputs[1] = new CombatTargetResolutionRolls("player", inputs[1].Rolls);
+            if (invalid == "reverse") inputs.Reverse();
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0, targetRolls: inputs);
+            inputs.Clear(); Assert.That(command.TargetRolls, Is.Not.Empty, "Command owns its immutable replay inputs.");
+            string before = AreaQueryState(s);
+            Assert.AreEqual("combat_target_rolls_invalid", service.Execute(s, command).RejectionReason);
+            Assert.AreEqual(before, AreaQueryState(s));
+        }
+
+        [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
+        public void AreaInvalidIndependentSampleRejectsWithoutPartialEffects(int field)
+        {
+            var s = CombatActionPointKernelTests.AreaSession(); var values = new float[] { 0, 100, 100, 100, 100 };
+            values[field] = float.NaN;
+            var rolls = new CombatResolutionRolls(values[0], values[1], values[2], values[3], values[4]);
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0,
+                targetRolls: new[] { new CombatTargetResolutionRolls("a", new CombatResolutionRolls(0, 100, 100, 100, 100)),
+                    new CombatTargetResolutionRolls("z", rolls) });
+            string before = AreaQueryState(s);
+            Assert.AreEqual("combat_target_rolls_invalid", new CombatCommandService().Execute(s, command).RejectionReason);
+            Assert.AreEqual(before, AreaQueryState(s));
+        }
+
+        [Test]
+        public void AreaDiscoveryAndEmptyConfirmationDoNotSpendOrSample()
+        {
+            var s = CombatActionPointKernelTests.AreaSession(query: new FixedRangeQuery(true)); var service = new CombatCommandService();
+            string before = AreaQueryState(s);
+            var actions = new CombatLegalActionService(service).GetLegalActions(s, "player")
+                .Where(value => value.Kind == CombatCommandKind.BasicAttack).ToArray();
+            Assert.AreEqual(1, actions.Length); Assert.AreEqual(0, actions[0].AttackDirection); Assert.AreEqual("", actions[0].TargetId);
+            Assert.IsEmpty(actions[0].TargetRolls); Assert.AreEqual(before, AreaQueryState(s));
+            s.Combatants.TryGet("a", out var a); s.Combatants.TryGet("z", out var z);
+            a.SetPosition(new HexCoord(3, 0)); z.SetPosition(new HexCoord(4, 0));
+            var empty = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0);
+            var quote = service.Preview(s, empty); before = AreaQueryState(s);
+            Assert.AreEqual(2, quote.AttackArea.Cells.Count); Assert.IsEmpty(quote.AttackArea.TargetIds);
+            Assert.AreEqual("combat_attack_area_empty", service.ValidateConfirmation(s, empty, quote).RejectionReason);
+            Assert.AreEqual("combat_attack_area_empty", service.Execute(s, empty, quote).RejectionReason);
+            Assert.AreEqual(before, AreaQueryState(s));
+        }
+
+        private sealed class MutableAreaQuery : ICombatSpatialQuery
+        {
+            public bool BlockSecond; public string Reason = "";
+            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int min, int max) =>
+                new CombatRangeQueryResult(!(BlockSecond && target == new HexCoord(2, 0)), Reason);
+            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord target, int ap, int v,
+                IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+            public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int ap, int v,
+                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
+        }
 
         private static string AreaQueryState(CombatSession session) => PreviewState(session) + ":" +
             session.StateVersion + ":" + session.TurnSequence + ":" + session.HasCommittedBenefit + ":" +
