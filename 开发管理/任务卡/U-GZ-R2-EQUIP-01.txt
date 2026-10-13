@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：task_scope_requires_repreparation",
+  "stateReason": "2026-10-13负责人授权按既有药物规则修正满血用药验收；设计与SPELL前置均已完成归档，重新预检后恢复ready。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EQUIP-01.txt",
     "开发管理/任务归档/U-GZ-R2-EQUIP-01.txt",
@@ -46,7 +46,7 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11试玩反馈5；负责人DEC-20261012-CDAC7E80B6DA67/A已批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01准备本卡合同。本卡尚未实施；2026-10-13 QueueMaintenance已核对该设计前置完成归档，当前只保留U-GZ-R2-SPELL-01，待其完成后再重新预检，不能直接入队。
+来源：2026-10-11试玩反馈5；负责人DEC-20261012-CDAC7E80B6DA67/A已批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01准备本卡合同。2026-10-13已核对设计与U-GZ-R2-SPELL-01均完成归档；执行run c6398fdb-72c3-44d2-9df9-404fcfcd7cfb因满血用药验收与既有药物规则冲突停止，无业务提交。负责人随后授权保留既有规则修复合同，本次只修正验收并重新预检、恢复入队，业务实现和正式入口验收仍待执行。
 
 ## 必查范围
 
@@ -57,6 +57,7 @@
 - src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatHudSnapshot/CombatActionPreviewSnapshot；src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::Present/PresentAction、CombatActionPreviewView.cs::Present、CombatCommandInput.cs::Configure/ConfirmCandidate/CancelCandidate（后两文件同目录）。
 - src/Assets/DataConfig/Items.csv表头与item_iron_sword/item_iron_blade/item_huoxue_dan；对应已导入资源及Language既有名称/拒绝原因映射只读。
 - docs/道具/武器/铁剑.txt、铁刀.txt的资格与主槽位、库存与互换、取得与保存；docs/superpowers/specs/2026-10-09-combat-ap-growth-and-repeat-cost-design.md第8至9节。
+- docs/道具/丹药/练气疗伤丹药.txt的丹药模板与效果绑定；开发管理/统一行动力道具合同.txt第三节准备与唯一原子提交、第六节验收矩阵，明确满血合法无收益与真实拒绝的区别。
 - src/Assets/Tests/EditMode/GameRuntimeTests.cs、GameSaveEnvelopeTests.cs、CombatActionPointEquipmentTests.cs、CombatActionPointItemTests.cs（均同目录）的新档/库存/装配/消费/保存相关完整逻辑单元。
 - src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs::EnterFormalAdventure/RoundTrip；GuanzhongCombatItemPlayModeTests.cs::EnterFormalAdventure/RoundTrip/InitialWriteFailureClearsTheGrantAndDoesNotActivateTheNewSlot/ExistingSchemaFourSaveWithoutMedicineLoadsWithoutAnotherGrant（同目录）。
 - UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md及unity-agent-workflows所路由的运行时所有者/可见文本/验证规则。
@@ -66,8 +67,8 @@
 唯一结果：已批准小族真实新档的初始物资、首件装配、战斗互换/用药和非战斗保存读档构成完整玩家闭环。
 
 1. 消费SPELL已实现的练气资格，复用CreateNewPlayer→BeginEquippedNewGame→首次CaptureSave/写盘。一次发放铁剑1、铁刀1、活血丹3，默认铁剑主手；拥有数量包含已装的一件。初始化/写盘失败保留既有失败清理，不以半成品进入世界；代码已正确则只增加直接验证，不重写新档管线。
-2. QueryEquipment/GetEquipmentCandidates/QueryItem与既有库存/装配所有者提供真实事实；沿现有只读表现合同、行动栏与预览显示当前主手、备选武器拥有情况、丹药数量、资格不足/无库存/满血等真实原因。允许在既有表现类型中补必要只读投影，禁止另建缓存库存或资格状态；不改变其他场景/出身的默认显示行为。
-3. 使用现有“换装备”/“使用道具”→预览→确认/取消入口。取消、拒绝、过期预览或重复确认不扣费、不切换、不消耗；成功互换只提交一次，角色主手/实例与战斗普攻同步、库存各一；实战受伤后活血丹只扣一颗并按原规则治疗。满血、零库存、无资格、重复装备等拒绝不产生部分提交。
+2. QueryEquipment/GetEquipmentCandidates/QueryItem与既有库存/装配所有者提供真实事实；沿现有只读表现合同、行动栏与预览显示当前主手、备选武器拥有情况、丹药数量、资格不足/无库存等真实拒绝原因。满血仅表示实际治疗收益为0，其他条件合法时仍可预览并确认，不以满血禁用或拒绝使用。允许在既有表现类型中补必要只读投影，禁止另建缓存库存或资格状态；不改变其他场景/出身的默认显示行为。
+3. 使用现有“换装备”/“使用道具”→预览→确认/取消入口。取消、拒绝、过期预览或重复确认不扣费、不切换、不消耗；成功互换只提交一次，角色主手/实例与战斗普攻同步、库存各一；实战受伤后活血丹只扣一颗并按原规则治疗。满血且其他条件合法时使用成功、恢复0，仍扣一颗和完整AP、退出Guard并记录成功根动作与版本，不能Wait。零库存、无资格、重复装备等拒绝不产生部分提交。
 4. 首件装配必须在首次保存前通过既有BeginEquippedNewGame完成；不放宽QueryEquipment来给旧空主手补装备。战后沿既有非战斗保存入口存盘、读档原样恢复；重进城镇/野外/战斗不重复发放。旧凡人小族档不升境、不补发、不迁移，沿既有真实资格拒绝提示；按2026-10-13修订合同，试玩变更说明由SPELL的创角摘要承载，不要求从旧档识别出身或追加专属说明。旧合法练气档保留消耗后状态，其他出身不变。
 5. 修改两个现存PlayMode的成功链为正式菜单创建，不调用PrepareEquippedPlayerFixture、RestoreProgression、直接注入库存或重开装备新档。SPELL已同步的Item初始化前提继续保留；负向用例可独立构造库存/资格/过期条件但必须明确为隔离边界，不拿来替代成功链。
 
@@ -80,12 +81,13 @@ expectedPaths为完整精确允许集合；全部Unity文件已存在，没有�
 ## 模型协作
 
 2026-10-13准备ready复核：有界实现，产品语义已由负责人选择A冻结；资格、投影与正式入口证据耦合，由卡头gpt-6.1-sol单模型统一复核，无独立只读问题，不调用辅助。建议high尚非入口已核实的配置；实际工具可运行风险预检，EXP-UNITY-015与EXP-UNITY-016开工前正文均已消费，Unity运行时门禁仍由执行轮满足。目标模型不可用按既有失败合同停止，不换模型。
+本次重新准备已按负责人授权消除满血用药语义冲突；沿用同一有界实现、路径和单模型组合，无新增所有者或独立辅助问题。执行前仍须消费最新风险预检，不把本次合同修订视作Unity验收完成。
 
 ## 验证
 
 - Unity EditMode直接检查GameRuntimeTests、GameSaveEnvelopeTests、CombatActionPointEquipmentTests、CombatActionPointItemTests的相关用例：首次发放与默认主手、资格/库存/重复提交拒绝、一次结算、保存恢复一致；不通过修改存档版本或数据定义制造成功。
 - Unity PlayMode使用GuanzhongCombatEquipmentPlayModeTests、GuanzhongCombatItemPlayModeTests，从正式菜单新档→小族→创角说明→城镇→首战，逐步证明显示、选择、预览、确认、应用、保存、读档与重入。首次磁盘记录必须已含两武器各1、丹药3及铁剑主手，未经测试重写存档。
-- 真实按钮预览铁剑→铁刀并取消，状态/资源/库存不变；再确认只付一次并同步普攻，反向换回亦成立。实战受伤后使用丹药，核对AP/MP、HP、数量与版本；满血/零库存/无资格、取消、过期预览及重复确认不消耗。成功链不得用强制境界、库存、确定命中/直接伤害夹具替代实际玩家过程；可保留独立的确定性事务单测并标注证据性质。
+- 真实按钮预览铁剑→铁刀并取消，状态/资源/库存不变；再确认只付一次并同步普攻，反向换回亦成立。实战受伤后使用丹药，核对AP/MP、HP、数量与版本；满血且其他条件合法时确认成功，HP不变、药物减一、扣完整AP、退出Guard且不能Wait，库存与会话版本各成功变更一次，原报价重复确认不消耗。零库存/无资格、取消、过期预览及重复确认不消耗。成功链不得用强制境界、库存、确定命中/直接伤害夹具替代实际玩家过程；可保留独立的确定性事务单测并标注证据性质。
 - 战斗按现有正常胜负结果回城，沿SaveAndReturnToMenu→LoadPlayer保存读档；核对主手/实例、境界、术法与消耗后库存，重入城镇/野外/战斗不补发。覆盖首次写盘失败、旧凡人小族档、旧合法练气档及其他出身新档；不增加尚未获批的战斗中存盘或强退入口。
 - 实际Game View检查创角物资说明、当前装备/拥有/数量/拒绝提示与预览在1920×1080、1366×768均可读且不遮挡确认取消；需要改布局时先取得运行时尺寸/刷新所有者证据，若需场景/新资源则停写重新准备。记录实际截图、状态和测试XML到本worktree src/Logs，不提交运行产物。未取得完整正式入口证据不得完成。
 
