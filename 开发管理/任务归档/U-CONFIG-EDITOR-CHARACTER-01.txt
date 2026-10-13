@@ -1,0 +1,106 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-CHARACTER-01",
+  "title": "配置编辑器角色物品与文本六表适配",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-13六表适配完成；Unity图形模式专项21/21通过，字段、嵌套往返、非法输入与真实窗口编辑撤销已验证；归档自身，保留下游具名前置。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-CHARACTER-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-CHARACTER-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor/CharacterTables.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CharacterTables.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/GongFaTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/GongFaTable.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCharacterTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCharacterTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-CHARACTER-01 · 配置编辑器角色物品与文本六表适配
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/Characters.csv
+- src/Assets/DataConfig/Enemies.csv
+- src/Assets/DataConfig/Items.csv
+- src/Assets/DataConfig/GongFa.csv
+- src/Assets/DataConfig/AppearanceProfiles.csv
+- src/Assets/DataConfig/Language.csv
+- src/Assets/Scripts/Editor/CharacterContentImporter.cs::ImportCharacterDefinitions
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportEnemies
+- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportGongFa
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::LoadLanguage
+
+## 实施范围
+
+角色/怪物/物品/功法/外观/文本六表完整中文编辑；术法与功法等跨表引用可按中文搜索，稳定ID不因显示名重命名；dropTable与dropEntries按各自真实语法拆成列表；功法growth/chapters逐层展开。Language是无普通表头的键值表，保留分组注释，外观表当前仅none也须适配且不虚构资源。只修改既有记录，不开放整行新增/删除。
+
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+有界但含多字段编解码与Unity工具接线，使用Sol在冻结合同下统一实现和复核。 执行主模型由卡头executionModel=gpt-6.1-sol固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+2026-10-13准备ready复核：六表可逆编解码和Editor接线仍为一项有界实现，保持卡头gpt-6.1-sol及单模型统一复核；无独立只读问题，不调用辅助。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+六表所有字段与复合字段覆盖，正式与旧掉落字段不可串用；中文重名引用保留准确ID；Language首个实体不能误当表头，注释保留；功法列表往返和无修改零diff。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+本组各表的全部列和复合子字段均有中文结构化编辑和可逆序列化，通过真实数据往返/非法输入验证，并交付本组校验与导入依赖描述供APPLY消费；不由本组另写独立保存或导入按钮。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+## 本轮实施与验证结果（2026-10-13）
+
+- 身份与模型协作：Codex；入口启动证明主模型gpt-6.1-sol，核对冻结合同后单模型统一实施与复核，没有独立辅助问题，不启动第二责任会话。入口未证明推理强度，不作已配置声明。
+- 写入前预检：get-experience-risk-preflight.ps1 -TaskId U-CONFIG-EDITOR-CHARACTER-01返回ok；taskCardDigest=537af3f6415d09a02c00b6ba1136942cad9ef8e30f05632d2b2c92b372ca48ab，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；matched/mustRead/gates/gatePointers全空，与入口及schema 2投影一致。补查直接接口与依赖后复核同一结果。
+- 结构与所有者：ConfigTableRegistry.TypeCache发现CharacterTables与GongFaTable，ConfigEditorWindow→ConfigFieldGUI→ConfigDraftSession.SetValue拥有窗口与内存草稿。新增源码置于现有TianZhang.Editor仅Editor程序集，测试置于既有EditMode程序集；无中央窗口、运行时、asmdef、CSV及产物修改。
+- 六表完整覆盖：角色23列、怪物28列、物品14列、功法15列、外观1列、Language两列虚拟声明。所有字段均有中文名、结构控件、空零、数值单位和只读原因；引用读取生产CSV或实际窗口不可变草稿，中文重名保留不同稳定ID，Language草稿改名立即更新引用标签。
+- 正式与旧掉落分别使用itemId@chance@quantity与itemId:旧词元，展开为独立只读列表；旧值不解释为概率或数量、不参与正式掉落。物品与外观当前批准投影只读；怪物锁定列、七条正式目录/册界中文文本与稳定身份禁止编辑。
+- 功法成长展开境界、阶段与九项增量；篇章展开两项引用、八项加成及可选说明。保留顺序、原数字词元和可选第十一段；合法结构逐子字段往返，清空篇章为无篇章。成长阶段与重复键复用原ParseGongFaGrowth错误；整数溢出、非有限浮点、未知引用、星数越界及原篇章解析器当前文化不能准确回读时产生定位错误。
+- GetLinkedEdits仅针对已编辑的角色境界，读取候选境界成长并报告必要镜像；不修复未编辑的非法基线，不因整数词元格式不同产生规范化改写。GetImportSteps只报告冻结的方法、输入与全部当前产物，包括两个独立角色模板及Language八步消费者闭包，不调用导入器或保存服务。完整原领域预览校验的提取仍归冻结的APPLY路径。
+- 真实数据验证发现既有敌人enemy_xueyingmoxiu引用spell_anshi，但Spells登记spell_tx_anshi；GongFa使用的element_none、element_wood、element_star、element_chaos未在Language登记。工具保留这些原ID与bytes并报告未知引用，未替换、补文本或修改配置；后续实际保存需由获授权的数据处理解决或依原合同明确处理，不能把往返通过理解为所有生产引用已合法。
+- Unity 6000.3.18f1图形模式专项21/21通过、无跳过。测试覆盖六表全部列与每个复合子字段的往返、零diff、真实生产全部行、分隔符区分、非法值与原成长错误、BOM/混合行尾/逗号/注释保留、Language首实体、只读声明、境界镜像、当前文化及导入描述路径存在性。
+- 窗口用例真实打开六表并发送Layout/Repaint，分别编辑角色、怪物、功法嵌套增量与Language，检查中文重名候选的准确ID，再撤销；只读物品和唯一none外观实际渲染。测试证明六份CSV及代表角色/功法/目录/外观文件hash、已加载资产序列化值与脏状态不变。
+- 最终运行命令：Unity.exe -batchmode -projectPath <本worktree>/src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.ConfigEditorCharacterTests。首次无图形模式18/19通过，窗口用例因No graphic device is available to initialize the view失败；启用图形设备并完成直接复核后21/21通过，不能以首次无图形结果替代窗口验收。
+- 本机证据：系统TEMP/tzg-character-7c8d0fd5/graphics-results.xml与graphics-unity.log；XML经tools/run-unity-editmode-tests.ps1 -ValidateResultOnly核验通过。初次Unity导入的ShaderGraphSettings空白序列化差异已按初始clean基线恢复，最终无允许集合之外的改动。
+- 已通过check-unity-assembly-boundaries.ps1（19程序集、2 asmref）与check-data-chain.ps1（功法29/29、术法84/84、神通31/31，Language649键）。管理收口检查为check-task-cards.ps1、check-review-text.ps1、预期路径check-pending-whitespace.ps1及暂存后git diff --cached --check。
+- 已加载结构图：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、UNITY_STRUCTURE.assemblies.md；技能引用：project-structure-discovery、modular-architecture、ai-workflows、runtime-owner-proof、serialized-persistence、unity-validation、ui-and-visual-assets、cleanup-and-git。三份新C#分别335/172/293行，未新增Player模块或运行时图节点。
+- 边界与后续：本卡只完成适配、校验描述和内存操作；保存/导入、篇章清空后资产读回与游戏流程验收由已冻结APPLY/V负责。本卡移入精确归档路径，并仅删除队列/backlog自身行；不移除其他卡对本taskId的前置、不提升或重排下游。
