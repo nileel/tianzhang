@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-13人工重新准备：补齐数据链检查器授权及区域枚举正反例验证，统一ready实施边界；风险预检ok，命中EXP-DATA-001、无门禁，恢复ready。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
@@ -40,7 +40,8 @@
     "simulations/BattleSim/BattleSim.csproj",
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
-    "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
+    "tools/check-data-chain.ps1"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -75,6 +76,11 @@
 - src/Assets/Scenes/AdventureScene.unity::attackProfiles序列化引用
 - src/Assets/Tests/EditMode/AttackProfileDataTests.cs
 - src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs
+- tools/check-data-chain.ps1::Test-FormalAttackProfileProjection/Get-CsvTable/AttackProfiles调用入口
+- simulations/BattleSim/GameData.cs::LoadProductionAttacks/LoadProductionRuleSet
+- simulations/BattleSim/BattleSimSelfTests.cs::AttackProfileHeaders及区域字段解析/断言
+- simulations/BattleSim/GuanzhongPlaytestAudit.cs::生产攻击配置读取
+- simulations/BattleSim/BattleSim.csproj::Combat源码显式链接
 
 ## 实施范围
 
@@ -84,15 +90,17 @@
 
 仅两件档案改为合同第三节的精确两格、以攻击者O起点、本次命令六向d；d可每次自由选择，初值Facing但不写长期Facing。仅存活敌方且禁止空放。保持倍率1.0/1.25、基础/最低净费40000/50000、资源none/0、CT与重用冷却0、肉攻承载120和原共享次数/取得/资格/库存/换装/保存，不修改其他档案语义。
 
-当前AttackProfileData要求Caster中心minCastRange=maxCastRange=0，且Line/Fan要求静态areaFacing；这是中心选择校验，不是剑落点1至2格/刀落点1格的命中校验。后者由QUERY逐格复用现有空间规则。不得把中心射程改成1/2导致拒绝自身O，也不得用静态Facing或三格Fan近似自由方向下的刀两格。待QUERY/RESOLVE完成最小纯档案后，冻结能精确表达上述语义的最小字段/校验；未知模式或非法值在资产发布前失败关闭。
+当前AttackProfileData要求Caster中心minCastRange=maxCastRange=0，且Line/Fan要求静态areaFacing；这是中心选择校验，不是剑落点1至2格/刀落点1格的命中校验。后者由已完成QUERY逐格复用现有空间规则，DATA负责将内容中心范围转换为CombatAttackProfile要求的命中范围。不得把内容中心射程改成1/2导致拒绝自身O，也不得用静态Facing或三格Fan近似自由方向下的刀两格。两格形状使用本次命令方向，内容不保存长期Facing；未知模式或非法值在资产发布前失败关闭。
 
 现有内容所有者为必查范围中的L2/L1、AttackProfiles.csv、AttackProfileData、CombatContentImporter.ParseAttackProfileRow/ParseAttackTargetingFields/CopyTo、CombatRuleSet.AttackColumns、CombatEntryAdapter.TryProjectProfiles。ImportAttackProfiles静态确认会写九个攻击asset及CombatRuleSet；CSV改变SourceDigest会影响全部攻击档案，不只铁剑/铁刀。准备时逐条枚举现存Assets/Data/AttackProfiles/AttackProfile_*.asset的真实九个ID、CombatRuleSet.asset、目录引用以及其他随摘要重写的派生文件，保留原GUID；此处星号仅是检索线索，不能进入expectedPaths授权。AdventureScene.unity是否需重写由实际引用/Builder决定，不预先声称需要改场景。
 
-完整内容编码及派生资源写入集合依赖上游结果，expectedPaths继续只授权管理准备，不提前写猜测字段或新文件名。创建/移动资源时必须包含精确.meta/新目录.meta，重算风险预检后才ready。本卡不拥有两敌遭遇数据。
+QUERY/RESOLVE现已完成，ready后允许在卡头逐项列出的源码、配置、测试、派生资源及检查器内实施本卡唯一结果。内容层在既有area字段中表达上游ForwardPair/AdjacentPair，允许所列AttackProfileData、导入器和读取端同步增加相应最小枚举值与校验；不新增CSV列、不改变旧枚举序号，不把既有Line/Fan解释成自由方向两格。创建/移动资源或新增列仍须停止重新冻结；本卡不拥有两敌遭遇数据。
 
 ### ready前冻结
 
-依赖：U-GZ-R2-AOE-RESOLVE-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+依赖U-GZ-R2-AOE-RESOLVE-01已完成归档；本节原“只允许管理准备”限制已由2026-10-13重新准备替换。执行以卡头字面量路径及上述接口边界为准，写前重跑风险预检并核对实际读取端。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖，不允许worker临时拆卡。
+
+数据链检查器仅同步Test-FormalAttackProfileProjection中区域字段到资产序列化值的严格映射及直接校验：areaCenterKind、areaShapeKind、areaEffectBlockers、areaAllowedFactions、areaAllowedStates均按内容枚举/标志集合处理，areaFacing空值保留-1。映射须与导入器一致，未知值和非法集合必须拒绝；不得把合法字符串交给double.Parse，也不得跳过字段、吞异常、接受任意数字或默认放行。既有单目标空字段和旧区域形状的含义保持不变，不重构检查器、不新增检查脚本。
 
 ## 禁止项
 
@@ -104,11 +112,15 @@
 
 ## ready准备记录
 
-RESOLVE已完成归档。本轮复核两件武器L2/L1、CSV、解析与导入、九个派生档案、CombatRuleSet、运行时投影和三张EditMode入口；卡头逐项列出三份事实文档、CSV、五项现有源码、九个既有攻击asset、CombatRuleSet及测试。CSV摘要变化会重写全部九个攻击asset和CombatRuleSet，故全部列出；路径均存在，不创建或移动资源、不改.meta。风险预检返回ok，命中EXP-DATA-001、无门禁；已沿生产读取补列BattleSim项目显式链接、GameData、SelfTests和关中审计读取，执行时以同一schema验证，先build再run但不把结果冒充平衡定案。若执行时发现必须新增字段、路径或所有者，立即停止重新准备。
+RESOLVE已完成归档。本轮复核两件武器L2/L1、CSV、解析与导入、九个派生档案、CombatRuleSet、运行时投影和三张EditMode入口；卡头逐项列出三份事实文档、CSV、五项现有源码、九个既有攻击asset、CombatRuleSet及测试。CSV摘要变化会重写全部九个攻击asset和CombatRuleSet，故全部列出；路径均存在，不创建或移动资源、不改.meta。已沿生产读取补列BattleSim项目显式链接、GameData、SelfTests和关中审计读取，执行时以同一schema验证，先build再run但不把结果冒充平衡定案。若执行时发现必须新增CSV列、路径或所有者，立即停止重新准备。
+
+2026-10-13阻塞修复：run 1f9ad0a4-22a3-46fe-a2b1-f88dc4885dc9在业务写入前发现tools/check-data-chain.ps1遗漏区域枚举映射且不在expectedPaths，按expected_paths_incomplete退出，未形成candidate。人工复核其622至633行，并用caster/line/enemy/alive最小复现FormatException；现有九条生产行均为single、区域字段为空，解释此前未触发。现已补列检查器并冻结同步范围与验证，不改运行机制；该检查器属于同一配置发布链，任务仍原子。沿用gpt-6.1-sol/high建议与主智能体单独统一复核，无独立辅助工作面。本次只修复任务准备，区域实现和运行验收仍由后续执行交付。
 
 ## 验证
 
 导入器正/反例覆盖两格语义、方向/中心/长度合法性和无部分资产发布；正式CSV→asset→运行时档案一致。验证全部受摘要影响档案、CombatRuleSet与场景引用，旧单目标档案回归。run-unity-editmode-tests.ps1、check-data-chain.ps1；伤害/AP参数保持原值，不宣称新群攻平衡。
+
+检查器修改须验证：合法caster/形状/阻挡/阵营/状态字符串映射与asset一致；未知中心/形状、非法标志集合和CSV/asset不一致均被拒绝；旧single空区域字段仍通过。通过临时隔离输入调用现有检查入口或函数取得正反例证据并恢复输入，不污染正式配置、不新建长期测试框架。最终运行实际生产数据链；不能仅以全single旧数据通过证明区域枚举已覆盖。
 
 本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
 
