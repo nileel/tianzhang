@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13 RESOLVE已完成归档；两件武器内容、严格导入、全部派生档案与运行时投影路径已冻结，已重新预检后进入ready。",
+  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
