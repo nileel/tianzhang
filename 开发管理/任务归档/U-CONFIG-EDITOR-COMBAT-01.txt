@@ -1,0 +1,108 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-COMBAT-01",
+  "title": "配置编辑器战斗与创角七表适配",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-13七表中文结构化适配、可逆编解码、镜像与导入依赖描述完成；Unity图形模式专项26/26通过，已完成本卡独占范围。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-COMBAT-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-COMBAT-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor/CombatRuleTables.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CombatRuleTables.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/CombatAbilityTables.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CombatAbilityTables.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/PointBuyTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/PointBuyTable.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCombatTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCombatTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-COMBAT-01 · 配置编辑器战斗与创角七表适配
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/RealmCombatGrowth.csv
+- src/Assets/DataConfig/CombatEffectTierRules.csv
+- src/Assets/DataConfig/CombatActionEconomyRules.csv
+- src/Assets/DataConfig/AttackProfiles.csv
+- src/Assets/DataConfig/Spells.csv
+- src/Assets/DataConfig/Skills.csv
+- src/Assets/DataConfig/CharacterCreationPointBuy.csv
+- src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles/ImportSpells/ImportSkills
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy
+
+## 实施范围
+
+完成七表全部列的中文元数据、记录分组、定点AP/效率/千分比/分数的可逆控件、权重列表、空值与零和可选覆写语义。凡人移动效率只设一处编辑入口，展示对创角三条default校验镜像的同步计划；原始成长参照不误改。区分声明字段/派生字段及recordKind，不把不适用列当0，不增加新平衡数值。
+
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+有界但含多字段编解码与Unity工具接线，使用Sol在冻结合同下统一实现和复核。 执行主模型由卡头executionModel=gpt-6.1-sol固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+2026-10-13准备ready复核：七表可逆编解码和Editor接线仍为一项有界实现，保持卡头gpt-6.1-sol及单模型统一复核；无独立只读问题，不调用辅助。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+七表字段覆盖100%；无编辑读写一致，修改一个业务字段只改变批准源值/必要镜像；AP精度、v普通格报价、权重、空值、分数及非法范围用例。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+本组各表的全部列和复合子字段均有中文结构化编辑和可逆序列化，通过真实数据往返/非法输入验证，并交付本组校验与导入依赖描述供APPLY消费；不由本组另写独立保存或导入按钮。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+## 本轮实施与验证结果
+
+- 模型证明采用共享入口选定并传给CLI的gpt-6.1-sol。业务写入前核对本卡模型协作：七表共用CORE草稿接口与既有领域解析器，是一项有界结果；保持默认单模型统一实施和复核，没有独立复杂问题，不调用辅助或第二责任会话。推理强度未由入口证实，不声称已配置。
+- 预检taskCardDigest=3e1f8aca0a2d76f81230d601c9ce1b805529abb32bac756d3cbcbb2c563ebab5，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；两次本worktree预检均matched/mustRead/gates为空，与schema 2 riskPreflight及入口绑定结果一致。没有缺失门禁入口。
+- CombatRuleTables、CombatAbilityTables、PointBuyTable由CORE的IConfigTableProvider自动发现，保持既有Editor程序集、窗口、草稿与控件接口。七表177列全部有中文元数据；成长权重、任一灵根和阵营/状态集合使用结构化列表或复选组，不退回分隔符输入，不新增/复制/删除生产整行。
+- AP与移动效率按1000定点换算，拒绝不可整除的精度与Int32溢出。千分比、百分点、倍数、游戏刻、自身回合结束次数及分数分别标注；未改分数不约分，未改集合不排序，空值与显式零覆写保留区别。global与test_action按recordKind分组和分支编辑；52条现有规则全部保留，不把参考行动行当fixture排除。
+- 三张规则复用CombatRuleSet.Parse，攻击档案复用CombatContentImporter.TryBuildAttackProfileProjection并显式传入候选规则和语言键；全程无写盘。旧术法/神通声明独立编辑，整表标量、枚举、引用、范围、有限浮点及导入文化校验为APPLY提供定位错误；原导入器完整预览入口的提取仍归冻结APPLY任务。
+- 成长仅对实际编辑的源值及角色境界变更报告必要镜像，凡人源同步创角全部default行及对应角色/怪物；不修复未编辑的非法基线，不因整数格式不同产生规范化镜像，不联动legacyBaseMovementEfficiencyMilliUnits。点购四项组级声明仅第一行可编辑，并只响应该头行已编辑列；费用段使用configId与原始物理行作为稳定键。
+- 点购镜像显示只读来源与菜单跳转。天章/配置编辑器跳转/凡人行动力与移动效率打开同一CORE窗口并选中凡人；天章/配置编辑器预览/当前攻击档案派生值通过原解析器显示当前草稿的物伤、魂伤与冷却，只读展示，不写回空声明列，不另建保存/导入按钮。
+- GetImportSteps报告精确方法、输入和当前产物：战斗规则/攻击档案→攻击与规则→角色→正式内容目录→创角；术法、神通、点购各自报告既有入口。只描述依赖，不调用导入器，不使用通配产物，不改变Player、场景或资产。
+- Unity 6000.3.18f1图形模式最终专项26/26通过、无跳过：覆盖真实生产全部行与全部可编辑字段往返、其他单元格不变、无编辑原bytes、定点AP与普通地表v=3000报价33333单位、权重与原规则错误、分数、空/零覆写、只读和不适用分支、镜像与组级联动、费用段稳定键、非法数值/引用/文化，以及导入描述闭包。
+- 既有AttackProfiles深层fixture仅复制并升级到当前列声明的隔离内存副本；区域圆/扇/线、灵根与集合逐子字段可逆。合法行通过原无写盘投影；历史unarmed_fallback行仍按basic_attack_binding_kind_invalid拒绝，没有修正该负例或生成生产fixture资产。
+- 窗口用例实际打开七表并发送Layout/Repaint，逐表编辑再撤销，验证源值跳转。七份CSV及代表规则/点购资产hash不变，保存服务未接入时SaveEnabled保持禁用。派生预览变化只随候选声明变化，未产生额外CSV编辑。
+- 初轮无图形启动18/23通过，窗口因No graphic device is available to initialize the view失败；其余失败定位到通用文本分隔符误拒合法规则版本的@与测试误假设生产已有凡人角色。修正已证实的原因、启用图形设备后23/23通过；合同补充与新验证后26/26通过。不能以无图形失败轮替代最终窗口操作证明。
+- 最终命令：Unity.exe -batchmode -projectPath <本worktree>/src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.ConfigEditorCombatTests；证据为系统TEMP/tzg-combat-fb2ca844-results-3.xml和tzg-combat-fb2ca844-unity-3.log，XML已由tools/run-unity-editmode-tests.ps1 -ValidateResultOnly核验。首次Unity导入产生的ShaderGraphSettings序列化差异已按本轮初始clean基线恢复；最终无允许集合之外的文件变化。
+- check-unity-assembly-boundaries.ps1通过（19程序集、2 asmref）；check-data-chain.ps1通过（功法29/29、术法84/84、神通31/31、Language649键）。管理收口检查为check-task-cards.ps1、check-review-text.ps1、本轮预期路径check-pending-whitespace.ps1及暂存后git diff --cached --check。
+- 真实数据发现Skills的16条specialEffectDesc使用未登记的“详见对应神通原文”。工具保留原字面值和bytes并报告combat_editor_reference_unknown，未补文本、换ID或修改生产CSV；这不影响可逆编辑与校验验收，但后续实际保存应用不能把往返通过当作这些引用已合法。
+- 边界与后续：本卡只完成七表适配、校验/依赖描述和内存窗口操作；保存、导入产物读回和实际游戏流程由已冻结APPLY/V承接。本卡移入精确归档路径，并只移除队列/backlog自身行；保留其他卡对本taskId的前置，不提升、重排或关闭下游。本轮既有事实未形成需要另记的跨任务经验候选。

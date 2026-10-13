@@ -69,7 +69,6 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | U-CONFIG-EDITOR-01 | P1 | codex | 阻塞 | V-CONFIG-EDITOR-01 | Unity中文配置编辑器总任务 | 开发管理/任务卡/U-CONFIG-EDITOR-01.txt |
-| U-CONFIG-EDITOR-COMBAT-01 | P1 | codex | 已排队 | — | 配置编辑器战斗与创角七表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-COMBAT-01.txt |
 | U-CONFIG-EDITOR-WORLD-01 | P1 | codex | 已排队 | — | 配置编辑器据点悬赏与环境四表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt |
 | U-CONFIG-EDITOR-CULTIVATION-01 | P1 | codex | 已排队 | — | 配置编辑器成长状态与NPC策略三表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt |
 | U-CONFIG-EDITOR-APPLY-01 | P1 | codex | 阻塞 | U-CONFIG-EDITOR-CORE-01、U-CONFIG-EDITOR-COMBAT-01、U-CONFIG-EDITOR-CHARACTER-01、U-CONFIG-EDITOR-WORLD-01、U-CONFIG-EDITOR-CULTIVATION-01、U-CONFIG-EDITOR-CHARTER-01 | 配置编辑器关联保存与导入应用闭环 | 开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt |
