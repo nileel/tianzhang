@@ -5,6 +5,28 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
+    /// <summary>Read-only targeting facts, not command authorization or a settlement result.</summary>
+    public sealed class CombatAttackAreaQueryResult
+    {
+        internal CombatAttackAreaQueryResult(string actorId, CombatAttackProfile profile, HexCoord origin,
+            int direction, IReadOnlyList<SpatialAreaCell> cells, IEnumerable<string> targetIds)
+        {
+            ActorId = actorId;
+            Profile = profile;
+            Origin = origin;
+            Direction = direction;
+            Cells = new List<SpatialAreaCell>(cells).AsReadOnly();
+            TargetIds = new List<string>(targetIds).AsReadOnly();
+        }
+
+        public string ActorId { get; }
+        public CombatAttackProfile Profile { get; }
+        public HexCoord Origin { get; }
+        public int Direction { get; }
+        public IReadOnlyList<SpatialAreaCell> Cells { get; }
+        public IReadOnlyList<string> TargetIds { get; }
+    }
+
     public readonly struct CombatRangeQueryResult
     {
         public CombatRangeQueryResult(bool isInRange, string reason)
@@ -308,6 +330,52 @@ namespace TianZhang.Combat
             return !string.IsNullOrWhiteSpace(id) && profiles.TryGetValue(id, out profile);
         }
 
+        public CombatAttackAreaQueryResult QueryAttackArea(string actorId, string profileId, int direction)
+        {
+            if (!Combatants.TryGet(actorId, out CombatantSnapshot actor))
+                throw new ArgumentException("combat_session_actor_invalid", nameof(actorId));
+            if (!TryGetProfile(profileId, out CombatAttackProfile profile))
+                throw new ArgumentException("attack_profile_unresolved", nameof(profileId));
+            return QueryAttackArea(actor, profile, direction, Combatants.All, SpatialQuery);
+        }
+
+        /// <summary>
+        /// Pure targeting over the supplied battlefield facts. No turn, cost, cooldown, random or HP changes;
+        /// even a nonempty target set must pass the later command authorization and settlement gates.
+        /// </summary>
+        public static CombatAttackAreaQueryResult QueryAttackArea(CombatantSnapshot actor, CombatAttackProfile profile,
+            int direction, IReadOnlyList<CombatantSnapshot> combatants, ICombatSpatialQuery spatialQuery)
+        {
+            if (actor == null) throw new ArgumentNullException(nameof(actor));
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            if (combatants == null) throw new ArgumentNullException(nameof(combatants));
+            if (spatialQuery == null) throw new ArgumentNullException(nameof(spatialQuery));
+            SpatialTwoCellShape shape = profile.Area switch
+            {
+                CombatAttackArea.ForwardPair => SpatialTwoCellShape.ForwardPair,
+                CombatAttackArea.AdjacentPair => SpatialTwoCellShape.AdjacentPair,
+                _ => throw new ArgumentException("combat_attack_area_invalid", nameof(profile)),
+            };
+            HexCoord origin = actor.Position;
+            SpatialTwoCellArea area = origin.GetTwoCellArea(shape, direction);
+            CombatRangeQueryResult first = spatialQuery.QueryRange(origin, area.First, profile.MinimumRange, profile.MaximumRange);
+            CombatRangeQueryResult second = spatialQuery.QueryRange(origin, area.Second, profile.MinimumRange, profile.MaximumRange);
+            var cells = new[]
+            {
+                new SpatialAreaCell(area.First, first.IsInRange, first.Reason),
+                new SpatialAreaCell(area.Second, second.IsInRange, second.Reason),
+            };
+            var targets = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (CombatantSnapshot target in combatants)
+            {
+                if (target == null) throw new ArgumentException("Combatant facts cannot be null.", nameof(combatants));
+                if (target.Id != actor.Id && target.IsAlive && target.Team != actor.Team &&
+                    (first.IsInRange && target.Position == area.First || second.IsInRange && target.Position == area.Second))
+                    targets.Add(target.Id);
+            }
+            return new CombatAttackAreaQueryResult(actor.Id, profile, origin, direction, cells, targets);
+        }
+
         /// <summary>Single side-effect-free command validation entry shared by resolution and action discovery.</summary>
         public CombatActionResult ValidateCommand(CombatCommand command)
             => new CombatCommandService().Validate(this, command);
@@ -390,6 +458,9 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("attack_profile_not_authorized");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
+            // Area declarations are query-only until the multi-target settlement contract is implemented.
+            if (profile.Area != CombatAttackArea.Single)
+                return CombatActionResult.Rejected("combat_attack_area_requires_resolution");
             if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))
                 return CombatActionResult.Rejected("combat_spirit_sealed");
             if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||

@@ -3,6 +3,39 @@ using System.Collections.Generic;
 
 namespace TianZhang.Spatial
 {
+    public enum SpatialTwoCellShape
+    {
+        ForwardPair,
+        AdjacentPair,
+    }
+
+    /// <summary>Geometry only; neither cell is replaced when a spatial query rejects it.</summary>
+    public readonly struct SpatialTwoCellArea
+    {
+        internal SpatialTwoCellArea(HexCoord first, HexCoord second)
+        {
+            First = first;
+            Second = second;
+        }
+
+        public HexCoord First { get; }
+        public HexCoord Second { get; }
+    }
+
+    public readonly struct SpatialAreaCell
+    {
+        public SpatialAreaCell(HexCoord coord, bool isLegal, string reason)
+        {
+            Coord = coord;
+            IsLegal = isLegal;
+            Reason = reason ?? SpatialQueryReasons.Ok;
+        }
+
+        public HexCoord Coord { get; }
+        public bool IsLegal { get; }
+        public string Reason { get; }
+    }
+
     public enum SpatialQueryKind
     {
         Movement,

@@ -143,6 +143,21 @@ namespace TianZhang.Spatial
                 activeEffectBlockers);
         }
 
+        /// <summary>Queries just the two generated cells using the existing attack metric and sight rules.</summary>
+        public IReadOnlyList<SpatialAreaCell> QueryTwoCellArea(
+            HexCoord origin, SpatialTwoCellShape shape, int direction)
+        {
+            SpatialTwoCellArea area = origin.GetTwoCellArea(shape, direction);
+            int maximumRange = shape == SpatialTwoCellShape.ForwardPair ? 2 : 1;
+            SpatialRangeEntry first = QueryRangeEntry(origin, area.First, 1, maximumRange, SpatialQueryKind.Attack, true);
+            SpatialRangeEntry second = QueryRangeEntry(origin, area.Second, 1, maximumRange, SpatialQueryKind.Attack, true);
+            return Array.AsReadOnly(new[]
+            {
+                new SpatialAreaCell(first.Coord, first.IsInRange, first.Reason),
+                new SpatialAreaCell(second.Coord, second.IsInRange, second.Reason),
+            });
+        }
+
         private SpatialRangeEntry QueryRangeEntryUnits(
             HexCoord center,
             HexCoord target,

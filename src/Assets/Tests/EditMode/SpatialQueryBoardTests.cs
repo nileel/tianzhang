@@ -270,6 +270,100 @@ namespace TianZhang.Tests.EditMode
                 "Attack range keeps the raw metric distance and never reads the AP price.");
         }
 
+        [TestCase(0, 1, 0, 2, 0, 1, -1)]
+        [TestCase(1, 1, -1, 2, -2, 0, -1)]
+        [TestCase(2, 0, -1, 0, -2, -1, 0)]
+        [TestCase(3, -1, 0, -2, 0, -1, 1)]
+        [TestCase(4, -1, 1, -2, 2, 0, 1)]
+        [TestCase(5, 0, 1, 0, 2, 1, 0)]
+        public void TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(
+            int direction, int firstQ, int firstR, int forwardQ, int forwardR, int adjacentQ, int adjacentR)
+        {
+            var origin = new HexCoord(7, -3);
+            var first = origin + new HexCoord(firstQ, firstR);
+            foreach (SpatialTwoCellShape shape in new[] { SpatialTwoCellShape.ForwardPair, SpatialTwoCellShape.AdjacentPair })
+            {
+                var second = origin + (shape == SpatialTwoCellShape.ForwardPair
+                    ? new HexCoord(forwardQ, forwardR) : new HexCoord(adjacentQ, adjacentR));
+                var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+                {
+                    [new SpatialDirectedEdge(origin, first)] = new SpatialEdgeRules(2, true, true),
+                    [new SpatialDirectedEdge(shape == SpatialTwoCellShape.ForwardPair ? first : origin, second)] =
+                        new SpatialEdgeRules(2, true, true),
+                };
+                var result = CreateBoard(new[] { origin, first, second }, edges).QueryTwoCellArea(origin, shape, direction);
+                Assert.AreEqual(2, result.Count);
+                CollectionAssert.AreEqual(new[] { first, second }, new[] { result[0].Coord, result[1].Coord });
+                Assert.AreNotEqual(origin, result[0].Coord);
+                Assert.AreNotEqual(result[0].Coord, result[1].Coord);
+                Assert.IsTrue(result[0].IsLegal, result[0].Reason);
+                Assert.IsTrue(result[1].IsLegal, result[1].Reason);
+            }
+        }
+
+        [TestCase("boundary")]
+        [TestCase("missing_edge")]
+        [TestCase("reverse_edge")]
+        [TestCase("effect_blocker")]
+        [TestCase("entity_obstacle")]
+        [TestCase("height")]
+        [TestCase("weighted_range")]
+        public void AdjacentPairKeepsBothCellsWhenOneIsRejected(string scenario)
+        {
+            var next = new HexCoord(1, -1);
+            var cells = CreateCells(Origin, East, next);
+            var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+            {
+                [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true),
+                [new SpatialDirectedEdge(Origin, next)] = new SpatialEdgeRules(2, true, true),
+            };
+            if (scenario == "boundary") cells.Remove(East);
+            if (scenario == "missing_edge" || scenario == "reverse_edge") edges.Remove(new SpatialDirectedEdge(Origin, East));
+            if (scenario == "reverse_edge") edges[new SpatialDirectedEdge(East, Origin)] = new SpatialEdgeRules(2, true, true);
+            if (scenario == "effect_blocker") edges[new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true, 1);
+            if (scenario == "entity_obstacle") cells[East] = new SpatialCellRules(0, false, false, true, 0);
+            if (scenario == "height") cells[East] = new SpatialCellRules(1, false, false, false, 0);
+            if (scenario == "weighted_range") edges[new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(4, true, true);
+            var board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(2, 16));
+            var result = board.QueryTwoCellArea(Origin, SpatialTwoCellShape.AdjacentPair, 0);
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(East, result[0].Coord);
+            Assert.IsFalse(result[0].IsLegal);
+            Assert.IsNotEmpty(result[0].Reason);
+            Assert.AreEqual(board.QueryRangeEntry(Origin, East, 1, 1, SpatialQueryKind.Attack, true).Reason, result[0].Reason);
+            Assert.AreEqual(next, result[1].Coord);
+            Assert.IsTrue(result[1].IsLegal, result[1].Reason);
+        }
+
+        [Test]
+        public void ForwardPairCannotBypassSightObstacleViaMetricDetour()
+        {
+            var detour = new HexCoord(1, -1);
+            var detourTwo = new HexCoord(2, -1);
+            var cells = CreateCells(Origin, East, EastTwo, detour, detourTwo);
+            cells[East] = new SpatialCellRules(0, false, false, true, 0);
+            var board = new SpatialQueryBoard(cells, new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+            {
+                [new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(East, EastTwo)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(Origin, detour)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(detour, detourTwo)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(detourTwo, EastTwo)] = new SpatialEdgeRules(1, true, true),
+            }, new SpatialQueryLimits(2, 16));
+            Assert.IsTrue(board.QueryMetricDistance(Origin, EastTwo, SpatialQueryKind.Attack).IsReachable);
+            var result = board.QueryTwoCellArea(Origin, SpatialTwoCellShape.ForwardPair, 0);
+            Assert.IsFalse(result[0].IsLegal);
+            Assert.IsFalse(result[1].IsLegal);
+            Assert.AreEqual(SpatialQueryReasons.EntityObstacle, result[1].Reason);
+        }
+
+        [TestCase(-1)]
+        [TestCase(6)]
+        public void TwoCellAreaRejectsDirectionOutsideSixChoices(int direction)
+        {
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => Origin.GetTwoCellArea(SpatialTwoCellShape.ForwardPair, direction));
+        }
+
         private static SpatialQueryBoard CreateBoard(
             IEnumerable<HexCoord> coords,
             IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges)

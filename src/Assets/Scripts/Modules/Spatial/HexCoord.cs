@@ -94,6 +94,19 @@ namespace TianZhang.Spatial
             return Neighbor(direction);
         }
 
+        /// <summary>Six grid directions, independent of screen axes; the origin is never included.</summary>
+        public SpatialTwoCellArea GetTwoCellArea(SpatialTwoCellShape shape, int direction)
+        {
+            HexCoord first = Step(direction);
+            HexCoord second = shape switch
+            {
+                SpatialTwoCellShape.ForwardPair => first.Step(direction),
+                SpatialTwoCellShape.AdjacentPair => Step((direction + 1) % 6),
+                _ => throw new System.ArgumentOutOfRangeException(nameof(shape)),
+            };
+            return new SpatialTwoCellArea(first, second);
+        }
+
         public bool TryGetDirectionTo(HexCoord neighbor, out int direction)
         {
             direction = DirectionTo(neighbor);

@@ -1407,6 +1407,174 @@ namespace TianZhang.Tests.EditMode
             Assert.Fail("Actor did not return to the real scheduler.");
         }
 
+        [TestCase(CombatAttackArea.ForwardPair, 0)]
+        [TestCase(CombatAttackArea.ForwardPair, 1)]
+        [TestCase(CombatAttackArea.ForwardPair, 2)]
+        [TestCase(CombatAttackArea.ForwardPair, 3)]
+        [TestCase(CombatAttackArea.ForwardPair, 4)]
+        [TestCase(CombatAttackArea.ForwardPair, 5)]
+        [TestCase(CombatAttackArea.AdjacentPair, 0)]
+        [TestCase(CombatAttackArea.AdjacentPair, 1)]
+        [TestCase(CombatAttackArea.AdjacentPair, 2)]
+        [TestCase(CombatAttackArea.AdjacentPair, 3)]
+        [TestCase(CombatAttackArea.AdjacentPair, 4)]
+        [TestCase(CombatAttackArea.AdjacentPair, 5)]
+        public void AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(CombatAttackArea area, int direction)
+        {
+            var origin = new HexCoord(3, 4);
+            var geometry = origin.GetTwoCellArea(area == CombatAttackArea.ForwardPair
+                ? SpatialTwoCellShape.ForwardPair : SpatialTwoCellShape.AdjacentPair, direction);
+            var profile = CreateAreaProfile(area);
+            var actor = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, basicAttackProfileId: profile.Id);
+            var ally = CreateCombatant("ally", CombatTeam.Player, geometry.First, 1, 100, 20, 10);
+            var z = CreateCombatant("a_enemy", CombatTeam.Enemy, geometry.First, 1, 100, 20, 10);
+            var a = CreateCombatant("Z_enemy", CombatTeam.Enemy, geometry.Second, 1, 100, 20, 10);
+            var query = new FixedRangeQuery(true, enforceDeclaredRange: true);
+            var session = CreateSession(new[] { actor, ally, z, a }, query, new[] { profile });
+            new CombatCommandService().AdvanceUntilAction(session);
+            actor.Facing = (direction + 3) % 6;
+            actor.SetCooldown(profile.Id, 7);
+            actor.ApplyStatus(CombatStatusKind.Immobilize, 2);
+            string before = AreaQueryState(session);
+            var result = session.QueryAttackArea(actor.Id, profile.Id, direction);
+            Assert.AreEqual(actor.Id, result.ActorId);
+            Assert.AreSame(profile, result.Profile);
+            Assert.AreEqual(origin, result.Origin);
+            Assert.AreEqual(direction, result.Direction);
+            Assert.AreEqual(2, result.Cells.Count);
+            CollectionAssert.AreEqual(new[] { "Z_enemy", "a_enemy" }, result.TargetIds);
+            Assert.AreEqual(before, AreaQueryState(session));
+            // A raw read-only fact list may repeat an identity; the session registry still forbids duplicates.
+            var repeated = CombatSession.QueryAttackArea(actor, profile, direction, new[] { z, a, actor, ally, z, a }, query);
+            CollectionAssert.AreEqual(result.TargetIds, repeated.TargetIds);
+            Assert.AreEqual(before, AreaQueryState(session));
+        }
+
+        [TestCase(CombatAttackArea.ForwardPair, 0)]
+        [TestCase(CombatAttackArea.ForwardPair, 1)]
+        [TestCase(CombatAttackArea.ForwardPair, 2)]
+        [TestCase(CombatAttackArea.AdjacentPair, 0)]
+        [TestCase(CombatAttackArea.AdjacentPair, 1)]
+        [TestCase(CombatAttackArea.AdjacentPair, 2)]
+        public void AttackAreaQueryFiltersDeadFriendsAndOutsideCells(CombatAttackArea area, int count)
+        {
+            var actor = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10);
+            var geometry = actor.Position.GetTwoCellArea(area == CombatAttackArea.ForwardPair
+                ? SpatialTwoCellShape.ForwardPair : SpatialTwoCellShape.AdjacentPair, 0);
+            var friend = CreateCombatant("friend", CombatTeam.Player, geometry.First, 1, 100, 20, 10);
+            var dead = CreateCombatant("dead", CombatTeam.Enemy, geometry.Second, 1, 100, 20, 10);
+            dead.ReceiveDamage(100);
+            var outside = CreateCombatant("outside", CombatTeam.Enemy, new HexCoord(-1, 0), 1, 100, 20, 10);
+            var facts = new List<CombatantSnapshot> { actor, friend, dead, outside };
+            for (int index = 0; index < count; index++)
+                facts.Add(CreateCombatant("enemy_" + index, CombatTeam.Enemy, geometry.First, 1, 100, 20, 10));
+            var result = CombatSession.QueryAttackArea(actor, CreateAreaProfile(area), 0, facts,
+                new FixedRangeQuery(true, enforceDeclaredRange: true));
+            Assert.AreEqual(2, result.Cells.Count);
+            CollectionAssert.AreEqual(Enumerable.Range(0, count).Select(i => "enemy_" + i), result.TargetIds);
+        }
+
+        [TestCase(CombatAttackArea.ForwardPair)]
+        [TestCase(CombatAttackArea.AdjacentPair)]
+        public void AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(CombatAttackArea area)
+        {
+            var actor = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10);
+            var shape = area == CombatAttackArea.ForwardPair ? SpatialTwoCellShape.ForwardPair : SpatialTwoCellShape.AdjacentPair;
+            var geometry = actor.Position.GetTwoCellArea(shape, 0);
+            var first = CreateCombatant("first", CombatTeam.Enemy, geometry.First, 1, 100, 20, 10);
+            var second = CreateCombatant("second", CombatTeam.Enemy, geometry.Second, 1, 100, 20, 10);
+            var cells = new Dictionary<HexCoord, SpatialCellRules>
+            {
+                [actor.Position] = new SpatialCellRules(0, false, false, false, 0),
+                [geometry.First] = new SpatialCellRules(0, false, false, false, 0),
+                [geometry.Second] = new SpatialCellRules(0, false, false, false, 0),
+            };
+            var board = new SpatialQueryBoard(cells, new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>
+            {
+                [new SpatialDirectedEdge(actor.Position, geometry.First)] = new SpatialEdgeRules(1, true, true),
+                [new SpatialDirectedEdge(area == CombatAttackArea.ForwardPair ? geometry.First : actor.Position, geometry.Second)] =
+                    new SpatialEdgeRules(1, true, false),
+            }, new SpatialQueryLimits(1, 16));
+            var result = CombatSession.QueryAttackArea(actor, CreateAreaProfile(area), 0, new[] { actor, first, second },
+                new AreaBoardQuery(board));
+            var spatial = board.QueryTwoCellArea(actor.Position, shape, 0);
+            CollectionAssert.AreEqual(new[] { "first" }, result.TargetIds);
+            for (int index = 0; index < 2; index++)
+            {
+                Assert.AreEqual(spatial[index].Coord, result.Cells[index].Coord);
+                Assert.AreEqual(spatial[index].IsLegal, result.Cells[index].IsLegal);
+                Assert.AreEqual(spatial[index].Reason, result.Cells[index].Reason);
+            }
+        }
+
+        [Test]
+        public void AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement()
+        {
+            var profile = CreateAreaProfile(CombatAttackArea.ForwardPair);
+            var player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10,
+                basicAttackProfileId: profile.Id);
+            var enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            var session = CreateSession(new[] { player, enemy }, new FixedRangeQuery(true), new[] { profile });
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+            string before = AreaQueryState(session);
+            var rejected = service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, profile.Id));
+            Assert.AreEqual("combat_attack_area_requires_resolution", rejected.RejectionReason);
+            Assert.AreEqual(before, AreaQueryState(session));
+        }
+
+        [Test]
+        public void AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery()
+        {
+            Assert.Throws<ArgumentException>(() => new CombatAttackProfile("bad", CombatAttackKind.Basic,
+                CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, area: CombatAttackArea.ForwardPair));
+            Assert.Throws<ArgumentException>(() => new CombatAttackProfile("bad", CombatAttackKind.Art,
+                CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, area: CombatAttackArea.AdjacentPair));
+            Assert.Throws<ArgumentException>(() => new CombatAttackProfile("bad", CombatAttackKind.Basic,
+                CombatAttackEffect.Physical, 1, 1, 1, 1, 0, 0, area: (CombatAttackArea)99));
+            var actor = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10);
+            var target = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            var query = new FixedRangeQuery(true, enforceDeclaredRange: true);
+            var session = CreateSession(new[] { actor, target }, query);
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, actor.Id, target.Id, "basic");
+            new CombatCommandService().AdvanceUntilAction(session);
+            var before = session.ValidateCommand(command);
+            Assert.Throws<ArgumentException>(() => session.QueryAttackArea(actor.Id, "basic", 0));
+            var after = session.ValidateCommand(command);
+            Assert.IsTrue(before.Succeeded);
+            Assert.AreEqual(before.Succeeded, after.Succeeded);
+            Assert.AreEqual(before.RejectionReason, after.RejectionReason);
+        }
+
+        private static CombatAttackProfile CreateAreaProfile(CombatAttackArea area) =>
+            new CombatAttackProfile("area_fixture", CombatAttackKind.Basic, CombatAttackEffect.Physical,
+                1, area == CombatAttackArea.ForwardPair ? 2 : 1, 40000, 40000, 0, 0,
+                physicalMultiplier: 1f, area: area);
+
+        private static string AreaQueryState(CombatSession session) => PreviewState(session) + ":" +
+            session.StateVersion + ":" + session.TurnSequence + ":" + session.HasCommittedBenefit + ":" +
+            string.Join(";", session.Combatants.All.Select(actor => actor.Id + ":" + actor.Facing + ":" +
+                actor.IsGuarding + ":" + actor.OwnTurnsStarted + ":" + actor.OwnTurnsEnded + ":" +
+                typeof(CombatantSnapshot).GetProperty("CommittedBasicAttackUses",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(actor) + ":" +
+                string.Join(",", actor.Cooldowns.Select(p => p.Key + "=" + p.Value)) + ":" +
+                string.Join(",", actor.Statuses.Select(s => s.StatusId + "=" + s.RemainingOwnTurnEnds))));
+
+        private sealed class AreaBoardQuery : ICombatSpatialQuery
+        {
+            private readonly SpatialQueryBoard board;
+            public AreaBoardQuery(SpatialQueryBoard board) => this.board = board;
+            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
+            {
+                var result = board.QueryRangeEntry(source, target, minimumRange, maximumRange, SpatialQueryKind.Attack, true);
+                return new CombatRangeQueryResult(result.IsInRange, result.Reason);
+            }
+            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord destination, int budget,
+                int efficiency, IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+            public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int budget,
+                int efficiency, IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+        }
+
         private static string PreviewState(CombatSession session)
         {
             CombatTurnSnapshot s = session.TurnScheduler.GetSnapshot(session.Combatants.All);

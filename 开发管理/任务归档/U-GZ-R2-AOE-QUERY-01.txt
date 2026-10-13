@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13已核对D-GZ-R2-RANGE-01完成归档；纯查询路径、验收合同和风险预检均已就绪。",
+  "stateReason": "2026-10-13本候选完成批准两格区域与合法目标集合纯查询；Unity定向EditMode114项、共享源码构建及程序集边界通过，正式群攻接入留给后续卡。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-QUERY-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-QUERY-01.txt",
@@ -91,3 +91,20 @@
 ## 停止条件
 
 若需超出批准两格语义或修改Content schema，停止准备并回交对应所有者；不得实现伤害/扣费或扩成任意技能AOE框架。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+
+## 本轮实现与验证结果
+
+2026-10-13，Codex按共享入口证明使用gpt-6.1-sol。业务写入前复核本卡、批准合同与实际源码：有界纯查询和角色筛选共同形成一个确定性结果，单主模型统一实施与复核，无独立辅助问题；实际使用PowerShell 7、Git、dotnet和Unity 6000.3.18f1，不启动第二责任会话。
+
+- Spatial：HexCoord.GetTwoCellArea复用Step和六向坐标，ForwardPair为O+D[d]/O+2D[d]，AdjacentPair为O+D[d]/O+D[(d+1)%6]。SpatialTwoCellArea保存两个落点，SpatialAreaCell保存格位、合法性和原原因；SpatialQueryBoard.QueryTwoCellArea逐格复用QueryRangeEntry的攻击度量及视线，不补格、不引入角色或内容依赖。
+- Combat：CombatAttackProfile.Area默认为Single；ForwardPair/AdjacentPair仅允许本合同的Basic/Physical和1至2格/1格范围。CombatSession.QueryAttackArea提供会话入口和显式只读事实入口，两者共用同一查询；结果保存ActorId、纯Profile、Origin、Direction、两格及目标ID。每格复用原ICombatSpatialQuery.QueryRange，目标只收合法格上的存活敌方，排除自身，真实ID去重并Ordinal排序；返回集合只读且不保留可变角色引用。
+- 查询只读取输入；不校准正式攻击权限、不报价、不扣费、不采样随机、不改HP/资源/状态/Facing/回合。现有ValidateAttack在尚未实现多目标结算时拒绝区域档案，避免旧单目标命令提前启用该声明；原Single调用和匹配1v1/2v2人数规则保持。
+- Unity定向EditMode：当前worktree的src由Unity批处理运行，-testFilter为TianZhang.Tests.EditMode.SpatialQueryBoardTests;TianZhang.Tests.EditMode.CombatRuntimeKernelTests。114/114通过（Spatial24、Combat90），失败/跳过/未定均为0；Unity日志确认当前projectPath及本次结果写入，开始/结束2026-10-13 00:26:00Z。结果副本在当前worktree忽略的src/Library/U-GZ-R2-AOE-QUERY-01-results.xml，日志在src/Temp/U-GZ-R2-AOE-QUERY-01-unity.log。现有run-unity-editmode-tests.ps1没有过滤参数，因此定向运行使用Unity现有CLI，随后执行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ValidateResultOnly -ResultXmlPath src/Library/U-GZ-R2-AOE-QUERY-01-results.xml校验通过；不扩为无关全量测试。
+- 用例覆盖剑/刀全部六向及平移起点、恰好两格、非法方向、越界/缺边/逆向边/效果阻挡/实体障碍/高差/加权距离、剑远格绕路不可越过直线障碍、0/1/同格多个/两格多个敌人、友方/死亡/区外排除、重复真实ID去重和大小写Ordinal排序。合法2v2会话查询前后比较HP、灵力、AP、位置、Facing、冷却、状态、共享普攻次数、CT/队列、回合和版本，保持一致；旧单目标验证和区域声明禁止旧提交均通过。
+- 当前worktree缺少BattleSim的obj/project.assets.json，先执行一次dotnet restore simulations/BattleSim准备环境；随后dotnet build -c Release --no-restore simulations/BattleSim通过，0警告、0错误。不运行数值平衡报告、不修改模拟器。
+- pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1通过（19程序集、2 asmref）。沿现有Spatial→Foundation、Combat→Spatial/Turns边界，无新增依赖、文件或.meta。已完整复核七条业务路径diff；Unity自动产生的ShaderGraphSettings.asset空白变化已恢复，非请求系统无最终差异。
+- 结构依据为UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md、UNITY_STRUCTURE.runtime.md及两个模块README，均以实时asmdef和源码校准；技能参考已读取project-structure-discovery、modular-architecture、content-and-systems、ai-workflows、unity-validation。CombatSession沿卡内冻结的现存文件扩展既有攻击查询职责，没有新增独立所有者或架构重构。
+
+生命周期仅归档本卡并移除自身backlog/queue行；其他卡对本ID的具名前置引用继续保留，由正式集成后QueueMaintenance消费。完成前运行check-task-cards.ps1的CodexClosedOrNonReady后置、check-review-text.ps1和本轮路径空白检查，提交前复核全部差异并只生成唯一candidate。
+
+未验证：正式武器内容、UI方向选择与预览、群攻随机/原子伤害/一次扣费、1对2正式遭遇和玩家闭环、数值平衡。这些属于后续卡；本次纯查询通过不代表正式群攻玩法已启用。

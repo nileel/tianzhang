@@ -2,6 +2,13 @@ using System;
 
 namespace TianZhang.Combat
 {
+    public enum CombatAttackArea
+    {
+        Single,
+        ForwardPair,
+        AdjacentPair,
+    }
+
     public enum CombatAttackKind
     {
         Basic,
@@ -110,7 +117,8 @@ namespace TianZhang.Combat
             float otherTargetSpiritRecoveryMultiplier = 1f,
             Func<string, string, string, bool> qualification = null,
             bool isTalisman = false,
-            CombatAttackRuleMetadata ruleMetadata = null)
+            CombatAttackRuleMetadata ruleMetadata = null,
+            CombatAttackArea area = CombatAttackArea.Single)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Attack profile ID is required.", nameof(id));
@@ -120,6 +128,11 @@ namespace TianZhang.Combat
                 throw new ArgumentException("Invalid attack effect or multiplier.");
             if (minimumRange < 0 || maximumRange < minimumRange || spiritCost < 0 || healAmount < 0)
                 throw new ArgumentOutOfRangeException(nameof(minimumRange));
+            if (!Enum.IsDefined(typeof(CombatAttackArea), area) ||
+                area != CombatAttackArea.Single &&
+                (kind != CombatAttackKind.Basic || effect != CombatAttackEffect.Physical || minimumRange != 1 ||
+                 maximumRange != (area == CombatAttackArea.ForwardPair ? 2 : 1)))
+                throw new ArgumentException("combat_attack_area_invalid", nameof(area));
             // 统一行动力公共合同：四值以各自单位严格验证，不设默认、不从另一字段推导。
             if (actionPointCostUnits <= 0)
                 throw new ArgumentOutOfRangeException(nameof(actionPointCostUnits));
@@ -178,8 +191,10 @@ namespace TianZhang.Combat
             this.qualification = qualification;
             IsTalisman = isTalisman;
             RuleMetadata = ruleMetadata;
+            Area = area;
         }
 
+        public CombatAttackArea Area { get; }
         public CombatAttackRuleMetadata RuleMetadata { get; }
         public string Id { get; }
         public CombatAttackKind Kind { get; }
