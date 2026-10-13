@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13已核对U-CONFIG-EDITOR-CORE-01完成归档；技术合同和实施路径已冻结，风险预检通过，现可执行。",
+  "stateReason": "自动责任方确认阻塞：required_importer_api_outside_task_scope",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CULTIVATION-01.txt",
