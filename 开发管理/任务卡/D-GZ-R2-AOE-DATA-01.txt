@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13人工重新准备：补齐数据链检查器授权及区域枚举正反例验证，统一ready实施边界；风险预检ok，命中EXP-DATA-001、无门禁，恢复ready。",
+  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
