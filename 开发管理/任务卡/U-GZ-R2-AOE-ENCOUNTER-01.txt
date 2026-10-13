@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13 RESOLVE已完成归档；两敌遭遇的内容、生命周期、表现与PlayMode路径已冻结，已重新预检后进入ready。",
+  "stateReason": "自动责任方确认阻塞：task_scope_out_of_bounds",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-ENCOUNTER-01.txt",
