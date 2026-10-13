@@ -5,3 +5,10 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-GZ-R2-AOE-RESOLVE-01 | codex_execute | codex | P1 | unity | implementation | 多目标攻击原子结算与一次扣费 | 开发管理/任务卡/U-GZ-R2-AOE-RESOLVE-01.txt |
+| U-CONFIG-EDITOR-CHARTER-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器册界规则与站点双表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt |
+| U-CONFIG-EDITOR-CHARACTER-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器角色物品与文本六表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-CHARACTER-01.txt |
+| U-CONFIG-EDITOR-COMBAT-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器战斗与创角七表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-COMBAT-01.txt |
+| U-CONFIG-EDITOR-CULTIVATION-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器成长状态与NPC策略三表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt |
+| U-CONFIG-EDITOR-WORLD-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器据点悬赏与环境四表适配 | 开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt |
+| U-GZ-R2-EQUIP-01 | codex_execute | codex | P1 | unity | implementation | 真实开局武器道具取得与装备入口修复 | 开发管理/任务卡/U-GZ-R2-EQUIP-01.txt |

@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CONFIG-EDITOR-CORE-01"
-  ],
-  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13已核对U-CONFIG-EDITOR-CORE-01完成归档；技术合同和实施路径已冻结，风险预检通过，现可执行。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-WORLD-01.txt",
@@ -65,7 +63,7 @@
 
 有界但含多字段编解码与Unity工具接线，使用Sol在冻结合同下统一实现和复核。 执行主模型由卡头executionModel=gpt-6.1-sol固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
 
-当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+2026-10-13准备ready复核：四表可逆编解码和Editor接线仍为一项有界实现，保持卡头gpt-6.1-sol及单模型统一复核；无独立只读问题，不调用辅助。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
 
 ## 验证
 
