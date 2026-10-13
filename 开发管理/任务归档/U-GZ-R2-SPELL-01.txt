@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13负责人授权修订旧档提示合同：试玩说明集中于创角，旧档沿既有资格拒绝；已重新预检并准备ready。",
+  "stateReason": "2026-10-13当前worktree完成目标小族新档资格与创角说明修复；创角28项、相关PlayMode最终28项和双分辨率画面通过，候选交共享入口重放。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPELL-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPELL-01.txt",
@@ -103,3 +103,32 @@ expectedPaths为完整精确写入集合；上述其他源码只读定位。全�
 ## 停止条件
 
 新的所有者或需扩expectedPaths、新Unity文件/资源、内容/数值变化、存档迁移、全局资格变化、缺失资源/必要运行时证据、与批准合同冲突时停写回查并重新准备，不叠加补丁。当前blocked前置未正式解锁不得实施；无法在当前两个既有工作面内闭环交有权规划者，不临时增任务。
+
+## 本轮实施与验证结果（2026-10-13）
+
+- 主责Codex，主模型保持共享入口传入的gpt-6.1-sol；Node REPL实际元数据亦为gpt-6.1-sol。按当轮有界、耦合工作面采用单模型，未调用辅助或第二责任会话；推理强度未核实。已消费入口绑定的EXP-UNITY-015开工前正文，schema 2投影matched一致，gates为空；未增加允许路径、运行时所有者或技术路线。
+- 已证实根因是创角统一写凡人，而两术法要求练气。仅origin_minor_clan且StartNodeId=guanzhong_hub的新建分支改为练气；先保留凡人点购镜像校验，再按最终境界调用现有ProjectActionEconomy及ResolveUnarmedAttack。未改CSV、生产asset、成长算法、存档或共享资格。
+- 可见文本所有者链：StartMenuScene的CharacterCreationPanel/CreationSummary，由StartMenuSceneBuilder创建并序列化到CharacterCreationView.summaryText；CharacterCreationController.Open/SelectOrigin调用RefreshOrigin，CharacterCreationView.RefreshOrigin是摘要正文唯一刷新写入者。仅此处追加批准的完整试玩说明；未修改共享UI工厂、布局或字体。StartMenuSceneInstaller.CreateNewPlayer继续一次调用BeginEquippedNewGame，初始化成功才首次写盘；LoadPlayer/RestoreSave未调用发放入口。
+- 旧档提示链已证明完备，故EncounterCoordinator.BuildArtActions/ProjectQuote/Present、CombatPresentationContracts、CombatActionBarView.PresentArt及CombatCommandInput只读核验。CombatSession.ValidateAttack保留资格、目标、范围、资源与冷却判定。旧凡人样本没有专属出身提示，不从存档或术法组合推断出身；无用户存档访问。
+- EditMode命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath <当前worktree>/src -ResultXmlPath <当前worktree>/src/Logs/starter-trial-editmode.xml。CharacterCreationRuleTests全部28项通过，涵盖其他出身凡人、目标起点限制、练气配置变化、凡人镜像及点购拒绝、空功法和灵根不变。全量1164项中1160通过、4项环境失败：宽袖实验缺外部Blender源，两项静态战斗棋子Builder缺approved源FBX，配置窗口测试在-nographics下无图形设备。保留完整失败XML及src/Logs/starter-trial-editmode.log；未扩范围修这些无关用例，未声称全量通过。最初测试编译的构造函数/命名空间引用错误已按实际API修正。
+- PlayMode命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <当前worktree>/src -ResultXmlPath <当前worktree>/src/Logs/starter-trial-playmode.xml -EnableGraphics -TestFilter <GuanzhongStarterArtsPlayModeTests;GuanzhongCombatTargetSelectionPlayModeTests;GuanzhongBasicAttackPlayModeTests;GuanzhongCombatSwapSpellPlayModeTests;GuanzhongCombatItemPlayModeTests的完整类型名>。首轮28项中26通过；空手用例原来选择小族却仍断言凡人，改为正式散修入口以保留原凡人空手目的；新增AP边界原先未耗足AP，随后等待又跨入下一回合，最终改在25AP尚存且贯石击需50AP的同回合断言拒绝。只重跑失败用例，src/Logs/starter-trial-playmode-recheck.xml中空手用例通过，src/Logs/starter-trial-playmode-boundaries.xml中ArtsKeepResourceCooldownTargetAndRangeRejectionsWithoutPayment通过。最终相关28个不同用例均通过，原失败文件保留，未重复已通过且输入未变化的范围。
+- 正式成功证据：FormalNewGameUsesProductionCombatRandomAndBothPreviewConfirmButtons从新档按钮、小族按钮、创建按钮经World/Settlement/Adventure进入首战；未调用资格夹具、RestoreProgression、直接改资源/位置/库存或再次BeginEquippedNewGame。首次盘与当前运行时JSON相等；练气、倍率1.5、空功法、两术法、AP100000、移动4000、人形练气空手档位、默认铁剑、铁剑/铁刀各1、活血丹3全部核实。保存退出读档相等。遭遇抽签为明确的GuaranteedEncounterRandomSource以稳定选取既有首战；攻击保留SystemCombatResolutionRandomSource。实际贯石击在合法移动至(0,1)、敌方(0,2)后通过真实预览/取消/再预览/确认结算，本次随机命中伤害43、MP扣12、AP扣50；不要求固定命中。聚灵术通过真实自身目标预览/确认，MP恢复5、AP扣25，与现有配置公式一致。
+- 负向证据：ArtsKeepResourceCooldownTargetAndRangeRejectionsWithoutPayment覆盖MP不足、有效冷却、非法/缺失目标、实际移动后的above_max_range和同回合AP不足，均拒绝且无扣费/状态副作用。IsolatedOldMortalMinorClanSaveLoadsWithoutQualificationOrGrants用明确来源的隔离旧创角输入，正式读档后仍凡人、无库存/主手，两术法保持attack_profile_requirements_not_met；样本来源不依赖运行时出身字段。上述隔离负向输入及环境克隆不充作正式成功证据。
+- 共享PrepareEquippedPlayerFixture仅核验现有正式新建结果；已去除StarterArts、SwapSpell、Item中的旧升境/重初始化前提。目标选择4项、换术3项、用药5项与BasicAttack最终10项直接回归通过；Item沿既有胜负保存与旧档无补发断言通过，不替EQUIP关闭完整物资/换装验收。正式散修新档、凡人空手保存/重进以及既有练气用药消耗保存行为通过。
+- 实际Game View PNG与同步TXT位于src/Logs/starter-trial/：creation-1920、creation-1366、first-combat、legal-arts-1920、legal-arts-1366、attack-preview、recovery-preview、both-cast、legacy-rejection-1920、legacy-rejection-1366。已逐图检查创角与拒绝两种分辨率及两预览，正文均完整可读。摘要本地Rect=880×84，preferred=880×71（1920×1080）/850.366×71.684（1366×768），4行；旧档行动状态Rect=192×76、preferredHeight=67.467（1366×768），3行；术法费用Label Rect=184×60、preferred=120.879×56.223、2行。未改变动作条费用/冷却文案，EXP-UNITY-015的文案变更触发条件不成立，仍记录双分辨率边界。运行产物未纳入提交。
+- 只关闭本卡并移除本卡backlog/队列行；EQUIP等下游卡及backlog的具名前置引用保留。收尾使用check-task-cards.ps1（CodexClosedOrNonReady）、check-review-text.ps1、check-data-chain.ps1和实际路径check-pending-whitespace.ps1，最终暂存检查由指定automation-finalize-commit.ps1执行。未操作runtime、集成锁、其他worktree或自动化配置。
+- 残留：旧凡人档仍不具备两术法资格，说明集中于新建入口；装备/用药完整验收留给EQUIP。本卡仅证明功能，不声称数值平衡；全量EditMode四项环境失败保留说明。候选尚待共享入口在最新master正式重放。
+
+## 经验候选
+
+### U-GZ-R2-SPELL-01.C1
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：新建角色已知且装配两门术法，正式首战却因境界不足禁用；测试通过人工升境和重开装备新档掩盖真实入口断点。
+- 已证实根因：创角统一凡人，术法与物资要求练气；测试夹具替玩家制造资格，未证明首次初始化与首次写盘的生产结果。
+- 可能复用范围：具有开局能力、资格校验、物资初始化及首次保存链的角色创建功能验收。
+- 证据：CharacterCreationRules.BuildCharacterData、StartMenuSceneInstaller.CreateNewPlayer、GameRuntime.BeginEquippedNewGame及本轮28项创角/28项相关PlayMode结果；正式随机两术法与隔离旧档截图/状态见本节。
+- 门禁可能：yes

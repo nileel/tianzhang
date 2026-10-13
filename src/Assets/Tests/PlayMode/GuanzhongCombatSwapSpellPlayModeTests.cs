@@ -61,10 +61,7 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator BeginEncounter(bool reserveRecovery, bool reserveAttack = false)
         {
-            // Existing character-domain API and real production spells; no invented content or session replacement.
-            // New characters are mortal; this spell-functionality fixture explicitly meets the production requirement.
-            GameBootstrap.RequireRuntime().Player.RestoreProgression(
-                new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
+            Assert.AreEqual("练气", GameBootstrap.RequireRuntime().Player.Progression.RealmStage);
             if (reserveRecovery)
                 Assert.IsTrue(GameBootstrap.RequireRuntime().Player.AbilityLoadout.UnequipSpell(Recovery));
             if (reserveAttack)

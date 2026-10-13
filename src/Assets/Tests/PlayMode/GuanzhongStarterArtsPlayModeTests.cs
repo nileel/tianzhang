@@ -41,6 +41,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         private const string AttackId = "spell_guanshiji", RecoveryId = "spell_julingshu";
+        private const string TrialSummary = "关中小族试玩：练气起步，可使用贯石击与聚灵术；初始铁剑、铁刀各一件，活血丹三颗。仅新建角色生效，已有存档不变。";
         private readonly List<string> saveDirectories = new List<string>();
         private readonly List<EnvironmentProfileAsset> environmentClones = new List<EnvironmentProfileAsset>();
         private EncounterCoordinator encounter;
@@ -113,6 +114,7 @@ namespace TianZhang.Tests.PlayMode
                 StringAssert.Contains("创建预算：" + used[index] + "/10", summary.text);
                 StringAssert.Contains("返还：" + refunded[index], summary.text);
                 StringAssert.Contains("剩余：" + remaining[index], summary.text);
+                Assert.That(summary.text.Contains(TrialSummary), Is.EqualTo(origin.Id == "origin_minor_clan"));
                 for (int labelIndex = 0; labelIndex < labels.Length; labelIndex++)
                     Assert.That(labels[labelIndex].text, Is.EqualTo((labelIndex == index ? "已选 · " : string.Empty) +
                         CharacterCreationCatalog.Origins[labelIndex].DisplayName));
@@ -245,7 +247,8 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
-        private IEnumerator EnterFormalCombat(SpiritRecoveryEnvironment? controlledEnvironment)
+        private IEnumerator EnterFormalCombat(SpiritRecoveryEnvironment? controlledEnvironment,
+            bool productionCombatRandom = false, bool legacyMortalSave = false)
         {
             GameBootstrap stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
@@ -278,6 +281,18 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(nameInput.text, Is.EqualTo("普通小族术法验证"));
             StringAssert.Contains("小族子弟", GetPrivateField<Text>(creationView, "summaryText").text);
             StringAssert.Contains("起点：关中", GetPrivateField<Text>(creationView, "summaryText").text);
+            StringAssert.Contains(TrialSummary, GetPrivateField<Text>(creationView, "summaryText").text);
+            if (productionCombatRandom)
+            {
+                foreach (int width in new[] { 1920, 1366 })
+                {
+                    GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                    for (int frame = 0; frame < 8; frame++) yield return null;
+                    Text summary = GetPrivateField<Text>(creationView, "summaryText");
+                    Assert.That(summary.preferredHeight, Is.LessThanOrEqualTo(summary.rectTransform.rect.height + 1f));
+                    yield return CaptureTrialEvidence("creation-" + width, summary);
+                }
+            }
             AssertOriginButtonGeometry(creationView);
             createdOriginId = creation.Draft.OriginId;
             Assert.That(new[] { creation.Draft.Innate.RootBone, creation.Draft.Innate.Soul,
@@ -289,6 +304,29 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForScene(GameplaySceneNames.World);
             Assert.That(GameBootstrap.RequireRuntime().Navigation.WorldNodeId, Is.EqualTo("guanzhong_hub"));
             source = GameBootstrap.RequireRuntime().Player.Capture();
+            Assert.That(source.Progression.RealmStage, Is.EqualTo("练气"));
+            AssertStarterInitialization();
+            var firstRead = bootstrap.SlotStore.Read("starter-arts");
+            Assert.That(firstRead.Succeeded, Is.True);
+            var firstRuntime = new GameRuntime();
+            firstRuntime.ConfigureGrowth(GrowthRules);
+            firstRuntime.RestoreSave(firstRead.Envelope,
+                UnityEditor.AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
+            Assert.That(firstRuntime.CaptureSaveJson(), Is.EqualTo(GameBootstrap.RequireRuntime().CaptureSaveJson()),
+                "The first disk write must already contain the realm, equipment and inventory initialization.");
+            if (legacyMortalSave)
+            {
+                // Isolated, source-known old creation input; never used by the successful new-game chain.
+                var legacyData = CharacterCreationRules.BuildCharacterData(creation.Draft,
+                    Resources.Load<TianZhang.Game.CharacterCreation.CharacterCreationPointBuyConfig>("Data/CharacterCreation/CharacterCreationPointBuyConfig"), GrowthRules);
+                legacyData.realmStage = "凡人";
+                CharacterRuntimeProfile.ProjectActionEconomy(GrowthRules, new CharacterProgressionSnapshot("", "凡人", 1.5f),
+                    out legacyData.actionPointMaximumUnits, out legacyData.movementEfficiencyMilliUnits);
+                GameBootstrap.RequireRuntime().BeginNewGame(CharacterRuntimeProfile.FromDefinition("player", legacyData, GrowthRules),
+                    GameBootstrap.RequireRuntime().Cultivation, "guanzhong_hub");
+                Object.Destroy(legacyData);
+                source = GameBootstrap.RequireRuntime().Player.Capture();
+            }
             string saved = GameBootstrap.RequireRuntime().CaptureSaveJson();
             Assert.That(bootstrap.SaveActiveSlot().Succeeded, Is.True);
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -296,9 +334,14 @@ namespace TianZhang.Tests.PlayMode
             FindInActiveScene<StartMenuController>().LoadPlayer("starter-arts");
             yield return WaitForScene(GameplaySceneNames.World);
             Assert.That(GameBootstrap.RequireRuntime().CaptureSaveJson(), Is.EqualTo(saved));
-            Assert.That(GameBootstrap.RequireRuntime().Player.Progression.RealmStage, Is.EqualTo("凡人"));
-            // This ability fixture explicitly upgrades through the existing aggregate; creation grants no qualification.
-            GameBootstrap.RequireRuntime().Player.RestoreProgression(new CharacterProgressionSnapshot("", "练气", 1.5f));
+            Assert.That(GameBootstrap.RequireRuntime().Player.Progression.RealmStage, Is.EqualTo(legacyMortalSave ? "凡人" : "练气"));
+            if (!legacyMortalSave) AssertStarterInitialization();
+            else
+            {
+                Assert.That(GameBootstrap.RequireRuntime().GetItemQuantity("item_iron_sword"), Is.Zero);
+                Assert.That(GameBootstrap.RequireRuntime().GetItemQuantity("item_huoxue_dan"), Is.Zero);
+                Assert.That(GameBootstrap.RequireRuntime().Player.MainEquipmentBasicAttackProfileId, Is.Empty);
+            }
             source = GameBootstrap.RequireRuntime().Player.Capture();
             Assert.That(new[] { source.Attributes.RootBone, source.Attributes.Spirit, source.Attributes.Mind,
                 source.Attributes.Talent, source.Attributes.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
@@ -333,8 +376,8 @@ namespace TianZhang.Tests.PlayMode
                 SetPrivateField(adventure, "environmentProfile", clone);
             }
             encounter = FindInActiveScene<EncounterCoordinator>();
-            random = new CountingCombatRandomSource();
-            encounter.SetCombatResolutionRandomSource(random);
+            random = productionCombatRandom ? null : new CountingCombatRandomSource();
+            if (random != null) encounter.SetCombatResolutionRandomSource(random);
             sink = new ForwardingSink(GetPrivateField<ICombatPresentationSink>(encounter, "presentation"));
             unitPort = new ForwardingUnitPort(GetPrivateField<ICombatUnitPresentationPort>(encounter, "unitPresentation"));
             SetPrivateField(encounter, "presentation", sink);
@@ -357,12 +400,155 @@ namespace TianZhang.Tests.PlayMode
             {
                 Assert.That(session.TryGetProfile(id, out CombatAttackProfile profile), Is.True);
                 Assert.That(profile.MeetsRequirements(spawned.Player.RealmStage,
-                    spawned.Player.VisibleRootElement, spawned.Player.VisibleRootGrade), Is.True);
+                    spawned.Player.VisibleRootElement, spawned.Player.VisibleRootGrade), Is.EqualTo(!legacyMortalSave));
             }
             actionBar = FindInActiveScene<CombatActionBarView>();
-            if (!controlledEnvironment.HasValue) ExportOrdinaryInputs();
+            if (productionCombatRandom) ExportOrdinaryInputs();
             yield return WaitForPlayerTurn();
+            if (productionCombatRandom) yield return CaptureTrialEvidence("first-combat", actionBar.ArtButton.GetComponentInChildren<Text>());
+            if (legacyMortalSave) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+        }
+
+        private static void AssertStarterInitialization()
+        {
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            Assert.That(runtime.Player.Progression.RealmStage, Is.EqualTo("练气"));
+            Assert.That(runtime.Player.Progression.GongFaId, Is.Empty);
+            Assert.That(runtime.Player.Progression.RealmMultiplier, Is.EqualTo(1.5f));
+            CharacterRuntimeProfile.ProjectActionEconomy(GrowthRules, runtime.Player.Progression.Capture(), out int ap, out int movement);
+            Assert.That(runtime.Player.Attributes.ActionPointMaximumUnits, Is.EqualTo(ap));
+            Assert.That(runtime.Player.Attributes.MovementEfficiencyMilliUnits, Is.EqualTo(movement));
+            Assert.That(runtime.Player.UnarmedBasicAttackProfileId, Is.EqualTo("basic_body_human_lianqi"));
+            Assert.That(runtime.Player.MainEquipmentBasicAttackProfileId, Is.EqualTo("basic_iron_sword"));
+            Assert.That(runtime.GetItemQuantity("item_iron_sword"), Is.EqualTo(1));
+            Assert.That(runtime.GetItemQuantity("item_iron_blade"), Is.EqualTo(1));
+            Assert.That(runtime.GetItemQuantity("item_huoxue_dan"), Is.EqualTo(3));
+        }
+
+        [UnityTest]
+        public IEnumerator FormalNewGameUsesProductionCombatRandomAndBothPreviewConfirmButtons()
+        {
+            yield return EnterFormalCombat(null, productionCombatRandom: true);
+            Assert.That(GetPrivateField<ICombatResolutionRandomSource>(encounter, "combatRandomSource"),
+                Is.TypeOf<SystemCombatResolutionRandomSource>());
+            CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
+            CombatActionPreviewView preview = FindInActiveScene<CombatActionPreviewView>();
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                yield return CaptureTrialEvidence("legal-arts-" + width, actionBar.ArtButton.GetComponentInChildren<Text>());
+            }
+            int mp = spawned.Player.CurrentSpirit, ap = spawned.Player.ActionPointsRemainingUnits;
+            actionBar.ArtButton.onClick.Invoke();
+            Assert.That(input.Preview.CanConfirm, Is.True);
+            int cost = input.Preview.ActionPointCostUnits, manaCost = input.Preview.SpiritCost;
+            preview.CancelButton.onClick.Invoke();
+            Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
+            actionBar.ArtButton.onClick.Invoke();
+            yield return CaptureTrialEvidence("attack-preview", GetPrivateField<Text>(preview, "summary"));
+            preview.ConfirmButton.onClick.Invoke();
+            Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - manaCost));
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
+            TestContext.WriteLine("Production random legal attack result: " + sink.Logs.Last());
+            yield return WaitForPlayerTurn();
+            mp = spawned.Player.CurrentSpirit; ap = spawned.Player.ActionPointsRemainingUnits;
+            actionBar.SecondArtButton.onClick.Invoke();
+            Assert.That(input.Candidate.TargetId, Is.EqualTo(spawned.Player.Id));
+            Assert.That(input.Preview.CanConfirm, Is.True);
+            cost = input.Preview.ActionPointCostUnits;
+            Assert.That(session.TryGetProfile(RecoveryId, out CombatAttackProfile recoveryProfile), Is.True);
+            int recovery = Math.Min(spawned.Player.MaximumSpirit - mp,
+                (int)Math.Floor(Math.Max(recoveryProfile.MinimumSpiritRecovery,
+                    Math.Min(spawned.Player.RawSpirit, recoveryProfile.RuleMetadata.Tier.RawSpiritRecoveryCapacity) *
+                    (double)recoveryProfile.SpiritRecoveryMultiplier) * session.SpiritRecoveryEnvironmentMultiplier));
+            yield return CaptureTrialEvidence("recovery-preview", GetPrivateField<Text>(preview, "summary"));
+            preview.ConfirmButton.onClick.Invoke();
+            Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp + recovery));
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
+            yield return WaitForPlayerTurn();
+            yield return CaptureTrialEvidence("both-cast", actionBar.SecondArtButton.GetComponentInChildren<Text>());
+        }
+
+        [UnityTest]
+        public IEnumerator IsolatedOldMortalMinorClanSaveLoadsWithoutQualificationOrGrants()
+        {
+            yield return EnterFormalCombat(null, legacyMortalSave: true);
+            foreach (string id in new[] { AttackId, RecoveryId })
+            {
+                CombatArtTargetSnapshot target = sink.Latest.ArtActions.Single(art => art.ProfileId == id).Targets.First();
+                Assert.That(target.CanExecute, Is.False);
+                Assert.That(target.RejectionReason, Is.EqualTo("attack_profile_requirements_not_met"));
+                AssertRejectedWithoutConsumption(() => ((ICombatCommandHandler)encounter).RequestArt("player", target.Id, id));
+            }
+            Text status = GetPrivateField<Text>(actionBar, "actionStatusLabel");
+            StringAssert.Contains("境界或灵根不满足要求", status.text);
+            Assert.That(status.text.Contains("试玩"), Is.False);
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                Assert.That(status.preferredHeight, Is.LessThanOrEqualTo(status.rectTransform.rect.height + 1f));
+                yield return CaptureTrialEvidence("legacy-rejection-" + width, status);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ArtsKeepResourceCooldownTargetAndRangeRejectionsWithoutPayment()
+        {
+            yield return EnterFormalCombat(null);
+            var service = new CombatCommandService();
+            AssertArtRejected("missing_target", AttackId, "combat_session_target_invalid");
+            AssertArtRejected("player", AttackId, "combat_session_target_invalid");
+            spawned.Player.SetCooldown(RecoveryId, 60); // Isolated negative input only.
+            AssertArtRejected("player", RecoveryId, "attack_profile_cooldown_active");
+            spawned.Player.SetCooldown(RecoveryId, 0);
+            int mp = spawned.Player.CurrentSpirit;
+            spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, 0); // Isolated negative input only.
+            AssertArtRejected("enemy", AttackId, "spirit_insufficient");
+            spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, mp);
+            ((ICombatCommandHandler)encounter).RequestArt("player", "enemy", AttackId);
+            yield return WaitForPlayerTurn();
+            ((ICombatCommandHandler)encounter).RequestArt("player", "player", RecoveryId);
+            yield return WaitForPlayerTurn();
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
+            AssertArtRejected("enemy", AttackId, "action_points_insufficient");
+            ((ICombatCommandHandler)encounter).RequestEndTurn("player");
+            yield return null;
+            yield return WaitForPlayerTurn();
+            var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player",
+                destination: session.SpatialQuery.FindReachable(spawned.Player.Position,
+                    spawned.Player.ActionPointsRemainingUnits, spawned.Player.MovementEfficiencyMilliUnits,
+                    new[] { spawned.Enemy.Position }).Keys.First(cell => cell.Distance(spawned.Enemy.Position) > 1 &&
+                        cell.Distance(spawned.Player.Position) == 1)));
+            Assert.That(move.IsLegal, Is.True);
+            ((ICombatCommandHandler)encounter).RequestMove("player", move.MovementPath.Last().Q, move.MovementPath.Last().R);
+            yield return WaitForPlayerTurn();
+            AssertArtRejected("enemy", AttackId, "above_max_range");
+        }
+
+        private void AssertArtRejected(string target, string art, string reason)
+        {
+            var command = new CombatCommand(CombatCommandKind.Art, "player", target, art);
+            Assert.That(new CombatCommandService().Preview(session, command).Validation.RejectionReason, Is.EqualTo(reason));
+            AssertRejectedWithoutConsumption(() => ((ICombatCommandHandler)encounter).RequestArt("player", target, art));
+        }
+
+        private IEnumerator CaptureTrialEvidence(string label, Text text)
+        {
+            Canvas.ForceUpdateCanvases();
+            string directory = Path.Combine(Application.dataPath, "../Logs/starter-trial");
+            Directory.CreateDirectory(directory);
+            string stem = Path.Combine(directory, label);
+            File.WriteAllText(stem + ".txt", "scene=" + SceneManager.GetActiveScene().name + "; resolution=" + Screen.width + "x" + Screen.height +
+                "; text=" + text.text + "; rect=" + DescribeRect(text.rectTransform) +
+                "; preferred=" + text.preferredWidth + "x" + text.preferredHeight + "; lines=" + text.cachedTextGenerator.lineCount +
+                "\nruntime=" + GameBootstrap.RequireRuntime().CaptureSaveJson() +
+                (spawned == null ? string.Empty : "\ncombat=" + JsonUtility.ToJson(CombatInputEvidence.Capture(spawned.Player), true)));
+            ScreenCapture.CaptureScreenshot(stem + ".png");
+            yield return null; yield return null;
         }
 
         private void AssertArtTargets()

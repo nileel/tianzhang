@@ -74,7 +74,8 @@ namespace TianZhang.Features.CharacterCreation
             profile.charName = string.IsNullOrWhiteSpace(draft.CharacterName) ? "无名修士" : draft.CharacterName;
             profile.baseLevel = 1;
             profile.realmMultiplier = 1.5f;
-            profile.realmStage = "凡人";
+            profile.realmStage = origin?.Id == "origin_minor_clan" && origin.StartNodeId == "guanzhong_hub"
+                ? "练气" : "凡人";
             profile.gongFaName = "";
             profile.equippedSpells = new string[0];
             profile.availableSpells = new string[0];
@@ -91,7 +92,10 @@ namespace TianZhang.Features.CharacterCreation
             profile.unarmedAttackFamilyId = "body_human";
             CharacterRuntimeProfile.ResolveUnarmedAttack(growthRules, profile.unarmedAttackFamilyId, profile.realmStage);
 
-            // 长期行动力基础输入读自点购配置，不在 C# 补 100000／2000，也不从反应或灵力派生。
+            // 点购镜像仍校验凡人配置；通过后按最终境界投影，不硬编码练气派生值。
+            CharacterRuntimeProfile.ProjectActionEconomy(growthRules,
+                new CharacterProgressionSnapshot(profile.gongFaName, profile.realmStage, profile.realmMultiplier),
+                out ap, out movement);
             profile.actionPointMaximumUnits = ap;
             profile.movementEfficiencyMilliUnits = movement;
 

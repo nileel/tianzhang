@@ -383,11 +383,78 @@ namespace TianZhang.Tests
                 CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.KnownSpells);
                 CollectionAssert.AreEqual(expected, runtime.AbilityLoadout.EquippedSpells);
-                Assert.AreEqual("basic_body_human_fanren", runtime.UnarmedBasicAttackProfileId);
+                Assert.AreEqual("练气", profile.realmStage);
+                Assert.AreEqual(1, profile.baseLevel);
+                Assert.AreEqual(1.5f, profile.realmMultiplier);
+                Assert.AreEqual("root_water_middle", profile.visibleRootId);
+                CharacterRuntimeProfile.ProjectActionEconomy(GrowthRules, runtime.Progression.Capture(), out int ap, out int movement);
+                Assert.AreEqual(ap, profile.actionPointMaximumUnits);
+                Assert.AreEqual(movement, profile.movementEfficiencyMilliUnits);
+                Assert.AreEqual(ap, runtime.Attributes.ActionPointMaximumUnits);
+                Assert.AreEqual(movement, runtime.Attributes.MovementEfficiencyMilliUnits);
+                Assert.AreEqual(CharacterRuntimeProfile.ResolveUnarmedAttack(GrowthRules, "body_human", "练气"),
+                    runtime.UnarmedBasicAttackProfileId);
             }
             finally
             {
                 Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
+        public void StarterRealmIsRestrictedToMinorClanAtGuanzhong()
+        {
+            foreach (OriginOption origin in CharacterCreationCatalog.Origins)
+            {
+                var draft = CharacterCreationCatalog.CreateDefaultDraft();
+                draft.OriginId = origin.Id;
+                CharacterData profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
+                try { Assert.AreEqual(origin.Id == "origin_minor_clan" ? "练气" : "凡人", profile.realmStage); }
+                finally { Object.DestroyImmediate(profile); }
+            }
+            int index = System.Array.FindIndex(CharacterCreationCatalog.Origins, origin => origin.Id == "origin_minor_clan");
+            OriginOption original = CharacterCreationCatalog.Origins[index];
+            CharacterData otherStart = null;
+            try
+            {
+                CharacterCreationCatalog.Origins[index] = new OriginOption(original.Id, original.DisplayName, original.BudgetCost, "jiangzuo_hub");
+                var draft = CharacterCreationCatalog.CreateDefaultDraft();
+                draft.OriginId = original.Id;
+                otherStart = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
+                Assert.AreEqual("凡人", otherStart.realmStage);
+            }
+            finally
+            {
+                CharacterCreationCatalog.Origins[index] = original;
+                if (otherStart != null) Object.DestroyImmediate(otherStart);
+            }
+        }
+
+        [Test]
+        public void MinorClanUsesFinalRealmConfigurationAndKeepsMortalPointBuyChecksum()
+        {
+            var draft = CharacterCreationCatalog.CreateDefaultDraft();
+            draft.OriginId = "origin_minor_clan";
+            var rules = Object.Instantiate(GrowthRules);
+            CharacterData profile = null;
+            try
+            {
+                rules.realms.Single(row => row.realmId == "realm_lianqi").baseMovementEfficiencyMilliUnits += 1000;
+                profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, rules);
+                CharacterRuntimeProfile.ProjectActionEconomy(rules, new CharacterProgressionSnapshot("", "练气", 1.5f),
+                    out int ap, out int movement);
+                Assert.AreEqual(ap, profile.actionPointMaximumUnits);
+                Assert.AreEqual(movement, profile.movementEfficiencyMilliUnits);
+                pointBuyConfig.movementEfficiencyMilliUnits = movement;
+                Assert.Throws<System.InvalidOperationException>(() => CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, rules));
+                pointBuyConfig.movementEfficiencyMilliUnits = GrowthRules.realms.Single(row => row.realmId == "realm_fanren").baseMovementEfficiencyMilliUnits;
+                draft.Innate = new InnateAttributeSet(15, 15, 15, 15, 15);
+                Assert.Throws<System.InvalidOperationException>(() => CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, rules));
+            }
+            finally
+            {
+                if (profile != null) Object.DestroyImmediate(profile);
+                Object.DestroyImmediate(rules);
             }
         }
 

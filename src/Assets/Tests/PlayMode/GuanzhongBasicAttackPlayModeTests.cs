@@ -28,17 +28,15 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongBasicAttackPlayModeTests
     {
-        // Explicit qualified-player fixture for damage/UI/save tests. Never called by production creation.
+        // Check the formal new-game result; this helper must never upgrade or initialize a player.
         public static void PrepareEquippedPlayerFixture()
         {
             var runtime = GameBootstrap.RequireRuntime();
-            Assert.AreEqual("凡人", runtime.Player.Progression.RealmStage);
-            Assert.IsTrue(string.IsNullOrEmpty(runtime.Player.MainEquipmentBasicAttackProfileId));
-            Assert.AreEqual("basic_body_human_fanren", runtime.Player.UnarmedBasicAttackProfileId);
-            Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
-            runtime.Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot("", "练气", 1.5f));
-            runtime.BeginEquippedNewGame(runtime.Player, runtime.Cultivation, "guanzhong_hub",
-                UnityEditor.AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
+            Assert.AreEqual("练气", runtime.Player.Progression.RealmStage);
+            Assert.AreEqual("basic_body_human_lianqi", runtime.Player.UnarmedBasicAttackProfileId);
+            Assert.AreEqual(1, runtime.GetItemQuantity("item_iron_sword"));
+            Assert.AreEqual(1, runtime.GetItemQuantity("item_iron_blade"));
+            Assert.AreEqual(3, runtime.GetItemQuantity("item_huoxue_dan"));
             Assert.AreEqual("basic_iron_sword", runtime.Player.MainEquipmentBasicAttackProfileId);
         }
 
@@ -103,14 +101,17 @@ namespace TianZhang.Tests.PlayMode
             CharacterCreationController creation = FindInActiveScene<CharacterCreationController>();
             Assert.IsNotNull(creation, "StartMenu must expose the CharacterCreation feature owner.");
             creation.Open();
-            creation.Draft.OriginId = "origin_minor_clan";
+            // Preserve the mortal, unarmed production path through an origin outside the clan trial.
+            creation.Draft.OriginId = "origin_loose";
             creation.Draft.Innate = InnateAttributeSet.Balanced();
             creation.Submit(slotId, "01G 正式薄切片");
             yield return WaitForScene(GameplaySceneNames.World);
 
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             Assert.IsNotNull(runtime.Player);
-            Assert.AreEqual("guanzhong_hub", runtime.Navigation.WorldNodeId);
+            Assert.AreEqual("jiangzuo_hub", runtime.Navigation.WorldNodeId);
+            Assert.AreEqual("凡人", runtime.Player.Progression.RealmStage);
+            Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
             WorldMapController world = FindInActiveScene<WorldMapController>();
             Assert.IsNotNull(world, "WorldScene must expose the WorldMap feature owner.");
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));

@@ -59,14 +59,19 @@ namespace TianZhang.Tests.PlayMode
             saveDirectory = Path.Combine(Application.temporaryCachePath, "TianZhang-Target-" + Guid.NewGuid().ToString("N"));
             Set(GameBootstrap.RequireInstance(), "slotStore", new GameSaveSlotStore(saveDirectory));
             CharacterCreationController creation = Find<CharacterCreationController>();
-            creation.Open();
+            Get<Button>(Find<StartMenuView>(), "newPlayerButton").onClick.Invoke();
             Assert.AreEqual("origin_loose", creation.Draft.OriginId);
-            Assert.IsTrue(creation.SelectOrigin("origin_minor_clan"));
+            CharacterCreationView creationView = Find<CharacterCreationView>();
+            creationView.GetOriginButton("origin_minor_clan").onClick.Invoke();
+            Assert.AreEqual("origin_minor_clan", creation.Draft.OriginId);
             Assert.That(new[] { creation.Draft.Innate.RootBone, creation.Draft.Innate.Soul, creation.Draft.Innate.DivineSense,
                 creation.Draft.Innate.Aptitude, creation.Draft.Innate.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
-            creation.Submit("formal-target", "目标联动验证");
+            Get<InputField>(creationView, "slotIdInput").text = "formal-target";
+            Get<InputField>(creationView, "characterNameInput").text = "目标联动验证";
+            Get<Button>(creationView, "createButton").onClick.Invoke();
             yield return SceneReady(GameplaySceneNames.World);
-            GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
+            Assert.AreEqual("练气", GameBootstrap.RequireRuntime().Player.Progression.RealmStage);
+            Assert.AreEqual("basic_iron_sword", GameBootstrap.RequireRuntime().Player.MainEquipmentBasicAttackProfileId);
             WorldMapController world = Find<WorldMapController>();
             Assert.IsTrue(world.SelectNode("guanzhong_hub"));
             world.EnterSelectedLocation();

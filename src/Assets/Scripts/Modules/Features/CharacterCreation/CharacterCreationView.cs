@@ -82,6 +82,8 @@ namespace TianZhang.Features.CharacterCreation
                 summaryText.text = $"出身：{origin?.DisplayName ?? "未选择"}　起点：{start}\n" +
                     $"创建预算：{validation.BudgetUsed}/{validation.BudgetLimit}　返还：{validation.BudgetRefunded}　剩余：{validation.BudgetAvailable}\n" +
                     "属性与灵根沿用当前草稿；进入游戏后再加入门派。";
+                if (origin?.Id == "origin_minor_clan" && origin.StartNodeId == "guanzhong_hub")
+                    summaryText.text += "\n关中小族试玩：练气起步，可使用贯石击与聚灵术；初始铁剑、铁刀各一件，活血丹三颗。仅新建角色生效，已有存档不变。";
             }
             if (failureText != null) failureText.text = string.Join("\n", validation.Errors);
         }
