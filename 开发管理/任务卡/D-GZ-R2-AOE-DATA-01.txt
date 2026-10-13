@@ -8,21 +8,46 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-R2-AOE-RESOLVE-01"
-  ],
-  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13 RESOLVE已完成归档；两件武器内容、严格导入、全部派生档案与运行时投影路径已冻结，已重新预检后进入ready。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "docs/道具/武器/铁剑.txt",
+    "docs/道具/武器/铁刀.txt",
+    "docs/道具/道具事实速查.txt",
+    "src/Assets/DataConfig/AttackProfiles.csv",
+    "src/Assets/Scripts/Modules/Content/AttackProfileData.cs",
+    "src/Assets/Scripts/Editor/CombatContentImporter.cs",
+    "src/Assets/Scripts/Combat/CombatRuleSet.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/CombatEntryAdapter.cs",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+    "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset",
+    "src/Assets/Data/CombatRuleSet.asset",
+    "src/Assets/Tests/EditMode/AttackProfileDataTests.cs",
+    "src/Assets/Tests/EditMode/ContentImporterArchitectureTests.cs",
+    "src/Assets/Tests/EditMode/FeatureCompositionEditorTests.cs",
+    "simulations/BattleSim/BattleSim.csproj",
+    "simulations/BattleSim/GameData.cs",
+    "simulations/BattleSim/BattleSimSelfTests.cs",
+    "simulations/BattleSim/GuanzhongPlaytestAudit.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-DATA-001"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"
@@ -75,7 +100,11 @@
 
 ## 模型协作
 
-中等偏复杂：同一武器内容链的原子导入与摘要一致性；gpt-6.1-sol建议high，主责单模型统一复核。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+2026-10-13准备ready复核：两件武器的内容语义、严格导入、摘要和九个派生产物构成同一原子链，保持卡头gpt-6.1-sol并建议high；已核对源码、PowerShell、数据链与EditMode验证入口，无独立只读问题，不调用辅助。建议强度不是已生效配置，真实运行证据仍由执行轮取得。
+
+## ready准备记录
+
+RESOLVE已完成归档。本轮复核两件武器L2/L1、CSV、解析与导入、九个派生档案、CombatRuleSet、运行时投影和三张EditMode入口；卡头逐项列出三份事实文档、CSV、五项现有源码、九个既有攻击asset、CombatRuleSet及测试。CSV摘要变化会重写全部九个攻击asset和CombatRuleSet，故全部列出；路径均存在，不创建或移动资源、不改.meta。风险预检返回ok，命中EXP-DATA-001、无门禁；已沿生产读取补列BattleSim项目显式链接、GameData、SelfTests和关中审计读取，执行时以同一schema验证，先build再run但不把结果冒充平衡定案。若执行时发现必须新增字段、路径或所有者，立即停止重新准备。
 
 ## 验证
 

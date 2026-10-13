@@ -8,16 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CONFIG-EDITOR-CORE-01",
-    "U-CONFIG-EDITOR-COMBAT-01",
-    "U-CONFIG-EDITOR-CHARACTER-01",
-    "U-CONFIG-EDITOR-WORLD-01",
-    "U-CONFIG-EDITOR-CULTIVATION-01",
-    "U-CONFIG-EDITOR-CHARTER-01"
-  ],
-  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-13六项具名前置均已完成归档；技术合同、完整实施路径、验证、完成条件和停止条件已冻结，已重新预检后进入ready。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-APPLY-01.txt",
@@ -470,7 +463,7 @@
 
 接入已冻结的校验并保存/保存并应用按钮，按变更集处理关联字段和受影响文件。凡人移动效率一次修改同步必要创角镜像，联动列表可见；避免整表无意义重排。复用现有领域校验和导入，处理导入仅LogError、派生digest及确切资产绑定，分别报告未保存/已保存未应用/应用成功或失败。检测磁盘外部变更不覆盖；写盘前所有相关字段先验证，保存失败不留下无提示半配置。导入失败保留草稿/诊断并明确未应用，不隐瞒部分生成物，不擅自追加重试/回滚服务。仅按合同修改必要导入接口，不改业务规则。
 
-2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。QueueMaintenance已核对CORE、COMBAT、CHARACTER、WORLD、CULTIVATION、CHARTER六项具名前置均为完成归档；当前仓库与已批准合同已足以实施。本轮预检返回ok，matched/gates均为空，riskPreflight投影保持三个空数组；本卡进入ready。
 
 ## 禁止项
 
@@ -480,7 +473,7 @@
 
 关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
 
-当前blocked，临近ready依据直接事实再评估能力，不因指定型号越过前置。 默认单模型，不要求额外辅助调用；如确需独立只读辅助，按既有AI协作规则处理，禁止共享写入。本轮未运行所分配模型；目标不可用按现有失败合同记录，不静默换型。真实Unity能力缺失不能声称实机验收通过。
+2026-10-13准备ready复核：22表保存、导入及失败边界是同一强耦合闭环，保持卡头gpt-6-astra并建议high；所需仓库、PowerShell与Unity验证入口可用，无独立只读问题，不需辅助模型。目标不可用按现有失败合同记录，不静默换型；真实Unity能力缺失不能声称实机验收通过。
 
 ## 验证
 
