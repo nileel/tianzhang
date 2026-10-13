@@ -321,6 +321,27 @@ namespace TianZhang.Tests
             Assert.AreEqual("天章/配置编辑器", menu.menuItem);
         }
 
+        [Test]
+        public void DraftChoiceContextUsesProspectiveRowAndExactSessionWithoutGlobalWindow()
+        {
+            var definition = FixtureDefinition();
+            var reference = definition.Fields.Single(f => f.Column == "reference");
+            reference.DraftChoices = context =>
+            {
+                Assert.AreEqual("fixture", context.TableId);
+                Assert.That(context.Path, Is.EqualTo("reference").Or.EqualTo("list/0"));
+                return context.Row.At("list").Items.Select(v => new ConfigChoice(v.RawToken, "当前行引用")).ToArray();
+            };
+            var session = FixtureSession(definition, FixtureBytes());
+            session.SetValue("fixture", "a", "reference", ConfigValue.Scalar("ref_1"));
+            Assert.Throws<ArgumentException>(() => session.SetValue("fixture", "b", "reference", ConfigValue.Scalar("ref_1")));
+            session.SetValue("fixture", "a", "list", ConfigValue.List(new[] { ConfigValue.Scalar("ref_2") }));
+            session.SetValue("fixture", "a", "reference", ConfigValue.Scalar("ref_2"));
+            session.UndoDraft();
+            Assert.Throws<ArgumentException>(() => session.SetValue("fixture", "a", "reference", ConfigValue.Scalar("ref_2")));
+            Assert.IsEmpty(reference.GetChoices(null), "缺少上下文不能借用静态候选或其他窗口");
+        }
+
         private static byte[] FixtureBytes() => Bytes("#隔离内存样例\r\nid,text,amount,reference,list,group\na,\"原,文\",001000,ref_1,ref_1,1~2\rb,次条,0,ref_2,,3~4");
 
         private static ConfigDraftSession FixtureSession(ConfigTableDefinition definition, byte[] bytes) =>

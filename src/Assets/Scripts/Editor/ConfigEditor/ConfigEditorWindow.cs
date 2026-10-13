@@ -253,7 +253,8 @@ namespace TianZhang.Editor.ConfigEditor
             {
                 try
                 {
-                    var value = ConfigFieldGUI.Draw(field, row.Members[field.Column], row, field.Column, searches);
+                    var value = ConfigFieldGUI.Draw(field, row.Members[field.Column], row, field.Column, searches,
+                        new ConfigFieldContext(session.Snapshot(), table.Definition.TableId, rowKey, row, field.Column));
                     if (!value.Equals(row.Members[field.Column])) SetSelectedValue(field.Column, value);
                 }
                 catch (Exception exception) when (exception is ArgumentException || exception is InvalidOperationException ||

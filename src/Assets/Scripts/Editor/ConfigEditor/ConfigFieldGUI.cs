@@ -31,7 +31,7 @@ namespace TianZhang.Editor.ConfigEditor
             return ConfigValue.Scalar(stored.ToString("G29", Invariant));
         }
 
-        public static void ValidateValue(ConfigFieldDefinition field, ConfigValue value)
+        public static void ValidateValue(ConfigFieldDefinition field, ConfigValue value, ConfigFieldContext context = null)
         {
             var expected = field.Control == ConfigControl.List ? ConfigNodeKind.List :
                 field.Control == ConfigControl.Group ? ConfigNodeKind.Group : ConfigNodeKind.Scalar;
@@ -44,14 +44,14 @@ namespace TianZhang.Editor.ConfigEditor
             if (value.Kind == ConfigNodeKind.List)
             {
                 if (field.Element == null) throw new ArgumentException("列表元素尚未适配。");
-                foreach (var item in value.Items) ValidateValue(field.Element, item);
+                for (var i = 0; i < value.Items.Count; i++) ValidateValue(field.Element, value.Items[i], context?.Child(i.ToString()));
                 return;
             }
             if (value.Kind == ConfigNodeKind.Group)
             {
                 if (value.Members.Count != field.Children.Count || !field.Children.All(child => value.Members.ContainsKey(child.Column)))
                     throw new ArgumentException("分组字段缺失或存在未知子字段。");
-                foreach (var child in field.Children) ValidateValue(child, value.Members[child.Column]);
+                foreach (var child in field.Children) ValidateValue(child, value.Members[child.Column], context?.Child(child.Column));
                 return;
             }
             CsvConfigDocument.ValidateToken(value.RawToken);
@@ -61,17 +61,17 @@ namespace TianZhang.Editor.ConfigEditor
             if (field.Control == ConfigControl.Boolean && value.RawToken != "0" && value.RawToken != "1")
                 throw new ArgumentException("布尔字段只接受显式0或1。");
             if ((field.Control == ConfigControl.Enum || field.Control == ConfigControl.Reference) &&
-                (field.Choices == null || !field.Choices().Any(choice => choice.Id == value.RawToken)))
+                !field.GetChoices(context).Any(choice => choice.Id == value.RawToken))
                 throw new ArgumentException("引用或枚举不在权威候选中。");
         }
 
         public static ConfigValue Draw(ConfigFieldDefinition field, ConfigValue value, ConfigValue row,
-            string fieldPath, IDictionary<string, string> searches)
+            string fieldPath, IDictionary<string, string> searches, ConfigFieldContext context = null)
         {
-            var editable = field.IsEditable(row);
+            var editable = field.IsEditable(row, context);
             using (new EditorGUI.DisabledScope(!editable))
             {
-                var result = DrawValue(field, value, row, fieldPath, searches);
+                var result = DrawValue(field, value, row, fieldPath, searches, context);
                 if (!editable) EditorGUILayout.LabelField(string.IsNullOrEmpty(field.ReadOnlyReason) ? "当前分支不适用，保持原值" : field.ReadOnlyReason, EditorStyles.wordWrappedMiniLabel);
                 if (!string.IsNullOrEmpty(field.Help)) EditorGUILayout.LabelField(field.Help, EditorStyles.wordWrappedMiniLabel);
                 return result;
@@ -79,7 +79,7 @@ namespace TianZhang.Editor.ConfigEditor
         }
 
         private static ConfigValue DrawValue(ConfigFieldDefinition field, ConfigValue value, ConfigValue row,
-            string path, IDictionary<string, string> searches)
+            string path, IDictionary<string, string> searches, ConfigFieldContext context)
         {
             var label = string.IsNullOrEmpty(field.Unit) ? field.ChineseName : $"{field.ChineseName}（{field.Unit}）";
             if (field.Control == ConfigControl.Group)
@@ -88,7 +88,7 @@ namespace TianZhang.Editor.ConfigEditor
                 EditorGUI.indentLevel++;
                 var members = value.Members.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
                 foreach (var child in field.Children)
-                    members[child.Column] = Draw(child, members[child.Column], row, path + "/" + child.Column, searches);
+                    members[child.Column] = Draw(child, members[child.Column], row, path + "/" + child.Column, searches, context?.Child(child.Column));
                 EditorGUI.indentLevel--;
                 return ConfigValue.Group(members, value.RawToken, value.HasValue);
             }
@@ -108,7 +108,7 @@ namespace TianZhang.Editor.ConfigEditor
                     using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
                         EditorGUILayout.LabelField($"第{i + 1}项");
-                        items[i] = Draw(field.Element, items[i], row, path + "/" + i, searches);
+                        items[i] = Draw(field.Element, items[i], row, path + "/" + i, searches, context?.Child(i.ToString()));
                         if (GUILayout.Button("删除此项")) removed = i;
                     }
                 }
@@ -130,7 +130,7 @@ namespace TianZhang.Editor.ConfigEditor
                 }
                 if (!value.HasValue)
                 {
-                    var firstChoice = field.Choices?.Invoke().FirstOrDefault();
+                    var firstChoice = field.GetChoices(context).FirstOrDefault();
                     value = ConfigValue.Scalar(firstChoice?.Id ?? "0");
                 }
             }
@@ -141,7 +141,7 @@ namespace TianZhang.Editor.ConfigEditor
             }
             if (field.Control == ConfigControl.Enum || field.Control == ConfigControl.Reference)
             {
-                var choices = field.Choices?.Invoke() ?? Array.Empty<ConfigChoice>();
+                var choices = field.GetChoices(context);
                 if (field.Control == ConfigControl.Reference)
                 {
                     searches.TryGetValue(path, out var filter);

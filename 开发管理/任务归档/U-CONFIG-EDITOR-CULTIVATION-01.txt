@@ -1,0 +1,125 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-CULTIVATION-01",
+  "title": "配置编辑器成长状态与NPC策略三表适配",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-13三表结构化适配及CORE草稿上下文完成，专项37/37通过；本卡归档，后继保存应用和总体验收仍按原拆分执行。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-CULTIVATION-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "开发管理/Unity配置编辑器字段与导入合同.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorContracts.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigFieldGUI.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigDraftSession.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CultivationTableCodec.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/CultivationTableCodec.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCoreTests.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/FoundationTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/FoundationTable.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/JindanTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/JindanTable.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/NpcPolicyTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/NpcPolicyTable.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCultivationTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCultivationTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6-astra",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-CULTIVATION-01 · 配置编辑器成长状态与NPC策略三表适配
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/FoundationPurpleMansionStates.csv
+- src/Assets/DataConfig/JindanStaticStates.csv
+- src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv
+- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportFoundationPurpleMansionStates/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles/ParseNpcCultivationActionWeightProfiles/ComputeNpcCultivationSourceHash
+
+## 实施范围
+
+展开道基紫府/金丹/NPC策略三表的嵌套结构、分段权重、引用与可选值；仅按现有版本解析，不改状态机、台账和资格规则。生产记录与fixture/expect/fixtureOnlyNumericProfile明确区分；隔离内存副本中的负例夹具按其预期验收，不错误要求整张表每行都成为合法生产角色。不得降级成原始分隔符文本框交付。
+
+2026-10-13接口阻塞修复：原run 3f37f47e-cff6-49d2-8d59-1540b269d807在业务写入前发现哈希方法为private、导入器修改权仅归后继APPLY，返回required_importer_api_outside_task_scope；31a54c23只提交阻塞投影。负责人随后批准修复。现仅新增CultivationContentImporter.cs及其.meta的精确授权：把ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)由private static改为public static，参数、返回类型、函数体及原Parse调用保持不变，.meta GUID保持不变。本组NpcPolicyTable直接复用该方法生成候选快照的MANIFEST关联哈希；不复制算法、不用反射、不等待APPLY提供入口。其他导入器接口仍归后继APPLY。原具名前置已解除；本卡重新校验后入队，三表业务实施与Unity验收尚未完成。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+2026-10-13准备ready复核：三表成长语义和Editor接线仍为一项有界实现，保持卡头gpt-6-astra及单模型统一复核；无独立只读问题，不调用辅助。本次阻塞根因和修复边界已由函数、直接Parse调用和合同核对，单个可见性变更仍服务同一三表结果，保持原子任务与原主模型。本轮Node REPL核实实际执行模型gpt-6-astra；同一主智能体实现与复核，不派生子智能体。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+深层组合往返/分段边界/有序列表、生产与正负fixture分流、空与零；当前schema每个字段都有中文和控件，未知版本拒绝写盘，不抹掉未理解数据。NPC哈希在ConfigEditorCultivationTests中验证：真实源重算与现有MANIFEST相同，合法内存字段编辑后所有MANIFEST同步新hash并可由原ParseNpcCultivationActionWeightProfiles解析，保留旧hash时仍被原解析器拒绝；导入器diff只允许该方法可见性变化。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+本组各表的全部列和复合子字段均有中文结构化编辑和可逆序列化，通过真实数据往返/非法输入验证，并交付本组校验与导入依赖描述供APPLY消费；不由本组另写独立保存或导入按钮。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+2026-10-13负责人追加授权直接完成：本卡同时修复CORE引用候选的显式草稿/当前行/字段路径上下文，贯通绘制、条件编辑与SetValue校验；原静态候选继续使用同一控件。精确路径见expectedPaths，新增CultivationTableCodec仅复用本组三表结构编解码和中文字段定义，不承担游戏规则。窗口只传递本会话上下文，不通过全局窗口查找解析本组引用；验收覆盖新建引用、跨角色隔离、无窗口校验及撤销。通过CORE的IConfigTableProvider注册，未授权运行时/数据规则保持原样。CultivationContentImporter.cs按依赖顺序交接：本卡先完成唯一哈希入口开放，APPLY在本卡归档后才修改其余必要无写盘接口，不能并行写入该文件。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+
+## 本轮实施与验证结果（2026-10-13）
+
+- 负责人明确要求直接完成后，在.worktrees/complete-cultivation-editor独立分支实施。Node REPL读取实际主模型gpt-6-astra；单模型统一实现与复核，未派生辅助。两个自动化owner未占用本taskId，主工作区用户改动不纳入本次提交。
+- 写入前预检status=ok；taskCardDigest=27fc483a0a9db77ccae33d71963adf5b5b3391fd2b923a6cfdf2b42b1f2dc5ed，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；matched/mustRead/gates为空，与schema 2投影一致。模型组合和所有者路径保持同一获批结果。
+- Foundation、Jindan、NPC三表分别完整覆盖26/12/34列，经IConfigTableProvider接入同一窗口。复合字段使用中文Group/List与标量控件，展开五府状态、效果及参数、镇府神通、强化节点、行动与闭关、结丹锁、核心/丹相、稳定位及辅助载体、台账和NPC递减分段；不提供原始复合分隔符文本框。
+- CultivationTableCodec只复用本组三表展示语法与逐行错误定位；领域合法性继续调用现有CultivationContentImporter解析器。生产Foundation/Jindan仍为零行，不借用fixture生成生产记录或权威目录。正负fixture由显式隔离构造器消费，保留原始错误结果；缺失生产权威时拒绝通过，不虚构候选。
+- CORE增加显式ConfigFieldContext，贯通Draw、嵌套条件编辑和SetValue；候选使用本会话当前行及字段父节点，支持同草稿新增效果后立即引用，跨角色隔离，撤销即失效；没有窗口也可校验。原静态Choices继续工作，没有全局窗口查找或新状态层。
+- NPC复用开放为public的原ComputeNpcCultivationSourceHash生成所有MANIFEST关联编辑；导入器差异仅该方法可见性，算法/签名/原Parse调用及.meta均不变。派生hash不可手填，旧hash由原解析器拒绝；记录顺序、稀疏空列不变。来源类型、冻结快照和未消费声明按合同只读。FORMED快照不自动修复。
+- 无编辑源bytes完全一致；结构未改保留原词元、空/none和数字写法。切换府状态但遗留旧分支数据时拒绝编码，避免丢失字段；原解析器继续验证段界、版本、引用及行动/闭关一致性。GetImportSteps只交付依赖描述，不执行导入。
+- Unity 6000.3.18f1实际EditMode：最终ConfigEditorCultivationTests 8/8、ConfigEditorCoreTests 29/29通过，结果TEMP/cultivation-final-targeted.xml与同名.log。此前相关回归COMBAT 26/26、WORLD 29/29通过（TEMP/cultivation-editor-graphics.xml），CHARACTER 21/21通过（TEMP/cultivation-core-regression.xml）；未变化组不重复运行。按用例去重，含CHARTER通过部分共143项通过。
+- 真实窗口测试打开三表，渲染生产零行空态，编辑NPC权重及隔离fixture深层效果参数后撤销；CSV及.meta hash保持不变，未保存、未导入。新增专项另覆盖府胚0进度、闭关有序条件、分支数据保护、FORMED只读、金丹载体候选和版本拒绝、未知schema/记录类型及生产fixture泄漏。
+- 已知回归限制：CHARTER为30/31，RealWindowEditsBothTablesRendersAndUndoesWithoutWritingAssetsOrGameState在全窗口校验断言失败；与WORLD归档已记录的同用例既有跨域内容校验缺口一致，本组三表校验通过。不能宣称全窗口整体校验或整个配置编辑器产品已经完成。首轮-nographics导致三个窗口用例无图形设备，启用图形设备后通过；新增CORE测试的路径断言修正为共享字段的reference/list/0真实路径，最终通过。
+- check-unity-assembly-boundaries.ps1通过（19程序集、2 asmref）；check-data-chain.ps1通过。任务卡、审核文本、允许路径空白及暂存差异检查用于收口。Unity导入产生的ShaderGraphSettings空白差异按已核实clean基线恢复；无CSV、asset、asmdef或运行时改动。
+- 所有者链为ConfigTableRegistry→ConfigEditorWindow→ConfigFieldGUI→ConfigDraftSession→三表codec→原领域解析器。实现仅在TianZhang.Editor程序集，测试在EditMode程序集，新C#低于500行。结构图和技能引用已核对project-structure-discovery、modular-architecture、ai-workflows、runtime-owner-proof、serialized-persistence、unity-validation、ui-and-visual-assets及cleanup-and-git。
+- 本卡完成并移入任务归档，从backlog移除；当时已不在ready队列。只关闭本任务，后继APPLY/V的具名前置与投影留给既有QueueMaintenance按正式master事实维护。保存/应用、实际资产重导入与完整用户路径验收仍由后继任务负责。
+
+## 经验候选
+
+### U-CONFIG-EDITOR-CULTIVATION-01-DRAFT-CONTEXT
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：成长三表自动任务先后因哈希入口私有及CORE候选缺少草稿上下文停止，不能在冻结的领域路径内交付完整引用编辑。
+- 已证实根因：冻结拆分只规定复用哈希和领域字段，未验证直接依赖接口的可见性与参数能力；Func无参候选无法获得当前会话、角色及嵌套父项，磁盘或聚焦窗口也不能代表新增草稿引用。
+- 可能复用范围：依赖通用Editor框架的结构化CSV适配任务及其ready前接口冻结。
+- 证据：原阻塞3f37f47e-cff6-49d2-8d59-1540b269d807和e47b2450-65e4-4a80-900c-2ae6cb027459；本轮导入器仅开放原哈希，CORE显式传ConfigFieldContext；ConfigEditorCoreTests与ConfigEditorCultivationTests最终37/37通过，包含新引用、无窗口、跨角色和撤销。
+- 门禁可能：yes

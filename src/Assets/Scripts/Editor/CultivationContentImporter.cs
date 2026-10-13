@@ -363,7 +363,7 @@ namespace TianZhang.Editor
             }
         }
 
-        private static string ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)
+        public static string ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)
         {
             var canonicalRows = rows.Select(row =>
             {

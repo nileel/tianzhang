@@ -104,10 +104,31 @@ namespace TianZhang.Editor.ConfigEditor
         // Stored integer = displayed decimal * scale (AP and MilliUnits: 1000).
         public decimal Scale { get; set; } = 1m;
         public Func<IReadOnlyList<ConfigChoice>> Choices { get; set; }
+        public Func<ConfigFieldContext, IReadOnlyList<ConfigChoice>> DraftChoices { get; set; }
+        public Func<ConfigFieldContext, bool> CanEditDraft { get; set; }
         public IReadOnlyList<ConfigFieldDefinition> Children { get; set; } = Array.Empty<ConfigFieldDefinition>();
         public ConfigFieldDefinition Element { get; set; }
         public Func<ConfigValue> NewElement { get; set; }
         public bool IsEditable(ConfigValue row) => Editable && (CanEdit == null || CanEdit(row));
+        public bool IsEditable(ConfigValue row, ConfigFieldContext context) => IsEditable(row) &&
+            (CanEditDraft == null || (context != null && CanEditDraft(context)));
+        public IReadOnlyList<ConfigChoice> GetChoices(ConfigFieldContext context) => DraftChoices != null
+            ? (context == null ? Array.Empty<ConfigChoice>() : DraftChoices(context))
+            : Choices?.Invoke() ?? Array.Empty<ConfigChoice>();
+    }
+
+    // Explicit session/row identity: a dropdown never borrows another focused window's draft.
+    public sealed class ConfigFieldContext
+    {
+        public ConfigDraftSnapshot Snapshot { get; }
+        public string TableId { get; }
+        public string RowKey { get; }
+        public ConfigValue Row { get; }
+        public string Path { get; }
+        public ConfigValue Parent => Path.Contains("/") ? Row.At(Path.Substring(0, Path.LastIndexOf('/'))) : Row;
+        public ConfigFieldContext(ConfigDraftSnapshot snapshot, string tableId, string rowKey, ConfigValue row, string path)
+        { Snapshot = snapshot; TableId = tableId; RowKey = rowKey; Row = row; Path = path; }
+        public ConfigFieldContext Child(string segment) => new ConfigFieldContext(Snapshot, TableId, RowKey, Row, Path + "/" + segment);
     }
 
     public sealed class ConfigTableDefinition

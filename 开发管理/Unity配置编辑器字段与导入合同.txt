@@ -259,6 +259,8 @@ CORE只拥有通用无损文档、草稿和窗口，不包含领域规则。每�
 
 ConfigValue保留原始词元及HasValue（空与零分开）；CsvConfigDocument.Load(bytes)保留行/单元格定位，EncodeEdits(edits)只产生候选bytes而不写盘；ConfigDraftSession保存打开基线hash、完整相关文档快照、编辑列表及最后应用证据。修改通过SetValue(tableId,rowKey,fieldPath,value)，UndoDraft回到最近已保存基线；关闭脏草稿提供继续编辑/放弃，APPLY接入后才提供校验保存。读失败或未适配字段不显示可用保存按钮。
 
+2026-10-13负责人授权CULTIVATION补齐CORE草稿引用接口：ConfigFieldContext显式携带Snapshot、TableId、RowKey、当前Row与字段Path，Parent/Child定位嵌套项。DraftChoices与CanEditDraft使用该上下文；绘制和SetValue使用同一候选来源，SetValue按改后的当前行校验新增嵌套引用。没有上下文时动态候选为空，不借用聚焦窗口、全局窗口或磁盘旧值；原Choices继续用于静态候选。撤销后从当前会话快照重新求值。本次精确涉及ConfigEditorContracts、ConfigFieldGUI、ConfigDraftSession、ConfigEditorWindow及ConfigEditorCoreTests，不改变领域所有者或保存服务。
+
 领域编解码器DecodeRow/EncodeRow只负责CSV⇄结构模型；ValidateDraft(snapshot)返回ConfigIssue(TableId,RowKey,FieldPath,中文原因,原领域错误码)，不可写文件/资产。GetLinkedEdits(snapshot)给出确定性的必要镜像，不静默修复非法用户输入。GetImportSteps(changedTables)只报告下面冻结的领域方法和产物，不自行调用。依赖完整源码的领域校验仍归原importer：APPLY在原类型提取可复用的无写盘Preview/Validate入口，生产Import复用同一解析单元，避免复制第二套业务规则。
 
 APPLY独占IConfigApplyService：ValidateAndSave(session)和SaveAndApply(session)，返回ConfigOperationResult，其最小字段为SavedPaths、FailedSavePaths、AppliedPaths、FailedImportStep、Issues、Evidence。CORE通过TypeCache只接一个实现，未实现时明确禁用按钮。方法同步执行，禁止第二保存服务、自动重试、通用事务层或后台状态机。ConfigImportPlan是本次有序方法/输入/产物清单，不持久化成第二事实源。
@@ -329,7 +331,7 @@ APPLY对每步绑定日志监听，仅在调用窗口捕获Error/Exception/Asser
 | COMBAT | CombatRuleTables.cs、CombatAbilityTables.cs、PointBuyTable.cs | ConfigEditorCombatTests.cs |
 | CHARACTER | CharacterTables.cs、GongFaTable.cs | ConfigEditorCharacterTests.cs |
 | WORLD | WorldTables.cs、EnvironmentTable.cs | ConfigEditorWorldTests.cs |
-| CULTIVATION | FoundationTable.cs、JindanTable.cs、NpcPolicyTable.cs | ConfigEditorCultivationTests.cs |
+| CULTIVATION | FoundationTable.cs、JindanTable.cs、NpcPolicyTable.cs、CultivationTableCodec.cs；上述获批CORE上下文补齐 | ConfigEditorCultivationTests.cs、上述CORE回归 |
 | CHARTER | CharterRuleTable.cs、CharterSiteTable.cs | ConfigEditorCharterTests.cs |
 | APPLY | ConfigSaveApplyService.cs、ConfigImportPlan.cs | ConfigEditorApplyTests.cs |
 | V | 不修改实现；只写开发管理/Unity中文配置编辑器验收记录.txt及原批准生命周期路径 | 运行前述测试，不新增测试实现 |

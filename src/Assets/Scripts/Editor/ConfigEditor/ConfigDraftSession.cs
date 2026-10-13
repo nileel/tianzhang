@@ -114,28 +114,31 @@ namespace TianZhang.Editor.ConfigEditor
             if (!table.Definition.IsAdapted || table.Issues.Count > 0) throw new InvalidOperationException("当前表尚不能编辑。");
             var row = table.Rows[rowKey];
             var segments = fieldPath.Split('/');
+            var snapshot = Snapshot();
+            var context = new ConfigFieldContext(snapshot, tableId, rowKey, row, segments[0]);
             var field = table.Definition.Fields.Single(item => item.Column == segments[0]);
-            if (!field.IsEditable(row)) throw new InvalidOperationException(field.ReadOnlyReason);
+            if (!field.IsEditable(row, context)) throw new InvalidOperationException(field.ReadOnlyReason);
             for (var i = 1; i < segments.Length; i++)
             {
                 field = field.Control == ConfigControl.List ? field.Element : field.Children.Single(item => item.Column == segments[i]);
-                if (field == null || !field.IsEditable(row)) throw new InvalidOperationException("字段为只读或尚未适配。");
+                context = context.Child(segments[i]);
+                if (field == null || !field.IsEditable(row, context)) throw new InvalidOperationException("字段为只读或尚未适配。");
             }
             if (row.At(fieldPath).Kind != value.Kind) throw new ArgumentException("字段结构类型不能改变。");
-            ConfigFieldGUI.ValidateValue(field, value);
-            CheckReadOnlyChildren(field, row.At(fieldPath), value, row);
+            ConfigFieldGUI.ValidateValue(field, value, new ConfigFieldContext(snapshot, tableId, rowKey, row.With(fieldPath, value), fieldPath));
+            CheckReadOnlyChildren(field, row.At(fieldPath), value, row, context);
             table.Rows[rowKey] = row.With(fieldPath, value);
         }
 
-        private static void CheckReadOnlyChildren(ConfigFieldDefinition field, ConfigValue before, ConfigValue after, ConfigValue row)
+        private static void CheckReadOnlyChildren(ConfigFieldDefinition field, ConfigValue before, ConfigValue after, ConfigValue row, ConfigFieldContext context)
         {
-            if (!field.IsEditable(row) && !before.Equals(after)) throw new InvalidOperationException(field.ReadOnlyReason);
+            if (!field.IsEditable(row, context) && !before.Equals(after)) throw new InvalidOperationException(field.ReadOnlyReason);
             if (field.Control == ConfigControl.Group)
                 foreach (var child in field.Children)
-                    CheckReadOnlyChildren(child, before.Members[child.Column], after.Members[child.Column], row);
+                    CheckReadOnlyChildren(child, before.Members[child.Column], after.Members[child.Column], row, context.Child(child.Column));
             if (field.Control == ConfigControl.List && before.Items.Count == after.Items.Count)
                 for (var i = 0; i < before.Items.Count; i++)
-                    CheckReadOnlyChildren(field.Element, before.Items[i], after.Items[i], row);
+                    CheckReadOnlyChildren(field.Element, before.Items[i], after.Items[i], row, context.Child(i.ToString()));
         }
 
         // APPLY consumes only deterministic mirrors reported by the authoritative codecs.
