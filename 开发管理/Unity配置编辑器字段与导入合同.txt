@@ -213,7 +213,7 @@ positionType=SOURCE源/TRANSFORMATION化/DOMAIN域；位ID和类型各唯一，�
 
 segments=lower-upper@multiplier，以|分段，子字段“起点/终点/倍率”：首lower=0、后lower=前upper，upper>lower，multiplier≥0。对绝对增量分段积分后封顶再恢复符号，不是跨activationThreshold才启用；控件不提供分隔符编辑。
 
-来源hash算法必须复用当前函数：找到首个非空非#表头并ParseRow，数据按物理顺序跳空/#并ParseRow，仅把各数据行sourceContentHash列清空，再用逗号Join（不Trim、不排序、不重新CSV转义）；表头与全部行用LF连接、无末尾LF，UTF-8无BOM字节SHA-256小写64位。每个MANIFEST写同一全表hash。sourceContentHash表头必须精确大小写，因为Array.IndexOf与RequireExactColumns大小写行为不同。编辑器预览显示hash派生变化，用户不可直接填hash。
+来源hash算法必须复用当前函数：找到首个非空非#表头并ParseRow，数据按物理顺序跳空/#并ParseRow，仅把各数据行sourceContentHash列清空，再用逗号Join（不Trim、不排序、不重新CSV转义）；表头与全部行用LF连接、无末尾LF，UTF-8无BOM字节SHA-256小写64位。每个MANIFEST写同一全表hash。sourceContentHash表头必须精确大小写，因为Array.IndexOf与RequireExactColumns大小写行为不同。编辑器预览显示hash派生变化，用户不可直接填hash。CULTIVATION负责将现有ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)从private static开放为public static，参数、返回类型、函数体和原Parse调用不变，NpcPolicyTable直接调用；不复制算法、不使用反射，不以后继APPLY作为此入口的前置。
 
 ## 21 CharterRuleDefinitions.csv · 册界规则（CHARTER）
 
@@ -321,7 +321,7 @@ APPLY对每步绑定日志监听，仅在调用窗口捕获Error/Exception/Asser
 
 ## 后继独占路径与验证责任
 
-以下路径均为仓库相对路径。每个新增.cs都同时授权同名.cs.meta，CORE额外独占ConfigEditor.meta。源码归属互斥；APPLY/V的CSV和派生资产是串行验收临时改值/恢复范围，不可提交新平衡值，不代表适配任务可改配置。现有importer的.meta保持原GUID。各卡自身管理路径保留；下文产物精确清单同步进入APPLY/V的expectedPaths。
+以下路径均为仓库相对路径。每个新增.cs都同时授权同名.cs.meta，CORE额外独占ConfigEditor.meta。源码按下述独占范围与明确的先后交接归属；APPLY/V的CSV和派生资产是串行验收临时改值/恢复范围，不可提交新平衡值，不代表适配任务可改配置。现有importer的.meta保持原GUID。各卡自身管理路径保留；下文产物精确清单同步进入APPLY/V的expectedPaths。
 
 | 所有者 | 独占实现（目录src/Assets/Scripts/Editor/ConfigEditor/） | 独占测试（目录src/Assets/Tests/EditMode/） |
 |---|---|---|
@@ -334,7 +334,7 @@ APPLY对每步绑定日志监听，仅在调用窗口捕获Error/Exception/Asser
 | APPLY | ConfigSaveApplyService.cs、ConfigImportPlan.cs | ConfigEditorApplyTests.cs |
 | V | 不修改实现；只写开发管理/Unity中文配置编辑器验收记录.txt及原批准生命周期路径 | 运行前述测试，不新增测试实现 |
 
-APPLY另独占必要无写盘校验接口：src/Assets/Scripts/Editor/CombatContentImporter.cs、CharacterContentImporter.cs、SettlementContentImporter.cs、CultivationContentImporter.cs、AdventureContentImporter.cs、WorldContentImporter.cs及各.meta。只提取/复用无写盘投影、显式上下文参数，完整保留原投影/赋值语义；不修改CombatRuleSet、运行时数据语义、CsvTableReader或Coordinator，不新增领域所有者。CORE禁止启用假保存，领域卡禁止建立保存/导入按钮；五组可各在同一窗口完成内存编辑/撤销，实际写盘测试集中APPLY，V统一用户路径复验。
+CultivationContentImporter.cs及其.meta由CULTIVATION先行拥有，仅允许上述哈希方法可见性变化并保持.meta GUID；本卡完成归档后才交给依赖它的APPLY，不允许两卡并行写入。除该先行开放的哈希入口外，APPLY拥有后续必要无写盘校验接口：src/Assets/Scripts/Editor/CombatContentImporter.cs、CharacterContentImporter.cs、SettlementContentImporter.cs、CultivationContentImporter.cs、AdventureContentImporter.cs、WorldContentImporter.cs及各.meta。只提取/复用无写盘投影、显式上下文参数，完整保留原投影/赋值语义；不修改CombatRuleSet、运行时数据语义、CsvTableReader或Coordinator，不新增领域所有者。CORE禁止启用假保存，领域卡禁止建立保存/导入按钮；五组可各在同一窗口完成内存编辑/撤销，实际写盘测试集中APPLY，V统一用户路径复验。
 
 测试fixture使用已有源的内存副本，不创建Assets测试数据目录、不把夹具导入生产。深层正负fixture逐行按expect分流，并保持负例错误。临时文件IO测试使用系统临时目录且终于清理；实际应用证据在本任务worktree的Unity工程收集，测试前记录CSV/asset/.meta的hash，测试后恢复并证明无额外Git差异，不使用其他worktree缓存。
 

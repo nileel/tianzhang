@@ -8,14 +8,16 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：required_importer_api_outside_task_scope",
+  "stateReason": "2026-10-13负责人批准修复接口范围冲突；本卡获准仅开放并复用现有NPC来源哈希方法，重新准备ready。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CULTIVATION-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
     "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs",
+    "src/Assets/Scripts/Editor/CultivationContentImporter.cs.meta",
     "src/Assets/Scripts/Editor/ConfigEditor/FoundationTable.cs",
     "src/Assets/Scripts/Editor/ConfigEditor/FoundationTable.cs.meta",
     "src/Assets/Scripts/Editor/ConfigEditor/JindanTable.cs",
@@ -46,13 +48,13 @@
 - src/Assets/DataConfig/FoundationPurpleMansionStates.csv
 - src/Assets/DataConfig/JindanStaticStates.csv
 - src/Assets/DataConfig/NpcCultivationActionWeightProfiles.csv
-- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportFoundationPurpleMansionStates/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles
+- src/Assets/Scripts/Editor/CultivationContentImporter.cs::ImportFoundationPurpleMansionStates/ImportJindanStaticStates/ImportNpcCultivationActionWeightProfiles/ParseNpcCultivationActionWeightProfiles/ComputeNpcCultivationSourceHash
 
 ## 实施范围
 
 展开道基紫府/金丹/NPC策略三表的嵌套结构、分段权重、引用与可选值；仅按现有版本解析，不改状态机、台账和资格规则。生产记录与fixture/expect/fixtureOnlyNumericProfile明确区分；隔离内存副本中的负例夹具按其预期验收，不错误要求整张表每行都成为合法生产角色。不得降级成原始分隔符文本框交付。
 
-2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+2026-10-13接口阻塞修复：原run 3f37f47e-cff6-49d2-8d59-1540b269d807在业务写入前发现哈希方法为private、导入器修改权仅归后继APPLY，返回required_importer_api_outside_task_scope；31a54c23只提交阻塞投影。负责人随后批准修复。现仅新增CultivationContentImporter.cs及其.meta的精确授权：把ComputeNpcCultivationSourceHash(string[] headers, IEnumerable<string[]> rows, int hashIndex)由private static改为public static，参数、返回类型、函数体及原Parse调用保持不变，.meta GUID保持不变。本组NpcPolicyTable直接复用该方法生成候选快照的MANIFEST关联哈希；不复制算法、不用反射、不等待APPLY提供入口。其他导入器接口仍归后继APPLY。原具名前置已解除；本卡重新校验后入队，三表业务实施与Unity验收尚未完成。
 
 ## 禁止项
 
@@ -62,11 +64,11 @@
 
 关键语义/写入/跨领域判断，使用Astra核对真实所有者与失败边界。 执行主模型由卡头executionModel=gpt-6-astra固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
 
-2026-10-13准备ready复核：三表成长语义和Editor接线仍为一项有界实现，保持卡头gpt-6-astra及单模型统一复核；无独立只读问题，不调用辅助。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
+2026-10-13准备ready复核：三表成长语义和Editor接线仍为一项有界实现，保持卡头gpt-6-astra及单模型统一复核；无独立只读问题，不调用辅助。本次阻塞根因和修复边界已由函数、直接Parse调用和合同核对，单个可见性变更仍服务同一三表结果，保持原子任务与原主模型。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
 
 ## 验证
 
-深层组合往返/分段边界/有序列表、生产与正负fixture分流、空与零；当前schema每个字段都有中文和控件，未知版本拒绝写盘，不抹掉未理解数据。
+深层组合往返/分段边界/有序列表、生产与正负fixture分流、空与零；当前schema每个字段都有中文和控件，未知版本拒绝写盘，不抹掉未理解数据。NPC哈希在ConfigEditorCultivationTests中验证：真实源重算与现有MANIFEST相同，合法内存字段编辑后所有MANIFEST同步新hash并可由原ParseNpcCultivationActionWeightProfiles解析，保留旧hash时仍被原解析器拒绝；导入器diff只允许该方法可见性变化。
 
 管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
 
@@ -80,6 +82,6 @@
 
 ## 冻结接口与验收补充
 
-仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
+仅修改本卡独占文件及上述哈希方法可见性，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。CultivationContentImporter.cs按依赖顺序交接：本卡先完成唯一哈希入口开放，APPLY在本卡归档后才修改其余必要无写盘接口，不能并行写入该文件。
 
 逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。

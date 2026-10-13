@@ -498,7 +498,7 @@
 
 ## 冻结接口与验收补充
 
-实现唯一IConfigApplyService；在列出的既有六importer内只提取/复用纯Preview校验和候选上下文参数，不改变解析/投影业务语义。保存冲突、逐文件部分写入、全局SaveAssets脏资产门、导入日志失败及全部产物读回按合同验证，不调用总导入日志判成功。
+实现唯一IConfigApplyService；在列出的既有六importer内只提取/复用纯Preview校验和候选上下文参数，不改变解析/投影业务语义。CultivationContentImporter.cs的ComputeNpcCultivationSourceHash公开入口由前置CULTIVATION负责先行开放，本卡在其完成归档后接手其余必要接口并复用该函数，不重复实现哈希、不收回其可见性；该文件按任务依赖串行交接。保存冲突、逐文件部分写入、全局SaveAssets脏资产门、导入日志失败及全部产物读回按合同验证，不调用总导入日志判成功。
 
 CSV/asset/.meta路径仅供当前worktree内真实应用测试与恢复，最终不得留下新平衡值或无关生成差异；产物范围为合同精确清单，不含静态册界目录或生产角色新行。
 
