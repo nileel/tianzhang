@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "ready",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：task_scope_requires_repreparation",
+  "stateReason": "2026-10-13负责人授权修订旧档提示合同：试玩说明集中于创角，旧档沿既有资格拒绝；已重新预检并准备ready。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-SPELL-01.txt",
     "开发管理/任务归档/U-GZ-R2-SPELL-01.txt",
@@ -43,7 +43,7 @@
 
 ## 来源与当前边界
 
-来源：2026-10-11试玩反馈1；负责人以DEC-20261012-CDAC7E80B6DA67/A批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01冻结本卡合同，设计见开发管理/关中小族开局资格修订合同.txt第三至五节。2026-10-13 QueueMaintenance已核对该前置完成归档，重新预检并消费EXP-UNITY-015开工前说明；本卡现已ready，尚未实施。
+来源：2026-10-11试玩反馈1；负责人以DEC-20261012-CDAC7E80B6DA67/A批准关中小族新档练气试玩。2026-10-12由D-GZ-R2-ENTRY-01冻结本卡合同，设计见开发管理/关中小族开局资格修订合同.txt第三至五节。2026-10-13 QueueMaintenance已核对该前置完成归档；随后执行因旧档未保存出身、无法提供仅小族可见的专属说明而阻塞，未写业务。负责人在排查后授权修复：试玩说明集中于创角界面，旧档保留真实资格拒绝。本卡按修订合同重新预检并恢复ready，业务尚未实施。
 
 ## 必查范围
 
@@ -66,7 +66,7 @@
 
 1. 仅origin_minor_clan且该出身起点为guanzhong_hub的新建分支使用现有“练气”，保留level=1、realmMultiplier=1.5、空功法、点购与灵根。凡人点购镜像校验仍按凡人成长配置执行；通过后再按最终境界投影AP/移动/人形空手档位。不硬编码配置值、不回滚用户参数，不改共享资格、成长算法或CSV。
 2. 保留两术法已知/已装与两个槽位，复用正式Submit→CreateNewPlayer→BeginEquippedNewGame；首次存档前必须已完成现有练气物资初始化，不重复调用初始化。物资完整显示、换装及用药验收归EQUIP；本卡仍须检查首存境界与初始化状态足以承接下游。
-3. CharacterCreationView.RefreshOrigin显示合同第三节的练气试玩、两术法、铁剑/铁刀各一、活血丹三颗及仅新档生效说明。旧凡人小族档通过既有EncounterCoordinator→表现合同→行动栏的只读投影，明确“当前角色仍为凡人，术法与这批物资需练气资格；本次试玩调整仅对新建角色生效”，允许等义可读措辞。限定小族/关中入口，不修改全局错误词条；不假造突破或领取按钮，不写持久化新状态。
+3. CharacterCreationView.RefreshOrigin在小族/关中创角入口显示合同第三节的练气试玩、两术法、铁剑/铁刀各一、活血丹三颗及仅新建角色生效、已有存档不变说明。旧档沿既有EncounterCoordinator→表现合同→行动栏保留真实境界对应的资格拒绝，不追加出身专属说明，不要求读档后识别小族，也不以术法组合、当前位置或装备推断出身。不修改全局错误词条；不假造突破或领取按钮，不写持久化新状态。
 4. 原术法目标、距离、资源、冷却和CanExecute校验保留；如提示投影有缺口，只修本卡允许的投影/视图，不修改Combat判定放宽资格。先证明实际文本创建/刷新所有者，记录界面和状态证据。
 5. 在现存测试文件补齐正式入口与负向边界。成功链不得调用PrepareEquippedPlayerFixture、RestoreProgression、直接改境界/库存或再次BeginEquippedNewGame。共享PrepareEquippedPlayerFixture只可改为核验已正式创建结果，禁止加入凡人/练气两套兼容补发；其他调用者不因此获得真实入口验收结论。同步去除StarterArts、SwapSpell、Item测试中的旧新档强制升境/重发前提；Item只改初始化前提，其物资消费/保存断言由EQUIP继续负责。
 
@@ -78,25 +78,27 @@ expectedPaths为完整精确写入集合；上述其他源码只读定位。全�
 
 ## 模型协作
 
-2026-10-13准备ready复核：有界实现，产品语义已由负责人选择A冻结；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，所需仓库、PowerShell与Unity验证入口可用；无独立辅助问题，不要求辅助调用。已重新预检并消费EXP-UNITY-015开工前说明，不能跳过Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本轮仅由gpt-6-astra准备合同，未调用下游模型。
+2026-10-13阻塞后重新准备ready复核：有界实现，负责人已批准路线A及本次旧档提示合同修订；资格/投影/正式入口证据耦合，由单一主模型统一复核。保留卡头executionModel=gpt-6.1-sol、主责codex、route=codex_execute。建议推理强度high，入口须核实，不把建议当已生效配置；此前执行日志证明gpt-6.1-sol与图形PlayMode入口可用，后续执行仍核对当轮能力。无独立辅助问题，不要求辅助调用。已重新预检并消费EXP-UNITY-015开工前说明，不能跳过Unity运行时门禁。目标模型不可用按既有失败合同停止，不换模型；本次管理修订未调用下游模型或重跑Unity。
 
 ## 验证
 
 - Unity EditMode直接运行CharacterCreationTests：目标出身/起点限制、其他出身仍凡人、点购校验仍有效、最终境界派生值与当前配置一致、空功法和灵根不变；隔离负向输入不得变成正式成功前提。
 - Unity PlayMode直接运行GuanzhongStarterArtsPlayModeTests与GuanzhongCombatTargetSelectionPlayModeTests的相关正式入口用例，从正式菜单新档按钮→小族选择→创建→城镇→首战；采集创角说明、运行时及首次盘上境界、AP/移动、术法、初始物资/主手。贯石击合法结算与聚灵术自用均经真实按钮预览/确认；随机未命中须与合法结算区分，确定性夹具不能替代实际入口证据。
 - 覆盖AP/MP不足、越界、非法目标、资格不足、有效冷却：拒绝可读且不扣费；预览取消不扣费，报价与实际扣费一致。测试操作移动到合法位置，不注入角色位置/资源来假造成功。
-- 隔离旧凡人小族档验证读档不升境/不补发和实际限制说明；其他出身新档、既有练气档保持原行为；成功链保存退出再读档一致。复核修改的BasicAttack夹具、SwapSpell及Item初始化直接回归；只对新增/失败证据扩大检查。
+- 使用来源已知的隔离旧凡人小族档验证读档不升境/不补发及既有资格拒绝提示；小族身份只标记测试样本来源，不要求运行时从存档识别。试玩变更说明在创角摘要验收，旧档不追加专属说明；其他出身新档、既有练气档保持原行为；成功链保存退出再读档一致。复核修改的BasicAttack夹具、SwapSpell及Item初始化直接回归；只对新增/失败证据扩大检查。
 - 使用当前worktree Unity项目和项目规定入口，EditMode/PlayMode测试结果XML、实际Game View截图及状态证据保存在本worktree的src/Logs下；正文写明结果路径、测试名与结论，不将运行产物加入提交。未获得实际画面/状态不得完成；不以静态检查或Unity编译替代PlayMode。
 
 管理收尾：check-task-cards.ps1、check-review-text.ps1；仅实际改动路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。Unity路径变化须运行check-data-chain.ps1。准备ready和执行前按既有流程运行get-experience-risk-preflight.ps1并消费mustRead及gates；新依赖、技术路线或范围变化先停写重新预检。未变输入已通过的检查不重复。本卡只验功能，不从功能检查推导数值平衡；需改强度另走数值任务，不扩充BattleSim复刻场景。
 
 ## 本次设计准备验证
 
+2026-10-13阻塞修复：已核实originId仅在创角数据中，CharacterRuntimeProfile.FromDefinition、CharacterStateSnapshot与GameSaveEnvelope.CharacterRecord未保留出身；本次取消旧档出身识别要求，保留全部新档功能与旧档不变验收，不扩大expectedPaths。重新预检命中EXP-UNITY-015，gates为空，已消费mustRead；任务卡/队列投影、审核文本及路径限定空白检查作为本次管理提交验收。原run未生成业务candidate，本次不将此前单项PlayMode入口检查当成完整游戏验收。
+
 2026-10-12扩路径后只读预检命中EXP-UNITY-015，gates为空；已消费返回mustRead正文并同步schema 2投影。本轮没有执行Unity或调用下游模型。固定动作栏的费用/冷却/本地化文案须在1920×1080、1366×768测量Label Rect、最长文案preferredWidth/preferredHeight及换行并核验Game View；超限只缩短文案或局部调字号。布局、字体或验证入口变化须重新核验；临近ready仍重新预检，不用本次结果代替执行时证据。
 
 ## 完成条件
 
-正式菜单新建目标小族角色按合同进入首战，两术法在合法条件下可预览/确认/结算；非法条件提示正确且无副作用。创角说明和旧档限制可读，首存与读档一致，其他出身不变；直接检查与运行时证据齐全。仅关闭本卡，不移除EQUIP等下游的具名前置引用。
+正式菜单新建目标小族角色按合同进入首战，两术法在合法条件下可预览/确认/结算；非法条件提示正确且无副作用。创角试玩说明和旧档既有资格拒绝提示可读，不依赖旧档出身识别；首存与读档一致，其他出身不变；直接检查与运行时证据齐全。仅关闭本卡，不移除EQUIP等下游的具名前置引用。
 
 ## 停止条件
 

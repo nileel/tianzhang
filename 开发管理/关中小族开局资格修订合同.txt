@@ -2,6 +2,7 @@
 
 任务：D-GZ-R2-ENTRY-01；日期：2026-10-12。
 状态：负责人已批准路线A，设计定稿；Unity尚未实施、未完成游戏验收。
+2026-10-13修订：负责人在阻塞排查后授权按最小方案修复合同；试玩变更说明集中在创角界面，旧档保留基于真实境界的资格拒绝，不再要求识别旧档出身。
 批准依据：任务卡 automationReply 记录 DEC-20261012-CDAC7E80B6DA67，OPTION_ACCEPTED / A，来源 feishu_card，证据摘要 100aa9d343b552da789f99c0bb9ce8a4b7c345a86968f3d269bfb7bf2cfb24e9。按本轮已冻结任务正文落实，不再次请求相同批准。
 原稿来源：任务卡所指 checkpoint 788896bb2433663081072ffef7681a82ff0eee09 的同路径完整文件；本轮起始工作树未物化该文件，已直接核对该 Git 对象原文后在允许路径定稿，未重放其他改动。
 
@@ -51,14 +52,14 @@
 
 - 只影响新建角色。已有凡人小族档不升境、不补发、不换装备、不迁移；已有合法练气档按原样恢复并保留消耗结果。重进场景、读档、重新进战斗都不重新发物资。
 - 玩家选中小族时，在现有创角摘要中明确显示：“关中小族试玩：练气起步，可使用贯石击与聚灵术；初始铁剑、铁刀各一件，活血丹三颗。仅新建角色生效，已有存档不变。”开始游戏前即可看到。
-- 向已有凡人小族档说明：“当前角色仍为凡人，术法与这批物资需练气资格；本次试玩调整仅对新建角色生效。”不得提示存在尚未实施的突破、领取或补发按钮；体验新入口需另建存档，不能覆盖用户原档。
+- “仅新建小族角色生效、已有存档不变”的试玩变更说明统一由上述创角摘要承载。旧档沿现有资格校验和提示显示真实境界对应的拒绝原因，不按出身追加专属说明；不要求在读档后识别小族，不以术法组合、当前位置或装备反推出身。不得提示存在尚未实施的突破、领取或补发按钮；体验新入口需另建存档，不能覆盖用户原档。
 - 术法、装备、道具分别显示真实拒绝原因；没有正式凡人成长链之前，不把旧档“仍不可用”写成已经修复。该限制必须随实现交付说明。
 
 ## 四、已冻结的下游所有者与准备边界
 
 两张既有实现卡的 expectedPaths 已按当前直接调用链补齐精确字面量路径；这些是将来该卡获准执行后的允许集合，本设计任务不写任何源码。完整实施、验证和停止条件以各卡正文为准。
 
-- U-GZ-R2-SPELL-01 独占 CharacterCreationRules.BuildCharacterData 的起始境界和最终派生值、CharacterCreationView.RefreshOrigin 的创角说明；沿 CharacterCreationController.Submit → StartMenuSceneInstaller.CreateNewPlayer → GameRuntime.BeginEquippedNewGame 的现有调用验证首次初始化，不另造发放入口。通过 EncounterCoordinator 的现有投影、CombatPresentationContracts 和 CombatActionBarView 向旧凡人小族档提供只读资格说明，不改存档、通用错误键或其他出身行为。
+- U-GZ-R2-SPELL-01 独占 CharacterCreationRules.BuildCharacterData 的起始境界和最终派生值、CharacterCreationView.RefreshOrigin 的创角说明；沿 CharacterCreationController.Submit → StartMenuSceneInstaller.CreateNewPlayer → GameRuntime.BeginEquippedNewGame 的现有调用验证首次初始化，不另造发放入口。核验 EncounterCoordinator → CombatPresentationContracts → CombatActionBarView 的既有资格拒绝投影；旧档不新增出身专属提示，不改存档、通用错误键或其他出身行为。
 - SPELL 的直接测试工作面为 CharacterCreationTests、GuanzhongStarterArtsPlayModeTests、GuanzhongCombatTargetSelectionPlayModeTests；GuanzhongBasicAttackPlayModeTests 的共享新档夹具改为只核验正式创建结果，不再升境或重发；GuanzhongCombatSwapSpellPlayModeTests 与 GuanzhongCombatItemPlayModeTests 仅同步去除旧新档前提中的强制升境/再初始化。新档成功验收不能调用这些资格夹具，保留独立负向资格测试。
 - U-GZ-R2-EQUIP-01 消费 SPELL 的创角结果，核验既有 StartMenuSceneInstaller / GameRuntime 首件装配及首次保存；物资、装备/数量和拒绝原因由 EncounterCoordinator → CombatPresentationContracts → CombatActionBarView / CombatActionPreviewView 投影，交互由 CombatCommandInput 接入。只可修复上述链中的已证实缺口；保留唯一库存及角色装配所有者，不新增背包、商店或保存格式。
 - EQUIP 的直接测试工作面为 GameRuntimeTests、GameSaveEnvelopeTests、CombatActionPointEquipmentTests、CombatActionPointItemTests、GuanzhongCombatEquipmentPlayModeTests、GuanzhongCombatItemPlayModeTests。后者正文与 SPELL 先完成的创角前提衔接；不再次改境界。共享投影和视图允许按 SPELL → EQUIP 顺序续改各自逻辑，不是并行写入授权。
@@ -75,10 +76,12 @@
 3. 通过实际界面预览铁剑→铁刀并取消，确认未扣费未切换；再次确认只扣一次且主手/普攻投影同步，库存仍各一件。反向换回同样成立。无库存、无资格、重复装备拒绝且不扣费。
 4. 实战受伤后使用活血丹，核对一次资源扣除、一次库存减少和治疗；取消、满血、无库存、无资格分别拒绝或取消且不消耗。两术法覆盖AP不足、MP不足、越界、非法目标、资格不足及有效冷却的拒绝，核对报价/实付与提示。
 5. 按既有非战斗返回和保存入口保存、退出、读档；核对境界、术法、当前主手/实例与消耗后库存。再次进城、进野外、进战斗，不补发不重复装配。
-6. 用隔离旧凡人小族档验证不升境、不补发、可读限制说明；用既有练气档验证不重置数量和装备；用其他出身新档验证原行为不变。不得对用户现有存档运行迁移或覆盖写入。
+6. 用来源已知的隔离旧凡人小族档验证不升境、不补发及既有资格拒绝提示；“小族”仅是测试样本来源，不要求运行时从存档识别出身。用既有练气档验证不重置数量和装备；用其他出身新档验证原行为不变。试玩变更说明在创角摘要验收，不向旧档增加专属提示；不得对用户现有存档运行迁移或覆盖写入。
 7. 直接 EditMode 检查创建/资格/发放/保存不变量；PlayMode 必须经上述正式入口并保留实际界面与状态证据。未取得运行时证据不得关闭对应实现卡。本稿只设计功能，不得从通过功能测试推导角色数值平衡；如需调整强度，另走 BattleSim 数值事实源。
 
 ## 六、本轮证据、验证范围与停止条件
+
+2026-10-13阻塞复核：CharacterCreationRules.BuildCharacterData写入的originId未被CharacterRuntimeProfile.FromDefinition、CharacterStateSnapshot及GameSaveEnvelope.CharacterRecord保留，旧档没有可准确识别出身的事实。原“仅向旧凡人小族档显示专属说明”超出既有只读投影能力，执行run ed0114c9-caa7-4b08-89ff-6aacafb4a5f0以task_scope_requires_repreparation停止且无业务提交。本次仅修订说明位置及对应验收，不扩角色/存档路径、不新增持久化字段；旧档数据和其他出身行为继续不变。
 
 2026-10-12重新核对批准依据、原checkpoint完整草案、创角/资格/发放/首次装配/保存读档调用链、指定CSV行及行动经济第8至9节和两武器资格原文。当前 CombatEntryAdapter 已将旧指针 TryBuildProfiles 改为 TryProjectProfiles；本合同及下游必查按当前符号定位，不为文档旧名添加兼容代码。新增发现的直接读依赖只用于本次授权的下游路径冻结，未扩展当前设计卡写入集合。
 
