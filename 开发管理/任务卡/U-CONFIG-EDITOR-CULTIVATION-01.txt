@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13负责人批准修复接口范围冲突；本卡获准仅开放并复用现有NPC来源哈希方法，重新准备ready。",
+  "stateReason": "自动责任方确认阻塞：required_core_draft_reference_api_outside_task_scope",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-CULTIVATION-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CULTIVATION-01.txt",
