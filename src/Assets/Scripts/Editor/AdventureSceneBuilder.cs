@@ -19,6 +19,75 @@ namespace TianZhang.Editor
 {
     public static class AdventureSceneBuilder
     {
+        [MenuItem("天章/场景/接入关中战斗撤离")]
+        public static void RebuildWithdrawalEntry()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            Canvas canvas = Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas")?.GetComponent<Canvas>();
+            if (root == null || canvas == null) throw new InvalidOperationException("Adventure withdrawal owners are missing.");
+            BuildWithdrawalEntry(root, canvas);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
+                throw new InvalidOperationException("Adventure withdrawal scene save failed.");
+        }
+
+        private static void BuildWithdrawalEntry(GameObject root, Canvas canvas)
+        {
+            AdventureHudPresenter hud = root.GetComponent<AdventureHudPresenter>();
+            // Independent canvas children: CombatHudPresenter only hides AdventurePanel.
+            GameObject entry = LayoutPanel(canvas.transform, "AdventureReturnEntry");
+            RectTransform entryRect = entry.GetComponent<RectTransform>();
+            RectTransform explorationRect = LayoutObject(canvas.transform, "AdventurePanel");
+            // Same canvas space: place beside the proven exploration bounds, never over its heading.
+            entryRect.anchorMin = entryRect.anchorMax = explorationRect.anchorMax;
+            entryRect.pivot = Vector2.up;
+            entryRect.anchoredPosition = new Vector2(24, 0);
+            entryRect.sizeDelta = new Vector2(explorationRect.rect.width, 144);
+            Button button = LayoutButton(entry.transform, "ReturnButton", "返回关中城");
+            PlaceLayoutRect(button.GetComponent<RectTransform>(), 16, 68, entryRect.rect.width - 32, 60);
+            Text label = button.GetComponentInChildren<Text>();
+            label.fontSize = 24;
+            Text reason = LayoutText(entry.transform, "ReturnReason", "正在加载", 20);
+            PlaceLayoutRect(reason.rectTransform, 16, 12, entryRect.rect.width - 32, 48);
+            reason.alignment = TextAnchor.MiddleCenter;
+
+            GameObject confirmation = LayoutPanel(canvas.transform, "AdventureWithdrawalConfirmation");
+            RectTransform blocker = confirmation.GetComponent<RectTransform>();
+            blocker.anchorMin = Vector2.zero; blocker.anchorMax = Vector2.one;
+            blocker.offsetMin = blocker.offsetMax = Vector2.zero;
+            confirmation.GetComponent<Image>().sprite = null;
+            confirmation.GetComponent<Image>().color = new Color(0, 0, 0, .65f);
+            confirmation.GetComponent<Image>().raycastTarget = true;
+            confirmation.transform.SetAsLastSibling();
+            GameObject dialog = LayoutPanel(confirmation.transform, "WithdrawalDialog");
+            RectTransform dialogRect = dialog.GetComponent<RectTransform>();
+            dialogRect.anchorMin = dialogRect.anchorMax = dialogRect.pivot = new Vector2(.5f, .5f);
+            dialogRect.anchoredPosition = Vector2.zero;
+            dialogRect.sizeDelta = new Vector2(760, 400);
+            Text title = LayoutText(dialog.transform, "WithdrawalTitle", "撤离战斗？", 30);
+            PlaceLayoutRect(title.rectTransform, 32, 316, 696, 52);
+            Text message = LayoutText(dialog.transform, "WithdrawalMessage", AdventureHudPresenter.WithdrawalMessage, 26);
+            PlaceLayoutRect(message.rectTransform, 32, 108, 696, 196);
+            message.alignment = TextAnchor.MiddleLeft;
+            Button confirm = LayoutButton(dialog.transform, "ConfirmWithdrawalButton", "确认撤离");
+            Button cancel = LayoutButton(dialog.transform, "ContinueCombatButton", "继续战斗");
+            PlaceLayoutRect(confirm.GetComponent<RectTransform>(), 32, 32, 332, 60);
+            PlaceLayoutRect(cancel.GetComponent<RectTransform>(), 396, 32, 332, 60);
+            foreach (Button action in new[] { confirm, cancel }) action.GetComponentInChildren<Text>().fontSize = 24;
+            confirm.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = cancel, selectOnRight = cancel };
+            cancel.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = confirm, selectOnRight = confirm };
+            SceneBuildSupport.SetObject(hud, "returnEntry", entry);
+            SceneBuildSupport.SetObject(hud, "returnButton", button);
+            SceneBuildSupport.SetObject(hud, "returnLabel", label);
+            SceneBuildSupport.SetObject(hud, "returnReason", reason);
+            SceneBuildSupport.SetObject(hud, "withdrawalConfirmation", confirmation);
+            SceneBuildSupport.SetObject(hud, "confirmWithdrawalButton", confirm);
+            SceneBuildSupport.SetObject(hud, "continueCombatButton", cancel);
+            entry.SetActive(false);
+            confirmation.SetActive(false);
+        }
+
         /// <summary>Refreshes only the frozen body-attack content and the formal scene's profile references.</summary>
         public static void RebuildUnarmedBindings()
         {
@@ -228,6 +297,7 @@ namespace TianZhang.Editor
             BuildCombatTargetSelection(root, canvas);
             BuildCombatActionPreview(root, canvas);
             BuildCombatLayout(root, canvas);
+            BuildWithdrawalEntry(root, canvas);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 

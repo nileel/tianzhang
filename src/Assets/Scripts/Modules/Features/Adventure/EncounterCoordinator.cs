@@ -53,6 +53,8 @@ namespace TianZhang.Features.Adventure
         private string playerDisplayName;
         private long commandContextVersion;
         private CombatCommandPreview swapPreview;
+        private Coroutine combatRoutine;
+        private bool withdrawalPaused;
 
         private CharacterRuntimeProfile equipmentOwner;
         private ContentCatalogData equipmentCatalog;
@@ -139,6 +141,68 @@ namespace TianZhang.Features.Adventure
         public bool IsRunning => session != null;
         public bool IsPresenting => (unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false;
 
+        public bool CanWithdraw(out string reason)
+        {
+            reason = "回合切换中";
+            if (session == null) return false;
+            if (resultBuilder.Build(session).Outcome != CombatSessionOutcome.Ongoing)
+            {
+                reason = "胜负已定，等待结算";
+                return false;
+            }
+            if (IsPresenting)
+            {
+                // A command can finish its rules turn before its movement presentation ends.
+                reason = acceptsPlayerCommand ? "行动演出中，请稍后撤离" : "敌方行动中，请等待你的行动";
+                return false;
+            }
+            if (session.TurnPhase != CombatTurnPhase.Active) return false;
+            if (session.CurrentActorId != "player")
+            {
+                reason = "敌方行动中，请等待你的行动";
+                return false;
+            }
+            if (!acceptsPlayerCommand && !withdrawalPaused) return false;
+            reason = null;
+            return true;
+        }
+
+        public bool PauseForWithdrawal()
+        {
+            if (withdrawalPaused || !CanWithdraw(out _)) return false;
+            withdrawalPaused = true;
+            acceptsPlayerCommand = false;
+            swapPreview = null;
+            Present("确认撤离中", false);
+            return true;
+        }
+
+        public void ResumeAfterWithdrawal()
+        {
+            if (!withdrawalPaused) return;
+            bool canResume = CanWithdraw(out _);
+            withdrawalPaused = false;
+            acceptsPlayerCommand = canResume;
+            Present("你的行动", canResume);
+        }
+
+        public void TerminateWithoutOutcome()
+        {
+            bool available = CanWithdraw(out string reason);
+            if (!withdrawalPaused || !available)
+                throw new InvalidOperationException("adventure_withdrawal_unavailable:" + reason);
+            acceptsPlayerCommand = false;
+            swapPreview = null;
+            ++commandContextVersion;
+            if (combatRoutine != null) StopCoroutine(combatRoutine);
+            combatRoutine = null;
+            session = null;
+            spawned = null;
+            enemyPolicy = null;
+            withdrawalPaused = false;
+            unitPresentation.Clear();
+        }
+
         public void SetCombatResolutionRandomSource(ICombatResolutionRandomSource source)
         {
             combatRandomSource = source ?? throw new ArgumentNullException(nameof(source));
@@ -209,7 +273,7 @@ namespace TianZhang.Features.Adventure
             presentation.ClearLog();
             playerDisplayName = player.Identity.DisplayName;
             presentation.AppendLog("战斗开始：" + playerDisplayName + " 对阵 " + resolveText(spawned.EnemyData.displayNameKey));
-            StartCoroutine(RunCombat());
+            combatRoutine = StartCoroutine(RunCombat());
             reason = null;
             return true;
         }
@@ -395,6 +459,7 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing))
                     {
                         yield return null;
+                        while (withdrawalPaused) yield return null;
                         if (RefreshGrowth()) Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
                         if (wasPresenting != IsPresenting)
                         {
@@ -650,6 +715,7 @@ namespace TianZhang.Features.Adventure
 
         private void Complete(CombatSessionOutcome outcome)
         {
+            if (session == null) return;
             acceptsPlayerCommand = false;
             presentation.AppendLog(outcome == CombatSessionOutcome.Victory ? "战斗胜利" : "战斗失败");
             Present(resolveText(outcome switch

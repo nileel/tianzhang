@@ -2,6 +2,7 @@ using System;
 using TianZhang.Content;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace TianZhang.Features.Adventure
 {
@@ -14,6 +15,39 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Sprite nodeNormal;
         [SerializeField] private Sprite nodeHover;
         [SerializeField] private Sprite nodeSelected;
+        [SerializeField] private GameObject returnEntry;
+        [SerializeField] private Button returnButton;
+        [SerializeField] private Text returnLabel;
+        [SerializeField] private Text returnReason;
+        [SerializeField] private GameObject withdrawalConfirmation;
+        [SerializeField] private Button confirmWithdrawalButton;
+        [SerializeField] private Button continueCombatButton;
+
+        public const string WithdrawalMessage = "撤离不计胜负，不推进本场悬赏，也不获得本场掉落。已使用的道具不返还，已确认的换装保留；本场生命与灵力变化不带回城镇。返回后仍需在城镇保存。";
+
+        public void ConfigureWithdrawal(Action request, Action confirm, Action cancel)
+        {
+            if (returnButton == null || withdrawalConfirmation == null || confirmWithdrawalButton == null ||
+                continueCombatButton == null || returnEntry == null || returnLabel == null || returnReason == null)
+                throw new InvalidOperationException("adventure_withdrawal_ui_missing");
+            returnButton.onClick.AddListener(() => request());
+            confirmWithdrawalButton.onClick.AddListener(() => confirm());
+            continueCombatButton.onClick.AddListener(() => cancel());
+        }
+
+        public void PresentReturnEntry(bool visible, string label, bool available, string reason, bool confirming)
+        {
+            returnEntry?.SetActive(visible);
+            if (returnLabel != null) returnLabel.text = label;
+            if (returnReason != null) returnReason.text = reason ?? string.Empty;
+            if (returnButton != null) returnButton.interactable = available;
+            bool showConfirmation = visible && confirming;
+            if (withdrawalConfirmation != null && withdrawalConfirmation.activeSelf != showConfirmation)
+            {
+                withdrawalConfirmation.SetActive(showConfirmation);
+                EventSystem.current?.SetSelectedGameObject(showConfirmation ? confirmWithdrawalButton.gameObject : returnButton.gameObject);
+            }
+        }
         private Func<string, string> resolveText = value => value;
         private Func<string, string> displayReason = value => value;
 

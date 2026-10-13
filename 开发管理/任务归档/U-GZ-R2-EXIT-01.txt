@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13已核对D-GZ-R2-EXIT-01完成归档；方案A、实施路径和风险预检均已就绪。",
+  "stateReason": "2026-10-13按方案A完成常驻返回、确认暂停及无胜负清理回城；真实入口双分辨率、隔离存档写盘重载和针对性PlayMode七项通过。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-EXIT-01.txt",
     "开发管理/任务归档/U-GZ-R2-EXIT-01.txt",
@@ -40,7 +40,7 @@
 ## 来源与当前边界
 
 来源：2026-10-11用户九项试玩反馈。唯一生效设计为开发管理/关中战斗主动退出合同.txt：负责人对DEC-20261012-CD92C5B14D00B7回复A，批准仅我方可操作时撤离及共同奖励、资源、保存语义。
-本卡只准备完成，尚未实施或获得Unity运行时验收。2026-10-13 QueueMaintenance已核对D-GZ-R2-EXIT-01完成归档，重新预检并消费EXP-UNITY-005开工前说明；本卡现已ready。
+2026-10-13 QueueMaintenance核对设计前置归档后将本卡准备为ready。本轮已在指定自动化worktree内完成实施和Unity运行时验收，按完成合同归档；仅移除本卡自身队列和backlog行，不解锁下游任务。
 
 ## 必查范围
 
@@ -125,3 +125,52 @@ AdventureHudPresenter拥有常驻入口与确认UI，放在不随AdventurePanel�
 2026-10-12：七个业务路径均为既有文件，不涉及创建/移动资产或新增.meta；本卡executionModel、route/owner及blockedBy未改变，未入队。
 范围冻结后已实际运行tools/get-experience-risk-preflight.ps1 -TaskId U-GZ-R2-EXIT-01，命中EXP-UNITY-005，已消费开工前正文，gates/gatePointers为空，无缺失门禁。该经验要求核对探索返回的输入与处理器双门禁：本轮只读复核AdventureInputController.SelectNode通过canSelectExplorationNode阻止战斗中分发，AdventureController.ReturnToSource再次检查CanSelectExplorationNode；后继保留两层限制并用原回归验证，不只依靠按钮禁用。状态模型或返回链变化时须重新核验。
 本记录为设计准备与源码静态证据，不是实施模型运行、PlayMode、双分辨率或磁盘保存验收。
+
+## 本轮实施与验证结果
+
+2026-10-13，runId=2f95f9ae-a790-414a-8357-82f90d39391c。共享入口启动证明的主模型为gpt-6.1-sol；保持单模型统一复核，无辅助或第二责任会话。状态、UI、输入、资源和导航共同构成冻结的一个有界结果，现有端口足够，未扩大路径、所有者、奖励或保存语义。未核实推理强度，不把卡中建议当实际配置。
+
+写入前及返回链/UI接入期间已重新运行tools/get-experience-risk-preflight.ps1 -TaskId U-GZ-R2-EXIT-01：taskCardDigest=5f845b0cbbd9b71e2a7390c6308f2d901cd5eff1e83cd48e1c9dced89eb3da73，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff，matched=EXP-UNITY-005，notice/gates/gatePointers为空；与schema 2原投影一致，已消费mustRead。原SelectNode输入门与ReturnToSource处理门均仍限Exploration，真实会话分别验证两层战斗拒绝。
+
+### 实施与所有者证明
+
+- 正式AdventureScene的AdventureRoot持有AdventureController、EncounterCoordinator和AdventureHudPresenter；AdventureSceneInstaller仅在guanzhong_wild配置撤离回调。常驻AdventureReturnEntry和AdventureWithdrawalConfirmation是UICanvas独立子项；原AdventurePanel仍由CombatHudPresenter.Present隐藏。HUD脚本GUID仍为019ad229dde38ad4fb6141d3932f1a09，installer GUID仍为a8ece9ead01772b49a3fbaab34bebfc8。
+- 常驻入口沿用INavigationUseCase.ReturnToPreviousScene及原loadScene委托。确认先撤销候选、关闭命令权限，EncounterCoordinator在我方等待循环暂停；取消仅恢复合法输入，不推进规则，不使用Time.timeScale。模态遮挡射线，显式双按钮导航和焦点阻止背景键盘操作。
+- 接受确认前重查Ongoing、我方可操作和无演出；先占用formalEncounterConsumed及Returning，再清输入、失效commandContextVersion/swapPreview、停本会话协程并丢弃session/spawned，经已有单位Clear和Bootstrap接入的CombatHudPresenter.Hide清理表现、目标、移动、时间轴与HUD，最后单次消费返回目标。不调用Complete(Defeat)、不生成FormalEncounterResult、不发本场奖励。迟到ResolveEncounter/Complete不发奖、不重载、不把Returning改回Loading。
+- AdventureSceneBuilder用局部RebuildWithdrawalEntry生成和保存正式场景；同一BuildWithdrawalEntry也接入已有完整Build入口，保持一份UI生成逻辑。本轮没有调用完整场景重建、没有手改YAML。逐ID比较证明原对象未删除、原引用未重接；旧对象只有UICanvas子项列表和AdventureHudPresenter七个新引用发生语义变化，新增54个Unity序列化对象。无新脚本、组件类型或.meta，无兄弟Feature直依赖；Contracts、CombatPresentation、GameRuntime、保存所有者及其他场景未修改。
+
+### Unity运行与资源证据
+
+实际命令：tools/run-unity-playmode-tests.ps1 -ProjectPath 当前worktree/src -TestFilter GuanzhongCombatNavigationGuardPlayModeTests -EnableGraphics；独立进程使用pwsh -NoProfile -ExecutionPolicy Bypass -File。最终验收2026-10-13T03:36:01Z至03:36:32Z，7/7 Passed，failed/inconclusive/skipped均为0。保留原胜利/败北各一次结算回城；新增真实探索返回、撤离资源及写盘重载、不可用点击不缓存/败北优先、胜利优先及历史奖励保留、初始化失败五项。原有反射Combat测试仅作回归，新增正式会话均由StartMenu创建角色→World→关中城→guanzhong_wild→实际遭遇进入，没有反射设置Combat。
+
+正式资源测试使用合法小族练气开局和可提交的创角属性，核对生产初始铁剑、铁刀各一与活血丹三枚，不升级凡人、不补发物品。真实敌方命令造成受伤，真实术法消耗灵力；实际换装、用药和换术后撤离。逐项证明：活血丹库存3→2且不返还、铁刀保持、持久HP/MP与术法槽不回写战斗变化、本场悬赏/掉落增量零。所有预览取消及确认等待保持持久JSON、库存版本、规则版本、回合、CT、HP/MP、AP和导航不变。攻击、术法、防御、换术、换装、道具候选及移动预览均清除，过期候选和直接命令不能绕过确认。
+
+我方移动耗尽行动点后规则回合先结束，演出仍在进行；最终门禁以现有我方命令权限识别演出归属，避免将清空的CurrentActorId误作敌方行动。测试实际观察我方移动演出、回合转换、敌方行动/演出，验证明确禁用原因和点击不缓存；隔离末击夹具分别证明已成立胜利、败北演出优先于撤离。末击夹具只调整临时战斗快照和确定性命中输入，不是生产敌人强度或数值平衡结论。另一个真实胜利后再次撤离的测试证明既有未领奖悬赏、历史掉落和全部持久JSON保持原样。初始化失败使用隔离未知地图ID，证明保留精确installer错误、不可返回、不启动结算、不写盘，不冒充正常玩家入口。
+
+真实撤离按钮经EventSystem射线找到实际Button并发送指针事件；确认期间背景射线命中模态，键盘方向操作仅在确认/继续按钮间循环。连点、迟到结算及迟到Complete保持加载计数1，session/spawned/协程句柄为空，单位、目标、候选与HUD清空。重入是新Exploration，无旧单位、候选、确认或敌方协程。
+
+隔离GameSaveSlotStore目录为Application.temporaryCachePath下TianZhang-Withdrawal-随机GUID；未读写用户存档。撤离回城后比较磁盘原JSON逐字未变，随后调用城镇原SaveAndReturnToMenu真实写盘，再从StartMenu.LoadPlayer重新加载，完整持久JSON、装备、库存、悬赏、导航一致；再入野外仍无旧会话。无schema变更、自动保存、补发、回滚或资源迁移。测试结束清理自身临时存档。
+
+### 双分辨率与引用门禁
+
+1920×1080和1280×720实际图形PlayMode截图位于当前worktree/src/Logs/withdrawal，已目视核对探索/战斗入口、确认正文、按钮和遮挡。源AdventurePanel visualRect分别为(48,600)至(420,1032)、(32,400)至(280,688)；source/destination同为ScreenSpaceOverlay的UICanvas，camera=null，scaleFactor分别为1和0.6666667。GetWorldCorners→WorldToScreenPoint→ScreenPointToLocalPointInRectangle给出源右上角canvas local=(-540,492)，结合实测size=(372,432)得到local min=(-912,60)。新入口按源右上anchor放在旁侧，最终ReturnButton interactiveRect分别为(460,956)至(800,1016)、(306.67,637.33)至(533.33,677.33)。运行时数值断言入口不遮挡探索内容，未用截图估计或猜测兜底；创建writer为AdventureSceneBuilder，刷新writer为AdventureController.LateUpdate→AdventureHudPresenter.PresentReturnEntry。
+
+证据指纹：acceptance.xml SHA256=aa723b92f9eae0939e0231f923f58090ed0c5ff0baed14a66a8d15578320f02b；exploration-1920.png=9ed70fb7e2de343c685d2322cde7b0a801f08d61141d3e4830a098b95a4e92fb；exploration-1280.png=68f25b5fc4d94d1caaeb3d01f66e10ed2d7b130101b443433517b581fd4f2e18；combat-1920.png=9b396007fafc591f5b1d6242f9c98c84c0a3246e644d6335cf2eeff0d44f889a；combat-1280.png=1a274ca00e7dc2fd29d86f83531afda2e16a5935be809c652a2c4c42ec3b5cdc；confirmation-1920.png=e1bb31c348c673aa9c31d8ec0d2fc07651f6e810ef8929c5b42217b46263102c；confirmation-1280.png=5847c0cc79454ef1aa54da753cc372b28767b9c78976e450bb76f22e6e78f281。
+
+Unity编译及SceneArchitectureValidator.ValidateForBatchMode正式场景引用验证退出0，scene-validation.log SHA256=89274560360657f477e356b75c35da3894bf5d880ef5b3ebfdc513f8ad80d8f0。tools/check-unity-assembly-boundaries.ps1通过（19 assemblies、2 asmrefs）；tools/check-data-chain.ps1通过（29/29功法、84/84术法、31/31神通、649 language keys）。管理收尾入口为check-task-cards的CodexClosedOrNonReady、check-review-text、实际改动路径check-pending-whitespace及暂存git diff --cached --check，提交必须由automation-finalize-commit执行并携带九字段元数据。
+
+技能：unity-agent-workflows及brainstorming（沿用已批准书面设计）；References loaded：ui-and-visual-assets、runtime-owner-proof、serialized-persistence、project-structure-discovery、content-and-systems、ai-workflows、unity-validation、runtime-visible-output、runtime-visible-targets、runtime-numeric-proof、coordinate-space-conversion。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md。largest touched C#：AdventureSceneBuilder 1409行、EncounterCoordinator 864行、测试543行；均在冻结既有所有者内修改，未拆模块或扩大依赖。未请求系统触及：无。残余边界：图形Unity PlayMode而非发布构建；其他分辨率未验收，胜负夹具不支持数值平衡结论；正式结果由共享入口重放集成。
+
+## 经验候选
+
+### U-GZ-R2-EXIT-01-C01
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：我方移动耗尽行动点后，移动演出尚未结束却显示敌方行动中的撤离禁用原因。
+- 已证实根因：命令同步提交可先结束规则回合并清空CurrentActorId，表现协程随后才结束；直接用当前actor判定演出归属会把无actor误判为敌方，既有acceptsPlayerCommand仍覆盖我方演出等待期。
+- 可能复用范围：规则提交与表现分离的战棋行动门禁和状态提示，尤其回合先结束而动画仍在播放的情况。
+- 证据：本轮图形PlayMode首次断言得到敌方提示，最终FormalUnavailableClicksAreNotCachedAndFinalOutcomeWins观察真实我方移动、回合转换与敌方演出并通过；7/7结果与运行时数值见本卡验证记录。
+- 门禁可能：yes

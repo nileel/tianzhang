@@ -129,6 +129,8 @@ namespace TianZhang.Bootstrap
                     runtime.Bounties,
                     runtime.InventoryGrants,
                     SceneManager.LoadScene);
+                if (adventureMap.adventureId == FormalEncounterRules.GuanzhongWildAdventureId)
+                    controller.ConfigureWithdrawal(combatCommandInput.ClearContext, combatHudPresenter.Hide);
             }
             catch (InvalidOperationException exception)
             {

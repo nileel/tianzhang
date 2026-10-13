@@ -38,6 +38,72 @@ namespace TianZhang.Features.Adventure
         private IFormalEncounterRandomSource randomSource = new SystemFormalEncounterRandomSource();
         private AdventureSession session;
         private bool formalEncounterConsumed;
+        private Action clearCombatInput;
+        private Action hideCombatPresentation;
+        public bool IsWithdrawalConfirmationOpen { get; private set; }
+
+        private bool HasGuanzhongReturn => map?.adventureId == FormalEncounterRules.GuanzhongWildAdventureId;
+
+        public void ConfigureWithdrawal(Action clearInput, Action hidePresentation)
+        {
+            clearCombatInput = clearInput ?? throw new ArgumentNullException(nameof(clearInput));
+            hideCombatPresentation = hidePresentation ?? throw new ArgumentNullException(nameof(hidePresentation));
+            hud.ConfigureWithdrawal(RequestReturn, ConfirmWithdrawal, CancelWithdrawal);
+        }
+
+        private void LateUpdate() => RefreshReturnEntry();
+
+        private void RefreshReturnEntry()
+        {
+            if (hud == null) return;
+            string label = CurrentState == AdventureSceneState.Combat ? "撤离战斗" : "返回关中城";
+            string reason = null;
+            bool available = CurrentState == AdventureSceneState.Exploration;
+            if (CurrentState == AdventureSceneState.Loading) reason = LastFailureReason ?? "正在加载";
+            else if (CurrentState == AdventureSceneState.Returning) { label = "正在返回"; reason = "正在返回"; }
+            else if (CurrentState == AdventureSceneState.Combat) available = encounters.CanWithdraw(out reason);
+            if (IsWithdrawalConfirmationOpen) { available = false; reason = "请确认撤离或继续战斗"; }
+            hud.PresentReturnEntry(HasGuanzhongReturn, label, available && isActiveAndEnabled, reason,
+                IsWithdrawalConfirmationOpen);
+        }
+
+        public void RequestReturn()
+        {
+            if (!HasGuanzhongReturn || !isActiveAndEnabled || IsWithdrawalConfirmationOpen) return;
+            if (CanSelectExplorationNode) { ReturnToSource(null, out _); return; }
+            if (CurrentState != AdventureSceneState.Combat || !encounters.PauseForWithdrawal()) return;
+            clearCombatInput();
+            IsWithdrawalConfirmationOpen = true;
+            RefreshReturnEntry();
+        }
+
+        public void CancelWithdrawal()
+        {
+            if (!IsWithdrawalConfirmationOpen || CurrentState != AdventureSceneState.Combat) return;
+            IsWithdrawalConfirmationOpen = false;
+            encounters.ResumeAfterWithdrawal();
+            RefreshReturnEntry();
+        }
+
+        public void ConfirmWithdrawal()
+        {
+            if (!IsWithdrawalConfirmationOpen || CurrentState != AdventureSceneState.Combat ||
+                formalEncounterConsumed) return;
+            if (!encounters.CanWithdraw(out _)) { CancelWithdrawal(); return; }
+            // Claim the same terminal guard before clearing authority or invoking external callbacks.
+            formalEncounterConsumed = true;
+            CurrentState = AdventureSceneState.Returning;
+            IsWithdrawalConfirmationOpen = false;
+            RefreshReturnEntry();
+            try
+            {
+                clearCombatInput();
+                encounters.TerminateWithoutOutcome();
+                hideCombatPresentation();
+                loadScene(navigation.ReturnToPreviousScene());
+            }
+            catch (InvalidOperationException exception) { Fail(exception.Message); }
+        }
 
         public AdventureSceneState CurrentState { get; private set; } = AdventureSceneState.Loading;
         public CombatSessionOutcome LastEncounterOutcome { get; private set; } = CombatSessionOutcome.Ongoing;
@@ -214,7 +280,7 @@ namespace TianZhang.Features.Adventure
         private void Fail(string reason)
         {
             LastFailureReason = string.IsNullOrWhiteSpace(reason) ? "adventure_failed" : reason;
-            CurrentState = AdventureSceneState.Loading;
+            if (CurrentState != AdventureSceneState.Returning) CurrentState = AdventureSceneState.Loading;
             Debug.LogError("[Adventure] " + LastFailureReason);
             if (session != null) hud?.Present(session, input.SelectNode, LastFailureReason, CanSelectExplorationNode);
         }
