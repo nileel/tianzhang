@@ -1,0 +1,103 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-CONFIG-EDITOR-WORLD-01",
+  "title": "配置编辑器据点悬赏与环境四表适配",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-13四表结构化适配、真实Unity窗口操作及29项专项测试通过；本卡完成归档，保存与应用仍归APPLY。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-CONFIG-EDITOR-WORLD-01.txt",
+    "开发管理/任务归档/U-CONFIG-EDITOR-WORLD-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Editor/ConfigEditor/WorldTables.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/WorldTables.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/EnvironmentTable.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/EnvironmentTable.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs.meta"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "executionModel": "gpt-6.1-sol",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  }
+}
+---TASK-BODY---
+# U-CONFIG-EDITOR-WORLD-01 · 配置编辑器据点悬赏与环境四表适配
+
+## 来源与当前边界
+
+2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
+
+## 必查范围
+
+- 开发管理/Unity配置编辑器字段与导入合同.txt
+- src/Assets/DataConfig/Settlements.csv
+- src/Assets/DataConfig/Bounties.csv
+- src/Assets/DataConfig/Adventures.csv
+- src/Assets/DataConfig/EnvironmentProfiles.csv
+- src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportContentCatalog
+- src/Assets/Scripts/Editor/AdventureContentImporter.cs::Import
+- src/Assets/Scripts/Editor/WorldContentImporter.cs::ParseQueryLimits/ParseBattlefieldCells/ImportEnvironmentProfiles
+
+## 实施范围
+
+完成据点/悬赏/冒险/环境四表。功能、奖励、入口列表与战场格子、现象通道/关系均拆成嵌套表单；坐标为数值列，阻挡为复选框，queryLimits为两个命名数值；自动输出必要稳定排序且不改变领域含义。不增加地图绘制工具、预览场景或另一环境运行时。
+
+2026-10-13：实施/测试路径及接口按《Unity配置编辑器字段与导入合同》冻结，见本卡expectedPaths。仍保持原blockedBy和blocked状态；本轮不解除具名前置。正式合同集成后由QueueMaintenance核验依赖及风险投影，再决定ready。
+
+## 禁止项
+
+不新建配置事实源、运行时解释器或自动化机制，不改变游戏规则、存档与平衡。首版不新增、复制或删除整行配置；不得将复合字段退回分隔符文本输入。不得用猜测性兼容或重复工作流掩盖未查明格式；保护用户无关文件与现有配置。
+
+## 模型协作
+
+有界但含多字段编解码与Unity工具接线，使用Sol在冻结合同下统一实现和复核。 执行主模型由卡头executionModel=gpt-6.1-sol固定，owner=codex、route=codex_execute。建议推理强度high；卡头仅配置模型，强度需实际执行入口核实。
+
+2026-10-13准备ready复核：四表可逆编解码和Editor接线仍为一项有界实现，保持卡头gpt-6.1-sol及单模型统一复核；无独立只读问题，不调用辅助。已核对所需仓库、PowerShell与Unity验证入口可用；推理强度尚未由实际执行入口核实，真实Unity能力缺失不能声称实机验收通过。
+
+## 验证
+
+四表列与嵌套语法覆盖；格子重复/排序/范围、奖励物品引用、空列表/必填、通道映射往返；非法坐标/引用在写盘前中文定位。
+
+管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
+
+## 完成条件
+
+本组各表的全部列和复合子字段均有中文结构化编辑和可逆序列化，通过真实数据往返/非法输入验证，并交付本组校验与导入依赖描述供APPLY消费；不由本组另写独立保存或导入按钮。
+
+## 停止条件
+
+发现未覆盖字段语义、未知格式、需要改变业务规则/新增所有者或突破独占路径时，停止业务写入并保留具体证据，返回合同边界判断；不得层叠兜底。工具或运行证据不足则保持未完成，不能用静态检查代替操作证明。批准产品范围不重复请示；只有新的实质冲突才提交具体决策。
+
+## 冻结接口与验收补充
+
+仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
+
+逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+
+## 本轮实施与验证结果（2026-10-13）
+
+- 身份与协作：Codex，入口证明主模型gpt-6.1-sol；按冻结卡核对复杂度与实际工具能力后，沿用单模型统一实施和复核，无独立辅助工作面，不启动第二责任会话。推理强度未获工具证明，不作已配置声明。
+- 风险预检：业务写入前及确认直接依赖后运行get-experience-risk-preflight.ps1 -TaskId U-CONFIG-EDITOR-WORLD-01，均status=ok；taskCardDigest=e225aebcc9c3a947e41afd71cfd54513e89ffd3f58f5d0bc301c21c83ad050c8，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；matched/mustRead/gates/gatePointers均为空，与入口及schema 2投影一致。
+- 所有者与路径：ConfigTableRegistry通过TypeCache发现WorldTables和EnvironmentTable；ConfigEditorWindow→ConfigFieldGUI→ConfigDraftSession.SetValue拥有显示与内存编辑。实现仅在既有TianZhang.Editor程序集，测试在既有EditMode程序集；没有修改中央窗口、领域导入器、asmdef、CSV、资产或运行时。
+- 四表完整覆盖9/11/8/8列。据点功能、冒险入口、悬赏奖励均展开中文嵌套控件；据点与悬赏全部递归只读并解释批准投影。中立势力是批准固定值，没有虚构Language外键。奖励校验读取当前Items候选的数量上限，敌人引用只列正式guanzhong范围。
+- 冒险节点坐标为整数列，类型使用实际节点处理器稳定ID与中文映射；起点/返回内容必须为空，遭遇须有正式敌人引用。同地图坐标重复定位到后出现的冲突节点。地图名称/内容范围只在组首行编辑，GetLinkedEdits只报告该地图全部已有行的确定性镜像；未编辑非法组不自动修复，源改回基线可恢复已联动行。结构解析复用AdventureContentImporter.Parse，成功生成的临时地图立即销毁。
+- 环境查询限制展开两个命名正整数；战场格展开q/r和两个0/1复选框，编辑后按q/r稳定排序且不合并重复；六个通道展开各自类型列表，现象组合展开通道/第一现象/第二现象/结果，五行固定集合递归只读，回灵环境为中文枚举。地表原型没有权威目录，只校验引用形状与唯一性并说明限制，保留用户列表顺序。ValidateDraft复用WorldContentImporter.ParseEnvironmentProfiles，不复制环境规则或派生邻接边算法。
+- 编码和校验使用未编辑字段的原始词元；无编辑返回原bytes，不因排序或检查修正非法基线。非法整数、范围、重复格子/入口/奖励、空必填列表、通道/组合引用、反向重复组合及五行集合均有中文表/行/字段定位。GetImportSteps只报告冻结方法、源依赖与当前产物，正式内容目录复用现有完整描述，不执行任何导入。
+- Unity 6000.3.18f1真实EditMode：最终ConfigEditorWorldTests为29/29通过，无跳过。窗口测试真实打开四表，渲染固定只读结构，编辑冒险坐标和环境格子阻挡后撤销；额外操作隔离零行环境表，确认无虚构条目。核对四表CSV及对应.meta、五个既有产物及.meta的hash、资产序列化值与脏状态不变。
+- 运行命令：Unity.exe -batchmode -projectPath <本worktree>/src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.ConfigEditorWorldTests；窗口渲染启用图形设备。最终证据为系统TEMP/tzg-world-f54b8157/final-results.xml及final-unity.log；XML已通过tools/run-unity-editmode-tests.ps1 -ValidateResultOnly核验。
+- 初次联合过滤覆盖配置编辑器与程序集边界：CORE 28/28、CHARACTER 21/21、COMBAT 26/26、程序集边界4/4通过；CHARTER 30/31，剩余真实窗口用例依赖全22表校验。复核全窗口快照得到50条既有非WORLD错误：Skills特殊说明文本引用29条、Enemies装备术法1条、GongFa属性/篇章引用20条。second-unity.log的WORLD_FULL_SNAPSHOT_ISSUES保留精确实体与字段，全部位于未修改的既有源及配置；WORLD四表无错误。本卡不修正或隐瞒这些跨域内容缺口，不能宣称全窗口整体校验通过。
+- 本轮发现并修正的局部问题：中立势力误映射Language候选；两个测试断言分别误判原控件的OverflowException及重复坐标的后出现节点定位。查明后按同一边界修正，最终只复跑受影响WORLD专项；未重复已通过且未受影响的其他组测试。
+- check-unity-assembly-boundaries.ps1通过（19程序集、2 asmref）；check-data-chain.ps1通过。任务卡、审核文本、允许路径空白与暂存差异检查作为候选收口门执行。Unity首次导入产生的ShaderGraphSettings行尾空白已按初始clean基线恢复，没有额外Git差异。
+- 结构图：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、UNITY_STRUCTURE.assemblies.md。技能引用：project-structure-discovery、modular-architecture、ai-workflows、runtime-owner-proof、serialized-persistence、unity-validation、ui-and-visual-assets、cleanup-and-git。新增C#均低于500行，无新增Player依赖或运行时图节点。
+- 边界与后续：没有保存/应用服务、独立按钮、地图绘制器、预览场景或第二环境运行时；完整跨域无写盘权威校验与实际保存/导入仍归APPLY，用户全链体验归V。未验证PlayMode、运行时热更新、真实写盘应用；全窗口50条既有内容缺口需在后续相应授权范围处理。本任务从队列/backlog移除并归档，下游卡及其具名前置保持原样。
