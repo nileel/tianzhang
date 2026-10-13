@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-CONFIG-EDITOR-APPLY-01 | codex_execute | codex | P1 | unity | implementation | 配置编辑器关联保存与导入应用闭环 | 开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt |
 | U-GZ-R2-AOE-ENCOUNTER-01 | codex_execute | codex | P1 | unity | implementation | 正式多敌遭遇生命周期与受击演出接入 | 开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt |

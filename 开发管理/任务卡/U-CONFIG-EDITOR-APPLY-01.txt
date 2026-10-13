@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-13六项具名前置均已完成归档；技术合同、完整实施路径、验证、完成条件和停止条件已冻结，已重新预检后进入ready。",
+  "stateReason": "自动责任方确认阻塞：task_scope_conflict",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-APPLY-01.txt",
