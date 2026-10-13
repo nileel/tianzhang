@@ -1,4 +1,4 @@
----TASK-META---
+﻿---TASK-META---
 {
   "schemaVersion": 2,
   "id": "U-CONFIG-EDITOR-CHARTER-01",
@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-13已核对U-CONFIG-EDITOR-CORE-01完成归档；技术合同和实施路径已冻结，风险预检通过，现可执行。",
+  "stateReason": "2026-10-13册界双表适配完成；31项专项与28项CORE测试通过，真实窗口内存编辑及撤销已验证；保存应用仍由APPLY负责。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-CHARTER-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-CHARTER-01.txt",
@@ -81,3 +81,18 @@
 仅修改本卡独占文件，通过CORE的IConfigTableProvider注册并消费同一草稿/控件接口，不改中央窗口或其他领域文件。
 
 逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+
+## 本轮实施与验证结果（2026-10-13）
+
+- 身份与协作：Codex，入口启动证明主模型gpt-6-astra；核对任务复杂度后沿用单模型统一实施与复核，无独立辅助问题，不启动第二责任会话。推理强度未获工具证明，不作已配置声明。
+- 风险预检：业务写入前运行get-experience-risk-preflight.ps1 -TaskId U-CONFIG-EDITOR-CHARTER-01，status=ok；taskCardDigest=b2620d752194bcbacc3029d4380c74396b98ef268135fd50486460ba4edbf566，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff。matched/mustRead/gates/gatePointers均为空，与入口及schema 2投影一致。
+- 结构与所有者：现有ConfigTableRegistry通过TypeCache发现两个IConfigTableProvider；ConfigEditorWindow→ConfigFieldGUI→ConfigDraftSession.SetValue拥有界面与内存编辑。新增代码置于TianZhang.Editor既有Editor-only程序集，测试置于既有EditMode程序集。无中央窗口、asmdef、运行时、CSV或资产业务修改。
+- 两表完整覆盖18列册界规则及71列册界站点；字段按基础、条件、提交、范围、时序、界印、资格、左右候选及后续事件中文标识分组。必填、只读、版本、数字单位、true/false中文枚举、静态目录引用与事件列表/事件环境子组均有描述与可逆编码。正负提交保持独立引用，不展开或复制目录内部对象。
+- ValidateDraft复用WorldContentImporter.ParseCharterRuleDefinitions、SettlementContentImporter.ParseCharterSites及其原冲突Decide路径；临时ScriptableObject投影全部销毁。站点校验使用完整规则与Language候选快照，不读取旧规则资产替代待编辑内容。既有CSV读取器无编号异常保留原原因，不伪造领域错误码。
+- GetLinkedEdits只报告受本轮编辑影响的五个镜像，不修复未编辑的非法基线，不补撤销原因或缺失节点；源字段改回基线后可恢复已联动的镜像。GetImportSteps仅描述冻结的精确方法、输入与产物（正式内容目录含14个当前产物），不调用导入或游戏事务。
+- Unity 6000.3.18f1真实EditMode验证：首次无图形模式56/59通过，两个窗口用例因缺图形设备失败，另一个断言误将原CSV读取器的无编号空值错误视为领域编号；查明后修正断言并启用图形设备，59/59通过。最终收紧镜像门后仅复跑受影响册界专项，31/31通过，CORE 28项相关输入未改变不重复运行。全部最终用例无跳过。
+- 运行命令：Unity.exe -batchmode -projectPath <本worktree>/src -runTests -testPlatform EditMode -testFilter TianZhang.Tests.ConfigEditorCharterTests；此前联合过滤还包括TianZhang.Tests.ConfigEditorCoreTests。窗口用例真实打开两表，渲染、编辑、领域校验和撤销；核对源CSV/目录/规则/站点/内容目录文件hash、资产序列化值和脏状态不变，临时对象无泄漏。
+- 本机证据：系统TEMP/tzg-charter-3c57379a-graphics-results.xml（59/59）及tzg-charter-3c57379a-final-results.xml（31/31），对应同名前缀Unity日志。最终XML已通过tools/run-unity-editmode-tests.ps1 -ValidateResultOnly检查。
+- 已通过check-unity-assembly-boundaries.ps1（19程序集、2 asmref）、check-data-chain.ps1。任务卡、审核文本、预期路径空白及暂存diff检查作为候选提交收口门执行。Unity首次导入产生的ShaderGraphSettings序列化改动已按初始clean基线恢复，最终仅保留允许路径。
+- 已加载结构图：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md、UNITY_STRUCTURE.assemblies.md；技能引用：project-structure-discovery、modular-architecture、ai-workflows、runtime-owner-proof、serialized-persistence、unity-validation、ui-and-visual-assets。三份新C#分别260/185/316行，无超过500行的新增文件；未引入运行时图节点或新模块。
+- 边界与后续：没有保存/应用按钮或IConfigApplyService实现，未进行写盘导入、PlayMode热更新或游戏事务验证；这些属于已冻结的APPLY/V后继。当前任务从队列/backlog移除并归档，不移除任何下游对本任务的具名前置，不提升或重排其他卡。
