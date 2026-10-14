@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-14已核对全部具名前置均有完成归档；正式验收及父项关闭的管理路径、运行时所有者和既有验证入口已冻结。",
+  "stateReason": "2026-10-14正式两件武器群攻证据复核及当前worktree全链1/1通过；验收记录完成，与冻结父项同candidate归档。",
   "expectedPaths": [
     "开发管理/任务卡/V-GZ-R2-AOE-01.txt",
     "开发管理/任务归档/V-GZ-R2-AOE-01.txt",
@@ -86,3 +86,12 @@
 ## 停止条件
 
 任一子卡未完成、正式入口/图像/数值证据缺失或发现业务缺陷时保持blocked并报告对应既有子卡，不在验收卡补功能、不提前关闭父项。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+## 本轮完成记录（2026-10-14）
+
+Codex按共享入口启动证明使用gpt-6.1-sol；复杂验收证据由单主模型统一复核，无独立辅助问题，不启动第二责任会话。共享入口预检matched/mustRead/gates为空，与卡头schema 2投影一致。设计、QUERY、RESOLVE、ENCOUNTER、DATA、INPUT及EQUIP均为completed归档，且无同ID活跃卡。
+
+完整验收事实及原件SHA-256见开发管理/关中两格群攻验收记录.txt。当前1560个Unity输入文件与INPUT正式完成worktree逐字节一致；脚本/测试/场景与INPUT检查点一致，复用两件武器默认随机源双目标、六向/取消/零目标/重复确认、八张双分辨率图像、8项EditMode及12个不同PlayMode直接回归的最终通过证据。铁剑O=(0,2)/d2，enemy657→569、enemy_2 657→543，AP75000→35000；铁刀O=(1,0)/d3，两敌657→531，AP75000→25000；共享次数均0→1。未采用冷编译占位图或将铁刀首幅软字帧作清晰文字证据。
+
+INPUT修改了正式命令投影，本轮只在当前worktree补跑run-unity-playmode-tests.ps1 -EnableGraphics定向FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads，1/1通过，结果位于src/Logs/aoe-acceptance-lifecycle.xml/log。真实两敌、原AI/移动、确定随机输入的生命周期链证明部分死亡继续、最后死亡胜利、各实例演出与清理、整场一次材料/悬赏、回城与保存回读；该确定随机输入不替代两件武器默认随机源玩家能力证据。check-data-chain通过（29/29、84/84、31/31及649语言键）。不复跑未变输入，不宣称历史范围外全量EditMode失败已解决，未运行BattleSim或形成新平衡结论。
+
+本卡及frozen父项在同一candidate完成归档，仅移除各自backlog/queue行；父项具名前置及其他卡依赖继续保留，不解锁或重排下游。Unity源码、资源、数值及自动化无最终变化；依据本轮已有事实/diff/验证，无需新增经验候选。正式重放及集成仍交共享入口处理。管理后置、审核文本、精确路径空白及暂存diff检查以本candidate收尾验证结果为准。

@@ -1,0 +1,108 @@
+# 关中两格群攻验收记录
+
+2026-10-14，V-GZ-R2-AOE-01，主责 Codex；主模型按共享入口启动证明为 gpt-6.1-sol。基线 9e70f3ff0aae0909a103411ca4f9b3863cae97cf，run dfcc4a76-edb8-4ac0-bb34-4d50b7abd560。按批准合同第三至五节验收铁剑、铁刀；本轮只写验收记录和管理归档，不补功能。
+
+## 结论与边界
+
+通过功能验收：正式新档取得两件武器，换装后可自由选择六向、预览恰好两格和全部合法敌人、取消或确认同一候选。两件武器均经真实移动、原 AI 和默认战斗随机源形成双目标攻击，逐目标 HP 变化与一次费用、一次共享次数有原始证据。正式生命周期另经确定随机输入证明部分死亡继续、最后死亡胜利、逐实例演出/清理、整场一次奖励/悬赏/回城与保存回读。
+
+设计、QUERY、RESOLVE、ENCOUNTER、DATA、INPUT、EQUIP均有 completed 归档且同 ID 活跃卡不存在。本卡与冻结汇总父项 D-GZ-R2-RANGE-DATA-01 同提交完成归档并移除各自 backlog/queue 行。保留其他卡的具名前置引用，不提升、重排或关闭下游。
+
+本记录签署场景功能正确性，不签署群攻收益或两敌难度平衡；本轮未运行 BattleSim，不改武器倍率、费用、CT、AI、地形、角色属性、用户存档或 Unity 资源。
+
+## 证据位置与复用依据
+
+下列目录只读消费既有证据，未在其他 worktree 实施、运行验证或借用缓存：
+
+- E1 = D:/天章游戏开发/.worktrees/aoe-input-recovery-20261014/src/Logs
+- E2 = D:/天章游戏开发/.worktrees/automation/b057e56a-948c-4402-b0af-bb63571cadbc/codex/src/Logs
+- E3 = D:/天章游戏开发/.worktrees/aoe-blocked-repair/Temp
+- E4 = 当前 run worktree 的 src/Logs
+
+当前版本与 E1 所属完成 worktree 的全部 1560 个已跟踪 src/Assets、src/ProjectSettings、src/Packages 文件逐个 SHA-256 比较，差异为零。当前脚本、测试与场景相对 INPUT 检查点 254238d072cbfc1c69c8db61eee6799f7ed3907c 的 git diff 为空；故 E2 已通过的输入与直接回归证据继续有效。E2 现场源文件已不同于检查点，不把现场旧文件当作测试版本，以检查点提交与正式完成归档绑定原始 XML。
+
+沿用 QUERY 与 RESOLVE 的已通过相关 EditMode 结果：QUERY 的 SpatialQueryBoardTests/CombatRuntimeKernelTests 114/114，RESOLVE 的 CombatRuntimeKernelTests/CombatActionPointKernelTests/CombatRealmStatusTests 290/290。对应事实读取各自归档的“本轮实现与验证结果”；QUERY的纯Spatial查询与RESOLVE最终核心结算/测试未再改变，QUERY的Combat部分由RESOLVE后续结果承接，不重跑未变输入。RESOLVE 当时完整 EditMode 有四项范围外环境失败，本记录不将全量结果写作通过。
+
+E3 的生命周期测试早于 INPUT 对 EncounterCoordinator 命令投影的修改，所以本轮在当前 worktree 单独补跑正式全链，没有复用旧结果替代最终组合验证。runner 对跟踪 Assets/ProjectSettings 做快照及恢复；运行后 git status 证明无 Unity 持久差异。
+
+## 正式玩家两件武器证据
+
+正式入口：GuanzhongCombatEquipmentPlayModeTests.EnterFormalAdventure → BeginEncounter → FormalAreaAttack。从 StartMenu 小族创角，经真实首次磁盘保存核对铁剑/铁刀各一、活血丹三、铁剑默认主手，城镇接悬赏再进入 shijiahou_encounter。两敌真实生成于 enemy@(3,5)、enemy_2@(4,5)，玩家@(0,0)，之后由原移动与 AI 形成下列实际攻击格位。遭遇抽签固定用于选择批准节点，战斗随机源断言为 SystemCombatResolutionRandomSource；没有注入敌人、改位置/HP/AP、暂停 AI 或替换伤害公式。
+
+E1/aoe-input-recovery.xml：2/2；E1/aoe-input-blade-capture.xml：1/1。后者是上游冷编译画面不足后的铁刀补验，本轮没有重复运行这两项。
+
+| 武器及正式测试 | 实际 O/d、两格 | 真实目标格位与 HP | AP 最小单位/共享次数 |
+|----------------|----------------|-------------------|---------------------|
+| 铁剑 AoeSwordSelectsPreviewsAndConfirmsFormalTwoEnemyQuote | O=(0,2)，d2；(0,1)/(0,0) | enemy@(0,0)：657→569；enemy_2@(0,1)：657→543 | 75000→35000，付一次40000；0→1 |
+| 铁刀 AoeBladeSelectsPreviewsAndConfirmsFormalTwoEnemyQuote | O=(1,0)，d3；(0,0)/(0,1) | enemy@(0,0)：657→531；enemy_2@(0,1)：657→531 | 75000→25000，付一次50000；0→1 |
+
+铁剑数值来自 E1/aoe-input-recovery.log 的 [AOE applied]，铁刀来自 E1/aoe-input-blade-capture.log 的同名日志；不混用初次铁刀运行的531/563与补验画面。两者 confirm 连续调用两次，随后再次提交旧候选，均只结算一次；确认不改变长期 Facing。两种分辨率均遍历方向、比较领域恰好两格/逐格合法性/Ordinal目标集合，取消无状态变化并清掉候选和高光，重开取实际 Facing；零目标确认禁用，调用确认也不改变状态。
+
+## 可见输出及运行时所有者
+
+已实际查看 E1/aoe-input 中剑/刀各自 two-targets、empty 的 1920/1366 共八张 PNG，场景有真实角色、正式地块、两格高光、两敌预览和六向/取消/确认。PNG 与 Screen 的1920×1080/1366×768一致由原测试断言及图像复核证明。铁刀首幅1920双目标图的部分按钮字偏软，仅用于对象/区域证据；文字可读性采用同分辨率 blade-empty-1920.png 和1366双目标图，不把该帧冒充清晰文字证据。旧冷编译青色占位图未采用。
+
+两件武器1366双目标摘要 preferredHeight=91.36164，viewport=99.90433；角点为(263.95,262.82)至(1011.69,327.82)。1920摘要高度95、视口100。费用、拒绝原因和按钮在视口内无需滚动，零目标/缺格原因可见。具体文本、状态、尺寸、角点保留于各 PNG 同名 txt。
+
+运行链为 AdventureSceneInstaller → EncounterCoordinator.PreviewAction/ProjectQuote/ConfirmAction → CombatCommandInput 唯一确认提交。AdventureSceneBuilder 及 AdventureScene 持久接线；CombatActionBarView 刷新六向按钮，CombatActionPreviewView.Present 刷新摘要；CombatMovementView.PresentAttackArea 使用序列化地块中心画高光，不另算规则。E1 日志记录高光对象、格位、世界中心、相机和屏幕点。E2 的 AoeCameraAndUiPointerKeepOneHighlightAndInputOwner 证明地块中心 XZ 误差小于0.001、相机移动不漂移、UI指针阻挡相机/选格；已通过源码与场景版本绑定复核。
+
+## 最终正式生命周期与直接回归
+
+本轮执行：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -EnableGraphics -ResultXmlPath 当前worktree/src/Logs/aoe-acceptance-lifecycle.xml -TestFilter TianZhang.Tests.PlayMode.GuanzhongBasicAttackPlayModeTests.FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads。
+
+E4/aoe-acceptance-lifecycle.xml：1/1，失败、跳过、未定均零。正式 StartMenu 新档 → World → 城镇悬赏 → Adventure两敌 → FightFormalTwoEnemies → 最后死亡回城 → 领取悬赏 → 保存返回菜单 → 原档加载。PrepareEquippedPlayerFixture 当前只有断言，不升级境界或发物资。该生命周期 helper 只将战斗随机输入确定化，使用生产敌人、原 AI 与合法移动/公开报价确认；不等同于默认随机源难度证明。两件武器的默认随机源可达性由上一节独立证明。
+
+本轮 XML 的实际第一笔双目标攻击：铁剑 O=(0,1)、d5，enemy@(0,2)、enemy_2@(0,3)，两敌657→569，一次付40000；之后有单目标攻击。enemy_2先死后enemy继续、最后enemy从41→0才结束；终局按 CombatSession.Terminate 清零剩余AP，不据此误判重复扣费。测试断言两敌均有真实 Move/Attack、各一次 Death，provider最终ActiveCombatantCount=0；整场材料一份、悬赏进度一次，领取前灵石一/领取后四，导航回城、Adventure清空、保存回读JSON一致。
+
+E2/aoe-input-targeted.xml：7/7；E2/aoe-input-regression.xml：5/6，失败的 SwordRoundTripWithNormalCombat 在 E2/aoe-input-roundtrip.xml：1/1补验通过。去重后12个不同PlayMode用例均有最终通过结果，保留失败历史、不声称regression原文件全绿。覆盖旧报价、空/取消、相机/指针、演出busy/上下文、移动生命周期清除、单目标术法、换装、正常胜利/被动失败回城与保存。E2/aoe-input-editmode.xml：8/8，合同只读快照和正式布局/单writer引用通过。
+
+E3/aoe-playmode-recheck.xml 中 GuanzhongCombatFeedbackPlayModeTests.ApprovedProfilesShareFiveCuesAndProjectAllSixEventsWithoutResiduals 为Passed：共享反馈、受击/死亡、短效粒子及provider清理属于局部表现证据。正式逐目标提交、移动/攻击/死亡与全体清理由本轮全链及 ENCOUNTER 完成记录证明。GuanzhongPlaytestFlowPlayModeTests.Flow 会改敌人攻击档案/玩家闪避，因此仅核对用途，不作为本次正式群攻能力或玩家死亡规则的替代证据。
+
+## 边界矩阵
+
+| 验收项 | 对应已通过证据及证据性质 |
+|--------|------------------------|
+| 剑/刀六向、恰好两格、平移起点、0/1/多个目标 | QUERY纯查询；E1正式玩家双目标/零目标；E4自然部分死亡后的单目标 |
+| 缺格/缺边/逆向边/效果阻挡/实体障碍/高差 | QUERY对应EditMode失败关闭；E1铁刀空区域图有实际缺格原因，不把局部地形夹具算正式走法 |
+| 自身/友方/尸体/重复ID/同格不同ID/Ordinal | QUERY纯规则测试，RESOLVE确认重验；E4自然死亡后只命中存活敌人 |
+| 逐目标独立随机、原子准备失败、全部闪避 | RESOLVE新增用例证明独立结果、第二目标失败无部分提交、一次费用/灵力/CT/冷却/共享计数；ENCOUNTER局部正式命令采样记录两个目标10次随机、命中/未命中分离 |
+| 切武器/回合/Facing/起点/目标/空间旧候选失效 | RESOLVE纯重验；E2 AoeAuthorityChangesRejectOldQuotesBeforeRandomOrPayment等为隔离变更/拒绝证据，不作自然玩家能力证明 |
+| busy/无权限/取消/重复确认、零敌无消耗 | E1正式输入取消/零目标/重复确认，E2演出与上下文门禁，RESOLVE纯事务 |
+| 部分死亡/最后死亡/玩家死亡/一次奖励/回城/保存 | E4正式胜利全链；RESOLVE玩家死亡原失败规则；E2 BladeRoundTripWithPassiveCombat自然失败回城，未用PlaytestFlow的改档案fixture代替 |
+
+## 本轮检查与管理关闭
+
+当前 worktree 的 check-data-chain.ps1 通过：GongFa29/29、Spells84/84、Skills31/31、language keys649。Unity没有源码/资源/程序集边界修改，不重复已有程序集/数值验证。共享入口预检 matched/mustRead/gates为空，与schema 2投影一致；复杂证据归并由单主模型统一复核，没有可独立解耦的辅助问题，不派生子智能体或第二责任会话。
+
+收尾检查包括两张归档的CodexClosedOrNonReady后置、管理审核文本、本轮精确路径空白检查和暂存diff检查，结果写入本卡归档。只删除父项和本卡的投影行，父项归档仍保留V的具名前置作为追溯关系。本轮依据已有事实、diff和验证复核，无需新增经验候选。
+
+原始XML/log/PNG/txt是忽略的运行产物，未纳入candidate。下方SHA-256清单将本记录绑定实际采用的原件；保留原证据目录才能继续复查图像。正式master重放/集成由共享入口处理，本candidate不代替正式结果。
+
+## 原始证据 SHA-256
+- E1/aoe-input-recovery.xml : b52ff0f55f4454bce5588cfaba0c274bcdada2ad6e013ad3d0306bd1e658d66c
+- E1/aoe-input-blade-capture.xml : 3b79b9280716bf4727706c52e526c3a7e333e16a266ae93d2ad3ef7ced813f4e
+- E1/aoe-input-recovery.log : 3de6fb7ed4a9a0398e7f261ac10288c5afa1101f378dc61ee9e0c8ce9635da74
+- E1/aoe-input-blade-capture.log : f5f787339f0dce7a030e718fae3643b7674ec2ceb815804613e1debe4ceea8ff
+- E1/aoe-input/sword-two-targets-1920.png : 876cc9dad2de9876ca414a30eb05cbe300e27b3bdd82e5720e8d11146d92a076
+- E1/aoe-input/sword-two-targets-1920.txt : a89f1380a31858dbe43454f6eae127937827211e35c6118276e8f5a33bf69548
+- E1/aoe-input/sword-two-targets-1366.png : e40e760ccffc0d50f290bc3e992b90a9255a07a291aa26beb0a994de0c96a0aa
+- E1/aoe-input/sword-two-targets-1366.txt : ae24ea0a09654b3d1dbafe78fb0f814f7f4280c5f05589ab50f5d7b3e26a0ab5
+- E1/aoe-input/sword-empty-1920.png : 873714187d7893ad583ad1a2b2e9e7d7d46ccdf3e011e0c0bacad015661aa73b
+- E1/aoe-input/sword-empty-1920.txt : f30ebe441e88501295f38ee6bcbb32c28d9f2f64252a3cd1b7198b1d2d9a1947
+- E1/aoe-input/sword-empty-1366.png : 0027d1185cc4bfe75ca7c66e01ef79d62b8975047a3b6ed64da9e8ae64b3a74b
+- E1/aoe-input/sword-empty-1366.txt : 8b210fad33077d4531a5460d51531f244eeea921fce0f4714057fdc7825377ac
+- E1/aoe-input/blade-two-targets-1920.png : 4dc9bb5e462be368f1f72215ac4984cdc1a164cc818dae206502c5102bf29ca7
+- E1/aoe-input/blade-two-targets-1920.txt : c06c6918366f3aa5c249346ba107f10613507dcc37358d67467490853ebe6372
+- E1/aoe-input/blade-two-targets-1366.png : f7843e0d6a59bce1b39c6ff312684e54046a23ed103b8df81035b4d395517db2
+- E1/aoe-input/blade-two-targets-1366.txt : 5ef94dba5fef334c48d79fc5ad74ccfba29607e90e626755b37f1ccbcd825199
+- E1/aoe-input/blade-empty-1920.png : 406da567416c6e2e3d974d167be832dc4ca4b05c53af9e95294eac57aa5f401c
+- E1/aoe-input/blade-empty-1920.txt : 791ac4016ba96a339731b24a82c4c515c870eef38a1797beaa6e58d9a9453c78
+- E1/aoe-input/blade-empty-1366.png : fe8492d94410043ffd84672de817f306e73a09fd79c6c82b6659c0f221ecb7d9
+- E1/aoe-input/blade-empty-1366.txt : 123cbab24b03408eecda9eac8d313e58c2c4f67b5f51ec0ef90da2653ad762d2
+- E2/aoe-input-targeted.xml : 4b5a02d6cc5d26e489312a27e67b0cc8ada031419773a499c9a4c9f85a2400c7
+- E2/aoe-input-regression.xml : b2d5b3f23d47923e9d44e9dc3d5f37187a5bcceb80f0765f68eafd1c579b29a8
+- E2/aoe-input-roundtrip.xml : b5cd8cb01000964ff51f9dcabb9fee9bc33d95c711bd0efdea51658800fa8aad
+- E2/aoe-input-editmode.xml : 794e6224d96845f30c067df72476f84831f7e71c6879eebd3077ea8e1c627c2d
+- E3/aoe-playmode-recheck.xml : 76809789cd6772d9583ab9afd36d7b4e563ed911ab40e20754217dacfcd45654
+- E4/aoe-acceptance-lifecycle.xml : 47b0a9a70c742e3e257c6c17128a7a03e1c0eb25c85f87e80addc65b3f3c05cf
+- E4/aoe-acceptance-lifecycle.log : ed11a6dfdaf42f271051536ad3e804cefe7a80f10b9c8068bd2254ea0b584ed4

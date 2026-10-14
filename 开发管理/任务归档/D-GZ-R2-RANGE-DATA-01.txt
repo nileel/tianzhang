@@ -8,11 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "frozen",
+  "dispatchState": "completed",
   "blockedBy": [
     "V-GZ-R2-AOE-01"
   ],
-  "stateReason": "2026-10-12已一次性拆为设计加六个子任务；本卡仅汇总、永不独立ready，由V-GZ-R2-AOE-01验证全部完成后同提交归档。",
+  "stateReason": "2026-10-14由V-GZ-R2-AOE-01验证全部具名前置及正式群攻闭环后同candidate关闭归档；保留具名前置追溯。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-RANGE-DATA-01.txt",
@@ -93,3 +93,10 @@
 ## 停止条件
 
 缺任一子卡/前置/真实验收证据，不关闭父项。新需求越过两件武器的两格区域攻击或发现无法按当前边界独立交付的冲突时，由普通规划上下文重新判断，不让worker继续叠加补丁或临时拆卡。
+## 汇总关闭记录（2026-10-14）
+
+由V-GZ-R2-AOE-01在同一candidate完成最终功能验收并归档本卡。本卡从冻结汇总直接completed，不曾独立ready或领取。上表“本次状态”为2026-10-12规划快照；当前设计、QUERY、RESOLVE、ENCOUNTER、DATA、INPUT、EQUIP及最终V均有completed归档，关闭要求已逐项核对。
+
+批准两件武器的默认随机源正式新档/换装/六向/双目标预览确认、逐目标HP和一次费用/次数、八张双分辨率图像已复核；当前worktree定向正式全链1/1通过，证明原AI与真实移动、部分死亡继续、最后死亡结束、各实例表现/清理、整场一次奖励/悬赏/回城及保存回读。细节、证据性质、原件位置和SHA-256统一读取开发管理/关中两格群攻验收记录.txt；不将确定随机生命周期或局部边界fixture冒充默认随机源玩家能力。
+
+仅移除本卡及V的backlog/queue投影；本卡blockedBy中的V引用保留为关闭来源，其他任务的具名前置不改，不提前解锁下游。功能正确性关闭不等于群攻收益或两敌难度平衡，本轮未运行BattleSim。最终正式master重放/集成由共享入口处理。

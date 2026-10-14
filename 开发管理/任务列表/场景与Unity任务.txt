@@ -72,8 +72,6 @@
 | U-CONFIG-EDITOR-APPLY-01 | P1 | codex | 阻塞 | — | 配置编辑器关联保存与导入应用闭环 | 开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt |
 | V-CONFIG-EDITOR-01 | P1 | codex | 阻塞 | U-CONFIG-EDITOR-APPLY-01 | Unity中文配置编辑器全表验收与总任务关闭 | 开发管理/任务卡/V-CONFIG-EDITOR-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | — | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
-| D-GZ-R2-RANGE-DATA-01 | P1 | codex | 冻结 | V-GZ-R2-AOE-01 | 两件基础武器两格群攻汇总 | 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt |
-| V-GZ-R2-AOE-01 | P1 | codex | 已排队 | — | 两格群攻正式玩法验收与父项关闭 | 开发管理/任务卡/V-GZ-R2-AOE-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
