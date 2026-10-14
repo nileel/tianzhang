@@ -107,6 +107,24 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void AreaQuoteCopiesCellsAndAllTargetIdentitiesWithoutWritableRuleObjects()
+        {
+            var cells = new[] { new CombatAttackAreaCellSnapshot(new CombatUnitPresentationHex(1, 0), true, ""),
+                new CombatAttackAreaCellSnapshot(new CombatUnitPresentationHex(2, 0), false, "blocked") };
+            var targets = new[] { new CombatantHudSnapshot("enemy", "石甲猴", 20, 20, 0, 0),
+                new CombatantHudSnapshot("enemy_2", "石甲猴", 20, 20, 0, 0) };
+            var area = new CombatAttackAreaSnapshot(new CombatUnitPresentationHex(0, 0), 0, cells, targets);
+            cells[0] = null; targets[0] = null;
+            Assert.That(area.Cells[0].Position.Q, Is.EqualTo(1));
+            Assert.That(area.Cells[1].Reason, Is.EqualTo("blocked"));
+            CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, area.Targets.Select(target => target.Id));
+            Assert.Throws<NotSupportedException>(() => ((System.Collections.Generic.IList<CombatAttackAreaCellSnapshot>)area.Cells).Clear());
+            Assert.Throws<NotSupportedException>(() => ((System.Collections.Generic.IList<CombatantHudSnapshot>)area.Targets).Clear());
+            foreach (Type type in new[] { typeof(CombatAttackAreaSnapshot), typeof(CombatAttackAreaCellSnapshot) })
+                Assert.That(type.GetProperties().All(property => !property.CanWrite), Is.True);
+        }
+
+        [Test]
         public void GameplayContractHasNoCombatOrUnityImplementationDependency()
         {
             string source = File.ReadAllText(Path.Combine(

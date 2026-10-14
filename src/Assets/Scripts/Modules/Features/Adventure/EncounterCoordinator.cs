@@ -292,7 +292,9 @@ namespace TianZhang.Features.Adventure
         private CombatActionPreviewSnapshot ProjectQuote(CombatActionCandidate candidate, CombatCommand command,
             CombatCommandPreview preview, string reason = "")
         {
-            if (preview != null && !preview.Validation.Succeeded) reason = displayReason(preview.Validation.RejectionReason);
+            if (preview != null && !preview.Validation.Succeeded)
+                reason = preview.Validation.RejectionReason == "combat_attack_area_empty"
+                    ? "区域内没有存活敌人" : displayReason(preview.Validation.RejectionReason);
             string name = candidate.Kind switch
             {
                 CombatActionKind.BasicAttack => "普攻",
@@ -312,7 +314,7 @@ namespace TianZhang.Features.Adventure
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
                 candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
-                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, candidate.AttackDirection);
+                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, command.AttackDirection);
             CombatantSnapshot actor = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
             CombatAttackProfile profile = null;
@@ -328,6 +330,16 @@ namespace TianZhang.Features.Adventure
                 resolveText(unarmed ? unarmedRealm : "realm_" + metadata.Tier.AbilityTierId.Substring(5)) +
                 (unarmed ? " · 肉攻承载 " + capacity : basic ? "档 · 肉攻承载 " + capacity : "档");
             int remainingCooldown = actor?.GetCooldown(command.ProfileId) ?? 0;
+            CombatAttackAreaSnapshot area = preview?.AttackArea == null ? null : new CombatAttackAreaSnapshot(
+                ToPresentationHex(preview.AttackArea.Origin), preview.AttackArea.Direction,
+                preview.AttackArea.Cells.Select(cell => new CombatAttackAreaCellSnapshot(
+                    ToPresentationHex(cell.Coord), cell.IsLegal, cell.IsLegal ? string.Empty : displayReason(cell.Reason))).ToArray(),
+                preview.AttackArea.TargetIds.Select(id =>
+                {
+                    session.Combatants.TryGet(id, out var target);
+                    return ToHud(target, resolveText(spawned.EnemyData.displayNameKey));
+                }).ToArray());
+            if (area != null) name = displayProfile(command.ProfileId);
             string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
                 candidate.SlotIndex >= 0 && candidate.SlotIndex < actor.EquippedArtProfileIds.Count
                 ? displayProfile(actor.EquippedArtProfileIds[candidate.SlotIndex]) : string.Empty;
@@ -346,7 +358,7 @@ namespace TianZhang.Features.Adventure
                 candidate.Kind == CombatActionKind.SwapEquipment && equipmentOwner != null
                     ? (string.IsNullOrEmpty(equipmentOwner.MainEquipmentItemId) ? "未装备" : resolveText(equipmentOwner.MainEquipmentItemId)) : string.Empty,
                 candidate.Kind == CombatActionKind.SwapEquipment && ownsEquipment != null
-                    ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null);
+                    ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null, area);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)
@@ -407,13 +419,21 @@ namespace TianZhang.Features.Adventure
                 _ => throw new ArgumentOutOfRangeException(nameof(candidate)),
             };
             string profile = candidate.Kind == CombatActionKind.BasicAttack ? CurrentBasicProfile(candidate.ActorId) : candidate.ProfileId;
+            string target = candidate.TargetId;
+            int? direction = candidate.AttackDirection;
+            if (candidate.Kind == CombatActionKind.BasicAttack && session != null &&
+                session.TryGetProfile(profile, out var attack) && attack.Area != CombatAttackArea.Single)
+            {
+                target = null;
+                if (!direction.HasValue && session.Combatants.TryGet(candidate.ActorId, out var actor)) direction = actor.Facing;
+            }
             var destination = candidate.Destination.HasValue
                 ? new TianZhang.Spatial.HexCoord(candidate.Destination.Value.Q, candidate.Destination.Value.R)
                 : (TianZhang.Spatial.HexCoord?)null;
-            return new CombatCommand(kind, candidate.ActorId, candidate.TargetId, profile,
+            return new CombatCommand(kind, candidate.ActorId, target, profile,
                 destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion,
                 equipmentSlotId: candidate.EquipmentSlotId, itemId: candidate.ItemId, instanceId: candidate.InstanceId,
-                attackDirection: candidate.AttackDirection);
+                attackDirection: direction);
         }
 
         private string CurrentBasicProfile(string actorId) => session != null && session.Combatants.TryGet(actorId, out var actor)

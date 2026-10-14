@@ -32,6 +32,8 @@ namespace TianZhang.Features.CombatPresentation
             Preview = null;
             previewView?.Present(null);
             timeline?.PresentPrediction(null);
+            actionBar?.PresentAttackDirections(null, false);
+            movementView?.PresentAttackArea(null);
         }
 
         public void ConfirmCandidate()
@@ -42,14 +44,23 @@ namespace TianZhang.Features.CombatPresentation
             previewHandler.ConfirmAction(selected);
         }
 
-        private void Choose(CombatActionKind kind, string target = null, string profile = null, int slot = -1)
+        private void Choose(CombatActionKind kind, string target = null, string profile = null, int slot = -1, int? direction = null)
         {
             if (!CanAct || snapshot == null || previewHandler == null) return;
+            CancelCandidate();
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
-                snapshot.CommandContextVersion, slotIndex: slot));
+                snapshot.CommandContextVersion, slotIndex: slot, attackDirection: direction));
             previewView?.Present(Preview);
             timeline?.PresentPrediction(Preview);
+            actionBar?.PresentAttackDirections(Preview?.AttackArea, CanAct);
+            movementView?.PresentAttackArea(Preview?.AttackArea);
+        }
+
+        private void SelectAttackDirection(int direction)
+        {
+            if (!CanAct || Candidate?.Kind != CombatActionKind.BasicAttack || Preview.AttackArea == null) return;
+            Choose(CombatActionKind.BasicAttack, direction: direction);
         }
 
         private void OnDisable() => ClearContext();
@@ -75,6 +86,11 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
             Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
             Bind(actionBar?.BasicAttackButton, () => { if (CanAct) Choose(CombatActionKind.BasicAttack, targetId); });
+            for (int index = 0; index < actionBar.AttackDirectionButtons.Count; index++)
+            {
+                int direction = index;
+                Bind(actionBar.AttackDirectionButtons[index], () => SelectAttackDirection(direction));
+            }
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
             Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);
@@ -86,6 +102,7 @@ namespace TianZhang.Features.CombatPresentation
                 if (!CanAct) return;
                 var choice = snapshot.FindAction(CombatActionKind.UseItem)?.Candidate;
                 if (choice == null) return;
+                CancelCandidate();
                 movementView?.Cancel();
                 Preview = previewHandler.PreviewAction(choice);
                 previewView?.Present(Preview);
@@ -96,6 +113,7 @@ namespace TianZhang.Features.CombatPresentation
                 if (!CanAct) return;
                 var choice = snapshot.FindAction(CombatActionKind.SwapEquipment)?.Candidate;
                 if (choice == null) return;
+                CancelCandidate();
                 movementView?.Cancel();
                 Preview = previewHandler.PreviewAction(choice);
                 previewView?.Present(Preview);

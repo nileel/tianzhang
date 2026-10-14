@@ -51,6 +51,30 @@ namespace TianZhang.Gameplay.Contracts
         public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
 
+    public sealed class CombatAttackAreaCellSnapshot
+    {
+        public CombatAttackAreaCellSnapshot(CombatUnitPresentationHex position, bool isLegal, string reason)
+        { Position = position; IsLegal = isLegal; Reason = reason ?? string.Empty; }
+        public CombatUnitPresentationHex Position { get; }
+        public bool IsLegal { get; }
+        public string Reason { get; }
+    }
+
+    public sealed class CombatAttackAreaSnapshot
+    {
+        public CombatAttackAreaSnapshot(CombatUnitPresentationHex origin, int direction,
+            IReadOnlyList<CombatAttackAreaCellSnapshot> cells, IReadOnlyList<CombatantHudSnapshot> targets)
+        {
+            Origin = origin; Direction = direction;
+            Cells = new List<CombatAttackAreaCellSnapshot>(cells).AsReadOnly();
+            Targets = new List<CombatantHudSnapshot>(targets).AsReadOnly();
+        }
+        public CombatUnitPresentationHex Origin { get; }
+        public int Direction { get; }
+        public IReadOnlyList<CombatAttackAreaCellSnapshot> Cells { get; }
+        public IReadOnlyList<CombatantHudSnapshot> Targets { get; }
+    }
+
     public sealed class CombatActionPreviewSnapshot
     {
         public CombatActionPreviewSnapshot(CombatActionCandidate candidate, string actionName, string actorName,
@@ -62,7 +86,7 @@ namespace TianZhang.Gameplay.Contracts
             int committedUseCount = 0, int repeatMultiplierPermille = 1000, string ruleSetVersion = "",
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
             string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
-            string currentEquipmentName = "", bool? equipmentOwned = null)
+            string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -88,6 +112,7 @@ namespace TianZhang.Gameplay.Contracts
             BasicAttackSourceKind = basicAttackSourceKind; UnarmedRealmId = unarmedRealmId;
             PhysicalAttackCapacity = physicalAttackCapacity; AttackDetail = attackDetail;
             CurrentEquipmentName = currentEquipmentName; EquipmentOwned = equipmentOwned;
+            AttackArea = attackArea;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -122,6 +147,7 @@ namespace TianZhang.Gameplay.Contracts
         public string AttackDetail { get; }
         public string CurrentEquipmentName { get; }
         public bool? EquipmentOwned { get; }
+        public CombatAttackAreaSnapshot AttackArea { get; }
     }
 
     public enum CombatUnitPresentationEvent

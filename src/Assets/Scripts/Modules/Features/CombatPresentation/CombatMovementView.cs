@@ -76,6 +76,22 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
+        public void PresentAttackArea(CombatAttackAreaSnapshot area)
+        {
+            ClearSelection();
+            if (!CanInput || area == null) return;
+            foreach (CombatAttackAreaCellSnapshot cell in area.Cells)
+            {
+                if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
+                var properties = new MaterialPropertyBlock();
+                Color color = cell.IsLegal ? selectedMaterial.GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
+                color.a = 1f;
+                properties.SetColor("_BaseColor", color);
+                ring.SetPropertyBlock(properties);
+                ring.gameObject.SetActive(true);
+            }
+        }
+
         public void BeginSelection()
         {
             if (!CanInput || snapshot.Movement == null || snapshot.Movement.Options.Count == 0) return;
@@ -173,7 +189,16 @@ namespace TianZhang.Features.CombatPresentation
         {
             IsSelecting = false;
             selected = null;
-            foreach (LineRenderer ring in highlights.Values) if (ring != null) ring.gameObject.SetActive(false);
+            foreach (LineRenderer ring in highlights.Values)
+                if (ring != null)
+                {
+                    ring.gameObject.SetActive(false);
+                    var properties = new MaterialPropertyBlock();
+                    Color color = reachableMaterial.GetColor("_BaseColor");
+                    color.a = 1f;
+                    properties.SetColor("_BaseColor", color);
+                    ring.SetPropertyBlock(properties);
+                }
             if (pathLine != null) pathLine.gameObject.SetActive(false);
             RefreshControls();
         }

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "负责人回复已落实范围：DEC-20261014-CD3F0C35250F34/A",
+  "stateReason": "2026-10-14人工处置检查点任务卡冲突；按已批准A补齐十个摘要，输入功能与数据链验证通过。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
@@ -234,3 +234,51 @@ CommandInput是唯一确认提交者，CombatMovementView使用现有序列化�
 ## 停止条件
 
 领域快照不能表达批准区域、需要UI另算几何/目标、出现新操作语义、新资源/所有者或超出新卡头字面量路径时停止。摘要修复涉及其他字段、CSV、共享算法、额外资产或不能通过既有数据链时停止并回交普通规划，不连续叠加补丁、不降低门禁。实际正常玩法不能形成覆盖或画面证据不成立时停止，不改敌人、AI、地形或参数补救；任务不再原子时按既有停止/拆分合同处理。
+
+## 原检查点验证记录（历史）
+
+2026-10-14，run b057e56a-948c-4402-b0af-bb63571cadbc，Node REPL实际模型元数据为gpt-6.1-sol，与入口证明一致。核对模型协作后维持单主模型：现有候选、报价、场景接线和画面是一个耦合闭环，无独立辅助问题；未调用子智能体或第二责任会话。新增只读区域投影和六向符号后复核预检：taskCardDigest=41d930b583f5695a7e74a9522ab26ba564a0376739213acbe0f7cacf36df5faa，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff，命中EXP-UNITY-012/014/016，无门禁，已消费正文。
+
+运行时所有者：AdventureScene中的AdventureRoot经AdventureSceneInstaller接线到CombatCommandInput；EncounterCoordinator只投影既有领域quote，不复制几何或筛选。UICanvas/CombatActionPreviewRoot/PreviewActions保存六个方向按钮，由AdventureSceneBuilder创建、CombatActionBarView刷新、CommandInput选择和确认；ActionPreviewSummary由CombatActionPreviewView刷新。AdventureRoot/Reachable_q_r由CombatMovementView统一绘制，使用36个序列化地块的实际世界中心、现有相机和EventSystem；没有新资源、meta、全局管理器或坐标兜底。静态3D provider、相机、领域结算与下游卡未改。
+
+定向EditMode 8/8通过（CombatUnitPresentationContractsTests、GuanzhongCombatLayoutEditorTests，复用现有runner的tracked workspace字节快照并恢复）。图形PlayMode最终12个不同用例通过：两件武器正式双敌选择/预览/取消/确认、旧报价的朝向/起点/目标移动/死亡及busy拒绝、相机与UI指针单一所有者、移动/生命周期清除、布局长文本、移动和检查联动、术法确认与费用、铁剑正常战斗往返、铁刀被动往返、缺武器拒绝。证据在本worktree的src/Logs/aoe-input-targeted.xml、aoe-input-regression.xml、aoe-input-roundtrip.xml、aoe-input-editmode.xml及aoe-input/截图；原失败用例保留为诊断记录，不算通过。剑往返的旧测试把按钮可预览当成可确认，已改为选择合法报价再提交；正式验证走位改为先进入内侧并保留攻击费用，不改敌人、AI或数值。
+
+正式新档通过现有来源取得两件武器，真实两敌和默认SystemCombatResolutionRandomSource：铁刀O=(1,0)、d3，enemy/ enemy_2各657→563，AP75000→25000，普攻次数0→1；铁剑O=(0,2)、d2，enemy 657→569、enemy_2 657→543，AP75000→35000，次数0→1。确认未改变长期Facing，重复确认/旧报价无额外提交。1920×1080与1366×768的Screen和PNG尺寸均断言通过；最长实际摘要preferredHeight分别100和91.36164，视口100和99.90，费用/拒绝行及方向按钮均在屏幕内且无需滚动。高光中心与真实tile的XZ误差小于0.001，相机(0,8,-9.58)→(0.12,8,-9.58)时世界线条不漂移，方向按钮指针阻挡选格和相机输入。
+
+程序集边界19程序集/2asmref通过。数据链门禁失败于已有十个派生资产的摘要：四张源CSV及CombatRuleSet.asset逐字节与base c8dcbdd1d3e4a54bc0b925f016e2be829e15825c一致；标准LF源摘要为f146a3971a4c86a0975502214dc45935ebfe9e59cb906a2d8b8f502e3d9088cf，已有资产保存af64d7edb8bf506d509b3f1b80d090a2168785a93497c2aadac81c7846499ad8。只把AttackProfiles.csv的LF换为CRLF、其他三表保持LF，即精确重现已有摘要；已证明是生成时字节换行与标准检出不一致，不是本轮规则或输入变化。九个AttackProfile asset与CombatRuleSet.asset均不在本卡冻结写入集合，未修改它们或摘要算法。
+
+按停止条件保留唯一检查点，等待负责人选择是否补齐十个派生资产的精确路径，或先独立处理前置问题/暂停。本记录不宣称数据链通过或任务完成，不修改卡头、生命周期、队列、backlog或下游具名前置；无数值平衡结论。
+## 人工处置与完成验证
+
+2026-10-14，根据负责人“codex最新接取的任务失败了，排查一下并解决”的明确要求，在独立.worktrees/aoe-input-recovery-20261014中人工完成；本轮Node REPL实际model=gpt-6-astra。原executionModel继续保留为自动入口设置，本轮未恢复旧模型会话、未重新调用candidate或更改自动化。此处是管理上下文对失败现场的人工处置；由同一主智能体核对冲突、原检查点diff、摘要、测试及正式集成，未派生子智能体。
+
+失败run为c4f95bd2-e8e6-40fd-9cb2-68d798671158，base为fd094c56d8069f3789fe34b4e84655df330edbc7，taskCardDigest为48c0b5d2b491e38e29abce6c05a0474d01c449e80762c19ff2300b8edf8a5929。失败发生于启动模型之前：共享入口对254238d072cbfc1c69c8db61eee6799f7ed3907c执行cherry-pick --no-commit，唯一未合并路径是本任务卡。检查点相对c8dcbdd1d3e4a54bc0b925f016e2be829e15825c仅向旧正文末尾追加验证记录；最新master已依据A重写任务正文，造成文本上下文冲突。两次base之间仅本任务卡有变化，没有业务冲突；12个src路径已可干净应用。原失败worktree及其未合并现场原样保留。
+
+在新人工worktree保留负责人批准的新卡，逐路径应用检查点12个src文件并证明与检查点完全一致，旧验证记录收入上节。风险预检taskCardDigest与claim一致，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；匹配EXP-UNITY-014/016，与schema 2投影一致，已消费mustRead，无门禁。没有修改共享入口、Git冲突门禁或创建新的恢复机制。
+
+调用现有CombatRuleSet.ComputeSourceDigest对四张实际LF源表重新计算，结果f146a3971a4c86a0975502214dc45935ebfe9e59cb906a2d8b8f502e3d9088cf。十个资产各仅改一个sourceDigest/ruleSetSourceDigest字段；逐项移除摘要行比较证明其他内容一致，四张CSV及十份.meta未改。check-data-chain.ps1通过，GongFa=29/29、Spells=84/84、Skills=31/31、language keys=649。
+
+已核对原XML：EditMode 8/8；targeted 7/7；regression 5/6，其中SwordRoundTripWithNormalCombat随后roundtrip 1/1通过，合计12个不同PlayMode用例有最终通过结果。功能、脚本、场景和测试文件保持检查点字节内容，没有把旧失败记录算成通过。原证据位于.worktrees/automation/b057e56a-948c-4402-b0af-bb63571cadbc/codex/src/Logs/aoe-input*，继续保留。
+
+人工复核发现旧blade-two-targets-1920.png为青色占位画面，拒绝作为正式可见性证据。因此本轮运行run-unity-playmode-tests.ps1 -EnableGraphics，仅定向重跑AoeBladeSelectsPreviewsAndConfirmsFormalTwoEnemyQuote与AoeSwordSelectsPreviewsAndConfirmsFormalTwoEnemyQuote：aoe-input-recovery.xml为2/2通过；首幅铁刀画面仍有未完成显示，保留src/Logs/aoe-input-first-capture后，在已经完成资源编译的同一项目单独补验铁刀，aoe-input-blade-capture.xml为1/1通过。没有为取证修改测试、场景、AI、敌人或玩法参数。
+
+本轮正式新档、真实两敌、默认随机源：铁剑O=(0,2)、d2，两敌657→569/543，AP75000→35000，次数0→1；铁刀补验O=(1,0)、d3，两敌657→531/531，AP75000→25000，次数0→1。两项均覆盖六向、取消、零目标禁止确认、重复确认不重复结算。1920×1080与1366×768的Screen/PNG尺寸及布局断言通过；摘要高度95/91.36164（原最长100），视口100/99.90433，费用/拒绝行无需滚动。已逐图检查新aoe-input中的双目标和空区域画面：两种分辨率可见正式棋子、地块、区域和摘要；1920首幅部分既有按钮文字较软，文字可读性取后续同分辨率空区域画面，不将首幅作为清晰文字证据。图像及文字数据保留于本人工worktree/src/Logs/aoe-input/。
+
+运行时所有者继续为AdventureSceneInstaller→EncounterCoordinator领域报价→CombatCommandInput唯一确认提交；CombatActionBarView刷新六向，CombatActionPreviewView刷新摘要，CombatMovementView使用真实地块中心显示两格。场景按fileID比较没有删除任何既有对象，仅给PreviewActions及CombatActionBarView增加六个按钮引用，并新增相应60个序列化对象块。原相机/UI指针与地块中心数值证据保持有效。本任务不作BattleSim平衡结论；V-GZ-R2-AOE-01及父项仍由其自身合同验收。
+
+仅完成归档本卡并删除自身队列/backlog行；下游blockedBy及其他任务不变。正式集成前运行check-task-cards、check-review-text、精确路径check-pending-whitespace和git diff --cached --check；满足原run精确关闭合同后，以现有排他集成入口fast-forward。失败worktree、原检查点分支及原/新图形证据均保留。
+
+## 经验候选
+
+### U-GZ-R2-AOE-INPUT-01-CP-TASK-CONFLICT
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：automation
+- 现象：负责人批准新任务范围后，下一次checkpoint重放在模型启动前因任务卡冲突进入attention_required。
+- 已证实根因：旧检查点向任务正文末尾追加验证记录，ResumeReady已按批准选项改写同一正文；完整cherry-pick重放旧任务卡补丁时上下文冲突，12个业务文件没有冲突。
+- 可能复用范围：同时包含业务变更和任务记录的decision checkpoint，在批准选项重写任务正文后人工处置重放冲突。
+- 证据：checkpoint 254238d072cbfc1c69c8db61eee6799f7ed3907c；失败run c4f95bd2-e8e6-40fd-9cb2-68d798671158仅本卡UU；base间diff仅本卡；人工worktree12个src路径与checkpoint一致。
+- 门禁可能：yes

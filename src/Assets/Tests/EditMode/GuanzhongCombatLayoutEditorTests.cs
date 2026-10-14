@@ -93,6 +93,15 @@ namespace TianZhang.Tests.EditMode
             Assert.NotNull(data.FindProperty("summary").objectReferenceValue);
             Assert.AreEqual(1, rects.Count(r => r.name == "BountySummary"));
             Assert.AreEqual(1, rects.Count(r => r.name == "CombatActionBar"));
+            var actionBar = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatActionBarView>()).Single();
+            Assert.AreEqual(6, actionBar.AttackDirectionButtons.Count);
+            for (int direction = 0; direction < 6; direction++)
+            {
+                var button = actionBar.AttackDirectionButtons[direction];
+                Assert.AreSame(Rect("AttackDirection_" + direction).gameObject, button.gameObject);
+                Assert.AreSame(Rect("PreviewActions"), button.transform.parent);
+                Assert.IsFalse(button.gameObject.activeSelf);
+            }
             var timeline = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTimelineView>()).Single();
             Assert.NotNull(new SerializedObject(timeline).FindProperty("predictionRoot").objectReferenceValue);
         }

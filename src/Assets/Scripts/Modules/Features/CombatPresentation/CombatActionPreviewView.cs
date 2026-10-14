@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,6 +39,19 @@ namespace TianZhang.Features.CombatPresentation
             }
             string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
+            if (value.AttackArea != null)
+            {
+                CombatAttackAreaSnapshot area = value.AttackArea;
+                string Hex(CombatUnitPresentationHex hex) => "(" + hex.Q + "," + hex.R + ")";
+                summary.text = value.ActionName + " · 起点" + Hex(area.Origin) + " · 方向" + area.Direction + " · " +
+                    string.Join(" / ", area.Cells.Select(cell => Hex(cell.Position) + (cell.IsLegal ? "可命中" : cell.Reason))) +
+                    "\n目标：" + (area.Targets.Count == 0 ? "无" : string.Join("、", area.Targets.Select(target => target.DisplayName + "[" + target.Id + "]"))) +
+                    " · 一次费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
+                    "\n" + (value.CanConfirm ? "确认命中全部目标" : "不可施行：" + value.Reason) +
+                    " · 已用" + value.CommittedUseCount + "次 · 本次×" +
+                    (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture);
+                return;
+            }
             if (value.Candidate.Kind == CombatActionKind.SwapEquipment && value.EquipmentOwned.HasValue)
             {
                 summary.text = "当前主手：" + value.CurrentEquipmentName + " → " + value.ActionName +

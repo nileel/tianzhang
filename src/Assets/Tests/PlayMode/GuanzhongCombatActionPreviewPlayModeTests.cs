@@ -492,6 +492,124 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AoeAuthorityChangesRejectOldQuotesBeforeRandomOrPayment()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var move = Find<CombatMovementView>();
+            void SelectArea()
+            {
+                bar.BasicAttackButton.onClick.Invoke();
+                for (int direction = 0; direction < 6 && !input.Preview.CanConfirm; direction++)
+                    bar.AttackDirectionButtons[direction].onClick.Invoke();
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                Assert.IsNotNull(input.Preview.AttackArea);
+            }
+            SelectArea();
+            int facing = spawned.Player.Facing;
+            spawned.Player.Facing = (facing + 1) % 6;
+            string before = State();
+            input.ConfirmCandidate();
+            Assert.AreEqual(before, State());
+            Assert.IsNull(input.Candidate);
+            spawned.Player.Facing = facing;
+
+            SelectArea();
+            HexCoord actorOrigin = spawned.Player.Position;
+            spawned.Player.SetPosition(new HexCoord(5, 5));
+            before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
+            spawned.Player.SetPosition(actorOrigin);
+
+            SelectArea();
+            var candidate = input.Candidate;
+            var targetId = input.Preview.AttackArea.Targets[0].Id;
+            session.Combatants.TryGet(targetId, out var enemy);
+            HexCoord origin = enemy.Position;
+            // Isolated stale-quote fixture, separate from the ordinary formal coverage test.
+            enemy.SetPosition(new HexCoord(5, 5));
+            before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
+            enemy.SetPosition(origin);
+            SelectArea();
+            enemy.ReceiveDamage(enemy.CurrentHealth);
+            before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
+            encounter.ConfirmAction(candidate); Assert.AreEqual(before, State());
+
+            bar.BasicAttackButton.onClick.Invoke();
+            var hud = presenter.Snapshot;
+            input.SetContext(new CombatHudSnapshot(hud.Player, hud.Enemy, hud.TurnText, true,
+                hud.ArtProfileIds, hud.DivineProfileIds, hud.Timeline, hud.CanEndTurn, hud.Movement,
+                isPresenting: true, commandContextVersion: hud.CommandContextVersion, actions: hud.Actions));
+            before = State();
+            foreach (var button in bar.AttackDirectionButtons) button.onClick.Invoke();
+            input.ConfirmCandidate(); Assert.AreEqual(before, State());
+            Assert.IsNull(input.Candidate);
+            Assert.IsFalse(move.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+            input.SetContext(hud);
+            bar.BasicAttackButton.onClick.Invoke();
+            bar.SwapEquipmentButton.onClick.Invoke();
+            Assert.AreEqual(CombatActionKind.SwapEquipment, input.Candidate.Kind);
+            Assert.IsFalse(bar.AttackDirectionButtons.Any(button => button.gameObject.activeSelf));
+            Assert.IsFalse(move.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+            input.CancelCandidate();
+            bar.BasicAttackButton.onClick.Invoke();
+            input.SetContext(null);
+            Assert.IsNull(input.Candidate);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AoeCameraAndUiPointerKeepOneHighlightAndInputOwner()
+        {
+            SetGameSize(1366, 768);
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            Assert.AreEqual(1366, Screen.width); Assert.AreEqual(768, Screen.height);
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var move = Find<CombatMovementView>();
+            bar.BasicAttackButton.onClick.Invoke();
+            for (int direction = 0; direction < 6 && !input.Preview.CanConfirm; direction++)
+                bar.AttackDirectionButtons[direction].onClick.Invoke();
+            Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+            Canvas.ForceUpdateCanvases();
+            Vector3 cameraBefore = Camera.main.transform.position;
+            var ringPositions = move.Highlights.Where(pair => pair.Value.gameObject.activeSelf)
+                .ToDictionary(pair => pair.Key, pair => pair.Value.GetPosition(0));
+            foreach (var cell in input.Preview.AttackArea.Cells)
+            {
+                if (!move.Highlights.TryGetValue(new Vector2Int(cell.Position.Q, cell.Position.R), out var ring)) continue;
+                Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + cell.Position.Q + "_" + cell.Position.R);
+                Vector3 center = Enumerable.Range(0, 6).Select(ring.GetPosition).Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
+                Assert.That(center.x, Is.EqualTo(tile.position.x).Within(.001f));
+                Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
+            }
+            string before = State();
+            int next = (input.Preview.AttackArea.Direction + 1) % 6;
+            var button = bar.AttackDirectionButtons[next];
+            Vector2 point = RectTransformUtility.WorldToScreenPoint(null, button.transform.position);
+            Assert.IsFalse(move.TryPickCell(point, out _), "UI owns the direction-button pointer.");
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            for (int frame = 0; frame < 6; frame++) yield return null;
+            Assert.AreEqual(cameraBefore, Camera.main.transform.position);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(Screen.width * .5f, Screen.height * .52f) });
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            for (int frame = 0; frame < 6; frame++) yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+            Assert.Greater(Vector3.Distance(cameraBefore, Camera.main.transform.position), .01f);
+            foreach (var pair in ringPositions) Assert.AreEqual(pair.Value, move.Highlights[pair.Key].GetPosition(0));
+            Debug.Log("[AOE camera] " + cameraBefore + "->" + Camera.main.transform.position + "; world rings unchanged");
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Left)); yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+            Assert.AreEqual(next, input.Preview.AttackArea.Direction);
+            Assert.AreEqual(before, State());
+            Assert.IsFalse(move.IsSelecting);
+            input.CancelCandidate();
+            bar.ArtButton.onClick.Invoke(); Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+        }
+
+        [UnityTest]
         public IEnumerator CandidateCancelAndTargetChangesNeverMutateAuthority()
         {
             CombatCommandInput input = Find<CombatCommandInput>();

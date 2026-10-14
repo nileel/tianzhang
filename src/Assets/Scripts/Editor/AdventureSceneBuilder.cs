@@ -358,6 +358,7 @@ namespace TianZhang.Editor
             SettlementSceneBuilder.PlacePanel(preview.gameObject, new Vector2(351, 281), new Vector2(1442, 477));
             MakeLayoutScroll(preview, "PreviewBody", LayoutObject(preview, "ActionPreviewSummary").GetComponent<Text>(), 20, 80, 20, 16);
             PlaceLayoutRect(LayoutObject(preview, "PreviewActions"), 20, 16, 1051, 48);
+            BuildAttackDirections(LayoutObject(preview, "PreviewActions"), root.GetComponent<CombatActionBarView>());
 
             CombatBountyTrackerView bounty = root.GetComponent<CombatBountyTrackerView>() ?? root.AddComponent<CombatBountyTrackerView>();
             GameObject bountyPanel = LayoutPanel(hud, "CombatBountyTrackerRoot");
@@ -554,6 +555,22 @@ namespace TianZhang.Editor
             }
             SceneBuildSupport.SetObject(view, "swapSlotButton", slot);
             SceneBuildSupport.SetObject(view, "swapCandidateButton", candidate);
+        }
+
+        private static void BuildAttackDirections(Transform row, CombatActionBarView bar)
+        {
+            var data = new SerializedObject(bar);
+            SerializedProperty buttons = data.FindProperty("attackDirectionButtons");
+            buttons.arraySize = 6;
+            for (int direction = 0; direction < 6; direction++)
+            {
+                Button button = LayoutButton(row, "AttackDirection_" + direction, "方向" + direction);
+                button.transform.SetSiblingIndex(direction + 2);
+                button.GetComponentInChildren<Text>().fontSize = 18;
+                button.gameObject.SetActive(false);
+                buttons.GetArrayElementAtIndex(direction).objectReferenceValue = button;
+            }
+            data.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [MenuItem("天章/场景/接入关中目标联动")]

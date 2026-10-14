@@ -10,6 +10,8 @@ namespace TianZhang.Features.CombatPresentation
     {
         [SerializeField] private GameObject root;
         [SerializeField] private Button basicAttackButton;
+        [SerializeField] private Button[] attackDirectionButtons = Array.Empty<Button>();
+        public System.Collections.Generic.IReadOnlyList<Button> AttackDirectionButtons => attackDirectionButtons;
         [SerializeField] private Button artButton;
         [SerializeField] private Button divineButton;
         [SerializeField] private Button guardButton;
@@ -86,6 +88,9 @@ namespace TianZhang.Features.CombatPresentation
             string equipmentReason = PresentAction(snapshot?.FindAction(CombatActionKind.SwapEquipment), swapEquipmentButton, canAct);
             string itemReason = PresentAction(snapshot?.FindAction(CombatActionKind.UseItem), useItemButton, canAct);
             string basicReason = PresentAction(snapshot?.FindAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
+            // An empty/rejected direction is still previewable; confirmation keeps the quote gate.
+            if (snapshot?.FindAction(CombatActionKind.BasicAttack)?.AttackArea != null)
+                SetEnabled(basicAttackButton, canAct);
             string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
             string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),
                 waitButton, canAct);
@@ -167,6 +172,19 @@ namespace TianZhang.Features.CombatPresentation
                     return target;
             }
             return null;
+        }
+
+        public void PresentAttackDirections(CombatAttackAreaSnapshot area, bool canAct)
+        {
+            for (int direction = 0; direction < attackDirectionButtons.Length; direction++)
+            {
+                Button button = attackDirectionButtons[direction];
+                if (button == null) continue;
+                button.gameObject.SetActive(area != null);
+                SetEnabled(button, area != null && canAct);
+                button.GetComponentInChildren<Text>().text = "方向" + direction +
+                    (area?.Direction == direction ? " ●" : string.Empty);
+            }
         }
 
         public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption selected, CombatMovementOption preview = null)
