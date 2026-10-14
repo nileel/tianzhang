@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "pending_decision",
   "blockedBy": [],
-  "stateReason": "2026-10-14 QueueMaintenance核对U-GZ-R2-AOE-ENCOUNTER-01与D-GZ-R2-AOE-DATA-01均已完成归档；已冻结同一选择、领域报价、预览和正式场景的完整原子路径，具备执行条件。",
+  "stateReason": "等待负责人决定：输入闭环已验证，但原有十个派生资产摘要与标准LF源表不一致，数据链门禁失败。是否授权扩大本卡到十个现有资产，仅同步摘要后完成，或先独立处理前置问题、暂停功能？",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
@@ -41,7 +41,111 @@
     ],
     "gates": []
   },
-  "executionModel": "gpt-6.1-sol"
+  "executionModel": "gpt-6.1-sol",
+  "automationCheckpoint": {
+    "schemaVersion": 1,
+    "taskId": "U-GZ-R2-AOE-INPUT-01",
+    "sourceRunId": "b057e56a-948c-4402-b0af-bb63571cadbc",
+    "owner": "codex",
+    "route": "codex_execute",
+    "decisionId": "DEC-20261014-CD3F0C35250F34",
+    "question": "输入闭环已验证，但原有十个派生资产摘要与标准LF源表不一致，数据链门禁失败。是否授权扩大本卡到十个现有资产，仅同步摘要后完成，或先独立处理前置问题、暂停功能？",
+    "options": [
+      {
+        "key": "A",
+        "label": "补齐十个派生摘要并完成输入任务",
+        "targetState": "ready",
+        "expectedPaths": [
+          "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+          "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
+          "开发管理/任务列表/场景与Unity任务.txt",
+          "开发管理/当前任务队列.txt",
+          "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+          "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+          "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+          "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+          "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+          "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+          "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+          "src/Assets/Scenes/AdventureScene.unity",
+          "src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs",
+          "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+          "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+          "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+          "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+          "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+          "src/Assets/Data/CombatRuleSet.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset",
+          "src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset"
+        ],
+        "taskBody": "# U-GZ-R2-AOE-INPUT-01 · 两格群攻选择预览与确认操作\n\n## 来源与当前边界\n\n负责人已批准铁剑纵向两格、铁刀相邻横向两格和自由六向选择。汇总父项为D-GZ-R2-RANGE-DATA-01；唯一验收结果是正式界面选择、准确预览和确认同一次攻击。本次选择A后承接当前检查点，在既有输入闭环上仅补齐阻挡完整验收的十个现有派生资产摘要；不改变玩法、数值或摘要算法。ENCOUNTER、DATA、EQUIP已完成，不改下游具名前置。\n\n## 必查范围\n\n- 开发管理/关中武器差异射程合同.txt#三、两格形状、筛选与结算及正式验收入口\n- 开发管理/任务卡/D-GZ-R2-RANGE-DATA-01.txt#依赖图与关闭条件\n- 本卡本轮检查点验证结果及现有diff和src/Logs/aoe-input相关证据\n- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatActionCandidate/CombatActionPreviewSnapshot/CombatAttackAreaSnapshot\n- src/Assets/Scripts/Modules/GameplayContracts/ICombatCommandHandler.cs的现有预览与确认接口\n- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::PreviewAction/ProjectQuote/ToCommand/ConfirmAction\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure/Choose/ConfirmCandidate/SetContext/CancelCandidate\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs::Present及CombatActionBarView方向控件\n- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs的序列化格位、指针和高光所有者\n- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs的预览/布局重建、AdventureSceneInstaller接线、AdventureScene.unity真实引用及相关.meta\n- src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs、GuanzhongCombatLayoutEditorTests.cs及四张冻结PlayMode测试的相关完整逻辑单元\n- .gitattributes的src文本LF规则；src/Assets/Scripts/Combat/CombatRuleSet.cs::ComputeSourceDigest、src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles和tools/check-data-chain.ps1::Test-CombatRuleSetProjection只读\n- src/Assets/DataConfig/AttackProfiles.csv、RealmCombatGrowth.csv、CombatEffectTierRules.csv、CombatActionEconomyRules.csv只读；下面列出的十个现有asset完整相关字段及对应.meta只读GUID核对\n- src/Assets/Data/CombatRuleSet.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_fanren.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_lianqi.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_zhuji.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_human_jindan.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_body_shijiahou_lianqi.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_sword.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_spell_guanshiji.asset\n- src/Assets/Data/AttackProfiles/AttackProfile_spell_julingshu.asset\n\n## 实施范围\n\n恢复唯一检查点，保留并统一复核现有选择—预览—确认链。按普攻进入预览，六个d自由选择，初值为当前Facing；O固定当前攻击者格，不选远端中心或单个敌人，不需要移动转向，不改变长期Facing，取消清除方向。领域报价是方向、恰好两格、逐格合法性/原因、Ordinal去重目标集合和一次费用的唯一事实；UI只投影，零敌人可看但禁确认，1/多个目标确认同一报价并全部结算。切武器、回合/朝向/起点/目标/空间状态变化清除或拒绝旧候选，busy、取消、无权限无提交、费用、次数或随机。CanEndTurn不替代接受命令/演出/报价门禁，保留原术法、移动、换装、用物及保存操作。\n\nCommandInput是唯一确认提交者，CombatMovementView使用现有序列化地块世界中心和相机/指针路线统一画两格，ActionBar/ActionPreview显示六向和区域摘要。AdventureSceneBuilder与AdventureScene.unity持久接线；Installer现有接线不变。无新增资源、目录或.meta；不改CombatSession、CombatCommandService、CombatEntryAdapter、CombatTargetInput、核心结算或敌人生成。\n\n本次额外授权只限上面十个现有asset：依当前标准LF源CSV和既有ComputeSourceDigest/导入器合同，将CombatRuleSet.asset的sourceDigest与九个AttackProfile asset的ruleSetSourceDigest同步为真实源摘要。已证实旧af64d7edb8bf506d509b3f1b80d090a2168785a93497c2aadac81c7846499ad8对应仅AttackProfiles.csv使用CRLF，其余三表LF；当前标准检出摘要为f146a3971a4c86a0975502214dc45935ebfe9e59cb906a2d8b8f502e3d9088cf。执行轮重新核实实际源字节后再写，不以本文常量替代计算。只修摘要字段，其他玩法/规则字段、GUID、源CSV及摘要算法保持原值；不运行会发布额外资源的宽泛导入。出现其他真实数据差异立即停止，不擅自修复。\n\n## 禁止项\n\n除本次明确批准的十个摘要字段外，不改武器、术法、规则、场景数值、用户存档、AI、地形或自动化；不新增全局管理器、重试、兼容层或通用输入框架。不改伤害/AP/CT，不宣称BattleSim平衡验收。不改变其他任务的blockedBy、backlog阻塞投影、顺序或状态。\n\n## 模型协作\n\n主模型继续为executionModel gpt-6.1-sol。检查点轮实际Node REPL值已核实一致，由一个主智能体复核耦合的输入闭环、正式场景和派生摘要；没有独立辅助问题，不启动第二责任会话。恢复执行前按新路径和真实能力核对复杂度、风险预检mustRead与门禁。若发现摘要修复需要新的共享算法或所有者，按停止条件回交规划。\n\n## 检查点证据\n\n8项定向EditMode和12项不同PlayMode最终通过，程序集19/2通过。正常新档、真实两敌、默认战斗随机源：铁刀O=(1,0)、d3，两个敌人657→563，AP75000→25000，次数0→1；铁剑O=(0,2)、d2，enemy657→569、enemy_2 657→543，AP75000→35000，次数0→1。Screen/PNG为1920×1080和1366×768；最长摘要100/91.36164，视口100/99.90，无需滚动，费用/拒绝行及按钮在屏内。高光地块中心XZ误差小于0.001，相机移动时世界线条不漂移，UI指针阻挡相机和选格。数据链尚未通过，当前检查点不是任务完成或数值平衡结论。\n\n## 验证\n\n先消费共享入口对新增路径重算的风险预检mustRead和门禁。逐项核实四张标准LF源表的真实摘要、十个asset的摘要字段、其他字段未变和.meta GUID未变；运行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1，必须通过，不以改换行、改检查器或跳过门禁制造通过。\n\n复用检查点已有通过证据；只改摘要且玩法、脚本、布局及输入未变时，不重跑已通过的同范围功能用例。若相关输入变化，按原卡用run-unity-playmode-tests.ps1 -EnableGraphics定向覆盖正式新档取得/切换两武器、六向、两格和多目标、取消/确认、逐目标HP/演出及一次费用/次数、旧候选失效、相机移动、UI阻挡，并保留单目标术法、换装、移动、用物/保存回归。区分显示/选择/应用，只有实际HP/费用/次数提交算攻击。\n\n场景或UI变化时使用runtime-owner-proof核对真实显示对象和writer，复用runner tracked workspace快照，断言1920×1080和1366×768的Screen/PNG宽高；量化最长摘要preferredHeight、视口高度及费用/拒绝行角点，必须在视口内无需滚动，超高只删重复/无关摘要后复验。不把静态源码、相机单独截图或nographics画面当正式Game View证据。\n\n修改管理投影后运行check-task-cards.ps1和check-review-text.ps1；暂存前只对本轮精确路径运行check-pending-whitespace.ps1，暂存后git diff --cached --check。所有项目脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File；不扩大无关验证。\n\n## 完成条件\n\n正式界面可选择铁剑/铁刀区域，准确显示领域两格/合法目标并确认同一次攻击，所需功能证据和数据链全部通过。核对同轮已有事实是否需要经验候选，无候选不写空章节。将本卡转completed并移至开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt，仅移除自身backlog/queue行，不解锁或删除下游前置。当前worktree形成一个路径限定candidate，由共享入口在最新master重放；不自行集成。\n\n## 停止条件\n\n领域快照不能表达批准区域、需要UI另算几何/目标、出现新操作语义、新资源/所有者或超出新卡头字面量路径时停止。摘要修复涉及其他字段、CSV、共享算法、额外资产或不能通过既有数据链时停止并回交普通规划，不连续叠加补丁、不降低门禁。实际正常玩法不能形成覆盖或画面证据不成立时停止，不改敌人、AI、地形或参数补救；任务不再原子时按既有停止/拆分合同处理。\n"
+      },
+      {
+        "key": "B",
+        "label": "先独立处理数据发布前置，本功能等待",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
+      },
+      {
+        "key": "C",
+        "label": "暂停这项功能并保留检查点",
+        "targetState": "blocked",
+        "expectedPaths": [],
+        "taskBody": ""
+      }
+    ],
+    "recommendedOption": "A",
+    "impactSummary": "A仅新增十个现有asset摘要字段的授权，保持玩法、数值、GUID及摘要算法不变，继续本卡闭环；B让本功能等待，先由普通规划独立处理数据发布前置；C暂停功能。B/C不自动新建或执行其他任务，三项都保留检查点。",
+    "plainSummary": {
+      "situation": "铁剑和铁刀的群攻操作已经实测，但旧数据的校验记录与当前文件不一致，完整验收被挡住；修复涉及原授权之外的数据，需要你选择范围。",
+      "impact": "A补齐十份现有数据记录，最快完成本功能；B先另行处理数据生成问题，本功能继续等待；C暂停推进并保留已做的工作。",
+      "action": "建议选A，只更新校验记录并保持攻击数值不变；若希望先整理整个数据生成流程，可选B。"
+    },
+    "checkpointCommit": "254238d072cbfc1c69c8db61eee6799f7ed3907c",
+    "baseCommit": "c8dcbdd1d3e4a54bc0b925f016e2be829e15825c",
+    "branch": "codex/automation/codex/b057e56a-948c-4402-b0af-bb63571cadbc/candidate",
+    "changedPaths": [
+      "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
+      "src/Assets/Scenes/AdventureScene.unity",
+      "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+      "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+      "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+      "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+      "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+      "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+      "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+      "src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs",
+      "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+      "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs"
+    ],
+    "verified": [
+      "Node REPL实际model=gpt-6.1-sol；单主模型执行，风险预检EXP-UNITY-012/014/016已消费。",
+      "定向Unity EditMode 8/8通过；图形PlayMode最终12个不同用例通过，含术法、移动、换装、保存往返和旧报价拒绝。",
+      "正常新档、真实两敌和默认战斗随机源：铁刀两敌各657→563，一次50 AP；铁剑两敌657→569/543，一次40 AP；次数均只加一次。",
+      "1920×1080和1366×768的Screen/PNG尺寸通过；最长摘要100/91.36164，视口100/99.90，费用、拒绝原因和六向按钮无需滚动。",
+      "高光与实际地块中心XZ误差小于0.001，相机移动不漂移；UI指针阻挡相机/选格。程序集边界19程序集/2asmref通过。",
+      "四张源CSV及规则资产与base逐字节相同；仅将攻击表LF换为CRLF即可精确重现旧af64摘要，已证明既有换行摘要不一致。",
+      "任务生命周期、队列、backlog和下游依赖未改；A的28条精确路径及完整正文通过CheckpointScope。",
+      "空白、审核文本和git diff检查通过；唯一提交直接继承base，13条changedPaths按指定命令生成，工作树干净。"
+    ],
+    "unverified": [
+      "check-data-chain未通过：十个既有资产摘要与标准LF源文件不一致，相关资产未获本轮写入授权。",
+      "正式master重放、集成及任务完成归档尚未执行。"
+    ],
+    "residualRisk": "输入功能已验证，但数据链门禁仍失败；须批准补齐十个现有资产摘要或先独立处理前置。检查点不能作为任务完成或数值平衡结论。",
+    "taskContextDigest": "37d47ded7fc87ff6e29156a48a331e4d6de20dc62e56dc32040575d83ef321c0",
+    "createdAt": "2026-10-14T11:04:51.5369254+08:00",
+    "queueIndex": 0
+  }
 }
 ---TASK-BODY---
 # U-GZ-R2-AOE-INPUT-01 · 两格群攻选择预览与确认操作
