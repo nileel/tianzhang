@@ -15,6 +15,7 @@ static class BattleSimSelfTests
     {
         if (suite == "unarmed") return RunChecked(suite, RunUnarmed);
         if (suite == "unarmed-config") return RunChecked(suite, RunUnarmedConfig);
+        if (suite == "two-cell-production") return RunChecked(suite, RunTwoCellProduction);
         if (suite == "ap2") return RunChecked(suite,RunAp2);
         if (suite == "equipment-production") return RunChecked(suite, RunEquipmentProduction);
         if (suite == "action-economy-n-combat-ap-sim-01")
@@ -2014,6 +2015,46 @@ static class BattleSimSelfTests
         Cost: new("fixture-legacy-basic", "fixture-old-rule", 50000, 25000, 0, 0));
 
 
+    static void RunTwoCellProduction()
+    {
+        string root = FindRepositoryRoot();
+        string data = Path.Combine(root, "Temp", "two-cell-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(data);
+        try
+        {
+            foreach (string name in new[] { "AttackProfiles", "RealmCombatGrowth", "CombatEffectTierRules", "CombatActionEconomyRules" })
+                File.Copy(Path.Combine(root, "src/Assets/DataConfig/" + name + ".csv"), Path.Combine(data, name + ".csv"));
+            string path = Path.Combine(data, "AttackProfiles.csv");
+            string[] original = File.ReadAllLines(path);
+            var profiles = GameData.LoadProductionAttacks(path);
+            AssertEqual(9, profiles.Count, "same nine production IDs");
+            foreach (var pair in new[] { ("basic_iron_sword", CombatAttackArea.ForwardPair, 2, 40000, 1d), ("basic_iron_blade", CombatAttackArea.AdjacentPair, 1, 50000, 1.25d) })
+            {
+                var profile = profiles[pair.Item1];
+                AssertEqual(pair.Item2, profile.Area, "two-cell area kind");
+                AssertEqual(1, profile.MinRange, "runtime minimum hit range");
+                AssertEqual(pair.Item3, profile.MaxRange, "runtime maximum hit range");
+                AssertEqual(pair.Item4, profile.Cost.ActionPointCostUnits, "unchanged cost");
+                AssertEqual(pair.Item5, profile.Mult, "unchanged multiplier");
+            }
+            AssertEqual(7, profiles.Values.Count(profile => profile.Area == CombatAttackArea.Single), "other profiles stay single");
+            string[] header = original.First(line => line.StartsWith("attackProfileId,")).Split(',');
+            foreach (var mutation in new[] { ("areaCenterKind", "target_cell"), ("areaShapeKind", "fan"), ("areaShapeKind", "unknown"),
+                ("areaFacing", "0"), ("areaLength", "3"), ("areaAllowedFactions", "ally"), ("areaAllowedStates", "corpse"),
+                ("areaEffectBlockers", "none"), ("minCastRange", "1"), ("targetingMode", "single") })
+            {
+                string[] lines = (string[])original.Clone();
+                int index = Array.FindIndex(lines, line => line.StartsWith("basic_iron_sword,"));
+                string[] row = lines[index].Split(','); row[Array.IndexOf(header, mutation.Item1)] = mutation.Item2;
+                lines[index] = string.Join(",", row); File.WriteAllLines(path, lines);
+                bool rejected = false;
+                try { GameData.LoadProductionAttacks(path); } catch (InvalidDataException) { rejected = true; }
+                AssertEqual(true, rejected, "invalid two-cell field: " + mutation.Item1);
+            }
+        }
+        finally { Directory.Delete(data, true); }
+    }
+
     static void RunUnarmedConfig()
     {
         string root = FindRepositoryRoot();
@@ -2044,6 +2085,8 @@ static class BattleSimSelfTests
             Set("minimumNetCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
             Set("unarmedPhysicalAttackCapacity", entry.Item5.ToString(System.Globalization.CultureInfo.InvariantCulture));
             Set("physicalDamageMultiplier", "1"); Set("reuseCooldownTicks", "0");
+            Set("targetingMode", "single"); Set("minCastRange", "1"); Set("maxCastRange", "1");
+            foreach (string field in fields.Where(field => field.StartsWith("area", StringComparison.Ordinal))) Set(field, "");
             fixture.Add(string.Join(",", row));
         }
         void Write(IEnumerable<string> lines) => File.WriteAllText(attackPath, string.Join("\n", lines) + "\n", new System.Text.UTF8Encoding(false));

@@ -51,6 +51,10 @@ namespace TianZhang.Editor.ConfigEditor
             var content = WorldFields.Reference("contentId", "节点内容", "Enemies", "name", true);
             content.CanEdit = row => row.At("nodeTypeId").RawToken == EncounterNodeHandler.StableNodeTypeId;
             content.ReadOnlyReason = "起点和返回节点内容必须为空；切换类型后不会自动清空原值";
+            var additionalEnemies = WorldFields.Lock(WorldFields.Text("additionalEnemies", "额外敌人实例及落点", true),
+                "批准的遭遇实例固定配置");
+            // This field carries the complete declaration; the Adventure parser owns |, @ and : syntax.
+            additionalEnemies.ReservedDelimiters = "~;=+>";
             var adventures = new[]
             {
                 WorldFields.Lock(WorldFields.Text("adventureId", "地图ID"), "稳定地图分组不可修改"),
@@ -59,7 +63,8 @@ namespace TianZhang.Editor.ConfigEditor
                 WorldFields.Lock(WorldFields.Text("nodeId", "节点ID"), "稳定节点ID不可修改"),
                 WorldFields.Enum("nodeTypeId", "节点类型", AdventureNodeDispatcher.StartNodeHandler.StableNodeTypeId, "起点",
                     EncounterNodeHandler.StableNodeTypeId, "遭遇", ReturnNodeHandler.StableNodeTypeId, "返回"),
-                WorldFields.Number("q", "轴坐标q", "格"), WorldFields.Number("r", "轴坐标r", "格"), content
+                WorldFields.Number("q", "轴坐标q", "格"), WorldFields.Number("r", "轴坐标r", "格"), content,
+                additionalEnemies
             };
             foreach (var field in adventures.Where(f => f.Column == "displayNameKey" || f.Column == "contentScope"))
             {

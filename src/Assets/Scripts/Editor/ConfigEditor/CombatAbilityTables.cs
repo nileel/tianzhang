@@ -88,7 +88,7 @@ namespace TianZhang.Editor.ConfigEditor
                     f.Unit = "无量纲分数"; f.Help = "正整数分子与分母，未改值保持原分数，不自动约分。";
                 }
                 if (c.StartsWith("area", StringComparison.Ordinal)) f.CanEdit = r => Value(r, "targetingMode") == "area" &&
-                    (c != "areaFacing" || Value(r, "areaShapeKind") != "circle");
+                    (c != "areaFacing" || Value(r, "areaShapeKind") is "line" or "fan");
                 if (c.StartsWith("status", StringComparison.Ordinal)) f.CanEdit = r => Value(r, "effectType") == "buff" || Value(r, "effectType") == "debuff";
                 if (new[] { "isDomain", "isBloodline", "specialEffectTextKey" }.Contains(c)) f.CanEdit = r => Value(r, "profileKind") == "divine";
                 if (f.CanEdit != null && f.ReadOnlyReason == "尚未接入字段适配") f.ReadOnlyReason = "当前分支不适用或身体映射固定；保持原声明与空值";
@@ -130,7 +130,7 @@ namespace TianZhang.Editor.ConfigEditor
                 case "cooldownClass": f = new ConfigFieldDefinition { Column = c, ChineseName = name, Control = ConfigControl.Enum, Editable = true, Choices = CombatEditorFields.CooldownChoices }; break;
                 case "effectBudgetMode": f = CombatEditorFields.Enum(c, name, "fixed_weapon", "武器固定", "fixed_unarmed", "身体固定", "damage_budget", "伤害预算", "prototype_restore", "恢复原型", "status_only", "状态", "fixed_output", "固定输出"); break;
                 case "areaCenterKind": f = CombatEditorFields.Enum(c, name, "caster", "施法者", "target_cell", "目标格"); f.AllowEmpty = true; break;
-                case "areaShapeKind": f = CombatEditorFields.Enum(c, name, "circle", "圆", "line", "线", "fan", "扇"); f.AllowEmpty = true; break;
+                case "areaShapeKind": f = CombatEditorFields.Enum(c, name, "circle", "圆", "line", "线", "fan", "扇", "forward_pair", "纵向两格", "adjacent_pair", "相邻两格"); f.AllowEmpty = true; break;
                 case "areaFacing": f = CombatEditorFields.Enum(c, name, "east", "东", "north_east", "东北", "north_west", "西北", "west", "西", "south_west", "西南", "south_east", "东南"); f.AllowEmpty = true; break;
                 case "areaEffectBlockers": f = CombatEditorFields.Enum(c, name, "none", "无", "directed_edge", "有向边"); f.AllowEmpty = true; break;
                 case "areaAllowedFactions": f = SetField(c, name, "ally", "友方", "enemy", "敌方", "self", "自身"); break;

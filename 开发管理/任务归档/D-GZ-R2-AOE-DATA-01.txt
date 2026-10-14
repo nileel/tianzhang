@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "data",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：expected_paths_incomplete",
+  "stateReason": "2026-10-14手动完成两格武器配置、严格导入、配置编辑器及Unity/BattleSim同源投影；定向验证通过，完成归档。",
   "expectedPaths": [
     "开发管理/任务卡/D-GZ-R2-AOE-DATA-01.txt",
     "开发管理/任务归档/D-GZ-R2-AOE-DATA-01.txt",
@@ -41,7 +41,12 @@
     "simulations/BattleSim/GameData.cs",
     "simulations/BattleSim/BattleSimSelfTests.cs",
     "simulations/BattleSim/GuanzhongPlaytestAudit.cs",
-    "tools/check-data-chain.ps1"
+    "tools/check-data-chain.ps1",
+    "src/Assets/Scripts/Editor/ConfigEditor/CombatAbilityTables.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCombatTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Tests/EditMode/CombatAbilityCapacityTests.cs",
+    "src/Assets/Tests/EditMode/CombatActionPointEquipmentTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -131,3 +136,24 @@ RESOLVE已完成归档。本轮复核两件武器L2/L1、CSV、解析与导入�
 ## 停止条件
 
 导入派生文件未枚举、横向两格无法由批准字段唯一表达或需要扩大到其他武器/术法时停止重新冻结；不手改导入资产绕过事实源。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+
+## 2026-10-14手动修复范围冻结
+
+承接aoe-data-implementation未提交实现，复核两格配置发布链；新增配置编辑器形状选项与静态方向可编辑条件、其既有定向测试以及三份直接生产命令测试。检查器保持旧Line/Fan命名方向映射与导入器一致。不新增列、文件或武器语义。
+
+用户明确要求两名子智能体分别实施；主智能体统一管理投影、预检、最终验证及提交。CombatEntryAdapter.cs先由DATA独占，再交ENCOUNTER；其他字面量路径互不重叠。新所有者/越界仍停止复核。
+## 2026-10-14手动完成记录
+
+负责人明确要求两名子智能体分别修复DATA与ENCOUNTER。主智能体在.worktrees/aoe-blocked-repair隔离统一实施、管理投影、复核完整差异并运行最终验证；data子智能体独占本卡业务路径，CombatEntryAdapter与AdventureNodeDispatchTests先由DATA写入，冻结后移交ENCOUNTER。子智能体没有改卡、领取任务、提交或操作自动化；工具继承当前会话，未另行声称建议模型名或推理强度已核实。
+
+根因：旧自动run因遗漏区域枚举检查器路径按expected_paths_incomplete停止；后续手动实现又遗漏配置编辑器的形状枚举及静态方向条件，真实配置加载拒绝forward_pair/adjacent_pair。旧aoe-data-implementation内业务实现未提交；本轮逐路径核对旧基线至当前master无覆盖冲突后承接，补齐同一发布链的直接读取端与测试，不增加重试或兼容流程。
+
+结果：铁剑/铁刀分别为caster中心的forward_pair/adjacent_pair，中心范围0，运行命中范围1至2/1至1，只接受批准的几何、阻挡与目标策略。内容不保存本次方向；旧枚举序号不变。CSV、九个原GUID攻击asset、CombatRuleSet摘要、严格导入、运行时投影、BattleSim读取、配置编辑器及L2/L1一致；其他武器、费用、倍率、CT和取得保存语义不变。检查器按真实枚举/标志及六个命名方向映射，拒绝未知值，不跳过区域字段。无新长期文件或meta。
+
+写前预检：taskId=D-GZ-R2-AOE-DATA-01，taskCardDigest=d700b6c344d2ec54a37fb0ab391aa7d43a393d8aefa5af1ba44ea5480d19f067，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；EXP-DATA-001正文已消费，matched与卡头一致、无gates，已核对Unity/BattleSim共享schema与显式源码链接。
+
+验证：本worktree真实dotnet restore后，Release --no-restore构建0警告0错误；实际默认BattleSim运行、two-cell-production与unarmed-config自测通过。本轮检查器10项隔离正反例及21项命名方向/旧形状/非法输入探针通过，实际生产check-data-chain通过。Unity定向EditMode共255项最终均通过：首轮249/255，6项World配置往返失败确证为新增声明的@/:被通用文本分隔符规则拒绝；只对该只读字段保留完整编码，再运行World与布局32/32通过，其他输入未变不重复。范围包括AttackProfileData、ContentImporterArchitecture、FeatureComposition、ConfigEditorCombat/World、CombatAbilityCapacity、CombatActionPointEquipment、AdventureNodeDispatch/ContentImporter和GuanzhongCombatLayoutEditor。非法区域导入验证九个asset与规则资产未部分发布且GUID未变。程序集边界19程序集/2asmref通过。
+
+结合ENCOUNTER实际PlayMode证明：正式铁剑在O=(0,1)、d=5同时命中enemy@(0,2)与enemy_2@(0,3)，两个HP各657至569，一次扣费40000；局部采样用例证明两目标独立10次随机输入、命中/未命中分离及过期报价不消耗随机。相关24项PlayMode按失败定向复查后全部通过。XML位于本worktree Temp/aoe-combined-editmode.xml、aoe-editor-recheck.xml、aoe-combined-playmode.xml、aoe-playmode-recheck.xml、aoe-playmode-final.xml。
+
+本卡完成归档，只移除自身backlog行；原ready队列无本卡，不改下游状态。六向玩家操作与区域预览仍归INPUT，完整玩家闭环与数值平衡仍归后续；以上不是群攻强度平衡结论。本轮依据已有事实、diff和验证复核，没有需要另建的经验候选。

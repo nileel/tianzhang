@@ -112,7 +112,7 @@ internal static class GuanzhongPlaytestAudit
             CombatAttackEffect effect = row["effectType"] switch { "physical" => CombatAttackEffect.Physical, "restore_spirit" => CombatAttackEffect.RestoreSpirit, _ => throw new InvalidDataException("Unsupported audit effect.") };
             float Number(string key, float empty = 0) => string.IsNullOrEmpty(row[key]) ? empty : Parse(row[key]);
             return new CombatAttackProfile(id, basic ? CombatAttackKind.Basic : CombatAttackKind.Art, effect,
-                (int)Number("minCastRange"), (int)Number("maxCastRange"),
+                resolved.MinRange, resolved.MaxRange,
                 RequireAttackCostInt(row, "actionPointCostUnits"), RequireAttackCostInt(row, "minimumNetCostUnits"),
                 resolved.Cost.CtPenalty, resolved.Cost.ReuseCooldownTicks,
                 (float)resolved.Mult, 0,
@@ -126,7 +126,7 @@ internal static class GuanzhongPlaytestAudit
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageMigrationNumerator"),(int)Number("damageMigrationDenominator")) : null,
                     resolved.EffectBudgetMode == "damage_budget" ? new CombatRuleRatio((int)Number("damageWeightNumerator"),(int)Number("damageWeightDenominator")) : null,
                     "","",0,0,0,"",(int)Number("controlChancePermille"),row["controlUsesMindContest"] == "1", unarmedFamilyId:resolved.UnarmedFamilyId,
-                    unarmedRealmId:resolved.UnarmedRealmId, unarmedPhysicalAttackCapacity:resolved.UnarmedPhysicalAttackCapacity));
+                    unarmedRealmId:resolved.UnarmedRealmId, unarmedPhysicalAttackCapacity:resolved.UnarmedPhysicalAttackCapacity), area:resolved.Area);
         }).ToArray();
         Require(profiles.Select(p => p.Id).Order().SequenceEqual(GameData.ProductionAttackIds.Order()), "Unexpected production profiles.");
         return new Inputs(evidence, profiles, root, I(character, "rootBone"), Hash(text));

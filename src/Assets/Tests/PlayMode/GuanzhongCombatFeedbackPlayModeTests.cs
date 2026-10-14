@@ -70,7 +70,14 @@ namespace TianZhang.Tests.PlayMode
                     player.Position,
                     end,
                     1,
-                    new[] { new CombatUnitPresentationTargetResult(enemy.CombatantId, 17, false) }));
+                    new[] { new CombatUnitPresentationTargetResult(enemy.CombatantId, 17, false) },
+                    presentationEvent == CombatUnitPresentationEvent.Move ? new[] { end } : null));
+                if (presentationEvent == CombatUnitPresentationEvent.Move)
+                {
+                    for (float deadline = Time.realtimeSinceStartup + 5f; provider.IsPresenting && Time.realtimeSinceStartup < deadline;)
+                        yield return null;
+                    Assert.IsFalse(provider.IsPresenting, "The valid adjacent movement must finish before the next event.");
+                }
             }
 
             yield return null;

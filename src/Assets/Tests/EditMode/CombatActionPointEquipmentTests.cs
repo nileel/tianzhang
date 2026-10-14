@@ -161,8 +161,8 @@ namespace TianZhang.Tests.EditMode
         {
             string before = State(); service.Preview(session, Swap()); Assert.AreEqual(before, State());
             Assert.IsTrue(Execute(Swap()).Succeeded);
-            var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", actor.BasicAttackProfileId,
-                new CombatResolutionRolls(0, 100, 100, 100));
+            var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: actor.BasicAttackProfileId, attackDirection: 0,
+                targetRolls: new[] { new CombatTargetResolutionRolls("enemy", new CombatResolutionRolls(0, 100, 100, 100, 100)) });
             Assert.AreEqual(50000, service.Preview(session, attack).ActionPointCostUnits);
             Assert.IsTrue(service.Execute(session, attack).Succeeded); Assert.AreEqual(25000, actor.ActionPointsRemainingUnits);
             Assert.IsTrue(Execute(Swap(Sword)).Succeeded); Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
@@ -181,8 +181,8 @@ namespace TianZhang.Tests.EditMode
                     true, out Action equip, out _)); equip(); actor.BasicAttackProfileId = "basic_iron_blade";
             }
             if (ap < 100000) Spend(100000 - ap);
-            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", actor.BasicAttackProfileId,
-                new CombatResolutionRolls(0, 100, 100, 100));
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: actor.BasicAttackProfileId, attackDirection: 0,
+                targetRolls: new[] { new CombatTargetResolutionRolls("enemy", new CombatResolutionRolls(0, 100, 100, 100, 100)) });
             for (int i = 0; i < count; i++) Assert.IsTrue(service.Execute(session, command).Succeeded);
             Assert.AreEqual(remaining, actor.ActionPointsRemainingUnits);
             Assert.IsFalse(service.Execute(session, command).Succeeded);
@@ -210,7 +210,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(item == Sword ? "basic_iron_sword" : "basic_iron_blade", actor.BasicAttackProfileId);
             Assert.AreEqual(1000000, actor.ActionPointMaximumUnits); Assert.AreEqual(100000, actor.ActionPointLimitAtTurnStartUnits);
             Assert.AreEqual(remaining, actor.ActionPointsRemainingUnits); Assert.AreEqual(turn, session.TurnSequence);
-            var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", actor.BasicAttackProfileId));
+            var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: actor.BasicAttackProfileId, attackDirection: 0));
             Assert.AreEqual(fee, quote.ActionPointCostUnits); Assert.IsTrue(session.TryGetProfile(actor.BasicAttackProfileId, out var weapon));
             Assert.AreEqual(120, weapon.RuleMetadata.Tier.PhysicalAttackCapacity);
             Assert.IsTrue(runtime.OwnsEquipmentInstance("player", Sword, "player:initial:" + Sword));

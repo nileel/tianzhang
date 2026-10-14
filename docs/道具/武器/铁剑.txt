@@ -28,9 +28,10 @@
 - 零CD普攻同回合同角色第1／2／3／4次及以后乘1／1／1.25／1.5，基础净费后乘、向上取整到AP最小单位，不复利。铁剑、铁刀与空手共用普攻次数，换武器不清零并按当前武器基础费报价；移动、换目标不清零，下一本人回合重置。预览不计，成功合法未命中计、取消／拒绝不计；附加费不使倍率重算。未装备且有合法身体攻击来源时可空手普攻；本件装备时主手优先，本次不提供主动切空手/卸装操作。武器与空手共用本角色普攻次数，肉身变档不清零、不补AP；basic_unarmed仍为退役ID，不隐式补档或武器。
 - 本节新规则待唯一配置源与运行时切换；库存、取得、资格、换装与保存仍按下列原合同，旧WEAPON归档的清空结果保留，新空手绑定与保存6迁移由开发管理/空手普攻成长接入合同§四/五和UNARMED-RUNTIME承接，尚未启用。
 
-- 档案 ID／显示键：basic_iron_sword／attack_profile_basic_iron_sword；profileKind=basic，basicBindingKind=main_equipment，effectType=physical，damageElementId=element_none，targetingMode=single，minCastRange=maxCastRange=1。
+- 档案 ID／显示键：basic_iron_sword／attack_profile_basic_iron_sword；profileKind=basic，basicBindingKind=main_equipment，effectType=physical，damageElementId=element_none，targetingMode=area，areaCenterKind=caster，areaShapeKind=forward_pair，minCastRange=maxCastRange=0（中心范围）；命中范围由运行时投影为1至2格。
 - 待 N-COMBAT-AP-BALANCE-01 实际运行验证：physicalDamageMultiplier=1.0；actionPointCostUnits=40000（40 AP）；minimumNetCostUnits=40000（40 AP）。单次倍率较铁刀低、费用较少，形成可测的动作选择差异；未宣称强度已平衡。
-- ctPenalty=0、reuseCooldownTicks=0、resourceKind=none、resourceCost=0；无穿透、范围效果、额外属性或特效。保持现有基础攻击的零 CT／零重用冷却合同。
+- ctPenalty=0、reuseCooldownTicks=0、resourceKind=none、resourceCost=0；无穿透、额外属性或特效。保持现有基础攻击的零 CT／零重用冷却合同。
+- 两格区域：以攻击者当前格O和本次命令方向d（0至5）生成{O+D[d], O+2D[d]}，排除O，恰好两格；只命中其中存活敌方，空集合禁止出手。本次方向不写长期Facing；逐格沿用空间阻挡/视线规则。areaRadius/areaFanHalfAngleSteps/areaInnerRadius=0、areaLength=2、areaFacing留空、areaEffectBlockers=directed_edge、areaAllowedFactions=enemy、areaAllowedStates=alive。每次命令只扣一次费用并增加一次共享普攻次数，多目标收益未经平衡定案。
 - 换入费用候选：25000（25 AP），净费下限同值；不是本件普攻费。两方向费用统一由换装行为定义生产，不在物品上另存一份。
 
 ## 取得与保存

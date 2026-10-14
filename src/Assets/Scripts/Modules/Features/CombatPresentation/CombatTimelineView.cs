@@ -9,7 +9,7 @@ namespace TianZhang.Features.CombatPresentation
 {
     public sealed class CombatTimelineView : MonoBehaviour
     {
-        private const int MaximumEntries = 2;
+        private const int MaximumEntries = 3;
         private const float EntrySpacing = 5f;
 
         [SerializeField] private GameObject root;

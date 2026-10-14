@@ -50,8 +50,8 @@ namespace TianZhang.Tests.EditMode
                 "Head health bars must not stretch with their content.");
             var healthView = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatUnitHealthBarView>()).Single();
             SerializedProperty healthSlots = new SerializedObject(healthView).FindProperty("bars");
-            Assert.AreEqual(2, healthSlots.arraySize);
-            foreach (string slot in new[] { "UnitHealthBar_0", "UnitHealthBar_1" })
+            Assert.AreEqual(3, healthSlots.arraySize);
+            foreach (string slot in new[] { "UnitHealthBar_0", "UnitHealthBar_1", "UnitHealthBar_2" })
             {
                 var bar = (RectTransform)healthBars.Find(slot);
                 Assert.NotNull(bar, slot + " must exist under the health bar container.");

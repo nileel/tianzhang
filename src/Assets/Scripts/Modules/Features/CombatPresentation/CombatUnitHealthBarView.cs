@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,15 +35,15 @@ namespace TianZhang.Features.CombatPresentation
             if (provider == null) throw new ArgumentNullException(nameof(provider));
             if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
                 throw new InvalidOperationException("combat_health_bar_overlay_canvas_required");
-            if (bars == null || bars.Length != 2)
-                throw new InvalidOperationException("combat_health_bar_two_slots_required");
+            if (bars == null || bars.Length == 0)
+                throw new InvalidOperationException("combat_health_bar_slots_required");
             for (int i = 0; i < bars.Length; i++)
             {
                 Bar bar = bars[i];
                 if (bar == null || bar.root == null || bar.healthFill == null || !(bar.root.parent is RectTransform) ||
                     bar.root.GetComponentInParent<Canvas>() != canvas)
                     throw new InvalidOperationException("combat_health_bar_references_invalid");
-                if (i > 0 && bars[0].root == bar.root)
+                if (bars.Take(i).Any(prior => prior.root == bar.root))
                     throw new InvalidOperationException("combat_health_bar_duplicate_slot");
             }
             this.worldCamera = worldCamera;
@@ -64,17 +65,16 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (!configured) throw new InvalidOperationException("combat_health_bar_not_configured");
             if (snapshot == null) { Hide(); return; }
-            if (snapshot.Player != null && snapshot.Enemy != null &&
-                string.Equals(snapshot.Player.Id, snapshot.Enemy.Id, StringComparison.Ordinal))
+            CombatantHudSnapshot[] units = new[] { snapshot.Player }.Concat(snapshot.Enemies).Where(unit => unit != null).ToArray();
+            if (units.Select(unit => unit.Id).Distinct(StringComparer.Ordinal).Count() != units.Length)
             {
                 Debug.LogError("combat_health_bar_input_invalid:duplicate_id", this);
                 Hide();
                 return;
             }
             foreach (Bar bar in bars)
-                if (!HasId(snapshot.Player, bar.Id) && !HasId(snapshot.Enemy, bar.Id)) Clear(bar);
-            UpdateResources(snapshot.Player);
-            UpdateResources(snapshot.Enemy);
+                if (!units.Any(unit => HasId(unit, bar.Id))) Clear(bar);
+            foreach (CombatantHudSnapshot unit in units) UpdateResources(unit);
         }
 
         public void Hide()

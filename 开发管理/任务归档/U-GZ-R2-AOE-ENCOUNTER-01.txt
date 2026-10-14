@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：task_scope_out_of_bounds",
+  "stateReason": "2026-10-14手动完成批准双敌遭遇、逐目标采样/演出和三槽接线；正式创建至奖励保存闭环及相关PlayMode通过，完成归档。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-ENCOUNTER-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-ENCOUNTER-01.txt",
@@ -30,7 +30,17 @@
     "src/Assets/Tests/PlayMode/GuanzhongCombatFeedbackPlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
     "src/Assets/Tests/PlayMode/GuanzhongUnitHealthBarPlayModeTests.cs",
-    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs"
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitHealthBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "src/Assets/Tests/EditMode/AdventureNodeDispatchTests.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/WorldTables.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs",
+    "src/Assets/Tests/EditMode/AdventureContentImporterTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
@@ -111,3 +121,30 @@ PlayMode从正式Adventure节点进入批准的多敌遭遇，核对实例ID/位
 ## 停止条件
 
 设计没有冻结多敌遭遇数据来源/人数/落点/结算口径，或需扩成全局遭遇系统时停止；不得用测试专用敌人注入冒充正式玩家功能。 需要超出冻结路径、发现新所有者或原子性失效时停止并回交普通规划上下文，不边实施边增加流程。
+
+## 2026-10-14手动修复范围冻结
+
+新增血条、时间轴、HUD检查目标的多单位投影及正式场景构建/序列化槽位与布局测试；仅现有批准两敌遭遇。原正文中expectedPaths仅管理准备的旧限制已失效，以当前卡头和本段为准。不修改CombatCommandInput或群攻UI。
+
+用户明确要求两名子智能体分别实施；主智能体统一管理投影、预检、最终验证及提交。CombatEntryAdapter.cs先由DATA独占，再交ENCOUNTER；其他字面量路径互不重叠。新所有者/越界仍停止复核。
+
+内容编码冻结为既有首敌contentId/q/r与additionalEnemies=enemy_2@4:5；WorldTables保留该声明为批准配置只读字段，沿既有codec无损往返，不扩自由编辑或新遭遇种类。ConfigEditorWorldTests核对声明不丢失。
+## 2026-10-14手动完成记录
+
+负责人明确要求两名子智能体分别修复DATA与ENCOUNTER。主智能体在.worktrees/aoe-blocked-repair隔离统一管理、复核全部差异、运行真实Unity验证并形成唯一提交；encounter子智能体独占本卡业务路径，在DATA冻结并移交CombatEntryAdapter及AdventureNodeDispatchTests后接入。子智能体不改卡、不提交、不操作runtime；继承当前会话，未把卡中建议模型/强度写作已核实调用证明。
+
+根因：旧自动run 20fcae36在业务写入前发现固定两槽血条/时间轴、场景构建器及序列化场景不在expectedPaths，按task_scope_out_of_bounds停止。本轮沿真实运行链补齐HUD目标查询、直接内容读取端、场景与必要测试，冻结同一个批准双敌遭遇的完整路径；不改自动化机制。
+
+结果：仅guanzhong_wild/shijiahou_encounter配置additionalEnemies=enemy_2@4:5，首敌enemy仍(3,5)，玩家(0,0)。导入器严格验证节点类型、实例ID与落点唯一；Spawner以原敌人模板创建独立快照，正式Session为1对2，原AI与属性不变。Coordinator逐实例调度/HUD/目标详情/表现与清理；区域确认先重验原报价，再按Ordinal目标独立采五项随机；按Damage.TargetId逐目标反馈受击/死亡，EndTurn不发默认Idle。既有formalEncounterConsumed与FormalEncounterResult继续按整场一次结算，不因首敌死亡提前结束。公开candidate只传递已有命令方向，不实现六向操作UI。
+
+场景由真实Unity Adventure导入及RebuildUnitHealthBars/RebuildCombatTimeline生成，三个槽位沿用原布局。Builder重建后保存原Timeline/Preview兄弟顺序。按GameObject路径和组件GUID规范化比较，场景仅新增第三血条/时间轴子树24项序列化对象，改变对应父子列表与两处view引用；无移除或其他运行时对象语义变化。没有手造YAML或新增meta。World配置表对该批准声明只读且无损往返。
+
+写前预检：taskId=U-GZ-R2-AOE-ENCOUNTER-01，最新taskCardDigest=c61c2c41624b91339e064df3d4236240548322c98bc2ce22bf2ee03730d56c0f，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；EXP-UNITY-007正文已消费，matched与卡头一致、无gates；保留EndTurn不覆盖攻击/移动表现。
+
+验证：实际Unity编译、Adventure导入及两个Builder成功；两卡相关EditMode共255项最终通过（World分隔符修正后相关32/32复查，其他已过输入未变）。程序集边界19程序集/2asmref通过。四类PlayMode共24项全部取得通过证据：首轮20/24；修正旧fixture后2/4；最终正式闭环、默认时间轴及双分辨率血条3/3。失败根因均已定位：区域授权负例缺方向、演出fixture缺MovementPath、默认凡人fixture误用练气准备及移动费、正式helper未走既有接触路径、终局仍要求保留AP（现有Terminate明确清零）。只修测试前提/断言，未改Provider、原AI、角色数值或费用。
+
+FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads从StartMenu创建、城镇悬赏、正式Adventure节点入场。实际O=(0,1)、d=5时enemy@(0,2)与enemy_2@(0,3)均由657HP降至569，一次扣费40000；enemy_2先死后enemy继续战斗，最后死亡才清理、回城。两敌均真实移动/攻击/死亡，整场材料1份、悬赏进度1次、领取后灵石4，存档重读一致。全过程无注入敌人、改位置/HP/AP或暂停AI；只有随机源确定化。局部采样用例另证明两目标独立10次采样、一个命中一个未中、过期报价不采样。默认凡人路线实际死亡从时间轴移除、回城再进入恢复三个独立槽位。
+
+最终实际截图已查看：1920x1080与1366x768均有三单位血条及三时间轴槽位；初轮冷编译青色占位截图未作通过证据，最终正常材质帧已保留于系统临时目录，路径记录在Temp/aoe-playmode-final.xml。验证XML/log保留于本worktree Temp/aoe-combined-editmode.xml、aoe-editor-recheck.xml、aoe-combined-playmode.xml、aoe-playmode-recheck.xml、aoe-playmode-final.xml。数值日志与截图采集帧时序不同，不将采集前的rect诊断冒充最终截图坐标。未修改布局、镜头或模型资源。
+
+完成收尾只归档本卡并删除自身backlog行；队列原无本卡，不解锁或重排INPUT、父项与后续验收。玩家六向选择/预览和新群攻数值平衡仍未完成，不在本卡声称完整群攻玩家功能上线。依据已有事实、diff和验证复核，没有需要另建的经验候选。

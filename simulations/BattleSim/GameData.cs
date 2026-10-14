@@ -445,7 +445,8 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
         int MinimumSpiritRecovery = 0,
         decimal OtherTargetRecoveryMultiplier = 1, string BasicBindingKind = "",
         string RuleSetVersion = "", string RuleSetSourceDigest = "", string AbilityTierId = "", string EffectBudgetMode = "",
-        int AttackSchemaVersion = 0, string UnarmedFamilyId = "", string UnarmedRealmId = "", int UnarmedPhysicalAttackCapacity = 0);
+        int AttackSchemaVersion = 0, string UnarmedFamilyId = "", string UnarmedRealmId = "", int UnarmedPhysicalAttackCapacity = 0,
+        CombatAttackArea Area = CombatAttackArea.Single);
     public record ArtConfig(
         string Name,
         string Type,
@@ -730,13 +731,20 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             string id = Value("attackProfileId"), mode = Value("effectBudgetMode");
             if (Value("ruleSetVersion") != rules.RuleSetVersion) throw new InvalidDataException("attack_profile_rule_version_unknown");
             int cooldown = rules.ResolveCooldown(Value("abilityTierId"),Value("cooldownClass"),Value("reuseCooldownTicks") == "" ? null : Number("reuseCooldownTicks"));
+            CombatAttackArea area = CombatAttackArea.Single;
             if (id is "basic_iron_sword" or "basic_iron_blade")
             {
+                bool forward = id == "basic_iron_sword";
                 if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" || mode != "fixed_weapon" ||
                     Value("effectType") != "physical" || Value("resourceKind") != "none" || Number("resourceCost") != 0 ||
-                    Number("ctPenalty") != 0 || cooldown != 0 || Value("targetingMode") != "single" ||
-                    Number("minCastRange") != 1 || Number("maxCastRange") != 1 || Value("physicalDamageMultiplier") == "" || ResolveAttackMultiplier(row,rules,false) <= 0)
+                    Number("ctPenalty") != 0 || cooldown != 0 || Value("targetingMode") != "area" ||
+                    Number("minCastRange") != 0 || Number("maxCastRange") != 0 || Value("physicalDamageMultiplier") == "" || ResolveAttackMultiplier(row,rules,false) <= 0 ||
+                    Value("areaCenterKind") != "caster" || Value("areaShapeKind") != (forward ? "forward_pair" : "adjacent_pair") ||
+                    Number("areaRadius") != 0 || Number("areaLength") != (forward ? 2 : 1) || Number("areaFanHalfAngleSteps") != 0 ||
+                    Value("areaFacing") != "" || Number("areaInnerRadius") != 0 || Value("areaEffectBlockers") != "directed_edge" ||
+                    Value("areaAllowedFactions") != "enemy" || Value("areaAllowedStates") != "alive")
                     throw new InvalidDataException("production_equipment_attack_invalid");
+                area = forward ? CombatAttackArea.ForwardPair : CombatAttackArea.AdjacentPair;
             }
             if (mode != "damage_budget" && new[] { "efficiencyNumerator","efficiencyDenominator","damageMigrationNumerator","damageMigrationDenominator","damageWeightNumerator","damageWeightDenominator" }.Any(key => Value(key) != ""))
                 throw new InvalidDataException("attack_profile_non_budget_fields_present");
@@ -755,13 +763,15 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             decimal Decimal(string key) => decimal.Parse(Value(key),CultureInfo.InvariantCulture);
             if (recovery && (mode != "prototype_restore" || Value("physicalDamageMultiplier") != "" || Value("soulDamageMultiplier") != "" || Decimal("spiritRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") <= 0 || Decimal("otherTargetRecoveryMultiplier") > 1))
                 throw new InvalidDataException("production_recovery_invalid");
-            result.Add(id,new(id,recovery ? "恢复灵力" : "物理",multiplier,NormalizeElement(Value("damageElementId")),Number("minCastRange"),Number("maxCastRange"),Cost:cost,
+            result.Add(id,new(id,recovery ? "恢复灵力" : "物理",multiplier,NormalizeElement(Value("damageElementId")),
+                area == CombatAttackArea.Single ? Number("minCastRange") : 1,
+                area == CombatAttackArea.Single ? Number("maxCastRange") : area == CombatAttackArea.ForwardPair ? 2 : 1,Cost:cost,
                 SpiritCost:Number("resourceCost"),OtherTargetSpiritCost:recovery ? Number("otherTargetResourceCost") : 0,
                 SpiritRecoveryMultiplier:recovery ? Decimal("spiritRecoveryMultiplier") : 0,MinimumSpiritRecovery:recovery ? Number("minimumSpiritRecovery") : 0,
                 OtherTargetRecoveryMultiplier:recovery ? Decimal("otherTargetRecoveryMultiplier") : 1,BasicBindingKind:Value("basicBindingKind"),
                 RuleSetVersion:rules.RuleSetVersion,RuleSetSourceDigest:rules.SourceDigest,AbilityTierId:Value("abilityTierId"),EffectBudgetMode:mode,
                 AttackSchemaVersion:Number("attackSchemaVersion"),UnarmedFamilyId:Value("unarmedFamilyId"),UnarmedRealmId:Value("unarmedRealmId"),
-                UnarmedPhysicalAttackCapacity:mode == "fixed_unarmed" ? Number("unarmedPhysicalAttackCapacity") : 0));
+                UnarmedPhysicalAttackCapacity:mode == "fixed_unarmed" ? Number("unarmedPhysicalAttackCapacity") : 0, Area:area));
         }
         return result;
     }

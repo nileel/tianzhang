@@ -285,7 +285,7 @@ namespace TianZhang.Features.Adventure
             CombatCommand command = ToCommand(candidate);
             string reason = !IsCandidateCurrent(candidate) ? "行动状态已变化，请重新选择" : string.Empty;
             CombatCommandPreview preview = string.IsNullOrEmpty(reason) ? commandService.Preview(session, command) : null;
-            swapPreview = candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment or CombatActionKind.UseItem ? preview : null;
+            swapPreview = preview;
             return ProjectQuote(candidate, command, preview, reason);
         }
 
@@ -306,13 +306,13 @@ namespace TianZhang.Features.Adventure
                 _ => displayProfile(command.ProfileId),
             };
             string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
-                ? playerDisplayName : command.TargetId == "enemy" && spawned != null
+                ? playerDisplayName : spawned != null && spawned.Enemies.Any(enemy => enemy.Id == command.TargetId)
                     ? resolveText(spawned.EnemyData.displayNameKey) : "无效目标";
             var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
                 candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
-                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId);
+                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, candidate.AttackDirection);
             CombatantSnapshot actor = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
             CombatAttackProfile profile = null;
@@ -370,7 +370,8 @@ namespace TianZhang.Features.Adventure
                     return;
                 }
             }
-            if (candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment or CombatActionKind.UseItem)
+            if (candidate.Kind is CombatActionKind.SwapSpell or CombatActionKind.SwapEquipment or CombatActionKind.UseItem or
+                CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine)
             {
                 CombatCommandPreview quote = swapPreview;
                 swapPreview = null;
@@ -411,7 +412,8 @@ namespace TianZhang.Features.Adventure
                 : (TianZhang.Spatial.HexCoord?)null;
             return new CombatCommand(kind, candidate.ActorId, candidate.TargetId, profile,
                 destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion,
-                equipmentSlotId: candidate.EquipmentSlotId, itemId: candidate.ItemId, instanceId: candidate.InstanceId);
+                equipmentSlotId: candidate.EquipmentSlotId, itemId: candidate.ItemId, instanceId: candidate.InstanceId,
+                attackDirection: candidate.AttackDirection);
         }
 
         private string CurrentBasicProfile(string actorId) => session != null && session.Combatants.TryGet(actorId, out var actor)
@@ -513,23 +515,22 @@ namespace TianZhang.Features.Adventure
         private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
         {
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
-            session.Combatants.TryGet(command.TargetId, out CombatantSnapshot targetBefore);
             CombatUnitPresentationHex actorStart = actorBefore == null
                 ? default
                 : ToPresentationHex(actorBefore.Position);
-            CombatActionResult validation = commandService.Validate(session, command);
+            quote ??= commandService.Preview(session, command);
+            CombatActionResult validation = commandService.ValidateConfirmation(session, command, quote);
             if (!validation.Succeeded)
                 return validation;
             if ((command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine) &&
                 session.TryGetProfile(command.ProfileId, out CombatAttackProfile sampledProfile) &&
                 sampledProfile.Effect is CombatAttackEffect.Physical or CombatAttackEffect.Soul or CombatAttackEffect.Hybrid)
             {
-                var rolls = new CombatResolutionRolls(
-                    combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent());
+                CombatResolutionRolls Sample() => new CombatResolutionRolls(combatRandomSource.NextPercent(),
+                    combatRandomSource.NextPercent(), combatRandomSource.NextPercent(),
+                    combatRandomSource.NextPercent(), combatRandomSource.NextPercent());
+                var targetRolls = quote.AttackArea?.TargetIds.Select(id => new CombatTargetResolutionRolls(id, Sample())).ToArray();
+                CombatResolutionRolls rolls = targetRolls == null ? Sample() : default;
                 command = new CombatCommand(
                     command.Kind,
                     command.ActorId,
@@ -538,7 +539,7 @@ namespace TianZhang.Features.Adventure
                     rolls,
                     command.Destination,
                     command.SlotIndex,
-                    command.ContextVersion);
+                    command.ContextVersion, attackDirection: command.AttackDirection, targetRolls: targetRolls);
             }
             CombatActionResult result;
             if (command.Kind == CombatCommandKind.UseItem)
@@ -568,7 +569,7 @@ namespace TianZhang.Features.Adventure
             }
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
             if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
-                ProjectPresentation(command, result, actorBefore, actorStart, targetBefore);
+                ProjectPresentation(command, result, actorBefore, actorStart);
             return result;
         }
 
@@ -586,7 +587,7 @@ namespace TianZhang.Features.Adventure
             if (session == null) return;
             RefreshGrowth();
             session.Combatants.TryGet("player", out CombatantSnapshot player);
-            session.Combatants.TryGet("enemy", out CombatantSnapshot enemy);
+            CombatantSnapshot enemy = spawned.Enemies.FirstOrDefault(value => value.IsAlive) ?? spawned.Enemy;
             acceptsCommands = acceptsCommands && !IsPresenting;
             ++commandContextVersion;
             presentation.Present(new CombatHudSnapshot(
@@ -605,7 +606,8 @@ namespace TianZhang.Features.Adventure
                 commandContextVersion: commandContextVersion,
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
-                pendingCtPenalty: session.PendingCtPenalty));
+                pendingCtPenalty: session.PendingCtPenalty,
+                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(spawned.EnemyData.displayNameKey))).ToArray()));
         }
 
         private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)
@@ -644,7 +646,8 @@ namespace TianZhang.Features.Adventure
                 var targets = new List<CombatArtTargetSnapshot>();
                 if (profile?.Effect == CombatAttackEffect.RestoreSpirit)
                     AddTarget(player, playerDisplayName);
-                if (enemy != null) AddTarget(enemy, resolveText(spawned.EnemyData.displayNameKey));
+                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive))
+                    AddTarget(target, resolveText(spawned.EnemyData.displayNameKey));
                 actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets));
 
                 void AddTarget(CombatantSnapshot target, string name)
@@ -730,7 +733,7 @@ namespace TianZhang.Features.Adventure
             }), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
             unitPresentation.Remove(spawned.Player.Id);
-            unitPresentation.Remove(spawned.Enemy.Id);
+            foreach (CombatantSnapshot enemy in spawned.Enemies) unitPresentation.Remove(enemy.Id);
             unitPresentation.Clear();
             session = null;
             AdventureSpawnSet prior = spawned;
@@ -759,8 +762,7 @@ namespace TianZhang.Features.Adventure
             }
 
             int playerFacing = values.Player.Position.DirectionTo(values.Enemy.Position);
-            int enemyFacing = values.Enemy.Position.DirectionTo(values.Player.Position);
-            descriptors = new[]
+            var result = new List<CombatUnitPresentationDescriptor>
             {
                 new CombatUnitPresentationDescriptor(
                     values.Player.Id,
@@ -768,13 +770,18 @@ namespace TianZhang.Features.Adventure
                     CombatUnitDisplayFaction.Player,
                     ToPresentationHex(values.Player.Position),
                     playerFacing < 0 ? 0 : playerFacing),
-                new CombatUnitPresentationDescriptor(
-                    values.Enemy.Id,
+            };
+            foreach (CombatantSnapshot enemy in values.Enemies)
+            {
+                int enemyFacing = enemy.Position.DirectionTo(values.Player.Position);
+                result.Add(new CombatUnitPresentationDescriptor(
+                    enemy.Id,
                     enemyProfileId,
                     CombatUnitDisplayFaction.Enemy,
-                    ToPresentationHex(values.Enemy.Position),
-                    enemyFacing < 0 ? 0 : enemyFacing),
-            };
+                    ToPresentationHex(enemy.Position),
+                    enemyFacing < 0 ? 0 : enemyFacing));
+            }
+            descriptors = result;
             reason = null;
             return true;
         }
@@ -783,8 +790,7 @@ namespace TianZhang.Features.Adventure
             CombatCommand command,
             CombatActionResult result,
             CombatantSnapshot actorBefore,
-            CombatUnitPresentationHex actorStart,
-            CombatantSnapshot targetBefore)
+            CombatUnitPresentationHex actorStart)
         {
             if (actorBefore == null) return;
             try
@@ -806,16 +812,17 @@ namespace TianZhang.Features.Adventure
                         value.TargetId, 0, false, value.ActualRecovery)).ToArray(),
                     result.MovementPath.Select(ToPresentationHex).ToArray()));
 
-                if (targetBefore == null || result.Damage.Count == 0) return;
-                int finalDamage = result.Damage.Sum(item => item.FinalDamage);
-                bool isDead = targetBefore.CurrentHealth <= 0;
-                unitPresentation.Present(new CombatUnitPresentationEventProjection(
-                    targetBefore.Id,
-                    isDead ? CombatUnitPresentationEvent.Death : CombatUnitPresentationEvent.Hit,
-                    ToPresentationHex(targetBefore.Position),
-                    ToPresentationHex(targetBefore.Position),
-                    targetBefore.Facing,
-                    new[] { new CombatUnitPresentationTargetResult(targetBefore.Id, finalDamage, isDead) }));
+                foreach (var targetDamage in result.Damage.GroupBy(item => item.TargetId, StringComparer.Ordinal))
+                {
+                    if (!session.Combatants.TryGet(targetDamage.Key, out CombatantSnapshot target))
+                        throw new InvalidOperationException("combat_presentation_damage_target_missing");
+                    int finalDamage = targetDamage.Sum(item => item.FinalDamage);
+                    bool isDead = !target.IsAlive;
+                    unitPresentation.Present(new CombatUnitPresentationEventProjection(
+                        target.Id, isDead ? CombatUnitPresentationEvent.Death : CombatUnitPresentationEvent.Hit,
+                        ToPresentationHex(target.Position), ToPresentationHex(target.Position), target.Facing,
+                        new[] { new CombatUnitPresentationTargetResult(target.Id, finalDamage, isDead) }));
+                }
             }
             catch (Exception exception)
             {

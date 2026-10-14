@@ -51,7 +51,7 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!TryProjectProfiles(attackProfiles, out var profiles, out reason)) return false;
-            foreach (CombatantSnapshot actor in new[] { spawned.Player, spawned.Enemy })
+            foreach (CombatantSnapshot actor in new[] { spawned.Player }.Concat(spawned.Enemies))
                 if (!string.IsNullOrEmpty(actor.BasicAttackProfileId) &&
                     !profiles.Any(profile => profile.Id == actor.BasicAttackProfileId && profile.Kind == CombatAttackKind.Basic))
                 { reason = "combat_session_basic_attack_binding_invalid"; return false; }
@@ -84,7 +84,7 @@ namespace TianZhang.Features.Adventure
             try
             {
                 session = new CombatSession(
-                    new[] { spawned.Player, spawned.Enemy },
+                    new[] { spawned.Player }.Concat(spawned.Enemies),
                     profiles,
                     new SpatialCombatQuery(spatial.Board),
                     ordinaryActions,
@@ -114,7 +114,15 @@ namespace TianZhang.Features.Adventure
             {
                 if (profile == null) { profiles = null; reason = "attack_profile_missing"; return false; }
                 if (!profile.TryValidate(out reason)) { profiles = null; return false; }
-                if (profile.targetingMode != AttackTargetingMode.Single) continue;
+                var area = profile.targetingMode == AttackTargetingMode.Single ? CombatAttackArea.Single :
+                    profile.areaShapeKind switch
+                    {
+                        AttackAreaShapeKind.ForwardPair => CombatAttackArea.ForwardPair,
+                        AttackAreaShapeKind.AdjacentPair => CombatAttackArea.AdjacentPair,
+                        _ => (CombatAttackArea)(-1),
+                    };
+                if ((int)area < 0)
+                { profiles = null; reason = "attack_profile_area_not_supported"; return false; }
                 if (profile.ruleSetVersion != rules.RuleSetVersion || profile.ruleSetSourceDigest != rules.SourceDigest ||
                     !rules.Tiers.Any(tier => tier.AbilityTierId == profile.abilityTierId) ||
                     (profile.profileKind == AttackProfileKind.Basic && profile.basicBindingKind is not (BasicAttackBindingKind.MainEquipment or BasicAttackBindingKind.UnarmedBody)))
@@ -155,8 +163,8 @@ namespace TianZhang.Features.Adventure
                         _ => throw new ArgumentOutOfRangeException(),
                     },
                     effect,
-                    profile.minCastRange,
-                    profile.maxCastRange,
+                    area == CombatAttackArea.Single ? profile.minCastRange : 1,
+                    area == CombatAttackArea.Single ? profile.maxCastRange : area == CombatAttackArea.ForwardPair ? 2 : 1,
                     profile.actionPointCostUnits,
                     profile.minimumNetCostUnits,
                     profile.ctPenalty,
@@ -179,7 +187,7 @@ namespace TianZhang.Features.Adventure
                         profile.statusId, profile.statusAttributeId, profile.statusRelativePermille, profile.statusDurationOwnTurnEnds,
                         profile.statusStackLimit, profile.statusRefreshPolicy, profile.controlChancePermille, profile.controlUsesMindContest,
                         unarmedFamilyId: profile.unarmedFamilyId, unarmedRealmId: profile.unarmedRealmId,
-                        unarmedPhysicalAttackCapacity: profile.unarmedPhysicalAttackCapacity)));
+                        unarmedPhysicalAttackCapacity: profile.unarmedPhysicalAttackCapacity), area: area));
             }
             if (result.Count == 0 || result.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() != result.Count)
             {

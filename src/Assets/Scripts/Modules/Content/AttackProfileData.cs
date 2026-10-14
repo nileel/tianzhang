@@ -60,6 +60,8 @@ namespace TianZhang.Combat
         Circle,
         Line,
         Fan,
+        ForwardPair,
+        AdjacentPair,
     }
 
     [Flags]
@@ -210,7 +212,7 @@ namespace TianZhang.Combat
                 profileKind == AttackProfileKind.Unknown ||
                 effectType == AttackEffectType.Unknown ||
                 resourceKind == AttackResourceKind.Unknown ||
-                targetingMode == AttackTargetingMode.Unknown ||
+                !Enum.IsDefined(typeof(AttackTargetingMode), targetingMode) || targetingMode == AttackTargetingMode.Unknown ||
                 float.IsNaN(physicalDamageMultiplier) || float.IsInfinity(physicalDamageMultiplier) || physicalDamageMultiplier < 0f ||
                 float.IsNaN(soulDamageMultiplier) || float.IsInfinity(soulDamageMultiplier) || soulDamageMultiplier < 0f ||
                 resourceCost < 0 || minCastRange < 0 ||
@@ -335,7 +337,7 @@ namespace TianZhang.Combat
                 return true;
             }
 
-            if (areaCenterKind == AttackAreaCenterKind.Unknown ||
+            if (!Enum.IsDefined(typeof(AttackAreaCenterKind), areaCenterKind) || areaCenterKind == AttackAreaCenterKind.Unknown ||
                 areaShapeKind == AttackAreaShapeKind.Unknown || areaRadius < 0 ||
                 areaLength < 0 || areaInnerRadius < 0 ||
                 areaAllowedFactions == AttackAreaTargetFaction.None ||
@@ -357,6 +359,19 @@ namespace TianZhang.Combat
 
             switch (areaShapeKind)
             {
+                case AttackAreaShapeKind.ForwardPair:
+                case AttackAreaShapeKind.AdjacentPair:
+                    bool forward = areaShapeKind == AttackAreaShapeKind.ForwardPair;
+                    if (attackProfileId != (forward ? "basic_iron_sword" : "basic_iron_blade") ||
+                        profileKind != AttackProfileKind.Basic || basicBindingKind != BasicAttackBindingKind.MainEquipment ||
+                        effectType != AttackEffectType.Physical || effectBudgetMode != "fixed_weapon" ||
+                        areaCenterKind != AttackAreaCenterKind.Caster || areaRadius != 0 ||
+                        areaLength != (forward ? 2 : 1) || areaFanHalfAngleSteps != 0 || areaFacing != -1 || areaInnerRadius != 0 ||
+                        areaEffectBlockers != AttackAreaEffectBlocker.DirectedEdge ||
+                        areaAllowedFactions != AttackAreaTargetFaction.Enemy || areaAllowedStates != AttackAreaTargetState.Alive)
+                    { reason = "two_cell_weapon_contract_invalid"; return false; }
+                    reason = string.Empty;
+                    return true;
                 case AttackAreaShapeKind.Circle when areaLength == 0 &&
                                                      areaFanHalfAngleSteps == 0 &&
                                                      areaFacing == -1 &&

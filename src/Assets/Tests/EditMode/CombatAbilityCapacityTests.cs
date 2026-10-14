@@ -217,7 +217,7 @@ namespace TianZhang.Tests.EditMode
             Assert.That(projected.RuleMetadata.UnarmedRealmId, Is.EqualTo(profile.unarmedRealmId));
             foreach (int multiplier in new[] { 1000, 1000, 1250, 1500 })
             {
-                var command = new CombatCommand(CombatCommandKind.BasicAttack, "actor", "target", id, Rolls);
+                var command = AttackCommand(profile);
                 var preview = service.Preview(session, command);
                 Assert.That(preview.IsLegal, Is.True, preview.Validation.RejectionReason);
                 var result = service.Execute(session, command, preview);
@@ -305,7 +305,7 @@ namespace TianZhang.Tests.EditMode
                     basicAttackProfileId: id, realmStage: "练气");
                 var session = Ready(actor, Target(60), profile);
                 int actions = 0, damage = 0;
-                var command = new CombatCommand(CombatCommandKind.BasicAttack, "actor", "target", id, Rolls);
+                var command = AttackCommand(profile);
                 while (service.Preview(session, command).IsLegal)
                 {
                     var result = service.Execute(session, command);
@@ -374,10 +374,16 @@ namespace TianZhang.Tests.EditMode
             return session;
         }
 
+        private static CombatCommand AttackCommand(AttackProfileData profile, bool self = false) =>
+            profile.targetingMode == AttackTargetingMode.Area
+                ? new CombatCommand(CombatCommandKind.BasicAttack, "actor", profileId: profile.attackProfileId, attackDirection: 0,
+                    targetRolls: new[] { new CombatTargetResolutionRolls("target", new CombatResolutionRolls(0, 100, 100, 100, 100)) })
+                : new CombatCommand(profile.profileKind == AttackProfileKind.Basic ? CombatCommandKind.BasicAttack : CombatCommandKind.Art,
+                    "actor", self ? "actor" : "target", profile.attackProfileId, Rolls);
+
         private CombatActionResult Attack(CombatSession session, AttackProfileData profile, bool self = false)
         {
-            var result = service.Execute(session, new CombatCommand(profile.profileKind == AttackProfileKind.Basic ?
-                CombatCommandKind.BasicAttack : CombatCommandKind.Art, "actor", self ? "actor" : "target", profile.attackProfileId, Rolls));
+            var result = service.Execute(session, AttackCommand(profile, self));
             Assert.That(result.Succeeded, Is.True, result.RejectionReason);
             return result;
         }

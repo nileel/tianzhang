@@ -37,19 +37,19 @@ MonoBehaviour:
   minimumNetCostUnits: 40000
   ctPenalty: 0
   reuseCooldownTicks: 0
-  minCastRange: 1
-  maxCastRange: 1
-  targetingMode: 1
-  areaCenterKind: 0
-  areaShapeKind: 0
+  minCastRange: 0
+  maxCastRange: 0
+  targetingMode: 2
+  areaCenterKind: 1
+  areaShapeKind: 4
   areaRadius: 0
-  areaLength: 0
+  areaLength: 2
   areaFanHalfAngleSteps: 0
   areaFacing: -1
   areaInnerRadius: 0
-  areaEffectBlockers: 0
-  areaAllowedFactions: 0
-  areaAllowedStates: 0
+  areaEffectBlockers: 1
+  areaAllowedFactions: 1
+  areaAllowedStates: 1
   isDomain: 0
   isBloodline: 0
   specialEffectTextKey:
@@ -71,7 +71,7 @@ MonoBehaviour:
   statusRefreshPolicy:
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: e53ba064b4a8c9783d17fbfb87abcb1173ce5bae03efbc761fa7f1938bd198cc
+  ruleSetSourceDigest: af64d7edb8bf506d509b3f1b80d090a2168785a93497c2aadac81c7846499ad8
   attackSchemaVersion: 2
   unarmedFamilyId:
   unarmedRealmId:

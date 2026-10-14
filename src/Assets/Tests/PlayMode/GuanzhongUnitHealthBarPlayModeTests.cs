@@ -251,7 +251,7 @@ namespace TianZhang.Tests.PlayMode
             CombatUnitHealthBarView view = FindInScene<CombatUnitHealthBarView>();
             Assert.IsNotNull(view, "Formal AdventureScene must carry the injected health view.");
             CombatUnitHealthBarView.Bar[] bars = GetField<CombatUnitHealthBarView.Bar[]>(view, "bars");
-            Assert.AreEqual(2, bars.Length);
+            Assert.AreEqual(3, bars.Length);
             Canvas.ForceUpdateCanvases();
             foreach (CombatUnitHealthBarView.Bar bar in bars) AssertSlimTextFreeBar(bar);
             CombatSession session = GetField<CombatSession>(encounter, "session");
@@ -260,6 +260,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(session.Combatants.TryGet(spawned.Enemy.Id, out CombatantSnapshot enemy));
             CombatUnitHealthBarView.Bar playerBar = FindBar(bars, player.Id);
             CombatUnitHealthBarView.Bar enemyBar = FindBar(bars, enemy.Id);
+            Assert.IsTrue(session.Combatants.TryGet("enemy_2", out CombatantSnapshot secondEnemy));
+            CombatUnitHealthBarView.Bar secondEnemyBar = FindBar(bars, secondEnemy.Id);
+            AssertResources(secondEnemyBar, secondEnemy.CurrentHealth, secondEnemy.MaximumHealth);
             string enemyName = UiText.Resolve(spawned.EnemyData.displayNameKey);
             Assert.AreNotEqual("血条接线验证", enemyName,
                 "Name-independent bar width needs two different committed names.");
@@ -278,6 +281,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(width, Screen.width, "The formal combat frame must keep the requested width.");
                 Rect playerRect = AssertSlimBarOnScreen(playerBar, player.Id);
                 Rect enemyRect = AssertSlimBarOnScreen(enemyBar, enemy.Id);
+                Rect secondEnemyRect = AssertSlimBarOnScreen(secondEnemyBar, secondEnemy.Id);
                 Assert.AreEqual(playerRect.width, enemyRect.width, 0.01f, "Bar width must not depend on the unit name.");
                 Assert.AreEqual(playerRect.height, enemyRect.height, 0.01f, "Bar height must not depend on the unit name.");
                 for (int inspect = 0; inspect < 60 && targetView.TargetId != enemy.Id; inspect++)
@@ -293,14 +297,14 @@ namespace TianZhang.Tests.PlayMode
                 RectTransform canvasRect = (RectTransform)hudCanvas.transform;
                 TestContext.WriteLine($"Formal slim bar {width}x{height}: screen={Screen.width}x{Screen.height}, " +
                     $"canvasScale={hudCanvas.scaleFactor}, canvasRect={RectText(canvasRect.rect)}, " +
-                    $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, slots={bars.Length}");
+                    $"playerRect={RectText(playerRect)}, enemyRect={RectText(enemyRect)}, enemy_2Rect={RectText(secondEnemyRect)}, slots={bars.Length}");
             }
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
             int playerBefore = player.CurrentHealth;
             int enemyBefore = enemy.CurrentHealth;
             for (int frame = 0; frame < 180 && player.CurrentHealth == playerBefore && enemy.CurrentHealth == enemyBefore; frame++)
             {
-                ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
+                GuanzhongBasicAttackPlayModeTests.ConfirmLegalBasicAttack(encounter, session);
                 yield return null;
             }
             Assert.IsTrue(player.CurrentHealth < playerBefore || enemy.CurrentHealth < enemyBefore,

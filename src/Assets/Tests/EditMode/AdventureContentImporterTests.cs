@@ -15,10 +15,10 @@ namespace TianZhang.Tests
         {
             IReadOnlyList<AdventureMapData> maps = AdventureContentImporter.Parse(new[]
             {
-                "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId",
-                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,start,adventure_node_start,0,0,",
-                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,resource_a,adventure_node_resource,1,0,item_lingshi_low",
-                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,return,adventure_node_return,0,1,",
+                "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies",
+                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,start,adventure_node_start,0,0,,",
+                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,resource_a,adventure_node_resource,1,0,item_lingshi_low,",
+                "guanzhong_wild,adventure_guanzhong_wild,content_scope_production,return,adventure_node_return,0,1,,",
             }, "fixture");
             try
             {
@@ -41,18 +41,18 @@ namespace TianZhang.Tests
         {
             string[] header =
             {
-                "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId",
-                "map_a,map_a_name,content_scope_production,start,adventure_node_start,0,0,",
+                "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies",
+                "map_a,map_a_name,content_scope_production,start,adventure_node_start,0,0,,",
             };
             Assert.Throws<InvalidOperationException>(() => AdventureContentImporter.Parse(new[]
             {
                 header[0], header[1],
-                "map_a,map_a_name,content_scope_production,start,adventure_node_return,0,1,",
+                "map_a,map_a_name,content_scope_production,start,adventure_node_return,0,1,,",
             }, "duplicate-id"));
             Assert.Throws<InvalidOperationException>(() => AdventureContentImporter.Parse(new[]
             {
                 header[0], header[1],
-                "map_a,map_a_name,content_scope_production,return,adventure_node_return,0,0,",
+                "map_a,map_a_name,content_scope_production,return,adventure_node_return,0,0,,",
             }, "duplicate-coordinate"));
         }
 

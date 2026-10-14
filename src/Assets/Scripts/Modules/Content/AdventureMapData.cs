@@ -4,6 +4,14 @@ using UnityEngine;
 namespace TianZhang.Content
 {
     [Serializable]
+    public sealed class AdventureEnemySpawnData
+    {
+        public string instanceId;
+        public int q;
+        public int r;
+    }
+
+    [Serializable]
     public sealed class AdventureNodeData
     {
         public string nodeId;
@@ -11,6 +19,7 @@ namespace TianZhang.Content
         public int q;
         public int r;
         public string contentId;
+        public AdventureEnemySpawnData[] additionalEnemies = Array.Empty<AdventureEnemySpawnData>();
     }
 
     [CreateAssetMenu(fileName = "AdventureMap_", menuName = "天章/内容/冒险地图")]

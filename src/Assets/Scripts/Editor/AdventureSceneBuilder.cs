@@ -718,8 +718,8 @@ namespace TianZhang.Editor
             CombatUnitHealthBarView view = root.GetComponent<CombatUnitHealthBarView>() ?? root.AddComponent<CombatUnitHealthBarView>();
             var serialized = new SerializedObject(view);
             SerializedProperty bars = serialized.FindProperty("bars");
-            bars.arraySize = 2;
-            for (int index = 0; index < 2; index++)
+            bars.arraySize = 3;
+            for (int index = 0; index < 3; index++)
             {
                 var bar = new GameObject("UnitHealthBar_" + index, typeof(RectTransform));
                 bar.transform.SetParent(container.transform, false);
@@ -767,10 +767,19 @@ namespace TianZhang.Editor
             GameObject root = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "AdventureRoot");
             GameObject canvasRoot = Array.Find(scene.GetRootGameObjects(), candidate => candidate.name == "UICanvas");
             if (root == null || canvasRoot == null) throw new InvalidOperationException("Adventure HUD owners are missing.");
+            var siblingIndices = new List<(string Name, int Index)>();
+            foreach (string name in new[] { "CombatTimelineRoot", "CombatActionPreviewRoot" })
+            {
+                Transform existing = canvasRoot.transform.Find(name);
+                if (existing != null) siblingIndices.Add((name, existing.GetSiblingIndex()));
+            }
+            siblingIndices.Sort((left, right) => left.Index.CompareTo(right.Index));
             BuildCombatTimeline(root, canvasRoot.GetComponent<Canvas>(), root.GetComponent<AdventureSceneInstaller>(),
                 root.GetComponent<CombatHudPresenter>());
             BuildCombatActionPreview(root, canvasRoot.GetComponent<Canvas>());
             BuildCombatLayout(root, canvasRoot.GetComponent<Canvas>());
+            foreach (var sibling in siblingIndices)
+                canvasRoot.transform.Find(sibling.Name).SetSiblingIndex(sibling.Index);
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -788,11 +797,11 @@ namespace TianZhang.Editor
             tick.font = SettlementSceneBuilder.UiFont;
             tick.raycastTarget = false;
             PlaceTimelineRect(tick.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -2), new Vector2(76, 28));
-            var entries = new RectTransform[2];
-            var buttons = new Button[2];
-            var labels = new Text[2];
-            var portraits = new Image[2];
-            for (int index = 0; index < 2; index++)
+            var entries = new RectTransform[3];
+            var buttons = new Button[3];
+            var labels = new Text[3];
+            var portraits = new Image[3];
+            for (int index = 0; index < 3; index++)
             {
                 buttons[index] = SceneBuildSupport.CreateButton("TimelineEntry" + index, rail.transform, string.Empty, out labels[index]);
                 SettlementSceneBuilder.ApplyButtonSkin(buttons[index]);

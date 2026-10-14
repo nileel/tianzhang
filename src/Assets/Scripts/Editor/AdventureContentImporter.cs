@@ -56,7 +56,7 @@ namespace TianZhang.Editor
             if (lines == null || lines.Length < 2)
                 throw new InvalidOperationException(sourceName + ": adventure rows are required");
             string[] header = CsvTableReader.ParseRow(lines[0]);
-            string[] required = { "adventureId", "displayNameKey", "contentScope", "nodeId", "nodeTypeId", "q", "r", "contentId" };
+            string[] required = { "adventureId", "displayNameKey", "contentScope", "nodeId", "nodeTypeId", "q", "r", "contentId", "additionalEnemies" };
             var columns = new Dictionary<string, int>(StringComparer.Ordinal);
             for (int i = 0; i < header.Length; i++) columns[header[i]] = i;
             foreach (string name in required)
@@ -108,6 +108,7 @@ namespace TianZhang.Editor
                     q = q,
                     r = r,
                     contentId = Get("contentId"),
+                    additionalEnemies = ParseAdditionalEnemies(Get("additionalEnemies"), nodeTypeId, q, r, sourceName),
                 });
             }
 
@@ -119,6 +120,27 @@ namespace TianZhang.Editor
             }
             result.Sort((left, right) => StringComparer.Ordinal.Compare(left.adventureId, right.adventureId));
             return result;
+        }
+
+        private static AdventureEnemySpawnData[] ParseAdditionalEnemies(string text, string nodeType, int q, int r, string source)
+        {
+            if (string.IsNullOrEmpty(text)) return Array.Empty<AdventureEnemySpawnData>();
+            if (nodeType != "adventure_node_encounter")
+                throw new InvalidOperationException(source + ": additional enemies require an encounter node");
+            var result = new List<AdventureEnemySpawnData>();
+            var ids = new HashSet<string>(StringComparer.Ordinal) { "player", "enemy" };
+            var positions = new HashSet<string>(StringComparer.Ordinal) { q + ":" + r };
+            foreach (string entry in text.Split('|'))
+            {
+                string[] parts = entry.Split('@', ':');
+                if (parts.Length != 3 || string.IsNullOrWhiteSpace(parts[0]) || !ids.Add(parts[0]) ||
+                    !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraQ) ||
+                    !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraR) ||
+                    !positions.Add(extraQ + ":" + extraR))
+                    throw new InvalidOperationException(source + ": invalid additional enemy " + entry);
+                result.Add(new AdventureEnemySpawnData { instanceId = parts[0], q = extraQ, r = extraR });
+            }
+            return result.ToArray();
         }
     }
 }

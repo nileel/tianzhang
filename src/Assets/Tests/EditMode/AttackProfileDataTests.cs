@@ -456,6 +456,8 @@ namespace TianZhang.Tests
                 Set("minimumNetCostUnits", entry.Item4.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 Set("unarmedPhysicalAttackCapacity", entry.Item5.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 Set("physicalDamageMultiplier", "1"); Set("reuseCooldownTicks", "0");
+                Set("targetingMode", "single"); Set("minCastRange", "1"); Set("maxCastRange", "1");
+                foreach (string field in fields.Where(field => field.StartsWith("area", StringComparison.Ordinal))) Set(field, "");
                 rows.Add(string.Join(",", row));
             }
             return rows.ToArray();
@@ -678,10 +680,11 @@ namespace TianZhang.Tests
                 Assert.AreEqual(40000, profile.minimumNetCostUnits);
                 Assert.AreEqual(0, profile.ctPenalty);
                 Assert.AreEqual(0, profile.reuseCooldownTicks);
-                Assert.AreEqual(1, profile.minCastRange);
-                Assert.AreEqual(1, profile.maxCastRange);
-                Assert.AreEqual(AttackTargetingMode.Single, profile.targetingMode);
-                Assert.AreEqual(AttackAreaShapeKind.Unknown, profile.areaShapeKind);
+                Assert.AreEqual(0, profile.minCastRange);
+                Assert.AreEqual(0, profile.maxCastRange);
+                Assert.AreEqual(AttackTargetingMode.Area, profile.targetingMode);
+                Assert.AreEqual(AttackAreaShapeKind.ForwardPair, profile.areaShapeKind);
+                Assert.AreEqual(AttackAreaShapeKind.AdjacentPair, byId["basic_iron_blade"].areaShapeKind);
                 Assert.AreEqual(-1, profile.areaFacing);
                 Assert.IsTrue(string.IsNullOrEmpty(profile.contentScope));
                 Assert.IsTrue(string.IsNullOrEmpty(profile.sourceAffiliation));
@@ -780,7 +783,7 @@ namespace TianZhang.Tests
             AssertRejects(Mutate("minimumNetCostUnits", "50001"),
                 "attack_profile_minimumNetCostUnits_exceeds_actionPointCostUnits");
             AssertRejects(Mutate("minCastRange", "3"), "attack_profile_cast_range_invalid");
-            AssertRejects(Mutate("areaCenterKind", "caster"), "attack_profile_areaCenterKind_must_be_empty");
+            AssertRejects(Mutate("areaCenterKind", "target_cell"), "two_cell_weapon_contract_invalid");
 
             Assert.IsFalse(
                 CombatContentImporter.TryValidateAttackProfileCsv(
@@ -811,9 +814,9 @@ namespace TianZhang.Tests
             Assert.AreEqual(40000, asset.minimumNetCostUnits);
             Assert.AreEqual(0, asset.ctPenalty);
             Assert.AreEqual(0, asset.reuseCooldownTicks);
-            Assert.AreEqual(1, asset.minCastRange);
-            Assert.AreEqual(1, asset.maxCastRange);
-            Assert.AreEqual(AttackTargetingMode.Single, asset.targetingMode);
+            Assert.AreEqual(0, asset.minCastRange);
+            Assert.AreEqual(0, asset.maxCastRange);
+            Assert.AreEqual(AttackTargetingMode.Area, asset.targetingMode);
             Assert.IsTrue(asset.TryValidate(out var validationReason), validationReason);
             foreach (string id in new[] { "spell_guanshiji", "spell_julingshu" })
             {
@@ -951,6 +954,52 @@ namespace TianZhang.Tests
                 Assert.AreEqual(pair.Value[3], asset.reuseCooldownTicks, assetPath);
                 Assert.IsTrue(asset.TryValidate(out string reason), reason);
             }
+        }
+
+        [TestCase("areaCenterKind", "target_cell")]
+        [TestCase("areaShapeKind", "adjacent_pair")]
+        [TestCase("areaLength", "3")]
+        [TestCase("areaRadius", "1")]
+        [TestCase("areaFanHalfAngleSteps", "1")]
+        [TestCase("areaFacing", "0")]
+        [TestCase("areaInnerRadius", "1")]
+        [TestCase("areaEffectBlockers", "none")]
+        [TestCase("areaAllowedFactions", "ally")]
+        [TestCase("areaAllowedStates", "corpse")]
+        [TestCase("areaShapeKind", "unknown")]
+        [TestCase("areaCenterKind", "unknown")]
+        [TestCase("minCastRange", "1")]
+        public void TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(string field, string value)
+        {
+            string[] lines = File.ReadAllLines(ProductionAbsolutePath());
+            string[] fields = lines.First(line => line.StartsWith("attackProfileId,")).Split(',');
+            int index = Array.FindIndex(lines, line => line.StartsWith("basic_iron_sword,"));
+            string[] row = lines[index].Split(','); row[Array.IndexOf(fields, field)] = value;
+            lines[index] = string.Join(",", row);
+            Assert.IsFalse(CombatContentImporter.TryBuildAttackProfileProjection(lines, ProductionLanguageKeys(), out var rejected, out _));
+            Assert.That(rejected, Is.Null.Or.Empty);
+        }
+
+        [Test]
+        public void InvalidAreaImportLeavesAllNineAssetsAndRuleSetUnpublished()
+        {
+            string[] paths = ProductionAttackProfileAssetPaths.Concat(new[] { "Assets/Data/CombatRuleSet.asset" }).ToArray();
+            var before = paths.ToDictionary(path => path, path => File.ReadAllBytes(ToAbsoluteAssetPath(path)));
+            var guids = paths.ToDictionary(path => path, AssetDatabase.AssetPathToGUID);
+            byte[] csv = File.ReadAllBytes(ProductionAbsolutePath());
+            try
+            {
+                string text = File.ReadAllText(ProductionAbsolutePath()).Replace("forward_pair", "unknown_pair");
+                File.WriteAllText(ProductionAbsolutePath(), text);
+                LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("\\[AttackProfiles\\] attack_profile_area_shape_invalid"));
+                CombatContentImporter.ImportAttackProfiles();
+                foreach (string path in paths)
+                {
+                    CollectionAssert.AreEqual(before[path], File.ReadAllBytes(ToAbsoluteAssetPath(path)), path);
+                    Assert.AreEqual(guids[path], AssetDatabase.AssetPathToGUID(path), path);
+                }
+            }
+            finally { File.WriteAllBytes(ProductionAbsolutePath(), csv); }
         }
 
         private static string ToAbsoluteAssetPath(string assetPath)

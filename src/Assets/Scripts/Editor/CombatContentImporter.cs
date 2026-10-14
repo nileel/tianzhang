@@ -701,7 +701,7 @@ namespace TianZhang.Editor
             row.AreaAllowedFactions = ParseAreaTargetFactions(required("areaAllowedFactions"));
             row.AreaAllowedStates = ParseAreaTargetStates(required("areaAllowedStates"));
             string facing = value("areaFacing");
-            if (row.AreaShapeKind == AttackAreaShapeKind.Circle)
+            if (row.AreaShapeKind is AttackAreaShapeKind.Circle or AttackAreaShapeKind.ForwardPair or AttackAreaShapeKind.AdjacentPair)
             {
                 requireEmpty("areaFacing");
             }
@@ -1055,6 +1055,8 @@ namespace TianZhang.Editor
             "circle" => AttackAreaShapeKind.Circle,
             "line" => AttackAreaShapeKind.Line,
             "fan" => AttackAreaShapeKind.Fan,
+            "forward_pair" => AttackAreaShapeKind.ForwardPair,
+            "adjacent_pair" => AttackAreaShapeKind.AdjacentPair,
             _ => throw new InvalidDataException("attack_profile_area_shape_invalid"),
         };
 

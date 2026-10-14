@@ -165,7 +165,9 @@ namespace TianZhang.Tests.PlayMode
             var service = new CombatCommandService();
             foreach (string profile in new[] { "", "basic_unarmed", "basic_iron_sword", "missing" })
             {
-                var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", profile));
+                bool area = profile == "basic_iron_sword";
+                var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", area ? null : "enemy", profile,
+                    attackDirection: area ? spawned.Player.Position.DirectionTo(spawned.Enemy.Position) : (int?)null));
                 Assert.IsFalse(quote.IsLegal);
                 Assert.AreEqual(profile == "basic_iron_sword" ? "attack_profile_not_authorized" : "attack_profile_unresolved", quote.RejectionReason);
             }
@@ -270,26 +272,14 @@ namespace TianZhang.Tests.PlayMode
             AssertFormalProviderUnit(provider, "player", Color.cyan);
             AssertFormalProviderUnit(provider, "enemy", Color.red);
             AssertFormalBattlefieldPresentation();
-            var outcome = GetPrivateField<AdventureSpawnSet>(encounter, "spawned").Enemy;
-            ArmEnemyOutcomeFixture(outcome);
-            yield return WaitForPlayerTurn(encounter, GetPrivateField<CombatSession>(encounter, "session"), "player");
-            yield return WaitForMeleeContact(encounter, GetPrivateField<CombatSession>(encounter, "session"));
-            outcome.ReceiveDamage(outcome.CurrentHealth - 1); // Explicit one-hit settlement fixture.
-            encounter.SetCombatResolutionRandomSource(new OutcomeFixtureRandom(
-                GetPrivateField<CombatSession>(encounter, "session"), true));
-            yield return null;
-
-            Assert.IsInstanceOf<ICombatCommandHandler>(encounter);
-            ICombatCommandHandler combatCommands = encounter;
-            for (float deadline = Time.realtimeSinceStartup + 60f;
-                 Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
-            {
-                combatCommands.RequestBasicAttack("player", "enemy");
-                yield return WaitForMovementPresentation(encounter);
-                if (SceneManager.GetActiveScene().name != GameplaySceneNames.Adventure) break;
-                encounter.RequestEndTurn("player");
-                yield return null;
-            }
+            AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
+            CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, spawned.Enemies.Select(enemy => enemy.Id));
+            CollectionAssert.AreEqual(new[] { new HexCoord(3, 5), new HexCoord(4, 5) }, spawned.Enemies.Select(enemy => enemy.Position));
+            Assert.AreNotSame(spawned.Enemies[0], spawned.Enemies[1]);
+            Assert.AreEqual(3, provider.ActiveCombatantCount);
+            foreach (CombatantSnapshot enemy in spawned.Enemies)
+                Assert.AreEqual("basic_body_shijiahou_lianqi", enemy.BasicAttackProfileId);
+            yield return FightFormalTwoEnemies(encounter, requireMultipleTargets: true);
             Assert.AreEqual(
                 GameplaySceneNames.Settlement,
                 SceneManager.GetActiveScene().name,
@@ -408,7 +398,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(tickBeforeMove, session.TurnScheduler.CurrentTick);
             yield return WaitForMovementPresentation(encounter);
             AssertFormalMovementProjection(recording, provider, player, firstPath);
-            ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
+            ConfirmLegalBasicAttack(encounter, session);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase,
                 "A legal movement followed by the equipped sword leaves the quoted remainder.");
             Assert.AreEqual(player.ActionPointMaximumUnits - 40000 - firstPath.ActionPointCostUnits, player.ActionPointsRemainingUnits);
@@ -428,7 +418,7 @@ namespace TianZhang.Tests.PlayMode
 
             yield return WaitForPlayerTurn(encounter, session, player.Id);
             Assert.AreEqual(player.ActionPointMaximumUnits, player.ActionPointsRemainingUnits);
-            ((ICombatCommandHandler)encounter).RequestBasicAttack(player.Id, enemy.Id);
+            ConfirmLegalBasicAttack(encounter, session);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
             yield return WaitForMovementPresentation(encounter);
             HexCoord secondDestination = contactPosition;
@@ -451,9 +441,115 @@ namespace TianZhang.Tests.PlayMode
 
         private static IEnumerator WaitForMovementPresentation(EncounterCoordinator encounter)
         {
-            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
-            Assert.IsFalse(encounter.IsPresenting, "Presentation did not release its command lock.");
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter != null && encounter.IsPresenting;) yield return null;
+            if (encounter != null) Assert.IsFalse(encounter.IsPresenting, "Presentation did not release its command lock.");
             yield return null;
+        }
+
+        public static void ConfirmLegalBasicAttack(EncounterCoordinator encounter, CombatSession session)
+        {
+            CombatHudPresenter hud = FindInActiveScene<CombatHudPresenter>();
+            session.Combatants.TryGet("player", out CombatantSnapshot player);
+            for (int direction = 0; direction < 6; direction++)
+            {
+                var candidate = new CombatActionCandidate(CombatActionKind.BasicAttack, player.Id, null,
+                    player.BasicAttackProfileId, hud.Snapshot.CommandContextVersion, attackDirection: direction);
+                var preview = encounter.PreviewAction(candidate);
+                if (!preview.CanConfirm) continue;
+                encounter.ConfirmAction(preview.Candidate);
+                return;
+            }
+        }
+
+        // Drives public candidate/confirm and movement requests; the original AI runs every enemy turn.
+        // Only random samples are deterministic. No actor positions, health, AP, profile or AI are injected.
+        public static IEnumerator FightFormalTwoEnemies(EncounterCoordinator encounter, bool requireMultipleTargets = false)
+        {
+            CombatSession session = GetPrivateField<CombatSession>(encounter, "session");
+            AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
+            var provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
+            var recording = new ForwardingPresentationPort(provider);
+            SetPrivateField(encounter, "unitPresentation", recording);
+            encounter.SetCombatResolutionRandomSource(new OutcomeFixtureRandom(session, true));
+            bool multiple = false, partial = false;
+            var service = new CombatCommandService();
+            CombatantSnapshot player = spawned.Player;
+            TestContext.WriteLine("AOE entry player=" + player.Position + " HP=" + player.CurrentHealth + "/" + player.MaximumHealth +
+                "; enemies=" + string.Join(",", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position + " HP=" + enemy.CurrentHealth)));
+            yield return WaitForMeleeContact(encounter, session);
+            for (int turn = 0; turn < 120 && encounter != null && encounter.IsRunning; turn++)
+            {
+                TestContext.WriteLine("AOE turn=" + turn + "; actor=" + session.CurrentActorId + "; player=" + player.Position +
+                    " HP=" + player.CurrentHealth + "; enemies=" + string.Join(",", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position + " HP=" + enemy.CurrentHealth)));
+                yield return WaitForPlayerTurn(encounter, session, player.Id);
+                for (int action = 0; action < 8 && encounter.IsRunning && session.TurnPhase == CombatTurnPhase.Active; action++)
+                {
+                    var quotes = Enumerable.Range(0, 6).Select(direction => service.Preview(session,
+                        new CombatCommand(CombatCommandKind.BasicAttack, player.Id, profileId: player.BasicAttackProfileId,
+                            attackDirection: direction))).Where(quote => quote.IsLegal)
+                        .OrderBy(quote => multiple ? quote.AttackArea.TargetIds.Count : -quote.AttackArea.TargetIds.Count).ToArray();
+                    bool wantMultiple = requireMultipleTargets && !multiple && spawned.Enemies.All(enemy => enemy.IsAlive);
+                    if (quotes.Length > 0 && (!wantMultiple || quotes[0].AttackArea.TargetIds.Count == 2))
+                    {
+                        CombatCommandPreview quote = quotes[0];
+                        var hud = FindInActiveScene<CombatHudPresenter>();
+                        var candidate = new CombatActionCandidate(CombatActionKind.BasicAttack, player.Id, null,
+                            player.BasicAttackProfileId, hud.Snapshot.CommandContextVersion, attackDirection: quote.AttackDirection);
+                        CombatActionPreviewSnapshot preview = encounter.PreviewAction(candidate);
+                        Assert.IsTrue(preview.CanConfirm, preview.Reason);
+                        int ap = player.ActionPointsRemainingUnits;
+                        int[] healthBefore = spawned.Enemies.Select(enemy => enemy.CurrentHealth).ToArray();
+                        string evidence = $"AOE origin={player.Position}; d={quote.AttackDirection}; targets=" +
+                            string.Join(",", spawned.Enemies.Where(enemy => quote.AttackArea.TargetIds.Contains(enemy.Id)).Select(enemy => enemy.Id + "@" + enemy.Position));
+                        encounter.ConfirmAction(preview.Candidate);
+                        bool ended = new CombatResultBuilder().Build(session).Outcome != CombatSessionOutcome.Ongoing;
+                        Assert.AreEqual(ended ? 0 : ap - quote.ActionPointCostUnits, player.ActionPointsRemainingUnits,
+                            "A terminal attack spends its quote, then CombatSession.Terminate clears all remaining AP.");
+                        if (ended) Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+                        multiple |= quote.AttackArea.TargetIds.Count == 2;
+                        TestContext.WriteLine(evidence + "; paid=" + quote.ActionPointCostUnits + "; HP=" +
+                            string.Join(",", spawned.Enemies.Select((enemy, index) => enemy.Id + ":" + healthBefore[index] + "->" + enemy.CurrentHealth)));
+                        if (spawned.Enemies.Count(enemy => enemy.IsAlive) == 1)
+                        {
+                            partial = true;
+                            Assert.IsTrue(encounter.IsRunning);
+                            Assert.AreEqual(CombatSessionOutcome.Ongoing, new CombatResultBuilder().Build(session).Outcome);
+                        }
+                        yield return WaitForMovementPresentation(encounter);
+                        if (encounter == null || !encounter.IsRunning) break;
+                        continue;
+                    }
+                    var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).Select(unit => unit.Position).ToArray();
+                    var reachable = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits,
+                        player.MovementEfficiencyMilliUnits, occupied);
+                    var options = reachable.Keys.Where(cell => cell != player.Position).Select(cell => new
+                    {
+                        Cell = cell,
+                        Count = Enumerable.Range(0, 6).Max(direction => spawned.Enemies.Count(enemy => enemy.IsAlive &&
+                            (enemy.Position == cell.Step(direction) || enemy.Position == cell.Step(direction).Step(direction))))
+                    }).Where(option => option.Count > 0 && (!wantMultiple || option.Count == 2))
+                        .OrderByDescending(option => option.Count).ThenBy(option => reachable[option.Cell]).ToArray();
+                    if (options.Length == 0) break;
+                    encounter.RequestMove(player.Id, options[0].Cell.Q, options[0].Cell.R);
+                    Assert.AreEqual(options[0].Cell, player.Position);
+                    yield return WaitForMovementPresentation(encounter);
+                }
+                if (encounter != null && encounter.IsRunning)
+                {
+                    encounter.RequestEndTurn(player.Id);
+                    yield return null;
+                }
+            }
+            Assert.IsTrue(spawned.Enemies.All(enemy => !enemy.IsAlive), "Formal two-enemy combat did not finish within 120 turns.");
+            if (requireMultipleTargets) Assert.IsTrue(multiple, "Real AI and movement never produced a two-target confirmation.");
+            Assert.IsTrue(partial, "A partial defeat must remain an ongoing encounter.");
+            foreach (CombatantSnapshot enemy in spawned.Enemies)
+            {
+                Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Move));
+                Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Attack));
+                Assert.AreEqual(1, recording.Events.Count(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Death));
+            }
+            if (provider != null) Assert.AreEqual(0, provider.ActiveCombatantCount);
         }
 
         // Walk the proven first path edge, then allow the real AI/CTB loop to approach.
@@ -525,6 +621,46 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(provider.TryGetPresentedUnit(player.Id, out GameObject root));
             Assert.Less(Vector3.Distance(Static3DCombatUnitPresentationProvider.HexToWorld(movement.EndPosition), root.transform.position), 0.0001f);
             TestContext.WriteLine("Formal provider movement path: " + string.Join(" -> ", movement.MovementPath.Select(value => $"({value.Q},{value.R})")));
+        }
+
+        [UnityTest]
+        public IEnumerator AreaConfirmationSamplesEachTargetAndRejectsStaleQuoteBeforeSampling()
+        {
+            CreateCombatSession(100, 1, out CombatantSnapshot player, out CombatantSnapshot enemy);
+            var second = new CombatantSnapshot("enemy_2", CombatTeam.Enemy, new HexCoord(2, 0), 1,
+                500, 500, 60, 0, 0, 0, 100000, 2000, 1f) { DodgeRate = 50f, BasicAttackProfileId = "basic_unarmed" };
+            var profile = new CombatAttackProfile("basic_unarmed", CombatAttackKind.Basic, CombatAttackEffect.Physical,
+                1, 2, 40000, 40000, 0, 0, physicalMultiplier: 1f, area: CombatAttackArea.ForwardPair);
+            var session = new CombatSession(new[] { player, enemy, second }, new[] { profile },
+                new AlwaysInRangeCombatSpatialQuery(),
+                new[] { new CombatOrdinaryActionDefinition(CombatCommandKind.Guard, 50000, 50000, 0, 0),
+                    new CombatOrdinaryActionDefinition(CombatCommandKind.SwapSpell, 50000, 50000, 0, 60) }, ruleSet: SamplerRules());
+            var source = new SequenceCombatRandomSource(0, 99, 99, 99, 99, 99, 99, 99, 99, 99);
+            EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData data);
+            SetPrivateField(coordinator, "spawned", new AdventureSpawnSet(player, enemy, data, "basic_unarmed", "basic_unarmed",
+                Array.Empty<string>(), new[] { second }));
+            var service = new CombatCommandService();
+            service.AdvanceUntilAction(session);
+            var command = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "basic_unarmed", attackDirection: 0);
+            var quote = service.Preview(session, command);
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            Assert.Zero(source.Count);
+            var execute = typeof(EncounterCoordinator).GetMethod("ExecuteCommand", BindingFlags.Instance | BindingFlags.NonPublic);
+            var result = (CombatActionResult)execute.Invoke(coordinator, new object[] { command, quote });
+            Assert.IsTrue(result.Succeeded, result.RejectionReason);
+            Assert.AreEqual(10, source.Count);
+            CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, result.Damage.Select(value => value.TargetId));
+            Assert.IsTrue(result.Damage[0].IsHit);
+            Assert.IsFalse(result.Damage[1].IsHit);
+            Assert.AreEqual(40000, result.ActionPointSpentUnits);
+            var stale = service.Preview(session, command);
+            second.ReceiveDamage(1);
+            result = (CombatActionResult)execute.Invoke(coordinator, new object[] { command, stale });
+            Assert.IsFalse(result.Succeeded);
+            Assert.AreEqual(10, source.Count, "A stale candidate cannot consume any target's samples.");
+            Object.Destroy(host);
+            Object.Destroy(data);
+            yield return null;
         }
 
         [UnityTest]

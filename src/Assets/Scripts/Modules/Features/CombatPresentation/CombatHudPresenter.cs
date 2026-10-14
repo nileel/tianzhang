@@ -1,3 +1,4 @@
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 
@@ -37,7 +38,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (string.IsNullOrEmpty(id) || Snapshot == null) return null;
             CombatantHudSnapshot value = Snapshot.Player?.Id == id ? Snapshot.Player :
-                Snapshot.Enemy?.Id == id ? Snapshot.Enemy : null;
+                Snapshot.Enemies.FirstOrDefault(enemy => enemy.Id == id);
             return value != null && value.CurrentHealth > 0 && unitProvider != null &&
                 unitProvider.TryGetVisibleBounds(id, out _) ? value : null;
         }

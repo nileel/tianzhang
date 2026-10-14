@@ -69,6 +69,19 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void ApprovedAdditionalEnemySurvivesAdventureRoundTripAndCannotBeEdited()
+        {
+            var session = Session();
+            var table = session.Snapshot().Tables["Adventures"];
+            var row = table.Rows.Single(entry => entry.Key.EndsWith("/shijiahou_encounter", StringComparison.Ordinal));
+            Assert.AreEqual("enemy_2@4:5", row.Value.At("additionalEnemies").RawToken);
+            Assert.Throws<InvalidOperationException>(() => session.SetValue("Adventures", row.Key,
+                "additionalEnemies", ConfigValue.Scalar("enemy_3@5:5")));
+            CollectionAssert.AreEqual(Source("Adventures"), session.EncodeCandidate("Adventures"));
+            Assert.IsEmpty(Validate(session, "Adventures"));
+        }
+
+        [Test]
         public void FixedTablesAndStableKeysRejectScalarAndNestedEdits()
         {
             var session = Session();

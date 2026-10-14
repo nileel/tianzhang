@@ -87,6 +87,16 @@ namespace TianZhang.Tests
                 Assert.AreEqual(ruleData.ruleSetVersion,profile.RuleMetadata.RuleSetVersion);
             }
             var badProfile = UnityEngine.Object.Instantiate(profiles.First(value => value.attackProfileId == "spell_guanshiji"));
+            foreach (var pair in new[] { ("basic_iron_sword", CombatAttackArea.ForwardPair, 2), ("basic_iron_blade", CombatAttackArea.AdjacentPair, 1) })
+            {
+                Assert.IsTrue(session.TryGetProfile(pair.Item1, out var weapon));
+                Assert.AreEqual(pair.Item2, weapon.Area);
+                Assert.AreEqual(1, weapon.MinimumRange);
+                Assert.AreEqual(pair.Item3, weapon.MaximumRange);
+                var query = session.QueryAttackArea(player.Id, weapon.Id, 0);
+                Assert.AreEqual(2, query.Cells.Count);
+                CollectionAssert.AreEqual(new[] { enemy.Id }, query.TargetIds);
+            }
             try
             {
                 badProfile.efficiencyDenominator=0;

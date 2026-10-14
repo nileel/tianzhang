@@ -21,13 +21,19 @@ MonoBehaviour:
     q: 0
     r: 0
     contentId:
+    additionalEnemies: []
   - nodeId: shijiahou_encounter
     nodeTypeId: adventure_node_encounter
     q: 3
     r: 5
     contentId: enemy_shijiahou
+    additionalEnemies:
+    - instanceId: enemy_2
+      q: 4
+      r: 5
   - nodeId: return
     nodeTypeId: adventure_node_return
     q: 0
     r: 2
     contentId:
+    additionalEnemies: []

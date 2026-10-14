@@ -26,6 +26,22 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void AdventureImporterKeepsIndependentAdditionalEnemyAndRejectsAmbiguousDeclarations()
+        {
+            const string header = "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies";
+            const string row = "test,name,scope,encounter,adventure_node_encounter,3,5,enemy_shijiahou,";
+            var maps = TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + "enemy_2@4:5" }, "test");
+            Assert.AreEqual("enemy_2", maps[0].nodes[0].additionalEnemies.Single().instanceId);
+            Assert.AreEqual(4, maps[0].nodes[0].additionalEnemies.Single().q);
+            Assert.AreEqual(5, maps[0].nodes[0].additionalEnemies.Single().r);
+            UnityEngine.Object.DestroyImmediate(maps[0]);
+            foreach (string value in new[] { "enemy@4:5", "enemy_2@3:5", "enemy_2@4:5|enemy_2@4:4", "enemy_2@4:5|enemy_3@4:5", "enemy_2@x:5" })
+                Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + value }, "test"), value);
+            Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(
+                new[] { header, row.Replace("adventure_node_encounter", "adventure_node_start") + "enemy_2@4:5" }, "test"));
+        }
+
+        [Test]
         public void NewNodeTypeExtendsThroughHandlerWithoutChangingMapLoader()
         {
             var map = ScriptableObject.CreateInstance<AdventureMapData>();
@@ -145,7 +161,8 @@ namespace TianZhang.Tests
                 Assert.AreEqual("player", turn.ActorId);
                 CombatActionResult result = service.Execute(
                     session,
-                    new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", "basic_iron_sword"));
+                    new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "basic_iron_sword", attackDirection: 0,
+                        targetRolls: new[] { new CombatTargetResolutionRolls("enemy", new CombatResolutionRolls(0, 100, 100, 100, 100)) }));
                 Assert.IsTrue(result.Succeeded, result.RejectionReason);
                 Assert.That(enemy.CurrentHealth, Is.LessThan(enemy.MaximumHealth));
             }

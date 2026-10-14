@@ -57,6 +57,28 @@ namespace TianZhang.Tests.EditMode
             Assert.That(session.Snapshot().Tables["CombatActionEconomyRules"].Rows.Count, Is.EqualTo(52));
         }
         private static string Describe(IEnumerable<ConfigIssue> issues) => string.Join("\n", issues.Select(i => i.TableId + "/" + i.RowKey + "/" + i.FieldPath + ": " + i.ChineseReason));
+
+        [Test]
+        public void TwoCellWeaponShapesHaveChoicesAndKeepCommandDirectionOutOfContent()
+        {
+            var session = Session();
+            var table = session.Snapshot().Tables["AttackProfiles"];
+            var shape = table.Definition.Fields.Single(field => field.Column == "areaShapeKind");
+            var facing = table.Definition.Fields.Single(field => field.Column == "areaFacing");
+            foreach (var pair in new[] { ("basic_iron_sword", "forward_pair"), ("basic_iron_blade", "adjacent_pair") })
+            {
+                var row = table.Rows[pair.Item1];
+                Assert.That(row.At("areaShapeKind").RawToken, Is.EqualTo(pair.Item2));
+                Assert.That(shape.Choices().Any(choice => choice.Id == pair.Item2), Is.True);
+                Assert.That(facing.IsEditable(row), Is.False);
+                Assert.That(row.At("areaFacing").RawToken, Is.Empty);
+                Assert.Throws<InvalidOperationException>(() => session.SetValue("AttackProfiles", pair.Item1, "areaFacing", ConfigValue.Scalar("east")));
+                foreach (string oldShape in new[] { "line", "fan" })
+                    Assert.That(facing.IsEditable(row.With("areaShapeKind", ConfigValue.Scalar(oldShape))), Is.True);
+                Assert.That(facing.IsEditable(row.With("areaShapeKind", ConfigValue.Scalar("circle"))), Is.False);
+            }
+        }
+
         private static void AssertMetadata(ConfigFieldDefinition f)
         {
             Assert.That(f.ChineseName.Any(c => c >= 0x4e00 && c <= 0x9fff), Is.True, f.Column);

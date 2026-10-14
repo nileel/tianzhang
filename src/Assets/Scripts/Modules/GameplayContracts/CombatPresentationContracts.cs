@@ -21,9 +21,10 @@ namespace TianZhang.Gameplay.Contracts
         public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion,
             CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1,
-            string equipmentSlotId = null, string itemId = null, string instanceId = null)
+            string equipmentSlotId = null, string itemId = null, string instanceId = null, int? attackDirection = null)
         {
             Kind = kind;
+            AttackDirection = attackDirection;
             ActorId = actorId;
             TargetId = targetId;
             ProfileId = profileId;
@@ -36,6 +37,7 @@ namespace TianZhang.Gameplay.Contracts
                 new List<CombatUnitPresentationHex>(movementPath).AsReadOnly();
         }
         public string EquipmentSlotId { get; }
+        public int? AttackDirection { get; }
         public string ItemId { get; }
         public string InstanceId { get; }
         public CombatActionKind Kind { get; }
@@ -424,11 +426,14 @@ namespace TianZhang.Gameplay.Contracts
             bool isPresenting = false,
             IReadOnlyList<CombatArtActionSnapshot> artActions = null,
             long commandContextVersion = 0, IReadOnlyList<CombatActionPreviewSnapshot> actions = null,
-            int actionPointLimitUnits = 0, int pendingCtPenalty = 0)
+            int actionPointLimitUnits = 0, int pendingCtPenalty = 0,
+            IReadOnlyList<CombatantHudSnapshot> enemies = null)
         {
             CommandContextVersion = commandContextVersion;
             Player = player;
             Enemy = enemy;
+            Enemies = new List<CombatantHudSnapshot>(enemies ??
+                (enemy == null ? Array.Empty<CombatantHudSnapshot>() : new[] { enemy })).AsReadOnly();
             TurnText = turnText;
             AcceptsCommands = acceptsCommands;
             ArtProfileIds = artProfileIds == null ? Array.Empty<string>() : new List<string>(artProfileIds).AsReadOnly();
@@ -448,6 +453,7 @@ namespace TianZhang.Gameplay.Contracts
         public long CommandContextVersion { get; }
         public CombatantHudSnapshot Player { get; }
         public CombatantHudSnapshot Enemy { get; }
+        public IReadOnlyList<CombatantHudSnapshot> Enemies { get; }
         public string TurnText { get; }
         public bool AcceptsCommands { get; }
         public IReadOnlyList<string> ArtProfileIds { get; }

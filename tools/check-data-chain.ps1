@@ -619,7 +619,9 @@ function Test-FormalAttackProfileProjection {
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
   if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the nine canonical assets are required.' }
   $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
-  $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2}}
+  $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2};areaCenterKind=@{caster=1;target_cell=2};areaShapeKind=@{circle=1;line=2;fan=3;forward_pair=4;adjacent_pair=5};areaEffectBlockers=@{none=0;directed_edge=1}}
+  $flags = @{areaAllowedFactions=@{enemy=1;ally=2;self=4};areaAllowedStates=@{alive=1;corpse=2}}
+  $facings = @{east=0;north_east=1;north_west=2;west=3;south_west=4;south_east=5}
   foreach ($row in $rows) {
     $id = [string]$row.attackProfileId; $fields = @{}
     if ($row.displayNameKey -notin $LanguageIds) { Add-Finding 'ATTACK_PROFILE_LANGUAGE_MISSING' $id 'Unknown display key.' }
@@ -627,10 +629,38 @@ function Test-FormalAttackProfileProjection {
       foreach ($field in $schemas.AttackProfiles) {
         $value = [string]$row.PSObject.Properties[$field].Value
         if ($field -in $strings) { $fields[$field] = $value }
+        elseif ($flags.ContainsKey($field)) {
+          $fields[$field] = 0
+          if ($value) {
+            [string[]]$members = $value.Split(',')
+            [string[]]$ordered = $members.Clone()
+            [Array]::Sort($ordered, [StringComparer]::Ordinal)
+            if (($ordered -join ',') -cne $value) { throw "Invalid $field set" }
+            foreach ($member in $members) {
+              if ($member -cnotin @($flags[$field].Keys)) { throw "Unknown $field member" }
+              $fields[$field] = $fields[$field] -bor $flags[$field][$member]
+            }
+          }
+        }
+        elseif ($field -ceq 'areaFacing') {
+          if ($value -and $value -cnotin @($facings.Keys)) { throw 'Unknown areaFacing' }
+          $fields[$field] = if ($value) { $facings[$value] } else { -1 }
+        }
         elseif ($enums.ContainsKey($field)) {
-          if ($value -and -not $enums[$field].ContainsKey($value)) { throw "Unknown $field" }
+          if ($value -and $value -cnotin @($enums[$field].Keys)) { throw "Unknown $field" }
           $fields[$field] = if ($value) { $enums[$field][$value] } else { 0 }
         } else { $fields[$field] = if ($value) { [double]::Parse($value,[Globalization.CultureInfo]::InvariantCulture) } elseif ($field -ceq 'areaFacing') { -1 } else { 0 } }
+      }
+      $areaColumns = @('areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates')
+      if ($row.targetingMode -ceq 'single' -and @($areaColumns | Where-Object { [string]$row.$_ -cne '' }).Count -ne 0) { throw 'Single attack contains area fields.' }
+      if ($id -cin @('basic_iron_sword','basic_iron_blade')) {
+        $shape = if ($id -ceq 'basic_iron_sword') { 'forward_pair' } else { 'adjacent_pair' }
+        $length = if ($id -ceq 'basic_iron_sword') { 2 } else { 1 }
+        if ($row.targetingMode -cne 'area' -or $row.areaShapeKind -cne $shape -or $row.areaCenterKind -cne 'caster' -or
+            $row.profileKind -cne 'basic' -or $row.basicBindingKind -cne 'main_equipment' -or $row.effectType -cne 'physical' -or
+            $fields.minCastRange -ne 0 -or $fields.maxCastRange -ne 0 -or $fields.areaRadius -ne 0 -or $fields.areaLength -ne $length -or
+            $fields.areaFanHalfAngleSteps -ne 0 -or [string]$row.areaFacing -cne '' -or $fields.areaInnerRadius -ne 0 -or
+            $row.areaEffectBlockers -cne 'directed_edge' -or $row.areaAllowedFactions -cne 'enemy' -or $row.areaAllowedStates -cne 'alive') { throw 'Invalid two-cell weapon contract.' }
       }
       if ($row.ruleSetVersion -cne $rules.RuleSetVersion) { throw 'Unknown rule version.' }
       foreach ($field in @('actionPointCostUnits','minimumNetCostUnits','ctPenalty','resourceCost','minCastRange','maxCastRange')) {

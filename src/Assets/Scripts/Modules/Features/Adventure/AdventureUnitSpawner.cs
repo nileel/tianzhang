@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Content;
@@ -16,10 +18,12 @@ namespace TianZhang.Features.Adventure
             EnemyData enemyData,
             string playerBasicProfileId,
             string enemyBasicProfileId,
-            string[] playerDivineProfileIds)
+            string[] playerDivineProfileIds,
+            IReadOnlyList<CombatantSnapshot> additionalEnemies = null)
         {
             Player = player;
             Enemy = enemy;
+            Enemies = new[] { enemy }.Concat(additionalEnemies ?? Array.Empty<CombatantSnapshot>()).ToArray();
             EnemyData = enemyData;
             PlayerBasicProfileId = playerBasicProfileId;
             EnemyBasicProfileId = enemyBasicProfileId;
@@ -28,6 +32,7 @@ namespace TianZhang.Features.Adventure
 
         public CombatantSnapshot Player { get; }
         public CombatantSnapshot Enemy { get; }
+        public IReadOnlyList<CombatantSnapshot> Enemies { get; }
         public EnemyData EnemyData { get; }
         public string PlayerBasicProfileId { get; }
         public string EnemyBasicProfileId { get; }
@@ -74,6 +79,7 @@ namespace TianZhang.Features.Adventure
 
             CombatantSnapshot playerSnapshot;
             CombatantSnapshot enemySnapshot;
+            var additionalSnapshots = new List<CombatantSnapshot>();
             try
             {
                 // Rebuild from authoritative inputs at entry; a stale derived snapshot cannot override the table.
@@ -89,6 +95,16 @@ namespace TianZhang.Features.Adventure
                 enemyBasic = ResolveBasicAttackBinding(enemyProfile.MainEquipmentBasicAttackProfileId, enemyProfile.UnarmedBasicAttackProfileId);
                 playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
                 enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyPosition, enemyBasic, catalog.CombatRuleSet);
+                var ids = new HashSet<string>(StringComparer.Ordinal) { "player", "enemy" };
+                var positions = new HashSet<HexCoord> { playerPosition, enemyPosition };
+                foreach (AdventureEnemySpawnData extra in encounterNode.additionalEnemies ?? Array.Empty<AdventureEnemySpawnData>())
+                {
+                    if (extra == null || string.IsNullOrWhiteSpace(extra.instanceId) || !ids.Add(extra.instanceId) ||
+                        !positions.Add(new HexCoord(extra.q, extra.r)))
+                    { reason = "adventure_spawn_coordinate_or_identity_invalid"; return false; }
+                    additionalSnapshots.Add(CreateEnemy(enemyData.combatTemplate, new HexCoord(extra.q, extra.r),
+                        enemyBasic, catalog.CombatRuleSet, extra.instanceId));
+                }
             }
             catch (ArgumentException) { reason = "adventure_growth_inputs_invalid"; return false; }
             catch (OverflowException) { reason = "adventure_growth_inputs_invalid"; return false; }
@@ -98,7 +114,7 @@ namespace TianZhang.Features.Adventure
                 enemyData,
                 playerBasic,
                 enemyBasic,
-                (string[])player.AbilityLoadout.EquippedSkills.Clone());
+                (string[])player.AbilityLoadout.EquippedSkills.Clone(), additionalSnapshots);
             reason = null;
             return true;
         }
@@ -166,14 +182,15 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position, string basicAttackProfileId, CombatRuleSetData growthRules)
+        private static CombatantSnapshot CreateEnemy(CharacterData source, HexCoord position, string basicAttackProfileId, CombatRuleSetData growthRules,
+            string instanceId = "enemy")
         {
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(source, growthRules);
             CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(source);
             float realmMultiplier = source.realmMultiplier > 0f ? source.realmMultiplier : 1f;
             CharacterDerivedAttributes derived = attributes.Derive(realmMultiplier, combatModifiers.ToAttributeBonuses());
             var snapshot = new CombatantSnapshot(
-                "enemy",
+                instanceId,
                 CombatTeam.Enemy,
                 position,
                 attributes.Reaction,
