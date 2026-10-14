@@ -16,7 +16,7 @@ MonoBehaviour:
   affiliation: "\u53E4\u4FEE"
   grade: "\u6781\u54C1"
   elementMain: "\u571F"
-  elementSub: element_star
+  elementSub: "\u661F"
   contentScope: reserved
   starRootBone: 2
   starPhysique: 2

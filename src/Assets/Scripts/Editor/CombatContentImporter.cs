@@ -87,7 +87,18 @@ namespace TianZhang.Editor
                     AssetCommitter.EnsureDirectory(assetPath);
                     AssetDatabase.CreateAsset(asset, assetPath);
                 }
-                asset.spellName = T(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
+                ProjectSpellsRow(asset, headers, cols, path, T);
+
+                EditorUtility.SetDirty(asset);
+                Debug.Log($"  术法: {asset.spellName} ← {assetPath}");
+            }
+
+            AssetDatabase.SaveAssets();
+        }
+        // Both production import and preview use this single field projection.
+        private static void ProjectSpellsRow(SpellData asset, string[] headers, string[] cols, string path, Func<string, string> text)
+        {
+                asset.spellName = text(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
                 asset.type = (SpellType)int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "maxRange", path));
@@ -107,13 +118,32 @@ namespace TianZhang.Editor
                 // 五行属性（从独立 element 列解析）
                 asset.element = CombatElementFacts.ResolveElement(
                     CsvTableReader.GetRequiredValue(headers, cols, "element", path));
-
-                EditorUtility.SetDirty(asset);
-                Debug.Log($"  术法: {asset.spellName} ← {assetPath}");
-            }
-
-            AssetDatabase.SaveAssets();
         }
+
+        public static Dictionary<string, SpellData> PreviewSpells(string[] lines, IReadOnlyDictionary<string, string> language)
+        {
+            const string path = "Assets/DataConfig/Spells.csv";
+            var headers = CsvTableReader.FindHeader(lines);
+            var result = new Dictionary<string, SpellData>(StringComparer.Ordinal);
+            try
+            {
+                foreach (var line in lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1))
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    var cols = CsvTableReader.ParseRow(line);
+                    if (cols.Length != headers.Length) throw new InvalidDataException(path + ": 行宽不符，禁止跳行应用。");
+                    var assetPath = "Assets/Data/Spells/Spell_" + AssetCommitter.SanitizeName(CsvTableReader.GetRequiredValue(headers, cols, "name", path)) + ".asset";
+                    if (result.ContainsKey(assetPath)) throw new InvalidDataException(path + ": 归一化路径重复。");
+                    var existing = AssetDatabase.LoadAssetAtPath<SpellData>(assetPath);
+                    var asset = existing == null ? ScriptableObject.CreateInstance<SpellData>() : UnityEngine.Object.Instantiate(existing);
+                    result.Add(assetPath, asset);
+                    ProjectSpellsRow(asset, headers, cols, path, key => language.TryGetValue(key, out var value) ? value : key);
+                }
+                return result;
+            }
+            catch { foreach (var asset in result.Values) UnityEngine.Object.DestroyImmediate(asset); throw; }
+        }
+
 
         [MenuItem("天章/导入攻击档案配置")]
         public static void ImportAttackProfiles()
@@ -843,6 +873,19 @@ namespace TianZhang.Editor
                 asset = ScriptableObject.CreateInstance<CombatRuleSetData>();
                 AssetDatabase.CreateAsset(asset, path);
             }
+            ProjectCombatRuleSet(rules, asset);
+            EditorUtility.SetDirty(asset);
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
+            catalog.SetCombatRuleSet(asset); EditorUtility.SetDirty(catalog);
+        }
+        public static CombatRuleSetData PreviewCombatRuleSet(CombatRuleSet rules)
+        {
+            var asset = ScriptableObject.CreateInstance<CombatRuleSetData>();
+            ProjectCombatRuleSet(rules, asset);
+            return asset;
+        }
+        private static void ProjectCombatRuleSet(CombatRuleSet rules, CombatRuleSetData asset)
+        {
             asset.schemaVersion = CombatRuleSet.SchemaVersion; asset.ruleSetVersion = rules.RuleSetVersion;
             asset.sourceDigest = rules.SourceDigest;
             asset.unarmedRows = rules.UnarmedRows.Select(row => new CombatRuleSetData.UnarmedRow
@@ -922,10 +965,8 @@ namespace TianZhang.Editor
                 damageWeightDenominator = new CombatRuleSetData.OptionalInteger { present = row.RecordKind == "test_action", value = row.DamageWeightDenominator },
             }).ToArray();
 
-            EditorUtility.SetDirty(asset);
-            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
-            catalog.SetCombatRuleSet(asset); EditorUtility.SetDirty(catalog);
         }
+
         private static void ResolveAttackRuleFields(AttackProfileImportRow row, CombatRuleSet rules,
             Func<string, string> value, Func<string, string> required, Action<string> empty)
         {
@@ -1218,7 +1259,18 @@ namespace TianZhang.Editor
                     AssetCommitter.EnsureDirectory(assetPath);
                     AssetDatabase.CreateAsset(asset, assetPath);
                 }
-                asset.skillName = T(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
+                ProjectSkillsRow(asset, headers, cols, path, T);
+
+                EditorUtility.SetDirty(asset);
+                Debug.Log($"  神通: {asset.skillName} ← {assetPath}");
+            }
+
+            AssetDatabase.SaveAssets();
+        }
+        // Both production import and preview use this single field projection.
+        private static void ProjectSkillsRow(DivineSkillData asset, string[] headers, string[] cols, string path, Func<string, string> text)
+        {
+                asset.skillName = text(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
                 asset.type = (SpellType)int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "type", path));
                 asset.minRange = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "minRange", path));
                 asset.maxRange = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "maxRange", path));
@@ -1238,14 +1290,33 @@ namespace TianZhang.Editor
                     CsvTableReader.GetRequiredValue(headers, cols, "element", path));
                 asset.isDomain = CsvTableReader.GetRequiredValue(headers, cols, "isDomain", path) == "1";
                 asset.isBloodline = CsvTableReader.GetRequiredValue(headers, cols, "isBloodline", path) == "1";
-                asset.specialEffectDesc = T(CsvTableReader.GetRequiredValue(headers, cols, "specialEffectDesc", path));
-
-                EditorUtility.SetDirty(asset);
-                Debug.Log($"  神通: {asset.skillName} ← {assetPath}");
-            }
-
-            AssetDatabase.SaveAssets();
+                asset.specialEffectDesc = text(CsvTableReader.GetRequiredValue(headers, cols, "specialEffectDesc", path));
         }
+
+        public static Dictionary<string, DivineSkillData> PreviewSkills(string[] lines, IReadOnlyDictionary<string, string> language)
+        {
+            const string path = "Assets/DataConfig/Skills.csv";
+            var headers = CsvTableReader.FindHeader(lines);
+            var result = new Dictionary<string, DivineSkillData>(StringComparer.Ordinal);
+            try
+            {
+                foreach (var line in lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1))
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    var cols = CsvTableReader.ParseRow(line);
+                    if (cols.Length != headers.Length) throw new InvalidDataException(path + ": 行宽不符，禁止跳行应用。");
+                    var assetPath = "Assets/Data/Skills/Skill_" + AssetCommitter.SanitizeName(CsvTableReader.GetRequiredValue(headers, cols, "name", path)) + ".asset";
+                    if (result.ContainsKey(assetPath)) throw new InvalidDataException(path + ": 归一化路径重复。");
+                    var existing = AssetDatabase.LoadAssetAtPath<DivineSkillData>(assetPath);
+                    var asset = existing == null ? ScriptableObject.CreateInstance<DivineSkillData>() : UnityEngine.Object.Instantiate(existing);
+                    result.Add(assetPath, asset);
+                    ProjectSkillsRow(asset, headers, cols, path, key => language.TryGetValue(key, out var value) ? value : key);
+                }
+                return result;
+            }
+            catch { foreach (var asset in result.Values) UnityEngine.Object.DestroyImmediate(asset); throw; }
+        }
+
 
 
         private static string GetRequiredContentScope(

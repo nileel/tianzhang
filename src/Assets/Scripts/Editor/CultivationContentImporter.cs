@@ -2271,11 +2271,34 @@ namespace TianZhang.Editor
                 }
 
                 var asset = ScriptableObject.CreateInstance<GongFaGrowthData>();
-                asset.gongFaName = T(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
-                asset.affiliation = T(CsvTableReader.GetRequiredValue(headers, cols, "affiliation", path));
-                asset.grade = T(CsvTableReader.GetRequiredValue(headers, cols, "grade", path));
-                asset.elementMain = T(CsvTableReader.GetRequiredValue(headers, cols, "elementMain", path));
-                asset.elementSub = T(CsvTableReader.GetRequiredValue(headers, cols, "elementSub", path));
+                ProjectGongFaRow(asset, headers, cols, path, T);
+
+                // 文件名用 ID（不用解析）
+                string assetPath = $"Assets/Data/GongFa/GongFa_{AssetCommitter.SanitizeName(CsvTableReader.GetRequiredValue(headers, cols, "name", path))}.asset";
+                string displayName = asset.gongFaName;
+                AssetCommitter.EnsureDirectory(assetPath);
+                var existing = AssetDatabase.LoadAssetAtPath<GongFaGrowthData>(assetPath);
+                if (existing == null)
+                {
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                }
+                else
+                {
+                    EditorUtility.CopySerialized(asset, existing);
+                    EditorUtility.SetDirty(existing);
+                    UnityEngine.Object.DestroyImmediate(asset);
+                }
+                Debug.Log($"  功法: {displayName} ← {assetPath}");
+            }
+        }
+        // Both production import and preview use this single field projection.
+        private static void ProjectGongFaRow(GongFaGrowthData asset, string[] headers, string[] cols, string path, Func<string, string> text)
+        {
+                asset.gongFaName = text(CsvTableReader.GetRequiredValue(headers, cols, "name", path));
+                asset.affiliation = text(CsvTableReader.GetRequiredValue(headers, cols, "affiliation", path));
+                asset.grade = text(CsvTableReader.GetRequiredValue(headers, cols, "grade", path));
+                asset.elementMain = text(CsvTableReader.GetRequiredValue(headers, cols, "elementMain", path));
+                asset.elementSub = text(CsvTableReader.GetRequiredValue(headers, cols, "elementSub", path));
                 asset.contentScope = GetRequiredContentScope(headers, cols, path);
                 asset.starRootBone = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "starRootBone", path));
                 asset.starPhysique = int.Parse(CsvTableReader.GetRequiredValue(headers, cols, "starPhysique", path));
@@ -2300,8 +2323,8 @@ namespace TianZhang.Editor
                         if (parts.Length < 10) continue;
                         chapterList.Add(new GongFaGrowthData.ChapterBonus
                         {
-                            chapterName = T(parts[0]),
-                            realm = T(parts[1]),
+                            chapterName = text(parts[0]),
+                            realm = text(parts[1]),
                             soulShieldRate = float.Parse(parts[2]),
                             hitRate = float.Parse(parts[3]),
                             blockRate = float.Parse(parts[4]),
@@ -2310,30 +2333,36 @@ namespace TianZhang.Editor
                             dodgeRate = float.Parse(parts[7]),
                             magAtkBonus = float.Parse(parts[8]),
                             magDefBonus = float.Parse(parts[9]),
-                            specialEffect = parts.Length > 10 ? T(parts[10]) : ""
+                            specialEffect = parts.Length > 10 ? text(parts[10]) : ""
                         });
                     }
                     asset.chapters = chapterList.ToArray();
                 }
-
-                // 文件名用 ID（不用解析）
-                string assetPath = $"Assets/Data/GongFa/GongFa_{AssetCommitter.SanitizeName(CsvTableReader.GetRequiredValue(headers, cols, "name", path))}.asset";
-                string displayName = asset.gongFaName;
-                AssetCommitter.EnsureDirectory(assetPath);
-                var existing = AssetDatabase.LoadAssetAtPath<GongFaGrowthData>(assetPath);
-                if (existing == null)
-                {
-                    AssetDatabase.CreateAsset(asset, assetPath);
-                }
-                else
-                {
-                    EditorUtility.CopySerialized(asset, existing);
-                    EditorUtility.SetDirty(existing);
-                    UnityEngine.Object.DestroyImmediate(asset);
-                }
-                Debug.Log($"  功法: {displayName} ← {assetPath}");
-            }
         }
+
+        public static Dictionary<string, GongFaGrowthData> PreviewGongFa(string[] lines, IReadOnlyDictionary<string, string> language)
+        {
+            const string path = "Assets/DataConfig/GongFa.csv";
+            var headers = CsvTableReader.FindHeader(lines);
+            var result = new Dictionary<string, GongFaGrowthData>(StringComparer.Ordinal);
+            try
+            {
+                foreach (var line in lines.Skip(CsvTableReader.FindHeaderIndex(lines) + 1))
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    var cols = CsvTableReader.ParseRow(line);
+                    if (cols.Length != headers.Length) throw new InvalidDataException(path + ": 行宽不符，禁止跳行应用。");
+                    var assetPath = "Assets/Data/GongFa/GongFa_" + AssetCommitter.SanitizeName(CsvTableReader.GetRequiredValue(headers, cols, "name", path)) + ".asset";
+                    if (result.ContainsKey(assetPath)) throw new InvalidDataException(path + ": 归一化路径重复。");
+                    var asset = ScriptableObject.CreateInstance<GongFaGrowthData>();
+                    result.Add(assetPath, asset);
+                    ProjectGongFaRow(asset, headers, cols, path, key => language.TryGetValue(key, out var value) ? value : key);
+                }
+                return result;
+            }
+            catch { foreach (var asset in result.Values) UnityEngine.Object.DestroyImmediate(asset); throw; }
+        }
+
 
         /// <summary>
         /// Parses one GongFa.csv growth field. The optional @10/@20/@30 suffix is reserved for

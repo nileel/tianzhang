@@ -104,7 +104,7 @@ MonoBehaviour:
     movePoints: 1.2
     mindGrowth: 3.8
   chapters:
-  - chapterName: chapter_hanzhang
+  - chapterName: "\u542B\u7AE0"
     realm: "\u7EC3\u6C14"
     soulShieldRate: 3
     hitRate: 3
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u5764\u5FB7\uFF1A\u8089\u8EAB\u9632\u5FA1+10%\uFF0C\u9632\u5FA1\u59FF\u6001\u51CF\u514D5%"
-  - chapterName: chapter_houde
+  - chapterName: "\u539A\u5FB7"
     realm: "\u7B51\u57FA"
     soulShieldRate: 3
     hitRate: 3
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u539A\u5FB7\u8F7D\u7269\uFF1A\u9632\u5FA1+15%\uFF0C\u8F7D\u7269\u88AB\u52A8HP\u964D\u5219\u9632\u5347"
-  - chapterName: chapter_zaiwu
+  - chapterName: "\u8F7D\u7269"
     realm: "\u91D1\u4E39"
     soulShieldRate: 3
     hitRate: 3
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u5764\u5143\uFF1A\u9632\u5FA1+20%\uFF0C\u5764\u5143\u5B88\u62A4\u5206\u644A30%"
-  - chapterName: chapter_hanhong
+  - chapterName: "\u542B\u5F18"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 3
@@ -148,7 +148,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u542B\u5F18\u5149\u5927\uFF1A\u9632\u5FA1+25%\uFF0C\u5764\u5143\u5B88\u62A4\u5206\u644A50%"
-  - chapterName: chapter_guangda
+  - chapterName: "\u5149\u5927"
     realm: "\u5316\u795E"
     soulShieldRate: 3
     hitRate: 3
@@ -159,7 +159,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u54B8\u4EA8\uFF1A\u9632\u5FA1+30%\uFF0C\u5206\u644A\u8F6C\u5316HP+MP"
-  - chapterName: chapter_pinwu
+  - chapterName: "\u54C1\u7269"
     realm: "\u5316\u795E"
     soulShieldRate: 3
     hitRate: 3

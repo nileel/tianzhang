@@ -104,7 +104,7 @@ MonoBehaviour:
     movePoints: 1.2
     mindGrowth: 7.5
   chapters:
-  - chapterName: chapter_cuifeng
+  - chapterName: "\u6DEC\u950B"
     realm: "\u7B51\u57FA"
     soulShieldRate: 3
     hitRate: 0
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u96F7\u7F61\uFF1A\u9644\u52A0\u96F7\u4F24\u8089\u653Bx10%\uFF0C\u7834\u963230%"
-  - chapterName: chapter_jinglei
+  - chapterName: "\u60CA\u96F7"
     realm: "\u91D1\u4E39"
     soulShieldRate: 3
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u96F7\u9644\u4F24x20%\uFF0C\u7834\u963250%\uFF0C\u66B4\u51FB\u8BA1\u6570\u56682"
-  - chapterName: chapter_poshan
+  - chapterName: "\u7834\u5C71"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u96F7\u9644\u4F24x30%\u7834\u963270%\uFF0C\u66B4\u51FB\u7387+15%"
-  - chapterName: chapter_wanjun2
+  - chapterName: "\u4E07\u94A7"
     realm: "\u5316\u795E"
     soulShieldRate: 3
     hitRate: 0

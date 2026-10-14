@@ -33,5 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc: desc_skill_wanfaguizong
+  specialEffectDesc: "\u8BE6\u89C1\u300A\u4E07\u6CD5\u5F52\u5B97\u300B\u795E\u901A\u539F\u6587\u3002"
   realmScaleBase: 1

@@ -104,7 +104,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E0D\u8FC1\uFF1A\u9996\u6B21\u53D7\u5927\u4F24\u5BB3\u51CF\u534A\uFF0C\u7269\u6297+5%"
-  - chapterName: chapter_gexing
+  - chapterName: "\u5404\u6027"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0

@@ -33,5 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 1
-  specialEffectDesc: desc_skill_yiqiguanshi
+  specialEffectDesc: "\u8BE6\u89C1\u300A\u5F08\u68CB\u89C2\u52BF\u300B\u795E\u901A\u539F\u6587\u3002"
   realmScaleBase: 1

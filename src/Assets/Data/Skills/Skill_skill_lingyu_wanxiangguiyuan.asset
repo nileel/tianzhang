@@ -33,5 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 1
   isBloodline: 0
-  specialEffectDesc: desc_skill_lingyu_wanxiangguiyuan
+  specialEffectDesc: "\u8BE6\u89C1\u300A\u7075\u57DF \xB7 \u4E07\u8C61\u5F52\u5143\u300B\u795E\u901A\u539F\u6587\u3002"
   realmScaleBase: 1

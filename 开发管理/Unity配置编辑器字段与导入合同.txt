@@ -265,6 +265,8 @@ ConfigValue保留原始词元及HasValue（空与零分开）；CsvConfigDocumen
 
 APPLY独占IConfigApplyService：ValidateAndSave(session)和SaveAndApply(session)，返回ConfigOperationResult，其最小字段为SavedPaths、FailedSavePaths、AppliedPaths、FailedImportStep、Issues、Evidence。CORE通过TypeCache只接一个实现，未实现时明确禁用按钮。方法同步执行，禁止第二保存服务、自动重试、通用事务层或后台状态机。ConfigImportPlan是本次有序方法/输入/产物清单，不持久化成第二事实源。
 
+2026-10-13解阻塞补充：ConfigEditorWindow的SaveEnabled与DrawToolbar原以同一IsDirty条件禁用两个按钮，AcceptSavedBaseline清除脏状态后无法继续应用。APPLY在CORE与CULTIVATION完成后串行接手ConfigEditorWindow.cs及.meta，仅拆分保存/应用可用性、显示准确结果并调用现有IConfigApplyService；保持.meta GUID，不改变领域字段、草稿编解码或公共接口。校验并保存仍要求未保存改动；保存并应用必须支持本会话已保存未应用、应用前门拒绝及应用失败后由用户显式再次发起，不能要求用户再制造CSV改动。服务依据本会话真实保存的变更集维护待应用范围，不能在AcceptSavedBaseline后因GetEdits为空丢失影响闭包；再次编辑时合并尚未应用及新保存变更。每次显式应用都重新核验源hash与原应用门，原失败诊断不得伪装成成功；不自动重试或持久化第二状态。新开窗口无可重建证据时仍显示“已保存，应用未核验”，不得据此全表导入或报成功。上述按钮与状态转移由ConfigEditorApplyTests及真实窗口操作验收，无服务时两按钮继续禁用。
+
 ### 必要关联编辑
 
 1. RealmCombatGrowth.actionPointMaximumUnits/baseMovementEfficiencyMilliUnits改动或Characters.realmId改动时，以完整候选快照的境界行为唯一源：更新所有Characters对应两列；更新所有Enemies对应realm两列；realm_fanren同步CharacterCreationPointBuy所有default行（现3行）。legacyBaseMovementEfficiencyMilliUnits保持原值。预览逐表逐行列出旧/新值，用户只确认保存按钮所示整体变更，不手工补镜像。
@@ -333,7 +335,7 @@ APPLY对每步绑定日志监听，仅在调用窗口捕获Error/Exception/Asser
 | WORLD | WorldTables.cs、EnvironmentTable.cs | ConfigEditorWorldTests.cs |
 | CULTIVATION | FoundationTable.cs、JindanTable.cs、NpcPolicyTable.cs、CultivationTableCodec.cs；上述获批CORE上下文补齐 | ConfigEditorCultivationTests.cs、上述CORE回归 |
 | CHARTER | CharterRuleTable.cs、CharterSiteTable.cs | ConfigEditorCharterTests.cs |
-| APPLY | ConfigSaveApplyService.cs、ConfigImportPlan.cs | ConfigEditorApplyTests.cs |
+| APPLY | ConfigSaveApplyService.cs、ConfigImportPlan.cs；CORE/CULTIVATION完成后串行接手ConfigEditorWindow.cs的保存/应用入口 | ConfigEditorApplyTests.cs |
 | V | 不修改实现；只写开发管理/Unity中文配置编辑器验收记录.txt及原批准生命周期路径 | 运行前述测试，不新增测试实现 |
 
 CultivationContentImporter.cs及其.meta由CULTIVATION先行拥有，仅允许上述哈希方法可见性变化并保持.meta GUID；本卡完成归档后才交给依赖它的APPLY，不允许两卡并行写入。除该先行开放的哈希入口外，APPLY拥有后续必要无写盘校验接口：src/Assets/Scripts/Editor/CombatContentImporter.cs、CharacterContentImporter.cs、SettlementContentImporter.cs、CultivationContentImporter.cs、AdventureContentImporter.cs、WorldContentImporter.cs及各.meta。只提取/复用无写盘投影、显式上下文参数，完整保留原投影/赋值语义；不修改CombatRuleSet、运行时数据语义、CsvTableReader或Coordinator，不新增领域所有者。CORE禁止启用假保存，领域卡禁止建立保存/导入按钮；五组可各在同一窗口完成内存编辑/撤销，实际写盘测试集中APPLY，V统一用户路径复验。

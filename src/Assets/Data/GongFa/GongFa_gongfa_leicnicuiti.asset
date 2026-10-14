@@ -16,7 +16,7 @@ MonoBehaviour:
   affiliation: "\u7389\u6E05\u5D16"
   grade: "\u4E0B\u54C1"
   elementMain: "\u96F7"
-  elementSub:
+  elementSub: "\u65E0"
   contentScope: reserved
   starRootBone: 5
   starPhysique: 4
@@ -93,7 +93,7 @@ MonoBehaviour:
     movePoints: 1
     mindGrowth: 3
   chapters:
-  - chapterName: chapter_ganlei
+  - chapterName: "\u611F\u96F7"
     realm: "\u51E1\u4EBA"
     soulShieldRate: 3
     hitRate: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
     magAtkBonus: 3
     magDefBonus: 0
     specialEffect: "\u96F7\u611F\uFF1A\u96F7\u6C60\u4FEE\u70BC\u901F\u5EA6x3\uFF0C\u88AB\u5288+0.1%\u96F7\u6297"
-  - chapterName: chapter_yinlei2
+  - chapterName: "\u5F15\u96F7"
     realm: "\u7EC3\u6C14"
     soulShieldRate: 3
     hitRate: 0
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 3
     magDefBonus: 0
     specialEffect: "\u5F15\u96F7\u6DEC\u4F53\uFF1A\u4FEE\u70BCx3.5\uFF0CHP\u4E0A\u9650+1%/3\u6B21"
-  - chapterName: chapter_cuiti
+  - chapterName: "\u6DEC\u4F53"
     realm: "\u7B51\u57FA"
     soulShieldRate: 3
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 3
     magDefBonus: 0
     specialEffect: "\u96F7\u808C\u94C1\u9AA8\uFF1A\u4FEE\u70BCx4\uFF0CHP\u4E0A\u9650+1%/2\u6B21\uFF0C\u7269\u9632+15%"
-  - chapterName: chapter_leiji
+  - chapterName: "\u96F7\u808C"
     realm: "\u91D1\u4E39"
     soulShieldRate: 3
     hitRate: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 3
     magDefBonus: 0
     specialEffect: "\u96F7\u9706\u4E4B\u8EAF\uFF1A\u4FEE\u70BCx4.5"
-  - chapterName: chapter_buhuai
+  - chapterName: "\u4E0D\u574F"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0

@@ -170,9 +170,10 @@ namespace TianZhang.Editor
             }
         }
 
-        public static CharacterData[] ParseCharacterDefinitions(string[] lines, string sourceName, CombatRuleSetData growthRules = null)
+        public static CharacterData[] ParseCharacterDefinitions(string[] lines, string sourceName, CombatRuleSetData growthRules = null, IReadOnlyDictionary<string, string> language = null)
         {
             growthRules = growthRules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
+            string Text(string key) => language == null ? T(key) : language.TryGetValue(key, out var value) ? value : key;
             var projected = new List<CharacterData>();
             try
             {
@@ -209,7 +210,7 @@ namespace TianZhang.Editor
 
                     var asset = ScriptableObject.CreateInstance<CharacterData>();
                     projected.Add(asset);
-                    asset.charName = T(id);
+                    asset.charName = Text(id);
                     string realmId = CsvTableReader.GetRequiredValue(headers, columns, "realmId", sourceName);
                     ProjectRealmGrowth(growthRules, realmId, out int ap, out int movement, out string realmStage);
                     asset.realmStage = realmStage;
@@ -232,7 +233,7 @@ namespace TianZhang.Editor
                     asset.critDamage = float.Parse(CsvTableReader.GetRequiredValue(headers, columns, "critDamage", sourceName));
                     asset.hitRateBonus = float.Parse(CsvTableReader.GetRequiredValue(headers, columns, "hitRateBonus", sourceName));
                     var gongFaId = CsvTableReader.GetValueOrDefault(headers, columns, "gongFaName", "");
-                    asset.gongFaName = gongFaId.Length > 0 ? T(gongFaId) : string.Empty;
+                    asset.gongFaName = gongFaId.Length > 0 ? Text(gongFaId) : string.Empty;
                     var equippedSpells = CsvTableReader.GetValueOrDefault(headers, columns, "equippedSpells", "");
                     asset.equippedSpells = equippedSpells.Length > 0 ? equippedSpells.Split('|') : Array.Empty<string>();
                     var equippedSkills = CsvTableReader.GetValueOrDefault(headers, columns, "equippedSkills", "");
@@ -301,17 +302,22 @@ namespace TianZhang.Editor
             for (int i = 0; i < targets.Count; i++)
             {
                 var input = IndependentActionEconomyInputs[i];
-                ProjectRealmGrowth(rules, input.Realm, out int ap, out int movement, out string realmStage);
-                targets[i].realmStage = realmStage;
-                targets[i].unarmedBasicAttackProfileId = string.Empty;
-                targets[i].unarmedAttackFamilyId = "body_human";
-                RequireUnarmedSource(rules, targets[i].unarmedAttackFamilyId, input.Realm);
-                targets[i].actionPointMaximumUnits = ap;
-                targets[i].movementEfficiencyMilliUnits = movement;
+                ProjectIndependentCharacter(targets[i], input.Realm, rules);
                 EditorUtility.SetDirty(targets[i]);
                 AssetDatabase.SaveAssetIfDirty(targets[i]);
             }
         }
+        internal static void ProjectIndependentCharacter(CharacterData target, string realm, CombatRuleSetData rules)
+        {
+                ProjectRealmGrowth(rules, realm, out int ap, out int movement, out string realmStage);
+                target.realmStage = realmStage;
+                target.unarmedBasicAttackProfileId = string.Empty;
+                target.unarmedAttackFamilyId = "body_human";
+                RequireUnarmedSource(rules, target.unarmedAttackFamilyId, realm);
+                target.actionPointMaximumUnits = ap;
+                target.movementEfficiencyMilliUnits = movement;
+        }
+
 
         internal static void RequireUnarmedSource(CombatRuleSetData rules, string family, string realmId)
         {

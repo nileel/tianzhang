@@ -205,6 +205,8 @@ namespace TianZhang.Tests.EditMode
             var files = Ids.Select(id => Path.Combine(Application.dataPath, "DataConfig", id + ".csv")).ToArray();
             var hashes = files.Concat(files.Select(p => p + ".meta")).ToDictionary(p => p, p => CsvConfigDocument.ComputeHash(File.ReadAllBytes(p)));
             var window = ConfigEditorWindow.Open();
+            var isolatedRegistry = new ConfigTableRegistry(ConfigTableRegistry.Discover().Tables);
+            window.Initialize(isolatedRegistry, isolatedRegistry.OpenSession());
             try
             {
                 Assert.IsNotNull(window.Session);

@@ -93,7 +93,7 @@ MonoBehaviour:
     movePoints: 1
     mindGrowth: 2
   chapters:
-  - chapterName: chapter_fadu
+  - chapterName: "\u6CD5\u5EA6"
     realm: "\u7EC3\u6C14"
     soulShieldRate: 3
     hitRate: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u675F\u4F0D\uFF1A\u53CB\u65B9\u6BCF\u5355\u4F4D+3%\u5168\u9632"
-  - chapterName: chapter_shengmo
+  - chapterName: "\u7EF3\u58A8"
     realm: "\u7B51\u57FA"
     soulShieldRate: 3
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E25\u660E\uFF1A\u4E0A\u9650+35%\uFF0C\u519B\u4EE4"
-  - chapterName: chapter_yanji
+  - chapterName: "\u4E25\u7EAA"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E0D\u79FB\uFF1A\u4E0A\u9650+45%\uFF0C\u80CC\u6C34"
-  - chapterName: chapter_buyi
+  - chapterName: "\u4E0D\u79FB"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0

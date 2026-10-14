@@ -33,5 +33,5 @@ MonoBehaviour:
   stunDuration: 1
   isDomain: 0
   isBloodline: 0
-  specialEffectDesc: desc_skill_tianfuzhenyue
+  specialEffectDesc: "\u8BE6\u89C1\u300A\u5929\u7B26\u9547\u5CB3\u300B\u795E\u901A\u539F\u6587\u3002"
   realmScaleBase: 1

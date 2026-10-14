@@ -15,8 +15,8 @@ MonoBehaviour:
   gongFaName: "\u7384\u725D\u9053\u85CF"
   affiliation: "\u53E4\u4FEE"
   grade: "\u6781\u54C1"
-  elementMain: element_chaos
-  elementSub: element_chaos
+  elementMain: "\u6DF7\u6C8C"
+  elementSub: "\u6DF7\u6C8C"
   contentScope: reserved
   starRootBone: 1
   starPhysique: 1

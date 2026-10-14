@@ -25,6 +25,10 @@ namespace TianZhang.Editor.ConfigEditor
         public string SelectedRowKey => rowKey;
         public bool SaveEnabled => registry?.ApplyService != null && session != null && session.IsDirty && session.CanSave &&
             registry.Tables.Count > 0 && registry.Tables[tableIndex].IsAdapted;
+        public bool ApplyEnabled => registry?.ApplyService != null && session != null && session.CanSave &&
+            registry.Tables.Count > 0 && registry.Tables[tableIndex].IsAdapted &&
+            (session.IsDirty || (registry.ApplyService is ConfigSaveApplyService service && service.HasPendingApplication(session)));
+        public ConfigOperationResult LastOperation => operation;
 
         [MenuItem("天章/配置编辑器")]
         public static ConfigEditorWindow Open()
@@ -133,6 +137,22 @@ namespace TianZhang.Editor.ConfigEditor
             if (session == null || registry == null) return;
             RefreshDirtyState();
             DrawToolbar();
+            if (session.IsDirty && registry.ApplyService != null)
+            {
+                try
+                {
+                    var linkedSnapshot = session.Snapshot();
+                    foreach (var edit in ConfigSaveApplyService.LinkedEdits(session))
+                    {
+                        var table = linkedSnapshot.Tables[edit.TableId];
+                        var field = table.Definition.Fields.FirstOrDefault(f => f.Column == edit.FieldPath.Split('/')[0]);
+                        EditorGUILayout.LabelField("保存联动：" + table.Definition.ChineseName + " / " + edit.RowKey + " / " +
+                            (field?.ChineseName ?? edit.FieldPath) + "：" + table.Rows[edit.RowKey].At(edit.FieldPath).RawToken + " → " + edit.Value.RawToken,
+                            EditorStyles.wordWrappedLabel);
+                    }
+                }
+                catch (Exception exception) { EditorGUILayout.HelpBox("关联预览失败：" + exception.Message, MessageType.Error); }
+            }
             if (registry.Tables.Count == 0) { EditorGUILayout.HelpBox("尚无表登记。", MessageType.Info); return; }
             var snapshot = session.Snapshot();
             var current = snapshot.Tables[SelectedTableId];
@@ -186,10 +206,9 @@ namespace TianZhang.Editor.ConfigEditor
                 if (GUILayout.Button("重新加载", EditorStyles.toolbarButton) && (!session.IsDirty ||
                     EditorUtility.DisplayDialog("放弃草稿并重新加载", "重新加载会放弃全部未保存修改。", "放弃并重新加载", "继续编辑"))) LoadProduction();
                 using (new EditorGUI.DisabledScope(!SaveEnabled))
-                {
                     if (GUILayout.Button("校验并保存", EditorStyles.toolbarButton)) RunApply(false);
+                using (new EditorGUI.DisabledScope(!ApplyEnabled))
                     if (GUILayout.Button("保存并应用", EditorStyles.toolbarButton)) RunApply(true);
-                }
             }
             if (registry.ApplyService == null) EditorGUILayout.HelpBox("保存与应用尚未接入；本窗口只编辑内存草稿。", MessageType.Info);
         }
@@ -202,8 +221,9 @@ namespace TianZhang.Editor.ConfigEditor
             return true;
         }
 
-        private void RunApply(bool apply)
+        public void RunApply(bool apply)
         {
+            if (apply ? !ApplyEnabled : !SaveEnabled) return;
             try { operation = apply ? registry.ApplyService.SaveAndApply(session) : registry.ApplyService.ValidateAndSave(session); }
             catch (Exception exception) { inputError = "操作失败：" + exception.Message; }
             RefreshDirtyState();

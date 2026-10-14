@@ -285,6 +285,8 @@ namespace TianZhang.Tests
             var values = assets.Select(EditorJsonUtility.ToJson).ToArray();
             var count = Resources.FindObjectsOfTypeAll<CharterSiteData>().Length;
             var window = ConfigEditorWindow.Open();
+            var isolatedRegistry = new ConfigTableRegistry(ConfigTableRegistry.Discover().Tables);
+            window.Initialize(isolatedRegistry, isolatedRegistry.OpenSession());
             try
             {
                 Assert.IsNotNull(window.Session);

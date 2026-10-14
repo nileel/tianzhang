@@ -16,7 +16,7 @@ MonoBehaviour:
   affiliation: "\u7389\u6E05\u5D16"
   grade: "\u4E2D\u54C1"
   elementMain: "\u91D1"
-  elementSub:
+  elementSub: "\u65E0"
   contentScope: reserved
   starRootBone: 4
   starPhysique: 3
@@ -104,7 +104,7 @@ MonoBehaviour:
     movePoints: 1.2
     mindGrowth: 7.5
   chapters:
-  - chapterName: chapter_mojian
+  - chapterName: "\u78E8\u5251"
     realm: "\u7EC3\u6C14"
     soulShieldRate: 0
     hitRate: 0
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u8840\u5251\u6C14\uFF1A\u6D88\u8017HP10%\u9020\u6210\u8089\u653Bx1.5\u7269\u4F24\uFF0C\u65E0\u89C6\u683C\u6321"
-  - chapterName: chapter_duanlong
+  - chapterName: "\u65AD\u9647"
     realm: "\u7B51\u57FA"
     soulShieldRate: 0
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u500D\u73871.8\uFF0CHP<50%\u65F6x1.3"
-  - chapterName: chapter_wujuan
+  - chapterName: "\u65E0\u5026"
     realm: "\u91D1\u4E39"
     soulShieldRate: 0
     hitRate: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u500D\u73872.2"
-  - chapterName: chapter_xuefeng
+  - chapterName: "\u8840\u950B"
     realm: "\u5143\u5A74"
     soulShieldRate: 0
     hitRate: 0
@@ -148,7 +148,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u500D\u73872.8\uFF0CHP<20%\u65F6\u53EF\u6D88\u8017\u51CF\u534A"
-  - chapterName: chapter_gujian
+  - chapterName: "\u5B64\u5251"
     realm: "\u5316\u795E"
     soulShieldRate: 0
     hitRate: 0

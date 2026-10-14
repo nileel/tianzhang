@@ -229,10 +229,11 @@ namespace TianZhang.Tests
         [Test]
         public void ExistingUndeclaredReferencesAreLocatedAndPreservedWithoutAutomaticSubstitution()
         {
-            var session = Session(); var issues = session.ValidateDraft();
+            var session = Session("Enemies", "equippedSpells", "spell_anshi", "enemy_xueyingmoxiu");
+            var issues = session.ValidateDraft();
             Assert.That(issues.Any(i => i.TableId == "Enemies" && i.RowKey == "enemy_xueyingmoxiu" && i.FieldPath == "equippedSpells" && i.ChineseReason.Contains("spell_anshi")));
             Assert.AreEqual("spell_anshi", session.Snapshot().Tables["Enemies"].Rows["enemy_xueyingmoxiu"].At("equippedSpells/0").RawToken);
-            foreach (var id in Ids) CollectionAssert.AreEqual(Source(id), session.EncodeCandidate(id));
+            foreach (var id in Ids) CollectionAssert.AreEqual(session.Snapshot().Tables[id].Document.OriginalBytes, session.EncodeCandidate(id));
         }
 
         [Test]
@@ -261,6 +262,8 @@ namespace TianZhang.Tests
             var assets = paths.Where(p => p.EndsWith(".asset", StringComparison.Ordinal)).Select(AssetDatabase.LoadMainAssetAtPath).ToArray();
             var values = assets.Select(EditorJsonUtility.ToJson).ToArray(); var dirty = assets.Select(EditorUtility.IsDirty).ToArray();
             var window = ConfigEditorWindow.Open();
+            var isolatedRegistry = new ConfigTableRegistry(ConfigTableRegistry.Discover().Tables);
+            window.Initialize(isolatedRegistry, isolatedRegistry.OpenSession());
             try
             {
                 foreach (var id in Ids)

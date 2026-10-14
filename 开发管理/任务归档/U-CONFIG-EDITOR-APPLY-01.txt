@@ -8,10 +8,11 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：task_scope_conflict",
+  "stateReason": "2026-10-14：保存与应用闭环、授权数据引用修复及自动验收完成；人工界面验收按用户本次指示留给V任务。",
   "expectedPaths": [
+    "开发管理/Unity配置编辑器字段与导入合同.txt",
     "开发管理/任务卡/U-CONFIG-EDITOR-APPLY-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-APPLY-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -20,6 +21,13 @@
     "src/Assets/Scripts/Editor/ConfigEditor/ConfigSaveApplyService.cs.meta",
     "src/Assets/Scripts/Editor/ConfigEditor/ConfigImportPlan.cs",
     "src/Assets/Scripts/Editor/ConfigEditor/ConfigImportPlan.cs.meta",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs",
+    "src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs.meta",
+    "src/Assets/Tests/EditMode/ConfigEditorCombatTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCharacterTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorWorldTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCultivationTests.cs",
+    "src/Assets/Tests/EditMode/ConfigEditorCharterTests.cs",
     "src/Assets/Tests/EditMode/ConfigEditorApplyTests.cs",
     "src/Assets/Tests/EditMode/ConfigEditorApplyTests.cs.meta",
     "src/Assets/Scripts/Editor/CombatContentImporter.cs",
@@ -458,6 +466,8 @@
 - src/Assets/Scripts/Editor/ContentImportCoordinator.cs::ImportAll
 - src/Assets/Scripts/Editor/CombatContentImporter.cs::ImportAttackProfiles
 - src/Assets/Scripts/Editor/SettlementContentImporter.cs::ImportCharacterCreationPointBuy
+- src/Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs::SaveEnabled、DrawToolbar、RunApply、SaveChanges
+- src/Assets/Scripts/Editor/ConfigEditor/ConfigDraftSession.cs::AcceptSavedBaseline、GetEdits、RecordApplicationEvidence（只读复用）
 
 ## 实施范围
 
@@ -475,9 +485,13 @@
 
 2026-10-13准备ready复核：22表保存、导入及失败边界是同一强耦合闭环，保持卡头gpt-6-astra并建议high；所需仓库、PowerShell与Unity验证入口可用，无独立只读问题，不需辅助模型。目标不可用按现有失败合同记录，不静默换型；真实Unity能力缺失不能声称实机验收通过。
 
+本次解阻塞只修正已定位的窗口边界与管理投影，由当前Codex单模型完成；后继业务仍使用卡头gpt-6-astra。窗口按钮与保存服务属于同一强耦合闭环，无需独立辅助工作面；未调用后继执行模型或开展Unity实机验收。
+
 ## 验证
 
 真实Unity修改凡人效率→同步镜像→保存→导入→重新进入创角/战斗读取新值；保存失败、磁盘冲突、导入LogError和受影响asset缺失均不得报成功；CSV与资产可追溯，测试在临时副本/worktree进行并恢复数值。
+
+ConfigEditorApplyTests及真实窗口操作须覆盖：先“校验并保存”令IsDirty=false后显式应用；保存后因脏资产门被阻止，用户处理后不再改CSV即可显式应用；应用失败后保留待应用范围与诊断，用户再次点击才重新检查并执行；保存后又编辑再应用须合并本会话尚未应用与新保存的变更影响闭包。无保存服务时两按钮仍禁用，无改动时“校验并保存”仍禁用；新开窗口没有应用证据不得显示成功，也不得默认为全表导入。
 
 管理验证：check-task-cards.ps1、check-review-text.ps1；本轮预期路径check-pending-whitespace.ps1，暂存后git diff --cached --check。涉及docs/CSV/Unity数据链路径时运行check-data-chain.ps1。业务写入前执行get-experience-risk-preflight.ps1并消费mustRead/gates；只运行与本卡实际变更相关的最小充分检查。
 
@@ -493,6 +507,39 @@
 
 实现唯一IConfigApplyService；在列出的既有六importer内只提取/复用纯Preview校验和候选上下文参数，不改变解析/投影业务语义。CultivationContentImporter.cs的ComputeNpcCultivationSourceHash公开入口由前置CULTIVATION负责先行开放，本卡在其完成归档后接手其余必要接口并复用该函数，不重复实现哈希、不收回其可见性；该文件按任务依赖串行交接。保存冲突、逐文件部分写入、全局SaveAssets脏资产门、导入日志失败及全部产物读回按合同验证，不调用总导入日志判成功。
 
-CSV/asset/.meta路径仅供当前worktree内真实应用测试与恢复，最终不得留下新平衡值或无关生成差异；产物范围为合同精确清单，不含静态册界目录或生产角色新行。
+除下述2026-10-14明确授权的引用修复外，CSV/asset/.meta路径仅供当前worktree内真实应用测试与恢复，最终不得留下新平衡值或无关生成差异；产物范围为合同精确清单，不含静态册界目录或生产角色新行。
 
 逐字段覆盖和已锁定只读原因按合同对应表验收；生产空表显示无已有条目，深层结构使用已有fixture的隔离内存副本。所有新.cs及.meta必须一起提交，非本卡源码保持原样。此路径冻结不代表运行验证已完成。
+
+## 2026-10-13阻塞诊断与范围修复
+
+原run为5d3df74d-90d4-4ddc-a9c8-599bbbf2c10e，责任方以task_scope_conflict在业务写入前停止，未形成candidate；3365ddf7将本卡及队列机械转为blocked。直接源码证据：ConfigEditorWindow.SaveEnabled要求session.IsDirty，DrawToolbar把两个按钮放在同一DisabledScope；ConfigDraftSession.AcceptSavedBaseline更新基线后清除脏状态。故先保存或保存后应用门拒绝时无法再次从窗口发起应用；窗口不在原expectedPaths内，停止判断成立。
+
+依据本次用户“排查并修复”授权，补入ConfigEditorWindow.cs及.meta，在CORE/CULTIVATION完成后串行交给APPLY，仅调整保存/应用入口可用性、结果显示与现有服务调用。保存仍要求未保存改动；应用不能只依赖IsDirty，必须能消费本会话已保存但尚未应用的真实变更集。AcceptSavedBaseline后GetEdits为空不代表无待应用内容；复用本会话保存/应用证据及ConfigImportPlan，不新增持久状态、全表导入兜底、自动重试或第二保存服务。测试继续在本卡ConfigEditorApplyTests内完成，不扩大到领域适配器、CORE草稿或公共接口。
+
+原schema 5的codex/deepseek run均已为空，不恢复旧run。本次只修复合同与调度条件，保存/应用服务的实现、窗口修复和Unity验收仍由本卡后继执行完成，不能将恢复ready记为功能完成。
+
+## 2026-10-14 接续与数据引用修复授权
+
+用户明确要求直接完成本任务，并确认允许永久修复Language.csv缺失文本引用、Skills.csv说明引用、Enemies.csv的spell_anshi至已存在spell_tx_anshi。仅按docs原文补齐文本和引用，不改变数值/玩法，不新增内容功能。旧工作区保留，基于最新master接续并复核其未提交实现；本轮实际模型经Node REPL核实为gpt-6-astra，推理强度未核实，单模型执行。窗口范围沿已核实的保存后应用缺口补齐；现有22表保存/应用合同保持。引用修复需验证所有受影响引用存在、显示语义与原文一致、数值不变，最终仅提交授权数据与必要派生文本变化。
+
+## 接入后的既有测试维护
+
+用户要求完成验收。五组适配器窗口测试原来通过全局Discover间接假设保存服务尚不存在；本卡接入服务后，此假设失效。仅在这五个已有测试中显式注入不带保存服务的同一表注册，以保留原无IO测试职责；服务接入与真实保存由本卡ApplyTests验证。增补对应测试.cs路径，不修改领域适配器或公共接口。
+
+## 2026-10-14 实施与验证证据
+
+基于master 2b6a0dbf1c420288716af5605df0b5f363bf4833，在.worktrees/config-editor-completion-20261014接续旧未提交实现。统一ConfigSaveApplyService消费22表领域适配器；逐文件原子替换、全快照内容哈希冲突、候选纯投影、精确导入闭包、日志失败停止、产物逐字段/GUID/重载核验。待应用范围仅在当前窗口会话内保存；先保存清除IsDirty后仍可显式应用，失败不自动重试。
+
+本轮定位并修正两个旧实现问题：内置/外部导入对象的dirty标记不能等同于可落盘资产的未保存编辑，门禁保留原生资产/Prefab/Importer及场景保护；SerializedProperty遍历须跳过临时对象名称与EditorClassIdentifier元数据的整个子树，类型、脚本及GUID仍独立核验，全部业务字段继续比较。
+
+Unity 6000.3.18f1，带图形设备的EditMode：ConfigEditor全组158项，首次157通过/1失败；唯一失败为Character旧反例依赖已批准修复的生产spell_anshi。改为内存副本显式注入同一失效引用后，仅重跑受影响Character组21/21通过；其他137项输入未变，不重复。分组：Apply12、Core29、Combat27、Character21、World30、Cultivation8、Charter31，全部通过。原始XML在src/Logs/config-editor-final.xml和src/Logs/config-character-final.xml。
+
+Apply测试覆盖真实EditorWindow打开/重绘/选择/改值/保存/再应用、无关脏资产阻止及显式再应用、外部内容同时间戳冲突、只读文件、第二文件IO失败、LogError停止、缺资产、保存范围合并、Language消费者、NPC源hash、功法篇章清空，以及World/Charter代表的真实保存与恢复。每次真实保存前备份22表、导入产物和.meta，Teardown逐文件恢复并比对原始字节。
+
+SavedGrowthIsReadByNewCreationAndFormalCombat实际进入PlayMode：临时凡人效率1500保存导入后，经StartMenu创角(origin_loose)→World→关中据点→guanzhong_wild→shijiahou_encounter，读取新创角Player.Attributes与正式CombatSession玩家快照均为1500；退出后恢复测试前配置。此证据为场景功能正确性，不是角色平衡结论。
+
+用户批准的永久修复：Language新增61个已被现有配置引用的文本键；Skills16行说明改为对应文本键且显示语义不变；Enemies仅enemy_xueyingmoxiu的spell_anshi改为已有spell_tx_anshi。逐CSV单元核对未改数值。派生资源由现有8步Language/Skills/Enemies闭包真实导入并逐步核验；只保留必要文本/引用差异，丢弃序列化空白、名称及空默认字段噪声，另启动Unity重载核验最终结果。
+
+2026-10-14用户明确选择“先完成代码与自动验收，界面验收稍后”。Windows窗口工具激活Unity失败/返回前台游戏图像，未进行未经画面核对的坐标输入；人工指针操作和截图不记通过，由V-CONFIG-EDITOR-01保留。自动窗口与正式场景测试证据如上，不将其冒充人工界面验收。
+最终持久化核验：src/Logs/approved-reference-final-verify-2.log含FINAL_REFERENCE_ASSETS_VERIFIED steps=8，Unity重新启动后全部批准闭包产物与纯投影一致。恢复ProjectSettings自动重存噪声，删除一次性导入/核验入口。数据链检查通过，710个Language键；程序集边界19个asmdef/2个asmref检查通过。完整变更仅批准代码/测试、3张CSV、必要派生文本/引用及本卡管理路径。

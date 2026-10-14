@@ -93,7 +93,7 @@ MonoBehaviour:
     movePoints: 1
     mindGrowth: 2
   chapters:
-  - chapterName: chapter_wuxin
+  - chapterName: "\u65E0\u5FC3"
     realm: "\u7EC3\u6C14"
     soulShieldRate: 3
     hitRate: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u65E0\u5F85\uFF1A20%\u6E05\u9664debuff\uFF0C\u795E\u8BC6+3"
-  - chapterName: chapter_jise
+  - chapterName: "\u5373\u8272"
     realm: "\u7B51\u57FA"
     soulShieldRate: 3
     hitRate: 0
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u8272\u7A7A\uFF1A30%\u6E05\u9664\uFF0C\u56DE\u88405%"
-  - chapterName: chapter_youxuan
+  - chapterName: "\u6E38\u7384"
     realm: "\u91D1\u4E39"
     soulShieldRate: 3
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u7384\u540C\uFF1A50%\u6E05\u9664\uFF0C\u514D\u75AB\u63A7\u5236"
-  - chapterName: chapter_xiaoyao
+  - chapterName: "\u900D\u9065"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 0

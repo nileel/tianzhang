@@ -150,14 +150,14 @@ namespace TianZhang.Editor
             string[] settlementLines,
             string[] itemLines,
             string[] bountyLines,
-            string[] enemyLines)
+            string[] enemyLines, CombatRuleSetData growthRules = null)
         {
             return ParseContentCatalog(
                 languageLines, "Language.csv",
                 settlementLines, "Settlements.csv",
                 itemLines, "Items.csv",
                 bountyLines, "Bounties.csv",
-                enemyLines, "Enemies.csv");
+                enemyLines, "Enemies.csv", growthRules);
         }
 
         [MenuItem("天章/导入正式内容目录")]
@@ -208,7 +208,7 @@ namespace TianZhang.Editor
             string[] bountyLines,
             string bountySource,
             string[] enemyLines,
-            string enemySource)
+            string enemySource, CombatRuleSetData growthRules = null)
         {
             var language = ParseContentLanguage(languageLines, languageSource);
             ValidateApprovedContentLanguage(language, languageSource);
@@ -221,7 +221,7 @@ namespace TianZhang.Editor
 
             try
             {
-                var enemyResult = ParseEnemyRows(enemyLines, enemySource, language);
+                var enemyResult = ParseEnemyRows(enemyLines, enemySource, language, growthRules);
                 preview.enemies = enemyResult.enemies;
                 preview.enemyTemplates = enemyResult.templates;
                 preview.enemyTemplateIds = enemyResult.templateIds;
@@ -451,7 +451,7 @@ namespace TianZhang.Editor
         private static (EnemyData[] enemies, CharacterData[] templates, string[] templateIds) ParseEnemyRows(
             string[] lines,
             string sourceName,
-            Dictionary<string, string> language)
+            Dictionary<string, string> language, CombatRuleSetData growthRules = null)
         {
             var table = ReadContentTable(lines, sourceName, ContentEnemyColumns);
             var templates = new List<CharacterData>();
@@ -466,7 +466,7 @@ namespace TianZhang.Editor
                 if (!ids.Add(enemyId))
                     throw new InvalidDataException($"{sourceName} contains duplicate enemyId '{enemyId}'.");
 
-                var template = BuildEnemyTemplate(table, row, language, sourceName);
+                var template = BuildEnemyTemplate(table, row, language, sourceName, growthRules);
                 templates.Add(template);
                 templateIds.Add(enemyId);
                 var contentScope = Value(table, row, "contentScope");
@@ -500,7 +500,7 @@ namespace TianZhang.Editor
             ContentCsvTable table,
             string[] row,
             Dictionary<string, string> language,
-            string sourceName)
+            string sourceName, CombatRuleSetData growthRules = null)
         {
             var actionPointMaximumUnits = ParsePositiveInteger(
                 Required(table, row, "actionPointMaximumUnits"), sourceName, "actionPointMaximumUnits");
@@ -510,7 +510,7 @@ namespace TianZhang.Editor
                 throw new InvalidDataException($"{sourceName} movementEfficiencyMilliUnits must be nonnegative.");
 
             var template = ScriptableObject.CreateInstance<CharacterData>();
-            CharacterContentImporter.ProjectRealmGrowth(AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
+            CharacterContentImporter.ProjectRealmGrowth(growthRules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
                 Required(table, row, "realm"), out int ap, out int movement, out string realmStage);
             template.realmStage = realmStage;
             template.actionPointMaximumUnits = actionPointMaximumUnits;
@@ -541,7 +541,7 @@ namespace TianZhang.Editor
             if (template.unarmedAttackFamilyId != expectedFamily) throw new InvalidDataException("enemy_unarmed_family_invalid");
             if (expectedFamily.Length != 0)
                 CharacterContentImporter.RequireUnarmedSource(
-                    AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"), expectedFamily, Required(table, row, "realm"));
+                    growthRules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"), expectedFamily, Required(table, row, "realm"));
             // 退役列不授新攻击。
             template.unarmedBasicAttackProfileId = Value(table, row, "unarmedBasicAttackProfileId");
             if (!string.IsNullOrEmpty(template.unarmedBasicAttackProfileId))
@@ -842,7 +842,7 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void ValidateContentAssetLocations(ContentCatalogImportPreview preview)
+        internal static void ValidateContentAssetLocations(ContentCatalogImportPreview preview)
         {
             ValidateContentAssetLocation(preview.settlements[0],
                 "Assets/Data/Settlements/Settlement_guanzhong_city.asset", value => value.settlementId);
@@ -865,7 +865,7 @@ namespace TianZhang.Editor
             }
         }
 
-        private static AppearanceProfileData[] LoadAppearanceProfiles()
+        internal static AppearanceProfileData[] LoadAppearanceProfiles()
         {
             const string expectedPath = "Assets/Data/AppearanceProfiles/AppearanceProfile_none.asset";
             UnityEngine.Object atExpectedPath = AssetDatabase.LoadMainAssetAtPath(expectedPath);
@@ -932,11 +932,12 @@ namespace TianZhang.Editor
             }
         }
 
-        private static TianZhang.Combat.AttackProfileData[] LoadEquipmentProfiles(ContentCatalogImportPreview preview)
+        internal static TianZhang.Combat.AttackProfileData[] LoadEquipmentProfiles(ContentCatalogImportPreview preview, string[] languageLines = null, string[] attackLines = null,
+            CombatRuleSet rules = null, IReadOnlyDictionary<string, TianZhang.Combat.AttackProfileData> candidates = null)
         {
-            var language = ParseContentLanguage(ReadRequiredContentFile("Assets/DataConfig/Language.csv"), "Language.csv");
-            if (!CombatContentImporter.TryBuildAttackProfileProjection(ReadRequiredContentFile("Assets/DataConfig/AttackProfiles.csv"),
-                language.Keys.ToArray(), out var projected, out string reason)) throw new InvalidDataException(reason);
+            var language = ParseContentLanguage(languageLines ?? ReadRequiredContentFile("Assets/DataConfig/Language.csv"), "Language.csv");
+            if (!CombatContentImporter.TryBuildAttackProfileProjection(attackLines ?? ReadRequiredContentFile("Assets/DataConfig/AttackProfiles.csv"),
+                language.Keys.ToArray(), out var projected, out string reason, rules)) throw new InvalidDataException(reason);
             try
             {
                 var result = new List<TianZhang.Combat.AttackProfileData>();
@@ -945,10 +946,11 @@ namespace TianZhang.Editor
                     var row = projected.SingleOrDefault(value => value.attackProfileId == item.equipmentBasicAttackProfileId);
                     var asset = AssetDatabase.LoadAssetAtPath<TianZhang.Combat.AttackProfileData>(
                         $"Assets/Data/AttackProfiles/AttackProfile_{item.equipmentBasicAttackProfileId}.asset");
-                    if (row == null || asset == null || !asset.TryValidate(out _) ||
+                    var comparison = candidates == null ? asset : candidates[item.equipmentBasicAttackProfileId];
+                    if (row == null || asset == null || comparison == null || !comparison.TryValidate(out _) ||
                         row.profileKind != TianZhang.Combat.AttackProfileKind.Basic ||
                         row.basicBindingKind != TianZhang.Combat.BasicAttackBindingKind.MainEquipment ||
-                        JsonUtility.ToJson(row) != JsonUtility.ToJson(asset))
+                        JsonUtility.ToJson(row) != JsonUtility.ToJson(comparison))
                         throw new InvalidDataException("equipment_definition_invalid");
                     result.Add(asset);
                 }
@@ -1030,6 +1032,12 @@ namespace TianZhang.Editor
             if (CharacterTemplateMatches(source, target))
                 return target;
 
+            CopyCharacterTemplate(source, target);
+            EditorUtility.SetDirty(target);
+            return target;
+        }
+        internal static void CopyCharacterTemplate(CharacterData source, CharacterData target)
+        {
             target.charName = source.charName;
             target.actionPointMaximumUnits = source.actionPointMaximumUnits;
             target.movementEfficiencyMilliUnits = source.movementEfficiencyMilliUnits;
@@ -1053,9 +1061,8 @@ namespace TianZhang.Editor
             target.equippedSkills = Array.Empty<string>();
             target.unarmedBasicAttackProfileId = source.unarmedBasicAttackProfileId;
             target.unarmedAttackFamilyId = source.unarmedAttackFamilyId;
-            EditorUtility.SetDirty(target);
-            return target;
         }
+
 
         private static bool CharacterTemplateMatches(CharacterData source, CharacterData target)
         {
@@ -1111,7 +1118,7 @@ namespace TianZhang.Editor
             return catalog;
         }
 
-        private static void CopySettlement(SettlementData source, SettlementData target)
+        internal static void CopySettlement(SettlementData source, SettlementData target)
         {
             target.settlementId = source.settlementId;
             target.displayNameKey = source.displayNameKey;
@@ -1130,7 +1137,7 @@ namespace TianZhang.Editor
             target.adventureEntranceIds = (string[])source.adventureEntranceIds.Clone();
         }
 
-        private static void CopyEnemy(EnemyData source, EnemyData target)
+        internal static void CopyEnemy(EnemyData source, EnemyData target)
         {
             target.enemyId = source.enemyId;
             target.displayNameKey = source.displayNameKey;
@@ -1148,7 +1155,7 @@ namespace TianZhang.Editor
             }).ToArray();
         }
 
-        private static void CopyItem(ItemData source, ItemData target)
+        internal static void CopyItem(ItemData source, ItemData target)
         {
             target.itemId = source.itemId;
             target.displayNameKey = source.displayNameKey;
@@ -1166,7 +1173,7 @@ namespace TianZhang.Editor
             target.initialGrantQuantity = source.initialGrantQuantity;
         }
 
-        private static void CopyBounty(BountyData source, BountyData target)
+        internal static void CopyBounty(BountyData source, BountyData target)
         {
             target.bountyId = source.bountyId;
             target.titleKey = source.titleKey;
@@ -1211,35 +1218,7 @@ namespace TianZhang.Editor
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Charter site CSV was not found: {path}", path);
 
-            var language = ParseContentLanguage(
-                ReadRequiredContentFile("Assets/DataConfig/Language.csv"),
-                "Language.csv");
-            RequireLanguageText(language, CharterSiteDisplayNameKey, CharterSiteDisplayNameText, "Language.csv");
-
-            // The site row resolves cross-contract references only through the single approved
-            // static catalog; an invalid catalog fails closed before any site row can import.
-            CharterRuleStaticCatalogData staticCatalog = LoadCharterRuleStaticCatalog();
-            if (!staticCatalog.TryValidateDefinitions(out string catalogReason))
-            {
-                throw CharterError(
-                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
-                    path,
-                    $"the approved static catalog is invalid: {catalogReason}");
-            }
-
-            var sites = ParseCharterSites(
-                File.ReadAllLines(path),
-                path,
-                language,
-                staticCatalog.ReferenceCatalog,
-                staticCatalog.Definitions);
-            if (sites[0].jindanGrant.definitionVersion != staticCatalog.DefinitionCatalogVersion)
-            {
-                throw CharterError(
-                    "CHARTER_SITE_GRANT_INVALID",
-                    path,
-                    $"grant definitionVersion '{sites[0].jindanGrant.definitionVersion}' must equal the static catalog version '{staticCatalog.DefinitionCatalogVersion}'.");
-            }
+            var sites = PreviewCharterSites(File.ReadAllLines(path), ReadRequiredContentFile("Assets/DataConfig/Language.csv"));
 
             try
             {
@@ -1256,6 +1235,42 @@ namespace TianZhang.Editor
                     UnityEngine.Object.DestroyImmediate(site);
             }
         }
+        public static CharterSiteData[] PreviewCharterSites(string[] lines, string[] languageLines)
+        {
+            const string path = "Assets/DataConfig/CharterSites.csv";
+            var language = ParseContentLanguage(
+                languageLines,
+                "Language.csv");
+            RequireLanguageText(language, CharterSiteDisplayNameKey, CharterSiteDisplayNameText, "Language.csv");
+
+            // The site row resolves cross-contract references only through the single approved
+            // static catalog; an invalid catalog fails closed before any site row can import.
+            CharterRuleStaticCatalogData staticCatalog = LoadCharterRuleStaticCatalog();
+            if (!staticCatalog.TryValidateDefinitions(out string catalogReason))
+            {
+                throw CharterError(
+                    "CHARTER_REFERENCE_CATALOG_UNDECLARED",
+                    path,
+                    $"the approved static catalog is invalid: {catalogReason}");
+            }
+
+            var sites = ParseCharterSites(
+                lines,
+                path,
+                language,
+                staticCatalog.ReferenceCatalog,
+                staticCatalog.Definitions);
+            if (sites[0].jindanGrant.definitionVersion != staticCatalog.DefinitionCatalogVersion)
+            {
+                throw CharterError(
+                    "CHARTER_SITE_GRANT_INVALID",
+                    path,
+                    $"grant definitionVersion '{sites[0].jindanGrant.definitionVersion}' must equal the static catalog version '{staticCatalog.DefinitionCatalogVersion}'.");
+            }
+
+            return sites;
+        }
+
 
         /// <summary>
         /// Parses and validates the complete charter site table before any asset can be written.
@@ -1811,7 +1826,7 @@ namespace TianZhang.Editor
             return raw;
         }
 
-        private static void CopyCharterSite(CharterSiteData source, CharterSiteData target)
+        internal static void CopyCharterSite(CharterSiteData source, CharterSiteData target)
         {
             target.siteId = source.siteId;
             target.displayNameKey = source.displayNameKey;
@@ -1894,10 +1909,26 @@ namespace TianZhang.Editor
         [MenuItem("天章/导入角色创建点购配置")]
         public static void ImportCharacterCreationPointBuy()
         {
-            string path = "Assets/DataConfig/CharacterCreationPointBuy.csv";
+            const string path = "Assets/DataConfig/CharacterCreationPointBuy.csv";
             if (!File.Exists(path)) { Debug.LogError($"找不到 {path}"); return; }
+            var projected = PreviewCharacterCreationPointBuy(File.ReadAllLines(path));
+            if (projected == null) return;
+            const string assetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
+            try
+            {
+                AssetCommitter.EnsureDirectory(assetPath);
+                var existing = AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(assetPath);
+                if (existing == null) AssetDatabase.CreateAsset(projected, assetPath);
+                else { EditorUtility.CopySerialized(projected, existing); EditorUtility.SetDirty(existing); }
+                AssetDatabase.SaveAssets();
+                Debug.Log($"  角色创建点购配置: {projected.purchasePointLimit}点 ← {assetPath}");
+            }
+            finally { if (!AssetDatabase.Contains(projected)) UnityEngine.Object.DestroyImmediate(projected); }
+        }
 
-            var lines = File.ReadAllLines(path);
+        public static CharacterCreationPointBuyConfig PreviewCharacterCreationPointBuy(string[] lines, CombatRuleSetData growthRules = null)
+        {
+            const string path = "Assets/DataConfig/CharacterCreationPointBuy.csv";
             var headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
             var headers = CsvTableReader.FindHeader(lines);
             CsvTableReader.RequireColumns(headers, path,
@@ -1928,7 +1959,7 @@ namespace TianZhang.Editor
             if (rows.Length == 0)
             {
                 Debug.LogError("[SettlementContentImporter] CharacterCreationPointBuy.csv missing default config rows.");
-                return;
+                return null;
             }
 
             // 全部行解析并验证成功后才允许写 asset，失败时既有 asset 与 GUID 保持不变。
@@ -1964,19 +1995,13 @@ namespace TianZhang.Editor
                 }
             }
 
-            CharacterContentImporter.ProjectRealmGrowth(AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
+            CharacterContentImporter.ProjectRealmGrowth(growthRules ?? AssetDatabase.LoadAssetAtPath<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset"),
                 "realm_fanren", out int ap, out int movement, out _);
             if (actionPointMaximumUnits != ap || movementEfficiencyMilliUnits != movement)
                 throw new InvalidDataException(path + ": realm growth checksum mismatch.");
 
-            string assetPath = "Assets/Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset";
-            AssetCommitter.EnsureDirectory(assetPath);
 
-            var asset = AssetDatabase.LoadAssetAtPath<CharacterCreationPointBuyConfig>(assetPath);
-            bool isNew = asset == null;
-            if (isNew)
-                asset = ScriptableObject.CreateInstance<CharacterCreationPointBuyConfig>();
-
+            var asset = ScriptableObject.CreateInstance<CharacterCreationPointBuyConfig>();
             asset.purchasePointLimit = purchasePointLimit;
             asset.minValue = minValue;
             asset.baseValue = baseValue;
@@ -1985,13 +2010,7 @@ namespace TianZhang.Editor
             asset.actionPointMaximumUnits = actionPointMaximumUnits;
             asset.movementEfficiencyMilliUnits = movementEfficiencyMilliUnits;
 
-            if (isNew)
-                AssetDatabase.CreateAsset(asset, assetPath);
-            else
-                EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssets();
-
-            Debug.Log($"  角色创建点购配置: {asset.purchasePointLimit}点 ← {assetPath}");
+            return asset;
         }
 
         /// <summary>解析一个必填整数列；空值、分数与超出 Int32 的溢出值都在写入前拒绝。</summary>

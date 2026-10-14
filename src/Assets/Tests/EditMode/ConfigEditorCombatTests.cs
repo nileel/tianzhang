@@ -328,6 +328,8 @@ namespace TianZhang.Tests.EditMode
                 .Concat(new[] { Path.Combine(Application.dataPath, "Data/CombatRuleSet.asset"), Path.Combine(Application.dataPath, "Resources/Data/CharacterCreation/CharacterCreationPointBuyConfig.asset") }).ToArray();
             var hashes = paths.ToDictionary(p => p, p => CsvConfigDocument.ComputeHash(File.ReadAllBytes(p)));
             var window = ConfigEditorWindow.Open();
+            var isolatedRegistry = new ConfigTableRegistry(ConfigTableRegistry.Discover().Tables);
+            window.Initialize(isolatedRegistry, isolatedRegistry.OpenSession());
             try
             {
                 foreach (var id in Ids)

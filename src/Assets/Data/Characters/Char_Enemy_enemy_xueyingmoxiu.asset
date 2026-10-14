@@ -39,7 +39,7 @@ MonoBehaviour:
   realmStage: 筑基
   gongFaName:
   equippedSpells:
-  - spell_anshi
+  - spell_tx_anshi
   equippedSkills: []
   availableSpells: []
   availableSkills: []

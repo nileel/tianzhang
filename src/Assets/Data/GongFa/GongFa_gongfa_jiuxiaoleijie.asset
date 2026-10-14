@@ -104,7 +104,7 @@ MonoBehaviour:
     movePoints: 1.2
     mindGrowth: 7.5
   chapters:
-  - chapterName: chapter_yinlei
+  - chapterName: "\u5F15\u96F7"
     realm: "\u7B51\u57FA"
     soulShieldRate: 0
     hitRate: 0
@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u96F7\u52AB\u5370\u8BB0\uFF1A\u53D7\u51FB\u53E0\u5C42\u2192\u51FA\u624B\u6D88\u8017\uFF0C\u6BCF\u5C42+15%\u7269\u4F24"
-  - chapterName: chapter_xuting
+  - chapterName: "\u84C4\u9706"
     realm: "\u91D1\u4E39"
     soulShieldRate: 0
     hitRate: 0
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u5370\u8BB0\u4E0A\u96505\u5C42\uFF0C\u6BCF\u5C42+18%"
-  - chapterName: chapter_jiuxiao
+  - chapterName: "\u4E5D\u9704"
     realm: "\u5143\u5A74"
     soulShieldRate: 0
     hitRate: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u6BCF\u5C42+25%\uFF0C\u6EE1\u5C42\u9B42\u9632-20%"
-  - chapterName: chapter_cuizhe
+  - chapterName: "\u6467\u6298"
     realm: "\u5316\u795E"
     soulShieldRate: 0
     hitRate: 0

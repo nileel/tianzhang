@@ -263,6 +263,8 @@ namespace TianZhang.Tests.EditMode
             var dirty = assets.Select(EditorUtility.IsDirty).ToArray();
             var values = assets.Select(EditorJsonUtility.ToJson).ToArray();
             var window = ConfigEditorWindow.Open();
+            var isolatedRegistry = new ConfigTableRegistry(ConfigTableRegistry.Discover().Tables);
+            window.Initialize(isolatedRegistry, isolatedRegistry.OpenSession());
             try
             {
                 Assert.IsNotNull(window.Session);

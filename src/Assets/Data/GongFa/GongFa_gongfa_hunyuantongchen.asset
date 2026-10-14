@@ -115,7 +115,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u4E07\u94A7\uFF1A\u53CB\u65B9\u4F18\u52BF\u65F6\u8089\u653B+3%/\u4EBA"
-  - chapterName: chapter_heguang
+  - chapterName: "\u548C\u5149"
     realm: "\u5143\u5A74"
     soulShieldRate: 3
     hitRate: 3
@@ -126,7 +126,7 @@ MonoBehaviour:
     magAtkBonus: 0
     magDefBonus: 0
     specialEffect: "\u7384\u540C\uFF1A\u4E0A\u9650+50%\uFF0C\u540C\u5C18\u4E00\u51FB"
-  - chapterName: chapter_wancheng
+  - chapterName: "\u4E07\u4E58"
     realm: "\u5316\u795E"
     soulShieldRate: 3
     hitRate: 3
