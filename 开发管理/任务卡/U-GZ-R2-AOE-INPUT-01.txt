@@ -8,22 +8,37 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-R2-AOE-ENCOUNTER-01",
-    "D-GZ-R2-AOE-DATA-01"
-  ],
-  "stateReason": "设计A语义已同步；U-GZ-R2-EQUIP-01已完成归档，仍等待U-GZ-R2-AOE-ENCOUNTER-01和D-GZ-R2-AOE-DATA-01正式完成及完整业务路径冻结。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-14 QueueMaintenance核对U-GZ-R2-AOE-ENCOUNTER-01与D-GZ-R2-AOE-DATA-01均已完成归档；已冻结同一选择、领域报价、预览和正式场景的完整原子路径，具备执行条件。",
   "expectedPaths": [
     "开发管理/任务卡/U-GZ-R2-AOE-INPUT-01.txt",
     "开发管理/任务归档/U-GZ-R2-AOE-INPUT-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt"
+    "开发管理/当前任务队列.txt",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/CombatUnitPresentationContractsTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs"
   ],
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
   "riskPreflight": {
     "explicitRefs": [],
-    "matched": [],
+    "matched": [
+      "EXP-UNITY-012",
+      "EXP-UNITY-014",
+      "EXP-UNITY-016"
+    ],
     "gates": []
   },
   "executionModel": "gpt-6.1-sol"
@@ -62,11 +77,11 @@
 
 已查明入口CombatCommandInput.Configure/Choose/ConfirmCandidate/SetContext/CancelCandidate；快照/候选在CombatPresentationContracts，预览经ICombatActionPreviewHandler及EncounterCoordinator.PreviewAction/ProjectQuote/ToCommand/ConfirmAction；显示由CombatActionPreviewView.Present、CombatActionBarView和CombatMovementView拥有。新增六向控件与两格高光的持久接线必须核对AdventureSceneBuilder相关重建方法、AdventureSceneInstaller与AdventureScene.unity真实引用及对应.meta，不能只改运行时界面。现有CombatMovementView显示格与相机/指针路径只作定位线索，不复制第二套坐标规则。
 
-等待ENCOUNTER/DATA/EQUIP正式结果后才能确定全部DTO/Builder/场景/测试路径；expectedPaths仍只授权管理准备，保留三个具名前置。准备时明确实际显示对象/父链/空间转换/刷新writer与拒绝原因可见性，PlayMode启用图形取得两种分辨率Game View，不把静态源码或相机单独截图当正式界面验收。
+ENCOUNTER、DATA与EQUIP均已完成归档。领域报价已含方向、两格和目标序列，保持其为唯一几何/目标事实：本卡仅把报价投影为只读合同、方向控件、预览文字和现有战场线条，不改CombatSession、CombatCommandService、CombatEntryAdapter或CombatTargetInput。CombatMovementView已拥有正式格位中心、相机射线和UI遮挡判断，扩展该单一显示所有者绘制报价两格；CombatCommandInput仍是唯一确认提交者。AdventureSceneBuilder重建控件/布局，AdventureScene.unity保留其序列化结果；AdventureSceneInstaller已有对象接线无需变更。PlayMode启用图形取得两种分辨率Game View，不把静态源码或相机单独截图当正式界面验收。
 
 ### ready前冻结
 
-依赖：U-GZ-R2-AOE-ENCOUNTER-01、D-GZ-R2-AOE-DATA-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+依赖已完成；卡头列出的字面量路径是本卡唯一授权。候选数据只通过CombatPresentationContracts在领域与表现之间传递，EncounterCoordinator只负责将既有quote的方向、格位和目标投影出来；不得把Combat或Unity对象泄漏到合同。ActionBar的方向按钮、ActionPreview的目标/格位说明、CommandInput的默认方向/取消失效、MovementView的两格高光及Builder/场景同属一个选择-预览-确认闭环。CombatUnitPresentationContractsTests覆盖只读合同，LayoutEditor与Layout PlayMode覆盖Builder和场景引用，其余三张PlayMode覆盖选中、预览、取消/确认、装备切换和多分辨率实机画面。无新增资源、目录或meta；发现新所有者、资源或路径立即停止重新冻结，不允许worker临时拆卡。
 
 ## 禁止项
 
@@ -74,11 +89,15 @@
 
 ## 模型协作
 
-中等偏复杂：同一选择-预览-确认闭环，主模型gpt-6.1-sol建议high；使用现有UI运行时证据入口，当前无需辅助。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+2026-10-14 QueueMaintenance准备ready：这是跨领域报价、表现合同和正式Unity场景的单一选择-预览-确认闭环，执行模型保持gpt-6.1-sol，建议high。各所有者都围绕同一候选和画面验收，拆分只读辅助不能独立形成可用结论；本轮由入口主模型gpt-5.6-terra完成路径冻结，未调用辅助或第二责任会话。执行轮在业务写入前按实际能力重新核对；建议强度不是已生效调用证明。
+
+## ready准备记录
+
+2026-10-14 QueueMaintenance已读取U-GZ-R2-AOE-ENCOUNTER-01与D-GZ-R2-AOE-DATA-01的完成归档，并复核CombatCommandInput、CombatActionPreviewView、CombatActionBarView、CombatMovementView、CombatTargetInput、CombatPresentationContracts、EncounterCoordinator、AdventureSceneInstaller、AdventureSceneBuilder及直接测试入口。当前领域quote已携带AttackDirection和两格AttackArea，故不扩展领域规则或新建输入系统；缺口仅在受限表现投影和正式场景接线。风险预检以空ExplicitRefs返回status=ok，命中EXP-UNITY-012、EXP-UNITY-014、EXP-UNITY-016且无gates/gatePointers，已消费其开工前正文：复用图形runner快照并核验两种截图尺寸、保持命令接受/演出/预览确认的分离门禁、量化最长预览文本和拒绝原因的可见性；卡头riskPreflight逐项一致。队列原为空，按P1、现有分线顺序将本卡作为唯一ready项入队。执行轮若修改范围出现新的源码、测试、场景对象、资源或meta，必须停止并重新准备/预检。
 
 ## 验证
 
-正式新档取得/切换两件武器，选中→预览→取消/确认全过程，记录两格高光、多个目标、实际逐目标结果和一次费用。覆盖不同分辨率、UI指针阻挡、相机移动、回合/武器/目标变化时旧候选失效；用runtime-owner-proof记录显示对象和更新者，禁止只凭编译通过认定高光正确。run-unity-playmode-tests.ps1 -EnableGraphics，按上述相关用例定向执行。
+正式新档取得/切换两件武器，选中→预览→取消/确认全过程，记录两格高光、多个目标、实际逐目标结果和一次费用。覆盖不同分辨率、UI指针阻挡、相机移动、回合/武器/目标变化时旧候选失效；用runtime-owner-proof记录显示对象和更新者，禁止只凭编译通过认定高光正确。复用图形runner快照，在可用图形环境断言两种Game View截图的Screen/PNG尺寸；量化最长摘要的preferredHeight、视口高度与费用/拒绝原因屏幕角点。确认CanEndTurn不替代命令接受、演出锁、目标与报价确认门禁，保留术法预览。run-unity-playmode-tests.ps1 -EnableGraphics，按上述相关用例定向执行。
 
 本轮建卡只运行风险预检、check-task-cards.ps1、check-review-text.ps1和本轮路径空白检查。实际执行时按变更触发数据链/程序集检查，保留已有通过且输入未变的证据，不重复无关全量检查。所有脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。
 
