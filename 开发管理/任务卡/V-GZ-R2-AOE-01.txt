@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-GZ-R2-AOE-INPUT-01"
-  ],
-  "stateReason": "设计A语义已同步，等待原具名前置正式完成及完整业务路径冻结；继续blocked，本轮不解锁或移除依赖。",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-14已核对全部具名前置均有完成归档；正式验收及父项关闭的管理路径、运行时所有者和既有验证入口已冻结。",
   "expectedPaths": [
     "开发管理/任务卡/V-GZ-R2-AOE-01.txt",
     "开发管理/任务归档/V-GZ-R2-AOE-01.txt",
@@ -59,11 +57,13 @@
 
 本轮未改变expectedPaths中的既有管理/验收记录范围。所需最终测试/图像路径须消费上游实际完成记录后冻结；目前必查PlayMode路径均是既有测试所有者，不能预先猜测新测试文件/证据目录。若准备需创建Unity测试或持久资源，精确列入路径与.meta并重新预检；发现业务缺陷回到对应既有子卡，不由本卡补功能。
 
-通过后同提交归档本卡及frozen父项，父项永不独立ready；各卡具名前置由正式结果后的维护按规则处理。本轮仍blocked，保留U-GZ-R2-AOE-INPUT-01。
+通过后同提交归档本卡及frozen父项，父项永不独立ready；各卡具名前置由正式结果后的维护按规则处理。
 
-### ready前冻结
+### 已完成的 ready 准备
 
-依赖：U-GZ-R2-AOE-INPUT-01。当前只建立全部已知工作面，不实施业务。上述候选所有者是只读定位线索；expectedPaths暂只允许管理准备，不能用它执行源码修改。设计或上游完成后，有权维护方读取对应完整逻辑单元及直接调用者，列出本卡精确源码/测试/数据/资产路径和必要.meta、新目录.meta，重跑风险预检、冻结接口和验收入口，证明本卡原子后才可ready。不能使用目录/通配符授权，不因为共享文件单独增加串行依赖。本次已知子卡和依赖全部建立，不允许worker临时拆卡。
+2026-10-14 QueueMaintenance 已核对设计、QUERY、RESOLVE、ENCOUNTER、DATA、INPUT 与 EQUIP 均只存在完成归档，且不存在同 ID 活跃卡；INPUT 是本卡最后一个具名前置。当前工作只产生验收记录和本卡／父项的归档与投影收口，不授权改写既有 Unity 源码、测试、场景、资源或其 `.meta`。
+
+验收的正式入口是 `GuanzhongCombatEquipmentPlayModeTests::AoeSwordSelectsPreviewsAndConfirmsFormalTwoEnemyQuote` 与 `::AoeBladeSelectsPreviewsAndConfirmsFormalTwoEnemyQuote`：两者经真实新档、装备切换、原 AI 和移动寻找双目标覆盖，并记录 O/d、目标、HP、AP 与次数。正式全链、部分死亡／最后死亡、一次奖励／回城及保存回读由 `GuanzhongBasicAttackPlayModeTests::FormalFeatureSceneChainCreatesFightsClaimsSavesAndLoads` 和 `::FightFormalTwoEnemies` 覆盖；区域界面、旧候选、相机／指针与高光所有者由 `GuanzhongCombatActionPreviewPlayModeTests` 的 AOE 用例覆盖。`AdventureSceneInstaller -> EncounterCoordinator -> CombatCommandInput` 是命令与确认链，`CombatActionBarView`／`CombatActionPreviewView` 写 UI，`CombatMovementView` 写格位高光；所有均位于既有路径且只作为验收对象。不得用目录/通配符授权，不因为共享文件单独增加串行依赖，也不得临时拆卡。
 
 ## 禁止项
 
@@ -71,7 +71,7 @@
 
 ## 模型协作
 
-中等：完整场景证据的一致性核验，gpt-6.1-sol建议high；主责单模型复核，不能以模型意见代替Unity实际结果。 executionModel保持gpt-6.1-sol；建议强度不是已生效配置，临近ready按实际任务范围及可用工具重新核对，必要辅助只读且按项目授权规则。本次仅建卡，未调用该执行模型开展业务。
+复杂验收：需要把真实双敌流程、界面／高光运行时所有者、一次结算和整场生命周期证据收敛为同一关闭结论。主模型为 `executionModel` 的 gpt-6.1-sol，建议 high；当前没有可与主结论解耦的根因诊断或只读问题，维持单主模型，不启动辅助或第二责任会话。模型意见不能代替 Unity 实际运行、图像和验收记录；执行前按实际工具能力与本卡预检再次核对。
 
 ## 验证
 
