@@ -12,7 +12,7 @@
   "blockedBy": [
     "N-JD-COMBO-FIRE-BUDGET-01"
   ],
-  "stateReason": "2026-09-30：负责人已选定渡火引线，媒介载体合同已完成；按用户明确方向，等待 N-JD-COMBO-FIRE-BUDGET-01 的 Unity 场景费用容量验证后收口，不再以扩充 BattleSim 为前置。",
+  "stateReason": "2026-10-14用户已批准赤野燎原替换渡火引线；保持范围收口职责，等待新版D→U→N链的真实费用容量验证，不再消费旧fixture证据。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md",
     "开发管理/任务卡/C-JD-COMBO-01.txt",
@@ -31,7 +31,15 @@
 ---TASK-BODY---
 # D-JD-COMBO-SCOPE-01 · 金丹组合首批生产范围与验收合同
 
+## 当前有效范围（2026-10-14）
+
+用户已批准赤野燎原（燃心灯＋不熄炉）。新版依赖为D-JD-COMBO-FIRE-DOMAIN-01→U-JD-COMBO-FIRE-DOMAIN-01→N-JD-COMBO-FIRE-BUDGET-01→本卡→C-JD-COMBO-01。先读2026-10-14-jindan-fire-domain-redesign.md和新版实施合同，再用新版N实际结果收口唯一正式组合的生产范围；更新既有2026-09-20范围稿时明确旧方案被替代，不能并列登记为两项批准对象。
+
+以下2026-09-20至09-30来源、旧媒介合同及两具名前置表述仅保留历史追溯，不是继续等待或重验旧火链的指令。现行禁止项、模型协作、输出范围和最终生产签收边界仍适用；新版N完成前本卡不ready。
+
 ## 来源与当前边界
+
+以下为历史来源，现行目标与依赖以上方2026-10-14范围为准。
 
 - 2026-09-20 用户解除金丹组合设计范围的内容冻结；2026-09-27 在本对话直接选择 A，确认“渡火引线”一项、战棋局部渡口用途及两火道路位置共同承载的语义。字面量候选路径与验收见 `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md`。
 - 旧 `DEC-20260921-CD08014CC7679C` 请求停在待发送结构，未收到服务商接受或有效回复。本次按明确对话选择人工收口，保留原 checkpoint 提交 `4888a905` 作追溯，不生成 `automationReply`，不声称飞书卡已回复。

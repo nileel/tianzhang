@@ -2,78 +2,70 @@
 {
   "schemaVersion": 2,
   "id": "N-JD-COMBO-FIRE-BUDGET-01",
-  "title": "渡火引线 Unity 场景费用与容量验证",
+  "title": "赤野燎原Unity场景费用与容量验证",
   "priority": "P2",
   "route": "codex_execute",
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
   "dispatchState": "blocked",
-  "blockedBy": [],
-  "stateReason": "2026-10-14：用户已选择燃心灯＋不熄炉、开场成片后扩张的持续火域压制，重设计稿已获用户整稿批准。旧验证卡保持blocked，等待既有范围责任方重新冻结输入、直接依赖和验收合同；不继续旧渡火引线规则验证或重放候选。",
-  "expectedPaths": [
-    "docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt",
-    "docs/基础设定/设定事实速查.txt",
-    "开发管理/任务列表/场景与Unity任务.txt",
-    "开发管理/当前任务队列.txt",
-    "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
-    "开发管理/任务归档/N-JD-COMBO-FIRE-BUDGET-01.txt"
+  "blockedBy": [
+    "U-JD-COMBO-FIRE-DOMAIN-01"
   ],
-  "riskPreflight": { "explicitRefs": [], "matched": [], "gates": [] },
+  "stateReason": "2026-10-14整稿已批准；原验证卡改承接新版独立验收，等待新版D冻结合同与U场景实现，不继续旧渡火引线验证。",
+  "expectedPaths": [
+    "开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt",
+    "开发管理/任务归档/N-JD-COMBO-FIRE-BUDGET-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
   "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
 }
 ---TASK-BODY---
-# N-JD-COMBO-FIRE-BUDGET-01 · 渡火引线 Unity 场景费用与容量验证
+# N-JD-COMBO-FIRE-BUDGET-01 · 赤野燎原Unity场景费用与容量验证
 
 ## 来源与当前边界
 
-- `D-JD-COMBO-FIRE-UNITY-01` 已冻结唯一允许的场景切片：非 BuildSettings 的 `JD_COMBO_FIRE_FERRY_LINE_01_SCENE_FIXTURE`，由 `JindanFireFerryLineScenarioController` 处理单项 source→走火→`END`。它不是正式组合、金丹装配、生产配置或角色数值平衡。
-- `U-JD-COMBO-FIRE-SCENE-01` 已完成归档，确认交付同版本的控制器、Builder、场景以及直接 EditMode/PlayMode 运行证据。本卡恢复执行后只对这些现有输入独立复验并记录费用／容量事实；若执行时输入、运行证据或场景隔离无法复现，记录准确缺口并停止，不补写业务代码、资源、正式配方或 BattleSim。
-
-## 用户阻塞与保留证据（2026-10-01）
-
-2026-10-14新决定：用户认为旧效果太弱，已选择“火域压制：铺开火场、封路逼位、持续灼烧”、燃心灯＋不熄炉、启动即形成一片火场再扩张，以及较高启动投入、按周期维护并支付实际扩张费用的持续压制版本。暂名“赤野燎原”，机制稿见docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md，用户已明确回复“整稿通过，保留这个设计”。源位负责初始真实火场，界位负责沿连续合法燃料的固定弱走火；有限面积、燃料和维护上限，灭火可开缺口，中心失效停止新扩张，有限余火不再传播。未锁定平衡数值、未改正式配方或Unity。本卡原范围只验旧fixture，不能自动转为新组合验证；待既有范围责任方重新冻结直接依赖、输入与实施/验收合同，不重放旧候选。此为新一轮玩法重设计，不能与10月2日已完成的金丹设定修改混淆。
-
-2026-10-14状态纠正：用户要求核实设定是否已改完。docs/基础设定/金丹位格/金丹位格索引.txt明确记录2026-10-02按用户确认同步名称与位格附性；开发管理/设计-当前状态.txt的“金丹与战场规则事实源”同步记录五大根系、性命六道、51席与FORM_INTERFACE肉身复原。设定修改已完成，不再等待用户重复确认。以下为10月1日历史阻塞与候选来源；本轮未执行本卡的最新规则/fixture/旧证据/路径冲突复核，保留blocked，不代表费用容量验收完成。
-
-- 用户正在修改金丹设定，要求暂缓本卡，修改完成后再继续；这是内容尚未冻结的明确阻塞，`blockedBy=[]` 不表示可执行。其他无依赖任务继续按原队列调度。
-- 原 run：`73e3e299-6fbe-446e-9c8d-1a1c053a8ebe`；base：`7e6dfff4dfea21490131943998879398da90d725`；candidate：`78d03afa0491b6683203983e9c68cf7fabed3783`。原分支 `codex/automation/codex/73e3e299-6fbe-446e-9c8d-1a1c053a8ebe/candidate` 与 `.worktrees/automation/73e3e299-6fbe-446e-9c8d-1a1c053a8ebe/codex` 保留，不清理、不直接合并。
-- 原 candidate 已形成验证记录；正式集成因 `hourly_main_path_conflict` 停止：`docs/基础设定/设定事实速查.txt` 的人工更名与候选新增指针涉及同一路径。候选不是正式完成事实，不据此解锁下游。
-- 用户确认金丹设定修改完成后，先对照最新正式事实核对本卡范围、fixture 输入、已有验证证据有效性及路径冲突，再按现有规则转 ready、新建 run；只补充因输入变化而必要的验证，不恢复旧模型会话，不机械重放旧候选中的任务归档或队列。
+2026-10-14用户批准赤野燎原整稿并要求准备后续任务。本卡沿用独立验证职责，目标改为燃心灯＋不熄炉；原渡火引线的媒介合同、fixture、candidate不能证明新版机制。当前仅有管理准备路径，必须等D-JD-COMBO-FIRE-DOMAIN-01冻结完整验收合同、U-JD-COMBO-FIRE-DOMAIN-01交付同版本实现后才能ready。
+依赖：新版D→新版U→本N→D-JD-COMBO-SCOPE-01→C-JD-COMBO-01。不因旧U归档而移除新版U。
 
 ## 必查范围
 
-- `docs/superpowers/specs/2026-09-20-jindan-combo-scope-design.md#三、付款与容量合同，以及最小前置任务`、`#六、渡火引线 Unity 单项场景实现与验收范围合同`；`docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_01_媒介载体合同.txt#二—六`。
-- U 完成后完整读取 `src/Assets/Scripts/Modules/Features/Adventure/JindanFireFerryLineScenarioController.cs`、`src/Assets/Scripts/Editor/JindanFireFerryLineScenarioSceneBuilder.cs`、`src/Assets/Tests/Scenes/JindanFireFerryLineScenario.unity`、`src/Assets/Tests/EditMode/JindanFireFerryLineScenarioEditorTests.cs`、`src/Assets/Tests/PlayMode/JindanFireFerryLineScenarioPlayModeTests.cs` 及每个新建 Unity 文件对应 `.meta`。
-- `UNITY_STRUCTURE.md`、`UNITY_STRUCTURE.runtime.md`、`UNITY_STRUCTURE.content.md`、`UNITY_STRUCTURE.assemblies.md`；仅为拒绝错误复用而读 `EnvironmentProfileRuntime`、`SpatialQueryBoardFactory.TryCreate`、`CombatEntryAdapter.TryCreateSession`、`CombatSession.ValidateCommand` 与 `EncounterCoordinator.Complete` 的实际边界。
+- docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md已批准稿。
+- 新版D交付的docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md，及U完成后绑定的源码、场景、资源、测试和.meta。
+- 现行燃心灯、不熄炉与金丹装配冲突规则对应费用/容量/结束原文；L1只提供定位，不替代L2。
 
 ## 实施范围
 
-- 创建唯一验证记录 `docs/基础设定/金丹组合/前置/JD_COMBO_FIRE_FERRY_LINE_费用容量验证.txt`，并在 `docs/基础设定/设定事实速查.txt` 增加其准确 L2 指针；记录绑定 U 的 candidate／正式提交、Unity 版本、fixture ID、场景路径、控制器／Builder／测试文件哈希或版本、运行命令和结果。验证文档只记录已运行事实，不填写正式数值档案、`comboProfileId` 或 `resultPrototypeId`。
-- 在同一 fixture 中独立复现源位显化先支付行动／灵力／实际燃料／地表容量，再预览并支付化位行动、展开、逐节点火势和环境容量。逐项记录 source 支付、借用 source 的消耗、走火支付、地表／环境占用和释放，证明同一地表链只占一份容量，既付 source 不被再收，走火也不因已付 source 而免费。
-- 复现并记录：缺 source、无效阵眼、水／隔绝、断燃料、非相邻节点、预算／资源不足、容量不足、位置／阵眼失效和场景结束。每个失败必须在支付前拒绝本次走火、保持既有合法 source，且没有半标记、重复扣费、容量泄漏或 fallback；`END` 只停止未来作用和释放场景占用，不反转已结算费用。
-- 只修改验证记录和本卡完成所需的管理投影；不修改 U 的控制器、Builder、场景、测试、正式 Adventure／Combat、金丹数据、`EditorBuildSettings.asset`、资产、CSV 或 BattleSim。发现 U 实现越界时标记失败证据，不在本卡修补。
+仅独立复验并记录新版场景功能、费用与容量事实：开场成片、逐周期扩张、入火/留火灼烧、灭火开路、下一周期付费复燃、水/隔绝/断燃料、最大面积、维护和扩张分别付费、两个位置承载与实际容量、中心失效、有限余火、战斗结束清理。具体输入/数值观察点、输出记录及其L1、命令与路径由新版D一次冻结后写入本卡，不临场推导新玩法。
+失败回报U，不在N修补业务代码或正式配方；不新增BattleSim地图传播，不以模型意见/截图代替实际数值。
 
 ## 禁止项
 
-- 不猜预算或把 fixture 计数当正式平衡值；不改位置、效果、媒介、白名单、正式配方、金丹状态或 `JindanBaseEffectLoadoutTuning`。
-- 不新增 BattleSim 地图、火种、传播或费用实现，不把现有环境／空间查询模块当作本场景账本，也不以静态源代码、截图或模型意见替代同版本实际运行。
+不修补U实现、不生产正式组合、不扩充BattleSim、不重放旧候选；不以静态检查代替真实费用容量值。
 
 ## 模型协作
 
-- 简单：本轮已核对 U 的完成归档，现有 fixture、输入、预期路径、独立复验步骤与停止边界均明确；本卡只验证并记录，不修补实现。沿用入口默认 `gpt-5.6-terra` 单模型，无需辅助；Unity 实际运行仍是完成门，模型意见不能替代 PlayMode 证据。
+当前blocked，待D冻结完整复验步骤后评估；预期有界只读独立验证由入口默认单模型处理，无需提前辅助。运行工具不可用不伪造结果。
 
 ## 验证
 
-- 先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-unity-assembly-boundaries.ps1`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/check-data-chain.ps1 -FailOnMissingAssets`、`pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1` 和 `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1`，记录 U 的直接测试是否真实执行且通过。
-- 在同版本场景重建后由验证者分别操作／观察每一条正常与失败输入；记录初始和最终行动、灵力、燃料、火势预算、地表／环境容量、source 状态、链标记和结束状态。若无法获取运行对象或数值，不得以文本推断通过。
-- 本卡、验证文档和管理路径通过 schema 2 风险预检、`tools/check-task-cards.ps1`、`tools/check-review-text.ps1`、`tools/check-data-chain.ps1`、whitespace 与 staged diff；无可抽象数值平衡修改，不运行 BattleSim。
+以U正式提交与同版本Unity实际运行绑定记录；正常/失败输入、实际费用/容量前后值和有限余火终止可复现，不混称角色数值平衡已验证。完整字面量记录路径及运行命令必须在ready前由D补齐。管理检查使用check-task-cards.ps1、check-review-text.ps1、riskPreflight与whitespace；相关docs变化再执行check-data-chain.ps1。
 
 ## 完成条件
 
-- 验证文档使另一位执行者能够在同版本 Unity 场景复现 source→走火→END 及所有列明反例，并证明没有免费动作、重复收费、容量双占用、容量泄漏或半状态。
-- 记录精确区分场景功能已验证与正式组合／角色数值平衡尚未完成，结果可供 `D-JD-COMBO-SCOPE-01` 以后续既有流程收口。
+新版U的正常及反例均完成独立复验，证据绑定同版本场景和实际费用容量，足以供D-JD-COMBO-SCOPE-01收口。
 
 ## 停止条件
 
-- U 未完成、场景／规则所有者或同版本输入不可定位、运行证据缺失、复现要求越过单项 fixture，或必须新增权限／修补业务实现时停止并回报 U／D 边界；不得改用模拟器或写入正式内容绕过。
+新版D/U未完成、输入或证据不可定位、出现实现失败或需要扩写业务时保持blocked/报告，不恢复旧fixture验收或旧候选。
+
+## 旧证据保留（仅追溯）
+
+金丹设定2026-10-02修改已完成；本次是用户认为旧效果弱而另行重设计，不再等待同一次设定确认。
+旧run：73e3e299-6fbe-446e-9c8d-1a1c053a8ebe；base：7e6dfff4dfea21490131943998879398da90d725；candidate：78d03afa0491b6683203983e9c68cf7fabed3783。旧分支codex/automation/codex/73e3e299-6fbe-446e-9c8d-1a1c053a8ebe/candidate及对应.worktrees/automation目录保留。旧集成因hourly_main_path_conflict停止，candidate不是正式完成；不清理、不直接合并，不机械重放任务归档或队列。原完整合同由Git历史追溯。

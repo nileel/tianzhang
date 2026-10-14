@@ -1,0 +1,65 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-JD-COMBO-FIRE-DOMAIN-01",
+  "title": "赤野燎原Unity场景实现",
+  "priority": "P2",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "D-JD-COMBO-FIRE-DOMAIN-01"
+  ],
+  "stateReason": "等待新版D合同冻结当前所有者、输入、完整代码/scene/meta路径与实际验收入口；不执行旧渡火引线范围。",
+  "expectedPaths": [
+    "开发管理/任务卡/U-JD-COMBO-FIRE-DOMAIN-01.txt",
+    "开发管理/任务归档/U-JD-COMBO-FIRE-DOMAIN-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-JD-COMBO-FIRE-DOMAIN-01 · 赤野燎原Unity场景实现
+
+## 来源与当前边界
+
+唯一结果：按D-JD-COMBO-FIRE-DOMAIN-01产出的冻结合同交付“赤野燎原”同版本Unity场景实现及直接测试。当前批准的是机制，技术所有者、具体场景输入与完整业务路径仍待D冻结；本卡不能ready，不沿用旧渡火引线fixture宣称完成。
+
+## 必查范围
+
+docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md；前置交付的2026-10-14-jindan-fire-domain-implementation-contract.md；前置确认的实际所有者、调用者、场景及测试。
+当前expectedPaths仅管理准备；前置D须把代码、scene、meta和测试精确路径写入后才有业务写入授权。
+
+## 实施范围
+
+一项隔离场景实现开场成片火场、逐周期合法扩张、灼烧/灭火开路、中心失效与有限余火，以及同一实际对象的费用容量正确性。测试与功能在同一实施卡闭合；N仅独立复验，不在N修补代码。禁止加入正式配方、BuildSettings、BattleSim地图传播或无关玩法。
+依赖顺序：D-JD-COMBO-FIRE-DOMAIN-01→本U→N-JD-COMBO-FIRE-BUDGET-01→D-JD-COMBO-SCOPE-01→C-JD-COMBO-01。
+
+## 禁止项
+
+不修改正式BuildSettings、生产配方、角色平衡或BattleSim地图传播；不在路径未冻结时写业务。
+
+## 模型协作
+
+主责codex保留本对话场景链责任；主模型gpt-6.1-sol。复杂度与单模型/辅助选择由前置D依据实际所有者在ready前补齐，不以当前blocked占位卡预判复杂度。
+
+## 验证
+
+D合同规定的EditMode/PlayMode实际执行及可见场景操作通过；费用容量数值来自运行对象，代码测试/截图与同版本资源绑定，残留测试状态恢复。完整命令、反例、断言、证据输出路径在D交付时冻结；缺其中任何项不得ready或完成。
+
+## 完成条件
+
+同版本隔离场景及冻结的全部正常/失败测试通过，并交付N可复现的版本、运行记录及恢复证据。
+
+## 停止条件
+
+D未完成、路径或验收入口未冻结、需修改正式系统/规则或出现新所有者时停止；不边实现边扩范围。

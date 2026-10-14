@@ -5,3 +5,5 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-GZ-R2-ROCK-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 整格岩石簇源资产生产与签收 | 开发管理/任务卡/A-GZ-R2-ROCK-ASSET-01.txt |
+| D-JD-COMBO-FIRE-DOMAIN-01 | codex_execute | codex | P2 | content | design | 赤野燎原场景输入与实施合同 | 开发管理/任务卡/D-JD-COMBO-FIRE-DOMAIN-01.txt |
