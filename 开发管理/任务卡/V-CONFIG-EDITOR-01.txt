@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "U-CONFIG-EDITOR-APPLY-01"
-  ],
-  "stateReason": "2026-10-12已批准产品范围；等待具名前置、技术合同与实施路径冻结，不能提前业务写入。",
+  "dispatchState": "frozen",
+  "blockedBy": [],
+  "stateReason": "2026-10-14：APPLY已正式集成，代码及自动验收完成；用户明确要求界面验收稍后。本卡保留人工窗口操作、截图和最终全表签收，暂不调度、不关闭父项。",
   "expectedPaths": [
     "开发管理/任务卡/V-CONFIG-EDITOR-01.txt",
     "开发管理/任务归档/V-CONFIG-EDITOR-01.txt",
@@ -436,6 +434,8 @@
 # V-CONFIG-EDITOR-01 · Unity中文配置编辑器全表验收与总任务关闭
 
 ## 来源与当前边界
+
+2026-10-14更新：U-CONFIG-EDITOR-APPLY-01已以5782f801正式集成。自动验收证据见开发管理/Unity中文配置编辑器验收记录.txt。本轮只汇总已有运行结果，不重跑输入未变化的检查；窗口工具无法可靠激活/截取Unity，用户选择“先完成代码与自动验收，界面验收稍后”，人工界面操作与截图保持未验收。本卡冻结等待用户继续界面验收，不因前置完成自动进入ready；恢复时仅补剩余人工路径及输入变化所必需的验证。
 
 2026-10-12用户批准Unity中文配置编辑器及本批Codex模型分配。产品范围与完整依赖见 开发管理/Unity中文配置编辑器设计与拆分.txt。本轮只建卡；没有开发、运行或验收工具。父项为U-CONFIG-EDITOR-01。
 

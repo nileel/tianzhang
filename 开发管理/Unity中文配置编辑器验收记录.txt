@@ -1,0 +1,36 @@
+# Unity中文配置编辑器验收记录
+
+日期：2026-10-14。实现正式提交：5782f801（U-CONFIG-EDITOR-APPLY-01）。Unity：6000.3.18f1。结论：代码、自动验收和授权引用修复完成；人工界面验收未完成，V-CONFIG-EDITOR-01按用户要求冻结，父项不关闭。
+
+## 自动验证证据
+
+执行工作区：D:/天章游戏开发/.worktrees/config-editor-completion-20261014；日志保存在该工作区src/Logs，不作为生产资源提交。
+
+- ConfigEditor筛选运行：config-editor-final.xml中非Character组137项通过；Character组一项旧断言依赖生产失效引用，改为隔离内存fixture后，config-character-final.xml中21项全部通过。合计158项通过，不能将首次全组XML表述为全绿。
+- 分组：CORE 29、COMBAT 27、CHARACTER 21、WORLD 30、CULTIVATION 8、CHARTER 31、APPLY 12。五组既有测试显式使用无保存服务注册，真实IO由APPLY组覆盖。
+- 22表无编辑往返、领域复合字段编解码、中文引用与只读字段检查由既有分组测试覆盖；全部22个provider可构建唯一14步有序导入计划，纯计划不写资产。
+- 真实窗口对象覆盖保存后清除脏状态仍可应用、移动效率关联镜像、WORLD/CHARTER代表保存与恢复；另覆盖同时间戳外部改动、只读目标、第二文件IO失败、脏用户资产前门、导入日志错误、缺失产物、待应用范围与后续编辑合并、Language消费者重导、NPC源hash和功法章节清空。
+- SavedGrowthIsReadByNewCreationAndFormalCombat实际进入PlayMode，以临时凡人移动效率1500保存应用，经StartMenu创角(origin_loose)→World→关中据点→guanzhong_wild→shijiahou_encounter，读取新创角Player.Attributes及正式CombatSession玩家快照均为1500。此为功能读值证据，不是平衡结论。
+- 真实保存测试在操作前备份全部22张CSV、受影响产物及.meta，TearDown逐文件恢复原始字节；退出PlayMode并恢复临时Editor设置。授权永久引用修复为新的测试基线，不回退已批准修复。
+- 最终资产由独立Unity进程重载核验：approved-reference-final-verify-2.log含FINAL_REFERENCE_ASSETS_VERIFIED steps=8；批准闭包产物全部匹配纯投影。一次性修复/核验入口已删除，ProjectSettings自动重存差异已恢复。
+- 数据链检查通过：GongFa 29/29、Spells 84/84、Skills 31/31、Language 710键；程序集边界检查通过：19个asmdef、2个asmref。任务卡、审核文本、预期路径空白检查及暂存diff检查通过。
+
+## 22表覆盖范围
+
+战斗：RealmCombatGrowth、CombatEffectTierRules、CombatActionEconomyRules、AttackProfiles、Spells、Skills。
+角色：CharacterCreationPointBuy、Characters、Enemies、Items、GongFa、AppearanceProfiles、Language。
+世界：Settlements、Bounties、Adventures、EnvironmentProfiles。
+养成：FoundationPurpleMansionStates、JindanStaticStates、NpcCultivationActionWeightProfiles。
+册界：CharterRuleDefinitions、CharterSites。
+
+Foundation/Jindan生产零行按空态处理，结构验证使用隔离fixture；Items/Settlements/Bounties固定投影与外观none保持合同只读语义。表覆盖和自动窗口对象调用不等同人工逐字段目检。
+
+## 永久数据修复
+
+用户明确批准：Language补齐61个现有配置缺失文本键；Skills的16行说明引用改为文本键并保持显示语义；Enemies仅将enemy_xueyingmoxiu的spell_anshi修正为现有spell_tx_anshi。既有数值字段未改。实际导入后只保留相应章节名、说明、元素中文和敌人术法引用差异，剔除无关序列化格式与名称变化。
+
+## 待完成的人工界面验收
+
+用户原话：“先完成代码与自动验收，界面验收稍后”。Windows窗口工具激活Unity失败或返回前台游戏，不能可靠核对配置窗口画面；没有把自动窗口对象测试或前台游戏截图当成人工验收证据。
+
+后续在Unity菜单“天章→配置编辑器”按普通用户方式完成选择表/条目、修改/撤销、中文引用、复合列表、保存与应用、错误提示和生产空态；五组各至少一条实际可编辑字段修改/恢复并采集真实窗口截图。按字段合同补全全表人工签收，确认测试数据恢复，再由V卡关闭自身和父项。输入未变化的自动检查不重复；出现新失败仅回到其所属实现叶子处理。

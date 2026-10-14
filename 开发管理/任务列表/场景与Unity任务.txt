@@ -69,7 +69,7 @@
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | U-CONFIG-EDITOR-01 | P1 | codex | 阻塞 | V-CONFIG-EDITOR-01 | Unity中文配置编辑器总任务 | 开发管理/任务卡/U-CONFIG-EDITOR-01.txt |
-| V-CONFIG-EDITOR-01 | P1 | codex | 阻塞 | U-CONFIG-EDITOR-APPLY-01 | Unity中文配置编辑器全表验收与总任务关闭 | 开发管理/任务卡/V-CONFIG-EDITOR-01.txt |
+| V-CONFIG-EDITOR-01 | P1 | codex | 冻结 | — | Unity中文配置编辑器全表验收与总任务关闭 | 开发管理/任务卡/V-CONFIG-EDITOR-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | — | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
 | N-JD-COMBO-FIRE-BUDGET-01 | P2 | codex | 阻塞 | — | 渡火引线 Unity 场景费用与容量验证 | 开发管理/任务卡/N-JD-COMBO-FIRE-BUDGET-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
