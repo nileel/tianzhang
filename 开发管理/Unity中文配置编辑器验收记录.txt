@@ -1,6 +1,6 @@
 # Unity中文配置编辑器验收记录
 
-日期：2026-10-14。实现正式提交：5782f801（U-CONFIG-EDITOR-APPLY-01）。Unity：6000.3.18f1。结论：代码、自动验收和授权引用修复完成；人工界面验收未完成，V-CONFIG-EDITOR-01按用户要求冻结，父项不关闭。
+日期：2026-10-14。基础实现正式提交：5782f801（U-CONFIG-EDITOR-APPLY-01）。Unity：6000.3.18f1。结论：代码、自动验收、授权引用修复和本轮人工界面验收完成；V-CONFIG-EDITOR-01与父项U-CONFIG-EDITOR-01完成归档。用户在界面验收中提出条目栏可拖宽，已按明确授权补齐并实测。
 
 ## 自动验证证据
 
@@ -29,8 +29,29 @@ Foundation/Jindan生产零行按空态处理，结构验证使用隔离fixture�
 
 用户明确批准：Language补齐61个现有配置缺失文本键；Skills的16行说明引用改为文本键并保持显示语义；Enemies仅将enemy_xueyingmoxiu的spell_anshi修正为现有spell_tx_anshi。既有数值字段未改。实际导入后只保留相应章节名、说明、元素中文和敌人术法引用差异，剔除无关序列化格式与名称变化。
 
-## 待完成的人工界面验收
+## 人工界面验收完成记录
 
-用户原话：“先完成代码与自动验收，界面验收稍后”。Windows窗口工具激活Unity失败或返回前台游戏，不能可靠核对配置窗口画面；没有把自动窗口对象测试或前台游戏截图当成人工验收证据。
+原来因窗口工具问题按用户“界面验收稍后”冻结；本轮用户回复“可以了”恢复验收，并将配置编辑器停靠进Unity主窗口。实际通过天章菜单进入窗口，使用鼠标和键盘操作；没有以自动窗口对象测试替代本轮实际指针操作。
 
-后续在Unity菜单“天章→配置编辑器”按普通用户方式完成选择表/条目、修改/撤销、中文引用、复合列表、保存与应用、错误提示和生产空态；五组各至少一条实际可编辑字段修改/恢复并采集真实窗口截图。按字段合同补全全表人工签收，确认测试数据恢复，再由V卡关闭自身和父项。输入未变化的自动检查不重复；出现新失败仅回到其所属实现叶子处理。
+- 已逐一打开全部22张表，核对表名、条目/分组、中文引用与实际表单渲染。全部字段/复合结构的覆盖矩阵与无编辑往返沿用上文158项验证；实机截图用于确认可见与操作行为，不声称逐一修改过每个生产字段。
+- 战斗组：凡人移动效率2改为1.5，实际显示创角三行联动；先点击校验并保存，草稿变干净后仍可点击保存并应用。应用成功，AttackProfiles、CharacterDefinitions、ContentCatalog与PointBuy四步持久化核验完成。临时数据恢复后重新加载显示2。
+- 角色组：太一修士的功法可选标记由指定改为空，显示“未指定/不适用”且脏标记出现；撤销后恢复抱元守一经。非法数字输入保留原值并显示有限数值错误。
+- 世界组：Environment第一个格子的阻挡地面移动由false改为true，撤销恢复；最终布局修正后另实际保存并应用同一临时值，Environment产物1项重新加载核验成功，之后恢复CSV与asset。
+- 养成组：action-foundation-trial的启用从true改为false，NPC来源hash联动预览可见；撤销恢复。Foundation/Jindan生产零行实际显示“无已有条目”，没有生成生产行；深层结构由既有隔离fixture验证。
+- 册界组：水府地纪兼容现象列表首项雨改为细雨，形成重复引用；实际点击保存返回CHARTER_UNKNOWN_PHENOMENON_REFERENCE及重复drizzle的定位信息，已保存文件为空，CSV零写入；撤销恢复雨。合法代表保存/恢复的直接证据沿用WindowSavesWorldAndCharterRepresentativesAndRestoresAllInputs。
+- Items、Settlements、Bounties固定投影与Appearance none实际显示禁用控件和中文只读理由。Language首行正常显示，术法/神通/功法/角色/册界的中文引用、列表项和字段控件可见，无需输入原始分隔符。
+
+## 实机发现问题与修正
+
+1. 应用结果的全部源hash被直接拼到单行顶部，底部自动增高的证据文本挤压表单。所有者为ConfigEditorWindow.OnGUI/DrawToolbar，实例由天章菜单Open创建，OnGUI为唯一布局/文字刷新方，没有Prefab或运行时Canvas覆盖。原APPLY叶子负责结果展示，本轮返工只把顶部改为简短核验状态、底部改为最大180且不超过窗口高度四分之一的固定滚动区，完整证据保留。初用MaxHeight时实际只分配约73像素，确认GUILayout上限不保证实际高度后改用明确Height，最终实际显示约180像素。
+2. 用户截图确认中间条目栏被截断，且边缘不能拖动。根因是OnGUI把条目ScrollView宽度写死205，旁边只有滚动条，无分隔线输入处理。用户明确授权拖动分栏；在同一窗口增加6像素分隔线和窗口布局宽度字段，按实际GUILayout矩形捕获鼠标，左右拖动时限制最小条目宽度并保留右侧表单空间。未修改任何领域适配器、公共接口或保存服务。实机条目栏由300拖到570，再向左拖到470；长NPC条目及分组完整可见，切表与脚本重载后宽度保留。
+
+最终源码经当前Unity重新编译并加载；Console无编译错误，仅既有过时API等警告。新改动只涉及窗口布局与状态文字，使用真实双向拖动、保存成功画面和错误画面验证，不重复输入未变的158项业务测试。
+
+## 证据与恢复
+
+实际截图在本工作区src/Logs/config-ui-*-20261014.jpg；包括save、applied、character-edit、world-edit、cultivation-edit、charter-edit、charter-error、foundation-empty、jindan-empty、items-readonly、settlements-readonly、bounties-readonly、appearance-readonly、divider-wide、applied-layout-final，以及其余逐表截图。Unity日志为config-editor-ui-20261014.log。
+
+实际保存前备份V合同内402个CSV/asset/.meta至src/Logs/ui-baseline-20261014，manifest.json记录SHA-256。完成后逐文件恢复并核对402/402与备份相同；授权永久引用修复保持。最终没有CSV、asset、meta、场景或ProjectSettings差异。主工作区无关改动未触碰。
+
+八个前置叶子均为completed归档，本卡完成第九叶并同时关闭父项；自动证据与本轮实机证据合并满足冻结验收合同。

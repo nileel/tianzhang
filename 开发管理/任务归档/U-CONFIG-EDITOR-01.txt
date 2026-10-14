@@ -8,11 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "design",
-  "dispatchState": "blocked",
-  "blockedBy": [
-    "V-CONFIG-EDITOR-01"
-  ],
-  "stateReason": "2026-10-12已完整拆为九项叶子；父项只汇总，最终验收完成后统一关闭。",
+  "dispatchState": "completed",
+  "blockedBy": [],
+  "stateReason": "2026-10-14：九个叶子均完成，V-CONFIG-EDITOR-01补齐实机验收并确认测试数据恢复；本父项统一关闭。",
   "expectedPaths": [
     "开发管理/任务卡/U-CONFIG-EDITOR-01.txt",
     "开发管理/任务归档/U-CONFIG-EDITOR-01.txt",
@@ -71,3 +69,7 @@ V-CONFIG-EDITOR-01完成并按批准规格确认所有现有表可中文配置�
 ## 技术合同引用
 
 2026-10-13字段/保存/导入与独占实现路径见《Unity配置编辑器字段与导入合同》。22表覆盖包括稳定键、既有批准固定投影、生成和不适用字段的中文只读说明；生产空表按空态和隔离fixture验收，不新增角色。父项及九叶依赖不变，所有前置保留；本轮合同交付不代表窗口已实现或实机验收通过。
+
+## 2026-10-14总任务完成
+
+D-CONFIG-EDITOR-CONTRACT-01、CORE、COMBAT、CHARACTER、WORLD、CULTIVATION、CHARTER、APPLY及V九叶均已完成归档。实际22表、158项自动证据、人工操作、运行时读值、402文件恢复与用户追加分栏拖动验收详见开发管理/Unity中文配置编辑器验收记录.txt。这里只关闭已批准配置编辑器范围，不代表其他Unity或金丹任务完成。

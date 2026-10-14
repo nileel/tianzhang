@@ -543,3 +543,13 @@ SavedGrowthIsReadByNewCreationAndFormalCombat实际进入PlayMode：临时凡人
 
 2026-10-14用户明确选择“先完成代码与自动验收，界面验收稍后”。Windows窗口工具激活Unity失败/返回前台游戏图像，未进行未经画面核对的坐标输入；人工指针操作和截图不记通过，由V-CONFIG-EDITOR-01保留。自动窗口与正式场景测试证据如上，不将其冒充人工界面验收。
 最终持久化核验：src/Logs/approved-reference-final-verify-2.log含FINAL_REFERENCE_ASSETS_VERIFIED steps=8，Unity重新启动后全部批准闭包产物与纯投影一致。恢复ProjectSettings自动重存噪声，删除一次性导入/核验入口。数据链检查通过，710个Language键；程序集边界19个asmdef/2个asmref检查通过。完整变更仅批准代码/测试、3张CSV、必要派生文本/引用及本卡管理路径。
+
+## 2026-10-14实机结果展示返工及用户追加分栏
+
+人工验收发现OnGUI把完整Evidence铺满底部、DrawToolbar把多行hash拼入单行状态；归属仍为本APPLY接手的ConfigEditorWindow结果展示。依据用户直接完成编辑器授权，仅修改该文件：顶部显示已保存/已核验摘要，完整证据置于有限高度滚动区。用户同时提供截图并明确要求条目列表边缘可左右拖动，故同一窗口的固定205宽条目栏改为可拖动分隔线；该追加布局需求为本次直接授权，不是V验收卡擅自扩大业务范围。
+
+真实所有者链：菜单天章/配置编辑器→Open/GetWindow<ConfigEditorWindow>→OnGUI→表、条目、表单三栏GUILayout→DrawToolbar及结果区。条目宽度唯一写入位于该窗口，分隔线事件与渲染共用GUILayout返回的矩形，未操作场景Canvas或改共享字段GUI。窗口宽度字段只保存编辑器布局，不新增业务状态或保存服务。
+
+业务写入前及用户追加范围后读取同卡风险预检：taskCardDigest=87cd3a0a1d27dcd99ace130c3c7ffe4f075fee0cd80dca9468ccc9f86e900b92，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff，matched/mustRead/gates均空，与riskPreflight一致。仍为当前Astra单模型统一处理该窗口，无独立工作面，不派辅助。
+
+当前Unity6000.3.18f1已真实编译加载最终文件，无编译错误。实际分栏300→570→470，左右拖动、切表与重载保留宽度通过。临时Environment格阻挡保存应用成功并读回产物，结果区约180像素、顶部状态不被hash覆盖、上方表单可继续操作；重复册界引用保存拒绝，未写CSV。全部402个CSV/asset/meta按预操作SHA-256恢复。完整人工证据及路径见开发管理/Unity中文配置编辑器验收记录.txt；未改业务规则/领域适配/原meta，既有158项业务检查输入未变，不重复运行。

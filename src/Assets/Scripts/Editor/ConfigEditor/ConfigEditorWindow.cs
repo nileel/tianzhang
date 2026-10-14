@@ -19,6 +19,8 @@ namespace TianZhang.Editor.ConfigEditor
         private Vector2 tableScroll;
         private Vector2 rowScroll;
         private Vector2 formScroll;
+        private Vector2 operationScroll;
+        [SerializeField] private float rowPanelWidth = 300f;
         private readonly Dictionary<string, string> searches = new Dictionary<string, string>(StringComparer.Ordinal);
         public ConfigDraftSession Session => session;
         public string SelectedTableId => registry == null || registry.Tables.Count == 0 ? "" : registry.Tables[tableIndex].TableId;
@@ -166,11 +168,13 @@ namespace TianZhang.Editor.ConfigEditor
                             table.ChineseName + (table.IsAdapted ? "" : "（待适配）"), "Button"))
                             if (table.TableId != SelectedTableId) { SelectTable(table.TableId); GUIUtility.ExitGUI(); }
                 }
-                using (var scroll = new EditorGUILayout.ScrollViewScope(rowScroll, GUILayout.Width(205)))
+                rowPanelWidth = Mathf.Clamp(rowPanelWidth, 180f, Mathf.Max(180f, position.width - 185f - 6f - 320f));
+                using (var scroll = new EditorGUILayout.ScrollViewScope(rowScroll, GUILayout.Width(rowPanelWidth)))
                 {
                     rowScroll = scroll.scrollPosition;
                     DrawRows(current);
                 }
+                DrawRowPanelDivider();
                 using (var scroll = new EditorGUILayout.ScrollViewScope(formScroll))
                 {
                     formScroll = scroll.scrollPosition;
@@ -180,20 +184,24 @@ namespace TianZhang.Editor.ConfigEditor
             if (!string.IsNullOrEmpty(inputError)) EditorGUILayout.HelpBox(inputError, MessageType.Error);
             if (operation != null)
             {
-                EditorGUILayout.LabelField("已保存文件：" + string.Join("、", operation.SavedPaths), EditorStyles.wordWrappedLabel);
-                EditorGUILayout.LabelField("未保存文件：" + string.Join("、", operation.FailedSavePaths), EditorStyles.wordWrappedLabel);
-                EditorGUILayout.LabelField("已应用产物：" + string.Join("、", operation.AppliedPaths), EditorStyles.wordWrappedLabel);
-                if (!string.IsNullOrEmpty(operation.FailedImportStep)) EditorGUILayout.HelpBox("应用失败步骤：" + operation.FailedImportStep, MessageType.Error);
-                foreach (var issue in operation.Issues) EditorGUILayout.HelpBox(
-                    $"{issue.TableId} / {issue.RowKey} / {issue.FieldPath}：{issue.ChineseReason}（{issue.ErrorCode}）", MessageType.Error);
-                EditorGUILayout.LabelField(operation.Evidence, EditorStyles.wordWrappedLabel);
+                using (var scroll = new EditorGUILayout.ScrollViewScope(operationScroll, GUILayout.Height(Mathf.Min(180f, position.height * 0.25f))))
+                {
+                    operationScroll = scroll.scrollPosition;
+                    EditorGUILayout.LabelField("已保存文件：" + string.Join("、", operation.SavedPaths), EditorStyles.wordWrappedLabel);
+                    EditorGUILayout.LabelField("未保存文件：" + string.Join("、", operation.FailedSavePaths), EditorStyles.wordWrappedLabel);
+                    EditorGUILayout.LabelField("已应用产物：" + string.Join("、", operation.AppliedPaths), EditorStyles.wordWrappedLabel);
+                    if (!string.IsNullOrEmpty(operation.FailedImportStep)) EditorGUILayout.HelpBox("应用失败步骤：" + operation.FailedImportStep, MessageType.Error);
+                    foreach (var issue in operation.Issues) EditorGUILayout.HelpBox(
+                        $"{issue.TableId} / {issue.RowKey} / {issue.FieldPath}：{issue.ChineseReason}（{issue.ErrorCode}）", MessageType.Error);
+                    EditorGUILayout.LabelField(operation.Evidence, EditorStyles.wordWrappedLabel);
+                }
             }
         }
 
         private void DrawToolbar()
         {
             EditorGUILayout.LabelField(session.IsDirty ? "未保存 *" :
-                string.IsNullOrEmpty(session.LastApplicationEvidence) ? "已保存，应用未核验" : "应用证据：" + session.LastApplicationEvidence);
+                string.IsNullOrEmpty(session.LastApplicationEvidence) ? "已保存，应用未核验" : "已保存，应用已核验（详细证据见下方）");
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
                 using (new EditorGUI.DisabledScope(!session.IsDirty))
@@ -211,6 +219,36 @@ namespace TianZhang.Editor.ConfigEditor
                     if (GUILayout.Button("保存并应用", EditorStyles.toolbarButton)) RunApply(true);
             }
             if (registry.ApplyService == null) EditorGUILayout.HelpBox("保存与应用尚未接入；本窗口只编辑内存草稿。", MessageType.Info);
+        }
+
+        private void DrawRowPanelDivider()
+        {
+            GUILayout.Box(GUIContent.none, GUIStyle.none, GUILayout.Width(6f), GUILayout.ExpandHeight(true));
+            var rect = GUILayoutUtility.GetLastRect();
+            EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f));
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeHorizontal);
+            var controlId = GUIUtility.GetControlID("ConfigRowPanelDivider".GetHashCode(), FocusType.Passive, rect);
+            var currentEvent = Event.current;
+            switch (currentEvent.GetTypeForControl(controlId))
+            {
+                case EventType.MouseDown:
+                    if (currentEvent.button != 0 || !rect.Contains(currentEvent.mousePosition)) break;
+                    GUIUtility.hotControl = controlId;
+                    currentEvent.Use();
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl != controlId) break;
+                    rowPanelWidth = Mathf.Clamp(rowPanelWidth + currentEvent.delta.x, 180f,
+                        Mathf.Max(180f, position.width - 185f - 6f - 320f));
+                    currentEvent.Use();
+                    Repaint();
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl != controlId || currentEvent.button != 0) break;
+                    GUIUtility.hotControl = 0;
+                    currentEvent.Use();
+                    break;
+            }
         }
 
         public bool TryClose(Func<bool> confirmDiscard)
