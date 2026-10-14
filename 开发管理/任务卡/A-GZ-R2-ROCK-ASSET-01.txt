@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-14用户要求四视图后续入队；补齐独立源资产生产卡，冻结单款参考、路径、费用上限与候选签收门。",
+  "stateReason": "自动责任方确认阻塞：blender_tool_unavailable",
   "expectedPaths": [
     "assets/source/environments/guanzhong-rock-cluster/v1/raw/tripo-rock-original.zip",
     "assets/source/environments/guanzhong-rock-cluster/v1/source-manifest.json",
