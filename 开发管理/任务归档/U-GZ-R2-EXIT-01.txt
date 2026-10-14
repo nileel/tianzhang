@@ -164,8 +164,8 @@ Unity编译及SceneArchitectureValidator.ValidateForBatchMode正式场景引用�
 ## 经验候选
 
 ### U-GZ-R2-EXIT-01-C01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-376F980F0582
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

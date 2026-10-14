@@ -272,8 +272,8 @@ CommandInput是唯一确认提交者，CombatMovementView使用现有序列化�
 
 ### U-GZ-R2-AOE-INPUT-01-CP-TASK-CONFLICT
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-E7FF3E7BEA8F
 - resolution: unresolved
 - experienceId:
 - 经验领域：automation

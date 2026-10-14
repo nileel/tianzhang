@@ -113,8 +113,8 @@
 ## 经验候选
 
 ### U-CONFIG-EDITOR-CULTIVATION-01-DRAFT-CONTEXT
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-22ACCFD366BB
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

@@ -122,8 +122,8 @@ expectedPaths为完整精确写入集合；上述其他源码只读定位。全�
 ## 经验候选
 
 ### U-GZ-R2-SPELL-01.C1
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-17674BCD8F12
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity
