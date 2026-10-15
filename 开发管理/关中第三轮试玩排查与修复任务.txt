@@ -1,0 +1,105 @@
+# 关中第三轮试玩排查与修复任务
+
+## 来源与证据边界
+
+2026-10-15用户反馈五项必须优先排查的问题，要求分别排查并建立修复任务；随后明确第1项换术后能用的仍是贯石击，但不确定是否换了栏位。
+源码基线：58d16d7f401ee671628ce06f071c125eb29100f3。本轮仅排查/建卡，未改游戏代码、资产、规则或用户存档。
+只读 tools/get-unity-runtime-snapshot.ps1 -Action Status 返回 Unity 6000.3.18f1、D:/天章游戏开发/src、StartMenuScene、isPlaying=false、isCompiling=false。没有当前战斗现场，不能把静态调用链当作玩家操作复现。
+下列已确认机制均来自当前源码及序列化资源；用户具体运行路径与换术前后因果仍须按任务卡取得运行时证据。任务卡是活跃任务唯一事实，本记录只作证据入口。
+
+## 1. 初始贯石击可用性与换术前后一致性修复
+
+任务：开发管理/任务卡/U-GZ-R3-STARTER-ART-01.txt
+
+用户补充：换术后能用的仍是贯石击，但不确定是否换了栏位。已确认新角色初始化直接装配 spell_guanshiji / spell_julingshu，AdventureUnitSpawner.CreatePlayer 直接消费该装配；没有证据证明初始化漏装。CombatCommandInput.KeepTarget 默认取 Targets[0]，CombatActionBarView.PresentArt 把整枚按钮 interactable 绑定这个目标的 CanExecute。正式 AttackProfile_spell_guanshiji 的射程为 1；BuildArtActions 按敌人顺序生成报价。初始远距离或首目标不可施放都能使按钮置灰；同一术法换术后恢复的具体触发尚未在运行时捕获，不能写成已证实装配故障。
+
+直接事实入口：
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentArt/Present
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::SetContext/KeepTarget/RequestArt
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::BuildArtActions/BuildActions/Present
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureUnitSpawner.cs::CreatePlayer
+- src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs::CreateProfile
+
+## 2. 可移动地块边框改为清晰蓝色
+
+任务：开发管理/任务卡/U-GZ-R3-MOVE-BLUE-01.txt
+
+AdventureScene 的 reachableMaterial 指向 VisualBaseline_Reachable（GUID 626b87080bcb9794c9f0255ee09bba41）。VisualBaselineBuilder 将它生成为 (0.28,0.78,0.68,0.48) 青绿色；CombatMovementView.CreateLine/ClearSelection 读取 _BaseColor 并把 alpha 提至 1，所以当前可移动轮廓仍为青绿色。颜色来自运行时 property block，不是仅改场景面板文字。该材质另供基线覆盖层使用。
+
+直接事实入口：
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::Configure/CreateLine/ClearSelection/BeginSelection/PresentAttackArea
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildMovement/BuildGuanzhongBattlefield
+- src/Assets/Scripts/Editor/VisualBaselineBuilder.cs::ReachableMaterialPath
+- src/Assets/Scenes/AdventureScene.unity::CombatMovementView
+- src/Assets/Art/VisualBaseline/Materials/VisualBaseline_Reachable.mat
+
+## 3. 普攻改为鼠标指向地块预览与选定
+
+任务：开发管理/任务卡/U-GZ-R3-BASIC-POINTER-01.txt
+
+CombatCommandInput.Configure 把普攻绑定为 Choose(BasicAttack,targetId)，六个方向按钮单独调用 SelectAttackDirection；EncounterCoordinator.ToCommand 对范围普攻清空 TargetId、缺方向时取 actor.Facing。CombatMovementView.PresentAttackArea 只画传入区域，没有攻击状态下鼠标 hover 更新；CombatTargetInput.Update 点击仅调用 InspectTarget 打开详情。现有机制与用户要求的鼠标指向攻击预览不一致。
+
+直接事实入口：
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure/Choose/SelectAttackDirection/ConfirmCandidate/CancelCandidate
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::TryPickCell/LateUpdate/PresentAttackArea
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs::Update/TryPick
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs::CanInspect/InspectTarget
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentAttackDirections
+
+## 4. 副本已接悬赏追踪按实际任务状态显示
+
+任务：开发管理/任务卡/U-GZ-R3-BOUNTY-TRACK-01.txt
+
+CombatBountyTrackerView.Present 的空提示来源是 AdventureController.ReadBountyTracker 返回空列表。该方法先 catalog.GetBountiesByIssuer(navigation.Navigation.ReturnTarget.SettlementId)，再按地图与 Accepted/ObjectiveCompleted 过滤。WorldMapController.BuildAdventureReturnTarget 返回 World，SceneReturnTarget.World 不设置 SettlementId，因此从世界地图进入时所有发行城镇悬赏会先被排除；城镇直入则带 SettlementId。两个 SceneInstaller 都传入同一 runtime.Bounties，当前证据支持查询维度错误，而非悬赏状态已丢失。用户本次具体进入路线尚未记录；修复需复现两条路线。
+
+直接事实入口：
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs::ReadBountyTracker
+- src/Assets/Scripts/Modules/Content/ContentCatalogData.cs::GetBountiesByIssuer/TryGetBounty
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBountyTrackerView.cs::Configure/Present
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs::Present/Hide
+- src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs::Awake
+
+## 5. 贯石击复用鼠标地块目标选取
+
+任务：开发管理/任务卡/U-GZ-R3-ART-TARGET-01.txt
+
+第一术法目标在 KeepTarget 中默认 Targets[0]，RequestArt(0) 直接使用该 ID。只有第二术法槽绑定 SelectNextSecondArtTarget；棋子点击的 InspectTarget 不会同步 firstArtTargetId。故换术后贯石击可能可确认，但仍不能按鼠标自主选择目标。此缺陷与初始按钮是否可点分属不同验收结果。
+
+直接事实入口：
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::KeepTarget/RequestArt/SelectNextSecondArtTarget
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentArt
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::TryPickCell/PresentAttackArea
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::BuildArtActions/PreviewAction/ConfirmAction
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs::Update
+
+## 已有验证的盲区
+
+- GuanzhongStarterArtsPlayModeTests.EnterFormalCombat 在断言可施法前调用 WaitForMeleeContact；接敌后通过不能证明初始远距场面和换术前后一致。还需对两个敌人逐一核对报价，不把首目标失败误写成技能未装配。
+- 当前 AttackProfile_spell_guanshiji.asset 的 min/maxCastRange 均为1。不得拿旧 Spell asset 的 cooldownTicks 代替当前权威攻击档案/行动系统报价。
+- GuanzhongCombatLayoutPlayModeTests 复用城镇直入路径并检查悬赏0/1，未覆盖“接赏→返回世界→进入野外”。空追踪不等于接取状态、进度或奖励已经丢失。
+- CombatTargetInput.TryPick 仅考虑 Player/Enemy；当前正式场景已有 Enemies 列表。攻击鼠标拾取必须覆盖全部候选，不能沿用仅首敌的详情拾取范围。
+
+## 参考
+
+- 《Heroes of Might and Magic V》官方英文手册，PDF第15页（印刷页26–27），战斗移动与近战攻击：鼠标悬停范围内敌人显示攻击光标，可选择攻击方向，并高亮相关地块。采用鼠标指向即反馈的交互原则，不照搬移动/反击规则。
+  https://shared.steamstatic.com/store_item_assets/steam/apps/15170/manuals/manual_english.pdf?t=1692823544
+- The Battle for Wesnoth 官方开发文档 mouse_handler：mouse_motion、current_unit_attacks_from、highlight_hex 与攻击指示接口用于鼠标地块交互。作为实现参考，不声称所有战棋的控件完全一致。
+  https://devdocs.wesnoth.org/classevents_1_1mouse__handler.html
+查阅日期：2026-10-15。用户明确要求的鼠标地块预览为产品依据，外部参考不替代现有战斗规则。
+
+## 交互合同与依赖
+
+- 选择普攻/贯石击进入选取；鼠标指向地块时显示候选实际作用地块高亮，移动鼠标仅改变预览。
+- 左键选定候选后复用现有确认按钮执行，右键/Esc取消。保留确认步骤作为最小修改，不添加新弹窗。
+- 无有效格、指向UI、空地/超距/无效目标时不得误确认旧候选，并显示真实拒绝原因；确认由既有权威接口再次核验，悬停与取消不扣费。
+- 普攻维持当前剑/刀/空手范围及六向规则；贯石击维持单体与当前射程。伤害、费用、CTB、敌人部署不在本轮范围。
+- 攻击选取点击不得同时打开详情或触发移动，复用同一拾取、候选和取消入口，不新建第二套战斗规则。
+- 第1、2、3、4张为P1 ready，按用户列举顺序插入既有P2经验整理前；第5张P1 blocked，真实依赖 STARTER-ART 与 BASIC-POINTER。前置完成后核对接口、路径和风险投影再转ready。
+- 第2、3涉及同一视图，依同一Codex队列顺序执行，不伪造业务依赖。不新建可被领取的汇总父卡，五项各自验收后才算这次反馈全部关闭；建卡不代表旧总验收卡或用户体验已通过。
+
+## 建卡与验证记录
+
+建立5张独立任务卡及backlog投影，4张进入ready队列，1张等待真实前置；每张冻结路径、模型协作、验收入口和停止条件，风险投影由唯一只读入口计算。
+本轮没有运行Unity业务测试或改变编辑器状态。后续在任务隔离worktree用正式新档和真实InputSystem输入补复现/回归，不操作用户原存档。
+管理检查已通过：check-task-cards.ps1 全局73张活跃卡、7张ready（既有3张加本轮4张）；check-review-text.ps1 检查843份文件通过；本轮8份文件的check-pending-whitespace.ps1通过。五张卡均运行唯一风险预检入口并回填实际matched/gates，未伪造零命中。
+技能参考已读：unity-agent-workflows 的 runtime-owner-proof、unity-validation；结构索引已读：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md。交互按本次明确要求形成合同，未进入实现。

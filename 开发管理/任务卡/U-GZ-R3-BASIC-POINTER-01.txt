@@ -1,0 +1,99 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-BASIC-POINTER-01",
+  "title": "普攻改为鼠标指向地块预览与选定",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-15用户明确要求优先排查并建修复任务；已定位直接所有者并冻结最小修复、取证与验收范围，尚未实施。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "开发管理/任务卡/U-GZ-R3-BASIC-POINTER-01.txt",
+    "开发管理/任务归档/U-GZ-R3-BASIC-POINTER-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-BASIC-POINTER-01 · 普攻改为鼠标指向地块预览与选定
+
+## 来源与当前边界
+
+2026-10-15用户第三轮试玩反馈，要求分别排查并建立修复任务。共同排查记录：开发管理/关中第三轮试玩排查与修复任务.txt。本卡只对应一个可独立验收结果，属于场景功能/交互正确性，不承担角色数值平衡。
+
+CombatCommandInput.Configure 把普攻绑定为 Choose(BasicAttack,targetId)，六个方向按钮单独调用 SelectAttackDirection；EncounterCoordinator.ToCommand 对范围普攻清空 TargetId、缺方向时取 actor.Facing。CombatMovementView.PresentAttackArea 只画传入区域，没有攻击状态下鼠标 hover 更新；CombatTargetInput.Update 点击仅调用 InspectTarget 打开详情。现有机制与用户要求的鼠标指向攻击预览不一致。
+
+本轮仅做源码/资产引用检查与编辑器只读状态查询；Unity 当时停在 StartMenuScene、isPlaying=false。未声称重现用户整段操作、已通过 PlayMode 或完成修复。实施者须在自身隔离 worktree 补运行时根因与验收证据。
+
+## 必查范围
+
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure/Choose/SelectAttackDirection/ConfirmCandidate/CancelCandidate
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::TryPickCell/LateUpdate/PresentAttackArea
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs::Update/TryPick
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs::CanInspect/InspectTarget
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentAttackDirections
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::ToCommand/PreviewAction/ConfirmAction
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatActionCandidate/CombatAttackAreaSnapshot
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildAttackDirections
+- src/Assets/Tests/PlayMode/GuanzhongBasicAttackPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs::AttackDirectionButtons 的直接输入、双敌AOE与装备切换回归
+- src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs::六个方向按钮序列化断言
+- 开发管理/关中第三轮试玩排查与修复任务.txt#交互合同与依赖
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md 中当前所有者/正式入口。
+
+## 实施范围
+
+普攻按钮进入瞄准；在既有 battlefieldCamera 与 TryPickCell 六边格拾取上，将鼠标指向格转换为候选目标/六向方向，经既有 PreviewAction 返回的权威 AttackArea 绘制高亮。鼠标移动只更新预览、不消费；左键锁定当前候选后通过既有确认执行，右键/Esc 取消。单体普攻选指向格内的合法敌人；方向/范围普攻按现有形状和 direction 报价，显示全部受影响格及命中目标，不默认黏住第一敌人。离开棋盘或悬停 UI 时不得保留可误确认的旧候选。空地/非法目标/资源不足给出拒绝原因，不能提交。正式玩家流程不再依赖方向按钮，清理对应可见旧控件和场景 Builder 接线。攻击选取期间抑制同次点击打开棋子详情或触发移动。复用现有输入和候选状态，不新建另一套战斗状态机/相机/Canvas/规则。为后续术法留下同一拾取与取消入口，但本卡不实现术法业务。
+
+## 禁止项
+
+不改 CTB/AP/MP/射程/伤害、角色成长、地图部署、存档 schema、其他场景或自动工作流。只在 expectedPaths 中写入，读取调用者不等于取得修改权；不覆盖用户存档、不复制主工作区 Library、不重建无关场景，不新增兜底/重试层/并行状态所有者。
+
+## 模型协作
+
+复杂交互：鼠标拾取、候选状态、高亮和详情输入互斥必须一致。主模型 gpt-6.1-sol，建议 high；同一状态链由单模型统一实现/验证，无独立写入委派。
+执行者写入前核对实际模型/工具能力；卡头配置模型，正文强度仅为建议，不冒充已生效配置。本轮未调用卡中执行模型。辅助不是新增前置，缺运行时证据不得用模型判断替代。
+
+## 验证
+
+定向运行 GuanzhongBasicAttackPlayModeTests、GuanzhongCombatTargetSelectionPlayModeTests 及受影响 GuanzhongCombatActionPreviewPlayModeTests。真实 InputSystem 鼠标事件覆盖六方向、现有剑/刀/空手范围、两个敌人、空地、超距、UI 遮挡、悬停切换、左键锁定与确认/右键/Esc取消、移动切换、演出/敌回合/退出/换装清理。断言悬停不消费、确认只执行一次、命中集合与权威报价一致；1920×1080/1366×768 实际画面验证光标与边框对应。场景由现有 Builder 保存后重开验证，禁止手改 YAML 代替持久化。
+
+在任务 worktree 使用 PowerShell 7：tools/run-unity-playmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath <worktree>/src/Logs/U-GZ-R3-BASIC-POINTER-01.xml -TestFilter <上述目标完整类名或受影响方法> -EnableGraphics；仅跑相关过滤器，XML 必须非零测试且 failed=0，截图须目检。EditMode（有对应变更时）使用 tools/run-unity-editmode-tests.ps1 的相应 TestFilter。场景/资源持久化与视觉证据不可用普通 C# 编译替代。
+管理收尾运行 check-task-cards.ps1、check-review-text.ps1；本轮路径 check-pending-whitespace.ps1、暂存后 git diff --cached --check。只在 docs/CSV/Unity 数据路径实际改变时执行 check-data-chain.ps1。选中 ready 后按项目隔离规则与 get-experience-risk-preflight.ps1 消费 mustRead/gates；只跑本轮变化要求的最小充分检查。
+
+## 完成条件
+
+旧方向按钮直接调用者已检索：CombatActionPreview/CombatEquipment PlayMode 与 CombatLayout EditMode。仅将它们的操作前置改为真实鼠标地块选取，并将旧六按钮持久化断言改为新入口接线；保留装备费用、范围、双敌命中和布局可达性原断言，运行受影响用例。不得删除失败测试来宣称旧控件已清理。
+
+普攻可完全通过鼠标指向地块查看攻击范围并选定目标/方向；画面预览与实际执行一致，方向按钮不再是必经流程，同次点击不触发详情或移动。
+验收证据写入本卡后精确归档到 开发管理/任务归档/U-GZ-R3-BASIC-POINTER-01.txt，同步自身 backlog/队列；不得因建卡、编译或历史归档已通过而自认本轮修复完成。
+
+## 停止条件
+
+若需改变伤害、射程、范围形状、方向算法、寻路/Combat 内核、跨 Feature 直接调用或引入新状态机，停止并重新划界；不能用修改规则让错误预览通过。运行时输入/画面证据缺失不算完成。
+发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。

@@ -1,0 +1,95 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-ART-TARGET-01",
+  "title": "贯石击复用鼠标地块目标选取",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "blocked",
+  "blockedBy": [
+    "U-GZ-R3-STARTER-ART-01",
+    "U-GZ-R3-BASIC-POINTER-01"
+  ],
+  "stateReason": "2026-10-15用户反馈已建卡；等待初始术法可用性及普攻鼠标选取正式完成，复用已验收入口后实施。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "开发管理/任务卡/U-GZ-R3-ART-TARGET-01.txt",
+    "开发管理/任务归档/U-GZ-R3-ART-TARGET-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-015"
+    ],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-ART-TARGET-01 · 贯石击复用鼠标地块目标选取
+
+## 来源与当前边界
+
+2026-10-15用户第三轮试玩反馈，要求分别排查并建立修复任务。共同排查记录：开发管理/关中第三轮试玩排查与修复任务.txt。本卡只对应一个可独立验收结果，属于场景功能/交互正确性，不承担角色数值平衡。
+
+第一术法目标在 KeepTarget 中默认 Targets[0]，RequestArt(0) 直接使用该 ID。只有第二术法槽绑定 SelectNextSecondArtTarget；棋子点击的 InspectTarget 不会同步 firstArtTargetId。故换术后贯石击可能可确认，但仍不能按鼠标自主选择目标。此缺陷与初始按钮是否可点分属不同验收结果。
+
+本轮仅做源码/资产引用检查与编辑器只读状态查询；Unity 当时停在 StartMenuScene、isPlaying=false。未声称重现用户整段操作、已通过 PlayMode 或完成修复。实施者须在自身隔离 worktree 补运行时根因与验收证据。
+
+## 必查范围
+
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::KeepTarget/RequestArt/SelectNextSecondArtTarget
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::PresentArt
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs::TryPickCell/PresentAttackArea
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::BuildArtActions/PreviewAction/ConfirmAction
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs::Update
+- src/Assets/Tests/PlayMode/GuanzhongStarterArtsPlayModeTests.cs
+- src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs
+- 开发管理/任务卡/U-GZ-R3-STARTER-ART-01.txt（完成后读同ID归档）
+- 开发管理/任务卡/U-GZ-R3-BASIC-POINTER-01.txt（完成后读同ID归档）
+- 开发管理/关中第三轮试玩排查与修复任务.txt#交互合同与依赖
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md 中当前所有者/正式入口。
+
+## 实施范围
+
+等待两个前置完成后，沿用 BASIC-POINTER 已验收的进入选取、hover 地块、锁定、确认和取消入口，将贯石击的选择绑定到当前鼠标所指格内敌人的稳定 ID，并由权威 PreviewAction 判定合法性。两个栏位内的贯石击行为必须一致，换术后不残留上一技能/目标候选；命中目标不按列表首项替代。单体术法高亮选中敌人的地块；超距、死亡、自身、空格、无效格和 UI 覆盖不得确认并清除旧合法候选。保留聚灵术现有自身/其他目标语义，不扩建其他术法/神通/AOE规则。初始入口可用性由 STARTER-ART 负责，本卡只交付自主选取。
+
+## 禁止项
+
+不改 CTB/AP/MP/射程/伤害、角色成长、地图部署、存档 schema、其他场景或自动工作流。只在 expectedPaths 中写入，读取调用者不等于取得修改权；不覆盖用户存档、不复制主工作区 Library、不重建无关场景，不新增兜底/重试层/并行状态所有者。
+
+## 模型协作
+
+当前 blocked：等待普攻鼠标入口与初始可用性修复，临近 ready 重新评估实际接口。预选主模型 gpt-6.1-sol，建议 high；复用同一选择状态链，由单模型统一复核。
+执行者写入前核对实际模型/工具能力；卡头配置模型，正文强度仅为建议，不冒充已生效配置。本轮未调用卡中执行模型。辅助不是新增前置，缺运行时证据不得用模型判断替代。
+
+## 验证
+
+正式新档双敌场景验证鼠标可在两个敌人之间选择，交换敌人顺序/首目标失效后仍命中所选 ID；分别覆盖贯石击在两个术法栏、换术前后、取消/重复确认、目标死亡、移动后刷新、演出与退出清理。真实 InputSystem 事件触发 hover/click；断言报价 targetId、最终受伤单位和资源消耗一致，不能只 Invoke 按钮。定向运行受影响 StarterArts、SwapSpell、TargetSelection PlayMode，在双分辨率留存鼠标地块高亮证据；聚灵术自身恢复回归不变。
+
+在任务 worktree 使用 PowerShell 7：tools/run-unity-playmode-tests.ps1 -ProjectPath <worktree>/src -ResultXmlPath <worktree>/src/Logs/U-GZ-R3-ART-TARGET-01.xml -TestFilter <上述目标完整类名或受影响方法> -EnableGraphics；仅跑相关过滤器，XML 必须非零测试且 failed=0，截图须目检。EditMode（有对应变更时）使用 tools/run-unity-editmode-tests.ps1 的相应 TestFilter。场景/资源持久化与视觉证据不可用普通 C# 编译替代。
+管理收尾运行 check-task-cards.ps1、check-review-text.ps1；本轮路径 check-pending-whitespace.ps1、暂存后 git diff --cached --check。只在 docs/CSV/Unity 数据路径实际改变时执行 check-data-chain.ps1。选中 ready 后按项目隔离规则与 get-experience-risk-preflight.ps1 消费 mustRead/gates；只跑本轮变化要求的最小充分检查。
+
+## 完成条件
+
+默认及换术后的贯石击均可通过鼠标地块自主选择任一合法敌人，目标、报价、边框与实际效果一致；两个栏位一致，不依赖自动首目标或第二栏循环按钮。
+验收证据写入本卡后精确归档到 开发管理/任务归档/U-GZ-R3-ART-TARGET-01.txt，同步自身 backlog/队列；不得因建卡、编译或历史归档已通过而自认本轮修复完成。
+
+## 停止条件
+
+前置未完成不得实施。前置接口/路径变化时重读完整差异、更新白名单与风险预检后才 ready；若需要改变术法数值/规则、重建选择系统或新增未冻结所有者，停止并回查范围。
+发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。
