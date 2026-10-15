@@ -10,10 +10,14 @@
   "stage": "implementation",
   "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "自动责任方确认阻塞：tripo_interaction_unavailable",
+  "stateReason": "Tripo原包已留存，待准备Blender清理/测量与用户签收阶段",
   "expectedPaths": [
     "assets/source/environments/guanzhong-rock-cluster/v1/raw/tripo-rock-original.zip",
     "assets/source/environments/guanzhong-rock-cluster/v1/source-manifest.json",
+    "assets/source/environments/guanzhong-rock-cluster/v1/raw/input-front.png",
+    "assets/source/environments/guanzhong-rock-cluster/v1/raw/input-left.png",
+    "assets/source/environments/guanzhong-rock-cluster/v1/raw/input-right.png",
+    "assets/source/environments/guanzhong-rock-cluster/v1/raw/input-back.png",
     "assets/source/environments/guanzhong-rock-cluster/v1/RockCluster.blend",
     "assets/source/environments/guanzhong-rock-cluster/v1/RockCluster.fbx",
     "assets/source/environments/guanzhong-rock-cluster/v1/RockCluster_basecolor.png",
@@ -56,7 +60,9 @@
 
 ## 实施范围
 
-### 阶段一：Tripo生成与原包留存（当前ready）
+### 阶段一：Tripo生成与原包留存（已完成）
+
+2026-10-15手动续办：用户已登录Tripo，并明确回复“允许无损拆图并继续”。允许将冻结四合一参考按原像素裁出front/left/right/back四张PNG作为临时上传输入，存于本卡raw/input-front.png、raw/input-left.png、raw/input-right.png、raw/input-back.png，不重绘、不缩放、不修改原图；manifest记录裁切矩形与各图hash。本轮仍只生产一个原始候选，不执行Blender。
 
 - 只核实Tripo Studio交互、账号、余额、报价、参考输入及下载/留存能力。无需启动Blender或检查其MCP、清理、FBX回读能力；Blender不可用不阻塞本阶段。
 - 采用四视图→Tripo Studio原包→本地清理/测量的单款生产路线。使用现有余额、默认4K纹理；交易前读取实时价格并将平台/服务版本、输入hash、报价、操作与累计花费写入source-manifest.json。遵守2026-10-04单款完整流程累计低于70 Studio点直接执行的授权，达到70点停止请求确认，禁止充值或订阅。最多生成一个原始候选，不自动再生成或切换供应商；平台不接受当前输入或出现质量失败先保留证据，不循环付费尝试。
@@ -85,6 +91,18 @@
 阶段一：按冻结hash核对唯一参考；记录实时交易证据、唯一平台任务/资产ID、原包字节数与哈希、ZIP可读性及模型/贴图条目；直接核验worktree外持久留存原包与manifest，并在本卡记录其绝对路径和哈希。不运行Blender或FBX验证，不声称几何或最终视觉合格。
 阶段二：复用阶段一原包并核对哈希，记录导出哈希、贴图、FBX回读及真实mesh投影/中心/高度/接地结果，实际查看候选四视图与上下文图。最终用户签收绑定同一hash。
 管理检查：get-experience-risk-preflight.ps1、check-task-cards.ps1、check-review-text.ps1、check-pending-whitespace.ps1及git diff --cached --check；资产路径变化按规则运行check-asset-versioning.ps1。不跑无关BattleSim或全Unity测试。
+
+## 阶段一实录（2026-10-15）
+
+- 用户在本对话完成Tripo登录，并批准“允许无损拆图并继续”。原图SHA-256与冻结值一致；按前/后/左/右裁切矩形(0,0,767,450)、(769,0,1536,450)、(0,512,767,962)、(769,512,1536,962)无缩放裁切，四张PNG回读像素与对应原图区域完全相同，各图hash见manifest。四图分别进入Tripo前/左/右/后槽位。
+- Tripo Studio H3.1，多视图、私有、4K、PBR、三角面、目标20000面；超清几何、分部件生成和8K关闭。提交前实时报价40 Studio点；一次生成，余额3120→3080，本款累计40点，无重试、追加候选、充值或订阅。
+- 唯一平台资产ID=b53c1711-3636-4b31-ac68-234f32c1b374，名称rock pile 3d model；地址https://studio.tripo3d.ai/zh/workspace/generate/b53c1711-3636-4b31-ac68-234f32c1b374。实际查看带纹理岩石簇预览；平台显示19952三角面、11744顶点，仅作平台显示记录，不作为本地测量结论。
+- 原始下载名rock+pile+3d+model.zip，平台导出FBX/Blender预设/4K；原ZIP未经修改，17207907字节，SHA-256=d93b872fdf8adc935fa0a67983b97258f133f60de7176cd726ef1926fb0a62ba。
+- 持久原包：D:/Temp/TianZhang-Blender/A-GZ-R2-ROCK-ASSET-01/raw/tripo-rock-original.zip；来源记录：D:/Temp/TianZhang-Blender/A-GZ-R2-ROCK-ASSET-01/source-manifest.json，SHA-256=5664625d07b853e16e6ae7ebfc486d3ca5b6e8ac3e060e300bf8561cac0bf0c5。与owner worktree D:/天章游戏开发/.worktrees/gz-rock-tripo-20261015/assets/source/environments/guanzhong-rock-cluster/v1/内的原包和manifest逐字节及SHA-256一致，Git外原包不依赖worktree存续。
+- 直接回读上述持久ZIP，CRC完整性通过，6个文件：tripo_convert_220f78ec-a0f6-45a7-8f20-8e611c14c6b9.fbx，以及同名.fbm目录内rock_pile_3d_model_basecolor.JPEG、normal.PNG、roughness.JPEG、metallic.JPEG、rm.JPEG（后四者均带rock_pile_3d_model_前缀）。5张贴图均实际读到4096×4096；每项字节数与SHA-256已列入manifest。未解压、未做FBX回读或Blender操作。
+- 原子性与能力复核：阶段一仍是单候选取得与持久留存的有界工作，单主责完成，无辅助智能体；已实证浏览器交互、四图上传、交易、下载与文件回读能力。卡中executionModel保留调度建议，不冒充本对话模型身份证明。
+- 写前及新增四张输入路径后分别运行风险预检；最新写前taskCardDigest=b56a3c9e9008ed7befdbfdb5763f3d9dd83b271a2a34e90c99f5044c94feded3，indexDigest=2192f3e5a12c2cd354f2548ba0d860f3a9821f362eaa881b166f0e67eac361ff；matched/mustRead/gates/gatePointers均为空，与schema 2投影一致。资产版本检查和Git LFS fsck通过。
+- 阶段一完成，本卡保留blocked且不入队、不归档、不解锁U-GZ-R2-OBSTACLE-01。后续管理上下文准备阶段二时必须复用上述原包、核对hash、冻结输入与风险投影；本轮未裁定几何、美术最终签收或Unity验收。
 
 ## 完成条件
 
