@@ -124,8 +124,8 @@ expectedPaths为完整精确写入集合；上述其他源码只读定位。全�
 ### U-GZ-R2-SPELL-01.C1
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-17674BCD8F12
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-023
 - 经验领域：unity
 - 现象：新建角色已知且装配两门术法，正式首战却因境界不足禁用；测试通过人工升境和重开装备新档掩盖真实入口断点。
 - 已证实根因：创角统一凡人，术法与物资要求练气；测试夹具替玩家制造资格，未证明首次初始化与首次写盘的生产结果。

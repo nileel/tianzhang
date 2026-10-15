@@ -828,6 +828,35 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-020.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-13"
+    },
+    {
+      "id": "EXP-UNITY-023",
+      "title": "新建角色开局资格与首次存档须走真实入口",
+      "preflightSummary": "变更新建角色的境界、开局能力或初始化物资时，须由正式创角到首存后的实战入口验收，不以夹具或重复初始化替代。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CharacterCreation/CharacterCreationRules.cs",
+        "src/Assets/Scripts/Modules/Bootstrap/StartMenuSceneInstaller.cs",
+        "src/Assets/Scripts/Modules/Bootstrap/GameRuntime.cs",
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "BuildCharacterData",
+        "CreateNewPlayer",
+        "BeginEquippedNewGame"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-023.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-15"
     }
   ],
   "gates": []
