@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "blocked",
   "blockedBy": [],
-  "stateReason": "2026-10-14用户批准分阶段推进：当前只执行Tripo生成与原包留存，Blender不作为本阶段前置；原包阶段收口后再准备Blender阶段。",
+  "stateReason": "自动责任方确认阻塞：tripo_interaction_unavailable",
   "expectedPaths": [
     "assets/source/environments/guanzhong-rock-cluster/v1/raw/tripo-rock-original.zip",
     "assets/source/environments/guanzhong-rock-cluster/v1/source-manifest.json",
