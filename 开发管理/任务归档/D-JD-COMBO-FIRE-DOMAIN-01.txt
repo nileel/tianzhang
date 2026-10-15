@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "content",
   "stage": "design",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-14用户批准整稿并要求相关任务ready；先冻结新版实现与独立验收合同，旧验证证据不复用。",
+  "stateReason": "2026-10-15完成新版隔离Unity场景实施合同及完整U/N卡准备；按本轮入口保留下游具名前置，待正式集成后由QueueMaintenance解锁，不复用旧验证证据。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md",
     "开发管理/任务卡/U-JD-COMBO-FIRE-DOMAIN-01.txt",
@@ -72,3 +72,20 @@
 ## 停止条件
 
 已批准效果与现行L2有不可消解冲突，缺不可推导的设计输入，或必须新增规则/生产所有者/正式功能范围时停止并提出具体缺口；不得降低验收、改旧fixture数值或新建第二套规则绕过。
+
+## 完成结果
+
+2026-10-15 Codex完成docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md，冻结单项非BuildSettings场景、当前所有者证据与旧fixture差异、新版12个Unity文件及.meta、功能测试输入、同一确定性传播/支付计划、实际单位HP与逐格燃料/费用/容量观察点、E01–E13正常/反例矩阵、真实scene加载命令、持久记录/截图及清理边界。
+
+U卡完整expectedPaths和正文已准备；N卡独立复验和精确证据路径已准备。用户本轮固定入口明确禁止在非QueueMaintenance移除下游的当前taskId或提升下游，因此优先于本卡原“提升U ready”的实施句：U仍blocked且保留D-JD-COMBO-FIRE-DOMAIN-01，N仍blocked且保留U-JD-COMBO-FIRE-DOMAIN-01；backlog一致，不入队、不改变原route/owner。正式结果进入master后由后续维护核实解锁。D-SCOPE/C既有依赖不改动。
+
+本轮不改运行时代码、资源、正式配方、角色数值或旧fixture；没有实际Unity/BattleSim运行或截图结果。合同数值只为可重复功能测试，不能称为平衡结论。
+
+## 验证结果
+
+- 原子性与模型组合：有界技术合同，传播/预览/支付/生命周期共享同一语义边界，单一主责统一复核；入口模型启动证明为gpt-6.1-sol，保持默认单模型，无辅助调用或第二责任会话，未从提示词推导辅助模型/强度证据。
+- 已读取并应用unity-agent-workflows；结构图为UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.assemblies.md；加载其ai-workflows、project-structure-discovery、content-and-systems、unity-validation、runtime-owner-proof及modular-architecture参考。只做结构/代码证据检查，未声明运行可见结果。
+- D/U/N均通过get-experience-risk-preflight.ps1，schema 2的explicitRefs/matched/gates皆为空，与当前风险索引计算一致，mustRead/门禁入口无缺项；U/N不提前解除具名前置。
+- 静态核对原文回指、现有代码/工具入口、新增文件与.meta成对、既有父目录、U/N完整精确路径集及D→U→N→D-SCOPE→C依赖无环；独立算例核对19格、默认两周期候选坐标和费用算术。新Unity入口在后续U实施，本轮仅确认其冻结名称与现有脚本能力，不冒充已经存在或运行通过。
+- check-task-cards.ps1 -TaskId D-JD-COMBO-FIRE-DOMAIN-01 -Postcondition CodexClosedOrNonReady -OutputJson、check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理、check-data-chain.ps1、预期改动现存文件check-pending-whitespace.ps1和git diff --cached --check通过。任务投影初检发现backlog摘要必须逐字等于title，已将准备说明移至表外，保持原title与具名前置后通过复验。
+- 经验候选检查：本轮没有新增已证实的实施失败/修复根因，不写空经验候选章节；旧场景能力差异已作为本合同直接结构证据，不另建经验状态或任务。

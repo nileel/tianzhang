@@ -68,6 +68,8 @@
 
 2026-10-15：A-GZ-R2-ROCK-ASSET-01已取得并持久留存唯一Tripo 4K原包（40 Studio点）；仍阻塞于阶段二准备、Blender清理/测量及用户签收。原包路径、平台ID和哈希以该活跃任务卡实录为准，后续禁止重新生成；U-GZ-R2-OBSTACLE-01前置不变。
 
+2026-10-15：赤野燎原新版实施合同已冻结，U-JD-COMBO-FIRE-DOMAIN-01与N-JD-COMBO-FIRE-BUDGET-01已补齐完整路径、测试参数与独立验收矩阵；本轮candidate保留原具名前置，待D-JD-COMBO-FIRE-DOMAIN-01正式集成后由QueueMaintenance核实解锁U，N继续等新版U。合同入口为docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md，旧fixture不作为新机制证据。
+
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
 | A-GZ-R2-ROCK-ASSET-01 | P1 | codex | 阻塞 | — | 整格岩石簇源资产生产与签收 | 开发管理/任务卡/A-GZ-R2-ROCK-ASSET-01.txt |

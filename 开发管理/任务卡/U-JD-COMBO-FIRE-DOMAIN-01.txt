@@ -12,8 +12,25 @@
   "blockedBy": [
     "D-JD-COMBO-FIRE-DOMAIN-01"
   ],
-  "stateReason": "等待新版D合同冻结当前所有者、输入、完整代码/scene/meta路径与实际验收入口；不执行旧渡火引线范围。",
+  "stateReason": "新版D已准备完整实施合同、路径与验收；按本轮入口保留D-JD-COMBO-FIRE-DOMAIN-01前置，待其正式进入master后由QueueMaintenance核实解锁，不在candidate中提升。",
   "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioState.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioState.cs.meta",
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioController.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioController.cs.meta",
+    "src/Assets/Scripts/Editor/JindanFireDomainScenarioSceneBuilder.cs",
+    "src/Assets/Scripts/Editor/JindanFireDomainScenarioSceneBuilder.cs.meta",
+    "src/Assets/Tests/Scenes/JindanFireDomainScenario.unity",
+    "src/Assets/Tests/Scenes/JindanFireDomainScenario.unity.meta",
+    "src/Assets/Tests/EditMode/JindanFireDomainScenarioEditorTests.cs",
+    "src/Assets/Tests/EditMode/JindanFireDomainScenarioEditorTests.cs.meta",
+    "src/Assets/Tests/PlayMode/JindanFireDomainScenarioPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/JindanFireDomainScenarioPlayModeTests.cs.meta",
+    "docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-evidence.md",
+    "docs/superpowers/evidence/2026-10-14-jindan-fire-domain-opening.png",
+    "docs/superpowers/evidence/2026-10-14-jindan-fire-domain-expansion.png",
+    "docs/superpowers/evidence/2026-10-14-jindan-fire-domain-gap.png",
+    "docs/superpowers/evidence/2026-10-14-jindan-fire-domain-ending.png",
     "开发管理/任务卡/U-JD-COMBO-FIRE-DOMAIN-01.txt",
     "开发管理/任务归档/U-JD-COMBO-FIRE-DOMAIN-01.txt",
     "开发管理/任务列表/场景与Unity任务.txt",
@@ -32,34 +49,44 @@
 
 ## 来源与当前边界
 
-唯一结果：按D-JD-COMBO-FIRE-DOMAIN-01产出的冻结合同交付“赤野燎原”同版本Unity场景实现及直接测试。当前批准的是机制，技术所有者、具体场景输入与完整业务路径仍待D冻结；本卡不能ready，不沿用旧渡火引线fixture宣称完成。
+唯一结果：按docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md（下称合同）交付燃心灯＋不熄炉的隔离可操作Unity场景、直接测试及同版本证据。合同已准备完整所有者、输入和路径；当前仍等待D-JD-COMBO-FIRE-DOMAIN-01正式进入master及后续QueueMaintenance解锁，不在本轮candidate提升ready。不沿用旧渡火引线fixture或candidate。
 
 ## 必查范围
 
-docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md；前置交付的2026-10-14-jindan-fire-domain-implementation-contract.md；前置确认的实际所有者、调用者、场景及测试。
-当前expectedPaths仅管理准备；前置D须把代码、scene、meta和测试精确路径写入后才有业务写入授权。
+- docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md完整批准稿；合同完整文件，尤其§2所有者、§3字面量路径、§4配置、§5规则、§6矩阵、§7运行入口。
+- docs/基础设定/设定事实速查.txt金丹指针；docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_燃心灯.txt#【位格附性】与8.1；界位/JD_FiveElements_Fire_DOMAIN01_不熄炉.txt#七、【位格附性】与8.3（同一金丹位格目录）；docs/基础设定/金丹基础效果装配与冲突规则.txt#一至三。
+- UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.assemblies.md的Adventure/Editor/测试相关部分；相应README和实际asmdef。合同§2列明的旧控制器、Builder、两个测试及scene/meta只读比较，不改旧fixture。
+- tools/run-unity-editmode-tests.ps1与tools/run-unity-playmode-tests.ps1实际参数、合同规定的Editor场景加载方式；必须在当前worktree核实Unity和图形工具可用。
 
 ## 实施范围
 
-一项隔离场景实现开场成片火场、逐周期合法扩张、灼烧/灭火开路、中心失效与有限余火，以及同一实际对象的费用容量正确性。测试与功能在同一实施卡闭合；N仅独立复验，不在N修补代码。禁止加入正式配方、BuildSettings、BattleSim地图传播或无关玩法。
+- 仅写expectedPaths：合同§3的12个新Unity文件（逐项含.meta）、实施证据记录与四张真实Game view PNG，加本卡生命周期四路径。新路径均在既有模块/测试目录，不改asmdef或旧代码。
+- JindanFireDomainScenarioState为唯一局部规则所有者，控制器仅输入/投影；同一计划供预览与提交。Builder.Build保存独立scene及完整配置、格/单位/中心/面板引用；直接测试从该持久化scene加载，不用内存替身替代。
+- 按合同§4：半径2共19格、初始3格、每周期最多2节点、不同格覆盖最多7；行动6/灵力60；源位显化1行动/6灵力，界位展开1行动/4灵力及初始余火预付3；维护2、逐节点扩张2＋余火1，燃料/传播预算与容量单独记账。参数均为功能输入，不是平衡结论。
+- 完整实现E01–E13：开场连通、确定性周期扩张、单位进入/停留实际HP变化、友敌中立受火、扑灭即时开路且仅下周期付费复燃、水/隔绝/断燃料、面积/传播/容量上限、维护与扩张分别支付、两位置/单组合、失败原子性、中心/位置退出、有限余火和战斗/禁用/卸载清理。
+- U直接测试随本次实现闭合并保存同版本运行证据；N只独立复验。U完成后不移除N的本U前置，不提升下游，由正式集成后的QueueMaintenance处理。
 依赖顺序：D-JD-COMBO-FIRE-DOMAIN-01→本U→N-JD-COMBO-FIRE-BUDGET-01→D-JD-COMBO-SCOPE-01→C-JD-COMBO-01。
 
 ## 禁止项
 
-不修改正式BuildSettings、生产配方、角色平衡或BattleSim地图传播；不在路径未冻结时写业务。
+不修改正式BuildSettings、正式Adventure/Combat/Bootstrap/存档/CSV/配方、角色平衡、BattleSim、旧fixture或冻结合同。不新增生产所有者、不把演示场景当正式玩家功能；不以标记或截图代替实际费用、容量、单位HP；不将无魂测试载体结果声明为正式神魂通道已验收。
 
 ## 模型协作
 
-主责codex保留本对话场景链责任；主模型gpt-6.1-sol。复杂度与单模型/辅助选择由前置D依据实际所有者在ready前补齐，不以当前blocked占位卡预判复杂度。
+有界但语义耦合较强的场景实现：gpt-6.1-sol/high建议，主责codex；传播、支付、预览与生命周期共享同一局部规则所有者，由单模型统一实施复核，不额外派发。执行前核实入口实际主模型与Unity/图形工具；不能静默换主模型或用文本检查代替运行证据。
 
 ## 验证
 
-D合同规定的EditMode/PlayMode实际执行及可见场景操作通过；费用容量数值来自运行对象，代码测试/截图与同版本资源绑定，残留测试状态恢复。完整命令、反例、断言、证据输出路径在D交付时冻结；缺其中任何项不得ready或完成。
+- 完整执行合同§6 E01–E13及§7命令：当前worktree src作为ProjectPath，EditMode全套（现有脚本无TestFilter），PlayMode过滤TianZhang.Tests.PlayMode.JindanFireDomainScenarioPlayModeTests并EnableGraphics；两者XML必须非零且全部通过。另执行check-unity-assembly-boundaries.ps1。
+- 可操作入口：天章/测试/重建赤野燎原单项场景 → Assets/Tests/Scenes/JindanFireDomainScenario.unity → Play。PlayMode以EditorSceneManager.LoadSceneAsyncInPlayMode实际加载保存scene，不添加BuildSettings。
+- 原始XML/log为src/Temp/JindanFireDomain/U/editmode.xml、editmode.log、playmode.xml、playmode.log；持久记录为docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-evidence.md。四张PNG按expectedPaths保存。记录配置/源码/scene/meta哈希、全部矩阵前后数值和失败原因、测试计数与日志摘录、截图哈希及清理证据，不只留Temp链接。
+- 核对所有.meta、真实场景引用、两位置映射及逐格容量/预算，不重复登记同一地表；中心结束时保留有限火，战斗结束才全清。测试后恢复原active scene并卸载fixture，检查实际工作树无非预期变化。
+- 执行前重跑本卡get-experience-risk-preflight.ps1并消费mustRead/门禁；路径/技术路线等变化先暂停。提交前check-task-cards.ps1、check-review-text.ps1、check-data-chain.ps1、预期路径whitespace、git diff --cached --check；不运行BattleSim冒充场景验收。
 
 ## 完成条件
 
-同版本隔离场景及冻结的全部正常/失败测试通过，并交付N可复现的版本、运行记录及恢复证据。
+同版本持久化隔离场景、全部E01–E13正常/失败测试、四张真实Game view及实际费用/容量/HP证据通过，持久记录和本卡归档验证结果可互查；N能在U正式提交上复现。只完成场景功能，不声明正式组合生产或角色平衡完成。
 
 ## 停止条件
 
-D未完成、路径或验收入口未冻结、需修改正式系统/规则或出现新所有者时停止；不边实现边扩范围。
+D未正式完成/本卡未获ready、工具不能运行或取图、合同与L2冲突、需新增生产所有者/公共接口/额外路径、直接调用者越界、预览和结算出现双规则、测试失败不能在原边界内修复时停止并报告；不边实现边扩范围、降低矩阵或补兜底。超过500行的新增运行时文件等结构风险先停查职责，不堆入单一控制器。
