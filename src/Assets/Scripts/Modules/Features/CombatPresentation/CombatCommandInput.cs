@@ -210,15 +210,13 @@ namespace TianZhang.Features.CombatPresentation
         private static string KeepTarget(CombatArtActionSnapshot art, string priorProfileId, string priorTargetId)
         {
             if (art == null) return null;
-            if (string.Equals(art.ProfileId, priorProfileId, StringComparison.Ordinal))
-            {
-                foreach (CombatArtTargetSnapshot target in art.Targets)
-                {
-                    if (target != null && string.Equals(target.Id, priorTargetId, StringComparison.Ordinal))
-                        return target.Id;
-                }
-            }
-            return art.Targets.Count > 0 ? art.Targets[0].Id : null;
+            CombatArtTargetSnapshot prior = string.Equals(art.ProfileId, priorProfileId, StringComparison.Ordinal)
+                ? art.Targets.FirstOrDefault(target => target != null && string.Equals(target.Id, priorTargetId, StringComparison.Ordinal))
+                : null;
+            if (prior != null && prior.CanExecute) return prior.Id;
+            // A default target that moved out of range must not hide another legal target.
+            return (art.Targets.FirstOrDefault(target => target != null && target.CanExecute) ??
+                prior ?? art.Targets.FirstOrDefault())?.Id;
         }
 
         private void RequestArt(int index)

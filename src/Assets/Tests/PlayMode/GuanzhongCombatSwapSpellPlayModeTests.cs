@@ -59,7 +59,7 @@ namespace TianZhang.Tests.PlayMode
             Find<BountyBoardView>().SubmitAccept("bounty_guanzhong_shijiahou");
         }
 
-        private IEnumerator BeginEncounter(bool reserveRecovery, bool reserveAttack = false)
+        private IEnumerator BeginEncounter(bool reserveRecovery, bool reserveAttack = false, bool waitForContact = true)
         {
             Assert.AreEqual("练气", GameBootstrap.RequireRuntime().Player.Progression.RealmStage);
             if (reserveRecovery)
@@ -84,7 +84,7 @@ namespace TianZhang.Tests.PlayMode
             session = Get<CombatSession>(encounter, "session");
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
             yield return Ready();
-            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+            if (waitForContact) yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
         [UnityTearDown]
@@ -136,7 +136,10 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator FormalSwapChargesOncePreservesCooldownExitsGuardAndExhaustsTwoUses()
         {
-            yield return BeginEncounter(true);
+            yield return BeginEncounter(true, waitForContact: false);
+            RecordArtState("initial-before-contact");
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+            RecordArtState("contact-before-swap");
             Assert.That(GameBootstrap.RequireRuntime().Player.AbilityLoadout.KnownSpells, Does.Contain(Recovery));
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
@@ -144,6 +147,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(50000));
             spawned.Player.SetCooldown(Recovery, 90);
             spawned.Player.SetCooldown(Attack, 80);
+            typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(encounter, new object[] { "受控冷却输入", true });
             int tick = session.TurnScheduler.CurrentTick;
             long turn = session.TurnSequence;
             bar.SwapSpellButton.onClick.Invoke();
@@ -159,8 +164,10 @@ namespace TianZhang.Tests.PlayMode
             bar.SwapSpellButton.onClick.Invoke();
             CombatActionCandidate first = input.Candidate;
             int mp = spawned.Player.CurrentSpirit, rolls = random.Count;
+            RecordArtState("before-swap-out");
             yield return RecordLayout("legal");
             input.ConfirmCandidate();
+            RecordArtState("after-swap-out");
             Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Recovery }));
             Assert.That(spawned.Player.CombatSwapsUsed, Is.EqualTo(1));
             Assert.That(spawned.Player.IsGuarding, Is.False);
@@ -181,7 +188,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(input.Candidate.ProfileId, Is.EqualTo(Attack));
             Assert.That(input.Preview.CombatSwapsRemaining, Is.EqualTo(1));
             Assert.That(input.Preview.ReuseCooldownTicks, Is.EqualTo(Math.Max(60, attackBefore)));
+            RecordArtState("before-swap-back");
             input.ConfirmCandidate();
+            RecordArtState("after-swap-back");
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(50000));
             Assert.That(spawned.Player.CombatSwapsUsed, Is.EqualTo(2));
             Assert.That(spawned.Player.GetCooldown(Recovery), Is.EqualTo(recoveryBefore));
@@ -196,7 +205,7 @@ namespace TianZhang.Tests.PlayMode
             bar.ArtButton.onClick.Invoke();
             Assert.That(input.Preview.CanConfirm, Is.False);
             preview.CancelButton.onClick.Invoke();
-            Assert.That(bar.ArtButton.interactable, Is.False);
+            Assert.That(bar.ArtButton.interactable, Is.True, "Cooldown rejection must remain previewable after swapping too.");
             Assert.That(encounter.PreviewAction(new CombatActionCandidate(CombatActionKind.Art, "player", "enemy", Attack,
                 hud.Snapshot.CommandContextVersion)).CanConfirm, Is.False);
             int startTick = session.TurnScheduler.CurrentTick, initialCd = spawned.Player.GetCooldown(Attack);
@@ -211,6 +220,7 @@ namespace TianZhang.Tests.PlayMode
             }
             Assert.That(session.TurnScheduler.CurrentTick - startTick, Is.GreaterThanOrEqualTo(initialCd));
             Assert.That(bar.ArtButton.interactable, Is.True, hud.Snapshot.ArtActions[0].Targets[0].RejectionReason);
+            RecordArtState("after-real-cooldown");
             bar.ArtButton.onClick.Invoke();
             Assert.That(input.Preview.CanConfirm, Is.True);
             int ap = spawned.Player.ActionPointsRemainingUnits;
@@ -246,6 +256,21 @@ namespace TianZhang.Tests.PlayMode
             preview.CancelButton.onClick.Invoke();
             Assert.That(State(), Is.EqualTo(before));
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
+        }
+
+        private void RecordArtState(string label)
+        {
+            string record = label + "; context=" + hud.Snapshot.CommandContextVersion + "; state=" + State() +
+                "; selected=" + Get<string>(input, "firstArtTargetId") + "; button=" + bar.ArtButton.interactable +
+                "; targets=" + string.Join("/", hud.Snapshot.ArtActions.SelectMany(art => art.Targets.Select(target =>
+                    art.ProfileId + ":" + target.Id + "=" + target.CanExecute + ":" + target.RejectionReason +
+                    ":AP=" + target.Quote.ActionPointCostUnits + ":MP=" + target.Quote.SpiritCost +
+                    ":CD=" + target.Quote.RemainingCooldownTicks + ":reuse=" + target.Quote.ReuseCooldownTicks +
+                    ":context=" + target.Quote.Candidate.ContextVersion)));
+            TestContext.WriteLine(record);
+            string directory = Path.Combine(Application.dataPath, "../Logs/swap");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "starter-" + label + ".txt"), record);
         }
 
         private IEnumerator Ready()

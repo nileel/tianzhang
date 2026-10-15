@@ -122,7 +122,8 @@ namespace TianZhang.Features.CombatPresentation
         private string PresentArt(CombatArtActionSnapshot art, string targetId, Button button, Text label, bool canAct)
         {
             CombatArtTargetSnapshot target = FindTarget(art, targetId);
-            SetEnabled(button, canAct && target != null && target.CanExecute);
+            // Target legality gates confirmation, not access to the quote and its rejection reason.
+            SetEnabled(button, canAct && target != null);
             if (label != null)
             {
                 label.text = art == null ? "术法" : art.DisplayName + "\n" +

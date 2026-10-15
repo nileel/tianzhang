@@ -5,7 +5,6 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-GZ-R3-STARTER-ART-01 | codex_execute | codex | P1 | unity | implementation | 初始贯石击可用性与换术前后一致性修复 | 开发管理/任务卡/U-GZ-R3-STARTER-ART-01.txt |
 | U-GZ-R3-MOVE-BLUE-01 | codex_execute | codex | P1 | unity | implementation | 可移动地块边框改为清晰蓝色 | 开发管理/任务卡/U-GZ-R3-MOVE-BLUE-01.txt |
 | U-GZ-R3-BASIC-POINTER-01 | codex_execute | codex | P1 | unity | implementation | 普攻改为鼠标指向地块预览与选定 | 开发管理/任务卡/U-GZ-R3-BASIC-POINTER-01.txt |
 | U-GZ-R3-BOUNTY-TRACK-01 | codex_execute | codex | P1 | unity | implementation | 副本已接悬赏追踪按实际任务状态显示 | 开发管理/任务卡/U-GZ-R3-BOUNTY-TRACK-01.txt |
