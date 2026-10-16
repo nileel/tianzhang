@@ -938,6 +938,34 @@
       "lastVerified": "2026-10-15"
     },
     {
+      "id": "EXP-UNITY-024",
+      "title": "鼠标战斗拾取测试须同步状态快照与合法格位",
+      "preflightSummary": "将战斗测试从直接方向命令迁移到真实鼠标拾取，或手动恢复领域状态后验证陈旧报价时，须同步拾取依赖的状态快照并选用实际合法格位。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+        "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "Movement.Origin",
+        "CombatCommandInput.LateUpdate",
+        "TryPickCell"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-024.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-17"
+    },
+    {
       "id": "EXP-UNITY-025",
       "title": "战斗规则变更后既有 PlayMode 断言须回查命令语义",
       "preflightSummary": "修改战斗规则、命令费用或回合边界相关 PlayMode 时，先以权威预览与提交语义核对既有断言，不把旧的自动结束假设当作当前规则。",

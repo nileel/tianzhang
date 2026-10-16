@@ -121,8 +121,8 @@ CombatCommandInput.Configure 把普攻绑定为 Choose(BasicAttack,targetId)，�
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-F19E0E531F34
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-024
 - 经验领域：unity
 - 现象：范围攻击旧报价回归在鼠标输入迁移后报告区域无敌人，但原始方向按钮用例通过。
 - 已证实根因：对抗性fixture直接改变再恢复领域位置，却未同步HUD的Movement.Origin；鼠标输入使用该快照计算方向，而旧按钮直接传方向，因而掩盖快照陈旧。另有测试选取棋盘外第一格，而合法命中来自刀的第二格。
