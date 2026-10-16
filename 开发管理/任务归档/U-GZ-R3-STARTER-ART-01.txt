@@ -125,8 +125,8 @@
 ## 经验候选
 
 ### U-GZ-R3-STARTER-ART-01-C01
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-651B3344DD2D
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

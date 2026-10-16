@@ -131,8 +131,8 @@ D未正式完成/本卡未获ready、工具不能运行或取图、合同与L2�
 
 ### U-JD-COMBO-FIRE-DOMAIN-01.GAMEVIEW
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-EDD4F4375EA0
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

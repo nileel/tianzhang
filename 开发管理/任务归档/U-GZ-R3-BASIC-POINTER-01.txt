@@ -119,8 +119,8 @@ CombatCommandInput.Configure 把普攻绑定为 Choose(BasicAttack,targetId)，�
 
 ### U-GZ-R3-BASIC-POINTER-01-C01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-F19E0E531F34
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

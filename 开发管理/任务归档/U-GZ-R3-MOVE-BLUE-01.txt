@@ -95,8 +95,8 @@ AdventureScene 的 reachableMaterial 指向 VisualBaseline_Reachable（GUID 626b
 
 ### U-GZ-R3-MOVE-BLUE-01-C01
 
-- collectionState: pending
-- promotionTaskId:
+- collectionState: collected
+- promotionTaskId: M-EXP-PROMOTE-ABD648EDA531
 - resolution: unresolved
 - experienceId:
 - 经验领域：unity

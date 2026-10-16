@@ -5,3 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| M-EXP-PROMOTE-651B3344DD2D | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-R3-STARTER-ART-01-C01 | 开发管理/任务卡/M-EXP-PROMOTE-651B3344DD2D.txt |
+| M-EXP-PROMOTE-ABD648EDA531 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-R3-MOVE-BLUE-01-C01 | 开发管理/任务卡/M-EXP-PROMOTE-ABD648EDA531.txt |
+| M-EXP-PROMOTE-EDD4F4375EA0 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-JD-COMBO-FIRE-DOMAIN-01.GAMEVIEW | 开发管理/任务卡/M-EXP-PROMOTE-EDD4F4375EA0.txt |
+| M-EXP-PROMOTE-F19E0E531F34 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-R3-BASIC-POINTER-01-C01 | 开发管理/任务卡/M-EXP-PROMOTE-F19E0E531F34.txt |
