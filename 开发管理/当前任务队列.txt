@@ -5,4 +5,3 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| U-JD-COMBO-FIRE-DOMAIN-01 | codex_execute | codex | P2 | unity | implementation | 赤野燎原Unity场景实现 | 开发管理/任务卡/U-JD-COMBO-FIRE-DOMAIN-01.txt |

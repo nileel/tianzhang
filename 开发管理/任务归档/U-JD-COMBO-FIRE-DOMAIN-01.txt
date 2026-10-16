@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-16已核对新版赤野燎原实施合同有唯一完成归档，现有实施范围、路径与验收已冻结，可按原合同执行。",
+  "stateReason": "2026-10-16按冻结合同完成隔离赤野燎原场景、E01至E13直接验证及四张真实Game view；本轮仅归档U，保留N具名前置，待正式集成后独立复验。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioState.cs",
     "src/Assets/Scripts/Modules/Features/Adventure/JindanFireDomainScenarioState.cs.meta",
@@ -115,3 +115,29 @@ D未正式完成/本卡未获ready、工具不能运行或取图、合同与L2�
 
 - 修复验证：在独立worktree .worktrees/fire-domain-validation-repair-20261016对同一base执行现有run-unity-editmode-tests.ps1（显式ProjectPath指向本worktree/src），Unity 6000.3.18f1全套1339/1339通过、0失败、0跳过，原失败12项逐名核对均Passed；总数少2是原责任方撤回了本U新增测试，不是过滤或跳过。入口自测、程序集边界通过；测试退出后只有本次四个预期文件变化。未重新实施本U，故不声明其PlayMode矩阵或四张截图完成。
 - 修复后XML SHA-256：ad9a9cf282c18fff416f8ac1dbc1b1b718f8ebc57193c58979887d8962c7afe0；log SHA-256：8b59e0449f52cc9865ebda70deb9a3cf5eb5ee3ee756602c06089a7710cc12e7。本机证据目录同上，文件为repaired-editmode.xml及repaired-editmode.log。三份冻结副本均与卡头bytes/SHA-256一致且只读，主工作区原始素材未变。
+
+## 验证结果
+
+- 2026-10-16：依据冻结实施合同完成12个新Unity文件（逐项含meta）、持久化可操作场景及直接测试。唯一规则所有者为JindanFireDomainScenarioState，控制器只负责输入/实际投影；未改旧fixture、正式场景/BuildSettings/CSV/配方/存档/asmdef或BattleSim。
+- 当前worktree完整EditMode为1341/1341通过、0失败/跳过；指定有图形PlayMode为12/12通过、0失败/跳过。E01至E13正常及反例覆盖真实费用、逐格容量/燃料、HP、位置映射、预览版本与生命周期。源位付费前传播0、之后8；默认启动行动4/灵力47；前两周期灵力39/31、第三周期29；关闭后有限火最多6周期清空。
+- 持久证据：docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-evidence.md；包含70份最终运行快照、12次清理证明、完整配置/源码/scene/meta/XML/log/截图哈希、全部矩阵与反例、取图问题实录、实际命令和退出恢复证明。
+- 四张真实1920×1080 Game view：docs/superpowers/evidence/2026-10-14-jindan-fire-domain-opening.png、2026-10-14-jindan-fire-domain-expansion.png、2026-10-14-jindan-fire-domain-gap.png、2026-10-14-jindan-fire-domain-ending.png。费用面板、边界、火/缺口/余火与中心均已逐张复看；预览框与按钮无交叠。
+- 原始最终XML/log均在src/Temp/JindanFireDomain/U；Unity退出会清理Temp，完整EditMode使用同worktree既有ResultXmlPath参数先落Logs，再原样复制回约定路径，现有严格入口成功。未减少测试或改工具。
+- 模型协作执行核对：共享入口证明主模型gpt-6.1-sol，强耦合局部规则由单模型统一实施复核，没有辅助或第二责任会话。经验预检零命中、无mustRead/门禁，与卡头投影一致。Unity 6000.3.18f1及实际NVIDIA图形设备均已运行证明。
+- 本完成只代表U场景功能；N-JD-COMBO-FIRE-BUDGET-01仍保留本U具名前置，未提升或改动任何下游。正式玩家功能、有魂敌人神魂通道与数值平衡未验收；未使用BattleSim代替场景验证。
+- 提交前管理/程序集/数据链与空白检查结果见同版持久证据的提交前检查章节。
+
+## 经验候选
+
+### U-JD-COMBO-FIRE-DOMAIN-01.GAMEVIEW
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：有图形的批处理规则测试通过仍可能没有截图，Editor场景载入后改分辨率还会使文字缩放模糊。
+- 已证实根因：批处理没有自动打开Game view，Screen.SetResolution不控制Editor视口；UI在321乘531视口创建后再切1920乘1080，旧文字网格与实际渲染上下文不一致。
+- 可能复用范围：需要保存真实Game view及Canvas文字证据的隔离Unity场景测试，不替代正式玩家设备验收。
+- 证据：docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-evidence.md的取图实录与VIEWPORT运行值；最终四图、12项PlayMode及临时尺寸条目恢复断言通过。
+- 门禁可能：yes
