@@ -166,8 +166,8 @@ Unity编译及SceneArchitectureValidator.ValidateForBatchMode正式场景引用�
 ### U-GZ-R2-EXIT-01-C01
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-376F980F0582
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-022
 - 经验领域：unity
 - 现象：我方移动耗尽行动点后，移动演出尚未结束却显示敌方行动中的撤离禁用原因。
 - 已证实根因：命令同步提交可先结束规则回合并清空CurrentActorId，表现协程随后才结束；直接用当前actor判定演出归属会把无actor误判为敌方，既有acceptsPlayerCommand仍覆盖我方演出等待期。

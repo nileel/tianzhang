@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-R2-EXIT-01/U-GZ-R2-EXIT-01-C01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "已独立核验 U-GZ-R2-EXIT-01-C01，建立 EXP-UNITY-022 并完成来源候选、风险索引、队列与 backlog 回链。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-R2-EXIT-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-16 完成记录
+
+- 语义裁决：promoted。来源候选以图形 PlayMode 首次断言复现了错误的敌方禁用提示，最终正式会话覆盖我方移动、回合转换与敌方演出并通过；根因、复用范围和证据完整，适合形成独立开工前提示。
+- 去重与边界：`EXP-UNITY-014` 处理回合结束能力与动作条显示／输入阶段门禁，`EXP-UNITY-005` 处理探索返回的输入／命令双层门禁；两者都不覆盖规则回合先结束、表现仍在播放时以空 `CurrentActorId` 误判行动归属。本经验仅匹配 `AdventureHudPresenter` 或 `EncounterCoordinator` 的相应状态处理及 `CurrentActorId`／`acceptsPlayerCommand` 文本，不新增门禁。
+- 模型协作：简单：来源候选、直接运行证据、现有经验边界和索引触发合同均可直接核验，验收是确定性回链与 schema 检查；沿用入口默认单模型，未调用辅助。

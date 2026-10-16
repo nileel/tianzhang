@@ -859,6 +859,32 @@
       "lastVerified": "2026-10-16"
     },
     {
+      "id": "EXP-UNITY-022",
+      "title": "规则回合先结束时表现归属须保留命令权限证据",
+      "preflightSummary": "处理战斗行动禁用原因或表现期间状态提示时，不能因规则已清空 CurrentActorId 就把仍在播放的我方动作误判为敌方行动。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+        "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs"
+      ],
+      "textPatterns": [
+        "CurrentActorId",
+        "acceptsPlayerCommand"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-022.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-16"
+    },
+    {
       "id": "EXP-UNITY-023",
       "title": "新建角色开局资格与首次存档须走真实入口",
       "preflightSummary": "变更新建角色的境界、开局能力或初始化物资时，须由正式创角到首存后的实战入口验收，不以夹具或重复初始化替代。",

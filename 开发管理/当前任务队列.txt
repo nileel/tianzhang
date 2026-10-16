@@ -5,5 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| M-EXP-PROMOTE-376F980F0582 | codex_execute | codex | P2 | unity | implementation | 经验候选整理：U-GZ-R2-EXIT-01-C01 | 开发管理/任务卡/M-EXP-PROMOTE-376F980F0582.txt |
 | M-EXP-PROMOTE-E7FF3E7BEA8F | codex_execute | codex | P2 | automation | implementation | 经验候选整理：U-GZ-R2-AOE-INPUT-01-CP-TASK-CONFLICT | 开发管理/任务卡/M-EXP-PROMOTE-E7FF3E7BEA8F.txt |
