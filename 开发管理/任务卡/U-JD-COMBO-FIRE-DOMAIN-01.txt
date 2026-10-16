@@ -40,21 +40,38 @@
     "matched": [],
     "gates": []
   },
-  "executionModel": "gpt-6.1-sol"
+  "executionModel": "gpt-6.1-sol",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/cloth-wide-sleeve-pilot/TZ_ClothWideSleevePilot_v001.blend",
+      "bytes": 576092,
+      "sha256": "5773beefefd1c4de02ba80b3f3b12f39bdd084adfe600477adeb9730ca255f65"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
+      "bytes": 24929388,
+      "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_basecolor.png",
+      "bytes": 22800947,
+      "sha256": "7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac"
+    }
+  ]
 }
 ---TASK-BODY---
 # U-JD-COMBO-FIRE-DOMAIN-01 · 赤野燎原Unity场景实现
 
 ## 来源与当前边界
 
-唯一结果：按docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md（下称合同）交付燃心灯＋不熄炉的隔离可操作Unity场景、直接测试及同版本证据。合同已准备完整所有者、输入和路径；当前仍等待D-JD-COMBO-FIRE-DOMAIN-01正式进入master及后续QueueMaintenance解锁，不在本轮candidate提升ready。不沿用旧渡火引线fixture或candidate。
+唯一结果：按docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md（下称合同）交付燃心灯＋不熄炉的隔离可操作Unity场景、直接测试及同版本证据。合同已准备完整所有者、输入和路径；D-JD-COMBO-FIRE-DOMAIN-01已正式归档并由QueueMaintenance解锁，本卡保持ready。不沿用旧渡火引线fixture或candidate。
 
 ## 必查范围
 
 - docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md完整批准稿；合同完整文件，尤其§2所有者、§3字面量路径、§4配置、§5规则、§6矩阵、§7运行入口。
 - docs/基础设定/设定事实速查.txt金丹指针；docs/基础设定/金丹位格/源位/JD_FiveElements_Fire_SOURCE_燃心灯.txt#【位格附性】与8.1；界位/JD_FiveElements_Fire_DOMAIN01_不熄炉.txt#七、【位格附性】与8.3（同一金丹位格目录）；docs/基础设定/金丹基础效果装配与冲突规则.txt#一至三。
 - UNITY_STRUCTURE.md、UNITY_STRUCTURE.runtime.md、UNITY_STRUCTURE.assemblies.md的Adventure/Editor/测试相关部分；相应README和实际asmdef。合同§2列明的旧控制器、Builder、两个测试及scene/meta只读比较，不改旧fixture。
-- tools/run-unity-editmode-tests.ps1与tools/run-unity-playmode-tests.ps1实际参数、合同规定的Editor场景加载方式；必须在当前worktree核实Unity和图形工具可用。
+- tools/run-unity-editmode-tests.ps1与tools/run-unity-playmode-tests.ps1实际参数、合同规定的Editor场景加载方式；必须在当前worktree核实Unity和图形工具可用。EditMode全套含真实EditorWindow测试，现有入口默认保留图形设备；不得追加-nographics。卡头automationInputs三项是全套既有测试的冻结输入，由共享入口逐项校验物化；手动执行也须在当前worktree按bytes/SHA-256核验，不回读主工作区替代测试。
 
 ## 实施范围
 
@@ -88,3 +105,13 @@
 ## 停止条件
 
 D未正式完成/本卡未获ready、工具不能运行或取图、合同与L2冲突、需新增生产所有者/公共接口/额外路径、直接调用者越界、预览和结算出现双规则、测试失败不能在原边界内修复时停止并报告；不边实现边扩范围、降低矩阵或补兜底。超过500行的新增运行时文件等结构风险先停查职责，不堆入单一控制器。
+
+## 2026-10-16 失败排查与验收前置修复
+
+- 负责人在普通管理对话明确要求排查并修复。失败run：96f3c6f5-0d97-49cf-b5a9-2b3b12064ae6，base=e04e646a1bc030faa4175f8ad5b185e81a30f1a4，原因unity_editmode_failed_out_of_scope；原责任方已撤回12个新增Unity文件，未生成candidate，旧worktree干净。此次只修复验收前置，不将本U标记完成、不复用已撤回实现；后续仍按gpt-6.1-sol及原E01–E13合同执行。
+- 原始全套EditMode：1341项，1329通过、12失败、0跳过；其中赤野燎原新增2项通过。8项ConfigEditor窗口测试因入口固定-nographics无设备失败；Cloth实验1项和正式棋子Builder两项因隔离worktree缺少未跟踪源文件失败；SavedGrowthIsReadByNewCreationAndFormalCombat进入PlayMode时继承前序Settlement场景，在加载StartMenu前触发SettlementInstaller的game_bootstrap_missing。
+- 最小修复：完整EditMode入口移除-nographics（保留batchmode、全部测试与严格XML门禁），入口自测拒绝再次传入该参数；ConfigEditorApplyTests在进入PlayMode前指定StartMenu为playModeStartScene，断言实际入口并在UnityTearDown恢复原设置；本卡用现有automationInputs冻结三份输入的路径、字节数和SHA-256，不改素材、不新增自动化机制、不修改正式Bootstrap或场景。
+- 原失败XML SHA-256：db5d5b1b2b5cac2c8c66f130e7754e6583b2915e218c6fae36bf5dc8149569f2；log SHA-256：7de4579fb28c4b8a18da2d0ec2646822a7cf4f461c566db58c24e971cf2b4f24。原始副本保留在本机C:/Users/WINDOWS/.codex/automation-state/evidence/fire-domain-repair-20261016/original-editmode.xml和original-editmode.log。
+
+- 修复验证：在独立worktree .worktrees/fire-domain-validation-repair-20261016对同一base执行现有run-unity-editmode-tests.ps1（显式ProjectPath指向本worktree/src），Unity 6000.3.18f1全套1339/1339通过、0失败、0跳过，原失败12项逐名核对均Passed；总数少2是原责任方撤回了本U新增测试，不是过滤或跳过。入口自测、程序集边界通过；测试退出后只有本次四个预期文件变化。未重新实施本U，故不声明其PlayMode矩阵或四张截图完成。
+- 修复后XML SHA-256：ad9a9cf282c18fff416f8ac1dbc1b1b718f8ebc57193c58979887d8962c7afe0；log SHA-256：8b59e0449f52cc9865ebda70deb9a3cf5eb5ee3ee756602c06089a7710cc12e7。本机证据目录同上，文件为repaired-editmode.xml及repaired-editmode.log。三份冻结副本均与卡头bytes/SHA-256一致且只读，主工作区原始素材未变。

@@ -19,6 +19,7 @@ using TianZhang.Features.Adventure;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.SceneManagement;
@@ -33,6 +34,7 @@ namespace TianZhang.Tests
         private string tempRoot;
         private bool playOptionsEnabled;
         private EnterPlayModeOptions playOptions;
+        private SceneAsset playModeStartScene;
         private readonly Dictionary<string, byte[]> backup = new Dictionary<string, byte[]>();
         private static string ProjectRoot => Directory.GetParent(Application.dataPath).FullName;
         private static string Absolute(string path) => Path.Combine(ProjectRoot, path);
@@ -42,6 +44,7 @@ namespace TianZhang.Tests
         {
             playOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
             playOptions = EditorSettings.enterPlayModeOptions;
+            playModeStartScene = EditorSceneManager.playModeStartScene;
             registry = ConfigTableRegistry.Discover(); session = registry.OpenSession();
             tempRoot = Path.Combine(Path.GetTempPath(), "tzg-config-apply-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(tempRoot, "Assets/DataConfig"));
@@ -52,6 +55,7 @@ namespace TianZhang.Tests
         public IEnumerator TearDown()
         {
             if (Application.isPlaying) yield return new ExitPlayMode();
+            EditorSceneManager.playModeStartScene = playModeStartScene;
             EditorSettings.enterPlayModeOptionsEnabled = playOptionsEnabled;
             EditorSettings.enterPlayModeOptions = playOptions;
             foreach (var window in Resources.FindObjectsOfTypeAll<ConfigEditorWindow>()) { window.DiscardChanges(); window.Close(); }
@@ -189,7 +193,12 @@ namespace TianZhang.Tests
             // Keep this fixture's restoration bytes alive while exercising the actual scene owners.
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+            // Other EditMode fixtures may leave Settlement open, which has no bootstrap.
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(
+                "Assets/Scenes/StartMenuScene.unity");
+            Assert.IsNotNull(EditorSceneManager.playModeStartScene);
             yield return new EnterPlayMode(false);
+            Assert.AreEqual(GameplaySceneNames.StartMenu, SceneManager.GetActiveScene().name);
             var stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);

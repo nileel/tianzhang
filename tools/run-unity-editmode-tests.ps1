@@ -133,7 +133,7 @@ try {
         $logPath = Join-Path ([IO.Path]::GetTempPath()) 'tzg-editmode-test-runner.log'
         $arguments = @(
             '-batchmode',
-            '-nographics',
+            # The full suite includes real EditorWindow rendering and needs a graphics device.
             '-projectPath', $resolvedProjectPath,
             '-runTests',
             '-testPlatform', 'EditMode',
@@ -141,7 +141,7 @@ try {
             '-logFile', $logPath
         )
 
-        $process = Start-Process -FilePath $UnityExecutable -ArgumentList $arguments -PassThru
+        $process = Start-Process -FilePath $UnityExecutable -ArgumentList $arguments -PassThru -WindowStyle Hidden
         $validResultObserved = $false
         $stoppedAfterValidResult = $false
         while (-not $process.HasExited) {

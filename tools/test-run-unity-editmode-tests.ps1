@@ -52,6 +52,7 @@ set "project="
 set "results="
 :parse
 if "%~1"=="" goto parsed
+if /I "%~1"=="-nographics" exit /b 24
 if /I "%~1"=="-projectPath" (
     set "project=%~2"
     shift
