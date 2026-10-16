@@ -936,6 +936,34 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-023.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-15"
+    },
+    {
+      "id": "EXP-UNITY-026",
+      "title": "战斗术法预览入口不得被单一无效目标封死",
+      "preflightSummary": "调整已有目标报价列表的战斗术法动作条、默认目标或预览入口时，保留权威确认拒绝，并确保单一无效目标不会遮蔽预览或其他合法目标。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+        "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs"
+      ],
+      "textPatterns": [
+        "PresentArt",
+        "KeepTarget",
+        "CanExecute",
+        "BuildArtActions"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-026.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-17"
     }
   ],
   "gates": []

@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-R3-STARTER-ART-01/U-GZ-R3-STARTER-ART-01-C01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-17：独立核验候选并晋级为 EXP-UNITY-026；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-R3-STARTER-ART-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,10 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-17 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-026`。来源候选由两个修改前非零失败 XML、正式新档远距／接敌结果、反转报价顺序夹具及换术差分直接证实：整枚按钮错误继承单一目标的拒绝，既封死预览也遮蔽同一术法的合法报价。
+- 去重与边界：`EXP-UNITY-015` 只覆盖固定动作条文字的双分辨率边界，`EXP-UNITY-016` 只覆盖预览摘要的拒绝原因可见性，`EXP-UNITY-022` 只覆盖规则回合与表现期间的行动归属；均不覆盖默认目标将预览入口与其他合法目标一并封死。本经验限定已有目标报价列表的术法动作条与预览／确认边界；自由地块选取、数值平衡、装配和收费规则排除。
+- 索引边界：仅当 `CombatActionBarView` 或 `CombatCommandInput` 路径与 `PresentArt`、`KeepTarget`、`CanExecute` 或 `BuildArtActions` 同时命中时提示。候选虽有门禁可能，但目前没有稳定的自动判定条件，未新增门禁。
+- 模型协作：简单：来源证据、既有经验边界与固定回链合同可直接核验；沿用入口默认单模型 gpt-5.6-terra，未启动辅助会话或第二责任会话。
