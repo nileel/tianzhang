@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-CONFIG-EDITOR-CULTIVATION-01/U-CONFIG-EDITOR-CULTIVATION-01-DRAFT-CONTEXT 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-16：Codex 独立核验候选并晋级为 EXP-UNITY-021；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-CONFIG-EDITOR-CULTIVATION-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,10 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-16 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-021`。来源候选的两次直接阻塞及最终实现共同证明：结构化表适配在未核对接口可见性和草稿上下文时，不能在冻结路径内正确复用 NPC 摘要或生成新增引用候选；仅开放原摘要方法并传递显式上下文后，37 项定向测试通过。
+- 去重与边界：`EXP-UNITY-002` 只约束程序集与生成投影，`EXP-UNITY-018` 只约束严格生产迁移的直接测试夹具，`EXP-DATA-001` 只约束共享战斗配置的生产读取与编译链接；均不覆盖 ConfigEditor 复用接口能力或草稿引用上下文。本经验限于具名编辑器路径和上下文／摘要语义，不新增门禁。
+- 模型协作：简单：单一候选的直接阻塞、完成记录、当前代码入口和现有经验边界可独立核验；Node REPL 核实主模型为 gpt-5.6-terra，沿用入口单模型，未调用辅助或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-UNITY-021`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。

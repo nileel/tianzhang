@@ -830,6 +830,35 @@
       "lastVerified": "2026-10-13"
     },
     {
+      "id": "EXP-UNITY-021",
+      "title": "配置编辑器结构化表适配须冻结直接接口与草稿上下文",
+      "preflightSummary": "为 Unity 配置编辑器的结构化表新增引用候选、派生摘要或嵌套编辑时，先冻结复用接口及绘制到校验的草稿上下文。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Scripts/Editor/ConfigEditor/ConfigFieldGUI.cs",
+        "src/Assets/Scripts/Editor/ConfigEditor/ConfigDraftSession.cs",
+        "src/Assets/Scripts/Editor/CultivationContentImporter.cs"
+      ],
+      "textPatterns": [
+        "ConfigFieldContext",
+        "ComputeNpcCultivationSourceHash",
+        "草稿上下文",
+        "结构化表"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-021.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-16"
+    },
+    {
       "id": "EXP-UNITY-023",
       "title": "新建角色开局资格与首次存档须走真实入口",
       "preflightSummary": "变更新建角色的境界、开局能力或初始化物资时，须由正式创角到首存后的实战入口验收，不以夹具或重复初始化替代。",

@@ -115,8 +115,8 @@
 ### U-CONFIG-EDITOR-CULTIVATION-01-DRAFT-CONTEXT
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-22ACCFD366BB
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-021
 - 经验领域：unity
 - 现象：成长三表自动任务先后因哈希入口私有及CORE候选缺少草稿上下文停止，不能在冻结的领域路径内交付完整引用编辑。
 - 已证实根因：冻结拆分只规定复用哈希和领域字段，未验证直接依赖接口的可见性与参数能力；Func无参候选无法获得当前会话、角色及嵌套父项，磁盘或聚焦窗口也不能代表新增草稿引用。
