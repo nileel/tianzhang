@@ -168,6 +168,18 @@ namespace TianZhang.Content
             return matches;
         }
 
+        public IReadOnlyList<BountyData> GetBountiesByAdventure(string adventureId)
+        {
+            var matches = new List<BountyData>();
+            foreach (var bounty in bounties)
+            {
+                if (bounty != null && string.Equals(bounty.allowedAdventureId, adventureId, StringComparison.Ordinal))
+                    matches.Add(bounty);
+            }
+
+            return matches.AsReadOnly();
+        }
+
         public void ReplaceEntries(
             SettlementData[] nextSettlements,
             EnemyData[] nextEnemies,

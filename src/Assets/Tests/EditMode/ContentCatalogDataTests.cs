@@ -441,6 +441,35 @@ namespace TianZhang.Tests
             Assert.IsFalse(catalog.TryGetAppearanceProfile("appearance_unknown", out _));
         }
 
+        [Test]
+        public void AdventureBountyQueryIncludesAllIssuersAndExcludesOtherMaps()
+        {
+            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
+            var first = ScriptableObject.CreateInstance<BountyData>();
+            var second = ScriptableObject.CreateInstance<BountyData>();
+            var other = ScriptableObject.CreateInstance<BountyData>();
+            try
+            {
+                first.bountyId = "first"; first.issuerSettlementId = "town_a"; first.allowedAdventureId = "map_a";
+                second.bountyId = "second"; second.issuerSettlementId = "town_b"; second.allowedAdventureId = "map_a";
+                other.bountyId = "other"; other.issuerSettlementId = "town_a"; other.allowedAdventureId = "map_b";
+                catalog.ReplaceEntries(null, null, null, new[] { first, null, second, other });
+                CollectionAssert.AreEqual(new[] { first, second }, catalog.GetBountiesByAdventure("map_a"));
+                CollectionAssert.AreEqual(new[] { other }, catalog.GetBountiesByAdventure("map_b"));
+                Assert.IsEmpty(catalog.GetBountiesByAdventure("missing"));
+                Assert.IsEmpty(catalog.GetBountiesByAdventure("MAP_A"));
+                CollectionAssert.AreEqual(new[] { first, other }, catalog.GetBountiesByIssuer("town_a"));
+                Assert.IsTrue(((System.Collections.Generic.ICollection<BountyData>)catalog.GetBountiesByAdventure("map_a")).IsReadOnly);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(catalog);
+                UnityEngine.Object.DestroyImmediate(first);
+                UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(other);
+            }
+        }
+
         private static SettlementContentImporter.ContentCatalogImportPreview ParseProductionPreview()
         {
             return SettlementContentImporter.ParseContentCatalog(

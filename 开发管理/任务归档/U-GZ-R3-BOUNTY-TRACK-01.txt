@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-15用户明确要求优先排查并建修复任务；已定位直接所有者并冻结最小修复、取证与验收范围，尚未实施。",
+  "stateReason": "2026-10-16 Codex已复现世界返回目标缺少城镇ID导致追踪漏查，改按当前副本查询；两入口真实战斗结算及接取、完成、领奖空态PlayMode 2/2，目录查询EditMode 2/2，六张截图目检通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
     "src/Assets/Scripts/Modules/Content/ContentCatalogData.cs",
@@ -86,3 +86,19 @@ ContentCatalogDataTests 对地图查询检验多发行城镇、同地图/异地�
 
 若实际失败来自接取未成功、跨场景会话被重建、存档丢状态或另一可见提示所有者，停止按查询缺陷继续修补，保留前后状态与入口证据并重新冻结范围；不硬编码 guanzhong_city、不自动重新接赏、不新建追踪 store。
 发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。
+
+## 本轮实施与验证结果（2026-10-16，Codex）
+
+- 身份与协作：Node REPL实际元数据为gpt-6.1-sol，与共享入口启动证明和executionModel一致。有界单一查询缺陷，沿用本模型独立处理；未启动辅助或第二责任会话。仅在本run专属worktree形成candidate，不操作runtime、集成锁或其他worktree。
+- 预检：消费共享入口绑定本run/task及digest的结果；riskPreflight命中EXP-UNITY-019、无gate。核对5次随机取样、命中率上下限、闪避与朝向最大1.2倍；重入战斗的临时双方闪避100，断言最大命中阈值小于99。胜利夹具只将本场两名敌人当前生命降为1，保持最大生命与正式模板不变；零命中骰确保玩家命中，实际InputSystem指向、锁定、确认攻击后经正式结算获胜。以上仅证明场景功能，不作为自然战果或平衡证据。
+- 所有者证据：AdventureScene唯一CombatBountyTrackerView，序列化root为CombatBountyTrackerRoot、summary为BountySummary；AdventureSceneBuilder创建并绑定对象，AdventureSceneInstaller.Awake将controller.ReadBountyTracker(UiText.Resolve)绑定到tracker.Configure。CombatHudPresenter.Present/Hide驱动CombatBountyTrackerView.Present，空列表写入“悬赏追踪：暂无已接悬赏”。BountyBoardView是城镇接赏/领奖面板，不是这个空提示的所有者；两个Installer均注入同一runtime.Bounties。
+- 修复前运行时复现：通过正式新档、城镇面板接赏和正式导航进入副本；城镇来源Accepted/0、rows=1。撤离后返回世界，再调用WorldMapController.EnterAdventure，实际ReturnTarget为WorldScene且SettlementId为空；同一用例状态仍为Accepted/0，ReadBountyTracker却为0条。src/Logs/U-GZ-R3-BOUNTY-TRACK-01-before.xml为预期失败1/1，失败点是期望1条实际0条，不是接取或跨场景状态丢失。
+- 最小修复：ContentCatalogData新增GetBountiesByAdventure只读查询，AdventureController按map.adventureId取定义并保留唯一BountyUseCase的Accepted/ObjectiveCompleted筛选。GetBountiesByIssuer及其城镇面板调用者语义不变；未改视图、生命周期、导航、战斗规则、数值、存档、场景或数据资产。
+- PlayMode最终命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <本worktree>/src -ResultXmlPath <本worktree>/src/Logs/U-GZ-R3-BOUNTY-TRACK-01.xml -TestFilter TianZhang.Tests.PlayMode.GuanzhongCombatLayoutPlayModeTests.BountyTrackerFrom -EnableGraphics。最终total=2、passed=2、failed=0、skipped=0。
+- 两例分别验证城镇和世界的正式控制器入口；每条路线均比较同一BountyUseCase与实际tracker数据/文本，覆盖Accepted 0/1、真实战斗完成后的ObjectiveCompleted 1/1及交付提示、城镇实际领奖后奖励增加3且重入追踪移除。额外的内存隔离定义经Accept正式接取不相关地图悬赏，未接同地图悬赏保持Available，两者均不出现在tracker。没有手写Accepted或伪造ReturnTarget，不触碰用户存档。
+- 世界入口取证边界：当前PrototypeNodes没有配置野外按钮，测试直接调用现有WorldMapController.EnterAdventure，由其BuildAdventureReturnTarget及真实跨场景导航生成上下文；没有声称点击了不存在的野外按钮，也没有扩展世界入口。用户当次具体路线仍未知，但返回目标维度的运行时缺陷已复现并回归。
+- 夹具修正过程：现有布局胜利辅助仍假定单敌且未适配当前鼠标普攻选取，本卡未修改该辅助或其旧测试；新增用例独立使用当前双敌正式结算与现有指向辅助。批处理需打开Game View才可靠生成截图，复用SetGameSize并检查PNG实际写入；实际演出等待按20秒计时，避免高速批处理的固定帧数提前耗尽。业务修复始终保持上述唯一查询边界。
+- EditMode：现有run-unity-editmode-tests.ps1不接收TestFilter，为避免无关全套，直接以同一Unity6000.3.18f1批处理运行-testPlatform EditMode、-testFilter TianZhang.Tests.ContentCatalogDataTests.AdventureBountyQueryIncludesAllIssuersAndExcludesOtherMaps;TianZhang.Tests.ContentCatalogDataTests.GeneratedCatalogProvidesReadOnlyStableIdQueries，项目及XML/日志均在本worktree。再运行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ValidateResultOnly -ResultXmlPath <本worktree>/src/Logs/U-GZ-R3-BOUNTY-TRACK-01-editmode.xml；total=2、passed=2、failed=0。覆盖同地图多发行城镇、异地图、未知/大小写不匹配空结果、只读集合及旧发行城镇查询保持原义。
+- 视觉证据：src/Logs/bounty-tracker/{settlement,world}-{accepted,completed,empty}.png六张1920×1080图片全部生成并逐张目检，标题/0/1、1/1及可交付、空态均在原追踪面板正确显示；对应对象层级、active与文本见src/Logs/layout/bounty-*.json。截图/XML/日志为本worktree忽略的验收产物，不加入提交。
+- 技能与结构：已应用unity-agent-workflows，读取runtime-owner-proof、screenshot-text-owner、ui-and-visual-assets、unity-validation、ai-workflows、multi-surface-visible、runtime-visible-output、shared-caller-blast-radius；读取UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md，直接查明接线与调用者。没有新增运行时所有者或改变程序集依赖。
+- 收尾：仅精确归档本卡并删除自身backlog/队列行，不提升或改写下游。无docs/CSV/持久化Unity数据资产变化，不运行无关数据链或BattleSim。已按本轮事实/diff/验证检查经验候选，无额外候选；EXP-UNITY-019的受控战斗边界已落实。

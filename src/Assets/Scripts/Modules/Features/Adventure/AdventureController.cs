@@ -149,9 +149,8 @@ namespace TianZhang.Features.Adventure
         public IReadOnlyList<CombatBountyTrackerSnapshot> ReadBountyTracker(Func<string, string> display)
         {
             var result = new List<CombatBountyTrackerSnapshot>();
-            foreach (BountyData bounty in catalog.GetBountiesByIssuer(navigation.Navigation.ReturnTarget.SettlementId))
+            foreach (BountyData bounty in catalog.GetBountiesByAdventure(map.adventureId))
             {
-                if (bounty.allowedAdventureId != map.adventureId) continue;
                 BountyState state = bounties.GetState(bounty.bountyId);
                 if (state.Status != BountyStatus.Accepted && state.Status != BountyStatus.ObjectiveCompleted) continue;
                 result.Add(new CombatBountyTrackerSnapshot(bounty.bountyId, display(bounty.titleKey),

@@ -8,6 +8,10 @@ using TianZhang.Bootstrap;
 using TianZhang.Combat;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Features.Adventure;
+using TianZhang.Content;
+using TianZhang.Features.Settlement;
+using TianZhang.Features.WorldMap;
+using TianZhang.World;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -26,6 +30,222 @@ namespace TianZhang.Tests.PlayMode
         private GuanzhongCombatActionPreviewPlayModeTests entry;
         [UnitySetUp] public IEnumerator Enter() { entry = new GuanzhongCombatActionPreviewPlayModeTests(); yield return entry.EnterFormalEncounter(); }
         [UnityTearDown] public IEnumerator Leave() { yield return entry.Cleanup(); }
+
+        [UnityTest] public IEnumerator BountyTrackerFromSettlementTracksActualState() => TrackBountyLifecycle(false);
+        [UnityTest] public IEnumerator BountyTrackerFromWorldTracksActualState() => TrackBountyLifecycle(true);
+
+        private IEnumerator TrackBountyLifecycle(bool fromWorld)
+        {
+            const string id = "bounty_guanzhong_shijiahou";
+            var runtime = GameBootstrap.RequireRuntime();
+            var useCase = runtime.Bounties;
+            AssertBountyTracker(BountyStatus.Accepted, 0);
+            if (fromWorld)
+            {
+                yield return WithdrawToSettlement();
+                Object.FindFirstObjectByType<SettlementController>().ReturnToWorld();
+                yield return SceneReady(GameplaySceneNames.World);
+                // Use the formal controller entrance; never manufacture ReturnTarget.
+                var world = Object.FindFirstObjectByType<WorldMapController>();
+                Assert.AreEqual(BountyStatus.Accepted, useCase.GetState(id).Status);
+                Assert.AreEqual(0, useCase.GetState(id).Progress);
+                world.EnterAdventure("guanzhong_wild");
+                yield return BeginBountyEncounter();
+                Assert.AreEqual(GameplaySceneNames.World, runtime.Navigation.ReturnTarget.SceneName);
+                Assert.That(runtime.Navigation.ReturnTarget.SettlementId, Is.Null.Or.Empty);
+            }
+            Assert.AreSame(useCase, GameBootstrap.RequireRuntime().Bounties);
+            AssertBountyTracker(BountyStatus.Accepted, 0);
+            yield return CaptureBounty(fromWorld ? "world-accepted" : "settlement-accepted");
+            yield return WinBountyBattle(fromWorld ? GameplaySceneNames.World : GameplaySceneNames.Settlement);
+            Assert.AreEqual(BountyStatus.ObjectiveCompleted, useCase.GetState(id).Status);
+            yield return ReenterBountyAdventure(fromWorld);
+            AssertBountyTracker(BountyStatus.ObjectiveCompleted, 1);
+            yield return CaptureBounty(fromWorld ? "world-completed" : "settlement-completed");
+            yield return WithdrawBountyAdventure(fromWorld ? GameplaySceneNames.World : GameplaySceneNames.Settlement);
+            if (fromWorld)
+            {
+                Object.FindFirstObjectByType<WorldMapController>().EnterSettlement("guanzhong_city");
+                yield return SceneReady(GameplaySceneNames.Settlement);
+            }
+            var settlement = Object.FindFirstObjectByType<SettlementController>();
+            var catalog = (ContentCatalogData)typeof(SettlementController).GetField("contentCatalog", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(settlement);
+            var board = Object.FindFirstObjectByType<BountyBoardView>(FindObjectsInactive.Include);
+            board.Show(catalog, "guanzhong_city", useCase);
+            int rewardBefore = runtime.GetItemQuantity("item_lingshi_low");
+            board.SubmitClaim(id);
+            Assert.AreEqual(BountyStatus.Claimed, useCase.GetState(id).Status);
+            Assert.AreEqual(rewardBefore + 3, runtime.GetItemQuantity("item_lingshi_low"));
+            if (fromWorld)
+            {
+                settlement.ReturnToWorld();
+                yield return SceneReady(GameplaySceneNames.World);
+            }
+            yield return ReenterBountyAdventure(fromWorld);
+            AssertBountyTracker(BountyStatus.Claimed, 1);
+
+            // Isolated definitions exercise Available and accepted-but-unrelated map filtering.
+            var adventure = Object.FindFirstObjectByType<AdventureController>();
+            var isolated = Object.Instantiate(catalog);
+            Assert.IsTrue(catalog.TryGetBounty(id, out var original));
+            var available = Object.Instantiate(original);
+            var unrelated = Object.Instantiate(original);
+            try
+            {
+                available.bountyId = "tracker_available_fixture";
+                unrelated.bountyId = "tracker_other_map_fixture";
+                unrelated.allowedAdventureId = "tracker_other_map";
+                typeof(ContentCatalogData).GetField("bounties", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(isolated, new[] { original, available, unrelated });
+                typeof(AdventureController).GetField("catalog", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(adventure, isolated);
+                Assert.IsTrue(useCase.Accept(isolated, unrelated.bountyId, "guanzhong_city").Succeeded);
+                Assert.AreEqual(BountyStatus.Available, useCase.GetState(available.bountyId).Status);
+                Assert.AreEqual(BountyStatus.Accepted, useCase.GetState(unrelated.bountyId).Status);
+                AssertBountyTracker(BountyStatus.Claimed, 1);
+                yield return CaptureBounty(fromWorld ? "world-empty" : "settlement-empty");
+            }
+            finally
+            {
+                typeof(AdventureController).GetField("catalog", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(adventure, catalog);
+                Object.Destroy(isolated); Object.Destroy(available); Object.Destroy(unrelated);
+            }
+        }
+
+        private static void AssertBountyTracker(BountyStatus status, int progress)
+        {
+            var runtime = GameBootstrap.RequireRuntime();
+            var state = runtime.Bounties.GetState("bounty_guanzhong_shijiahou");
+            Assert.AreEqual(status, state.Status); Assert.AreEqual(progress, state.Progress);
+            var adventure = Object.FindFirstObjectByType<AdventureController>();
+            var rows = adventure.ReadBountyTracker(UiText.Resolve);
+            var tracker = Object.FindFirstObjectByType<CombatBountyTrackerView>();
+            Assert.AreEqual(1, Object.FindObjectsByType<CombatBountyTrackerView>(FindObjectsSortMode.None).Length);
+            Assert.IsTrue(Rect("BountySummary").gameObject.activeInHierarchy);
+            if (status == BountyStatus.Claimed)
+            {
+                Assert.IsEmpty(rows);
+                Assert.AreEqual("悬赏追踪：暂无已接悬赏", tracker.Summary);
+            }
+            else
+            {
+                Assert.AreEqual(1, rows.Count);
+                Assert.AreEqual(state.BountyId, rows[0].Id);
+                Assert.AreEqual(progress, rows[0].Progress); Assert.AreEqual(1, rows[0].Required);
+                Assert.AreEqual(status == BountyStatus.ObjectiveCompleted, rows[0].Completed);
+                Assert.AreEqual(rows[0].Title + "  " + progress + "/1" + (rows[0].Completed ? " · 可回城交付" : ""), tracker.Summary);
+            }
+            Debug.Log("BOUNTY route=" + runtime.Navigation.ReturnTarget.SceneName + " settlement=" + runtime.Navigation.ReturnTarget.SettlementId +
+                " status=" + state.Status + " progress=" + progress + " rows=" + rows.Count + " text=" + tracker.Summary);
+        }
+
+        private static IEnumerator SceneReady(string name)
+        {
+            for (int frame = 0; frame < 300 && SceneManager.GetActiveScene().name != name; frame++) yield return null;
+            Assert.AreEqual(name, SceneManager.GetActiveScene().name);
+            yield return null; yield return null;
+        }
+
+        private static IEnumerator BeginBountyEncounter()
+        {
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Object.FindFirstObjectByType<AdventureController>();
+            Assert.AreEqual(AdventureSceneState.Exploration, adventure.CurrentState);
+            var coordinator = Object.FindFirstObjectByType<EncounterCoordinator>();
+            coordinator.SetCombatResolutionRandomSource(new NeverHitRandom());
+            Assert.IsTrue(Object.FindFirstObjectByType<AdventureInputController>().SelectNode("shijiahou_encounter"));
+            var session = (CombatSession)typeof(EncounterCoordinator).GetField("session", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+            var spawned = (AdventureSpawnSet)typeof(EncounterCoordinator).GetField("spawned", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+            // Controlled navigation fixture only: 99 must exceed even the rear-facing hit threshold.
+            spawned.Player.DodgeRate = 100f;
+            foreach (var enemy in spawned.Enemies)
+            {
+                enemy.DodgeRate = 100f;
+                Assert.Less(CombatActionResolver.EffectiveHitRate(enemy.HitRateBonus, spawned.Player.DodgeRate) * 1.2f, 99f);
+                Assert.Less(CombatActionResolver.EffectiveHitRate(spawned.Player.HitRateBonus, enemy.DodgeRate) * 1.2f, 99f);
+            }
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(coordinator, session);
+        }
+
+        private sealed class NeverHitRandom : ICombatResolutionRandomSource { public float NextPercent() => 99f; }
+
+        private static IEnumerator ReenterBountyAdventure(bool fromWorld)
+        {
+            Assert.AreEqual(fromWorld ? GameplaySceneNames.World : GameplaySceneNames.Settlement, SceneManager.GetActiveScene().name);
+            if (fromWorld) Object.FindFirstObjectByType<WorldMapController>().EnterAdventure("guanzhong_wild");
+            else Assert.IsTrue(Object.FindFirstObjectByType<SettlementController>().EnterAdventure("guanzhong_wild"));
+            yield return BeginBountyEncounter();
+        }
+
+        private static IEnumerator WithdrawToSettlement() => WithdrawBountyAdventure(GameplaySceneNames.Settlement);
+
+        private static IEnumerator WithdrawBountyAdventure(string returnScene)
+        {
+            var adventure = Object.FindFirstObjectByType<AdventureController>();
+            adventure.RequestReturn(); Assert.IsTrue(adventure.IsWithdrawalConfirmationOpen);
+            adventure.ConfirmWithdrawal();
+            yield return SceneReady(returnScene);
+        }
+
+        private IEnumerator WinBountyBattle(string returnScene)
+        {
+            var coordinator = Object.FindFirstObjectByType<EncounterCoordinator>();
+            var session = (CombatSession)typeof(EncounterCoordinator).GetField("session", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+            var spawned = (AdventureSpawnSet)typeof(EncounterCoordinator).GetField("spawned", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(coordinator);
+            // Outcome coverage only: weaken every temporary enemy, preserving production templates.
+            string sourceBefore = JsonUtility.ToJson(spawned.EnemyData.combatTemplate);
+            foreach (var enemy in spawned.Enemies)
+            {
+                int maximum = enemy.MaximumHealth;
+                enemy.ReceiveDamage(enemy.CurrentHealth - 1);
+                Assert.AreEqual(1, enemy.CurrentHealth); Assert.AreEqual(maximum, enemy.MaximumHealth);
+            }
+            Assert.AreEqual(sourceBefore, JsonUtility.ToJson(spawned.EnemyData.combatTemplate));
+            coordinator.SetCombatResolutionRandomSource(new OutcomeCoverageRandom(session, true));
+            int confirmed = 0;
+            for (float deadline = Time.realtimeSinceStartup + 20f;
+                Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
+            {
+                var presenter = Object.FindFirstObjectByType<CombatHudPresenter>();
+                if (presenter.Snapshot?.AcceptsCommands != true || presenter.Snapshot.IsPresenting || coordinator.IsPresenting)
+                { yield return null; continue; }
+                var bar = Object.FindFirstObjectByType<CombatActionBarView>();
+                var preview = Object.FindFirstObjectByType<CombatActionPreviewView>();
+                Button action = bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
+                yield return Click(action);
+                if (action == bar.BasicAttackButton) yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
+                var input = Object.FindFirstObjectByType<CombatCommandInput>();
+                Assert.IsTrue(preview.ConfirmButton.interactable, "Bounty battle quote: " + input.Preview?.Reason +
+                    "; locked=" + input.IsAttackLocked + "; pointer=" + Mouse.current.position.ReadValue());
+                yield return Click(preview.ConfirmButton);
+                confirmed++;
+            }
+            if (SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure)
+            {
+                var snapshot = Object.FindFirstObjectByType<CombatHudPresenter>().Snapshot;
+                Assert.Fail("Bounty victory did not settle: confirmed=" + confirmed + "; actor=" + session.CurrentActorId +
+                    "; phase=" + session.TurnPhase + "; accepts=" + snapshot.AcceptsCommands + "; presenting=" + coordinator.IsPresenting +
+                    "; enemies=" + string.Join(",", spawned.Enemies.Select(enemy => enemy.Id + ":" + enemy.CurrentHealth)));
+            }
+            yield return SceneReady(returnScene);
+            Assert.Greater(confirmed, 0);
+            Assert.IsTrue(spawned.Enemies.All(enemy => !enemy.IsAlive));
+            Assert.AreEqual(sourceBefore, JsonUtility.ToJson(spawned.EnemyData.combatTemplate));
+            Debug.Log("BOUNTY real victory confirmed=" + confirmed + " defeated=" + spawned.Enemies.Count);
+        }
+
+        private static IEnumerator CaptureBounty(string label)
+        {
+            SetGameSize(1920, 1080);
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            var directory = Path.Combine(Application.dataPath, "../Logs/bounty-tracker");
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, label + ".png");
+            File.Delete(path);
+            ScreenCapture.CaptureScreenshot(path);
+            Capture("bounty-" + label);
+            for (int frame = 0; frame < 3; frame++) yield return null;
+            Assert.IsTrue(File.Exists(path), "Bounty screenshot was not written: " + path);
+        }
         [UnityTest] public IEnumerator RealControlsRemainReachableWithDetailsPreviewAndLongLog()
         {
             var presenter = Object.FindFirstObjectByType<CombatHudPresenter>();
