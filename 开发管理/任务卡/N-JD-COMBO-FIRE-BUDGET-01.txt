@@ -24,7 +24,24 @@
     "matched": [],
     "gates": []
   },
-  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt"
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "automationInputs": [
+    {
+      "path": "assets/source/characters/cloth-wide-sleeve-pilot/TZ_ClothWideSleevePilot_v001.blend",
+      "bytes": 576092,
+      "sha256": "5773beefefd1c4de02ba80b3f3b12f39bdd084adfe600477adeb9730ca255f65"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2.fbx",
+      "bytes": 24929388,
+      "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    },
+    {
+      "path": "assets/source/characters/combat-pieces/shijiahou-static-3d-v2/shijiahou_static3d_v2_basecolor.png",
+      "bytes": 22800947,
+      "sha256": "7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac"
+    }
+  ]
 }
 ---TASK-BODY---
 # N-JD-COMBO-FIRE-BUDGET-01 · 赤野燎原Unity场景费用与容量验证
@@ -39,6 +56,7 @@
 - docs/superpowers/specs/2026-10-14-jindan-fire-domain-redesign.md已批准稿。
 - 合同完整文件；§3全部12个Unity字面量路径（含.meta）只读，§4–§7逐项输入、动作、断言、命令、观察点及恢复要求；U持久记录docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-evidence.md与四张对应Game view。
 - 现行燃心灯、不熄炉与金丹装配冲突规则对应费用/容量/结束原文；L1只提供定位，不替代L2。
+- 卡头automationInputs三项沿用U正式归档的冻结输入，供全量EditMode既有宽袖与战斗展示测试使用。共享入口按字节数/SHA-256复制到当前worktree并设为只读；手动执行同样先核验物化，不回读主工作区替代测试，不将素材纳入Git。
 
 ## 实施范围
 
@@ -57,6 +75,7 @@
 ## 验证
 
 - 从U正式master提交核对合同§3资源哈希，按§7以phase=N、当前worktree的src运行tools/run-unity-editmode-tests.ps1（不能传TestFilter）、tools/run-unity-playmode-tests.ps1（TestFilter=TianZhang.Tests.PlayMode.JindanFireDomainScenarioPlayModeTests，EnableGraphics）和check-unity-assembly-boundaries.ps1；完整命令以合同代码块为准。XML/log输出为src/Temp/JindanFireDomain/N/editmode.xml、editmode.log、playmode.xml、playmode.log，关键信息须持久写入验证记录。
+- 沿用U归档已验证的结果留存方式：Unity退出会清理Temp，完整EditMode的ResultXmlPath先指定当前worktree的src/Logs/JindanFireDomain/N/editmode.xml，成功后将XML与系统Temp的tzg-editmode-test-runner.log原样复制到上述约定路径；失败也先保留原始证据。不改工具、过滤器或严格XML门禁。
 - 真实加载Assets/Tests/Scenes/JindanFireDomainScenario.unity，不用CreateRuntimeFixture替身；通过实际面板和控制器重放E01–E13，观察State的格预算/单位HP/位置映射/表面与环境登记/全部费用分账快照。默认启动行动4/灵力47，前两周期后灵力39/31且覆盖5/7，第3周期仅维护后灵力29；不能仅引用U记录的这些数值。
 - 独立Game view绑定本轮操作与快照；截图不代替数字。测试前后U源码/scene/meta哈希不变、正式四场景BuildSettings不变、active scene恢复且fixture卸载，没有持久化反例或残留状态。无魂测试对象不构成神魂通道验收；功能验证不构成角色平衡结论。
 - 运行本卡get-experience-risk-preflight.ps1并消费mustRead/门禁，check-task-cards.ps1、check-review-text.ps1、check-data-chain.ps1、预期路径whitespace与git diff --cached --check。未变化且已通过的同范围验证不重复。
@@ -68,6 +87,16 @@ E01–E13及全部反例独立复验通过，持久证据绑定U正式版本与�
 ## 停止条件
 
 新版D/U未正式完成或本N未ready、同版资产/输入/工具/截图/数字证据不可定位、任一矩阵失败、出现L2冲突或需要额外路径/实现修补时停止并保留准确失败事实；不归档为通过，不在N修补U、不降低矩阵、不恢复旧fixture或旧候选。
+
+## 2026-10-16 失败排查与验收输入修复
+
+- 负责人明确要求排查并修复。失败run=d6dc5a4d-5427-40f3-a89f-3924d09331b4，base=24dbcdfb71054ffc85095ffd7fa6738ca4205fe8；终态unity_editmode_failed_missing_required_sources，无candidate，原worktree干净且责任进程已退出。本次只修复N的验收前置，原失败现场保留，不冒充E01–E13独立复验完成。
+- 原始EditMode共1341项，1338通过、3失败、0跳过。SavedExperimentHasARealWideSleeveClothAndRemainsOutsideBuildSettings报告Editable Blender source is required beside the Unity pilot；BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently与FormalProfileSetHasNoFuYuanDependency均报告Missing approved Shijiahou FBX source。前者直接检查仓库assets/source中的blend，后两者调用FormalStatic3DCombatPieceBuilder.VerifyFrozenInputs同时核验FBX与BaseColor。
+- 根因：U卡在正式提交251275e2中已冻结三份素材，但N卡未声明automationInputs。共享入口只物化当前卡声明项，Git linked worktree不包含被忽略的原始素材；主工作区文件存在不能满足隔离测试。补齐与U完全相同的三项路径、bytes和SHA-256，并已核验本机源文件一致；不修改素材、Unity源码、测试、全量入口或自动化机制。
+- 原始XML SHA-256为0c361ca2b884ac49d2629589f5b7f1f9e178608b66af3f60619593eaf7a325ac，log为50010cc60dbd59c4a91043d1def5302a415cbc2a88e1b679e4cad5c18eb62033。本机原始副本为C:/Users/WINDOWS/.codex/automation-state/evidence/fire-budget-input-repair-20261016/original-editmode.xml与original-editmode.log；XML取自Unity实际回落的LocalLow/DefaultCompany/src/TestResults.xml，已核对测试数、三项失败及其worktree路径，日志绑定同一run。
+- 修复由单模型在.worktrees/fire-budget-input-repair-20261016完成，根因明确且仅修改本卡，无独立委派工作面。经验预检零命中、无mustRead或门禁，与schema 2投影一致；后续仍沿用入口默认单模型和原独立复验矩阵。
+- 修复验证：在上述独立worktree执行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/fire-budget-input-repair-20261016/src -ResultXmlPath D:/天章游戏开发/.worktrees/fire-budget-input-repair-20261016/src/Logs/JindanFireDomain/InputRepair/editmode.xml，Unity 6000.3.18f1完整1341/1341通过，0失败/跳过；三项原失败逐名核对均Passed。原始素材与只读副本前后bytes/SHA-256一致；共享入口现有Assert-MaterializedAutomationInputs验证通过，测试后仅本卡有Git差异，Unity资源与BuildSettings未变。
+- 修复后XML SHA-256为82f8ee4869fc980c6182708f55f6f3de3f63d926591a2295af0c87a6ab0f7837，log为eecca40e6c4eac8048936fd847b52257e759f9a0159a467e5c73120a80050112，副本为上述本机证据目录的repaired-editmode.xml与repaired-editmode.log。本轮未执行N的指定PlayMode与独立Game view，不归档本N、不解锁下游。
 
 ## 旧证据保留（仅追溯）
 
