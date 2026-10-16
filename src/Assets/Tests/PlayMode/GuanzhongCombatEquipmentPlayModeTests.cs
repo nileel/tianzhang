@@ -18,6 +18,7 @@ using TianZhang.Spatial;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -28,6 +29,11 @@ namespace TianZhang.Tests.PlayMode
     {
         private const string Attack = "spell_guanshiji", Recovery = "spell_julingshu";
         private string saveDirectory;
+        private Mouse mouse;
+        private InputSettings.BackgroundBehavior background;
+#if UNITY_EDITOR
+        private InputSettings.EditorInputBehaviorInPlayMode editorInput;
+#endif
         private EncounterCoordinator encounter;
         private CombatSession session;
         private AdventureSpawnSet spawned;
@@ -39,6 +45,13 @@ namespace TianZhang.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator EnterFormalAdventure()
         {
+            background = InputSystem.settings.backgroundBehavior;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+#if UNITY_EDITOR
+            editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+#endif
+            mouse = InputSystem.AddDevice<Mouse>();
             GameBootstrap stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -101,6 +114,11 @@ namespace TianZhang.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator Cleanup()
         {
+            InputSystem.settings.backgroundBehavior = background;
+#if UNITY_EDITOR
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+#endif
+            if (mouse != null) InputSystem.RemoveDevice(mouse);
             GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -138,11 +156,13 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 Debug.Log("[AOE route] " + profileId + "; step=" + step + "; " + AreaState());
                 bar.BasicAttackButton.onClick.Invoke();
-                Assert.AreEqual(spawned.Player.Facing, input.Candidate.AttackDirection);
+                Assert.IsTrue(input.IsSelectingAttack);
+                Assert.IsFalse(input.IsAttackLocked);
                 for (int direction = 0; direction < 6; direction++)
                 {
                     string before = AreaState();
-                    bar.AttackDirectionButtons[direction].onClick.Invoke();
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, direction);
+                    if (input.Preview.AttackArea == null) { Assert.IsFalse(input.Preview.CanConfirm); continue; }
                     AssertAreaMatchesAuthority(direction);
                     Debug.Log("[AOE direction] d=" + direction + "; targets=" + input.Preview.AttackArea.Targets.Count +
                         "; confirm=" + input.Preview.CanConfirm + "; reason=" + input.Preview.Reason);
@@ -181,10 +201,12 @@ namespace TianZhang.Tests.PlayMode
                 SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 Assert.AreEqual(width, Screen.width); Assert.AreEqual(width == 1920 ? 1080 : 768, Screen.height);
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, selectedDirection);
                 yield return CaptureArea((blade ? "blade" : "sword") + "-two-targets-" + width);
                 for (int direction = 0; direction < 6; direction++)
                 {
-                    bar.AttackDirectionButtons[direction].onClick.Invoke();
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, direction);
+                    if (input.Preview.AttackArea == null) { Assert.IsFalse(input.Preview.CanConfirm); continue; }
                     AssertAreaMatchesAuthority(direction);
                     if (input.Preview.AttackArea.Targets.Count != 0) continue;
                     string before = AreaState(); input.ConfirmCandidate(); Assert.AreEqual(before, AreaState());
@@ -192,14 +214,15 @@ namespace TianZhang.Tests.PlayMode
                     yield return CaptureArea((blade ? "blade" : "sword") + "-empty-" + width);
                     break;
                 }
-                bar.AttackDirectionButtons[selectedDirection].onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, selectedDirection);
                 string cancelled = AreaState(); preview.CancelButton.onClick.Invoke();
                 Assert.AreEqual(cancelled, AreaState());
                 Assert.IsNull(input.Candidate);
                 Assert.IsFalse(Find<CombatMovementView>().Highlights.Values.Any(ring => ring.gameObject.activeSelf));
                 bar.BasicAttackButton.onClick.Invoke();
-                Assert.AreEqual(spawned.Player.Facing, input.Candidate.AttackDirection);
-                bar.AttackDirectionButtons[selectedDirection].onClick.Invoke();
+                Assert.IsTrue(input.IsSelectingAttack);
+                Assert.IsFalse(input.IsAttackLocked);
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, selectedDirection);
             }
             var quote = input.Preview;
             var old = input.Candidate;
@@ -247,6 +270,11 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator CaptureArea(string label)
         {
+#if UNITY_EDITOR
+            for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling, "Shader compilation must finish before visual evidence.");
+#endif
+            for (int frame = 0; frame < 8; frame++) yield return null;
             yield return null; Canvas.ForceUpdateCanvases();
             AssertPreviewBounds(preview, label);
             var text = Get<Text>(preview, "summary");
@@ -264,8 +292,7 @@ namespace TianZhang.Tests.PlayMode
                     "cell=" + key + "; center=" + center + "; camera=" + Camera.main.transform.position +
                     "; screen=" + Camera.main.WorldToScreenPoint(center) + "; legal=" + cell.IsLegal);
             }
-            foreach (var button in bar.AttackDirectionButtons)
-                AssertVisibleText(button.GetComponentInChildren<Text>(), label + "/" + button.name);
+            AssertVisibleText(preview.ConfirmButton.GetComponentInChildren<Text>(), label + "/confirm");
             string directory = Path.Combine(Application.dataPath, "../Logs/aoe-input"); Directory.CreateDirectory(directory);
             string path = Path.Combine(directory, label + ".png");
             File.WriteAllText(Path.ChangeExtension(path, ".txt"), text.text + "\nstate=" + AreaState() +
@@ -408,8 +435,9 @@ namespace TianZhang.Tests.PlayMode
                     if (!passive && bar.BasicAttackButton.interactable)
                     {
                         bar.BasicAttackButton.onClick.Invoke();
-                        for (int direction = 0; input.Preview.AttackArea != null && !input.Preview.CanConfirm && direction < 6; direction++)
-                            bar.AttackDirectionButtons[direction].onClick.Invoke();
+                        yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
+                        for (int direction = 0; !input.Preview.CanConfirm && direction < 6; direction++)
+                            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, direction);
                         canAttack = input.Preview.CanConfirm;
                     }
                     var enemy = units.Enemies.FirstOrDefault(unit => unit.IsAlive);

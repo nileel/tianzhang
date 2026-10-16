@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-15用户明确要求优先排查并建修复任务；已定位直接所有者并冻结最小修复、取证与验收范围，尚未实施。",
+  "stateReason": "2026-10-16按负责人要求人工排查并完成：普攻鼠标预览/锁定/确认/取消、旧控件清理、测试前置修正和场景持久化均已验证。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
@@ -97,3 +97,35 @@ CombatCommandInput.Configure 把普攻绑定为 Choose(BasicAttack,targetId)，�
 
 若需改变伤害、射程、范围形状、方向算法、寻路/Combat 内核、跨 Feature 直接调用或引入新状态机，停止并重新划界；不能用修改规则让错误预览通过。运行时输入/画面证据缺失不算完成。
 发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。
+
+
+## 2026-10-16 人工排查与完成证据
+
+- 失败现场：run=7e9e4bb7-9b79-420c-b90c-fabf873ab124，base=cc989e3d902885777e7e4e04b555ddc80565bdef。原run为attention_required/playmode_validation_failed，candidate/canonical均为空。HEAD与base、任务卡digest均匹配，原worktree干净，无责任方或Unity执行进程；上轮已回滚全部业务修改。本轮依负责人“排查原因，并直接把任务做了”的授权，在保留的同一隔离worktree人工完成，未恢复旧模型会话、未重跑自动入口。
+- 原失败根因：上轮20项中7失败，回滚基线复核确认6项已存在。旧测试仍假设新角色空手、冷却/余额不足的术法按钮必须禁用、仅一个敌人，并通过不携带范围方向的旧直接普攻入口制造死亡。本轮明确建立空手fixture；拒绝报价仍可查看但确认无效且不消费；按当前双敌行动轴及鼠标hover优先级检验键盘；最终死亡fixture用真实鼠标选格和当前范围报价执行。保留费用、冷却、范围、命中、存档及生命周期断言。
+- 新输入及验收前置问题：上轮对单体攻击也传入方向，违反现有CombatSession.ValidateAttack合同；现根据当前权威BasicAttack报价是否具有AttackArea，仅给范围攻击传方向。范围测试的自动选格须处于棋盘内；敌人可落在刀的第二格，不能把第一个敌人方位等同唯一合法方向。直接改变/恢复测试单位位置后，旧HUD Movement.Origin仍可能残留，现每个stale-quote子场景通过既有失效候选入口重新发布权威快照。权威费用比较同时带入实际AttackDirection。没有改Combat内核、规则或补生产兜底。
+- 执行能力：Node REPL requestMeta实测gpt-6-astra；本次是普通人工任务，单主模型统一处理同一输入/候选/取消链，无子智能体或第二责任会话，原自动化executionModel配置不变。写入前及调用者核对后两次唯一风险预检：taskCardDigest=af16d596e06f4cc51b8072be334cd565a22ce0cef001ddaa6fdb0b11cf2fbafc，indexDigest=58c8271c312b085a906befd8a963b8bbde820fef601668f375e467b234991bba，matched/mustRead/gates均空，与卡头投影一致。全部修改限定在原expectedPaths。
+- 所有者与范围：AdventureScene/AdventureRoot/CombatCommandInput从BasicAttackButton进入瞄准，复用CombatMovementView.TryPickCell的battlefieldCamera、正式地块平面与EventSystem；CombatTargetInput从已存在的单位provider按格查找敌人；PreviewAction返回报价及区域；CombatMovementView.PresentAttackArea只绘制报价区域或单体目标格。CombatHudPresenter.CanInspect抑制攻击选取期间的详情输入。锁定前hover不消费，左键锁定后现有确认提交一次，右键/Esc取消；未锁定时离开棋盘或进入UI清除旧报价。已锁定报价允许移到确认按钮。换动作、权威刷新、演出、回合/退出清理沿用现有入口。没有新Canvas、相机、战斗状态机或其他场景变化。
+- 持久化：AdventureSceneBuilder.RebuildCombatLayout经Unity Editor API保存。按fileID解析场景前后语义差异：仅删除六个方向按钮及其子对象，共60个序列化对象；既有三个对象只变更旧按钮数组、父children和CombatCommandInput.targetInput接线，无新增对象。场景重开及增量Builder幂等测试通过；Unity退出后仅用check-pending-whitespace -Fix规范行尾空白，未手改YAML业务值。
+- PlayMode命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <本worktree>/src -ResultXmlPath <本worktree>/src/Logs/basic-pointer-recovery.xml -TestFilter 'TianZhang.Tests.PlayMode.GuanzhongBasicAttackPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatTargetSelectionPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatActionPreviewPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatEquipmentPlayModeTests' -EnableGraphics。首轮31项/27通过/4失败。修正上述测试前置后，对4个失败项及3个更新取图的目标用例定向复验，basic-pointer-recovery-final.xml为7/7通过、failed=0。累计覆盖31个不同用例；已通过且相关业务输入未变的用例未重复运行。日志保留所有失败及后续通过证据，不把首次失败结果称为全绿。
+- 复验过滤器：GuanzhongCombatActionPreviewPlayModeTests的AoeAuthorityChangesRejectOldQuotesBeforeRandomOrPayment、Ap2UnarmedGrowthAndRejectedQuoteAtBothResolutions、Ap2WeaponRepeatQuoteAndCooldownAtBothResolutions；GuanzhongCombatTargetSelectionPlayModeTests的WorldAxisAndKeyboardKeepStableIdentityWithoutChangingCommands、BasicPointerHoverLockCancelAndInputOwnershipAtBothResolutions；GuanzhongCombatEquipmentPlayModeTests的AoeSwordSelectsPreviewsAndConfirmsFormalTwoEnemyQuote、AoeBladeSelectsPreviewsAndConfirmsFormalTwoEnemyQuote。空手真实鼠标同时覆盖两敌切换、超距拒绝、空地拒绝、方向字段为空、hover不扣费；剑刀验证六向中棋盘内可指向格、权威受影响格/双敌命中/一次费用和取消无消费。
+- EditMode：现有run-unity-editmode-tests.ps1没有TestFilter参数，故使用同一Unity6000.3.18f1的-runTests -testPlatform EditMode -testFilter TianZhang.Tests.EditMode.GuanzhongCombatLayoutEditorTests，保留并恢复测试前场景字节，再用该脚本-ValidateResultOnly核验XML。basic-pointer-layout.xml为2/2通过、failed=0，覆盖保存后重开、接线、旧按钮不存在与相关增量Builder幂等性。
+- 视觉与数值：最终取图前断言ShaderUtil.anythingCompiling=false，1920x1080及1366x768已目检。证据在src/Logs/basic-pointer/pointer-{1920,1366}.png及txt、src/Logs/aoe-input/{sword,blade}-two-targets-{1920,1366}.png及txt、src/Logs/ap-hud/ap2-unarmed-1366-0.png。画面显示对应单格/两格金色轮廓、实际目标/费用、确认与取消控件，无旧方向按钮。目标为GuanzhongBattlefield/GuanzhongHex_q_r逻辑格；输出为AdventureRoot/Reachable_q_r世界空间LineRenderer。示例刀预览：Reachable_0_0中心(0,0.44,1)，Camera(0,8,-9.58)，1920屏幕点(960,615.72)，1366屏幕点(683,437.85)；pointer-1366实际鼠标(779,532.35)，origin=(0,1)，显示(0,2)/(0,3)。沿用既有线几何与坐标换算，没有调整位置/尺寸/共享材质。青绿色地形与上轮已验基线一致，不能仅凭颜色判断编译占位。
+- 验证范围不含角色数值平衡，不运行BattleSim；没有生产存档写入或额外场景/系统修改。技能已读unity-agent-workflows及runtime-owner-proof、runtime-visible-output、runtime-visible-targets、ui-and-visual-assets、serialized-persistence、content-and-systems、unity-validation；结构索引已读UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md。截图与完整日志保留在原隔离worktree，未混入正式资源。
+
+- 管理与数据检查：check-task-cards -Postcondition CodexClosedOrNonReady通过（70张活跃卡，4项ready，本卡completed）；check-review-text通过（845份）；check-data-chain通过（GongFa29/29、Spells84/84、Skills31/31、710个语言键）；15个现有变更文件的check-pending-whitespace与git diff --check通过。仅移除自身队列/backlog行；后续术法任务仍由其维护入口核对前置，未越权改下游卡。
+
+## 经验候选
+
+### U-GZ-R3-BASIC-POINTER-01-C01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：范围攻击旧报价回归在鼠标输入迁移后报告区域无敌人，但原始方向按钮用例通过。
+- 已证实根因：对抗性fixture直接改变再恢复领域位置，却未同步HUD的Movement.Origin；鼠标输入使用该快照计算方向，而旧按钮直接传方向，因而掩盖快照陈旧。另有测试选取棋盘外第一格，而合法命中来自刀的第二格。
+- 可能复用范围：把直接命令/按钮测试迁移到真实鼠标拾取，以及手动改变领域状态的stale-quote测试。
+- 证据：原始基线AoeAuthorityChangesRejectOldQuotesBeforeRandomOrPayment通过而输入版失败；CombatCommandInput.LateUpdate读取snapshot.Movement.Origin，EncounterCoordinator.Present发布该值；fixture恢复后经既有失效候选入口发布快照、在棋盘内选取后，basic-pointer-recovery-final.xml该项通过。
+- 门禁可能：yes

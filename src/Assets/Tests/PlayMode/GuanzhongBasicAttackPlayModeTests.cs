@@ -19,6 +19,8 @@ using TianZhang.Spatial;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -28,6 +30,47 @@ namespace TianZhang.Tests.PlayMode
 {
     public sealed class GuanzhongBasicAttackPlayModeTests
     {
+        // Exercise the formal pointer path; domain queries only choose a cell, never submit a UI candidate.
+        public static IEnumerator PointBasicAttack(CombatSession session, int? direction = null, bool lockTarget = true)
+        {
+            var input = FindInActiveScene<CombatCommandInput>();
+            if (!input.IsSelectingAttack || input.IsAttackLocked)
+                FindInActiveScene<CombatActionBarView>().BasicAttackButton.onClick.Invoke();
+            if (!input.IsSelectingAttack) yield break;
+            session.Combatants.TryGet("player", out var actor);
+            // Area attacks select a legal facing, not the first enemy's bearing: the blade's
+            // adjacent pair can hit an enemy in either of its two cells.
+            if (!direction.HasValue && session.TryGetProfile(actor.BasicAttackProfileId, out var profile) &&
+                profile.Area != CombatAttackArea.Single)
+            {
+                Transform board = GameObject.Find("GuanzhongBattlefield").transform;
+                int[] legal = Enumerable.Range(0, 6).Where(value =>
+                    board.Find("GuanzhongHex_" + actor.Position.Step(value).Q + "_" + actor.Position.Step(value).R) != null &&
+                    CombatSession.QueryAttackArea(actor, profile, value, session.Combatants.All, session.SpatialQuery)
+                        .TargetIds.Count > 0).ToArray();
+                if (legal.Length > 0) direction = legal[0];
+            }
+            HexCoord cell = direction.HasValue ? actor.Position.Step(direction.Value) :
+                (session.Combatants.All.FirstOrDefault(unit => unit.Team == CombatTeam.Enemy && unit.IsAlive) ??
+                    session.Combatants.All.First(unit => unit.Team == CombatTeam.Enemy)).Position;
+            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + cell.Q + "_" + cell.R);
+            Vector2 point = tile != null ? (Vector2)Camera.main.WorldToScreenPoint(tile.position) : new Vector2(-100, -100);
+            yield return PointAttackAt(point, lockTarget);
+        }
+
+        public static IEnumerator PointAttackAt(Vector2 point, bool lockTarget = false)
+        {
+            Mouse mouse = Mouse.current;
+            Assert.NotNull(mouse);
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+            yield return null; yield return null;
+            if (!lockTarget) yield break;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Left));
+            yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+            yield return null;
+        }
+
         // Check the formal new-game result; this helper must never upgrade or initialize a player.
         public static void PrepareEquippedPlayerFixture()
         {

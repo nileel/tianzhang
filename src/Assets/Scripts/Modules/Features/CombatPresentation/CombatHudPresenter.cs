@@ -21,6 +21,7 @@ namespace TianZhang.Features.CombatPresentation
         public CombatHudSnapshot Snapshot { get; private set; }
         public string InspectedTargetId { get; private set; }
         public bool CanInspect => Snapshot != null && !Snapshot.IsPresenting &&
+            (commandInput == null || !commandInput.IsSelectingAttack) &&
             unitProvider != null && !unitProvider.IsPresenting && movementView != null && !movementView.IsSelecting;
 
         public void ConfigureTargets(CombatTargetView targets, Static3DCombatUnitPresentationProvider provider,

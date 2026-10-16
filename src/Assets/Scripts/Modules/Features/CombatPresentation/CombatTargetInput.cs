@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -55,6 +56,19 @@ namespace TianZhang.Features.CombatPresentation
                     closestId = candidate;
                 }
             }
+        }
+
+        public string FindEnemyAtCell(CombatUnitPresentationHex cell)
+        {
+            if (presenter?.Snapshot == null) return null;
+            Vector3 center = Static3DCombatUnitPresentationProvider.HexToWorld(cell);
+            foreach (var enemy in presenter.Snapshot.Enemies)
+            {
+                if (enemy.CurrentHealth <= 0 || !provider.TryGetPresentedUnit(enemy.Id, out GameObject unit)) continue;
+                Vector3 delta = unit.transform.position - center;
+                if (delta.x * delta.x + delta.z * delta.z < .0001f) return enemy.Id;
+            }
+            return null;
         }
 
     }

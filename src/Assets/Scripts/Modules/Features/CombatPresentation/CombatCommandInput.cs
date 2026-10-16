@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace TianZhang.Features.CombatPresentation
@@ -9,12 +10,16 @@ namespace TianZhang.Features.CombatPresentation
     public sealed class CombatCommandInput : MonoBehaviour
     {
         [SerializeField] private CombatActionBarView actionBar;
+        [SerializeField] private CombatTargetInput targetInput;
         private ICombatCommandHandler handler;
         private ICombatActionPreviewHandler previewHandler;
         private CombatActionPreviewView previewView;
         private CombatTimelineView timeline;
         public CombatActionPreviewSnapshot Preview { get; private set; }
         public CombatActionCandidate Candidate => Preview?.Candidate;
+        public bool IsSelectingAttack { get; private set; }
+        public bool IsAttackLocked { get; private set; }
+        private CombatUnitPresentationHex? pointedCell;
 
         public void ConfigurePreview(ICombatActionPreviewHandler previews, CombatActionPreviewView view, CombatTimelineView axis)
         {
@@ -29,16 +34,18 @@ namespace TianZhang.Features.CombatPresentation
 
         public void CancelCandidate()
         {
+            IsSelectingAttack = IsAttackLocked = false;
+            pointedCell = null;
             Preview = null;
             previewView?.Present(null);
             timeline?.PresentPrediction(null);
-            actionBar?.PresentAttackDirections(null, false);
             movementView?.PresentAttackArea(null);
         }
 
         public void ConfirmCandidate()
         {
-            if (!isActiveAndEnabled || !CanAct || Preview == null || !Preview.CanConfirm) return;
+            if (!isActiveAndEnabled || !CanAct || Preview == null || !Preview.CanConfirm ||
+                (IsSelectingAttack && !IsAttackLocked)) return;
             CombatActionCandidate selected = Candidate;
             CancelCandidate();
             previewHandler.ConfirmAction(selected);
@@ -53,14 +60,62 @@ namespace TianZhang.Features.CombatPresentation
                 snapshot.CommandContextVersion, slotIndex: slot, attackDirection: direction));
             previewView?.Present(Preview);
             timeline?.PresentPrediction(Preview);
-            actionBar?.PresentAttackDirections(Preview?.AttackArea, CanAct);
             movementView?.PresentAttackArea(Preview?.AttackArea);
         }
 
-        private void SelectAttackDirection(int direction)
+        private void BeginAttackSelection()
         {
-            if (!CanAct || Candidate?.Kind != CombatActionKind.BasicAttack || Preview.AttackArea == null) return;
-            Choose(CombatActionKind.BasicAttack, direction: direction);
+            if (!CanAct || previewHandler == null || movementView == null || targetInput == null) return;
+            CancelCandidate();
+            movementView.Cancel();
+            IsSelectingAttack = true;
+            PresentPointerPrompt("鼠标指向地块预览，左键选定；右键或 Esc 取消");
+        }
+
+        private void PresentPointerPrompt(string reason)
+        {
+            pointedCell = null;
+            Preview = new CombatActionPreviewSnapshot(new CombatActionCandidate(CombatActionKind.BasicAttack,
+                actorId, null, null, snapshot.CommandContextVersion), "普攻", "当前角色", "地块", false,
+                reason, 0, false, 0, 0, 0);
+            previewView?.Present(Preview);
+            timeline?.PresentPrediction(null);
+            movementView.PresentAttackArea(null);
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsSelectingAttack) return;
+            if (!CanAct) { CancelCandidate(); return; }
+            Mouse mouse = Mouse.current;
+            if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+            { CancelCandidate(); return; }
+            // A locked quote must survive moving onto its confirmation button.
+            if (IsAttackLocked) return;
+            if (mouse == null || !movementView.TryPickCell(mouse.position.ReadValue(), out var cell))
+            { if (pointedCell.HasValue) PresentPointerPrompt("请指向棋盘内的地块，左键选定后确认"); return; }
+            if (!pointedCell.HasValue || !pointedCell.Value.Equals(cell))
+            {
+                pointedCell = cell;
+                CombatUnitPresentationHex origin = snapshot.Movement.Origin;
+                int q = cell.Q - origin.Q, r = cell.R - origin.R;
+                if (q == 0 && r == 0) { PresentPointerPrompt("请选择其他地块，不能攻击自身"); return; }
+                // Same axial six-direction order as the board; choose the nearest facing to the pointed cell.
+                float angle = Mathf.Atan2(-0.8660254f * r, q + .5f * r) * Mathf.Rad2Deg;
+                int direction = (Mathf.FloorToInt((angle + 30f) / 60f) % 6 + 6) % 6;
+                Preview = previewHandler.PreviewAction(new CombatActionCandidate(CombatActionKind.BasicAttack,
+                    actorId, targetInput.FindEnemyAtCell(cell), null, snapshot.CommandContextVersion, attackDirection:
+                        snapshot.FindAction(CombatActionKind.BasicAttack)?.AttackArea != null ? direction : (int?)null));
+                previewView?.Present(Preview);
+                timeline?.PresentPrediction(Preview);
+                movementView.PresentAttackArea(Preview?.AttackArea, cell, Preview?.CanConfirm == true);
+                if (previewView != null) previewView.ConfirmButton.interactable = false;
+            }
+            if (mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true)
+            {
+                IsAttackLocked = true;
+                previewView?.Present(Preview);
+            }
         }
 
         private void OnDisable() => ClearContext();
@@ -85,12 +140,7 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
             Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
             Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
-            Bind(actionBar?.BasicAttackButton, () => { if (CanAct) Choose(CombatActionKind.BasicAttack, targetId); });
-            for (int index = 0; index < actionBar.AttackDirectionButtons.Count; index++)
-            {
-                int direction = index;
-                Bind(actionBar.AttackDirectionButtons[index], () => SelectAttackDirection(direction));
-            }
+            Bind(actionBar?.BasicAttackButton, BeginAttackSelection);
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
             Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);

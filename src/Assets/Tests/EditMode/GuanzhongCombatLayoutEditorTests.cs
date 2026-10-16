@@ -94,14 +94,12 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(1, rects.Count(r => r.name == "BountySummary"));
             Assert.AreEqual(1, rects.Count(r => r.name == "CombatActionBar"));
             var actionBar = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatActionBarView>()).Single();
-            Assert.AreEqual(6, actionBar.AttackDirectionButtons.Count);
-            for (int direction = 0; direction < 6; direction++)
-            {
-                var button = actionBar.AttackDirectionButtons[direction];
-                Assert.AreSame(Rect("AttackDirection_" + direction).gameObject, button.gameObject);
-                Assert.AreSame(Rect("PreviewActions"), button.transform.parent);
-                Assert.IsFalse(button.gameObject.activeSelf);
-            }
+            Assert.IsFalse(rects.Any(r => r.name.StartsWith("AttackDirection_")));
+            Assert.IsNull(new SerializedObject(actionBar).FindProperty("attackDirectionButtons"));
+            var input = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatCommandInput>()).Single();
+            Assert.AreSame(actionBar, new SerializedObject(input).FindProperty("actionBar").objectReferenceValue);
+            var targetInput = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTargetInput>()).Single();
+            Assert.AreSame(targetInput, new SerializedObject(input).FindProperty("targetInput").objectReferenceValue);
             var timeline = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTimelineView>()).Single();
             Assert.NotNull(new SerializedObject(timeline).FindProperty("predictionRoot").objectReferenceValue);
         }

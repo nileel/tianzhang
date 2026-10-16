@@ -74,6 +74,18 @@ namespace TianZhang.Tests.PlayMode
             bool ap2 = TestContext.CurrentContext.Test.Name.StartsWith("Ap2", StringComparison.Ordinal);
             bool unarmed = TestContext.CurrentContext.Test.Name.Contains("Unarmed");
             if (!unarmed) GuanzhongBasicAttackPlayModeTests.PrepareEquippedPlayerFixture();
+            else
+            {
+                // New games now equip a sword. Explicitly construct this isolated unarmed fixture.
+                var player = GameBootstrap.RequireRuntime().Player;
+                var state = player.Capture();
+                player.Restore(new TianZhang.Character.CharacterStateSnapshot(state.Identity, state.Attributes,
+                    state.Resources, state.AbilityLoadout, state.Progression, state.CombatModifiers,
+                    null, state.UnarmedBasicAttackProfileId, state.AppearanceProfileId,
+                    state.VisibleRootId, state.VisibleRootGrade, state.VisibleRootElement,
+                    unarmedAttackFamilyId: state.UnarmedAttackFamilyId));
+                Assert.That(player.MainEquipmentBasicAttackProfileId, Is.Null.Or.Empty);
+            }
             if (ap2)
                 GameBootstrap.RequireRuntime().Player.RestoreProgression(new TianZhang.Character.CharacterProgressionSnapshot(
                     "", unarmed ? "练气" : "金丹", unarmed ? 1.5f : 6f));
@@ -160,6 +172,7 @@ namespace TianZhang.Tests.PlayMode
                         yield return Ready();
                     }
                     bar.BasicAttackButton.onClick.Invoke();
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                     AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
                     Assert.That(input.Preview.CommittedUseCount, Is.EqualTo(use));
                     Assert.That(input.Preview.RepeatMultiplierPermille, Is.EqualTo(use < 2 ? 1000 : use == 2 ? 1250 : 1500));
@@ -172,6 +185,7 @@ namespace TianZhang.Tests.PlayMode
                     view.CancelButton.onClick.Invoke();
                     Assert.That(State(), Is.EqualTo(before));
                     bar.BasicAttackButton.onClick.Invoke();
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                     Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(cost));
                     Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                     input.ConfirmCandidate();
@@ -197,12 +211,13 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 var cooling = presenter.Snapshot.ArtActions[1].Targets[0].Quote;
                 Assert.That(cooling.RemainingCooldownTicks, Is.GreaterThan(0));
-                Assert.That(bar.SecondArtButton.interactable, Is.False);
+                AssertRejectedArtCanBeInspected(bar.SecondArtButton);
                 view.Present(cooling);
                 yield return CaptureAp2("cooldown-" + width);
                 encounter.RequestEndTurn("player");
                 yield return Ready();
                 bar.BasicAttackButton.onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                 Assert.That(input.Preview.CommittedUseCount, Is.Zero);
                 Assert.That(input.Preview.RepeatMultiplierPermille, Is.EqualTo(1000));
             }
@@ -219,9 +234,11 @@ namespace TianZhang.Tests.PlayMode
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 var bar = Find<CombatActionBarView>();
                 var input = Find<CombatCommandInput>();
+                yield return InspectUnarmedPointerTargets();
                 for (int use = 0; use < 2; use++)
                 {
                     bar.BasicAttackButton.onClick.Invoke();
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                     AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
                     Assert.That(input.Preview.ActionName, Is.EqualTo("拳脚"));
                     Assert.That(input.Preview.BasicAttackSourceKind, Is.EqualTo("unarmed_body"));
@@ -234,6 +251,7 @@ namespace TianZhang.Tests.PlayMode
                     yield return Ready();
                 }
                 bar.BasicAttackButton.onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                 var stale = input.Candidate;
                 GameBootstrap.RequireRuntime().Player.RestoreProgression(
                     new TianZhang.Character.CharacterProgressionSnapshot("", "筑基", 3f));
@@ -242,6 +260,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(remaining, Is.EqualTo(50000), "Growth neither refills AP nor confirms an old quote.");
                 input.SetContext(presenter.Snapshot);
                 bar.BasicAttackButton.onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                 AssertAp2Quote(input.Preview, CombatCommandKind.BasicAttack);
                 Assert.That(input.Preview.UnarmedRealmId, Is.EqualTo("realm_zhuji"));
                 Assert.That(input.Preview.PhysicalAttackCapacity, Is.EqualTo(500));
@@ -257,6 +276,7 @@ namespace TianZhang.Tests.PlayMode
                 encounter.RequestEndTurn("player");
                 yield return Ready();
                 bar.BasicAttackButton.onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                 Assert.That(input.Preview.CommittedUseCount, Is.Zero);
                 Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(75000));
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
@@ -268,7 +288,8 @@ namespace TianZhang.Tests.PlayMode
         private void AssertAp2Quote(CombatActionPreviewSnapshot quote, CombatCommandKind kind)
         {
             var authority = new CombatCommandService().Preview(session,
-                new CombatCommand(kind, quote.Candidate.ActorId, quote.Candidate.TargetId, quote.Candidate.ProfileId));
+                new CombatCommand(kind, quote.Candidate.ActorId, quote.Candidate.TargetId, quote.Candidate.ProfileId,
+                    attackDirection: quote.Candidate.AttackDirection));
             Assert.That(quote.ActionPointCostUnits, Is.EqualTo(authority.ActionPointCostUnits));
             Assert.That(quote.CommittedUseCount, Is.EqualTo(authority.CommittedUseCount));
             Assert.That(quote.RepeatMultiplierPermille, Is.EqualTo(authority.RepeatMultiplierPermille));
@@ -276,6 +297,51 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(quote.RuleSetSourceDigest, Is.EqualTo(authority.RuleSetSourceDigest));
             Assert.That(quote.AbilityTierId, Is.EqualTo(authority.AbilityTierId));
             TestContext.WriteLine($"AP2 {Screen.width}: {kind} {quote.Candidate.ProfileId}, uses={quote.CommittedUseCount}, multiplier={quote.RepeatMultiplierPermille}, AP={quote.ActionPointCostUnits}, capacity={quote.PhysicalAttackCapacity}, legal={quote.CanConfirm}");
+        }
+
+        private IEnumerator InspectUnarmedPointerTargets()
+        {
+            var input = Find<CombatCommandInput>();
+            var move = Find<CombatMovementView>();
+            Transform board = GameObject.Find("GuanzhongBattlefield").transform;
+            string before = State();
+            Find<CombatActionBarView>().BasicAttackButton.onClick.Invoke();
+            int legal = 0, rejected = 0;
+            foreach (var enemy in spawned.Enemies)
+            {
+                Transform tile = board.Find("GuanzhongHex_" + enemy.Position.Q + "_" + enemy.Position.R);
+                Vector2 point = Camera.main.WorldToScreenPoint(tile.position);
+                Assert.IsTrue(move.TryPickCell(point, out var picked));
+                Assert.AreEqual(enemy.Position.Q, picked.Q);
+                Assert.AreEqual(enemy.Position.R, picked.R);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point);
+                Assert.AreEqual(enemy.Id, input.Candidate.TargetId);
+                Assert.IsNull(input.Candidate.AttackDirection, "Single attacks never carry a direction.");
+                var authority = new CombatCommandService().Preview(session,
+                    new CombatCommand(CombatCommandKind.BasicAttack, "player", enemy.Id, spawned.Player.BasicAttackProfileId));
+                Assert.AreEqual(authority.IsLegal, input.Preview.CanConfirm);
+                if (authority.IsLegal) legal++;
+                else { rejected++; Assert.IsNotEmpty(input.Preview.Reason); }
+                Assert.IsFalse(Find<CombatActionPreviewView>().ConfirmButton.interactable);
+                input.ConfirmCandidate();
+                Assert.AreEqual(before, State(), "Hover cannot commit either legal or rejected targets.");
+            }
+            Assert.Greater(legal, 0);
+            Assert.Greater(rejected, 0, "The second enemy exercises the unarmed range boundary.");
+            var empty = move.Highlights.Keys.First(key =>
+            {
+                var cell = new HexCoord(key.x, key.y);
+                return session.Combatants.All.All(unit => unit.Position != cell) &&
+                    move.TryPickCell(Camera.main.WorldToScreenPoint(board.Find("GuanzhongHex_" + key.x + "_" + key.y).position), out _);
+            });
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(Camera.main.WorldToScreenPoint(
+                board.Find("GuanzhongHex_" + empty.x + "_" + empty.y).position), true);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.IsFalse(input.IsAttackLocked);
+            Assert.IsNotEmpty(input.Preview.Reason);
+            input.ConfirmCandidate();
+            Assert.AreEqual(before, State());
+            input.CancelCandidate();
         }
 
         [UnityTest]
@@ -308,7 +374,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - 168));
                 Assert.That(session.TurnSequence, Is.EqualTo(turn));
                 Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
-                Assert.That(bar.ArtButton.interactable, Is.False);
+                AssertRejectedArtCanBeInspected(bar.ArtButton);
                 var rejected = presenter.Snapshot.ArtActions[0].Targets[0].Quote;
                 Assert.That(rejected.ActionPointCostUnits, Is.EqualTo(75000));
                 Find<CombatActionPreviewView>().Present(rejected);
@@ -320,6 +386,11 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator CaptureAp2(string label)
         {
+#if UNITY_EDITOR
+            for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling);
+#endif
+            for (int frame = 0; frame < 8; frame++) yield return null;
             Canvas.ForceUpdateCanvases();
             Text text = Get<Text>(Find<CombatActionPreviewView>(), "summary");
             var viewport = text.GetComponentInParent<ScrollRect>().viewport;
@@ -384,13 +455,13 @@ namespace TianZhang.Tests.PlayMode
                 input.ConfirmCandidate(); encounter.ConfirmAction(oldAction); encounter.ConfirmAction(oldMove);
                 Assert.That(State(), Is.EqualTo(busy));
                 yield return Ready();
-                Assert.That(bar.SecondArtButton.interactable, Is.False);
+                AssertRejectedArtCanBeInspected(bar.SecondArtButton);
                 Assert.That(presenter.Snapshot.ArtActions[1].Targets[0].Quote.RemainingCooldownTicks, Is.EqualTo(16));
                 if (width == 1920) yield return MoveThroughHud();
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(50000));
                 Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 50/100"));
                 Assert.That(presenter.Snapshot.PendingCtPenalty, Is.EqualTo(5));
-                Assert.That(bar.BasicAttackButton.interactable, Is.EqualTo(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanConfirm));
+                Assert.That(bar.BasicAttackButton.interactable, Is.True, "Aiming remains available even when the default direction is empty.");
                 Assert.That(bar.GuardButton.interactable, Is.True);
                 Assert.That(bar.WaitButton.interactable, Is.True, "End turn legality must not disable or enable other actions.");
                 Assert.That(spawned.Player.GetCooldown("spell_julingshu"), Is.EqualTo(16));
@@ -437,6 +508,20 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
         }
 
+        private void AssertRejectedArtCanBeInspected(Button button)
+        {
+            var input = Find<CombatCommandInput>();
+            Assert.IsTrue(button.interactable, "The button exposes the current rejection reason.");
+            string before = State();
+            button.onClick.Invoke();
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.IsNotEmpty(input.Preview.Reason);
+            Assert.IsFalse(Find<CombatActionPreviewView>().ConfirmButton.interactable);
+            input.ConfirmCandidate();
+            Assert.AreEqual(before, State(), "Rejected quotes cannot consume resources or advance combat.");
+            input.CancelCandidate();
+        }
+
         private IEnumerator CaptureHud(string label)
         {
             Canvas.ForceUpdateCanvases();
@@ -472,7 +557,7 @@ namespace TianZhang.Tests.PlayMode
                 "; scale=" + text.canvas.scaleFactor + "; screenCorners=" + string.Join("/", corners.Select(corner => corner.ToString("F2")));
         }
 
-        private static void SetGameSize(int width, int height)
+        public static void SetGameSize(int width, int height)
         {
 #if UNITY_EDITOR
             var assembly = typeof(UnityEditor.Editor).Assembly;
@@ -497,15 +582,17 @@ namespace TianZhang.Tests.PlayMode
             var input = Find<CombatCommandInput>();
             var bar = Find<CombatActionBarView>();
             var move = Find<CombatMovementView>();
-            void SelectArea()
+            IEnumerator SelectArea()
             {
+                // Republish authority after each direct domain-field mutation in this stale-quote fixture.
+                encounter.ConfirmAction(null);
                 bar.BasicAttackButton.onClick.Invoke();
-                for (int direction = 0; direction < 6 && !input.Preview.CanConfirm; direction++)
-                    bar.AttackDirectionButtons[direction].onClick.Invoke();
+                yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
+
                 Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
                 Assert.IsNotNull(input.Preview.AttackArea);
             }
-            SelectArea();
+            yield return SelectArea();
             int facing = spawned.Player.Facing;
             spawned.Player.Facing = (facing + 1) % 6;
             string before = State();
@@ -514,13 +601,13 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNull(input.Candidate);
             spawned.Player.Facing = facing;
 
-            SelectArea();
+            yield return SelectArea();
             HexCoord actorOrigin = spawned.Player.Position;
             spawned.Player.SetPosition(new HexCoord(5, 5));
             before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
             spawned.Player.SetPosition(actorOrigin);
 
-            SelectArea();
+            yield return SelectArea();
             var candidate = input.Candidate;
             var targetId = input.Preview.AttackArea.Targets[0].Id;
             session.Combatants.TryGet(targetId, out var enemy);
@@ -529,29 +616,32 @@ namespace TianZhang.Tests.PlayMode
             enemy.SetPosition(new HexCoord(5, 5));
             before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
             enemy.SetPosition(origin);
-            SelectArea();
+            yield return SelectArea();
             enemy.ReceiveDamage(enemy.CurrentHealth);
             before = State(); input.ConfirmCandidate(); Assert.AreEqual(before, State());
             encounter.ConfirmAction(candidate); Assert.AreEqual(before, State());
 
             bar.BasicAttackButton.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
             var hud = presenter.Snapshot;
             input.SetContext(new CombatHudSnapshot(hud.Player, hud.Enemy, hud.TurnText, true,
                 hud.ArtProfileIds, hud.DivineProfileIds, hud.Timeline, hud.CanEndTurn, hud.Movement,
                 isPresenting: true, commandContextVersion: hud.CommandContextVersion, actions: hud.Actions));
             before = State();
-            foreach (var button in bar.AttackDirectionButtons) button.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
             input.ConfirmCandidate(); Assert.AreEqual(before, State());
             Assert.IsNull(input.Candidate);
             Assert.IsFalse(move.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
             input.SetContext(hud);
             bar.BasicAttackButton.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
             bar.SwapEquipmentButton.onClick.Invoke();
             Assert.AreEqual(CombatActionKind.SwapEquipment, input.Candidate.Kind);
-            Assert.IsFalse(bar.AttackDirectionButtons.Any(button => button.gameObject.activeSelf));
+            Assert.IsFalse(input.IsSelectingAttack);
             Assert.IsFalse(move.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
             input.CancelCandidate();
             bar.BasicAttackButton.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
             input.SetContext(null);
             Assert.IsNull(input.Candidate);
             yield return null;
@@ -567,8 +657,8 @@ namespace TianZhang.Tests.PlayMode
             var bar = Find<CombatActionBarView>();
             var move = Find<CombatMovementView>();
             bar.BasicAttackButton.onClick.Invoke();
-            for (int direction = 0; direction < 6 && !input.Preview.CanConfirm; direction++)
-                bar.AttackDirectionButtons[direction].onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
+
             Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
             Canvas.ForceUpdateCanvases();
             Vector3 cameraBefore = Camera.main.transform.position;
@@ -583,10 +673,9 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
             }
             string before = State();
-            int next = (input.Preview.AttackArea.Direction + 1) % 6;
-            var button = bar.AttackDirectionButtons[next];
+            var button = Find<CombatActionPreviewView>().CancelButton;
             Vector2 point = RectTransformUtility.WorldToScreenPoint(null, button.transform.position);
-            Assert.IsFalse(move.TryPickCell(point, out _), "UI owns the direction-button pointer.");
+            Assert.IsFalse(move.TryPickCell(point, out _), "UI owns the preview-button pointer.");
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
             for (int frame = 0; frame < 6; frame++) yield return null;
@@ -602,7 +691,7 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Left)); yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
-            Assert.AreEqual(next, input.Preview.AttackArea.Direction);
+            Assert.IsNull(input.Candidate);
             Assert.AreEqual(before, State());
             Assert.IsFalse(move.IsSelecting);
             input.CancelCandidate();
@@ -621,6 +710,7 @@ namespace TianZhang.Tests.PlayMode
                 for (int repeat = 0; repeat < 3; repeat++)
                 {
                     button.onClick.Invoke();
+                    if (button == bar.BasicAttackButton) yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                     Assert.IsNotNull(input.Candidate);
                     Assert.IsTrue(view.IsVisible);
                     Assert.IsTrue(input.Preview.CanConfirm);

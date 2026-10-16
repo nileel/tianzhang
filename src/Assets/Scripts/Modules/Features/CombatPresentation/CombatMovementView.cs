@@ -78,11 +78,14 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
-        public void PresentAttackArea(CombatAttackAreaSnapshot area)
+        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false)
         {
             ClearSelection();
-            if (!CanInput || area == null) return;
-            foreach (CombatAttackAreaCellSnapshot cell in area.Cells)
+            if (!CanInput) return;
+            IReadOnlyList<CombatAttackAreaCellSnapshot> shown = area?.Cells ??
+                (target.HasValue ? new[] { new CombatAttackAreaCellSnapshot(target.Value, legal, string.Empty) } :
+                    Array.Empty<CombatAttackAreaCellSnapshot>());
+            foreach (CombatAttackAreaCellSnapshot cell in shown)
             {
                 if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
                 var properties = new MaterialPropertyBlock();
