@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "verification",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "新版U已完成归档；独立验收合同、预期路径、验证矩阵与停止条件完整，现可在同版本正式场景上执行复验。",
+  "stateReason": "2026-10-16在U正式提交251275e2上完成独立复验；完整EditMode 1341/1341、指定有图形PlayMode 12/12及独立Game view均通过，费用、容量、HP与清理证据已持久归档。",
   "expectedPaths": [
     "docs/superpowers/specs/2026-10-14-jindan-fire-domain-verification.md",
     "docs/superpowers/evidence/2026-10-14-jindan-fire-domain-independent.png",
@@ -97,6 +97,15 @@ E01–E13及全部反例独立复验通过，持久证据绑定U正式版本与�
 - 修复由单模型在.worktrees/fire-budget-input-repair-20261016完成，根因明确且仅修改本卡，无独立委派工作面。经验预检零命中、无mustRead或门禁，与schema 2投影一致；后续仍沿用入口默认单模型和原独立复验矩阵。
 - 修复验证：在上述独立worktree执行pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-editmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/fire-budget-input-repair-20261016/src -ResultXmlPath D:/天章游戏开发/.worktrees/fire-budget-input-repair-20261016/src/Logs/JindanFireDomain/InputRepair/editmode.xml，Unity 6000.3.18f1完整1341/1341通过，0失败/跳过；三项原失败逐名核对均Passed。原始素材与只读副本前后bytes/SHA-256一致；共享入口现有Assert-MaterializedAutomationInputs验证通过，测试后仅本卡有Git差异，Unity资源与BuildSettings未变。
 - 修复后XML SHA-256为82f8ee4869fc980c6182708f55f6f3de3f63d926591a2295af0c87a6ab0f7837，log为eecca40e6c4eac8048936fd847b52257e759f9a0159a467e5c73120a80050112，副本为上述本机证据目录的repaired-editmode.xml与repaired-editmode.log。本轮未执行N的指定PlayMode与独立Game view，不归档本N、不解锁下游。
+
+## 验证结果
+
+- 2026-10-16：按合同§6–§7在当前隔离worktree、U正式提交`251275e27652d1bfb7dbfdc9d173dbf66aef8a55`的同版十二项Unity资源上独立重跑。测试前后逐路径比较该十二项与U提交完全一致，四个正式BuildSettings场景未变；没有重放旧candidate、旧fixture或修补U实现。
+- 冻结素材均在本worktree以只读形式物化并复核：宽袖Blend 576092 bytes/`5773beefefd1c4de02ba80b3f3b12f39bdd084adfe600477adeb9730ca255f65`；石甲兽FBX 24929388 bytes/`36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700`；BaseColor 22800947 bytes/`7499200a1b372963b190a0aa6e489811aa76f94c849c1cd610cfe96c3e8037ac`。
+- Unity 6000.3.18f1完整EditMode实际1341/1341通过、0失败/跳过；指定有图形的`TianZhang.Tests.PlayMode.JindanFireDomainScenarioPlayModeTests`实际12/12通过、0失败/跳过；`check-unity-assembly-boundaries.ps1`通过（19 assemblies、2 asmrefs）。经验预检为零命中、无mustRead和门禁，与卡头投影一致。
+- E01–E13及反例均由持久化真实scene与同一控制器入口重新运行：默认启动行动4/灵力47；前两周期灵力39/31、覆盖5/7，第三周期仅维护至29；友敌中立进入/停留火格实际为30→26→24，穿两格为30→22；扑灭即时释放一格容量，复燃只在后续周期完整支付；水、隔绝、断燃料、预算、容量、单实例、四类主效果退出、余火和战斗卸载清理均通过。
+- 独立1920×1080真实Game view为`docs/superpowers/evidence/2026-10-14-jindan-fire-domain-independent.png`，SHA-256 `d6b46ed42366affbe47b92b758135d3ef34923cd52836704c03ab4f61489afdb`，显示cycle 1、行动4、灵力39、地表5/7、环境1/1、预算6和两格扩张；详细逐项输入、前后值、原始XML/log哈希及恢复证据见`docs/superpowers/specs/2026-10-14-jindan-fire-domain-verification.md`。
+- 本完成只证明隔离场景功能；不声明正式玩家接入、有魂敌人神魂通道或角色数值平衡完成，未用BattleSim代替场景验证。保留所有下游具名前置，等待正式集成后的QueueMaintenance处理。
 
 ## 旧证据保留（仅追溯）
 
