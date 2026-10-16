@@ -133,8 +133,8 @@ D未正式完成/本卡未获ready、工具不能运行或取图、合同与L2�
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-EDD4F4375EA0
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-027
 - 经验领域：unity
 - 现象：有图形的批处理规则测试通过仍可能没有截图，Editor场景载入后改分辨率还会使文字缩放模糊。
 - 已证实根因：批处理没有自动打开Game view，Screen.SetResolution不控制Editor视口；UI在321乘531视口创建后再切1920乘1080，旧文字网格与实际渲染上下文不一致。

@@ -992,6 +992,33 @@
       "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-026.txt#开工前",
       "gateRefs": [],
       "lastVerified": "2026-10-17"
+    },
+    {
+      "id": "EXP-UNITY-027",
+      "title": "图形 PlayMode 的 Game View 取证须先显式打开并固定视口",
+      "preflightSummary": "在隔离 Unity 场景保存真实 Game View 与 Canvas 文字证据时，先显式打开并固定 Editor 视口，再创建场景或 UI；Screen.SetResolution 不能替代这一操作。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "unity"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "src/Assets/Tests/PlayMode/*.cs"
+      ],
+      "textPatterns": [
+        "GameViewSizes",
+        "Screen.SetResolution",
+        "Game View",
+        "VIEWPORT"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-UNITY-027.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-17"
     }
   ],
   "gates": []

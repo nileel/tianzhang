@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-JD-COMBO-FIRE-DOMAIN-01/U-JD-COMBO-FIRE-DOMAIN-01.GAMEVIEW 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-17：Codex 独立核验候选并晋级为 EXP-UNITY-027；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-JD-COMBO-FIRE-DOMAIN-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,10 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-17 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-027`。来源候选以一次实际失败和后续四张可读 Game View 的同一图形 Editor 运行直接证明：批处理规则通过不会自动打开 Game View，`Screen.SetResolution` 也不控制 Editor 视口；在 321×531 视口创建 Canvas 后才切到 1920×1080 会留下缩放模糊的旧文字网格。该因果链可复用于隔离场景的真实 Game View 取证。
+- 去重与边界：`EXP-UNITY-011` 只约束 Screen Space Overlay 必须取 Game View 合成像素，`EXP-UNITY-012` 只约束实际尺寸、截图与快照恢复；两者都未规定批处理中的 Game View 显式打开及场景／UI 创建前固定 Editor 视口。本经验仅匹配同类图形 PlayMode 视口控制与取证，不新增门禁。
+- 模型协作：简单：单一候选的直接证据、既有经验边界和固定格式回链均可核验；沿用入口 gpt-5.6-terra 单模型，未启动辅助模型或第二责任会话。
+- 已回链来源候选为 `promoted/EXP-UNITY-027`，并移除本卡的队列和管理 backlog 投影；其他候选和下游具名前置未改动。
