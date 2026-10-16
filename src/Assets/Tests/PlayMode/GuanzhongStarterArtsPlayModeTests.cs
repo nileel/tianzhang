@@ -19,6 +19,7 @@ using TianZhang.Infrastructure.Persistence;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.World;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -53,10 +54,33 @@ namespace TianZhang.Tests.PlayMode
         private ForwardingUnitPort unitPort;
         private CombatActionBarView actionBar;
         private string createdOriginId;
+        private Mouse mouse;
+        private InputSettings.BackgroundBehavior background;
+#if UNITY_EDITOR
+        private InputSettings.EditorInputBehaviorInPlayMode editorInput;
+#endif
+
+        [UnitySetUp]
+        public IEnumerator PreparePointer()
+        {
+            background = InputSystem.settings.backgroundBehavior;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+#if UNITY_EDITOR
+            editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+#endif
+            mouse = InputSystem.AddDevice<Mouse>();
+            yield return null;
+        }
 
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            if (mouse != null) InputSystem.RemoveDevice(mouse);
+            InputSystem.settings.backgroundBehavior = background;
+#if UNITY_EDITOR
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+#endif
             GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -159,6 +183,7 @@ namespace TianZhang.Tests.PlayMode
                 spawned.Player.Id, "missing_target", RecoveryId));
             int mana = spawned.Player.CurrentSpirit, health = spawned.Enemy.CurrentHealth, rolls = random.Count;
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
@@ -268,6 +293,7 @@ namespace TianZhang.Tests.PlayMode
             }
             Assert.That(actionBar.ArtButton.interactable, Is.True, "A rejected target must not seal the preview entry.");
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Candidate.ProfileId, Is.EqualTo(AttackId));
             Assert.That(input.Preview.CanConfirm, Is.False);
             Assert.That(input.Preview.Reason, Is.Not.Empty);
@@ -278,6 +304,7 @@ namespace TianZhang.Tests.PlayMode
             RecordStarterArtState("contact-without-swap");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
             yield return CaptureTrialEvidence("starter-contact-preview", GetPrivateField<Text>(preview, "summary"));
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
@@ -287,6 +314,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             input.ConfirmCandidate();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - mana));
@@ -317,6 +345,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(art.Targets[1].CanExecute, Is.True);
             Assert.That(actionBar.ArtButton.interactable, Is.True);
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemies[1].Id);
             Assert.That(input.Candidate.TargetId, Is.EqualTo(spawned.Enemies[1].Id));
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
             int firstHealth = spawned.Enemies[0].CurrentHealth, secondHealth = spawned.Enemies[1].CurrentHealth;
@@ -326,6 +355,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemies[1].Id);
             input.ConfirmCandidate();
             Assert.That(spawned.Enemies[0].CurrentHealth, Is.EqualTo(firstHealth));
             Assert.That(spawned.Enemies[1].CurrentHealth, Is.LessThan(secondHealth));
@@ -549,12 +579,14 @@ namespace TianZhang.Tests.PlayMode
             }
             int mp = spawned.Player.CurrentSpirit, ap = spawned.Player.ActionPointsRemainingUnits;
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True);
             int cost = input.Preview.ActionPointCostUnits, manaCost = input.Preview.SpiritCost;
             preview.CancelButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             yield return CaptureTrialEvidence("attack-preview", GetPrivateField<Text>(preview, "summary"));
             preview.ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - manaCost));
@@ -613,12 +645,12 @@ namespace TianZhang.Tests.PlayMode
             AssertArtRejected("player", RecoveryId, "attack_profile_cooldown_active");
             spawned.Player.SetCooldown(RecoveryId, 0);
             spawned.Player.SetCooldown(AttackId, 60); // Isolated negative input only.
-            AssertArtPreviewRejected("attack_profile_cooldown_active");
+            yield return AssertArtPreviewRejected("attack_profile_cooldown_active");
             spawned.Player.SetCooldown(AttackId, 0);
             int mp = spawned.Player.CurrentSpirit;
             spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, 0); // Isolated negative input only.
             AssertArtRejected("enemy", AttackId, "spirit_insufficient");
-            AssertArtPreviewRejected("spirit_insufficient");
+            yield return AssertArtPreviewRejected("spirit_insufficient");
             spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, mp);
             ((ICombatCommandHandler)encounter).RequestArt("player", "enemy", AttackId);
             yield return WaitForPlayerTurn();
@@ -626,7 +658,7 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForPlayerTurn();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
             AssertArtRejected("enemy", AttackId, "action_points_insufficient");
-            AssertArtPreviewRejected("action_points_insufficient");
+            yield return AssertArtPreviewRejected("action_points_insufficient");
             ((ICombatCommandHandler)encounter).RequestEndTurn("player");
             yield return null;
             yield return WaitForPlayerTurn();
@@ -648,13 +680,14 @@ namespace TianZhang.Tests.PlayMode
             AssertRejectedWithoutConsumption(() => ((ICombatCommandHandler)encounter).RequestArt("player", target, art));
         }
 
-        private void AssertArtPreviewRejected(string reason)
+        private IEnumerator AssertArtPreviewRejected(string reason)
         {
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(encounter, new object[] { "真实拒绝门禁测试", true });
             CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
             Assert.That(actionBar.ArtButton.interactable, Is.True);
             actionBar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Candidate.ProfileId, Is.EqualTo(AttackId));
             Assert.That(input.Preview.CanConfirm, Is.False);
             Assert.That(input.Preview.Reason, Is.Not.Empty);
@@ -686,12 +719,13 @@ namespace TianZhang.Tests.PlayMode
         private void AssertArtTargets()
         {
             CombatArtActionSnapshot attack = sink.Latest.ArtActions.Single(value => value.ProfileId == AttackId);
-            Assert.That(attack.Targets.Single().Id, Is.EqualTo(spawned.Enemy.Id));
-            Assert.That(attack.Targets.Single().SpiritCost, Is.EqualTo(12));
+            string[] enemies = spawned.Enemies.Where(enemy => enemy.IsAlive).Select(enemy => enemy.Id).ToArray();
+            Assert.That(attack.Targets.Select(value => value.Id), Is.EquivalentTo(enemies));
+            Assert.That(attack.Targets.All(value => value.SpiritCost == 12), Is.True);
             CombatArtActionSnapshot recovery = sink.Latest.ArtActions.Single(value => value.ProfileId == RecoveryId);
-            Assert.That(recovery.Targets.Select(value => value.Id), Is.EquivalentTo(new[] { spawned.Player.Id, spawned.Enemy.Id }));
+            Assert.That(recovery.Targets.Select(value => value.Id), Is.EquivalentTo(enemies.Concat(new[] { spawned.Player.Id })));
             Assert.That(recovery.Targets.Single(value => value.Id == spawned.Player.Id).SpiritCost, Is.Zero);
-            Assert.That(recovery.Targets.Single(value => value.Id == spawned.Enemy.Id).SpiritCost, Is.EqualTo(20));
+            Assert.That(recovery.Targets.Where(value => value.Id != spawned.Player.Id).All(value => value.SpiritCost == 20), Is.True);
             Assert.That(recovery.Targets.All(value => value.CanExecute), Is.True);
         }
 

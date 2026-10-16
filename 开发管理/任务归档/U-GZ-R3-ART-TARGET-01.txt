@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-16已核对初始术法可用性与普攻鼠标选取均有唯一完成归档，现有实施范围、路径与验收已冻结，可按原合同执行。",
+  "stateReason": "2026-10-16贯石击两个栏位已复用普攻鼠标选格链；定向PlayMode首轮18/20通过、两项测试断言修正后2/2通过，四张双分辨率截图已目检。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
@@ -90,3 +90,35 @@
 
 前置未完成不得实施。前置接口/路径变化时重读完整差异、更新白名单与风险预检后才 ready；若需要改变术法数值/规则、重建选择系统或新增未冻结所有者，停止并回查范围。
 发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。
+
+## 2026-10-16 执行与验证结果
+
+### 范围、模型与所有者
+
+- 使用共享入口传入的 gpt-6.1-sol，在本 run 的 codex worktree 统一实施、复核与验证；任务只有贯石击自主选取这一结果。接口已由两个前置冻结，状态链强耦合，按模型协作规则采用默认单模型，无辅助会话或写入委派。
+- 已核对 STARTER-ART 与 BASIC-POINTER 的唯一完成归档。消费共享入口 EXP-UNITY-015 正文；修改前在同一 worktree 运行 get-experience-risk-preflight.ps1 -TaskId U-GZ-R3-ART-TARGET-01，status=ok，taskCardDigest=f75e811e05d0a0269ed5668b4082ad3572aa0aeb3e4aca215eb4020cc5cebc6a，indexDigest=23ce5c0e0ac0aed35f4c78742bdf5a87fa38780f820fc232f99b4e875faa459e，matched与卡头一致，gates及gatePointers为空。
+- 正式入口仍是 StartMenu 新档小族角色 → World → Settlement接赏 → AdventureScene。AdventureSceneInstaller.Awake显式接线 → CombatHudPresenter.Present/CombatCommandInput.SetContext → ArtButton或SecondArtButton/RequestArt → 既有BeginAttackSelection/LateUpdate → CombatMovementView.TryPickCell → CombatTargetInput.FindEnemyAtCell → EncounterCoordinator.PreviewAction/ConfirmAction。CombatHudPresenter.CanInspect沿用IsSelectingAttack互斥，选格点击不打开详情、不触发移动。
+- 单体高亮复用 CombatMovementView.PresentAttackArea；源为 GuanzhongBattlefield/GuanzhongHex_q_r 逻辑格，输出为 AdventureRoot/Reachable_q_r 世界空间 LineRenderer。原相机射线、地块几何、线条尺寸、材质及坐标换算均未调整。第二栏目标文字由 AdventureSceneBuilder 创建的 SecondArtTargetButton/Label 承载，正式刷新写入者仍是 CombatActionBarView.Present；未改共享构建器、其他场景或其他术法语义。
+- 仅两个生产类变化：贯石击使用既有选取状态与Preview候选承载Kind/ProfileId，不默认提交KeepTarget结果；两个栏位相同，第二栏循环回调对贯石击失效并显示“鼠标选取”。聚灵术保留自身/敌方目标循环；费用、射程、冷却、伤害、CTB、存档与部署不变，没有新增规则或并行状态所有者。
+- 结构索引已读 UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md；技能 unity-agent-workflows 已加载 runtime-owner-proof、runtime-visible-output、runtime-visible-targets、ui-and-visual-assets、screenshot-text-owner、shared-caller-blast-radius、project-structure-discovery、content-and-systems、ai-workflows、unity-validation。未新增程序集、文件类型或跨模块依赖。
+
+### 修改前证据与根因
+
+- art-target-baseline.xml：既有新档初始/接敌用例1/1通过，但入口仍为自动目标。接敌记录为 context=26、turn=7、tick=39、player=(0,1)，AP=100000、MP=180、CD=0；enemy=(0,2)合法、enemy_2=(0,3)超距，自动selected=enemy。
+- art-target-before.xml：新增鼠标入口回归1项执行/1项预期失败，实际 selecting=False、target=enemy、legal=True；失败点为贯石击没有进入已有鼠标选取链。此时只增加测试，没有修改生产逻辑。
+- 已证实根因：RequestArt按firstArtTargetId/secondArtTargetId直接Choose，未调用普攻已具备的选取入口；第二栏仍可循环自动目标。不是权威射程或初始装配问题。修复只把贯石击接入同一个选格、候选、锁定、确认及取消链，稳定ID来自鼠标所在格的存活敌人，合法性继续由权威报价判定。
+
+### PlayMode与视觉证据
+
+- 本worktree命令：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath <本worktree>/src -ResultXmlPath <本worktree>/src/Logs/U-GZ-R3-ART-TARGET-01.xml -TestFilter 'TianZhang.Tests.PlayMode.GuanzhongStarterArtsPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatSwapSpellPlayModeTests;TianZhang.Tests.PlayMode.GuanzhongCombatTargetSelectionPlayModeTests' -EnableGraphics。
+- 首轮20项，18通过、2失败。新死亡夹具将权威空目标字符串误要求为null；既有AssertArtTargets仍用Single断言只有一个敌人。仅修正这两处测试断言：空目标允许既有空字符串；逐个核对所有存活敌人的ID与12MP费用，以及聚灵术自身0MP、其他目标20MP。生产代码未再次修改，没有削弱伤害、资源或权威拒绝断言。
+- 同脚本复验过滤器为 GuanzhongCombatTargetSelectionPlayModeTests.GuanshijiSelectsEitherEnemyAfterRealMovementAndIgnoresEnumerationAndDeath 与 GuanzhongStarterArtsPlayModeTests.FormalMinorClanSelectionSavesLoadsAndCastsBothRealButtonsWithoutRecoveryRandomness 的完整类路径；结果 U-GZ-R3-ART-TARGET-01-final.xml：2/2通过、failed=0。累计20个不同用例已通过；没有重复首轮已通过且输入未变的18项。
+- 真实InputSystem.QueueStateEvent触发hover/左键锁定/右键与Esc取消，不以单纯按钮Invoke代替选格。覆盖两个栏位、真实换术换回/冷却后施法、两敌之间自主切换、反转枚举顺序、首目标死亡、超距、自身、空地、棋盘外与UI覆盖清除旧合法候选、锁定后移到确认按钮、重复确认只扣一次、移动/演出/Hide清理、聚灵术自身及其他目标恢复。双敌共同合法位置由正式移动选项/命令到达；枚举反转、死亡、第二栏初始装配顺序是明确测试夹具，不冒充修改正式部署或完整用户试玩录像。
+- 双分辨率截图 src/Logs/art-target/{first,second}-{1920,1366}.png 及同名txt已目检：1920×1080与1366×768，单格金色边框、正确术法、50AP/12MP报价、确认/取消按钮均可见，第二栏显示“鼠标选取”。捕获前断言ShaderUtil.anythingCompiling=false。
+- 数值证据：所选enemy位于(0,2)，输出Reachable_0_2，父AdventureRoot、useWorldSpace=True，六角点Y=0.44，中心约(1,0.44,2.732)；Camera=(0,8,-9.58)，鼠标1920时(1095,748.62)、1366时(779,532.35)。贯石击Label Rect=184×60，preferred分别119×58与120.8785×56.22255；“鼠标选取”Rect=184×36，preferred分别80×29与78.71157×28.11127，均不换行溢出。未改费用文案或布局。
+- 本轮没有场景/Prefab/asset或EditMode代码变化，无须扩大为EditMode或数据链验证；不涉及角色数值平衡，不运行BattleSim。正式master重放与集成仍由共享入口负责。
+
+### 管理收尾
+
+- 本卡精确移入同ID归档，只移除自身backlog与ready队列行；不移除其他卡的具名前置、不提升或重排下游任务。所有修改限于冻结expectedPaths，生成日志与截图保留在本worktree的忽略目录。
+- check-task-cards.ps1 -TaskId U-GZ-R3-ART-TARGET-01 -Postcondition CodexClosedOrNonReady -OutputJson通过：65张活跃卡、1项ready，本卡completed；check-review-text.ps1 -Paths AGENTS.md,CLAUDE.md,开发管理通过，检查848份文件。收尾仅复核本轮事实与diff，没有新增独立经验候选或修改风险索引。

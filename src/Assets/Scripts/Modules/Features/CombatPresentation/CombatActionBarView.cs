@@ -101,9 +101,10 @@ namespace TianZhang.Features.CombatPresentation
             string firstReason = PresentArt(first, firstArtTargetId, artButton, artLabel, canAct);
             string secondReason = PresentArt(second, secondArtTargetId, secondArtButton, secondArtLabel, canAct);
             CombatArtTargetSnapshot secondTarget = FindTarget(second, secondArtTargetId);
-            SetEnabled(secondArtTargetButton, canAct && second != null && second.Targets.Count > 1);
+            bool pointerTarget = second?.ProfileId == "spell_guanshiji";
+            SetEnabled(secondArtTargetButton, canAct && second != null && !pointerTarget && second.Targets.Count > 1);
             if (secondArtTargetLabel != null)
-                secondArtTargetLabel.text = secondTarget == null ? "目标：—" : "目标：" +
+                secondArtTargetLabel.text = pointerTarget ? "鼠标选取" : secondTarget == null ? "目标：—" : "目标：" +
                     (secondTarget.Id == snapshot.Player?.Id ? "自身" : secondTarget.DisplayName);
             if (actionStatusLabel != null)
             {

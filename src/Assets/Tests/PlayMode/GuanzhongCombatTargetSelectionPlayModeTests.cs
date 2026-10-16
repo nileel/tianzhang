@@ -125,6 +125,236 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator GuanshijiEntersPointerSelectionWithoutAnAutomaticTarget()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            bar.ArtButton.onClick.Invoke();
+            TestContext.WriteLine("Before pointer: selecting=" + input.IsSelectingAttack +
+                "; target=" + input.Candidate?.TargetId + "; legal=" + input.Preview?.CanConfirm +
+                "; enemies=" + string.Join("/", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position)));
+            Assert.IsTrue(input.IsSelectingAttack, "Guanshiji must enter the existing pointer selection chain.");
+            Assert.IsNull(input.Candidate.TargetId);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            input.ConfirmCandidate();
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+            yield return PointArt(session, spawned.Enemy.Id);
+            Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+            Assert.IsTrue(input.IsAttackLocked);
+            input.CancelCandidate();
+        }
+
+        public static IEnumerator PointArt(CombatSession combat, string targetId, bool lockTarget = true)
+        {
+            Assert.IsTrue(combat.Combatants.TryGet(targetId, out var actor));
+            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
+                "GuanzhongHex_" + actor.Position.Q + "_" + actor.Position.R);
+            Assert.NotNull(tile);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(Camera.main.WorldToScreenPoint(tile.position), lockTarget);
+        }
+
+        [UnityTest]
+        public IEnumerator GuanshijiPointerInvalidatesHoverAndClearsOnCancelMovementPresentationAndExit()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var preview = Find<CombatActionPreviewView>();
+            var movement = Find<CombatMovementView>();
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            int hp = spawned.Enemy.CurrentHealth, tick = session.TurnScheduler.CurrentTick;
+            string inspected = presenter.InspectedTargetId;
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                bar.ArtButton.onClick.Invoke();
+                yield return PointArt(session, spawned.Enemy.Id, false);
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                Assert.IsFalse(preview.ConfirmButton.interactable);
+                input.ConfirmCandidate();
+                foreach (Vector2 rejected in new[]
+                {
+                    CellPoint(spawned.Enemies[1].Position), CellPoint(spawned.Player.Position),
+                    CellPoint(new HexCoord(1, 0)), new Vector2(-50, -50),
+                    RectTransformUtility.WorldToScreenPoint(null, preview.ConfirmButton.transform.position)
+                })
+                {
+                    yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(rejected, true);
+                    Assert.IsFalse(input.IsAttackLocked);
+                    Assert.IsFalse(input.Preview.CanConfirm, input.Preview.Reason);
+                    Assert.AreNotEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+                    Assert.IsFalse(preview.ConfirmButton.interactable);
+                    input.ConfirmCandidate();
+                    yield return PointArt(session, spawned.Enemy.Id, false);
+                }
+                yield return PointArt(session, spawned.Enemy.Id);
+                Assert.IsTrue(input.IsAttackLocked);
+                Assert.AreEqual(inspected, presenter.InspectedTargetId);
+                Assert.IsTrue(preview.ConfirmButton.interactable);
+                yield return CaptureArtEvidence("first-" + width);
+                Vector2 confirm = RectTransformUtility.WorldToScreenPoint(null, preview.ConfirmButton.transform.position);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(confirm);
+                Assert.IsTrue(input.IsAttackLocked, "Moving to Confirm preserves the deliberately locked quote.");
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = confirm }.WithButton(MouseButton.Right));
+                yield return null; yield return null;
+                Assert.IsNull(input.Candidate);
+                InputSystem.QueueStateEvent(mouse, new MouseState()); yield return null;
+                bar.ArtButton.onClick.Invoke();
+                yield return PointArt(session, spawned.Enemy.Id);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+                yield return null; yield return null;
+                Assert.IsNull(input.Candidate);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+            }
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+            Assert.AreEqual(hp, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(tick, session.TurnScheduler.CurrentTick);
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id);
+            bar.MoveButton.onClick.Invoke();
+            Assert.IsNull(input.Candidate);
+            Assert.IsTrue(movement.IsSelecting);
+            bar.ArtButton.onClick.Invoke();
+            Assert.IsFalse(movement.IsSelecting);
+            Assert.IsNull(input.Candidate.TargetId);
+            bar.SecondArtButton.onClick.Invoke();
+            Assert.IsFalse(input.IsSelectingAttack);
+            Assert.AreEqual(spawned.Player.Id, input.Candidate.TargetId, "Recovery retains self semantics.");
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id);
+            int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
+            input.ConfirmCandidate(); input.ConfirmCandidate();
+            Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
+            Assert.Less(spawned.Enemy.CurrentHealth, hp);
+            Assert.IsTrue(encounter.IsPresenting);
+            Assert.IsNull(input.Candidate);
+            Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+            yield return CommandsReady();
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id);
+            presenter.Hide();
+            Assert.IsNull(input.Candidate);
+            Assert.IsFalse(input.IsSelectingAttack);
+            Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+        }
+
+        [UnityTest]
+        public IEnumerator GuanshijiSelectsEitherEnemyAfterRealMovementAndIgnoresEnumerationAndDeath()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            // Use the formal reachable/quoted route to stand beside both existing enemies.
+            CombatMovementOption option = presenter.Snapshot.Movement.Options.First(move => spawned.Enemies.All(enemy =>
+                new HexCoord(move.Destination.Q, move.Destination.R).Distance(enemy.Position) == 1));
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id);
+            encounter.RequestMove(spawned.Player.Id, option.Destination.Q, option.Destination.R);
+            Assert.IsNull(input.Candidate);
+            yield return CommandsReady();
+            Assert.AreEqual(spawned.Player.Position.Q, presenter.Snapshot.Movement.Origin.Q);
+            Assert.AreEqual(spawned.Player.Position.R, presenter.Snapshot.Movement.Origin.R);
+            encounter.RequestEndTurn(spawned.Player.Id);
+            yield return null;
+            yield return CommandsReady();
+            Assert.IsTrue(presenter.Snapshot.ArtActions[0].Targets.All(value => value.CanExecute));
+            // Reverse only enumeration, keeping live authority, stable IDs, positions and resources.
+            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], spawned.EnemyData,
+                spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, spawned.PlayerDivineProfileIds,
+                new[] { spawned.Enemies[0] });
+            Set(encounter, "spawned", spawned);
+            RefreshAuthority();
+            foreach (var enemy in spawned.Enemies)
+            {
+                bar.ArtButton.onClick.Invoke();
+                yield return PointArt(session, enemy.Id, false);
+                Assert.AreEqual(enemy.Id, input.Candidate.TargetId);
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                yield return PointArt(session, enemy.Id);
+                Assert.IsTrue(input.IsAttackLocked);
+                input.CancelCandidate();
+            }
+            // Controlled death input: killing the first entry must not replace the chosen second ID.
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id);
+            spawned.Enemy.ReceiveDamage(spawned.Enemy.CurrentHealth);
+            RefreshAuthority();
+            Assert.IsNull(input.Candidate);
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemy.Id, false);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId));
+            var chosen = spawned.Enemies[1];
+            yield return PointArt(session, chosen.Id);
+            Assert.AreEqual(chosen.Id, input.Candidate.TargetId);
+            Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+            int hp = chosen.CurrentHealth, mp = spawned.Player.CurrentSpirit, ap = spawned.Player.ActionPointsRemainingUnits;
+            int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
+            input.ConfirmCandidate(); input.ConfirmCandidate();
+            Assert.Less(chosen.CurrentHealth, hp);
+            Assert.AreEqual(0, spawned.Enemy.CurrentHealth);
+            Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
+        }
+
+        public static IEnumerator CaptureArtEvidence(string label)
+        {
+            var input = Find<CombatCommandInput>();
+            var movement = Find<CombatMovementView>();
+            var bar = Find<CombatActionBarView>();
+            Canvas.ForceUpdateCanvases();
+            foreach (Text text in new[] { bar.ArtButton, bar.SecondArtButton, bar.SecondArtTargetButton }
+                .Select(button => button.GetComponentInChildren<Text>()))
+            {
+                Assert.LessOrEqual(text.preferredWidth, text.rectTransform.rect.width + 1f, text.text);
+                Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + 1f, text.text);
+            }
+            var rings = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
+            Assert.AreEqual(1, rings.Length, "A single-target spell highlights exactly its chosen enemy cell.");
+            Assert.NotNull(input.Candidate.TargetId);
+#if UNITY_EDITOR
+            for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling);
+#endif
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            string directory = Path.Combine(Application.dataPath, "../Logs/art-target");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, label + ".txt"), "resolution=" + Screen.width + "x" + Screen.height +
+                "; target=" + input.Candidate.TargetId + "; profile=" + input.Candidate.ProfileId +
+                "; context=" + input.Candidate.ContextVersion + "; AP=" + input.Preview.ActionPointCostUnits +
+                "; MP=" + input.Preview.SpiritCost + "; pointer=" + Mouse.current.position.ReadValue() +
+                "; camera=" + Camera.main.transform.position + "; ring=" + rings[0].Value.name +
+                "; parent=" + rings[0].Value.transform.parent.name + "; world=" + rings[0].Value.useWorldSpace +
+                "; points=" + string.Join("/", Enumerable.Range(0, 6).Select(index => rings[0].Value.GetPosition(index))) +
+                "; labels=" + string.Join("/", new[] { bar.ArtButton, bar.SecondArtButton, bar.SecondArtTargetButton }.Select(button =>
+                {
+                    Text text = button.GetComponentInChildren<Text>();
+                    return text.text + ":rect=" + text.rectTransform.rect.size + ":preferred=" + text.preferredWidth + "," + text.preferredHeight;
+                })));
+            ScreenCapture.CaptureScreenshot(Path.Combine(directory, label + ".png"));
+            for (int frame = 0; frame < 8; frame++) yield return null;
+        }
+
+        private Vector2 CellPoint(HexCoord cell) => Camera.main.WorldToScreenPoint(GameObject.Find("GuanzhongBattlefield")
+            .transform.Find("GuanzhongHex_" + cell.Q + "_" + cell.R).position);
+
+        private void RefreshAuthority() => typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(encounter, new object[] { "目标选取夹具刷新", true });
+
+        private IEnumerator CommandsReady()
+        {
+            for (float deadline = Time.realtimeSinceStartup + 20f; Time.realtimeSinceStartup < deadline &&
+                (session.CurrentActorId != "player" || session.TurnPhase != CombatTurnPhase.Active || encounter.IsPresenting);) yield return null;
+            yield return null;
+            Assert.IsFalse(encounter.IsPresenting);
+            Assert.AreEqual("player", session.CurrentActorId);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
+        }
+
+        [UnityTest]
         public IEnumerator BasicPointerHoverLockCancelAndInputOwnershipAtBothResolutions()
         {
             var input = Find<CombatCommandInput>();

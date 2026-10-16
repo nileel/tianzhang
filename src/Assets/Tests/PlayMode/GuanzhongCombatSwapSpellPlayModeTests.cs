@@ -15,6 +15,7 @@ using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -34,10 +35,22 @@ namespace TianZhang.Tests.PlayMode
         private CombatCommandInput input;
         private CombatActionPreviewView preview;
         private CombatRandom random;
+        private Mouse mouse;
+        private InputSettings.BackgroundBehavior background;
+#if UNITY_EDITOR
+        private InputSettings.EditorInputBehaviorInPlayMode editorInput;
+#endif
 
         [UnitySetUp]
         public IEnumerator EnterFormalAdventure()
         {
+            background = InputSystem.settings.backgroundBehavior;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+#if UNITY_EDITOR
+            editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+#endif
+            mouse = InputSystem.AddDevice<Mouse>();
             GameBootstrap stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -90,11 +103,60 @@ namespace TianZhang.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator Cleanup()
         {
+            if (mouse != null) InputSystem.RemoveDevice(mouse);
+            InputSystem.settings.backgroundBehavior = background;
+#if UNITY_EDITOR
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+#endif
             GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
             yield return null;
             if (Directory.Exists(saveDirectory)) Directory.Delete(saveDirectory, true);
+        }
+
+        [UnityTest]
+        public IEnumerator SecondSlotGuanshijiUsesTheSamePointerAndKeepsRecoverySelfTargeting()
+        {
+            // Legitimate pre-entry loadout ordering fixture; do not alter battle rules or deployment.
+            var loadout = GameBootstrap.RequireRuntime().Player.AbilityLoadout;
+            Assert.IsTrue(loadout.UnequipSpell(Attack));
+            Assert.IsTrue(loadout.UnequipSpell(Recovery));
+            Assert.IsTrue(loadout.TryEquipSpell(Recovery));
+            Assert.IsTrue(loadout.TryEquipSpell(Attack));
+            yield return BeginEncounter(false);
+            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Recovery, Attack }));
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                bar.ArtButton.onClick.Invoke();
+                Assert.AreEqual(spawned.Player.Id, input.Candidate.TargetId);
+                Assert.IsFalse(input.IsSelectingAttack);
+                bar.SecondArtButton.onClick.Invoke();
+                Assert.IsTrue(input.IsSelectingAttack);
+                Assert.IsNull(input.Candidate.TargetId);
+                Assert.IsFalse(bar.SecondArtTargetButton.interactable);
+                bar.SecondArtTargetButton.onClick.Invoke();
+                Assert.IsNull(input.Candidate.TargetId, "The old cycling callback cannot bypass pointer selection.");
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
+                Assert.AreEqual(Attack, input.Candidate.ProfileId);
+                Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("second-" + width);
+                input.CancelCandidate();
+                Assert.IsNull(input.Candidate);
+            }
+            bar.SecondArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            int hp = spawned.Enemy.CurrentHealth, otherHp = spawned.Enemies[1].CurrentHealth;
+            int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
+            input.ConfirmCandidate(); input.ConfirmCandidate();
+            Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
+            Assert.Less(spawned.Enemy.CurrentHealth, hp);
+            Assert.AreEqual(otherHp, spawned.Enemies[1].CurrentHealth);
+            Assert.IsNull(input.Candidate);
         }
 
         [UnityTest]
@@ -203,6 +265,7 @@ namespace TianZhang.Tests.PlayMode
             input.ConfirmCandidate(); preview.CancelButton.onClick.Invoke();
             Assert.That(State(), Is.EqualTo(before));
             bar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.False);
             preview.CancelButton.onClick.Invoke();
             Assert.That(bar.ArtButton.interactable, Is.True, "Cooldown rejection must remain previewable after swapping too.");
@@ -222,6 +285,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(bar.ArtButton.interactable, Is.True, hud.Snapshot.ArtActions[0].Targets[0].RejectionReason);
             RecordArtState("after-real-cooldown");
             bar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True);
             int ap = spawned.Player.ActionPointsRemainingUnits;
             input.ConfirmCandidate();
@@ -242,6 +306,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(State(), Is.EqualTo(before), "Changed authority facts invalidate the original quote.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
             bar.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
             input.ConfirmCandidate();
             yield return Ready();
