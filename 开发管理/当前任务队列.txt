@@ -5,4 +5,4 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
-| D-JD-COMBO-SCOPE-01 | codex_execute | codex | P2 | content | design | 金丹组合首批生产范围与验收合同 | 开发管理/任务卡/D-JD-COMBO-SCOPE-01.txt |
+| C-JD-COMBO-01 | external_execute | deepseek | P2 | content | design | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |
