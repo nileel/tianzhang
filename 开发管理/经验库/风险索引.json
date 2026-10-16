@@ -49,6 +49,30 @@
       "lastVerified": "2026-09-07"
     },
     {
+      "id": "EXP-AUTO-003",
+      "title": "决策检查点重放须隔离任务卡冲突",
+      "preflightSummary": "重放同时改业务与任务卡的决策检查点前，先比对批准选项对同一任务卡的变更；任务卡冲突须与业务差异分开核验。",
+      "status": "active",
+      "level": "must_read",
+      "triggerMode": "path_and_text",
+      "domains": [
+        "automation"
+      ],
+      "stages": [
+        "implementation",
+        "verification"
+      ],
+      "pathPatterns": [
+        "开发管理/任务卡/*.txt"
+      ],
+      "textPatterns": [
+        "checkpoint"
+      ],
+      "detailRef": "开发管理/经验库/经验卡/EXP-AUTO-003.txt#开工前",
+      "gateRefs": [],
+      "lastVerified": "2026-10-16"
+    },
+    {
       "id": "EXP-MGMT-001",
       "title": "共享 worktree 写入与正式集成隔离",
       "preflightSummary": "显式涉及共享工作区写入或正式集成时，隔离于任务 worktree，并在集成锁内复核路径冲突与 fast-forward 条件。",

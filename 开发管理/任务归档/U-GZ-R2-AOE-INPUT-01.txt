@@ -274,8 +274,8 @@ CommandInput是唯一确认提交者，CombatMovementView使用现有序列化�
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-E7FF3E7BEA8F
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-AUTO-003
 - 经验领域：automation
 - 现象：负责人批准新任务范围后，下一次checkpoint重放在模型启动前因任务卡冲突进入attention_required。
 - 已证实根因：旧检查点向任务正文末尾追加验证记录，ResumeReady已按批准选项改写同一正文；完整cherry-pick重放旧任务卡补丁时上下文冲突，12个业务文件没有冲突。
