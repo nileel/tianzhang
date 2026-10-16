@@ -117,11 +117,51 @@ namespace TianZhang.Tests.PlayMode
             bar.MoveButton.onClick.Invoke();
             Assert.IsTrue(movement.IsSelecting);
             CollectionAssert.AreEquivalent(expected, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
+            AssertReachableColors(movement);
             bar.CancelMoveButton.onClick.Invoke();
             Assert.IsFalse(movement.IsSelecting);
             Assert.AreEqual(original, player.Position);
             Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
             bar.MoveButton.onClick.Invoke();
+            AssertReachableColors(movement);
+            bar.BasicAttackButton.onClick.Invoke();
+            Assert.NotNull(commandInput.Preview?.AttackArea);
+            Assert.IsFalse(movement.IsSelecting);
+            foreach (CombatAttackAreaCellSnapshot cell in commandInput.Preview.AttackArea.Cells)
+            {
+                if (!movement.Highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
+                Color attackColor = cell.IsLegal ? Get<Material>(movement, "selectedMaterial").GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
+                attackColor.a = 1f;
+                AssertLineColor(ring, attackColor);
+            }
+            bar.MoveButton.onClick.Invoke();
+            Assert.IsNull(commandInput.Preview);
+            AssertReachableColors(movement);
+            CollectionAssert.AreEquivalent(expected, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                int height = width == 1920 ? 1080 : 768;
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, height);
+                yield return null; yield return null;
+                Canvas.ForceUpdateCanvases();
+#if UNITY_EDITOR
+                // Fresh worktrees can still be rendering cyan shader-compilation placeholders.
+                for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+                Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling, "Shader compilation must finish before visual evidence.");
+                yield return null;
+#endif
+                Assert.AreEqual(width, Screen.width);
+                Assert.AreEqual(height, Screen.height);
+                AssertReachableColors(movement);
+                string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/move-blue"));
+                Directory.CreateDirectory(directory);
+                string stem = Path.Combine(directory, $"reachable-{width}x{height}");
+                string evidence = $"scene={SceneManager.GetActiveScene().name}; screen={Screen.width}x{Screen.height}; owner={movement.name}/{movement.GetType().Name}; active={expected.Length}; color=#238CFFFF";
+                TestContext.WriteLine(evidence);
+                File.WriteAllText(stem + ".txt", evidence);
+                ScreenCapture.CaptureScreenshot(stem + ".png");
+                yield return null; yield return null;
+            }
             Camera camera = Get<Camera>(movement, "battlefieldCamera");
             var destination = new CombatUnitPresentationHex(0, 1);
             Vector3 worldPoint = Static3DCombatUnitPresentationProvider.HexToWorld(destination);
@@ -163,6 +203,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(original, player.Position);
             Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
             LineRenderer previewLine = Get<LineRenderer>(movement, "pathLine");
+            Color pathColor = Get<Material>(movement, "selectedMaterial").GetColor("_BaseColor");
+            pathColor.a = 1f;
+            AssertLineColor(previewLine, pathColor);
             Assert.AreEqual(movement.Selected.Path.Count + 1, previewLine.positionCount);
             for (int index = 0; index < movement.Selected.Path.Count; index++)
             {
@@ -223,7 +266,17 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(Vector3.one, root.transform.localScale);
             Assert.AreEqual(0.04f, root.transform.Find("Static3DCombatBase").localPosition.y, 0.0001f);
             Assert.AreEqual("结束行动", Get<Text>(bar, "waitLabel").text);
+            int beforeGuard = player.ActionPointsRemainingUnits;
+            CombatCommandPreview guardQuote = new CombatCommandService().Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
+            Assert.IsTrue(guardQuote.Validation.Succeeded);
             encounter.RequestGuard("player");
+            Assert.AreEqual(beforeGuard - guardQuote.ActionPointCostUnits, player.ActionPointsRemainingUnits);
+            Assert.Greater(player.ActionPointsRemainingUnits, 0);
+            Assert.IsTrue(player.IsGuarding);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase, "Guard does not end a turn with AP remaining.");
+            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
+            Assert.IsFalse(encounter.IsPresenting);
+            encounter.RequestEndTurn("player");
             Assert.AreEqual(0, player.ActionPointsRemainingUnits);
             Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             TestContext.WriteLine($"MOVE scene: options={expected.Length}, cost={option.Cost}, points={player.ActionPointsRemainingUnits}, root={root.transform.position}, button={moveRect.rect}");
@@ -331,6 +384,24 @@ namespace TianZhang.Tests.PlayMode
             public string[] lines, tiles;
         }
 #endif
+
+        private static void AssertReachableColors(CombatMovementView movement)
+        {
+            LineRenderer[] active = movement.Highlights.Values.Where(line => line.gameObject.activeSelf).ToArray();
+            Assert.IsNotEmpty(active);
+            foreach (LineRenderer ring in active) AssertLineColor(ring, new Color32(0x23, 0x8C, 0xFF, 0xFF));
+        }
+
+        private static void AssertLineColor(LineRenderer line, Color expected)
+        {
+            var properties = new MaterialPropertyBlock();
+            line.GetPropertyBlock(properties);
+            Color actual = properties.GetColor("_BaseColor");
+            Assert.That(actual.r, Is.EqualTo(expected.r).Within(0.0001f), $"{line.name} final color={actual}");
+            Assert.That(actual.g, Is.EqualTo(expected.g).Within(0.0001f));
+            Assert.That(actual.b, Is.EqualTo(expected.b).Within(0.0001f));
+            Assert.That(actual.a, Is.EqualTo(expected.a).Within(0.0001f));
+        }
 
         private static IEnumerator ClickCell(Mouse device, Vector2 point)
         {

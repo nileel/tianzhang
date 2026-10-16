@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "2026-10-15用户明确要求优先排查并建修复任务；已定位直接所有者并冻结最小修复、取证与验收范围，尚未实施。",
+  "stateReason": "2026-10-16按用户要求排查失败任务：修正过时防御断言，完成蓝色边框与状态切换验证；正式场景PlayMode及双分辨率截图验收通过。",
   "expectedPaths": [
     "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
     "src/Assets/Tests/PlayMode/GuanzhongMovementPlayModeTests.cs",
@@ -78,3 +78,30 @@ AdventureScene 的 reachableMaterial 指向 VisualBaseline_Reachable（GUID 626b
 
 若需要修改共享材质、地面、相机、布局、坐标或新增资源才能完成，先停止并回查来源/渲染覆盖，不叠加猜测性补丁。
 发现新增路径/所有者/语义/内容类型或技术路线变化时先暂停、重跑风险预检并重新检查原子性；不能连续叠补丁扩大范围。
+
+## 2026-10-16 人工排查与完成证据
+
+- 来源对话：01a14090-1509-7621-b9b8-9d88f0e18c44；失败 run：17abf6b1-b980-4fa0-9b69-0f622d5058ce，baseCommit=01266246364746937a4d0e66b6a26163b3204cff。Show 核实为 attention_required、candidate/canonical 均为空；原 owner worktree 干净、HEAD 等于 base，无责任方或 Unity 执行进程。原现场保留，本轮在 .worktrees/move-blue-repair-20261016 独立实施。
+- 失败根因：原临时 XML 的测试第232行仍要求 RequestGuard 后 AP=0，实测为25000。docs/基础设定/战斗系统.txt 的普通防御合同已规定“独立正 AP、不自动结束”；CombatCommandService.Prepare 仅在预算耗尽等条件下结束。测试改为核对权威报价扣费、正余额与 Active 状态，再显式 RequestEndTurn 验证清零和 Finished。未修改 AP/CTB 或其他战斗规则。
+- 颜色根因与所有者：正式 AdventureScene/AdventureRoot/CombatMovementView 的 Reachable_0_1 最终 property block 实测为 RGBA(0.280,0.780,0.680,1.000)，新增回归断言在改色前失败。SceneBuilder 显式连接 GuanzhongBattlefield 格位、相机和共享材质；Configure/CreateLine 创建线，ClearSelection 恢复颜色，CombatCommandInput.SelectionStarted 清理攻击预览。现两条路径共用 #238CFF/alpha=1，路径及攻击颜色仍沿用各自语义。未改共享材质、位置/尺寸、相机、场景或生成器。
+- 执行能力：本次为用户授权的普通人工修复，Node REPL requestMeta 实测 gpt-6-astra；问题与两份源码强耦合，由单主模型完成，无辅助模型调用。未改原自动化执行模型配置。写入前及取证依赖补查后均运行 get-experience-risk-preflight.ps1，taskId 与卡摘要 1c1e704917fb4a8ff6b009c13f1f016be56f011462a951827071ee571ff8534f、索引摘要 58c8271c312b085a906befd8a963b8bbde820fef601668f375e467b234991bba 一致，matched/mustRead/gates 均为空，与 schema 2 投影一致。
+- 权威验证命令（在本轮 worktree）：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath D:/天章游戏开发/.worktrees/move-blue-repair-20261016/src -ResultXmlPath D:/天章游戏开发/.worktrees/move-blue-repair-20261016/src/Logs/move-blue-verified.xml -TestFilter TianZhang.Tests.PlayMode.GuanzhongMovementPlayModeTests -EnableGraphics。结果 total=1、passed=1、failed=0；覆盖进入/取消/再进入移动、攻击预览切回、最终property block、路径语义、不可走格集合、真实InputSystem选格/确认、移动演出、防御和结束行动。
+- 视觉证据：src/Logs/move-blue/reachable-1920x1080.png 与 reachable-1366x768.png，同名txt及XML记录实际 Screen=1920×1080/1366×768、正式 AdventureScene、11个活动可达边框；均已目检，蓝色轮廓与地面可区分。首次截图处于异步着色器青色占位阶段，未作为验收；按既有 GuanzhongRuntimeEvidencePlayModeTests.Capture 的方式等待 ShaderUtil.anythingCompiling=false 后重新取证。没有修改渲染参数来掩盖取证问题。
+- 本地证据根：D:/天章游戏开发/.worktrees/move-blue-repair-20261016/src/Logs/。最终XML SHA256=00C5C9A973E33A9199CFC67791F9D73A694E918E9AEE08176802943E56D61D9F；1920截图=D166F27DA8D6E323848C49BA570D82E69608150FBE2B84FAD66FE7539B2ADC35；1366截图=918C1421E3A519AE1DD6D06455CA00DB3FB6A1B6CD27C995A73DAADFA70E3B70。保留该worktree供复核；截图/日志不作为业务资产进入Git。
+- 收尾检查：check-task-cards.ps1 的 CodexClosedOrNonReady、check-review-text.ps1、本轮路径 check-pending-whitespace.ps1 与 git diff --cached --check；具体输出见本轮执行记录。未变更 docs、CSV 或 Unity 数据资产，不运行无关数据链/BattleSim验证。
+- 技能参考已读取：unity-validation.md、runtime-owner-proof.md、ui-and-visual-assets.md；项目结构已读取：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.runtime.md。验收范围限本卡，其他第三轮试玩条目及整屏UI不在本次完成结论内。
+
+## 经验候选
+
+### U-GZ-R3-MOVE-BLUE-01-C01
+
+- collectionState: pending
+- promotionTaskId:
+- resolution: unresolved
+- experienceId:
+- 经验领域：unity
+- 现象：颜色任务在未修改业务前被既有PlayMode防御后AP清零断言阻断。
+- 已证实根因：测试仍使用旧的防御结束回合语义，现行规则及权威提交服务均规定防御只扣自身费用，剩余预算允许继续行动。
+- 可能复用范围：战斗规则改变后仍复用的场景端到端测试，以及被既有断言阻断的表现层小任务。
+- 证据：原U-GZ-R3-MOVE-BLUE-01.xml在RequestGuard后期望0实得25000；战斗系统.txt普通防御条款、CombatCommandService.Prepare；修正为报价扣费/Active并显式EndTurn后move-blue-verified.xml为1/1通过。
+- 门禁可能：yes

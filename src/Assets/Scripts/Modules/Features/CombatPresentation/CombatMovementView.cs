@@ -10,6 +10,8 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>Projects authoritative move options and keeps uncommitted selection local to the view.</summary>
     public sealed class CombatMovementView : MonoBehaviour
     {
+        private static readonly Color ReachableOutlineColor = new Color32(0x23, 0x8C, 0xFF, 0xFF);
+
         [Serializable]
         private sealed class Cell
         {
@@ -54,7 +56,7 @@ namespace TianZhang.Features.CombatPresentation
                 center.y = top + 0.01f;
                 var key = new Vector2Int(cell.q, cell.r);
                 centers.Add(key, center);
-                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, 0.035f);
+                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, 0.035f, ReachableOutlineColor);
                 ring.loop = true;
                 ring.positionCount = 6;
                 for (int corner = 0; corner < 6; corner++)
@@ -65,7 +67,7 @@ namespace TianZhang.Features.CombatPresentation
                 ring.gameObject.SetActive(false);
                 highlights.Add(key, ring);
             }
-            pathLine = CreateLine("MovementPathPreview", selectedMaterial, 0.065f);
+            pathLine = CreateLine("MovementPathPreview", selectedMaterial, 0.065f, selectedMaterial.GetColor("_BaseColor"));
             pathLine.gameObject.SetActive(false);
         }
 
@@ -194,9 +196,7 @@ namespace TianZhang.Features.CombatPresentation
                 {
                     ring.gameObject.SetActive(false);
                     var properties = new MaterialPropertyBlock();
-                    Color color = reachableMaterial.GetColor("_BaseColor");
-                    color.a = 1f;
-                    properties.SetColor("_BaseColor", color);
+                    properties.SetColor("_BaseColor", ReachableOutlineColor);
                     ring.SetPropertyBlock(properties);
                 }
             if (pathLine != null) pathLine.gameObject.SetActive(false);
@@ -206,15 +206,14 @@ namespace TianZhang.Features.CombatPresentation
         private void RefreshControls() => actionBar?.PresentMovement(snapshot, IsSelecting, selected);
         private void OnDisable() => ClearSelection();
         private static Vector2Int Key(CombatUnitPresentationHex hex) => new Vector2Int(hex.Q, hex.R);
-        private LineRenderer CreateLine(string name, Material material, float width)
+        private LineRenderer CreateLine(string name, Material material, float width, Color color)
         {
             var value = new GameObject(name);
             value.transform.SetParent(transform, false);
             LineRenderer line = value.AddComponent<LineRenderer>();
             line.sharedMaterial = material;
-            // The shared palette was authored for filled overlays; thin outlines need its full opacity.
+            // Outlines have their own colors without changing the shared filled-overlay palette.
             var properties = new MaterialPropertyBlock();
-            Color color = material.GetColor("_BaseColor");
             color.a = 1f;
             properties.SetColor("_BaseColor", color);
             line.SetPropertyBlock(properties);

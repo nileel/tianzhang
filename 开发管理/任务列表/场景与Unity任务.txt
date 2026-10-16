@@ -72,7 +72,6 @@
 
 | ID | 优先级 | 主责 | 状态投影 | 阻塞于 | 摘要 | 任务卡 |
 |----|--------|------|----------|--------|------|--------|
-| U-GZ-R3-MOVE-BLUE-01 | P1 | codex | 已排队 | — | 可移动地块边框改为清晰蓝色 | 开发管理/任务卡/U-GZ-R3-MOVE-BLUE-01.txt |
 | U-GZ-R3-BASIC-POINTER-01 | P1 | codex | 已排队 | — | 普攻改为鼠标指向地块预览与选定 | 开发管理/任务卡/U-GZ-R3-BASIC-POINTER-01.txt |
 | U-GZ-R3-BOUNTY-TRACK-01 | P1 | codex | 已排队 | — | 副本已接悬赏追踪按实际任务状态显示 | 开发管理/任务卡/U-GZ-R3-BOUNTY-TRACK-01.txt |
 | U-GZ-R3-ART-TARGET-01 | P1 | codex | 阻塞 | U-GZ-R3-STARTER-ART-01、U-GZ-R3-BASIC-POINTER-01 | 贯石击复用鼠标地块目标选取 | 开发管理/任务卡/U-GZ-R3-ART-TARGET-01.txt |
