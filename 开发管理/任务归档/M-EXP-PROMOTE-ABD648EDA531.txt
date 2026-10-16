@@ -8,9 +8,9 @@
   "owner": "codex",
   "domain": "unity",
   "stage": "implementation",
-  "dispatchState": "ready",
+  "dispatchState": "completed",
   "blockedBy": [],
-  "stateReason": "每日收集器已从 U-GZ-R3-MOVE-BLUE-01/U-GZ-R3-MOVE-BLUE-01-C01 建立独立整理任务；等待 Codex 进行经验语义核验。",
+  "stateReason": "2026-10-17：独立核验候选并晋级为 EXP-UNITY-025；来源候选、风险索引、经验卡与任务投影已同步。",
   "expectedPaths": [
     "开发管理/任务归档/U-GZ-R3-MOVE-BLUE-01.txt",
     "开发管理/经验库/风险索引.json",
@@ -68,3 +68,9 @@
 ## 停止条件
 
 - 直接证据不足、需要修改未授权既有经验、预留 ID 发生冲突，或无法在一个正式提交中完成语义结论与回链。
+
+## 2026-10-17 完成记录
+
+- 语义裁决：promoted 为 `EXP-UNITY-025`。来源候选、现行战斗规则和正式 `CombatCommandService` 共同证实：普通防御是独立正 AP 命令，扣除报价费用后只要仍有 AP 就保持 Active；只有显式结束行动或 AP 耗尽才结束。既有 PlayMode 把防御后 AP 直接清零的旧语义当断言，曾在颜色任务改业务前错误阻断验证；改为核对权威报价、余额、Active 状态和显式结束后，正式场景回归 1/1 通过。
+- 去重与边界：`EXP-UNITY-014` 约束 `CanEndTurn` 被显示和输入消费者误作阶段状态，`EXP-UNITY-015` 仅处理防御按钮费用文本几何，均不覆盖既有场景 PlayMode 对防御提交后回合边界的过时断言。本经验只在战斗规则、费用或回合边界相关的 PlayMode 涉及防御命令时，要求以当前权威预览和提交语义复核断言；非战斗测试、只改显示、无需防御命令的测试，或命令／预算所有者替换时排除或重新核验；不新增门禁。
+- 模型协作：简单：来源候选、直接规则证据、既有经验边界及确定性回链均可直接核验；入口指定主模型 `gpt-5.6-terra`，沿用入口单模型，未调用辅助。

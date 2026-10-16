@@ -97,8 +97,8 @@ AdventureScene 的 reachableMaterial 指向 VisualBaseline_Reachable（GUID 626b
 
 - collectionState: collected
 - promotionTaskId: M-EXP-PROMOTE-ABD648EDA531
-- resolution: unresolved
-- experienceId:
+- resolution: promoted
+- experienceId: EXP-UNITY-025
 - 经验领域：unity
 - 现象：颜色任务在未修改业务前被既有PlayMode防御后AP清零断言阻断。
 - 已证实根因：测试仍使用旧的防御结束回合语义，现行规则及权威提交服务均规定防御只扣自身费用，剩余预算允许继续行动。
