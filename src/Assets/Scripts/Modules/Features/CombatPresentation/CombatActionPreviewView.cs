@@ -27,7 +27,9 @@ namespace TianZhang.Features.CombatPresentation
             // Scene teardown can destroy the Canvas before the input owner is disabled.
             if (root == null || summary == null || confirmButton == null) return;
             root.SetActive(value != null);
-            confirmButton.interactable = value != null && value.CanConfirm;
+            bool attack = value?.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
+            confirmButton.gameObject.SetActive(!attack);
+            confirmButton.interactable = !attack && value != null && value.CanConfirm;
             bool swapping = value?.Candidate.Kind == CombatActionKind.SwapSpell;
             swapSlotButton?.gameObject.SetActive(swapping);
             swapCandidateButton?.gameObject.SetActive(swapping);
@@ -47,7 +49,7 @@ namespace TianZhang.Features.CombatPresentation
                     string.Join(" / ", area.Cells.Select(cell => Hex(cell.Position) + (cell.IsLegal ? "可命中" : cell.Reason))) +
                     "\n目标：" + (area.Targets.Count == 0 ? "无" : string.Join("、", area.Targets.Select(target => target.DisplayName + "[" + target.Id + "]"))) +
                     " · 一次费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
-                    "\n" + (value.CanConfirm ? "确认命中全部目标" : "不可施行：" + value.Reason) +
+                    "\n" + (value.CanConfirm ? "左键施行，命中全部目标" : "不可施行：" + value.Reason) +
                     " · 已用" + value.CommittedUseCount + "次 · 本次×" +
                     (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture);
                 return;
@@ -81,7 +83,6 @@ namespace TianZhang.Features.CombatPresentation
                         "\n不可施行：" + value.Reason);
                 return;
             }
-            bool attack = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
             string repeat = attack && value.ReuseCooldownTicks == 0
                 ? " · 已用" + value.CommittedUseCount + "次 · 本次×" +
                     (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture)

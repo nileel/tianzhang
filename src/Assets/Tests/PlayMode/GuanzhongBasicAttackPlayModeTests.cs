@@ -31,10 +31,10 @@ namespace TianZhang.Tests.PlayMode
     public sealed class GuanzhongBasicAttackPlayModeTests
     {
         // Exercise the formal pointer path; domain queries only choose a cell, never submit a UI candidate.
-        public static IEnumerator PointBasicAttack(CombatSession session, int? direction = null, bool lockTarget = true)
+        public static IEnumerator PointBasicAttack(CombatSession session, int? direction = null, bool click = false)
         {
             var input = FindInActiveScene<CombatCommandInput>();
-            if (!input.IsSelectingAttack || input.IsAttackLocked)
+            if (!input.IsSelectingAttack)
                 FindInActiveScene<CombatActionBarView>().BasicAttackButton.onClick.Invoke();
             if (!input.IsSelectingAttack) yield break;
             session.Combatants.TryGet("player", out var actor);
@@ -55,21 +55,23 @@ namespace TianZhang.Tests.PlayMode
                     session.Combatants.All.First(unit => unit.Team == CombatTeam.Enemy)).Position;
             Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + cell.Q + "_" + cell.R);
             Vector2 point = tile != null ? (Vector2)Camera.main.WorldToScreenPoint(tile.position) : new Vector2(-100, -100);
-            yield return PointAttackAt(point, lockTarget);
+            yield return PointAttackAt(point, click);
         }
 
-        public static IEnumerator PointAttackAt(Vector2 point, bool lockTarget = false)
+        public static IEnumerator PointAttackAt(Vector2 point, bool click = false)
         {
             Mouse mouse = Mouse.current;
             Assert.NotNull(mouse);
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
             yield return null; yield return null;
-            if (!lockTarget) yield break;
+            if (!click) yield break;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Left));
             yield return null; yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
             yield return null;
         }
+
+        public static IEnumerator ClickPointedAttack() => PointAttackAt(Mouse.current.position.ReadValue(), true);
 
         // Check the formal new-game result; this helper must never upgrade or initialize a player.
         public static void PrepareEquippedPlayerFixture()

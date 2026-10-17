@@ -212,11 +212,13 @@ namespace TianZhang.Tests.PlayMode
                 var preview = Object.FindFirstObjectByType<CombatActionPreviewView>();
                 Button action = bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
                 yield return Click(action);
-                if (action == bar.BasicAttackButton) yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
-                var input = Object.FindFirstObjectByType<CombatCommandInput>();
-                Assert.IsTrue(preview.ConfirmButton.interactable, "Bounty battle quote: " + input.Preview?.Reason +
-                    "; locked=" + input.IsAttackLocked + "; pointer=" + Mouse.current.position.ReadValue());
-                yield return Click(preview.ConfirmButton);
+                if (action == bar.BasicAttackButton)
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
+                else
+                {
+                    Assert.IsTrue(preview.ConfirmButton.interactable);
+                    yield return Click(preview.ConfirmButton);
+                }
                 confirmed++;
             }
             if (SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure)
@@ -262,7 +264,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(width, Screen.width);
                 presenter.InspectTarget("enemy"); bar.ArtButton.onClick.Invoke();
                 yield return null; Canvas.ForceUpdateCanvases();
-                AssertButtonReachable(preview.ConfirmButton); AssertButtonReachable(preview.CancelButton);
+                Assert.IsFalse(preview.ConfirmButton.gameObject.activeSelf); AssertButtonReachable(preview.CancelButton);
                 AssertButtonReachable(Object.FindFirstObjectByType<CombatTargetView>().CloseButton);
                 Assert.IsNull(Rect("CombatHudRoot").GetComponent<LayoutGroup>());
                 var point = new Vector2(Screen.width * 0.5f, Screen.height * 0.52f);
@@ -349,6 +351,7 @@ namespace TianZhang.Tests.PlayMode
                 int maximumHealth = enemy.MaximumHealth;
                 Assert.Greater(maximumHealth, 1);
                 Assert.AreEqual(maximumHealth, enemy.CurrentHealth, "The formal enemy must start at full health");
+                foreach (var other in spawned.Enemies.Where(unit => unit != enemy)) other.ReceiveDamage(other.CurrentHealth);
                 enemy.ReceiveDamage(enemy.CurrentHealth - 1);
                 Assert.AreEqual(1, enemy.CurrentHealth);
                 Assert.AreEqual(maximumHealth, enemy.MaximumHealth);
@@ -381,10 +384,17 @@ namespace TianZhang.Tests.PlayMode
                     capturedLongLog = true;
                 }
                 Button action = victory && bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
+                if (action == bar.BasicAttackButton && Rect("CloseLogButton").gameObject.activeInHierarchy)
+                    yield return Click(Rect("CloseLogButton").GetComponent<Button>());
                 yield return Click(action);
-                Assert.IsTrue(preview.IsVisible);
-                Assert.IsTrue(preview.ConfirmButton.interactable);
-                yield return Click(preview.ConfirmButton);
+                if (action == bar.BasicAttackButton)
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
+                else
+                {
+                    Assert.IsTrue(preview.IsVisible);
+                    Assert.IsTrue(preview.ConfirmButton.interactable);
+                    yield return Click(preview.ConfirmButton);
+                }
                 commands++;
                 yield return null;
             }

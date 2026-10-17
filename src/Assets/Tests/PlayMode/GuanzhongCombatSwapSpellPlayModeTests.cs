@@ -130,8 +130,7 @@ namespace TianZhang.Tests.PlayMode
             {
                 SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
-                bar.ArtButton.onClick.Invoke();
-                Assert.AreEqual(spawned.Player.Id, input.Candidate.TargetId);
+                Assert.AreEqual(spawned.Player.Id, hud.Snapshot.ArtActions[0].Targets[0].Id);
                 Assert.IsFalse(input.IsSelectingAttack);
                 bar.SecondArtButton.onClick.Invoke();
                 Assert.IsTrue(input.IsSelectingAttack);
@@ -142,7 +141,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
                 Assert.AreEqual(Attack, input.Candidate.ProfileId);
                 Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
-                yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("second-" + width);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("q3-second-" + width);
                 input.CancelCandidate();
                 Assert.IsNull(input.Candidate);
             }
@@ -151,12 +150,20 @@ namespace TianZhang.Tests.PlayMode
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
             int hp = spawned.Enemy.CurrentHealth, otherHp = spawned.Enemies[1].CurrentHealth;
             int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
-            input.ConfirmCandidate(); input.ConfirmCandidate();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            input.ConfirmCandidate();
             Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
             Assert.Less(spawned.Enemy.CurrentHealth, hp);
             Assert.AreEqual(otherHp, spawned.Enemies[1].CurrentHealth);
             Assert.IsNull(input.Candidate);
+            yield return Ready();
+            var recovery = hud.Snapshot.ArtActions[0].Targets.First(target => target.Id == "player").Quote;
+            ap = spawned.Player.ActionPointsRemainingUnits; mp = spawned.Player.CurrentSpirit;
+            bar.ArtButton.onClick.Invoke();
+            Assert.IsNull(input.Candidate);
+            Assert.AreEqual(ap - recovery.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
+            Assert.Greater(spawned.Player.CurrentSpirit, mp);
         }
 
         [UnityTest]
@@ -212,7 +219,7 @@ namespace TianZhang.Tests.PlayMode
             spawned.Player.SetCooldown(Recovery, 90);
             spawned.Player.SetCooldown(Attack, 80);
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(encounter, new object[] { "受控冷却输入", true });
+                .Invoke(encounter, new object[] { "受控冷却输入", true, null });
             int tick = session.TurnScheduler.CurrentTick;
             long turn = session.TurnSequence;
             bar.SwapSpellButton.onClick.Invoke();
@@ -292,7 +299,7 @@ namespace TianZhang.Tests.PlayMode
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True);
             int ap = spawned.Player.ActionPointsRemainingUnits;
-            input.ConfirmCandidate();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - 50000));
             Assert.That(spawned.Player.GetCooldown(Attack), Is.Zero, "The final production Guanshiji has CD 0.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.EqualTo(2));
@@ -309,10 +316,10 @@ namespace TianZhang.Tests.PlayMode
             input.ConfirmCandidate();
             Assert.That(State(), Is.EqualTo(before), "Changed authority facts invalidate the original quote.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
+            var recovery = hud.Snapshot.ArtActions[0].Targets.First(target => target.Id == "player").Quote;
+            Assert.IsTrue(recovery.CanConfirm, recovery.Reason);
             bar.ArtButton.onClick.Invoke();
-            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
-            input.ConfirmCandidate();
+            Assert.IsNull(input.Candidate);
             yield return Ready();
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();

@@ -157,7 +157,7 @@ namespace TianZhang.Tests.PlayMode
                 Debug.Log("[AOE route] " + profileId + "; step=" + step + "; " + AreaState());
                 bar.BasicAttackButton.onClick.Invoke();
                 Assert.AreEqual(hud.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm, input.IsSelectingAttack);
-                Assert.IsFalse(input.IsAttackLocked);
+                Assert.IsFalse(preview.ConfirmButton.interactable);
                 for (int direction = 0; input.IsSelectingAttack && direction < 6; direction++)
                 {
                     string before = AreaState();
@@ -209,7 +209,9 @@ namespace TianZhang.Tests.PlayMode
                     if (input.Preview.AttackArea == null) { Assert.IsFalse(input.Preview.CanConfirm); continue; }
                     AssertAreaMatchesAuthority(direction);
                     if (input.Preview.AttackArea.Targets.Count != 0) continue;
-                    string before = AreaState(); input.ConfirmCandidate(); Assert.AreEqual(before, AreaState());
+                    string before = AreaState();
+                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    Assert.AreEqual(before, AreaState());
                     Assert.IsFalse(preview.ConfirmButton.interactable);
                     yield return CaptureArea((blade ? "blade" : "sword") + "-empty-" + width);
                     break;
@@ -221,7 +223,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(Find<CombatMovementView>().Highlights.Values.Any(ring => ring.gameObject.activeSelf));
                 bar.BasicAttackButton.onClick.Invoke();
                 Assert.IsTrue(input.IsSelectingAttack);
-                Assert.IsFalse(input.IsAttackLocked);
+                Assert.IsFalse(preview.ConfirmButton.interactable);
                 yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, selectedDirection);
             }
             var quote = input.Preview;
@@ -230,7 +232,8 @@ namespace TianZhang.Tests.PlayMode
             int ap = spawned.Player.ActionPointsRemainingUnits;
             int uses = BasicUseCount();
             int facing = spawned.Player.Facing;
-            input.ConfirmCandidate(); input.ConfirmCandidate();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            input.ConfirmCandidate();
             Assert.AreEqual(ap - quote.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(uses + 1, BasicUseCount());
             Assert.AreEqual(facing, spawned.Player.Facing);
@@ -292,7 +295,8 @@ namespace TianZhang.Tests.PlayMode
                     "cell=" + key + "; center=" + center + "; camera=" + Camera.main.transform.position +
                     "; screen=" + Camera.main.WorldToScreenPoint(center) + "; legal=" + cell.IsLegal);
             }
-            AssertVisibleText(preview.ConfirmButton.GetComponentInChildren<Text>(), label + "/confirm");
+            Assert.IsFalse(preview.ConfirmButton.gameObject.activeSelf);
+            AssertVisibleText(preview.CancelButton.GetComponentInChildren<Text>(), label + "/cancel");
             string directory = Path.Combine(Application.dataPath, "../Logs/aoe-input"); Directory.CreateDirectory(directory);
             string path = Path.Combine(directory, label + ".png");
             File.WriteAllText(Path.ChangeExtension(path, ".txt"), text.text + "\nstate=" + AreaState() +
@@ -444,7 +448,7 @@ namespace TianZhang.Tests.PlayMode
                     var enemy = units.Enemies.FirstOrDefault(unit => unit.IsAlive);
                     if (canAttack)
                     {
-                        preview.ConfirmButton.onClick.Invoke();
+                        yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
                     }
                     else if (!passive && enemy != null && units.Player.Position.Distance(enemy.Position) > 1)
                     {
@@ -492,7 +496,9 @@ namespace TianZhang.Tests.PlayMode
             var viewport = scroll.viewport;
             var corners = new Vector3[4]; viewport.GetWorldCorners(corners);
             var textCorners = new Vector3[4]; text.rectTransform.GetWorldCorners(textCorners);
-            var buttons = new Vector3[4]; view.ConfirmButton.GetComponent<RectTransform>().GetWorldCorners(buttons);
+            var visibleButton = view.ConfirmButton.gameObject.activeSelf ? view.ConfirmButton : view.CancelButton;
+            Assert.IsTrue(visibleButton.gameObject.activeInHierarchy);
+            var buttons = new Vector3[4]; visibleButton.GetComponent<RectTransform>().GetWorldCorners(buttons);
             Debug.Log("[EquipmentItemUI] " + evidence + "; screen=" + Screen.width + "x" + Screen.height +
                 "; preferredHeight=" + text.preferredHeight + "; viewport=" + viewport.rect.size +
                 "; viewportMin=" + corners[0] + "; viewportMax=" + corners[2] +

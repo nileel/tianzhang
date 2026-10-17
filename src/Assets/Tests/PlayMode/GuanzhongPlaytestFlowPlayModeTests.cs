@@ -129,10 +129,12 @@ namespace TianZhang.Tests.PlayMode
 
             if (victory)
             {
-                foreach (var action in new[] { bar.ArtButton, bar.SecondArtButton })
+                foreach (var action in new[] { bar.ArtButton, bar.GuardButton })
                 {
                     state = State();
                     yield return Click(action);
+                    if (action == bar.ArtButton)
+                        yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, "enemy");
                     Assert.IsTrue(preview.IsVisible);
                     Assert.IsNotNull(timeline.Prediction);
                     Assert.That(Get<Text>(timeline, "predictionText").text, Does.Contain("顺位未定"));
@@ -191,10 +193,8 @@ namespace TianZhang.Tests.PlayMode
                     yield return CaptureLongLog();
                     longLogCaptured = true;
                 }
-                bool canAttack = session.ValidateCommand(new CombatCommand(CombatCommandKind.BasicAttack,
-                    player.Id, enemy.Id, player.BasicAttackProfileId)).Succeeded;
                 Button action = !victory ? bar.WaitButton : bar.ArtButton.interactable ? bar.ArtButton :
-                    canAttack ? bar.BasicAttackButton : bar.WaitButton;
+                    bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
                 yield return Action(action);
                 commands++;
             }
@@ -338,8 +338,20 @@ namespace TianZhang.Tests.PlayMode
         {
             Log("action=" + button.name + " before=" + State());
             yield return Click(button);
-            Assert.IsTrue(preview.IsVisible);
-            yield return Click(preview.ConfirmButton);
+            var input = Find<CombatCommandInput>();
+            if (input.IsSelectingAttack)
+            {
+                if (button == bar.BasicAttackButton)
+                    yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
+                else
+                    yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, "enemy", click: true);
+            }
+            else if (button != bar.ArtButton && button != bar.SecondArtButton && button != bar.DivineButton)
+            {
+                Assert.IsTrue(preview.IsVisible);
+                yield return Click(preview.ConfirmButton);
+            }
+            Assert.IsNull(input.Candidate);
         }
         private IEnumerator Ready()
         {

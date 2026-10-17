@@ -18,7 +18,6 @@ namespace TianZhang.Features.CombatPresentation
         public CombatActionPreviewSnapshot Preview { get; private set; }
         public CombatActionCandidate Candidate => Preview?.Candidate;
         public bool IsSelectingAttack { get; private set; }
-        public bool IsAttackLocked { get; private set; }
         private CombatUnitPresentationHex? pointedCell;
 
         public void ConfigurePreview(ICombatActionPreviewHandler previews, CombatActionPreviewView view, CombatTimelineView axis)
@@ -34,7 +33,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void CancelCandidate()
         {
-            IsSelectingAttack = IsAttackLocked = false;
+            IsSelectingAttack = false;
             pointedCell = null;
             Preview = null;
             previewView?.Present(null);
@@ -44,8 +43,13 @@ namespace TianZhang.Features.CombatPresentation
 
         public void ConfirmCandidate()
         {
-            if (!isActiveAndEnabled || !CanAct || Preview == null || !Preview.CanConfirm ||
-                (IsSelectingAttack && !IsAttackLocked)) return;
+            if (IsSelectingAttack) return;
+            CommitCandidate();
+        }
+
+        private void CommitCandidate()
+        {
+            if (!isActiveAndEnabled || !CanAct || Preview == null || !Preview.CanConfirm) return;
             CombatActionCandidate selected = Candidate;
             CancelCandidate();
             previewHandler.ConfirmAction(selected);
@@ -58,6 +62,11 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
                 snapshot.CommandContextVersion, slotIndex: slot, attackDirection: direction));
+            if (kind is CombatActionKind.Art or CombatActionKind.Divine && Preview?.CanConfirm == true)
+            {
+                CommitCandidate();
+                return;
+            }
             previewView?.Present(Preview);
             timeline?.PresentPrediction(Preview);
             movementView?.PresentAttackArea(Preview?.AttackArea);
@@ -69,7 +78,7 @@ namespace TianZhang.Features.CombatPresentation
             CancelCandidate();
             movementView.Cancel();
             IsSelectingAttack = true;
-            PresentPointerPrompt("鼠标指向地块预览，左键选定；右键或 Esc 取消",
+            PresentPointerPrompt("鼠标指向地块预览，左键施行；右键或 Esc 取消",
                 new CombatActionCandidate(art == null ? CombatActionKind.BasicAttack : CombatActionKind.Art,
                     actorId, null, art?.ProfileId, snapshot.CommandContextVersion), art?.DisplayName ?? "普攻");
         }
@@ -94,11 +103,10 @@ namespace TianZhang.Features.CombatPresentation
             Mouse mouse = Mouse.current;
             if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
             { CancelCandidate(); return; }
-            // A locked quote must survive moving onto its confirmation button.
-            if (IsAttackLocked) return;
             if (mouse == null || !movementView.TryPickCell(mouse.position.ReadValue(), out var cell))
-            { if (pointedCell.HasValue) PresentPointerPrompt("请指向棋盘内的地块，左键选定后确认"); return; }
-            if (!pointedCell.HasValue || !pointedCell.Value.Equals(cell))
+            { if (pointedCell.HasValue) PresentPointerPrompt("请指向棋盘内的地块，左键施行"); return; }
+            // Requote on the committing click even when the pointer has not moved.
+            if (!pointedCell.HasValue || !pointedCell.Value.Equals(cell) || mouse.leftButton.wasPressedThisFrame)
             {
                 pointedCell = cell;
                 bool art = Candidate.Kind == CombatActionKind.Art;
@@ -115,12 +123,10 @@ namespace TianZhang.Features.CombatPresentation
                 previewView?.Present(Preview);
                 timeline?.PresentPrediction(Preview);
                 movementView.PresentAttackArea(Preview?.AttackArea, cell, Preview?.CanConfirm == true);
-                if (previewView != null) previewView.ConfirmButton.interactable = false;
             }
             if (mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true)
             {
-                IsAttackLocked = true;
-                previewView?.Present(Preview);
+                CommitCandidate();
             }
         }
 
@@ -324,7 +330,7 @@ namespace TianZhang.Features.CombatPresentation
             secondArtTargetId = art.Targets[(selectedIndex + 1) % art.Targets.Count].Id;
             actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
             if (Candidate?.Kind == CombatActionKind.Art && Candidate.ProfileId == art.ProfileId)
-                Choose(CombatActionKind.Art, secondArtTargetId, art.ProfileId);
+                CancelCandidate();
         }
 
         private void Bind(Button button, Action action)

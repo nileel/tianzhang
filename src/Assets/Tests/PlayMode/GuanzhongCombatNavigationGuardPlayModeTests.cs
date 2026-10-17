@@ -28,6 +28,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -45,6 +46,20 @@ namespace TianZhang.Tests.PlayMode
         private CombatHudPresenter combatHud;
         private AdventureHudPresenter adventureHud;
         private CombatActionBarView actions;
+        private Mouse mouse;
+        private InputSettings.BackgroundBehavior background;
+        private InputSettings.EditorInputBehaviorInPlayMode editorInput;
+
+        [UnitySetUp]
+        public IEnumerator PreparePointer()
+        {
+            background = InputSystem.settings.backgroundBehavior;
+            editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            mouse = InputSystem.AddDevice<Mouse>();
+            yield return null;
+        }
 
         private static T Field<T>(object owner, string name) =>
             (T)owner.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(owner);
@@ -57,6 +72,9 @@ namespace TianZhang.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator CleanIsolatedSave()
         {
+            InputSystem.settings.backgroundBehavior = background;
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+            if (mouse != null) InputSystem.RemoveDevice(mouse);
             if (saveDirectory == null) yield break;
             var bootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
@@ -203,6 +221,13 @@ namespace TianZhang.Tests.PlayMode
             yield return EnterFormalAdventure(); yield return Capture("exploration");
             yield return BeginRealEncounter(); yield return Capture("combat");
             CharacterRecord initialPlayer = GameBootstrap.RequireRuntime().CaptureSave().player;
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, combat);
+            // All preview actions must be executable under Q1, including healing an injured actor.
+            for (int turn = 0; turn < 10 && spawned.Player.CurrentHealth == spawned.Player.MaximumHealth; turn++)
+            {
+                encounter.RequestEndTurn("player"); yield return null; yield return PlayerReady();
+            }
+            Assert.Less(spawned.Player.CurrentHealth, spawned.Player.MaximumHealth);
             foreach (Button action in new[] { actions.BasicAttackButton, actions.ArtButton, actions.GuardButton,
                 actions.SwapSpellButton, actions.SwapEquipmentButton, actions.UseItemButton })
             {
@@ -244,9 +269,11 @@ namespace TianZhang.Tests.PlayMode
             }
             Assert.Less(spawned.Player.CurrentHealth, spawned.Player.MaximumHealth);
             var runtime = GameBootstrap.RequireRuntime();
-            actions.ArtButton.onClick.Invoke(); Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
+            actions.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(combat, spawned.Enemy.Id);
+            Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
             int spiritBeforeCast = spawned.Player.CurrentSpirit;
-            commands.ConfirmCandidate(); yield return PlayerReady();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack(); yield return PlayerReady();
             Assert.Less(spawned.Player.CurrentSpirit, spiritBeforeCast);
             encounter.RequestEndTurn("player"); yield return null; yield return PlayerReady();
             actions.SwapEquipmentButton.onClick.Invoke(); Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
@@ -396,15 +423,19 @@ namespace TianZhang.Tests.PlayMode
             for (int turn = 0; turn < 10; turn++)
             {
                 actions.ArtButton.onClick.Invoke();
-                if (commands.Preview.CanConfirm) break;
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(combat, spawned.Enemy.Id);
+                if (commands.Preview?.CanConfirm == true) break;
                 commands.CancelCandidate();
                 encounter.RequestEndTurn("player"); yield return null; yield return PlayerReady();
             }
             // Isolated last-hit fixture; real commands, presentation and settlement still own the result.
+            foreach (var other in spawned.Enemies.Where(enemy => enemy != spawned.Enemy)) other.ReceiveDamage(other.CurrentHealth);
             spawned.Enemy.ReceiveDamage(spawned.Enemy.CurrentHealth - 1);
             encounter.SetCombatResolutionRandomSource(new GuanzhongBasicAttackPlayModeTests.OutcomeFixtureRandom(combat, true));
-            actions.ArtButton.onClick.Invoke(); Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
-            commands.ConfirmCandidate();
+            actions.ArtButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(combat, spawned.Enemy.Id);
+            Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             Assert.IsFalse(spawned.Enemy.IsAlive); Assert.IsTrue(encounter.IsPresenting);
             Assert.IsFalse(encounter.CanWithdraw(out string reason)); Assert.AreEqual("胜负已定，等待结算", reason);
             adventure.RequestReturn(); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);

@@ -183,8 +183,7 @@ namespace TianZhang.Tests.PlayMode
                 spawned.Player.Id, "missing_target", RecoveryId));
             int mana = spawned.Player.CurrentSpirit, health = spawned.Enemy.CurrentHealth, rolls = random.Count;
             actionBar.ArtButton.onClick.Invoke();
-            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: true);
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
             Assert.That(random.Count, Is.EqualTo(rolls + 5));
@@ -207,7 +206,6 @@ namespace TianZhang.Tests.PlayMode
                 AssertArtTargets();
                 Assert.That(actionBar.SecondArtButton.interactable, Is.True);
                 actionBar.SecondArtButton.onClick.Invoke();
-                Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana + recovery));
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(enemyHealth));
                 AssertRecoveryProjection(spawned.Player.Id, recovery, rolls);
@@ -226,7 +224,6 @@ namespace TianZhang.Tests.PlayMode
                 actionBar.SecondArtTargetButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             StringAssert.Contains("20MP", actionBar.SecondArtButton.GetComponentInChildren<UnityEngine.UI.Text>().text);
             actionBar.SecondArtButton.onClick.Invoke();
-            Object.FindFirstObjectByType<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 20));
             AssertRecoveryProjection(spawned.Enemy.Id, 0, rolls);
             StringAssert.Contains("恢复灵力 0", sink.Logs.Last());
@@ -291,15 +288,14 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f));
                 yield return CaptureTrialEvidence("starter-initial-range-" + width, label);
             }
-            Assert.That(actionBar.ArtButton.interactable, Is.True, "A rejected target must not seal the preview entry.");
-            actionBar.ArtButton.onClick.Invoke();
-            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            Assert.That(input.Candidate.ProfileId, Is.EqualTo(AttackId));
-            Assert.That(input.Preview.CanConfirm, Is.False);
-            Assert.That(input.Preview.Reason, Is.Not.Empty);
-            yield return CaptureTrialEvidence("starter-range-preview", GetPrivateField<Text>(preview, "summary"));
-            AssertRejectedWithoutConsumption(input.ConfirmCandidate);
-            preview.CancelButton.onClick.Invoke();
+            Assert.IsFalse(actionBar.ArtButton.interactable, "No legal target disables entry under Q1.");
+            AssertRejectedWithoutConsumption(() => actionBar.ArtButton.onClick.Invoke());
+            Assert.IsNull(input.Candidate);
+            var rejected = encounter.PreviewAction(new CombatActionCandidate(CombatActionKind.Art, "player",
+                spawned.Enemy.Id, AttackId, sink.Latest.CommandContextVersion));
+            Assert.IsFalse(rejected.CanConfirm);
+            Assert.IsNotEmpty(rejected.Reason);
+            AssertRejectedWithoutConsumption(() => encounter.ConfirmAction(rejected.Candidate));
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
             RecordStarterArtState("contact-without-swap");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);
@@ -315,7 +311,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            input.ConfirmCandidate();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - mana));
             AssertRejectedWithoutConsumption(() => { input.ConfirmCandidate(); encounter.ConfirmAction(candidate); });
@@ -335,7 +331,7 @@ namespace TianZhang.Tests.PlayMode
             CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
             input.SetContext("player", null, null, null, false);
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(encounter, new object[] { "目标顺序测试", true });
+                .Invoke(encounter, new object[] { "目标顺序测试", true, null });
             RecordStarterArtState("controlled-target-order-initial");
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
             RecordStarterArtState("controlled-second-target-legal");
@@ -356,7 +352,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemies[1].Id);
-            input.ConfirmCandidate();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             Assert.That(spawned.Enemies[0].CurrentHealth, Is.EqualTo(firstHealth));
             Assert.That(spawned.Enemies[1].CurrentHealth, Is.LessThan(secondHealth));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
@@ -564,7 +560,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FormalNewGameUsesProductionCombatRandomAndBothPreviewConfirmButtons()
+        public IEnumerator FormalNewGameUsesProductionCombatRandomAndDirectSpellActions()
         {
             yield return EnterFormalCombat(null, productionCombatRandom: true);
             Assert.That(GetPrivateField<ICombatResolutionRandomSource>(encounter, "combatRandomSource"),
@@ -588,23 +584,23 @@ namespace TianZhang.Tests.PlayMode
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             yield return CaptureTrialEvidence("attack-preview", GetPrivateField<Text>(preview, "summary"));
-            preview.ConfirmButton.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - manaCost));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             TestContext.WriteLine("Production random legal attack result: " + sink.Logs.Last());
             yield return WaitForPlayerTurn();
             mp = spawned.Player.CurrentSpirit; ap = spawned.Player.ActionPointsRemainingUnits;
-            actionBar.SecondArtButton.onClick.Invoke();
-            Assert.That(input.Candidate.TargetId, Is.EqualTo(spawned.Player.Id));
-            Assert.That(input.Preview.CanConfirm, Is.True);
-            cost = input.Preview.ActionPointCostUnits;
+            var selfQuote = sink.Latest.ArtActions[1].Targets.First(target => target.Id == "player").Quote;
+            Assert.That(selfQuote.CanConfirm, Is.True);
+            cost = selfQuote.ActionPointCostUnits;
             Assert.That(session.TryGetProfile(RecoveryId, out CombatAttackProfile recoveryProfile), Is.True);
             int recovery = Math.Min(spawned.Player.MaximumSpirit - mp,
                 (int)Math.Floor(Math.Max(recoveryProfile.MinimumSpiritRecovery,
                     Math.Min(spawned.Player.RawSpirit, recoveryProfile.RuleMetadata.Tier.RawSpiritRecoveryCapacity) *
                     (double)recoveryProfile.SpiritRecoveryMultiplier) * session.SpiritRecoveryEnvironmentMultiplier));
-            yield return CaptureTrialEvidence("recovery-preview", GetPrivateField<Text>(preview, "summary"));
-            preview.ConfirmButton.onClick.Invoke();
+            actionBar.SecondArtButton.onClick.Invoke();
+            Assert.IsNull(input.Candidate);
+            Assert.IsFalse(preview.IsVisible);
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp + recovery));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             yield return WaitForPlayerTurn();
@@ -683,22 +679,20 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator AssertArtPreviewRejected(string reason)
         {
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(encounter, new object[] { "真实拒绝门禁测试", true });
+                .Invoke(encounter, new object[] { "真实拒绝门禁测试", true, null });
             CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
-            Assert.That(actionBar.ArtButton.interactable, Is.True);
-            actionBar.ArtButton.onClick.Invoke();
-            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            Assert.That(input.Candidate.ProfileId, Is.EqualTo(AttackId));
-            Assert.That(input.Preview.CanConfirm, Is.False);
-            Assert.That(input.Preview.Reason, Is.Not.Empty);
-            Assert.That(FindInActiveScene<CombatActionPreviewView>().ConfirmButton.interactable, Is.False);
-            Assert.That(sink.Latest.ArtActions.Single(art => art.ProfileId == AttackId).Targets
-                .Single(target => target.Id == input.Candidate.TargetId).RejectionReason, Is.EqualTo(reason));
+            Assert.IsFalse(actionBar.ArtButton.interactable);
+            AssertRejectedWithoutConsumption(() => actionBar.ArtButton.onClick.Invoke());
+            Assert.IsNull(input.Candidate);
+            var target = sink.Latest.ArtActions.Single(art => art.ProfileId == AttackId).Targets
+                .Single(value => value.Id == spawned.Enemy.Id);
+            Assert.AreEqual(reason, target.RejectionReason);
+            var quote = encounter.PreviewAction(target.Quote.Candidate);
+            Assert.IsFalse(quote.CanConfirm);
+            Assert.IsNotEmpty(quote.Reason);
             RecordStarterArtState(reason);
-            CombatActionCandidate candidate = input.Candidate;
-            AssertRejectedWithoutConsumption(input.ConfirmCandidate);
-            AssertRejectedWithoutConsumption(() => encounter.ConfirmAction(candidate));
-            input.CancelCandidate();
+            AssertRejectedWithoutConsumption(() => encounter.ConfirmAction(quote.Candidate));
+            yield return null;
         }
 
         private IEnumerator CaptureTrialEvidence(string label, Text text)
