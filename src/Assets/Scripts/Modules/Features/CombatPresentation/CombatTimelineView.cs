@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
@@ -39,8 +38,7 @@ namespace TianZhang.Features.CombatPresentation
         private CombatTimelineSnapshot playbackEnd;
         private int playbackStep;
         private float playbackElapsed;
-        private readonly Dictionary<string, int> lanes = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly float[] displayedCt = new float[MaximumEntries];
+        private readonly float[] displayedRemainingTicks = new float[MaximumEntries];
         private float displayedTick;
         public bool IsPresenting => playbackEnd != null;
         private string focusedCombatantId;
@@ -145,15 +143,8 @@ namespace TianZhang.Features.CombatPresentation
             snapshot = timeline;
             if (root != null) root.SetActive(true);
             displayedTick = timeline.CurrentTick + elapsedTicks;
-            if (tickText != null) tickText.text = "刻 " + displayedTick.ToString("0.##", CultureInfo.InvariantCulture) + " · CT / 门槛";
+            if (tickText != null) tickText.text = IsPresenting ? "行动序列 · 推进中" : "行动序列";
             int count = Math.Min(MaximumEntries, timeline.Entries.Count);
-            for (int lane = 0; lane < MaximumEntries; lane++)
-            {
-                string removed = null;
-                foreach (var pair in lanes)
-                    if (pair.Value == lane && FindEntry(timeline, pair.Key) == null) removed = pair.Key;
-                if (removed != null) lanes.Remove(removed);
-            }
             for (int index = 0; index < MaximumEntries; index++)
             {
                 bool visible = index < count;
@@ -166,29 +157,21 @@ namespace TianZhang.Features.CombatPresentation
                 }
 
                 CombatTimelineEntrySnapshot entry = timeline.Entries[index];
-                if (!lanes.TryGetValue(entry.Id, out int entryLane))
-                {
-                    entryLane = 0;
-                    while (lanes.ContainsValue(entryLane)) entryLane++;
-                    lanes.Add(entry.Id, entryLane);
-                }
-                displayedCt[index] = entry.CurrentCt + elapsedTicks * entry.Speed;
+                displayedRemainingTicks[index] = Mathf.Max(0, entry.TicksUntilReady - elapsedTicks);
                 if (entryRoots[index] != null)
                 {
-                    // The lower 75% is linear up to this unit's threshold. Overflow stays visible above it.
-                    float ratio = displayedCt[index] / entry.NextActionThreshold;
-                    float position = ratio <= 1f ? ratio * 0.75f : 1f - 0.25f / ratio;
-                    entryRoots[index].anchoredPosition = new Vector2(
-                        (entryLane - 1) * chargeTrack.rect.width / MaximumEntries, position * chargeTrack.rect.height);
+                    // Entries already carry the authoritative current / ready / future order.
+                    entryRoots[index].anchoredPosition = new Vector2(0, -index * chargeTrack.rect.height / MaximumEntries);
                 }
                 if (entryCtLabels[index] != null)
-                    entryCtLabels[index].text = displayedCt[index].ToString("0.#", CultureInfo.InvariantCulture) +
-                        "/" + entry.NextActionThreshold.ToString("0.#", CultureInfo.InvariantCulture);
+                    entryCtLabels[index].text = "剩余 " + Mathf.CeilToInt(displayedRemainingTicks[index]).ToString(CultureInfo.InvariantCulture);
                 if (entryLabels[index] != null)
                 {
-                    entryLabels[index].fontSize = entry.IsCurrent ? 14 : 12;
+                    entryLabels[index].color = entry.IsCurrent ? new Color32(255, 220, 135, 255) : new Color32(244, 234, 212, 255);
                     entryLabels[index].text = FormatEntry(entry, index);
                 }
+                if (entryButtons[index] != null)
+                    entryButtons[index].image.color = entry.IsCurrent ? new Color32(255, 220, 135, 255) : Color.white;
                 Image portrait = entryPortraits[index];
                 if (portrait != null)
                 {
@@ -213,13 +196,6 @@ namespace TianZhang.Features.CombatPresentation
                         nextFocus = entryButtons[index].gameObject;
                 EventSystem.current.SetSelectedGameObject(nextFocus);
             }
-        }
-
-        private static CombatTimelineEntrySnapshot FindEntry(CombatTimelineSnapshot value, string id)
-        {
-            foreach (var entry in value.Entries)
-                if (entry.Id == id) return entry;
-            return null;
         }
 
         public void Hide()
@@ -298,20 +274,17 @@ namespace TianZhang.Features.CombatPresentation
             }
             string faction = entry.Faction == CombatUnitDisplayFaction.Player ? "我方" : "敌方";
             string state = entry.IsCurrent ? "当前行动" : entry.QueuePosition >= 0
-                ? "已排队 · 队列 " + (entry.QueuePosition + 1) : entry.IsReady ? "已就绪" : "蓄力（未排队）";
-            focusText.text = entry.DisplayName + " · " + faction + "\nCT " +
-                entry.CurrentCt.ToString("0.###", CultureInfo.InvariantCulture) + " / 门槛 " +
-                entry.NextActionThreshold.ToString("0.###", CultureInfo.InvariantCulture) + "\n速度 " +
-                entry.Speed + " · 调度 tick " + snapshot.CurrentTick + "\n" + state;
+                ? "已就绪 · 等待前序行动" : entry.IsReady ? "已就绪" : "等待行动";
+            focusText.text = entry.DisplayName + " · " + faction + "\n剩余行动值 " +
+                entry.TicksUntilReady + "\n速度 " + entry.Speed + "\n" + state;
         }
 
         private string FormatEntry(CombatTimelineEntrySnapshot entry, int index)
         {
             bool player = entry.Faction == CombatUnitDisplayFaction.Player;
             return (entry.Id == inspectedTargetId ? "◆" : string.Empty) +
-                (lanes.TryGetValue(entry.Id, out int lane) ? lane + 1 : index + 1) +
-                (entry.IsCurrent ? " 当前" : entry.QueuePosition >= 0 ? " 队" + (entry.QueuePosition + 1) :
-                    entry.IsReady ? " 就绪" : player ? " 我方" : entry.DisplayName);
+                (index + 1) + (entry.IsCurrent ? " 当前" : "") + (player ? " · 我方" : " · 敌方") +
+                "\n" + entry.DisplayName;
         }
 
         private void ClearContent()
@@ -320,8 +293,7 @@ namespace TianZhang.Features.CombatPresentation
             playbackEnd = null;
             playbackStep = 0;
             playbackElapsed = 0;
-            lanes.Clear();
-            Array.Clear(displayedCt, 0, displayedCt.Length);
+            Array.Clear(displayedRemainingTicks, 0, displayedRemainingTicks.Length);
             displayedTick = 0;
             snapshot = null;
             focusedCombatantId = null;

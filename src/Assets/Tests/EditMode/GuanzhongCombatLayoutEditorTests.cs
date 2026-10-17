@@ -12,6 +12,13 @@ namespace TianZhang.Tests.EditMode
 {
     public sealed class GuanzhongCombatLayoutEditorTests
     {
+        [Test] public void TimelineRebuildAndReopenKeepSingleSequence()
+        {
+            AdventureSceneBuilder.RebuildCombatTimeline();
+            AdventureSceneBuilder.RebuildCombatTimeline();
+            SavedFormalLayoutKeepsReferencesAndSingleWriters();
+        }
+
         [Test] public void IncrementalCreatorsRetainOneFinalLayout()
         {
             AdventureSceneBuilder.RebuildCombatLayout();
@@ -135,12 +142,14 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(new Vector2(300f / 1920, 801f / 1080), Rect("CombatTimelineRoot").anchorMax);
             Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMin);
             Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMax);
-            Assert.AreEqual(new Vector2(0.5f, 0.75f), Rect("TimelineThreshold").anchorMin);
+            Assert.IsFalse(rects.Any(rect => rect.name == "TimelineThreshold" || rect.name == "TimelineZero"));
             Assert.AreEqual(3, timelineData.FindProperty("entryCtLabels").arraySize);
             for (int index = 0; index < 3; index++)
             {
                 Assert.AreSame(Rect("TimelineTrack"), Rect("TimelineEntry" + index).parent);
-                Assert.AreEqual(Vector2.one * 0.5f, Rect("TimelineEntry" + index).pivot);
+                Assert.AreEqual(new Vector2(0.5f, 1), Rect("TimelineEntry" + index).pivot);
+                Assert.AreEqual(new Vector2(0.5f, 1), Rect("TimelineEntry" + index).anchorMin);
+                Assert.AreEqual(0, Rect("TimelineEntry" + index).anchoredPosition.x);
                 Assert.NotNull(timelineData.FindProperty("entryCtLabels").GetArrayElementAtIndex(index).objectReferenceValue);
             }
         }

@@ -766,13 +766,14 @@ namespace TianZhang.Features.Adventure
                     isPlayer ? playerDisplayName : resolveText(spawned.EnemyData.displayNameKey),
                     isPlayer ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
                     unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady, queuePosition,
-                    string.Equals(current, id, StringComparison.Ordinal)));
+                    string.Equals(current, id, StringComparison.Ordinal), unit.TicksUntilReady));
             }
             Add(current, -1);
+            // A recorded boundary can contain the first ready actor already dequeued but not yet begun.
+            foreach (CombatTurnUnitSnapshot unit in turns.Units)
+                if (unit.IsReady && !turns.ReadyQueueIds.Contains(unit.Id)) Add(unit.Id, -1);
             for (int index = 0; index < turns.ReadyQueueIds.Count; index++) Add(turns.ReadyQueueIds[index], index);
             foreach (string id in turns.ChargingUnitIds) Add(id, -1);
-            // A recorded boundary can contain a ready actor already dequeued but not yet begun.
-            foreach (CombatTurnUnitSnapshot unit in turns.Units) Add(unit.Id, -1);
             return new CombatTimelineSnapshot(turns.CurrentTick, current, entries, advanceSteps);
         }
 

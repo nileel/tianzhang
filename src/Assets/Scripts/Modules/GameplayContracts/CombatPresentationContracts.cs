@@ -396,7 +396,8 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatTimelineEntrySnapshot
     {
         public CombatTimelineEntrySnapshot(string id, string displayName, CombatUnitDisplayFaction faction,
-            int speed, float currentCt, float nextActionThreshold, bool isReady, int queuePosition, bool isCurrent)
+            int speed, float currentCt, float nextActionThreshold, bool isReady, int queuePosition, bool isCurrent,
+            long ticksUntilReady)
         {
             Id = id;
             DisplayName = displayName;
@@ -407,6 +408,7 @@ namespace TianZhang.Gameplay.Contracts
             IsReady = isReady;
             QueuePosition = queuePosition;
             IsCurrent = isCurrent;
+            TicksUntilReady = ticksUntilReady;
         }
 
         public string Id { get; }
@@ -418,6 +420,7 @@ namespace TianZhang.Gameplay.Contracts
         public bool IsReady { get; }
         public int QueuePosition { get; }
         public bool IsCurrent { get; }
+        public long TicksUntilReady { get; }
     }
 
     [Serializable]

@@ -221,7 +221,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(view.FocusedCombatantId, Is.EqualTo(spawned.Enemy.Id));
             Assert.That(session.CurrentActorId, Is.EqualTo(current), "Viewing the enemy must not transfer the real turn.");
             StringAssert.Contains(captured.Latest.Enemy.DisplayName, GetTimelineField<Text>(view, "focusText").text);
-            StringAssert.Contains("CT ", GetTimelineField<Text>(view, "focusText").text);
+            StringAssert.Contains("剩余行动值 ", GetTimelineField<Text>(view, "focusText").text);
             presenter.Hide();
             AssertTimelineHidden(view, exploration);
             Assert.That(GetTimelineField<RectTransform[]>(view, "entryRoots").All(rect => !rect.gameObject.activeSelf), Is.True);
@@ -348,6 +348,17 @@ namespace TianZhang.Tests.PlayMode
                 .Concat(labels).ToArray();
             var lines = new List<string> { "stage=" + stage + ", actualScreen=" + Screen.width + "x" + Screen.height +
                 "; PlayMode diagnostic only, no resolution switch or claim of dual-resolution visual acceptance." };
+            var rail = (RectTransform)GetTimelineField<GameObject>(view, "root").transform;
+            var canvasRoot = rail.GetComponentInParent<Canvas>();
+            lines.Add("owner=" + view.gameObject.name + "/CombatTimelineView; writer=Present/Render/LateUpdate; " +
+                "creator=AdventureSceneBuilder.BuildCombatTimeline; canvas=" + canvasRoot.name +
+                "; mode=" + canvasRoot.renderMode + "; scale=" + canvasRoot.scaleFactor +
+                "; camera=" + (canvasRoot.worldCamera == null ? "<null>" : canvasRoot.worldCamera.name));
+            foreach (RectTransform rect in new[] { rail, GetTimelineField<RectTransform>(view, "chargeTrack") }
+                .Concat(GetTimelineField<RectTransform[]>(view, "entryRoots")))
+                lines.Add("bounds " + rect.parent.name + "/" + rect.name + "; local=" + rect.rect +
+                    "; anchor=" + rect.anchorMin + ".." + rect.anchorMax + "; pivot=" + rect.pivot +
+                    "; position=" + rect.anchoredPosition + "; screen=" + ScreenRect(rect));
             foreach (Text text in texts)
             {
                 Vector3[] corners = new Vector3[4];
@@ -360,7 +371,7 @@ namespace TianZhang.Tests.PlayMode
                     ", fontSize=" + text.fontSize + ", canvasScale=" + canvas.scaleFactor + ", vertices=" + text.cachedTextGenerator.vertexCount);
             }
             Image[] portraits = GetTimelineField<Image[]>(view, "entryPortraits");
-            var geometry = new List<(Text label, Rect portrait, Rect lastLine, int lineCount, int glyphVertices)>();
+            var geometry = new List<(Text label, Rect portrait, Rect glyphs, int lineCount, int glyphVertices)>();
             for (int index = 0; index < labels.Length; index++)
             {
                 Text label = labels[index];
@@ -374,25 +385,24 @@ namespace TianZhang.Tests.PlayMode
                 Vector2 portraitMax = RectTransformUtility.WorldToScreenPoint(camera, portraitCorners[2]);
                 Rect portraitBounds = Rect.MinMaxRect(portraitMin.x, portraitMin.y, portraitMax.x, portraitMax.y);
 
-                // Read the actual rendered mesh, including Text's pixel adjustment, rather than estimating a line from font size.
+                // Read all rendered glyphs. Character offsets cannot index this mesh: whitespace has no quad.
                 Mesh mesh = label.canvasRenderer.GetMesh();
                 Vector3[] vertices = mesh.vertices;
                 IList<UILineInfo> generatedLines = label.cachedTextGenerator.lines;
-                int lastLineStart = generatedLines.Count == 0 ? vertices.Length : generatedLines[generatedLines.Count - 1].startCharIdx * 4;
                 var glyphScreenPoints = new List<Vector2>();
-                for (int vertex = lastLineStart; vertex + 3 < vertices.Length; vertex += 4)
+                for (int vertex = 0; vertex + 3 < vertices.Length; vertex += 4)
                 {
                     Vector3[] quad = { vertices[vertex], vertices[vertex + 1], vertices[vertex + 2], vertices[vertex + 3] };
                     if (quad.Max(point => point.x) <= quad.Min(point => point.x) || quad.Max(point => point.y) <= quad.Min(point => point.y)) continue;
                     glyphScreenPoints.AddRange(quad.Select(point => RectTransformUtility.WorldToScreenPoint(camera, label.rectTransform.TransformPoint(point))));
                 }
-                Rect lastLineBounds = glyphScreenPoints.Count == 0 ? Rect.zero : Rect.MinMaxRect(
+                Rect glyphBounds = glyphScreenPoints.Count == 0 ? Rect.zero : Rect.MinMaxRect(
                     glyphScreenPoints.Min(point => point.x), glyphScreenPoints.Min(point => point.y),
                     glyphScreenPoints.Max(point => point.x), glyphScreenPoints.Max(point => point.y));
-                geometry.Add((label, portraitBounds, lastLineBounds, generatedLines.Count, glyphScreenPoints.Count));
-                lines.Add(label.name + ": portraitScreen=" + portraitBounds + ", lastVisibleLineScreen=" + lastLineBounds +
-                    ", generatedLines=" + generatedLines.Count + ", lastLineGlyphVertices=" + glyphScreenPoints.Count +
-                    ", portraitToTextGap=" + (portraitBounds.yMin - lastLineBounds.yMax));
+                geometry.Add((label, portraitBounds, glyphBounds, generatedLines.Count, glyphScreenPoints.Count));
+                lines.Add(label.name + ": portraitScreen=" + portraitBounds + ", glyphScreen=" + glyphBounds +
+                    ", generatedLines=" + generatedLines.Count + ", glyphVertices=" + glyphScreenPoints.Count +
+                    ", portraitToTextGap=" + (glyphBounds.xMin - portraitBounds.xMax));
             }
             string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "timeline"));
             Directory.CreateDirectory(directory);
@@ -406,11 +416,10 @@ namespace TianZhang.Tests.PlayMode
             foreach (var entry in geometry)
             {
                 Assert.That(entry.label.preferredWidth, Is.LessThanOrEqualTo(entry.label.rectTransform.rect.width), entry.label.name + " must fit without automatic wrapping.");
-                // Font line-box height includes leading; actual line count and rendered glyph geometry prove the single-line layout.
-                Assert.That(entry.lineCount, Is.EqualTo(1), entry.label.name + " must generate exactly one line.");
-                Assert.That(entry.glyphVertices, Is.GreaterThan(0), entry.label.name + " last visible line must contain actual glyph geometry.");
-                Assert.That(entry.lastLine.Overlaps(entry.portrait), Is.False, entry.label.name + " actual glyphs must not overlap the portrait.");
-                Assert.That(entry.lastLine.yMax, Is.LessThanOrEqualTo(entry.portrait.yMin), entry.label.name + " actual label line must remain below its portrait.");
+                Assert.That(entry.lineCount, Is.EqualTo(2), entry.label.name + " must show order/faction and identity on two lines.");
+                Assert.That(entry.glyphVertices, Is.GreaterThan(0), entry.label.name + " must contain actual glyph geometry.");
+                Assert.That(entry.glyphs.Overlaps(entry.portrait), Is.False, entry.label.name + " actual glyphs must not overlap the portrait.");
+                Assert.That(entry.glyphs.xMin, Is.GreaterThanOrEqualTo(entry.portrait.xMax), entry.label.name + " identity must remain beside its portrait.");
             }
         }
 
@@ -454,6 +463,7 @@ namespace TianZhang.Tests.PlayMode
                     CombatTurnUnitSnapshot unit = Unit(turns, entry.Id);
                     Assert.That((entry.Speed, entry.CurrentCt, entry.NextActionThreshold, entry.IsReady),
                         Is.EqualTo((unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady)));
+                    Assert.That(entry.TicksUntilReady, Is.EqualTo(unit.TicksUntilReady));
                     Assert.That(entry.QueuePosition, Is.EqualTo(turns.ReadyQueueIds.ToList().IndexOf(entry.Id)));
                     Assert.That(entry.IsCurrent, Is.EqualTo(entry.Id == current));
                     Assert.That(session.Combatants.TryGet(entry.Id, out CombatantSnapshot combatant), Is.True);
@@ -586,6 +596,22 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(initial.ReadyQueueIds, Is.Empty);
         }
 
+        [TestCase(30, 0, 4)]
+        [TestCase(30, 30, 5)]
+        [TestCase(300, 0, 1)]
+        public void RemainingActionValueMatchesTheActualDispatchTick(int speed, int penalty, int expectedTicks)
+        {
+            var combatants = new[] { CreateTimelineCombatant("actor", CombatTeam.Player, speed) };
+            var scheduler = new CombatTurnScheduler(combatants);
+            scheduler.AdvanceUntilAction(combatants);
+            Assert.That(Unit(scheduler.GetSnapshot(combatants), "actor").TicksUntilReady, Is.Zero);
+            scheduler.ConsumeAction("actor", penalty);
+            var before = Unit(scheduler.GetSnapshot(combatants), "actor");
+            Assert.That(before.TicksUntilReady, Is.EqualTo(expectedTicks));
+            Assert.That(scheduler.AdvanceUntilAction(combatants).TicksElapsed, Is.EqualTo(before.TicksUntilReady));
+            Assert.That(Unit(scheduler.GetSnapshot(combatants), "actor").TicksUntilReady, Is.Zero);
+        }
+
         [TestCase(100, 100f, 50f, 150f)]
         [TestCase(300, 300f, 150f, 450f)]
         public void WaitRetainsHalfOfActualCtAndStillChargesOneTickWhenRetentionAlreadyMeetsThreshold(
@@ -601,6 +627,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(Unit(waiting, "actor").ChargeTime, Is.EqualTo(retainedCt));
             Assert.That(Unit(waiting, "actor").NextActionThreshold, Is.EqualTo(100f));
             Assert.That(Unit(waiting, "actor").IsReady, Is.False);
+            Assert.That(Unit(waiting, "actor").TicksUntilReady, Is.EqualTo(1));
             Assert.That(waiting.CurrentTick, Is.EqualTo(1));
             Assert.That(waiting.ChargingUnitIds, Is.EqualTo(new[] { "actor" }));
 
@@ -739,13 +766,38 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(steps[2].Units.Select(unit => unit.Id), Is.EqualTo(new[] { "enemy" }));
         }
 
-        [UnityTest] public IEnumerator FormalCtPlaybackAndInputLockAt1920() => VerifyCtPlayback(1920, 1080);
-        [UnityTest] public IEnumerator FormalCtPlaybackAndInputLockAt1366() => VerifyCtPlayback(1366, 768);
+        [UnityTest]
+        public IEnumerator TimelineProjectionKeepsDequeuedActorAheadOfSameTickQueue()
+        {
+            timelineFixture = new GuanzhongCombatActionPreviewPlayModeTests();
+            yield return timelineFixture.EnterFormalEncounter();
+            var coordinator = FindTimelineOwner<EncounterCoordinator>();
+            var session = GetTimelineField<CombatSession>(coordinator, "session");
+            var combatants = session.Combatants.All.Select(unit => CreateTimelineCombatant(unit.Id, unit.Team, 100)).ToArray();
+            var scheduler = new CombatTurnScheduler(combatants);
+            var project = typeof(EncounterCoordinator).GetMethod("ProjectTimeline", BindingFlags.Instance | BindingFlags.NonPublic);
+            for (int index = 0; index < combatants.Length; index++)
+            {
+                var advance = scheduler.AdvanceUntilAction(combatants);
+                var turns = scheduler.GetSnapshot(combatants);
+                var projected = (CombatTimelineSnapshot)project.Invoke(coordinator, new object[] { turns, null, null });
+                Assert.That(advance.TicksElapsed, Is.EqualTo(index == 0 ? 1 : 0));
+                Assert.That(projected.Entries[0].Id, Is.EqualTo(advance.ActorId));
+                Assert.That(projected.Entries.Select(unit => unit.Id), Is.EqualTo(new[] { advance.ActorId }
+                    .Concat(turns.ReadyQueueIds).Concat(turns.ChargingUnitIds)));
+                foreach (var unit in projected.Entries)
+                    Assert.That(unit.TicksUntilReady, Is.EqualTo(Unit(turns, unit.Id).TicksUntilReady));
+                scheduler.ConsumeAction(advance.ActorId, 0);
+            }
+        }
+
+        [UnityTest] public IEnumerator FormalActionSequenceAndInputLockAt1920() => VerifyActionSequence(1920, 1080);
+        [UnityTest] public IEnumerator FormalActionSequenceAndInputLockAt1366() => VerifyActionSequence(1366, 768);
 
         [UnityTest]
-        public IEnumerator SameCtAndPredictionRemainReadableAtBothResolutions()
+        public IEnumerator SameReadyTickAndPredictionRemainReadableAtBothResolutions()
         {
-            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "q2-timeline"));
+            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "r1-timeline"));
             Directory.CreateDirectory(directory);
             foreach (var size in new[] { (1920, 1080), (1366, 768) })
             {
@@ -760,7 +812,7 @@ namespace TianZhang.Tests.PlayMode
                 var actual = hud.Snapshot.Timeline;
                 var sameCt = new CombatTimelineSnapshot(actual.CurrentTick, actual.CurrentActorId,
                     actual.Entries.Select(unit => new CombatTimelineEntrySnapshot(unit.Id, unit.DisplayName,
-                        unit.Faction, unit.Speed, 100, 100, true, unit.QueuePosition, unit.IsCurrent)).ToArray());
+                        unit.Faction, unit.Speed, 100, 100, true, unit.QueuePosition, unit.IsCurrent, 0)).ToArray());
                 view.Present(sameCt);
                 view.PresentPrediction(hud.Snapshot.Actions.First(action => action.CanConfirm));
                 yield return new WaitForSecondsRealtime(0.15f);
@@ -802,11 +854,10 @@ namespace TianZhang.Tests.PlayMode
             FindTimelineOwner<EncounterCoordinator>().StopAllCoroutines();
             var view = FindTimelineOwner<CombatTimelineView>();
             var actual = FindTimelineOwner<CombatHudPresenter>().Snapshot.Timeline;
-            CombatTimelineSnapshot Project(CombatTurnSnapshot step) => new CombatTimelineSnapshot(step.CurrentTick, null,
-                step.Units.Select(unit => new CombatTimelineEntrySnapshot(unit.Id, unit.Id,
-                    unit.Id == "player" ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
-                    unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady,
-                    step.ReadyQueueIds.ToList().IndexOf(unit.Id), false)).ToArray());
+            var coordinator = FindTimelineOwner<EncounterCoordinator>();
+            var project = typeof(EncounterCoordinator).GetMethod("ProjectTimeline", BindingFlags.Instance | BindingFlags.NonPublic);
+            CombatTimelineSnapshot Project(CombatTurnSnapshot step) =>
+                (CombatTimelineSnapshot)project.Invoke(coordinator, new object[] { step, null, null });
             foreach (bool death in new[] { false, true })
             {
                 var player = CreateTimelineCombatant("player", CombatTeam.Player, 100);
@@ -824,16 +875,16 @@ namespace TianZhang.Tests.PlayMode
                 {
                     var shown = GetTimelineField<CombatTimelineSnapshot>(view, "snapshot");
                     float tick = GetTimelineField<float>(view, "displayedTick");
-                    var ct = GetTimelineField<float[]>(view, "displayedCt");
+                    var remaining = GetTimelineField<float[]>(view, "displayedRemainingTicks");
                     var roots = GetTimelineField<RectTransform[]>(view, "entryRoots");
                     for (int index = 0; index < shown.Entries.Count; index++)
                     {
                         var unit = shown.Entries[index];
-                        Assert.That(ct[index], Is.EqualTo(unit.CurrentCt + (tick - shown.CurrentTick) * unit.Speed).Within(0.002));
+                        Assert.That(remaining[index], Is.EqualTo(Math.Max(0, unit.TicksUntilReady - (tick - shown.CurrentTick))).Within(0.002));
                         if (unit.Id == "player" && shown.CurrentTick == 1 && unit.CurrentCt == 0 && tick > 1)
                         {
                             sawResetSegment = true;
-                            Assert.That(ct[index], Is.LessThan(100), "The second segment must start from the recorded reset.");
+                            Assert.That(remaining[index], Is.LessThan(1), "The second segment must count down again after the recorded reset.");
                         }
                         if (unit.Id == "enemy")
                         {
@@ -852,11 +903,12 @@ namespace TianZhang.Tests.PlayMode
             view.Present(actual);
         }
 
-        private IEnumerator VerifyCtPlayback(int width, int height)
+        private IEnumerator VerifyActionSequence(int width, int height)
         {
+            GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, height);
+            for (int frame = 0; frame < 8; frame++) yield return null;
             timelineFixture = new GuanzhongCombatActionPreviewPlayModeTests();
             yield return timelineFixture.EnterFormalEncounter();
-            GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, height);
             yield return null; yield return null;
             Assert.That((Screen.width, Screen.height), Is.EqualTo((width, height)));
             var coordinator = FindTimelineOwner<EncounterCoordinator>();
@@ -867,6 +919,7 @@ namespace TianZhang.Tests.PlayMode
             var roots = GetTimelineField<RectTransform[]>(view, "entryRoots");
             var buttons = GetTimelineField<Button[]>(view, "entryButtons");
             var original = hud.Snapshot.Timeline;
+            DiagnoseFormalTimelineRects(view, "playback-start-" + width);
             var fixedPositions = roots.Select(root => root.anchoredPosition).ToArray();
             var frozen = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             for (int frame = 0; frame < 5; frame++) yield return null;
@@ -885,7 +938,7 @@ namespace TianZhang.Tests.PlayMode
             var lines = new List<string>();
             int frames = 0, pictures = 0;
             float lastCapture = -1;
-            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "q2-timeline"));
+            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "r1-timeline"));
             Directory.CreateDirectory(directory);
             while (view.IsPresenting && ReferenceEquals(GetTimelineField<CombatTimelineSnapshot>(view, "playbackEnd"), destination))
             {
@@ -900,13 +953,14 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(State(), Is.EqualTo(locked), "Commands cannot be accepted or cached during CT playback.");
                 var shown = GetTimelineField<CombatTimelineSnapshot>(view, "snapshot");
                 float tick = GetTimelineField<float>(view, "displayedTick");
-                var ct = GetTimelineField<float[]>(view, "displayedCt");
+                var remaining = GetTimelineField<float[]>(view, "displayedRemainingTicks");
                 foreach (var item in shown.Entries.Select((unit, index) => (unit, index)))
                 {
-                    var start = destination.AdvanceSteps[0].Entries.Single(unit => unit.Id == item.unit.Id);
-                    Assert.That(ct[item.index], Is.EqualTo(start.CurrentCt + (tick - destination.AdvanceSteps[0].CurrentTick) * start.Speed).Within(0.002));
-                    lines.Add("frame=" + frames + ", tick=" + tick + ", id=" + item.unit.Id + ", ct=" + ct[item.index] +
-                        ", speed=" + item.unit.Speed + ", threshold=" + item.unit.NextActionThreshold +
+                    Assert.That(remaining[item.index], Is.EqualTo(Math.Max(0, item.unit.TicksUntilReady - (tick - shown.CurrentTick))).Within(0.002));
+                    Assert.That(GetTimelineField<Text[]>(view, "entryCtLabels")[item.index].text,
+                        Is.EqualTo("剩余 " + Mathf.CeilToInt(remaining[item.index])));
+                    lines.Add("frame=" + frames + ", tick=" + tick + ", id=" + item.unit.Id + ", remaining=" + remaining[item.index] +
+                        ", rank=" + item.index + ", ready=" + item.unit.IsReady + ", actor=" + destination.CurrentActorId +
                         ", local=" + roots[item.index].anchoredPosition + ", screen=" + ScreenRect(roots[item.index]));
                 }
                 AssertTimelineGeometry(view);
@@ -934,8 +988,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(frames, Is.GreaterThan(3));
             File.WriteAllLines(Path.Combine(directory, width + "-frames.txt"), lines);
             Assert.That(GetTimelineField<float>(view, "displayedTick"), Is.EqualTo(destination.CurrentTick));
-            Assert.That(GetTimelineField<float[]>(view, "displayedCt").Take(destination.Entries.Count),
-                Is.EqualTo(destination.Entries.Select(unit => unit.CurrentCt)));
+            Assert.That(GetTimelineField<float[]>(view, "displayedRemainingTicks").Take(destination.Entries.Count),
+                Is.EqualTo(destination.Entries.Select(unit => (float)unit.TicksUntilReady)));
             ScreenCapture.CaptureScreenshot(Path.Combine(directory, width + "-endpoint.png"));
             yield return WaitForTimelinePlayer(coordinator, session, "player");
             Assert.That(FindTimelineOwner<CombatCommandInput>().Preview, Is.Null, "Blocked input must not reopen after playback.");
@@ -943,45 +997,80 @@ namespace TianZhang.Tests.PlayMode
             for (int frame = 0; frame < 5; frame++) yield return null;
             Assert.That(roots.Select(root => root.anchoredPosition), Is.EqualTo(idlePositions));
 
-            // Isolated display inputs cover penalties, exact threshold, overflow, wait retention and reordered identity.
+            // Follow two more real player/enemy cycles, including zero-tick ready dequeues.
+            for (int round = 1; round <= 2; round++)
+            {
+                long priorTurn = session.TurnSequence;
+                coordinator.RequestEndTurn("player");
+                float deadline = Time.realtimeSinceStartup + 20;
+                lastCapture = -1;
+                do
+                {
+                    yield return null;
+                    Assert.That(coordinator != null && coordinator.IsRunning, Is.True);
+                    var shown = GetTimelineField<CombatTimelineSnapshot>(view, "snapshot");
+                    float tick = GetTimelineField<float>(view, "displayedTick");
+                    var remaining = GetTimelineField<float[]>(view, "displayedRemainingTicks");
+                    for (int index = 0; index < shown.Entries.Count; index++)
+                    {
+                        var unit = shown.Entries[index];
+                        Assert.That(remaining[index], Is.EqualTo(Math.Max(0, unit.TicksUntilReady - (tick - shown.CurrentTick))).Within(0.002));
+                        lines.Add("round=" + round + ", tick=" + tick + ", authorityTick=" + session.TurnScheduler.CurrentTick +
+                            ", actor=" + session.CurrentActorId + ", rank=" + index + ", id=" + unit.Id + ", remaining=" + remaining[index]);
+                    }
+                    if (!view.IsPresenting)
+                        Assert.That(shown.Entries.Select(unit => unit.Id), Is.EqualTo(hud.Snapshot.Timeline.Entries.Select(unit => unit.Id)));
+                    AssertTimelineGeometry(view);
+                    if (Time.realtimeSinceStartup - lastCapture > 0.2f)
+                    {
+                        ScreenCapture.CaptureScreenshot(Path.Combine(directory, width + "-round" + round + "-" + pictures++ + ".png"));
+                        lastCapture = Time.realtimeSinceStartup;
+                    }
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                } while (session.TurnSequence == priorTurn || coordinator.IsPresenting || session.CurrentActorId != "player" ||
+                    session.TurnPhase != CombatTurnPhase.Active);
+                Assert.That(hud.Snapshot.Timeline.Entries[0].Id, Is.EqualTo(session.CurrentActorId));
+                Assert.That(hud.Snapshot.Timeline.Entries[0].TicksUntilReady, Is.Zero);
+            }
+            File.WriteAllLines(Path.Combine(directory, width + "-frames.txt"), lines);
+            ScreenCapture.CaptureScreenshot(Path.Combine(directory, width + "-player-ready.png"));
+            yield return null;
+
+            // Equal ready values keep separate ranks; reordered identities follow their new slots.
             var actual = hud.Snapshot.Timeline;
-            CombatTimelineSnapshot Sample(float firstCt, float firstThreshold, bool reverse = false, int count = 3) =>
-                new CombatTimelineSnapshot(actual.CurrentTick, actual.CurrentActorId,
-                    actual.Entries.Take(count).Select((unit, index) => new CombatTimelineEntrySnapshot(unit.Id, unit.DisplayName,
-                        unit.Faction, unit.Speed, index == 0 ? firstCt : 100, index == 0 ? firstThreshold : 100,
-                        index > 0, index == 0 ? -1 : index - 1, index == 0)).OrderBy(unit => reverse ? -Array.FindIndex(actual.Entries.ToArray(), item => item.Id == unit.Id) :
-                            Array.FindIndex(actual.Entries.ToArray(), item => item.Id == unit.Id)).ToArray());
-            view.Present(Sample(100, 130));
-            Assert.That(roots[0].anchoredPosition.y, Is.LessThan(roots[1].anchoredPosition.y));
-            view.Present(Sample(300, 100));
-            Assert.That(roots[0].anchoredPosition.y, Is.GreaterThan(roots[1].anchoredPosition.y));
-            float overflow = roots[0].anchoredPosition.y;
-            view.Present(Sample(150, 100));
-            Assert.That(roots[0].anchoredPosition.y, Is.LessThan(overflow).And.GreaterThan(roots[1].anchoredPosition.y));
-            view.Present(Sample(100, 100));
-            Assert.That(roots.Select(root => root.anchoredPosition.y).Distinct().Count(), Is.EqualTo(1));
+            CombatTimelineSnapshot Sample(bool reverse = false, int count = 3)
+            {
+                var units = actual.Entries.Take(count);
+                if (reverse) units = units.Reverse();
+                var entries = units.Select((unit, index) => new CombatTimelineEntrySnapshot(unit.Id, unit.DisplayName,
+                    unit.Faction, unit.Speed, 100, 100, true, index - 1, index == 0, 0)).ToArray();
+                return new CombatTimelineSnapshot(actual.CurrentTick, entries[0].Id, entries);
+            }
+            view.Present(Sample());
+            Assert.That(roots.Select(root => root.anchoredPosition.x).Distinct().Count(), Is.EqualTo(1));
             AssertTimelineGeometry(view);
             var sameCt = roots.Select(root => root.anchoredPosition).ToArray();
-            view.Present(Sample(100, 100, true));
-            Assert.That(roots.Select(root => root.anchoredPosition), Is.EqualTo(sameCt.Reverse()), "Reordering cannot exchange identities or positions.");
-            view.Present(Sample(100, 100));
+            var reversed = Sample(true);
+            view.Present(reversed);
+            Assert.That(roots.Select(root => root.anchoredPosition), Is.EqualTo(sameCt), "Slots show rank, not a permanent charge lane.");
             for (int index = 0; index < 3; index++)
             {
                 var hits = new List<RaycastResult>();
                 EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = ScreenRect(roots[index]).center }, hits);
                 Assert.That(hits[0].gameObject.GetComponentInParent<Button>(), Is.EqualTo(buttons[index]));
                 buttons[index].onClick.Invoke();
-                Assert.That(hud.InspectedTargetId, Is.EqualTo(actual.Entries[index].Id));
+                Assert.That(hud.InspectedTargetId, Is.EqualTo(reversed.Entries[index].Id));
             }
+            view.Present(Sample());
             view.PresentPrediction(hud.Snapshot.Actions.First(action => action.CanConfirm));
             yield return null;
             AssertTimelineGeometry(view);
             view.PresentPrediction(null);
-            view.Present(new CombatTimelineSnapshot(actual.CurrentTick, null, Sample(100, 100).Entries,
-                new[] { Sample(100, 100), Sample(100, 100, true) }));
+            view.Present(new CombatTimelineSnapshot(actual.CurrentTick, null, Sample().Entries,
+                new[] { Sample(), Sample(true) }));
             Assert.That(view.IsPresenting, Is.False, "A zero-tick ready dequeue cannot manufacture movement.");
             Assert.That(roots.Select(root => root.anchoredPosition), Is.EqualTo(sameCt));
-            view.Present(Sample(100, 100, count: 2));
+            view.Present(Sample(count: 2));
             Assert.That(roots[2].gameObject.activeSelf, Is.False, "Death removes the old slot.");
             view.Present(destination);
             Assert.That(view.IsPresenting, Is.True);
@@ -996,7 +1085,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(view.IsPresenting, Is.False);
             view.enabled = true;
             view.Present(actual);
-            DiagnoseFormalTimelineRects(view, "q2-" + width);
+            DiagnoseFormalTimelineRects(view, "r1-" + width);
             for (int frame = 0; frame < 4; frame++) yield return null;
         }
 
@@ -1010,11 +1099,17 @@ namespace TianZhang.Tests.PlayMode
         {
             Canvas.ForceUpdateCanvases();
             var roots = GetTimelineField<RectTransform[]>(view, "entryRoots").Where(root => root.gameObject.activeInHierarchy).ToArray();
+            var withdrawal = GetTimelineField<GameObject>(FindTimelineOwner<AdventureHudPresenter>(), "returnEntry");
             for (int index = 0; index < roots.Length; index++)
             {
                 Rect rect = ScreenRect(roots[index]);
                 Assert.That(rect.xMin >= 0 && rect.yMin >= 0 && rect.xMax <= Screen.width && rect.yMax <= Screen.height, Is.True);
                 foreach (var other in roots.Skip(index + 1)) Assert.That(rect.Overlaps(ScreenRect(other)), Is.False);
+                Assert.That(roots[index].anchoredPosition.x, Is.Zero);
+                if (index > 0) Assert.That(rect.yMax, Is.LessThan(ScreenRect(roots[index - 1]).yMin));
+                Assert.That(rect.Overlaps(ScreenRect((RectTransform)withdrawal.transform)), Is.False);
+                Assert.That(ScreenRect(GetTimelineField<Text[]>(view, "entryLabels")[index].rectTransform)
+                    .Overlaps(ScreenRect(GetTimelineField<Text[]>(view, "entryCtLabels")[index].rectTransform)), Is.False);
             }
             foreach (Text text in GetTimelineField<GameObject>(view, "root").GetComponentsInChildren<Text>())
                 Assert.That(text.preferredHeight, Is.LessThanOrEqualTo(text.rectTransform.rect.height + 0.1f), text.name);
@@ -1036,8 +1131,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(actual.CurrentTick, Is.EqualTo(expected.CurrentTick));
             Assert.That(actual.ReadyQueueIds, Is.EqualTo(expected.ReadyQueueIds));
             Assert.That(actual.ChargingUnitIds, Is.EqualTo(expected.ChargingUnitIds));
-            Assert.That(actual.Units.Select(value => (value.Id, value.Speed, value.ChargeTime, value.NextActionThreshold, value.IsReady)),
-                Is.EqualTo(expected.Units.Select(value => (value.Id, value.Speed, value.ChargeTime, value.NextActionThreshold, value.IsReady))));
+            Assert.That(actual.Units.Select(value => (value.Id, value.Speed, value.ChargeTime, value.NextActionThreshold, value.IsReady, value.TicksUntilReady)),
+                Is.EqualTo(expected.Units.Select(value => (value.Id, value.Speed, value.ChargeTime, value.NextActionThreshold, value.IsReady, value.TicksUntilReady))));
         }
 
         private static CombatantSnapshot CreateTimelineCombatant(string id, CombatTeam team, int speed, int movePoints = 0) =>

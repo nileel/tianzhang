@@ -19,13 +19,15 @@ namespace TianZhang.Combat
 
     public readonly struct CombatTurnUnitSnapshot
     {
-        internal CombatTurnUnitSnapshot(string id, int speed, float chargeTime, float nextActionThreshold, bool isReady)
+        internal CombatTurnUnitSnapshot(string id, int speed, float chargeTime, float nextActionThreshold, bool isReady,
+            long ticksUntilReady)
         {
             Id = id;
             Speed = speed;
             ChargeTime = chargeTime;
             NextActionThreshold = nextActionThreshold;
             IsReady = isReady;
+            TicksUntilReady = ticksUntilReady;
         }
 
         public string Id { get; }
@@ -33,6 +35,7 @@ namespace TianZhang.Combat
         public float ChargeTime { get; }
         public float NextActionThreshold { get; }
         public bool IsReady { get; }
+        public long TicksUntilReady { get; }
     }
 
     public sealed class CombatTurnSnapshot
@@ -103,7 +106,7 @@ namespace TianZhang.Combat
             {
                 if (aliveIds.Contains(unit.Id))
                     unitSnapshots.Add(new CombatTurnUnitSnapshot(unit.Id, unit.Speed, unit.ChargeTime,
-                        unit.NextActionThreshold, unit.IsReady));
+                        unit.NextActionThreshold, unit.IsReady, CTBEngine.TicksUntilReady(unit)));
             }
             var readyQueueIds = new List<string>();
             foreach (string id in snapshot.ReadyQueueIds)
