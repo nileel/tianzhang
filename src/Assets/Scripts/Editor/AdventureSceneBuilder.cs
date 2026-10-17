@@ -338,12 +338,14 @@ namespace TianZhang.Editor
             PlaceLayoutRect(LayoutObject(actions, "ArtButton"), 378, 138, 216, 68);
             PlaceLayoutRect(LayoutObject(actions, "SecondArtButton"), 606, 138, 216, 68);
             PlaceLayoutRect(LayoutObject(actions, "GuardButton"), 252, 92, 114, 44);
-            PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 378, 92, 216, 44);
+            // Keep the existing lifecycle owner, but separate turn completion to the right of the hotbar.
+            PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 880, 55, 200, 96);
             PlaceLayoutRect(LayoutObject(actions, "SecondArtTargetButton"), 606, 92, 216, 44);
             PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
             PlaceLayoutRect(LayoutObject(actions, "SwapSpellButton"), 252, 8, 114, 68);
             ConfigureEquipmentButton(root);
             foreach (Text text in actions.GetComponentsInChildren<Text>(true)) text.fontSize = 20;
+            LayoutObject(actions, "WaitButton").GetComponentInChildren<Text>(true).fontSize = 26;
 
             RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
             RemoveLayout(target);
