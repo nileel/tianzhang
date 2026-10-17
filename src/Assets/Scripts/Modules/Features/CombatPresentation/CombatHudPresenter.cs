@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    public sealed class CombatHudPresenter : MonoBehaviour, ICombatPresentationSink
+    public sealed class CombatHudPresenter : MonoBehaviour, ICombatPresentationSink, ICombatPresentationActivity
     {
         [SerializeField] private CombatHudView view;
         [SerializeField] private CombatCommandInput commandInput;
@@ -20,7 +20,8 @@ namespace TianZhang.Features.CombatPresentation
         private CombatMovementView movementView;
         public CombatHudSnapshot Snapshot { get; private set; }
         public string InspectedTargetId { get; private set; }
-        public bool CanInspect => Snapshot != null && !Snapshot.IsPresenting &&
+        public bool IsPresenting => timelineView != null && timelineView.IsPresenting;
+        public bool CanInspect => Snapshot != null && !Snapshot.IsPresenting && !IsPresenting &&
             (commandInput == null || !commandInput.IsSelectingAttack) &&
             unitProvider != null && !unitProvider.IsPresenting && movementView != null && !movementView.IsSelecting;
 
@@ -74,6 +75,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void OnDisable()
         {
+            timelineView?.Hide();
             commandInput?.ClearContext();
             Snapshot = null;
             ClearInspectedTarget();

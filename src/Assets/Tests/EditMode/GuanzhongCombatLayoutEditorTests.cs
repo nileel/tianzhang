@@ -102,6 +102,20 @@ namespace TianZhang.Tests.EditMode
             Assert.AreSame(targetInput, new SerializedObject(input).FindProperty("targetInput").objectReferenceValue);
             var timeline = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTimelineView>()).Single();
             Assert.NotNull(new SerializedObject(timeline).FindProperty("predictionRoot").objectReferenceValue);
+            var timelineData = new SerializedObject(timeline);
+            Assert.AreSame(Rect("TimelineTrack"), timelineData.FindProperty("chargeTrack").objectReferenceValue);
+            Assert.AreEqual(new Vector2(52f / 1920, 196f / 1080), Rect("CombatTimelineRoot").anchorMin);
+            Assert.AreEqual(new Vector2(300f / 1920, 801f / 1080), Rect("CombatTimelineRoot").anchorMax);
+            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMin);
+            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMax);
+            Assert.AreEqual(new Vector2(0.5f, 0.75f), Rect("TimelineThreshold").anchorMin);
+            Assert.AreEqual(3, timelineData.FindProperty("entryCtLabels").arraySize);
+            for (int index = 0; index < 3; index++)
+            {
+                Assert.AreSame(Rect("TimelineTrack"), Rect("TimelineEntry" + index).parent);
+                Assert.AreEqual(Vector2.one * 0.5f, Rect("TimelineEntry" + index).pivot);
+                Assert.NotNull(timelineData.FindProperty("entryCtLabels").GetArrayElementAtIndex(index).objectReferenceValue);
+            }
         }
     }
 }

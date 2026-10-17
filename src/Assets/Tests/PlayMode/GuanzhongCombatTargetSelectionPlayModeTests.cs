@@ -103,7 +103,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(Find<AdventureInputController>().SelectNode("shijiahou_encounter"));
             session = Get<CombatSession>(encounter, "session");
             spawned = Get<AdventureSpawnSet>(encounter, "spawned");
-            for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
+            for (float deadline = Time.realtimeSinceStartup + 10f;
+                !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
@@ -504,8 +505,13 @@ namespace TianZhang.Tests.PlayMode
             // Keyboard navigation changes peek only; submit changes inspection.
             // Pointer hover deliberately takes priority over keyboard peek.
             yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(new Vector2(-50, -50));
-            string adjacentId = original.Entries.Reverse().ToArray()[newPlayerIndex == 0 ? 1 : newPlayerIndex - 1].Id;
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(newPlayerIndex == 0 ? Key.DownArrow : Key.UpArrow));
+            // CT positions use stable horizontal lanes; navigation follows screen geometry, not array order.
+            Selectable adjacent = entries[newPlayerIndex].FindSelectableOnRight();
+            int adjacentIndex = Array.FindIndex(entries, entry => entry == adjacent);
+            Assert.That(adjacentIndex, Is.GreaterThanOrEqualTo(0));
+            string adjacentId = original.Entries.Reverse().ToArray()[adjacentIndex].Id;
+            Assert.That(adjacentId, Is.Not.EqualTo(spawned.Player.Id));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
             yield return null; yield return null;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             yield return null;

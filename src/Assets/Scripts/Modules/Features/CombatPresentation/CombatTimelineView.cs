@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
@@ -7,17 +8,18 @@ using UnityEngine.UI;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    public sealed class CombatTimelineView : MonoBehaviour
+    public sealed class CombatTimelineView : MonoBehaviour, ICombatPresentationActivity
     {
         private const int MaximumEntries = 3;
-        private const float EntrySpacing = 5f;
 
         [SerializeField] private GameObject root;
         [SerializeField] private Text tickText;
         [SerializeField] private Text focusText;
+        [SerializeField] private RectTransform chargeTrack;
         [SerializeField] private RectTransform[] entryRoots = new RectTransform[MaximumEntries];
         [SerializeField] private Button[] entryButtons = new Button[MaximumEntries];
         [SerializeField] private Text[] entryLabels = new Text[MaximumEntries];
+        [SerializeField] private Text[] entryCtLabels = new Text[MaximumEntries];
         [SerializeField] private Image[] entryPortraits = new Image[MaximumEntries];
         [SerializeField] private Sprite playerPortrait;
 
@@ -34,6 +36,13 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         private CombatTimelineSnapshot snapshot;
+        private CombatTimelineSnapshot playbackEnd;
+        private int playbackStep;
+        private float playbackElapsed;
+        private readonly Dictionary<string, int> lanes = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly float[] displayedCt = new float[MaximumEntries];
+        private float displayedTick;
+        public bool IsPresenting => playbackEnd != null;
         private string focusedCombatantId;
         private int hoveredSlot = -1;
         private string inspectedTargetId;
@@ -82,6 +91,52 @@ namespace TianZhang.Features.CombatPresentation
                 return;
             }
 
+            playbackEnd = null;
+            playbackStep = 1;
+            playbackElapsed = 0;
+            var steps = timeline.AdvanceSteps;
+            if (steps.Count > 1 && steps[steps.Count - 1].CurrentTick > steps[0].CurrentTick)
+            {
+                playbackEnd = timeline;
+                PresentPrediction(null);
+                Render(steps[0]);
+            }
+            else Render(timeline);
+        }
+
+        private void AdvancePlayback()
+        {
+            if (!IsPresenting) return;
+            var steps = playbackEnd.AdvanceSteps;
+            while (playbackStep < steps.Count)
+            {
+                CombatTimelineSnapshot start = steps[playbackStep - 1], end = steps[playbackStep];
+                int ticks = end.CurrentTick - start.CurrentTick;
+                if (ticks == 0)
+                {
+                    Render(end);
+                    playbackStep++;
+                    continue;
+                }
+                float duration = Mathf.Clamp(ticks * 0.08f, 0.35f, 1.2f);
+                playbackElapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(playbackElapsed / duration);
+                if (progress < 1f) Render(start, ticks * progress);
+                else
+                {
+                    Render(end);
+                    playbackStep++;
+                    playbackElapsed = 0;
+                }
+                return;
+            }
+            CombatTimelineSnapshot final = playbackEnd;
+            playbackEnd = null;
+            Render(final);
+        }
+
+        private void Render(CombatTimelineSnapshot timeline, float elapsedTicks = 0)
+        {
             string keyboardFocusId = null;
             if (snapshot != null && EventSystem.current != null)
                 for (int index = 0; index < Math.Min(MaximumEntries, snapshot.Entries.Count); index++)
@@ -89,14 +144,21 @@ namespace TianZhang.Features.CombatPresentation
                         keyboardFocusId = snapshot.Entries[index].Id;
             snapshot = timeline;
             if (root != null) root.SetActive(true);
-            if (tickText != null) tickText.text = "刻 " + timeline.CurrentTick;
-            float top = entryRoots[0] != null ? entryRoots[0].anchoredPosition.y : 0f;
+            displayedTick = timeline.CurrentTick + elapsedTicks;
+            if (tickText != null) tickText.text = "刻 " + displayedTick.ToString("0.##", CultureInfo.InvariantCulture) + " · CT / 门槛";
             int count = Math.Min(MaximumEntries, timeline.Entries.Count);
+            for (int lane = 0; lane < MaximumEntries; lane++)
+            {
+                string removed = null;
+                foreach (var pair in lanes)
+                    if (pair.Value == lane && FindEntry(timeline, pair.Key) == null) removed = pair.Key;
+                if (removed != null) lanes.Remove(removed);
+            }
             for (int index = 0; index < MaximumEntries; index++)
             {
                 bool visible = index < count;
                 if (entryRoots[index] != null) entryRoots[index].gameObject.SetActive(visible);
-                if (entryButtons[index] != null) entryButtons[index].interactable = visible;
+                if (entryButtons[index] != null) entryButtons[index].interactable = visible && !IsPresenting;
                 if (!visible)
                 {
                     ClearEntry(index);
@@ -104,15 +166,24 @@ namespace TianZhang.Features.CombatPresentation
                 }
 
                 CombatTimelineEntrySnapshot entry = timeline.Entries[index];
-                Vector2 size = entry.IsCurrent ? new Vector2(66f, 66f) : new Vector2(52f, 46f);
+                if (!lanes.TryGetValue(entry.Id, out int entryLane))
+                {
+                    entryLane = 0;
+                    while (lanes.ContainsValue(entryLane)) entryLane++;
+                    lanes.Add(entry.Id, entryLane);
+                }
+                displayedCt[index] = entry.CurrentCt + elapsedTicks * entry.Speed;
                 if (entryRoots[index] != null)
                 {
-                    entryRoots[index].sizeDelta = size;
-                    Vector2 position = entryRoots[index].anchoredPosition;
-                    position.y = top;
-                    entryRoots[index].anchoredPosition = position;
+                    // The lower 75% is linear up to this unit's threshold. Overflow stays visible above it.
+                    float ratio = displayedCt[index] / entry.NextActionThreshold;
+                    float position = ratio <= 1f ? ratio * 0.75f : 1f - 0.25f / ratio;
+                    entryRoots[index].anchoredPosition = new Vector2(
+                        (entryLane - 1) * chargeTrack.rect.width / MaximumEntries, position * chargeTrack.rect.height);
                 }
-                top -= size.y + EntrySpacing;
+                if (entryCtLabels[index] != null)
+                    entryCtLabels[index].text = displayedCt[index].ToString("0.#", CultureInfo.InvariantCulture) +
+                        "/" + entry.NextActionThreshold.ToString("0.#", CultureInfo.InvariantCulture);
                 if (entryLabels[index] != null)
                 {
                     entryLabels[index].fontSize = entry.IsCurrent ? 14 : 12;
@@ -121,7 +192,6 @@ namespace TianZhang.Features.CombatPresentation
                 Image portrait = entryPortraits[index];
                 if (portrait != null)
                 {
-                    portrait.rectTransform.sizeDelta = entry.IsCurrent ? new Vector2(40f, 40f) : new Vector2(24f, 24f);
                     bool player = entry.Faction == CombatUnitDisplayFaction.Player;
                     portrait.sprite = player ? playerPortrait : null;
                     portrait.preserveAspect = player;
@@ -143,6 +213,13 @@ namespace TianZhang.Features.CombatPresentation
                         nextFocus = entryButtons[index].gameObject;
                 EventSystem.current.SetSelectedGameObject(nextFocus);
             }
+        }
+
+        private static CombatTimelineEntrySnapshot FindEntry(CombatTimelineSnapshot value, string id)
+        {
+            foreach (var entry in value.Entries)
+                if (entry.Id == id) return entry;
+            return null;
         }
 
         public void Hide()
@@ -173,7 +250,13 @@ namespace TianZhang.Features.CombatPresentation
 
         private void LateUpdate()
         {
+            AdvancePlayback();
             if (focusText == null) return;
+            if (IsPresenting)
+            {
+                focusText.transform.parent.gameObject.SetActive(false);
+                return;
+            }
             int count = snapshot == null ? 0 : Math.Min(MaximumEntries, snapshot.Entries.Count);
             int slot = hoveredSlot >= 0 && hoveredSlot < count ? hoveredSlot : -1;
             GameObject current = EventSystem.current == null ? null : EventSystem.current.currentSelectedGameObject;
@@ -215,7 +298,7 @@ namespace TianZhang.Features.CombatPresentation
             }
             string faction = entry.Faction == CombatUnitDisplayFaction.Player ? "我方" : "敌方";
             string state = entry.IsCurrent ? "当前行动" : entry.QueuePosition >= 0
-                ? "已排队 · 队列 " + (entry.QueuePosition + 1) : "蓄力（未排队）";
+                ? "已排队 · 队列 " + (entry.QueuePosition + 1) : entry.IsReady ? "已就绪" : "蓄力（未排队）";
             focusText.text = entry.DisplayName + " · " + faction + "\nCT " +
                 entry.CurrentCt.ToString("0.###", CultureInfo.InvariantCulture) + " / 门槛 " +
                 entry.NextActionThreshold.ToString("0.###", CultureInfo.InvariantCulture) + "\n速度 " +
@@ -226,12 +309,20 @@ namespace TianZhang.Features.CombatPresentation
         {
             bool player = entry.Faction == CombatUnitDisplayFaction.Player;
             return (entry.Id == inspectedTargetId ? "◆" : string.Empty) +
-                (index + 1) + (entry.IsCurrent ? " 当前" : player ? " 我方" : entry.DisplayName);
+                (lanes.TryGetValue(entry.Id, out int lane) ? lane + 1 : index + 1) +
+                (entry.IsCurrent ? " 当前" : entry.QueuePosition >= 0 ? " 队" + (entry.QueuePosition + 1) :
+                    entry.IsReady ? " 就绪" : player ? " 我方" : entry.DisplayName);
         }
 
         private void ClearContent()
         {
             PresentPrediction(null);
+            playbackEnd = null;
+            playbackStep = 0;
+            playbackElapsed = 0;
+            lanes.Clear();
+            Array.Clear(displayedCt, 0, displayedCt.Length);
+            displayedTick = 0;
             snapshot = null;
             focusedCombatantId = null;
             hoveredSlot = -1;
@@ -252,6 +343,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void ClearEntry(int index)
         {
+            if (entryCtLabels[index] != null) entryCtLabels[index].text = string.Empty;
             if (entryLabels[index] != null) entryLabels[index].text = string.Empty;
             if (entryPortraits[index] != null)
             {

@@ -423,17 +423,21 @@ namespace TianZhang.Gameplay.Contracts
     [Serializable]
     public sealed class CombatTimelineSnapshot
     {
-        public CombatTimelineSnapshot(int currentTick, string currentActorId, IReadOnlyList<CombatTimelineEntrySnapshot> entries)
+        public CombatTimelineSnapshot(int currentTick, string currentActorId, IReadOnlyList<CombatTimelineEntrySnapshot> entries,
+            IReadOnlyList<CombatTimelineSnapshot> advanceSteps = null)
         {
             CurrentTick = currentTick;
             CurrentActorId = currentActorId;
             Entries = entries == null ? Array.Empty<CombatTimelineEntrySnapshot>()
                 : new List<CombatTimelineEntrySnapshot>(entries).AsReadOnly();
+            AdvanceSteps = advanceSteps == null ? Array.Empty<CombatTimelineSnapshot>()
+                : new List<CombatTimelineSnapshot>(advanceSteps).AsReadOnly();
         }
 
         public int CurrentTick { get; }
         public string CurrentActorId { get; }
         public IReadOnlyList<CombatTimelineEntrySnapshot> Entries { get; }
+        public IReadOnlyList<CombatTimelineSnapshot> AdvanceSteps { get; }
     }
 
     [Serializable]

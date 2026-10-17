@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Spatial;
 
@@ -257,9 +258,21 @@ namespace TianZhang.Combat
 
         public CombatActionResult Validate(CombatSession session, CombatCommand command) => Preview(session, command).Validation;
 
-        public CombatTurnAdvance AdvanceUntilAction(CombatSession session)
+        public CombatTurnAdvance AdvanceUntilAction(CombatSession session) => AdvanceUntilAction(session, null);
+
+        /// <summary>Records actual charge and same-tick settlement boundaries without running presentation callbacks.</summary>
+        public CombatTurnAdvance AdvanceUntilAction(CombatSession session, out IReadOnlyList<CombatTurnSnapshot> steps)
+        {
+            var recorded = new List<CombatTurnSnapshot>();
+            CombatTurnAdvance result = AdvanceUntilAction(session, recorded);
+            steps = recorded.AsReadOnly();
+            return result;
+        }
+
+        private CombatTurnAdvance AdvanceUntilAction(CombatSession session, List<CombatTurnSnapshot> steps)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
+            Record();
             int ticks = 0;
             while (true)
             {
@@ -269,8 +282,10 @@ namespace TianZhang.Combat
                     if (session.Combatants.TryGet(session.CurrentActorId, out var current) && current.IsAlive)
                         return new CombatTurnAdvance(current.Id, ticks);
                     EndTurn(session, session.CurrentActorId);
+                    Record();
                 }
                 CombatTurnAdvance advance = session.TurnScheduler.AdvanceUntilAction(session.Combatants.All);
+                Record();
                 ticks = checked(ticks + advance.TicksElapsed);
                 foreach (CombatantSnapshot combatant in session.Combatants.All)
                     if (combatant.IsAlive) combatant.AdvanceCooldowns(advance.TicksElapsed);
@@ -278,7 +293,10 @@ namespace TianZhang.Combat
                 session.Combatants.TryGet(advance.ActorId, out var actor);
                 if (session.BeginTurn(actor)) return new CombatTurnAdvance(actor.Id, ticks);
                 EndTurn(session, actor.Id);
+                Record();
             }
+
+            void Record() { if (steps != null) steps.Add(session.TurnScheduler.GetSnapshot(session.Combatants.All)); }
         }
 
         private static void EndTurn(CombatSession session, string actorId)

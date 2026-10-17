@@ -43,6 +43,7 @@ namespace TianZhang.Features.Adventure
         private AdventureSpawnSet spawned;
         private ICombatActionPolicy enemyPolicy;
         private ICombatPresentationSink presentation;
+        private ICombatPresentationActivity hudActivity;
         private ICombatUnitPresentationPort unitPresentation;
         private CombatUnitPresentationProfileCatalogData presentationProfileCatalog;
         private Action<CombatSessionOutcome, EnemyData> completed;
@@ -140,7 +141,8 @@ namespace TianZhang.Features.Adventure
         }
 
         public bool IsRunning => session != null;
-        public bool IsPresenting => (unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false;
+        public bool IsPresenting => ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
+            (hudActivity?.IsPresenting ?? false);
 
         public bool CanWithdraw(out string reason)
         {
@@ -216,6 +218,7 @@ namespace TianZhang.Features.Adventure
             Action<CombatSessionOutcome, EnemyData> onCompleted)
         {
             presentation = presentationSink ?? throw new ArgumentNullException(nameof(presentationSink));
+            hudActivity = presentationSink as ICombatPresentationActivity;
             unitPresentation = unitPresentationPort ?? throw new ArgumentNullException(nameof(unitPresentationPort));
             presentationProfileCatalog = profileCatalog ?? throw new ArgumentNullException(nameof(profileCatalog));
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
@@ -364,6 +367,7 @@ namespace TianZhang.Features.Adventure
 
         public void ConfirmAction(CombatActionCandidate candidate)
         {
+            if (IsPresenting) return;
             RefreshGrowth();
             if (!IsCandidateCurrent(candidate))
             {
@@ -470,7 +474,10 @@ namespace TianZhang.Features.Adventure
             while (resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
             {
                 RefreshGrowth();
-                CombatTurnAdvance advance = commandService.AdvanceUntilAction(session);
+                acceptsPlayerCommand = false;
+                CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
+                Present("回合推进", false, advanceSteps);
+                while (IsPresenting) yield return null;
                 if (!advance.HasActor)
                 {
                     Complete(CombatSessionOutcome.Defeat);
@@ -604,7 +611,7 @@ namespace TianZhang.Features.Adventure
                     ? equipmentOwner.UnarmedBasicAttackProfileId : equipmentOwner.MainEquipmentBasicAttackProfileId);
         }
 
-        private void Present(string turnText, bool acceptsCommands)
+        private void Present(string turnText, bool acceptsCommands, IReadOnlyList<CombatTurnSnapshot> advanceSteps = null)
         {
             if (session == null) return;
             RefreshGrowth();
@@ -620,11 +627,12 @@ namespace TianZhang.Features.Adventure
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
                 spawned.PlayerDivineProfileIds,
-                timeline: BuildTimeline(),
+                timeline: BuildTimeline(advanceSteps),
                 canEndTurn: acceptsCommands && player != null && commandService.Validate(session,
                     new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded,
                 movement: BuildMovement(player, acceptsCommands),
-                isPresenting: IsPresenting,
+                isPresenting: IsPresenting || (advanceSteps != null && advanceSteps.Count > 1 &&
+                    advanceSteps[advanceSteps.Count - 1].CurrentTick > advanceSteps[0].CurrentTick),
                 artActions: BuildArtActions(player, enemy),
                 commandContextVersion: commandContextVersion,
                 actions: BuildActions(player, enemy),
@@ -736,10 +744,16 @@ namespace TianZhang.Features.Adventure
             }
         }
 
-        private CombatTimelineSnapshot BuildTimeline()
+        private CombatTimelineSnapshot BuildTimeline(IReadOnlyList<CombatTurnSnapshot> advanceSteps = null)
         {
             CombatTurnSnapshot turns = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             string current = session.TurnPhase == CombatTurnPhase.Finished ? null : session.CurrentActorId;
+            return ProjectTimeline(turns, current, advanceSteps?.Select(step => ProjectTimeline(step, null)).ToArray());
+        }
+
+        private CombatTimelineSnapshot ProjectTimeline(CombatTurnSnapshot turns, string current,
+            IReadOnlyList<CombatTimelineSnapshot> advanceSteps = null)
+        {
             var units = turns.Units.ToDictionary(unit => unit.Id, StringComparer.Ordinal);
             var entries = new List<CombatTimelineEntrySnapshot>();
             var included = new HashSet<string>(StringComparer.Ordinal);
@@ -757,7 +771,9 @@ namespace TianZhang.Features.Adventure
             Add(current, -1);
             for (int index = 0; index < turns.ReadyQueueIds.Count; index++) Add(turns.ReadyQueueIds[index], index);
             foreach (string id in turns.ChargingUnitIds) Add(id, -1);
-            return new CombatTimelineSnapshot(turns.CurrentTick, current, entries);
+            // A recorded boundary can contain a ready actor already dequeued but not yet begun.
+            foreach (CombatTurnUnitSnapshot unit in turns.Units) Add(unit.Id, -1);
+            return new CombatTimelineSnapshot(turns.CurrentTick, current, entries, advanceSteps);
         }
 
         private void Complete(CombatSessionOutcome outcome)

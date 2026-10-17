@@ -129,7 +129,8 @@ namespace TianZhang.Tests.PlayMode
                 spawned.Player.DodgeRate = spawned.Enemy.DodgeRate = 100f;
             }
             else GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
-            for (int frame = 0; frame < 600 && !presenter.CanInspect; frame++) yield return null;
+            for (float deadline = Time.realtimeSinceStartup + 10f;
+                !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
