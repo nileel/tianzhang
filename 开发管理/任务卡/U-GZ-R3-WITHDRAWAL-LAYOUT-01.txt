@@ -1,0 +1,83 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-WITHDRAWAL-LAYOUT-01",
+  "title": "战斗撤离入口移至屏幕左上角",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-17 用户已允许角落或角色面板方案；冻结左上角，运行时坐标及Builder所有者已查明。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "开发管理/任务卡/U-GZ-R3-WITHDRAWAL-LAYOUT-01.txt",
+    "开发管理/任务归档/U-GZ-R3-WITHDRAWAL-LAYOUT-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-WITHDRAWAL-LAYOUT-01 · 战斗撤离入口移至屏幕左上角
+
+## 来源与当前边界
+
+2026-10-17 用户反馈第3项，允许屏幕左上角、右上角或角色操作面板；本卡冻结战斗状态左上角方案。本轮只建卡。
+根因：AdventureSceneBuilder.BuildWithdrawalEntry 以 AdventurePanel.anchorMax 为锚，把入口放在探索面板右侧；CombatHudPresenter 在战斗中隐藏探索面板，但独立撤离入口仍留在原位置。2026-10-17 正式PlayMode探针确认 /UICanvas/AdventureReturnEntry，anchor=(0.21875,0.95555556)，pivot=(0,1)，anchoredPosition=(24,0)，size=(372,144)，1920×1080 Canvas中的根位置=(444,1032)，对应截图偏中部。
+唯一结果：战斗中撤离入口稳定在左上角，保留探索返回入口和撤离确认的现有功能。
+
+## 必查范围
+
+- UNITY_STRUCTURE.ui.md；UNITY_STRUCTURE.runtime.md。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildWithdrawalEntry、RebuildWithdrawalEntry、布局辅助方法。
+- src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs::PresentReturnEntry；AdventureController.cs::RefreshReturnEntry。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs::Present、Hide，只读探索面板显隐。
+- src/Assets/Scenes/AdventureScene.unity::UICanvas、AdventurePanel、AdventureReturnEntry、CombatTimelineRoot。
+- expectedPaths 中布局及导航测试；开发管理/关中战斗主动退出合同.txt 的既有撤离行为。
+
+## 实施范围
+
+- 在现有入口所有者内让战斗状态使用屏幕左上角布局；探索状态保留返回城镇入口不遮挡标题/节点。采用已证明的同Canvas锚点与父级矩形，先复核当前运行时值，禁止凭截图猜坐标。
+- 只调整入口位置和必要的自身留白，不重做整个HUD；不遮挡行动轴、角色操作面板和撤离禁用原因。
+- Builder与正式场景保存结果一致；若按状态切换布局，在现有Presenter/Controller参数中表达，不能凭按钮中文标签判断战斗状态。
+- 保存、重开、进入战斗、退出战斗后均验证同一真实入口。
+
+## 禁止项
+
+不改撤离的确认/取消、资源与奖励语义、返回路由、存档、战斗调度、相机、探索布局整体设计或其他按钮位置。不新增平行撤离按钮。
+
+## 模型协作
+
+简单且所有者明确；主模型 gpt-6.1-sol，建议 medium，单模型。无独立辅助工作面；执行前核对运行时探针、Unity场景保存和双分辨率截图能力。
+
+## 验证
+
+先读取最新源父级/Canvas/入口矩形及刷新writer，记录布局前后屏幕矩形。用既有布局EditMode验证Builder保存和重开；正式PlayMode在1920×1080、1366×768验证左上角可点击、无遮挡和文本可读，同时覆盖探索入口、战斗撤离确认/取消及敌方/演出期间禁用。运行 tools/run-unity-playmode-tests.ps1 -EnableGraphics -TestFilter 精确导航/布局用例，不扩大到无关战斗或资源测试。
+
+## 完成条件
+
+两个分辨率的正式战斗中撤离入口位于左上角并可用；探索和撤离语义回归通过；场景重建不恢复截图位置。独立记录取证与验证结果。
+
+## 停止条件
+
+运行时父级/Canvas与上述证据不同、需要移动其他HUD或修改返回业务逻辑时停止，先重新定位与冻结范围，不叠加坐标补丁。
+
+## 执行与管理收尾
+
+本次是2026-10-17用户明确要求的拆分建卡，不执行业务修改。后续执行者单独领取本卡，按AGENTS.md建立规定worktree并重跑风险预检，读取mustRead与门禁；只提交本卡授权路径。相关任务共享文件不构成人为依赖，但必须以最新集成版本重新核对目标逻辑，不能覆盖其他卡结果。
+完成前以本轮已有证据判断经验候选；运行check-task-cards.ps1、check-review-text.ps1、check-pending-whitespace.ps1及git diff --cached --check。只有实际改动命中docs/CSV/Unity数据路径时运行check-data-chain.ps1；不重复输入未变的已通过检查。验证记录写回本卡正文，完成后移入同ID精确归档并同步队列/backlog。

@@ -5,4 +5,8 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| U-GZ-R3-ACTION-AVAILABILITY-01 | codex_execute | codex | P1 | unity | implementation | 战斗行动按钮统一资源与可执行性门禁 | 开发管理/任务卡/U-GZ-R3-ACTION-AVAILABILITY-01.txt |
+| U-GZ-R3-CT-TIMELINE-01 | codex_execute | codex | P1 | unity | implementation | 行动轴按真实CT定位并播放回合间推进 | 开发管理/任务卡/U-GZ-R3-CT-TIMELINE-01.txt |
+| U-GZ-R3-DIRECT-CAST-01 | codex_execute | codex | P1 | unity | implementation | 普攻与施法选定目标后直接执行 | 开发管理/任务卡/U-GZ-R3-DIRECT-CAST-01.txt |
+| U-GZ-R3-WITHDRAWAL-LAYOUT-01 | codex_execute | codex | P1 | unity | implementation | 战斗撤离入口移至屏幕左上角 | 开发管理/任务卡/U-GZ-R3-WITHDRAWAL-LAYOUT-01.txt |
 | C-JD-COMBO-01 | external_execute | deepseek | P2 | content | design | 金丹组合档案首批生产 | 开发管理/任务卡/C-JD-COMBO-01.txt |

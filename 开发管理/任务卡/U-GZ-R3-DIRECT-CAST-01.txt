@@ -1,0 +1,88 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-DIRECT-CAST-01",
+  "title": "普攻与施法选定目标后直接执行",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-17 用户明确取消普攻及施法二次确认；现有Choose/锁定目标/ConfirmCandidate链已定位。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatNavigationGuardPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
+    "开发管理/任务卡/U-GZ-R3-DIRECT-CAST-01.txt",
+    "开发管理/任务归档/U-GZ-R3-DIRECT-CAST-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-016",
+      "EXP-UNITY-024"
+    ],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-DIRECT-CAST-01 · 普攻与施法选定目标后直接执行
+
+## 来源与当前边界
+
+2026-10-17 用户反馈第5项：施法和攻击还要二次确认太麻烦，要求去掉。本轮只建卡。
+已证实：CombatCommandInput.LateUpdate 在左键选定合法攻击目标后只设置 IsAttackLocked，再等待 ConfirmCandidate；非鼠标选取的术法通过 RequestArt→Choose 弹出报价等待确认。已有确认执行接口负责即时合法性与上下文校验，去掉UI步骤不等于去掉这些校验。
+唯一结果：普通攻击、术法和神通在合法目标选定时直接执行一次，不再要求额外点击确认。
+
+## 必查范围
+
+- UNITY_STRUCTURE.ui.md；CombatPresentation/README.md。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Choose、BeginAttackSelection、PresentPointerPrompt、LateUpdate、ConfirmCandidate、RequestArt、Configure、ClearContext。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionPreviewView.cs::Present；CombatHudPresenter.cs::CanInspect、Present。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs::目标拾取；CombatMovementView.cs::TryPickCell、PresentAttackArea，只读既有选格与UI遮挡。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::PreviewAction、ConfirmAction、IsCandidateCurrent、ExecutePlayer，只读权威即时校验。
+- expectedPaths 中PlayMode的锁定/取消/旧上下文/重复输入/撤离清理断言。
+
+## 实施范围
+
+- 普攻、贯石击等需要鼠标选取的动作：点击行动按钮进入选取，指向时可预览，点击合法地块/目标即提交一次；右键/Esc在提交前取消；空格、越界、无效目标或UI区域点击不得提交。
+- 自身术法及已有明确合法目标的术法/神通：点击动作按钮即执行当前选择，不再弹出二次确认；仍需重新获取权威报价并通过既有确认接口校验。不得在仅切换目标时自动施法。
+- 普攻/施法预览不再显示可点击的额外确认入口；同步“选定后确认”等过时提示。其他动作的既有确认视图按各自类型保持正确显隐。
+- 删除仅为二次确认存在的锁定流程时同步直接调用者与测试；保留输入隔离、上下文版本、费用/次数、冷却、目标合法性、演出锁和同一点击只提交一次。
+- 适配旧测试的“先锁定再确认”断言为直接执行结果，保留取消、重复点击、过期命令和退出清理覆盖，不能删测试掩盖问题。
+
+## 禁止项
+
+不取消移动、换术、换装、用药、防御、待机/结束行动或撤离的既有确认；不改费用、伤害、CT、动作规则、存档、模型或布局。按钮统一门禁由独立 U-GZ-R3-ACTION-AVAILABILITY-01 负责，本卡不得假定其已实施。
+
+## 模型协作
+
+有界交互修改，主模型 gpt-6.1-sol，建议 high；输入、预览和实际提交强耦合，由单模型完成和复核，无独立辅助写入工作面。执行前核对Input System注入与正式PlayMode取证能力。
+
+## 验证
+
+正式场景分别覆盖普攻、鼠标目标术法、自身术法和神通：目标选定后一次结算，AP/MP/次数/冷却变化正确，无额外确认；非法/取消/UI点击零结算，重复点击与旧命令不重复扣费。保留移动/换术等其他确认和撤离清理回归。
+使用 tools/run-unity-playmode-tests.ps1 -EnableGraphics -TestFilter 运行修改影响的直接用例；两个分辨率确认攻击预览不显示多余确认控件。测试需检查领域结果，不能仅断言面板关闭。无需BattleSim。
+
+## 完成条件
+
+所有普攻/施法路径完成一次目标选择即可执行，后端校验及取消/防重仍成立；其他确认流程无回归。独立记录验证后收口。
+
+## 停止条件
+
+必须修改权威提交/计费语义、无法区分选择点击与提交点击、需要更换输入框架、越出白名单或发现共享调用者影响非本任务动作时停止，重新核定范围。
+
+## 执行与管理收尾
+
+本次是2026-10-17用户明确要求的拆分建卡，不执行业务修改。后续执行者单独领取本卡，按AGENTS.md建立规定worktree并重跑风险预检，读取mustRead与门禁；只提交本卡授权路径。相关任务共享文件不构成人为依赖，但必须以最新集成版本重新核对目标逻辑，不能覆盖其他卡结果。
+完成前以本轮已有证据判断经验候选；运行check-task-cards.ps1、check-review-text.ps1、check-pending-whitespace.ps1及git diff --cached --check。只有实际改动命中docs/CSV/Unity数据路径时运行check-data-chain.ps1；不重复输入未变的已通过检查。验证记录写回本卡正文，完成后移入同ID精确归档并同步队列/backlog。

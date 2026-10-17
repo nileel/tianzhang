@@ -1,0 +1,92 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-ACTION-AVAILABILITY-01",
+  "title": "战斗行动按钮统一资源与可执行性门禁",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-17 用户要求资源不足时所有消耗行动统一置灰；运行时所有者与绕过报价的直接代码已定位。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatActionPreviewPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatSwapSpellPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatEquipmentPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatItemPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "开发管理/任务卡/U-GZ-R3-ACTION-AVAILABILITY-01.txt",
+    "开发管理/任务归档/U-GZ-R3-ACTION-AVAILABILITY-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [
+      "EXP-UNITY-015",
+      "EXP-UNITY-026"
+    ],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-ACTION-AVAILABILITY-01 · 战斗行动按钮统一资源与可执行性门禁
+
+## 来源与当前边界
+
+2026-10-17 用户反馈第1项：截图 AP=10/100，普攻40AP、贯石击50AP/12MP、聚灵术25AP仍能点击，防御/移动等已置灰。用户随后明确要求先逐项判断并单独建任务，本次仅建卡。
+已证实根因：CombatActionBarView.Present 在 PresentAction 后把 basicAttackButton 无条件恢复为 canAct；PresentArt 只检查 target 非空；换术入口只检查存在报价。它们绕过了服务端投影的合法性。消费不足不是数值平衡问题。
+本卡唯一结果：正式战斗所有消耗行动的可用性与权威费用、资源及执行约束一致。不得顺带取消确认或改行动轴。
+
+## 必查范围
+
+- UNITY_STRUCTURE.ui.md；UNITY_STRUCTURE.runtime.md；CombatPresentation/README.md。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatActionBarView.cs::Present、PresentArt、PresentAction、PresentMovement、SetEnabled。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs::Configure、Bind、RequestArt、BeginAttackSelection、BeginSwapSpell。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::BuildActions、BuildArtActions、ProjectQuote、BuildMovement、ConfirmAction。
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatHudSnapshot、CombatActionPreviewSnapshot、CombatArtTargetSnapshot。
+- src/Assets/Scripts/Combat/CombatCommandService.cs::Preview、ValidateConfirmation；只读权威规则，不复制计费逻辑到UI。
+- expectedPaths 中五个 PlayMode 测试类的按钮/拒绝/选目标断言；只读 AdventureScene.unity 的 actionBar 和 input 引用。
+
+## 实施范围
+
+- 统一普攻、术法、神通、防御、移动、换术、换装、道具的可执行性门禁：AP、MP、道具数量、持有条件、换术剩余次数不足或冷却未结束时，真实 Button.interactable=false 且使用一致禁用样式。
+- 候选选择型入口以是否存在合法可选动作判断，不能把“当前默认目标/方向无效”误当成“资源不足”，也不能因第一条换术报价是无效的原槽位就禁用其余合法候选。必要时仅在既有只读投影中提供可执行候选，不新建计费服务或按中文错误字符串分类。
+- 目标切换等不消耗资源的选择按钮不套用其他动作的费用；结束行动/待机按自身合法性判断，不随AP耗尽全部禁用。
+- 保留后端确认时的即时验证、旧上下文拒绝、演出期间输入锁；禁用后的键盘/事件路径也不得消费资源。
+- 更新原本要求拒绝按钮仍可点击的直接测试，使其验证禁用与状态不变，而非删掉拒绝覆盖。
+- EXP-UNITY-026中保留“不能由单一无效目标推导整枚按钮不可用”的多目标核验要求；其旧“资源不足仍可进入预览”口径与本次用户要求冲突时，以本次要求为准：全部候选均资源不足则置灰。不得借旧经验恢复本次要移除的行为，也不在本卡顺带修改经验库。
+
+## 禁止项
+
+不改AP/MP/倍率/冷却/次数配置、伤害、CTB调度、BattleSim、存档、模型、布局或二次确认流程；不增加全局可用性状态、兜底重试或新组件。
+
+## 模型协作
+
+有界实现，主模型 gpt-6.1-sol，建议 high：需区分资源门禁与目标选择入口，并统一多个行动报价。单模型处理同一HUD与报价链，无独立辅助写入工作面，不派子智能体。执行前核对Unity运行时取证与PlayMode能力。
+
+## 验证
+
+在正式 AdventureScene 覆盖：截图10AP状态；AP不足/恰好足够，MP不足/足够，道具0，换术0次，冷却中，已持有与未持有换装；费用递增或资源变化后立即刷新。验证另一个合法目标/方向/换术候选不会被默认无效候选误禁用。禁用按钮真实指针/键盘输入不改变资源、行动次数、随机源、CT或日志；结束行动仍可用。
+运行修改涉及的上述PlayMode用例，保留1920×1080与1366×768禁用状态截图；使用 tools/run-unity-playmode-tests.ps1 -EnableGraphics -TestFilter 精确选择。无需BattleSim或无关全量测试。
+
+## 完成条件
+
+所有消耗行动通过同口径门禁，截图问题可复现后消失；合法选目标入口仍可达；权威报价与执行规则不变。记录改动、测试结果和剩余边界后独立收口。
+
+## 停止条件
+
+需要改底层计费规则、新增全局服务、超出白名单或发现未定位资源所有者时停止，回查根因并先修订任务；不得用错误字符串黑名单或额外兜底绕过。
+
+## 执行与管理收尾
+
+本次是2026-10-17用户明确要求的拆分建卡，不执行业务修改。后续执行者单独领取本卡，按AGENTS.md建立规定worktree并重跑风险预检，读取mustRead与门禁；只提交本卡授权路径。相关任务共享文件不构成人为依赖，但必须以最新集成版本重新核对目标逻辑，不能覆盖其他卡结果。
+完成前以本轮已有证据判断经验候选；运行check-task-cards.ps1、check-review-text.ps1、check-pending-whitespace.ps1及git diff --cached --check。只有实际改动命中docs/CSV/Unity数据路径时运行check-data-chain.ps1；不重复输入未变的已通过检查。验证记录写回本卡正文，完成后移入同ID精确归档并同步队列/backlog。

@@ -1,0 +1,90 @@
+---TASK-META---
+{
+  "schemaVersion": 2,
+  "id": "U-GZ-R3-CT-TIMELINE-01",
+  "title": "行动轴按真实CT定位并播放回合间推进",
+  "priority": "P1",
+  "route": "codex_execute",
+  "owner": "codex",
+  "domain": "unity",
+  "stage": "implementation",
+  "dispatchState": "ready",
+  "blockedBy": [],
+  "stateReason": "2026-10-17 用户指定CT位置与差速推进；已有权威CT/速度投影，当前显示仅按数组顺序排队。",
+  "expectedPaths": [
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs",
+    "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs",
+    "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs",
+    "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "src/Assets/Scenes/AdventureScene.unity",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTimelinePlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatTargetSelectionPlayModeTests.cs",
+    "src/Assets/Tests/PlayMode/GuanzhongCombatLayoutPlayModeTests.cs",
+    "src/Assets/Tests/EditMode/GuanzhongCombatLayoutEditorTests.cs",
+    "开发管理/任务卡/U-GZ-R3-CT-TIMELINE-01.txt",
+    "开发管理/任务归档/U-GZ-R3-CT-TIMELINE-01.txt",
+    "开发管理/任务列表/场景与Unity任务.txt",
+    "开发管理/当前任务队列.txt"
+  ],
+  "sourceBacklog": "开发管理/任务列表/场景与Unity任务.txt",
+  "riskPreflight": {
+    "explicitRefs": [],
+    "matched": [],
+    "gates": []
+  },
+  "executionModel": "gpt-6.1-sol"
+}
+---TASK-BODY---
+# U-GZ-R3-CT-TIMELINE-01 · 行动轴按真实CT定位并播放回合间推进
+
+## 来源与当前边界
+
+2026-10-17 用户反馈第4项：按各方实际CT显示行动轴位置；行动结束后各单位按自己的CT速度移动，下一位行动时停止。本轮只建卡。
+已证实：EncounterCoordinator.BuildTimeline 已提供 CurrentCt、NextActionThreshold、Speed、CurrentTick、IsCurrent 和就绪队列；CombatTimelineView.Present 却仅从顶部按数组顺序和 EntrySpacing 排列。RunCombat 调用 AdvanceUntilAction 一次跳过多个tick，显示层没有表现这段推进。
+唯一结果：同一正式行动轴准确显示CT状态和两位行动者之间的推进过程。这是表现功能，不是调整反应数值或CTB规则。
+
+## 必查范围
+
+- UNITY_STRUCTURE.ui.md；UNITY_STRUCTURE.runtime.md；CombatPresentation/README.md。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTimelineView.cs::Present、PresentPrediction、LateUpdate、Hide、SetInspectedTarget。
+- src/Assets/Scripts/Modules/Features/CombatPresentation/CombatHudPresenter.cs::Present、CanInspect、Hide。
+- src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs::RunCombat、BuildTimeline、Present、IsPresenting、撤离暂停/恢复。
+- src/Assets/Scripts/Modules/GameplayContracts/CombatPresentationContracts.cs::CombatTimelineSnapshot、CombatTimelineEntrySnapshot、ICombatPresentationActivity。
+- src/Assets/Scripts/Combat/Turns/CTBEngine.cs::AdvanceUntilAction、ConsumeAction、WaitAction；CombatCommandService.cs::AdvanceUntilAction；只读真实离散tick/消费/待机语义。
+- src/Assets/Scripts/Editor/AdventureSceneBuilder.cs::BuildCombatTimeline、BuildCombatActionPreview；AdventureScene.unity::CombatTimelineRoot及ConditionalNextMarker。
+- expectedPaths 中行动轴、目标联动与布局测试的对应完整用例。
+
+## 实施范围
+
+- 位置由真实CT与行动门槛映射，不能再用顺序编号伪装位置；当前行动者、已就绪队列和仍蓄力角色可区分。支持CT溢出、门槛惩罚、待机保留CT；同位置角色仍可识别/点击，不靠篡改CT错开。
+- 仅在调度真实推进的tick区间表现差速移动；同一角色以稳定ID保持连续性，不能因列表重排把旧头像动画到另一角色。端点与调度快照逐项一致；途中CT变化按同一段经过tick数乘自身速度投影。
+- 下一角色行动前完成推进并停住；玩家输入、敌方执行、目标检查与撤离按现有表现活动/暂停边界处理，禁止动画未结束就开放下一位操作。零tick的已有就绪队列不得伪造蓄力移动。
+- 同一角色本回合内普攻/施法/移动但未结束行动时，遵守现有调度冻结，不擅自推进其他角色CT。死亡移除、离开战斗、重入和取消时清除旧动画。
+- 沿用现有DTO、表现组件和门禁；允许仅调整行动轴自身布局避免头像、详情与预估标记重叠，Builder和序列化场景保持一致。不得把持续计时或CT修改逻辑塞入UI。
+
+## 禁止项
+
+不改CTBEngine、CombatCommandService、反应/速度/惩罚配置、角色数值、BattleSim、AI决策、存档或角色模型。不建立第二套调度器、全局动画状态服务或新的帧驱动战斗规则。
+
+## 模型协作
+
+有界但需较强技术判断，主模型 gpt-6.1-sol，建议 high。CT事实、动画端点与输入时序强耦合，由单主责统一复核；不拆并行写入，不调用子智能体。若出现调度语义冲突则停止，不以多模型投票改变玩法。执行前核对正式PlayMode、截图和逐帧取证能力。
+
+## 验证
+
+既有行动轴PlayMode覆盖不同速度/门槛、待机、消费、队列、死亡、重入；扩展正式场景逐帧观察：起点/中间/终点的CT与屏幕位置、各方差速、停止后不漂移、列表重排不换人、零tick不假推进、推进中命令不被接收或缓存。相同输入下调度行动顺序和tick数与改动前控制值相同。
+1920×1080与1366×768截图及短连续取证确认头像可读、重叠可区分、目标选择/预估信息仍正确。运行 tools/run-unity-playmode-tests.ps1 -EnableGraphics -TestFilter 精确上述相关用例；无需BattleSim。
+
+## 完成条件
+
+CT位置与底层事实对应，差速推进可见且在下一行动前停止；旧输入/旧动画不穿越回合或场景；两分辨率通过。单卡形成独立可验证结果，不以静态截图替代推进证据。
+
+## 停止条件
+
+无法从现有快照与调度事件确定动画区间、必须改调度/角色数值、发现第二运行时所有者、需新增全局服务或越出白名单时停止，重新判定根因与原子范围。
+
+## 执行与管理收尾
+
+本次是2026-10-17用户明确要求的拆分建卡，不执行业务修改。后续执行者单独领取本卡，按AGENTS.md建立规定worktree并重跑风险预检，读取mustRead与门禁；只提交本卡授权路径。相关任务共享文件不构成人为依赖，但必须以最新集成版本重新核对目标逻辑，不能覆盖其他卡结果。
+完成前以本轮已有证据判断经验候选；运行check-task-cards.ps1、check-review-text.ps1、check-pending-whitespace.ps1及git diff --cached --check。只有实际改动命中docs/CSV/Unity数据路径时运行check-data-chain.ps1；不重复输入未变的已通过检查。验证记录写回本卡正文，完成后移入同ID精确归档并同步队列/backlog。
