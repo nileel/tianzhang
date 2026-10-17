@@ -322,8 +322,12 @@ namespace TianZhang.Editor
             foreach (string name in new[] { "CombatTurnText", "CombatPlayerPortrait", "CombatPlayerText", "CombatEnemyText", "CombatActionBar" })
                 LayoutObject(hud, name).SetParent(hotbar.transform, false);
             PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatTurnText"), 16, 178, 198, 44);
-            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatPlayerPortrait"), 16, 118, 60, 54);
-            MakeLayoutScroll(hotbar.transform, "PlayerSummaryBody", LayoutObject(hotbar.transform, "CombatPlayerText").GetComponent<Text>(), 16, 16, 877, 126);
+            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatPlayerPortrait"), 16, 134, 44, 40);
+            MakeLayoutScroll(hotbar.transform, "PlayerSummaryBody", LayoutObject(hotbar.transform, "CombatPlayerText").GetComponent<Text>(), 68, 134, 877, 64);
+            CombatHudView resourceView = root.GetComponent<CombatHudView>();
+            BuildResourceBar(hotbar.transform, resourceView, "Health", "health", "生命", 94, new Color32(52, 121, 78, 255));
+            BuildResourceBar(hotbar.transform, resourceView, "Spirit", "spirit", "灵力", 56, new Color32(41, 102, 148, 255));
+            BuildResourceBar(hotbar.transform, resourceView, "ActionPoint", "actionPoint", "AP", 18, new Color32(139, 104, 38, 255));
             LayoutObject(hotbar.transform, "CombatEnemyText").gameObject.SetActive(false);
             RectTransform actions = LayoutObject(hotbar.transform, "CombatActionBar");
             RemoveLayout(actions);
@@ -385,6 +389,36 @@ namespace TianZhang.Editor
             // The rail's current/selected/predicted units keep their existing runtime writer.
             LayoutObject(canvas.transform, "CombatTimelineRoot/TimelineFocus").gameObject.SetActive(false);
             hud.gameObject.SetActive(false);
+        }
+
+        private static void BuildResourceBar(Transform parent, CombatHudView view, string objectName,
+            string fieldName, string caption, float y, Color color)
+        {
+            string name = "Combat" + objectName + "Bar";
+            GameObject track = parent.Find(name)?.gameObject ?? new GameObject(name, typeof(RectTransform), typeof(Image));
+            track.transform.SetParent(parent, false);
+            PlaceLayoutRect(track.GetComponent<RectTransform>(), 16, y, 198, 30);
+            track.GetComponent<Image>().color = new Color32(22, 32, 39, 255);
+            GameObject fill = track.transform.Find("Fill")?.gameObject ?? new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(track.transform, false);
+            StretchLayoutRect(fill.GetComponent<RectTransform>(), 1, 1, 1, 1);
+            Image image = fill.GetComponent<Image>();
+            image.sprite = SettlementSceneBuilder.UiSprite("Guanzhong_Panel_Paper");
+            image.type = Image.Type.Filled;
+            image.fillMethod = Image.FillMethod.Horizontal;
+            image.fillOrigin = 0;
+            image.color = color;
+            Text label = LayoutText(track.transform, "Value", caption + " 0/0", 18);
+            StretchLayoutRect(label.rectTransform, 4, 0, 4, 0);
+            label.alignment = TextAnchor.MiddleCenter;
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.transform.SetAsLastSibling();
+            Shadow shadow = label.GetComponent<Shadow>() ?? label.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color32(0, 0, 0, 220);
+            shadow.effectDistance = new Vector2(1, -1);
+            foreach (Graphic graphic in track.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+            SceneBuildSupport.SetObject(view, fieldName + "Fill", image);
+            SceneBuildSupport.SetObject(view, fieldName + "Label", label);
         }
 
         private static RectTransform LayoutObject(Transform parent, string name)

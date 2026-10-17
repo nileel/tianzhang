@@ -162,7 +162,7 @@ namespace TianZhang.Tests.PlayMode
                 var bar = Find<CombatActionBarView>();
                 var input = Find<CombatCommandInput>();
                 var view = Find<CombatActionPreviewView>();
-                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("1000/1000"));
+                Assert.That(Get<Text>(Find<CombatHudView>(), "actionPointLabel").text, Does.Contain("1000/1000"));
                 for (int use = 0; use < 4; use++)
                 {
                     if (use == 2)
@@ -423,7 +423,7 @@ namespace TianZhang.Tests.PlayMode
                 int tick = session.TurnScheduler.CurrentTick;
                 string initial = State();
                 Assert.That(presenter.Snapshot.Movement.RemainingPoints, Is.EqualTo(spawned.Player.ActionPointsRemainingUnits));
-                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 100/100"));
+                Assert.That(Get<Text>(Find<CombatHudView>(), "actionPointLabel").text, Does.Contain("AP 100/100"));
                 Assert.That(bar.BasicAttackButton.interactable && bar.GuardButton.interactable && bar.ArtButton.interactable, Is.True);
                 Assert.That(bar.WaitButton.interactable && presenter.Snapshot.CanEndTurn, Is.True);
                 bar.ArtButton.onClick.Invoke();
@@ -465,7 +465,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(presenter.Snapshot.ArtActions[1].Targets[0].Quote.RemainingCooldownTicks, Is.EqualTo(16));
                 if (width == 1920) yield return MoveThroughHud();
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(50000));
-                Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("AP 50/100"));
+                Assert.That(Get<Text>(Find<CombatHudView>(), "actionPointLabel").text, Does.Contain("AP 50/100"));
                 Assert.That(presenter.Snapshot.PendingCtPenalty, Is.EqualTo(5));
                 Assert.That(bar.BasicAttackButton.interactable, Is.True, "Aiming remains available even when the default direction is empty.");
                 Assert.That(bar.GuardButton.interactable, Is.True);
@@ -796,6 +796,130 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(after, State(), "A previous context cannot submit again after presentation.");
                 if (cooldown > 0) AssertDisabledActionIsInert(bar.DivineButton);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator R3ResourceBarsFollowAuthorityAndActionsAtBothResolutions()
+        {
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                Assert.AreEqual(width, Screen.width);
+                Assert.AreEqual(width == 1920 ? 1080 : 768, Screen.height);
+                var player = spawned.Player;
+                var bar = Find<CombatActionBarView>();
+                var preview = Find<CombatActionPreviewView>();
+
+                // Boundary fixtures only change the live combat state, then use the normal projection.
+                player.RestoreHealth(player.MaximumHealth);
+                player.RestoreSpirit(player.MaximumSpirit);
+                Reproject();
+                yield return CaptureResources("full-" + width);
+                player.ReceiveDamage(player.MaximumHealth / 2);
+                player.TryConsumeSpirit(player.MaximumSpirit / 2);
+                Set(player, "<ActionPointsRemainingUnits>k__BackingField", 75123);
+                Reproject();
+                yield return CaptureResources("partial-" + width);
+                Assert.AreEqual("AP 75.123/100", Get<Text>(Find<CombatHudView>(), "actionPointLabel").text);
+
+                int health = player.CurrentHealth;
+                yield return ClickResourceControl(bar.UseItemButton);
+                Assert.AreEqual(CombatActionKind.UseItem, Find<CombatCommandInput>().Candidate.Kind);
+                yield return ClickResourceControl(preview.ConfirmButton);
+                yield return Ready();
+                Assert.Greater(player.CurrentHealth, health, "The real item action restores health.");
+                yield return CaptureResources("item-recovery-" + width);
+
+                int spirit = player.CurrentSpirit;
+                yield return ClickResourceControl(bar.SecondArtButton);
+                yield return Ready();
+                Assert.Greater(player.CurrentSpirit, spirit, "The real self spell restores spirit.");
+                yield return CaptureResources("spirit-recovery-" + width);
+                long turn = session.TurnSequence;
+                yield return ClickResourceControl(bar.WaitButton);
+                yield return ClickResourceControl(preview.ConfirmButton);
+                for (float deadline = Time.realtimeSinceStartup + 15f;
+                    (session.CurrentActorId != "player" || session.TurnSequence == turn || encounter.IsPresenting) &&
+                    Time.realtimeSinceStartup < deadline;)
+                {
+                    AssertResourcesMatchSnapshot();
+                    yield return null;
+                }
+                yield return Ready();
+                Assert.Greater(session.TurnSequence, turn);
+                Assert.AreEqual(player.ActionPointLimitAtTurnStartUnits, player.ActionPointsRemainingUnits);
+                yield return CaptureResources("next-turn-" + width);
+
+                // Keep only this terminal zero-value display fixture on screen; normal defeat immediately leaves the scene.
+                encounter.StopAllCoroutines();
+                player.TryConsumeSpirit(player.CurrentSpirit);
+                player.ReceiveDamage(player.CurrentHealth);
+                Reproject();
+                yield return CaptureResources("zero-" + width);
+                foreach (string field in new[] { "health", "spirit", "actionPoint" })
+                    Assert.Zero(Get<Image>(Find<CombatHudView>(), field + "Fill").fillAmount);
+            }
+            Assert.That(layoutFailures, Is.Empty, string.Join("\n", layoutFailures));
+        }
+
+        private IEnumerator ClickResourceControl(Button button)
+        {
+            Assert.IsTrue(button.interactable, button.name);
+            Canvas.ForceUpdateCanvases();
+            Vector2 position = RectTransformUtility.WorldToScreenPoint(null,
+                button.transform.TransformPoint(((RectTransform)button.transform).rect.center));
+            foreach (ushort buttons in new ushort[] { 0, 1, 0 })
+            {
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = position, buttons = buttons });
+                yield return null; yield return null;
+            }
+        }
+
+        private void AssertResourcesMatchSnapshot()
+        {
+            var hud = Find<CombatHudView>();
+            var snapshot = presenter.Snapshot;
+            foreach (var resource in new[]
+            {
+                (field: "health", name: "生命", current: snapshot.Player.CurrentHealth, maximum: snapshot.Player.MaximumHealth),
+                (field: "spirit", name: "灵力", current: snapshot.Player.CurrentSpirit, maximum: snapshot.Player.MaximumSpirit),
+                (field: "actionPoint", name: "AP", current: snapshot.Movement.RemainingPoints, maximum: snapshot.ActionPointLimitUnits),
+            })
+            {
+                Image fill = Get<Image>(hud, resource.field + "Fill");
+                Text label = Get<Text>(hud, resource.field + "Label");
+                string Format(int value) => resource.field == "actionPoint" ? CombatActionPreviewView.FormatActionPoints(value) : value.ToString();
+                Assert.AreEqual(resource.name + " " + Format(resource.current) + "/" + Format(resource.maximum), label.text);
+                Assert.That(fill.fillAmount, Is.EqualTo(resource.maximum > 0 ? (float)resource.current / resource.maximum : 0f).Within(.00001f));
+                Assert.IsTrue(label.gameObject.activeInHierarchy);
+            }
+        }
+
+        private IEnumerator CaptureResources(string label)
+        {
+            AssertResourcesMatchSnapshot();
+            Assert.AreEqual(spawned.Player.CurrentHealth, presenter.Snapshot.Player.CurrentHealth);
+            Assert.AreEqual(spawned.Player.CurrentSpirit, presenter.Snapshot.Player.CurrentSpirit);
+            Assert.AreEqual(spawned.Player.ActionPointsRemainingUnits, presenter.Snapshot.Movement.RemainingPoints);
+            yield return CaptureHud("r3-" + label);
+            var hud = Find<CombatHudView>();
+            var evidence = new System.Collections.Generic.List<string>();
+            var actions = Get<GameObject>(Find<CombatActionBarView>(), "root").GetComponent<RectTransform>();
+            var corners = new Vector3[4]; actions.GetWorldCorners(corners);
+            float actionsLeft = corners[0].x;
+            foreach (string field in new[] { "health", "spirit", "actionPoint" })
+            {
+                Text text = Get<Text>(hud, field + "Label");
+                Image fill = Get<Image>(hud, field + "Fill");
+                Assert.LessOrEqual(text.preferredWidth, text.rectTransform.rect.width + .1f, text.text);
+                Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + .1f, text.text);
+                text.rectTransform.GetWorldCorners(corners);
+                Assert.Less(corners[2].x, actionsLeft, "Resource text cannot cover the action controls.");
+                evidence.Add(TextGeometry(text) + "; fill=" + fill.fillAmount);
+            }
+            File.WriteAllLines(Path.Combine(Application.dataPath, "../Logs/ap-hud/r3-" + label + "-resources.txt"), evidence);
         }
 
         private void Reproject() => typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)

@@ -12,6 +12,30 @@ namespace TianZhang.Tests.EditMode
 {
     public sealed class GuanzhongCombatLayoutEditorTests
     {
+        [Test] public void R3ResourceBarsRebuildAndReopenKeepBindings()
+        {
+            AdventureSceneBuilder.RebuildCombatLayout();
+            AdventureSceneBuilder.RebuildCombatLayout();
+            var scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            var hud = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatHudView>()).Single();
+            var data = new SerializedObject(hud);
+            foreach (string field in new[] { "health", "spirit", "actionPoint" })
+            {
+                var fill = (Image)data.FindProperty(field + "Fill").objectReferenceValue;
+                var label = (Text)data.FindProperty(field + "Label").objectReferenceValue;
+                Assert.NotNull(fill); Assert.NotNull(label);
+                Assert.AreSame(fill.transform.parent, label.transform.parent);
+                Assert.AreEqual("CombatHotbar", fill.transform.parent.parent.name);
+                Assert.AreEqual(Image.Type.Filled, fill.type);
+                Assert.AreEqual(Image.FillMethod.Horizontal, fill.fillMethod);
+                Assert.Zero(fill.fillOrigin);
+                Assert.NotNull(fill.sprite);
+                Assert.AreEqual(1, fill.transform.parent.parent.Cast<Transform>().Count(t => t.name == fill.transform.parent.name));
+                Assert.IsTrue(fill.transform.parent.GetComponentsInChildren<Graphic>().All(g => !g.raycastTarget));
+            }
+            SavedFormalLayoutKeepsReferencesAndSingleWriters();
+        }
+
         [Test] public void TimelineRebuildAndReopenKeepSingleSequence()
         {
             AdventureSceneBuilder.RebuildCombatTimeline();

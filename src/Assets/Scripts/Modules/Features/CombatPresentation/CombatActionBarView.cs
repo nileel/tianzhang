@@ -183,8 +183,7 @@ namespace TianZhang.Features.CombatPresentation
             if (cancelMoveButton != null) cancelMoveButton.gameObject.SetActive(selecting);
             CombatMovementOption shown = preview ?? selected;
             if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
-                "AP " + CombatActionPreviewView.FormatActionPoints(snapshot.Movement.RemainingPoints) + "/" +
-                CombatActionPreviewView.FormatActionPoints(snapshot.ActionPointLimitUnits) + " · 累计 CT +" + snapshot.PendingCtPenalty +
+                "累计 CT +" + snapshot.PendingCtPenalty +
                 (shown == null ? (selecting ? "\n选择目的地" : string.Empty) : "\n消耗 " +
                 CombatActionPreviewView.FormatActionPoints(shown.Cost) + " AP" + (selected == null ? " · 点击选定" : " · 确认后移动"));
         }
