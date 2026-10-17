@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -42,6 +42,8 @@ class Character
     public GameData.AttackProfile BasicAttackProfile;
     public string UnarmedAttackFamilyId = "";
     public float? ProductionRealmMultiplier;
+    public TianZhang.Content.EnemyCombatStats ProductionEnemyStats { get; private set; }
+    public TianZhang.Content.EnemyCombatStats ProductionEnemyBaseline { get; private set; }
     public GameData.AttackProfile EffectiveBasicAttackProfile => ResolveBasicAttack(Realm);
 
     GameData.AttackProfile ResolveBasicAttack(string realm)
@@ -142,20 +144,35 @@ class Character
         var realm = GameData.Rules.Realms.Single(r => r.RealmId == realmId);
         float multiplier = Number("realmMultiplier");
         int Round(float value) => checked((int)MathF.Round(value, MidpointRounding.ToEven));
-        // Existing production CharacterAttributes.Calculate projection, without added bonuses.
-        // Synthetic gongfa builds still use FinalizeStats and their actual GongFaTables.
+        // Match Unity's unscaled CharacterAttributes projection before the enemy-only boundary.
+        var stats = new TianZhang.Content.EnemyCombatStats
+        {
+            rootBone = Int("rootBone"), physique = Int("physique"), spirit = Int("spirit"),
+            mind = Int("mind"), reaction = Int("reaction"), talent = Int("talent"),
+            maximumHealth = Round(MathF.Pow(Int("rootBone"), .75f) * multiplier * 80f),
+            maximumSpirit = Round(Int("spirit") * multiplier * 15f),
+            physicalAttack = Round(Int("rootBone") * multiplier * 5f), soulAttack = Round(Int("spirit") * multiplier * 5f),
+            physicalDefense = Round(Int("physique") * multiplier * 3.5f), soulDefense = Round(Int("mind") * multiplier * 3.5f),
+            actionPointMaximumUnits = realm.ActionPointMaximumUnits, movementEfficiencyMilliUnits = realm.BaseMovementEfficiencyMilliUnits,
+            blockRate = Number("blockRate"), blockReduction = Number("blockReduction"),
+            soulShieldRate = Number("soulShieldRate"), soulShieldReduction = Number("soulShieldReduction"),
+            dodgeRate = Number("dodgeRate"), critRate = Number("critRate"), critDamage = Number("critDamage"), hitRateBonus = Number("hitRateBonus"),
+        };
+        var baseline = stats;
+        if (enemy) stats = stats.Scale(Number("combatStatScale"));
         var c = new Character { Name = id, Realm = GameData.RealmOrder[realm.RealmOrder], Style = "physical",
             UnarmedAttackFamilyId = row["unarmedAttackFamilyId"], ProductionRealmMultiplier = multiplier,
-            Innate = new() { ["根骨"] = Int("rootBone"), ["魂魄"] = Int("spirit"), ["神识"] = Int("mind"),
-                ["资质"] = Int("talent"), ["气运"] = 0 },
-            Primary = new() { ["HP"] = Round(MathF.Pow(Int("rootBone"), .75f) * multiplier * 80f),
-                ["MP"] = Round(Int("spirit") * multiplier * 15f), ["肉攻"] = Round(Int("rootBone") * multiplier * 5f),
-                ["神攻"] = Round(Int("spirit") * multiplier * 5f), ["肉防"] = Round(Int("physique") * multiplier * 3.5f),
-                ["神防"] = Round(Int("mind") * multiplier * 3.5f), ["反应"] = Int("reaction"), ["神识"] = Int("mind") } };
-        foreach (var pair in new[] { ("格挡率", "blockRate"), ("格挡减伤率", "blockReduction"), ("魂盾率", "soulShieldRate"),
-            ("魂盾减伤率", "soulShieldReduction"), ("闪避率", "dodgeRate"), ("暴击率", "critRate"),
-            ("暴击伤害", "critDamage"), ("命中率", "hitRateBonus") }) c.Secondary[pair.Item1] = Number(pair.Item2);
-        c.SetActionEconomyInputs(realm.ActionPointMaximumUnits, realm.BaseMovementEfficiencyMilliUnits);
+            ProductionEnemyStats = enemy ? stats : null,
+            ProductionEnemyBaseline = enemy ? baseline : null,
+            Innate = new() { ["根骨"] = stats.rootBone, ["体魄"] = stats.physique, ["魂魄"] = stats.spirit,
+                ["神识"] = stats.mind, ["反应"] = stats.reaction, ["资质"] = stats.talent, ["气运"] = 0 },
+            Primary = new() { ["HP"] = stats.maximumHealth, ["MP"] = stats.maximumSpirit,
+                ["肉攻"] = stats.physicalAttack, ["神攻"] = stats.soulAttack, ["肉防"] = stats.physicalDefense,
+                ["神防"] = stats.soulDefense, ["反应"] = stats.reaction, ["神识"] = stats.mind },
+            Secondary = new() { ["格挡率"] = stats.blockRate, ["格挡减伤率"] = stats.blockReduction,
+                ["魂盾率"] = stats.soulShieldRate, ["魂盾减伤率"] = stats.soulShieldReduction, ["闪避率"] = stats.dodgeRate,
+                ["暴击率"] = stats.critRate, ["暴击伤害"] = stats.critDamage, ["命中率"] = stats.hitRateBonus } };
+        c.SetActionEconomyInputs(stats.actionPointMaximumUnits, stats.movementEfficiencyMilliUnits);
         return c;
     }
 

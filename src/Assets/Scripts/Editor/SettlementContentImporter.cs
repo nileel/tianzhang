@@ -54,7 +54,7 @@ namespace TianZhang.Editor
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
             "contentScope", "dropEntries", "unarmedBasicAttackProfileId",
-            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId"
+            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId", "combatStatScale"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -484,6 +484,8 @@ namespace TianZhang.Editor
                 enemy.enemyTypeId = Required(table, row, "type");
                 enemy.aiProfileId = Required(table, row, "aiType");
                 enemy.realmId = Required(table, row, "realm");
+                enemy.combatStatScale = ParseFloat(Required(table, row, "combatStatScale"), sourceName, "combatStatScale");
+                EnemyCombatStats.ValidateScale(enemy.combatStatScale);
                 enemy.combatTemplate = template;
                 enemy.dropEntries = ParseEnemyDropEntries(dropEntries, sourceName);
                 ValidateApprovedEnemy(enemy, sourceName);
@@ -1146,6 +1148,7 @@ namespace TianZhang.Editor
             target.enemyTypeId = source.enemyTypeId;
             target.aiProfileId = source.aiProfileId;
             target.realmId = source.realmId;
+            target.combatStatScale = source.combatStatScale;
             target.combatTemplate = source.combatTemplate;
             target.dropEntries = source.dropEntries.Select(entry => new EnemyDropEntry
             {

@@ -22,6 +22,7 @@ namespace TianZhang.Content
         public string enemyTypeId;
         public string aiProfileId;
         public string realmId;
+        public float combatStatScale = 1f;
         public CharacterData combatTemplate;
         public EnemyDropEntry[] dropEntries = Array.Empty<EnemyDropEntry>();
     }

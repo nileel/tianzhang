@@ -6,6 +6,7 @@
     <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Content\EnemyCombatStats.cs" Link="Content\EnemyCombatStats.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatCommand.cs" Link="Combat\CombatCommand.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatRuleSet.cs" Link="Combat\CombatRuleSet.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatAttackProfile.cs" Link="Combat\CombatAttackProfile.cs" />

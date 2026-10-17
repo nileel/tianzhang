@@ -71,6 +71,7 @@ namespace TianZhang.Editor.ConfigEditor
                 movement.Scale = 1000m; fields.Add(movement);
                 fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Enum("unarmedAttackFamilyId", "身体攻击族", "body_human", "人形身体", "body_shijiahou", "石甲兽身体"), "按当前角色身份固定；其他怪物未指定"));
                 fields.Last().AllowEmpty = enemy;
+                if (enemy) fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("combatStatScale", "敌人战斗属性倍率", "倍"), Approved));
             }
             else if (id == "Items")
             {

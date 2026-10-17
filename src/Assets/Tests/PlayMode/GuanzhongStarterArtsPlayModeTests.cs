@@ -792,6 +792,7 @@ namespace TianZhang.Tests.PlayMode
                 playerCharacter = CharacterRecord.Capture(source),
                 enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition(spawned.Enemy.Id, spawned.EnemyData.combatTemplate, GrowthRules).Capture()),
                 enemyId = spawned.EnemyData.enemyId,
+                enemyEffective = spawned.EnemyStats,
                 player = CombatInputEvidence.Capture(spawned.Player),
                 enemy = CombatInputEvidence.Capture(spawned.Enemy),
                 environmentMultiplier = session.SpiritRecoveryEnvironmentMultiplier,
@@ -810,6 +811,8 @@ namespace TianZhang.Tests.PlayMode
             string original = File.ReadAllText(Path.Combine(root, "开发管理", "关中首战普通角色输入.json"));
             var template = UnityEditor.AssetDatabase.LoadAssetAtPath<TianZhang.Entity.CharacterData>(
                 "Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset");
+            var enemyDefinition = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemyData>(
+                "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset");
             Assert.That(template, Is.Not.Null);
             MethodInfo factory = typeof(AdventureUnitSpawner).GetMethod("CreateEnemy", BindingFlags.Static | BindingFlags.NonPublic);
             Assert.That(factory, Is.Not.Null);
@@ -822,11 +825,13 @@ namespace TianZhang.Tests.PlayMode
                 {
                     copy.rootBone = rootBone;
                     var enemy = (CombatantSnapshot)factory.Invoke(null, new object[] {
-                        copy, new TianZhang.Spatial.HexCoord(1, 0), copy.unarmedBasicAttackProfileId, GrowthRules });
+                        copy, AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale),
+                        new TianZhang.Spatial.HexCoord(1, 0), "basic_body_shijiahou_lianqi", "enemy" });
                     var evidence = JsonUtility.FromJson<OrdinaryInputEvidence>(original);
                     evidence.source = "Player: unchanged SPELLS visible ordinary input; enemy: Unity production CreateEnemy on explicit rootBone candidate clone=" + rootBone;
                     evidence.enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition("enemy", copy, GrowthRules).Capture());
                     evidence.enemy = CombatInputEvidence.Capture(enemy);
+                    evidence.enemyEffective = AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale);
                     string json = JsonUtility.ToJson(evidence, true);
                     File.WriteAllText(Path.Combine(directory, "rootbone-" + rootBone + ".json"), json);
                     if (rootBone == template.rootBone)
@@ -885,6 +890,7 @@ namespace TianZhang.Tests.PlayMode
                 enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition(
                     liveSpawned.Enemy.Id, liveSpawned.EnemyData.combatTemplate, GrowthRules).Capture()),
                 enemyId = liveSpawned.EnemyData.enemyId,
+                enemyEffective = liveSpawned.EnemyStats,
                 player = CombatInputEvidence.Capture(liveSpawned.Player),
                 enemy = CombatInputEvidence.Capture(liveSpawned.Enemy),
                 environmentMultiplier = liveSession.SpiritRecoveryEnvironmentMultiplier,
@@ -936,6 +942,7 @@ namespace TianZhang.Tests.PlayMode
             public string source, originId, enemyId;
             public int[] innate;
             public CharacterRecord playerCharacter, enemyCharacter;
+            public EnemyCombatStats enemyEffective;
             public CombatInputEvidence player, enemy;
             public float environmentMultiplier;
         }

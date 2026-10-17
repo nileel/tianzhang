@@ -52,6 +52,10 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
   既有战斗模板输入，不能因导入而升格进正式内容目录。
 - `Enemies.csv.dropTable` 是旧候选文本；正式石甲兽掉落只由 `dropEntries` 的
   `itemId@dropChancePercent@quantity` 表达。
+- `Enemies.csv.combatStatScale` 是正式敌人的战斗结果缩放参数，范围 `(0,1]`。
+  石甲兽为 `0.5`；原始属性、境界系数及 AP／移动效率镜像保持基线。由
+  `AdventureUnitSpawner.ProjectEnemyStats` 派生后统一缩放一次，Unity 与 BattleSim
+  共用 `EnemyCombatStats.Scale`；不得把已缩放一级属性再次代入派生公式。
 - `features` 使用 `featureId~displayNameKey~availability~disabledReasonKey`，多个条目用
   `|` 分隔；`adventureEntranceIds` 用 `|` 分隔。
 - `Bounties.csv.rewardEntries` 使用 `itemId@quantity`，多个条目用 `|` 分隔。

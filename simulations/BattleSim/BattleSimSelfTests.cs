@@ -13,6 +13,7 @@ static class BattleSimSelfTests
 {
     public static int Run(string suite)
     {
+        if (suite == "enemy-scaling") return RunChecked(suite, RunEnemyScaling);
         if (suite == "unarmed") return RunChecked(suite, RunUnarmed);
         if (suite == "unarmed-config") return RunChecked(suite, RunUnarmedConfig);
         if (suite == "two-cell-production") return RunChecked(suite, RunTwoCellProduction);
@@ -135,6 +136,25 @@ static class BattleSimSelfTests
         }
 
         return RunChecked(suite, RunElementV510);
+    }
+
+    static void RunEnemyScaling()
+    {
+        var enemy = Character.FromProduction(true, "enemy_shijiahou");
+        var stats = enemy.ProductionEnemyStats;
+        AssertSequence(new[] { 7, 8, 3, 3, 3, 2, 329, 54, 39, 18, 34, 13, 50000, 2000 },
+            new[] { stats.rootBone, stats.physique, stats.spirit, stats.mind, stats.reaction, stats.talent,
+                stats.maximumHealth, stats.maximumSpirit, stats.physicalAttack, stats.soulAttack,
+                stats.physicalDefense, stats.soulDefense, stats.actionPointMaximumUnits, stats.movementEfficiencyMilliUnits }, "R4 effective integers");
+        AssertEqual(7.5f, stats.blockRate, "block rate"); AssertEqual(12.5f, stats.blockReduction, "block reduction");
+        AssertEqual(2.5f, stats.critRate, "critical rate"); AssertEqual(5f, stats.critDamage, "critical bonus");
+        AssertEqual(329, enemy.Primary["HP"], "actual simulation HP");
+        AssertEqual(39, enemy.Primary["肉攻"], "actual simulation attack");
+        AssertEqual(50000, enemy.ActionPointMaximumUnits, "actual simulation AP");
+        AssertEqual(2000, enemy.MovementEfficiencyMilliUnits, "actual simulation movement");
+        AssertEqual(25000, enemy.EffectiveBasicAttackProfile.Cost.ActionPointCostUnits, "unchanged body cost");
+        Console.WriteLine(JsonSerializer.Serialize(new { baseline = enemy.ProductionEnemyBaseline, effective = stats },
+            new JsonSerializerOptions { IncludeFields = true }));
     }
 
     static int RunChecked(string suite, Action body)

@@ -19,6 +19,7 @@ MonoBehaviour:
   enemyTypeId: type_yaoshou
   aiProfileId: ai_melee
   realmId: realm_lianqi
+  combatStatScale: 0.5
   combatTemplate: {fileID: 11400000, guid: d8e383ae0eda4443a17f4f151191127d, type: 2}
   dropEntries:
   - itemId: item_shijia_piece

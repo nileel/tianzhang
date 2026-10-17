@@ -107,8 +107,8 @@ namespace TianZhang.Tests.PlayMode
             if (victory) player.DodgeRate = 100f;
             encounter.SetCombatResolutionRandomSource(new GuanzhongBasicAttackPlayModeTests.OutcomeFixtureRandom(session, victory));
             Assert.AreEqual(GameBootstrap.RequireRuntime().Player.Resources.MaximumHealth, player.MaximumHealth);
-            Assert.AreEqual(657, enemy.MaximumHealth);
-            Assert.AreEqual(78, enemy.PhysicalAttack);
+            Assert.AreEqual(329, enemy.MaximumHealth);
+            Assert.AreEqual(39, enemy.PhysicalAttack);
             CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu" }, player.EquippedArtProfileIds);
             Assert.That(Find<CombatBountyTrackerView>().Summary, Does.Contain("0/1"));
             Assert.IsFalse(Button("AdventureNode_return").interactable);

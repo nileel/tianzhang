@@ -520,6 +520,131 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator R4ScaledEnemiesMoveAttackAndFinishTheFormalEncounterAtBothResolutions()
+        {
+            string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/r4-stats"));
+            Directory.CreateDirectory(output);
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+                yield return SceneReady(GameplaySceneNames.Adventure);
+                var adventure = Find<AdventureController>();
+                for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+                var encounter = Find<EncounterCoordinator>();
+                encounter.SetCombatResolutionRandomSource(new SystemCombatResolutionRandomSource(1729));
+                Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+                var session = Get<CombatSession>(encounter, "session");
+                var spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+                var provider = Find<Static3DCombatUnitPresentationProvider>();
+                var recorder = new R4RecordingPort(provider, session);
+                Set(encounter, "unitPresentation", recorder);
+                yield return SetGameSize(size);
+                Assert.That(spawned.Enemies.Count, Is.EqualTo(2));
+                Assert.That(spawned.Player.MaximumHealth, Is.EqualTo(571));
+                Assert.That(spawned.Player.PhysicalAttack, Is.EqualTo(60));
+                foreach (var enemy in spawned.Enemies)
+                {
+                    Assert.That(enemy.MaximumHealth, Is.EqualTo(329)); Assert.That(enemy.PhysicalAttack, Is.EqualTo(39));
+                    Assert.That(enemy.ActionPointMaximumUnits, Is.EqualTo(50000));
+                    Assert.That(enemy.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+                    Assert.That(enemy.Speed, Is.EqualTo(3));
+                }
+                File.WriteAllText(Path.Combine(output, "runtime-effective-" + size.x + ".json"), JsonUtility.ToJson(spawned.EnemyStats, true));
+                yield return Capture("opening-" + size.x, output);
+                var legal = new CombatLegalActionService();
+                bool contactCaptured = false, attackCaptured = false;
+                int commands = 0;
+                float deadline = Time.realtimeSinceStartup + 180f;
+                while (encounter != null && encounter.IsRunning && Time.realtimeSinceStartup < deadline && commands < 150)
+                {
+                    if (encounter.IsPresenting || session.CurrentActorId != "player" ||
+                        !Get<bool>(encounter, "acceptsPlayerCommand") || session.TurnPhase == CombatTurnPhase.Finished)
+                    { yield return null; continue; }
+                    var options = legal.GetLegalActions(session, "player");
+                    var alive = spawned.Enemies.Where(e => e.IsAlive).ToArray();
+                    if (alive.Length == 0) { yield return null; continue; }
+                    int distance = alive.Min(e => spawned.Player.Position.Distance(e.Position));
+                    if (distance == 1 && !contactCaptured)
+                    { yield return Capture("contact-" + size.x, output); contactCaptured = true; }
+                    bool enemyAttacked = recorder.Samples.Any(e => e.actor != "player" && e.action == "Attack");
+                    if (enemyAttacked && !attackCaptured)
+                    { yield return Capture("after-enemy-attack-" + size.x, output); attackCaptured = true; }
+                    // Allow a real enemy turn in contact before fighting back; no HP/AP/position injection.
+                    CombatCommand chosen = distance == 1 && !enemyAttacked ?
+                        options.FirstOrDefault(c => c.Kind == CombatCommandKind.Guard) :
+                        options.FirstOrDefault(c => c.Kind == CombatCommandKind.Art && c.ProfileId == "spell_guanshiji") ??
+                        options.FirstOrDefault(c => c.Kind == CombatCommandKind.BasicAttack);
+                    if (chosen == null && distance > 1)
+                        chosen = options.Where(c => c.Kind == CombatCommandKind.Move &&
+                                alive.Min(e => c.Destination.Value.Distance(e.Position)) < distance)
+                            .OrderBy(c => alive.Min(e => c.Destination.Value.Distance(e.Position)))
+                            .ThenBy(c => spawned.Player.Position.Distance(c.Destination.Value)).FirstOrDefault();
+                    chosen = chosen ?? options.FirstOrDefault(c => c.Kind == CombatCommandKind.EndTurn) ??
+                        options.First(c => c.Kind == CombatCommandKind.Wait);
+                    if (chosen.Kind == CombatCommandKind.Move)
+                        encounter.RequestMove("player", chosen.Destination.Value.Q, chosen.Destination.Value.R);
+                    else if (chosen.Kind == CombatCommandKind.Guard) encounter.RequestGuard("player");
+                    else if (chosen.Kind == CombatCommandKind.EndTurn) encounter.RequestEndTurn("player");
+                    else if (chosen.Kind == CombatCommandKind.Wait) encounter.RequestWait("player");
+                    else
+                    {
+                        var candidate = new CombatActionCandidate(chosen.Kind == CombatCommandKind.Art ? CombatActionKind.Art : CombatActionKind.BasicAttack,
+                            "player", chosen.TargetId, chosen.ProfileId, Get<long>(encounter, "commandContextVersion"), attackDirection: chosen.AttackDirection);
+                        encounter.PreviewAction(candidate);
+                        encounter.ConfirmAction(candidate);
+                    }
+                    commands++;
+                    yield return null;
+                }
+                File.WriteAllText(Path.Combine(output, "actions-" + size.x + ".json"), JsonUtility.ToJson(recorder, true));
+                Assert.That(spawned.Enemies.All(e => !e.IsAlive), Is.True, "Formal two-enemy fight must reach victory within the bounded playthrough.");
+                Assert.That(spawned.Player.IsAlive, Is.True);
+                Assert.That(contactCaptured && attackCaptured, Is.True);
+                var moves = recorder.Samples.Where(e => e.actor != "player" && e.action == "Move").ToArray();
+                Assert.That(moves, Is.Not.Empty);
+                Assert.That(moves.All(e => e.ap == 0), Is.True, "A normal one-cell enemy move spends all 50 AP.");
+                var attacks = recorder.Samples.Where(e => e.actor != "player" && e.action == "Attack").ToArray();
+                Assert.That(attacks, Is.Not.Empty);
+                Assert.That(attacks.All(e => e.ap == 25000 || e.ap == 0), Is.True);
+                Assert.That(attacks.GroupBy(e => new { e.actor, e.turn }).All(g => g.Count() <= 2), Is.True);
+                yield return SceneReady(GameplaySceneNames.Settlement);
+                yield return Capture("returned-" + size.x, output);
+                TestContext.WriteLine($"R4 {size}: commands={commands}, HP={spawned.Player.CurrentHealth}/571, enemyMoves={moves.Length}, enemyAttacks={attacks.Length}, tick={session.TurnScheduler.CurrentTick}; production AI, seed=1729; no altered combat stats.");
+            }
+        }
+
+        [Serializable]
+        private sealed class R4Sample
+        {
+            public string actor, action;
+            public long turn;
+            public int frame, tick, ap, hp, q, r;
+        }
+
+        [Serializable]
+        private sealed class R4RecordingPort : ICombatUnitPresentationPort, ICombatPresentationActivity
+        {
+            private readonly ICombatUnitPresentationPort actual;
+            private readonly CombatSession session;
+            public List<R4Sample> Samples = new List<R4Sample>();
+            public R4RecordingPort(ICombatUnitPresentationPort actual, CombatSession session) { this.actual = actual; this.session = session; }
+            public bool IsPresenting => ((ICombatPresentationActivity)actual).IsPresenting;
+            public void Prepare(IReadOnlyList<CombatUnitPresentationDescriptor> values) => actual.Prepare(values);
+            public void Spawn(CombatUnitPresentationDescriptor value) => actual.Spawn(value);
+            public void Present(CombatUnitPresentationEventProjection value)
+            {
+                if (session.Combatants.TryGet(value.ActorCombatantId, out var actor))
+                    Samples.Add(new R4Sample { actor = actor.Id, action = value.PresentationEvent.ToString(),
+                        turn = session.TurnSequence, frame = Time.frameCount, tick = session.TurnScheduler.CurrentTick,
+                        ap = actor.ActionPointsRemainingUnits, hp = actor.CurrentHealth, q = actor.Position.Q, r = actor.Position.R });
+                actual.Present(value);
+            }
+            public void Remove(string id) => actual.Remove(id);
+            public void Clear() => actual.Clear();
+        }
+
         private IEnumerator EnterSettlement()
         {
             var stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
@@ -645,7 +770,7 @@ namespace TianZhang.Tests.PlayMode
             return $"{PathOf(renderer.transform)}; enabled={renderer.enabled}; boundsMin={bounds.min:F5}; boundsMax={bounds.max:F5}; center={bounds.center:F5}; screenMin=({screen.Min(point => point.x):F3},{screen.Min(point => point.y):F3}); screenMax=({screen.Max(point => point.x):F3},{screen.Max(point => point.y):F3})" + top;
         }
 
-        private static IEnumerator Capture(string label)
+        private static IEnumerator Capture(string label, string directory = null)
         {
 #if UNITY_EDITOR
             // A fresh worktree compiles shader variants on first render. Never capture their cyan placeholder.
@@ -653,7 +778,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(UnityEditor.ShaderUtil.anythingCompiling, Is.False, "Shader compilation must finish before visual evidence.");
             yield return null;
 #endif
-            string path = Path.Combine(OutputDirectory, label + ".png");
+            string path = Path.Combine(directory ?? OutputDirectory, label + ".png");
             if (File.Exists(path)) File.Delete(path);
             ScreenCapture.CaptureScreenshot(path);
             for (int frame = 0; frame < 120 && !File.Exists(path); frame++) yield return null;
