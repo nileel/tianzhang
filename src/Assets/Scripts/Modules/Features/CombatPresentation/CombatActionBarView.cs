@@ -79,22 +79,20 @@ namespace TianZhang.Features.CombatPresentation
             bool visible = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             bool canAct = visible;
             root?.SetActive(snapshot != null);
-            CombatActionPreviewSnapshot swap = snapshot?.FindAction(CombatActionKind.SwapSpell);
-            SetEnabled(swapSpellButton, canAct && swap != null);
+            CombatActionPreviewSnapshot swap = snapshot?.FindPreferredAction(CombatActionKind.SwapSpell);
+            SetEnabled(swapSpellButton, canAct && swap?.CanConfirm == true);
+            string swapReason = swap?.CanConfirm == false ? swap.Reason : string.Empty;
             if (swapSpellButton != null)
                 swapSpellButton.GetComponentInChildren<Text>().text = "换术\n剩余 " + (swap?.CombatSwapsRemaining ?? 0) + " 次";
-            string equipmentReason = PresentAction(snapshot?.FindAction(CombatActionKind.SwapEquipment), swapEquipmentButton, canAct);
-            string itemReason = PresentAction(snapshot?.FindAction(CombatActionKind.UseItem), useItemButton, canAct);
-            string basicReason = PresentAction(snapshot?.FindAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
-            // An empty/rejected direction is still previewable; confirmation keeps the quote gate.
-            if (snapshot?.FindAction(CombatActionKind.BasicAttack) != null)
-                SetEnabled(basicAttackButton, canAct);
+            string equipmentReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.SwapEquipment), swapEquipmentButton, canAct);
+            string itemReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.UseItem), useItemButton, canAct);
+            string basicReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
             string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
             string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),
                 waitButton, canAct);
             string divineId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             if (divineButton != null) divineButton.gameObject.SetActive(!string.IsNullOrWhiteSpace(divineId));
-            string divineReason = PresentAction(snapshot?.FindAction(CombatActionKind.Divine, divineId), divineButton, canAct);
+            string divineReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.Divine, divineId), divineButton, canAct);
 
             CombatArtActionSnapshot first = snapshot != null && snapshot.ArtActions.Count > 0 ? snapshot.ArtActions[0] : null;
             CombatArtActionSnapshot second = snapshot != null && snapshot.ArtActions.Count > 1 ? snapshot.ArtActions[1] : null;
@@ -113,7 +111,7 @@ namespace TianZhang.Features.CombatPresentation
                 actionStatusLabel.fontSize = 16;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
-                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, equipmentReason, itemReason },
+                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, swapReason, equipmentReason, itemReason },
                         reason => !string.IsNullOrEmpty(reason)).Distinct()));
             }
         }
@@ -121,8 +119,9 @@ namespace TianZhang.Features.CombatPresentation
         private string PresentArt(CombatArtActionSnapshot art, string targetId, Button button, Text label, bool canAct)
         {
             CombatArtTargetSnapshot target = FindTarget(art, targetId);
-            // Target legality gates confirmation, not access to the quote and its rejection reason.
-            SetEnabled(button, canAct && target != null);
+            if (target?.CanExecute != true)
+                target = art?.Targets.FirstOrDefault(option => option.CanExecute) ?? target;
+            SetEnabled(button, canAct && target?.CanExecute == true);
             if (label != null)
             {
                 label.text = art == null ? "术法" : art.DisplayName + "\n" +

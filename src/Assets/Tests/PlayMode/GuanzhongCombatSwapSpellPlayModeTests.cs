@@ -170,18 +170,20 @@ namespace TianZhang.Tests.PlayMode
             {
                 SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
+                Assert.IsFalse(bar.SwapSpellButton.interactable);
                 bar.SwapSpellButton.onClick.Invoke();
-                Assert.That(input.Candidate.SlotIndex, Is.Zero);
-                Assert.That(input.Preview.CanConfirm, Is.False);
-                StringAssert.Contains("已装配", input.Preview.Reason);
-                preview.SwapSlotButton.onClick.Invoke();
-                Assert.That(input.Candidate.SlotIndex, Is.EqualTo(1));
-                StringAssert.Contains("其他栏位", input.Preview.Reason);
-                preview.SwapCandidateButton.onClick.Invoke();
-                Assert.That(input.Candidate.ProfileId, Is.EqualTo(Recovery));
-                Assert.That(preview.ConfirmButton.interactable, Is.False);
+                Assert.IsNull(input.Candidate);
+                foreach (var action in hud.Snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell))
+                {
+                    var candidate = Candidate(action.Candidate.ProfileId, action.Candidate.SlotIndex);
+                    var rejected = encounter.PreviewAction(candidate);
+                    Assert.IsFalse(rejected.CanConfirm);
+                    StringAssert.Contains(action.Candidate.SlotIndex == (action.Candidate.ProfileId == Attack ? 0 : 1)
+                        ? "已装配" : "其他栏位", rejected.Reason);
+                    encounter.ConfirmAction(candidate);
+                    Assert.AreEqual(before, State());
+                }
                 input.ConfirmCandidate();
-                yield return RecordLayout("default-" + width);
                 preview.CancelButton.onClick.Invoke();
                 Assert.That(input.Candidate, Is.Null);
                 Assert.That(preview.IsVisible, Is.False);
@@ -258,17 +260,19 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.GetCooldown(Recovery), Is.EqualTo(recoveryBefore));
             Assert.That(spawned.Player.GetCooldown(Attack), Is.EqualTo(Math.Max(60, attackBefore)));
             Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Attack }));
+            Assert.IsFalse(bar.SwapSpellButton.interactable);
             bar.SwapSpellButton.onClick.Invoke();
-            Assert.That(input.Preview.CanConfirm, Is.False);
-            StringAssert.Contains("次数已用尽", input.Preview.Reason);
+            Assert.IsNull(input.Candidate);
+            var exhausted = encounter.PreviewAction(Candidate(Recovery, 0));
+            Assert.IsFalse(exhausted.CanConfirm);
+            StringAssert.Contains("次数已用尽", exhausted.Reason);
             before = State();
-            input.ConfirmCandidate(); preview.CancelButton.onClick.Invoke();
+            encounter.ConfirmAction(exhausted.Candidate);
+            input.ConfirmCandidate();
             Assert.That(State(), Is.EqualTo(before));
             bar.ArtButton.onClick.Invoke();
-            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            Assert.That(input.Preview.CanConfirm, Is.False);
-            preview.CancelButton.onClick.Invoke();
-            Assert.That(bar.ArtButton.interactable, Is.True, "Cooldown rejection must remain previewable after swapping too.");
+            Assert.IsNull(input.Candidate);
+            Assert.That(bar.ArtButton.interactable, Is.False, "Cooldown disables the action after swapping too.");
             Assert.That(encounter.PreviewAction(new CombatActionCandidate(CombatActionKind.Art, "player", "enemy", Attack,
                 hud.Snapshot.CommandContextVersion)).CanConfirm, Is.False);
             int startTick = session.TurnScheduler.CurrentTick, initialCd = spawned.Player.GetCooldown(Attack);
@@ -313,11 +317,14 @@ namespace TianZhang.Tests.PlayMode
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
+            Assert.IsFalse(bar.SwapSpellButton.interactable);
             bar.SwapSpellButton.onClick.Invoke();
-            Assert.That(input.Preview.CanConfirm, Is.False);
-            StringAssert.Contains("行动力", input.Preview.Reason);
+            Assert.IsNull(input.Candidate);
+            var rejected = encounter.PreviewAction(Candidate(Attack, 0));
+            Assert.That(rejected.CanConfirm, Is.False);
+            StringAssert.Contains("行动力", rejected.Reason);
             before = State();
-            input.ConfirmCandidate();
+            encounter.ConfirmAction(rejected.Candidate);
             preview.CancelButton.onClick.Invoke();
             Assert.That(State(), Is.EqualTo(before));
             Assert.That(spawned.Player.CombatSwapsUsed, Is.Zero);

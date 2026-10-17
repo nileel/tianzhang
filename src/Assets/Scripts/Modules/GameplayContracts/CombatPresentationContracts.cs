@@ -500,6 +500,18 @@ namespace TianZhang.Gameplay.Contracts
                     return action;
             return null;
         }
+
+        public CombatActionPreviewSnapshot FindPreferredAction(CombatActionKind kind, string profileId = null)
+        {
+            CombatActionPreviewSnapshot first = null;
+            foreach (CombatActionPreviewSnapshot action in Actions)
+            {
+                if (action.Candidate.Kind != kind || (profileId != null && action.Candidate.ProfileId != profileId)) continue;
+                first ??= action;
+                if (action.CanConfirm) return action;
+            }
+            return first;
+        }
     }
 
     public interface ICombatPresentationSink

@@ -96,6 +96,32 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(3, runtime.GetItemQuantity(Item));
             yield return null;
         }
+        [UnityTest] public IEnumerator Q1ExternalStockChangesRefreshWithoutAnAction()
+        {
+            var runtime = GameBootstrap.RequireRuntime();
+            var inventory = Get<InventoryStore>(runtime, "inventory");
+            var stock = inventory.Capture();
+            Assert.IsTrue(bar.UseItemButton.interactable);
+            Assert.IsTrue(bar.SwapEquipmentButton.interactable);
+            bar.UseItemButton.onClick.Invoke();
+            var stale = input.Candidate;
+            int ap = spawned.Player.ActionPointsRemainingUnits;
+            inventory.Restore(new InventoryStoreSnapshot(stock.Entries.Where(entry =>
+                entry.ItemId != Item && entry.ItemId != "item_iron_blade")));
+            yield return null; yield return null;
+            Assert.IsFalse(bar.UseItemButton.interactable);
+            Assert.IsFalse(bar.SwapEquipmentButton.interactable);
+            Assert.IsNull(input.Candidate, "The old inventory quote is cleared by the refresh.");
+            string before = State();
+            encounter.ConfirmAction(stale);
+            Assert.AreEqual(before, State());
+            inventory.Restore(stock);
+            yield return null; yield return null;
+            Assert.IsTrue(bar.UseItemButton.interactable);
+            Assert.IsTrue(bar.SwapEquipmentButton.interactable);
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+        }
+
         [UnityTest] public IEnumerator FormalUseSavesAfterNormalCombat() { yield return RoundTrip(false); }
         [UnityTest] public IEnumerator FormalUseSavesAfterPassiveCombat() { yield return RoundTrip(true); }
         [UnityTest] public IEnumerator FullHealthUseSucceedsOnceAndZeroStockRejects()
@@ -125,9 +151,11 @@ namespace TianZhang.Tests.PlayMode
                 GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 string before = State(); bar.UseItemButton.onClick.Invoke();
-                Assert.IsFalse(input.Preview.CanConfirm);
-                StringAssert.Contains("丹药数量不足", input.Preview.Reason);
-                GuanzhongCombatEquipmentPlayModeTests.AssertPreviewBounds(preview, "empty-item-preview");
+                Assert.IsNull(input.Candidate);
+                var rejected = encounter.PreviewAction(Find<CombatHudPresenter>().Snapshot.FindAction(CombatActionKind.UseItem).Candidate);
+                Assert.IsFalse(rejected.CanConfirm);
+                StringAssert.Contains("丹药数量不足", rejected.Reason);
+                encounter.ConfirmAction(rejected.Candidate);
                 string directory = Path.Combine(Application.dataPath, "../Logs/weapon-item-ui"); Directory.CreateDirectory(directory);
                 ScreenCapture.CaptureScreenshot(Path.Combine(directory, "empty-" + width + ".png"));
                 for (int frame = 0; frame < 3; frame++) yield return null;

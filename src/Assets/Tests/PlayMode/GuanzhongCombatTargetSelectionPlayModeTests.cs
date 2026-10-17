@@ -146,6 +146,43 @@ namespace TianZhang.Tests.PlayMode
             input.CancelCandidate();
         }
 
+        [UnityTest]
+        public IEnumerator Q1LegalAlternativeDirectionAndTargetKeepEntryAvailable()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var service = new CombatCommandService();
+            // Reverse enumeration only; live positions, IDs and their presented units stay aligned.
+            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], spawned.EnemyData,
+                spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, spawned.PlayerDivineProfileIds,
+                new[] { spawned.Enemy });
+            Set(encounter, "spawned", spawned);
+            spawned.Player.Facing = Enumerable.Range(0, 6).First(direction => !service.Preview(session,
+                new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: spawned.Player.BasicAttackProfileId,
+                    attackDirection: direction)).IsLegal);
+            typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(encounter, new object[] { "合法替代候选验证", true });
+            Assert.IsFalse(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanConfirm);
+            Assert.IsTrue(presenter.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm);
+            Assert.IsFalse(presenter.Snapshot.ArtActions[0].Targets[0].CanExecute);
+            Assert.IsTrue(presenter.Snapshot.ArtActions[0].Targets[1].CanExecute);
+            Assert.IsTrue(bar.BasicAttackButton.interactable);
+            Assert.IsTrue(bar.ArtButton.interactable);
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            bar.BasicAttackButton.onClick.Invoke();
+            yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session,
+                presenter.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).Candidate.AttackDirection);
+            Assert.IsTrue(input.Preview.CanConfirm);
+            input.CancelCandidate();
+            bar.ArtButton.onClick.Invoke();
+            yield return PointArt(session, spawned.Enemies[1].Id);
+            Assert.IsTrue(input.Preview.CanConfirm);
+            Assert.AreEqual(spawned.Enemies[1].Id, input.Candidate.TargetId);
+            input.CancelCandidate();
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+        }
+
         public static IEnumerator PointArt(CombatSession combat, string targetId, bool lockTarget = true)
         {
             Assert.IsTrue(combat.Combatants.TryGet(targetId, out var actor));

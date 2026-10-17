@@ -60,6 +60,7 @@ namespace TianZhang.Features.Adventure
         private ContentCatalogData equipmentCatalog;
         private Func<string, string, string, bool> ownsEquipment;
         private Func<long> inventoryVersion;
+        private long presentedInventoryVersion;
         private Func<string, int> itemQuantity;
         public delegate bool PrepareItemConsumption(string itemId, int quantity, long version, out Action apply, out string reason);
         private PrepareItemConsumption prepareItemConsumption;
@@ -486,7 +487,8 @@ namespace TianZhang.Features.Adventure
                     {
                         yield return null;
                         while (withdrawalPaused) yield return null;
-                        if (RefreshGrowth()) Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
+                        if (RefreshGrowth() || (inventoryVersion?.Invoke() ?? 0) != presentedInventoryVersion)
+                            Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
                         if (wasPresenting != IsPresenting)
                         {
                             wasPresenting = IsPresenting;
@@ -607,6 +609,7 @@ namespace TianZhang.Features.Adventure
             if (session == null) return;
             RefreshGrowth();
             session.Combatants.TryGet("player", out CombatantSnapshot player);
+            presentedInventoryVersion = inventoryVersion?.Invoke() ?? 0;
             CombatantSnapshot enemy = spawned.Enemies.FirstOrDefault(value => value.IsAlive) ?? spawned.Enemy;
             acceptsCommands = acceptsCommands && !IsPresenting;
             ++commandContextVersion;
@@ -687,6 +690,16 @@ namespace TianZhang.Features.Adventure
             var actions = new List<CombatActionPreviewSnapshot>();
             if (player == null) return actions;
             Add(CombatActionKind.BasicAttack, enemy?.Id);
+            if (session.TryGetProfile(player.BasicAttackProfileId, out var basic) && basic.Area != CombatAttackArea.Single)
+            {
+                for (int direction = 0; direction < 6; direction++)
+                    if (direction != player.Facing) Add(CombatActionKind.BasicAttack, direction: direction);
+            }
+            else
+            {
+                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive && value.Id != enemy?.Id))
+                    Add(CombatActionKind.BasicAttack, target.Id);
+            }
             Add(CombatActionKind.Guard);
             Add(CombatActionKind.Wait);
             Add(CombatActionKind.EndTurn);
@@ -702,15 +715,22 @@ namespace TianZhang.Features.Adventure
                     commandContextVersion, equipmentSlotId: equipment.EquipmentSlotId, itemId: equipment.ItemId, instanceId: equipment.InstanceId);
                 actions.Add(ProjectQuote(candidate, equipment, commandService.Preview(session, equipment)));
             }
-            foreach (string profileId in spawned.PlayerDivineProfileIds) Add(CombatActionKind.Divine, enemy?.Id, profileId);
+            foreach (string profileId in spawned.PlayerDivineProfileIds)
+            {
+                if (session.TryGetProfile(profileId, out var divine) && divine.Effect == CombatAttackEffect.RestoreSpirit)
+                    Add(CombatActionKind.Divine, player.Id, profileId);
+                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive))
+                    Add(CombatActionKind.Divine, target.Id, profileId);
+            }
             for (int slot = 0; slot < player.EquippedArtProfileIds.Count; slot++)
                 foreach (string profileId in player.AvailableArtProfileIds)
                     Add(CombatActionKind.SwapSpell, profile: profileId, slot: slot);
             return actions;
 
-            void Add(CombatActionKind kind, string target = null, string profile = null, int slot = -1)
+            void Add(CombatActionKind kind, string target = null, string profile = null, int slot = -1, int? direction = null)
             {
-                var candidate = new CombatActionCandidate(kind, player.Id, target, profile, commandContextVersion, slotIndex: slot);
+                var candidate = new CombatActionCandidate(kind, player.Id, target, profile, commandContextVersion,
+                    slotIndex: slot, attackDirection: direction);
                 CombatCommand command = ToCommand(candidate);
                 actions.Add(ProjectQuote(candidate, command, commandService.Preview(session, command)));
             }

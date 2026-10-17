@@ -150,13 +150,17 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
             Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);
-            Bind(actionBar?.DivineButton, () => { if (CanAct) Choose(CombatActionKind.Divine, targetId, divineProfileId); });
+            Bind(actionBar?.DivineButton, () =>
+            {
+                var choice = snapshot?.FindPreferredAction(CombatActionKind.Divine, divineProfileId)?.Candidate;
+                if (choice != null) Choose(CombatActionKind.Divine, choice.TargetId, choice.ProfileId);
+            });
             Bind(actionBar?.GuardButton, () => { if (CanAct) Choose(CombatActionKind.Guard); });
             Bind(actionBar?.SwapSpellButton, BeginSwapSpell);
             Bind(actionBar?.UseItemButton, () =>
             {
                 if (!CanAct) return;
-                var choice = snapshot.FindAction(CombatActionKind.UseItem)?.Candidate;
+                var choice = snapshot.FindPreferredAction(CombatActionKind.UseItem)?.Candidate;
                 if (choice == null) return;
                 CancelCandidate();
                 movementView?.Cancel();
@@ -167,7 +171,7 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.SwapEquipmentButton, () =>
             {
                 if (!CanAct) return;
-                var choice = snapshot.FindAction(CombatActionKind.SwapEquipment)?.Candidate;
+                var choice = snapshot.FindPreferredAction(CombatActionKind.SwapEquipment)?.Candidate;
                 if (choice == null) return;
                 CancelCandidate();
                 movementView?.Cancel();
@@ -287,6 +291,13 @@ namespace TianZhang.Features.CombatPresentation
                 return;
             }
             string selected = index == 0 ? firstArtTargetId : secondArtTargetId;
+            if (!art.Targets.Any(target => target.Id == selected && target.CanExecute))
+            {
+                selected = art.Targets.FirstOrDefault(target => target.CanExecute)?.Id;
+                if (index == 0) firstArtTargetId = selected;
+                else secondArtTargetId = selected;
+                actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
+            }
             foreach (CombatArtTargetSnapshot target in art.Targets)
             {
                 if (target != null && string.Equals(target.Id, selected, StringComparison.Ordinal))
@@ -320,7 +331,10 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (button == null) return;
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => { if (isActiveAndEnabled && acceptsCommands) action(); });
+            button.onClick.AddListener(() =>
+            {
+                if (isActiveAndEnabled && acceptsCommands && button.gameObject.activeInHierarchy && button.IsInteractable()) action();
+            });
         }
     }
 }

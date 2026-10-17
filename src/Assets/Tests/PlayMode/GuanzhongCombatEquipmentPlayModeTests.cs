@@ -156,9 +156,9 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 Debug.Log("[AOE route] " + profileId + "; step=" + step + "; " + AreaState());
                 bar.BasicAttackButton.onClick.Invoke();
-                Assert.IsTrue(input.IsSelectingAttack);
+                Assert.AreEqual(hud.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm, input.IsSelectingAttack);
                 Assert.IsFalse(input.IsAttackLocked);
-                for (int direction = 0; direction < 6; direction++)
+                for (int direction = 0; input.IsSelectingAttack && direction < 6; direction++)
                 {
                     string before = AreaState();
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, direction);
@@ -322,13 +322,14 @@ namespace TianZhang.Tests.PlayMode
                 SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 Assert.IsFalse(bar.SwapEquipmentButton.interactable);
-                // Exercise the existing handler as an isolated stale/programmatic input despite disabled UI.
                 bar.SwapEquipmentButton.onClick.Invoke();
-                Assert.IsFalse(input.Preview.CanConfirm);
-                Assert.IsFalse(input.Preview.EquipmentOwned);
-                StringAssert.Contains("未拥有该武器", input.Preview.Reason);
+                Assert.IsNull(input.Candidate);
+                var rejected = encounter.PreviewAction(hud.Snapshot.FindAction(CombatActionKind.SwapEquipment).Candidate);
+                Assert.IsFalse(rejected.CanConfirm);
+                Assert.IsFalse(rejected.EquipmentOwned);
+                StringAssert.Contains("未拥有该武器", rejected.Reason);
+                encounter.ConfirmAction(rejected.Candidate);
                 AssertVisibleText(bar.SwapEquipmentButton.GetComponentInChildren<Text>(), "missing-equipment-button");
-                AssertPreviewBounds(preview, "missing-equipment-preview");
                 string directory = Path.Combine(Application.dataPath, "../Logs/equipment"); Directory.CreateDirectory(directory);
                 ScreenCapture.CaptureScreenshot(Path.Combine(directory, "missing-" + width + ".png"));
                 for (int frame = 0; frame < 3; frame++) yield return null;
