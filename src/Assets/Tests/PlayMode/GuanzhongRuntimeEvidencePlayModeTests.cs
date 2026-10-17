@@ -29,7 +29,7 @@ using Object = UnityEngine.Object;
 namespace TianZhang.Tests.PlayMode
 {
     // Bounty UI acceptance uses an explicit controlled combat precondition, not player-balance evidence.
-    // Battlefield measurements remain baseline probes for the pending obstacle/spawn tasks.
+    // Rock acceptance uses the formal scene, production movement, and original mesh evidence.
     // Input goes through InputSystem -> the production EventSystem, never Button.onClick.Invoke.
     public sealed class GuanzhongRuntimeEvidencePlayModeTests
     {
@@ -330,6 +330,127 @@ namespace TianZhang.Tests.PlayMode
                 Write("battlefield-" + size.x, lines);
                 yield return Capture("battlefield-" + size.x);
             }
+
+            // Pan through the production camera input so the tracker no longer covers the back rocks.
+            EventSystem.current.SetSelectedGameObject(null);
+            yield return Pointer(new Vector2(Screen.width * .5f, Screen.height * .5f), false);
+            Vector3 initialCamera = camera.transform.position;
+            yield return PanCamera(camera, Key.D, () => camera.transform.position.x >= initialCamera.x + 2.5f);
+            yield return PanCamera(camera, Key.W, () => camera.transform.position.z >= initialCamera.z + 2f);
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return SetGameSize(size);
+                var lines = new List<string> { Header(), "camera after D/W input=" + camera.transform.position.ToString("F5") };
+                foreach (string name in names)
+                {
+                    Transform obstacle = objects.Single(item => item.name == name);
+                    MeshFilter filter = obstacle.GetComponentsInChildren<MeshFilter>().Single();
+#if UNITY_EDITOR
+                    Assert.That(UnityEditor.AssetDatabase.GetAssetPath(filter.sharedMesh),
+                        Is.EqualTo("Assets/Art/Environments/Guanzhong/RockCluster.fbx"));
+#endif
+                    Vector3[] points = filter.sharedMesh.vertices.Select(filter.transform.TransformPoint).ToArray();
+                    var bounds = new Bounds(points[0], Vector3.zero);
+                    foreach (Vector3 point in points)
+                    {
+                        bounds.Encapsulate(point);
+                        Vector3 p = point - obstacle.position;
+                        Assert.That(Mathf.Abs(p.x), Is.LessThanOrEqualTo(.45001f));
+                        Assert.That(Mathf.Abs(.5f * p.x + .8660254f * p.z), Is.LessThanOrEqualTo(.45001f));
+                        Assert.That(Mathf.Abs(.5f * p.x - .8660254f * p.z), Is.LessThanOrEqualTo(.45001f));
+                    }
+                    Assert.That(Vector2.Distance(new Vector2(bounds.center.x, bounds.center.z),
+                        new Vector2(obstacle.position.x, obstacle.position.z)), Is.LessThan(.01f));
+                    Assert.That(bounds.max.y - .3404328f, Is.EqualTo(.60f).Within(.05f));
+                    Vector3[] screen = points.Select(camera.WorldToScreenPoint).ToArray();
+                    Assert.That(screen.All(p => p.z > 0 && p.x > 0 && p.x < Screen.width && p.y > 0 && p.y < Screen.height), Is.True);
+                    Rect rockRect = Rect.MinMaxRect(screen.Min(p => p.x), screen.Min(p => p.y), screen.Max(p => p.x), screen.Max(p => p.y));
+                    var trackerCorners = new Vector3[4];
+                    Get<GameObject>(Find<CombatBountyTrackerView>(), "root").GetComponent<RectTransform>().GetWorldCorners(trackerCorners);
+                    Assert.That(rockRect.Overlaps(Rect.MinMaxRect(trackerCorners[0].x, trackerCorners[0].y, trackerCorners[2].x, trackerCorners[2].y)), Is.False);
+                    lines.Add(name + "; actualMeshMin=" + bounds.min.ToString("F6") + "; actualMeshMax=" + bounds.max.ToString("F6") + "; screen=" + rockRect);
+                }
+                Write("rocks-unobstructed-" + size.x, lines);
+                yield return Capture("rocks-unobstructed-" + size.x);
+            }
+
+            var movementTrace = new List<string> { Header(), "Production stats and AI unchanged; movement via mouse selection and confirmation." };
+            var detour = new List<CombatUnitPresentationHex>();
+            yield return MoveAroundRock(2, 0, encounter, spawned, camera, movementTrace, null);
+            yield return RockInputReady(encounter);
+            CombatActionBarView bar = Find<CombatActionBarView>();
+            int apBefore = spawned.Player.ActionPointsRemainingUnits;
+            HexCoord positionBefore = spawned.Player.Position;
+            yield return Click(bar.MoveButton);
+            Transform blocked = objects.Single(item => item.name == "GuanzhongHex_2_1");
+            Vector2 blockedPoint = camera.WorldToScreenPoint(blocked.position);
+            yield return Pointer(blockedPoint, false);
+            yield return Pointer(blockedPoint, true);
+            yield return Pointer(blockedPoint, false);
+            Assert.That(Find<CombatMovementView>().Selected, Is.Null, "Clicking the rock must not select a movement destination.");
+            Assert.That(spawned.Player.Position, Is.EqualTo(positionBefore));
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(apBefore));
+            yield return KeyPress(Key.Escape);
+            movementTrace.Add("rock 2,1 click rejected; position=" + positionBefore + "; AP=" + apBefore);
+            yield return MoveAroundRock(1, 2, encounter, spawned, camera, movementTrace, detour);
+            yield return MoveAroundRock(2, 2, encounter, spawned, camera, movementTrace, detour);
+            Assert.That(detour.Count, Is.EqualTo(3), "The blocked direct distance is two; the actual detour is three steps.");
+            Write("rock-detour", movementTrace);
+            yield return Capture("rock-detour-complete");
+        }
+
+        private IEnumerator PanCamera(Camera camera, Key key, Func<bool> reached)
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+            float deadline = Time.realtimeSinceStartup + 5;
+            while (!reached() && Time.realtimeSinceStartup < deadline) yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+            Assert.That(reached(), Is.True, "Production camera input did not reach the inspection viewpoint: " + camera.transform.position);
+        }
+
+        private static IEnumerator RockInputReady(EncounterCoordinator encounter)
+        {
+            float deadline = Time.realtimeSinceStartup + 25;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                var hud = Find<CombatHudPresenter>().Snapshot;
+                if (hud != null && hud.AcceptsCommands && !encounter.IsPresenting) yield break;
+                yield return null;
+            }
+            Assert.Fail("Formal encounter did not yield player input during the rock detour.");
+        }
+
+        private IEnumerator MoveAroundRock(int q, int r, EncounterCoordinator encounter, AdventureSpawnSet spawned,
+            Camera camera, List<string> trace, List<CombatUnitPresentationHex> path)
+        {
+            yield return RockInputReady(encounter);
+            var bar = Find<CombatActionBarView>();
+            var option = Find<CombatHudPresenter>().Snapshot.Movement.Options.SingleOrDefault(o => o.Destination.Q == q && o.Destination.R == r);
+            if (option == null)
+            {
+                Assert.That(bar.WaitButton.interactable, Is.True, "The next leg requires a legal turn boundary.");
+                yield return Click(bar.WaitButton);
+                yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
+                yield return RockInputReady(encounter);
+                option = Find<CombatHudPresenter>().Snapshot.Movement.Options.Single(o => o.Destination.Q == q && o.Destination.R == r);
+            }
+            Assert.That(option.Path.Any(p => (p.Q == 2 || p.Q == 3) && (p.R == 1 || p.R == 4)), Is.False);
+            trace.Add("from=" + spawned.Player.Position + "; to=" + q + "," + r + "; path=" + string.Join("/", option.Path.Select(p => p.Q + "," + p.R)) + "; cost=" + option.Cost);
+            int ap = spawned.Player.ActionPointsRemainingUnits;
+            yield return Click(bar.MoveButton);
+            Vector2 point = camera.WorldToScreenPoint(GameObject.Find("GuanzhongHex_" + q + "_" + r).transform.position);
+            yield return Pointer(point, false);
+            yield return Pointer(point, true);
+            yield return Pointer(point, false);
+            Assert.That(Find<CombatMovementView>().Selected, Is.EqualTo(option));
+            yield return Click(bar.ConfirmMoveButton);
+            Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(q, r)));
+            trace.Add("committed=" + spawned.Player.Position + "; AP before=" + ap + "; after=" + spawned.Player.ActionPointsRemainingUnits + "; HP=" + spawned.Player.CurrentHealth);
+            path?.AddRange(option.Path);
+            for (float deadline = Time.realtimeSinceStartup + 15; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.That(encounter.IsPresenting, Is.False);
+            yield return Capture("rock-move-" + q + "-" + r);
         }
 
         [UnityTest]

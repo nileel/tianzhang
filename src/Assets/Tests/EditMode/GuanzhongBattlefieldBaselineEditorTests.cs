@@ -19,7 +19,7 @@ namespace TianZhang.Tests.EditMode
         {
             float highest = float.NegativeInfinity;
             Vector3 center = ground.position;
-            foreach (MeshFilter filter in ground.GetComponentsInChildren<MeshFilter>(true))
+            foreach (MeshFilter filter in ground.Find("MeasuredFbxAlignment").GetComponentsInChildren<MeshFilter>(true))
             {
                 Mesh mesh = filter.sharedMesh;
                 Assert.IsNotNull(mesh);
@@ -81,8 +81,7 @@ namespace TianZhang.Tests.EditMode
                     GuanzhongTerrainAssetBuilder.StairPrefabPath &&
                     PrefabUtility.GetOutermostPrefabInstanceRoot(item.gameObject) == item.gameObject)
                 .ToArray();
-            Assert.AreEqual(4, stairs.Length,
-                "The formal battlefield must show exactly the four configured obstacle cells.");
+            Assert.Zero(stairs.Length, "Stair remains a shared reserve asset, outside the formal battlefield.");
         }
 
         [Test]
@@ -174,13 +173,55 @@ namespace TianZhang.Tests.EditMode
                 if (expectedObstacles.Contains(coord))
                 {
                     Assert.IsNotNull(obstacle, "Missing visible obstacle at " + coord + ".");
-                    Assert.AreEqual(GuanzhongTerrainAssetBuilder.StairPrefabPath,
+                    Assert.AreEqual(GuanzhongTerrainAssetBuilder.RockPrefabPath,
                         PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obstacle.gameObject));
+                    Assert.IsFalse(profile.battlefieldCells.Single(item => item.q == coord.x && item.r == coord.y).blocksLineOfSight);
+                    AssertRockGeometry(obstacle, CenterSurfaceY(cell));
                 }
                 else
                     Assert.IsNull(obstacle, "Walkable cell must not gain an obstacle visual at " + coord + ".");
             }
 
+        }
+
+        private static void AssertRockGeometry(Transform obstacle, float groundY)
+        {
+            MeshFilter filter = obstacle.GetComponentsInChildren<MeshFilter>(true).Single();
+            Assert.AreEqual(GuanzhongTerrainAssetBuilder.AssetRoot + "/RockCluster.fbx", AssetDatabase.GetAssetPath(filter.sharedMesh));
+            Vector3[] vertices = filter.sharedMesh.vertices.Select(filter.transform.TransformPoint).ToArray();
+            var bounds = new Bounds(vertices[0], Vector3.zero);
+            foreach (Vector3 vertex in vertices)
+            {
+                bounds.Encapsulate(vertex);
+                Vector3 p = vertex - obstacle.position;
+                Assert.LessOrEqual(Mathf.Abs(p.x), .45001f);
+                Assert.LessOrEqual(Mathf.Abs(.5f * p.x + .8660254f * p.z), .45001f);
+                Assert.LessOrEqual(Mathf.Abs(.5f * p.x - .8660254f * p.z), .45001f);
+            }
+            Assert.Less(Vector2.Distance(new Vector2(bounds.center.x, bounds.center.z),
+                new Vector2(obstacle.position.x, obstacle.position.z)), .01f);
+            Assert.That(bounds.max.y - groundY, Is.EqualTo(.60f).Within(.05f));
+            Assert.AreEqual(1, obstacle.GetComponentsInChildren<Renderer>(true).Length);
+        }
+
+        [Test]
+        public void RockBuilderCanRebuildTwiceAndReopenTheSavedBattlefield()
+        {
+            for (int pass = 0; pass < 2; pass++)
+            {
+                GuanzhongTerrainAssetBuilder.BuildRockClusterAndScene();
+                Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+                Assert.IsFalse(scene.isDirty);
+                Transform[] rocks = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                    .Where(item => item.name.StartsWith("GuanzhongObstacle_")).ToArray();
+                Assert.AreEqual(4, rocks.Length);
+                foreach (Transform rock in rocks)
+                {
+                    Assert.AreEqual(GuanzhongTerrainAssetBuilder.RockPrefabPath,
+                        PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rock.gameObject));
+                    AssertRockGeometry(rock, CenterSurfaceY(rock.parent));
+                }
+            }
         }
     }
 }

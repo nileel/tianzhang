@@ -1240,7 +1240,7 @@ namespace TianZhang.Editor
 
             var battlefield = new GameObject("GuanzhongBattlefield");
             GameObject tilePrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.TilePrefabPath);
-            GameObject stairPrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.StairPrefabPath);
+            GameObject rockPrefab = SceneBuildSupport.RequireAsset<GameObject>(GuanzhongTerrainAssetBuilder.RockPrefabPath);
             foreach (Vector2Int coord in cells)
             {
                 var cell = (GameObject)PrefabUtility.InstantiatePrefab(tilePrefab);
@@ -1254,7 +1254,7 @@ namespace TianZhang.Editor
                     item => item.q == coord.x && item.r == coord.y);
                 if (definition.blocksGroundMove)
                 {
-                    var obstacle = (GameObject)PrefabUtility.InstantiatePrefab(stairPrefab);
+                    var obstacle = (GameObject)PrefabUtility.InstantiatePrefab(rockPrefab);
                     obstacle.name = "GuanzhongObstacle_" + coord.x + "_" + coord.y;
                     obstacle.transform.SetParent(cell.transform, false);
                 }

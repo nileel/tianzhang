@@ -10,12 +10,13 @@ using UnityEngine.SceneManagement;
 
 namespace TianZhang.Editor
 {
-    /// <summary>Imports only the two approved initial Guanzhong terrain sources.</summary>
+    /// <summary>Builds the approved Guanzhong terrain and independent obstacle prefabs.</summary>
     public static class GuanzhongTerrainAssetBuilder
     {
         public const string AssetRoot = "Assets/Art/Environments/Guanzhong";
         public const string TilePrefabPath = AssetRoot + "/Tile.prefab";
         public const string StairPrefabPath = AssetRoot + "/Stair.prefab";
+        public const string RockPrefabPath = AssetRoot + "/RockCluster.prefab";
         private static string EvidenceRoot => Path.GetFullPath(Path.Combine(Application.dataPath,
             "../../assets/source/environments/guanzhong-first-bounty/initial-v1"));
 
@@ -30,9 +31,103 @@ namespace TianZhang.Editor
             BuildAsset("Stair", "d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9",
                 new Vector3(-2.4696964348630835e-8f, -1.8870143808589007e-9f, -.4071731671681368f),
                 new Quaternion(0, -.7071067811865476f, 0, .7071067811865475f), .4143463054212788f);
+            BuildRockClusterAsset();
             AdventureSceneBuilder.Build();
             EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
             WriteSceneEvidence();
+        }
+
+        [MenuItem("天章/美术/构建关中岩石与正式战场")]
+        public static void BuildRockClusterAndScene()
+        {
+            BuildRockClusterAsset();
+            AdventureSceneBuilder.RebuildGuanzhongBattlefield();
+        }
+
+        private static void BuildRockClusterAsset()
+        {
+            const string sourcePath = AssetRoot + "/RockCluster.fbx";
+            using (var sha = SHA256.Create())
+            {
+                string hash = BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(sourcePath)))
+                    .Replace("-", "").ToLowerInvariant();
+                if (hash != "1b2afc88171c6c8144a61616cf3129824a9a65c5363d15d66a76721940c824ba")
+                    throw new InvalidOperationException("Original Tripo rock FBX hash mismatch.");
+            }
+            var importer = AssetImporter.GetAtPath(sourcePath) as ModelImporter;
+            if (importer == null) throw new InvalidOperationException("Missing original rock FBX.");
+            importer.isReadable = true;
+            importer.importAnimation = false;
+            importer.importCameras = false;
+            importer.importLights = false;
+            importer.addCollider = false;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            importer.SaveAndReimport();
+
+            string[] textures = { "RockCluster_basecolor.JPEG", "RockCluster_normal.PNG", "RockCluster_metallic_smoothness.png" };
+            for (int index = 0; index < textures.Length; index++)
+            {
+                var textureImporter = (TextureImporter)AssetImporter.GetAtPath(AssetRoot + "/" + textures[index]);
+                textureImporter.maxTextureSize = 4096;
+                textureImporter.sRGBTexture = index == 0;
+                textureImporter.textureType = index == 1 ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                textureImporter.SaveAndReimport();
+            }
+            string materialPath = AssetRoot + "/RockCluster.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+            material.SetColor("_BaseColor", Color.white);
+            material.SetTexture("_BaseMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[0]));
+            material.SetTexture("_BumpMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[1]));
+            material.SetTexture("_MetallicGlossMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[2]));
+            material.SetFloat("_Smoothness", 1);
+            material.SetFloat("_BumpScale", 1);
+            material.EnableKeyword("_NORMALMAP");
+            material.EnableKeyword("_METALLICSPECGLOSSMAP");
+            EditorUtility.SetDirty(material);
+
+            var root = new GameObject("RockCluster");
+            try
+            {
+                var alignment = new GameObject("MeasuredFbxAlignment").transform;
+                alignment.SetParent(root.transform, false);
+                // Original mesh stays byte-identical. Fit its measured footprint with prefab transforms.
+                alignment.localRotation = Quaternion.Euler(0, 54.8f, 0);
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(SceneBuildSupport.RequireAsset<GameObject>(sourcePath));
+                instance.transform.SetParent(alignment, false);
+                Vector3[] vertices = instance.GetComponentsInChildren<MeshFilter>(true)
+                    .SelectMany(filter => filter.sharedMesh.vertices.Select(filter.transform.TransformPoint)).ToArray();
+                var bounds = new Bounds(vertices[0], Vector3.zero);
+                foreach (Vector3 vertex in vertices) bounds.Encapsulate(vertex);
+                float extent = vertices.Max(vertex =>
+                {
+                    Vector3 p = vertex - bounds.center;
+                    return Mathf.Max(Mathf.Abs(p.x), Mathf.Abs(.5f * p.x + .8660254f * p.z),
+                        Mathf.Abs(.5f * p.x - .8660254f * p.z));
+                });
+                float horizontalScale = .4499f / extent;
+                // Bury the source's uneven underside; top remains 0.60 m above the measured tile center.
+                float verticalScale = (.6004328f + .16f) / bounds.size.y;
+                alignment.localScale = new Vector3(horizontalScale, verticalScale, horizontalScale);
+                alignment.localPosition = new Vector3(-bounds.center.x * horizontalScale,
+                    -.16f - bounds.min.y * verticalScale, -bounds.center.z * horizontalScale);
+                foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+                {
+                    renderer.sharedMaterials = Enumerable.Repeat(material, renderer.sharedMaterials.Length).ToArray();
+                    renderer.shadowCastingMode = ShadowCastingMode.On;
+                    renderer.receiveShadows = true;
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                }
+                if (PrefabUtility.SaveAsPrefabAsset(root, RockPrefabPath) == null)
+                    throw new InvalidOperationException("Could not save rock prefab.");
+                Debug.Log($"GUANZHONG_ROCK_FIT sourceBounds={bounds}; scale={alignment.localScale:F7}; position={alignment.localPosition:F7}");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+            AssetDatabase.SaveAssets();
         }
 
         private static void BuildAsset(string kind, string expectedHash, Vector3 position, Quaternion rotation, float scale)
