@@ -39,11 +39,9 @@ namespace TianZhang.Editor
             GameObject entry = LayoutPanel(canvas.transform, "AdventureReturnEntry");
             RectTransform entryRect = entry.GetComponent<RectTransform>();
             RectTransform explorationRect = LayoutObject(canvas.transform, "AdventurePanel");
-            // Same canvas space: place beside the proven exploration bounds, never over its heading.
-            entryRect.anchorMin = entryRect.anchorMax = explorationRect.anchorMax;
-            entryRect.pivot = Vector2.up;
-            entryRect.anchoredPosition = new Vector2(24, 0);
-            entryRect.sizeDelta = new Vector2(explorationRect.rect.width, 144);
+            SceneBuildSupport.SetObject(hud, "returnEntry", entry);
+            SceneBuildSupport.SetObject(hud, "explorationPanel", explorationRect);
+            hud.ApplyReturnEntryLayout(false);
             Button button = LayoutButton(entry.transform, "ReturnButton", "返回关中城");
             PlaceLayoutRect(button.GetComponent<RectTransform>(), 16, 68, entryRect.rect.width - 32, 60);
             Text label = button.GetComponentInChildren<Text>();
@@ -77,7 +75,6 @@ namespace TianZhang.Editor
             foreach (Button action in new[] { confirm, cancel }) action.GetComponentInChildren<Text>().fontSize = 24;
             confirm.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = cancel, selectOnRight = cancel };
             cancel.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = confirm, selectOnRight = confirm };
-            SceneBuildSupport.SetObject(hud, "returnEntry", entry);
             SceneBuildSupport.SetObject(hud, "returnButton", button);
             SceneBuildSupport.SetObject(hud, "returnLabel", label);
             SceneBuildSupport.SetObject(hud, "returnReason", reason);

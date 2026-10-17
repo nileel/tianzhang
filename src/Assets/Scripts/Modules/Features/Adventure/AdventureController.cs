@@ -64,7 +64,7 @@ namespace TianZhang.Features.Adventure
             else if (CurrentState == AdventureSceneState.Combat) available = encounters.CanWithdraw(out reason);
             if (IsWithdrawalConfirmationOpen) { available = false; reason = "请确认撤离或继续战斗"; }
             hud.PresentReturnEntry(HasGuanzhongReturn, label, available && isActiveAndEnabled, reason,
-                IsWithdrawalConfirmationOpen);
+                IsWithdrawalConfirmationOpen, CurrentState == AdventureSceneState.Combat);
         }
 
         public void RequestReturn()

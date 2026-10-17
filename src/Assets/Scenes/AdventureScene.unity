@@ -3204,6 +3204,7 @@ MonoBehaviour:
   nodeHover: {fileID: -3476323663699632403, guid: 6253602f0cbbfb549b61545ab484f690, type: 3}
   nodeSelected: {fileID: -6710257201445114892, guid: 6253602f0cbbfb549b61545ab484f690, type: 3}
   returnEntry: {fileID: 762766665}
+  explorationPanel: {fileID: 1502999378}
   returnButton: {fileID: 21575224}
   returnLabel: {fileID: 640734859}
   returnReason: {fileID: 1511099777}

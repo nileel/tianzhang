@@ -29,6 +29,7 @@ using UnityEngine.TestTools;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -172,28 +173,32 @@ namespace TianZhang.Tests.PlayMode
             ExecuteEvents.Execute(receiver, data, ExecuteEvents.pointerClickHandler);
         }
 
-        private IEnumerator Capture(string stage)
+        private IEnumerator Capture(string stage, int singleWidth = 0)
         {
-            foreach (int width in new[] { 1920, 1280 })
+            foreach (int width in singleWidth == 0 ? new[] { 1920, 1366 } : new[] { singleWidth })
             {
-                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 720);
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 Canvas.ForceUpdateCanvases();
                 Assert.AreEqual(width, Screen.width);
-                Assert.AreEqual(width == 1920 ? 1080 : 720, Screen.height);
+                Assert.AreEqual(width == 1920 ? 1080 : 768, Screen.height);
                 foreach (Text text in Field<GameObject>(adventureHud, "returnEntry").GetComponentsInChildren<Text>())
                     AssertReadable(text);
                 if (adventure.IsWithdrawalConfirmationOpen)
                     foreach (Text text in Field<GameObject>(adventureHud, "withdrawalConfirmation").GetComponentsInChildren<Text>())
                         AssertReadable(text);
-                string directory = Path.Combine(Application.dataPath, "../Logs/withdrawal"); Directory.CreateDirectory(directory);
-                ScreenCapture.CaptureScreenshot(Path.Combine(directory, stage + "-" + width + ".png"));
+                string directory = Path.Combine(Application.dataPath, "../Logs/q4-withdrawal"); Directory.CreateDirectory(directory);
+                string screenshot = Path.Combine(directory, stage + "-" + width + ".png");
+                File.Delete(screenshot);
+                ScreenCapture.CaptureScreenshot(screenshot);
                 for (int frame = 0; frame < 3; frame++) yield return null;
+                Assert.IsTrue(File.Exists(screenshot));
                 var rect = ReturnButton.GetComponent<RectTransform>(); var corners = new Vector3[4]; rect.GetWorldCorners(corners);
                 var canvas = rect.GetComponentInParent<Canvas>();
                 var panel = Field<GameObject>(combatHud, "explorationPanel").GetComponent<RectTransform>();
                 var panelCorners = new Vector3[4]; panel.GetWorldCorners(panelCorners);
-                Assert.GreaterOrEqual(corners[0].x, panelCorners[2].x, "Return entry overlaps exploration content.");
+                AssertEntryLayout();
+                GuanzhongCombatLayoutPlayModeTests.Capture("q4-" + stage + "-" + width);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)canvas.transform,
                     RectTransformUtility.WorldToScreenPoint(null, panelCorners[2]), null, out Vector2 sourceTopRight);
                 Debug.Log("[WithdrawalBounds] source=" + panel.name + "; sourceParent=" + panel.parent.name +
@@ -206,6 +211,88 @@ namespace TianZhang.Tests.PlayMode
                     "; source=" + rect.name + "; parent=" + rect.parent.name + "; canvas=" + rect.GetComponentInParent<Canvas>().name +
                     "; min=" + corners[0] + "; max=" + corners[2] + "; writer=AdventureController.LateUpdate/AdventureHudPresenter.PresentReturnEntry");
             }
+        }
+
+        private static Rect ScreenRect(RectTransform rect)
+        {
+            var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private void AssertEntryLayout()
+        {
+            var rects = SceneManager.GetActiveScene().GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<RectTransform>(true)).ToArray();
+            var entry = rects.Single(rect => rect.name == "AdventureReturnEntry");
+            var panel = Field<GameObject>(combatHud, "explorationPanel").GetComponent<RectTransform>();
+            Assert.AreSame(panel.parent, entry.parent);
+            var canvas = entry.GetComponentInParent<Canvas>();
+            Assert.AreEqual(RenderMode.ScreenSpaceOverlay, canvas.renderMode);
+            Rect bounds = ScreenRect(entry);
+            Assert.GreaterOrEqual(bounds.xMin, 0); Assert.GreaterOrEqual(bounds.yMin, 0);
+            Assert.LessOrEqual(bounds.xMax, Screen.width); Assert.LessOrEqual(bounds.yMax, Screen.height);
+            if (adventure.CurrentState == AdventureSceneState.Combat)
+            {
+                Assert.Less(bounds.xMin, Screen.width * .05f, "Entry must use the left screen margin.");
+                Assert.Greater(bounds.yMin, Screen.height * .8f, "Entry must stay in the upper-left corner.");
+                foreach (string name in new[] { "CombatTimelineRoot", "TimelineFocus", "CombatHotbar" })
+                {
+                    var other = rects.Single(rect => rect.name == name);
+                    if (other.gameObject.activeInHierarchy)
+                        Assert.IsFalse(bounds.Overlaps(ScreenRect(other)), "Return entry overlaps " + name);
+                }
+            }
+            else Assert.GreaterOrEqual(bounds.xMin, ScreenRect(panel).xMax, "Return entry overlaps exploration content.");
+            Rect button = ScreenRect(ReturnButton.GetComponent<RectTransform>());
+            Rect reason = ScreenRect(Field<Text>(adventureHud, "returnReason").rectTransform);
+            Assert.IsTrue(bounds.Contains(reason.min) && bounds.Contains(reason.max));
+            Assert.IsFalse(button.Overlaps(reason), "Disabled reason must not overlap the button.");
+        }
+
+        private IEnumerator ClickWithMouse(Button button)
+        {
+            Canvas.ForceUpdateCanvases();
+            Vector2 point = ScreenRect(button.GetComponent<RectTransform>()).center;
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, hits);
+            Assert.IsNotEmpty(hits);
+            Assert.AreSame(button.gameObject, ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject));
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+        }
+
+        [UnityTest] public IEnumerator ReturnEntryMouseAndReentryAt1920() => VerifyReturnEntryMouseAndReentry(1920);
+        [UnityTest] public IEnumerator ReturnEntryMouseAndReentryAt1366() => VerifyReturnEntryMouseAndReentry(1366);
+
+        private IEnumerator VerifyReturnEntryMouseAndReentry(int width)
+        {
+            yield return EnterFormalAdventure(); yield return Capture("mouse-exploration", width);
+            yield return BeginRealEncounter(); yield return Capture("mouse-combat", width);
+            string before = State();
+            yield return ClickWithMouse(ReturnButton);
+            Assert.IsTrue(adventure.IsWithdrawalConfirmationOpen);
+            yield return Capture("mouse-confirmation", width);
+            yield return ClickWithMouse(ContinueButton);
+            Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen); Assert.AreEqual(before, State());
+            AssertEntryLayout();
+            yield return ClickWithMouse(ReturnButton); yield return ClickWithMouse(ConfirmButton);
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            Assert.AreEqual(0, GameBootstrap.RequireRuntime().Bounties.GetState(Bounty).Progress);
+            Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
+            yield return SceneReady(GameplaySceneNames.Adventure); yield return null;
+            adventure = Find<AdventureController>(); encounter = Find<EncounterCoordinator>();
+            adventureHud = Find<AdventureHudPresenter>(); combatHud = Find<CombatHudPresenter>();
+            commands = Find<CombatCommandInput>(); actions = Find<CombatActionBarView>();
+            Assert.AreEqual(AdventureSceneState.Exploration, adventure.CurrentState);
+            yield return Capture("mouse-reentered", width);
+            string disk = File.ReadAllText(Directory.GetFiles(saveDirectory, "*.json").Single());
+            yield return ClickWithMouse(ReturnButton);
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            Assert.AreEqual(disk, File.ReadAllText(Directory.GetFiles(saveDirectory, "*.json").Single()));
+            Debug.Log("[Q4] Real mouse confirmation, cancellation, withdrawal, re-entry and exploration return passed at " + width);
         }
 
         private static void AssertReadable(Text text)
@@ -344,6 +431,9 @@ namespace TianZhang.Tests.PlayMode
             adventure.RequestReturn(); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
             yield return null; Assert.IsFalse(ReturnButton.interactable);
             Assert.AreEqual("行动演出中，请稍后撤离", Field<Text>(adventureHud, "returnReason").text);
+            AssertEntryLayout(); PointerClick(ReturnButton);
+            Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
+            AssertReadable(Field<Text>(adventureHud, "returnReason"));
             yield return PlayerReady();
             Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
             encounter.RequestEndTurn("player");
@@ -358,6 +448,9 @@ namespace TianZhang.Tests.PlayMode
             adventure.RequestReturn(); yield return null;
             Assert.IsFalse(ReturnButton.interactable); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
             Assert.AreEqual("敌方行动中，请等待你的行动", Field<Text>(adventureHud, "returnReason").text);
+            AssertEntryLayout(); PointerClick(ReturnButton);
+            Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
+            AssertReadable(Field<Text>(adventureHud, "returnReason"));
             yield return PlayerReady(); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
             // Existing isolated outcome fixture changes only this temporary enemy snapshot, not production content.
             GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);

@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using TianZhang.Editor;
+using TianZhang.Features.Adventure;
 using TianZhang.Features.CombatPresentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -20,6 +21,32 @@ namespace TianZhang.Tests.EditMode
             AdventureSceneBuilder.RebuildCombatActionPreview();
             AdventureSceneBuilder.RebuildCombatTimeline();
             SavedFormalLayoutKeepsReferencesAndSingleWriters();
+        }
+
+        [Test] public void WithdrawalRebuildAndReopenKeepOneBoundEntry()
+        {
+            AdventureSceneBuilder.RebuildWithdrawalEntry();
+            AdventureSceneBuilder.RebuildWithdrawalEntry();
+            var scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            var rects = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RectTransform>(true)).ToArray();
+            var entry = rects.Single(r => r.name == "AdventureReturnEntry");
+            var panel = rects.Single(r => r.name == "AdventurePanel");
+            var hud = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<AdventureHudPresenter>()).Single();
+            var data = new SerializedObject(hud);
+            Assert.AreSame(entry.gameObject, data.FindProperty("returnEntry").objectReferenceValue);
+            Assert.AreSame(panel, data.FindProperty("explorationPanel").objectReferenceValue);
+            Assert.AreSame(entry.Find("ReturnButton").GetComponent<Button>(), data.FindProperty("returnButton").objectReferenceValue);
+            Assert.AreSame(entry.Find("ReturnReason").GetComponent<Text>(), data.FindProperty("returnReason").objectReferenceValue);
+            Assert.AreEqual("UICanvas", entry.parent.name);
+            Assert.AreSame(panel.parent, entry.parent);
+            Assert.IsNull(entry.GetComponent<LayoutGroup>());
+            Assert.AreEqual(panel.anchorMax, entry.anchorMin);
+            Assert.AreEqual(panel.anchorMax, entry.anchorMax);
+            Assert.AreEqual(Vector2.up, entry.pivot);
+            Assert.AreEqual(new Vector2(24, 0), entry.anchoredPosition);
+            Assert.AreEqual(new Vector2(panel.rect.width, 144), entry.sizeDelta);
+            Assert.IsFalse(entry.gameObject.activeSelf);
+            Assert.IsFalse(rects.Single(r => r.name == "AdventureWithdrawalConfirmation").gameObject.activeSelf);
         }
 
         [Test] public void SavedFormalLayoutKeepsReferencesAndSingleWriters()

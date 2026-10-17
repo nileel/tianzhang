@@ -16,6 +16,7 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Sprite nodeHover;
         [SerializeField] private Sprite nodeSelected;
         [SerializeField] private GameObject returnEntry;
+        [SerializeField] private RectTransform explorationPanel;
         [SerializeField] private Button returnButton;
         [SerializeField] private Text returnLabel;
         [SerializeField] private Text returnReason;
@@ -28,15 +29,29 @@ namespace TianZhang.Features.Adventure
         public void ConfigureWithdrawal(Action request, Action confirm, Action cancel)
         {
             if (returnButton == null || withdrawalConfirmation == null || confirmWithdrawalButton == null ||
-                continueCombatButton == null || returnEntry == null || returnLabel == null || returnReason == null)
+                continueCombatButton == null || returnEntry == null || explorationPanel == null || returnLabel == null || returnReason == null)
                 throw new InvalidOperationException("adventure_withdrawal_ui_missing");
             returnButton.onClick.AddListener(() => request());
             confirmWithdrawalButton.onClick.AddListener(() => confirm());
             continueCombatButton.onClick.AddListener(() => cancel());
         }
 
-        public void PresentReturnEntry(bool visible, string label, bool available, string reason, bool confirming)
+        public void ApplyReturnEntryLayout(bool inCombat)
         {
+            if (returnEntry == null || explorationPanel == null) return;
+            var rect = (RectTransform)returnEntry.transform;
+            // Both are direct children of the same canvas. Reuse the exploration panel's outer margins.
+            rect.anchorMin = rect.anchorMax = inCombat
+                ? new Vector2(explorationPanel.anchorMin.x, explorationPanel.anchorMax.y)
+                : explorationPanel.anchorMax;
+            rect.pivot = Vector2.up;
+            rect.anchoredPosition = inCombat ? Vector2.zero : new Vector2(24, 0);
+            rect.sizeDelta = new Vector2(explorationPanel.rect.width, 144);
+        }
+
+        public void PresentReturnEntry(bool visible, string label, bool available, string reason, bool confirming, bool inCombat)
+        {
+            ApplyReturnEntryLayout(inCombat);
             returnEntry?.SetActive(visible);
             if (returnLabel != null) returnLabel.text = label;
             if (returnReason != null) returnReason.text = reason ?? string.Empty;
