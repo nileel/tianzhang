@@ -5,6 +5,7 @@
 
 | ID | 路由 | 主责 | 优先级 | 领域 | 阶段 | 标题 | 任务卡 |
 |----|------|------|--------|------|------|------|--------|
+| A-GZ-R2-ROCK-ASSET-01 | codex_execute | codex | P1 | unity | implementation | 整格岩石簇源资产生产与签收 | 开发管理/任务卡/A-GZ-R2-ROCK-ASSET-01.txt |
 | U-GZ-R3-ACTION-AVAILABILITY-01 | codex_execute | codex | P1 | unity | implementation | 战斗行动按钮统一资源与可执行性门禁 | 开发管理/任务卡/U-GZ-R3-ACTION-AVAILABILITY-01.txt |
 | U-GZ-R3-CT-TIMELINE-01 | codex_execute | codex | P1 | unity | implementation | 行动轴按真实CT定位并播放回合间推进 | 开发管理/任务卡/U-GZ-R3-CT-TIMELINE-01.txt |
 | U-GZ-R3-DIRECT-CAST-01 | codex_execute | codex | P1 | unity | implementation | 普攻与施法选定目标后直接执行 | 开发管理/任务卡/U-GZ-R3-DIRECT-CAST-01.txt |

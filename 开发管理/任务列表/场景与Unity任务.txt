@@ -66,9 +66,11 @@
 
 ## 任务
 
-2026-10-17 第三轮试玩反馈拆分（只建卡，未修复）：第1/3/4/5项分别由 U-GZ-R3-ACTION-AVAILABILITY-01、U-GZ-R3-WITHDRAWAL-LAYOUT-01、U-GZ-R3-CT-TIMELINE-01、U-GZ-R3-DIRECT-CAST-01 独立承担，四卡均ready，无相互业务前置；按P1及稳定ID插入队列，执行时各自收口，共享文件不构成人为依赖。第2项复用 A-GZ-R2-ROCK-ASSET-01 → U-GZ-R2-OBSTACLE-01，不重复建卡：现有证据只到Tripo原包，源资产卡仍待阶段二准备/Blender清理测量/具体候选签收，Unity接入继续依赖源资产完成。五项反馈的整体关闭条件是四张交互卡分别验证完成、同一已签收岩石正式接入并验证，再交用户复测；这段只汇总，不是可领取父任务，也不代替 V-GZ-ART-SLICE-01 的原有验收合同。不得以本次建卡宣布修复或美术完成。
+2026-10-17 第三轮试玩反馈拆分（只建卡，未修复）：第1/3/4/5项分别由 U-GZ-R3-ACTION-AVAILABILITY-01、U-GZ-R3-WITHDRAWAL-LAYOUT-01、U-GZ-R3-CT-TIMELINE-01、U-GZ-R3-DIRECT-CAST-01 独立承担，四卡均ready，无相互业务前置；按P1及稳定ID插入队列，执行时各自收口，共享文件不构成人为依赖。第2项复用 A-GZ-R2-ROCK-ASSET-01 → U-GZ-R2-OBSTACLE-01，不重复建卡：现有证据只到Tripo原包，源资产卡现已完成阶段二准备并恢复ready执行Blender清理/测量/候选交付，Unity接入继续依赖具体候选签收完成。五项反馈的整体关闭条件是四张交互卡分别验证完成、同一已签收岩石正式接入并验证，再交用户复测；这段只汇总，不是可领取父任务，也不代替 V-GZ-ART-SLICE-01 的原有验收合同。不得以本次建卡宣布修复或美术完成。
 
-2026-10-15：A-GZ-R2-ROCK-ASSET-01已取得并持久留存唯一Tripo 4K原包（40 Studio点）；仍阻塞于阶段二准备、Blender清理/测量及用户签收。原包路径、平台ID和哈希以该活跃任务卡实录为准，后续禁止重新生成；U-GZ-R2-OBSTACLE-01前置不变。
+2026-10-17：按用户要求，A-GZ-R2-ROCK-ASSET-01复核持久ZIP、manifest和全部6项条目哈希，冻结清理、真实三角面测量、导出回读、候选图及持久留存后恢复ready；按P1及下游解锁量插入队首，原ready任务相对顺序不变。技术候选交付后转waiting_reply，用户签收完成事件中立即准备U的精确Unity路径与风险投影，满足条件即入队，不再停在原包准备阶段。当前U仍blocked，未实施模型清理或Unity接入。
+
+2026-10-15历史记录（已由10月17日阶段二准备推进）：A-GZ-R2-ROCK-ASSET-01已取得并持久留存唯一Tripo 4K原包（40 Studio点）；仍阻塞于阶段二准备、Blender清理/测量及用户签收。原包路径、平台ID和哈希以该活跃任务卡实录为准，后续禁止重新生成；U-GZ-R2-OBSTACLE-01前置不变。
 
 2026-10-16：赤野燎原新版实施合同已冻结并完成场景实现与独立复验；在正式提交上重跑完整 EditMode 1341/1341、指定有图形 PlayMode 12/12，费用、容量、HP、清理与独立画面证据均归档。合同入口为docs/superpowers/specs/2026-10-14-jindan-fire-domain-implementation-contract.md，旧fixture不作为新机制证据。
 
@@ -78,7 +80,7 @@
 | U-GZ-R3-WITHDRAWAL-LAYOUT-01 | P1 | codex | 已排队 | — | 战斗撤离入口移至屏幕左上角 | 开发管理/任务卡/U-GZ-R3-WITHDRAWAL-LAYOUT-01.txt |
 | U-GZ-R3-CT-TIMELINE-01 | P1 | codex | 已排队 | — | 行动轴按真实CT定位并播放回合间推进 | 开发管理/任务卡/U-GZ-R3-CT-TIMELINE-01.txt |
 | U-GZ-R3-DIRECT-CAST-01 | P1 | codex | 已排队 | — | 普攻与施法选定目标后直接执行 | 开发管理/任务卡/U-GZ-R3-DIRECT-CAST-01.txt |
-| A-GZ-R2-ROCK-ASSET-01 | P1 | codex | 阻塞 | — | 整格岩石簇源资产生产与签收 | 开发管理/任务卡/A-GZ-R2-ROCK-ASSET-01.txt |
+| A-GZ-R2-ROCK-ASSET-01 | P1 | codex | 已排队 | — | 整格岩石簇源资产生产与签收 | 开发管理/任务卡/A-GZ-R2-ROCK-ASSET-01.txt |
 | U-GZ-R2-OBSTACLE-01 | P1 | codex | 阻塞 | A-GZ-R2-ROCK-ASSET-01 | 四处整格居中障碍物正式接入 | 开发管理/任务卡/U-GZ-R2-OBSTACLE-01.txt |
 | V-GZ-ART-SLICE-01 | P1 | codex | 阻塞 | — | 关中首个可展示流程实机美术验收 | 开发管理/任务卡/V-GZ-ART-SLICE-01.txt |
 | U-CHAR-BATTLE-PRESENTATION-MODULAR-01 | P1 | codex | 阻塞 | — | 战斗棋子功能与表现模块化父项 | 开发管理/任务卡/U-CHAR-BATTLE-PRESENTATION-MODULAR-01.txt |
