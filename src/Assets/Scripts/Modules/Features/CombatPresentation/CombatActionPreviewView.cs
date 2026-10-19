@@ -102,8 +102,9 @@ namespace TianZhang.Features.CombatPresentation
                 summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
                     (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
                     "\n" + status +
-                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标单格 · 费用 " +
-                    FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CD" + value.ReuseCooldownTicks +
+                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：单格 · 费用 " +
+                    FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT +" + value.CtPenalty +
+                    " · CD" + value.ReuseCooldownTicks +
                     (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +
                         "CT " + ct + "/" + threshold + " · 约+" + value.TicksUntilReady + "刻（双方存活、速度/CT不变，顺位未定）" : string.Empty);
                 return;
