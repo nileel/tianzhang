@@ -22,6 +22,41 @@ namespace TianZhang.Features.CombatPresentation
         public bool IsVisible => root != null && root.activeSelf;
         public static string FormatActionPoints(int units) => (units / 1000m).ToString("0.###", CultureInfo.InvariantCulture);
 
+        /// <summary>Shows the uncommitted movement candidate; a legal board click commits it.</summary>
+        public void PresentMovement(CombatMovementSnapshot movement, CombatMovementOption hovered, bool selecting,
+            bool pointerOnBoard)
+        {
+            if (root == null || summary == null) return;
+            if (!selecting)
+            {
+                root.SetActive(false);
+                summary.text = string.Empty;
+                return;
+            }
+            root.SetActive(true);
+            // Movement commits from the board, so the generic confirm button never applies.
+            confirmButton?.gameObject.SetActive(false);
+            swapSlotButton?.gameObject.SetActive(false);
+            swapCandidateButton?.gameObject.SetActive(false);
+            if (cancelButton != null) cancelButton.gameObject.SetActive(true);
+            if (movement == null)
+            {
+                summary.text = "移动 · 当前无法行动";
+                return;
+            }
+            string head = "移动 · 可达 " + movement.Options.Count + " 格 · 剩余 " +
+                FormatActionPoints(movement.RemainingPoints) + " AP";
+            string body;
+            if (hovered != null)
+                body = "\n→ 目标 (" + hovered.Destination.Q + "," + hovered.Destination.R + ") · 消耗 " +
+                    FormatActionPoints(hovered.Cost) + " AP · 路径 " + hovered.Path.Count + " 格";
+            else if (pointerOnBoard)
+                body = "\n此处不可到达：超出移动范围、被阻挡或已占用";
+            else
+                body = "\n指向蓝色高亮地块预览路径与费用";
+            summary.text = head + body + "\n左键点击高亮地块立即移动；右键、Esc 或取消关闭";
+        }
+
         public void Present(CombatActionPreviewSnapshot value)
         {
             // Scene teardown can destroy the Canvas before the input owner is disabled.

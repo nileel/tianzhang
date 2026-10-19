@@ -156,6 +156,10 @@ namespace TianZhang.Tests.EditMode
             Assert.IsFalse(rects.Any(r => r.name == "SecondArtTargetButton"), "The old cycling target entry must not remain in the formal scene.");
             Assert.IsNull(new SerializedObject(actionBar).FindProperty("secondArtTargetButton"));
             Assert.IsNull(new SerializedObject(actionBar).FindProperty("attackDirectionButtons"));
+            Assert.IsFalse(rects.Any(r => r.name == "ConfirmMoveButton" || r.name == "CancelMoveButton"),
+                "Movement uses the shared selection popup, not a second confirm/cancel row.");
+            Assert.IsNull(new SerializedObject(actionBar).FindProperty("confirmMoveButton"));
+            Assert.IsNull(new SerializedObject(actionBar).FindProperty("cancelMoveButton"));
             var input = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatCommandInput>()).Single();
             Assert.AreSame(actionBar, new SerializedObject(input).FindProperty("actionBar").objectReferenceValue);
             var targetInput = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTargetInput>()).Single();

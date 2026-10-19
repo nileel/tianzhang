@@ -254,10 +254,11 @@ namespace TianZhang.Tests.PlayMode
                     u.Position.Q == cell.Q && u.Position.R == cell.R));
             }
             yield return Click(bar.MoveButton);
-            yield return Pointer(Camera.main.WorldToScreenPoint(Node("GuanzhongHex_" + q + "_" + r).transform.position));
+            Vector2 destinationPoint = Camera.main.WorldToScreenPoint(Node("GuanzhongHex_" + q + "_" + r).transform.position);
+            yield return Hover(destinationPoint);
             Assert.AreEqual(move, Find<CombatMovementView>().Selected);
             yield return Capture("movement-" + q + "-" + r);
-            yield return Click(bar.ConfirmMoveButton);
+            yield return Pointer(destinationPoint);
             Assert.IsTrue(session.Combatants.TryGet("player", out var player));
             Assert.AreEqual(q, player.Position.Q); Assert.AreEqual(r, player.Position.R);
             evidence?.AddRange(move.Path);
@@ -380,6 +381,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(button, hits[0].gameObject.GetComponentInParent<Button>(), button.name);
             Log("click=" + button.name + " point=" + point);
             yield return Pointer(point);
+        }
+        private IEnumerator Hover(Vector2 point)
+        {
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
         }
         private IEnumerator Pointer(Vector2 point)
         {

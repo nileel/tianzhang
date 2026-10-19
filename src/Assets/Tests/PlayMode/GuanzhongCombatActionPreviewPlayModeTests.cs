@@ -133,7 +133,9 @@ namespace TianZhang.Tests.PlayMode
                 !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
             // S2 verifies selection before contact; its own real movement turns approach the other target.
-            if (TestContext.CurrentContext.Test.Name.StartsWith("S2Recovery", StringComparison.Ordinal)) yield break;
+            // The movement-only lifecycle check also needs no contact and must not wait on the melee helper.
+            if (TestContext.CurrentContext.Test.Name.StartsWith("S2Recovery", StringComparison.Ordinal) ||
+                TestContext.CurrentContext.Test.Name.StartsWith("MoveAndLifecycle", StringComparison.Ordinal)) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
@@ -449,7 +451,8 @@ namespace TianZhang.Tests.PlayMode
                 view.CancelButton.onClick.Invoke();
                 bar.MoveButton.onClick.Invoke();
                 Assert.That(move.IsSelecting, Is.True);
-                bar.CancelMoveButton.onClick.Invoke();
+                view.CancelButton.onClick.Invoke();
+                Assert.That(move.IsSelecting, Is.False);
                 Assert.That(State(), Is.EqualTo(initial), "All preview/selection/cancel operations must be read-only.");
                 CombatActionCandidate oldMove = presenter.Snapshot.Movement.Options.First().Candidate;
 
@@ -514,14 +517,17 @@ namespace TianZhang.Tests.PlayMode
             Vector3 world = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(move, "centers")[new Vector2Int(destination.Q, destination.R)];
             Vector2 point = Get<Camera>(move, "battlefieldCamera").WorldToScreenPoint(world);
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+            Assert.That(move.Selected, Is.SameAs(option));
+            Assert.That(State(), Is.EqualTo(before));
+            Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 25 AP"));
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
-            Assert.That(move.Selected, Is.SameAs(option));
-            Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 25 AP"));
-            Assert.That(State(), Is.EqualTo(before));
-            bar.ConfirmMoveButton.onClick.Invoke(); bar.ConfirmMoveButton.onClick.Invoke();
+            Assert.That(move.IsSelecting, Is.False, "A legal click must commit and close the popup.");
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
             Assert.That(spawned.Player.Position, Is.EqualTo(destination));
+            // A repeated submission cannot spend AP or reposition twice.
+            encounter.ConfirmAction(option.Candidate);
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
             yield return Ready();
         }
 

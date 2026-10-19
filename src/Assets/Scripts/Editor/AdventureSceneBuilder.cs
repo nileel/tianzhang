@@ -689,7 +689,7 @@ namespace TianZhang.Editor
             SettlementSceneBuilder.ConfigureColumn(controls, 0);
             controls.GetComponent<VerticalLayoutGroup>().spacing = 8;
             SettlementSceneBuilder.SetHeight(controls, 96);
-            Text status = SceneBuildSupport.CreateText("MovementStatus", controls.transform, "移力", 18);
+            Text status = SceneBuildSupport.CreateText("MovementStatus", controls.transform, "移动", 18);
             SettlementSceneBuilder.ApplyTextSkin(status, 32);
             var row = new GameObject("MovementButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             row.transform.SetParent(controls.transform, false);
@@ -699,18 +699,13 @@ namespace TianZhang.Editor
             row.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = true;
             SettlementSceneBuilder.SetHeight(row, 56);
             Button move = SceneBuildSupport.CreateButton("MoveButton", row.transform, "移动", out _);
-            Button confirm = SceneBuildSupport.CreateButton("ConfirmMoveButton", row.transform, "确认", out _);
-            Button cancel = SceneBuildSupport.CreateButton("CancelMoveButton", row.transform, "取消", out _);
-            foreach (Button button in new[] { move, confirm, cancel }) SettlementSceneBuilder.ApplyButtonSkin(button);
-            confirm.gameObject.SetActive(false);
-            cancel.gameObject.SetActive(false);
+            SettlementSceneBuilder.ApplyButtonSkin(move);
+            // Moving commits on the first legal board click; the shared preview popup owns cancellation.
             // Two starter arts: 96 movement + 344 controls + seven 4-unit gaps.
             VerticalLayoutGroup actionColumn = actionRoot.GetComponent<VerticalLayoutGroup>();
             if (actionColumn != null) actionColumn.spacing = 4;
             SettlementSceneBuilder.SetHeight(actionRoot, 468);
             SceneBuildSupport.SetObject(bar, "moveButton", move);
-            SceneBuildSupport.SetObject(bar, "confirmMoveButton", confirm);
-            SceneBuildSupport.SetObject(bar, "cancelMoveButton", cancel);
             SceneBuildSupport.SetObject(bar, "movementLabel", status);
             Button wait = (Button)barData.FindProperty("waitButton").objectReferenceValue;
             SceneBuildSupport.SetObject(bar, "waitLabel", wait.GetComponentInChildren<Text>(true));

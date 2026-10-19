@@ -29,21 +29,25 @@ namespace TianZhang.Features.CombatPresentation
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
         private ICombatActionPreviewHandler previewHandler;
         private CombatActionBarView actionBar;
+        private CombatActionPreviewView previewView;
         private CombatHudSnapshot snapshot;
         private CombatMovementOption selected;
         private LineRenderer pathLine;
+        private bool ownsPreview;
         public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
         private bool CanInput => snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
 
-        public void Configure(ICombatCommandHandler commands, CombatActionBarView bar)
+        public void Configure(ICombatCommandHandler commands, CombatActionBarView bar,
+            CombatActionPreviewView movementPopup = null)
         {
             if (commands == null) throw new ArgumentNullException(nameof(commands));
             previewHandler = commands as ICombatActionPreviewHandler ??
                 throw new ArgumentException("Movement requires the authoritative preview boundary.", nameof(commands));
             actionBar = bar != null ? bar : throw new ArgumentNullException(nameof(bar));
+            previewView = movementPopup;
             if (battlefieldCamera == null || cells.Length == 0 || reachableMaterial == null || selectedMaterial == null)
                 throw new InvalidOperationException("combat_movement_scene_references_missing");
             foreach (Cell cell in cells)
@@ -137,6 +141,8 @@ namespace TianZhang.Features.CombatPresentation
             selected = null;
             foreach (CombatMovementOption option in snapshot.Movement.Options)
                 if (highlights.TryGetValue(Key(option.Destination), out LineRenderer ring)) ring.gameObject.SetActive(true);
+            ownsPreview = previewView != null;
+            PresentMovementPreview(false);
             RefreshControls();
         }
 
@@ -148,35 +154,40 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Confirm()
         {
-            if (!CanInput || !IsSelecting || selected == null) return;
+            if (!CanInput || !IsSelecting || selected == null || selected.Candidate == null) return;
             CombatMovementOption committed = selected;
+            // Close the popup and range before the authority projection can repaint either.
             ClearSelection();
             previewHandler.ConfirmAction(committed.Candidate);
         }
 
         private void LateUpdate()
         {
-            if (!CanInput || !IsSelecting) return;
+            if (!CanInput || !IsSelecting || snapshot.Movement == null) return;
             Mouse mouse = Mouse.current;
             if (mouse == null) return;
             Vector2 pointer = mouse.position.ReadValue();
-            if (UiOwnsPointer(pointer)) return;
+            // Cancellation must work even while the pointer is over the popup or another UI owner.
             if (mouse.rightButton.wasPressedThisFrame || (Keyboard.current?.escapeKey.wasPressedThisFrame ?? false))
             {
                 Cancel();
                 return;
             }
+            bool uiOwnsPointer = UiOwnsPointer(pointer);
+            bool pointerOnBoard = false;
             CombatMovementOption hovered = null;
-            if (TryPickCell(pointer, out CombatUnitPresentationHex cell))
+            if (!uiOwnsPointer && TryPickCell(pointer, out CombatUnitPresentationHex cell))
+            {
+                pointerOnBoard = true;
                 foreach (CombatMovementOption option in snapshot.Movement.Options)
                     if (option.Destination.Equals(cell)) { hovered = option; break; }
-            if (mouse.leftButton.wasPressedThisFrame)
-            {
-                selected = hovered;
-                RefreshControls();
             }
-            DrawPath(selected ?? hovered);
-            actionBar?.PresentMovement(snapshot, IsSelecting, selected, selected ?? hovered);
+            // Hover is only a preview; it never commits and never clears an ongoing selection.
+            selected = hovered;
+            DrawPath(hovered);
+            PresentMovementPreview(pointerOnBoard);
+            actionBar?.PresentMovement(snapshot, IsSelecting, hovered);
+            if (mouse.leftButton.wasPressedThisFrame && hovered != null) Confirm();
         }
 
         public bool TryPickCell(Vector2 screenPoint, out CombatUnitPresentationHex picked)
@@ -224,6 +235,11 @@ namespace TianZhang.Features.CombatPresentation
 
         private void ClearSelection()
         {
+            if (ownsPreview)
+            {
+                ownsPreview = false;
+                previewView?.PresentMovement(null, null, false, false);
+            }
             IsSelecting = false;
             selected = null;
             foreach (LineRenderer ring in highlights.Values)
@@ -237,6 +253,12 @@ namespace TianZhang.Features.CombatPresentation
                 }
             if (pathLine != null) pathLine.gameObject.SetActive(false);
             RefreshControls();
+        }
+
+        private void PresentMovementPreview(bool pointerOnBoard)
+        {
+            if (!ownsPreview) return;
+            previewView?.PresentMovement(snapshot?.Movement, selected, IsSelecting, pointerOnBoard);
         }
 
         private void RefreshControls() => actionBar?.PresentMovement(snapshot, IsSelecting, selected);

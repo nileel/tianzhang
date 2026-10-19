@@ -17,6 +17,7 @@ using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using TianZhang.Spatial;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
@@ -31,6 +32,7 @@ namespace TianZhang.Tests.PlayMode
         private const string SettlementId = "guanzhong_city", AdventureId = "guanzhong_wild", BountyId = "bounty_guanzhong_shijiahou";
         private string saveDirectory;
         private Mouse mouse;
+        private Keyboard keyboard;
         private InputSettings.BackgroundBehavior originalBackgroundBehavior;
 #if UNITY_EDITOR
         private InputSettings.EditorInputBehaviorInPlayMode originalEditorInputBehavior;
@@ -55,6 +57,7 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.settings.editorInputBehaviorInPlayMode = originalEditorInputBehavior;
 #endif
             if (mouse != null) InputSystem.RemoveDevice(mouse);
+            if (keyboard != null) InputSystem.RemoveDevice(keyboard);
             GameBootstrap bootstrap = Object.FindFirstObjectByType<GameBootstrap>();
             if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
             SceneManager.LoadScene(GameplaySceneNames.StartMenu);
@@ -63,7 +66,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FormalSceneProjectsAuthorityAndCommitsOnlyConfirmedMovement()
+        public IEnumerator FormalSceneOpensMovePopupAndCommitsOncePerLegalClickAtBothResolutions()
         {
             GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (staleBootstrap != null) { Object.Destroy(staleBootstrap.gameObject); yield return null; }
@@ -107,179 +110,314 @@ namespace TianZhang.Tests.PlayMode
             CombatCommandInput commandInput = Find<CombatCommandInput>();
             CombatActionBarView bar = Find<CombatActionBarView>();
             CombatMovementView movement = Find<CombatMovementView>();
-            CombatHudSnapshot snapshot = Get<CombatHudSnapshot>(commandInput, "snapshot");
-            Assert.NotNull(snapshot.Movement);
-            var expected = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position })
-                .Keys.Where(hex => hex != player.Position).Select(hex => new Vector2Int(hex.Q, hex.R)).ToArray();
-            CollectionAssert.AreEquivalent(expected, snapshot.Movement.Options.Select(option => Key(option.Destination)).ToArray());
-            HexCoord original = player.Position;
-            int originalPoints = player.ActionPointsRemainingUnits, originalTick = session.TurnScheduler.CurrentTick;
-            bar.MoveButton.onClick.Invoke();
-            Assert.IsTrue(movement.IsSelecting);
-            CollectionAssert.AreEquivalent(expected, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
-            AssertReachableColors(movement);
-            bar.CancelMoveButton.onClick.Invoke();
-            Assert.IsFalse(movement.IsSelecting);
-            Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
-            bar.MoveButton.onClick.Invoke();
-            AssertReachableColors(movement);
-            bar.BasicAttackButton.onClick.Invoke();
-            Assert.NotNull(commandInput.Preview?.AttackArea);
-            Assert.IsFalse(movement.IsSelecting);
-            foreach (CombatAttackAreaCellSnapshot cell in commandInput.Preview.AttackArea.Cells)
+            CombatActionPreviewView preview = Find<CombatActionPreviewView>();
+            Camera camera = Get<Camera>(movement, "battlefieldCamera");
+            mouse = InputSystem.AddDevice<Mouse>();
+            keyboard = InputSystem.AddDevice<Keyboard>();
+
+            string evidenceDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/movement-s3"));
+            Directory.CreateDirectory(evidenceDirectory);
+
+            foreach (int size in new[] { 1920, 1366 })
             {
-                if (!movement.Highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
-                Color attackColor = cell.IsLegal ? Get<Material>(movement, "selectedMaterial").GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
-                attackColor.a = 1f;
-                AssertLineColor(ring, attackColor);
-            }
-            bar.MoveButton.onClick.Invoke();
-            Assert.IsNull(commandInput.Preview);
-            AssertReachableColors(movement);
-            CollectionAssert.AreEquivalent(expected, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
-            foreach (int width in new[] { 1920, 1366 })
-            {
-                int height = width == 1920 ? 1080 : 768;
-                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, height);
-                yield return null; yield return null;
+                if (size == 1366) yield return ReadyForPlayerTurn(encounter, session);
+                int height = size == 1920 ? 1080 : 768;
+                GuanzhongCombatEquipmentPlayModeTests.SetGameSize(size, height);
+                for (int frame = 0; frame < 8; frame++) yield return null;
                 Canvas.ForceUpdateCanvases();
 #if UNITY_EDITOR
-                // Fresh worktrees can still be rendering cyan shader-compilation placeholders.
                 for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
                 Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling, "Shader compilation must finish before visual evidence.");
                 yield return null;
 #endif
-                Assert.AreEqual(width, Screen.width);
+                Assert.AreEqual(size, Screen.width);
                 Assert.AreEqual(height, Screen.height);
-                AssertReachableColors(movement);
-                string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/move-blue"));
-                Directory.CreateDirectory(directory);
-                string stem = Path.Combine(directory, $"reachable-{width}x{height}");
-                string evidence = $"scene={SceneManager.GetActiveScene().name}; screen={Screen.width}x{Screen.height}; owner={movement.name}/{movement.GetType().Name}; active={expected.Length}; color=#238CFFFF";
-                TestContext.WriteLine(evidence);
-                File.WriteAllText(stem + ".txt", evidence);
-                ScreenCapture.CaptureScreenshot(stem + ".png");
-                yield return null; yield return null;
-            }
-            Camera camera = Get<Camera>(movement, "battlefieldCamera");
-            var destination = new CombatUnitPresentationHex(0, 1);
-            Vector3 worldPoint = Static3DCombatUnitPresentationProvider.HexToWorld(destination);
-            Vector3 screenPoint = camera.WorldToScreenPoint(worldPoint);
-            Assert.IsTrue(movement.TryPickCell(screenPoint, out CombatUnitPresentationHex picked));
-            Assert.AreEqual(destination, picked);
-            Vector3 originalCameraPosition = camera.transform.position;
-            camera.transform.position += new Vector3(0.15f, 0f, 0.1f);
-            screenPoint = camera.WorldToScreenPoint(worldPoint);
-            Assert.IsTrue(movement.TryPickCell(screenPoint, out picked));
-            Assert.AreEqual(destination, picked, "Picking must use the camera's current pose.");
-            camera.transform.position = originalCameraPosition;
-            yield return null;
-            Canvas.ForceUpdateCanvases();
-            RectTransform moveRect = bar.MoveButton.GetComponent<RectTransform>();
-            Vector2 buttonPoint = RectTransformUtility.WorldToScreenPoint(null, moveRect.position);
-            var uiResults = new List<UnityEngine.EventSystems.RaycastResult>();
-            var eventSystem = UnityEngine.EventSystems.EventSystem.current;
-            eventSystem.RaycastAll(new UnityEngine.EventSystems.PointerEventData(eventSystem) { position = buttonPoint }, uiResults);
-            TestContext.WriteLine($"UI gate probe: screen={Screen.width}x{Screen.height}, point={buttonPoint}, rect={moveRect.rect}, world={moveRect.position}, active={bar.MoveButton.gameObject.activeInHierarchy}, raycast={bar.MoveButton.image.raycastTarget}, depth={bar.MoveButton.image.depth}, canvas={moveRect.GetComponentInParent<Canvas>().renderMode}, hits={string.Join(",", uiResults.Select(hit => hit.gameObject.name))}");
-            Assert.IsFalse(movement.TryPickCell(buttonPoint, out _), "UI must own its pointer.");
-            Assert.LessOrEqual(moveRect.rect.height, 56.01f);
-            Assert.Greater(moveRect.rect.width, 0f);
-            mouse = InputSystem.AddDevice<Mouse>();
-            screenPoint = camera.WorldToScreenPoint(worldPoint);
-            InputSystem.QueueStateEvent(mouse, new MouseState { position = screenPoint });
-            yield return null;
-            yield return null;
-            Assert.IsNull(movement.Selected, "Hover must not select or commit.");
-            Assert.IsFalse(bar.ConfirmMoveButton.interactable);
-            TestContext.WriteLine($"Hover probe: currentMouse={Mouse.current?.deviceId}, testMouse={mouse.deviceId}, position={Mouse.current?.position.ReadValue()}, expected={screenPoint}, options={Get<CombatHudSnapshot>(commandInput, "snapshot").Movement.Options.Count}, accepts={Get<CombatHudSnapshot>(commandInput, "snapshot").AcceptsCommands}, selecting={movement.IsSelecting}, enabled={movement.enabled}, picked={movement.TryPickCell(mouse.position.ReadValue(), out var hoverCell)}, hex={hoverCell.Q},{hoverCell.R}, line={Get<LineRenderer>(movement, "pathLine").gameObject.activeSelf}");
-            StringAssert.Contains("消耗", Get<Text>(bar, "movementLabel").text);
-            InputSystem.QueueStateEvent(mouse, new MouseState { position = screenPoint }.WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left));
-            yield return null;
-            yield return null;
-            InputSystem.QueueStateEvent(mouse, new MouseState { position = screenPoint });
-            yield return null;
-            Assert.NotNull(movement.Selected);
-            Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
-            LineRenderer previewLine = Get<LineRenderer>(movement, "pathLine");
-            Color pathColor = Get<Material>(movement, "selectedMaterial").GetColor("_BaseColor");
-            pathColor.a = 1f;
-            AssertLineColor(previewLine, pathColor);
-            Assert.AreEqual(movement.Selected.Path.Count + 1, previewLine.positionCount);
-            for (int index = 0; index < movement.Selected.Path.Count; index++)
-            {
-                Vector3 drawn = previewLine.GetPosition(index + 1);
-                Vector3 expectedWorld = Static3DCombatUnitPresentationProvider.HexToWorld(movement.Selected.Path[index]);
-                Assert.AreEqual(expectedWorld.x, drawn.x, 0.0001f);
-                Assert.AreEqual(expectedWorld.z, drawn.z, 0.0001f);
-            }
-            int originalFacing = player.Facing;
-            bar.CancelMoveButton.onClick.Invoke();
-            Assert.IsNull(movement.Selected);
-            Assert.IsFalse(movement.IsSelecting);
-            Assert.AreEqual(original, player.Position);
-            Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(originalFacing, player.Facing);
-            Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
-            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
-            bar.MoveButton.onClick.Invoke();
-            foreach (HexCoord invalid in new[] { original, enemy.Position, new HexCoord(2, 1), new HexCoord(5, 5), new HexCoord(-20, -20) })
-            {
-                Vector2 invalidPoint = camera.WorldToScreenPoint(Static3DCombatUnitPresentationProvider.HexToWorld(
-                    new CombatUnitPresentationHex(invalid.Q, invalid.R)));
-                yield return ClickCell(mouse, invalidPoint);
-                Assert.IsNull(movement.Selected, "Illegal cells must not become pending moves.");
-                Assert.IsFalse(bar.ConfirmMoveButton.interactable);
+                CombatHudSnapshot snapshot = Get<CombatHudSnapshot>(commandInput, "snapshot");
+                Assert.NotNull(snapshot.Movement);
+                Assert.IsFalse(movement.IsSelecting);
+                Assert.IsFalse(preview.IsVisible);
+                Assert.IsTrue(bar.MoveButton.interactable);
+                HexCoord original = player.Position;
+                int originalPoints = player.ActionPointsRemainingUnits;
+                int originalTick = session.TurnScheduler.CurrentTick;
+                int originalFacing = player.Facing;
+
+                bar.MoveButton.onClick.Invoke();
+                Assert.IsTrue(movement.IsSelecting, "Move must only open selection.");
+                Assert.IsTrue(preview.IsVisible, "Movement must use the shared selection popup.");
+                Assert.IsFalse(preview.ConfirmButton.gameObject.activeSelf, "Movement cannot keep a second confirmation entry.");
                 Assert.AreEqual(original, player.Position);
                 Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
-                Assert.AreEqual(originalFacing, player.Facing);
+                AssertReachableHighlights(movement, snapshot);
+                Canvas.ForceUpdateCanvases();
+                string summary = Get<Text>(preview, "summary").text;
+                StringAssert.Contains("可达", summary);
+                StringAssert.Contains("左键点击高亮地块立即移动", summary);
+
+                var selected = FindVisibleMovementOption(movement, snapshot, camera);
+                CombatMovementOption option = selected.option;
+                Vector2 destinationPoint = selected.point;
+                yield return Point(mouse, destinationPoint);
+                Assert.IsTrue(movement.IsSelecting);
+                Assert.AreSame(option, movement.Selected, "Hover must preview the authoritative option.");
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+                Assert.IsTrue(Get<LineRenderer>(movement, "pathLine").gameObject.activeSelf, "Hover must draw the path.");
+                StringAssert.Contains("消耗 " + CombatActionPreviewView.FormatActionPoints(option.Cost) + " AP",
+                    Get<Text>(preview, "summary").text);
+                StringAssert.Contains("路径 " + option.Path.Count + " 格", Get<Text>(preview, "summary").text);
+                Assert.AreEqual(option.Path.Count + 1, Get<LineRenderer>(movement, "pathLine").positionCount);
+
+                Vector2 popupPoint = PopupPoint(preview);
+                // Right click and Escape must cancel even while the pointer is over the popup.
+                yield return Click(mouse, popupPoint, MouseButton.Right);
+                Assert.IsFalse(movement.IsSelecting, "Right click over UI must close movement selection.");
+                Assert.IsFalse(preview.IsVisible);
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
                 Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
+
+                bar.MoveButton.onClick.Invoke();
+                yield return Point(mouse, popupPoint);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+                yield return null; yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                Assert.IsFalse(movement.IsSelecting, "Escape over UI must close movement selection.");
+                Assert.IsFalse(preview.IsVisible);
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+
+                // The popup's cancel button is the only remaining cancellation entry.
+                bar.MoveButton.onClick.Invoke();
+                Canvas.ForceUpdateCanvases();
+                yield return Click(mouse, RectTransformUtility.WorldToScreenPoint(null, preview.CancelButton.transform.position),
+                    MouseButton.Left);
+                Assert.IsFalse(movement.IsSelecting, "The popup cancel button must close movement selection.");
+                Assert.IsFalse(preview.IsVisible);
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+
+                // Illegal board cells keep selection open and never charge AP.
+                bar.MoveButton.onClick.Invoke();
+                var legalKeys = new HashSet<Vector2Int>(snapshot.Movement.Options.Select(value => CellKey(value.Destination)));
+                var centers = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
+                var testedIllegal = new HashSet<Vector2Int>();
+                foreach (var ring in movement.Highlights)
+                {
+                    if (legalKeys.Contains(ring.Key)) continue;
+                    if (!TryFindCellPoint(movement, camera, centers[ring.Key], ring.Key, out Vector2 point)) continue;
+                    yield return Click(mouse, point, MouseButton.Left);
+                    Assert.IsTrue(movement.IsSelecting, "Illegal click at " + ring.Key + " must keep selection open.");
+                    Assert.IsTrue(preview.IsVisible);
+                    Assert.IsNull(movement.Selected);
+                    Assert.AreEqual(original, player.Position);
+                    Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+                    Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
+                    Assert.AreEqual(originalFacing, player.Facing);
+                    testedIllegal.Add(ring.Key);
+                }
+                Assert.GreaterOrEqual(testedIllegal.Count, 3, "At least three visible illegal cells must be exercised.");
+                Vector2Int enemyKey = CellKey(new CombatUnitPresentationHex(enemy.Position.Q, enemy.Position.R));
+                Assert.Contains(enemyKey, testedIllegal.ToList(),
+                    "The occupied enemy cell must reject the movement click.");
+                Vector2Int[] rockKeys =
+                {
+                    new Vector2Int(2, 1), new Vector2Int(3, 1), new Vector2Int(2, 4), new Vector2Int(3, 4),
+                };
+                Assert.IsTrue(rockKeys.Any(testedIllegal.Contains),
+                    "At least one visible formal rock cell must reject the movement click; tested=" +
+                    string.Join("/", testedIllegal.Select(value => value.x + "," + value.y)));
+                bool unreachableTested = testedIllegal.Any(key => !legalKeys.Contains(key) && key != enemyKey &&
+                    !rockKeys.Contains(key));
+                Assert.IsTrue(unreachableTested, "A visible out-of-range cell must reject the movement click.");
+                StringAssert.Contains("不可到达", Get<Text>(preview, "summary").text);
+
+                // UI and off-board clicks are inert as well.
+                yield return Click(mouse, popupPoint, MouseButton.Left);
+                Assert.IsTrue(movement.IsSelecting, "Clicking popup chrome must not move.");
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+                Assert.IsTrue(TryFindOffBoardPoint(movement, camera, out Vector2 offBoard));
+                yield return Click(mouse, offBoard, MouseButton.Left);
+                Assert.IsTrue(movement.IsSelecting, "Clicking outside the board must not move.");
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+
+                // A single left click on a highlighted cell commits exactly once.
+                yield return Point(mouse, destinationPoint);
+                Assert.AreSame(option, movement.Selected);
+                string selectionEvidence = "scene=" + SceneManager.GetActiveScene().name +
+                    "; screen=" + Screen.width + "x" + Screen.height + "; origin=" + original +
+                    "; ap=" + originalPoints + "; options=" + snapshot.Movement.Options.Count +
+                    "; destination=(" + option.Destination.Q + "," + option.Destination.R + "); cost=" + option.Cost +
+                    "; path=" + string.Join("/", option.Path.Select(value => value.Q + "," + value.R)) +
+                    "; popup=" + preview.IsVisible + "; confirm=" + preview.ConfirmButton.gameObject.activeSelf +
+                    "; rings=" + movement.Highlights.Count(pair => pair.Value.gameObject.activeSelf) +
+                    "; illegalTested=" + string.Join("/", testedIllegal.Select(value => value.x + "," + value.y)) +
+                    "; summary=" + Get<Text>(preview, "summary").text.Replace("\n", "\\n");
+                File.WriteAllText(Path.Combine(evidenceDirectory, "selection-" + size + ".txt"), selectionEvidence);
+                ScreenCapture.CaptureScreenshot(Path.Combine(evidenceDirectory, "selection-" + size + ".png"));
+                yield return null; yield return null;
+
+                yield return Click(mouse, destinationPoint, MouseButton.Left);
+                Assert.IsFalse(movement.IsSelecting, "A legal click must commit and close the popup immediately.");
+                Assert.IsFalse(preview.IsVisible);
+                Assert.IsNull(movement.Selected);
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                Assert.AreEqual(option.Destination.Q, player.Position.Q);
+                Assert.AreEqual(option.Destination.R, player.Position.R);
+                Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits,
+                    "One click may only spend the quoted AP once.");
+                Assert.IsTrue(encounter.IsPresenting, "The committed move must enter its presentation lock.");
+                Assert.IsFalse(bar.MoveButton.interactable);
+
+                // Presentation/stale/duplicate submissions cannot apply the move or its AP again.
+                string committed = State(encounter, session);
+                movement.BeginSelection();
+                Assert.IsFalse(movement.IsSelecting, "Selection cannot open during presentation.");
+                CombatActionCandidate stale = option.Candidate;
+                encounter.ConfirmAction(stale);
+                yield return null;
+                Assert.AreEqual(committed, State(encounter, session), "A stale movement candidate must be inert.");
+
+                string commitEvidence = "scene=" + SceneManager.GetActiveScene().name +
+                    "; screen=" + Screen.width + "x" + Screen.height + "; from=" + original + "; to=" + player.Position +
+                    "; ap=" + originalPoints + "->" + player.ActionPointsRemainingUnits + "; cost=" + option.Cost +
+                    "; presenting=" + encounter.IsPresenting + "; selecting=" + movement.IsSelecting +
+                    "; popup=" + preview.IsVisible + "; rings=" + movement.Highlights.Count(pair => pair.Value.gameObject.activeSelf);
+                File.WriteAllText(Path.Combine(evidenceDirectory, "committed-" + size + ".txt"), commitEvidence);
+                ScreenCapture.CaptureScreenshot(Path.Combine(evidenceDirectory, "committed-" + size + ".png"));
+                yield return ReadyForPlayerTurn(encounter, session);
+                Assert.IsFalse(encounter.IsPresenting);
+                Assert.IsFalse(movement.IsSelecting);
+                Assert.IsFalse(preview.IsVisible);
+                Assert.IsTrue(bar.MoveButton.interactable || player.ActionPointsRemainingUnits == 0);
+                Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject root));
+                Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(option.Destination), root.transform.position);
             }
-            yield return ClickCell(mouse, screenPoint);
-            Assert.NotNull(movement.Selected);
-            CombatMovementOption option = movement.Selected;
-            CombatActionResult validation = session.ValidateCommand(new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
-            Assert.AreEqual(validation.MovementCost, option.Cost);
-            CollectionAssert.AreEqual(validation.MovementPath.Select(hex => new Vector2Int(hex.Q, hex.R)).ToArray(), option.Path.Select(Key).ToArray());
-            bar.ConfirmMoveButton.onClick.Invoke();
-            Assert.IsTrue(encounter.IsPresenting);
-            Assert.AreEqual(new HexCoord(0, 1), player.Position);
-            Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
-            Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject root));
-            Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(new CombatUnitPresentationHex(original.Q, original.R)), root.transform.position);
-            encounter.RequestGuard("player");
-            encounter.RequestEndTurn("player");
-            encounter.RequestMove("player", 0, 0);
-            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
-            Assert.AreEqual(new HexCoord(0, 1), player.Position);
-            Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(originalTick, session.TurnScheduler.CurrentTick);
-            Assert.AreEqual(validation.MovementFacing, player.Facing);
-            Assert.IsFalse(bar.MoveButton.interactable);
-            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
+
+            // Turn change also clears an uncommitted move before the next authority projection.
+            CombatHudSnapshot finalSnapshot = Get<CombatHudSnapshot>(commandInput, "snapshot");
+            if (finalSnapshot.Movement != null && finalSnapshot.Movement.Options.Count > 0)
+            {
+                bar.MoveButton.onClick.Invoke();
+                Assert.IsTrue(movement.IsSelecting);
+                encounter.RequestEndTurn("player");
+                Assert.IsFalse(movement.IsSelecting, "A turn change must clear the uncommitted movement selection.");
+                Assert.IsFalse(preview.IsVisible);
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+            }
+            TestContext.WriteLine("S3 movement: popup, hover, single-click commit, cancellation over UI, illegal clicks, and stale rejection verified at 1920x1080 and 1366x768.");
+        }
+
+        private static IEnumerator ReadyForPlayerTurn(EncounterCoordinator encounter, CombatSession session)
+        {
+            for (float deadline = Time.realtimeSinceStartup + 20f; Time.realtimeSinceStartup < deadline &&
+                (session.CurrentActorId != "player" || session.TurnPhase == CombatTurnPhase.Finished || encounter.IsPresenting);)
+                yield return null;
             yield return null;
+            Assert.AreEqual("player", session.CurrentActorId);
             Assert.IsFalse(encounter.IsPresenting);
-            Assert.IsTrue(bar.MoveButton.interactable);
-            Assert.AreEqual(worldPoint, root.transform.position);
-            Assert.AreEqual(Vector3.one, root.transform.localScale);
-            Assert.AreEqual(0.04f, root.transform.Find("Static3DCombatBase").localPosition.y, 0.0001f);
-            Assert.AreEqual("结束行动", Get<Text>(bar, "waitLabel").text);
-            int beforeGuard = player.ActionPointsRemainingUnits;
-            CombatCommandPreview guardQuote = new CombatCommandService().Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
-            Assert.IsTrue(guardQuote.Validation.Succeeded);
-            encounter.RequestGuard("player");
-            Assert.AreEqual(beforeGuard - guardQuote.ActionPointCostUnits, player.ActionPointsRemainingUnits);
-            Assert.Greater(player.ActionPointsRemainingUnits, 0);
-            Assert.IsTrue(player.IsGuarding);
-            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase, "Guard does not end a turn with AP remaining.");
-            for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline && encounter.IsPresenting;) yield return null;
-            Assert.IsFalse(encounter.IsPresenting);
-            encounter.RequestEndTurn("player");
-            Assert.AreEqual(0, player.ActionPointsRemainingUnits);
-            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
-            TestContext.WriteLine($"MOVE scene: options={expected.Length}, cost={option.Cost}, points={player.ActionPointsRemainingUnits}, root={root.transform.position}, button={moveRect.rect}");
+        }
+
+        private IEnumerator Point(Mouse device, Vector2 point)
+        {
+            InputSystem.QueueStateEvent(device, new MouseState { position = point });
+            yield return null; yield return null;
+        }
+
+        private IEnumerator Click(Mouse device, Vector2 point, MouseButton button)
+        {
+            InputSystem.QueueStateEvent(device, new MouseState { position = point }.WithButton(button));
+            yield return null; yield return null;
+            InputSystem.QueueStateEvent(device, new MouseState { position = point });
+            yield return null;
+        }
+
+        private static (CombatMovementOption option, Vector2 point) FindVisibleMovementOption(
+            CombatMovementView movement, CombatHudSnapshot snapshot, Camera camera)
+        {
+            var centers = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
+            foreach (CombatMovementOption option in snapshot.Movement.Options)
+            {
+                Vector2 point = camera.WorldToScreenPoint(centers[CellKey(option.Destination)]);
+                if (!OnScreen(point)) continue;
+                if (!movement.TryPickCell(point, out CombatUnitPresentationHex picked) ||
+                    !picked.Equals(option.Destination)) continue;
+                return (option, point);
+            }
+            Assert.Fail("No visible, clickable movement option while the shared popup is open.");
+            return (null, Vector2.zero);
+        }
+
+        private static bool TryFindCellPoint(CombatMovementView movement, Camera camera, Vector3 center,
+            Vector2Int expected, out Vector2 point)
+        {
+            // The shared popup covers part of the board; a real obstacle click can still target an
+            // exposed edge of the same hex. Stay well inside the 0.46-unit inradius.
+            Vector3[] offsets =
+            {
+                Vector3.zero,
+                new Vector3(0.30f, 0, 0), new Vector3(-0.30f, 0, 0),
+                new Vector3(0, 0, 0.30f), new Vector3(0, 0, -0.30f),
+                new Vector3(0.21f, 0, 0.21f), new Vector3(-0.21f, 0, 0.21f),
+                new Vector3(0.21f, 0, -0.21f), new Vector3(-0.21f, 0, -0.21f),
+            };
+            foreach (Vector3 offset in offsets)
+            {
+                Vector2 candidate = camera.WorldToScreenPoint(center + offset);
+                if (!OnScreen(candidate)) continue;
+                if (!movement.TryPickCell(candidate, out CombatUnitPresentationHex picked) ||
+                    CellKey(picked) != expected) continue;
+                point = candidate;
+                return true;
+            }
+            point = default;
+            return false;
+        }
+
+        private static bool TryFindOffBoardPoint(CombatMovementView movement, Camera camera, out Vector2 point)
+        {
+            for (int row = 1; row < 10; row++)
+            {
+                for (int column = 1; column < 10; column++)
+                {
+                    var candidate = new Vector2(Screen.width * column / 10f, Screen.height * row / 10f);
+                    if (PointerHitsUi(candidate)) continue;
+                    if (movement.TryPickCell(candidate, out _)) continue;
+                    point = candidate;
+                    return true;
+                }
+            }
+            point = Vector2.zero;
+            return false;
+        }
+
+        private static bool PointerHitsUi(Vector2 point)
+        {
+            EventSystem system = EventSystem.current;
+            if (system == null) return false;
+            var hits = new List<RaycastResult>();
+            system.RaycastAll(new PointerEventData(system) { position = point }, hits);
+            return hits.Count > 0;
+        }
+
+        private static Vector2 PopupPoint(CombatActionPreviewView preview)
+        {
+            Canvas.ForceUpdateCanvases();
+            RectTransform rect = Get<GameObject>(preview, "root").GetComponent<RectTransform>();
+            return RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+        }
+
+        private static bool OnScreen(Vector2 point) =>
+            point.x >= 0f && point.x < Screen.width && point.y >= 0f && point.y < Screen.height;
+
+        private static string State(EncounterCoordinator encounter, CombatSession session)
+        {
+            bool presenting = encounter.IsPresenting;
+            var player = session.Combatants.All.Single(unit => unit.Id == "player");
+            return presenting + ":" + player.Position + ":" + player.ActionPointsRemainingUnits + ":" +
+                player.Facing + ":" + session.TurnScheduler.CurrentTick + ":" + session.TurnPhase;
         }
 
 #if UNITY_EDITOR
@@ -338,7 +476,7 @@ namespace TianZhang.Tests.PlayMode
                     root = root == null ? "removed" : $"position={root.transform.position:F5}; rotation={root.transform.eulerAngles:F3}; scale={root.transform.localScale:F3}; base={root.transform.Find("Static3DCombatBase").position:F5}",
                     status = $"{status.text}; rect={status.rectTransform.rect}; preferred={status.preferredWidth:F2}x{status.preferredHeight:F2}; vertices={status.cachedTextGenerator.vertexCount}; font={status.font.name}; canvas={status.canvas.renderMode}/{status.canvas.scaleFactor}",
                     camera = $"{camera.name}; position={camera.transform.position:F5}; size={camera.orthographicSize}; pixelRect={camera.pixelRect}",
-                    controls = $"move={bar.MoveButton.interactable}; confirm={bar.ConfirmMoveButton.interactable}; cancel={bar.CancelMoveButton.interactable}; guard={bar.GuardButton.interactable}; end={bar.WaitButton.interactable}",
+                    controls = $"move={bar.MoveButton.interactable}; guard={bar.GuardButton.interactable}; end={bar.WaitButton.interactable}",
                     lines = movement.GetComponentsInChildren<LineRenderer>().Select(line =>
                     {
                         var mesh = new Mesh();
@@ -385,11 +523,13 @@ namespace TianZhang.Tests.PlayMode
         }
 #endif
 
-        private static void AssertReachableColors(CombatMovementView movement)
+        private static void AssertReachableHighlights(CombatMovementView movement, CombatHudSnapshot snapshot)
         {
-            LineRenderer[] active = movement.Highlights.Values.Where(line => line.gameObject.activeSelf).ToArray();
-            Assert.IsNotEmpty(active);
-            foreach (LineRenderer ring in active) AssertLineColor(ring, new Color32(0x23, 0x8C, 0xFF, 0xFF));
+            var expected = snapshot.Movement.Options.Select(option => CellKey(option.Destination)).ToArray();
+            CollectionAssert.AreEquivalent(expected,
+                movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
+            foreach (LineRenderer ring in movement.Highlights.Values.Where(line => line.gameObject.activeSelf))
+                AssertLineColor(ring, new Color32(0x23, 0x8C, 0xFF, 0xFF));
         }
 
         private static void AssertLineColor(LineRenderer line, Color expected)
@@ -403,16 +543,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(actual.a, Is.EqualTo(expected.a).Within(0.0001f));
         }
 
-        private static IEnumerator ClickCell(Mouse device, Vector2 point)
-        {
-            InputSystem.QueueStateEvent(device, new MouseState { position = point }.WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left));
-            yield return null;
-            yield return null;
-            InputSystem.QueueStateEvent(device, new MouseState { position = point });
-            yield return null;
-        }
-
-        private static Vector2Int Key(CombatUnitPresentationHex hex) => new Vector2Int(hex.Q, hex.R);
+        private static Vector2Int CellKey(CombatUnitPresentationHex hex) => new Vector2Int(hex.Q, hex.R);
         private static T Find<T>() where T : Component => SceneManager.GetActiveScene().GetRootGameObjects()
             .SelectMany(root => root.GetComponentsInChildren<T>(true)).Single();
         private static T Get<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(owner);

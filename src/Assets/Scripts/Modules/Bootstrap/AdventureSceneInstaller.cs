@@ -98,7 +98,7 @@ namespace TianZhang.Bootstrap
                 combatUnitHealthBars.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);
                 combatHudPresenter.ConfigureHealthBars(combatUnitHealthBars);
                 combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);
-                combatMovementView.Configure(encounterCoordinator, combatActionBar);
+                combatMovementView.Configure(encounterCoordinator, combatActionBar, combatActionPreviewView);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar, combatMovementView);
                 combatCommandInput.ConfigurePreview(encounterCoordinator, combatActionPreviewView, combatTimelineView);
                 combatTargetView.Configure(battlefieldCamera, hudCanvas, static3DUnitPresentationProvider);

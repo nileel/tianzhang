@@ -374,7 +374,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return Capture("rocks-unobstructed-" + size.x);
             }
 
-            var movementTrace = new List<string> { Header(), "Production stats and AI unchanged; movement via mouse selection and confirmation." };
+            var movementTrace = new List<string> { Header(), "Production stats and AI unchanged; one legal mouse click commits the quoted move." };
             var detour = new List<CombatUnitPresentationHex>();
             yield return MoveAroundRock(2, 0, encounter, spawned, camera, movementTrace, null);
             yield return RockInputReady(encounter);
@@ -441,10 +441,9 @@ namespace TianZhang.Tests.PlayMode
             yield return Click(bar.MoveButton);
             Vector2 point = camera.WorldToScreenPoint(GameObject.Find("GuanzhongHex_" + q + "_" + r).transform.position);
             yield return Pointer(point, false);
+            Assert.That(Find<CombatMovementView>().Selected, Is.EqualTo(option), "Hover must preview the move.");
             yield return Pointer(point, true);
             yield return Pointer(point, false);
-            Assert.That(Find<CombatMovementView>().Selected, Is.EqualTo(option));
-            yield return Click(bar.ConfirmMoveButton);
             Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(q, r)));
             trace.Add("committed=" + spawned.Player.Position + "; AP before=" + ap + "; after=" + spawned.Player.ActionPointsRemainingUnits + "; HP=" + spawned.Player.CurrentHealth);
             path?.AddRange(option.Path);

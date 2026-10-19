@@ -106,6 +106,8 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f;
                 !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
+            // Movement and target inspection are range-independent; this case must not block on melee contact.
+            if (TestContext.CurrentContext.Test.Name.StartsWith("ActionPointMovement", StringComparison.Ordinal)) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
@@ -575,18 +577,20 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(before, spawned.Player.Position);
             CombatMovementOption option = presenter.Snapshot.Movement.Options.First(value => value.Cost == 50000);
             Vector3 tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + option.Destination.Q + "_" + option.Destination.R).position;
-            yield return Click(Camera.main.WorldToScreenPoint(tile));
-            Assert.NotNull(movement.Selected);
+            Vector2 tilePoint = Camera.main.WorldToScreenPoint(tile);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(tilePoint, false);
+            Assert.NotNull(movement.Selected, "Hover must preview the destination without committing.");
             Button[] entries = Get<Button[]>(timeline, "entryButtons");
             entries[1].onClick.Invoke();
             Assert.NotNull(movement.Selected, "Inspecting must not call SetContext and erase the movement candidate.");
-            bar.CancelMoveButton.onClick.Invoke();
+            Find<CombatActionPreviewView>().CancelButton.onClick.Invoke();
+            Assert.IsFalse(movement.IsSelecting);
             Assert.AreEqual(before, spawned.Player.Position);
             Assert.AreEqual(points, spawned.Player.ActionPointsRemainingUnits);
             bar.MoveButton.onClick.Invoke();
-            yield return Click(Camera.main.WorldToScreenPoint(tile));
-            bar.ConfirmMoveButton.onClick.Invoke();
-            Assert.IsTrue(encounter.IsPresenting);
+            yield return Click(tilePoint);
+            Assert.IsTrue(encounter.IsPresenting, "One legal click must commit the move immediately.");
+            Assert.IsFalse(movement.IsSelecting);
             Assert.IsFalse(presenter.CanInspect);
             entries[1].onClick.Invoke();
             yield return Click(WorldPoint(spawned.Enemy.Id));

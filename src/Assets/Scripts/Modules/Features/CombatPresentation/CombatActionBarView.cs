@@ -22,8 +22,6 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text waitLabel;
         private Func<string, string> displayReason = value => value;
         [SerializeField] private Button moveButton;
-        [SerializeField] private Button confirmMoveButton;
-        [SerializeField] private Button cancelMoveButton;
         [SerializeField] private Text movementLabel;
         [SerializeField] private Button swapSpellButton;
         public Button SwapSpellButton => swapSpellButton;
@@ -32,8 +30,6 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button useItemButton;
         public Button UseItemButton => useItemButton;
         public Button MoveButton => moveButton;
-        public Button ConfirmMoveButton => confirmMoveButton;
-        public Button CancelMoveButton => cancelMoveButton;
 
         private Func<string, string> displayProfile = value => value;
 
@@ -150,19 +146,16 @@ namespace TianZhang.Features.CombatPresentation
             return quote.CanConfirm ? string.Empty : quote.Reason;
         }
 
-        public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption selected, CombatMovementOption preview = null)
+        public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption preview = null)
         {
             bool canInput = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             SetEnabled(moveButton, canInput && snapshot.Movement != null && snapshot.Movement.Options.Count > 0);
-            SetEnabled(confirmMoveButton, canInput && selecting && selected != null);
-            SetEnabled(cancelMoveButton, canInput && selecting);
-            if (confirmMoveButton != null) confirmMoveButton.gameObject.SetActive(selecting);
-            if (cancelMoveButton != null) cancelMoveButton.gameObject.SetActive(selecting);
-            CombatMovementOption shown = preview ?? selected;
             if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
                 "累计 CT +" + snapshot.PendingCtPenalty +
-                (shown == null ? (selecting ? "\n选择目的地" : string.Empty) : "\n消耗 " +
-                CombatActionPreviewView.FormatActionPoints(shown.Cost) + " AP" + (selected == null ? " · 点击选定" : " · 确认后移动"));
+                (!canInput ? "\n暂不可移动" :
+                    selecting ? (preview == null ? "\n点击高亮地块移动" : "\n(" + preview.Destination.Q + "," +
+                        preview.Destination.R + ") · 消耗 " + CombatActionPreviewView.FormatActionPoints(preview.Cost) + " AP") :
+                        "\n" + snapshot.Movement.Options.Count + " 格可达");
         }
 
         private static void SetEnabled(Button button, bool enabled)

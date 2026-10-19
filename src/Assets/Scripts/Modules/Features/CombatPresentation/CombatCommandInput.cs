@@ -178,8 +178,6 @@ namespace TianZhang.Features.CombatPresentation
             movementView = movement;
             if (movementView != null) movementView.SelectionStarted = CancelCandidate;
             Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
-            Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
-            Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
             Bind(actionBar?.BasicAttackButton, () => BeginSelection(CombatActionKind.BasicAttack));
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
