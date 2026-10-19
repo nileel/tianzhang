@@ -133,7 +133,7 @@ namespace TianZhang.Tests.PlayMode
                 !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
             // S2 verifies selection before contact; its own real movement turns approach the other target.
-            if (TestContext.CurrentContext.Test.Name.StartsWith("S2RecoverySelection", StringComparison.Ordinal)) yield break;
+            if (TestContext.CurrentContext.Test.Name.StartsWith("S2Recovery", StringComparison.Ordinal)) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
@@ -756,6 +756,19 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("s2-other-range-" + width, session);
 
+                Transform emptyTile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_0_1");
+                Assert.NotNull(emptyTile);
+                int emptyAp = spawned.Player.ActionPointsRemainingUnits, emptyMp = spawned.Player.CurrentSpirit;
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
+                    Camera.main.WorldToScreenPoint(emptyTile.position), false);
+                Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId), "An empty cell must not produce a unit target.");
+                Assert.IsFalse(input.Preview.CanConfirm);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                Assert.IsTrue(input.IsSelectingAttack, "An empty-cell click must not submit the skill.");
+                Assert.AreEqual(emptyAp, spawned.Player.ActionPointsRemainingUnits);
+                Assert.AreEqual(emptyMp, spawned.Player.CurrentSpirit);
+                CaptureS2Selection("empty-cell-" + width);
+
                 Vector2 summaryPoint = RectTransformUtility.WorldToScreenPoint(null,
                     Get<Text>(view, "summary").transform.position);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(summaryPoint, true);
@@ -854,6 +867,11 @@ namespace TianZhang.Tests.PlayMode
                     InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                     Assert.AreEqual(after, State(), "Keyboard resubmission during presentation cannot pay twice.");
                     yield return Ready();
+                    Assert.IsFalse(bar.SecondArtButton.interactable, "Cooldown must disable the recovery entry.");
+                    bar.SecondArtButton.onClick.Invoke();
+                    Assert.IsFalse(input.IsSelectingAttack);
+                    Assert.IsNull(input.Candidate);
+                    CaptureS2Selection("cooldown-disabled-" + width);
                     yield return CaptureHud("s2-recovery-self-" + width);
                     continue;
                 }
@@ -888,6 +906,15 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(other.Id, input.Candidate.TargetId);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("s2-other-legal-" + width, session);
                 int otherMp = spawned.Player.CurrentSpirit, otherAp = spawned.Player.ActionPointsRemainingUnits;
+                spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, 0);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                Assert.IsTrue(input.IsSelectingAttack, "An unaffordable target must not submit the skill.");
+                Assert.IsFalse(input.Preview.CanConfirm);
+                StringAssert.Contains("灵力不足", input.Preview.Reason);
+                Assert.AreEqual(0, spawned.Player.CurrentSpirit);
+                Assert.AreEqual(otherAp, spawned.Player.ActionPointsRemainingUnits);
+                CaptureS2Selection("other-insufficient-" + width);
+                spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, otherMp);
                 yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
                 Assert.IsFalse(input.IsSelectingAttack);
                 Assert.AreEqual(otherMp - 20, spawned.Player.CurrentSpirit);
@@ -901,6 +928,33 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 yield return CaptureHud("s2-recovery-other-" + width);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator S2RecoveryRejectsDeadTargetWithoutPayment()
+        {
+            SetGameSize(1920, 1080);
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            yield return Ready();
+            var bar = Find<CombatActionBarView>();
+            var input = Find<CombatCommandInput>();
+            var view = Find<CombatActionPreviewView>();
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            spawned.Enemy.ReceiveDamage(spawned.Enemy.CurrentHealth);
+            Reproject();
+            Assert.IsFalse(spawned.Enemy.IsAlive);
+            bar.SecondArtButton.onClick.Invoke();
+            Assert.IsTrue(input.IsSelectingAttack);
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: false);
+            Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId), "A dead unit must not be picked as a recovery target.");
+            Assert.IsFalse(input.Preview.CanConfirm);
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            Assert.IsTrue(input.IsSelectingAttack);
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+            Assert.IsFalse(view.ConfirmButton.gameObject.activeSelf);
+            CaptureS2Selection("dead-target");
+            input.CancelCandidate();
         }
 
         [UnityTest]

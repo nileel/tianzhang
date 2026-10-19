@@ -96,10 +96,20 @@ namespace TianZhang.Features.CombatPresentation
                 ? " · 已用" + value.CommittedUseCount + "次 · 本次×" +
                     (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture)
                 : string.Empty;
-            string artRange = value.Candidate.Kind == CombatActionKind.Art
-                ? "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标所在单格" : string.Empty;
+            if (value.Candidate.Kind == CombatActionKind.Art)
+            {
+                string status = value.CanConfirm ? "可施行" : "不可施行：" + value.Reason;
+                summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
+                    (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
+                    "\n" + status +
+                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标单格 · 费用 " +
+                    FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CD" + value.ReuseCooldownTicks +
+                    (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +
+                        "CT " + ct + "/" + threshold + " · 约+" + value.TicksUntilReady + "刻（双方存活、速度/CT不变，顺位未定）" : string.Empty);
+                return;
+            }
             summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
-                (attack ? " · " + value.AttackDetail + repeat : string.Empty) + artRange +
+                (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
                 "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT 惩罚 +" +
                 value.CtPenalty + " · CD " + value.ReuseCooldownTicks + "（剩 " + value.RemainingCooldownTicks + " 刻）" +
                 (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +

@@ -308,7 +308,7 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest]
         public IEnumerator StaleQuoteAndInsufficientActionPointsDoNotChargeOrConsumeSwap()
         {
-            yield return BeginEncounter(false, true);
+            yield return BeginEncounter(false, true, waitForContact: false);
             bar.SwapSpellButton.onClick.Invoke();
             Assert.That(input.Preview.CanConfirm, Is.True);
             spawned.Player.SetCooldown(Attack, 100);
@@ -321,7 +321,8 @@ namespace TianZhang.Tests.PlayMode
             bar.ArtButton.onClick.Invoke();
             Assert.IsTrue(input.IsSelectingAttack);
             Assert.IsNull(input.Candidate.TargetId);
-            input.CancelCandidate();
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+            Assert.IsFalse(input.IsSelectingAttack);
             yield return Ready();
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
