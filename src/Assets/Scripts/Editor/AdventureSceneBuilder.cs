@@ -340,7 +340,6 @@ namespace TianZhang.Editor
             PlaceLayoutRect(LayoutObject(actions, "GuardButton"), 252, 92, 114, 44);
             // Keep the existing lifecycle owner, but separate turn completion to the right of the hotbar.
             PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 880, 55, 200, 96);
-            PlaceLayoutRect(LayoutObject(actions, "SecondArtTargetButton"), 606, 92, 216, 44);
             PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
             PlaceLayoutRect(LayoutObject(actions, "SwapSpellButton"), 252, 8, 114, 68);
             ConfigureEquipmentButton(root);
@@ -958,12 +957,11 @@ namespace TianZhang.Editor
             Button basic = SceneBuildSupport.CreateButton("BasicAttackButton", actionRoot.transform, "普攻", out _);
             Button art = SceneBuildSupport.CreateButton("ArtButton", actionRoot.transform, "术法", out Text artLabel);
             Button secondArt = SceneBuildSupport.CreateButton("SecondArtButton", actionRoot.transform, "术法", out Text secondLabel);
-            Button target = SceneBuildSupport.CreateButton("SecondArtTargetButton", actionRoot.transform, "目标：自身", out Text targetLabel);
             Button divine = SceneBuildSupport.CreateButton("DivineButton", actionRoot.transform, "神通", out Text divineLabel);
             Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
             Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out Text waitLabel);
             Button swap = SceneBuildSupport.CreateButton("SwapSpellButton", actionRoot.transform, "换术", out _);
-            foreach (Button button in new[] { basic, art, secondArt, target, divine, guard, wait, swap })
+            foreach (Button button in new[] { basic, art, secondArt, divine, guard, wait, swap })
             {
                 SettlementSceneBuilder.ApplyButtonSkin(button);
                 SettlementSceneBuilder.SetHeight(button.gameObject, 44);
@@ -973,8 +971,6 @@ namespace TianZhang.Editor
                 SettlementSceneBuilder.SetHeight(button.gameObject, 64);
                 button.GetComponentInChildren<Text>().fontSize = 18;
             }
-            SettlementSceneBuilder.SetHeight(target.gameObject, 36);
-            targetLabel.fontSize = 16;
             Text status = SceneBuildSupport.CreateText("ActionStatusText", actionRoot.transform, string.Empty, 16);
             SettlementSceneBuilder.ApplyTextSkin(status, 48);
             SceneBuildSupport.SetObject(actionBar, "root", actionRoot);
@@ -983,8 +979,6 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(actionBar, "artLabel", artLabel);
             SceneBuildSupport.SetObject(actionBar, "secondArtButton", secondArt);
             SceneBuildSupport.SetObject(actionBar, "secondArtLabel", secondLabel);
-            SceneBuildSupport.SetObject(actionBar, "secondArtTargetButton", target);
-            SceneBuildSupport.SetObject(actionBar, "secondArtTargetLabel", targetLabel);
             SceneBuildSupport.SetObject(actionBar, "divineButton", divine);
             SceneBuildSupport.SetObject(actionBar, "divineLabel", divineLabel);
             SceneBuildSupport.SetObject(actionBar, "guardButton", guard);

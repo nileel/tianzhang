@@ -344,7 +344,13 @@ namespace TianZhang.Tests.PlayMode
                 if (button == bar.BasicAttackButton)
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
                 else
-                    yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, "enemy", click: true);
+                {
+                    int artIndex = button == bar.SecondArtButton ? 1 : 0;
+                    CombatArtActionSnapshot art = hud.Snapshot.ArtActions[artIndex];
+                    string target = art.Targets.Any(value => value.Id == "player" && value.CanExecute)
+                        ? "player" : "enemy";
+                    yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, target, click: true);
+                }
             }
             else if (button != bar.ArtButton && button != bar.SecondArtButton && button != bar.DivineButton)
             {

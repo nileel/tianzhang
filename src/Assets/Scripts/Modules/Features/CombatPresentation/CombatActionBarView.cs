@@ -18,8 +18,6 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text divineLabel;
         [SerializeField] private Button secondArtButton;
         [SerializeField] private Text secondArtLabel;
-        [SerializeField] private Button secondArtTargetButton;
-        [SerializeField] private Text secondArtTargetLabel;
         [SerializeField] private Text actionStatusLabel;
         [SerializeField] private Text waitLabel;
         private Func<string, string> displayReason = value => value;
@@ -49,7 +47,6 @@ namespace TianZhang.Features.CombatPresentation
         public Button ArtButton => artButton;
         public Button DivineButton => divineButton;
         public Button SecondArtButton => secondArtButton;
-        public Button SecondArtTargetButton => secondArtTargetButton;
         public Button GuardButton => guardButton;
         public Button WaitButton => waitButton;
 
@@ -60,9 +57,7 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(swapSpellButton, false);
             SetEnabled(swapEquipmentButton, false);
             SetEnabled(useItemButton, false);
-            SetEnabled(secondArtTargetButton, false);
             if (secondArtLabel != null) secondArtLabel.text = "术法";
-            if (secondArtTargetLabel != null) secondArtTargetLabel.text = "目标：—";
             if (actionStatusLabel != null) actionStatusLabel.text = string.Empty;
             if (waitLabel != null) waitLabel.text = "待机";
             SetEnabled(basicAttackButton, visible);
@@ -74,7 +69,7 @@ namespace TianZhang.Features.CombatPresentation
             if (divineLabel != null) divineLabel.text = string.IsNullOrWhiteSpace(divineProfileId) ? "神通" : displayProfile(divineProfileId);
         }
 
-        public void Present(CombatHudSnapshot snapshot, string firstArtTargetId, string secondArtTargetId)
+        public void Present(CombatHudSnapshot snapshot)
         {
             bool visible = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             bool canAct = visible;
@@ -96,14 +91,8 @@ namespace TianZhang.Features.CombatPresentation
 
             CombatArtActionSnapshot first = snapshot != null && snapshot.ArtActions.Count > 0 ? snapshot.ArtActions[0] : null;
             CombatArtActionSnapshot second = snapshot != null && snapshot.ArtActions.Count > 1 ? snapshot.ArtActions[1] : null;
-            string firstReason = PresentArt(first, firstArtTargetId, artButton, artLabel, canAct);
-            string secondReason = PresentArt(second, secondArtTargetId, secondArtButton, secondArtLabel, canAct);
-            CombatArtTargetSnapshot secondTarget = FindTarget(second, secondArtTargetId);
-            bool pointerTarget = second?.ProfileId == "spell_guanshiji";
-            SetEnabled(secondArtTargetButton, canAct && second != null && !pointerTarget && second.Targets.Count > 1);
-            if (secondArtTargetLabel != null)
-                secondArtTargetLabel.text = pointerTarget ? "鼠标选取" : secondTarget == null ? "目标：—" : "目标：" +
-                    (secondTarget.Id == snapshot.Player?.Id ? "自身" : secondTarget.DisplayName);
+            string firstReason = PresentArt(first, artButton, artLabel, canAct);
+            string secondReason = PresentArt(second, secondArtButton, secondArtLabel, canAct);
             if (actionStatusLabel != null)
             {
                 // The formal 192x76 status area also shows unarmed/equipment rejection reasons.
@@ -116,11 +105,10 @@ namespace TianZhang.Features.CombatPresentation
             }
         }
 
-        private string PresentArt(CombatArtActionSnapshot art, string targetId, Button button, Text label, bool canAct)
+        private string PresentArt(CombatArtActionSnapshot art, Button button, Text label, bool canAct)
         {
-            CombatArtTargetSnapshot target = FindTarget(art, targetId);
-            if (target?.CanExecute != true)
-                target = art?.Targets.FirstOrDefault(option => option.CanExecute) ?? target;
+            CombatArtTargetSnapshot target = art?.Targets.FirstOrDefault(option => option.CanExecute) ??
+                art?.Targets.FirstOrDefault();
             SetEnabled(button, canAct && target?.CanExecute == true);
             if (label != null)
             {
@@ -160,17 +148,6 @@ namespace TianZhang.Features.CombatPresentation
                     label.fontSize = 18;
             }
             return quote.CanConfirm ? string.Empty : quote.Reason;
-        }
-
-        private static CombatArtTargetSnapshot FindTarget(CombatArtActionSnapshot art, string targetId)
-        {
-            if (art == null) return null;
-            foreach (CombatArtTargetSnapshot target in art.Targets)
-            {
-                if (target != null && string.Equals(target.Id, targetId, StringComparison.Ordinal))
-                    return target;
-            }
-            return null;
         }
 
         public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption selected, CombatMovementOption preview = null)

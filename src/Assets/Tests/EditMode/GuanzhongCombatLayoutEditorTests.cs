@@ -153,6 +153,8 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(1, rects.Count(r => r.name == "CombatActionBar"));
             var actionBar = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatActionBarView>()).Single();
             Assert.IsFalse(rects.Any(r => r.name.StartsWith("AttackDirection_")));
+            Assert.IsFalse(rects.Any(r => r.name == "SecondArtTargetButton"), "The old cycling target entry must not remain in the formal scene.");
+            Assert.IsNull(new SerializedObject(actionBar).FindProperty("secondArtTargetButton"));
             Assert.IsNull(new SerializedObject(actionBar).FindProperty("attackDirectionButtons"));
             var input = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatCommandInput>()).Single();
             Assert.AreSame(actionBar, new SerializedObject(input).FindProperty("actionBar").objectReferenceValue);

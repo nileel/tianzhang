@@ -311,9 +311,11 @@ namespace TianZhang.Features.Adventure
                 CombatActionKind.UseItem => resolveText(command.ItemId),
                 _ => displayProfile(command.ProfileId),
             };
-            string targetName = string.IsNullOrEmpty(command.TargetId) ? "自身" : command.TargetId == "player"
-                ? playerDisplayName : spawned != null && spawned.Enemies.Any(enemy => enemy.Id == command.TargetId)
-                    ? resolveText(spawned.EnemyData.displayNameKey) : "无效目标";
+            string targetName = string.IsNullOrEmpty(command.TargetId)
+                ? candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art ? "待选目标" : "自身"
+                : command.TargetId == "player"
+                    ? playerDisplayName : spawned != null && spawned.Enemies.Any(enemy => enemy.Id == command.TargetId)
+                        ? resolveText(spawned.EnemyData.displayNameKey) : "无效目标";
             var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
@@ -362,7 +364,8 @@ namespace TianZhang.Features.Adventure
                 candidate.Kind == CombatActionKind.SwapEquipment && equipmentOwner != null
                     ? (string.IsNullOrEmpty(equipmentOwner.MainEquipmentItemId) ? "未装备" : resolveText(equipmentOwner.MainEquipmentItemId)) : string.Empty,
                 candidate.Kind == CombatActionKind.SwapEquipment && ownsEquipment != null
-                    ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null, area);
+                    ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null, area,
+                profile?.MinimumRange ?? 0, profile?.MaximumRange ?? 0);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)
@@ -633,7 +636,7 @@ namespace TianZhang.Features.Adventure
                 movement: BuildMovement(player, acceptsCommands),
                 isPresenting: IsPresenting || (advanceSteps != null && advanceSteps.Count > 1 &&
                     advanceSteps[advanceSteps.Count - 1].CurrentTick > advanceSteps[0].CurrentTick),
-                artActions: BuildArtActions(player, enemy),
+                artActions: BuildArtActions(player),
                 commandContextVersion: commandContextVersion,
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
@@ -667,7 +670,7 @@ namespace TianZhang.Features.Adventure
                 session.TurnPhase.ToString(), options);
         }
 
-        private IReadOnlyList<CombatArtActionSnapshot> BuildArtActions(CombatantSnapshot player, CombatantSnapshot enemy)
+        private IReadOnlyList<CombatArtActionSnapshot> BuildArtActions(CombatantSnapshot player)
         {
             var actions = new List<CombatArtActionSnapshot>();
             if (player == null) return actions;
@@ -675,11 +678,21 @@ namespace TianZhang.Features.Adventure
             {
                 session.TryGetProfile(id, out CombatAttackProfile profile);
                 var targets = new List<CombatArtTargetSnapshot>();
-                if (profile?.Effect == CombatAttackEffect.RestoreSpirit)
-                    AddTarget(player, playerDisplayName);
-                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive))
-                    AddTarget(target, resolveText(spawned.EnemyData.displayNameKey));
-                actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets));
+                if (profile != null)
+                {
+                    // Target availability follows the profile's own team rule, never a spell ID.
+                    // Keep the player first so self-target labels and default previews stay stable.
+                    var ordered = new List<CombatantSnapshot> { player };
+                    ordered.AddRange(session.Combatants.All.Where(target => target.Id != player.Id));
+                    foreach (CombatantSnapshot target in ordered)
+                    {
+                        if (!target.IsAlive || !profile.AllowsTarget(player.Team, target.Team)) continue;
+                        AddTarget(target, target.Team == CombatTeam.Player
+                            ? playerDisplayName : resolveText(spawned.EnemyData.displayNameKey));
+                    }
+                }
+                actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets,
+                    profile?.MinimumRange ?? 0, profile?.MaximumRange ?? 0));
 
                 void AddTarget(CombatantSnapshot target, string name)
                 {

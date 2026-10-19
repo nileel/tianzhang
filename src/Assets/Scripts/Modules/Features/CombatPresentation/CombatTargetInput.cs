@@ -58,17 +58,26 @@ namespace TianZhang.Features.CombatPresentation
             }
         }
 
-        public string FindEnemyAtCell(CombatUnitPresentationHex cell)
+        public string FindUnitAtCell(CombatUnitPresentationHex cell)
         {
             if (presenter?.Snapshot == null) return null;
             Vector3 center = Static3DCombatUnitPresentationProvider.HexToWorld(cell);
+            string player = Find(presenter.Snapshot.Player);
+            if (player != null) return player;
             foreach (var enemy in presenter.Snapshot.Enemies)
             {
-                if (enemy.CurrentHealth <= 0 || !provider.TryGetPresentedUnit(enemy.Id, out GameObject unit)) continue;
-                Vector3 delta = unit.transform.position - center;
-                if (delta.x * delta.x + delta.z * delta.z < .0001f) return enemy.Id;
+                string id = Find(enemy);
+                if (id != null) return id;
             }
             return null;
+
+            string Find(TianZhang.Gameplay.Contracts.CombatantHudSnapshot unit)
+            {
+                if (unit == null || unit.CurrentHealth <= 0 ||
+                    !provider.TryGetPresentedUnit(unit.Id, out GameObject presented)) return null;
+                Vector3 delta = presented.transform.position - center;
+                return delta.x * delta.x + delta.z * delta.z < .0001f ? unit.Id : null;
+            }
         }
 
     }

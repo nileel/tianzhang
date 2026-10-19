@@ -257,6 +257,8 @@ namespace TianZhang.Tests.PlayMode
             var log = Object.FindFirstObjectByType<CombatLogView>();
             string before = GameBootstrap.RequireRuntime().CaptureSaveJson();
             Assert.That(bounty.Summary, Does.Contain("0/1"));
+            Assert.IsFalse(Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Any(rect => rect.name == "SecondArtTargetButton"), "Board targeting replaces the old cycling target entry.");
             foreach (int width in new[] { 1920, 1366 })
             {
                 SetGameSize(width, width == 1920 ? 1080 : 768);
@@ -269,7 +271,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsNull(Rect("CombatHudRoot").GetComponent<LayoutGroup>());
                 var point = new Vector2(Screen.width * 0.5f, Screen.height * 0.52f);
                 Assert.IsEmpty(Hits(point), "Central battlefield must remain open");
-                foreach (Button button in new[] { bar.ArtButton, bar.SecondArtButton, bar.SecondArtTargetButton })
+                foreach (Button button in new[] { bar.ArtButton, bar.SecondArtButton })
                 {
                     Text label = button.GetComponentInChildren<Text>();
                     Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height + .1f, label.text);

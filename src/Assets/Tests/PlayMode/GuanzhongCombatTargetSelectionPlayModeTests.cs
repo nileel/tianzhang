@@ -231,7 +231,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(input.IsSelectingAttack);
                 Assert.AreEqual(inspected, presenter.InspectedTargetId);
                 Assert.IsFalse(preview.ConfirmButton.gameObject.activeSelf);
-                yield return CaptureArtEvidence("q3-first-" + width);
+                yield return CaptureArtEvidence("q3-first-" + width, session);
                 Vector2 confirm = RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(confirm);
                 Assert.IsFalse(input.Preview.CanConfirm, "Moving onto UI clears the hover quote.");
@@ -342,21 +342,27 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
         }
 
-        public static IEnumerator CaptureArtEvidence(string label)
+        public static IEnumerator CaptureArtEvidence(string label, CombatSession combat)
         {
             var input = Find<CombatCommandInput>();
             var movement = Find<CombatMovementView>();
             var bar = Find<CombatActionBarView>();
             Canvas.ForceUpdateCanvases();
-            foreach (Text text in new[] { bar.ArtButton, bar.SecondArtButton, bar.SecondArtTargetButton }
+            foreach (Text text in new[] { bar.ArtButton, bar.SecondArtButton }
                 .Select(button => button.GetComponentInChildren<Text>()))
             {
                 Assert.LessOrEqual(text.preferredWidth, text.rectTransform.rect.width + 1f, text.text);
                 Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + 1f, text.text);
             }
             var rings = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
-            Assert.AreEqual(1, rings.Length, "A single-target spell highlights exactly its chosen enemy cell.");
+            Assert.Greater(rings.Length, 1, "The selected skill must show its cast range plus the target's effect cell.");
             Assert.NotNull(input.Candidate.TargetId);
+            Assert.IsTrue(combat.Combatants.TryGet(input.Candidate.TargetId, out var targetUnit));
+            var effectRing = rings.Single(pair => pair.Value.name ==
+                "Reachable_" + targetUnit.Position.Q + "_" + targetUnit.Position.R);
+            string summary = Get<Text>(Find<CombatActionPreviewView>(), "summary").text;
+            StringAssert.Contains("施法范围", summary);
+            StringAssert.Contains("作用范围", summary);
 #if UNITY_EDITOR
             for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling);
@@ -367,11 +373,14 @@ namespace TianZhang.Tests.PlayMode
             File.WriteAllText(Path.Combine(directory, label + ".txt"), "resolution=" + Screen.width + "x" + Screen.height +
                 "; target=" + input.Candidate.TargetId + "; profile=" + input.Candidate.ProfileId +
                 "; context=" + input.Candidate.ContextVersion + "; AP=" + input.Preview.ActionPointCostUnits +
-                "; MP=" + input.Preview.SpiritCost + "; pointer=" + Mouse.current.position.ReadValue() +
-                "; camera=" + Camera.main.transform.position + "; ring=" + rings[0].Value.name +
-                "; parent=" + rings[0].Value.transform.parent.name + "; world=" + rings[0].Value.useWorldSpace +
-                "; points=" + string.Join("/", Enumerable.Range(0, 6).Select(index => rings[0].Value.GetPosition(index))) +
-                "; labels=" + string.Join("/", new[] { bar.ArtButton, bar.SecondArtButton, bar.SecondArtTargetButton }.Select(button =>
+                "; MP=" + input.Preview.SpiritCost + "; castRange=" + input.Preview.MinimumRange + "-" + input.Preview.MaximumRange +
+                "; rings=" + string.Join("/", rings.Select(pair => pair.Value.name)) +
+                "; pointer=" + Mouse.current.position.ReadValue() +
+                "; camera=" + Camera.main.transform.position + "; ring=" + effectRing.Value.name +
+                "; parent=" + effectRing.Value.transform.parent.name + "; world=" + effectRing.Value.useWorldSpace +
+                "; points=" + string.Join("/", Enumerable.Range(0, 6).Select(index => effectRing.Value.GetPosition(index))) +
+                "; summary=" + summary.Replace("\n", "\\n") +
+                "; labels=" + string.Join("/", new[] { bar.ArtButton, bar.SecondArtButton }.Select(button =>
                 {
                     Text text = button.GetComponentInChildren<Text>();
                     return text.text + ":rect=" + text.rectTransform.rect.size + ":preferred=" + text.preferredWidth + "," + text.preferredHeight;
@@ -487,9 +496,7 @@ namespace TianZhang.Tests.PlayMode
             string actor = session.CurrentActorId;
             CombatCommandInput commands = Find<CombatCommandInput>();
             string commandTarget = Get<string>(commands, "targetId");
-            string artTarget = Get<string>(commands, "secondArtTargetId");
             Assert.AreEqual(2, presenter.Snapshot.ArtActions.Count);
-            Assert.That(artTarget, Is.Not.Null.And.Not.Empty);
             int tick = session.TurnScheduler.CurrentTick, hp = spawned.Player.CurrentHealth, mp = spawned.Player.CurrentSpirit;
             yield return Click(WorldPoint(spawned.Enemy.Id));
             AssertSelection(spawned.Enemy.Id);
@@ -533,7 +540,6 @@ namespace TianZhang.Tests.PlayMode
             AssertSelection(adjacentId);
             Assert.AreEqual(actor, session.CurrentActorId);
             Assert.AreEqual(commandTarget, Get<string>(commands, "targetId"));
-            Assert.AreEqual(artTarget, Get<string>(commands, "secondArtTargetId"));
             Assert.AreEqual(tick, session.TurnScheduler.CurrentTick);
             Assert.AreEqual(hp, spawned.Player.CurrentHealth);
             Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
@@ -700,7 +706,7 @@ namespace TianZhang.Tests.PlayMode
                 width = Screen.width, height = Screen.height, selected = hud.InspectedTargetId,
                 axis = Find<CombatTimelineView>().InspectedTargetId, focus = Find<CombatTimelineView>().FocusedCombatantId,
                 actor = hud.Snapshot?.Timeline?.CurrentActorId, commandTarget = Get<string>(input, "targetId"),
-                secondArtTarget = Get<string>(input, "secondArtTargetId"), details = view.DetailsText,
+                details = view.DetailsText,
                 canInspect = hud.CanInspect, selecting = Find<CombatMovementView>().IsSelecting,
                 markerActive = view.WorldMarker.gameObject.activeSelf,
                 markerCorners = new Vector3[4], tick = hud.Snapshot?.Timeline?.CurrentTick ?? -1
@@ -726,7 +732,7 @@ namespace TianZhang.Tests.PlayMode
         private sealed class VisibleEvidence
         {
             public int width, height, tick;
-            public string selected, axis, focus, actor, commandTarget, secondArtTarget, details, root;
+            public string selected, axis, focus, actor, commandTarget, details, root;
             public bool canInspect, selecting, markerActive;
             public string selectedButton, focusedEditor;
             public Vector2 textSize;

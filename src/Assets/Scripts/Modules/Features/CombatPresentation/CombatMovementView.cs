@@ -78,23 +78,55 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
-        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false)
+        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false) =>
+            PresentTargeting(null, 0, 0, area, target, legal);
+
+        /// <summary>Shows the cast range and the effect cells for the currently pointed target.</summary>
+        public void PresentCastingPreview(CombatUnitPresentationHex origin, int minimum, int maximum,
+            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal) =>
+            PresentTargeting(origin, minimum, maximum, area, target, legal);
+
+        private void PresentTargeting(CombatUnitPresentationHex? rangeOrigin, int minimum, int maximum,
+            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal)
         {
             ClearSelection();
             if (!CanInput) return;
+            if (rangeOrigin.HasValue)
+            {
+                foreach (var pair in highlights)
+                {
+                    var position = new CombatUnitPresentationHex(pair.Key.x, pair.Key.y);
+                    int distance = HexDistance(rangeOrigin.Value, position);
+                    if (distance < minimum || distance > maximum) continue;
+                    ShowRing(pair.Value, ReachableOutlineColor, 0.035f);
+                }
+            }
             IReadOnlyList<CombatAttackAreaCellSnapshot> shown = area?.Cells ??
                 (target.HasValue ? new[] { new CombatAttackAreaCellSnapshot(target.Value, legal, string.Empty) } :
                     Array.Empty<CombatAttackAreaCellSnapshot>());
             foreach (CombatAttackAreaCellSnapshot cell in shown)
             {
                 if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
-                var properties = new MaterialPropertyBlock();
                 Color color = cell.IsLegal ? selectedMaterial.GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
-                color.a = 1f;
-                properties.SetColor("_BaseColor", color);
-                ring.SetPropertyBlock(properties);
-                ring.gameObject.SetActive(true);
+                ShowRing(ring, color, 0.06f);
             }
+        }
+
+        private static void ShowRing(LineRenderer ring, Color color, float width)
+        {
+            if (ring == null) return;
+            var properties = new MaterialPropertyBlock();
+            color.a = 1f;
+            properties.SetColor("_BaseColor", color);
+            ring.SetPropertyBlock(properties);
+            ring.widthMultiplier = width;
+            ring.gameObject.SetActive(true);
+        }
+
+        private static int HexDistance(CombatUnitPresentationHex left, CombatUnitPresentationHex right)
+        {
+            int q = left.Q - right.Q, r = left.R - right.R;
+            return (Math.Abs(q) + Math.Abs(r) + Math.Abs(q + r)) / 2;
         }
 
         public void BeginSelection()
@@ -198,6 +230,7 @@ namespace TianZhang.Features.CombatPresentation
                 if (ring != null)
                 {
                     ring.gameObject.SetActive(false);
+                    ring.widthMultiplier = 0.035f;
                     var properties = new MaterialPropertyBlock();
                     properties.SetColor("_BaseColor", ReachableOutlineColor);
                     ring.SetPropertyBlock(properties);

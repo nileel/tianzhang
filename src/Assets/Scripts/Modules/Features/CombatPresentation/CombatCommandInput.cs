@@ -34,6 +34,7 @@ namespace TianZhang.Features.CombatPresentation
         public void CancelCandidate()
         {
             IsSelectingAttack = false;
+            selectingArt = null;
             pointedCell = null;
             Preview = null;
             previewView?.Present(null);
@@ -62,7 +63,7 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
                 snapshot.CommandContextVersion, slotIndex: slot, attackDirection: direction));
-            if (kind is CombatActionKind.Art or CombatActionKind.Divine && Preview?.CanConfirm == true)
+            if (kind == CombatActionKind.Divine && Preview?.CanConfirm == true)
             {
                 CommitCandidate();
                 return;
@@ -72,57 +73,87 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.PresentAttackArea(Preview?.AttackArea);
         }
 
-        private void BeginAttackSelection(CombatArtActionSnapshot art = null)
+        private void BeginSelection(CombatActionKind kind, CombatArtActionSnapshot art = null)
         {
             if (!CanAct || previewHandler == null || movementView == null || targetInput == null) return;
             CancelCandidate();
             movementView.Cancel();
             IsSelectingAttack = true;
-            PresentPointerPrompt("鼠标指向地块预览，左键施行；右键或 Esc 取消",
-                new CombatActionCandidate(art == null ? CombatActionKind.BasicAttack : CombatActionKind.Art,
-                    actorId, null, art?.ProfileId, snapshot.CommandContextVersion), art?.DisplayName ?? "普攻");
+            selectingArt = art;
+            var selection = new CombatActionCandidate(kind, actorId, null, art?.ProfileId, snapshot.CommandContextVersion);
+            PresentPointerPrompt(art == null
+                    ? "鼠标指向地块预览，左键施行；右键或 Esc 取消"
+                    : "左键点击施法范围内角色；右键或 Esc 取消",
+                selection, art?.DisplayName ?? "普攻", art?.MinimumRange ?? 0, art?.MaximumRange ?? 0);
         }
 
-        private void PresentPointerPrompt(string reason, CombatActionCandidate selection = null, string actionName = null)
+        private void PresentPointerPrompt(string reason, CombatActionCandidate selection = null, string actionName = null,
+            int minimumRange = 0, int maximumRange = 0)
         {
             selection ??= Candidate;
-            actionName ??= Preview.ActionName;
+            if (actionName == null) actionName = Preview?.ActionName ?? "攻击";
             pointedCell = null;
             Preview = new CombatActionPreviewSnapshot(new CombatActionCandidate(selection.Kind,
-                actorId, null, selection.ProfileId, snapshot.CommandContextVersion), actionName, "当前角色", "地块", false,
-                reason, 0, false, 0, 0, 0);
+                actorId, null, selection.ProfileId, snapshot.CommandContextVersion), actionName, "当前角色", "待选目标", false,
+                reason, 0, false, 0, 0, 0, minimumRange: minimumRange, maximumRange: maximumRange);
             previewView?.Present(Preview);
             timeline?.PresentPrediction(null);
-            movementView.PresentAttackArea(null);
+            PresentSelectionHighlights(null, null, false);
+        }
+
+        private void PresentSelectionHighlights(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? cell, bool legal)
+        {
+            if (movementView == null) return;
+            if (selectingArt != null && snapshot?.Movement != null)
+            {
+                CombatUnitPresentationHex origin = snapshot.Movement.Origin;
+                movementView.PresentCastingPreview(origin, selectingArt.MinimumRange, selectingArt.MaximumRange, area, cell, legal);
+            }
+            else movementView.PresentAttackArea(area, cell, legal);
         }
 
         private void LateUpdate()
         {
             if (!IsSelectingAttack) return;
-            if (!CanAct) { CancelCandidate(); return; }
+            if (!CanAct || snapshot?.Movement == null) { CancelCandidate(); return; }
             Mouse mouse = Mouse.current;
             if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
             { CancelCandidate(); return; }
             if (mouse == null || !movementView.TryPickCell(mouse.position.ReadValue(), out var cell))
-            { if (pointedCell.HasValue) PresentPointerPrompt("请指向棋盘内的地块，左键施行"); return; }
+            {
+                if (pointedCell.HasValue)
+                    PresentPointerPrompt(selectingArt == null
+                        ? "请指向棋盘内的地块，左键施行"
+                        : "请指向施法范围内的角色，左键施行", null, selectingArt?.DisplayName,
+                        selectingArt?.MinimumRange ?? 0, selectingArt?.MaximumRange ?? 0);
+                return;
+            }
             // Requote on the committing click even when the pointer has not moved.
             if (!pointedCell.HasValue || !pointedCell.Value.Equals(cell) || mouse.leftButton.wasPressedThisFrame)
             {
                 pointedCell = cell;
-                bool art = Candidate.Kind == CombatActionKind.Art;
-                string profile = Candidate.ProfileId;
+                bool basic = selectingArt == null;
                 CombatUnitPresentationHex origin = snapshot.Movement.Origin;
                 int q = cell.Q - origin.Q, r = cell.R - origin.R;
-                if (q == 0 && r == 0) { PresentPointerPrompt("请选择其他地块，不能攻击自身"); return; }
+                if (basic && q == 0 && r == 0)
+                {
+                    PresentPointerPrompt("请选择其他地块，不能攻击自身", new CombatActionCandidate(
+                        CombatActionKind.BasicAttack, actorId, null, null, snapshot.CommandContextVersion), "普攻");
+                    return;
+                }
                 // Same axial six-direction order as the board; choose the nearest facing to the pointed cell.
                 float angle = Mathf.Atan2(-0.8660254f * r, q + .5f * r) * Mathf.Rad2Deg;
                 int direction = (Mathf.FloorToInt((angle + 30f) / 60f) % 6 + 6) % 6;
-                Preview = previewHandler.PreviewAction(new CombatActionCandidate(art ? CombatActionKind.Art : CombatActionKind.BasicAttack,
-                    actorId, targetInput.FindEnemyAtCell(cell), profile, snapshot.CommandContextVersion, attackDirection:
-                        !art && snapshot.FindAction(CombatActionKind.BasicAttack)?.AttackArea != null ? direction : (int?)null));
+                bool directional = basic && snapshot.FindAction(CombatActionKind.BasicAttack)?.AttackArea != null;
+                string target = targetInput.FindUnitAtCell(cell);
+                Preview = previewHandler.PreviewAction(new CombatActionCandidate(
+                    basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, target,
+                    basic ? null : selectingArt.ProfileId, snapshot.CommandContextVersion,
+                    attackDirection: directional ? direction : (int?)null));
                 previewView?.Present(Preview);
                 timeline?.PresentPrediction(Preview);
-                movementView.PresentAttackArea(Preview?.AttackArea, cell, Preview?.CanConfirm == true);
+                CombatUnitPresentationHex? effectCell = basic || target != null ? cell : (CombatUnitPresentationHex?)null;
+                PresentSelectionHighlights(Preview?.AttackArea, effectCell, Preview?.CanConfirm == true);
             }
             if (mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true)
             {
@@ -138,10 +169,7 @@ namespace TianZhang.Features.CombatPresentation
         private string divineProfileId;
         private bool acceptsCommands;
         private CombatHudSnapshot snapshot;
-        private string firstArtTargetId;
-        private string secondArtTargetId;
-        private string firstArtSelectionProfileId;
-        private string secondArtSelectionProfileId;
+        private CombatArtActionSnapshot selectingArt;
 
         public void Configure(ICombatCommandHandler commandHandler, CombatActionBarView bar, CombatMovementView movement = null)
         {
@@ -152,10 +180,9 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
             Bind(actionBar?.ConfirmMoveButton, () => movementView?.Confirm());
             Bind(actionBar?.CancelMoveButton, () => movementView?.Cancel());
-            Bind(actionBar?.BasicAttackButton, () => BeginAttackSelection());
+            Bind(actionBar?.BasicAttackButton, () => BeginSelection(CombatActionKind.BasicAttack));
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
-            Bind(actionBar?.SecondArtTargetButton, SelectNextSecondArtTarget);
             Bind(actionBar?.DivineButton, () =>
             {
                 var choice = snapshot?.FindPreferredAction(CombatActionKind.Divine, divineProfileId)?.Candidate;
@@ -202,8 +229,6 @@ namespace TianZhang.Features.CombatPresentation
         {
             CancelCandidate();
             snapshot = null;
-            firstArtTargetId = secondArtTargetId = null;
-            firstArtSelectionProfileId = secondArtSelectionProfileId = null;
             this.acceptsCommands = acceptsCommands;
             actorId = nextActorId;
             targetId = nextTargetId;
@@ -221,13 +246,7 @@ namespace TianZhang.Features.CombatPresentation
             actorId = snapshot?.Player?.Id;
             targetId = snapshot?.Enemy?.Id;
             divineProfileId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
-            CombatArtActionSnapshot first = GetArt(0);
-            CombatArtActionSnapshot second = GetArt(1);
-            firstArtTargetId = KeepTarget(first, firstArtSelectionProfileId, firstArtTargetId);
-            secondArtTargetId = KeepTarget(second, secondArtSelectionProfileId, secondArtTargetId);
-            firstArtSelectionProfileId = first?.ProfileId;
-            secondArtSelectionProfileId = second?.ProfileId;
-            actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
+            actionBar?.Present(snapshot);
             movementView?.Present(nextSnapshot);
         }
 
@@ -273,64 +292,13 @@ namespace TianZhang.Features.CombatPresentation
         private CombatArtActionSnapshot GetArt(int index) =>
             snapshot != null && snapshot.ArtActions.Count > index ? snapshot.ArtActions[index] : null;
 
-        private static string KeepTarget(CombatArtActionSnapshot art, string priorProfileId, string priorTargetId)
-        {
-            if (art == null) return null;
-            CombatArtTargetSnapshot prior = string.Equals(art.ProfileId, priorProfileId, StringComparison.Ordinal)
-                ? art.Targets.FirstOrDefault(target => target != null && string.Equals(target.Id, priorTargetId, StringComparison.Ordinal))
-                : null;
-            if (prior != null && prior.CanExecute) return prior.Id;
-            // A default target that moved out of range must not hide another legal target.
-            return (art.Targets.FirstOrDefault(target => target != null && target.CanExecute) ??
-                prior ?? art.Targets.FirstOrDefault())?.Id;
-        }
-
         private void RequestArt(int index)
         {
-            if (!CanAct) return;
-            if (snapshot == null) return;
+            if (!CanAct || snapshot == null) return;
             CombatArtActionSnapshot art = GetArt(index);
-            if (art == null) return;
-            if (art.ProfileId == "spell_guanshiji")
-            {
-                BeginAttackSelection(art);
-                return;
-            }
-            string selected = index == 0 ? firstArtTargetId : secondArtTargetId;
-            if (!art.Targets.Any(target => target.Id == selected && target.CanExecute))
-            {
-                selected = art.Targets.FirstOrDefault(target => target.CanExecute)?.Id;
-                if (index == 0) firstArtTargetId = selected;
-                else secondArtTargetId = selected;
-                actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
-            }
-            foreach (CombatArtTargetSnapshot target in art.Targets)
-            {
-                if (target != null && string.Equals(target.Id, selected, StringComparison.Ordinal))
-                {
-                    Choose(CombatActionKind.Art, target.Id, art.ProfileId);
-                    return;
-                }
-            }
-        }
-
-        private void SelectNextSecondArtTarget()
-        {
-            CombatArtActionSnapshot art = GetArt(1);
-            if (!CanAct || art == null || art.ProfileId == "spell_guanshiji" || art.Targets.Count < 2) return;
-            int selectedIndex = 0;
-            for (int index = 0; index < art.Targets.Count; index++)
-            {
-                if (string.Equals(art.Targets[index].Id, secondArtTargetId, StringComparison.Ordinal))
-                {
-                    selectedIndex = index;
-                    break;
-                }
-            }
-            secondArtTargetId = art.Targets[(selectedIndex + 1) % art.Targets.Count].Id;
-            actionBar?.Present(snapshot, firstArtTargetId, secondArtTargetId);
-            if (Candidate?.Kind == CombatActionKind.Art && Candidate.ProfileId == art.ProfileId)
-                CancelCandidate();
+            if (art == null || !art.Targets.Any(target => target != null && target.CanExecute)) return;
+            // The skill button only opens targeting; every legal target still needs its own pointed click.
+            BeginSelection(CombatActionKind.Art, art);
         }
 
         private void Bind(Button button, Action action)

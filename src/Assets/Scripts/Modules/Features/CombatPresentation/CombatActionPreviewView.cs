@@ -41,11 +41,20 @@ namespace TianZhang.Features.CombatPresentation
             }
             string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
+            if (value.Candidate.Kind == CombatActionKind.Art && string.IsNullOrEmpty(value.Candidate.TargetId))
+            {
+                summary.text = value.ActionName + " · 待选目标" +
+                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标所在单格" +
+                    "\n" + value.Reason;
+                return;
+            }
             if (value.AttackArea != null)
             {
                 CombatAttackAreaSnapshot area = value.AttackArea;
                 string Hex(CombatUnitPresentationHex hex) => "(" + hex.Q + "," + hex.R + ")";
-                summary.text = value.ActionName + " · 起点" + Hex(area.Origin) + " · 方向" + area.Direction + " · " +
+                string castRange = value.MaximumRange > 0
+                    ? " · 施法 " + value.MinimumRange + "–" + value.MaximumRange + " 格" : string.Empty;
+                summary.text = value.ActionName + " · 起点" + Hex(area.Origin) + " · 方向" + area.Direction + castRange + " · " +
                     string.Join(" / ", area.Cells.Select(cell => Hex(cell.Position) + (cell.IsLegal ? "可命中" : cell.Reason))) +
                     "\n目标：" + (area.Targets.Count == 0 ? "无" : string.Join("、", area.Targets.Select(target => target.DisplayName + "[" + target.Id + "]"))) +
                     " · 一次费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
@@ -87,8 +96,10 @@ namespace TianZhang.Features.CombatPresentation
                 ? " · 已用" + value.CommittedUseCount + "次 · 本次×" +
                     (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture)
                 : string.Empty;
+            string artRange = value.Candidate.Kind == CombatActionKind.Art
+                ? "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标所在单格" : string.Empty;
             summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
-                (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
+                (attack ? " · " + value.AttackDetail + repeat : string.Empty) + artRange +
                 "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT 惩罚 +" +
                 value.CtPenalty + " · CD " + value.ReuseCooldownTicks + "（剩 " + value.RemainingCooldownTicks + " 刻）" +
                 (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +

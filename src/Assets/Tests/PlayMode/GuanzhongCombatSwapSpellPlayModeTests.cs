@@ -135,13 +135,10 @@ namespace TianZhang.Tests.PlayMode
                 bar.SecondArtButton.onClick.Invoke();
                 Assert.IsTrue(input.IsSelectingAttack);
                 Assert.IsNull(input.Candidate.TargetId);
-                Assert.IsFalse(bar.SecondArtTargetButton.interactable);
-                bar.SecondArtTargetButton.onClick.Invoke();
-                Assert.IsNull(input.Candidate.TargetId, "The old cycling callback cannot bypass pointer selection.");
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
                 Assert.AreEqual(Attack, input.Candidate.ProfileId);
                 Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
-                yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("q3-second-" + width);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("q3-second-" + width, session);
                 input.CancelCandidate();
                 Assert.IsNull(input.Candidate);
             }
@@ -161,7 +158,10 @@ namespace TianZhang.Tests.PlayMode
             var recovery = hud.Snapshot.ArtActions[0].Targets.First(target => target.Id == "player").Quote;
             ap = spawned.Player.ActionPointsRemainingUnits; mp = spawned.Player.CurrentSpirit;
             bar.ArtButton.onClick.Invoke();
-            Assert.IsNull(input.Candidate);
+            Assert.IsTrue(input.IsSelectingAttack);
+            Assert.IsNull(input.Candidate.TargetId);
+            yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+            Assert.IsFalse(input.IsSelectingAttack);
             Assert.AreEqual(ap - recovery.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             Assert.Greater(spawned.Player.CurrentSpirit, mp);
         }
@@ -319,7 +319,9 @@ namespace TianZhang.Tests.PlayMode
             var recovery = hud.Snapshot.ArtActions[0].Targets.First(target => target.Id == "player").Quote;
             Assert.IsTrue(recovery.CanConfirm, recovery.Reason);
             bar.ArtButton.onClick.Invoke();
-            Assert.IsNull(input.Candidate);
+            Assert.IsTrue(input.IsSelectingAttack);
+            Assert.IsNull(input.Candidate.TargetId);
+            input.CancelCandidate();
             yield return Ready();
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
@@ -340,7 +342,7 @@ namespace TianZhang.Tests.PlayMode
         private void RecordArtState(string label)
         {
             string record = label + "; context=" + hud.Snapshot.CommandContextVersion + "; state=" + State() +
-                "; selected=" + Get<string>(input, "firstArtTargetId") + "; button=" + bar.ArtButton.interactable +
+                "; button=" + bar.ArtButton.interactable +
                 "; targets=" + string.Join("/", hud.Snapshot.ArtActions.SelectMany(art => art.Targets.Select(target =>
                     art.ProfileId + ":" + target.Id + "=" + target.CanExecute + ":" + target.RejectionReason +
                     ":AP=" + target.Quote.ActionPointCostUnits + ":MP=" + target.Quote.SpiritCost +

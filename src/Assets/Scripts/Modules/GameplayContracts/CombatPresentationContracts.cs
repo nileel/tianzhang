@@ -86,7 +86,8 @@ namespace TianZhang.Gameplay.Contracts
             int committedUseCount = 0, int repeatMultiplierPermille = 1000, string ruleSetVersion = "",
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
             string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
-            string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null)
+            string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null,
+            int minimumRange = 0, int maximumRange = 0)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -113,6 +114,7 @@ namespace TianZhang.Gameplay.Contracts
             PhysicalAttackCapacity = physicalAttackCapacity; AttackDetail = attackDetail;
             CurrentEquipmentName = currentEquipmentName; EquipmentOwned = equipmentOwned;
             AttackArea = attackArea;
+            MinimumRange = minimumRange; MaximumRange = maximumRange;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -148,6 +150,8 @@ namespace TianZhang.Gameplay.Contracts
         public string CurrentEquipmentName { get; }
         public bool? EquipmentOwned { get; }
         public CombatAttackAreaSnapshot AttackArea { get; }
+        public int MinimumRange { get; }
+        public int MaximumRange { get; }
     }
 
     public enum CombatUnitPresentationEvent
@@ -377,19 +381,23 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatArtActionSnapshot
     {
         public CombatArtActionSnapshot(string profileId, string displayName, int cooldownPenalty,
-            IReadOnlyList<CombatArtTargetSnapshot> targets)
+            IReadOnlyList<CombatArtTargetSnapshot> targets, int minimumRange = 0, int maximumRange = 0)
         {
             ProfileId = profileId;
             DisplayName = displayName;
             CooldownPenalty = cooldownPenalty;
             Targets = targets == null ? Array.Empty<CombatArtTargetSnapshot>() :
                 new List<CombatArtTargetSnapshot>(targets).AsReadOnly();
+            MinimumRange = minimumRange;
+            MaximumRange = maximumRange;
         }
 
         public string ProfileId { get; }
         public string DisplayName { get; }
         public int CooldownPenalty { get; }
         public IReadOnlyList<CombatArtTargetSnapshot> Targets { get; }
+        public int MinimumRange { get; }
+        public int MaximumRange { get; }
     }
 
     [Serializable]
