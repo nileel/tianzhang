@@ -1300,6 +1300,8 @@ namespace TianZhang.Tests.PlayMode
                 Vector3 center = Enumerable.Range(0, 6).Select(ring.GetPosition).Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
                 Assert.That(center.x, Is.EqualTo(tile.position.x).Within(.001f));
                 Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
+                Assert.That(center.y, Is.EqualTo(TileBodyTop(tile) + .01f).Within(.001f),
+                    "The selection border must sit on the tile body instead of the obstacle top.");
             }
             string before = State();
             var button = Find<CombatActionPreviewView>().CancelButton;
@@ -1581,6 +1583,19 @@ namespace TianZhang.Tests.PlayMode
             public bool MissAll { get; set; }
             public float NextPercent() => Count++ % 5 == 0 && !MissAll ? 0f : 99f;
         }
+
+        /// <summary>Tile body top only: obstacles and units are parented under the same cell root.</summary>
+        private static float TileBodyTop(Transform tile)
+        {
+            Transform body = tile.Find("MeasuredFbxAlignment");
+            Renderer[] renderers = body != null
+                ? body.GetComponentsInChildren<Renderer>()
+                : tile.GetComponents<Renderer>();
+            float top = tile.position.y;
+            foreach (Renderer renderer in renderers) top = Mathf.Max(top, renderer.bounds.max.y);
+            return top;
+        }
+
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("天章/验证/记录行动预览现场 %&p")]
         public static void CaptureVisiblePreview()

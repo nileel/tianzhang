@@ -614,6 +614,122 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
+        // S4: the selection ring is measured from the tile body only. Units and obstacles share
+        // the cell root, so a formal rock must never lift its cell's border off the ground.
+        [UnityTest]
+        public IEnumerator SelectionBordersStayOnTileBodyAroundFormalRocksAtBothResolutions()
+        {
+            string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/s4-evidence"));
+            Directory.CreateDirectory(output);
+            yield return EnterSettlement();
+            Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+            var encounter = Find<EncounterCoordinator>();
+            var session = Get<CombatSession>(encounter, "session");
+            var spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            var movement = Find<CombatMovementView>();
+            var bar = Find<CombatActionBarView>();
+            var presenter = Find<CombatHudPresenter>();
+            var input = Find<CombatCommandInput>();
+            Camera camera = Get<Camera>(movement, "battlefieldCamera");
+            yield return PlayerTurn(encounter, session);
+
+            var rocks = new[] { new HexCoord(2, 1), new HexCoord(3, 1), new HexCoord(2, 4), new HexCoord(3, 4) };
+            for (int step = 0; step < 3 && NearestRock(spawned.Player.Position, rocks) > 1; step++)
+            {
+                CombatHudSnapshot snapshot = presenter.Snapshot;
+                Assert.That(snapshot.Movement, Is.Not.Null, "The player turn must quote movement options.");
+                CombatMovementOption option = snapshot.Movement.Options
+                    .FirstOrDefault(candidate => rocks.Any(rock => rock.Distance(ToHex(candidate.Destination)) == 1))
+                    ?? snapshot.Movement.Options.OrderBy(candidate => rocks.Min(rock => rock.Distance(ToHex(candidate.Destination)))).FirstOrDefault();
+                Assert.That(option, Is.Not.Null, "A legal step toward the formal rocks must exist.");
+                int before = spawned.Player.ActionPointsRemainingUnits;
+                encounter.RequestMove("player", option.Destination.Q, option.Destination.R);
+                for (float deadline = Time.realtimeSinceStartup + 15f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
+                Assert.That(spawned.Player.Position, Is.EqualTo(ToHex(option.Destination)), "The production move must land on the quoted cell.");
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.LessThan(before));
+                yield return PlayerTurn(encounter, session);
+            }
+            Assert.That(NearestRock(spawned.Player.Position, rocks), Is.LessThanOrEqualTo(1),
+                "The player must stand next to a formal rock before the art range can include it: " + spawned.Player.Position);
+
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return SetGameSize(size);
+                var lines = new List<string>
+                {
+                    Header(),
+                    "player=" + spawned.Player.Position + "; ap=" + spawned.Player.ActionPointsRemainingUnits +
+                    "; spirit=" + spawned.Player.CurrentSpirit + "; turn=" + session.CurrentActorId + "/" + session.TurnPhase,
+                };
+                foreach (var pair in movement.Highlights.OrderBy(item => item.Key.x).ThenBy(item => item.Key.y))
+                {
+                    Transform tile = GameObject.Find("GuanzhongHex_" + pair.Key.x + "_" + pair.Key.y).transform;
+                    float bodyTop = TileBodyTop(tile);
+                    float ringY = pair.Value.GetPosition(0).y;
+                    Assert.That(ringY, Is.EqualTo(bodyTop + .01f).Within(.001f),
+                        "Border Y must be measured from the tile body only: " + pair.Key);
+                    Transform rock = tile.Find("GuanzhongObstacle_" + pair.Key.x + "_" + pair.Key.y);
+                    if (rock == null) continue;
+                    float rockTop = rock.GetComponentsInChildren<Renderer>().Max(renderer => renderer.bounds.max.y);
+                    Assert.That(ringY, Is.LessThan(rockTop - .3f),
+                        "The formal rock must not raise the border: " + pair.Key);
+                    lines.Add($"rock={pair.Key.x},{pair.Key.y}; tileBodyTop={bodyTop:F4}; ringY={ringY:F4}; offset={ringY - bodyTop:F4}; rockTop={rockTop:F4}; ringBelowRockTop={rockTop - ringY:F4}");
+                }
+
+                Button art = new[] { bar.ArtButton, bar.SecondArtButton }
+                    .FirstOrDefault(button => button != null && button.gameObject.activeInHierarchy && button.interactable);
+                Assert.That(art, Is.Not.Null, "An executable art is required to show the cast range; ap=" +
+                    spawned.Player.ActionPointsRemainingUnits + "; spirit=" + spawned.Player.CurrentSpirit +
+                    "; art=" + bar.ArtButton.interactable + "; second=" + bar.SecondArtButton.interactable +
+                    "; status=" + Get<Text>(bar, "actionStatusLabel")?.text);
+                art.onClick.Invoke();
+                yield return null; yield return null;
+                Assert.That(input.IsSelectingAttack, Is.True, "Art selection must open without a preselected target.");
+                HexCoord[] active = movement.Highlights.Where(item => item.Value.gameObject.activeSelf)
+                    .Select(item => new HexCoord(item.Key.x, item.Key.y)).ToArray();
+                Assert.That(active.Any(cell => rocks.Any(rock => rock.Q == cell.Q && rock.R == cell.R)), Is.True,
+                    "The cast range must cover a formal rock cell; active=" + string.Join("/", active.Select(cell => cell.Q + "," + cell.R)));
+                lines.Add("artRangeCells=" + string.Join("/", active.OrderBy(cell => cell.Q).ThenBy(cell => cell.R).Select(cell => cell.Q + "," + cell.R)));
+                lines.Add("artButton=" + art.name + "; label=" + art.GetComponentInChildren<Text>().text.Replace("\n", " "));
+                yield return Capture("s4-art-range-rock-" + size.x, output);
+                input.CancelCandidate();
+                yield return null;
+
+                bar.MoveButton.onClick.Invoke();
+                yield return null; yield return null;
+                Assert.That(movement.IsSelecting, Is.True, "Movement selection must open for the range capture.");
+                CombatMovementOption hovered = null;
+                Vector2 hoverPoint = default;
+                foreach (CombatMovementOption candidate in presenter.Snapshot.Movement.Options
+                    .OrderBy(option => rocks.Min(rock => rock.Distance(ToHex(option.Destination)))))
+                {
+                    if (!TryPointAtCell(movement, camera, ToHex(candidate.Destination), out Vector2 point)) continue;
+                    hovered = candidate;
+                    hoverPoint = point;
+                    break;
+                }
+                Assert.That(hovered, Is.Not.Null, "A clickable movement destination must be visible on screen.");
+                yield return Pointer(hoverPoint, false);
+                yield return null;
+                Assert.That(movement.Selected, Is.Not.Null, "Hovering a legal cell must preview its path.");
+                Assert.That(movement.Selected.Destination.Q, Is.EqualTo(hovered.Destination.Q));
+                Assert.That(movement.Selected.Destination.R, Is.EqualTo(hovered.Destination.R));
+                lines.Add("movementHover=" + hovered.Destination.Q + "," + hovered.Destination.R +
+                    "; path=" + string.Join("/", hovered.Path.Select(cell => cell.Q + "," + cell.R)) +
+                    "; cost=" + hovered.Cost + "; activeRings=" + movement.Highlights.Count(item => item.Value.gameObject.activeSelf));
+                yield return Capture("s4-move-range-rock-" + size.x, output);
+                movement.Cancel();
+                yield return null;
+                File.WriteAllText(Path.Combine(output, "highlight-height-" + size.x + ".txt"), string.Join("\n", lines));
+                TestContext.WriteLine("S4 " + size.x + ": " + string.Join(" | ", lines));
+            }
+        }
+
         [Serializable]
         private sealed class R4Sample
         {
@@ -793,6 +909,50 @@ namespace TianZhang.Tests.PlayMode
         }
         private static string Header() => $"scene={SceneManager.GetActiveScene().name}; resolution={Screen.width}x{Screen.height}; project={Application.dataPath}; utc={DateTime.UtcNow:O}";
         private static Vector2Int[] Sizes() => new[] { new Vector2Int(1920, 1080), new Vector2Int(1366, 768) };
+
+        private static IEnumerator PlayerTurn(EncounterCoordinator encounter, CombatSession session)
+        {
+            for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline &&
+                (session.CurrentActorId != "player" || encounter.IsPresenting);) yield return null;
+            yield return null;
+            Assert.That(session.CurrentActorId, Is.EqualTo("player"), "Expected a player turn.");
+            Assert.That(encounter.IsPresenting, Is.False);
+        }
+
+        /// <summary>Tile body top only: obstacles and units are parented under the same cell root.</summary>
+        private static float TileBodyTop(Transform tile)
+        {
+            Transform body = tile.Find("MeasuredFbxAlignment");
+            Renderer[] renderers = body != null
+                ? body.GetComponentsInChildren<Renderer>()
+                : tile.GetComponents<Renderer>();
+            float top = tile.position.y;
+            foreach (Renderer renderer in renderers) top = Mathf.Max(top, renderer.bounds.max.y);
+            return top;
+        }
+
+        private static int NearestRock(HexCoord position, HexCoord[] rocks) => rocks.Min(rock => rock.Distance(position));
+
+        private static HexCoord ToHex(CombatUnitPresentationHex hex) => new HexCoord(hex.Q, hex.R);
+
+        private static bool TryPointAtCell(CombatMovementView movement, Camera camera, HexCoord cell, out Vector2 point)
+        {
+            Transform tile = GameObject.Find("GuanzhongHex_" + cell.Q + "_" + cell.R).transform;
+            Vector3 center = camera.WorldToScreenPoint(tile.position);
+            point = center;
+            if (center.z <= 0) return false;
+            for (int dx = -30; dx <= 30; dx += 10)
+            for (int dy = -30; dy <= 30; dy += 10)
+            {
+                Vector2 candidate = new Vector2(center.x + dx, center.y + dy);
+                if (!movement.TryPickCell(candidate, out CombatUnitPresentationHex picked)) continue;
+                if (picked.Q != cell.Q || picked.R != cell.R) continue;
+                point = candidate;
+                return true;
+            }
+            return false;
+        }
+
         private static string PathOf(Transform value) => value.parent == null ? value.name : PathOf(value.parent) + "/" + value.name;
         private static T Find<T>() where T : Component => SceneManager.GetActiveScene().GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).Single();
         private static T Get<T>(object owner, string field) => (T)owner.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(owner);

@@ -11,6 +11,7 @@ namespace TianZhang.Features.CombatPresentation
     public sealed class CombatMovementView : MonoBehaviour
     {
         private static readonly Color ReachableOutlineColor = new Color32(0x23, 0x8C, 0xFF, 0xFF);
+        private const float SelectionBorderOffset = 0.01f;
 
         [Serializable]
         private sealed class Cell
@@ -54,10 +55,7 @@ namespace TianZhang.Features.CombatPresentation
             {
                 if (cell.tile == null) throw new InvalidOperationException("combat_movement_tile_missing");
                 Vector3 center = cell.tile.position;
-                float top = center.y;
-                foreach (Renderer renderer in cell.tile.GetComponentsInChildren<Renderer>())
-                    top = Mathf.Max(top, renderer.bounds.max.y);
-                center.y = top + 0.01f;
+                center.y = TileBodyTop(cell.tile, center.y) + SelectionBorderOffset;
                 var key = new Vector2Int(cell.q, cell.r);
                 centers.Add(key, center);
                 LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, 0.035f, ReachableOutlineColor);
@@ -114,6 +112,23 @@ namespace TianZhang.Features.CombatPresentation
                 Color color = cell.IsLegal ? selectedMaterial.GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
                 ShowRing(ring, color, 0.06f);
             }
+        }
+
+        /// <summary>
+        /// Returns the top of the cell's terrain body. Units and obstacles share the same cell
+        /// root, so only the tile's own measured alignment subtree may raise the selection ring;
+        /// a rock sitting in the cell must never lift it off the ground.
+        /// </summary>
+        private static float TileBodyTop(Transform tile, float fallback)
+        {
+            Transform body = tile.Find("MeasuredFbxAlignment");
+            Renderer[] renderers = body != null
+                ? body.GetComponentsInChildren<Renderer>()
+                : tile.GetComponents<Renderer>();
+            float top = fallback;
+            foreach (Renderer renderer in renderers)
+                top = Mathf.Max(top, renderer.bounds.max.y);
+            return top;
         }
 
         private static void ShowRing(LineRenderer ring, Color color, float width)

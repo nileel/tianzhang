@@ -528,8 +528,29 @@ namespace TianZhang.Tests.PlayMode
             var expected = snapshot.Movement.Options.Select(option => CellKey(option.Destination)).ToArray();
             CollectionAssert.AreEquivalent(expected,
                 movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key).ToArray());
-            foreach (LineRenderer ring in movement.Highlights.Values.Where(line => line.gameObject.activeSelf))
-                AssertLineColor(ring, new Color32(0x23, 0x8C, 0xFF, 0xFF));
+            foreach (var pair in movement.Highlights.Where(item => item.Value.gameObject.activeSelf))
+            {
+                AssertLineColor(pair.Value, new Color32(0x23, 0x8C, 0xFF, 0xFF));
+                Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
+                    "GuanzhongHex_" + pair.Key.x + "_" + pair.Key.y);
+                Assert.IsNotNull(tile, "Reachable ring must belong to a formal cell: " + pair.Key);
+                Vector3 center = Enumerable.Range(0, 6).Select(pair.Value.GetPosition)
+                    .Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
+                Assert.That(center.y, Is.EqualTo(TileBodyTop(tile) + .01f).Within(.001f),
+                    "Reachable border must sit on the tile body: " + pair.Key);
+            }
+        }
+
+        /// <summary>Tile body top only: obstacles and units are parented under the same cell root.</summary>
+        private static float TileBodyTop(Transform tile)
+        {
+            Transform body = tile.Find("MeasuredFbxAlignment");
+            Renderer[] renderers = body != null
+                ? body.GetComponentsInChildren<Renderer>()
+                : tile.GetComponents<Renderer>();
+            float top = tile.position.y;
+            foreach (Renderer renderer in renderers) top = Mathf.Max(top, renderer.bounds.max.y);
+            return top;
         }
 
         private static void AssertLineColor(LineRenderer line, Color expected)
