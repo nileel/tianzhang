@@ -18,4 +18,4 @@ MonoBehaviour:
   - combatantId: enemy_shijiahou
     presentationProfileId: combat_enemy_shijiahou_v1
   - combatantId: enemy_lieshijia
-    presentationProfileId: combat_enemy_shijiahou_v1
+    presentationProfileId: combat_enemy_lieshijia_v1

@@ -23,8 +23,8 @@ namespace TianZhang.Content
         public const string LieshijiaCombatantId = "enemy_lieshijia";
         public const string PlayerProfileId = "combat_player_default_v1";
         public const string ShijiahouProfileId = "combat_enemy_shijiahou_v1";
-        // The ranged beast reuses the approved 石甲兽 static piece until a dedicated art pass exists.
-        public const string LieshijiaProfileId = ShijiahouProfileId;
+        // The ranged beast owns a presentation profile built from the approved mesh with its own tint.
+        public const string LieshijiaProfileId = "combat_enemy_lieshijia_v1";
 
         [SerializeField] private CombatUnitPresentationProfileCatalogEntry[] entries = Array.Empty<CombatUnitPresentationProfileCatalogEntry>();
 

@@ -11,13 +11,14 @@ namespace TianZhang.Tests.EditMode
     public sealed class CombatUnitPresentationProfileEditorTests
     {
         [Test]
-        public void BuilderCreatesAndReloadsTheApprovedDualProfileSetIdempotently()
+        public void BuilderCreatesAndReloadsTheApprovedProfileSetIdempotently()
         {
             FormalStatic3DCombatPieceBuilder.Build();
             string firstCatalogGuid = AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.CatalogAssetPath);
             string firstProfileSetGuid = AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath);
             string firstPlayerPrefabGuid = AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.PlayerPrefabPath);
             string firstShijiahouPrefabGuid = AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.ShijiahouPrefabPath);
+            string firstLieshijiaPrefabGuid = AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.LieshijiaPrefabPath);
 
             FormalStatic3DCombatPieceBuilder.Build();
             AssetDatabase.SaveAssets();
@@ -27,6 +28,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(firstProfileSetGuid, AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
             Assert.AreEqual(firstPlayerPrefabGuid, AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.PlayerPrefabPath));
             Assert.AreEqual(firstShijiahouPrefabGuid, AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.ShijiahouPrefabPath));
+            Assert.AreEqual(firstLieshijiaPrefabGuid, AssetDatabase.AssetPathToGUID(FormalStatic3DCombatPieceBuilder.LieshijiaPrefabPath));
 
             CombatUnitPresentationProfileCatalogData catalog = AssetDatabase.LoadAssetAtPath<CombatUnitPresentationProfileCatalogData>(
                 FormalStatic3DCombatPieceBuilder.CatalogAssetPath);
@@ -40,8 +42,12 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(CombatUnitPresentationProfileCatalogData.LieshijiaProfileId, lieshijiaProfileId);
             Assert.IsTrue(profileSet.TryGetProfile(playerProfileId, out Static3DCombatUnitPresentationProfile playerProfile));
             Assert.IsTrue(profileSet.TryGetProfile(shijiahouProfileId, out Static3DCombatUnitPresentationProfile shijiahouProfile));
+            Assert.IsTrue(profileSet.TryGetProfile(lieshijiaProfileId, out Static3DCombatUnitPresentationProfile lieshijiaProfile));
             Assert.AreEqual(FormalStatic3DCombatPieceBuilder.PlayerPrefabPath, AssetDatabase.GetAssetPath(playerProfile.prefab));
             Assert.AreEqual(FormalStatic3DCombatPieceBuilder.ShijiahouPrefabPath, AssetDatabase.GetAssetPath(shijiahouProfile.prefab));
+            Assert.AreEqual(FormalStatic3DCombatPieceBuilder.LieshijiaPrefabPath, AssetDatabase.GetAssetPath(lieshijiaProfile.prefab));
+            Assert.AreEqual(FormalStatic3DCombatPieceBuilder.LieshijiaMaterialPath,
+                AssetDatabase.GetAssetPath(lieshijiaProfile.prefab.GetComponentInChildren<MeshRenderer>(true).sharedMaterial));
         }
 
         [Test]
@@ -111,6 +117,7 @@ namespace TianZhang.Tests.EditMode
             GameObject missingComponent = new GameObject("MissingStatic3DMesh");
             GameObject validPrefab = CreateRuntimeValidPrefab("ValidStatic3DMesh");
             GameObject secondValidPrefab = CreateRuntimeValidPrefab("SecondValidStatic3DMesh");
+            GameObject thirdValidPrefab = CreateRuntimeValidPrefab("ThirdValidStatic3DMesh");
             missingMaterial.GetComponent<MeshRenderer>().sharedMaterial = null;
             try
             {
@@ -118,12 +125,14 @@ namespace TianZhang.Tests.EditMode
                 {
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId, validPrefab),
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, secondValidPrefab),
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId, thirdValidPrefab),
                 }, out string validReason), validReason);
 
                 Assert.IsFalse(Static3DCombatUnitPresentationProfileSet.TryValidateProfiles(new[]
                 {
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId, missingMaterial),
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, validPrefab),
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId, thirdValidPrefab),
                 }, out string materialReason));
                 Assert.AreEqual("static_3d_profile_prefab_material_or_mesh_missing", materialReason);
 
@@ -131,6 +140,7 @@ namespace TianZhang.Tests.EditMode
                 {
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId, missingComponent),
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, validPrefab),
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId, thirdValidPrefab),
                 }, out string componentReason));
                 Assert.AreEqual("static_3d_profile_prefab_components_invalid", componentReason);
 
@@ -141,6 +151,7 @@ namespace TianZhang.Tests.EditMode
                 {
                     invalidDirection,
                     CreateValidProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, secondValidPrefab),
+                    CreateValidProfile(Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId, thirdValidPrefab),
                 }, out string directionReason));
                 Assert.AreEqual("static_3d_profile_direction_contract_invalid", directionReason);
             }
@@ -150,6 +161,7 @@ namespace TianZhang.Tests.EditMode
                 DestroyRuntimePrefab(missingComponent);
                 DestroyRuntimePrefab(validPrefab);
                 DestroyRuntimePrefab(secondValidPrefab);
+                DestroyRuntimePrefab(thirdValidPrefab);
             }
         }
 

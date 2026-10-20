@@ -282,7 +282,8 @@ namespace TianZhang.Features.Adventure
 
             presentation.ClearLog();
             playerDisplayName = player.Identity.DisplayName;
-            presentation.AppendLog("战斗开始：" + playerDisplayName + " 对阵 " + resolveText(spawned.EnemyData.displayNameKey));
+            presentation.AppendLog("战斗开始：" + playerDisplayName + " 对阵 " +
+                string.Join("、", spawned.EnemyDataList.Select(data => resolveText(data.displayNameKey))));
             combatRoutine = StartCoroutine(RunCombat());
             reason = null;
             return true;
@@ -321,7 +322,7 @@ namespace TianZhang.Features.Adventure
                 ? candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art ? "待选目标" : "自身"
                 : command.TargetId == "player"
                     ? playerDisplayName : spawned != null && spawned.Enemies.Any(enemy => enemy.Id == command.TargetId)
-                        ? resolveText(spawned.EnemyData.displayNameKey) : "无效目标";
+                        ? resolveText(EnemyDataFor(command.TargetId).displayNameKey) : "无效目标";
             var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
@@ -349,7 +350,8 @@ namespace TianZhang.Features.Adventure
                 preview.AttackArea.TargetIds.Select(id =>
                 {
                     session.Combatants.TryGet(id, out var target);
-                    return ToHud(target, resolveText(spawned.EnemyData.displayNameKey));
+                    return ToHud(target, target != null && target.Team == CombatTeam.Player
+                        ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey));
                 }).ToArray());
             if (area != null) name = displayProfile(command.ProfileId);
             string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
@@ -516,7 +518,7 @@ namespace TianZhang.Features.Adventure
                 }
                 else
                 {
-                    Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
+                    Present(resolveText(EnemyDataFor(advance.ActorId).displayNameKey) + " 行动", false);
                     yield return null;
                     while (session.TurnPhase != CombatTurnPhase.Finished &&
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
@@ -633,7 +635,7 @@ namespace TianZhang.Features.Adventure
             ++commandContextVersion;
             presentation.Present(new CombatHudSnapshot(
                 ToHud(player, playerDisplayName),
-                ToHud(enemy, resolveText(spawned.EnemyData.displayNameKey)),
+                ToHud(enemy, enemy == null ? string.Empty : resolveText(EnemyDataFor(enemy.Id).displayNameKey)),
                 turnText,
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
@@ -649,7 +651,7 @@ namespace TianZhang.Features.Adventure
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
-                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(spawned.EnemyData.displayNameKey))).ToArray()));
+                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(EnemyDataFor(value.Id).displayNameKey))).ToArray()));
         }
 
         private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)
@@ -696,7 +698,7 @@ namespace TianZhang.Features.Adventure
                     {
                         if (!target.IsAlive || !profile.AllowsTarget(player.Team, target.Team)) continue;
                         AddTarget(target, target.Team == CombatTeam.Player
-                            ? playerDisplayName : resolveText(spawned.EnemyData.displayNameKey));
+                            ? playerDisplayName : resolveText(EnemyDataFor(target.Id).displayNameKey));
                     }
                 }
                 actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets,
@@ -784,7 +786,7 @@ namespace TianZhang.Features.Adventure
                 session.Combatants.TryGet(id, out CombatantSnapshot combatant);
                 bool isPlayer = combatant.Team == CombatTeam.Player;
                 entries.Add(new CombatTimelineEntrySnapshot(id,
-                    isPlayer ? playerDisplayName : resolveText(spawned.EnemyData.displayNameKey),
+                    isPlayer ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey),
                     isPlayer ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
                     unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady, queuePosition,
                     string.Equals(current, id, StringComparison.Ordinal), unit.TicksUntilReady));

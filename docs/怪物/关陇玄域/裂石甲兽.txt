@@ -33,4 +33,6 @@
 
 ## 表现
 
-- 表现目录映射到 `combat_enemy_shijiahou_v1`，暂复用石甲兽静态模型；独立外观与特效另立美术任务，不影响本轮行为验收
+- 独立表现档案 `combat_enemy_lieshijia_v1`，使用石甲兽已审核网格，但配自己的材质 `Lieshijia_Static3D.mat`（偏冷灰蓝染色）与预制体 `Lieshijia_Static3D.prefab`
+- 表现目录映射 `enemy_lieshijia → combat_enemy_lieshijia_v1`；与石甲兽同场时两只可凭颜色区分
+- 独立网格与专属动作／特效另立美术任务，不影响本轮行为验收

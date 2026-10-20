@@ -372,7 +372,11 @@ function Test-FormalStatic3DPresentationProfiles {
     'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat',
     'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.mat.meta',
     'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab',
-    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta'
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Lieshijia/Lieshijia_Static3D.mat',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Lieshijia/Lieshijia_Static3D.mat.meta',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Lieshijia/Lieshijia_Static3D.prefab',
+    'src/Assets/Art/Characters/CombatPieces/Static3D/Lieshijia/Lieshijia_Static3D.prefab.meta'
   )
   foreach ($relativePath in $requiredFiles) {
     if (-not (Test-Path -LiteralPath (Join-Path $root $relativePath) -PathType Leaf)) {
@@ -388,7 +392,7 @@ function Test-FormalStatic3DPresentationProfiles {
   foreach ($mapping in @(
     @{ Combatant = 'player'; Profile = 'combat_player_default_v1' },
     @{ Combatant = 'enemy_shijiahou'; Profile = 'combat_enemy_shijiahou_v1' },
-    @{ Combatant = 'enemy_lieshijia'; Profile = 'combat_enemy_shijiahou_v1' }
+    @{ Combatant = 'enemy_lieshijia'; Profile = 'combat_enemy_lieshijia_v1' }
   )) {
     if ($catalog -notmatch "(?ms)^  - combatantId: $([regex]::Escape($mapping.Combatant))\r?\n    presentationProfileId: $([regex]::Escape($mapping.Profile))\s*$") {
       Add-Finding 'STATIC3D_PROFILE_CATALOG_MAPPING_INVALID' $mapping.Combatant 'Provider-neutral catalog must retain the exact stable combatant-to-profile mapping.'
@@ -410,6 +414,12 @@ function Test-FormalStatic3DPresentationProfiles {
       PrefabMeta = 'src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.prefab.meta'
       ModelPath = 'Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx'
       ModelHash = '36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700'
+    },
+    @{
+      Id = 'combat_enemy_lieshijia_v1'
+      PrefabMeta = 'src/Assets/Art/Characters/CombatPieces/Static3D/Lieshijia/Lieshijia_Static3D.prefab.meta'
+      ModelPath = 'Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx'
+      ModelHash = '36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700'
     }
   )
   foreach ($expected in $expectedProfiles) {
@@ -425,8 +435,8 @@ function Test-FormalStatic3DPresentationProfiles {
       Add-Finding 'STATIC3D_PROFILE_SET_ENTRY_INVALID' $expected.Id 'Static-3D set must bind the approved Prefab, source identity and six-direction contract.'
     }
   }
-  if (@([regex]::Matches($profileSet, '(?m)^  - presentationProfileId: ')).Count -ne 2) {
-    Add-Finding 'STATIC3D_PROFILE_SET_CARDINALITY_INVALID' 'Static3DCombatUnitPresentationProfileSet' 'Static-3D set must contain exactly the two approved profiles.'
+  if (@([regex]::Matches($profileSet, '(?m)^  - presentationProfileId: ')).Count -ne 3) {
+    Add-Finding 'STATIC3D_PROFILE_SET_CARDINALITY_INVALID' 'Static3DCombatUnitPresentationProfileSet' 'Static-3D set must contain exactly the three approved profiles.'
   }
   if ($profileSet -match 'FuYuan_StaticChess') {
     Add-Finding 'STATIC3D_PROFILE_FORBIDDEN_REFERENCE' 'Static3DCombatUnitPresentationProfileSet' 'Formal profile set must not reference FuYuan_StaticChess.'

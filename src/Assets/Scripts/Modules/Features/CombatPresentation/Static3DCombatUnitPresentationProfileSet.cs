@@ -58,6 +58,7 @@ namespace TianZhang.Features.CombatPresentation
     {
         public const string PlayerProfileId = "combat_player_default_v1";
         public const string ShijiahouProfileId = "combat_enemy_shijiahou_v1";
+        public const string LieshijiaProfileId = "combat_enemy_lieshijia_v1";
         public static readonly int[] RequiredSixDirectionYawDegrees = { 90, 150, 210, 270, 330, 30 };
 
         [SerializeField] private Static3DCombatUnitPresentationProfile[] profiles = Array.Empty<Static3DCombatUnitPresentationProfile>();
@@ -92,7 +93,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public static bool TryValidateProfiles(Static3DCombatUnitPresentationProfile[] values, out string reason)
         {
-            if (values == null || values.Length != 2)
+            if (values == null || values.Length != 3)
             {
                 reason = "static_3d_profile_set_incomplete";
                 return false;
@@ -116,13 +117,15 @@ namespace TianZhang.Features.CombatPresentation
             {
                 PlayerProfileId,
                 ShijiahouProfileId,
+                LieshijiaProfileId,
             }))
             {
                 reason = "static_3d_profile_set_unknown_profile";
                 return false;
             }
 
-            if (!HasSharedFeedbackResources(values[0].combatFeedback, values[1].combatFeedback))
+            if (!HasSharedFeedbackResources(values[0].combatFeedback, values[1].combatFeedback) ||
+                !HasSharedFeedbackResources(values[0].combatFeedback, values[2].combatFeedback))
             {
                 reason = "static_3d_profile_feedback_not_shared";
                 return false;

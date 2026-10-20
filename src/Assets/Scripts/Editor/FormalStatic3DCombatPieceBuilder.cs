@@ -25,6 +25,10 @@ namespace TianZhang.Editor
         public const string ShijiahouBaseColorPath = ShijiahouFolderPath + "/Shijiahou_Static3D_BaseColor.png";
         public const string ShijiahouMaterialPath = ShijiahouFolderPath + "/Shijiahou_Static3D.mat";
         public const string ShijiahouPrefabPath = ShijiahouFolderPath + "/Shijiahou_Static3D.prefab";
+        // 裂石甲兽 reuses the approved 石甲兽 mesh with its own tinted material; the profile stays independent.
+        public const string LieshijiaFolderPath = "Assets/Art/Characters/CombatPieces/Static3D/Lieshijia";
+        public const string LieshijiaMaterialPath = LieshijiaFolderPath + "/Lieshijia_Static3D.mat";
+        public const string LieshijiaPrefabPath = LieshijiaFolderPath + "/Lieshijia_Static3D.prefab";
         public const string CatalogAssetPath = "Assets/Data/CombatPresentationProfiles/CombatUnitPresentationProfileCatalog.asset";
         public const string ProfileSetAssetPath = "Assets/Data/CombatPresentationProfiles/Static3DCombatUnitPresentationProfileSet.asset";
         public const string FeedbackAudioFolderPath = "Assets/Art/Audio/Guanzhong";
@@ -170,6 +174,7 @@ namespace TianZhang.Editor
             VerifyFrozenInputs();
             VerifyFeedbackSources();
             EnsureFolder("Assets/Art/Characters/CombatPieces/Static3D", "Shijiahou");
+            EnsureFolder("Assets/Art/Characters/CombatPieces/Static3D", "Lieshijia");
             EnsureFolder("Assets/Data", "CombatPresentationProfiles");
             EnsureFolder("Assets/Art", "Audio");
             EnsureFolder("Assets/Art/Audio", "Guanzhong");
@@ -200,9 +205,12 @@ namespace TianZhang.Editor
 
             Material playerMaterial = GetOrCreateMaterial(PlayerMaterialPath, "FormalPlayer_Static3D", PlayerBaseColorPath);
             Material shijiahouMaterial = GetOrCreateMaterial(ShijiahouMaterialPath, "Shijiahou_Static3D", ShijiahouBaseColorPath);
+            Material lieshijiaMaterial = GetOrCreateMaterial(LieshijiaMaterialPath, "Lieshijia_Static3D", ShijiahouBaseColorPath,
+                new Color(0.42f, 0.56f, 0.82f, 1f));
             Material feedbackMaterial = GetOrCreateFeedbackMaterial();
             GameObject playerPrefab = BuildPrefab("FormalPlayer_Static3D", PlayerModelPath, playerMaterial, PlayerPrefabPath);
             GameObject shijiahouPrefab = BuildPrefab("Shijiahou_Static3D", ShijiahouModelPath, shijiahouMaterial, ShijiahouPrefabPath);
+            GameObject lieshijiaPrefab = BuildPrefab("Lieshijia_Static3D", ShijiahouModelPath, lieshijiaMaterial, LieshijiaPrefabPath);
             GameObject feedbackPrefab = BuildFeedbackPrefab(feedbackMaterial);
 
             CombatUnitPresentationProfileCatalogData catalog = GetOrCreateAsset<CombatUnitPresentationProfileCatalogData>(CatalogAssetPath);
@@ -245,6 +253,14 @@ namespace TianZhang.Editor
                     ShijiahouBoundsMin,
                     ShijiahouBoundsMax,
                     CreateFeedbackProfile(feedbackPrefab, 1.12f, 0.2f)),
+                CreateProfile(
+                    CombatUnitPresentationProfileCatalogData.LieshijiaProfileId,
+                    lieshijiaPrefab,
+                    ShijiahouModelPath,
+                    ShijiahouModelSha256,
+                    ShijiahouBoundsMin,
+                    ShijiahouBoundsMax,
+                    CreateFeedbackProfile(feedbackPrefab, 1.05f, 0.18f)),
             });
             EditorUtility.SetDirty(profileSet);
 
@@ -280,11 +296,14 @@ namespace TianZhang.Editor
                 profile != null && profile.presentationProfileId == Static3DCombatUnitPresentationProfileSet.PlayerProfileId);
             Static3DCombatUnitPresentationProfile shijiahouProfile = profileSet.Profiles.SingleOrDefault(profile =>
                 profile != null && profile.presentationProfileId == Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId);
-            if (playerProfile == null || shijiahouProfile == null)
+            Static3DCombatUnitPresentationProfile lieshijiaProfile = profileSet.Profiles.SingleOrDefault(profile =>
+                profile != null && profile.presentationProfileId == Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId);
+            if (playerProfile == null || shijiahouProfile == null || lieshijiaProfile == null)
                 throw new InvalidOperationException("Formal static 3D profile mapping is incomplete.");
 
             playerProfile.combatFeedback = CreateFeedbackProfile(feedbackPrefab, 0.82f, 0.14f);
             shijiahouProfile.combatFeedback = CreateFeedbackProfile(feedbackPrefab, 1.12f, 0.2f);
+            lieshijiaProfile.combatFeedback = CreateFeedbackProfile(feedbackPrefab, 1.05f, 0.18f);
             EditorUtility.SetDirty(profileSet);
             AssetDatabase.SaveAssets();
             VerifyFeedbackOutputs();
@@ -303,15 +322,19 @@ namespace TianZhang.Editor
 
             if (!catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.PlayerCombatantId, out string playerProfileId) ||
                 !catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId, out string shijiahouProfileId) ||
+                !catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId, out string lieshijiaProfileId) ||
                 !profileSet.TryGetProfile(playerProfileId, out Static3DCombatUnitPresentationProfile playerProfile) ||
-                !profileSet.TryGetProfile(shijiahouProfileId, out Static3DCombatUnitPresentationProfile shijiahouProfile))
+                !profileSet.TryGetProfile(shijiahouProfileId, out Static3DCombatUnitPresentationProfile shijiahouProfile) ||
+                !profileSet.TryGetProfile(lieshijiaProfileId, out Static3DCombatUnitPresentationProfile lieshijiaProfile))
             {
                 throw new InvalidOperationException("Formal static 3D profile mapping is incomplete.");
             }
 
             VerifyPrefab(playerProfile, "FormalPlayer_Static3D", PlayerMaterialPath, PlayerBoundsMin, PlayerBoundsMax);
             VerifyPrefab(shijiahouProfile, "Shijiahou_Static3D", ShijiahouMaterialPath, ShijiahouBoundsMin, ShijiahouBoundsMax);
+            VerifyPrefab(lieshijiaProfile, "Lieshijia_Static3D", LieshijiaMaterialPath, ShijiahouBoundsMin, ShijiahouBoundsMax);
             VerifyFeedbackProfile(playerProfile, shijiahouProfile);
+            VerifyFeedbackProfile(playerProfile, lieshijiaProfile);
             string[] dependencies = AssetDatabase.GetDependencies(ProfileSetAssetPath, true);
             if (dependencies.Any(path => path.IndexOf("FuYuan_StaticChess", StringComparison.OrdinalIgnoreCase) >= 0))
                 throw new InvalidOperationException("Formal static 3D profiles must not depend on FuYuan_StaticChess.");
@@ -327,12 +350,15 @@ namespace TianZhang.Editor
             if (!profileSet.TryGetProfile(Static3DCombatUnitPresentationProfileSet.PlayerProfileId,
                     out Static3DCombatUnitPresentationProfile playerProfile) ||
                 !profileSet.TryGetProfile(Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId,
-                    out Static3DCombatUnitPresentationProfile shijiahouProfile))
+                    out Static3DCombatUnitPresentationProfile shijiahouProfile) ||
+                !profileSet.TryGetProfile(Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId,
+                    out Static3DCombatUnitPresentationProfile lieshijiaProfile))
             {
                 throw new InvalidOperationException("Formal combat feedback profile mapping is incomplete.");
             }
 
             VerifyFeedbackProfile(playerProfile, shijiahouProfile);
+            VerifyFeedbackProfile(playerProfile, lieshijiaProfile);
         }
 
         private static Static3DCombatUnitPresentationProfile CreateProfile(
@@ -557,7 +583,10 @@ namespace TianZhang.Editor
             }
         }
 
-        private static Material GetOrCreateMaterial(string materialPath, string materialName, string baseColorPath)
+        private static Material GetOrCreateMaterial(string materialPath, string materialName, string baseColorPath) =>
+            GetOrCreateMaterial(materialPath, materialName, baseColorPath, Color.white);
+
+        private static Material GetOrCreateMaterial(string materialPath, string materialName, string baseColorPath, Color tint)
         {
             Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
@@ -571,7 +600,7 @@ namespace TianZhang.Editor
             Texture2D baseColor = RequireAsset<Texture2D>(baseColorPath);
             material.name = materialName;
             material.shader = Shader.Find("Universal Render Pipeline/Lit") ?? throw new InvalidOperationException("Required URP Lit shader is unavailable.");
-            material.SetColor("_BaseColor", Color.white);
+            material.SetColor("_BaseColor", tint);
             material.SetTexture("_BaseMap", baseColor);
             material.SetFloat("_Metallic", 0f);
             material.SetFloat("_Smoothness", 0.22f);
