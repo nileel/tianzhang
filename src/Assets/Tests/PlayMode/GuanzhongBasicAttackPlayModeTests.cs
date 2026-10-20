@@ -597,24 +597,15 @@ namespace TianZhang.Tests.PlayMode
             if (provider != null) Assert.AreEqual(0, provider.ActiveCombatantCount);
         }
 
-        // Walk the proven first path edge, then allow the real AI/CTB loop to approach.
-        // Waiting at (0,0) alone does not guarantee contact at the start of a player turn.
-        // No positions, AP, CT or attack range are injected; callers start with a fresh turn.
+        // Close on the named enemy with the player's own legal moves. Passive waiting cannot
+        // resolve the two-hostile encounter: after R4 halved enemy speed, the front enemy can
+        // hold the only adjacent cell while the named one waits behind it forever. Movement uses
+        // the production quote/commit path, and contact still requires a fresh, full-AP turn.
+        // No positions, AP, CT or attack range are injected.
         public static IEnumerator WaitForMeleeContact(EncounterCoordinator encounter, CombatSession session)
         {
             Assert.IsTrue(session.Combatants.TryGet("player", out CombatantSnapshot player));
             Assert.IsTrue(session.Combatants.TryGet("enemy", out CombatantSnapshot enemy));
-            yield return WaitForPlayerTurn(encounter, session, player.Id);
-            if (player.Position.Distance(enemy.Position) > 1 && player.Position == new HexCoord(0, 0))
-            {
-                var move = new CombatCommandService().Preview(session,
-                    new CombatCommand(CombatCommandKind.Move, player.Id, destination: new HexCoord(0, 1)));
-                Assert.IsTrue(move.IsLegal, move.RejectionReason);
-                int before = player.ActionPointsRemainingUnits;
-                encounter.RequestMove(player.Id, 0, 1);
-                Assert.AreEqual(before - move.ActionPointCostUnits, player.ActionPointsRemainingUnits);
-                yield return WaitForMovementPresentation(encounter);
-            }
             for (int turn = 0; turn < 12; turn++)
             {
                 yield return WaitForPlayerTurn(encounter, session, player.Id);
@@ -624,7 +615,19 @@ namespace TianZhang.Tests.PlayMode
                     TestContext.WriteLine($"CONTACT player={player.Position}; enemy={enemy.Position}; turn={session.TurnSequence}; tick={session.TurnScheduler.CurrentTick}; AP={player.ActionPointsRemainingUnits}");
                     yield break;
                 }
-                encounter.RequestEndTurn(player.Id);
+                CombatCommand step = new CombatLegalActionService().GetLegalActions(session, player.Id)
+                    .Where(action => action.Kind == CombatCommandKind.Move && action.Destination.HasValue)
+                    .Where(action => action.Destination.Value.Distance(enemy.Position) < player.Position.Distance(enemy.Position))
+                    .OrderBy(action => action.Destination.Value.Distance(enemy.Position))
+                    .ThenByDescending(action => action.Destination.Value.Distance(player.Position))
+                    .FirstOrDefault();
+                if (step != null)
+                {
+                    encounter.RequestMove(player.Id, step.Destination.Value.Q, step.Destination.Value.R);
+                    yield return WaitForMovementPresentation(encounter);
+                }
+                if (session.CurrentActorId == player.Id && session.TurnPhase != CombatTurnPhase.Finished && !encounter.IsPresenting)
+                    encounter.RequestEndTurn(player.Id);
                 yield return null;
             }
             Assert.Fail($"Formal movement did not reach contact: player={player.Position}, enemy={enemy.Position}, tick={session.TurnScheduler.CurrentTick}.");
