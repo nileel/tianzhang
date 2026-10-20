@@ -297,9 +297,15 @@ function Test-FormalContentCatalog {
   if ($enemy.Count -ne 1 -or $enemy[0].contentScope -cne 'guanzhong' -or $enemy[0].dropEntries -cne 'item_shijia_piece@100@1|item_lingshi_low@50@1' -or $enemy[0].unarmedBasicAttackProfileId -cne '' -or $enemy[0].unarmedAttackFamilyId -cne 'body_shijiahou') {
     Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_shijiahou' 'Enemy production scope, structured drop entries or basic attack binding differ from the approved decision.'
   }
-  foreach ($row in @($Enemies.Rows | Where-Object { $_.name -cne 'enemy_shijiahou' })) {
+  $rangedEnemy = @($Enemies.Rows | Where-Object { $_.name -ceq 'enemy_lieshijia' })
+  if ($rangedEnemy.Count -ne 1 -or $rangedEnemy[0].contentScope -cne 'guanzhong' -or $rangedEnemy[0].aiType -cne 'ai_ranged' -or
+      $rangedEnemy[0].dropEntries -cne 'item_shijia_piece@80@1|item_lingshi_low@40@1' -or $rangedEnemy[0].equippedSpells -cne 'spell_lieshi' -or
+      $rangedEnemy[0].unarmedBasicAttackProfileId -cne '' -or $rangedEnemy[0].unarmedAttackFamilyId -cne 'body_shijiahou') {
+    Add-Finding 'FORMAL_ENEMY_PROJECTION_INVALID' 'enemy_lieshijia' 'Ranged enemy production scope, drops, art binding or basic attack family differ from the approved decision.'
+  }
+  foreach ($row in @($Enemies.Rows | Where-Object { $_.name -cne 'enemy_shijiahou' -and $_.name -cne 'enemy_lieshijia' })) {
     if (-not [string]::IsNullOrWhiteSpace([string]$row.contentScope) -or -not [string]::IsNullOrWhiteSpace([string]$row.dropEntries) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedBasicAttackProfileId) -or -not [string]::IsNullOrWhiteSpace([string]$row.unarmedAttackFamilyId)) {
-      Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only enemy_shijiahou may enter the formal content directory or bind the production basic attack.'
+      Add-Finding 'FORMAL_ENEMY_SCOPE_LEAK' ([string]$row.name) 'Only the two approved Guanzhong enemies may enter the formal content directory.'
     }
   }
 
@@ -323,6 +329,9 @@ function Test-FormalContentCatalog {
   Test-FormalContentAsset 'Enemy:enemy_shijiahou' 'src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset' @{
     enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'
   }
+  Test-FormalContentAsset 'Enemy:enemy_lieshijia' 'src/Assets/Data/Enemies/Enemy_enemy_lieshijia.asset' @{
+    enemyId = 'enemy_lieshijia'; contentScope = 'guanzhong'; aiProfileId = 'ai_ranged'; realmId = 'realm_lianqi'
+  }
   Test-FormalContentAsset 'Item:item_lingshi_low' 'src/Assets/Data/Items/Item_item_lingshi_low.asset' @{
     itemId = 'item_lingshi_low'; contentScope = 'content_scope_production'; maxStack = '99'
   }
@@ -333,6 +342,9 @@ function Test-FormalContentCatalog {
     bountyId = 'bounty_guanzhong_shijiahou'; contentScope = 'content_scope_production'; targetEnemyId = 'enemy_shijiahou'; repeatPolicy = 'one_time'
   }
   Test-FormalContentAsset 'EnemyTemplate:enemy_shijiahou' 'src/Assets/Data/Characters/Char_Enemy_enemy_shijiahou.asset' @{
+    unarmedBasicAttackProfileId = ''; unarmedAttackFamilyId = 'body_shijiahou'
+  }
+  Test-FormalContentAsset 'EnemyTemplate:enemy_lieshijia' 'src/Assets/Data/Characters/Char_Enemy_enemy_lieshijia.asset' @{
     unarmedBasicAttackProfileId = ''; unarmedAttackFamilyId = 'body_shijiahou'
   }
   $catalogPath = Join-Path $root 'src/Assets/Data/ContentCatalog/ContentCatalog.asset'
@@ -375,14 +387,15 @@ function Test-FormalStatic3DPresentationProfiles {
   $profileSet = Get-Content -Raw -LiteralPath $profileSetPath
   foreach ($mapping in @(
     @{ Combatant = 'player'; Profile = 'combat_player_default_v1' },
-    @{ Combatant = 'enemy_shijiahou'; Profile = 'combat_enemy_shijiahou_v1' }
+    @{ Combatant = 'enemy_shijiahou'; Profile = 'combat_enemy_shijiahou_v1' },
+    @{ Combatant = 'enemy_lieshijia'; Profile = 'combat_enemy_shijiahou_v1' }
   )) {
     if ($catalog -notmatch "(?ms)^  - combatantId: $([regex]::Escape($mapping.Combatant))\r?\n    presentationProfileId: $([regex]::Escape($mapping.Profile))\s*$") {
       Add-Finding 'STATIC3D_PROFILE_CATALOG_MAPPING_INVALID' $mapping.Combatant 'Provider-neutral catalog must retain the exact stable combatant-to-profile mapping.'
     }
   }
-  if (@([regex]::Matches($catalog, '(?m)^  - combatantId: ')).Count -ne 2) {
-    Add-Finding 'STATIC3D_PROFILE_CATALOG_CARDINALITY_INVALID' 'CombatUnitPresentationProfileCatalog' 'Formal catalog must contain exactly the two approved combatant identities.'
+  if (@([regex]::Matches($catalog, '(?m)^  - combatantId: ')).Count -ne 3) {
+    Add-Finding 'STATIC3D_PROFILE_CATALOG_CARDINALITY_INVALID' 'CombatUnitPresentationProfileCatalog' 'Formal catalog must contain exactly the three approved combatant identities.'
   }
 
   $expectedProfiles = @(
@@ -612,12 +625,12 @@ function Test-CombatRuleSetProjection {
 function Test-FormalAttackProfileProjection {
   param([object]$Table,[string[]]$LanguageIds)
   $rules = Test-CombatRuleSetProjection; if ($null -eq $rules) { return }
-  $ids = @('spell_guanshiji','spell_julingshu','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
-  if ($rows.Count -ne 9 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly nine approved IDs are required.'; return
+  $ids = @('spell_guanshiji','spell_julingshu','spell_lieshi','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
+  if ($rows.Count -ne 10 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly ten approved IDs are required.'; return
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
-  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the nine canonical assets are required.' }
+  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the ten canonical assets are required.' }
   $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
   $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2};areaCenterKind=@{caster=1;target_cell=2};areaShapeKind=@{circle=1;line=2;fan=3;forward_pair=4;adjacent_pair=5};areaEffectBlockers=@{none=0;directed_edge=1}}
   $flags = @{areaAllowedFactions=@{enemy=1;ally=2;self=4};areaAllowedStates=@{alive=1;corpse=2}}

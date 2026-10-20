@@ -90,6 +90,7 @@ namespace TianZhang.Editor
         private const string GuanzhongScope = "guanzhong";
         private const string GuanzhongSettlementId = "guanzhong_city";
         private const string ShijiahouEnemyId = "enemy_shijiahou";
+        private const string LieshijiaEnemyId = "enemy_lieshijia";
         private const string ShijiahouBountyId = "bounty_guanzhong_shijiahou";
 
         // 旧水驿站点契约的固定自有语义：通行能力、交互时间档案、门禁可操作状态与交互时序。
@@ -473,8 +474,8 @@ namespace TianZhang.Editor
                 var dropEntries = Value(table, row, "dropEntries");
                 if (string.IsNullOrEmpty(contentScope) && string.IsNullOrEmpty(dropEntries))
                     continue;
-                if (enemyId != ShijiahouEnemyId || contentScope != GuanzhongScope)
-                    throw new InvalidDataException($"{sourceName} may only project '{ShijiahouEnemyId}' into the formal catalog.");
+                if (enemyId != ShijiahouEnemyId && enemyId != LieshijiaEnemyId || contentScope != GuanzhongScope)
+                    throw new InvalidDataException($"{sourceName} may only project approved Guanzhong enemies into the formal catalog.");
 
                 var enemy = ScriptableObject.CreateInstance<EnemyData>();
                 enemy.enemyId = enemyId;
@@ -492,8 +493,10 @@ namespace TianZhang.Editor
                 enemies.Add(enemy);
             }
 
-            if (enemies.Count != 1 || enemies[0].enemyId != ShijiahouEnemyId)
-                throw new InvalidDataException($"{sourceName} must include exactly one approved '{ShijiahouEnemyId}' content projection.");
+            if (enemies.Count != 2 ||
+                !enemies.Any(enemy => enemy.enemyId == ShijiahouEnemyId) ||
+                !enemies.Any(enemy => enemy.enemyId == LieshijiaEnemyId))
+                throw new InvalidDataException($"{sourceName} must include the two approved Guanzhong enemy projections.");
 
             return (enemies.ToArray(), templates.ToArray(), templateIds.ToArray());
         }
@@ -539,7 +542,7 @@ namespace TianZhang.Editor
             template.equippedSpells = ParseOptionalStableIdList(Value(table, row, "equippedSpells"), sourceName, "equippedSpells");
             template.equippedSkills = Array.Empty<string>();
             template.unarmedAttackFamilyId = Value(table, row, "unarmedAttackFamilyId");
-            string expectedFamily = Required(table, row, "name") == ShijiahouEnemyId ? "body_shijiahou" : string.Empty;
+            string expectedFamily = Required(table, row, "name") is ShijiahouEnemyId or LieshijiaEnemyId ? "body_shijiahou" : string.Empty;
             if (template.unarmedAttackFamilyId != expectedFamily) throw new InvalidDataException("enemy_unarmed_family_invalid");
             if (expectedFamily.Length != 0)
                 CharacterContentImporter.RequireUnarmedSource(
@@ -582,12 +585,8 @@ namespace TianZhang.Editor
 
         private static void ValidateApprovedEnemy(EnemyData enemy, string sourceName)
         {
-            if (enemy.enemyId != ShijiahouEnemyId ||
-                enemy.displayNameKey != ShijiahouEnemyId ||
-                enemy.descriptionKey != "desc_enemy_shijiahou" ||
-                enemy.contentScope != GuanzhongScope ||
+            if (enemy.contentScope != GuanzhongScope ||
                 enemy.enemyTypeId != "type_yaoshou" ||
-                enemy.aiProfileId != "ai_melee" ||
                 enemy.realmId != "realm_lianqi" ||
                 enemy.dropEntries.Length != 2 ||
                 enemy.combatTemplate == null ||
@@ -595,14 +594,34 @@ namespace TianZhang.Editor
                 !string.IsNullOrEmpty(enemy.combatTemplate.unarmedBasicAttackProfileId) ||
                 !string.IsNullOrEmpty(enemy.combatTemplate.mainEquipmentBasicAttackProfileId))
             {
-                throw new InvalidDataException($"{sourceName} does not match the approved '{ShijiahouEnemyId}' projection.");
+                throw new InvalidDataException($"{sourceName} enemy '{enemy.enemyId}' is not an approved Guanzhong projection.");
             }
 
             var drops = enemy.dropEntries.ToDictionary(entry => entry.itemId, StringComparer.Ordinal);
-            if (!drops.TryGetValue("item_shijia_piece", out var piece) || piece.dropChancePercent != 100 || piece.quantity != 1 ||
-                !drops.TryGetValue("item_lingshi_low", out var lingshi) || lingshi.dropChancePercent != 50 || lingshi.quantity != 1)
+            switch (enemy.enemyId)
             {
-                throw new InvalidDataException($"{sourceName} '{ShijiahouEnemyId}' drop parameters differ from the approved decision.");
+                case ShijiahouEnemyId:
+                    if (enemy.displayNameKey != ShijiahouEnemyId ||
+                        enemy.descriptionKey != "desc_enemy_shijiahou" ||
+                        enemy.aiProfileId != "ai_melee" ||
+                        !drops.TryGetValue("item_shijia_piece", out var piece) || piece.dropChancePercent != 100 || piece.quantity != 1 ||
+                        !drops.TryGetValue("item_lingshi_low", out var lingshi) || lingshi.dropChancePercent != 50 || lingshi.quantity != 1)
+                    {
+                        throw new InvalidDataException($"{sourceName} '{ShijiahouEnemyId}' differs from the approved decision.");
+                    }
+                    return;
+                case LieshijiaEnemyId:
+                    if (enemy.displayNameKey != LieshijiaEnemyId ||
+                        enemy.descriptionKey != "desc_enemy_lieshijia" ||
+                        enemy.aiProfileId != "ai_ranged" ||
+                        !drops.TryGetValue("item_shijia_piece", out var stone) || stone.dropChancePercent != 80 || stone.quantity != 1 ||
+                        !drops.TryGetValue("item_lingshi_low", out var gravel) || gravel.dropChancePercent != 40 || gravel.quantity != 1)
+                    {
+                        throw new InvalidDataException($"{sourceName} '{LieshijiaEnemyId}' differs from the approved decision.");
+                    }
+                    return;
+                default:
+                    throw new InvalidDataException($"{sourceName} enemy '{enemy.enemyId}' is not an approved Guanzhong enemy.");
             }
         }
 
@@ -848,8 +867,11 @@ namespace TianZhang.Editor
         {
             ValidateContentAssetLocation(preview.settlements[0],
                 "Assets/Data/Settlements/Settlement_guanzhong_city.asset", value => value.settlementId);
-            ValidateContentAssetLocation(preview.enemies[0],
-                "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", value => value.enemyId);
+            foreach (var enemy in preview.enemies)
+            {
+                ValidateContentAssetLocation(enemy,
+                    $"Assets/Data/Enemies/Enemy_{enemy.enemyId}.asset", value => value.enemyId);
+            }
             foreach (var item in preview.items)
             {
                 ValidateContentAssetLocation(item, $"Assets/Data/Items/Item_{item.itemId}.asset", value => value.itemId);
@@ -988,12 +1010,14 @@ namespace TianZhang.Editor
                     .OrderBy(item => item.itemId, StringComparer.Ordinal)
                     .ToArray();
 
-                preview.enemies[0].combatTemplate = templates[ShijiahouEnemyId];
-                var enemies = new[]
-                {
-                    UpsertContentAsset(preview.enemies[0],
-                        "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", CopyEnemy)
-                };
+                var enemies = preview.enemies
+                    .Select(enemy =>
+                    {
+                        enemy.combatTemplate = templates[enemy.enemyId];
+                        return UpsertContentAsset(enemy, $"Assets/Data/Enemies/Enemy_{enemy.enemyId}.asset", CopyEnemy);
+                    })
+                    .OrderBy(enemy => enemy.enemyId, StringComparer.Ordinal)
+                    .ToArray();
                 var bounties = new[]
                 {
                     UpsertContentAsset(preview.bounties[0],

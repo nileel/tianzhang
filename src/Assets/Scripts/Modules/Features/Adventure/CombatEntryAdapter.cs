@@ -149,10 +149,13 @@ namespace TianZhang.Features.Adventure
                 if ((int)effect < 0) continue;
                 string realmRequirement = profile.realmRequirementId;
                 string elementRequirement = profile.elementRequirementId;
-                Func<string, string, string, bool> qualification = profile.profileKind == AttackProfileKind.Basic
-                    ? null
-                    : (realmStage, rootElement, rootGrade) => AbilityRequirementPolicy.IsSatisfied(
-                        realmStage, rootElement, rootGrade, realmRequirement, elementRequirement);
+                // Player root grade/element gates learning a player art. Reserved enemy-only arts
+                // carry the same documentation fields but are authorized by the enemy loadout.
+                Func<string, string, string, bool> qualification =
+                    profile.profileKind == AttackProfileKind.Basic || profile.contentScope == "reserved"
+                        ? null
+                        : (realmStage, rootElement, rootGrade) => AbilityRequirementPolicy.IsSatisfied(
+                            realmStage, rootElement, rootGrade, realmRequirement, elementRequirement);
                 result.Add(new CombatAttackProfile(
                     profile.attackProfileId,
                     profile.profileKind switch

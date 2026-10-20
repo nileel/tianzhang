@@ -128,19 +128,36 @@ namespace TianZhang.Editor
             if (nodeType != "adventure_node_encounter")
                 throw new InvalidOperationException(source + ": additional enemies require an encounter node");
             var result = new List<AdventureEnemySpawnData>();
-            var ids = new HashSet<string>(StringComparer.Ordinal) { "player", "enemy" };
             var positions = new HashSet<string>(StringComparer.Ordinal) { q + ":" + r };
             foreach (string entry in text.Split('|'))
             {
                 string[] parts = entry.Split('@', ':');
-                if (parts.Length != 3 || string.IsNullOrWhiteSpace(parts[0]) || !ids.Add(parts[0]) ||
+                string enemyId = parts.Length == 3 ? parts[0].Trim() : string.Empty;
+                // The first token is the enemy content id. The stable instance id keeps the
+                // existing "enemy_N" combatant naming that presentation and tests expect.
+                if (parts.Length != 3 || !IsStableId(enemyId) ||
                     !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraQ) ||
                     !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraR) ||
                     !positions.Add(extraQ + ":" + extraR))
                     throw new InvalidOperationException(source + ": invalid additional enemy " + entry);
-                result.Add(new AdventureEnemySpawnData { instanceId = parts[0], q = extraQ, r = extraR });
+                result.Add(new AdventureEnemySpawnData
+                {
+                    instanceId = "enemy_" + (result.Count + 2).ToString(CultureInfo.InvariantCulture),
+                    enemyId = enemyId,
+                    q = extraQ,
+                    r = extraR,
+                });
             }
             return result.ToArray();
+        }
+
+        private static bool IsStableId(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value[0] < 'a' || value[0] > 'z') return false;
+            foreach (char c in value)
+                if (!(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_'))
+                    return false;
+            return true;
         }
     }
 }

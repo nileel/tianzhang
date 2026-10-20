@@ -2949,6 +2949,7 @@ MonoBehaviour:
   attackProfiles:
   - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}
   - {fileID: 11400000, guid: 3555f4c15eb80314ba125cf22f62f582, type: 2}
+  - {fileID: 11400000, guid: 363916019deda554a96cf594d475daa5, type: 2}
   - {fileID: 11400000, guid: 57e0d2be330d2ff4dbbbccfa2021f02d, type: 2}
   - {fileID: 11400000, guid: 588f40063e8bb314eace22286ea47728, type: 2}
   - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}

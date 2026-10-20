@@ -20,11 +20,13 @@ namespace TianZhang.Features.Adventure
             string enemyBasicProfileId,
             string[] playerDivineProfileIds,
             IReadOnlyList<CombatantSnapshot> additionalEnemies = null,
-            EnemyCombatStats enemyStats = null)
+            EnemyCombatStats enemyStats = null,
+            IReadOnlyList<EnemyData> additionalEnemyData = null)
         {
             Player = player;
             Enemy = enemy;
             Enemies = new[] { enemy }.Concat(additionalEnemies ?? Array.Empty<CombatantSnapshot>()).ToArray();
+            EnemyDataList = new[] { enemyData }.Concat(additionalEnemyData ?? Array.Empty<EnemyData>()).ToArray();
             EnemyData = enemyData;
             EnemyStats = enemyStats;
             PlayerBasicProfileId = playerBasicProfileId;
@@ -36,6 +38,8 @@ namespace TianZhang.Features.Adventure
         public CombatantSnapshot Enemy { get; }
         public IReadOnlyList<CombatantSnapshot> Enemies { get; }
         public EnemyData EnemyData { get; }
+        /// <summary>Species data aligned with <see cref="Enemies"/>; the first entry is the main enemy.</summary>
+        public IReadOnlyList<EnemyData> EnemyDataList { get; }
         public EnemyCombatStats EnemyStats { get; }
         public string PlayerBasicProfileId { get; }
         public string EnemyBasicProfileId { get; }
@@ -84,6 +88,7 @@ namespace TianZhang.Features.Adventure
             CombatantSnapshot enemySnapshot;
             EnemyCombatStats enemyStats;
             var additionalSnapshots = new List<CombatantSnapshot>();
+            var additionalEnemyData = new List<EnemyData>();
             try
             {
                 // Rebuild from authoritative inputs at entry; a stale derived snapshot cannot override the table.
@@ -107,8 +112,17 @@ namespace TianZhang.Features.Adventure
                     if (extra == null || string.IsNullOrWhiteSpace(extra.instanceId) || !ids.Add(extra.instanceId) ||
                         !positions.Add(new HexCoord(extra.q, extra.r)))
                     { reason = "adventure_spawn_coordinate_or_identity_invalid"; return false; }
-                    additionalSnapshots.Add(CreateEnemy(enemyData.combatTemplate, enemyStats, new HexCoord(extra.q, extra.r),
-                        enemyBasic, extra.instanceId));
+                    if (!catalog.TryGetEnemy(extra.enemyId, out EnemyData extraData) || extraData.combatTemplate == null)
+                    { reason = "adventure_enemy_unresolved"; return false; }
+                    var extraProfile = CharacterRuntimeProfile.FromDefinition("enemy", extraData.combatTemplate, catalog.CombatRuleSet);
+                    if (!extraProfile.ValidateEquipmentState(catalog, true))
+                    { reason = "adventure_enemy_basic_attack_binding_invalid"; return false; }
+                    string extraBasic = ResolveBasicAttackBinding(
+                        extraProfile.MainEquipmentBasicAttackProfileId, extraProfile.UnarmedBasicAttackProfileId);
+                    EnemyCombatStats extraStats = ProjectEnemyStats(extraData.combatTemplate, catalog.CombatRuleSet, extraData.combatStatScale);
+                    additionalSnapshots.Add(CreateEnemy(extraData.combatTemplate, extraStats, new HexCoord(extra.q, extra.r),
+                        extraBasic, extra.instanceId));
+                    additionalEnemyData.Add(extraData);
                 }
             }
             catch (ArgumentException) { reason = "adventure_growth_inputs_invalid"; return false; }
@@ -119,7 +133,7 @@ namespace TianZhang.Features.Adventure
                 enemyData,
                 playerBasic,
                 enemyBasic,
-                (string[])player.AbilityLoadout.EquippedSkills.Clone(), additionalSnapshots, enemyStats);
+                (string[])player.AbilityLoadout.EquippedSkills.Clone(), additionalSnapshots, enemyStats, additionalEnemyData);
             reason = null;
             return true;
         }
@@ -230,6 +244,8 @@ namespace TianZhang.Features.Adventure
                 stats.movementEfficiencyMilliUnits,
                 source.realmMultiplier,
                 basicAttackProfileId: basicAttackProfileId,
+                equippedArtProfileIds: source.equippedSpells,
+                availableArtProfileIds: source.equippedSpells,
                 rawSpirit: stats.spirit,
                 rawMind: stats.mind,
                 realmStage: source.realmStage,

@@ -20,8 +20,11 @@ namespace TianZhang.Content
     {
         public const string PlayerCombatantId = "player";
         public const string ShijiahouCombatantId = "enemy_shijiahou";
+        public const string LieshijiaCombatantId = "enemy_lieshijia";
         public const string PlayerProfileId = "combat_player_default_v1";
         public const string ShijiahouProfileId = "combat_enemy_shijiahou_v1";
+        // The ranged beast reuses the approved 石甲兽 static piece until a dedicated art pass exists.
+        public const string LieshijiaProfileId = ShijiahouProfileId;
 
         [SerializeField] private CombatUnitPresentationProfileCatalogEntry[] entries = Array.Empty<CombatUnitPresentationProfileCatalogEntry>();
 
@@ -55,7 +58,7 @@ namespace TianZhang.Content
 
         public static bool TryValidateEntries(CombatUnitPresentationProfileCatalogEntry[] values, out string reason)
         {
-            if (values == null || values.Length != 2)
+            if (values == null || values.Length != 3)
             {
                 reason = "combat_presentation_profile_catalog_incomplete";
                 return false;
@@ -76,7 +79,9 @@ namespace TianZhang.Content
             if (!mappings.TryGetValue(PlayerCombatantId, out string playerProfileId) ||
                 !string.Equals(playerProfileId, PlayerProfileId, StringComparison.Ordinal) ||
                 !mappings.TryGetValue(ShijiahouCombatantId, out string shijiahouProfileId) ||
-                !string.Equals(shijiahouProfileId, ShijiahouProfileId, StringComparison.Ordinal))
+                !string.Equals(shijiahouProfileId, ShijiahouProfileId, StringComparison.Ordinal) ||
+                !mappings.TryGetValue(LieshijiaCombatantId, out string lieshijiaProfileId) ||
+                !string.Equals(lieshijiaProfileId, LieshijiaProfileId, StringComparison.Ordinal))
             {
                 reason = "combat_presentation_profile_catalog_mapping_invalid";
                 return false;

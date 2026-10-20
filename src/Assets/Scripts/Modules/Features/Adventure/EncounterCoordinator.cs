@@ -41,7 +41,7 @@ namespace TianZhang.Features.Adventure
         private CombatLegalActionService legalActions;
         private CombatSession session;
         private AdventureSpawnSet spawned;
-        private ICombatActionPolicy enemyPolicy;
+        private Dictionary<string, ICombatActionPolicy> enemyPolicies;
         private ICombatPresentationSink presentation;
         private ICombatPresentationActivity hudActivity;
         private ICombatUnitPresentationPort unitPresentation;
@@ -201,7 +201,7 @@ namespace TianZhang.Features.Adventure
             combatRoutine = null;
             session = null;
             spawned = null;
-            enemyPolicy = null;
+            enemyPolicies = null;
             withdrawalPaused = false;
             unitPresentation.Clear();
         }
@@ -244,11 +244,17 @@ namespace TianZhang.Features.Adventure
             if (!unitSpawner.TrySpawn(
                     player, catalog, startNode, encounterNode, out spawned, out reason))
                 return false;
-            if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(
-                    spawned.EnemyData.aiProfileId, out enemyPolicy, out reason))
+            enemyPolicies = new Dictionary<string, ICombatActionPolicy>(StringComparer.Ordinal);
+            for (int index = 0; index < spawned.Enemies.Count; index++)
             {
-                spawned = null;
-                return false;
+                if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(
+                        spawned.EnemyDataList[index].aiProfileId, out ICombatActionPolicy policy, out reason))
+                {
+                    spawned = null;
+                    enemyPolicies = null;
+                    return false;
+                }
+                enemyPolicies.Add(spawned.Enemies[index].Id, policy);
             }
             if (!TryCreatePresentationDescriptors(spawned, out IReadOnlyList<CombatUnitPresentationDescriptor> descriptors, out reason))
             {
@@ -516,14 +522,16 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                     {
                         IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
-                        CombatCommand command = enemyPolicy.ChooseAction(session, legal);
+                        if (!enemyPolicies.TryGetValue(advance.ActorId, out ICombatActionPolicy policy))
+                            throw new InvalidOperationException("combat_enemy_ai_profile_missing");
+                        CombatCommand command = policy.ChooseAction(session, legal);
                         if (command == null)
                             throw new InvalidOperationException("combat_enemy_turn_has_no_legal_command");
                         CombatActionResult result = ExecuteCommand(command);
-                        presentation.AppendLog(BuildActionMessage(resolveText(spawned.EnemyData.displayNameKey), command, result));
+                        presentation.AppendLog(BuildActionMessage(resolveText(EnemyDataFor(advance.ActorId).displayNameKey), command, result));
                         if (!result.Succeeded)
                             throw new InvalidOperationException("combat_enemy_legal_command_rejected:" + result.RejectionReason);
-                        Present(resolveText(spawned.EnemyData.displayNameKey) + " 行动", false);
+                        Present(resolveText(EnemyDataFor(advance.ActorId).displayNameKey) + " 行动", false);
                         do { yield return null; } while (IsPresenting);
                     }
                 }
@@ -823,9 +831,7 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!presentationProfileCatalog.TryGetPresentationProfileId(
-                    CombatUnitPresentationProfileCatalogData.PlayerCombatantId, out string playerProfileId) ||
-                !presentationProfileCatalog.TryGetPresentationProfileId(
-                    values.EnemyData.enemyId, out string enemyProfileId))
+                    CombatUnitPresentationProfileCatalogData.PlayerCombatantId, out string playerProfileId))
             {
                 reason = "adventure_presentation_profile_unresolved";
                 return false;
@@ -841,8 +847,15 @@ namespace TianZhang.Features.Adventure
                     ToPresentationHex(values.Player.Position),
                     playerFacing < 0 ? 0 : playerFacing),
             };
-            foreach (CombatantSnapshot enemy in values.Enemies)
+            for (int index = 0; index < values.Enemies.Count; index++)
             {
+                CombatantSnapshot enemy = values.Enemies[index];
+                if (!presentationProfileCatalog.TryGetPresentationProfileId(
+                        values.EnemyDataList[index].enemyId, out string enemyProfileId))
+                {
+                    reason = "adventure_presentation_profile_unresolved";
+                    return false;
+                }
                 int enemyFacing = enemy.Position.DirectionTo(values.Player.Position);
                 result.Add(new CombatUnitPresentationDescriptor(
                     enemy.Id,
@@ -854,6 +867,15 @@ namespace TianZhang.Features.Adventure
             descriptors = result;
             reason = null;
             return true;
+        }
+
+        private EnemyData EnemyDataFor(string combatantId)
+        {
+            if (spawned != null)
+                for (int index = 0; index < spawned.Enemies.Count; index++)
+                    if (string.Equals(spawned.Enemies[index].Id, combatantId, StringComparison.Ordinal))
+                        return spawned.EnemyDataList[index];
+            return spawned?.EnemyData;
         }
 
         private void ProjectPresentation(

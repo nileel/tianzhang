@@ -17,3 +17,5 @@ MonoBehaviour:
     presentationProfileId: combat_player_default_v1
   - combatantId: enemy_shijiahou
     presentationProfileId: combat_enemy_shijiahou_v1
+  - combatantId: enemy_lieshijia
+    presentationProfileId: combat_enemy_shijiahou_v1

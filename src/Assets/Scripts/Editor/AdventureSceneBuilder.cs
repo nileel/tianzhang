@@ -659,6 +659,18 @@ namespace TianZhang.Editor
             marker.SetActive(false);
         }
 
+        [MenuItem("天章/场景/刷新战斗攻击档案")]
+        public static void RefreshCombatAttackProfiles()
+        {
+            // Content imports create AttackProfileData assets; the saved scene owns the serialized
+            // array the combat session reads at runtime, so refresh only that reference list.
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            GameObject root = Array.Find(scene.GetRootGameObjects(), value => value.name == "AdventureRoot");
+            if (root == null) throw new InvalidOperationException("AdventureScene is missing AdventureRoot.");
+            SceneBuildSupport.SetObjects(root.GetComponent<AdventureSceneInstaller>(), "attackProfiles", LoadAttackProfiles());
+            SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
+        }
+
         [MenuItem("天章/场景/接入关中移动交互")]
         public static void RebuildCombatMovement()
         {

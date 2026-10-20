@@ -218,6 +218,11 @@ namespace TianZhang.Editor
                     combatantId = CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId,
                     presentationProfileId = CombatUnitPresentationProfileCatalogData.ShijiahouProfileId,
                 },
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.LieshijiaProfileId,
+                },
             });
             EditorUtility.SetDirty(catalog);
 

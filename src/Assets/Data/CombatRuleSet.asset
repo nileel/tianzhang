@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TianZhang.Content::TianZhang.Content.CombatRuleSetData
   schemaVersion: 1
   ruleSetVersion: AP-GROWTH@0.1
-  sourceDigest: f146a3971a4c86a0975502214dc45935ebfe9e59cb906a2d8b8f502e3d9088cf
+  sourceDigest: a1b78d630fe2582f2c3856d071eed42c2ed56576bc5a583dd8835f40366a8d96
   realms:
   - realmId: realm_fanren
     realmOrder: 0
@@ -22,7 +22,7 @@ MonoBehaviour:
     actionPointMaximumUnits: 100000
     baseMovementEfficiencyMilliUnits: 2000
     legacyBaseMovementEfficiencyMilliUnits: 2000
-    movementNodeWeightNumerators:
+    movementNodeWeightNumerators: 
     movementNodeWeightDenominator: 1
   - realmId: realm_lianqi
     realmOrder: 1
@@ -104,7 +104,7 @@ MonoBehaviour:
   economy:
   - recordKind: global
     definitionRef: action_economy
-    abilityTierId:
+    abilityTierId: 
     repeatFirstPermille:
       present: 1
       value: 1000
@@ -201,7 +201,7 @@ MonoBehaviour:
     ctPenalty:
       present: 0
       value: 0
-    cooldownClass:
+    cooldownClass: 
     reuseCooldownOverrideTicks:
       present: 0
       value: 0

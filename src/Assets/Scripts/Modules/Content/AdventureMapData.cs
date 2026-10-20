@@ -7,6 +7,7 @@ namespace TianZhang.Content
     public sealed class AdventureEnemySpawnData
     {
         public string instanceId;
+        public string enemyId;
         public int q;
         public int r;
     }

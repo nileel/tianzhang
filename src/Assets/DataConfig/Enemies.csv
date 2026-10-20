@@ -5,3 +5,4 @@ enemy_fengsun,type_yaoshou,ai_ranged,realm_lianqi,1.4,7,5,13,8,20,10,0,0,0,0,18,
 enemy_yanweihu,type_yaoshou,ai_magic,realm_lianqi,1.3,8,6,16,12,14,8,0,0,8,15,10,5,15,5,spell_liuhuolingfu,item_yanwei_fur:25|item_huoling_crystal:15,desc_enemy_yanweihu,,,,100000,4000,,1
 enemy_xueyingmoxiu,type_moxiu,ai_magic,realm_zhuji,2.0,12,10,18,16,14,10,5,0,10,15,5,10,25,5,spell_tx_anshi,item_mohe_piece:40|item_xuelian_stone:20,desc_enemy_xueyingmoxiu,,,,300000,4000,,1
 enemy_huangyesanxiu,faction_sanxiu,ai_ranged,realm_lianqi,1.5,12,12,10,10,10,8,8,15,5,0,5,8,15,0,spell_xuanshuizhou,item_sanxiu_token:60|item_lingshi_bag:30,desc_enemy_huangyesanxiu,,,,100000,4000,,1
+enemy_lieshijia,type_yaoshou,ai_ranged,realm_lianqi,1.1,7,9,8,7,9,4,0,0,0,0,12,6,12,0,spell_lieshi,item_shijia_piece:40|item_lingshi_low:40,desc_enemy_lieshijia,guanzhong,item_shijia_piece@80@1|item_lingshi_low@40@1,,100000,4000,body_shijiahou,0.5

@@ -34,8 +34,10 @@ namespace TianZhang.Tests.EditMode
                 FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath);
             Assert.IsTrue(catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.PlayerCombatantId, out string playerProfileId));
             Assert.IsTrue(catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId, out string shijiahouProfileId));
+            Assert.IsTrue(catalog.TryGetPresentationProfileId(CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId, out string lieshijiaProfileId));
             Assert.AreEqual(CombatUnitPresentationProfileCatalogData.PlayerProfileId, playerProfileId);
             Assert.AreEqual(CombatUnitPresentationProfileCatalogData.ShijiahouProfileId, shijiahouProfileId);
+            Assert.AreEqual(CombatUnitPresentationProfileCatalogData.LieshijiaProfileId, lieshijiaProfileId);
             Assert.IsTrue(profileSet.TryGetProfile(playerProfileId, out Static3DCombatUnitPresentationProfile playerProfile));
             Assert.IsTrue(profileSet.TryGetProfile(shijiahouProfileId, out Static3DCombatUnitPresentationProfile shijiahouProfile));
             Assert.AreEqual(FormalStatic3DCombatPieceBuilder.PlayerPrefabPath, AssetDatabase.GetAssetPath(playerProfile.prefab));
@@ -67,6 +69,11 @@ namespace TianZhang.Tests.EditMode
                     combatantId = CombatUnitPresentationProfileCatalogData.PlayerCombatantId,
                     presentationProfileId = CombatUnitPresentationProfileCatalogData.ShijiahouProfileId,
                 },
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.LieshijiaProfileId,
+                },
             }, out string duplicateReason));
             Assert.AreEqual("combat_presentation_profile_catalog_duplicate_or_invalid", duplicateReason);
 
@@ -81,6 +88,11 @@ namespace TianZhang.Tests.EditMode
                 {
                     combatantId = CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId,
                     presentationProfileId = "combat_enemy_unknown_v1",
+                },
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.LieshijiaProfileId,
                 },
             }, out string unknownReason));
             Assert.AreEqual("combat_presentation_profile_catalog_mapping_invalid", unknownReason);

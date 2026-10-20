@@ -324,7 +324,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(3, provider.ActiveCombatantCount);
             foreach (CombatantSnapshot enemy in spawned.Enemies)
                 Assert.AreEqual("basic_body_shijiahou_lianqi", enemy.BasicAttackProfileId);
-            yield return FightFormalTwoEnemies(encounter, requireMultipleTargets: true);
+            // The encounter is deliberately mixed now; the ranged beast holds distance, so the
+            // two-adjacent-target AOE confirmation is covered by its own dedicated case instead.
+            yield return FightFormalTwoEnemies(encounter, requireMultipleTargets: false);
             Assert.AreEqual(
                 GameplaySceneNames.Settlement,
                 SceneManager.GetActiveScene().name,
@@ -588,10 +590,15 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(spawned.Enemies.All(enemy => !enemy.IsAlive), "Formal two-enemy combat did not finish within 120 turns.");
             if (requireMultipleTargets) Assert.IsTrue(multiple, "Real AI and movement never produced a two-target confirmation.");
             Assert.IsTrue(partial, "A partial defeat must remain an ongoing encounter.");
+            Assert.IsTrue(spawned.Enemies.Any(enemy => recording.Events.Any(value =>
+                    value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Move)),
+                "At least one enemy must move using the production AI.");
             foreach (CombatantSnapshot enemy in spawned.Enemies)
             {
-                Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Move));
-                Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Attack));
+                // Melee bites present as Attack; the ranged beast's art presents as Cast.
+                Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == enemy.Id &&
+                        value.PresentationEvent is CombatUnitPresentationEvent.Attack or CombatUnitPresentationEvent.Cast),
+                    enemy.Id + " must perform at least one offensive action.");
                 Assert.AreEqual(1, recording.Events.Count(value => value.ActorCombatantId == enemy.Id && value.PresentationEvent == CombatUnitPresentationEvent.Death));
             }
             if (provider != null) Assert.AreEqual(0, provider.ActiveCombatantCount);
@@ -741,7 +748,8 @@ namespace TianZhang.Tests.PlayMode
             CombatSession session = CreateCombatSession(1, 100, out CombatantSnapshot player, out CombatantSnapshot enemy);
             var source = new SequenceCombatRandomSource(50f, 50f, 50f, 50f, 99f);
             EncounterCoordinator coordinator = CreateCoordinator(session, player, enemy, source, out GameObject host, out EnemyData enemyData);
-            SetPrivateField(coordinator, "enemyPolicy", new LegalActionAI());
+            SetPrivateField(coordinator, "enemyPolicies",
+                new Dictionary<string, ICombatActionPolicy> { [enemy.Id] = new LegalActionAI() });
             MethodInfo runCombat = typeof(EncounterCoordinator).GetMethod(
                 "RunCombat",
                 BindingFlags.Instance | BindingFlags.NonPublic);
@@ -1505,6 +1513,11 @@ namespace TianZhang.Tests.PlayMode
                 {
                     combatantId = CombatUnitPresentationProfileCatalogData.ShijiahouCombatantId,
                     presentationProfileId = CombatUnitPresentationProfileCatalogData.ShijiahouProfileId,
+                },
+                new CombatUnitPresentationProfileCatalogEntry
+                {
+                    combatantId = CombatUnitPresentationProfileCatalogData.LieshijiaCombatantId,
+                    presentationProfileId = CombatUnitPresentationProfileCatalogData.LieshijiaProfileId,
                 },
             });
             return catalog;

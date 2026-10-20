@@ -30,15 +30,26 @@ namespace TianZhang.Tests
         {
             const string header = "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies";
             const string row = "test,name,scope,encounter,adventure_node_encounter,3,5,enemy_shijiahou,";
-            var maps = TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + "enemy_2@4:5" }, "test");
-            Assert.AreEqual("enemy_2", maps[0].nodes[0].additionalEnemies.Single().instanceId);
-            Assert.AreEqual(4, maps[0].nodes[0].additionalEnemies.Single().q);
-            Assert.AreEqual(5, maps[0].nodes[0].additionalEnemies.Single().r);
+            // The first token is the enemy content id; instance ids stay the stable enemy_2, enemy_3 order.
+            var maps = TianZhang.Editor.AdventureContentImporter.Parse(
+                new[] { header, row + "enemy_lieshijia@4:5|enemy_shijiahou@4:4" }, "test");
+            AdventureEnemySpawnData[] extras = maps[0].nodes[0].additionalEnemies;
+            CollectionAssert.AreEqual(new[] { "enemy_2", "enemy_3" }, extras.Select(extra => extra.instanceId));
+            CollectionAssert.AreEqual(new[] { "enemy_lieshijia", "enemy_shijiahou" }, extras.Select(extra => extra.enemyId));
+            Assert.AreEqual(4, extras[0].q);
+            Assert.AreEqual(5, extras[0].r);
             UnityEngine.Object.DestroyImmediate(maps[0]);
-            foreach (string value in new[] { "enemy@4:5", "enemy_2@3:5", "enemy_2@4:5|enemy_2@4:4", "enemy_2@4:5|enemy_3@4:5", "enemy_2@x:5" })
+            foreach (string value in new[]
+            {
+                "enemy_lieshijia@3:5",                       // main enemy coordinate
+                "enemy_lieshijia@4:5|enemy_shijiahou@4:5",   // duplicate coordinate
+                "Enemy_Lieshijia@4:5",                       // unstable id
+                "@4:5",                                      // missing content id
+                "enemy_lieshijia@x:5",                       // invalid coordinate
+            })
                 Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + value }, "test"), value);
             Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(
-                new[] { header, row.Replace("adventure_node_encounter", "adventure_node_start") + "enemy_2@4:5" }, "test"));
+                new[] { header, row.Replace("adventure_node_encounter", "adventure_node_start") + "enemy_lieshijia@4:5" }, "test"));
         }
 
         [Test]

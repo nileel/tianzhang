@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed487ba0dcb5e9a43a39f8b1c4a934d1, type: 3}
+  m_Name: Char_Enemy_enemy_lieshijia
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.CharacterData
+  charName: "\u88C2\u77F3\u7532\u517D"
+  baseLevel: 1
+  rootBone: 7
+  physique: 9
+  spirit: 8
+  mind: 7
+  reaction: 9
+  talent: 4
+  fortune: 10
+  hpBonus: 0
+  mpBonus: 0
+  physAtkBonus: 0
+  magAtkBonus: 0
+  physDefBonus: 0
+  magDefBonus: 0
+  blockRate: 0
+  blockReduction: 0
+  soulShieldRate: 0
+  soulShieldReduction: 0
+  dodgeRate: 12
+  critRate: 6
+  critDamage: 12
+  hitRateBonus: 0
+  realmMultiplier: 1.1
+  realmStage: "\u7EC3\u6C14"
+  gongFaName: 
+  equippedSpells:
+  - spell_lieshi
+  equippedSkills: []
+  availableSpells: []
+  availableSkills: []
+  mainEquipmentBasicAttackProfileId: 
+  unarmedBasicAttackProfileId: 
+  unarmedAttackFamilyId: body_shijiahou
+  innatePurchasePointsLimit: 0
+  innatePurchasePointsUsed: 0
+  creationBudgetLimit: 0
+  creationBudgetUsed: 0
+  creationBudgetRefunded: 0
+  originId: 
+  fateTagIds: []
+  craftSkillIds: []
+  craftSkillLevels: 
+  visibleRootId: 
+  visibleRootKind: 
+  visibleRootGrade: 
+  visibleRootElement: 
+  visibleRootMotherElement: 
+  visibleRootCultivationMultiplier: 1
+  visibleRootMpMultiplier: 1
+  visibleRootRealmCap: 
+  visibleRootRegionAffinity: 
+  visibleRootLearnTags: []
+  hiddenRootSeedId: 
+  hiddenRootId: 
+  hiddenRootKind: 
+  hiddenRootGrade: 
+  hiddenRootElement: 
+  hiddenRootMotherElement: 
+  hiddenRootCultivationMultiplier: 0
+  hiddenRootMpMultiplier: 1
+  hiddenRootRealmCap: 
+  hiddenRootRegionAffinity: 
+  hiddenRootLearnTags: []
+  hiddenRootState: 
+  hiddenRootRollSeed: 0
+  maxSpellSlots: 0
+  maxSkillSlots: 0
+  foundationPurpleMansionState: {fileID: 0}
+  developedMansions: []
+  targetPosition: 
+  positionOccupationState: 
+  danXiangId: 
+  danPivotRole: 
+  mansionBindings: []
+  danArtifactForm: 
+  legacyDanJiType: 
+  actionPointMaximumUnits: 100000
+  movementEfficiencyMilliUnits: 4000

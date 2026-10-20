@@ -23,7 +23,7 @@ namespace TianZhang.Tests
         private static readonly string[] EnemyIds =
         {
             "enemy_shijiahou", "enemy_fengsun", "enemy_yanweihu",
-            "enemy_xueyingmoxiu", "enemy_huangyesanxiu"
+            "enemy_xueyingmoxiu", "enemy_huangyesanxiu", "enemy_lieshijia"
         };
 
         [Test]
@@ -37,9 +37,8 @@ namespace TianZhang.Tests
                 Assert.AreEqual("content_scope_production", preview.settlements[0].contentScope);
                 Assert.AreEqual("bounty_board", preview.settlements[0].features[0].featureId);
 
-                Assert.AreEqual(1, preview.enemies.Length);
-                var enemy = preview.enemies[0];
-                Assert.AreEqual("enemy_shijiahou", enemy.enemyId);
+                Assert.AreEqual(2, preview.enemies.Length);
+                var enemy = preview.enemies.Single(candidate => candidate.enemyId == "enemy_shijiahou");
                 Assert.AreEqual("ai_melee", enemy.aiProfileId);
                 Assert.AreSame(enemy.combatTemplate, preview.enemyTemplates.Single(template => template == enemy.combatTemplate));
                 CollectionAssert.AreEquivalent(
@@ -47,6 +46,11 @@ namespace TianZhang.Tests
                     enemy.dropEntries.Select(entry => entry.itemId));
                 Assert.AreEqual(100, enemy.dropEntries.Single(entry => entry.itemId == "item_shijia_piece").dropChancePercent);
                 Assert.AreEqual(50, enemy.dropEntries.Single(entry => entry.itemId == "item_lingshi_low").dropChancePercent);
+                var ranged = preview.enemies.Single(candidate => candidate.enemyId == "enemy_lieshijia");
+                Assert.AreEqual("ai_ranged", ranged.aiProfileId);
+                CollectionAssert.AreEquivalent(new[] { "spell_lieshi" }, ranged.combatTemplate.equippedSpells);
+                Assert.AreEqual(80, ranged.dropEntries.Single(entry => entry.itemId == "item_shijia_piece").dropChancePercent);
+                Assert.AreEqual(40, ranged.dropEntries.Single(entry => entry.itemId == "item_lingshi_low").dropChancePercent);
 
                 CollectionAssert.AreEquivalent(
                     new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" },
@@ -153,7 +157,7 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void AllFiveEnemyTemplatesHaveExplicitProductionActionEconomyInputs()
+        public void AllEnemyTemplatesHaveExplicitProductionActionEconomyInputs()
         {
             var preview = ParseProductionPreview();
             try
@@ -168,7 +172,7 @@ namespace TianZhang.Tests
                     Assert.AreEqual(foundation ? 300000 : 100000, template.actionPointMaximumUnits);
                     Assert.AreEqual(4000, template.movementEfficiencyMilliUnits);
                 }
-                Assert.AreEqual(1, preview.enemies.Length);
+                Assert.AreEqual(2, preview.enemies.Length);
             }
             finally
             {
@@ -201,11 +205,11 @@ namespace TianZhang.Tests
             {
                 var lines = ReadDataFile(EnemiesPath);
                 if (field == "extraColumn")
-                    lines = lines.Select(line => line.StartsWith(EnemyIds[4] + ",", StringComparison.Ordinal) ? line + "," + value : line).ToArray();
+                    lines = lines.Select(line => line.StartsWith(EnemyIds[EnemyIds.Length - 1] + ",", StringComparison.Ordinal) ? line + "," + value : line).ToArray();
                 else if (field == "missingColumn")
                     lines = lines.Select(line => line.StartsWith("#", StringComparison.Ordinal) ? line : string.Join(",", line.Split(',').Take(line.Split(',').Length - 1))).ToArray();
                 else
-                    lines = WithEnemyInput(lines, EnemyIds[4], field, value);
+                    lines = WithEnemyInput(lines, EnemyIds[EnemyIds.Length - 1], field, value);
                 File.WriteAllLines(ToAbsolutePath(EnemiesPath), lines);
 
                 Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ImportContentCatalog());
