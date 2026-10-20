@@ -292,7 +292,9 @@ namespace TianZhang.Editor.ConfigEditor
                 string source = field.Column == "gongFaName" ? "GongFa" : field.Column == "equipmentBasicAttackProfileId" ? "AttackProfiles" :
                     field.Column == "itemId" ? "Items" : path == "equippedSpells" ? "Spells" : path == "equippedSkills" ? "Skills" : "Language";
                 string key = source == "Language" ? "id" : source == "Items" ? "itemId" : source == "AttackProfiles" ? "attackProfileId" : "name";
-                if (!Rows(source, snapshot).Any(r => r[key] == value.RawToken)) throw new InvalidDataException("未登记的引用ID：" + value.RawToken);
+                if (!Rows(source, snapshot).Any(r => r[key] == value.RawToken) &&
+                    !(path == "equippedSpells" && Rows("AttackProfiles", snapshot).Any(r => r["attackProfileId"] == value.RawToken)))
+                    throw new InvalidDataException("未登记的引用ID：" + value.RawToken);
                 string prefix = field.Column == "affiliation" ? "faction_" : field.Column == "grade" ? "grade_" :
                     field.Column == "elementMain" || field.Column == "elementSub" ? "element_" :
                     field.Column == "realmId" || field.Column == "realm" || field.Column == "realmKey" || field.Column == "equipmentRealmRequirementId" || field.Column == "combatUseRealmId" ? "realm_" : "";

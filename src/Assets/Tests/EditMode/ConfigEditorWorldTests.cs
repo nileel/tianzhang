@@ -110,7 +110,7 @@ namespace TianZhang.Tests.EditMode
             session.SetValue("Adventures", head, "displayNameKey", ConfigValue.Scalar("settlement_guanzhong_city"));
             Assert.That(Validate(session, "Adventures").Any(i => i.ErrorCode == "adventure_group_mismatch"));
             var edits = codec.GetLinkedEdits(session.Snapshot());
-            Assert.AreEqual(4, edits.Count);
+            Assert.AreEqual(2 * (table.Rows.Count - 1), edits.Count);
             session.ApplyLinkedEdits(edits);
             Assert.IsEmpty(Validate(session, "Adventures"));
             Assert.IsEmpty(codec.GetLinkedEdits(session.Snapshot()));

@@ -229,10 +229,12 @@ namespace TianZhang.Editor.ConfigEditor
                 foreach (var value in preview.bounties)
                 { var path = "Assets/Data/Bounties/Bounty_" + value.bountyId + ".asset"; var clone = Clone<BountyData>(path); SettlementContentImporter.CopyBounty(value, clone); add(path, clone); }
                 var catalog = Clone<ContentCatalogData>(Catalog);
+                // Entry order must mirror SettlementContentImporter.CommitContentCatalog: sorted by
+                // stable ID, not CSV row order, or the read-back comparison reports a field mismatch.
                 catalog.ReplaceEntries(preview.settlements.Select(v => Required<SettlementData>("Assets/Data/Settlements/Settlement_" + v.settlementId + ".asset")).ToArray(),
-                    preview.enemies.Select(v => Required<EnemyData>("Assets/Data/Enemies/Enemy_" + v.enemyId + ".asset")).ToArray(),
+                    preview.enemies.OrderBy(v => v.enemyId, StringComparer.Ordinal).Select(v => Required<EnemyData>("Assets/Data/Enemies/Enemy_" + v.enemyId + ".asset")).ToArray(),
                     preview.items.OrderBy(v => v.itemId, StringComparer.Ordinal).Select(v => Required<ItemData>("Assets/Data/Items/Item_" + v.itemId + ".asset")).ToArray(),
-                    preview.bounties.Select(v => Required<BountyData>("Assets/Data/Bounties/Bounty_" + v.bountyId + ".asset")).ToArray());
+                    preview.bounties.OrderBy(v => v.bountyId, StringComparer.Ordinal).Select(v => Required<BountyData>("Assets/Data/Bounties/Bounty_" + v.bountyId + ".asset")).ToArray());
                 catalog.SetAppearanceProfiles(appearances); catalog.SetEquipmentAttackProfiles(equipment);
                 var authority = WorldContentImporter.LoadCharterRuleStaticCatalog();
                 if (!authority.TryValidateDefinitions(out var reason)) throw new InvalidDataException(reason);
