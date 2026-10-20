@@ -144,6 +144,10 @@ namespace TianZhang.Features.Adventure
         public bool IsPresenting => ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
             (hudActivity?.IsPresenting ?? false);
 
+        /// <summary>The only window in which a direct <c>Request*</c> command is performed instead of
+        /// dropped: the player's turn is active and its advance presentation has finished.</summary>
+        public bool AcceptsPlayerCommand => acceptsPlayerCommand && !IsPresenting;
+
         public bool CanWithdraw(out string reason)
         {
             reason = "回合切换中";
@@ -546,8 +550,15 @@ namespace TianZhang.Features.Adventure
         private void ExecutePlayer(CombatCommand command, CombatCommandPreview quote = null)
         {
             RefreshGrowth();
-            if (!acceptsPlayerCommand || IsPresenting || session == null || command == null ||
-                !string.Equals(command.ActorId, "player", StringComparison.Ordinal)) return;
+            if (!AcceptsPlayerCommand || session == null || command == null ||
+                !string.Equals(command.ActorId, "player", StringComparison.Ordinal))
+            {
+                // A direct request outside the accepting window is dropped, never queued. The HUD
+                // path (ConfirmAction) already reports stale state; keep one log line so automation
+                // and tooling do not lose a command silently.
+                if (session != null && command != null) presentation?.AppendLog(displayReason("combat_quote_stale"));
+                return;
+            }
             CombatActionResult result = ExecuteCommand(command, quote);
             presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&

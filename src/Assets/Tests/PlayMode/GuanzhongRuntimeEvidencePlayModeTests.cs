@@ -488,32 +488,58 @@ namespace TianZhang.Tests.PlayMode
                 tracker.rectTransform.GetWorldCorners(hudCorners);
                 Assert.That(enemyRect.Overlaps(Rect.MinMaxRect(hudCorners[0].x, hudCorners[0].y, hudCorners[2].x, hudCorners[2].y)), Is.False);
                 var service = new CombatCommandService();
-                var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", spawned.Player.BasicAttackProfileId);
-                var distant = service.Preview(session, attack);
-                Assert.That(distant.IsLegal, Is.False);
-                int ap = spawned.Player.ActionPointsRemainingUnits, health = spawned.Enemy.CurrentHealth;
-                encounter.RequestBasicAttack("player", "enemy");
-                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
-                Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(health));
+                // The equipped sword is a two-cell forward area, so a basic attack is a direction
+                // rather than a target. Model it exactly like CombatCommandInput does.
+                CombatActionCandidate AttackCandidate(int attackDirection) => new CombatActionCandidate(
+                    CombatActionKind.BasicAttack, "player", null, null,
+                    Find<CombatHudPresenter>().Snapshot.CommandContextVersion, attackDirection: attackDirection);
+                var inputTrace = new List<string>();
+                // ExecutePlayer drops a direct request until the turn-advance presentation ends, so
+                // every direct call below waits for the coordinator's own acceptance gate.
+                yield return PlayerInputReady(encounter, session, inputTrace);
                 var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, spawned.Enemy.Position,
                     10000000, spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>());
                 Assert.That(path.IsReachable, Is.True, path.Reason);
+                // HexCoord.DirectionTo only resolves adjacent cells, so the remote aim comes from the
+                // first step of the authoritative path.
+                int direction = path.Path.Select(cell => spawned.Player.Position.DirectionTo(cell)).First(value => value >= 0);
+                var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player",
+                    profileId: spawned.Player.BasicAttackProfileId, attackDirection: direction);
+                var distant = service.Preview(session, attack);
+                Assert.That(distant.IsLegal, Is.False);
+                Assert.That(distant.RejectionReason, Is.EqualTo("combat_attack_area_empty"),
+                    "A remote spawn must be rejected because no enemy stands in the forward pair, not because the command is malformed.");
+                var distantPreview = encounter.PreviewAction(AttackCandidate(direction));
+                Assert.That(distantPreview.CanConfirm, Is.False, distantPreview.Reason);
+                int ap = spawned.Player.ActionPointsRemainingUnits, health = spawned.Enemy.CurrentHealth;
+                encounter.ConfirmAction(AttackCandidate(direction));
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
+                Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(health));
                 var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance=18; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
                 yield return Capture("remote-spawn-" + size.x);
+                yield return PlayerInputReady(encounter, session, inputTrace);
                 var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
                 Assert.That(move.IsLegal, Is.True, move.RejectionReason);
                 encounter.RequestMove("player", 0, 1);
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - move.ActionPointCostUnits));
+                Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)), "The quoted move must commit exactly once.");
                 for (float deadline = Time.realtimeSinceStartup + 10f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
                 Assert.That(encounter.IsPresenting, Is.False);
                 yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
                 Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(9, 9)), "Production AI must advance from its remote spawn.");
-                Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)));
-                var close = service.Preview(session, attack);
+                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(1),
+                    "The player must close into melee contact instead of staying on the first move's cell.");
+                yield return PlayerInputReady(encounter, session, inputTrace);
+                int closeDirection = spawned.Player.Position.DirectionTo(spawned.Enemy.Position);
+                var close = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player",
+                    profileId: spawned.Player.BasicAttackProfileId, attackDirection: closeDirection));
                 Assert.That(close.IsLegal, Is.True, close.RejectionReason);
+                var closePreview = encounter.PreviewAction(AttackCandidate(closeDirection));
+                Assert.That(closePreview.CanConfirm, Is.True, closePreview.Reason);
                 ap = spawned.Player.ActionPointsRemainingUnits;
-                encounter.RequestBasicAttack("player", "enemy");
+                encounter.ConfirmAction(AttackCandidate(closeDirection));
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - close.ActionPointCostUnits));
+                lines.AddRange(inputTrace);
                 lines.Add($"contact player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={spawned.Player.Position.Distance(spawned.Enemy.Position)}; tick={session.TurnScheduler.CurrentTick}; turn={session.TurnSequence}; legalAttackCost={close.ActionPointCostUnits}");
                 Write("remote-spawn-" + size.x, lines);
             }
@@ -1008,6 +1034,35 @@ namespace TianZhang.Tests.PlayMode
             yield return null;
             Assert.That(session.CurrentActorId, Is.EqualTo("player"), "Expected a player turn.");
             Assert.That(encounter.IsPresenting, Is.False);
+        }
+
+        // The session already belongs to the player while the action-order playback still runs;
+        // EncounterCoordinator.ExecutePlayer drops direct requests in that window instead of queuing
+        // them. Wait for the same gate the production HUD uses before sending a command.
+        private static IEnumerator PlayerInputReady(EncounterCoordinator encounter, CombatSession session, List<string> trace = null)
+        {
+            string entry = CoordinatorState(encounter, session);
+            int frames = 0;
+            for (float deadline = Time.realtimeSinceStartup + 30f; Time.realtimeSinceStartup < deadline; frames++)
+            {
+                if (encounter.AcceptsPlayerCommand && session.CurrentActorId == "player" &&
+                    session.TurnPhase == CombatTurnPhase.Active)
+                {
+                    trace?.Add("inputReady frames=" + frames + "; entry={" + entry + "}; exit={" + CoordinatorState(encounter, session) + "}");
+                    yield break;
+                }
+                yield return null;
+            }
+            Assert.Fail("Formal encounter did not accept player commands: " + CoordinatorState(encounter, session));
+        }
+
+        private static string CoordinatorState(EncounterCoordinator encounter, CombatSession session)
+        {
+            CombatHudSnapshot hud = Find<CombatHudPresenter>().Snapshot;
+            return "presenting=" + encounter.IsPresenting + "; accepts=" + encounter.AcceptsPlayerCommand +
+                "; actor=" + session.CurrentActorId + "; phase=" + session.TurnPhase + "; turn=" + session.TurnSequence +
+                "; tick=" + session.TurnScheduler.CurrentTick + "; hudAccepts=" + hud?.AcceptsCommands +
+                "; hudPresenting=" + hud?.IsPresenting;
         }
 
         /// <summary>Tile body top only: obstacles and units are parented under the same cell root.</summary>
