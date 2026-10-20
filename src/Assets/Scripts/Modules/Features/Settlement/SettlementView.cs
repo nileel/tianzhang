@@ -140,6 +140,8 @@ namespace TianZhang.Features.Settlement
         [SerializeField] private Button charterSiteEntryButton;
         [SerializeField] private Text charterSiteEntryText;
         [SerializeField] private CharterSiteView charterSiteView;
+        [SerializeField] private RectTransform equipmentContainer;
+        [SerializeField] private Text equipmentStatusText;
 
         private void Start()
         {
@@ -183,6 +185,63 @@ namespace TianZhang.Features.Settlement
         }
 
         public bool HasCharterSitePanel => charterSiteView != null;
+
+        public void ConfigureEquipmentPanel(RectTransform container, Text status)
+        {
+            equipmentContainer = container;
+            equipmentStatusText = status;
+        }
+
+        /// <summary>
+        /// 结算后换装：只列出已拥有的正式武器，当前主手不可重复点击。按钮沿用功能按钮的
+        /// 克隆，避免为每件武器新增场景对象。
+        /// </summary>
+        public void BindEquipment(
+            IReadOnlyList<string> ownedItemIds,
+            string currentItemId,
+            ContentCatalogData catalog,
+            Action<string> onEquip)
+        {
+            EnsureLanguageLoaded();
+            if (equipmentContainer == null) return;
+            for (int index = equipmentContainer.childCount - 1; index >= 0; index--)
+            {
+                GameObject child = equipmentContainer.GetChild(index).gameObject;
+                child.SetActive(false);
+                if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
+            }
+
+            if (equipmentStatusText != null)
+            {
+                string currentName = null;
+                if (!string.IsNullOrEmpty(currentItemId) && catalog != null &&
+                    catalog.TryGetItem(currentItemId, out ItemData currentItem) && currentItem != null)
+                    currentName = UiText.Resolve(currentItem.displayNameKey);
+                equipmentStatusText.text = currentName == null ? "主手：未装备" : "主手：" + currentName;
+            }
+
+            if (featureButton == null || catalog == null || ownedItemIds == null) return;
+            foreach (string itemId in ownedItemIds)
+            {
+                if (!catalog.TryGetItem(itemId, out ItemData item) || item == null) continue;
+                Button button = Instantiate(featureButton, equipmentContainer);
+                button.name = "SettlementEquip_" + itemId;
+                Text label = button.GetComponentInChildren<Text>();
+                if (label != null) label.text = UiText.Resolve(item.displayNameKey);
+                button.interactable = !string.Equals(itemId, currentItemId, StringComparison.Ordinal);
+                button.onClick.RemoveAllListeners();
+                string captured = itemId;
+                if (onEquip != null) button.onClick.AddListener(() => onEquip(captured));
+            }
+        }
+
+        public void ShowEquipmentResult(string reason)
+        {
+            EnsureLanguageLoaded();
+            SetStatus(string.IsNullOrEmpty(reason)
+                ? UiText.Resolve("settlement_equipment_changed")
+                : UiText.ReasonDisplay(reason, "无法更换主手武器"));
+        }
 
         public void BindCharterSiteEntry(Action onClick)
         {

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -338,6 +339,53 @@ namespace TianZhang.Tests
             AssertRejected(
                 fixture.Catalog,
                 FormalEncounterRules.DropItemNotProductionReason + ":item_shijia_piece");
+        }
+
+        [Test]
+        public void DefeatedRangedEnemyResolvesItsOwnFormalProjectionAndDrops()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            Assert.IsTrue(catalog.TryGetEnemy("enemy_lieshijia", out EnemyData ranged),
+                "The formal catalog must project the ranged beast.");
+
+            Assert.IsTrue(
+                FormalEncounterRules.TryResolveDefeatedEnemy(catalog, ranged, out EnemyData resolved, out string reason),
+                reason);
+            Assert.AreSame(ranged, resolved);
+
+            Assert.IsTrue(
+                FormalEncounterResult.TryCreate(
+                    catalog,
+                    ranged,
+                    FormalEncounterRules.GuanzhongWildAdventureId,
+                    CombatSessionOutcome.Victory,
+                    new SequenceRandomSource(0, 0, 0, 0),
+                    out FormalEncounterResult result,
+                    out reason),
+                reason);
+            Assert.AreEqual("enemy_lieshijia", result.EnemyId);
+            CollectionAssert.AreEquivalent(
+                new[] { "item_shijia_piece", "item_lingshi_low" },
+                result.DropGrants.Select(grant => grant.ItemId));
+        }
+
+        [Test]
+        public void DefeatedEnemyResolutionRejectsForeignInstancesAndNull()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
+                "Assets/Data/ContentCatalog/ContentCatalog.asset");
+            Assert.IsTrue(catalog.TryGetEnemy("enemy_lieshijia", out EnemyData ranged));
+
+            var clone = Track(ScriptableObject.CreateInstance<EnemyData>());
+            clone.enemyId = ranged.enemyId;
+            clone.contentScope = ranged.contentScope;
+            clone.combatTemplate = ranged.combatTemplate;
+            Assert.IsFalse(FormalEncounterRules.TryResolveDefeatedEnemy(catalog, clone, out _, out string reason));
+            Assert.AreEqual(FormalEncounterRules.EnemyIdentityMismatchReason, reason);
+
+            Assert.IsFalse(FormalEncounterRules.TryResolveDefeatedEnemy(catalog, null, out _, out reason));
+            Assert.AreEqual(FormalEncounterRules.EnemyIdentityMismatchReason, reason);
         }
 
         [Test]

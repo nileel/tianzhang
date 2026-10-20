@@ -21,3 +21,8 @@ MonoBehaviour:
   equipmentSlotId:
   equipmentRealmRequirementId:
   equipmentBasicAttackProfileId:
+  combatUseEffectId:
+  combatUseRealmId:
+  combatUseTargetMode:
+  combatUseHealthRecovery: 0
+  initialGrantQuantity: 0

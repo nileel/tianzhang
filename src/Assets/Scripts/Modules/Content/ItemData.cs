@@ -37,6 +37,7 @@ namespace TianZhang.Content
             itemCategory == "weapon" && maxStack == 1 && equipmentSlotId == "main_hand" &&
             equipmentRealmRequirementId == "realm_lianqi" &&
             ((itemId == "item_iron_sword" && equipmentBasicAttackProfileId == "basic_iron_sword") ||
-             (itemId == "item_iron_blade" && equipmentBasicAttackProfileId == "basic_iron_blade"));
+             (itemId == "item_iron_blade" && equipmentBasicAttackProfileId == "basic_iron_blade") ||
+             (itemId == "item_qingfeng_jian" && equipmentBasicAttackProfileId == "basic_qingfeng_jian"));
     }
 }

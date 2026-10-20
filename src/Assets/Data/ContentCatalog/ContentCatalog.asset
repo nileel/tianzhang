@@ -22,8 +22,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e8f17b8775261564abcff44c13786e1b, type: 2}
   - {fileID: 11400000, guid: e8965497efb940242ba792192d2f2145, type: 2}
   - {fileID: 11400000, guid: 810a3ecc48412684db916b895666f292, type: 2}
+  - {fileID: 11400000, guid: 3b66f3dc582ef0b4d817dbfe00b730ce, type: 2}
   - {fileID: 11400000, guid: 523aaf1074176d742b2f77a3be488137, type: 2}
   bounties:
+  - {fileID: 11400000, guid: a419f1d6b25ade549b118b9b7566aaca, type: 2}
   - {fileID: 11400000, guid: 143ef2025cac7c94fb00f6991de7b556, type: 2}
   appearanceProfiles:
   - {fileID: 11400000, guid: 73858fc8d2de4ff0a6f70b7c56456b45, type: 2}
@@ -36,3 +38,4 @@ MonoBehaviour:
   equipmentAttackProfiles:
   - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}
   - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}
+  - {fileID: 11400000, guid: 0136c0fced51ffc44aa8eac71bb7de6d, type: 2}

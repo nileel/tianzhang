@@ -38,6 +38,16 @@ namespace TianZhang.Editor
             Text status = SceneBuildSupport.CreateText("SettlementStatusText", panel.transform, string.Empty, 16);
             Button feature = SceneBuildSupport.CreateButton("SettlementFeature_bounty_board", panel.transform, "功能", out Text featureLabel);
             Button adventure = SceneBuildSupport.CreateButton("SettlementAdventure_guanzhong_wild", panel.transform, "副本", out Text adventureLabel);
+            var equipmentList = new GameObject("SettlementEquipmentList", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            equipmentList.transform.SetParent(panel.transform, false);
+            HorizontalLayoutGroup equipmentRow = equipmentList.GetComponent<HorizontalLayoutGroup>();
+            equipmentRow.spacing = 8;
+            equipmentRow.childControlWidth = true;
+            equipmentRow.childControlHeight = true;
+            equipmentRow.childForceExpandWidth = true;
+            equipmentRow.childForceExpandHeight = false;
+            SetHeight(equipmentList, 56);
+            Text equipmentStatus = SceneBuildSupport.CreateText("SettlementEquipmentStatus", panel.transform, "主手：未装备", 16);
             Button charterEntry = SceneBuildSupport.CreateButton("SettlementCharterSiteEntry", panel.transform, "旧水驿入口", out Text charterEntryLabel);
             charterEntryLabel.gameObject.name = "SettlementCharterSiteEntryStatus";
             Button returnButton = SceneBuildSupport.CreateButton("ReturnToWorldButton", panel.transform, "返回主世界", out _);
@@ -45,6 +55,7 @@ namespace TianZhang.Editor
             ApplyTextSkin(name, 52);
             ApplyTextSkin(detail, 64);
             ApplyTextSkin(status, 64);
+            ApplyTextSkin(equipmentStatus, 36);
             foreach (Button button in new[] { feature, adventure, charterEntry, returnButton, saveButton })
                 ApplyButtonSkin(button, button == feature);
 
@@ -65,6 +76,7 @@ namespace TianZhang.Editor
                 charterEntryLabel,
                 charter);
             SceneBuildSupport.SetObject(view, "languageTable", SceneBuildSupport.RequireAsset<TextAsset>("Assets/DataConfig/Language.csv"));
+            view.ConfigureEquipmentPanel(equipmentList.GetComponent<RectTransform>(), equipmentStatus);
             SceneBuildSupport.SetObject(installer, "contentCatalog", SceneBuildSupport.RequireAsset<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset"));
             SceneBuildSupport.SetObject(installer, "controller", controller);
             SceneBuildSupport.SetObject(installer, "view", view);

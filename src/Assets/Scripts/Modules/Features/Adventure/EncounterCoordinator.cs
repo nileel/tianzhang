@@ -122,7 +122,7 @@ namespace TianZhang.Features.Adventure
         {
             var candidates = new List<CombatCommand>();
             if (equipmentOwner == null || actorId != equipmentOwner.Identity.CharacterId) return candidates;
-            foreach (string id in new[] { "item_iron_sword", "item_iron_blade" })
+            foreach (string id in new[] { "item_iron_sword", "item_iron_blade", "item_qingfeng_jian" })
             {
                 if (id == equipmentOwner.MainEquipmentItemId || !equipmentCatalog.TryGetEquipment(id, out ItemData item)) continue;
                 candidates.Add(new CombatCommand(CombatCommandKind.SwapEquipment, actorId,

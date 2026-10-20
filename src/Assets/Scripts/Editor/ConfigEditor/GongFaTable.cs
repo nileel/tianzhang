@@ -167,6 +167,7 @@ namespace TianZhang.Editor.ConfigEditor
                 .Concat(Products("CharterRuleDefinitions", "ruleEntryId", "CharterRuleDefinitions", "CharterRuleDefinition_")),
             Products("Items", "itemId", "Items", "Item_").Concat(Products("Enemies", "name", "Characters", "Char_Enemy_"))
                 .Concat(new[] { "Assets/Data/ContentCatalog/ContentCatalog.asset", "Assets/Data/Settlements/Settlement_guanzhong_city.asset",
-                    "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", "Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset" }));
+                    "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", "Assets/Data/Enemies/Enemy_enemy_lieshijia.asset",
+                    "Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset", "Assets/Data/Bounties/Bounty_bounty_guanzhong_lieshijia.asset" }));
     }
 }

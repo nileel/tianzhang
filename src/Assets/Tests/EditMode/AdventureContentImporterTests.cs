@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using TianZhang.Content;
 using TianZhang.Editor;
@@ -69,7 +70,8 @@ namespace TianZhang.Tests
             ContentCatalogData catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>(
                 AdventureContentImporter.CatalogPath);
             Assert.IsTrue(catalog.TryGetAdventureMap("guanzhong_wild", out AdventureMapData map));
-            Assert.AreEqual(3, map.nodes.Length);
+            Assert.AreEqual(4, map.nodes.Length);
+            Assert.IsTrue(map.nodes.Any(node => node.nodeId == "lieshijia_encounter" && node.contentId == "enemy_lieshijia"));
         }
     }
 }

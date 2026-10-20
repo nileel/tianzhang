@@ -81,18 +81,8 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
 
-            if (!FormalEncounterRules.TryResolveGuanzhongEnemy(
-                    catalog,
-                    out EnemyData catalogEnemy,
-                    out _,
-                    out reason))
+            if (!FormalEncounterRules.TryResolveDefeatedEnemy(catalog, defeatedEnemy, out _, out reason))
             {
-                return false;
-            }
-
-            if (!ReferenceEquals(catalogEnemy, defeatedEnemy))
-            {
-                reason = FormalEncounterRules.EnemyIdentityMismatchReason;
                 return false;
             }
 
@@ -158,6 +148,52 @@ namespace TianZhang.Features.Adventure
         public const string RandomValueInvalidReason = "formal_encounter_random_value_invalid";
         public const string AlreadyConsumedReason = "formal_encounter_already_consumed";
         public const string SessionMissingReason = "formal_encounter_session_missing";
+
+        /// <summary>
+        /// Resolves the defeated combatant's own formal enemy projection. The encounter node owns
+        /// which enemy is primary, so the reward/drop path must follow that enemy instead of a
+        /// single approved ID.
+        /// </summary>
+        public static bool TryResolveDefeatedEnemy(
+            ContentCatalogData catalog,
+            EnemyData defeatedEnemy,
+            out EnemyData enemy,
+            out string reason)
+        {
+            enemy = null;
+            if (catalog == null)
+            {
+                reason = CatalogMissingReason;
+                return false;
+            }
+
+            if (defeatedEnemy == null || string.IsNullOrWhiteSpace(defeatedEnemy.enemyId) ||
+                !catalog.TryGetEnemy(defeatedEnemy.enemyId, out EnemyData catalogEnemy) || catalogEnemy == null ||
+                !ReferenceEquals(catalogEnemy, defeatedEnemy))
+            {
+                reason = EnemyIdentityMismatchReason;
+                return false;
+            }
+
+            if (!string.Equals(defeatedEnemy.contentScope, GuanzhongContentScope, StringComparison.Ordinal))
+            {
+                reason = EnemyScopeInvalidReason;
+                return false;
+            }
+
+            if (defeatedEnemy.combatTemplate == null)
+            {
+                reason = CombatTemplateMissingReason;
+                return false;
+            }
+
+            if (!TryValidateDrops(catalog, defeatedEnemy.dropEntries, out reason))
+                return false;
+
+            enemy = defeatedEnemy;
+            reason = string.Empty;
+            return true;
+        }
 
         public static bool TryResolveGuanzhongEnemy(
             ContentCatalogData catalog,

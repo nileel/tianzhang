@@ -362,7 +362,10 @@ namespace TianZhang.Combat
                 case AttackAreaShapeKind.ForwardPair:
                 case AttackAreaShapeKind.AdjacentPair:
                     bool forward = areaShapeKind == AttackAreaShapeKind.ForwardPair;
-                    if (attackProfileId != (forward ? "basic_iron_sword" : "basic_iron_blade") ||
+                    bool approvedWeaponId = forward
+                        ? attackProfileId is "basic_iron_sword" or "basic_qingfeng_jian"
+                        : attackProfileId == "basic_iron_blade";
+                    if (!approvedWeaponId ||
                         profileKind != AttackProfileKind.Basic || basicBindingKind != BasicAttackBindingKind.MainEquipment ||
                         effectType != AttackEffectType.Physical || effectBudgetMode != "fixed_weapon" ||
                         areaCenterKind != AttackAreaCenterKind.Caster || areaRadius != 0 ||

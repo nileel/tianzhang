@@ -28,6 +28,7 @@ namespace TianZhang.Features.Settlement
         private INavigationUseCase navigation;
         private BountyUseCase bounties;
         private CharterUseCase charters;
+        private ISettlementEquipmentUseCase equipment;
         private Action<string> loadScene;
         private Func<string> saveAndReturnToMenu;
         private string initialSettlementId;
@@ -102,6 +103,18 @@ namespace TianZhang.Features.Settlement
 
             RefreshSettlementUi();
             return true;
+        }
+
+        /// <summary>Out-of-combat weapon growth; the settlement scene only offers it when bound.</summary>
+        public void ConfigureEquipment(ISettlementEquipmentUseCase useCase) => equipment = useCase;
+
+        public string RequestEquipMainHand(string itemId)
+        {
+            if (equipment == null) return SettlementEquipmentReasons.Unavailable;
+            string reason = equipment.EquipMainHand(contentCatalog, itemId);
+            sceneView?.ShowEquipmentResult(reason);
+            BindEquipment();
+            return reason;
         }
 
         /// <summary>
@@ -230,6 +243,17 @@ namespace TianZhang.Features.Settlement
             sceneView.ShowSettlement(CurrentSettlement, ResolveReturnWorldNodeId());
             BindFeature(CurrentSettlement.features);
             BindAdventure(CurrentSettlement.adventureEntranceIds);
+            BindEquipment();
+        }
+
+        private void BindEquipment()
+        {
+            if (sceneView == null || contentCatalog == null || equipment == null) return;
+            sceneView.BindEquipment(
+                equipment.OwnedMainHandItemIds(contentCatalog),
+                equipment.CurrentMainHandItemId,
+                contentCatalog,
+                itemId => RequestEquipMainHand(itemId));
         }
 
         private void BindFeature(SettlementFeatureData[] features)

@@ -177,7 +177,7 @@ namespace TianZhang.Editor
                 return;
             }
 
-            if (rows.Count != 11 || ruleSet.UnarmedRows.Count != 5)
+            if (rows.Count != 12 || ruleSet.UnarmedRows.Count != 5)
                 throw new InvalidDataException("production_attack_mapping_incomplete");
 
             AssetDatabase.StartAssetEditing();

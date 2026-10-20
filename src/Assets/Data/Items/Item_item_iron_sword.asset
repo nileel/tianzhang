@@ -21,3 +21,8 @@ MonoBehaviour:
   equipmentSlotId: main_hand
   equipmentRealmRequirementId: realm_lianqi
   equipmentBasicAttackProfileId: basic_iron_sword
+  combatUseEffectId:
+  combatUseRealmId:
+  combatUseTargetMode:
+  combatUseHealthRecovery: 0
+  initialGrantQuantity: 0

@@ -123,8 +123,9 @@ namespace TianZhang.Editor.ConfigEditor
                         "Assets/Data/AttackProfiles/AttackProfile_basic_iron_blade.asset", "Assets/Data/CombatRuleSet.asset", CharterEditorFields.CatalogPath }
                         .Concat(CharterEditorFields.Catalog().Definitions.Select(v => "Assets/Data/CharterRuleDefinitions/CharterRuleDefinition_" + v.ruleEntryId + ".asset")).ToArray(),
                     ProductPaths = new[] { "Assets/Data/ContentCatalog/ContentCatalog.asset", "Assets/Data/Settlements/Settlement_guanzhong_city.asset",
-                        "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", "Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset" }
-                        .Concat(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" }
+                        "Assets/Data/Enemies/Enemy_enemy_shijiahou.asset", "Assets/Data/Enemies/Enemy_enemy_lieshijia.asset",
+                        "Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset", "Assets/Data/Bounties/Bounty_bounty_guanzhong_lieshijia.asset" }
+                        .Concat(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_qingfeng_jian", "item_huoxue_dan" }
                             .Select(id => "Assets/Data/Items/Item_" + id + ".asset"))
                         .Concat(new[] { "enemy_shijiahou", "enemy_fengsun", "enemy_yanweihu", "enemy_xueyingmoxiu", "enemy_huangyesanxiu" }
                             .Select(id => "Assets/Data/Characters/Char_Enemy_" + id + ".asset")).ToArray()

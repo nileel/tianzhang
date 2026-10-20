@@ -505,7 +505,7 @@ namespace TianZhang.Tests
             Assert.That(projected.Single(row => row.unarmedRealmId == "realm_fanren").unarmedPhysicalAttackCapacity, Is.EqualTo(30));
             Assert.That(CombatContentImporter.TryReadCombatRuleSet(out var production, out reason), Is.True, reason);
             Assert.That(production.UnarmedRows.Count, Is.EqualTo(5));
-            Assert.That(CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(ProductionAbsolutePath())).Length, Is.EqualTo(12));
+            Assert.That(CombatContentImporter.TokenizeRuleTable(File.ReadAllLines(ProductionAbsolutePath())).Length, Is.EqualTo(13));
             Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_human", "realm_yuanying"));
             Assert.Throws<InvalidDataException>(() => rules.GetUnarmed("body_shijiahou", "realm_zhuji"));
         }
@@ -624,9 +624,9 @@ namespace TianZhang.Tests
                 reason);
             try
             {
-                Assert.AreEqual(11, projected.Length);
+                Assert.AreEqual(12, projected.Length);
                 CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu", "spell_lieshi", "spell_feixingzhi",
-                    "basic_iron_sword", "basic_iron_blade",
+                    "basic_iron_sword", "basic_iron_blade", "basic_qingfeng_jian",
                     "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan",
                     "basic_body_shijiahou_lianqi" },
                     projected.Select(item => item.attackProfileId).ToArray());

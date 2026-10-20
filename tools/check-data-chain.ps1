@@ -201,8 +201,8 @@ function Test-FormalContentCatalog {
 
   $expectedIds = @{
     Settlements = @('guanzhong_city')
-    Items = @('item_lingshi_low', 'item_shijia_piece', 'item_iron_sword', 'item_iron_blade', 'item_huoxue_dan')
-    Bounties = @('bounty_guanzhong_shijiahou')
+    Items = @('item_lingshi_low', 'item_shijia_piece', 'item_iron_sword', 'item_iron_blade', 'item_qingfeng_jian', 'item_huoxue_dan')
+    Bounties = @('bounty_guanzhong_shijiahou', 'bounty_guanzhong_lieshijia')
   }
   foreach ($kind in $expectedIds.Keys) {
     $rows = @((Get-Variable -Name $kind -ValueOnly).Rows)
@@ -229,7 +229,11 @@ function Test-FormalContentCatalog {
     'enemy_shijiahou',
     'desc_enemy_shijiahou',
     'bounty_guanzhong_shijiahou_title',
-    'bounty_guanzhong_shijiahou_description'
+    'bounty_guanzhong_shijiahou_description',
+    'bounty_guanzhong_lieshijia_title',
+    'bounty_guanzhong_lieshijia_description',
+    'item_qingfeng_jian', 'item_qingfeng_jian_description',
+    'attack_profile_basic_qingfeng_jian'
   )
   foreach ($languageId in $requiredLanguageIds) {
     if ($languageId -notin $LanguageIds) { Add-Finding 'FORMAL_CONTENT_LANGUAGE_MISSING' $languageId 'Formal content projection references a missing Language key.' }
@@ -250,7 +254,7 @@ function Test-FormalContentCatalog {
 
   foreach ($item in $Items.Rows) {
     $id = [string]$item.itemId
-    $weapon = $id -cin @('item_iron_sword', 'item_iron_blade')
+    $weapon = $id -cin @('item_iron_sword', 'item_iron_blade', 'item_qingfeng_jian')
     $medicine = $id -ceq 'item_huoxue_dan'
     $fields = @{
       itemId=$id; displayNameKey=$id; descriptionKey="${id}_description"; contentScope='content_scope_production'
@@ -291,6 +295,10 @@ function Test-FormalContentCatalog {
   $bounty = @($Bounties.Rows | Where-Object { $_.bountyId -ceq 'bounty_guanzhong_shijiahou' })
   if ($bounty.Count -eq 1 -and ($bounty[0].issuerSettlementId -cne 'guanzhong_city' -or $bounty[0].targetEnemyId -cne 'enemy_shijiahou' -or $bounty[0].allowedAdventureId -cne 'guanzhong_wild' -or $bounty[0].rewardEntries -cne 'item_lingshi_low@3' -or $bounty[0].repeatPolicy -cne 'one_time')) {
     Add-Finding 'FORMAL_BOUNTY_PROJECTION_INVALID' 'bounty_guanzhong_shijiahou' 'Bounty production fields differ from the approved projection.'
+  }
+  $growthBounty = @($Bounties.Rows | Where-Object { $_.bountyId -ceq 'bounty_guanzhong_lieshijia' })
+  if ($growthBounty.Count -eq 1 -and ($growthBounty[0].issuerSettlementId -cne 'guanzhong_city' -or $growthBounty[0].targetEnemyId -cne 'enemy_lieshijia' -or $growthBounty[0].allowedAdventureId -cne 'guanzhong_wild' -or $growthBounty[0].rewardEntries -cne 'item_qingfeng_jian@1' -or $growthBounty[0].repeatPolicy -cne 'one_time')) {
+    Add-Finding 'FORMAL_BOUNTY_PROJECTION_INVALID' 'bounty_guanzhong_lieshijia' 'Bounty production fields differ from the approved growth projection.'
   }
 
   $enemy = @($Enemies.Rows | Where-Object { $_.name -ceq 'enemy_shijiahou' })
@@ -635,12 +643,12 @@ function Test-CombatRuleSetProjection {
 function Test-FormalAttackProfileProjection {
   param([object]$Table,[string[]]$LanguageIds)
   $rules = Test-CombatRuleSetProjection; if ($null -eq $rules) { return }
-  $ids = @('spell_guanshiji','spell_julingshu','spell_lieshi','spell_feixingzhi','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
-  if ($rows.Count -ne 11 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly eleven approved IDs are required.'; return
+  $ids = @('spell_guanshiji','spell_julingshu','spell_lieshi','spell_feixingzhi','basic_iron_sword','basic_iron_blade','basic_qingfeng_jian','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
+  if ($rows.Count -ne 12 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly twelve approved IDs are required.'; return
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
-  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the eleven canonical assets are required.' }
+  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the twelve canonical assets are required.' }
   $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
   $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2};areaCenterKind=@{caster=1;target_cell=2};areaShapeKind=@{circle=1;line=2;fan=3;forward_pair=4;adjacent_pair=5};areaEffectBlockers=@{none=0;directed_edge=1}}
   $flags = @{areaAllowedFactions=@{enemy=1;ally=2;self=4};areaAllowedStates=@{alive=1;corpse=2}}
@@ -676,9 +684,10 @@ function Test-FormalAttackProfileProjection {
       }
       $areaColumns = @('areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates')
       if ($row.targetingMode -ceq 'single' -and @($areaColumns | Where-Object { [string]$row.$_ -cne '' }).Count -ne 0) { throw 'Single attack contains area fields.' }
-      if ($id -cin @('basic_iron_sword','basic_iron_blade')) {
-        $shape = if ($id -ceq 'basic_iron_sword') { 'forward_pair' } else { 'adjacent_pair' }
-        $length = if ($id -ceq 'basic_iron_sword') { 2 } else { 1 }
+      if ($id -cin @('basic_iron_sword','basic_iron_blade','basic_qingfeng_jian')) {
+        $forward = $id -cne 'basic_iron_blade'
+        $shape = if ($forward) { 'forward_pair' } else { 'adjacent_pair' }
+        $length = if ($forward) { 2 } else { 1 }
         if ($row.targetingMode -cne 'area' -or $row.areaShapeKind -cne $shape -or $row.areaCenterKind -cne 'caster' -or
             $row.profileKind -cne 'basic' -or $row.basicBindingKind -cne 'main_equipment' -or $row.effectType -cne 'physical' -or
             $fields.minCastRange -ne 0 -or $fields.maxCastRange -ne 0 -or $fields.areaRadius -ne 0 -or $fields.areaLength -ne $length -or

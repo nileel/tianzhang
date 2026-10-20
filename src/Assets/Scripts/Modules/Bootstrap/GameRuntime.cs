@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using TianZhang.Character;
 using TianZhang.Content;
 using TianZhang.Cultivation;
+using TianZhang.Features.Settlement;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using TianZhang.World;
@@ -9,7 +11,7 @@ using TianZhang.World;
 namespace TianZhang.Bootstrap
 {
     /// <summary>Application lifetime owner. Domain algorithms remain in their module use cases.</summary>
-    public sealed class GameRuntime : INavigationUseCase
+    public sealed class GameRuntime : INavigationUseCase, ISettlementEquipmentUseCase
     {
         public const int InitialWorldYear = 387;
         public const string InitialWorldSeasonId = "autumn";
@@ -61,6 +63,47 @@ namespace TianZhang.Bootstrap
             inventory.TryPrepareCombatConsumption(catalog, itemId, quantity, version, out apply, out reason);
         public bool OwnsEquipmentInstance(string actorId, string itemId, string instanceId) =>
             inventory.OwnsEquipmentInstance(actorId, itemId, instanceId);
+
+        // Approved formal weapons only. The catalog rejects anything outside the approved set, so
+        // this list is the same closed set the importer enforces.
+        private static readonly string[] ApprovedMainHandItemIds =
+            { "item_iron_sword", "item_iron_blade", "item_qingfeng_jian" };
+
+        public string CurrentMainHandItemId => Player?.MainEquipmentItemId;
+
+        public IReadOnlyList<string> OwnedMainHandItemIds(ContentCatalogData catalog)
+        {
+            if (catalog == null || Player == null) return Array.Empty<string>();
+            var owned = new List<string>();
+            foreach (string itemId in ApprovedMainHandItemIds)
+            {
+                string instanceId = Player.Identity.CharacterId + ":initial:" + itemId;
+                if (catalog.TryGetEquipment(itemId, out _) &&
+                    inventory.OwnsEquipmentInstance(Player.Identity.CharacterId, itemId, instanceId))
+                {
+                    owned.Add(itemId);
+                }
+            }
+            return owned;
+        }
+
+        public string EquipMainHand(ContentCatalogData catalog, string itemId)
+        {
+            if (catalog == null) return SettlementEquipmentReasons.CatalogMissing;
+            if (Player == null) return SettlementEquipmentReasons.PlayerMissing;
+            if (string.IsNullOrWhiteSpace(itemId) || !catalog.TryGetEquipment(itemId, out ItemData item) || item == null)
+                return SettlementEquipmentReasons.ItemInvalid;
+            string instanceId = Player.Identity.CharacterId + ":initial:" + itemId;
+            bool owned = inventory.OwnsEquipmentInstance(Player.Identity.CharacterId, itemId, instanceId);
+            if (!owned) return SettlementEquipmentReasons.NotOwned;
+            if (!Player.TryPrepareEquipmentChange(catalog, "main_hand", itemId, instanceId, owned,
+                    out Action commit, out string reason))
+            {
+                return reason;
+            }
+            commit();
+            return null;
+        }
 
         public void BeginEquippedNewGame(CharacterRuntimeProfile player, CultivationState cultivation,
             string startNodeId, ContentCatalogData catalog)

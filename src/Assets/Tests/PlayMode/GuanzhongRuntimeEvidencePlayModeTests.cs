@@ -545,6 +545,82 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
+        // 战斗→收益→成长→再战斗：第一场打石甲兽领灵石，第二场打裂石甲兽领青锋剑，结算换装后
+        // 第三场用新武器再战；换装结果还要经保存／读取一次。
+        [UnityTest]
+        public IEnumerator TwoBattlesPayForTheWeaponGrowthAndRestartAtBothResolutions()
+        {
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                yield return SetGameSize(size);
+                var lines = new List<string> { Header() };
+                GameRuntime runtime = GameBootstrap.RequireRuntime();
+                ContentCatalogData catalog = Get<ContentCatalogData>(Find<SettlementController>(), "contentCatalog");
+                BountyBoardView Board()
+                {
+                    BountyBoardView view = Find<BountyBoardView>();
+                    view.Show(catalog, SettlementController.GuanzhongSettlementId, runtime.Bounties);
+                    return view;
+                }
+
+                Board().SubmitAccept("bounty_guanzhong_shijiahou");
+                yield return RunGrowthBattle("shijiahou_encounter", size, "growth-battle1", lines);
+                runtime = GameBootstrap.RequireRuntime();
+                Board().SubmitClaim("bounty_guanzhong_shijiahou");
+                Assert.That(runtime.Bounties.GetState("bounty_guanzhong_shijiahou").Status, Is.EqualTo(BountyStatus.Claimed));
+                Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_iron_sword"),
+                    "The first bounty pays resources, not equipment.");
+                Assert.That(runtime.GetItemQuantity("item_qingfeng_jian"), Is.EqualTo(0));
+
+                Board().SubmitAccept("bounty_guanzhong_lieshijia");
+                yield return RunGrowthBattle("lieshijia_encounter", size, "growth-battle2", lines);
+                runtime = GameBootstrap.RequireRuntime();
+                SettlementController settlement = Find<SettlementController>();
+                Board().SubmitClaim("bounty_guanzhong_lieshijia");
+                Assert.That(runtime.GetItemQuantity("item_qingfeng_jian"), Is.EqualTo(1),
+                    "The ranged bounty must grant the growth weapon.");
+                Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_iron_sword"),
+                    "Claiming the weapon must not equip it behind the player's back.");
+
+                Assert.That(settlement.RequestEquipMainHand("item_qingfeng_jian"), Is.Null);
+                Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_qingfeng_jian"));
+                Assert.That(runtime.Player.MainEquipmentBasicAttackProfileId, Is.EqualTo("basic_qingfeng_jian"));
+                Assert.That(settlement.RequestEquipMainHand("item_qingfeng_jian"), Is.EqualTo("equipment_no_change"));
+                lines.Add("equip -> item_qingfeng_jian; profile=" + runtime.Player.MainEquipmentBasicAttackProfileId);
+
+                string saved = runtime.CaptureSaveJson();
+                runtime.RestoreSaveJson(saved, catalog);
+                Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_qingfeng_jian"),
+                    "The equipped weapon must survive a save round trip.");
+
+                yield return RunGrowthBattle("shijiahou_encounter", size, "growth-battle3", lines);
+                runtime = GameBootstrap.RequireRuntime();
+                Assert.That(runtime.GetItemQuantity("item_qingfeng_jian"), Is.EqualTo(1));
+                Write("growth-loop-" + size.x, lines);
+            }
+        }
+
+        private static IEnumerator RunGrowthBattle(string nodeId, Vector2Int size, string label, List<string> lines)
+        {
+            Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            Assert.That(Find<AdventureInputController>().SelectNode(nodeId), Is.True);
+            var encounter = Find<EncounterCoordinator>();
+            CombatSession session = Get<CombatSession>(encounter, "session");
+            AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            Assert.That(session.TryGetProfile(spawned.Player.BasicAttackProfileId, out CombatAttackProfile profile), Is.True);
+            lines.Add($"{label}: node={nodeId}; weaponProfile={spawned.Player.BasicAttackProfileId}; area={profile.Area}; " +
+                $"cost={profile.ActionPointCostUnits}; multiplier={profile.PhysicalMultiplier:F2}; " +
+                $"enemies={string.Join("/", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position))}");
+            yield return Capture(label + "-" + size.x);
+            yield return GuanzhongBasicAttackPlayModeTests.FightFormalTwoEnemies(encounter);
+            yield return SceneReady(GameplaySceneNames.Settlement);
+        }
+
         [UnityTest]
         public IEnumerator R4ScaledEnemiesMoveAttackAndFinishTheFormalEncounterAtBothResolutions()
         {

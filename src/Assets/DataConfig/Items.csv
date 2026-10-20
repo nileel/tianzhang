@@ -4,4 +4,5 @@ item_lingshi_low,item_lingshi_low,item_lingshi_low_description,content_scope_pro
 item_shijia_piece,item_shijia_piece,item_shijia_piece_description,content_scope_production,monster_material,99,,,,,,,,
 item_iron_sword,item_iron_sword,item_iron_sword_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_sword,,,,,
 item_iron_blade,item_iron_blade,item_iron_blade_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_iron_blade,,,,,
+item_qingfeng_jian,item_qingfeng_jian,item_qingfeng_jian_description,content_scope_production,weapon,1,main_hand,realm_lianqi,basic_qingfeng_jian,,,,,
 item_huoxue_dan,item_huoxue_dan,item_huoxue_dan_description,content_scope_production,pill,99,,,,restore_current_health,realm_lianqi,self,80,3

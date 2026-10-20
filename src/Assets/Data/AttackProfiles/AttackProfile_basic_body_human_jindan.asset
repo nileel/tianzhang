@@ -16,10 +16,10 @@ MonoBehaviour:
   displayNameKey: attack_profile_body_human
   profileKind: 1
   basicBindingKind: 3
-  contentScope: 
-  sourceAffiliation: 
-  realmRequirementId: 
-  elementRequirementId: 
+  contentScope:
+  sourceAffiliation:
+  realmRequirementId:
+  elementRequirementId:
   effectType: 1
   damageElementId: element_none
   physicalDamageMultiplier: 0.65
@@ -52,7 +52,7 @@ MonoBehaviour:
   areaAllowedStates: 0
   isDomain: 0
   isBloodline: 0
-  specialEffectTextKey: 
+  specialEffectTextKey:
   ruleSetVersion: AP-GROWTH@0.1
   abilityTierId: tier_jindan
   cooldownClass: basic_repeat
@@ -63,15 +63,15 @@ MonoBehaviour:
   damageMigrationDenominator: 0
   damageWeightNumerator: 0
   damageWeightDenominator: 0
-  statusId: 
-  statusAttributeId: 
+  statusId:
+  statusAttributeId:
   statusRelativePermille: 0
   statusDurationOwnTurnEnds: 0
   statusStackLimit: 0
-  statusRefreshPolicy: 
+  statusRefreshPolicy:
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: 56be9afcce34fa8b795a70a2fbddbd7ef8449780a4d2fa7a79695d71e1758a33
+  ruleSetSourceDigest: f9e5a0fd9c72fd7d170f12d4ae87adc264be1480c734879a6d8bf63c638d8393
   attackSchemaVersion: 2
   unarmedFamilyId: body_human
   unarmedRealmId: realm_jindan

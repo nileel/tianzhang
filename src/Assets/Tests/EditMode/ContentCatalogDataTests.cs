@@ -53,15 +53,21 @@ namespace TianZhang.Tests
                 Assert.AreEqual(40, ranged.dropEntries.Single(entry => entry.itemId == "item_lingshi_low").dropChancePercent);
 
                 CollectionAssert.AreEquivalent(
-                    new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" },
+                    new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_qingfeng_jian", "item_huoxue_dan" },
                     preview.items.Select(item => item.itemId));
                 Assert.IsTrue(preview.items.All(item => item.maxStack == (item.IsApprovedEquipment ? 1 : 99)));
+                Assert.IsTrue(preview.items.Single(item => item.itemId == "item_qingfeng_jian").IsApprovedEquipment);
+                Assert.AreEqual("basic_qingfeng_jian",
+                    preview.items.Single(item => item.itemId == "item_qingfeng_jian").equipmentBasicAttackProfileId);
 
-                Assert.AreEqual(1, preview.bounties.Length);
-                var bounty = preview.bounties[0];
-                Assert.AreEqual("bounty_guanzhong_shijiahou", bounty.bountyId);
+                Assert.AreEqual(2, preview.bounties.Length);
+                var bounty = preview.bounties.Single(value => value.bountyId == "bounty_guanzhong_shijiahou");
                 Assert.AreEqual("item_lingshi_low", bounty.rewardEntries[0].itemId);
                 Assert.AreEqual(3, bounty.rewardEntries[0].quantity);
+                var growth = preview.bounties.Single(value => value.bountyId == "bounty_guanzhong_lieshijia");
+                Assert.AreEqual("enemy_lieshijia", growth.targetEnemyId);
+                Assert.AreEqual("item_qingfeng_jian", growth.rewardEntries[0].itemId);
+                Assert.AreEqual(1, growth.rewardEntries[0].quantity);
             }
             finally
             {
@@ -437,7 +443,7 @@ namespace TianZhang.Tests
             Assert.AreEqual("one_time", bounty.repeatPolicy);
             Assert.IsTrue(catalog.TryGetAppearanceProfile("none", out var appearance));
             Assert.IsTrue(appearance.IsNone);
-            Assert.AreEqual(1, catalog.GetBountiesByIssuer("guanzhong_city").Count);
+            Assert.AreEqual(2, catalog.GetBountiesByIssuer("guanzhong_city").Count);
             Assert.IsTrue(catalog.TryGetAdventureMap("guanzhong_wild", out var adventure));
             Assert.AreEqual("adventure_node_start", adventure.nodes[0].nodeTypeId);
             Assert.IsFalse(catalog.TryGetEnemy("enemy_fengsun", out _));

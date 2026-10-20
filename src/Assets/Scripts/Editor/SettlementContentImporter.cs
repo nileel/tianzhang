@@ -92,6 +92,7 @@ namespace TianZhang.Editor
         private const string ShijiahouEnemyId = "enemy_shijiahou";
         private const string LieshijiaEnemyId = "enemy_lieshijia";
         private const string ShijiahouBountyId = "bounty_guanzhong_shijiahou";
+        private const string LieshijiaBountyId = "bounty_guanzhong_lieshijia";
 
         // 旧水驿站点契约的固定自有语义：通行能力、交互时间档案、门禁可操作状态与交互时序。
         private const string CharterSiteId = "charter_site_old_water_station";
@@ -418,8 +419,8 @@ namespace TianZhang.Editor
                 items.Add(item);
             }
 
-            if (items.Count != 5 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_huoxue_dan" }))
-                throw new InvalidDataException($"{sourceName} must contain only the five approved formal item rows.");
+            if (items.Count != 6 || !ids.SetEquals(new[] { "item_lingshi_low", "item_shijia_piece", "item_iron_sword", "item_iron_blade", "item_qingfeng_jian", "item_huoxue_dan" }))
+                throw new InvalidDataException($"{sourceName} must contain only the six approved formal item rows.");
 
             return items.OrderBy(item => item.itemId, StringComparer.Ordinal).ToArray();
         }
@@ -654,8 +655,10 @@ namespace TianZhang.Editor
                 bounties.Add(bounty);
             }
 
-            if (bounties.Count != 1 || bounties[0].bountyId != ShijiahouBountyId)
-                throw new InvalidDataException($"{sourceName} must contain only the approved '{ShijiahouBountyId}' production row.");
+            if (bounties.Count != 2 ||
+                !bounties.Any(bounty => bounty.bountyId == ShijiahouBountyId) ||
+                !bounties.Any(bounty => bounty.bountyId == LieshijiaBountyId))
+                throw new InvalidDataException($"{sourceName} must contain the two approved formal bounty rows.");
 
             return bounties.ToArray();
         }
@@ -687,22 +690,47 @@ namespace TianZhang.Editor
 
         private static void ValidateApprovedBounty(BountyData bounty, string sourceName)
         {
-            if (bounty.bountyId != ShijiahouBountyId ||
-                bounty.titleKey != "bounty_guanzhong_shijiahou_title" ||
-                bounty.descriptionKey != "bounty_guanzhong_shijiahou_description" ||
-                bounty.contentScope != ContentScopeProduction ||
-                bounty.issuerSettlementId != GuanzhongSettlementId ||
-                bounty.objectiveType != "defeat_enemy" ||
-                bounty.targetEnemyId != ShijiahouEnemyId ||
-                bounty.requiredCount != 1 ||
-                bounty.allowedAdventureId != "guanzhong_wild" ||
-                bounty.repeatPolicy != "one_time" ||
-                bounty.rewardEntries.Length != 1 ||
-                bounty.rewardEntries[0].itemId != "item_lingshi_low" ||
-                bounty.rewardEntries[0].quantity != 3)
+            if (bounty.bountyId == ShijiahouBountyId)
             {
-                throw new InvalidDataException($"{sourceName} does not match the approved '{ShijiahouBountyId}' projection.");
+                if (bounty.titleKey != "bounty_guanzhong_shijiahou_title" ||
+                    bounty.descriptionKey != "bounty_guanzhong_shijiahou_description" ||
+                    bounty.contentScope != ContentScopeProduction ||
+                    bounty.issuerSettlementId != GuanzhongSettlementId ||
+                    bounty.objectiveType != "defeat_enemy" ||
+                    bounty.targetEnemyId != ShijiahouEnemyId ||
+                    bounty.requiredCount != 1 ||
+                    bounty.allowedAdventureId != "guanzhong_wild" ||
+                    bounty.repeatPolicy != "one_time" ||
+                    bounty.rewardEntries.Length != 1 ||
+                    bounty.rewardEntries[0].itemId != "item_lingshi_low" ||
+                    bounty.rewardEntries[0].quantity != 3)
+                {
+                    throw new InvalidDataException($"{sourceName} does not match the approved '{ShijiahouBountyId}' projection.");
+                }
+                return;
             }
+
+            if (bounty.bountyId == LieshijiaBountyId)
+            {
+                if (bounty.titleKey != "bounty_guanzhong_lieshijia_title" ||
+                    bounty.descriptionKey != "bounty_guanzhong_lieshijia_description" ||
+                    bounty.contentScope != ContentScopeProduction ||
+                    bounty.issuerSettlementId != GuanzhongSettlementId ||
+                    bounty.objectiveType != "defeat_enemy" ||
+                    bounty.targetEnemyId != LieshijiaEnemyId ||
+                    bounty.requiredCount != 1 ||
+                    bounty.allowedAdventureId != "guanzhong_wild" ||
+                    bounty.repeatPolicy != "one_time" ||
+                    bounty.rewardEntries.Length != 1 ||
+                    bounty.rewardEntries[0].itemId != "item_qingfeng_jian" ||
+                    bounty.rewardEntries[0].quantity != 1)
+                {
+                    throw new InvalidDataException($"{sourceName} does not match the approved '{LieshijiaBountyId}' projection.");
+                }
+                return;
+            }
+
+            throw new InvalidDataException($"{sourceName} bounty '{bounty.bountyId}' is not an approved formal projection.");
         }
 
         private static void ValidateContentCatalogReferences(
@@ -1018,11 +1046,11 @@ namespace TianZhang.Editor
                     })
                     .OrderBy(enemy => enemy.enemyId, StringComparer.Ordinal)
                     .ToArray();
-                var bounties = new[]
-                {
-                    UpsertContentAsset(preview.bounties[0],
-                        "Assets/Data/Bounties/Bounty_bounty_guanzhong_shijiahou.asset", CopyBounty)
-                };
+                var bounties = preview.bounties
+                    .Select(bounty => UpsertContentAsset(bounty,
+                        $"Assets/Data/Bounties/Bounty_{bounty.bountyId}.asset", CopyBounty))
+                    .OrderBy(bounty => bounty.bountyId, StringComparer.Ordinal)
+                    .ToArray();
                 var catalog = UpsertCatalogAsset("Assets/Data/ContentCatalog/ContentCatalog.asset");
                 catalog.ReplaceEntries(settlements, enemies, items, bounties);
                 catalog.SetAppearanceProfiles(appearanceProfiles);

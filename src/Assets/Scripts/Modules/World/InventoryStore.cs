@@ -40,7 +40,8 @@ namespace TianZhang.World
         }
 
         public bool OwnsEquipmentInstance(string characterId, string itemId, string instanceId) =>
-            !string.IsNullOrWhiteSpace(characterId) && (itemId == "item_iron_sword" || itemId == "item_iron_blade") &&
+            !string.IsNullOrWhiteSpace(characterId) &&
+            (itemId == "item_iron_sword" || itemId == "item_iron_blade" || itemId == "item_qingfeng_jian") &&
             string.Equals(instanceId, characterId + ":initial:" + itemId, StringComparison.Ordinal) && GetQuantity(itemId) == 1;
 
         public int GetQuantity(string itemId)

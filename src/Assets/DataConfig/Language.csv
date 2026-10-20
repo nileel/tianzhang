@@ -107,6 +107,8 @@ item_lingshi_low_description,劣质灵石是稳定 ID 为 `item_lingshi_low` 的
 item_shijia_piece_description,石甲碎片是稳定 ID 为 `item_shijia_piece` 的妖兽材料。
 bounty_guanzhong_shijiahou_title,石甲兽悬赏 · 一次性除害令
 bounty_guanzhong_shijiahou_description,黄土旧道石甲兽阻路伤人，击杀有赏。——坊市联盟
+bounty_guanzhong_lieshijia_title,裂石甲兽悬赏 · 一次性除害令
+bounty_guanzhong_lieshijia_description,旧道裂石甲兽以碎石伤人，击杀有赏。——坊市联盟
 # === 攻击档案 ===
 attack_profile_basic_unarmed,徒手
 # === 新增门派 ===
@@ -637,6 +639,7 @@ desc_zhongdao_feiyoufeiwu,非有非无：虚化概率累计40%；成功反弹原
 # === 关中探索与正式战斗显示 ===
 adventure_node_start,起点
 adventure_node_shijiahou_encounter,石甲兽遭遇
+adventure_node_lieshijia_encounter,裂石甲兽遭遇
 adventure_node_return,返回据点
 adventure_ready,请选择探索地点
 adventure_node_selected,已选择地点
@@ -714,12 +717,21 @@ item_iron_sword,铁剑
 item_iron_sword_description,寻常铁制长剑，无额外属性，装在主手使用。
 item_iron_blade,铁刀
 item_iron_blade_description,寻常铁制长刀，出击较重，装在主手使用。
+item_qingfeng_jian,青锋剑
+item_qingfeng_jian_description,青锋薄刃长剑，锋口更利，装在主手使用。
 attack_profile_basic_iron_sword,铁剑普攻
 attack_profile_basic_iron_blade,铁刀普攻
+attack_profile_basic_qingfeng_jian,青锋剑普攻
 combat_command_swap_equipment,换装备
 equipment_no_change,已装备该武器
 equipment_not_owned,未拥有该武器
 equipment_instance_invalid,武器身份无效
+settlement_equipment_changed,已更换主手武器
+settlement_equipment_unavailable,当前无法换装
+settlement_equipment_not_owned,尚未获得该武器
+settlement_equipment_item_invalid,该物品不是可用武器
+settlement_equipment_catalog_missing,内容目录缺失
+settlement_equipment_player_missing,角色数据缺失
 equipment_qualification_invalid,境界不满足装备要求
 equipment_slot_invalid,主手槽无效
 equipment_definition_invalid,武器定义无效
