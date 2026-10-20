@@ -83,8 +83,8 @@ namespace TianZhang.Features.CharacterCreation
             profile.availableSkills = new string[0];
             if (origin?.Id == "origin_minor_clan")
             {
-                profile.maxSpellSlots = 2;
-                profile.availableSpells = new[] { "spell_guanshiji", "spell_julingshu" };
+                profile.maxSpellSlots = 3;
+                profile.availableSpells = new[] { "spell_guanshiji", "spell_julingshu", "spell_feixingzhi" };
                 profile.equippedSpells = (string[])profile.availableSpells.Clone();
             }
             // 新角色的人形来源显式声明，档位由当前境界和同一攻击表派生。

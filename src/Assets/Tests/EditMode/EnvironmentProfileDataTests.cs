@@ -79,7 +79,7 @@ namespace TianZhang.Tests
         }
 
         private const string GuanzhongWildRow =
-            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=16,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@0@0|1:4@0@0|1:5@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|4:0@0@0|4:1@0@0|4:2@0@0|4:3@0@0|4:4@0@0|4:5@0@0|5:0@0@0|5:1@0@0|5:2@0@0|5:3@0@0|5:4@0@0|5:5@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water,ordinary";
+            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=24,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|0:6@0@0|0:7@0@0|0:8@0@0|0:9@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@0@0|1:4@0@0|1:5@0@0|1:6@0@0|1:7@0@0|1:8@0@0|1:9@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|2:6@0@0|2:7@0@0|2:8@0@0|2:9@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|3:6@0@0|3:7@0@0|3:8@0@0|3:9@0@0|4:0@0@0|4:1@0@0|4:2@0@0|4:3@0@0|4:4@0@0|4:5@0@0|4:6@0@0|4:7@0@0|4:8@0@0|4:9@0@0|5:0@0@0|5:1@0@0|5:2@0@0|5:3@0@0|5:4@0@0|5:5@0@0|5:6@0@0|5:7@0@0|5:8@0@0|5:9@0@0|6:0@0@0|6:1@0@0|6:2@0@0|6:3@0@0|6:4@0@0|6:5@0@0|6:6@0@0|6:7@0@0|6:8@0@0|6:9@0@0|7:0@0@0|7:1@0@0|7:2@0@0|7:3@0@0|7:4@0@0|7:5@0@0|7:6@0@0|7:7@0@0|7:8@0@0|7:9@0@0|8:0@0@0|8:1@0@0|8:2@0@0|8:3@0@0|8:4@0@0|8:5@0@0|8:6@0@0|8:7@0@0|8:8@0@0|8:9@0@0|9:0@0@0|9:1@0@0|9:2@0@0|9:3@0@0|9:4@0@0|9:5@0@0|9:6@0@0|9:7@0@0|9:8@0@0|9:9@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water,ordinary";
 
         [Test]
         public void GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized()
@@ -94,12 +94,12 @@ namespace TianZhang.Tests
 
             Assert.AreEqual(1, expectedProfiles.Length);
             Assert.AreEqual(1, actualProfiles.Length);
-            Assert.AreEqual(36, expectedProfiles[0].battlefieldCells.Length);
+            Assert.AreEqual(100, expectedProfiles[0].battlefieldCells.Length);
             Assert.AreEqual(4, expectedProfiles[0].battlefieldCells.Count(item => item.blocksGroundMove));
             Assert.IsTrue(expectedProfiles[0].battlefieldCells
                 .Where(item => item.blocksGroundMove)
                 .All(item => !item.blocksLineOfSight));
-            Assert.AreEqual(170, expectedProfiles[0].directedEdges.Length);
+            Assert.AreEqual(522, expectedProfiles[0].directedEdges.Length);
             foreach (EnvironmentDirectedEdge edge in expectedProfiles[0].directedEdges)
             {
                 Assert.IsTrue(expectedProfiles[0].directedEdges.Any(reverse =>

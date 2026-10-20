@@ -106,7 +106,7 @@ namespace TianZhang.Tests.EditMode
             var expectedObstacles = new HashSet<Vector2Int>(profile.battlefieldCells
                 .Where(item => item.blocksGroundMove)
                 .Select(item => new Vector2Int(item.q, item.r)));
-            Assert.AreEqual(36, expectedCells.Count,
+            Assert.AreEqual(100, expectedCells.Count,
                 "The current Guanzhong environment profile must expose all formal battlefield cells.");
             Assert.AreEqual(4, expectedObstacles.Count,
                 "The current Guanzhong environment profile must expose four impassable cells.");

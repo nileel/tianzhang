@@ -11,11 +11,11 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3b0d21f8a7544ad9c0c8832bc5f8714, type: 3}
   m_Name: EnvironmentProfile_env_guanzhong_wild
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   profileId: env_guanzhong_wild
   spiritRecoveryEnvironment: 1
   unitsPerRange: 2
-  maxQueryRange: 16
+  maxQueryRange: 24
   battlefieldCells:
   - q: 0
     r: 0
@@ -41,6 +41,22 @@ MonoBehaviour:
     r: 5
     blocksGroundMove: 0
     blocksLineOfSight: 0
+  - q: 0
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 0
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 0
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 0
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
   - q: 1
     r: 0
     blocksGroundMove: 0
@@ -63,6 +79,22 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 1
     r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 1
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 1
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 1
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 1
+    r: 9
     blocksGroundMove: 0
     blocksLineOfSight: 0
   - q: 2
@@ -89,6 +121,22 @@ MonoBehaviour:
     r: 5
     blocksGroundMove: 0
     blocksLineOfSight: 0
+  - q: 2
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 2
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 2
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 2
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
   - q: 3
     r: 0
     blocksGroundMove: 0
@@ -113,6 +161,22 @@ MonoBehaviour:
     r: 5
     blocksGroundMove: 0
     blocksLineOfSight: 0
+  - q: 3
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 3
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 3
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 3
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
   - q: 4
     r: 0
     blocksGroundMove: 0
@@ -137,6 +201,22 @@ MonoBehaviour:
     r: 5
     blocksGroundMove: 0
     blocksLineOfSight: 0
+  - q: 4
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 4
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 4
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 4
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
   - q: 5
     r: 0
     blocksGroundMove: 0
@@ -159,6 +239,182 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 5
     r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 5
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 5
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 5
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 5
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 0
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 1
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 2
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 3
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 4
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 6
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 0
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 1
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 2
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 3
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 4
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 7
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 0
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 1
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 2
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 3
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 4
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 8
+    r: 9
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 0
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 1
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 2
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 3
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 4
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 5
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 6
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 7
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 8
+    blocksGroundMove: 0
+    blocksLineOfSight: 0
+  - q: 9
+    r: 9
     blocksGroundMove: 0
     blocksLineOfSight: 0
   directedEdges:
@@ -309,6 +565,118 @@ MonoBehaviour:
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
+  - fromQ: 0
+    fromR: 5
+    toQ: 0
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 6
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 6
+    toQ: 1
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 6
+    toQ: 0
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 6
+    toQ: 0
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 7
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 7
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 7
+    toQ: 0
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 7
+    toQ: 0
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 8
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 8
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 8
+    toQ: 0
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 8
+    toQ: 0
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 9
+    toQ: 1
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 9
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 0
+    fromR: 9
+    toQ: 0
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 1
     fromR: 0
     toQ: 2
@@ -533,6 +901,174 @@ MonoBehaviour:
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
+  - fromQ: 1
+    fromR: 5
+    toQ: 0
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 5
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 2
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 1
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 0
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 0
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 6
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 0
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 0
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 7
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 0
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 0
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 8
+    toQ: 1
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 9
+    toQ: 2
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 9
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 9
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 1
+    fromR: 9
+    toQ: 0
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 2
     fromR: 0
     toQ: 3
@@ -757,6 +1293,174 @@ MonoBehaviour:
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
+  - fromQ: 2
+    fromR: 5
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 5
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 3
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 2
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 1
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 6
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 1
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 7
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 1
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 1
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 8
+    toQ: 2
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 9
+    toQ: 3
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 9
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 9
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 2
+    fromR: 9
+    toQ: 1
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 3
     fromR: 0
     toQ: 4
@@ -981,6 +1685,174 @@ MonoBehaviour:
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
+  - fromQ: 3
+    fromR: 5
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 5
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 4
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 3
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 2
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 6
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 2
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 7
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 2
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 2
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 8
+    toQ: 3
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 9
+    toQ: 4
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 9
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 9
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 3
+    fromR: 9
+    toQ: 2
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 4
     fromR: 0
     toQ: 5
@@ -1205,6 +2077,181 @@ MonoBehaviour:
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
+  - fromQ: 4
+    fromR: 5
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 5
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 5
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 4
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 3
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 6
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 3
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 7
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 3
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 3
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 8
+    toQ: 4
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 9
+    toQ: 5
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 9
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 9
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 4
+    fromR: 9
+    toQ: 3
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 0
+    toQ: 6
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
   - fromQ: 5
     fromR: 0
     toQ: 4
@@ -1223,6 +2270,20 @@ MonoBehaviour:
     fromR: 0
     toQ: 5
     toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 1
+    toQ: 6
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 1
+    toQ: 6
+    toR: 0
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
@@ -1251,6 +2312,20 @@ MonoBehaviour:
     fromR: 1
     toQ: 5
     toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 2
+    toQ: 6
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 2
+    toQ: 6
+    toR: 1
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
@@ -1279,6 +2354,20 @@ MonoBehaviour:
     fromR: 2
     toQ: 5
     toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 3
+    toQ: 6
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 3
+    toQ: 6
+    toR: 2
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
@@ -1307,6 +2396,20 @@ MonoBehaviour:
     fromR: 3
     toQ: 5
     toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 4
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 4
+    toQ: 6
+    toR: 3
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1
@@ -1340,6 +2443,20 @@ MonoBehaviour:
     allowsEffects: 1
   - fromQ: 5
     fromR: 5
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 5
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 5
     toQ: 5
     toR: 4
     metricDistanceUnits: 2
@@ -1349,6 +2466,1609 @@ MonoBehaviour:
     fromR: 5
     toQ: 4
     toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 5
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 5
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 5
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 4
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 6
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 4
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 7
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 4
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 4
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 8
+    toQ: 5
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 9
+    toQ: 6
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 9
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 9
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 5
+    fromR: 9
+    toQ: 4
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 0
+    toQ: 7
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 0
+    toQ: 5
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 0
+    toQ: 5
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 0
+    toQ: 6
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 7
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 6
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 5
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 5
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 1
+    toQ: 6
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 6
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 5
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 5
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 2
+    toQ: 6
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 6
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 5
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 5
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 3
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 6
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 5
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 5
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 4
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 5
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 5
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 5
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 6
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 5
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 7
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 5
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 5
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 8
+    toQ: 6
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 9
+    toQ: 7
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 9
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 9
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 6
+    fromR: 9
+    toQ: 5
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 0
+    toQ: 8
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 0
+    toQ: 6
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 0
+    toQ: 6
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 0
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 8
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 7
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 6
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 6
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 1
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 6
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 6
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 2
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 6
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 3
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 6
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 4
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 6
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 5
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 6
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 6
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 6
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 7
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 6
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 6
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 8
+    toQ: 7
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 9
+    toQ: 8
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 9
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 9
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 7
+    fromR: 9
+    toQ: 6
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 0
+    toQ: 9
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 0
+    toQ: 7
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 0
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 0
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 9
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 9
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 8
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 7
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 1
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 9
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 9
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 7
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 2
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 9
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 9
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 7
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 3
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 9
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 9
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 7
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 4
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 9
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 9
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 7
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 5
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 9
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 9
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 7
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 6
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 9
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 9
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 7
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 7
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 9
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 9
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 7
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 7
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 8
+    toQ: 8
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 9
+    toQ: 9
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 9
+    toQ: 9
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 9
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 8
+    fromR: 9
+    toQ: 7
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 0
+    toQ: 8
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 0
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 0
+    toQ: 9
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 1
+    toQ: 9
+    toR: 0
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 1
+    toQ: 8
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 1
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 1
+    toQ: 9
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 2
+    toQ: 9
+    toR: 1
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 2
+    toQ: 8
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 2
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 2
+    toQ: 9
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 3
+    toQ: 9
+    toR: 2
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 3
+    toQ: 8
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 3
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 3
+    toQ: 9
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 4
+    toQ: 9
+    toR: 3
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 4
+    toQ: 8
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 4
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 4
+    toQ: 9
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 5
+    toQ: 9
+    toR: 4
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 5
+    toQ: 8
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 5
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 5
+    toQ: 9
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 6
+    toQ: 9
+    toR: 5
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 6
+    toQ: 8
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 6
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 6
+    toQ: 9
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 7
+    toQ: 9
+    toR: 6
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 7
+    toQ: 8
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 7
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 7
+    toQ: 9
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 8
+    toQ: 9
+    toR: 7
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 8
+    toQ: 8
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 8
+    toQ: 8
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 8
+    toQ: 9
+    toR: 9
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 9
+    toQ: 9
+    toR: 8
+    metricDistanceUnits: 2
+    allowsMovement: 1
+    allowsEffects: 1
+  - fromQ: 9
+    fromR: 9
+    toQ: 8
+    toR: 9
     metricDistanceUnits: 2
     allowsMovement: 1
     allowsEffects: 1

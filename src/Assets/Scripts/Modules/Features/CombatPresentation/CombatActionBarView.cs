@@ -18,6 +18,8 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text divineLabel;
         [SerializeField] private Button secondArtButton;
         [SerializeField] private Text secondArtLabel;
+        [SerializeField] private Button thirdArtButton;
+        [SerializeField] private Text thirdArtLabel;
         [SerializeField] private Text actionStatusLabel;
         [SerializeField] private Text waitLabel;
         private Func<string, string> displayReason = value => value;
@@ -43,6 +45,7 @@ namespace TianZhang.Features.CombatPresentation
         public Button ArtButton => artButton;
         public Button DivineButton => divineButton;
         public Button SecondArtButton => secondArtButton;
+        public Button ThirdArtButton => thirdArtButton;
         public Button GuardButton => guardButton;
         public Button WaitButton => waitButton;
 
@@ -50,10 +53,12 @@ namespace TianZhang.Features.CombatPresentation
         {
             root?.SetActive(visible);
             SetEnabled(secondArtButton, false);
+            SetEnabled(thirdArtButton, false);
             SetEnabled(swapSpellButton, false);
             SetEnabled(swapEquipmentButton, false);
             SetEnabled(useItemButton, false);
             if (secondArtLabel != null) secondArtLabel.text = "术法";
+            if (thirdArtLabel != null) thirdArtLabel.text = "术法";
             if (actionStatusLabel != null) actionStatusLabel.text = string.Empty;
             if (waitLabel != null) waitLabel.text = "待机";
             SetEnabled(basicAttackButton, visible);
@@ -87,8 +92,10 @@ namespace TianZhang.Features.CombatPresentation
 
             CombatArtActionSnapshot first = snapshot != null && snapshot.ArtActions.Count > 0 ? snapshot.ArtActions[0] : null;
             CombatArtActionSnapshot second = snapshot != null && snapshot.ArtActions.Count > 1 ? snapshot.ArtActions[1] : null;
+            CombatArtActionSnapshot third = snapshot != null && snapshot.ArtActions.Count > 2 ? snapshot.ArtActions[2] : null;
             string firstReason = PresentArt(first, artButton, artLabel, canAct);
             string secondReason = PresentArt(second, secondArtButton, secondArtLabel, canAct);
+            string thirdReason = PresentArt(third, thirdArtButton, thirdArtLabel, canAct);
             if (actionStatusLabel != null)
             {
                 // The formal 192x76 status area also shows unarmed/equipment rejection reasons.
@@ -96,7 +103,7 @@ namespace TianZhang.Features.CombatPresentation
                 actionStatusLabel.fontSize = 16;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
-                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, swapReason, equipmentReason, itemReason },
+                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, swapReason, equipmentReason, itemReason },
                         reason => !string.IsNullOrEmpty(reason)).Distinct()));
             }
         }

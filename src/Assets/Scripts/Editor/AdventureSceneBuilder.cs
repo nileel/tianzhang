@@ -337,6 +337,7 @@ namespace TianZhang.Editor
             PlaceLayoutRect(LayoutObject(actions, "BasicAttackButton"), 252, 138, 114, 68);
             PlaceLayoutRect(LayoutObject(actions, "ArtButton"), 378, 138, 216, 68);
             PlaceLayoutRect(LayoutObject(actions, "SecondArtButton"), 606, 138, 216, 68);
+            PlaceLayoutRect(LayoutObject(actions, "ThirdArtButton"), 378, 64, 216, 68);
             PlaceLayoutRect(LayoutObject(actions, "GuardButton"), 252, 92, 114, 44);
             // Keep the existing lifecycle owner, but separate turn completion to the right of the hotbar.
             PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 880, 55, 200, 96);
@@ -964,16 +965,17 @@ namespace TianZhang.Editor
             Button basic = SceneBuildSupport.CreateButton("BasicAttackButton", actionRoot.transform, "普攻", out _);
             Button art = SceneBuildSupport.CreateButton("ArtButton", actionRoot.transform, "术法", out Text artLabel);
             Button secondArt = SceneBuildSupport.CreateButton("SecondArtButton", actionRoot.transform, "术法", out Text secondLabel);
+            Button thirdArt = SceneBuildSupport.CreateButton("ThirdArtButton", actionRoot.transform, "术法", out Text thirdLabel);
             Button divine = SceneBuildSupport.CreateButton("DivineButton", actionRoot.transform, "神通", out Text divineLabel);
             Button guard = SceneBuildSupport.CreateButton("GuardButton", actionRoot.transform, "防御", out _);
             Button wait = SceneBuildSupport.CreateButton("WaitButton", actionRoot.transform, "待机", out Text waitLabel);
             Button swap = SceneBuildSupport.CreateButton("SwapSpellButton", actionRoot.transform, "换术", out _);
-            foreach (Button button in new[] { basic, art, secondArt, divine, guard, wait, swap })
+            foreach (Button button in new[] { basic, art, secondArt, thirdArt, divine, guard, wait, swap })
             {
                 SettlementSceneBuilder.ApplyButtonSkin(button);
                 SettlementSceneBuilder.SetHeight(button.gameObject, 44);
             }
-            foreach (Button button in new[] { art, secondArt })
+            foreach (Button button in new[] { art, secondArt, thirdArt })
             {
                 SettlementSceneBuilder.SetHeight(button.gameObject, 64);
                 button.GetComponentInChildren<Text>().fontSize = 18;
@@ -986,6 +988,8 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(actionBar, "artLabel", artLabel);
             SceneBuildSupport.SetObject(actionBar, "secondArtButton", secondArt);
             SceneBuildSupport.SetObject(actionBar, "secondArtLabel", secondLabel);
+            SceneBuildSupport.SetObject(actionBar, "thirdArtButton", thirdArt);
+            SceneBuildSupport.SetObject(actionBar, "thirdArtLabel", thirdLabel);
             SceneBuildSupport.SetObject(actionBar, "divineButton", divine);
             SceneBuildSupport.SetObject(actionBar, "divineLabel", divineLabel);
             SceneBuildSupport.SetObject(actionBar, "guardButton", guard);
@@ -1032,8 +1036,50 @@ namespace TianZhang.Editor
             AdventureCameraController controller = camera.GetComponent<AdventureCameraController>();
             if (controller == null) controller = camera.gameObject.AddComponent<AdventureCameraController>();
             controller.Configure(camera, battlefield.transform, battlefield.transform.GetChild(0).position.y);
+            FitCameraToBattlefield(camera, battlefield);
             EditorUtility.SetDirty(camera);
             EditorUtility.SetDirty(controller);
+        }
+
+        private static void FitCameraToBattlefield(Camera camera, GameObject battlefield)
+        {
+            var bounds = new Bounds();
+            bool any = false;
+            foreach (Renderer renderer in battlefield.GetComponentsInChildren<Renderer>())
+            {
+                if (!renderer.enabled) continue;
+                if (!any) { bounds = renderer.bounds; any = true; }
+                else bounds.Encapsulate(renderer.bounds);
+            }
+            if (!any) return;
+
+            float groundHeight = battlefield.transform.GetChild(0).position.y;
+            var focus = new Vector3(bounds.center.x, groundHeight, bounds.center.z);
+            Vector3 forward = camera.transform.forward;
+            if (Mathf.Abs(forward.y) > 0.0001f)
+            {
+                float distance = (focus.y - camera.transform.position.y) / forward.y;
+                if (distance > 0f)
+                {
+                    Vector3 viewCenter = camera.transform.position + forward * distance;
+                    camera.transform.position += new Vector3(focus.x - viewCenter.x, 0f, focus.z - viewCenter.z);
+                }
+            }
+
+            Matrix4x4 view = camera.worldToCameraMatrix;
+            float halfHeight = 0f, halfWidth = 0f;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                var world = new Vector3(
+                    (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                    (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                    (corner & 4) == 0 ? bounds.min.z : bounds.max.z);
+                Vector3 local = view.MultiplyPoint(world);
+                halfHeight = Mathf.Max(halfHeight, Mathf.Abs(local.y));
+                halfWidth = Mathf.Max(halfWidth, Mathf.Abs(local.x));
+            }
+            camera.orthographicSize = Mathf.Max(4f,
+                Mathf.Max(halfHeight, halfWidth / Mathf.Max(1f, camera.aspect)) * 1.12f);
         }
 
         [MenuItem("天章/场景/重建战术精灵隔离矩阵")]

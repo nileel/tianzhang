@@ -74,9 +74,9 @@ namespace TianZhang.Tests.EditMode
             var session = Session();
             var table = session.Snapshot().Tables["Adventures"];
             var row = table.Rows.Single(entry => entry.Key.EndsWith("/shijiahou_encounter", StringComparison.Ordinal));
-            Assert.AreEqual("enemy_2@4:5", row.Value.At("additionalEnemies").RawToken);
+            Assert.AreEqual("enemy_lieshijia@8:9", row.Value.At("additionalEnemies").RawToken);
             Assert.Throws<InvalidOperationException>(() => session.SetValue("Adventures", row.Key,
-                "additionalEnemies", ConfigValue.Scalar("enemy_3@5:5")));
+                "additionalEnemies", ConfigValue.Scalar("enemy_fengsun@7:9")));
             CollectionAssert.AreEqual(Source("Adventures"), session.EncodeCandidate("Adventures"));
             Assert.IsEmpty(Validate(session, "Adventures"));
         }
@@ -193,8 +193,8 @@ namespace TianZhang.Tests.EditMode
             Assert.IsEmpty(Validate(session, id));
             var source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(Definition(id)).Single();
             Assert.IsTrue(source["battlefieldCells"].StartsWith("0:0@0@0|0:1@0@0", StringComparison.Ordinal));
-            Assert.IsTrue(source["battlefieldCells"].EndsWith("5:5@0@1", StringComparison.Ordinal));
-            Assert.AreEqual("unitsPerRange=3;maxQueryRange=16", source["queryLimits"]);
+            Assert.IsTrue(source["battlefieldCells"].EndsWith("9:9@0@1", StringComparison.Ordinal));
+            Assert.AreEqual("unitsPerRange=3;maxQueryRange=24", source["queryLimits"]);
             Assert.AreEqual("blessed_land", source["spiritRecoveryEnvironment"]);
             foreach (var column in new[] { "surfacePrototypeRefs", "phenomenonChannels", "phenomenonPairs", "elementRelationRefs" })
                 Assert.AreEqual(session.Snapshot().Tables[id].SourceRows[key][column], source[column], column);

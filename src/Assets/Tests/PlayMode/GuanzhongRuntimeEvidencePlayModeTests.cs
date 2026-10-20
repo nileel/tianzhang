@@ -469,8 +469,8 @@ namespace TianZhang.Tests.PlayMode
                 AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
                 yield return SetGameSize(size);
                 Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 0)));
-                Assert.That(spawned.Enemy.Position, Is.EqualTo(new HexCoord(3, 5)));
-                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(8));
+                Assert.That(spawned.Enemy.Position, Is.EqualTo(new HexCoord(9, 9)));
+                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(18));
                 Camera camera = Get<Camera>(Find<CombatMovementView>(), "battlefieldCamera");
                 var provider = Find<Static3DCombatUnitPresentationProvider>();
                 Assert.That(provider.TryGetVisibleBounds("enemy", out Bounds bounds), Is.True);
@@ -498,7 +498,7 @@ namespace TianZhang.Tests.PlayMode
                 var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, spawned.Enemy.Position,
                     10000000, spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>());
                 Assert.That(path.IsReachable, Is.True, path.Reason);
-                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance=8; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
+                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance=18; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
                 yield return Capture("remote-spawn-" + size.x);
                 var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
                 Assert.That(move.IsLegal, Is.True, move.RejectionReason);
@@ -507,7 +507,7 @@ namespace TianZhang.Tests.PlayMode
                 for (float deadline = Time.realtimeSinceStartup + 10f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
                 Assert.That(encounter.IsPresenting, Is.False);
                 yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
-                Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(3, 5)), "Production AI must advance from its remote spawn.");
+                Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(9, 9)), "Production AI must advance from its remote spawn.");
                 Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 1)));
                 var close = service.Preview(session, attack);
                 Assert.That(close.IsLegal, Is.True, close.RejectionReason);
@@ -767,6 +767,88 @@ namespace TianZhang.Tests.PlayMode
             }
             public void Remove(string id) => actual.Remove(id);
             public void Clear() => actual.Clear();
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerFiveHexArtFiresOnlyInsideItsRange()
+        {
+            yield return EnterSettlement();
+            Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+            yield return SetGameSize(new Vector2Int(1920, 1080));
+
+            var encounter = Find<EncounterCoordinator>();
+            CombatSession session = Get<CombatSession>(encounter, "session");
+            AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+            CombatantSnapshot player = spawned.Player;
+            CombatantSnapshot enemy = spawned.Enemy;
+            Assert.That(player.EquippedArtProfileIds, Does.Contain("spell_feixingzhi"));
+            var hud = Find<CombatHudPresenter>().Snapshot;
+            Assert.That(hud.ArtActions.Count, Is.EqualTo(3), "The action bar must present every equipped art.");
+            Assert.That(hud.ArtActions[2].DisplayName, Is.EqualTo("飞星指"));
+            Assert.That(hud.ArtActions[2].MaximumRange, Is.EqualTo(5));
+
+            var service = new CombatCommandService();
+            CombatCommand art = new CombatCommand(CombatCommandKind.Art, player.Id, enemy.Id, "spell_feixingzhi");
+            var distant = service.Preview(session, art);
+            Assert.That(distant.IsLegal, Is.False, "The enemy starts beyond five hexes.");
+            Assert.That(distant.RejectionReason, Is.EqualTo("above_max_range"));
+
+            int firedAt = -1, apBefore = 0, healthBefore = 0;
+            for (int turn = 0; turn < 12 && encounter.IsRunning && firedAt < 0; turn++)
+            {
+                for (float deadline = Time.realtimeSinceStartup + 15f; Time.realtimeSinceStartup < deadline;)
+                {
+                    if (session.CurrentActorId == player.Id && session.TurnPhase == CombatTurnPhase.Active && !encounter.IsPresenting) break;
+                    yield return null;
+                }
+                if (session.CurrentActorId != player.Id || session.TurnPhase != CombatTurnPhase.Active) continue;
+                var now = service.Preview(session, art);
+                if (now.IsLegal)
+                {
+                    firedAt = player.Position.Distance(enemy.Position);
+                    var candidate = new CombatActionCandidate(CombatActionKind.Art, player.Id, enemy.Id, "spell_feixingzhi",
+                        Find<CombatHudPresenter>().Snapshot.CommandContextVersion);
+                    CombatActionPreviewSnapshot preview = encounter.PreviewAction(candidate);
+                    Assert.That(preview.CanConfirm, Is.True, preview.Reason);
+                    apBefore = player.ActionPointsRemainingUnits;
+                    healthBefore = enemy.CurrentHealth;
+                    encounter.ConfirmAction(preview.Candidate);
+                    Assert.That(player.ActionPointsRemainingUnits, Is.EqualTo(apBefore - now.ActionPointCostUnits));
+                    break;
+                }
+                CombatCommand step = new CombatLegalActionService().GetLegalActions(session, player.Id)
+                    .Where(action => action.Kind == CombatCommandKind.Move && action.Destination.HasValue)
+                    .Where(action => action.Destination.Value.Distance(enemy.Position) < player.Position.Distance(enemy.Position))
+                    .OrderBy(action => action.Destination.Value.Distance(enemy.Position))
+                    .ThenByDescending(action => action.Destination.Value.Distance(player.Position))
+                    .FirstOrDefault();
+                if (step != null)
+                {
+                    encounter.RequestMove(player.Id, step.Destination.Value.Q, step.Destination.Value.R);
+                    for (float deadline = Time.realtimeSinceStartup + 15f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
+                    Assert.That(encounter.IsPresenting, Is.False);
+                }
+                if (session.CurrentActorId == player.Id && session.TurnPhase != CombatTurnPhase.Finished && !encounter.IsPresenting)
+                    encounter.RequestEndTurn(player.Id);
+                yield return null;
+            }
+
+            Assert.That(firedAt, Is.InRange(2, 5), "The five-hex art must fire before contact, not only when adjacent.");
+            TestContext.WriteLine("FEIXINGZHI fired at distance=" + firedAt + "; AP " + apBefore + "->" + player.ActionPointsRemainingUnits +
+                "; enemy HP " + healthBefore + "->" + enemy.CurrentHealth);
+            var lines = new List<string>
+            {
+                Header(),
+                $"arts={string.Join(",", player.EquippedArtProfileIds)}; artCount={hud.ArtActions.Count}; third={hud.ArtActions[2].DisplayName}; range=1-{hud.ArtActions[2].MaximumRange}",
+                $"distantRejection={distant.RejectionReason}; firedAt={firedAt}; damage={healthBefore - enemy.CurrentHealth}; enemy={enemy.Id}@{enemy.Position}",
+            };
+            Write("feixingzhi-range", lines);
+            yield return Capture("feixingzhi-range");
         }
 
         private IEnumerator EnterSettlement()

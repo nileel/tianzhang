@@ -319,7 +319,7 @@ namespace TianZhang.Tests.PlayMode
             AssertFormalBattlefieldPresentation();
             AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, spawned.Enemies.Select(enemy => enemy.Id));
-            CollectionAssert.AreEqual(new[] { new HexCoord(3, 5), new HexCoord(4, 5) }, spawned.Enemies.Select(enemy => enemy.Position));
+            CollectionAssert.AreEqual(new[] { new HexCoord(9, 9), new HexCoord(8, 9) }, spawned.Enemies.Select(enemy => enemy.Position));
             Assert.AreNotSame(spawned.Enemies[0], spawned.Enemies[1]);
             Assert.AreEqual(3, provider.ActiveCombatantCount);
             foreach (CombatantSnapshot enemy in spawned.Enemies)
@@ -1163,7 +1163,7 @@ namespace TianZhang.Tests.PlayMode
             GameObject battlefield = FindSceneObjectIncludingInactive("GuanzhongBattlefield");
             Assert.IsNotNull(battlefield, "AdventureScene is missing the functional Guanzhong battlefield.");
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
-            Assert.AreEqual(36, battlefield.transform.childCount);
+            Assert.AreEqual(100, battlefield.transform.childCount);
             Assert.AreEqual(4, battlefield.GetComponentsInChildren<Transform>(true).Count(value =>
                 value.name.StartsWith("GuanzhongObstacle_", StringComparison.Ordinal)));
             Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
@@ -1178,7 +1178,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
             Assert.AreEqual(8f, camera.transform.position.y, 0.001f);
             Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
-            Assert.AreEqual(4f, camera.orthographicSize, 0.001f);
+            Assert.GreaterOrEqual(camera.orthographicSize, 4f, "The adventure camera must cover the whole battlefield.");
             AdventureCameraController cameraController = camera.GetComponent<AdventureCameraController>();
             Assert.IsNotNull(cameraController);
             Assert.IsTrue(cameraController.enabled);
@@ -1197,7 +1197,7 @@ namespace TianZhang.Tests.PlayMode
 
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
-            AssertProviderGrounding(provider, "enemy", 3, 5, battlefield.transform);
+            AssertProviderGrounding(provider, "enemy", 9, 9, battlefield.transform);
         }
 
         private static void AssertProviderGrounding(

@@ -635,12 +635,12 @@ function Test-CombatRuleSetProjection {
 function Test-FormalAttackProfileProjection {
   param([object]$Table,[string[]]$LanguageIds)
   $rules = Test-CombatRuleSetProjection; if ($null -eq $rules) { return }
-  $ids = @('spell_guanshiji','spell_julingshu','spell_lieshi','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
-  if ($rows.Count -ne 10 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
-    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly ten approved IDs are required.'; return
+  $ids = @('spell_guanshiji','spell_julingshu','spell_lieshi','spell_feixingzhi','basic_iron_sword','basic_iron_blade','basic_body_human_fanren','basic_body_human_lianqi','basic_body_human_zhuji','basic_body_human_jindan','basic_body_shijiahou_lianqi'); $rows = @($Table.Rows)
+  if ($rows.Count -ne 11 -or (@($rows.attackProfileId|Sort-Object)-join ',') -cne (@($ids|Sort-Object)-join ',')) {
+    Add-Finding 'ATTACK_PROFILE_ROW_SET_INVALID' 'AttackProfiles' 'Exactly eleven approved IDs are required.'; return
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
-  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the ten canonical assets are required.' }
+  if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the eleven canonical assets are required.' }
   $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
   $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2};areaCenterKind=@{caster=1;target_cell=2};areaShapeKind=@{circle=1;line=2;fan=3;forward_pair=4;adjacent_pair=5};areaEffectBlockers=@{none=0;directed_edge=1}}
   $flags = @{areaAllowedFactions=@{enemy=1;ally=2;self=4};areaAllowedStates=@{alive=1;corpse=2}}
@@ -769,11 +769,11 @@ function Test-FormalEnvironmentProjection {
     return
   }
   $row = $rows[0]
-  if ($row.spiritRecoveryEnvironment -cne 'ordinary' -or $row.queryLimits -cne 'unitsPerRange=2;maxQueryRange=16') {
+  if ($row.spiritRecoveryEnvironment -cne 'ordinary' -or $row.queryLimits -cne 'unitsPerRange=2;maxQueryRange=24') {
     Add-Finding 'ENVIRONMENT_PROFILE_PROJECTION_INVALID' 'env_guanzhong_wild' 'Formal Guanzhong must declare ordinary recovery and its approved query limits.'
   }
   $assetPath = 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset'
-  Test-FormalProjectionAssetFields 'env_guanzhong_wild' $assetPath @{ profileId='env_guanzhong_wild'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=16 }
+  Test-FormalProjectionAssetFields 'env_guanzhong_wild' $assetPath @{ profileId='env_guanzhong_wild'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=24 }
   Test-FormalProjectionSceneReference 'env_guanzhong_wild' $assetPath
   $path = Join-Path $root $assetPath
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
@@ -781,8 +781,8 @@ function Test-FormalEnvironmentProjection {
   $cells = @([regex]::Matches($text, '(?m)^  - q: (\d+)\r?\n    r: (\d+)\r?\n    blocksGroundMove: ([01])\r?\n    blocksLineOfSight: ([01])\s*$') | ForEach-Object {
     "$($_.Groups[1].Value):$($_.Groups[2].Value)@$($_.Groups[3].Value)@$($_.Groups[4].Value)"
   })
-  if ($cells.Count -ne 36 -or ($cells -join '|') -cne [string]$row.battlefieldCells) {
-    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELLS_MISMATCH' 'env_guanzhong_wild' 'All 36 asset cells must exactly match CSV order and flags.'
+  if ($cells.Count -ne 100 -or ($cells -join '|') -cne [string]$row.battlefieldCells) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELLS_MISMATCH' 'env_guanzhong_wild' 'All 100 asset cells must exactly match CSV order and flags.'
   }
   foreach ($field in @('surfacePrototypeRefs','elementRelationRefs')) {
     $block = [regex]::Match($text, "(?m)^  ${field}:\r?\n((?:  - [^\r\n]+\r?\n)+)")
@@ -806,7 +806,7 @@ function Test-FormalEnvironmentProjection {
     $parts = $_ -split '[:>]',3; $parts[0] + ':' + (@($parts[1].Split('+') | Sort-Object) -join '+') + '>' + $parts[2]
   })
   if ($pairRows.Count -ne 6 -or ($pairRows -join '|') -cne ($expectedPairs -join '|')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_PAIRS_MISMATCH' 'env_guanzhong_wild' 'Asset pair results must exactly match the CSV.' }
-  if ([regex]::Matches($text, '(?m)^  - fromQ:').Count -ne 170) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize its 170 generated directed edges.' }
+  if ([regex]::Matches($text, '(?m)^  - fromQ:').Count -ne 522) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize its 522 generated directed edges.' }
 }
 
 function Test-CharterSiteProjection {

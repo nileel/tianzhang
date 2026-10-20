@@ -368,16 +368,16 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void MinorClanLearnsAndEquipsOnlyTheTwoApprovedStarterArts()
+        public void MinorClanLearnsAndEquipsOnlyTheThreeApprovedStarterArts()
         {
             var draft = CharacterCreationCatalog.CreateDefaultDraft();
             draft.OriginId = "origin_minor_clan";
             CharacterData profile = CharacterCreationRules.BuildCharacterData(draft, pointBuyConfig, GrowthRules);
             try
             {
-                var expected = new[] { "spell_guanshiji", "spell_julingshu" };
+                var expected = new[] { "spell_guanshiji", "spell_julingshu", "spell_feixingzhi" };
                 Assert.IsTrue(string.IsNullOrEmpty(profile.gongFaName));
-                Assert.AreEqual(2, profile.maxSpellSlots);
+                Assert.AreEqual(3, profile.maxSpellSlots);
                 CollectionAssert.AreEqual(expected, profile.availableSpells);
                 CollectionAssert.AreEqual(expected, profile.equippedSpells);
                 CharacterRuntimeProfile runtime = CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules);

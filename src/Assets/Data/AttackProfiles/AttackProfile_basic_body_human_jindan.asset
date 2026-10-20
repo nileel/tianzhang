@@ -71,7 +71,7 @@ MonoBehaviour:
   statusRefreshPolicy: 
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: a1b78d630fe2582f2c3856d071eed42c2ed56576bc5a583dd8835f40366a8d96
+  ruleSetSourceDigest: 56be9afcce34fa8b795a70a2fbddbd7ef8449780a4d2fa7a79695d71e1758a33
   attackSchemaVersion: 2
   unarmedFamilyId: body_human
   unarmedRealmId: realm_jindan

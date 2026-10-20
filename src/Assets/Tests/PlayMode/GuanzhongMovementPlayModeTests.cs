@@ -154,10 +154,22 @@ namespace TianZhang.Tests.PlayMode
                 StringAssert.Contains("可达", summary);
                 StringAssert.Contains("左键点击高亮地块立即移动", summary);
 
-                var selected = FindVisibleMovementOption(movement, snapshot, camera);
-                CombatMovementOption option = selected.option;
-                Vector2 destinationPoint = selected.point;
-                yield return Point(mouse, destinationPoint);
+                // A larger board can place option centers behind the shared preview popup, and hovering
+                // may grow that popup. Try legal options until one actually previews under the pointer.
+                var optionCenters = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
+                CombatMovementOption option = null;
+                Vector2 destinationPoint = default;
+                foreach (CombatMovementOption candidate in snapshot.Movement.Options)
+                {
+                    Vector2 point = camera.WorldToScreenPoint(optionCenters[CellKey(candidate.Destination)]);
+                    if (!OnScreen(point)) continue;
+                    yield return Point(mouse, point);
+                    if (movement.Selected == null || !movement.Selected.Destination.Equals(candidate.Destination)) continue;
+                    option = candidate;
+                    destinationPoint = point;
+                    break;
+                }
+                Assert.IsNotNull(option, "Hover must preview a legal movement option.");
                 Assert.IsTrue(movement.IsSelecting);
                 Assert.AreSame(option, movement.Selected, "Hover must preview the authoritative option.");
                 Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
@@ -332,22 +344,6 @@ namespace TianZhang.Tests.PlayMode
             yield return null; yield return null;
             InputSystem.QueueStateEvent(device, new MouseState { position = point });
             yield return null;
-        }
-
-        private static (CombatMovementOption option, Vector2 point) FindVisibleMovementOption(
-            CombatMovementView movement, CombatHudSnapshot snapshot, Camera camera)
-        {
-            var centers = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
-            foreach (CombatMovementOption option in snapshot.Movement.Options)
-            {
-                Vector2 point = camera.WorldToScreenPoint(centers[CellKey(option.Destination)]);
-                if (!OnScreen(point)) continue;
-                if (!movement.TryPickCell(point, out CombatUnitPresentationHex picked) ||
-                    !picked.Equals(option.Destination)) continue;
-                return (option, point);
-            }
-            Assert.Fail("No visible, clickable movement option while the shared popup is open.");
-            return (null, Vector2.zero);
         }
 
         private static bool TryFindCellPoint(CombatMovementView movement, Camera camera, Vector3 center,

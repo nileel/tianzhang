@@ -181,6 +181,7 @@ namespace TianZhang.Features.CombatPresentation
             Bind(actionBar?.BasicAttackButton, () => BeginSelection(CombatActionKind.BasicAttack));
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
+            Bind(actionBar?.ThirdArtButton, () => RequestArt(2));
             Bind(actionBar?.DivineButton, () =>
             {
                 var choice = snapshot?.FindPreferredAction(CombatActionKind.Divine, divineProfileId)?.Candidate;
