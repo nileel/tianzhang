@@ -621,6 +621,99 @@ namespace TianZhang.Tests.PlayMode
             yield return SceneReady(GameplaySceneNames.Settlement);
         }
 
+        // 铁剑普攻播剑气、飞星指播弹道；两种特效都只读表现事件，不改规则、不延长输入锁。
+        [UnityTest]
+        public IEnumerator AttackEffectsDifferentiateSwordAndStarAtBothResolutions()
+        {
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                yield return SetGameSize(size);
+                Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+                yield return SceneReady(GameplaySceneNames.Adventure);
+                var adventure = Find<AdventureController>();
+                for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+                adventure.SetEncounterRandomSource(new EncounterRandom());
+                Assert.That(Find<AdventureInputController>().SelectNode("lieshijia_encounter"), Is.True);
+                var encounter = Find<EncounterCoordinator>();
+                CombatSession session = Get<CombatSession>(encounter, "session");
+                AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+                var service = new CombatCommandService();
+                var lines = new List<string> { Header(),
+                    $"node=lieshijia_encounter; enemies={string.Join("/", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position))}" };
+
+                bool TryCast(CombatantSnapshot target)
+                {
+                    var command = new CombatCommand(CombatCommandKind.Art, "player", target.Id, "spell_feixingzhi");
+                    CombatCommandPreview quote = service.Preview(session, command);
+                    if (!quote.IsLegal) return false;
+                    var candidate = new CombatActionCandidate(CombatActionKind.Art, "player", target.Id,
+                        "spell_feixingzhi", Find<CombatHudPresenter>().Snapshot.CommandContextVersion);
+                    CombatActionPreviewSnapshot preview = encounter.PreviewAction(candidate);
+                    TestContext.WriteLine($"VFX TryCast target={target.Id} distance={spawned.Player.Position.Distance(target.Position)} " +
+                        $"presenting={encounter.IsPresenting} accepts={Get<bool>(encounter, "acceptsPlayerCommand")} " +
+                        $"ctx={Find<CombatHudPresenter>().Snapshot.CommandContextVersion} can={preview.CanConfirm} reason={preview.Reason}");
+                    Assert.That(preview.CanConfirm, Is.True, preview.Reason);
+                    encounter.ConfirmAction(candidate);
+                    lines.Add($"star cast: target={target.Id}@{target.Position}; distance={spawned.Player.Position.Distance(target.Position)}; cost={quote.ActionPointCostUnits}");
+                    return true;
+                }
+
+                bool cast = false;
+                for (int turn = 0; turn < 6 && !cast; turn++)
+                {
+                    yield return PlayerInputReady(encounter, session);
+                    CombatantSnapshot target = spawned.Enemies.Where(enemy => enemy.IsAlive)
+                        .OrderByDescending(enemy => enemy.CurrentHealth).First();
+                    if (TryCast(target)) { cast = true; break; }
+                    int artCost = service.Preview(session,
+                        new CombatCommand(CombatCommandKind.Art, "player", target.Id, "spell_feixingzhi")).ActionPointCostUnits;
+                    var move = Find<CombatHudPresenter>().Snapshot.Movement.Options
+                        .Where(option => option.Cost + artCost <= spawned.Player.ActionPointsRemainingUnits)
+                        .OrderBy(option => new HexCoord(option.Destination.Q, option.Destination.R).Distance(target.Position)).ThenBy(option => option.Cost)
+                        .FirstOrDefault();
+                    if (move != null)
+                    {
+                        Assert.That(encounter.PreviewAction(move.Candidate).CanConfirm, Is.True);
+                        encounter.ConfirmAction(move.Candidate);
+                        for (int frame = 0; frame < 240 && encounter.IsPresenting; frame++) yield return null;
+                        // The move can spend the last AP and hand the turn over; wait for the next
+                        // accepted window before building a command context version.
+                        yield return PlayerInputReady(encounter, session);
+                        target = spawned.Enemies.Where(enemy => enemy.IsAlive)
+                            .OrderByDescending(enemy => enemy.CurrentHealth).First();
+                        if (TryCast(target)) { cast = true; break; }
+                    }
+                    if (session.CurrentActorId == "player" && session.TurnPhase == CombatTurnPhase.Active && !encounter.IsPresenting)
+                        encounter.RequestEndTurn("player");
+                    for (int frame = 0; frame < 240 && encounter.IsPresenting; frame++) yield return null;
+                }
+                Assert.That(cast, Is.True, "飞星指必须在 6 回合内进入射程并施放。");
+                Assert.That(GameObject.Find(CombatAttackVfx.ProjectileObjectName), Is.Not.Null,
+                    "飞星指必须播出弹道特效。");
+                Assert.That(encounter.IsPresenting, Is.True, "特效应由表现锁覆盖。");
+                for (int frame = 0; frame < 10; frame++) yield return null;
+                yield return Capture("attack-vfx-star-" + size.x);
+
+                for (int frame = 0; frame < 240 && encounter.IsPresenting; frame++) yield return null;
+                yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
+                yield return PlayerInputReady(encounter, session);
+                CombatHudSnapshot hud = Find<CombatHudPresenter>().Snapshot;
+                int direction = spawned.Player.Position.DirectionTo(spawned.Enemy.Position);
+                var attack = new CombatActionCandidate(CombatActionKind.BasicAttack, "player", null, null,
+                    hud.CommandContextVersion, attackDirection: direction);
+                CombatActionPreviewSnapshot attackPreview = encounter.PreviewAction(attack);
+                Assert.That(attackPreview.CanConfirm, Is.True, attackPreview.Reason);
+                encounter.ConfirmAction(attack);
+                Assert.That(GameObject.Find(CombatAttackVfx.SlashObjectName), Is.Not.Null,
+                    "铁剑普攻必须播出剑气特效。");
+                lines.Add($"sword slash: direction={direction}; target={spawned.Enemy.Position}; cost={attackPreview.ActionPointCostUnits}");
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                yield return Capture("attack-vfx-slash-" + size.x);
+                Write("attack-vfx-" + size.x, lines);
+            }
+        }
+
         [UnityTest]
         public IEnumerator R4ScaledEnemiesMoveAttackAndFinishTheFormalEncounterAtBothResolutions()
         {

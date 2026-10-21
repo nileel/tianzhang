@@ -907,15 +907,24 @@ namespace TianZhang.Features.Adventure
                     CombatCommandKind.Art or CombatCommandKind.Divine => CombatUnitPresentationEvent.Cast,
                     _ => CombatUnitPresentationEvent.Idle,
                 };
+                // The actor event carries every affected target: heals for restored spirit and the
+                // damage group, so presentation can place one impact per affected unit without
+                // reading combat state. Individual Hit/Death events still follow separately.
+                CombatUnitPresentationTargetResult[] affected = result.SpiritRecoveries
+                    .Select(value => new CombatUnitPresentationTargetResult(value.TargetId, 0, false, value.ActualRecovery))
+                    .Concat(result.Damage.GroupBy(item => item.TargetId, StringComparer.Ordinal)
+                        .Select(group => new CombatUnitPresentationTargetResult(
+                            group.Key, group.Sum(item => item.FinalDamage), false)))
+                    .ToArray();
                 unitPresentation.Present(new CombatUnitPresentationEventProjection(
                     actorBefore.Id,
                     actionEvent,
                     actorStart,
                     ToPresentationHex(actorBefore.Position),
                     actorBefore.Facing,
-                    result.SpiritRecoveries.Select(value => new CombatUnitPresentationTargetResult(
-                        value.TargetId, 0, false, value.ActualRecovery)).ToArray(),
-                    result.MovementPath.Select(ToPresentationHex).ToArray()));
+                    affected,
+                    result.MovementPath.Select(ToPresentationHex).ToArray(),
+                    profileId: command.ProfileId));
 
                 foreach (var targetDamage in result.Damage.GroupBy(item => item.TargetId, StringComparer.Ordinal))
                 {

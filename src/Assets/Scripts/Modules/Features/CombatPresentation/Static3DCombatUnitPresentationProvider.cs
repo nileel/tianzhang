@@ -20,6 +20,7 @@ namespace TianZhang.Features.CombatPresentation
         private const float BaseThickness = 0.04f;
 
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
+        [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
 
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
         private readonly Dictionary<string, Coroutine> actionRecoveries = new Dictionary<string, Coroutine>();
@@ -37,6 +38,11 @@ namespace TianZhang.Features.CombatPresentation
             if (!profileSet.TryValidate(out string profileReason))
             {
                 reason = "static_3d_presentation_profile_set_invalid:" + profileReason;
+                return false;
+            }
+            if (attackVfxCatalog != null && !attackVfxCatalog.TryValidate(out string vfxReason))
+            {
+                reason = "static_3d_presentation_attack_vfx_catalog_invalid:" + vfxReason;
                 return false;
             }
             reason = null;
@@ -137,6 +143,7 @@ namespace TianZhang.Features.CombatPresentation
             unit.Root.transform.position = HexToWorld(presentationEvent.EndPosition);
             unit.LastEvent = presentationEvent.PresentationEvent;
             PlayFeedback(unit, profile, presentationEvent);
+            PlayAttackVfx(presentationEvent);
             switch (presentationEvent.PresentationEvent)
             {
                 case CombatUnitPresentationEvent.Idle:
@@ -292,6 +299,38 @@ namespace TianZhang.Features.CombatPresentation
             if (!movements.TryGetValue(id, out Coroutine routine)) return;
             StopCoroutine(routine);
             movements.Remove(id);
+        }
+
+        /// <summary>
+        /// Per-attack light VFX. Only profiles listed in the catalog play; every other attack keeps
+        /// the existing generic feedback. The effect is transient, never extends the input lock
+        /// beyond the existing 1s feedback window, and is skipped when no target is known.
+        /// </summary>
+        private void PlayAttackVfx(CombatUnitPresentationEventProjection presentationEvent)
+        {
+            if (attackVfxCatalog == null ||
+                presentationEvent.PresentationEvent is not (CombatUnitPresentationEvent.Attack or CombatUnitPresentationEvent.Cast) ||
+                !attackVfxCatalog.TryGet(presentationEvent.ProfileId, out CombatAttackVfxEntry entry))
+                return;
+
+            Vector3 origin = HexToWorld(presentationEvent.EndPosition) + Vector3.up * 0.85f;
+            Vector3 target = origin;
+            bool found = false;
+            foreach (CombatUnitPresentationTargetResult targetResult in presentationEvent.TargetResults)
+            {
+                if (!units.TryGetValue(targetResult.CombatantId, out PresentedUnit targetUnit) ||
+                    targetUnit.Root == null)
+                    continue;
+                target = targetUnit.Root.transform.position + Vector3.up * 0.75f;
+                found = true;
+                break;
+            }
+            if (!found) return;
+
+            CombatAttackVfx effect = entry.kind == CombatAttackVfxKind.Slash
+                ? CombatAttackVfx.PlaySlash(target, origin, entry.color, entry.scale, entry.durationSeconds)
+                : CombatAttackVfx.PlayProjectile(origin, target, entry.color, entry.scale, entry.durationSeconds);
+            RegisterTransient(effect.gameObject, entry.durationSeconds + 0.3f);
         }
 
         private void PlayFeedback(

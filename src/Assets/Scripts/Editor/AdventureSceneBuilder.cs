@@ -288,6 +288,11 @@ namespace TianZhang.Editor
                 "profileSet",
                 SceneBuildSupport.RequireAsset<Static3DCombatUnitPresentationProfileSet>(
                     FormalStatic3DCombatPieceBuilder.ProfileSetAssetPath));
+            SceneBuildSupport.SetObject(
+                static3DProvider,
+                "attackVfxCatalog",
+                SceneBuildSupport.RequireAsset<CombatAttackVfxCatalogData>(
+                    CombatAttackVfxBuilder.CatalogPath));
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
             BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);

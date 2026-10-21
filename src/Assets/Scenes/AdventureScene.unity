@@ -4985,6 +4985,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.Static3DCombatUnitPresentationProvider
   profileSet: {fileID: 11400000, guid: 3efef3dc211373a4ba192d8725f65e0a, type: 2}
+  attackVfxCatalog: {fileID: 11400000, guid: 93a9f9ff618a9f94b9752f79e3b90557, type: 2}
 --- !u!114 &458967852
 MonoBehaviour:
   m_ObjectHideFlags: 0

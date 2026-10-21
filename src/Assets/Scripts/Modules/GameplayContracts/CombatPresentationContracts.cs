@@ -248,7 +248,8 @@ namespace TianZhang.Gameplay.Contracts
             CombatUnitPresentationHex endPosition,
             int facing,
             IReadOnlyList<CombatUnitPresentationTargetResult> targetResults,
-            IReadOnlyList<CombatUnitPresentationHex> movementPath = null)
+            IReadOnlyList<CombatUnitPresentationHex> movementPath = null,
+            string profileId = null)
         {
             if (string.IsNullOrWhiteSpace(actorCombatantId))
                 throw new ArgumentException("Actor combatant ID is required.", nameof(actorCombatantId));
@@ -263,6 +264,7 @@ namespace TianZhang.Gameplay.Contracts
             StartPosition = startPosition;
             EndPosition = endPosition;
             Facing = facing;
+            ProfileId = profileId;
             TargetResults = targetResults == null
                 ? Array.Empty<CombatUnitPresentationTargetResult>()
                 : new List<CombatUnitPresentationTargetResult>(targetResults).AsReadOnly();
@@ -276,6 +278,8 @@ namespace TianZhang.Gameplay.Contracts
         public CombatUnitPresentationHex StartPosition { get; }
         public CombatUnitPresentationHex EndPosition { get; }
         public int Facing { get; }
+        /// <summary>Authoritative attack profile that produced this event; presentation-only.</summary>
+        public string ProfileId { get; }
         public IReadOnlyList<CombatUnitPresentationTargetResult> TargetResults { get; }
         public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
