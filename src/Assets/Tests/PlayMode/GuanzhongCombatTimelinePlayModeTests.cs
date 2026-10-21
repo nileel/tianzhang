@@ -416,10 +416,10 @@ namespace TianZhang.Tests.PlayMode
             foreach (var entry in geometry)
             {
                 Assert.That(entry.label.preferredWidth, Is.LessThanOrEqualTo(entry.label.rectTransform.rect.width), entry.label.name + " must fit without automatic wrapping.");
-                Assert.That(entry.lineCount, Is.EqualTo(2), entry.label.name + " must show order/faction and identity on two lines.");
+                Assert.That(entry.lineCount, Is.EqualTo(1), entry.label.name + " shows compact rank/current; identity is in its portrait and focus card.");
                 Assert.That(entry.glyphVertices, Is.GreaterThan(0), entry.label.name + " must contain actual glyph geometry.");
                 Assert.That(entry.glyphs.Overlaps(entry.portrait), Is.False, entry.label.name + " actual glyphs must not overlap the portrait.");
-                Assert.That(entry.glyphs.xMin, Is.GreaterThanOrEqualTo(entry.portrait.xMax), entry.label.name + " identity must remain beside its portrait.");
+                Assert.That(entry.glyphs.yMin, Is.GreaterThanOrEqualTo(entry.portrait.yMax), entry.label.name + " rank must remain above its portrait.");
             }
         }
 
@@ -812,7 +812,7 @@ namespace TianZhang.Tests.PlayMode
                 var actual = hud.Snapshot.Timeline;
                 var sameCt = new CombatTimelineSnapshot(actual.CurrentTick, actual.CurrentActorId,
                     actual.Entries.Select(unit => new CombatTimelineEntrySnapshot(unit.Id, unit.DisplayName,
-                        unit.Faction, unit.Speed, 100, 100, true, unit.QueuePosition, unit.IsCurrent, 0)).ToArray());
+                        unit.Faction, unit.Speed, 100, 100, true, unit.QueuePosition, unit.IsCurrent, 0, unit.PortraitKey)).ToArray());
                 view.Present(sameCt);
                 view.PresentPrediction(hud.Snapshot.Actions.First(action => action.CanConfirm));
                 yield return new WaitForSecondsRealtime(0.15f);
@@ -958,7 +958,7 @@ namespace TianZhang.Tests.PlayMode
                 {
                     Assert.That(remaining[item.index], Is.EqualTo(Math.Max(0, item.unit.TicksUntilReady - (tick - shown.CurrentTick))).Within(0.002));
                     Assert.That(GetTimelineField<Text[]>(view, "entryCtLabels")[item.index].text,
-                        Is.EqualTo("剩余 " + Mathf.CeilToInt(remaining[item.index])));
+                        Is.EqualTo(Mathf.CeilToInt(remaining[item.index]).ToString()));
                     lines.Add("frame=" + frames + ", tick=" + tick + ", id=" + item.unit.Id + ", remaining=" + remaining[item.index] +
                         ", rank=" + item.index + ", ready=" + item.unit.IsReady + ", actor=" + destination.CurrentActorId +
                         ", local=" + roots[item.index].anchoredPosition + ", screen=" + ScreenRect(roots[item.index]));
@@ -1043,7 +1043,7 @@ namespace TianZhang.Tests.PlayMode
                 var units = actual.Entries.Take(count);
                 if (reverse) units = units.Reverse();
                 var entries = units.Select((unit, index) => new CombatTimelineEntrySnapshot(unit.Id, unit.DisplayName,
-                    unit.Faction, unit.Speed, 100, 100, true, index - 1, index == 0, 0)).ToArray();
+                    unit.Faction, unit.Speed, 100, 100, true, index - 1, index == 0, 0, unit.PortraitKey)).ToArray();
                 return new CombatTimelineSnapshot(actual.CurrentTick, entries[0].Id, entries);
             }
             view.Present(Sample());

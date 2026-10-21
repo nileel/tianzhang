@@ -409,7 +409,7 @@ namespace TianZhang.Gameplay.Contracts
     {
         public CombatTimelineEntrySnapshot(string id, string displayName, CombatUnitDisplayFaction faction,
             int speed, float currentCt, float nextActionThreshold, bool isReady, int queuePosition, bool isCurrent,
-            long ticksUntilReady)
+            long ticksUntilReady, string portraitKey = null)
         {
             Id = id;
             DisplayName = displayName;
@@ -421,10 +421,12 @@ namespace TianZhang.Gameplay.Contracts
             QueuePosition = queuePosition;
             IsCurrent = isCurrent;
             TicksUntilReady = ticksUntilReady;
+            PortraitKey = portraitKey;
         }
 
         public string Id { get; }
         public string DisplayName { get; }
+        public string PortraitKey { get; }
         public CombatUnitDisplayFaction Faction { get; }
         public int Speed { get; }
         public float CurrentCt { get; }

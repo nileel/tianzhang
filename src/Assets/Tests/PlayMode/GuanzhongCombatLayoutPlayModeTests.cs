@@ -28,8 +28,127 @@ namespace TianZhang.Tests.PlayMode
     public sealed class GuanzhongCombatLayoutPlayModeTests
     {
         private GuanzhongCombatActionPreviewPlayModeTests entry;
-        [UnitySetUp] public IEnumerator Enter() { entry = new GuanzhongCombatActionPreviewPlayModeTests(); yield return entry.EnterFormalEncounter(); }
+        [UnitySetUp] public IEnumerator Enter()
+        {
+            if (TestContext.CurrentContext.Test.Name.StartsWith("V5CompactHud"))
+            {
+                bool small = TestContext.CurrentContext.Test.Name.EndsWith("1366");
+                SetGameSize(small ? 1366 : 1920, small ? 768 : 1080);
+                yield return null;
+            }
+            entry = new GuanzhongCombatActionPreviewPlayModeTests();
+            yield return entry.EnterFormalEncounter();
+        }
         [UnityTearDown] public IEnumerator Leave() { yield return entry.Cleanup(); }
+
+        [UnityTest] public IEnumerator V5CompactHudAt1920() => VerifyCompactHud();
+        [UnityTest] public IEnumerator V5CompactHudAt1366() => VerifyCompactHud();
+
+        private IEnumerator VerifyCompactHud()
+        {
+            var hud = Object.FindFirstObjectByType<CombatHudPresenter>();
+            var bar = Object.FindFirstObjectByType<CombatActionBarView>();
+            var axis = Object.FindFirstObjectByType<CombatTimelineView>();
+            var input = Object.FindFirstObjectByType<CombatCommandInput>();
+            var coordinator = Object.FindFirstObjectByType<EncounterCoordinator>();
+            var preview = Object.FindFirstObjectByType<CombatActionPreviewView>();
+            var snapshot = hud.Snapshot;
+            T Field<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(owner);
+            Rect Bounds(RectTransform rect)
+            {
+                var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+                return UnityEngine.Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+            }
+            Canvas.ForceUpdateCanvases();
+            Assert.That(Rect("CombatTimelineRoot").rect.width, Is.EqualTo(104).Within(.1));
+            Assert.That(Rect("CombatHotbar").rect.height, Is.EqualTo(164).Within(.1));
+            Assert.IsFalse(Bounds(Rect("CombatResourceCard")).Overlaps(Bounds(Rect("CombatHotbar"))));
+            foreach (var image in Rect("CombatResourceCard").GetComponentsInChildren<Image>())
+                Assert.IsFalse(image.raycastTarget && image.name == "Fill");
+            foreach (Text label in Rect("CombatResourceCard").GetComponentsInChildren<Text>())
+                Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height + .1f, label.name + ": " + label.text);
+            Image[] portraits = Field<Image[]>(axis, "entryPortraits");
+            Button[] entries = Field<Button[]>(axis, "entryButtons");
+            for (int index = 0; index < snapshot.Timeline.Entries.Count; index++)
+            {
+                var unit = snapshot.Timeline.Entries[index];
+                string expected = unit.PortraitKey == "player" ? "FormalPlayer_Default_Portrait" : unit.PortraitKey;
+                Assert.AreEqual(expected, portraits[index].sprite.name, unit.Id);
+                AssertButtonReachable(entries[index]);
+            }
+            foreach (Button button in new[] { bar.BasicAttackButton, bar.ArtButton, bar.SecondArtButton,
+                bar.ThirdArtButton, bar.MoveButton, bar.GuardButton, bar.SwapSpellButton, bar.SwapEquipmentButton,
+                bar.UseItemButton, bar.WaitButton }) AssertButtonReachable(button);
+            yield return CaptureV5("hud");
+            yield return Click(entries.Last());
+            Assert.AreEqual(snapshot.Timeline.Entries.Last().Id, hud.InspectedTargetId);
+            yield return Click(bar.GuardButton);
+            Assert.AreEqual(CombatActionKind.Guard, input.Candidate.Kind);
+            Assert.IsTrue(preview.IsVisible);
+            yield return CaptureV5("details-preview");
+            yield return Click(preview.CancelButton);
+            Assert.IsNull(input.Candidate);
+            yield return Click(Rect("ToggleLogButton").GetComponent<Button>());
+            yield return CaptureV5("log");
+            yield return Click(Rect("CloseLogButton").GetComponent<Button>());
+
+            // Presentation-only capacity probe; no rule/loadout/source asset is changed.
+            bar.DivineButton.gameObject.SetActive(true);
+            Canvas.ForceUpdateCanvases();
+            var scroll = Rect("ActionViewport").GetComponent<ScrollRect>();
+            Assert.Greater(scroll.content.rect.width, scroll.viewport.rect.width);
+            scroll.horizontalNormalizedPosition = 1;
+            yield return null;
+            AssertButtonReachable(bar.DivineButton);
+            AssertButtonReachable(bar.WaitButton);
+            Assert.IsFalse(Bounds(bar.DivineButton.GetComponent<RectTransform>()).Overlaps(Bounds(bar.WaitButton.GetComponent<RectTransform>())));
+            var nameLabel = bar.SwapEquipmentButton.GetComponentInChildren<Text>();
+            nameLabel.text = "装备精炼玄铁长刀\n25 AP\n已持有";
+            Canvas.ForceUpdateCanvases();
+            Capture("v5-capacity-" + Screen.width);
+            Assert.LessOrEqual(nameLabel.preferredHeight, nameLabel.rectTransform.rect.height + .1f, "Two-line dynamic name must retain its cost/status lines.");
+            yield return CaptureV5("capacity-probe");
+            bar.Present(snapshot);
+            scroll.horizontalNormalizedPosition = 0;
+            hud.ClearInspectedTarget();
+            var move = snapshot.Movement.Options.OrderByDescending(value => value.Path.Count).First();
+            coordinator.ConfirmAction(move.Candidate);
+            yield return null;
+            var adventure = Object.FindFirstObjectByType<AdventureController>();
+            var returnButton = Rect("ReturnButton").GetComponent<Button>();
+            Assert.IsTrue(coordinator.IsPresenting);
+            Assert.IsFalse(returnButton.interactable);
+            adventure.RequestReturn();
+            Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
+            Text reason = Rect("ReturnReason").GetComponent<Text>();
+            Assert.IsNotEmpty(reason.text);
+            Assert.LessOrEqual(reason.preferredHeight, reason.rectTransform.rect.height + .1f);
+            Assert.IsFalse(Bounds(reason.rectTransform).Overlaps(Bounds(returnButton.GetComponent<RectTransform>())));
+            yield return CaptureV5("withdraw-disabled");
+        }
+
+        private static IEnumerator CaptureV5(string stage)
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            if (stage == "withdraw-disabled")
+            {
+                Text reason = Rect("ReturnReason").GetComponent<Text>();
+                Mesh mesh = reason.canvasRenderer.GetMesh();
+                Assert.IsTrue(reason.rectTransform.rect.Contains(mesh.bounds.min));
+                Assert.IsTrue(reason.rectTransform.rect.Contains(mesh.bounds.max));
+                Debug.Log("V5 return reason mesh: " + mesh.bounds + "; world min=" +
+                    reason.transform.TransformPoint(mesh.bounds.min) + "; world max=" + reason.transform.TransformPoint(mesh.bounds.max));
+            }
+            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/gz-r2-evidence"));
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, "v5-" + stage + "-" + Screen.width + ".png");
+            File.Delete(path);
+            Capture("v5-" + stage + "-" + Screen.width);
+            ScreenCapture.CaptureScreenshot(path);
+            for (int frame = 0; frame < 120 && !File.Exists(path); frame++) yield return null;
+            Assert.IsTrue(File.Exists(path));
+        }
 
         [UnityTest] public IEnumerator BountyTrackerFromSettlementTracksActualState() => TrackBountyLifecycle(false);
         [UnityTest] public IEnumerator BountyTrackerFromWorldTracksActualState() => TrackBountyLifecycle(true);

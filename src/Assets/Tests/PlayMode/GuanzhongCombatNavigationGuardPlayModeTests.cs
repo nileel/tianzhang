@@ -235,9 +235,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.LessOrEqual(bounds.xMax, Screen.width); Assert.LessOrEqual(bounds.yMax, Screen.height);
             if (adventure.CurrentState == AdventureSceneState.Combat)
             {
-                Assert.Less(bounds.xMin, Screen.width * .05f, "Entry must use the left screen margin.");
-                Assert.Greater(bounds.yMin, Screen.height * .8f, "Entry must stay in the upper-left corner.");
-                foreach (string name in new[] { "CombatTimelineRoot", "TimelineFocus", "CombatHotbar" })
+                Assert.Greater(bounds.xMin, Screen.width * .65f, "Combat return and its reason use the right side.");
+                Assert.Greater(bounds.yMin, Screen.height * .8f, "Entry must stay at the top right.");
+                foreach (string name in new[] { "CombatTimelineRoot", "TimelineFocus", "CombatHotbar", "CombatBountyTrackerRoot" })
                 {
                     var other = rects.Single(rect => rect.name == name);
                     if (other.gameObject.activeInHierarchy)
@@ -452,6 +452,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
             AssertReadable(Field<Text>(adventureHud, "returnReason"));
             yield return PlayerReady(); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);
+            // Ending one turn far from the enemy cannot exercise a lethal attack presentation.
+            yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, combat);
             // Existing isolated outcome fixture changes only this temporary enemy snapshot, not production content.
             GuanzhongBasicAttackPlayModeTests.ArmEnemyOutcomeFixture(spawned.Enemy);
             spawned.Player.ReceiveDamage(spawned.Player.CurrentHealth - 1);

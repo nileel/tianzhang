@@ -9,6 +9,11 @@ namespace TianZhang.Features.CombatPresentation
     public sealed class CombatActionBarView : MonoBehaviour
     {
         [SerializeField] private GameObject root;
+        [SerializeField] private Sprite attackIcon;
+        [SerializeField] private Sprite unarmedIcon;
+        [SerializeField] private Sprite guanshijiIcon;
+        [SerializeField] private Sprite julingshuIcon;
+        [SerializeField] private Sprite feixingzhiIcon;
         [SerializeField] private Button basicAttackButton;
         [SerializeField] private Button artButton;
         [SerializeField] private Button divineButton;
@@ -79,12 +84,15 @@ namespace TianZhang.Features.CombatPresentation
             SetEnabled(swapSpellButton, canAct && swap?.CanConfirm == true);
             string swapReason = swap?.CanConfirm == false ? swap.Reason : string.Empty;
             if (swapSpellButton != null)
-                swapSpellButton.GetComponentInChildren<Text>().text = "换术\n剩余 " + (swap?.CombatSwapsRemaining ?? 0) + " 次";
+                swapSpellButton.GetComponentInChildren<Text>().text = "换术\n" +
+                    (swap == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(swap.ActionPointCostUnits) + " AP\n") +
+                    "剩余 " + (swap?.CombatSwapsRemaining ?? 0) + " 次";
+            PresentCooldown(swapSpellButton, swap?.RemainingCooldownTicks ?? 0);
             string equipmentReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.SwapEquipment), swapEquipmentButton, canAct);
             string itemReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.UseItem), useItemButton, canAct);
             string basicReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.BasicAttack), basicAttackButton, canAct);
             string guardReason = PresentAction(snapshot?.FindAction(CombatActionKind.Guard), guardButton, canAct);
-            string waitReason = PresentAction(snapshot?.FindAction(snapshot.CanEndTurn ? CombatActionKind.EndTurn : CombatActionKind.Wait),
+            string waitReason = PresentAction(snapshot?.FindAction(snapshot?.CanEndTurn == true ? CombatActionKind.EndTurn : CombatActionKind.Wait),
                 waitButton, canAct);
             string divineId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             if (divineButton != null) divineButton.gameObject.SetActive(!string.IsNullOrWhiteSpace(divineId));
@@ -98,13 +106,12 @@ namespace TianZhang.Features.CombatPresentation
             string thirdReason = PresentArt(third, thirdArtButton, thirdArtLabel, canAct);
             if (actionStatusLabel != null)
             {
-                // The formal 192x76 status area also shows unarmed/equipment rejection reasons.
-                // 20pt overflowed at both target resolutions; keep the complete text at 16pt.
-                actionStatusLabel.fontSize = 16;
+                actionStatusLabel.fontSize = 22;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
                     string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, swapReason, equipmentReason, itemReason },
                         reason => !string.IsNullOrEmpty(reason)).Distinct()));
+                actionStatusLabel.transform.parent.gameObject.SetActive(!string.IsNullOrEmpty(actionStatusLabel.text));
             }
         }
 
@@ -113,13 +120,18 @@ namespace TianZhang.Features.CombatPresentation
             CombatArtTargetSnapshot target = art?.Targets.FirstOrDefault(option => option.CanExecute) ??
                 art?.Targets.FirstOrDefault();
             SetEnabled(button, canAct && target?.CanExecute == true);
-            if (label != null)
+            SetIcon(button, art?.ProfileId switch
             {
-                label.text = art == null ? "术法" : art.DisplayName + "\n" +
+                "spell_guanshiji" => guanshijiIcon,
+                "spell_julingshu" => julingshuIcon,
+                "spell_feixingzhi" => feixingzhiIcon,
+                _ => null,
+            });
+            PresentCooldown(button, target?.Quote?.RemainingCooldownTicks ?? 0);
+            if (label != null)
+                label.text = art == null ? "术法" : CompactName(art.DisplayName) + "\n" +
                     (target?.Quote == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(target.Quote.ActionPointCostUnits) +
-                    "AP / " + target.Quote.SpiritCost + "MP") +
-                    (target?.Quote?.RemainingCooldownTicks > 0 ? " · CD" + target.Quote.RemainingCooldownTicks : string.Empty);
-            }
+                    " AP\n" + target.Quote.SpiritCost + " MP");
             if (art == null) return string.Empty;
             if (target == null) return art.DisplayName + "：无可选目标";
             return target.CanExecute || string.IsNullOrEmpty(target.RejectionReason)
@@ -130,25 +142,24 @@ namespace TianZhang.Features.CombatPresentation
         private string PresentAction(CombatActionPreviewSnapshot quote, Button button, bool canAct)
         {
             SetEnabled(button, canAct && quote != null && quote.CanConfirm);
+            PresentCooldown(button, quote?.RemainingCooldownTicks ?? 0);
             if (quote == null) return string.Empty;
+            if (quote.Candidate.Kind == CombatActionKind.BasicAttack)
+                SetIcon(button, quote.BasicAttackSourceKind == "unarmed_body" ? unarmedIcon : attackIcon);
             Text label = button == null ? null : button.GetComponentInChildren<Text>();
             if (label != null)
             {
-                string cost = CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + "AP" +
-                    (quote.SpiritCost > 0 ? " / " + quote.SpiritCost + "MP" : string.Empty);
+                string cost = CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP" +
+                    (quote.SpiritCost > 0 ? "\n" + quote.SpiritCost + " MP" : string.Empty);
                 label.text = quote.Candidate.Kind switch
                 {
-                    CombatActionKind.SwapEquipment when quote.EquipmentOwned.HasValue => quote.ActionName + "\n" +
-                        (quote.EquipmentOwned.Value ? "×1 " : "×0 ") + cost,
-                    CombatActionKind.UseItem => quote.ActionName + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
+                    CombatActionKind.SwapEquipment when quote.EquipmentOwned.HasValue => CompactName(quote.ActionName) + "\n" + cost + "\n" +
+                        (quote.EquipmentOwned.Value ? "已持有" : "未持有"),
+                    CombatActionKind.UseItem => CompactName(quote.ActionName) + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
                     CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
-                    CombatActionKind.Guard => quote.ActionName + cost,
-                    _ => quote.ActionName + "\n" + cost,
+                    CombatActionKind.Guard => quote.ActionName + "\n" + cost,
+                    _ => CompactName(quote.ActionName) + "\n" + cost,
                 };
-                // Guard (82x36), item (90x60), and equipment (82x60) overflow at 20pt.
-                // The equipment ownership/cost line measured 83px and wrapped to 87px high.
-                if (quote.Candidate.Kind is CombatActionKind.Guard or CombatActionKind.UseItem or CombatActionKind.SwapEquipment)
-                    label.fontSize = 18;
             }
             return quote.CanConfirm ? string.Empty : quote.Reason;
         }
@@ -158,20 +169,38 @@ namespace TianZhang.Features.CombatPresentation
             bool canInput = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             SetEnabled(moveButton, canInput && snapshot.Movement != null && snapshot.Movement.Options.Count > 0);
             if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
-                "累计 CT +" + snapshot.PendingCtPenalty +
-                (!canInput ? "\n暂不可移动" :
-                    selecting ? (preview == null ? "\n点击高亮地块移动" : "\n(" + preview.Destination.Q + "," +
-                        preview.Destination.R + ") · 消耗 " + CombatActionPreviewView.FormatActionPoints(preview.Cost) + " AP") :
-                        "\n" + snapshot.Movement.Options.Count + " 格可达");
+                (!canInput ? "暂不可移动" : selecting ? (preview == null ? "点击地格" :
+                    "消耗 " + CombatActionPreviewView.FormatActionPoints(preview.Cost) + " AP") : "按路径报价") +
+                "\nCT +" + snapshot.PendingCtPenalty;
+        }
+
+        private static string CompactName(string value) => value != null && value.Length > 10
+            ? value.Substring(0, 9) + "…" : value;
+
+        private static void SetIcon(Button button, Sprite sprite)
+        {
+            Image icon = button == null ? null : button.transform.Find("ActionIcon")?.GetComponent<Image>();
+            if (icon != null && sprite != null) icon.sprite = sprite;
+        }
+
+        private static void PresentCooldown(Button button, int ticks)
+        {
+            if (button == null) return;
+            Text label = button.transform.Find("Cooldown")?.GetComponent<Text>();
+            if (label != null) label.text = ticks > 0 ? "CD " + ticks : string.Empty;
+            button.transform.Find("CooldownShade")?.gameObject.SetActive(ticks > 0);
+            button.transform.Find("ActionIcon")?.gameObject.SetActive(ticks <= 0);
         }
 
         private static void SetEnabled(Button button, bool enabled)
         {
             if (button == null) return;
             button.interactable = enabled;
-            if (button.image != null) button.image.color = new Color(1, 1, 1, enabled ? 1 : 0.65f);
+            if (button.image != null) button.image.color = Color.white;
+            Image icon = button.transform.Find("ActionIcon")?.GetComponent<Image>();
+            if (icon != null) icon.color = new Color(1, 1, 1, enabled ? 1 : .5f);
             Text label = button.GetComponentInChildren<Text>();
-            if (label != null) label.color = enabled ? new Color32(244, 234, 212, 255) : new Color32(177, 191, 187, 255);
+            if (label != null) label.color = enabled ? new Color32(239, 233, 211, 255) : new Color32(164, 181, 179, 255);
         }
     }
 }

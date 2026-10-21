@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Bootstrap;
 using TianZhang.Combat;
 using TianZhang.Content;
@@ -46,7 +47,7 @@ namespace TianZhang.Editor
             PlaceLayoutRect(button.GetComponent<RectTransform>(), 16, 68, entryRect.rect.width - 32, 60);
             Text label = button.GetComponentInChildren<Text>();
             label.fontSize = 24;
-            Text reason = LayoutText(entry.transform, "ReturnReason", "正在加载", 20);
+            Text reason = LayoutText(entry.transform, "ReturnReason", "正在加载", 22);
             PlaceLayoutRect(reason.rectTransform, 16, 12, entryRect.rect.width - 32, 48);
             reason.alignment = TextAnchor.MiddleCenter;
 
@@ -81,6 +82,10 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(hud, "withdrawalConfirmation", confirmation);
             SceneBuildSupport.SetObject(hud, "confirmWithdrawalButton", confirm);
             SceneBuildSupport.SetObject(hud, "continueCombatButton", cancel);
+            CombatCompactUiAssets.Button(button);
+            entry.GetComponent<Image>().color = Color.clear;
+            entry.GetComponent<Image>().raycastTarget = false;
+            hud.ApplyReturnEntryLayout(false);
             entry.SetActive(false);
             confirmation.SetActive(false);
         }
@@ -150,7 +155,7 @@ namespace TianZhang.Editor
             float itemX = equipment.anchoredPosition.x + equipment.rect.width + 12;
             PlaceLayoutRect(item.GetComponent<RectTransform>(), itemX, equipment.anchoredPosition.y, equipment.rect.width, equipment.rect.height);
             float statusX = itemX + equipment.rect.width + 12;
-            PlaceLayoutRect(LayoutObject(actions, "ActionStatusText"), statusX, 8, 822 - statusX, 76);
+            PlaceLayoutRect(LayoutObject(actions.parent, "ActionStatusText"), statusX, 8, 822 - statusX, 76);
         }
 
         public static void UpdateOrdinaryCombatActions()
@@ -171,6 +176,7 @@ namespace TianZhang.Editor
         [MenuItem("天章/场景/重建冒险")]
         public static void Build()
         {
+            CombatCompactUiAssets.Import();
             GameObject root = SceneBuildSupport.BeginScene("AdventureRoot", new Color(0.08f, 0.1f, 0.14f));
             // This legacy plane intersects the approved terrain's deep rock walls.
             GameObject.Find("VisualBackdrop").SetActive(false);
@@ -323,42 +329,124 @@ namespace TianZhang.Editor
             hud.offsetMin = hud.offsetMax = Vector2.zero;
             hud.GetComponent<Image>().color = Color.clear;
             hud.GetComponent<Image>().raycastTarget = false;
+            // All rectangles use V4's 1920x1080 design space; only this canvas uses uniform Fit.
+            canvas.GetComponent<CanvasScaler>().screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             GameObject hotbar = LayoutPanel(hud, "CombatHotbar");
-            SettlementSceneBuilder.PlacePanel(hotbar, new Vector2(351, 31), new Vector2(1442, 269));
-            foreach (string name in new[] { "CombatTurnText", "CombatPlayerPortrait", "CombatPlayerText", "CombatEnemyText", "CombatActionBar" })
-                LayoutObject(hud, name).SetParent(hotbar.transform, false);
-            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatTurnText"), 16, 178, 198, 44);
-            PlaceLayoutRect(LayoutObject(hotbar.transform, "CombatPlayerPortrait"), 16, 134, 44, 40);
-            MakeLayoutScroll(hotbar.transform, "PlayerSummaryBody", LayoutObject(hotbar.transform, "CombatPlayerText").GetComponent<Text>(), 68, 134, 877, 64);
+            CompactRect(hotbar, 160, 892, 1728, 164);
+            CombatCompactUiAssets.Panel(hotbar);
+            GameObject resources = LayoutPanel(hud, "CombatResourceCard");
+            CompactRect(resources, 32, 24, 416, 188);
+            CombatCompactUiAssets.Panel(resources);
+            foreach (string name in new[] { "CombatPlayerPortrait", "CombatPlayerText", "CombatEnemyText" })
+                LayoutObject(hud, name).SetParent(resources.transform, false);
+            PlaceLayoutRect(LayoutObject(resources.transform, "CombatPlayerPortrait"), 20, 48, 104, 120);
+            MakeLayoutScroll(resources.transform, "PlayerSummaryBody", LayoutObject(resources.transform, "CombatPlayerText").GetComponent<Text>(), 144, 132, 20, 16);
             CombatHudView resourceView = root.GetComponent<CombatHudView>();
-            BuildResourceBar(hotbar.transform, resourceView, "Health", "health", "生命", 94, new Color32(52, 121, 78, 255));
-            BuildResourceBar(hotbar.transform, resourceView, "Spirit", "spirit", "灵力", 56, new Color32(41, 102, 148, 255));
-            BuildResourceBar(hotbar.transform, resourceView, "ActionPoint", "actionPoint", "AP", 18, new Color32(139, 104, 38, 255));
-            LayoutObject(hotbar.transform, "CombatEnemyText").gameObject.SetActive(false);
-            RectTransform actions = LayoutObject(hotbar.transform, "CombatActionBar");
+            BuildResourceBar(resources.transform, resourceView, "Health", "health", "生命", 92, "fill_health");
+            BuildResourceBar(resources.transform, resourceView, "Spirit", "spirit", "灵力", 52, "fill_mana");
+            BuildResourceBar(resources.transform, resourceView, "ActionPoint", "actionPoint", "AP", 12, "fill_ap");
+            LayoutObject(resources.transform, "CombatEnemyText").gameObject.SetActive(false);
+            RectTransform turn = LayoutObject(hud, "CombatTurnText");
+            turn.SetParent(hotbar.transform, false);
+            PlaceLayoutRect(turn, 18, 16, 60, 64);
+            turn.GetComponent<Text>().fontSize = 22;
+            turn.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+            Image turnPortrait = CompactImage(hotbar.transform, "CombatTurnPortrait", null);
+            turnPortrait.sprite = SceneBuildSupport.RequireAsset<Sprite>("Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png");
+            turnPortrait.preserveAspect = true;
+            PlaceLayoutRect(turnPortrait.rectTransform, 20, 84, 56, 60);
+
+            Text location = LayoutText(hud, "CombatLocationText", string.Empty, 34);
+            PlaceLayoutRect(location.rectTransform, 740, 992, 440, 64);
+            location.alignment = TextAnchor.MiddleCenter;
+            SceneBuildSupport.SetObject(root.GetComponent<AdventureHudPresenter>(), "combatLocationText", location);
+
+            RectTransform actions = LayoutObject(hud, "CombatActionBar");
+            actions.SetParent(hotbar.transform, false);
             RemoveLayout(actions);
-            PlaceLayoutRect(actions, 230, 16, 841, 206);
-            PlaceLayoutRect(LayoutObject(actions, "MovementControls"), 0, 78, 240, 128);
-            SettlementSceneBuilder.SetHeight(LayoutObject(actions, "MovementStatus").gameObject, 64);
-            PlaceLayoutRect(LayoutObject(actions, "BasicAttackButton"), 252, 138, 114, 68);
-            PlaceLayoutRect(LayoutObject(actions, "ArtButton"), 378, 138, 216, 68);
-            PlaceLayoutRect(LayoutObject(actions, "SecondArtButton"), 606, 138, 216, 68);
-            PlaceLayoutRect(LayoutObject(actions, "ThirdArtButton"), 378, 64, 216, 68);
-            PlaceLayoutRect(LayoutObject(actions, "GuardButton"), 252, 92, 114, 44);
-            // Keep the existing lifecycle owner, but separate turn completion to the right of the hotbar.
-            PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 880, 55, 200, 96);
-            PlaceLayoutRect(LayoutObject(actions, "DivineButton"), 0, 20, 240, 64);
-            PlaceLayoutRect(LayoutObject(actions, "SwapSpellButton"), 252, 8, 114, 68);
+            PlaceLayoutRect(actions, 0, 0, 1728, 164);
             ConfigureEquipmentButton(root);
-            foreach (Text text in actions.GetComponentsInChildren<Text>(true)) text.fontSize = 20;
-            LayoutObject(actions, "WaitButton").GetComponentInChildren<Text>(true).fontSize = 26;
+            var viewport = actions.Find("ActionViewport")?.gameObject ??
+                new GameObject("ActionViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+            viewport.transform.SetParent(actions, false);
+            PlaceLayoutRect(viewport.GetComponent<RectTransform>(), 96, 12, 1412, 140);
+            viewport.GetComponent<Image>().color = Color.clear;
+            var content = viewport.transform.Find("ActionContent")?.gameObject ??
+                new GameObject("ActionContent", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            content.transform.SetParent(viewport.transform, false);
+            RectTransform contentRect = content.GetComponent<RectTransform>();
+            contentRect.anchorMin = Vector2.zero; contentRect.anchorMax = Vector2.up;
+            contentRect.pivot = Vector2.up; contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = Vector2.zero;
+            HorizontalLayoutGroup row = content.GetComponent<HorizontalLayoutGroup>();
+            row.spacing = 12; row.childControlWidth = row.childControlHeight = true;
+            row.childForceExpandWidth = row.childForceExpandHeight = false;
+            content.GetComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ScrollRect scroll = viewport.GetComponent<ScrollRect>();
+            scroll.viewport = viewport.GetComponent<RectTransform>(); scroll.content = contentRect;
+            scroll.horizontal = true; scroll.vertical = false; scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 40;
+            string[] names = { "BasicAttackButton", "ArtButton", "SecondArtButton", "ThirdArtButton", "MovementControls", "GuardButton", "SwapSpellButton", "SwapEquipmentButton", "UseItemButton", "DivineButton" };
+            string[] icons = { "icon_attack", "icon_guanshiji", "icon_julingshu", "icon_feixingzhi", "icon_move", "icon_defend", "icon_switch_art", "icon_equipment", "icon_medicine", "icon_divine" };
+            for (int index = 0; index < names.Length; index++)
+            {
+                RectTransform item = LayoutObject(actions, names[index]);
+                item.SetParent(content.transform, false); item.SetAsLastSibling();
+                RemoveLayout(item);
+                LayoutElement size = item.GetComponent<LayoutElement>() ?? item.gameObject.AddComponent<LayoutElement>();
+                size.minWidth = size.preferredWidth = 144; size.minHeight = size.preferredHeight = 140;
+                size.flexibleWidth = size.flexibleHeight = 0;
+                Button button;
+                if (names[index] == "MovementControls")
+                {
+                    button = LayoutObject(item, "MoveButton").GetComponent<Button>();
+                    button.transform.SetParent(item, false);
+                    StretchLayoutRect(button.GetComponent<RectTransform>(), 0, 0, 0, 0);
+                    LayoutObject(item, "MovementButtons").gameObject.SetActive(false);
+                }
+                else button = item.GetComponent<Button>();
+                CombatCompactUiAssets.Button(button);
+                Image icon = CompactImage(button.transform, "ActionIcon", icons[index]);
+                PlaceLayoutRect(icon.rectTransform, 58, 108, 28, 28);
+                Text label = button.GetComponentInChildren<Text>(true);
+                PlaceLayoutRect(label.rectTransform, 8, 0, 128, 108);
+                label.fontSize = 22;
+                // This font's default line advance is 32px at 22pt; four dynamic lines must fit below the icon.
+                label.lineSpacing = .75f;
+                label.horizontalOverflow = HorizontalWrapMode.Wrap;
+                label.verticalOverflow = VerticalWrapMode.Truncate;
+                label.resizeTextForBestFit = false;
+                Text cooldown = LayoutText(button.transform, "Cooldown", string.Empty, 22);
+                PlaceLayoutRect(cooldown.rectTransform, 6, 104, 132, 36);
+                cooldown.alignment = TextAnchor.MiddleCenter;
+                Image shade = CompactImage(button.transform, "CooldownShade", "cooldown_shade");
+                StretchLayoutRect(shade.rectTransform, 0, 0, 0, 0);
+                shade.transform.SetAsFirstSibling(); shade.gameObject.SetActive(false);
+            }
+            RectTransform movement = LayoutObject(actions, "MovementStatus");
+            movement.SetParent(LayoutObject(actions, "MoveButton"), false);
+            PlaceLayoutRect(movement, 8, 4, 128, 64);
+            movement.GetComponent<Text>().fontSize = 22;
+            movement.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+            PlaceLayoutRect(LayoutObject(actions, "MoveButton").GetComponentInChildren<Text>().rectTransform, 8, 68, 128, 36);
+            PlaceLayoutRect(LayoutObject(actions, "WaitButton"), 1540, 84, 168, 64);
+            CombatCompactUiAssets.Button(LayoutObject(actions, "WaitButton").GetComponent<Button>(), true);
+            MakeLayoutScroll(hotbar.transform, "ActionStatusBody", LayoutObject(hud, "ActionStatusText").GetComponent<Text>(), 96, 176, 220, -68);
+            LayoutObject(hud, "ActionStatusText").gameObject.AddComponent<LayoutElement>().minHeight = 36;
+            var bar = root.GetComponent<CombatActionBarView>();
+            SceneBuildSupport.SetObject(bar, "attackIcon", CombatCompactUiAssets.Sprite("icon_attack"));
+            SceneBuildSupport.SetObject(bar, "unarmedIcon", CombatCompactUiAssets.Sprite("icon_unarmed"));
+            SceneBuildSupport.SetObject(bar, "guanshijiIcon", CombatCompactUiAssets.Sprite("icon_guanshiji"));
+            SceneBuildSupport.SetObject(bar, "julingshuIcon", CombatCompactUiAssets.Sprite("icon_julingshu"));
+            SceneBuildSupport.SetObject(bar, "feixingzhiIcon", CombatCompactUiAssets.Sprite("icon_feixingzhi"));
 
             RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
             RemoveLayout(target);
-            SettlementSceneBuilder.PlacePanel(target.gameObject, new Vector2(1508, 286), new Vector2(1868, 786));
+            CompactRect(target.gameObject, 1536, 232, 352, 376);
+            CombatCompactUiAssets.Panel(target.gameObject);
             Text targetTitle = LayoutText(target, "TargetHeading", "目标详情", 24);
-            PlaceLayoutRect(targetTitle.rectTransform, 20, 440, 210, 44);
-            PlaceLayoutRect(LayoutObject(target, "CloseTargetButton"), 240, 440, 100, 44);
+            PlaceLayoutRect(targetTitle.rectTransform, 20, 316, 210, 44);
+            PlaceLayoutRect(LayoutObject(target, "CloseTargetButton"), 236, 316, 96, 44);
             LayoutObject(target, "CloseTargetButton").GetComponentInChildren<Text>(true).text = "关闭";
             MakeLayoutScroll(target, "TargetBody", LayoutObject(target, "CombatTargetDetails").GetComponent<Text>(), 20, 20, 20, 76);
 
@@ -371,7 +459,8 @@ namespace TianZhang.Editor
 
             CombatBountyTrackerView bounty = root.GetComponent<CombatBountyTrackerView>() ?? root.AddComponent<CombatBountyTrackerView>();
             GameObject bountyPanel = LayoutPanel(hud, "CombatBountyTrackerRoot");
-            SettlementSceneBuilder.PlacePanel(bountyPanel, new Vector2(1508, 809), new Vector2(1868, 909));
+            CompactRect(bountyPanel, 1536, 112, 352, 112);
+            CombatCompactUiAssets.Panel(bountyPanel);
             Text bountyText = LayoutText(bountyPanel.transform, "BountySummary", string.Empty, 22);
             MakeLayoutScroll(bountyPanel.transform, "BountyBody", bountyText, 20, 16, 20, 16);
             SceneBuildSupport.SetObject(bounty, "root", bountyPanel);
@@ -381,15 +470,21 @@ namespace TianZhang.Editor
             CombatLogView logView = root.GetComponent<CombatLogView>();
             GameObject logPanel = LayoutPanel(hud, "CombatLogPanel");
             SettlementSceneBuilder.PlacePanel(logPanel, new Vector2(968, 495), new Vector2(1488, 845));
+            CombatCompactUiAssets.Panel(logPanel);
             Text logHeading = LayoutText(logPanel.transform, "LogHeading", "战报", 24);
             PlaceLayoutRect(logHeading.rectTransform, 20, 290, 360, 44);
             RectTransform logViewport = LayoutObject(hud, "CombatLogViewport");
             logViewport.SetParent(logPanel.transform, false);
             StretchLayoutRect(logViewport, 20, 20, 20, 76);
+            Text logText = LayoutObject(logViewport, "CombatLogText").GetComponent<Text>();
+            logText.fontSize = 24;
+            logText.color = new Color32(194, 208, 203, 255);
             Button closeLog = LayoutButton(logPanel.transform, "CloseLogButton", "关闭");
             PlaceLayoutRect(closeLog.GetComponent<RectTransform>(), 400, 290, 100, 44);
             Button toggleLog = LayoutButton(hud, "ToggleLogButton", "战报");
-            SettlementSceneBuilder.PlacePanel(toggleLog.gameObject, new Vector2(1708, 32), new Vector2(1868, 84));
+            CompactRect(toggleLog.gameObject, 1700, 992, 168, 48);
+            foreach (Button button in new[] { toggleLog, closeLog, LayoutObject(target, "CloseTargetButton").GetComponent<Button>() })
+                CombatCompactUiAssets.Button(button);
             SceneBuildSupport.SetObject(logView, "panel", logPanel);
             SceneBuildSupport.SetObject(logView, "toggleButton", toggleLog);
             SceneBuildSupport.SetObject(logView, "closeButton", closeLog);
@@ -400,25 +495,28 @@ namespace TianZhang.Editor
         }
 
         private static void BuildResourceBar(Transform parent, CombatHudView view, string objectName,
-            string fieldName, string caption, float y, Color color)
+            string fieldName, string caption, float y, string fillSprite)
         {
             string name = "Combat" + objectName + "Bar";
-            GameObject track = parent.Find(name)?.gameObject ?? new GameObject(name, typeof(RectTransform), typeof(Image));
+            GameObject track = parent.root.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(rect => rect.name == name)?.gameObject ??
+                new GameObject(name, typeof(RectTransform), typeof(Image));
             track.transform.SetParent(parent, false);
-            PlaceLayoutRect(track.GetComponent<RectTransform>(), 16, y, 198, 30);
-            track.GetComponent<Image>().color = new Color32(22, 32, 39, 255);
+            PlaceLayoutRect(track.GetComponent<RectTransform>(), 144, y, 252, 4);
+            track.GetComponent<Image>().sprite = CombatCompactUiAssets.Sprite("bar_track");
+            track.GetComponent<Image>().type = Image.Type.Sliced;
+            track.GetComponent<Image>().color = Color.white;
             GameObject fill = track.transform.Find("Fill")?.gameObject ?? new GameObject("Fill", typeof(RectTransform), typeof(Image));
             fill.transform.SetParent(track.transform, false);
-            StretchLayoutRect(fill.GetComponent<RectTransform>(), 1, 1, 1, 1);
+            PlaceLayoutRect(fill.GetComponent<RectTransform>(), 0, 0, 252, 4);
             Image image = fill.GetComponent<Image>();
-            image.sprite = SettlementSceneBuilder.UiSprite("Guanzhong_Panel_Paper");
+            image.sprite = CombatCompactUiAssets.Sprite(fillSprite);
             image.type = Image.Type.Filled;
             image.fillMethod = Image.FillMethod.Horizontal;
             image.fillOrigin = 0;
-            image.color = color;
-            Text label = LayoutText(track.transform, "Value", caption + " 0/0", 18);
-            StretchLayoutRect(label.rectTransform, 4, 0, 4, 0);
-            label.alignment = TextAnchor.MiddleCenter;
+            image.color = Color.white;
+            Text label = LayoutText(track.transform, "Value", caption + " 0/0", 24);
+            PlaceLayoutRect(label.rectTransform, 0, 4, 252, 36);
+            label.alignment = TextAnchor.MiddleLeft;
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.transform.SetAsLastSibling();
             Shadow shadow = label.GetComponent<Shadow>() ?? label.gameObject.AddComponent<Shadow>();
@@ -427,6 +525,21 @@ namespace TianZhang.Editor
             foreach (Graphic graphic in track.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
             SceneBuildSupport.SetObject(view, fieldName + "Fill", image);
             SceneBuildSupport.SetObject(view, fieldName + "Label", label);
+        }
+
+        private static void CompactRect(GameObject target, float x, float y, float width, float height)
+        {
+            PlaceLayoutRect(target.GetComponent<RectTransform>(), x, 1080 - y - height, width, height);
+        }
+
+        private static Image CompactImage(Transform parent, string name, string sprite)
+        {
+            GameObject go = parent.Find(name)?.gameObject ?? new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            Image image = go.GetComponent<Image>();
+            if (sprite != null) image.sprite = CombatCompactUiAssets.Sprite(sprite);
+            image.color = Color.white; image.raycastTarget = false;
+            return image;
         }
 
         private static RectTransform LayoutObject(Transform parent, string name)
@@ -472,13 +585,14 @@ namespace TianZhang.Editor
                 if (existing.name == name) { text = existing; break; }
             if (text == null) text = SceneBuildSupport.CreateText(name, parent, value, size);
             text.font = SettlementSceneBuilder.UiFont; text.alignment = TextAnchor.MiddleLeft;
-            text.color = new Color32(244, 234, 212, 255); text.raycastTarget = false;
+            text.fontSize = size;
+            text.color = new Color32(239, 233, 211, 255); text.raycastTarget = false;
             return text;
         }
 
         private static Button LayoutButton(Transform parent, string name, string value)
         {
-            Button button = parent.Find(name)?.GetComponent<Button>() ?? SceneBuildSupport.CreateButton(name, parent, value, out _);
+            Button button = parent.GetComponentsInChildren<Button>(true).SingleOrDefault(candidate => candidate.name == name) ?? SceneBuildSupport.CreateButton(name, parent, value, out _);
             SettlementSceneBuilder.ApplyButtonSkin(button);
             return button;
         }
@@ -551,12 +665,12 @@ namespace TianZhang.Editor
             if (rail == null) throw new InvalidOperationException("Preview requires the formal timeline.");
             Transform oldPrediction = rail.Find("ConditionalNextMarker");
             if (oldPrediction != null) UnityEngine.Object.DestroyImmediate(oldPrediction.gameObject);
-            Text prediction = SceneBuildSupport.CreateText("ConditionalNextMarker", rail, string.Empty, 15);
+            Text prediction = SceneBuildSupport.CreateText("ConditionalNextMarker", rail, string.Empty, 22);
             prediction.font = SettlementSceneBuilder.UiFont;
             prediction.raycastTarget = false;
             prediction.alignment = TextAnchor.UpperCenter;
             prediction.color = new Color32(239, 206, 123, 255);
-            PlaceTimelineRect(prediction.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 108), new Vector2(228, 96));
+            PlaceTimelineRect(prediction.rectTransform, new Vector2(1, 0), new Vector2(204, 144), new Vector2(192, 144));
             SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionRoot", prediction.gameObject);
             SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionText", prediction);
             prediction.gameObject.SetActive(false);
@@ -700,7 +814,7 @@ namespace TianZhang.Editor
             CombatActionBarView bar = root.GetComponent<CombatActionBarView>();
             var barData = new SerializedObject(bar);
             GameObject actionRoot = (GameObject)barData.FindProperty("root").objectReferenceValue;
-            Transform old = actionRoot.transform.Find("MovementControls");
+            Transform old = actionRoot.GetComponentsInChildren<RectTransform>(true).SingleOrDefault(rect => rect.name == "MovementControls");
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
             var controls = new GameObject("MovementControls", typeof(RectTransform), typeof(VerticalLayoutGroup));
             controls.transform.SetParent(actionRoot.transform, false);
@@ -847,23 +961,19 @@ namespace TianZhang.Editor
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
             CombatTimelineView view = root.GetComponent<CombatTimelineView>() ?? root.AddComponent<CombatTimelineView>();
             GameObject rail = SceneBuildSupport.CreatePanel("CombatTimelineRoot", canvas.transform, Vector2.zero, Vector2.one);
-            SettlementSceneBuilder.PlacePanel(rail, new Vector2(52, 196), new Vector2(300, 801));
-            SettlementSceneBuilder.ApplyPanelSkin(rail);
+            CompactRect(rail, 32, 232, 104, 512);
+            CombatCompactUiAssets.Panel(rail);
             rail.GetComponent<Image>().raycastTarget = false;
-            Text tick = SceneBuildSupport.CreateText("TimelineTick", rail.transform, string.Empty, 16);
+            Text tick = SceneBuildSupport.CreateText("TimelineTick", rail.transform, string.Empty, 22);
             tick.font = SettlementSceneBuilder.UiFont;
             tick.raycastTarget = false;
-            PlaceTimelineRect(tick.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -2), new Vector2(228, 28));
+            PlaceTimelineRect(tick.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -8), new Vector2(96, 34));
             var track = new GameObject("TimelineTrack", typeof(RectTransform)).GetComponent<RectTransform>();
             track.SetParent(rail.transform, false);
             track.anchorMin = Vector2.zero;
             track.anchorMax = Vector2.one;
-            track.offsetMin = new Vector2(8, 152);
-            track.offsetMax = new Vector2(-8, -64);
-            Text scale = SceneBuildSupport.CreateText("TimelineScale", rail.transform, "剩余行动值 · 越小越早", 16);
-            scale.font = SettlementSceneBuilder.UiFont;
-            scale.raycastTarget = false;
-            PlaceTimelineRect(scale.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -32), new Vector2(228, 24));
+            track.offsetMin = new Vector2(4, 18);
+            track.offsetMax = new Vector2(-4, -44);
             var entries = new RectTransform[3];
             var buttons = new Button[3];
             var labels = new Text[3];
@@ -872,31 +982,41 @@ namespace TianZhang.Editor
             for (int index = 0; index < 3; index++)
             {
                 buttons[index] = SceneBuildSupport.CreateButton("TimelineEntry" + index, track, string.Empty, out labels[index]);
-                SettlementSceneBuilder.ApplyButtonSkin(buttons[index]);
-                labels[index].fontSize = 16;
-                labels[index].alignment = TextAnchor.MiddleLeft;
-                PlaceTimelineRect(labels[index].rectTransform, new Vector2(0, 1), new Vector2(74, -8), new Vector2(150, 48));
+                CombatCompactUiAssets.Button(buttons[index]);
+                buttons[index].image.sprite = null;
+                buttons[index].image.color = Color.clear;
+                buttons[index].transition = Selectable.Transition.None;
+                labels[index].fontSize = 22;
+                labels[index].alignment = TextAnchor.MiddleCenter;
+                PlaceTimelineRect(labels[index].rectTransform, new Vector2(0, 1), new Vector2(0, 0), new Vector2(96, 34));
                 entries[index] = buttons[index].GetComponent<RectTransform>();
-                PlaceTimelineRect(entries[index], new Vector2(0.5f, 1), new Vector2(0, -index * track.rect.height / 3), new Vector2(232, 100));
-                ctLabels[index] = SceneBuildSupport.CreateText("TimelineCt", entries[index], string.Empty, 20);
+                PlaceTimelineRect(entries[index], new Vector2(0.5f, 1), new Vector2(0, -index * track.rect.height / 3), new Vector2(96, 148));
+                ctLabels[index] = SceneBuildSupport.CreateText("TimelineCt", entries[index], string.Empty, 24);
                 ctLabels[index].font = SettlementSceneBuilder.UiFont;
                 ctLabels[index].raycastTarget = false;
-                ctLabels[index].alignment = TextAnchor.MiddleLeft;
-                PlaceTimelineRect(ctLabels[index].rectTransform, new Vector2(0, 1), new Vector2(74, -62), new Vector2(150, 30));
+                ctLabels[index].alignment = TextAnchor.MiddleCenter;
+                PlaceTimelineRect(ctLabels[index].rectTransform, new Vector2(0, 1), new Vector2(0, -112), new Vector2(96, 36));
                 var portrait = new GameObject("Identity", typeof(RectTransform), typeof(Image));
                 portrait.transform.SetParent(entries[index], false);
                 portrait.transform.SetAsFirstSibling();
                 portraits[index] = portrait.GetComponent<Image>();
                 portraits[index].preserveAspect = true;
                 portraits[index].raycastTarget = false;
-                PlaceTimelineRect(portrait.GetComponent<RectTransform>(), new Vector2(0, 1), new Vector2(10, -12), new Vector2(52, 52));
+                PlaceTimelineRect(portrait.GetComponent<RectTransform>(), new Vector2(0, 1), new Vector2(9, -34), new Vector2(78, 78));
+                Image frame = CompactImage(entries[index], "SelectionFrame", "frame_selected");
+                frame.type = Image.Type.Sliced;
+                PlaceTimelineRect(frame.rectTransform, new Vector2(0, 1), new Vector2(9, -34), new Vector2(78, 78));
+                frame.gameObject.SetActive(false);
+                Image current = CompactImage(entries[index], "CurrentMarker", "timeline_current");
+                PlaceTimelineRect(current.rectTransform, new Vector2(0, 1), new Vector2(0, -34), new Vector2(4, 78));
+                current.gameObject.SetActive(false);
             }
             GameObject detail = SceneBuildSupport.CreatePanel("TimelineFocus", rail.transform, Vector2.zero, Vector2.one);
-            SettlementSceneBuilder.ApplyPanelSkin(detail);
+            CombatCompactUiAssets.Panel(detail);
             detail.GetComponent<Image>().raycastTarget = false;
-            PlaceTimelineRect(detail.GetComponent<RectTransform>(), new Vector2(1, 1), new Vector2(12, 0), new Vector2(280, 136));
+            PlaceTimelineRect(detail.GetComponent<RectTransform>(), new Vector2(1, 1), new Vector2(12, 0), new Vector2(320, 160));
             detail.GetComponent<RectTransform>().pivot = new Vector2(0, 1);
-            Text focus = SceneBuildSupport.CreateText("TimelineFocusText", detail.transform, string.Empty, 18);
+            Text focus = SceneBuildSupport.CreateText("TimelineFocusText", detail.transform, string.Empty, 24);
             focus.font = SettlementSceneBuilder.UiFont;
             focus.alignment = TextAnchor.MiddleLeft;
             focus.raycastTarget = false;
@@ -914,6 +1034,8 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObjects(view, "entryCtLabels", ctLabels);
             SceneBuildSupport.SetObjects(view, "entryPortraits", portraits);
             SceneBuildSupport.SetObject(view, "playerPortrait", SceneBuildSupport.RequireAsset<Sprite>("Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"));
+            SceneBuildSupport.SetObject(view, "shijiahouPortrait", SceneBuildSupport.RequireAsset<Sprite>(CombatCompactUiAssets.Folder + "enemy_shijiahou.png"));
+            SceneBuildSupport.SetObject(view, "lieshijiaPortrait", SceneBuildSupport.RequireAsset<Sprite>(CombatCompactUiAssets.Folder + "enemy_lieshijia.png"));
             GameObject exploration = canvas.transform.Find("AdventurePanel").gameObject;
             SceneBuildSupport.SetObject(installer, "combatTimelineView", view);
             SceneBuildSupport.SetObject(installer, "explorationPanel", exploration);

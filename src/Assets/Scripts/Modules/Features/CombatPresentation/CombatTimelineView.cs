@@ -21,6 +21,8 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text[] entryCtLabels = new Text[MaximumEntries];
         [SerializeField] private Image[] entryPortraits = new Image[MaximumEntries];
         [SerializeField] private Sprite playerPortrait;
+        [SerializeField] private Sprite shijiahouPortrait;
+        [SerializeField] private Sprite lieshijiaPortrait;
 
         [SerializeField] private GameObject predictionRoot;
         [SerializeField] private Text predictionText;
@@ -55,7 +57,10 @@ namespace TianZhang.Features.CombatPresentation
             if (snapshot == null) return;
             for (int index = 0; index < Math.Min(MaximumEntries, snapshot.Entries.Count); index++)
                 if (entryLabels[index] != null)
+                {
                     entryLabels[index].text = FormatEntry(snapshot.Entries[index], index);
+                    RefreshMarkers(index, snapshot.Entries[index]);
+                }
         }
 
         public string FocusedCombatantId => focusedCombatantId;
@@ -143,7 +148,7 @@ namespace TianZhang.Features.CombatPresentation
             snapshot = timeline;
             if (root != null) root.SetActive(true);
             displayedTick = timeline.CurrentTick + elapsedTicks;
-            if (tickText != null) tickText.text = IsPresenting ? "行动序列 · 推进中" : "行动序列";
+            if (tickText != null) tickText.text = IsPresenting ? "推进中" : "行动序列";
             int count = Math.Min(MaximumEntries, timeline.Entries.Count);
             for (int index = 0; index < MaximumEntries; index++)
             {
@@ -164,23 +169,27 @@ namespace TianZhang.Features.CombatPresentation
                     entryRoots[index].anchoredPosition = new Vector2(0, -index * chargeTrack.rect.height / MaximumEntries);
                 }
                 if (entryCtLabels[index] != null)
-                    entryCtLabels[index].text = "剩余 " + Mathf.CeilToInt(displayedRemainingTicks[index]).ToString(CultureInfo.InvariantCulture);
+                    entryCtLabels[index].text = Mathf.CeilToInt(displayedRemainingTicks[index]).ToString(CultureInfo.InvariantCulture);
                 if (entryLabels[index] != null)
                 {
                     entryLabels[index].color = entry.IsCurrent ? new Color32(255, 220, 135, 255) : new Color32(244, 234, 212, 255);
                     entryLabels[index].text = FormatEntry(entry, index);
                 }
-                if (entryButtons[index] != null)
-                    entryButtons[index].image.color = entry.IsCurrent ? new Color32(255, 220, 135, 255) : Color.white;
+                RefreshMarkers(index, entry);
                 Image portrait = entryPortraits[index];
                 if (portrait != null)
                 {
-                    bool player = entry.Faction == CombatUnitDisplayFaction.Player;
-                    portrait.sprite = player ? playerPortrait : null;
-                    portrait.preserveAspect = player;
-                    portrait.color = player ? Color.white : new Color32(118, 69, 58, 255);
+                    portrait.sprite = entry.PortraitKey switch
+                    {
+                        "player" => playerPortrait,
+                        "enemy_shijiahou" => shijiahouPortrait,
+                        "enemy_lieshijia" => lieshijiaPortrait,
+                        _ => null,
+                    };
+                    portrait.preserveAspect = true;
+                    portrait.color = Color.white;
                     portrait.raycastTarget = false;
-                    portrait.enabled = true;
+                    portrait.enabled = portrait.sprite != null;
                 }
             }
 
@@ -279,12 +288,14 @@ namespace TianZhang.Features.CombatPresentation
                 entry.TicksUntilReady + "\n速度 " + entry.Speed + "\n" + state;
         }
 
-        private string FormatEntry(CombatTimelineEntrySnapshot entry, int index)
+        private static string FormatEntry(CombatTimelineEntrySnapshot entry, int index) =>
+            entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
+
+        private void RefreshMarkers(int index, CombatTimelineEntrySnapshot entry)
         {
-            bool player = entry.Faction == CombatUnitDisplayFaction.Player;
-            return (entry.Id == inspectedTargetId ? "◆" : string.Empty) +
-                (index + 1) + (entry.IsCurrent ? " 当前" : "") + (player ? " · 我方" : " · 敌方") +
-                "\n" + entry.DisplayName;
+            if (entryRoots[index] == null) return;
+            entryRoots[index].Find("SelectionFrame")?.gameObject.SetActive(entry.Id == inspectedTargetId);
+            entryRoots[index].Find("CurrentMarker")?.gameObject.SetActive(entry.IsCurrent);
         }
 
         private void ClearContent()

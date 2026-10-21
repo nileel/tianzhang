@@ -1045,6 +1045,9 @@ namespace TianZhang.Tests.PlayMode
 
                 int spirit = player.CurrentSpirit;
                 yield return ClickResourceControl(bar.SecondArtButton);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, player.Id, click: false);
+                Assert.IsTrue(Find<CombatCommandInput>().Preview.CanConfirm);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
                 yield return Ready();
                 Assert.Greater(player.CurrentSpirit, spirit, "The real self spell restores spirit.");
                 yield return CaptureResources("spirit-recovery-" + width);
@@ -1119,7 +1122,7 @@ namespace TianZhang.Tests.PlayMode
             var evidence = new System.Collections.Generic.List<string>();
             var actions = Get<GameObject>(Find<CombatActionBarView>(), "root").GetComponent<RectTransform>();
             var corners = new Vector3[4]; actions.GetWorldCorners(corners);
-            float actionsLeft = corners[0].x;
+            Rect actionsBounds = Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
             foreach (string field in new[] { "health", "spirit", "actionPoint" })
             {
                 Text text = Get<Text>(hud, field + "Label");
@@ -1127,7 +1130,8 @@ namespace TianZhang.Tests.PlayMode
                 Assert.LessOrEqual(text.preferredWidth, text.rectTransform.rect.width + .1f, text.text);
                 Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + .1f, text.text);
                 text.rectTransform.GetWorldCorners(corners);
-                Assert.Less(corners[2].x, actionsLeft, "Resource text cannot cover the action controls.");
+                Assert.IsFalse(actionsBounds.Overlaps(Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y)),
+                    "Resource text cannot cover the action controls.");
                 evidence.Add(TextGeometry(text) + "; fill=" + fill.fillAmount);
             }
             File.WriteAllLines(Path.Combine(Application.dataPath, "../Logs/ap-hud/r3-" + label + "-resources.txt"), evidence);

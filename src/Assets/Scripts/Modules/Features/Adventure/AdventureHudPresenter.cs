@@ -11,6 +11,7 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Transform nodeContainer;
         [SerializeField] private Text adventureText;
         [SerializeField] private Text statusText;
+        [SerializeField] private Text combatLocationText;
         [SerializeField] private Font nodeFont;
         [SerializeField] private Sprite nodeNormal;
         [SerializeField] private Sprite nodeHover;
@@ -40,13 +41,25 @@ namespace TianZhang.Features.Adventure
         {
             if (returnEntry == null || explorationPanel == null) return;
             var rect = (RectTransform)returnEntry.transform;
-            // Both are direct children of the same canvas. Reuse the exploration panel's outer margins.
-            rect.anchorMin = rect.anchorMax = inCombat
-                ? new Vector2(explorationPanel.anchorMin.x, explorationPanel.anchorMax.y)
-                : explorationPanel.anchorMax;
+            // Both are direct children of the Overlay canvas. Combat uses V4 design coordinates.
+            rect.anchorMin = rect.anchorMax = inCombat ? Vector2.up : explorationPanel.anchorMax;
             rect.pivot = Vector2.up;
-            rect.anchoredPosition = inCombat ? Vector2.zero : new Vector2(24, 0);
-            rect.sizeDelta = new Vector2(explorationPanel.rect.width, 144);
+            rect.anchoredPosition = inCombat ? new Vector2(1296, -24) : new Vector2(24, 0);
+            rect.sizeDelta = inCombat ? new Vector2(592, 60) : new Vector2(explorationPanel.rect.width, 144);
+            if (returnButton != null)
+            {
+                var button = (RectTransform)returnButton.transform;
+                button.anchorMin = button.anchorMax = button.pivot = Vector2.zero;
+                button.anchoredPosition = inCombat ? new Vector2(400, 0) : new Vector2(16, 68);
+                button.sizeDelta = inCombat ? new Vector2(192, 60) : new Vector2(rect.rect.width - 32, 60);
+            }
+            if (returnReason != null)
+            {
+                var reason = returnReason.rectTransform;
+                reason.anchorMin = reason.anchorMax = reason.pivot = Vector2.zero;
+                reason.anchoredPosition = inCombat ? new Vector2(0, 12) : new Vector2(16, 12);
+                reason.sizeDelta = inCombat ? new Vector2(384, 36) : new Vector2(rect.rect.width - 32, 48);
+            }
         }
 
         public void PresentReturnEntry(bool visible, string label, bool available, string reason, bool confirming, bool inCombat)
@@ -77,6 +90,7 @@ namespace TianZhang.Features.Adventure
         {
             if (session == null) return;
             if (adventureText != null) adventureText.text = resolveText(session.Map.displayNameKey);
+            if (combatLocationText != null) combatLocationText.text = resolveText(session.Map.displayNameKey);
             if (statusText != null) statusText.text = string.IsNullOrWhiteSpace(failureReason)
                 ? resolveText(session.Status) : displayReason(failureReason);
             if (nodeContainer == null) return;

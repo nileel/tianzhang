@@ -498,7 +498,8 @@ namespace TianZhang.Tests.PlayMode
             string actor = session.CurrentActorId;
             CombatCommandInput commands = Find<CombatCommandInput>();
             string commandTarget = Get<string>(commands, "targetId");
-            Assert.AreEqual(2, presenter.Snapshot.ArtActions.Count);
+            CollectionAssert.AreEqual(spawned.Player.EquippedArtProfileIds,
+                presenter.Snapshot.ArtActions.Select(action => action.ProfileId));
             int tick = session.TurnScheduler.CurrentTick, hp = spawned.Player.CurrentHealth, mp = spawned.Player.CurrentSpirit;
             yield return Click(WorldPoint(spawned.Enemy.Id));
             AssertSelection(spawned.Enemy.Id);
@@ -523,13 +524,14 @@ namespace TianZhang.Tests.PlayMode
             // Keyboard navigation changes peek only; submit changes inspection.
             // Pointer hover deliberately takes priority over keyboard peek.
             yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(new Vector2(-50, -50));
-            // CT positions use stable horizontal lanes; navigation follows screen geometry, not array order.
-            Selectable adjacent = entries[newPlayerIndex].FindSelectableOnRight();
+            // The compact action order is vertical; navigation follows screen geometry.
+            bool goDown = newPlayerIndex < original.Entries.Count - 1;
+            Selectable adjacent = goDown ? entries[newPlayerIndex].FindSelectableOnDown() : entries[newPlayerIndex].FindSelectableOnUp();
             int adjacentIndex = Array.FindIndex(entries, entry => entry == adjacent);
             Assert.That(adjacentIndex, Is.GreaterThanOrEqualTo(0));
             string adjacentId = original.Entries.Reverse().ToArray()[adjacentIndex].Id;
             Assert.That(adjacentId, Is.Not.EqualTo(spawned.Player.Id));
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(goDown ? Key.DownArrow : Key.UpArrow));
             yield return null; yield return null;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             yield return null;

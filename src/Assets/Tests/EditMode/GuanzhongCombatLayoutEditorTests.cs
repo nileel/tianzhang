@@ -25,7 +25,7 @@ namespace TianZhang.Tests.EditMode
                 var label = (Text)data.FindProperty(field + "Label").objectReferenceValue;
                 Assert.NotNull(fill); Assert.NotNull(label);
                 Assert.AreSame(fill.transform.parent, label.transform.parent);
-                Assert.AreEqual("CombatHotbar", fill.transform.parent.parent.name);
+                Assert.AreEqual("CombatResourceCard", fill.transform.parent.parent.name);
                 Assert.AreEqual(Image.Type.Filled, fill.type);
                 Assert.AreEqual(Image.FillMethod.Horizontal, fill.fillMethod);
                 Assert.Zero(fill.fillOrigin);
@@ -168,10 +168,10 @@ namespace TianZhang.Tests.EditMode
             Assert.NotNull(new SerializedObject(timeline).FindProperty("predictionRoot").objectReferenceValue);
             var timelineData = new SerializedObject(timeline);
             Assert.AreSame(Rect("TimelineTrack"), timelineData.FindProperty("chargeTrack").objectReferenceValue);
-            Assert.AreEqual(new Vector2(52f / 1920, 196f / 1080), Rect("CombatTimelineRoot").anchorMin);
-            Assert.AreEqual(new Vector2(300f / 1920, 801f / 1080), Rect("CombatTimelineRoot").anchorMax);
-            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMin);
-            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").offsetMax);
+            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").anchorMin);
+            Assert.AreEqual(Vector2.zero, Rect("CombatTimelineRoot").anchorMax);
+            Assert.AreEqual(new Vector2(32, 336), Rect("CombatTimelineRoot").anchoredPosition);
+            Assert.AreEqual(new Vector2(104, 512), Rect("CombatTimelineRoot").sizeDelta);
             Assert.IsFalse(rects.Any(rect => rect.name == "TimelineThreshold" || rect.name == "TimelineZero"));
             Assert.AreEqual(3, timelineData.FindProperty("entryCtLabels").arraySize);
             for (int index = 0; index < 3; index++)

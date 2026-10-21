@@ -800,7 +800,8 @@ namespace TianZhang.Features.Adventure
                     isPlayer ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey),
                     isPlayer ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
                     unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady, queuePosition,
-                    string.Equals(current, id, StringComparison.Ordinal), unit.TicksUntilReady));
+                    string.Equals(current, id, StringComparison.Ordinal), unit.TicksUntilReady,
+                    isPlayer ? "player" : EnemyDataFor(id).enemyId));
             }
             Add(current, -1);
             // A recorded boundary can contain the first ready actor already dequeued but not yet begun.
