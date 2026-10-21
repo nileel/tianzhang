@@ -31,8 +31,17 @@ namespace TianZhang.Tests.EditMode
             Assert.IsNotNull(battlefield, "AdventureScene 必须包含战场。");
             Assert.IsFalse(environment.transform.IsChildOf(battlefield.transform),
                 "环境层不能挂在战场下，否则会扩大相机自动取景与平移边界。");
+            Assert.AreSame(Camera.main.transform, environment.transform.parent,
+                "环境层必须像天空盒一样挂在相机下，平移时相对镜头不变。");
             Assert.AreEqual(0, environment.GetComponentsInChildren<Collider>().Length, "环境层不得拦截棋盘点击。");
 
+            var expected = new Dictionary<string, Vector3>
+            {
+                { "Environment_DistantCanyon", new Vector3(0f, 0f, 35f) },
+                { "Environment_ForegroundLeft", new Vector3(-10.7290f, -3.8933f, 4f) },
+                { "Environment_ForegroundRight", new Vector3(11.2710f, -4.2269f, 4f) },
+                { "Environment_ValleyMist", new Vector3(0f, -4.2f, 3.5f) },
+            };
             foreach (string name in LayerNames)
             {
                 Transform layer = environment.transform.Find(name);
@@ -43,6 +52,10 @@ namespace TianZhang.Tests.EditMode
                 Assert.AreEqual("Sprites/Default", renderer.sharedMaterial.shader.name, name + " 必须使用无光照材质。");
                 Assert.IsNotNull(renderer.sharedMaterial.mainTexture, name + " 缺少贴图。");
                 Assert.AreEqual(ShadowCastingMode.Off, renderer.shadowCastingMode, name + " 不得投射阴影。");
+                Assert.Less(Vector3.Distance(expected[name], layer.localPosition), 0.01f,
+                    name + " 的镜头相对位置不得漂移：" + layer.localPosition);
+                if (name != "Environment_DistantCanyon")
+                    Assert.Less(layer.localPosition.z, 5f, name + " 必须比最近的棋盘格更靠近相机，才能压在地块上层。");
             }
 
             Assert.AreEqual(6.3617754f, Camera.main.orthographicSize, 0.01f,
@@ -73,13 +86,13 @@ namespace TianZhang.Tests.EditMode
                 var renderer = layer.GetComponent<Renderer>();
                 Assert.IsNotNull(renderer, layer.name);
                 snapshot.Add(string.Join("|", layer.name,
-                    $"{layer.position.x:F4},{layer.position.y:F4},{layer.position.z:F4}",
-                    $"{layer.lossyScale.x:F4},{layer.lossyScale.y:F4},{layer.lossyScale.z:F4}",
+                    $"{layer.localPosition.x:F4},{layer.localPosition.y:F4},{layer.localPosition.z:F4}",
+                    $"{layer.localScale.x:F4},{layer.localScale.y:F4},{layer.localScale.z:F4}",
                     renderer.sharedMaterial.shader.name,
                     renderer.sharedMaterial.mainTexture.name,
                     renderer.sharedMaterial.GetColor("_Color").a.ToString("F3")));
             }
-            snapshot.Add("camera|" + Camera.main.orthographicSize.ToString("F4"));
+            snapshot.Add("camera|" + Camera.main.orthographicSize.ToString("F4") + "|" + environment.transform.parent.name);
             return snapshot;
         }
 

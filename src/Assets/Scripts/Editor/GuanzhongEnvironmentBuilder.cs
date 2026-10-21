@@ -29,10 +29,13 @@ namespace TianZhang.Editor
         private const float NearBottomProjection = -6.6f;
         private const float LeftWidth = 18f, LeftHeight = 12f, LeftCenterX = -4f, LeftZ = 0.5f;
         private const float RightWidth = 17f, RightHeight = 11.33333f, RightCenterX = 18f, RightZ = 0.5f;
-        private const float FogHeight = -1.30f;
-        private const float FogWidth = 40f, FogDepth = 33f;
-        private const float FogAlpha = 0.30f;
+        private const float NearDepth = 4f;
+        private const float FogWidth = 34f, FogBandHeight = 7.5f;
+        private const float FogAlpha = 0.50f;
         private const float BoardTolerance = 0.15f;
+
+        // Camera-space fog band: the art's dense rows land in the lower quarter of the screen.
+        private static readonly Vector3 MistLocalPosition = new Vector3(0f, -4.2f, 3.5f);
 
         private static readonly string[] LayerFiles =
         {
@@ -66,32 +69,39 @@ namespace TianZhang.Editor
             GameObject existing = GameObject.Find(EnvironmentRootName);
             if (existing != null) UnityEngine.Object.DestroyImmediate(existing);
             var root = new GameObject(EnvironmentRootName);
+            // Playtest feedback: the decoration must behave like a skybox, i.e. stay fixed relative
+            // to the camera instead of sitting at world coordinates the pan slides past.
+            root.transform.SetParent(camera.transform, false);
 
-            float groundY = battlefield.transform.GetChild(0).position.y;
             float sin = Mathf.Sin(CameraPitchDegrees * Mathf.Deg2Rad);
             float cos = Mathf.Cos(CameraPitchDegrees * Mathf.Deg2Rad);
-            Vector3 focus = new Vector3(board.center.x, groundY, board.center.z);
-            Vector3 forward = camera.transform.forward;
-            Quaternion facing = camera.transform.rotation;
 
+            // Far layer: 35 units down the camera ray, sized to cover the whole view at both aspects.
             CreateLayer(root.transform, "Environment_DistantCanyon", "01-distant-canyon.png",
-                BackgroundWidth, BackgroundHeight, camera.transform.position + forward * FarDistance, facing, Color.white);
+                BackgroundWidth, BackgroundHeight, new Vector3(0f, 0f, FarDistance), Color.white);
 
+            // Near layers reuse the V1 world placement converted once into camera space, then pulled
+            // closer than the closest tile so they draw over the board edges instead of behind it.
             float leftY = (NearBottomProjection + LeftHeight * 0.5f - sin * LeftZ) / cos;
             CreateLayer(root.transform, "Environment_ForegroundLeft", "02-foreground-left.png",
-                LeftWidth, LeftHeight, new Vector3(LeftCenterX, leftY, LeftZ), facing, Color.white);
+                LeftWidth, LeftHeight, ToCameraSpace(camera, new Vector3(LeftCenterX, leftY, LeftZ)), Color.white);
 
             float rightY = (NearBottomProjection + RightHeight * 0.5f - sin * RightZ) / cos;
             CreateLayer(root.transform, "Environment_ForegroundRight", "03-foreground-right.png",
-                RightWidth, RightHeight, new Vector3(RightCenterX, rightY, RightZ), facing, Color.white);
+                RightWidth, RightHeight, ToCameraSpace(camera, new Vector3(RightCenterX, rightY, RightZ)), Color.white);
 
-            float fogZ = focus.z + (groundY - FogHeight) * (cos / sin);
             CreateLayer(root.transform, "Environment_ValleyMist", "04-valley-mist.png",
-                FogWidth, FogDepth, new Vector3(focus.x, FogHeight, fogZ), Quaternion.Euler(90f, 0f, 0f),
-                new Color(1f, 1f, 1f, FogAlpha));
+                FogWidth, FogBandHeight, MistLocalPosition, new Color(1f, 1f, 1f, FogAlpha));
 
             ConfigureLighting(camera);
             Selection.activeGameObject = root;
+        }
+
+        /// <summary>Keeps the V1 screen placement but moves the quad in front of the nearest tile.</summary>
+        private static Vector3 ToCameraSpace(Camera camera, Vector3 world)
+        {
+            Vector3 local = camera.transform.InverseTransformPoint(world);
+            return new Vector3(local.x, local.y, NearDepth);
         }
 
         private static Bounds BattlefieldBounds(GameObject battlefield)
@@ -120,12 +130,13 @@ namespace TianZhang.Editor
         }
 
         private static void CreateLayer(Transform parent, string name, string file, float width, float height,
-            Vector3 position, Quaternion rotation, Color tint)
+            Vector3 localPosition, Color tint)
         {
             Material material = EnsureMaterial(name, AssetFolder + "/" + file, tint);
             var layer = new GameObject(name);
             layer.transform.SetParent(parent, false);
-            layer.transform.SetPositionAndRotation(position, rotation);
+            layer.transform.localPosition = localPosition;
+            layer.transform.localRotation = Quaternion.identity;
             layer.transform.localScale = new Vector3(width, height, 1f);
             layer.AddComponent<MeshFilter>().sharedMesh = EnsureQuadMesh();
             var renderer = layer.AddComponent<MeshRenderer>();

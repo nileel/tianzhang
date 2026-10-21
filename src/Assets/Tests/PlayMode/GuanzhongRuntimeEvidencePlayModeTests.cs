@@ -1095,6 +1095,9 @@ namespace TianZhang.Tests.PlayMode
                 GameObject battlefield = GameObject.Find("GuanzhongBattlefield");
                 Assert.That(environment.transform.IsChildOf(battlefield.transform), Is.False,
                     "环境层不能挂在战场下，否则会扩大自动取景与平移边界。");
+                Camera camera = Camera.main;
+                Assert.That(environment.transform.parent, Is.EqualTo(camera.transform),
+                    "环境层必须像天空盒一样跟随镜头。");
                 foreach (string layer in new[] { "Environment_DistantCanyon", "Environment_ForegroundLeft", "Environment_ForegroundRight", "Environment_ValleyMist" })
                 {
                     Transform node = environment.transform.Find(layer);
@@ -1102,13 +1105,14 @@ namespace TianZhang.Tests.PlayMode
                     Renderer renderer = node.GetComponent<Renderer>();
                     Assert.That(renderer, Is.Not.Null);
                     Assert.That(renderer.enabled, Is.True, layer + " 必须可见。");
-                    lines.Add($"{layer}: world={node.position:F3}; scale={node.lossyScale:F3}; " +
+                    lines.Add($"{layer}: local={node.localPosition:F3}; scale={node.localScale:F3}; " +
                         $"shader={renderer.sharedMaterial.shader.name}; texture={renderer.sharedMaterial.mainTexture.name}");
                 }
 
+                Dictionary<string, Rect> locked = LayerScreenRects(environment, camera);
+                lines.Add("locked=" + string.Join("; ", locked.Select(pair => pair.Key + "@" + pair.Value)));
                 Bounds board = BattlefieldRenderBounds(battlefield);
                 float groundY = battlefield.transform.GetChild(0).position.y;
-                Camera camera = Camera.main;
                 foreach (var corner in new[]
                 {
                     ("sw", board.min.x, board.min.z), ("se", board.max.x, board.min.z),
@@ -1118,7 +1122,16 @@ namespace TianZhang.Tests.PlayMode
                     MoveCameraFocus(camera, new Vector3(corner.Item2, groundY, corner.Item3));
                     yield return null;
                     yield return null;
-                    lines.Add($"pan {corner.Item1}: camera={camera.transform.position:F3}");
+                    Dictionary<string, Rect> after = LayerScreenRects(environment, camera);
+                    foreach (var pair in locked)
+                    {
+                        Rect now = after[pair.Key];
+                        Assert.That(Mathf.Abs(now.x - pair.Value.x), Is.LessThan(1f), pair.Key + " 平移后水平漂移");
+                        Assert.That(Mathf.Abs(now.y - pair.Value.y), Is.LessThan(1f), pair.Key + " 平移后垂直漂移");
+                        Assert.That(Mathf.Abs(now.width - pair.Value.width), Is.LessThan(1f), pair.Key + " 平移后宽度变化");
+                        Assert.That(Mathf.Abs(now.height - pair.Value.height), Is.LessThan(1f), pair.Key + " 平移后高度变化");
+                    }
+                    lines.Add($"pan {corner.Item1}: camera={camera.transform.position:F3}; lockedRectsStable=true");
                     yield return Capture($"env-pan-{corner.Item1}-{size.x}");
                 }
                 Write("environment-" + size.x, lines);
@@ -1137,6 +1150,29 @@ namespace TianZhang.Tests.PlayMode
             }
             Assert.That(any, Is.True, "战场必须有可见几何。");
             return bounds;
+        }
+
+        private static Dictionary<string, Rect> LayerScreenRects(GameObject environment, Camera camera)
+        {
+            var result = new Dictionary<string, Rect>();
+            foreach (string name in new[] { "Environment_DistantCanyon", "Environment_ForegroundLeft", "Environment_ForegroundRight", "Environment_ValleyMist" })
+            {
+                Bounds bounds = environment.transform.Find(name).GetComponent<Renderer>().bounds;
+                var min = new Vector2(float.MaxValue, float.MaxValue);
+                var max = new Vector2(float.MinValue, float.MinValue);
+                for (int corner = 0; corner < 8; corner++)
+                {
+                    var world = new Vector3(
+                        (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                        (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                        (corner & 4) == 0 ? bounds.min.z : bounds.max.z);
+                    Vector2 point = camera.WorldToScreenPoint(world);
+                    min = Vector2.Min(min, point);
+                    max = Vector2.Max(max, point);
+                }
+                result[name] = new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
+            }
+            return result;
         }
 
         private static void MoveCameraFocus(Camera camera, Vector3 target)
