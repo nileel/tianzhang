@@ -80,11 +80,11 @@ namespace TianZhang.Editor
                 material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
                 AssetDatabase.CreateAsset(material, materialPath);
             }
-            material.SetColor("_BaseColor", Color.white);
+            material.SetColor("_BaseColor", new Color(0.90f, 0.93f, 0.98f));
             material.SetTexture("_BaseMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[0]));
             material.SetTexture("_BumpMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[1]));
             material.SetTexture("_MetallicGlossMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + textures[2]));
-            material.SetFloat("_Smoothness", 1);
+            material.SetFloat("_Smoothness", 0.35f);
             material.SetFloat("_BumpScale", 1);
             material.EnableKeyword("_NORMALMAP");
             material.EnableKeyword("_METALLICSPECGLOSSMAP");
@@ -158,10 +158,10 @@ namespace TianZhang.Editor
                 material = new Material(shader);
                 AssetDatabase.CreateAsset(material, materialPath);
             }
-            material.SetColor("_BaseColor", Color.white);
+            material.SetColor("_BaseColor", kind == "Tile" ? new Color(1f, 0.90f, 0.72f) : Color.white);
             material.SetTexture("_BaseMap", SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot + "/" + kind + "_basecolor.JPEG"));
             material.SetFloat("_Metallic", 0);
-            material.SetFloat("_Smoothness", .15f);
+            material.SetFloat("_Smoothness", kind == "Tile" ? 0.08f : 0.15f);
             EditorUtility.SetDirty(material);
 
             var root = new GameObject(kind);

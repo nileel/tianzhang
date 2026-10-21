@@ -1138,6 +1138,80 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
+        [UnityTest, Timeout(300000)]
+        public IEnumerator LightingAndGroundingFollowProductionMovesAtBothResolutions()
+        {
+            string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/v3-lighting"));
+            Directory.CreateDirectory(output);
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                yield return SetGameSize(size);
+                Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+                yield return SceneReady(GameplaySceneNames.Adventure);
+                var adventure = Find<AdventureController>();
+                for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+                adventure.SetEncounterRandomSource(new EncounterRandom());
+                Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+                var encounter = Find<EncounterCoordinator>();
+                var session = Get<CombatSession>(encounter, "session");
+                var spawned = Get<AdventureSpawnSet>(encounter, "spawned");
+                yield return PlayerInputReady(encounter, session);
+                var lines = new List<string> { Header(), "input=production EncounterCoordinator.RequestMove; no position/AP injection" };
+                Light key = Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Single(light => light.type == LightType.Directional);
+                lines.Add($"light: rotation={key.transform.eulerAngles:F3}; color={key.color}; intensity={key.intensity}; shadows={key.shadows}; strength={key.shadowStrength}; bias={key.shadowBias}; normalBias={key.shadowNormalBias}");
+                Vector3 boardCenter = BattlefieldRenderBounds(GameObject.Find("GuanzhongBattlefield")).center;
+                Vector3 screenToLight = Camera.main.WorldToScreenPoint(boardCenter - key.transform.forward) - Camera.main.WorldToScreenPoint(boardCenter);
+                Assert.That(screenToLight.x, Is.LessThan(0), "主光应来自画面左上方，与背景太阳一致。");
+                Assert.That(screenToLight.y, Is.GreaterThan(0));
+                lines.Add($"screenToLight={screenToLight:F3}");
+                lines.Add($"ambient: mode={RenderSettings.ambientMode}; sky={RenderSettings.ambientSkyColor}; equator={RenderSettings.ambientEquatorColor}; ground={RenderSettings.ambientGroundColor}; intensity={RenderSettings.ambientIntensity}");
+                Vector3[] probeDirections = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
+                var probeColors = new Color[probeDirections.Length];
+                RenderSettings.ambientProbe.Evaluate(probeDirections, probeColors);
+                lines.Add("ambientProbe linear [up,down,left,right,forward,back]=" + string.Join(";", probeColors.Select(color => color.ToString("F4"))));
+                yield return Capture("after-" + size.x, output);
+                HexCoord[] targets = { new HexCoord(2, 0), new HexCoord(1, 2), new HexCoord(2, 3) };
+                for (int step = 0; step < targets.Length; step++)
+                {
+                    yield return PlayerInputReady(encounter, session);
+                    CombatMovementOption option = Find<CombatHudPresenter>().Snapshot.Movement.Options
+                        .OrderBy(candidate => ToHex(candidate.Destination).Distance(targets[step]))
+                        .ThenBy(candidate => candidate.Cost).First();
+                    var command = new CombatCommand(CombatCommandKind.Move, "player", destination: ToHex(option.Destination));
+                    var quote = new CombatCommandService().Preview(session, command);
+                    Assert.That(quote.IsLegal, Is.True, quote.RejectionReason);
+                    int before = spawned.Player.ActionPointsRemainingUnits;
+                    HexCoord from = spawned.Player.Position;
+                    encounter.RequestMove("player", option.Destination.Q, option.Destination.R);
+                    Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(before - quote.ActionPointCostUnits));
+                    if (step == 1) yield return Capture("moving-" + size.x, output);
+                    for (float deadline = Time.realtimeSinceStartup + 15f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
+                    Assert.That(encounter.IsPresenting, Is.False);
+                    Assert.That(spawned.Player.Position, Is.EqualTo(ToHex(option.Destination)));
+                    Transform player = GameObject.Find("Static3DCombatUnit_player").transform;
+                    Vector3 expected = Static3DCombatUnitPresentationProvider.HexToWorld(option.Destination);
+                    Assert.That(Vector3.Distance(player.position, expected), Is.LessThan(0.001f));
+                    lines.Add($"move {step + 1}: {from}->{spawned.Player.Position}; AP={before}->{before - quote.ActionPointCostUnits}; world={player.position:F4}; expected={expected:F4}");
+                    yield return Capture($"move-{step + 1}-{size.x}", output);
+                    if (step < targets.Length - 1)
+                    {
+                        yield return PlayerInputReady(encounter, session);
+                        encounter.RequestEndTurn("player");
+                        yield return null;
+                    }
+                }
+                foreach (string id in new[] { "player", "enemy", "enemy_2" })
+                {
+                    Transform unit = GameObject.Find("Static3DCombatUnit_" + id).transform;
+                    foreach (Renderer renderer in unit.GetComponentsInChildren<Renderer>())
+                        lines.Add($"{PathOf(renderer.transform)}: min={renderer.bounds.min:F4}; max={renderer.bounds.max:F4}; cast={renderer.shadowCastingMode}; receive={renderer.receiveShadows}; materials=" +
+                            string.Join(",", renderer.sharedMaterials.Select(material => material.name + "/" + material.shader.name)));
+                }
+                File.WriteAllLines(Path.Combine(output, "runtime-" + size.x + ".txt"), lines);
+            }
+        }
+
         private static Bounds BattlefieldRenderBounds(GameObject battlefield)
         {
             var bounds = new Bounds();

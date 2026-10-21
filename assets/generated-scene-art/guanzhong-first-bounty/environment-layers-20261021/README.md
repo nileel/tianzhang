@@ -2,6 +2,8 @@
 
 2026-10-21。沿用[已接受参考](../interaction-preview-20261021/reference-approved-layout.png)的山谷、山雾、左上暖光与青灰冷影。交付范围是可导入 PNG 与摆放起点；Unity 场景接入和真实运行验收属于 V2，实机光色统一属于 V3。
 
+以下 V1 推导保留为素材制作依据；V2/V3 已完成，当前正式摆放与参数以文末 V3 节及 Unity 资源为准。
+
 ## 素材与导入
 
 | 文件 | 实际尺寸／通道 | 用途与边缘 |
@@ -46,3 +48,40 @@ V2 可将这四张 PNG 导入 `src/Assets/Art/Environments/Guanzhong/` 的独立
 - 双分辨率的全 pan 背景覆盖、近景与棋盘间隔、近景裁切边不进入全 pan 可视域的数值核对通过。检查原始记录在仓库本机 `Logs/v1-environment-assets/validation.json`、`alpha-preview.png`；这些是素材／推导证据，不是 Game View。
 - 已读取 `UNITY_STRUCTURE.md`、`UNITY_STRUCTURE.ui.md` 及 Unity 技能的 `ui-and-visual-assets.md`、`ai-workflows.md`；实际镜头入口核对 `AdventureSceneBuilder.ConfigureAdventureCamera/FitCameraToBattlefield`、`AdventureCameraController` 和 `AdventureScene.unity`。本项没有修改 `src/`、战斗规则或其他系统。
 - V2 仍须用真实 Game View 检查 1920×1080／1366×768 初始及 pan 四角：无露底、穿插、关键格遮挡、点击拦截，背景采样清晰度可接受；Builder 重建与保存重开一致。近景雾的材质排序、深度效果与上下文亮度必须以实机为准，不把本素材检查当作 V2/V3 完成。
+
+## V3 实机光色定稿（2026-10-21）
+
+实际场景为 `src/Assets/Scenes/AdventureScene.unity`。V2 已按试玩反馈改为相机子树 `Main Camera/GuanzhongEnvironment`，四层随镜头固定；远景 z=35，左右近景 z=4，雾 z=3.5、中心 y=-4.2、尺寸 34×7.5。V3 保持这些摆放、100 格棋盘、正交尺寸 6.3617754、网格、碰撞和 HUD。
+
+颜色为 Unity 材质／光照属性的输入 RGB；没有改全局 URP、换 Shader、加体积雾或后处理。
+
+| 项目 | V2 基线 | V3 最终值 |
+|---|---|---|
+| 主光 Euler | (48,-32,0) | **(42,132,0)**，实际屏幕来光左上，投影朝右下 |
+| 主光 RGB／强度 | (1,.93,.82)／1.1 | **(1,.89,.72)／1.15** |
+| 阴影 | Hard，强度 .85，实际采用全局 bias 1／normal 1 | **Hard，强度 .78，局部 bias .12／normal .18**；`UniversalAdditionalLightData.usePipelineSettings=false` |
+| Trilight sky | (.30,.38,.48) | **(.58,.63,.72)** |
+| Trilight equator | (.20,.25,.31) | **(.50,.55,.64)** |
+| Trilight ground | (.09,.10,.12) | **(.25,.28,.34)** |
+| Tile `_BaseColor`／`_Smoothness` | (1,1,1)／.15 | **(1,.90,.72)／.08**；顶面和崖壁仍共用原材质与贴图 |
+| RockCluster `_BaseColor`／`_Smoothness` | (1,1,1)／1 | **(.90,.93,.98)／.35**；保留原法线与金属／光滑度贴图 |
+| 左右近景 `_Color` | (1,1,1,1) | **(.78,.82,.88,1)** |
+| 雾 `_Color` | (1,1,1,.50) | **(1,1,1,.42)** |
+
+远景保持白色 tint。玩家、石甲兽、裂石甲兽沿用原 Lit 材质和纹理，裂石甲兽原蓝灰染色保留；同一暖主光与冷补光作用于三者。`ambientIntensity=.9` 作为原序列化值保留，Trilight 实际亮度由上述三色控制。实测水平 ambient SH（linear）为 (.2047,.2509,.3486)，修正光向后的背光面保留可辨细节；没有手写 SH 或添加额外灯。
+
+持久化 owner：`GuanzhongEnvironmentBuilder.ConfigureLighting/EnsureMaterial` 负责灯光与装饰 tint；`GuanzhongTerrainAssetBuilder.BuildAsset/BuildRockClusterAsset` 负责地块与岩石材质默认值。对应 `.mat`、正式场景和 Builder 已同步，重建不会恢复旧色。
+
+### 实机对照与验收
+
+本机 [双分辨率对照页](../../../../src/Logs/v3-lighting/compare.html) 使用完整 `ScreenCapture` 输出，含真实 HUD；截图没有重绘、调色或裁切。
+
+| 分辨率 | 调整前 | 调整后 | 移动后 |
+|---|---|---|---|
+| 1920×1080 | [V2 基线](../../../../src/Logs/v3-lighting/before-1920.png) | [V3 初始](../../../../src/Logs/v3-lighting/initial-1920.png) | [第三段落点](../../../../src/Logs/v3-lighting/move-3-1920.png) |
+| 1366×768 | [V2 基线](../../../../src/Logs/v3-lighting/before-1366.png) | [V3 初始](../../../../src/Logs/v3-lighting/initial-1366.png) | [第三段落点](../../../../src/Logs/v3-lighting/move-3-1366.png) |
+
+- Unity 编译与 `tools/check-unity-assembly-boundaries.ps1` 通过；`GuanzhongEnvironmentTests` 3/3，验证局部阴影、材质、环境重建、保存重开与完整光色快照。最终保留原环境对象 ID 后，两项只读场景检查通过。
+- 两项 PlayMode 通过：1920×1080／1366×768 初始与平移四角；正式生产移动三段 `(0,0)→(2,0)→(1,2)→(2,3)`，跨回合，每段实际报价及结算均 50 AP，模型根落点误差小于 .001m。保留每段截图、移动中截图及 `runtime-{1920,1366}.txt`，不注入位置／AP，不把测试业务入口称为物理鼠标操作。
+- 目视检查草面纹理、岩石接触阴影、角色脚下、两敌冷蓝／暖褐区别、深冷崖壁和淡远景；全棋盘初始可读，近景不压住初始关键格。平移截图仍沿用 V2 的完整屏幕 HUD 与相机边界，未做 V4–V8 UI 改造。
+- XML 位于仓库 `Logs/v3-environment-editmode.xml`、`v3-lighting-final-playmode.xml`、`v3-final-serialized.xml`。图片与临时测量资料位于本机忽略的 `src/Logs/v3-lighting/`，不是重新生成的美术原图；未运行全量测试，最终体验待用户试玩。

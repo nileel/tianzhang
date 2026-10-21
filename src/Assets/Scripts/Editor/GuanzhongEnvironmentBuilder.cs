@@ -4,15 +4,14 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 namespace TianZhang.Editor
 {
     /// <summary>
-    /// V2 environment integration: imports the V1 layered art, builds the far canyon, both near
-    /// foregrounds and the cliff-bottom mist as decoration under a root that is a sibling of the
-    /// battlefield (so camera framing and pan bounds stay driven by the battlefield only), and
-    /// establishes the base light/ambient/shadow setup V3 tunes in the real game view.
+    /// Imports the V1 layered art under the camera, outside battlefield framing/pan bounds,
+    /// and reapplies the V3 light, ambient, contact-shadow and decoration tint settings.
     /// </summary>
     public static class GuanzhongEnvironmentBuilder
     {
@@ -31,7 +30,7 @@ namespace TianZhang.Editor
         private const float RightWidth = 17f, RightHeight = 11.33333f, RightCenterX = 18f, RightZ = 0.5f;
         private const float NearDepth = 4f;
         private const float FogWidth = 34f, FogBandHeight = 7.5f;
-        private const float FogAlpha = 0.50f;
+        private const float FogAlpha = 0.42f;
         private const float BoardTolerance = 0.15f;
 
         // Camera-space fog band: the art's dense rows land in the lower quarter of the screen.
@@ -84,11 +83,11 @@ namespace TianZhang.Editor
             // closer than the closest tile so they draw over the board edges instead of behind it.
             float leftY = (NearBottomProjection + LeftHeight * 0.5f - sin * LeftZ) / cos;
             CreateLayer(root.transform, "Environment_ForegroundLeft", "02-foreground-left.png",
-                LeftWidth, LeftHeight, ToCameraSpace(camera, new Vector3(LeftCenterX, leftY, LeftZ)), Color.white);
+                LeftWidth, LeftHeight, ToCameraSpace(camera, new Vector3(LeftCenterX, leftY, LeftZ)), new Color(0.78f, 0.82f, 0.88f));
 
             float rightY = (NearBottomProjection + RightHeight * 0.5f - sin * RightZ) / cos;
             CreateLayer(root.transform, "Environment_ForegroundRight", "03-foreground-right.png",
-                RightWidth, RightHeight, ToCameraSpace(camera, new Vector3(RightCenterX, rightY, RightZ)), Color.white);
+                RightWidth, RightHeight, ToCameraSpace(camera, new Vector3(RightCenterX, rightY, RightZ)), new Color(0.78f, 0.82f, 0.88f));
 
             CreateLayer(root.transform, "Environment_ValleyMist", "04-valley-mist.png",
                 FogWidth, FogBandHeight, MistLocalPosition, new Color(1f, 1f, 1f, FogAlpha));
@@ -244,17 +243,24 @@ namespace TianZhang.Editor
             Light[] lights = UnityEngine.Object.FindObjectsOfType<Light>();
             var directional = Array.Find(lights, light => light.type == LightType.Directional);
             if (directional == null) throw new InvalidOperationException("adventure_environment_directional_light_missing");
-            directional.color = new Color(1f, 0.93f, 0.82f);
-            directional.intensity = 1.1f;
+            directional.color = new Color(1f, 0.89f, 0.72f);
+            directional.intensity = 1.15f;
             directional.shadows = LightShadows.Hard;
-            directional.shadowStrength = 0.85f;
-            directional.transform.rotation = Quaternion.Euler(48f, -32f, 0f);
+            directional.shadowStrength = 0.78f;
+            directional.transform.rotation = Quaternion.Euler(42f, 132f, 0f);
+            // URP otherwise ignores Light bias and uses the shared pipeline's 1/1 defaults.
+            // Keep the smaller contact offset local to this scene's main light.
+            UniversalAdditionalLightData lightData = directional.GetUniversalAdditionalLightData();
+            lightData.usePipelineSettings = false;
+            directional.shadowBias = 0.12f;
+            directional.shadowNormalBias = 0.18f;
+            EditorUtility.SetDirty(lightData);
 
             // Warm key from the upper left; cool sky/ground ambient keeps shadows readable.
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.30f, 0.38f, 0.48f);
-            RenderSettings.ambientEquatorColor = new Color(0.20f, 0.25f, 0.31f);
-            RenderSettings.ambientGroundColor = new Color(0.09f, 0.10f, 0.12f);
+            RenderSettings.ambientSkyColor = new Color(0.58f, 0.63f, 0.72f);
+            RenderSettings.ambientEquatorColor = new Color(0.50f, 0.55f, 0.64f);
+            RenderSettings.ambientGroundColor = new Color(0.25f, 0.28f, 0.34f);
             RenderSettings.ambientIntensity = 0.9f;
             RenderSettings.fog = false;
             camera.clearFlags = CameraClearFlags.SolidColor;

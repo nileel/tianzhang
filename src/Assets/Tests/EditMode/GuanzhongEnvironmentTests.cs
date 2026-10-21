@@ -63,6 +63,29 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void SceneUsesLocalContactShadowsAndLitOpaqueMaterials()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            Light key = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Light>())
+                .Single(light => light.type == LightType.Directional);
+            Component lightData = key.GetComponents<Component>().Single(component => component.GetType().Name == "UniversalAdditionalLightData");
+            Assert.That((bool)lightData.GetType().GetProperty("usePipelineSettings").GetValue(lightData), Is.False,
+                "主光必须采用自己的接触阴影偏移，不能回落到全局 URP 偏移。");
+            Assert.That(key.shadowBias, Is.InRange(0.05f, 0.2f));
+            Assert.That(key.shadowNormalBias, Is.InRange(0.1f, 0.25f));
+            Assert.That(key.color.r, Is.GreaterThan(key.color.b), "暖色主光。");
+            Assert.That(RenderSettings.ambientSkyColor.b, Is.GreaterThan(RenderSettings.ambientSkyColor.r), "冷色环境光。");
+            foreach (string name in new[] { "Tile", "RockCluster" })
+            {
+                Material material = AssetDatabase.LoadAssetAtPath<Material>(GuanzhongTerrainAssetBuilder.AssetRoot + "/" + name + ".mat");
+                Assert.That(material.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"));
+                Assert.That(material.GetFloat("_Surface"), Is.Zero);
+                Assert.That(material.GetFloat("_Smoothness"), Is.LessThan(0.4f));
+                Assert.That(material.GetTexture("_BaseMap"), Is.Not.Null);
+            }
+        }
+
+        [Test]
         public void RebuildKeepsLayerPlacementAndSurvivesSaveAndReopen()
         {
             Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
@@ -90,9 +113,15 @@ namespace TianZhang.Tests.EditMode
                     $"{layer.localScale.x:F4},{layer.localScale.y:F4},{layer.localScale.z:F4}",
                     renderer.sharedMaterial.shader.name,
                     renderer.sharedMaterial.mainTexture.name,
-                    renderer.sharedMaterial.GetColor("_Color").a.ToString("F3")));
+                    renderer.sharedMaterial.GetColor("_Color").ToString("F3")));
             }
             snapshot.Add("camera|" + Camera.main.orthographicSize.ToString("F4") + "|" + environment.transform.parent.name);
+            Light key = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Light>())
+                .Single(light => light.type == LightType.Directional);
+            snapshot.Add($"light|{key.transform.eulerAngles:F3}|{key.color:F3}|{key.intensity:F3}|{key.shadows}|{key.shadowStrength:F3}|{key.shadowBias:F3}|{key.shadowNormalBias:F3}");
+            Component lightData = key.GetComponents<Component>().Single(component => component.GetType().Name == "UniversalAdditionalLightData");
+            snapshot.Add("localShadows|" + lightData.GetType().GetProperty("usePipelineSettings").GetValue(lightData));
+            snapshot.Add($"ambient|{RenderSettings.ambientMode}|{RenderSettings.ambientSkyColor:F3}|{RenderSettings.ambientEquatorColor:F3}|{RenderSettings.ambientGroundColor:F3}|{RenderSettings.ambientIntensity:F3}");
             return snapshot;
         }
 

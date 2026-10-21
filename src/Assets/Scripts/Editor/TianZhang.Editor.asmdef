@@ -16,6 +16,7 @@
         "TianZhang.World",
         "Unity.InputSystem",
         "Unity.InputSystem.ForUI",
+        "Unity.RenderPipelines.Universal.Runtime",
         "UnityEngine.UI"
     ],
     "includePlatforms": [
