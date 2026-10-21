@@ -1,0 +1,1104 @@
+{
+  "version": 1,
+  "date": "2026-10-21",
+  "scope": "V4 art handoff only; no Unity integration",
+  "atlas": {
+    "file": "compact-ui-atlas.png",
+    "size": [
+      1024,
+      512
+    ],
+    "transparentGutter": 4
+  },
+  "import": {
+    "textureType": "Sprite (2D and UI)",
+    "spriteMode": "Multiple",
+    "meshType": "FullRect",
+    "pixelsPerUnit": 100,
+    "sRGB": true,
+    "alphaIsTransparency": true,
+    "mipmaps": false,
+    "filter": "Bilinear",
+    "wrap": "Clamp",
+    "compression": "None",
+    "maxSize": 2048
+  },
+  "colors": {
+    "panel": "#102D38",
+    "normal": "#193B46",
+    "hover": "#28515A",
+    "pressed": "#0B222B",
+    "selected": "#244D4C",
+    "disabled": "#24343B",
+    "cooldown": "#162F3C",
+    "ink": "#EFE9D3",
+    "secondary": "#C2D0CB",
+    "muted": "#A4B5B3",
+    "gold": "#D8BE80",
+    "line": "#768D87",
+    "health": "#8FBE75",
+    "mana": "#68C5D9",
+    "ap": "#E6BF62",
+    "enemy": "#D99982"
+  },
+  "layout": {
+    "reference": [
+      1920,
+      1080
+    ],
+    "scale": "uniform Fit; 1366x768 = 0.711111, centered",
+    "rectOrigin": "top-left; x,y,w,h",
+    "resource": [
+      32,
+      24,
+      416,
+      188
+    ],
+    "timeline": [
+      32,
+      232,
+      104,
+      512
+    ],
+    "location": [
+      740,
+      24,
+      440,
+      64
+    ],
+    "withdraw": [
+      1696,
+      24,
+      192,
+      60
+    ],
+    "bounty": [
+      1536,
+      112,
+      352,
+      112
+    ],
+    "details": [
+      1536,
+      232,
+      352,
+      376
+    ],
+    "preview": [
+      1536,
+      632,
+      352,
+      236
+    ],
+    "actions": [
+      160,
+      892,
+      1728,
+      164
+    ],
+    "actionViewport": [
+      256,
+      904,
+      1412,
+      140
+    ],
+    "endTurn": [
+      1700,
+      908,
+      168,
+      64
+    ],
+    "battleLog": [
+      1700,
+      992,
+      168,
+      48
+    ]
+  },
+  "slices": [
+    {
+      "name": "icon_attack",
+      "file": "sprites/icon_attack.png",
+      "source": "vectors/icon_attack.svg",
+      "kind": "icon",
+      "label": "普攻（武器）",
+      "rectTopLeft": [
+        4,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        4,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_guanshiji",
+      "file": "sprites/icon_guanshiji.png",
+      "source": "vectors/icon_guanshiji.svg",
+      "kind": "icon",
+      "label": "贯石击",
+      "rectTopLeft": [
+        132,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        132,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_julingshu",
+      "file": "sprites/icon_julingshu.png",
+      "source": "vectors/icon_julingshu.svg",
+      "kind": "icon",
+      "label": "聚灵术",
+      "rectTopLeft": [
+        260,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        260,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_feixingzhi",
+      "file": "sprites/icon_feixingzhi.png",
+      "source": "vectors/icon_feixingzhi.svg",
+      "kind": "icon",
+      "label": "飞星指",
+      "rectTopLeft": [
+        388,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        388,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_move",
+      "file": "sprites/icon_move.png",
+      "source": "vectors/icon_move.svg",
+      "kind": "icon",
+      "label": "移动",
+      "rectTopLeft": [
+        516,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        516,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_defend",
+      "file": "sprites/icon_defend.png",
+      "source": "vectors/icon_defend.svg",
+      "kind": "icon",
+      "label": "防御",
+      "rectTopLeft": [
+        644,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        644,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_switch_art",
+      "file": "sprites/icon_switch_art.png",
+      "source": "vectors/icon_switch_art.svg",
+      "kind": "icon",
+      "label": "换术",
+      "rectTopLeft": [
+        772,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        772,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_equipment",
+      "file": "sprites/icon_equipment.png",
+      "source": "vectors/icon_equipment.svg",
+      "kind": "icon",
+      "label": "换装",
+      "rectTopLeft": [
+        900,
+        4,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        900,
+        388,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_medicine",
+      "file": "sprites/icon_medicine.png",
+      "source": "vectors/icon_medicine.svg",
+      "kind": "icon",
+      "label": "丹药",
+      "rectTopLeft": [
+        4,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        4,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_divine",
+      "file": "sprites/icon_divine.png",
+      "source": "vectors/icon_divine.svg",
+      "kind": "icon",
+      "label": "条件神通",
+      "rectTopLeft": [
+        132,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        132,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_unarmed",
+      "file": "sprites/icon_unarmed.png",
+      "source": "vectors/icon_unarmed.svg",
+      "kind": "icon",
+      "label": "徒手普攻",
+      "rectTopLeft": [
+        260,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        260,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_close",
+      "file": "sprites/icon_close.png",
+      "source": "vectors/icon_close.svg",
+      "kind": "icon",
+      "label": "关闭",
+      "rectTopLeft": [
+        388,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        388,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_end_turn",
+      "file": "sprites/icon_end_turn.png",
+      "source": "vectors/icon_end_turn.svg",
+      "kind": "icon",
+      "label": "结束行动",
+      "rectTopLeft": [
+        516,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        516,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_cancel",
+      "file": "sprites/icon_cancel.png",
+      "source": "vectors/icon_cancel.svg",
+      "kind": "icon",
+      "label": "取消",
+      "rectTopLeft": [
+        644,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        644,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "icon_log",
+      "file": "sprites/icon_log.png",
+      "source": "vectors/icon_log.svg",
+      "kind": "icon",
+      "label": "战报",
+      "rectTopLeft": [
+        772,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        772,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_normal",
+      "file": "sprites/button_normal.png",
+      "source": "vectors/button_normal.svg",
+      "kind": "sliced",
+      "label": "normal",
+      "rectTopLeft": [
+        900,
+        132,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        900,
+        260,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_hover",
+      "file": "sprites/button_hover.png",
+      "source": "vectors/button_hover.svg",
+      "kind": "sliced",
+      "label": "hover",
+      "rectTopLeft": [
+        4,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        4,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_pressed",
+      "file": "sprites/button_pressed.png",
+      "source": "vectors/button_pressed.svg",
+      "kind": "sliced",
+      "label": "pressed",
+      "rectTopLeft": [
+        132,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        132,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_selected",
+      "file": "sprites/button_selected.png",
+      "source": "vectors/button_selected.svg",
+      "kind": "sliced",
+      "label": "selected",
+      "rectTopLeft": [
+        260,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        260,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_disabled",
+      "file": "sprites/button_disabled.png",
+      "source": "vectors/button_disabled.svg",
+      "kind": "sliced",
+      "label": "disabled",
+      "rectTopLeft": [
+        388,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        388,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_cooldown",
+      "file": "sprites/button_cooldown.png",
+      "source": "vectors/button_cooldown.svg",
+      "kind": "sliced",
+      "label": "cooldown",
+      "rectTopLeft": [
+        516,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        516,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "panel_dark",
+      "file": "sprites/panel_dark.png",
+      "source": "vectors/panel_dark.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        644,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        644,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "button_end",
+      "file": "sprites/button_end.png",
+      "source": "vectors/button_end.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        772,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        772,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "frame_normal",
+      "file": "sprites/frame_normal.png",
+      "source": "vectors/frame_normal.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        900,
+        260,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        900,
+        132,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "frame_selected",
+      "file": "sprites/frame_selected.png",
+      "source": "vectors/frame_selected.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        4,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        4,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "bar_track",
+      "file": "sprites/bar_track.png",
+      "source": "vectors/bar_track.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        132,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        132,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "fill_health",
+      "file": "sprites/fill_health.png",
+      "source": "vectors/fill_health.svg",
+      "kind": "fill",
+      "label": "",
+      "rectTopLeft": [
+        260,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        260,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "fill_mana",
+      "file": "sprites/fill_mana.png",
+      "source": "vectors/fill_mana.svg",
+      "kind": "fill",
+      "label": "",
+      "rectTopLeft": [
+        388,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        388,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "fill_ap",
+      "file": "sprites/fill_ap.png",
+      "source": "vectors/fill_ap.svg",
+      "kind": "fill",
+      "label": "",
+      "rectTopLeft": [
+        516,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        516,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "cooldown_shade",
+      "file": "sprites/cooldown_shade.png",
+      "source": "vectors/cooldown_shade.svg",
+      "kind": "radial-fill",
+      "label": "",
+      "rectTopLeft": [
+        644,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        644,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "timeline_current",
+      "file": "sprites/timeline_current.png",
+      "source": "vectors/timeline_current.svg",
+      "kind": "simple",
+      "label": "",
+      "rectTopLeft": [
+        772,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        772,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "divider",
+      "file": "sprites/divider.png",
+      "source": "vectors/divider.svg",
+      "kind": "sliced",
+      "label": "",
+      "rectTopLeft": [
+        900,
+        388,
+        120,
+        120
+      ],
+      "rectUnityBottomLeft": [
+        900,
+        4,
+        120,
+        120
+      ],
+      "borderLTRB": [
+        4,
+        0,
+        4,
+        0
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "portraits": [
+    {
+      "unit": "player",
+      "file": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png",
+      "reuse": true
+    },
+    {
+      "unit": "enemy_shijiahou",
+      "profile": "combat_enemy_shijiahou_v1",
+      "file": "portraits/enemy_shijiahou.png",
+      "identity": "warm brown; left-facing; closed mouth"
+    },
+    {
+      "unit": "enemy_lieshijia",
+      "profile": "combat_enemy_lieshijia_v1",
+      "file": "portraits/enemy_lieshijia.png",
+      "identity": "cold blue; right-facing; open mouth"
+    }
+  ],
+  "font": "Assets/Art/UI/Guanzhong/Fonts/GuanzhongChinese.otf",
+  "fontSizesReference": {
+    "place": 34,
+    "title": 28,
+    "body": 24,
+    "secondary": 22,
+    "button": 24,
+    "cost": 22,
+    "reason": 22
+  },
+  "spacingReference": {
+    "outer": 32,
+    "panel": 20,
+    "gap": 16,
+    "icon": 40,
+    "minHit": 64
+  },
+  "actionMapping": {
+    "basic": "icon_attack; icon_unarmed for unarmed",
+    "spell_guanshiji": "icon_guanshiji",
+    "spell_julingshu": "icon_julingshu",
+    "spell_feixingzhi": "icon_feixingzhi",
+    "move": "icon_move",
+    "defend": "icon_defend",
+    "switchArt": "icon_switch_art",
+    "equip": "icon_equipment",
+    "medicine": "icon_medicine",
+    "conditionalDivine": "icon_divine"
+  },
+  "statePriority": [
+    "disabled/cooldown",
+    "pressed",
+    "selected",
+    "hover",
+    "normal"
+  ],
+  "textPolicy": "No baked text, prices, shortcut numbers or counts. Dynamic names support two lines; full name/reason in preview. Quote values remain authoritative runtime data."
+}

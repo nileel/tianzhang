@@ -1,0 +1,679 @@
+{
+  "scope": "Asset package + browser layout only; not Unity runtime proof",
+  "assets": [
+    {
+      "name": "icon_attack",
+      "rect": [
+        4,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_guanshiji",
+      "rect": [
+        132,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_julingshu",
+      "rect": [
+        260,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_feixingzhi",
+      "rect": [
+        388,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_move",
+      "rect": [
+        516,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_defend",
+      "rect": [
+        644,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_switch_art",
+      "rect": [
+        772,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_equipment",
+      "rect": [
+        900,
+        4,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_medicine",
+      "rect": [
+        4,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_divine",
+      "rect": [
+        132,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_unarmed",
+      "rect": [
+        260,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_close",
+      "rect": [
+        388,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_end_turn",
+      "rect": [
+        516,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_cancel",
+      "rect": [
+        644,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "icon_log",
+      "rect": [
+        772,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "button_normal",
+      "rect": [
+        900,
+        132,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_hover",
+      "rect": [
+        4,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_pressed",
+      "rect": [
+        132,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_selected",
+      "rect": [
+        260,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_disabled",
+      "rect": [
+        388,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_cooldown",
+      "rect": [
+        516,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "panel_dark",
+      "rect": [
+        644,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "button_end",
+      "rect": [
+        772,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "frame_normal",
+      "rect": [
+        900,
+        260,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "frame_selected",
+      "rect": [
+        4,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "name": "bar_track",
+      "rect": [
+        132,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "name": "fill_health",
+      "rect": [
+        260,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fill_mana",
+      "rect": [
+        388,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fill_ap",
+      "rect": [
+        516,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "cooldown_shade",
+      "rect": [
+        644,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "timeline_current",
+      "rect": [
+        772,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "divider",
+      "rect": [
+        900,
+        388,
+        120,
+        120
+      ],
+      "border": [
+        4,
+        0,
+        4,
+        0
+      ]
+    },
+    {
+      "name": "player",
+      "size": [
+        512,
+        512
+      ],
+      "alpha": {
+        "clear": 147743,
+        "partial": 5320,
+        "solid": 109081,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "enemy_shijiahou",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha": {
+        "clear": 423948,
+        "partial": 1148257,
+        "solid": 311,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "enemy_lieshijia",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha": {
+        "clear": 456487,
+        "partial": 1115047,
+        "solid": 982,
+        "corners": [
+          0,
+          0,
+          246,
+          2
+        ]
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "view": "sheet",
+      "width": 1720,
+      "height": 1140,
+      "screenshot": "evidence/sheet-1720.png",
+      "broken": [],
+      "overflow": [],
+      "rects": {}
+    },
+    {
+      "view": "layout",
+      "width": 1920,
+      "height": 1080,
+      "screenshot": "evidence/layout-1920.png",
+      "broken": [],
+      "overflow": [],
+      "rects": {
+        "resource": [
+          32,
+          24,
+          416,
+          188
+        ],
+        "timeline": [
+          32,
+          232,
+          104,
+          512
+        ],
+        "location": [
+          740,
+          24,
+          440,
+          64
+        ],
+        "withdraw": [
+          1696,
+          24,
+          192,
+          60
+        ],
+        "bounty": [
+          1536,
+          112,
+          352,
+          112
+        ],
+        "details": [
+          1536,
+          232,
+          352,
+          376
+        ],
+        "preview": [
+          1536,
+          632,
+          352,
+          236
+        ],
+        "actions": [
+          160,
+          892,
+          1728,
+          164
+        ]
+      }
+    },
+    {
+      "view": "layout",
+      "width": 1366,
+      "height": 768,
+      "screenshot": "evidence/layout-1366.png",
+      "broken": [],
+      "overflow": [],
+      "rects": {
+        "resource": [
+          23.083681106567383,
+          17.066667556762695,
+          295.8222351074219,
+          133.6888885498047
+        ],
+        "timeline": [
+          23.083681106567383,
+          164.977783203125,
+          73.95555877685547,
+          364.0888671875
+        ],
+        "location": [
+          526.5503540039062,
+          17.066667556762695,
+          312.888916015625,
+          45.5111083984375
+        ],
+        "withdraw": [
+          1206.37255859375,
+          17.066667556762695,
+          136.5333251953125,
+          42.666664123535156
+        ],
+        "bounty": [
+          1092.5948486328125,
+          79.64444732666016,
+          250.31103515625,
+          79.64444732666016
+        ],
+        "details": [
+          1092.5948486328125,
+          164.977783203125,
+          250.31103515625,
+          267.3777770996094
+        ],
+        "preview": [
+          1092.5948486328125,
+          449.4222412109375,
+          250.31103515625,
+          167.82220458984375
+        ],
+        "actions": [
+          114.10590362548828,
+          634.3110961914062,
+          1228.7999267578125,
+          116.62225341796875
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "contrast": {
+    "ink": 11.871052796822243,
+    "secondary": 9.060610310166286,
+    "muted": 6.764556548089383,
+    "gold": 7.973147108190161,
+    "enemy": 6.070286408423325
+  },
+  "cooldownText": {
+    "source": "CombatArtActionSnapshot.RemainingCooldownTicks",
+    "sample": "CD 3 刻",
+    "scope": "sheet text and overflow checked after correction"
+  }
+}
