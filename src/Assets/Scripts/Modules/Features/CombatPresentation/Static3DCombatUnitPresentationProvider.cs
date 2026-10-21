@@ -313,7 +313,8 @@ namespace TianZhang.Features.CombatPresentation
                 !attackVfxCatalog.TryGet(presentationEvent.ProfileId, out CombatAttackVfxEntry entry))
                 return;
 
-            Vector3 origin = HexToWorld(presentationEvent.EndPosition) + Vector3.up * 0.85f;
+            Vector3 feet = HexToWorld(presentationEvent.EndPosition);
+            Vector3 origin = feet + Vector3.up * 0.85f;
             Vector3 target = origin;
             bool found = false;
             foreach (CombatUnitPresentationTargetResult targetResult in presentationEvent.TargetResults)
@@ -328,7 +329,7 @@ namespace TianZhang.Features.CombatPresentation
             if (!found) return;
 
             CombatAttackVfx effect = entry.kind == CombatAttackVfxKind.Slash
-                ? CombatAttackVfx.PlaySlash(target, origin, entry.color, entry.scale, entry.durationSeconds)
+                ? CombatAttackVfx.PlaySlash(feet, target, entry.color, entry.scale, entry.durationSeconds)
                 : CombatAttackVfx.PlayProjectile(origin, target, entry.color, entry.scale, entry.durationSeconds);
             RegisterTransient(effect.gameObject, entry.durationSeconds + 0.3f);
         }

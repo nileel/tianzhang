@@ -916,12 +916,27 @@ namespace TianZhang.Features.Adventure
                         .Select(group => new CombatUnitPresentationTargetResult(
                             group.Key, group.Sum(item => item.FinalDamage), false)))
                     .ToArray();
+                // Attack and cast turn the actor toward the action's target for presentation only;
+                // the authoritative combatant facing stays untouched.
+                int facing = actorBefore.Facing;
+                if (command.Kind == CombatCommandKind.BasicAttack &&
+                    command.AttackDirection is >= 0 and < 6)
+                {
+                    facing = command.AttackDirection.Value;
+                }
+                else if (command.Kind is CombatCommandKind.Art or CombatCommandKind.Divine &&
+                         !string.IsNullOrWhiteSpace(command.TargetId) &&
+                         !string.Equals(command.TargetId, actorBefore.Id, StringComparison.Ordinal) &&
+                         session.Combatants.TryGet(command.TargetId, out CombatantSnapshot aimed) && aimed != null)
+                {
+                    facing = FacingToward(actorBefore.Position, aimed.Position);
+                }
                 unitPresentation.Present(new CombatUnitPresentationEventProjection(
                     actorBefore.Id,
                     actionEvent,
                     actorStart,
                     ToPresentationHex(actorBefore.Position),
-                    actorBefore.Facing,
+                    facing,
                     affected,
                     result.MovementPath.Select(ToPresentationHex).ToArray(),
                     profileId: command.ProfileId));
@@ -946,6 +961,23 @@ namespace TianZhang.Features.Adventure
 
         private static CombatUnitPresentationHex ToPresentationHex(TianZhang.Spatial.HexCoord value) =>
             new CombatUnitPresentationHex(value.Q, value.R);
+
+        /// <summary>Presentation-only facing: the neighbour step that best approaches the target cell.</summary>
+        private static int FacingToward(TianZhang.Spatial.HexCoord from, TianZhang.Spatial.HexCoord to)
+        {
+            int deltaQ = to.Q - from.Q, deltaR = to.R - from.R;
+            int best = 0;
+            long bestProjection = long.MinValue;
+            for (int direction = 0; direction < 6; direction++)
+            {
+                TianZhang.Spatial.HexCoord step = TianZhang.Spatial.HexCoord.Directions[direction];
+                long projection = (long)deltaQ * step.Q + (long)deltaR * step.R;
+                if (projection <= bestProjection) continue;
+                bestProjection = projection;
+                best = direction;
+            }
+            return best;
+        }
 
         private static CombatantHudSnapshot ToHud(CombatantSnapshot value, string name)
         {

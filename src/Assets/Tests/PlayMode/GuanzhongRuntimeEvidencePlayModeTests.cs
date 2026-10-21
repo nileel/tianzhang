@@ -642,6 +642,7 @@ namespace TianZhang.Tests.PlayMode
                 var lines = new List<string> { Header(),
                     $"node=lieshijia_encounter; enemies={string.Join("/", spawned.Enemies.Select(enemy => enemy.Id + "@" + enemy.Position))}" };
 
+                HexCoord castTarget = default;
                 bool TryCast(CombatantSnapshot target)
                 {
                     var command = new CombatCommand(CombatCommandKind.Art, "player", target.Id, "spell_feixingzhi");
@@ -655,6 +656,7 @@ namespace TianZhang.Tests.PlayMode
                         $"ctx={Find<CombatHudPresenter>().Snapshot.CommandContextVersion} can={preview.CanConfirm} reason={preview.Reason}");
                     Assert.That(preview.CanConfirm, Is.True, preview.Reason);
                     encounter.ConfirmAction(candidate);
+                    castTarget = target.Position;
                     lines.Add($"star cast: target={target.Id}@{target.Position}; distance={spawned.Player.Position.Distance(target.Position)}; cost={quote.ActionPointCostUnits}");
                     return true;
                 }
@@ -691,8 +693,19 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(cast, Is.True, "飞星指必须在 6 回合内进入射程并施放。");
                 Assert.That(GameObject.Find(CombatAttackVfx.ProjectileObjectName), Is.Not.Null,
                     "飞星指必须播出弹道特效。");
+                GameObject casterRoot = GameObject.Find("Static3DCombatUnit_player");
+                Assert.That(casterRoot, Is.Not.Null, "正式场景必须存在玩家表现根节点。");
+                Vector3 casterWorld = Static3DCombatUnitPresentationProvider.HexToWorld(
+                    new CombatUnitPresentationHex(spawned.Player.Position.Q, spawned.Player.Position.R));
+                Vector3 castTo = Static3DCombatUnitPresentationProvider.HexToWorld(
+                    new CombatUnitPresentationHex(castTarget.Q, castTarget.R)) - casterWorld;
+                castTo.y = 0f;
+                float castFacingDot = Vector3.Dot(casterRoot.transform.forward, castTo.normalized);
+                Assert.That(castFacingDot, Is.GreaterThan(0.35f), "施法时应转向目标地块。");
+                lines.Add($"star facingDot={castFacingDot:F2}");
                 Assert.That(encounter.IsPresenting, Is.True, "特效应由表现锁覆盖。");
-                for (int frame = 0; frame < 10; frame++) yield return null;
+                // Mid-flight frame: the projectile is between caster and target and the tail is longest.
+                for (int frame = 0; frame < 13; frame++) yield return null;
                 yield return Capture("attack-vfx-star-" + size.x);
 
                 for (int frame = 0; frame < 240 && encounter.IsPresenting; frame++) yield return null;
@@ -705,10 +718,22 @@ namespace TianZhang.Tests.PlayMode
                 CombatActionPreviewSnapshot attackPreview = encounter.PreviewAction(attack);
                 Assert.That(attackPreview.CanConfirm, Is.True, attackPreview.Reason);
                 encounter.ConfirmAction(attack);
-                Assert.That(GameObject.Find(CombatAttackVfx.SlashObjectName), Is.Not.Null,
-                    "铁剑普攻必须播出剑气特效。");
-                lines.Add($"sword slash: direction={direction}; target={spawned.Enemy.Position}; cost={attackPreview.ActionPointCostUnits}");
-                for (int frame = 0; frame < 8; frame++) yield return null;
+                GameObject slash = GameObject.Find(CombatAttackVfx.SlashObjectName);
+                Assert.That(slash, Is.Not.Null, "铁剑普攻必须播出剑气特效。");
+                Vector3 actorWorld = Static3DCombatUnitPresentationProvider.HexToWorld(
+                    new CombatUnitPresentationHex(spawned.Player.Position.Q, spawned.Player.Position.R));
+                Assert.That(Vector3.Distance(slash.transform.position, actorWorld), Is.LessThan(1.2f),
+                    "近战特效必须锚定在出手角色附近，而不是目标格。");
+                Vector3 toTarget = Static3DCombatUnitPresentationProvider.HexToWorld(
+                    new CombatUnitPresentationHex(spawned.Enemy.Position.Q, spawned.Enemy.Position.R)) - actorWorld;
+                toTarget.y = 0f;
+                GameObject playerRoot = GameObject.Find("Static3DCombatUnit_player");
+                Assert.That(playerRoot, Is.Not.Null, "正式场景必须存在玩家表现根节点。");
+                float facingDot = Vector3.Dot(playerRoot.transform.forward, toTarget.normalized);
+                Assert.That(facingDot, Is.GreaterThan(0.35f), "攻击或施法时应转向目标地块。");
+                lines.Add($"sword slash: direction={direction}; target={spawned.Enemy.Position}; cost={attackPreview.ActionPointCostUnits}; facingDot={facingDot:F2}");
+                // Wide sweep frame rather than the initial short stroke.
+                for (int frame = 0; frame < 11; frame++) yield return null;
                 yield return Capture("attack-vfx-slash-" + size.x);
                 Write("attack-vfx-" + size.x, lines);
             }

@@ -38,12 +38,12 @@ namespace TianZhang.Features.CombatPresentation
         private Material headMaterial;
         private bool impacted;
 
-        public static CombatAttackVfx PlaySlash(Vector3 target, Vector3 fromPosition, Color tint, float size, float seconds)
+        public static CombatAttackVfx PlaySlash(Vector3 actorFeet, Vector3 targetWorld, Color tint, float size, float seconds)
         {
-            CombatAttackVfx effect = Create(SlashObjectName, target, tint, size, seconds);
+            CombatAttackVfx effect = Create(SlashObjectName, actorFeet, tint, size, seconds);
             effect.mode = Mode.Slash;
-            effect.from = fromPosition;
-            effect.to = target;
+            effect.from = actorFeet;
+            effect.to = targetWorld;
             effect.CreateRibbon();
             effect.RenderSlash(0f);
             return effect;
@@ -164,29 +164,24 @@ namespace TianZhang.Features.CombatPresentation
 
         private void RenderSlash(float progress)
         {
-            // Vertical crescent in front of the target, opening toward the attacker, and biased
-            // toward the camera so the target model cannot hide it.
-            Vector3 flat = to - from;
-            flat.y = 0f;
-            if (flat.sqrMagnitude < 0.0001f) flat = Vector3.forward;
-            flat.Normalize();
-            // Face the crescent toward the camera so it never collapses into an edge-on band.
-            Vector3 toCamera = Camera.main != null ? Camera.main.transform.position - to : -flat;
-            toCamera.y = 0f;
-            if (toCamera.sqrMagnitude < 0.0001f) toCamera = -flat;
-            toCamera.Normalize();
-            Vector3 side = Vector3.Cross(Vector3.up, toCamera).normalized;
+            // The crescent is anchored to the attacker and oriented by the attack direction, so
+            // it travels and turns with the character instead of floating over the target cell.
+            Vector3 forward = to - from;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.0001f) forward = Vector3.forward;
+            forward.Normalize();
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
             float radius = (0.62f + 0.18f * progress) * scale;
             float sweep = Mathf.Lerp(60f, 170f, progress);
-            Vector3 center = to + Vector3.up * 0.45f + toCamera * 0.55f;
+            Vector3 center = from + Vector3.up * 0.95f + forward * 0.6f;
             float alpha = Mathf.Clamp01(1.1f - progress);
             var points = new List<Vector3>(ArcSegments + 1);
             for (int index = 0; index <= ArcSegments; index++)
             {
                 float angle = Mathf.Lerp(-sweep * 0.5f, sweep * 0.5f, index / (float)ArcSegments) * Mathf.Deg2Rad;
-                points.Add(center + side * Mathf.Sin(angle) * radius + Vector3.up * (Mathf.Cos(angle) * radius * 0.7f));
+                points.Add(center + right * Mathf.Sin(angle) * radius + Vector3.up * (Mathf.Cos(angle) * radius * 0.65f));
             }
-            BuildArcStrip(points, toCamera, 0.16f * scale * (1f - 0.3f * progress), alpha);
+            BuildArcStrip(points, forward, 0.18f * scale * (1f - 0.3f * progress), alpha);
         }
 
         private void RenderProjectile(float progress)
