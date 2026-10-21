@@ -193,6 +193,7 @@ namespace TianZhang.Editor
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
             GameObject battlefield = BuildGuanzhongBattlefield(environmentProfile);
             ConfigureAdventureCamera(Camera.main, battlefield);
+            GuanzhongEnvironmentBuilder.Build();
 
             Canvas canvas = SceneBuildSupport.CreateCanvas();
             GameObject adventurePanel = SceneBuildSupport.CreatePanel("AdventurePanel", canvas.transform, Vector2.zero, Vector2.one);

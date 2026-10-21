@@ -1071,6 +1071,83 @@ namespace TianZhang.Tests.PlayMode
             yield return Capture("feixingzhi-range");
         }
 
+        [UnityTest, Timeout(600000)]
+        public IEnumerator EnvironmentLayersCoverTheInitialViewAndPanCornersAtBothResolutions()
+        {
+            foreach (Vector2Int size in Sizes())
+            {
+                yield return EnterSettlement();
+                yield return SetGameSize(size);
+                Assert.That(Find<SettlementController>().EnterAdventure("guanzhong_wild"), Is.True);
+                yield return SceneReady(GameplaySceneNames.Adventure);
+                var adventure = Find<AdventureController>();
+                for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++) yield return null;
+                adventure.SetEncounterRandomSource(new EncounterRandom());
+                Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+                for (int frame = 0; frame < 300 && Find<CombatHudPresenter>().Snapshot == null; frame++) yield return null;
+                Assert.That(Find<CombatHudPresenter>().Snapshot, Is.Not.Null, "战斗 HUD 必须已呈现。");
+                yield return Capture("env-initial-" + size.x);
+
+                var lines = new List<string> { Header() };
+                GameObject environment = GameObject.Find("GuanzhongEnvironment");
+                Assert.That(environment, Is.Not.Null, "环境层根必须存在。");
+                Assert.That(environment.GetComponentsInChildren<Collider>().Length, Is.Zero, "环境层不得拦截棋盘点击。");
+                GameObject battlefield = GameObject.Find("GuanzhongBattlefield");
+                Assert.That(environment.transform.IsChildOf(battlefield.transform), Is.False,
+                    "环境层不能挂在战场下，否则会扩大自动取景与平移边界。");
+                foreach (string layer in new[] { "Environment_DistantCanyon", "Environment_ForegroundLeft", "Environment_ForegroundRight", "Environment_ValleyMist" })
+                {
+                    Transform node = environment.transform.Find(layer);
+                    Assert.That(node, Is.Not.Null, "缺少环境层：" + layer);
+                    Renderer renderer = node.GetComponent<Renderer>();
+                    Assert.That(renderer, Is.Not.Null);
+                    Assert.That(renderer.enabled, Is.True, layer + " 必须可见。");
+                    lines.Add($"{layer}: world={node.position:F3}; scale={node.lossyScale:F3}; " +
+                        $"shader={renderer.sharedMaterial.shader.name}; texture={renderer.sharedMaterial.mainTexture.name}");
+                }
+
+                Bounds board = BattlefieldRenderBounds(battlefield);
+                float groundY = battlefield.transform.GetChild(0).position.y;
+                Camera camera = Camera.main;
+                foreach (var corner in new[]
+                {
+                    ("sw", board.min.x, board.min.z), ("se", board.max.x, board.min.z),
+                    ("nw", board.min.x, board.max.z), ("ne", board.max.x, board.max.z),
+                })
+                {
+                    MoveCameraFocus(camera, new Vector3(corner.Item2, groundY, corner.Item3));
+                    yield return null;
+                    yield return null;
+                    lines.Add($"pan {corner.Item1}: camera={camera.transform.position:F3}");
+                    yield return Capture($"env-pan-{corner.Item1}-{size.x}");
+                }
+                Write("environment-" + size.x, lines);
+            }
+        }
+
+        private static Bounds BattlefieldRenderBounds(GameObject battlefield)
+        {
+            var bounds = new Bounds();
+            bool any = false;
+            foreach (Renderer renderer in battlefield.GetComponentsInChildren<Renderer>())
+            {
+                if (!renderer.enabled) continue;
+                if (!any) { bounds = renderer.bounds; any = true; }
+                else bounds.Encapsulate(renderer.bounds);
+            }
+            Assert.That(any, Is.True, "战场必须有可见几何。");
+            return bounds;
+        }
+
+        private static void MoveCameraFocus(Camera camera, Vector3 target)
+        {
+            var plane = new Plane(Vector3.up, new Vector3(0f, target.y, 0f));
+            Ray ray = camera.ScreenPointToRay(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f));
+            if (!plane.Raycast(ray, out float distance)) return;
+            Vector3 focus = ray.GetPoint(distance);
+            camera.transform.position += new Vector3(target.x - focus.x, 0f, target.z - focus.z);
+        }
+
         private IEnumerator EnterSettlement()
         {
             var stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
