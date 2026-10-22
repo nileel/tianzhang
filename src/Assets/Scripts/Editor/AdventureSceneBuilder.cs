@@ -452,10 +452,39 @@ namespace TianZhang.Editor
 
             RectTransform preview = LayoutObject(canvas.transform, "CombatActionPreviewRoot");
             RemoveLayout(preview);
-            SettlementSceneBuilder.PlacePanel(preview.gameObject, new Vector2(351, 281), new Vector2(1442, 477));
-            MakeLayoutScroll(preview, "PreviewBody", LayoutObject(preview, "ActionPreviewSummary").GetComponent<Text>(), 20, 80, 20, 16);
-            PlaceLayoutRect(LayoutObject(preview, "PreviewActions"), 20, 16, 1051, 48);
-            BuildAttackPointer(LayoutObject(preview, "PreviewActions"), root);
+            // The interaction preview belongs to the accepted compact layout: lower right, one
+            // narrow column above the hotbar, clear of the timeline, log and target panels.
+            CompactRect(preview.gameObject, 1268, 612, 620, 276);
+            CombatCompactUiAssets.Panel(preview.gameObject);
+            MakeLayoutScroll(preview, "PreviewBody", LayoutObject(preview, "ActionPreviewSummary").GetComponent<Text>(), 12, 96, 12, 40);
+            Text previewSummary = LayoutObject(preview, "ActionPreviewSummary").GetComponent<Text>();
+            previewSummary.fontSize = 20;
+            RectTransform previewHeading = FindLayout(preview, "ActionPreviewHeading");
+            if (previewHeading != null)
+            {
+                PlaceLayoutRect(previewHeading, 16, 238, 280, 36);
+                Text label = previewHeading.GetComponent<Text>();
+                label.fontSize = 24;
+                label.alignment = TextAnchor.MiddleLeft;
+            }
+            RectTransform previewLegend = FindLayout(preview, "PreviewLegend");
+            if (previewLegend != null)
+            {
+                PlaceLayoutRect(previewLegend, 300, 240, 304, 34);
+                Text label = previewLegend.GetComponent<Text>();
+                label.fontSize = 15;
+                label.alignment = TextAnchor.MiddleRight;
+            }
+            RectTransform previewSelectors = FindLayout(preview, "PreviewSelectors");
+            if (previewSelectors != null)
+            {
+                PlaceLayoutRect(previewSelectors, 12, 54, 596, 38);
+                ConfigurePreviewRow(previewSelectors);
+            }
+            RectTransform previewActions = LayoutObject(preview, "PreviewActions");
+            PlaceLayoutRect(previewActions, 12, 10, 596, 38);
+            ConfigurePreviewRow(previewActions);
+            BuildAttackPointer(previewActions, root);
 
             CombatBountyTrackerView bounty = root.GetComponent<CombatBountyTrackerView>() ?? root.AddComponent<CombatBountyTrackerView>();
             GameObject bountyPanel = LayoutPanel(hud, "CombatBountyTrackerRoot");
@@ -597,6 +626,34 @@ namespace TianZhang.Editor
             return button;
         }
 
+        private static RectTransform FindLayout(Transform parent, string name)
+        {
+            foreach (RectTransform child in parent.GetComponentsInChildren<RectTransform>(true))
+                if (child.name == name) return child;
+            return null;
+        }
+
+        /// <summary>One equal-width button row; a lone button (attack/move cancel) fills the row.</summary>
+        private static void ConfigurePreviewRow(RectTransform row)
+        {
+            RemoveLayout(row);
+            HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(0, 0, 0, 0);
+            layout.spacing = 6;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = true;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            foreach (Button button in row.GetComponentsInChildren<Button>(true))
+            {
+                LayoutElement element = button.GetComponent<LayoutElement>() ?? button.gameObject.AddComponent<LayoutElement>();
+                element.minWidth = 0; element.minHeight = element.preferredHeight = 38;
+                element.flexibleWidth = 1; element.flexibleHeight = 0;
+                Text label = button.GetComponentInChildren<Text>(true);
+                if (label != null) label.fontSize = 20;
+            }
+        }
+
         private static void MakeLayoutScroll(Transform parent, string name, Text text, float left, float bottom, float right, float top)
         {
             Transform existing = parent.Find(name);
@@ -638,39 +695,45 @@ namespace TianZhang.Editor
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
             CombatActionPreviewView view = root.GetComponent<CombatActionPreviewView>() ?? root.AddComponent<CombatActionPreviewView>();
             GameObject panel = SceneBuildSupport.CreatePanel("CombatActionPreviewRoot", canvas.transform, Vector2.zero, Vector2.one);
-            SettlementSceneBuilder.PlacePanel(panel, new Vector2(544, 48), new Vector2(1396, 278));
             SettlementSceneBuilder.ApplyPanelSkin(panel);
             SettlementSceneBuilder.ConfigureColumn(panel);
+            Text heading = LayoutText(panel.transform, "ActionPreviewHeading", string.Empty, 24);
+            heading.alignment = TextAnchor.MiddleLeft;
+            Text legend = LayoutText(panel.transform, "PreviewLegend", string.Empty, 16);
+            legend.alignment = TextAnchor.MiddleRight;
+            legend.color = new Color32(194, 208, 203, 255);
+            legend.supportRichText = true;
             Text summary = SceneBuildSupport.CreateText("ActionPreviewSummary", panel.transform, string.Empty, 20);
             SettlementSceneBuilder.ApplyTextSkin(summary, 120);
             summary.raycastTarget = false;
-            var row = new GameObject("PreviewActions", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            var selectors = new GameObject("PreviewSelectors", typeof(RectTransform));
+            selectors.transform.SetParent(panel.transform, false);
+            var row = new GameObject("PreviewActions", typeof(RectTransform));
             row.transform.SetParent(panel.transform, false);
-            SettlementSceneBuilder.SetHeight(row, 44);
-            HorizontalLayoutGroup layout = row.GetComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
             Button cancel = SceneBuildSupport.CreateButton("CancelActionButton", row.transform, "取消", out _);
             Button confirm = SceneBuildSupport.CreateButton("ConfirmActionButton", row.transform, "确认施行", out _);
             SettlementSceneBuilder.ApplyButtonSkin(cancel);
             SettlementSceneBuilder.ApplyButtonSkin(confirm);
             SceneBuildSupport.SetObject(view, "root", panel);
+            SceneBuildSupport.SetObject(view, "heading", heading);
+            SceneBuildSupport.SetObject(view, "legend", legend);
             SceneBuildSupport.SetObject(view, "summary", summary);
             SceneBuildSupport.SetObject(view, "confirmButton", confirm);
             SceneBuildSupport.SetObject(view, "cancelButton", cancel);
-            BuildSwapSelectors(row.transform, view);
+            BuildSwapSelectors(selectors.transform, view);
             SceneBuildSupport.SetObject(root.GetComponent<AdventureSceneInstaller>(), "combatActionPreviewView", view);
             Transform rail = canvas.transform.Find("CombatTimelineRoot");
             if (rail == null) throw new InvalidOperationException("Preview requires the formal timeline.");
             Transform oldPrediction = rail.Find("ConditionalNextMarker");
             if (oldPrediction != null) UnityEngine.Object.DestroyImmediate(oldPrediction.gameObject);
-            Text prediction = SceneBuildSupport.CreateText("ConditionalNextMarker", rail, string.Empty, 22);
+            Text prediction = SceneBuildSupport.CreateText("ConditionalNextMarker", rail, string.Empty, 20);
             prediction.font = SettlementSceneBuilder.UiFont;
             prediction.raycastTarget = false;
             prediction.alignment = TextAnchor.UpperCenter;
             prediction.color = new Color32(239, 206, 123, 255);
-            PlaceTimelineRect(prediction.rectTransform, new Vector2(1, 0), new Vector2(204, 144), new Vector2(192, 144));
+            // The compact preview carries the CT lines; the rail annotation stays under the rail
+            // instead of floating over the board or behind the old wide popup.
+            PlaceTimelineRect(prediction.rectTransform, Vector2.zero, new Vector2(0, -6), new Vector2(184, 132));
             SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionRoot", prediction.gameObject);
             SceneBuildSupport.SetObject(root.GetComponent<CombatTimelineView>(), "predictionText", prediction);
             prediction.gameObject.SetActive(false);
@@ -690,7 +753,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(bar, "swapSpellButton", swap);
             PlaceLayoutRect(swap.GetComponent<RectTransform>(), 252, 8, 114, 68);
             ConfigureEquipmentButton(root);
-            BuildSwapSelectors(LayoutObject(canvas.transform, "CombatActionPreviewRoot/PreviewActions"),
+            BuildSwapSelectors(LayoutObject(canvas.transform, "CombatActionPreviewRoot/PreviewSelectors"),
                 root.GetComponent<CombatActionPreviewView>());
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }

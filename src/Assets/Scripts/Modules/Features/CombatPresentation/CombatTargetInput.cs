@@ -80,5 +80,13 @@ namespace TianZhang.Features.CombatPresentation
             }
         }
 
+        /// <summary>Cell of an already spawned unit, read from the presentation that mirrors authority.</summary>
+        public bool TryGetUnitCell(string id, out CombatUnitPresentationHex cell)
+        {
+            cell = default;
+            return provider != null && !string.IsNullOrWhiteSpace(id) &&
+                provider.TryGetPresentedPosition(id, out cell);
+        }
+
     }
 }

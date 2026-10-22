@@ -7,10 +7,36 @@ using UnityEngine.InputSystem;
 
 namespace TianZhang.Features.CombatPresentation
 {
+    /// <summary>One selectable unit or cell offered by the authoritative skill quote.</summary>
+    public readonly struct CombatTargetingHint
+    {
+        public CombatTargetingHint(CombatUnitPresentationHex cell, bool legal)
+        {
+            Cell = cell;
+            IsLegal = legal;
+        }
+
+        public CombatUnitPresentationHex Cell { get; }
+        public bool IsLegal { get; }
+    }
+
     /// <summary>Projects authoritative move options and keeps uncommitted selection local to the view.</summary>
     public sealed class CombatMovementView : MonoBehaviour
     {
+        // Cool reachable range, warm destination/target, amber effect cells and red rejection.
         private static readonly Color ReachableOutlineColor = new Color32(0x23, 0x8C, 0xFF, 0xFF);
+        private static readonly Color DestinationColor = new Color32(0xF2, 0xC1, 0x4E, 0xFF);
+        private static readonly Color LegalTargetColor = new Color32(0xE8, 0xC4, 0x6A, 0xFF);
+        private static readonly Color CurrentTargetColor = new Color32(0xFF, 0xE7, 0xA0, 0xFF);
+        private static readonly Color EffectCellColor = new Color32(0xFF, 0x9F, 0x3C, 0xFF);
+        private static readonly Color IllegalColor = new Color32(0xFF, 0x40, 0x33, 0xFF);
+        private const float ReachableWidth = 0.035f;
+        private const float DestinationWidth = 0.07f;
+        private const float LegalTargetWidth = 0.045f;
+        private const float CurrentTargetWidth = 0.09f;
+        private const float EffectWidth = 0.06f;
+        private const float IllegalWidth = 0.06f;
+        private const float PathNodeRadius = 0.12f;
         private const float SelectionBorderOffset = 0.01f;
 
         [Serializable]
@@ -28,17 +54,22 @@ namespace TianZhang.Features.CombatPresentation
         private readonly Dictionary<Vector2Int, LineRenderer> highlights = new Dictionary<Vector2Int, LineRenderer>();
         private readonly Dictionary<Vector2Int, Vector3> centers = new Dictionary<Vector2Int, Vector3>();
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
+        private readonly List<LineRenderer> pathNodes = new List<LineRenderer>();
         private ICombatActionPreviewHandler previewHandler;
         private CombatActionBarView actionBar;
         private CombatActionPreviewView previewView;
         private CombatHudSnapshot snapshot;
         private CombatMovementOption selected;
         private LineRenderer pathLine;
+        private LineRenderer pathArrow;
+        private Vector2Int? highlightedDestination;
         private bool ownsPreview;
         public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
+        public IReadOnlyList<LineRenderer> PathNodeLines => pathNodes;
+        public LineRenderer PathDirectionArrow => pathArrow;
         private bool CanInput => snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
 
         public void Configure(ICombatCommandHandler commands, CombatActionBarView bar,
@@ -58,7 +89,7 @@ namespace TianZhang.Features.CombatPresentation
                 center.y = TileBodyTop(cell.tile, center.y) + SelectionBorderOffset;
                 var key = new Vector2Int(cell.q, cell.r);
                 centers.Add(key, center);
-                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, 0.035f, ReachableOutlineColor);
+                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, ReachableWidth, ReachableOutlineColor);
                 ring.loop = true;
                 ring.positionCount = 6;
                 for (int corner = 0; corner < 6; corner++)
@@ -69,8 +100,11 @@ namespace TianZhang.Features.CombatPresentation
                 ring.gameObject.SetActive(false);
                 highlights.Add(key, ring);
             }
-            pathLine = CreateLine("MovementPathPreview", selectedMaterial, 0.065f, selectedMaterial.GetColor("_BaseColor"));
+            pathLine = CreateLine("MovementPathPreview", selectedMaterial, 0.065f, DestinationColor);
             pathLine.gameObject.SetActive(false);
+            pathArrow = CreateLine("MovementPathDirection", selectedMaterial, 0.07f, DestinationColor);
+            pathArrow.positionCount = 3;
+            pathArrow.gameObject.SetActive(false);
         }
 
         public void Present(CombatHudSnapshot value)
@@ -81,15 +115,17 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false) =>
-            PresentTargeting(null, 0, 0, area, target, legal);
+            PresentTargeting(null, 0, 0, area, target, legal, null);
 
-        /// <summary>Shows the cast range and the effect cells for the currently pointed target.</summary>
+        /// <summary>Shows the cast range, the legal unit targets, and the effect cells of the pointed target.</summary>
         public void PresentCastingPreview(CombatUnitPresentationHex origin, int minimum, int maximum,
-            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal) =>
-            PresentTargeting(origin, minimum, maximum, area, target, legal);
+            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
+            IReadOnlyList<CombatTargetingHint> targets = null) =>
+            PresentTargeting(origin, minimum, maximum, area, target, legal, targets);
 
         private void PresentTargeting(CombatUnitPresentationHex? rangeOrigin, int minimum, int maximum,
-            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal)
+            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
+            IReadOnlyList<CombatTargetingHint> targets)
         {
             ClearSelection();
             if (!CanInput) return;
@@ -100,18 +136,29 @@ namespace TianZhang.Features.CombatPresentation
                     var position = new CombatUnitPresentationHex(pair.Key.x, pair.Key.y);
                     int distance = HexDistance(rangeOrigin.Value, position);
                     if (distance < minimum || distance > maximum) continue;
-                    ShowRing(pair.Value, ReachableOutlineColor, 0.035f);
+                    ShowRing(pair.Value, ReachableOutlineColor, ReachableWidth);
                 }
             }
+            // Legal targets stay marked before the pointer reaches them, so the range and the
+            // selectable units remain distinguishable from the effect cells of one candidate.
+            if (targets != null)
+                foreach (CombatTargetingHint hint in targets)
+                {
+                    if (!hint.IsLegal || !highlights.TryGetValue(Key(hint.Cell), out LineRenderer ring)) continue;
+                    ShowRing(ring, LegalTargetColor, LegalTargetWidth);
+                }
             IReadOnlyList<CombatAttackAreaCellSnapshot> shown = area?.Cells ??
                 (target.HasValue ? new[] { new CombatAttackAreaCellSnapshot(target.Value, legal, string.Empty) } :
                     Array.Empty<CombatAttackAreaCellSnapshot>());
             foreach (CombatAttackAreaCellSnapshot cell in shown)
             {
                 if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
-                Color color = cell.IsLegal ? selectedMaterial.GetColor("_BaseColor") : new Color(1f, 0.25f, 0.2f, 1f);
-                ShowRing(ring, color, 0.06f);
+                ShowRing(ring, cell.IsLegal ? EffectCellColor : IllegalColor, cell.IsLegal ? EffectWidth : IllegalWidth);
             }
+            // The pointed cell is the current target and always outranks the range or area color.
+            if (target.HasValue && highlights.TryGetValue(Key(target.Value), out LineRenderer current))
+                ShowRing(current, legal ? CurrentTargetColor : IllegalColor,
+                    legal ? CurrentTargetWidth : IllegalWidth);
         }
 
         /// <summary>
@@ -154,6 +201,7 @@ namespace TianZhang.Features.CombatPresentation
             SelectionStarted?.Invoke();
             IsSelecting = true;
             selected = null;
+            highlightedDestination = null;
             foreach (CombatMovementOption option in snapshot.Movement.Options)
                 if (highlights.TryGetValue(Key(option.Destination), out LineRenderer ring)) ring.gameObject.SetActive(true);
             ownsPreview = previewView != null;
@@ -199,6 +247,7 @@ namespace TianZhang.Features.CombatPresentation
             }
             // Hover is only a preview; it never commits and never clears an ongoing selection.
             selected = hovered;
+            HighlightDestination(hovered);
             DrawPath(hovered);
             PresentMovementPreview(pointerOnBoard);
             actionBar?.PresentMovement(snapshot, IsSelecting, hovered);
@@ -237,15 +286,90 @@ namespace TianZhang.Features.CombatPresentation
             return uiHits.Count > 0;
         }
 
+        /// <summary>Keeps exactly one gold destination; the previous hover returns to cyan.</summary>
+        private void HighlightDestination(CombatMovementOption hovered)
+        {
+            if (highlightedDestination.HasValue &&
+                highlights.TryGetValue(highlightedDestination.Value, out LineRenderer previous) &&
+                (hovered == null || Key(hovered.Destination) != highlightedDestination.Value))
+                ShowRing(previous, ReachableOutlineColor, ReachableWidth);
+            highlightedDestination = null;
+            if (hovered == null || !highlights.TryGetValue(Key(hovered.Destination), out LineRenderer ring)) return;
+            ShowRing(ring, DestinationColor, DestinationWidth);
+            highlightedDestination = Key(hovered.Destination);
+        }
+
         private void DrawPath(CombatMovementOption option)
         {
             if (pathLine == null) return;
-            pathLine.gameObject.SetActive(option != null);
-            if (option == null) return;
+            bool visible = option != null && snapshot?.Movement != null;
+            pathLine.gameObject.SetActive(visible);
+            if (pathArrow != null) pathArrow.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                HidePathNodes(0);
+                return;
+            }
             pathLine.positionCount = option.Path.Count + 1;
-            pathLine.SetPosition(0, centers[Key(snapshot.Movement.Origin)]);
+            Vector3 origin = centers[Key(snapshot.Movement.Origin)];
+            pathLine.SetPosition(0, origin);
             for (int index = 0; index < option.Path.Count; index++)
                 pathLine.SetPosition(index + 1, centers[Key(option.Path[index])]);
+            // Every intermediate cell carries a warm node; the destination gets the arrowhead.
+            int nodeCount = Math.Max(0, option.Path.Count - 1);
+            EnsurePathNodes(nodeCount);
+            for (int index = 0; index < nodeCount; index++)
+            {
+                Vector3 nodeCenter = centers[Key(option.Path[index])];
+                LineRenderer node = pathNodes[index];
+                node.loop = true;
+                node.positionCount = 6;
+                for (int corner = 0; corner < 6; corner++)
+                {
+                    float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
+                    node.SetPosition(corner, nodeCenter + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * PathNodeRadius);
+                }
+                ShowRing(node, DestinationColor, 0.05f);
+            }
+            HidePathNodes(nodeCount);
+            if (pathArrow == null) return;
+            Vector3 destination = centers[Key(option.Destination)];
+            Vector3 previous = option.Path.Count > 1
+                ? centers[Key(option.Path[option.Path.Count - 2])]
+                : origin;
+            Vector3 direction = destination - previous;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.000001f)
+            {
+                pathArrow.gameObject.SetActive(false);
+                return;
+            }
+            direction.Normalize();
+            Vector3 side = new Vector3(-direction.z, 0f, direction.x);
+            // Straddle the destination centre so the chevron reads as the last path step.
+            Vector3 tip = destination + direction * 0.10f;
+            Vector3 back = tip - direction * 0.26f;
+            pathArrow.SetPosition(0, back + side * 0.16f);
+            pathArrow.SetPosition(1, tip);
+            pathArrow.SetPosition(2, back - side * 0.16f);
+            pathArrow.gameObject.SetActive(true);
+        }
+
+        private void EnsurePathNodes(int count)
+        {
+            while (pathNodes.Count < count)
+            {
+                LineRenderer node = CreateLine("MovementPathNode_" + pathNodes.Count, selectedMaterial, 0.05f, DestinationColor);
+                node.loop = true;
+                node.positionCount = 6;
+                pathNodes.Add(node);
+            }
+        }
+
+        private void HidePathNodes(int from)
+        {
+            for (int index = from; index < pathNodes.Count; index++)
+                pathNodes[index].gameObject.SetActive(false);
         }
 
         private void ClearSelection()
@@ -257,16 +381,19 @@ namespace TianZhang.Features.CombatPresentation
             }
             IsSelecting = false;
             selected = null;
+            highlightedDestination = null;
             foreach (LineRenderer ring in highlights.Values)
                 if (ring != null)
                 {
                     ring.gameObject.SetActive(false);
-                    ring.widthMultiplier = 0.035f;
+                    ring.widthMultiplier = ReachableWidth;
                     var properties = new MaterialPropertyBlock();
                     properties.SetColor("_BaseColor", ReachableOutlineColor);
                     ring.SetPropertyBlock(properties);
                 }
             if (pathLine != null) pathLine.gameObject.SetActive(false);
+            if (pathArrow != null) pathArrow.gameObject.SetActive(false);
+            HidePathNodes(0);
             RefreshControls();
         }
 

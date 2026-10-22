@@ -135,7 +135,8 @@ namespace TianZhang.Tests.PlayMode
             // S2 verifies selection before contact; its own real movement turns approach the other target.
             // The movement-only lifecycle check also needs no contact and must not wait on the melee helper.
             if (TestContext.CurrentContext.Test.Name.StartsWith("S2Recovery", StringComparison.Ordinal) ||
-                TestContext.CurrentContext.Test.Name.StartsWith("MoveAndLifecycle", StringComparison.Ordinal)) yield break;
+                TestContext.CurrentContext.Test.Name.StartsWith("MoveAndLifecycle", StringComparison.Ordinal) ||
+                TestContext.CurrentContext.Test.Name.StartsWith("V6", StringComparison.Ordinal)) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
@@ -722,7 +723,7 @@ namespace TianZhang.Tests.PlayMode
                     legal ? string.Empty : "不可执行", 5, true, 0, 100, 0, actionPointCostUnits: 12000);
         }
 
-        [UnityTest]
+        [UnityTest, Timeout(600000)]
         public IEnumerator S2RecoverySelectionShowsRangeCommitsSelfAndOtherAtBothResolutions()
         {
             foreach (int width in new[] { 1920, 1366 })
@@ -884,7 +885,10 @@ namespace TianZhang.Tests.PlayMode
 
                 bool LegalEnemyTarget() => presenter.Snapshot.ArtActions[1].Targets.Any(target =>
                     target.Id != spawned.Player.Id && target.CanExecute);
-                for (int step = 0; step < 8 && !LegalEnemyTarget(); step++)
+                // A4 widened the battlefield to 10x10 and moved the encounter to the far edge, so one
+                // real move per turn no longer closes 18 cells inside the old eight-turn budget. Keep
+                // the real move/end-turn flow and give it a budget that fits the current map.
+                for (int step = 0; step < 24 && !LegalEnemyTarget(); step++)
                 {
                     HexCoord enemyPosition = spawned.Enemy.Position;
                     int currentDistance = spawned.Player.Position.Distance(enemyPosition);
@@ -1525,6 +1529,212 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNull(input.Candidate);
             Assert.IsNull(timeline.Prediction);
             Assert.AreEqual(before, State());
+        }
+
+        [UnityTest]
+        public IEnumerator V6MovementAndSpellBordersAndCompactPreviewUseAuthorityAtBothResolutions()
+        {
+            string directory = Path.Combine(Application.dataPath, "../Logs/v6-interaction");
+            Directory.CreateDirectory(directory);
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                if (width == 1366) { yield return Cleanup(); yield return EnterFormalEncounter(); }
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                yield return Ready();
+                CombatActionBarView bar = Find<CombatActionBarView>();
+                CombatCommandInput input = Find<CombatCommandInput>();
+                CombatActionPreviewView view = Find<CombatActionPreviewView>();
+                CombatMovementView movement = Find<CombatMovementView>();
+                Camera camera = Get<Camera>(movement, "battlefieldCamera");
+                Canvas.ForceUpdateCanvases();
+                RectTransform panel = Get<GameObject>(view, "root").GetComponent<RectTransform>();
+                var panelCorners = new Vector3[4];
+                panel.GetWorldCorners(panelCorners);
+                Assert.That(panelCorners[0].x, Is.GreaterThanOrEqualTo(0f), "Preview must stay on screen.");
+                Assert.That(panelCorners[0].y, Is.GreaterThanOrEqualTo(0f));
+                Assert.That(panelCorners[2].x, Is.LessThanOrEqualTo(Screen.width + .5f));
+                Assert.That(panelCorners[2].y, Is.LessThanOrEqualTo(Screen.height + .5f));
+                Assert.That(panelCorners[0].x, Is.GreaterThan(Screen.width * .55f),
+                    "The compact preview must occupy the right side, away from the timeline.");
+                Assert.That(panelCorners[2].y, Is.LessThan(Screen.height * .95f),
+                    "The compact preview must stay above the action hotbar.");
+                string before = State();
+                Vector2Int selfKey = new Vector2Int(spawned.Player.Position.Q, spawned.Player.Position.R);
+                Vector2Int enemyKey = new Vector2Int(spawned.Enemy.Position.Q, spawned.Enemy.Position.R);
+
+                // Skill selection: cyan cast range, gold legal targets, bright current target, red rejection.
+                bar.SecondArtButton.onClick.Invoke();
+                Assert.IsTrue(input.IsSelectingAttack, "The skill entry must only open selection.");
+                Assert.IsTrue(view.IsVisible);
+                Text summary = Get<Text>(view, "summary");
+                Canvas.ForceUpdateCanvases();
+                StringAssert.Contains("施法范围 0–2 格", summary.text);
+                StringAssert.Contains("作用范围", summary.text);
+                StringAssert.Contains("范围", Get<Text>(view, "legend").text);
+                AssertRing(movement, selfKey, new Color32(0xE8, 0xC4, 0x6A, 0xFF), .045f);
+                Assert.IsFalse(movement.Highlights[enemyKey].gameObject.activeSelf,
+                    "A target beyond the cast range must not be marked as selectable.");
+                yield return CaptureV6("v6-spell-open-" + width, view, movement, directory);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: false);
+                Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
+                AssertRing(movement, selfKey, new Color32(0xFF, 0xE7, 0xA0, 0xFF), .09f);
+                StringAssert.Contains("当前 AP", summary.text);
+                StringAssert.Contains("→ 预计", summary.text);
+                yield return CaptureV6("v6-spell-self-" + width, view, movement, directory);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: false);
+                Assert.IsFalse(input.Preview.CanConfirm, "The untouched formal opening leaves the enemy out of 0-2.");
+                AssertRing(movement, enemyKey, new Color32(0xFF, 0x40, 0x33, 0xFF), .06f);
+                StringAssert.Contains("不可施行", summary.text);
+                StringAssert.Contains("距离过远", summary.text);
+                yield return CaptureV6("v6-spell-illegal-" + width, view, movement, directory);
+                Vector2 panelPoint = RectTransformUtility.WorldToScreenPoint(null, panel.TransformPoint(panel.rect.center));
+                Assert.IsFalse(movement.TryPickCell(panelPoint, out _), "The preview panel owns its pointer.");
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(panelPoint, true);
+                Assert.IsTrue(input.IsSelectingAttack, "A UI click must not submit the skill.");
+                Assert.AreEqual(before, State());
+                input.CancelCandidate();
+                Assert.IsFalse(view.IsVisible);
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+
+                // Guard keeps a confirm entry plus the same AP projection.
+                bar.GuardButton.onClick.Invoke();
+                Assert.AreEqual(CombatActionKind.Guard, input.Candidate.Kind);
+                Assert.IsTrue(view.ConfirmButton.gameObject.activeSelf);
+                Canvas.ForceUpdateCanvases();
+                StringAssert.Contains("当前 AP", summary.text);
+                Assert.That(summary.preferredHeight,
+                    Is.LessThanOrEqualTo(summary.GetComponentInParent<ScrollRect>().viewport.rect.height + .1f),
+                    "The compact preview must show its content without scrolling: " + summary.text);
+                yield return CaptureV6("v6-guard-" + width, view, movement, directory);
+                view.CancelButton.onClick.Invoke();
+                Assert.AreEqual(before, State());
+
+                // Movement: cyan reachable, one gold destination, warm path nodes and an arrowhead.
+                bar.MoveButton.onClick.Invoke();
+                Assert.IsTrue(movement.IsSelecting);
+                Assert.IsTrue(view.IsVisible);
+                StringAssert.Contains("可达", summary.text);
+                StringAssert.Contains("左键点击高亮地块立即移动", summary.text);
+                var centers = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(movement, "centers");
+                int remaining = spawned.Player.ActionPointsRemainingUnits;
+                CombatMovementOption hovered = null;
+                foreach (CombatMovementOption candidate in presenter.Snapshot.Movement.Options
+                    .OrderByDescending(option => option.Path.Count >= 2).ThenBy(option => option.Path.Count))
+                {
+                    Vector2 point = camera.WorldToScreenPoint(centers[new Vector2Int(candidate.Destination.Q, candidate.Destination.R)]);
+                    if (point.x < 0 || point.x >= Screen.width || point.y < 0 || point.y >= Screen.height) continue;
+                    if (!movement.TryPickCell(point, out CombatUnitPresentationHex picked) ||
+                        picked.Q != candidate.Destination.Q || picked.R != candidate.Destination.R) continue;
+                    yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, false);
+                    if (movement.Selected == null || !movement.Selected.Destination.Equals(candidate.Destination)) continue;
+                    hovered = candidate;
+                    break;
+                }
+                Assert.IsNotNull(hovered, "A visible legal movement destination must preview its path.");
+                Vector2Int destinationKey = new Vector2Int(hovered.Destination.Q, hovered.Destination.R);
+                AssertRing(movement, destinationKey, new Color32(0xF2, 0xC1, 0x4E, 0xFF), .07f);
+                var pathLine = Get<LineRenderer>(movement, "pathLine");
+                Assert.IsTrue(pathLine.gameObject.activeSelf);
+                Assert.AreEqual(hovered.Path.Count + 1, pathLine.positionCount);
+                var nodes = Get<System.Collections.Generic.List<LineRenderer>>(movement, "pathNodes");
+                Assert.AreEqual(Math.Max(0, hovered.Path.Count - 1), nodes.Count(node => node.gameObject.activeSelf),
+                    "Every intermediate path cell must carry a warm node.");
+                for (int index = 0; index < hovered.Path.Count - 1; index++)
+                {
+                    LineRenderer node = nodes[index];
+                    Assert.IsTrue(node.gameObject.activeSelf, "Path node " + index + " must be visible.");
+                    Vector3 center = Enumerable.Range(0, 6).Select(node.GetPosition)
+                        .Aggregate(Vector3.zero, (sum, value) => sum + value) / 6f;
+                    Vector3 cell = centers[new Vector2Int(hovered.Path[index].Q, hovered.Path[index].R)];
+                    Assert.That(center.x, Is.EqualTo(cell.x).Within(.001f), "Path node must stay on its cell.");
+                    Assert.That(center.z, Is.EqualTo(cell.z).Within(.001f), "Path node must stay on its cell.");
+                    Assert.That(center.y, Is.EqualTo(cell.y).Within(.001f),
+                        "Path nodes follow the tile body height, not obstacles.");
+                }
+                LineRenderer arrow = Get<LineRenderer>(movement, "pathArrow");
+                Assert.IsTrue(arrow.gameObject.activeSelf);
+                Vector3 tip = arrow.GetPosition(1);
+                Vector3 baseCenter = (arrow.GetPosition(0) + arrow.GetPosition(2)) * .5f;
+                HexCoord beforeDestination = hovered.Path.Count > 1
+                    ? new HexCoord(hovered.Path[hovered.Path.Count - 2].Q, hovered.Path[hovered.Path.Count - 2].R)
+                    : new HexCoord(presenter.Snapshot.Movement.Origin.Q, presenter.Snapshot.Movement.Origin.R);
+                Vector3 finalStep = (centers[destinationKey] -
+                    centers[new Vector2Int(beforeDestination.Q, beforeDestination.R)]).normalized;
+                Assert.That(Vector3.Dot((tip - baseCenter).normalized, finalStep),
+                    Is.GreaterThan(.98f), "The arrowhead must point along the final path step.");
+                StringAssert.Contains("消耗 " + CombatActionPreviewView.FormatActionPoints(hovered.Cost) + " AP", summary.text);
+                StringAssert.Contains("路径 " + hovered.Path.Count + " 格", summary.text);
+                StringAssert.Contains("当前 AP " + CombatActionPreviewView.FormatActionPoints(remaining) + " → 预计 " +
+                    CombatActionPreviewView.FormatActionPoints(remaining - hovered.Cost), summary.text);
+                yield return CaptureV6("v6-move-hover-" + width, view, movement, directory);
+
+                // One click commits exactly once and clears every border, node and arrow.
+                Vector2 committedPoint = camera.WorldToScreenPoint(centers[destinationKey]);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(committedPoint, true);
+                Assert.IsFalse(movement.IsSelecting);
+                Assert.IsFalse(view.IsVisible);
+                Assert.AreEqual(remaining - hovered.Cost, spawned.Player.ActionPointsRemainingUnits);
+                Assert.AreEqual(hovered.Destination.Q, spawned.Player.Position.Q);
+                Assert.AreEqual(hovered.Destination.R, spawned.Player.Position.R);
+                Assert.IsFalse(nodes.Any(node => node.gameObject.activeSelf));
+                Assert.IsFalse(arrow.gameObject.activeSelf);
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                yield return Ready();
+            }
+        }
+
+        private static void AssertRing(CombatMovementView movement, Vector2Int key, Color32 expected, float width)
+        {
+            Assert.That(movement.Highlights.TryGetValue(key, out LineRenderer ring), Is.True, "Missing ring " + key);
+            Assert.IsTrue(ring.gameObject.activeSelf, ring.name + " must be active.");
+            var properties = new MaterialPropertyBlock();
+            ring.GetPropertyBlock(properties);
+            Color actual = properties.GetColor("_BaseColor");
+            Color wanted = expected;
+            Assert.That(actual.r, Is.EqualTo(wanted.r).Within(.002f), ring.name + " color=" + actual);
+            Assert.That(actual.g, Is.EqualTo(wanted.g).Within(.002f), ring.name + " color=" + actual);
+            Assert.That(actual.b, Is.EqualTo(wanted.b).Within(.002f), ring.name + " color=" + actual);
+            Assert.That(ring.widthMultiplier, Is.EqualTo(width).Within(.0005f), ring.name + " width");
+        }
+
+        private IEnumerator CaptureV6(string label, CombatActionPreviewView view, CombatMovementView movement, string directory)
+        {
+#if UNITY_EDITOR
+            for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling, "Shader compilation must finish before visual evidence.");
+#endif
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            Canvas.ForceUpdateCanvases();
+            Text summary = Get<Text>(view, "summary");
+            RectTransform root = Get<GameObject>(view, "root").GetComponent<RectTransform>();
+            var corners = new Vector3[4];
+            root.GetWorldCorners(corners);
+            var nodes = Get<System.Collections.Generic.List<LineRenderer>>(movement, "pathNodes");
+            LineRenderer arrow = Get<LineRenderer>(movement, "pathArrow");
+            string text = "resolution=" + Screen.width + "x" + Screen.height +
+                "; panel=" + root.anchoredPosition + "/" + root.sizeDelta +
+                "; corners=" + string.Join("/", corners.Select(corner => corner.x.ToString("F1") + "," + corner.y.ToString("F1"))) +
+                "; summaryFits=" + (summary.preferredHeight <= summary.GetComponentInParent<ScrollRect>().viewport.rect.height + .1f) +
+                "; heading=" + Get<Text>(view, "heading").text +
+                "; summary=" + summary.text.Replace("\n", "\\n") +
+                "; legend=" + Get<Text>(view, "legend").text +
+                "; rings=" + string.Join("/", movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf)
+                    .Select(pair => pair.Value.name + ":" + RingColor(pair.Value))) +
+                "; nodes=" + nodes.Count(node => node.gameObject.activeSelf) +
+                "; arrow=" + arrow.gameObject.activeSelf +
+                "; arrowPoints=" + string.Join("|", Enumerable.Range(0, arrow.positionCount).Select(index => arrow.GetPosition(index).ToString("F2")));
+            File.WriteAllText(Path.Combine(directory, label + ".txt"), text);
+            ScreenCapture.CaptureScreenshot(Path.Combine(directory, label + ".png"));
+            for (int frame = 0; frame < 6; frame++) yield return null;
+        }
+
+        private static string RingColor(LineRenderer ring)
+        {
+            var properties = new MaterialPropertyBlock();
+            ring.GetPropertyBlock(properties);
+            Color color = properties.GetColor("_BaseColor");
+            return "#" + ColorUtility.ToHtmlStringRGB(color) + "/" + ring.widthMultiplier.ToString("0.###");
         }
 
         private IEnumerator Ready()

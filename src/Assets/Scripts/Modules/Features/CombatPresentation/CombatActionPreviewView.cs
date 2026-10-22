@@ -1,5 +1,5 @@
 using System.Globalization;
-using System.Linq;
+using System.Text;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +9,15 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>Displays a read-only candidate. All submission stays in CombatCommandInput.</summary>
     public sealed class CombatActionPreviewView : MonoBehaviour
     {
+        private const string MovementLegend =
+            "<color=#238CFF>■</color> 可移动   <color=#F2C14E>■</color> 目的地   <color=#FFE7A0>■</color> 路径";
+        private const string TargetingLegend =
+            "<color=#238CFF>■</color> 范围 <color=#E8C46A>■</color> 可选 <color=#FFE7A0>■</color> 当前 " +
+            "<color=#FF9F3C>■</color> 作用 <color=#FF4033>■</color> 非法";
+
         [SerializeField] private GameObject root;
+        [SerializeField] private Text heading;
+        [SerializeField] private Text legend;
         [SerializeField] private Text summary;
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
@@ -31,6 +39,8 @@ namespace TianZhang.Features.CombatPresentation
             {
                 root.SetActive(false);
                 summary.text = string.Empty;
+                SetText(heading, string.Empty);
+                SetText(legend, string.Empty);
                 return;
             }
             root.SetActive(true);
@@ -39,25 +49,43 @@ namespace TianZhang.Features.CombatPresentation
             swapSlotButton?.gameObject.SetActive(false);
             swapCandidateButton?.gameObject.SetActive(false);
             if (cancelButton != null) cancelButton.gameObject.SetActive(true);
+            SetText(heading, "移动预览");
+            SetText(legend, MovementLegend);
             if (movement == null)
             {
                 summary.text = "移动 · 当前无法行动";
                 return;
             }
-            string head = "移动 · 可达 " + movement.Options.Count + " 格 · 剩余 " +
-                FormatActionPoints(movement.RemainingPoints) + " AP";
-            string body;
-            if (hovered != null)
-                body = "\n→ 目标 (" + hovered.Destination.Q + "," + hovered.Destination.R + ") · 消耗 " +
-                    FormatActionPoints(hovered.Cost) + " AP · 路径 " + hovered.Path.Count + " 格";
-            else if (pointerOnBoard)
-                body = "\n此处不可到达：超出移动范围、被阻挡或已占用";
+            string remaining = "当前 AP " + FormatActionPoints(movement.RemainingPoints);
+            var text = new StringBuilder();
+            if (hovered == null)
+            {
+                text.Append("可达 ").Append(movement.Options.Count).Append(" 格 · ").Append(remaining);
+                text.Append(pointerOnBoard
+                    ? "\n此处不可到达：超出移动范围、被阻挡或已占用"
+                    : "\n指向青蓝地块预览路径与费用");
+                text.Append("\n左键点击高亮地块立即移动");
+                text.Append("\n右键 / Esc / 取消关闭");
+            }
             else
-                body = "\n指向蓝色高亮地块预览路径与费用";
-            summary.text = head + body + "\n左键点击高亮地块立即移动；右键、Esc 或取消关闭";
+            {
+                text.Append("目标 (").Append(hovered.Destination.Q).Append(',').Append(hovered.Destination.R)
+                    .Append(") · 路径 ").Append(hovered.Path.Count).Append(" 格 · 消耗 ")
+                    .Append(FormatActionPoints(hovered.Cost)).Append(" AP");
+                text.Append('\n').Append(remaining).Append(" → 预计 ")
+                    .Append(FormatActionPoints(movement.RemainingPoints - hovered.Cost)).Append(" AP");
+                text.Append("\n左键点击立即移动 · 右键 / Esc 取消");
+            }
+            summary.text = text.ToString();
         }
 
-        public void Present(CombatActionPreviewSnapshot value)
+        public void Present(CombatActionPreviewSnapshot value) => Present(value, -1);
+
+        /// <summary>
+        /// Shows the uncommitted action. <paramref name="currentActionPointUnits"/> is the authoritative
+        /// remaining AP so the preview can state both the current and the post-action balance.
+        /// </summary>
+        public void Present(CombatActionPreviewSnapshot value, int currentActionPointUnits)
         {
             // Scene teardown can destroy the Canvas before the input owner is disabled.
             if (root == null || summary == null || confirmButton == null) return;
@@ -68,89 +96,147 @@ namespace TianZhang.Features.CombatPresentation
             bool swapping = value?.Candidate.Kind == CombatActionKind.SwapSpell;
             swapSlotButton?.gameObject.SetActive(swapping);
             swapCandidateButton?.gameObject.SetActive(swapping);
-            if (value == null) { summary.text = string.Empty; return; }
+            if (value == null)
+            {
+                summary.text = string.Empty;
+                SetText(heading, string.Empty);
+                SetText(legend, string.Empty);
+                return;
+            }
+            bool targeting = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
+            SetText(heading, value.ActionName + (targeting ? " · 选择目标" : string.Empty));
+            SetText(legend, targeting ? TargetingLegend : string.Empty);
             if (swapping)
             {
                 swapSlotButton.GetComponentInChildren<Text>().text = "槽位 " + (value.Candidate.SlotIndex + 1) + "：" + value.ReplacedSpellName;
                 swapCandidateButton.GetComponentInChildren<Text>().text = "候选：" + value.ActionName;
             }
-            string ct = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
+            string cost = FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP";
+            string settledCt = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
+            string balance = ActionPointLine(currentActionPointUnits, value.ActionPointCostUnits);
+            var text = new StringBuilder();
             if (value.Candidate.Kind == CombatActionKind.Art && string.IsNullOrEmpty(value.Candidate.TargetId))
             {
-                summary.text = value.ActionName + " · 待选目标" +
-                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：所选目标所在单格" +
-                    "\n" + value.Reason;
+                text.Append("施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange)
+                    .Append(" 格 · 作用范围：所选目标单格");
+                text.Append('\n').Append(string.IsNullOrEmpty(value.Reason)
+                    ? "左键点击施法范围内角色；右键或 Esc 取消" : value.Reason);
+                summary.text = text.ToString();
+                return;
+            }
+            if (value.Candidate.Kind == CombatActionKind.BasicAttack &&
+                string.IsNullOrEmpty(value.Candidate.TargetId) && value.AttackArea == null)
+            {
+                text.Append(value.ActionName).Append(" · 指向地块选取方向");
+                text.Append('\n').Append(string.IsNullOrEmpty(value.Reason)
+                    ? "左键施行 · 右键 / Esc 取消" : value.Reason);
+                if (currentActionPointUnits >= 0)
+                    text.Append("\n当前 AP ").Append(FormatActionPoints(currentActionPointUnits));
+                summary.text = text.ToString();
                 return;
             }
             if (value.AttackArea != null)
             {
                 CombatAttackAreaSnapshot area = value.AttackArea;
-                string Hex(CombatUnitPresentationHex hex) => "(" + hex.Q + "," + hex.R + ")";
-                string castRange = value.MaximumRange > 0
-                    ? " · 施法 " + value.MinimumRange + "–" + value.MaximumRange + " 格" : string.Empty;
-                summary.text = value.ActionName + " · 起点" + Hex(area.Origin) + " · 方向" + area.Direction + castRange + " · " +
-                    string.Join(" / ", area.Cells.Select(cell => Hex(cell.Position) + (cell.IsLegal ? "可命中" : cell.Reason))) +
-                    "\n目标：" + (area.Targets.Count == 0 ? "无" : string.Join("、", area.Targets.Select(target => target.DisplayName + "[" + target.Id + "]"))) +
-                    " · 一次费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
-                    "\n" + (value.CanConfirm ? "左键施行，命中全部目标" : "不可施行：" + value.Reason) +
-                    " · 已用" + value.CommittedUseCount + "次 · 本次×" +
-                    (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture);
+                text.Append(value.ActionName).Append(" → ").Append(value.TargetName)
+                    .Append(" · 命中 ").Append(area.Cells.Count).Append(" 格");
+                text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
+                    .Append(" · CD ").Append(value.ReuseCooldownTicks)
+                    .Append(" · 已用").Append(value.CommittedUseCount).Append(" 次");
+                if (balance.Length > 0) text.Append('\n').Append(balance);
+                text.Append('\n').Append(value.CanConfirm
+                    ? "左键施行，命中全部目标 · 右键 / Esc 取消"
+                    : "不可施行：" + value.Reason);
+                summary.text = text.ToString();
                 return;
             }
             if (value.Candidate.Kind == CombatActionKind.SwapEquipment && value.EquipmentOwned.HasValue)
             {
-                summary.text = "当前主手：" + value.CurrentEquipmentName + " → " + value.ActionName +
-                    (value.EquipmentOwned.Value ? "（已持有）" : "（未持有）") +
-                    "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP；库存不变" +
-                    (value.CanConfirm ? "\n确认后主手与普攻同步；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束") :
-                        "\n不可施行：" + value.Reason);
+                text.Append("当前主手 ").Append(value.CurrentEquipmentName).Append(" → ").Append(value.ActionName)
+                    .Append(value.EquipmentOwned.Value ? "（已持有）" : "（未持有）");
+                text.Append("\n费用 ").Append(FormatActionPoints(value.ActionPointCostUnits)).Append(" AP · 库存不变");
+                text.Append('\n').Append(value.CanConfirm
+                    ? "确认后主手与普攻同步；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束")
+                    : "不可施行：" + value.Reason);
+                if (balance.Length > 0) text.Append('\n').Append(balance);
+                summary.text = text.ToString();
                 return;
             }
             if (value.Candidate.Kind == CombatActionKind.UseItem)
             {
-                summary.text = value.ActionName + " → 自身 · 持有 " + value.ItemAvailableQuantity + " 颗" +
-                    "\n恢复 " + value.ExpectedHealthRecovery + " / 药效 " + value.ItemHealthRecovery +
-                    " · 消耗 " + value.ItemQuantityCost + " 颗 / " + FormatActionPoints(value.ActionPointCostUnits) + " AP" +
-                    (value.CanConfirm ? "\n成功后退出防御；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束") :
-                        "\n不可施行：" + value.Reason);
+                text.Append(value.ActionName).Append(" → 自身 · 持有 ").Append(value.ItemAvailableQuantity)
+                    .Append(" 颗 · 消耗 ").Append(value.ItemQuantityCost).Append(" 颗");
+                text.Append("\n恢复 ").Append(value.ExpectedHealthRecovery).Append(" / 药效 ")
+                    .Append(value.ItemHealthRecovery).Append(" · 费用 ")
+                    .Append(FormatActionPoints(value.ActionPointCostUnits)).Append(" AP");
+                text.Append('\n').Append(value.CanConfirm
+                    ? "成功后退出防御；" + (value.RemainsInTurn ? "仍可行动" : "本回合结束")
+                    : "不可施行：" + value.Reason);
+                if (balance.Length > 0) text.Append('\n').Append(balance);
+                summary.text = text.ToString();
                 return;
             }
             if (swapping)
             {
-                summary.text = value.ActorName + " · 槽位 " + (value.Candidate.SlotIndex + 1) + "：" + value.ReplacedSpellName +
-                    " → " + value.ActionName + "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost +
-                    " MP · CT +" + value.CtPenalty + " · 本战剩余 " + value.CombatSwapsRemaining + " 次 · 换入冷却 " +
-                    value.ReuseCooldownTicks + " 刻（原剩 " + value.RemainingCooldownTicks + "）" +
-                    (value.CanConfirm ? "\n成功后退出防御；" + (value.RemainsInTurn ? "仍可行动；若此时结束" : "本回合结束") +
-                        " CT " + ct + "/" + threshold + " · 自身下次约 +" + value.TicksUntilReady + " 刻（顺位未定）" :
-                        "\n不可施行：" + value.Reason);
+                text.Append("费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
+                    .Append(" · CD ").Append(value.ReuseCooldownTicks).Append(" · 剩余 ")
+                    .Append(value.CombatSwapsRemaining).Append(" 次");
+                text.Append("\n换入冷却 ").Append(value.ReuseCooldownTicks).Append(" 刻（原剩 ")
+                    .Append(value.RemainingCooldownTicks).Append("）· ")
+                    .Append(value.CanConfirm ? "成功后退出防御" : "不可施行：" + value.Reason);
+                if (value.CanConfirm)
+                    text.Append('\n').Append(value.RemainsInTurn ? "若结束：" : "结束后：")
+                        .Append("CT ").Append(settledCt).Append('/').Append(threshold)
+                        .Append(" · 约+").Append(value.TicksUntilReady).Append("刻（顺位未定）");
+                if (balance.Length > 0) text.Append('\n').Append(balance);
+                summary.text = text.ToString();
                 return;
             }
             string repeat = attack && value.ReuseCooldownTicks == 0
-                ? " · 已用" + value.CommittedUseCount + "次 · 本次×" +
+                ? " · 已用" + value.CommittedUseCount + " 次 · 本次×" +
                     (value.RepeatMultiplierPermille / 1000m).ToString("0.###", CultureInfo.InvariantCulture)
                 : string.Empty;
             if (value.Candidate.Kind == CombatActionKind.Art)
             {
-                string status = value.CanConfirm ? "可施行" : "不可施行：" + value.Reason;
-                summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
-                    (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
-                    "\n" + status +
-                    "\n施法范围 " + value.MinimumRange + "–" + value.MaximumRange + " 格 · 作用范围：单格 · 费用 " +
-                    FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT +" + value.CtPenalty +
-                    " · CD" + value.ReuseCooldownTicks +
-                    (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +
-                        "CT " + ct + "/" + threshold + " · 约+" + value.TicksUntilReady + "刻（双方存活、速度/CT不变，顺位未定）" : string.Empty);
+                text.Append(value.ActionName).Append(" → ").Append(value.TargetName);
+                if (value.TargetDistance >= 0) text.Append(" · 距离 ").Append(value.TargetDistance).Append(" 格");
+                text.Append(" · 施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange).Append(" 格");
+                text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
+                    .Append(" · CD ").Append(value.ReuseCooldownTicks)
+                    .Append(" · 作用范围：单格");
+                if (balance.Length > 0) text.Append('\n').Append(balance);
+                text.Append('\n').Append(value.CanConfirm
+                    ? "左键施行 · 右键 / Esc 取消"
+                    : "不可施行：" + value.Reason + " · 左键不会扣费");
+                summary.text = text.ToString();
                 return;
             }
-            summary.text = value.ActorName + " · " + value.ActionName + " → " + value.TargetName +
-                (attack ? " · " + value.AttackDetail + repeat : string.Empty) +
-                "\n费用 " + FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP · CT 惩罚 +" +
-                value.CtPenalty + " · CD " + value.ReuseCooldownTicks + "（剩 " + value.RemainingCooldownTicks + " 刻）" +
-                (value.CanConfirm ? "\n" + (value.RemainsInTurn ? "若结束：" : "结束后：") +
-                    "CT " + ct + "/" + threshold + " · 约+" + value.TicksUntilReady + "刻（双方存活、速度/CT不变，顺位未定）" :
-                    "\n不可施行：" + value.Reason);
+            text.Append(value.ActorName).Append(" · ").Append(value.ActionName).Append(" → ").Append(value.TargetName)
+                .Append(attack ? " · " + value.AttackDetail : string.Empty).Append(repeat);
+            text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
+                .Append(" · CD ").Append(value.ReuseCooldownTicks);
+            if (value.CanConfirm)
+                text.Append('\n').Append(value.RemainsInTurn ? "若结束：" : "结束后：")
+                    .Append("CT ").Append(settledCt).Append('/').Append(threshold)
+                    .Append(" · 约+").Append(value.TicksUntilReady).Append("刻（顺位未定）");
+            else text.Append('\n').Append("不可施行：").Append(value.Reason);
+            if (balance.Length > 0) text.Append('\n').Append(balance);
+            summary.text = text.ToString();
+        }
+
+        /// <summary>Current AP and the balance after the quoted cost, always derived from authority.</summary>
+        private static string ActionPointLine(int currentUnits, int costUnits)
+        {
+            if (currentUnits < 0 || costUnits <= 0) return string.Empty;
+            string current = FormatActionPoints(currentUnits);
+            if (currentUnits < costUnits) return "当前 AP " + current + " · 不足（需 " + FormatActionPoints(costUnits) + "）";
+            return "当前 AP " + current + " → 预计 " + FormatActionPoints(currentUnits - costUnits) + " AP";
+        }
+
+        private static void SetText(Text target, string value)
+        {
+            if (target != null) target.text = value ?? string.Empty;
         }
     }
 }

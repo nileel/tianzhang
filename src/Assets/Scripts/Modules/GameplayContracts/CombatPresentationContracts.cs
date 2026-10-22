@@ -87,7 +87,7 @@ namespace TianZhang.Gameplay.Contracts
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
             string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
             string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null,
-            int minimumRange = 0, int maximumRange = 0)
+            int minimumRange = 0, int maximumRange = 0, int targetDistance = -1)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -115,6 +115,7 @@ namespace TianZhang.Gameplay.Contracts
             CurrentEquipmentName = currentEquipmentName; EquipmentOwned = equipmentOwned;
             AttackArea = attackArea;
             MinimumRange = minimumRange; MaximumRange = maximumRange;
+            TargetDistance = targetDistance;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
@@ -152,6 +153,8 @@ namespace TianZhang.Gameplay.Contracts
         public CombatAttackAreaSnapshot AttackArea { get; }
         public int MinimumRange { get; }
         public int MaximumRange { get; }
+        /// <summary>Authoritative actor-to-target hex distance; -1 when the quote has no unit target.</summary>
+        public int TargetDistance { get; }
     }
 
     public enum CombatUnitPresentationEvent

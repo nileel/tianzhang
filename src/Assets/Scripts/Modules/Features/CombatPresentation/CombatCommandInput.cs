@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
@@ -68,7 +69,7 @@ namespace TianZhang.Features.CombatPresentation
                 CommitCandidate();
                 return;
             }
-            previewView?.Present(Preview);
+            previewView?.Present(Preview, CurrentActionPoints);
             timeline?.PresentPrediction(Preview);
             movementView?.PresentAttackArea(Preview?.AttackArea);
         }
@@ -96,7 +97,7 @@ namespace TianZhang.Features.CombatPresentation
             Preview = new CombatActionPreviewSnapshot(new CombatActionCandidate(selection.Kind,
                 actorId, null, selection.ProfileId, snapshot.CommandContextVersion), actionName, "当前角色", "待选目标", false,
                 reason, 0, false, 0, 0, 0, minimumRange: minimumRange, maximumRange: maximumRange);
-            previewView?.Present(Preview);
+            previewView?.Present(Preview, CurrentActionPoints);
             timeline?.PresentPrediction(null);
             PresentSelectionHighlights(null, null, false);
         }
@@ -107,10 +108,33 @@ namespace TianZhang.Features.CombatPresentation
             if (selectingArt != null && snapshot?.Movement != null)
             {
                 CombatUnitPresentationHex origin = snapshot.Movement.Origin;
-                movementView.PresentCastingPreview(origin, selectingArt.MinimumRange, selectingArt.MaximumRange, area, cell, legal);
+                movementView.PresentCastingPreview(origin, selectingArt.MinimumRange, selectingArt.MaximumRange,
+                    area, cell, legal, BuildTargetingHints());
             }
             else movementView.PresentAttackArea(area, cell, legal);
         }
+
+        /// <summary>
+        /// Authoritative selectable cells for the open skill, taken from the same per-target quote the
+        /// buttons use. Out-of-range or unaffordable units stay unmarked until the pointer reaches them.
+        /// </summary>
+        private IReadOnlyList<CombatTargetingHint> BuildTargetingHints()
+        {
+            if (targetInput == null || snapshot == null || selectingArt == null)
+                return Array.Empty<CombatTargetingHint>();
+            CombatArtActionSnapshot action = snapshot.ArtActions.FirstOrDefault(value =>
+                string.Equals(value.ProfileId, selectingArt.ProfileId, StringComparison.Ordinal));
+            if (action == null) return Array.Empty<CombatTargetingHint>();
+            var hints = new List<CombatTargetingHint>();
+            foreach (CombatArtTargetSnapshot target in action.Targets)
+            {
+                if (target == null || !targetInput.TryGetUnitCell(target.Id, out CombatUnitPresentationHex unitCell)) continue;
+                hints.Add(new CombatTargetingHint(unitCell, target.CanExecute));
+            }
+            return hints;
+        }
+
+        private int CurrentActionPoints => snapshot?.Movement?.RemainingPoints ?? -1;
 
         private void LateUpdate()
         {
@@ -150,7 +174,7 @@ namespace TianZhang.Features.CombatPresentation
                     basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, target,
                     basic ? null : selectingArt.ProfileId, snapshot.CommandContextVersion,
                     attackDirection: directional ? direction : (int?)null));
-                previewView?.Present(Preview);
+                previewView?.Present(Preview, CurrentActionPoints);
                 timeline?.PresentPrediction(Preview);
                 CombatUnitPresentationHex? effectCell = basic || target != null ? cell : (CombatUnitPresentationHex?)null;
                 PresentSelectionHighlights(Preview?.AttackArea, effectCell, Preview?.CanConfirm == true);
@@ -197,7 +221,7 @@ namespace TianZhang.Features.CombatPresentation
                 CancelCandidate();
                 movementView?.Cancel();
                 Preview = previewHandler.PreviewAction(choice);
-                previewView?.Present(Preview);
+                previewView?.Present(Preview, CurrentActionPoints);
                 timeline?.PresentPrediction(Preview);
             });
             Bind(actionBar?.SwapEquipmentButton, () =>
@@ -208,7 +232,7 @@ namespace TianZhang.Features.CombatPresentation
                 CancelCandidate();
                 movementView?.Cancel();
                 Preview = previewHandler.PreviewAction(choice);
-                previewView?.Present(Preview);
+                previewView?.Present(Preview, CurrentActionPoints);
                 timeline?.PresentPrediction(Preview);
             });
             Bind(actionBar?.WaitButton, () =>

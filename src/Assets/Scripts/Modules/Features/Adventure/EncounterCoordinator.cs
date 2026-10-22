@@ -332,8 +332,13 @@ namespace TianZhang.Features.Adventure
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
                 candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
                 candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, command.AttackDirection);
-            CombatantSnapshot actor = null;
+            CombatantSnapshot actor = null, quotedTarget = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
+            session?.Combatants.TryGet(command.TargetId, out quotedTarget);
+            // Presentation-only distance for the compact preview; it comes from the same authority
+            // positions the legal quote used and never feeds back into validation.
+            int targetDistance = actor == null || quotedTarget == null ? -1
+                : actor.Position.Distance(quotedTarget.Position);
             CombatAttackProfile profile = null;
             session?.TryGetProfile(command.ProfileId, out profile);
             CombatAttackRuleMetadata metadata = profile?.RuleMetadata;
@@ -377,7 +382,7 @@ namespace TianZhang.Features.Adventure
                     ? (string.IsNullOrEmpty(equipmentOwner.MainEquipmentItemId) ? "未装备" : resolveText(equipmentOwner.MainEquipmentItemId)) : string.Empty,
                 candidate.Kind == CombatActionKind.SwapEquipment && ownsEquipment != null
                     ? ownsEquipment(command.ActorId, command.ItemId, command.InstanceId) : (bool?)null, area,
-                profile?.MinimumRange ?? 0, profile?.MaximumRange ?? 0);
+                profile?.MinimumRange ?? 0, profile?.MaximumRange ?? 0, targetDistance);
         }
 
         public void ConfirmAction(CombatActionCandidate candidate)

@@ -195,6 +195,16 @@ namespace TianZhang.Features.CombatPresentation
             return units.TryGetValue(combatantId, out PresentedUnit unit) && (root = unit.Root) != null;
         }
 
+        /// <summary>Committed presentation cell of a spawned unit; used only to draw selection hints.</summary>
+        public bool TryGetPresentedPosition(string combatantId, out CombatUnitPresentationHex position)
+        {
+            position = default;
+            if (string.IsNullOrWhiteSpace(combatantId) || !units.TryGetValue(combatantId, out PresentedUnit unit))
+                return false;
+            position = unit.Position;
+            return true;
+        }
+
         public bool TryGetHeadAnchor(string combatantId, out Vector3 anchor)
         {
             anchor = default;
