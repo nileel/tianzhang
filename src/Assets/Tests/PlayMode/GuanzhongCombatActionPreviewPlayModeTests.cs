@@ -890,10 +890,12 @@ namespace TianZhang.Tests.PlayMode
                 // the real move/end-turn flow and give it a budget that fits the current map.
                 for (int step = 0; step < 24 && !LegalEnemyTarget(); step++)
                 {
-                    HexCoord enemyPosition = spawned.Enemy.Position;
-                    int currentDistance = spawned.Player.Position.Distance(enemyPosition);
+                    double currentDistance = GuanzhongBasicAttackPlayModeTests.ContactDistance(session,
+                        spawned.Player.Pose, spawned.Enemy.Pose);
                     CombatMovementOption next = presenter.Snapshot.Movement.Options
-                        .Where(option => new HexCoord(option.Destination.Q, option.Destination.R).Distance(enemyPosition) < currentDistance)
+                        .Where(option => GuanzhongBasicAttackPlayModeTests.ContactDistance(session,
+                            spawned.Player.Pose.WithAnchor(new HexCoord(option.Destination.Q, option.Destination.R)),
+                            spawned.Enemy.Pose) < currentDistance)
                         .OrderBy(option => option.Cost).FirstOrDefault();
                     Assert.IsNotNull(next, "A real reachable move toward the other target must remain available.");
                     HexCoord start = spawned.Player.Position;

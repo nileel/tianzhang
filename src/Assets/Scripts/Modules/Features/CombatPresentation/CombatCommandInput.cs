@@ -105,13 +105,17 @@ namespace TianZhang.Features.CombatPresentation
         private void PresentSelectionHighlights(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? cell, bool legal)
         {
             if (movementView == null) return;
+            IReadOnlyList<CombatUnitPresentationHex> targetCells = null;
+            string selectedTarget = cell.HasValue ? targetInput?.FindUnitAtCell(cell.Value) : null;
+            if (selectedTarget != null && targetInput.TryGetUnitPose(selectedTarget, out CombatUnitPresentationPose targetPose))
+                targetCells = targetPose.OccupiedCells;
             if (selectingArt != null && snapshot?.Movement != null)
             {
                 CombatUnitPresentationHex origin = snapshot.Movement.Origin;
                 movementView.PresentCastingPreview(origin, selectingArt.MinimumRange, selectingArt.MaximumRange,
-                    area, cell, legal, BuildTargetingHints());
+                    area, cell, legal, BuildTargetingHints(), targetCells);
             }
-            else movementView.PresentAttackArea(area, cell, legal);
+            else movementView.PresentAttackArea(area, cell, legal, targetCells);
         }
 
         /// <summary>
@@ -128,8 +132,9 @@ namespace TianZhang.Features.CombatPresentation
             var hints = new List<CombatTargetingHint>();
             foreach (CombatArtTargetSnapshot target in action.Targets)
             {
-                if (target == null || !targetInput.TryGetUnitCell(target.Id, out CombatUnitPresentationHex unitCell)) continue;
-                hints.Add(new CombatTargetingHint(unitCell, target.CanExecute));
+                if (target == null || !targetInput.TryGetUnitPose(target.Id, out CombatUnitPresentationPose pose)) continue;
+                foreach (CombatUnitPresentationHex cell in pose.OccupiedCells)
+                    hints.Add(new CombatTargetingHint(cell, target.CanExecute));
             }
             return hints;
         }

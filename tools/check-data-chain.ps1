@@ -318,6 +318,16 @@ function Test-FormalContentCatalog {
   }
 
   foreach ($row in $Enemies.Rows) {
+    $rank = 0
+    if ($row.footprintKind -cnotin @('single','adjacent_pair') -or
+        -not [int]::TryParse([string]$row.bodyScaleRank, [ref]$rank) -or $rank -le 0) {
+      Add-Finding 'ENEMY_BODY_INVALID' ([string]$row.name) 'Enemy footprint and clearance rank must be explicit valid inputs.'
+    }
+    $formalBeast = $row.name -cin @('enemy_shijiahou','enemy_lieshijia')
+    if (($formalBeast -and ($row.footprintKind -cne 'adjacent_pair' -or $rank -ne 2)) -or
+        (-not $formalBeast -and ($row.footprintKind -cne 'single' -or $rank -ne 1))) {
+      Add-Finding 'ENEMY_BODY_PROJECTION_INVALID' ([string]$row.name) 'Enemy body inputs differ from the approved F4 species projection.'
+    }
     foreach ($field in @('actionPointMaximumUnits', 'movementEfficiencyMilliUnits')) {
       $value = 0
       $minimum = if ($field -ceq 'actionPointMaximumUnits') { 1 } else { 0 }
@@ -335,10 +345,10 @@ function Test-FormalContentCatalog {
     settlementId = 'guanzhong_city'; contentScope = 'content_scope_production'; displayNameKey = 'settlement_guanzhong_city'
   }
   Test-FormalContentAsset 'Enemy:enemy_shijiahou' 'src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset' @{
-    enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'
+    enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'
   }
   Test-FormalContentAsset 'Enemy:enemy_lieshijia' 'src/Assets/Data/Enemies/Enemy_enemy_lieshijia.asset' @{
-    enemyId = 'enemy_lieshijia'; contentScope = 'guanzhong'; aiProfileId = 'ai_ranged'; realmId = 'realm_lianqi'
+    enemyId = 'enemy_lieshijia'; contentScope = 'guanzhong'; aiProfileId = 'ai_ranged'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'
   }
   Test-FormalContentAsset 'Item:item_lingshi_low' 'src/Assets/Data/Items/Item_item_lingshi_low.asset' @{
     itemId = 'item_lingshi_low'; contentScope = 'content_scope_production'; maxStack = '99'
@@ -770,7 +780,7 @@ function Test-FormalStarterSpellProjection {
 function Test-FormalEnvironmentProjection {
   param([object]$Table)
   if (($Table.Headers -join ',') -cne ($schemas.EnvironmentProfiles -join ',')) {
-    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered eight-column contract.'
+    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered nine-column contract.'
   }
   $rows = @($Table.Rows)
   if ($rows.Count -ne 1 -or $rows[0].profileId -cne 'env_guanzhong_wild') {
@@ -780,6 +790,25 @@ function Test-FormalEnvironmentProjection {
   $row = $rows[0]
   if ($row.spiritRecoveryEnvironment -cne 'ordinary' -or $row.queryLimits -cne 'unitsPerRange=2;maxQueryRange=24') {
     Add-Finding 'ENVIRONMENT_PROFILE_PROJECTION_INVALID' 'env_guanzhong_wild' 'Formal Guanzhong must declare ordinary recovery and its approved query limits.'
+  }
+  $clearances = @{}
+  $cellKeys = @{}
+  foreach ($cell in ([string]$row.battlefieldCells).Split('|')) { $cellKeys[$cell.Split('@')[0]] = $true }
+  if ($row.edgeClearanceLimits -cne 'none') {
+    foreach ($entry in ([string]$row.edgeClearanceLimits).Split('|')) {
+      $match = [regex]::Match($entry, '^(-?\d+):(-?\d+)>(-?\d+):(-?\d+)@(\d+)$')
+      $parsed = [int[]]::new(5)
+      $valid = $match.Success
+      for ($i = 0; $valid -and $i -lt 5; $i++) { $valid = [int]::TryParse($match.Groups[$i + 1].Value, [ref]$parsed[$i]) }
+      if (-not $valid -or $parsed[4] -le 0) { Add-Finding 'ENVIRONMENT_CLEARANCE_INVALID' $entry 'Edge clearance must use explicit coordinates and a positive Int32 limit.'; continue }
+      $from = "$($parsed[0]):$($parsed[1])"; $to = "$($parsed[2]):$($parsed[3])"; $key = "$from>$to"
+      $dq = [long]$parsed[2] - $parsed[0]; $dr = [long]$parsed[3] - $parsed[1]
+      if (-not $cellKeys.ContainsKey($from) -or -not $cellKeys.ContainsKey($to) -or
+          ([Math]::Abs($dq) + [Math]::Abs($dr) + [Math]::Abs($dq + $dr)) -ne 2 -or $clearances.ContainsKey($key)) {
+        Add-Finding 'ENVIRONMENT_CLEARANCE_EDGE_INVALID' $entry 'Clearance must reference one unique generated directed edge.'; continue
+      }
+      $clearances[$key] = $parsed[4]
+    }
   }
   $assetPath = 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset'
   Test-FormalProjectionAssetFields 'env_guanzhong_wild' $assetPath @{ profileId='env_guanzhong_wild'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=24 }
@@ -815,7 +844,62 @@ function Test-FormalEnvironmentProjection {
     $parts = $_ -split '[:>]',3; $parts[0] + ':' + (@($parts[1].Split('+') | Sort-Object) -join '+') + '>' + $parts[2]
   })
   if ($pairRows.Count -ne 6 -or ($pairRows -join '|') -cne ($expectedPairs -join '|')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_PAIRS_MISMATCH' 'env_guanzhong_wild' 'Asset pair results must exactly match the CSV.' }
-  if ([regex]::Matches($text, '(?m)^  - fromQ:').Count -ne 522) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize its 522 generated directed edges.' }
+  $edges = [regex]::Matches($text, '(?m)^  - fromQ: (-?\d+)\r?\n    fromR: (-?\d+)\r?\n    toQ: (-?\d+)\r?\n    toR: (-?\d+)\r?\n    metricDistanceUnits: \d+\r?\n    allowsMovement: [01]\r?\n    allowsEffects: [01]\r?\n    clearanceLimit: (\d+)[ \t]*$')
+  if ($edges.Count -ne 522) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize all 522 directed edges with explicit clearance limits.' }
+  foreach ($edge in $edges) {
+    $key = "$($edge.Groups[1].Value):$($edge.Groups[2].Value)>$($edge.Groups[3].Value):$($edge.Groups[4].Value)"
+    $expectedLimit = if ($clearances.ContainsKey($key)) { $clearances[$key] } else { 0 }
+    if ([int]$edge.Groups[5].Value -ne $expectedLimit) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CLEARANCE_MISMATCH' $key 'Asset edge clearance differs from the CSV declaration.' }
+  }
+}
+
+function Test-FormalAdventureProjection {
+  param([object]$Table, [object]$Enemies)
+  if (($Table.Headers -join ',') -cne ($schemas.Adventures -join ',')) {
+    Add-Finding 'ADVENTURE_HEADER_NOT_EXACT' 'Adventures' 'Adventure columns must match the declared F4 schema.'
+  }
+  $assetPath = 'src/Assets/Data/Adventures/AdventureMap_guanzhong_wild.asset'
+  Test-FormalContentAsset 'Adventure:guanzhong_wild' $assetPath @{ adventureId = 'guanzhong_wild' }
+  $path = Join-Path $root $assetPath
+  $text = if (Test-Path -LiteralPath $path -PathType Leaf) { Get-Content -LiteralPath $path -Raw -Encoding UTF8 } else { '' }
+  $enemyIds = @($Enemies.Rows | Where-Object { $_.contentScope -ceq 'guanzhong' } | ForEach-Object { [string]$_.name })
+  foreach ($row in $Table.Rows) {
+    $encounter = $row.nodeTypeId -ceq 'adventure_node_encounter'
+    $facing = -1
+    if ($encounter) {
+      if ($row.contentId -cnotin $enemyIds -or -not [int]::TryParse([string]$row.enemyFacing, [ref]$facing) -or $facing -lt 0 -or $facing -gt 5) {
+        Add-Finding 'ADVENTURE_SPAWN_INVALID' ([string]$row.nodeId) 'Encounter must reference a formal enemy and an explicit facing 0 through 5.'
+      }
+    } elseif ($row.enemyFacing -cne '' -or $row.additionalEnemies -cne '') {
+      Add-Finding 'ADVENTURE_SPAWN_INVALID' ([string]$row.nodeId) 'Non-encounter nodes cannot declare enemy facing or additional enemies.'
+    }
+    $block = [regex]::Match($text, '(?ms)^  - nodeId: ' + [regex]::Escape([string]$row.nodeId) + '\r?\n(.*?)(?=^  - nodeId:|\z)').Groups[1].Value
+    foreach ($field in @('nodeTypeId','q','r','contentId','enemyFacing')) {
+      $expected = if ($field -ceq 'enemyFacing') { [string]$facing } else { [string]$row.$field }
+      if (-not [regex]::IsMatch($block, '(?m)^    ' + $field + ':[ \t]*' + [regex]::Escape($expected) + '[ \t]*\r?$')) {
+        Add-Finding 'ADVENTURE_ASSET_SPAWN_MISMATCH' "$($row.nodeId):$field" 'Adventure asset spawn field differs from CSV.'
+      }
+    }
+    $declared = @()
+    $positions = @{ "$($row.q):$($row.r)" = $true }
+    if ($row.additionalEnemies -cne '') {
+      foreach ($entry in ([string]$row.additionalEnemies).Split('|')) {
+        $match = [regex]::Match($entry, '^([a-z][a-z0-9_]*)@(-?\d+):(-?\d+):([0-5])$')
+        $q = 0; $r = 0
+        if (-not $match.Success -or $match.Groups[1].Value -cnotin $enemyIds -or
+            -not [int]::TryParse($match.Groups[2].Value, [ref]$q) -or -not [int]::TryParse($match.Groups[3].Value, [ref]$r) -or
+            $positions.ContainsKey("${q}:${r}")) {
+          Add-Finding 'ADVENTURE_EXTRA_SPAWN_INVALID' $entry 'Additional enemies require a unique anchor, formal enemy and facing 0 through 5.'; continue
+        }
+        $positions["${q}:${r}"] = $true
+        $declared += "enemy_$($declared.Count + 2)@$entry"
+      }
+    }
+    $actual = @([regex]::Matches($block, '(?m)^    - instanceId: (\S+)\r?\n      enemyId: (\S+)\r?\n      q: (-?\d+)\r?\n      r: (-?\d+)\r?\n      facing: ([0-5])[ \t]*\r?$') | ForEach-Object {
+      "$($_.Groups[1].Value)@$($_.Groups[2].Value)@$($_.Groups[3].Value):$($_.Groups[4].Value):$($_.Groups[5].Value)"
+    })
+    if (($declared -join '|') -cne ($actual -join '|')) { Add-Finding 'ADVENTURE_ASSET_EXTRA_SPAWN_MISMATCH' ([string]$row.nodeId) 'Additional enemy asset identities and poses must match CSV order.' }
+  }
 }
 
 function Test-CharterSiteProjection {
@@ -1030,12 +1114,13 @@ $schemas = [ordered]@{
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
-  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits','unarmedAttackFamilyId','combatStatScale')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits','unarmedAttackFamilyId','combatStatScale','footprintKind','bodyScaleRank')
+  Adventures = @('adventureId','displayNameKey','contentScope','nodeId','nodeTypeId','q','r','contentId','additionalEnemies','enemyFacing')
   RealmCombatGrowth = [TianZhang.Combat.CombatRuleSet]::RealmColumns
   CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns
   CombatActionEconomyRules = [TianZhang.Combat.CombatRuleSet]::EconomyColumns
   AttackProfiles = [TianZhang.Combat.CombatRuleSet]::AttackColumns
-  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment')
+  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment','edgeClearanceLimits')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','stageId','stageCode','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','expansionGrants','expandedMansionCapacity','carryingCapacityProfileId','currentMansionCarryingCapacity','completionMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
@@ -1050,6 +1135,7 @@ $tables = [ordered]@{
   Items = Get-CsvTable 'src/Assets/DataConfig/Items.csv' $schemas.Items @('equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity') @('content_scope_production')
   Bounties = Get-CsvTable 'src/Assets/DataConfig/Bounties.csv' $schemas.Bounties @() @('content_scope_production')
   Enemies = Get-CsvTable 'src/Assets/DataConfig/Enemies.csv' $schemas.Enemies @('equippedSpells','contentScope','dropEntries','unarmedBasicAttackProfileId','unarmedAttackFamilyId') @('guanzhong')
+  Adventures = Get-CsvTable 'src/Assets/DataConfig/Adventures.csv' $schemas.Adventures @('contentId','additionalEnemies','enemyFacing') @('content_scope_production')
   RealmCombatGrowth = Get-CsvTable 'src/Assets/DataConfig/RealmCombatGrowth.csv' $schemas.RealmCombatGrowth @('movementNodeWeightNumerators')
   CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
   CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })
@@ -1076,6 +1162,7 @@ Test-FormalStatic3DPresentationProfiles
 Test-FormalAttackProfileProjection $tables.AttackProfiles $languageIds
 Test-FormalStarterSpellProjection $tables.Spells
 Test-FormalEnvironmentProjection $tables.EnvironmentProfiles
+Test-FormalAdventureProjection $tables.Adventures $tables.Enemies
 Test-CharterSiteProjection $tables.CharterSites $languageIds
 Test-UiTextProjection $languageIds
 

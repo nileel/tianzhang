@@ -185,7 +185,8 @@ namespace TianZhang.Tests.PlayMode
                             1, 1, 1, 0, 0, 0, 0, 100000, 1000), profile, direction,
                         session.Combatants.All, session.SpatialQuery).TargetIds.Count),
                     Distance = spawned.Enemies.Where(enemy => enemy.IsAlive).Sum(enemy =>
-                        new HexCoord(move.Destination.Q, move.Destination.R).Distance(enemy.Position)),
+                        GuanzhongBasicAttackPlayModeTests.ContactDistance(session,
+                            spawned.Player.Pose.WithAnchor(new HexCoord(move.Destination.Q, move.Destination.R)), enemy.Pose)),
                 }).Where(value => value.Targets >= requiredTargets)
                     .OrderBy(value => value.Move.Cost).ThenBy(value => value.Distance).FirstOrDefault();
                 if (option != null)
@@ -208,7 +209,8 @@ namespace TianZhang.Tests.PlayMode
                 var close = hud.Snapshot.Movement.Options
                     .Where(move => move.Cost + profile.ActionPointCostUnits <= spawned.Player.ActionPointsRemainingUnits)
                     .OrderBy(move => spawned.Enemies.Where(enemy => enemy.IsAlive).Sum(enemy =>
-                        new HexCoord(move.Destination.Q, move.Destination.R).Distance(enemy.Position)))
+                        GuanzhongBasicAttackPlayModeTests.ContactDistance(session,
+                            spawned.Player.Pose.WithAnchor(new HexCoord(move.Destination.Q, move.Destination.R)), enemy.Pose)))
                     .ThenBy(move => move.Cost)
                     .FirstOrDefault();
                 if (close != null)
@@ -478,13 +480,13 @@ namespace TianZhang.Tests.PlayMode
                     {
                         yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
                     }
-                    else if (!passive && enemy != null && units.Player.Position.Distance(enemy.Position) > 1)
+                    else if (!passive && enemy != null &&
+                        !session.SpatialQuery.QueryRange(units.Player.Pose, enemy.Pose, 1, 1).IsInRange)
                     {
                         input.CancelCandidate();
                         var move = hud.Snapshot.Movement?.Options.OrderBy(option =>
-                            Math.Max(Math.Abs(option.Destination.Q - enemy.Position.Q),
-                                Math.Max(Math.Abs(option.Destination.R - enemy.Position.R),
-                                    Math.Abs(option.Destination.Q + option.Destination.R - enemy.Position.Q - enemy.Position.R))))
+                            GuanzhongBasicAttackPlayModeTests.ContactDistance(session,
+                                units.Player.Pose.WithAnchor(new HexCoord(option.Destination.Q, option.Destination.R)), enemy.Pose))
                             .ThenBy(option => option.Cost).FirstOrDefault();
                         if (move != null)
                         {

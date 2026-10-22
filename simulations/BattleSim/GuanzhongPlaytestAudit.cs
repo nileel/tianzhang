@@ -321,9 +321,9 @@ internal static class GuanzhongPlaytestAudit
             }
             board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(1, 3));
         }
-        public CombatRangeQueryResult QueryRange(UnityHexCoord source, UnityHexCoord target, int minimumRange, int maximumRange)
-        { var r = board.QueryRangeEntry(source, target, minimumRange, maximumRange, TianZhang.Spatial.SpatialQueryKind.Attack, true); return new CombatRangeQueryResult(r.IsInRange, r.Reason); }
-        public CombatMovementQueryResult QueryMovement(UnityHexCoord source, UnityHexCoord destination, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
-        public IReadOnlyDictionary<UnityHexCoord, int> FindReachable(UnityHexCoord source, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
+        public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
+            board.QueryContact(source, target, minimumRange, maximumRange);
+        public CombatMovementQueryResult QueryMovement(SpatialPose source, UnityHexCoord destination, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied, int? destinationFacing = null) => throw new NotSupportedException("No map movement in numeric audit.");
+        public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
     }
 }

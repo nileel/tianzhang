@@ -19,7 +19,7 @@
 | `Spells.csv` | 术法配置（ID化） | `Data/Spells/Spell_*.asset` |
 | `Skills.csv` | 神通配置（ID化） | `Data/Skills/Skill_*.asset` |
 | `Characters.csv` | 角色模板（ID化） | `Data/Characters/Char_*.asset` |
-| `Enemies.csv` | 敌人模板（ID化） | `Data/Characters/Char_Enemy_*.asset` |
+| `Enemies.csv` | 敌人模板与正式物种定义（ID化） | `Data/Characters/Char_Enemy_*.asset`、`Data/Enemies/Enemy_*.asset` |
 | `Settlements.csv` | 正式据点投影 | `Data/Settlements/Settlement_*.asset` |
 | `Items.csv` | 正式物品投影 | `Data/Items/Item_*.asset` |
 | `Bounties.csv` | 正式悬赏投影 | `Data/Bounties/Bounty_*.asset` |
@@ -42,14 +42,14 @@
 
 ## 关中首批正式内容目录
 
-`Settlements.csv`、`Items.csv`、`Bounties.csv` 与 `Enemies.csv` 中唯一带有
-`contentScope` 的石甲兽行共同构成首批正式内容投影。导入器会先读取并验证四张表、
+`Settlements.csv`、`Items.csv`、`Bounties.csv` 与 `Enemies.csv` 中带有
+`contentScope=guanzhong` 的石甲兽、裂石甲兽行共同构成正式内容投影。导入器会先读取并验证四张表、
 Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 `Data/ContentCatalog/ContentCatalog.asset`。
 
-- 首批只允许 `guanzhong_city`、`enemy_shijiahou`、`item_lingshi_low`、
-  `item_shijia_piece` 与 `bounty_guanzhong_shijiahou`。其他 `Enemies.csv` 行保持
-  既有战斗模板输入，不能因导入而升格进正式内容目录。
+- 只有 `enemy_shijiahou` 与 `enemy_lieshijia` 进入正式敌人目录；其他 `Enemies.csv` 行保持战斗模板输入，不因新增字段升格进目录。
+- `footprintKind` 与 `bodyScaleRank` 是每行必填的独立物种资格：前者只接受 `single`／`adjacent_pair`，后者为正 Int32。两兽显式为 `adjacent_pair`／2，其余现有敌人为 `single`／1；缺列、缺值、未知类型、非正档与溢出均在写 asset 前拒绝。
+- 这两个字段由 `SettlementContentImporter` 读取全部行并校验，正式物种保存到 `EnemyData`，经 `AdventureUnitSpawner` 进入 `CombatantSnapshot`；不复制进 `combatTemplate` 数值派生、不乘 `combatStatScale`。玩家由 `AdventureUnitSpawner.CreatePlayer` 明确赋 `single`／1，现有新建及读档链不增加长期字段。
 - `Enemies.csv.dropTable` 是旧候选文本；正式石甲兽掉落只由 `dropEntries` 的
   `itemId@dropChancePercent@quantity` 表达。
 - `Enemies.csv.combatStatScale` 是正式敌人的战斗结果缩放参数，范围 `(0,1]`。
@@ -62,19 +62,30 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 - 任一表头、行数、Language、稳定 ID、参数、路径或跨表引用不合法时，导入在写入任何
   正式内容 asset 前失败；目录只提供查找，不接入场景、战斗、掉落、背包、悬赏或存档。
 
+## Adventures.csv 出生姿态
+
+表头为 `adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies,enemyFacing`。
+`enemyFacing` 仅遭遇行必填，必须为 0–5；无敌人的节点留空，夹带朝向拒绝。
+`additionalEnemies` 每项为 `enemyId@q:r:facing`，多项用 `|` 分隔；保留声明顺序对应的稳定 `enemy_2`、`enemy_3` ID。字段缺失、非法方向、重复锚点、未知列或错误行宽均拒绝。
+`AdventureContentImporter` 生成 `AdventureMapData.nodes[].enemyFacing` 与 `additionalEnemies[].facing`，正式地图第一遭遇前格为 `(7,8)`／`(8,8)`、第二遭遇为 `(3,5)`／`(1,5)`，两兽均朝向 2。第一遭遇主敌向内留出转身空间，避免 q=9 边界锁死；第二遭遇副敌向左一格，避免岩石与两兽身体互锁。整个身体的障碍、边界与重叠仍由战斗空间权威入口检查。
+
 ## EnvironmentProfiles.csv 契约
 
-本表定义环境档案结构；当前唯一生产行为 `env_guanzhong_wild`。表头固定为：
+唯一生产行为 `env_guanzhong_wild`。表头固定为：
 
-`profileId,directedEdges,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs`
+`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits`
 
-- `directedEdges`：完整格式为 `unitsPerRange=<正整数>;maxQueryRange=<正整数>;edges=<边列表>`。边列表以 `|` 分隔，每项为 `fromQ:fromR>toQ:toR@metricDistanceUnits@allowsMovement@allowsEffects`；两个许可字段只接受 `0`/`1`。缺少查询上限、非拓扑邻格、非正边长、非法许可值或重复有向边均拒绝导入。
-- `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID 引用。
-- `phenomenonChannels`：以 `;` 分隔的六个通道声明，格式为 `channel=typeA+typeB`。通道必须恰为 `airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。
-- `phenomenonPairs`：以 `|` 分隔的同通道无序配对，格式为 `channel:typeA+typeB>resultType`。三个类型引用必须已在对应通道声明；翻转的同一对视为冲突并拒绝导入。
-- `elementRelationRefs`：以 `|` 分隔，且必须恰含 `element_wood`、`element_fire`、`element_earth`、`element_metal`、`element_water` 各一次。
+- `queryLimits` 格式为 `unitsPerRange=<正整数>;maxQueryRange=<正整数>`。
+- `battlefieldCells` 以 `|` 分隔，每项 `q:r@blocksGroundMove@blocksLineOfSight`，标志只接受 0／1，按 q、r 排序且坐标唯一。原导入器从全部拓扑相邻格生成有向边，边长度为 `unitsPerRange`，不维护第二份地图边列表。
+- `edgeClearanceLimits` 在已生成边上附加稀疏净空限制：`fromQ:fromR>toQ:toR@limit`，多项用 `|` 分隔，无约束显式写 `none`。条目 limit 须为正 Int32；端点须存在、拓扑相邻、对应边已生成、同向键唯一。缺值、错格式、非法引用与溢出拒绝，反向边必须单独声明。未列边的 `clearanceLimit=0` 明确表示不限；正上限要求单位 `bodyScaleRank <= clearanceLimit`。
+- 限制经 `EnvironmentDirectedEdge` → `EnvironmentProfileDefinition`／`EnvironmentProfileAsset`／runtime → `SpatialQueryBoardFactory` → `SpatialEdgeRules` 投影。净空不影响攻击／视线与 AP 计价。当前关中写 `none`，不改变百格与四个岩石；窄口测试使用隔离夹具。
+- `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID。
+- `phenomenonChannels`：以 `;` 分隔的六个通道，格式 `channel=typeA+typeB`；`airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。
+- `phenomenonPairs`：以 `|` 分隔的无序配对，格式 `channel:typeA+typeB>resultType`；类型须在对应通道声明，翻转的重复配对拒绝。
+- `elementRelationRefs`：五行 `element_wood`、`element_fire`、`element_earth`、`element_metal`、`element_water` 各一次，以 `|` 分隔。
+- `spiritRecoveryEnvironment`：`ordinary`、`spirit_vein_node` 或 `blessed_land`，无默认值。
 
-导入器会先验证整张表；任何缺字段、未知引用、非法通道、非相邻边、重复或顺序冲突配对都会在创建或更新 `.asset` 前失败。
+`WorldContentImporter` 验证整张表后才创建或更新 asset；导入沿 `天章/导入全部配置` 的现有顺序执行。
 
 ## FoundationPurpleMansionStates.csv 契约
 

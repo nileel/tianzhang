@@ -54,6 +54,7 @@ namespace TianZhang.Combat
         public int? AttackDirection => Command.AttackDirection;
         public CombatAttackAreaQueryResult AttackArea { get; }
         public HexCoord? Destination => Command.Destination;
+        public int? DestinationFacing => Command.DestinationFacing;
         public int SlotIndex => Command.SlotIndex;
         public long ContextVersion => Command.ContextVersion;
         public long TurnSequence { get; }
@@ -74,6 +75,7 @@ namespace TianZhang.Combat
         public string AbilityTierId { get; }
         public System.Collections.Generic.IReadOnlyList<HexCoord> MovementPath => Validation.MovementPath;
         public System.Collections.Generic.IReadOnlyList<SpatialMovementEdgeCost> MovementEdges => Validation.MovementEdges;
+        public IReadOnlyList<SpatialMovementStep> MovementSteps => Validation.MovementSteps;
         public int UnitsPerRange => Validation.UnitsPerRange;
         public int MovementEfficiencyMilliUnits { get; }
         public bool RemainsInTurn { get; }
@@ -229,7 +231,7 @@ namespace TianZhang.Combat
             if (quote.Session != session || quote.TurnSequence != session.TurnSequence || quote.StateVersion != session.StateVersion ||
                 quote.ActorId != command.ActorId || quote.Kind != command.Kind || quote.TargetId != command.TargetId ||
                 quote.ProfileId != command.ProfileId || quote.Destination != command.Destination || quote.SlotIndex != command.SlotIndex ||
-                quote.AttackDirection != command.AttackDirection ||
+                quote.AttackDirection != command.AttackDirection || quote.DestinationFacing != command.DestinationFacing ||
                 quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
                 quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
                 quote.Command.InstanceId != command.InstanceId ||
@@ -248,7 +250,8 @@ namespace TianZhang.Combat
                 quote.RuleSetVersion != current.RuleSetVersion || quote.RuleSetSourceDigest != current.RuleSetSourceDigest ||
                 quote.SpiritCost != current.SpiritCost || quote.CtPenalty != current.CtPenalty || quote.ReuseCooldownTicks != current.ReuseCooldownTicks ||
                 quote.UnitsPerRange != current.UnitsPerRange || !quote.MovementPath.SequenceEqual(current.MovementPath) ||
-                !quote.MovementEdges.SequenceEqual(current.MovementEdges))
+                !quote.MovementEdges.SequenceEqual(current.MovementEdges) || !quote.MovementSteps.SequenceEqual(current.MovementSteps) ||
+                !quote.Validation.TargetContacts.SequenceEqual(current.Validation.TargetContacts))
                 return CombatActionResult.Rejected("combat_quote_stale");
             return current.Validation;
         }
@@ -314,7 +317,7 @@ namespace TianZhang.Combat
         // Snapshot setters are also used by deterministic fixtures and external state effects; quote them
         // as facts as well as checking the aggregate version, so a changed target/v/position cannot slip through.
         private static string Facts(CombatSession session) => string.Join(";", session.Combatants.All.Select(actor =>
-            string.Join("|", actor.Id, actor.Position, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
+            string.Join("|", actor.Id, actor.Position, actor.Footprint, actor.BodyScaleRank, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
                 actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing,
                 actor.BasicAttackProfileId, actor.CombatSwapsUsed, actor.GongFaId, actor.GongFaElement,
                 actor.CommittedBasicAttackUses,

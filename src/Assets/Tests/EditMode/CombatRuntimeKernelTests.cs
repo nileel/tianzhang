@@ -245,20 +245,20 @@ namespace TianZhang.Tests.EditMode
                 "enemy", CombatTeam.Enemy, enemyOrigin, 100, 100, 20, 10, movePoints: 1,
                 equippedArtProfileIds: new[] { "art" }, availableArtProfileIds: new[] { "art", "backup_art" },
                 equippedDivineProfileIds: new[] { "divine" }, availableDivineProfileIds: new[] { "divine" });
-            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>
             {
-                [playerOrigin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [playerOrigin] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(true,
+                    [new HexCoord(-1, 0)] = new MovementFixture(true,
                 string.Empty,
                 new[] { new HexCoord(-1, 0) },
                 null,
                 1000,
                 (1) * 10000),
                 },
-                [enemyOrigin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [enemyOrigin] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true,
+                    [new HexCoord(2, 0)] = new MovementFixture(true,
                 string.Empty,
                 new[] { new HexCoord(2, 0) },
                 null,
@@ -302,15 +302,15 @@ namespace TianZhang.Tests.EditMode
             HexCoord origin = new HexCoord(0, 0), first = new HexCoord(1, 0);
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, movePoints: 3);
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(3, 0), 1, 100, 20, 10);
-            var movement = new CombatMovementQueryResult(true,
+            var movement = new MovementFixture(true,
                 SpatialQueryReasons.Ok,
                 new[] { first },
                 new[] { new SpatialMovementEdgeCost(origin, first, metricDistanceUnits: 800, movementBurdenUnits: 200) },
                 unitsPerRange: 1000,
                 actionPointCostUnits: 33333);
-            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>
             {
-                [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [origin] = new Dictionary<HexCoord, MovementFixture>
                 {
                     [first] = movement,
                 },
@@ -340,20 +340,20 @@ namespace TianZhang.Tests.EditMode
             HexCoord origin = new HexCoord(0, 0), first = new HexCoord(1, 0), second = new HexCoord(1, 1);
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, origin, 100, 100, 20, 10, movePoints: 3);
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(3, 0), 1, 100, 20, 10);
-            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>
             {
-                [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [origin] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [first] = new CombatMovementQueryResult(true,
+                    [first] = new MovementFixture(true,
                 "",
                 new[] { first },
                 null,
                 1000,
                 (7) * 10000),
                 },
-                [first] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [first] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [second] = new CombatMovementQueryResult(true,
+                    [second] = new MovementFixture(true,
                 "",
                 new[] { second },
                 null,
@@ -459,38 +459,38 @@ namespace TianZhang.Tests.EditMode
             CombatantSnapshot enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 100, 100, 20, 10, movePoints: 2);
             CombatantSnapshot ally = CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 2), 1, 100, 20, 10);
             CombatantSnapshot otherEnemy = CreateCombatant("other_enemy", CombatTeam.Enemy, new HexCoord(2, 2), 1, 100, 20, 10);
-            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            var query = new FixedRangeQuery(true, movementBySource: new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>
             {
-                [origin] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [origin] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [new HexCoord(0, 1)] = new CombatMovementQueryResult(true,
+                    [new HexCoord(0, 1)] = new MovementFixture(true,
                 "",
                 new[] { new HexCoord(0, 1) },
                 null,
                 1000,
                 (11) * 10000),
-                    [new HexCoord(2, 1)] = new CombatMovementQueryResult(false,
+                    [new HexCoord(2, 1)] = new MovementFixture(false,
                 "declared_obstacle",
                 null,
                 null,
                 1000,
                 (0) * 10000),
-                    [new HexCoord(-1, 0)] = new CombatMovementQueryResult(false,
+                    [new HexCoord(-1, 0)] = new MovementFixture(false,
                 "declared_board_boundary",
                 null,
                 null,
                 1000,
                 (0) * 10000),
-                    [new HexCoord(1, -1)] = new CombatMovementQueryResult(false,
+                    [new HexCoord(1, -1)] = new MovementFixture(false,
                 "declared_blocked_edge",
                 null,
                 null,
                 1000,
                 (0) * 10000),
                 },
-                [enemy.Position] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [enemy.Position] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [new HexCoord(2, 0)] = new CombatMovementQueryResult(true,
+                    [new HexCoord(2, 0)] = new MovementFixture(true,
                 "",
                 new[] { new HexCoord(2, 0) },
                 null,
@@ -1708,12 +1708,13 @@ namespace TianZhang.Tests.EditMode
         private sealed class MutableAreaQuery : ICombatSpatialQuery
         {
             public bool BlockSecond; public string Reason = "";
-            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int min, int max) =>
-                new CombatRangeQueryResult(!(BlockSecond && target == new HexCoord(2, 0)), Reason);
-            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord target, int ap, int v,
-                IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int ap, int v,
-                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int min, int max) =>
+                new SpatialContactResult(source.Anchor, target.Anchor, source.Anchor.Distance(target.Anchor) * 1000,
+                    !(BlockSecond && target.Anchor == new HexCoord(2, 0)), !(BlockSecond && target.Anchor == new HexCoord(2, 0)), Reason, 1000);
+            public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord target, int ap, int v,
+                IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null) => throw new NotSupportedException();
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int ap, int v,
+                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<SpatialPose, int>();
         }
 
         private static string AreaQueryState(CombatSession session) => PreviewState(session) + ":" +
@@ -1729,14 +1730,11 @@ namespace TianZhang.Tests.EditMode
         {
             private readonly SpatialQueryBoard board;
             public AreaBoardQuery(SpatialQueryBoard board) => this.board = board;
-            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
-            {
-                var result = board.QueryRangeEntry(source, target, minimumRange, maximumRange, SpatialQueryKind.Attack, true);
-                return new CombatRangeQueryResult(result.IsInRange, result.Reason);
-            }
-            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord destination, int budget,
-                int efficiency, IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int budget,
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
+                board.QueryContact(source, target, minimumRange, maximumRange);
+            public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination, int budget,
+                int efficiency, IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null) => throw new NotSupportedException();
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int budget,
                 int efficiency, IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
         }
 
@@ -1881,17 +1879,17 @@ namespace TianZhang.Tests.EditMode
             return profiles;
         }
 
-        private static IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> CreateMovementMap(
+        private static IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>> CreateMovementMap(
             HexCoord source,
             HexCoord destination,
             IReadOnlyList<HexCoord> path,
             int movementCost)
         {
-            return new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>
+            return new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>
             {
-                [source] = new Dictionary<HexCoord, CombatMovementQueryResult>
+                [source] = new Dictionary<HexCoord, MovementFixture>
                 {
-                    [destination] = new CombatMovementQueryResult(true,
+                    [destination] = new MovementFixture(true,
                 string.Empty,
                 path,
                 null,
@@ -1901,81 +1899,95 @@ namespace TianZhang.Tests.EditMode
             };
         }
 
+        // Test data keeps the deliberately declared path and edge payload independent, so malformed
+        // or differently priced spatial facts remain testable without a production compatibility API.
+        private sealed class MovementFixture
+        {
+            public MovementFixture(bool isReachable, string reason, IReadOnlyList<HexCoord> path,
+                IReadOnlyList<SpatialMovementEdgeCost> movementEdges, int unitsPerRange, int actionPointCostUnits)
+            {
+                IsReachable = isReachable; Reason = reason;
+                Path = path ?? Array.Empty<HexCoord>();
+                MovementEdges = movementEdges ?? Array.Empty<SpatialMovementEdgeCost>();
+                UnitsPerRange = unitsPerRange; ActionPointCostUnits = actionPointCostUnits;
+            }
+            public bool IsReachable { get; }
+            public string Reason { get; }
+            public IReadOnlyList<HexCoord> Path { get; }
+            public IReadOnlyList<SpatialMovementEdgeCost> MovementEdges { get; }
+            public int UnitsPerRange { get; }
+            public int ActionPointCostUnits { get; }
+        }
+
         private sealed class FixedRangeQuery : ICombatSpatialQuery
         {
             private readonly bool inRange;
             private readonly string reason;
             private readonly bool enforceDeclaredRange;
-            private readonly IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> movementBySource;
+            private readonly IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>> movementBySource;
 
-            public FixedRangeQuery(
-                bool inRange,
-                string reason = "",
-                IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>> movementBySource = null,
+            public FixedRangeQuery(bool inRange, string reason = "",
+                IReadOnlyDictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>> movementBySource = null,
                 bool enforceDeclaredRange = false)
             {
-                this.inRange = inRange;
-                this.reason = reason;
-                this.enforceDeclaredRange = enforceDeclaredRange;
+                this.inRange = inRange; this.reason = reason; this.enforceDeclaredRange = enforceDeclaredRange;
                 this.movementBySource = movementBySource ??
-                    new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, CombatMovementQueryResult>>();
+                    new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>();
             }
 
-            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange)
             {
-                if (enforceDeclaredRange && (source.Distance(target) < minimumRange || source.Distance(target) > maximumRange))
-                    return new CombatRangeQueryResult(false, "target_out_of_range");
-                return new CombatRangeQueryResult(inRange, reason);
+                int distance = source.Anchor.Distance(target.Anchor);
+                if (enforceDeclaredRange && (distance < minimumRange || distance > maximumRange))
+                    return new SpatialContactResult(source.Anchor, target.Anchor, distance * 1000,
+                        false, true, "target_out_of_range", 1000);
+                return new SpatialContactResult(source.Anchor, target.Anchor, distance * 1000,
+                    inRange, inRange, reason, 1000);
             }
 
-            public CombatMovementQueryResult QueryMovement(
-                HexCoord source,
-                HexCoord destination,
-                int movementPoints,
-                int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied)
+            public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination,
+                int movementPoints, int movementEfficiencyMilliUnits, IReadOnlyCollection<HexCoord> occupied,
+                int? destinationFacing = null)
             {
-                if (!movementBySource.TryGetValue(source, out IReadOnlyDictionary<HexCoord, CombatMovementQueryResult> moves) ||
-                    !moves.TryGetValue(destination, out CombatMovementQueryResult movement))
-                    return new CombatMovementQueryResult(false,
-                "declared_move_path_blocker",
-                null,
-                null,
-                1000,
-                (0) * 10000);
+                if (!movementBySource.TryGetValue(source.Anchor, out var moves) ||
+                    !moves.TryGetValue(destination, out MovementFixture movement))
+                    return new CombatMovementQueryResult(false, "declared_move_path_blocker", null, 1000, 0);
                 if (occupied.Contains(destination) || movement.ActionPointCostUnits > movementPoints)
-                    return new CombatMovementQueryResult(false,
-                "declared_move_budget_or_occupancy",
-                null,
-                null,
-                1000,
-                (0) * 10000);
-                if (movement.MovementEdges.Count > 0) return movement;
-                var edges = new List<SpatialMovementEdgeCost>();
-                HexCoord previous = source;
-                foreach (HexCoord step in movement.Path)
+                    return new CombatMovementQueryResult(false, "declared_move_budget_or_occupancy", null, 1000, 0);
+                var steps = new List<SpatialMovementStep>();
+                SpatialPose previous = source;
+                for (int index = 0; index < movement.Path.Count; index++)
                 {
+                    HexCoord cell = movement.Path[index];
+                    int direction = previous.Anchor.DirectionTo(cell);
+                    SpatialPose next = previous.WithAnchor(cell).WithFacing(direction >= 0 ? direction : previous.Facing);
+                    var turns = new List<int>();
+                    int turn = previous.Facing;
+                    int sign = (next.Facing - turn + 6) % 6 <= 3 ? 1 : -1;
+                    while (turn != next.Facing) { turn = (turn + sign + 6) % 6; turns.Add(turn); }
                     int metric = checked((int)Math.Max(1L, (long)movement.ActionPointCostUnits * movementEfficiencyMilliUnits / 100000 / movement.Path.Count));
-                    edges.Add(new SpatialMovementEdgeCost(previous, step, metric, 0));
-                    previous = step;
+                    SpatialMovementEdgeCost edge = movement.MovementEdges.Count > 0
+                        ? (index < movement.MovementEdges.Count ? movement.MovementEdges[index] : default)
+                        : new SpatialMovementEdgeCost(previous.Anchor, cell, metric, 0);
+                    steps.Add(new SpatialMovementStep(previous, next, turns, edge));
+                    previous = next;
                 }
-                return new CombatMovementQueryResult(true, movement.Reason, movement.Path, edges, 1000, movement.ActionPointCostUnits);
+                if (destinationFacing.HasValue && previous.Facing != destinationFacing.Value)
+                    return new CombatMovementQueryResult(false, "declared_move_facing", null, 1000, 0);
+                return new CombatMovementQueryResult(movement.IsReachable, movement.Reason, steps,
+                    movement.UnitsPerRange, movement.ActionPointCostUnits);
             }
 
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(
-                HexCoord source,
-                int movementPoints,
-                int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied)
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int movementPoints,
+                int movementEfficiencyMilliUnits, IReadOnlyCollection<HexCoord> occupied)
             {
-                var reachable = new Dictionary<HexCoord, int>();
-                if (!movementBySource.TryGetValue(source, out IReadOnlyDictionary<HexCoord, CombatMovementQueryResult> moves))
-                    return reachable;
-
-                foreach (KeyValuePair<HexCoord, CombatMovementQueryResult> entry in moves)
+                var reachable = new Dictionary<SpatialPose, int>();
+                if (!movementBySource.TryGetValue(source.Anchor, out var moves)) return reachable;
+                foreach (var entry in moves)
                 {
-                    if (!occupied.Contains(entry.Key) && entry.Value.IsReachable && entry.Value.ActionPointCostUnits <= movementPoints)
-                        reachable.Add(entry.Key, entry.Value.ActionPointCostUnits);
+                    CombatMovementQueryResult movement = QueryMovement(source, entry.Key, movementPoints, movementEfficiencyMilliUnits, occupied);
+                    if (movement.IsReachable && movement.Steps.Count > 0)
+                        reachable.Add(movement.Steps[movement.Steps.Count - 1].To, movement.ActionPointCostUnits);
                 }
                 return reachable;
             }

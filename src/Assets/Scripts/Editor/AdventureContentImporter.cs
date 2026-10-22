@@ -56,7 +56,12 @@ namespace TianZhang.Editor
             if (lines == null || lines.Length < 2)
                 throw new InvalidOperationException(sourceName + ": adventure rows are required");
             string[] header = CsvTableReader.ParseRow(lines[0]);
-            string[] required = { "adventureId", "displayNameKey", "contentScope", "nodeId", "nodeTypeId", "q", "r", "contentId", "additionalEnemies" };
+            string[] required = { "adventureId", "displayNameKey", "contentScope", "nodeId", "nodeTypeId", "q", "r", "contentId", "additionalEnemies", "enemyFacing" };
+            if (header.Length != required.Length)
+                throw new InvalidOperationException(sourceName + ": exact adventure columns are required");
+            for (int i = 0; i < required.Length; i++)
+                if (header[i] != required[i])
+                    throw new InvalidOperationException(sourceName + ": invalid column " + header[i]);
             var columns = new Dictionary<string, int>(StringComparer.Ordinal);
             for (int i = 0; i < header.Length; i++) columns[header[i]] = i;
             foreach (string name in required)
@@ -70,6 +75,8 @@ namespace TianZhang.Editor
             {
                 if (string.IsNullOrWhiteSpace(lines[lineNumber]) || lines[lineNumber].TrimStart().StartsWith("#")) continue;
                 string[] row = CsvTableReader.ParseRow(lines[lineNumber]);
+                if (row.Length != required.Length)
+                    throw new InvalidOperationException(sourceName + ": invalid column count at line " + (lineNumber + 1));
                 string Get(string name) => columns[name] < row.Length ? row[columns[name]].Trim() : string.Empty;
                 string adventureId = Get("adventureId");
                 string nodeId = Get("nodeId");
@@ -108,6 +115,7 @@ namespace TianZhang.Editor
                     q = q,
                     r = r,
                     contentId = Get("contentId"),
+                    enemyFacing = ParseEnemyFacing(Get("enemyFacing"), nodeTypeId, sourceName),
                     additionalEnemies = ParseAdditionalEnemies(Get("additionalEnemies"), nodeTypeId, q, r, sourceName),
                 });
             }
@@ -122,6 +130,19 @@ namespace TianZhang.Editor
             return result;
         }
 
+        private static int ParseEnemyFacing(string value, string nodeType, string source)
+        {
+            if (nodeType != "adventure_node_encounter")
+            {
+                if (value.Length != 0)
+                    throw new InvalidOperationException(source + ": enemyFacing requires an encounter node");
+                return -1;
+            }
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int facing) || facing < 0 || facing > 5)
+                throw new InvalidOperationException(source + ": enemyFacing must be an explicit integer from 0 to 5");
+            return facing;
+        }
+
         private static AdventureEnemySpawnData[] ParseAdditionalEnemies(string text, string nodeType, int q, int r, string source)
         {
             if (string.IsNullOrEmpty(text)) return Array.Empty<AdventureEnemySpawnData>();
@@ -132,12 +153,13 @@ namespace TianZhang.Editor
             foreach (string entry in text.Split('|'))
             {
                 string[] parts = entry.Split('@', ':');
-                string enemyId = parts.Length == 3 ? parts[0].Trim() : string.Empty;
+                string enemyId = parts.Length == 4 ? parts[0].Trim() : string.Empty;
                 // The first token is the enemy content id. The stable instance id keeps the
                 // existing "enemy_N" combatant naming that presentation and tests expect.
-                if (parts.Length != 3 || !IsStableId(enemyId) ||
+                if (parts.Length != 4 || !IsStableId(enemyId) ||
                     !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraQ) ||
                     !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int extraR) ||
+                    !int.TryParse(parts[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int facing) || facing < 0 || facing > 5 ||
                     !positions.Add(extraQ + ":" + extraR))
                     throw new InvalidOperationException(source + ": invalid additional enemy " + entry);
                 result.Add(new AdventureEnemySpawnData
@@ -146,6 +168,7 @@ namespace TianZhang.Editor
                     enemyId = enemyId,
                     q = extraQ,
                     r = extraR,
+                    facing = facing,
                 });
             }
             return result.ToArray();

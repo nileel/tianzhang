@@ -75,14 +75,15 @@ namespace TianZhang.Combat
                 return;
 
             IReadOnlyCollection<HexCoord> occupied = session.GetOccupiedPositionsExcept(actor.Id);
-            foreach (HexCoord destination in session.SpatialQuery
-                         .FindReachable(actor.Position, actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, occupied)
+            foreach (SpatialPose destination in session.SpatialQuery
+                         .FindReachable(actor.Pose, actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, occupied)
                          .Keys
-                         .Where(destination => destination != actor.Position)
-                         .OrderBy(destination => destination.Q)
-                         .ThenBy(destination => destination.R))
+                         .Where(destination => destination.Anchor != actor.Position)
+                         .OrderBy(destination => destination.Anchor.Q)
+                         .ThenBy(destination => destination.Anchor.R).ThenBy(destination => destination.Facing))
             {
-                AddIfValid(session, new CombatCommand(CombatCommandKind.Move, actor.Id, destination: destination), actions);
+                AddIfValid(session, new CombatCommand(CombatCommandKind.Move, actor.Id, destination: destination.Anchor,
+                    destinationFacing: destination.Facing), actions);
             }
         }
 

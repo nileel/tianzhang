@@ -123,6 +123,23 @@ namespace TianZhang.Spatial
             return -1; // 不相邻
         }
 
+        /// <summary>Nearest six-way sector at any distance; ties use the lowest direction index.</summary>
+        public int DirectionToward(HexCoord target)
+        {
+            if (this == target) return -1;
+            long dq = (long)target.q - q, dr = (long)target.r - r, ds = (long)target.s - s;
+            int best = 0;
+            long bestDot = long.MinValue;
+            for (int index = 0; index < Directions.Length; index++)
+            {
+                HexCoord direction = Directions[index];
+                long dot = dq * direction.q + dr * direction.r + ds * direction.s;
+                if (dot <= bestDot) continue;
+                bestDot = dot; best = index;
+            }
+            return best;
+        }
+
         /// <summary>两个相邻格方向之差（用于判断朝向：正面/侧面/背面）</summary>
         public static int DirectionDiff(int dirA, int dirB)
         {

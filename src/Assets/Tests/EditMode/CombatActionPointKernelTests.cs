@@ -206,8 +206,8 @@ namespace TianZhang.Tests.EditMode
         {
             var s = Ready(Actor(ap: 120000, v: 3000), null, Attack("art", 10000));
             var whole = service.Preview(s, Move(3)); Assert.AreEqual(99999, whole.ActionPointCostUnits);
-            Assert.AreEqual(99999, s.SpatialQuery.FindReachable(s.Combatants.All[0].Position, 120000, 3000,
-                new[] { s.Combatants.All[1].Position })[new HexCoord(3, 0)]);
+            Assert.AreEqual(99999, s.SpatialQuery.FindReachable(s.Combatants.All[0].Pose, 120000, 3000,
+                new[] { s.Combatants.All[1].Position })[new SpatialPose(new HexCoord(3, 0))]);
             int first = Commit(s, Move(2)).ActionPointSpentUnits; Commit(s, Hit("art"));
             int second = Commit(s, Move(3)).ActionPointSpentUnits;
             Assert.AreEqual(99999, first + second); Assert.AreEqual(10001, s.Combatants.All[0].ActionPointsRemainingUnits);
@@ -748,9 +748,10 @@ namespace TianZhang.Tests.EditMode
         }
         internal sealed class DirectRange : ICombatSpatialQuery
         {
-            public CombatRangeQueryResult QueryRange(HexCoord a,HexCoord b,int min,int max) => new(true,"");
-            public CombatMovementQueryResult QueryMovement(HexCoord a,HexCoord b,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
-            public IReadOnlyDictionary<HexCoord,int> FindReachable(HexCoord a,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
+            public SpatialContactResult QueryRange(SpatialPose a,SpatialPose b,int min,int max) =>
+                new(a.Anchor,b.Anchor,a.Anchor.Distance(b.Anchor)*1000,true,true,"",1000);
+            public CombatMovementQueryResult QueryMovement(SpatialPose a,HexCoord b,int ap,int v,IReadOnlyCollection<HexCoord> occupied,int? destinationFacing=null) => throw new NotSupportedException();
+            public IReadOnlyDictionary<SpatialPose,int> FindReachable(SpatialPose a,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();
         }
         [TestCase("练气",9000)] [TestCase("筑基",8500)] [TestCase("金丹",8600)]
         public void KuxingKeepsOriginalRealmHealthFeeAndBudgetWhileIgnoringBlock(string realm,int hp)

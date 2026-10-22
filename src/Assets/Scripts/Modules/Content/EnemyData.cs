@@ -22,6 +22,8 @@ namespace TianZhang.Content
         public string enemyTypeId;
         public string aiProfileId;
         public string realmId;
+        public string footprintKind;
+        public int bodyScaleRank;
         public float combatStatScale = 1f;
         public CharacterData combatTemplate;
         public EnemyDropEntry[] dropEntries = Array.Empty<EnemyDropEntry>();

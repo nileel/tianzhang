@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.Json;
 using TianZhang.Combat;
 using NativeHex = TianZhang.Spatial.HexCoord;
+using SpatialPose = TianZhang.Spatial.SpatialPose;
+using SpatialContactResult = TianZhang.Spatial.SpatialContactResult;
 
 namespace BattleSim;
 
@@ -36,14 +38,14 @@ static class ActionEconomyBalanceReport
     // Numeric fixtures have no obstacles or movement; the production spatial owner is tested above.
     sealed class AdjacentSpace : ICombatSpatialQuery
     {
-        public CombatRangeQueryResult QueryRange(NativeHex a, NativeHex b, int min, int max)
+        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max)
         {
-            int d = (Math.Abs(a.Q - b.Q) + Math.Abs(a.R - b.R) + Math.Abs(a.Q + a.R - b.Q - b.R)) / 2;
-            return new(d >= min && d <= max, "fixture_out_of_range");
+            int d = a.Anchor.TopologicalDistanceTo(b.Anchor);
+            return new(a.Anchor, b.Anchor, d * 1000, d >= min && d <= max, true, "fixture_out_of_range", 1000);
         }
-        public CombatMovementQueryResult QueryMovement(NativeHex a, NativeHex b, int ap, int v, IReadOnlyCollection<NativeHex> occupied)
+        public CombatMovementQueryResult QueryMovement(SpatialPose a, NativeHex b, int ap, int v, IReadOnlyCollection<NativeHex> occupied, int? destinationFacing = null)
             => throw new NotSupportedException("No movement in abstract cost rows.");
-        public IReadOnlyDictionary<NativeHex, int> FindReachable(NativeHex a, int ap, int v, IReadOnlyCollection<NativeHex> occupied)
+        public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose a, int ap, int v, IReadOnlyCollection<NativeHex> occupied)
             => throw new NotSupportedException("No movement in abstract cost rows.");
     }
     static void Emit(object value) => Console.WriteLine(JsonSerializer.Serialize(value));
@@ -377,14 +379,14 @@ static class Ap2CombatReport
 {
     internal sealed class Space : ICombatSpatialQuery
     {
-        public CombatRangeQueryResult QueryRange(NativeHex a, NativeHex b, int min, int max)
+        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max)
         {
-            int d = (Math.Abs(a.Q-b.Q)+Math.Abs(a.R-b.R)+Math.Abs(a.Q+a.R-b.Q-b.R))/2;
-            return new(d >= min && d <= max,"target_out_of_range");
+            int d = a.Anchor.TopologicalDistanceTo(b.Anchor);
+            return new(a.Anchor,b.Anchor,d*1000,d >= min && d <= max,true,"target_out_of_range",1000);
         }
-        public CombatMovementQueryResult QueryMovement(NativeHex a, NativeHex b, int ap, int v, IReadOnlyCollection<NativeHex> occupied)
+        public CombatMovementQueryResult QueryMovement(SpatialPose a, NativeHex b, int ap, int v, IReadOnlyCollection<NativeHex> occupied,int? destinationFacing=null)
             => throw new NotSupportedException("AP2 adjacent fixture has no movement command.");
-        public IReadOnlyDictionary<NativeHex,int> FindReachable(NativeHex a,int ap,int v,IReadOnlyCollection<NativeHex> occupied)
+        public IReadOnlyDictionary<SpatialPose,int> FindReachable(SpatialPose a,int ap,int v,IReadOnlyCollection<NativeHex> occupied)
             => throw new NotSupportedException("AP2 adjacent fixture has no movement command.");
     }
     internal static CombatOrdinaryActionDefinition[] Ordinary() => new[] {

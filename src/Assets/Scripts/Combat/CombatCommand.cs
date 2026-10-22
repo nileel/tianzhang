@@ -62,7 +62,7 @@ namespace TianZhang.Combat
             int slotIndex = -1,
             long contextVersion = 0, string equipmentSlotId = null, string itemId = null, string instanceId = null,
             int itemQuantityCost = 1, int? attackDirection = null,
-            IReadOnlyList<CombatTargetResolutionRolls> targetRolls = null)
+            IReadOnlyList<CombatTargetResolutionRolls> targetRolls = null, int? destinationFacing = null)
         {
             if (string.IsNullOrWhiteSpace(actorId))
                 throw new ArgumentException("Actor ID is required.", nameof(actorId));
@@ -73,6 +73,7 @@ namespace TianZhang.Combat
             ProfileId = profileId ?? string.Empty;
             Rolls = rolls;
             Destination = destination;
+            DestinationFacing = destinationFacing;
             SlotIndex = slotIndex;
             ContextVersion = contextVersion;
             EquipmentSlotId = equipmentSlotId ?? string.Empty;
@@ -97,6 +98,7 @@ namespace TianZhang.Combat
         public string ProfileId { get; }
         public CombatResolutionRolls Rolls { get; }
         public HexCoord? Destination { get; }
+        public int? DestinationFacing { get; }
         public int SlotIndex { get; }
         public long ContextVersion { get; }
     }

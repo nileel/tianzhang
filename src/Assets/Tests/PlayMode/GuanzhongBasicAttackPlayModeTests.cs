@@ -208,11 +208,12 @@ namespace TianZhang.Tests.PlayMode
             var recording = new ForwardingPresentationPort(FindInActiveScene<Static3DCombatUnitPresentationProvider>());
             SetPrivateField(encounter, "unitPresentation", recording);
             var service = new CombatCommandService();
+            SpatialContactResult contact = session.SpatialQuery.QueryRange(spawned.Player.Pose, spawned.Enemy.Pose, 1, 1);
             foreach (string profile in new[] { "", "basic_unarmed", "basic_iron_sword", "missing" })
             {
                 bool area = profile == "basic_iron_sword";
                 var quote = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player", area ? null : "enemy", profile,
-                    attackDirection: area ? spawned.Player.Position.DirectionTo(spawned.Enemy.Position) : (int?)null));
+                    attackDirection: area ? contact.SourceCell.DirectionToward(contact.TargetCell) : (int?)null));
                 Assert.IsFalse(quote.IsLegal);
                 Assert.AreEqual(profile == "basic_iron_sword" ? "attack_profile_not_authorized" : "attack_profile_unresolved", quote.RejectionReason);
             }
@@ -319,7 +320,7 @@ namespace TianZhang.Tests.PlayMode
             AssertFormalBattlefieldPresentation();
             AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, spawned.Enemies.Select(enemy => enemy.Id));
-            CollectionAssert.AreEqual(new[] { new HexCoord(9, 9), new HexCoord(8, 9) }, spawned.Enemies.Select(enemy => enemy.Position));
+            CollectionAssert.AreEqual(new[] { new HexCoord(7, 8), new HexCoord(8, 8) }, spawned.Enemies.Select(enemy => enemy.Position));
             Assert.AreNotSame(spawned.Enemies[0], spawned.Enemies[1]);
             Assert.AreEqual(3, provider.ActiveCombatantCount);
             foreach (CombatantSnapshot enemy in spawned.Enemies)
@@ -424,8 +425,9 @@ namespace TianZhang.Tests.PlayMode
             {
                 HexCoord positionBefore = player.Position;
                 int remainingBefore = player.ActionPointsRemainingUnits, facingBefore = player.Facing;
-                Assert.IsFalse(session.SpatialQuery.QueryMovement(positionBefore, rejectedDestination,
-                    remainingBefore, player.MovementEfficiencyMilliUnits, new[] { enemy.Position }).IsReachable);
+                Assert.IsFalse(session.SpatialQuery.QueryMovement(player.Pose, rejectedDestination,
+                    remainingBefore, player.MovementEfficiencyMilliUnits,
+                    session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).SelectMany(unit => unit.OccupiedCells).ToArray()).IsReachable);
                 ((ICombatCommandHandler)encounter).RequestMove(player.Id, rejectedDestination.Q, rejectedDestination.R);
                 Assert.That(player.Position, Is.EqualTo(positionBefore));
                 Assert.AreEqual(remainingBefore, player.ActionPointsRemainingUnits);
@@ -435,7 +437,8 @@ namespace TianZhang.Tests.PlayMode
             }
             HexCoord firstDestination = AdjacentMeleeStep(session);
             CombatMovementQueryResult firstPath = session.SpatialQuery.QueryMovement(
-                player.Position, firstDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
+                player.Pose, firstDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits,
+                session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).SelectMany(unit => unit.OccupiedCells).ToArray());
             Assert.IsTrue(firstPath.IsReachable, firstPath.Reason);
             int movementBefore = player.ActionPointsRemainingUnits;
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, firstDestination.Q, firstDestination.R);
@@ -470,7 +473,8 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForMovementPresentation(encounter);
             HexCoord secondDestination = contactPosition;
             CombatMovementQueryResult secondPath = session.SpatialQuery.QueryMovement(
-                player.Position, secondDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, new[] { enemy.Position });
+                player.Pose, secondDestination, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits,
+                session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).SelectMany(unit => unit.OccupiedCells).ToArray());
             Assert.IsTrue(secondPath.IsReachable, secondPath.Reason);
             movementBefore = player.ActionPointsRemainingUnits;
             ((ICombatCommandHandler)encounter).RequestMove(player.Id, secondDestination.Q, secondDestination.R);
@@ -566,14 +570,15 @@ namespace TianZhang.Tests.PlayMode
                         if (encounter == null || !encounter.IsRunning) break;
                         continue;
                     }
-                    var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).Select(unit => unit.Position).ToArray();
-                    var reachable = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits,
-                        player.MovementEfficiencyMilliUnits, occupied);
+                    var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).SelectMany(unit => unit.OccupiedCells).ToArray();
+                    var reachable = session.SpatialQuery.FindReachable(player.Pose, player.ActionPointsRemainingUnits,
+                        player.MovementEfficiencyMilliUnits, occupied).GroupBy(entry => entry.Key.Anchor)
+                        .ToDictionary(group => group.Key, group => group.Min(entry => entry.Value));
                     var options = reachable.Keys.Where(cell => cell != player.Position).Select(cell => new
                     {
                         Cell = cell,
                         Count = Enumerable.Range(0, 6).Max(direction => spawned.Enemies.Count(enemy => enemy.IsAlive &&
-                            (enemy.Position == cell.Step(direction) || enemy.Position == cell.Step(direction).Step(direction))))
+                            enemy.OccupiedCells.Any(occupiedCell => occupiedCell == cell.Step(direction) || occupiedCell == cell.Step(direction).Step(direction))))
                     }).Where(option => option.Count > 0 && (!wantMultiple || option.Count == 2))
                         .OrderByDescending(option => option.Count).ThenBy(option => reachable[option.Cell]).ToArray();
                     if (options.Length == 0) break;
@@ -616,7 +621,7 @@ namespace TianZhang.Tests.PlayMode
             for (int turn = 0; turn < 12; turn++)
             {
                 yield return WaitForPlayerTurn(encounter, session, player.Id);
-                if (player.Position.Distance(enemy.Position) == 1 &&
+                if (session.SpatialQuery.QueryRange(player.Pose, enemy.Pose, 1, 1).IsInRange &&
                     player.ActionPointsRemainingUnits == player.ActionPointMaximumUnits)
                 {
                     TestContext.WriteLine($"CONTACT player={player.Position}; enemy={enemy.Position}; turn={session.TurnSequence}; tick={session.TurnScheduler.CurrentTick}; AP={player.ActionPointsRemainingUnits}");
@@ -624,8 +629,9 @@ namespace TianZhang.Tests.PlayMode
                 }
                 CombatCommand step = new CombatLegalActionService().GetLegalActions(session, player.Id)
                     .Where(action => action.Kind == CombatCommandKind.Move && action.Destination.HasValue)
-                    .Where(action => action.Destination.Value.Distance(enemy.Position) < player.Position.Distance(enemy.Position))
-                    .OrderBy(action => action.Destination.Value.Distance(enemy.Position))
+                    .Where(action => ContactDistance(session, player.Pose.WithAnchor(action.Destination.Value), enemy.Pose) <
+                        ContactDistance(session, player.Pose, enemy.Pose))
+                    .OrderBy(action => ContactDistance(session, player.Pose.WithAnchor(action.Destination.Value), enemy.Pose))
                     .ThenByDescending(action => action.Destination.Value.Distance(player.Position))
                     .FirstOrDefault();
                 if (step != null)
@@ -640,13 +646,21 @@ namespace TianZhang.Tests.PlayMode
             Assert.Fail($"Formal movement did not reach contact: player={player.Position}, enemy={enemy.Position}, tick={session.TurnScheduler.CurrentTick}.");
         }
 
+        public static double ContactDistance(CombatSession session, SpatialPose source, SpatialPose target)
+        {
+            SpatialContactResult contact = session.SpatialQuery.QueryRange(source, target, 0, 0);
+            return contact.DistanceUnits < 0 ? double.PositiveInfinity : (double)contact.DistanceUnits / contact.UnitsPerRange;
+        }
+
         public static HexCoord AdjacentMeleeStep(CombatSession session)
         {
             Assert.IsTrue(session.Combatants.TryGet("player", out CombatantSnapshot player));
             Assert.IsTrue(session.Combatants.TryGet("enemy", out CombatantSnapshot enemy));
-            var steps = session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits,
-                    player.MovementEfficiencyMilliUnits, new[] { enemy.Position }).Keys
-                .Where(cell => cell.Distance(player.Position) == 1 && cell.Distance(enemy.Position) == 1)
+            var steps = session.SpatialQuery.FindReachable(player.Pose, player.ActionPointsRemainingUnits,
+                    player.MovementEfficiencyMilliUnits,
+                    session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id).SelectMany(unit => unit.OccupiedCells).ToArray()).Keys
+                .Where(pose => pose.Anchor.Distance(player.Position) == 1 && session.SpatialQuery.QueryRange(pose, enemy.Pose, 1, 1).IsInRange)
+                .Select(pose => pose.Anchor).Distinct()
                 .OrderBy(cell => cell.Q).ThenBy(cell => cell.R).ToArray();
             Assert.IsNotEmpty(steps, "Movement/attack ordering needs a legal adjacent melee step.");
             return steps[0];
@@ -1541,30 +1555,30 @@ namespace TianZhang.Tests.PlayMode
 
         private sealed class AlwaysInRangeCombatSpatialQuery : ICombatSpatialQuery
         {
-            public CombatRangeQueryResult QueryRange(
-                HexCoord source,
-                HexCoord target,
+            public SpatialContactResult QueryRange(
+                SpatialPose source,
+                SpatialPose target,
                 int minimumRange,
-                int maximumRange) => new CombatRangeQueryResult(true, string.Empty);
+                int maximumRange) => new SpatialContactResult(source.Anchor, target.Anchor,
+                    source.Anchor.Distance(target.Anchor) * 1000, true, true, string.Empty, 1000);
 
             public CombatMovementQueryResult QueryMovement(
-                HexCoord source,
+                SpatialPose source,
                 HexCoord destination,
                 int movementPoints,
                 int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied) =>
+                IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null) =>
                 new CombatMovementQueryResult(false,
                 "movement_not_used",
-                null,
                 null,
                 1000,
                 (0) * 10000);
 
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(
-                HexCoord source,
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(
+                SpatialPose source,
                 int movementPoints,
                 int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
+                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<SpatialPose, int>();
         }
     }
 }

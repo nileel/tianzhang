@@ -30,7 +30,7 @@ namespace TianZhang.Features.CombatPresentation
         private static readonly Color CurrentTargetColor = new Color32(0xFF, 0xE7, 0xA0, 0xFF);
         private static readonly Color EffectCellColor = new Color32(0xFF, 0x9F, 0x3C, 0xFF);
         private static readonly Color IllegalColor = new Color32(0xFF, 0x40, 0x33, 0xFF);
-        // The single ground anchor for the inspected unit replaces the old screen-space box.
+        // Ground rings identify the full committed footprint of the inspected unit.
         private static readonly Color InspectionColor = new Color32(0xFF, 0xC8, 0x5C, 0xFF);
         private const float ReachableWidth = 0.035f;
         private const float DestinationWidth = 0.07f;
@@ -67,13 +67,17 @@ namespace TianZhang.Features.CombatPresentation
         private LineRenderer pathArrow;
         private LineRenderer inspectionRing;
         private CombatUnitPresentationHex? inspectionCell;
-        private Vector2Int? highlightedDestination;
+        private CombatUnitPresentationPose? inspectionPose;
+        private LineRenderer[] inspectionRings;
+        private readonly List<Vector2Int> destinationCells = new List<Vector2Int>(2);
+        private readonly List<Vector3> pathPoints = new List<Vector3>();
         private bool ownsPreview;
         public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
         public LineRenderer InspectionRing => inspectionRing;
+        public IReadOnlyList<LineRenderer> InspectionRings => inspectionRings ?? Array.Empty<LineRenderer>();
         public CombatUnitPresentationHex? InspectionCell => inspectionCell;
         public IReadOnlyList<LineRenderer> PathNodeLines => pathNodes;
         public LineRenderer PathDirectionArrow => pathArrow;
@@ -116,28 +120,37 @@ namespace TianZhang.Features.CombatPresentation
             inspectionRing.loop = true;
             inspectionRing.positionCount = 6;
             inspectionRing.gameObject.SetActive(false);
+            LineRenderer rearRing = CreateLine("InspectionRearCellRing", selectedMaterial, InspectionWidth, InspectionColor);
+            rearRing.loop = true;
+            rearRing.positionCount = 6;
+            rearRing.gameObject.SetActive(false);
+            inspectionRings = new[] { inspectionRing, rearRing };
         }
 
-        /// <summary>Single tile-body ring marking the inspected unit's cell; independent of movement selection.</summary>
-        public void SetInspectionHighlight(CombatUnitPresentationHex? cell)
+        /// <summary>Compatibility entry for the single-cell player and existing UI callers.</summary>
+        public void SetInspectionHighlight(CombatUnitPresentationHex? cell) =>
+            SetInspectionPose(cell.HasValue ? new CombatUnitPresentationPose(cell.Value, 0) : (CombatUnitPresentationPose?)null);
+
+        public void SetInspectionPose(CombatUnitPresentationPose? pose)
         {
-            if (inspectionRing == null) return;
-            if (!cell.HasValue || !centers.TryGetValue(Key(cell.Value), out Vector3 center))
+            if (inspectionRings == null) return;
+            if (Nullable.Equals(inspectionPose, pose)) return;
+            inspectionPose = pose;
+            inspectionCell = pose?.Position;
+            for (int index = 0; index < inspectionRings.Length; index++)
             {
-                inspectionCell = null;
-                inspectionRing.gameObject.SetActive(false);
-                return;
+                LineRenderer ring = inspectionRings[index];
+                if (!pose.HasValue || index == 1 && !pose.Value.IsDoubleCell ||
+                    !centers.TryGetValue(Key(index == 0 ? pose.Value.Position : pose.Value.Rear), out Vector3 center))
+                { ring.gameObject.SetActive(false); continue; }
+                for (int corner = 0; corner < 6; corner++)
+                {
+                    float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
+                    ring.SetPosition(corner,
+                        center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
+                }
+                ShowRing(ring, InspectionColor, InspectionWidth);
             }
-            if (inspectionCell.HasValue && inspectionCell.Value.Equals(cell.Value) &&
-                inspectionRing.gameObject.activeSelf) return;
-            inspectionCell = cell;
-            for (int corner = 0; corner < 6; corner++)
-            {
-                float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
-                inspectionRing.SetPosition(corner,
-                    center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
-            }
-            ShowRing(inspectionRing, InspectionColor, InspectionWidth);
         }
 
         public void Present(CombatHudSnapshot value)
@@ -147,18 +160,19 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
-        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false) =>
-            PresentTargeting(null, 0, 0, area, target, legal, null);
+        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false,
+            IReadOnlyList<CombatUnitPresentationHex> targetCells = null) =>
+            PresentTargeting(null, 0, 0, area, target, legal, null, targetCells);
 
         /// <summary>Shows the cast range, the legal unit targets, and the effect cells of the pointed target.</summary>
         public void PresentCastingPreview(CombatUnitPresentationHex origin, int minimum, int maximum,
             CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
-            IReadOnlyList<CombatTargetingHint> targets = null) =>
-            PresentTargeting(origin, minimum, maximum, area, target, legal, targets);
+            IReadOnlyList<CombatTargetingHint> targets = null, IReadOnlyList<CombatUnitPresentationHex> targetCells = null) =>
+            PresentTargeting(origin, minimum, maximum, area, target, legal, targets, targetCells);
 
         private void PresentTargeting(CombatUnitPresentationHex? rangeOrigin, int minimum, int maximum,
             CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
-            IReadOnlyList<CombatTargetingHint> targets)
+            IReadOnlyList<CombatTargetingHint> targets, IReadOnlyList<CombatUnitPresentationHex> targetCells)
         {
             ClearSelection();
             if (!CanInput) return;
@@ -188,6 +202,11 @@ namespace TianZhang.Features.CombatPresentation
                 if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
                 ShowRing(ring, cell.IsLegal ? EffectCellColor : IllegalColor, cell.IsLegal ? EffectWidth : IllegalWidth);
             }
+            // All occupied cells of the pointed unit identify the same target, without changing the effect template.
+            if (targetCells != null)
+                foreach (CombatUnitPresentationHex cell in targetCells)
+                    if (highlights.TryGetValue(Key(cell), out LineRenderer ring))
+                        ShowRing(ring, legal ? CurrentTargetColor : IllegalColor, legal ? CurrentTargetWidth : IllegalWidth);
             // The pointed cell is the current target and always outranks the range or area color.
             if (target.HasValue && highlights.TryGetValue(Key(target.Value), out LineRenderer current))
                 ShowRing(current, legal ? CurrentTargetColor : IllegalColor,
@@ -234,7 +253,6 @@ namespace TianZhang.Features.CombatPresentation
             SelectionStarted?.Invoke();
             IsSelecting = true;
             selected = null;
-            highlightedDestination = null;
             foreach (CombatMovementOption option in snapshot.Movement.Options)
                 if (highlights.TryGetValue(Key(option.Destination), out LineRenderer ring)) ring.gameObject.SetActive(true);
             ownsPreview = previewView != null;
@@ -319,17 +337,35 @@ namespace TianZhang.Features.CombatPresentation
             return uiHits.Count > 0;
         }
 
-        /// <summary>Keeps exactly one gold destination; the previous hover returns to cyan.</summary>
+        /// <summary>The selected destination displays both cells when its quoted final pose occupies two.</summary>
         private void HighlightDestination(CombatMovementOption hovered)
         {
-            if (highlightedDestination.HasValue &&
-                highlights.TryGetValue(highlightedDestination.Value, out LineRenderer previous) &&
-                (hovered == null || Key(hovered.Destination) != highlightedDestination.Value))
-                ShowRing(previous, ReachableOutlineColor, ReachableWidth);
-            highlightedDestination = null;
-            if (hovered == null || !highlights.TryGetValue(Key(hovered.Destination), out LineRenderer ring)) return;
-            ShowRing(ring, DestinationColor, DestinationWidth);
-            highlightedDestination = Key(hovered.Destination);
+            foreach (Vector2Int key in destinationCells)
+            {
+                if (!highlights.TryGetValue(key, out LineRenderer previous)) continue;
+                bool reachable = false;
+                foreach (CombatMovementOption option in snapshot.Movement.Options)
+                    if (Key(option.Destination) == key) { reachable = true; break; }
+                previous.gameObject.SetActive(reachable);
+                if (reachable) ShowRing(previous, ReachableOutlineColor, ReachableWidth);
+            }
+            destinationCells.Clear();
+            if (hovered == null) return;
+            if (hovered.MovementSteps.Count > 0)
+            {
+                CombatUnitPresentationPose pose = hovered.MovementSteps[hovered.MovementSteps.Count - 1].To;
+                Add(pose.Position);
+                if (pose.IsDoubleCell) Add(pose.Rear);
+            }
+            else Add(hovered.Destination);
+
+            void Add(CombatUnitPresentationHex cell)
+            {
+                Vector2Int key = Key(cell);
+                if (!highlights.TryGetValue(key, out LineRenderer ring)) return;
+                destinationCells.Add(key);
+                ShowRing(ring, DestinationColor, DestinationWidth);
+            }
         }
 
         private void DrawPath(CombatMovementOption option)
@@ -343,17 +379,29 @@ namespace TianZhang.Features.CombatPresentation
                 HidePathNodes(0);
                 return;
             }
-            pathLine.positionCount = option.Path.Count + 1;
-            Vector3 origin = centers[Key(snapshot.Movement.Origin)];
-            pathLine.SetPosition(0, origin);
-            for (int index = 0; index < option.Path.Count; index++)
-                pathLine.SetPosition(index + 1, centers[Key(option.Path[index])]);
-            // Every intermediate cell carries a warm node; the destination gets the arrowhead.
-            int nodeCount = Math.Max(0, option.Path.Count - 1);
+            pathPoints.Clear();
+            if (option.MovementSteps.Count > 0 && option.MovementSteps[0].From.IsDoubleCell)
+            {
+                pathPoints.Add(PoseCenter(option.MovementSteps[0].From));
+                foreach (CombatUnitPresentationMovementStep step in option.MovementSteps)
+                {
+                    foreach (int facing in step.TurnFacings)
+                        pathPoints.Add(PoseCenter(new CombatUnitPresentationPose(step.From.Position, facing, true)));
+                    pathPoints.Add(PoseCenter(step.To));
+                }
+            }
+            else
+            {
+                pathPoints.Add(centers[Key(snapshot.Movement.Origin)]);
+                foreach (CombatUnitPresentationHex cell in option.Path) pathPoints.Add(centers[Key(cell)]);
+            }
+            pathLine.positionCount = pathPoints.Count;
+            for (int index = 0; index < pathPoints.Count; index++) pathLine.SetPosition(index, pathPoints[index]);
+            int nodeCount = Math.Max(0, pathPoints.Count - 2);
             EnsurePathNodes(nodeCount);
             for (int index = 0; index < nodeCount; index++)
             {
-                Vector3 nodeCenter = centers[Key(option.Path[index])];
+                Vector3 nodeCenter = pathPoints[index + 1];
                 LineRenderer node = pathNodes[index];
                 node.loop = true;
                 node.positionCount = 6;
@@ -366,10 +414,8 @@ namespace TianZhang.Features.CombatPresentation
             }
             HidePathNodes(nodeCount);
             if (pathArrow == null) return;
-            Vector3 destination = centers[Key(option.Destination)];
-            Vector3 previous = option.Path.Count > 1
-                ? centers[Key(option.Path[option.Path.Count - 2])]
-                : origin;
+            Vector3 destination = pathPoints[pathPoints.Count - 1];
+            Vector3 previous = pathPoints.Count > 1 ? pathPoints[pathPoints.Count - 2] : destination;
             Vector3 direction = destination - previous;
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.000001f)
@@ -387,6 +433,9 @@ namespace TianZhang.Features.CombatPresentation
             pathArrow.SetPosition(2, back - side * 0.16f);
             pathArrow.gameObject.SetActive(true);
         }
+
+        private Vector3 PoseCenter(CombatUnitPresentationPose pose) => pose.IsDoubleCell
+            ? (centers[Key(pose.Position)] + centers[Key(pose.Rear)]) * .5f : centers[Key(pose.Position)];
 
         private void EnsurePathNodes(int count)
         {
@@ -414,7 +463,7 @@ namespace TianZhang.Features.CombatPresentation
             }
             IsSelecting = false;
             selected = null;
-            highlightedDestination = null;
+            destinationCells.Clear();
             foreach (LineRenderer ring in highlights.Values)
                 if (ring != null)
                 {

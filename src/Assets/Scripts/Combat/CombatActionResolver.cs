@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Spatial;
 
 namespace TianZhang.Combat
@@ -57,13 +58,14 @@ namespace TianZhang.Combat
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine =>
-                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, attackArea != null),
+                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, attackArea != null, validation.TargetContacts),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
                 CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
                 CombatCommandKind.SwapEquipment => ResolveEquipment(actor, command),
                 CombatCommandKind.UseItem => ResolveItem(actor, session.ExternalResources.QueryItem(command).HealthRecovery),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
+            if (result.Succeeded) result = result.WithContacts(validation.TargetContacts);
             if (result.Succeeded) commit = () =>
             {
                 originalActor.CommitResolvedState(actor);
@@ -120,7 +122,7 @@ namespace TianZhang.Combat
             CombatCommand command,
             CombatantSnapshot actor,
             IReadOnlyList<CombatantSnapshot> targets,
-            int cooldown, bool isArea)
+            int cooldown, bool isArea, IReadOnlyList<CombatTargetContact> contacts)
         {
             session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile);
 
@@ -180,7 +182,9 @@ namespace TianZhang.Combat
                     target = targets[index];
                     var rolls = isArea ? command.TargetRolls[index].Rolls : command.Rolls;
                     var effectActor = isArea ? source.CopyForResolution() : actor;
-                    CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus);
+                    SpatialContactResult contact = contacts.Single(value => value.TargetId == target.Id).Contact;
+                    int incomingDirection = contact.TargetCell.DirectionToward(contact.SourceCell);
+                    CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus, incomingDirection);
                     if (isArea && damage.IsHit) actor.LeijieStacks = effectActor.LeijieStacks;
                     if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
                     {
@@ -238,7 +242,7 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatantSnapshot target,
             CombatAttackProfile profile,
-            CombatResolutionRolls rolls, bool kuxingLowHealthBonus)
+            CombatResolutionRolls rolls, bool kuxingLowHealthBonus, int incomingDirection)
         {
             switch (profile.Effect)
             {
@@ -246,12 +250,12 @@ namespace TianZhang.Combat
                     target.RestoreHealth(profile.HealAmount);
                     return new CombatDamageResult(0, true, false, false, false);
                 case CombatAttackEffect.Physical:
-                    return ResolvePhysical(actor, target, profile, rolls, true, true, kuxingLowHealthBonus);
+                    return ResolvePhysical(actor, target, profile, rolls, true, true, incomingDirection, kuxingLowHealthBonus);
                 case CombatAttackEffect.Soul:
-                    return ResolveSoul(actor, target, profile, rolls, true, true);
+                    return ResolveSoul(actor, target, profile, rolls, true, true, incomingDirection);
                 case CombatAttackEffect.Hybrid:
-                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, kuxingLowHealthBonus);
-                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false);
+                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, incomingDirection, kuxingLowHealthBonus);
+                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false, incomingDirection);
                     if (physical.IsHit)
                         target.ReceiveDamage(physical.FinalDamage);
                     if (soul.IsHit)
@@ -273,9 +277,9 @@ namespace TianZhang.Combat
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
             bool advanceAction,
-            bool applyDamage, bool kuxingLowHealthBonus = false)
+            bool applyDamage, int incomingDirection, bool kuxingLowHealthBonus = false)
         {
-            if (!RollHit(actor, target, rolls.HitPercent))
+            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection))
                 return new CombatDamageResult(0, false, false, false, false);
 
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
@@ -292,9 +296,9 @@ namespace TianZhang.Combat
                     profile.RuleMetadata.UnarmedPhysicalAttackCapacity : profile.RuleMetadata.Tier.PhysicalAttackCapacity);
             float damage = CalculateLineDamage(attack, effectiveDefense, 0f, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
-            damage *= FacingDamageModifier(target, actor);
+            damage *= FacingDamageModifier(target, incomingDirection);
 
-            bool backAttack = IsBackAttack(target, actor);
+            bool backAttack = IsBackAttack(target, incomingDirection);
             bool blocked = !kuxing && !backAttack && rolls.BlockPercent < target.BlockRate;
             if (blocked)
                 damage *= BlockReductionMultiplier(target.BlockReduction);
@@ -312,9 +316,9 @@ namespace TianZhang.Combat
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
             bool advanceAction,
-            bool applyDamage)
+            bool applyDamage, int incomingDirection)
         {
-            if (!RollHit(actor, target, rolls.HitPercent))
+            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection))
                 return new CombatDamageResult(0, false, false, false, false);
 
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
@@ -337,7 +341,7 @@ namespace TianZhang.Combat
                 (int)Math.Round(effectiveDefense), soulResist, multiplier,
                 actor.RealmMultiplier, target.RealmMultiplier, element.DamageMultiplier);
 
-            bool backAttack = IsBackAttack(target, actor);
+            bool backAttack = IsBackAttack(target, incomingDirection);
             bool soulShielded = !backAttack && rolls.SoulShieldPercent < target.SoulShieldRate;
             if (soulShielded)
                 damage *= 1f - Clamp(target.SoulShieldReduction, 0f, 100f) / 100f;
@@ -358,10 +362,10 @@ namespace TianZhang.Combat
         public static float BlockReductionMultiplier(float blockReduction) =>
             1f - Clamp(blockReduction, 0f, 100f) / 100f;
 
-        private static bool RollHit(CombatantSnapshot actor, CombatantSnapshot target, float rollPercent)
+        private static bool RollHit(CombatantSnapshot actor, CombatantSnapshot target, float rollPercent, int incomingDirection)
         {
             float rate = EffectiveHitRate(actor.HitRateBonus, target.DodgeRate);
-            rate *= FacingHitModifier(target, actor);
+            rate *= FacingHitModifier(target, incomingDirection);
             return rollPercent <= Clamp(rate, 5f, 100f);
         }
 
@@ -416,27 +420,25 @@ namespace TianZhang.Combat
             return new FudanBonus(multiplier, wasFull ? 30f : 0f);
         }
 
-        private static float FacingHitModifier(CombatantSnapshot target, CombatantSnapshot actor)
+        private static float FacingHitModifier(CombatantSnapshot target, int direction)
         {
-            int direction = target.Position.DirectionTo(actor.Position);
             if (direction < 0)
                 return 1f;
             int difference = DirectionDifference(target.Facing, direction);
             return difference switch { 3 => 1.2f, 1 or 2 => 1.1f, _ => 1f };
         }
 
-        private static float FacingDamageModifier(CombatantSnapshot target, CombatantSnapshot actor)
+        private static float FacingDamageModifier(CombatantSnapshot target, int direction)
         {
-            int direction = target.Position.DirectionTo(actor.Position);
             if (direction < 0)
                 return 1f;
             int difference = DirectionDifference(target.Facing, direction);
             return difference switch { 3 => 1.3f, 1 or 2 => 1.15f, _ => 1f };
         }
 
-        private static bool IsBackAttack(CombatantSnapshot target, CombatantSnapshot actor)
+        private static bool IsBackAttack(CombatantSnapshot target, int direction)
         {
-            return FacingDamageModifier(target, actor) >= 1.25f;
+            return FacingDamageModifier(target, direction) >= 1.25f;
         }
 
         private static int DirectionDifference(int left, int right)

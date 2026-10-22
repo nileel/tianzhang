@@ -22,13 +22,13 @@ using Object = UnityEngine.Object;
 namespace TianZhang.Tests.PlayMode
 {
     /// <summary>
-    /// F3 acceptance evidence: the three formal combatants stand with their own foot contact on
+    /// F4 grounding regression evidence: the three formal combatants stand with their own foot contact on
     /// the measured tile plane, without the former physical base, at both game resolutions.
     /// </summary>
     public sealed class GuanzhongGroundedUnitsPlayModeTests
     {
         private string saveDirectory;
-        private static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/f3-grounding"));
+        private static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/f4-grounding"));
 
         [UnitySetUp]
         public IEnumerator EnterSettlement()
@@ -104,8 +104,8 @@ namespace TianZhang.Tests.PlayMode
             foreach (CombatantSnapshot combatant in combatants)
             {
                 Assert.IsTrue(provider.TryGetPresentedUnit(combatant.Id, out GameObject root), combatant.Id);
-                Assert.IsTrue(provider.TryGetPresentedPosition(combatant.Id, out CombatUnitPresentationHex cell), combatant.Id);
-                lines.Add(MeasureGrounded(combatant.Id, root, cell));
+                Assert.IsTrue(provider.TryGetPresentedPose(combatant.Id, out CombatUnitPresentationPose pose), combatant.Id);
+                lines.Add(MeasureGrounded(combatant.Id, root, pose));
             }
 
             // The default framing keeps all three grounded units and their head bars visible.
@@ -124,6 +124,20 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(combatant.Id, pickedId);
                 hud.InspectTarget(combatant.Id);
                 Assert.AreEqual(combatant.Id, hud.InspectedTargetId);
+                Assert.IsTrue(pick.TryGetUnitPose(combatant.Id, out CombatUnitPresentationPose pose));
+                foreach (CombatUnitPresentationHex occupied in pose.OccupiedCells)
+                    Assert.AreEqual(combatant.Id, pick.FindUnitAtCell(occupied), "Both body cells must select the same stable unit.");
+                var movement = Find<CombatMovementView>();
+                Assert.AreEqual(pose.IsDoubleCell ? 2 : 1,
+                    movement.InspectionRings.Count(ring => ring.gameObject.activeSelf));
+                for (int index = 0; index < pose.OccupiedCells.Count; index++)
+                {
+                    Vector3 ringCenter = Enumerable.Range(0, 6).Select(movement.InspectionRings[index].GetPosition)
+                        .Aggregate(Vector3.zero, (sum, value) => sum + value) / 6f;
+                    Vector3 cellCenter = Static3DCombatUnitPresentationProvider.HexToWorld(pose.OccupiedCells[index]);
+                    Assert.AreEqual(cellCenter.x, ringCenter.x, .001f);
+                    Assert.AreEqual(cellCenter.z, ringCenter.z, .001f);
+                }
                 hud.ClearInspectedTarget();
             }
             yield return null;
@@ -131,15 +145,15 @@ namespace TianZhang.Tests.PlayMode
                 "Every living formal unit keeps its head health bar after base removal.");
             lines.Add("activeHealthBars=" + bars.Count(bar => bar.root != null && bar.root.gameObject.activeInHierarchy));
 
-            File.WriteAllLines(Path.Combine(Evidence, "f3-grounding-" + width + ".txt"), lines);
-            yield return Capture("f3-grounding-" + width);
+            File.WriteAllLines(Path.Combine(Evidence, "f4-grounding-" + width + ".txt"), lines);
+            yield return Capture("f4-grounding-" + width);
             Assert.IsTrue(provider.TryGetVisibleBounds("player", out Bounds playerBounds));
-            yield return CaptureCloseup("f3-grounding-" + width + "-player", playerBounds.center, 1.6f);
+            yield return CaptureCloseup("f4-grounding-" + width + "-player", playerBounds.center, 1.6f);
             Vector3 enemyFocus = (Static3DCombatUnitPresentationProvider.HexToWorld(
                     new CombatUnitPresentationHex(spawned.Enemies[0].Position.Q, spawned.Enemies[0].Position.R)) +
                 Static3DCombatUnitPresentationProvider.HexToWorld(
                     new CombatUnitPresentationHex(spawned.Enemies[1].Position.Q, spawned.Enemies[1].Position.R))) * .5f;
-            yield return CaptureCloseup("f3-grounding-" + width + "-enemies", enemyFocus + Vector3.up * .45f, 2.4f);
+            yield return CaptureCloseup("f4-grounding-" + width + "-enemies", enemyFocus + Vector3.up * .45f, 2.4f);
             hud.ClearInspectedTarget();
         }
 
@@ -148,7 +162,7 @@ namespace TianZhang.Tests.PlayMode
         /// tile renderer's top includes grass and must stay above the foot, proving it was not
         /// mistaken for the ground.
         /// </summary>
-        private static string MeasureGrounded(string combatantId, GameObject root, CombatUnitPresentationHex cell)
+        private static string MeasureGrounded(string combatantId, GameObject root, CombatUnitPresentationPose pose)
         {
             Assert.IsNull(root.transform.Find("Static3DCombatBase"),
                 combatantId + " must not carry the removed physical base.");
@@ -159,7 +173,12 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(Vector3.zero, body.localPosition,
                 "The body must not keep the former BaseThickness lift.");
             MeshRenderer renderer = root.GetComponentsInChildren<MeshRenderer>(true).Single();
-            Assert.AreEqual(1.4f, body.localScale.x, .00001f);
+            Assert.AreEqual(body.localScale.x, body.localScale.y, .00001f);
+            Assert.AreEqual(body.localScale.x, body.localScale.z, .00001f);
+            if (pose.IsDoubleCell) Assert.That(body.localScale.x, Is.GreaterThan(1.4f).And.LessThan(2.01f));
+            else Assert.AreEqual(1.4f, body.localScale.x, .00001f);
+            Assert.Less(Vector3.Distance(Static3DCombatUnitPresentationProvider.PoseToWorld(pose), root.transform.position), .001f);
+            CombatUnitPresentationHex cell = pose.Position;
 
             Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
                 "GuanzhongHex_" + cell.Q + "_" + cell.R);

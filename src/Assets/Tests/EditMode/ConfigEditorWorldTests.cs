@@ -74,7 +74,7 @@ namespace TianZhang.Tests.EditMode
             var session = Session();
             var table = session.Snapshot().Tables["Adventures"];
             var row = table.Rows.Single(entry => entry.Key.EndsWith("/shijiahou_encounter", StringComparison.Ordinal));
-            Assert.AreEqual("enemy_lieshijia@8:9", row.Value.At("additionalEnemies").RawToken);
+            Assert.AreEqual("enemy_lieshijia@8:8:2", row.Value.At("additionalEnemies").RawToken);
             Assert.Throws<InvalidOperationException>(() => session.SetValue("Adventures", row.Key,
                 "additionalEnemies", ConfigValue.Scalar("enemy_fengsun@7:9")));
             CollectionAssert.AreEqual(Source("Adventures"), session.EncodeCandidate("Adventures"));
@@ -143,6 +143,8 @@ namespace TianZhang.Tests.EditMode
             Assert.That(Validate(session, "Adventures").Any(i => i.ErrorCode == "adventure_encounter_enemy_unresolved"));
             Assert.Throws<ArgumentException>(() => session.SetValue("Adventures", key, "contentId", ConfigValue.Scalar("enemy_yanweihu")), "旧测试敌人不能进入正式选择器");
             session.SetValue("Adventures", key, "contentId", ConfigValue.Scalar("enemy_shijiahou"));
+            Assert.That(Validate(session, "Adventures").Any(i => i.ErrorCode == "adventure_facing_invalid"));
+            session.SetValue("Adventures", key, "enemyFacing", ConfigValue.Scalar("2"));
             Assert.IsEmpty(Validate(session, "Adventures"));
             session.SetValue("Adventures", key, "nodeTypeId", ConfigValue.Scalar("adventure_node_start"));
             Assert.That(Validate(session, "Adventures").Any(i => i.FieldPath == "contentId"));
@@ -158,6 +160,7 @@ namespace TianZhang.Tests.EditMode
         [TestCase("Bounties", "rewardEntries", "", "rewardEntries")]
         [TestCase("Adventures", "q", "1.5", "q")]
         [TestCase("Adventures", "contentId", "enemy_shijiahou", "contentId")]
+        [TestCase("Adventures", "enemyFacing", "2", "enemyFacing")]
         [TestCase("EnvironmentProfiles", "queryLimits", "unitsPerRange=0;maxQueryRange=16", "queryLimits/unitsPerRange")]
         [TestCase("EnvironmentProfiles", "battlefieldCells", "0:0@0@0|0:0@1@0", "battlefieldCells/1/q")]
         [TestCase("EnvironmentProfiles", "battlefieldCells", "0:0@2@0", "battlefieldCells/0/blocksGroundMove")]
@@ -170,6 +173,9 @@ namespace TianZhang.Tests.EditMode
         [TestCase("EnvironmentProfiles", "phenomenonPairs", "airflow:wind+wind>wind", "phenomenonPairs")]
         [TestCase("EnvironmentProfiles", "elementRelationRefs", "element_wood|element_fire", "elementRelationRefs")]
         [TestCase("EnvironmentProfiles", "spiritRecoveryEnvironment", "unknown", "spiritRecoveryEnvironment")]
+        [TestCase("EnvironmentProfiles", "edgeClearanceLimits", "0:0>1:0@0", "edgeClearanceLimits")]
+        [TestCase("EnvironmentProfiles", "edgeClearanceLimits", "0:0>1:0@1|0:0>1:0@2", "edgeClearanceLimits")]
+        [TestCase("EnvironmentProfiles", "edgeClearanceLimits", "0:0>2147483648:0@1", "edgeClearanceLimits")]
         public void InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(string id, string column, string token, string path)
         {
             var session = Session(id, column, token);
@@ -190,12 +196,14 @@ namespace TianZhang.Tests.EditMode
             session.SetValue(id, key, "battlefieldCells/0/blocksLineOfSight", ConfigValue.Scalar("1"));
             session.SetValue(id, key, "queryLimits/unitsPerRange", ConfigValue.Scalar("3"));
             session.SetValue(id, key, "spiritRecoveryEnvironment", ConfigValue.Scalar("blessed_land"));
+            session.SetValue(id, key, "edgeClearanceLimits", ConfigValue.Scalar("0:0>1:0@1|1:0>0:0@2"));
             Assert.IsEmpty(Validate(session, id));
             var source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(Definition(id)).Single();
             Assert.IsTrue(source["battlefieldCells"].StartsWith("0:0@0@0|0:1@0@0", StringComparison.Ordinal));
             Assert.IsTrue(source["battlefieldCells"].EndsWith("9:9@0@1", StringComparison.Ordinal));
             Assert.AreEqual("unitsPerRange=3;maxQueryRange=24", source["queryLimits"]);
             Assert.AreEqual("blessed_land", source["spiritRecoveryEnvironment"]);
+            Assert.AreEqual("0:0>1:0@1|1:0>0:0@2", source["edgeClearanceLimits"]);
             foreach (var column in new[] { "surfacePrototypeRefs", "phenomenonChannels", "phenomenonPairs", "elementRelationRefs" })
                 Assert.AreEqual(session.Snapshot().Tables[id].SourceRows[key][column], source[column], column);
             var definition = Definition(id);
@@ -205,6 +213,8 @@ namespace TianZhang.Tests.EditMode
             source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(definition).Single();
             var projected = WorldContentImporter.ParseEnvironmentProfiles(new[] { string.Join(",", definition.ExactColumns), string.Join(",", definition.ExactColumns.Select(c => source[c])) }, id).Single();
             Assert.AreEqual(3, projected.unitsPerRange);
+            Assert.AreEqual(1, projected.directedEdges.Single(e => e.fromQ == 0 && e.fromR == 0 && e.toQ == 1 && e.toR == 0).clearanceLimit);
+            Assert.AreEqual(2, projected.directedEdges.Single(e => e.fromQ == 1 && e.fromR == 0 && e.toQ == 0 && e.toR == 0).clearanceLimit);
             Assert.That(projected.directedEdges.All(e => e.allowsMovement && e.allowsEffects && e.metricDistanceUnits == 3));
             Assert.That(projected.phenomenonPairs.Any(p => p.resultTypeRef == "breeze"));
             Assert.Throws<ArgumentException>(() => session.SetValue(id, key, "phenomenonPairs/0/result", ConfigValue.Scalar("wind+gust")));

@@ -10,6 +10,7 @@ namespace TianZhang.Content
         public string enemyId;
         public int q;
         public int r;
+        public int facing;
     }
 
     [Serializable]
@@ -20,6 +21,7 @@ namespace TianZhang.Content
         public int q;
         public int r;
         public string contentId;
+        public int enemyFacing;
         public AdventureEnemySpawnData[] additionalEnemies = Array.Empty<AdventureEnemySpawnData>();
     }
 

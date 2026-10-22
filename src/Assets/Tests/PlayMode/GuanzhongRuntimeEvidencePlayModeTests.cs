@@ -25,6 +25,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
+using static TianZhang.Tests.PlayMode.GuanzhongBasicAttackPlayModeTests;
 
 namespace TianZhang.Tests.PlayMode
 {
@@ -293,7 +294,7 @@ namespace TianZhang.Tests.PlayMode
                     string[] coordinate = cell.name.Split('_');
                     var hex = new HexCoord(int.Parse(coordinate[1]), int.Parse(coordinate[2]));
                     // Read-only multi-turn reachability quote; does not grant AP or move either unit.
-                    var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, hex, 10000000,
+                    var path = session.SpatialQuery.QueryMovement(spawned.Player.Pose, hex, 10000000,
                         spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>()).Path;
                     lines.Add($"cell={cell.name}; world={cell.position:F5}; screen={camera.WorldToScreenPoint(cell.position):F3}; pathFromPlayer={string.Join("/", path)}");
                     Vector3 offset = cell.position - enemyRoot.transform.position;
@@ -469,8 +470,9 @@ namespace TianZhang.Tests.PlayMode
                 AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
                 yield return SetGameSize(size);
                 Assert.That(spawned.Player.Position, Is.EqualTo(new HexCoord(0, 0)));
-                Assert.That(spawned.Enemy.Position, Is.EqualTo(new HexCoord(9, 9)));
-                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(18));
+                Assert.That(spawned.Enemy.Position, Is.EqualTo(new HexCoord(7, 8)));
+                Assert.That(spawned.Enemy.OccupiedCells, Does.Contain(new HexCoord(7, 9)));
+                Assert.That(ContactDistance(session, spawned.Player.Pose, spawned.Enemy.Pose), Is.EqualTo(15d));
                 Camera camera = Get<Camera>(Find<CombatMovementView>(), "battlefieldCamera");
                 var provider = Find<Static3DCombatUnitPresentationProvider>();
                 Assert.That(provider.TryGetVisibleBounds("enemy", out Bounds bounds), Is.True);
@@ -497,7 +499,7 @@ namespace TianZhang.Tests.PlayMode
                 // ExecutePlayer drops a direct request until the turn-advance presentation ends, so
                 // every direct call below waits for the coordinator's own acceptance gate.
                 yield return PlayerInputReady(encounter, session, inputTrace);
-                var path = session.SpatialQuery.QueryMovement(spawned.Player.Position, spawned.Enemy.Position,
+                var path = session.SpatialQuery.QueryMovement(spawned.Player.Pose, spawned.Enemy.Position,
                     10000000, spawned.Player.MovementEfficiencyMilliUnits, Array.Empty<HexCoord>());
                 Assert.That(path.IsReachable, Is.True, path.Reason);
                 // HexCoord.DirectionTo only resolves adjacent cells, so the remote aim comes from the
@@ -515,7 +517,7 @@ namespace TianZhang.Tests.PlayMode
                 encounter.ConfirmAction(AttackCandidate(direction));
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(health));
-                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance=18; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
+                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={ContactDistance(session, spawned.Player.Pose, spawned.Enemy.Pose)}; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
                 yield return Capture("remote-spawn-" + size.x);
                 yield return PlayerInputReady(encounter, session, inputTrace);
                 var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
@@ -526,11 +528,12 @@ namespace TianZhang.Tests.PlayMode
                 for (float deadline = Time.realtimeSinceStartup + 10f; encounter.IsPresenting && Time.realtimeSinceStartup < deadline;) yield return null;
                 Assert.That(encounter.IsPresenting, Is.False);
                 yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
-                Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(9, 9)), "Production AI must advance from its remote spawn.");
-                Assert.That(spawned.Player.Position.Distance(spawned.Enemy.Position), Is.EqualTo(1),
+                Assert.That(spawned.Enemy.Position, Is.Not.EqualTo(new HexCoord(7, 8)), "Production AI must advance from its remote spawn.");
+                SpatialContactResult closeContact = session.SpatialQuery.QueryRange(spawned.Player.Pose, spawned.Enemy.Pose, 1, 1);
+                Assert.That(closeContact.IsInRange, Is.True,
                     "The player must close into melee contact instead of staying on the first move's cell.");
                 yield return PlayerInputReady(encounter, session, inputTrace);
-                int closeDirection = spawned.Player.Position.DirectionTo(spawned.Enemy.Position);
+                int closeDirection = closeContact.SourceCell.DirectionToward(closeContact.TargetCell);
                 var close = service.Preview(session, new CombatCommand(CombatCommandKind.BasicAttack, "player",
                     profileId: spawned.Player.BasicAttackProfileId, attackDirection: closeDirection));
                 Assert.That(close.IsLegal, Is.True, close.RejectionReason);
@@ -540,7 +543,7 @@ namespace TianZhang.Tests.PlayMode
                 encounter.ConfirmAction(AttackCandidate(closeDirection));
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - close.ActionPointCostUnits));
                 lines.AddRange(inputTrace);
-                lines.Add($"contact player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={spawned.Player.Position.Distance(spawned.Enemy.Position)}; tick={session.TurnScheduler.CurrentTick}; turn={session.TurnSequence}; legalAttackCost={close.ActionPointCostUnits}");
+                lines.Add($"contact player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={ContactDistance(session, spawned.Player.Pose, spawned.Enemy.Pose)}; tick={session.TurnScheduler.CurrentTick}; turn={session.TurnSequence}; legalAttackCost={close.ActionPointCostUnits}");
                 Write("remote-spawn-" + size.x, lines);
             }
         }
@@ -651,13 +654,14 @@ namespace TianZhang.Tests.PlayMode
                     var candidate = new CombatActionCandidate(CombatActionKind.Art, "player", target.Id,
                         "spell_feixingzhi", Find<CombatHudPresenter>().Snapshot.CommandContextVersion);
                     CombatActionPreviewSnapshot preview = encounter.PreviewAction(candidate);
-                    TestContext.WriteLine($"VFX TryCast target={target.Id} distance={spawned.Player.Position.Distance(target.Position)} " +
+                    SpatialContactResult contact = session.SpatialQuery.QueryRange(spawned.Player.Pose, target.Pose, 1, 5);
+                    TestContext.WriteLine($"VFX TryCast target={target.Id} distance={ContactDistance(session, spawned.Player.Pose, target.Pose)} " +
                         $"presenting={encounter.IsPresenting} accepts={Get<bool>(encounter, "acceptsPlayerCommand")} " +
                         $"ctx={Find<CombatHudPresenter>().Snapshot.CommandContextVersion} can={preview.CanConfirm} reason={preview.Reason}");
                     Assert.That(preview.CanConfirm, Is.True, preview.Reason);
                     encounter.ConfirmAction(candidate);
-                    castTarget = target.Position;
-                    lines.Add($"star cast: target={target.Id}@{target.Position}; distance={spawned.Player.Position.Distance(target.Position)}; cost={quote.ActionPointCostUnits}");
+                    castTarget = contact.TargetCell;
+                    lines.Add($"star cast: target={target.Id}@{castTarget}; distance={ContactDistance(session, spawned.Player.Pose, target.Pose)}; cost={quote.ActionPointCostUnits}");
                     return true;
                 }
 
@@ -672,7 +676,8 @@ namespace TianZhang.Tests.PlayMode
                         new CombatCommand(CombatCommandKind.Art, "player", target.Id, "spell_feixingzhi")).ActionPointCostUnits;
                     var move = Find<CombatHudPresenter>().Snapshot.Movement.Options
                         .Where(option => option.Cost + artCost <= spawned.Player.ActionPointsRemainingUnits)
-                        .OrderBy(option => new HexCoord(option.Destination.Q, option.Destination.R).Distance(target.Position)).ThenBy(option => option.Cost)
+                        .OrderBy(option => ContactDistance(session, spawned.Player.Pose.WithAnchor(ToHex(option.Destination)), target.Pose))
+                        .ThenBy(option => option.Cost)
                         .FirstOrDefault();
                     if (move != null)
                     {
@@ -712,7 +717,8 @@ namespace TianZhang.Tests.PlayMode
                 yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
                 yield return PlayerInputReady(encounter, session);
                 CombatHudSnapshot hud = Find<CombatHudPresenter>().Snapshot;
-                int direction = spawned.Player.Position.DirectionTo(spawned.Enemy.Position);
+                SpatialContactResult meleeContact = session.SpatialQuery.QueryRange(spawned.Player.Pose, spawned.Enemy.Pose, 1, 1);
+                int direction = meleeContact.SourceCell.DirectionToward(meleeContact.TargetCell);
                 var attack = new CombatActionCandidate(CombatActionKind.BasicAttack, "player", null, null,
                     hud.CommandContextVersion, attackDirection: direction);
                 CombatActionPreviewSnapshot attackPreview = encounter.PreviewAction(attack);
@@ -725,7 +731,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(Vector3.Distance(slash.transform.position, actorWorld), Is.LessThan(1.2f),
                     "近战特效必须锚定在出手角色附近，而不是目标格。");
                 Vector3 toTarget = Static3DCombatUnitPresentationProvider.HexToWorld(
-                    new CombatUnitPresentationHex(spawned.Enemy.Position.Q, spawned.Enemy.Position.R)) - actorWorld;
+                    new CombatUnitPresentationHex(meleeContact.TargetCell.Q, meleeContact.TargetCell.R)) - actorWorld;
                 toTarget.y = 0f;
                 GameObject playerRoot = GameObject.Find("Static3DCombatUnit_player");
                 Assert.That(playerRoot, Is.Not.Null, "正式场景必须存在玩家表现根节点。");
@@ -793,7 +799,7 @@ namespace TianZhang.Tests.PlayMode
                     var options = legal.GetLegalActions(session, "player");
                     var alive = spawned.Enemies.Where(e => e.IsAlive).ToArray();
                     if (alive.Length == 0) { yield return null; continue; }
-                    int distance = alive.Min(e => spawned.Player.Position.Distance(e.Position));
+                    double distance = alive.Min(e => ContactDistance(session, spawned.Player.Pose, e.Pose));
                     if (distance == 1 && !contactCaptured)
                     { yield return Capture("contact-" + size.x, output); contactCaptured = true; }
                     bool enemyAttacked = recorder.Samples.Any(e => e.actor != "player" && e.action == "Attack");
@@ -806,8 +812,8 @@ namespace TianZhang.Tests.PlayMode
                         options.FirstOrDefault(c => c.Kind == CombatCommandKind.BasicAttack);
                     if (chosen == null && distance > 1)
                         chosen = options.Where(c => c.Kind == CombatCommandKind.Move &&
-                                alive.Min(e => c.Destination.Value.Distance(e.Position)) < distance)
-                            .OrderBy(c => alive.Min(e => c.Destination.Value.Distance(e.Position)))
+                                alive.Min(e => ContactDistance(session, spawned.Player.Pose.WithAnchor(c.Destination.Value), e.Pose)) < distance)
+                            .OrderBy(c => alive.Min(e => ContactDistance(session, spawned.Player.Pose.WithAnchor(c.Destination.Value), e.Pose)))
                             .ThenBy(c => spawned.Player.Position.Distance(c.Destination.Value)).FirstOrDefault();
                     chosen = chosen ?? options.FirstOrDefault(c => c.Kind == CombatCommandKind.EndTurn) ??
                         options.First(c => c.Kind == CombatCommandKind.Wait);
@@ -1018,7 +1024,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(distant.IsLegal, Is.False, "The enemy starts beyond five hexes.");
             Assert.That(distant.RejectionReason, Is.EqualTo("above_max_range"));
 
-            int firedAt = -1, apBefore = 0, healthBefore = 0;
+            double firedAt = -1;
+            int apBefore = 0, healthBefore = 0;
             for (int turn = 0; turn < 12 && encounter.IsRunning && firedAt < 0; turn++)
             {
                 for (float deadline = Time.realtimeSinceStartup + 15f; Time.realtimeSinceStartup < deadline;)
@@ -1030,7 +1037,7 @@ namespace TianZhang.Tests.PlayMode
                 var now = service.Preview(session, art);
                 if (now.IsLegal)
                 {
-                    firedAt = player.Position.Distance(enemy.Position);
+                    firedAt = ContactDistance(session, player.Pose, enemy.Pose);
                     var candidate = new CombatActionCandidate(CombatActionKind.Art, player.Id, enemy.Id, "spell_feixingzhi",
                         Find<CombatHudPresenter>().Snapshot.CommandContextVersion);
                     CombatActionPreviewSnapshot preview = encounter.PreviewAction(candidate);
@@ -1043,8 +1050,9 @@ namespace TianZhang.Tests.PlayMode
                 }
                 CombatCommand step = new CombatLegalActionService().GetLegalActions(session, player.Id)
                     .Where(action => action.Kind == CombatCommandKind.Move && action.Destination.HasValue)
-                    .Where(action => action.Destination.Value.Distance(enemy.Position) < player.Position.Distance(enemy.Position))
-                    .OrderBy(action => action.Destination.Value.Distance(enemy.Position))
+                    .Where(action => ContactDistance(session, player.Pose.WithAnchor(action.Destination.Value), enemy.Pose) <
+                        ContactDistance(session, player.Pose, enemy.Pose))
+                    .OrderBy(action => ContactDistance(session, player.Pose.WithAnchor(action.Destination.Value), enemy.Pose))
                     .ThenByDescending(action => action.Destination.Value.Distance(player.Position))
                     .FirstOrDefault();
                 if (step != null)

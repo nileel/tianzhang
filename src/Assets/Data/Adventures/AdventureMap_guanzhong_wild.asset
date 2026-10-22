@@ -21,30 +21,36 @@ MonoBehaviour:
     q: 0
     r: 0
     contentId:
+    enemyFacing: -1
     additionalEnemies: []
   - nodeId: shijiahou_encounter
     nodeTypeId: adventure_node_encounter
-    q: 9
-    r: 9
+    q: 7
+    r: 8
     contentId: enemy_shijiahou
+    enemyFacing: 2
     additionalEnemies:
     - instanceId: enemy_2
       enemyId: enemy_lieshijia
       q: 8
-      r: 9
+      r: 8
+      facing: 2
   - nodeId: lieshijia_encounter
     nodeTypeId: adventure_node_encounter
     q: 3
     r: 5
     contentId: enemy_lieshijia
+    enemyFacing: 2
     additionalEnemies:
     - instanceId: enemy_2
       enemyId: enemy_shijiahou
-      q: 2
+      q: 1
       r: 5
+      facing: 2
   - nodeId: return
     nodeTypeId: adventure_node_return
     q: 0
     r: 2
     contentId:
+    enemyFacing: -1
     additionalEnemies: []

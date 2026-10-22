@@ -24,6 +24,7 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
         [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
+        [SerializeField, Range(.1f, 1f)] private float doubleCellFootprintFill = .9f;
 
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
         private readonly Dictionary<string, Coroutine> actionRecoveries = new Dictionary<string, Coroutine>();
@@ -96,7 +97,7 @@ namespace TianZhang.Features.CombatPresentation
             try
             {
                 root.transform.SetParent(transform, false);
-                root.transform.position = HexToWorld(combatant.Position);
+                root.transform.position = PoseToWorld(combatant.Pose);
                 root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[combatant.Facing], 0f);
 
                 GameObject body = Instantiate(profile.prefab, root.transform);
@@ -105,12 +106,12 @@ namespace TianZhang.Features.CombatPresentation
                 // stands on the support plane, so no base plate or extra lift may be inserted.
                 body.transform.localPosition = Vector3.zero;
                 body.transform.localRotation = Quaternion.identity;
-                body.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
+                body.transform.localScale = CombatUnitPresentationMotion.BodyScale(profile, combatant.IsDoubleCell, doubleCellFootprintFill);
                 units.Add(combatant.CombatantId, new PresentedUnit(
                     root,
                     body.GetComponentsInChildren<Renderer>(true),
                     combatant.PresentationProfileId,
-                    combatant.CombatantId, combatant.Position));
+                    combatant.CombatantId, combatant.Pose));
             }
             catch
             {
@@ -141,9 +142,12 @@ namespace TianZhang.Features.CombatPresentation
             }
             if (movements.ContainsKey(unit.CombatantId))
                 throw new InvalidOperationException("static_3d_presentation_busy");
-            unit.Position = presentationEvent.EndPosition;
-            unit.Root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[presentationEvent.Facing], 0f);
-            unit.Root.transform.position = HexToWorld(presentationEvent.EndPosition);
+            // A long body can turn only along the committed movement pose path. Attack direction
+            // is carried separately by its contact cells and never changes the occupied footprint.
+            int facing = unit.Pose.IsDoubleCell ? unit.Pose.Facing : presentationEvent.Facing;
+            unit.Pose = new CombatUnitPresentationPose(presentationEvent.EndPosition, facing, unit.Pose.IsDoubleCell);
+            unit.Root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[facing], 0f);
+            unit.Root.transform.position = PoseToWorld(unit.Pose);
             unit.LastEvent = presentationEvent.PresentationEvent;
             PlayFeedback(unit, profile, presentationEvent);
             PlayAttackVfx(presentationEvent);
@@ -204,9 +208,20 @@ namespace TianZhang.Features.CombatPresentation
             position = default;
             if (string.IsNullOrWhiteSpace(combatantId) || !units.TryGetValue(combatantId, out PresentedUnit unit))
                 return false;
-            position = unit.Position;
+            position = unit.Pose.Position;
             return true;
         }
+
+        public bool TryGetPresentedPose(string combatantId, out CombatUnitPresentationPose pose)
+        {
+            pose = default;
+            if (string.IsNullOrWhiteSpace(combatantId) || !units.TryGetValue(combatantId, out PresentedUnit unit))
+                return false;
+            pose = unit.Pose;
+            return true;
+        }
+
+        public static Vector3 PoseToWorld(CombatUnitPresentationPose pose) => CombatUnitPresentationMotion.Center(pose);
 
         public bool TryGetHeadAnchor(string combatantId, out Vector3 anchor)
         {
@@ -263,8 +278,28 @@ namespace TianZhang.Features.CombatPresentation
         private void ValidateMovement(PresentedUnit unit, CombatUnitPresentationEventProjection projection)
         {
             if (movements.ContainsKey(unit.CombatantId) || projection.MovementPath.Count == 0 ||
-                !unit.Position.Equals(projection.StartPosition))
+                !unit.Pose.Position.Equals(projection.StartPosition))
                 throw new InvalidOperationException("static_3d_presentation_move_stale");
+            if (unit.Pose.IsDoubleCell && projection.MovementSteps.Count == 0)
+                throw new InvalidOperationException("static_3d_presentation_move_pose_missing");
+            if (projection.MovementSteps.Count > 0)
+            {
+                if (projection.MovementSteps.Count != projection.MovementPath.Count)
+                    throw new InvalidOperationException("static_3d_presentation_move_pose_path_mismatch");
+                CombatUnitPresentationPose previousPose = unit.Pose;
+                for (int index = 0; index < projection.MovementSteps.Count; index++)
+                {
+                    CombatUnitPresentationMovementStep step = projection.MovementSteps[index];
+                    if (step == null || !step.From.Position.Equals(previousPose.Position) ||
+                        step.From.IsDoubleCell != previousPose.IsDoubleCell ||
+                        (previousPose.IsDoubleCell && step.From.Facing != previousPose.Facing) ||
+                        !step.To.Position.Equals(projection.MovementPath[index]))
+                        throw new InvalidOperationException("static_3d_presentation_move_pose_stale");
+                    previousPose = step.To;
+                }
+                if (previousPose.Facing != projection.Facing)
+                    throw new InvalidOperationException("static_3d_presentation_move_pose_endpoint_invalid");
+            }
             CombatUnitPresentationHex previous = projection.StartPosition;
             int direction = -1;
             foreach (CombatUnitPresentationHex next in projection.MovementPath)
@@ -280,23 +315,18 @@ namespace TianZhang.Features.CombatPresentation
         private System.Collections.IEnumerator MoveAlongPath(PresentedUnit unit,
             Static3DCombatUnitPresentationProfile profile, CombatUnitPresentationEventProjection projection)
         {
-            CombatUnitPresentationHex previous = projection.StartPosition;
-            foreach (CombatUnitPresentationHex next in projection.MovementPath)
+            for (int index = 0; index < projection.MovementPath.Count; index++)
             {
-                Vector3 start = HexToWorld(previous), end = HexToWorld(next);
-                unit.Root.transform.rotation = Quaternion.Euler(0f,
-                    profile.sixDirectionYawDegrees[SegmentDirection(previous, next)], 0f);
-                float progress = 0f;
-                while (progress < 1f)
-                {
-                    yield return null;
-                    progress = Mathf.Min(1f, progress + Time.deltaTime * MovementCellsPerSecond);
-                    unit.Root.transform.position = Vector3.Lerp(start, end, progress);
-                }
-                unit.Position = next;
-                previous = next;
+                CombatUnitPresentationHex next = projection.MovementPath[index];
+                CombatUnitPresentationMovementStep step = projection.MovementSteps.Count > 0
+                    ? projection.MovementSteps[index]
+                    : new CombatUnitPresentationMovementStep(unit.Pose,
+                        new CombatUnitPresentationPose(next, SegmentDirection(unit.Pose.Position, next)));
+                yield return CombatUnitPresentationMotion.AnimateStep(unit.Root.transform, step,
+                    profile.sixDirectionYawDegrees, MovementCellsPerSecond);
+                unit.Pose = step.To;
             }
-            unit.Root.transform.position = HexToWorld(projection.EndPosition);
+            unit.Root.transform.position = PoseToWorld(unit.Pose);
             movements.Remove(unit.CombatantId);
         }
 
@@ -328,7 +358,13 @@ namespace TianZhang.Features.CombatPresentation
                 if (!units.TryGetValue(targetResult.CombatantId, out PresentedUnit targetUnit) ||
                     targetUnit.Root == null)
                     continue;
-                target = targetUnit.Root.transform.position + Vector3.up * 0.75f;
+                if (targetResult.SourceCell.HasValue)
+                {
+                    feet = HexToWorld(targetResult.SourceCell.Value);
+                    origin = feet + Vector3.up * .85f;
+                    target = HexToWorld(targetResult.TargetCell.Value) + Vector3.up * .75f;
+                }
+                else target = targetUnit.Root.transform.position + Vector3.up * .75f;
                 found = true;
                 break;
             }
@@ -348,7 +384,11 @@ namespace TianZhang.Features.CombatPresentation
             if (presentationEvent.PresentationEvent == CombatUnitPresentationEvent.Idle)
                 return;
 
-            Vector3 position = HexToWorld(presentationEvent.EndPosition) + Vector3.up * 0.22f;
+            Vector3 position = PoseToWorld(unit.Pose) + Vector3.up * 0.22f;
+            if (presentationEvent.PresentationEvent is CombatUnitPresentationEvent.Hit or CombatUnitPresentationEvent.Death)
+                foreach (CombatUnitPresentationTargetResult target in presentationEvent.TargetResults)
+                    if (target.CombatantId == unit.CombatantId && target.TargetCell.HasValue)
+                    { position = HexToWorld(target.TargetCell.Value) + Vector3.up * .22f; break; }
             Static3DCombatFeedbackProfile feedback = profile.combatFeedback;
             AudioClip cue = feedback.GetCue(presentationEvent.PresentationEvent);
             SpawnCue(cue, position, feedback.intensity);
@@ -463,20 +503,20 @@ namespace TianZhang.Features.CombatPresentation
         private sealed class PresentedUnit
         {
             public PresentedUnit(GameObject root, Renderer[] bodyRenderers, string profileId,
-                string combatantId, CombatUnitPresentationHex position)
+                string combatantId, CombatUnitPresentationPose pose)
             {
                 Root = root;
                 BodyRenderers = bodyRenderers;
                 ProfileId = profileId;
                 CombatantId = combatantId;
-                Position = position;
+                Pose = pose;
                 LastEvent = CombatUnitPresentationEvent.Idle;
             }
 
             public GameObject Root { get; }
             public Renderer[] BodyRenderers { get; }
             public string ProfileId { get; set; }
-            public CombatUnitPresentationHex Position { get; set; }
+            public CombatUnitPresentationPose Pose { get; set; }
             public string CombatantId { get; }
             public CombatUnitPresentationEvent LastEvent { get; set; }
         }

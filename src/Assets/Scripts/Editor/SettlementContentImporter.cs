@@ -54,7 +54,7 @@ namespace TianZhang.Editor
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
             "contentScope", "dropEntries", "unarmedBasicAttackProfileId",
-            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId", "combatStatScale"
+            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId", "combatStatScale", "footprintKind", "bodyScaleRank"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -468,6 +468,10 @@ namespace TianZhang.Editor
                 if (!ids.Add(enemyId))
                     throw new InvalidDataException($"{sourceName} contains duplicate enemyId '{enemyId}'.");
 
+                string footprintKind = Required(table, row, "footprintKind");
+                if (footprintKind is not ("single" or "adjacent_pair"))
+                    throw new InvalidDataException($"{sourceName} has invalid footprintKind for {enemyId}.");
+                int bodyScaleRank = ParsePositiveInteger(Required(table, row, "bodyScaleRank"), sourceName, "bodyScaleRank");
                 var template = BuildEnemyTemplate(table, row, language, sourceName, growthRules);
                 templates.Add(template);
                 templateIds.Add(enemyId);
@@ -486,6 +490,8 @@ namespace TianZhang.Editor
                 enemy.enemyTypeId = Required(table, row, "type");
                 enemy.aiProfileId = Required(table, row, "aiType");
                 enemy.realmId = Required(table, row, "realm");
+                enemy.footprintKind = footprintKind;
+                enemy.bodyScaleRank = bodyScaleRank;
                 enemy.combatStatScale = ParseFloat(Required(table, row, "combatStatScale"), sourceName, "combatStatScale");
                 EnemyCombatStats.ValidateScale(enemy.combatStatScale);
                 enemy.combatTemplate = template;
@@ -589,6 +595,7 @@ namespace TianZhang.Editor
             if (enemy.contentScope != GuanzhongScope ||
                 enemy.enemyTypeId != "type_yaoshou" ||
                 enemy.realmId != "realm_lianqi" ||
+                enemy.footprintKind != "adjacent_pair" || enemy.bodyScaleRank != 2 ||
                 enemy.dropEntries.Length != 2 ||
                 enemy.combatTemplate == null ||
                 enemy.combatTemplate.unarmedAttackFamilyId != "body_shijiahou" ||
@@ -1200,6 +1207,8 @@ namespace TianZhang.Editor
             target.enemyTypeId = source.enemyTypeId;
             target.aiProfileId = source.aiProfileId;
             target.realmId = source.realmId;
+            target.footprintKind = source.footprintKind;
+            target.bodyScaleRank = source.bodyScaleRank;
             target.combatStatScale = source.combatStatScale;
             target.combatTemplate = source.combatTemplate;
             target.dropEntries = source.dropEntries.Select(entry => new EnemyDropEntry

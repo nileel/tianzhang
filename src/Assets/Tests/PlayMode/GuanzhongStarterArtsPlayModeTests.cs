@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using TianZhang.Spatial;
 using TianZhang.Bootstrap;
 using TianZhang.Character;
 using TianZhang.Combat;
@@ -680,10 +681,12 @@ namespace TianZhang.Tests.PlayMode
             yield return null;
             yield return WaitForPlayerTurn();
             var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player",
-                destination: session.SpatialQuery.FindReachable(spawned.Player.Position,
+                destination: session.SpatialQuery.FindReachable(spawned.Player.Pose,
                     spawned.Player.ActionPointsRemainingUnits, spawned.Player.MovementEfficiencyMilliUnits,
-                    new[] { spawned.Enemy.Position }).Keys.First(cell => cell.Distance(spawned.Enemy.Position) > 1 &&
-                        cell.Distance(spawned.Player.Position) == 1)));
+                    session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != spawned.Player.Id)
+                        .SelectMany(unit => unit.OccupiedCells).ToArray()).Keys.First(pose =>
+                    session.SpatialQuery.QueryRange(pose, spawned.Enemy.Pose, 1, 1).Reason == SpatialQueryReasons.AboveMaximumRange &&
+                    pose.Anchor.Distance(spawned.Player.Position) == 1).Anchor));
             Assert.That(move.IsLegal, Is.True);
             ((ICombatCommandHandler)encounter).RequestMove("player", move.MovementPath.Last().Q, move.MovementPath.Last().R);
             yield return WaitForPlayerTurn();

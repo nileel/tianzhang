@@ -22,7 +22,7 @@ namespace TianZhang.Tests.EditMode
             var target = new HexCoord(3, 0);
 
             SpatialMovementPathResult whole = board.QueryMovementPath(
-                Origin,
+                new SpatialPose(Origin),
                 target,
                 actionPointBudgetUnits: 100000,
                 movementEfficiencyMilliUnits: 3000);
@@ -39,12 +39,12 @@ namespace TianZhang.Tests.EditMode
                 "Rounded once at the path end the same route would cost 100000 units, so each edge is priced on its own.");
 
             SpatialMovementPathResult withinBudget = board.QueryMovementPath(
-                Origin, target, actionPointBudgetUnits: 99999, movementEfficiencyMilliUnits: 3000);
+                new SpatialPose(Origin), target, actionPointBudgetUnits: 99999, movementEfficiencyMilliUnits: 3000);
             Assert.AreEqual(SpatialQueryReasons.Ok, withinBudget.Reason);
             Assert.AreEqual(99999, withinBudget.ActionPointCostUnits);
 
             SpatialMovementPathResult shortBudget = board.QueryMovementPath(
-                Origin, target, actionPointBudgetUnits: 99998, movementEfficiencyMilliUnits: 3000);
+                new SpatialPose(Origin), target, actionPointBudgetUnits: 99998, movementEfficiencyMilliUnits: 3000);
             Assert.AreEqual(SpatialQueryReasons.NoLegalPath, shortBudget.Reason);
             Assert.AreEqual(0, shortBudget.ActionPointCostUnits);
             Assert.IsEmpty(shortBudget.Path);
@@ -58,9 +58,9 @@ namespace TianZhang.Tests.EditMode
             var mid = new HexCoord(2, 0);
             var target = new HexCoord(3, 0);
 
-            SpatialMovementPathResult whole = board.QueryMovementPath(Origin, target, 100000, 3000);
-            SpatialMovementPathResult firstSegment = board.QueryMovementPath(Origin, mid, 100000, 3000);
-            SpatialMovementPathResult secondSegment = board.QueryMovementPath(mid, target, 100000, 3000);
+            SpatialMovementPathResult whole = board.QueryMovementPath(new SpatialPose(Origin), target, 100000, 3000);
+            SpatialMovementPathResult firstSegment = board.QueryMovementPath(new SpatialPose(Origin), mid, 100000, 3000);
+            SpatialMovementPathResult secondSegment = board.QueryMovementPath(new SpatialPose(mid), target, 100000, 3000);
 
             Assert.AreEqual(SpatialQueryReasons.Ok, firstSegment.Reason);
             Assert.AreEqual(SpatialQueryReasons.Ok, secondSegment.Reason);
@@ -76,7 +76,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(whole.Edges[2].From, secondSegment.Edges[0].From);
             Assert.AreEqual(whole.Edges[2].To, secondSegment.Edges[0].To);
 
-            SpatialMovementPathResult requoted = board.QueryMovementPath(mid, target, 100000, 3000);
+            SpatialMovementPathResult requoted = board.QueryMovementPath(new SpatialPose(mid), target, 100000, 3000);
             Assert.AreEqual(secondSegment.ActionPointCostUnits, requoted.ActionPointCostUnits);
         }
 
@@ -91,7 +91,7 @@ namespace TianZhang.Tests.EditMode
             var second = new HexCoord(2, 0);
             var third = new HexCoord(3, 0);
 
-            SpatialMovementPathResult burdened = board.QueryMovementPath(Origin, third, 100000, 5000);
+            SpatialMovementPathResult burdened = board.QueryMovementPath(new SpatialPose(Origin), third, 100000, 5000);
 
             Assert.AreEqual(SpatialQueryReasons.Ok, burdened.Reason);
             Assert.AreEqual(10000, SingleEdgeCostUnits(board, Origin, first, 5000), "Compressed edge d_e=500.");
@@ -120,7 +120,7 @@ namespace TianZhang.Tests.EditMode
                 new SpatialQueryLimits(1000, 16));
 
             SpatialMovementPathResult quote = board.QueryMovementPath(
-                Origin,
+                new SpatialPose(Origin),
                 new HexCoord(1, 0),
                 actionPointBudgetUnits: 1,
                 movementEfficiencyMilliUnits: int.MaxValue);
@@ -143,9 +143,9 @@ namespace TianZhang.Tests.EditMode
                 new SpatialQueryLimits(1, 16));
 
             SpatialMovementPathResult metricQuote = hugeMetric.QueryMovementPath(
-                Origin, new HexCoord(1, 0), int.MaxValue, movementEfficiencyMilliUnits: 1);
+                new SpatialPose(Origin), new HexCoord(1, 0), int.MaxValue, movementEfficiencyMilliUnits: 1);
             SpatialMovementPathResult burdenQuote = hugeBurden.QueryMovementPath(
-                Origin, new HexCoord(1, 0), int.MaxValue, movementEfficiencyMilliUnits: 1);
+                new SpatialPose(Origin), new HexCoord(1, 0), int.MaxValue, movementEfficiencyMilliUnits: 1);
 
             Assert.AreEqual(SpatialQueryReasons.ActionPointCostOverflow, metricQuote.Reason);
             Assert.AreEqual(SpatialQueryReasons.ActionPointCostOverflow, burdenQuote.Reason,
@@ -155,7 +155,7 @@ namespace TianZhang.Tests.EditMode
             Assert.IsEmpty(metricQuote.Path);
             Assert.IsEmpty(burdenQuote.Path);
             Assert.IsFalse(hugeMetric.FindReachableWithinActionPoints(
-                Origin, int.MaxValue, 1).ContainsKey(new HexCoord(1, 0)));
+                new SpatialPose(Origin), int.MaxValue, 1).ContainsKey(new SpatialPose(new HexCoord(1, 0))));
         }
 
         [Test]
@@ -165,13 +165,13 @@ namespace TianZhang.Tests.EditMode
             var target = new HexCoord(3, 0);
 
             SpatialMovementPathResult quote = board.QueryMovementPath(
-                Origin, target, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 0);
+                new SpatialPose(Origin), target, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 0);
 
             Assert.AreEqual(SpatialQueryReasons.MovementEfficiencyZero, quote.Reason);
             Assert.AreEqual(0, quote.ActionPointCostUnits);
             Assert.IsEmpty(quote.Path);
             Assert.IsEmpty(quote.Edges);
-            Assert.IsEmpty(board.FindReachableWithinActionPoints(Origin, 100000, 0));
+            Assert.IsEmpty(board.FindReachableWithinActionPoints(new SpatialPose(Origin), 100000, 0));
         }
 
         [Test]
@@ -180,13 +180,13 @@ namespace TianZhang.Tests.EditMode
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 1);
 
             Assert.Throws<ArgumentOutOfRangeException>(() => board.QueryMovementPath(
-                Origin, new HexCoord(1, 0), 100000, movementEfficiencyMilliUnits: -1));
+                new SpatialPose(Origin), new HexCoord(1, 0), 100000, movementEfficiencyMilliUnits: -1));
             Assert.Throws<ArgumentOutOfRangeException>(() => board.QueryMovementPath(
-                Origin, new HexCoord(1, 0), actionPointBudgetUnits: -1, movementEfficiencyMilliUnits: 1000));
+                new SpatialPose(Origin), new HexCoord(1, 0), actionPointBudgetUnits: -1, movementEfficiencyMilliUnits: 1000));
             Assert.Throws<ArgumentOutOfRangeException>(() => board.FindReachableWithinActionPoints(
-                Origin, 100000, movementEfficiencyMilliUnits: -1));
+                new SpatialPose(Origin), 100000, movementEfficiencyMilliUnits: -1));
             Assert.Throws<ArgumentOutOfRangeException>(() => board.FindReachableWithinActionPoints(
-                Origin, actionPointBudgetUnits: -1, movementEfficiencyMilliUnits: 1000));
+                new SpatialPose(Origin), actionPointBudgetUnits: -1, movementEfficiencyMilliUnits: 1000));
         }
 
         [Test]
@@ -195,7 +195,7 @@ namespace TianZhang.Tests.EditMode
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 1);
 
             SpatialMovementPathResult quote = board.QueryMovementPath(
-                Origin, Origin, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 3000);
+                new SpatialPose(Origin), Origin, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 3000);
 
             Assert.AreEqual(SpatialQueryReasons.DestinationUnchanged, quote.Reason);
             Assert.AreEqual(0, quote.ActionPointCostUnits);
@@ -208,8 +208,8 @@ namespace TianZhang.Tests.EditMode
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 3);
             var target = new HexCoord(3, 0);
 
-            SpatialMovementPathResult exact = board.QueryMovementPath(Origin, target, 99999, 3000);
-            SpatialMovementPathResult grown = board.QueryMovementPath(Origin, target, 1200000, 3000);
+            SpatialMovementPathResult exact = board.QueryMovementPath(new SpatialPose(Origin), target, 99999, 3000);
+            SpatialMovementPathResult grown = board.QueryMovementPath(new SpatialPose(Origin), target, 1200000, 3000);
 
             Assert.AreEqual(SpatialQueryReasons.Ok, exact.Reason);
             Assert.AreEqual(SpatialQueryReasons.Ok, grown.Reason);
@@ -223,8 +223,8 @@ namespace TianZhang.Tests.EditMode
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 3);
             var target = new HexCoord(3, 0);
 
-            SpatialMovementPathResult slow = board.QueryMovementPath(Origin, target, 100000, 3000);
-            SpatialMovementPathResult fast = board.QueryMovementPath(Origin, target, 100000, 5000);
+            SpatialMovementPathResult slow = board.QueryMovementPath(new SpatialPose(Origin), target, 100000, 3000);
+            SpatialMovementPathResult fast = board.QueryMovementPath(new SpatialPose(Origin), target, 100000, 5000);
 
             Assert.AreEqual(99999, slow.ActionPointCostUnits);
             Assert.AreEqual(60000, fast.ActionPointCostUnits);
@@ -239,15 +239,15 @@ namespace TianZhang.Tests.EditMode
             var target = new HexCoord(3, 0);
 
             SpatialMovementPathResult occupiedMid = board.QueryMovementPath(
-                Origin, target, 100000, 3000, new[] { mid });
+                new SpatialPose(Origin), target, 100000, 3000, new[] { mid });
             SpatialMovementPathResult occupiedTarget = board.QueryMovementPath(
-                Origin, target, 100000, 3000, new[] { target });
+                new SpatialPose(Origin), target, 100000, 3000, new[] { target });
 
             Assert.AreEqual(SpatialQueryReasons.NoLegalPath, occupiedMid.Reason,
                 "An occupied cell blocks the only legal line instead of becoming a detour.");
             Assert.AreEqual(SpatialQueryReasons.NoLegalPath, occupiedTarget.Reason);
             Assert.IsFalse(board.FindReachableWithinActionPoints(
-                Origin, 100000, 3000, new[] { mid }).ContainsKey(target));
+                new SpatialPose(Origin), 100000, 3000, new[] { mid }).ContainsKey(new SpatialPose(target)));
 
             var cells = CellsWithBurden(count: 3);
             cells[mid] = new SpatialCellRules(0, false, false, true, 0);
@@ -256,7 +256,7 @@ namespace TianZhang.Tests.EditMode
                 LineEdges(edgeCount: 3, metricAt: _ => 1000),
                 new SpatialQueryLimits(1000, 16));
 
-            SpatialMovementPathResult entityObstacle = obstructed.QueryMovementPath(Origin, target, 100000, 3000);
+            SpatialMovementPathResult entityObstacle = obstructed.QueryMovementPath(new SpatialPose(Origin), target, 100000, 3000);
             Assert.AreEqual(SpatialQueryReasons.EntityObstacle, entityObstacle.Reason);
         }
 
@@ -265,7 +265,7 @@ namespace TianZhang.Tests.EditMode
         {
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 3);
             SpatialMovementPathResult voluntary = board.QueryMovementPath(
-                Origin, new HexCoord(2, 0), 100000, 3000);
+                new SpatialPose(Origin), new HexCoord(2, 0), 100000, 3000);
 
             SpatialForcedMovementResult forced = board.ResolveForcedMovement(
                 Origin, direction: 0, distanceBudget: 2);
@@ -283,12 +283,11 @@ namespace TianZhang.Tests.EditMode
         {
             SpatialQueryBoard board = CreateLineBoard(edgeCount: 3);
             var target = new HexCoord(3, 0);
-            SpatialMovementPathResult quote = board.QueryMovementPath(Origin, target, 100000, 3000);
+            SpatialMovementPathResult quote = board.QueryMovementPath(new SpatialPose(Origin), target, 100000, 3000);
 
             var boundary = new CombatMovementQueryResult(true,
                 SpatialQueryReasons.Ok,
-                quote.Path,
-                quote.Edges,
+                quote.Steps,
                 quote.UnitsPerRange,
                 quote.ActionPointCostUnits);
 
@@ -314,7 +313,7 @@ namespace TianZhang.Tests.EditMode
             int movementEfficiencyMilliUnits)
         {
             SpatialMovementPathResult single = board.QueryMovementPath(
-                from, to, actionPointBudgetUnits: int.MaxValue, movementEfficiencyMilliUnits: movementEfficiencyMilliUnits);
+                new SpatialPose(from), to, actionPointBudgetUnits: int.MaxValue, movementEfficiencyMilliUnits: movementEfficiencyMilliUnits);
             Assert.AreEqual(SpatialQueryReasons.Ok, single.Reason);
             Assert.AreEqual(1, single.Edges.Count);
             return single.ActionPointCostUnits;

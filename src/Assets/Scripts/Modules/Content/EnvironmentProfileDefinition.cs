@@ -37,6 +37,7 @@ namespace TianZhang.Content
         public int metricDistanceUnits;
         public bool allowsMovement;
         public bool allowsEffects;
+        public int clearanceLimit;
     }
 
     [Serializable]
@@ -227,6 +228,10 @@ namespace TianZhang.Content
             {
                 return false;
             }
+
+            foreach (EnvironmentDirectedEdge edge in profile.directedEdges)
+                if (edge.clearanceLimit < 0)
+                    return Fail("clearance_limit_invalid", out reason);
 
             var edges = new EnvironmentDirectedEdge[profile.directedEdges.Length];
             Array.Copy(profile.directedEdges, edges, edges.Length);

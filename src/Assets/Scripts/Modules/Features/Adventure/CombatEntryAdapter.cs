@@ -81,6 +81,14 @@ namespace TianZhang.Features.Adventure
             if (!SpatialQueryBoardFactory.TryCreate(grid, environmentProfile, out SpatialQuerySnapshot spatial, out reason))
                 return false;
 
+            var occupied = new HashSet<HexCoord>();
+            foreach (CombatantSnapshot actor in new[] { spawned.Player }.Concat(spawned.Enemies))
+            {
+                reason = spatial.Board.InspectPlacement(actor.Pose, occupied);
+                if (!string.IsNullOrEmpty(reason)) return false;
+                occupied.UnionWith(actor.OccupiedCells);
+            }
+
             try
             {
                 session = new CombatSession(
@@ -210,28 +218,24 @@ namespace TianZhang.Features.Adventure
             private readonly SpatialQueryBoard board;
             public SpatialCombatQuery(SpatialQueryBoard spatialBoard) => board = spatialBoard;
 
-            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange)
-            {
-                SpatialRangeEntry result = board.QueryRangeEntry(
-                    source, target, minimumRange, maximumRange, SpatialQueryKind.Attack, true);
-                return new CombatRangeQueryResult(result.IsInRange, result.Reason);
-            }
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
+                board.QueryContact(source, target, minimumRange, maximumRange);
 
             public CombatMovementQueryResult QueryMovement(
-                HexCoord source,
+                SpatialPose source,
                 HexCoord destination,
                 int actionPointBudgetUnits,
                 int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied)
+                IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null)
             {
                 SpatialMovementPathResult result = board.QueryMovementPath(source, destination,
-                    actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied);
-                return new CombatMovementQueryResult(result.Path.Count > 0, result.Reason, result.Path,
-                    result.Edges, result.UnitsPerRange, result.ActionPointCostUnits);
+                    actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, destinationFacing);
+                return new CombatMovementQueryResult(result.Path.Count > 0, result.Reason, result.Steps,
+                    result.UnitsPerRange, result.ActionPointCostUnits);
             }
 
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(
-                HexCoord source,
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(
+                SpatialPose source,
                 int actionPointBudgetUnits,
                 int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied) => board.FindReachableWithinActionPoints(

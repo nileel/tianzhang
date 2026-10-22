@@ -51,10 +51,13 @@ namespace TianZhang.Editor.ConfigEditor
             var content = WorldFields.Reference("contentId", "节点内容", "Enemies", "name", true);
             content.CanEdit = row => row.At("nodeTypeId").RawToken == EncounterNodeHandler.StableNodeTypeId;
             content.ReadOnlyReason = "起点和返回节点内容必须为空；切换类型后不会自动清空原值";
-            var additionalEnemies = WorldFields.Lock(WorldFields.Text("additionalEnemies", "额外敌人实例及落点", true),
+            var additionalEnemies = WorldFields.Lock(WorldFields.Text("additionalEnemies", "额外敌人及出生姿态", true),
                 "批准的遭遇实例固定配置");
             // This field carries the complete declaration; the Adventure parser owns |, @ and : syntax.
             additionalEnemies.ReservedDelimiters = "~;=+>";
+            var enemyFacing = WorldFields.Number("enemyFacing", "主敌出生朝向", "方向索引");
+            enemyFacing.AllowEmpty = true;
+            enemyFacing.Help = "遭遇必须显式填写0至5，起点与返回节点留空。";
             var adventures = new[]
             {
                 WorldFields.Lock(WorldFields.Text("adventureId", "地图ID"), "稳定地图分组不可修改"),
@@ -64,7 +67,7 @@ namespace TianZhang.Editor.ConfigEditor
                 WorldFields.Enum("nodeTypeId", "节点类型", AdventureNodeDispatcher.StartNodeHandler.StableNodeTypeId, "起点",
                     EncounterNodeHandler.StableNodeTypeId, "遭遇", ReturnNodeHandler.StableNodeTypeId, "返回"),
                 WorldFields.Number("q", "轴坐标q", "格"), WorldFields.Number("r", "轴坐标r", "格"), content,
-                additionalEnemies
+                additionalEnemies, enemyFacing
             };
             foreach (var field in adventures.Where(f => f.Column == "displayNameKey" || f.Column == "contentScope"))
             {
@@ -155,6 +158,14 @@ namespace TianZhang.Editor.ConfigEditor
                 var coordinate = map + "/" + int.Parse(row.At("q").RawToken, CultureInfo.InvariantCulture) + ":" + int.Parse(row.At("r").RawToken, CultureInfo.InvariantCulture);
                 if (!coordinates.Add(coordinate)) Issue("q", "同一地图的节点坐标不能重复", "adventure_duplicate_coordinate");
                 var type = row.At("nodeTypeId").RawToken;
+                var facing = row.At("enemyFacing");
+                if (type == EncounterNodeHandler.StableNodeTypeId)
+                {
+                    if (!facing.HasValue || !int.TryParse(facing.RawToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out int direction) || direction < 0 || direction > 5)
+                        Issue("enemyFacing", "遭遇朝向必须显式为0至5", "adventure_facing_invalid");
+                }
+                else if (facing.HasValue)
+                    Issue("enemyFacing", "无敌人的节点不能声明出生朝向", "adventure_facing_must_be_empty");
                 if (type != EncounterNodeHandler.StableNodeTypeId && row.At("contentId").HasValue)
                     Issue("contentId", "起点和返回节点的内容必须为空", "adventure_content_must_be_empty");
                 if (type == EncounterNodeHandler.StableNodeTypeId && !row.At("contentId").HasValue)

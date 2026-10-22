@@ -119,7 +119,8 @@ namespace TianZhang.Infrastructure.UnityContent
                     rules = new SpatialEdgeRules(
                         configured.metricDistanceUnits,
                         configured.allowsMovement,
-                        configured.allowsEffects);
+                        configured.allowsEffects,
+                        clearanceLimit: configured.clearanceLimit);
                 }
                 catch (ArgumentException)
                 {

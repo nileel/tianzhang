@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Spatial;
 
 namespace TianZhang.Combat
@@ -62,7 +63,9 @@ namespace TianZhang.Combat
             int unitsPerRange = 0,
             int actionPointSpentUnits = 0,
             int actionPointRefundUnits = 0,
-            long rootActionId = 0)
+            long rootActionId = 0,
+            IReadOnlyList<SpatialMovementStep> movementSteps = null,
+            IReadOnlyList<CombatTargetContact> targetContacts = null)
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
@@ -81,6 +84,8 @@ namespace TianZhang.Combat
             ActionPointSpentUnits = actionPointSpentUnits;
             ActionPointRefundUnits = actionPointRefundUnits;
             RootActionId = rootActionId;
+            MovementSteps = new List<SpatialMovementStep>(movementSteps ?? Array.Empty<SpatialMovementStep>()).AsReadOnly();
+            TargetContacts = new List<CombatTargetContact>(targetContacts ?? Array.Empty<CombatTargetContact>()).AsReadOnly();
         }
 
         public bool Succeeded { get; }
@@ -96,21 +101,28 @@ namespace TianZhang.Combat
         public int ActionPointSpentUnits { get; }
         public int ActionPointRefundUnits { get; }
         public long RootActionId { get; }
+        public IReadOnlyList<SpatialMovementStep> MovementSteps { get; }
+        public IReadOnlyList<CombatTargetContact> TargetContacts { get; }
 
         internal CombatActionResult WithPayment(int spent, int refund, long root) => new CombatActionResult(
             Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
-            SpiritRecoveries, MovementEdges, UnitsPerRange, spent, refund, root);
+            SpiritRecoveries, MovementEdges, UnitsPerRange, spent, refund, root, MovementSteps, TargetContacts);
+
+        internal CombatActionResult WithContacts(IReadOnlyList<CombatTargetContact> contacts) => new CombatActionResult(
+            Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
+            SpiritRecoveries, MovementEdges, UnitsPerRange, ActionPointSpentUnits, ActionPointRefundUnits, RootActionId,
+            MovementSteps, contacts);
 
         public static CombatActionResult Success(params CombatDamageResult[] damage)
         {
             return new CombatActionResult(true, string.Empty, damage, null, 0);
         }
 
-        public static CombatActionResult MovementSuccess(IReadOnlyList<HexCoord> path, int movementCost, int movementFacing = -1,
-            IReadOnlyList<SpatialMovementEdgeCost> movementEdges = null, int unitsPerRange = 0)
+        public static CombatActionResult MovementSuccess(CombatMovementQueryResult movement)
         {
-            return new CombatActionResult(true, string.Empty, null, path, movementCost, movementFacing,
-                movementEdges: movementEdges, unitsPerRange: unitsPerRange);
+            return new CombatActionResult(true, string.Empty, null, movement.Path, movement.ActionPointCostUnits,
+                movement.Steps.Last().To.Facing, movementEdges: movement.MovementEdges, unitsPerRange: movement.UnitsPerRange,
+                movementSteps: movement.Steps);
         }
 
         public static CombatActionResult AttackSuccess(int spiritSpent, params CombatDamageResult[] damage)

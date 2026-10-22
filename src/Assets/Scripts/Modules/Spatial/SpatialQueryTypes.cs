@@ -3,6 +3,59 @@ using System.Collections.Generic;
 
 namespace TianZhang.Spatial
 {
+    public enum SpatialFootprintKind { Single, AdjacentPair }
+
+    /// <summary>Fixed footprint and clearance facts at one anchor and six-way facing.</summary>
+    public readonly struct SpatialPose : IEquatable<SpatialPose>
+    {
+        public SpatialPose(HexCoord anchor, int facing = 0,
+            SpatialFootprintKind footprint = SpatialFootprintKind.Single, int bodyScaleRank = 1)
+        {
+            if (facing < 0 || facing >= 6) throw new ArgumentOutOfRangeException(nameof(facing));
+            if (footprint != SpatialFootprintKind.Single && footprint != SpatialFootprintKind.AdjacentPair)
+                throw new ArgumentOutOfRangeException(nameof(footprint));
+            if (bodyScaleRank < 1) throw new ArgumentOutOfRangeException(nameof(bodyScaleRank));
+            Anchor = anchor; Facing = facing; Footprint = footprint; BodyScaleRank = bodyScaleRank;
+        }
+
+        public HexCoord Anchor { get; }
+        public int Facing { get; }
+        public SpatialFootprintKind Footprint { get; }
+        public int BodyScaleRank { get; }
+        public IReadOnlyList<HexCoord> OccupiedCells => Array.AsReadOnly(Footprint == SpatialFootprintKind.AdjacentPair
+            ? new[] { Anchor, Anchor.Step((Facing + 3) % 6) } : new[] { Anchor });
+        public bool Contains(HexCoord cell) => cell == Anchor ||
+            Footprint == SpatialFootprintKind.AdjacentPair && cell == Anchor.Step((Facing + 3) % 6);
+        public SpatialPose WithAnchor(HexCoord anchor) => new SpatialPose(anchor, Facing, Footprint, BodyScaleRank);
+        public SpatialPose WithFacing(int facing) => new SpatialPose(Anchor, facing, Footprint, BodyScaleRank);
+        public bool Equals(SpatialPose other) => Anchor == other.Anchor && Facing == other.Facing &&
+            Footprint == other.Footprint && BodyScaleRank == other.BodyScaleRank;
+        public override bool Equals(object obj) => obj is SpatialPose other && Equals(other);
+        public override int GetHashCode() => unchecked(((Anchor.GetHashCode() * 397 ^ Facing) * 397 ^
+            (int)Footprint) * 397 ^ BodyScaleRank);
+        public static bool operator ==(SpatialPose left, SpatialPose right) => left.Equals(right);
+        public static bool operator !=(SpatialPose left, SpatialPose right) => !left.Equals(right);
+        public override string ToString() => $"{Anchor}/{Facing}/{Footprint}/{BodyScaleRank}";
+    }
+
+    public readonly struct SpatialContactResult
+    {
+        public SpatialContactResult(HexCoord sourceCell, HexCoord targetCell, int distanceUnits,
+            bool isInRange, bool hasLineOfSight, string reason, int unitsPerRange)
+        {
+            SourceCell = sourceCell; TargetCell = targetCell; DistanceUnits = distanceUnits;
+            IsInRange = isInRange; HasLineOfSight = hasLineOfSight;
+            Reason = reason ?? SpatialQueryReasons.Ok; UnitsPerRange = unitsPerRange;
+        }
+        public HexCoord SourceCell { get; }
+        public HexCoord TargetCell { get; }
+        public int DistanceUnits { get; }
+        public bool IsInRange { get; }
+        public bool HasLineOfSight { get; }
+        public string Reason { get; }
+        public int UnitsPerRange { get; }
+    }
+
     public enum SpatialTwoCellShape
     {
         ForwardPair,
@@ -66,6 +119,8 @@ namespace TianZhang.Spatial
         public const string DestinationUnchanged = "destination_unchanged";
         public const string MovementEfficiencyZero = "movement_efficiency_zero";
         public const string ActionPointCostOverflow = "action_point_cost_overflow";
+        public const string ClearanceInsufficient = "clearance_insufficient";
+        public const string InvalidPose = "spatial_pose_invalid";
     }
 
     public readonly struct SpatialCellRules
@@ -99,20 +154,25 @@ namespace TianZhang.Spatial
             int metricDistanceUnits,
             bool allowsMovement,
             bool allowsEffects,
-            ulong effectBlockerMask = 0)
+            ulong effectBlockerMask = 0,
+            int clearanceLimit = 0)
         {
             if (metricDistanceUnits < 1)
                 throw new ArgumentOutOfRangeException(nameof(metricDistanceUnits));
+            if (clearanceLimit < 0)
+                throw new ArgumentOutOfRangeException(nameof(clearanceLimit));
             MetricDistanceUnits = metricDistanceUnits;
             AllowsMovement = allowsMovement;
             AllowsEffects = allowsEffects;
             EffectBlockerMask = effectBlockerMask;
+            ClearanceLimit = clearanceLimit;
         }
 
         public int MetricDistanceUnits { get; }
         public bool AllowsMovement { get; }
         public bool AllowsEffects { get; }
         public ulong EffectBlockerMask { get; }
+        public int ClearanceLimit { get; }
     }
 
     public readonly struct SpatialQueryLimits
@@ -254,27 +314,58 @@ namespace TianZhang.Spatial
         public int DistanceUnits => checked(MetricDistanceUnits + MovementBurdenUnits);
     }
 
-    /// <summary>
-    /// 一条合法移动路径的定点行动力报价（统一行动力公共合同 §四）。Path 不含起点，按现有 FindPath 顺序
-    /// 包含经过格与终点；Edges 与 Path 一一对应；ActionPointCostUnits 为 AP 最小单位。
-    /// Reason 为 Ok 才表示路径可达；不可达时 Path 与 Edges 为空、ActionPointCostUnits 为 0。
-    /// </summary>
+    /// <summary>One anchor move, including the chosen ordered 60-degree turns before it.</summary>
+    public readonly struct SpatialMovementStep : IEquatable<SpatialMovementStep>
+    {
+        public SpatialMovementStep(SpatialPose from, SpatialPose to, IReadOnlyList<int> turnFacings,
+            SpatialMovementEdgeCost edge)
+        {
+            From = from; To = to; Edge = edge;
+            TurnFacings = new List<int>(turnFacings ?? Array.Empty<int>()).AsReadOnly();
+        }
+        public SpatialPose From { get; }
+        public SpatialPose To { get; }
+        public IReadOnlyList<int> TurnFacings { get; }
+        public SpatialMovementEdgeCost Edge { get; }
+        public bool Equals(SpatialMovementStep other)
+        {
+            if (From != other.From || To != other.To || !Edge.Equals(other.Edge)) return false;
+            int count = TurnFacings?.Count ?? 0;
+            if (count != (other.TurnFacings?.Count ?? 0)) return false;
+            for (int index = 0; index < count; index++)
+                if (TurnFacings[index] != other.TurnFacings[index]) return false;
+            return true;
+        }
+        public override bool Equals(object obj) => obj is SpatialMovementStep other && Equals(other);
+        public override int GetHashCode()
+        {
+            int hash = unchecked((From.GetHashCode() * 397 ^ To.GetHashCode()) * 397 ^ Edge.GetHashCode());
+            if (TurnFacings != null)
+                foreach (int facing in TurnFacings) hash = unchecked(hash * 397 ^ facing);
+            return hash;
+        }
+    }
+
+    /// <summary>Steps are authoritative; anchor path and priced edges are their read-only projections.</summary>
     public readonly struct SpatialMovementPathResult
     {
         public SpatialMovementPathResult(
-            IReadOnlyList<HexCoord> path,
-            IReadOnlyList<SpatialMovementEdgeCost> edges,
+            IReadOnlyList<SpatialMovementStep> steps,
             int unitsPerRange,
             int actionPointCostUnits,
             string reason)
         {
-            Path = path ?? Array.Empty<HexCoord>();
-            Edges = edges ?? Array.Empty<SpatialMovementEdgeCost>();
+            Steps = new List<SpatialMovementStep>(steps ?? Array.Empty<SpatialMovementStep>()).AsReadOnly();
+            var path = new List<HexCoord>();
+            var edges = new List<SpatialMovementEdgeCost>();
+            foreach (SpatialMovementStep step in Steps) { path.Add(step.To.Anchor); edges.Add(step.Edge); }
+            Path = path.AsReadOnly(); Edges = edges.AsReadOnly();
             UnitsPerRange = unitsPerRange;
             ActionPointCostUnits = actionPointCostUnits;
             Reason = reason ?? SpatialQueryReasons.Ok;
         }
 
+        public IReadOnlyList<SpatialMovementStep> Steps { get; }
         public IReadOnlyList<HexCoord> Path { get; }
         public IReadOnlyList<SpatialMovementEdgeCost> Edges { get; }
         public int UnitsPerRange { get; }

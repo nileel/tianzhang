@@ -27,16 +27,12 @@ namespace TianZhang.Combat
         public IReadOnlyList<string> TargetIds { get; }
     }
 
-    public readonly struct CombatRangeQueryResult
+    public readonly struct CombatTargetContact
     {
-        public CombatRangeQueryResult(bool isInRange, string reason)
-        {
-            IsInRange = isInRange;
-            Reason = reason ?? string.Empty;
-        }
-
-        public bool IsInRange { get; }
-        public string Reason { get; }
+        public CombatTargetContact(string targetId, SpatialContactResult contact)
+        { TargetId = targetId; Contact = contact; }
+        public string TargetId { get; }
+        public SpatialContactResult Contact { get; }
     }
 
     public readonly struct CombatMovementQueryResult
@@ -44,21 +40,22 @@ namespace TianZhang.Combat
         public CombatMovementQueryResult(
             bool isReachable,
             string reason,
-            IReadOnlyList<HexCoord> path,
-            IReadOnlyList<SpatialMovementEdgeCost> movementEdges,
+            IReadOnlyList<SpatialMovementStep> steps,
             int unitsPerRange,
             int actionPointCostUnits)
         {
             IsReachable = isReachable;
             Reason = reason ?? string.Empty;
-            Path = new List<HexCoord>(path ?? Array.Empty<HexCoord>()).AsReadOnly();
-            MovementEdges = new List<SpatialMovementEdgeCost>(movementEdges ?? Array.Empty<SpatialMovementEdgeCost>()).AsReadOnly();
+            Steps = new List<SpatialMovementStep>(steps ?? Array.Empty<SpatialMovementStep>()).AsReadOnly();
+            Path = Steps.Select(step => step.To.Anchor).ToList().AsReadOnly();
+            MovementEdges = Steps.Select(step => step.Edge).ToList().AsReadOnly();
             UnitsPerRange = unitsPerRange;
             ActionPointCostUnits = actionPointCostUnits;
         }
 
         public bool IsReachable { get; }
         public string Reason { get; }
+        public IReadOnlyList<SpatialMovementStep> Steps { get; }
 
         /// <summary>所选路径的经过格与终点，不含起点；按现有 FindPath 顺序。</summary>
         public IReadOnlyList<HexCoord> Path { get; }
@@ -83,15 +80,16 @@ namespace TianZhang.Combat
     /// </summary>
     public interface ICombatSpatialQuery
     {
-        CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange);
+        SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange);
         CombatMovementQueryResult QueryMovement(
-            HexCoord source,
+            SpatialPose source,
             HexCoord destination,
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
-            IReadOnlyCollection<HexCoord> occupied);
-        IReadOnlyDictionary<HexCoord, int> FindReachable(
-            HexCoord source,
+            IReadOnlyCollection<HexCoord> occupied,
+            int? destinationFacing = null);
+        IReadOnlyDictionary<SpatialPose, int> FindReachable(
+            SpatialPose source,
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
             IReadOnlyCollection<HexCoord> occupied);
@@ -358,8 +356,8 @@ namespace TianZhang.Combat
             };
             HexCoord origin = actor.Position;
             SpatialTwoCellArea area = origin.GetTwoCellArea(shape, direction);
-            CombatRangeQueryResult first = spatialQuery.QueryRange(origin, area.First, profile.MinimumRange, profile.MaximumRange);
-            CombatRangeQueryResult second = spatialQuery.QueryRange(origin, area.Second, profile.MinimumRange, profile.MaximumRange);
+            SpatialContactResult first = spatialQuery.QueryRange(new SpatialPose(origin), new SpatialPose(area.First), profile.MinimumRange, profile.MaximumRange);
+            SpatialContactResult second = spatialQuery.QueryRange(new SpatialPose(origin), new SpatialPose(area.Second), profile.MinimumRange, profile.MaximumRange);
             var cells = new[]
             {
                 new SpatialAreaCell(area.First, first.IsInRange, first.Reason),
@@ -370,7 +368,7 @@ namespace TianZhang.Combat
             {
                 if (target == null) throw new ArgumentException("Combatant facts cannot be null.", nameof(combatants));
                 if (target.Id != actor.Id && target.IsAlive && target.Team != actor.Team &&
-                    (first.IsInRange && target.Position == area.First || second.IsInRange && target.Position == area.Second))
+                    (first.IsInRange && target.Pose.Contains(area.First) || second.IsInRange && target.Pose.Contains(area.Second)))
                     targets.Add(target.Id);
             }
             return new CombatAttackAreaQueryResult(actor.Id, profile, origin, direction, cells, targets);
@@ -445,7 +443,7 @@ namespace TianZhang.Combat
             foreach (CombatantSnapshot combatant in Combatants.All)
             {
                 if (combatant.IsAlive && !string.Equals(combatant.Id, combatantId, StringComparison.Ordinal))
-                    occupied.Add(combatant.Position);
+                    occupied.AddRange(combatant.OccupiedCells);
             }
             return occupied;
         }
@@ -518,16 +516,28 @@ namespace TianZhang.Combat
             if (actor.CurrentSpirit < spiritCost)
                 return CombatActionResult.Rejected("spirit_insufficient");
 
-            if (attackArea != null) return CombatActionResult.Success();
-
-            CombatRangeQueryResult range = SpatialQuery.QueryRange(
-                actor.Position, singleTarget.Position,
-                profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
-                    ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange,
-                profile.MaximumRange);
-            return range.IsInRange
-                ? CombatActionResult.Success()
-                : CombatActionResult.Rejected(string.IsNullOrEmpty(range.Reason) ? "target_out_of_range" : range.Reason);
+            var contacts = new List<CombatTargetContact>();
+            foreach (CombatantSnapshot target in targets)
+            {
+                SpatialContactResult range;
+                if (attackArea == null)
+                    range = SpatialQuery.QueryRange(actor.Pose, target.Pose,
+                        profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
+                            ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange);
+                else
+                {
+                    HexCoord areaOrigin = attackArea.Origin;
+                    range = attackArea.Cells.Where(cell => cell.IsLegal && target.Pose.Contains(cell.Coord))
+                        .Select(cell => SpatialQuery.QueryRange(new SpatialPose(areaOrigin), new SpatialPose(cell.Coord),
+                            profile.MinimumRange, profile.MaximumRange))
+                        .OrderBy(contact => contact.DistanceUnits).ThenBy(contact => contact.TargetCell.Q)
+                        .ThenBy(contact => contact.TargetCell.R).First();
+                }
+                if (!range.IsInRange)
+                    return CombatActionResult.Rejected(string.IsNullOrEmpty(range.Reason) ? "target_out_of_range" : range.Reason);
+                contacts.Add(new CombatTargetContact(target.Id, range));
+            }
+            return CombatActionResult.Success().WithContacts(contacts);
         }
 
         private static string GetAuthorizationFailure(CombatantSnapshot actor, CombatAttackProfile profile)
@@ -550,7 +560,8 @@ namespace TianZhang.Combat
 
         private CombatActionResult ValidateMove(CombatCommand command, CombatantSnapshot actor)
         {
-            if (!command.Destination.HasValue || command.Destination.Value == actor.Position)
+            if (!command.Destination.HasValue || command.Destination.Value == actor.Position ||
+                command.DestinationFacing is < 0 or > 5)
                 return CombatActionResult.Rejected("combat_move_destination_invalid");
             if (actor.HasStatus(CombatStatusKind.Immobilize)) return CombatActionResult.Rejected("combat_actor_immobilized");
             if (actor.MovementEfficiencyMilliUnits == 0) return CombatActionResult.Rejected("movement_efficiency_zero");
@@ -561,11 +572,11 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("combat_move_destination_occupied");
 
             CombatMovementQueryResult movement = SpatialQuery.QueryMovement(
-                actor.Position,
+                actor.Pose,
                 command.Destination.Value,
                 actor.ActionPointsRemainingUnits,
                 actor.MovementEfficiencyMilliUnits,
-                occupied);
+                occupied, command.DestinationFacing);
             if (!movement.IsReachable || movement.Path.Count == 0 ||
                 movement.Path[movement.Path.Count - 1] != command.Destination.Value ||
                 movement.UnitsPerRange <= 0 || movement.MovementEdges.Count != movement.Path.Count ||
@@ -577,17 +588,20 @@ namespace TianZhang.Combat
             try
             {
                 int cost = 0;
-                HexCoord from = actor.Position;
+                SpatialPose from = actor.Pose;
                 for (int index = 0; index < movement.Path.Count; index++)
                 {
                     SpatialMovementEdgeCost edge = movement.MovementEdges[index];
-                    if (edge.From != from || edge.To != movement.Path[index] || from.DirectionTo(edge.To) < 0 ||
+                    SpatialMovementStep step = movement.Steps[index];
+                    if (!step.From.Equals(from) || step.To.Footprint != actor.Footprint || step.To.BodyScaleRank != actor.BodyScaleRank ||
+                        step.To.Facing != edge.From.DirectionTo(edge.To) ||
+                        edge.From != from.Anchor || edge.To != movement.Path[index] || from.Anchor.DirectionTo(edge.To) < 0 ||
                         edge.MetricDistanceUnits <= 0 || edge.MovementBurdenUnits < 0 || occupied.Contains(edge.To))
                         return CombatActionResult.Rejected("combat_move_path_invalid");
                     long numerator = checked(100000000L * checked(edge.MetricDistanceUnits + (long)edge.MovementBurdenUnits));
                     long denominator = checked((long)movement.UnitsPerRange * actor.MovementEfficiencyMilliUnits);
                     cost = checked(cost + checked((int)Math.Max(1L, numerator / denominator)));
-                    from = edge.To;
+                    from = step.To;
                 }
                 if (cost != movement.ActionPointCostUnits) return CombatActionResult.Rejected("combat_move_quote_invalid");
             }
@@ -598,8 +612,9 @@ namespace TianZhang.Combat
             int facing = previous.DirectionTo(movement.Path[movement.Path.Count - 1]);
             if (facing < 0)
                 return CombatActionResult.Rejected("combat_move_path_invalid");
-            return CombatActionResult.MovementSuccess(movement.Path, movement.ActionPointCostUnits, facing,
-                movement.MovementEdges, movement.UnitsPerRange);
+            if (command.DestinationFacing.HasValue && facing != command.DestinationFacing.Value)
+                return CombatActionResult.Rejected("combat_move_path_invalid");
+            return CombatActionResult.MovementSuccess(movement);
         }
 
         private CombatActionResult ValidateSwapSpell(CombatCommand command, CombatantSnapshot actor)

@@ -347,16 +347,16 @@ namespace TianZhang.Tests.PlayMode
         {
             CombatantSnapshot player = spawned.Player;
             var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id)
-                .Select(unit => unit.Position).ToArray();
+                .SelectMany(unit => unit.OccupiedCells).ToArray();
             var service = new CombatCommandService();
-            foreach (var pair in session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits,
+            foreach (var pair in session.SpatialQuery.FindReachable(player.Pose, player.ActionPointsRemainingUnits,
                          player.MovementEfficiencyMilliUnits, occupied)
-                         .Where(pair => pair.Key != player.Position && pair.Value == expectedCost)
-                         .OrderBy(pair => pair.Key.Q).ThenBy(pair => pair.Key.R))
+                         .Where(pair => pair.Key.Anchor != player.Position && pair.Value == expectedCost)
+                         .OrderBy(pair => pair.Key.Anchor.Q).ThenBy(pair => pair.Key.Anchor.R).ThenBy(pair => pair.Key.Facing))
             {
                 CombatCommandPreview quote = service.Preview(session,
-                    new CombatCommand(CombatCommandKind.Move, player.Id, destination: pair.Key));
-                if (quote.IsLegal) return pair.Key;
+                    new CombatCommand(CombatCommandKind.Move, player.Id, destination: pair.Key.Anchor));
+                if (quote.IsLegal && quote.ActionPointCostUnits == expectedCost) return pair.Key.Anchor;
             }
             Assert.Fail("No one-edge move quoting " + expectedCost + " AP is legal from " + player.Position + ".");
             return default;

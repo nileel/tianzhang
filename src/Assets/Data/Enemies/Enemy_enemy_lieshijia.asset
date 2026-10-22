@@ -19,6 +19,8 @@ MonoBehaviour:
   enemyTypeId: type_yaoshou
   aiProfileId: ai_ranged
   realmId: realm_lianqi
+  footprintKind: adjacent_pair
+  bodyScaleRank: 2
   combatStatScale: 0.5
   combatTemplate: {fileID: 11400000, guid: 642d2e8356665da4e9bc435538fd0555, type: 2}
   dropEntries:

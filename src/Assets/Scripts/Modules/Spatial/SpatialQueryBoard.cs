@@ -37,8 +37,10 @@ namespace TianZhang.Spatial
             HexCoord from,
             HexCoord to,
             SpatialQueryKind kind,
-            ulong activeEffectBlockers = ulong.MaxValue)
+            ulong activeEffectBlockers = ulong.MaxValue,
+            int bodyScaleRank = 1)
         {
+            if (bodyScaleRank < 1) throw new ArgumentOutOfRangeException(nameof(bodyScaleRank));
             if (!from.TryGetDirectionTo(to, out _))
                 throw new ArgumentException("Spatial queries can inspect only adjacent hex edges.", nameof(to));
             if (!cells.TryGetValue(from, out var fromRules) || !cells.TryGetValue(to, out var toRules))
@@ -59,6 +61,8 @@ namespace TianZhang.Spatial
             bool movement = kind == SpatialQueryKind.Movement || kind == SpatialQueryKind.ForcedMovement;
             if (movement && !edgeRules.AllowsMovement)
                 return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.DirectedEdgeBlocksMovement);
+            if (movement && edgeRules.ClearanceLimit > 0 && bodyScaleRank > edgeRules.ClearanceLimit)
+                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.ClearanceInsufficient);
             if (!movement && (!edgeRules.AllowsEffects || (edgeRules.EffectBlockerMask & activeEffectBlockers) != 0))
                 return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.DirectedEdgeBlocksEffects);
             if (toRules.IsEntityObstacle)
@@ -67,6 +71,83 @@ namespace TianZhang.Spatial
                 return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.MovementBlocked);
 
             return new SpatialEdgeInspection(true, edgeRules.MetricDistanceUnits, SpatialQueryReasons.Ok);
+        }
+
+        /// <summary>Occupancy belongs to the caller; no cell is silently removed from occupied.</summary>
+        public string InspectPlacement(SpatialPose pose, IReadOnlyCollection<HexCoord> occupied = null)
+        {
+            if (!IsValidPose(pose)) return SpatialQueryReasons.InvalidPose;
+            foreach (HexCoord coord in pose.OccupiedCells)
+            {
+                if (!cells.TryGetValue(coord, out var rules)) return SpatialQueryReasons.MissingCell;
+                if (rules.IsEntityObstacle) return SpatialQueryReasons.EntityObstacle;
+                if (rules.BlocksMovement) return SpatialQueryReasons.MovementBlocked;
+                if (Contains(occupied, coord)) return SpatialQueryReasons.Occupied;
+            }
+            if (pose.Footprint == SpatialFootprintKind.Single) return SpatialQueryReasons.Ok;
+            HexCoord rear = pose.Anchor.Step((pose.Facing + 3) % 6);
+            if (cells[pose.Anchor].HeightLevel != cells[rear].HeightLevel)
+                return SpatialQueryReasons.HeightRuleUnconfigured;
+            if (!edges.TryGetValue(new SpatialDirectedEdge(pose.Anchor, rear), out var forward) ||
+                !edges.TryGetValue(new SpatialDirectedEdge(rear, pose.Anchor), out var reverse))
+                return SpatialQueryReasons.MissingDirectedEdge;
+            if (!forward.AllowsMovement && !reverse.AllowsMovement)
+                return SpatialQueryReasons.DirectedEdgeBlocksMovement;
+            if (forward.ClearanceLimit > 0 && pose.BodyScaleRank > forward.ClearanceLimit ||
+                reverse.ClearanceLimit > 0 && pose.BodyScaleRank > reverse.ClearanceLimit)
+                return SpatialQueryReasons.ClearanceInsufficient;
+            return SpatialQueryReasons.Ok;
+        }
+
+        /// <summary>Choose the nearest visible effect-path pair before applying either range bound.</summary>
+        public SpatialContactResult QueryContact(SpatialPose source, SpatialPose target, int min, int max)
+        {
+            if (min < 0 || max < min || max > limits.MaxQueryRange)
+                throw new ArgumentOutOfRangeException(nameof(min));
+            if (!IsValidPose(source) || !IsValidPose(target))
+                return new SpatialContactResult(source.Anchor, target.Anchor, -1, false, false,
+                    SpatialQueryReasons.InvalidPose, limits.UnitsPerRange);
+            var sources = new List<HexCoord>(source.OccupiedCells);
+            var targets = new List<HexCoord>(target.OccupiedCells);
+            sources.Sort(CompareCells); targets.Sort(CompareCells);
+            bool found = false;
+            int bestDistance = int.MaxValue;
+            HexCoord bestSource = source.Anchor, bestTarget = target.Anchor;
+            string rejection = null;
+            foreach (HexCoord from in sources)
+            foreach (HexCoord to in targets)
+            {
+                var distance = QueryMetricDistance(from, to, SpatialQueryKind.Attack);
+                if (!distance.IsReachable) { rejection ??= distance.Reason; continue; }
+                var sight = QueryLineOfSight(from, to);
+                if (!sight.HasLineOfSight) { rejection ??= sight.Reason; continue; }
+                if (found && distance.DistanceUnits >= bestDistance) continue;
+                found = true; bestDistance = distance.DistanceUnits; bestSource = from; bestTarget = to;
+            }
+            if (!found)
+                return new SpatialContactResult(bestSource, bestTarget, -1, false, false,
+                    rejection ?? SpatialQueryReasons.NoLegalPath, limits.UnitsPerRange);
+            string reason = bestDistance < checked(min * limits.UnitsPerRange) ? SpatialQueryReasons.BelowMinimumRange :
+                bestDistance > checked(max * limits.UnitsPerRange) ? SpatialQueryReasons.AboveMaximumRange : SpatialQueryReasons.Ok;
+            return new SpatialContactResult(bestSource, bestTarget, bestDistance,
+                reason.Length == 0, true, reason, limits.UnitsPerRange);
+        }
+
+        private static bool IsValidPose(SpatialPose pose) => pose.BodyScaleRank > 0 && pose.Facing >= 0 &&
+            pose.Facing < 6 && (pose.Footprint == SpatialFootprintKind.Single || pose.Footprint == SpatialFootprintKind.AdjacentPair);
+
+        private static bool Contains(IReadOnlyCollection<HexCoord> occupied, HexCoord cell)
+        {
+            if (occupied == null) return false;
+            if (occupied is HashSet<HexCoord> set) return set.Contains(cell);
+            foreach (HexCoord candidate in occupied) if (candidate == cell) return true;
+            return false;
+        }
+
+        private static int CompareCells(HexCoord left, HexCoord right)
+        {
+            int q = left.Q.CompareTo(right.Q);
+            return q == 0 ? left.R.CompareTo(right.R) : q;
         }
 
         public SpatialMetricDistanceResult QueryMetricDistance(
@@ -251,90 +332,159 @@ namespace TianZhang.Spatial
         /// v_milli=0 拒绝自主移动且不进入除法；负值为数据错误；中间量用 checked long，费用不可表示为 int 或超预算时稳定拒绝。
         /// </summary>
         public SpatialMovementPathResult QueryMovementPath(
-            HexCoord start,
+            SpatialPose start,
             HexCoord target,
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
-            IReadOnlyCollection<HexCoord> occupied = null)
+            IReadOnlyCollection<HexCoord> occupied = null,
+            int? targetFacing = null)
         {
-            if (actionPointBudgetUnits < 0)
-                throw new ArgumentOutOfRangeException(nameof(actionPointBudgetUnits));
-            if (movementEfficiencyMilliUnits < 0)
-                throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+            ValidateMovementInputs(actionPointBudgetUnits, movementEfficiencyMilliUnits);
+            if (targetFacing.HasValue && (targetFacing.Value < 0 || targetFacing.Value >= 6))
+                throw new ArgumentOutOfRangeException(nameof(targetFacing));
             if (movementEfficiencyMilliUnits == 0)
                 return UnpricedMovementPath(SpatialQueryReasons.MovementEfficiencyZero);
-            if (start == target)
+            if (start.Anchor == target)
                 return UnpricedMovementPath(SpatialQueryReasons.DestinationUnchanged);
-
-            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
-            blocked?.Remove(start);
-            var traversal = Traverse(
-                start,
-                SpatialQueryKind.Movement,
-                actionPointBudgetUnits,
-                blocked,
-                ulong.MaxValue,
-                target,
-                null,
-                new ActionPointEdgeWeight(limits.UnitsPerRange, movementEfficiencyMilliUnits),
-                true);
-            if (!traversal.Costs.ContainsKey(target))
-            {
-                return UnpricedMovementPath(
-                    traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
-            }
-
-            var path = new List<HexCoord>();
-            var edges = new List<SpatialMovementEdgeCost>();
-            var current = target;
+            var traversal = TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits,
+                occupied, target, targetFacing);
+            if (!traversal.Destination.HasValue)
+                return UnpricedMovementPath(traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
+            var steps = new List<SpatialMovementStep>();
+            var current = traversal.Destination.Value;
             while (current != start)
             {
-                path.Add(current);
-                edges.Add(traversal.MovementEdges[current]);
-                current = traversal.Previous[current];
+                SpatialMovementStep step = traversal.Previous[current];
+                steps.Add(step);
+                current = step.From;
             }
-            path.Reverse();
-            edges.Reverse();
-            return new SpatialMovementPathResult(
-                path,
-                edges,
-                limits.UnitsPerRange,
-                traversal.Costs[target],
-                SpatialQueryReasons.Ok);
+            steps.Reverse();
+            return new SpatialMovementPathResult(steps, limits.UnitsPerRange,
+                traversal.Costs[traversal.Destination.Value], SpatialQueryReasons.Ok);
         }
 
         /// <summary>
         /// 与 QueryMovementPath 同一边遍历、同一 AP 边权的可达集合；预算与报价均为 AP 最小单位，
         /// 不先反算整格预算裁掉压缩边。v_milli=0 拒绝自主移动，返回空集合而不进入除法。
         /// </summary>
-        public IReadOnlyDictionary<HexCoord, int> FindReachableWithinActionPoints(
-            HexCoord start,
+        public IReadOnlyDictionary<SpatialPose, int> FindReachableWithinActionPoints(
+            SpatialPose start,
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
             IReadOnlyCollection<HexCoord> occupied = null)
         {
-            if (actionPointBudgetUnits < 0)
-                throw new ArgumentOutOfRangeException(nameof(actionPointBudgetUnits));
-            if (movementEfficiencyMilliUnits < 0)
-                throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+            ValidateMovementInputs(actionPointBudgetUnits, movementEfficiencyMilliUnits);
             if (movementEfficiencyMilliUnits == 0)
-                return new Dictionary<HexCoord, int>();
-
-            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
-            blocked?.Remove(start);
-            return Traverse(
-                start,
-                SpatialQueryKind.Movement,
-                actionPointBudgetUnits,
-                blocked,
-                ulong.MaxValue,
-                null,
-                null,
-                new ActionPointEdgeWeight(limits.UnitsPerRange, movementEfficiencyMilliUnits)).Costs;
+                return new Dictionary<SpatialPose, int>();
+            return TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, null, null).Costs;
         }
 
         private SpatialMovementPathResult UnpricedMovementPath(string reason) =>
-            new SpatialMovementPathResult(null, null, limits.UnitsPerRange, 0, reason);
+            new SpatialMovementPathResult(null, limits.UnitsPerRange, 0, reason);
+
+        private static void ValidateMovementInputs(int actionPointBudgetUnits, int movementEfficiencyMilliUnits)
+        {
+            if (actionPointBudgetUnits < 0) throw new ArgumentOutOfRangeException(nameof(actionPointBudgetUnits));
+            if (movementEfficiencyMilliUnits < 0) throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+        }
+
+        private PoseTraversalResult TraversePoses(SpatialPose start, int budget, int efficiency,
+            IReadOnlyCollection<HexCoord> occupied, HexCoord? target, int? targetFacing)
+        {
+            var result = new PoseTraversalResult();
+            var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
+            string initial = InspectPlacement(start, blocked);
+            if (initial.Length != 0) { result.FirstRejection = initial; return result; }
+            var weight = new ActionPointEdgeWeight(limits.UnitsPerRange, efficiency);
+            var frontier = new List<PoseFrontierEntry> { new PoseFrontierEntry(start, 0) };
+            result.Costs.Add(start, 0);
+            while (frontier.Count > 0)
+            {
+                int best = 0;
+                for (int index = 1; index < frontier.Count; index++)
+                    if (frontier[index].CompareTo(frontier[best]) < 0) best = index;
+                PoseFrontierEntry current = frontier[best];
+                frontier.RemoveAt(best);
+                if (result.Costs[current.Pose] != current.Cost) continue;
+                if (target.HasValue && current.Pose.Anchor == target.Value &&
+                    (!targetFacing.HasValue || current.Pose.Facing == targetFacing.Value))
+                { result.Destination = current.Pose; break; }
+                for (int direction = 0; direction < 6; direction++)
+                {
+                    if (!TryMovementStep(current.Pose, direction, blocked, out var step, out string reason))
+                    {
+                        // Missing outer cells and occupied alternatives do not hide a meaningful rule rejection.
+                        if (result.FirstRejection == null && (reason == SpatialQueryReasons.ClearanceInsufficient ||
+                            reason == SpatialQueryReasons.HeightRuleUnconfigured || reason == SpatialQueryReasons.EntityObstacle))
+                            result.FirstRejection = reason;
+                        continue;
+                    }
+                    if (!weight.TryGetEdgeCostUnits(step.Edge.MetricDistanceUnits, step.Edge.MovementBurdenUnits, out int edgeCost) ||
+                        (long)current.Cost + edgeCost > int.MaxValue)
+                    { result.FirstRejection ??= SpatialQueryReasons.ActionPointCostOverflow; continue; }
+                    int nextCost = current.Cost + edgeCost;
+                    if (nextCost > budget || result.Costs.TryGetValue(step.To, out int known) && known <= nextCost) continue;
+                    result.Costs[step.To] = nextCost;
+                    result.Previous[step.To] = step;
+                    frontier.Add(new PoseFrontierEntry(step.To, nextCost));
+                }
+            }
+            return result;
+        }
+
+        private bool TryMovementStep(SpatialPose from, int direction, HashSet<HexCoord> blocked,
+            out SpatialMovementStep step, out string reason)
+        {
+            step = default;
+            int delta = (direction - from.Facing + 6) % 6;
+            int turnSign = delta <= 3 ? 1 : -1;
+            if (!TryTurns(from, direction, turnSign, blocked, out var turns, out reason))
+            {
+                if (delta != 3 || !TryTurns(from, direction, -1, blocked, out turns, out reason)) return false;
+            }
+            SpatialPose rotated = from.WithFacing(direction);
+            SpatialPose to = rotated.WithAnchor(from.Anchor.Step(direction));
+            reason = InspectPlacement(to, blocked);
+            if (reason.Length != 0) return false;
+            SpatialEdgeInspection frontEdge = InspectEdge(from.Anchor, to.Anchor, SpatialQueryKind.Movement,
+                bodyScaleRank: from.BodyScaleRank);
+            if (!frontEdge.IsLegal) { reason = frontEdge.Reason; return false; }
+            if (from.Footprint == SpatialFootprintKind.AdjacentPair)
+            {
+                HexCoord rear = rotated.Anchor.Step((direction + 3) % 6);
+                var rearEdge = InspectEdge(rear, from.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
+                if (!rearEdge.IsLegal) { reason = rearEdge.Reason; return false; }
+            }
+            step = new SpatialMovementStep(from, to, turns,
+                new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, cells[to.Anchor].MovementBurdenUnits));
+            reason = SpatialQueryReasons.Ok;
+            return true;
+        }
+
+        private bool TryTurns(SpatialPose from, int direction, int sign, HashSet<HexCoord> blocked,
+            out IReadOnlyList<int> turns, out string reason)
+        {
+            var facings = new List<int>();
+            turns = facings;
+            SpatialPose current = from;
+            while (current.Facing != direction)
+            {
+                SpatialPose next = current.WithFacing((current.Facing + sign + 6) % 6);
+                if (from.Footprint == SpatialFootprintKind.AdjacentPair)
+                {
+                    HexCoord oldRear = current.Anchor.Step((current.Facing + 3) % 6);
+                    HexCoord newRear = next.Anchor.Step((next.Facing + 3) % 6);
+                    var sweep = InspectEdge(oldRear, newRear, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
+                    if (!sweep.IsLegal) { reason = sweep.Reason; return false; }
+                    reason = InspectPlacement(next, blocked);
+                    if (reason.Length != 0) return false;
+                }
+                facings.Add(next.Facing);
+                current = next;
+            }
+            reason = SpatialQueryReasons.Ok;
+            return true;
+        }
 
         public SpatialLineOfSightResult QueryLineOfSight(
             HexCoord source,
@@ -403,17 +553,12 @@ namespace TianZhang.Spatial
             HashSet<HexCoord> blocked,
             ulong activeEffectBlockers,
             HexCoord? stopAt,
-            Func<HexCoord, bool> canTraverse,
-            ActionPointEdgeWeight? actionPointWeight = null,
-            bool recordMovementEdges = false)
+            Func<HexCoord, bool> canTraverse)
         {
             var costs = new Dictionary<HexCoord, int>();
             var previous = new Dictionary<HexCoord, HexCoord>();
-            var movementEdges = recordMovementEdges
-                ? new Dictionary<HexCoord, SpatialMovementEdgeCost>()
-                : null;
             if (!cells.ContainsKey(start) || blocked?.Contains(start) == true || canTraverse?.Invoke(start) == false)
-                return new TraversalResult(costs, previous, movementEdges, SpatialQueryReasons.MissingCell);
+                return new TraversalResult(costs, previous, SpatialQueryReasons.MissingCell);
 
             var frontier = new List<FrontierEntry> { new FrontierEntry(start, 0) };
             costs[start] = 0;
@@ -443,48 +588,16 @@ namespace TianZhang.Spatial
                     int movementBurden = kind == SpatialQueryKind.Movement
                         ? cells[neighbor].MovementBurdenUnits
                         : 0;
-                    int nextCost;
-                    if (actionPointWeight.HasValue)
-                    {
-                        if (!actionPointWeight.Value.TryGetEdgeCostUnits(
-                                edge.MetricDistanceUnits,
-                                movementBurden,
-                                out int edgeCostUnits))
-                        {
-                            if (firstRejection == null)
-                                firstRejection = SpatialQueryReasons.ActionPointCostOverflow;
-                            continue;
-                        }
-                        long pricedCost = (long)currentCost + edgeCostUnits;
-                        if (pricedCost > int.MaxValue)
-                        {
-                            if (firstRejection == null)
-                                firstRejection = SpatialQueryReasons.ActionPointCostOverflow;
-                            continue;
-                        }
-                        nextCost = (int)pricedCost;
-                    }
-                    else
-                    {
-                        nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
-                    }
+                    int nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
                     if (nextCost > budgetUnits ||
                         (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))
                         continue;
                     costs[neighbor] = nextCost;
                     previous[neighbor] = currentEntry.Coord;
-                    if (movementEdges != null)
-                    {
-                        movementEdges[neighbor] = new SpatialMovementEdgeCost(
-                            currentEntry.Coord,
-                            neighbor,
-                            edge.MetricDistanceUnits,
-                            movementBurden);
-                    }
                     frontier.Add(new FrontierEntry(neighbor, nextCost));
                 }
             }
-            return new TraversalResult(costs, previous, movementEdges, firstRejection);
+            return new TraversalResult(costs, previous, firstRejection);
         }
 
         private static FrontierEntry DequeueMinimum(List<FrontierEntry> frontier)
@@ -559,6 +672,28 @@ namespace TianZhang.Spatial
             }
         }
 
+        private readonly struct PoseFrontierEntry : IComparable<PoseFrontierEntry>
+        {
+            public PoseFrontierEntry(SpatialPose pose, int cost) { Pose = pose; Cost = cost; }
+            public SpatialPose Pose { get; }
+            public int Cost { get; }
+            public int CompareTo(PoseFrontierEntry other)
+            {
+                int compare = Cost.CompareTo(other.Cost);
+                if (compare != 0) return compare;
+                compare = CompareCells(Pose.Anchor, other.Pose.Anchor);
+                return compare != 0 ? compare : Pose.Facing.CompareTo(other.Pose.Facing);
+            }
+        }
+
+        private sealed class PoseTraversalResult
+        {
+            public readonly Dictionary<SpatialPose, int> Costs = new Dictionary<SpatialPose, int>();
+            public readonly Dictionary<SpatialPose, SpatialMovementStep> Previous = new Dictionary<SpatialPose, SpatialMovementStep>();
+            public SpatialPose? Destination;
+            public string FirstRejection;
+        }
+
         /// <summary>
         /// 统一行动力公共合同 §四的定点 AP 边权：每条正费合法边的 u = max(1, floor(AP_ref × S × d_e × 1000 / (K × v_milli)))。
         /// 中间量用 checked long；d_e 不可表示为 int 或费用超过 int 时返回 false，由调用方稳定拒绝。
@@ -606,18 +741,15 @@ namespace TianZhang.Spatial
             public TraversalResult(
                 Dictionary<HexCoord, int> costs,
                 Dictionary<HexCoord, HexCoord> previous,
-                Dictionary<HexCoord, SpatialMovementEdgeCost> movementEdges,
                 string firstRejection)
             {
                 Costs = costs;
                 Previous = previous;
-                MovementEdges = movementEdges;
                 FirstRejection = firstRejection;
             }
 
             public Dictionary<HexCoord, int> Costs { get; }
             public Dictionary<HexCoord, HexCoord> Previous { get; }
-            public Dictionary<HexCoord, SpatialMovementEdgeCost> MovementEdges { get; }
             public string FirstRejection { get; }
         }
     }

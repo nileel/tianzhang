@@ -67,15 +67,15 @@ namespace TianZhang.Features.CombatPresentation
             RefreshInspectionMarker();
         }
 
-        /// <summary>One ground ring follows the inspected unit; the old screen box and base ring are gone.</summary>
+        /// <summary>Tile-body rings follow every occupied cell of the inspected unit.</summary>
         private void RefreshInspectionMarker()
         {
             if (movementView == null) return;
-            CombatUnitPresentationHex? cell = null;
+            CombatUnitPresentationPose? pose = null;
             if (InspectedTargetId != null && unitProvider != null &&
-                unitProvider.TryGetPresentedPosition(InspectedTargetId, out CombatUnitPresentationHex presented))
-                cell = presented;
-            movementView.SetInspectionHighlight(cell);
+                unitProvider.TryGetPresentedPose(InspectedTargetId, out CombatUnitPresentationPose presented))
+                pose = presented;
+            movementView.SetInspectionPose(pose);
         }
 
         private void LateUpdate()

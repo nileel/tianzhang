@@ -28,28 +28,34 @@ namespace TianZhang.Tests
         [Test]
         public void AdventureImporterKeepsIndependentAdditionalEnemyAndRejectsAmbiguousDeclarations()
         {
-            const string header = "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies";
+            const string header = "adventureId,displayNameKey,contentScope,nodeId,nodeTypeId,q,r,contentId,additionalEnemies,enemyFacing";
             const string row = "test,name,scope,encounter,adventure_node_encounter,3,5,enemy_shijiahou,";
             // The first token is the enemy content id; instance ids stay the stable enemy_2, enemy_3 order.
             var maps = TianZhang.Editor.AdventureContentImporter.Parse(
-                new[] { header, row + "enemy_lieshijia@4:5|enemy_shijiahou@4:4" }, "test");
+                new[] { header, row + "enemy_lieshijia@4:5:2|enemy_shijiahou@4:4:3,2" }, "test");
             AdventureEnemySpawnData[] extras = maps[0].nodes[0].additionalEnemies;
             CollectionAssert.AreEqual(new[] { "enemy_2", "enemy_3" }, extras.Select(extra => extra.instanceId));
             CollectionAssert.AreEqual(new[] { "enemy_lieshijia", "enemy_shijiahou" }, extras.Select(extra => extra.enemyId));
             Assert.AreEqual(4, extras[0].q);
             Assert.AreEqual(5, extras[0].r);
+            Assert.AreEqual(2, extras[0].facing);
+            Assert.AreEqual(3, extras[1].facing);
+            Assert.AreEqual(2, maps[0].nodes[0].enemyFacing);
             UnityEngine.Object.DestroyImmediate(maps[0]);
             foreach (string value in new[]
             {
-                "enemy_lieshijia@3:5",                       // main enemy coordinate
-                "enemy_lieshijia@4:5|enemy_shijiahou@4:5",   // duplicate coordinate
-                "Enemy_Lieshijia@4:5",                       // unstable id
-                "@4:5",                                      // missing content id
-                "enemy_lieshijia@x:5",                       // invalid coordinate
+                "enemy_lieshijia@3:5:2",                       // main enemy coordinate
+                "enemy_lieshijia@4:5:2|enemy_shijiahou@4:5:3",   // duplicate coordinate
+                "Enemy_Lieshijia@4:5:2",                       // unstable id
+                "enemy_lieshijia@4:5",                       // missing facing
+                "enemy_lieshijia@4:5:6",                     // invalid facing
+                "enemy_lieshijia@4:5:2147483648",            // overflow
+                "@4:5:2",                                      // missing content id
+                "enemy_lieshijia@x:5:2",                       // invalid coordinate
             })
-                Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + value }, "test"), value);
+                Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(new[] { header, row + value + ",2" }, "test"), value);
             Assert.Throws<InvalidOperationException>(() => TianZhang.Editor.AdventureContentImporter.Parse(
-                new[] { header, row.Replace("adventure_node_encounter", "adventure_node_start") + "enemy_lieshijia@4:5" }, "test"));
+                new[] { header, row.Replace("adventure_node_encounter", "adventure_node_start") + "enemy_lieshijia@4:5:2," }, "test"));
         }
 
         [Test]

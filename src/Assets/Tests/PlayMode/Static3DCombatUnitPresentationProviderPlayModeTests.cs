@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using TianZhang.Features.CombatPresentation;
@@ -173,6 +174,151 @@ namespace TianZhang.Tests.PlayMode
             host.SetActive(false);
             Assert.IsFalse(provider.IsPresenting);
             Assert.AreEqual(0, provider.ActiveCombatantCount);
+            UnityEngine.Object.Destroy(host);
+            yield return null;
+        }
+
+        [Test]
+        public void DoubleCellPoseContractPreservesBothShortestHalfTurnsAndRejectsLongTurns()
+        {
+            var from = new CombatUnitPresentationPose(new CombatUnitPresentationHex(2, 2), 0, true);
+            var to = new CombatUnitPresentationPose(new CombatUnitPresentationHex(1, 2), 3, true);
+            Assert.AreEqual(2, from.OccupiedCells.Count);
+            Assert.IsTrue(from.Occupies(from.Position));
+            Assert.IsTrue(from.Occupies(from.Rear));
+            Assert.AreEqual(to.Position, from.Rear);
+            var clockwise = new CombatUnitPresentationMovementStep(from, to, new[] { 1, 2, 3 });
+            var counterclockwise = new CombatUnitPresentationMovementStep(from, to, new[] { 5, 4, 3 });
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, clockwise.TurnFacings);
+            CollectionAssert.AreEqual(new[] { 5, 4, 3 }, counterclockwise.TurnFacings);
+            Assert.AreEqual(clockwise, new CombatUnitPresentationMovementStep(from, to, new[] { 1, 2, 3 }));
+            Assert.AreNotEqual(clockwise, counterclockwise, "Opposite half-turn routes must invalidate a stale quote.");
+            var candidate = new CombatActionCandidate(CombatActionKind.Move, "enemy", null, null, 1,
+                destination: to.Position, destinationFacing: to.Facing, movementSteps: new[] { clockwise });
+            Assert.AreEqual(3, candidate.DestinationFacing);
+            Assert.AreEqual(clockwise, candidate.MovementSteps[0]);
+            Assert.Throws<ArgumentException>(() => new CombatUnitPresentationMovementStep(from, to));
+            Assert.Throws<ArgumentException>(() => new CombatUnitPresentationMovementStep(from, to, new[] { 1, 0, 3 }));
+            Assert.Throws<ArgumentException>(() => new CombatUnitPresentationMovementStep(from,
+                new CombatUnitPresentationPose(new CombatUnitPresentationHex(3, 1), 1, true), new[] { 5, 4, 3, 2, 1 }));
+            Assert.Throws<ArgumentException>(() => new CombatUnitPresentationTargetResult("enemy", 1, false,
+                sourceCell: from.Position));
+            var contact = new CombatUnitPresentationTargetResult("enemy", 1, false,
+                sourceCell: from.Position, targetCell: to.Position);
+            Assert.AreEqual(to.Position, contact.TargetCell);
+        }
+
+        [UnityTest]
+        public IEnumerator DoubleCellProfilesCenterOnBothCellsAndKeepBodyFacingDuringFeedback()
+        {
+            var host = new GameObject("DoubleCellProfilesTest");
+            var provider = host.AddComponent<Static3DCombatUnitPresentationProvider>();
+            var profiles = LoadProfileSet();
+            SetPrivateField(provider, "profileSet", profiles);
+            foreach (string profileId in new[] { Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId,
+                Static3DCombatUnitPresentationProfileSet.LieshijiaProfileId })
+            {
+                Assert.IsTrue(profiles.TryGetProfile(profileId, out var profile));
+                float scale = Mathf.Min(1.8f / (profile.approvedBoundsMax.z - profile.approvedBoundsMin.z),
+                    .9f / (profile.approvedBoundsMax.x - profile.approvedBoundsMin.x));
+                for (int facing = 0; facing < 6; facing++)
+                {
+                    var descriptor = new CombatUnitPresentationDescriptor("enemy", profileId,
+                        CombatUnitDisplayFaction.Enemy, new CombatUnitPresentationHex(3, 3), facing, true);
+                    provider.Prepare(new[] { descriptor });
+                    Assert.IsTrue(provider.TryGetPresentedUnit("enemy", out GameObject root));
+                    Assert.IsTrue(provider.TryGetPresentedPose("enemy", out var pose));
+                    Assert.AreEqual(descriptor.Pose, pose);
+                    Assert.Less(Vector3.Distance(Static3DCombatUnitPresentationProvider.PoseToWorld(pose),
+                        root.transform.position), .00001f);
+                    Assert.Less(Vector3.Distance(root.transform.forward,
+                        (Static3DCombatUnitPresentationProvider.HexToWorld(pose.Position) -
+                         Static3DCombatUnitPresentationProvider.HexToWorld(pose.Rear)).normalized), .00001f);
+                    Assert.Less(Vector3.Distance(Vector3.one * scale, FindBody(root).localScale), .00001f);
+                    foreach (CombatUnitPresentationEvent action in new[] { CombatUnitPresentationEvent.Attack,
+                        CombatUnitPresentationEvent.Cast, CombatUnitPresentationEvent.Hit })
+                    {
+                        provider.Present(new CombatUnitPresentationEventProjection("enemy", action, pose.Position,
+                            pose.Position, (facing + 3) % 6, new[] { new CombatUnitPresentationTargetResult(
+                                "enemy", 1, false, sourceCell: new CombatUnitPresentationHex(0, 0), targetCell: pose.Rear) }));
+                        AssertYaw(root, profile.sixDirectionYawDegrees[facing]);
+                        Assert.AreEqual(.34f, FindBody(root).GetComponentInChildren<MeshRenderer>().bounds.min.y, .001f);
+                        Assert.IsTrue(provider.TryGetPresentedPose("enemy", out var after));
+                        Assert.AreEqual(pose, after, "Feedback cannot rotate the committed footprint.");
+                        if (action == CombatUnitPresentationEvent.Hit)
+                        {
+                            var feedback = (HashSet<GameObject>)typeof(Static3DCombatUnitPresentationProvider)
+                                .GetField("transientFeedback", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(provider);
+                            int impacts = 0;
+                            foreach (GameObject effect in feedback)
+                                if (effect != null && effect.name == "GuanzhongCombatFeedback_Hit_Vfx")
+                                {
+                                    Assert.Less(Vector3.Distance(effect.transform.position,
+                                        Static3DCombatUnitPresentationProvider.HexToWorld(pose.Rear) + Vector3.up * .22f), .001f);
+                                    impacts++;
+                                }
+                            Assert.AreEqual(1, impacts, "A hit uses the selected rear contact cell once.");
+                        }
+                        yield return new WaitForSeconds(.25f);
+                    }
+                    Assert.AreEqual(Vector3.one, root.transform.localScale);
+                    provider.Clear();
+                    yield return null;
+                }
+            }
+            UnityEngine.Object.Destroy(host);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator DoubleCellMoveFollowsChosenHalfTurnAroundFrontBeforeAdvancing()
+        {
+            var host = new GameObject("DoubleCellMoveTest");
+            var provider = host.AddComponent<Static3DCombatUnitPresentationProvider>();
+            SetPrivateField(provider, "profileSet", LoadProfileSet());
+            foreach (int[] turns in new[] { new[] { 1, 2, 3 }, new[] { 5, 4, 3 } })
+            {
+                var descriptor = new CombatUnitPresentationDescriptor("enemy",
+                    Static3DCombatUnitPresentationProfileSet.ShijiahouProfileId, CombatUnitDisplayFaction.Enemy,
+                    new CombatUnitPresentationHex(2, 2), 0, true);
+                var destination = new CombatUnitPresentationPose(new CombatUnitPresentationHex(1, 2), 3, true);
+                provider.Prepare(new[] { descriptor });
+                Assert.IsTrue(provider.TryGetPresentedUnit("enemy", out GameObject root));
+                var step = new CombatUnitPresentationMovementStep(descriptor.Pose, destination, turns);
+                Assert.Throws<InvalidOperationException>(() => provider.Present(new CombatUnitPresentationEventProjection(
+                    "enemy", CombatUnitPresentationEvent.Move, descriptor.Position, destination.Position, 3, null,
+                    new[] { destination.Position })));
+                provider.Present(new CombatUnitPresentationEventProjection("enemy", CombatUnitPresentationEvent.Move,
+                    descriptor.Position, destination.Position, 3, null, new[] { destination.Position }, movementSteps: new[] { step }));
+                Vector3 front = Static3DCombatUnitPresentationProvider.HexToWorld(descriptor.Position);
+                float turned = 0f;
+                float previousYaw = root.transform.eulerAngles.y;
+                int rotationSamples = 0;
+                while (provider.IsPresenting)
+                {
+                    yield return null;
+                    float yaw = root.transform.eulerAngles.y;
+                    float change = Mathf.DeltaAngle(previousYaw, yaw);
+                    if (Mathf.Abs(change) > .001f)
+                    {
+                        Assert.AreEqual(turns[0] == 1 ? 1 : -1, Math.Sign(change), "Must preserve the authority's chosen 180-degree route.");
+                        turned += Mathf.Abs(change);
+                        Assert.Less(Vector3.Distance(front, root.transform.position + root.transform.forward * .5f), .001f,
+                            "The front cell stays fixed throughout each sixty-degree turn.");
+                        rotationSamples++;
+                    }
+                    previousYaw = yaw;
+                    Assert.AreEqual(.34f, root.transform.position.y, .0001f);
+                    Assert.AreEqual(.34f, FindBody(root).GetComponentInChildren<MeshRenderer>().bounds.min.y, .001f);
+                }
+                Assert.Greater(rotationSamples, 2);
+                Assert.AreEqual(180f, turned, .01f);
+                Assert.IsTrue(provider.TryGetPresentedPose("enemy", out var actual));
+                Assert.AreEqual(destination, actual);
+                Assert.Less(Vector3.Distance(Static3DCombatUnitPresentationProvider.PoseToWorld(destination), root.transform.position), .0001f);
+                provider.Clear();
+                yield return null;
+            }
             UnityEngine.Object.Destroy(host);
             yield return null;
         }

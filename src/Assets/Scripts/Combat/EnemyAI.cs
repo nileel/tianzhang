@@ -88,31 +88,9 @@ namespace TianZhang.Combat
             if (!CombatAIQuery.TryActor(session, legalActions, out CombatantSnapshot actor))
                 return CombatAIQuery.Fallback(legalActions);
 
-            var targets = CombatAIQuery.BuildTargets(session, actor);
-            if (targets.Count == 0)
-                return CombatAIQuery.Fallback(legalActions);
-
-            int current = CombatAIQuery.PathDistanceToNearest(session, actor, actor.Position, targets);
-            if (current == int.MaxValue)
-                return CombatAIQuery.Fallback(legalActions);
-
             CombatAIQuery.GetFiringRange(session, actor, out int minimum, out int maximum);
-
-            if (current < minimum)
-            {
-                CombatCommand retreat = CombatAIQuery.ChooseBestMove(session, actor, legalActions, targets,
-                    distance => distance > current ? distance : int.MinValue);
-                if (retreat != null)
-                    return retreat;
-            }
-            else if (current > maximum)
-            {
-                CombatCommand approach = CombatAIQuery.ChooseBestMove(session, actor, legalActions, targets,
-                    distance => distance >= current ? int.MinValue :
-                        distance >= minimum && distance <= maximum ? 1000 + distance : -distance);
-                if (approach != null)
-                    return approach;
-            }
+            CombatCommand reposition = CombatAIQuery.ChooseApproach(session, actor, legalActions, minimum, maximum);
+            if (reposition != null) return reposition;
 
             CombatCommand melee = CombatAIQuery.Pick(legalActions, CombatCommandKind.BasicAttack);
             return melee ?? CombatAIQuery.Fallback(legalActions);
@@ -153,22 +131,6 @@ namespace TianZhang.Combat
             return false;
         }
 
-        public static List<ApproachTarget> BuildTargets(CombatSession session, CombatantSnapshot actor)
-        {
-            var targets = new List<ApproachTarget>();
-            foreach (CombatantSnapshot enemy in session.Combatants.All)
-            {
-                if (!enemy.IsAlive || enemy.Team == actor.Team) continue;
-                // Other living units block the approach; the target's own cell does not.
-                HexCoord[] blocked = session.Combatants.All
-                    .Where(unit => unit.IsAlive && unit.Id != actor.Id && unit.Id != enemy.Id)
-                    .Select(unit => unit.Position)
-                    .ToArray();
-                targets.Add(new ApproachTarget(enemy, blocked));
-            }
-            return targets;
-        }
-
         public static void GetFiringRange(CombatSession session, CombatantSnapshot actor,
             out int minimum, out int maximum)
         {
@@ -194,72 +156,46 @@ namespace TianZhang.Combat
                 return null;
             if (!TryActor(session, moves, out CombatantSnapshot actor))
                 return null;
-            var targets = BuildTargets(session, actor);
-            if (targets.Count == 0)
-                return null;
-            int current = PathDistanceToNearest(session, actor, actor.Position, targets);
-            if (current == int.MaxValue)
-                return null;
-            return ChooseBestMove(session, actor, legalActions, targets,
-                distance => distance < current ? -distance : int.MinValue);
+            if (!session.TryGetProfile(actor.BasicAttackProfileId, out var profile)) return null;
+            return ChooseApproach(session, actor, legalActions, profile.MinimumRange, profile.MaximumRange);
         }
 
-        /// <summary>Picks the legal move with the highest score; ties keep the first admitted move.</summary>
-        public static CombatCommand ChooseBestMove(
+        /// <summary>Walk toward an actual legal firing pose, keeping both body cells clear.
+        /// Ranking uses the same AP path and contact metric as execution, including detours and retreat.</summary>
+        public static CombatCommand ChooseApproach(
             CombatSession session,
             CombatantSnapshot actor,
             IReadOnlyList<CombatCommand> legalActions,
-            IReadOnlyList<ApproachTarget> targets,
-            Func<int, int> score)
+            int minimum, int maximum)
         {
-            CombatCommand best = null;
-            int bestScore = int.MinValue;
-            foreach (CombatCommand move in legalActions)
+            var moves = legalActions.Where(action => action.Kind == CombatCommandKind.Move).ToArray();
+            if (moves.Length == 0) return null;
+            var targets = session.Combatants.All.Where(unit => unit.IsAlive && unit.Team != actor.Team)
+                .OrderBy(unit => unit.Id, StringComparer.Ordinal).ToArray();
+            bool CanEngage(SpatialPose pose) => targets.Any(target =>
+                session.SpatialQuery.QueryRange(pose, target.Pose, minimum, maximum).IsInRange);
+            if (targets.Length == 0 || CanEngage(actor.Pose)) return null;
+            var occupied = session.GetOccupiedPositionsExcept(actor.Id);
+            var reachable = session.SpatialQuery.FindReachable(actor.Pose, ApproachBudgetUnits,
+                actor.MovementEfficiencyMilliUnits, occupied);
+            foreach (var entry in reachable.OrderBy(pair => pair.Value).ThenBy(pair => pair.Key.Anchor.Q)
+                         .ThenBy(pair => pair.Key.Anchor.R).ThenBy(pair => pair.Key.Facing))
             {
-                if (move.Kind != CombatCommandKind.Move || !move.Destination.HasValue) continue;
-                int distance = PathDistanceToNearest(session, actor, move.Destination.Value, targets);
-                if (distance == int.MaxValue) continue;
-                int value = score(distance);
-                if (value == int.MinValue || value <= bestScore) continue;
-                bestScore = value;
-                best = move;
+                if (entry.Key.Anchor == actor.Position || !CanEngage(entry.Key)) continue;
+                CombatMovementQueryResult route = session.SpatialQuery.QueryMovement(actor.Pose, entry.Key.Anchor,
+                    ApproachBudgetUnits, actor.MovementEfficiencyMilliUnits, occupied, entry.Key.Facing);
+                if (!route.IsReachable) continue;
+                CombatCommand best = null;
+                foreach (SpatialMovementStep step in route.Steps)
+                {
+                    var admitted = moves.FirstOrDefault(move => move.Destination == step.To.Anchor &&
+                        move.DestinationFacing == step.To.Facing);
+                    if (admitted == null) break;
+                    best = admitted;
+                }
+                return best;
             }
-            return best;
-        }
-
-        /// <summary>
-        /// Hop count of the authoritative path to the closest living hostile. Terrain and every
-        /// other living unit block the route; only the target's own cell stays measurable.
-        /// </summary>
-        public static int PathDistanceToNearest(
-            CombatSession session,
-            CombatantSnapshot actor,
-            HexCoord origin,
-            IReadOnlyList<ApproachTarget> targets)
-        {
-            int best = int.MaxValue;
-            foreach (ApproachTarget target in targets)
-            {
-                CombatMovementQueryResult path = session.SpatialQuery.QueryMovement(
-                    origin, target.Enemy.Position, ApproachBudgetUnits, actor.MovementEfficiencyMilliUnits,
-                    target.Blocked);
-                int distance = path.IsReachable && path.Path.Count > 0 ? path.Path.Count : int.MaxValue;
-                if (distance < best)
-                    best = distance;
-            }
-            return best;
-        }
-
-        public sealed class ApproachTarget
-        {
-            public ApproachTarget(CombatantSnapshot enemy, HexCoord[] blocked)
-            {
-                Enemy = enemy;
-                Blocked = blocked;
-            }
-
-            public CombatantSnapshot Enemy { get; }
-            public HexCoord[] Blocked { get; }
+            return null;
         }
     }
 }

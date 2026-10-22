@@ -39,6 +39,7 @@ namespace TianZhang.Editor
             "phenomenonPairs",
             "elementRelationRefs",
             "spiritRecoveryEnvironment",
+            "edgeClearanceLimits",
         };
 
         private static readonly string[] CharterRuleDefinitionColumns =
@@ -171,6 +172,8 @@ namespace TianZhang.Editor
                 CsvTableReader.GetRequiredValue(headers, cols, "battlefieldCells", sourceName),
                 sourceName);
             var directedEdges = BuildDirectedEdges(battlefieldCells, unitsPerRange);
+            ApplyEdgeClearanceLimits(
+                CsvTableReader.GetRequiredValue(headers, cols, "edgeClearanceLimits", sourceName), directedEdges, sourceName);
             var surfacePrototypeRefs = ParseReferenceList(
                 CsvTableReader.GetRequiredValue(headers, cols, "surfacePrototypeRefs", sourceName),
                 '|',
@@ -294,6 +297,31 @@ namespace TianZhang.Editor
                 });
             }
             return edges.ToArray();
+        }
+
+        private static void ApplyEdgeClearanceLimits(string raw, EnvironmentDirectedEdge[] edges, string sourceName)
+        {
+            if (raw == "none") return;
+            var indices = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < edges.Length; i++)
+            {
+                EnvironmentDirectedEdge edge = edges[i];
+                indices.Add($"{edge.fromQ}:{edge.fromR}>{edge.toQ}:{edge.toR}", i);
+            }
+            var assigned = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string entry in SplitRequired(raw, '|', sourceName, "edgeClearanceLimits"))
+            {
+                string[] parts = entry.Split('@');
+                string[] endpoints = parts[0].Split('>');
+                if (parts.Length != 2 || endpoints.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid edgeClearanceLimits entry '{entry}'.");
+                ParseHexCoordinate(endpoints[0], sourceName + " edgeClearanceLimits", out int fromQ, out int fromR);
+                ParseHexCoordinate(endpoints[1], sourceName + " edgeClearanceLimits", out int toQ, out int toR);
+                string key = $"{fromQ}:{fromR}>{toQ}:{toR}";
+                if (!indices.TryGetValue(key, out int index) || !assigned.Add(key))
+                    throw new InvalidDataException($"{sourceName} edgeClearanceLimits must reference unique generated directed edges: '{key}'.");
+                edges[index].clearanceLimit = ParsePositiveInteger(parts[1], sourceName, "edgeClearanceLimits");
+            }
         }
 
         private static bool ParseBinaryFlag(string raw, string sourceName, string fieldName)

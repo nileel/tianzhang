@@ -336,9 +336,10 @@ sealed class HexBattlefield
             .OrderBy(coord => coord.Q).ThenBy(coord => coord.R).Select(coord => $"{coord.Q},{coord.R}"));
         var key = (start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupancy);
         if (actionReachableCache.TryGetValue(key, out var cached)) return cached;
-        var result = spatialBoard.FindReachableWithinActionPoints(ToSpatial(start), actionPointBudgetUnits,
+        var result = spatialBoard.FindReachableWithinActionPoints(new SharedSpatial.SpatialPose(ToSpatial(start)), actionPointBudgetUnits,
             movementEfficiencyMilliUnits, occupied?.Select(ToSpatial).ToArray())
-            .ToDictionary(entry => FromSpatial(entry.Key), entry => entry.Value);
+            .GroupBy(entry => FromSpatial(entry.Key.Anchor))
+            .ToDictionary(group => group.Key, group => group.Min(entry => entry.Value));
         actionReachableCache.Add(key, result);
         return result;
     }
@@ -346,7 +347,7 @@ sealed class HexBattlefield
     internal SharedSpatial.SpatialMovementPathResult QueryMovementPath(
         HexCoord start, HexCoord target, int actionPointBudgetUnits, int movementEfficiencyMilliUnits,
         IReadOnlyCollection<HexCoord> occupied = null) => spatialBoard.QueryMovementPath(
-        ToSpatial(start), ToSpatial(target), actionPointBudgetUnits, movementEfficiencyMilliUnits,
+        new SharedSpatial.SpatialPose(ToSpatial(start)), ToSpatial(target), actionPointBudgetUnits, movementEfficiencyMilliUnits,
         occupied?.Select(ToSpatial).ToArray());
 
     public RangeQueryResult QueryRange(

@@ -304,7 +304,8 @@ namespace TianZhang.Tests.PlayMode
             var bar = Find<CombatActionBarView>();
             // Use the formal reachable/quoted route to stand beside both existing enemies.
             CombatMovementOption option = presenter.Snapshot.Movement.Options.First(move => spawned.Enemies.All(enemy =>
-                new HexCoord(move.Destination.Q, move.Destination.R).Distance(enemy.Position) == 1));
+                session.SpatialQuery.QueryRange(
+                    spawned.Player.Pose.WithAnchor(new HexCoord(move.Destination.Q, move.Destination.R)), enemy.Pose, 1, 1).IsInRange));
             bar.ArtButton.onClick.Invoke();
             yield return PointArt(session, spawned.Enemy.Id);
             encounter.RequestMove(spawned.Player.Id, option.Destination.Q, option.Destination.R);
@@ -853,24 +854,27 @@ namespace TianZhang.Tests.PlayMode
             return Camera.main.WorldToScreenPoint(bounds.center);
         }
 
-        /// <summary>One ground ring at the tile body top; the old screen box and base circle are gone.</summary>
+        /// <summary>Every occupied cell gets one ground ring at the tile body's top.</summary>
         private void AssertInspectionRing(string id)
         {
             CombatMovementView movement = Find<CombatMovementView>();
             Assert.AreEqual(id, presenter.InspectedTargetId);
-            Assert.IsTrue(provider.TryGetPresentedPosition(id, out CombatUnitPresentationHex cell),
-                "The inspected unit must have a presented cell.");
-            Assert.That(movement.InspectionCell, Is.EqualTo(cell));
-            Assert.IsTrue(movement.InspectionRing.gameObject.activeSelf);
-            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
-                "GuanzhongHex_" + cell.Q + "_" + cell.R);
-            Assert.NotNull(tile);
-            Vector3 center = Enumerable.Range(0, 6).Select(movement.InspectionRing.GetPosition)
-                .Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
-            Assert.That(center.x, Is.EqualTo(tile.position.x).Within(.001f));
-            Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
-            Assert.That(center.y, Is.EqualTo(TileBodyTop(tile) + .01f).Within(.001f),
-                "The inspection ring must sit on the tile body, not the unit or an obstacle.");
+            Assert.IsTrue(provider.TryGetPresentedPose(id, out CombatUnitPresentationPose pose));
+            Assert.That(movement.InspectionCell, Is.EqualTo(pose.Position));
+            Assert.AreEqual(pose.IsDoubleCell ? 2 : 1, movement.InspectionRings.Count(ring => ring.gameObject.activeSelf));
+            for (int index = 0; index < pose.OccupiedCells.Count; index++)
+            {
+                CombatUnitPresentationHex cell = pose.OccupiedCells[index];
+                Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + cell.Q + "_" + cell.R);
+                Assert.NotNull(tile);
+                Vector3 center = Enumerable.Range(0, 6).Select(movement.InspectionRings[index].GetPosition)
+                    .Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
+                Assert.That(center.x, Is.EqualTo(tile.position.x).Within(.001f));
+                Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
+                Assert.That(center.y, Is.EqualTo(TileBodyTop(tile) + .01f).Within(.001f),
+                    "The inspection ring must sit on the tile body, not the unit or an obstacle.");
+                Assert.AreEqual(id, Find<CombatTargetInput>().FindUnitAtCell(cell));
+            }
         }
 
         /// <summary>Tile body top only: the unit carrier and rocks share the cell root.</summary>

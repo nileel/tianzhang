@@ -7,6 +7,7 @@ using TianZhang.Combat;
 using TianZhang.Content;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Spatial;
 using UnityEngine;
 
 namespace TianZhang.Features.Adventure
@@ -331,14 +332,18 @@ namespace TianZhang.Features.Adventure
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
                 candidate.Kind == CombatActionKind.Move ? preview?.MovementPath.Select(ToPresentationHex).ToArray() : null,
-                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, command.AttackDirection);
+                candidate.SlotIndex, candidate.EquipmentSlotId, candidate.ItemId, candidate.InstanceId, command.AttackDirection,
+                command.DestinationFacing, preview?.MovementSteps.Select(ToPresentationStep).ToArray());
             CombatantSnapshot actor = null, quotedTarget = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
             session?.Combatants.TryGet(command.TargetId, out quotedTarget);
-            // Presentation-only distance for the compact preview; it comes from the same authority
-            // positions the legal quote used and never feeds back into validation.
-            int targetDistance = actor == null || quotedTarget == null ? -1
-                : actor.Position.Distance(quotedTarget.Position);
+            float targetDistance = -1;
+            if (actor != null && quotedTarget != null)
+            {
+                SpatialContactResult contact = session.SpatialQuery.QueryRange(actor.Pose, quotedTarget.Pose, 0, 0);
+                if (contact.DistanceUnits >= 0 && contact.UnitsPerRange > 0)
+                    targetDistance = contact.DistanceUnits / (float)contact.UnitsPerRange;
+            }
             CombatAttackProfile profile = null;
             session?.TryGetProfile(command.ProfileId, out profile);
             CombatAttackRuleMetadata metadata = profile?.RuleMetadata;
@@ -400,7 +405,8 @@ namespace TianZhang.Features.Adventure
             {
                 CombatCommandPreview quote = commandService.Preview(session, ToCommand(candidate));
                 if (!quote.IsLegal || candidate.MovementCostUnits != quote.ActionPointCostUnits ||
-                    !candidate.MovementPath.SequenceEqual(quote.MovementPath.Select(ToPresentationHex)))
+                    !candidate.MovementPath.SequenceEqual(quote.MovementPath.Select(ToPresentationHex)) ||
+                    !SameMovementSteps(candidate.MovementSteps, quote.MovementSteps))
                 {
                     presentation?.AppendLog("移动状态已变化，请重新选择");
                     Present("移动状态已变化", true);
@@ -458,7 +464,7 @@ namespace TianZhang.Features.Adventure
             return new CombatCommand(kind, candidate.ActorId, target, profile,
                 destination: destination, slotIndex: candidate.SlotIndex, contextVersion: candidate.ContextVersion,
                 equipmentSlotId: candidate.EquipmentSlotId, itemId: candidate.ItemId, instanceId: candidate.InstanceId,
-                attackDirection: direction);
+                attackDirection: direction, destinationFacing: candidate.DestinationFacing);
         }
 
         private string CurrentBasicProfile(string actorId) => session != null && session.Combatants.TryGet(actorId, out var actor)
@@ -597,7 +603,8 @@ namespace TianZhang.Features.Adventure
                     rolls,
                     command.Destination,
                     command.SlotIndex,
-                    command.ContextVersion, attackDirection: command.AttackDirection, targetRolls: targetRolls);
+                    command.ContextVersion, attackDirection: command.AttackDirection, targetRolls: targetRolls,
+                    destinationFacing: command.DestinationFacing);
             }
             CombatActionResult result;
             if (command.Kind == CombatCommandKind.UseItem)
@@ -679,18 +686,21 @@ namespace TianZhang.Features.Adventure
             if (acceptsCommands && player.ActionPointsRemainingUnits > 0)
             {
                 var occupied = session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != player.Id)
-                    .Select(unit => unit.Position).ToArray();
-                foreach (var cell in session.SpatialQuery.FindReachable(player.Position, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, occupied))
+                    .SelectMany(unit => unit.OccupiedCells).ToArray();
+                foreach (var cell in session.SpatialQuery.FindReachable(player.Pose, player.ActionPointsRemainingUnits, player.MovementEfficiencyMilliUnits, occupied)
+                             .OrderBy(pair => pair.Value).ThenBy(pair => pair.Key.Facing).GroupBy(pair => pair.Key.Anchor).Select(group => group.First()))
                 {
                     CombatCommandPreview quote = commandService.Preview(session, new CombatCommand(
-                        CombatCommandKind.Move, player.Id, destination: cell.Key));
+                        CombatCommandKind.Move, player.Id, destination: cell.Key.Anchor, destinationFacing: cell.Key.Facing));
                     if (quote.IsLegal)
                     {
                         var path = quote.MovementPath.Select(ToPresentationHex).ToArray();
-                        var destination = ToPresentationHex(cell.Key);
+                        var destination = ToPresentationHex(cell.Key.Anchor);
+                        var steps = quote.MovementSteps.Select(ToPresentationStep).ToArray();
                         options.Add(new CombatMovementOption(destination, quote.ActionPointCostUnits, path,
                             new CombatActionCandidate(CombatActionKind.Move, player.Id, null, null,
-                                commandContextVersion, destination, quote.ActionPointCostUnits, path)));
+                                commandContextVersion, destination, quote.ActionPointCostUnits, path,
+                                destinationFacing: cell.Key.Facing, movementSteps: steps), steps));
                     }
                 }
             }
@@ -858,7 +868,6 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
 
-            int playerFacing = values.Player.Position.DirectionTo(values.Enemy.Position);
             var result = new List<CombatUnitPresentationDescriptor>
             {
                 new CombatUnitPresentationDescriptor(
@@ -866,7 +875,7 @@ namespace TianZhang.Features.Adventure
                     playerProfileId,
                     CombatUnitDisplayFaction.Player,
                     ToPresentationHex(values.Player.Position),
-                    playerFacing < 0 ? 0 : playerFacing),
+                    values.Player.Facing),
             };
             for (int index = 0; index < values.Enemies.Count; index++)
             {
@@ -877,13 +886,12 @@ namespace TianZhang.Features.Adventure
                     reason = "adventure_presentation_profile_unresolved";
                     return false;
                 }
-                int enemyFacing = enemy.Position.DirectionTo(values.Player.Position);
                 result.Add(new CombatUnitPresentationDescriptor(
                     enemy.Id,
                     enemyProfileId,
                     CombatUnitDisplayFaction.Enemy,
                     ToPresentationHex(enemy.Position),
-                    enemyFacing < 0 ? 0 : enemyFacing));
+                    enemy.Facing, enemy.Footprint == SpatialFootprintKind.AdjacentPair));
             }
             descriptors = result;
             reason = null;
@@ -918,21 +926,28 @@ namespace TianZhang.Features.Adventure
                 // The actor event carries every affected target: heals for restored spirit and the
                 // damage group, so presentation can place one impact per affected unit without
                 // reading combat state. Individual Hit/Death events still follow separately.
+                CombatUnitPresentationTargetResult TargetResult(string id, int damage, bool dead, int recovered = 0)
+                {
+                    var contact = result.TargetContacts.FirstOrDefault(value => value.TargetId == id);
+                    return new CombatUnitPresentationTargetResult(id, damage, dead, recovered,
+                        contact.TargetId == null ? null : ToPresentationHex(contact.Contact.SourceCell),
+                        contact.TargetId == null ? null : ToPresentationHex(contact.Contact.TargetCell));
+                }
                 CombatUnitPresentationTargetResult[] affected = result.SpiritRecoveries
-                    .Select(value => new CombatUnitPresentationTargetResult(value.TargetId, 0, false, value.ActualRecovery))
+                    .Select(value => TargetResult(value.TargetId, 0, false, value.ActualRecovery))
                     .Concat(result.Damage.GroupBy(item => item.TargetId, StringComparer.Ordinal)
-                        .Select(group => new CombatUnitPresentationTargetResult(
+                        .Select(group => TargetResult(
                             group.Key, group.Sum(item => item.FinalDamage), false)))
                     .ToArray();
                 // Attack and cast turn the actor toward the action's target for presentation only;
                 // the authoritative combatant facing stays untouched.
                 int facing = actorBefore.Facing;
-                if (command.Kind == CombatCommandKind.BasicAttack &&
+                if (actorBefore.Footprint == SpatialFootprintKind.Single && command.Kind == CombatCommandKind.BasicAttack &&
                     command.AttackDirection is >= 0 and < 6)
                 {
                     facing = command.AttackDirection.Value;
                 }
-                else if (command.Kind is CombatCommandKind.Art or CombatCommandKind.Divine &&
+                else if (actorBefore.Footprint == SpatialFootprintKind.Single && command.Kind is CombatCommandKind.Art or CombatCommandKind.Divine &&
                          !string.IsNullOrWhiteSpace(command.TargetId) &&
                          !string.Equals(command.TargetId, actorBefore.Id, StringComparison.Ordinal) &&
                          session.Combatants.TryGet(command.TargetId, out CombatantSnapshot aimed) && aimed != null)
@@ -947,7 +962,7 @@ namespace TianZhang.Features.Adventure
                     facing,
                     affected,
                     result.MovementPath.Select(ToPresentationHex).ToArray(),
-                    profileId: command.ProfileId));
+                    profileId: command.ProfileId, movementSteps: result.MovementSteps.Select(ToPresentationStep).ToArray()));
 
                 foreach (var targetDamage in result.Damage.GroupBy(item => item.TargetId, StringComparer.Ordinal))
                 {
@@ -958,7 +973,7 @@ namespace TianZhang.Features.Adventure
                     unitPresentation.Present(new CombatUnitPresentationEventProjection(
                         target.Id, isDead ? CombatUnitPresentationEvent.Death : CombatUnitPresentationEvent.Hit,
                         ToPresentationHex(target.Position), ToPresentationHex(target.Position), target.Facing,
-                        new[] { new CombatUnitPresentationTargetResult(target.Id, finalDamage, isDead) }));
+                        new[] { TargetResult(target.Id, finalDamage, isDead) }));
                 }
             }
             catch (Exception exception)
@@ -969,6 +984,28 @@ namespace TianZhang.Features.Adventure
 
         private static CombatUnitPresentationHex ToPresentationHex(TianZhang.Spatial.HexCoord value) =>
             new CombatUnitPresentationHex(value.Q, value.R);
+
+        private static CombatUnitPresentationPose ToPresentationPose(SpatialPose pose) =>
+            new CombatUnitPresentationPose(ToPresentationHex(pose.Anchor), pose.Facing, pose.Footprint == SpatialFootprintKind.AdjacentPair);
+
+        private static CombatUnitPresentationMovementStep ToPresentationStep(SpatialMovementStep step) =>
+            new CombatUnitPresentationMovementStep(ToPresentationPose(step.From), ToPresentationPose(step.To), step.TurnFacings);
+
+        private static bool SameMovementSteps(IReadOnlyList<CombatUnitPresentationMovementStep> shown,
+            IReadOnlyList<SpatialMovementStep> quoted)
+        {
+            if (shown.Count != quoted.Count) return false;
+            for (int index = 0; index < shown.Count; index++)
+            {
+                var left = shown[index]; var right = quoted[index];
+                if (!left.From.Position.Equals(ToPresentationHex(right.From.Anchor)) || left.From.Facing != right.From.Facing ||
+                    left.From.IsDoubleCell != (right.From.Footprint == SpatialFootprintKind.AdjacentPair) ||
+                    !left.To.Position.Equals(ToPresentationHex(right.To.Anchor)) || left.To.Facing != right.To.Facing ||
+                    left.To.IsDoubleCell != (right.To.Footprint == SpatialFootprintKind.AdjacentPair) ||
+                    !left.TurnFacings.SequenceEqual(right.TurnFacings)) return false;
+            }
+            return true;
+        }
 
         /// <summary>Presentation-only facing: the neighbour step that best approaches the target cell.</summary>
         private static int FacingToward(TianZhang.Spatial.HexCoord from, TianZhang.Spatial.HexCoord to)

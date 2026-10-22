@@ -119,7 +119,10 @@ namespace TianZhang.Combat
             string visibleRootGrade = null,
             IEnumerable<CombatActionEconomyModifier> actionEconomyModifiers = null,
             IReadOnlyDictionary<string, string> abilityInstanceIds = null,
-            int? rawMind = null)
+            int? rawMind = null,
+            SpatialFootprintKind footprint = SpatialFootprintKind.Single,
+            int bodyScaleRank = 1,
+            int facing = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
@@ -136,6 +139,10 @@ namespace TianZhang.Combat
             Id = id;
             Team = team;
             Position = position;
+            var pose = new SpatialPose(position, facing, footprint, bodyScaleRank);
+            Footprint = pose.Footprint;
+            BodyScaleRank = pose.BodyScaleRank;
+            Facing = pose.Facing;
             Speed = speed;
             MaximumHealth = maximumHealth;
             CurrentHealth = currentHealth;
@@ -177,6 +184,10 @@ namespace TianZhang.Combat
         public string Id { get; }
         public CombatTeam Team { get; }
         public HexCoord Position { get; private set; }
+        public SpatialFootprintKind Footprint { get; }
+        public int BodyScaleRank { get; }
+        public SpatialPose Pose => new SpatialPose(Position, Facing, Footprint, BodyScaleRank);
+        public IReadOnlyList<HexCoord> OccupiedCells => Pose.OccupiedCells;
         public int Speed { get; }
         public int MaximumHealth { get; }
         public int CurrentHealth { get; private set; }

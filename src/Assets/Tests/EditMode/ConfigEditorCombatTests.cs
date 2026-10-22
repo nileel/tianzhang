@@ -143,7 +143,7 @@ namespace TianZhang.Tests.EditMode
             var cells = new Dictionary<HexCoord, SpatialCellRules> { [new HexCoord(0, 0)] = new SpatialCellRules(0, false, false, false, 0), [new HexCoord(1, 0)] = new SpatialCellRules(0, false, false, false, 0) };
             var edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules> { [new SpatialDirectedEdge(new HexCoord(0, 0), new HexCoord(1, 0))] = new SpatialEdgeRules(1000, true, true) };
             var board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(1000, 16));
-            Assert.That(board.QueryMovementPath(new HexCoord(0, 0), new HexCoord(1, 0), 100000, 3000).ActionPointCostUnits, Is.EqualTo(33333));
+            Assert.That(board.QueryMovementPath(new SpatialPose(new HexCoord(0, 0)), new HexCoord(1, 0), 100000, 3000).ActionPointCostUnits, Is.EqualTo(33333));
             var fraction = WithCell("CombatActionEconomyRules", "movementBudgetNumerator", "2");
             var key = fraction.Snapshot().Tables["CombatActionEconomyRules"].Rows.Keys.First();
             fraction.SetValue("CombatActionEconomyRules", key, "movementBudgetDenominator", ConfigValue.Scalar("8"));

@@ -22,6 +22,9 @@ namespace TianZhang.Editor.ConfigEditor
             pairs.Help = "三项现象均引用所选通道的类型；前两项为无序组合，结果含义保持不变。";
             var surface = WorldFields.List("surfacePrototypeRefs", "地表原型引用", WorldFields.Text("surface", "地表原型ID"), () => ConfigValue.Scalar("surface_new"));
             surface.Help = "原领域仅校验引用形状与唯一性，没有地表原型目录；不宣称已解析实际资产。";
+            var clearance = WorldFields.Text("edgeClearanceLimits", "有向边净空上限");
+            clearance.ReservedDelimiters = "~;=+";
+            clearance.Help = "无约束写none；每条使用fromQ:fromR>toQ:toR@正整数，以|分隔，反向边独立声明。";
             var fields = new[]
             {
                 WorldFields.Lock(WorldFields.Text("profileId", "环境档案ID"), "稳定档案ID不可修改"),
@@ -34,7 +37,7 @@ namespace TianZhang.Editor.ConfigEditor
                 surface, channels, pairs,
                 WorldFields.Lock(WorldFields.List("elementRelationRefs", "五行关系", WorldFields.Enum("element", "五行",
                     "element_wood", "木", "element_fire", "火", "element_earth", "土", "element_metal", "金", "element_water", "水"), () => ConfigValue.Scalar("element_wood")), "固定的五行关系集合，各出现一次，不由本工具改变规则"),
-                WorldFields.Enum("spiritRecoveryEnvironment", "回灵环境", "ordinary", "普通", "spirit_vein_node", "灵脉节点", "blessed_land", "福地")
+                WorldFields.Enum("spiritRecoveryEnvironment", "回灵环境", "ordinary", "普通", "spirit_vein_node", "灵脉节点", "blessed_land", "福地"), clearance
             };
             fields[2].Help = "编辑后按q、r排序；重复坐标拒绝。派生六邻接边仍由原导入器生成，格子阻挡不改写边标志。";
             yield return WorldFields.Table(TableId, "战场环境", "profileId", fields, this);
@@ -130,7 +133,7 @@ namespace TianZhang.Editor.ConfigEditor
                 }
                 catch (InvalidDataException e)
                 {
-                    var path = e.Message.Contains("battlefield") || e.Message.Contains("hex coordinate") || e.Message.Contains("binary flag") ? "battlefieldCells" :
+                    var path = e.Message.Contains("edgeClearanceLimits") ? "edgeClearanceLimits" : e.Message.Contains("battlefield") || e.Message.Contains("hex coordinate") || e.Message.Contains("binary flag") ? "battlefieldCells" :
                         e.Message.Contains("pair") ? "phenomenonPairs" : e.Message.Contains("channel") || e.Message.Contains("phenomenonChannels") ? "phenomenonChannels" :
                         e.Message.Contains("surfacePrototypeRefs") ? "surfacePrototypeRefs" : e.Message.Contains("element") ? "elementRelationRefs" :
                         e.Message.Contains("spiritRecoveryEnvironment") ? "spiritRecoveryEnvironment" : e.Message.Contains("profileId") ? "profileId" : "queryLimits";

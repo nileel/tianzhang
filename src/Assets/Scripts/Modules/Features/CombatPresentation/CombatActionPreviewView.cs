@@ -200,7 +200,7 @@ namespace TianZhang.Features.CombatPresentation
             if (value.Candidate.Kind == CombatActionKind.Art)
             {
                 text.Append(value.ActionName).Append(" → ").Append(value.TargetName);
-                if (value.TargetDistance >= 0) text.Append(" · 距离 ").Append(value.TargetDistance).Append(" 格");
+                if (value.TargetDistance >= 0) text.Append(" · 距离 ").Append(value.TargetDistance.ToString("0.###")).Append(" 格");
                 text.Append(" · 施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange).Append(" 格");
                 text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks)

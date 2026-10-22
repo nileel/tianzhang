@@ -21,9 +21,15 @@ namespace TianZhang.Gameplay.Contracts
         public CombatActionCandidate(CombatActionKind kind, string actorId, string targetId, string profileId, long contextVersion,
             CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1,
-            string equipmentSlotId = null, string itemId = null, string instanceId = null, int? attackDirection = null)
+            string equipmentSlotId = null, string itemId = null, string instanceId = null, int? attackDirection = null,
+            int? destinationFacing = null, IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null)
         {
+            if (destinationFacing.HasValue && (destinationFacing.Value < 0 || destinationFacing.Value >= 6))
+                throw new ArgumentOutOfRangeException(nameof(destinationFacing));
             Kind = kind;
+            DestinationFacing = destinationFacing;
+            MovementSteps = movementSteps == null ? Array.Empty<CombatUnitPresentationMovementStep>() :
+                new List<CombatUnitPresentationMovementStep>(movementSteps).AsReadOnly();
             AttackDirection = attackDirection;
             ActorId = actorId;
             TargetId = targetId;
@@ -38,6 +44,8 @@ namespace TianZhang.Gameplay.Contracts
         }
         public string EquipmentSlotId { get; }
         public int? AttackDirection { get; }
+        public int? DestinationFacing { get; }
+        public IReadOnlyList<CombatUnitPresentationMovementStep> MovementSteps { get; }
         public string ItemId { get; }
         public string InstanceId { get; }
         public CombatActionKind Kind { get; }
@@ -87,7 +95,7 @@ namespace TianZhang.Gameplay.Contracts
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
             string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
             string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null,
-            int minimumRange = 0, int maximumRange = 0, int targetDistance = -1)
+            int minimumRange = 0, int maximumRange = 0, float targetDistance = -1)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -153,8 +161,8 @@ namespace TianZhang.Gameplay.Contracts
         public CombatAttackAreaSnapshot AttackArea { get; }
         public int MinimumRange { get; }
         public int MaximumRange { get; }
-        /// <summary>Authoritative actor-to-target hex distance; -1 when the quote has no unit target.</summary>
-        public int TargetDistance { get; }
+        /// <summary>Authoritative weighted contact distance; -1 when the quote has no unit target.</summary>
+        public float TargetDistance { get; }
     }
 
     public enum CombatUnitPresentationEvent
@@ -194,7 +202,8 @@ namespace TianZhang.Gameplay.Contracts
             string presentationProfileId,
             CombatUnitDisplayFaction displayFaction,
             CombatUnitPresentationHex position,
-            int facing)
+            int facing,
+            bool isDoubleCell = false)
         {
             if (string.IsNullOrWhiteSpace(combatantId))
                 throw new ArgumentException("Combatant ID is required.", nameof(combatantId));
@@ -210,6 +219,7 @@ namespace TianZhang.Gameplay.Contracts
             DisplayFaction = displayFaction;
             Position = position;
             Facing = facing;
+            Pose = new CombatUnitPresentationPose(position, facing, isDoubleCell);
         }
 
         public string CombatantId { get; }
@@ -217,18 +227,25 @@ namespace TianZhang.Gameplay.Contracts
         public CombatUnitDisplayFaction DisplayFaction { get; }
         public CombatUnitPresentationHex Position { get; }
         public int Facing { get; }
+        public bool IsDoubleCell => Pose.IsDoubleCell;
+        public CombatUnitPresentationPose Pose { get; }
     }
 
     [Serializable]
     public sealed class CombatUnitPresentationTargetResult
     {
-        public CombatUnitPresentationTargetResult(string combatantId, int finalDamage, bool isDead, int restoredSpirit = 0)
+        public CombatUnitPresentationTargetResult(string combatantId, int finalDamage, bool isDead, int restoredSpirit = 0,
+            CombatUnitPresentationHex? sourceCell = null, CombatUnitPresentationHex? targetCell = null)
         {
             if (string.IsNullOrWhiteSpace(combatantId))
                 throw new ArgumentException("Combatant ID is required.", nameof(combatantId));
             if (finalDamage < 0 || restoredSpirit < 0)
                 throw new ArgumentOutOfRangeException(nameof(finalDamage));
 
+            if (sourceCell.HasValue != targetCell.HasValue)
+                throw new ArgumentException("Contact source and target cells must be supplied together.");
+            SourceCell = sourceCell;
+            TargetCell = targetCell;
             CombatantId = combatantId;
             FinalDamage = finalDamage;
             IsDead = isDead;
@@ -239,6 +256,8 @@ namespace TianZhang.Gameplay.Contracts
         public int FinalDamage { get; }
         public bool IsDead { get; }
         public int RestoredSpirit { get; }
+        public CombatUnitPresentationHex? SourceCell { get; }
+        public CombatUnitPresentationHex? TargetCell { get; }
     }
 
     [Serializable]
@@ -252,7 +271,8 @@ namespace TianZhang.Gameplay.Contracts
             int facing,
             IReadOnlyList<CombatUnitPresentationTargetResult> targetResults,
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null,
-            string profileId = null)
+            string profileId = null,
+            IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null)
         {
             if (string.IsNullOrWhiteSpace(actorCombatantId))
                 throw new ArgumentException("Actor combatant ID is required.", nameof(actorCombatantId));
@@ -268,6 +288,8 @@ namespace TianZhang.Gameplay.Contracts
             EndPosition = endPosition;
             Facing = facing;
             ProfileId = profileId;
+            MovementSteps = movementSteps == null ? Array.Empty<CombatUnitPresentationMovementStep>() :
+                new List<CombatUnitPresentationMovementStep>(movementSteps).AsReadOnly();
             TargetResults = targetResults == null
                 ? Array.Empty<CombatUnitPresentationTargetResult>()
                 : new List<CombatUnitPresentationTargetResult>(targetResults).AsReadOnly();
@@ -284,6 +306,7 @@ namespace TianZhang.Gameplay.Contracts
         /// <summary>Authoritative attack profile that produced this event; presentation-only.</summary>
         public string ProfileId { get; }
         public IReadOnlyList<CombatUnitPresentationTargetResult> TargetResults { get; }
+        public IReadOnlyList<CombatUnitPresentationMovementStep> MovementSteps { get; }
         public IReadOnlyList<CombatUnitPresentationHex> MovementPath { get; }
     }
 
@@ -296,8 +319,10 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatMovementOption
     {
         public CombatMovementOption(CombatUnitPresentationHex destination, int cost, IReadOnlyList<CombatUnitPresentationHex> path,
-            CombatActionCandidate candidate = null)
+            CombatActionCandidate candidate = null, IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null)
         {
+            MovementSteps = movementSteps == null ? Array.Empty<CombatUnitPresentationMovementStep>() :
+                new List<CombatUnitPresentationMovementStep>(movementSteps).AsReadOnly();
             Destination = destination;
             Cost = cost;
             Path = new List<CombatUnitPresentationHex>(path).AsReadOnly();
@@ -307,6 +332,7 @@ namespace TianZhang.Gameplay.Contracts
         public int Cost { get; }
         public IReadOnlyList<CombatUnitPresentationHex> Path { get; }
         public CombatActionCandidate Candidate { get; }
+        public IReadOnlyList<CombatUnitPresentationMovementStep> MovementSteps { get; }
     }
 
     [Serializable]

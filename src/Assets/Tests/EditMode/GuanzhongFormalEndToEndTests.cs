@@ -275,6 +275,8 @@ namespace TianZhang.Tests.EditMode
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_combat_modifier_fixture";
+            enemy.footprintKind = "single";
+            enemy.bodyScaleRank = 1;
             enemy.combatTemplate = enemyTemplate;
 
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
@@ -282,7 +284,7 @@ namespace TianZhang.Tests.EditMode
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
-            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_combat_modifier_fixture" };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, enemyFacing = 0, contentId = "enemy_combat_modifier_fixture" };
 
             CharacterStateSnapshot player = CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules).Capture();
             AdventureUnitSpawner spawner = Track(new GameObject("CombatModifierSpawner"))
@@ -344,6 +346,8 @@ namespace TianZhang.Tests.EditMode
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_unknown_gongfa_fixture";
+            enemy.footprintKind = "single";
+            enemy.bodyScaleRank = 1;
             enemy.combatTemplate = enemyTemplate;
 
             var catalog = Track(ScriptableObject.CreateInstance<ContentCatalogData>());
@@ -351,7 +355,7 @@ namespace TianZhang.Tests.EditMode
             catalog.ReplaceEntries(null, new[] { enemy }, null, null);
 
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
-            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_unknown_gongfa_fixture" };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, enemyFacing = 0, contentId = "enemy_unknown_gongfa_fixture" };
 
             Assert.Throws<System.ArgumentException>(() => CharacterRuntimeProfile.FromDefinition("player", playerData, GrowthRules));
             playerData.gongFaName = string.Empty;
@@ -374,7 +378,7 @@ namespace TianZhang.Tests.EditMode
         public void SpawnerAppliesExactlyOneBasicAttackBindingForPlayerAndEnemy()
         {
             AdventureNodeData start = new AdventureNodeData { nodeId = "start", nodeTypeId = "start", q = 0, r = 0 };
-            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, contentId = "enemy_basic_binding_fixture" };
+            AdventureNodeData encounter = new AdventureNodeData { nodeId = "encounter", nodeTypeId = "encounter", q = 1, r = 0, enemyFacing = 0, contentId = "enemy_basic_binding_fixture" };
 
             AssertPlayerBinding(start, encounter, "basic_main", "", false, null);
             AssertPlayerBinding(start, encounter, "", "basic_unarmed", false, null);
@@ -406,6 +410,8 @@ namespace TianZhang.Tests.EditMode
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
+            enemy.footprintKind = "single";
+            enemy.bodyScaleRank = 1;
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
             enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";
@@ -458,6 +464,8 @@ namespace TianZhang.Tests.EditMode
 
             EnemyData enemy = Track(ScriptableObject.CreateInstance<EnemyData>());
             enemy.enemyId = "enemy_basic_binding_fixture";
+            enemy.footprintKind = "single";
+            enemy.bodyScaleRank = 1;
             CharacterData enemyTemplate = Track(ScriptableObject.CreateInstance<CharacterData>());
             enemyTemplate.unarmedAttackFamilyId = "body_human";
             enemyTemplate.realmStage = "凡人";

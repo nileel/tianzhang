@@ -38,6 +38,8 @@ namespace TianZhang.Tests
                 Assert.AreEqual("bounty_board", preview.settlements[0].features[0].featureId);
 
                 Assert.AreEqual(2, preview.enemies.Length);
+                Assert.IsTrue(preview.enemies.All(value => value.footprintKind == "adjacent_pair" && value.bodyScaleRank == 2));
+                Assert.IsTrue(preview.enemies.All(value => value.combatStatScale == 0.5f));
                 var enemy = preview.enemies.Single(candidate => candidate.enemyId == "enemy_shijiahou");
                 Assert.AreEqual("ai_melee", enemy.aiProfileId);
                 Assert.AreSame(enemy.combatTemplate, preview.enemyTemplates.Single(template => template == enemy.combatTemplate));
@@ -73,6 +75,36 @@ namespace TianZhang.Tests
             {
                 DestroyPreview(preview);
             }
+        }
+
+        [TestCase("footprintKind", "")]
+        [TestCase("footprintKind", "double")]
+        [TestCase("bodyScaleRank", "")]
+        [TestCase("bodyScaleRank", "0")]
+        [TestCase("bodyScaleRank", "-1")]
+        [TestCase("bodyScaleRank", "2147483648")]
+        public void EnemyBodyInputsAreValidatedBeforeFormalScopeFiltering(string column, string value)
+        {
+            var enemies = ReadDataFile(EnemiesPath);
+            int header = Array.FindIndex(enemies, line => line.StartsWith("name,", StringComparison.Ordinal));
+            int index = Array.IndexOf(CsvTableReader.ParseRow(enemies[header]), column);
+            int rowIndex = Array.FindIndex(enemies, line => line.StartsWith("enemy_fengsun,", StringComparison.Ordinal));
+            var row = CsvTableReader.ParseRow(enemies[rowIndex]);
+            row[index] = value;
+            enemies[rowIndex] = string.Join(",", row);
+            Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ParseContentCatalog(
+                ReadDataFile(LanguagePath), ReadDataFile(SettlementsPath), ReadDataFile(ItemsPath), ReadDataFile(BountiesPath), enemies));
+        }
+
+        [TestCase("footprintKind")]
+        [TestCase("bodyScaleRank")]
+        public void EnemyBodyColumnsCannotBeOmitted(string column)
+        {
+            var enemies = ReadDataFile(EnemiesPath);
+            int header = Array.FindIndex(enemies, line => line.StartsWith("name,", StringComparison.Ordinal));
+            enemies[header] = enemies[header].Replace("," + column, "");
+            Assert.Throws<InvalidDataException>(() => SettlementContentImporter.ParseContentCatalog(
+                ReadDataFile(LanguagePath), ReadDataFile(SettlementsPath), ReadDataFile(ItemsPath), ReadDataFile(BountiesPath), enemies));
         }
 
         [Test]

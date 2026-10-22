@@ -71,7 +71,12 @@ namespace TianZhang.Editor.ConfigEditor
                 movement.Scale = 1000m; fields.Add(movement);
                 fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Enum("unarmedAttackFamilyId", "身体攻击族", "body_human", "人形身体", "body_shijiahou", "石甲兽身体"), "按当前角色身份固定；其他怪物未指定"));
                 fields.Last().AllowEmpty = enemy;
-                if (enemy) fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("combatStatScale", "敌人战斗属性倍率", "倍"), Approved));
+                if (enemy)
+                {
+                    fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("combatStatScale", "敌人战斗属性倍率", "倍"), Approved));
+                    fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Enum("footprintKind", "占格类型", "single", "单格", "adjacent_pair", "相邻双格"), Approved));
+                    fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("bodyScaleRank", "通行净空档", "档", true), Approved));
+                }
             }
             else if (id == "Items")
             {
@@ -329,7 +334,7 @@ namespace TianZhang.Editor.ConfigEditor
                     if (actual != invariant) throw new InvalidDataException("当前文化下原导入器不能准确回读该数值");
                 }
             }
-            if (value.HasValue && (field.Column == "maxStack" || field.Column == "combatUseHealthRecovery" || field.Column == "initialGrantQuantity" || field.Column == "quantity") &&
+            if (value.HasValue && (field.Column == "maxStack" || field.Column == "combatUseHealthRecovery" || field.Column == "initialGrantQuantity" || field.Column == "quantity" || field.Column == "bodyScaleRank") &&
                 int.Parse(value.RawToken, CultureInfo.InvariantCulture) <= 0) throw new InvalidDataException("必须为正整数");
             if (field.Column == "chance" && value.HasValue && (decimal.Parse(value.RawToken, CultureInfo.InvariantCulture) < 0 || decimal.Parse(value.RawToken, CultureInfo.InvariantCulture) > 100))
                 throw new InvalidDataException("概率必须为0至100百分点");

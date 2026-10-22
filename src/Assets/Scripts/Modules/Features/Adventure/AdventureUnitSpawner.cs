@@ -104,7 +104,7 @@ namespace TianZhang.Features.Adventure
                 enemyBasic = ResolveBasicAttackBinding(enemyProfile.MainEquipmentBasicAttackProfileId, enemyProfile.UnarmedBasicAttackProfileId);
                 playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
                 enemyStats = ProjectEnemyStats(enemyData.combatTemplate, catalog.CombatRuleSet, enemyData.combatStatScale);
-                enemySnapshot = CreateEnemy(enemyData.combatTemplate, enemyStats, enemyPosition, enemyBasic);
+                enemySnapshot = CreateEnemy(enemyData, enemyStats, enemyPosition, enemyBasic, encounterNode.enemyFacing);
                 var ids = new HashSet<string>(StringComparer.Ordinal) { "player", "enemy" };
                 var positions = new HashSet<HexCoord> { playerPosition, enemyPosition };
                 foreach (AdventureEnemySpawnData extra in encounterNode.additionalEnemies ?? Array.Empty<AdventureEnemySpawnData>())
@@ -120,8 +120,8 @@ namespace TianZhang.Features.Adventure
                     string extraBasic = ResolveBasicAttackBinding(
                         extraProfile.MainEquipmentBasicAttackProfileId, extraProfile.UnarmedBasicAttackProfileId);
                     EnemyCombatStats extraStats = ProjectEnemyStats(extraData.combatTemplate, catalog.CombatRuleSet, extraData.combatStatScale);
-                    additionalSnapshots.Add(CreateEnemy(extraData.combatTemplate, extraStats, new HexCoord(extra.q, extra.r),
-                        extraBasic, extra.instanceId));
+                    additionalSnapshots.Add(CreateEnemy(extraData, extraStats, new HexCoord(extra.q, extra.r),
+                        extraBasic, extra.facing, extra.instanceId));
                     additionalEnemyData.Add(extraData);
                 }
             }
@@ -184,7 +184,8 @@ namespace TianZhang.Features.Adventure
                 realmStage: source.Progression.RealmStage,
                 visibleRootElement: source.VisibleRootElement,
                 visibleRootGrade: source.VisibleRootGrade,
-                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>())
+                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>(),
+                footprint: SpatialFootprintKind.Single, bodyScaleRank: 1, facing: 0)
             {
                 BlockRate = source.CombatModifiers.BlockRate,
                 BlockReduction = source.CombatModifiers.BlockReduction,
@@ -226,9 +227,16 @@ namespace TianZhang.Features.Adventure
             }.Scale(scale);
         }
 
-        private static CombatantSnapshot CreateEnemy(CharacterData source, EnemyCombatStats stats, HexCoord position,
-            string basicAttackProfileId, string instanceId = "enemy")
+        private static CombatantSnapshot CreateEnemy(EnemyData definition, EnemyCombatStats stats, HexCoord position,
+            string basicAttackProfileId, int facing, string instanceId = "enemy")
         {
+            CharacterData source = definition.combatTemplate;
+            SpatialFootprintKind footprint = definition.footprintKind switch
+            {
+                "single" => SpatialFootprintKind.Single,
+                "adjacent_pair" => SpatialFootprintKind.AdjacentPair,
+                _ => throw new ArgumentException("enemy_footprint_invalid"),
+            };
             var snapshot = new CombatantSnapshot(
                 instanceId,
                 CombatTeam.Enemy,
@@ -251,7 +259,8 @@ namespace TianZhang.Features.Adventure
                 realmStage: source.realmStage,
                 visibleRootElement: source.visibleRootElement,
                 visibleRootGrade: source.visibleRootGrade,
-                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>())
+                actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>(),
+                footprint: footprint, bodyScaleRank: definition.bodyScaleRank, facing: facing)
             {
                 BlockRate = stats.blockRate,
                 BlockReduction = stats.blockReduction,

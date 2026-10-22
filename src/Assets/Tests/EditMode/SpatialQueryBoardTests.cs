@@ -255,16 +255,16 @@ namespace TianZhang.Tests.EditMode
                 });
 
             SpatialMovementPathResult priced = board.QueryMovementPath(
-                Origin, EastTwo, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
-            IReadOnlyDictionary<HexCoord, int> reachable = board.FindReachableWithinActionPoints(
-                Origin, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
+                new SpatialPose(Origin), EastTwo, actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
+            IReadOnlyDictionary<SpatialPose, int> reachable = board.FindReachableWithinActionPoints(
+                new SpatialPose(Origin), actionPointBudgetUnits: 100000, movementEfficiencyMilliUnits: 2000);
 
             Assert.AreEqual(SpatialQueryReasons.Ok, priced.Reason);
             Assert.AreEqual(50000, priced.ActionPointCostUnits);
             Assert.AreEqual(2, priced.Edges.Count);
-            Assert.AreEqual(0, reachable[Origin]);
-            Assert.AreEqual(25000, reachable[East]);
-            Assert.AreEqual(priced.ActionPointCostUnits, reachable[EastTwo],
+            Assert.AreEqual(0, reachable[new SpatialPose(Origin)]);
+            Assert.AreEqual(25000, reachable[new SpatialPose(East)]);
+            Assert.AreEqual(priced.ActionPointCostUnits, reachable[new SpatialPose(EastTwo)],
                 "Reachability preview and the selected path quote use the same AP edge weight.");
             Assert.AreEqual(2, board.QueryMetricDistance(Origin, EastTwo, SpatialQueryKind.Attack).DistanceUnits,
                 "Attack range keeps the raw metric distance and never reads the AP price.");

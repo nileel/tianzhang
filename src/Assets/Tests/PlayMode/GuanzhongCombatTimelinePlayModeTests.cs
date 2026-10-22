@@ -232,8 +232,9 @@ namespace TianZhang.Tests.PlayMode
 
             ICombatCommandHandler commands = encounter;
             CombatTurnSnapshot beforeMove = session.TurnScheduler.GetSnapshot(session.Combatants.All);
-            CombatMovementQueryResult path = session.SpatialQuery.QueryMovement(spawned.Player.Position, new HexCoord(0, 1),
-                spawned.Player.ActionPointsRemainingUnits, spawned.Player.MovementEfficiencyMilliUnits, new[] { spawned.Enemy.Position });
+            CombatMovementQueryResult path = session.SpatialQuery.QueryMovement(spawned.Player.Pose, new HexCoord(0, 1),
+                spawned.Player.ActionPointsRemainingUnits, spawned.Player.MovementEfficiencyMilliUnits,
+                session.Combatants.All.Where(unit => unit.IsAlive && unit.Id != spawned.Player.Id).SelectMany(unit => unit.OccupiedCells).ToArray());
             Assert.That(path.IsReachable, Is.True, path.Reason);
             commands.RequestMove(spawned.Player.Id, 0, 1);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
@@ -271,15 +272,29 @@ namespace TianZhang.Tests.PlayMode
                 Is.EqualTo(ctBeforeWait * 0.5f));
             Assert.That(captured.Latest.Timeline.CurrentActorId, Is.Null.Or.Empty);
 
+            var legalActions = new CombatLegalActionService();
+            var approach = new LegalActionAI();
             for (float deadline = Time.realtimeSinceStartup + 60f; Time.realtimeSinceStartup < deadline && encounter != null && encounter.IsRunning;)
             {
-                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.Active)
-                    commands.RequestBasicAttack(spawned.Player.Id, spawned.Enemies.FirstOrDefault(enemy => enemy.IsAlive)?.Id);
-                if (!encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.Active)
-                    commands.RequestEndTurn(spawned.Player.Id);
+                if (encounter.AcceptsPlayerCommand && !encounter.IsPresenting && session.CurrentActorId == spawned.Player.Id && session.TurnPhase == CombatTurnPhase.Active)
+                {
+                    // A ranged survivor need not approach melee distance. Drive the default player
+                    // with actual admitted moves as well as attacks, preserving the real death callback.
+                    var choices = legalActions.GetLegalActions(session, spawned.Player.Id)
+                        .Where(action => action.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Move or CombatCommandKind.EndTurn).ToArray();
+                    CombatCommand action = approach.ChooseAction(session, choices);
+                    if (action.Kind == CombatCommandKind.Move)
+                        commands.RequestMove(spawned.Player.Id, action.Destination.Value.Q, action.Destination.Value.R);
+                    else if (action.Kind == CombatCommandKind.BasicAttack)
+                        commands.RequestBasicAttack(spawned.Player.Id, action.TargetId);
+                    else commands.RequestEndTurn(spawned.Player.Id);
+                }
                 yield return null;
             }
-            Assert.That(captured.SawDeathFilteredSnapshot, Is.True, "An actual combat death must disappear from the timeline before the return callback.");
+            Assert.That(captured.SawDeathFilteredSnapshot, Is.True,
+                "An actual combat death must disappear from the timeline before the return callback. " +
+                "turn=" + session.TurnSequence + ";actor=" + session.CurrentActorId + ";presenting=" + encounter.IsPresenting + ";units=" +
+                string.Join(";", session.Combatants.All.Select(unit => unit.Id + ":" + unit.Pose + ":hp=" + unit.CurrentHealth + ":ap=" + unit.ActionPointsRemainingUnits)));
             yield return WaitForTimelineScene(GameplaySceneNames.Settlement);
             settlement = FindTimelineOwner<SettlementController>();
             Assert.That(settlement.EnterAdventure("guanzhong_wild"), Is.True);
@@ -437,7 +452,8 @@ namespace TianZhang.Tests.PlayMode
         private sealed class TimelineCombatRandom : ICombatResolutionRandomSource
         {
             private int count;
-            public float NextPercent() => count++ % 4 == 0 ? 0f : 99f;
+            // Hit, critical, block, soul shield and control are five samples per target.
+            public float NextPercent() => count++ % 5 == 0 ? 0f : 99f;
         }
 
         private sealed class FormalTimelineSink : ICombatPresentationSink
@@ -1161,15 +1177,28 @@ namespace TianZhang.Tests.PlayMode
 
         private sealed class TimelineSpatialQuery : ICombatSpatialQuery
         {
-            public CombatRangeQueryResult QueryRange(HexCoord source, HexCoord target, int minimumRange, int maximumRange) =>
-                new CombatRangeQueryResult(source.Distance(target) >= minimumRange && source.Distance(target) <= maximumRange, "target_out_of_range");
-            public CombatMovementQueryResult QueryMovement(HexCoord source, HexCoord destination, int budget,
-                int v, IReadOnlyCollection<HexCoord> occupied) => new CombatMovementQueryResult(
-                    source.Distance(destination) == 1 && v > 0 && budget >= 20000 && !occupied.Contains(destination),
-                    string.Empty, new[] { destination }, new[] { new SpatialMovementEdgeCost(source, destination, v / 5, 0) }, 1000, 20000);
-            public IReadOnlyDictionary<HexCoord, int> FindReachable(HexCoord source, int movementPoints,
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
+                new SpatialContactResult(source.Anchor, target.Anchor, source.Anchor.Distance(target.Anchor) * 1000,
+                    source.Anchor.Distance(target.Anchor) >= minimumRange && source.Anchor.Distance(target.Anchor) <= maximumRange,
+                    true, "target_out_of_range", 1000);
+            public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination, int budget,
+                int v, IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null)
+            {
+                bool legal = source.Anchor.Distance(destination) == 1 && v > 0 && budget >= 20000 && !occupied.Contains(destination);
+                if (!legal) return new CombatMovementQueryResult(false, string.Empty, null, 1000, 20000);
+                int facing = source.Anchor.DirectionTo(destination);
+                if (destinationFacing.HasValue && destinationFacing.Value != facing)
+                    return new CombatMovementQueryResult(false, string.Empty, null, 1000, 20000);
+                var turns = new List<int>();
+                int turn = source.Facing, sign = (facing - turn + 6) % 6 <= 3 ? 1 : -1;
+                while (turn != facing) { turn = (turn + sign + 6) % 6; turns.Add(turn); }
+                var step = new SpatialMovementStep(source, source.WithAnchor(destination).WithFacing(facing), turns,
+                    new SpatialMovementEdgeCost(source.Anchor, destination, v / 5, 0));
+                return new CombatMovementQueryResult(true, string.Empty, new[] { step }, 1000, 20000);
+            }
+            public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int movementPoints,
                 int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<HexCoord, int>();
+                IReadOnlyCollection<HexCoord> occupied) => new Dictionary<SpatialPose, int>();
         }
     }
 }
