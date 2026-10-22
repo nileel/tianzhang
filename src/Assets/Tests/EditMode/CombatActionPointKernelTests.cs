@@ -219,13 +219,120 @@ namespace TianZhang.Tests.EditMode
             var s = Ready(null, null, Attack("art", 30000, 10), Attack("other", 30000, 30), Attack());
             Commit(s, Hit(reverse ? "other" : "art")); Commit(s, Hit(reverse ? "art" : "other"));
             var quote = service.Preview(s, Hit()); Assert.AreEqual(140, quote.Turn.NextActionThreshold);
-            Assert.AreEqual(2, quote.Turn.TicksUntilReady); Commit(s, Hit());
+            Assert.AreEqual(2, quote.Turn.TicksUntilReady); Assert.IsTrue(quote.RemainsInTurn); Commit(s, Hit());
             var p = s.Combatants.All[0]; Assert.AreEqual(0, p.ActionPointsRemainingUnits);
+            Assert.AreEqual(0, p.OwnTurnsEnded); Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            Assert.AreEqual("player", s.CurrentActorId); Assert.AreEqual(40, s.PendingCtPenalty);
+            Assert.AreEqual(100, s.TurnScheduler.GetSnapshot(s.Combatants.All).Units.Single(u => u.Id == p.Id).NextActionThreshold);
+            Assert.IsFalse(service.Execute(s, Hit()).Succeeded);
+            Assert.IsTrue(service.Execute(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)).Succeeded);
             Assert.AreEqual(1, p.OwnTurnsEnded); Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase);
             Assert.AreEqual(140, s.TurnScheduler.GetSnapshot(s.Combatants.All).Units.Single(u => u.Id == p.Id).NextActionThreshold);
             Assert.IsFalse(service.Execute(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)).Succeeded);
             Assert.AreEqual(1, p.OwnTurnsEnded);
         }
+        [Test]
+        public void PlayerAtZeroApAfterAttackKeepsTurnAndSettlesAccumulatedCtOnce()
+        {
+            var p = Actor(ap: 40000);
+            var s = Ready(p, null, Attack("basic", 40000, ct: 150));
+            long turn = s.TurnSequence; int tick = s.TurnScheduler.CurrentTick;
+            var quote = service.Preview(s, Hit());
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            Assert.AreEqual(40000, quote.ActionPointCostUnits);
+            Assert.IsTrue(quote.RemainsInTurn);
+            Commit(s, Hit());
+            Assert.AreEqual(0, p.ActionPointsRemainingUnits);
+            Assert.AreEqual("player", s.CurrentActorId);
+            Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            Assert.AreEqual(turn, s.TurnSequence);
+            Assert.AreEqual(tick, s.TurnScheduler.CurrentTick);
+            Assert.AreEqual(0, p.OwnTurnsEnded);
+            Assert.AreEqual(150, s.PendingCtPenalty);
+            Assert.AreEqual("combat_quote_stale", service.Execute(s, Hit(), quote).RejectionReason);
+            Assert.AreEqual("action_points_insufficient", service.Execute(s, Hit()).RejectionReason);
+            Assert.AreEqual("action_points_insufficient", service.Preview(s,
+                new CombatCommand(CombatCommandKind.Guard, p.Id)).RejectionReason);
+            Assert.AreEqual(0, p.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            Assert.IsTrue(service.Validate(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)).Succeeded);
+            Commit(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id));
+            Assert.AreEqual(1, p.OwnTurnsEnded);
+            Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase);
+            var settled = s.TurnScheduler.GetSnapshot(s.Combatants.All).Units.Single(unit => unit.Id == p.Id);
+            Assert.AreEqual(0, settled.ChargeTime);
+            Assert.AreEqual(250, settled.NextActionThreshold);
+            Assert.IsFalse(service.Execute(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id)).Succeeded);
+            Assert.AreEqual(1, p.OwnTurnsEnded);
+        }
+
+        [Test]
+        public void PlayerAtZeroApAfterMoveKeepsTurnUntilManualEnd()
+        {
+            var p = Actor(ap: 50000, v: 2000);
+            var s = Ready(p);
+            long turn = s.TurnSequence; int tick = s.TurnScheduler.CurrentTick;
+            var quote = service.Preview(s, Move(1));
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            Assert.AreEqual(50000, quote.ActionPointCostUnits);
+            Assert.IsTrue(quote.RemainsInTurn);
+            Commit(s, Move(1));
+            Assert.AreEqual(0, p.ActionPointsRemainingUnits);
+            Assert.AreEqual("player", s.CurrentActorId);
+            Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            Assert.AreEqual(turn, s.TurnSequence);
+            Assert.AreEqual(tick, s.TurnScheduler.CurrentTick);
+            Assert.AreEqual(0, p.OwnTurnsEnded);
+            Assert.AreEqual("action_points_insufficient", service.Execute(s, Move(2)).RejectionReason);
+            Commit(s, new CombatCommand(CombatCommandKind.EndTurn, p.Id));
+            Assert.AreEqual(1, p.OwnTurnsEnded);
+            Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase);
+            var settled = s.TurnScheduler.GetSnapshot(s.Combatants.All).Units.Single(unit => unit.Id == p.Id);
+            Assert.AreEqual(100, settled.NextActionThreshold);
+        }
+
+        [Test]
+        public void ZeroApEnemyPolicyExplicitlyEndsInsteadOfStalling()
+        {
+            var player = Actor(ap: 100000, speed: 1);
+            var enemy = Actor("enemy", CombatTeam.Enemy, ap: 40000, speed: 100);
+            var s = new CombatSession(new[] { player, enemy }, new[] { Attack() }, ProductionSpace(), Ordinary(), ruleSet: Rules());
+            Assert.AreEqual("enemy", service.AdvanceUntilAction(s).ActorId);
+            var legalActions = new CombatLegalActionService(service);
+            var policy = new LegalActionAI();
+            CombatCommand attack = policy.ChooseAction(s, legalActions.GetLegalActions(s, enemy.Id));
+            Assert.AreEqual(CombatCommandKind.BasicAttack, attack.Kind);
+            Assert.IsTrue(service.Execute(s, attack).Succeeded);
+            Assert.AreEqual(0, enemy.ActionPointsRemainingUnits);
+            Assert.AreEqual("enemy", s.CurrentActorId);
+            Assert.AreEqual(CombatTurnPhase.Active, s.TurnPhase);
+            Assert.AreEqual(0, enemy.OwnTurnsEnded);
+            IReadOnlyList<CombatCommand> remaining = legalActions.GetLegalActions(s, enemy.Id);
+            Assert.IsTrue(remaining.Any(command => command.Kind == CombatCommandKind.EndTurn));
+            CombatCommand end = policy.ChooseAction(s, remaining);
+            Assert.AreEqual(CombatCommandKind.EndTurn, end.Kind);
+            Assert.IsTrue(service.Execute(s, end).Succeeded);
+            Assert.AreEqual(1, enemy.OwnTurnsEnded);
+            Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase);
+        }
+
+        [Test]
+        public void KillingAttackAtZeroApStillTerminatesBattle()
+        {
+            var p = Actor(ap: 40000);
+            var s = Ready(p, null, Attack("basic", 40000, ct: 7));
+            var enemy = s.Combatants.All[1];
+            enemy.ReceiveDamage(enemy.CurrentHealth - 1);
+            int tick = s.TurnScheduler.CurrentTick;
+            Commit(s, Hit());
+            Assert.AreEqual(0, p.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatSessionOutcome.Victory, new CombatResultBuilder().Build(s).Outcome);
+            Assert.AreEqual(CombatTurnPhase.Finished, s.TurnPhase);
+            Assert.AreEqual(1, p.OwnTurnsEnded);
+            Assert.AreEqual(tick, s.TurnScheduler.CurrentTick);
+            Assert.IsFalse(service.AdvanceUntilAction(s).HasActor);
+        }
+
         [Test]
         public void SharedAbilityCooldownIsUniqueAndOnlyGlobalTicksReduceIt()
         {

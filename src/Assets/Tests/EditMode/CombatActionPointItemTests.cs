@@ -151,7 +151,15 @@ namespace TianZhang.Tests.EditMode
             Spend(100000 - remaining); actor.IsGuarding = true; string before = State();
             Assert.AreEqual(success, Execute(Use()).Succeeded);
             if (!success) Assert.AreEqual(before, State());
-            else { Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase); Assert.AreEqual(0, actor.ActionPointsRemainingUnits); Assert.AreEqual(2, runtime.GetItemQuantity(Item)); }
+            else
+            {
+                Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
+                Assert.AreEqual(0, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(2, runtime.GetItemQuantity(Item));
+                Assert.IsTrue(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, "player")).Succeeded);
+                Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+                Assert.AreEqual(1, actor.OwnTurnsEnded);
+            }
         }
         [Test] public void ThreeFreshQuotesConsumeLastEntryAndEmptyInventoryRoundTrips()
         {

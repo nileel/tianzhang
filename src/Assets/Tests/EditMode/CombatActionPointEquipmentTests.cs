@@ -165,7 +165,10 @@ namespace TianZhang.Tests.EditMode
                 targetRolls: new[] { new CombatTargetResolutionRolls("enemy", new CombatResolutionRolls(0, 100, 100, 100, 100)) });
             Assert.AreEqual(50000, service.Preview(session, attack).ActionPointCostUnits);
             Assert.IsTrue(service.Execute(session, attack).Succeeded); Assert.AreEqual(25000, actor.ActionPointsRemainingUnits);
-            Assert.IsTrue(Execute(Swap(Sword)).Succeeded); Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
+            Assert.IsTrue(Execute(Swap(Sword)).Succeeded); Assert.AreEqual(0, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
+            Assert.IsTrue(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, "player")).Succeeded);
+            Assert.AreEqual(CombatTurnPhase.Finished, session.TurnPhase);
             Assert.AreEqual(Sword, runtime.Player.MainEquipmentItemId);
         }
         [TestCase(Sword, 100000, 2, 20000)]

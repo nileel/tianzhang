@@ -376,11 +376,21 @@ namespace TianZhang.Tests.EditMode
             Assert.That(player.Facing, Is.EqualTo(first.DirectionTo(second)));
             Assert.That(session.TurnScheduler.CurrentTick, Is.EqualTo(tick));
             Assert.That(session.PendingCtPenalty, Is.Zero);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(session.CurrentActorId, Is.EqualTo(player.Id));
+            Assert.That(player.OwnTurnsEnded, Is.Zero);
             AssertRejectedWithoutTurnMutation(service, session, player,
                 new CombatCommand(CombatCommandKind.Move, player.Id, destination: origin));
             Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.BasicAttack, player.Id, enemy.Id, "basic")).Succeeded, Is.False,
-                "Exhausting the shared action-point budget ends the turn.");
+                "Zero AP rejects positive-cost actions without ending the turn.");
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.True);
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            Assert.That(player.OwnTurnsEnded, Is.EqualTo(1));
+            Assert.That(session.TurnScheduler.GetSnapshot(session.Combatants.All).Units.Single(unit => unit.Id == player.Id).NextActionThreshold,
+                Is.EqualTo(100));
+            Assert.That(service.Execute(session, new CombatCommand(CombatCommandKind.EndTurn, player.Id)).Succeeded, Is.False);
+            Assert.That(player.OwnTurnsEnded, Is.EqualTo(1));
         }
 
         [Test]

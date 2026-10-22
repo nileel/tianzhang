@@ -158,8 +158,9 @@ namespace TianZhang.Combat
             if (validation.Succeeded && penalty > int.MaxValue - 100 - session.PendingCtPenalty)
                 validation = CombatActionResult.Rejected("combat_ct_penalty_overflow");
             bool terminal = command.Kind is CombatCommandKind.Wait or CombatCommandKind.EndTurn;
-            bool remains = validation.Succeeded && !terminal && actor.ActionPointsRemainingUnits - cost +
-                actor.QuoteRefund(modifier, baseNetCost, minimum, actor.ActionPointsRemainingUnits - cost) > 0;
+            // A successful action that spends the last AP still leaves the actor in control of the
+            // turn. Only an explicit end/wait, death, a control skip, or combat termination closes it.
+            bool remains = validation.Succeeded && !terminal;
             CombatTurnPreview turn = validation.Succeeded ? session.TurnScheduler.PreviewTurnEnd(command.ActorId,
                 session.PendingCtPenalty + penalty, command.Kind == CombatCommandKind.Wait, session.Combatants.All) : null;
             return new CombatCommandPreview(session, command, validation, cost, minimum, spirit, penalty, cooldown,
@@ -205,8 +206,12 @@ namespace TianZhang.Combat
                 else
                 {
                     session.RecordAction(current.CtPenalty);
+                    // Reaching zero AP is not a turn boundary. The player keeps the accepting
+                    // window for free inspection/selection and ends manually; enemy policies
+                    // explicitly choose EndTurn when no positive-cost action remains. Death and
+                    // combat termination still close the turn through the original paths.
                     if (session.IsFinished) { EndTurn(session, actor.Id); session.Terminate(); }
-                    else if (actor.ActionPointsRemainingUnits == 0 || !actor.IsAlive) EndTurn(session, actor.Id);
+                    else if (!actor.IsAlive) EndTurn(session, actor.Id);
                 }
             };
             return result.WithPayment(current.ActionPointCostUnits, quotedRefund, current.StateVersion + 1);

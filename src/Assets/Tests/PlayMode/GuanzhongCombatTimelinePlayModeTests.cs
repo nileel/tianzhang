@@ -248,9 +248,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(50000, guard.ActionPointCostUnits);
             commands.RequestGuard(spawned.Player.Id);
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.Zero);
-            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
+            Assert.That(spawned.Player.OwnTurnsEnded, Is.Zero);
+            for (float guardDeadline = Time.realtimeSinceStartup + 10f;
+                 Time.realtimeSinceStartup < guardDeadline && encounter.IsPresenting;) yield return null;
+            Assert.That(encounter.IsPresenting, Is.False, "The zero-AP guard presentation must release command input.");
             commands.RequestEndTurn(spawned.Player.Id);
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            Assert.That(spawned.Player.OwnTurnsEnded, Is.EqualTo(1));
             CombatTurnSnapshot exhausted = session.TurnScheduler.GetSnapshot(session.Combatants.All);
             Assert.That(exhausted.CurrentTick, Is.EqualTo(beforeMove.CurrentTick));
             Assert.That(Unit(exhausted, spawned.Player.Id).NextActionThreshold, Is.EqualTo(100f));
@@ -468,7 +473,11 @@ namespace TianZhang.Tests.PlayMode
                     Assert.That(entry.IsCurrent, Is.EqualTo(entry.Id == current));
                     Assert.That(session.Combatants.TryGet(entry.Id, out CombatantSnapshot combatant), Is.True);
                     Assert.That(entry.Faction, Is.EqualTo(combatant.Team == CombatTeam.Player ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy));
-                    Assert.That(entry.DisplayName, Is.EqualTo(entry.Faction == CombatUnitDisplayFaction.Player ? hud.Player.DisplayName : hud.Enemy.DisplayName));
+                    CombatantHudSnapshot expected = entry.Faction == CombatUnitDisplayFaction.Player
+                        ? hud.Player
+                        : hud.Enemies.FirstOrDefault(value => value.Id == entry.Id) ?? hud.Enemy;
+                    Assert.That(expected, Is.Not.Null, "Timeline entry has no matching HUD combatant.");
+                    Assert.That(entry.DisplayName, Is.EqualTo(expected.DisplayName));
                 }
                 SawDeathFilteredSnapshot |= session.Combatants.All.Any(value => !value.IsAlive) &&
                     timeline.Entries.All(entry => session.Combatants.All.Single(value => value.Id == entry.Id).IsAlive);

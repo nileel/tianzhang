@@ -255,6 +255,11 @@ namespace TianZhang.Tests.PlayMode
             input.ConfirmCandidate(); encounter.ConfirmAction(first);
             Assert.That(State(), Is.EqualTo(committed));
             yield return Ready();
+            Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.Zero,
+                "The zero-AP swap keeps the accepting window until the player ends manually.");
+            encounter.RequestEndTurn("player");
+            Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Finished));
+            yield return Ready();
             int recoveryBefore = spawned.Player.GetCooldown(Recovery);
             int attackBefore = spawned.Player.GetCooldown(Attack);
             bar.SwapSpellButton.onClick.Invoke();
