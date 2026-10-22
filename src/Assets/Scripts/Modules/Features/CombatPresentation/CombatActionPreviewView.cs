@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
@@ -12,8 +13,7 @@ namespace TianZhang.Features.CombatPresentation
         private const string MovementLegend =
             "<color=#238CFF>■</color> 可移动   <color=#F2C14E>■</color> 目的地   <color=#FFE7A0>■</color> 路径";
         private const string TargetingLegend =
-            "<color=#238CFF>■</color> 范围 <color=#E8C46A>■</color> 可选 <color=#FFE7A0>■</color> 当前 " +
-            "<color=#FF9F3C>■</color> 作用 <color=#FF4033>■</color> 非法";
+            "<color=#FF9F3C>■</color> 作用地块";
 
         [SerializeField] private GameObject root;
         [SerializeField] private Text heading;
@@ -119,7 +119,7 @@ namespace TianZhang.Features.CombatPresentation
             if (value.Candidate.Kind == CombatActionKind.Art && string.IsNullOrEmpty(value.Candidate.TargetId))
             {
                 text.Append("施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange)
-                    .Append(" 格 · 作用范围：所选目标单格");
+                    .Append(" 格 · 作用范围：所选目标");
                 text.Append('\n').Append(string.IsNullOrEmpty(value.Reason)
                     ? "左键点击施法范围内角色；右键或 Esc 取消" : value.Reason);
                 summary.text = text.ToString();
@@ -140,7 +140,7 @@ namespace TianZhang.Features.CombatPresentation
             {
                 CombatAttackAreaSnapshot area = value.AttackArea;
                 text.Append(value.ActionName).Append(" → ").Append(value.TargetName)
-                    .Append(" · 命中 ").Append(area.Cells.Count).Append(" 格");
+                    .Append(" · 作用 ").Append(area.Cells.Count(cell => cell.IsLegal)).Append(" 格");
                 text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks)
                     .Append(" · 已用").Append(value.CommittedUseCount).Append(" 次");
@@ -204,7 +204,7 @@ namespace TianZhang.Features.CombatPresentation
                 text.Append(" · 施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange).Append(" 格");
                 text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks)
-                    .Append(" · 作用范围：单格");
+                    .Append(" · 作用范围：所选目标");
                 if (balance.Length > 0) text.Append('\n').Append(balance);
                 text.Append('\n').Append(value.CanConfirm
                     ? "左键施行 · 右键 / Esc 取消"

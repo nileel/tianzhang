@@ -7,37 +7,18 @@ using UnityEngine.InputSystem;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    /// <summary>One selectable unit or cell offered by the authoritative skill quote.</summary>
-    public readonly struct CombatTargetingHint
-    {
-        public CombatTargetingHint(CombatUnitPresentationHex cell, bool legal)
-        {
-            Cell = cell;
-            IsLegal = legal;
-        }
-
-        public CombatUnitPresentationHex Cell { get; }
-        public bool IsLegal { get; }
-    }
-
     /// <summary>Projects authoritative move options and keeps uncommitted selection local to the view.</summary>
     public sealed class CombatMovementView : MonoBehaviour
     {
-        // Cool reachable range, warm destination/target, amber effect cells and red rejection.
+        // Cool movement range, warm destination, and amber attack effect cells.
         private static readonly Color ReachableOutlineColor = new Color32(0x23, 0x8C, 0xFF, 0xFF);
         private static readonly Color DestinationColor = new Color32(0xF2, 0xC1, 0x4E, 0xFF);
-        private static readonly Color LegalTargetColor = new Color32(0xE8, 0xC4, 0x6A, 0xFF);
-        private static readonly Color CurrentTargetColor = new Color32(0xFF, 0xE7, 0xA0, 0xFF);
         private static readonly Color EffectCellColor = new Color32(0xFF, 0x9F, 0x3C, 0xFF);
-        private static readonly Color IllegalColor = new Color32(0xFF, 0x40, 0x33, 0xFF);
         // Ground rings identify the full committed footprint of the inspected unit.
         private static readonly Color InspectionColor = new Color32(0xFF, 0xC8, 0x5C, 0xFF);
         private const float ReachableWidth = 0.035f;
         private const float DestinationWidth = 0.07f;
-        private const float LegalTargetWidth = 0.045f;
-        private const float CurrentTargetWidth = 0.09f;
         private const float EffectWidth = 0.06f;
-        private const float IllegalWidth = 0.06f;
         private const float InspectionWidth = 0.08f;
         private const float PathNodeRadius = 0.12f;
         private const float SelectionBorderOffset = 0.01f;
@@ -160,57 +141,25 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
-        public void PresentAttackArea(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target = null, bool legal = false,
-            IReadOnlyList<CombatUnitPresentationHex> targetCells = null) =>
-            PresentTargeting(null, 0, 0, area, target, legal, null, targetCells);
-
-        /// <summary>Shows the cast range, the legal unit targets, and the effect cells of the pointed target.</summary>
-        public void PresentCastingPreview(CombatUnitPresentationHex origin, int minimum, int maximum,
-            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
-            IReadOnlyList<CombatTargetingHint> targets = null, IReadOnlyList<CombatUnitPresentationHex> targetCells = null) =>
-            PresentTargeting(origin, minimum, maximum, area, target, legal, targets, targetCells);
-
-        private void PresentTargeting(CombatUnitPresentationHex? rangeOrigin, int minimum, int maximum,
-            CombatAttackAreaSnapshot area, CombatUnitPresentationHex? target, bool legal,
-            IReadOnlyList<CombatTargetingHint> targets, IReadOnlyList<CombatUnitPresentationHex> targetCells)
+        /// <summary>Shows only effective area cells, or the quoted single target's footprint.</summary>
+        public void PresentAttackArea(CombatAttackAreaSnapshot area,
+            IReadOnlyList<CombatUnitPresentationHex> targetCells = null)
         {
             ClearSelection();
             if (!CanInput) return;
-            if (rangeOrigin.HasValue)
+            if (area != null)
             {
-                foreach (var pair in highlights)
+                foreach (CombatAttackAreaCellSnapshot cell in area.Cells)
                 {
-                    var position = new CombatUnitPresentationHex(pair.Key.x, pair.Key.y);
-                    int distance = HexDistance(rangeOrigin.Value, position);
-                    if (distance < minimum || distance > maximum) continue;
-                    ShowRing(pair.Value, ReachableOutlineColor, ReachableWidth);
+                    if (cell.IsLegal && highlights.TryGetValue(Key(cell.Position), out LineRenderer ring))
+                        ShowRing(ring, EffectCellColor, EffectWidth);
                 }
+                return;
             }
-            // Legal targets stay marked before the pointer reaches them, so the range and the
-            // selectable units remain distinguishable from the effect cells of one candidate.
-            if (targets != null)
-                foreach (CombatTargetingHint hint in targets)
-                {
-                    if (!hint.IsLegal || !highlights.TryGetValue(Key(hint.Cell), out LineRenderer ring)) continue;
-                    ShowRing(ring, LegalTargetColor, LegalTargetWidth);
-                }
-            IReadOnlyList<CombatAttackAreaCellSnapshot> shown = area?.Cells ??
-                (target.HasValue ? new[] { new CombatAttackAreaCellSnapshot(target.Value, legal, string.Empty) } :
-                    Array.Empty<CombatAttackAreaCellSnapshot>());
-            foreach (CombatAttackAreaCellSnapshot cell in shown)
-            {
-                if (!highlights.TryGetValue(Key(cell.Position), out LineRenderer ring)) continue;
-                ShowRing(ring, cell.IsLegal ? EffectCellColor : IllegalColor, cell.IsLegal ? EffectWidth : IllegalWidth);
-            }
-            // All occupied cells of the pointed unit identify the same target, without changing the effect template.
             if (targetCells != null)
                 foreach (CombatUnitPresentationHex cell in targetCells)
                     if (highlights.TryGetValue(Key(cell), out LineRenderer ring))
-                        ShowRing(ring, legal ? CurrentTargetColor : IllegalColor, legal ? CurrentTargetWidth : IllegalWidth);
-            // The pointed cell is the current target and always outranks the range or area color.
-            if (target.HasValue && highlights.TryGetValue(Key(target.Value), out LineRenderer current))
-                ShowRing(current, legal ? CurrentTargetColor : IllegalColor,
-                    legal ? CurrentTargetWidth : IllegalWidth);
+                        ShowRing(ring, EffectCellColor, EffectWidth);
         }
 
         /// <summary>
@@ -239,12 +188,6 @@ namespace TianZhang.Features.CombatPresentation
             ring.SetPropertyBlock(properties);
             ring.widthMultiplier = width;
             ring.gameObject.SetActive(true);
-        }
-
-        private static int HexDistance(CombatUnitPresentationHex left, CombatUnitPresentationHex right)
-        {
-            int q = left.Q - right.Q, r = left.R - right.R;
-            return (Math.Abs(q) + Math.Abs(r) + Math.Abs(q + r)) / 2;
         }
 
         public void BeginSelection()

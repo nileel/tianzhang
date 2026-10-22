@@ -238,6 +238,8 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsFalse(input.Preview.CanConfirm, input.Preview.Reason);
                     Assert.AreNotEqual(spawned.Enemy.Id, input.Candidate.TargetId);
                     Assert.IsFalse(preview.ConfirmButton.interactable);
+                    Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf),
+                        "Invalid or absent skill targets have no effect cells.");
                     input.ConfirmCandidate();
                     yield return PointArt(session, spawned.Enemy.Id, false);
                 }
@@ -372,10 +374,12 @@ namespace TianZhang.Tests.PlayMode
                 Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + 1f, text.text);
             }
             var rings = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
-            Assert.Greater(rings.Length, 1, "The selected skill must show its cast range plus the target's effect cell.");
             Assert.NotNull(input.Candidate.TargetId);
             Assert.IsTrue(combat.Combatants.TryGet(input.Candidate.TargetId, out var targetUnit));
-            var effectRing = rings.Single(pair => pair.Value.name ==
+            CollectionAssert.AreEquivalent(input.Preview.CanConfirm
+                    ? targetUnit.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R)) : Enumerable.Empty<Vector2Int>(),
+                rings.Select(pair => pair.Key), "Only a valid single-target skill highlights the quoted target's occupied cells.");
+            var effectRing = movement.Highlights.Single(pair => pair.Value.name ==
                 "Reachable_" + targetUnit.Position.Q + "_" + targetUnit.Position.R);
             string summary = Get<Text>(Find<CombatActionPreviewView>(), "summary").text;
             StringAssert.Contains("施法范围", summary);
@@ -394,6 +398,7 @@ namespace TianZhang.Tests.PlayMode
                 "; rings=" + string.Join("/", rings.Select(pair => pair.Value.name)) +
                 "; pointer=" + Mouse.current.position.ReadValue() +
                 "; camera=" + Camera.main.transform.position + "; ring=" + effectRing.Value.name +
+                "; active=" + effectRing.Value.gameObject.activeSelf +
                 "; parent=" + effectRing.Value.transform.parent.name + "; world=" + effectRing.Value.useWorldSpace +
                 "; points=" + string.Join("/", Enumerable.Range(0, 6).Select(index => effectRing.Value.GetPosition(index))) +
                 "; summary=" + summary.Replace("\n", "\\n") +
@@ -434,6 +439,40 @@ namespace TianZhang.Tests.PlayMode
                 GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 Assert.AreEqual(width, Screen.width);
+                // A distant hover chooses the blade direction, never an additional effect cell.
+                Camera camera = Camera.main;
+                Vector2Int selfKey = new Vector2Int(spawned.Player.Position.Q, spawned.Player.Position.R);
+                presenter.InspectTarget(spawned.Enemy.Id);
+                bar.BasicAttackButton.onClick.Invoke();
+                Transform board = GameObject.Find("GuanzhongBattlefield").transform;
+                Vector2Int farKey = movement.Highlights.Keys.First(key =>
+                {
+                    int q = key.x - selfKey.x, r = key.y - selfKey.y;
+                    if ((Math.Abs(q) + Math.Abs(r) + Math.Abs(q + r)) / 2 <= 2) return false;
+                    Vector2 point = camera.WorldToScreenPoint(board.Find("GuanzhongHex_" + key.x + "_" + key.y).position);
+                    return movement.TryPickCell(point, out var picked) && picked.Q == key.x && picked.R == key.y;
+                });
+                Vector2 farPoint = camera.WorldToScreenPoint(board.Find("GuanzhongHex_" + farKey.x + "_" + farKey.y).position);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(farPoint);
+                Assert.IsNotNull(input.Preview.AttackArea);
+                string effectDirectory = Path.Combine(Application.dataPath, "../Logs/attack-highlight");
+                Directory.CreateDirectory(effectDirectory);
+                ScreenCapture.CaptureScreenshot(Path.Combine(effectDirectory, "effect-only-basic-" + width + ".png"));
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                CollectionAssert.AreEquivalent(input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
+                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)),
+                    movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key),
+                    "Only actual effect cells may have attack borders; a distant hover is only a direction.");
+                Assert.IsFalse(movement.Highlights[farKey].gameObject.activeSelf);
+                Assert.IsFalse(movement.InspectionRings.Any(ring => ring.gameObject.activeSelf),
+                    "Inspection borders must not add unrelated cells while aiming.");
+                Assert.AreEqual(spawned.Enemy.Id, presenter.InspectedTargetId);
+                input.CancelCandidate();
+                yield return null;
+                Assert.AreEqual(2, movement.InspectionRings.Count(ring => ring.gameObject.activeSelf),
+                    "Cancelling restores the inspected double-cell unit's borders.");
+                presenter.ClearInspectedTarget();
+
                 string inspected = presenter.InspectedTargetId;
                 int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
                 int hp = spawned.Enemy.CurrentHealth, tick = session.TurnScheduler.CurrentTick;
@@ -444,6 +483,10 @@ namespace TianZhang.Tests.PlayMode
                 yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: false);
                 Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
                 Assert.IsFalse(preview.ConfirmButton.interactable);
+                CollectionAssert.AreEquivalent(input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
+                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)),
+                    movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key),
+                    "An area attack must not expand its effect to the target's other body cell.");
                 input.ConfirmCandidate();
                 Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
                 Vector2 confirm = RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position);

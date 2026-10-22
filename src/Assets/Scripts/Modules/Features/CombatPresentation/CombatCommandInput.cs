@@ -99,44 +99,17 @@ namespace TianZhang.Features.CombatPresentation
                 reason, 0, false, 0, 0, 0, minimumRange: minimumRange, maximumRange: maximumRange);
             previewView?.Present(Preview, CurrentActionPoints);
             timeline?.PresentPrediction(null);
-            PresentSelectionHighlights(null, null, false);
+            PresentSelectionHighlights();
         }
 
-        private void PresentSelectionHighlights(CombatAttackAreaSnapshot area, CombatUnitPresentationHex? cell, bool legal)
+        private void PresentSelectionHighlights()
         {
             if (movementView == null) return;
             IReadOnlyList<CombatUnitPresentationHex> targetCells = null;
-            string selectedTarget = cell.HasValue ? targetInput?.FindUnitAtCell(cell.Value) : null;
-            if (selectedTarget != null && targetInput.TryGetUnitPose(selectedTarget, out CombatUnitPresentationPose targetPose))
+            if (Preview?.AttackArea == null && Preview?.CanConfirm == true && targetInput != null &&
+                targetInput.TryGetUnitPose(Preview.Candidate.TargetId, out CombatUnitPresentationPose targetPose))
                 targetCells = targetPose.OccupiedCells;
-            if (selectingArt != null && snapshot?.Movement != null)
-            {
-                CombatUnitPresentationHex origin = snapshot.Movement.Origin;
-                movementView.PresentCastingPreview(origin, selectingArt.MinimumRange, selectingArt.MaximumRange,
-                    area, cell, legal, BuildTargetingHints(), targetCells);
-            }
-            else movementView.PresentAttackArea(area, cell, legal, targetCells);
-        }
-
-        /// <summary>
-        /// Authoritative selectable cells for the open skill, taken from the same per-target quote the
-        /// buttons use. Out-of-range or unaffordable units stay unmarked until the pointer reaches them.
-        /// </summary>
-        private IReadOnlyList<CombatTargetingHint> BuildTargetingHints()
-        {
-            if (targetInput == null || snapshot == null || selectingArt == null)
-                return Array.Empty<CombatTargetingHint>();
-            CombatArtActionSnapshot action = snapshot.ArtActions.FirstOrDefault(value =>
-                string.Equals(value.ProfileId, selectingArt.ProfileId, StringComparison.Ordinal));
-            if (action == null) return Array.Empty<CombatTargetingHint>();
-            var hints = new List<CombatTargetingHint>();
-            foreach (CombatArtTargetSnapshot target in action.Targets)
-            {
-                if (target == null || !targetInput.TryGetUnitPose(target.Id, out CombatUnitPresentationPose pose)) continue;
-                foreach (CombatUnitPresentationHex cell in pose.OccupiedCells)
-                    hints.Add(new CombatTargetingHint(cell, target.CanExecute));
-            }
-            return hints;
+            movementView.PresentAttackArea(Preview?.AttackArea, targetCells);
         }
 
         private int CurrentActionPoints => snapshot?.Movement?.RemainingPoints ?? -1;
@@ -181,8 +154,7 @@ namespace TianZhang.Features.CombatPresentation
                     attackDirection: directional ? direction : (int?)null));
                 previewView?.Present(Preview, CurrentActionPoints);
                 timeline?.PresentPrediction(Preview);
-                CombatUnitPresentationHex? effectCell = basic || target != null ? cell : (CombatUnitPresentationHex?)null;
-                PresentSelectionHighlights(Preview?.AttackArea, effectCell, Preview?.CanConfirm == true);
+                PresentSelectionHighlights();
             }
             if (mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true)
             {

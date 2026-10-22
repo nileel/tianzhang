@@ -918,18 +918,18 @@ namespace TianZhang.Tests.PlayMode
 
                 Button art = new[] { bar.ArtButton, bar.SecondArtButton }
                     .FirstOrDefault(button => button != null && button.gameObject.activeInHierarchy && button.interactable);
-                Assert.That(art, Is.Not.Null, "An executable art is required to show the cast range; ap=" +
+                Assert.That(art, Is.Not.Null, "An executable art is required to open target selection; ap=" +
                     spawned.Player.ActionPointsRemainingUnits + "; spirit=" + spawned.Player.CurrentSpirit +
                     "; art=" + bar.ArtButton.interactable + "; second=" + bar.SecondArtButton.interactable +
                     "; status=" + Get<Text>(bar, "actionStatusLabel")?.text);
+                yield return Pointer(new Vector2(-50, -50), false);
                 art.onClick.Invoke();
                 yield return null; yield return null;
                 Assert.That(input.IsSelectingAttack, Is.True, "Art selection must open without a preselected target.");
                 HexCoord[] active = movement.Highlights.Where(item => item.Value.gameObject.activeSelf)
                     .Select(item => new HexCoord(item.Key.x, item.Key.y)).ToArray();
-                Assert.That(active.Any(cell => rocks.Any(rock => rock.Q == cell.Q && rock.R == cell.R)), Is.True,
-                    "The cast range must cover a formal rock cell; active=" + string.Join("/", active.Select(cell => cell.Q + "," + cell.R)));
-                lines.Add("artRangeCells=" + string.Join("/", active.OrderBy(cell => cell.Q).ThenBy(cell => cell.R).Select(cell => cell.Q + "," + cell.R)));
+                Assert.That(active, Is.Empty, "Opening a skill without a pointed target must not mark cast-range or rock cells.");
+                lines.Add("artEffectCells=" + string.Join("/", active.OrderBy(cell => cell.Q).ThenBy(cell => cell.R).Select(cell => cell.Q + "," + cell.R)));
                 lines.Add("artButton=" + art.name + "; label=" + art.GetComponentInChildren<Text>().text.Replace("\n", " "));
                 yield return Capture("s4-art-range-rock-" + size.x, output);
                 input.CancelCandidate();

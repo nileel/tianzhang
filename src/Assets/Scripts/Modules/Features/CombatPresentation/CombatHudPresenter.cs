@@ -72,7 +72,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (movementView == null) return;
             CombatUnitPresentationPose? pose = null;
-            if (InspectedTargetId != null && unitProvider != null &&
+            if (commandInput?.IsSelectingAttack != true && InspectedTargetId != null && unitProvider != null &&
                 unitProvider.TryGetPresentedPose(InspectedTargetId, out CombatUnitPresentationPose presented))
                 pose = presented;
             movementView.SetInspectionPose(pose);
