@@ -1178,7 +1178,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(camera, "AdventureScene is missing its formal camera.");
             Assert.AreEqual(8f, camera.transform.position.y, 0.001f);
             Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), 0.01f);
-            Assert.GreaterOrEqual(camera.orthographicSize, 4f, "The adventure camera must cover the whole battlefield.");
+            Assert.AreEqual(5f, camera.orthographicSize, .001f,
+                "The adventure camera starts closer; players can zoom out for an overview.");
             AdventureCameraController cameraController = camera.GetComponent<AdventureCameraController>();
             Assert.IsNotNull(cameraController);
             Assert.IsTrue(cameraController.enabled);

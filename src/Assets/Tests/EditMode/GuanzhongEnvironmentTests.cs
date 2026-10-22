@@ -38,8 +38,8 @@ namespace TianZhang.Tests.EditMode
             var expected = new Dictionary<string, Vector3>
             {
                 { "Environment_DistantCanyon", new Vector3(0f, 0f, 35f) },
-                { "Environment_ForegroundLeft", new Vector3(-10.7290f, -3.8933f, 4f) },
-                { "Environment_ForegroundRight", new Vector3(11.2710f, -4.2269f, 4f) },
+                { "Environment_ForegroundLeft", new Vector3(-10.7290f, -4.1398f, 4f) },
+                { "Environment_ForegroundRight", new Vector3(11.2710f, -4.4732f, 4f) },
                 { "Environment_ValleyMist", new Vector3(0f, -4.2f, 3.5f) },
             };
             foreach (string name in LayerNames)
@@ -58,8 +58,31 @@ namespace TianZhang.Tests.EditMode
                     Assert.Less(layer.localPosition.z, 5f, name + " 必须比最近的棋盘格更靠近相机，才能压在地块上层。");
             }
 
-            Assert.AreEqual(6.3617754f, Camera.main.orthographicSize, 0.01f,
-                "环境层不得改变按战场计算的相机取景。");
+            Assert.AreEqual(5f, Camera.main.orthographicSize, 0.01f,
+                "环境层不得覆盖玩家默认近景取景。");
+        }
+
+        [Test]
+        public void TacticalCameraRebuildKeepsZoomAndEnvironmentAfterReopen()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            List<string> before = Snapshot(scene);
+            AdventureSceneBuilder.RebuildTacticalCamera();
+            AdventureSceneBuilder.RebuildTacticalCamera();
+            scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            CollectionAssert.AreEqual(before, Snapshot(scene));
+            var camera = Camera.main;
+            var controller = camera.GetComponent<TianZhang.Features.Adventure.AdventureCameraController>();
+            var data = new SerializedObject(controller);
+            Assert.AreSame(camera, data.FindProperty("controlledCamera").objectReferenceValue);
+            Assert.AreSame(Find(scene, "GuanzhongBattlefield").transform,
+                data.FindProperty("battlefield").objectReferenceValue);
+            Assert.AreEqual(5f, camera.orthographicSize);
+            Assert.AreEqual(3f, data.FindProperty("minimumSize").floatValue);
+            Assert.AreEqual(7f, data.FindProperty("maximumSize").floatValue);
+            Assert.AreEqual(.5f, data.FindProperty("zoomStep").floatValue);
+            Assert.AreEqual(8f, camera.transform.position.y, .001f);
+            Assert.Less(Quaternion.Angle(camera.transform.rotation, Quaternion.Euler(38f, 0f, 0f)), .01f);
         }
 
         [Test]
@@ -115,7 +138,8 @@ namespace TianZhang.Tests.EditMode
                     renderer.sharedMaterial.mainTexture.name,
                     renderer.sharedMaterial.GetColor("_Color").ToString("F3")));
             }
-            snapshot.Add("camera|" + Camera.main.orthographicSize.ToString("F4") + "|" + environment.transform.parent.name);
+            snapshot.Add("camera|" + Camera.main.orthographicSize.ToString("F4") + "|" + environment.transform.parent.name +
+                "|" + Camera.main.transform.position.ToString("F4") + "|" + Camera.main.transform.eulerAngles.ToString("F4"));
             Light key = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Light>())
                 .Single(light => light.type == LightType.Directional);
             snapshot.Add($"light|{key.transform.eulerAngles:F3}|{key.color:F3}|{key.intensity:F3}|{key.shadows}|{key.shadowStrength:F3}|{key.shadowBias:F3}|{key.shadowNormalBias:F3}");

@@ -6,25 +6,34 @@ using UnityEngine.UI;
 
 namespace TianZhang.Features.Adventure
 {
-    /// <summary>Moves the Adventure camera on the battlefield plane without owning combat input or state.</summary>
+    /// <summary>Pans and zooms the Adventure camera without owning combat input or state.</summary>
     public sealed class AdventureCameraController : MonoBehaviour
     {
         [SerializeField] private Camera controlledCamera;
         [SerializeField] private Transform battlefield;
         [SerializeField] private float groundHeight;
         [SerializeField] private float panSpeed = 4f;
+        [SerializeField] private float minimumSize = 3f;
+        [SerializeField] private float maximumSize = 7f;
+        [SerializeField] private float zoomStep = 0.5f;
 
         private Bounds battlefieldBounds;
         private bool hasBounds;
         private bool dragging;
         private Vector2 previousPointerPosition;
 
-        public void Configure(Camera camera, Transform battlefieldRoot, float planeHeight, float speed = 4f)
+        public void Configure(Camera camera, Transform battlefieldRoot, float planeHeight, float speed = 4f,
+            float minimumSize = 3f, float maximumSize = 7f, float zoomStep = 0.5f)
         {
+            if (minimumSize <= 0f || maximumSize < minimumSize || zoomStep <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(minimumSize), "Camera zoom requires positive, ordered limits and step.");
             controlledCamera = camera != null ? camera : throw new ArgumentNullException(nameof(camera));
             battlefield = battlefieldRoot != null ? battlefieldRoot : throw new ArgumentNullException(nameof(battlefieldRoot));
             groundHeight = planeHeight;
             panSpeed = speed;
+            this.minimumSize = minimumSize;
+            this.maximumSize = maximumSize;
+            this.zoomStep = zoomStep;
             hasBounds = false;
             dragging = false;
         }
@@ -51,6 +60,13 @@ namespace TianZhang.Features.Adventure
                 dragging = false;
                 return;
             }
+
+            // Input System uses normalized wheel ticks. Orthographic zoom keeps the center ray
+            // on the same ground point, independently of turn state and presentation time.
+            if (mouse != null && mouse.scroll.y.ReadValue() != 0f)
+                controlledCamera.orthographicSize = Mathf.Clamp(
+                    controlledCamera.orthographicSize - mouse.scroll.y.ReadValue() * zoomStep,
+                    minimumSize, maximumSize);
 
             Vector3 displacement = Vector3.zero;
             Keyboard keyboard = Keyboard.current;

@@ -185,6 +185,55 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator WheelZoomKeepsGroundFocusAndClampsAtBothLimits()
+        {
+            yield return null;
+            Vector3 position = camera.transform.position;
+            Quaternion rotation = camera.transform.rotation;
+            Vector3 focus = GroundFocus();
+            Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
+            MouseAt(center, false, 1f);
+            Tick();
+            Assert.That(camera.orthographicSize, Is.EqualTo(3.5f).Within(.001f));
+            MouseAt(center, false, -1f);
+            Tick();
+            Assert.That(camera.orthographicSize, Is.EqualTo(4f).Within(.001f));
+            MouseAt(center, false, 100f);
+            Tick();
+            Assert.That(camera.orthographicSize, Is.EqualTo(3f).Within(.001f));
+            MouseAt(center, false, -100f);
+            Tick();
+            Assert.That(camera.orthographicSize, Is.EqualTo(7f).Within(.001f));
+            Assert.That(Vector3.Distance(focus, GroundFocus()), Is.LessThan(.001f));
+            Assert.That(Vector3.Distance(position, camera.transform.position), Is.LessThan(.001f));
+            Assert.AreEqual(rotation, camera.transform.rotation);
+            MouseAt(center, false);
+            controller.enabled = false;
+            controller.enabled = true;
+            yield return null;
+            Assert.That(camera.orthographicSize, Is.EqualTo(7f).Within(.001f),
+                "Reenabling input must not reset the player's zoom.");
+        }
+
+        [UnityTest]
+        public IEnumerator WheelDuringMiddleDragDoesNotJumpTheGroundFocus()
+        {
+            yield return null;
+            Vector2 pointer = new Vector2(Screen.width * .65f, Screen.height * .55f);
+            MouseAt(pointer, true);
+            Tick();
+            Vector3 focus = GroundFocus();
+            MouseAt(pointer, true, 1f);
+            Tick();
+            Assert.That(camera.orthographicSize, Is.EqualTo(3.5f).Within(.001f));
+            Assert.That(Vector3.Distance(focus, GroundFocus()), Is.LessThan(.001f));
+            MouseAt(pointer + new Vector2(30f, 0f), true);
+            Tick();
+            Assert.Greater(Vector3.Distance(focus, GroundFocus()), .001f);
+            MouseAt(pointer, false);
+        }
+
+        [UnityTest]
         public IEnumerator UiPointerAndInputFieldFocusDoNotPanOrStartDrag()
         {
             var eventObject = Track(new GameObject("TacticalCameraEventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule)));
@@ -211,10 +260,12 @@ namespace TianZhang.Tests.PlayMode
             Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
             MouseAt(center, true);
             Keys(Key.D);
+            MouseAt(center, true, 1f);
             uiModule.Process();
             Assert.IsTrue(events.IsPointerOverGameObject(mouse.deviceId), "Real UI input module must own this pointer.");
             Tick();
             Assert.That(Vector3.Distance(origin, camera.transform.position), Is.LessThan(0.001f));
+            Assert.AreEqual(4f, camera.orthographicSize, "UI must consume the wheel before camera zoom.");
             Keys();
             panel.SetActive(false);
             fieldObject.SetActive(false);
@@ -231,8 +282,10 @@ namespace TianZhang.Tests.PlayMode
             yield return null;
             Assert.IsTrue(input.isFocused);
             Keys(Key.W);
+            MouseAt(Vector2.zero, false, -1f);
             Tick();
             Assert.That(Vector3.Distance(origin, camera.transform.position), Is.LessThan(0.001f));
+            Assert.AreEqual(4f, camera.orthographicSize, "A focused input field must block zoom outside UI too.");
             events.SetSelectedGameObject(null);
             input.DeactivateInputField();
             Keys();
@@ -240,7 +293,7 @@ namespace TianZhang.Tests.PlayMode
 
 #if UNITY_EDITOR
         [UnityTest]
-        public IEnumerator SavedAdventureSceneReopensWithSizeFourAndExplicitCameraReferences()
+        public IEnumerator SavedAdventureSceneReopensWithDefaultZoomAndExplicitCameraReferences()
         {
             controller.enabled = false;
             var bootstrapObject = Track(new GameObject("CameraSceneBootstrap"));
@@ -268,7 +321,10 @@ namespace TianZhang.Tests.PlayMode
             var actualCamera = Field<Camera>(saved, "controlledCamera");
             Assert.IsNotNull(actualCamera);
             Assert.IsTrue(actualCamera.orthographic);
-            Assert.AreEqual(4, actualCamera.orthographicSize);
+            Assert.AreEqual(5f, actualCamera.orthographicSize);
+            Assert.AreEqual(3f, Field<float>(saved, "minimumSize"));
+            Assert.AreEqual(7f, Field<float>(saved, "maximumSize"));
+            Assert.AreEqual(.5f, Field<float>(saved, "zoomStep"));
             Assert.AreSame(actualCamera.gameObject, saved.gameObject);
             Assert.IsNotNull(Field<Transform>(saved, "battlefield"));
             Assert.AreEqual("GuanzhongBattlefield", Field<Transform>(saved, "battlefield").name);
@@ -286,9 +342,10 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(keys));
             InputSystem.Update();
         }
-        private void MouseAt(Vector2 position, bool held)
+        private void MouseAt(Vector2 position, bool held, float scroll = 0f)
         {
-            var state = new MouseState { position = position }.WithButton(MouseButton.Middle, held);
+            var state = new MouseState { position = position, scroll = new Vector2(0f, scroll) }
+                .WithButton(MouseButton.Middle, held);
             InputSystem.QueueStateEvent(mouse, state);
             InputSystem.Update();
         }

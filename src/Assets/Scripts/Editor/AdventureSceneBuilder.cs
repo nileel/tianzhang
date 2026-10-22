@@ -1279,16 +1279,17 @@ namespace TianZhang.Editor
         private static void ConfigureAdventureCamera(Camera camera, GameObject battlefield)
         {
             if (camera == null) throw new InvalidOperationException("AdventureScene requires its main camera.");
-            camera.orthographicSize = 4f;
+            camera.orthographicSize = 5f;
             AdventureCameraController controller = camera.GetComponent<AdventureCameraController>();
             if (controller == null) controller = camera.gameObject.AddComponent<AdventureCameraController>();
-            controller.Configure(camera, battlefield.transform, battlefield.transform.GetChild(0).position.y);
-            FitCameraToBattlefield(camera, battlefield);
+            controller.Configure(camera, battlefield.transform, battlefield.transform.GetChild(0).position.y,
+                minimumSize: 3f, maximumSize: 7f, zoomStep: 0.5f);
+            CenterCameraOnBattlefield(camera, battlefield);
             EditorUtility.SetDirty(camera);
             EditorUtility.SetDirty(controller);
         }
 
-        private static void FitCameraToBattlefield(Camera camera, GameObject battlefield)
+        private static void CenterCameraOnBattlefield(Camera camera, GameObject battlefield)
         {
             var bounds = new Bounds();
             bool any = false;
@@ -1301,7 +1302,8 @@ namespace TianZhang.Editor
             if (!any) return;
 
             float groundHeight = battlefield.transform.GetChild(0).position.y;
-            var focus = new Vector3(bounds.center.x, groundHeight, bounds.center.z);
+            // Leave room below the top-right HUD for enemy head bars in the default close view.
+            var focus = new Vector3(bounds.center.x, groundHeight, bounds.center.z + 0.4f);
             Vector3 forward = camera.transform.forward;
             if (Mathf.Abs(forward.y) > 0.0001f)
             {
@@ -1312,21 +1314,6 @@ namespace TianZhang.Editor
                     camera.transform.position += new Vector3(focus.x - viewCenter.x, 0f, focus.z - viewCenter.z);
                 }
             }
-
-            Matrix4x4 view = camera.worldToCameraMatrix;
-            float halfHeight = 0f, halfWidth = 0f;
-            for (int corner = 0; corner < 8; corner++)
-            {
-                var world = new Vector3(
-                    (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
-                    (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
-                    (corner & 4) == 0 ? bounds.min.z : bounds.max.z);
-                Vector3 local = view.MultiplyPoint(world);
-                halfHeight = Mathf.Max(halfHeight, Mathf.Abs(local.y));
-                halfWidth = Mathf.Max(halfWidth, Mathf.Abs(local.x));
-            }
-            camera.orthographicSize = Mathf.Max(4f,
-                Mathf.Max(halfHeight, halfWidth / Mathf.Max(1f, camera.aspect)) * 1.12f);
         }
 
         [MenuItem("天章/场景/重建战术精灵隔离矩阵")]
