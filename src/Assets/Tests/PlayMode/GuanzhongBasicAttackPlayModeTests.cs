@@ -314,8 +314,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(AdventureSceneState.Combat, adventure.CurrentState);
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             Assert.IsNotNull(provider, "AdventureScene must bind the single formal static-3D provider.");
-            AssertFormalProviderUnit(provider, "player", Color.cyan);
-            AssertFormalProviderUnit(provider, "enemy", Color.red);
+            AssertFormalProviderUnit(provider, "player", "FormalPlayer_Static3D");
+            AssertFormalProviderUnit(provider, "enemy", "Shijiahou_Static3D");
             AssertFormalBattlefieldPresentation();
             AdventureSpawnSet spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             CollectionAssert.AreEqual(new[] { "enemy", "enemy_2" }, spawned.Enemies.Select(enemy => enemy.Id));
@@ -1138,24 +1138,25 @@ namespace TianZhang.Tests.PlayMode
         private static void AssertFormalProviderUnit(
             Static3DCombatUnitPresentationProvider provider,
             string combatantId,
-            Color expectedBaseColor)
+            string expectedMaterialName)
         {
             Assert.IsTrue(provider.TryGetPresentedUnit(combatantId, out GameObject unit));
             Assert.Greater(unit.transform.position.y, 0f);
             Assert.Zero(unit.GetComponentsInChildren<SpriteRenderer>(true).Length);
+            Assert.IsNull(unit.transform.Find("Static3DCombatBase"),
+                "The formal unit must stand directly on the tile; no base geometry may remain.");
+            Assert.Zero(unit.GetComponentsInChildren<LineRenderer>(true).Length,
+                "The old base selection ring must not be recreated.");
             MeshRenderer[] renderers = unit.GetComponentsInChildren<MeshRenderer>(true);
-            Assert.AreEqual(2, renderers.Length, "The provider must create exactly the approved body and independent base.");
-            int baseColorId = Shader.PropertyToID("_BaseColor");
-            Transform baseRoot = unit.transform.Find("Static3DCombatBase");
-            Assert.IsNotNull(baseRoot);
-            MeshRenderer baseRenderer = baseRoot.GetComponentInChildren<MeshRenderer>();
-            Assert.IsNotNull(baseRenderer);
-            var properties = new MaterialPropertyBlock();
-            baseRenderer.GetPropertyBlock(properties, 1);
-            Color actual = properties.GetColor(baseColorId);
-            Assert.That(actual.r, Is.EqualTo(expectedBaseColor.r).Within(0.001f));
-            Assert.That(actual.g, Is.EqualTo(expectedBaseColor.g).Within(0.001f));
-            Assert.That(actual.b, Is.EqualTo(expectedBaseColor.b).Within(0.001f));
+            Assert.AreEqual(1, renderers.Length,
+                "The provider must create exactly the approved body and no independent base.");
+            Assert.AreEqual(expectedMaterialName, renderers[0].sharedMaterial.name);
+            Assert.AreEqual(0.34f, unit.transform.position.y, 0.001f);
+            Assert.AreEqual(0.34f, renderers[0].bounds.min.y, 0.001f,
+                "The body foot must rest on the measured tile support plane.");
+            Assert.AreEqual(Vector3.zero, unit.transform.GetChild(0).localPosition,
+                "The body must not be lifted by a former base thickness.");
+            Assert.AreEqual(1, unit.transform.childCount);
         }
 
         private static void AssertFormalBattlefieldPresentation()
@@ -1222,6 +1223,20 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(0.34f, ground.position.y, 0.001f);
             Assert.AreEqual(Vector3.one, ground.localScale);
             Assert.AreEqual(0.34f, unit.transform.position.y, 0.001f);
+            Assert.IsNull(unit.transform.Find("Static3DCombatBase"));
+            Assert.AreEqual(1, unit.transform.childCount, "Only the approved body may remain under the unit root.");
+            MeshRenderer body = unit.GetComponentsInChildren<MeshRenderer>(true).Single();
+            float surfaceY = CenterSurfaceY(ground);
+            Assert.AreEqual(0.34f, surfaceY, 0.002f,
+                "The tile's measured bearing surface at the cell center is the support plane.");
+            Assert.AreEqual(surfaceY, body.bounds.min.y, 0.002f,
+                "The body foot must rest on the measured tile surface, not on a removed base lift.");
+            float decorationTop = ground.GetComponentsInChildren<Renderer>(true).Max(renderer => renderer.bounds.max.y);
+            Assert.Greater(decorationTop, body.bounds.min.y + 0.05f,
+                "The tile renderer bounds include grass; that top must not be used as the support plane.");
+            TestContext.WriteLine($"grounding:{combatantId}:cell=({q},{r}),rootY={unit.transform.position.y:F5}," +
+                $"footY={body.bounds.min.y:F5},surfaceY={surfaceY:F5},tileRendererTop={decorationTop:F5}," +
+                $"children={unit.transform.childCount},base=none");
         }
 
 

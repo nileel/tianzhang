@@ -81,8 +81,6 @@ namespace TianZhang.Features.CombatPresentation
         private void LateUpdate()
         {
             if (InspectedTargetId != null && FindInspectable(InspectedTargetId) == null) ClearInspectedTarget();
-            unitProvider?.SetSelectionHighlight(movementView != null && movementView.IsSelecting
-                ? Snapshot?.Player?.Id : null);
             RefreshInspectionMarker();
         }
 

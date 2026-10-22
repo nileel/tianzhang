@@ -190,11 +190,6 @@ namespace TianZhang.Tests.EditMode
                 approvedBoundsMax = new Vector3(1f, 1f, 1f),
                 sixDirectionYawDegrees = (int[])Static3DCombatUnitPresentationProfileSet.RequiredSixDirectionYawDegrees.Clone(),
                 combatFeedback = approved.combatFeedback,
-                combatBasePrefab = approved.combatBasePrefab,
-                approvedBaseModelAssetPath = approved.approvedBaseModelAssetPath,
-                approvedBaseModelSha256 = approved.approvedBaseModelSha256,
-                combatBaseBoundsMin = approved.combatBaseBoundsMin,
-                combatBaseBoundsMax = approved.combatBaseBoundsMax,
             };
         }
 

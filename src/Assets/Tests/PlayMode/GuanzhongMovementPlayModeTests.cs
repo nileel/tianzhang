@@ -103,6 +103,11 @@ namespace TianZhang.Tests.PlayMode
             AdventureSpawnSet spawned = Get<AdventureSpawnSet>(encounter, "spawned");
             CombatantSnapshot player = spawned.Player, enemy = spawned.Enemy;
             Static3DCombatUnitPresentationProvider provider = Find<Static3DCombatUnitPresentationProvider>();
+            foreach (string combatantId in new[] { "player", "enemy", "enemy_2" })
+            {
+                Assert.IsTrue(provider.TryGetPresentedUnit(combatantId, out GameObject presented));
+                AssertGroundedPresentedUnit(presented);
+            }
 
             for (float deadline = Time.realtimeSinceStartup + 15f; Time.realtimeSinceStartup < deadline &&
                 (session.CurrentActorId != "player" || encounter.IsPresenting);) yield return null;
@@ -306,6 +311,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(bar.MoveButton.interactable || player.ActionPointsRemainingUnits == 0);
                 Assert.IsTrue(provider.TryGetPresentedUnit("player", out GameObject root));
                 Assert.AreEqual(Static3DCombatUnitPresentationProvider.HexToWorld(option.Destination), root.transform.position);
+                AssertGroundedPresentedUnit(root);
             }
 
             // Turn change also clears an uncommitted move before the next authority projection.
@@ -320,6 +326,22 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
             }
             TestContext.WriteLine("S3 movement: popup, hover, single-click commit, cancellation over UI, illegal clicks, and stale rejection verified at 1920x1080 and 1366x768.");
+        }
+
+        /// <summary>
+        /// Formal units stand with their own foot pivot on the tile plane; the former physical
+        /// base and its lift are gone, so root, feet and plane must share the same height.
+        /// </summary>
+        private static void AssertGroundedPresentedUnit(GameObject root)
+        {
+            Assert.IsNotNull(root);
+            Assert.IsNull(root.transform.Find("Static3DCombatBase"));
+            Assert.AreEqual(1, root.transform.childCount, "Only the approved body may remain.");
+            MeshRenderer body = root.GetComponentInChildren<MeshRenderer>(true);
+            Assert.IsNotNull(body);
+            Assert.AreEqual(0.34f, root.transform.position.y, 0.001f);
+            Assert.AreEqual(0.34f, body.bounds.min.y, 0.002f,
+                "The body foot must rest on the measured tile support plane.");
         }
 
         private static IEnumerator ReadyForPlayerTurn(EncounterCoordinator encounter, CombatSession session)
@@ -458,6 +480,7 @@ namespace TianZhang.Tests.PlayMode
                 session.Combatants.TryGet("player", out CombatantSnapshot player);
                 session.Combatants.TryGet("enemy", out CombatantSnapshot enemy);
                 provider.TryGetPresentedUnit("player", out GameObject root);
+                MeshRenderer presentedBody = root == null ? null : root.GetComponentInChildren<MeshRenderer>(true);
                 Text status = Get<Text>(bar, "movementLabel");
                 var evidence = new VisibleMovementEvidence
                 {
@@ -469,7 +492,7 @@ namespace TianZhang.Tests.PlayMode
                     activeUnits = provider.ActiveCombatantCount, rootActive = root != null && root.activeInHierarchy,
                     selecting = movement.IsSelecting,
                     selected = movement.Selected == null ? "" : movement.Selected.Destination.ToString(),
-                    root = root == null ? "removed" : $"position={root.transform.position:F5}; rotation={root.transform.eulerAngles:F3}; scale={root.transform.localScale:F3}; base={root.transform.Find("Static3DCombatBase").position:F5}",
+                    root = root == null ? "removed" : $"position={root.transform.position:F5}; rotation={root.transform.eulerAngles:F3}; scale={root.transform.localScale:F3}; children={root.transform.childCount}; feet={(presentedBody == null ? "none" : presentedBody.bounds.min.y.ToString("F5"))}",
                     status = $"{status.text}; rect={status.rectTransform.rect}; preferred={status.preferredWidth:F2}x{status.preferredHeight:F2}; vertices={status.cachedTextGenerator.vertexCount}; font={status.font.name}; canvas={status.canvas.renderMode}/{status.canvas.scaleFactor}",
                     camera = $"{camera.name}; position={camera.transform.position:F5}; size={camera.orthographicSize}; pixelRect={camera.pixelRect}",
                     controls = $"move={bar.MoveButton.interactable}; guard={bar.GuardButton.interactable}; end={bar.WaitButton.interactable}",
