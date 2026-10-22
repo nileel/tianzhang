@@ -442,13 +442,28 @@ namespace TianZhang.Editor
 
             RectTransform target = LayoutObject(canvas.transform, "CombatTargetRoot");
             RemoveLayout(target);
-            CompactRect(target.gameObject, 1536, 232, 352, 376);
+            // Structured details: portrait, identity, two resource bars and an unknown-facts body.
+            CompactRect(target.gameObject, 1504, 232, 384, 368);
             CombatCompactUiAssets.Panel(target.gameObject);
             Text targetTitle = LayoutText(target, "TargetHeading", "目标详情", 24);
-            PlaceLayoutRect(targetTitle.rectTransform, 20, 316, 210, 44);
-            PlaceLayoutRect(LayoutObject(target, "CloseTargetButton"), 236, 316, 96, 44);
+            PlaceLayoutRect(targetTitle.rectTransform, 20, 320, 210, 36);
+            PlaceLayoutRect(LayoutObject(target, "CloseTargetButton"), 288, 320, 80, 34);
             LayoutObject(target, "CloseTargetButton").GetComponentInChildren<Text>(true).text = "关闭";
-            MakeLayoutScroll(target, "TargetBody", LayoutObject(target, "CombatTargetDetails").GetComponent<Text>(), 20, 20, 20, 76);
+            PlaceLayoutRect(LayoutObject(target, "TargetPortrait"), 20, 216, 96, 96);
+            Text targetName = LayoutText(target, "TargetName", string.Empty, 26);
+            PlaceLayoutRect(targetName.rectTransform, 128, 276, 236, 40);
+            Text targetFaction = LayoutText(target, "TargetFaction", string.Empty, 20);
+            targetFaction.color = new Color32(194, 208, 203, 255);
+            PlaceLayoutRect(targetFaction.rectTransform, 128, 242, 236, 32);
+            PlaceLayoutRect(LayoutObject(target, "TargetHealthBar"), 128, 232, 236, 6);
+            StretchLayoutRect((RectTransform)LayoutObject(target, "TargetHealthBar").Find("Fill"), 0, 0, 0, 0);
+            Text targetHealth = LayoutText(target, "TargetHealthLabel", string.Empty, 18);
+            PlaceLayoutRect(targetHealth.rectTransform, 128, 204, 236, 28);
+            PlaceLayoutRect(LayoutObject(target, "TargetSpiritBar"), 128, 192, 236, 6);
+            StretchLayoutRect((RectTransform)LayoutObject(target, "TargetSpiritBar").Find("Fill"), 0, 0, 0, 0);
+            Text targetSpirit = LayoutText(target, "TargetSpiritLabel", string.Empty, 18);
+            PlaceLayoutRect(targetSpirit.rectTransform, 128, 164, 236, 28);
+            MakeLayoutScroll(target, "TargetBody", LayoutObject(target, "CombatTargetDetails").GetComponent<Text>(), 20, 20, 20, 210);
 
             RectTransform preview = LayoutObject(canvas.transform, "CombatActionPreviewRoot");
             RemoveLayout(preview);
@@ -805,42 +820,83 @@ namespace TianZhang.Editor
             CombatTargetView view = root.GetComponent<CombatTargetView>() ?? root.AddComponent<CombatTargetView>();
             CombatTargetInput input = root.GetComponent<CombatTargetInput>() ?? root.AddComponent<CombatTargetInput>();
             GameObject panel = SceneBuildSupport.CreatePanel("CombatTargetRoot", canvas.transform, Vector2.zero, Vector2.one);
-            SettlementSceneBuilder.PlacePanel(panel, new Vector2(152, 296), new Vector2(512, 640));
             SettlementSceneBuilder.ApplyPanelSkin(panel);
             SettlementSceneBuilder.ConfigureColumn(panel);
-            Text details = SceneBuildSupport.CreateText("CombatTargetDetails", panel.transform, string.Empty, 20);
-            SettlementSceneBuilder.ApplyTextSkin(details, 224);
-            details.raycastTarget = false;
-            Button close = SceneBuildSupport.CreateButton("CloseTargetButton", panel.transform, "关闭查看", out _);
+            Text heading = SceneBuildSupport.CreateText("TargetHeading", panel.transform, "目标详情", 24);
+            SettlementSceneBuilder.ApplyTextSkin(heading, 34);
+            Text closeLabel;
+            Button close = SceneBuildSupport.CreateButton("CloseTargetButton", panel.transform, "关闭", out closeLabel);
             SettlementSceneBuilder.ApplyButtonSkin(close);
-            var marker = new GameObject("CombatTargetMarker", typeof(RectTransform));
-            marker.transform.SetParent(canvas.transform, false);
-            var markerRect = marker.GetComponent<RectTransform>();
-            markerRect.anchorMin = markerRect.anchorMax = markerRect.pivot = new Vector2(0.5f, 0.5f);
-            for (int side = 0; side < 4; side++)
+            closeLabel.font = SettlementSceneBuilder.UiFont;
+            closeLabel.verticalOverflow = VerticalWrapMode.Overflow;
+            Sprite playerPortrait = SceneBuildSupport.RequireAsset<Sprite>(
+                "Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png");
+            Image portrait = CompactImage(panel.transform, "TargetPortrait", null);
+            portrait.sprite = playerPortrait;
+            Text targetNameLabel = SceneBuildSupport.CreateText("TargetName", panel.transform, string.Empty, 26);
+            SettlementSceneBuilder.ApplyTextSkin(targetNameLabel, 32);
+            Text faction = SceneBuildSupport.CreateText("TargetFaction", panel.transform, string.Empty, 20);
+            faction.font = SettlementSceneBuilder.UiFont;
+            faction.color = new Color32(194, 208, 203, 255);
+            faction.raycastTarget = false;
+            Text healthLabel = SceneBuildSupport.CreateText("TargetHealthLabel", panel.transform, string.Empty, 18);
+            Text spiritLabel = SceneBuildSupport.CreateText("TargetSpiritLabel", panel.transform, string.Empty, 18);
+            foreach (Text label in new[] { healthLabel, spiritLabel })
             {
-                var edge = new GameObject("Edge" + side, typeof(RectTransform), typeof(Image));
-                edge.transform.SetParent(marker.transform, false);
-                Image image = edge.GetComponent<Image>();
-                image.color = new Color32(239, 206, 123, 255);
-                image.raycastTarget = false;
-                RectTransform rect = image.rectTransform;
-                bool horizontal = side < 2;
-                float position = side % 2;
-                rect.anchorMin = horizontal ? new Vector2(0, position) : new Vector2(position, 0);
-                rect.anchorMax = horizontal ? new Vector2(1, position) : new Vector2(position, 1);
-                rect.anchoredPosition = Vector2.zero;
-                rect.sizeDelta = horizontal ? new Vector2(0, 2) : new Vector2(2, 0);
+                label.font = SettlementSceneBuilder.UiFont;
+                label.alignment = TextAnchor.MiddleLeft;
+                label.color = new Color32(239, 233, 211, 255);
+                label.raycastTarget = false;
             }
+            // The project font's line advance exceeds the compact label heights; never crop glyphs.
+            foreach (Text label in new[] { heading, targetNameLabel, faction, healthLabel, spiritLabel })
+            {
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+            Image healthFill = CreateTargetBar(panel.transform, "TargetHealthBar", "fill_health");
+            Image spiritFill = CreateTargetBar(panel.transform, "TargetSpiritBar", "fill_mana");
+            Text details = SceneBuildSupport.CreateText("CombatTargetDetails", panel.transform, string.Empty, 20);
+            SettlementSceneBuilder.ApplyTextSkin(details, 120);
+            details.raycastTarget = false;
             SceneBuildSupport.SetObject(view, "root", panel);
+            SceneBuildSupport.SetObject(view, "portrait", portrait);
+            SceneBuildSupport.SetObject(view, "nameText", targetNameLabel);
+            SceneBuildSupport.SetObject(view, "factionText", faction);
+            SceneBuildSupport.SetObject(view, "healthFill", healthFill);
+            SceneBuildSupport.SetObject(view, "healthLabel", healthLabel);
+            SceneBuildSupport.SetObject(view, "spiritFill", spiritFill);
+            SceneBuildSupport.SetObject(view, "spiritLabel", spiritLabel);
             SceneBuildSupport.SetObject(view, "details", details);
             SceneBuildSupport.SetObject(view, "closeButton", close);
-            SceneBuildSupport.SetObject(view, "worldMarker", markerRect);
+            SceneBuildSupport.SetObject(view, "playerPortrait", playerPortrait);
+            SceneBuildSupport.SetObject(view, "shijiahouPortrait",
+                SceneBuildSupport.RequireAsset<Sprite>(CombatCompactUiAssets.Folder + "enemy_shijiahou.png"));
+            SceneBuildSupport.SetObject(view, "lieshijiaPortrait",
+                SceneBuildSupport.RequireAsset<Sprite>(CombatCompactUiAssets.Folder + "enemy_lieshijia.png"));
             AdventureSceneInstaller installer = root.GetComponent<AdventureSceneInstaller>();
             SceneBuildSupport.SetObject(installer, "combatTargetView", view);
             SceneBuildSupport.SetObject(installer, "combatTargetInput", input);
             panel.SetActive(false);
-            marker.SetActive(false);
+        }
+
+        private static Image CreateTargetBar(Transform parent, string name, string fillSprite)
+        {
+            var track = new GameObject(name, typeof(RectTransform), typeof(Image));
+            track.transform.SetParent(parent, false);
+            track.GetComponent<Image>().sprite = CombatCompactUiAssets.Sprite("bar_track");
+            track.GetComponent<Image>().type = Image.Type.Sliced;
+            track.GetComponent<Image>().color = Color.white;
+            var fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(track.transform, false);
+            Image image = fill.GetComponent<Image>();
+            image.sprite = CombatCompactUiAssets.Sprite(fillSprite);
+            image.type = Image.Type.Filled;
+            image.fillMethod = Image.FillMethod.Horizontal;
+            image.fillOrigin = 0;
+            image.color = Color.white;
+            foreach (Graphic graphic in track.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
+            return image;
         }
 
         [MenuItem("天章/场景/刷新战斗攻击档案")]

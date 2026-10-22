@@ -290,9 +290,10 @@ namespace TianZhang.Tests.PlayMode
                     yield return null;
                 }
                 Assert.AreEqual(enemy.Id, targetView.TargetId, "The existing target panel must still present details.");
-                StringAssert.Contains(enemyName, targetView.DetailsText);
-                StringAssert.Contains("生命 " + enemy.CurrentHealth + "/" + enemy.MaximumHealth, targetView.DetailsText);
-                StringAssert.Contains("灵力 " + enemy.CurrentSpirit + "/" + enemy.MaximumSpirit, targetView.DetailsText);
+                Assert.AreEqual(enemyName, targetView.NameText, "The structured panel binds the unit's own name.");
+                StringAssert.Contains("生命 " + enemy.CurrentHealth + "/" + enemy.MaximumHealth, targetView.HealthText);
+                StringAssert.Contains("灵力 " + enemy.CurrentSpirit + "/" + enemy.MaximumSpirit, targetView.SpiritText);
+                StringAssert.Contains("伤害：未探明", targetView.DetailsText);
                 yield return CaptureOverlayFrame(width, height);
                 RectTransform canvasRect = (RectTransform)hudCanvas.transform;
                 TestContext.WriteLine($"Formal slim bar {width}x{height}: screen={Screen.width}x{Screen.height}, " +

@@ -344,7 +344,8 @@ namespace TianZhang.Gameplay.Contracts
             int currentHealth,
             int maximumHealth,
             int currentSpirit,
-            int maximumSpirit)
+            int maximumSpirit,
+            string portraitKey = null)
         {
             Id = id;
             DisplayName = displayName;
@@ -352,6 +353,7 @@ namespace TianZhang.Gameplay.Contracts
             MaximumHealth = maximumHealth;
             CurrentSpirit = currentSpirit;
             MaximumSpirit = maximumSpirit;
+            PortraitKey = portraitKey;
         }
 
         public string Id { get; }
@@ -360,6 +362,8 @@ namespace TianZhang.Gameplay.Contracts
         public int MaximumHealth { get; }
         public int CurrentSpirit { get; }
         public int MaximumSpirit { get; }
+        /// <summary>Stable identity used to pick the portrait: "player" or the enemy data id.</summary>
+        public string PortraitKey { get; }
     }
 
     [Serializable]

@@ -43,8 +43,12 @@ namespace TianZhang.Features.CombatPresentation
             float nearest = float.PositiveInfinity;
             string closestId = null;
             Consider(presenter.Snapshot.Player?.Id);
-            Consider(presenter.Snapshot.Enemy?.Id);
+            // Every living enemy must be pickable, not only the primary one.
+            foreach (TianZhang.Gameplay.Contracts.CombatantHudSnapshot enemy in presenter.Snapshot.Enemies)
+                Consider(enemy?.Id);
             id = closestId;
+            if (id == null && TryGetCell(screenPoint, out CombatUnitPresentationHex cell))
+                id = FindUnitAtCell(cell);
             return id != null;
 
             void Consider(string candidate)
@@ -56,6 +60,29 @@ namespace TianZhang.Features.CombatPresentation
                     closestId = candidate;
                 }
             }
+        }
+
+        /// <summary>Board cell under the pointer; a cell click also selects the unit standing there.</summary>
+        public bool TryGetCell(Vector2 screenPoint, out CombatUnitPresentationHex cell)
+        {
+            cell = default;
+            if (worldCamera == null) return false;
+            Ray ray = worldCamera.ScreenPointToRay(screenPoint);
+            var plane = new Plane(Vector3.up, new Vector3(0f, Static3DCombatUnitPresentationProvider.HexToWorld(
+                new CombatUnitPresentationHex(0, 0)).y, 0f));
+            if (!plane.Raycast(ray, out float distance)) return false;
+            Vector3 position = ray.GetPoint(distance);
+            // Inverse of the formal axial grid used by the board and the unit carrier.
+            int r = Mathf.RoundToInt((position.z - 1f) / 0.8660254f);
+            int q = Mathf.RoundToInt(position.x - r * 0.5f);
+            var candidate = new CombatUnitPresentationHex(q, r);
+            Vector3 delta = position - Static3DCombatUnitPresentationProvider.HexToWorld(candidate);
+            if (Mathf.Abs(delta.x) > 0.5f ||
+                Mathf.Abs(0.5f * delta.x + 0.8660254f * delta.z) > 0.5f ||
+                Mathf.Abs(0.5f * delta.x - 0.8660254f * delta.z) > 0.5f)
+                return false;
+            cell = candidate;
+            return true;
         }
 
         public string FindUnitAtCell(CombatUnitPresentationHex cell)

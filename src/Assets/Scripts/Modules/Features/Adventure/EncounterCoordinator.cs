@@ -650,8 +650,9 @@ namespace TianZhang.Features.Adventure
             acceptsCommands = acceptsCommands && !IsPresenting;
             ++commandContextVersion;
             presentation.Present(new CombatHudSnapshot(
-                ToHud(player, playerDisplayName),
-                ToHud(enemy, enemy == null ? string.Empty : resolveText(EnemyDataFor(enemy.Id).displayNameKey)),
+                ToHud(player, playerDisplayName, player == null ? null : "player"),
+                ToHud(enemy, enemy == null ? string.Empty : resolveText(EnemyDataFor(enemy.Id).displayNameKey),
+                    enemy == null ? null : EnemyDataFor(enemy.Id).enemyId),
                 turnText,
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
@@ -667,7 +668,8 @@ namespace TianZhang.Features.Adventure
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
-                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(EnemyDataFor(value.Id).displayNameKey))).ToArray()));
+                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(EnemyDataFor(value.Id).displayNameKey),
+                    EnemyDataFor(value.Id).enemyId)).ToArray()));
         }
 
         private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)
@@ -985,7 +987,7 @@ namespace TianZhang.Features.Adventure
             return best;
         }
 
-        private static CombatantHudSnapshot ToHud(CombatantSnapshot value, string name)
+        private static CombatantHudSnapshot ToHud(CombatantSnapshot value, string name, string portraitKey = null)
         {
             return value == null ? null : new CombatantHudSnapshot(
                 value.Id,
@@ -993,7 +995,8 @@ namespace TianZhang.Features.Adventure
                 value.CurrentHealth,
                 value.MaximumHealth,
                 value.CurrentSpirit,
-                value.MaximumSpirit);
+                value.MaximumSpirit,
+                portraitKey);
         }
 
         private string BuildActionMessage(string actor, CombatCommand command, CombatActionResult result)

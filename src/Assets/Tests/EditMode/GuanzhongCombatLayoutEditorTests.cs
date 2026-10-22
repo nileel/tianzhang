@@ -98,7 +98,30 @@ namespace TianZhang.Tests.EditMode
                 Assert.NotNull(scroll.GetComponent<RectMask2D>());
                 Assert.IsFalse(scroll.horizontal);
             }
-            Assert.AreEqual("UICanvas", Rect("CombatTargetMarker").parent.name);
+            Assert.IsFalse(rects.Any(rect => rect.name == "CombatTargetMarker"),
+                "V7 replaces the screen-space target box with one ground ring.");
+            var targetRoot = Rect("CombatTargetRoot");
+            Assert.AreEqual("UICanvas", targetRoot.parent.name);
+            foreach (string part in new[]
+                     {
+                         "TargetPortrait", "TargetName", "TargetFaction", "TargetHealthBar", "TargetHealthLabel",
+                         "TargetSpiritBar", "TargetSpiritLabel", "CombatTargetDetails",
+                     })
+            {
+                var rect = Rect(part);
+                Assert.That(rect.IsChildOf(targetRoot), Is.True,
+                    part + " must stay inside the structured target panel.");
+            }
+            var targetView = scene.GetRootGameObjects().SelectMany(r => r.GetComponents<CombatTargetView>()).Single();
+            var targetData = new SerializedObject(targetView);
+            foreach (string field in new[]
+                     {
+                         "portrait", "nameText", "factionText", "healthFill", "healthLabel", "spiritFill",
+                         "spiritLabel", "details", "closeButton", "playerPortrait", "shijiahouPortrait",
+                         "lieshijiaPortrait",
+                     })
+                Assert.NotNull(targetData.FindProperty(field)?.objectReferenceValue, "CombatTargetView." + field);
+            Assert.IsNull(targetData.FindProperty("worldMarker"));
             var healthBars = Rect("CombatUnitHealthBars");
             Assert.AreEqual("UICanvas", healthBars.parent.name);
             Assert.IsEmpty(healthBars.GetComponentsInChildren<Text>(true), "Head health bars must stay text-free.");

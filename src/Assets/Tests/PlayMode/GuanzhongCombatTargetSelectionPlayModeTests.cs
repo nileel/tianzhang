@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -156,9 +157,11 @@ namespace TianZhang.Tests.PlayMode
             var bar = Find<CombatActionBarView>();
             var service = new CombatCommandService();
             // Reverse enumeration only; live positions, IDs and their presented units stay aligned.
-            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], spawned.EnemyData,
+            // Species data stays aligned with the reversed enemy list, as production guarantees.
+            EnemyData firstData = spawned.EnemyDataList[0], secondData = spawned.EnemyDataList[1];
+            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], secondData,
                 spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, spawned.PlayerDivineProfileIds,
-                new[] { spawned.Enemy });
+                new[] { spawned.Enemy }, additionalEnemyData: new[] { firstData });
             Set(encounter, "spawned", spawned);
             spawned.Player.Facing = Enumerable.Range(0, 6).First(direction => !service.Preview(session,
                 new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: spawned.Player.BasicAttackProfileId,
@@ -167,8 +170,17 @@ namespace TianZhang.Tests.PlayMode
                 .Invoke(encounter, new object[] { "合法替代候选验证", true, null });
             Assert.IsFalse(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanConfirm);
             Assert.IsTrue(presenter.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm);
-            Assert.IsFalse(presenter.Snapshot.ArtActions[0].Targets[0].CanExecute);
-            Assert.IsTrue(presenter.Snapshot.ArtActions[0].Targets[1].CanExecute);
+            var firstArt = presenter.Snapshot.ArtActions[0];
+            string artDiagnostic = string.Join("; ", firstArt.Targets.Select(t =>
+            {
+                session.Combatants.TryGet(t.Id, out CombatantSnapshot unit);
+                return t.Id + "/" + t.DisplayName + "@" + unit?.Position + "=" + t.CanExecute + ":" + t.RejectionReason;
+            }));
+            // The formal contact keeps one species in range and one out of range; enumeration order
+            // follows the session, so assert the offered alternatives rather than a fixed index.
+            Assert.IsTrue(firstArt.Targets.Any(t => t.CanExecute), artDiagnostic);
+            Assert.IsTrue(firstArt.Targets.Any(t => !t.CanExecute), artDiagnostic);
+            string legalArtTarget = firstArt.Targets.First(t => t.CanExecute).Id;
             Assert.IsTrue(bar.BasicAttackButton.interactable);
             Assert.IsTrue(bar.ArtButton.interactable);
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
@@ -178,9 +190,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(input.Preview.CanConfirm);
             input.CancelCandidate();
             bar.ArtButton.onClick.Invoke();
-            yield return PointArt(session, spawned.Enemies[1].Id);
+            yield return PointArt(session, legalArtTarget);
             Assert.IsTrue(input.Preview.CanConfirm);
-            Assert.AreEqual(spawned.Enemies[1].Id, input.Candidate.TargetId);
+            Assert.AreEqual(legalArtTarget, input.Candidate.TargetId);
             input.CancelCandidate();
             Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
@@ -305,9 +317,11 @@ namespace TianZhang.Tests.PlayMode
             yield return CommandsReady();
             Assert.IsTrue(presenter.Snapshot.ArtActions[0].Targets.All(value => value.CanExecute));
             // Reverse only enumeration, keeping live authority, stable IDs, positions and resources.
-            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], spawned.EnemyData,
+            // Species data follows the reversed enemy list so the presentation stays aligned.
+            EnemyData firstData = spawned.EnemyDataList[0], secondData = spawned.EnemyDataList[1];
+            spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemies[1], secondData,
                 spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, spawned.PlayerDivineProfileIds,
-                new[] { spawned.Enemies[0] });
+                new[] { spawned.Enemies[0] }, additionalEnemyData: new[] { firstData });
             Set(encounter, "spawned", spawned);
             RefreshAuthority();
             foreach (var enemy in spawned.Enemies)
@@ -503,14 +517,14 @@ namespace TianZhang.Tests.PlayMode
             int tick = session.TurnScheduler.CurrentTick, hp = spawned.Player.CurrentHealth, mp = spawned.Player.CurrentSpirit;
             yield return Click(WorldPoint(spawned.Enemy.Id));
             AssertSelection(spawned.Enemy.Id);
-            StringAssert.Contains("敌方", target.DetailsText);
+            Assert.AreEqual("敌方", target.FactionText);
             StringAssert.Contains("伤害：未探明", target.DetailsText);
-            AssertMarker();
+            AssertInspectionRing(spawned.Enemy.Id);
             Button[] entries = Get<Button[]>(timeline, "entryButtons");
             int playerIndex = presenter.Snapshot.Timeline.Entries.ToList().FindIndex(value => value.Id == spawned.Player.Id);
-            yield return Click(RectTransformUtility.WorldToScreenPoint(null, entries[playerIndex].transform.position));
+            yield return Click(EntryCenter(entries[playerIndex]));
             AssertSelection(spawned.Player.Id);
-            StringAssert.Contains("我方", target.DetailsText);
+            Assert.AreEqual("我方", target.FactionText);
             CombatTimelineSnapshot original = presenter.Snapshot.Timeline;
             CombatHudSnapshot hud = presenter.Snapshot;
             presenter.Present(new CombatHudSnapshot(hud.Player, hud.Enemy, hud.TurnText, hud.AcceptsCommands,
@@ -602,7 +616,175 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(new HexCoord(option.Destination.Q, option.Destination.R), spawned.Player.Position);
             Assert.AreEqual(points - option.Cost, spawned.Player.ActionPointsRemainingUnits);
             yield return null;
-            AssertMarker();
+            AssertInspectionRing(spawned.Player.Id);
+        }
+
+        [UnityTest, Timeout(600000)]
+        public IEnumerator V7StructuredDetailsAndSingleGroundSelectionAtBothResolutions()
+        {
+            string directory = Path.Combine(Application.dataPath, "../Logs/v7-details");
+            Directory.CreateDirectory(directory);
+            CombatTargetInput pick = Find<CombatTargetInput>();
+            CombatActionBarView bar = Find<CombatActionBarView>();
+            CombatActionPreviewView preview = Find<CombatActionPreviewView>();
+            yield return CommandsReady();
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(width, Screen.width);
+
+                // Model click binds the primary enemy's own portrait, name, faction and resources.
+                yield return Click(WorldPoint(spawned.Enemy.Id));
+                AssertSelection(spawned.Enemy.Id);
+                CombatantHudSnapshot primary = presenter.FindInspectable(spawned.Enemy.Id);
+                Assert.AreEqual("enemy_shijiahou", primary.PortraitKey);
+                Sprite shijiahouPortrait = target.PortraitSprite;
+                Assert.NotNull(shijiahouPortrait);
+                Assert.AreEqual(primary.DisplayName, target.NameText);
+                Assert.AreEqual("敌方", target.FactionText);
+                Assert.That(target.HealthFillAmount,
+                    Is.EqualTo((float)primary.CurrentHealth / primary.MaximumHealth).Within(.001f));
+                Assert.That(target.SpiritFillAmount,
+                    Is.EqualTo((float)primary.CurrentSpirit / primary.MaximumSpirit).Within(.001f));
+                yield return CaptureV7("v7-details-primary-" + width, directory);
+
+                // The second enemy is pickable from its body and keeps its own portrait identity.
+                CombatantHudSnapshot second = presenter.FindInspectable(spawned.Enemies[1].Id);
+                Assert.NotNull(second, "The second enemy must stay inspectable.");
+                Assert.IsTrue(pick.TryPick(WorldPoint(spawned.Enemies[1].Id), out string pickedId));
+                Assert.AreEqual(spawned.Enemies[1].Id, pickedId, "TryPick must cover every enemy body.");
+                yield return Click(WorldPoint(spawned.Enemies[1].Id));
+                AssertSelection(spawned.Enemies[1].Id);
+                Assert.AreEqual("enemy_lieshijia", second.PortraitKey);
+                Assert.NotNull(target.PortraitSprite);
+                Assert.AreNotSame(shijiahouPortrait, target.PortraitSprite,
+                    "The two enemy portraits must stay distinct.");
+                Assert.AreEqual(second.DisplayName, target.NameText);
+                yield return CaptureV7("v7-details-second-" + width, directory);
+
+                // The unit's own cell maps back to it, so a cell click inspects the same unit.
+                Assert.IsTrue(provider.TryGetPresentedPosition(spawned.Enemies[1].Id,
+                    out CombatUnitPresentationHex secondCell));
+                Vector3 cellCenter = Static3DCombatUnitPresentationProvider.HexToWorld(secondCell);
+                Vector2 cellPoint = Camera.main.WorldToScreenPoint(cellCenter + new Vector3(0.30f, 0, 0));
+                Assert.IsTrue(pick.TryGetCell(cellPoint, out CombatUnitPresentationHex mappedCell),
+                    "The formal grid must resolve the unit's cell.");
+                Assert.That(mappedCell, Is.EqualTo(secondCell));
+                Assert.AreEqual(spawned.Enemies[1].Id, pick.FindUnitAtCell(mappedCell),
+                    "A cell click resolves the unit standing there.");
+                Assert.AreEqual(spawned.Enemies[1].Id,
+                    pick.TryPick(cellPoint, out string cellPicked) ? cellPicked : null);
+                yield return Click(cellPoint);
+                AssertSelection(spawned.Enemies[1].Id);
+                yield return CaptureV7("v7-details-cell-pick-" + width, directory);
+
+                // Timeline selection presents the same unit and the player's own portrait.
+                Button[] entries = Get<Button[]>(timeline, "entryButtons");
+                int playerIndex = presenter.Snapshot.Timeline.Entries.ToList().FindIndex(value => value.Id == spawned.Player.Id);
+                Assert.That(playerIndex, Is.GreaterThanOrEqualTo(0));
+                entries[playerIndex].onClick.Invoke();
+                AssertSelection(spawned.Player.Id);
+                Assert.AreEqual("我方", target.FactionText);
+                Assert.AreEqual("player", presenter.FindInspectable(spawned.Player.Id).PortraitKey);
+                Assert.AreNotSame(shijiahouPortrait, target.PortraitSprite,
+                    "The player portrait must differ from the enemy portraits.");
+                yield return CaptureV7("v7-details-player-" + width, directory);
+
+                // Details and the action preview coexist without covering each other's controls.
+                presenter.InspectTarget(spawned.Enemies[1].Id);
+                bar.GuardButton.onClick.Invoke();
+                Canvas.ForceUpdateCanvases();
+                Assert.IsTrue(preview.IsVisible);
+                Rect targetRect = ScreenRect(Get<GameObject>(target, "root").GetComponent<RectTransform>());
+                Rect previewRect = ScreenRect(Get<GameObject>(preview, "root").GetComponent<RectTransform>());
+                Assert.IsFalse(targetRect.Overlaps(previewRect), "Details and the action preview must not overlap.");
+                AssertButtonReachable(target.CloseButton);
+                AssertButtonReachable(preview.CancelButton);
+                AssertButtonReachable(preview.ConfirmButton);
+                yield return CaptureV7("v7-details-and-preview-" + width, directory);
+                preview.CancelButton.onClick.Invoke();
+                Assert.IsFalse(preview.IsVisible);
+
+                // Closing clears the panel, the ground ring and the rail frame together.
+                target.CloseButton.onClick.Invoke();
+                AssertSelection(null);
+                yield return null;
+            }
+
+            // Death and scene exit clear the same selection without stale rings.
+            presenter.InspectTarget(spawned.Enemies[1].Id);
+            AssertSelection(spawned.Enemies[1].Id);
+            spawned.Enemies[1].ReceiveDamage(spawned.Enemies[1].CurrentHealth);
+            typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(encounter, new object[] { "V7死亡清理", true, null });
+            yield return null; yield return null;
+            AssertSelection(null);
+            presenter.InspectTarget(spawned.Enemy.Id);
+            AssertSelection(spawned.Enemy.Id);
+            presenter.Hide();
+            AssertSelection(null);
+        }
+
+        private IEnumerator CaptureV7(string label, string directory)
+        {
+#if UNITY_EDITOR
+            for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
+            Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling, "Shader compilation must finish before visual evidence.");
+#endif
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            Canvas.ForceUpdateCanvases();
+            CombatMovementView movement = Find<CombatMovementView>();
+            CombatActionPreviewView preview = Find<CombatActionPreviewView>();
+            File.WriteAllText(Path.Combine(directory, label + ".txt"),
+                "resolution=" + Screen.width + "x" + Screen.height +
+                "; selected=" + presenter.InspectedTargetId +
+                "; name=" + target.NameText + "; faction=" + target.FactionText +
+                "; health=" + target.HealthText + "; spirit=" + target.SpiritText +
+                "; portrait=" + (target.PortraitSprite == null ? "none" : target.PortraitSprite.name) +
+                "; hpFill=" + target.HealthFillAmount.ToString("0.###") +
+                "; mpFill=" + target.SpiritFillAmount.ToString("0.###") +
+                "; details=" + target.DetailsText.Replace("\n", "\\n") +
+                "; ring=" + movement.InspectionRing.gameObject.activeSelf +
+                "; ringCell=" + movement.InspectionCell?.Q + "," + movement.InspectionCell?.R +
+                "; targetRect=" + ScreenRect(Get<GameObject>(target, "root").GetComponent<RectTransform>()) +
+                "; previewVisible=" + preview.IsVisible);
+            ScreenCapture.CaptureScreenshot(Path.Combine(directory, label + ".png"));
+            for (int frame = 0; frame < 6; frame++) yield return null;
+        }
+
+        private static Vector2 EntryCenter(Button entry)
+        {
+            RectTransform rect = (RectTransform)entry.transform;
+            return RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+        }
+
+        private static Rect ScreenRect(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
+        private static bool Hits(Vector2 point)
+        {
+            EventSystem system = EventSystem.current;
+            if (system == null) return false;
+            var results = new List<RaycastResult>();
+            system.RaycastAll(new PointerEventData(system) { position = point }, results);
+            return results.Count > 0;
+        }
+
+        private static void AssertButtonReachable(Button button)
+        {
+            Assert.IsTrue(button != null && button.gameObject.activeInHierarchy);
+            var corners = new Vector3[4];
+            ((RectTransform)button.transform).GetWorldCorners(corners);
+            Assert.That(corners[0].x, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(corners[0].y, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(corners[2].x, Is.LessThanOrEqualTo(Screen.width + .5f));
+            Assert.That(corners[2].y, Is.LessThanOrEqualTo(Screen.height + .5f));
         }
 
         [UnityTest]
@@ -640,13 +822,29 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(id, timeline.InspectedTargetId);
             Assert.AreEqual(id, target.TargetId);
             Assert.AreEqual(id != null, Get<GameObject>(target, "root").activeSelf);
+            CombatMovementView movement = Find<CombatMovementView>();
             if (id == null)
             {
-                Assert.IsFalse(target.WorldMarker.gameObject.activeSelf);
+                Assert.IsFalse(movement.InspectionRing.gameObject.activeSelf);
+                Assert.IsNull(movement.InspectionCell);
                 Assert.IsEmpty(target.DetailsText);
+                Assert.IsEmpty(target.NameText);
+                Assert.IsEmpty(target.HealthText);
+                Assert.IsEmpty(target.SpiritText);
                 Assert.That(Get<Text[]>(timeline, "entryLabels").All(label => !label.text.Contains("◆")), Is.True);
             }
-            else StringAssert.Contains(presenter.FindInspectable(id).DisplayName, target.DetailsText);
+            else
+            {
+                CombatantHudSnapshot unit = presenter.FindInspectable(id);
+                Assert.AreEqual(unit.DisplayName, target.NameText);
+                Assert.AreEqual(id == "player" ? "我方" : "敌方", target.FactionText);
+                StringAssert.Contains("伤害：未探明", target.DetailsText);
+                StringAssert.Contains("命中：未探明", target.DetailsText);
+                StringAssert.Contains("能力：未探明", target.DetailsText);
+                StringAssert.Contains("生命 " + unit.CurrentHealth + "/" + unit.MaximumHealth, target.HealthText);
+                StringAssert.Contains("灵力 " + unit.CurrentSpirit + "/" + unit.MaximumSpirit, target.SpiritText);
+                AssertInspectionRing(id);
+            }
         }
 
         private Vector2 WorldPoint(string id)
@@ -655,21 +853,36 @@ namespace TianZhang.Tests.PlayMode
             return Camera.main.WorldToScreenPoint(bounds.center);
         }
 
-        private void AssertMarker()
+        /// <summary>One ground ring at the tile body top; the old screen box and base circle are gone.</summary>
+        private void AssertInspectionRing(string id)
         {
-            Assert.IsTrue(provider.TryGetVisibleBounds(target.TargetId, out Bounds bounds));
-            Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity), max = -min;
-            for (int index = 0; index < 8; index++)
-            {
-                Vector3 screen = Camera.main.WorldToScreenPoint(bounds.center + Vector3.Scale(bounds.extents,
-                    new Vector3((index & 1) == 0 ? -1 : 1, (index & 2) == 0 ? -1 : 1, (index & 4) == 0 ? -1 : 1)));
-                min = Vector2.Min(min, screen); max = Vector2.Max(max, screen);
-            }
-            var corners = new Vector3[4];
-            target.WorldMarker.GetWorldCorners(corners);
-            Assert.That(Vector2.Distance(min, corners[0]), Is.LessThan(1f));
-            Assert.That(Vector2.Distance(max, corners[2]), Is.LessThan(1f));
-            Assert.IsTrue(target.WorldMarker.gameObject.activeSelf);
+            CombatMovementView movement = Find<CombatMovementView>();
+            Assert.AreEqual(id, presenter.InspectedTargetId);
+            Assert.IsTrue(provider.TryGetPresentedPosition(id, out CombatUnitPresentationHex cell),
+                "The inspected unit must have a presented cell.");
+            Assert.That(movement.InspectionCell, Is.EqualTo(cell));
+            Assert.IsTrue(movement.InspectionRing.gameObject.activeSelf);
+            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
+                "GuanzhongHex_" + cell.Q + "_" + cell.R);
+            Assert.NotNull(tile);
+            Vector3 center = Enumerable.Range(0, 6).Select(movement.InspectionRing.GetPosition)
+                .Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
+            Assert.That(center.x, Is.EqualTo(tile.position.x).Within(.001f));
+            Assert.That(center.z, Is.EqualTo(tile.position.z).Within(.001f));
+            Assert.That(center.y, Is.EqualTo(TileBodyTop(tile) + .01f).Within(.001f),
+                "The inspection ring must sit on the tile body, not the unit or an obstacle.");
+        }
+
+        /// <summary>Tile body top only: the unit carrier and rocks share the cell root.</summary>
+        private static float TileBodyTop(Transform tile)
+        {
+            Transform body = tile.Find("MeasuredFbxAlignment");
+            Renderer[] renderers = body != null
+                ? body.GetComponentsInChildren<Renderer>()
+                : tile.GetComponents<Renderer>();
+            float top = tile.position.y;
+            foreach (Renderer renderer in renderers) top = Mathf.Max(top, renderer.bounds.max.y);
+            return top;
         }
 
         private IEnumerator Click(Vector2 point)
@@ -706,22 +919,27 @@ namespace TianZhang.Tests.PlayMode
             CombatTargetView view = Find<CombatTargetView>();
             Static3DCombatUnitPresentationProvider units = Find<Static3DCombatUnitPresentationProvider>();
             CombatCommandInput input = Find<CombatCommandInput>();
+            CombatMovementView movement = Find<CombatMovementView>();
             Text detailText = Get<Text>(view, "details");
             var evidence = new VisibleEvidence
             {
                 width = Screen.width, height = Screen.height, selected = hud.InspectedTargetId,
                 axis = Find<CombatTimelineView>().InspectedTargetId, focus = Find<CombatTimelineView>().FocusedCombatantId,
                 actor = hud.Snapshot?.Timeline?.CurrentActorId, commandTarget = Get<string>(input, "targetId"),
-                details = view.DetailsText,
-                canInspect = hud.CanInspect, selecting = Find<CombatMovementView>().IsSelecting,
-                markerActive = view.WorldMarker.gameObject.activeSelf,
-                markerCorners = new Vector3[4], tick = hud.Snapshot?.Timeline?.CurrentTick ?? -1
+                details = view.DetailsText, name = view.NameText, faction = view.FactionText,
+                health = view.HealthText, spirit = view.SpiritText, portrait = view.PortraitSprite?.name,
+                canInspect = hud.CanInspect, selecting = movement.IsSelecting,
+                ringActive = movement.InspectionRing.gameObject.activeSelf,
+                ringCell = movement.InspectionCell?.Q + "," + movement.InspectionCell?.R,
+                tick = hud.Snapshot?.Timeline?.CurrentTick ?? -1
             };
             evidence.textSize = detailText.rectTransform.rect.size;
             evidence.preferredHeight = detailText.preferredHeight;
             evidence.selectedButton = EventSystem.current?.currentSelectedGameObject?.name;
             evidence.focusedEditor = UnityEditor.EditorWindow.focusedWindow?.GetType().Name;
-            view.WorldMarker.GetWorldCorners(evidence.markerCorners);
+            if (movement.InspectionRing.gameObject.activeSelf)
+                evidence.ringCenter = Enumerable.Range(0, 6).Select(movement.InspectionRing.GetPosition)
+                    .Aggregate(Vector3.zero, (sum, point) => sum + point) / 6f;
             if (evidence.selected != null && units.TryGetPresentedUnit(evidence.selected, out GameObject root))
             {
                 evidence.root = root.name; evidence.rootPosition = root.transform.position;
@@ -739,12 +957,12 @@ namespace TianZhang.Tests.PlayMode
         {
             public int width, height, tick;
             public string selected, axis, focus, actor, commandTarget, details, root;
-            public bool canInspect, selecting, markerActive;
+            public string name, faction, health, spirit, portrait, ringCell;
+            public bool canInspect, selecting, ringActive;
             public string selectedButton, focusedEditor;
             public Vector2 textSize;
             public float preferredHeight;
-            public Vector3 rootPosition, boundsCenter, boundsSize;
-            public Vector3[] markerCorners;
+            public Vector3 rootPosition, boundsCenter, boundsSize, ringCenter;
         }
 #endif
     }

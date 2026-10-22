@@ -30,12 +30,15 @@ namespace TianZhang.Features.CombatPresentation
         private static readonly Color CurrentTargetColor = new Color32(0xFF, 0xE7, 0xA0, 0xFF);
         private static readonly Color EffectCellColor = new Color32(0xFF, 0x9F, 0x3C, 0xFF);
         private static readonly Color IllegalColor = new Color32(0xFF, 0x40, 0x33, 0xFF);
+        // The single ground anchor for the inspected unit replaces the old screen-space box.
+        private static readonly Color InspectionColor = new Color32(0xFF, 0xC8, 0x5C, 0xFF);
         private const float ReachableWidth = 0.035f;
         private const float DestinationWidth = 0.07f;
         private const float LegalTargetWidth = 0.045f;
         private const float CurrentTargetWidth = 0.09f;
         private const float EffectWidth = 0.06f;
         private const float IllegalWidth = 0.06f;
+        private const float InspectionWidth = 0.08f;
         private const float PathNodeRadius = 0.12f;
         private const float SelectionBorderOffset = 0.01f;
 
@@ -62,12 +65,16 @@ namespace TianZhang.Features.CombatPresentation
         private CombatMovementOption selected;
         private LineRenderer pathLine;
         private LineRenderer pathArrow;
+        private LineRenderer inspectionRing;
+        private CombatUnitPresentationHex? inspectionCell;
         private Vector2Int? highlightedDestination;
         private bool ownsPreview;
         public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
+        public LineRenderer InspectionRing => inspectionRing;
+        public CombatUnitPresentationHex? InspectionCell => inspectionCell;
         public IReadOnlyList<LineRenderer> PathNodeLines => pathNodes;
         public LineRenderer PathDirectionArrow => pathArrow;
         private bool CanInput => snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
@@ -105,6 +112,32 @@ namespace TianZhang.Features.CombatPresentation
             pathArrow = CreateLine("MovementPathDirection", selectedMaterial, 0.07f, DestinationColor);
             pathArrow.positionCount = 3;
             pathArrow.gameObject.SetActive(false);
+            inspectionRing = CreateLine("InspectionCellRing", selectedMaterial, InspectionWidth, InspectionColor);
+            inspectionRing.loop = true;
+            inspectionRing.positionCount = 6;
+            inspectionRing.gameObject.SetActive(false);
+        }
+
+        /// <summary>Single tile-body ring marking the inspected unit's cell; independent of movement selection.</summary>
+        public void SetInspectionHighlight(CombatUnitPresentationHex? cell)
+        {
+            if (inspectionRing == null) return;
+            if (!cell.HasValue || !centers.TryGetValue(Key(cell.Value), out Vector3 center))
+            {
+                inspectionCell = null;
+                inspectionRing.gameObject.SetActive(false);
+                return;
+            }
+            if (inspectionCell.HasValue && inspectionCell.Value.Equals(cell.Value) &&
+                inspectionRing.gameObject.activeSelf) return;
+            inspectionCell = cell;
+            for (int corner = 0; corner < 6; corner++)
+            {
+                float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
+                inspectionRing.SetPosition(corner,
+                    center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
+            }
+            ShowRing(inspectionRing, InspectionColor, InspectionWidth);
         }
 
         public void Present(CombatHudSnapshot value)
@@ -404,7 +437,11 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         private void RefreshControls() => actionBar?.PresentMovement(snapshot, IsSelecting, selected);
-        private void OnDisable() => ClearSelection();
+        private void OnDisable()
+        {
+            ClearSelection();
+            SetInspectionHighlight(null);
+        }
         private static Vector2Int Key(CombatUnitPresentationHex hex) => new Vector2Int(hex.Q, hex.R);
         private LineRenderer CreateLine(string name, Material material, float width, Color color)
         {

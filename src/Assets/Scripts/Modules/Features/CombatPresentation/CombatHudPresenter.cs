@@ -64,13 +64,26 @@ namespace TianZhang.Features.CombatPresentation
             if (selected == null) InspectedTargetId = null;
             targetView?.Present(selected, Snapshot?.Player?.Id == InspectedTargetId);
             timelineView?.SetInspectedTarget(InspectedTargetId);
+            RefreshInspectionMarker();
+        }
+
+        /// <summary>One ground ring follows the inspected unit; the old screen box and base ring are gone.</summary>
+        private void RefreshInspectionMarker()
+        {
+            if (movementView == null) return;
+            CombatUnitPresentationHex? cell = null;
+            if (InspectedTargetId != null && unitProvider != null &&
+                unitProvider.TryGetPresentedPosition(InspectedTargetId, out CombatUnitPresentationHex presented))
+                cell = presented;
+            movementView.SetInspectionHighlight(cell);
         }
 
         private void LateUpdate()
         {
             if (InspectedTargetId != null && FindInspectable(InspectedTargetId) == null) ClearInspectedTarget();
-            unitProvider?.SetSelectionHighlight(InspectedTargetId ??
-                (movementView != null && movementView.IsSelecting ? Snapshot?.Player?.Id : null));
+            unitProvider?.SetSelectionHighlight(movementView != null && movementView.IsSelecting
+                ? Snapshot?.Player?.Id : null);
+            RefreshInspectionMarker();
         }
 
         private void OnDisable()
