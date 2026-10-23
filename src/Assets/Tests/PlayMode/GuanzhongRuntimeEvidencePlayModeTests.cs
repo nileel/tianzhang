@@ -938,8 +938,9 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(input.IsSelectingAttack, Is.True, "Art selection must open without a preselected target.");
                 HexCoord[] active = movement.Highlights.Where(item => item.Value.gameObject.activeSelf)
                     .Select(item => new HexCoord(item.Key.x, item.Key.y)).ToArray();
-                Assert.That(active, Is.Empty, "Opening a skill without a pointed target must not mark cast-range or rock cells.");
-                lines.Add("artEffectCells=" + string.Join("/", active.OrderBy(cell => cell.Q).ThenBy(cell => cell.R).Select(cell => cell.Q + "," + cell.R)));
+                GuanzhongCombatTargetSelectionPlayModeTests.AssertSpellHighlights(session);
+                Assert.That(active.Any(cell => rocks.Contains(cell)), Is.False, "Empty rock cells are not selectable unit targets.");
+                lines.Add("artSelectableCells=" + string.Join("/", active.OrderBy(cell => cell.Q).ThenBy(cell => cell.R).Select(cell => cell.Q + "," + cell.R)));
                 lines.Add("artButton=" + art.name + "; label=" + art.GetComponentInChildren<Text>().text.Replace("\n", " "));
                 yield return Capture("s4-art-range-rock-" + size.x, output);
                 input.CancelCandidate();

@@ -105,11 +105,19 @@ namespace TianZhang.Features.CombatPresentation
         private void PresentSelectionHighlights()
         {
             if (movementView == null) return;
+            List<CombatUnitPresentationHex> selectableCells = null;
+            if (selectingArt != null && targetInput != null)
+            {
+                selectableCells = new List<CombatUnitPresentationHex>();
+                foreach (CombatArtTargetSnapshot target in selectingArt.Targets)
+                    if (target.CanExecute && targetInput.TryGetUnitPose(target.Id, out CombatUnitPresentationPose pose))
+                        selectableCells.AddRange(pose.OccupiedCells);
+            }
             IReadOnlyList<CombatUnitPresentationHex> targetCells = null;
             if (Preview?.AttackArea == null && Preview?.CanConfirm == true && targetInput != null &&
                 targetInput.TryGetUnitPose(Preview.Candidate.TargetId, out CombatUnitPresentationPose targetPose))
                 targetCells = targetPose.OccupiedCells;
-            movementView.PresentAttackArea(Preview?.AttackArea, targetCells);
+            movementView.PresentAttackArea(Preview?.AttackArea, targetCells, selectableCells);
         }
 
         private int CurrentActionPoints => snapshot?.Movement?.RemainingPoints ?? -1;

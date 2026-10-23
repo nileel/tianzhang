@@ -10,7 +10,7 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>Projects authoritative move options and keeps uncommitted selection local to the view.</summary>
     public sealed class CombatMovementView : MonoBehaviour
     {
-        // Cool movement range, warm destination, and amber attack effect cells.
+        // Cool movement range / selectable spell targets, warm destination, and amber effect cells.
         private static readonly Color ReachableOutlineColor = new Color32(0x23, 0x8C, 0xFF, 0xFF);
         private static readonly Color DestinationColor = new Color32(0xF2, 0xC1, 0x4E, 0xFF);
         private static readonly Color EffectCellColor = new Color32(0xFF, 0x9F, 0x3C, 0xFF);
@@ -141,12 +141,17 @@ namespace TianZhang.Features.CombatPresentation
             ClearSelection();
         }
 
-        /// <summary>Shows only effective area cells, or the quoted single target's footprint.</summary>
+        /// <summary>Shows legal spell targets, then overlays the current effect's actual footprint.</summary>
         public void PresentAttackArea(CombatAttackAreaSnapshot area,
-            IReadOnlyList<CombatUnitPresentationHex> targetCells = null)
+            IReadOnlyList<CombatUnitPresentationHex> targetCells = null,
+            IReadOnlyList<CombatUnitPresentationHex> selectableCells = null)
         {
             ClearSelection();
             if (!CanInput) return;
+            if (selectableCells != null)
+                foreach (CombatUnitPresentationHex cell in selectableCells)
+                    if (highlights.TryGetValue(Key(cell), out LineRenderer ring))
+                        ShowRing(ring, ReachableOutlineColor, ReachableWidth);
             if (area != null)
             {
                 foreach (CombatAttackAreaCellSnapshot cell in area.Cells)

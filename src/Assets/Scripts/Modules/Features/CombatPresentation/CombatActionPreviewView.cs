@@ -14,6 +14,8 @@ namespace TianZhang.Features.CombatPresentation
             "<color=#238CFF>■</color> 可移动   <color=#F2C14E>■</color> 目的地   <color=#FFE7A0>■</color> 路径";
         private const string TargetingLegend =
             "<color=#FF9F3C>■</color> 作用地块";
+        private const string SpellTargetingLegend =
+            "<color=#238CFF>■</color> 可选目标   <color=#FF9F3C>■</color> 本次作用";
 
         [SerializeField] private GameObject root;
         [SerializeField] private Text heading;
@@ -105,7 +107,8 @@ namespace TianZhang.Features.CombatPresentation
             }
             bool targeting = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
             SetText(heading, value.ActionName + (targeting ? " · 选择目标" : string.Empty));
-            SetText(legend, targeting ? TargetingLegend : string.Empty);
+            SetText(legend, value.Candidate.Kind == CombatActionKind.Art
+                ? SpellTargetingLegend : targeting ? TargetingLegend : string.Empty);
             if (swapping)
             {
                 swapSlotButton.GetComponentInChildren<Text>().text = "槽位 " + (value.Candidate.SlotIndex + 1) + "：" + value.ReplacedSpellName;

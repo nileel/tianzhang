@@ -238,8 +238,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsFalse(input.Preview.CanConfirm, input.Preview.Reason);
                     Assert.AreNotEqual(spawned.Enemy.Id, input.Candidate.TargetId);
                     Assert.IsFalse(preview.ConfirmButton.interactable);
-                    Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf),
-                        "Invalid or absent skill targets have no effect cells.");
+                    AssertSpellHighlights(session);
                     input.ConfirmCandidate();
                     yield return PointArt(session, spawned.Enemy.Id, false);
                 }
@@ -361,6 +360,99 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
         }
 
+        [UnityTest]
+        public IEnumerator SpellSelectableFootprintsStaySeparateFromEffectsAtBothResolutions()
+        {
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var movement = Find<CombatMovementView>();
+            var preview = Find<CombatActionPreviewView>();
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            Assert.AreEqual("spell_feixingzhi", presenter.Snapshot.ArtActions[2].ProfileId);
+            Assert.AreEqual(2, presenter.Snapshot.ArtActions[2].Targets.Count(value => value.CanExecute),
+                "The formal ranged spell must offer both living double-cell enemies at contact.");
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 8; frame++) yield return null;
+                yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
+                Assert.IsNull(input.Candidate.TargetId);
+                Assert.IsFalse(input.Preview.CanConfirm);
+                Assert.AreEqual(4, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
+                StringAssert.Contains("可选目标", Get<Text>(preview, "legend").text);
+                StringAssert.Contains("本次作用", Get<Text>(preview, "legend").text);
+                yield return CaptureArtEvidence("selectable-open-" + width, session);
+                foreach (var enemy in spawned.Enemies)
+                {
+                    yield return PointArt(session, enemy.Id);
+                    Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                    Assert.AreEqual(enemy.Id, input.Candidate.TargetId);
+                    yield return CaptureArtEvidence("selectable-" + enemy.Id + "-" + width, session);
+                }
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(CellPoint(new HexCoord(0, 1)), true);
+                Assert.IsFalse(input.Preview.CanConfirm);
+                Assert.IsEmpty(input.Candidate.TargetId);
+                Assert.IsFalse(movement.Highlights[new Vector2Int(0, 1)].gameObject.activeSelf,
+                    "The unrelated pointed empty cell must never become a candidate or effect.");
+                yield return CaptureArtEvidence("selectable-empty-" + width, session);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
+                    RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position), true);
+                Assert.IsFalse(input.Preview.CanConfirm);
+                AssertSpellHighlights(session);
+                yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.SecondArtButton.transform.position));
+                Assert.AreEqual("spell_julingshu", input.Candidate.ProfileId);
+                AssertSpellHighlights(session);
+                yield return Click(RectTransformUtility.WorldToScreenPoint(null, preview.CancelButton.transform.position));
+                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+            }
+            // Refresh after an explicit death fixture must remove every cell of that target.
+            var dead = spawned.Enemy;
+            dead.ReceiveDamage(dead.CurrentHealth);
+            RefreshAuthority();
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
+            AssertSpellHighlights(session);
+            Assert.AreEqual(2, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
+            foreach (var cell in dead.OccupiedCells)
+                Assert.IsFalse(movement.Highlights[new Vector2Int(cell.Q, cell.R)].gameObject.activeSelf);
+            yield return CaptureArtEvidence("selectable-death-refresh", session);
+            input.CancelCandidate();
+            Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+        }
+
+        public static void AssertSpellHighlights(CombatSession combat)
+        {
+            var input = Find<CombatCommandInput>();
+            var movement = Find<CombatMovementView>();
+            Assert.IsTrue(input.IsSelectingAttack);
+            Assert.AreEqual(CombatActionKind.Art, input.Candidate.Kind);
+            var action = Find<CombatHudPresenter>().Snapshot.ArtActions.Single(art => art.ProfileId == input.Candidate.ProfileId);
+            var selectable = action.Targets.Where(target => target.CanExecute).SelectMany(target =>
+            {
+                Assert.IsTrue(combat.Combatants.TryGet(target.Id, out var unit));
+                return unit.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R));
+            }).ToArray();
+            var effects = new HashSet<Vector2Int>();
+            if (input.Preview.CanConfirm)
+            {
+                Assert.IsTrue(combat.Combatants.TryGet(input.Candidate.TargetId, out var target));
+                effects.UnionWith(target.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R)));
+            }
+            var active = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
+            CollectionAssert.AreEquivalent(selectable.Concat(effects).Distinct(), active.Select(pair => pair.Key),
+                "Only legal candidate footprints and the current effect may be outlined; never unrelated mouse or range cells.");
+            foreach (var pair in active)
+            {
+                bool effect = effects.Contains(pair.Key);
+                var properties = new MaterialPropertyBlock();
+                pair.Value.GetPropertyBlock(properties);
+                Color expected = effect ? new Color32(0xFF, 0x9F, 0x3C, 0xFF) : new Color32(0x23, 0x8C, 0xFF, 0xFF);
+                Assert.That(properties.GetColor("_BaseColor"), Is.EqualTo(expected), pair.Value.name);
+                Assert.That(pair.Value.widthMultiplier, Is.EqualTo(effect ? .06f : .035f).Within(.0005f), pair.Value.name);
+            }
+        }
+
         public static IEnumerator CaptureArtEvidence(string label, CombatSession combat)
         {
             var input = Find<CombatCommandInput>();
@@ -373,14 +465,8 @@ namespace TianZhang.Tests.PlayMode
                 Assert.LessOrEqual(text.preferredWidth, text.rectTransform.rect.width + 1f, text.text);
                 Assert.LessOrEqual(text.preferredHeight, text.rectTransform.rect.height + 1f, text.text);
             }
+            AssertSpellHighlights(combat);
             var rings = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
-            Assert.NotNull(input.Candidate.TargetId);
-            Assert.IsTrue(combat.Combatants.TryGet(input.Candidate.TargetId, out var targetUnit));
-            CollectionAssert.AreEquivalent(input.Preview.CanConfirm
-                    ? targetUnit.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R)) : Enumerable.Empty<Vector2Int>(),
-                rings.Select(pair => pair.Key), "Only a valid single-target skill highlights the quoted target's occupied cells.");
-            var effectRing = movement.Highlights.Single(pair => pair.Value.name ==
-                "Reachable_" + targetUnit.Position.Q + "_" + targetUnit.Position.R);
             string summary = Get<Text>(Find<CombatActionPreviewView>(), "summary").text;
             StringAssert.Contains("施法范围", summary);
             StringAssert.Contains("作用范围", summary);
@@ -395,12 +481,16 @@ namespace TianZhang.Tests.PlayMode
                 "; target=" + input.Candidate.TargetId + "; profile=" + input.Candidate.ProfileId +
                 "; context=" + input.Candidate.ContextVersion + "; AP=" + input.Preview.ActionPointCostUnits +
                 "; MP=" + input.Preview.SpiritCost + "; castRange=" + input.Preview.MinimumRange + "-" + input.Preview.MaximumRange +
-                "; rings=" + string.Join("/", rings.Select(pair => pair.Value.name)) +
+                "; rings=" + string.Join("/", rings.Select(pair =>
+                {
+                    LineRenderer ring = pair.Value;
+                    var properties = new MaterialPropertyBlock(); ring.GetPropertyBlock(properties);
+                    return ring.name + ":#" + ColorUtility.ToHtmlStringRGB(properties.GetColor("_BaseColor")) +
+                        ":width=" + ring.widthMultiplier + ":parent=" + ring.transform.parent.name + ":world=" + ring.useWorldSpace +
+                        ":points=" + string.Join("|", Enumerable.Range(0, 6).Select(index => ring.GetPosition(index).ToString("F4")));
+                })) +
                 "; pointer=" + Mouse.current.position.ReadValue() +
-                "; camera=" + Camera.main.transform.position + "; ring=" + effectRing.Value.name +
-                "; active=" + effectRing.Value.gameObject.activeSelf +
-                "; parent=" + effectRing.Value.transform.parent.name + "; world=" + effectRing.Value.useWorldSpace +
-                "; points=" + string.Join("/", Enumerable.Range(0, 6).Select(index => effectRing.Value.GetPosition(index))) +
+                "; camera=" + Camera.main.transform.position + "; legal=" + input.Preview.CanConfirm +
                 "; summary=" + summary.Replace("\n", "\\n") +
                 "; labels=" + string.Join("/", new[] { bar.ArtButton, bar.SecondArtButton }.Select(button =>
                 {

@@ -745,7 +745,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(view.ConfirmButton.gameObject.activeSelf);
                 StringAssert.Contains("施法范围 0–2 格", Get<Text>(view, "summary").text);
                 StringAssert.Contains("作用范围", Get<Text>(view, "summary").text);
-                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                GuanzhongCombatTargetSelectionPlayModeTests.AssertSpellHighlights(session);
                 Assert.AreEqual(before, State(), "Opening selection must not cast or pay.");
                 CaptureS2Selection("open-" + width);
 
@@ -1565,7 +1565,7 @@ namespace TianZhang.Tests.PlayMode
                 Vector2Int selfKey = new Vector2Int(spawned.Player.Position.Q, spawned.Player.Position.R);
                 Vector2Int enemyKey = new Vector2Int(spawned.Enemy.Position.Q, spawned.Enemy.Position.R);
 
-                // Skill selection shows only the pointed legal target's actual footprint.
+                // Legal targets stay blue; only the current effect overrides them in orange.
                 bar.SecondArtButton.onClick.Invoke();
                 Assert.IsTrue(input.IsSelectingAttack, "The skill entry must only open selection.");
                 Assert.IsTrue(view.IsVisible);
@@ -1574,7 +1574,9 @@ namespace TianZhang.Tests.PlayMode
                 StringAssert.Contains("施法范围 0–2 格", summary.text);
                 StringAssert.Contains("作用范围", summary.text);
                 StringAssert.Contains("作用", Get<Text>(view, "legend").text);
-                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                StringAssert.Contains("可选目标", Get<Text>(view, "legend").text);
+                AssertRing(movement, selfKey, new Color32(0x23, 0x8C, 0xFF, 0xFF), .035f);
+                Assert.AreEqual(1, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
                 Assert.IsFalse(movement.Highlights[enemyKey].gameObject.activeSelf,
                     "A target beyond the cast range must not be marked as selectable.");
                 yield return CaptureV6("v6-spell-open-" + width, view, movement, directory);
@@ -1587,7 +1589,9 @@ namespace TianZhang.Tests.PlayMode
                 yield return CaptureV6("v6-spell-self-" + width, view, movement, directory);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: false);
                 Assert.IsFalse(input.Preview.CanConfirm, "The untouched formal opening leaves the enemy out of 0-2.");
-                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                AssertRing(movement, selfKey, new Color32(0x23, 0x8C, 0xFF, 0xFF), .035f);
+                Assert.AreEqual(1, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
+                Assert.IsFalse(movement.Highlights[enemyKey].gameObject.activeSelf);
                 StringAssert.Contains("不可施行", summary.text);
                 StringAssert.Contains("距离过远", summary.text);
                 yield return CaptureV6("v6-spell-illegal-" + width, view, movement, directory);
