@@ -23,7 +23,7 @@
 
 - `Enemies.csv` 一级属性：根骨 7／体魄 9／魂魄 8／神识 7／反应 9／资质 4，`realmMultiplier=1.1`
 - `combatStatScale=0.5`，与石甲兽共用 `EnemyCombatStats.Scale` 的单项缩放规则
-- 每回合 AP、移动效率沿用境界镜像后再缩放：100000／4000 → 50000／2000
+- 移动效率另由 `movementEfficiencyScale=3` 调节：最终 AP／移动效率＝100000／4000 × 0.5 × 移动倍率 3 → 50000／6000；每格 16,666 AP 单位，每回合最多三格，AP 上限、术法费用与其他属性不变
 - 掉落：`item_shijia_piece@80@1`、`item_lingshi_low@40@1`
 
 ## 出现位置

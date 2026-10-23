@@ -54,7 +54,8 @@ namespace TianZhang.Editor
             "reaction", "talent", "blockRate", "blockReduction", "soulShieldRate", "soulShieldReduction",
             "dodgeRate", "critRate", "critDamage", "hitRateBonus", "equippedSpells", "dropTable", "description",
             "contentScope", "dropEntries", "unarmedBasicAttackProfileId",
-            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId", "combatStatScale", "footprintKind", "bodyScaleRank"
+            "actionPointMaximumUnits", "movementEfficiencyMilliUnits", "unarmedAttackFamilyId", "combatStatScale", "footprintKind", "bodyScaleRank",
+            "movementEfficiencyScale"
         };
 
         private static readonly string[] CharterSiteColumns =
@@ -472,6 +473,18 @@ namespace TianZhang.Editor
                 if (footprintKind is not ("single" or "adjacent_pair"))
                     throw new InvalidDataException($"{sourceName} has invalid footprintKind for {enemyId}.");
                 int bodyScaleRank = ParsePositiveInteger(Required(table, row, "bodyScaleRank"), sourceName, "bodyScaleRank");
+                float movementEfficiencyScale = ParseFloat(
+                    Required(table, row, "movementEfficiencyScale"), sourceName, "movementEfficiencyScale");
+                try
+                {
+                    EnemyCombatStats.ValidateMovementEfficiencyScale(movementEfficiencyScale);
+                }
+                catch (ArgumentOutOfRangeException exception)
+                {
+                    throw new InvalidDataException(
+                        $"{sourceName} movementEfficiencyScale '{movementEfficiencyScale}' must be positive and finite.",
+                        exception);
+                }
                 var template = BuildEnemyTemplate(table, row, language, sourceName, growthRules);
                 templates.Add(template);
                 templateIds.Add(enemyId);
@@ -494,6 +507,7 @@ namespace TianZhang.Editor
                 enemy.bodyScaleRank = bodyScaleRank;
                 enemy.combatStatScale = ParseFloat(Required(table, row, "combatStatScale"), sourceName, "combatStatScale");
                 EnemyCombatStats.ValidateScale(enemy.combatStatScale);
+                enemy.movementEfficiencyScale = movementEfficiencyScale;
                 enemy.combatTemplate = template;
                 enemy.dropEntries = ParseEnemyDropEntries(dropEntries, sourceName);
                 ValidateApprovedEnemy(enemy, sourceName);
@@ -1210,6 +1224,7 @@ namespace TianZhang.Editor
             target.footprintKind = source.footprintKind;
             target.bodyScaleRank = source.bodyScaleRank;
             target.combatStatScale = source.combatStatScale;
+            target.movementEfficiencyScale = source.movementEfficiencyScale;
             target.combatTemplate = source.combatTemplate;
             target.dropEntries = source.dropEntries.Select(entry => new EnemyDropEntry
             {

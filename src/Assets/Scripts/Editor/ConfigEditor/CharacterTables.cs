@@ -76,6 +76,7 @@ namespace TianZhang.Editor.ConfigEditor
                     fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("combatStatScale", "敌人战斗属性倍率", "倍"), Approved));
                     fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Enum("footprintKind", "占格类型", "single", "单格", "adjacent_pair", "相邻双格"), Approved));
                     fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("bodyScaleRank", "通行净空档", "档", true), Approved));
+                    fields.Add(CharacterEditorFields.Lock(CharacterEditorFields.Number("movementEfficiencyScale", "移动效率倍率", "倍"), Approved));
                 }
             }
             else if (id == "Items")

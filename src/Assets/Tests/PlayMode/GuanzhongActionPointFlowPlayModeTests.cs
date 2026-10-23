@@ -51,9 +51,10 @@ namespace TianZhang.Tests.PlayMode
             CombatantSnapshot player = spawned.Player;
             Assert.That(player.ActionPointMaximumUnits, Is.EqualTo(100000));
             Assert.That(player.MovementEfficiencyMilliUnits, Is.EqualTo(4000));
-            // R4 halves every production enemy combat attribute, including AP and movement efficiency.
+            // R4 halves every production enemy combat attribute, including AP; the 2026-10-23
+            // movement tuning restores three legal movement cells per turn (2000 x 3 = 6000).
             Assert.That(spawned.Enemy.ActionPointMaximumUnits, Is.EqualTo(50000));
-            Assert.That(spawned.Enemy.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+            Assert.That(spawned.Enemy.MovementEfficiencyMilliUnits, Is.EqualTo(6000));
             long turn = session.TurnSequence;
             int tick = session.TurnScheduler.CurrentTick;
             var stale = new CombatActionCandidate(CombatActionKind.Art, "player", "player",

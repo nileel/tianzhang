@@ -71,7 +71,7 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 1
     r: 3
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 1
     r: 4
@@ -131,7 +131,7 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 2
     r: 8
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 2
     r: 9
@@ -171,7 +171,7 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 3
     r: 8
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 3
     r: 9
@@ -187,11 +187,11 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 4
     r: 2
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 4
     r: 3
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 4
     r: 4
@@ -227,7 +227,7 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 5
     r: 2
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 5
     r: 3
@@ -243,7 +243,7 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 5
     r: 6
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 5
     r: 7
@@ -279,11 +279,11 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 6
     r: 5
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 6
     r: 6
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 6
     r: 7
@@ -355,11 +355,11 @@ MonoBehaviour:
     blocksLineOfSight: 0
   - q: 8
     r: 4
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 8
     r: 5
-    blocksGroundMove: 0
+    blocksGroundMove: 1
     blocksLineOfSight: 0
   - q: 8
     r: 6

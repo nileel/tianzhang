@@ -1,5 +1,7 @@
 # 关中野外最小环境档案
 
+> 过时提示（2026-10-23）：本档 §1 的 36 格／6×6／170 有向边与 `Stair.prefab` 描述停留在 2026-07 的最小版本，已被 A4 百格、R2 岩石与 F4 双格改动取代。当前战场格位、障碍与边事实以 `src/Assets/DataConfig/EnvironmentProfiles.csv` 和 `EnvironmentProfile_env_guanzhong_wild.asset` 为准；本档仅保留历史契约说明，不再作为当前地图事实源。
+
 > 本档案为正式 `AdventureScene` 唯一冒险入口 `guanzhong_wild`（关中野外）的最小生产环境配置，由 `DEC-20260724-ENVPROFILE = A` 授权。
 
 ## 概览

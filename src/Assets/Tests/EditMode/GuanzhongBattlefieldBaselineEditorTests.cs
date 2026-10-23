@@ -108,8 +108,8 @@ namespace TianZhang.Tests.EditMode
                 .Select(item => new Vector2Int(item.q, item.r)));
             Assert.AreEqual(100, expectedCells.Count,
                 "The current Guanzhong environment profile must expose all formal battlefield cells.");
-            Assert.AreEqual(4, expectedObstacles.Count,
-                "The current Guanzhong environment profile must expose four impassable cells.");
+            Assert.AreEqual(15, expectedObstacles.Count,
+                "The current Guanzhong environment profile must expose fifteen impassable cells.");
             AdventureNodeData start = map.nodes.Single(item => item.nodeId == "start");
             AdventureNodeData encounter = map.nodes.Single(item => item.nodeId == "shijiahou_encounter");
             Assert.IsTrue(expectedCells.Contains(new Vector2Int(start.q, start.r)),
@@ -214,7 +214,11 @@ namespace TianZhang.Tests.EditMode
                 Assert.IsFalse(scene.isDirty);
                 Transform[] rocks = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true))
                     .Where(item => item.name.StartsWith("GuanzhongObstacle_")).ToArray();
-                Assert.AreEqual(4, rocks.Length);
+                EnvironmentProfileAsset profile = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(
+                    "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset");
+                Assert.IsNotNull(profile);
+                int expectedRocks = profile.battlefieldCells.Count(item => item.blocksGroundMove);
+                Assert.AreEqual(expectedRocks, rocks.Length);
                 foreach (Transform rock in rocks)
                 {
                     Assert.AreEqual(GuanzhongTerrainAssetBuilder.RockPrefabPath,

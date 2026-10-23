@@ -226,17 +226,41 @@ namespace TianZhang.Tests.PlayMode
             yield return WaitForMovementPresentation(encounter);
             var guard = service.Preview(session, new CombatCommand(CombatCommandKind.Guard, "player"));
             Assert.IsTrue(guard.IsLegal, guard.RejectionReason);
-            var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(1, 0)));
-            Assert.IsTrue(move.IsLegal, move.RejectionReason);
-            encounter.RequestMove("player", 1, 0);
-            Assert.AreEqual(ap - punch.ActionPointCostUnits - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
-            yield return WaitForMovementPresentation(encounter);
+            // F4 moved the formal spawns to the far corner. Move only to a real legal cell that
+            // keeps the melee contact, so the enemy still has a target on its own turn; otherwise
+            // stay in place and let the already-adjacent enemy finish its turn.
+            var movementSnapshot = FindInActiveScene<CombatHudPresenter>().Snapshot.Movement;
+            Assert.IsNotNull(movementSnapshot, "The formal combat HUD must expose a movement snapshot after the punch.");
+            CombatMovementOption moveOption = movementSnapshot.Options
+                .OrderBy(option => option.Cost)
+                .FirstOrDefault(option => session.SpatialQuery.QueryRange(
+                    spawned.Player.Pose.WithAnchor(new HexCoord(option.Destination.Q, option.Destination.R)),
+                    spawned.Enemy.Pose, 1, 1).IsInRange);
+            if (moveOption != null)
+            {
+                HexCoord destination = new HexCoord(moveOption.Destination.Q, moveOption.Destination.R);
+                var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: destination));
+                Assert.IsTrue(move.IsLegal, move.RejectionReason);
+                encounter.RequestMove("player", destination.Q, destination.R);
+                Assert.AreEqual(ap - punch.ActionPointCostUnits - move.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
+                yield return WaitForMovementPresentation(encounter);
+            }
+            else
+                TestContext.WriteLine("No adjacent legal move after the punch; ending the turn in place.");
             int playerHealth = spawned.Player.CurrentHealth; long priorTurn = session.TurnSequence;
             encounter.RequestEndTurn("player");
             yield return WaitForPlayerTurn(encounter, session, "player");
             Assert.Less(spawned.Player.CurrentHealth, playerHealth);
             Assert.Greater(session.TurnSequence, priorTurn);
-            Assert.IsTrue(recording.Events.Any(value => value.ActorCombatantId == "enemy" && value.PresentationEvent == CombatUnitPresentationEvent.Attack));
+            int enemyOffensiveEvents = recording.Events.Count(value =>
+                value.ActorCombatantId != "player" &&
+                (value.PresentationEvent == CombatUnitPresentationEvent.Attack ||
+                 value.PresentationEvent == CombatUnitPresentationEvent.Cast));
+            TestContext.WriteLine("Enemy offensive presentations before returning to the player: " + enemyOffensiveEvents +
+                "; actors=" + string.Join(",", recording.Events.Where(value => value.ActorCombatantId != "player")
+                    .Select(value => value.ActorCombatantId + ":" + value.PresentationEvent)));
+            Assert.Greater(enemyOffensiveEvents, 0,
+                "The formal two-beast encounter must show an enemy offensive presentation before returning to the player.");
             Assert.AreEqual("basic_body_shijiahou_lianqi", spawned.Enemy.BasicAttackProfileId);
             Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_sword"));
             Assert.AreEqual(0, runtime.GetItemQuantity("item_iron_blade"));
@@ -1179,7 +1203,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(battlefield, "AdventureScene is missing the functional Guanzhong battlefield.");
             Assert.IsTrue(battlefield.activeInHierarchy, "The formal Adventure route must show the functional battlefield.");
             Assert.AreEqual(100, battlefield.transform.childCount);
-            Assert.AreEqual(4, battlefield.GetComponentsInChildren<Transform>(true).Count(value =>
+            Assert.AreEqual(15, battlefield.GetComponentsInChildren<Transform>(true).Count(value =>
                 value.name.StartsWith("GuanzhongObstacle_", StringComparison.Ordinal)));
             Assert.Zero(battlefield.GetComponentsInChildren<Collider>(true).Length);
             GameObject backdrop = FindSceneObjectIncludingInactive("VisualBackdrop");
@@ -1213,7 +1237,7 @@ namespace TianZhang.Tests.PlayMode
 
             Static3DCombatUnitPresentationProvider provider = FindInActiveScene<Static3DCombatUnitPresentationProvider>();
             AssertProviderGrounding(provider, "player", 0, 0, battlefield.transform);
-            AssertProviderGrounding(provider, "enemy", 9, 9, battlefield.transform);
+            AssertProviderGrounding(provider, "enemy", 7, 8, battlefield.transform);
         }
 
         private static void AssertProviderGrounding(
@@ -1225,12 +1249,18 @@ namespace TianZhang.Tests.PlayMode
         {
             Assert.IsNotNull(provider);
             Assert.IsTrue(provider.TryGetPresentedUnit(combatantId, out GameObject unit));
+            Assert.IsTrue(provider.TryGetPresentedPose(combatantId, out var presentedPose));
+            Assert.AreEqual(q, presentedPose.Position.Q);
+            Assert.AreEqual(r, presentedPose.Position.R);
             Transform ground = battlefield.Find("GuanzhongHex_" + q + "_" + r);
             Assert.IsNotNull(ground, "The functional battlefield is missing the marker ground cell.");
             Vector3 expectedCenter = new Vector3(q + r * 0.5f, 0f, r * 0.8660254f + 1f);
+            // A formal stone beast presents its two-cell body center between anchor and rear cell;
+            // compare the root against the provider's authoritative pose rather than the single-cell anchor.
+            Vector3 expectedUnitCenter = Static3DCombatUnitPresentationProvider.PoseToWorld(presentedPose);
             Assert.Less(Vector2.Distance(
                 new Vector2(unit.transform.position.x, unit.transform.position.z),
-                new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);
+                new Vector2(expectedUnitCenter.x, expectedUnitCenter.z)), 0.001f);
             Assert.Less(Vector2.Distance(
                 new Vector2(ground.position.x, ground.position.z),
                 new Vector2(expectedCenter.x, expectedCenter.z)), 0.001f);

@@ -22,6 +22,7 @@ MonoBehaviour:
   footprintKind: adjacent_pair
   bodyScaleRank: 2
   combatStatScale: 0.5
+  movementEfficiencyScale: 3
   combatTemplate: {fileID: 11400000, guid: d8e383ae0eda4443a17f4f151191127d, type: 2}
   dropEntries:
   - itemId: item_shijia_piece

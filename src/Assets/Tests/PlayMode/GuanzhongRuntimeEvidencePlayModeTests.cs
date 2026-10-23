@@ -774,7 +774,7 @@ namespace TianZhang.Tests.PlayMode
                 CombatantSnapshot armadillo = spawned.Enemies[0];
                 Assert.That(armadillo.MaximumHealth, Is.EqualTo(329)); Assert.That(armadillo.PhysicalAttack, Is.EqualTo(39));
                 Assert.That(armadillo.ActionPointMaximumUnits, Is.EqualTo(50000));
-                Assert.That(armadillo.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+                Assert.That(armadillo.MovementEfficiencyMilliUnits, Is.EqualTo(6000));
                 Assert.That(armadillo.Speed, Is.EqualTo(3));
                 CombatantSnapshot spitter = spawned.Enemies[1];
                 Assert.That(spitter.IsAlive, Is.True);

@@ -849,13 +849,13 @@ namespace TianZhang.Tests.PlayMode
                 {
                     copy.rootBone = rootBone;
                     var enemy = (CombatantSnapshot)factory.Invoke(null, new object[] {
-                        copy, AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale),
+                        copy, AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale, enemyDefinition.movementEfficiencyScale),
                         new TianZhang.Spatial.HexCoord(1, 0), "basic_body_shijiahou_lianqi", "enemy" });
                     var evidence = JsonUtility.FromJson<OrdinaryInputEvidence>(original);
                     evidence.source = "Player: unchanged SPELLS visible ordinary input; enemy: Unity production CreateEnemy on explicit rootBone candidate clone=" + rootBone;
                     evidence.enemyCharacter = CharacterRecord.Capture(CharacterRuntimeProfile.FromDefinition("enemy", copy, GrowthRules).Capture());
                     evidence.enemy = CombatInputEvidence.Capture(enemy);
-                    evidence.enemyEffective = AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale);
+                    evidence.enemyEffective = AdventureUnitSpawner.ProjectEnemyStats(copy, GrowthRules, enemyDefinition.combatStatScale, enemyDefinition.movementEfficiencyScale);
                     string json = JsonUtility.ToJson(evidence, true);
                     File.WriteAllText(Path.Combine(directory, "rootbone-" + rootBone + ".json"), json);
                     if (rootBone == template.rootBone)

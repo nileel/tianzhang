@@ -159,7 +159,12 @@ class Character
             dodgeRate = Number("dodgeRate"), critRate = Number("critRate"), critDamage = Number("critDamage"), hitRateBonus = Number("hitRateBonus"),
         };
         var baseline = stats;
-        if (enemy) stats = stats.Scale(Number("combatStatScale"));
+        if (enemy)
+        {
+            stats = stats.Scale(Number("combatStatScale"));
+            stats.movementEfficiencyMilliUnits = TianZhang.Content.EnemyCombatStats.ScaleMovementEfficiency(
+                stats.movementEfficiencyMilliUnits, Number("movementEfficiencyScale"));
+        }
         var c = new Character { Name = id, Realm = GameData.RealmOrder[realm.RealmOrder], Style = "physical",
             UnarmedAttackFamilyId = row["unarmedAttackFamilyId"], ProductionRealmMultiplier = multiplier,
             ProductionEnemyStats = enemy ? stats : null,

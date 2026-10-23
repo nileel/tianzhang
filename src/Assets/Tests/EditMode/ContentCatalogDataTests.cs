@@ -40,6 +40,7 @@ namespace TianZhang.Tests
                 Assert.AreEqual(2, preview.enemies.Length);
                 Assert.IsTrue(preview.enemies.All(value => value.footprintKind == "adjacent_pair" && value.bodyScaleRank == 2));
                 Assert.IsTrue(preview.enemies.All(value => value.combatStatScale == 0.5f));
+                Assert.IsTrue(preview.enemies.All(value => value.movementEfficiencyScale == 3f));
                 var enemy = preview.enemies.Single(candidate => candidate.enemyId == "enemy_shijiahou");
                 Assert.AreEqual("ai_melee", enemy.aiProfileId);
                 Assert.AreSame(enemy.combatTemplate, preview.enemyTemplates.Single(template => template == enemy.combatTemplate));
@@ -83,6 +84,12 @@ namespace TianZhang.Tests
         [TestCase("bodyScaleRank", "0")]
         [TestCase("bodyScaleRank", "-1")]
         [TestCase("bodyScaleRank", "2147483648")]
+        [TestCase("movementEfficiencyScale", "")]
+        [TestCase("movementEfficiencyScale", "0")]
+        [TestCase("movementEfficiencyScale", "-1")]
+        [TestCase("movementEfficiencyScale", "NaN")]
+        [TestCase("movementEfficiencyScale", "Infinity")]
+        [TestCase("movementEfficiencyScale", "abc")]
         public void EnemyBodyInputsAreValidatedBeforeFormalScopeFiltering(string column, string value)
         {
             var enemies = ReadDataFile(EnemiesPath);
@@ -98,6 +105,7 @@ namespace TianZhang.Tests
 
         [TestCase("footprintKind")]
         [TestCase("bodyScaleRank")]
+        [TestCase("movementEfficiencyScale")]
         public void EnemyBodyColumnsCannotBeOmitted(string column)
         {
             var enemies = ReadDataFile(EnemiesPath);

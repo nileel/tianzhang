@@ -142,7 +142,7 @@ static class BattleSimSelfTests
     {
         var enemy = Character.FromProduction(true, "enemy_shijiahou");
         var stats = enemy.ProductionEnemyStats;
-        AssertSequence(new[] { 7, 8, 3, 3, 3, 2, 329, 54, 39, 18, 34, 13, 50000, 2000 },
+        AssertSequence(new[] { 7, 8, 3, 3, 3, 2, 329, 54, 39, 18, 34, 13, 50000, 6000 },
             new[] { stats.rootBone, stats.physique, stats.spirit, stats.mind, stats.reaction, stats.talent,
                 stats.maximumHealth, stats.maximumSpirit, stats.physicalAttack, stats.soulAttack,
                 stats.physicalDefense, stats.soulDefense, stats.actionPointMaximumUnits, stats.movementEfficiencyMilliUnits }, "R4 effective integers");
@@ -151,7 +151,7 @@ static class BattleSimSelfTests
         AssertEqual(329, enemy.Primary["HP"], "actual simulation HP");
         AssertEqual(39, enemy.Primary["肉攻"], "actual simulation attack");
         AssertEqual(50000, enemy.ActionPointMaximumUnits, "actual simulation AP");
-        AssertEqual(2000, enemy.MovementEfficiencyMilliUnits, "actual simulation movement");
+        AssertEqual(6000, enemy.MovementEfficiencyMilliUnits, "actual simulation movement");
         AssertEqual(25000, enemy.EffectiveBasicAttackProfile.Cost.ActionPointCostUnits, "unchanged body cost");
         Console.WriteLine(JsonSerializer.Serialize(new { baseline = enemy.ProductionEnemyBaseline, effective = stats },
             new JsonSerializerOptions { IncludeFields = true }));

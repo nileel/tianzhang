@@ -222,7 +222,7 @@ namespace TianZhang.Tests.EditMode
             Assert.AreEqual(1.2f, spawned.Enemy.RealmMultiplier);
             Assert.AreEqual(0, spawned.Enemy.ActionPointsRemainingUnits);
             Assert.AreEqual(50000, spawned.Enemy.ActionPointMaximumUnits);
-            Assert.AreEqual(2000, spawned.Enemy.MovementEfficiencyMilliUnits);
+            Assert.AreEqual(6000, spawned.Enemy.MovementEfficiencyMilliUnits);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.AvailableArtProfileIds);
             CollectionAssert.IsEmpty(spawned.Enemy.EquippedDivineProfileIds);

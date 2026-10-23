@@ -25,6 +25,8 @@ namespace TianZhang.Content
         public string footprintKind;
         public int bodyScaleRank;
         public float combatStatScale = 1f;
+        /// <summary>移动效率独立倍率，默认 1；最终移动效率 = 境界镜像 × combatStatScale × 本值。</summary>
+        public float movementEfficiencyScale = 1f;
         public CharacterData combatTemplate;
         public EnemyDropEntry[] dropEntries = Array.Empty<EnemyDropEntry>();
     }

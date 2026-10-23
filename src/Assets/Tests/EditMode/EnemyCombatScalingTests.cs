@@ -22,6 +22,7 @@ namespace TianZhang.Tests.EditMode
             var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
             Assert.That(catalog.TryGetEnemy("enemy_shijiahou", out var enemy), Is.True);
             Assert.That(enemy.combatStatScale, Is.EqualTo(0.5f));
+            Assert.That(enemy.movementEfficiencyScale, Is.EqualTo(3f));
             string templateBefore = JsonUtility.ToJson(enemy.combatTemplate);
             string rulesBefore = JsonUtility.ToJson(catalog.CombatRuleSet);
             var baseline = AdventureUnitSpawner.ProjectEnemyStats(enemy.combatTemplate, catalog.CombatRuleSet, 1f);
@@ -37,9 +38,10 @@ namespace TianZhang.Tests.EditMode
                 {
                     Assert.That(spawner.TrySpawn(player, catalog, new AdventureNodeData { q = 0, r = 0 },
                         new AdventureNodeData { q = 3, r = 5, contentId = enemy.enemyId,
-                            additionalEnemies = new[] { new AdventureEnemySpawnData { instanceId = "enemy_2", q = 4, r = 5 } } },
+                            additionalEnemies = new[] { new AdventureEnemySpawnData {
+                                instanceId = "enemy_2", enemyId = enemy.enemyId, q = 4, r = 5, facing = 2 } } },
                         out var spawned, out var reason), Is.True, reason);
-                    CollectionAssert.AreEqual(new[] { 7, 8, 3, 3, 3, 2, 329, 54, 39, 18, 34, 13, 50000, 2000 }, Integers(spawned.EnemyStats));
+                    CollectionAssert.AreEqual(new[] { 7, 8, 3, 3, 3, 2, 329, 54, 39, 18, 34, 13, 50000, 6000 }, Integers(spawned.EnemyStats));
                     foreach (var field in typeof(EnemyCombatStats).GetFields().Where(f => f.FieldType == typeof(float)))
                         Assert.That(field.GetValue(spawned.EnemyStats), Is.EqualTo((float)field.GetValue(baseline) * 0.5f), field.Name);
                     foreach (var actor in spawned.Enemies)
@@ -52,7 +54,7 @@ namespace TianZhang.Tests.EditMode
                         Assert.That(actor.BlockRate, Is.EqualTo(7.5f)); Assert.That(actor.BlockReduction, Is.EqualTo(12.5f));
                         Assert.That(actor.CriticalRate, Is.EqualTo(2.5f)); Assert.That(actor.CriticalDamage, Is.EqualTo(5f));
                         Assert.That(actor.ActionPointMaximumUnits, Is.EqualTo(50000));
-                        Assert.That(actor.MovementEfficiencyMilliUnits, Is.EqualTo(2000));
+                        Assert.That(actor.MovementEfficiencyMilliUnits, Is.EqualTo(6000));
                         Assert.That(actor.BasicAttackProfileId, Is.EqualTo("basic_body_shijiahou_lianqi"));
                     }
                     Assert.That(spawned.Player.ActionPointMaximumUnits, Is.EqualTo(player.Attributes.ActionPointMaximumUnits));

@@ -339,16 +339,21 @@ function Test-FormalContentCatalog {
         $field = $value.ToString([Globalization.CultureInfo]::InvariantCulture)
       }
     }
+    $movementScale = 0.0
+    if (-not [double]::TryParse([string]$row.movementEfficiencyScale, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$movementScale) -or
+        [double]::IsNaN($movementScale) -or [double]::IsInfinity($movementScale) -or $movementScale -le 0) {
+      Add-Finding 'ENEMY_MOVEMENT_SCALE_INVALID' ([string]$row.name) 'movementEfficiencyScale must be an explicit positive finite number.'
+    }
   }
 
   Test-FormalContentAsset 'Settlement:guanzhong_city' 'src/Assets/Data/Settlements/Settlement_guanzhong_city.asset' @{
     settlementId = 'guanzhong_city'; contentScope = 'content_scope_production'; displayNameKey = 'settlement_guanzhong_city'
   }
   Test-FormalContentAsset 'Enemy:enemy_shijiahou' 'src/Assets/Data/Enemies/Enemy_enemy_shijiahou.asset' @{
-    enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'
+    enemyId = 'enemy_shijiahou'; contentScope = 'guanzhong'; aiProfileId = 'ai_melee'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'; movementEfficiencyScale = '3'
   }
   Test-FormalContentAsset 'Enemy:enemy_lieshijia' 'src/Assets/Data/Enemies/Enemy_enemy_lieshijia.asset' @{
-    enemyId = 'enemy_lieshijia'; contentScope = 'guanzhong'; aiProfileId = 'ai_ranged'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'
+    enemyId = 'enemy_lieshijia'; contentScope = 'guanzhong'; aiProfileId = 'ai_ranged'; realmId = 'realm_lianqi'; footprintKind = 'adjacent_pair'; bodyScaleRank = '2'; movementEfficiencyScale = '3'
   }
   Test-FormalContentAsset 'Item:item_lingshi_low' 'src/Assets/Data/Items/Item_item_lingshi_low.asset' @{
     itemId = 'item_lingshi_low'; contentScope = 'content_scope_production'; maxStack = '99'
@@ -1114,7 +1119,7 @@ $schemas = [ordered]@{
   Settlements = @('settlementId','displayNameKey','contentScope','settlementType','regionId','ownerFactionId','visualThemeId','features','adventureEntranceIds')
   Items = @('itemId','displayNameKey','descriptionKey','contentScope','itemCategory','maxStack','equipmentSlotId','equipmentRealmRequirementId','equipmentBasicAttackProfileId','combatUseEffectId','combatUseRealmId','combatUseTargetMode','combatUseHealthRecovery','initialGrantQuantity')
   Bounties = @('bountyId','titleKey','descriptionKey','contentScope','issuerSettlementId','objectiveType','targetEnemyId','requiredCount','allowedAdventureId','rewardEntries','repeatPolicy')
-  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits','unarmedAttackFamilyId','combatStatScale','footprintKind','bodyScaleRank')
+  Enemies = @('name','type','aiType','realm','realmMultiplier','rootBone','physique','spirit','mind','reaction','talent','blockRate','blockReduction','soulShieldRate','soulShieldReduction','dodgeRate','critRate','critDamage','hitRateBonus','equippedSpells','dropTable','description','contentScope','dropEntries','unarmedBasicAttackProfileId','actionPointMaximumUnits','movementEfficiencyMilliUnits','unarmedAttackFamilyId','combatStatScale','footprintKind','bodyScaleRank','movementEfficiencyScale')
   Adventures = @('adventureId','displayNameKey','contentScope','nodeId','nodeTypeId','q','r','contentId','additionalEnemies','enemyFacing')
   RealmCombatGrowth = [TianZhang.Combat.CombatRuleSet]::RealmColumns
   CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns

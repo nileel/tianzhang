@@ -23,6 +23,26 @@ namespace TianZhang.Content
                 throw new ArgumentOutOfRangeException(nameof(scale), "Enemy combat scale must be in (0, 1].");
         }
 
+        /// <summary>移动效率是独立的行动经济输入，不参与战斗属性缩放的取值范围限制。</summary>
+        public static void ValidateMovementEfficiencyScale(float scale)
+        {
+            if (float.IsNaN(scale) || float.IsInfinity(scale) || scale <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(scale), "Enemy movement efficiency scale must be positive and finite.");
+        }
+
+        /// <summary>按独立倍率缩放最终移动效率；整数结果四舍五入，越界明确失败。</summary>
+        public static int ScaleMovementEfficiency(int movementEfficiencyMilliUnits, float scale)
+        {
+            ValidateMovementEfficiencyScale(scale);
+            if (movementEfficiencyMilliUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementEfficiencyMilliUnits));
+            double scaled = Math.Round(
+                movementEfficiencyMilliUnits * (double)scale, MidpointRounding.AwayFromZero);
+            if (scaled > int.MaxValue)
+                throw new OverflowException("Enemy movement efficiency scale exceeds Int32.");
+            return (int)scaled;
+        }
+
         public EnemyCombatStats Scale(float scale)
         {
             ValidateScale(scale);

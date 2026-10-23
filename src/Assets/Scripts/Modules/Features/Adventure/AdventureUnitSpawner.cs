@@ -103,7 +103,8 @@ namespace TianZhang.Features.Adventure
                 playerBasic = ResolveBasicAttackBinding(player.MainEquipmentBasicAttackProfileId, player.UnarmedBasicAttackProfileId);
                 enemyBasic = ResolveBasicAttackBinding(enemyProfile.MainEquipmentBasicAttackProfileId, enemyProfile.UnarmedBasicAttackProfileId);
                 playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
-                enemyStats = ProjectEnemyStats(enemyData.combatTemplate, catalog.CombatRuleSet, enemyData.combatStatScale);
+                enemyStats = ProjectEnemyStats(enemyData.combatTemplate, catalog.CombatRuleSet,
+                    enemyData.combatStatScale, enemyData.movementEfficiencyScale);
                 enemySnapshot = CreateEnemy(enemyData, enemyStats, enemyPosition, enemyBasic, encounterNode.enemyFacing);
                 var ids = new HashSet<string>(StringComparer.Ordinal) { "player", "enemy" };
                 var positions = new HashSet<HexCoord> { playerPosition, enemyPosition };
@@ -119,7 +120,8 @@ namespace TianZhang.Features.Adventure
                     { reason = "adventure_enemy_basic_attack_binding_invalid"; return false; }
                     string extraBasic = ResolveBasicAttackBinding(
                         extraProfile.MainEquipmentBasicAttackProfileId, extraProfile.UnarmedBasicAttackProfileId);
-                    EnemyCombatStats extraStats = ProjectEnemyStats(extraData.combatTemplate, catalog.CombatRuleSet, extraData.combatStatScale);
+                    EnemyCombatStats extraStats = ProjectEnemyStats(extraData.combatTemplate, catalog.CombatRuleSet,
+                        extraData.combatStatScale, extraData.movementEfficiencyScale);
                     additionalSnapshots.Add(CreateEnemy(extraData, extraStats, new HexCoord(extra.q, extra.r),
                         extraBasic, extra.facing, extra.instanceId));
                     additionalEnemyData.Add(extraData);
@@ -202,13 +204,14 @@ namespace TianZhang.Features.Adventure
             return snapshot;
         }
 
-        public static EnemyCombatStats ProjectEnemyStats(CharacterData source, CombatRuleSetData growthRules, float scale)
+        public static EnemyCombatStats ProjectEnemyStats(
+            CharacterData source, CombatRuleSetData growthRules, float scale, float movementEfficiencyScale = 1f)
         {
             CharacterAttributes attributes = CharacterAttributes.FromDefinition(source, growthRules);
             CharacterCombatModifiers combatModifiers = CharacterCombatModifiers.FromDefinition(source);
             float realmMultiplier = source.realmMultiplier > 0f ? source.realmMultiplier : 1f;
             CharacterDerivedAttributes derived = attributes.Derive(realmMultiplier, combatModifiers.ToAttributeBonuses());
-            return new EnemyCombatStats
+            EnemyCombatStats stats = new EnemyCombatStats
             {
                 rootBone = attributes.RootBone, physique = attributes.Physique,
                 spirit = attributes.Spirit, mind = attributes.Mind, reaction = attributes.Reaction, talent = attributes.Talent,
@@ -225,6 +228,9 @@ namespace TianZhang.Features.Adventure
                 dodgeRate = combatModifiers.DodgeRate, critRate = combatModifiers.CritRate,
                 critDamage = combatModifiers.CritDamage, hitRateBonus = combatModifiers.HitRateBonus,
             }.Scale(scale);
+            stats.movementEfficiencyMilliUnits = EnemyCombatStats.ScaleMovementEfficiency(
+                stats.movementEfficiencyMilliUnits, movementEfficiencyScale);
+            return stats;
         }
 
         private static CombatantSnapshot CreateEnemy(EnemyData definition, EnemyCombatStats stats, HexCoord position,
