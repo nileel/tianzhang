@@ -706,7 +706,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             float.IsNaN(value) || float.IsInfinity(value) || value < 0) throw new InvalidDataException("attack_profile_multiplier_invalid");
         return value;
     }
-    internal static readonly string[] ProductionAttackIds = { "spell_guanshiji", "spell_julingshu", "basic_iron_sword", "basic_iron_blade",
+    internal static readonly string[] ProductionAttackIds = { "spell_guanshiji", "spell_julingshu", "spell_lieshi", "spell_feixingzhi", "basic_iron_sword", "basic_iron_blade", "basic_qingfeng_jian",
         "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji", "basic_body_human_jindan", "basic_body_shijiahou_lianqi" };
     internal static IReadOnlyDictionary<string, AttackProfile> LoadProductionAttacks(string path)
     {
@@ -715,7 +715,7 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             throw new InvalidDataException("production_attack_mapping_incomplete");
         return result;
     }
-    // Explicit fixture entry; the production caller retains its frozen nine-ID contract.
+    // Explicit fixture entry; the production caller retains its approved-ID contract.
     internal static IReadOnlyDictionary<string, AttackProfile> LoadAttackProfileProjection(string path)
     {
         var lines = CsvTableReader.ReadRequired(path); var header = CsvTableReader.FindHeader(lines);
@@ -732,9 +732,9 @@ public static readonly (string realm, int subIdx, int cpp)[] Milestones = new (s
             if (Value("ruleSetVersion") != rules.RuleSetVersion) throw new InvalidDataException("attack_profile_rule_version_unknown");
             int cooldown = rules.ResolveCooldown(Value("abilityTierId"),Value("cooldownClass"),Value("reuseCooldownTicks") == "" ? null : Number("reuseCooldownTicks"));
             CombatAttackArea area = CombatAttackArea.Single;
-            if (id is "basic_iron_sword" or "basic_iron_blade")
+            if (id is "basic_iron_sword" or "basic_iron_blade" or "basic_qingfeng_jian")
             {
-                bool forward = id == "basic_iron_sword";
+                bool forward = id != "basic_iron_blade";
                 if (Value("profileKind") != "basic" || Value("basicBindingKind") != "main_equipment" || mode != "fixed_weapon" ||
                     Value("effectType") != "physical" || Value("resourceKind") != "none" || Number("resourceCost") != 0 ||
                     Number("ctPenalty") != 0 || cooldown != 0 || Value("targetingMode") != "area" ||

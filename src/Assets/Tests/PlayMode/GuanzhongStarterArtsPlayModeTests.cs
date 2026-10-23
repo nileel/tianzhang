@@ -279,7 +279,7 @@ namespace TianZhang.Tests.PlayMode
             CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
             CombatActionPreviewView preview = FindInActiveScene<CombatActionPreviewView>();
             RecordStarterArtState("initial-range");
-            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { AttackId, RecoveryId }));
+            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { AttackId, RecoveryId, "spell_feixingzhi" }));
             Assert.That(sink.Latest.ArtActions[0].Targets.All(target => !target.CanExecute), Is.True);
             Assert.That(sink.Latest.ArtActions[0].Targets[0].RejectionReason, Is.EqualTo("above_max_range"));
             foreach (int width in new[] { 1920, 1366 })
@@ -493,8 +493,8 @@ namespace TianZhang.Tests.PlayMode
             source = GameBootstrap.RequireRuntime().Player.Capture();
             Assert.That(new[] { source.Attributes.RootBone, source.Attributes.Spirit, source.Attributes.Mind,
                 source.Attributes.Talent, source.Attributes.Fortune }, Is.EqualTo(new[] { 8, 8, 8, 8, 8 }));
-            Assert.That(source.AbilityLoadout.KnownSpells, Is.EqualTo(new[] { AttackId, RecoveryId }));
-            Assert.That(source.AbilityLoadout.EquippedSpells, Is.EqualTo(new[] { AttackId, RecoveryId }));
+            Assert.That(source.AbilityLoadout.KnownSpells, Is.EqualTo(new[] { AttackId, RecoveryId, "spell_feixingzhi" }));
+            Assert.That(source.AbilityLoadout.EquippedSpells, Is.EqualTo(new[] { AttackId, RecoveryId, "spell_feixingzhi" }));
             Assert.That(source.VisibleRootId, Is.EqualTo("root_water_middle"));
             Assert.That(source.VisibleRootElement, Is.EqualTo("水"));
             Assert.That(source.VisibleRootGrade, Is.EqualTo("中品"));
@@ -535,7 +535,7 @@ namespace TianZhang.Tests.PlayMode
             session = GetPrivateField<CombatSession>(encounter, "session");
             spawned = GetPrivateField<AdventureSpawnSet>(encounter, "spawned");
             Assert.That(session.AttackProfiles.Select(profile => profile.Id),
-                Is.EquivalentTo(new[] { "basic_iron_sword", "basic_iron_blade", AttackId, RecoveryId,
+                Is.EquivalentTo(new[] { "basic_iron_sword", "basic_iron_blade", "basic_qingfeng_jian", AttackId, RecoveryId, "spell_lieshi", "spell_feixingzhi",
                     "basic_body_human_fanren", "basic_body_human_lianqi", "basic_body_human_zhuji",
                     "basic_body_human_jindan", "basic_body_shijiahou_lianqi" }));
             Assert.That(spawned.Player.RawSpirit, Is.EqualTo(source.Attributes.Spirit));
@@ -544,7 +544,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.VisibleRootGrade, Is.EqualTo(source.VisibleRootGrade));
             Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(source.AbilityLoadout.EquippedSpells));
             Assert.That(spawned.Player.AvailableArtProfileIds, Is.EqualTo(source.AbilityLoadout.KnownSpells));
-            foreach (string id in new[] { AttackId, RecoveryId })
+            foreach (string id in new[] { AttackId, RecoveryId, "spell_feixingzhi" })
             {
                 Assert.That(session.TryGetProfile(id, out CombatAttackProfile profile), Is.True);
                 Assert.That(profile.MeetsRequirements(spawned.Player.RealmStage,
@@ -633,7 +633,7 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator IsolatedOldMortalMinorClanSaveLoadsWithoutQualificationOrGrants()
         {
             yield return EnterFormalCombat(null, legacyMortalSave: true);
-            foreach (string id in new[] { AttackId, RecoveryId })
+            foreach (string id in new[] { AttackId, RecoveryId, "spell_feixingzhi" })
             {
                 CombatArtTargetSnapshot target = sink.Latest.ArtActions.Single(art => art.ProfileId == id).Targets.First();
                 Assert.That(target.CanExecute, Is.False);

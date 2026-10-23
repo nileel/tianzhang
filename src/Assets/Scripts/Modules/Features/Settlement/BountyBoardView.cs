@@ -25,6 +25,7 @@ namespace TianZhang.Features.Settlement
         [SerializeField] private Button acceptButton;
         [SerializeField] private Button claimButton;
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button nextButton;
 
         private ContentCatalogData catalog;
         private BountyUseCase useCase;
@@ -44,7 +45,8 @@ namespace TianZhang.Features.Settlement
             Text result,
             Button accept,
             Button claim,
-            Button close)
+            Button close,
+            Button next)
         {
             titleText = title;
             entriesText = entries;
@@ -52,6 +54,7 @@ namespace TianZhang.Features.Settlement
             acceptButton = accept;
             claimButton = claim;
             closeButton = close;
+            nextButton = next;
         }
 
         public void Show(ContentCatalogData nextCatalog, string nextSettlementId, BountyUseCase nextUseCase)
@@ -72,6 +75,11 @@ namespace TianZhang.Features.Settlement
 
         private void BindButtonListeners()
         {
+            if (nextButton != null)
+            {
+                nextButton.onClick.RemoveAllListeners();
+                nextButton.onClick.AddListener(SelectNextBounty);
+            }
             if (acceptButton != null)
             {
                 acceptButton.onClick.RemoveAllListeners();
@@ -94,6 +102,15 @@ namespace TianZhang.Features.Settlement
         public void AcceptCurrentBounty()
         {
             SubmitAccept(currentBountyId);
+        }
+
+        private void SelectNextBounty()
+        {
+            if (listedBounties.Count < 2) return;
+            int index = listedBounties.FindIndex(bounty => bounty.bountyId == currentBountyId);
+            currentBountyId = listedBounties[(index + 1) % listedBounties.Count].bountyId;
+            SetResult(null);
+            Refresh();
         }
 
         public void ClaimCurrentBounty()
@@ -147,13 +164,19 @@ namespace TianZhang.Features.Settlement
                 return;
             }
 
-            var rows = new StringBuilder();
             foreach (BountyData bounty in catalog.GetBountiesByIssuer(settlementId))
             {
                 if (bounty == null || string.IsNullOrWhiteSpace(bounty.bountyId))
                     continue;
 
                 listedBounties.Add(bounty);
+            }
+
+            if (!listedBounties.Exists(bounty => bounty.bountyId == currentBountyId))
+                currentBountyId = listedBounties.Count == 0 ? null : listedBounties[0].bountyId;
+            var rows = new StringBuilder();
+            foreach (BountyData bounty in listedBounties)
+            {
                 BountyState state = useCase.GetState(bounty.bountyId);
                 if (rows.Length > 0)
                     rows.Append('\n');
@@ -164,12 +187,12 @@ namespace TianZhang.Features.Settlement
                 string title = string.IsNullOrEmpty(resolvedTitle) || resolvedTitle == bounty.titleKey
                     ? bounty.bountyId
                     : resolvedTitle;
-                rows.Append(title)
+                rows.Append(bounty.bountyId == currentBountyId ? "【当前】" : "")
+                    .Append(title)
                     .Append(" | ").Append(StatusDisplay(state.Status))
                     .Append(" | 进度 ").Append(state.Progress).Append('/').Append(bounty.requiredCount);
             }
 
-            currentBountyId = listedBounties.Count == 0 ? null : listedBounties[0].bountyId;
             if (entriesText != null)
                 entriesText.text = rows.ToString();
             if (listedBounties.Count == 0 && string.IsNullOrEmpty(lastResultReason))
@@ -183,6 +206,7 @@ namespace TianZhang.Features.Settlement
             BountyStatus status = hasCurrent ? useCase.GetState(currentBountyId).Status : BountyStatus.Available;
             SetButtonAvailable(acceptButton, hasCurrent && status == BountyStatus.Available);
             SetButtonAvailable(claimButton, hasCurrent && status == BountyStatus.ObjectiveCompleted);
+            SetButtonAvailable(nextButton, listedBounties.Count > 1);
         }
 
         private static void SetButtonAvailable(Button button, bool available)

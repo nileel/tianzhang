@@ -571,7 +571,7 @@ static class BattleSimSelfTests
     {
         var service=new CombatCommandService(); var board=new HexBattlefield();
         AssertEqual(51,GameData.Rules.Economy.Count(r=>r.RecordKind=="test_action"),"51 explicit test triples");
-        AssertEqual(9,GameData.ProductionAttacks.Count,"nine actual production IDs");
+        AssertEqual(GameData.ProductionAttackIds.Length,GameData.ProductionAttacks.Count,"approved production IDs");
         AssertEqual(false,GameData.ProjectMovement("金丹",2,"万法都箓经").UnlockedChapters.Any(p=>p.Contains("元婴")),"future chapter is never granted early");
         AssertEqual(5333,GameData.ProjectMovement("筑基",2,"苦行剑典").EffectiveMilliUnits,"same table cumulative M rescale");
         foreach (var row in GameData.Rules.Economy.Where(r=>r.RecordKind=="test_action"))
@@ -2020,7 +2020,7 @@ static class BattleSimSelfTests
     {
         var rows = ReadCsvRows("src/Assets/DataConfig/AttackProfiles.csv");
         AssertEqual(false, rows.Any(row => row["attackProfileId"] == "basic_unarmed" || row["basicBindingKind"] == "unarmed_fallback"), "no production unarmed row");
-        AssertEqual(9, GameData.ProductionAttacks.Count, "nine current production profiles");
+        AssertEqual(GameData.ProductionAttackIds.Length, GameData.ProductionAttacks.Count, "approved production profiles");
         var actor = CtTestCharacter("no-weapon", 20);
         var enemy = CtTestCharacter("no-weapon-enemy", 10);
         actor.BasicAttackProfile = enemy.BasicAttackProfile = null;
@@ -2047,8 +2047,8 @@ static class BattleSimSelfTests
             string path = Path.Combine(data, "AttackProfiles.csv");
             string[] original = File.ReadAllLines(path);
             var profiles = GameData.LoadProductionAttacks(path);
-            AssertEqual(9, profiles.Count, "same nine production IDs");
-            foreach (var pair in new[] { ("basic_iron_sword", CombatAttackArea.ForwardPair, 2, 40000, 1d), ("basic_iron_blade", CombatAttackArea.AdjacentPair, 1, 50000, 1.25d) })
+            AssertEqual(GameData.ProductionAttackIds.Length, profiles.Count, "approved production IDs");
+            foreach (var pair in new[] { ("basic_iron_sword", CombatAttackArea.ForwardPair, 2, 40000, 1d), ("basic_iron_blade", CombatAttackArea.AdjacentPair, 1, 50000, 1.25d), ("basic_qingfeng_jian", CombatAttackArea.ForwardPair, 2, 40000, (double)1.35f) })
             {
                 var profile = profiles[pair.Item1];
                 AssertEqual(pair.Item2, profile.Area, "two-cell area kind");
@@ -2057,7 +2057,7 @@ static class BattleSimSelfTests
                 AssertEqual(pair.Item4, profile.Cost.ActionPointCostUnits, "unchanged cost");
                 AssertEqual(pair.Item5, profile.Mult, "unchanged multiplier");
             }
-            AssertEqual(7, profiles.Values.Count(profile => profile.Area == CombatAttackArea.Single), "other profiles stay single");
+            AssertEqual(GameData.ProductionAttackIds.Length - 3, profiles.Values.Count(profile => profile.Area == CombatAttackArea.Single), "other profiles stay single");
             string[] header = original.First(line => line.StartsWith("attackProfileId,")).Split(',');
             foreach (var mutation in new[] { ("areaCenterKind", "target_cell"), ("areaShapeKind", "fan"), ("areaShapeKind", "unknown"),
                 ("areaFacing", "0"), ("areaLength", "3"), ("areaAllowedFactions", "ally"), ("areaAllowedStates", "corpse"),
@@ -2166,7 +2166,7 @@ static class BattleSimSelfTests
             AssertEqual((double)1.1f, adjusted.Mult, "multiplier is not a parser constant");
             AssertEqual(false, adjusted.RuleSetSourceDigest == rules.SourceDigest, "parameter change updates digest");
             Write(production);
-            AssertEqual(9, GameData.LoadProductionAttacks(attackPath).Count, "nine production IDs");
+            AssertEqual(GameData.ProductionAttackIds.Length, GameData.LoadProductionAttacks(attackPath).Count, "approved production IDs");
             AssertEqual(5, GameData.LoadProductionRuleSet(attackPath).UnarmedRows.Count, "five production body mappings");
             var wrong = production.Where(line => !line.StartsWith('#')).ToArray(); var weapon = wrong[3].Split(',');
             weapon[Array.IndexOf(fields, "unarmedPhysicalAttackCapacity")] = "0"; wrong[3] = string.Join(",", weapon); Write(wrong);

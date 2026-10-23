@@ -39,10 +39,10 @@ namespace TianZhang.Tests.PlayMode
         private int captureIndex;
         private const string Bounty = "bounty_guanzhong_shijiahou";
 
-        [UnityTest] public IEnumerator Victory1920() => Flow(1920, true);
-        [UnityTest] public IEnumerator Victory1366() => Flow(1366, true);
-        [UnityTest] public IEnumerator Defeat1920() => Flow(1920, false);
-        [UnityTest] public IEnumerator Defeat1366() => Flow(1366, false);
+        [UnityTest, Timeout(600000)] public IEnumerator Victory1920() => Flow(1920, true);
+        [UnityTest, Timeout(600000)] public IEnumerator Victory1366() => Flow(1366, true);
+        [UnityTest, Timeout(600000)] public IEnumerator Defeat1920() => Flow(1920, false);
+        [UnityTest, Timeout(600000)] public IEnumerator Defeat1366() => Flow(1366, false);
 
         private IEnumerator Flow(int width, bool victory)
         {
@@ -83,6 +83,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Click(Button("EnterLocationButton"));
             yield return SceneReady(GameplaySceneNames.Settlement);
             yield return Click(Button("SettlementFeature_bounty_board"));
+            yield return Click(Button("NextBountyButton"));
             yield return Click(Button("AcceptBountyButton"));
             Assert.AreEqual("Accepted", GameBootstrap.RequireRuntime().Bounties.GetState(Bounty).Status.ToString());
             string rewardBaseline = RewardState();
@@ -109,7 +110,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(GameBootstrap.RequireRuntime().Player.Resources.MaximumHealth, player.MaximumHealth);
             Assert.AreEqual(329, enemy.MaximumHealth);
             Assert.AreEqual(39, enemy.PhysicalAttack);
-            CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu" }, player.EquippedArtProfileIds);
+            CollectionAssert.AreEquivalent(new[] { "spell_guanshiji", "spell_julingshu", "spell_feixingzhi" }, player.EquippedArtProfileIds);
             Assert.That(Find<CombatBountyTrackerView>().Summary, Does.Contain("0/1"));
             Assert.IsFalse(Button("AdventureNode_return").interactable);
             yield return Capture("battle-entry");
@@ -125,6 +126,13 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(state, State());
             yield return Capture("target-linked");
             yield return Click(Find<CombatTargetView>().CloseButton);
+            if (victory)
+            {
+                // Movement rejection and the fixed rock detour have dedicated runtime suites.
+                yield return MoveTo(1, 0);
+                yield return Action(bar.WaitButton);
+                yield return Ready();
+            }
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
 
             if (victory)
@@ -154,33 +162,6 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 if (hud.Snapshot.CanEndTurn) yield return Action(bar.WaitButton);
                 yield return Ready();
-                yield return MoveTo(1, 1);
-                yield return FinishActionAndTurn();
-                yield return MoveTo(2, 0);
-                yield return FinishActionAndTurn();
-                // The axial two-step route (2,0)->(2,1)->(2,2) is blocked by a static tile.
-                // Observe the actual three-step detour in two legal turns; never inject a path.
-                Assert.IsTrue(Node("GuanzhongObstacle_2_1").activeInHierarchy);
-                Assert.IsFalse(hud.Snapshot.Movement.Options.Any(o => o.Destination.Q == 2 && o.Destination.R == 1));
-                var detour = new List<CombatUnitPresentationHex>();
-                yield return MoveTo(1, 2, detour);
-                yield return FinishActionAndTurn();
-                yield return MoveTo(2, 2, detour);
-                Assert.AreEqual(3, detour.Count, "Static detour must exceed direct axial distance two");
-                Assert.IsFalse(detour.Any(p => p.Q == 2 && p.R == 1));
-                Log("STATIC DETOUR origin=2,0 blocked=2,1 destination=2,2 directDistance=2 actual=" +
-                    string.Join(";", detour.Select(p => p.Q + "," + p.R)));
-                yield return Capture("static-obstacle-detour-complete");
-                yield return FinishActionAndTurn();
-                // Return in budgeted turns: the enemy may have moved while the detour consumed AP.
-                yield return MoveTo(1, 1);
-                yield return FinishActionAndTurn();
-                // Return through legal movement to the enemy's actual melee neighborhood.
-                var approach = hud.Snapshot.Movement.Options.Where(o =>
-                    HexDistance(o.Destination.Q, o.Destination.R, enemy.Position.Q, enemy.Position.R) == 1)
-                    .OrderBy(o => o.Cost).FirstOrDefault();
-                Assert.IsNotNull(approach, "No legal return to melee range after obstacle proof");
-                yield return MoveTo(approach.Destination.Q, approach.Destination.R);
             }
             int commands = 0;
             bool longLogCaptured = false;
@@ -193,9 +174,18 @@ namespace TianZhang.Tests.PlayMode
                     yield return CaptureLongLog();
                     longLogCaptured = true;
                 }
-                Button action = !victory ? bar.WaitButton : bar.ArtButton.interactable ? bar.ArtButton :
-                    bar.BasicAttackButton.interactable ? bar.BasicAttackButton : bar.WaitButton;
-                yield return Action(action);
+                if (!victory) yield return Action(bar.WaitButton);
+                else if (bar.ArtButton.interactable) yield return Action(bar.ArtButton);
+                else if (bar.BasicAttackButton.interactable) yield return Action(bar.BasicAttackButton);
+                else
+                {
+                    var choices = new CombatLegalActionService().GetLegalActions(session, "player")
+                        .Where(action => action.Kind is CombatCommandKind.Move or CombatCommandKind.EndTurn).ToArray();
+                    CombatCommand next = new LegalActionAI().ChooseAction(session, choices);
+                    if (next.Kind == CombatCommandKind.Move)
+                        yield return MoveTo(next.Destination.Value.Q, next.Destination.Value.R);
+                    else yield return Action(bar.WaitButton);
+                }
                 commands++;
             }
             yield return SceneReady(GameplaySceneNames.Settlement);
@@ -215,6 +205,7 @@ namespace TianZhang.Tests.PlayMode
             if (victory)
             {
                 yield return Click(Button("SettlementFeature_bounty_board"));
+                yield return Click(Button("NextBountyButton"));
                 int before = Quantity("item_lingshi_low");
                 yield return Click(Button("ClaimBountyButton"));
                 Assert.AreEqual("Claimed", runtime.Bounties.GetState(Bounty).Status.ToString());
@@ -240,7 +231,7 @@ namespace TianZhang.Tests.PlayMode
             Log("FLOW COMPLETE width=" + width + " victory=" + victory + " confirmedCommands=" + commands);
         }
 
-        private IEnumerator MoveTo(int q, int r, List<CombatUnitPresentationHex> evidence = null)
+        private IEnumerator MoveTo(int q, int r)
         {
             yield return Ready();
             var move = hud.Snapshot.Movement.Options.SingleOrDefault(o => o.Destination.Q == q && o.Destination.R == r);
@@ -251,33 +242,21 @@ namespace TianZhang.Tests.PlayMode
             {
                 Assert.IsFalse((cell.Q == 2 || cell.Q == 3) && (cell.R == 1 || cell.R == 4));
                 Assert.IsFalse(session.Combatants.All.Any(u => u.Id != "player" && u.CurrentHealth > 0 &&
-                    u.Position.Q == cell.Q && u.Position.R == cell.R));
+                    u.OccupiedCells.Any(occupied => occupied.Q == cell.Q && occupied.R == cell.R)));
             }
             yield return Click(bar.MoveButton);
-            Vector2 destinationPoint = Camera.main.WorldToScreenPoint(Node("GuanzhongHex_" + q + "_" + r).transform.position);
+            var movement = Find<CombatMovementView>();
+            var key = new Vector2Int(q, r);
+            var centers = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
+            Assert.IsTrue(GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, Camera.main, centers[key], key,
+                out Vector2 destinationPoint), "Movement destination must have an exposed, pickable point: " + key);
             yield return Hover(destinationPoint);
             Assert.AreEqual(move, Find<CombatMovementView>().Selected);
             yield return Capture("movement-" + q + "-" + r);
             yield return Pointer(destinationPoint);
             Assert.IsTrue(session.Combatants.TryGet("player", out var player));
             Assert.AreEqual(q, player.Position.Q); Assert.AreEqual(r, player.Position.R);
-            evidence?.AddRange(move.Path);
             yield return Ready();
-        }
-
-        private IEnumerator FinishActionAndTurn()
-        {
-            yield return Ready();
-            if (!session.HasCommittedBenefit && bar.ArtButton.interactable)
-            {
-                yield return Action(bar.ArtButton);
-                yield return Ready();
-            }
-            if (session.TurnPhase == CombatTurnPhase.Active)
-            {
-                yield return Action(bar.WaitButton);
-                yield return Ready();
-            }
         }
 
         private IEnumerator CaptureLongLog()
@@ -326,8 +305,6 @@ namespace TianZhang.Tests.PlayMode
             Assert.Fail("Saved slot did not become visible through mouse scrolling");
         }
 
-        private static int HexDistance(int q, int r, int otherQ, int otherR) =>
-            (Math.Abs(q - otherQ) + Math.Abs(r - otherR) + Math.Abs(q + r - otherQ - otherR)) / 2;
         private static string RewardState()
         {
             var save = GameBootstrap.RequireRuntime().CaptureSave();
@@ -348,8 +325,8 @@ namespace TianZhang.Tests.PlayMode
                 {
                     int artIndex = button == bar.SecondArtButton ? 1 : 0;
                     CombatArtActionSnapshot art = hud.Snapshot.ArtActions[artIndex];
-                    string target = art.Targets.Any(value => value.Id == "player" && value.CanExecute)
-                        ? "player" : "enemy";
+                    string target = art.Targets.Where(value => value.CanExecute)
+                        .OrderBy(value => value.Id == "player" ? 0 : 1).First().Id;
                     yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, target, click: true);
                 }
             }

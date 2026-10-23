@@ -122,10 +122,12 @@ namespace TianZhang.Tests.PlayMode
             var loadout = GameBootstrap.RequireRuntime().Player.AbilityLoadout;
             Assert.IsTrue(loadout.UnequipSpell(Attack));
             Assert.IsTrue(loadout.UnequipSpell(Recovery));
+            Assert.IsTrue(loadout.UnequipSpell("spell_feixingzhi"));
             Assert.IsTrue(loadout.TryEquipSpell(Recovery));
             Assert.IsTrue(loadout.TryEquipSpell(Attack));
+            Assert.IsTrue(loadout.TryEquipSpell("spell_feixingzhi"));
             yield return BeginEncounter(false);
-            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Recovery, Attack }));
+            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Recovery, Attack, "spell_feixingzhi" }));
             foreach (int width in new[] { 1920, 1366 })
             {
                 SetGameSize(width, width == 1920 ? 1080 : 768);
@@ -170,8 +172,8 @@ namespace TianZhang.Tests.PlayMode
         public IEnumerator DefaultLoadoutSelectsBothSlotsAndRejectsNoChangeWithoutPayment()
         {
             yield return BeginEncounter(false);
-            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Attack, Recovery }));
-            Assert.That(hud.Snapshot.Actions.Count(action => action.Candidate.Kind == CombatActionKind.SwapSpell), Is.EqualTo(4));
+            Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(new[] { Attack, Recovery, "spell_feixingzhi" }));
+            Assert.That(hud.Snapshot.Actions.Count(action => action.Candidate.Kind == CombatActionKind.SwapSpell), Is.EqualTo(9));
             string before = State();
             foreach (int width in new[] { 1920, 1366 })
             {
@@ -185,7 +187,7 @@ namespace TianZhang.Tests.PlayMode
                     var candidate = Candidate(action.Candidate.ProfileId, action.Candidate.SlotIndex);
                     var rejected = encounter.PreviewAction(candidate);
                     Assert.IsFalse(rejected.CanConfirm);
-                    StringAssert.Contains(action.Candidate.SlotIndex == (action.Candidate.ProfileId == Attack ? 0 : 1)
+                    StringAssert.Contains(action.Candidate.SlotIndex == Array.IndexOf(spawned.Player.EquippedArtProfileIds.ToArray(), action.Candidate.ProfileId)
                         ? "已装配" : "其他栏位", rejected.Reason);
                     encounter.ConfirmAction(candidate);
                     Assert.AreEqual(before, State());

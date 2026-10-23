@@ -46,8 +46,11 @@ namespace TianZhang.Tests
                 featureButton.onClick.Invoke();
 
                 Assert.IsTrue(board.IsOpen);
+                Assert.AreEqual(2, board.ListedBountyCount);
+                Assert.AreEqual("bounty_guanzhong_lieshijia", board.CurrentBountyId);
+                GetBoardButton(board, "nextButton").onClick.Invoke();
                 Assert.AreEqual(BountyId, board.CurrentBountyId);
-                Assert.AreEqual(1, board.ListedBountyCount);
+                StringAssert.Contains("【当前】石甲兽", BoardEntriesText(board).text);
                 // 玩家显示只呈现已批准悬赏标题与中文状态；稳定 ID 保留在 board 与会话对象中。
                 StringAssert.Contains("悬赏板已打开", BoardStatusText().text);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 可接取 | 进度 0/1", BoardEntriesText(board).text);
@@ -56,10 +59,18 @@ namespace TianZhang.Tests
 
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
 
+                Assert.AreEqual(BountyId, board.CurrentBountyId, "Refreshing after acceptance preserves selection.");
+                Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState("bounty_guanzhong_lieshijia").Status);
                 Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
                 AssertButtons(board, false, false);
                 StringAssert.Contains("石甲兽悬赏 · 一次性除害令 | 已接取 | 进度 0/1", BoardEntriesText(board).text);
                 Assert.IsNull(board.LastResultReason, "成功不得伪造结果字面量，只显示刷新后的实际状态");
+
+                GetBoardButton(board, "nextButton").onClick.Invoke();
+                Assert.AreEqual("bounty_guanzhong_lieshijia", board.CurrentBountyId);
+                AssertButtons(board, true, false);
+                GetBoardButton(board, "acceptButton").onClick.Invoke();
+                Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState("bounty_guanzhong_lieshijia").Status);
 
                 GetBoardButton(board, "closeButton").onClick.Invoke();
                 Assert.IsFalse(board.IsOpen);
@@ -77,6 +88,7 @@ namespace TianZhang.Tests
             try
             {
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+                GetBoardButton(board, "nextButton").onClick.Invoke();
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
                 AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
 
@@ -105,6 +117,7 @@ namespace TianZhang.Tests
             try
             {
                 GameObject.Find("SettlementFeature_bounty_board").GetComponent<Button>().onClick.Invoke();
+                GetBoardButton(board, "nextButton").onClick.Invoke();
                 GetBoardButton(board, "acceptButton").onClick.Invoke();
                 AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
                 GetBoardButton(board, "claimButton").onClick.Invoke();

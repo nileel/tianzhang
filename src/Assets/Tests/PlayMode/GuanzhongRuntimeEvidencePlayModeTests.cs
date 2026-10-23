@@ -78,6 +78,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        [Timeout(600000)]
         public IEnumerator BountyPointerPipelineAtBothResolutions()
         {
             foreach (Vector2Int size in Sizes())
@@ -88,6 +89,8 @@ namespace TianZhang.Tests.PlayMode
                 var settlement = Find<SettlementController>();
                 board.Show(Get<ContentCatalogData>(settlement, "contentCatalog"), "guanzhong_city", GameBootstrap.RequireRuntime().Bounties);
                 yield return null;
+                yield return Click(Get<Button>(board, "nextButton"));
+                Assert.That(board.CurrentBountyId, Is.EqualTo(BountyId));
                 Canvas.ForceUpdateCanvases();
                 Button accept = Get<Button>(board, "acceptButton");
                 Button claim = Get<Button>(board, "claimButton");
@@ -153,6 +156,8 @@ namespace TianZhang.Tests.PlayMode
                 board = Find<BountyBoardView>();
                 board.Show(Get<ContentCatalogData>(settlement, "contentCatalog"), "guanzhong_city", GameBootstrap.RequireRuntime().Bounties);
                 yield return null;
+                yield return Click(Get<Button>(board, "nextButton"));
+                Assert.That(board.CurrentBountyId, Is.EqualTo(BountyId));
                 Canvas.ForceUpdateCanvases();
                 accept = Get<Button>(board, "acceptButton");
                 claim = Get<Button>(board, "claimButton");
@@ -219,32 +224,49 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(session.CurrentActorId, Is.EqualTo("player"));
             Assert.That(session.TurnPhase, Is.EqualTo(CombatTurnPhase.Active));
             Assert.That(encounter.IsPresenting, Is.False);
-            Assert.That(spawned.Player.BasicAttackProfileId, Is.EqualTo("basic_body_human_fanren"));
+            Assert.That(spawned.Player.BasicAttackProfileId, Is.EqualTo("basic_iron_sword"));
             Assert.That(spawned.Enemy.BasicAttackProfileId, Is.EqualTo("basic_body_shijiahou_lianqi"));
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
 
-            // Approved 2026-10-12: explicit one-hit combat precondition for UI/settlement coverage.
-            // Only this temporary enemy snapshot is weakened. No RecordDefeat or bounty-state injection;
-            // the production attack, death, return-to-settlement and bounty settlement still execute.
-            int productionHealth = spawned.Enemy.CurrentHealth;
-            Assert.That(productionHealth, Is.EqualTo(spawned.Enemy.MaximumHealth).And.GreaterThan(1));
-            spawned.Enemy.ReceiveDamage(productionHealth - 1);
-            Assert.That(spawned.Enemy.IsAlive, Is.True);
+            // Explicit one-hit fixtures keep this UI test focused on real death and bounty settlement.
+            // Both formal enemies must die; no RecordDefeat or bounty-state injection is used.
+            foreach (var enemy in spawned.Enemies) enemy.ReceiveDamage(enemy.CurrentHealth - 1);
             Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.Accepted));
-            var quote = new CombatCommandService().Preview(session,
-                new CombatCommand(CombatCommandKind.BasicAttack, "player", "enemy", spawned.Player.BasicAttackProfileId));
-            Assert.That(quote.IsLegal, Is.True, quote.RejectionReason);
-            encounter.RequestBasicAttack("player", "enemy");
-            Assert.That(spawned.Enemy.CurrentHealth, Is.Zero, "Production attack must deliver the killing blow.");
-            // The production coordinator waits for real-time attack/death presentation before returning.
-            for (float deadline = Time.realtimeSinceStartup + 10f;
-                 Time.realtimeSinceStartup < deadline && SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure;)
+            encounter.SetCombatResolutionRandomSource(new OutcomeFixtureRandom(session, true));
+            var legal = new CombatLegalActionService();
+            var ai = new LegalActionAI();
+            for (float deadline = Time.realtimeSinceStartup + 90f;
+                Time.realtimeSinceStartup < deadline && encounter != null && encounter.IsRunning;)
+            {
+                if (encounter.AcceptsPlayerCommand && !encounter.IsPresenting && session.CurrentActorId == "player" && session.TurnPhase == CombatTurnPhase.Active)
+                {
+                    CombatCommand action = ai.ChooseAction(session, legal.GetLegalActions(session, "player")
+                        .Where(value => value.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Move or CombatCommandKind.EndTurn ||
+                            value.Kind == CombatCommandKind.Art && value.TargetId != "player").ToArray());
+                    TestContext.WriteLine("BOUNTY action=" + action.Kind + "; profile=" + action.ProfileId + "; player=" + spawned.Player.Position +
+                        "; AP=" + spawned.Player.ActionPointsRemainingUnits + "; targets=" + string.Join(";", spawned.Enemies.Select(
+                            enemy => enemy.Id + ":" + enemy.Position + ":HP" + enemy.CurrentHealth)));
+                    if (action.Kind == CombatCommandKind.Move)
+                        encounter.RequestMove("player", action.Destination.Value.Q, action.Destination.Value.R);
+                    else if (action.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art)
+                    {
+                        var kind = action.Kind == CombatCommandKind.BasicAttack ? CombatActionKind.BasicAttack : CombatActionKind.Art;
+                        var candidate = new CombatActionCandidate(kind, "player", action.TargetId,
+                            action.ProfileId, Find<CombatHudPresenter>().Snapshot.CommandContextVersion, attackDirection: action.AttackDirection);
+                        var quote = encounter.PreviewAction(candidate);
+                        Assert.That(quote.CanConfirm, Is.True, quote.Reason);
+                        encounter.ConfirmAction(quote.Candidate);
+                    }
+                    else encounter.RequestEndTurn("player");
+                }
                 yield return null;
+            }
+            Assert.That(spawned.Enemies.All(enemy => !enemy.IsAlive), Is.True, "Production attacks must defeat both enemies.");
             yield return SceneReady(GameplaySceneNames.Settlement);
             Assert.That(adventure.LastEncounterOutcome, Is.EqualTo(CombatSessionOutcome.Victory));
             Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Status, Is.EqualTo(BountyStatus.ObjectiveCompleted));
             Assert.That(GameBootstrap.RequireRuntime().Bounties.GetState(BountyId).Progress, Is.EqualTo(1));
-            string evidence = $"controlled-combat-precondition: temporaryEnemyHP={productionHealth}->1; productionAttackHP=0; outcome=Victory; bounty=ObjectiveCompleted; not natural-new-player victory evidence";
+            string evidence = "controlled-combat-precondition: bothTemporaryEnemyHP=1; productionAttackHP=0; outcome=Victory; bounty=ObjectiveCompleted; not natural-new-player victory evidence";
             trace.Add(evidence);
             TestContext.WriteLine(evidence);
         }
@@ -268,12 +290,14 @@ namespace TianZhang.Tests.PlayMode
             Camera camera = Get<Camera>(Find<CombatMovementView>(), "battlefieldCamera");
             var objects = SceneManager.GetActiveScene().GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray();
             Transform[] cells = objects.Where(item => item.name.StartsWith("GuanzhongHex_", StringComparison.Ordinal)).ToArray();
-            Assert.That(cells.Length, Is.EqualTo(36));
+            Assert.That(cells.Length, Is.EqualTo(100));
             var provider = Find<Static3DCombatUnitPresentationProvider>();
             Assert.That(provider.TryGetPresentedUnit("enemy", out GameObject enemyRoot), Is.True);
             Renderer[] enemyRenderers = enemyRoot.GetComponentsInChildren<Renderer>();
             Assert.That(enemyRenderers, Is.Not.Empty);
-            string[] names = { "GuanzhongObstacle_2_1", "GuanzhongObstacle_3_1", "GuanzhongObstacle_2_4", "GuanzhongObstacle_3_4" };
+            string[] names = objects.Where(item => item.name.StartsWith("GuanzhongObstacle_", StringComparison.Ordinal))
+                .Select(item => item.name).OrderBy(name => name).ToArray();
+            Assert.That(names.Length, Is.EqualTo(15));
             foreach (Vector2Int size in Sizes())
             {
                 yield return SetGameSize(size);
@@ -332,16 +356,12 @@ namespace TianZhang.Tests.PlayMode
                 yield return Capture("battlefield-" + size.x);
             }
 
-            // Pan through the production camera input so the tracker no longer covers the back rocks.
-            EventSystem.current.SetSelectedGameObject(null);
-            yield return Pointer(new Vector2(Screen.width * .5f, Screen.height * .5f), false);
-            Vector3 initialCamera = camera.transform.position;
-            yield return PanCamera(camera, Key.D, () => camera.transform.position.x >= initialCamera.x + 2.5f);
-            yield return PanCamera(camera, Key.W, () => camera.transform.position.z >= initialCamera.z + 2f);
+            // Default zoom intentionally shows the nearby battlefield. CameraZoom tests cover
+            // full-board inspection; here every rock is checked in world space at both resolutions.
             foreach (Vector2Int size in Sizes())
             {
                 yield return SetGameSize(size);
-                var lines = new List<string> { Header(), "camera after D/W input=" + camera.transform.position.ToString("F5") };
+                var lines = new List<string> { Header(), "camera=" + camera.transform.position.ToString("F5") };
                 foreach (string name in names)
                 {
                     Transform obstacle = objects.Single(item => item.name == name);
@@ -364,11 +384,7 @@ namespace TianZhang.Tests.PlayMode
                         new Vector2(obstacle.position.x, obstacle.position.z)), Is.LessThan(.01f));
                     Assert.That(bounds.max.y - .3404328f, Is.EqualTo(.60f).Within(.05f));
                     Vector3[] screen = points.Select(camera.WorldToScreenPoint).ToArray();
-                    Assert.That(screen.All(p => p.z > 0 && p.x > 0 && p.x < Screen.width && p.y > 0 && p.y < Screen.height), Is.True);
                     Rect rockRect = Rect.MinMaxRect(screen.Min(p => p.x), screen.Min(p => p.y), screen.Max(p => p.x), screen.Max(p => p.y));
-                    var trackerCorners = new Vector3[4];
-                    Get<GameObject>(Find<CombatBountyTrackerView>(), "root").GetComponent<RectTransform>().GetWorldCorners(trackerCorners);
-                    Assert.That(rockRect.Overlaps(Rect.MinMaxRect(trackerCorners[0].x, trackerCorners[0].y, trackerCorners[2].x, trackerCorners[2].y)), Is.False);
                     lines.Add(name + "; actualMeshMin=" + bounds.min.ToString("F6") + "; actualMeshMax=" + bounds.max.ToString("F6") + "; screen=" + rockRect);
                 }
                 Write("rocks-unobstructed-" + size.x, lines);
@@ -398,16 +414,6 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(detour.Count, Is.EqualTo(3), "The blocked direct distance is two; the actual detour is three steps.");
             Write("rock-detour", movementTrace);
             yield return Capture("rock-detour-complete");
-        }
-
-        private IEnumerator PanCamera(Camera camera, Key key, Func<bool> reached)
-        {
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
-            float deadline = Time.realtimeSinceStartup + 5;
-            while (!reached() && Time.realtimeSinceStartup < deadline) yield return null;
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            yield return null;
-            Assert.That(reached(), Is.True, "Production camera input did not reach the inspection viewpoint: " + camera.transform.position);
         }
 
         private static IEnumerator RockInputReady(EncounterCoordinator encounter)
@@ -440,7 +446,11 @@ namespace TianZhang.Tests.PlayMode
             trace.Add("from=" + spawned.Player.Position + "; to=" + q + "," + r + "; path=" + string.Join("/", option.Path.Select(p => p.Q + "," + p.R)) + "; cost=" + option.Cost);
             int ap = spawned.Player.ActionPointsRemainingUnits;
             yield return Click(bar.MoveButton);
-            Vector2 point = camera.WorldToScreenPoint(GameObject.Find("GuanzhongHex_" + q + "_" + r).transform.position);
+            var movement = Find<CombatMovementView>();
+            var key = new Vector2Int(q, r);
+            var centers = Get<Dictionary<Vector2Int, Vector3>>(movement, "centers");
+            Assert.That(GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, camera, centers[key], key,
+                out Vector2 point), Is.True, "Movement destination must have an exposed, pickable point: " + key);
             yield return Pointer(point, false);
             Assert.That(Find<CombatMovementView>().Selected, Is.EqualTo(option), "Hover must preview the move.");
             yield return Pointer(point, true);

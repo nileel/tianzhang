@@ -98,14 +98,15 @@ namespace TianZhang.Editor
             SetHeight(paper, 176);
             Text entries = SceneBuildSupport.CreateText("BountyEntries", paper.transform, string.Empty, 20);
             Text result = SceneBuildSupport.CreateText("BountyResult", panel.transform, string.Empty, 18);
+            Button next = SceneBuildSupport.CreateButton("NextBountyButton", panel.transform, "切换悬赏", out _);
             Button accept = SceneBuildSupport.CreateButton("AcceptBountyButton", panel.transform, "接取", out _);
             Button claim = SceneBuildSupport.CreateButton("ClaimBountyButton", panel.transform, "领取", out _);
             Button close = SceneBuildSupport.CreateButton("CloseBountyButton", panel.transform, "关闭", out _);
             ApplyTextSkin(title, 52);
             ApplyTextSkin(entries, 128, true);
             ApplyTextSkin(result, 64);
-            foreach (Button button in new[] { accept, claim, close }) ApplyButtonSkin(button);
-            view.Configure(title, entries, result, accept, claim, close);
+            foreach (Button button in new[] { next, accept, claim, close }) ApplyButtonSkin(button);
+            view.Configure(title, entries, result, accept, claim, close, next);
             panel.SetActive(false);
             return view;
         }

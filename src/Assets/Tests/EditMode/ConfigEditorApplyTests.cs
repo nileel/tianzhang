@@ -64,33 +64,20 @@ namespace TianZhang.Tests
                 var asset = AssetDatabase.LoadMainAssetAtPath(path);
                 if (asset != null) EditorUtility.ClearDirty(asset);
             }
-            foreach (var pair in backup) yield return WriteWithRetry(Absolute(pair.Key), pair.Value);
+            foreach (var pair in backup)
+            {
+                string path = Absolute(pair.Key);
+                // Importers can keep the old file mapped: replace it atomically instead of truncating it.
+                // MissingExpectedAsset deliberately removes an asset (and its meta during Refresh).
+                if (File.Exists(path)) ConfigSaveApplyService.WriteFile(path, pair.Value);
+                else File.WriteAllBytes(path, pair.Value);
+            }
             foreach (var path in backup.Keys.Where(p => !p.EndsWith(".meta", StringComparison.Ordinal)))
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
             foreach (var pair in backup) CollectionAssert.AreEqual(pair.Value, File.ReadAllBytes(Absolute(pair.Key)), pair.Key);
             backup.Clear();
             if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true);
         }
-        private static IEnumerator WriteWithRetry(string absolutePath, byte[] bytes)
-        {
-            // Just-applied production assets can still be memory-mapped by the asset importer
-            // (Win32 1224). Wait for the update to settle and retry instead of failing the tear-down.
-            for (int frame = 0; frame < 240 && EditorApplication.isUpdating; frame++) yield return null;
-            IOException last = null;
-            for (int attempt = 0; attempt < 60; attempt++)
-            {
-                try
-                {
-                    File.WriteAllBytes(absolutePath, bytes);
-                    last = null;
-                    break;
-                }
-                catch (IOException exception) { last = exception; }
-                yield return null;
-            }
-            if (last != null) throw last;
-        }
-
         private void ProtectProduction()
         {
             using var plan = ConfigImportPlan.Build(session, registry.Tables.Select(t => t.TableId).ToArray());

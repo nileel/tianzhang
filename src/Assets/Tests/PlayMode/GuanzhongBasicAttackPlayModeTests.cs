@@ -695,7 +695,7 @@ namespace TianZhang.Tests.PlayMode
             for (float deadline = Time.realtimeSinceStartup + 10f; Time.realtimeSinceStartup < deadline;)
             {
                 Assert.IsTrue(encounter != null && encounter.IsRunning, "Formal combat ended before the movement scenario completed.");
-                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.Active && !encounter.IsPresenting)
+                if (session.CurrentActorId == playerId && session.TurnPhase == CombatTurnPhase.Active && encounter.AcceptsPlayerCommand)
                     yield break;
                 yield return null;
             }

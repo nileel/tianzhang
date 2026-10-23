@@ -80,6 +80,19 @@ NativeFormatImporter:
     Write-FixtureFile 'tools/data-chain-warning-waivers.json' '[]'
 
     foreach ($relativePath in @(
+        'src/Assets/Scripts/Combat/CombatRuleSet.cs',
+        'src/Assets/DataConfig/AttackProfiles.csv',
+        'src/Assets/DataConfig/RealmCombatGrowth.csv',
+        'src/Assets/DataConfig/CombatEffectTierRules.csv',
+        'src/Assets/DataConfig/CombatActionEconomyRules.csv',
+        'src/Assets/DataConfig/EnvironmentProfiles.csv',
+        'src/Assets/DataConfig/Language.csv.meta',
+        'src/Assets/Data/CombatRuleSet.asset',
+        'src/Assets/Data/CombatRuleSet.asset.meta',
+        'src/Assets/Data/CombatPresentationProfiles.meta',
+        'src/Assets/Scenes/WorldScene.unity',
+        'src/Assets/Scenes/SettlementScene.unity',
+        'src/Assets/Scenes/AdventureScene.unity',
         'src/Assets/DataConfig/Language.csv',
         'src/Assets/DataConfig/Settlements.csv',
         'src/Assets/DataConfig/Items.csv',
@@ -99,6 +112,35 @@ NativeFormatImporter:
         'src/Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_npc-cultivation-production-v1.asset'
     )) {
         Copy-FixtureSource $relativePath
+    }
+
+    # The checker validates the complete formal delivery in addition to the synthetic rows below.
+    # Keep those production dependencies intact so each negative case changes only its intended input.
+    foreach ($directory in @('Items', 'Bounties', 'Characters', 'Enemies', 'Settlements', 'Adventures',
+        'ContentCatalog', 'AttackProfiles', 'EnvironmentProfiles', 'CombatPresentationProfiles',
+        'NpcCultivationActionWeightProfiles')) {
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot "src/Assets/Data/$directory") -File -Recurse |
+            ForEach-Object { Copy-FixtureSource ([IO.Path]::GetRelativePath($repoRoot, $_.FullName)) }
+    }
+    $pieces = 'src/Assets/Art/Characters/CombatPieces/Static3D'
+    foreach ($unit in @('FormalPlayer', 'Shijiahou', 'Lieshijia')) {
+        foreach ($extension in @('mat', 'mat.meta', 'prefab', 'prefab.meta')) {
+            Copy-FixtureSource "$pieces/$unit/${unit}_Static3D.$extension"
+        }
+    }
+    foreach ($relative in @('Shijiahou.meta', 'Shijiahou/Shijiahou_Static3D.fbx',
+        'Shijiahou/Shijiahou_Static3D.fbx.meta', 'Shijiahou/Shijiahou_Static3D_BaseColor.png',
+        'Shijiahou/Shijiahou_Static3D_BaseColor.png.meta')) { Copy-FixtureSource "$pieces/$relative" }
+
+    $formalSpells = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Assets/DataConfig/Spells.csv') |
+        Where-Object { $_.Trim() -and -not $_.TrimStart().StartsWith('#') } | ConvertFrom-Csv |
+        Where-Object { $_.name -in @('spell_guanshiji', 'spell_julingshu') }
+    foreach ($spell in $formalSpells) {
+        $row = ($spellHeader.Split(',') | ForEach-Object { $spell.$_ }) -join ','
+        Add-Content -LiteralPath (Join-Path $fixtureRoot 'src/Assets/DataConfig/Spells.csv') -Value $row -Encoding utf8
+        Copy-FixtureSource "src/Assets/Data/Spells/Spell_$($spell.name).asset"
+        Copy-FixtureSource "src/Assets/Data/Spells/Spell_$($spell.name).asset.meta"
+        Write-FixtureFile "docs/$cultivation/$spells/fixture/$($spell.name).txt" 'fixture'
     }
 }
 

@@ -331,7 +331,9 @@ namespace TianZhang.Tests.EditMode
             Assert.That(go.AddComponent<AdventureUnitSpawner>().TrySpawn(player, catalog, new AdventureNodeData { q = 0, r = 0 },
                 new AdventureNodeData { q = 1, r = 0, contentId = "enemy_shijiahou" }, out var spawned, out string reason), Is.True, reason);
             Assert.That(spawned.Player.RawMind, Is.EqualTo(17)); Assert.That(spawned.Player.RawMindInputsPresent, Is.True);
-            Assert.That(spawned.Enemy.RawMind, Is.EqualTo(spawned.EnemyData.combatTemplate.mind)); Assert.That(spawned.Enemy.RawMindInputsPresent, Is.True);
+            Assert.That(spawned.Enemy.RawMind, Is.EqualTo((int)Math.Round(
+                spawned.EnemyData.combatTemplate.mind * (double)spawned.EnemyData.combatStatScale, MidpointRounding.AwayFromZero)));
+            Assert.That(spawned.Enemy.RawMindInputsPresent, Is.True);
         }
         private sealed class Samples : ICombatResolutionRandomSource
         {

@@ -368,7 +368,7 @@ namespace TianZhang.Tests.PlayMode
             yield return null;
         }
 
-        private static bool TryFindCellPoint(CombatMovementView movement, Camera camera, Vector3 center,
+        public static bool TryFindCellPoint(CombatMovementView movement, Camera camera, Vector3 center,
             Vector2Int expected, out Vector2 point)
         {
             // The shared popup covers part of the board; a real obstacle click can still target an
