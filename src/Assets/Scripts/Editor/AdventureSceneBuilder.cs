@@ -300,6 +300,8 @@ namespace TianZhang.Editor
                 "attackVfxCatalog",
                 SceneBuildSupport.RequireAsset<CombatAttackVfxCatalogData>(
                     CombatAttackVfxBuilder.CatalogPath));
+            SceneBuildSupport.SetObject(static3DProvider, "targetPreviewMaterial",
+                SceneBuildSupport.RequireAsset<Material>("Assets/Art/VFX/CombatTargetPreview.mat"));
             BuildUnitHealthBars(root, canvas, GameObject.Find("Main Camera").GetComponent<Camera>());
             BuildCombatTimeline(root, canvas, installer, combatPresenter);
             BuildCombatMovement(root, Camera.main, battlefield, environmentProfile);

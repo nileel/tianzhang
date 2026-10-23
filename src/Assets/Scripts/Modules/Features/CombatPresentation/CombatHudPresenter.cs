@@ -30,6 +30,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             targetView = targets;
             unitProvider = provider;
+            commandInput.ConfigureTargetPreview(provider);
             movementView = movement;
             timelineView.ConfigureSelection(InspectTarget);
             targetView.CloseButton.onClick.RemoveAllListeners();

@@ -27,7 +27,7 @@ using Object = UnityEngine.Object;
 
 namespace TianZhang.Tests.PlayMode
 {
-    public sealed class GuanzhongCombatTargetSelectionPlayModeTests
+    public sealed partial class GuanzhongCombatTargetSelectionPlayModeTests
     {
         private string saveDirectory;
         private Mouse mouse;

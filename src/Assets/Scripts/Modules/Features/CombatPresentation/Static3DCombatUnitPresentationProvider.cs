@@ -24,6 +24,7 @@ namespace TianZhang.Features.CombatPresentation
 
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
         [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
+        [SerializeField] private Material targetPreviewMaterial;
         [SerializeField, Range(.1f, 1f)] private float doubleCellFootprintFill = .9f;
 
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
@@ -178,6 +179,7 @@ namespace TianZhang.Features.CombatPresentation
                     SetActionScale(unit, new Vector3(1.04f, 1.1f, 1.04f), profile.combatFeedback.actionRecoverySeconds);
                     break;
                 case CombatUnitPresentationEvent.Death:
+                    unit.TargetPreview?.SetVisible(false);
                     StopActionRecovery(presentationEvent.ActorCombatantId);
                     unit.Root.SetActive(false);
                     break;
@@ -188,6 +190,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (string.IsNullOrWhiteSpace(combatantId)) throw new ArgumentException("Combatant ID is required.", nameof(combatantId));
             if (!units.TryGetValue(combatantId, out PresentedUnit unit)) return;
+            unit.TargetPreview?.SetVisible(false);
             StopMovement(combatantId);
             units.Remove(combatantId);
             StopActionRecovery(combatantId);
@@ -200,7 +203,10 @@ namespace TianZhang.Features.CombatPresentation
             movements.Clear();
             ClearTransientFeedback();
             foreach (PresentedUnit unit in units.Values)
+            {
+                unit.TargetPreview?.SetVisible(false);
                 if (unit.Root != null) Destroy(unit.Root);
+            }
             units.Clear();
             StopAllActionRecoveries();
         }
@@ -209,6 +215,35 @@ namespace TianZhang.Features.CombatPresentation
         {
             root = null;
             return units.TryGetValue(combatantId, out PresentedUnit unit) && (root = unit.Root) != null;
+        }
+
+        /// <summary>Projects only the current confirmable quote's affected units, independently of action playback.</summary>
+        public void PresentTargetPreview(IReadOnlyList<CombatantHudSnapshot> targets)
+        {
+            foreach (PresentedUnit unit in units.Values)
+            {
+                bool visible = false;
+                if (targets != null && unit.LastEvent != CombatUnitPresentationEvent.Death &&
+                    unit.Root != null && unit.Root.activeInHierarchy)
+                    foreach (CombatantHudSnapshot target in targets)
+                        if (target.Id == unit.CombatantId && target.CurrentHealth > 0) { visible = true; break; }
+                if (visible)
+                    unit.TargetPreview ??= new CombatTargetPreview(unit.BodyRenderers, targetPreviewMaterial);
+                unit.TargetPreview?.SetVisible(visible);
+                RefreshTargetPreview(unit);
+            }
+        }
+
+        private void LateUpdate()
+        {
+            foreach (PresentedUnit unit in units.Values) RefreshTargetPreview(unit);
+        }
+
+        private void RefreshTargetPreview(PresentedUnit unit)
+        {
+            if (unit.TargetPreview?.IsVisible != true) return;
+            if (TryGetVisibleBounds(unit.CombatantId, out Bounds bounds)) unit.TargetPreview.Refresh(bounds);
+            else unit.TargetPreview.SetVisible(false);
         }
 
         /// <summary>Committed presentation cell of a spawned unit; used only to draw selection hints.</summary>
@@ -554,6 +589,7 @@ namespace TianZhang.Features.CombatPresentation
 
             public GameObject Root { get; }
             public Renderer[] BodyRenderers { get; }
+            public CombatTargetPreview TargetPreview { get; set; }
             public string ProfileId { get; set; }
             public CombatUnitPresentationPose Pose { get; set; }
             public string CombatantId { get; }

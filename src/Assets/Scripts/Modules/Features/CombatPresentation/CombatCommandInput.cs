@@ -16,6 +16,8 @@ namespace TianZhang.Features.CombatPresentation
         private ICombatActionPreviewHandler previewHandler;
         private CombatActionPreviewView previewView;
         private CombatTimelineView timeline;
+        private Static3DCombatUnitPresentationProvider unitProvider;
+        public void ConfigureTargetPreview(Static3DCombatUnitPresentationProvider provider) => unitProvider = provider;
         public CombatActionPreviewSnapshot Preview { get; private set; }
         public CombatActionCandidate Candidate => Preview?.Candidate;
         public bool IsSelectingAttack { get; private set; }
@@ -41,6 +43,7 @@ namespace TianZhang.Features.CombatPresentation
             previewView?.Present(null);
             timeline?.PresentPrediction(null);
             movementView?.PresentAttackArea(null);
+            unitProvider?.PresentTargetPreview(null);
         }
 
         public void ConfirmCandidate()
@@ -113,6 +116,7 @@ namespace TianZhang.Features.CombatPresentation
             if (Candidate?.TargetCell != null && area != null &&
                 !area.Cells.Any(cell => cell.IsLegal && cell.Position.Equals(Candidate.TargetCell.Value))) area = null;
             movementView.PresentAttackArea(area, selectableCells: selectableCells);
+            unitProvider?.PresentTargetPreview(Preview?.CanConfirm == true && area != null ? area.Targets : null);
         }
 
         private int CurrentActionPoints => snapshot?.Movement?.RemainingPoints ?? -1;
