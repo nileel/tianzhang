@@ -139,7 +139,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsNull(input.Candidate.TargetId);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
                 Assert.AreEqual(Attack, input.Candidate.ProfileId);
-                Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+                Assert.AreEqual(spawned.Enemy.Id, input.Preview.AttackArea.Targets.Single().Id);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("q3-second-" + width, session);
                 input.CancelCandidate();
                 Assert.IsNull(input.Candidate);
@@ -179,9 +179,18 @@ namespace TianZhang.Tests.PlayMode
             {
                 SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
-                Assert.IsFalse(bar.SwapSpellButton.interactable);
-                bar.SwapSpellButton.onClick.Invoke();
-                Assert.IsNull(input.Candidate);
+                Assert.IsTrue(bar.SwapSpellButton.interactable);
+                yield return ClickButton(bar.SwapSpellButton);
+                Assert.AreEqual(CombatActionKind.SwapSpell, input.Candidate.Kind);
+                Assert.IsTrue(preview.IsVisible);
+                Assert.IsFalse(preview.ConfirmButton.interactable);
+                StringAssert.Contains("已学术法均已装备，暂无可替换术法", Get<Text>(preview, "summary").text);
+                int slot = input.Candidate.SlotIndex;
+                yield return ClickButton(preview.SwapSlotButton);
+                Assert.AreNotEqual(slot, input.Candidate.SlotIndex);
+                Assert.IsFalse(preview.SwapCandidateButton.interactable);
+                Assert.AreEqual(before, State());
+                yield return RecordLayout("all-equipped-" + width);
                 foreach (var action in hud.Snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell))
                 {
                     var candidate = Candidate(action.Candidate.ProfileId, action.Candidate.SlotIndex);
@@ -193,7 +202,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.AreEqual(before, State());
                 }
                 input.ConfirmCandidate();
-                preview.CancelButton.onClick.Invoke();
+                yield return ClickButton(preview.CancelButton);
                 Assert.That(input.Candidate, Is.Null);
                 Assert.That(preview.IsVisible, Is.False);
                 Assert.That(State(), Is.EqualTo(before));
@@ -240,7 +249,12 @@ namespace TianZhang.Tests.PlayMode
             expectedArts[first.SlotIndex] = Recovery;
             int mp = spawned.Player.CurrentSpirit, rolls = random.Count;
             RecordArtState("before-swap-out");
-            yield return RecordLayout("legal");
+            foreach (int width in new[] { 1920, 1366 })
+            {
+                SetGameSize(width, width == 1920 ? 1080 : 768);
+                for (int frame = 0; frame < 4; frame++) yield return null;
+                yield return RecordLayout("legal-" + width);
+            }
             input.ConfirmCandidate();
             RecordArtState("after-swap-out");
             Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(expectedArts));
@@ -277,9 +291,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.GetCooldown(Recovery), Is.EqualTo(recoveryBefore));
             Assert.That(spawned.Player.GetCooldown(Attack), Is.EqualTo(Math.Max(60, attackBefore)));
             Assert.That(spawned.Player.EquippedArtProfileIds, Is.EqualTo(expectedArts));
-            Assert.IsFalse(bar.SwapSpellButton.interactable);
+            Assert.IsTrue(bar.SwapSpellButton.interactable);
             bar.SwapSpellButton.onClick.Invoke();
-            Assert.IsNull(input.Candidate);
+            Assert.IsNotNull(input.Candidate);
+            Assert.IsFalse(preview.ConfirmButton.interactable);
+            StringAssert.Contains("次数已用尽", Get<Text>(preview, "summary").text);
             var exhausted = encounter.PreviewAction(Candidate(Recovery, 0));
             Assert.IsFalse(exhausted.CanConfirm);
             StringAssert.Contains("次数已用尽", exhausted.Reason);
@@ -287,9 +303,12 @@ namespace TianZhang.Tests.PlayMode
             encounter.ConfirmAction(exhausted.Candidate);
             input.ConfirmCandidate();
             Assert.That(State(), Is.EqualTo(before));
+            input.CancelCandidate();
             bar.ArtButton.onClick.Invoke();
-            Assert.IsNull(input.Candidate);
-            Assert.That(bar.ArtButton.interactable, Is.False, "Cooldown disables the action after swapping too.");
+            Assert.IsNotNull(input.Candidate);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.That(bar.ArtButton.interactable, Is.True, "Cooldown permits browsing but still rejects the cast.");
+            input.CancelCandidate();
             Assert.That(encounter.PreviewAction(new CombatActionCandidate(CombatActionKind.Art, "player", "enemy", Attack,
                 hud.Snapshot.CommandContextVersion)).CanConfirm, Is.False);
             int startTick = session.TurnScheduler.CurrentTick, initialCd = spawned.Player.GetCooldown(Attack);
@@ -337,9 +356,11 @@ namespace TianZhang.Tests.PlayMode
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();
             yield return Ready();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(25000));
-            Assert.IsFalse(bar.SwapSpellButton.interactable);
+            Assert.IsTrue(bar.SwapSpellButton.interactable);
             bar.SwapSpellButton.onClick.Invoke();
-            Assert.IsNull(input.Candidate);
+            Assert.IsNotNull(input.Candidate);
+            Assert.IsFalse(preview.ConfirmButton.interactable);
+            StringAssert.Contains("行动力", Get<Text>(preview, "summary").text);
             var rejected = encounter.PreviewAction(Candidate(Attack, 0));
             Assert.That(rejected.CanConfirm, Is.False);
             StringAssert.Contains("行动力", rejected.Reason);
@@ -363,6 +384,19 @@ namespace TianZhang.Tests.PlayMode
             string directory = Path.Combine(Application.dataPath, "../Logs/swap");
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, "starter-" + label + ".txt"), record);
+        }
+
+        private IEnumerator ClickButton(Button button)
+        {
+            Canvas.ForceUpdateCanvases();
+            Vector2 point = RectTransformUtility.WorldToScreenPoint(null,
+                button.GetComponent<RectTransform>().TransformPoint(button.GetComponent<RectTransform>().rect.center));
+            InputSystem.QueueDeltaStateEvent(mouse.position, point);
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new UnityEngine.InputSystem.LowLevel.MouseState { position = point }.WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left));
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new UnityEngine.InputSystem.LowLevel.MouseState { position = point });
+            yield return null;
         }
 
         private IEnumerator Ready()

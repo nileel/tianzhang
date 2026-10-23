@@ -9,7 +9,8 @@ namespace TianZhang.Combat
     public sealed class CombatAttackAreaQueryResult
     {
         internal CombatAttackAreaQueryResult(string actorId, CombatAttackProfile profile, HexCoord origin,
-            int direction, IReadOnlyList<SpatialAreaCell> cells, IEnumerable<string> targetIds)
+            int direction, IReadOnlyList<SpatialAreaCell> cells, IEnumerable<string> targetIds,
+            IReadOnlyList<SpatialContactResult> cellContacts)
         {
             ActorId = actorId;
             Profile = profile;
@@ -17,6 +18,7 @@ namespace TianZhang.Combat
             Direction = direction;
             Cells = new List<SpatialAreaCell>(cells).AsReadOnly();
             TargetIds = new List<string>(targetIds).AsReadOnly();
+            CellContacts = new List<SpatialContactResult>(cellContacts).AsReadOnly();
         }
 
         public string ActorId { get; }
@@ -25,6 +27,7 @@ namespace TianZhang.Combat
         public int Direction { get; }
         public IReadOnlyList<SpatialAreaCell> Cells { get; }
         public IReadOnlyList<string> TargetIds { get; }
+        public IReadOnlyList<SpatialContactResult> CellContacts { get; }
     }
 
     public readonly struct CombatTargetContact
@@ -337,6 +340,30 @@ namespace TianZhang.Combat
             return QueryAttackArea(actor, profile, direction, Combatants.All, SpatialQuery);
         }
 
+        /// <summary>A selected cell stays exact even when its occupant has a multi-cell body.</summary>
+        public CombatAttackAreaQueryResult QueryAttackCell(string actorId, string profileId, HexCoord targetCell)
+        {
+            if (!Combatants.TryGet(actorId, out CombatantSnapshot actor))
+                throw new ArgumentException("combat_session_actor_invalid", nameof(actorId));
+            if (!TryGetProfile(profileId, out CombatAttackProfile profile))
+                throw new ArgumentException("attack_profile_unresolved", nameof(profileId));
+            if (profile.Area != CombatAttackArea.Single)
+                throw new ArgumentException("combat_attack_area_invalid", nameof(profileId));
+            bool targetsSelf = actor.Pose.Contains(targetCell);
+            SpatialContactResult contact = SpatialQuery.QueryRange(actor.Pose, new SpatialPose(targetCell),
+                profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
+                    ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange);
+            var targets = Combatants.All.Where(target => contact.IsInRange && target.IsAlive &&
+                    target.Pose.Contains(targetCell) && profile.AllowsTarget(actor.Team, target.Team))
+                .Select(target => target.Id).Distinct().OrderBy(id => id, StringComparer.Ordinal);
+            return new CombatAttackAreaQueryResult(actor.Id, profile, actor.Position, -1,
+                new[] { new SpatialAreaCell(targetCell, contact.IsInRange, contact.Reason) }, targets,
+                new[] { contact });
+        }
+
+        internal static bool TargetsSelf(CombatantSnapshot actor, CombatCommand command) => command.TargetCell.HasValue
+            ? actor.Pose.Contains(command.TargetCell.Value) : actor.Id == command.TargetId;
+
         /// <summary>
         /// Pure targeting over the supplied battlefield facts. No turn, cost, cooldown, random or HP changes;
         /// even a nonempty target set must pass the later command authorization and settlement gates.
@@ -371,7 +398,8 @@ namespace TianZhang.Combat
                     (first.IsInRange && target.Pose.Contains(area.First) || second.IsInRange && target.Pose.Contains(area.Second)))
                     targets.Add(target.Id);
             }
-            return new CombatAttackAreaQueryResult(actor.Id, profile, origin, direction, cells, targets);
+            return new CombatAttackAreaQueryResult(actor.Id, profile, origin, direction, cells, targets,
+                new[] { first, second });
         }
 
         /// <summary>Single side-effect-free command validation entry shared by resolution and action discovery.</summary>
@@ -458,6 +486,8 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("attack_profile_not_authorized");
             if (!TryGetProfile(command.ProfileId, out CombatAttackProfile profile) || profile.Kind != expectedKind)
                 return CombatActionResult.Rejected("attack_profile_unresolved");
+            if (command.TargetCell.HasValue && expectedKind == CombatAttackKind.Divine)
+                return CombatActionResult.Rejected("combat_session_target_invalid");
             if (expectedKind != CombatAttackKind.Basic && actor.HasStatus(CombatStatusKind.SealSpirit))
                 return CombatActionResult.Rejected("combat_spirit_sealed");
             var targets = new List<CombatantSnapshot>();
@@ -465,23 +495,43 @@ namespace TianZhang.Combat
             {
                 if (!command.AttackDirection.HasValue || command.AttackDirection.Value is < 0 or > 5)
                     return CombatActionResult.Rejected("combat_attack_direction_invalid");
-                // An area has no selected individual target or destination/center override.
+                // Direction keeps its existing template; an optional aim cell must belong to it.
                 if (command.TargetId.Length != 0 || command.Destination.HasValue)
                     return CombatActionResult.Rejected("combat_session_target_invalid");
                 try { attackArea = QueryAttackArea(actor.Id, profile.Id, command.AttackDirection.Value); }
                 catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
-                if (attackArea.TargetIds.Count == 0)
+                if (command.TargetCell.HasValue && !attackArea.Cells.Any(cell =>
+                        cell.Coord == command.TargetCell.Value && cell.IsLegal))
+                    return CombatActionResult.Rejected("combat_session_target_invalid");
+                if (!attackArea.Cells.Any(cell => cell.IsLegal))
+                    return CombatActionResult.Rejected(attackArea.Cells[0].Reason);
+                if (attackArea.TargetIds.Count == 0 && expectedKind == CombatAttackKind.Divine)
                     return CombatActionResult.Rejected("combat_attack_area_empty");
                 foreach (string id in attackArea.TargetIds)
                 { Combatants.TryGet(id, out var target); targets.Add(target); }
             }
             else
             {
-                if (command.AttackDirection.HasValue || command.TargetRolls.Count != 0 ||
-                    !Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
-                    !profile.AllowsTarget(actor.Team, target.Team))
+                if (command.AttackDirection.HasValue || command.TargetRolls.Count != 0)
                     return CombatActionResult.Rejected("combat_session_target_invalid");
-                targets.Add(target);
+                if (command.TargetCell.HasValue)
+                {
+                    if (command.TargetId.Length != 0 || command.Destination.HasValue)
+                        return CombatActionResult.Rejected("combat_session_target_invalid");
+                    try { attackArea = QueryAttackCell(actor.Id, profile.Id, command.TargetCell.Value); }
+                    catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
+                    if (!attackArea.Cells[0].IsLegal)
+                        return CombatActionResult.Rejected(attackArea.Cells[0].Reason);
+                    foreach (string id in attackArea.TargetIds)
+                    { Combatants.TryGet(id, out var target); targets.Add(target); }
+                }
+                else
+                {
+                    if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
+                        !profile.AllowsTarget(actor.Team, target.Team))
+                        return CombatActionResult.Rejected("combat_session_target_invalid");
+                    targets.Add(target);
+                }
             }
             foreach (CombatantSnapshot target in targets)
             {
@@ -510,8 +560,7 @@ namespace TianZhang.Combat
             }
             if (actor.GetCooldown(profile.Id) > 0)
                 return CombatActionResult.Rejected("attack_profile_cooldown_active");
-            CombatantSnapshot singleTarget = targets[0];
-            bool targetsSelf = string.Equals(actor.Id, singleTarget.Id, StringComparison.Ordinal);
+            bool targetsSelf = TargetsSelf(actor, command);
             int spiritCost = profile.GetSpiritCost(targetsSelf);
             if (actor.CurrentSpirit < spiritCost)
                 return CombatActionResult.Rejected("spirit_insufficient");
@@ -526,10 +575,7 @@ namespace TianZhang.Combat
                             ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange);
                 else
                 {
-                    HexCoord areaOrigin = attackArea.Origin;
-                    range = attackArea.Cells.Where(cell => cell.IsLegal && target.Pose.Contains(cell.Coord))
-                        .Select(cell => SpatialQuery.QueryRange(new SpatialPose(areaOrigin), new SpatialPose(cell.Coord),
-                            profile.MinimumRange, profile.MaximumRange))
+                    range = attackArea.CellContacts.Where(contact => contact.IsInRange && target.Pose.Contains(contact.TargetCell))
                         .OrderBy(contact => contact.DistanceUnits).ThenBy(contact => contact.TargetCell.Q)
                         .ThenBy(contact => contact.TargetCell.R).First();
                 }

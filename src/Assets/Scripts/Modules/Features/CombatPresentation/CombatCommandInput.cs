@@ -69,7 +69,7 @@ namespace TianZhang.Features.CombatPresentation
                 CommitCandidate();
                 return;
             }
-            previewView?.Present(Preview, CurrentActionPoints);
+            previewView?.Present(Preview, CurrentActionPoints, snapshot);
             timeline?.PresentPrediction(Preview);
             movementView?.PresentAttackArea(Preview?.AttackArea);
         }
@@ -84,7 +84,7 @@ namespace TianZhang.Features.CombatPresentation
             var selection = new CombatActionCandidate(kind, actorId, null, art?.ProfileId, snapshot.CommandContextVersion);
             PresentPointerPrompt(art == null
                     ? "鼠标指向地块预览，左键施行；右键或 Esc 取消"
-                    : "左键点击施法范围内角色；右键或 Esc 取消",
+                    : !string.IsNullOrEmpty(art.EntryQuote?.Reason) ? art.EntryQuote.Reason : "左键点击可施放地块；右键或 Esc 取消",
                 selection, art?.DisplayName ?? "普攻", art?.MinimumRange ?? 0, art?.MaximumRange ?? 0);
         }
 
@@ -105,19 +105,14 @@ namespace TianZhang.Features.CombatPresentation
         private void PresentSelectionHighlights()
         {
             if (movementView == null) return;
-            List<CombatUnitPresentationHex> selectableCells = null;
-            if (selectingArt != null && targetInput != null)
-            {
-                selectableCells = new List<CombatUnitPresentationHex>();
-                foreach (CombatArtTargetSnapshot target in selectingArt.Targets)
-                    if (target.CanExecute && targetInput.TryGetUnitPose(target.Id, out CombatUnitPresentationPose pose))
-                        selectableCells.AddRange(pose.OccupiedCells);
-            }
-            IReadOnlyList<CombatUnitPresentationHex> targetCells = null;
-            if (Preview?.AttackArea == null && Preview?.CanConfirm == true && targetInput != null &&
-                targetInput.TryGetUnitPose(Preview.Candidate.TargetId, out CombatUnitPresentationPose targetPose))
-                targetCells = targetPose.OccupiedCells;
-            movementView.PresentAttackArea(Preview?.AttackArea, targetCells, selectableCells);
+            IReadOnlyList<CombatUnitPresentationHex> selectableCells = selectingArt?.CastableCells ??
+                snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.BasicAttack && action.AttackArea != null)
+                    .SelectMany(action => action.AttackArea.Cells).Where(cell => cell.IsLegal)
+                    .Select(cell => cell.Position).Distinct().ToArray();
+            CombatAttackAreaSnapshot area = Preview?.AttackArea;
+            if (Candidate?.TargetCell != null && area != null &&
+                !area.Cells.Any(cell => cell.IsLegal && cell.Position.Equals(Candidate.TargetCell.Value))) area = null;
+            movementView.PresentAttackArea(area, selectableCells: selectableCells);
         }
 
         private int CurrentActionPoints => snapshot?.Movement?.RemainingPoints ?? -1;
@@ -129,12 +124,12 @@ namespace TianZhang.Features.CombatPresentation
             Mouse mouse = Mouse.current;
             if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
             { CancelCandidate(); return; }
-            if (mouse == null || !movementView.TryPickCell(mouse.position.ReadValue(), out var cell))
+            if (mouse == null || !TryPickAttackCell(mouse.position.ReadValue(), out var cell))
             {
                 if (pointedCell.HasValue)
                     PresentPointerPrompt(selectingArt == null
                         ? "请指向棋盘内的地块，左键施行"
-                        : "请指向施法范围内的角色，左键施行", null, selectingArt?.DisplayName,
+                        : "请指向可施放地块，左键施行", null, selectingArt?.DisplayName,
                         selectingArt?.MinimumRange ?? 0, selectingArt?.MaximumRange ?? 0);
                 return;
             }
@@ -155,11 +150,10 @@ namespace TianZhang.Features.CombatPresentation
                 float angle = Mathf.Atan2(-0.8660254f * r, q + .5f * r) * Mathf.Rad2Deg;
                 int direction = (Mathf.FloorToInt((angle + 30f) / 60f) % 6 + 6) % 6;
                 bool directional = basic && snapshot.FindAction(CombatActionKind.BasicAttack)?.AttackArea != null;
-                string target = targetInput.FindUnitAtCell(cell);
                 Preview = previewHandler.PreviewAction(new CombatActionCandidate(
-                    basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, target,
+                    basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, null,
                     basic ? null : selectingArt.ProfileId, snapshot.CommandContextVersion,
-                    attackDirection: directional ? direction : (int?)null));
+                    attackDirection: directional ? direction : (int?)null, targetCell: cell));
                 previewView?.Present(Preview, CurrentActionPoints);
                 timeline?.PresentPrediction(Preview);
                 PresentSelectionHighlights();
@@ -171,6 +165,15 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         private void OnDisable() => ClearContext();
+
+        private bool TryPickAttackCell(Vector2 screenPoint, out CombatUnitPresentationHex cell)
+        {
+            cell = default;
+            if (movementView.UiOwnsPointer(screenPoint)) return false;
+            if (targetInput.TryPickBodyPoint(screenPoint, out Vector3 bodyPoint))
+                return movementView.TryGetCellAtWorld(bodyPoint, out cell);
+            return movementView.TryPickCell(screenPoint, out cell);
+        }
         private CombatMovementView movementView;
         private string actorId;
         private string targetId;
@@ -273,7 +276,9 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (!CanAct) return;
             var options = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell).ToArray();
-            CombatActionCandidate choice = (options.FirstOrDefault(action => action.CanConfirm) ?? options.FirstOrDefault())?.Candidate;
+            CombatActionCandidate choice = (options.FirstOrDefault(action => action.CanConfirm) ??
+                options.FirstOrDefault(action => !snapshot.ArtProfileIds.Contains(action.Candidate.ProfileId)) ??
+                options.FirstOrDefault())?.Candidate;
             if (choice != null) Choose(CombatActionKind.SwapSpell, profile: choice.ProfileId, slot: choice.SlotIndex);
         }
 
@@ -290,7 +295,8 @@ namespace TianZhang.Features.CombatPresentation
         private void SelectNextSwapCandidate()
         {
             if (!CanAct || Candidate?.Kind != CombatActionKind.SwapSpell) return;
-            string[] profiles = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell)
+            string[] profiles = snapshot.Actions.Where(action => action.Candidate.Kind == CombatActionKind.SwapSpell &&
+                    !snapshot.ArtProfileIds.Contains(action.Candidate.ProfileId))
                 .Select(action => action.Candidate.ProfileId).Distinct().ToArray();
             if (profiles.Length == 0) return;
             int next = (Array.IndexOf(profiles, Candidate.ProfileId) + 1) % profiles.Length;
@@ -304,7 +310,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (!CanAct || snapshot == null) return;
             CombatArtActionSnapshot art = GetArt(index);
-            if (art == null || !art.Targets.Any(target => target != null && target.CanExecute)) return;
+            if (art?.EntryQuote?.CanOpen != true) return;
             // The skill button only opens targeting; every legal target still needs its own pointed click.
             BeginSelection(CombatActionKind.Art, art);
         }

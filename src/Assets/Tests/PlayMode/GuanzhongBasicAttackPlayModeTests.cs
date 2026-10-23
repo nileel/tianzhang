@@ -50,11 +50,15 @@ namespace TianZhang.Tests.PlayMode
                         .TargetIds.Count > 0).ToArray();
                 if (legal.Length > 0) direction = legal[0];
             }
+            if (!direction.HasValue && session.TryGetProfile(actor.BasicAttackProfileId, out var emptyProfile) &&
+                emptyProfile.Area != CombatAttackArea.Single)
+                direction = Enumerable.Range(0, 6).Where(value => session.QueryAttackArea(actor.Id,
+                    actor.BasicAttackProfileId, value).Cells.Any(cell => cell.IsLegal)).Select(value => (int?)value).FirstOrDefault();
             HexCoord cell = direction.HasValue ? actor.Position.Step(direction.Value) :
                 (session.Combatants.All.FirstOrDefault(unit => unit.Team == CombatTeam.Enemy && unit.IsAlive) ??
                     session.Combatants.All.First(unit => unit.Team == CombatTeam.Enemy)).Position;
-            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_" + cell.Q + "_" + cell.R);
-            Vector2 point = tile != null ? (Vector2)Camera.main.WorldToScreenPoint(tile.position) : new Vector2(-100, -100);
+            Vector2 point = GuanzhongCombatTargetSelectionPlayModeTests.TryFindCastingPoint(cell, out var picked)
+                ? picked : new Vector2(-100, -100);
             yield return PointAttackAt(point, click);
         }
 

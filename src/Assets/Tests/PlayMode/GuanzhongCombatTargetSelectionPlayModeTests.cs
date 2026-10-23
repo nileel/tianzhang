@@ -108,7 +108,8 @@ namespace TianZhang.Tests.PlayMode
                 !presenter.CanInspect && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsTrue(presenter.CanInspect);
             // Movement and target inspection are range-independent; this case must not block on melee contact.
-            if (TestContext.CurrentContext.Test.Name.StartsWith("ActionPointMovement", StringComparison.Ordinal)) yield break;
+            if (TestContext.CurrentContext.Test.Name.StartsWith("ActionPointMovement", StringComparison.Ordinal) ||
+                TestContext.CurrentContext.Test.Name.StartsWith("G2Empty", StringComparison.Ordinal)) yield break;
             yield return GuanzhongBasicAttackPlayModeTests.WaitForMeleeContact(encounter, session);
         }
 
@@ -145,7 +146,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
             yield return PointArt(session, spawned.Enemy.Id);
-            Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+            AssertAffectedTarget(input, spawned.Enemy.Id);
             Assert.IsTrue(input.IsSelectingAttack);
             input.CancelCandidate();
         }
@@ -163,13 +164,12 @@ namespace TianZhang.Tests.PlayMode
                 spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, spawned.PlayerDivineProfileIds,
                 new[] { spawned.Enemy }, additionalEnemyData: new[] { firstData });
             Set(encounter, "spawned", spawned);
-            spawned.Player.Facing = Enumerable.Range(0, 6).First(direction => !service.Preview(session,
-                new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: spawned.Player.BasicAttackProfileId,
-                    attackDirection: direction)).IsLegal);
+            spawned.Player.Facing = Enumerable.Range(0, 6).First(direction => session.QueryAttackArea("player",
+                spawned.Player.BasicAttackProfileId, direction).TargetIds.Count == 0);
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(encounter, new object[] { "合法替代候选验证", true, null });
-            Assert.IsFalse(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanConfirm);
-            Assert.IsTrue(presenter.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm);
+            Assert.IsTrue(presenter.Snapshot.FindAction(CombatActionKind.BasicAttack).CanOpen,
+                "A facing with no targets must still allow opening a tile attack.");
             var firstArt = presenter.Snapshot.ArtActions[0];
             string artDiagnostic = string.Join("; ", firstArt.Targets.Select(t =>
             {
@@ -192,7 +192,7 @@ namespace TianZhang.Tests.PlayMode
             bar.ArtButton.onClick.Invoke();
             yield return PointArt(session, legalArtTarget);
             Assert.IsTrue(input.Preview.CanConfirm);
-            Assert.AreEqual(legalArtTarget, input.Candidate.TargetId);
+            AssertAffectedTarget(input, legalArtTarget);
             input.CancelCandidate();
             Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
@@ -201,10 +201,63 @@ namespace TianZhang.Tests.PlayMode
         public static IEnumerator PointArt(CombatSession combat, string targetId, bool click = false)
         {
             Assert.IsTrue(combat.Combatants.TryGet(targetId, out var actor));
-            Transform tile = GameObject.Find("GuanzhongBattlefield").transform.Find(
-                "GuanzhongHex_" + actor.Position.Q + "_" + actor.Position.R);
-            Assert.NotNull(tile);
-            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(Camera.main.WorldToScreenPoint(tile.position), click);
+            var input = Find<CombatCommandInput>();
+            var service = new CombatCommandService();
+            HexCoord cell = actor.OccupiedCells.OrderByDescending(value => service.Preview(combat,
+                new CombatCommand(CombatCommandKind.Art, "player", profileId: input.Candidate.ProfileId,
+                    targetCell: value)).IsLegal).First();
+            Assert.IsTrue(TryFindCastingPoint(cell, out var point), "No visible casting point for " + targetId + " at " + cell);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, click);
+        }
+
+        public static bool TryFindCastingPoint(HexCoord cell, out Vector2 point, bool? requireBody = null)
+        {
+            point = default;
+            var movement = Find<CombatMovementView>();
+            var units = Find<Static3DCombatUnitPresentationProvider>();
+            var wanted = new CombatUnitPresentationHex(cell.Q, cell.R);
+            Vector3 center = Static3DCombatUnitPresentationProvider.HexToWorld(wanted);
+            // Test screen coordinates against the real body and ground owners. Never substitute
+            // a unit anchor when the cursor actually maps to a different occupied cell.
+            var samples = new List<Vector3>();
+            if (requireBody == true)
+            {
+                var targetInput = Find<CombatTargetInput>();
+                string id = targetInput.FindUnitAtCell(wanted);
+                if (id == null || !units.TryGetVisibleBounds(id, out Bounds bounds)) return false;
+                for (int x = -10; x <= 10; x++)
+                for (int y = -10; y <= 10; y++)
+                    samples.Add(bounds.center + Camera.main.transform.right * (x * bounds.size.magnitude / 24f) +
+                        Camera.main.transform.up * (y * bounds.size.magnitude / 24f));
+            }
+            else
+            {
+                samples.Add(center);
+                for (int x = -5; x <= 5; x++)
+                for (int z = -5; z <= 5; z++)
+                    samples.Add(center + new Vector3(x * .09f, 0f, z * .09f));
+            }
+            foreach (Vector3 sample in samples)
+            {
+                Vector3 screen = Camera.main.WorldToScreenPoint(sample);
+                if (screen.z <= 0 || screen.x < 2 || screen.y < 2 || screen.x >= Screen.width - 2 || screen.y >= Screen.height - 2 ||
+                    movement.UiOwnsPointer(screen)) continue;
+                bool hitBody = units.TryPickBodyPoint(Camera.main.ScreenPointToRay(screen), out Vector3 hit);
+                if (requireBody.HasValue && hitBody != requireBody.Value) continue;
+                bool mapped = hitBody ? movement.TryGetCellAtWorld(hit, out var mappedCell) :
+                    movement.TryPickCell(screen, out mappedCell);
+                if (!mapped || !mappedCell.Equals(wanted)) continue;
+                point = screen;
+                return true;
+            }
+            return false;
+        }
+
+        private static void AssertAffectedTarget(CombatCommandInput input, string id)
+        {
+            Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId), "The tile command must retain a cell, not collapse to a unit ID.");
+            Assert.IsTrue(input.Candidate.TargetCell.HasValue);
+            CollectionAssert.AreEqual(new[] { id }, input.Preview.AttackArea.Targets.Select(unit => unit.Id));
         }
 
         [UnityTest]
@@ -229,7 +282,7 @@ namespace TianZhang.Tests.PlayMode
                 foreach (Vector2 rejected in new[]
                 {
                     CellPoint(spawned.Enemies[1].Position), CellPoint(spawned.Player.Position),
-                    CellPoint(new HexCoord(1, 0)), new Vector2(-50, -50),
+                    new Vector2(-50, -50),
                     RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position)
                 })
                 {
@@ -330,7 +383,7 @@ namespace TianZhang.Tests.PlayMode
             {
                 bar.ArtButton.onClick.Invoke();
                 yield return PointArt(session, enemy.Id, false);
-                Assert.AreEqual(enemy.Id, input.Candidate.TargetId);
+                AssertAffectedTarget(input, enemy.Id);
                 Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
                 yield return PointArt(session, enemy.Id);
                 Assert.IsTrue(input.IsSelectingAttack);
@@ -344,11 +397,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNull(input.Candidate);
             bar.ArtButton.onClick.Invoke();
             yield return PointArt(session, spawned.Enemy.Id, false);
-            Assert.IsFalse(input.Preview.CanConfirm);
-            Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId));
+            Assert.IsTrue(input.Preview.CanConfirm, "A dead unit leaves a legal empty cell.");
+            Assert.IsEmpty(input.Preview.AttackArea.Targets);
             var chosen = spawned.Enemies[1];
             yield return PointArt(session, chosen.Id);
-            Assert.AreEqual(chosen.Id, input.Candidate.TargetId);
+            AssertAffectedTarget(input, chosen.Id);
             Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
             int hp = chosen.CurrentHealth, mp = spawned.Player.CurrentSpirit, ap = spawned.Player.ActionPointsRemainingUnits;
             int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
@@ -361,6 +414,229 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator G2EmptyCastsAt1920() => VerifyG2EmptyCasts(1920, 1080);
+
+        [UnityTest]
+        public IEnumerator G2EmptyCastsAt1366() => VerifyG2EmptyCasts(1366, 768);
+
+        private IEnumerator VerifyG2EmptyCasts(int width, int height)
+        {
+            GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, height);
+            for (int frame = 0; frame < 8; frame++) yield return null;
+            yield return CommandsReady();
+            var input = Find<CombatCommandInput>();
+            var bar = Find<CombatActionBarView>();
+            var view = Find<CombatActionPreviewView>();
+            var random = new G2CountingRandom();
+            encounter.SetCombatResolutionRandomSource(random);
+            Assert.IsTrue(presenter.Snapshot.ArtActions[2].Targets.All(target => !target.CanExecute),
+                "This evidence starts before movement, with every enemy outside the five-cell range.");
+            Assert.IsTrue(bar.BasicAttackButton.interactable);
+            Assert.IsTrue(bar.ArtButton.interactable);
+            Assert.IsTrue(bar.ThirdArtButton.interactable);
+
+            // Inspect and cancel with the real mouse before any cast. UI, board exterior and
+            // a spatially rejected cell must preserve resources and never add an orange cell.
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
+            AssertSpellHighlights(session);
+            yield return CaptureG2("open-no-targets-" + width);
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            HexCoord far = spawned.Enemy.Position;
+            if (TryFindCastingPoint(far, out var farPoint))
+            {
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(farPoint, true);
+                Assert.IsFalse(input.Preview.CanConfirm);
+                AssertSpellHighlights(session);
+            }
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(new Vector2(-40, -40), true);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.IsNull(input.Candidate.TargetCell);
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, view.CancelButton.transform.position));
+            Assert.IsNull(input.Candidate);
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+
+            // Two real 50 AP casts consume the complete turn budget and retain the turn.
+            yield return CastEmpty(bar.ThirdArtButton, "spell_feixingzhi", 50000, 10, "star-first-" + width, random);
+            yield return CastEmpty(bar.ThirdArtButton, "spell_feixingzhi", 50000, 10, "star-second-" + width, random);
+            Assert.AreEqual(0, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual("player", session.CurrentActorId);
+            Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
+            Assert.IsTrue(bar.WaitButton.interactable);
+            var repeat = new CombatCommandService().Preview(session, new CombatCommand(CombatCommandKind.Art,
+                "player", profileId: "spell_feixingzhi", targetCell: new HexCoord(1, 0)));
+            Assert.AreEqual(2, repeat.CommittedUseCount);
+            Assert.Greater(repeat.RepeatMultiplierPermille, 1000);
+            Assert.IsFalse(bar.ThirdArtButton.interactable);
+            yield return CaptureG2("zero-ap-" + width);
+
+            encounter.RequestEndTurn("player");
+            yield return null;
+            yield return CommandsReady();
+            // Negative fixture changes only cooldown; the ordinary entry and pointer submit
+            // still run through the production UI, quote, and coordinator.
+            spawned.Player.SetCooldown("spell_feixingzhi", 60);
+            RefreshAuthority();
+            Assert.IsTrue(bar.ThirdArtButton.interactable);
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
+            HexCoord cooldownCell = EmptyCell("spell_feixingzhi");
+            Assert.IsTrue(TryFindCastingPoint(cooldownCell, out var cooldownPoint));
+            ap = spawned.Player.ActionPointsRemainingUnits; mp = spawned.Player.CurrentSpirit;
+            int sampled = random.Count;
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(cooldownPoint, true);
+            Assert.IsFalse(input.Preview.CanConfirm);
+            Assert.Greater(input.Preview.RemainingCooldownTicks, 0);
+            Assert.IsNotEmpty(input.Preview.Reason);
+            Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+            Assert.AreEqual(sampled, random.Count);
+            yield return CaptureG2("cooldown-open-" + width);
+            input.CancelCandidate();
+            spawned.Player.SetCooldown("spell_feixingzhi", 0);
+            RefreshAuthority();
+            yield return CastEmpty(bar.BasicAttackButton, spawned.Player.BasicAttackProfileId, 40000, 0, "sword-" + width, random);
+            yield return CastEmpty(bar.ArtButton, "spell_guanshiji", 50000, 12, "strike-" + width, random);
+            encounter.RequestEndTurn("player");
+            yield return null;
+            yield return CommandsReady();
+            yield return CastEmpty(bar.SecondArtButton, "spell_julingshu", 25000, 20, "recovery-" + width, random);
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.SecondArtButton.transform.position));
+            yield return PointArt(session, "player");
+            Assert.AreEqual(25000, input.Preview.ActionPointCostUnits);
+            Assert.AreEqual(0, input.Preview.SpiritCost, "Only the actor's occupied cell uses the self branch.");
+            AssertAffectedTarget(input, "player");
+            input.CancelCandidate();
+        }
+
+        private HexCoord EmptyCell(string profileId)
+        {
+            var service = new CombatCommandService();
+            bool basic = profileId == spawned.Player.BasicAttackProfileId;
+            foreach (var key in Find<CombatMovementView>().Highlights.Keys.OrderBy(key => key.x).ThenBy(key => key.y))
+            {
+                var cell = new HexCoord(key.x, key.y);
+                if (cell.Equals(spawned.Player.Position) || !TryFindCastingPoint(cell, out _)) continue;
+                var quote = service.Preview(session, new CombatCommand(basic ? CombatCommandKind.BasicAttack : CombatCommandKind.Art,
+                    "player", profileId: profileId, targetCell: cell,
+                    attackDirection: basic ? spawned.Player.Position.DirectionToward(cell) : (int?)null));
+                if (quote.AttackArea != null && quote.AttackArea.Cells.Any(value => value.Coord.Equals(cell) && value.IsLegal) &&
+                    quote.AttackArea.TargetIds.Count == 0) return cell;
+            }
+            Assert.Fail("No visible spatially valid empty cell for " + profileId);
+            return default;
+        }
+
+        private IEnumerator CastEmpty(Button button, string profileId, int expectedAp, int expectedMp,
+            string label, G2CountingRandom random)
+        {
+            var input = Find<CombatCommandInput>();
+            Assert.IsTrue(button.interactable, profileId);
+            yield return Click(RectTransformUtility.WorldToScreenPoint(null, button.transform.position));
+            HexCoord cell = EmptyCell(profileId);
+            Assert.IsTrue(TryFindCastingPoint(cell, out var point));
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point);
+            var quote = input.Preview;
+            Assert.IsTrue(quote.CanConfirm, quote.Reason);
+            Assert.AreEqual(expectedAp, quote.ActionPointCostUnits);
+            Assert.AreEqual(expectedMp, quote.SpiritCost);
+            Assert.IsEmpty(quote.AttackArea.Targets);
+            StringAssert.Contains("空放", Get<Text>(Find<CombatActionPreviewView>(), "summary").text);
+            int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
+            int ct = session.PendingCtPenalty, samples = random.Count;
+            var health = session.Combatants.All.ToDictionary(unit => unit.Id, unit => unit.CurrentHealth);
+            var spirits = spawned.Enemies.ToDictionary(unit => unit.Id, unit => unit.CurrentSpirit);
+            yield return CaptureG2(label + "-preview");
+            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            Assert.AreEqual(ap - expectedAp, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - expectedMp, spawned.Player.CurrentSpirit);
+            Assert.AreEqual(ct + quote.CtPenalty, session.PendingCtPenalty);
+            Assert.AreEqual(quote.ReuseCooldownTicks, spawned.Player.GetCooldown(profileId));
+            Assert.AreEqual(samples, random.Count, "Empty casting must not sample a fabricated target.");
+            foreach (var unit in session.Combatants.All) Assert.AreEqual(health[unit.Id], unit.CurrentHealth);
+            foreach (var unit in spawned.Enemies) Assert.AreEqual(spirits[unit.Id], unit.CurrentSpirit);
+            Assert.IsNull(input.Candidate);
+            var after = new CombatCommandService().Preview(session, new CombatCommand(
+                profileId == spawned.Player.BasicAttackProfileId ? CombatCommandKind.BasicAttack : CombatCommandKind.Art,
+                "player", profileId: profileId, targetCell: cell, attackDirection: quote.Candidate.AttackDirection));
+            Assert.AreEqual(quote.ReuseCooldownTicks == 0 ? quote.CommittedUseCount + 1 : quote.CommittedUseCount,
+                after.CommittedUseCount);
+            // The consumed candidate cannot be replayed, even before the presentation unlocks.
+            encounter.ConfirmAction(quote.Candidate);
+            Assert.AreEqual(ap - expectedAp, spawned.Player.ActionPointsRemainingUnits);
+            Assert.AreEqual(samples, random.Count);
+            if (profileId == "spell_feixingzhi")
+            {
+                var effect = GameObject.Find(CombatAttackVfx.ProjectileObjectName);
+                Assert.IsNotNull(effect, "An empty star cast still needs its real projectile.");
+                Vector3 endpoint = Get<Vector3>(effect.GetComponent<CombatAttackVfx>(), "to");
+                Vector3 expected = Static3DCombatUnitPresentationProvider.HexToWorld(new CombatUnitPresentationHex(cell.Q, cell.R)) + Vector3.up * .75f;
+                Assert.Less(Vector3.Distance(endpoint, expected), .001f);
+                Assert.IsTrue(provider.TryGetPresentedUnit("player", out var root));
+                Vector3 direction = expected - root.transform.position; direction.y = 0;
+                Assert.Greater(Vector3.Dot(root.transform.forward, direction.normalized), .35f);
+            }
+            yield return CaptureG2(label + "-committed");
+            yield return CommandsReady();
+        }
+
+        private IEnumerator CaptureG2(string label)
+        {
+            Canvas.ForceUpdateCanvases();
+            var input = Find<CombatCommandInput>();
+            var movement = Find<CombatMovementView>();
+            string cellText = input.Candidate?.TargetCell is CombatUnitPresentationHex selected
+                ? selected.Q + "," + selected.R : "none";
+            string orange = string.Join("/", movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf &&
+                Mathf.Abs(pair.Value.widthMultiplier - .06f) < .0005f).Select(pair => pair.Key.x + "," + pair.Key.y));
+            string directory = Path.Combine(Application.dataPath, "../Logs/g2-tile-casting");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, label + ".txt"),
+                "resolution=" + Screen.width + "x" + Screen.height + "; mouse=" + Mouse.current.position.ReadValue() +
+                "; camera=" + Camera.main.transform.position + "; cell=" + cellText + "; orange=" + orange +
+                "; affected=" + string.Join("/", input.Preview?.AttackArea?.Targets.Select(unit => unit.Id) ?? Array.Empty<string>()) +
+                "; AP=" + spawned.Player.ActionPointsRemainingUnits + "; MP=" + spawned.Player.CurrentSpirit +
+                "; CT=" + session.PendingCtPenalty + "; summary=" + Get<Text>(Find<CombatActionPreviewView>(), "summary").text +
+                "; borders=" + string.Join("/", movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair =>
+                    pair.Key + ":width=" + pair.Value.widthMultiplier + ":vertices=" + string.Join("|",
+                        Enumerable.Range(0, 6).Select(index => pair.Value.GetPosition(index).ToString("F4"))))));
+            ScreenCapture.CaptureScreenshot(Path.Combine(directory, label + ".png"));
+            yield return null; yield return null;
+        }
+
+        private sealed class G2CountingRandom : ICombatResolutionRandomSource
+        {
+            public int Count { get; private set; }
+            public float NextPercent() { Count++; return 99; }
+        }
+
+        [UnityTest]
+        public IEnumerator BodyPickingUsesCurrentPoseBeforeTheNextPhysicsStep()
+        {
+            Assert.IsFalse(Physics.autoSyncTransforms);
+            Assert.IsTrue(TryFindCastingPoint(spawned.Enemy.Position, out var point, true));
+            Ray ray = Camera.main.ScreenPointToRay(point);
+            Assert.IsTrue(provider.TryPickBodyPoint(ray, out Vector3 before));
+            Assert.IsTrue(provider.TryGetPresentedUnit(spawned.Enemy.Id, out GameObject root));
+            Vector3 original = root.transform.position;
+            Vector3 offset = new Vector3(20f, 0f, 0f);
+            try
+            {
+                root.transform.position += offset;
+                Assert.IsTrue(provider.TryPickBodyPoint(new Ray(ray.origin + offset, ray.direction), out Vector3 after),
+                    "The first query after a transform change must hit its current visible pose.");
+                Assert.That(Vector3.Distance(before + offset, after), Is.LessThan(.002f));
+                TestContext.WriteLine("Same-frame body pick: before=" + before.ToString("F4") +
+                    "; after=" + after.ToString("F4") + "; expected=" + (before + offset).ToString("F4"));
+            }
+            finally
+            {
+                root.transform.position = original;
+                Physics.SyncTransforms();
+            }
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator SpellSelectableFootprintsStaySeparateFromEffectsAtBothResolutions()
         {
             var input = Find<CombatCommandInput>();
@@ -368,36 +644,43 @@ namespace TianZhang.Tests.PlayMode
             var movement = Find<CombatMovementView>();
             var preview = Find<CombatActionPreviewView>();
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
-            Assert.AreEqual("spell_feixingzhi", presenter.Snapshot.ArtActions[2].ProfileId);
-            Assert.AreEqual(2, presenter.Snapshot.ArtActions[2].Targets.Count(value => value.CanExecute),
-                "The formal ranged spell must offer both living double-cell enemies at contact.");
             foreach (int width in new[] { 1920, 1366 })
             {
                 GuanzhongCombatActionPreviewPlayModeTests.SetGameSize(width, width == 1920 ? 1080 : 768);
                 for (int frame = 0; frame < 8; frame++) yield return null;
                 yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
-                Assert.IsNull(input.Candidate.TargetId);
+                Assert.IsNull(input.Candidate.TargetCell);
                 Assert.IsFalse(input.Preview.CanConfirm);
-                Assert.AreEqual(4, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
-                StringAssert.Contains("可选目标", Get<Text>(preview, "legend").text);
-                StringAssert.Contains("本次作用", Get<Text>(preview, "legend").text);
-                yield return CaptureArtEvidence("selectable-open-" + width, session);
+                AssertSpellHighlights(session);
+                StringAssert.Contains("可施放地块", Get<Text>(preview, "legend").text);
+                yield return CaptureArtEvidence("g2-selectable-open-" + width, session);
                 foreach (var enemy in spawned.Enemies)
+                foreach (HexCoord cell in enemy.OccupiedCells)
+                foreach (bool body in new[] { false, true })
                 {
-                    yield return PointArt(session, enemy.Id);
+                    Assert.IsTrue(TryFindCastingPoint(cell, out Vector2 point, body),
+                        "Need a real " + (body ? "model" : "ground") + " point for " + enemy.Id + " " + cell);
+                    yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point);
+                    Assert.AreEqual(new CombatUnitPresentationHex(cell.Q, cell.R), input.Candidate.TargetCell);
                     Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
-                    Assert.AreEqual(enemy.Id, input.Candidate.TargetId);
-                    yield return CaptureArtEvidence("selectable-" + enemy.Id + "-" + width, session);
+                    AssertAffectedTarget(input, enemy.Id);
+                    CollectionAssert.AreEqual(new[] { input.Candidate.TargetCell.Value },
+                        input.Preview.AttackArea.Cells.Where(value => value.IsLegal).Select(value => value.Position));
+                    AssertSpellHighlights(session);
+                    yield return CaptureArtEvidence("g2-" + enemy.Id + "-" + cell.Q + "-" + cell.R +
+                        (body ? "-body-" : "-ground-") + width, session);
                 }
-                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(CellPoint(new HexCoord(0, 1)), true);
-                Assert.IsFalse(input.Preview.CanConfirm);
-                Assert.IsEmpty(input.Candidate.TargetId);
-                Assert.IsFalse(movement.Highlights[new Vector2Int(0, 1)].gameObject.activeSelf,
-                    "The unrelated pointed empty cell must never become a candidate or effect.");
-                yield return CaptureArtEvidence("selectable-empty-" + width, session);
+                HexCoord empty = EmptyCell("spell_feixingzhi");
+                Assert.IsTrue(TryFindCastingPoint(empty, out var emptyPoint));
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(emptyPoint);
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                Assert.IsEmpty(input.Preview.AttackArea.Targets);
+                AssertSpellHighlights(session);
+                yield return CaptureArtEvidence("g2-selectable-empty-" + width, session);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
                     RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position), true);
                 Assert.IsFalse(input.Preview.CanConfirm);
+                Assert.IsNull(input.Candidate.TargetCell);
                 AssertSpellHighlights(session);
                 yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.SecondArtButton.transform.position));
                 Assert.AreEqual("spell_julingshu", input.Candidate.ProfileId);
@@ -407,16 +690,17 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
                 Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
             }
-            // Refresh after an explicit death fixture must remove every cell of that target.
+            // Death changes affected units, not the set of legal terrain cells.
             var dead = spawned.Enemy;
+            HexCoord deadCell = dead.Position;
             dead.ReceiveDamage(dead.CurrentHealth);
             RefreshAuthority();
             yield return Click(RectTransformUtility.WorldToScreenPoint(null, bar.ThirdArtButton.transform.position));
+            Assert.IsTrue(TryFindCastingPoint(deadCell, out var deadPoint));
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(deadPoint);
+            Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+            Assert.IsEmpty(input.Preview.AttackArea.Targets);
             AssertSpellHighlights(session);
-            Assert.AreEqual(2, movement.Highlights.Values.Count(ring => ring.gameObject.activeSelf));
-            foreach (var cell in dead.OccupiedCells)
-                Assert.IsFalse(movement.Highlights[new Vector2Int(cell.Q, cell.R)].gameObject.activeSelf);
-            yield return CaptureArtEvidence("selectable-death-refresh", session);
             input.CancelCandidate();
             Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
         }
@@ -428,20 +712,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(input.IsSelectingAttack);
             Assert.AreEqual(CombatActionKind.Art, input.Candidate.Kind);
             var action = Find<CombatHudPresenter>().Snapshot.ArtActions.Single(art => art.ProfileId == input.Candidate.ProfileId);
-            var selectable = action.Targets.Where(target => target.CanExecute).SelectMany(target =>
-            {
-                Assert.IsTrue(combat.Combatants.TryGet(target.Id, out var unit));
-                return unit.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R));
-            }).ToArray();
+            var selectable = action.CastableCells.Select(cell => new Vector2Int(cell.Q, cell.R)).ToArray();
             var effects = new HashSet<Vector2Int>();
-            if (input.Preview.CanConfirm)
-            {
-                Assert.IsTrue(combat.Combatants.TryGet(input.Candidate.TargetId, out var target));
-                effects.UnionWith(target.OccupiedCells.Select(cell => new Vector2Int(cell.Q, cell.R)));
-            }
+            if (input.Candidate.TargetCell.HasValue && input.Preview.AttackArea != null)
+                effects.UnionWith(input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
+                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)));
             var active = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
             CollectionAssert.AreEquivalent(selectable.Concat(effects).Distinct(), active.Select(pair => pair.Key),
-                "Only legal candidate footprints and the current effect may be outlined; never unrelated mouse or range cells.");
+                "Borders must be legal cast cells plus the quoted effect, never the entire affected unit footprint.");
             foreach (var pair in active)
             {
                 bool effect = effects.Contains(pair.Key);
@@ -468,8 +746,7 @@ namespace TianZhang.Tests.PlayMode
             AssertSpellHighlights(combat);
             var rings = movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).ToArray();
             string summary = Get<Text>(Find<CombatActionPreviewView>(), "summary").text;
-            StringAssert.Contains("施法范围", summary);
-            StringAssert.Contains("作用范围", summary);
+            StringAssert.Contains("作用", summary);
 #if UNITY_EDITOR
             for (float deadline = Time.realtimeSinceStartup + 120f; UnityEditor.ShaderUtil.anythingCompiling && Time.realtimeSinceStartup < deadline;) yield return null;
             Assert.IsFalse(UnityEditor.ShaderUtil.anythingCompiling);
@@ -478,7 +755,9 @@ namespace TianZhang.Tests.PlayMode
             string directory = Path.Combine(Application.dataPath, "../Logs/art-target");
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, label + ".txt"), "resolution=" + Screen.width + "x" + Screen.height +
-                "; target=" + input.Candidate.TargetId + "; profile=" + input.Candidate.ProfileId +
+                "; targetCell=" + input.Candidate.TargetCell + "; targets=" +
+                string.Join("/", input.Preview.AttackArea?.Targets.Select(unit => unit.Id) ?? Array.Empty<string>()) +
+                "; profile=" + input.Candidate.ProfileId +
                 "; context=" + input.Candidate.ContextVersion + "; AP=" + input.Preview.ActionPointCostUnits +
                 "; MP=" + input.Preview.SpiritCost + "; castRange=" + input.Preview.MinimumRange + "-" + input.Preview.MaximumRange +
                 "; rings=" + string.Join("/", rings.Select(pair =>
@@ -517,6 +796,22 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
         }
 
+        private static void AssertBasicHighlights(CombatCommandInput input, CombatMovementView movement)
+        {
+            var castable = Find<CombatHudPresenter>().Snapshot.Actions.Where(action =>
+                action.Candidate.Kind == CombatActionKind.BasicAttack && action.AttackArea != null)
+                .SelectMany(action => action.AttackArea.Cells).Where(cell => cell.IsLegal)
+                .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)).Distinct().ToArray();
+            var effects = input.Preview.AttackArea != null && input.Candidate.TargetCell.HasValue &&
+                input.Preview.AttackArea.Cells.Any(cell => cell.IsLegal && cell.Position.Equals(input.Candidate.TargetCell.Value))
+                ? input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
+                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)).ToArray() : Array.Empty<Vector2Int>();
+            CollectionAssert.AreEquivalent(castable.Concat(effects).Distinct(),
+                movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key));
+            CollectionAssert.AreEquivalent(effects, movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf &&
+                Mathf.Abs(pair.Value.widthMultiplier - .06f) < .0005f).Select(pair => pair.Key));
+        }
+
         [UnityTest]
         public IEnumerator BasicPointerHoverCancelAndDirectClickAtBothResolutions()
         {
@@ -549,10 +844,8 @@ namespace TianZhang.Tests.PlayMode
                 Directory.CreateDirectory(effectDirectory);
                 ScreenCapture.CaptureScreenshot(Path.Combine(effectDirectory, "effect-only-basic-" + width + ".png"));
                 for (int frame = 0; frame < 8; frame++) yield return null;
-                CollectionAssert.AreEquivalent(input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
-                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)),
-                    movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key),
-                    "Only actual effect cells may have attack borders; a distant hover is only a direction.");
+                AssertBasicHighlights(input, movement);
+                Assert.IsFalse(input.Preview.CanConfirm, "An explicit far tile cannot be replaced by a nearer direction cell.");
                 Assert.IsFalse(movement.Highlights[farKey].gameObject.activeSelf);
                 Assert.IsFalse(movement.InspectionRings.Any(ring => ring.gameObject.activeSelf),
                     "Inspection borders must not add unrelated cells while aiming.");
@@ -573,16 +866,13 @@ namespace TianZhang.Tests.PlayMode
                 yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: false);
                 Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
                 Assert.IsFalse(preview.ConfirmButton.interactable);
-                CollectionAssert.AreEquivalent(input.Preview.AttackArea.Cells.Where(cell => cell.IsLegal)
-                    .Select(cell => new Vector2Int(cell.Position.Q, cell.Position.R)),
-                    movement.Highlights.Where(pair => pair.Value.gameObject.activeSelf).Select(pair => pair.Key),
-                    "An area attack must not expand its effect to the target's other body cell.");
+                AssertBasicHighlights(input, movement);
                 input.ConfirmCandidate();
                 Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
                 Vector2 confirm = RectTransformUtility.WorldToScreenPoint(null, Get<Text>(preview, "summary").transform.position);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(confirm);
                 Assert.IsFalse(input.Preview.CanConfirm);
-                Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
+                AssertBasicHighlights(input, movement);
                 yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: false);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(new Vector2(-50, -50));
                 Assert.IsFalse(input.Preview.CanConfirm);

@@ -22,7 +22,8 @@ namespace TianZhang.Gameplay.Contracts
             CombatUnitPresentationHex? destination = null, int movementCostUnits = 0,
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null, int slotIndex = -1,
             string equipmentSlotId = null, string itemId = null, string instanceId = null, int? attackDirection = null,
-            int? destinationFacing = null, IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null)
+            int? destinationFacing = null, IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null,
+            CombatUnitPresentationHex? targetCell = null)
         {
             if (destinationFacing.HasValue && (destinationFacing.Value < 0 || destinationFacing.Value >= 6))
                 throw new ArgumentOutOfRangeException(nameof(destinationFacing));
@@ -31,6 +32,7 @@ namespace TianZhang.Gameplay.Contracts
             MovementSteps = movementSteps == null ? Array.Empty<CombatUnitPresentationMovementStep>() :
                 new List<CombatUnitPresentationMovementStep>(movementSteps).AsReadOnly();
             AttackDirection = attackDirection;
+            TargetCell = targetCell;
             ActorId = actorId;
             TargetId = targetId;
             ProfileId = profileId;
@@ -44,6 +46,7 @@ namespace TianZhang.Gameplay.Contracts
         }
         public string EquipmentSlotId { get; }
         public int? AttackDirection { get; }
+        public CombatUnitPresentationHex? TargetCell { get; }
         public int? DestinationFacing { get; }
         public IReadOnlyList<CombatUnitPresentationMovementStep> MovementSteps { get; }
         public string ItemId { get; }
@@ -95,7 +98,7 @@ namespace TianZhang.Gameplay.Contracts
             string ruleSetSourceDigest = "", string abilityTierId = "", string basicAttackSourceKind = "",
             string unarmedRealmId = "", int physicalAttackCapacity = 0, string attackDetail = "",
             string currentEquipmentName = "", bool? equipmentOwned = null, CombatAttackAreaSnapshot attackArea = null,
-            int minimumRange = 0, int maximumRange = 0, float targetDistance = -1)
+            int minimumRange = 0, int maximumRange = 0, float targetDistance = -1, bool canOpen = false)
         {
             Candidate = candidate;
             ActionName = actionName;
@@ -124,12 +127,14 @@ namespace TianZhang.Gameplay.Contracts
             AttackArea = attackArea;
             MinimumRange = minimumRange; MaximumRange = maximumRange;
             TargetDistance = targetDistance;
+            CanOpen = canOpen;
         }
         public CombatActionCandidate Candidate { get; }
         public string ActionName { get; }
         public string ActorName { get; }
         public string TargetName { get; }
         public bool CanConfirm { get; }
+        public bool CanOpen { get; }
         public string Reason { get; }
         public int SpiritCost { get; }
         public bool RemainsInTurn { get; }
@@ -272,7 +277,8 @@ namespace TianZhang.Gameplay.Contracts
             IReadOnlyList<CombatUnitPresentationTargetResult> targetResults,
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null,
             string profileId = null,
-            IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null)
+            IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null,
+            CombatUnitPresentationHex? targetCell = null, CombatUnitPresentationHex? sourceCell = null)
         {
             if (string.IsNullOrWhiteSpace(actorCombatantId))
                 throw new ArgumentException("Actor combatant ID is required.", nameof(actorCombatantId));
@@ -288,6 +294,8 @@ namespace TianZhang.Gameplay.Contracts
             EndPosition = endPosition;
             Facing = facing;
             ProfileId = profileId;
+            TargetCell = targetCell;
+            SourceCell = sourceCell;
             MovementSteps = movementSteps == null ? Array.Empty<CombatUnitPresentationMovementStep>() :
                 new List<CombatUnitPresentationMovementStep>(movementSteps).AsReadOnly();
             TargetResults = targetResults == null
@@ -299,6 +307,8 @@ namespace TianZhang.Gameplay.Contracts
         }
 
         public string ActorCombatantId { get; }
+        public CombatUnitPresentationHex? TargetCell { get; }
+        public CombatUnitPresentationHex? SourceCell { get; }
         public CombatUnitPresentationEvent PresentationEvent { get; }
         public CombatUnitPresentationHex StartPosition { get; }
         public CombatUnitPresentationHex EndPosition { get; }
@@ -418,7 +428,8 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatArtActionSnapshot
     {
         public CombatArtActionSnapshot(string profileId, string displayName, int cooldownPenalty,
-            IReadOnlyList<CombatArtTargetSnapshot> targets, int minimumRange = 0, int maximumRange = 0)
+            IReadOnlyList<CombatArtTargetSnapshot> targets, int minimumRange = 0, int maximumRange = 0,
+            IReadOnlyList<CombatUnitPresentationHex> castableCells = null, CombatActionPreviewSnapshot entryQuote = null)
         {
             ProfileId = profileId;
             DisplayName = displayName;
@@ -427,12 +438,16 @@ namespace TianZhang.Gameplay.Contracts
                 new List<CombatArtTargetSnapshot>(targets).AsReadOnly();
             MinimumRange = minimumRange;
             MaximumRange = maximumRange;
+            CastableCells = new List<CombatUnitPresentationHex>(castableCells ?? Array.Empty<CombatUnitPresentationHex>()).AsReadOnly();
+            EntryQuote = entryQuote;
         }
 
         public string ProfileId { get; }
         public string DisplayName { get; }
         public int CooldownPenalty { get; }
         public IReadOnlyList<CombatArtTargetSnapshot> Targets { get; }
+        public IReadOnlyList<CombatUnitPresentationHex> CastableCells { get; }
+        public CombatActionPreviewSnapshot EntryQuote { get; }
         public int MinimumRange { get; }
         public int MaximumRange { get; }
     }

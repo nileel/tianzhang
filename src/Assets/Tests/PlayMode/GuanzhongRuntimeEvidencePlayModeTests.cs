@@ -464,7 +464,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator RemoteSpawnRejectsAttackAndMovesIntoContactAtBothResolutions()
+        public IEnumerator RemoteSpawnAllowsEmptyAttackAndMovesIntoContactAtBothResolutions()
         {
             foreach (Vector2Int size in Sizes())
             {
@@ -518,18 +518,19 @@ namespace TianZhang.Tests.PlayMode
                 var attack = new CombatCommand(CombatCommandKind.BasicAttack, "player",
                     profileId: spawned.Player.BasicAttackProfileId, attackDirection: direction);
                 var distant = service.Preview(session, attack);
-                Assert.That(distant.IsLegal, Is.False);
-                Assert.That(distant.RejectionReason, Is.EqualTo("combat_attack_area_empty"),
-                    "A remote spawn must be rejected because no enemy stands in the forward pair, not because the command is malformed.");
+                Assert.That(distant.IsLegal, Is.True, distant.RejectionReason);
+                Assert.That(distant.AttackArea.TargetIds, Is.Empty,
+                    "A remote spawn leaves the legal forward area empty.");
                 var distantPreview = encounter.PreviewAction(AttackCandidate(direction));
-                Assert.That(distantPreview.CanConfirm, Is.False, distantPreview.Reason);
+                Assert.That(distantPreview.CanConfirm, Is.True, distantPreview.Reason);
                 int ap = spawned.Player.ActionPointsRemainingUnits, health = spawned.Enemy.CurrentHealth;
                 encounter.ConfirmAction(AttackCandidate(direction));
-                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap));
+                Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - distant.ActionPointCostUnits));
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(health));
-                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={ContactDistance(session, spawned.Player.Pose, spawned.Enemy.Pose)}; enemyScreenRect={enemyRect}; rejectedAttack={distant.RejectionReason}; path={string.Join("/", path.Path)}" };
+                var lines = new List<string> { Header(), $"spawn player={spawned.Player.Position}; enemy={spawned.Enemy.Position}; distance={ContactDistance(session, spawned.Player.Pose, spawned.Enemy.Pose)}; enemyScreenRect={enemyRect}; emptyAttackCost={distant.ActionPointCostUnits}; path={string.Join("/", path.Path)}" };
                 yield return Capture("remote-spawn-" + size.x);
                 yield return PlayerInputReady(encounter, session, inputTrace);
+                ap = spawned.Player.ActionPointsRemainingUnits;
                 var move = service.Preview(session, new CombatCommand(CombatCommandKind.Move, "player", destination: new HexCoord(0, 1)));
                 Assert.That(move.IsLegal, Is.True, move.RejectionReason);
                 encounter.RequestMove("player", 0, 1);

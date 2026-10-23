@@ -52,6 +52,7 @@ namespace TianZhang.Combat
         public string TargetId => Command.TargetId;
         public string ProfileId => Command.ProfileId;
         public int? AttackDirection => Command.AttackDirection;
+        public HexCoord? TargetCell => Command.TargetCell;
         public CombatAttackAreaQueryResult AttackArea { get; }
         public HexCoord? Destination => Command.Destination;
         public int? DestinationFacing => Command.DestinationFacing;
@@ -100,7 +101,7 @@ namespace TianZhang.Combat
                 if (session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile))
                 {
                     cost = profile.ActionPointCostUnits; minimum = profile.MinimumNetCostUnits;
-                    spirit = profile.GetSpiritCost(command.ActorId == command.TargetId);
+                    spirit = profile.GetSpiritCost(actor != null && CombatSession.TargetsSelf(actor, command));
                     penalty = profile.CtPenalty; cooldown = profile.ReuseCooldownTicks;
                 }
             }
@@ -231,7 +232,8 @@ namespace TianZhang.Combat
             if (quote.Session != session || quote.TurnSequence != session.TurnSequence || quote.StateVersion != session.StateVersion ||
                 quote.ActorId != command.ActorId || quote.Kind != command.Kind || quote.TargetId != command.TargetId ||
                 quote.ProfileId != command.ProfileId || quote.Destination != command.Destination || quote.SlotIndex != command.SlotIndex ||
-                quote.AttackDirection != command.AttackDirection || quote.DestinationFacing != command.DestinationFacing ||
+                quote.AttackDirection != command.AttackDirection || quote.TargetCell != command.TargetCell ||
+                quote.DestinationFacing != command.DestinationFacing ||
                 quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
                 quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
                 quote.Command.InstanceId != command.InstanceId ||
@@ -261,7 +263,8 @@ namespace TianZhang.Combat
             if (quoted == null || current == null) return quoted == current;
             return quoted.ActorId == current.ActorId && quoted.Profile == current.Profile &&
                 quoted.Origin == current.Origin && quoted.Direction == current.Direction &&
-                quoted.TargetIds.SequenceEqual(current.TargetIds) && quoted.Cells.SequenceEqual(current.Cells);
+                quoted.TargetIds.SequenceEqual(current.TargetIds) && quoted.Cells.SequenceEqual(current.Cells) &&
+                quoted.CellContacts.SequenceEqual(current.CellContacts);
         }
 
         public CombatActionResult Validate(CombatSession session, CombatCommand command) => Preview(session, command).Validation;

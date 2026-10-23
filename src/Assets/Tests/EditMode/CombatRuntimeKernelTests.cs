@@ -1687,7 +1687,7 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void AreaDiscoveryAndEmptyConfirmationDoNotSpendOrSample()
+        public void AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce()
         {
             var s = CombatActionPointKernelTests.AreaSession(query: new FixedRangeQuery(true)); var service = new CombatCommandService();
             string before = AreaQueryState(s);
@@ -1700,9 +1700,15 @@ namespace TianZhang.Tests.EditMode
             var empty = new CombatCommand(CombatCommandKind.BasicAttack, "player", profileId: "area", attackDirection: 0);
             var quote = service.Preview(s, empty); before = AreaQueryState(s);
             Assert.AreEqual(2, quote.AttackArea.Cells.Count); Assert.IsEmpty(quote.AttackArea.TargetIds);
-            Assert.AreEqual("combat_attack_area_empty", service.ValidateConfirmation(s, empty, quote).RejectionReason);
-            Assert.AreEqual("combat_attack_area_empty", service.Execute(s, empty, quote).RejectionReason);
+            Assert.IsTrue(service.ValidateConfirmation(s, empty, quote).Succeeded);
             Assert.AreEqual(before, AreaQueryState(s));
+            var result = service.Execute(s, empty, quote);
+            Assert.IsTrue(result.Succeeded, result.RejectionReason);
+            Assert.AreEqual(20000, result.ActionPointSpentUnits);
+            Assert.IsEmpty(result.Damage);
+            Assert.IsEmpty(result.SpiritRecoveries);
+            Assert.IsEmpty(empty.TargetRolls);
+            Assert.AreEqual("combat_quote_stale", service.Execute(s, empty, quote).RejectionReason);
         }
 
         private sealed class MutableAreaQuery : ICombatSpatialQuery

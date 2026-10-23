@@ -111,6 +111,13 @@ namespace TianZhang.Features.CombatPresentation
             return provider != null && !string.IsNullOrWhiteSpace(id) && provider.TryGetPresentedPose(id, out pose);
         }
 
+        public bool TryPickBodyPoint(Vector2 screenPoint, out Vector3 point)
+        {
+            point = default;
+            return worldCamera != null && provider != null &&
+                provider.TryPickBodyPoint(worldCamera.ScreenPointToRay(screenPoint), out point);
+        }
+
         /// <summary>Front cell of an already spawned unit, read from the presentation that mirrors authority.</summary>
         public bool TryGetUnitCell(string id, out CombatUnitPresentationHex cell)
         {

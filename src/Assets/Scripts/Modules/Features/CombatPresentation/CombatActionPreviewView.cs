@@ -13,9 +13,9 @@ namespace TianZhang.Features.CombatPresentation
         private const string MovementLegend =
             "<color=#238CFF>■</color> 可移动   <color=#F2C14E>■</color> 目的地   <color=#FFE7A0>■</color> 路径";
         private const string TargetingLegend =
-            "<color=#FF9F3C>■</color> 作用地块";
+            "<color=#238CFF>■</color> 可施放地块   <color=#FF9F3C>■</color> 本次作用";
         private const string SpellTargetingLegend =
-            "<color=#238CFF>■</color> 可选目标   <color=#FF9F3C>■</color> 本次作用";
+            TargetingLegend;
 
         [SerializeField] private GameObject root;
         [SerializeField] private Text heading;
@@ -87,7 +87,7 @@ namespace TianZhang.Features.CombatPresentation
         /// Shows the uncommitted action. <paramref name="currentActionPointUnits"/> is the authoritative
         /// remaining AP so the preview can state both the current and the post-action balance.
         /// </summary>
-        public void Present(CombatActionPreviewSnapshot value, int currentActionPointUnits)
+        public void Present(CombatActionPreviewSnapshot value, int currentActionPointUnits, CombatHudSnapshot context = null)
         {
             // Scene teardown can destroy the Canvas before the input owner is disabled.
             if (root == null || summary == null || confirmButton == null) return;
@@ -96,6 +96,9 @@ namespace TianZhang.Features.CombatPresentation
             confirmButton.gameObject.SetActive(!attack);
             confirmButton.interactable = !attack && value != null && value.CanConfirm;
             bool swapping = value?.Candidate.Kind == CombatActionKind.SwapSpell;
+            bool hasSwapCandidate = context == null || context.Actions.Any(action =>
+                action.Candidate.Kind == CombatActionKind.SwapSpell &&
+                !context.ArtProfileIds.Contains(action.Candidate.ProfileId));
             swapSlotButton?.gameObject.SetActive(swapping);
             swapCandidateButton?.gameObject.SetActive(swapping);
             if (value == null)
@@ -106,25 +109,27 @@ namespace TianZhang.Features.CombatPresentation
                 return;
             }
             bool targeting = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
-            SetText(heading, value.ActionName + (targeting ? " · 选择目标" : string.Empty));
+            SetText(heading, swapping ? "换术" : value.ActionName + (targeting ? " · 选择地块" : string.Empty));
             SetText(legend, value.Candidate.Kind == CombatActionKind.Art
                 ? SpellTargetingLegend : targeting ? TargetingLegend : string.Empty);
             if (swapping)
             {
                 swapSlotButton.GetComponentInChildren<Text>().text = "槽位 " + (value.Candidate.SlotIndex + 1) + "：" + value.ReplacedSpellName;
-                swapCandidateButton.GetComponentInChildren<Text>().text = "候选：" + value.ActionName;
+                swapCandidateButton.GetComponentInChildren<Text>().text = hasSwapCandidate
+                    ? "候选：" + value.ActionName : "暂无可换入项";
+                swapCandidateButton.interactable = hasSwapCandidate;
             }
             string cost = FormatActionPoints(value.ActionPointCostUnits) + " AP / " + value.SpiritCost + " MP";
             string settledCt = value.SettledCt.ToString("0.###", CultureInfo.InvariantCulture);
             string threshold = value.Threshold.ToString("0.###", CultureInfo.InvariantCulture);
             string balance = ActionPointLine(currentActionPointUnits, value.ActionPointCostUnits);
             var text = new StringBuilder();
-            if (value.Candidate.Kind == CombatActionKind.Art && string.IsNullOrEmpty(value.Candidate.TargetId))
+            if (value.Candidate.Kind == CombatActionKind.Art && !value.Candidate.TargetCell.HasValue && string.IsNullOrEmpty(value.Candidate.TargetId))
             {
                 text.Append("施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange)
-                    .Append(" 格 · 作用范围：所选目标");
+                    .Append(" 格 · 作用范围：所选一格");
                 text.Append('\n').Append(string.IsNullOrEmpty(value.Reason)
-                    ? "左键点击施法范围内角色；右键或 Esc 取消" : value.Reason);
+                    ? "左键点击可施放地块；右键或 Esc 取消" : value.Reason);
                 summary.text = text.ToString();
                 return;
             }
@@ -142,14 +147,17 @@ namespace TianZhang.Features.CombatPresentation
             if (value.AttackArea != null)
             {
                 CombatAttackAreaSnapshot area = value.AttackArea;
-                text.Append(value.ActionName).Append(" → ").Append(value.TargetName)
-                    .Append(" · 作用 ").Append(area.Cells.Count(cell => cell.IsLegal)).Append(" 格");
+                text.Append(value.TargetName);
+                if (value.TargetDistance >= 0) text.Append(" · 距离 ").Append(value.TargetDistance.ToString("0.###"));
+                if (value.Candidate.Kind == CombatActionKind.Art)
+                    text.Append(" · 施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange);
+                text.Append("\n作用 ").Append(area.Cells.Count(cell => cell.IsLegal)).Append(" 格 · 受影响：")
+                    .Append(area.Targets.Count == 0 ? "空放" : string.Join(" / ", area.Targets.Select(target => target.DisplayName)));
                 text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks)
                     .Append(" · 已用").Append(value.CommittedUseCount).Append(" 次");
-                if (balance.Length > 0) text.Append('\n').Append(balance);
                 text.Append('\n').Append(value.CanConfirm
-                    ? "左键施行，命中全部目标 · 右键 / Esc 取消"
+                    ? balance + " · 左键施行 / 右键取消"
                     : "不可施行：" + value.Reason);
                 summary.text = text.ToString();
                 return;
@@ -182,16 +190,17 @@ namespace TianZhang.Features.CombatPresentation
             }
             if (swapping)
             {
+                if (context != null)
+                    text.Append("已装备：").Append(string.Join(" / ", context.ArtActions.Select(art => art.DisplayName))).Append('\n');
+                if (!hasSwapCandidate)
+                    text.Append("已学术法均已装备，暂无可替换术法\n");
                 text.Append("费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks).Append(" · 剩余 ")
                     .Append(value.CombatSwapsRemaining).Append(" 次");
-                text.Append("\n换入冷却 ").Append(value.ReuseCooldownTicks).Append(" 刻（原剩 ")
-                    .Append(value.RemainingCooldownTicks).Append("）· ")
-                    .Append(value.CanConfirm ? "成功后退出防御" : "不可施行：" + value.Reason);
-                if (value.CanConfirm)
-                    text.Append('\n').Append(value.RemainsInTurn ? "若结束：" : "结束后：")
-                        .Append("CT ").Append(settledCt).Append('/').Append(threshold)
-                        .Append(" · 约+").Append(value.TicksUntilReady).Append("刻（顺位未定）");
+                if (hasSwapCandidate)
+                    text.Append("\n换入冷却 ").Append(value.ReuseCooldownTicks).Append(" 刻（原剩 ")
+                        .Append(value.RemainingCooldownTicks).Append("）· ")
+                        .Append(value.CanConfirm ? "成功后退出防御" : "不可施行：" + value.Reason);
                 if (balance.Length > 0) text.Append('\n').Append(balance);
                 summary.text = text.ToString();
                 return;

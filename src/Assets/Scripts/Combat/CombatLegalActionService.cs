@@ -56,8 +56,13 @@ namespace TianZhang.Combat
                 if (profile.Area != CombatAttackArea.Single)
                 {
                     for (int direction = 0; direction < 6; direction++)
-                        AddIfValid(session, new CombatCommand(commandKind, actor.Id, profileId: profile.Id,
-                            attackDirection: direction), actions);
+                    {
+                        var command = new CombatCommand(commandKind, actor.Id, profileId: profile.Id,
+                            attackDirection: direction);
+                        var quote = commandService.Preview(session, command);
+                        // AI action discovery remains target-driven; players may intentionally empty-cast.
+                        if (quote.IsLegal && quote.AttackArea.TargetIds.Count > 0) actions.Add(command);
+                    }
                     continue;
                 }
                 foreach (CombatantSnapshot target in session.Combatants.All)

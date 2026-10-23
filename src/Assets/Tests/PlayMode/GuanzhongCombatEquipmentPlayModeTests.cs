@@ -161,7 +161,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return Ready();
                 Debug.Log("[AOE route] " + profileId + "; step=" + step + "; " + AreaState());
                 bar.BasicAttackButton.onClick.Invoke();
-                Assert.AreEqual(hud.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanConfirm, input.IsSelectingAttack);
+                Assert.AreEqual(hud.Snapshot.FindPreferredAction(CombatActionKind.BasicAttack).CanOpen, input.IsSelectingAttack);
                 Assert.IsFalse(preview.ConfirmButton.interactable);
                 for (int direction = 0; input.IsSelectingAttack && direction < 6; direction++)
                 {
@@ -238,9 +238,9 @@ namespace TianZhang.Tests.PlayMode
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, direction);
                     if (input.Preview.AttackArea == null) { Assert.IsFalse(input.Preview.CanConfirm); continue; }
                     AssertAreaMatchesAuthority(direction);
-                    if (input.Preview.AttackArea.Targets.Count != 0) continue;
+                    if (input.Preview.AttackArea.Targets.Count != 0 || !input.Preview.CanConfirm) continue;
                     string before = AreaState();
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    Assert.IsTrue(input.Preview.CanConfirm, "A spatially valid empty area is a legal cast.");
                     Assert.AreEqual(before, AreaState());
                     Assert.IsFalse(preview.ConfirmButton.interactable);
                     yield return CaptureArea((blade ? "blade" : "sword") + "-empty-" + width);

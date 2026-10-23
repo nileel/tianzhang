@@ -107,6 +107,15 @@ namespace TianZhang.Features.CombatPresentation
                 body.transform.localPosition = Vector3.zero;
                 body.transform.localRotation = Quaternion.identity;
                 body.transform.localScale = CombatUnitPresentationMotion.BodyScale(profile, combatant.IsDoubleCell, doubleCellFootprintFill);
+                // Use the rendered static mesh for casting picks; a tall body must not project
+                // through to a different ground cell behind it. These colliders live with the body.
+                foreach (MeshFilter mesh in body.GetComponentsInChildren<MeshFilter>(true))
+                    if (mesh.sharedMesh != null)
+                    {
+                        MeshCollider collider = mesh.GetComponent<MeshCollider>();
+                        if (collider == null) collider = mesh.gameObject.AddComponent<MeshCollider>();
+                        collider.sharedMesh = mesh.sharedMesh;
+                    }
                 units.Add(combatant.CombatantId, new PresentedUnit(
                     root,
                     body.GetComponentsInChildren<Renderer>(true),
@@ -352,9 +361,16 @@ namespace TianZhang.Features.CombatPresentation
             Vector3 feet = HexToWorld(presentationEvent.EndPosition);
             Vector3 origin = feet + Vector3.up * 0.85f;
             Vector3 target = origin;
-            bool found = false;
+            bool found = presentationEvent.TargetCell.HasValue;
+            if (found)
+            {
+                feet = HexToWorld(presentationEvent.SourceCell ?? presentationEvent.EndPosition);
+                origin = feet + Vector3.up * .85f;
+                target = HexToWorld(presentationEvent.TargetCell.Value) + Vector3.up * .75f;
+            }
             foreach (CombatUnitPresentationTargetResult targetResult in presentationEvent.TargetResults)
             {
+                if (found) break;
                 if (!units.TryGetValue(targetResult.CombatantId, out PresentedUnit targetUnit) ||
                     targetUnit.Root == null)
                     continue;
@@ -374,6 +390,29 @@ namespace TianZhang.Features.CombatPresentation
                 ? CombatAttackVfx.PlaySlash(feet, target, entry.color, entry.scale, entry.durationSeconds)
                 : CombatAttackVfx.PlayProjectile(origin, target, entry.color, entry.scale, entry.durationSeconds);
             RegisterTransient(effect.gameObject, entry.durationSeconds + 0.3f);
+        }
+
+        public bool TryPickBodyPoint(Ray ray, out Vector3 point)
+        {
+            // Animation and movement update transforms outside the physics step.
+            Physics.SyncTransforms();
+            point = default;
+            float nearest = float.PositiveInfinity;
+            foreach (PresentedUnit unit in units.Values)
+            {
+                if (unit.Root == null || unit.LastEvent == CombatUnitPresentationEvent.Death) continue;
+                foreach (Renderer renderer in unit.BodyRenderers)
+                {
+                    if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                    MeshCollider collider = renderer.GetComponent<MeshCollider>();
+                    if (collider != null && collider.Raycast(ray, out RaycastHit hit, nearest))
+                    {
+                        nearest = hit.distance;
+                        point = hit.point;
+                    }
+                }
+            }
+            return !float.IsPositiveInfinity(nearest);
         }
 
         private void PlayFeedback(

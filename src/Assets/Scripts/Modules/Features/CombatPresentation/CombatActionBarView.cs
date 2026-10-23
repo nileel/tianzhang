@@ -81,8 +81,7 @@ namespace TianZhang.Features.CombatPresentation
             bool canAct = visible;
             root?.SetActive(snapshot != null);
             CombatActionPreviewSnapshot swap = snapshot?.FindPreferredAction(CombatActionKind.SwapSpell);
-            SetEnabled(swapSpellButton, canAct && swap?.CanConfirm == true);
-            string swapReason = swap?.CanConfirm == false ? swap.Reason : string.Empty;
+            SetEnabled(swapSpellButton, canAct && swap != null);
             if (swapSpellButton != null)
                 swapSpellButton.GetComponentInChildren<Text>().text = "换术\n" +
                     (swap == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(swap.ActionPointCostUnits) + " AP\n") +
@@ -109,7 +108,7 @@ namespace TianZhang.Features.CombatPresentation
                 actionStatusLabel.fontSize = 22;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
-                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, swapReason, equipmentReason, itemReason },
+                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, equipmentReason, itemReason },
                         reason => !string.IsNullOrEmpty(reason)).Distinct()));
                 actionStatusLabel.transform.parent.gameObject.SetActive(!string.IsNullOrEmpty(actionStatusLabel.text));
             }
@@ -117,9 +116,8 @@ namespace TianZhang.Features.CombatPresentation
 
         private string PresentArt(CombatArtActionSnapshot art, Button button, Text label, bool canAct)
         {
-            CombatArtTargetSnapshot target = art?.Targets.FirstOrDefault(option => option.CanExecute) ??
-                art?.Targets.FirstOrDefault();
-            SetEnabled(button, canAct && target?.CanExecute == true);
+            CombatActionPreviewSnapshot quote = art?.EntryQuote;
+            SetEnabled(button, canAct && quote?.CanOpen == true);
             SetIcon(button, art?.ProfileId switch
             {
                 "spell_guanshiji" => guanshijiIcon,
@@ -127,21 +125,19 @@ namespace TianZhang.Features.CombatPresentation
                 "spell_feixingzhi" => feixingzhiIcon,
                 _ => null,
             });
-            PresentCooldown(button, target?.Quote?.RemainingCooldownTicks ?? 0);
+            PresentCooldown(button, quote?.RemainingCooldownTicks ?? 0);
             if (label != null)
                 label.text = art == null ? "术法" : CompactName(art.DisplayName) + "\n" +
-                    (target?.Quote == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(target.Quote.ActionPointCostUnits) +
-                    " AP\n" + target.Quote.SpiritCost + " MP");
+                    (quote == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) +
+                    " AP\n" + quote.SpiritCost + " MP");
             if (art == null) return string.Empty;
-            if (target == null) return art.DisplayName + "：无可选目标";
-            return target.CanExecute || string.IsNullOrEmpty(target.RejectionReason)
-                ? string.Empty
-                : displayReason(target.RejectionReason);
+            return quote?.CanOpen == true ? string.Empty : quote?.Reason ?? string.Empty;
         }
 
         private string PresentAction(CombatActionPreviewSnapshot quote, Button button, bool canAct)
         {
-            SetEnabled(button, canAct && quote != null && quote.CanConfirm);
+            SetEnabled(button, canAct && quote != null &&
+                (quote.Candidate.Kind == CombatActionKind.BasicAttack ? quote.CanOpen : quote.CanConfirm));
             PresentCooldown(button, quote?.RemainingCooldownTicks ?? 0);
             if (quote == null) return string.Empty;
             if (quote.Candidate.Kind == CombatActionKind.BasicAttack)
@@ -161,7 +157,7 @@ namespace TianZhang.Features.CombatPresentation
                     _ => CompactName(quote.ActionName) + "\n" + cost,
                 };
             }
-            return quote.CanConfirm ? string.Empty : quote.Reason;
+            return quote.CanConfirm || quote.Candidate.Kind == CombatActionKind.BasicAttack && quote.CanOpen ? string.Empty : quote.Reason;
         }
 
         public void PresentMovement(CombatHudSnapshot snapshot, bool selecting, CombatMovementOption preview = null)

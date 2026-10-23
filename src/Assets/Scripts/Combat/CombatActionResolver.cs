@@ -31,18 +31,23 @@ namespace TianZhang.Combat
             var actor = originalActor.CopyForResolution();
             var originals = new List<CombatantSnapshot>();
             var targets = new List<CombatantSnapshot>();
+            bool directional = attackArea != null && attackArea.Direction >= 0;
             if (attackArea != null)
             {
-                if (command.TargetRolls.Count != attackArea.TargetIds.Count)
+                if (directional && command.TargetRolls.Count != attackArea.TargetIds.Count)
                     return CombatActionResult.Rejected("combat_target_rolls_invalid");
                 for (int index = 0; index < attackArea.TargetIds.Count; index++)
                 {
-                    var input = command.TargetRolls[index];
-                    if (input.TargetId != attackArea.TargetIds[index] || !ValidAreaRolls(input.Rolls))
-                        return CombatActionResult.Rejected("combat_target_rolls_invalid");
-                    session.Combatants.TryGet(input.TargetId, out var original);
+                    string id = attackArea.TargetIds[index];
+                    if (directional)
+                    {
+                        var input = command.TargetRolls[index];
+                        if (input.TargetId != id || !ValidAreaRolls(input.Rolls))
+                            return CombatActionResult.Rejected("combat_target_rolls_invalid");
+                    }
+                    session.Combatants.TryGet(id, out var original);
                     originals.Add(original);
-                    targets.Add(original.CopyForResolution());
+                    targets.Add(original == originalActor ? actor : original.CopyForResolution());
                 }
             }
             else if (session.Combatants.TryGet(command.TargetId, out var originalTarget))
@@ -58,7 +63,7 @@ namespace TianZhang.Combat
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine =>
-                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, attackArea != null, validation.TargetContacts),
+                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, directional, validation.TargetContacts),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
                 CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
                 CombatCommandKind.SwapEquipment => ResolveEquipment(actor, command),
@@ -128,12 +133,12 @@ namespace TianZhang.Combat
 
             bool control = profile.RuleMetadata != null &&
                 (profile.RuleMetadata.ControlChancePermille > 0 || profile.RuleMetadata.ControlUsesMindContest);
-            if (control && !isArea && (!command.Rolls.ControlRoll.HasValue ||
+            if (control && targets.Count > 0 && !isArea && (!command.Rolls.ControlRoll.HasValue ||
                 !ValidPercent(command.Rolls.ControlRoll.Value)))
                 return CombatActionResult.Rejected("combat_control_roll_invalid");
 
-            CombatantSnapshot target = targets[0];
-            bool targetsSelf = string.Equals(actor.Id, target.Id, StringComparison.Ordinal);
+            CombatantSnapshot target = targets.FirstOrDefault();
+            bool targetsSelf = CombatSession.TargetsSelf(actor, command);
             bool kuxing = profile.RuleMetadata?.PrototypeDefinitionRef == "KuxingAction";
             int healthRecovery = 0;
             if (kuxing)
@@ -149,7 +154,12 @@ namespace TianZhang.Combat
             if (!actor.TryConsumeSpirit(spiritCost))
                 return CombatActionResult.Rejected("spirit_insufficient");
             CombatActionResult result;
-            if (profile.Effect == CombatAttackEffect.RestoreSpirit)
+            if (targets.Count == 0)
+            {
+                result = profile.Effect == CombatAttackEffect.RestoreSpirit
+                    ? CombatActionResult.SpiritRecoverySuccess(spiritCost) : CombatActionResult.AttackSuccess(spiritCost);
+            }
+            else if (profile.Effect == CombatAttackEffect.RestoreSpirit)
             {
                 int sourceSpirit = profile.RuleMetadata == null ? actor.RawSpirit :
                     Math.Min(actor.RawSpirit, profile.RuleMetadata.Tier.RawSpiritRecoveryCapacity);

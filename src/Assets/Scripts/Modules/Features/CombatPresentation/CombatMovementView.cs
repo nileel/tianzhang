@@ -260,7 +260,12 @@ namespace TianZhang.Features.CombatPresentation
             Ray ray = battlefieldCamera.ScreenPointToRay(screenPoint);
             var plane = new Plane(Vector3.up, cells[0].tile.position);
             if (!plane.Raycast(ray, out float distance)) return false;
-            Vector3 position = ray.GetPoint(distance);
+            return TryGetCellAtWorld(ray.GetPoint(distance), out picked);
+        }
+
+        public bool TryGetCellAtWorld(Vector3 position, out CombatUnitPresentationHex picked)
+        {
+            picked = default;
             foreach (Cell cell in cells)
             {
                 Vector3 delta = position - cell.tile.position;
@@ -276,7 +281,7 @@ namespace TianZhang.Features.CombatPresentation
             return false;
         }
 
-        private bool UiOwnsPointer(Vector2 pointer)
+        public bool UiOwnsPointer(Vector2 pointer)
         {
             EventSystem system = EventSystem.current;
             if (system == null) return false;

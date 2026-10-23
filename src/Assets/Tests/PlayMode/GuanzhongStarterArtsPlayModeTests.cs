@@ -291,9 +291,11 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f));
                 yield return CaptureTrialEvidence("starter-initial-range-" + width, label);
             }
-            Assert.IsFalse(actionBar.ArtButton.interactable, "No legal target disables entry under Q1.");
+            Assert.IsTrue(actionBar.ArtButton.interactable, "An empty casting range must still open under G2.");
             AssertRejectedWithoutConsumption(() => actionBar.ArtButton.onClick.Invoke());
-            Assert.IsNull(input.Candidate);
+            Assert.IsTrue(input.IsSelectingAttack);
+            Assert.IsNull(input.Candidate.TargetCell);
+            input.CancelCandidate();
             var rejected = encounter.PreviewAction(new CombatActionCandidate(CombatActionKind.Art, "player",
                 spawned.Enemy.Id, AttackId, sink.Latest.CommandContextVersion));
             Assert.IsFalse(rejected.CanConfirm);
@@ -358,7 +360,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(actionBar.ArtButton.interactable, Is.True);
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemies[1].Id);
-            Assert.That(input.Candidate.TargetId, Is.EqualTo(spawned.Enemies[1].Id));
+            Assert.That(input.Candidate.TargetId, Is.Null);
+            Assert.That(input.Candidate.TargetCell.HasValue, Is.True);
+            CollectionAssert.AreEqual(new[] { spawned.Enemies[1].Id }, input.Preview.AttackArea.Targets.Select(unit => unit.Id));
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
             int firstHealth = spawned.Enemies[0].CurrentHealth, secondHealth = spawned.Enemies[1].CurrentHealth;
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
@@ -705,9 +709,17 @@ namespace TianZhang.Tests.PlayMode
             typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(encounter, new object[] { "真实拒绝门禁测试", true, null });
             CombatCommandInput input = FindInActiveScene<CombatCommandInput>();
-            Assert.IsFalse(actionBar.ArtButton.interactable);
+            bool canBrowse = reason == "attack_profile_cooldown_active" || reason == "combat_spirit_sealed";
+            Assert.AreEqual(canBrowse, actionBar.ArtButton.interactable);
             AssertRejectedWithoutConsumption(() => actionBar.ArtButton.onClick.Invoke());
-            Assert.IsNull(input.Candidate);
+            if (canBrowse)
+            {
+                Assert.IsTrue(input.IsSelectingAttack);
+                yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
+                Assert.IsFalse(input.Preview.CanConfirm);
+                input.CancelCandidate();
+            }
+            else Assert.IsNull(input.Candidate);
             var target = sink.Latest.ArtActions.Single(art => art.ProfileId == AttackId).Targets
                 .Single(value => value.Id == spawned.Enemy.Id);
             Assert.AreEqual(reason, target.RejectionReason);
@@ -744,7 +756,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(recovery.Targets.Select(value => value.Id), Is.EquivalentTo(enemies.Concat(new[] { spawned.Player.Id })));
             Assert.That(recovery.Targets.Single(value => value.Id == spawned.Player.Id).SpiritCost, Is.Zero);
             Assert.That(recovery.Targets.Where(value => value.Id != spawned.Player.Id).All(value => value.SpiritCost == 20), Is.True);
-            Assert.That(recovery.Targets.All(value => value.CanExecute), Is.True);
+            CollectionAssert.AreEquivalent(session.Combatants.All.Where(unit => unit.IsAlive &&
+                session.SpatialQuery.QueryRange(spawned.Player.Pose, unit.Pose,
+                    recovery.MinimumRange, recovery.MaximumRange).IsInRange).Select(unit => unit.Id),
+                recovery.Targets.Where(value => value.CanExecute).Select(value => value.Id),
+                "The ranged beast can remain outside recovery range; only spatially legal targets can execute.");
         }
 
         private void AssertRecoveryProjection(string targetId, int amount, int previousRolls)
