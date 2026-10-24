@@ -1,4 +1,4 @@
-﻿# 数据管线说明 (v2 — 文本 ID 化)
+# 数据管线说明 (v2 — 文本 ID 化)
 
 ## 设计理念
 
@@ -71,14 +71,24 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 
 ## EnvironmentProfiles.csv 契约
 
-唯一生产行为 `env_guanzhong_wild`。表头固定为：
+生产行固定为 `env_guanzhong_wild`（旧平地地图）与 `env_guanzhong_jindan_demo`（D1 三档演武地图）。表头固定为：
 
-`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits`
+`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers`
+
+`mapSchemaVersion` 留空表示旧版（v1）三段格契约，唯一显式值 `2` 表示固定高差地图；其他值失败关闭，不回退推断。v1 行的五个追加列必须留空，按旧九列语义导入，不改变百格、四个岩石或平地有向边。
 
 - `queryLimits` 格式为 `unitsPerRange=<正整数>;maxQueryRange=<正整数>`。
-- `battlefieldCells` 以 `|` 分隔，每项 `q:r@blocksGroundMove@blocksLineOfSight`，标志只接受 0／1，按 q、r 排序且坐标唯一。原导入器从全部拓扑相邻格生成有向边，边长度为 `unitsPerRange`，不维护第二份地图边列表。
-- `edgeClearanceLimits` 在已生成边上附加稀疏净空限制：`fromQ:fromR>toQ:toR@limit`，多项用 `|` 分隔，无约束显式写 `none`。条目 limit 须为正 Int32；端点须存在、拓扑相邻、对应边已生成、同向键唯一。缺值、错格式、非法引用与溢出拒绝，反向边必须单独声明。未列边的 `clearanceLimit=0` 明确表示不限；正上限要求单位 `bodyScaleRank <= clearanceLimit`。
-- 限制经 `EnvironmentDirectedEdge` → `EnvironmentProfileDefinition`／`EnvironmentProfileAsset`／runtime → `SpatialQueryBoardFactory` → `SpatialEdgeRules` 投影。净空不影响攻击／视线与 AP 计价。当前关中写 `none`，不改变百格与四个岩石；窄口测试使用隔离夹具。
+- v1 `battlefieldCells` 以 `|` 分隔，每项 `q:r@blocksGroundMove@blocksLineOfSight`，标志只接受 0／1，按 q、r 排序且坐标唯一。导入器从全部拓扑相邻格生成平接有向边，边长度为 `unitsPerRange`。
+- v2 `battlefieldCells` 以 `|` 分隔，每项
+  `q:r@groundBlocked@losBlocked@integerHeightLevel@nonnegativeCellBurdenUnits@surfaceKind@physicalSurfaceId`；
+  高度档用于规则，单元格负担用于涉水／泥地，物理支承档案引用 `physicalSurfaceProfiles`。记录仍按 q、r 排序且唯一。
+- `edgeClearanceLimits` 在 v1 已生成边上附加稀疏净空限制：`fromQ:fromR>toQ:toR@limit`，多项用 `|` 分隔，无约束显式写 `none`。条目 limit 须为正 Int32；端点须存在、拓扑相邻、对应边已生成、同向键唯一。缺值、错格式、非法引用与溢出拒绝，反向边必须单独声明。未列边的 `clearanceLimit=0` 明确表示不限；正上限要求单位 `bodyScaleRank <= clearanceLimit`。v2 必须写 `none`，净空改由有向边覆盖唯一承载。
+- v2 `directedEdgeOverrides` 以 `|` 分隔，每项
+  `fromQ:fromR>toQ:toR@edgeKind@positiveMetricDistanceUnits@nonnegEdgeBurdenUnits@allowsMovement@allowsEffects@nonnegClearanceLimit@connectionIdOrNone`。
+  先为全部六邻接有向对生成默认边（同高 `flat` 可走、异高 `open_cliff` 不可走），再应用覆盖。`edgeKind` 接受 `flat`、`slope`、`stairs`、`one_way_drop`、`open_cliff`、`entity_wall`（`climb`／`bridge` 仅保留枚举，不在本轮实现通行）。坡／阶必须具名，且异高移动连接须两向同类型、同 `connectionId`、两向可走；单向落差只能由高处落下；封墙同时阻断地面移动与普通作用路径。
+- v2 `physicalSurfaceProfiles` 是一个带引号的 JSON 单元，包含 `gridGeometry`、`flatProfiles`、`rampProfiles`、`stairConnections`；导入器校验 JSON、支承 ID 唯一、格与坡／阶引用、坡肩阻挡、三平台高度和台阶连接 ID。几何细节留待 D3 读取，不用表现层反推规则。
+- v2 `mapMarkers` 是一个带引号的 JSON 数组，标记 ID 唯一且格存在；标记不创造占位、阻挡或接触资格，只有所属遭遇启用后才成为对象。
+- 有向边负担与格负担分别投影到 `SpatialEdgeRules.MovementBurdenUnits` 与 `SpatialCellRules.MovementBurdenUnits`；攻击距离仍只读 `metricDistanceUnits`，不把上坡负担算成射程。高度资格、边类型与双向连接由 `SpatialQueryBoard` 统一判定，不从 Transform 或模型高度推断。
 - `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID。
 - `phenomenonChannels`：以 `;` 分隔的六个通道，格式 `channel=typeA+typeB`；`airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。
 - `phenomenonPairs`：以 `|` 分隔的无序配对，格式 `channel:typeA+typeB>resultType`；类型须在对应通道声明，翻转的重复配对拒绝。

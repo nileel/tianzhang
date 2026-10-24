@@ -13,10 +13,12 @@ namespace TianZhang.Tests
     public class EnvironmentProfileDataTests
     {
         private const string Header =
-            "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits";
+            "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers";
 
-        private const string ValidRow =
+        private const string ValidRowV1 =
             "fixture_profile,unitsPerRange=2;maxQueryRange=16,0:0@0@0|1:0@1@0,surface_wet|surface_ash,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none";
+
+        private const string ValidRow = ValidRowV1 + ",,,,,";
 
         [Test]
         public void ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow()
@@ -79,12 +81,12 @@ namespace TianZhang.Tests
         }
 
         private const string GuanzhongWildRow =
-            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=24,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|0:6@0@0|0:7@0@0|0:8@0@0|0:9@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@1@0|1:4@0@0|1:5@0@0|1:6@0@0|1:7@0@0|1:8@0@0|1:9@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|2:6@0@0|2:7@0@0|2:8@1@0|2:9@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|3:6@0@0|3:7@0@0|3:8@1@0|3:9@0@0|4:0@0@0|4:1@0@0|4:2@1@0|4:3@1@0|4:4@0@0|4:5@0@0|4:6@0@0|4:7@0@0|4:8@0@0|4:9@0@0|5:0@0@0|5:1@0@0|5:2@1@0|5:3@0@0|5:4@0@0|5:5@0@0|5:6@1@0|5:7@0@0|5:8@0@0|5:9@0@0|6:0@0@0|6:1@0@0|6:2@0@0|6:3@0@0|6:4@0@0|6:5@1@0|6:6@1@0|6:7@0@0|6:8@0@0|6:9@0@0|7:0@0@0|7:1@0@0|7:2@0@0|7:3@0@0|7:4@0@0|7:5@0@0|7:6@0@0|7:7@0@0|7:8@0@0|7:9@0@0|8:0@0@0|8:1@0@0|8:2@0@0|8:3@0@0|8:4@1@0|8:5@1@0|8:6@0@0|8:7@0@0|8:8@0@0|8:9@0@0|9:0@0@0|9:1@0@0|9:2@0@0|9:3@0@0|9:4@0@0|9:5@0@0|9:6@0@0|9:7@0@0|9:8@0@0|9:9@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none";
+            "env_guanzhong_wild,unitsPerRange=2;maxQueryRange=24,0:0@0@0|0:1@0@0|0:2@0@0|0:3@0@0|0:4@0@0|0:5@0@0|0:6@0@0|0:7@0@0|0:8@0@0|0:9@0@0|1:0@0@0|1:1@0@0|1:2@0@0|1:3@1@0|1:4@0@0|1:5@0@0|1:6@0@0|1:7@0@0|1:8@0@0|1:9@0@0|2:0@0@0|2:1@1@0|2:2@0@0|2:3@0@0|2:4@1@0|2:5@0@0|2:6@0@0|2:7@0@0|2:8@1@0|2:9@0@0|3:0@0@0|3:1@1@0|3:2@0@0|3:3@0@0|3:4@1@0|3:5@0@0|3:6@0@0|3:7@0@0|3:8@1@0|3:9@0@0|4:0@0@0|4:1@0@0|4:2@1@0|4:3@1@0|4:4@0@0|4:5@0@0|4:6@0@0|4:7@0@0|4:8@0@0|4:9@0@0|5:0@0@0|5:1@0@0|5:2@1@0|5:3@0@0|5:4@0@0|5:5@0@0|5:6@1@0|5:7@0@0|5:8@0@0|5:9@0@0|6:0@0@0|6:1@0@0|6:2@0@0|6:3@0@0|6:4@0@0|6:5@1@0|6:6@1@0|6:7@0@0|6:8@0@0|6:9@0@0|7:0@0@0|7:1@0@0|7:2@0@0|7:3@0@0|7:4@0@0|7:5@0@0|7:6@0@0|7:7@0@0|7:8@0@0|7:9@0@0|8:0@0@0|8:1@0@0|8:2@0@0|8:3@0@0|8:4@1@0|8:5@1@0|8:6@0@0|8:7@0@0|8:8@0@0|8:9@0@0|9:0@0@0|9:1@0@0|9:2@0@0|9:3@0@0|9:4@0@0|9:5@0@0|9:6@0@0|9:7@0@0|9:8@0@0|9:9@0@0,surface_grassland|surface_loess,airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning,airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none,,,,,";
 
         [Test]
         public void ClearanceLimitsProjectToOnlyTheDeclaredDirection()
         {
-            string row = ValidRow.Substring(0, ValidRow.LastIndexOf(',') + 1) + "0:0>1:0@1";
+            string row = ValidRowV1.Substring(0, ValidRowV1.LastIndexOf(',') + 1) + "0:0>1:0@1" + ",,,,,";
             var definition = WorldContentImporter.ParseEnvironmentProfiles(new[] { Header, row }, "fixture")[0];
             var asset = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();
             try
@@ -114,7 +116,7 @@ namespace TianZhang.Tests
         [TestCase("0:0>1:0@1|")]
         public void ClearanceInvalidEntriesFailBeforeAssetImport(string value)
         {
-            string row = ValidRow.Substring(0, ValidRow.LastIndexOf(',') + 1) + value;
+            string row = ValidRowV1.Substring(0, ValidRowV1.LastIndexOf(',') + 1) + value + ",,,,,";
             Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(new[] { Header, row }, "fixture"));
         }
 
@@ -139,28 +141,35 @@ namespace TianZhang.Tests
                 sourceFilePath);
 
             Assert.AreEqual(1, expectedProfiles.Length);
-            Assert.AreEqual(1, actualProfiles.Length);
-            Assert.AreEqual(100, expectedProfiles[0].battlefieldCells.Length);
-            Assert.AreEqual(15, expectedProfiles[0].battlefieldCells.Count(item => item.blocksGroundMove));
-            Assert.IsTrue(expectedProfiles[0].battlefieldCells
+            Assert.AreEqual(2, actualProfiles.Length);
+            var expectedWild = expectedProfiles.Single(profile => profile.profileId == "env_guanzhong_wild");
+            var actualWild = actualProfiles.Single(profile => profile.profileId == "env_guanzhong_wild");
+            Assert.AreEqual(100, expectedWild.battlefieldCells.Length);
+            Assert.AreEqual(15, expectedWild.battlefieldCells.Count(item => item.blocksGroundMove));
+            Assert.IsTrue(expectedWild.battlefieldCells
                 .Where(item => item.blocksGroundMove)
                 .All(item => !item.blocksLineOfSight));
-            Assert.AreEqual(522, expectedProfiles[0].directedEdges.Length);
-            foreach (EnvironmentDirectedEdge edge in expectedProfiles[0].directedEdges)
+            Assert.IsTrue(expectedWild.battlefieldCells.All(item =>
+                item.heightLevel == 0 && item.cellMovementBurdenUnits == 0 &&
+                item.surfaceKind == "none" && item.physicalSurfaceId == "legacy_flat"));
+            Assert.AreEqual(522, expectedWild.directedEdges.Length);
+            Assert.IsTrue(expectedWild.directedEdges.All(edge =>
+                edge.edgeKind == EnvironmentEdgeKind.Flat && edge.movementBurdenUnits == 0));
+            foreach (EnvironmentDirectedEdge edge in expectedWild.directedEdges)
             {
-                Assert.IsTrue(expectedProfiles[0].directedEdges.Any(reverse =>
+                Assert.IsTrue(expectedWild.directedEdges.Any(reverse =>
                     reverse.fromQ == edge.toQ &&
                     reverse.fromR == edge.toR &&
                     reverse.toQ == edge.fromQ &&
                     reverse.toR == edge.fromR));
             }
-            AssertEnvironmentProfileEquals(expectedProfiles[0], actualProfiles[0]);
+            AssertEnvironmentProfileEquals(expectedWild, actualWild);
 
             const string assetPath =
                 "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset";
             var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(assetPath);
             Assert.IsNotNull(asset, $"Missing generated environment asset at {assetPath}.");
-            AssertEnvironmentProfileEquals(expectedProfiles[0], asset);
+            AssertEnvironmentProfileEquals(expectedWild, asset);
         }
 
         [TestCase("ordinary", SpiritRecoveryEnvironment.Ordinary)]
@@ -212,6 +221,124 @@ namespace TianZhang.Tests
             Assert.AreEqual("spirit_recovery_environment_not_configured", reason);
         }
 
+        private const string Version2Physical =
+            "{\"gridGeometry\":{\"worldCenterFormula\":\"x=q\",\"neighborCenterDistanceMeters\":1,\"hexOrientation\":\"pointy\"}," +
+            "\"flatProfiles\":[],\"rampProfiles\":[{\"id\":\"ramp_a\",\"kind\":\"ramp\",\"coveredCells\":[\"0:0\",\"1:0\"],\"shoulderCells\":[]}]," +
+            "\"stairConnections\":[]}";
+
+        private const string Version2Markers = "[{\"id\":\"spawn\",\"kind\":\"spawn\",\"cell\":\"0:0\"}]";
+
+        private const string Version2Overrides =
+            "0:0>1:0@slope@2@1@1@1@0@ramp_a|1:0>0:0@slope@2@1@1@1@0@ramp_a";
+
+        private static string CsvCell(string value) => value.IndexOfAny(new[] { ',', '"', '\r', '\n' }) >= 0
+            ? "\"" + value.Replace("\"", "\"\"") + "\""
+            : value;
+
+        private static string Version2Row(
+            string overrides,
+            string physical = Version2Physical,
+            string markers = Version2Markers,
+            string cells = "0:0@0@0@0@0@ramp@ramp_a|1:0@0@0@1@0@ramp@ramp_a")
+        {
+            string tail = ValidRowV1.Substring(ValidRowV1.IndexOf(",surface_wet|surface_ash,", StringComparison.Ordinal));
+            return "fixture_v2,unitsPerRange=2;maxQueryRange=16," + cells + tail +
+                ",2,fixture-v2," + overrides + "," + CsvCell(physical) + "," + CsvCell(markers);
+        }
+
+        [Test]
+        public void Version2HeightBurdenAndSlopeConnectionProjectThroughRuntime()
+        {
+            var profile = WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row(Version2Overrides) }, "fixture-v2").Single();
+            Assert.AreEqual("2", profile.mapSchemaVersion);
+            Assert.AreEqual("fixture-v2", profile.mapVersion);
+            Assert.AreEqual(2, profile.battlefieldCells.Length);
+            Assert.AreEqual(1, profile.battlefieldCells[1].heightLevel);
+            Assert.AreEqual(2, profile.directedEdges.Length);
+            EnvironmentDirectedEdge forward = profile.directedEdges.Single(edge => edge.fromQ == 0 && edge.toQ == 1);
+            Assert.AreEqual(EnvironmentEdgeKind.Slope, forward.edgeKind);
+            Assert.AreEqual(1, forward.movementBurdenUnits);
+            Assert.AreEqual("ramp_a", forward.connectionId);
+            Assert.IsTrue(EnvironmentProfileRuntime.TryCreate(profile, out var runtime, out string reason), reason);
+            Assert.AreEqual(2, runtime.DirectedEdges.Count);
+        }
+
+        [Test]
+        public void Version2DefaultsToOpenCliffAndRejectsGroundTraversal()
+        {
+            var profile = WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row("0:0>1:0@open_cliff@2@0@0@1@0@none") }, "fixture-v2").Single();
+            Assert.AreEqual(2, profile.directedEdges.Length);
+            Assert.IsTrue(profile.directedEdges.All(edge => edge.edgeKind == EnvironmentEdgeKind.OpenCliff));
+            Assert.IsTrue(profile.directedEdges.All(edge => !edge.allowsMovement && edge.allowsEffects));
+        }
+
+        [Test]
+        public void Version2RejectsMissingReverseSlopeAndInvalidEdgeSemantics()
+        {
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row("0:0>1:0@slope@2@1@1@1@0@ramp_a") }, "fixture-v2"));
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row("0:0>1:0@open_cliff@2@0@1@1@0@none") }, "fixture-v2"));
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row("0:0>1:0@entity_wall@2@0@0@1@0@wall") }, "fixture-v2"));
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row("0:0>1:0@slope@2@1@1@1@0@none|1:0>0:0@slope@2@1@1@1@0@none") }, "fixture-v2"));
+        }
+
+        [Test]
+        public void Version2RejectsUnknownPhysicalSupportAndMarkerCells()
+        {
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row(Version2Overrides,
+                    cells: "0:0@0@0@0@0@ramp@missing_support|1:0@0@0@1@0@ramp@missing_support") }, "fixture-v2"));
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row(Version2Overrides,
+                    markers: "[{\"id\":\"spawn\",\"kind\":\"spawn\",\"cell\":\"9:9\"}]") }, "fixture-v2"));
+            Assert.Throws<InvalidDataException>(() => WorldContentImporter.ParseEnvironmentProfiles(
+                new[] { Header, Version2Row(Version2Overrides,
+                    markers: "[{\"id\":\"spawn\",\"kind\":\"spawn\",\"cell\":\"0:0\"},{\"id\":\"spawn\",\"kind\":\"spawn\",\"cell\":\"1:0\"}]") },
+                "fixture-v2"));
+        }
+
+        [Test]
+        public void Version2RequiresEveryAppendedFieldOnTheProductionRow()
+        {
+            string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/EnvironmentProfiles.csv");
+            string[] lines = File.ReadAllLines(sourceFilePath);
+            string header = lines[0];
+            string demoRow = lines.Single(line => line.StartsWith("env_guanzhong_jindan_demo,", StringComparison.Ordinal));
+            string[] demoColumns = CsvTableReader.ParseRow(demoRow);
+            foreach (int index in new[] { 9, 10, 11, 12, 13 })
+            {
+                var copy = (string[])demoColumns.Clone();
+                copy[index] = "";
+                string row = string.Join(",", copy.Select(CsvCell));
+                Assert.Throws<InvalidDataException>(() =>
+                    WorldContentImporter.ParseEnvironmentProfiles(new[] { header, row }, "fixture-v2"), "column " + index);
+            }
+        }
+
+        [Test]
+        public void ImportedDemoAssetKeepsPhysicalProfilesAndMarkersParseable()
+        {
+            const string assetPath = "Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_jindan_demo.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>(assetPath);
+            Assert.IsNotNull(asset, assetPath);
+            Assert.AreEqual(144, asset.battlefieldCells.Length);
+            Assert.AreEqual(760, asset.directedEdges.Length);
+            var physical = JsonUtility.FromJson<EnvironmentPhysicalSurfaceProfilesJson>(asset.physicalSurfaceProfiles);
+            Assert.IsNotNull(physical);
+            Assert.IsNotNull(physical.gridGeometry);
+            Assert.AreEqual(3, physical.flatProfiles.Length);
+            Assert.AreEqual(3, physical.rampProfiles.Length);
+            Assert.AreEqual(2, physical.stairConnections.Length);
+            var markers = JsonUtility.FromJson<EnvironmentMapMarkerArrayJson>("{\"items\":" + asset.mapMarkers + "}");
+            Assert.IsNotNull(markers);
+            Assert.AreEqual(11, markers.items.Length);
+        }
+
         private static void AssertEnvironmentProfileEquals(EnvironmentProfileDefinition expected, EnvironmentProfileDefinition actual)
         {
             Assert.AreEqual(expected.profileId, actual.profileId);
@@ -228,6 +355,14 @@ namespace TianZhang.Tests
                     actual.battlefieldCells[index].blocksGroundMove);
                 Assert.AreEqual(expected.battlefieldCells[index].blocksLineOfSight,
                     actual.battlefieldCells[index].blocksLineOfSight);
+                Assert.AreEqual(expected.battlefieldCells[index].heightLevel,
+                    actual.battlefieldCells[index].heightLevel);
+                Assert.AreEqual(expected.battlefieldCells[index].cellMovementBurdenUnits,
+                    actual.battlefieldCells[index].cellMovementBurdenUnits);
+                Assert.AreEqual(expected.battlefieldCells[index].surfaceKind,
+                    actual.battlefieldCells[index].surfaceKind);
+                Assert.AreEqual(expected.battlefieldCells[index].physicalSurfaceId,
+                    actual.battlefieldCells[index].physicalSurfaceId);
             }
 
             Assert.AreEqual(expected.directedEdges.Length, actual.directedEdges.Length);
@@ -241,6 +376,10 @@ namespace TianZhang.Tests
                 Assert.AreEqual(expected.directedEdges[index].allowsMovement, actual.directedEdges[index].allowsMovement);
                 Assert.AreEqual(expected.directedEdges[index].allowsEffects, actual.directedEdges[index].allowsEffects);
                 Assert.AreEqual(expected.directedEdges[index].clearanceLimit, actual.directedEdges[index].clearanceLimit);
+                Assert.AreEqual(expected.directedEdges[index].movementBurdenUnits, actual.directedEdges[index].movementBurdenUnits);
+                Assert.AreEqual(expected.directedEdges[index].edgeKind, actual.directedEdges[index].edgeKind);
+                Assert.AreEqual(expected.directedEdges[index].connectionId ?? "",
+                    actual.directedEdges[index].connectionId ?? "");
             }
 
             CollectionAssert.AreEqual(expected.surfacePrototypeRefs, actual.surfacePrototypeRefs);
@@ -264,6 +403,11 @@ namespace TianZhang.Tests
             }
 
             CollectionAssert.AreEqual(expected.elementRelationRefs, actual.elementRelationRefs);
+            Assert.AreEqual(expected.mapSchemaVersion ?? "", actual.mapSchemaVersion ?? "");
+            Assert.AreEqual(expected.mapVersion ?? "", actual.mapVersion ?? "");
+            Assert.AreEqual(expected.directedEdgeOverrides ?? "", actual.directedEdgeOverrides ?? "");
+            Assert.AreEqual(expected.physicalSurfaceProfiles ?? "", actual.physicalSurfaceProfiles ?? "");
+            Assert.AreEqual(expected.mapMarkers ?? "", actual.mapMarkers ?? "");
         }
 
         private static void AssertEnvironmentProfileEquals(EnvironmentProfileDefinition expected, EnvironmentProfileAsset actual)

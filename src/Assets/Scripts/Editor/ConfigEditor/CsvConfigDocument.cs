@@ -49,23 +49,40 @@ namespace TianZhang.Editor.ConfigEditor
                 Index = index; Text = text; Ending = ending;
                 var cells = new List<Cell>();
                 var quoted = false;
-                var quoteCount = 0;
                 var start = 0;
                 for (var i = 0; i <= text.Length; i++)
                 {
-                    if (i < text.Length && text[i] == '"') { quoted = !quoted; quoteCount++; }
+                    if (i < text.Length && text[i] == '"')
+                    {
+                        // A doubled quote inside a quoted field is one literal quote and
+                        // cannot terminate the field.
+                        if (quoted && i + 1 < text.Length && text[i + 1] == '"') { i++; continue; }
+                        quoted = !quoted;
+                        continue;
+                    }
                     if (i != text.Length && (text[i] != ',' || quoted)) continue;
                     var raw = text.Substring(start, i - start);
-                    // Only a single outer pair is supported; RFC escaped quotes are forbidden.
-                    if (quoteCount != 0 && (quoteCount != 2 || raw.Length < 2 || raw[0] != '"' || raw[raw.Length - 1] != '"'))
+                    if (!IsWellFormedQuotedField(raw))
                         MalformedQuotes = true;
                     cells.Add(new Cell(start, raw, CsvTableReader.ParseRow(raw)[0]));
                     start = i + 1;
-                    quoteCount = 0;
                 }
                 if (quoted) MalformedQuotes = true;
                 Cells = cells.AsReadOnly();
             }
+        }
+
+        private static bool IsWellFormedQuotedField(string raw)
+        {
+            if (raw.IndexOf('"') < 0) return true;
+            if (raw.Length < 2 || raw[0] != '"') return false;
+            for (var i = 1; i < raw.Length; i++)
+            {
+                if (raw[i] != '"') continue;
+                if (i + 1 < raw.Length && raw[i + 1] == '"') { i++; continue; }
+                return i == raw.Length - 1;
+            }
+            return false;
         }
 
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
@@ -113,7 +130,7 @@ namespace TianZhang.Editor.ConfigEditor
                 Error(null, "表的精确列声明缺失或重复。", "column_contract");
             foreach (var line in data)
             {
-                if (line.MalformedQuotes) Error(line, "引号格式不受现有CSV读取器支持。", "csv_quotes");
+                if (line.MalformedQuotes) Error(line, "引号格式不符合CSV单对引号与双写转义合同。", "csv_quotes");
                 if (line.Cells.Count != definition.ExactColumns.Count) Error(line, "列宽与字段合同不一致。", "csv_width");
             }
             if (definition.HeaderMode != ConfigHeaderMode.None)

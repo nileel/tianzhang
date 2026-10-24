@@ -68,7 +68,8 @@ function Get-CsvTable {
     [string]$RelativePath,
     [string[]]$ExpectedHeaders,
     [string[]]$OptionalHeaders = @(),
-    [string[]]$AllowedContentScopes = @('player', 'reserved')
+    [string[]]$AllowedContentScopes = @('player', 'reserved'),
+    [switch]$Quoted
   )
   $path = Join-Path $root $RelativePath
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -95,7 +96,14 @@ function Get-CsvTable {
 
   $rows = @()
   for ($index = 1; $index -lt $lines.Count; $index++) {
-    $values = @($lines[$index].Split(',') | ForEach-Object { $_.Trim() })
+    if ($Quoted) {
+      # EnvironmentProfiles version 2 stores JSON objects in quoted CSV cells. The
+      # built-in reader handles the doubled inner quotes that a plain split destroys.
+      $record = @(@($lines[0], $lines[$index]) | ConvertFrom-Csv)[0]
+      $values = @($headers | ForEach-Object { [string]$record.$_ })
+    } else {
+      $values = @($lines[$index].Split(',') | ForEach-Object { $_.Trim() })
+    }
     $rowKey = if ($values.Count -gt 0 -and $values[0]) { $values[0] } else { "line-$($index + 1)" }
     if ($values.Count -ne $headers.Count) {
       Add-Finding 'CSV_ROW_COLUMN_COUNT' "${RelativePath}:$rowKey" "Expected $($headers.Count) columns but found $($values.Count)."
@@ -782,19 +790,151 @@ function Test-FormalStarterSpellProjection {
     if ($guid.Count -ne 1) { Add-Finding 'STARTER_SPELL_ASSET_META_INVALID' $id 'Spell asset must have exactly one stable GUID.' }
   }
 }
+function Test-DemoEnvironmentProfile {
+  param([object]$Row)
+  if ($Row.mapSchemaVersion -cne '2') {
+    Add-Finding 'ENVIRONMENT_PROFILE_SCHEMA_VERSION_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map must declare mapSchemaVersion 2.'
+    return
+  }
+  if ($Row.mapVersion -cne 'guanzhong-jindan-v3-d1-supported-map-20261024.4') {
+    Add-Finding 'ENVIRONMENT_PROFILE_MAP_VERSION_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map version must match the D1 frozen map version.'
+  }
+  if ($Row.edgeClearanceLimits -cne 'none') {
+    Add-Finding 'ENVIRONMENT_PROFILE_CLEARANCE_ENVELOPE_INVALID' 'env_guanzhong_jindan_demo' 'Version 2 must leave edgeClearanceLimits as none.'
+  }
+  foreach ($field in @('directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers')) {
+    if ([string]::IsNullOrWhiteSpace([string]$Row.$field)) {
+      Add-Finding 'ENVIRONMENT_PROFILE_V2_FIELD_EMPTY' $field 'Every version-2 field is required.'
+    }
+  }
+
+  $cellKeys = @{}
+  $cellHeights = @{}
+  $cellRecords = ([string]$Row.battlefieldCells).Split('|')
+  foreach ($record in $cellRecords) {
+    $parts = $record.Split('@')
+    if ($parts.Count -ne 7) { Add-Finding 'ENVIRONMENT_PROFILE_CELL_INVALID' $record 'Version 2 cells require seven fields.'; continue }
+    $key = [string]$parts[0]
+    if ($cellKeys.ContainsKey($key)) { Add-Finding 'ENVIRONMENT_PROFILE_CELL_INVALID' $key 'Duplicate version-2 cell.'; continue }
+    $height = 0
+    if (-not [int]::TryParse([string]$parts[3], [ref]$height)) {
+      Add-Finding 'ENVIRONMENT_PROFILE_CELL_INVALID' $key 'heightLevel must be an integer.'; continue
+    }
+    $cellKeys[$key] = $true
+    $cellHeights[$key] = $height
+  }
+  if ($cellRecords.Count -ne 144) {
+    Add-Finding 'ENVIRONMENT_PROFILE_CELL_COUNT_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map must declare 144 support cells.'
+  }
+
+  $overrideRecords = ([string]$Row.directedEdgeOverrides).Split('|')
+  $overrideKeys = @{}
+  foreach ($record in $overrideRecords) {
+    $parts = $record.Split('@')
+    if ($parts.Count -ne 8) { Add-Finding 'ENVIRONMENT_PROFILE_EDGE_INVALID' $record 'Version 2 edge overrides require eight fields.'; continue }
+    $endpoints = ([string]$parts[0]).Split('>')
+    if ($endpoints.Count -ne 2) { Add-Finding 'ENVIRONMENT_PROFILE_EDGE_INVALID' $record 'Edge endpoints must be a directed pair.'; continue }
+    $key = [string]$parts[0]
+    if ($overrideKeys.ContainsKey($key)) { Add-Finding 'ENVIRONMENT_PROFILE_EDGE_INVALID' $key 'Duplicate directed edge override.'; continue }
+    $overrideKeys[$key] = $true
+    if (-not $cellKeys.ContainsKey([string]$endpoints[0]) -or -not $cellKeys.ContainsKey([string]$endpoints[1])) {
+      Add-Finding 'ENVIRONMENT_PROFILE_EDGE_INVALID' $key 'Edge endpoints must exist in the fixed map.'
+    }
+    if ($parts[1] -cin @('slope','stairs') -and $parts[7] -ceq 'none') {
+      Add-Finding 'ENVIRONMENT_PROFILE_EDGE_INVALID' $key 'Slope and stairs require a named connection.'
+    }
+  }
+  if ($overrideRecords.Count -ne 532) {
+    Add-Finding 'ENVIRONMENT_PROFILE_EDGE_COUNT_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map must declare 532 explicit directed edge overrides.'
+  }
+
+  $physical = $null
+  $markers = $null
+  try { $physical = $Row.physicalSurfaceProfiles | ConvertFrom-Json } catch {
+    Add-Finding 'ENVIRONMENT_PROFILE_PHYSICAL_JSON_INVALID' 'env_guanzhong_jindan_demo' 'physicalSurfaceProfiles must be valid JSON.'
+  }
+  try { $markers = $Row.mapMarkers | ConvertFrom-Json } catch {
+    Add-Finding 'ENVIRONMENT_PROFILE_MARKERS_JSON_INVALID' 'env_guanzhong_jindan_demo' 'mapMarkers must be valid JSON.'
+  }
+  if ($null -ne $physical) {
+    $supportIds = @()
+    foreach ($group in @('flatProfiles','rampProfiles','stairConnections')) {
+      if ($null -eq $physical.$group) {
+        Add-Finding 'ENVIRONMENT_PROFILE_PHYSICAL_GROUP_INVALID' $group 'Physical profile group is required.'
+        continue
+      }
+      $supportIds += @($physical.$group | ForEach-Object { [string]$_.id })
+    }
+    foreach ($record in $cellRecords) {
+      $parts = $record.Split('@')
+      if ($parts.Count -eq 7 -and $parts[6] -cnotin $supportIds) {
+        Add-Finding 'ENVIRONMENT_PROFILE_PHYSICAL_REF_INVALID' $parts[0] 'Cell physicalSurfaceId must resolve in the physical profile JSON.'
+      }
+    }
+    if (@($physical.flatProfiles).Count -ne 3 -or @($physical.rampProfiles).Count -ne 3 -or @($physical.stairConnections).Count -ne 2) {
+      Add-Finding 'ENVIRONMENT_PROFILE_PHYSICAL_GROUP_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map must declare 3 flat profiles, 3 ramps and 2 stair connections.'
+    }
+  }
+  if ($null -ne $markers) {
+    $markerIds = @{}
+    foreach ($marker in @($markers)) {
+      if ([string]::IsNullOrWhiteSpace([string]$marker.id) -or $markerIds.ContainsKey([string]$marker.id)) {
+        Add-Finding 'ENVIRONMENT_PROFILE_MARKER_INVALID' ([string]$marker.id) 'Marker ids must be unique and non-empty.'
+      } else { $markerIds[[string]$marker.id] = $true }
+      if (-not $cellKeys.ContainsKey([string]$marker.cell)) {
+        Add-Finding 'ENVIRONMENT_PROFILE_MARKER_INVALID' ([string]$marker.id) 'Marker cell must exist in the fixed map.'
+      }
+    }
+    if (@($markers).Count -ne 11) {
+      Add-Finding 'ENVIRONMENT_PROFILE_MARKER_COUNT_INVALID' 'env_guanzhong_jindan_demo' 'Fixed map must declare 11 markers.'
+    }
+  }
+
+  $assetPath = 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_jindan_demo.asset'
+  Test-FormalProjectionAssetFields 'env_guanzhong_jindan_demo' $assetPath @{ profileId='env_guanzhong_jindan_demo'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=24 }
+  $path = Join-Path $root $assetPath
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
+  $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+  $assetCells = ([regex]::Matches($text, '(?m)^  - q: ')).Count
+  $assetEdges = ([regex]::Matches($text, '(?m)^  - fromQ: ')).Count
+  if ($assetCells -ne 144 -or $assetEdges -ne 760) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_COUNTS_MISMATCH' 'env_guanzhong_jindan_demo' 'Asset must serialize 144 cells and 760 directed edges.'
+  }
+  foreach ($expected in @(
+      @{ Kind = 0; Count = 436 }, @{ Kind = 1; Count = 210 }, @{ Kind = 2; Count = 8 },
+      @{ Kind = 3; Count = 2 }, @{ Kind = 4; Count = 100 }, @{ Kind = 5; Count = 4 })) {
+    $actual = ([regex]::Matches($text, "(?m)^    edgeKind: $($expected.Kind)\s*$")).Count
+    if ($actual -ne $expected.Count) {
+      Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGE_KIND_MISMATCH' "edgeKind=$($expected.Kind)" "Expected $($expected.Count) edges but the asset declares $actual."
+    }
+  }
+  if (([regex]::Matches($text, '(?m)^    movementBurdenUnits: 1\s*$')).Count -ne 218) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGE_BURDEN_MISMATCH' 'env_guanzhong_jindan_demo' 'Slope and stair edges must serialize movementBurdenUnits 1.'
+  }
+  if (([regex]::Matches($text, '(?m)^    cellMovementBurdenUnits: 1\s*$')).Count -ne 8) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELL_BURDEN_MISMATCH' 'env_guanzhong_jindan_demo' 'Shallow water and mud cells must serialize cellMovementBurdenUnits 1.'
+  }
+}
+
 function Test-FormalEnvironmentProjection {
   param([object]$Table)
   if (($Table.Headers -join ',') -cne ($schemas.EnvironmentProfiles -join ',')) {
-    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered nine-column contract.'
+    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered fourteen-column contract.'
   }
   $rows = @($Table.Rows)
-  if ($rows.Count -ne 1 -or $rows[0].profileId -cne 'env_guanzhong_wild') {
-    Add-Finding 'ENVIRONMENT_PROFILE_ROW_SET_INVALID' 'EnvironmentProfiles' 'CSV must contain exactly env_guanzhong_wild.'
+  $wild = @($rows | Where-Object { $_.profileId -ceq 'env_guanzhong_wild' })
+  $demo = @($rows | Where-Object { $_.profileId -ceq 'env_guanzhong_jindan_demo' })
+  if ($rows.Count -ne 2 -or $wild.Count -ne 1 -or $demo.Count -ne 1) {
+    Add-Finding 'ENVIRONMENT_PROFILE_ROW_SET_INVALID' 'EnvironmentProfiles' 'CSV must contain exactly env_guanzhong_wild and env_guanzhong_jindan_demo.'
     return
   }
-  $row = $rows[0]
+  $row = $wild[0]
   if ($row.spiritRecoveryEnvironment -cne 'ordinary' -or $row.queryLimits -cne 'unitsPerRange=2;maxQueryRange=24') {
     Add-Finding 'ENVIRONMENT_PROFILE_PROJECTION_INVALID' 'env_guanzhong_wild' 'Formal Guanzhong must declare ordinary recovery and its approved query limits.'
+  }
+  if ($row.mapSchemaVersion -cne '' -or $row.mapVersion -cne '' -or $row.directedEdgeOverrides -cne '' -or
+      $row.physicalSurfaceProfiles -cne '' -or $row.mapMarkers -cne '') {
+    Add-Finding 'ENVIRONMENT_PROFILE_LEGACY_ENVELOPE_INVALID' 'env_guanzhong_wild' 'Version 1 rows must leave the five appended map fields empty.'
   }
   $clearances = @{}
   $cellKeys = @{}
@@ -819,43 +959,54 @@ function Test-FormalEnvironmentProjection {
   Test-FormalProjectionAssetFields 'env_guanzhong_wild' $assetPath @{ profileId='env_guanzhong_wild'; spiritRecoveryEnvironment=1; unitsPerRange=2; maxQueryRange=24 }
   Test-FormalProjectionSceneReference 'env_guanzhong_wild' $assetPath
   $path = Join-Path $root $assetPath
-  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
-  $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
-  $cells = @([regex]::Matches($text, '(?m)^  - q: (\d+)\r?\n    r: (\d+)\r?\n    blocksGroundMove: ([01])\r?\n    blocksLineOfSight: ([01])\s*$') | ForEach-Object {
-    "$($_.Groups[1].Value):$($_.Groups[2].Value)@$($_.Groups[3].Value)@$($_.Groups[4].Value)"
-  })
-  if ($cells.Count -ne 100 -or ($cells -join '|') -cne [string]$row.battlefieldCells) {
-    Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELLS_MISMATCH' 'env_guanzhong_wild' 'All 100 asset cells must exactly match CSV order and flags.'
+  if (Test-Path -LiteralPath $path -PathType Leaf) {
+    $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+    $cells = @([regex]::Matches($text, '(?m)^  - q: (\d+)\r?\n    r: (\d+)\r?\n    blocksGroundMove: ([01])\r?\n    blocksLineOfSight: ([01])\r?\n    heightLevel: (-?\d+)\r?\n    cellMovementBurdenUnits: (\d+)\r?\n    surfaceKind: ?[^\r\n]*\r?\n    physicalSurfaceId: ?[^\r\n]*\s*$') | ForEach-Object {
+      "$($_.Groups[1].Value):$($_.Groups[2].Value)@$($_.Groups[3].Value)@$($_.Groups[4].Value)"
+    })
+    if ($cells.Count -ne 100 -or ($cells -join '|') -cne [string]$row.battlefieldCells) {
+      Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CELLS_MISMATCH' 'env_guanzhong_wild' 'All 100 asset cells must exactly match CSV order and flags.'
+    }
+    if (([regex]::Matches($text, '(?m)^    heightLevel: 0\s*$')).Count -ne 100 -or
+        ([regex]::Matches($text, '(?m)^    surfaceKind: none\s*$')).Count -ne 100 -or
+        ([regex]::Matches($text, '(?m)^    physicalSurfaceId: legacy_flat\s*$')).Count -ne 100) {
+      Add-Finding 'ENVIRONMENT_PROFILE_ASSET_LEGACY_CELL_DEFAULTS_MISMATCH' 'env_guanzhong_wild' 'Version 1 cells must project height 0, surface none and support legacy_flat.'
+    }
+    foreach ($field in @('surfacePrototypeRefs','elementRelationRefs')) {
+      $block = [regex]::Match($text, "(?m)^  ${field}:\r?\n((?:  - [^\r\n]+\r?\n)+)")
+      $values = @([regex]::Matches($block.Groups[1].Value, '(?m)^  - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
+      if (($values -join '|') -cne [string]$row.$field) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_REFS_MISMATCH' $field 'Asset references must exactly match the CSV.' }
+    }
+    $channels = @('airflow','visibility','temperature','precipitation','suspendedHazard','cloudDischarge')
+    $channelRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    phenomenonTypeRefs:\r?\n((?:    - [^\r\n]+\r?\n)+)') | ForEach-Object {
+      $channelMatch = $_
+      $types = @([regex]::Matches($channelMatch.Groups[2].Value, '(?m)^    - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
+      $channels[[int]$channelMatch.Groups[1].Value] + '=' + ($types -join '+')
+    })
+    $expectedChannels = @(([string]$row.phenomenonChannels).Split(';') | ForEach-Object {
+      $parts = $_.Split('='); $parts[0] + '=' + (@($parts[1].Split('+') | Sort-Object) -join '+')
+    })
+    if ($channelRows.Count -ne 6 -or ($channelRows -join ';') -cne ($expectedChannels -join ';')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CHANNELS_MISMATCH' 'env_guanzhong_wild' 'Asset channels must exactly match CSV types.' }
+    $pairRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    firstTypeRef: (\S+)\r?\n    secondTypeRef: (\S+)\r?\n    resultTypeRef: (\S+)\s*$') | ForEach-Object {
+      "$($channels[[int]$_.Groups[1].Value]):$($_.Groups[2].Value)+$($_.Groups[3].Value)>$($_.Groups[4].Value)"
+    })
+    $expectedPairs = @(([string]$row.phenomenonPairs).Split('|') | ForEach-Object {
+      $parts = $_ -split '[:>]',3; $parts[0] + ':' + (@($parts[1].Split('+') | Sort-Object) -join '+') + '>' + $parts[2]
+    })
+    if ($pairRows.Count -ne 6 -or ($pairRows -join '|') -cne ($expectedPairs -join '|')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_PAIRS_MISMATCH' 'env_guanzhong_wild' 'Asset pair results must exactly match the CSV.' }
+    $edges = [regex]::Matches($text, '(?m)^  - fromQ: (-?\d+)\r?\n    fromR: (-?\d+)\r?\n    toQ: (-?\d+)\r?\n    toR: (-?\d+)\r?\n    metricDistanceUnits: \d+\r?\n    allowsMovement: [01]\r?\n    allowsEffects: [01]\r?\n    clearanceLimit: (\d+)\r?\n    movementBurdenUnits: \d+\r?\n    edgeKind: \d+\r?\n    connectionId: ?[^\r\n]*\s*$')
+    if ($edges.Count -ne 522) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize all 522 directed edges with explicit clearance limits.' }
+    foreach ($edge in $edges) {
+      $key = "$($edge.Groups[1].Value):$($edge.Groups[2].Value)>$($edge.Groups[3].Value):$($edge.Groups[4].Value)"
+      $expectedLimit = if ($clearances.ContainsKey($key)) { $clearances[$key] } else { 0 }
+      if ([int]$edge.Groups[5].Value -ne $expectedLimit) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CLEARANCE_MISMATCH' $key 'Asset edge clearance differs from the CSV declaration.' }
+    }
+    if (([regex]::Matches($text, '(?m)^    edgeKind: 0\s*$')).Count -ne 522 -or
+        ([regex]::Matches($text, '(?m)^    movementBurdenUnits: 0\s*$')).Count -ne 522) {
+      Add-Finding 'ENVIRONMENT_PROFILE_ASSET_LEGACY_EDGE_DEFAULTS_MISMATCH' 'env_guanzhong_wild' 'Version 1 edges must project flat kind and zero edge burden.'
+    }
   }
-  foreach ($field in @('surfacePrototypeRefs','elementRelationRefs')) {
-    $block = [regex]::Match($text, "(?m)^  ${field}:\r?\n((?:  - [^\r\n]+\r?\n)+)")
-    $values = @([regex]::Matches($block.Groups[1].Value, '(?m)^  - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
-    if (($values -join '|') -cne [string]$row.$field) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_REFS_MISMATCH' $field 'Asset references must exactly match the CSV.' }
-  }
-  $channels = @('airflow','visibility','temperature','precipitation','suspendedHazard','cloudDischarge')
-  $channelRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    phenomenonTypeRefs:\r?\n((?:    - [^\r\n]+\r?\n)+)') | ForEach-Object {
-    $channelMatch = $_
-    $types = @([regex]::Matches($channelMatch.Groups[2].Value, '(?m)^    - (\S+)\s*$') | ForEach-Object { $_.Groups[1].Value })
-    $channels[[int]$channelMatch.Groups[1].Value] + '=' + ($types -join '+')
-  })
-  $expectedChannels = @(([string]$row.phenomenonChannels).Split(';') | ForEach-Object {
-    $parts = $_.Split('='); $parts[0] + '=' + (@($parts[1].Split('+') | Sort-Object) -join '+')
-  })
-  if ($channelRows.Count -ne 6 -or ($channelRows -join ';') -cne ($expectedChannels -join ';')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CHANNELS_MISMATCH' 'env_guanzhong_wild' 'Asset channels must exactly match CSV types.' }
-  $pairRows = @([regex]::Matches($text, '(?m)^  - channel: ([0-5])\r?\n    firstTypeRef: (\S+)\r?\n    secondTypeRef: (\S+)\r?\n    resultTypeRef: (\S+)\s*$') | ForEach-Object {
-    "$($channels[[int]$_.Groups[1].Value]):$($_.Groups[2].Value)+$($_.Groups[3].Value)>$($_.Groups[4].Value)"
-  })
-  $expectedPairs = @(([string]$row.phenomenonPairs).Split('|') | ForEach-Object {
-    $parts = $_ -split '[:>]',3; $parts[0] + ':' + (@($parts[1].Split('+') | Sort-Object) -join '+') + '>' + $parts[2]
-  })
-  if ($pairRows.Count -ne 6 -or ($pairRows -join '|') -cne ($expectedPairs -join '|')) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_PAIRS_MISMATCH' 'env_guanzhong_wild' 'Asset pair results must exactly match the CSV.' }
-  $edges = [regex]::Matches($text, '(?m)^  - fromQ: (-?\d+)\r?\n    fromR: (-?\d+)\r?\n    toQ: (-?\d+)\r?\n    toR: (-?\d+)\r?\n    metricDistanceUnits: \d+\r?\n    allowsMovement: [01]\r?\n    allowsEffects: [01]\r?\n    clearanceLimit: (\d+)[ \t]*$')
-  if ($edges.Count -ne 522) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_EDGES_MISMATCH' 'env_guanzhong_wild' 'Formal environment must serialize all 522 directed edges with explicit clearance limits.' }
-  foreach ($edge in $edges) {
-    $key = "$($edge.Groups[1].Value):$($edge.Groups[2].Value)>$($edge.Groups[3].Value):$($edge.Groups[4].Value)"
-    $expectedLimit = if ($clearances.ContainsKey($key)) { $clearances[$key] } else { 0 }
-    if ([int]$edge.Groups[5].Value -ne $expectedLimit) { Add-Finding 'ENVIRONMENT_PROFILE_ASSET_CLEARANCE_MISMATCH' $key 'Asset edge clearance differs from the CSV declaration.' }
-  }
+  Test-DemoEnvironmentProfile $demo[0]
 }
 
 function Test-FormalAdventureProjection {
@@ -1125,7 +1276,7 @@ $schemas = [ordered]@{
   CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns
   CombatActionEconomyRules = [TianZhang.Combat.CombatRuleSet]::EconomyColumns
   AttackProfiles = [TianZhang.Combat.CombatRuleSet]::AttackColumns
-  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment','edgeClearanceLimits')
+  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment','edgeClearanceLimits','mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','stageId','stageCode','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','expansionGrants','expandedMansionCapacity','carryingCapacityProfileId','currentMansionCarryingCapacity','completionMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
@@ -1145,7 +1296,7 @@ $tables = [ordered]@{
   CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
   CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })
   AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest','unarmedFamilyId','unarmedRealmId','unarmedPhysicalAttackCapacity')
-  EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles
+  EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles @('mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers') -Quoted
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites
   FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')

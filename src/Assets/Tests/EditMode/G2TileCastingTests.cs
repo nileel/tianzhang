@@ -165,7 +165,7 @@ namespace TianZhang.Tests.EditMode
             Assert.IsEmpty(result.Damage);
         }
 
-        [TestCase("missing")] [TestCase("height")] [TestCase("sight")] [TestCase("effects")] [TestCase("weighted")]
+        [TestCase("missing")] [TestCase("sight")] [TestCase("effects")] [TestCase("weighted")]
         public void InvalidSpatialCellCannotConsumeResources(string cause)
         {
             var board = new TileQuery();
@@ -173,7 +173,6 @@ namespace TianZhang.Tests.EditMode
             switch (cause)
             {
                 case "missing": cell = new HexCoord(99, 0); break;
-                case "height": board.SetCell(cell, height: 1); break;
                 case "sight": board.SetCell(new HexCoord(1, 0), blocksSight: true); break;
                 case "effects": board.SetEffects(false); break;
                 case "weighted": board.SetMetric(3000); break;

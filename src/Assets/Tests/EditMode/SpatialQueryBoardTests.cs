@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using TianZhang.Spatial;
 using TianZhang.Content;
@@ -95,7 +95,7 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void DifferentHeightFailsClosed()
+        public void HeightNeedsAnExplicitConnectionForMovementButNotForEffects()
         {
             var cells = CreateCells(Origin, East);
             cells[East] = new SpatialCellRules(1, false, false, false, 0);
@@ -107,8 +107,10 @@ namespace TianZhang.Tests.EditMode
                 },
                 new SpatialQueryLimits(2, 16));
 
-            Assert.AreEqual(SpatialQueryReasons.HeightRuleUnconfigured,
-                board.QueryMetricDistance(Origin, East, SpatialQueryKind.Attack).Reason);
+            Assert.AreEqual(SpatialQueryReasons.EdgeHeightMismatch,
+                board.QueryMovementPath(new SpatialPose(Origin), East, 100000, 1000).Reason);
+            Assert.IsTrue(board.QueryMetricDistance(Origin, East, SpatialQueryKind.Attack).IsReachable,
+                "A flat edge mislabelled across heights cannot admit ground movement, but effects still use the explicit edge.");
         }
 
         [Test]
@@ -306,7 +308,7 @@ namespace TianZhang.Tests.EditMode
         [TestCase("reverse_edge")]
         [TestCase("effect_blocker")]
         [TestCase("entity_obstacle")]
-        [TestCase("height")]
+        [TestCase("wall")]
         [TestCase("weighted_range")]
         public void AdjacentPairKeepsBothCellsWhenOneIsRejected(string scenario)
         {
@@ -322,7 +324,7 @@ namespace TianZhang.Tests.EditMode
             if (scenario == "reverse_edge") edges[new SpatialDirectedEdge(East, Origin)] = new SpatialEdgeRules(2, true, true);
             if (scenario == "effect_blocker") edges[new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, true, true, 1);
             if (scenario == "entity_obstacle") cells[East] = new SpatialCellRules(0, false, false, true, 0);
-            if (scenario == "height") cells[East] = new SpatialCellRules(1, false, false, false, 0);
+            if (scenario == "wall") edges[new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(2, false, false, edgeKind: SpatialEdgeKind.EntityWall);
             if (scenario == "weighted_range") edges[new SpatialDirectedEdge(Origin, East)] = new SpatialEdgeRules(4, true, true);
             var board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(2, 16));
             var result = board.QueryTwoCellArea(Origin, SpatialTwoCellShape.AdjacentPair, 0);

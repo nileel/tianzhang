@@ -54,7 +54,7 @@ namespace TianZhang.Tests
         [TestCase("id,unknown\na,b\n", "csv_columns")]
         [TestCase("id,name\na\n", "csv_width")]
         [TestCase("id,name\na,\"bad\n", "csv_quotes")]
-        [TestCase("id,name\na,\"escaped\"\"quote\"\n", "csv_quotes")]
+        [TestCase("id,name\na,\"escaped\"quote\"\n", "csv_quotes")]
         [TestCase("id,name\na,x\"y\"\n", "csv_quotes")]
         public void UnknownDuplicateShortAndMalformedRowsFailStructure(string text, string errorCode)
         {
@@ -63,6 +63,21 @@ namespace TianZhang.Tests
             Assert.That(document.ValidateStructure(definition).Any(issue => issue.ErrorCode == errorCode));
             Assert.Throws<InvalidDataException>(() => document.GetRows(definition));
             CollectionAssert.AreEqual(Bytes(text), document.EncodeEdits(null));
+        }
+
+        [Test]
+        public void QuotedFieldWithEscapedQuotesDecodesWithoutRewritingBytes()
+        {
+            const string text = "id,name\n1,\"say \"\"hi\"\", ok\"\n";
+            var bytes = Bytes(text);
+            var definition = new ConfigTableDefinition { TableId = "sample", ExactColumns = new[] { "id", "name" } };
+            var document = CsvConfigDocument.Load(bytes);
+            Assert.IsEmpty(document.ValidateStructure(definition));
+            var row = document.GetRows(definition).Single();
+            Assert.AreEqual("1", row["id"]);
+            Assert.AreEqual("say \"hi\", ok", row["name"]);
+            CollectionAssert.AreEqual(new[] { "1", "say \"hi\", ok" }, CsvTableReader.ParseRow("1,\"say \"\"hi\"\", ok\""));
+            CollectionAssert.AreEqual(bytes, document.EncodeEdits(null));
         }
 
         [TestCase("双\"引号")]

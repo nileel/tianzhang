@@ -71,7 +71,7 @@ namespace TianZhang.Tests.EditMode
                 fixture.Board().QueryMovementPath(Pair(), Origin.Step(0), 100000, 1000, new[] { Origin }).Reason,
                 "The spatial service must not erase an occupant supplied at its own anchor.");
             fixture.Cells[rear] = new SpatialCellRules(1, false, false, false, 0);
-            Assert.AreEqual(SpatialQueryReasons.HeightRuleUnconfigured, fixture.Board().InspectPlacement(Pair()));
+            Assert.AreEqual(SpatialQueryReasons.PairCrossHeightConnectionInvalid, fixture.Board().InspectPlacement(Pair()));
             fixture.Cells[rear] = new SpatialCellRules(0, false, false, true, 0);
             Assert.AreEqual(SpatialQueryReasons.EntityObstacle, fixture.Board().InspectPlacement(Pair()));
             fixture.Cells.Remove(rear);

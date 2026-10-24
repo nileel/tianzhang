@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TianZhang.Spatial
@@ -98,6 +98,19 @@ namespace TianZhang.Spatial
         Sight,
     }
 
+    /// <summary>Explicit directed-edge type; it is data, never inferred from Transform height.</summary>
+    public enum SpatialEdgeKind
+    {
+        Flat,
+        Slope,
+        Stairs,
+        OneWayDrop,
+        OpenCliff,
+        EntityWall,
+        Climb,
+        Bridge,
+    }
+
     public static class SpatialQueryReasons
     {
         public const string Ok = "";
@@ -121,6 +134,13 @@ namespace TianZhang.Spatial
         public const string ActionPointCostOverflow = "action_point_cost_overflow";
         public const string ClearanceInsufficient = "clearance_insufficient";
         public const string InvalidPose = "spatial_pose_invalid";
+        public const string EdgeHeightMismatch = "edge_height_mismatch";
+        public const string OpenCliffBlocksGround = "open_cliff_blocks_ground";
+        public const string EntityWallBlocksMovement = "entity_wall_blocks_movement";
+        public const string EntityWallBlocksEffects = "entity_wall_blocks_effects";
+        public const string OneWayDropDirectionInvalid = "one_way_drop_direction_invalid";
+        public const string EdgeKindNotImplemented = "edge_kind_not_implemented";
+        public const string PairCrossHeightConnectionInvalid = "pair_cross_height_connection_invalid";
     }
 
     public readonly struct SpatialCellRules
@@ -155,17 +175,25 @@ namespace TianZhang.Spatial
             bool allowsMovement,
             bool allowsEffects,
             ulong effectBlockerMask = 0,
-            int clearanceLimit = 0)
+            int clearanceLimit = 0,
+            SpatialEdgeKind edgeKind = SpatialEdgeKind.Flat,
+            int movementBurdenUnits = 0,
+            string connectionId = null)
         {
             if (metricDistanceUnits < 1)
                 throw new ArgumentOutOfRangeException(nameof(metricDistanceUnits));
             if (clearanceLimit < 0)
                 throw new ArgumentOutOfRangeException(nameof(clearanceLimit));
+            if (movementBurdenUnits < 0)
+                throw new ArgumentOutOfRangeException(nameof(movementBurdenUnits));
             MetricDistanceUnits = metricDistanceUnits;
             AllowsMovement = allowsMovement;
             AllowsEffects = allowsEffects;
             EffectBlockerMask = effectBlockerMask;
             ClearanceLimit = clearanceLimit;
+            EdgeKind = edgeKind;
+            MovementBurdenUnits = movementBurdenUnits;
+            ConnectionId = connectionId;
         }
 
         public int MetricDistanceUnits { get; }
@@ -173,6 +201,10 @@ namespace TianZhang.Spatial
         public bool AllowsEffects { get; }
         public ulong EffectBlockerMask { get; }
         public int ClearanceLimit { get; }
+        public SpatialEdgeKind EdgeKind { get; }
+        /// <summary>Movement-only extra burden; never part of attack metric distance.</summary>
+        public int MovementBurdenUnits { get; }
+        public string ConnectionId { get; }
     }
 
     public readonly struct SpatialQueryLimits
@@ -193,16 +225,19 @@ namespace TianZhang.Spatial
 
     public readonly struct SpatialEdgeInspection
     {
-        public SpatialEdgeInspection(bool isLegal, int metricDistanceUnits, string reason)
+        public SpatialEdgeInspection(bool isLegal, int metricDistanceUnits, string reason,
+            int movementBurdenUnits = 0)
         {
             IsLegal = isLegal;
             MetricDistanceUnits = metricDistanceUnits;
             Reason = reason ?? SpatialQueryReasons.Ok;
+            MovementBurdenUnits = movementBurdenUnits;
         }
 
         public bool IsLegal { get; }
         public int MetricDistanceUnits { get; }
         public string Reason { get; }
+        public int MovementBurdenUnits { get; }
     }
 
     public readonly struct SpatialMetricDistanceResult

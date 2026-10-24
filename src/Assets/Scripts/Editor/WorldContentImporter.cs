@@ -40,7 +40,16 @@ namespace TianZhang.Editor
             "elementRelationRefs",
             "spiritRecoveryEnvironment",
             "edgeClearanceLimits",
+            "mapSchemaVersion",
+            "mapVersion",
+            "directedEdgeOverrides",
+            "physicalSurfaceProfiles",
+            "mapMarkers",
         };
+
+        private const int EnvironmentMapSchemaVersion2 = 2;
+        private const string EnvironmentLegacySurfaceKind = "none";
+        private const string EnvironmentLegacySurfaceId = "legacy_flat";
 
         private static readonly string[] CharterRuleDefinitionColumns =
         {
@@ -168,12 +177,55 @@ namespace TianZhang.Editor
                 sourceName,
                 out int unitsPerRange,
                 out int maxQueryRange);
-            var battlefieldCells = ParseBattlefieldCells(
-                CsvTableReader.GetRequiredValue(headers, cols, "battlefieldCells", sourceName),
-                sourceName);
-            var directedEdges = BuildDirectedEdges(battlefieldCells, unitsPerRange);
-            ApplyEdgeClearanceLimits(
-                CsvTableReader.GetRequiredValue(headers, cols, "edgeClearanceLimits", sourceName), directedEdges, sourceName);
+
+            string mapSchemaVersion = GetOptionalValue(headers, cols, "mapSchemaVersion");
+            string mapVersion = GetOptionalValue(headers, cols, "mapVersion");
+            string directedEdgeOverrides = GetOptionalValue(headers, cols, "directedEdgeOverrides");
+            string physicalSurfaceProfiles = GetOptionalValue(headers, cols, "physicalSurfaceProfiles");
+            string mapMarkers = GetOptionalValue(headers, cols, "mapMarkers");
+            string edgeClearanceLimits = CsvTableReader.GetRequiredValue(headers, cols, "edgeClearanceLimits", sourceName);
+
+            EnvironmentBattlefieldCell[] battlefieldCells;
+            EnvironmentDirectedEdge[] directedEdges;
+            bool version2 = mapSchemaVersion.Length > 0;
+            if (version2)
+            {
+                if (mapSchemaVersion != EnvironmentMapSchemaVersion2.ToString(CultureInfo.InvariantCulture))
+                    throw new InvalidDataException(
+                        $"{sourceName} has unsupported mapSchemaVersion '{mapSchemaVersion}'; blank is version 1 and 2 is the only explicit version.");
+                if (edgeClearanceLimits != "none")
+                    throw new InvalidDataException(
+                        $"{sourceName} version 2 requires edgeClearanceLimits 'none' because directedEdgeOverrides owns clearance.");
+                if (mapVersion.Length == 0 || directedEdgeOverrides.Length == 0 ||
+                    physicalSurfaceProfiles.Length == 0 || mapMarkers.Length == 0)
+                    throw new InvalidDataException(
+                        $"{sourceName} version 2 requires mapVersion, directedEdgeOverrides, physicalSurfaceProfiles and mapMarkers.");
+                ValidateReference(mapVersion, sourceName, "mapVersion");
+
+                battlefieldCells = ParseBattlefieldCellsV2(
+                    CsvTableReader.GetRequiredValue(headers, cols, "battlefieldCells", sourceName),
+                    sourceName);
+                var cellIndex = battlefieldCells.ToDictionary(cell => $"{cell.q}:{cell.r}", StringComparer.Ordinal);
+                var supports = EnvironmentMapJsonValidator.ValidatePhysicalSurfaceProfiles(
+                    physicalSurfaceProfiles, cellIndex, sourceName);
+                EnvironmentMapJsonValidator.ValidateMapMarkers(mapMarkers, cellIndex, sourceName);
+                directedEdges = BuildDirectedEdgesV2(battlefieldCells, unitsPerRange);
+                ApplyDirectedEdgeOverrides(
+                    directedEdgeOverrides, battlefieldCells, directedEdges, supports, sourceName);
+            }
+            else
+            {
+                if (mapVersion.Length > 0 || directedEdgeOverrides.Length > 0 ||
+                    physicalSurfaceProfiles.Length > 0 || mapMarkers.Length > 0)
+                    throw new InvalidDataException(
+                        $"{sourceName} version 1 rows must leave the five appended map fields empty.");
+                battlefieldCells = ParseBattlefieldCells(
+                    CsvTableReader.GetRequiredValue(headers, cols, "battlefieldCells", sourceName),
+                    sourceName);
+                directedEdges = BuildDirectedEdges(battlefieldCells, unitsPerRange);
+                ApplyEdgeClearanceLimits(edgeClearanceLimits, directedEdges, sourceName);
+            }
+
             var surfacePrototypeRefs = ParseReferenceList(
                 CsvTableReader.GetRequiredValue(headers, cols, "surfacePrototypeRefs", sourceName),
                 '|',
@@ -209,7 +261,19 @@ namespace TianZhang.Editor
             profile.phenomenonChannels = channels;
             profile.phenomenonPairs = pairs;
             profile.elementRelationRefs = elementRelations;
+            profile.mapSchemaVersion = mapSchemaVersion;
+            profile.mapVersion = mapVersion;
+            profile.directedEdgeOverrides = directedEdgeOverrides;
+            profile.physicalSurfaceProfiles = physicalSurfaceProfiles;
+            profile.mapMarkers = mapMarkers;
             return profile;
+        }
+
+        private static string GetOptionalValue(string[] headers, string[] cols, string columnName)
+        {
+            int index = CsvTableReader.FindColumnIndex(headers, columnName);
+            if (index < 0 || cols == null || index >= cols.Length) return "";
+            return (cols[index] ?? "").Trim();
         }
 
         private static void ParseQueryLimits(
@@ -261,6 +325,10 @@ namespace TianZhang.Editor
                     r = r,
                     blocksGroundMove = ParseBinaryFlag(ruleParts[1], sourceName, $"battlefieldCells '{cellKey}' blocksGroundMove"),
                     blocksLineOfSight = ParseBinaryFlag(ruleParts[2], sourceName, $"battlefieldCells '{cellKey}' blocksLineOfSight"),
+                    heightLevel = 0,
+                    cellMovementBurdenUnits = 0,
+                    surfaceKind = EnvironmentLegacySurfaceKind,
+                    physicalSurfaceId = EnvironmentLegacySurfaceId,
                 });
                 previousQ = q;
                 previousR = r;
@@ -322,6 +390,239 @@ namespace TianZhang.Editor
                     throw new InvalidDataException($"{sourceName} edgeClearanceLimits must reference unique generated directed edges: '{key}'.");
                 edges[index].clearanceLimit = ParsePositiveInteger(parts[1], sourceName, "edgeClearanceLimits");
             }
+        }
+
+        private static EnvironmentBattlefieldCell[] ParseBattlefieldCellsV2(string raw, string sourceName)
+        {
+            var cells = new List<EnvironmentBattlefieldCell>();
+            var seenCells = new HashSet<string>(StringComparer.Ordinal);
+            int previousQ = int.MinValue;
+            int previousR = int.MinValue;
+            foreach (string entry in SplitRequired(raw, '|', sourceName, "battlefieldCells"))
+            {
+                string[] parts = entry.Split(new[] { '@' }, StringSplitOptions.None);
+                if (parts.Length != 7)
+                    throw new InvalidDataException($"{sourceName} has invalid version-2 battlefield cell '{entry}'.");
+
+                ParseHexCoordinate(parts[0], sourceName, out int q, out int r);
+                string cellKey = $"{q}:{r}";
+                if (!seenCells.Add(cellKey))
+                    throw new InvalidDataException($"{sourceName} has duplicate battlefield cell '{cellKey}'.");
+                if (q < previousQ || (q == previousQ && r <= previousR))
+                    throw new InvalidDataException($"{sourceName} battlefieldCells must be ordered by q and r.");
+
+                int heightLevel = ParseInteger(parts[3], sourceName, $"battlefieldCells '{cellKey}' heightLevel");
+                int burden = ParseNonNegativeInteger(
+                    parts[4], sourceName, $"battlefieldCells '{cellKey}' cellMovementBurdenUnits");
+                ValidateReference(parts[5], sourceName, "battlefieldCells surfaceKind");
+                ValidateReference(parts[6], sourceName, "battlefieldCells physicalSurfaceId");
+                cells.Add(new EnvironmentBattlefieldCell
+                {
+                    q = q,
+                    r = r,
+                    blocksGroundMove = ParseBinaryFlag(parts[1], sourceName, $"battlefieldCells '{cellKey}' blocksGroundMove"),
+                    blocksLineOfSight = ParseBinaryFlag(parts[2], sourceName, $"battlefieldCells '{cellKey}' blocksLineOfSight"),
+                    heightLevel = heightLevel,
+                    cellMovementBurdenUnits = burden,
+                    surfaceKind = parts[5],
+                    physicalSurfaceId = parts[6],
+                });
+                previousQ = q;
+                previousR = r;
+            }
+            return cells.ToArray();
+        }
+
+        private static EnvironmentDirectedEdge[] BuildDirectedEdgesV2(
+            EnvironmentBattlefieldCell[] cells,
+            int metricDistanceUnits)
+        {
+            var knownCells = new Dictionary<string, EnvironmentBattlefieldCell>(StringComparer.Ordinal);
+            foreach (EnvironmentBattlefieldCell cell in cells)
+                knownCells.Add(cell.q + ":" + cell.r, cell);
+
+            int[,] directions = { { 1, 0 }, { 1, -1 }, { 0, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 } };
+            var edges = new List<EnvironmentDirectedEdge>();
+            foreach (EnvironmentBattlefieldCell cell in cells)
+            for (int direction = 0; direction < directions.GetLength(0); direction++)
+            {
+                int toQ = cell.q + directions[direction, 0];
+                int toR = cell.r + directions[direction, 1];
+                if (!knownCells.TryGetValue(toQ + ":" + toR, out var target))
+                    continue;
+                bool sameHeight = cell.heightLevel == target.heightLevel;
+                edges.Add(new EnvironmentDirectedEdge
+                {
+                    fromQ = cell.q,
+                    fromR = cell.r,
+                    toQ = toQ,
+                    toR = toR,
+                    metricDistanceUnits = metricDistanceUnits,
+                    allowsMovement = sameHeight,
+                    allowsEffects = true,
+                    edgeKind = sameHeight ? EnvironmentEdgeKind.Flat : EnvironmentEdgeKind.OpenCliff,
+                    movementBurdenUnits = 0,
+                    clearanceLimit = 0,
+                    connectionId = null,
+                });
+            }
+            return edges.ToArray();
+        }
+
+        private static void ApplyDirectedEdgeOverrides(
+            string raw,
+            EnvironmentBattlefieldCell[] cells,
+            EnvironmentDirectedEdge[] edges,
+            EnvironmentMapJsonValidator.SupportIndex supports,
+            string sourceName)
+        {
+            var cellIndex = cells.ToDictionary(cell => cell.q + ":" + cell.r, StringComparer.Ordinal);
+            var indices = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (var i = 0; i < edges.Length; i++)
+            {
+                EnvironmentDirectedEdge edge = edges[i];
+                indices.Add($"{edge.fromQ}:{edge.fromR}>{edge.toQ}:{edge.toR}", i);
+            }
+
+            var assigned = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string entry in SplitRequired(raw, '|', sourceName, "directedEdgeOverrides"))
+            {
+                string[] parts = entry.Split(new[] { '@' }, StringSplitOptions.None);
+                if (parts.Length != 8)
+                    throw new InvalidDataException($"{sourceName} has invalid directedEdgeOverrides entry '{entry}'.");
+                string[] endpoints = parts[0].Split('>');
+                if (endpoints.Length != 2)
+                    throw new InvalidDataException($"{sourceName} has invalid directedEdgeOverrides entry '{entry}'.");
+                ParseHexCoordinate(endpoints[0], sourceName + " directedEdgeOverrides", out int fromQ, out int fromR);
+                ParseHexCoordinate(endpoints[1], sourceName + " directedEdgeOverrides", out int toQ, out int toR);
+                string key = $"{fromQ}:{fromR}>{toQ}:{toR}";
+                if (!indices.TryGetValue(key, out int index) || !assigned.Add(key))
+                    throw new InvalidDataException(
+                        $"{sourceName} directedEdgeOverrides must reference unique generated directed edges: '{key}'.");
+
+                EnvironmentEdgeKind edgeKind = ParseEnvironmentEdgeKind(parts[1], sourceName);
+                string connectionId = parts[7] == "none" ? null : parts[7];
+                if ((edgeKind == EnvironmentEdgeKind.Slope || edgeKind == EnvironmentEdgeKind.Stairs) &&
+                    string.IsNullOrWhiteSpace(connectionId))
+                    throw new InvalidDataException(
+                        $"{sourceName} {parts[1]} edge '{key}' requires a named connectionId.");
+                if (!string.IsNullOrWhiteSpace(connectionId))
+                    ValidateReference(connectionId, sourceName, "directedEdgeOverrides connectionId");
+
+                EnvironmentDirectedEdge edge = edges[index];
+                edge.metricDistanceUnits = ParsePositiveInteger(parts[2], sourceName, "directedEdgeOverrides");
+                edge.movementBurdenUnits = ParseNonNegativeInteger(parts[3], sourceName, "directedEdgeOverrides");
+                edge.allowsMovement = ParseBinaryFlag(parts[4], sourceName, "directedEdgeOverrides allowsMovement");
+                edge.allowsEffects = ParseBinaryFlag(parts[5], sourceName, "directedEdgeOverrides allowsEffects");
+                edge.clearanceLimit = ParseNonNegativeInteger(parts[6], sourceName, "directedEdgeOverrides");
+                edge.edgeKind = edgeKind;
+                edge.connectionId = connectionId;
+                edges[index] = edge;
+            }
+
+            ValidateDirectedEdgeRules(edges, cellIndex, supports, sourceName);
+        }
+
+        private static void ValidateDirectedEdgeRules(
+            EnvironmentDirectedEdge[] edges,
+            IReadOnlyDictionary<string, EnvironmentBattlefieldCell> cells,
+            EnvironmentMapJsonValidator.SupportIndex supports,
+            string sourceName)
+        {
+            var byKey = edges.ToDictionary(
+                edge => $"{edge.fromQ}:{edge.fromR}>{edge.toQ}:{edge.toR}",
+                StringComparer.Ordinal);
+            foreach (EnvironmentDirectedEdge edge in edges)
+            {
+                int fromHeight = cells[$"{edge.fromQ}:{edge.fromR}"].heightLevel;
+                int toHeight = cells[$"{edge.toQ}:{edge.toR}"].heightLevel;
+                int delta = toHeight - fromHeight;
+                string key = $"{edge.fromQ}:{edge.fromR}>{edge.toQ}:{edge.toR}";
+                switch (edge.edgeKind)
+                {
+                    case EnvironmentEdgeKind.Flat:
+                        if (delta != 0)
+                            throw new InvalidDataException(
+                                $"{sourceName} flat edge '{key}' connects height levels {fromHeight} and {toHeight}.");
+                        break;
+                    case EnvironmentEdgeKind.Slope:
+                    case EnvironmentEdgeKind.Stairs:
+                        if (Math.Abs(delta) > 1)
+                            throw new InvalidDataException(
+                                $"{sourceName} {edge.edgeKind} edge '{key}' crosses more than one height level.");
+                        if (!edge.allowsMovement) break;
+                        string reverseKey = $"{edge.toQ}:{edge.toR}>{edge.fromQ}:{edge.fromR}";
+                        if (!byKey.TryGetValue(reverseKey, out var reverse) ||
+                            reverse.edgeKind != edge.edgeKind ||
+                            !string.Equals(reverse.connectionId, edge.connectionId, StringComparison.Ordinal) ||
+                            !reverse.allowsMovement)
+                            throw new InvalidDataException(
+                                $"{sourceName} {edge.edgeKind} connection '{edge.connectionId}' must allow the same kind and connection in both directions: '{key}'.");
+                        if (!supports.Kinds.TryGetValue(edge.connectionId, out var supportKind) ||
+                            supportKind != edge.edgeKind)
+                            throw new InvalidDataException(
+                                $"{sourceName} {edge.edgeKind} edge '{key}' references unknown support '{edge.connectionId}'.");
+                        break;
+                    case EnvironmentEdgeKind.OneWayDrop:
+                        if (edge.allowsMovement)
+                        {
+                            if (delta >= 0)
+                                throw new InvalidDataException(
+                                    $"{sourceName} one_way_drop edge '{key}' must descend from a higher cell.");
+                            string climbKey = $"{edge.toQ}:{edge.toR}>{edge.fromQ}:{edge.fromR}";
+                            if (!byKey.TryGetValue(climbKey, out var climb) || climb.allowsMovement)
+                                throw new InvalidDataException(
+                                    $"{sourceName} one_way_drop edge '{key}' cannot be traversed in both directions.");
+                        }
+                        break;
+                    case EnvironmentEdgeKind.OpenCliff:
+                        if (edge.allowsMovement)
+                            throw new InvalidDataException(
+                                $"{sourceName} open_cliff edge '{key}' cannot allow ordinary ground movement.");
+                        break;
+                    case EnvironmentEdgeKind.EntityWall:
+                        if (edge.allowsMovement || edge.allowsEffects)
+                            throw new InvalidDataException(
+                                $"{sourceName} entity_wall edge '{key}' must block both ground movement and effects.");
+                        break;
+                    case EnvironmentEdgeKind.Climb:
+                    case EnvironmentEdgeKind.Bridge:
+                        break;
+                    default:
+                        throw new InvalidDataException($"{sourceName} has unknown edge kind for '{key}'.");
+                }
+            }
+        }
+
+        private static EnvironmentEdgeKind ParseEnvironmentEdgeKind(string raw, string sourceName)
+        {
+            return raw switch
+            {
+                "flat" => EnvironmentEdgeKind.Flat,
+                "slope" => EnvironmentEdgeKind.Slope,
+                "stairs" => EnvironmentEdgeKind.Stairs,
+                "one_way_drop" => EnvironmentEdgeKind.OneWayDrop,
+                "open_cliff" => EnvironmentEdgeKind.OpenCliff,
+                "entity_wall" => EnvironmentEdgeKind.EntityWall,
+                "climb" => EnvironmentEdgeKind.Climb,
+                "bridge" => EnvironmentEdgeKind.Bridge,
+                _ => throw new InvalidDataException($"{sourceName} has unknown edge kind '{raw}'."),
+            };
+        }
+
+        private static int ParseInteger(string value, string sourceName, string fieldName)
+        {
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
+                throw new InvalidDataException($"{sourceName} {fieldName} '{value}' is not an integer.");
+            return result;
+        }
+
+        private static int ParseNonNegativeInteger(string value, string sourceName, string fieldName)
+        {
+            int result = ParseInteger(value, sourceName, fieldName);
+            if (result < 0)
+                throw new InvalidDataException($"{sourceName} {fieldName} must not be negative.");
+            return result;
         }
 
         private static bool ParseBinaryFlag(string raw, string sourceName, string fieldName)

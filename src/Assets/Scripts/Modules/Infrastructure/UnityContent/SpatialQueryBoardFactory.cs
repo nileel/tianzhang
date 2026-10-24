@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using TianZhang.Content;
 using TianZhang.Spatial;
@@ -95,7 +95,7 @@ namespace TianZhang.Infrastructure.UnityContent
                     tile.BlocksGroundMove,
                     tile.BlocksLineOfSight,
                     tile.IsEntityObstacle,
-                    0));
+                    tile.MovementBurdenUnits));
                 if (!tile.IsOccupied)
                     continue;
                 if (unitAnchors.ContainsKey(tile.OccupiedUnitId))
@@ -120,7 +120,10 @@ namespace TianZhang.Infrastructure.UnityContent
                         configured.metricDistanceUnits,
                         configured.allowsMovement,
                         configured.allowsEffects,
-                        clearanceLimit: configured.clearanceLimit);
+                        clearanceLimit: configured.clearanceLimit,
+                        edgeKind: ToSpatialEdgeKind(configured.edgeKind),
+                        movementBurdenUnits: configured.movementBurdenUnits,
+                        connectionId: configured.connectionId);
                 }
                 catch (ArgumentException)
                 {
@@ -141,6 +144,22 @@ namespace TianZhang.Infrastructure.UnityContent
                 unitAnchors);
             reason = SpatialQueryReasons.Ok;
             return true;
+        }
+
+        private static SpatialEdgeKind ToSpatialEdgeKind(EnvironmentEdgeKind kind)
+        {
+            return kind switch
+            {
+                EnvironmentEdgeKind.Flat => SpatialEdgeKind.Flat,
+                EnvironmentEdgeKind.Slope => SpatialEdgeKind.Slope,
+                EnvironmentEdgeKind.Stairs => SpatialEdgeKind.Stairs,
+                EnvironmentEdgeKind.OneWayDrop => SpatialEdgeKind.OneWayDrop,
+                EnvironmentEdgeKind.OpenCliff => SpatialEdgeKind.OpenCliff,
+                EnvironmentEdgeKind.EntityWall => SpatialEdgeKind.EntityWall,
+                EnvironmentEdgeKind.Climb => SpatialEdgeKind.Climb,
+                EnvironmentEdgeKind.Bridge => SpatialEdgeKind.Bridge,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+            };
         }
 
         private static bool Fail(string failureReason, out string reason)

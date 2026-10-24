@@ -109,7 +109,13 @@ namespace TianZhang.Tests.PlayMode
                 .Where(edge => (edge.fromQ < 2) != (edge.toQ < 2))
                 .Select(edge => edge.fromQ + ":" + edge.fromR + ">" + edge.toQ + ":" + edge.toR + "@1"));
             Assert.IsNotEmpty(narrowEdges);
-            row = row.Substring(0, row.LastIndexOf(',') + 1) + narrowEdges;
+            string[] headerCells = header.Split(',');
+            string[] rowCells = row.Split(',');
+            Assert.AreEqual(headerCells.Length, rowCells.Length);
+            int clearanceIndex = Array.IndexOf(headerCells, "edgeClearanceLimits");
+            Assert.GreaterOrEqual(clearanceIndex, 0);
+            rowCells[clearanceIndex] = narrowEdges;
+            row = string.Join(",", rowCells);
             Type importer = Type.GetType("TianZhang.Editor.WorldContentImporter, TianZhang.Editor", true);
             var definitions = (EnvironmentProfileDefinition[])importer.GetMethod("ParseEnvironmentProfiles")
                 .Invoke(null, new object[] { new[] { header, row }, "F4-formal-clearance-fixture.csv" });

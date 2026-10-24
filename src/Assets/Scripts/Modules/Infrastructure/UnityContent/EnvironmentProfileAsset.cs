@@ -17,6 +17,11 @@ namespace TianZhang.Infrastructure.UnityContent
         public EnvironmentPhenomenonChannelData[] phenomenonChannels;
         public EnvironmentPhenomenonPairing[] phenomenonPairs;
         public string[] elementRelationRefs;
+        public string mapSchemaVersion;
+        public string mapVersion;
+        public string directedEdgeOverrides;
+        public string physicalSurfaceProfiles;
+        public string mapMarkers;
 
         public bool TryCreateDefinition(out EnvironmentProfileDefinition definition, out string reason)
         {
@@ -32,6 +37,11 @@ namespace TianZhang.Infrastructure.UnityContent
                 phenomenonChannels = phenomenonChannels,
                 phenomenonPairs = phenomenonPairs,
                 elementRelationRefs = elementRelationRefs,
+                mapSchemaVersion = mapSchemaVersion,
+                mapVersion = mapVersion,
+                directedEdgeOverrides = directedEdgeOverrides,
+                physicalSurfaceProfiles = physicalSurfaceProfiles,
+                mapMarkers = mapMarkers,
             };
             return EnvironmentProfileRuntime.TryCreate(definition, out _, out reason);
         }
@@ -48,6 +58,11 @@ namespace TianZhang.Infrastructure.UnityContent
             phenomenonChannels = definition.phenomenonChannels;
             phenomenonPairs = definition.phenomenonPairs;
             elementRelationRefs = definition.elementRelationRefs;
+            mapSchemaVersion = definition.mapSchemaVersion;
+            mapVersion = definition.mapVersion;
+            directedEdgeOverrides = definition.directedEdgeOverrides;
+            physicalSurfaceProfiles = definition.physicalSurfaceProfiles;
+            mapMarkers = definition.mapMarkers;
         }
     }
 }

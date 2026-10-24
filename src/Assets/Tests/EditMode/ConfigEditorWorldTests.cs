@@ -198,7 +198,7 @@ namespace TianZhang.Tests.EditMode
             session.SetValue(id, key, "spiritRecoveryEnvironment", ConfigValue.Scalar("blessed_land"));
             session.SetValue(id, key, "edgeClearanceLimits", ConfigValue.Scalar("0:0>1:0@1|1:0>0:0@2"));
             Assert.IsEmpty(Validate(session, id));
-            var source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(Definition(id)).Single();
+            var source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(Definition(id)).First();
             Assert.IsTrue(source["battlefieldCells"].StartsWith("0:0@0@0|0:1@0@0", StringComparison.Ordinal));
             Assert.IsTrue(source["battlefieldCells"].EndsWith("9:9@0@1", StringComparison.Ordinal));
             Assert.AreEqual("unitsPerRange=3;maxQueryRange=24", source["queryLimits"]);
@@ -210,7 +210,7 @@ namespace TianZhang.Tests.EditMode
             session.SetValue(id, key, "phenomenonChannels/airflow", ConfigValue.List(original.At("phenomenonChannels/airflow").Items.Concat(new[] { ConfigValue.Scalar("breeze") })));
             session.SetValue(id, key, "phenomenonPairs/0/result", ConfigValue.Scalar("breeze"));
             Assert.IsEmpty(Validate(session, id));
-            source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(definition).Single();
+            source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(definition).First();
             var projected = WorldContentImporter.ParseEnvironmentProfiles(new[] { string.Join(",", definition.ExactColumns), string.Join(",", definition.ExactColumns.Select(c => source[c])) }, id).Single();
             Assert.AreEqual(3, projected.unitsPerRange);
             Assert.AreEqual(1, projected.directedEdges.Single(e => e.fromQ == 0 && e.fromR == 0 && e.toQ == 1 && e.toR == 0).clearanceLimit);
@@ -220,7 +220,7 @@ namespace TianZhang.Tests.EditMode
             Assert.Throws<ArgumentException>(() => session.SetValue(id, key, "phenomenonPairs/0/result", ConfigValue.Scalar("wind+gust")));
             Assert.Throws<ArgumentException>(() => session.SetValue(id, key, "queryLimits/maxQueryRange", ConfigValue.Scalar("")));
             session.SetValue(id, key, "surfacePrototypeRefs", ConfigValue.List(original.At("surfacePrototypeRefs").Items.Reverse()));
-            source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(definition).Single();
+            source = CsvConfigDocument.Load(session.EncodeCandidate(id)).GetRows(definition).First();
             Assert.AreEqual("surface_loess|surface_grassland", source["surfacePrototypeRefs"], "没有排序约束的列表保留用户顺序");
             session.SetValue(id, key, "surfacePrototypeRefs", ConfigValue.List(original.At("surfacePrototypeRefs").Items.Take(1)));
             Assert.IsEmpty(Validate(session, id));

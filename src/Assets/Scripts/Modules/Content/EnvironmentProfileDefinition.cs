@@ -27,6 +27,22 @@ namespace TianZhang.Content
         CloudDischarge,
     }
 
+    /// <summary>
+    /// Explicit directed-edge type (战场空间与环境规则 §四.4). The values are serialized
+    /// in the environment asset, so append new kinds instead of reordering existing ones.
+    /// </summary>
+    public enum EnvironmentEdgeKind
+    {
+        Flat = 0,
+        Slope = 1,
+        Stairs = 2,
+        OneWayDrop = 3,
+        OpenCliff = 4,
+        EntityWall = 5,
+        Climb = 6,
+        Bridge = 7,
+    }
+
     [Serializable]
     public struct EnvironmentDirectedEdge
     {
@@ -38,6 +54,11 @@ namespace TianZhang.Content
         public bool allowsMovement;
         public bool allowsEffects;
         public int clearanceLimit;
+        /// <summary>Movement-only extra burden of this directed edge (slope/stair climbing).</summary>
+        public int movementBurdenUnits;
+        public EnvironmentEdgeKind edgeKind;
+        /// <summary>Named ramp/stair/drop/wall connection; null only when the kind allows it.</summary>
+        public string connectionId;
     }
 
     [Serializable]
@@ -47,6 +68,12 @@ namespace TianZhang.Content
         public int r;
         public bool blocksGroundMove;
         public bool blocksLineOfSight;
+        /// <summary>Integer rule height; physical ramp/stair support stays in the profile JSON.</summary>
+        public int heightLevel;
+        /// <summary>Destination cell movement burden (shallow water, mud, deep water).</summary>
+        public int cellMovementBurdenUnits;
+        public string surfaceKind;
+        public string physicalSurfaceId;
     }
 
     [Serializable]
@@ -230,8 +257,24 @@ namespace TianZhang.Content
             }
 
             foreach (EnvironmentDirectedEdge edge in profile.directedEdges)
+            {
                 if (edge.clearanceLimit < 0)
                     return Fail("clearance_limit_invalid", out reason);
+                if (edge.movementBurdenUnits < 0)
+                    return Fail("edge_movement_burden_invalid", out reason);
+                if (!Enum.IsDefined(typeof(EnvironmentEdgeKind), edge.edgeKind))
+                    return Fail("edge_kind_invalid", out reason);
+                if ((edge.edgeKind == EnvironmentEdgeKind.Slope || edge.edgeKind == EnvironmentEdgeKind.Stairs) &&
+                    string.IsNullOrWhiteSpace(edge.connectionId))
+                    return Fail("edge_connection_required", out reason);
+            }
+
+            if (!string.IsNullOrWhiteSpace(profile.mapSchemaVersion) && profile.mapSchemaVersion != "2")
+                return Fail("map_schema_version_invalid", out reason);
+            if (profile.battlefieldCells != null)
+                foreach (EnvironmentBattlefieldCell cell in profile.battlefieldCells)
+                    if (cell.cellMovementBurdenUnits < 0)
+                        return Fail("cell_movement_burden_invalid", out reason);
 
             var edges = new EnvironmentDirectedEdge[profile.directedEdges.Length];
             Array.Copy(profile.directedEdges, edges, edges.Length);
@@ -419,5 +462,14 @@ namespace TianZhang.Content
         public EnvironmentPhenomenonChannelData[] phenomenonChannels;
         public EnvironmentPhenomenonPairing[] phenomenonPairs;
         public string[] elementRelationRefs;
+        /// <summary>Blank means the legacy version-1 flat map contract.</summary>
+        public string mapSchemaVersion;
+        public string mapVersion;
+        /// <summary>Raw version-2 override envelope, retained for asset round-trip.</summary>
+        public string directedEdgeOverrides;
+        /// <summary>Raw version-2 physical support profile JSON, parsed in D3.</summary>
+        public string physicalSurfaceProfiles;
+        /// <summary>Raw version-2 map marker JSON; markers never imply occupancy or blocking.</summary>
+        public string mapMarkers;
     }
 }

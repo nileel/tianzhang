@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace TianZhang.Editor
 {
@@ -15,18 +16,45 @@ namespace TianZhang.Editor
             return File.ReadAllLines(path);
         }
 
+        /// <summary>
+        /// RFC 4180-style row reader: a quoted field may contain commas, and a doubled
+        /// quote inside it is one literal quote. Existing data without quoted commas or
+        /// escaped quotes keeps its previous values; the environment map physical profile
+        /// is the first production cell that needs a quoted JSON object.
+        /// </summary>
         public static string[] ParseRow(string line)
         {
             var values = new List<string>();
-            var current = string.Empty;
+            var current = new StringBuilder();
             var quoted = false;
-            foreach (var character in line ?? string.Empty)
+            var text = line ?? string.Empty;
+            for (var index = 0; index < text.Length; index++)
             {
-                if (character == '"') { quoted = !quoted; continue; }
-                if (character == ',' && !quoted) { values.Add(current); current = string.Empty; continue; }
-                current += character;
+                var character = text[index];
+                if (quoted)
+                {
+                    if (character == '"')
+                    {
+                        if (index + 1 < text.Length && text[index + 1] == '"')
+                        {
+                            current.Append('"');
+                            index++;
+                            continue;
+                        }
+
+                        quoted = false;
+                        continue;
+                    }
+
+                    current.Append(character);
+                    continue;
+                }
+
+                if (character == '"') { quoted = true; continue; }
+                if (character == ',') { values.Add(current.ToString()); current.Clear(); continue; }
+                current.Append(character);
             }
-            values.Add(current);
+            values.Add(current.ToString());
             return values.ToArray();
         }
 

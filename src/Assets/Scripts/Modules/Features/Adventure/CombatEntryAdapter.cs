@@ -71,11 +71,13 @@ namespace TianZhang.Features.Adventure
                 grid.SetTile(new TacticalTileData(new HexCoord(cell.q, cell.r))
                 {
                     TerrainType = cell.blocksGroundMove ? TacticalTerrainType.Obstacle : TacticalTerrainType.Plain,
+                    HeightLevel = cell.heightLevel,
                     BlocksGroundMove = cell.blocksGroundMove,
                     BlocksFlyingMove = false,
                     BlocksLineOfSight = cell.blocksLineOfSight,
                     BlocksLanding = cell.blocksGroundMove,
                     IsEntityObstacle = false,
+                    MovementBurdenUnits = cell.cellMovementBurdenUnits,
                 });
             }
             if (!SpatialQueryBoardFactory.TryCreate(grid, environmentProfile, out SpatialQuerySnapshot spatial, out reason))

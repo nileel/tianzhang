@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TianZhang.Spatial
@@ -45,8 +45,6 @@ namespace TianZhang.Spatial
                 throw new ArgumentException("Spatial queries can inspect only adjacent hex edges.", nameof(to));
             if (!cells.TryGetValue(from, out var fromRules) || !cells.TryGetValue(to, out var toRules))
                 return new SpatialEdgeInspection(false, 0, SpatialQueryReasons.MissingCell);
-            if (fromRules.HeightLevel != toRules.HeightLevel)
-                return new SpatialEdgeInspection(false, 0, SpatialQueryReasons.HeightRuleUnconfigured);
 
             var key = new SpatialDirectedEdge(from, to);
             if (!edges.TryGetValue(key, out var edgeRules))
@@ -59,19 +57,59 @@ namespace TianZhang.Spatial
             }
 
             bool movement = kind == SpatialQueryKind.Movement || kind == SpatialQueryKind.ForcedMovement;
-            if (movement && !edgeRules.AllowsMovement)
-                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.DirectedEdgeBlocksMovement);
-            if (movement && edgeRules.ClearanceLimit > 0 && bodyScaleRank > edgeRules.ClearanceLimit)
-                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.ClearanceInsufficient);
-            if (!movement && (!edgeRules.AllowsEffects || (edgeRules.EffectBlockerMask & activeEffectBlockers) != 0))
-                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.DirectedEdgeBlocksEffects);
+            if (movement)
+            {
+                // Height difference itself is not a rejection: the explicit edge type decides
+                // whether a connection exists. The kind checks keep a mislabelled flat edge from
+                // silently bridging a height step.
+                switch (edgeRules.EdgeKind)
+                {
+                    case SpatialEdgeKind.OpenCliff:
+                        return Reject(edgeRules, SpatialQueryReasons.OpenCliffBlocksGround);
+                    case SpatialEdgeKind.EntityWall:
+                        return Reject(edgeRules, SpatialQueryReasons.EntityWallBlocksMovement);
+                    case SpatialEdgeKind.OneWayDrop:
+                        if (edgeRules.AllowsMovement && toRules.HeightLevel >= fromRules.HeightLevel)
+                            return Reject(edgeRules, SpatialQueryReasons.OneWayDropDirectionInvalid);
+                        break;
+                    case SpatialEdgeKind.Flat:
+                        if (fromRules.HeightLevel != toRules.HeightLevel)
+                            return Reject(edgeRules, SpatialQueryReasons.EdgeHeightMismatch);
+                        break;
+                    case SpatialEdgeKind.Slope:
+                    case SpatialEdgeKind.Stairs:
+                        if (Math.Abs((long)toRules.HeightLevel - fromRules.HeightLevel) > 1)
+                            return Reject(edgeRules, SpatialQueryReasons.EdgeHeightMismatch);
+                        break;
+                    case SpatialEdgeKind.Climb:
+                    case SpatialEdgeKind.Bridge:
+                        return Reject(edgeRules, SpatialQueryReasons.EdgeKindNotImplemented);
+                }
+                if (!edgeRules.AllowsMovement)
+                    return Reject(edgeRules, SpatialQueryReasons.DirectedEdgeBlocksMovement);
+                if (edgeRules.ClearanceLimit > 0 && bodyScaleRank > edgeRules.ClearanceLimit)
+                    return Reject(edgeRules, SpatialQueryReasons.ClearanceInsufficient);
+            }
+            else
+            {
+                // Effects use the same explicit edge. A wall blocks ordinary action paths;
+                // an open cliff or one-way drop keeps the effect path.
+                if (edgeRules.EdgeKind == SpatialEdgeKind.EntityWall)
+                    return Reject(edgeRules, SpatialQueryReasons.EntityWallBlocksEffects);
+                if (!edgeRules.AllowsEffects || (edgeRules.EffectBlockerMask & activeEffectBlockers) != 0)
+                    return Reject(edgeRules, SpatialQueryReasons.DirectedEdgeBlocksEffects);
+            }
             if (toRules.IsEntityObstacle)
-                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.EntityObstacle);
+                return Reject(edgeRules, SpatialQueryReasons.EntityObstacle);
             if (movement && toRules.BlocksMovement)
-                return new SpatialEdgeInspection(false, edgeRules.MetricDistanceUnits, SpatialQueryReasons.MovementBlocked);
+                return Reject(edgeRules, SpatialQueryReasons.MovementBlocked);
 
-            return new SpatialEdgeInspection(true, edgeRules.MetricDistanceUnits, SpatialQueryReasons.Ok);
+            return new SpatialEdgeInspection(true, edgeRules.MetricDistanceUnits, SpatialQueryReasons.Ok,
+                edgeRules.MovementBurdenUnits);
         }
+
+        private static SpatialEdgeInspection Reject(SpatialEdgeRules rules, string reason) =>
+            new SpatialEdgeInspection(false, rules.MetricDistanceUnits, reason, rules.MovementBurdenUnits);
 
         /// <summary>Occupancy belongs to the caller; no cell is silently removed from occupied.</summary>
         public string InspectPlacement(SpatialPose pose, IReadOnlyCollection<HexCoord> occupied = null)
@@ -86,13 +124,31 @@ namespace TianZhang.Spatial
             }
             if (pose.Footprint == SpatialFootprintKind.Single) return SpatialQueryReasons.Ok;
             HexCoord rear = pose.Anchor.Step((pose.Facing + 3) % 6);
-            if (cells[pose.Anchor].HeightLevel != cells[rear].HeightLevel)
-                return SpatialQueryReasons.HeightRuleUnconfigured;
             if (!edges.TryGetValue(new SpatialDirectedEdge(pose.Anchor, rear), out var forward) ||
                 !edges.TryGetValue(new SpatialDirectedEdge(rear, pose.Anchor), out var reverse))
                 return SpatialQueryReasons.MissingDirectedEdge;
-            if (!forward.AllowsMovement && !reverse.AllowsMovement)
-                return SpatialQueryReasons.DirectedEdgeBlocksMovement;
+            bool sameHeight = cells[pose.Anchor].HeightLevel == cells[rear].HeightLevel;
+            if (sameHeight)
+            {
+                if (!forward.AllowsMovement && !reverse.AllowsMovement)
+                    return SpatialQueryReasons.DirectedEdgeBlocksMovement;
+            }
+            else
+            {
+                // 战场空间与环境规则 §八.4: a cross-height body must stand on one explicit
+                // ramp/stair connection with the same named connection and edge kind in both
+                // directions, both movement-enabled. This spatial owner currently serves GROUND,
+                // altitudeBand=0 units; other movement modes are added with their own prototypes.
+                if (Math.Abs((long)cells[pose.Anchor].HeightLevel - cells[rear].HeightLevel) != 1)
+                    return SpatialQueryReasons.PairCrossHeightConnectionInvalid;
+                if (forward.EdgeKind != reverse.EdgeKind ||
+                    (forward.EdgeKind != SpatialEdgeKind.Slope && forward.EdgeKind != SpatialEdgeKind.Stairs) ||
+                    string.IsNullOrWhiteSpace(forward.ConnectionId) ||
+                    !string.Equals(forward.ConnectionId, reverse.ConnectionId, StringComparison.Ordinal))
+                    return SpatialQueryReasons.PairCrossHeightConnectionInvalid;
+                if (!forward.AllowsMovement || !reverse.AllowsMovement)
+                    return SpatialQueryReasons.DirectedEdgeBlocksMovement;
+            }
             if (forward.ClearanceLimit > 0 && pose.BodyScaleRank > forward.ClearanceLimit ||
                 reverse.ClearanceLimit > 0 && pose.BodyScaleRank > reverse.ClearanceLimit)
                 return SpatialQueryReasons.ClearanceInsufficient;
@@ -161,12 +217,10 @@ namespace TianZhang.Spatial
             int rangeLimit = maxRange ?? limits.MaxQueryRange;
             if (rangeLimit < 0 || rangeLimit > limits.MaxQueryRange)
                 throw new ArgumentOutOfRangeException(nameof(maxRange));
-            if (!cells.TryGetValue(start, out var startRules) || !cells.TryGetValue(target, out var targetRules))
+            if (!cells.ContainsKey(start) || !cells.ContainsKey(target))
                 return new SpatialMetricDistanceResult(false, -1, SpatialQueryReasons.MissingCell);
             if (canTraverse?.Invoke(start) == false || canTraverse?.Invoke(target) == false)
                 return new SpatialMetricDistanceResult(false, -1, SpatialQueryReasons.MissingCell);
-            if (startRules.HeightLevel != targetRules.HeightLevel)
-                return new SpatialMetricDistanceResult(false, -1, SpatialQueryReasons.HeightRuleUnconfigured);
             if (start == target)
                 return new SpatialMetricDistanceResult(true, 0, SpatialQueryReasons.Ok);
 
@@ -415,7 +469,10 @@ namespace TianZhang.Spatial
                     {
                         // Missing outer cells and occupied alternatives do not hide a meaningful rule rejection.
                         if (result.FirstRejection == null && (reason == SpatialQueryReasons.ClearanceInsufficient ||
-                            reason == SpatialQueryReasons.HeightRuleUnconfigured || reason == SpatialQueryReasons.EntityObstacle))
+                            reason == SpatialQueryReasons.HeightRuleUnconfigured ||
+                            reason == SpatialQueryReasons.EdgeHeightMismatch ||
+                            reason == SpatialQueryReasons.PairCrossHeightConnectionInvalid ||
+                            reason == SpatialQueryReasons.EntityObstacle))
                             result.FirstRejection = reason;
                         continue;
                     }
@@ -455,8 +512,10 @@ namespace TianZhang.Spatial
                 var rearEdge = InspectEdge(rear, from.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
                 if (!rearEdge.IsLegal) { reason = rearEdge.Reason; return false; }
             }
+            long burdenUnits = (long)frontEdge.MovementBurdenUnits + cells[to.Anchor].MovementBurdenUnits;
+            if (burdenUnits > int.MaxValue) { reason = SpatialQueryReasons.ActionPointCostOverflow; return false; }
             step = new SpatialMovementStep(from, to, turns,
-                new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, cells[to.Anchor].MovementBurdenUnits));
+                new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, (int)burdenUnits));
             reason = SpatialQueryReasons.Ok;
             return true;
         }
@@ -580,14 +639,15 @@ namespace TianZhang.Spatial
                     {
                         if (firstRejection == null &&
                             (edge.Reason == SpatialQueryReasons.HeightRuleUnconfigured ||
+                             edge.Reason == SpatialQueryReasons.EdgeHeightMismatch ||
                              edge.Reason == SpatialQueryReasons.EntityObstacle))
                             firstRejection = edge.Reason;
                         continue;
                     }
 
-                    int movementBurden = kind == SpatialQueryKind.Movement
-                        ? cells[neighbor].MovementBurdenUnits
-                        : 0;
+                    long burdenUnits = (long)edge.MovementBurdenUnits + cells[neighbor].MovementBurdenUnits;
+                    if (burdenUnits > int.MaxValue) continue;
+                    int movementBurden = kind == SpatialQueryKind.Movement ? (int)burdenUnits : 0;
                     int nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
                     if (nextCost > budgetUnits ||
                         (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))

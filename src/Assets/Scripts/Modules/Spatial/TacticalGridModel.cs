@@ -26,6 +26,8 @@ namespace TianZhang.Spatial
         public bool IsEntityObstacle;
         public string EntityObstacleSourceId;
         public int OccupiedUnitId;
+        /// <summary>Destination-cell movement burden (shallow water, mud, deep water).</summary>
+        public int MovementBurdenUnits;
 
         public bool IsOccupied => OccupiedUnitId >= 0;
 
@@ -41,6 +43,7 @@ namespace TianZhang.Spatial
             IsEntityObstacle = false;
             EntityObstacleSourceId = null;
             OccupiedUnitId = NoUnit;
+            MovementBurdenUnits = 0;
         }
     }
 
