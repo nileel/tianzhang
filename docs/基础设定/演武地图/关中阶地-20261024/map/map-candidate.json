@@ -1,14 +1,24 @@
 {
   "schema": "tianzhang.d1.fixed-map-candidate",
   "schemaVersion": 1,
-  "mapVersion": "guanzhong-jindan-v3-d1-candidate-20261024.1",
-  "status": "candidate_pending_double_cell_rule_and_geometry",
+  "mapVersion": "guanzhong-jindan-v3-d1-candidate-20261024.2",
+  "status": "candidate_approved_pair_rule_geometry_pending",
   "targetImage": "assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png",
   "productionEntry": {
     "csv": "src/Assets/DataConfig/EnvironmentProfiles.csv",
     "plannedProfileId": "env_guanzhong_jindan_demo",
     "currentImporterSupportsCandidate": false,
     "existingProfileMustRemain": "env_guanzhong_wild"
+  },
+  "environmentProfileEnvelope": {
+    "profileId": "env_guanzhong_jindan_demo",
+    "queryLimits": "unitsPerRange=2;maxQueryRange=24",
+    "surfacePrototypeRefs": "surface_grassland|surface_loess",
+    "phenomenonChannels": "airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning",
+    "phenomenonPairs": "airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning",
+    "elementRelationRefs": "element_wood|element_fire|element_earth|element_metal|element_water",
+    "spiritRecoveryEnvironment": "ordinary",
+    "edgeClearanceLimits": "none"
   },
   "grid": {
     "qMin": 0,
@@ -59,10 +69,20 @@
     "geometryEvidence": "../geometry/04-candidate-dimensions.json"
   },
   "defaultEdgeRule": {
-    "sameHeight": "flat",
-    "differentHeight": "open_cliff",
+    "sameHeight": {
+      "edgeKind": "flat",
+      "allowsMovement": true
+    },
+    "differentHeight": {
+      "edgeKind": "open_cliff",
+      "allowsMovement": false
+    },
     "metricDistanceUnits": 2,
-    "note": "Generate every topology neighbor in both directions, then apply sparse overrides."
+    "edgeMovementBurdenUnits": 0,
+    "allowsEffects": true,
+    "clearanceLimit": 0,
+    "connectionId": null,
+    "generation": "Generate all six-neighbor directed edges in both directions, then apply sparse overrides. Missing reverse records are invalid, not inferred."
   },
   "movementBurden": {
     "unitsPerRange": 2,
@@ -70,10 +90,10 @@
     "slopeAndStairsExtraUnits": 1,
     "slopeAndStairsBidirectional": true,
     "shallowWaterAndMudCellExtraUnits": 1,
-    "interpretation": "Movement d_e = metric units + directed-edge extra units + destination-cell extra units. Attack metric remains 2 units per edge.",
-    "currentRuntimeGap": "Current runtime supports destination-cell burden only; D2 must consume configured edge burden without changing attack metric.",
     "deepWaterCellExtraUnits": 2,
-    "demoDeepWaterGroundAllowed": true
+    "demoDeepWaterGroundAllowed": true,
+    "interpretation": "Movement d_e = metric units + directed-edge extra units + destination-cell extra units. Attack metric remains 2 units per edge.",
+    "currentRuntimeGap": "Current runtime supports destination-cell burden only; D2 must consume configured edge burden without changing attack metric."
   },
   "cells": [
     {
@@ -1314,6 +1334,11 @@
       "cell": "6:9"
     },
     {
+      "id": "conceal_support",
+      "kind": "public_planned_support",
+      "cell": "9:9"
+    },
+    {
       "id": "mid_low_cover_a",
       "kind": "low_cover",
       "cell": "3:4"
@@ -1337,18 +1362,13 @@
       "id": "rock_6:4",
       "kind": "rock_obstacle",
       "cell": "6:4"
-    },
-    {
-      "id": "conceal_support",
-      "kind": "public_planned_support",
-      "cell": "9:9"
     }
   ],
   "placementNotes": [
     "Support and cover markers do not create occupancy or block movement in this D1 graph.",
     "Their future scene-object type, material and interaction contracts remain D4/D9-D11 work.",
     "Pair validation seeds are separate hypothetical snapshots, not simultaneous production spawns.",
-    "Same-height pair placements cannot cross levels under the current follow-the-front step rule.",
+    "Pair placements retain the same-height rule; abs(deltaHeight)=1 is allowed only with explicit slope/stairs edges in both directions, matching edgeKind and connectionId, both movement-enabled and both clearance-qualified. Turn-then-follow, every 60-degree intermediate pose and rear sweep stay mandatory.",
     "Layer heights and slope/stair dimensions remain candidates awaiting confirmation and geometry validation; this definition is not supported by the current production importer."
   ]
 }

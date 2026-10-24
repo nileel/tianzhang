@@ -1,0 +1,9 @@
+{
+  "only_boundary_measurement_not_approved_contract": true,
+  "tail_flat_platform_intersection_depth_m": 0.02043726764939202,
+  "minimum_axial_shift_plus_slope_rise_to_clear_tail_at_same_36p87_pitch": 0.027249690199189363,
+  "result_all_vertex_min_gap_at_shift": -1.1102230246251565e-16,
+  "minimum_centered_ramp_run_for_stationary_uphill_no_collision_m": 1.0573514588779855,
+  "corresponding_pitch_deg": 35.34882089183862,
+  "warning": "Axial shift changes midpoint convention. Longer run changes port-to-cell-center coincidence. Neither may be silently adopted; neither verifies entry/exit or stairs."
+}

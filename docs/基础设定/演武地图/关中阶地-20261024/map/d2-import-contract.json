@@ -1,0 +1,94 @@
+{
+  "status": "design_field_values_complete_for_D2_implementation_not_currently_importable",
+  "productionEntry": "src/Assets/DataConfig/EnvironmentProfiles.csv",
+  "plannedProfileId": "env_guanzhong_jindan_demo",
+  "existingProfileMustRemain": "env_guanzhong_wild",
+  "copiedProfileEnvelope": {
+    "queryLimits": "unitsPerRange=2;maxQueryRange=24",
+    "surfacePrototypeRefs": "surface_grassland|surface_loess",
+    "phenomenonChannels": "airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning",
+    "phenomenonPairs": "airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning",
+    "elementRelationRefs": "element_wood|element_fire|element_earth|element_metal|element_water",
+    "spiritRecoveryEnvironment": "ordinary",
+    "profileId": "env_guanzhong_jindan_demo",
+    "edgeClearanceLimits": "none"
+  },
+  "copiedEnvelopeSource": {
+    "path": "D:\\天章游戏开发\\src\\Assets\\DataConfig\\EnvironmentProfiles.csv",
+    "profileId": "env_guanzhong_wild",
+    "sha256": "3be7d842b37af277acceca7898733357b449bb681bd2f1f14ae271c708b97e15"
+  },
+  "copyMode": "These are explicit D2 output row values copied from the existing profile. Do not add a runtime profile inheritance mechanism.",
+  "mapFieldSources": {
+    "battlefieldCells": "map-candidate.json:cells",
+    "directedEdgeOverrides": "map-candidate.json:sparseDirectedEdgeOverrides",
+    "markers": "map-candidate.json:markers",
+    "version": "map-candidate.json:mapVersion"
+  },
+  "requiredCellFields": [
+    "q",
+    "r",
+    "heightLevel",
+    "surfaceKind",
+    "blocksGroundMove",
+    "blocksLineOfSight",
+    "cellMovementBurdenUnits"
+  ],
+  "requiredDirectedEdgeFields": [
+    "fromCell",
+    "toCell",
+    "edgeKind",
+    "metricDistanceUnits",
+    "edgeMovementBurdenUnits",
+    "allowsMovement",
+    "allowsEffects",
+    "clearanceLimit",
+    "connectionId"
+  ],
+  "defaultDirectedEdgeRule": {
+    "sameHeight": {
+      "edgeKind": "flat",
+      "allowsMovement": true
+    },
+    "differentHeight": {
+      "edgeKind": "open_cliff",
+      "allowsMovement": false
+    },
+    "metricDistanceUnits": 2,
+    "edgeMovementBurdenUnits": 0,
+    "allowsEffects": true,
+    "clearanceLimit": 0,
+    "connectionId": null,
+    "generation": "Generate all six-neighbor directed edges in both directions, then apply sparse overrides. Missing reverse records are invalid, not inferred."
+  },
+  "pairPlacementRule": {
+    "footprint": "AdjacentPair",
+    "bodyScaleRank": 2,
+    "sameHeight": "Keep current rule: both internal directed records exist; at least one allows movement; both clearance limits pass.",
+    "differentHeight": "Only abs(deltaHeight)=1; both internal records explicitly slope/stairs with matching edgeKind and connectionId, movement allowed, clearance passed. Open cliffs, drops, missing reverse and walls cannot hold a cross-height body.",
+    "movement": "Keep turn-then-follow and every shortest 60-degree intermediate pose and rear sweep. Only 180 degrees may try the other three-step direction. No independent turn action.",
+    "presentation": "User-approved body follows slope; this document supplies no geometric-support or collision proof."
+  },
+  "movementAccounting": "Front translation costs metricDistanceUnits + edgeMovementBurdenUnits + destination cellMovementBurdenUnits. Rear/internal/sweep edges check eligibility only. Attack metric remains unchanged.",
+  "surfaceKindMeaning": "Fixed-map terrain classification, not a reference to an already existing SurfacePrototype. Per-cell burden is explicit, so D2 movement is not dependent on adding D8 water prototypes.",
+  "markerScope": "Spawn/objective/support/cover markers are retained design locations; support and cover do not implicitly create occupancy or blockers. Encounter actor composition remains D5.",
+  "knownCurrentCodeGaps": [
+    "WorldContentImporter.ParseBattlefieldCells accepts q:r@blocksGroundMove@blocksLineOfSight only; height and cell burden are absent.",
+    "WorldContentImporter.BuildDirectedEdges creates flat all-allowed edges; only clearance overrides are supported. Edge kind, directed allows flags and edge burden require D2 projection.",
+    "EnvironmentBattlefieldCell lacks height/burden; EnvironmentDirectedEdge lacks kind/burden. EnvironmentProfileAsset must round-trip the added data.",
+    "CombatEntryAdapter creates tiles without height; SpatialQueryBoardFactory hardcodes cell movement burden 0 and omits edge kind/burden.",
+    "SpatialQueryBoard.InspectEdge and InspectPlacement reject every different-height pair; movement costs consume destination-cell burden only."
+  ],
+  "physicalGeometry": "Height meter values, connector occupied/stoppable cells and interfaces are supplied by the separate D1 geometry decision. They are not derived from graph route legality.",
+  "noProductionWrites": true,
+  "checks": [
+    "each of 100 cell rows has all 7 fields",
+    "each of 28 sparse directed edge rows has all 9 fields",
+    "profile envelope has every unchanged required importer field",
+    "query limits retain existing K2 and range24",
+    "all marker locations name existing map cells",
+    "final candidate includes complete exact environment envelope",
+    "final candidate includes complete exact default edge fields"
+  ],
+  "testCount": 7
+}

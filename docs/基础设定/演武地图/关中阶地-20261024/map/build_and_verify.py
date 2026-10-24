@@ -2,16 +2,19 @@
 
 This is NOT an importer or a replacement runtime spatial service. Its pair
 transition check mirrors the currently documented turn-then-follow rule to
-expose the unresolved same-height placement incompatibility.
+verify the approved one-level bidirectional slope/stair placement exception.
 """
 import heapq
 import json
+import sys
 from collections import Counter, deque
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent
 DIRS = ((1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1))
-VERSION = "guanzhong-jindan-v3-d1-candidate-20261024.1"
+VERSION = "guanzhong-jindan-v3-d1-candidate-20261024.2"
+PAIR_ONLY = "--pair-only" in sys.argv
+BASELINE_REPORT = json.loads((OUT / "baseline" / "verification.json").read_text(encoding="utf-8")) if PAIR_ONLY else None
 
 
 def step(p, d):
@@ -94,9 +97,9 @@ main_route = [(1, r) for r in range(7)] + [(q, 6) for q in range(2, 8)] + [(7, 7
 alternate_route = [(q, 0) for q in range(1, 9)] + [(8, r) for r in range(1, 9)]
 
 
-def legal_edge(a, b, forbidden=()):
+def legal_edge(a, b, forbidden=(), body_scale=1):
     e = edges.get((a, b))
-    return e is not None and e["allowsMovement"] and e["connectionId"] not in forbidden and not cells[b]["blocksGroundMove"]
+    return e is not None and e["allowsMovement"] and e["connectionId"] not in forbidden and not cells[b]["blocksGroundMove"] and (e["clearanceLimit"] == 0 or e["clearanceLimit"] >= body_scale)
 
 
 def move_units(a, b):
@@ -136,38 +139,44 @@ def shortest(forbidden=()):
     return None
 
 
-def placement(pose):
+def placement(pose, forbidden=()):
     a, facing = pose
     rear = step(a, (facing + 3) % 6)
     if a not in cells or rear not in cells or cells[a]["blocksGroundMove"] or cells[rear]["blocksGroundMove"]:
         return False
-    if cells[a]["heightLevel"] != cells[rear]["heightLevel"]:
-        return False
     f, r = edges.get((a, rear)), edges.get((rear, a))
-    return f is not None and r is not None and (f["allowsMovement"] or r["allowsMovement"]) and all(
-        e["clearanceLimit"] == 0 or e["clearanceLimit"] >= 2 for e in (f, r))
+    if f is None or r is None or any(e["connectionId"] in forbidden for e in (f, r)):
+        return False
+    if not all(e["clearanceLimit"] == 0 or e["clearanceLimit"] >= 2 for e in (f, r)):
+        return False
+    delta_height = abs(cells[a]["heightLevel"] - cells[rear]["heightLevel"])
+    if delta_height == 0:
+        return f["allowsMovement"] or r["allowsMovement"]
+    return (delta_height == 1 and f["edgeKind"] == r["edgeKind"]
+            and f["connectionId"] == r["connectionId"] and all(
+                e["edgeKind"] in ("slope", "stairs") and e["allowsMovement"] for e in (f, r)))
 
 
-def turns(pose, target, sign):
+def turns(pose, target, sign, forbidden=()):
     a, facing = pose
     while facing != target:
         nxt = (facing + sign) % 6
         old_rear, new_rear = step(a, (facing + 3) % 6), step(a, (nxt + 3) % 6)
-        if not legal_edge(old_rear, new_rear) or not placement((a, nxt)):
+        if not legal_edge(old_rear, new_rear, forbidden, 2) or not placement((a, nxt), forbidden):
             return False
         facing = nxt
     return True
 
 
-def pair_step(pose, direction):
+def pair_step(pose, direction, forbidden=()):
     a, facing = pose
     delta = (direction - facing) % 6
-    if not turns(pose, direction, 1 if delta <= 3 else -1):
-        if delta != 3 or not turns(pose, direction, -1):
+    if not turns(pose, direction, 1 if delta <= 3 else -1, forbidden):
+        if delta != 3 or not turns(pose, direction, -1, forbidden):
             return None
     b, rear = step(a, direction), step(a, (direction + 3) % 6)
     destination = b, direction
-    if not placement(destination) or not legal_edge(a, b) or not legal_edge(rear, a):
+    if not placement(destination, forbidden) or not legal_edge(a, b, forbidden, 2) or not legal_edge(rear, a, forbidden, 2):
         return None
     return destination
 
@@ -198,11 +207,12 @@ assert all(abs(cells[a]["heightLevel"] - cells[b]["heightLevel"]) <= 1 for a, b 
 assert Counter(c["heightLevel"] for c in cells.values()) == {0: 30, 1: 58, 2: 12}
 assert len({edge_key(a, b) for a, b in edges}) == 522
 assert len({e["fromCell"]+">"+e["toCell"] for e in overrides}) == len(overrides)
-assert not cross_height
-assert shortest() and shortest(("left_ramp",))
-assert shortest(("left_ramp", "front_right_stairs")) is None
-assert shortest(("rear_right_stairs",)) is None
-assert legal_edge((6, 8), (5, 8)) and not legal_edge((5, 8), (6, 8))
+assert cross_height
+if not PAIR_ONLY:
+    assert shortest() and shortest(("left_ramp",))
+    assert shortest(("left_ramp", "front_right_stairs")) is None
+    assert shortest(("rear_right_stairs",)) is None
+    assert legal_edge((6, 8), (5, 8)) and not legal_edge((5, 8), (6, 8))
 for (a, b), e in edges.items():
     assert (b, a) in edges and e["metricDistanceUnits"] == 2
     if e["edgeKind"] in ("slope", "stairs"):
@@ -220,20 +230,31 @@ markers = [
 ] + [dict(id="rock_"+key(p), kind="rock_obstacle", cell=key(p)) for p in sorted(rocks)]
 candidate = dict(
     schema="tianzhang.d1.fixed-map-candidate", schemaVersion=1, mapVersion=VERSION,
-    status="candidate_pending_double_cell_rule_and_geometry",
+    status="candidate_approved_pair_rule_geometry_pending",
     targetImage="assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png",
     productionEntry=dict(csv="src/Assets/DataConfig/EnvironmentProfiles.csv",
                          plannedProfileId="env_guanzhong_jindan_demo",
                          currentImporterSupportsCandidate=False,
                          existingProfileMustRemain="env_guanzhong_wild"),
+    environmentProfileEnvelope=dict(
+        profileId="env_guanzhong_jindan_demo",
+        queryLimits="unitsPerRange=2;maxQueryRange=24",
+        surfacePrototypeRefs="surface_grassland|surface_loess",
+        phenomenonChannels="airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning",
+        phenomenonPairs="airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning",
+        elementRelationRefs="element_wood|element_fire|element_earth|element_metal|element_water",
+        spiritRecoveryEnvironment="ordinary", edgeClearanceLimits="none"),
     grid=dict(qMin=0, qMax=9, rMin=0, rMax=9, unitsPerRange=2,
               heightLevels=[0, 1, 2], worldCenterFormula="x=q+0.5*r; z=0.8660254*r+1",
               neighborDirections=[list(d) for d in DIRS],
               visualHeightMeters=None, visualHeightStatus="measured_candidate_not_frozen",
               candidateHeightStepMeters=0.75, candidateNominalTopMeters=[0.34, 1.09, 1.84],
               geometryEvidence="../geometry/04-candidate-dimensions.json"),
-    defaultEdgeRule=dict(sameHeight="flat", differentHeight="open_cliff", metricDistanceUnits=2,
-                         note="Generate every topology neighbor in both directions, then apply sparse overrides."),
+    defaultEdgeRule=dict(sameHeight=dict(edgeKind="flat", allowsMovement=True),
+                        differentHeight=dict(edgeKind="open_cliff", allowsMovement=False),
+                        metricDistanceUnits=2, edgeMovementBurdenUnits=0,
+                        allowsEffects=True, clearanceLimit=0, connectionId=None,
+                        generation="Generate all six-neighbor directed edges in both directions, then apply sparse overrides. Missing reverse records are invalid, not inferred."),
     movementBurden=dict(unitsPerRange=2, flatExtraUnits=0, slopeAndStairsExtraUnits=1,
                         slopeAndStairsBidirectional=True,
                         shallowWaterAndMudCellExtraUnits=1,
@@ -244,7 +265,7 @@ candidate = dict(
     placementNotes=["Support and cover markers do not create occupancy or block movement in this D1 graph.",
                     "Their future scene-object type, material and interaction contracts remain D4/D9-D11 work.",
                     "Pair validation seeds are separate hypothetical snapshots, not simultaneous production spawns.",
-                    "Same-height pair placements cannot cross levels under the current follow-the-front step rule.",
+                    "Pair placements retain the same-height rule; abs(deltaHeight)=1 is allowed only with explicit slope/stairs edges in both directions, matching edgeKind and connectionId, both movement-enabled and both clearance-qualified. Turn-then-follow, every 60-degree intermediate pose and rear sweep stay mandatory.",
                     "Layer heights and slope/stair dimensions remain candidates awaiting confirmation and geometry validation; this definition is not supported by the current production importer."])
 report = dict(mapVersion=VERSION, checks="passed",
               cellCount=len(cells), directedEdgeCount=len(edges),
@@ -253,20 +274,22 @@ report = dict(mapVersion=VERSION, checks="passed",
               surfaceCounts=dict(Counter(c["surfaceKind"] for c in cells.values())),
               sparseDirectedOverrideCount=len(overrides),
               edgeKindCounts=dict(Counter(e["edgeKind"] for e in edges.values())),
-              mainWitness=route_summary(main_route),
-              alternateWitnessWithLeftRampBlocked=route_summary(alternate_route, ("left_ramp",)),
-              minimumCostRoute=shortest(), minimumCostRouteWithLeftRampBlocked=shortest(("left_ramp",)),
+              mainWitness=BASELINE_REPORT["mainWitness"] if PAIR_ONLY else route_summary(main_route),
+              alternateWitnessWithLeftRampBlocked=BASELINE_REPORT["alternateWitnessWithLeftRampBlocked"] if PAIR_ONLY else route_summary(alternate_route, ("left_ramp",)),
+              minimumCostRoute=BASELINE_REPORT["minimumCostRoute"] if PAIR_ONLY else shortest(),
+              minimumCostRouteWithLeftRampBlocked=BASELINE_REPORT["minimumCostRouteWithLeftRampBlocked"] if PAIR_ONLY else shortest(("left_ramp",)),
+              singleChecksExecuted=not PAIR_ONLY,
               noLowToMidConnectionsMeansNoGoal=True, noHighStairsMeansNoGoal=True,
               oneWayDropForwardLegalReverseIllegal=True,
               slopeAndStairBothDirectionsRawMovementUnits=3,
               pairLegalPoseCountsByHeight=dict(Counter(cells[p[0]]["heightLevel"] for p in poses)),
               pairLegalTransitionCount=sum(map(len, pair_graph.values())),
               pairCrossHeightTransitionCount=len(cross_height), pairReachability=seed_reports,
-              pairInvariantProof="Every move ends with rear=old anchor. Same-height destination placement therefore forces H(new anchor)=H(old anchor). Turns preserve the anchor. Induction forbids changing height on any path, regardless of ramp width.",
+              pairPlacementProof="Every move still ends with rear=old anchor. Approved one-level slope/stair placements remove the same-height invariant only across explicit bidirectional legal connections. Turn sequences and rear sweeps are not skipped.",
               verificationLimits=["Offline candidate graph only; no current Unity importer/runtime acceptance claimed.",
                                   "No geometry, line-of-sight or visual-body collision verification.",
                                   "No actual AP/MP/CT balance claim; reports movement-equivalent distance only.",
-                                  "Double-cell cross-height movement remains unresolved, not passed."])
+                                  "Cross-height pair rule is approved and checked offline; geometry and Unity runtime remain unverified."])
 for name, data in (("map-candidate.json", candidate), ("verification.json", report)):
     (OUT / name).write_text(json.dumps(data, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 print(json.dumps(report, ensure_ascii=False, indent=2))

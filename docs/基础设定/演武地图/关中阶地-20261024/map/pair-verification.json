@@ -1,0 +1,1037 @@
+{
+  "mapVersion": "guanzhong-jindan-v3-d1-candidate-20261024.2",
+  "status": "passed",
+  "testCount": 29,
+  "tests": [
+    "100 cells unchanged",
+    "28 directed overrides unchanged",
+    "marker records unchanged (baseline generator differs only in ordering)",
+    "522 edges, three heights unchanged",
+    "approved one-level slope placement both facing directions",
+    "open cliff cannot hold pair",
+    "one-way drop cannot hold cross-height pair",
+    "entity wall cannot hold pair",
+    "closed connection cannot hold pair",
+    "one-way slope rejected",
+    "reverse non-slope rejected",
+    "slope-stairs internal kind mismatch rejected",
+    "internal connectionId mismatch rejected",
+    "reverse clearance rank 1 rejected",
+    "missing reverse edge rejected",
+    "two-level pair rejected",
+    "blocked rear rejected",
+    "same-height one-way internal rule retained",
+    "sweep test fixture is originally legal",
+    "rear sweep checks body clearance",
+    "pair full route through left slope",
+    "pair full route with left slope blocked",
+    "pair all low-to-mid connectors closed blocks goal",
+    "pair all high stairs closed blocks goal",
+    "all accepted transitions replay every intermediate turn and rear edge",
+    "endpoint-only acceptance is prevented by intermediate checks",
+    "180 alternate shortest rotation retained",
+    "non-180 long rotation fallback remains prohibited",
+    "old boundary seed still reaches exactly 16 same-height poses"
+  ],
+  "pairPoseCount": 442,
+  "crossHeightPoseCount": 22,
+  "pairTransitionCount": 1632,
+  "checkedIntermediateTurnCount": 2407,
+  "pairCrossHeightTransitionCount": 113,
+  "pairMainWitness": {
+    "seed": {
+      "front": "1:1",
+      "rear": "1:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "forbiddenConnections": [],
+    "steps": 14,
+    "movementEquivalentDistance": 15.0,
+    "requiredConnection": "left_ramp",
+    "poses": [
+      {
+        "front": "1:1",
+        "rear": "1:0",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "1:2",
+        "rear": "1:1",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "1:3",
+        "rear": "1:2",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 0
+      },
+      {
+        "front": "1:4",
+        "rear": "1:3",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "1:5",
+        "rear": "1:4",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "1:6",
+        "rear": "1:5",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "2:6",
+        "rear": "1:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "3:6",
+        "rear": "2:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "4:6",
+        "rear": "3:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "5:6",
+        "rear": "4:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "6:6",
+        "rear": "5:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:6",
+        "rear": "6:6",
+        "facing": 0,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:7",
+        "rear": "7:6",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:8",
+        "rear": "7:7",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2
+      },
+      {
+        "front": "8:8",
+        "rear": "7:8",
+        "facing": 0,
+        "frontHeight": 2,
+        "rearHeight": 2
+      }
+    ],
+    "movements": [
+      {
+        "fromPose": {
+          "front": "1:1",
+          "rear": "1:0",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:1>1:2",
+        "rearMove": "1:0>1:1",
+        "toPose": {
+          "front": "1:2",
+          "rear": "1:1",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "1:2",
+          "rear": "1:1",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:2>1:3",
+        "rearMove": "1:1>1:2",
+        "toPose": {
+          "front": "1:3",
+          "rear": "1:2",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 3,
+        "connectionId": "left_ramp"
+      },
+      {
+        "fromPose": {
+          "front": "1:3",
+          "rear": "1:2",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:3>1:4",
+        "rearMove": "1:2>1:3",
+        "toPose": {
+          "front": "1:4",
+          "rear": "1:3",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "1:4",
+          "rear": "1:3",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:4>1:5",
+        "rearMove": "1:3>1:4",
+        "toPose": {
+          "front": "1:5",
+          "rear": "1:4",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "1:5",
+          "rear": "1:4",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:5>1:6",
+        "rearMove": "1:4>1:5",
+        "toPose": {
+          "front": "1:6",
+          "rear": "1:5",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "1:6",
+          "rear": "1:5",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "1:6",
+              "rear": "0:6",
+              "facing": 0,
+              "frontHeight": 1,
+              "rearHeight": 1
+            },
+            "rearSweep": "1:5>0:6"
+          }
+        ],
+        "frontMove": "1:6>2:6",
+        "rearMove": "0:6>1:6",
+        "toPose": {
+          "front": "2:6",
+          "rear": "1:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "2:6",
+          "rear": "1:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "2:6>3:6",
+        "rearMove": "1:6>2:6",
+        "toPose": {
+          "front": "3:6",
+          "rear": "2:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "3:6",
+          "rear": "2:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "3:6>4:6",
+        "rearMove": "2:6>3:6",
+        "toPose": {
+          "front": "4:6",
+          "rear": "3:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "4:6",
+          "rear": "3:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "4:6>5:6",
+        "rearMove": "3:6>4:6",
+        "toPose": {
+          "front": "5:6",
+          "rear": "4:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "5:6",
+          "rear": "4:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "5:6>6:6",
+        "rearMove": "4:6>5:6",
+        "toPose": {
+          "front": "6:6",
+          "rear": "5:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "6:6",
+          "rear": "5:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "6:6>7:6",
+        "rearMove": "5:6>6:6",
+        "toPose": {
+          "front": "7:6",
+          "rear": "6:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:6",
+          "rear": "6:6",
+          "facing": 0,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": -1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "7:6",
+              "rear": "7:5",
+              "facing": 5,
+              "frontHeight": 1,
+              "rearHeight": 1
+            },
+            "rearSweep": "6:6>7:5"
+          }
+        ],
+        "frontMove": "7:6>7:7",
+        "rearMove": "7:5>7:6",
+        "toPose": {
+          "front": "7:7",
+          "rear": "7:6",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 3,
+        "connectionId": "rear_right_stairs"
+      },
+      {
+        "fromPose": {
+          "front": "7:7",
+          "rear": "7:6",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:7>7:8",
+        "rearMove": "7:6>7:7",
+        "toPose": {
+          "front": "7:8",
+          "rear": "7:7",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:8",
+          "rear": "7:7",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "turnSign": 1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "7:8",
+              "rear": "6:8",
+              "facing": 0,
+              "frontHeight": 2,
+              "rearHeight": 2
+            },
+            "rearSweep": "7:7>6:8"
+          }
+        ],
+        "frontMove": "7:8>8:8",
+        "rearMove": "6:8>7:8",
+        "toPose": {
+          "front": "8:8",
+          "rear": "7:8",
+          "facing": 0,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      }
+    ]
+  },
+  "pairAlternateWitnessWithLeftRampBlocked": {
+    "seed": {
+      "front": "1:1",
+      "rear": "1:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "forbiddenConnections": [
+      "left_ramp"
+    ],
+    "steps": 14,
+    "movementEquivalentDistance": 16.5,
+    "requiredConnection": null,
+    "poses": [
+      {
+        "front": "1:1",
+        "rear": "1:0",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "1:2",
+        "rear": "1:1",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "2:2",
+        "rear": "1:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "3:2",
+        "rear": "2:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "4:2",
+        "rear": "3:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "5:2",
+        "rear": "4:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "6:2",
+        "rear": "5:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "7:2",
+        "rear": "6:2",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0
+      },
+      {
+        "front": "7:3",
+        "rear": "7:2",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 0
+      },
+      {
+        "front": "7:4",
+        "rear": "7:3",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:5",
+        "rear": "7:4",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:6",
+        "rear": "7:5",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:7",
+        "rear": "7:6",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 1
+      },
+      {
+        "front": "7:8",
+        "rear": "7:7",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2
+      },
+      {
+        "front": "8:8",
+        "rear": "7:8",
+        "facing": 0,
+        "frontHeight": 2,
+        "rearHeight": 2
+      }
+    ],
+    "movements": [
+      {
+        "fromPose": {
+          "front": "1:1",
+          "rear": "1:0",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "1:1>1:2",
+        "rearMove": "1:0>1:1",
+        "toPose": {
+          "front": "1:2",
+          "rear": "1:1",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "1:2",
+          "rear": "1:1",
+          "facing": 5,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "1:2",
+              "rear": "0:2",
+              "facing": 0,
+              "frontHeight": 0,
+              "rearHeight": 0
+            },
+            "rearSweep": "1:1>0:2"
+          }
+        ],
+        "frontMove": "1:2>2:2",
+        "rearMove": "0:2>1:2",
+        "toPose": {
+          "front": "2:2",
+          "rear": "1:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "2:2",
+          "rear": "1:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "2:2>3:2",
+        "rearMove": "1:2>2:2",
+        "toPose": {
+          "front": "3:2",
+          "rear": "2:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "3:2",
+          "rear": "2:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "3:2>4:2",
+        "rearMove": "2:2>3:2",
+        "toPose": {
+          "front": "4:2",
+          "rear": "3:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 3,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "4:2",
+          "rear": "3:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "4:2>5:2",
+        "rearMove": "3:2>4:2",
+        "toPose": {
+          "front": "5:2",
+          "rear": "4:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 3,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "5:2",
+          "rear": "4:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "5:2>6:2",
+        "rearMove": "4:2>5:2",
+        "toPose": {
+          "front": "6:2",
+          "rear": "5:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 3,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "6:2",
+          "rear": "5:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "6:2>7:2",
+        "rearMove": "5:2>6:2",
+        "toPose": {
+          "front": "7:2",
+          "rear": "6:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:2",
+          "rear": "6:2",
+          "facing": 0,
+          "frontHeight": 0,
+          "rearHeight": 0
+        },
+        "turnSign": -1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "7:2",
+              "rear": "7:1",
+              "facing": 5,
+              "frontHeight": 0,
+              "rearHeight": 0
+            },
+            "rearSweep": "6:2>7:1"
+          }
+        ],
+        "frontMove": "7:2>7:3",
+        "rearMove": "7:1>7:2",
+        "toPose": {
+          "front": "7:3",
+          "rear": "7:2",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 0
+        },
+        "frontMovementUnits": 3,
+        "connectionId": "front_right_stairs"
+      },
+      {
+        "fromPose": {
+          "front": "7:3",
+          "rear": "7:2",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 0
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:3>7:4",
+        "rearMove": "7:2>7:3",
+        "toPose": {
+          "front": "7:4",
+          "rear": "7:3",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:4",
+          "rear": "7:3",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:4>7:5",
+        "rearMove": "7:3>7:4",
+        "toPose": {
+          "front": "7:5",
+          "rear": "7:4",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:5",
+          "rear": "7:4",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:5>7:6",
+        "rearMove": "7:4>7:5",
+        "toPose": {
+          "front": "7:6",
+          "rear": "7:5",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:6",
+          "rear": "7:5",
+          "facing": 5,
+          "frontHeight": 1,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:6>7:7",
+        "rearMove": "7:5>7:6",
+        "toPose": {
+          "front": "7:7",
+          "rear": "7:6",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 1
+        },
+        "frontMovementUnits": 3,
+        "connectionId": "rear_right_stairs"
+      },
+      {
+        "fromPose": {
+          "front": "7:7",
+          "rear": "7:6",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 1
+        },
+        "turnSign": 0,
+        "intermediateTurns": [],
+        "frontMove": "7:7>7:8",
+        "rearMove": "7:6>7:7",
+        "toPose": {
+          "front": "7:8",
+          "rear": "7:7",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      },
+      {
+        "fromPose": {
+          "front": "7:8",
+          "rear": "7:7",
+          "facing": 5,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "turnSign": 1,
+        "intermediateTurns": [
+          {
+            "pose": {
+              "front": "7:8",
+              "rear": "6:8",
+              "facing": 0,
+              "frontHeight": 2,
+              "rearHeight": 2
+            },
+            "rearSweep": "7:7>6:8"
+          }
+        ],
+        "frontMove": "7:8>8:8",
+        "rearMove": "6:8>7:8",
+        "toPose": {
+          "front": "8:8",
+          "rear": "7:8",
+          "facing": 0,
+          "frontHeight": 2,
+          "rearHeight": 2
+        },
+        "frontMovementUnits": 2,
+        "connectionId": null
+      }
+    ]
+  },
+  "pairMainReachability": {
+    "seed": {
+      "front": "1:1",
+      "rear": "1:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "reachablePoses": 323,
+    "anchorHeights": [
+      0,
+      1,
+      2
+    ]
+  },
+  "pairBlockedReachability": {
+    "seed": {
+      "front": "1:1",
+      "rear": "1:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "reachablePoses": 303,
+    "anchorHeights": [
+      0,
+      1,
+      2
+    ]
+  },
+  "singleChecksExecuted": false,
+  "singleReachability": null,
+  "singleBlockedReachability": null,
+  "endpointOnlyFalsePositiveCount": 152,
+  "endpointOnlyFalsePositiveExample": {
+    "pose": {
+      "front": "1:2",
+      "rear": "0:2",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "direction": 2
+  },
+  "alternative180Count": 81,
+  "alternative180Example": {
+    "pose": {
+      "front": "0:1",
+      "rear": "0:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "direction": 2
+  },
+  "prohibitedLongRotationCount": 64,
+  "prohibitedLongRotationExample": {
+    "pose": {
+      "front": "1:2",
+      "rear": "0:2",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0
+    },
+    "direction": 2
+  },
+  "boundarySeedWarning": "((2,0), facing 0) is a legal but boundary-turn-locked hypothetical seed. Use ((1,1), facing 5), rear=(1,0), for slope route proof; no production spawn changed.",
+  "scope": "Offline design graph and definition only. No geometric support, surface contact, body collision, Unity runtime, import or balance acceptance claimed."
+}

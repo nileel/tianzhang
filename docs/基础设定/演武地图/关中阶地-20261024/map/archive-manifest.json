@@ -1,0 +1,32 @@
+{
+  "scope": "D1 approved pair-map design verification only",
+  "sourceCommit": "41f063f99bb60e67605782e936fa3f22037ea140",
+  "requiredFiles": [
+    "build_and_verify.py",
+    "verify_approved_pair.py",
+    "audit_import_fields.py",
+    "map-candidate.json",
+    "verification.json",
+    "pair-verification.json",
+    "pair-main-route.txt",
+    "pair-alternate-route.txt",
+    "d2-import-contract.json",
+    "D1-pair-map-report.txt",
+    "archive-manifest.json",
+    "baseline/map-candidate.json",
+    "baseline/verification.json"
+  ],
+  "baselineDependencies": {
+    "baseline/map-candidate.json": "verify_approved_pair.py compares cells, all 28 directed overrides, and marker records against the unchanged source map.",
+    "baseline/verification.json": "build_and_verify.py --pair-only carries forward the already-verified unchanged single-cell results without running the single-cell checks again."
+  },
+  "optionalProvenanceFiles": ["baseline/build_and_verify.py"],
+  "excludeFiles": ["adjust_checker.py", "__pycache__/"],
+  "affectedChecksCommand": "python verify_approved_pair.py --pair-only",
+  "fullReproductionCommand": "python verify_approved_pair.py",
+  "fieldAuditCommand": "python audit_import_fields.py",
+  "fieldAuditExternalInput": "The field audit reads src/Assets/DataConfig/EnvironmentProfiles.csv in D:/天章游戏开发 to compare the explicit copied profile envelope. Pair verification itself is portable with only the required files.",
+  "latestAffectedChecks": {"pairAndUnchangedDataChecks": 29, "fieldChecks": 7, "totalPassed": 36, "singleChecksExecuted": false},
+  "fullSuiteDistinctCheckCount": 40,
+  "status": "candidate_approved_pair_rule_geometry_pending"
+}

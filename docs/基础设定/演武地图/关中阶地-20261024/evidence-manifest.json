@@ -1,22 +1,32 @@
 {
   "capturedDate": "2026-10-24",
   "task": "D1 partial design evidence",
-  "status": "blocked_on_double_cell_height_rule",
+  "status": "blocked_geometry_after_pair_rule_approved",
   "runtimeValidated": false,
   "targetImage": "assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png",
-  "mapScope": "Offline candidate graph, not a production importer. Marker 9:9 and dimension/deep-water annotations added after graph verification; cells, edges and default rule were compared unchanged.",
-  "geometryScope": "Real FBX vertices transformed by current Builder normalization; standalone comparison scene only, not D3.1 seam/sidewall/base samples.",
+  "mapScope": "Offline graph verified against approved one-level bidirectional slope/stair pair rule: 442 poses, 1632 transitions, 113 anchor-height changes, 2407 intermediate turn poses. Explicit environment envelope and default edge fields included; no production importer or runtime implementation.",
+  "geometryScope": "Real FBX vertices and triangle-edge contact envelope in read-only Blender measurement scene. Fixed 1.125 m / 8-step axial profile supports middle poses but fails entry/exit due to tail intersections. No D3.1 seam/sidewall/base samples.",
   "localMeasurementBlend": "D:\\Temp\\TianZhang-Blender\\d1-measure-20261024\\d1-measured-size-comparison.blend",
   "localMeasurementBlendSha256": "46addfb939697740a97e5137c94731899d62390690bd21512483f4e58e0aaf76",
   "blendRetention": "Local measured comparison scene retained outside Git. Original FBX/Prefab/persistent blend were not overwritten. Reproduction script expects the retained local scene and import-state JSON.",
   "independentReviews": [
-    "Map/placement invariant and candidate edge costs: source-only review passed within scope; cross-height double movement blocked.",
+    "Approved pair placement, per-cell height, turn/sweep and temporary-support rules match the offline predicate; read-only independent review passed. No geometry or Unity pass claimed.",
     "Earth/water/fire/flight: prototype and carrier review passed after gravity cost clarification.",
     "Space/Yang/Yin/seal and five character presets: source review passed after foundation capacity and per-instance reserve corrections."
   ],
   "limits": [
     "No Unity import, play or balance acceptance.",
-    "D1 common connector footprint/stoppable cells/interfaces still pending the double-cell rule decision.",
-    "D2 and D3.1 not started."
-  ]
+    "D1 common connector physical interfaces, six-direction shared ramp band and continuous body support remain unresolved. Discrete measured failures cannot be treated as a passed continuous-motion proof.",
+    "D2 and D3.1 not started; user narrowed this batch to D1 on return."
+  ],
+  "approvedRule": "User approved cross-height pair standing on slope/stair connections on 2026-10-24; this decision is resolved and no longer pending.",
+  "localContactEvidence": "D:/Temp/TianZhang-Blender/d1-approved-20261024",
+  "contactReport": "geometry/D1-contact-interface-findings.txt",
+  "affectedValidation": {
+    "pairAndUnchangedDataChecks": 29,
+    "fieldChecks": 7,
+    "totalPassed": 36,
+    "singleChecksRepeated": false,
+    "archive": "map/archive-manifest.json"
+  }
 }

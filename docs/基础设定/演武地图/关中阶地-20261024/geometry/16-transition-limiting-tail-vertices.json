@@ -1,0 +1,73 @@
+{
+  "scope": "Identify limiting real geometry at four already-found transition failures; same inputs/poses, no new fitting or parameter changes",
+  "rows": [
+    {
+      "kind": "ramp",
+      "facing": 1,
+      "center_x": 0.125,
+      "foot_gap": 0.19375522135441037,
+      "limiting_contact": {
+        "source": "vertex",
+        "source_vertex_index": 21032,
+        "local_xyz": [
+          0.00043952964668113033,
+          0.14245231547241857,
+          -0.8489985333788782
+        ],
+        "world_axial": -0.6688990394274965,
+        "terrain_y": 0.0
+      }
+    },
+    {
+      "kind": "ramp",
+      "facing": -1,
+      "center_x": -0.375,
+      "foot_gap": 0.21521324517771848,
+      "limiting_contact": {
+        "source": "vertex",
+        "source_vertex_index": 21032,
+        "local_xyz": [
+          0.00043952964668113033,
+          0.14245231547241857,
+          -0.8489985333788782
+        ],
+        "world_axial": 0.47399850670416666,
+        "terrain_y": 0.35766567113611114
+      }
+    },
+    {
+      "kind": "stairs",
+      "facing": 1,
+      "center_x": 0.125,
+      "foot_gap": 0.1918339635308204,
+      "limiting_contact": {
+        "source": "vertex",
+        "source_vertex_index": 21032,
+        "local_xyz": [
+          0.00043952964668113033,
+          0.14245231547241857,
+          -0.8489985333788782
+        ],
+        "world_axial": -0.6700153164721477,
+        "terrain_y": 0.0
+      }
+    },
+    {
+      "kind": "stairs",
+      "facing": -1,
+      "center_x": -0.25,
+      "foot_gap": 0.2880014658144017,
+      "limiting_contact": {
+        "source": "edge/riser intersection",
+        "source_vertex_index": null,
+        "local_xyz": [
+          0.00043952418484618664,
+          0.1807484159049163,
+          -0.8906250338457916
+        ],
+        "world_axial": 0.640625,
+        "terrain_y": 0.46875
+      }
+    }
+  ]
+}

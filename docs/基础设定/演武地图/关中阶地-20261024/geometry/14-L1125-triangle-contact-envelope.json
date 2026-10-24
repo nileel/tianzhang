@@ -1,0 +1,489 @@
+{
+  "scope": "D1 single L1125/8step trial including all mesh vertices plus every mesh edge intersection with support-profile break lines. This gives exact piecewise-linear triangle envelope in axial terrain profile, not an asset or runtime acceptance.",
+  "rows": [
+    {
+      "kind": "ramp",
+      "facing": 1,
+      "center": 0.5,
+      "fixed_profile_pitch": {
+        "pitch_deg": 33.690067525979785,
+        "root_y": 0.3750000000000001,
+        "support_root_difference_front_minus_rear": 1.1102230246251565e-16,
+        "max_foot_gap_after_fit": 1.1102230246251565e-16,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.3750000000000001,
+            "local_contact_xyz": [
+              -0.1859794551012467,
+              0.0,
+              0.413727459112916
+            ],
+            "world_axial": 0.84424205413055,
+            "terrain_y": 0.6044947027537,
+            "source": "vertex"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.3750000000000001,
+            "local_contact_xyz": [
+              0.18861751560761103,
+              0.0,
+              0.41988275472647785
+            ],
+            "world_axial": 0.8493635696575506,
+            "terrain_y": 0.6079090464383671,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.375,
+            "local_contact_xyz": [
+              -0.17630685729250414,
+              0.0,
+              -0.25984361967343383
+            ],
+            "world_axial": 0.2837970397689087,
+            "terrain_y": 0.23086469317927244,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.375,
+            "local_contact_xyz": [
+              0.16839270260860437,
+              0.0,
+              -0.2589643377318277
+            ],
+            "world_axial": 0.284528646567228,
+            "terrain_y": 0.23135243104481867,
+            "source": "vertex"
+          }
+        ],
+        "sampled_points_including_exact_edges": 28796,
+        "lowest_is_body_not_foot": false
+      },
+      "foot_envelope_pitch_solved": {
+        "pitch_deg": 33.69006603956223,
+        "root_y": 0.37500001309172004,
+        "support_root_difference_front_minus_rear": 2.1166087049717675e-08,
+        "max_foot_gap_after_fit": 2.1166088770563363e-08,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.37500001309172004,
+            "local_contact_xyz": [
+              -0.18773812632523193,
+              0.0,
+              0.4198828083968643
+            ],
+            "world_axial": 0.8493636203563435,
+            "terrain_y": 0.6079090802375624,
+            "source": "vertex"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.37500001309171843,
+            "local_contact_xyz": [
+              0.18861751560761103,
+              0.0,
+              0.41988275472647785
+            ],
+            "world_axial": 0.849363575699882,
+            "terrain_y": 0.607909050466588,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.374999991925633,
+            "local_contact_xyz": [
+              -0.16839283678457054,
+              0.0,
+              -0.25896428406144123
+            ],
+            "world_axial": 0.284528687497058,
+            "terrain_y": 0.23135245833137202,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.37499999192563127,
+            "local_contact_xyz": [
+              0.16839270260860437,
+              0.0,
+              -0.2589643377318277
+            ],
+            "world_axial": 0.28452864284059637,
+            "terrain_y": 0.23135242856039756,
+            "source": "vertex"
+          }
+        ],
+        "sampled_points_including_exact_edges": 28796,
+        "lowest_is_body_not_foot": false
+      }
+    },
+    {
+      "kind": "ramp",
+      "facing": -1,
+      "center": 0.5,
+      "fixed_profile_pitch": {
+        "pitch_deg": -33.690067525979785,
+        "root_y": 0.3750000000000001,
+        "support_root_difference_front_minus_rear": -1.1102230246251565e-16,
+        "max_foot_gap_after_fit": 1.6653345369377348e-16,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.37499999999999994,
+            "local_contact_xyz": [
+              -0.1859794551012467,
+              0.0,
+              0.413727459112916
+            ],
+            "world_axial": 0.15575794586945008,
+            "terrain_y": 0.14550529724630004,
+            "source": "vertex"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.375,
+            "local_contact_xyz": [
+              0.18861751560761103,
+              0.0,
+              0.41988275472647785
+            ],
+            "world_axial": 0.15063643034244945,
+            "terrain_y": 0.14209095356163298,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.3750000000000001,
+            "local_contact_xyz": [
+              -0.16839283678457054,
+              0.0,
+              -0.25896428406144123
+            ],
+            "world_axial": 0.7154713087763112,
+            "terrain_y": 0.5186475391842075,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.3750000000000001,
+            "local_contact_xyz": [
+              0.16839270260860437,
+              0.0,
+              -0.2589643377318277
+            ],
+            "world_axial": 0.715471353432772,
+            "terrain_y": 0.5186475689551814,
+            "source": "vertex"
+          }
+        ],
+        "sampled_points_including_exact_edges": 29105,
+        "lowest_is_body_not_foot": false
+      },
+      "foot_envelope_pitch_solved": {
+        "pitch_deg": -33.69006603956223,
+        "root_y": 0.37500000810178585,
+        "support_root_difference_front_minus_rear": -2.100158374984673e-08,
+        "max_foot_gap_after_fit": 2.1001585415181268e-08,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.37499998710020044,
+            "local_contact_xyz": [
+              -0.1859794551012467,
+              0.0,
+              0.413727459112916
+            ],
+            "world_axial": 0.15575793991569653,
+            "terrain_y": 0.14550529327713102,
+            "source": "vertex"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.3749999871002021,
+            "local_contact_xyz": [
+              0.18597950877163316,
+              0.0,
+              0.41372740544252945
+            ],
+            "world_axial": 0.15575798457215823,
+            "terrain_y": 0.14550532304810548,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.37500000810178424,
+            "local_contact_xyz": [
+              -0.17630685729250414,
+              0.0,
+              -0.25984361967343383
+            ],
+            "world_axial": 0.7162029639703763,
+            "terrain_y": 0.5191353093135842,
+            "source": "vertex"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.37500000810178585,
+            "local_contact_xyz": [
+              0.17630672311653797,
+              0.0,
+              -0.2598436733438203
+            ],
+            "world_axial": 0.716203008626838,
+            "terrain_y": 0.5191353390845586,
+            "source": "vertex"
+          }
+        ],
+        "sampled_points_including_exact_edges": 29105,
+        "lowest_is_body_not_foot": false
+      }
+    },
+    {
+      "kind": "stairs",
+      "facing": 1,
+      "center": 0.5,
+      "fixed_profile_pitch": {
+        "pitch_deg": 33.690067525979785,
+        "root_y": 0.37394317012087314,
+        "support_root_difference_front_minus_rear": 0.009250473406581528,
+        "max_foot_gap_after_fit": 0.009345594943488689,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.37394317012087314,
+            "local_contact_xyz": [
+              -0.2995419159514208,
+              0.0008793356119926238,
+              0.5076168718534518
+            ],
+            "world_axial": 0.921875,
+            "terrain_y": 0.65625,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.3739431701208731,
+            "local_contact_xyz": [
+              0.2791890836428513,
+              0.0008793356119926238,
+              0.3386066558160774
+            ],
+            "world_axial": 0.78125,
+            "terrain_y": 0.5625,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.36459757517738445,
+            "local_contact_xyz": [
+              -0.17319835093913097,
+              0.008655340635484548,
+              -0.16323998894705147
+            ],
+            "world_axial": 0.359375,
+            "terrain_y": 0.28125,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.3646926967142916,
+            "local_contact_xyz": [
+              0.16737670259134735,
+              0.008576194732703083,
+              -0.1632927528822391
+            ],
+            "world_axial": 0.359375,
+            "terrain_y": 0.28125,
+            "source": "edge/riser intersection"
+          }
+        ],
+        "sampled_points_including_exact_edges": 32294,
+        "lowest_is_body_not_foot": false
+      },
+      "foot_envelope_pitch_solved": {
+        "pitch_deg": 34.53871160745621,
+        "root_y": 0.36785482844741973,
+        "support_root_difference_front_minus_rear": 1.1290787860218643e-08,
+        "max_foot_gap_after_fit": 6.524136866120633e-05,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.3678548284474197,
+            "local_contact_xyz": [
+              -0.3092031963985443,
+              0.0008793356119926238,
+              0.34203440189199524
+            ],
+            "world_axial": 0.78125,
+            "terrain_y": 0.5625,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.36785482844741973,
+            "local_contact_xyz": [
+              0.2791890836428513,
+              0.0008793356119926238,
+              0.3420344018919952
+            ],
+            "world_axial": 0.78125,
+            "terrain_y": 0.5625,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.36778958707875853,
+            "local_contact_xyz": [
+              -0.17278243805809093,
+              0.00844275524360578,
+              -0.16490364047121156
+            ],
+            "world_axial": 0.359375,
+            "terrain_y": 0.28125,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.3678548171566319,
+            "local_contact_xyz": [
+              0.1688414750830336,
+              0.008389022403281652,
+              -0.16494062350691802
+            ],
+            "world_axial": 0.359375,
+            "terrain_y": 0.28125,
+            "source": "edge/riser intersection"
+          }
+        ],
+        "sampled_points_including_exact_edges": 32258,
+        "lowest_is_body_not_foot": false
+      }
+    },
+    {
+      "kind": "stairs",
+      "facing": -1,
+      "center": 0.5,
+      "fixed_profile_pitch": {
+        "pitch_deg": -33.690067525979785,
+        "root_y": 0.37394317012087297,
+        "support_root_difference_front_minus_rear": 0.004948536873807363,
+        "max_foot_gap_after_fit": 0.004948549642226963,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.37394317012087297,
+            "local_contact_xyz": [
+              -0.2971437226285477,
+              0.0008793356119926238,
+              0.5064444243707951
+            ],
+            "world_axial": 0.078125,
+            "terrain_y": 0.09375,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.37394317012087297,
+            "local_contact_xyz": [
+              0.28553784959651296,
+              0.0008793356119926238,
+              0.5064444243707951
+            ],
+            "world_axial": 0.078125,
+            "terrain_y": 0.09375,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.3689946332470656,
+            "local_contact_xyz": [
+              -0.269203560617062,
+              0.004996767174385794,
+              -0.1723413941536317
+            ],
+            "world_axial": 0.640625,
+            "terrain_y": 0.46875,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.368994620478646,
+            "local_contact_xyz": [
+              0.2695163114053527,
+              0.00499677779835306,
+              -0.17234140123627653
+            ],
+            "world_axial": 0.640625,
+            "terrain_y": 0.46875,
+            "source": "edge/riser intersection"
+          }
+        ],
+        "sampled_points_including_exact_edges": 31947,
+        "lowest_is_body_not_foot": false
+      },
+      "foot_envelope_pitch_solved": {
+        "pitch_deg": -33.215272128582,
+        "root_y": 0.3705462694556779,
+        "support_root_difference_front_minus_rear": -1.2113898106846932e-08,
+        "max_foot_gap_after_fit": 1.6140652314700077e-08,
+        "feet": [
+          {
+            "name": "front_left",
+            "needed_root_y": 0.3705462533150256,
+            "local_contact_xyz": [
+              -0.3011724202722804,
+              0.0009250297430922,
+              0.33556912502887226
+            ],
+            "world_axial": 0.21875,
+            "terrain_y": 0.1875,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "front_right",
+            "needed_root_y": 0.3705462573417798,
+            "local_contact_xyz": [
+              0.3022690522365036,
+              0.0009250263742358204,
+              0.33556912723467286
+            ],
+            "world_axial": 0.21875,
+            "terrain_y": 0.1875,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_left",
+            "needed_root_y": 0.3705462694556779,
+            "local_contact_xyz": [
+              -0.2693317447223882,
+              0.005126600804615508,
+              -0.17144410541634825
+            ],
+            "world_axial": 0.640625,
+            "terrain_y": 0.46875,
+            "source": "edge/riser intersection"
+          },
+          {
+            "name": "rear_right",
+            "needed_root_y": 0.3705462567369951,
+            "local_contact_xyz": [
+              0.2695163114053527,
+              0.00512661144529878,
+              -0.17144411238346768
+            ],
+            "world_axial": 0.640625,
+            "terrain_y": 0.46875,
+            "source": "edge/riser intersection"
+          }
+        ],
+        "sampled_points_including_exact_edges": 31982,
+        "lowest_is_body_not_foot": false
+      }
+    }
+  ]
+}

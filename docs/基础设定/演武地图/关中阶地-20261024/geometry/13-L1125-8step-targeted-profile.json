@@ -1,0 +1,1720 @@
+{
+  "parameters": {
+    "L": 1.125,
+    "H": 0.75,
+    "N": 8,
+    "start_from_low_cell": -0.0625,
+    "end_from_low_cell": 1.0625,
+    "step_run": 0.140625,
+    "step_rise": 0.09375,
+    "foot_anchor_mean_distance": 0.6762090856223276,
+    "tilted_anchor_horizontal_distance": 0.5626399687259819
+  },
+  "scope": "D1 single requested analytic profile trial only. All original mesh vertices; rigid body rotation and minimum vertical translation; unchanged meshes. Foot support candidates are actual lower sole vertices <=1cm, not bbox minima. No triangles or actual assembled asset acceptance.",
+  "center_stationary_rows": [
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 90,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 150,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 210,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 270,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 330,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": 1,
+      "yaw": 30,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.84424205413055,
+          "support_height": 0.6044947027537,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.8493635696575506,
+          "support_height": 0.6079090464383671,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5555,
+          "local_xyz": [
+            -0.17630685729250414,
+            0.0,
+            -0.25984361967343383
+          ],
+          "world_axial": 0.2837970397689087,
+          "support_height": 0.23086469317927244,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11756,
+          "local_xyz": [
+            0.17630672311653797,
+            0.0,
+            -0.2598436733438203
+          ],
+          "world_axial": 0.2837969951124478,
+          "support_height": 0.23086466340829856,
+          "gap_before_vertical_fit": 0.0,
+          "gap_after_vertical_fit": 1.1102230246251565e-16,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.3877787807814457e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 90,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 150,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 210,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 270,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 330,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "ramp",
+      "facing_relative_incline": -1,
+      "yaw": 30,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3750000000000001,
+      "vertical_fit_m": 1.1102230246251565e-16,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 16386,
+          "local_xyz": [
+            -0.1859794551012467,
+            0.0,
+            0.413727459112916
+          ],
+          "world_axial": 0.15575794586945008,
+          "support_height": 0.14550529724630004,
+          "gap_before_vertical_fit": 5.551115123125783e-17,
+          "gap_after_vertical_fit": 1.6653345369377348e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 22861,
+          "local_xyz": [
+            0.18861751560761103,
+            0.0,
+            0.41988275472647785
+          ],
+          "world_axial": 0.15063643034244945,
+          "support_height": 0.14209095356163298,
+          "gap_before_vertical_fit": 2.7755575615628914e-17,
+          "gap_after_vertical_fit": 1.3877787807814457e-16,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 5556,
+          "local_xyz": [
+            -0.16839283678457054,
+            0.0,
+            -0.25896428406144123
+          ],
+          "world_axial": 0.7154713087763112,
+          "support_height": 0.5186475391842075,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 11754,
+          "local_xyz": [
+            0.16839270260860437,
+            0.0,
+            -0.2589643377318277
+          ],
+          "world_axial": 0.715471353432772,
+          "support_height": 0.5186475689551814,
+          "gap_before_vertical_fit": -1.1102230246251565e-16,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 1.6653345369377348e-16,
+      "all_vertex_min_before_fit": -1.1102230246251565e-16,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 90,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 150,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 210,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 270,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 330,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": 1,
+      "yaw": 30,
+      "pitch_deg": 33.690067525979785,
+      "root_y_relative_low": 0.3726131491345124,
+      "vertical_fit_m": -0.002386850865487622,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 14648,
+          "local_xyz": [
+            -0.20796283198346566,
+            0.0017586712239852475,
+            0.5086957052081194
+          ],
+          "world_axial": 0.9222848759737724,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.0023869104074354386,
+          "gap_after_vertical_fit": 5.9541947816654783e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 21877,
+          "local_xyz": [
+            0.208842248101038,
+            0.0017586712239852475,
+            0.5086955978673464
+          ],
+          "world_axial": 0.9222847866608507,
+          "support_height": 0.65625,
+          "gap_before_vertical_fit": 0.002386850865487622,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 4130,
+          "local_xyz": [
+            -0.26160239823819204,
+            0.008894951645722455,
+            -0.16223736674225261
+          ],
+          "world_axial": 0.3600763198262158,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157947967952275,
+          "gap_after_vertical_fit": 0.008771097102464653,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 12237,
+          "local_xyz": [
+            0.2616022908974191,
+            0.008894951645722455,
+            -0.16223744724783232
+          ],
+          "world_axial": 0.36007625284152456,
+          "support_height": 0.28125,
+          "gap_before_vertical_fit": 0.011157903311491413,
+          "gap_after_vertical_fit": 0.00877105244600379,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.008771097102464653,
+      "all_vertex_min_before_fit": 0.002386850865487622,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 90,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 150,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 210,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 270,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 330,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    },
+    {
+      "kind": "stairs",
+      "facing_relative_incline": -1,
+      "yaw": 30,
+      "pitch_deg": -33.690067525979785,
+      "root_y_relative_low": 0.3733394992851473,
+      "vertical_fit_m": -0.0016605007148526585,
+      "min_gap_all_vertices_after_fit": 0.0,
+      "vertices_below_minus_2mm": 0,
+      "feet": [
+        {
+          "name": "front_left",
+          "support_vertex_index": 15502,
+          "local_xyz": [
+            -0.3011724202722804,
+            0.0008793356119926238,
+            0.33634592525756507
+          ],
+          "world_axial": 0.21965550625358848,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605007148526585,
+          "gap_after_vertical_fit": 0.0,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "front_right",
+          "support_vertex_index": 23963,
+          "local_xyz": [
+            0.2791890836428513,
+            0.0008793356119926238,
+            0.3363458715871786
+          ],
+          "world_axial": 0.2196555509100493,
+          "support_height": 0.1875,
+          "gap_before_vertical_fit": 0.0016605304858265668,
+          "gap_after_vertical_fit": 2.9770973908327392e-08,
+          "low_sole_vertex_count": 484
+        },
+        {
+          "name": "rear_left",
+          "support_vertex_index": 18230,
+          "local_xyz": [
+            -0.26863708313413304,
+            0.004423000030129539,
+            -0.1763067365341346
+          ],
+          "world_axial": 0.6442426330423543,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275398282398156,
+          "gap_after_vertical_fit": 0.006067039113387157,
+          "low_sole_vertex_count": 290
+        },
+        {
+          "name": "rear_right",
+          "support_vertex_index": 27813,
+          "local_xyz": [
+            0.2695163114053527,
+            0.004423000030129539,
+            -0.1763068170397143
+          ],
+          "world_axial": 0.6442427000270456,
+          "support_height": 0.46875,
+          "gap_before_vertical_fit": 0.0077275844847006225,
+          "gap_after_vertical_fit": 0.006067083769847964,
+          "low_sole_vertex_count": 289
+        }
+      ],
+      "max_gap_among_four_foot_supports": 0.006067083769847964,
+      "all_vertex_min_before_fit": 0.0016605007148526585,
+      "vertical_fit_is_contact_envelope_not_approved_runtime_rule": true
+    }
+  ]
+}

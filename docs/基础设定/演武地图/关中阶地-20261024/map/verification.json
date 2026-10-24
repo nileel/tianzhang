@@ -1,5 +1,5 @@
 {
-  "mapVersion": "guanzhong-jindan-v3-d1-candidate-20261024.1",
+  "mapVersion": "guanzhong-jindan-v3-d1-candidate-20261024.2",
   "checks": "passed",
   "cellCount": 100,
   "directedEdgeCount": 522,
@@ -131,17 +131,18 @@
       "rear_right_stairs"
     ]
   },
+  "singleChecksExecuted": false,
   "noLowToMidConnectionsMeansNoGoal": true,
   "noHighStairsMeansNoGoal": true,
   "oneWayDropForwardLegalReverseIllegal": true,
   "slopeAndStairBothDirectionsRawMovementUnits": 3,
   "pairLegalPoseCountsByHeight": {
-    "0": 130,
-    "1": 244,
-    "2": 46
+    "0": 138,
+    "1": 255,
+    "2": 49
   },
-  "pairLegalTransitionCount": 1396,
-  "pairCrossHeightTransitionCount": 0,
+  "pairLegalTransitionCount": 1632,
+  "pairCrossHeightTransitionCount": 113,
   "pairReachability": [
     {
       "anchor": "2:0",
@@ -156,26 +157,30 @@
       "anchor": "4:6",
       "facing": 0,
       "startHeight": 1,
-      "reachablePoses": 172,
+      "reachablePoses": 322,
       "reachableHeights": [
-        1
+        0,
+        1,
+        2
       ]
     },
     {
       "anchor": "8:8",
       "facing": 0,
       "startHeight": 2,
-      "reachablePoses": 24,
+      "reachablePoses": 322,
       "reachableHeights": [
+        0,
+        1,
         2
       ]
     }
   ],
-  "pairInvariantProof": "Every move ends with rear=old anchor. Same-height destination placement therefore forces H(new anchor)=H(old anchor). Turns preserve the anchor. Induction forbids changing height on any path, regardless of ramp width.",
+  "pairPlacementProof": "Every move still ends with rear=old anchor. Approved one-level slope/stair placements remove the same-height invariant only across explicit bidirectional legal connections. Turn sequences and rear sweeps are not skipped.",
   "verificationLimits": [
     "Offline candidate graph only; no current Unity importer/runtime acceptance claimed.",
     "No geometry, line-of-sight or visual-body collision verification.",
     "No actual AP/MP/CT balance claim; reports movement-equivalent distance only.",
-    "Double-cell cross-height movement remains unresolved, not passed."
+    "Cross-height pair rule is approved and checked offline; geometry and Unity runtime remain unverified."
   ]
 }

@@ -1,0 +1,33 @@
+steps=14; movementEquivalentDistance=15.0; forbidden=[]
+00 front=1:1 H0 rear=1:0 H0 facing=5
+   move: front=1:1>1:2; rear=1:0>1:1; units=2; connection=None
+01 front=1:2 H0 rear=1:1 H0 facing=5
+   move: front=1:2>1:3; rear=1:1>1:2; units=3; connection=left_ramp
+02 front=1:3 H1 rear=1:2 H0 facing=5
+   move: front=1:3>1:4; rear=1:2>1:3; units=2; connection=None
+03 front=1:4 H1 rear=1:3 H1 facing=5
+   move: front=1:4>1:5; rear=1:3>1:4; units=2; connection=None
+04 front=1:5 H1 rear=1:4 H1 facing=5
+   move: front=1:5>1:6; rear=1:4>1:5; units=2; connection=None
+05 front=1:6 H1 rear=1:5 H1 facing=5
+   turn: front=1:6 H1 rear=0:6 H1 facing=0; rearSweep=1:5>0:6
+   move: front=1:6>2:6; rear=0:6>1:6; units=2; connection=None
+06 front=2:6 H1 rear=1:6 H1 facing=0
+   move: front=2:6>3:6; rear=1:6>2:6; units=2; connection=None
+07 front=3:6 H1 rear=2:6 H1 facing=0
+   move: front=3:6>4:6; rear=2:6>3:6; units=2; connection=None
+08 front=4:6 H1 rear=3:6 H1 facing=0
+   move: front=4:6>5:6; rear=3:6>4:6; units=2; connection=None
+09 front=5:6 H1 rear=4:6 H1 facing=0
+   move: front=5:6>6:6; rear=4:6>5:6; units=2; connection=None
+10 front=6:6 H1 rear=5:6 H1 facing=0
+   move: front=6:6>7:6; rear=5:6>6:6; units=2; connection=None
+11 front=7:6 H1 rear=6:6 H1 facing=0
+   turn: front=7:6 H1 rear=7:5 H1 facing=5; rearSweep=6:6>7:5
+   move: front=7:6>7:7; rear=7:5>7:6; units=3; connection=rear_right_stairs
+12 front=7:7 H2 rear=7:6 H1 facing=5
+   move: front=7:7>7:8; rear=7:6>7:7; units=2; connection=None
+13 front=7:8 H2 rear=7:7 H2 facing=5
+   turn: front=7:8 H2 rear=6:8 H2 facing=0; rearSweep=7:7>6:8
+   move: front=7:8>8:8; rear=6:8>7:8; units=2; connection=None
+14 front=8:8 H2 rear=7:8 H2 facing=0

@@ -1,0 +1,730 @@
+{
+  "mesh": "D1_Beast_Shijiahou_Static3D_Mesh",
+  "vertex_count": 28618,
+  "feet": [
+    {
+      "name": "front_left",
+      "count_y_le_1cm": 484,
+      "bounds_min": [
+        -0.40141668003943953,
+        0.0,
+        0.26775774752214043
+      ],
+      "bounds_max": [
+        -0.17366875653334995,
+        0.009672691731918861,
+        0.5447484652998169
+      ],
+      "zero_vertex_indices": [
+        16385,
+        16386
+      ],
+      "zero_vertex_mean": [
+        -0.1868587907132393,
+        0.0,
+        0.41680513375489014
+      ]
+    },
+    {
+      "name": "front_right",
+      "count_y_le_1cm": 484,
+      "bounds_min": [
+        0.17366881020373642,
+        0.0,
+        0.2677576938517539
+      ],
+      "bounds_max": [
+        0.401416733709826,
+        0.009672691731918861,
+        0.544748357959044
+      ],
+      "zero_vertex_indices": [
+        22861,
+        22862
+      ],
+      "zero_vertex_mean": [
+        0.1872985121896221,
+        0.0,
+        0.4168050800845037
+      ]
+    },
+    {
+      "name": "rear_left",
+      "count_y_le_1cm": 290,
+      "bounds_min": [
+        -0.296775822717897,
+        0.0,
+        -0.26424029773339697
+      ],
+      "bounds_max": [
+        -0.08837327596684685,
+        0.009794728966163424,
+        -0.038251065577687586
+      ],
+      "zero_vertex_indices": [
+        5555,
+        5556
+      ],
+      "zero_vertex_mean": [
+        -0.17234984703853734,
+        0.0,
+        -0.25940395186743753
+      ]
+    },
+    {
+      "name": "rear_right",
+      "count_y_le_1cm": 289,
+      "bounds_min": [
+        0.08837318204367052,
+        0.0,
+        -0.26424035140378344
+      ],
+      "bounds_max": [
+        0.29765505098911665,
+        0.009794728966163424,
+        -0.038251099121679136
+      ],
+      "zero_vertex_indices": [
+        11754,
+        11756
+      ],
+      "zero_vertex_mean": [
+        0.17234971286257117,
+        0.0,
+        -0.259404005537824
+      ]
+    }
+  ],
+  "pure_slope_six_directions": [
+    {
+      "yaw": 90,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.3316658105488397,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.84029318551559
+    },
+    {
+      "yaw": 150,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.3316658105488397,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.84029318551559
+    },
+    {
+      "yaw": 210,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.33166581054884,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.8402931855155901
+    },
+    {
+      "yaw": 270,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.3316658105488397,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.84029318551559
+    },
+    {
+      "yaw": 330,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.3316658105488397,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.84029318551559
+    },
+    {
+      "yaw": 30,
+      "pitch_deg": 36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.33166581054884,
+      "vertical_extent": 1.298602874727016,
+      "min_plane_signed_vertical_gap": -5.551115123125783e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.8402931855155901
+    },
+    {
+      "yaw": 90,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084667
+    },
+    {
+      "yaw": 150,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.8204201259891181,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084667
+    },
+    {
+      "yaw": 210,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084667
+    },
+    {
+      "yaw": 270,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.820420125989118,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084667
+    },
+    {
+      "yaw": 330,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.8204201259891181,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084666
+    },
+    {
+      "yaw": 30,
+      "pitch_deg": -36.86989764584402,
+      "width": 0.8204201259891181,
+      "projected_axial_length": 1.5745383870867822,
+      "vertical_extent": 1.024074232258455,
+      "min_plane_signed_vertical_gap": -2.7755575615628914e-17,
+      "below_plane_count": 0,
+      "max_radius_about_midpoint": 0.9693796784084668
+    }
+  ],
+  "finite_ramp_chord_poses": [
+    {
+      "facing_relative_slope": 1,
+      "center_x": -0.5,
+      "pitch_deg": 0.0,
+      "root_y": 0.0,
+      "min_mesh_gap": -0.02960433872089582,
+      "lowest_vertex_index": 13464,
+      "lowest_local_xyz": [
+        -0.2879823592571978,
+        0.002638006835977871,
+        0.5429897940758316
+      ],
+      "penetrating_vertex_count": 66,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 0,
+      "pitch_deg": 20.556045219583467,
+      "root_y": 0.1875,
+      "min_mesh_gap": 8.297057261241747e-06,
+      "lowest_vertex_index": 13464,
+      "lowest_local_xyz": [
+        -0.2879823592571978,
+        0.002638006835977871,
+        0.5429897940758316
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.040069303251893784,
+          "max_gap": 0.0422305906766523
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.04006932209682457,
+          "max_gap": 0.04223060952158314
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.09626281398547878,
+          "max_gap": 0.09657156933187286
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.09626279514054797,
+          "max_gap": 0.09657155048694205
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 0.25,
+      "pitch_deg": 29.357753542791276,
+      "root_y": 0.28125,
+      "min_mesh_gap": -0.010823120048044421,
+      "lowest_vertex_index": 21032,
+      "lowest_local_xyz": [
+        0.00043952964668113033,
+        0.14245231547241857,
+        -0.8489985333788782
+      ],
+      "penetrating_vertex_count": 96,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.025132577951651025,
+          "max_gap": 0.026138487675091082
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.025132586722487804,
+          "max_gap": 0.026138496445927695
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.13607005030817343,
+          "max_gap": 0.13621375169723626
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.13607005907901015,
+          "max_gap": 0.136213760468073
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 0.5,
+      "pitch_deg": 36.86989764584402,
+      "root_y": 0.375,
+      "min_mesh_gap": -0.02043726764939202,
+      "lowest_vertex_index": 21032,
+      "lowest_local_xyz": [
+        0.00043952964668113033,
+        0.14245231547241857,
+        -0.8489985333788782
+      ],
+      "penetrating_vertex_count": 144,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": -1.1102230246251565e-16,
+          "max_gap": -1.1102230246251565e-16
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 2.7755575615628914e-17
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 2.7755575615628914e-17
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 0.75,
+      "pitch_deg": 29.357753542791276,
+      "root_y": 0.46875,
+      "min_mesh_gap": -0.1366808363948716,
+      "lowest_vertex_index": 1537,
+      "lowest_local_xyz": [
+        -0.31612115251134826,
+        0.0026379800007846343,
+        0.2827064797612083
+      ],
+      "penetrating_vertex_count": 5654,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": -0.07841546302527291,
+          "max_gap": -0.07539773385495308
+        },
+        {
+          "name": "front_right",
+          "min_gap": -0.0784154893377832,
+          "max_gap": -0.07539776016746325
+        },
+        {
+          "name": "rear_left",
+          "min_gap": -0.05142994969182657,
+          "max_gap": -0.05128624830276374
+        },
+        {
+          "name": "rear_right",
+          "min_gap": -0.05142994092098979,
+          "max_gap": -0.05128623953192696
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 1,
+      "pitch_deg": 20.556045219583467,
+      "root_y": 0.5625,
+      "min_mesh_gap": -0.16231869448452096,
+      "lowest_vertex_index": 18882,
+      "lowest_local_xyz": [
+        -0.13058136521609787,
+        0.009794728966163424,
+        -0.038251065577687586
+      ],
+      "penetrating_vertex_count": 5852,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": -0.04223059067665236,
+          "max_gap": -0.04006930325189373
+        },
+        {
+          "name": "front_right",
+          "min_gap": -0.042230609521583196,
+          "max_gap": -0.04006932209682457
+        },
+        {
+          "name": "rear_left",
+          "min_gap": -0.09657156933187283,
+          "max_gap": -0.09626281398547887
+        },
+        {
+          "name": "rear_right",
+          "min_gap": -0.09657155048694216,
+          "max_gap": -0.09626279514054797
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": 1,
+      "center_x": 1.5,
+      "pitch_deg": 0.0,
+      "root_y": 0.75,
+      "min_mesh_gap": 0.0,
+      "lowest_vertex_index": 5555,
+      "lowest_local_xyz": [
+        -0.17630685729250414,
+        0.0,
+        -0.25984361967343383
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": -0.5,
+      "pitch_deg": 0.0,
+      "root_y": 0.0,
+      "min_mesh_gap": -0.11929658456174005,
+      "lowest_vertex_index": 21032,
+      "lowest_local_xyz": [
+        0.00043952964668113033,
+        0.14245231547241857,
+        -0.8489985333788782
+      ],
+      "penetrating_vertex_count": 762,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 0,
+      "pitch_deg": -20.556045219583467,
+      "root_y": 0.1875,
+      "min_mesh_gap": -0.0006864024721254247,
+      "lowest_vertex_index": 13464,
+      "lowest_local_xyz": [
+        -0.2879823592571978,
+        0.002638006835977871,
+        0.5429897940758316
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.040069303251893756,
+          "max_gap": 0.04223059067665233
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.04006932209682457,
+          "max_gap": 0.04223060952158317
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.09626281398547881,
+          "max_gap": 0.09657156933187289
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.09626279514054797,
+          "max_gap": 0.09657155048694205
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 0.25,
+      "pitch_deg": -29.357753542791276,
+      "root_y": 0.28125,
+      "min_mesh_gap": 0.017342372673560535,
+      "lowest_vertex_index": 13464,
+      "lowest_local_xyz": [
+        -0.2879823592571978,
+        0.002638006835977871,
+        0.5429897940758316
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.07539773385495305,
+          "max_gap": 0.07841546302527294
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.07539776016746325,
+          "max_gap": 0.07841548933778317
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.05128624830276374,
+          "max_gap": 0.05142994969182657
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.051286239531927014,
+          "max_gap": 0.05142994092098979
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 0.5,
+      "pitch_deg": -36.86989764584402,
+      "root_y": 0.375,
+      "min_mesh_gap": 0.0,
+      "lowest_vertex_index": 5555,
+      "lowest_local_xyz": [
+        -0.17630685729250414,
+        0.0,
+        -0.25984361967343383
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 2.7755575615628914e-17,
+          "max_gap": 2.7755575615628914e-17
+        },
+        {
+          "name": "front_right",
+          "min_gap": 2.7755575615628914e-17,
+          "max_gap": 2.7755575615628914e-17
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 1.1102230246251565e-16
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 0.75,
+      "pitch_deg": -29.357753542791276,
+      "root_y": 0.46875,
+      "min_mesh_gap": -0.1362137604680731,
+      "lowest_vertex_index": 11756,
+      "lowest_local_xyz": [
+        0.17630672311653797,
+        0.0,
+        -0.2598436733438203
+      ],
+      "penetrating_vertex_count": 4823,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": -0.026138487675091027,
+          "max_gap": -0.025132577951651025
+        },
+        {
+          "name": "front_right",
+          "min_gap": -0.02613849644592775,
+          "max_gap": -0.02513258672248775
+        },
+        {
+          "name": "rear_left",
+          "min_gap": -0.13621375169723626,
+          "max_gap": -0.13607005030817343
+        },
+        {
+          "name": "rear_right",
+          "min_gap": -0.1362137604680731,
+          "max_gap": -0.13607005907901015
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 1,
+      "pitch_deg": -20.556045219583467,
+      "root_y": 0.5625,
+      "min_mesh_gap": -0.16489806369253956,
+      "lowest_vertex_index": 18882,
+      "lowest_local_xyz": [
+        -0.13058136521609787,
+        0.009794728966163424,
+        -0.038251065577687586
+      ],
+      "penetrating_vertex_count": 6420,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": -0.042230590676652247,
+          "max_gap": -0.040069303251893784
+        },
+        {
+          "name": "front_right",
+          "min_gap": -0.04223060952158314,
+          "max_gap": -0.04006932209682451
+        },
+        {
+          "name": "rear_left",
+          "min_gap": -0.09657156933187283,
+          "max_gap": -0.09626281398547876
+        },
+        {
+          "name": "rear_right",
+          "min_gap": -0.09657155048694199,
+          "max_gap": -0.09626279514054792
+        }
+      ]
+    },
+    {
+      "facing_relative_slope": -1,
+      "center_x": 1.5,
+      "pitch_deg": 0.0,
+      "root_y": 0.75,
+      "min_mesh_gap": 0.0,
+      "lowest_vertex_index": 5555,
+      "lowest_local_xyz": [
+        -0.17630685729250414,
+        0.0,
+        -0.25984361967343383
+      ],
+      "penetrating_vertex_count": 0,
+      "zero_foot_gaps": [
+        {
+          "name": "front_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "front_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_left",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        },
+        {
+          "name": "rear_right",
+          "min_gap": 0.0,
+          "max_gap": 0.0
+        }
+      ]
+    }
+  ],
+  "flat_turn_swept_radius_from_front_cell": 1.4000000678674536,
+  "flat_turn_swept_diameter_plus_10cm": 2.9000001357349072,
+  "flat_radius_from_midpoint": 0.9000001063122115,
+  "scope": "D1 numeric actual-vertex measurement only. No asset made or changed."
+}

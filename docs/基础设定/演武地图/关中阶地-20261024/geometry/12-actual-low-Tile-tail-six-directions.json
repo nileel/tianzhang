@@ -1,0 +1,95 @@
+{
+  "scope": "D1 true low-Tile tail conflict test only; .75-rise 1m-run analytical ramp midpoint pose. No ramp exists; this does not validate an assembled connector. Terrain rays hit full actual mesh, grass is included if present but chosen tail samples are near centre.",
+  "rows": [
+    {
+      "yaw": 90,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 155,
+      "worst": {
+        "gap_m": -0.01905268512986069,
+        "vertex_index": 21032,
+        "beast_xyz": [
+          -0.2646702159865537,
+          0.31956273235060806,
+          -0.00043952964668114654
+        ],
+        "actual_low_Tile_hit_y": 0.33861541748046875
+      }
+    },
+    {
+      "yaw": 150,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 143,
+      "worst": {
+        "gap_m": -0.019758527809692172,
+        "vertex_index": 6640,
+        "beast_xyz": [
+          -0.11663575226930947,
+          0.32079380220739767,
+          0.2380720840618893
+        ],
+        "actual_low_Tile_hit_y": 0.34055233001708984
+      }
+    },
+    {
+      "yaw": 210,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 151,
+      "worst": {
+        "gap_m": -0.02267867856652811,
+        "vertex_index": 13184,
+        "beast_xyz": [
+          0.11587446350045193,
+          0.32079380220739767,
+          0.23851161433752024
+        ],
+        "actual_low_Tile_hit_y": 0.3434724807739258
+      }
+    },
+    {
+      "yaw": 270,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 158,
+      "worst": {
+        "gap_m": -0.024511516916970066,
+        "vertex_index": 21032,
+        "beast_xyz": [
+          0.2646702159865537,
+          0.31956273235060806,
+          0.00043952964668117896
+        ],
+        "actual_low_Tile_hit_y": 0.3440742492675781
+      }
+    },
+    {
+      "yaw": 330,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 146,
+      "worst": {
+        "gap_m": -0.019512356150368504,
+        "vertex_index": 21032,
+        "beast_xyz": [
+          0.13271575183301923,
+          0.31956273235060806,
+          -0.2289913658461291
+        ],
+        "actual_low_Tile_hit_y": 0.33907508850097656
+      }
+    },
+    {
+      "yaw": 30,
+      "tested_low_end_actual_tail_vertices": 659,
+      "intersections_deeper_than_2mm": 138,
+      "worst": {
+        "gap_m": -0.01801318012497788,
+        "vertex_index": 21032,
+        "beast_xyz": [
+          -0.13195446415353457,
+          0.31956273235060806,
+          -0.22943089549281037
+        ],
+        "actual_low_Tile_hit_y": 0.33757591247558594
+      }
+    }
+  ]
+}

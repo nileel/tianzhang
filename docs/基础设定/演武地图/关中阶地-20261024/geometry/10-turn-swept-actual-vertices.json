@@ -1,0 +1,23 @@
+{
+  "sweep_degrees": [
+    0,
+    60
+  ],
+  "angle_step_degrees": 0.1,
+  "pivot": "front logical cell center; mesh origin starts .5m behind pivot",
+  "measured_actual_vertex_bounds_x_axial_min": [
+    -1.2136526148012365,
+    -1.3999999988744505
+  ],
+  "measured_actual_vertex_bounds_x_axial_max": [
+    0.410210062994559,
+    0.39999999887445037
+  ],
+  "sampled_swept_rectangle_size": [
+    1.6238626777957954,
+    1.799999997748901
+  ],
+  "angle_sampling_bound_m": 0.0012217305356215567,
+  "clear_circle_diameter_with_5cm_per_side": 2.9000001357349072,
+  "note": "Circle is sufficient conservative 360-degree clearance, not a required/new gameplay footprint; pair occupancy remains two cells."
+}
