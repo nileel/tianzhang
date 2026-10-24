@@ -205,7 +205,12 @@ namespace TianZhang.Features.CombatPresentation
             foreach (PresentedUnit unit in units.Values)
             {
                 unit.TargetPreview?.SetVisible(false);
-                if (unit.Root != null) Destroy(unit.Root);
+                if (unit.Root != null)
+                {
+                    foreach (MeshCollider collider in unit.Root.GetComponentsInChildren<MeshCollider>(true))
+                        collider.sharedMesh = null;
+                    Destroy(unit.Root);
+                }
             }
             units.Clear();
             StopAllActionRecoveries();
