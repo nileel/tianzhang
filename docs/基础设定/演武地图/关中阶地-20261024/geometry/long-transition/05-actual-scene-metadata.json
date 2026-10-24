@@ -1,0 +1,64 @@
+{
+  "scene": "D1_Long_C1_Measurement_20261024",
+  "file": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\d1-long-cosine-measurement.blend",
+  "surface_z_chord_max_m": 0.020000000000000462,
+  "surface_curve_chord_error_bound_m": 9.869604401089815e-06,
+  "poses": [
+    {
+      "label": "Uphill - actual sole support",
+      "yaw": 30,
+      "profile_center_z": 0.5825317547305482,
+      "profile_root_y": 0.048744780269026455,
+      "lateral_x": -0.85,
+      "pitch": 7.018927885391301,
+      "roll": -3.1788517262969727,
+      "front_vertex": 3,
+      "rear_vertex": 11756
+    },
+    {
+      "label": "Across slope - roll",
+      "yaw": 90,
+      "profile_center_z": 2.1650635094610964,
+      "profile_root_y": 0.37512750315698495,
+      "lateral_x": 0.5,
+      "pitch": 0.0022208690643310547,
+      "roll": -15.22005597581778,
+      "front_vertex": 22861,
+      "rear_vertex": 11756
+    },
+    {
+      "label": "Downhill - actual sole support",
+      "yaw": 150,
+      "profile_center_z": 3.747595264191645,
+      "profile_root_y": 0.7148871334765341,
+      "lateral_x": 0.9,
+      "pitch": -5.609967066146908,
+      "roll": -3.178851726296969,
+      "front_vertex": 15502,
+      "rear_vertex": 11756
+    }
+  ],
+  "source_hashes": [
+    {
+      "key": "Tile",
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Environments\\Guanzhong\\Tile.fbx",
+      "repository_relative_path": "src/Assets/Art/Environments/Guanzhong/Tile.fbx",
+      "expected": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee",
+      "actual": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee"
+    },
+    {
+      "key": "Player",
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\FormalPlayer\\FormalPlayer_Static3D.fbx",
+      "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+      "expected": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28",
+      "actual": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28"
+    },
+    {
+      "key": "Beast",
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\Shijiahou\\Shijiahou_Static3D.fbx",
+      "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx",
+      "expected": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700",
+      "actual": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    }
+  ]
+}

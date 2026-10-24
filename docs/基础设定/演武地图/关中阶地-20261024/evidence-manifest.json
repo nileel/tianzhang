@@ -1,32 +1,68 @@
 {
   "capturedDate": "2026-10-24",
-  "task": "D1 partial design evidence",
-  "status": "blocked_geometry_after_pair_rule_approved",
+  "task": "D1 fixed map, common geometry dimensions and demo ability contracts",
+  "status": "design_complete_runtime_not_implemented",
   "runtimeValidated": false,
   "targetImage": "assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png",
-  "mapScope": "Offline graph verified against approved one-level bidirectional slope/stair pair rule: 442 poses, 1632 transitions, 113 anchor-height changes, 2407 intermediate turn poses. Explicit environment envelope and default edge fields included; no production importer or runtime implementation.",
-  "geometryScope": "Real FBX vertices and triangle-edge contact envelope in read-only Blender measurement scene. Fixed 1.125 m / 8-step axial profile supports middle poses but fails entry/exit due to tail intersections. No D3.1 seam/sidewall/base samples.",
-  "localMeasurementBlend": "D:\\Temp\\TianZhang-Blender\\d1-measure-20261024\\d1-measured-size-comparison.blend",
-  "localMeasurementBlendSha256": "46addfb939697740a97e5137c94731899d62390690bd21512483f4e58e0aaf76",
-  "blendRetention": "Local measured comparison scene retained outside Git. Original FBX/Prefab/persistent blend were not overwritten. Reproduction script expects the retained local scene and import-state JSON.",
-  "independentReviews": [
-    "Approved pair placement, per-cell height, turn/sweep and temporary-support rules match the offline predicate; read-only independent review passed. No geometry or Unity pass claimed.",
-    "Earth/water/fire/flight: prototype and carrier review passed after gravity cost clarification.",
-    "Space/Yang/Yin/seal and five character presets: source review passed after foundation capacity and per-instance reserve corrections."
+  "approvedDecisions": [
+    "User approved pair cross-height standing on qualified one-level slope/stair connections.",
+    "User approved increasing ramp footprint and changing entry/exit transitions while retaining original beast and 0.75m rise.",
+    "User returned and instructed completion of D1 only; D2 and D3.1 not started."
   ],
+  "map": {
+    "version": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+    "definition": "map/map-candidate.json",
+    "sha256": "be6de07b7193f0f76ea7b698b17ed9bb6a745928f5f256cfb8c0f4e1e7eae7db",
+    "cellCount": 144,
+    "groundStopCellCount": 105,
+    "directedEdges": 760,
+    "overrides": 532,
+    "graphChecksPassed": 39,
+    "encodingChecksPassed": 9,
+    "candidateCsv": "map/EnvironmentProfiles.candidate.csv",
+    "importContract": "map/d2-import-contract.json",
+    "archive": "map/archive-manifest.json",
+    "geometryRelevantDataSha256": "683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8",
+    "inputEquivalence": "map/geometry-input-comparison.json"
+  },
+  "geometry": {
+    "summary": "geometry/long-transition/11-lightweight-summary-manifest.json",
+    "summarySha256": "ea8538000ee814afb46917a7156d954fd25f2da709d5201c77426b9d9f6ac306",
+    "reproduction": "geometry/long-transition/REPRODUCTION.txt",
+    "actualRender": "geometry/long-transition/07-actual-Blender-measurement-render.png",
+    "scope": "Original character mesh and declared finite support geometry: all390 legal stationary pair poses; two complete witness routes with1295 samples and1240 bounded interpolation intervals. All993 transitions were checked for rules only.",
+    "continuousSameProfileBoundMeters": 0.0005370580000357836,
+    "higherForeignSupportHorizontalClearanceLowerBoundMeters": 0.6931065097879338,
+    "engineeringToleranceMeters": 0.002,
+    "rawRetention": "Repetitive raw logs and the measurement blend are retained locally outside Git; exact paths, sizes and SHA256 hashes are in the geometry summary. Original FBX/Prefab/persistent source blend not overwritten."
+  },
+  "abilityScope": {
+    "definitionDirectory": "docs/角色养成/演示原型",
+    "spells": 8,
+    "skills": 7,
+    "legalPresets": 5,
+    "uniqueSeats": 7,
+    "assemblyRules": "docs/基础设定/金丹基础效果装配与冲突规则.txt §一/§九",
+    "coordinateReferences": "Final map markers and visibility/scale/seal witnesses match the five updated source files."
+  },
+  "validation": {
+    "independentReview": "Read-only reviewer independently replayed topology, all pair poses/transitions/turns, costs, CSV decode and ability witnesses; then checked geometry sample coverage, bound implementation and scope. Reviewer did not implement artifacts and did not claim to rerun Blender.",
+    "dataChain": {
+      "result": "passed",
+      "gongFa": "29/29",
+      "spells": "84/84",
+      "skills": "31/31",
+      "languageKeys": 727,
+      "log": "Logs/d1-20261024/data-chain-final-d1.log"
+    },
+    "compilerAndRuntime": "No C# or production CSV changes. Unity and BattleSim compilation/runtime were not run or claimed."
+  },
   "limits": [
-    "No Unity import, play or balance acceptance.",
-    "D1 common connector physical interfaces, six-direction shared ramp band and continuous body support remain unresolved. Discrete measured failures cannot be treated as a passed continuous-motion proof.",
-    "D2 and D3.1 not started; user narrowed this batch to D1 on return."
+    "D2 must implement the versioned existing EnvironmentProfiles import and spatial query chain while preserving old flat maps.",
+    "D3 must produce final Tile seam/sidewall/base samples and ramp/stair assets; the D1 Blender measurement scene is not D3.1 completion.",
+    "The continuous bound applies to the two recorded piecewise yaw/pitch/roll/root witness routes, not all993 legal graph transitions or arbitrary animation.",
+    "Some non-support mesh portions and partial toe tips extend beyond open map edges; actual foot contact points remain on finite support surfaces. Four rigid feet are not required to touch a curved surface simultaneously.",
+    "Short stairs admit bodyScaleRank1, with three grounded stopping platforms and bounded lift/translate/lower presentation during traversal. Double-cell beasts use the long ramps."
   ],
-  "approvedRule": "User approved cross-height pair standing on slope/stair connections on 2026-10-24; this decision is resolved and no longer pending.",
-  "localContactEvidence": "D:/Temp/TianZhang-Blender/d1-approved-20261024",
-  "contactReport": "geometry/D1-contact-interface-findings.txt",
-  "affectedValidation": {
-    "pairAndUnchangedDataChecks": 29,
-    "fieldChecks": 7,
-    "totalPassed": 36,
-    "singleChecksRepeated": false,
-    "archive": "map/archive-manifest.json"
-  }
+  "historicalEvidence": "geometry/D1-geometry-report.txt and geometry/D1-contact-interface-findings.txt preserve rejected short-ramp diagnostics. Their old candidate dimensions and blockers are superseded by the current section IX contract."
 }

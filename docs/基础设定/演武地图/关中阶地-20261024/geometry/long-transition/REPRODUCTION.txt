@@ -1,0 +1,31 @@
+D1 long-transition reproduction (design geometry only)
+
+Input scene: retain the hash-identified d1-long-cosine-measurement.blend in Temp.
+It includes D1_Measure_20261024, D1_Beast_Shijiahou_Static3D_Mesh and D1_Player_FormalPlayer_Static3D_Mesh.
+Original FBX paths/hashes are recorded in measurement-import-state.json; source models were not overwritten.
+
+Execute saved measure-*.py scripts inside the existing Blender Python environment, through the same blender_lab route.
+Before each script, globals MAP_DIR and OUT_DIR may override paths. Defaults preserve the actual execution directories.
+MAP_DIR should point to the archived final map directory:
+D:/天章游戏开发/docs/基础设定/演武地图/关中阶地-20261024/map
+OUT_DIR must be a fresh explicitly chosen folder under D:/Temp/TianZhang-Blender/, created before the run.
+Do not overwrite the retained input blend, original FBX or existing evidence outputs.
+
+Numeric reproduction order:
+measure-02, measure-03, measure-04, measure-13, measure-14,
+measure-15, measure-16, measure-17, measure-18.
+Use each full filename in this folder. Every script contains its required functions.
+15 uses archived map/route JSON. 16 and18 reuse15 output in OUT_DIR. 17 uses all-legal-pair-poses.json.
+Geometry input parameters match the original execution; optional MAP_DIR/OUT_DIR only choose paths.
+Scripts were syntax checked after adding these path overrides; numeric computation was not rerun because geometry inputs did not change.
+
+Optional reconstruction of measurement scene:
+Copy measurement-import-state.json into OUT_DIR. Run measure-05 after02/04, then measure-07.
+05 requires a new destination blend filename; it does not overwrite the retained source scene.
+07 is an actual Workbench render, not image generation. No extra polished scene is required.
+
+Archive only 11-lightweight-summary-manifest.json, this note, measurement-import-state.json,
+05-actual-scene-metadata.json,07-actual-Blender-measurement-render.png and the listed11 reproduction scripts.
+14-stair-constructibility-and-domain.json is a small explanatory artifact and may also be archived.
+All repetitive raw pose/interval logs and the blend stay in Temp; their absolute paths, sizes and SHA256 hashes are in11.
+The earlier121 layout was rejected. 08/09/10/12 are historical diagnostics and are not the final contract.

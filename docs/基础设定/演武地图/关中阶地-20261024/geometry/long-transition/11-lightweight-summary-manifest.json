@@ -1,0 +1,471 @@
+{
+  "status": "D1_geometric_design_contract_verified_with_stated_2mm_tolerance_and_scope",
+  "scope": "Original approved meshes. All 390 legal stationary pair poses; both specified full pair witness routes, 1295 measured poses and1240 bounded interpolation intervals; single player on shared long profile and three-platform true stairs. No D2/D3 production asset or runtime acceptance.",
+  "engineering_tolerance_m": 0.002,
+  "blender_version": "5.2.0 LTS",
+  "profile": {
+    "kind": "C1 half cosine along global worldZ",
+    "H_m": 0.75,
+    "L_m": 4.330127018922193,
+    "formula": "Y=Y0+.75/2*(1-cos(pi*clamp((worldZ-Z0)/L,0,1)))",
+    "center_rows": 6,
+    "row_intervals": 5,
+    "row_pitch_m": 0.8660254037844386,
+    "max_slope_deg": 15.22005597581778,
+    "max_second_derivative_m_inverse": 0.1973920880217872,
+    "endpoint_slope": 0,
+    "physical_width": "Four hex columns share exactly one profile; inner two are stoppable, outer two are explicit nonstoppable shoulders. No second support layer.",
+    "straight_heading_clear_width_m": 1.0,
+    "global_worldX_width_warning": "1m is a heading-relative straight corridor requirement, not the worldX width of the entire band.",
+    "complete_flat_turn_sufficient_diameter_about_front_anchor_m": 2.9,
+    "shared_edges": "Evaluate one global profile at all points of whole shared edges, clip original Tile tops and walls from profile footprint; side edges remain blocked. Actual route turns additionally use finite geometry proof."
+  },
+  "standalone_long_profile": {
+    "L": 4.330127018922193,
+    "H": 0.75,
+    "row_intervals": 5,
+    "profile": "H/2*(1-cos(pi*z/L)), flat outside 0..L",
+    "rows": 774,
+    "failed_brackets": 0,
+    "max_front_rear_foot_gap_m": 1.5691601962242174e-08,
+    "max_triangle_interpolation_error_m": 0.00015586215779110597,
+    "foot_gap_above_2mm_count": 0,
+    "max_lateral_body_width": 0.8930429711740722
+  },
+  "individual_foot_and_body": {
+    "worst_individual_foot": {
+      "yaw": 210,
+      "center": 0.5825317547305482,
+      "feet": {
+        "front_left": {
+          "minimum_gap": 8.497368718385356e-09,
+          "contact_candidate_vertex": 13356
+        },
+        "front_right": {
+          "minimum_gap": 0.024189006004870367,
+          "contact_candidate_vertex": 22862
+        },
+        "rear_left": {
+          "minimum_gap": 0.0067283875954668865,
+          "contact_candidate_vertex": 5556
+        },
+        "rear_right": {
+          "minimum_gap": 0.0,
+          "contact_candidate_vertex": 11756
+        }
+      },
+      "max_individual_foot_gap": 0.024189006004870367,
+      "minimum_tail_clearance": 0.0618697751929789,
+      "minimum_body_above_5cm_clearance": 0.049508748865311966,
+      "worldX_extent": 1.050697943862985,
+      "worldZ_extent": 1.5793723007581286
+    },
+    "minimum_tail_clearance": 0.05919378910034992,
+    "minimum_body_above_5cm_clearance": 0.0481011834150409,
+    "max_worldX_extent": 1.8001965380209013,
+    "max_worldZ_extent": 1.5887793613937253,
+    "orientation_bisection_half_interval_rad": 2.0805946016244048e-08,
+    "profile_C1_at_both_ports": true,
+    "longitudinal_sample_spacing_m": 0.04945411733532963,
+    "continuous_proof_claim": false
+  },
+  "player_long_profile": {
+    "mesh": "D1_Player_FormalPlayer_Static3D_Mesh",
+    "vertex_count": 26105,
+    "triangle_count": 51301,
+    "low_sole_counts_left_right": [
+      156,
+      156
+    ],
+    "poses": 774,
+    "non_sole_limiting_count": 0,
+    "max_individual_foot_gap": 0.003619649057531066,
+    "max_triangle_error_bound": 0.00013499360677688262,
+    "min_local_y": 0.0,
+    "max_gradient": 0.2720699046351327
+  },
+  "stairs": {
+    "H_m": 0.75,
+    "stair_run_m": 1.125,
+    "risers": 8,
+    "riser_height_m": 0.09375,
+    "tread_depth_m": 0.078125,
+    "riser_z_positions_m": [
+      0.3816504037844386,
+      0.4597754037844386,
+      0.5379004037844386,
+      0.6160254037844386,
+      1.1941504037844386,
+      1.2722754037844386,
+      1.3504004037844386,
+      1.4285254037844386
+    ],
+    "port_center_span_m": 1.7320508075688772,
+    "ports": [
+      0,
+      0.8660254037844386,
+      1.7320508075688772
+    ],
+    "middle_platform_depth_m": 0.5,
+    "flight_run_m": 0.3125,
+    "flight_count": 2,
+    "risers_each_flight": 4,
+    "horizontal_platform_center_to_stair_domain_m": 0.3035254037844386,
+    "first_riser_from_lower_center_m": 0.3816504037844386,
+    "last_riser_to_upper_center_m": 0.3035254037844386,
+    "stop_rule": "All three center rows stop on actual horizontal platforms at Y=0,.375,.75. No transit-only state. Stair profile uniquely replaces Tile inside footprint.",
+    "poses": 966,
+    "non_sole_limiting": 0,
+    "max_other_foot_gap_during_move_m": 0.375,
+    "stationary_max_foot_gap_m": 0.0,
+    "max_root_height_jump_between_samples_m": 0.09375,
+    "body_orientation": "upright, pitch=roll=0, six yaw preserved",
+    "extents": [
+      {
+        "yaw": 90,
+        "sole_z_min": -0.19055250883102415,
+        "sole_z_max": 0.19196139872074125,
+        "whole_z_min": -0.25183927118778227,
+        "whole_z_max": 0.25183927118778227,
+        "lower_riser_clearance_from_whole_mesh": 0.12981113259665633,
+        "upper_last_riser_clearance_from_whole_mesh": 0.05168613259665622
+      },
+      {
+        "yaw": 150,
+        "sole_z_min": -0.1488138856935019,
+        "sole_z_max": 0.14354221898256608,
+        "whole_z_min": -0.17099532126644015,
+        "whole_z_max": 0.22902262510390564,
+        "lower_riser_clearance_from_whole_mesh": 0.15262777868053296,
+        "upper_last_riser_clearance_from_whole_mesh": 0.13253008251799847
+      },
+      {
+        "yaw": 210,
+        "sole_z_min": -0.15308439095413878,
+        "sole_z_max": 0.14126544283223094,
+        "whole_z_min": -0.19593716147229778,
+        "whole_z_max": 0.21542597762569085,
+        "lower_riser_clearance_from_whole_mesh": 0.16622442615874775,
+        "upper_last_riser_clearance_from_whole_mesh": 0.10758824231214081
+      },
+      {
+        "yaw": 270,
+        "sole_z_min": -0.19196139872074125,
+        "sole_z_max": 0.19055250883102415,
+        "whole_z_min": -0.25183927118778227,
+        "whole_z_max": 0.25183927118778227,
+        "lower_riser_clearance_from_whole_mesh": 0.12981113259665633,
+        "upper_last_riser_clearance_from_whole_mesh": 0.05168613259665622
+      },
+      {
+        "yaw": 330,
+        "sole_z_min": -0.1435422189825661,
+        "sole_z_max": 0.14881388569350196,
+        "whole_z_min": -0.22902262510390567,
+        "whole_z_max": 0.17099532126644018,
+        "lower_riser_clearance_from_whole_mesh": 0.21065508251799842,
+        "upper_last_riser_clearance_from_whole_mesh": 0.07450277868053301
+      },
+      {
+        "yaw": 30,
+        "sole_z_min": -0.14126544283223091,
+        "sole_z_max": 0.15308439095413878,
+        "whole_z_min": -0.21542597762569082,
+        "whole_z_max": 0.19593716147229778,
+        "lower_riser_clearance_from_whole_mesh": 0.1857132423121408,
+        "upper_last_riser_clearance_from_whole_mesh": 0.08809942615874777
+      }
+    ],
+    "minimum_clear_width_m": 1.0,
+    "geometry_surface_proof": "At each sampled pose, all original triangles clipped exactly at all vertical risers; vertex + triangle-edge intersections give exact piecewise constant solid envelope. No macro-slope collider.",
+    "motion_scope": "All three standing platform centers verified. Travel poses are geometric support envelope, not animated stepping; root may rise up to one riser between consecutive states. D3 must animate step clearance using real treads, with no static mid-stair floating."
+  },
+  "stair_motion_constructibility": {
+    "scope": "D1 constructibility contract only, no D3 implementation or IK",
+    "coordinate_contract": {
+      "worldZ_span_m": 1.7320508075688772,
+      "axial_three_cell_center_path_length_m": 2.0,
+      "worldX_span_m": 1.0,
+      "yaw_up_deg": 30,
+      "yaw_down_deg": 210,
+      "middle_platform_worldZ_depth_m": 0.5,
+      "middle_platform_along_path_depth_m": 0.5773502691896258
+    },
+    "continuous_horizontal_containment": {
+      "mesh_XZ_radius_m": 0.2656165924565017,
+      "three_hex_centerline_capsule_minimum_radius_m": 0.2886751345948129,
+      "clearance_m": 0.02305854213831121,
+      "proof": "Every original vertex is inside the stated XZ disk. Every triangle is a convex combination of its vertices and stays in the disk. The capsule swept by this disk along the three adjacent collinear cell centers stays within their ideal hex union, for all yaw."
+    },
+    "lift_translate_lower_constructibility": {
+      "R": "For fixed upright yaw and horizontal coordinate s, R(s)=sup over the whole original mesh of [actual stepped terrain(s+localXZ)-localY]. Mesh includes full triangle interiors, not just bounding box.",
+      "uphill": "R is nondecreasing because actual terrain height is nondecreasing. For each short interval [a,b], lift vertically at a to R(b), translate to b at that constant root height, then settle on R(b). Vertical lift and horizontal phase cannot penetrate terrain because root height stays >=R(s).",
+      "downhill": "Traverse the same stages in reverse: translate at the higher existing R, then lower at the new horizontal coordinate to its R.",
+      "single_riser_jump_upper_bound_m": 0.09375,
+      "maximum_total_root_elevation_above_lower_port_m": 0.75,
+      "standing": "At the three platform centers R equals 0,.375,.75 exactly and both actual feet contact; no static airborne stop is permitted.",
+      "animation_boundary": "Movement may temporarily lift both feet as an ordinary chess-piece step presentation. Actual foot gap from unchanged static mesh may reach375mm; do not claim walking animation, IK, or continuous ground contact."
+    },
+    "standing_verification": "13-upright-player-stairs-middle-platform.json",
+    "map_bindings": {
+      "front_right_stairs": [
+        "5:2",
+        "5:3",
+        "5:4"
+      ],
+      "rear_right_stairs": [
+        "8:8",
+        "8:9",
+        "8:10"
+      ]
+    }
+  },
+  "finite_pair_routes": {
+    "mapVersion": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+    "map_sha256": "76fdef397edee33f33a215298eec63f870b65112e1bdc81b30937e1d815b0b5e",
+    "poses": 1295,
+    "positive_vertex_penetration_above_1mm": 0,
+    "max_vertex_penetration": 4.440892098500626e-16,
+    "minimum_triangle_conservative_gap": -0.0001558625668505227,
+    "triangles_negative_beyond_1mm_count": 0,
+    "max_fore_hind_group_gap": 1.4560705308142019e-08,
+    "max_vertices_outside_map": 1513,
+    "mixed_triangle_clips": 232,
+    "turn_yaw_step_deg": 2,
+    "translation_step_m": 0.05,
+    "flat_turn_between_sample_point_displacement_upper_bound_m": 0.024434316848518014,
+    "straight_between_sample_translation_upper_bound_m": 0.025
+  },
+  "finite_foot_support": {
+    "poses": 1295,
+    "individual_foot_wholly_outside_support_count": 0,
+    "max_individual_foot_gap_to_actual_finite_surface_m": 0.02412385728969474,
+    "outside_map_pose_count": 38,
+    "outside_sole_pose_count": 11,
+    "maximum_sole_vertices_outside": 182,
+    "max_rigid_rotation_chord_error_bound_m": 0.0002893391885665751,
+    "max_vertex_Z_travel_between_adjacent_samples_m": 0.0503002622451163,
+    "mesh_max_3d_radius_m": 0.9910921818226621,
+    "interpolation_scope": "Chord bound applies to piecewise linear yaw/pitch/roll plus root interpolation for actual rigid vertices. Surface curvature contributes K*deltaZ^2/8; discontinuous foreign side interfaces still require finite sweep clearance."
+  },
+  "all_legal_stationary_pairs": {
+    "mapVersion": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+    "poses": 390,
+    "max_vertex_penetration": 4.440892098500626e-16,
+    "vertex_penetration_above_1mm_count": 0,
+    "triangle_conservative_min_gap": -0.00015585990224391876,
+    "max_fore_hind_gap": 1.4129528880246767e-08,
+    "map_sha256": "2bb210a9fdfff912447d8d5d95fd88596b3720cfa6e4feccf7c95616de833e66"
+  },
+  "continuous_route_boundaries": {
+    "intervals": 1240,
+    "original_mesh_convex_hull_vertices": 282,
+    "continuous_C1_surface_error_bound_m": 0.0005370580000357836,
+    "engineering_tolerance_m": 0.002,
+    "foreign_higher_surface_intervals_with_nonpositive_separation": 0,
+    "minimum_higher_foreign_domain_horizontal_clearance_bound_m": 0.6931065097879338,
+    "method": "Convex hull of both endpoint rigid mesh projections contains every linear swept triangle. True rigid Euler interpolation deviates by <=(meshRadius+.5)*(sum absolute angle increments)^2/8. Expanded hull is separated from every foreign higher support hex, or that actual support is pointwise below the intended global profile over their shared Z range. Curvature bound includes full triangle interiors. No map geometry modified."
+  },
+  "final_map_inputs": [
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\map-candidate.json",
+      "bytes": 537450,
+      "sha256": "be6de07b7193f0f76ea7b698b17ed9bb6a745928f5f256cfb8c0f4e1e7eae7db"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\physical-profiles.json",
+      "bytes": 342230,
+      "sha256": "3dce544f64f3ed137c8180f8e8e7e2d0166c63a8a4f987d4e964ac0db759eeee"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\pair-main-route.json",
+      "bytes": 27938,
+      "sha256": "d42f7784311efbca8966395cacde738ed7fad27242fdc3775dd92351d317d54b"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\pair-alternate-route.json",
+      "bytes": 25475,
+      "sha256": "7996ed024d093c7361bd7e2eadc73acc53385aa9c3afbad6c140e3334343194d"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\all-legal-pair-poses.json",
+      "bytes": 105553,
+      "sha256": "72a66652f7ce71327aa5ad5dbe9fdf14ee11db3d5ddfc27ffeba943159e197d5"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-D1-Approved-20261024\\long-map\\geometry-input-comparison.json",
+      "bytes": 2272,
+      "sha256": "8bf4afd2d5e78abd2b753d72a27371343b2d9b2f459ed37e76454248909f2f6f"
+    }
+  ],
+  "input_revision_note": {
+    "route_measurement15_map_sha256": "76fdef397edee33f33a215298eec63f870b65112e1bdc81b30937e1d815b0b5e",
+    "final_map_sha256": "be6de07b7193f0f76ea7b698b17ed9bb6a745928f5f256cfb8c0f4e1e7eae7db",
+    "differences": "Final metadata plus rock4:2->4:3/water4:3->4:2 and unused edge5:2<->6:1 closed; both pair routes and all ramp/stair support shapes unchanged. All390 static poses and continuous boundary script use final map. Existing unchanged route pose measurements are reused.",
+    "rejected121_inputs": "D:/Temp/TianZhang-D1-Approved-20261024/long-map/rejected-121/; earlier09/10 are rejected-layout diagnostics, not this final map.",
+    "stationary17_and_boundary18_map_sha256": "2bb210a9fdfff912447d8d5d95fd88596b3720cfa6e4feccf7c95616de833e66",
+    "final_metadata_equivalence": "Final be6de07... revision changes acceptance/evidence paths/description and existing .75 height alias only. Geometry-relevant data SHA256 remains683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8; see geometry-input-comparison.json. Actual raw report hashes remain untouched; no claim of rerunning earlier samples against a later byte-identical map."
+  },
+  "limits": [
+    "390 stationary poses covered; not all993 possible dynamic transitions.",
+    "Continuous bound applies to the two named witness routes with piecewise linear yaw/pitch/roll/root interpolation of the measured poses. It is a geometry bound, not a Unity implementation.",
+    "Same-C1 surface/triangle/interpolation error bound0.537058mm is distinct from higher foreign-domain horizontal clearance bound693.106510mm.",
+    "Fore/hind groups have actual support. Not all four individual feet are flush: standalone maximum24.189006mm; finite route maximum24.123857mm; player smooth-profile maximum3.619649mm.",
+    "38 route poses have partial mesh beyond the finite map, including11 with partial low sole tips; all four foot groups retain finite surface vertices and selected fore/hind contact points remain on real support. No whole foot falls outside support.",
+    "Stairs have three real horizontal stopping platforms with both player feet contacting. Movement may lift the chess-piece body step by step: max other static foot gap375mm, single-riser root jump93.75mm. Later D3 movement presentation must lift before crossing a riser, settle after it, and fully land at the three stops. No new IK or ground-rule/AP system.",
+    "The actual Workbench image is a temporary measurement sample, not a finished joined terrain asset or Unity runtime picture.",
+    "Formal terrain thickness, Tile joins, final asset collision, export/import and runtime movement remain later D3 work."
+  ],
+  "source_assets": [
+    {
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Environments\\Guanzhong\\Tile.fbx",
+      "repository_relative_path": "src/Assets/Art/Environments/Guanzhong/Tile.fbx",
+      "sha256": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee"
+    },
+    {
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\FormalPlayer\\FormalPlayer_Static3D.fbx",
+      "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+      "sha256": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28"
+    },
+    {
+      "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\Shijiahou\\Shijiahou_Static3D.fbx",
+      "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx",
+      "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+    }
+  ],
+  "raw_evidence_kept_in_temp": [
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\01-curvature-sizing.json",
+      "bytes": 1483,
+      "sha256": "a08d49ad7bf286a5b70424cd7bcaf9d50a0a877a83c02b34ba1e8305bb1f8a4e"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\02-cosine-five-row-six-yaw.json",
+      "bytes": 888434,
+      "sha256": "e84c3ee4e5018bd98ffd4a304e314f3bf14fb1910ba7cc2cc2a97522ad669cb4"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\03-individual-feet-and-body-clearance.json",
+      "bytes": 668974,
+      "sha256": "7260bb19d946ed3aa678fcd26ef74b279626c51918210f7c9ba2b6ec7467af18"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\04-player-common-profile.json",
+      "bytes": 385241,
+      "sha256": "79adb3ffb2f536ad186695f633b48fe874b495a2953d23bad3297da95fa3c42f"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\13-upright-player-stairs-middle-platform.json",
+      "bytes": 634509,
+      "sha256": "3276993b61cae19778b8c9bda2dbe58e6e0079ee7d9e53dd7f4de2cbd59842ba"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\14-stair-constructibility-and-domain.json",
+      "bytes": 2343,
+      "sha256": "7c2b49e490077cab418a487b483ef70de9adc4d299afa575aeca8783f1a7faca"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\15-finite144-route-full-triangles.json",
+      "bytes": 969920,
+      "sha256": "d7d23361e9d5a300234c4f57dccc51955c96663c5ee90a495f6cf4f1537c02f7"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\16-finite144-feet-and-motion-bounds.json",
+      "bytes": 50177,
+      "sha256": "2a0edb9018ef7c0a298a8a87c2a08bfc02aec61a99b3fe35750549bf514462e7"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\17-all-legal144-stationary-poses.json",
+      "bytes": 281772,
+      "sha256": "6f9acbecae44a999b9fefdab0872e8703ea1f8103879a1999a3ae5caa717b4ea"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\18-continuous-route-side-boundary-bound.json",
+      "bytes": 474463,
+      "sha256": "ad8c97e42ae66becc7e0974e8910ef6f89889387dff874fefe0815d5b982d585"
+    }
+  ],
+  "reproduction_scripts": [
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-02-long-profile.py",
+      "bytes": 3836,
+      "sha256": "ff93e6f7da9ac82b6d90512c3b35c3e6a89be967d923ef15310cd41186f519d3"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-03-individual-feet.py",
+      "bytes": 2079,
+      "sha256": "eb2ffef58dff4f3b8e0ce72ce650d0bda1f58c5e849c1ea73b4ca4a9788eab35"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-04-player-profile.py",
+      "bytes": 3828,
+      "sha256": "83649e257cd4d9a8fef45b8b5e76ecd8ea4033bbece8fdaa25c05008a4fbba65"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-05-build-measurement-scene.py",
+      "bytes": 5000,
+      "sha256": "833f2ccfd0b669839c14001eee583a13678b1479029ad559b2df7f63923b7db6"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-07-actual-render.py",
+      "bytes": 791,
+      "sha256": "0054da73d892df58163864d8a643c591a46810abc40de2bed79817b5ebb502b5"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-13-stairs-middle-platform.py",
+      "bytes": 4420,
+      "sha256": "51ce6dc41809151bb2db33bba09622b0c0ef8ab3989868145920740a5c110c9d"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-14-stair-constructibility.py",
+      "bytes": 2719,
+      "sha256": "64e3281bc5b43cc6cf2785b52fa2896eba91392c636fcc0b09291778f633ebe2"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-15-finite144-route.py",
+      "bytes": 9700,
+      "sha256": "add7bfd990d9d6bde342637e8ccfaaf0b4385a7faac5301a7a65b94b03e9e64d"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-16-finite144-feet.py",
+      "bytes": 10363,
+      "sha256": "7ac619fda847316bbe3c0f753f0f1b16b72d4aa0e28aecc764902718ab1e0806"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-17-all-legal144-static.py",
+      "bytes": 8222,
+      "sha256": "3344a789559f8f031ca7b76a4e4ca6f7b7dc8d552842ea5e3f9d10b38c5b2600"
+    },
+    {
+      "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measure-18-continuous-boundary.py",
+      "bytes": 11544,
+      "sha256": "7a5d0e4b574634ecf3d39082fe3990c7db5180be8d1ee688e78d69a1b49fd362"
+    }
+  ],
+  "measurement_input": {
+    "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\measurement-import-state.json",
+    "bytes": 986,
+    "sha256": "787462098973bf127c9086bc69c2a63ab368c6c5ac085628c4838e9565db9a90"
+  },
+  "scene_metadata": {
+    "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\05-actual-scene-metadata.json",
+    "bytes": 2608,
+    "sha256": "3cae254d6691705ca63651cfd8287df37fd41afe1cb59ce1202333a80ac7bbd4"
+  },
+  "actual_visual": {
+    "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\07-actual-Blender-measurement-render.png",
+    "bytes": 1297635,
+    "sha256": "5707a2887190699c2e26d6f8591d13c16207b8006c6d502e21a0b4c4955c26ba"
+  },
+  "actual_visual_label": "Actual Blender Workbench camera render, original linked meshes with real C1 measurement surface and measured matrices.",
+  "retained_measurement_blend": {
+    "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\d1-long-cosine-measurement.blend",
+    "bytes": 48201968,
+    "sha256": "2e57ef1659516b0376335052c87aedfb69b4828a4194942044d3689bacb00dfa"
+  },
+  "reproduction_note": {
+    "path": "D:\\Temp\\TianZhang-Blender\\d1-long-transition-20261024\\REPRODUCTION.txt",
+    "bytes": 2380,
+    "sha256": "87880673e1027834d3c481015acda495c56608e2171a8c0a6e9b64af77089bdb"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "geometryRelevantDataUnchanged": true,
+  "beforeMapSha256": "2bb210a9fdfff912447d8d5d95fd88596b3720cfa6e4feccf7c95616de833e66",
+  "beforeRelevantDataSha256": "683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8",
+  "gridKeys": [
+    "worldCenterFormula",
+    "neighborDirections",
+    "heightStepMeters",
+    "nominalSupportTopMeters",
+    "neighborCenterDistanceMeters",
+    "hexOrientation",
+    "hexCornerOffsetsXZ"
+  ],
+  "rampKeys": [
+    "id",
+    "kind",
+    "coveredCells",
+    "stoppableCells",
+    "shoulderCells",
+    "worldZStart",
+    "worldZEnd",
+    "horizontalRunMeters",
+    "lowerY",
+    "upperY",
+    "formula",
+    "lowerPortalEdges",
+    "upperPortalEdges",
+    "closedSideEdges",
+    "minimumStraightClearWidthMeters"
+  ],
+  "stairKeys": [
+    "id",
+    "kind",
+    "coveredCells",
+    "lowerLevel",
+    "upperLevel",
+    "clearanceLimit",
+    "riseMeters",
+    "worldZStart",
+    "worldZEnd",
+    "worldZPortSeparationMeters",
+    "gridCenterPathLengthMeters",
+    "lowerY",
+    "platformCenters",
+    "endPlatformCenterToFlightMeters",
+    "middlePlatformWorldZDepthMeters",
+    "flightCount",
+    "stepsPerFlight",
+    "stepRiseMeters",
+    "stepRunWorldZMeters",
+    "flightWorldZRunMeters",
+    "flightStartOffsetsWorldZ",
+    "risers",
+    "lowerPortalEdges",
+    "upperPortalEdges",
+    "closedSideEdges"
+  ],
+  "additionalData": [
+    "all cells",
+    "all directed edges",
+    "all markers",
+    "both route JSON byte hashes"
+  ],
+  "excluded": "Acceptance states, prose notes, evidence paths and redundant height aliases only",
+  "routeSha256": {
+    "pair-main-route.json": "d42f7784311efbca8966395cacde738ed7fad27242fdc3775dd92351d317d54b",
+    "pair-alternate-route.json": "7996ed024d093c7361bd7e2eadc73acc53385aa9c3afbad6c140e3334343194d"
+  },
+  "afterMapSha256": "be6de07b7193f0f76ea7b698b17ed9bb6a745928f5f256cfb8c0f4e1e7eae7db",
+  "afterRelevantDataSha256": "683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8",
+  "routeJsonBytesUnchanged": true,
+  "result": "Only evidence/status/prose and redundant height alias metadata changed; no graph or geometry input changed. Previously passed graph and entity checks were not rerun."
+}

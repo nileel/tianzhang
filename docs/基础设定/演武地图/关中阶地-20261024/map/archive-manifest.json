@@ -1,32 +1,63 @@
 {
-  "scope": "D1 approved pair-map design verification only",
-  "sourceCommit": "41f063f99bb60e67605782e936fa3f22037ea140",
-  "requiredFiles": [
+  "scope": "Parent copies only this current map entry; no main workspace writes by this subagent.",
+  "destination": "docs/\u57fa\u7840\u8bbe\u5b9a/\u6f14\u6b66\u5730\u56fe/\u5173\u4e2d\u9636\u5730-20261024/map",
+  "currentMapVersion": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+  "replace": [
     "build_and_verify.py",
-    "verify_approved_pair.py",
-    "audit_import_fields.py",
     "map-candidate.json",
     "verification.json",
+    "d2-import-contract.json",
+    "archive-manifest.json"
+  ],
+  "add": [
+    "encode_import_candidate.py",
+    "physical-profiles.json",
+    "all-legal-pair-poses.json",
+    "pair-main-route.json",
+    "pair-alternate-route.json",
+    "EnvironmentProfiles.candidate.csv",
+    "D1-map-report.txt",
+    "geometry-input-comparison.json"
+  ],
+  "removeObsoleteCurrentEntry": [
+    "verify_approved_pair.py",
+    "audit_import_fields.py",
     "pair-verification.json",
     "pair-main-route.txt",
     "pair-alternate-route.txt",
-    "d2-import-contract.json",
     "D1-pair-map-report.txt",
-    "archive-manifest.json",
     "baseline/map-candidate.json",
     "baseline/verification.json"
   ],
-  "baselineDependencies": {
-    "baseline/map-candidate.json": "verify_approved_pair.py compares cells, all 28 directed overrides, and marker records against the unchanged source map.",
-    "baseline/verification.json": "build_and_verify.py --pair-only carries forward the already-verified unchanged single-cell results without running the single-cell checks again."
+  "doNotCopy": [
+    "assemble_candidate.py",
+    "baseline-candidate.json",
+    "superseded-121/",
+    "rejected-121/"
+  ],
+  "rejectedInputs": "rejected-121 holds the five actual prior input JSON files for finite-geometry failure evidence09/10; never identify them as current. Parent requested these remain temporary, not Git archive.",
+  "reproduction": [
+    "python build_and_verify.py",
+    "python encode_import_candidate.py"
+  ],
+  "runtimeStatus": "Design-only CSV; no production CSV, importer, runtime, FBX or source asset changes.",
+  "geometryEvidence": "../geometry/long-transition/11-lightweight-summary-manifest.json",
+  "finalDesignInputHashes": {
+    "build_and_verify.py": "0a8bcbf1cf5b8a4b8582537373a65f89dd76a0976ff13d20d6620c0a5d626d41",
+    "map-candidate.json": "be6de07b7193f0f76ea7b698b17ed9bb6a745928f5f256cfb8c0f4e1e7eae7db",
+    "verification.json": "ec5a5d566bef4465b6a4700510c156cffb96314a5157856b05ae14e4cde24679",
+    "d2-import-contract.json": "825977fb7c50f134f9dbb85919a22363257a8a3063c98277857ba2607d9f70b3",
+    "encode_import_candidate.py": "1c93d75a80726a23936a45a44b06a02319dac9d2f8044a3c5c9daceae17bbc2a",
+    "physical-profiles.json": "3dce544f64f3ed137c8180f8e8e7e2d0166c63a8a4f987d4e964ac0db759eeee",
+    "all-legal-pair-poses.json": "72a66652f7ce71327aa5ad5dbe9fdf14ee11db3d5ddfc27ffeba943159e197d5",
+    "pair-main-route.json": "d42f7784311efbca8966395cacde738ed7fad27242fdc3775dd92351d317d54b",
+    "pair-alternate-route.json": "7996ed024d093c7361bd7e2eadc73acc53385aa9c3afbad6c140e3334343194d",
+    "EnvironmentProfiles.candidate.csv": "cfb926d688f8fb9d2a83947a862765af17e922488823db9038d4cca6ef5787ae",
+    "D1-map-report.txt": "3d05d3a53a1630370cb3069ed6dae6a38302b4cbeb8d2e473890217780b14087",
+    "geometry-input-comparison.json": "8bf4afd2d5e78abd2b753d72a27371343b2d9b2f459ed37e76454248909f2f6f"
   },
-  "optionalProvenanceFiles": ["baseline/build_and_verify.py"],
-  "excludeFiles": ["adjust_checker.py", "__pycache__/"],
-  "affectedChecksCommand": "python verify_approved_pair.py --pair-only",
-  "fullReproductionCommand": "python verify_approved_pair.py",
-  "fieldAuditCommand": "python audit_import_fields.py",
-  "fieldAuditExternalInput": "The field audit reads src/Assets/DataConfig/EnvironmentProfiles.csv in D:/天章游戏开发 to compare the explicit copied profile envelope. Pair verification itself is portable with only the required files.",
-  "latestAffectedChecks": {"pairAndUnchangedDataChecks": 29, "fieldChecks": 7, "totalPassed": 36, "singleChecksExecuted": false},
-  "fullSuiteDistinctCheckCount": 40,
-  "status": "candidate_approved_pair_rule_geometry_pending"
+  "acceptance": "D1 fixed design accepted for390 stationary poses and2 dynamic witnesses/1295 samples/1240 bounded intervals. Not all993 graph-legal dynamic transitions. D2 production import and D3 runtime presentation remain later work.",
+  "geometryRelevantDataUnchanged": true,
+  "geometryRelevantDataSha256": "683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8",
+  "archiveFormattingNote": "Parent removed only extra EOF blank lines from build_and_verify.py for git diff --check; numeric inputs and execution unchanged."
 }

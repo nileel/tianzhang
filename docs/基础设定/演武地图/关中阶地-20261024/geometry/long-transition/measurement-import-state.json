@@ -1,0 +1,17 @@
+{
+  "Tile": {
+    "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Environments\\Guanzhong\\Tile.fbx",
+    "repository_relative_path": "src/Assets/Art/Environments/Guanzhong/Tile.fbx",
+    "sha256": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee"
+  },
+  "Player": {
+    "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\FormalPlayer\\FormalPlayer_Static3D.fbx",
+    "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/FormalPlayer/FormalPlayer_Static3D.fbx",
+    "sha256": "393da803b51dc3800199538aa1e17dcdce84c274831091ebecfa3bbebb79ae28"
+  },
+  "Beast": {
+    "path": "D:\\天章游戏开发\\src\\Assets\\Art\\Characters\\CombatPieces\\Static3D\\Shijiahou\\Shijiahou_Static3D.fbx",
+    "repository_relative_path": "src/Assets/Art/Characters/CombatPieces/Static3D/Shijiahou/Shijiahou_Static3D.fbx",
+    "sha256": "36ba2de48926b5c1aee6f2692b51891c2d48c87c2be08331db62dc8baf470700"
+  }
+}

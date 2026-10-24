@@ -1,94 +1,67 @@
 {
-  "status": "design_field_values_complete_for_D2_implementation_not_currently_importable",
+  "status": "d1_encoding_and_geometry_values_fixed_production_importer_not_implemented",
   "productionEntry": "src/Assets/DataConfig/EnvironmentProfiles.csv",
-  "plannedProfileId": "env_guanzhong_jindan_demo",
-  "existingProfileMustRemain": "env_guanzhong_wild",
-  "copiedProfileEnvelope": {
-    "queryLimits": "unitsPerRange=2;maxQueryRange=24",
-    "surfacePrototypeRefs": "surface_grassland|surface_loess",
-    "phenomenonChannels": "airflow=wind+gust;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning",
-    "phenomenonPairs": "airflow:wind+gust>gust|visibility:mist+haze>haze|temperature:heat+cold>cold|precipitation:rain+drizzle>drizzle|suspendedHazard:ash+dust>ash|cloudDischarge:storm+lightning>lightning",
-    "elementRelationRefs": "element_wood|element_fire|element_earth|element_metal|element_water",
-    "spiritRecoveryEnvironment": "ordinary",
-    "profileId": "env_guanzhong_jindan_demo",
-    "edgeClearanceLimits": "none"
-  },
-  "copiedEnvelopeSource": {
-    "path": "D:\\天章游戏开发\\src\\Assets\\DataConfig\\EnvironmentProfiles.csv",
-    "profileId": "env_guanzhong_wild",
-    "sha256": "3be7d842b37af277acceca7898733357b449bb681bd2f1f14ae271c708b97e15"
-  },
-  "copyMode": "These are explicit D2 output row values copied from the existing profile. Do not add a runtime profile inheritance mechanism.",
-  "mapFieldSources": {
-    "battlefieldCells": "map-candidate.json:cells",
-    "directedEdgeOverrides": "map-candidate.json:sparseDirectedEdgeOverrides",
-    "markers": "map-candidate.json:markers",
-    "version": "map-candidate.json:mapVersion"
-  },
-  "requiredCellFields": [
-    "q",
-    "r",
-    "heightLevel",
-    "surfaceKind",
-    "blocksGroundMove",
-    "blocksLineOfSight",
-    "cellMovementBurdenUnits"
+  "consumerChain": "WorldContentImporter -> EnvironmentProfileDefinition/Asset -> CombatEntryAdapter -> existing SpatialQueryBoardFactory/SpatialQueryBoard; rendering reads the same declared physical profiles",
+  "newRuntimeLoader": false,
+  "existingColumns": [
+    "profileId",
+    "queryLimits",
+    "battlefieldCells",
+    "surfacePrototypeRefs",
+    "phenomenonChannels",
+    "phenomenonPairs",
+    "elementRelationRefs",
+    "spiritRecoveryEnvironment",
+    "edgeClearanceLimits"
   ],
-  "requiredDirectedEdgeFields": [
-    "fromCell",
-    "toCell",
-    "edgeKind",
-    "metricDistanceUnits",
-    "edgeMovementBurdenUnits",
-    "allowsMovement",
-    "allowsEffects",
-    "clearanceLimit",
-    "connectionId"
+  "appendedColumns": [
+    "mapSchemaVersion",
+    "mapVersion",
+    "directedEdgeOverrides",
+    "physicalSurfaceProfiles",
+    "mapMarkers"
   ],
-  "defaultDirectedEdgeRule": {
-    "sameHeight": {
-      "edgeKind": "flat",
-      "allowsMovement": true
+  "versionSelection": "Missing or blank mapSchemaVersion means version 1. Explicit 2 requires every v2 field. Other values are content errors; no runtime fallback.",
+  "version1": {
+    "battlefieldCells": "q:r@blocksGroundMove@blocksLineOfSight; ordered numeric q then r, unique q:r.",
+    "newFieldDefaults": {
+      "heightLevel": 0,
+      "cellMovementBurdenUnits": 0,
+      "surfaceKind": "none",
+      "physicalSurfaceId": "legacy_flat",
+      "directedEdgeOverrides": "none",
+      "physicalSurfaceProfiles": "legacy existing presentation unchanged",
+      "mapMarkers": "[]",
+      "mapVersion": "legacy"
     },
-    "differentHeight": {
-      "edgeKind": "open_cliff",
-      "allowsMovement": false
-    },
-    "metricDistanceUnits": 2,
-    "edgeMovementBurdenUnits": 0,
-    "allowsEffects": true,
-    "clearanceLimit": 0,
-    "connectionId": null,
-    "generation": "Generate all six-neighbor directed edges in both directions, then apply sparse overrides. Missing reverse records are invalid, not inferred."
+    "csvMigration": "Append the five new columns once to the existing header. Existing v1 rows append five empty CSV cells; their original nine field values remain byte-for-byte semantically unchanged.",
+    "edgeRules": "Preserve old generated all-flat neighbor edges and existing edgeClearanceLimits exactly; no new geometry or body behavior is inferred for old rows."
   },
-  "pairPlacementRule": {
-    "footprint": "AdjacentPair",
-    "bodyScaleRank": 2,
-    "sameHeight": "Keep current rule: both internal directed records exist; at least one allows movement; both clearance limits pass.",
-    "differentHeight": "Only abs(deltaHeight)=1; both internal records explicitly slope/stairs with matching edgeKind and connectionId, movement allowed, clearance passed. Open cliffs, drops, missing reverse and walls cannot hold a cross-height body.",
-    "movement": "Keep turn-then-follow and every shortest 60-degree intermediate pose and rear sweep. Only 180 degrees may try the other three-step direction. No independent turn action.",
-    "presentation": "User-approved body follows slope; this document supplies no geometric-support or collision proof."
+  "version2": {
+    "battlefieldCells": "q:r@groundBlocked(0|1)@losBlocked(0|1)@integerHeightLevel@nonnegativeCellBurdenUnits@surfaceKind@physicalSurfaceId; records joined with |, numeric q/r order, no duplicate coordinates.",
+    "directedEdgeOverrides": "fromQ:fromR>toQ:toR@edgeKind@positiveMetricDistanceUnits@nonnegativeEdgeBurdenUnits@allowsMovement(0|1)@allowsEffects(0|1)@nonnegativeClearanceLimit@connectionIdOrNone; records joined with |. Endpoint pairs must be unique topology neighbors. slope and stairs require a non-empty named connectionId; none is invalid for those kinds. Cross-height pair support requires the same non-empty ID and same slope/stairs kind in both directions.",
+    "defaultEdges": "Generate every existing six-neighbor directed pair. Same logical H: flat/allowMovement=1; different H: open_cliff/allowMovement=0. Both effects=1, metric=unitsPerRange, edgeBurden=0, clearance=0, connectionId=null. Then apply explicit directed overrides.",
+    "edgeClearanceLimits": "Must be none in version 2 because directedEdgeOverrides is the sole clearance source. Version 1 behavior remains unchanged.",
+    "physicalSurfaceProfiles": "One RFC8259 JSON object stored as a normal quoted CSV cell, with gridGeometry object and flatProfiles/rampProfiles/stairConnections arrays. Grid geometry defines actual hex corners and centers. The CSV writer doubles inner quotes. Cell physicalSurfaceId refs and each connection footprint resolve uniquely here. D1 dimensions are fixed under the explicitly recorded geometry scope; production acceptance additionally requires D2 importer implementation and D3 runtime realization.",
+    "rampShoulders": "Each ramp shoulder appears as a normal battlefieldCells record with groundBlocked=1, losBlocked=0 and surfaceKind=ramp_shoulder; its physicalSurfaceId is the same ramp as the inner pathway. rampProfiles.shoulderCells is the explicit physical support-only set; no additional runtime occupancy state. D3 must distinguish non-traversable shoulders visually while keeping the measured body swept-clearance region free of raised decoration.",
+    "stairStops": "All three stair platform cells use groundBlocked=0 and one physicalSurfaceId. Their exact physical platform elevations and true riser geometry live in stairConnections. The midpoint stays at integer lowerLevel as declared; no half-height gameplay state or pass-only cell is introduced.",
+    "mapMarkers": "RFC8259 JSON array stored as a normal quoted CSV cell. IDs unique, cells present. Marker data does not imply blockers or occupancy.",
+    "mapVersion": "Non-empty stable version ID; changed map input invalidates map-dependent cached paths."
   },
-  "movementAccounting": "Front translation costs metricDistanceUnits + edgeMovementBurdenUnits + destination cellMovementBurdenUnits. Rear/internal/sweep edges check eligibility only. Attack metric remains unchanged.",
-  "surfaceKindMeaning": "Fixed-map terrain classification, not a reference to an already existing SurfacePrototype. Per-cell burden is explicit, so D2 movement is not dependent on adding D8 water prototypes.",
-  "markerScope": "Spawn/objective/support/cover markers are retained design locations; support and cover do not implicitly create occupancy or blockers. Encounter actor composition remains D5.",
-  "knownCurrentCodeGaps": [
-    "WorldContentImporter.ParseBattlefieldCells accepts q:r@blocksGroundMove@blocksLineOfSight only; height and cell burden are absent.",
-    "WorldContentImporter.BuildDirectedEdges creates flat all-allowed edges; only clearance overrides are supported. Edge kind, directed allows flags and edge burden require D2 projection.",
-    "EnvironmentBattlefieldCell lacks height/burden; EnvironmentDirectedEdge lacks kind/burden. EnvironmentProfileAsset must round-trip the added data.",
-    "CombatEntryAdapter creates tiles without height; SpatialQueryBoardFactory hardcodes cell movement burden 0 and omits edge kind/burden.",
-    "SpatialQueryBoard.InspectEdge and InspectPlacement reject every different-height pair; movement costs consume destination-cell burden only."
-  ],
-  "physicalGeometry": "Height meter values, connector occupied/stoppable cells and interfaces are supplied by the separate D1 geometry decision. They are not derived from graph route legality.",
-  "noProductionWrites": true,
-  "checks": [
-    "each of 100 cell rows has all 7 fields",
-    "each of 28 sparse directed edge rows has all 9 fields",
-    "profile envelope has every unchanged required importer field",
-    "query limits retain existing K2 and range24",
-    "all marker locations name existing map cells",
-    "final candidate includes complete exact environment envelope",
-    "final candidate includes complete exact default edge fields"
-  ],
-  "testCount": 7
+  "geometryGate": "D1 geometry values are fixed. Evidence covers390 stationary pair poses and two dynamic witness routes:1295 samples and1240 conservatively bounded adjacent intervals. It does not prove all993 graph-legal dynamic transitions. This is a design-only candidate CSV; the current production importer is not implemented for v2. D2 must extend the existing data chain and D3 must realize the declared geometry and foot animation.",
+  "geometryRelevantDataUnchanged": true,
+  "geometryRelevantDataSha256": "683cd4fada56b816d81c0fda6e95e7f7b6c28531c86358551e9f863539262df8",
+  "tests": {
+    "csvRoundTrip": true,
+    "cellRecordCount": 144,
+    "overrideRecordCount": 532,
+    "physicalJsonRoundTrip": true,
+    "markerJsonRoundTrip": true,
+    "decodedCellsMatch": true,
+    "decodedAllDirectedEdgesMatch": true,
+    "decodedEdgeCount": 760,
+    "allSupportIdsResolve": true,
+    "slopeStairsRequireNamedConnection": true
+  },
+  "noProductionWrites": true
 }

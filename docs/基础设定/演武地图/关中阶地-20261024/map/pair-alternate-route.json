@@ -1,0 +1,898 @@
+{
+  "steps": 20,
+  "movementEquivalentDistance": 26.0,
+  "forbiddenConnections": [
+    "left_ramp"
+  ],
+  "requiredConnection": "right_pair_ramp",
+  "poses": [
+    {
+      "front": "4:0",
+      "rear": "3:0",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "flat_H0",
+      "rearPhysicalSurface": "flat_H0",
+      "frontSupportY": 0.340433121,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "5:0",
+      "rear": "4:0",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "flat_H0",
+      "rearPhysicalSurface": "flat_H0",
+      "frontSupportY": 0.340433121,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "6:0",
+      "rear": "5:0",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "flat_H0",
+      "rearPhysicalSurface": "flat_H0",
+      "frontSupportY": 0.340433121,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "7:0",
+      "rear": "6:0",
+      "facing": 0,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "flat_H0",
+      "rearPhysicalSurface": "flat_H0",
+      "frontSupportY": 0.340433121,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "7:1",
+      "rear": "7:0",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "flat_H0",
+      "frontSupportY": 0.340433121,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "7:2",
+      "rear": "7:1",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 0.4120517481093947,
+      "rearSupportY": 0.340433121
+    },
+    {
+      "front": "7:3",
+      "rear": "7:2",
+      "facing": 5,
+      "frontHeight": 0,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 0.5995517481093947,
+      "rearSupportY": 0.4120517481093947
+    },
+    {
+      "front": "7:4",
+      "rear": "7:3",
+      "facing": 5,
+      "frontHeight": 1,
+      "rearHeight": 0,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 0.8313144938906053,
+      "rearSupportY": 0.5995517481093947
+    },
+    {
+      "front": "7:5",
+      "rear": "7:4",
+      "facing": 5,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 1.0188144938906052,
+      "rearSupportY": 0.8313144938906053
+    },
+    {
+      "front": "7:6",
+      "rear": "7:5",
+      "facing": 5,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "right_pair_ramp",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 1.090433121,
+      "rearSupportY": 1.0188144938906052
+    },
+    {
+      "front": "6:7",
+      "rear": "7:6",
+      "facing": 4,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "flat_H1",
+      "rearPhysicalSurface": "right_pair_ramp",
+      "frontSupportY": 1.090433121,
+      "rearSupportY": 1.090433121
+    },
+    {
+      "front": "5:8",
+      "rear": "6:7",
+      "facing": 4,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "flat_H1",
+      "frontSupportY": 1.090433121,
+      "rearSupportY": 1.090433121
+    },
+    {
+      "front": "5:9",
+      "rear": "5:8",
+      "facing": 5,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.1620517481093948,
+      "rearSupportY": 1.090433121
+    },
+    {
+      "front": "5:10",
+      "rear": "5:9",
+      "facing": 5,
+      "frontHeight": 1,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.3495517481093946,
+      "rearSupportY": 1.1620517481093948
+    },
+    {
+      "front": "5:11",
+      "rear": "5:10",
+      "facing": 5,
+      "frontHeight": 2,
+      "rearHeight": 1,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.5813144938906054,
+      "rearSupportY": 1.3495517481093946
+    },
+    {
+      "front": "5:12",
+      "rear": "5:11",
+      "facing": 5,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.7688144938906054,
+      "rearSupportY": 1.5813144938906054
+    },
+    {
+      "front": "5:13",
+      "rear": "5:12",
+      "facing": 5,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "high_pair_ramp",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.840433121,
+      "rearSupportY": 1.7688144938906054
+    },
+    {
+      "front": "5:14",
+      "rear": "5:13",
+      "facing": 5,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "flat_H2",
+      "rearPhysicalSurface": "high_pair_ramp",
+      "frontSupportY": 1.840433121,
+      "rearSupportY": 1.840433121
+    },
+    {
+      "front": "6:14",
+      "rear": "5:14",
+      "facing": 0,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "flat_H2",
+      "rearPhysicalSurface": "flat_H2",
+      "frontSupportY": 1.840433121,
+      "rearSupportY": 1.840433121
+    },
+    {
+      "front": "7:13",
+      "rear": "6:14",
+      "facing": 1,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "flat_H2",
+      "rearPhysicalSurface": "flat_H2",
+      "frontSupportY": 1.840433121,
+      "rearSupportY": 1.840433121
+    },
+    {
+      "front": "8:12",
+      "rear": "7:13",
+      "facing": 1,
+      "frontHeight": 2,
+      "rearHeight": 2,
+      "frontPhysicalSurface": "flat_H2",
+      "rearPhysicalSurface": "flat_H2",
+      "frontSupportY": 1.840433121,
+      "rearSupportY": 1.840433121
+    }
+  ],
+  "movements": [
+    {
+      "fromPose": {
+        "front": "4:0",
+        "rear": "3:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "4:0>5:0",
+      "rearMove": "3:0>4:0",
+      "toPose": {
+        "front": "5:0",
+        "rear": "4:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "frontMovementUnits": 3,
+      "connectionId": null
+    },
+    {
+      "fromPose": {
+        "front": "5:0",
+        "rear": "4:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:0>6:0",
+      "rearMove": "4:0>5:0",
+      "toPose": {
+        "front": "6:0",
+        "rear": "5:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "frontMovementUnits": 3,
+      "connectionId": null
+    },
+    {
+      "fromPose": {
+        "front": "6:0",
+        "rear": "5:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "6:0>7:0",
+      "rearMove": "5:0>6:0",
+      "toPose": {
+        "front": "7:0",
+        "rear": "6:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": null
+    },
+    {
+      "fromPose": {
+        "front": "7:0",
+        "rear": "6:0",
+        "facing": 0,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "flat_H0",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [
+        {
+          "pose": {
+            "front": "7:0",
+            "rear": "7:-1",
+            "facing": 5,
+            "frontHeight": 0,
+            "rearHeight": 0,
+            "frontPhysicalSurface": "flat_H0",
+            "rearPhysicalSurface": "flat_H0",
+            "frontSupportY": 0.340433121,
+            "rearSupportY": 0.340433121
+          },
+          "rearSweep": "6:0>7:-1"
+        }
+      ],
+      "frontMove": "7:0>7:1",
+      "rearMove": "7:-1>7:0",
+      "toPose": {
+        "front": "7:1",
+        "rear": "7:0",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:1",
+        "rear": "7:0",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "flat_H0",
+        "frontSupportY": 0.340433121,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:1>7:2",
+      "rearMove": "7:0>7:1",
+      "toPose": {
+        "front": "7:2",
+        "rear": "7:1",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.4120517481093947,
+        "rearSupportY": 0.340433121
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:2",
+        "rear": "7:1",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.4120517481093947,
+        "rearSupportY": 0.340433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:2>7:3",
+      "rearMove": "7:1>7:2",
+      "toPose": {
+        "front": "7:3",
+        "rear": "7:2",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.5995517481093947,
+        "rearSupportY": 0.4120517481093947
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:3",
+        "rear": "7:2",
+        "facing": 5,
+        "frontHeight": 0,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.5995517481093947,
+        "rearSupportY": 0.4120517481093947
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:3>7:4",
+      "rearMove": "7:2>7:3",
+      "toPose": {
+        "front": "7:4",
+        "rear": "7:3",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.8313144938906053,
+        "rearSupportY": 0.5995517481093947
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:4",
+        "rear": "7:3",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 0,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 0.8313144938906053,
+        "rearSupportY": 0.5995517481093947
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:4>7:5",
+      "rearMove": "7:3>7:4",
+      "toPose": {
+        "front": "7:5",
+        "rear": "7:4",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.0188144938906052,
+        "rearSupportY": 0.8313144938906053
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:5",
+        "rear": "7:4",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.0188144938906052,
+        "rearSupportY": 0.8313144938906053
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:5>7:6",
+      "rearMove": "7:4>7:5",
+      "toPose": {
+        "front": "7:6",
+        "rear": "7:5",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.0188144938906052
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "7:6",
+        "rear": "7:5",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "right_pair_ramp",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.0188144938906052
+      },
+      "intermediateTurns": [
+        {
+          "pose": {
+            "front": "7:6",
+            "rear": "8:5",
+            "facing": 4,
+            "frontHeight": 1,
+            "rearHeight": 1,
+            "frontPhysicalSurface": "right_pair_ramp",
+            "rearPhysicalSurface": "right_pair_ramp",
+            "frontSupportY": 1.090433121,
+            "rearSupportY": 1.0188144938906052
+          },
+          "rearSweep": "7:5>8:5"
+        }
+      ],
+      "frontMove": "7:6>6:7",
+      "rearMove": "8:5>7:6",
+      "toPose": {
+        "front": "6:7",
+        "rear": "7:6",
+        "facing": 4,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "flat_H1",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.090433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": "right_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "6:7",
+        "rear": "7:6",
+        "facing": 4,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "flat_H1",
+        "rearPhysicalSurface": "right_pair_ramp",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.090433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "6:7>5:8",
+      "rearMove": "7:6>6:7",
+      "toPose": {
+        "front": "5:8",
+        "rear": "6:7",
+        "facing": 4,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "flat_H1",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.090433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:8",
+        "rear": "6:7",
+        "facing": 4,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "flat_H1",
+        "frontSupportY": 1.090433121,
+        "rearSupportY": 1.090433121
+      },
+      "intermediateTurns": [
+        {
+          "pose": {
+            "front": "5:8",
+            "rear": "5:7",
+            "facing": 5,
+            "frontHeight": 1,
+            "rearHeight": 1,
+            "frontPhysicalSurface": "high_pair_ramp",
+            "rearPhysicalSurface": "flat_H1",
+            "frontSupportY": 1.090433121,
+            "rearSupportY": 1.090433121
+          },
+          "rearSweep": "6:7>5:7"
+        }
+      ],
+      "frontMove": "5:8>5:9",
+      "rearMove": "5:7>5:8",
+      "toPose": {
+        "front": "5:9",
+        "rear": "5:8",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.1620517481093948,
+        "rearSupportY": 1.090433121
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:9",
+        "rear": "5:8",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.1620517481093948,
+        "rearSupportY": 1.090433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:9>5:10",
+      "rearMove": "5:8>5:9",
+      "toPose": {
+        "front": "5:10",
+        "rear": "5:9",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.3495517481093946,
+        "rearSupportY": 1.1620517481093948
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:10",
+        "rear": "5:9",
+        "facing": 5,
+        "frontHeight": 1,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.3495517481093946,
+        "rearSupportY": 1.1620517481093948
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:10>5:11",
+      "rearMove": "5:9>5:10",
+      "toPose": {
+        "front": "5:11",
+        "rear": "5:10",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.5813144938906054,
+        "rearSupportY": 1.3495517481093946
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:11",
+        "rear": "5:10",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 1,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.5813144938906054,
+        "rearSupportY": 1.3495517481093946
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:11>5:12",
+      "rearMove": "5:10>5:11",
+      "toPose": {
+        "front": "5:12",
+        "rear": "5:11",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.7688144938906054,
+        "rearSupportY": 1.5813144938906054
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:12",
+        "rear": "5:11",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.7688144938906054,
+        "rearSupportY": 1.5813144938906054
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:12>5:13",
+      "rearMove": "5:11>5:12",
+      "toPose": {
+        "front": "5:13",
+        "rear": "5:12",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.7688144938906054
+      },
+      "frontMovementUnits": 3,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:13",
+        "rear": "5:12",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "high_pair_ramp",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.7688144938906054
+      },
+      "intermediateTurns": [],
+      "frontMove": "5:13>5:14",
+      "rearMove": "5:12>5:13",
+      "toPose": {
+        "front": "5:14",
+        "rear": "5:13",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": "high_pair_ramp"
+    },
+    {
+      "fromPose": {
+        "front": "5:14",
+        "rear": "5:13",
+        "facing": 5,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "high_pair_ramp",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "intermediateTurns": [
+        {
+          "pose": {
+            "front": "5:14",
+            "rear": "4:14",
+            "facing": 0,
+            "frontHeight": 2,
+            "rearHeight": 2,
+            "frontPhysicalSurface": "flat_H2",
+            "rearPhysicalSurface": "flat_H2",
+            "frontSupportY": 1.840433121,
+            "rearSupportY": 1.840433121
+          },
+          "rearSweep": "5:13>4:14"
+        }
+      ],
+      "frontMove": "5:14>6:14",
+      "rearMove": "4:14>5:14",
+      "toPose": {
+        "front": "6:14",
+        "rear": "5:14",
+        "facing": 0,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "flat_H2",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": null
+    },
+    {
+      "fromPose": {
+        "front": "6:14",
+        "rear": "5:14",
+        "facing": 0,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "flat_H2",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "intermediateTurns": [
+        {
+          "pose": {
+            "front": "6:14",
+            "rear": "5:15",
+            "facing": 1,
+            "frontHeight": 2,
+            "rearHeight": 2,
+            "frontPhysicalSurface": "flat_H2",
+            "rearPhysicalSurface": "flat_H2",
+            "frontSupportY": 1.840433121,
+            "rearSupportY": 1.840433121
+          },
+          "rearSweep": "5:14>5:15"
+        }
+      ],
+      "frontMove": "6:14>7:13",
+      "rearMove": "5:15>6:14",
+      "toPose": {
+        "front": "7:13",
+        "rear": "6:14",
+        "facing": 1,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "flat_H2",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": null
+    },
+    {
+      "fromPose": {
+        "front": "7:13",
+        "rear": "6:14",
+        "facing": 1,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "flat_H2",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "intermediateTurns": [],
+      "frontMove": "7:13>8:12",
+      "rearMove": "6:14>7:13",
+      "toPose": {
+        "front": "8:12",
+        "rear": "7:13",
+        "facing": 1,
+        "frontHeight": 2,
+        "rearHeight": 2,
+        "frontPhysicalSurface": "flat_H2",
+        "rearPhysicalSurface": "flat_H2",
+        "frontSupportY": 1.840433121,
+        "rearSupportY": 1.840433121
+      },
+      "frontMovementUnits": 2,
+      "connectionId": null
+    }
+  ]
+}
