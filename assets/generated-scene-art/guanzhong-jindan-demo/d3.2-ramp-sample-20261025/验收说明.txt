@@ -1,0 +1,46 @@
+D3.2 土石长坡独立样组验收（2026-10-25）
+
+交付与边界
+完成一款24格土石长坡：连续半余弦坡面、可辨碎石坡肩、封闭实体侧面和底面；上下9块平台派生复用原Tile岩壁，旁侧保留实际地图的未连接裸崖。
+入口：src/Assets/Scripts/Editor/GuanzhongRampSampleBuilder.cs，Unity菜单“天章/美术/D3.2 构建土石长坡样组”。
+保存场景：src/Assets/Scenes/GuanzhongRampSample.unity。Prefab／FBX／材质：src/Assets/Art/Environments/Guanzhong/Ramp/。
+当前运行表现由独立样组的Prefab、材质和保存场景承载；Builder保存后重新打开该场景，PlayMode测试再次加载保存结果取得证据。
+此项不接正式移动、鼠标选格或整图装配；D3.6继续沿既有AdventureSceneBuilder接入。测试贴脚辅助仅在Tests/PlayMode中，不是生产移动实现。
+
+尺寸与根因
+以环境CSV及已导入env_guanzhong_jindan_demo资产为事实源，mapVersion为guanzhong-jindan-v3-d1-supported-map-20261024.4；没有修改CSV、规则占格或可停位置。
+24格由四列×六行组成，内两列可停、外两列为不可停坡肩；升高0.75米，曲面水平长度5√3/2＝4.330127019米。两端导数为零，并以端点高度延伸至有限六角并集边界。
+世界支承Y＝lowerY＋0.375×(1－cos(π×clamp((worldZ－worldZStart)/length,0,1)))；样组lowerY＝0.340433121米。
+原Tile最高射线可命中草冠，原上接口岩土边缘实测又比要求支承面低约41毫米；因此只为坡道端口制作RampLanding派生。删除原水平冠部，保留localY≤－0.10米的原岩壁和UV，唯一平顶支承为localY＝0.000433121米，封边裙部延至－0.25米。草冠不承担脚底支承。
+原Tile、Stair、D3.1派生和角色模型均保留。坡域内没有叠放旧水平地块。无需额外通行状态、隐形支承板或生产Collider。
+FBX导入的材质槽顺序按名称匹配，避免把坡肩／石壁／土路误配。源坐标与Unity的X镜像已在源模型坐标和绕序中解决，Unity米制及边界检查通过。
+
+Unity验证与证据解释
+Unity 6000.3.18f1，启用图形的PlayMode；实际MeshCollider用于验收，测试结束销毁，不存入生产Prefab。
+unity-geometry.json：六个60度方向共12444条坡面射线、10710条接口射线；最大曲面采样误差0.000038146973米（约0.038毫米）。
+其中384条恰在共享边界的射线受独立FBX浮点变换影响，使用四个方向10微米邻域复核，仍要求命中相同高度的坡面／平台平顶，垂直误差小于0.1毫米。精确外角的±1厘米法向条带会离开有限六角并集，故只检查该角点本身。此结果不是“所有中心射线直接命中”，也不是整条缝宽的连续上界证明。
+unity-body.json：原尺度玩家1.4、双格石甲吼1.800879333；151个双格姿态（含路线和转身采样）、36个玩家姿态，实际身体顶点与低位三角形共28829374次检查。双格前后足组最大支承包络高差2.3841858e－7米，玩家左右足组1.1920929e－7米，最大身体侵入分别5.9604645e－8米、0米，处于数值精度范围。足组高差不是每只脚或整个脚底面的最大离面间隙，不声称四脚全为零间隙。
+脚底拟合只用坡面和9块平台平顶；邻接岩壁与所有地形网格仍参与独立身体阻挡检查。并非用装饰草、Renderer包围盒或单个根节点代替身体检查。
+runtime-orientation-0～5.png、runtime-side.png、runtime-bottom.png：实际Unity画面，已检查六向、侧面和底面未见明显露空。
+runtime-body-stop-0～6.png：实际脚底拟合与有限身体路线停点画面。runtime-ramp-traversal.mp4由108帧Unity运行图像编码，1366×768、16fps、6.75秒，包含坡道进入、转向、通过和离开。它是样组测试驱动的运行采样短片，不是正式战斗点击移动录像。
+本轮证明样组有限姿态与已列接口，不扩大为全图全部动态过渡、任意转向或连续碰撞保证。正式角色贴坡／选格链、双分辨率操作与整图负载仍属D3.6。
+
+原始测试结果
+body-pass-and-pre-fix-geometry.xml：ActualPlayerAndPairFeetTraverseTheSavedRamp通过；同次几何测试尚因精确边界射线失败，XML完整保留，整次结果不是全通过。
+geometry-playmode-results.xml：修正上述边界采样后，单独复跑SavedSolidMatchesProfileAndSixRotatedPorts，1/1通过。
+边界修正只影响几何测试，已通过的身体实现、资产和输入没有变化，故未重复身体测试。两个验收方法各有通过记录。
+复现两个测试：关闭同工程Unity编辑器后，在仓库根目录执行：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests -EnableGraphics -ResultXmlPath D:/天章游戏开发/src/Logs/d32-recheck.xml
+只复现最终几何检查时将TestFilter后缀改为GuanzhongRampSamplePlayModeTests.SavedSolidMatchesProfileAndSixRotatedPorts。
+
+源文件与编辑
+assets/source/environments/guanzhong-jindan-demo/d3.2-earth-ramp/保存build-ramp.py、build-landing.py、两个.blend及source-proof.json／landing-proof.json。
+两个.blend是可追加对象的原生对象库，不含完整场景；在Blender中Append其Object即可继续编辑。EarthRamp24源网格21194顶点、42384三角，非流形边0；FBX导入因UV等分裂为22182顶点、三角数不变。
+平台派生每件74889三角；样组26个MeshFilter实例、共1411807三角。记录实际负载，不将有限样组当作整图性能结论。
+source-proof.json／landing-proof.json保存输出.blend／FBX的SHA256。原Tile FBX SHA256为504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee。
+制作只通过blender_lab通道，未启用远程生成服务。Blender5.2写完整Scene库时曾崩溃，改为原生Object库保存；原D1量测blend未覆盖，崩溃日志保留于D:/Temp/TianZhang-Blender/d32-library-scene-write.crash.txt。
+build-ramp.py从现有CSV读取profile，可在Blender环境生成；build-landing.py需要D1_Measure_20261024场景中的D1_Tile_原始网格，当前保存在D:/Temp/TianZhang-Blender/d1-long-transition-20261024/d1-long-cosine-measurement.blend。矩阵输入已改用仓库geometry/01-import-state.json，与当次临时文件SHA256完全相同。
+生成脚本为此次制作记录，需先核对工作目录、D1源场景及输出保护；平台脚本遇已有输出会停止，不能直接覆盖人工编辑。日常Unity重建直接使用已交付FBX与Builder，不依赖Temp目录或Blender。
+
+复核
+独立只读检查已核对D1合同、原资产身份、材质槽、平台唯一支承与采样边界；发现的问题已按根因修正。未新增旧任务卡、自动化或审核流转记录。

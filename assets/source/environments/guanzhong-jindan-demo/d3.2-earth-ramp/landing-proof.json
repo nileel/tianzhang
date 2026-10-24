@@ -1,0 +1,10 @@
+{
+  "originalTileSha256": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee",
+  "triangles": 74889,
+  "retainedOriginalRockTopLocalY": -0.1,
+  "replacementSupportLocalY": 0.000433121,
+  "collarBottomLocalY": -0.25,
+  "blendSha256": "19136d92c82dce3ee34c3dc8e224eb3d4e1aeaae2765b78b1d0f91c0c0647690",
+  "fbxSha256": "e490cc8b504ced3a64dc72479b0ca904da530dc43bb7841e5cd9c15221c56c23",
+  "scope": "Only lower/upper ramp port platforms. Original Tile and D3.1 remain unchanged."
+}

@@ -1,0 +1,12 @@
+{
+    "playMode": true,
+    "pairPoses": 151,
+    "playerPoses": 36,
+    "actualMeshChecks": 28829374,
+    "frames": 108,
+    "pairFootGap": 2.384185791015625e-7,
+    "playerFootGap": 1.1920928955078126e-7,
+    "pairPenetration": 5.960464477539063e-8,
+    "playerPenetration": 0.0,
+    "scope": "Saved sample art in Unity; actual mesh sole fitting and vertex/low-triangle samples. No production movement or rule changes; no all-map continuous proof."
+}

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="2" result="Failed(Child)" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.4260936">
+  <test-suite type="TestSuite" id="1237" name="src" fullname="src" runstate="Runnable" testcasecount="193" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.426094" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1230" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="193" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.419168" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="54568" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1231" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="193" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.417211" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1232" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="193" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.415459" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1233" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="193" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.413469" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1155" name="GuanzhongRampSamplePlayModeTests" fullname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests" classname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:10Z" duration="84.410120" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1157" name="ActualPlayerAndPairFeetTraverseTheSavedRamp" fullname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests.ActualPlayerAndPairFeetTraverseTheSavedRamp" methodname="ActualPlayerAndPairFeetTraverseTheSavedRamp" classname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests" runstate="Runnable" seed="2065954657" result="Passed" start-time="2026-10-24 16:26:45Z" end-time="2026-10-24 16:28:09Z" duration="84.206270" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1156" name="SavedSolidMatchesProfileAndSixRotatedPorts" fullname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests.SavedSolidMatchesProfileAndSixRotatedPorts" methodname="SavedSolidMatchesProfileAndSixRotatedPorts" classname="TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests" runstate="Runnable" seed="1519233935" result="Failed" start-time="2026-10-24 16:28:09Z" end-time="2026-10-24 16:28:10Z" duration="0.195151" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="180000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.Tests.PlayMode.GuanzhongRampSamplePlayModeTests+<SavedSolidMatchesProfileAndSixRotatedPorts>d__9.MoveNext () [0x005d3] in D:\天章游戏开发\src\Assets\Tests\PlayMode\GuanzhongRampSamplePlayModeTests.cs:118
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

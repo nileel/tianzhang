@@ -1,0 +1,12 @@
+{
+    "unityVersion": "6000.3.18f1",
+    "playMode": true,
+    "rampTriangles": 42384,
+    "rampVertices": 22182,
+    "instances": 26,
+    "instanceTriangles": 1411807,
+    "supportRays": 12444,
+    "seamRays": 10710,
+    "boundaryPrecisionRays": 384,
+    "maxProfileError": 0.00003814697265625
+}

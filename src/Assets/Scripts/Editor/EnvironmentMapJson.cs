@@ -39,6 +39,12 @@ namespace TianZhang.Editor
         public string kind;
         public string[] coveredCells;
         public string[] shoulderCells;
+        public double worldZStart;
+        public double worldZEnd;
+        public double lowerY;
+        public double upperY;
+        public string[] lowerPortalEdges;
+        public string[] upperPortalEdges;
     }
 
     [Serializable]
