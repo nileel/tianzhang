@@ -1,0 +1,65 @@
+{
+  "sample": "radial=.5m, lateral=0; only edge midpoint; not full-edge seam proof",
+  "rows": [
+    {
+      "normal_deg": 0,
+      "top_y": 0.33426475524902344,
+      "bottom_y": -0.674647331237793,
+      "edge_top_minus_center_y": -0.006168365478515625,
+      "same_height_current_minus_opposite_edge_y": -0.0028018951416015625,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7528018951416016,
+      "bottom_y_after_rise_075": 0.07535266876220703,
+      "downward_coverage_below_low_center_after_rise_075": 0.26508045196533203
+    },
+    {
+      "normal_deg": 60,
+      "top_y": 0.330047607421875,
+      "bottom_y": -1.0279502868652344,
+      "edge_top_minus_center_y": -0.010385513305664062,
+      "same_height_current_minus_opposite_edge_y": -0.0025815963745117188,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7525815963745117,
+      "bottom_y_after_rise_075": -0.2779502868652344,
+      "downward_coverage_below_low_center_after_rise_075": 0.6183834075927734
+    },
+    {
+      "normal_deg": 120,
+      "top_y": 0.3350553512573242,
+      "bottom_y": -1.4316940307617188,
+      "edge_top_minus_center_y": -0.005377769470214844,
+      "same_height_current_minus_opposite_edge_y": 0.00383758544921875,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7461624145507812,
+      "bottom_y_after_rise_075": -0.6816940307617188,
+      "downward_coverage_below_low_center_after_rise_075": 1.0221271514892578
+    },
+    {
+      "normal_deg": 180,
+      "top_y": 0.337066650390625,
+      "bottom_y": -1.1697425842285156,
+      "edge_top_minus_center_y": -0.0033664703369140625,
+      "same_height_current_minus_opposite_edge_y": 0.0028018951416015625,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7471981048583984,
+      "bottom_y_after_rise_075": -0.4197425842285156,
+      "downward_coverage_below_low_center_after_rise_075": 0.7601757049560547
+    },
+    {
+      "normal_deg": 240,
+      "top_y": 0.3326292037963867,
+      "bottom_y": -0.6842555999755859,
+      "edge_top_minus_center_y": -0.007803916931152344,
+      "same_height_current_minus_opposite_edge_y": 0.0025815963745117188,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7474184036254883,
+      "bottom_y_after_rise_075": 0.06574440002441406,
+      "downward_coverage_below_low_center_after_rise_075": 0.274688720703125
+    },
+    {
+      "normal_deg": 300,
+      "top_y": 0.33121776580810547,
+      "bottom_y": -1.3079004287719727,
+      "edge_top_minus_center_y": -0.009215354919433594,
+      "same_height_current_minus_opposite_edge_y": -0.00383758544921875,
+      "high_neighbor_edge_minus_low_edge_y_at_rise_075": 0.7538375854492188,
+      "bottom_y_after_rise_075": -0.5579004287719727,
+      "downward_coverage_below_low_center_after_rise_075": 0.8983335494995117
+    }
+  ]
+}

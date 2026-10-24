@@ -1,0 +1,206 @@
+{
+  "candidate_only": true,
+  "center_spacing_m": 1.0,
+  "hex_inradius_m": 0.5,
+  "hex_circumradius_m": 0.5773502691896258,
+  "ideal_shared_edge_width_m": 0.5773502691896258,
+  "height_increment_candidate_m": 0.75,
+  "level_offsets_m": [
+    0,
+    0.75,
+    1.5
+  ],
+  "nominal_support_y": [
+    0.34,
+    1.09,
+    1.84
+  ],
+  "measured_center_top_y": [
+    0.34043312072753906,
+    1.090433120727539,
+    1.840433120727539
+  ],
+  "grass_max_y": [
+    0.4339444935321808,
+    1.1839444935321808,
+    1.9339444935321808
+  ],
+  "global_bounds_min_y": [
+    -1.5431104898452759,
+    -0.7931104898452759,
+    -0.04311048984527588
+  ],
+  "beast_actual_union_max_halfplane_overrun_m": 0.027222026463444404,
+  "beast_worst_point_local_x_y_z": [
+    0.34777720770788945,
+    0.45021980650503013,
+    0.04792374053761068
+  ],
+  "beast_vertices_outside_ideal_union": 56,
+  "straight_connector_width_no_margin_m": 0.820420125989118,
+  "width_with_0p05_each_side_m": 0.9204201259891179,
+  "candidate_connector_clear_width_m": 0.95,
+  "candidate_lateral_margin_each_side_m": 0.064789937005441,
+  "one_center_interval_rise_angle_deg": 36.86989764584402,
+  "one_center_interval_slope_length_m": 1.25,
+  "ramp_interface_status": "NOT VALIDATED: ramp length and grade are not frozen. Elevated Tile sidewall occupies the line from low-cell centre to high-cell centre. D3.2 requires a derived join/cut and actual footprint/foot contact checks.",
+  "edge_lower_envelope_samples": [
+    {
+      "normal_deg": 0,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.24361133575439453,
+          "bottom": -1.2160701751708984
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.33426475524902344,
+          "bottom": -0.674647331237793
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.3377208709716797,
+          "bottom": 0.29702186584472656
+        }
+      ],
+      "max_edge_bottom": 0.29702186584472656,
+      "high_1p5_gap_above_low_center_at_worst_sample": 1.4565887451171875
+    },
+    {
+      "normal_deg": 60,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.3607358932495117,
+          "bottom": 0.2903127670288086
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.330047607421875,
+          "bottom": -1.0279502868652344
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.33109283447265625,
+          "bottom": -1.3773860931396484
+        }
+      ],
+      "max_edge_bottom": 0.2903127670288086,
+      "high_1p5_gap_above_low_center_at_worst_sample": 1.4498796463012695
+    },
+    {
+      "normal_deg": 120,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.36414337158203125,
+          "bottom": -1.5036344528198242
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.3350553512573242,
+          "bottom": -1.4316940307617188
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.35530567169189453,
+          "bottom": -1.535059928894043
+        }
+      ],
+      "max_edge_bottom": -1.4316940307617188,
+      "high_1p5_gap_above_low_center_at_worst_sample": 0
+    },
+    {
+      "normal_deg": 180,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.3326587677001953,
+          "bottom": -1.4390239715576172
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.337066650390625,
+          "bottom": -1.1697425842285156
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.40245819091796875,
+          "bottom": 0.29055309295654297
+        }
+      ],
+      "max_edge_bottom": 0.29055309295654297,
+      "high_1p5_gap_above_low_center_at_worst_sample": 1.450119972229004
+    },
+    {
+      "normal_deg": 240,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.3369102478027344,
+          "bottom": 0.2981081008911133
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.3326292037963867,
+          "bottom": -0.6842555999755859
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.3335418701171875,
+          "bottom": -1.401494026184082
+        }
+      ],
+      "max_edge_bottom": 0.2981081008911133,
+      "high_1p5_gap_above_low_center_at_worst_sample": 1.4576749801635742
+    },
+    {
+      "normal_deg": 300,
+      "nominal_edge_samples": [
+        {
+          "radius": 0.5,
+          "lateral": -0.25,
+          "top": 0.3300447463989258,
+          "bottom": -1.5139780044555664
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0,
+          "top": 0.33121776580810547,
+          "bottom": -1.3079004287719727
+        },
+        {
+          "radius": 0.5,
+          "lateral": 0.25,
+          "top": 0.3334493637084961,
+          "bottom": -1.5175895690917969
+        }
+      ],
+      "max_edge_bottom": -1.3079004287719727,
+      "high_1p5_gap_above_low_center_at_worst_sample": 0
+    }
+  ],
+  "limits": [
+    "All profiles use actual mesh vertices; projections are static silhouettes, not occupancy legality or locomotion tests.",
+    "Ideal occupied hex union test is an analytical reference; it is not actual Tile support testing.",
+    "The six edge lower envelopes are sampled vertical rays, not complete topological/closure proofs. Global minimum Y cannot prove edge closure.",
+    "Candidate .75 rise, .95 clear width and arithmetic ramp slope are not D3.1/D3.2 acceptance.",
+    "Current double-cell movement has no cross-height rule; geometry does not authorize one."
+  ]
+}

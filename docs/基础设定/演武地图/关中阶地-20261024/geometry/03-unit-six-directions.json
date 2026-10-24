@@ -1,0 +1,198 @@
+{
+  "Player": {
+    "raw_bounds_min": [
+      -0.17988519370555878,
+      0.0,
+      -0.14063750207424164
+    ],
+    "raw_bounds_max": [
+      0.17988519370555878,
+      1.0299999713897705,
+      0.14063750207424164
+    ],
+    "runtime_scale": 1.4,
+    "runtime_size_width_height_length": [
+      0.5036785423755645,
+      1.4419999599456785,
+      0.39378500580787656
+    ],
+    "six_facing": [
+      {
+        "facing": 0,
+        "unity_yaw": 90,
+        "world_size_x_y_z": [
+          0.39378500580787656,
+          1.4419999599456785,
+          0.5036785423755645
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.39378500580787656,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      },
+      {
+        "facing": 1,
+        "unity_yaw": 150,
+        "world_size_x_y_z": [
+          0.4927446376402694,
+          1.4419999599456785,
+          0.4000179463703458
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.39378500580787656,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      },
+      {
+        "facing": 2,
+        "unity_yaw": 210,
+        "world_size_x_y_z": [
+          0.46242319723350983,
+          1.4419999599456785,
+          0.4113631390979886
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.3937850058078766,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      },
+      {
+        "facing": 3,
+        "unity_yaw": 270,
+        "world_size_x_y_z": [
+          0.39378500580787656,
+          1.4419999599456785,
+          0.5036785423755645
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.39378500580787656,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      },
+      {
+        "facing": 4,
+        "unity_yaw": 330,
+        "world_size_x_y_z": [
+          0.49274463764026927,
+          1.4419999599456785,
+          0.4000179463703458
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.39378500580787656,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      },
+      {
+        "facing": 5,
+        "unity_yaw": 30,
+        "world_size_x_y_z": [
+          0.46242319723350983,
+          1.4419999599456785,
+          0.4113631390979886
+        ],
+        "path_lateral_width": 0.5036785423755645,
+        "path_axial_length": 0.39378500580787656,
+        "vertices_projected_outside_ideal_occupied_hex_union": 0,
+        "vertex_count": 26105
+      }
+    ]
+  },
+  "Beast": {
+    "raw_bounds_min": [
+      -0.227783203125,
+      0.0,
+      -0.499755859375
+    ],
+    "raw_bounds_max": [
+      0.227783203125,
+      0.45654296875,
+      0.499755859375
+    ],
+    "runtime_scale": 1.8008793333608935,
+    "runtime_size_width_height_length": [
+      0.820420125989118,
+      0.8221787972131032,
+      1.7999999977489007
+    ],
+    "six_facing": [
+      {
+        "facing": 0,
+        "unity_yaw": 90,
+        "world_size_x_y_z": [
+          1.7999999977489007,
+          0.8221787972131032,
+          0.820420125989118
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.7999999977489007,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      },
+      {
+        "facing": 1,
+        "unity_yaw": 150,
+        "world_size_x_y_z": [
+          1.049121569375262,
+          0.8221787972131032,
+          1.5645068487769431
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.799999997748901,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      },
+      {
+        "facing": 2,
+        "unity_yaw": 210,
+        "world_size_x_y_z": [
+          1.0491218062043641,
+          0.8221787972131032,
+          1.564506613549702
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.799999997748901,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      },
+      {
+        "facing": 3,
+        "unity_yaw": 270,
+        "world_size_x_y_z": [
+          1.7999999977489007,
+          0.8221787972131032,
+          0.820420125989118
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.7999999977489007,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      },
+      {
+        "facing": 4,
+        "unity_yaw": 330,
+        "world_size_x_y_z": [
+          1.0491215693752627,
+          0.8221787972131032,
+          1.5645068487769427
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.7999999977489005,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      },
+      {
+        "facing": 5,
+        "unity_yaw": 30,
+        "world_size_x_y_z": [
+          1.049121806204364,
+          0.8221787972131032,
+          1.5645066135497023
+        ],
+        "path_lateral_width": 0.820420125989118,
+        "path_axial_length": 1.799999997748901,
+        "vertices_projected_outside_ideal_occupied_hex_union": 56,
+        "vertex_count": 28618
+      }
+    ]
+  }
+}

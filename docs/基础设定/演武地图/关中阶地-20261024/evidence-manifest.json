@@ -1,0 +1,22 @@
+{
+  "capturedDate": "2026-10-24",
+  "task": "D1 partial design evidence",
+  "status": "blocked_on_double_cell_height_rule",
+  "runtimeValidated": false,
+  "targetImage": "assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png",
+  "mapScope": "Offline candidate graph, not a production importer. Marker 9:9 and dimension/deep-water annotations added after graph verification; cells, edges and default rule were compared unchanged.",
+  "geometryScope": "Real FBX vertices transformed by current Builder normalization; standalone comparison scene only, not D3.1 seam/sidewall/base samples.",
+  "localMeasurementBlend": "D:\\Temp\\TianZhang-Blender\\d1-measure-20261024\\d1-measured-size-comparison.blend",
+  "localMeasurementBlendSha256": "46addfb939697740a97e5137c94731899d62390690bd21512483f4e58e0aaf76",
+  "blendRetention": "Local measured comparison scene retained outside Git. Original FBX/Prefab/persistent blend were not overwritten. Reproduction script expects the retained local scene and import-state JSON.",
+  "independentReviews": [
+    "Map/placement invariant and candidate edge costs: source-only review passed within scope; cross-height double movement blocked.",
+    "Earth/water/fire/flight: prototype and carrier review passed after gravity cost clarification.",
+    "Space/Yang/Yin/seal and five character presets: source review passed after foundation capacity and per-instance reserve corrections."
+  ],
+  "limits": [
+    "No Unity import, play or balance acceptance.",
+    "D1 common connector footprint/stoppable cells/interfaces still pending the double-cell rule decision.",
+    "D2 and D3.1 not started."
+  ]
+}
