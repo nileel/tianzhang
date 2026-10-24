@@ -1,0 +1,303 @@
+{
+  "source": "D:\\\u5929\u7ae0\u6e38\u620f\u5f00\u53d1\\src\\Assets\\Art\\Environments\\Guanzhong\\Tile.fbx",
+  "sha256": "504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee",
+  "sourceUntouched": true,
+  "vertices": 49675,
+  "triangles": 99346,
+  "boundaryEdges": 2,
+  "nonManifoldEdges": 4,
+  "rootCenterY": 0.0004329681396484375,
+  "localBoundsMin": [
+    -0.5790567398071289,
+    -1.883110523223877,
+    -0.5987600088119507
+  ],
+  "localBoundsMax": [
+    0.5397034883499146,
+    0.0939444899559021,
+    0.6574773192405701
+  ],
+  "sixDirections": [
+    {
+      "directionDegrees": 0,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 18,
+          "maxRayDistance": 0.5216103196144104,
+          "examples": [
+            [
+              0.20207259421636903,
+              0.13241379310344828,
+              0.5216103196144104
+            ],
+            [
+              0.21169509870286282,
+              0.13241379310344828,
+              0.5155028700828552
+            ],
+            [
+              0.22131760318935653,
+              0.13241379310344828,
+              0.5087275505065918
+            ]
+          ]
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 24,
+          "maxRayDistance": 0.535281777381897,
+          "examples": [
+            [
+              0.1924500897298753,
+              0.04,
+              0.5241952538490295
+            ],
+            [
+              0.20207259421636903,
+              0.04,
+              0.5227395296096802
+            ],
+            [
+              0.21169509870286282,
+              0.04,
+              0.5201818346977234
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "directionDegrees": 60,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 1,
+          "maxRayDistance": 0.505804181098938,
+          "examples": [
+            [
+              -0.14433756729740646,
+              0.13241379310344828,
+              0.505804181098938
+            ]
+          ]
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 10,
+          "maxRayDistance": 0.5431798100471497,
+          "examples": [
+            [
+              -0.2886751345948129,
+              0.04,
+              0.5177618265151978
+            ],
+            [
+              -0.2886751345948129,
+              0.0889655172413793,
+              0.5110937356948853
+            ],
+            [
+              -0.2886751345948129,
+              0.13793103448275862,
+              0.5431798100471497
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "directionDegrees": 120,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 0,
+          "maxRayDistance": 0.32703572511672974,
+          "examples": []
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 0,
+          "maxRayDistance": 0.3670884370803833,
+          "examples": []
+        }
+      ]
+    },
+    {
+      "directionDegrees": 180,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 0,
+          "maxRayDistance": 0.4900257885456085,
+          "examples": []
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 15,
+          "maxRayDistance": 0.6287341117858887,
+          "examples": [
+            [
+              0.25018511664883786,
+              0.0889655172413793,
+              0.5076034069061279
+            ],
+            [
+              0.25980762113533157,
+              0.0889655172413793,
+              0.5703256130218506
+            ],
+            [
+              0.2694301256218254,
+              0.04,
+              0.5132394433021545
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "directionDegrees": 240,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 23,
+          "maxRayDistance": 0.5674338936805725,
+          "examples": [
+            [
+              -0.2886751345948129,
+              0.04,
+              0.5674338936805725
+            ],
+            [
+              -0.2886751345948129,
+              0.06310344827586208,
+              0.5372685790061951
+            ],
+            [
+              -0.2886751345948129,
+              0.08620689655172414,
+              0.5227226614952087
+            ]
+          ]
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 14,
+          "maxRayDistance": 0.5793960094451904,
+          "examples": [
+            [
+              -0.2886751345948129,
+              0.7744827586206896,
+              0.5750517845153809
+            ],
+            [
+              -0.2886751345948129,
+              0.8234482758620689,
+              0.527030348777771
+            ],
+            [
+              -0.2886751345948129,
+              0.8724137931034484,
+              0.5077659487724304
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "directionDegrees": 300,
+      "seamStripRays": 505,
+      "seamBelowMinus25mm": 0,
+      "seamExamples": [],
+      "wall": [
+        {
+          "rise": 0.75,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 0,
+          "maxRayDistance": 0.41680535674095154,
+          "examples": []
+        },
+        {
+          "rise": 1.5,
+          "rays": 1830,
+          "miss": 0,
+          "recessBeyondRadius0_3": 0,
+          "maxRayDistance": 0.41447019577026367,
+          "examples": []
+        }
+      ]
+    }
+  ],
+  "limits": "Finite sample, not a continuous watertight proof. Side rays include stone recesses; a distant hit alone does not prove a flush side wall. Unity views decide visible gaps. No rule/collider changes.",
+  "irregularEdges": [
+    {
+      "vertices": [
+        21644,
+        21684
+      ],
+      "uses": 3,
+      "lengthMeters": 0.0016829176322466788
+    },
+    {
+      "vertices": [
+        21644,
+        21683
+      ],
+      "uses": 1,
+      "lengthMeters": 0.000946316155989551
+    },
+    {
+      "vertices": [
+        21684,
+        21713
+      ],
+      "uses": 3,
+      "lengthMeters": 0.0023845772047741986
+    },
+    {
+      "vertices": [
+        21683,
+        21713
+      ],
+      "uses": 1,
+      "lengthMeters": 0.0015239792030693272
+    }
+  ]
+}

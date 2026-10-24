@@ -1,0 +1,57 @@
+D3.1 三档基础地块样组
+制作开始：2026-10-24；完成：2026-10-25（香港时间）
+
+结果与范围
+复用原 Tile 的网格、UV和贴图，19格独立样组包含同高接合、0.75m台差、1.5m直接邻接和外围暴露底端。
+派生Prefab：src/Assets/Art/Environments/Guanzhong/Terrace/TileTerrace.prefab。
+样组场景：src/Assets/Scenes/GuanzhongTerraceSample.unity；未加入正式构建场景。
+Builder：src/Assets/Scripts/Editor/GuanzhongTerraceSampleBuilder.cs。
+入口：Unity菜单“天章/美术/D3.1 构建三档地块样组”。它引用现有GuanzhongTerrainAssetBuilder.TilePrefabPath，不调用会重建旧场景/岩石的入口。
+没有修改Adventure场景、空间数据、规则、角色、RockCluster或原Tile。整图装配、坡阶、角色支承、选格和真实操作属于后续子项。
+
+资产来源与光色
+原FBX：src/Assets/Art/Environments/Guanzhong/Tile.fbx。
+SHA256：504b1e7b390d5c061d911a3787d2171a241c4c6ce2cb58479aa53dbb899ffbee，实施后复核相同。
+原网格49,675顶点/99,346三角；样组19实例、1个共享网格，共1,887,574实例三角，未复制第二层可站地块、未拉伸草顶。
+GrassEarthStone.mat使用原Tile_basecolor.JPEG；TerraceLit.shader只将URP Lit采样后的albedo按线性亮度混合到40%色度。
+暖色乘色(0.94,0.90,0.80)、Smoothness=0.06；复用URP Lit光照、阴影和深度Pass。这个着色器只供本派生材质使用。
+单纯整体乘色会保留过亮橙色土缘，因此最终改为材质着色阶段降色度；原贴图字节未变。
+场景用38°常用俯角、正交尺寸3和5；暖主光配冷色环境光。未添加雾/远山装饰掩盖接缝。
+
+三类量分别记录
+档位     根Y             格心实际支承Y（D1冻结值）    草冠最高Y（约）
+0        0.340000        0.340433121                  0.43394449
+1        1.090000        1.090433121                  1.18394449
+2        1.840000        1.840433121                  1.93394449
+Unity逐格向实际MeshCollider射线量测格心，误差小于0.00001m；临时Collider验证后移除，保存场景无Collider。
+归一化原件根局部外露AABB：min=(-0.57905674,-1.88311052,-0.59876001)，max=(0.53970349,0.09394449,0.65747732)。
+这是实际顶点的包围范围；外露轮廓见runtime-direction-0～5六向图，不能拿AABB最高点代替格心支承；草冠比格心高约0.093511m。
+每格位置、世界包围范围及格心/草冠详见unity-runtime-proof.json。格心距1m，不移动格距掩盖接缝。
+
+接合与补件判定
+原件六向共边各101个横向点×5条缝带，共3030条射线，没有落到根Y下25mm之外的缺口。
+0.75/1.5m两种台差的六向侧壁共21960条水平射线均命中实体；深凹槽单列，不把“命中远处”当作平直壁证明。
+Unity样组26条同高邻边各61×3条缝带射线，共4758条通过。
+六向38°视图、18°低侧视及-25°仰视显示原岩壁和底面连贯，没有可确认透出背景的接合缺口；现有底端的不规则石形保留。
+原件有2条小于1.6mm的拓扑边界边及2条三面共边，已记录，未形成可见缺陷；不把原件声明为严格流形。
+有限射线和画面是本样组验收，不是所有相机/任意排列的连续数学证明。未发现必须补件的实际露空，因此没有新增岩壁延长、封底或角件。
+runtime-pan-zoom.mp4为32帧实际PlayMode渲染，1366×768、12fps播放；相机平移±0.12m、正交尺寸3±0.12。
+抽查微移帧的同高接缝、三格交汇点和台沿未见明显叠面闪烁。原贴图/草饰的格间纹理接缝仍可辨，不声称无缝纹理。
+
+验证与复现
+Unity 6000.3.18f1，RTX 4070 / Direct3D11。
+构建：Unity.exe -batchmode -quit -projectPath D:\天章游戏开发\src -executeMethod TianZhang.Editor.GuanzhongTerraceSampleBuilder.Build。
+几何与初次画面：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongTerraceSamplePlayModeTests -EnableGraphics。
+geometry-playmode-results.xml：1/1通过（当时几何与画面在同一测试）；材质修正不改变网格/位置，之后没有重复几何检查。
+最终画面：同脚本 -TestFilter TianZhang.Tests.PlayMode.GuanzhongTerraceSamplePlayModeTests.SavedSampleRendersSixDirectionsAndCameraMotion -EnableGraphics。
+material-playmode-results.xml：1/1通过，Shader支持且无编译错误。最终六向图片和微移帧来自这次运行。
+该次脚本退出时因Windows映射文件占用，恢复已有RockCluster贴图meta时报错；测试本身通过。Unity退出后用-ValidateResultOnly复核XML通过，并清除了唯一新增的ProjectSettings尾空白差异，保留原RockCluster改动。未修改测试运行脚本。
+unity-runtime-views.json记录最终材质/镜头与采集帧耗时。批处理含同步截图和文件IO，不能解读为游戏FPS或整图性能；当前没有证据要求简模。
+Blender原件只读检查走tianzhang-blender-pipeline的blender_lab通道；probe-original-tile.py依赖保留的D1_Measure_20261024场景与D1导入记录，未保存/覆盖源blend。
+
+所有者与边界
+独立样组场景→TileTerrace prefab variant→原Tile/MeasuredFbxAlignment→原FBX；无运行时位置/材质重写组件。
+Builder与派生默认材质一致；保存重开后PlayMode读取这些序列化值。原正式Adventure仍使用原Tile。
+References loaded：runtime-owner-proof、visible-object-identity、asset-source-lock、serialized-persistence、ui-and-visual-assets、project-structure-discovery、modular-architecture、ai-workflows、unity-validation、shared-caller-blast-radius，以及Blender tool-routing。
+Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md，具体Editor/PlayMode程序集以实际asmdef核对。
+独立只读复核检查六向/底面、源尺寸与范围，指出土缘色度后由主智能体修正。代码均小于500行，没有新增运行时组件或跨模块依赖。

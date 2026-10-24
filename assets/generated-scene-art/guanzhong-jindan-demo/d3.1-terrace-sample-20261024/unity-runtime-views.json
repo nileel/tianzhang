@@ -1,0 +1,17 @@
+{
+    "scene": "Assets/Scenes/GuanzhongTerraceSample.unity",
+    "shader": "TianZhang/Guanzhong Terrace Lit",
+    "performanceNote": "Graphics-enabled batch PlayMode; median includes synchronous capture/file IO, not player FPS or full-map load.",
+    "playMode": true,
+    "tint": {
+        "r": 0.9399999976158142,
+        "g": 0.8999999761581421,
+        "b": 0.800000011920929,
+        "a": 1.0
+    },
+    "motionFrames": 32,
+    "pitch": 38.0,
+    "closeSize": 3.0,
+    "commonSize": 5.0,
+    "batchFrameMsMedian": 35.69020080566406
+}
