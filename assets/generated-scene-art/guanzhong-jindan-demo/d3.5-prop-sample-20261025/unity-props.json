@@ -1,0 +1,16 @@
+{
+    "playMode": true,
+    "instances": 11,
+    "meshVertexChecks": 16752,
+    "baseSupportRays": 3576,
+    "activeTriangles": 3624,
+    "totalInstanceTriangles": 4588720,
+    "stateSwitches": 10,
+    "minPathClearance": 0.23320519924163819,
+    "lowWallHeight": 0.374584823846817,
+    "highWallHeight": 0.9995927214622498,
+    "steleHeight": 0.7549999952316284,
+    "failedSteleHeight": 0.34284496307373049,
+    "livingPlantHeight": 0.257026731967926,
+    "charredPlantHeight": 0.1519901603460312
+}

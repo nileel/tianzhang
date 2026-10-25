@@ -1,0 +1,37 @@
+D3.5 墙体、支点石碑与低植静态状态样组（2026-10-25）
+
+交付与状态
+Unity菜单：天章/美术/D3.5 构建墙碑低植状态样组。
+Builder：src/Assets/Scripts/Editor/GuanzhongPropSampleBuilder.cs。
+场景：src/Assets/Scenes/GuanzhongPropSample.unity；这是状态对照样组，不是正式演武地图。
+资产目录：src/Assets/Art/Environments/Guanzhong/Props/。
+LowWall.prefab、HighWall.prefab：互斥根子对象Intact、Damaged、Remnant。两种墙共用SharedRubble，残留不用RockCluster充当。
+SupportStele.prefab：互斥根子对象Intact、Failed；Intact/Glow可独立开关，关闭微光保持碑体完整。Failed为断裂矮碑，和仅熄光的完整碑可区分。
+LowPlant.prefab：互斥根子对象Living、Charred。焦枯状态有短黑枝和少量灰烬，树木/地块草饰不因此自动成为可燃物。
+所有Prefab默认只启用首个状态。后续调用者须关闭旧状态再开启新状态；本轮只提供层级，不添加运行时状态机。状态Mesh也各有独立Prefab便于D7复用。微光只来自自发光材质，没有PointLight或领域效果。
+原生源库：assets/source/environments/guanzhong-jindan-demo/d3.5-static-props/StaticProps.blend、build-props.py、source-proof.json。共10份FBX；通过blender_lab制作，保持原Blender会话场景。库包含可Append的原生对象，首次制作脚本拒绝覆盖，重新制作需明确新输出目录；Unity Builder可以重建交付Prefab和样组。
+
+外观、复用与布局
+墙、碑、碎石复用原Stair石纹atlas，新增切角石块和断面轮廓；原Stair/Tile/Ramp资产没有修改。低墙约0.375米、高墙约1米、完整碑0.755米、失效碑0.343米；活低植约0.257米、焦枯约0.152米（均含实际网格上下界）。
+样组前后四排依次为低墙、高墙、碑、低植；前三排从左到右分别是完整/受损/残留、完整/受损/残留、亮碑/熄光完整碑/失效碑，低植从左到右为活/焦枯。
+地块边缘复用原Tile草饰，路径复用D3.2精确平顶地块。岩堆已在D3.4同轮样组复用，不为状态展台另外堆装饰。
+物件放在每排行进中心线后方的格边，所有状态（含隐藏状态）参与净空检查。低墙样组沿长度缩至0.93倍以适应单条共边，Prefab源仍保持制作尺寸；其他状态不依赖整体非等比缩放。
+地图中的低掩体marker(4,5)/(9,7)、墙边(8,14)↔(9,14)/(8,15)↔(9,15)、四个支点坐标仍由战场规则§九和生产环境数据规定；本轮对照样组不替代这些位置，也不提前启用marker。实际在全图摆放与正式镜头适配留D3.6。
+新Builder→独立状态Prefab→保存场景→PlayMode读取是可见所有者链，无后续运行时写入器。所有生产Prefab和样组均无Collider、MonoBehaviour及障碍/燃料/耐久/能力注册。没有修改CSV、存档、战斗、公共接口、生产Adventure场景或原Builder。
+
+Unity验证
+Unity 6000.3.18f1；Builder编译、生成、保存重开成功；启用图形的PlayMode 1/1通过，见props-playmode-results.xml。
+unity-props.json：11个展示实例，16,752个实际网格顶点检查、3,576条底部支承射线通过；各状态到本排行进中心线的最近距离为0.233205米，未侵入预设0.4米宽空带。低植根部最多约2.5毫米埋入原地块，未悬空。此宽度是本静态样组检查约束，不是全图角色/双格身体可通过的证明。
+10次互斥状态切换成功，碑Glow实际启用/关闭通过；runtime-stele-glow-on/off.png为同一运行对象与相同相机，仅切换微光。runtime-all-static-states.png及四排近景已检查，墙高、残留、亮/暗/失效碑、活/焦枯低植均可辨。
+首次测试错误地把GetComponentsInChildren返回数量为0当作关闭证据。Unity会返回被查询根对象自身的Renderer，即使根已停用；修正测试为检查activeInHierarchy与enabled后通过，生产资产未因此修改。
+当前可见道具总计3,624三角；含复用地块/岩壁的样组总计4,588,720实例三角。此数只记录样组负载，不构成整图性能验收。
+验收限静态状态与样组有限采样。正式操作与整图布局留D3.6；破坏、燃烧、环境交互资格、领域/支点结算留D4/D7–D11。
+
+复现
+关闭同工程Unity编辑器后，在仓库根目录执行：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongPropSamplePlayModeTests -EnableGraphics -ResultXmlPath D:/天章游戏开发/src/Logs/d35-recheck.xml
+重建入口：TianZhang.Editor.GuanzhongPropSampleBuilder.Build。
+References loaded：Unity技能runtime-owner-proof、serialized-persistence、project-structure-discovery、modular-architecture、ai-workflows、unity-validation、ui-and-visual-assets、visible-object-identity、asset-source-lock；项目Blender技能与tool-routing。
+Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md；新增Builder归属既有TianZhang.Editor，测试归属TianZhang.PlayModeTests。新增C#均少于500行，没有改动运行时架构或非请求系统。
+独立只读检查核对源FBX哈希、静态Prefab、运行结果及7张截图，确认本项静态验收证据充分；正式地图与身体通行仍留D3.6。
+提交检查：本轮D3.4/D3.5合计128个相关文件通过定向check-pending-whitespace；只修剪生成YAML的非语义行尾空白。git diff --cached --check仅报告49个.meta中147行userData/assetBundleName/assetBundleVariant空值后的语义空格，按仓库既有例外保留；git -c core.whitespace=-blank-at-eol diff --cached --check通过，未更改全局配置。

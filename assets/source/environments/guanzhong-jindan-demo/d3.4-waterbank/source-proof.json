@@ -1,0 +1,19 @@
+{
+  "hexInradius": 0.5,
+  "hexCircumradius": 0.5773502691896258,
+  "shoreWidth": 0.045,
+  "waterRenderOffset": 0.004,
+  "shoreRenderOffset": 0.005,
+  "newSupportLayer": false,
+  "scope": "Static sheets only; existing RampLanding keeps the unique flat support. No water simulation.",
+  "assets": {
+    "WaterHex": {
+      "vertices": 7,
+      "fbxSha256": "87a3ed863e99e6c341c57c9fdf497a56dd1efd8f693ad2cab868dbb1ac99b94d"
+    },
+    "ShoreEdge": {
+      "vertices": 4,
+      "fbxSha256": "ca899fffd2d7ba30da83fe415da2cd8b3489441c30a6c3addfe6f1cb54581028"
+    }
+  }
+}

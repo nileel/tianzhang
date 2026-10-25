@@ -1,0 +1,14 @@
+{
+    "playMode": true,
+    "mapVersion": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+    "waterCells": 6,
+    "upperWaterCells": 1,
+    "mudCells": 2,
+    "waterVertices": 42,
+    "shoreEdges": 22,
+    "surfaceRays": 432,
+    "landingRays": 168,
+    "meshInstances": 114,
+    "instanceTriangles": 3133243,
+    "maxSupportError": 0.0
+}

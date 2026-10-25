@@ -1,0 +1,158 @@
+{
+  "scope": "Separate static mesh states only. No collision, fuel, durability, abilities or game state.",
+  "stoneTexture": "Assets/Art/Environments/Guanzhong/Stair_basecolor.JPEG",
+  "stoneTextureSha256": "23e14161e0051843fedfd8db1b691587a9638c94c4966e4f652d3b6549fcc54a",
+  "blendSha256": "7ec8bf8d61927c3aedbfbeca5cc6cc87b4232a8bcc6f09c04788b5346703640e",
+  "assets": {
+    "LowWallIntact": {
+      "vertices": 128,
+      "triangles": 224,
+      "unityMin": [
+        -0.30149999260902405,
+        0.0,
+        -0.07999999821186066
+      ],
+      "unityMax": [
+        0.30149999260902405,
+        0.3745848536491394,
+        0.07999999821186066
+      ],
+      "fbxSha256": "337603ac843d32def93a106089237f5a02692730e6deae7e6ed86173c0f35061"
+    },
+    "LowWallDamaged": {
+      "vertices": 80,
+      "triangles": 140,
+      "unityMin": [
+        -0.30149999260902405,
+        0.0,
+        -0.07999999821186066
+      ],
+      "unityMax": [
+        0.30149999260902405,
+        0.3730391561985016,
+        0.07999999821186066
+      ],
+      "fbxSha256": "d21ea6021efa84a228c66e73f1479b2d0b108aedc20f211f4629b534c8645ce9"
+    },
+    "HighWallIntact": {
+      "vertices": 320,
+      "triangles": 560,
+      "unityMin": [
+        -0.2815000116825104,
+        0.0,
+        -0.07999999821186066
+      ],
+      "unityMax": [
+        0.2815000116825104,
+        0.9995927214622498,
+        0.07999999821186066
+      ],
+      "fbxSha256": "8a32dcbe4a47e01a287962e67382b31d1a30e0889d1dfc2f0f66077e971a1e64"
+    },
+    "HighWallDamaged": {
+      "vertices": 224,
+      "triangles": 392,
+      "unityMin": [
+        -0.2815000116825104,
+        0.0,
+        -0.07999999821186066
+      ],
+      "unityMax": [
+        0.2815000116825104,
+        0.9986233711242676,
+        0.07999999821186066
+      ],
+      "fbxSha256": "33f60ff30a07e8a73e7264ef4dccfab846f49c7614b3391935df3a1aece66139"
+    },
+    "SharedRubble": {
+      "vertices": 96,
+      "triangles": 168,
+      "unityMin": [
+        -0.2954181134700775,
+        0.0,
+        -0.13134941458702087
+      ],
+      "unityMax": [
+        0.25284361839294434,
+        0.10214146226644516,
+        0.135653555393219
+      ],
+      "fbxSha256": "8fd64dcdeb7c64b1c047ad396299f7f5743554462d20df146bfa9c6daca3becc"
+    },
+    "SteleIntact": {
+      "vertices": 112,
+      "triangles": 196,
+      "unityMin": [
+        -0.12999999523162842,
+        0.0,
+        -0.0949999988079071
+      ],
+      "unityMax": [
+        0.12999999523162842,
+        0.7549999952316284,
+        0.0949999988079071
+      ],
+      "fbxSha256": "6235302050abca14a2c3494bf7f0d6e665ddec0879a3bd0519efd5008cf56864"
+    },
+    "SteleGlow": {
+      "vertices": 144,
+      "triangles": 240,
+      "unityMin": [
+        -0.04529411718249321,
+        0.28999999165534973,
+        -0.07419615238904953
+      ],
+      "unityMax": [
+        0.04529411718249321,
+        0.5128235220909119,
+        0.06819615513086319
+      ],
+      "fbxSha256": "a4f0e2e1dd09782fd9410441eec76afc098905b0df24fbd90c1065004b1f35fd"
+    },
+    "SteleFailed": {
+      "vertices": 64,
+      "triangles": 112,
+      "unityMin": [
+        -0.12999999523162842,
+        0.0,
+        -0.13856615126132965
+      ],
+      "unityMax": [
+        0.15093395113945007,
+        0.34284496307373047,
+        0.0949999988079071
+      ],
+      "fbxSha256": "4ab700cb50b02b2f1480e4eb255a19a8f1dd2151851ad9d9bf7a59cae85a5235"
+    },
+    "LowPlantLiving": {
+      "vertices": 459,
+      "triangles": 748,
+      "unityMin": [
+        -0.09247550368309021,
+        -0.0017666271887719631,
+        -0.10275772213935852
+      ],
+      "unityMax": [
+        0.12321086972951889,
+        0.2552601099014282,
+        0.10398562252521515
+      ],
+      "fbxSha256": "21ab8bc1a59498c14642f7cb7b3a6f6d977004427613b3d53818101fdaf0cf39"
+    },
+    "LowPlantCharred": {
+      "vertices": 284,
+      "triangles": 480,
+      "unityMin": [
+        -0.0891028344631195,
+        -0.0024947235360741615,
+        -0.1011529341340065
+      ],
+      "unityMax": [
+        0.12303385138511658,
+        0.1494954377412796,
+        0.10389264672994614
+      ],
+      "fbxSha256": "5b541751f8d403c8ec46ceebe7fa298f314691384027876404eb47b8896cca54"
+    }
+  }
+}

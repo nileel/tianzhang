@@ -1,0 +1,36 @@
+D3.4 水面与泥岸静态样组（2026-10-25）
+
+交付
+Unity菜单：天章/美术/D3.4 构建水面与泥岸样组。
+Builder：src/Assets/Scripts/Editor/GuanzhongWaterbankSampleBuilder.cs。
+保存场景：src/Assets/Scenes/GuanzhongWaterbankSample.unity。
+新资产：src/Assets/Art/Environments/Guanzhong/Waterbank/，含WaterHex、ShoreEdge、水/泥岸材质、ShallowWaterTile与MudBankTile。
+源库：assets/source/environments/guanzhong-jindan-demo/d3.4-waterbank/Waterbank.blend、build-waterbank.py、source-proof.json。
+制作通道为blender_lab。源库包含可Append的原生Object；首次制作脚本拒绝覆盖现有输出，源模型重新制作须明确使用新输出目录，不能直接覆盖重跑。日常重建使用已交付FBX和Unity Builder。
+
+事实与边界
+依开发计划D3.4、战场空间与环境规则§九、EnvironmentProfiles.csv及已导入EnvironmentProfile_env_guanzhong_jindan_demo.asset。
+地图版本仍为guanzhong-jindan-v3-d1-supported-map-20261024.4。
+低谷水格为(4,0)/(5,0)/(4,1)/(5,1)/(4,2)，唯一支承Y=0.340433121米；(5,5)为中台独立浅水格，支承Y=1.090433121米。泥岸仅(3,0)/(6,0)。没有把中台水格下移或把六格连成同一低谷水面。
+WaterHex是内切半径0.5米、外接半径1/√3米的6三角平面，渲染面比原支承高4毫米；ShoreEdge是水格内侧45毫米宽的平片，比支承高5毫米。此偏移只避免共面闪烁，不创建另一支承、深度或占位层。
+同高相邻水格没有内部岸带；外侧22条六角边使用暗湿泥岸带。泥岸直接替换RampLanding的顶面材质，没有叠置第二个顶面地块。水为不透明静态纹理表现，涟纹没有时间、波高或水深模拟。
+原D3.3通路场景作为只读装配基础，另存新场景。保留短阶端口(5,1)↔(5,2)、(5,4)↔(5,5)/(4,5)，以及泥岸(6,0)到(7,0)/(8,0)/(9,0)的备用坡道入口走廊；右侧完整长坡及整图装配属于D3.6。
+只在已有岩障(4,3)复用一个RockCluster实例，按其当前Renderer包围盒定宽0.64米、底部贴支承；不修改原Prefab、材质或纹理设置。当前工作区原RockCluster存在本轮开始前的未提交工作，本次不暂存这些文件；截图反映当前工作区引用的外观，不代表这些无关改动已提交。
+生产样组没有Collider、MonoBehaviour或游戏规则注册，临时MeshCollider只在测试内创建。新Builder→新Prefab→保存场景→PlayMode读取构成可见所有者链；无运行时重写器。正式AdventureScene与生产Builder、CSV、能力及战斗规则未改。
+
+最小验证
+Unity 6000.3.18f1；Builder编译、生成、保存重开成功。启用图形的PlayMode 1/1通过，结果见waterbank-playmode-results.xml。
+unity-waterbank.json：6水/2泥格，1个中台水格，42个水面顶点落在精确六角域内，22条岸带方向与邻接一致；432条水面射线、168条岸口/短阶端口/备用入口走廊支承射线通过，格心支承高度最大误差0。
+实际运行截图：runtime-low-water-and-landings.png（低谷、泥岸落点）、runtime-upper-pool-and-stair.png（中台独立水格与前阶）、runtime-hex-boundaries.png（俯视六角边界）、runtime-waterbank-overview.png（样组构图）。已检查水/泥/干地可辨，没有水面跨高台或封住阶梯端口。
+样组114个MeshFilter实例、3,133,243个实例三角；大部分来自原地块/岩壁及复用通路。这是样组负载记录，不是性能瓶颈结论。
+验证仅覆盖静态资产、有限射线和样组画面；正式角色移动、选格、全图遮挡、双分辨率操作、撤离重入留D3.6。水深、潮汐、燃烧及地表规则留D8。
+
+复现
+关闭同工程Unity编辑器后，在仓库根目录执行：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongWaterbankSamplePlayModeTests -EnableGraphics -ResultXmlPath D:/天章游戏开发/src/Logs/d34-recheck.xml
+重新装配入口：TianZhang.Editor.GuanzhongWaterbankSampleBuilder.Build，使用已存在的D3.3场景，不重建或覆盖D3.3。
+不重复已通过且输入不变的D3.1–D3.3全量验证；本次没有docs/CSV/Unity规则数据链变化，不运行无关导入或BattleSim。
+References loaded：Unity技能runtime-owner-proof、serialized-persistence、project-structure-discovery、modular-architecture、ai-workflows、unity-validation、ui-and-visual-assets、visible-object-identity、asset-source-lock；项目Blender技能与tool-routing。
+Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md，归属以Editor README、现有样组Builder与PlayMode测试核实。新增C#均少于500行，无新增运行时模块或公共接口。
+独立只读检查核对固定水格、端口、源FBX哈希和运行画面，未发现实质问题；不作为正式整图操作验收。
+提交检查：本轮D3.4/D3.5合计128个相关文件通过定向check-pending-whitespace；只修剪生成YAML的非语义行尾空白。git diff --cached --check仅报告49个.meta中147行userData/assetBundleName/assetBundleVariant空值后的语义空格，按仓库既有例外保留；git -c core.whitespace=-blank-at-eol diff --cached --check通过，未更改全局配置。
