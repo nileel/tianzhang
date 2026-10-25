@@ -1,0 +1,56 @@
+D3.3 两处石阶与通路接合验收（2026-10-25）
+
+交付与所有者
+完成前右短阶(5,2)/(5,3)/(5,4)与后右高台阶梯(8,8)/(8,9)/(8,10)，共用StoneStair3派生件；场景包含左长坡、接合平台、主路及到(6,0)泥岸格的支路。
+Unity菜单：天章/美术/D3.3 构建两处石阶与通路样组。
+入口：src/Assets/Scripts/Editor/GuanzhongStairSampleBuilder.cs。
+保存场景：src/Assets/Scenes/GuanzhongStairSample.unity。
+资产：src/Assets/Art/Environments/Guanzhong/Stairs/StoneStair3.fbx、StoneStair3.prefab及三种材质。
+源文件：assets/source/environments/guanzhong-jindan-demo/d3.3-stone-stairs/，含制作脚本、原生Object库.blend与source-proof.json。
+运行可见对象由Builder→保存的GuanzhongStairSample→两个Prefab实例与材质承载；Builder保存后重开，PlayMode再读取保存场景。样组没有生产移动脚本、隐藏支承Collider或额外占格层；验收Collider及角色提落只在Tests/PlayMode创建。
+此项完成通路资产和独立样组。正式Adventure整图装配、移动/选格/遮挡与双分辨率操作仍按D3.6验收，没有用本样组代替正式战斗操作。
+
+来源与尺寸冻结
+事实源：开发计划D3.3、战场空间与环境规则§九、生产EnvironmentProfiles.csv及已导入EnvironmentProfile_env_guanzhong_jindan_demo.asset。
+地图版本仍为guanzhong-jindan-v3-d1-supported-map-20261024.4。没有修改CSV、规则高度、净空、可停位置或有向边。
+直接按physicalSurfaceProfiles.stairConnections中的risers制作，两处同形平移复用；后阶相对前阶平移X+6、Y+.75、Z+3√3米。
+每处占三个相邻六角格的精确并集；两段各4级，总升.75米，每级高.09375米，worldZ踏深.078125米。三平台相对支承Y=0/.375/.75；前阶低端世界Y=.340433121，后阶低端1.090433121米。
+名义端平台格心到梯段起点.303525404米；第一实际立板另加一级踏深，距格心.381650404米。名义中平台核心深.5米，按第4/5立板间距的实际连续水平面深.578125米。两者不是不同版本，不将首立板前移。
+短阶两向净空档1，双格兽继续走长坡。三覆盖格内不摆旧Tile或RampLanding，避免地块压踏面；外部端口平台复用D3.2的RampLanding精确平顶及原Tile岩壁。左坡复用EarthRamp24。
+前阶下端口5:1↔5:2，上端口4:5↔5:4、5:4↔5:5；后阶下端口8:7↔8:8、9:7↔8:8，上端口7:11↔8:10、8:10↔8:11。其余侧缘继续按数据关闭。
+通路接合尺寸至此按上述D1 profile及本次实际Mesh验收冻结；后续装饰不得侵入已验证身体区域或改动唯一支承面。
+
+原资产复用与负载
+旧Stair原比例踏宽不足且会被地块压住，不能直接摆放；本次保留原石纹atlas并重建符合冻结尺寸的踏面、立板与封闭侧底面。原Stair.fbx、Stair.prefab、贴图、角色模型和无关RockCluster工作均未改动。
+原Stair FBX SHA256：d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9。
+原石纹贴图SHA256：23e14161e0051843fedfd8db1b691587a9638c94c4966e4f652d3b6549fcc54a。
+源网格97顶点/190三角，Blender检查非流形边0。每个Unity阶梯仍为190三角；样组73个MeshFilter实例，总计2663879三角，主要来自复用的原地块岩壁。此数是实例负载记录，不是整图性能结论。
+制作采用blender_lab通道。原生.blend是可Append Object的对象库；Unity材质由Builder复用原Stair.mat及既有TerraceLit着色器配置。脚本默认拒绝覆盖已有输出；日常重建仅需已交付FBX与Builder。
+石阶侧壁采用规则实体轮廓，原atlas在部分侧面有横向条带拉伸；不以装饰凸石掩盖尺寸或接口。正式环境构图与装饰适配继续按后续子项执行。
+
+Unity运行证据
+Unity 6000.3.18f1，启用图形的PlayMode；生产Prefab不附Collider，测试临时使用实际MeshCollider。
+stair-playmode-results.xml：3/3通过，包含石阶几何、原尺度人物和地面路线。
+pair-playmode-results.xml：新增当前邻壁环境的双格检查，1/1通过。它是在前三项通过后单独新增运行，未重复已通过且输入未变的前三项。
+unity-geometry.json：两处石阶各六向，共504条踏面射线、360条立板射线、4998条端口条带射线，测得profile高度误差为0（Unity float精度）。九档真实水平面与八次升高均存在，无隐藏斜面。
+其中96条精确边界射线需以四向10微米邻域复核，同样要求命中期望高度；这不是所有中心射线直接命中，也不是连续缝宽上界证明。共享边外角只检查角点，避免把有限hex域外当成缺口。
+unity-body.json：玩家原尺度1.4，共706个落脚姿态，其中36个为两处三平台×六朝向静止；实际原网格顶点、低位三角中心及原三角边与立板交点，连同运动阶段中点共163429901次检查。静止左右足组支承高差为0，最大采样身体侵入1.1920929e-7米，最大单次抬升.0937500596米，均在浮点精度内满足2毫米容差及.09375米设计步高。
+移动另一足组最大离面.375米，是原刚体跨阶的已知表现边界；静止三平台双脚接地。运行短片展示棋子式先提起、平移、再落下；不声称步行骨骼动画、IK或运动全程双脚同时贴地。
+unity-pair.json：双格石甲吼原尺度1.800879333，在当前样组坡内42个D1合法姿态覆盖六朝向；7771116次实际网格检查，前后足组最大高差1.1920929e-7米，最大侵入5.9604645e-8米。
+该项针对本次部分邻格改用RampLanding后的坡内静止状态。D3.2原坡道与端口资源哈希未改，原进出/转身动态证据仍保留；不把它当作当前样组所有邻壁动态状态已经验证。
+unity-routes.json：主路4:0→3:0→2:1→2:2→2:3→2:4→2:5→2:6→2:7→3:7→4:7→5:7→6:7→7:7→8:7→8:8→8:9→8:10→8:11→8:12，贯穿低谷、左坡、中台、后阶、高台；前阶支路5:7→5:6→5:5→5:4→5:3→5:2→5:1→5:0→6:0到泥岸格。实际生产有向边与可停格合法，567个沿路线采样有实体支承。
+runtime-ground-route.png中金线为主路、蓝线为岸台支路，是测试临时标记；水面与泥岸材质属于D3.4。
+runtime-*-direction-0～5.png、runtime-bottom-*.png：实际六向及底面画面，已检查未见接口断口或实体露空；有些背向视角会被高台遮挡，未宣称任意镜头下可见全部踏面。
+runtime-*-platform-0～2.png：前后两处三平台人物停留画面。
+runtime-stair-traversal.mp4：258帧Unity运行图像，1366×768、16fps、16.125秒，含前/后阶的上行与下行、抬起/横移/下降中间画面。它是测试驱动的样组短片，不是正式战斗点击移动录像。
+身体检查覆盖有限姿态与阶段中点，不构成全图、全部动态转移或完整连续碰撞证明。
+
+复现
+关闭同工程Unity编辑器后，在仓库根目录执行：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongStairSamplePlayModeTests -EnableGraphics -ResultXmlPath D:/天章游戏开发/src/Logs/d33-recheck.xml
+当前类共4项；若只复查补充双格项，将TestFilter改为TianZhang.Tests.PlayMode.GuanzhongStairSamplePlayModeTests.PairClearsTheReusedRampWithThisSamplesNeighbours。
+重建入口为TianZhang.Editor.GuanzhongStairSampleBuilder.Build；编译及保存重开均成功。脚本和测试各自属于既有TianZhang.Editor与TianZhang.PlayModeTests程序集，无新增公共接口、程序集或生产状态。
+References loaded：Unity技能的runtime-owner-proof、serialized-persistence、project-structure-discovery、modular-architecture、ui-and-visual-assets、asset-source-lock、visible-object-identity、ai-workflows、unity-validation，以及项目Blender技能/tool-routing。
+Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md；实际归属再以现有Builder、Editor README、PlayMode asmdef及源代码核实。新增C#文件均少于500行。
+本任务没有修改非请求系统，没有恢复旧任务卡、自动化或审核流转。
+提交检查：定向check-pending-whitespace检查53个文件通过。普通git diff --cached --check仅报告7个Unity .meta的userData/assetBundleName/assetBundleVariant空值后的语义空格；按仓库已有空白检查例外保留，使用git -c core.whitespace=-blank-at-eol diff --cached --check通过，其他行尾空白已由定向脚本严格检查。没有修改全局Git配置。

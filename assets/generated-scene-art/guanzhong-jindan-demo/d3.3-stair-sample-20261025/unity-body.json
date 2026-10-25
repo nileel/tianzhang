@@ -1,0 +1,11 @@
+{
+    "playMode": true,
+    "poses": 706,
+    "staticPoses": 36,
+    "meshPointChecks": 163429901,
+    "frames": 258,
+    "maxStaticFootGap": 0.0,
+    "maxMovingFootGap": 0.375,
+    "maxPenetration": 1.1920928955078126e-7,
+    "maxSingleLift": 0.09375005960464478
+}

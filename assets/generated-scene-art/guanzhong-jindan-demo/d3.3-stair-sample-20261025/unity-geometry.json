@@ -1,0 +1,12 @@
+{
+    "playMode": true,
+    "unityVersion": "6000.3.18f1",
+    "instances": 73,
+    "instanceTriangles": 2663879,
+    "stairTriangles": 190,
+    "treadRays": 504,
+    "riserRays": 360,
+    "portRays": 4998,
+    "boundaryPrecisionRays": 96,
+    "maxProfileError": 0.0
+}

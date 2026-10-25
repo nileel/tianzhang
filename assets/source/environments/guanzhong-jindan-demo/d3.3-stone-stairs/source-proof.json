@@ -1,0 +1,146 @@
+{
+  "mapVersion": "guanzhong-jindan-v3-d1-supported-map-20261024.4",
+  "profile": {
+    "id": "front_right_stairs",
+    "kind": "true_stair_two_flights_three_landings",
+    "coveredCells": [
+      "5:2",
+      "5:3",
+      "5:4"
+    ],
+    "lowerLevel": 0,
+    "upperLevel": 1,
+    "clearanceLimit": 1,
+    "riseMeters": 0.75,
+    "worldZStart": 2.732050807568877,
+    "worldZEnd": 4.464101615137754,
+    "worldZPortSeparationMeters": 1.7320508075688772,
+    "gridCenterPathLengthMeters": 2.0,
+    "lowerY": 0.340433121,
+    "platformCenters": [
+      {
+        "cell": "5:2",
+        "worldX": 6.0,
+        "worldZ": 2.732050807568877,
+        "supportY": 0.340433121,
+        "heightLevel": 0,
+        "groundStopAllowed": true
+      },
+      {
+        "cell": "5:3",
+        "worldX": 6.5,
+        "worldZ": 3.598076211353316,
+        "supportY": 0.715433121,
+        "heightLevel": 0,
+        "groundStopAllowed": true
+      },
+      {
+        "cell": "5:4",
+        "worldX": 7.0,
+        "worldZ": 4.464101615137754,
+        "supportY": 1.090433121,
+        "heightLevel": 1,
+        "groundStopAllowed": true
+      }
+    ],
+    "endPlatformCenterToFlightMeters": 0.30352540378443865,
+    "middlePlatformWorldZDepthMeters": 0.5,
+    "flightCount": 2,
+    "stepsPerFlight": 4,
+    "stepRiseMeters": 0.09375,
+    "stepRunWorldZMeters": 0.078125,
+    "flightWorldZRunMeters": 0.3125,
+    "flightStartOffsetsWorldZ": [
+      0.30352540378443865,
+      1.1160254037844386
+    ],
+    "risers": [
+      {
+        "worldZ": 3.113701211353316,
+        "supportYAfter": 0.434183121
+      },
+      {
+        "worldZ": 3.191826211353316,
+        "supportYAfter": 0.527933121
+      },
+      {
+        "worldZ": 3.269951211353316,
+        "supportYAfter": 0.621683121
+      },
+      {
+        "worldZ": 3.348076211353316,
+        "supportYAfter": 0.715433121
+      },
+      {
+        "worldZ": 3.926201211353316,
+        "supportYAfter": 0.809183121
+      },
+      {
+        "worldZ": 4.004326211353316,
+        "supportYAfter": 0.902933121
+      },
+      {
+        "worldZ": 4.082451211353316,
+        "supportYAfter": 0.996683121
+      },
+      {
+        "worldZ": 4.160576211353316,
+        "supportYAfter": 1.090433121
+      }
+    ],
+    "stairSurfaceDefinition": "At each riser worldZ, height increases by .09375; constant horizontal tread between consecutive risers. Before the first riser use lowerY, after the last use lowerY+.75. Profile domain is exactly the union of three covered hexes; vertical faces are the actual risers, with no hidden slope support.",
+    "lowerPortalEdges": [
+      "5:1>5:2",
+      "5:2>5:1"
+    ],
+    "upperPortalEdges": [
+      "4:5>5:4",
+      "5:4>4:5",
+      "5:4>5:5",
+      "5:5>5:4"
+    ],
+    "closedSideEdges": [
+      "4:2>5:2",
+      "4:3>5:3",
+      "4:3>5:2",
+      "4:4>5:4",
+      "4:4>5:3",
+      "5:2>6:2",
+      "5:2>6:1",
+      "5:2>4:2",
+      "5:2>4:3",
+      "5:3>6:3",
+      "5:3>6:2",
+      "5:3>4:3",
+      "5:3>4:4",
+      "5:4>6:4",
+      "5:4>6:3",
+      "5:4>4:4",
+      "6:1>5:2",
+      "6:2>5:2",
+      "6:2>5:3",
+      "6:3>5:3",
+      "6:3>5:4",
+      "6:4>5:4"
+    ],
+    "geometryStatus": "D1 shared true-stair dimensions fixed: three stopping platforms validated in six facings, and actual player stepping sampled with lower-foot support and no body penetration. Finite domain is the declared three-hex footprint. Subsequent D3 runtime presentation must implement the measured stepping behavior.",
+    "movingSupport": "Each tested traversed pose has an actual lower foot support and no body penetration; simultaneous two-foot contact is required at the three stopping platforms, not during stepping. Subsequent D3 runtime presentation supplies foot lifting animation.",
+    "supportOwnership": "The three covered hexes bind this one stair authority, including both endpoint landings, midpoint landing and true treads. Clip original Tile tops inside the footprint. No hidden slope collider or second top. WorldZ profile is shared for all facings; axial center travel is 2m although worldZ separation is sqrt(3)m.",
+    "logicalHeightQuantization": "Midpoint platform remains at lowerLevel, upper platform at upperLevel; intermediate physical .375m rise is not a new rule height."
+  },
+  "localOriginUnity": [
+    6.0,
+    0.340433121,
+    2.732050807568877
+  ],
+  "vertices": 97,
+  "triangles": 190,
+  "nonManifoldEdges": 0,
+  "originalStairSha256": "d1e5a51e8d934a827e90f2e77376c8f0697be6999f1c32407aeb41bee2c9eda9",
+  "originalTextureSha256": "23e14161e0051843fedfd8db1b691587a9638c94c4966e4f652d3b6549fcc54a",
+  "blendSha256": "57b017a821b0e3305f851db037700b3e13f1377252c68c18569849507933b06b",
+  "fbxSha256": "4bcb150097e217785dc4e49e675a0fd7f4b2b4154a2e947c11f3b1f5cb68eb4c",
+  "reuse": "Original Stair stone atlas and appearance; dimensioned remesh replaces its undersized treads. Original FBX and prefab unchanged.",
+  "nominalMiddlePlatformCoreDepth": 0.5,
+  "actualMiddleHorizontalDepth": 0.578125
+}
