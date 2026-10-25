@@ -93,17 +93,18 @@ namespace TianZhang.Features.Adventure
 
             try
             {
+                CombatSceneObjects sceneObjects = CreateSceneObjects(environmentProfile, spatial.Board);
                 session = new CombatSession(
                     new[] { spawned.Player }.Concat(spawned.Enemies),
                     profiles,
-                    new SpatialCombatQuery(spatial.Board),
+                    new SpatialCombatQuery(spatial.Board, sceneObjects),
                     ordinaryActions,
                     spatial.Environment.SpiritRecoveryEnvironment switch
                     {
                         SpiritRecoveryEnvironment.Ordinary => 1f,
                         SpiritRecoveryEnvironment.SpiritVeinNode or SpiritRecoveryEnvironment.BlessedLand => 2f,
                         _ => throw new ArgumentException("spirit_recovery_environment_not_configured"),
-                    }, rules);
+                    }, rules, sceneObjects);
                 reason = null;
                 return true;
             }
@@ -200,7 +201,11 @@ namespace TianZhang.Features.Adventure
                         profile.statusId, profile.statusAttributeId, profile.statusRelativePermille, profile.statusDurationOwnTurnEnds,
                         profile.statusStackLimit, profile.statusRefreshPolicy, profile.controlChancePermille, profile.controlUsesMindContest,
                         unarmedFamilyId: profile.unarmedFamilyId, unarmedRealmId: profile.unarmedRealmId,
-                        unarmedPhysicalAttackCapacity: profile.unarmedPhysicalAttackCapacity), area: area));
+                        unarmedPhysicalAttackCapacity: profile.unarmedPhysicalAttackCapacity), area: area,
+                    spatialPolicy: new SpatialAttackPolicy((SpatialMovementMode)profile.sourceModeMask,
+                        (SpatialMovementMode)profile.targetModeMask, profile.verticalReachRank, profile.isMelee),
+                    environmentTargetTypes: (profile.environmentTargetTypes ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries),
+                    environmentDamage: profile.environmentDamage));
             }
             if (result.Count == 0 || result.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() != result.Count)
             {
@@ -215,13 +220,37 @@ namespace TianZhang.Features.Adventure
             return true;
         }
 
+        private static CombatSceneObjects CreateSceneObjects(EnvironmentProfileAsset environment, SpatialQueryBoard board)
+        {
+            var config = environment.sceneObjects;
+            if (config == null || config.IsEmpty) return null;
+            var types = config.types.ToDictionary(value => value.contentType, value => new CombatSceneObjectDefinition(
+                value.contentType, value.materialType, value.maxDurability, value.coverTier,
+                value.maxProtectedBodyScaleRank, value.blocksMovement, value.blocksSight, value.residueType));
+            return new CombatSceneObjects(board, config.instances.Select(value => new CombatSceneObject(
+                value.instanceId, types[value.contentType], ParseCell(value.cell),
+                string.IsNullOrEmpty(value.edgeOther) ? null : (HexCoord?)ParseCell(value.edgeOther),
+                value.sourceRef, string.IsNullOrEmpty(value.replacesWallConnectionId) ? null : value.replacesWallConnectionId)),
+                config.lightCoverHitPenalty, config.heavyCoverHitPenalty);
+        }
+
+        private static HexCoord ParseCell(string cell)
+        {
+            string[] values = cell.Split(':');
+            return new HexCoord(int.Parse(values[0], System.Globalization.CultureInfo.InvariantCulture),
+                int.Parse(values[1], System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         private sealed class SpatialCombatQuery : ICombatSpatialQuery
         {
-            private readonly SpatialQueryBoard board;
-            public SpatialCombatQuery(SpatialQueryBoard spatialBoard) => board = spatialBoard;
+            private readonly SpatialQueryBoard initialBoard;
+            private readonly CombatSceneObjects sceneObjects;
+            private SpatialQueryBoard Board => sceneObjects?.Board ?? initialBoard;
+            public SpatialCombatQuery(SpatialQueryBoard spatialBoard, CombatSceneObjects objects)
+            { initialBoard = spatialBoard; sceneObjects = objects; }
 
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
-                board.QueryContact(source, target, minimumRange, maximumRange);
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange,
+                SpatialAttackPolicy policy = null) => Board.QueryContact(source, target, minimumRange, maximumRange, policy);
 
             public CombatMovementQueryResult QueryMovement(
                 SpatialPose source,
@@ -230,7 +259,7 @@ namespace TianZhang.Features.Adventure
                 int movementEfficiencyMilliUnits,
                 IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null)
             {
-                SpatialMovementPathResult result = board.QueryMovementPath(source, destination,
+                SpatialMovementPathResult result = Board.QueryMovementPath(source, destination,
                     actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, destinationFacing);
                 return new CombatMovementQueryResult(result.Path.Count > 0, result.Reason, result.Steps,
                     result.UnitsPerRange, result.ActionPointCostUnits);
@@ -240,7 +269,7 @@ namespace TianZhang.Features.Adventure
                 SpatialPose source,
                 int actionPointBudgetUnits,
                 int movementEfficiencyMilliUnits,
-                IReadOnlyCollection<HexCoord> occupied) => board.FindReachableWithinActionPoints(
+                IReadOnlyCollection<HexCoord> occupied) => Board.FindReachableWithinActionPoints(
                     source, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied);
         }
     }

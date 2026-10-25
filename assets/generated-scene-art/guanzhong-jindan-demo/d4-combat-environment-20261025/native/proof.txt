@@ -1,0 +1,22 @@
+ordinary empty attack: wall remains 60
+intact path=8:15;9:14
+detour native click=(-943.63, 1805.01) picked=UI AP=100000 wall=60
+detour native click=(-943.63, 1805.01) picked=UI AP=100000 wall=60
+detour native click=(677.00, 79.50) picked=UI AP=100000 wall=60
+detour native click=(680.00, 403.50) picked=9:14 AP=100000 wall=60
+detour completed at (9, 14, -23)
+break-wall native click=(344.00, 78.50) picked=UI AP=100000 wall=60
+break-wall native click=(680.00, 403.50) picked=9:14 AP=100000 wall=60
+break-wall wall=30 AP=50000 MP=168
+break-wall native click=(1268.00, 97.50) picked=UI AP=50000 wall=30
+break-wall native click=(1224.00, 156.50) picked=UI AP=50000 wall=30
+break-wall native click=(344.00, 78.50) picked=UI AP=100000 wall=30
+break-wall native click=(680.00, 403.50) picked=9:14 AP=100000 wall=30
+break-wall wall=0 AP=50000 MP=156
+break-wall completed at (8, 14, -22)
+destroyed path=9:14; wall=0; other wall=60; LOS=true
+breakthrough native click=(677.00, 79.50) picked=UI AP=50000 wall=0
+breakthrough native click=(680.00, 403.50) picked=9:14 AP=50000 wall=0
+breakthrough completed at (9, 14, -23)
+ordinary bounty entered; environment=null; guard committed and paid AP
+reentry: all 7 durability reset; wall blocks movement/effects; intact visible

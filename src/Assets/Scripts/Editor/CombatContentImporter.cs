@@ -372,6 +372,12 @@ namespace TianZhang.Editor
             public string UnarmedFamilyId;
             public string UnarmedRealmId;
             public int UnarmedPhysicalAttackCapacity;
+            public int SourceModeMask;
+            public int TargetModeMask;
+            public int VerticalReachRank;
+            public bool IsMelee;
+            public string EnvironmentTargetTypes;
+            public int EnvironmentDamage;
 
             public void CopyTo(AttackProfileData asset)
             {
@@ -398,6 +404,12 @@ namespace TianZhang.Editor
                 asset.unarmedFamilyId = UnarmedFamilyId;
                 asset.unarmedRealmId = UnarmedRealmId;
                 asset.unarmedPhysicalAttackCapacity = UnarmedPhysicalAttackCapacity;
+                asset.sourceModeMask = SourceModeMask;
+                asset.targetModeMask = TargetModeMask;
+                asset.verticalReachRank = VerticalReachRank;
+                asset.isMelee = IsMelee;
+                asset.environmentTargetTypes = EnvironmentTargetTypes;
+                asset.environmentDamage = EnvironmentDamage;
                 asset.attackProfileId = AttackProfileId;
                 asset.displayNameKey = DisplayNameKey;
                 asset.profileKind = ProfileKind;
@@ -550,6 +562,12 @@ namespace TianZhang.Editor
                 MinCastRange = ParseNonNegativeInt(Required("minCastRange"), "minCastRange"),
                 MaxCastRange = ParseNonNegativeInt(Required("maxCastRange"), "maxCastRange"),
                 TargetingMode = ParseAttackTargetingMode(Required("targetingMode")),
+                SourceModeMask = ParsePositiveInt(Required("sourceModeMask"), "sourceModeMask"),
+                TargetModeMask = ParsePositiveInt(Required("targetModeMask"), "targetModeMask"),
+                VerticalReachRank = ParseNonNegativeInt(Required("verticalReachRank"), "verticalReachRank"),
+                IsMelee = ParseStrictBool(Required("isMelee"), "isMelee"),
+                EnvironmentTargetTypes = Value("environmentTargetTypes"),
+                EnvironmentDamage = ParseNonNegativeInt(Required("environmentDamage"), "environmentDamage"),
             };
 
             if (!System.Text.RegularExpressions.Regex.IsMatch(row.AttackProfileId, "^[a-z][a-z0-9_]*$"))

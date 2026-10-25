@@ -1,3 +1,4 @@
+using SpatialAttackPolicy = TianZhang.Spatial.SpatialAttackPolicy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ static class ActionEconomyBalanceReport
     // Numeric fixtures have no obstacles or movement; the production spatial owner is tested above.
     sealed class AdjacentSpace : ICombatSpatialQuery
     {
-        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max)
+        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max, SpatialAttackPolicy policy = null)
         {
             int d = a.Anchor.TopologicalDistanceTo(b.Anchor);
             return new(a.Anchor, b.Anchor, d * 1000, d >= min && d <= max, true, "fixture_out_of_range", 1000);
@@ -379,7 +380,7 @@ static class Ap2CombatReport
 {
     internal sealed class Space : ICombatSpatialQuery
     {
-        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max)
+        public SpatialContactResult QueryRange(SpatialPose a, SpatialPose b, int min, int max, SpatialAttackPolicy policy = null)
         {
             int d = a.Anchor.TopologicalDistanceTo(b.Anchor);
             return new(a.Anchor,b.Anchor,d*1000,d >= min && d <= max,true,"target_out_of_range",1000);

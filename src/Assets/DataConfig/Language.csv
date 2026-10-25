@@ -814,3 +814,14 @@ enemy_lieshijia,裂石甲兽
 desc_enemy_lieshijia,低阶妖兽，躲在远处吐出石砾；一旦被贴近就会后撤
 spell_lieshi,裂石
 spell_feixingzhi,飞星指
+scene_object_low_wall,低矮残垣
+scene_object_high_wall,完整墙段
+scene_object_stone_support,土石支点
+scene_object_low_plant,可燃低植
+attack_source_mode_not_allowed,当前形态不能施放
+attack_target_mode_not_allowed,不能作用于目标形态
+attack_vertical_reach_exceeded,高差超出触及范围
+scene_object_blocks_movement,场景物阻挡通行
+scene_object_blocks_effects,实体场景物阻挡作用
+scene_object_missing,场景物不存在
+scene_object_anchor_mismatch,所选地块不接触该场景物

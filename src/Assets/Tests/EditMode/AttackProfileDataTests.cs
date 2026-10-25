@@ -11,8 +11,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-using TianZhang.Spatial;
-
 namespace TianZhang.Tests
 {
     public class AttackProfileDataTests
@@ -35,7 +33,9 @@ namespace TianZhang.Tests
             string header = File.ReadAllLines(ProductionAbsolutePath()).First(line => line.StartsWith("attackProfileId,"));
             var valid = new string[header.Split(',').Length];
             void Field(string name, string value) => valid[Array.IndexOf(header.Split(','), name)] = value;
-            Field("attackSchemaVersion", "2");
+            Field("attackSchemaVersion", "3");
+            Field("sourceModeMask", "1"); Field("targetModeMask", "1"); Field("verticalReachRank", "1");
+            Field("isMelee", "1"); Field("environmentDamage", "0");
             Field("ruleSetVersion", "AP-GROWTH@0.1"); Field("abilityTierId", "tier_lianqi");
             Field("cooldownClass", "basic_repeat"); Field("effectBudgetMode", "fixed_weapon");
             valid[0] = "basic_test";
@@ -76,18 +76,18 @@ namespace TianZhang.Tests
             string header = File.ReadAllLines(ProductionAbsolutePath())
                 .First(line => line.StartsWith("attackProfileId,", StringComparison.Ordinal));
             var columns = header.Split(',').ToList();
-            Assert.AreEqual(63, columns.Count);
+            Assert.AreEqual(69, columns.Count);
             Assert.AreEqual(17, columns.IndexOf("actionPointCostUnits"));
 
             string[] legacyColumns = columns.Where(name => name is not (
                 "actionPointCostUnits" or "minimumNetCostUnits" or "ctPenalty" or "reuseCooldownTicks"))
                 .ToList().ToArray();
             legacyColumns = legacyColumns.Take(17).Concat(new[] { "cooldownTicks" }).Concat(legacyColumns.Skip(17)).ToArray();
-            Assert.AreEqual(60, legacyColumns.Length);
+            Assert.AreEqual(66, legacyColumns.Length);
 
             string[] coexistingColumns = columns.Take(21).Concat(new[] { "cooldownTicks" })
                 .Concat(columns.Skip(21)).ToArray();
-            Assert.AreEqual(64, coexistingColumns.Length);
+            Assert.AreEqual(70, coexistingColumns.Length);
 
             foreach (string[] rejected in new[] { legacyColumns, coexistingColumns })
             {
@@ -495,7 +495,7 @@ namespace TianZhang.Tests
             foreach (var profile in projected)
             {
                 var mapping = rules.GetUnarmed(profile.unarmedFamilyId, profile.unarmedRealmId);
-                Assert.That(profile.attackSchemaVersion, Is.EqualTo(2));
+                Assert.That(profile.attackSchemaVersion, Is.EqualTo(3));
                 Assert.That(profile.ruleSetSourceDigest, Is.EqualTo(rules.SourceDigest));
                 Assert.That(profile.actionPointCostUnits, Is.EqualTo(mapping.ActionPointCostUnits));
                 Assert.That(profile.minimumNetCostUnits, Is.EqualTo(mapping.MinimumNetCostUnits));
@@ -579,18 +579,14 @@ namespace TianZhang.Tests
         }
 
         // The historical unarmed fixture is a rejection input, never part of the current valid set.
-        private static string[] UpgradeHistoricalFixture(string[] lines) => lines.Select(line =>
-            string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#") ? line :
-            line + (line.StartsWith("attackProfileId,", StringComparison.Ordinal)
-                ? ",attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity" : ",2,,,")).ToArray();
-        private static string[] CurrentFixtureLines() => UpgradeHistoricalFixture(File.ReadAllLines(FixtureAbsolutePath()))
+        private static string[] CurrentFixtureLines() => File.ReadAllLines(FixtureAbsolutePath())
             .Where(line => !line.StartsWith("basic_fixture_unarmed,", StringComparison.Ordinal)).ToArray();
 
         [Test]
         public void HistoricalUnarmedFixtureCannotEnterTheImporter()
         {
             Assert.IsFalse(CombatContentImporter.TryBuildAttackProfileProjection(
-                UpgradeHistoricalFixture(File.ReadAllLines(FixtureAbsolutePath())), LanguageFixtureKeys(), out var rejected, out var reason));
+                File.ReadAllLines(FixtureAbsolutePath()), LanguageFixtureKeys(), out var rejected, out var reason));
             Assert.IsEmpty(rejected);
             StringAssert.StartsWith("basic_attack_binding_kind_invalid", reason);
         }

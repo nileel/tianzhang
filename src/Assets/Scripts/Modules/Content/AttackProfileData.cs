@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TianZhang.Cultivation;
 using UnityEngine;
 
@@ -174,12 +175,39 @@ namespace TianZhang.Combat
         public string unarmedRealmId;
         public int unarmedPhysicalAttackCapacity;
 
+        [Header("D4 空间与环境作用资格")]
+        public int sourceModeMask;
+        public int targetModeMask;
+        public int verticalReachRank;
+        public bool isMelee;
+        public string environmentTargetTypes;
+        public int environmentDamage;
+
+        public bool TryValidateSpatialEffects(out string reason)
+        {
+            if (sourceModeMask < 1 || sourceModeMask > 15 || targetModeMask < 1 || targetModeMask > 15 ||
+                verticalReachRank < 0 || environmentDamage < 0)
+            { reason = "attack_spatial_fields_invalid"; return false; }
+            var targets = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string type in string.IsNullOrEmpty(environmentTargetTypes) ? Array.Empty<string>() :
+                         environmentTargetTypes.Split(';'))
+                if (type is not ("low_wall" or "high_wall" or "stone_support" or "low_plant") || !targets.Add(type))
+                { reason = "attack_environment_target_invalid"; return false; }
+            if ((targets.Count == 0) != (environmentDamage == 0) ||
+                targets.Count > 0 && effectType is not (AttackEffectType.Physical or AttackEffectType.Magic or AttackEffectType.Hybrid) ||
+                effectBudgetMode == "fixed_unarmed" && targets.Count > 0)
+            { reason = "attack_environment_effect_invalid"; return false; }
+            reason = string.Empty;
+            return true;
+        }
+
         public bool TryValidate(out string reason)
         {
-            if (attackSchemaVersion != 2)
+            if (attackSchemaVersion != 3)
             { reason = "attack_schema_version_unknown"; return false; }
             if (attackProfileId == "basic_unarmed" || basicBindingKind == BasicAttackBindingKind.UnarmedFallback || effectBudgetMode == "legacy_unarmed")
             { reason = "legacy_unarmed_rejected"; return false; }
+            if (!TryValidateSpatialEffects(out reason)) return false;
             bool unarmed = effectBudgetMode == "fixed_unarmed";
             if (unarmed)
             {

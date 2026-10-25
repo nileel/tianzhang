@@ -9681,3 +9681,106 @@ MonoBehaviour:
     platform remains at lowerLevel, upper platform at upperLevel; intermediate physical
     .375m rise is not a new rule height."}]}'
   mapMarkers: '[{"id":"player_spawn","kind":"spawn","cell":"4:0"},{"id":"high_goal","kind":"objective","cell":"8:12"},{"id":"fire_domain_support","kind":"public_planned_support","cell":"7:12"},{"id":"space_lock_support","kind":"public_planned_support","cell":"9:12"},{"id":"reveal_support","kind":"public_planned_support","cell":"4:15"},{"id":"conceal_support","kind":"public_planned_support","cell":"7:15"},{"id":"mid_low_cover_a","kind":"low_cover","cell":"4:5"},{"id":"mid_low_cover_b","kind":"low_cover","cell":"9:7"},{"id":"rock_0:0","kind":"rock_obstacle","cell":"0:0"},{"id":"rock_4:3","kind":"rock_obstacle","cell":"4:3"},{"id":"rock_9:15","kind":"rock_obstacle","cell":"9:15"}]'
+  sceneObjects:
+    lightCoverHitPenalty: 10
+    heavyCoverHitPenalty: 20
+    types:
+    - contentType: low_wall
+      materialType: stone
+      anchorMode: edge
+      coverMode: edge
+      stateRules: half_durability
+      residueType: rubble
+      targetFlags: attack
+      interactionType: destructible
+      reactionRules: fixed_residue
+      maxDurability: 30
+      coverTier: 2
+      maxProtectedBodyScaleRank: 2
+      blocksMovement: 0
+      blocksSight: 0
+    - contentType: high_wall
+      materialType: stone
+      anchorMode: edge
+      coverMode: none
+      stateRules: half_durability
+      residueType: rubble
+      targetFlags: attack
+      interactionType: destructible
+      reactionRules: fixed_residue
+      maxDurability: 60
+      coverTier: 0
+      maxProtectedBodyScaleRank: 0
+      blocksMovement: 1
+      blocksSight: 1
+    - contentType: stone_support
+      materialType: stone
+      anchorMode: cell
+      coverMode: none
+      stateRules: half_durability
+      residueType: failed
+      targetFlags: attack
+      interactionType: destructible
+      reactionRules: fixed_residue
+      maxDurability: 60
+      coverTier: 0
+      maxProtectedBodyScaleRank: 0
+      blocksMovement: 0
+      blocksSight: 0
+    - contentType: low_plant
+      materialType: plant
+      anchorMode: cell
+      coverMode: none
+      stateRules: half_durability
+      residueType: charred
+      targetFlags: attack
+      interactionType: destructible
+      reactionRules: fixed_residue
+      maxDurability: 15
+      coverTier: 0
+      maxProtectedBodyScaleRank: 0
+      blocksMovement: 0
+      blocksSight: 0
+    instances:
+    - instanceId: mid_low_cover_a
+      contentType: low_wall
+      cell: 4:5
+      edgeOther: 4:6
+      sourceRef:
+      replacesWallConnectionId:
+    - instanceId: mid_low_cover_b
+      contentType: low_wall
+      cell: 9:7
+      edgeOther: 9:8
+      sourceRef:
+      replacesWallConnectionId:
+    - instanceId: HighWall_8_14
+      contentType: high_wall
+      cell: 8:14
+      edgeOther: 9:14
+      sourceRef:
+      replacesWallConnectionId: mid_sealed_wall
+    - instanceId: HighWall_8_15
+      contentType: high_wall
+      cell: 8:15
+      edgeOther: 9:15
+      sourceRef:
+      replacesWallConnectionId: mid_sealed_wall
+    - instanceId: D4StoneSupport
+      contentType: stone_support
+      cell: 7:11
+      edgeOther:
+      sourceRef:
+      replacesWallConnectionId:
+    - instanceId: LowPlant_4_6
+      contentType: low_plant
+      cell: 4:6
+      edgeOther:
+      sourceRef:
+      replacesWallConnectionId:
+    - instanceId: LowPlant_9_8
+      contentType: low_plant
+      cell: 9:8
+      edgeOther:
+      sourceRef:
+      replacesWallConnectionId:

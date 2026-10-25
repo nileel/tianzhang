@@ -122,7 +122,7 @@ namespace TianZhang.Combat
             int? rawMind = null,
             SpatialFootprintKind footprint = SpatialFootprintKind.Single,
             int bodyScaleRank = 1,
-            int facing = 0)
+            int facing = 0, SpatialMovementMode movementMode = SpatialMovementMode.Ground, int altitudeBand = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Combatant ID is required.", nameof(id));
@@ -139,9 +139,11 @@ namespace TianZhang.Combat
             Id = id;
             Team = team;
             Position = position;
-            var pose = new SpatialPose(position, facing, footprint, bodyScaleRank);
+            var pose = new SpatialPose(position, facing, footprint, bodyScaleRank, movementMode, altitudeBand);
             Footprint = pose.Footprint;
             BodyScaleRank = pose.BodyScaleRank;
+            MovementMode = pose.MovementMode;
+            AltitudeBand = pose.AltitudeBand;
             Facing = pose.Facing;
             Speed = speed;
             MaximumHealth = maximumHealth;
@@ -186,7 +188,9 @@ namespace TianZhang.Combat
         public HexCoord Position { get; private set; }
         public SpatialFootprintKind Footprint { get; }
         public int BodyScaleRank { get; }
-        public SpatialPose Pose => new SpatialPose(Position, Facing, Footprint, BodyScaleRank);
+        public SpatialMovementMode MovementMode { get; }
+        public int AltitudeBand { get; }
+        public SpatialPose Pose => new SpatialPose(Position, Facing, Footprint, BodyScaleRank, MovementMode, AltitudeBand);
         public IReadOnlyList<HexCoord> OccupiedCells => Pose.OccupiedCells;
         public int Speed { get; }
         public int MaximumHealth { get; }

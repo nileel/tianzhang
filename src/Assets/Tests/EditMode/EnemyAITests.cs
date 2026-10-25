@@ -250,8 +250,8 @@ namespace TianZhang.Tests.EditMode
             private readonly SpatialQueryBoard board;
             public BoardQuery(SpatialQueryBoard value) => board = value;
 
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
-                board.QueryContact(source, target, minimumRange, maximumRange);
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange, SpatialAttackPolicy policy = null) =>
+                board.QueryContact(source, target, minimumRange, maximumRange, policy);
 
             public CombatMovementQueryResult QueryMovement(
                 SpatialPose source, HexCoord destination, int actionPointBudgetUnits,

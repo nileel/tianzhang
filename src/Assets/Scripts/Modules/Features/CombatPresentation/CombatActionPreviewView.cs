@@ -152,7 +152,11 @@ namespace TianZhang.Features.CombatPresentation
                 if (value.Candidate.Kind == CombatActionKind.Art)
                     text.Append(" · 施法范围 ").Append(value.MinimumRange).Append('–').Append(value.MaximumRange);
                 text.Append("\n作用 ").Append(area.Cells.Count(cell => cell.IsLegal)).Append(" 格 · 受影响：")
-                    .Append(area.Targets.Count == 0 ? "空放" : string.Join(" / ", area.Targets.Select(target => target.DisplayName)));
+                    .Append(area.Targets.Count == 0 ? area.SceneObjects.Any(item => item.PredictedDamage > 0) ? "环境" : "空放" :
+                        string.Join(" / ", area.Targets.Select(target => target.DisplayName)));
+                foreach (var item in area.SceneObjects)
+                    text.Append(" · ").Append(item.DisplayName).Append(' ').Append(item.Durability).Append('/').Append(item.MaxDurability)
+                        .Append(item.PredictedDamage > 0 ? " → " + (item.Durability - item.PredictedDamage) : "（无环境效果）");
                 text.Append("\n费用 ").Append(cost).Append(" · CT +").Append(value.CtPenalty)
                     .Append(" · CD ").Append(value.ReuseCooldownTicks)
                     .Append(" · 已用").Append(value.CommittedUseCount).Append(" 次");

@@ -264,7 +264,8 @@ namespace TianZhang.Combat
             return quoted.ActorId == current.ActorId && quoted.Profile == current.Profile &&
                 quoted.Origin == current.Origin && quoted.Direction == current.Direction &&
                 quoted.TargetIds.SequenceEqual(current.TargetIds) && quoted.Cells.SequenceEqual(current.Cells) &&
-                quoted.CellContacts.SequenceEqual(current.CellContacts);
+                quoted.CellContacts.SequenceEqual(current.CellContacts) &&
+                quoted.EnvironmentTargetIds.SequenceEqual(current.EnvironmentTargetIds);
         }
 
         public CombatActionResult Validate(CombatSession session, CombatCommand command) => Preview(session, command).Validation;
@@ -319,9 +320,9 @@ namespace TianZhang.Combat
 
         // Snapshot setters are also used by deterministic fixtures and external state effects; quote them
         // as facts as well as checking the aggregate version, so a changed target/v/position cannot slip through.
-        private static string Facts(CombatSession session) => string.Join(";", session.Combatants.All.Select(actor =>
+        private static string Facts(CombatSession session) => (session.SceneObjects?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
             string.Join("|", actor.Id, actor.Position, actor.Footprint, actor.BodyScaleRank, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
-                actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing,
+                actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing, actor.MovementMode, actor.AltitudeBand,
                 actor.BasicAttackProfileId, actor.CombatSwapsUsed, actor.GongFaId, actor.GongFaElement,
                 actor.CommittedBasicAttackUses,
                 string.Join(",", actor.CommittedAbilityUses.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + ":" + pair.Value)),

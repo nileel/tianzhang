@@ -14,6 +14,7 @@ namespace TianZhang.Spatial
         private readonly Dictionary<HexCoord, SpatialCellRules> cells;
         private readonly Dictionary<SpatialDirectedEdge, SpatialEdgeRules> edges;
         private readonly SpatialQueryLimits limits;
+        private readonly SpatialSceneObjectSet sceneObjects = SpatialSceneObjectSet.Empty;
 
         public SpatialQueryBoard(
             IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
@@ -28,6 +29,17 @@ namespace TianZhang.Spatial
             this.edges = new Dictionary<SpatialDirectedEdge, SpatialEdgeRules>(edges);
             this.limits = limits;
         }
+
+        private SpatialQueryBoard(IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
+            IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges, SpatialQueryLimits limits,
+            IReadOnlyList<SpatialSceneObjectRules> sceneObjects) : this(cells, edges, limits)
+        {
+            this.sceneObjects = new SpatialSceneObjectSet(sceneObjects, this.cells, this.edges);
+        }
+
+        /// <summary>Replace one immutable object projection; the original board and its base edges stay intact.</summary>
+        public SpatialQueryBoard WithSceneObjects(IReadOnlyList<SpatialSceneObjectRules> objects) =>
+            new SpatialQueryBoard(cells, edges, limits, objects);
 
         public int UnitsPerRange => limits.UnitsPerRange;
         public int MaxQueryRange => limits.MaxQueryRange;
@@ -57,6 +69,10 @@ namespace TianZhang.Spatial
             }
 
             bool movement = kind == SpatialQueryKind.Movement || kind == SpatialQueryKind.ForcedMovement;
+            edgeRules = sceneObjects.ResolveEdge(key, edgeRules);
+            if (sceneObjects.BlocksEdge(from, to, movement) || sceneObjects.BlocksCell(to, movement))
+                return Reject(edgeRules, movement ? SpatialQueryReasons.SceneObjectBlocksMovement :
+                    SpatialQueryReasons.SceneObjectBlocksEffects);
             if (movement)
             {
                 // Height difference itself is not a rejection: the explicit edge type decides
@@ -120,6 +136,7 @@ namespace TianZhang.Spatial
                 if (!cells.TryGetValue(coord, out var rules)) return SpatialQueryReasons.MissingCell;
                 if (rules.IsEntityObstacle) return SpatialQueryReasons.EntityObstacle;
                 if (rules.BlocksMovement) return SpatialQueryReasons.MovementBlocked;
+                if (sceneObjects.BlocksCell(coord, true)) return SpatialQueryReasons.SceneObjectBlocksMovement;
                 if (Contains(occupied, coord)) return SpatialQueryReasons.Occupied;
             }
             if (pose.Footprint == SpatialFootprintKind.Single) return SpatialQueryReasons.Ok;
@@ -127,6 +144,9 @@ namespace TianZhang.Spatial
             if (!edges.TryGetValue(new SpatialDirectedEdge(pose.Anchor, rear), out var forward) ||
                 !edges.TryGetValue(new SpatialDirectedEdge(rear, pose.Anchor), out var reverse))
                 return SpatialQueryReasons.MissingDirectedEdge;
+            forward = sceneObjects.ResolveEdge(new SpatialDirectedEdge(pose.Anchor, rear), forward);
+            reverse = sceneObjects.ResolveEdge(new SpatialDirectedEdge(rear, pose.Anchor), reverse);
+            if (sceneObjects.BlocksEdge(pose.Anchor, rear, true)) return SpatialQueryReasons.SceneObjectBlocksMovement;
             bool sameHeight = cells[pose.Anchor].HeightLevel == cells[rear].HeightLevel;
             if (sameHeight)
             {
@@ -137,9 +157,9 @@ namespace TianZhang.Spatial
             {
                 // 战场空间与环境规则 §八.4: a cross-height body must stand on one explicit
                 // ramp/stair connection with the same named connection and edge kind in both
-                // directions, both movement-enabled. This spatial owner currently serves GROUND,
-                // altitudeBand=0 units; other movement modes are added with their own prototypes.
-                if (Math.Abs((long)cells[pose.Anchor].HeightLevel - cells[rear].HeightLevel) != 1)
+                // directions, both movement-enabled. Cross-height ground support does not grant flight.
+                if (pose.MovementMode != SpatialMovementMode.Ground || pose.AltitudeBand != 0 ||
+                    Math.Abs((long)cells[pose.Anchor].HeightLevel - cells[rear].HeightLevel) != 1)
                     return SpatialQueryReasons.PairCrossHeightConnectionInvalid;
                 if (forward.EdgeKind != reverse.EdgeKind ||
                     (forward.EdgeKind != SpatialEdgeKind.Slope && forward.EdgeKind != SpatialEdgeKind.Stairs) ||
@@ -156,13 +176,18 @@ namespace TianZhang.Spatial
         }
 
         /// <summary>Choose the nearest visible effect-path pair before applying either range bound.</summary>
-        public SpatialContactResult QueryContact(SpatialPose source, SpatialPose target, int min, int max)
+        public SpatialContactResult QueryContact(SpatialPose source, SpatialPose target, int min, int max,
+            SpatialAttackPolicy policy = null)
         {
             if (min < 0 || max < min || max > limits.MaxQueryRange)
                 throw new ArgumentOutOfRangeException(nameof(min));
             if (!IsValidPose(source) || !IsValidPose(target))
                 return new SpatialContactResult(source.Anchor, target.Anchor, -1, false, false,
                     SpatialQueryReasons.InvalidPose, limits.UnitsPerRange);
+            if (policy != null && (source.MovementMode & policy.SourceModeMask) == 0)
+                return RejectedContact(source.Anchor, target.Anchor, SpatialQueryReasons.SourceModeNotAllowed);
+            if (policy != null && (target.MovementMode & policy.TargetModeMask) == 0)
+                return RejectedContact(source.Anchor, target.Anchor, SpatialQueryReasons.TargetModeNotAllowed);
             var sources = new List<HexCoord>(source.OccupiedCells);
             var targets = new List<HexCoord>(target.OccupiedCells);
             sources.Sort(CompareCells); targets.Sort(CompareCells);
@@ -173,6 +198,15 @@ namespace TianZhang.Spatial
             foreach (HexCoord from in sources)
             foreach (HexCoord to in targets)
             {
+                if (policy != null)
+                {
+                    if (!cells.TryGetValue(from, out var sourceRules) || !cells.TryGetValue(to, out var targetRules))
+                    { rejection ??= SpatialQueryReasons.MissingCell; continue; }
+                    long sourceHeight = (long)sourceRules.HeightLevel + source.AltitudeBand;
+                    long targetHeight = (long)targetRules.HeightLevel + target.AltitudeBand;
+                    if (Math.Abs(sourceHeight - targetHeight) > policy.VerticalReachRank)
+                    { rejection ??= SpatialQueryReasons.VerticalReachExceeded; continue; }
+                }
                 var distance = QueryMetricDistance(from, to, SpatialQueryKind.Attack);
                 if (!distance.IsReachable) { rejection ??= distance.Reason; continue; }
                 var sight = QueryLineOfSight(from, to);
@@ -186,11 +220,50 @@ namespace TianZhang.Spatial
             string reason = bestDistance < checked(min * limits.UnitsPerRange) ? SpatialQueryReasons.BelowMinimumRange :
                 bestDistance > checked(max * limits.UnitsPerRange) ? SpatialQueryReasons.AboveMaximumRange : SpatialQueryReasons.Ok;
             return new SpatialContactResult(bestSource, bestTarget, bestDistance,
-                reason.Length == 0, true, reason, limits.UnitsPerRange);
+                reason.Length == 0, true, reason, limits.UnitsPerRange,
+                policy == null ? 0 : QueryCoverTier(source, target, bestSource, bestTarget, policy.IsMelee));
+        }
+
+        /// <summary>Target the named object, excluding only its own blocker. Object effects do not select units.</summary>
+        public SpatialContactResult QuerySceneObjectContact(SpatialPose source, HexCoord selectedCell,
+            string objectId, int min, int max, SpatialAttackPolicy policy)
+        {
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+            if (!sceneObjects.TryGet(objectId, out var item))
+                return RejectedContact(source.Anchor, selectedCell, SpatialQueryReasons.SceneObjectMissing);
+            if (selectedCell != item.Cell && (!item.EdgeOther.HasValue || selectedCell != item.EdgeOther.Value))
+                return RejectedContact(source.Anchor, selectedCell, SpatialQueryReasons.SceneObjectAnchorMismatch);
+            HexCoord contactCell = selectedCell;
+            if (item.EdgeOther.HasValue && source.Contains(selectedCell))
+                contactCell = selectedCell == item.Cell ? item.EdgeOther.Value : item.Cell;
+            // The environmental target is at ground height; target unit-mode masks do not grant object eligibility.
+            var objectPolicy = new SpatialAttackPolicy(policy.SourceModeMask, SpatialMovementMode.Ground,
+                policy.VerticalReachRank, policy.IsMelee);
+            var contact = WithSceneObjects(sceneObjects.WithoutBlocking(objectId)).QueryContact(source,
+                new SpatialPose(contactCell), min, max, objectPolicy);
+            return new SpatialContactResult(contact.SourceCell, contact.TargetCell, contact.DistanceUnits,
+                contact.IsInRange, contact.HasLineOfSight, contact.Reason, contact.UnitsPerRange);
+        }
+
+        private SpatialContactResult RejectedContact(HexCoord source, HexCoord target, string reason) =>
+            new SpatialContactResult(source, target, -1, false, false, reason, limits.UnitsPerRange);
+
+        private int QueryCoverTier(SpatialPose source, SpatialPose target, HexCoord from, HexCoord to, bool isMelee)
+        {
+            if (from == to || target.MovementMode != SpatialMovementMode.Ground || target.AltitudeBand != 0 ||
+                source.MovementMode == SpatialMovementMode.Fly || source.AltitudeBand > 0 ||
+                (long)cells[from].HeightLevel + source.AltitudeBand > (long)cells[to].HeightLevel + target.AltitudeBand)
+                return 0;
+            var line = TraceLine(from, to);
+            return sceneObjects.GetCoverTier(to, line[line.Count - 2], target.BodyScaleRank,
+                isMelee && from.TopologicalDistanceTo(to) == 1);
         }
 
         private static bool IsValidPose(SpatialPose pose) => pose.BodyScaleRank > 0 && pose.Facing >= 0 &&
-            pose.Facing < 6 && (pose.Footprint == SpatialFootprintKind.Single || pose.Footprint == SpatialFootprintKind.AdjacentPair);
+            pose.Facing < 6 && pose.AltitudeBand >= 0 &&
+            (pose.MovementMode == SpatialMovementMode.Ground || pose.MovementMode == SpatialMovementMode.Fly ||
+             pose.MovementMode == SpatialMovementMode.Burrow || pose.MovementMode == SpatialMovementMode.Swim) &&
+            (pose.Footprint == SpatialFootprintKind.Single || pose.Footprint == SpatialFootprintKind.AdjacentPair);
 
         private static bool Contains(IReadOnlyCollection<HexCoord> occupied, HexCoord cell)
         {

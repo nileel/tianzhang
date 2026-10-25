@@ -321,8 +321,8 @@ internal static class GuanzhongPlaytestAudit
             }
             board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(1, 3));
         }
-        public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
-            board.QueryContact(source, target, minimumRange, maximumRange);
+        public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange, SpatialAttackPolicy policy = null) =>
+            board.QueryContact(source, target, minimumRange, maximumRange, policy);
         public CombatMovementQueryResult QueryMovement(SpatialPose source, UnityHexCoord destination, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied, int? destinationFacing = null) => throw new NotSupportedException("No map movement in numeric audit.");
         public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int actionPointBudgetUnits, int movementEfficiencyMilliUnits, IReadOnlyCollection<UnityHexCoord> occupied) => throw new NotSupportedException("No map movement in numeric audit.");
     }

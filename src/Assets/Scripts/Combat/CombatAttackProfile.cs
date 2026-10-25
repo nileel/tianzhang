@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
@@ -118,7 +121,9 @@ namespace TianZhang.Combat
             Func<string, string, string, bool> qualification = null,
             bool isTalisman = false,
             CombatAttackRuleMetadata ruleMetadata = null,
-            CombatAttackArea area = CombatAttackArea.Single)
+            CombatAttackArea area = CombatAttackArea.Single,
+            SpatialAttackPolicy spatialPolicy = null,
+            IEnumerable<string> environmentTargetTypes = null, int environmentDamage = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Attack profile ID is required.", nameof(id));
@@ -192,8 +197,18 @@ namespace TianZhang.Combat
             IsTalisman = isTalisman;
             RuleMetadata = ruleMetadata;
             Area = area;
+            SpatialPolicy = spatialPolicy ?? new SpatialAttackPolicy(SpatialMovementMode.Ground, SpatialMovementMode.Ground, 0);
+            EnvironmentTargetTypes = (environmentTargetTypes ?? Array.Empty<string>()).Distinct(StringComparer.Ordinal).ToList().AsReadOnly();
+            if (environmentDamage < 0 || (EnvironmentTargetTypes.Count == 0) != (environmentDamage == 0) ||
+                EnvironmentTargetTypes.Any(string.IsNullOrWhiteSpace) ||
+                environmentDamage > 0 && effect != CombatAttackEffect.Physical)
+                throw new ArgumentException("attack_environment_permission_invalid");
+            EnvironmentDamage = environmentDamage;
         }
 
+        public SpatialAttackPolicy SpatialPolicy { get; }
+        public IReadOnlyList<string> EnvironmentTargetTypes { get; }
+        public int EnvironmentDamage { get; }
         public CombatAttackArea Area { get; }
         public CombatAttackRuleMetadata RuleMetadata { get; }
         public string Id { get; }

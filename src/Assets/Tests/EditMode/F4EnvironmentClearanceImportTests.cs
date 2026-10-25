@@ -15,8 +15,8 @@ namespace TianZhang.Tests.EditMode
         [Test]
         public void SparseCsvClearanceSurvivesAssetReloadAndRestrictsTheRuntimeBoardByBodyRank()
         {
-            const string header = "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers";
-            const string row = "f4_clearance_fixture,unitsPerRange=2;maxQueryRange=16,-1:0@0@0|0:0@0@0|1:0@0@0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,0:0>1:0@1,,,,,";
+            const string header = "profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers,sceneObjects";
+            const string row = "f4_clearance_fixture,unitsPerRange=2;maxQueryRange=16,-1:0@0@0|0:0@0@0|1:0@0@0,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,0:0>1:0@1,,,,,,";
             EnvironmentProfileDefinition parsed = WorldContentImporter.ParseEnvironmentProfiles(new[] { header, row }, "F4-clearance.csv").Single();
             string path = "Assets/F4ClearanceFixture_" + Guid.NewGuid().ToString("N") + ".asset";
             var asset = ScriptableObject.CreateInstance<EnvironmentProfileAsset>();

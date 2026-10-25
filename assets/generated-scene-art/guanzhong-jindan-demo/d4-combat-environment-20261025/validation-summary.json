@@ -1,0 +1,1420 @@
+{
+  "date": "2026-10-25",
+  "editModeUniqueCases": 352,
+  "editModePassed": 352,
+  "productionPlayModeReport": "src/Logs/d4-production-final.xml",
+  "productionPlayModePassed": 1,
+  "nativeAcceptance": "Passed: OS mouse detour, wall 60->30->0 and one-step crossing; 1366x768",
+  "cases": {
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"actionPointCostUnits\",\"\",\"attack_profile_required_actionPointCostUnits_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"actionPointCostUnits\",\"0\",\"attack_profile_actionPointCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"actionPointCostUnits\",\"-1\",\"attack_profile_actionPointCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"actionPointCostUnits\",\"2.5\",\"attack_profile_actionPointCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"actionPointCostUnits\",\"2147483648\",\"attack_profile_actionPointCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"minimumNetCostUnits\",\"\",\"attack_profile_required_minimumNetCostUnits_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"minimumNetCostUnits\",\"0\",\"attack_profile_minimumNetCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"minimumNetCostUnits\",\"-1\",\"attack_profile_minimumNetCostUnits_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"minimumNetCostUnits\",\"25001\",\"attack_profile_minimumNetCostUnits_exceeds_actionPointCostUnits\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"ctPenalty\",\"\",\"attack_profile_required_ctPenalty_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"ctPenalty\",\"-1\",\"attack_profile_ctPenalty_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"ctPenalty\",\"1.5\",\"attack_profile_ctPenalty_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"ctPenalty\",\"2147483548\",\"attack_profile_ctPenalty_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"ctPenalty\",\"2147483648\",\"attack_profile_ctPenalty_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"reuseCooldownTicks\",\"-1\",\"attack_profile_reuseCooldownTicks_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"reuseCooldownTicks\",\"3.5\",\"attack_profile_reuseCooldownTicks_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ActionCostCsvRejectsMissingZeroNegativeFractionalOrOverflowingValues(\"reuseCooldownTicks\",\"4294967296\",\"attack_profile_reuseCooldownTicks_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.AssetIdConflictOnCanonicalPathFailsClosedWithoutMutation": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"attackSchemaVersion\",\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"attackSchemaVersion\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedFamilyId\",\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedFamilyId\",\"body_unknown\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedRealmId\",\"realm_yuanying\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"attackProfileId\",\"basic_unarmed\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"attackProfileId\",\"basic_body_human_lianqi\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"abilityTierId\",\"tier_zhuji\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"basicBindingKind\",\"main_equipment\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"effectBudgetMode\",\"fixed_weapon\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"displayNameKey\",\"attack_profile_body_shijiahou\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"-1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"1.5\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"1e2\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"unarmedPhysicalAttackCapacity\",\"2147483648\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"actionPointCostUnits\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"actionPointCostUnits\",\"1.5\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"minimumNetCostUnits\",\"20001\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"physicalDamageMultiplier\",\"NaN\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"physicalDamageMultiplier\",\"Infinity\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"physicalDamageMultiplier\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"defensePenetration\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"controlChancePermille\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"controlUsesMindContest\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"isDomain\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"statusId\",\"status_test\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"efficiencyNumerator\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"spiritRecoveryMultiplier\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"soulDamageMultiplier\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"resourceCost\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"ctPenalty\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"reuseCooldownTicks\",\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"reuseCooldownTicks\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"minCastRange\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.BadBodyRowRejectsTheWholeFixture(\"sourceAffiliation\",\"body_human\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.CtAndReuseColumnsAreReadIndependentlyPerRow": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.FiveExplicitBodyRowsShareTheirSourceDigestAndProductionAtEleven": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.FixtureRowsProjectExplicitlyWithoutWritingAssets": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.FixtureRowVariantsShareOnePerColumnMutationFailureWithNoPartialProjection": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.HistoricalUnarmedFixtureCannotEnterTheImporter": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.InvalidActionCostTableWritesNoAssetAndKeepsEveryGuid": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.InvalidAreaImportLeavesAllNineAssetsAndRuleSetUnpublished": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.LegacyCooldownColumnCanNeverCoexistWithTheFourActionCostColumns": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.MissingDuplicateNonIncreasingAndOldHeaderBodyFixturesFailClosed": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.NonRecoveryCsvRequiresEmptyRecoveryColumnsEvenForZero(\"spiritRecoveryMultiplier\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.NonRecoveryCsvRequiresEmptyRecoveryColumnsEvenForZero(\"minimumSpiritRecovery\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.NonRecoveryCsvRequiresEmptyRecoveryColumnsEvenForZero(\"otherTargetResourceCost\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.NonRecoveryCsvRequiresEmptyRecoveryColumnsEvenForZero(\"otherTargetRecoveryMultiplier\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ProductionAttackProfileCsvProjectsExactlyTheNineApprovedProfiles": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ProductionImportWritesCanonicalWeaponAssetAndValidatesBindings": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ProductionWeaponRowFailsClosedOnIllegalMutations": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.ProjectionFailureLeavesNoPartialAssetAndNoFallbackDefaults": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"spiritRecoveryMultiplier\",\"\",\"attack_profile_required_spiritRecoveryMultiplier_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"spiritRecoveryMultiplier\",\"NaN\",\"attack_profile_spiritRecoveryMultiplier_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"spiritRecoveryMultiplier\",\"Infinity\",\"attack_profile_spiritRecoveryMultiplier_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"spiritRecoveryMultiplier\",\"0\",\"spirit_recovery_profile_contract_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"minimumSpiritRecovery\",\"\",\"attack_profile_required_minimumSpiritRecovery_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"minimumSpiritRecovery\",\"-1\",\"attack_profile_minimumSpiritRecovery_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetResourceCost\",\"\",\"attack_profile_required_otherTargetResourceCost_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetResourceCost\",\"-1\",\"attack_profile_otherTargetResourceCost_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetRecoveryMultiplier\",\"\",\"attack_profile_required_otherTargetRecoveryMultiplier_missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetRecoveryMultiplier\",\"NaN\",\"attack_profile_otherTargetRecoveryMultiplier_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetRecoveryMultiplier\",\"0\",\"spirit_recovery_profile_contract_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"otherTargetRecoveryMultiplier\",\"2\",\"spirit_recovery_profile_contract_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RecoveryCsvRejectsMissingMalformedOrForeignEffectFields(\"healAmount\",\"5\",\"attack_profile_healAmount_must_be_empty\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.RepeatedProductionImportKeepsAssetsGuidsAndTheFourFrozenFieldsStable": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.StrictCsvValidationRejectsNonExactRowsWithoutWritingAssets": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaCenterKind\",\"target_cell\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaShapeKind\",\"adjacent_pair\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaLength\",\"3\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaRadius\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaFanHalfAngleSteps\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaFacing\",\"0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaInnerRadius\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaEffectBlockers\",\"none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaAllowedFactions\",\"ally\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaAllowedStates\",\"corpse\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaShapeKind\",\"unknown\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"areaCenterKind\",\"unknown\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.AttackProfileDataTests.TwoCellWeaponRejectsInvalidGeometryAndTargetPolicyWithoutPartialProjection(\"minCastRange\",\"1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.AreaActionBonusAppliesToBothTargetsAndConsumesOnce": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.AreaPaysAndCountsOnceIncludingAllMissesAndCancelledPreparation(False)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.AreaPaysAndCountsOnceIncludingAllMissesAndCancelledPreparation(True)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.AreaStartsOneCooldownAndOneCtPenalty": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.BothTeamsUseIndependentCountsAndTargetChangesDoNotResetThem": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CancelledPreparationAndOverflowPublishNoKuxingEffectOrLedger": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CancelledPreparedRejectedAndStaleCommandsDoNotCountButMissesDo": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CeilingUsesMinimumUnitsWithoutCompoundingOrDiscountingTheSurcharge": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CombatTerminationClearsAllTemporaryBudgetsAndGuard": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.ConfiguredMultiplierAppliesAfterBaseReductionAndOnlyBaseIsRefundable(1000)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.ConfiguredMultiplierAppliesAfterBaseReductionAndOnlyBaseIsRefundable(1250)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CountOrCostOverflowRejectsBeforePublishingAnyState(False)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CountOrCostOverflowRejectsBeforePublishingAnyState(True)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.CtOverflowIsRejectedBeforePaymentAndCannotWashOutEarlierPenalty": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.GuardExitsOnlyForSuccessfulBenefitAndPersistsThroughEnd": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.HybridDerivedDamageCountsOnlyOneRootActionAndMissingRulesReject": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.ImmobilizeAndSealDoNotBecomeLegalWithMoreAp": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.InsufficientMpApAndPreparedEffectOverflowLeaveEveryLedgerUnchanged": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KillingAttackAtZeroApStillTerminatesBattle": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KuxingKeepsOriginalRealmHealthFeeAndBudgetWhileIgnoringBlock(\"练气\",9000)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KuxingKeepsOriginalRealmHealthFeeAndBudgetWhileIgnoringBlock(\"筑基\",8500)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KuxingKeepsOriginalRealmHealthFeeAndBudgetWhileIgnoringBlock(\"金丹\",8600)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KuxingQualificationAndLifeGateRejectWithoutAnyPayment(False,10000)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.KuxingQualificationAndLifeGateRejectWithoutAnyPayment(True,2)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.LockedLowTierDoesNotGrantEarlyKuxingLowHealthBonus(\"练气\",19)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.LockedLowTierDoesNotGrantEarlyKuxingLowHealthBonus(\"筑基\",25)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.LockedLowTierDoesNotGrantEarlyKuxingLowHealthBonus(\"金丹\",25)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.MissStillPaysAllDeclaredCostsAndDoesNotAdvanceTime": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.MoveAndAttackInEitherOrderShareOneBudgetAndOneTurn(False)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.MoveAndAttackInEitherOrderShareOneBudgetAndOneTurn(True)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.MoveCastMoveAndMultipleAttacksContinueWithoutASecondGrant": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.NextPhysicalHitConsumesDebtOnceAndRepeatedApDoesNotIncreaseRecoveryBudget": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.OrdinaryActionsChargeTheirExplicitDefinition(Guard)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.OrdinaryActionsChargeTheirExplicitDefinition(SwapSpell)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PenaltiesSumInEitherOrderAndZeroCannotEraseEarlierCosts(False)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PenaltiesSumInEitherOrderAndZeroCannotEraseEarlierCosts(True)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PlayerAtZeroApAfterAttackKeepsTurnAndSettlesAccumulatedCtOnce": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PlayerAtZeroApAfterMoveKeepsTurnUntilManualEnd": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PositiveResolvedCooldownIsExcludedButReductionToZeroQualifies": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.PreparationCopiesIsolateUseAndStatusLedgersAndCannotOverwritePayment": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.ProductionAdapterUsesPerEdgeRoundingAcrossAnInterveningCast": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.RecoveryAndControlSkipSettleOnceEvenWithRepeatedAdvance": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.RefundIsBoundedByNetFloorCountsAndOriginalTurnBudget": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.RepetitionQuotesAndPaymentsUseTheSameCappedSequence(\"basic\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.RepetitionQuotesAndPaymentsUseTheSameCappedSequence(\"art\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.RepetitionQuotesAndPaymentsUseTheSameCappedSequence(\"divine\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.SecondTargetOverflowPublishesNoDamageStacksPaymentOrLedger": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.SharedAbilityCooldownIsUniqueAndOnlyGlobalTicksReduceIt": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.SharedInstanceSurvivesMovementOtherAbilitiesAndReequipmentUntilOwnTurn": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.StableIdsOrderSameTickWithoutChargingAgain": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.StaleDuplicateOrChangedTargetQuotesCannotPartiallyCommit": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.StartDotDeathCannotRecoverOrResurrect": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.StatusDurationCountsSubsequentOwnEndsInsteadOfSubActions": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.TurnEndStacksDoNotMultiplyWithAttacksAndMovementSuppressesShouyi": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.WaitRequiresNoCommittedBenefitWhileEndIsAlwaysAvailable": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.WeaponChangesShareBasicCountsWhileItemsAndEquipmentStayAtBaseCost": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatActionPointKernelTests.ZeroApEnemyPolicyExplicitlyEndsInsteadOfStalling": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionStateAdvancesToProjectedShouyiAndFudanCaps": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AiEnumerationUsesTheSameAuthorizationAsDirectExecution": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"move\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"death\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"origin\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"facing\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"direction\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"context\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"cell\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"reason\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(3)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(4)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(ForwardPair)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(AdjacentPair)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"duplicate\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"other\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"reverse\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,3)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,4)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,3)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,4)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(ForwardPair)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(AdjacentPair)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullFudanUsesItsProjectedCapForPenetrationAndPostActionState": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.KernelSourcesDoNotReferenceProductionOwnersOrUnityPresentation": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveRejectionsLeavePositionAndCtbStateUnchanged": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsTwoSchedulesEveryLivingInstance": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PlayerAndAiReceiveTheSameEightLegalCommandKinds": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,50,30,False)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,100,70,False)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(220,50,0,True)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(13,8,10,False)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsKeepDistinctKnownIdsInOrder": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.0f,3,5,3,0.15f,3,1.0f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.5f,3,5,3,0.15f,3,1.1f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(3.0f,4,3,3,0.15f,5,1.15f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(6.0f,5,5,5,0.18f,8,1.2f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(12.0f,5,5,5,0.22f,12,1.25f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(24.0f,5,5,5,0.3f,12,1.3f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RangeAndTeamRejectionsLeaveTheTurnReadyForAValidRetry": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,10,5,15)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,0,5,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,100,0,100)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,98,2,100)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,100,0,100)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,2,100,2,100)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"ordinary\",1.0f,True,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"spirit_vein_node\",2.0f,True,11)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"blessed_land\",2.0f,True,11)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"ordinary\",1.0f,False,2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"spirit_vein_node\",2.0f,False,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"blessed_land\",2.0f,False,5)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SessionAllowsOneVsTwoButRejectsOtherUnsupportedSideCardinalities": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectionsLeaveLoadoutCooldownAndCtbStateUnchanged": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectsEmptyCandidatesDuplicateEquipmentAndAnExhaustedLimit": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapUsesTheLegacyLimitAndFixedCooldownWithoutCtbPenalty": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(0.0f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(1.5f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(3.0f)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"unknown\",\"attack_profile_not_learned\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"unequipped\",\"attack_profile_not_equipped\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"realm\",\"attack_profile_requirements_not_met\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"root\",\"attack_profile_requirements_not_met\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"grade\",\"attack_profile_requirements_not_met\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"cost\",\"spirit_insufficient\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"dead\",\"combat_session_target_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"actor_dead\",\"combat_session_actor_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"far\",\"target_out_of_range\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"same_cell\",\"target_out_of_range\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"missing\",\"combat_session_target_invalid\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"cooldown\",\"attack_profile_cooldown_active\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SwapEquippedArtUpdatesAuthorizationToTheNewSlot": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.TwoVsTwoAndResultProjectionRemainSessionLocal": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.XuanganMindStrengthChangesOnlyTheSoulDamageLine": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.D4CombatEnvironmentTests.AreaHitsOnePairUnitOnce": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4CombatEnvironmentTests.CoverChangesHitChanceButNotDamageAndHeightDoesNotAddDamage": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4CombatEnvironmentTests.OneAreaDamagesEachObjectOnceAndNeverRetargetsBehindTheBrokenWall": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4CombatEnvironmentTests.OrdinaryEmptyCastCannotDamageAnObjectAndPermittedArtPaysItsExistingCosts": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.AttackChecksModeMasksAndVerticalReachWithoutChangingHorizontalDistance": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.CellObjectBlocksPlacementAndEffectsUntilDestroyedWithoutErasingBaseObstacle": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.CoverUsesLastIncomingEdgeAndHighestTierWhileMeleeIgnoresOnlyCellCover": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.DestroyedWallRefreshesRouteAndSightButPreservesOtherSameConnectionWall": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.HighGroundAirAndOversizedTargetsIgnoreOrdinaryLowCover": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.HighGroundIgnoresCoverButCannotCrossAnEntityWall": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.MinimumRangeCannotSelectFartherBodyCellToEscapeDeadZone": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.PairSourceChecksHeightBeforeSelectingNearestLegalContact": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.PairTargetUsesEachHeightAndExplicitSelectedCellNeverSubstitutesAnotherBodyCell": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.PoseCopiesAndEqualityRetainModeAndAltitude": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.SceneObjectQueriesRejectWrongIdsAnchorsAndMismatchedWallReplacement": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.D4SpatialAttackTests.WallCanBeTargetedWithoutExposingUnitBehindItOrIgnoringAnotherWall": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EditMode.F4EnvironmentClearanceImportTests.SparseCsvClearanceSurvivesAssetReloadAndRestrictsTheRuntimeBoardByBodyRank": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.DamageAtFriendlyCellIsEmptyAndDirectionAreaStillSettlesEachUnitOnlyOnce": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.DirectionWithNoLegalCoverageOrInvalidAimCellCannotEmptyCast": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCastingDoesNotBypassExistingRestrictionsOrExpandDivine(\"cooldown\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCastingDoesNotBypassExistingRestrictionsOrExpandDivine(\"seal\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCastingDoesNotBypassExistingRestrictionsOrExpandDivine(\"spirit\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCastingDoesNotBypassExistingRestrictionsOrExpandDivine(\"divine\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCastsUseTheExistingRepeatLedgerAndKeepTheZeroApTurnOpen": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCellPaysTheActionWithoutCreatingAnyTargetResult(\"bite\",25000,0,0,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCellPaysTheActionWithoutCreatingAnyTargetResult(\"strike\",50000,12,0,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCellPaysTheActionWithoutCreatingAnyTargetResult(\"shot\",50000,10,0,0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyCellPaysTheActionWithoutCreatingAnyTargetResult(\"recovery\",25000,20,5,8)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyDirectionIsValidButIsNotAnAiAttackCandidate": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyQuoteRejectsChangedSelectionOccupancyAndEnvironmentBeforeCommit(\"cell\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyQuoteRejectsChangedSelectionOccupancyAndEnvironmentBeforeCommit(\"occupant\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyQuoteRejectsChangedSelectionOccupancyAndEnvironmentBeforeCommit(\"distance\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.EmptyQuoteRejectsChangedSelectionOccupancyAndEnvironmentBeforeCommit(\"blocked\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.ExplicitFarBodyCellUsesItsOwnMinimumAndMaximumRangeWhileUnitSelectionStaysNearest": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.InvalidSpatialCellCannotConsumeResources(\"missing\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.InvalidSpatialCellCannotConsumeResources(\"sight\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.InvalidSpatialCellCannotConsumeResources(\"effects\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.InvalidSpatialCellCannotConsumeResources(\"weighted\")": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.MovementOnlyObstacleRemainsAValidCastingCell": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.RecoveryOnAnotherUnitKeepsItsExistingTargetQualificationAndOtherCost": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.RecoveryOnEitherOwnBodyCellUsesSelfCostAndCommitsTheRecovery(0)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.RecoveryOnEitherOwnBodyCellUsesSelfCostAndCommitsTheRecovery(-1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.SelectedBodyCellIsTheOnlyCoveredCellAndExactDamageContact(1)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EditMode.G2TileCastingTests.SelectedBodyCellIsTheOnlyCoveredCellAndExactDamageContact(2)": {
+      "result": "Passed",
+      "report": "d4-editmode.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceColumnIsRequiredAndUnknownColumnsFail": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"None\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0@0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0@-1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0@2147483648\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0@1|0:0>1:0@2\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>2:0@1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>0:0@1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>2147483648:0@1\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceInvalidEntriesFailBeforeAssetImport(\"0:0>1:0@1|\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ClearanceLimitsProjectToOnlyTheDeclaredDirection": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ExplicitRecoveryEnvironmentProjectsThroughAssetAndRuntime(\"ordinary\",Ordinary)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ExplicitRecoveryEnvironmentProjectsThroughAssetAndRuntime(\"spirit_vein_node\",SpiritVeinNode)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ExplicitRecoveryEnvironmentProjectsThroughAssetAndRuntime(\"blessed_land\",BlessedLand)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.GuanzhongWildProductionProfileCsvAndAssetRemainSynchronized": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ImportedDemoAssetKeepsPhysicalProfilesAndMarkersParseable": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ImportEnvironmentProfilesRejectsInvalidRowsBeforeCreatingAssets": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesBuildsOneDeterministicProfileFromAValidRow": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>2:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@0@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@yes@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;invalid=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+unknown>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsInvalidProfileReferencesBeforeImport(\"fixture_profile,unitsPerRange=2;maxQueryRange=16;edges=0:0>1:0@2@1@1,surface_wet,airflow=wind;visibility=mist+smoke+haze;temperature=heat;precipitation=rain;suspendedHazard=ash;cloudDischarge=storm,visibility:mist+smoke>haze|visibility:smoke+mist>haze,element_wood|element_fire|element_earth|element_metal|element_water,ordinary,none\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.ParseEnvironmentProfilesRejectsRowsWithMissingRequiredFields": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RecoveryEnvironmentColumnCannotBeOmitted": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RecoveryEnvironmentMissingOrUnknownFailsBeforeImport(\"\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RecoveryEnvironmentMissingOrUnknownFailsBeforeImport(\"unknown\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RecoveryEnvironmentMissingOrUnknownFailsBeforeImport(\"Ordinary\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RecoveryEnvironmentMissingOrUnknownFailsBeforeImport(\"spirit_vein\")": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RuntimeRejectsUnconfiguredRecoveryEnvironment(Unknown)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.RuntimeRejectsUnconfiguredRecoveryEnvironment(99)": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.Version2DefaultsToOpenCliffAndRejectsGroundTraversal": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.Version2HeightBurdenAndSlopeConnectionProjectThroughRuntime": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.Version2RejectsMissingReverseSlopeAndInvalidEdgeSemantics": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.Version2RejectsUnknownPhysicalSupportAndMarkerCells": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    },
+    "TianZhang.Tests.EnvironmentProfileDataTests.Version2RequiresEveryAppendedFieldOnTheProductionRow": {
+      "result": "Passed",
+      "report": "d4-editmode-fixed.xml"
+    }
+  },
+  "nativePlayModeReport": "src/Logs/d4-native.xml",
+  "nativePlayModePassed": 1
+}

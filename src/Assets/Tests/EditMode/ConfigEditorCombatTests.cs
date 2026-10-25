@@ -232,8 +232,7 @@ namespace TianZhang.Tests.EditMode
             var definitions = Definitions();
             var attack = definitions.Single(t => t.TableId == "AttackProfiles");
             var lines = File.ReadAllLines(Path.Combine(Application.dataPath, "Tests/EditMode/Fixtures/AttackProfiles.fixture.csv"));
-            var upgraded = lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.TrimStart().StartsWith("#")).Select(l =>
-                l + (l.StartsWith("attackProfileId,", StringComparison.Ordinal) ? ",attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity" : ",2,,,")).ToArray();
+            var upgraded = lines.Where(l => !string.IsNullOrWhiteSpace(l) && !l.TrimStart().StartsWith("#")).ToArray();
             var bytes = definitions.ToDictionary(d => d.TableId, d => Source(d.TableId));
             bytes["AttackProfiles"] = Encoding.UTF8.GetBytes(string.Join("\n", upgraded));
             var session = new ConfigDraftSession(definitions, bytes);

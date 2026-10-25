@@ -69,11 +69,17 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
 `additionalEnemies` 每项为 `enemyId@q:r:facing`，多项用 `|` 分隔；保留声明顺序对应的稳定 `enemy_2`、`enemy_3` ID。字段缺失、非法方向、重复锚点、未知列或错误行宽均拒绝。
 `AdventureContentImporter` 生成 `AdventureMapData.nodes[].enemyFacing` 与 `additionalEnemies[].facing`，正式地图第一遭遇前格为 `(7,8)`／`(8,8)`、第二遭遇为 `(3,5)`／`(1,5)`，两兽均朝向 2。第一遭遇主敌向内留出转身空间，避免 q=9 边界锁死；第二遭遇副敌向左一格，避免岩石与两兽身体互锁。整个身体的障碍、边界与重叠仍由战斗空间权威入口检查。
 
+## AttackProfiles.csv D4空间与环境资格
+
+attackSchemaVersion固定为3，旧schema2不能缺省补值。表尾严格追加sourceModeMask、targetModeMask、verticalReachRank、isMelee、environmentTargetTypes、environmentDamage；前三项分别为1～15位掩码、1～15位掩码及非负整数，isMelee仅0/1。GROUND=1、FLY=2、BURROW=4、SWIM=8；当前生产全部来源／目标掩码为1。基础攻击及贯石击显式近战、触及档1，其余现有术法触及档2（自施聚灵术无需虚构外部高度比较）。水平射程、垂直触及及实体遮挡独立检查，不增加高地伤害倍率。
+
+environmentTargetTypes以分号分隔且不允许空项／重复／未知类型；空集合时environmentDamage必须显式0，有集合时须为正整数且只能用于伤害效果。当前只有spell_guanshiji配置low_wall;high_wall;stone_support;low_plant及30；其余生产档为空／0，徒手始终无环境作用资格。贯石击单位倍率／费用不变，环境耐久损伤独立固定结算，整次动作末统一提交。CSV修改仍沿“天章/导入全部配置”同步asset；BattleSim和数据链校验共用CombatRuleSet的严格schema门。
+
 ## EnvironmentProfiles.csv 契约
 
 生产行固定为 `env_guanzhong_wild`（旧平地地图）与 `env_guanzhong_jindan_demo`（D1 三档演武地图）。表头固定为：
 
-`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers`
+`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers,sceneObjects`
 
 `mapSchemaVersion` 留空表示旧版（v1）三段格契约，唯一显式值 `2` 表示固定高差地图；其他值失败关闭，不回退推断。v1 行的五个追加列必须留空，按旧九列语义导入，不改变百格、四个岩石或平地有向边。
 
@@ -88,6 +94,9 @@ Language 引用和跨表稳定 ID，再原位更新 asset，并生成唯一的
   先为全部六邻接有向对生成默认边（同高 `flat` 可走、异高 `open_cliff` 不可走），再应用覆盖。`edgeKind` 接受 `flat`、`slope`、`stairs`、`one_way_drop`、`open_cliff`、`entity_wall`（`climb`／`bridge` 仅保留枚举，不在本轮实现通行）。坡／阶必须具名，且异高移动连接须两向同类型、同 `connectionId`、两向可走；单向落差只能由高处落下；封墙同时阻断地面移动与普通作用路径。
 - v2 `physicalSurfaceProfiles` 是一个带引号的 JSON 单元，包含 `gridGeometry`、`flatProfiles`、`rampProfiles`、`stairConnections`；导入器校验 JSON、支承 ID 唯一、格与坡／阶引用、坡肩阻挡、三平台高度和台阶连接 ID。几何细节留待 D3 读取，不用表现层反推规则。
 - v2 `mapMarkers` 是一个带引号的 JSON 数组，标记 ID 唯一且格存在；标记不创造占位、阻挡或接触资格，只有所属遭遇启用后才成为对象。
+- `sceneObjects` 是D4主要场景交互物的JSON配置，旧平地行留空；地图schema仍为2。顶层显式包含lightCoverHitPenalty=10、heavyCoverHitPenalty=20、types与instances。导入器直接解析为EnvironmentSceneObjectConfiguration并完整验证，运行时消费已解析asset，不另读取JSON。
+- 类型只允许low_wall/high_wall/stone_support/low_plant；每型声明materialType（stone/plant）、anchorMode（edge/cell）、maxDurability、coverMode（edge/none）、coverTier、maxProtectedBodyScaleRank、blocksMovement/blocksSight、stateRules=half_durability、residueType（rubble/failed/charred）、targetFlags=attack、interactionType=destructible、reactionRules=fixed_residue。固定耐久分别为30/60/60/15；剩余耐久<=一半进入受损，低墙重2降轻1（保护体型至2），高墙受损仍阻挡，归零后所有残留无阻挡／掩体。
+- 实例声明instanceId、contentType、cell、edgeOther、sourceRef、replacesWallConnectionId。实例与原型ID、占槽唯一；格边须两端存在且相邻。高墙必须逐无向格边精确绑定已有entity_wall正反边及connectionId，两段共用mid_sealed_wall名称但分别解除；不能按连接名一次拆掉整组墙。普通支点与低植不提供领域或燃烧周期，四个public_planned_support标记仍未激活。
 - 有向边负担与格负担分别投影到 `SpatialEdgeRules.MovementBurdenUnits` 与 `SpatialCellRules.MovementBurdenUnits`；攻击距离仍只读 `metricDistanceUnits`，不把上坡负担算成射程。高度资格、边类型与双向连接由 `SpatialQueryBoard` 统一判定，不从 Transform 或模型高度推断。
 - `surfacePrototypeRefs`：以 `|` 分隔的地表原型 ID。
 - `phenomenonChannels`：以 `;` 分隔的六个通道，格式 `channel=typeA+typeB`；`airflow`、`visibility`、`temperature`、`precipitation`、`suspendedHazard`、`cloudDischarge` 各一次。

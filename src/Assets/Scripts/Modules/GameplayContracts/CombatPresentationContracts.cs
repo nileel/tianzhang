@@ -74,16 +74,19 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatAttackAreaSnapshot
     {
         public CombatAttackAreaSnapshot(CombatUnitPresentationHex origin, int direction,
-            IReadOnlyList<CombatAttackAreaCellSnapshot> cells, IReadOnlyList<CombatantHudSnapshot> targets)
+            IReadOnlyList<CombatAttackAreaCellSnapshot> cells, IReadOnlyList<CombatantHudSnapshot> targets,
+            IReadOnlyList<CombatSceneObjectSnapshot> sceneObjects = null)
         {
             Origin = origin; Direction = direction;
             Cells = new List<CombatAttackAreaCellSnapshot>(cells).AsReadOnly();
             Targets = new List<CombatantHudSnapshot>(targets).AsReadOnly();
+            SceneObjects = new List<CombatSceneObjectSnapshot>(sceneObjects ?? Array.Empty<CombatSceneObjectSnapshot>()).AsReadOnly();
         }
         public CombatUnitPresentationHex Origin { get; }
         public int Direction { get; }
         public IReadOnlyList<CombatAttackAreaCellSnapshot> Cells { get; }
         public IReadOnlyList<CombatantHudSnapshot> Targets { get; }
+        public IReadOnlyList<CombatSceneObjectSnapshot> SceneObjects { get; }
     }
 
     public sealed class CombatActionPreviewSnapshot
@@ -522,7 +525,8 @@ namespace TianZhang.Gameplay.Contracts
             IReadOnlyList<CombatArtActionSnapshot> artActions = null,
             long commandContextVersion = 0, IReadOnlyList<CombatActionPreviewSnapshot> actions = null,
             int actionPointLimitUnits = 0, int pendingCtPenalty = 0,
-            IReadOnlyList<CombatantHudSnapshot> enemies = null)
+            IReadOnlyList<CombatantHudSnapshot> enemies = null,
+            IReadOnlyList<CombatSceneObjectSnapshot> sceneObjects = null)
         {
             CommandContextVersion = commandContextVersion;
             Player = player;
@@ -543,12 +547,14 @@ namespace TianZhang.Gameplay.Contracts
                 new List<CombatActionPreviewSnapshot>(actions).AsReadOnly();
             ActionPointLimitUnits = actionPointLimitUnits;
             PendingCtPenalty = pendingCtPenalty;
+            SceneObjects = new List<CombatSceneObjectSnapshot>(sceneObjects ?? Array.Empty<CombatSceneObjectSnapshot>()).AsReadOnly();
         }
 
         public long CommandContextVersion { get; }
         public CombatantHudSnapshot Player { get; }
         public CombatantHudSnapshot Enemy { get; }
         public IReadOnlyList<CombatantHudSnapshot> Enemies { get; }
+        public IReadOnlyList<CombatSceneObjectSnapshot> SceneObjects { get; }
         public string TurnText { get; }
         public bool AcceptsCommands { get; }
         public IReadOnlyList<string> ArtProfileIds { get; }

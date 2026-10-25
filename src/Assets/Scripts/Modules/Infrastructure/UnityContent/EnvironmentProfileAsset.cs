@@ -22,6 +22,7 @@ namespace TianZhang.Infrastructure.UnityContent
         public string directedEdgeOverrides;
         public string physicalSurfaceProfiles;
         public string mapMarkers;
+        public EnvironmentSceneObjectConfiguration sceneObjects;
 
         public bool TryCreateDefinition(out EnvironmentProfileDefinition definition, out string reason)
         {
@@ -42,6 +43,7 @@ namespace TianZhang.Infrastructure.UnityContent
                 directedEdgeOverrides = directedEdgeOverrides,
                 physicalSurfaceProfiles = physicalSurfaceProfiles,
                 mapMarkers = mapMarkers,
+                sceneObjects = sceneObjects,
             };
             return EnvironmentProfileRuntime.TryCreate(definition, out _, out reason);
         }
@@ -63,6 +65,7 @@ namespace TianZhang.Infrastructure.UnityContent
             directedEdgeOverrides = definition.directedEdgeOverrides;
             physicalSurfaceProfiles = definition.physicalSurfaceProfiles;
             mapMarkers = definition.mapMarkers;
+            sceneObjects = definition.sceneObjects;
         }
     }
 }

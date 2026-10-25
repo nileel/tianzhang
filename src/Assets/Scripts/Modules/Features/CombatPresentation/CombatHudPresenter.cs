@@ -10,6 +10,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatCommandInput commandInput;
         [SerializeField] private CombatLogView logView;
         [SerializeField] private CombatUnitHealthBarView healthBars;
+        [SerializeField] private CombatSceneObjectView sceneObjects;
 
         [SerializeField] private CombatTimelineView timelineView;
         [SerializeField] private GameObject explorationPanel;
@@ -112,6 +113,7 @@ namespace TianZhang.Features.CombatPresentation
         public void Present(CombatHudSnapshot snapshot)
         {
             Snapshot = snapshot;
+            sceneObjects?.Present(snapshot?.SceneObjects);
             view?.Present(snapshot);
             bountyTracker?.Present(snapshot != null);
             healthBars?.Present(snapshot);
@@ -127,6 +129,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Hide()
         {
+            sceneObjects?.Present(null);
             Snapshot = null;
             ClearInspectedTarget();
             view?.Hide();

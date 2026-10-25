@@ -1,9 +1,11 @@
 [CmdletBinding()]
-param()
+param([string]$SourceRoot = '')
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $checkerPath = Join-Path $repoRoot 'tools/check-data-chain.ps1'
+# An isolated checker worktree may use another checkout's Unity-imported production inputs.
+if ($SourceRoot) { $repoRoot = [IO.Path]::GetFullPath($SourceRoot) }
 $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("tianzhang-data-chain-test-" + [Guid]::NewGuid())
 
 function Copy-FixtureSource {
@@ -39,7 +41,7 @@ function New-ValidFixture {
     $spellRow = 'spell_fixture,1,1,4,1,1,0,1,0,0,0,0,0,realm_lianqi,element_water_root,element_water,faction_fixture,player'
     $skillHeader = 'name,type,minRange,maxRange,mpCost,cooldownTicks,damageMultiplier,healAmount,cannotBlock,cannotDodge,penetratingShield,stunChance,isDomain,isBloodline,specialEffectDesc,element,realmReq,sourceAffiliation,contentScope'
     $skillRow = 'skill_fixture,1,1,4,1,1,1,0,0,0,0,0,0,0,desc_fixture,element_water,realm_lianqi,faction_fixture,player'
-    $script:environmentProfileHeader = 'profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers'
+    $script:environmentProfileHeader = 'profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers,sceneObjects'
     $script:charterRuleDefinitionHeader = 'ruleEntryId,displayName,ruleFamily,relationElement,compatiblePhenomena,positiveCommit,negativeCommit,requiredAuthority,requiredNodeTypes,scopeType,scopeTierCap,anchorNodeIds,propagationBoundaryProfileId,currentCoverageSet,affectedWorldVariables,conflictProfileId,failurePolicy,worldEventOutputs'
     $script:charterSiteHeader = 'siteId,displayNameKey,settlementId,passageCapabilityId,passageOperatorId,passageTargetId,passageProtocolState,passageStructureState,passagePowerState,interactionTimeProfileId,recognitionTiming,operationTiming,cancellationPolicy,facilityId,sealRelicId,sealManagerId,sealBeneficiaryId,sealAuthorizationVersionId,ruleEntryId,ruleEntryOccupancyId,nodeOccupancyId,jindanConflictEventId,jindanChallengeEventId,grantId,grantDefinitionVersion,grantTargetVariableId,grantChallengerId,grantQualificationSource,grantAllowedOperationId,grantTargetId,grantScopeId,grantBeneficiaryId,grantRealityAnchorId,grantResourceLedgerRef,grantCapacityLedgerRef,grantChallengeRuleTier,grantEffectiveAtTick,grantExpiresAtTick,grantIsRevoked,grantRevocationReason,grantDisplaySource,leftCandidateId,leftCandidateTargetVariableId,leftCandidateTargetId,leftCandidateHasVariableAuthority,leftCandidateHasLegalTarget,leftCandidatePositionRank,leftCandidateRealityAnchorRank,leftCandidateAlreadyPaidCost,leftCandidateHasActiveContinuousCarrier,leftCandidateConflictReserve,leftCandidatePulseCost,leftCandidateSettlementCooldown,rightCandidateId,rightCandidateTargetVariableId,rightCandidateTargetId,rightCandidateHasVariableAuthority,rightCandidateHasLegalTarget,rightCandidatePositionRank,rightCandidateRealityAnchorRank,rightCandidateAlreadyPaidCost,rightCandidateHasActiveContinuousCarrier,rightCandidateConflictReserve,rightCandidatePulseCost,rightCandidateSettlementCooldown,charterCandidateId,yuanyingConflictEventId,yuanyingTargetVariableId,yuanyingTargetId,yuanyingScopeId,yuanyingRealityAnchorId'
     $script:charterSiteRow = 'charter_site_old_water_station,charter_site_old_water_station,guanzhong_city,capability_kaihe_jiuzhang_v1,operator_old_water_station,gate_old_water_station_pump,compatible,intact,available,interaction_time_old_water_station_gate_v1,instant,sustained_guided,no_commit_on_cancel,facility_old_water_station,relic_taixuan_realm_seal,manager_old_water_station,beneficiary_water_basin,authorization_taixuan_seal_old_water_station_management_v1,charter_entry_suifu_diji,occupancy_suifu_diji_v1,occupancy_suifu_waterworks_v1,conflict_suifu_water_spirit_001,challenge_suifu_001,cross_tier_charter_water_basin_v1,1,water_element_spirit_flow,jindan_challenger,JindanProtection,charter_apply,node_old_water_station_waterworks,scope_suifu_water_basin,beneficiary_water_basin,anchor_suifu_waterway,ledger_suifu_resource,ledger_suifu_capacity,1,0,500,false,none,charter_site_old_water_station,jindan_left,water_element_spirit_flow,node_old_water_station_waterworks,true,true,3,1,2,true,6,2,3,jindan_right,water_element_spirit_flow,node_old_water_station_waterworks,true,true,2,1,2,true,6,2,3,jindan_right,anchor_suifu_water_001,wetland_waterline_state,node_old_water_station_river_wetland,scope_suifu_water_basin,anchor_yuanying_road'
@@ -81,6 +83,8 @@ NativeFormatImporter:
 
     foreach ($relativePath in @(
         'src/Assets/Scripts/Combat/CombatRuleSet.cs',
+        'src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs',
+        'src/Assets/Scripts/Modules/Content/EnvironmentSceneObjectConfiguration.cs',
         'src/Assets/DataConfig/AttackProfiles.csv',
         'src/Assets/DataConfig/RealmCombatGrowth.csv',
         'src/Assets/DataConfig/CombatEffectTierRules.csv',
@@ -162,6 +166,42 @@ function Assert-CheckerResult {
 try {
     New-ValidFixture
     Assert-CheckerResult -Name 'valid fixture' -ShouldPass $true -ExpectedRuleId ''
+
+    $attackPath = Join-Path $fixtureRoot 'src/Assets/DataConfig/AttackProfiles.csv'
+    (Get-Content -Raw -LiteralPath $attackPath).Replace('low_wall;high_wall;stone_support;low_plant', 'unknown_scene_object') | Set-Content -Encoding utf8 -LiteralPath $attackPath
+    Assert-CheckerResult -Name 'attack unknown environment target type' -ShouldPass $false -ExpectedRuleId 'COMBAT_RULE_SOURCE_INVALID'
+    New-ValidFixture
+
+    $lines = @(Get-Content -LiteralPath $attackPath | Where-Object { $_ -and -not $_.StartsWith('#') })
+    $columns = $lines[0].Split(','); $values = $lines[1].Split(',')
+    $values[[Array]::IndexOf($columns, 'sourceModeMask')] = '0'
+    $lines[1] = $values -join ','
+    Write-FixtureFile 'src/Assets/DataConfig/AttackProfiles.csv' ($lines -join "`n")
+    Assert-CheckerResult -Name 'attack invalid spatial source mask' -ShouldPass $false -ExpectedRuleId 'COMBAT_RULE_SOURCE_INVALID'
+    New-ValidFixture
+
+    $environmentPath = Join-Path $fixtureRoot 'src/Assets/DataConfig/EnvironmentProfiles.csv'
+    (Get-Content -Raw -LiteralPath $environmentPath).Replace('""lightCoverHitPenalty"":10', '""lightCoverHitPenalty"":invalid') | Set-Content -Encoding utf8 -LiteralPath $environmentPath
+    Assert-CheckerResult -Name 'scene objects invalid JSON' -ShouldPass $false -ExpectedRuleId 'ENVIRONMENT_SCENE_OBJECT_SOURCE_INVALID'
+    New-ValidFixture
+
+    (Get-Content -Raw -LiteralPath $environmentPath).Replace('""instanceId"":""D4StoneSupport""', '""instanceId"":""HighWall_8_14""') | Set-Content -Encoding utf8 -LiteralPath $environmentPath
+    Assert-CheckerResult -Name 'scene object duplicate instance id' -ShouldPass $false -ExpectedRuleId 'scene_object_instance_duplicate'
+    New-ValidFixture
+
+    (Get-Content -Raw -LiteralPath $environmentPath).Replace('""replacesWallConnectionId"":""mid_sealed_wall""', '""replacesWallConnectionId"":""unknown_wall""') | Set-Content -Encoding utf8 -LiteralPath $environmentPath
+    Assert-CheckerResult -Name 'scene object incorrect wall binding' -ShouldPass $false -ExpectedRuleId 'scene_object_wall_binding_invalid'
+    New-ValidFixture
+
+    $environmentAsset = Join-Path $fixtureRoot 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_jindan_demo.asset'
+    (Get-Content -Raw -LiteralPath $environmentAsset).Replace('maxDurability: 60', 'maxDurability: 59') | Set-Content -Encoding utf8 -LiteralPath $environmentAsset
+    Assert-CheckerResult -Name 'scene object asset durability drift' -ShouldPass $false -ExpectedRuleId 'ENVIRONMENT_SCENE_OBJECT_ASSET_MISMATCH'
+    New-ValidFixture
+
+    $wildAsset = Join-Path $fixtureRoot 'src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_wild.asset'
+    (Get-Content -Raw -LiteralPath $wildAsset).Replace('lightCoverHitPenalty: 0', 'lightCoverHitPenalty: 10') | Set-Content -Encoding utf8 -LiteralPath $wildAsset
+    Assert-CheckerResult -Name 'legacy map scene objects must remain empty' -ShouldPass $false -ExpectedRuleId 'ENVIRONMENT_SCENE_OBJECT_ASSET_MISMATCH'
+    New-ValidFixture
 
     Write-FixtureFile (Join-Path "docs/$cultivation" "$spells/fixture/functional.txt") "# Functional fixture`n`n- 内容类型：功能术法。`n"
     Assert-CheckerResult -Name 'functional spell excluded from combat data count' -ShouldPass $true -ExpectedRuleId ''

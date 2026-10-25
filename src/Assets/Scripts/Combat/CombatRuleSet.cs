@@ -13,8 +13,8 @@ namespace TianZhang.Combat
     {
         public const string Version = "AP-GROWTH@0.1";
         public const int SchemaVersion = 1;
-        public const int AttackSchemaVersion = 2;
-        public static readonly string[] AttackColumns = "attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,actionPointCostUnits,minimumNetCostUnits,ctPenalty,reuseCooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey,spiritRecoveryMultiplier,minimumSpiritRecovery,otherTargetResourceCost,otherTargetRecoveryMultiplier,ruleSetVersion,abilityTierId,cooldownClass,effectBudgetMode,efficiencyNumerator,efficiencyDenominator,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator,statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest,attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity".Split(',');
+        public const int AttackSchemaVersion = 3;
+        public static readonly string[] AttackColumns = "attackProfileId,displayNameKey,profileKind,basicBindingKind,contentScope,sourceAffiliation,realmRequirementId,elementRequirementId,effectType,damageElementId,physicalDamageMultiplier,soulDamageMultiplier,healAmount,buffMultiplier,defensePenetration,resourceKind,resourceCost,actionPointCostUnits,minimumNetCostUnits,ctPenalty,reuseCooldownTicks,minCastRange,maxCastRange,targetingMode,areaCenterKind,areaShapeKind,areaRadius,areaLength,areaFanHalfAngleSteps,areaFacing,areaInnerRadius,areaEffectBlockers,areaAllowedFactions,areaAllowedStates,isDomain,isBloodline,specialEffectTextKey,spiritRecoveryMultiplier,minimumSpiritRecovery,otherTargetResourceCost,otherTargetRecoveryMultiplier,ruleSetVersion,abilityTierId,cooldownClass,effectBudgetMode,efficiencyNumerator,efficiencyDenominator,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator,statusId,statusAttributeId,statusRelativePermille,statusDurationOwnTurnEnds,statusStackLimit,statusRefreshPolicy,controlChancePermille,controlUsesMindContest,attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity,sourceModeMask,targetModeMask,verticalReachRank,isMelee,environmentTargetTypes,environmentDamage".Split(',');
         public static readonly string[] RealmColumns = "schemaVersion,ruleSetVersion,realmId,realmOrder,usageScope,actionPointMaximumUnits,baseMovementEfficiencyMilliUnits,legacyBaseMovementEfficiencyMilliUnits,movementNodeWeightNumerators,movementNodeWeightDenominator".Split(',');
         public static readonly string[] TierColumns = "schemaVersion,ruleSetVersion,abilityTierId,realmId,actionPointReferenceUnits,spiritBudgetReference,physicalAttackCapacity,soulAttackCapacity,physicalDefenseCapacity,soulDefenseCapacity,recoverySoulAttackCapacity,rawSpiritRecoveryCapacity,reactionCapacity,referenceTurnIntervalTicks".Split(',');
         public static readonly string[] EconomyColumns = "schemaVersion,ruleSetVersion,recordKind,definitionRef,abilityTierId,repeatFirstPermille,repeatSecondPermille,repeatThirdPermille,repeatCappedPermille,realmBelowTwoPermille,realmBelowOnePermille,realmEqualPermille,realmAboveOnePermille,realmAboveTwoPermille,relativeStatusLimitPermille,probabilityPointLimitPermille,strongControlLimitPermille,burstCooldownMultiplier,controlCooldownMultiplier,recoveryCooldownMultiplier,movementBudgetNumerator,movementBudgetDenominator,waterBaseChancePermille,waterMinimumChancePermille,waterMindDifferenceDivisor,waterDefensePerStackPermille,waterDefenseMaxStacks,waterReductionMigrationNumerator,waterReductionMigrationDenominator,actionPointFactorNumerator,actionPointFactorDenominator,spiritFactorNumerator,spiritFactorDenominator,actionPointCostOverrideUnits,minimumNetCostOverrideUnits,spiritCostOverride,ctPenalty,cooldownClass,reuseCooldownOverrideTicks,damageMigrationNumerator,damageMigrationDenominator,damageWeightNumerator,damageWeightDenominator".Split(',');
@@ -54,7 +54,20 @@ namespace TianZhang.Combat
                 if (row == null || row.Length != AttackColumns.Length)
                     throw new InvalidDataException("attack_profile_short_or_extra_row");
                 string V(string field) => row[Array.IndexOf(AttackColumns, field)];
-                if (V("attackSchemaVersion") != "2") throw new InvalidDataException("attack_schema_version_unknown");
+                if (V("attackSchemaVersion") != "3") throw new InvalidDataException("attack_schema_version_unknown");
+                int sourceMode = Integer(V("sourceModeMask"), true), targetMode = Integer(V("targetModeMask"), true);
+                if (sourceMode > 15 || targetMode > 15 || Integer(V("verticalReachRank")) < 0 ||
+                    V("isMelee") is not ("0" or "1"))
+                    throw new InvalidDataException("attack_spatial_fields_invalid");
+                int environmentDamage = Integer(V("environmentDamage"));
+                string[] environmentTargets = V("environmentTargetTypes") == "" ? Array.Empty<string>() : V("environmentTargetTypes").Split(';');
+                if (environmentTargets.Any(type => type is not ("low_wall" or "high_wall" or "stone_support" or "low_plant")) ||
+                    environmentTargets.Distinct(StringComparer.Ordinal).Count() != environmentTargets.Length)
+                    throw new InvalidDataException("attack_environment_target_invalid");
+                if ((environmentTargets.Length == 0) != (environmentDamage == 0) ||
+                    environmentTargets.Length > 0 && V("effectType") is not ("physical" or "magic" or "hybrid") ||
+                    V("effectBudgetMode") == "fixed_unarmed" && environmentTargets.Length > 0)
+                    throw new InvalidDataException("attack_environment_effect_invalid");
                 if (!ids.Add(V("attackProfileId"))) throw new InvalidDataException("attack_profile_id_duplicate");
                 if (V("attackProfileId") == "basic_unarmed" || V("effectBudgetMode") == "legacy_unarmed")
                     throw new InvalidDataException("legacy_unarmed_rejected");
@@ -81,7 +94,8 @@ namespace TianZhang.Combat
                     "damageElementId", "physicalDamageMultiplier", "resourceKind", "resourceCost", "actionPointCostUnits",
                     "minimumNetCostUnits", "ctPenalty", "reuseCooldownTicks", "minCastRange", "maxCastRange", "targetingMode",
                     "ruleSetVersion", "abilityTierId", "cooldownClass", "effectBudgetMode", "attackSchemaVersion",
-                    "unarmedFamilyId", "unarmedRealmId", "unarmedPhysicalAttackCapacity" };
+                    "unarmedFamilyId", "unarmedRealmId", "unarmedPhysicalAttackCapacity", "sourceModeMask",
+                    "targetModeMask", "verticalReachRank", "isMelee", "environmentDamage" };
                 if (AttackColumns.Where(field => !allowed.Contains(field, StringComparer.Ordinal)).Any(field => V(field) != ""))
                     throw new InvalidDataException("fixed_unarmed_foreign_fields_present");
                 result.Add(mapping);

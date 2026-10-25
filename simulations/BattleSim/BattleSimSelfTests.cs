@@ -2125,7 +2125,7 @@ static class BattleSimSelfTests
                 AssertEqual(mapping.MinimumNetCostUnits, profile.Cost.MinimumNetCostUnits, "same-row net floor");
                 AssertEqual(mapping.PhysicalAttackCapacity, profile.UnarmedPhysicalAttackCapacity, "same-row capacity");
                 AssertEqual(rules.SourceDigest, profile.RuleSetSourceDigest, "four-source fixture digest");
-                AssertEqual(2, profile.AttackSchemaVersion, "attack schema version");
+                AssertEqual(3, profile.AttackSchemaVersion, "attack schema version");
                 AssertEqual(1d, profile.Mult, "declared physical multiplier");
             }
             Console.WriteLine("unarmed-config fixture sourceDigest=" + rules.SourceDigest);

@@ -1714,7 +1714,7 @@ namespace TianZhang.Tests.EditMode
         private sealed class MutableAreaQuery : ICombatSpatialQuery
         {
             public bool BlockSecond; public string Reason = "";
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int min, int max) =>
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int min, int max, SpatialAttackPolicy policy = null) =>
                 new SpatialContactResult(source.Anchor, target.Anchor, source.Anchor.Distance(target.Anchor) * 1000,
                     !(BlockSecond && target.Anchor == new HexCoord(2, 0)), !(BlockSecond && target.Anchor == new HexCoord(2, 0)), Reason, 1000);
             public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord target, int ap, int v,
@@ -1736,8 +1736,8 @@ namespace TianZhang.Tests.EditMode
         {
             private readonly SpatialQueryBoard board;
             public AreaBoardQuery(SpatialQueryBoard board) => this.board = board;
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
-                board.QueryContact(source, target, minimumRange, maximumRange);
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange, SpatialAttackPolicy policy = null) =>
+                board.QueryContact(source, target, minimumRange, maximumRange, policy);
             public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination, int budget,
                 int efficiency, IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null) => throw new NotSupportedException();
             public IReadOnlyDictionary<SpatialPose, int> FindReachable(SpatialPose source, int budget,
@@ -1941,7 +1941,7 @@ namespace TianZhang.Tests.EditMode
                     new Dictionary<HexCoord, IReadOnlyDictionary<HexCoord, MovementFixture>>();
             }
 
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange)
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange, SpatialAttackPolicy policy = null)
             {
                 int distance = source.Anchor.Distance(target.Anchor);
                 if (enforceDeclaredRange && (distance < minimumRange || distance > maximumRange))

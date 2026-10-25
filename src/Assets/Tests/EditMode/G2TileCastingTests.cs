@@ -330,8 +330,8 @@ namespace TianZhang.Tests.EditMode
                     if (cells.ContainsKey(next)) edges.Add(new SpatialDirectedEdge(cell, next), new SpatialEdgeRules(metric, true, effects));
                 board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(1000, 16));
             }
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int min, int max) =>
-                board.QueryContact(source, target, min, max);
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int min, int max, SpatialAttackPolicy policy = null) =>
+                board.QueryContact(source, target, min, max, policy);
             public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination, int budget, int efficiency,
                 IReadOnlyCollection<HexCoord> occupied, int? destinationFacing = null)
             {

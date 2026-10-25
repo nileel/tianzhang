@@ -10,7 +10,8 @@ namespace TianZhang.Combat
     {
         internal CombatAttackAreaQueryResult(string actorId, CombatAttackProfile profile, HexCoord origin,
             int direction, IReadOnlyList<SpatialAreaCell> cells, IEnumerable<string> targetIds,
-            IReadOnlyList<SpatialContactResult> cellContacts)
+            IReadOnlyList<SpatialContactResult> cellContacts,
+            IEnumerable<string> environmentTargetIds = null)
         {
             ActorId = actorId;
             Profile = profile;
@@ -19,6 +20,7 @@ namespace TianZhang.Combat
             Cells = new List<SpatialAreaCell>(cells).AsReadOnly();
             TargetIds = new List<string>(targetIds).AsReadOnly();
             CellContacts = new List<SpatialContactResult>(cellContacts).AsReadOnly();
+            EnvironmentTargetIds = new List<string>(environmentTargetIds ?? Array.Empty<string>()).AsReadOnly();
         }
 
         public string ActorId { get; }
@@ -28,6 +30,7 @@ namespace TianZhang.Combat
         public IReadOnlyList<SpatialAreaCell> Cells { get; }
         public IReadOnlyList<string> TargetIds { get; }
         public IReadOnlyList<SpatialContactResult> CellContacts { get; }
+        public IReadOnlyList<string> EnvironmentTargetIds { get; }
     }
 
     public readonly struct CombatTargetContact
@@ -83,7 +86,8 @@ namespace TianZhang.Combat
     /// </summary>
     public interface ICombatSpatialQuery
     {
-        SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange);
+        SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange,
+            SpatialAttackPolicy policy = null);
         CombatMovementQueryResult QueryMovement(
             SpatialPose source,
             HexCoord destination,
@@ -172,13 +176,14 @@ namespace TianZhang.Combat
             ICombatSpatialQuery spatialQuery,
             IEnumerable<CombatOrdinaryActionDefinition> ordinaryActions,
             float spiritRecoveryEnvironmentMultiplier = 1f,
-            CombatRuleSet ruleSet = null)
+            CombatRuleSet ruleSet = null, CombatSceneObjects sceneObjects = null)
         {
             if (spatialQuery == null)
                 throw new ArgumentNullException(nameof(spatialQuery));
             if (spiritRecoveryEnvironmentMultiplier != 1f && spiritRecoveryEnvironmentMultiplier != 2f)
                 throw new ArgumentOutOfRangeException(nameof(spiritRecoveryEnvironmentMultiplier));
             RuleSet = ruleSet;
+            SceneObjects = sceneObjects;
             Combatants = new CombatantRegistry(combatants);
             ValidateSideCardinality(Combatants.All);
             profiles = new Dictionary<string, CombatAttackProfile>(StringComparer.Ordinal);
@@ -321,6 +326,7 @@ namespace TianZhang.Combat
 
         public CombatantRegistry Combatants { get; }
         public ICombatSpatialQuery SpatialQuery { get; }
+        public CombatSceneObjects SceneObjects { get; }
         public float SpiritRecoveryEnvironmentMultiplier { get; }
         public CombatTurnScheduler TurnScheduler { get; }
         public IReadOnlyList<CombatAttackProfile> AttackProfiles => orderedProfiles.AsReadOnly();
@@ -337,7 +343,7 @@ namespace TianZhang.Combat
                 throw new ArgumentException("combat_session_actor_invalid", nameof(actorId));
             if (!TryGetProfile(profileId, out CombatAttackProfile profile))
                 throw new ArgumentException("attack_profile_unresolved", nameof(profileId));
-            return QueryAttackArea(actor, profile, direction, Combatants.All, SpatialQuery);
+            return IncludeEnvironment(actor, QueryAttackArea(actor, profile, direction, Combatants.All, SpatialQuery));
         }
 
         /// <summary>A selected cell stays exact even when its occupant has a multi-cell body.</summary>
@@ -350,19 +356,49 @@ namespace TianZhang.Combat
             if (profile.Area != CombatAttackArea.Single)
                 throw new ArgumentException("combat_attack_area_invalid", nameof(profileId));
             bool targetsSelf = actor.Pose.Contains(targetCell);
-            SpatialContactResult contact = SpatialQuery.QueryRange(actor.Pose, new SpatialPose(targetCell),
+            SpatialContactResult contact = SpatialQuery.QueryRange(actor.Pose, TargetPoseAtCell(Combatants.All, targetCell),
                 profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
-                    ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange);
+                    ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange, profile.SpatialPolicy);
             var targets = Combatants.All.Where(target => contact.IsInRange && target.IsAlive &&
                     target.Pose.Contains(targetCell) && profile.AllowsTarget(actor.Team, target.Team))
                 .Select(target => target.Id).Distinct().OrderBy(id => id, StringComparer.Ordinal);
-            return new CombatAttackAreaQueryResult(actor.Id, profile, actor.Position, -1,
+            return IncludeEnvironment(actor, new CombatAttackAreaQueryResult(actor.Id, profile, actor.Position, -1,
                 new[] { new SpatialAreaCell(targetCell, contact.IsInRange, contact.Reason) }, targets,
-                new[] { contact });
+                new[] { contact }));
+        }
+
+        private CombatAttackAreaQueryResult IncludeEnvironment(CombatantSnapshot actor, CombatAttackAreaQueryResult area)
+        {
+            if (SceneObjects == null || area.Profile.EnvironmentDamage == 0) return area;
+            var ids = new SortedSet<string>(StringComparer.Ordinal);
+            var cells = area.Cells.ToArray();
+            for (int index = 0; index < cells.Length; index++)
+            {
+                HexCoord cell = cells[index].Coord;
+                foreach (var value in SceneObjects.All)
+                {
+                    if (value.IsDestroyed || !value.Contains(cell) ||
+                        !area.Profile.EnvironmentTargetTypes.Contains(value.Definition.ContentType)) continue;
+                    var contact = SceneObjects.Board.QuerySceneObjectContact(actor.Pose, cell, value.Id,
+                        area.Profile.MinimumRange, area.Profile.MaximumRange, area.Profile.SpatialPolicy);
+                    if (!contact.IsInRange) continue;
+                    ids.Add(value.Id);
+                    cells[index] = new SpatialAreaCell(cell, true, SpatialQueryReasons.Ok);
+                }
+            }
+            return new CombatAttackAreaQueryResult(area.ActorId, area.Profile, area.Origin, area.Direction,
+                cells, area.TargetIds, area.CellContacts, ids);
         }
 
         internal static bool TargetsSelf(CombatantSnapshot actor, CombatCommand command) => command.TargetCell.HasValue
             ? actor.Pose.Contains(command.TargetCell.Value) : actor.Id == command.TargetId;
+
+        private static SpatialPose TargetPoseAtCell(IReadOnlyList<CombatantSnapshot> combatants, HexCoord cell)
+        {
+            var target = combatants.FirstOrDefault(value => value.IsAlive && value.Pose.Contains(cell));
+            return target == null ? new SpatialPose(cell) : new SpatialPose(cell, bodyScaleRank: target.BodyScaleRank,
+                movementMode: target.MovementMode, altitudeBand: target.AltitudeBand);
+        }
 
         /// <summary>
         /// Pure targeting over the supplied battlefield facts. No turn, cost, cooldown, random or HP changes;
@@ -383,8 +419,9 @@ namespace TianZhang.Combat
             };
             HexCoord origin = actor.Position;
             SpatialTwoCellArea area = origin.GetTwoCellArea(shape, direction);
-            SpatialContactResult first = spatialQuery.QueryRange(new SpatialPose(origin), new SpatialPose(area.First), profile.MinimumRange, profile.MaximumRange);
-            SpatialContactResult second = spatialQuery.QueryRange(new SpatialPose(origin), new SpatialPose(area.Second), profile.MinimumRange, profile.MaximumRange);
+            var source = new SpatialPose(origin, movementMode: actor.Pose.MovementMode, altitudeBand: actor.Pose.AltitudeBand);
+            SpatialContactResult first = spatialQuery.QueryRange(source, TargetPoseAtCell(combatants, area.First), profile.MinimumRange, profile.MaximumRange, profile.SpatialPolicy);
+            SpatialContactResult second = spatialQuery.QueryRange(source, TargetPoseAtCell(combatants, area.Second), profile.MinimumRange, profile.MaximumRange, profile.SpatialPolicy);
             var cells = new[]
             {
                 new SpatialAreaCell(area.First, first.IsInRange, first.Reason),
@@ -572,7 +609,7 @@ namespace TianZhang.Combat
                 if (attackArea == null)
                     range = SpatialQuery.QueryRange(actor.Pose, target.Pose,
                         profile.Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf
-                            ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange);
+                            ? Math.Max(1, profile.MinimumRange) : profile.MinimumRange, profile.MaximumRange, profile.SpatialPolicy);
                 else
                 {
                     range = attackArea.CellContacts.Where(contact => contact.IsInRange && target.Pose.Contains(contact.TargetCell))

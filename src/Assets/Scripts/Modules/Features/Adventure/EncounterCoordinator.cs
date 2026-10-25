@@ -343,6 +343,12 @@ namespace TianZhang.Features.Adventure
             if (command.TargetCell.HasValue && preview?.AttackArea != null)
             {
                 SpatialContactResult contact = preview.AttackArea.CellContacts.FirstOrDefault(value => value.TargetCell == command.TargetCell.Value);
+                if (!contact.IsInRange && actor != null && preview.AttackArea.EnvironmentTargetIds.Count > 0)
+                {
+                    var attack = preview.AttackArea.Profile;
+                    contact = session.SceneObjects.Board.QuerySceneObjectContact(actor.Pose, command.TargetCell.Value,
+                        preview.AttackArea.EnvironmentTargetIds[0], attack.MinimumRange, attack.MaximumRange, attack.SpatialPolicy);
+                }
                 if (contact.DistanceUnits >= 0 && contact.UnitsPerRange > 0)
                     targetDistance = contact.DistanceUnits / (float)contact.UnitsPerRange;
                 targetName = "地块 (" + command.TargetCell.Value.Q + "," + command.TargetCell.Value.R + ")";
@@ -375,7 +381,9 @@ namespace TianZhang.Features.Adventure
                     session.Combatants.TryGet(id, out var target);
                     return ToHud(target, target != null && target.Team == CombatTeam.Player
                         ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey));
-                }).ToArray());
+                }).ToArray(), session.SceneObjects?.All.Where(value => preview.AttackArea.Cells.Any(cell => value.Contains(cell.Coord)))
+                    .Select(value => ProjectSceneObject(value, preview.AttackArea.EnvironmentTargetIds.Contains(value.Id)
+                        ? Math.Min(value.Durability, profile.EnvironmentDamage) : 0)).ToArray());
             if (area != null) name = displayProfile(command.ProfileId);
             string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
                 candidate.SlotIndex >= 0 && candidate.SlotIndex < actor.EquippedArtProfileIds.Count
@@ -690,8 +698,15 @@ namespace TianZhang.Features.Adventure
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
                 enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(EnemyDataFor(value.Id).displayNameKey),
-                    EnemyDataFor(value.Id).enemyId)).ToArray()));
+                    EnemyDataFor(value.Id).enemyId)).ToArray(),
+                sceneObjects: session.SceneObjects?.All.Select(value => ProjectSceneObject(value)).ToArray()));
         }
+
+        private CombatSceneObjectSnapshot ProjectSceneObject(CombatSceneObject value, int predictedDamage = 0) =>
+            new CombatSceneObjectSnapshot(value.Id, value.Definition.ContentType,
+                resolveText("scene_object_" + value.Definition.ContentType), value.Definition.MaterialType,
+                value.Durability, value.Definition.MaxDurability, value.IsDestroyed ? 2 : value.IsDamaged ? 1 : 0,
+                value.Definition.ResidueType, predictedDamage);
 
         private CombatMovementSnapshot BuildMovement(CombatantSnapshot player, bool acceptsCommands)
         {
@@ -1087,6 +1102,12 @@ namespace TianZhang.Features.Adventure
             });
             if (command.Kind == CombatCommandKind.Art) commandName = displayProfile(command.ProfileId);
             if (command.Kind == CombatCommandKind.UseItem) commandName += "：" + resolveText(command.ItemId);
+            if (result.SceneObjectChanges.Count > 0)
+                commandName += "，" + string.Join(" / ", result.SceneObjectChanges.Select(change =>
+                {
+                    var item = session.SceneObjects.Find(change.Id);
+                    return resolveText("scene_object_" + item.Definition.ContentType) + " 耐久 " + change.Before + "→" + change.After;
+                }));
             if (result.SpiritRecoveries.Count > 0)
                 return actor + "：" + commandName + "，恢复灵力 " + result.SpiritRecoveries.Sum(item => item.ActualRecovery) +
                     "，消耗灵力 " + result.SpiritSpent;

@@ -276,6 +276,10 @@ namespace TianZhang.Content
                     if (cell.cellMovementBurdenUnits < 0)
                         return Fail("cell_movement_burden_invalid", out reason);
 
+            if (profile.sceneObjects != null &&
+                !profile.sceneObjects.TryValidate(profile.battlefieldCells, profile.directedEdges, out reason))
+                return false;
+
             var edges = new EnvironmentDirectedEdge[profile.directedEdges.Length];
             Array.Copy(profile.directedEdges, edges, edges.Length);
             runtime = new EnvironmentProfileRuntime(
@@ -471,5 +475,6 @@ namespace TianZhang.Content
         public string physicalSurfaceProfiles;
         /// <summary>Raw version-2 map marker JSON; markers never imply occupancy or blocking.</summary>
         public string mapMarkers;
+        public EnvironmentSceneObjectConfiguration sceneObjects;
     }
 }

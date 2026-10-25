@@ -65,7 +65,8 @@ namespace TianZhang.Combat
             int actionPointRefundUnits = 0,
             long rootActionId = 0,
             IReadOnlyList<SpatialMovementStep> movementSteps = null,
-            IReadOnlyList<CombatTargetContact> targetContacts = null)
+            IReadOnlyList<CombatTargetContact> targetContacts = null,
+            IReadOnlyList<CombatSceneObjectChange> sceneObjectChanges = null)
         {
             Succeeded = succeeded;
             RejectionReason = rejectionReason ?? string.Empty;
@@ -86,6 +87,7 @@ namespace TianZhang.Combat
             RootActionId = rootActionId;
             MovementSteps = new List<SpatialMovementStep>(movementSteps ?? Array.Empty<SpatialMovementStep>()).AsReadOnly();
             TargetContacts = new List<CombatTargetContact>(targetContacts ?? Array.Empty<CombatTargetContact>()).AsReadOnly();
+            SceneObjectChanges = new List<CombatSceneObjectChange>(sceneObjectChanges ?? Array.Empty<CombatSceneObjectChange>()).AsReadOnly();
         }
 
         public bool Succeeded { get; }
@@ -103,15 +105,21 @@ namespace TianZhang.Combat
         public long RootActionId { get; }
         public IReadOnlyList<SpatialMovementStep> MovementSteps { get; }
         public IReadOnlyList<CombatTargetContact> TargetContacts { get; }
+        public IReadOnlyList<CombatSceneObjectChange> SceneObjectChanges { get; }
 
         internal CombatActionResult WithPayment(int spent, int refund, long root) => new CombatActionResult(
             Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
-            SpiritRecoveries, MovementEdges, UnitsPerRange, spent, refund, root, MovementSteps, TargetContacts);
+            SpiritRecoveries, MovementEdges, UnitsPerRange, spent, refund, root, MovementSteps, TargetContacts, SceneObjectChanges);
 
         internal CombatActionResult WithContacts(IReadOnlyList<CombatTargetContact> contacts) => new CombatActionResult(
             Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
             SpiritRecoveries, MovementEdges, UnitsPerRange, ActionPointSpentUnits, ActionPointRefundUnits, RootActionId,
-            MovementSteps, contacts);
+            MovementSteps, contacts, SceneObjectChanges);
+
+        internal CombatActionResult WithSceneObjects(IReadOnlyList<CombatSceneObjectChange> changes) => new CombatActionResult(
+            Succeeded, RejectionReason, Damage, MovementPath, MovementCost, MovementFacing, SpiritSpent,
+            SpiritRecoveries, MovementEdges, UnitsPerRange, ActionPointSpentUnits, ActionPointRefundUnits, RootActionId,
+            MovementSteps, TargetContacts, changes);
 
         public static CombatActionResult Success(params CombatDamageResult[] damage)
         {

@@ -1,0 +1,5 @@
+ordinary empty attack: wall remains 60
+intact path=8:15;9:14
+destroyed path=9:14; wall=0; other wall=60; LOS=true
+ordinary bounty entered; environment=null; guard committed and paid AP
+reentry: all 7 durability reset; wall blocks movement/effects; intact visible

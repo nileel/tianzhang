@@ -1177,7 +1177,7 @@ namespace TianZhang.Tests.PlayMode
 
         private sealed class TimelineSpatialQuery : ICombatSpatialQuery
         {
-            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange) =>
+            public SpatialContactResult QueryRange(SpatialPose source, SpatialPose target, int minimumRange, int maximumRange, SpatialAttackPolicy policy = null) =>
                 new SpatialContactResult(source.Anchor, target.Anchor, source.Anchor.Distance(target.Anchor) * 1000,
                     source.Anchor.Distance(target.Anchor) >= minimumRange && source.Anchor.Distance(target.Anchor) <= maximumRange,
                     true, "target_out_of_range", 1000);

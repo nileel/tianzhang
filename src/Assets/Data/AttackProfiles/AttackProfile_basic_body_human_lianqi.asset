@@ -71,8 +71,14 @@ MonoBehaviour:
   statusRefreshPolicy:
   controlChancePermille: 0
   controlUsesMindContest: 0
-  ruleSetSourceDigest: f9e5a0fd9c72fd7d170f12d4ae87adc264be1480c734879a6d8bf63c638d8393
-  attackSchemaVersion: 2
+  ruleSetSourceDigest: 4ad6604858212133493236c544b2a76a99099407565fbc0d7df6155dc2852ae5
+  attackSchemaVersion: 3
   unarmedFamilyId: body_human
   unarmedRealmId: realm_lianqi
   unarmedPhysicalAttackCapacity: 120
+  sourceModeMask: 1
+  targetModeMask: 1
+  verticalReachRank: 1
+  isMelee: 1
+  environmentTargetTypes:
+  environmentDamage: 0

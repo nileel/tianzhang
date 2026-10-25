@@ -31,9 +31,9 @@ namespace TianZhang.Tests.EditMode
         private AttackProfileData Project(string id, params (string field, string value)[] changes)
         {
             string[] lines = File.ReadAllLines(Path.Combine(Application.dataPath, "Tests/EditMode/Fixtures/RealmStatuses.fixture.csv"));
-            // Upgrade the explicit schema-1 rejection-era fixture at its input boundary.
-            string header = lines[0] + ",attackSchemaVersion,unarmedFamilyId,unarmedRealmId,unarmedPhysicalAttackCapacity";
-            string[] fields = header.Split(','), row = (lines.Single(line => line.StartsWith(id + ",", StringComparison.Ordinal)) + ",2,,,").Split(',');
+            // Fixtures declare the current strict schema directly.
+            string header = lines[0];
+            string[] fields = header.Split(','), row = lines.Single(line => line.StartsWith(id + ",", StringComparison.Ordinal)).Split(',');
             foreach (var change in changes) row[Array.IndexOf(fields, change.field)] = change.value;
             Assert.That(CombatContentImporter.TryBuildAttackProfileProjection(new[] { header, string.Join(",", row) },
                 new[] { id }, out var profiles, out string reason), Is.True, reason);

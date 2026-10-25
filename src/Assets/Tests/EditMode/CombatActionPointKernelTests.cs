@@ -73,7 +73,7 @@ namespace TianZhang.Tests.EditMode
             var board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(1000, 16));
             Type type = typeof(CombatEntryAdapter).GetNestedType("SpatialCombatQuery", BindingFlags.NonPublic);
             return (ICombatSpatialQuery)Activator.CreateInstance(type, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null, new object[] { board }, null);
+                null, new object[] { board, null }, null);
         }
         private static CombatCommand Hit(string profile = "basic", float roll = 0) => new CombatCommand(
             profile == "basic" ? CombatCommandKind.BasicAttack : profile == "divine" ? CombatCommandKind.Divine : CombatCommandKind.Art,
@@ -748,7 +748,7 @@ namespace TianZhang.Tests.EditMode
         }
         internal sealed class DirectRange : ICombatSpatialQuery
         {
-            public SpatialContactResult QueryRange(SpatialPose a,SpatialPose b,int min,int max) =>
+            public SpatialContactResult QueryRange(SpatialPose a,SpatialPose b,int min,int max, SpatialAttackPolicy policy = null) =>
                 new(a.Anchor,b.Anchor,a.Anchor.Distance(b.Anchor)*1000,true,true,"",1000);
             public CombatMovementQueryResult QueryMovement(SpatialPose a,HexCoord b,int ap,int v,IReadOnlyCollection<HexCoord> occupied,int? destinationFacing=null) => throw new NotSupportedException();
             public IReadOnlyDictionary<SpatialPose,int> FindReachable(SpatialPose a,int ap,int v,IReadOnlyCollection<HexCoord> occupied) => throw new NotSupportedException();

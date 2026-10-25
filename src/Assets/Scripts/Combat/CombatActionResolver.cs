@@ -71,11 +71,17 @@ namespace TianZhang.Combat
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
             if (result.Succeeded) result = result.WithContacts(validation.TargetContacts);
+            var objectChanges = attackArea != null && session.SceneObjects != null
+                ? session.SceneObjects.PrepareDamage(attackArea.EnvironmentTargetIds, attackArea.Profile.EnvironmentDamage)
+                : Array.Empty<CombatSceneObjectChange>();
+            if (result.Succeeded) result = result.WithSceneObjects(objectChanges);
             if (result.Succeeded) commit = () =>
             {
                 originalActor.CommitResolvedState(actor);
                 for (int index = 0; index < originals.Count; index++)
                     if (originals[index] != originalActor) originals[index].CommitResolvedState(targets[index]);
+                // Targets/contacts above belong to the old board for the whole action.
+                session.SceneObjects?.Apply(objectChanges);
             };
             return result;
         }
@@ -194,7 +200,8 @@ namespace TianZhang.Combat
                     var effectActor = isArea ? source.CopyForResolution() : actor;
                     SpatialContactResult contact = contacts.Single(value => value.TargetId == target.Id).Contact;
                     int incomingDirection = contact.TargetCell.DirectionToward(contact.SourceCell);
-                    CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus, incomingDirection);
+                    CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus, incomingDirection,
+                        session.SceneObjects?.HitPenalty(contact.CoverTier) ?? 0);
                     if (isArea && damage.IsHit) actor.LeijieStacks = effectActor.LeijieStacks;
                     if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
                     {
@@ -252,7 +259,7 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatantSnapshot target,
             CombatAttackProfile profile,
-            CombatResolutionRolls rolls, bool kuxingLowHealthBonus, int incomingDirection)
+            CombatResolutionRolls rolls, bool kuxingLowHealthBonus, int incomingDirection, int coverHitPenalty)
         {
             switch (profile.Effect)
             {
@@ -260,12 +267,12 @@ namespace TianZhang.Combat
                     target.RestoreHealth(profile.HealAmount);
                     return new CombatDamageResult(0, true, false, false, false);
                 case CombatAttackEffect.Physical:
-                    return ResolvePhysical(actor, target, profile, rolls, true, true, incomingDirection, kuxingLowHealthBonus);
+                    return ResolvePhysical(actor, target, profile, rolls, true, true, incomingDirection, kuxingLowHealthBonus, coverHitPenalty);
                 case CombatAttackEffect.Soul:
-                    return ResolveSoul(actor, target, profile, rolls, true, true, incomingDirection);
+                    return ResolveSoul(actor, target, profile, rolls, true, true, incomingDirection, coverHitPenalty);
                 case CombatAttackEffect.Hybrid:
-                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, incomingDirection, kuxingLowHealthBonus);
-                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false, incomingDirection);
+                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, incomingDirection, kuxingLowHealthBonus, coverHitPenalty);
+                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false, incomingDirection, coverHitPenalty);
                     if (physical.IsHit)
                         target.ReceiveDamage(physical.FinalDamage);
                     if (soul.IsHit)
@@ -287,9 +294,9 @@ namespace TianZhang.Combat
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
             bool advanceAction,
-            bool applyDamage, int incomingDirection, bool kuxingLowHealthBonus = false)
+            bool applyDamage, int incomingDirection, bool kuxingLowHealthBonus, int coverHitPenalty)
         {
-            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection))
+            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection, coverHitPenalty))
                 return new CombatDamageResult(0, false, false, false, false);
 
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
@@ -326,9 +333,9 @@ namespace TianZhang.Combat
             CombatAttackProfile profile,
             CombatResolutionRolls rolls,
             bool advanceAction,
-            bool applyDamage, int incomingDirection)
+            bool applyDamage, int incomingDirection, int coverHitPenalty)
         {
-            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection))
+            if (!RollHit(actor, target, rolls.HitPercent, incomingDirection, coverHitPenalty))
                 return new CombatDamageResult(0, false, false, false, false);
 
             ElementMatch element = GetElementMatch(profile.DamageElement, actor.GongFaElement, target.GongFaElement);
@@ -372,10 +379,11 @@ namespace TianZhang.Combat
         public static float BlockReductionMultiplier(float blockReduction) =>
             1f - Clamp(blockReduction, 0f, 100f) / 100f;
 
-        private static bool RollHit(CombatantSnapshot actor, CombatantSnapshot target, float rollPercent, int incomingDirection)
+        private static bool RollHit(CombatantSnapshot actor, CombatantSnapshot target, float rollPercent, int incomingDirection, int coverHitPenalty)
         {
             float rate = EffectiveHitRate(actor.HitRateBonus, target.DodgeRate);
             rate *= FacingHitModifier(target, incomingDirection);
+            rate -= coverHitPenalty;
             return rollPercent <= Clamp(rate, 5f, 100f);
         }
 

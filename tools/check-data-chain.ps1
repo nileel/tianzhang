@@ -672,7 +672,7 @@ function Test-FormalAttackProfileProjection {
   }
   $actualAssets = @(Get-ChildItem -LiteralPath (Join-Path $root 'src/Assets/Data/AttackProfiles') -Filter *.asset|Select-Object -ExpandProperty Name|Sort-Object)
   if (($actualAssets-join ',') -cne (@($ids|ForEach-Object {"AttackProfile_$_.asset"}|Sort-Object)-join ',')) { Add-Finding 'ATTACK_PROFILE_ASSET_COVERAGE_INVALID' 'AttackProfiles' 'Exactly the twelve canonical assets are required.' }
-  $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId')
+  $strings = @('attackProfileId','displayNameKey','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','specialEffectTextKey','ruleSetVersion','abilityTierId','cooldownClass','effectBudgetMode','statusId','statusAttributeId','statusRefreshPolicy','unarmedFamilyId','unarmedRealmId','environmentTargetTypes')
   $enums = @{profileKind=@{basic=1;art=2;divine=3};basicBindingKind=@{main_equipment=1;unarmed_body=3};effectType=@{physical=1;magic=2;heal=3;buff=4;debuff=5;movement=6;hybrid=7;restore_spirit=8};resourceKind=@{none=1;mp=2};targetingMode=@{single=1;area=2};areaCenterKind=@{caster=1;target_cell=2};areaShapeKind=@{circle=1;line=2;fan=3;forward_pair=4;adjacent_pair=5};areaEffectBlockers=@{none=0;directed_edge=1}}
   $flags = @{areaAllowedFactions=@{enemy=1;ally=2;self=4};areaAllowedStates=@{alive=1;corpse=2}}
   $facings = @{east=0;north_east=1;north_west=2;west=3;south_west=4;south_east=5}
@@ -790,6 +790,85 @@ function Test-FormalStarterSpellProjection {
     if ($guid.Count -ne 1) { Add-Finding 'STARTER_SPELL_ASSET_META_INVALID' $id 'Spell asset must have exactly one stable GUID.' }
   }
 }
+function Test-EnvironmentSceneObjects {
+  param([object]$Row, [string]$AssetText)
+  $id = [string]$Row.profileId
+  try {
+    $configuration = [TianZhang.Content.EnvironmentSceneObjectConfiguration]::new()
+    if (-not [string]::IsNullOrWhiteSpace([string]$Row.sceneObjects)) {
+      $options = [System.Text.Json.JsonSerializerOptions]::new()
+      $options.IncludeFields = $true
+      $configuration = [System.Text.Json.JsonSerializer]::Deserialize([string]$Row.sceneObjects,
+        [TianZhang.Content.EnvironmentSceneObjectConfiguration], $options)
+      if ($null -eq $configuration) { throw 'sceneObjects must be a configuration object.' }
+    }
+    if (-not $configuration.IsEmpty) {
+      $cells = @(([string]$Row.battlefieldCells).Split('|') | ForEach-Object {
+        $parts = $_.Split('@'); $coordinate = $parts[0].Split(':')
+        [TianZhang.Content.EnvironmentBattlefieldCell]@{ q=[int]$coordinate[0]; r=[int]$coordinate[1]; heightLevel=[int]$parts[3] }
+      })
+      $byCell = @{}; foreach ($cell in $cells) { $byCell["$($cell.q):$($cell.r)"] = $cell }
+      $overrides = @{}
+      foreach ($record in ([string]$Row.directedEdgeOverrides).Split('|')) {
+        if ($record) { $parts = $record.Split('@'); $overrides[$parts[0]] = $parts }
+      }
+      $kinds = @{ flat=0; slope=1; stairs=2; one_way_drop=3; open_cliff=4; entity_wall=5; climb=6; bridge=7 }
+      $edges = @(
+        foreach ($cell in $cells) {
+          foreach ($direction in @(@(1,0),@(1,-1),@(0,-1),@(-1,0),@(-1,1),@(0,1))) {
+            $q = $cell.q + $direction[0]; $r = $cell.r + $direction[1]
+            $target = $byCell["${q}:${r}"]; if ($null -eq $target) { continue }
+            $sameHeight = $cell.heightLevel -eq $target.heightLevel
+            $edge = [TianZhang.Content.EnvironmentDirectedEdge]@{
+              fromQ=$cell.q; fromR=$cell.r; toQ=$q; toR=$r; allowsMovement=$sameHeight; allowsEffects=$true
+              edgeKind=$(if ($sameHeight) { 0 } else { 4 })
+            }
+            $parts = $overrides["$($cell.q):$($cell.r)>${q}:${r}"]
+            if ($null -ne $parts) {
+              if ($parts.Count -ne 8 -or -not $kinds.ContainsKey($parts[1])) { throw 'Invalid scene-object map edge.' }
+              $edge.edgeKind = $kinds[$parts[1]]
+              $edge.allowsMovement = $parts[4] -ceq '1'; $edge.allowsEffects = $parts[5] -ceq '1'
+              $edge.connectionId = if ($parts[7] -ceq 'none') { '' } else { $parts[7] }
+            }
+            $edge
+          }
+        }
+      )
+      $reason = ''
+      if (-not $configuration.TryValidate($cells, $edges, [ref]$reason)) { throw $reason }
+    }
+  } catch {
+    Add-Finding 'ENVIRONMENT_SCENE_OBJECT_SOURCE_INVALID' $id $_.Exception.Message
+    return
+  }
+
+  # These serializable classes contain only scalar fields and the two flat arrays.
+  # Use their declared fields so every imported D4 field participates in projection checks.
+  $expected = [Collections.Generic.List[string]]::new()
+  $expected.Add('  sceneObjects:')
+  $expected.Add("    lightCoverHitPenalty: $($configuration.lightCoverHitPenalty)")
+  $expected.Add("    heavyCoverHitPenalty: $($configuration.heavyCoverHitPenalty)")
+  foreach ($group in @('types','instances')) {
+    $members = @($configuration.$group | Where-Object { $null -ne $_ })
+    if ($members.Count -eq 0) { $expected.Add("    ${group}: []"); continue }
+    $expected.Add("    ${group}:")
+    foreach ($member in $members) {
+      $first = $true
+      foreach ($field in $member.GetType().GetFields()) {
+        $value = $field.GetValue($member)
+        if ($value -is [bool]) { $value = [int]$value }
+        $prefix = if ($first) { '    - ' } else { '      ' }; $first = $false
+        $expected.Add(("${prefix}$($field.Name): $value").TrimEnd())
+      }
+    }
+  }
+  $block = [regex]::Match($AssetText, '(?m)^  sceneObjects:\r?\n(?:^    [^\r\n]*(?:\r?\n|$))*')
+  $actual = (($block.Value -split '\r?\n' | ForEach-Object { $_.TrimEnd() }) -join "`n").TrimEnd()
+  if (-not $block.Success -or $actual -cne ($expected -join "`n")) {
+    Add-Finding 'ENVIRONMENT_SCENE_OBJECT_ASSET_MISMATCH' $id 'Asset sceneObjects must exactly project the CSV configuration; an empty legacy configuration must remain empty.'
+  }
+}
+
 function Test-DemoEnvironmentProfile {
   param([object]$Row)
   if ($Row.mapSchemaVersion -cne '2') {
@@ -802,7 +881,7 @@ function Test-DemoEnvironmentProfile {
   if ($Row.edgeClearanceLimits -cne 'none') {
     Add-Finding 'ENVIRONMENT_PROFILE_CLEARANCE_ENVELOPE_INVALID' 'env_guanzhong_jindan_demo' 'Version 2 must leave edgeClearanceLimits as none.'
   }
-  foreach ($field in @('directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers')) {
+  foreach ($field in @('directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers','sceneObjects')) {
     if ([string]::IsNullOrWhiteSpace([string]$Row.$field)) {
       Add-Finding 'ENVIRONMENT_PROFILE_V2_FIELD_EMPTY' $field 'Every version-2 field is required.'
     }
@@ -895,6 +974,7 @@ function Test-DemoEnvironmentProfile {
   $path = Join-Path $root $assetPath
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
   $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+  Test-EnvironmentSceneObjects $Row $text
   $assetCells = ([regex]::Matches($text, '(?m)^  - q: ')).Count
   $assetEdges = ([regex]::Matches($text, '(?m)^  - fromQ: ')).Count
   if ($assetCells -ne 144 -or $assetEdges -ne 760) {
@@ -919,7 +999,7 @@ function Test-DemoEnvironmentProfile {
 function Test-FormalEnvironmentProjection {
   param([object]$Table)
   if (($Table.Headers -join ',') -cne ($schemas.EnvironmentProfiles -join ',')) {
-    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered fourteen-column contract.'
+    Add-Finding 'ENVIRONMENT_PROFILE_HEADER_NOT_EXACT' 'EnvironmentProfiles' 'Header must match the ordered fifteen-column contract.'
   }
   $rows = @($Table.Rows)
   $wild = @($rows | Where-Object { $_.profileId -ceq 'env_guanzhong_wild' })
@@ -933,8 +1013,8 @@ function Test-FormalEnvironmentProjection {
     Add-Finding 'ENVIRONMENT_PROFILE_PROJECTION_INVALID' 'env_guanzhong_wild' 'Formal Guanzhong must declare ordinary recovery and its approved query limits.'
   }
   if ($row.mapSchemaVersion -cne '' -or $row.mapVersion -cne '' -or $row.directedEdgeOverrides -cne '' -or
-      $row.physicalSurfaceProfiles -cne '' -or $row.mapMarkers -cne '') {
-    Add-Finding 'ENVIRONMENT_PROFILE_LEGACY_ENVELOPE_INVALID' 'env_guanzhong_wild' 'Version 1 rows must leave the five appended map fields empty.'
+      $row.physicalSurfaceProfiles -cne '' -or $row.mapMarkers -cne '' -or $row.sceneObjects -cne '') {
+    Add-Finding 'ENVIRONMENT_PROFILE_LEGACY_ENVELOPE_INVALID' 'env_guanzhong_wild' 'The legacy flat map must leave appended map fields and sceneObjects empty.'
   }
   $clearances = @{}
   $cellKeys = @{}
@@ -961,6 +1041,7 @@ function Test-FormalEnvironmentProjection {
   $path = Join-Path $root $assetPath
   if (Test-Path -LiteralPath $path -PathType Leaf) {
     $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
+    Test-EnvironmentSceneObjects $row $text
     $cells = @([regex]::Matches($text, '(?m)^  - q: (\d+)\r?\n    r: (\d+)\r?\n    blocksGroundMove: ([01])\r?\n    blocksLineOfSight: ([01])\r?\n    heightLevel: (-?\d+)\r?\n    cellMovementBurdenUnits: (\d+)\r?\n    surfaceKind: ?[^\r\n]*\r?\n    physicalSurfaceId: ?[^\r\n]*\s*$') | ForEach-Object {
       "$($_.Groups[1].Value):$($_.Groups[2].Value)@$($_.Groups[3].Value)@$($_.Groups[4].Value)"
     })
@@ -1263,6 +1344,11 @@ function Load-Waivers {
 $waivers = Load-Waivers
 $combatRuleSource = Join-Path $root 'src/Assets/Scripts/Combat/CombatRuleSet.cs'
 if (-not ('TianZhang.Combat.CombatRuleSet' -as [type])) { Add-Type -TypeDefinition ([IO.File]::ReadAllText($combatRuleSource)) }
+if (-not ('TianZhang.Content.EnvironmentSceneObjectConfiguration' -as [type])) {
+  Add-Type -Path @(
+    (Join-Path $root 'src/Assets/Scripts/Modules/Content/EnvironmentProfileDefinition.cs'),
+    (Join-Path $root 'src/Assets/Scripts/Modules/Content/EnvironmentSceneObjectConfiguration.cs'))
+}
 $schemas = [ordered]@{
   GongFa = @('name','affiliation','grade','elementMain','elementSub','starRootBone','starPhysique','starSpirit','starMind','starReaction','starTalent','starFortune','growth','chapters','contentScope')
   Spells = @('name','type','minRange','maxRange','mpCost','cooldownTicks','physicalDamageMultiplier','soulDamageMultiplier','healAmount','cannotBlock','cannotDodge','penetratingShield','stunChance','realmReq','elementReq','element','sourceAffiliation','contentScope')
@@ -1276,7 +1362,7 @@ $schemas = [ordered]@{
   CombatEffectTierRules = [TianZhang.Combat.CombatRuleSet]::TierColumns
   CombatActionEconomyRules = [TianZhang.Combat.CombatRuleSet]::EconomyColumns
   AttackProfiles = [TianZhang.Combat.CombatRuleSet]::AttackColumns
-  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment','edgeClearanceLimits','mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers')
+  EnvironmentProfiles = @('profileId','queryLimits','battlefieldCells','surfacePrototypeRefs','phenomenonChannels','phenomenonPairs','elementRelationRefs','spiritRecoveryEnvironment','edgeClearanceLimits','mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers','sceneObjects')
   CharterRuleDefinitions = @('ruleEntryId','displayName','ruleFamily','relationElement','compatiblePhenomena','positiveCommit','negativeCommit','requiredAuthority','requiredNodeTypes','scopeType','scopeTierCap','anchorNodeIds','propagationBoundaryProfileId','currentCoverageSet','affectedWorldVariables','conflictProfileId','failurePolicy','worldEventOutputs')
   CharterSites = @('siteId','displayNameKey','settlementId','passageCapabilityId','passageOperatorId','passageTargetId','passageProtocolState','passageStructureState','passagePowerState','interactionTimeProfileId','recognitionTiming','operationTiming','cancellationPolicy','facilityId','sealRelicId','sealManagerId','sealBeneficiaryId','sealAuthorizationVersionId','ruleEntryId','ruleEntryOccupancyId','nodeOccupancyId','jindanConflictEventId','jindanChallengeEventId','grantId','grantDefinitionVersion','grantTargetVariableId','grantChallengerId','grantQualificationSource','grantAllowedOperationId','grantTargetId','grantScopeId','grantBeneficiaryId','grantRealityAnchorId','grantResourceLedgerRef','grantCapacityLedgerRef','grantChallengeRuleTier','grantEffectiveAtTick','grantExpiresAtTick','grantIsRevoked','grantRevocationReason','grantDisplaySource','leftCandidateId','leftCandidateTargetVariableId','leftCandidateTargetId','leftCandidateHasVariableAuthority','leftCandidateHasLegalTarget','leftCandidatePositionRank','leftCandidateRealityAnchorRank','leftCandidateAlreadyPaidCost','leftCandidateHasActiveContinuousCarrier','leftCandidateConflictReserve','leftCandidatePulseCost','leftCandidateSettlementCooldown','rightCandidateId','rightCandidateTargetVariableId','rightCandidateTargetId','rightCandidateHasVariableAuthority','rightCandidateHasLegalTarget','rightCandidatePositionRank','rightCandidateRealityAnchorRank','rightCandidateAlreadyPaidCost','rightCandidateHasActiveContinuousCarrier','rightCandidateConflictReserve','rightCandidatePulseCost','rightCandidateSettlementCooldown','charterCandidateId','yuanyingConflictEventId','yuanyingTargetVariableId','yuanyingTargetId','yuanyingScopeId','yuanyingRealityAnchorId')
   FoundationPurpleMansionStates = @('schemaId','schemaVersion','characterId','foundationInstanceId','foundationDefinitionId','sourceGongFaId','stageId','stageCode','continuousProgress','phaseBoundarySetId','naturalMansionCapacity','expansionGrants','expandedMansionCapacity','carryingCapacityProfileId','currentMansionCarryingCapacity','completionMansionCapacity','mansionStates','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','jindanLock','fixtureId','expect','fixtureOnlyNumericProfile')
@@ -1295,8 +1381,8 @@ $tables = [ordered]@{
   RealmCombatGrowth = Get-CsvTable 'src/Assets/DataConfig/RealmCombatGrowth.csv' $schemas.RealmCombatGrowth @('movementNodeWeightNumerators')
   CombatEffectTierRules = Get-CsvTable 'src/Assets/DataConfig/CombatEffectTierRules.csv' $schemas.CombatEffectTierRules
   CombatActionEconomyRules = Get-CsvTable 'src/Assets/DataConfig/CombatActionEconomyRules.csv' $schemas.CombatActionEconomyRules @($schemas.CombatActionEconomyRules | Where-Object { $_ -notin @('schemaVersion','ruleSetVersion','recordKind','definitionRef') })
-  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest','unarmedFamilyId','unarmedRealmId','unarmedPhysicalAttackCapacity')
-  EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles @('mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers') -Quoted
+  AttackProfiles = Get-CsvTable 'src/Assets/DataConfig/AttackProfiles.csv' $schemas.AttackProfiles @('basicBindingKind','contentScope','sourceAffiliation','realmRequirementId','elementRequirementId','damageElementId','physicalDamageMultiplier','soulDamageMultiplier','healAmount','buffMultiplier','defensePenetration','areaCenterKind','areaShapeKind','areaRadius','areaLength','areaFanHalfAngleSteps','areaFacing','areaInnerRadius','areaEffectBlockers','areaAllowedFactions','areaAllowedStates','isDomain','isBloodline','specialEffectTextKey','spiritRecoveryMultiplier','minimumSpiritRecovery','otherTargetResourceCost','otherTargetRecoveryMultiplier','reuseCooldownTicks','abilityTierId','efficiencyNumerator','efficiencyDenominator','damageMigrationNumerator','damageMigrationDenominator','damageWeightNumerator','damageWeightDenominator','statusId','statusAttributeId','statusRelativePermille','statusDurationOwnTurnEnds','statusStackLimit','statusRefreshPolicy','controlChancePermille','controlUsesMindContest','unarmedFamilyId','unarmedRealmId','unarmedPhysicalAttackCapacity','environmentTargetTypes')
+  EnvironmentProfiles = Get-CsvTable 'src/Assets/DataConfig/EnvironmentProfiles.csv' $schemas.EnvironmentProfiles @('mapSchemaVersion','mapVersion','directedEdgeOverrides','physicalSurfaceProfiles','mapMarkers','sceneObjects') -Quoted
   CharterRuleDefinitions = Get-CsvTable 'src/Assets/DataConfig/CharterRuleDefinitions.csv' $schemas.CharterRuleDefinitions
   CharterSites = Get-CsvTable 'src/Assets/DataConfig/CharterSites.csv' $schemas.CharterSites
   FoundationPurpleMansionStates = Get-CsvTable 'src/Assets/DataConfig/FoundationPurpleMansionStates.csv' $schemas.FoundationPurpleMansionStates @('expansionGrants','effectBindings','guardianAbilities','enhancementNodes','cultivationActionState','closedRetreatPlan','fixtureId','expect','fixtureOnlyNumericProfile')

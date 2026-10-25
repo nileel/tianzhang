@@ -6624,3 +6624,8 @@ MonoBehaviour:
   directedEdgeOverrides:
   physicalSurfaceProfiles:
   mapMarkers:
+  sceneObjects:
+    lightCoverHitPenalty: 0
+    heavyCoverHitPenalty: 0
+    types: []
+    instances: []

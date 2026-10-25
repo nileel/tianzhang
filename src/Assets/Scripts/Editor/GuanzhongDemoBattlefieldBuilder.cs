@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Bootstrap;
 using TianZhang.Features.CombatPresentation;
@@ -14,6 +15,13 @@ namespace TianZhang.Editor
     public static class GuanzhongDemoBattlefieldBuilder
     {
         public const string RootName = "GuanzhongTerrainRehearsal";
+        [MenuItem("天章/场景/D4 导入攻击与场景物并重建演武")]
+        public static void ImportAndRebuild()
+        {
+            CombatContentImporter.ImportAttackProfiles();
+            WorldContentImporter.ImportEnvironmentProfiles();
+            Rebuild();
+        }
         [MenuItem("天章/场景/D3.6 装配阶地演武与入口")]
         public static void Rebuild()
         {
@@ -104,24 +112,13 @@ namespace TianZhang.Editor
                 var hex=new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(qr[0],qr[1]);
                 Vector3 p=surface.Center(hex);
                 string asset=marker.kind=="rock_obstacle" ? GuanzhongTerrainAssetBuilder.RockPrefabPath :
-                    marker.kind=="low_cover" ? GuanzhongPropSampleBuilder.AssetRoot+"/LowWall.prefab" :
                     marker.kind=="public_planned_support" ? GuanzhongPropSampleBuilder.AssetRoot+"/SupportStele.prefab" : null;
                 if(asset==null) continue;
                 if(marker.kind!="rock_obstacle") p+=new Vector3(.25f,0,.4330127f);
                 var prop=Place(root.transform,asset,marker.id,p);
-                if(marker.kind=="low_cover") { prop.transform.rotation=Quaternion.Euler(0,30,0); prop.transform.localScale=new Vector3(.93f,1,1); }
                 PrefabUtility.RecordPrefabInstancePropertyModifications(prop.transform);
             }
-            foreach(int r in new[]{14,15})
-            {
-                Vector3 p=surface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(8,r))+Vector3.right*.5f;
-                var wall=Place(root.transform,GuanzhongPropSampleBuilder.AssetRoot+"/HighWall.prefab","HighWall_8_"+r,p);
-                wall.transform.rotation=Quaternion.Euler(0,90,0);
-                PrefabUtility.RecordPrefabInstancePropertyModifications(wall.transform);
-            }
-            foreach(var qr in new[]{new Vector2Int(4,6),new Vector2Int(9,8)})
-                Place(root.transform,GuanzhongPropSampleBuilder.AssetRoot+"/LowPlant.prefab","LowPlant_"+qr.x+"_"+qr.y,
-                    surface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(qr.x,qr.y))+new Vector3(.25f,0,.4330127f));
+            InstallSceneObjects(root, surface, environment);
             var installer=UnityEngine.Object.FindFirstObjectByType<AdventureSceneInstaller>();
             Transform panel=GameObject.Find("AdventurePanel").transform;
             Transform oldButton=panel.Find("TerrainRehearsalButton");
@@ -145,6 +142,54 @@ namespace TianZhang.Editor
             enemy.FindPropertyRelative("facing").intValue=0;
             wiring.ApplyModifiedPropertiesWithoutUndo();
             root.SetActive(false);
+        }
+
+        private static void InstallSceneObjects(GameObject root, CombatBattlefieldSurface surface, EnvironmentProfileAsset environment)
+        {
+            var bindings = new List<CombatSceneObjectView.Binding>();
+            foreach (var instance in environment.sceneObjects.instances)
+            {
+                string prefab = instance.contentType switch
+                {
+                    "low_wall" => "LowWall", "high_wall" => "HighWall",
+                    "stone_support" => "SupportStele", "low_plant" => "LowPlant",
+                    _ => throw new InvalidOperationException("scene_object_visual_type_missing:" + instance.contentType),
+                };
+                Vector3 position = Center(instance.cell);
+                float yaw = 0;
+                if (!string.IsNullOrEmpty(instance.edgeOther))
+                {
+                    Vector3 other = Center(instance.edgeOther);
+                    Vector3 direction = other - position;
+                    position = (position + other) * .5f;
+                    yaw = 90 - Mathf.Atan2(direction.z, direction.x) * Mathf.Rad2Deg;
+                }
+                else position += new Vector3(.25f, 0, .4330127f);
+                var prop = Place(root.transform, GuanzhongPropSampleBuilder.AssetRoot + "/" + prefab + ".prefab", instance.instanceId, position);
+                prop.transform.rotation = Quaternion.Euler(0, yaw, 0);
+                if (instance.contentType == "low_wall") prop.transform.localScale = new Vector3(.93f, 1, 1);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(prop.transform);
+                GameObject intact = prop.transform.Find(prefab == "LowPlant" ? "Living" : "Intact").gameObject;
+                GameObject damaged = prop.transform.Find("Damaged")?.gameObject ?? intact;
+                GameObject residue = prop.transform.Find(prefab == "LowPlant" ? "Charred" : prefab == "SupportStele" ? "Failed" : "Remnant").gameObject;
+                if (prefab == "SupportStele")
+                {
+                    var glow = intact.transform.Find("Glow").gameObject;
+                    glow.SetActive(false);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(glow);
+                }
+                bindings.Add(new CombatSceneObjectView.Binding { instanceId = instance.instanceId, intact = intact, damaged = damaged, residue = residue });
+            }
+            var view = root.AddComponent<CombatSceneObjectView>();
+            view.Configure(bindings.ToArray());
+            EditorUtility.SetDirty(view);
+            SceneBuildSupport.SetObject(UnityEngine.Object.FindFirstObjectByType<CombatHudPresenter>(), "sceneObjects", view);
+
+            Vector3 Center(string cell)
+            {
+                int[] qr = cell.Split(':').Select(int.Parse).ToArray();
+                return surface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(qr[0], qr[1]));
+            }
         }
         private static void SetNode(SerializedProperty node,string id,int q,int r,string enemy)
         {

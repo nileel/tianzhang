@@ -1593,7 +1593,7 @@ namespace TianZhang.Tests.PlayMode
                 SpatialPose source,
                 SpatialPose target,
                 int minimumRange,
-                int maximumRange) => new SpatialContactResult(source.Anchor, target.Anchor,
+                int maximumRange, SpatialAttackPolicy policy = null) => new SpatialContactResult(source.Anchor, target.Anchor,
                     source.Anchor.Distance(target.Anchor) * 1000, true, true, string.Empty, 1000);
 
             public CombatMovementQueryResult QueryMovement(

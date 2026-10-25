@@ -5,47 +5,84 @@ namespace TianZhang.Spatial
 {
     public enum SpatialFootprintKind { Single, AdjacentPair }
 
+    [Flags]
+    public enum SpatialMovementMode { Ground = 1, Fly = 2, Burrow = 4, Swim = 8 }
+
+    /// <summary>Explicit attack eligibility; horizontal distance remains a separate query.</summary>
+    public sealed class SpatialAttackPolicy
+    {
+        public SpatialAttackPolicy(SpatialMovementMode sourceModeMask, SpatialMovementMode targetModeMask,
+            int verticalReachRank, bool isMelee = false)
+        {
+            const SpatialMovementMode all = SpatialMovementMode.Ground | SpatialMovementMode.Fly |
+                SpatialMovementMode.Burrow | SpatialMovementMode.Swim;
+            if (sourceModeMask == 0 || (sourceModeMask & ~all) != 0)
+                throw new ArgumentOutOfRangeException(nameof(sourceModeMask));
+            if (targetModeMask == 0 || (targetModeMask & ~all) != 0)
+                throw new ArgumentOutOfRangeException(nameof(targetModeMask));
+            if (verticalReachRank < 0) throw new ArgumentOutOfRangeException(nameof(verticalReachRank));
+            SourceModeMask = sourceModeMask; TargetModeMask = targetModeMask;
+            VerticalReachRank = verticalReachRank; IsMelee = isMelee;
+        }
+        public SpatialMovementMode SourceModeMask { get; }
+        public SpatialMovementMode TargetModeMask { get; }
+        public int VerticalReachRank { get; }
+        public bool IsMelee { get; }
+    }
+
     /// <summary>Fixed footprint and clearance facts at one anchor and six-way facing.</summary>
     public readonly struct SpatialPose : IEquatable<SpatialPose>
     {
         public SpatialPose(HexCoord anchor, int facing = 0,
-            SpatialFootprintKind footprint = SpatialFootprintKind.Single, int bodyScaleRank = 1)
+            SpatialFootprintKind footprint = SpatialFootprintKind.Single, int bodyScaleRank = 1,
+            SpatialMovementMode movementMode = SpatialMovementMode.Ground, int altitudeBand = 0)
         {
             if (facing < 0 || facing >= 6) throw new ArgumentOutOfRangeException(nameof(facing));
             if (footprint != SpatialFootprintKind.Single && footprint != SpatialFootprintKind.AdjacentPair)
                 throw new ArgumentOutOfRangeException(nameof(footprint));
             if (bodyScaleRank < 1) throw new ArgumentOutOfRangeException(nameof(bodyScaleRank));
+            if (movementMode != SpatialMovementMode.Ground && movementMode != SpatialMovementMode.Fly &&
+                movementMode != SpatialMovementMode.Burrow && movementMode != SpatialMovementMode.Swim)
+                throw new ArgumentOutOfRangeException(nameof(movementMode));
+            if (altitudeBand < 0) throw new ArgumentOutOfRangeException(nameof(altitudeBand));
             Anchor = anchor; Facing = facing; Footprint = footprint; BodyScaleRank = bodyScaleRank;
+            MovementMode = movementMode; AltitudeBand = altitudeBand;
         }
 
         public HexCoord Anchor { get; }
         public int Facing { get; }
         public SpatialFootprintKind Footprint { get; }
         public int BodyScaleRank { get; }
+        public SpatialMovementMode MovementMode { get; }
+        public int AltitudeBand { get; }
         public IReadOnlyList<HexCoord> OccupiedCells => Array.AsReadOnly(Footprint == SpatialFootprintKind.AdjacentPair
             ? new[] { Anchor, Anchor.Step((Facing + 3) % 6) } : new[] { Anchor });
         public bool Contains(HexCoord cell) => cell == Anchor ||
             Footprint == SpatialFootprintKind.AdjacentPair && cell == Anchor.Step((Facing + 3) % 6);
-        public SpatialPose WithAnchor(HexCoord anchor) => new SpatialPose(anchor, Facing, Footprint, BodyScaleRank);
-        public SpatialPose WithFacing(int facing) => new SpatialPose(Anchor, facing, Footprint, BodyScaleRank);
+        public SpatialPose WithAnchor(HexCoord anchor) => new SpatialPose(anchor, Facing, Footprint, BodyScaleRank,
+            MovementMode, AltitudeBand);
+        public SpatialPose WithFacing(int facing) => new SpatialPose(Anchor, facing, Footprint, BodyScaleRank,
+            MovementMode, AltitudeBand);
         public bool Equals(SpatialPose other) => Anchor == other.Anchor && Facing == other.Facing &&
-            Footprint == other.Footprint && BodyScaleRank == other.BodyScaleRank;
+            Footprint == other.Footprint && BodyScaleRank == other.BodyScaleRank &&
+            MovementMode == other.MovementMode && AltitudeBand == other.AltitudeBand;
         public override bool Equals(object obj) => obj is SpatialPose other && Equals(other);
-        public override int GetHashCode() => unchecked(((Anchor.GetHashCode() * 397 ^ Facing) * 397 ^
-            (int)Footprint) * 397 ^ BodyScaleRank);
+        public override int GetHashCode() => unchecked(((((Anchor.GetHashCode() * 397 ^ Facing) * 397 ^
+            (int)Footprint) * 397 ^ BodyScaleRank) * 397 ^ (int)MovementMode) * 397 ^ AltitudeBand);
         public static bool operator ==(SpatialPose left, SpatialPose right) => left.Equals(right);
         public static bool operator !=(SpatialPose left, SpatialPose right) => !left.Equals(right);
-        public override string ToString() => $"{Anchor}/{Facing}/{Footprint}/{BodyScaleRank}";
+        public override string ToString() => $"{Anchor}/{Facing}/{Footprint}/{BodyScaleRank}/{MovementMode}/{AltitudeBand}";
     }
 
     public readonly struct SpatialContactResult
     {
         public SpatialContactResult(HexCoord sourceCell, HexCoord targetCell, int distanceUnits,
-            bool isInRange, bool hasLineOfSight, string reason, int unitsPerRange)
+            bool isInRange, bool hasLineOfSight, string reason, int unitsPerRange, int coverTier = 0)
         {
             SourceCell = sourceCell; TargetCell = targetCell; DistanceUnits = distanceUnits;
             IsInRange = isInRange; HasLineOfSight = hasLineOfSight;
             Reason = reason ?? SpatialQueryReasons.Ok; UnitsPerRange = unitsPerRange;
+            CoverTier = coverTier;
         }
         public HexCoord SourceCell { get; }
         public HexCoord TargetCell { get; }
@@ -54,6 +91,7 @@ namespace TianZhang.Spatial
         public bool HasLineOfSight { get; }
         public string Reason { get; }
         public int UnitsPerRange { get; }
+        public int CoverTier { get; }
     }
 
     public enum SpatialTwoCellShape
@@ -141,6 +179,13 @@ namespace TianZhang.Spatial
         public const string OneWayDropDirectionInvalid = "one_way_drop_direction_invalid";
         public const string EdgeKindNotImplemented = "edge_kind_not_implemented";
         public const string PairCrossHeightConnectionInvalid = "pair_cross_height_connection_invalid";
+        public const string SourceModeNotAllowed = "attack_source_mode_not_allowed";
+        public const string TargetModeNotAllowed = "attack_target_mode_not_allowed";
+        public const string VerticalReachExceeded = "attack_vertical_reach_exceeded";
+        public const string SceneObjectBlocksMovement = "scene_object_blocks_movement";
+        public const string SceneObjectBlocksEffects = "scene_object_blocks_effects";
+        public const string SceneObjectMissing = "scene_object_missing";
+        public const string SceneObjectAnchorMismatch = "scene_object_anchor_mismatch";
     }
 
     public readonly struct SpatialCellRules

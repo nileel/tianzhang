@@ -1,0 +1,27 @@
+D4 高差攻击、掩体与可破场景物（2026-10-25，已完成）
+
+已实施
+沿正式 EnvironmentProfiles → asset → CombatEntryAdapter → CombatSession 接入七个场景物，含四种类型。使用现有 D3.5 完整／受损／残留造型，不赋予场景物 CT、AI、领域或燃烧周期。
+用户已确认贯石击本体四类许可，每次固定扣30耐久；原有单位倍率、AP／MP费用不变。普通攻击无破坏资格。耐久为残垣30、完整墙60、普通土石支点60、低植15，半耐久受损；轻／重掩体减10／20个百分点命中，无高地增伤。
+单位与场景物分别冻结、按ID去重；环境变化在整次动作末尾提交，重新构建空间查询，不在本次攻击途中重新选中墙后单位。两段同名连接墙按精确格边独立解除。
+
+已取得的验证
+1. Unity 编译、正式导入、AdventureScene重建保存重开：src/Logs/d4-import.log，成功退出0。
+2. 定向EditMode最终352个独立测试通过：首次352项中307通过，45项为测试夹具旧构造参数／列数；同步夹具后相关212项全通过，另140项输入未变且首次已通过。合并索引见 validation-summary.json。新增D4空间12项、核心4项包括高度／形态／掩体、破墙冻结、同连接多墙独立、空放与费用、双格及场景物去重。
+3. 正式场景自动PlayMode：src/Logs/d4-production-final.xml，1/1通过。ProductionDestructionAndReentry通过真实场景和UI输入测试设备进入，敌方策略临时隔离为待机；玩家位置、AP、MP均未改写。合法UI命令准备路线到8:14；完整墙绕行路径8:15→9:14，两次贯石击60→30→0；破坏后9:14单步可达且视线恢复，同名另一墙仍60。旧悬赏无环境对象并能防御付费；重入全部七物初始耐久、完整模型与阻挡恢复。详见 proof.txt 和六张截图。
+4. BattleSim Release构建0警告0错误，attack-profile-d-combat-02与unarmed-config通过；后者包括五条徒手配置及40条非法夹具。未增加场景功能到BattleSim，也未提出新的数值平衡结论。
+5. 数据链检查通过；检查器21项夹具（新增7项D4非法配置／投影）通过；Unity程序集边界检查通过。
+6. 独立只读检查发现的环境预览距离和格边选择文案已修正并复核；不是全项目审阅或全量测试。
+
+原生验收
+NativeDetourAndBreakthrough：src/Logs/d4-native.xml，1/1通过，1366×768。准备阶段沿合法UI命令到墙侧，之后三个原生阶段均移除模拟鼠标，只观察系统Mouse.native点击和正式会话状态。用OS鼠标完成绕路至9:14、选择贯石击与目标格、结束回合、第二击、选择移动及穿越。原生日志见native/proof.txt。
+完整墙绕行经8:15→9:14，50 AP；墙60→30→0，两次各50 AP/12 MP；破坏后8:14→9:14单步25 AP，剩余另一墙60，视线刷新。贯石击预览显示距离1、环境完整墙段60/60→30，文字完整；破路预览显示路径1格、25 AP，见native/preview-native.jpg与native/path-native.jpg。原生结尾再次验证旧悬赏、防御付费与重入重置。最终运行日志没有未映射的D4原因提示。
+首次原生运行因用户暂时使用电脑而按要求结束，未计入通过；用户恢复授权后重新运行并完成。本记录不把模拟UI输入当作原生鼠标证据。
+
+验证边界
+这是D4定向验收，未宣称全项目测试通过；首次功能配置不构成数值平衡结论。飞行起降、金丹预设、燃烧周期及领域能力仍按后续计划处理。
+
+复现入口
+自动：pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.D4CombatEnvironmentPlayModeTests.ProductionDestructionAndReentry -EnableGraphics -ResultXmlPath <结果.xml>
+原生：Unity 6000.3.18f1（同项目不得另有编辑器）使用 -projectPath D:\天章游戏开发\src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.D4CombatEnvironmentPlayModeTests.NativeDetourAndBreakthrough -testResults <结果.xml> -logFile <日志>
+原生阶段依 src/Logs/d4/native/stage.txt：detour 时用鼠标移动至墙另一侧9:14；测试以合法UI命令返回并补满回合后，break-wall 时用鼠标贯石击9:14两次（AP不足手动结束行动）；breakthrough 时用鼠标移动9:14。原生观察只记录系统原生鼠标与会话状态，需完成实际点击才能通过。

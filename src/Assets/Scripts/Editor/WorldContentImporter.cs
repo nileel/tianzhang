@@ -45,6 +45,7 @@ namespace TianZhang.Editor
             "directedEdgeOverrides",
             "physicalSurfaceProfiles",
             "mapMarkers",
+            "sceneObjects",
         };
 
         private const int EnvironmentMapSchemaVersion2 = 2;
@@ -266,6 +267,17 @@ namespace TianZhang.Editor
             profile.directedEdgeOverrides = directedEdgeOverrides;
             profile.physicalSurfaceProfiles = physicalSurfaceProfiles;
             profile.mapMarkers = mapMarkers;
+            string sceneObjects = GetOptionalValue(headers, cols, "sceneObjects");
+            if (sceneObjects.Length > 0)
+            {
+                try { profile.sceneObjects = JsonUtility.FromJson<EnvironmentSceneObjectConfiguration>(sceneObjects); }
+                catch (ArgumentException exception)
+                { throw new InvalidDataException($"{sourceName} sceneObjects JSON is invalid: {exception.Message}"); }
+                string sceneReason = null;
+                if (profile.sceneObjects == null ||
+                    !profile.sceneObjects.TryValidate(battlefieldCells, directedEdges, out sceneReason))
+                    throw new InvalidDataException($"{sourceName} sceneObjects invalid: {sceneReason ?? "configuration_missing"}");
+            }
             return profile;
         }
 
