@@ -21,6 +21,17 @@ namespace TianZhang.Features.CombatPresentation
         /// its own foot pivot on it, without any independent base geometry.
         /// </summary>
         private const float GroundY = 0.34f;
+        private CombatBattlefieldSurface surface;
+        private readonly Dictionary<string, CombatUnitSurfacePose> surfacePoses = new Dictionary<string, CombatUnitSurfacePose>();
+        public void ConfigureSurface(CombatBattlefieldSurface value) { surface = value; surfacePoses.Clear(); }
+        public Vector3 SurfacePosition(CombatUnitPresentationHex cell) => surface != null ? surface.Center(cell) : HexToWorld(cell);
+
+        private void FitSurface(string id, Transform root, CombatUnitPresentationPose pose, float yaw)
+        {
+            if (surface == null) return;
+            Vector3 center = pose.IsDoubleCell ? (SurfacePosition(pose.Position)+SurfacePosition(pose.Rear))*.5f : SurfacePosition(pose.Position);
+            surfacePoses[id].Place(root,center,yaw);
+        }
 
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
         [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
@@ -108,6 +119,11 @@ namespace TianZhang.Features.CombatPresentation
                 body.transform.localPosition = Vector3.zero;
                 body.transform.localRotation = Quaternion.identity;
                 body.transform.localScale = CombatUnitPresentationMotion.BodyScale(profile, combatant.IsDoubleCell, doubleCellFootprintFill);
+                if (surface != null)
+                {
+                    surfacePoses[combatant.CombatantId] = new CombatUnitSurfacePose(surface,body.transform,combatant.IsDoubleCell);
+                    FitSurface(combatant.CombatantId,root.transform,combatant.Pose,profile.sixDirectionYawDegrees[combatant.Facing]);
+                }
                 // Use the rendered static mesh for casting picks; a tall body must not project
                 // through to a different ground cell behind it. These colliders live with the body.
                 foreach (MeshFilter mesh in body.GetComponentsInChildren<MeshFilter>(true))
@@ -158,6 +174,7 @@ namespace TianZhang.Features.CombatPresentation
             unit.Pose = new CombatUnitPresentationPose(presentationEvent.EndPosition, facing, unit.Pose.IsDoubleCell);
             unit.Root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[facing], 0f);
             unit.Root.transform.position = PoseToWorld(unit.Pose);
+            FitSurface(unit.CombatantId,unit.Root.transform,unit.Pose,profile.sixDirectionYawDegrees[facing]);
             unit.LastEvent = presentationEvent.PresentationEvent;
             PlayFeedback(unit, profile, presentationEvent);
             PlayAttackVfx(presentationEvent);
@@ -213,6 +230,7 @@ namespace TianZhang.Features.CombatPresentation
                 }
             }
             units.Clear();
+            surfacePoses.Clear();
             StopAllActionRecoveries();
         }
 
@@ -372,10 +390,12 @@ namespace TianZhang.Features.CombatPresentation
                     : new CombatUnitPresentationMovementStep(unit.Pose,
                         new CombatUnitPresentationPose(next, SegmentDirection(unit.Pose.Position, next)));
                 yield return CombatUnitPresentationMotion.AnimateStep(unit.Root.transform, step,
-                    profile.sixDirectionYawDegrees, MovementCellsPerSecond);
+                    profile.sixDirectionYawDegrees, MovementCellsPerSecond,
+                    surface, surface != null ? surfacePoses[unit.CombatantId] : null);
                 unit.Pose = step.To;
             }
             unit.Root.transform.position = PoseToWorld(unit.Pose);
+            FitSurface(unit.CombatantId,unit.Root.transform,unit.Pose,profile.sixDirectionYawDegrees[unit.Pose.Facing]);
             movements.Remove(unit.CombatantId);
         }
 
@@ -398,15 +418,15 @@ namespace TianZhang.Features.CombatPresentation
                 !attackVfxCatalog.TryGet(presentationEvent.ProfileId, out CombatAttackVfxEntry entry))
                 return;
 
-            Vector3 feet = HexToWorld(presentationEvent.EndPosition);
+            Vector3 feet = SurfacePosition(presentationEvent.EndPosition);
             Vector3 origin = feet + Vector3.up * 0.85f;
             Vector3 target = origin;
             bool found = presentationEvent.TargetCell.HasValue;
             if (found)
             {
-                feet = HexToWorld(presentationEvent.SourceCell ?? presentationEvent.EndPosition);
+                feet = SurfacePosition(presentationEvent.SourceCell ?? presentationEvent.EndPosition);
                 origin = feet + Vector3.up * .85f;
-                target = HexToWorld(presentationEvent.TargetCell.Value) + Vector3.up * .75f;
+                target = SurfacePosition(presentationEvent.TargetCell.Value) + Vector3.up * .75f;
             }
             foreach (CombatUnitPresentationTargetResult targetResult in presentationEvent.TargetResults)
             {
@@ -416,9 +436,9 @@ namespace TianZhang.Features.CombatPresentation
                     continue;
                 if (targetResult.SourceCell.HasValue)
                 {
-                    feet = HexToWorld(targetResult.SourceCell.Value);
+                    feet = SurfacePosition(targetResult.SourceCell.Value);
                     origin = feet + Vector3.up * .85f;
-                    target = HexToWorld(targetResult.TargetCell.Value) + Vector3.up * .75f;
+                    target = SurfacePosition(targetResult.TargetCell.Value) + Vector3.up * .75f;
                 }
                 else target = targetUnit.Root.transform.position + Vector3.up * .75f;
                 found = true;
@@ -463,11 +483,11 @@ namespace TianZhang.Features.CombatPresentation
             if (presentationEvent.PresentationEvent == CombatUnitPresentationEvent.Idle)
                 return;
 
-            Vector3 position = PoseToWorld(unit.Pose) + Vector3.up * 0.22f;
+            Vector3 position = (surface != null ? unit.Root.transform.position : PoseToWorld(unit.Pose)) + Vector3.up * 0.22f;
             if (presentationEvent.PresentationEvent is CombatUnitPresentationEvent.Hit or CombatUnitPresentationEvent.Death)
                 foreach (CombatUnitPresentationTargetResult target in presentationEvent.TargetResults)
                     if (target.CombatantId == unit.CombatantId && target.TargetCell.HasValue)
-                    { position = HexToWorld(target.TargetCell.Value) + Vector3.up * .22f; break; }
+                    { position = SurfacePosition(target.TargetCell.Value) + Vector3.up * .22f; break; }
             Static3DCombatFeedbackProfile feedback = profile.combatFeedback;
             AudioClip cue = feedback.GetCue(presentationEvent.PresentationEvent);
             SpawnCue(cue, position, feedback.intensity);
@@ -518,6 +538,8 @@ namespace TianZhang.Features.CombatPresentation
 
         private void SetActionScale(PresentedUnit unit, Vector3 scale, float recoverySeconds)
         {
+            // Terrain soles are fitted at the approved body scale; VFX/audio retain action feedback.
+            if (surface != null) { ResetRootScale(unit); return; }
             unit.Root.transform.localScale = scale;
             StopActionRecovery(unit.CombatantId);
             actionRecoveries.Add(unit.CombatantId, StartCoroutine(RecoverRootScale(unit, recoverySeconds)));

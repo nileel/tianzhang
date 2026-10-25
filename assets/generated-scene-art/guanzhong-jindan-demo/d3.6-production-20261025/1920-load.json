@@ -1,0 +1,8 @@
+{
+    "meanMilliseconds": 2.8811540603637697,
+    "p95Milliseconds": 1.9664967060089112,
+    "visibleTriangles": 7030827,
+    "drawCalls": 352,
+    "managedBytes": 740376576,
+    "totalAllocatedBytes": 473295449
+}

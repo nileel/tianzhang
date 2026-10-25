@@ -7,6 +7,7 @@ using TianZhang.Features.Settlement;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace TianZhang.Bootstrap
 {
@@ -44,6 +45,31 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatUnitHealthBarView combatUnitHealthBars;
         [SerializeField] private Camera battlefieldCamera;
         [SerializeField] private Canvas hudCanvas;
+        [Header("Terrain rehearsal (D3; character loadout remains the current player's)")]
+        [SerializeField] private Button terrainRehearsalButton;
+        [SerializeField] private GameObject ordinaryBattlefield;
+        [SerializeField] private CombatBattlefieldSurface terrainRehearsalSurface;
+        [SerializeField] private EnvironmentProfileAsset terrainRehearsalEnvironment;
+        [SerializeField] private AdventureNodeData terrainRehearsalStart = new AdventureNodeData();
+        [SerializeField] private AdventureNodeData terrainRehearsalEncounter = new AdventureNodeData();
+
+        public void BeginTerrainRehearsal()
+        {
+            if (!controller.CanSelectExplorationNode) return;
+            ordinaryBattlefield.SetActive(false);
+            terrainRehearsalSurface.gameObject.SetActive(true);
+            combatMovementView.UseSurface(terrainRehearsalSurface);
+            static3DUnitPresentationProvider.ConfigureSurface(terrainRehearsalSurface);
+            combatTargetInput.ConfigureSurface(terrainRehearsalSurface);
+            battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
+                terrainRehearsalSurface.transform,.340433121f);
+            Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(
+                terrainRehearsalStart.q,terrainRehearsalStart.r));
+            battlefieldCamera.transform.position = focus-battlefieldCamera.transform.forward*20;
+            if (!controller.BeginTerrainRehearsal(terrainRehearsalEnvironment,terrainRehearsalStart,
+                    terrainRehearsalEncounter,out string reason))
+                throw new InvalidOperationException("terrain_rehearsal_entry_failed:"+reason);
+        }
 
         private void Awake()
         {
@@ -131,6 +157,7 @@ namespace TianZhang.Bootstrap
                     SceneManager.LoadScene);
                 if (adventureMap.adventureId == FormalEncounterRules.GuanzhongWildAdventureId)
                     controller.ConfigureWithdrawal(combatCommandInput.ClearContext, combatHudPresenter.Hide);
+                if (terrainRehearsalButton != null) terrainRehearsalButton.onClick.AddListener(BeginTerrainRehearsal);
             }
             catch (InvalidOperationException exception)
             {

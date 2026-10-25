@@ -1,0 +1,158 @@
+[
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Props/HighWall.prefab",
+    "sha256": "470c66a6ac3af6d53d3f937aca6f752acd81c25e2fe73875fe6d32afe258344f"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Props/LowPlant.prefab",
+    "sha256": "207f22f9363ce7b274a6ea4f3f2276881046b4e8fb7f214155ab2e0f3460db58"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Props/LowWall.prefab",
+    "sha256": "4860db36c6d77580757e93a3730d2950f21e805781f6bf02745df3c1ccf49fa7"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Props/SupportStele.prefab",
+    "sha256": "acc819b88f3b80a1807074e29e6a1e20905efc2dbb701118d580d63b93e41692"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Ramp/EarthRamp24.prefab",
+    "sha256": "2e36d11a99dde4a05e872dd93dd8e183b446424812fce4204b405fc57d3b885c"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Ramp/RampLanding.prefab",
+    "sha256": "464136406006ca69dc09f88b65f42c4894468160775937f03e12c38d6e207d04"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/RockCluster_basecolor.JPEG.meta",
+    "sha256": "ad34fcf48224595fa4ce6721515ced8e0da07c9efb5cd58d6910a993d3a800b6"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/RockCluster_metallic_smoothness.png.meta",
+    "sha256": "9baaed8a0fc92cd538096d82288d4e74a4a34d0e08c33863e1034e9ec37ed9de"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/RockCluster_normal.PNG.meta",
+    "sha256": "35b3b0611e20fa87b973ed4041f2ec86afe19eebeb3501b8f32c79944b4d9feb"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/RockCluster.mat",
+    "sha256": "c5070ef32914e9cd3c3d6861a46f8bb03f3f8687a35fdc234fbd7eb6d8adf8f8"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/RockCluster.prefab",
+    "sha256": "e9a7ff3e8c7bce24dba65259f8dad852d85962540bddf277758cebb28efe5d62"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Stairs/StoneStair3.prefab",
+    "sha256": "12c9fb00fd96ff96d6012418d7502c0f719a97ca054a853286ee57c0cabd5c3b"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Waterbank/MudBankTile.prefab",
+    "sha256": "243acbddb95dcaf9fae8fa65f075dbaf7de66e0c55a2188c0d53fadf4f0b3ebd"
+  },
+  {
+    "path": "src/Assets/Art/Environments/Guanzhong/Waterbank/ShallowWaterTile.prefab",
+    "sha256": "02a572308317a1524e3a3df2d0ed6d9c8c05812a15b629492b82145f0085b4a6"
+  },
+  {
+    "path": "src/Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_jindan_demo.asset",
+    "sha256": "d9b71029083283315907a4a436b44b2337a2de473d2831085e07c1225b6bcad9"
+  },
+  {
+    "path": "src/Assets/Scenes/AdventureScene.unity",
+    "sha256": "5407b3d06b91bc2f85f56b9753f3335d03adef08050a1de413f3fafbefec474b"
+  },
+  {
+    "path": "src/Assets/Scripts/Editor/AdventureSceneBuilder.cs",
+    "sha256": "3899b729c43489e806125f69b82f88b0b4bab1e821081d2f59aa4ebf4cb71b6a"
+  },
+  {
+    "path": "src/Assets/Scripts/Editor/GuanzhongDemoBattlefieldBuilder.cs",
+    "sha256": "94d7f56dafeb6a7f6fc5c75c65c5f1d8955b0dbf158db6eb519725cea524840c"
+  },
+  {
+    "path": "src/Assets/Scripts/Editor/GuanzhongDemoBattlefieldBuilder.cs.meta",
+    "sha256": "1d8cbca2b1b78c799c0b48dc5dbd1ea6aeb40158c0e693cf4499de80e4b36360"
+  },
+  {
+    "path": "src/Assets/Scripts/Editor/TianZhang.Editor.asmdef",
+    "sha256": "57a036ae7ce4ee332d58ce957eae926520ec7a9b0dd783dc59f188b3952b7172"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs",
+    "sha256": "9e4d9e70a5eb3bb1c2c766e86f65de7f986ad927c88b2a01c3c0b78c3cd6d4e4"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/Adventure/AdventureController.cs",
+    "sha256": "d758c56cbb7f5f73ea3ca85c9486f48f01011ea77cb1929b94152705024a9824"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/Adventure/AdventureHudPresenter.cs",
+    "sha256": "863b440c3ed07d173324ae57f68bc161e06eb917f0b1b18b60b65457c0c07bc1"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBattlefieldSurface.cs",
+    "sha256": "9bfafeebc7e034c64671b4bd11dc3989c9832cd919048d286a907829e0cbbd00"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBattlefieldSurface.cs.meta",
+    "sha256": "6b9edc0f08df249374ac93a49b4353d4d1874f035fd7d2d51e05449fe571d7ae"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatMovementView.cs",
+    "sha256": "ea77cf4f2e721422186429d3d967fdfdd8fa8000fea32a5620e9fe1f25fa26be"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatTargetInput.cs",
+    "sha256": "9fa2c85452841f5eb082c147d76b4db3e3aee6a1b8b066a7ecb951e39bbd1ccb"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitPresentationMotion.cs",
+    "sha256": "074e89a140e03ac02828bea5b2c14991002aa7bd8be49b8c4367a77c2943a63e"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitSurfacePose.cs",
+    "sha256": "0284a0816156fc69ae1ce703d4f2fcff0696afb06a2b0f17fba349ece62c5d9b"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitSurfacePose.cs.meta",
+    "sha256": "70a35d9cf8b750e5b1cbc456b5736f187ff23ccff156095a4e6026ad8fd67e7b"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
+    "sha256": "704cc3d4d69f4c305ae3e52c77b22eaa356472b6a846fa60f885252295856f3f"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainMotionRegression.cs",
+    "sha256": "f2c15b358df1583d673ba1666ba790ab6af30b706dac2e7a4e58d3b4d7b96414"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainMotionRegression.cs.meta",
+    "sha256": "53a3223339948821be4a3026f5d55b5f274b852fd5806134378af7d577fd096f"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainNativeObservation.cs",
+    "sha256": "71d38d4d1cf544249192c17759357b229b5a7d5c765c2ba9cabe1d9374f08166"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainNativeObservation.cs.meta",
+    "sha256": "a7753791a3905321e8b388592b4eb50c4637c2b0e4f8201ac7babf627724f281"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainPairReplay.cs",
+    "sha256": "f286deecf0f9fccbd0aef5bfca70c494ba79385e3b6cd1a2af9cd1305faa454c"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainPairReplay.cs.meta",
+    "sha256": "74678d4d183ec85a28ca0489ef477c1acb7ef759f566ca9c5b2dd9778aaa4b97"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainRehearsalPlayModeTests.cs",
+    "sha256": "dd23a09021109e48ec1d7b3c5bfcb6d01c47aee148a99a902c9ebb59e776705c"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/GuanzhongTerrainRehearsalPlayModeTests.cs.meta",
+    "sha256": "65f06816719629788c750cde918cbe852628a130bb989e2b5f44b62b495127b2"
+  }
+]

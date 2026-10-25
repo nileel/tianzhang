@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-25 11:15:15Z" end-time="2026-10-25 11:17:42Z" duration="146.2346601">
+  <test-suite type="TestSuite" id="1254" name="src" fullname="src" runstate="Runnable" testcasecount="206" result="Passed" start-time="2026-10-25 11:15:15Z" end-time="2026-10-25 11:17:42Z" duration="146.234660" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1247" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="206" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:17:42Z" duration="146.226751" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="71708" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1248" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="206" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:17:42Z" duration="146.224066" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1249" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="206" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:17:42Z" duration="146.221705" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1250" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="206" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:17:42Z" duration="146.219267" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1197" name="GuanzhongTerrainRehearsalPlayModeTests" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:17:42Z" duration="146.207134" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1199" name="FormalEntry1366" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.FormalEntry1366" methodname="FormalEntry1366" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="1831775956" result="Passed" start-time="2026-10-25 11:15:16Z" end-time="2026-10-25 11:15:59Z" duration="43.013717" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1198" name="FormalEntry1920" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.FormalEntry1920" methodname="FormalEntry1920" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="497007888" result="Passed" start-time="2026-10-25 11:15:59Z" end-time="2026-10-25 11:16:41Z" duration="42.934190" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1203" name="MotionRegressions" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions" methodname="MotionRegressions" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="387365769" result="Passed" start-time="2026-10-25 11:16:41Z" end-time="2026-10-25 11:16:51Z" duration="9.946273" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1200" name="PairWitness1366" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.PairWitness1366" methodname="PairWitness1366" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="1369721319" result="Passed" start-time="2026-10-25 11:16:51Z" end-time="2026-10-25 11:17:42Z" duration="50.302506" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -309,6 +309,7 @@ namespace TianZhang.Editor
             BuildCombatActionPreview(root, canvas);
             BuildCombatLayout(root, canvas);
             BuildWithdrawalEntry(root, canvas);
+            GuanzhongDemoBattlefieldBuilder.Install();
             SceneBuildSupport.Save(SceneBuildSupport.AdventureScenePath);
         }
 
@@ -1262,6 +1263,7 @@ namespace TianZhang.Editor
             GameObject adventureRoot = Array.Find(scene.GetRootGameObjects(), root => root.name == "AdventureRoot");
             BuildCombatMovement(adventureRoot, Camera.main, battlefield, environmentProfile);
             BuildCombatLayout(adventureRoot, Array.Find(scene.GetRootGameObjects(), value => value.name == "UICanvas").GetComponent<Canvas>());
+            GuanzhongDemoBattlefieldBuilder.Install();
             if (!EditorSceneManager.SaveScene(scene, SceneBuildSupport.AdventureScenePath))
                 throw new InvalidOperationException("Could not save the rebuilt Guanzhong battlefield.");
             AssetDatabase.SaveAssets();

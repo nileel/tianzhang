@@ -99,6 +99,11 @@ namespace TianZhang.Features.Adventure
                 node.GetComponent<Button>().interactable = nodesInteractable;
         }
 
+        public void PresentTerrainRehearsalLocation()
+        {
+            if (combatLocationText != null) combatLocationText.text = "阶地演武 · 地形试玩";
+        }
+
         private void CreateNodes(AdventureSession session, Func<string, bool> selectNode)
         {
             foreach (AdventureNodeData node in session.Map.nodes)

@@ -38,6 +38,20 @@ namespace TianZhang.Features.Adventure
         private IFormalEncounterRandomSource randomSource = new SystemFormalEncounterRandomSource();
         private AdventureSession session;
         private bool formalEncounterConsumed;
+        public bool IsTerrainRehearsal { get; private set; }
+
+        public bool BeginTerrainRehearsal(EnvironmentProfileAsset environment, AdventureNodeData start,
+            AdventureNodeData encounter, out string reason)
+        {
+            reason = "adventure_not_exploring";
+            if (!CanSelectExplorationNode) return false;
+            if (!encounters.TryBegin(player,catalog,start,encounter,attackProfiles,environment,
+                    unitSpawner,combatEntry,out reason)) return false;
+            IsTerrainRehearsal = true;
+            CurrentState = AdventureSceneState.Combat;
+            hud.PresentTerrainRehearsalLocation();
+            return true;
+        }
         private Action clearCombatInput;
         private Action hideCombatPresentation;
         public bool IsWithdrawalConfirmationOpen { get; private set; }
@@ -242,6 +256,12 @@ namespace TianZhang.Features.Adventure
 
             formalEncounterConsumed = true;
             LastEncounterOutcome = outcome;
+            if (IsTerrainRehearsal)
+            {
+                CurrentState = AdventureSceneState.Returning;
+                loadScene(navigation.ReturnToPreviousScene());
+                return;
+            }
             if (!FormalEncounterResult.TryCreate(
                     catalog,
                     enemy,

@@ -35,6 +35,21 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Cell[] cells = Array.Empty<Cell>();
         [SerializeField] private Material reachableMaterial;
         [SerializeField] private Material selectedMaterial;
+        private CombatBattlefieldSurface surface;
+        public void UseSurface(CombatBattlefieldSurface value)
+        {
+            ClearSelection();
+            surface = value;
+            if (surface == null) throw new ArgumentNullException(nameof(value));
+            cells = new Cell[surface.Cells.Count];
+            for (int i=0;i<cells.Length;i++)
+            {
+                var c=surface.Cells[i];
+                cells[i]=new Cell { q=c.q,r=c.r,tile=surface.transform.Find("GuanzhongHex_"+c.q+"_"+c.r) };
+            }
+            BuildCellHighlights();
+            inspectionPose = null;
+        }
         private readonly Dictionary<Vector2Int, LineRenderer> highlights = new Dictionary<Vector2Int, LineRenderer>();
         private readonly Dictionary<Vector2Int, Vector3> centers = new Dictionary<Vector2Int, Vector3>();
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
@@ -74,24 +89,7 @@ namespace TianZhang.Features.CombatPresentation
             previewView = movementPopup;
             if (battlefieldCamera == null || cells.Length == 0 || reachableMaterial == null || selectedMaterial == null)
                 throw new InvalidOperationException("combat_movement_scene_references_missing");
-            foreach (Cell cell in cells)
-            {
-                if (cell.tile == null) throw new InvalidOperationException("combat_movement_tile_missing");
-                Vector3 center = cell.tile.position;
-                center.y = TileBodyTop(cell.tile, center.y) + SelectionBorderOffset;
-                var key = new Vector2Int(cell.q, cell.r);
-                centers.Add(key, center);
-                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, ReachableWidth, ReachableOutlineColor);
-                ring.loop = true;
-                ring.positionCount = 6;
-                for (int corner = 0; corner < 6; corner++)
-                {
-                    float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
-                    ring.SetPosition(corner, center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
-                }
-                ring.gameObject.SetActive(false);
-                highlights.Add(key, ring);
-            }
+            BuildCellHighlights();
             pathLine = CreateLine("MovementPathPreview", selectedMaterial, 0.065f, DestinationColor);
             pathLine.gameObject.SetActive(false);
             pathArrow = CreateLine("MovementPathDirection", selectedMaterial, 0.07f, DestinationColor);
@@ -106,6 +104,32 @@ namespace TianZhang.Features.CombatPresentation
             rearRing.positionCount = 6;
             rearRing.gameObject.SetActive(false);
             inspectionRings = new[] { inspectionRing, rearRing };
+        }
+
+        private void BuildCellHighlights()
+        {
+            foreach (var ring in highlights.Values) if (ring != null) Destroy(ring.gameObject);
+            highlights.Clear();
+            centers.Clear();
+            foreach (Cell cell in cells)
+            {
+                if (cell.tile == null) throw new InvalidOperationException("combat_movement_tile_missing");
+                Vector3 center = cell.tile.position;
+                center.y = (surface != null ? surface.Center(new CombatUnitPresentationHex(cell.q,cell.r)).y : TileBodyTop(cell.tile, center.y)) + SelectionBorderOffset;
+                var key = new Vector2Int(cell.q, cell.r);
+                centers.Add(key, center);
+                LineRenderer ring = CreateLine("Reachable_" + cell.q + "_" + cell.r, reachableMaterial, ReachableWidth, ReachableOutlineColor);
+                ring.loop = true;
+                ring.positionCount = 6;
+                for (int corner = 0; corner < 6; corner++)
+                {
+                    float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
+                    ring.SetPosition(corner, center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
+                }
+                if (surface != null) surface.DrawRing(ring,new CombatUnitPresentationHex(cell.q,cell.r),.92f/Mathf.Sqrt(3),SelectionBorderOffset);
+                ring.gameObject.SetActive(false);
+                highlights.Add(key, ring);
+            }
         }
 
         /// <summary>Compatibility entry for the single-cell player and existing UI callers.</summary>
@@ -131,6 +155,7 @@ namespace TianZhang.Features.CombatPresentation
                         center + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * (0.92f / Mathf.Sqrt(3f)));
                 }
                 ShowRing(ring, InspectionColor, InspectionWidth);
+                if (surface != null) surface.DrawRing(ring,index==0 ? pose.Value.Position : pose.Value.Rear,.92f/Mathf.Sqrt(3),SelectionBorderOffset);
             }
         }
 
@@ -258,6 +283,7 @@ namespace TianZhang.Features.CombatPresentation
             picked = default;
             if (battlefieldCamera == null || cells.Length == 0 || UiOwnsPointer(screenPoint)) return false;
             Ray ray = battlefieldCamera.ScreenPointToRay(screenPoint);
+            if (surface != null) return surface.TryPick(ray,out picked);
             var plane = new Plane(Vector3.up, cells[0].tile.position);
             if (!plane.Raycast(ray, out float distance)) return false;
             return TryGetCellAtWorld(ray.GetPoint(distance), out picked);
@@ -265,6 +291,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public bool TryGetCellAtWorld(Vector3 position, out CombatUnitPresentationHex picked)
         {
+            if (surface != null) return surface.TryCell(position,out picked);
             picked = default;
             foreach (Cell cell in cells)
             {
@@ -348,8 +375,12 @@ namespace TianZhang.Features.CombatPresentation
                 pathPoints.Add(centers[Key(snapshot.Movement.Origin)]);
                 foreach (CombatUnitPresentationHex cell in option.Path) pathPoints.Add(centers[Key(cell)]);
             }
-            pathLine.positionCount = pathPoints.Count;
-            for (int index = 0; index < pathPoints.Count; index++) pathLine.SetPosition(index, pathPoints[index]);
+            if (surface != null) surface.DrawPath(pathLine,pathPoints,SelectionBorderOffset);
+            else
+            {
+                pathLine.positionCount = pathPoints.Count;
+                for (int index = 0; index < pathPoints.Count; index++) pathLine.SetPosition(index, pathPoints[index]);
+            }
             int nodeCount = Math.Max(0, pathPoints.Count - 2);
             EnsurePathNodes(nodeCount);
             for (int index = 0; index < nodeCount; index++)
@@ -361,7 +392,9 @@ namespace TianZhang.Features.CombatPresentation
                 for (int corner = 0; corner < 6; corner++)
                 {
                     float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
-                    node.SetPosition(corner, nodeCenter + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * PathNodeRadius);
+                    Vector3 p=nodeCenter + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * PathNodeRadius;
+                    if(surface != null && surface.TryHeight(p,out float y)) p.y=y+SelectionBorderOffset;
+                    node.SetPosition(corner,p);
                 }
                 ShowRing(node, DestinationColor, 0.05f);
             }

@@ -12,6 +12,8 @@ namespace TianZhang.Features.CombatPresentation
         private Camera worldCamera;
         private Static3DCombatUnitPresentationProvider provider;
         private CombatHudPresenter presenter;
+        private CombatBattlefieldSurface surface;
+        public void ConfigureSurface(CombatBattlefieldSurface value) => surface = value;
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
 
         public void Configure(Camera camera, Static3DCombatUnitPresentationProvider units, CombatHudPresenter hud)
@@ -68,6 +70,7 @@ namespace TianZhang.Features.CombatPresentation
             cell = default;
             if (worldCamera == null) return false;
             Ray ray = worldCamera.ScreenPointToRay(screenPoint);
+            if (surface != null) return surface.TryPick(ray,out cell);
             var plane = new Plane(Vector3.up, new Vector3(0f, Static3DCombatUnitPresentationProvider.HexToWorld(
                 new CombatUnitPresentationHex(0, 0)).y, 0f));
             if (!plane.Raycast(ray, out float distance)) return false;

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.4160241">
+  <test-suite type="TestSuite" id="1253" name="src" fullname="src" runstate="Runnable" testcasecount="205" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.416024" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1246" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="205" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.406636" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="73008" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1247" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="205" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.403410" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1248" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="205" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.400985" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1249" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="205" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.398437" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1197" name="GuanzhongTerrainRehearsalPlayModeTests" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" testcasecount="6" result="Failed" site="Child" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.394558" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1203" name="MotionRegressions" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions" methodname="MotionRegressions" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="1259041271" result="Failed" start-time="2026-10-25 11:07:44Z" end-time="2026-10-25 11:08:03Z" duration="18.383905" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Single-cell turns must stay on their movement segment.
+  Expected: less than 0.00200000009f
+  But was:  0.500000238f
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.Tests.PlayMode.GuanzhongTerrainMotionRegression+<Run>d__0.MoveNext () [0x00a10] in D:\天章游戏开发\src\Assets\Tests\PlayMode\GuanzhongTerrainMotionRegression.cs:113
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,57 @@
+D3.6 整图装配与正式操作验收（2026-10-25，已完成）
+
+交付状态
+正式 AdventureScene 已接入144格阶地演武。四项复查问题已按根因修复，针对性回归及1920×1080、1366×768原生鼠标操作均通过，D3.6与D3完成。
+用户同意将D5最小地图入口提前至本项；金丹预设、能力账本、高差攻击、环境破坏与燃烧仍留D4／D5及后续项。当前证据不表示完整金丹演武已完成。
+
+入口与运行所有者
+关中城→进入副本：关中野外→“阶地演武（地形试玩）”。沿原AdventureSceneInstaller、AdventureController、EncounterCoordinator、CombatEntryAdapter进入战斗。
+当前角色仍取存档人物的练气快照，两个敌人取既有合法定义，没有强行升阶或新增演示装备、位格。演武自然结束不发悬赏进度或掉落，撤离沿既有暂停、确认、返回关中城流程。
+普通入口保留env_guanzhong_wild与GuanzhongBattlefield（100个Tile、15个RockCluster、0个Stair）。GuanzhongTerrainRehearsal默认关闭，由按钮启用并关闭旧图；退出后重新加载AdventureScene恢复普通入口。没有新增正式Scene或第二战斗系统。
+AdventureSceneBuilder.Build与RebuildGuanzhongBattlefield调用GuanzhongDemoBattlefieldBuilder.Install；独立重建菜单为“天章/场景/D3.6 装配阶地演武与入口”。重建、保存、重开已两次通过，日志保留src/Logs/d36-build.log及d36-build-final.log。随后四项修复不改变Builder、场景或源资产，沿用该项证据。
+
+地形与表现
+读取D2环境asset的physicalSurfaceProfiles与mapMarkers，复用D3.2 RampLanding／EarthRamp24、D3.3 StoneStair3、D3.4水面泥岸／岸线、D3.5墙碑低植及既有RockCluster。
+144个格面所有者、3条24格长坡、2处三平台短阶、6格浅水、2格泥岸、22段岸线、3处岩堆、2段低掩体、2段高墙、4个支点碑和2丛低植。坡阶覆盖格没有叠加水平Tile；墙碑低植保留独立静态状态，没有注册燃料、耐久或额外规则障碍。
+四张既有环境图随相机环境根复用，缩放／平移控制器切换到新战场边界。源FBX、源blend、贴图、材质与Prefab未因本项重做。
+CombatBattlefieldSurface仅负责本地图局部表现查询：有限hex域、冻结flat／C1 cosine ramp／真实水平踏面；profile来自环境asset。人物、攻击起落点、范围框、路径预览和选格读取同一查询，范围框不由Renderer最高点抬高。
+CombatUnitSurfacePose缓存实际模型低足顶点，按前后足组求接地、俯仰与侧倾；短阶保持直立，上行先提后移、下行先移后落。身体比例固定，没有骨骼、IK、隐藏坡面或新增规则移动模式。
+拾取对实际顶面profile求交，崖壁不遮挡合法格面；模型点选落实到明确身体格，不吸附双格锚点。旧平地HexToWorld／PoseToWorld与未配置地表时的动作表现保留。
+
+四项修复与针对性证据
+1. 单格移动错误进入双格转轴动画：真实命令可携带SingleTurnFacings，旧分支让单格先绕半米轴偏移。现仅双格进入该转轴分支。回归以正式载体重放单格4:7→3:7及三个转向，路径最大偏差从0.500000238米降为0。
+2. 每个几何采样点至少等待一帧导致移动随帧率变慢：保留15毫米几何采样，按累计真实三维弧长与Time.deltaTime推进。30／60／120帧率下，同一单格路段由3.0667／1.8833／1.3167秒变为0.26667／0.25／0.25秒。阶梯提落仍按真实踏面拐点移动。
+3. Attack／Hit／Cast缩放会破坏地形接地：配置地表时维持根比例，沿用其余反馈；旧平地Attack比例仍为(1.08,0.94,1.08)。单／双格坡地各动作逐帧采样，最大比例偏差0、侵入0、足底离地1.19209e-7米；短阶往返逐帧最大侵入0.000091195米（0.0912毫米），平台停姿足差0。
+4. 原生验收可能把地面点击和相机重建误记为身体点选、缩放／平移：现要求native鼠标、真实身体命中及下一帧HUD目标一致；相机须在同一非零相机／战斗实例下伴随对应输入变化。取消必须关闭选择且AP不变，空放须同格在限定窗口实际扣40 AP；重入不会冒充回低谷，两处短阶分别要求8:9和5:3。负向回归明确拒绝地面点击、未确认HUD、相机／战斗更换和零实例。
+motion-before.xml／json记录修复前预期失败，不是最终验收结果。motion-and-observer.xml为修复后2项通过；final-regression.xml为最终4项通过（FormalEntry1366、FormalEntry1920、MotionRegressions、PairWitness1366）。两组共有MotionRegressions，合计5个不同用例。motion-regression.json／csv保留数值和逐帧样本。
+
+双分辨率原生操作
+native-1920.xml与native-1366.xml各1/1通过；对应JSON分辨率正确、entries=2，全部要求标记为true。输入日志mouseInterface为RawInput，观察器仅接受native鼠标。
+每轮从真实演武按钮进入，完成低谷→左坡→中台→后右阶梯→高台，随后经后右阶梯、中台、前右短阶回低谷；包含低地单格身体、高台双格前格8:12与后格7:12点选、右键取消、实际扣40 AP的高台空放、滚轮缩放、平移、撤离取消、确认撤离、返回关中城并再次进入。
+Windows操作工具不支持按住中键拖拽，两轮中键平移由用户亲自完成并回复“已平移”；其余点击与滚轮由工具在可见Unity窗口操作。观察器依据真实输入及运行状态记证，没有直接改人物位置、AP或完成标记。
+native-1920.mp4包含本轮495帧、native-1366.mp4包含本轮553帧，均由实际运行采样画面以8fps编码，属于加速采样短片，不是实时帧率录屏。对应native-*-clicks.csv和JSON保留输入及路线；原始PNG留src/Logs/d36/<分辨率>/native-frames。
+测试夹具先以隔离临时存档进入关中野外；演武内敌方采用待机策略，以隔离地形操作与战斗平衡。策略没有写入生产AI，临时存档在测试清理阶段删除。这不是正式存档成长、敌方AI平衡或用户完整试玩验收。
+
+自动输入与有限几何验证
+双分辨率FormalEntry通过InputSystem鼠标事件操作正式UI／命令，不直接改玩家位置或AP，包含完整上下路线、前后格、取消／空放、缩放平移、撤离重入。玩家使用空高台落点，未放宽敌人占格；普通空放前后静态道具数不变。
+144格垂直拾取、每分辨率10,368个范围框顶点和144格心实际MeshCollider射线通过。框顶点对profile最大误差2.05e-8米，格心对实际支承网格最大误差1.19e-7米。
+各分辨率runtime-body.csv记录18个上行停姿的root位置、pitch／roll、足差及侵入，最大误差约1.19e-7米，低于2毫米。它不代表整段单格移动每帧与实际三角网格接触。
+GuanzhongTerrainPairReplay将D1 pair-main-route.json的21个见证经正式Static3D载体重放，含转向、坡道和高台；最终50次采样、29帧，最大前后足组离地3.57628e-7米、顶点侵入5.96046e-8米。pair-replay.json／pair-runtime.csv及runtime-pair-route.mp4对应本次结果，短片只编码这29帧（8fps），排除目录中的历史尾帧。它是载体重放，单格正式命令另由FormalEntry与原生输入覆盖。
+此前动态检查还修复了只按全图台阶Z范围提落的问题：现按真实短阶有限占地区分，避免左坡被误提起。该修复也包含在最终四项整合回归中。
+足底与侵入数值来自有限模型顶点对profile采样；实际网格射线验证144格心。不能把两类证据合并宣称全部合法转移、全模型逐三角连续无穿透。
+旧平地回归flat-regression.xml：BasicPointerHoverCancelAndDirectClickAtBothResolutions通过。程序集边界检查通过（19个程序集、2个asmref）；只新增Editor→既有Gameplay.Contracts引用，没有新增Player跨Feature依赖。输入未变的检查沿用已有结果，未重跑全项目，D2已有无关失败未改断言。
+
+本机负载观测
+可见静态模块182个Renderer、5,134,944个实例三角；场景实际约7,030,827三角、352 draw calls，后者含场景其他内容和渲染通道，口径不同。
+各120帧：1366×768均值3.0904毫秒、P95 1.9423毫秒；1920×1080均值2.8812毫秒、P95 1.9665毫秒。均值受少量慢帧影响可高于P95，没有剔除异常帧。GC及Profiler内存读数见各load.json。
+这是本机Unity编辑器启用图形的短窗口观测，不是发布版、长期压力或移动设备结论；录制采样开销不包含在该120帧窗口内。
+
+复现与证据边界
+关闭同工程Unity编辑器后，可用现有入口运行自动验证：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.FormalEntry1366 -EnableGraphics -ResultXmlPath D:/天章游戏开发/src/Logs/d36-recheck-1366.xml
+换为FormalEntry1920、PairWitness1366、MotionRegressions或NativeEvidenceRejectsGroundClicksAndCameraReplacement可分别复现对应项。
+原生验收使用可见Unity（不加-batchmode）：Unity.exe -projectPath D:/天章游戏开发/src -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.NativeWindow1366 -testResults D:/天章游戏开发/src/Logs/d36-native-recheck.xml -logFile D:/天章游戏开发/src/Logs/d36-native-recheck.log -d36Manual -d36NativeOnly
+对应NativeWindow1920验证1920。夹具等待演武入口240秒、进入后等待原生操作1500秒；只有实际完成操作并核对观察结果后，写src/Logs/d36/<分辨率>/native-finish.txt结束等待。该文件仅触发结束，所有操作条件仍须断言通过。不要用NativeWindow名称却省略这两个开关，否则会执行自动输入分支。
+input-hashes.json记录实际输入的SHA256，包括代码、场景和相关源资产，以及工作区原有RockCluster材质／Prefab／导入设置。用户原有RockCluster改动未纳入本次提交，清洁checkout的颜色／比例可能与证据画面不同；源包与忽略文件不能由Git状态推断已备份。
+References loaded：unity-agent-workflows的runtime-owner-proof、runtime-visible-output、serialized-persistence、project-structure-discovery、modular-architecture、shared-caller-blast-radius、unity-validation、ui-and-visual-assets、ai-workflows；code-review-unity；computer-use及guidance／api／confirmations。Project maps：UNITY_STRUCTURE.md、UNITY_STRUCTURE.assemblies.md。
+新增C#类均少于500行；既有较大的Static3D载体和AdventureSceneBuilder只接入地表委托与生成调用。未声称不存在的代码图审核。相关路径提交前运行定向空白检查及git diff --cached --check；不提交无关立绘、RockCluster、设计总结、.agents状态或Unity临时文件。

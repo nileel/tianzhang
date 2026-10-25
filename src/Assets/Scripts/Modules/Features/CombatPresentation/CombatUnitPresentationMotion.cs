@@ -25,8 +25,32 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         public static IEnumerator AnimateStep(Transform root, CombatUnitPresentationMovementStep step,
-            int[] yawDegrees, float cellsPerSecond)
+            int[] yawDegrees, float cellsPerSecond, CombatBattlefieldSurface surface = null, CombatUnitSurfacePose support = null)
         {
+            if (surface != null)
+            {
+                Vector3 CenterOnSurface(CombatUnitPresentationPose pose) => pose.IsDoubleCell
+                    ? (surface.Center(pose.Position)+surface.Center(pose.Rear))*.5f : surface.Center(pose.Position);
+                float startYaw = yawDegrees[step.From.Facing];
+                if (step.From.IsDoubleCell)
+                foreach (int facing in step.TurnFacings)
+                {
+                    float endYaw = yawDegrees[facing];
+                    for (float t=0;t<1;)
+                    {
+                        t=Mathf.Min(1,t+Time.deltaTime*cellsPerSecond);
+                        float yaw=Mathf.LerpAngle(startYaw,endYaw,t);
+                        Vector3 front=surface.Center(step.From.Position);
+                        Vector3 center=front-new Vector3(Mathf.Sin(yaw*Mathf.Deg2Rad),0,Mathf.Cos(yaw*Mathf.Deg2Rad))*.5f;
+                        support.Place(root,center,yaw);
+                        yield return null;
+                    }
+                    startYaw=endYaw;
+                }
+                yield return support.Move(root,CenterOnSurface(new CombatUnitPresentationPose(step.From.Position,step.To.Facing,step.From.IsDoubleCell)),
+                    CenterOnSurface(step.To),yawDegrees[step.To.Facing],cellsPerSecond);
+                yield break;
+            }
             if (step.From.IsDoubleCell)
             {
                 Vector3 front = Static3DCombatUnitPresentationProvider.HexToWorld(step.From.Position);

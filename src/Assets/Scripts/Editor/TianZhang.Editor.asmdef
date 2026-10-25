@@ -2,6 +2,7 @@
     "name": "TianZhang.Editor",
     "references": [
         "TianZhang.Foundation",
+        "TianZhang.Gameplay.Contracts",
         "TianZhang.Domain",
         "TianZhang.Content",
         "TianZhang.Infrastructure.UnityContent",
