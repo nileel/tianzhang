@@ -136,9 +136,11 @@ namespace TianZhang.Tests.EditMode
                 connectionId: "stairs"));
             var board = new SpatialQueryBoard(cells, edges, new SpatialQueryLimits(2, 16))
                 .WithMetricOverrides(new[] { Scale(A, B, 1) });
-            Assert.IsTrue(board.InspectEdge(A, B, SpatialQueryKind.Movement).IsLegal);
+            Assert.AreEqual(SpatialQueryReasons.DirectedEdgeBlocksEffects,
+                board.InspectEdge(A, B, SpatialQueryKind.Movement).Reason);
+            Assert.IsTrue(board.InspectEdge(A, B, SpatialQueryKind.Movement, activeEffectBlockers: 0).IsLegal);
             Assert.AreEqual(SpatialQueryReasons.ClearanceInsufficient,
-                board.InspectEdge(A, B, SpatialQueryKind.Movement, bodyScaleRank: 2).Reason);
+                board.InspectEdge(A, B, SpatialQueryKind.Movement, activeEffectBlockers: 0, bodyScaleRank: 2).Reason);
             Assert.AreEqual(SpatialQueryReasons.DirectedEdgeBlocksEffects,
                 board.InspectEdge(A, B, SpatialQueryKind.Attack).Reason);
             Assert.IsTrue(board.InspectEdge(A, B, SpatialQueryKind.Attack, 0).IsLegal);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -71,6 +72,22 @@ namespace TianZhang.Entity
                 cost.supportDurability.ToString(), cost.remoteOriginManaCost.ToString(), cost.sourceModeMask.ToString(),
                 cost.targetModeMask.ToString(), string.Join("|", cost.metricDistanceModes), cost.failurePolicy,
             };
+            if (contract.effectId == "WATER_TIDE")
+            {
+                var rules = catalog.surfaceRules ?? throw new InvalidDataException("JD_DEMO_SURFACE_RULES_MISSING");
+                frozen = frozen.Concat(new[]
+                {
+                    rules.rulesId, rules.environmentProfileId,
+                    rules.wetMovementBurden.ToString(CultureInfo.InvariantCulture), rules.deepMovementBurden.ToString(CultureInfo.InvariantCulture),
+                    rules.tideRadius.ToString(CultureInfo.InvariantCulture), rules.waterlineOffset.ToString(CultureInfo.InvariantCulture),
+                    rules.forceRank.ToString(CultureInfo.InvariantCulture), rules.distanceBudget.ToString(CultureInfo.InvariantCulture),
+                    rules.chargeExtraActionPoints.ToString(CultureInfo.InvariantCulture), rules.chargeExtraMana.ToString(CultureInfo.InvariantCulture),
+                    rules.chargeTicks.ToString(CultureInfo.InvariantCulture), rules.eyeExtraActionPoints.ToString(CultureInfo.InvariantCulture),
+                    rules.eyeExtraMana.ToString(CultureInfo.InvariantCulture), rules.attackCapacity.ToString(CultureInfo.InvariantCulture),
+                    rules.waterMultiplier.ToString("R", CultureInfo.InvariantCulture), rules.chargeMultiplier.ToString("R", CultureInfo.InvariantCulture),
+                    rules.erosionDamage.ToString(CultureInfo.InvariantCulture),
+                }).ToArray();
+            }
             using var sha = SHA256.Create();
             return "demo_compat_sha256_" + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(
                 string.Join("\n", frozen)))).Replace("-", "").ToLowerInvariant();

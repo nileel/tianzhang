@@ -46,6 +46,12 @@ namespace TianZhang.Combat
             var seat = Find(command.Jindan?.SeatId);
             if (seat == null) return (0, 0, 0);
             var definition = abilities[seat.EffectId];
+            if (command.Kind==CombatCommandKind.JindanAbility && seat.EffectId=="WATER_TIDE" && definition.Tide!=null)
+            {
+                var tide=definition.Tide;
+                return (checked(definition.ActionPoints+(command.Jindan.Charged?tide.ChargeExtraActionPoints:0)+(command.Jindan.CreateTideEye?tide.EyeExtraActionPoints:0)),
+                    checked(definition.Mana+(command.Jindan.Charged?tide.ChargeExtraMana:0)+(command.Jindan.CreateTideEye?tide.EyeExtraMana:0)),definition.Cooldown);
+            }
             return command.Kind switch
             {
                 CombatCommandKind.SwapJindan => (actor.ActionPointLimitAtTurnStartUnits, 0, 0),
@@ -72,14 +78,16 @@ namespace TianZhang.Combat
             if (command.ProfileId != seat.EffectId) return Reject("jindan_effect_not_equipped");
             var definition = abilities[seat.EffectId];
             if (command.Kind == CombatCommandKind.CloseJindan)
-                return seat.ActiveScale == null && seat.ActiveEarth == null ? Reject("jindan_instance_missing") : CombatActionResult.Success();
+                return seat.ActiveScale == null && seat.ActiveEarth == null && seat.PendingTide==null &&
+                    (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId)??0)==0 ? Reject("jindan_instance_missing") : CombatActionResult.Success();
             if (!definition.Enabled) return Reject(definition.UnavailableReason);
             if (seat.LockedOwnTurn >= actor.OwnTurnsStarted) return Reject("jindan_effect_wait_next_own_turn");
             if (actor.HasStatus(CombatStatusKind.SealSpirit)) return Reject("combat_actor_sealed");
             if (actor.GetCooldown(seat.EffectId) > 0) return Reject("combat_ability_on_cooldown");
             if (seat.ActiveScale != null) return Reject("jindan_capacity_full");
+            if (seat.PendingTide!=null) return Reject("tide_process_pending");
             if (actor.CurrentSpirit < Costs(command, actor).mana) return Reject("spirit_insufficient");
-            string reason = seat.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY"
+            string reason = seat.EffectId=="WATER_TIDE" ? CombatTideRules.Preview(session,actor,seat,command.Jindan).Reason : seat.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY"
                 ? CombatEarthRules.Validate(session, actor, seat, command.Jindan, definition)
                 : CombatScaleRules.Validate(session, actor, command.Jindan, definition);
             if (reason.Length != 0) return Reject(reason);
@@ -95,6 +103,8 @@ namespace TianZhang.Combat
             session.Combatants.TryGet(command.ActorId, out var actor);
             var definition = abilities[seat.EffectId];
             var costs = Costs(command, actor);
+            if (seat.EffectId=="WATER_TIDE" && command.Kind!=CombatCommandKind.SwapJindan)
+                return PrepareTide(session,command,actor,seat,costs,out apply);
             CombatScaleInstance next = null;
             CombatEarthInstance nextEarth = null;
             CombatOwnTurnStatus unitStatus = null;
@@ -125,6 +135,7 @@ namespace TianZhang.Combat
                 seat.ActiveEarth = nextEarth;
                 if (command.Kind == CombatCommandKind.SwapJindan)
                 {
+                    seat.PendingTide=null;
                     seat.EffectId = command.ProfileId; seat.LastSwitchTurn = session.TurnSequence;
                     seat.LockedOwnTurn = actor.OwnTurnsStarted; seat.LastEndReason = "jindan_switched_end";
                 }
@@ -147,6 +158,10 @@ namespace TianZhang.Combat
             int now = session.TurnScheduler.CurrentTick;
             for (int tick = now - elapsed + 1; tick <= now && elapsed > 0; tick++)
             {
+                CompleteTides(session,tick);
+                if (session.IsFinished) return;
+                session.Surfaces?.AdvanceTick(session,tick);
+                if (session.IsFinished) return;
                 foreach (var seat in Seats.Where(value => value.ActiveScale != null).ToArray())
                 {
                     var instance = seat.ActiveScale;
@@ -164,6 +179,19 @@ namespace TianZhang.Combat
 
         internal void Reconcile(CombatSession session)
         {
+            foreach (var seat in Seats)
+            {
+                seat.OwnedSurfaceCount=session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId)??0;
+                if (seat.PendingTide==null) continue;
+                session.Combatants.TryGet(seat.Definition.ActorId,out var tideActor);
+                var request=seat.PendingTide.Request;
+                var kind=session.Surfaces?.Get(request.TideSource.Value)?.Kind;
+                bool sourceLost=!request.CreateTideEye && (request.TideAction==CombatTideAction.Rise
+                    ? kind is not (CombatSurfaceKind.ShallowWater or CombatSurfaceKind.DeepWater)
+                    : kind is not (CombatSurfaceKind.Wet or CombatSurfaceKind.ShallowWater or CombatSurfaceKind.DeepWater));
+                if (!tideActor.IsAlive || tideActor.HasStatus(CombatStatusKind.SealSpirit) || seat.EffectId!="WATER_TIDE" || sourceLost)
+                { seat.PendingTide=null;seat.LastEndReason="tide_process_interrupted";Revision++; }
+            }
             foreach (var seat in Seats.Where(value => value.ActiveScale != null).ToArray())
             {
                 session.Combatants.TryGet(seat.Definition.ActorId, out var actor);
@@ -213,15 +241,57 @@ namespace TianZhang.Combat
 
         public void Clear(CombatSession session)
         {
-            foreach (var seat in Seats.Where(value => value.ActiveScale != null || value.ActiveEarth != null).ToArray())
+            foreach (var seat in Seats.Where(value => value.ActiveScale != null || value.ActiveEarth != null || value.PendingTide!=null || value.OwnedSurfaceCount>0).ToArray())
                 End(session, seat, "jindan_session_ended");
+            session.Surfaces?.Clear(session);
         }
 
         private void End(CombatSession session, CombatJindanSeatState seat, string reason)
         {
             PrepareProjection(session, seat, null, null)();
             RemoveGravity(session, seat);
-            seat.ActiveScale = null; seat.ActiveEarth = null; seat.LastEndReason = reason; Revision++;
+            seat.ActiveScale = null; seat.ActiveEarth = null; seat.PendingTide=null; seat.OwnedSurfaceCount=0; seat.LastEndReason = reason; Revision++;
+        }
+
+        private CombatActionResult PrepareTide(CombatSession session,CombatCommand command,CombatantSnapshot actor,
+            CombatJindanSeatState seat,(int actionPoints,int mana,int cooldown) costs,out Action apply)
+        {
+            Action settlement=null; CombatPendingTide pending=null;
+            if (command.Kind==CombatCommandKind.JindanAbility)
+            {
+                if(command.Jindan.Charged)
+                    pending=new CombatPendingTide(command.Jindan,checked(session.TurnScheduler.CurrentTick+abilities[seat.EffectId].Tide.ChargeTicks));
+                else settlement=CombatTideRules.PrepareSettlement(session,actor,seat,command.Jindan,
+                    CombatTideRules.Preview(session,actor,seat,command.Jindan),session.TurnScheduler.CurrentTick);
+            }
+            apply=()=>
+            {
+                settlement?.Invoke();
+                actor.TryConsumeSpirit(costs.mana);actor.IsGuarding=false;
+                seat.TotalManaSpent+=costs.mana;seat.TotalActionPointSpent+=costs.actionPoints;seat.PendingTide=pending;
+                if(command.Kind==CombatCommandKind.CloseJindan)
+                {session.Surfaces.ClearSource(session,seat.Definition.AbilityInstanceId);seat.LastEndReason="jindan_closed";}
+                else {actor.SetCooldown(seat.EffectId,costs.cooldown);seat.SuccessfulDeployments++;seat.LastEndReason="";}
+                seat.OwnedSurfaceCount=session.Surfaces.OwnedCount(seat.Definition.AbilityInstanceId);Revision++;
+            };
+            return CombatActionResult.AttackSuccess(costs.mana);
+        }
+
+        private void CompleteTides(CombatSession session,int tick)
+        {
+            Reconcile(session);
+            foreach(var seat in Seats.Where(value=>value.PendingTide!=null && value.PendingTide.DueTick<=tick).ToArray())
+            {
+                session.Combatants.TryGet(seat.Definition.ActorId,out var actor);
+                var request=seat.PendingTide.Request;
+                var preview=CombatTideRules.Preview(session,actor,seat,request);
+                if(preview.IsLegal)
+                    CombatTideRules.PrepareSettlement(session,actor,seat,request,preview,tick)();
+                seat.PendingTide=null;seat.LastEndReason=preview.IsLegal?"":"tide_process_invalid:"+preview.Reason;
+                seat.OwnedSurfaceCount=session.Surfaces.OwnedCount(seat.Definition.AbilityInstanceId);Revision++;
+                Reconcile(session);session.Flight?.Reconcile(session);
+                if (session.IsFinished) return;
+            }
         }
 
         private static void RemoveGravity(CombatSession session, CombatJindanSeatState seat)

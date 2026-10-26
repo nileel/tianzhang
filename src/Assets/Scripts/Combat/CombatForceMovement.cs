@@ -43,6 +43,10 @@ namespace TianZhang.Combat
 
         public static CombatForcedMovementResult Query(CombatSession session, string actorId, int direction,
             int distanceBudget, int forceRank)
+            => Query(session,actorId,direction,distanceBudget,forceRank,null);
+
+        internal static CombatForcedMovementResult Query(CombatSession session, string actorId, int direction,
+            int distanceBudget, int forceRank, IReadOnlyCollection<HexCoord> occupiedOverride)
         {
             if (direction is < 0 or > 5 || distanceBudget < 0 || forceRank < 0 ||
                 !session.Combatants.TryGet(actorId, out var actor) || !actor.IsAlive)
@@ -53,7 +57,7 @@ namespace TianZhang.Combat
             int adjusted = status?.EarthMode == CombatEarthMode.Heavy ? Math.Max(0,distanceBudget-1) :
                 status?.EarthMode == CombatEarthMode.Light ? Math.Min(2,checked(distanceBudget+1)) : distanceBudget;
             int budget = checked(adjusted * board.UnitsPerRange);
-            var occupied = session.GetOccupiedPositionsExcept(actorId);
+            var occupied = occupiedOverride ?? session.GetOccupiedPositionsExcept(actorId);
             var policy = Policy(actor, forceRank);
             string reason = string.Empty;
             while (true)
@@ -80,10 +84,11 @@ namespace TianZhang.Combat
                 reason = board.InspectPlacement(next, occupied);
                 if (reason.Length > 0) break;
                 if ((long)consumed + metric > budget) { reason = SpatialQueryReasons.DistanceBudgetExhausted; break; }
-                if (current.MovementMode == SpatialMovementMode.Ground &&
-                    board.TryGetEdge(current.Anchor,next.Anchor,out var front) && front.EdgeKind == SpatialEdgeKind.OneWayDrop &&
-                    board.TryGetCell(current.Anchor,out var fromCell) && board.TryGetCell(next.Anchor,out var toCell) &&
-                    fromCell.HeightLevel > toCell.HeightLevel) fell = true;
+                if (current.MovementMode == SpatialMovementMode.Ground)
+                    foreach (var cell in current.OccupiedCells)
+                        if (board.TryGetEdge(cell,cell.Step(direction),out var bodyEdge) && bodyEdge.EdgeKind==SpatialEdgeKind.OneWayDrop &&
+                            board.TryGetCell(cell,out var fromCell) && board.TryGetCell(cell.Step(direction),out var toCell) &&
+                            fromCell.HeightLevel>toCell.HeightLevel) fell=true;
                 consumed += metric; path.Add(next); current = next;
             }
             return new CombatForcedMovementResult(actor.Pose,path,consumed,reason,fell);

@@ -54,6 +54,20 @@ namespace TianZhang.Spatial
         public SpatialQueryBoard WithMetricOverrides(IReadOnlyList<SpatialMetricOverride> overrides) =>
             new SpatialQueryBoard(this, new SpatialMetricOverrideSet(overrides, cells, edges, limits.UnitsPerRange));
 
+        /// <summary>Replace explicit destination burdens without changing topology, heights or metric distance.</summary>
+        public SpatialQueryBoard WithCellMovementBurdens(IReadOnlyDictionary<HexCoord,int> burdens)
+        {
+            var next = new Dictionary<HexCoord,SpatialCellRules>(cells);
+            foreach (var pair in burdens)
+            {
+                if (!cells.TryGetValue(pair.Key,out var cell)) throw new ArgumentException("surface_cell_missing");
+                next[pair.Key] = new SpatialCellRules(cell.HeightLevel,cell.BlocksMovement,cell.BlocksSight,
+                    cell.IsEntityObstacle,pair.Value,cell.AllowsFlight,cell.MaximumFlightHeight,cell.FlightMovementBurdenUnits);
+            }
+            var result = new SpatialQueryBoard(next,edges,limits);
+            return new SpatialQueryBoard(result,metricOverrides).WithSceneObjects(sceneObjects.All);
+        }
+
         public IReadOnlyList<SpatialMetricOverride> MetricOverrides => metricOverrides.Rules;
         public bool TryGetCell(HexCoord cell, out SpatialCellRules rules) => cells.TryGetValue(cell, out rules);
         public bool TryGetEdge(HexCoord from, HexCoord to, out SpatialEdgeRules rules)

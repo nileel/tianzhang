@@ -221,6 +221,13 @@ namespace TianZhang.Combat
         public bool HasCommittedBenefit { get; private set; }
         public CombatJindanLoadout Jindan { get; private set; }
         public CombatFlight Flight { get; private set; }
+        public CombatSurfaces Surfaces { get; private set; }
+        public void ConfigureSurfaces(CombatSurfaces surfaces)
+        {
+            if (TurnSequence!=0 || Surfaces!=null) throw new InvalidOperationException("surface_session_already_started");
+            if (surfaces==null || SceneObjects==null) throw new ArgumentException("surface_configuration_missing");
+            surfaces.Bind(this); Surfaces=surfaces;
+        }
         public void ConfigureFlight(CombatFlight flight)
         {
             if (TurnSequence != 0 || Flight != null) throw new InvalidOperationException("flight_session_already_started");
@@ -298,6 +305,7 @@ namespace TianZhang.Combat
         internal void Terminate()
         {
             Jindan?.Clear(this);
+            if (Jindan==null) Surfaces?.Clear(this);
             Flight?.Clear(this);
             FinishTurn();
             foreach (CombatantSnapshot actor in Combatants.All)

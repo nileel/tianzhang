@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 
@@ -397,7 +398,8 @@ namespace TianZhang.Features.CombatPresentation
                 if (direction < 0) throw new InvalidOperationException("static_3d_presentation_move_nonadjacent");
                 previous = next;
             }
-            if (!previous.Equals(projection.EndPosition) || direction != projection.Facing)
+            bool forced = projection.MovementSteps.Count > 0 && projection.MovementSteps.All(step => step.IsForced);
+            if (!previous.Equals(projection.EndPosition) || !forced && direction != projection.Facing)
                 throw new InvalidOperationException("static_3d_presentation_move_endpoint_invalid");
         }
 

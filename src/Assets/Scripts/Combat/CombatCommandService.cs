@@ -29,6 +29,8 @@ namespace TianZhang.Combat
             TurnSequence = session.TurnSequence; StateVersion = session.StateVersion;
             MovementEfficiencyMilliUnits = session.Combatants.TryGet(command.ActorId, out var actor) ? actor.MovementEfficiencyMilliUnits : 0;
             AbilityInstanceId = actor == null || command.ProfileId.Length == 0 ? string.Empty : actor.GetAbilityInstanceId(command.ProfileId);
+            if (command.Kind==CombatCommandKind.JindanAbility && command.ProfileId=="WATER_TIDE" && actor!=null && command.Jindan!=null && session.Jindan!=null)
+                Tide=CombatTideRules.Preview(session,actor,session.Jindan.Find(command.Jindan.SeatId),command.Jindan);
         }
         internal CombatSession Session { get; }
         internal CombatCommand Command { get; }
@@ -54,6 +56,7 @@ namespace TianZhang.Combat
         public int? AttackDirection => Command.AttackDirection;
         public HexCoord? TargetCell => Command.TargetCell;
         public CombatAttackAreaQueryResult AttackArea { get; }
+        public CombatTidePreview Tide { get; }
         public HexCoord? Destination => Command.Destination;
         public int? DestinationFacing => Command.DestinationFacing;
         public int SlotIndex => Command.SlotIndex;
@@ -221,6 +224,7 @@ namespace TianZhang.Combat
                 commit();
                 if (command.Kind == CombatCommandKind.Move) actor.RecordPhysicalMovement(current.MovementSteps.Count);
                 session.Jindan?.Reconcile(session);
+                session.Surfaces?.Reconcile(session);
                 session.Flight?.Reconcile(session);
                 if (current.AppliesRepeatCost)
                     actor.RecordCommittedUse(command.Kind, command.ProfileId, current.CommittedUseCount + 1);
@@ -326,7 +330,11 @@ namespace TianZhang.Combat
                 foreach (CombatantSnapshot combatant in session.Combatants.All)
                     if (combatant.IsAlive) combatant.AdvanceCooldowns(advance.TicksElapsed);
                 session.Jindan?.AdvanceTicks(session, advance.TicksElapsed);
+                if (session.Jindan==null)
+                    for(int tick=session.TurnScheduler.CurrentTick-advance.TicksElapsed+1;tick<=session.TurnScheduler.CurrentTick && advance.TicksElapsed>0;tick++)
+                    { session.Surfaces?.AdvanceTick(session,tick); if(tick==int.MaxValue || session.IsFinished) break; }
                 session.Flight?.Reconcile(session);
+                if (session.IsFinished) { session.Terminate(); return new CombatTurnAdvance(string.Empty,ticks); }
                 if (!advance.HasActor) return new CombatTurnAdvance(string.Empty, ticks);
                 session.Combatants.TryGet(advance.ActorId, out var actor);
                 if (session.BeginTurn(actor)) return new CombatTurnAdvance(actor.Id, ticks);
@@ -347,7 +355,7 @@ namespace TianZhang.Combat
         // Snapshot setters are also used by deterministic fixtures and external state effects; quote them
         // as facts as well as checking the aggregate version, so a changed target/v/position cannot slip through.
         private static string Facts(CombatSession session) => (session.SceneObjects?.Revision ?? 0) + ";" +
-            (session.Jindan?.Revision ?? 0) + ";" + (session.Flight?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
+            (session.Jindan?.Revision ?? 0) + ";" + (session.Flight?.Revision ?? 0) + ";" + (session.Surfaces?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
             string.Join("|", actor.Id, actor.Position, actor.Footprint, actor.BodyScaleRank, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
                 actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing, actor.MovementMode, actor.AltitudeBand,
                 actor.BasicAttackProfileId, actor.CombatSwapsUsed, actor.GongFaId, actor.GongFaElement,

@@ -1,0 +1,4 @@
+segmentId,q,r,kind,fuel,sourceRef,fuelObjectId
+demo_20261024_segment_2,5,6,Burning,4,demo_20261026_environment_fire,none
+demo_20261024_segment_2,4,6,None,4,none,LowPlant_4_6
+demo_20261024_segment_2,3,7,None,4,none,none

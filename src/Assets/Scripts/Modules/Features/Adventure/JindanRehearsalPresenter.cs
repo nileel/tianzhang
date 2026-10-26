@@ -32,7 +32,10 @@ namespace TianZhang.Features.Adventure
         private HexCoord? earthCell;
         private string earthTarget;
         private bool earthPage;
-        private enum SelectionMode { None, Edges, Origin, EarthTarget, BreakTarget }
+        private bool tidePage, tideCharged, tideEye;
+        private HexCoord? tideSource;
+        private CombatTideAction tideAction = CombatTideAction.Rise;
+        private enum SelectionMode { None, Edges, Origin, EarthTarget, BreakTarget, TideSource }
 
         public JindanRehearsalPresenter(JindanDemoCatalogData catalog, EncounterCoordinator encounter,
             Action<int, string> enter, Func<string, string> text)
@@ -50,6 +53,8 @@ namespace TianZhang.Features.Adventure
         public string PreparationDetails { get; private set; } = string.Empty;
         public string CombatDetails { get; private set; } = string.Empty;
         public string QuoteDetails { get; private set; } = string.Empty;
+        public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
+            JindanTidePresentation.Project(encounter.CurrentSession, frozenQuote, frozenCommand);
         public bool CanConfirm => frozenQuote != null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&
             frozenCommand.ActorId == encounter.ControlledActorId && observedSession == encounter.CurrentSession;
 
@@ -86,14 +91,22 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
-            if (key is "earth_tab" or "scale_tab")
-            { earthPage = key == "earth_tab"; ClearTargeting(); Refresh(); return; }
+            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab")
+            { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
             if (!encounter.AcceptsPlayerCommand)
             { message = "等待当前演出或敌方行动结束。"; Refresh(); return; }
             switch (key)
             {
+                case "tide_rise": case "tide_ebb": case "tide_eye":
+                    ClearTargeting(); tidePage = true; earthPage = false;
+                    tideAction = key == "tide_ebb" ? CombatTideAction.Ebb : CombatTideAction.Rise;
+                    tideEye = key == "tide_eye"; selection = SelectionMode.TideSource;
+                    message = tideEye ? "点击无源时的合法潮眼格，再预演。" : "点击一个合法潮源，再预演；青色显示变化格，箭头显示实际落点。"; break;
+                case "tide_charge": tideCharged = !tideCharged; ClearQuote(); message = tideCharged ? "一档蓄力：先付费，1全局tick后完成时重验。" : "普通潮汐：确认即结算。"; break;
+                case "tide_preview": Preview(CombatCommandKind.JindanAbility); break;
+                case "tide_close": Preview(CombatCommandKind.CloseJindan); break;
                 case "earth_tab": earthPage=true; ClearTargeting(); break;
                 case "scale_tab": earthPage=false; ClearTargeting(); break;
                 case "earth_wall": case "earth_ramp":
@@ -131,6 +144,8 @@ namespace TianZhang.Features.Adventure
             if (!IsSelecting || !encounter.AcceptsPlayerCommand || encounter.CurrentSession?.Jindan == null) return;
             var cell = new HexCoord(q, r);
             ClearQuote();
+            if (selection == SelectionMode.TideSource)
+            { tideSource = cell; selection = SelectionMode.None; message = "潮源已选" + CellText(cell) + "；点击预演查看变化格、推移与水击。"; Refresh(); return; }
             if (selection == SelectionMode.EarthTarget)
             { SelectEarthTarget(cell,false); Refresh(); return; }
             if (selection == SelectionMode.BreakTarget)
@@ -197,7 +212,7 @@ namespace TianZhang.Features.Adventure
             var owned = session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId).ToArray();
             var seat = kind == CombatCommandKind.SwapJindan
                 ? owned.FirstOrDefault(value => value.Definition.Candidates.Count > 1)
-                : owned.FirstOrDefault(value => earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
+                : owned.FirstOrDefault(value => tidePage ? value.EffectId == "WATER_TIDE" : earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
             if (seat == null)
             {
                 message = kind == CombatCommandKind.SwapJindan ? "当前角色没有可切换的同席候选。" :
@@ -207,7 +222,9 @@ namespace TianZhang.Features.Adventure
             string effect = kind == CombatCommandKind.SwapJindan
                 ? seat.Definition.Candidates.First(value => value != seat.EffectId) : seat.EffectId;
             var request = kind == CombatCommandKind.JindanAbility
-                ? new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin,earthPage?earthMode:null,earthTarget,earthCell)
+                ? tidePage ? new CombatJindanRequest(seat.Definition.SeatId, tideAction: tideAction, tideSource: tideSource,
+                    charged: tideCharged, createTideEye: tideEye)
+                : new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin,earthPage?earthMode:null,earthTarget,earthCell)
                 : new CombatJindanRequest(seat.Definition.SeatId);
             frozenCommand = new CombatCommand(kind, actorId, profileId: effect, jindan: request);
             frozenQuote = encounter.PreviewJindan(frozenCommand);
@@ -240,7 +257,7 @@ namespace TianZhang.Features.Adventure
 
         private void ClearQuote() { frozenCommand = null; frozenQuote = null; }
         private void ClearTargeting()
-        { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; selection = SelectionMode.None; }
+        { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; tideSource = null; selection = SelectionMode.None; }
         private void SelectSegmentPreset()
         {
             string id = catalog.segments[segmentIndex].actors.First(value => value.team == 0).characterId;
@@ -289,6 +306,7 @@ namespace TianZhang.Features.Adventure
                 (encounter.AcceptsPlayerCommand ? " · 你的行动" : " · 等待行动"));
             result.AppendLine("AP " + Ap(actor.ActionPointsRemainingUnits) + "/" + Ap(actor.ActionPointLimitAtTurnStartUnits) +
                 "  MP " + actor.CurrentSpirit + "/" + actor.MaximumSpirit);
+            if (tidePage) return result + JindanTidePresentation.Details(session, actor, tideSource, tideAction, tideCharged, tideEye);
             var flight = session.Flight?.Find(actorId);
             if (flight != null)
             {
@@ -351,12 +369,15 @@ namespace TianZhang.Features.Adventure
             string action = frozenCommand.Kind == CombatCommandKind.Flight ? FlightName(frozenCommand.FlightAction.Value) :
                 frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
                 frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(frozenCommand.ProfileId) :
-                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开方位定尺";
+                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.Jindan?.TideAction is {} water
+                    ? JindanTidePresentation.Name(water, frozenCommand.Jindan.Charged, frozenCommand.Jindan.CreateTideEye)
+                    : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开方位定尺";
             string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
                 "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
             if (frozenCommand.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";
             else if(frozenCommand.Kind==CombatCommandKind.Art) result+="\n环境命中目标："+string.Join("、",frozenQuote.AttackArea?.EnvironmentTargetIds??Array.Empty<string>());
             else if (frozenCommand.Kind == CombatCommandKind.CloseJindan) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
+            if (frozenQuote.Tide != null) result += "\n" + JindanTidePresentation.Quote(frozenQuote.Tide, frozenCommand.Jindan);
             if (frozenCommand.Kind == CombatCommandKind.JindanAbility && frozenCommand.Jindan?.EarthMode is {} earth)
             {
                 var session = encounter.CurrentSession;
@@ -402,6 +423,7 @@ namespace TianZhang.Features.Adventure
         };
         private string Explain(string reason)
         {
+            if (reason?.StartsWith("tide_", StringComparison.Ordinal) == true) return JindanTidePresentation.Explain(reason);
             string localized = Local(reason);
             if (!string.IsNullOrEmpty(localized) && localized != reason) return localized;
             return reason switch

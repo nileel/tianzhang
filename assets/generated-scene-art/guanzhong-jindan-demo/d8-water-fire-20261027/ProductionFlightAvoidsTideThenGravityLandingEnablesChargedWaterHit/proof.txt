@@ -1,0 +1,4 @@
+airborne tide immunity; altitude=1 HP=3104 | tick=10
+ground source heavy gravity landed water actor at (4, 5, -9) HP=2756 | tick=20
+charge paid375AP600MP now=20 due=21 without early surface result | tick=20
+charge resolved at exact tick=21 grounded water hit=14 | tick=30

@@ -51,6 +51,8 @@ namespace TianZhang.Features.Adventure
             if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
             prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
             prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
+            if (!environment.TryCreateDefinition(out var surfaceEnvironment, out reason)) return false;
+            prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, segmentIndex));
             if (!encounters.TryBeginRehearsal(actors, prepared,
                 JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
                 environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;

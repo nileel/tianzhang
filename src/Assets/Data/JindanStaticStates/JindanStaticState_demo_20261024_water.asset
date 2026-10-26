@@ -76,7 +76,7 @@ MonoBehaviour:
     positionType: 0
     proofProfileId: PROOF_WATER_SOURCE_01
     equippedBaseEffectId: WATER_TIDE
-    compatibilityProfileId: demo_compat_sha256_21ec518366eb9dbad96a1ea8e48d88f357b65e211379d70dddc0d345685958fa
+    compatibilityProfileId: demo_compat_sha256_d8313dd4c8586c5a19c62f6d69fb5afe92b930b8cc0363563cf5691b813580d3
     primaryCarrierAbilityInstanceId: demo_20261024_water_guardian
     auxiliaryCarrierAbilityInstanceIds: []
   abilityLedgerBindings:

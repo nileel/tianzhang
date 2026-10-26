@@ -831,8 +831,8 @@ MonoBehaviour:
     failurePolicy: KEEP_COMMITTED_SURFACES
     capacityUnit: SURFACE_CELL
     additionalRulesKey: demo_20261024_water_tide_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d8
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
   - commandId: demo_20261024_water_tide_terminate
     displayNameKey: demo_20261024_water_tide_terminate
@@ -859,8 +859,8 @@ MonoBehaviour:
     failurePolicy: KEEP_COMMITTED_SURFACES
     capacityUnit: SURFACE_CELL
     additionalRulesKey: demo_20261024_water_tide_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d8
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
   - commandId: demo_20261024_fire_manifest_deploy
     displayNameKey: demo_20261024_fire_manifest_deploy
@@ -1366,7 +1366,7 @@ MonoBehaviour:
     capacitySchemaId: demo_20261024_water_tide_deploy
     forbiddenContractIds:
     - UNDECLARED
-    compatibilityProfileId: demo_compat_sha256_21ec518366eb9dbad96a1ea8e48d88f357b65e211379d70dddc0d345685958fa
+    compatibilityProfileId: demo_compat_sha256_d8313dd4c8586c5a19c62f6d69fb5afe92b930b8cc0363563cf5691b813580d3
   - contractId: demo_20261024_fire_manifest_contract_v1
     contractVersion: 1.0
     positionId: JD_FiveElements_Fire_DOMAIN01
@@ -1511,17 +1511,17 @@ MonoBehaviour:
     - characterId: demo_20261024_earth
       team: 0
       q: 4
-      r: 0
+      r: 4
       facing: 0
     - characterId: demo_20261024_water
       team: 0
-      q: 5
-      r: 0
+      q: 4
+      r: 5
       facing: 0
     - characterId: demo_20261024_fire
       team: 1
       q: 7
-      r: 12
+      r: 7
       facing: 3
   - segmentId: demo_20261024_segment_3
     displayNameKey: demo_20261024_segment_3
@@ -1557,3 +1557,55 @@ MonoBehaviour:
     - high_wall
     - stone_support
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u7834\u5792.txt"
+  surfaceRules:
+    rulesId: demo_20261026_water_surface_rules
+    environmentProfileId: env_guanzhong_jindan_demo
+    wetMovementBurden: 1
+    deepMovementBurden: 2
+    tideRadius: 1
+    waterlineOffset: 1
+    forceRank: 2
+    distanceBudget: 1
+    chargeExtraActionPoints: 125000
+    chargeExtraMana: 200
+    chargeTicks: 1
+    eyeExtraActionPoints: 125000
+    eyeExtraMana: 200
+    attackCapacity: 2400
+    waterMultiplier: 0.04642857
+    chargeMultiplier: 1.25
+    erosionDamage: 150
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
+  surfaceCells:
+  - segmentId: demo_20261024_segment_2
+    q: 5
+    r: 6
+    kind: Burning
+    fuel: 4
+    sourceRef: demo_20261026_environment_fire
+    fuelObjectId:
+  - segmentId: demo_20261024_segment_2
+    q: 4
+    r: 6
+    kind: None
+    fuel: 4
+    sourceRef:
+    fuelObjectId: LowPlant_4_6
+  - segmentId: demo_20261024_segment_2
+    q: 3
+    r: 7
+    kind: None
+    fuel: 4
+    sourceRef:
+    fuelObjectId:
+  surfaceFires:
+  - segmentId: demo_20261024_segment_2
+    sourceRef: demo_20261026_environment_fire
+    actorId: demo_20261024_fire
+    periodTicks: 10
+    durationTicks: 40
+    capacity: 3
+    fuelBudget: 12
+    attackCapacity: 2400
+    damageMultiplier: 0.01
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u4E94\u884C\u663E\u5316\u4E0E\u73AF\u5883\u4EA4\u4E92\u89C4\u5219.txt"

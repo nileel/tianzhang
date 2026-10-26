@@ -37,6 +37,7 @@ namespace TianZhang.Entity
                               actor.facing >= 0 && actor.facing < 6, "SEGMENT_ACTOR_SOURCE");
                 }
                 ValidateTuning(catalog.loadoutTuning);
+                JindanDemoSurfaceValidator.Validate(catalog);
                 Check(catalog.demolition != null && catalog.GetPreset(catalog.demolition.characterId) != null &&
                     catalog.demolition.sourceProfileId == "spell_guanshiji" && catalog.demolition.profileId == "demo_20261026_polei" &&
                     catalog.demolition.environmentDamage == 375 && catalog.demolition.environmentTargetTypes.SequenceEqual(new[]{"high_wall","stone_support"}) &&
@@ -154,8 +155,10 @@ namespace TianZhang.Entity
             {
                 bool flight = command.effectId == "FLIGHT" && command.abilityDefinitionId == "demo_20261024_yufeng_flight";
                 bool earth = command.effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && command.abilityDefinitionId == "demo_20261024_guardian_houzai";
+                bool water = command.effectId == "WATER_TIDE" && command.abilityDefinitionId == "demo_20261024_guardian_xulan";
                 Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
                       earth && command.kind is ("DEPLOY" or "TERMINATE") ||
+                      water && command.kind is ("DEPLOY" or "TERMINATE") ||
                       command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
                       command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
                 if (flight)
@@ -169,6 +172,15 @@ namespace TianZhang.Entity
                         command.capacity == (command.effectId == "EARTH_MANIFEST" ? 2 : 1) &&
                         command.cooldownTicks == (command.effectId == "EARTH_MANIFEST" ? 1 : 3) &&
                         command.durationClock == (command.effectId == "EARTH_MANIFEST" ? "OWN_TURN_END" : "TARGET_OWN_TURN_END"), "EARTH_CONFIGURATION");
+                else if (water)
+                    Check(command.ctPenalty == 0 && command.upkeepMana == 0 &&
+                        command.failurePolicy == "KEEP_COMMITTED_SURFACES" && command.capacityUnit == "SURFACE_CELL" &&
+                        (command.kind == "DEPLOY"
+                            ? command.actionPointCostUnits == 250000 && command.manaCost == 400 && command.cooldownTicks == 1 &&
+                              command.range == 4 && command.verticalReachRank == 3 && command.maximumInstances == 1 &&
+                              command.capacity == 7 && command.durationClock == "BATTLE_END"
+                            : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0),
+                        "WATER_CONFIGURATION");
                 else if (!earth && command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");

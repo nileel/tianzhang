@@ -11,7 +11,7 @@ namespace TianZhang.Combat
         public CombatJindanAbilityDefinition(string effectId, bool enabled, int actionPoints, int mana,
             int cooldown, int closeActionPoints, int upkeepMana, int range, int verticalReach,
             int capacity, int supportDurability, int remoteMana, int visionRange,
-            IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0)
+            IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0, CombatTideDefinition tide = null)
         {
             if (string.IsNullOrWhiteSpace(effectId) || actionPoints <= 0 || mana < 0 || cooldown < 0 ||
                 closeActionPoints <= 0 || upkeepMana < 0 || range < 0 || verticalReach < 0 || capacity < 1 ||
@@ -23,6 +23,8 @@ namespace TianZhang.Combat
             MetricModes = Array.AsReadOnly((metricModes ?? Array.Empty<int>()).ToArray());
             UnavailableReason = unavailableReason ?? "jindan_effect_not_implemented";
             DurationOwnTurnEnds = durationOwnTurnEnds;
+            Tide = tide;
+            if (enabled && effectId == "WATER_TIDE" && tide == null) throw new ArgumentException("tide_definition_missing");
             if (enabled && effectId == "SPACE_SCALE" && (supportDurability <= 0 || remoteMana < 0 || MetricModes.Count != 2 ||
                 MetricModes.Any(value => value <= 0))) throw new ArgumentException("jindan_scale_definition_invalid");
             if (enabled && effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && durationOwnTurnEnds < 1)
@@ -44,6 +46,7 @@ namespace TianZhang.Combat
         public IReadOnlyList<int> MetricModes { get; }
         public string UnavailableReason { get; }
         public int DurationOwnTurnEnds { get; }
+        public CombatTideDefinition Tide { get; }
     }
 
     public sealed class CombatJindanSeatDefinition
@@ -71,12 +74,14 @@ namespace TianZhang.Combat
     {
         public CombatJindanRequest(string seatId, IEnumerable<HexCoord> edgePath = null,
             int metricDistanceUnits = 0, HexCoord? remoteOrigin = null, CombatEarthMode? earthMode = null,
-            string earthTargetId = null, HexCoord? selectedTargetCell = null)
+            string earthTargetId = null, HexCoord? selectedTargetCell = null, CombatTideAction? tideAction = null,
+            HexCoord? tideSource = null, bool charged = false, bool createTideEye = false)
         {
             SeatId = seatId ?? string.Empty;
             EdgePath = Array.AsReadOnly((edgePath ?? Array.Empty<HexCoord>()).ToArray());
             MetricDistanceUnits = metricDistanceUnits; RemoteOrigin = remoteOrigin;
             EarthMode = earthMode; EarthTargetId = earthTargetId; SelectedTargetCell = selectedTargetCell;
+            TideAction=tideAction; TideSource=tideSource; Charged=charged; CreateTideEye=createTideEye;
         }
         public string SeatId { get; }
         public IReadOnlyList<HexCoord> EdgePath { get; }
@@ -85,8 +90,13 @@ namespace TianZhang.Combat
         public CombatEarthMode? EarthMode { get; }
         public string EarthTargetId { get; }
         public HexCoord? SelectedTargetCell { get; }
+        public CombatTideAction? TideAction { get; }
+        public HexCoord? TideSource { get; }
+        public bool Charged { get; }
+        public bool CreateTideEye { get; }
         internal string Facts => SeatId + ":" + MetricDistanceUnits + ":" + RemoteOrigin + ":" +
-            string.Join("/", EdgePath) + ":" + EarthMode + ":" + EarthTargetId + ":" + SelectedTargetCell;
+            string.Join("/", EdgePath) + ":" + EarthMode + ":" + EarthTargetId + ":" + SelectedTargetCell +
+            ":" + TideAction + ":" + TideSource + ":" + Charged + ":" + CreateTideEye;
     }
 
     public sealed class CombatJindanSeatState
@@ -103,6 +113,8 @@ namespace TianZhang.Combat
         public int MaintenancePayments { get; internal set; }
         public CombatScaleInstance ActiveScale { get; internal set; }
         public CombatEarthInstance ActiveEarth { get; internal set; }
+        public CombatPendingTide PendingTide { get; internal set; }
+        public int OwnedSurfaceCount { get; internal set; }
         public string LastEndReason { get; internal set; } = string.Empty;
     }
 

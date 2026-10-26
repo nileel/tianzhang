@@ -55,6 +55,7 @@ namespace TianZhang.Spatial
             new Dictionary<SpatialDirectedEdge, SpatialSceneObjectRules>();
 
         private SpatialSceneObjectSet() { }
+        internal IReadOnlyList<SpatialSceneObjectRules> All => new List<SpatialSceneObjectRules>(byId.Values).AsReadOnly();
 
         internal SpatialSceneObjectSet(IReadOnlyList<SpatialSceneObjectRules> objects,
             IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,

@@ -1,0 +1,15 @@
+before tide: (5, 5, -10):ShallowWater->DeepWater;(6, 5, -11):None->Wet;(6, 4, -10):None->Wet;(5, 4, -9):None->Wet;(4, 5, -9):None->Wet;(4, 6, -10):Burning->Wet;(5, 6, -11):Burning->Wet push=(4, 5, -9)->(4, 5, -9) reason=earth_anchored | tick=10
+tide native=(206.27, 1747.38) | tick=10
+tide native=(49.11, 1747.38) | tick=10
+tide native=(585.14, 537.89) | tick=10
+tide native=(403.36, 812.10) | tick=10
+tide native=(365.58, 858.77) | tick=10
+tide native=(226.00, 304.50) | tick=10
+tide native=(512.00, 585.50) | tick=10
+tide native=(798.00, 424.50) | tick=10
+tide native=(512.00, 585.50) | tick=10
+tide native=(191.00, 221.50) | tick=10
+tide native=(333.00, 221.50) | tick=10
+surface own-support max error=7.450581E-09 | tick=10
+committed: (4, 5, -9) HP=3104->3093 AP=750000 MP=5600 visual=(6.50, 1.09, 5.33) source=DeepWater | tick=10
+withdrawal / reentry resets only new rehearsal; world record unchanged | tick=10

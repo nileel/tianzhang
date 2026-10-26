@@ -849,8 +849,8 @@ demo_20261024_earth_manifest_terminate,关闭厚载
 demo_20261024_earth_gravity_deploy,展开厚载
 demo_20261024_earth_gravity_rules,极重、失重、镇岳三选一；档差2，接地受养加1封顶3；同实例替换不叠层。
 demo_20261024_earth_gravity_terminate,关闭厚载
-demo_20261024_water_tide_deploy,展开蓄澜
-demo_20261024_water_tide_rules,普通250AP/400MP；蓄力375AP/600MP准备1tick；无水源潮眼另125AP/200MP；唯一水面总容量7，切装不倒改已提交地表。
+demo_20261024_water_tide_deploy,蓄澜·涨退潮
+demo_20261024_water_tide_rules,普通250AP/400MP；蓄力375AP/600MP准备1tick；无合法水源潮眼另125AP/200MP。固定半径1、水线源高+1，先改地表再潮推、水击与冲蚀；水面总容量7，切装保留已提交地表。
 demo_20261024_unavailable_d8,D8能力尚未接入；当前仅可浏览来源、装配与费用。
 demo_20261024_water_tide_terminate,关闭蓄澜
 demo_20261024_fire_manifest_deploy,展开长明

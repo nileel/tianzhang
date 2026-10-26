@@ -79,6 +79,7 @@ namespace TianZhang.Combat
         private Dictionary<string, CombatSceneObject> objects;
         private readonly CombatSceneObject[] originalObjects;
         private IReadOnlyList<SpatialMetricOverride> metricOverrides = Array.Empty<SpatialMetricOverride>();
+        private IReadOnlyDictionary<HexCoord,int> surfaceBurdens = new Dictionary<HexCoord,int>();
         public CombatSceneObjects(SpatialQueryBoard board, IEnumerable<CombatSceneObject> instances,
             int lightCoverHitPenalty, int heavyCoverHitPenalty)
         {
@@ -123,11 +124,18 @@ namespace TianZhang.Combat
             var next = originalObjects.Concat(abilityObjects).ToDictionary(value => value.Id, StringComparer.Ordinal);
             var ordered = next.Values.OrderBy(value => value.Id, StringComparer.Ordinal).ToList().AsReadOnly();
             var frozen = Array.AsReadOnly(overrides.ToArray());
-            var board = baseBoard.WithMetricOverrides(frozen).WithSceneObjects(ordered.Select(value => value.SpatialRules).ToArray());
+            var board = baseBoard.WithCellMovementBurdens(surfaceBurdens).WithMetricOverrides(frozen).WithSceneObjects(ordered.Select(value => value.SpatialRules).ToArray());
             return () => { objects = next; All = ordered; metricOverrides = frozen; Board = board; Revision++; };
         }
 
-        private void RebuildBoard() => Board = baseBoard.WithMetricOverrides(metricOverrides)
+        internal void ApplySurfaces(IReadOnlyDictionary<HexCoord,int> burdens, IReadOnlyList<CombatSceneObjectChange> changes)
+        {
+            foreach (var change in changes) objects[change.Id].ApplyDurability(change.After);
+            surfaceBurdens = burdens.ToDictionary(pair=>pair.Key,pair=>pair.Value);
+            RebuildBoard(); Revision++;
+        }
+
+        private void RebuildBoard() => Board = baseBoard.WithCellMovementBurdens(surfaceBurdens).WithMetricOverrides(metricOverrides)
             .WithSceneObjects(All.Select(value => value.SpatialRules).ToArray());
     }
 }

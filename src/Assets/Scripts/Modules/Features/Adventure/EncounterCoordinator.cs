@@ -57,6 +57,8 @@ namespace TianZhang.Features.Adventure
         private long commandContextVersion;
         private CombatCommandPreview swapPreview;
         private Coroutine combatRoutine;
+        private Coroutine surfaceRoutine;
+        private readonly CombatSurfacePlayback surfacePlayback = new CombatSurfacePlayback();
         private bool withdrawalPaused;
 
         private CharacterRuntimeProfile equipmentOwner;
@@ -150,7 +152,7 @@ namespace TianZhang.Features.Adventure
         private string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
             ? name : IsPlayerActor(id) ? playerDisplayName : resolveText(EnemyDataFor(id)?.displayNameKey ?? id);
         private string PortraitKey(string id) => spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
-        public bool IsPresenting => ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
+        public bool IsPresenting => surfacePlayback.Busy || ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
             (hudActivity?.IsPresenting ?? false);
 
         /// <summary>The only window in which a direct <c>Request*</c> command is performed instead of
@@ -211,6 +213,8 @@ namespace TianZhang.Features.Adventure
             swapPreview = null;
             ++commandContextVersion;
             if (combatRoutine != null) StopCoroutine(combatRoutine);
+            if (surfaceRoutine != null) StopCoroutine(surfaceRoutine);
+            surfacePlayback.Clear();
             combatRoutine = null;
             session.Jindan?.Clear(session);
             session.Flight?.Clear(session);
@@ -334,6 +338,8 @@ namespace TianZhang.Features.Adventure
             string action = command.Kind == CombatCommandKind.SwapJindan ? "切换金丹装配" :
                 command.Kind == CombatCommandKind.CloseJindan ? "关闭当前位格效果" :
                 command.Kind == CombatCommandKind.Flight ? "御风飞行" : command.Kind==CombatCommandKind.Art?"演武·破垒":
+                command.Jindan?.TideAction.HasValue == true ? JindanTidePresentation.Name(command.Jindan.TideAction.Value,
+                    command.Jindan.Charged, command.Jindan.CreateTideEye) :
                 command.Jindan?.EarthMode.HasValue==true?"厚载·"+command.Jindan.EarthMode:"布设方位定尺";
             presentation.AppendLog(result.Succeeded ? ActorName(command.ActorId) + "：" + action +
                 "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent : displayReason(result.RejectionReason));
@@ -566,6 +572,7 @@ namespace TianZhang.Features.Adventure
                 var flightBefore = SnapshotFlightStates();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
                 ProjectFlightStates(flightBefore);
+                surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog));
                 Present("回合推进", false, advanceSteps);
                 while (IsPresenting) yield return null;
                 if (!advance.HasActor)
@@ -701,9 +708,10 @@ namespace TianZhang.Features.Adventure
                 }
             }
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
-            if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
+            if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn && command.Jindan?.TideAction == null)
                 ProjectPresentation(command, result, actorBefore, actorStart, quote);
             if (result.Succeeded) ProjectFlightStates(flightBefore);
+            if (result.Succeeded) surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog));
             return result;
         }
 
@@ -1100,7 +1108,8 @@ namespace TianZhang.Features.Adventure
                 session.Combatants.TryGet(flight.ActorId, out var actor);
                 var previous = before[actor.Id];
                 if (previous.Health <= 0 || previous.Pose == actor.Pose && previous.Health == actor.CurrentHealth) continue;
-                int damage = Math.Max(0, previous.Health - actor.CurrentHealth);
+                int damage = Math.Max(0, previous.Health - actor.CurrentHealth - surfacePlayback.PendingDamage(session, actor.Id));
+                if (previous.Pose.AltitudeBand == actor.AltitudeBand && damage == 0) continue;
                 unitPresentation.Present(new CombatUnitPresentationEventProjection(actor.Id,
                     !actor.IsAlive ? CombatUnitPresentationEvent.Death : damage > 0 ? CombatUnitPresentationEvent.Hit : CombatUnitPresentationEvent.Idle,
                     ToPresentationHex(actor.Position), ToPresentationHex(actor.Position), actor.Facing,

@@ -48,10 +48,14 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatUnitPresentationMovementStep : IEquatable<CombatUnitPresentationMovementStep>
     {
         public CombatUnitPresentationMovementStep(CombatUnitPresentationPose from, CombatUnitPresentationPose to,
-            IReadOnlyList<int> turnFacings = null, bool isLightLeap = false)
+            IReadOnlyList<int> turnFacings = null, bool isLightLeap = false, bool isForced = false)
         {
-            if (from.IsDoubleCell != to.IsDoubleCell ||
-                !CombatUnitPresentationPose.Step(from.Position, to.Facing).Equals(to.Position))
+            bool adjacent = false;
+            for (int direction = 0; direction < 6; direction++)
+                adjacent |= CombatUnitPresentationPose.Step(from.Position, direction).Equals(to.Position);
+            if (from.IsDoubleCell != to.IsDoubleCell || (isForced
+                ? !adjacent || from.Facing != to.Facing || isLightLeap || turnFacings?.Count > 0
+                : !CombatUnitPresentationPose.Step(from.Position, to.Facing).Equals(to.Position)))
                 throw new ArgumentException("Movement must advance one cell without changing footprint.");
             var turns = turnFacings == null ? new List<int>() : new List<int>(turnFacings);
             if (from.IsDoubleCell)
@@ -76,14 +80,16 @@ namespace TianZhang.Gameplay.Contracts
             To = to;
             TurnFacings = turns.AsReadOnly();
             IsLightLeap = isLightLeap;
+            IsForced = isForced;
         }
         public CombatUnitPresentationPose From { get; }
         public CombatUnitPresentationPose To { get; }
         public IReadOnlyList<int> TurnFacings { get; }
         public bool IsLightLeap { get; }
+        public bool IsForced { get; }
         public bool Equals(CombatUnitPresentationMovementStep other)
         {
-            if (other == null || !From.Equals(other.From) || !To.Equals(other.To) || TurnFacings.Count != other.TurnFacings.Count || IsLightLeap != other.IsLightLeap)
+            if (other == null || !From.Equals(other.From) || !To.Equals(other.To) || TurnFacings.Count != other.TurnFacings.Count || IsLightLeap != other.IsLightLeap || IsForced != other.IsForced)
                 return false;
             for (int index = 0; index < TurnFacings.Count; index++)
                 if (TurnFacings[index] != other.TurnFacings[index]) return false;

@@ -1,0 +1,2 @@
+segmentId,sourceRef,actorId,periodTicks,durationTicks,capacity,fuelBudget,attackCapacity,damageMultiplier,sourceDocument
+demo_20261024_segment_2,demo_20261026_environment_fire,demo_20261024_fire,10,40,3,12,2400,0.01,docs/基础设定/五行显化与环境交互规则.txt

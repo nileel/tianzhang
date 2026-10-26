@@ -1,0 +1,13 @@
+walked to actual tide stance (5, 4, -9) | tick=10
+before tide: (5, 5, -10):ShallowWater->DeepWater;(6, 5, -11):None->Wet;(6, 4, -10):None->Wet;(5, 4, -9):None->Wet;(4, 5, -9):None->Wet;(4, 6, -10):Burning->Wet;(5, 6, -11):Burning->Wet push=(5, 4, -9)->(5, 3, -8) reason=distance_budget_exhausted | tick=10
+普通·涨潮  250AP / 400MP / CT 0 / CD 1tick
+水线 H2；变化7格：(5,5)浅水→深水、(6,5)干地→湿泥、(6,4)干地→湿泥、(5,4)干地→湿泥、(4,5)干地→湿泥、(4,6)燃烧→湿泥、(5,6)燃烧→湿泥
+fire 推向4 (4,6)→(3,7)
+water 推向2 (5,4)→(5,3)
+水击：fire、water；冲蚀：
+报价已冻结，请核对后确认。 | tick=10
+surface own-support max error=7.450581E-09 | tick=10
+committed: (5, 3, -8) HP=2919->2908 AP=729167 MP=5600 visual=(6.50, 0.72, 3.60) source=DeepWater | tick=10
+walked into deep water at (5, 5, -10) | tick=10
+returned to shore (4, 7, -11) AP=593752 | tick=10
+withdrawal / reentry resets only new rehearsal; world record unchanged | tick=10

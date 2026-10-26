@@ -75,9 +75,51 @@ namespace TianZhang.Features.Adventure
                     deploy.manaCost, deploy.cooldownTicks, close.actionPointCostUnits, deploy.upkeepMana,
                     deploy.range, deploy.verticalReachRank, deploy.capacity, deploy.supportDurability,
                     deploy.remoteOriginManaCost, catalog.GetPreset(seat.characterId).normalVisionRange,
-                    deploy.metricDistanceModes, deploy.unavailableReasonKey, deploy.durationCount));
+                    deploy.metricDistanceModes, deploy.unavailableReasonKey, deploy.durationCount,
+                    effect == "WATER_TIDE" ? CreateTide(catalog.surfaceRules) : null));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
+        }
+
+        private static CombatTideDefinition CreateTide(JindanDemoSurfaceRules rules) => new CombatTideDefinition(
+            rules.tideRadius, rules.waterlineOffset, rules.forceRank, rules.distanceBudget,
+            rules.chargeExtraActionPoints, rules.chargeExtraMana, rules.chargeTicks,
+            rules.eyeExtraActionPoints, rules.eyeExtraMana, rules.attackCapacity,
+            rules.waterMultiplier, rules.chargeMultiplier, rules.erosionDamage);
+
+        public static CombatSurfaces CreateSurfaces(JindanDemoCatalogData catalog,
+            EnvironmentProfileDefinition environment, int segmentIndex)
+        {
+            if (catalog == null || !catalog.Validate(out _)) throw new ArgumentException("jindan_catalog_invalid");
+            if (environment == null || environment.profileId != catalog.surfaceRules.environmentProfileId)
+                throw new ArgumentException("jindan_surface_environment_mismatch");
+            if (segmentIndex < 0 || segmentIndex >= catalog.segments.Length)
+                throw new ArgumentOutOfRangeException(nameof(segmentIndex));
+            string segment = catalog.segments[segmentIndex].segmentId;
+            var definitions = environment.battlefieldCells.ToDictionary(value => new HexCoord(value.q, value.r), value =>
+                new CombatSurfaceDefinition(new HexCoord(value.q, value.r), value.surfaceKind switch
+                {
+                    "mud_bank" => CombatSurfaceKind.Wet,
+                    "shallow_water" => CombatSurfaceKind.ShallowWater,
+                    "deep_water" => CombatSurfaceKind.DeepWater,
+                    _ => CombatSurfaceKind.None,
+                }));
+            foreach (var cell in catalog.surfaceCells.Where(value => value.segmentId == segment))
+            {
+                var position = new HexCoord(cell.q, cell.r);
+                if (!definitions.ContainsKey(position)) throw new ArgumentException("jindan_surface_cell_missing");
+                if (!string.IsNullOrEmpty(cell.fuelObjectId) &&
+                    !(environment.sceneObjects?.instances?.Any(value => value.instanceId == cell.fuelObjectId &&
+                        value.cell == cell.q + ":" + cell.r && value.contentType == "low_plant") ?? false))
+                    throw new ArgumentException("jindan_surface_fuel_object_missing");
+                definitions[position] = new CombatSurfaceDefinition(position,
+                    (CombatSurfaceKind)Enum.Parse(typeof(CombatSurfaceKind), cell.kind), cell.fuel, cell.sourceRef, cell.fuelObjectId);
+            }
+            var fires = catalog.surfaceFires.Where(value => value.segmentId == segment).Select(value =>
+                new CombatFireDefinition(value.sourceRef, value.actorId, value.periodTicks, value.durationTicks,
+                    value.capacity, value.fuelBudget, value.attackCapacity, value.damageMultiplier));
+            return new CombatSurfaces(definitions.Values, fires,
+                catalog.surfaceRules.wetMovementBurden, catalog.surfaceRules.deepMovementBurden);
         }
 
         public static CombatFlight CreateFlight(JindanDemoCatalogData catalog, AdventureSpawnSet spawned)

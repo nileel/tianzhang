@@ -1,0 +1,3 @@
+first rise extinguishes both burning cells without prematurely eroding wet-only plant | tick=10
+second rise applies150 erosion: LowPlant_4_6 durability15->0; dependent fuel=0 | tick=20
+next environment cycle does not spread into (3,7) | tick=30

@@ -11,6 +11,30 @@ namespace TianZhang.Combat
         private const float BaseHitRate = 100f;
         private const float BaseCriticalMultiplier = 1.5f;
 
+        /// <summary>Guaranteed environmental contact: normal numeric defenses, no active-hit or critical rolls/procs.</summary>
+        internal static CombatDamageResult ResolveEnvironmentDamage(CombatantSnapshot source,CombatantSnapshot target,
+            bool physical,int attackCapacity,float multiplier,string element)
+        {
+            int attack=physical?Math.Min(source.PhysicalAttack,attackCapacity):
+                (int)Math.Min((long)source.SoulAttack+source.MindStrengthBonus,attackCapacity);
+            float defense=physical?Math.Max(0,target.PhysicalDefense-target.ConsumeKuxingDefenseDebt())*target.DefenseMultiplier(true):
+                target.SoulDefense*target.DefenseMultiplier(false);
+            float resistance=0;
+            if(!physical)
+            {
+                if(target.GongFaId==CombatGongFaRules.ShouyiGongFaId && target.ShouyiStacks==target.MaximumShouyiStacks) resistance=15;
+                if(target.GongFaId==CombatGongFaRules.LeijieGongFaId && target.LeijieStacks==target.MaximumLeijieStacks) defense*=.8f;
+            }
+            float value=CalculateLineDamage(attack,(int)Math.Round(defense),resistance,multiplier,source.RealmMultiplier,
+                target.RealmMultiplier,GetElementMatch(element,source.GongFaElement,target.GongFaElement).DamageMultiplier);
+            bool shielded=!physical && target.SoulShieldRate>=100f;
+            if(shielded) value*=1f-Clamp(target.SoulShieldReduction,0f,100f)/100f;
+            value=ApplyCommonReductions(value,target);
+            int damage=Math.Max(1,checked((int)Math.Round(value,MidpointRounding.AwayFromZero)));
+            target.ReceiveDamage(damage);
+            return new CombatDamageResult(damage,true,false,false,shielded);
+        }
+
         public CombatActionResult Resolve(CombatSession session, CombatCommand command)
         {
             if (session == null || command == null)

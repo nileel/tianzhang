@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace TianZhang.Editor
 {
-    /// <summary>Strict scalar/list projection for the seven explicitly typed demo definition tables.</summary>
+    /// <summary>Strict scalar/list projection for the explicitly typed demo definition tables.</summary>
     public static class JindanDemoCsv
     {
         public static T[] Parse<T>(string[] lines, string source) where T : new()
@@ -55,6 +55,9 @@ namespace TianZhang.Editor
                 catalog.segments = Parse<JindanDemoSegmentDefinition>(read("JindanDemoSegments"), "JindanDemoSegments");
                 catalog.loadoutTuning = Parse<JindanDemoLoadoutTuning>(read("JindanDemoLoadoutTuning"), "JindanDemoLoadoutTuning").Single();
                 catalog.demolition = Parse<JindanDemoDemolitionDefinition>(read("JindanDemoDemolition"), "JindanDemoDemolition").Single();
+                catalog.surfaceRules = Parse<JindanDemoSurfaceRules>(read("JindanDemoSurfaceRules"), "JindanDemoSurfaceRules").Single();
+                catalog.surfaceCells = Parse<JindanDemoSurfaceCell>(read("JindanDemoSurfaceCells"), "JindanDemoSurfaceCells");
+                catalog.surfaceFires = Parse<JindanDemoSurfaceFire>(read("JindanDemoSurfaceFires"), "JindanDemoSurfaceFires");
                 foreach (var contract in catalog.contracts)
                 {
                     if (contract.compatibilityProfileId != "compile")

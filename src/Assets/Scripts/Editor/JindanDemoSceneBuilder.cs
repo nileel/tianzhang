@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Bootstrap;
 using TianZhang.Features.CombatPresentation;
 using UnityEditor;
@@ -54,6 +55,7 @@ namespace TianZhang.Editor
             Remove(canvas, "JindanDemoCombatRoot");
             Remove(owner.transform, "JindanScaleRoot");
             Remove(owner.transform, "JindanEarthRoot");
+            Remove(owner.transform, "JindanSurfaceRoot");
             var view = owner.GetComponent<JindanDemoView>() ?? owner.AddComponent<JindanDemoView>();
             var bindings = new List<JindanDemoView.ActionButton>();
             BuildPreparation(canvas, view, bindings);
@@ -89,6 +91,25 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(earth, "rampPrefab", SceneBuildSupport.RequireAsset<GameObject>(
                 "Assets/Art/Environments/Guanzhong/EarthManifest/EarthManifestRamp.prefab"));
             SceneBuildSupport.SetObject(installer, "earthView", earth);
+            var surfaceRoot = new GameObject("JindanSurfaceRoot");
+            surfaceRoot.transform.SetParent(owner.transform, false);
+            var surfaceView = surfaceRoot.AddComponent<CombatSurfaceView>();
+            SceneBuildSupport.SetObject(surfaceView, "surfacePrefab", SceneBuildSupport.RequireAsset<GameObject>(
+                GuanzhongWaterbankSampleBuilder.AssetRoot + "/WaterHex.prefab"));
+            SceneBuildSupport.SetObject(surfaceView, "groundMaterial", SceneBuildSupport.RequireAsset<Material>(
+                GuanzhongWaterbankSampleBuilder.AssetRoot + "/MudBank.mat"));
+            SceneBuildSupport.SetObject(surfaceView, "lineMaterial", SceneBuildSupport.RequireAsset<Material>(
+                VisualBaselineBuilder.SelectedMaterialPath));
+            var terrain = owner.transform.Find(GuanzhongDemoBattlefieldBuilder.RootName);
+            if (terrain == null) terrain = scene.GetRootGameObjects().SelectMany(value => value.GetComponentsInChildren<Transform>(true))
+                .Single(value => value.name == GuanzhongDemoBattlefieldBuilder.RootName);
+            var overlays = terrain.GetComponentsInChildren<Transform>(true)
+                .Where(value => value.name == "WaterSurface" || value.name.StartsWith("Shore_", StringComparison.Ordinal)).ToArray();
+            var surfaceData = new SerializedObject(surfaceView);
+            var originals = surfaceData.FindProperty("staticWaterOverlays"); originals.arraySize = overlays.Length;
+            for (int i = 0; i < overlays.Length; i++) originals.GetArrayElementAtIndex(i).objectReferenceValue = overlays[i].gameObject;
+            surfaceData.ApplyModifiedPropertiesWithoutUndo();
+            SceneBuildSupport.SetObject(installer, "surfaceView", surfaceView);
             SceneBuildSupport.SetObject(installer, "jindanDemoCatalog", catalog);
             // The existing withdrawal dialog remains above every combat panel and receives its clicks.
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
@@ -124,7 +145,7 @@ namespace TianZhang.Editor
             rect.anchoredPosition = Vector2.zero; rect.sizeDelta = new Vector2(1280, 880);
             Label(dialog.transform, "Heading", "金丹演武 · 战前配置", 30, 32, 814, 1216, 44);
             AddButton(dialog.transform, bindings, "stage1", "第一段 · 御风飞行", 32, 742, 392, 60);
-            AddButton(dialog.transform, bindings, "stage2", "第二段 · 土石与受力", 444, 742, 392, 60);
+            AddButton(dialog.transform, bindings, "stage2", "第二段 · 水火与土石", 444, 742, 392, 60);
             AddButton(dialog.transform, bindings, "stage3", "第三段 · 方位定尺", 856, 742, 392, 60);
             Text details = ScrollText(dialog.transform, "PreparationDetails", 32, 166, 1216, 560, 24);
             AddButton(dialog.transform, bindings, "preset_next", "切换预设", 32, 90, 594, 60);
@@ -147,10 +168,11 @@ namespace TianZhang.Editor
             GameObject header = Panel(root.transform, "JindanCombatHeader");
             Place(header.GetComponent<RectTransform>(), 0, 580, 620, 48);
             Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 180, 44);
-            AddButton(header.transform, bindings, "flight_tab", "飞行", 200, 0, 85, 48);
-            AddButton(header.transform, bindings, "scale_tab", "位格", 292, 0, 85, 48);
-            AddButton(header.transform, bindings, "earth_tab", "土系", 384, 0, 85, 48);
-            Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 480, 0, 140, 48);
+            AddButton(header.transform, bindings, "flight_tab", "飞行", 200, 0, 66, 48);
+            AddButton(header.transform, bindings, "scale_tab", "位格", 274, 0, 66, 48);
+            AddButton(header.transform, bindings, "earth_tab", "土系", 348, 0, 66, 48);
+            AddButton(header.transform, bindings, "tide_tab", "水火", 422, 0, 66, 48);
+            Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 496, 0, 124, 48);
             GameObject body = Panel(root.transform, "JindanCombatBody");
             Place(body.GetComponent<RectTransform>(), 0, 0, 620, 580);
             Text details = ScrollText(body.transform, "CombatDetails", 16, 330, 588, 238, 22);
@@ -186,6 +208,16 @@ namespace TianZhang.Editor
             AddButton(earth.transform,bindings,"break_object","破垒 · 选构件",420,10,184,50);
             earth.SetActive(false);
             SceneBuildSupport.SetObject(view,"earthActions",earth);
+            var tide = new GameObject("TideActions", typeof(RectTransform)); tide.transform.SetParent(body.transform, false);
+            Place(tide.GetComponent<RectTransform>(), 0, 0, 620, 240);
+            AddButton(tide.transform, bindings, "tide_rise", "涨潮 · 选水源", 16, 184, 286, 50);
+            AddButton(tide.transform, bindings, "tide_ebb", "退潮 · 选湿水格", 318, 184, 286, 50);
+            AddButton(tide.transform, bindings, "tide_charge", "切换普通／蓄力", 16, 126, 286, 50);
+            AddButton(tide.transform, bindings, "tide_eye", "无源潮眼 · 选干格", 318, 126, 286, 50);
+            AddButton(tide.transform, bindings, "tide_preview", "预演", 16, 68, 184, 50);
+            AddButton(tide.transform, bindings, "tide_close", "终止本源水面／准备", 16, 10, 588, 50);
+            tide.SetActive(false);
+            SceneBuildSupport.SetObject(view, "tideActions", tide);
             SceneBuildSupport.SetObject(view, "flightActions", flight);
             SceneBuildSupport.SetObject(view, "scaleActions", scale);
             AddButton(body.transform, bindings, "confirm", "确认施放", 218, 68, 184, 50);

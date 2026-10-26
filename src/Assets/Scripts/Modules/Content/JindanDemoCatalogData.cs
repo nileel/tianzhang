@@ -18,6 +18,9 @@ namespace TianZhang.Entity
         public JindanDemoSegmentDefinition[] segments;
         public JindanDemoLoadoutTuning loadoutTuning;
         public JindanDemoDemolitionDefinition demolition;
+        public JindanDemoSurfaceRules surfaceRules;
+        public JindanDemoSurfaceCell[] surfaceCells;
+        public JindanDemoSurfaceFire[] surfaceFires;
 
         public JindanDemoPresetDefinition GetPreset(string id) => presets?.SingleOrDefault(x => x.characterId == id);
         public JindanDemoSeatDefinition GetSeat(string id) => seats?.SingleOrDefault(x => x.seatInstanceId == id);

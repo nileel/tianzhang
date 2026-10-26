@@ -1,0 +1,3 @@
+before walls: ebb changes (4, 2, -6);(5, 1, -6);(4, 1, -5) | tick=10
+two actual walls: ebb changes (4, 2, -6);(5, 1, -6) | tick=20
+isolated (4,1) remains shallow; source and (5,1) become wet; both walls retain750 | tick=20
