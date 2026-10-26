@@ -88,6 +88,14 @@ namespace TianZhang.Entity
                     rules.erosionDamage.ToString(CultureInfo.InvariantCulture),
                 }).ToArray();
             }
+            if (contract.effectId == "SPACE_SEAL")
+            {
+                var seal = catalog.sealRules ?? throw new InvalidDataException("JD_DEMO_SEAL_RULES_MISSING");
+                frozen = frozen.Concat(new[] { seal.rulesId, seal.fromQ.ToString(CultureInfo.InvariantCulture),
+                    seal.fromR.ToString(CultureInfo.InvariantCulture), seal.toQ.ToString(CultureInfo.InvariantCulture),
+                    seal.toR.ToString(CultureInfo.InvariantCulture), seal.supportId, seal.localRadius.ToString(CultureInfo.InvariantCulture),
+                    seal.layerDurability.ToString(CultureInfo.InvariantCulture), seal.brokenLayerTicks.ToString(CultureInfo.InvariantCulture) }).ToArray();
+            }
             using var sha = SHA256.Create();
             return "demo_compat_sha256_" + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(
                 string.Join("\n", frozen)))).Replace("-", "").ToLowerInvariant();

@@ -35,7 +35,8 @@ namespace TianZhang.Tests.EditMode
                 "demo_20261024_flight_ascend", "demo_20261024_flight_descend", "demo_20261024_flight_land", "demo_20261024_flight_recover",
                 "demo_20261024_earth_manifest_deploy","demo_20261024_earth_manifest_terminate",
                 "demo_20261024_earth_gravity_deploy","demo_20261024_earth_gravity_terminate",
-                "demo_20261024_water_tide_deploy","demo_20261024_water_tide_terminate" }));
+                "demo_20261024_water_tide_deploy","demo_20261024_water_tide_terminate",
+                "demo_20261024_space_seal_deploy","demo_20261024_space_seal_terminate" }));
             Assert.That(catalog.commands.Where(c => !c.enabled).All(c => !string.IsNullOrEmpty(c.unavailableReasonKey)), Is.True);
             Assert.That(JindanDemoCatalogValidator.Validate(catalog, false, out string reason), Is.True, reason);
         }

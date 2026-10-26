@@ -43,6 +43,7 @@ MonoBehaviour:
     carryingCapacityProfileId: demo_20261024_capacity_1
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
     sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    equippedArtProfileIds: []
     sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
     foundationState: {fileID: 11400000, guid: 8cdc4ec6c0d049349af296d82f0b7aca, type: 2}
     jindanState: {fileID: 11400000, guid: 53f71418302ba714b94ba1d581d17fc7, type: 2}
@@ -75,6 +76,7 @@ MonoBehaviour:
     carryingCapacityProfileId: demo_20261024_capacity_1
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
     sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    equippedArtProfileIds: []
     sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
     foundationState: {fileID: 11400000, guid: d4056094cd3e7e1468f2013016859893, type: 2}
     jindanState: {fileID: 11400000, guid: 82e23b8cded5fd6479da599307f9164c, type: 2}
@@ -107,6 +109,7 @@ MonoBehaviour:
     carryingCapacityProfileId: demo_20261024_capacity_1
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
     sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    equippedArtProfileIds: []
     sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
     foundationState: {fileID: 11400000, guid: 9658e200c45ced74e9d3052ea9b56a7c, type: 2}
     jindanState: {fileID: 11400000, guid: 16cadccb0d3b6164481e917abdfc55e9, type: 2}
@@ -141,6 +144,8 @@ MonoBehaviour:
     carryingCapacityProfileId: demo_20261024_capacity_2
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
     sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    equippedArtProfileIds:
+    - spell_guanshiji
     sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
     foundationState: {fileID: 11400000, guid: 63c9b8776aa22c94786016967fab8f3c, type: 2}
     jindanState: {fileID: 11400000, guid: a0686f5235fcdac43891fd2c92bef536, type: 2}
@@ -175,6 +180,7 @@ MonoBehaviour:
     carryingCapacityProfileId: demo_20261024_capacity_2
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
     sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    equippedArtProfileIds: []
     sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
     foundationState: {fileID: 11400000, guid: 8dc54107c0e2dbb4a8cbf58eb0c01a9b, type: 2}
     jindanState: {fileID: 11400000, guid: 7e284ad06f657f54e93e90d0e98d8275, type: 2}
@@ -1055,8 +1061,8 @@ MonoBehaviour:
     failurePolicy: LAYERED_END
     capacityUnit: GATE
     additionalRulesKey: demo_20261024_space_seal_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d9
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
   - commandId: demo_20261024_space_seal_terminate
     displayNameKey: demo_20261024_space_seal_terminate
@@ -1083,8 +1089,8 @@ MonoBehaviour:
     failurePolicy: LAYERED_END
     capacityUnit: GATE
     additionalRulesKey: demo_20261024_space_seal_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d9
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
   - commandId: demo_20261024_yin_conceal_deploy
     displayNameKey: demo_20261024_yin_conceal_deploy
@@ -1466,7 +1472,7 @@ MonoBehaviour:
     capacitySchemaId: demo_20261024_space_seal_deploy
     forbiddenContractIds:
     - UNDECLARED
-    compatibilityProfileId: demo_compat_sha256_e51b8ab35ae75564bcf837f2691e82523154fc9b907cadbab5eda12508920dd3
+    compatibilityProfileId: demo_compat_sha256_1120415879a0a9c3b32c8021e11ae3dfb61cf92c1723b47e3252e012a55931dd
   - contractId: demo_20261024_yin_conceal_contract_v1
     contractVersion: 1.0
     positionId: JD_YinYang_Yin_DOMAIN01
@@ -1609,3 +1615,14 @@ MonoBehaviour:
     attackCapacity: 2400
     damageMultiplier: 0.01
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u4E94\u884C\u663E\u5316\u4E0E\u73AF\u5883\u4EA4\u4E92\u89C4\u5219.txt"
+  sealRules:
+    rulesId: demo_20261024_space_seal_rules
+    fromQ: 8
+    fromR: 12
+    toQ: 9
+    toR: 12
+    supportId: space_lock_support
+    localRadius: 2
+    layerDurability: 100
+    brokenLayerTicks: 2
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"

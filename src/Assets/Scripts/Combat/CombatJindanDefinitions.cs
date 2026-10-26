@@ -11,7 +11,8 @@ namespace TianZhang.Combat
         public CombatJindanAbilityDefinition(string effectId, bool enabled, int actionPoints, int mana,
             int cooldown, int closeActionPoints, int upkeepMana, int range, int verticalReach,
             int capacity, int supportDurability, int remoteMana, int visionRange,
-            IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0, CombatTideDefinition tide = null)
+            IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0, CombatTideDefinition tide = null,
+            CombatSealDefinition seal = null)
         {
             if (string.IsNullOrWhiteSpace(effectId) || actionPoints <= 0 || mana < 0 || cooldown < 0 ||
                 closeActionPoints <= 0 || upkeepMana < 0 || range < 0 || verticalReach < 0 || capacity < 1 ||
@@ -24,6 +25,9 @@ namespace TianZhang.Combat
             UnavailableReason = unavailableReason ?? "jindan_effect_not_implemented";
             DurationOwnTurnEnds = durationOwnTurnEnds;
             Tide = tide;
+            Seal = seal;
+            if (enabled && effectId == "SPACE_SEAL" && (seal == null || supportDurability != checked(seal.LayerDurability * 2) || capacity != 1))
+                throw new ArgumentException("jindan_seal_definition_invalid");
             if (enabled && effectId == "WATER_TIDE" && tide == null) throw new ArgumentException("tide_definition_missing");
             if (enabled && effectId == "SPACE_SCALE" && (supportDurability <= 0 || remoteMana < 0 || MetricModes.Count != 2 ||
                 MetricModes.Any(value => value <= 0))) throw new ArgumentException("jindan_scale_definition_invalid");
@@ -47,6 +51,7 @@ namespace TianZhang.Combat
         public string UnavailableReason { get; }
         public int DurationOwnTurnEnds { get; }
         public CombatTideDefinition Tide { get; }
+        public CombatSealDefinition Seal { get; }
     }
 
     public sealed class CombatJindanSeatDefinition
@@ -112,6 +117,7 @@ namespace TianZhang.Combat
         public int SuccessfulDeployments { get; internal set; }
         public int MaintenancePayments { get; internal set; }
         public CombatScaleInstance ActiveScale { get; internal set; }
+        public CombatSealInstance ActiveSeal { get; internal set; }
         public CombatEarthInstance ActiveEarth { get; internal set; }
         public CombatPendingTide PendingTide { get; internal set; }
         public int OwnedSurfaceCount { get; internal set; }

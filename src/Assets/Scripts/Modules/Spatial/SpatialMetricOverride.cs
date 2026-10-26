@@ -54,8 +54,8 @@ namespace TianZhang.Spatial
                     throw new ArgumentException("spatial_metric_cell_missing", nameof(overrides));
                 if (!edges.ContainsKey(forward) || !edges.ContainsKey(reverse))
                     throw new ArgumentException("spatial_metric_bidirectional_edge_required", nameof(overrides));
-                // A higher layer must first resolve any overlap. This projection never chooses a winner.
-                if (byEdge.ContainsKey(forward))
+                // Same-direction sources share one final value; opposing explanations need resolution upstream.
+                if (byEdge.TryGetValue(forward, out var prior) && prior.MetricDistanceUnits != item.MetricDistanceUnits)
                     throw new ArgumentException("spatial_metric_override_conflict", nameof(overrides));
                 if (!groups.TryGetValue(item.SourceInstanceId, out var group))
                 {
@@ -64,6 +64,9 @@ namespace TianZhang.Spatial
                 }
                 if (group.Count == 2)
                     throw new ArgumentException("spatial_metric_capacity_exceeded", nameof(overrides));
+                if (group.Exists(value => value.From == item.From && value.To == item.To ||
+                    value.From == item.To && value.To == item.From))
+                    throw new ArgumentException("spatial_metric_duplicate_source_edge", nameof(overrides));
                 if (group.Count == 1)
                 {
                     SpatialMetricOverride first = group[0];
@@ -75,8 +78,8 @@ namespace TianZhang.Spatial
                 }
                 group.Add(item);
                 frozen.Add(item);
-                byEdge.Add(forward, item);
-                byEdge.Add(reverse, item);
+                byEdge[forward] = item;
+                byEdge[reverse] = item;
             }
             Rules = frozen.AsReadOnly();
         }

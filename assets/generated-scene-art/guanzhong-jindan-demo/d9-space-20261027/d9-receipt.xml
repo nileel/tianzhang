@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.1514021">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1703" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.151402" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2970" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.134300" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="41728" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2971" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.121697" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2972" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.109377" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2973" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="864" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.097198" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="2744" name="D9SpaceSealTests" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="20" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.090629" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2756" name="FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" methodname="FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="35734483" result="Passed" start-time="2026-10-26 23:50:08Z" end-time="2026-10-26 23:50:08Z" duration="0.081721" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

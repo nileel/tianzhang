@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="30" result="Passed" total="30" passed="30" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.1553855">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1703" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.155386" total="30" passed="30" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2970" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.144799" total="30" passed="30" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="53436" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2971" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.138799" total="30" passed="30" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2972" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1687" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.132944" total="30" passed="30" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1023" name="AbilityRequirementPolicyTests" fullname="TianZhang.Tests.AbilityRequirementPolicyTests" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" testcasecount="28" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.025309" total="28" passed="28" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1053" name="AbilityAssetsUseRuntimeRequirementsAndSourceOnlyAffiliationMetadata" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.AbilityAssetsUseRuntimeRequirementsAndSourceOnlyAffiliationMetadata" methodname="AbilityAssetsUseRuntimeRequirementsAndSourceOnlyAffiliationMetadata" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1737995095" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.007318" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1052" name="CharacterDefinitionFeedsIdentityRatherThanDamageMultiplierToRequirementPolicy" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.CharacterDefinitionFeedsIdentityRatherThanDamageMultiplierToRequirementPolicy" methodname="CharacterDefinitionFeedsIdentityRatherThanDamageMultiplierToRequirementPolicy" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="386304356" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.002064" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1054" name="ElementFactsPreserveStableIdsNamesAndUnknownFallbacks" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.ElementFactsPreserveStableIdsNamesAndUnknownFallbacks" methodname="ElementFactsPreserveStableIdsNamesAndUnknownFallbacks" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="236522301" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.001726" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1033" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.003041" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1024" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_none&quot;,True)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_none&quot;,True)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="813565370" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.001120" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1025" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_water_root&quot;,True)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_water_root&quot;,True)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="881720866" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000065" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1026" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_fire_root&quot;,True)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_fire_root&quot;,True)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1398809249" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000038" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1027" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_earth_or_fire&quot;,True)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_earth_or_fire&quot;,True)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1499942397" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000034" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1028" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_earth_root&quot;,False)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_earth_root&quot;,False)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1319777897" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000029" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1029" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_unknown_root&quot;,False)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/火&quot;,&quot;element_unknown_root&quot;,False)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="2081305087" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000032" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1030" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/未知&quot;,&quot;element_none&quot;,False)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/未知&quot;,&quot;element_none&quot;,False)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="346285418" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000028" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1031" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/&quot;,&quot;element_none&quot;,False)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;水/&quot;,&quot;element_none&quot;,False)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="446111263" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000028" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1032" name="MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;/火&quot;,&quot;element_fire_root&quot;,False)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.MultipleRootsPreserveQualificationAndRejectMalformedFacts(&quot;/火&quot;,&quot;element_fire_root&quot;,False)" methodname="MultipleRootsPreserveQualificationAndRejectMalformedFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="443658726" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000027" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1034" name="RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs" methodname="RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1805523837" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000118" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1040" name="StarterArtsAllowEveryValidRootGrade" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000706" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1035" name="StarterArtsAllowEveryValidRootGrade(&quot;凡品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade(&quot;凡品&quot;)" methodname="StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1606837019" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000141" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1036" name="StarterArtsAllowEveryValidRootGrade(&quot;下品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade(&quot;下品&quot;)" methodname="StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1761313862" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000033" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1037" name="StarterArtsAllowEveryValidRootGrade(&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade(&quot;中品&quot;)" methodname="StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1469986293" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000022" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1038" name="StarterArtsAllowEveryValidRootGrade(&quot;上品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade(&quot;上品&quot;)" methodname="StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1973067402" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000021" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1039" name="StarterArtsAllowEveryValidRootGrade(&quot;极品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsAllowEveryValidRootGrade(&quot;极品&quot;)" methodname="StarterArtsAllowEveryValidRootGrade" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="826944845" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000021" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1050" name="StarterArtsRejectMissingOrInvalidQualificationFacts" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.001024" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1041" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;&quot;,&quot;水&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;&quot;,&quot;水&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="338751654" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000157" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1042" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;未知&quot;,&quot;水&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;未知&quot;,&quot;水&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1519299893" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000037" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1043" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;凡人&quot;,&quot;水&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;凡人&quot;,&quot;水&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="346267259" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000025" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1044" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1274095929" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000023" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1045" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;上古&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;上古&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1392009175" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000029" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1046" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;未知&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;水&quot;,&quot;未知&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1121137709" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000025" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1047" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1518720282" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000024" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1048" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;element_unknown&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;element_unknown&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="426576219" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000023" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1049" name="StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;garbage_water_root&quot;,&quot;中品&quot;)" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.StarterArtsRejectMissingOrInvalidQualificationFacts(&quot;练气&quot;,&quot;garbage_water_root&quot;,&quot;中品&quot;)" methodname="StarterArtsRejectMissingOrInvalidQualificationFacts" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1426667665" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000023" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1051" name="UnrestrictedStarterArtsAcceptAllTwelveFormalRootElements" fullname="TianZhang.Tests.AbilityRequirementPolicyTests.UnrestrictedStarterArtsAcceptAllTwelveFormalRootElements" methodname="UnrestrictedStarterArtsAcceptAllTwelveFormalRootElements" classname="TianZhang.Tests.AbilityRequirementPolicyTests" runstate="Runnable" seed="1669005479" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.000157" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestSuite" id="2973" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="864" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.057867" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="2741" name="D9SpaceContentTests" fullname="TianZhang.Tests.EditMode.D9SpaceContentTests" classname="TianZhang.Tests.EditMode.D9SpaceContentTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.047773" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2743" name="DirectionAndLayerContractChangesInvalidateCompilation" fullname="TianZhang.Tests.EditMode.D9SpaceContentTests.DirectionAndLayerContractChangesInvalidateCompilation" methodname="DirectionAndLayerContractChangesInvalidateCompilation" classname="TianZhang.Tests.EditMode.D9SpaceContentTests" runstate="Runnable" seed="1130673187" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.031371" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2742" name="ImportedThirdSegmentUsesFrozenGateAndExistingStoneStrike" fullname="TianZhang.Tests.EditMode.D9SpaceContentTests.ImportedThirdSegmentUsesFrozenGateAndExistingStoneStrike" methodname="ImportedThirdSegmentUsesFrozenGateAndExistingStoneStrike" classname="TianZhang.Tests.EditMode.D9SpaceContentTests" runstate="Runnable" seed="172765" result="Passed" start-time="2026-10-26 23:46:44Z" end-time="2026-10-26 23:46:44Z" duration="0.015722" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

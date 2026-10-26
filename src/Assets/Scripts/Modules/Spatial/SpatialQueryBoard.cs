@@ -594,7 +594,7 @@ namespace TianZhang.Spatial
                             reason == SpatialQueryReasons.HeightRuleUnconfigured ||
                             reason == SpatialQueryReasons.EdgeHeightMismatch ||
                             reason == SpatialQueryReasons.PairCrossHeightConnectionInvalid ||
-                            reason == SpatialQueryReasons.EntityObstacle))
+                            reason == SpatialQueryReasons.EntityObstacle || reason == "space_seal_blocks_entry"))
                             result.FirstRejection = reason;
                         continue;
                     }
@@ -620,12 +620,15 @@ namespace TianZhang.Spatial
             step = default;
             int delta = (direction - from.Facing + 6) % 6;
             int turnSign = delta <= 3 ? 1 : -1;
-            if (!TryTurns(from, direction, turnSign, blocked, out var turns, out reason))
+            if (!TryTurns(from, direction, turnSign, blocked, out var turns, out reason, policy))
             {
-                if (delta != 3 || !TryTurns(from, direction, -1, blocked, out turns, out reason)) return false;
+                if (delta != 3 || !TryTurns(from, direction, -1, blocked, out turns, out reason, policy)) return false;
             }
             SpatialPose rotated = from.WithFacing(direction);
             SpatialPose to = rotated.WithAnchor(from.Anchor.Step(direction));
+            foreach (HexCoord cell in rotated.OccupiedCells)
+                if (policy.BlocksEdge(cell, cell.Step(direction)))
+                { reason = "space_seal_blocks_entry"; return false; }
             reason = InspectPlacement(to, blocked);
             if (reason.Length != 0) return false;
             SpatialEdgeInspection frontEdge = from.MovementMode == SpatialMovementMode.Fly
@@ -684,7 +687,7 @@ namespace TianZhang.Spatial
         }
 
         private bool TryTurns(SpatialPose from, int direction, int sign, HashSet<HexCoord> blocked,
-            out IReadOnlyList<int> turns, out string reason)
+            out IReadOnlyList<int> turns, out string reason, SpatialMovementPolicy policy)
         {
             var facings = new List<int>();
             turns = facings;
@@ -696,6 +699,8 @@ namespace TianZhang.Spatial
                 {
                     HexCoord oldRear = current.Anchor.Step((current.Facing + 3) % 6);
                     HexCoord newRear = next.Anchor.Step((next.Facing + 3) % 6);
+                    if (policy.BlocksEdge(oldRear, newRear))
+                    { reason = "space_seal_blocks_entry"; return false; }
                     var sweep = InspectEdge(oldRear, newRear, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
                     if (!sweep.IsLegal) { reason = sweep.Reason; return false; }
                     reason = InspectPlacement(next, blocked);

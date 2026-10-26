@@ -76,7 +76,7 @@ MonoBehaviour:
     positionType: 1
     proofProfileId: PROOF_SPACE_TRANSFORM01_01
     equippedBaseEffectId: SPACE_SEAL
-    compatibilityProfileId: demo_compat_sha256_e51b8ab35ae75564bcf837f2691e82523154fc9b907cadbab5eda12508920dd3
+    compatibilityProfileId: demo_compat_sha256_1120415879a0a9c3b32c8021e11ae3dfb61cf92c1723b47e3252e012a55931dd
     primaryCarrierAbilityInstanceId: demo_20261024_seal_yin_seal_guardian
     auxiliaryCarrierAbilityInstanceIds: []
   - positionId: JD_YinYang_Yin_DOMAIN01

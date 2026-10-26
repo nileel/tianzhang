@@ -222,7 +222,11 @@ namespace TianZhang.Combat
             {
                 actor.SpendActionPoints(current.ActionPointCostUnits);
                 commit();
-                if (command.Kind == CombatCommandKind.Move) actor.RecordPhysicalMovement(current.MovementSteps.Count);
+                if (command.Kind == CombatCommandKind.Move)
+                {
+                    actor.RecordPhysicalMovement(current.MovementSteps.Count);
+                    session.Jindan?.MovementCommitted(session, actor, current.MovementSteps);
+                }
                 session.Jindan?.Reconcile(session);
                 session.Surfaces?.Reconcile(session);
                 session.Flight?.Reconcile(session);

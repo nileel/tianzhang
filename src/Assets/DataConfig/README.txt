@@ -224,7 +224,8 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 - `Seats`：七个唯一席位、版本与道证、唯一主承载、四项作用范围、候选效果与默认装配。
 - `Abilities`：十五项定义、源术升格、内化处置、合法府属及对象／操作／媒介／结果范围。
 - `Commands`：每个候选效果各一项展开和终止，以及五项飞行命令；费用、时钟、容量、射程、
-  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`展开／关闭及五种 `FLIGHT` 动作已启用；
+  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`SPACE_SEAL`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`展开／关闭及五种 `FLIGHT` 动作已启用；
+  `JindanDemoSealRules.csv`固定封锁方向、锚点、局部维持半径与破层期限；费用和6tick期限仍读Commands。Presets的equippedArtProfileIds显式登记space_yang的现有贯石击。
   其余只可浏览，尚待对应 D9–D11 的真实效果实现，不能用空账本执行。潮汐涨／退、普通／蓄力、无源潮眼共用一份主枢命令，附费与效果参数由SurfaceRules读取。
 - `Contracts`：八项固定效果合同。`compatibilityProfileId` 必须写 `compile`，导入时用来源版本、
   具体主承载、席位／道证版本、四项交集与费用容量语义生成稳定 SHA-256 标识；不接受伪造兼容 ID。

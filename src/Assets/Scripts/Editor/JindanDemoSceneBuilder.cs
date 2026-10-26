@@ -54,6 +54,7 @@ namespace TianZhang.Editor
             Remove(canvas, "JindanDemoPreparationRoot");
             Remove(canvas, "JindanDemoCombatRoot");
             Remove(owner.transform, "JindanScaleRoot");
+            Remove(owner.transform, "JindanSealRoot");
             Remove(owner.transform, "JindanEarthRoot");
             Remove(owner.transform, "JindanSurfaceRoot");
             var view = owner.GetComponent<JindanDemoView>() ?? owner.AddComponent<JindanDemoView>();
@@ -82,6 +83,14 @@ namespace TianZhang.Editor
             if (catalog == null) throw new InvalidOperationException("Jindan demo catalog is missing.");
             SceneBuildSupport.SetObject(installer, "jindanDemoView", view);
             SceneBuildSupport.SetObject(installer, "jindanScaleView", scale);
+            var sealRoot = new GameObject("JindanSealRoot");
+            sealRoot.transform.SetParent(owner.transform, false);
+            var seal = sealRoot.AddComponent<JindanSealView>();
+            var marker = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .Single(value => value.name == "space_lock_support");
+            SceneBuildSupport.SetObject(seal, "supportMarker", marker.gameObject);
+            SceneBuildSupport.SetObject(seal, "edgeMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
+            SceneBuildSupport.SetObject(installer, "jindanSealView", seal);
             BuildEarthRamp();
             var earthRoot = new GameObject("JindanEarthRoot");
             earthRoot.transform.SetParent(owner.transform, false);

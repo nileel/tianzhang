@@ -56,6 +56,9 @@ namespace TianZhang.Combat
             if (legalActions == null || legalActions.Count == 0)
                 return null;
 
+            var gate = legalActions.FirstOrDefault(action => action.Kind == CombatCommandKind.JindanAbility && action.ProfileId == "SPACE_SEAL");
+            if (gate != null) return gate;
+            legalActions = CombatSealRules.MaintainingActions(session, legalActions);
             CombatCommand attack = CombatAIQuery.Pick(legalActions, CombatCommandKind.Art)
                 ?? CombatAIQuery.Pick(legalActions, CombatCommandKind.Divine)
                 ?? CombatAIQuery.Pick(legalActions, CombatCommandKind.BasicAttack);

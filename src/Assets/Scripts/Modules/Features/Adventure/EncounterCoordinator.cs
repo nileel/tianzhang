@@ -1171,6 +1171,9 @@ namespace TianZhang.Features.Adventure
         private string BuildActionMessage(string actor, CombatCommand command, CombatActionResult result)
         {
             if (!result.Succeeded) return actor + "：" + displayReason(result.RejectionReason);
+            if (command.Kind == CombatCommandKind.JindanAbility)
+                return actor + "：" + JindanRehearsalPresenter.Effect(command.ProfileId) +
+                    "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent;
             string commandName = resolveText(command.Kind switch
             {
                 CombatCommandKind.BasicAttack => "combat_command_basic_attack",
@@ -1189,10 +1192,7 @@ namespace TianZhang.Features.Adventure
             if (command.Kind == CombatCommandKind.UseItem) commandName += "：" + resolveText(command.ItemId);
             if (result.SceneObjectChanges.Count > 0)
                 commandName += "，" + string.Join(" / ", result.SceneObjectChanges.Select(change =>
-                {
-                    var item = session.SceneObjects.Find(change.Id);
-                    return resolveText("scene_object_" + item.Definition.ContentType) + " 耐久 " + change.Before + "→" + change.After;
-                }));
+                    resolveText("scene_object_" + change.ContentType) + " 耐久 " + change.Before + "→" + change.After));
             if (result.SpiritRecoveries.Count > 0)
                 return actor + "：" + commandName + "，恢复灵力 " + result.SpiritRecoveries.Sum(item => item.ActualRecovery) +
                     "，消耗灵力 " + result.SpiritSpent;

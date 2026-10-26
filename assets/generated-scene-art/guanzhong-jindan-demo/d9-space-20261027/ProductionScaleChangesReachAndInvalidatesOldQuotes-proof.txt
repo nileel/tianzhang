@@ -1,0 +1,3 @@
+compressed two topology edges to range1; old move/attack rejected without payment | tick=10
+expanded adjacent edge to range2; adjacent basic attack unavailable | tick=10
+closing restores adjacent attack | tick=10

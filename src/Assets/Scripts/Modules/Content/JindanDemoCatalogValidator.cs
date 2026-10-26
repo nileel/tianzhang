@@ -38,6 +38,16 @@ namespace TianZhang.Entity
                 }
                 ValidateTuning(catalog.loadoutTuning);
                 JindanDemoSurfaceValidator.Validate(catalog);
+                var seal = catalog.sealRules;
+                Check(seal != null && seal.rulesId == "demo_20261024_space_seal_rules" &&
+                    seal.fromQ == 8 && seal.fromR == 12 && seal.toQ == 9 && seal.toR == 12 &&
+                    seal.supportId == "space_lock_support" && seal.localRadius == 2 &&
+                    seal.layerDurability == 100 && seal.brokenLayerTicks == 2 &&
+                    !string.IsNullOrWhiteSpace(seal.sourceDocument), "SEAL_CONFIGURATION");
+                foreach (var preset in catalog.presets)
+                    Check(preset.equippedArtProfileIds != null && preset.equippedArtProfileIds.SequenceEqual(
+                        preset.characterId == "demo_20261024_space_yang" ? new[] { "spell_guanshiji" } : Array.Empty<string>()),
+                        "PRESET_ENVIRONMENT_ART");
                 Check(catalog.demolition != null && catalog.GetPreset(catalog.demolition.characterId) != null &&
                     catalog.demolition.sourceProfileId == "spell_guanshiji" && catalog.demolition.profileId == "demo_20261026_polei" &&
                     catalog.demolition.environmentDamage == 375 && catalog.demolition.environmentTargetTypes.SequenceEqual(new[]{"high_wall","stone_support"}) &&
@@ -156,9 +166,11 @@ namespace TianZhang.Entity
                 bool flight = command.effectId == "FLIGHT" && command.abilityDefinitionId == "demo_20261024_yufeng_flight";
                 bool earth = command.effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && command.abilityDefinitionId == "demo_20261024_guardian_houzai";
                 bool water = command.effectId == "WATER_TIDE" && command.abilityDefinitionId == "demo_20261024_guardian_xulan";
+                bool seal = command.effectId == "SPACE_SEAL" && command.abilityDefinitionId == "demo_20261024_guardian_menshu_fengguan";
                 Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
                       earth && command.kind is ("DEPLOY" or "TERMINATE") ||
                       water && command.kind is ("DEPLOY" or "TERMINATE") ||
+                      seal && command.kind is ("DEPLOY" or "TERMINATE") ||
                       command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
                       command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
                 if (flight)
@@ -181,6 +193,14 @@ namespace TianZhang.Entity
                               command.capacity == 7 && command.durationClock == "BATTLE_END"
                             : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0),
                         "WATER_CONFIGURATION");
+                else if (seal)
+                    Check(command.ctPenalty == 0 && command.failurePolicy == "LAYERED_END" &&
+                        command.capacityUnit == "GATE" && (command.kind == "DEPLOY"
+                            ? command.actionPointCostUnits == 250000 && command.manaCost == 400 && command.cooldownTicks == 3 &&
+                              command.upkeepMana == 40 && command.upkeepClock == "GLOBAL_TICK" && command.durationCount == 6 &&
+                              command.durationClock == "GLOBAL_TICK" && command.capacity == 1 && command.maximumInstances == 1 &&
+                              command.supportDurability == 200 && command.range == 4 && command.verticalReachRank == 3
+                            : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0), "SEAL_COMMAND");
                 else if (!earth && command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");

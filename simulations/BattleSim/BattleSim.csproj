@@ -36,6 +36,7 @@
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanDefinitions.cs" Link="Combat\CombatJindanDefinitions.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanLoadout.cs" Link="Combat\CombatJindanLoadout.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatScaleRules.cs" Link="Combat\CombatScaleRules.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSealRules.cs" Link="Combat\CombatSealRules.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialMetricOverride.cs" Link="Spatial\SpatialMetricOverride.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialSceneObjectRules.cs" Link="Spatial\SpatialSceneObjectRules.cs" />
   </ItemGroup>

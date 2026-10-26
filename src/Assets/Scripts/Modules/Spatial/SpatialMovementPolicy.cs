@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TianZhang.Spatial
 {
@@ -7,13 +8,18 @@ namespace TianZhang.Spatial
     {
         public static readonly SpatialMovementPolicy Normal = new SpatialMovementPolicy();
         public SpatialMovementPolicy(int numerator = 1, int denominator = 1, bool lightLeap = false,
-            int maximumEdges = int.MaxValue, string blockedReason = "")
+            int maximumEdges = int.MaxValue, string blockedReason = "", IEnumerable<SpatialDirectedEdge> sealedEdges = null)
         {
             if (numerator < 1 || denominator < 1 || maximumEdges < 0)
                 throw new ArgumentOutOfRangeException(nameof(numerator));
             Numerator = numerator; Denominator = denominator; LightLeap = lightLeap;
             MaximumEdges = maximumEdges; BlockedReason = blockedReason ?? string.Empty;
+            this.sealedEdges = new HashSet<SpatialDirectedEdge>(sealedEdges ?? Array.Empty<SpatialDirectedEdge>());
         }
+        private readonly HashSet<SpatialDirectedEdge> sealedEdges;
+        public bool BlocksEdge(HexCoord from, HexCoord to) => sealedEdges.Contains(new SpatialDirectedEdge(from, to));
+        public SpatialMovementPolicy WithSealedEdges(IEnumerable<SpatialDirectedEdge> edges) =>
+            new SpatialMovementPolicy(Numerator, Denominator, LightLeap, MaximumEdges, BlockedReason, edges);
         public int Numerator { get; }
         public int Denominator { get; }
         public bool LightLeap { get; }

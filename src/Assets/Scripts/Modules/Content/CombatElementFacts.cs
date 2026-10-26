@@ -116,8 +116,12 @@ namespace TianZhang.Content
             if (string.IsNullOrWhiteSpace(realmStage) || !RealmStages.TryGetValue(realmStage, out int current) ||
                 string.IsNullOrWhiteSpace(realmRequirement) || !RealmThresholds.TryGetValue(realmRequirement, out int minimum) ||
                 current < minimum || visibleRootGrade is not ("凡品" or "下品" or "中品" or "上品" or "极品") ||
-                string.IsNullOrEmpty(CombatElementFacts.NormalizeElement(visibleRootElement)))
+                string.IsNullOrWhiteSpace(visibleRootElement))
                 return false;
+            // Rehearsal identities preserve every visible root, separated by '/'. All must be valid;
+            // an elemental entry requirement can be met by any one of those existing roots.
+            string[] characterElements = Array.ConvertAll(visibleRootElement.Split('/'), CombatElementFacts.NormalizeElement);
+            if (Array.Exists(characterElements, string.IsNullOrEmpty)) return false;
             if (string.Equals(elementRequirement?.Trim(), "element_none", StringComparison.OrdinalIgnoreCase))
                 return true;
             if (string.IsNullOrWhiteSpace(elementRequirement) || string.IsNullOrWhiteSpace(visibleRootElement))
@@ -128,12 +132,11 @@ namespace TianZhang.Content
             if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
                 return false;
 
-            string characterElement = CombatElementFacts.NormalizeElement(visibleRootElement);
             foreach (string alternative in normalized.Substring(prefix.Length)
                          .Replace("_root", string.Empty)
                          .Split(new[] { "_or_" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (CombatElementFacts.NormalizeElement(prefix + alternative) == characterElement)
+                if (Array.IndexOf(characterElements, CombatElementFacts.NormalizeElement(prefix + alternative)) >= 0)
                     return true;
             }
             return false;

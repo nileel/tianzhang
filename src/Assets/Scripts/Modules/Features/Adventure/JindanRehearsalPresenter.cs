@@ -306,6 +306,7 @@ namespace TianZhang.Features.Adventure
                 (encounter.AcceptsPlayerCommand ? " · 你的行动" : " · 等待行动"));
             result.AppendLine("AP " + Ap(actor.ActionPointsRemainingUnits) + "/" + Ap(actor.ActionPointLimitAtTurnStartUnits) +
                 "  MP " + actor.CurrentSpirit + "/" + actor.MaximumSpirit);
+            result.Append(JindanSealPresentation.Details(session));
             if (tidePage) return result + JindanTidePresentation.Details(session, actor, tideSource, tideAction, tideCharged, tideEye);
             var flight = session.Flight?.Find(actorId);
             if (flight != null)
@@ -410,7 +411,7 @@ namespace TianZhang.Features.Adventure
         private static string EarthName(CombatEarthMode mode)=>mode switch { CombatEarthMode.Wall=>"岩墙",CombatEarthMode.Ramp=>"窄土坡",CombatEarthMode.Heavy=>"极重",CombatEarthMode.Light=>"失重",_=>"镇岳" };
         private static string Position(string type) => type.ToUpperInvariant() switch
         { "SOURCE" => "源", "TRANSFORMATION" => "化", "DOMAIN" => "界", _ => type };
-        private static string Effect(string effect) => effect switch
+        internal static string Effect(string effect) => effect switch
         {
             "SPACE_SCALE" => "方位定尺", "EARTH_GRAVITY" => "厚载·重力", "EARTH_MANIFEST" => "厚载·造物",
             "WATER_TIDE" => "蓄澜", "FIRE_MANIFEST" => "长明", "YANG_RADIANCE" => "日坛昭明",

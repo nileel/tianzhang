@@ -28865,6 +28865,7 @@ MonoBehaviour:
   jindanDemoCatalog: {fileID: 11400000, guid: 9a8721129eed3f2459768f15848e4ea5, type: 2}
   jindanDemoView: {fileID: 1319519976}
   jindanScaleView: {fileID: 1873580806}
+  jindanSealView: {fileID: 1264202451}
   earthView: {fileID: 1325530449}
   surfaceView: {fileID: 1957387484}
 --- !u!4 &1319519975
@@ -28880,6 +28881,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1264202452}
   - {fileID: 1873580807}
   - {fileID: 1325530450}
   - {fileID: 1957387485}
@@ -38146,6 +38148,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8186764088782878635, guid: 99aec3e88e2015b43a286cda4646a9bd, type: 3}
   m_PrefabInstance: {fileID: 1828418171}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1828418173 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2764158477547517118, guid: 99aec3e88e2015b43a286cda4646a9bd, type: 3}
+  m_PrefabInstance: {fileID: 1828418171}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1833210116
 GameObject:
   m_ObjectHideFlags: 0
@@ -46711,3 +46718,49 @@ SceneRoots:
   - {fileID: 60140836}
   - {fileID: 1026578197}
   - {fileID: 2046743065}
+--- !u!4 &1264202452
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264202450}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1319519975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1264202451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264202450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a44d5285ce670c40956fde24de001cc, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.JindanSealView
+  supportMarker: {fileID: 1828418173}
+  edgeMaterial: {fileID: 2100000, guid: 5dfbd83b608f6cb4aac279e3125589a2, type: 2}
+--- !u!1 &1264202450
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1264202452}
+  - component: {fileID: 1264202451}
+  m_Layer: 0
+  m_Name: JindanSealRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1

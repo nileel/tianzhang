@@ -17,7 +17,7 @@ namespace TianZhang.Editor
         {
             "JindanDemoPresets", "JindanDemoSeats", "JindanDemoAbilities", "JindanDemoCommands",
             "JindanDemoContracts", "JindanDemoLoadoutTuning", "JindanDemoSegments", "JindanDemoDemolition",
-            "JindanDemoSurfaceRules", "JindanDemoSurfaceCells", "JindanDemoSurfaceFires",
+            "JindanDemoSurfaceRules", "JindanDemoSurfaceCells", "JindanDemoSurfaceFires", "JindanDemoSealRules",
         };
         public static string[] DefinitionPaths => DefinitionTables.Select(t => "Assets/DataConfig/" + t + ".csv").ToArray();
         public static string FoundationPath(string id) => "Assets/Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_" + AssetCommitter.SanitizeName(id) + ".asset";
@@ -117,7 +117,7 @@ namespace TianZhang.Editor
                 }
                 else { EditorUtility.CopySerialized(preview, existing); EditorUtility.SetDirty(existing); }
                 AssetDatabase.SaveAssets();
-                Debug.Log("[JindanDemoContentImporter] Imported five fixed presets, eight compiled contracts and finite rehearsal surfaces; WATER_TIDE is enabled.");
+                Debug.Log("[JindanDemoContentImporter] Imported five fixed presets, eight compiled contracts, rehearsal surfaces and SPACE_SEAL.");
             }
             finally
             {
@@ -149,6 +149,7 @@ namespace TianZhang.Editor
             var characters = Rows("Characters").Select(r => r["name"]).ToHashSet(StringComparer.Ordinal);
             Require(Source(catalog.demolition.sourceDocument).Contains(catalog.demolition.profileId), "DEMOLITION_SOURCE");
             Require(Source(catalog.surfaceRules.sourceDocument).Contains(catalog.surfaceRules.rulesId), "SURFACE_RULES_SOURCE");
+            Require(Source(catalog.sealRules.sourceDocument).Contains(catalog.sealRules.supportId), "SEAL_RULES_SOURCE");
             foreach (var fire in catalog.surfaceFires)
                 Require(Source(fire.sourceDocument).Contains(fire.sourceRef), "SURFACE_FIRE_SOURCE");
             foreach (var ability in catalog.abilities)

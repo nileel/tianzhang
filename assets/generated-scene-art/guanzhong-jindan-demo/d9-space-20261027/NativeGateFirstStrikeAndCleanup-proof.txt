@@ -1,0 +1,19 @@
+enemy paid deployment; gate arrow and layers shown; ground route detours 2 steps | tick=10
+native mouse (-204.97, 1747.38) | tick=10
+native mouse (343.06, 76.07) | tick=10
+native mouse (679.39, 382.65) | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 2 durability=140 expiry=16 | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 3 durability=110 expiry=16 | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 4 durability=80 expiry=12 | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 5 durability=50 expiry=12 | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 6 durability=20 expiry=12 | tick=10
+strike preview cell=TianZhang.Gameplay.Contracts.CombatUnitPresentationHex legal=True reason= | tick=10
+strike 7 durability=0 expiry=12 | tick=10
+7 strikes: AP=916668->454168 MP=6000->5916 | tick=10
+walked through opened edge | tick=10
+fresh reentry pays a fresh deployment; world character unchanged | tick=10

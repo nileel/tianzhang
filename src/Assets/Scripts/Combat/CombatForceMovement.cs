@@ -58,14 +58,15 @@ namespace TianZhang.Combat
                 status?.EarthMode == CombatEarthMode.Light ? Math.Min(2,checked(distanceBudget+1)) : distanceBudget;
             int budget = checked(adjusted * board.UnitsPerRange);
             var occupied = occupiedOverride ?? session.GetOccupiedPositionsExcept(actorId);
-            var policy = Policy(actor, forceRank);
+            var policy = Policy(actor, forceRank).WithSealedEdges(CombatSealRules.BlockedEdges(session, actor));
             string reason = string.Empty;
             while (true)
             {
                 var next = current.WithAnchor(current.Anchor.Step(direction));
                 // Check every body's space seal before force/anchor comparisons.
                 foreach (var cell in current.OccupiedCells)
-                    if (board.TryGetEdge(cell,cell.Step(direction),out var edge) && edge.EffectBlockerMask != 0)
+                    if (policy.BlocksEdge(cell, cell.Step(direction)) ||
+                        board.TryGetEdge(cell,cell.Step(direction),out var edge) && edge.EffectBlockerMask != 0)
                     { reason = "forced_movement_space_sealed"; break; }
                 if (reason.Length > 0) break;
                 if (policy.BlockedReason.Length > 0) { reason = policy.BlockedReason; break; }
@@ -122,7 +123,10 @@ namespace TianZhang.Combat
         private SpatialMovementPolicy Policy(SpatialPose source)
         {
             var actor=session.Combatants.All.FirstOrDefault(value=>value.IsAlive && value.Pose==source);
-            return actor == null ? SpatialMovementPolicy.Normal : CombatForceMovement.Policy(actor);
+            if (actor == null) return SpatialMovementPolicy.Normal;
+            var policy = CombatForceMovement.Policy(actor);
+            var edges = CombatSealRules.BlockedEdges(session, actor);
+            return edges.Count == 0 ? policy : policy.WithSealedEdges(edges);
         }
         public CombatMovementQueryResult QueryMovement(SpatialPose source, HexCoord destination,int budget,int efficiency,
             IReadOnlyCollection<HexCoord> occupied,int? destinationFacing=null)

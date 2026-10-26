@@ -64,9 +64,10 @@ namespace TianZhang.Combat
 
     public readonly struct CombatSceneObjectChange
     {
-        public CombatSceneObjectChange(string id, int before, int after)
-        { Id = id; Before = before; After = after; }
+        public CombatSceneObjectChange(string id, string contentType, int before, int after)
+        { Id = id; ContentType = contentType; Before = before; After = after; }
         public string Id { get; }
+        public string ContentType { get; }
         public int Before { get; }
         public int After { get; }
         public int Damage => Before - After;
@@ -106,7 +107,7 @@ namespace TianZhang.Combat
             return ids.Distinct(StringComparer.Ordinal).OrderBy(id => id, StringComparer.Ordinal).Select(id =>
             {
                 CombatSceneObject value = objects[id];
-                return new CombatSceneObjectChange(id, value.Durability, Math.Max(0, value.Durability - damage));
+                return new CombatSceneObjectChange(id, value.Definition.ContentType, value.Durability, Math.Max(0, value.Durability - damage));
             }).ToList().AsReadOnly();
         }
 

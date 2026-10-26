@@ -48,9 +48,9 @@ namespace TianZhang.Combat
             // The immutable board performs final complete-set validation before any payment.
             try
             {
-                board.WithMetricOverrides(Enumerable.Range(1, request.EdgePath.Count - 1).Select(i =>
+                board.WithMetricOverrides(board.MetricOverrides.Concat(Enumerable.Range(1, request.EdgePath.Count - 1).Select(i =>
                     new SpatialMetricOverride(request.SeatId, request.EdgePath[i - 1], request.EdgePath[i],
-                        request.MetricDistanceUnits)).ToArray());
+                        request.MetricDistanceUnits))).ToArray());
             }
             catch (ArgumentException) { return "jindan_scale_selection_invalid"; }
             return string.Empty;

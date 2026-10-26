@@ -9,6 +9,20 @@ namespace TianZhang.Tests
 {
     public class AbilityRequirementPolicyTests
     {
+        [TestCase("水/火", "element_none", true)]
+        [TestCase("水/火", "element_water_root", true)]
+        [TestCase("水/火", "element_fire_root", true)]
+        [TestCase("水/火", "element_earth_or_fire", true)]
+        [TestCase("水/火", "element_earth_root", false)]
+        [TestCase("水/火", "element_unknown_root", false)]
+        [TestCase("水/未知", "element_none", false)]
+        [TestCase("水/", "element_none", false)]
+        [TestCase("/火", "element_fire_root", false)]
+        public void MultipleRootsPreserveQualificationAndRejectMalformedFacts(string roots, string requirement, bool expected)
+        {
+            Assert.AreEqual(expected, AbilityRequirementPolicy.IsSatisfied("金丹", roots, "中品", "realm_lianqi", requirement));
+        }
+
         [Test]
         public void RequirementPolicyAllowsAndRejectsExplicitRealmAndElementInputs()
         {

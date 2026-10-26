@@ -37,6 +37,8 @@ namespace TianZhang.Features.Adventure
                     .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
                 if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId))
                     bindings.Add(CombatFlight.ProfileId, preset.flightAbilityInstanceId);
+                var arts = preset.equippedArtProfileIds.Concat(preset.characterId == catalog.demolition.characterId
+                    ? new[] { catalog.demolition.profileId } : Array.Empty<string>()).ToArray();
                 var actor = new CombatantSnapshot(preset.characterId, placement.team == 0 ? CombatTeam.Player : CombatTeam.Enemy,
                     new HexCoord(placement.q, placement.r), attributes.Reaction, stats.MaxHealth, stats.MaxHealth,
                     stats.PhysicalAttack, stats.MagicAttack, stats.PhysicalDefense, stats.MagicDefense,
@@ -45,8 +47,7 @@ namespace TianZhang.Features.Adventure
                     realmStage: "金丹", visibleRootElement: string.Join("/", preset.rootElements.Select(CombatElementFacts.ResolveElement)),
                     visibleRootGrade: preset.rootGrade == 2 ? "中品" : "上品", abilityInstanceIds: bindings,
                     facing: placement.facing,
-                    equippedArtProfileIds: preset.characterId == catalog.demolition.characterId ? new[]{catalog.demolition.profileId} : Array.Empty<string>(),
-                    availableArtProfileIds: preset.characterId == catalog.demolition.characterId ? new[]{catalog.demolition.profileId} : Array.Empty<string>())
+                    equippedArtProfileIds: arts, availableArtProfileIds: arts)
                 { GongFaId = preset.sourceGongFaId };
                 actor.SetSpirit(preset.manaMaximum, preset.manaMaximum);
                 (actor.Team == CombatTeam.Player ? players : enemies).Add(actor);
@@ -76,7 +77,11 @@ namespace TianZhang.Features.Adventure
                     deploy.range, deploy.verticalReachRank, deploy.capacity, deploy.supportDurability,
                     deploy.remoteOriginManaCost, catalog.GetPreset(seat.characterId).normalVisionRange,
                     deploy.metricDistanceModes, deploy.unavailableReasonKey, deploy.durationCount,
-                    effect == "WATER_TIDE" ? CreateTide(catalog.surfaceRules) : null));
+                    effect == "WATER_TIDE" ? CreateTide(catalog.surfaceRules) : null,
+                    effect == "SPACE_SEAL" ? new CombatSealDefinition(new HexCoord(catalog.sealRules.fromQ, catalog.sealRules.fromR),
+                        new HexCoord(catalog.sealRules.toQ, catalog.sealRules.toR), catalog.sealRules.supportId,
+                        catalog.sealRules.localRadius, catalog.sealRules.layerDurability, catalog.sealRules.brokenLayerTicks,
+                        deploy.durationCount) : null));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
         }

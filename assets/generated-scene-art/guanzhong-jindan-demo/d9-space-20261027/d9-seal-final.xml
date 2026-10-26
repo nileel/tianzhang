@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="20" result="Passed" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.2722779">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1694" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.272278" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2960" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1678" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.253367" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="65756" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2961" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1678" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.237676" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2962" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1678" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.222272" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2963" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="864" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.179292" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="2734" name="D9SpaceSealTests" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="20" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.167698" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2755" name="AIInstallsThroughTheLegalCommandAndRespectsItsDomain" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.AIInstallsThroughTheLegalCommandAndRespectsItsDomain" methodname="AIInstallsThroughTheLegalCommandAndRespectsItsDomain" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="626560232" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.114436" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2735" name="DeploymentIsOnePaidInstanceAndNoTriggerFeeOrExtraObject" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.DeploymentIsOnePaidInstanceAndNoTriggerFeeOrExtraObject" methodname="DeploymentIsOnePaidInstanceAndNoTriggerFeeOrExtraObject" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1971677315" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.004168" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2754" name="EndPathsRemoveOnlyTheRuntimeGate" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EndPathsRemoveOnlyTheRuntimeGate" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.009991" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2750" name="EndPathsRemoveOnlyTheRuntimeGate(&quot;leave&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EndPathsRemoveOnlyTheRuntimeGate(&quot;leave&quot;)" methodname="EndPathsRemoveOnlyTheRuntimeGate" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1058454124" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.004705" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2751" name="EndPathsRemoveOnlyTheRuntimeGate(&quot;source&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EndPathsRemoveOnlyTheRuntimeGate(&quot;source&quot;)" methodname="EndPathsRemoveOnlyTheRuntimeGate" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="82176593" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001604" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2752" name="EndPathsRemoveOnlyTheRuntimeGate(&quot;close&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EndPathsRemoveOnlyTheRuntimeGate(&quot;close&quot;)" methodname="EndPathsRemoveOnlyTheRuntimeGate" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="676967975" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000885" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2753" name="EndPathsRemoveOnlyTheRuntimeGate(&quot;finish&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EndPathsRemoveOnlyTheRuntimeGate(&quot;finish&quot;)" methodname="EndPathsRemoveOnlyTheRuntimeGate" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1490068449" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000960" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2738" name="EnemyGroundAndFlightDetourButAttacksAndSightCross" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EnemyGroundAndFlightDetourButAttacksAndSightCross" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.006743" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2736" name="EnemyGroundAndFlightDetourButAttacksAndSightCross(False)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EnemyGroundAndFlightDetourButAttacksAndSightCross(False)" methodname="EnemyGroundAndFlightDetourButAttacksAndSightCross" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1990327532" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.004926" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2737" name="EnemyGroundAndFlightDetourButAttacksAndSightCross(True)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.EnemyGroundAndFlightDetourButAttacksAndSightCross(True)" methodname="EnemyGroundAndFlightDetourButAttacksAndSightCross" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1749989491" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001398" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2746" name="FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" methodname="FirstBrokenLayerShortensOnceAndStillBlocksThenSecondLayerOpens" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="781480625" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.011663" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2745" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.003677" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2740" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;mana&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;mana&quot;)" methodname="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1407735169" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000864" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2741" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;ap&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;ap&quot;)" methodname="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1519244559" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000566" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2742" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;outside&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;outside&quot;)" methodname="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1748121422" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000499" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2743" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;condition&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;condition&quot;)" methodname="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="757310118" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000470" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2744" name="InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;disabled&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.InvalidDeploymentDoesNotPayOrLeaveHalfInstance(&quot;disabled&quot;)" methodname="InvalidDeploymentDoesNotPayOrLeaveHalfInstance" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1044905082" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000612" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2749" name="MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.002940" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2747" name="MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana(1000,5,400,&quot;seal_expired&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana(1000,5,400,&quot;seal_expired&quot;)" methodname="MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1702217401" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001555" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2748" name="MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana(599,4,39,&quot;jindan_upkeep_failed&quot;)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana(599,4,39,&quot;jindan_upkeep_failed&quot;)" methodname="MultiTickAdvanceMaintainsExactlyUntilExpiryOrInsufficientMana" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1677817611" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001007" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2756" name="PairRearAndPivotUseDirectedSeals" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.PairRearAndPivotUseDirectedSeals" methodname="PairRearAndPivotUseDirectedSeals" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="984226166" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000551" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2759" name="SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001550" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2757" name="SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther(1)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther(1)" methodname="SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1053535366" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001119" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2758" name="SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther(4)" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther(4)" methodname="SameDirectionSourcesDoNotMultiplyAndOneRemovalKeepsTheOther" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="1240277383" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.000084" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2739" name="SameFactionAndReverseDirectionRemainOpen" fullname="TianZhang.Tests.EditMode.D9SpaceSealTests.SameFactionAndReverseDirectionRemainOpen" methodname="SameFactionAndReverseDirectionRemainOpen" classname="TianZhang.Tests.EditMode.D9SpaceSealTests" runstate="Runnable" seed="339733951" result="Passed" start-time="2026-10-26 23:34:53Z" end-time="2026-10-26 23:34:53Z" duration="0.001769" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
