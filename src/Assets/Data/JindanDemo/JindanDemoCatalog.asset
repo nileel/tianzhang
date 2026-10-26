@@ -1,0 +1,1540 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8405c6d8f301476182a565c4874c7d3d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.JindanDemoCatalogData
+  contentVersion: demo_20261024_v1
+  presets:
+  - characterId: demo_20261024_earth
+    displayNameKey: demo_20261024_earth
+    realmId: realm_jindan
+    realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
+    realmMultiplier: 6
+    basicAttackProfileId: basic_body_human_jindan
+    sourceGongFaId: gongfa_qiushuiyouxin
+    sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
+    sourceCharacterDefinitionId: char_sanxiuqiangdao
+    rootElements:
+    - earth
+    rootGrade: 2
+    naturalMansionCapacity: 1
+    actionPointMaximumUnits: 1000000
+    movementEfficiencyMilliUnits: 4800
+    manaMaximum: 6000
+    normalVisionRange: 4
+    seatInstanceIds:
+    - demo_20261024_earth_seat
+    flightAbilityInstanceId: demo_20261024_earth_flight
+    danxiangNameKey: demo_20261024_earth_danxiang_name
+    danxiangPresentationProfileId: demo_20261024_earth_danxiang_presentation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    carryingCapacityProfileId: demo_20261024_capacity_1
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+    sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
+    foundationState: {fileID: 11400000, guid: 8cdc4ec6c0d049349af296d82f0b7aca, type: 2}
+    jindanState: {fileID: 11400000, guid: 53f71418302ba714b94ba1d581d17fc7, type: 2}
+  - characterId: demo_20261024_water
+    displayNameKey: demo_20261024_water
+    realmId: realm_jindan
+    realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
+    realmMultiplier: 6
+    basicAttackProfileId: basic_body_human_jindan
+    sourceGongFaId: gongfa_qiushuiyouxin
+    sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
+    sourceCharacterDefinitionId: char_sanxiuqiangdao
+    rootElements:
+    - water
+    rootGrade: 2
+    naturalMansionCapacity: 1
+    actionPointMaximumUnits: 1000000
+    movementEfficiencyMilliUnits: 4800
+    manaMaximum: 6000
+    normalVisionRange: 4
+    seatInstanceIds:
+    - demo_20261024_water_seat
+    flightAbilityInstanceId: demo_20261024_water_flight
+    danxiangNameKey: demo_20261024_water_danxiang_name
+    danxiangPresentationProfileId: demo_20261024_water_danxiang_presentation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    carryingCapacityProfileId: demo_20261024_capacity_1
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+    sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
+    foundationState: {fileID: 11400000, guid: d4056094cd3e7e1468f2013016859893, type: 2}
+    jindanState: {fileID: 11400000, guid: 82e23b8cded5fd6479da599307f9164c, type: 2}
+  - characterId: demo_20261024_fire
+    displayNameKey: demo_20261024_fire
+    realmId: realm_jindan
+    realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
+    realmMultiplier: 6
+    basicAttackProfileId: basic_body_human_jindan
+    sourceGongFaId: gongfa_qiushuiyouxin
+    sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
+    sourceCharacterDefinitionId: char_sanxiuqiangdao
+    rootElements:
+    - fire
+    rootGrade: 2
+    naturalMansionCapacity: 1
+    actionPointMaximumUnits: 1000000
+    movementEfficiencyMilliUnits: 4800
+    manaMaximum: 6000
+    normalVisionRange: 4
+    seatInstanceIds:
+    - demo_20261024_fire_seat
+    flightAbilityInstanceId:
+    danxiangNameKey: demo_20261024_fire_danxiang_name
+    danxiangPresentationProfileId: demo_20261024_fire_danxiang_presentation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    carryingCapacityProfileId: demo_20261024_capacity_1
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+    sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
+    foundationState: {fileID: 11400000, guid: 9658e200c45ced74e9d3052ea9b56a7c, type: 2}
+    jindanState: {fileID: 11400000, guid: 16cadccb0d3b6164481e917abdfc55e9, type: 2}
+  - characterId: demo_20261024_space_yang
+    displayNameKey: demo_20261024_space_yang
+    realmId: realm_jindan
+    realmSubstage: "\u91D1\u4E39\u6E29\u517B"
+    realmMultiplier: 6
+    basicAttackProfileId: basic_body_human_jindan
+    sourceGongFaId: gongfa_qiushuiyouxin
+    sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
+    sourceCharacterDefinitionId: char_sanxiuqiangdao
+    rootElements:
+    - water
+    - fire
+    rootGrade: 3
+    naturalMansionCapacity: 2
+    actionPointMaximumUnits: 1000000
+    movementEfficiencyMilliUnits: 4800
+    manaMaximum: 6000
+    normalVisionRange: 4
+    seatInstanceIds:
+    - demo_20261024_space_yang_scale_seat
+    - demo_20261024_space_yang_yang_seat
+    flightAbilityInstanceId: demo_20261024_space_yang_flight
+    danxiangNameKey: demo_20261024_space_yang_danxiang_name
+    danxiangPresentationProfileId: demo_20261024_space_yang_danxiang_presentation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    carryingCapacityProfileId: demo_20261024_capacity_2
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+    sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
+    foundationState: {fileID: 11400000, guid: 63c9b8776aa22c94786016967fab8f3c, type: 2}
+    jindanState: {fileID: 11400000, guid: a0686f5235fcdac43891fd2c92bef536, type: 2}
+  - characterId: demo_20261024_seal_yin
+    displayNameKey: demo_20261024_seal_yin
+    realmId: realm_jindan
+    realmSubstage: "\u91D1\u4E39\u6E29\u517B"
+    realmMultiplier: 6
+    basicAttackProfileId: basic_body_human_jindan
+    sourceGongFaId: gongfa_qiushuiyouxin
+    sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
+    sourceCharacterDefinitionId: char_sanxiuqiangdao
+    rootElements:
+    - water
+    - fire
+    rootGrade: 3
+    naturalMansionCapacity: 2
+    actionPointMaximumUnits: 1000000
+    movementEfficiencyMilliUnits: 4800
+    manaMaximum: 6000
+    normalVisionRange: 4
+    seatInstanceIds:
+    - demo_20261024_seal_yin_seal_seat
+    - demo_20261024_seal_yin_yin_seat
+    flightAbilityInstanceId:
+    danxiangNameKey: demo_20261024_seal_yin_danxiang_name
+    danxiangPresentationProfileId: demo_20261024_seal_yin_danxiang_presentation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    carryingCapacityProfileId: demo_20261024_capacity_2
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+    sourceCharacterDefinition: {fileID: 11400000, guid: 3ce6e49825244cd2aae5b919a5784efa, type: 2}
+    sourceGongFa: {fileID: 11400000, guid: f5797941fa444415a089d6034bd6beb2, type: 2}
+    foundationState: {fileID: 11400000, guid: 8dc54107c0e2dbb4a8cbf58eb0c01a9b, type: 2}
+    jindanState: {fileID: 11400000, guid: 7e284ad06f657f54e93e90d0e98d8275, type: 2}
+  seats:
+  - seatInstanceId: demo_20261024_earth_seat
+    characterId: demo_20261024_earth
+    positionId: JD_FiveElements_Earth_SOURCE
+    positionVersion: 1.2
+    proofProfileId: PROOF_EARTH_SOURCE_01
+    proofVersion: 1.1
+    roadId: ROAD_EARTH
+    positionType: 0
+    guardianAbilityInstanceId: demo_20261024_earth_guardian
+    guardianDefinitionId: demo_20261024_guardian_houzai
+    candidateEffectIds:
+    - EARTH_MANIFEST
+    - EARTH_GRAVITY
+    defaultEffectId: EARTH_GRAVITY
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u6E90\u4F4D/JD_FiveElements_Earth_SOURCE_\u5764\u5730\u9AD3.txt"
+    allowedObjects:
+    - EXISTING_EDGE
+    - UNIT
+    - EARTH_OBJECT
+    allowedOperations:
+    - WALL
+    - RAMP
+    - HEAVY
+    - LIGHT
+    - ANCHOR
+    allowedMedia:
+    - EARTH_CHANNEL
+    - EARTH_SHAPING
+    - SPIRIT
+    allowedResults:
+    - EARTH_OBJECT
+    - FORCE_STATUS
+  - seatInstanceId: demo_20261024_water_seat
+    characterId: demo_20261024_water
+    positionId: JD_FiveElements_Water_SOURCE
+    positionVersion: 1.2
+    proofProfileId: PROOF_WATER_SOURCE_01
+    proofVersion: 1.1
+    roadId: ROAD_WATER
+    positionType: 0
+    guardianAbilityInstanceId: demo_20261024_water_guardian
+    guardianDefinitionId: demo_20261024_guardian_xulan
+    candidateEffectIds:
+    - WATER_TIDE
+    defaultEffectId: WATER_TIDE
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u6E90\u4F4D/JD_FiveElements_Water_SOURCE_\u6E0A\u84C4\u6C60.txt"
+    allowedObjects:
+    - WATER_SOURCE
+    - SURFACE
+    allowedOperations:
+    - RISE
+    - RETREAT
+    allowedMedia:
+    - WATER
+    - PAID_SPRING
+    - WATER_GUIDING
+    allowedResults:
+    - SURFACE
+    - PUSH
+    - WATER_HIT
+    - EROSION
+  - seatInstanceId: demo_20261024_fire_seat
+    characterId: demo_20261024_fire
+    positionId: JD_FiveElements_Fire_DOMAIN01
+    positionVersion: 1.2
+    proofProfileId: PROOF_FIRE_DOMAIN01_01
+    proofVersion: 1.1
+    roadId: ROAD_FIRE
+    positionType: 2
+    guardianAbilityInstanceId: demo_20261024_fire_guardian
+    guardianDefinitionId: demo_20261024_guardian_changming
+    candidateEffectIds:
+    - FIRE_MANIFEST
+    defaultEffectId: FIRE_MANIFEST
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u754C\u4F4D/JD_FiveElements_Fire_DOMAIN01_\u4E0D\u7184\u7089.txt"
+    allowedObjects:
+    - BURNABLE_SURFACE
+    allowedOperations:
+    - WEAK_HEAT
+    allowedMedia:
+    - FIRE_CENTER
+    - FUEL
+    - FIRE_GUIDING
+    allowedResults:
+    - TEMPERATURE
+    - BURNING
+  - seatInstanceId: demo_20261024_space_yang_scale_seat
+    characterId: demo_20261024_space_yang
+    positionId: JD_Cosmos_Space_SOURCE
+    positionVersion: 1.1
+    proofProfileId: PROOF_SPACE_SOURCE_01
+    proofVersion: 1.0
+    roadId: ROAD_SPACE
+    positionType: 0
+    guardianAbilityInstanceId: demo_20261024_space_yang_scale_guardian
+    guardianDefinitionId: demo_20261024_guardian_fangwei_dingchi
+    candidateEffectIds:
+    - SPACE_SCALE
+    defaultEffectId: SPACE_SCALE
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u6E90\u4F4D/JD_Cosmos_Space_SOURCE_\u516D\u5408\u67A2.txt"
+    allowedObjects:
+    - EXISTING_EDGE
+    allowedOperations:
+    - SET_METRIC
+    allowedMedia:
+    - SCALE_MAP
+    - DIRECTION_MARKER
+    allowedResults:
+    - METRIC_DISTANCE
+  - seatInstanceId: demo_20261024_space_yang_yang_seat
+    characterId: demo_20261024_space_yang
+    positionId: JD_YinYang_Yang_DOMAIN01
+    positionVersion: 1.1
+    proofProfileId: PROOF_YANG_DOMAIN01_01
+    proofVersion: 1.0
+    roadId: ROAD_YANG
+    positionType: 2
+    guardianAbilityInstanceId: demo_20261024_space_yang_yang_guardian
+    guardianDefinitionId: demo_20261024_guardian_ritan_zhaoming
+    candidateEffectIds:
+    - YANG_RADIANCE
+    defaultEffectId: YANG_RADIANCE
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u754C\u4F4D/JD_YinYang_Yang_DOMAIN01_\u662D\u660E\u6BBF.txt"
+    allowedObjects:
+    - OBSERVABLE_OBJECT
+    allowedOperations:
+    - REAL_LIGHT
+    allowedMedia:
+    - SUN_MAP
+    - SUN_ALTAR
+    allowedResults:
+    - LIGHTING
+    - OBSERVATION
+  - seatInstanceId: demo_20261024_seal_yin_seal_seat
+    characterId: demo_20261024_seal_yin
+    positionId: JD_Cosmos_Space_TRANSFORM01
+    positionVersion: 1.1
+    proofProfileId: PROOF_SPACE_TRANSFORM01_01
+    proofVersion: 1.0
+    roadId: ROAD_SPACE
+    positionType: 1
+    guardianAbilityInstanceId: demo_20261024_seal_yin_seal_guardian
+    guardianDefinitionId: demo_20261024_guardian_menshu_fengguan
+    candidateEffectIds:
+    - SPACE_SEAL
+    defaultEffectId: SPACE_SEAL
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u5316\u4F4D/JD_Cosmos_Space_TRANSFORM01_\u53E0\u5D82\u5173.txt"
+    allowedObjects:
+    - ENEMY_ENTRY
+    allowedOperations:
+    - BLOCK_ENTRY
+    allowedMedia:
+    - GATE
+    - CHAIN
+    - BOUNDARY_ANCHOR
+    allowedResults:
+    - PASSAGE_REJECTION
+  - seatInstanceId: demo_20261024_seal_yin_yin_seat
+    characterId: demo_20261024_seal_yin
+    positionId: JD_YinYang_Yin_DOMAIN01
+    positionVersion: 1.3
+    proofProfileId: PROOF_YIN_DOMAIN01_01
+    proofVersion: 1.0
+    roadId: ROAD_YIN
+    positionType: 2
+    guardianAbilityInstanceId: demo_20261024_seal_yin_yin_guardian
+    guardianDefinitionId: demo_20261024_guardian_shuotan_cangzhen
+    candidateEffectIds:
+    - YIN_CONCEAL
+    defaultEffectId: YIN_CONCEAL
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u4F4D\u683C/\u754C\u4F4D/JD_YinYang_Yin_DOMAIN01_\u85CF\u771F\u57DF.txt"
+    allowedObjects:
+    - LIVING_ALLY
+    allowedOperations:
+    - WEAK_CONCEAL
+    allowedMedia:
+    - CONCEAL_RECORD
+    - MOON_ALTAR
+    allowedResults:
+    - VISIBILITY
+  abilities:
+  - definitionId: demo_20261024_spell_tuantu
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_tuantu
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u629F\u571F.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - MING
+    - WU
+    objects:
+    - EXISTING_EDGE
+    - UNIT
+    - EARTH_OBJECT
+    operations:
+    - WALL
+    - RAMP
+    - HEAVY
+    - LIGHT
+    - ANCHOR
+    media:
+    - EARTH_CHANNEL
+    - EARTH_SHAPING
+    - SPIRIT
+    results:
+    - EARTH_OBJECT
+    - FORCE_STATUS
+  - definitionId: demo_20261024_guardian_houzai
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_houzai
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
+    sourceSpellId: demo_20261024_spell_tuantu
+    upgradePlanId: demo_20261024_spell_tuantu_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - MING
+    - WU
+    objects:
+    - EXISTING_EDGE
+    - UNIT
+    - EARTH_OBJECT
+    operations:
+    - WALL
+    - RAMP
+    - HEAVY
+    - LIGHT
+    - ANCHOR
+    media:
+    - EARTH_CHANNEL
+    - EARTH_SHAPING
+    - SPIRIT
+    results:
+    - EARTH_OBJECT
+    - FORCE_STATUS
+  - definitionId: demo_20261024_spell_xingshui
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_xingshui
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u884C\u6C34.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - HUN
+    - WU
+    objects:
+    - WATER_SOURCE
+    - SURFACE
+    operations:
+    - RISE
+    - RETREAT
+    media:
+    - WATER
+    - PAID_SPRING
+    - WATER_GUIDING
+    results:
+    - SURFACE
+    - PUSH
+    - WATER_HIT
+    - EROSION
+  - definitionId: demo_20261024_guardian_xulan
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_xulan
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
+    sourceSpellId: demo_20261024_spell_xingshui
+    upgradePlanId: demo_20261024_spell_xingshui_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - HUN
+    - WU
+    objects:
+    - WATER_SOURCE
+    - SURFACE
+    operations:
+    - RISE
+    - RETREAT
+    media:
+    - WATER
+    - PAID_SPRING
+    - WATER_GUIDING
+    results:
+    - SURFACE
+    - PUSH
+    - WATER_HIT
+    - EROSION
+  - definitionId: demo_20261024_spell_chuanxin
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_chuanxin
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u4F20\u85AA.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - WU
+    - HUN
+    objects:
+    - BURNABLE_SURFACE
+    operations:
+    - WEAK_HEAT
+    media:
+    - FIRE_CENTER
+    - FUEL
+    - FIRE_GUIDING
+    results:
+    - TEMPERATURE
+    - BURNING
+  - definitionId: demo_20261024_guardian_changming
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_changming
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
+    sourceSpellId: demo_20261024_spell_chuanxin
+    upgradePlanId: demo_20261024_spell_chuanxin_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - WU
+    - HUN
+    objects:
+    - BURNABLE_SURFACE
+    operations:
+    - WEAK_HEAT
+    media:
+    - FIRE_CENTER
+    - FUEL
+    - FIRE_GUIDING
+    results:
+    - TEMPERATURE
+    - BURNING
+  - definitionId: demo_20261024_spell_chidu_yutu
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_chidu_yutu
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5C3A\u5EA6\u8206\u56FE.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - WU
+    - SHI
+    objects:
+    - EXISTING_EDGE
+    operations:
+    - SET_METRIC
+    media:
+    - SCALE_MAP
+    - DIRECTION_MARKER
+    results:
+    - METRIC_DISTANCE
+  - definitionId: demo_20261024_guardian_fangwei_dingchi
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_fangwei_dingchi
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65B9\u4F4D\u5B9A\u5C3A.txt"
+    sourceSpellId: demo_20261024_spell_chidu_yutu
+    upgradePlanId: demo_20261024_spell_chidu_yutu_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - WU
+    - SHI
+    objects:
+    - EXISTING_EDGE
+    operations:
+    - SET_METRIC
+    media:
+    - SCALE_MAP
+    - DIRECTION_MARKER
+    results:
+    - METRIC_DISTANCE
+  - definitionId: demo_20261024_spell_rizhao_yutu
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_rizhao_yutu
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u7167\u8206\u56FE.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - SHI
+    - WU
+    objects:
+    - OBSERVABLE_OBJECT
+    operations:
+    - REAL_LIGHT
+    media:
+    - SUN_MAP
+    - SUN_ALTAR
+    results:
+    - LIGHTING
+    - OBSERVATION
+  - definitionId: demo_20261024_guardian_ritan_zhaoming
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_ritan_zhaoming
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u575B\u662D\u660E.txt"
+    sourceSpellId: demo_20261024_spell_rizhao_yutu
+    upgradePlanId: demo_20261024_spell_rizhao_yutu_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - SHI
+    - WU
+    objects:
+    - OBSERVABLE_OBJECT
+    operations:
+    - REAL_LIGHT
+    media:
+    - SUN_MAP
+    - SUN_ALTAR
+    results:
+    - LIGHTING
+    - OBSERVATION
+  - definitionId: demo_20261024_spell_fengsuo_suolian
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_fengsuo_suolian
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5C01\u9501\u9501\u94FE.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - WU
+    - HUN
+    objects:
+    - ENEMY_ENTRY
+    operations:
+    - BLOCK_ENTRY
+    media:
+    - GATE
+    - CHAIN
+    - BOUNDARY_ANCHOR
+    results:
+    - PASSAGE_REJECTION
+  - definitionId: demo_20261024_guardian_menshu_fengguan
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_menshu_fengguan
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
+    sourceSpellId: demo_20261024_spell_fengsuo_suolian
+    upgradePlanId: demo_20261024_spell_fengsuo_suolian_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - WU
+    - HUN
+    objects:
+    - ENEMY_ENTRY
+    operations:
+    - BLOCK_ENTRY
+    media:
+    - GATE
+    - CHAIN
+    - BOUNDARY_ANCHOR
+    results:
+    - PASSAGE_REJECTION
+  - definitionId: demo_20261024_spell_qianfu_minglu
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_spell_qianfu_minglu
+    kind: SOURCE_SPELL
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u6F5C\u4F0F\u540D\u5F55.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions:
+    - HUN
+    - SHI
+    objects:
+    - LIVING_ALLY
+    operations:
+    - WEAK_CONCEAL
+    media:
+    - CONCEAL_RECORD
+    - MOON_ALTAR
+    results:
+    - VISIBILITY
+  - definitionId: demo_20261024_guardian_shuotan_cangzhen
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_guardian_shuotan_cangzhen
+    kind: GUARDIAN
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u6714\u575B\u85CF\u771F.txt"
+    sourceSpellId: demo_20261024_spell_qianfu_minglu
+    upgradePlanId: demo_20261024_spell_qianfu_minglu_upgrade_v1
+    sourceDisposition: INTERNALIZE
+    compatibleMansions:
+    - HUN
+    - SHI
+    objects:
+    - LIVING_ALLY
+    operations:
+    - WEAK_CONCEAL
+    media:
+    - CONCEAL_RECORD
+    - MOON_ALTAR
+    results:
+    - VISIBILITY
+  - definitionId: demo_20261024_yufeng_flight
+    definitionVersion: 1.0
+    displayNameKey: demo_20261024_yufeng_flight
+    kind: FLIGHT
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+    sourceSpellId:
+    upgradePlanId:
+    sourceDisposition:
+    compatibleMansions: []
+    objects:
+    - SELF
+    operations:
+    - FLIGHT_MODE
+    media:
+    - WIND
+    results:
+    - FLIGHT
+  commands:
+  - commandId: demo_20261024_earth_manifest_deploy
+    displayNameKey: demo_20261024_earth_manifest_deploy
+    abilityDefinitionId: demo_20261024_guardian_houzai
+    effectId: EARTH_MANIFEST
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 2
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 600
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_ALL
+    capacityUnit: COMPONENT
+    additionalRulesKey: demo_20261024_earth_manifest_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d7
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
+  - commandId: demo_20261024_earth_manifest_terminate
+    displayNameKey: demo_20261024_earth_manifest_terminate
+    abilityDefinitionId: demo_20261024_guardian_houzai
+    effectId: EARTH_MANIFEST
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_ALL
+    capacityUnit: COMPONENT
+    additionalRulesKey: demo_20261024_earth_manifest_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d7
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
+  - commandId: demo_20261024_earth_gravity_deploy
+    displayNameKey: demo_20261024_earth_gravity_deploy
+    abilityDefinitionId: demo_20261024_guardian_houzai
+    effectId: EARTH_GRAVITY
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 3
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 2
+    durationClock: TARGET_OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_STATUS
+    capacityUnit: TARGET
+    additionalRulesKey: demo_20261024_earth_gravity_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d7
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
+  - commandId: demo_20261024_earth_gravity_terminate
+    displayNameKey: demo_20261024_earth_gravity_terminate
+    abilityDefinitionId: demo_20261024_guardian_houzai
+    effectId: EARTH_GRAVITY
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_STATUS
+    capacityUnit: TARGET
+    additionalRulesKey: demo_20261024_earth_gravity_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d7
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
+  - commandId: demo_20261024_water_tide_deploy
+    displayNameKey: demo_20261024_water_tide_deploy
+    abilityDefinitionId: demo_20261024_guardian_xulan
+    effectId: WATER_TIDE
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: BATTLE_END
+    maximumInstances: 1
+    capacity: 7
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: KEEP_COMMITTED_SURFACES
+    capacityUnit: SURFACE_CELL
+    additionalRulesKey: demo_20261024_water_tide_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d8
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
+  - commandId: demo_20261024_water_tide_terminate
+    displayNameKey: demo_20261024_water_tide_terminate
+    abilityDefinitionId: demo_20261024_guardian_xulan
+    effectId: WATER_TIDE
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: KEEP_COMMITTED_SURFACES
+    capacityUnit: SURFACE_CELL
+    additionalRulesKey: demo_20261024_water_tide_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d8
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u84C4\u6F9C.txt"
+  - commandId: demo_20261024_fire_manifest_deploy
+    displayNameKey: demo_20261024_fire_manifest_deploy
+    abilityDefinitionId: demo_20261024_guardian_changming
+    effectId: FIRE_MANIFEST
+    kind: DEPLOY
+    actionPointCostUnits: 500000
+    manaCost: 1000
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 200
+    upkeepClock: OWN_TURN_END
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 3
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 600
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FINITE_PREPAID_TAIL
+    capacityUnit: BURNING_CELL
+    additionalRulesKey: demo_20261024_fire_manifest_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d10
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
+  - commandId: demo_20261024_fire_manifest_terminate
+    displayNameKey: demo_20261024_fire_manifest_terminate
+    abilityDefinitionId: demo_20261024_guardian_changming
+    effectId: FIRE_MANIFEST
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FINITE_PREPAID_TAIL
+    capacityUnit: BURNING_CELL
+    additionalRulesKey: demo_20261024_fire_manifest_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d10
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
+  - commandId: demo_20261024_scale_deploy
+    displayNameKey: demo_20261024_scale_deploy
+    abilityDefinitionId: demo_20261024_guardian_fangwei_dingchi
+    effectId: SPACE_SCALE
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 40
+    upkeepClock: GLOBAL_TICK
+    durationCount: 0
+    durationClock: UNTIL_INVALID
+    maximumInstances: 1
+    capacity: 2
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 200
+    remoteOriginManaCost: 50
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes: 0100000004000000
+    failurePolicy: END_AND_RECOMPUTE
+    capacityUnit: EDGE
+    additionalRulesKey: demo_20261024_space_scale_rules
+    enabled: 1
+    unavailableReasonKey:
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65B9\u4F4D\u5B9A\u5C3A.txt"
+  - commandId: demo_20261024_scale_terminate
+    displayNameKey: demo_20261024_scale_terminate
+    abilityDefinitionId: demo_20261024_guardian_fangwei_dingchi
+    effectId: SPACE_SCALE
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_AND_RECOMPUTE
+    capacityUnit: EDGE
+    additionalRulesKey: demo_20261024_space_scale_rules
+    enabled: 1
+    unavailableReasonKey:
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65B9\u4F4D\u5B9A\u5C3A.txt"
+  - commandId: demo_20261024_yang_radiance_deploy
+    displayNameKey: demo_20261024_yang_radiance_deploy
+    abilityDefinitionId: demo_20261024_guardian_ritan_zhaoming
+    effectId: YANG_RADIANCE
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 40
+    upkeepClock: GLOBAL_TICK
+    durationCount: 6
+    durationClock: GLOBAL_TICK
+    maximumInstances: 1
+    capacity: 1
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 600
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_FUTURE_EFFECT
+    capacityUnit: DOMAIN
+    additionalRulesKey: demo_20261024_yang_radiance_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d11
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u575B\u662D\u660E.txt"
+  - commandId: demo_20261024_yang_radiance_terminate
+    displayNameKey: demo_20261024_yang_radiance_terminate
+    abilityDefinitionId: demo_20261024_guardian_ritan_zhaoming
+    effectId: YANG_RADIANCE
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_FUTURE_EFFECT
+    capacityUnit: DOMAIN
+    additionalRulesKey: demo_20261024_yang_radiance_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d11
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u575B\u662D\u660E.txt"
+  - commandId: demo_20261024_space_seal_deploy
+    displayNameKey: demo_20261024_space_seal_deploy
+    abilityDefinitionId: demo_20261024_guardian_menshu_fengguan
+    effectId: SPACE_SEAL
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 3
+    upkeepMana: 40
+    upkeepClock: GLOBAL_TICK
+    durationCount: 6
+    durationClock: GLOBAL_TICK
+    maximumInstances: 1
+    capacity: 1
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 200
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: LAYERED_END
+    capacityUnit: GATE
+    additionalRulesKey: demo_20261024_space_seal_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d9
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
+  - commandId: demo_20261024_space_seal_terminate
+    displayNameKey: demo_20261024_space_seal_terminate
+    abilityDefinitionId: demo_20261024_guardian_menshu_fengguan
+    effectId: SPACE_SEAL
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: LAYERED_END
+    capacityUnit: GATE
+    additionalRulesKey: demo_20261024_space_seal_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d9
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
+  - commandId: demo_20261024_yin_conceal_deploy
+    displayNameKey: demo_20261024_yin_conceal_deploy
+    abilityDefinitionId: demo_20261024_guardian_shuotan_cangzhen
+    effectId: YIN_CONCEAL
+    kind: DEPLOY
+    actionPointCostUnits: 250000
+    manaCost: 400
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 40
+    upkeepClock: GLOBAL_TICK
+    durationCount: 6
+    durationClock: GLOBAL_TICK
+    maximumInstances: 1
+    capacity: 1
+    range: 4
+    verticalReachRank: 3
+    supportDurability: 600
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_FUTURE_EFFECT
+    capacityUnit: DOMAIN
+    additionalRulesKey: demo_20261024_yin_conceal_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d11
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u6714\u575B\u85CF\u771F.txt"
+  - commandId: demo_20261024_yin_conceal_terminate
+    displayNameKey: demo_20261024_yin_conceal_terminate
+    abilityDefinitionId: demo_20261024_guardian_shuotan_cangzhen
+    effectId: YIN_CONCEAL
+    kind: TERMINATE
+    actionPointCostUnits: 25000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 0
+    upkeepClock: NONE
+    durationCount: 0
+    durationClock: NONE
+    maximumInstances: 0
+    capacity: 0
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: END_FUTURE_EFFECT
+    capacityUnit: DOMAIN
+    additionalRulesKey: demo_20261024_yin_conceal_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d11
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u6714\u575B\u85CF\u771F.txt"
+  - commandId: demo_20261024_flight_takeoff
+    displayNameKey: demo_20261024_flight_takeoff
+    abilityDefinitionId: demo_20261024_yufeng_flight
+    effectId: FLIGHT
+    kind: FLIGHT_TAKEOFF
+    actionPointCostUnits: 250000
+    manaCost: 200
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 100
+    upkeepClock: OWN_TURN_START
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
+    capacityUnit: SELF
+    additionalRulesKey: demo_20261024_flight_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d6
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+  - commandId: demo_20261024_flight_ascend
+    displayNameKey: demo_20261024_flight_ascend
+    abilityDefinitionId: demo_20261024_yufeng_flight
+    effectId: FLIGHT
+    kind: FLIGHT_ASCEND
+    actionPointCostUnits: 125000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 100
+    upkeepClock: OWN_TURN_START
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
+    capacityUnit: SELF
+    additionalRulesKey: demo_20261024_flight_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d6
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+  - commandId: demo_20261024_flight_descend
+    displayNameKey: demo_20261024_flight_descend
+    abilityDefinitionId: demo_20261024_yufeng_flight
+    effectId: FLIGHT
+    kind: FLIGHT_DESCEND
+    actionPointCostUnits: 125000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 100
+    upkeepClock: OWN_TURN_START
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
+    capacityUnit: SELF
+    additionalRulesKey: demo_20261024_flight_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d6
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+  - commandId: demo_20261024_flight_land
+    displayNameKey: demo_20261024_flight_land
+    abilityDefinitionId: demo_20261024_yufeng_flight
+    effectId: FLIGHT
+    kind: FLIGHT_LAND
+    actionPointCostUnits: 50000
+    manaCost: 0
+    ctPenalty: 0
+    cooldownTicks: 0
+    upkeepMana: 100
+    upkeepClock: OWN_TURN_START
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
+    capacityUnit: SELF
+    additionalRulesKey: demo_20261024_flight_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d6
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+  - commandId: demo_20261024_flight_recover
+    displayNameKey: demo_20261024_flight_recover
+    abilityDefinitionId: demo_20261024_yufeng_flight
+    effectId: FLIGHT
+    kind: FLIGHT_RECOVER
+    actionPointCostUnits: 250000
+    manaCost: 200
+    ctPenalty: 0
+    cooldownTicks: 1
+    upkeepMana: 100
+    upkeepClock: OWN_TURN_START
+    durationCount: 3
+    durationClock: OWN_TURN_END
+    maximumInstances: 1
+    capacity: 1
+    range: 0
+    verticalReachRank: 0
+    supportDurability: 0
+    remoteOriginManaCost: 0
+    sourceModeMask: 3
+    targetModeMask: 3
+    metricDistanceModes:
+    failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
+    capacityUnit: SELF
+    additionalRulesKey: demo_20261024_flight_rules
+    enabled: 0
+    unavailableReasonKey: demo_20261024_unavailable_d6
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
+  contracts:
+  - contractId: demo_20261024_earth_manifest_contract_v1
+    contractVersion: 1.0
+    positionId: JD_FiveElements_Earth_SOURCE
+    positionProfileVersion: 1.2
+    roadId: ROAD_EARTH
+    positionType: 0
+    effectId: EARTH_MANIFEST
+    carrierDefinitionId: demo_20261024_guardian_houzai
+    objectSchema:
+    - EXISTING_EDGE
+    operationSchema:
+    - WALL
+    - RAMP
+    mediumSchema:
+    - EARTH_CHANNEL
+    - EARTH_SHAPING
+    - SPIRIT
+    filterSchema: MANUAL
+    scopeSchema: ONE_EDGE
+    resultCarrierSchema:
+    - EARTH_OBJECT
+    costSchemaId: demo_20261024_earth_manifest_deploy
+    capacitySchemaId: demo_20261024_earth_manifest_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_dd8b71628c91e5a8158235e89c434771c32b224d4d94abbd9626267b0c3df2d4
+  - contractId: demo_20261024_earth_gravity_contract_v1
+    contractVersion: 1.0
+    positionId: JD_FiveElements_Earth_SOURCE
+    positionProfileVersion: 1.2
+    roadId: ROAD_EARTH
+    positionType: 0
+    effectId: EARTH_GRAVITY
+    carrierDefinitionId: demo_20261024_guardian_houzai
+    objectSchema:
+    - UNIT
+    - EARTH_OBJECT
+    operationSchema:
+    - HEAVY
+    - LIGHT
+    - ANCHOR
+    mediumSchema:
+    - EARTH_CHANNEL
+    - EARTH_SHAPING
+    - SPIRIT
+    filterSchema: MANUAL
+    scopeSchema: ONE_OBJECT
+    resultCarrierSchema:
+    - FORCE_STATUS
+    costSchemaId: demo_20261024_earth_gravity_deploy
+    capacitySchemaId: demo_20261024_earth_gravity_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_49843ea3d6ce7cbb0341b71c102a8a58fd21bc1f714bde14c7a0c00f92f73078
+  - contractId: demo_20261024_water_tide_contract_v1
+    contractVersion: 1.0
+    positionId: JD_FiveElements_Water_SOURCE
+    positionProfileVersion: 1.2
+    roadId: ROAD_WATER
+    positionType: 0
+    effectId: WATER_TIDE
+    carrierDefinitionId: demo_20261024_guardian_xulan
+    objectSchema:
+    - WATER_SOURCE
+    - SURFACE
+    operationSchema:
+    - RISE
+    - RETREAT
+    mediumSchema:
+    - WATER
+    - PAID_SPRING
+    - WATER_GUIDING
+    filterSchema: MANUAL
+    scopeSchema: BASE_TOPOLOGY_RADIUS_1
+    resultCarrierSchema:
+    - SURFACE
+    - PUSH
+    - WATER_HIT
+    - EROSION
+    costSchemaId: demo_20261024_water_tide_deploy
+    capacitySchemaId: demo_20261024_water_tide_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_21ec518366eb9dbad96a1ea8e48d88f357b65e211379d70dddc0d345685958fa
+  - contractId: demo_20261024_fire_manifest_contract_v1
+    contractVersion: 1.0
+    positionId: JD_FiveElements_Fire_DOMAIN01
+    positionProfileVersion: 1.2
+    roadId: ROAD_FIRE
+    positionType: 2
+    effectId: FIRE_MANIFEST
+    carrierDefinitionId: demo_20261024_guardian_changming
+    objectSchema:
+    - BURNABLE_SURFACE
+    operationSchema:
+    - WEAK_HEAT
+    mediumSchema:
+    - FIRE_CENTER
+    - FUEL
+    - FIRE_GUIDING
+    filterSchema: ALL_FACTIONS
+    scopeSchema: BOARD_BASE_TOPOLOGY
+    resultCarrierSchema:
+    - TEMPERATURE
+    - BURNING
+    costSchemaId: demo_20261024_fire_manifest_deploy
+    capacitySchemaId: demo_20261024_fire_manifest_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_8e61b514e617086c5b5692c71acfd9a1cc0d604e91974fcd710d0c4637b4cda2
+  - contractId: demo_20261024_space_scale_contract_v1
+    contractVersion: 1.0
+    positionId: JD_Cosmos_Space_SOURCE
+    positionProfileVersion: 1.1
+    roadId: ROAD_SPACE
+    positionType: 0
+    effectId: SPACE_SCALE
+    carrierDefinitionId: demo_20261024_guardian_fangwei_dingchi
+    objectSchema:
+    - EXISTING_EDGE
+    operationSchema:
+    - SET_METRIC
+    mediumSchema:
+    - SCALE_MAP
+    - DIRECTION_MARKER
+    filterSchema: MANUAL
+    scopeSchema: TWO_CONNECTED_EDGES
+    resultCarrierSchema:
+    - METRIC_DISTANCE
+    costSchemaId: demo_20261024_scale_deploy
+    capacitySchemaId: demo_20261024_scale_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_d80d4b2e866b9e18f13626d70004609de9f4aa9966a6f508d237c5350d62707d
+  - contractId: demo_20261024_yang_radiance_contract_v1
+    contractVersion: 1.0
+    positionId: JD_YinYang_Yang_DOMAIN01
+    positionProfileVersion: 1.1
+    roadId: ROAD_YANG
+    positionType: 2
+    effectId: YANG_RADIANCE
+    carrierDefinitionId: demo_20261024_guardian_ritan_zhaoming
+    objectSchema:
+    - OBSERVABLE_OBJECT
+    operationSchema:
+    - REAL_LIGHT
+    mediumSchema:
+    - SUN_MAP
+    - SUN_ALTAR
+    filterSchema: ALL_FACTIONS
+    scopeSchema: BOARD_BASE_TOPOLOGY
+    resultCarrierSchema:
+    - LIGHTING
+    - OBSERVATION
+    costSchemaId: demo_20261024_yang_radiance_deploy
+    capacitySchemaId: demo_20261024_yang_radiance_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_5c6363bad1e7eb3ba8abbe9cdec7e0f3d47bc06ca385130cbfcf270c7b87e786
+  - contractId: demo_20261024_space_seal_contract_v1
+    contractVersion: 1.0
+    positionId: JD_Cosmos_Space_TRANSFORM01
+    positionProfileVersion: 1.1
+    roadId: ROAD_SPACE
+    positionType: 1
+    effectId: SPACE_SEAL
+    carrierDefinitionId: demo_20261024_guardian_menshu_fengguan
+    objectSchema:
+    - ENEMY_ENTRY
+    operationSchema:
+    - BLOCK_ENTRY
+    mediumSchema:
+    - GATE
+    - CHAIN
+    - BOUNDARY_ANCHOR
+    filterSchema: FIXED_ENEMY_ENTRY
+    scopeSchema: ONE_DIRECTED_EDGE
+    resultCarrierSchema:
+    - PASSAGE_REJECTION
+    costSchemaId: demo_20261024_space_seal_deploy
+    capacitySchemaId: demo_20261024_space_seal_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_e51b8ab35ae75564bcf837f2691e82523154fc9b907cadbab5eda12508920dd3
+  - contractId: demo_20261024_yin_conceal_contract_v1
+    contractVersion: 1.0
+    positionId: JD_YinYang_Yin_DOMAIN01
+    positionProfileVersion: 1.3
+    roadId: ROAD_YIN
+    positionType: 2
+    effectId: YIN_CONCEAL
+    carrierDefinitionId: demo_20261024_guardian_shuotan_cangzhen
+    objectSchema:
+    - LIVING_ALLY
+    operationSchema:
+    - WEAK_CONCEAL
+    mediumSchema:
+    - CONCEAL_RECORD
+    - MOON_ALTAR
+    filterSchema: OWN_FACTION
+    scopeSchema: BOARD_BASE_TOPOLOGY
+    resultCarrierSchema:
+    - VISIBILITY
+    costSchemaId: demo_20261024_yin_conceal_deploy
+    capacitySchemaId: demo_20261024_yin_conceal_deploy
+    forbiddenContractIds:
+    - UNDECLARED
+    compatibilityProfileId: demo_compat_sha256_4a2742d19c344f0ec34d524ebfe1c2eea3204c25aa89205faf1766d21f633f9e
+  segments:
+  - segmentId: demo_20261024_segment_1
+    displayNameKey: demo_20261024_segment_1
+    actors:
+    - characterId: demo_20261024_earth
+      team: 0
+      q: 4
+      r: 0
+      facing: 0
+    - characterId: demo_20261024_water
+      team: 1
+      q: 7
+      r: 3
+      facing: 3
+  - segmentId: demo_20261024_segment_2
+    displayNameKey: demo_20261024_segment_2
+    actors:
+    - characterId: demo_20261024_earth
+      team: 0
+      q: 4
+      r: 0
+      facing: 0
+    - characterId: demo_20261024_water
+      team: 0
+      q: 5
+      r: 0
+      facing: 0
+    - characterId: demo_20261024_fire
+      team: 1
+      q: 7
+      r: 12
+      facing: 3
+  - segmentId: demo_20261024_segment_3
+    displayNameKey: demo_20261024_segment_3
+    actors:
+    - characterId: demo_20261024_space_yang
+      team: 0
+      q: 4
+      r: 14
+      facing: 0
+    - characterId: demo_20261024_seal_yin
+      team: 1
+      q: 7
+      r: 14
+      facing: 3
+  loadoutTuning:
+    tuningId: demo_20261024_loadout_v1
+    combatSwitchActionMode: UNUSED_FULL_OWN_TURN_AP
+    maxSwitchesPerOwnAction: 1
+    switchCostProfileId: demo_20261024_switch_full_ap
+    safeStateSwitchMode: FREE
+    switchActionPointCostMode: SNAPSHOT_MAX_AP
+    switchManaCost: 0
+    switchCtPenalty: 0
+    switchCooldownTicks: 0
+    activationGate: NEXT_OWN_TURN_START
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"

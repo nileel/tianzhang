@@ -891,7 +891,7 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
-        public void SessionAllowsOneVsTwoButRejectsOtherUnsupportedSideCardinalities()
+        public void SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne()
         {
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10);
             CombatantSnapshot enemyOne = CreateCombatant("enemy_one", CombatTeam.Enemy, new HexCoord(1, 0), 10, 100, 20, 10);
@@ -901,8 +901,11 @@ namespace TianZhang.Tests.EditMode
             Assert.Throws<ArgumentException>(() => CreateSession(new[] { player }, new FixedRangeQuery(true)));
             Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne, enemyTwo,
                 CreateCombatant("third", CombatTeam.Enemy, new HexCoord(3, 0), 10, 100, 20, 10) }, new FixedRangeQuery(true)));
-            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne,
+            Assert.DoesNotThrow(() => CreateSession(new[] { player, enemyOne,
                 CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 10, 100, 20, 10) }, new FixedRangeQuery(true)));
+            Assert.Throws<ArgumentException>(() => CreateSession(new[] { player, enemyOne,
+                CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 10, 100, 20, 10),
+                CreateCombatant("third_player", CombatTeam.Player, new HexCoord(0, 2), 10, 100, 20, 10) }, new FixedRangeQuery(true)));
         }
 
         [Test]

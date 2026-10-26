@@ -1,0 +1,42 @@
+D5 金丹演武入口与首个能力闭环
+日期：2026-10-26
+状态：D5 已完成。本次只执行 D5 及用户确认的提前能力与单向下落表现修复；D6–D11 未自动推进。
+
+范围
+- 用户确认在 D5 提前接入 D9《演武·方位定尺》SPACE_SCALE，完成展开、全局 CT tick 维护、支点、关闭与清理。
+- 固定五预设、七个唯一席位、十五份能力来源、八项有限编译合同及三段入口已接入既有 Adventure/Combat 链。
+- 其余能力显示来源、装配、费用及 D6–D11 未开放原因；不视为能力效果已经实现。D9 空间封锁及组合验收仍后置。
+- 演武资源属于本次 CombatSession，不写回正式人物成长或世界位格。
+
+通过证据
+- EditMode 167/167：D5 账本、空间尺度以及相关 Combat/D4/双格回归，见 d5-core-edit.xml。
+- 内容与静态身份 37/37：JindanDemoContentTests 12、FoundationPurpleMansionStateDataTests 8、JindanStaticStateDataTests 17；原始结果 src/Logs/d5-content-edit.xml。
+- 配置编辑器定向集成 1/1：生产五行身份、联合导入十一项产物、旧位格版本拒绝及撤销，见 d5-config-edit-2.xml。
+- 正式导入并重建、保存重开成功；compile_ 占位符修正后重新导入成功，见 src/Logs/d5-import-build.log、d5-layer-build.log、d5-token-import.log。
+- check-data-chain 通过：功法 29/29、术法 84/84、神通 31/31、语言键 802。
+- BattleSim Release 编译通过；既有 --self-test two-cell-production 通过。不据此提出新的角色数值平衡结论。
+- NativeScaleLoop 原生鼠标操作 1/1，见 d5-native-play.xml、native-proof.txt。战前初次准备由测试建立，真实鼠标完成两格选择、预演、施放、结束行动、关闭、撤离和再次进入。
+- 实测展开：AP 1000→750、MP 6000→5600，边 (4,14)↔(5,14) 从 2→1，支点 200，停在同一 tick 的额外帧不重复维护。
+- 实测维护：t=10→20，10 次×40MP，MP 5600→5200；主动关闭 AP 1000→975，支点与边覆盖清除，边权恢复 2。新会话资源、CD、支点、维护次数均重置。
+- 已查看 1366×768 和 1920×1080 实际运行画面。原生交互在 1366×768 完成，1920×1080 为同次会话切换分辨率后的画面检查；不冒称两种分辨率均完成整套原生操作。
+
+后续完整回归与获准修复
+- ProductionEntryAndLedger 最终通过，见 d5-final-play.xml 中该用例及 production-proof.txt：三段正式入口、战前浏览／调整／取消、空选择拒绝不扣费、第三段施放／维护／关闭、撤离重入、第二名友方输入、第一段切装支付完整回合预算并保留 AP=0 手动结束、旧练气悬赏入场与防御扣费、正式角色存档隔离均通过。
+- 用户批准补齐既有 OneWayDrop 表现。实际 LegalActionAI 路径包含规则许可的 (9,9) 高台→(9,8) 中台；旧代码把 0.75 米落差当连续坡面，得到梯度37.5、pitch约-88.24°后抛 unit_sole_support_not_bracketed。诊断原文仍保留在 src/Logs/d5/stage2-sole-diagnostic.txt。
+- 修复仅由既有环境资产投影允许移动的落差有向边；单格命中该边时先水平离崖再垂直落地，原接地求解、双格、地图、规则费用与 AI 不变。Builder重建保存重开后，唯一记录为9:9>9:8，反向未开放。
+- FormalHumanDropsOnDeclaredEdgeWithoutPenetrationOrTilt 图形模式1/1，见 d5-drop-visual.xml 与 one-way-drop/：实际FormalPlayer_Static3D、缩放1.4、49570顶点、647脚底点、28帧、1387960次有限支承高度比较，未测到顶点穿入或倾斜；起终双足支承误差与最终位置误差均为0。水平1米、垂直0.75米，总路长1.75米，4米/秒；预期0.4375秒，60Hz实际0.45秒。证据是逐帧网格顶点采样，不宣称任意模型、任意落差或全三角面连续避碰已经验证。
+- 第二段完整实际AI路径及演出锁解除后友方操作通过；GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions通过，见 d5-drop-production.xml 中该用例与 terrain-motion-regression.json。原楼梯最大顶点穿入0.0912毫米，三平台落脚误差0；坡上动作及30/60/120Hz移动回归通过。
+- 第一段本轮配表曾把water放在(6,3)不可停坡肩；D1未固定该出生坐标，已移至同坡合法格(7,3)并重新导入及验证。没有修改地图可通行性来放行错误起点。
+- 对四个下落修复文件做独立只读检查，无阻塞发现；几何保证限当前已验真实人形及指定平→平落差。
+- d5-drop-production.xml 保留了修复下落后、修正第一段出生前的混合结果：地形动作通过，D5入口因非法起点失败。d5-final-play.xml 保留最终入口通过与下落截图测试在batchmode等待帧失败的混合结果；下落测试随后改用普通图形模式执行且通过。没有改写原始测试结果或把这些整批XML冒称全绿。
+
+既有独立限制
+- 全局 ConfigEditorApplyTests 12 项及 ConfigEditorCultivationTests 2 项失败；当前 HEAD 的攻击表有 69 列而 AttackLabels 只有 63 项，导致全局注册发现越界，另有无图形 GUI 测试约束。相关攻击表文件不属于本次改动。
+- 已使用定向生产身份表集成测试验证 D5 改动；未把全局配置编辑器套件报告为通过，也未扩展修复无关表。
+
+复现入口
+- Unity：天章/场景/D5 导入并接入金丹演武；进入关中野外后点击“金丹演武”，默认第三段。
+- PlayMode 过滤 TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests.ProductionEntryAndLedger。
+- 下落图形验收过滤 TianZhang.Tests.PlayMode.D5OneWayDropPlayModeTests.FormalHumanDropsOnDeclaredEdgeWithoutPenetrationOrTilt；需要普通图形模式（不传-batchmode），截图使用WaitForEndOfFrame。地形回归过滤 TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions。
+- 原生验收过滤 TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests.NativeScaleLoop，使用有图形 Unity 并按 src/Logs/d5/native/pending.json 操作。
+- 禁止打开同一工程编辑器时并行启动批处理。项目验证脚本使用 PowerShell 7。

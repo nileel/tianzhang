@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25d7a763b4241a4b8e8a7f5f6254c52, type: 3}
+  m_Name: JindanStaticState_demo_20261024_seal_yin
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.JindanStaticStateData
+  schemaId: jindanStaticState
+  schemaVersion: 1
+  characterId: demo_20261024_seal_yin
+  foundationPurpleMansionStateRef: demo_20261024_seal_yin_foundation
+  mansionInputs:
+  - mansionKind: 0
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 1
+    state: 2
+    mansionInstanceId: demo_20261024_seal_yin_hun
+    mansionBodyEffectBindingId: demo_20261024_seal_yin_hun_body
+    guardianAbilityInstanceId: demo_20261024_seal_yin_yin_guardian
+    sourceSpellId: demo_20261024_spell_qianfu_minglu
+    upgradePlanId: demo_20261024_spell_qianfu_minglu_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 2
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 3
+    state: 2
+    mansionInstanceId: demo_20261024_seal_yin_wu
+    mansionBodyEffectBindingId: demo_20261024_seal_yin_wu_body
+    guardianAbilityInstanceId: demo_20261024_seal_yin_seal_guardian
+    sourceSpellId: demo_20261024_spell_fengsuo_suolian
+    upgradePlanId: demo_20261024_spell_fengsuo_suolian_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 4
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  jindanCoreBinding:
+    jindanCoreBindingId: demo_20261024_seal_yin_core_binding
+    jindanInstanceId: demo_20261024_seal_yin_jindan
+    boundDanshuCoreId: demo_20261024_seal_yin_core
+    formationTransactionId: demo_20261024_seal_yin_formation
+    formationVersion: 1
+  danxiang:
+    danxiangInstanceId: demo_20261024_seal_yin_danxiang
+    jindanInstanceId: demo_20261024_seal_yin_jindan
+    danxiangNameKey: demo_20261024_seal_yin_danxiang_name
+    danxingDefinitionId:
+    danxiangPresentationProfileId: demo_20261024_seal_yin_danxiang_presentation
+  stablePositionBindings:
+  - positionId: JD_Cosmos_Space_TRANSFORM01
+    expectedPositionVersion: 101
+    roadId: ROAD_SPACE
+    positionType: 1
+    proofProfileId: PROOF_SPACE_TRANSFORM01_01
+    equippedBaseEffectId: SPACE_SEAL
+    compatibilityProfileId: demo_compat_sha256_e51b8ab35ae75564bcf837f2691e82523154fc9b907cadbab5eda12508920dd3
+    primaryCarrierAbilityInstanceId: demo_20261024_seal_yin_seal_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  - positionId: JD_YinYang_Yin_DOMAIN01
+    expectedPositionVersion: 103
+    roadId: ROAD_YIN
+    positionType: 2
+    proofProfileId: PROOF_YIN_DOMAIN01_01
+    equippedBaseEffectId: YIN_CONCEAL
+    compatibilityProfileId: demo_compat_sha256_4a2742d19c344f0ec34d524ebfe1c2eea3204c25aa89205faf1766d21f633f9e
+    primaryCarrierAbilityInstanceId: demo_20261024_seal_yin_yin_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  abilityLedgerBindings:
+  - abilityInstanceId: demo_20261024_seal_yin_seal_guardian
+    resourceDebitLedgerRef: demo_20261024_seal_yin_seal_guardian_resource
+    cooldownLedgerRef: demo_20261024_seal_yin_seal_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_seal_yin_seal_guardian_cost
+    conflictReserveLedgerRef:
+    conflictCostProfileId:
+  - abilityInstanceId: demo_20261024_seal_yin_yin_guardian
+    resourceDebitLedgerRef: demo_20261024_seal_yin_yin_guardian_resource
+    cooldownLedgerRef: demo_20261024_seal_yin_yin_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_seal_yin_yin_guardian_cost
+    conflictReserveLedgerRef: demo_20261024_seal_yin_yin_guardian_conflict_reserve
+    conflictCostProfileId: demo_20261024_visibility_conflict_v1

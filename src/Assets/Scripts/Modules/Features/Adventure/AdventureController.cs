@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Content;
+using TianZhang.Entity;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.World;
@@ -39,6 +41,23 @@ namespace TianZhang.Features.Adventure
         private AdventureSession session;
         private bool formalEncounterConsumed;
         public bool IsTerrainRehearsal { get; private set; }
+
+        public bool BeginJindanRehearsal(JindanDemoCatalogData demo, int segmentIndex, string earthEffect,
+            EnvironmentProfileAsset environment, Func<string, string> text, out string reason)
+        {
+            reason = "adventure_not_exploring";
+            if (!CanSelectExplorationNode) return false;
+            var actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text);
+            if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason)) return false;
+            prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
+            if (!encounters.TryBeginRehearsal(actors, prepared,
+                JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
+                environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;
+            IsTerrainRehearsal = true;
+            CurrentState = AdventureSceneState.Combat;
+            hud.PresentTerrainRehearsalLocation("金丹演武 · " + text(demo.segments[segmentIndex].displayNameKey));
+            return true;
+        }
 
         public bool BeginTerrainRehearsal(EnvironmentProfileAsset environment, AdventureNodeData start,
             AdventureNodeData encounter, out string reason)

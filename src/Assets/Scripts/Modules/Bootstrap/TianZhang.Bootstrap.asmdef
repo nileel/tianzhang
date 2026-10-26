@@ -5,6 +5,8 @@
         "TianZhang.Character",
         "TianZhang.Content",
         "TianZhang.Combat",
+        "TianZhang.Spatial",
+        "Unity.InputSystem",
         "TianZhang.Cultivation",
         "TianZhang.World",
         "TianZhang.Gameplay.Contracts",

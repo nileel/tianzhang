@@ -135,7 +135,8 @@ namespace TianZhang.Editor.ConfigEditor
             }
         }
         protected override void ValidateDomain(ConfigValue row, string[] lines, ConfigDraftSnapshot snapshot) =>
-            Destroy(CultivationContentImporter.ParseFoundationPurpleMansionStates(lines, Id, AllowFixtures));
+            Destroy(AllowFixtures ? CultivationContentImporter.ParseFoundationPurpleMansionStates(lines, Id, true)
+                : JindanDemoContentImporter.ParseFoundationStates(lines));
         public override IReadOnlyList<ConfigEdit> GetLinkedEdits(ConfigDraftSnapshot snapshot)
         {
             var edits = new List<ConfigEdit>();
@@ -151,7 +152,6 @@ namespace TianZhang.Editor.ConfigEditor
             return edits;
         }
         public override IReadOnlyList<ConfigImportStep> GetImportSteps(IReadOnlyCollection<string> tables) => !tables.Contains(Id) ? Array.Empty<ConfigImportStep>() :
-            new[] { new ConfigImportStep { Method = "CultivationContentImporter.ImportFoundationPurpleMansionStates", InputPaths = new[] { Definition.CsvPath } },
-                new ConfigImportStep { Method = "CultivationContentImporter.ImportJindanStaticStates", InputPaths = new[] { Definition.CsvPath, "Assets/DataConfig/JindanStaticStates.csv" } } };
+            new[] { JindanDemoImportStep.Create() };
     }
 }

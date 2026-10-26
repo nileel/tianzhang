@@ -1,0 +1,66 @@
+{
+    "actor": "demo_20261024_fire",
+    "profile": "combat_player_default_v1",
+    "prefab": "FormalPlayer_Static3D",
+    "root": "AdventureRoot/Static3DCombatUnit_demo_20261024_fire",
+    "surface": "GuanzhongTerrainRehearsal",
+    "dropEdges": [
+        "9:9>9:8"
+    ],
+    "bodyScale": {
+        "x": 1.399999976158142,
+        "y": 1.399999976158142,
+        "z": 1.399999976158142
+    },
+    "start": {
+        "x": 13.5,
+        "y": 1.840433120727539,
+        "z": 8.794228553771973
+    },
+    "finish": {
+        "x": 13.0,
+        "y": 1.090433120727539,
+        "z": 7.928203105926514
+    },
+    "worstPoint": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "vertexCount": 49570,
+    "soleCount": 647,
+    "frames": 28,
+    "worstFrame": 0,
+    "supportedVertexChecks": 1387960,
+    "completed": true,
+    "yaw": 210.0,
+    "speed": 4.0,
+    "expectedHorizontal": 1.0,
+    "expectedVertical": 0.75,
+    "expectedPath": 1.75,
+    "expectedSeconds": 0.4375,
+    "seconds": 0.4500000476837158,
+    "horizontalTravel": 1.0000001192092896,
+    "verticalTravel": 0.75,
+    "pathTravel": 1.7500001192092896,
+    "chordTravel": 1.7500001192092896,
+    "maxPenetration": 0.0,
+    "worstSupportY": 0.0,
+    "maxTiltDegrees": 0.0,
+    "maxYawErrorDegrees": 0.0,
+    "maxPathDeviation": 0.0,
+    "maxScaleDeviation": 0.0,
+    "finalPositionError": 0.0,
+    "startFeet": {
+        "leftHits": 329,
+        "rightHits": 318,
+        "leftGap": 0.0,
+        "rightGap": 0.0
+    },
+    "endFeet": {
+        "leftHits": 329,
+        "rightHits": 318,
+        "leftGap": 0.0,
+        "rightGap": 0.0
+    }
+}

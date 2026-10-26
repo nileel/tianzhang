@@ -51,7 +51,7 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!TryProjectProfiles(attackProfiles, out var profiles, out reason)) return false;
-            foreach (CombatantSnapshot actor in new[] { spawned.Player }.Concat(spawned.Enemies))
+            foreach (CombatantSnapshot actor in spawned.Players.Concat(spawned.Enemies))
                 if (!string.IsNullOrEmpty(actor.BasicAttackProfileId) &&
                     !profiles.Any(profile => profile.Id == actor.BasicAttackProfileId && profile.Kind == CombatAttackKind.Basic))
                 { reason = "combat_session_basic_attack_binding_invalid"; return false; }
@@ -84,7 +84,7 @@ namespace TianZhang.Features.Adventure
                 return false;
 
             var occupied = new HashSet<HexCoord>();
-            foreach (CombatantSnapshot actor in new[] { spawned.Player }.Concat(spawned.Enemies))
+            foreach (CombatantSnapshot actor in spawned.Players.Concat(spawned.Enemies))
             {
                 reason = spatial.Board.InspectPlacement(actor.Pose, occupied);
                 if (!string.IsNullOrEmpty(reason)) return false;
@@ -95,7 +95,7 @@ namespace TianZhang.Features.Adventure
             {
                 CombatSceneObjects sceneObjects = CreateSceneObjects(environmentProfile, spatial.Board);
                 session = new CombatSession(
-                    new[] { spawned.Player }.Concat(spawned.Enemies),
+                    spawned.Players.Concat(spawned.Enemies),
                     profiles,
                     new SpatialCombatQuery(spatial.Board, sceneObjects),
                     ordinaryActions,

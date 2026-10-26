@@ -8,7 +8,8 @@ namespace TianZhang.Combat
     public sealed class CombatSceneObjectDefinition
     {
         public CombatSceneObjectDefinition(string contentType, string materialType, int maxDurability,
-            int coverTier, int maxProtectedBodyScaleRank, bool blocksMovement, bool blocksSight, string residueType)
+            int coverTier, int maxProtectedBodyScaleRank, bool blocksMovement, bool blocksSight, string residueType,
+            bool isSupportMarker = false)
         {
             if (string.IsNullOrWhiteSpace(contentType) || string.IsNullOrWhiteSpace(materialType) ||
                 maxDurability <= 0 || coverTier < 0 || coverTier > 2 || maxProtectedBodyScaleRank < 0 || coverTier > 0 && maxProtectedBodyScaleRank == 0 ||
@@ -16,6 +17,7 @@ namespace TianZhang.Combat
             ContentType = contentType; MaterialType = materialType; MaxDurability = maxDurability;
             CoverTier = coverTier; MaxProtectedBodyScaleRank = maxProtectedBodyScaleRank;
             BlocksMovement = blocksMovement; BlocksSight = blocksSight; ResidueType = residueType;
+            IsSupportMarker = isSupportMarker;
         }
         public string ContentType { get; }
         public string MaterialType { get; }
@@ -25,6 +27,7 @@ namespace TianZhang.Combat
         public bool BlocksMovement { get; }
         public bool BlocksSight { get; }
         public string ResidueType { get; }
+        public bool IsSupportMarker { get; }
     }
 
     public sealed class CombatSceneObject
@@ -53,7 +56,7 @@ namespace TianZhang.Combat
         internal void ApplyDurability(int durability) => Durability = durability;
         internal SpatialSceneObjectRules SpatialRules => new SpatialSceneObjectRules(Id, Cell, EdgeOther,
             !IsDestroyed && Definition.BlocksMovement, !IsDestroyed && Definition.BlocksSight,
-            CoverTier, Definition.MaxProtectedBodyScaleRank, ReplacesWallConnectionId);
+            CoverTier, Definition.MaxProtectedBodyScaleRank, ReplacesWallConnectionId, Definition.IsSupportMarker);
     }
 
     public readonly struct CombatSceneObjectChange
@@ -70,19 +73,22 @@ namespace TianZhang.Combat
     public sealed class CombatSceneObjects
     {
         private readonly SpatialQueryBoard baseBoard;
-        private readonly Dictionary<string, CombatSceneObject> objects;
+        private Dictionary<string, CombatSceneObject> objects;
+        private readonly CombatSceneObject[] originalObjects;
+        private IReadOnlyList<SpatialMetricOverride> metricOverrides = Array.Empty<SpatialMetricOverride>();
         public CombatSceneObjects(SpatialQueryBoard board, IEnumerable<CombatSceneObject> instances,
             int lightCoverHitPenalty, int heavyCoverHitPenalty)
         {
             baseBoard = board ?? throw new ArgumentNullException(nameof(board));
             objects = (instances ?? throw new ArgumentNullException(nameof(instances))).ToDictionary(value => value.Id, StringComparer.Ordinal);
+            originalObjects = objects.Values.ToArray();
             if (lightCoverHitPenalty < 0 || heavyCoverHitPenalty < lightCoverHitPenalty || heavyCoverHitPenalty > 100)
                 throw new ArgumentException("cover_hit_penalty_invalid");
             LightCoverHitPenalty = lightCoverHitPenalty; HeavyCoverHitPenalty = heavyCoverHitPenalty;
             All = objects.Values.OrderBy(value => value.Id, StringComparer.Ordinal).ToList().AsReadOnly();
             RebuildBoard();
         }
-        public IReadOnlyList<CombatSceneObject> All { get; }
+        public IReadOnlyList<CombatSceneObject> All { get; private set; }
         public SpatialQueryBoard Board { get; private set; }
         public long Revision { get; private set; }
         public int LightCoverHitPenalty { get; }
@@ -108,6 +114,17 @@ namespace TianZhang.Combat
             Revision++;
         }
 
-        private void RebuildBoard() => Board = baseBoard.WithSceneObjects(All.Select(value => value.SpatialRules).ToArray());
+        internal Action PrepareAbilityObjects(IReadOnlyList<CombatSceneObject> abilityObjects,
+            IReadOnlyList<SpatialMetricOverride> overrides)
+        {
+            var next = originalObjects.Concat(abilityObjects).ToDictionary(value => value.Id, StringComparer.Ordinal);
+            var ordered = next.Values.OrderBy(value => value.Id, StringComparer.Ordinal).ToList().AsReadOnly();
+            var frozen = Array.AsReadOnly(overrides.ToArray());
+            var board = baseBoard.WithMetricOverrides(frozen).WithSceneObjects(ordered.Select(value => value.SpatialRules).ToArray());
+            return () => { objects = next; All = ordered; metricOverrides = frozen; Board = board; Revision++; };
+        }
+
+        private void RebuildBoard() => Board = baseBoard.WithMetricOverrides(metricOverrides)
+            .WithSceneObjects(All.Select(value => value.SpatialRules).ToArray());
     }
 }

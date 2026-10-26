@@ -11,7 +11,7 @@ namespace TianZhang.Editor.ConfigEditor
         public const string Id = "JindanStaticStates";
         private readonly Func<ConfigValue, JindanStaticReferenceCatalog> fixtureCatalog;
         public JindanTable() : this(null) { }
-        // An explicit, isolated test caller supplies its authority. The production provider has none.
+        // Isolated fixtures supply their authority; production uses the registered demo catalog.
         public JindanTable(Func<ConfigValue, JindanStaticReferenceCatalog> isolatedFixtureCatalog)
         {
             fixtureCatalog = isolatedFixtureCatalog; AllowFixtures = fixtureCatalog != null;
@@ -42,19 +42,18 @@ namespace TianZhang.Editor.ConfigEditor
             var foundation = Array.Empty<FoundationPurpleMansionStateData>();
             try
             {
-                JindanStaticReferenceCatalog catalog;
-                if (AllowFixtures && !IsNone(Token(row, "fixtureId"))) catalog = fixtureCatalog(row);
+                if (AllowFixtures && !IsNone(Token(row, "fixtureId")))
+                    Destroy(CultivationContentImporter.ParseJindanStaticStates(lines, Id, fixtureCatalog(row), true));
                 else
                 {
                     if (snapshot.Tables.TryGetValue(FoundationTable.Id, out var table))
-                        foundation = CultivationContentImporter.ParseFoundationPurpleMansionStates(Lines(table.Definition, table.Rows.Values), FoundationTable.Id, false);
-                    catalog = new JindanStaticReferenceCatalog { foundationPurpleMansionStates = foundation };
+                        foundation = JindanDemoContentImporter.ParseFoundationStates(Lines(table.Definition, table.Rows.Values));
+                    Destroy(JindanDemoContentImporter.ParseStaticStates(lines, foundation));
                 }
-                Destroy(CultivationContentImporter.ParseJindanStaticStates(lines, Id, catalog, AllowFixtures));
             }
             finally { Destroy(foundation); }
         }
         public override IReadOnlyList<ConfigImportStep> GetImportSteps(IReadOnlyCollection<string> tables) => !tables.Contains(Id) ? Array.Empty<ConfigImportStep>() :
-            new[] { new ConfigImportStep { Method = "CultivationContentImporter.ImportJindanStaticStates", InputPaths = new[] { "Assets/DataConfig/FoundationPurpleMansionStates.csv", Definition.CsvPath } } };
+            new[] { JindanDemoImportStep.Create() };
     }
 }

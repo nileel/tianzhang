@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using TianZhang.Combat;
 using TianZhang.Content;
+using TianZhang.Entity;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CombatPresentation;
 using TianZhang.Features.Settlement;
@@ -8,6 +10,7 @@ using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 namespace TianZhang.Bootstrap
 {
@@ -52,6 +55,77 @@ namespace TianZhang.Bootstrap
         [SerializeField] private EnvironmentProfileAsset terrainRehearsalEnvironment;
         [SerializeField] private AdventureNodeData terrainRehearsalStart = new AdventureNodeData();
         [SerializeField] private AdventureNodeData terrainRehearsalEncounter = new AdventureNodeData();
+
+        [Header("Jindan rehearsal")]
+        [SerializeField] private Button jindanRehearsalButton;
+        [SerializeField] private JindanDemoCatalogData jindanDemoCatalog;
+        [SerializeField] private JindanDemoView jindanDemoView;
+        [SerializeField] private JindanScaleView jindanScaleView;
+        private JindanRehearsalPresenter jindan;
+
+        public void OpenJindanPreparation()
+        {
+            if (controller.CanSelectExplorationNode) jindan.OpenPreparation();
+        }
+
+        private void BeginJindanRehearsal(int segmentIndex, string earthEffect)
+        {
+            if (!controller.CanSelectExplorationNode) return;
+            ordinaryBattlefield.SetActive(false);
+            terrainRehearsalSurface.gameObject.SetActive(true);
+            combatMovementView.UseSurface(terrainRehearsalSurface);
+            static3DUnitPresentationProvider.ConfigureSurface(terrainRehearsalSurface);
+            combatTargetInput.ConfigureSurface(terrainRehearsalSurface);
+            jindanScaleView.ConfigureSurface(terrainRehearsalSurface);
+            battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
+                terrainRehearsalSurface.transform, .340433121f);
+            var placement = jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == 0);
+            Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(placement.q, placement.r));
+            battlefieldCamera.transform.position = focus - battlefieldCamera.transform.forward * 20;
+            if (!controller.BeginJindanRehearsal(jindanDemoCatalog, segmentIndex, earthEffect,
+                terrainRehearsalEnvironment, UiText.Resolve, out string reason))
+                throw new InvalidOperationException("jindan_rehearsal_entry_failed:" + reason);
+        }
+
+        private void HandleJindanAction(string key)
+        {
+            combatCommandInput.CancelCandidate();
+            combatMovementView.Cancel();
+            jindan.HandleAction(key);
+            combatTargetInput.enabled = !jindan.IsSelecting;
+        }
+
+        private void Update()
+        {
+            if (jindan == null || !jindan.IsSelecting || !encounterCoordinator.AcceptsPlayerCommand) return;
+            var mouse = Mouse.current;
+            if (combatMovementView.IsSelecting || combatCommandInput.Preview != null ||
+                mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+            {
+                jindan.HandleAction("cancel_targeting");
+                combatTargetInput.enabled = true;
+                return;
+            }
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame &&
+                combatMovementView.TryPickCell(mouse.position.ReadValue(), out var cell))
+                jindan.PickCell(cell.Q, cell.R);
+        }
+
+        private void LateUpdate()
+        {
+            if (jindan == null) return;
+            jindan.Refresh();
+            combatTargetInput.enabled = !jindan.IsSelecting;
+            if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
+            else if (encounterCoordinator.CurrentSession?.Jindan != null)
+                jindanDemoView.PresentCombat(jindan.CombatDetails, jindan.QuoteDetails,
+                    encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm);
+            else jindanDemoView.HideAll();
+            var scale = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.ActiveScale != null)?.ActiveScale;
+            jindanScaleView.Present(scale?.Path.Select(value => new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(value.Q, value.R)).ToArray()
+                ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatUnitPresentationHex>(), scale?.MetricDistanceUnits ?? 0,
+                scale?.Support.Durability ?? 0, scale?.Support.Definition.MaxDurability ?? 0);
+        }
 
         public void BeginTerrainRehearsal()
         {
@@ -158,6 +232,15 @@ namespace TianZhang.Bootstrap
                 if (adventureMap.adventureId == FormalEncounterRules.GuanzhongWildAdventureId)
                     controller.ConfigureWithdrawal(combatCommandInput.ClearContext, combatHudPresenter.Hide);
                 if (terrainRehearsalButton != null) terrainRehearsalButton.onClick.AddListener(BeginTerrainRehearsal);
+                if (jindanRehearsalButton != null)
+                {
+                    RequireReference(jindanDemoCatalog, "jindan_demo_catalog_missing");
+                    RequireReference(jindanDemoView, "jindan_demo_view_missing");
+                    RequireReference(jindanScaleView, "jindan_scale_view_missing");
+                    jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve);
+                    jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
+                    jindanDemoView.ActionRequested += HandleJindanAction;
+                }
             }
             catch (InvalidOperationException exception)
             {

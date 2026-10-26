@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25d7a763b4241a4b8e8a7f5f6254c52, type: 3}
+  m_Name: JindanStaticState_demo_20261024_space_yang
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.JindanStaticStateData
+  schemaId: jindanStaticState
+  schemaVersion: 1
+  characterId: demo_20261024_space_yang
+  foundationPurpleMansionStateRef: demo_20261024_space_yang_foundation
+  mansionInputs:
+  - mansionKind: 0
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 1
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 2
+    state: 2
+    mansionInstanceId: demo_20261024_space_yang_shi
+    mansionBodyEffectBindingId: demo_20261024_space_yang_shi_body
+    guardianAbilityInstanceId: demo_20261024_space_yang_yang_guardian
+    sourceSpellId: demo_20261024_spell_rizhao_yutu
+    upgradePlanId: demo_20261024_spell_rizhao_yutu_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 3
+    state: 2
+    mansionInstanceId: demo_20261024_space_yang_wu
+    mansionBodyEffectBindingId: demo_20261024_space_yang_wu_body
+    guardianAbilityInstanceId: demo_20261024_space_yang_scale_guardian
+    sourceSpellId: demo_20261024_spell_chidu_yutu
+    upgradePlanId: demo_20261024_spell_chidu_yutu_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 4
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  jindanCoreBinding:
+    jindanCoreBindingId: demo_20261024_space_yang_core_binding
+    jindanInstanceId: demo_20261024_space_yang_jindan
+    boundDanshuCoreId: demo_20261024_space_yang_core
+    formationTransactionId: demo_20261024_space_yang_formation
+    formationVersion: 1
+  danxiang:
+    danxiangInstanceId: demo_20261024_space_yang_danxiang
+    jindanInstanceId: demo_20261024_space_yang_jindan
+    danxiangNameKey: demo_20261024_space_yang_danxiang_name
+    danxingDefinitionId:
+    danxiangPresentationProfileId: demo_20261024_space_yang_danxiang_presentation
+  stablePositionBindings:
+  - positionId: JD_Cosmos_Space_SOURCE
+    expectedPositionVersion: 101
+    roadId: ROAD_SPACE
+    positionType: 0
+    proofProfileId: PROOF_SPACE_SOURCE_01
+    equippedBaseEffectId: SPACE_SCALE
+    compatibilityProfileId: demo_compat_sha256_d80d4b2e866b9e18f13626d70004609de9f4aa9966a6f508d237c5350d62707d
+    primaryCarrierAbilityInstanceId: demo_20261024_space_yang_scale_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  - positionId: JD_YinYang_Yang_DOMAIN01
+    expectedPositionVersion: 101
+    roadId: ROAD_YANG
+    positionType: 2
+    proofProfileId: PROOF_YANG_DOMAIN01_01
+    equippedBaseEffectId: YANG_RADIANCE
+    compatibilityProfileId: demo_compat_sha256_5c6363bad1e7eb3ba8abbe9cdec7e0f3d47bc06ca385130cbfcf270c7b87e786
+    primaryCarrierAbilityInstanceId: demo_20261024_space_yang_yang_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  abilityLedgerBindings:
+  - abilityInstanceId: demo_20261024_space_yang_scale_guardian
+    resourceDebitLedgerRef: demo_20261024_space_yang_scale_guardian_resource
+    cooldownLedgerRef: demo_20261024_space_yang_scale_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_space_yang_scale_guardian_cost
+    conflictReserveLedgerRef:
+    conflictCostProfileId:
+  - abilityInstanceId: demo_20261024_space_yang_yang_guardian
+    resourceDebitLedgerRef: demo_20261024_space_yang_yang_guardian_resource
+    cooldownLedgerRef: demo_20261024_space_yang_yang_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_space_yang_yang_guardian_cost
+    conflictReserveLedgerRef: demo_20261024_space_yang_yang_guardian_conflict_reserve
+    conflictCostProfileId: demo_20261024_visibility_conflict_v1

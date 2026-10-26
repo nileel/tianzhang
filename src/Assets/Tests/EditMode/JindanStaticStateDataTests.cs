@@ -129,18 +129,17 @@ namespace TianZhang.Tests
         public void ProductionJindanStaticCsvHasNoFixtureRows()
         {
             string sourceFilePath = Path.Combine(Application.dataPath, "DataConfig/JindanStaticStates.csv");
-            var states = CultivationContentImporter.ParseJindanStaticStates(
-                File.ReadAllLines(sourceFilePath),
-                sourceFilePath,
-                new JindanStaticReferenceCatalog(),
-                allowFixtures: false);
+            var foundations = JindanDemoContentImporter.ParseFoundationStates(
+                File.ReadAllLines(Path.Combine(Application.dataPath, "DataConfig/FoundationPurpleMansionStates.csv")));
+            var states = JindanDemoContentImporter.ParseStaticStates(File.ReadAllLines(sourceFilePath), foundations);
             try
             {
-                Assert.AreEqual(0, states.Length);
+                Assert.AreEqual(5, states.Length);
             }
             finally
             {
                 DestroyAll(states);
+                foreach (var foundation in foundations) UnityEngine.Object.DestroyImmediate(foundation);
             }
         }
 

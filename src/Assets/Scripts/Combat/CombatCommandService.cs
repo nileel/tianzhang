@@ -119,7 +119,14 @@ namespace TianZhang.Combat
             }
             else if (command.Kind == CombatCommandKind.Move && validation.Succeeded)
                 cost = minimum = validation.MovementCost;
-            if (actor != null && cost > 0 && command.Kind != CombatCommandKind.Move)
+            else if (actor != null && session.Jindan != null && command.Kind is
+                (CombatCommandKind.JindanAbility or CombatCommandKind.SwapJindan or CombatCommandKind.CloseJindan))
+            {
+                var fees = session.Jindan.Costs(command, actor);
+                cost = minimum = fees.actionPoints; spirit = fees.mana; cooldown = fees.cooldown;
+            }
+            if (actor != null && cost > 0 && command.Kind is not (CombatCommandKind.Move or
+                CombatCommandKind.JindanAbility or CombatCommandKind.SwapJindan or CombatCommandKind.CloseJindan))
             {
                 modifier = actor.ActionEconomyModifiers.SingleOrDefault(value => value.Matches(command.Kind, command.ProfileId));
                 if (modifier != null)
@@ -189,8 +196,13 @@ namespace TianZhang.Combat
             if (!confirmation.Succeeded) return confirmation;
             CombatActionResult result;
             Action commit;
-            try { result = resolver.PrepareValidated(session, command, current.Validation, current.ReuseCooldownTicks,
-                current.AttackArea, out commit); }
+            try
+            {
+                result = command.Kind is (CombatCommandKind.JindanAbility or CombatCommandKind.SwapJindan or CombatCommandKind.CloseJindan)
+                    ? session.Jindan.Prepare(session, command, out commit)
+                    : resolver.PrepareValidated(session, command, current.Validation, current.ReuseCooldownTicks,
+                        current.AttackArea, out commit);
+            }
             catch (OverflowException) { return CombatActionResult.Rejected("combat_effect_overflow"); }
             if (!result.Succeeded) return result;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actor);
@@ -200,6 +212,7 @@ namespace TianZhang.Combat
             {
                 actor.SpendActionPoints(current.ActionPointCostUnits);
                 commit();
+                session.Jindan?.Reconcile(session);
                 if (current.AppliesRepeatCost)
                     actor.RecordCommittedUse(command.Kind, command.ProfileId, current.CommittedUseCount + 1);
                 actor.RefundActionPoints(current.Modifier, current.BaseNetCostUnits, current.MinimumNetCostUnits);
@@ -237,6 +250,7 @@ namespace TianZhang.Combat
                 quote.ContextVersion != command.ContextVersion || quote.Facts != Facts(session) ||
                 quote.Command.EquipmentSlotId != command.EquipmentSlotId || quote.Command.ItemId != command.ItemId ||
                 quote.Command.InstanceId != command.InstanceId ||
+                quote.Command.Jindan?.Facts != command.Jindan?.Facts ||
                 quote.Command.ItemQuantityCost != command.ItemQuantityCost ||
                 (command.Kind == CombatCommandKind.UseItem && quote.ItemResource?.Facts != session.ExternalResources?.QueryItem(command)?.Facts) ||
                 (command.Kind == CombatCommandKind.SwapEquipment && quote.EquipmentFacts != session.ExternalResources?.QueryEquipment(command)?.Facts))
@@ -301,6 +315,7 @@ namespace TianZhang.Combat
                 ticks = checked(ticks + advance.TicksElapsed);
                 foreach (CombatantSnapshot combatant in session.Combatants.All)
                     if (combatant.IsAlive) combatant.AdvanceCooldowns(advance.TicksElapsed);
+                session.Jindan?.AdvanceTicks(session, advance.TicksElapsed);
                 if (!advance.HasActor) return new CombatTurnAdvance(string.Empty, ticks);
                 session.Combatants.TryGet(advance.ActorId, out var actor);
                 if (session.BeginTurn(actor)) return new CombatTurnAdvance(actor.Id, ticks);
@@ -320,7 +335,8 @@ namespace TianZhang.Combat
 
         // Snapshot setters are also used by deterministic fixtures and external state effects; quote them
         // as facts as well as checking the aggregate version, so a changed target/v/position cannot slip through.
-        private static string Facts(CombatSession session) => (session.SceneObjects?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
+        private static string Facts(CombatSession session) => (session.SceneObjects?.Revision ?? 0) + ";" +
+            (session.Jindan?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
             string.Join("|", actor.Id, actor.Position, actor.Footprint, actor.BodyScaleRank, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
                 actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing, actor.MovementMode, actor.AltitudeBand,
                 actor.BasicAttackProfileId, actor.CombatSwapsUsed, actor.GongFaId, actor.GongFaElement,

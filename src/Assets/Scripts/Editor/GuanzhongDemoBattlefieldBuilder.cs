@@ -95,6 +95,18 @@ namespace TianZhang.Editor
                     }
                 }
             }
+            var dropEdges = environment.directedEdges.Where(edge => edge.allowsMovement &&
+                edge.edgeKind == TianZhang.Content.EnvironmentEdgeKind.OneWayDrop).ToArray();
+            var drops = data.FindProperty("oneWayDrops");
+            drops.arraySize = dropEdges.Length;
+            for (int i = 0; i < dropEdges.Length; i++)
+            {
+                var drop = drops.GetArrayElementAtIndex(i);
+                drop.FindPropertyRelative("fromQ").intValue = dropEdges[i].fromQ;
+                drop.FindPropertyRelative("fromR").intValue = dropEdges[i].fromR;
+                drop.FindPropertyRelative("toQ").intValue = dropEdges[i].toQ;
+                drop.FindPropertyRelative("toR").intValue = dropEdges[i].toR;
+            }
             data.ApplyModifiedPropertiesWithoutUndo();
             foreach(var ramp in profiles.rampProfiles)
             {

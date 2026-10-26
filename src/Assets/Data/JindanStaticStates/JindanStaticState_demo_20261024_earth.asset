@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25d7a763b4241a4b8e8a7f5f6254c52, type: 3}
+  m_Name: JindanStaticState_demo_20261024_earth
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.JindanStaticStateData
+  schemaId: jindanStaticState
+  schemaVersion: 1
+  characterId: demo_20261024_earth
+  foundationPurpleMansionStateRef: demo_20261024_earth_foundation
+  mansionInputs:
+  - mansionKind: 0
+    state: 2
+    mansionInstanceId: demo_20261024_earth_ming
+    mansionBodyEffectBindingId: demo_20261024_earth_ming_body
+    guardianAbilityInstanceId: demo_20261024_earth_guardian
+    sourceSpellId: demo_20261024_spell_tuantu
+    upgradePlanId: demo_20261024_spell_tuantu_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 1
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 2
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 3
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 4
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  jindanCoreBinding:
+    jindanCoreBindingId: demo_20261024_earth_core_binding
+    jindanInstanceId: demo_20261024_earth_jindan
+    boundDanshuCoreId: demo_20261024_earth_core
+    formationTransactionId: demo_20261024_earth_formation
+    formationVersion: 1
+  danxiang:
+    danxiangInstanceId: demo_20261024_earth_danxiang
+    jindanInstanceId: demo_20261024_earth_jindan
+    danxiangNameKey: demo_20261024_earth_danxiang_name
+    danxingDefinitionId:
+    danxiangPresentationProfileId: demo_20261024_earth_danxiang_presentation
+  stablePositionBindings:
+  - positionId: JD_FiveElements_Earth_SOURCE
+    expectedPositionVersion: 102
+    roadId: ROAD_EARTH
+    positionType: 0
+    proofProfileId: PROOF_EARTH_SOURCE_01
+    equippedBaseEffectId: EARTH_GRAVITY
+    compatibilityProfileId: demo_compat_sha256_49843ea3d6ce7cbb0341b71c102a8a58fd21bc1f714bde14c7a0c00f92f73078
+    primaryCarrierAbilityInstanceId: demo_20261024_earth_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  abilityLedgerBindings:
+  - abilityInstanceId: demo_20261024_earth_guardian
+    resourceDebitLedgerRef: demo_20261024_earth_guardian_resource
+    cooldownLedgerRef: demo_20261024_earth_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_earth_guardian_cost
+    conflictReserveLedgerRef:
+    conflictCostProfileId:

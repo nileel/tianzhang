@@ -219,6 +219,14 @@ namespace TianZhang.Combat
         public long TurnSequence { get; private set; }
         public long StateVersion { get; private set; }
         public bool HasCommittedBenefit { get; private set; }
+        public CombatJindanLoadout Jindan { get; private set; }
+        public void ConfigureJindan(CombatJindanLoadout loadout)
+        {
+            if (TurnSequence != 0 || Jindan != null) throw new InvalidOperationException("jindan_session_already_started");
+            if (loadout == null) throw new ArgumentNullException(nameof(loadout));
+            loadout.ValidateBindings(this);
+            Jindan = loadout;
+        }
         internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
             !Combatants.HasLivingMembers(CombatTeam.Enemy);
 
@@ -279,6 +287,7 @@ namespace TianZhang.Combat
 
         internal void Terminate()
         {
+            Jindan?.Clear(this);
             FinishTurn();
             foreach (CombatantSnapshot actor in Combatants.All)
             { actor.ClearActionPoints(); actor.IsGuarding = false; actor.ClearStatuses(); }
@@ -472,6 +481,8 @@ namespace TianZhang.Combat
                 CombatCommandKind.SwapSpell => ValidateSwapSpell(command, actor),
                 CombatCommandKind.SwapEquipment => ValidateEquipment(command, actor),
                 CombatCommandKind.UseItem => ValidateItem(command, actor),
+                CombatCommandKind.JindanAbility or CombatCommandKind.SwapJindan or CombatCommandKind.CloseJindan =>
+                    Jindan?.Validate(this, command, actor) ?? CombatActionResult.Rejected("jindan_session_not_configured"),
                 _ => CombatActionResult.Rejected("combat_command_kind_invalid"),
             };
         }
@@ -728,8 +739,8 @@ namespace TianZhang.Combat
                 else
                     enemies++;
             }
-            if (!((players == 1 && enemies is 1 or 2) || (players == 2 && enemies == 2)))
-                throw new ArgumentException("Combat sessions require 1v1, 1v2 or 2v2 teams.", nameof(combatants));
+            if (!(players is 1 or 2 && enemies is 1 or 2))
+                throw new ArgumentException("Combat sessions require one or two actors on each team.", nameof(combatants));
         }
     }
 }

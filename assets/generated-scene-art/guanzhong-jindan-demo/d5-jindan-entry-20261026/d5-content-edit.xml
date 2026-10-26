@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="57" result="Failed(Child)" total="57" passed="43" failed="14" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.8843265">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1573" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.884327" total="57" passed="43" failed="14" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="2818" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1557" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.866937" total="57" passed="43" failed="14" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="74300" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="2819" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1557" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.854699" total="57" passed="43" failed="14" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="2820" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1557" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.842729" total="57" passed="43" failed="14" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestFixture" id="1436" name="ConfigEditorApplyTests" fullname="TianZhang.Tests.ConfigEditorApplyTests" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.036822" total="12" passed="0" failed="12" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-case id="1441" name="ActualWindowCanSaveThenApplyCleanDraftAndReadBackMirrors" fullname="TianZhang.Tests.ConfigEditorApplyTests.ActualWindowCanSaveThenApplyCleanDraftAndReadBackMirrors" methodname="ActualWindowCanSaveThenApplyCleanDraftAndReadBackMirrors" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="1025604393" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.020660" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1437" name="AllTwentyTwoProvidersBuildOneOrderedPlanWithoutAssetWrites" fullname="TianZhang.Tests.ConfigEditorApplyTests.AllTwentyTwoProvidersBuildOneOrderedPlanWithoutAssetWrites" methodname="AllTwentyTwoProvidersBuildOneOrderedPlanWithoutAssetWrites" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="1270506687" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000921" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1442" name="DirtyAssetGatePreservesUserChangeAndAllowsExplicitApplyAfterDiscard" fullname="TianZhang.Tests.ConfigEditorApplyTests.DirtyAssetGatePreservesUserChangeAndAllowsExplicitApplyAfterDiscard" methodname="DirtyAssetGatePreservesUserChangeAndAllowsExplicitApplyAfterDiscard" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="150347036" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000374" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1438" name="ExternalDependencyChangeWithSameTimestampBlocksBeforeFirstWrite" fullname="TianZhang.Tests.ConfigEditorApplyTests.ExternalDependencyChangeWithSameTimestampBlocksBeforeFirstWrite" methodname="ExternalDependencyChangeWithSameTimestampBlocksBeforeFirstWrite" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="342990934" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000418" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1445" name="ImportLogErrorStopsLaterStepsAndRetainsPendingScope" fullname="TianZhang.Tests.ConfigEditorApplyTests.ImportLogErrorStopsLaterStepsAndRetainsPendingScope" methodname="ImportLogErrorStopsLaterStepsAndRetainsPendingScope" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="901442307" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000342" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1448" name="MissingExpectedAssetFailsBeforeCsvSave" fullname="TianZhang.Tests.ConfigEditorApplyTests.MissingExpectedAssetFailsBeforeCsvSave" methodname="MissingExpectedAssetFailsBeforeCsvSave" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="365903850" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000309" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1447" name="NpcHashAndGongfaChapterClearPersistAndMatchPureProjection" fullname="TianZhang.Tests.ConfigEditorApplyTests.NpcHashAndGongfaChapterClearPersistAndMatchPureProjection" methodname="NpcHashAndGongfaChapterClearPersistAndMatchPureProjection" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="1480033014" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000299" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1439" name="PartialIoFailureKeepsUnsavedDraftAndReportsExactSavedFiles" fullname="TianZhang.Tests.ConfigEditorApplyTests.PartialIoFailureKeepsUnsavedDraftAndReportsExactSavedFiles" methodname="PartialIoFailureKeepsUnsavedDraftAndReportsExactSavedFiles" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="862419660" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000313" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1440" name="ReadOnlyDestinationBlocksAllCsvWrites" fullname="TianZhang.Tests.ConfigEditorApplyTests.ReadOnlyDestinationBlocksAllCsvWrites" methodname="ReadOnlyDestinationBlocksAllCsvWrites" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="132314786" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000353" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1443" name="SavedGrowthIsReadByNewCreationAndFormalCombat" fullname="TianZhang.Tests.ConfigEditorApplyTests.SavedGrowthIsReadByNewCreationAndFormalCombat" methodname="SavedGrowthIsReadByNewCreationAndFormalCombat" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="1618905721" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000479" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1446" name="SavedScopeMergesWithLaterEditsAndLanguageConsumersReimport" fullname="TianZhang.Tests.ConfigEditorApplyTests.SavedScopeMergesWithLaterEditsAndLanguageConsumersReimport" methodname="SavedScopeMergesWithLaterEditsAndLanguageConsumersReimport" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="250579432" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000338" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+            <test-case id="1444" name="WindowSavesWorldAndCharterRepresentativesAndRestoresAllInputs" fullname="TianZhang.Tests.ConfigEditorApplyTests.WindowSavesWorldAndCharterRepresentativesAndRestoresAllInputs" methodname="WindowSavesWorldAndCharterRepresentativesAndRestoresAllInputs" classname="TianZhang.Tests.ConfigEditorApplyTests" runstate="Runnable" seed="427577048" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000391" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[SetUp : System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                <stack-trace><![CDATA[--SetUp
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.ConfigEditorApplyTests.SetUp () [0x00021] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorApplyTests.cs:48
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+              </failure>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestSuite" id="2821" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="743" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.518470" total="20" passed="18" failed="2" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="2501" name="ConfigEditorCultivationTests" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" testcasecount="8" result="Failed" site="Child" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.287854" total="8" passed="6" failed="2" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="2503" name="AllFrozenFixturesRoundTripWithoutChangingOriginalParserOutcomes" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.AllFrozenFixturesRoundTripWithoutChangingOriginalParserOutcomes" methodname="AllFrozenFixturesRoundTripWithoutChangingOriginalParserOutcomes" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="426320961" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.086886" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2504" name="DraftReferencesUseCurrentRoleWithoutWindowAndUndoRemovesNewChoices" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.DraftReferencesUseCurrentRoleWithoutWindowAndUndoRemovesNewChoices" methodname="DraftReferencesUseCurrentRoleWithoutWindowAndUndoRemovesNewChoices" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="483894196" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.006961" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2505" name="EmbryoActionRetreatAndBranchChangesPreserveDataAndFrozenFacts" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.EmbryoActionRetreatAndBranchChangesPreserveDataAndFrozenFacts" methodname="EmbryoActionRetreatAndBranchChangesPreserveDataAndFrozenFacts" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="1485843542" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.009750" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2506" name="JindanStructuredEditsRespectCarrierAuthorityVersionAndFrozenInputs" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.JindanStructuredEditsRespectCarrierAuthorityVersionAndFrozenInputs" methodname="JindanStructuredEditsRespectCarrierAuthorityVersionAndFrozenInputs" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="51791240" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.003370" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2507" name="NpcEditsHashAllManifestsAndPreservesOrderSparseColumnsAndOriginalValidation" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.NpcEditsHashAllManifestsAndPreservesOrderSparseColumnsAndOriginalValidation" methodname="NpcEditsHashAllManifestsAndPreservesOrderSparseColumnsAndOriginalValidation" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="1698736639" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.040558" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2502" name="ProductionSchemasChineseControlsAndNoEditBytesAreComplete" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.ProductionSchemasChineseControlsAndNoEditBytesAreComplete" methodname="ProductionSchemasChineseControlsAndNoEditBytesAreComplete" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="1482104958" result="Failed" label="Error" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.000929" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorCultivationTests.ProductionSchemasChineseControlsAndNoEditBytesAreComplete () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorCultivationTests.cs:33
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2509" name="RealWindowEditsNpcAndDeepFixtureUndoesAndRendersProductionEmptyStatesWithoutIO" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.RealWindowEditsNpcAndDeepFixtureUndoesAndRendersProductionEmptyStatesWithoutIO" methodname="RealWindowEditsNpcAndDeepFixtureUndoesAndRendersProductionEmptyStatesWithoutIO" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="1952910015" result="Failed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:14Z" duration="0.099161" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[Unhandled log message: '[Error] No graphic device is available to initialize the view.'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                  <stack-trace><![CDATA[UnityEditor.EditorWindow:GetWindow<TianZhang.Editor.ConfigEditor.ConfigEditorWindow> (string)
+TianZhang.Editor.ConfigEditor.ConfigEditorWindow:Open () (at Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs:38)
+TianZhang.Tests.EditMode.ConfigEditorCultivationTests/<RealWindowEditsNpcAndDeepFixtureUndoesAndRendersProductionEmptyStatesWithoutIO>d__18:MoveNext () (at Assets/Tests/EditMode/ConfigEditorCultivationTests.cs:207)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[No graphic device is available to initialize the view.
+No graphic device is available to show the window.
+No graphic device is available to initialize the view.
+]]></output>
+              </test-case>
+              <test-case id="2508" name="UnknownSchemasRecordKindsAndFixtureProductionLeakageAreRejected" fullname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests.UnknownSchemasRecordKindsAndFixtureProductionLeakageAreRejected" methodname="UnknownSchemasRecordKindsAndFixtureProductionLeakageAreRejected" classname="TianZhang.Tests.EditMode.ConfigEditorCultivationTests" runstate="Runnable" seed="1955938976" result="Passed" start-time="2026-10-26 00:40:14Z" end-time="2026-10-26 00:40:15Z" duration="0.037322" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2756" name="JindanDemoContentTests" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.170517" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2761" name="CompilerRejectsOperationOutsideBothSourceAndPosition" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.CompilerRejectsOperationOutsideBothSourceAndPosition" methodname="CompilerRejectsOperationOutsideBothSourceAndPosition" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="377632793" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.009708" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2762" name="CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" methodname="CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="278427900" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.008836" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2765" name="EnablingAnUnimplementedAbilityFailsClosed" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.EnablingAnUnimplementedAbilityFailsClosed" methodname="EnablingAnUnimplementedAbilityFailsClosed" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1881728287" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.009415" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2763" name="FrozenHashIsOrderIndependentButChangesWithActualPrice" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.FrozenHashIsOrderIndependentButChangesWithActualPrice" methodname="FrozenHashIsOrderIndependentButChangesWithActualPrice" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="248957127" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.010037" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2759" name="FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" methodname="FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="547644697" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.016556" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2767" name="MansionBindingUsesInstanceIdentityAndRejectsWrongModule" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.MansionBindingUsesInstanceIdentityAndRejectsWrongModule" methodname="MansionBindingUsesInstanceIdentityAndRejectsWrongModule" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1811600272" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.019015" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2764" name="PositionVersionAndConcreteCarrierAreRequired" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.PositionVersionAndConcreteCarrierAreRequired" methodname="PositionVersionAndConcreteCarrierAreRequired" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="827847702" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.009953" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2758" name="ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" methodname="ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="2093927504" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.020156" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2760" name="ProductionNumericProfilesRequireExplicitRegisteredAuthority" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionNumericProfilesRequireExplicitRegisteredAuthority" methodname="ProductionNumericProfilesRequireExplicitRegisteredAuthority" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="714669825" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.027117" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2757" name="ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" methodname="ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="550909035" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.009742" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2768" name="SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" methodname="SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="324484748" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.009199" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2766" name="TwoEarthCandidatesShareOneGuardianAndOneSeat" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.TwoEarthCandidatesShareOneGuardianAndOneSeat" methodname="TwoEarthCandidatesShareOneGuardianAndOneSeat" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1620968490" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.018568" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+          <test-suite type="TestFixture" id="1682" name="FoundationPurpleMansionStateDataTests" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.008333" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="ParameterizedMethod" id="1687" name="ImporterAndRuntimeAcceptFrozenThreeStageFixtures" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterAndRuntimeAcceptFrozenThreeStageFixtures" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.005400" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1683" name="ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;foundation&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;foundation&quot;)" methodname="ImporterAndRuntimeAcceptFrozenThreeStageFixtures" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="1118093432" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.003257" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1684" name="ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;complete&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;complete&quot;)" methodname="ImporterAndRuntimeAcceptFrozenThreeStageFixtures" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="367324006" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000654" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1685" name="ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;completeThenExpand&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;completeThenExpand&quot;)" methodname="ImporterAndRuntimeAcceptFrozenThreeStageFixtures" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="1991633264" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000271" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1686" name="ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;pausedEmbryo&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterAndRuntimeAcceptFrozenThreeStageFixtures(&quot;pausedEmbryo&quot;)" methodname="ImporterAndRuntimeAcceptFrozenThreeStageFixtures" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="1064212312" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000533" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1691" name="ImporterRejectsIncompatibleOrIncompleteState" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterRejectsIncompatibleOrIncompleteState" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.001101" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1688" name="ImporterRejectsIncompatibleOrIncompleteState(&quot;legacyStage&quot;,&quot;FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterRejectsIncompatibleOrIncompleteState(&quot;legacyStage&quot;,&quot;FPM_LEGACY_STAGE_SCHEMA_INCOMPATIBLE&quot;)" methodname="ImporterRejectsIncompatibleOrIncompleteState" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="2105523923" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000358" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1689" name="ImporterRejectsIncompatibleOrIncompleteState(&quot;overflow&quot;,&quot;FPM_CAPACITY_OVERFLOW&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterRejectsIncompatibleOrIncompleteState(&quot;overflow&quot;,&quot;FPM_CAPACITY_OVERFLOW&quot;)" methodname="ImporterRejectsIncompatibleOrIncompleteState" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="595824443" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000175" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1690" name="ImporterRejectsIncompatibleOrIncompleteState(&quot;missingBinding&quot;,&quot;FPM_COMPLETE_MISSING_BINDING&quot;)" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ImporterRejectsIncompatibleOrIncompleteState(&quot;missingBinding&quot;,&quot;FPM_COMPLETE_MISSING_BINDING&quot;)" methodname="ImporterRejectsIncompatibleOrIncompleteState" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="2087552733" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000146" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1692" name="ProductionFoundationPurpleMansionCsvHasFiveDemoRows" fullname="TianZhang.Tests.FoundationPurpleMansionStateDataTests.ProductionFoundationPurpleMansionCsvHasFiveDemoRows" methodname="ProductionFoundationPurpleMansionCsvHasFiveDemoRows" classname="TianZhang.Tests.FoundationPurpleMansionStateDataTests" runstate="Runnable" seed="332663177" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000631" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1884" name="JindanStaticStateDataTests" fullname="TianZhang.Tests.JindanStaticStateDataTests" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.248674" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1902" name="ImportJindanStaticStatesRejectsTheWholeTableBeforeCreatingAnAsset" fullname="TianZhang.Tests.JindanStaticStateDataTests.ImportJindanStaticStatesRejectsTheWholeTableBeforeCreatingAnAsset" methodname="ImportJindanStaticStatesRejectsTheWholeTableBeforeCreatingAnAsset" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1662553310" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.181834" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1888" name="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.006508" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1885" name="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.one-mansion-one-seat&quot;,1,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.one-mansion-one-seat&quot;,1,1)" methodname="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="802705889" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.002723" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1886" name="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.three-mansion-three-seats&quot;,3,3)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.three-mansion-three-seats&quot;,3,3)" methodname="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1966944110" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.001221" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1887" name="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.five-mansion-three-seats&quot;,5,3)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture(&quot;jd.valid.five-mansion-three-seats&quot;,5,3)" methodname="ParseJindanStaticStatesAcceptsEverySpecifiedValidFixture" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="568656316" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.001183" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1901" name="ParseJindanStaticStatesFailsWithItsStableReason" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.017300" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1889" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.input-not-formed&quot;,&quot;JD_FPM_INPUT_NOT_FORMED&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.input-not-formed&quot;,&quot;JD_FPM_INPUT_NOT_FORMED&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1989829984" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.001345" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1890" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.missing-mansion-input&quot;,&quot;JD_MANSION_INPUT_INCOMPLETE&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.missing-mansion-input&quot;,&quot;JD_MANSION_INPUT_INCOMPLETE&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="38073734" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000922" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1891" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.unknown-static-reference&quot;,&quot;JD_UNKNOWN_STATIC_REFERENCE&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.unknown-static-reference&quot;,&quot;JD_UNKNOWN_STATIC_REFERENCE&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="394701472" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000863" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1892" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.effect-outside-road-candidates&quot;,&quot;JD_EFFECT_LOADOUT_INVALID&quot;,2)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.effect-outside-road-candidates&quot;,&quot;JD_EFFECT_LOADOUT_INVALID&quot;,2)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="801284640" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000876" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1893" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.fourth-stable-position&quot;,&quot;JD_STABLE_POSITION_LIMIT&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.fourth-stable-position&quot;,&quot;JD_STABLE_POSITION_LIMIT&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1012603368" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000885" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1894" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.second-core&quot;,&quot;JD_CORE_NOT_UNIQUE&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.second-core&quot;,&quot;JD_CORE_NOT_UNIQUE&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="73387624" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000789" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1895" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.second-danxiang&quot;,&quot;JD_DANXIANG_NOT_UNIQUE&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.second-danxiang&quot;,&quot;JD_DANXIANG_NOT_UNIQUE&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="2085440021" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000784" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1896" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.duplicate-primary-carrier&quot;,&quot;JD_PRIMARY_CARRIER_DUPLICATE&quot;,3)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.duplicate-primary-carrier&quot;,&quot;JD_PRIMARY_CARRIER_DUPLICATE&quot;,3)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="51594371" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000859" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1897" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.illegal-carrier-reference&quot;,&quot;JD_CARRIER_REFERENCE_INVALID&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.illegal-carrier-reference&quot;,&quot;JD_CARRIER_REFERENCE_INVALID&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1171275652" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000885" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1898" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.shared-instance-ledger&quot;,&quot;JD_ABILITY_LEDGER_OWNERSHIP_INVALID&quot;,3)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.shared-instance-ledger&quot;,&quot;JD_ABILITY_LEDGER_OWNERSHIP_INVALID&quot;,3)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1984199407" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.000948" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1899" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.conflict-reference-foreign&quot;,&quot;JD_CONFLICT_REFERENCE_INVALID&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.conflict-reference-foreign&quot;,&quot;JD_CONFLICT_REFERENCE_INVALID&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="171560298" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.002005" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1900" name="ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.legacy-or-display-string&quot;,&quot;JD_LEGACY_OR_DISPLAY_FIELD&quot;,1)" fullname="TianZhang.Tests.JindanStaticStateDataTests.ParseJindanStaticStatesFailsWithItsStableReason(&quot;jd.invalid.legacy-or-display-string&quot;,&quot;JD_LEGACY_OR_DISPLAY_FIELD&quot;,1)" methodname="ParseJindanStaticStatesFailsWithItsStableReason" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1202542378" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.002737" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1903" name="ProductionJindanStaticCsvHasNoFixtureRows" fullname="TianZhang.Tests.JindanStaticStateDataTests.ProductionJindanStaticCsvHasNoFixtureRows" methodname="ProductionJindanStaticCsvHasNoFixtureRows" classname="TianZhang.Tests.JindanStaticStateDataTests" runstate="Runnable" seed="1120581575" result="Passed" start-time="2026-10-26 00:40:15Z" end-time="2026-10-26 00:40:15Z" duration="0.041258" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -89,7 +89,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public IReadOnlyList<CombatCommand> GetItemCandidates(string actorId) =>
-            itemQuantity == null ? Array.Empty<CombatCommand>() : new[]
+            itemQuantity == null || spawned?.IsJindanRehearsal == true ? Array.Empty<CombatCommand>() : new[]
             {
                 new CombatCommand(CombatCommandKind.UseItem, actorId, actorId, contextVersion: commandContextVersion,
                     itemId: "item_huoxue_dan"),
@@ -143,6 +143,13 @@ namespace TianZhang.Features.Adventure
         }
 
         public bool IsRunning => session != null;
+        public CombatSession CurrentSession => session;
+        public string ControlledActorId => session != null && session.Combatants.TryGet(session.CurrentActorId, out var current) &&
+            current.Team == CombatTeam.Player ? current.Id : spawned?.Player.Id ?? "player";
+        private bool IsPlayerActor(string id) => session != null && session.Combatants.TryGet(id, out var actor) && actor.Team == CombatTeam.Player;
+        private string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
+            ? name : IsPlayerActor(id) ? playerDisplayName : resolveText(EnemyDataFor(id)?.displayNameKey ?? id);
+        private string PortraitKey(string id) => spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
         public bool IsPresenting => ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
             (hudActivity?.IsPresenting ?? false);
 
@@ -166,7 +173,7 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (session.TurnPhase != CombatTurnPhase.Active) return false;
-            if (session.CurrentActorId != "player")
+            if (!IsPlayerActor(session.CurrentActorId))
             {
                 reason = "敌方行动中，请等待你的行动";
                 return false;
@@ -205,6 +212,7 @@ namespace TianZhang.Features.Adventure
             ++commandContextVersion;
             if (combatRoutine != null) StopCoroutine(combatRoutine);
             combatRoutine = null;
+            session.Jindan?.Clear(session);
             session = null;
             spawned = null;
             enemyPolicies = null;
@@ -296,6 +304,40 @@ namespace TianZhang.Features.Adventure
             return true;
         }
 
+        public bool TryBeginRehearsal(AdventureSpawnSet values, CombatSession prepared,
+            IReadOnlyList<CombatUnitPresentationDescriptor> descriptors, IReadOnlyList<HexCoord> cells, out string reason)
+        {
+            reason = "adventure_encounter_already_running";
+            if (IsRunning || values == null || !values.IsJindanRehearsal || prepared?.Jindan == null) return false;
+            try { unitPresentation.Prepare(descriptors); }
+            catch (Exception exception)
+            { unitPresentation.Clear(); reason = "adventure_presentation_spawn_failed:" + exception.Message; return false; }
+            spawned = values; session = prepared; battlefieldCells = cells;
+            // Demo identities never bind world equipment or inventory. Growth refresh is also disabled below.
+            session.ExternalResources = null;
+            enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => (ICombatActionPolicy)new LegalActionAI());
+            playerDisplayName = ActorName(values.Player.Id);
+            presentation.ClearLog(); presentation.AppendLog("金丹演武开始：" + string.Join("、", values.RehearsalNames.Values));
+            combatRoutine = StartCoroutine(RunCombat());
+            reason = null; return true;
+        }
+
+        public CombatCommandPreview PreviewJindan(CombatCommand command) =>
+            session == null ? null : commandService.Preview(session, command);
+
+        public CombatActionResult ConfirmJindan(CombatCommand command, CombatCommandPreview quote)
+        {
+            if (!AcceptsPlayerCommand || command?.ActorId != ControlledActorId || session?.Jindan == null)
+                return CombatActionResult.Rejected("combat_quote_stale");
+            var result = ExecuteCommand(command, quote);
+            string action = command.Kind == CombatCommandKind.SwapJindan ? "切换金丹装配" :
+                command.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" : "布设方位定尺";
+            presentation.AppendLog(result.Succeeded ? ActorName(command.ActorId) + "：" + action +
+                "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent : displayReason(result.RejectionReason));
+            Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
+            return result;
+        }
+
         public CombatActionPreviewSnapshot PreviewAction(CombatActionCandidate candidate)
         {
             RefreshGrowth();
@@ -327,9 +369,7 @@ namespace TianZhang.Features.Adventure
             };
             string targetName = string.IsNullOrEmpty(command.TargetId)
                 ? candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art ? "待选目标" : "自身"
-                : command.TargetId == "player"
-                    ? playerDisplayName : spawned != null && spawned.Enemies.Any(enemy => enemy.Id == command.TargetId)
-                        ? resolveText(EnemyDataFor(command.TargetId).displayNameKey) : "无效目标";
+                : session != null && session.Combatants.TryGet(command.TargetId, out _) ? ActorName(command.TargetId) : "无效目标";
             var resolved = new CombatActionCandidate(candidate.Kind, command.ActorId, command.TargetId,
                 command.ProfileId, candidate.ContextVersion, candidate.Destination,
                 candidate.Kind == CombatActionKind.Move ? preview?.ActionPointCostUnits ?? 0 : 0,
@@ -379,8 +419,7 @@ namespace TianZhang.Features.Adventure
                 preview.AttackArea.TargetIds.Select(id =>
                 {
                     session.Combatants.TryGet(id, out var target);
-                    return ToHud(target, target != null && target.Team == CombatTeam.Player
-                        ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey));
+                    return ToHud(target, ActorName(id));
                 }).ToArray(), session.SceneObjects?.All.Where(value => preview.AttackArea.Cells.Any(cell => value.Contains(cell.Coord)))
                     .Select(value => ProjectSceneObject(value, preview.AttackArea.EnvironmentTargetIds.Contains(value.Id)
                         ? Math.Min(value.Durability, profile.EnvironmentDamage) : 0)).ToArray());
@@ -450,7 +489,7 @@ namespace TianZhang.Features.Adventure
 
         private bool IsCandidateCurrent(CombatActionCandidate candidate) => candidate != null && session != null &&
             acceptsPlayerCommand && !IsPresenting && candidate.ContextVersion == commandContextVersion &&
-            candidate.ActorId == session.CurrentActorId && candidate.ActorId == "player";
+            candidate.ActorId == session.CurrentActorId && IsPlayerActor(candidate.ActorId);
 
         private CombatCommand ToCommand(CombatActionCandidate candidate)
         {
@@ -530,7 +569,7 @@ namespace TianZhang.Features.Adventure
                     yield break;
                 }
 
-                if (string.Equals(advance.ActorId, "player", StringComparison.Ordinal))
+                if (IsPlayerActor(advance.ActorId))
                 {
                     acceptsPlayerCommand = true;
                     Present("你的行动", true);
@@ -553,7 +592,7 @@ namespace TianZhang.Features.Adventure
                 }
                 else
                 {
-                    Present(resolveText(EnemyDataFor(advance.ActorId).displayNameKey) + " 行动", false);
+                    Present(ActorName(advance.ActorId) + " 行动", false);
                     yield return null;
                     while (session.TurnPhase != CombatTurnPhase.Finished &&
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
@@ -565,10 +604,10 @@ namespace TianZhang.Features.Adventure
                         if (command == null)
                             throw new InvalidOperationException("combat_enemy_turn_has_no_legal_command");
                         CombatActionResult result = ExecuteCommand(command);
-                        presentation.AppendLog(BuildActionMessage(resolveText(EnemyDataFor(advance.ActorId).displayNameKey), command, result));
+                        presentation.AppendLog(BuildActionMessage(ActorName(advance.ActorId), command, result));
                         if (!result.Succeeded)
                             throw new InvalidOperationException("combat_enemy_legal_command_rejected:" + result.RejectionReason);
-                        Present(resolveText(EnemyDataFor(advance.ActorId).displayNameKey) + " 行动", false);
+                        Present(ActorName(advance.ActorId) + " 行动", false);
                         do { yield return null; } while (IsPresenting);
                     }
                 }
@@ -582,7 +621,7 @@ namespace TianZhang.Features.Adventure
         {
             RefreshGrowth();
             if (!AcceptsPlayerCommand || session == null || command == null ||
-                !string.Equals(command.ActorId, "player", StringComparison.Ordinal))
+                command.ActorId != ControlledActorId || !IsPlayerActor(command.ActorId))
             {
                 // A direct request outside the accepting window is dropped, never queued. The HUD
                 // path (ConfirmAction) already reports stale state; keep one log line so automation
@@ -591,7 +630,7 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             CombatActionResult result = ExecuteCommand(command, quote);
-            presentation.AppendLog(BuildActionMessage(playerDisplayName, command, result));
+            presentation.AppendLog(BuildActionMessage(ActorName(command.ActorId), command, result));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
                 resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
         }
@@ -662,7 +701,7 @@ namespace TianZhang.Features.Adventure
 
         private bool RefreshGrowth()
         {
-            if (session == null || equipmentOwner == null) return false;
+            if (session == null || equipmentOwner == null || spawned?.IsJindanRehearsal == true) return false;
             return session.RefreshActionEconomy("player", equipmentOwner.Attributes.ActionPointMaximumUnits,
                 equipmentOwner.Attributes.MovementEfficiencyMilliUnits, equipmentOwner.Progression.RealmStage,
                 string.IsNullOrEmpty(equipmentOwner.MainEquipmentBasicAttackProfileId)
@@ -673,15 +712,15 @@ namespace TianZhang.Features.Adventure
         {
             if (session == null) return;
             RefreshGrowth();
-            session.Combatants.TryGet("player", out CombatantSnapshot player);
+            session.Combatants.TryGet(ControlledActorId, out CombatantSnapshot player);
             presentedInventoryVersion = inventoryVersion?.Invoke() ?? 0;
             CombatantSnapshot enemy = spawned.Enemies.FirstOrDefault(value => value.IsAlive) ?? spawned.Enemy;
             acceptsCommands = acceptsCommands && !IsPresenting;
             ++commandContextVersion;
             presentation.Present(new CombatHudSnapshot(
-                ToHud(player, playerDisplayName, player == null ? null : "player"),
-                ToHud(enemy, enemy == null ? string.Empty : resolveText(EnemyDataFor(enemy.Id).displayNameKey),
-                    enemy == null ? null : EnemyDataFor(enemy.Id).enemyId),
+                ToHud(player, ActorName(player.Id), PortraitKey(player.Id)),
+                ToHud(enemy, enemy == null ? string.Empty : ActorName(enemy.Id),
+                    enemy == null ? null : PortraitKey(enemy.Id)),
                 turnText,
                 acceptsCommands,
                 player?.EquippedArtProfileIds,
@@ -697,8 +736,8 @@ namespace TianZhang.Features.Adventure
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
-                enemies: spawned.Enemies.Select(value => ToHud(value, resolveText(EnemyDataFor(value.Id).displayNameKey),
-                    EnemyDataFor(value.Id).enemyId)).ToArray(),
+                enemies: spawned.Players.Concat(spawned.Enemies).Where(value => value.Id != player.Id)
+                    .Select(value => ToHud(value, ActorName(value.Id), PortraitKey(value.Id))).ToArray(),
                 sceneObjects: session.SceneObjects?.All.Select(value => ProjectSceneObject(value)).ToArray()));
         }
 
@@ -765,8 +804,7 @@ namespace TianZhang.Features.Adventure
                     foreach (CombatantSnapshot target in ordered)
                     {
                         if (!target.IsAlive || !profile.AllowsTarget(player.Team, target.Team)) continue;
-                        AddTarget(target, target.Team == CombatTeam.Player
-                            ? playerDisplayName : resolveText(EnemyDataFor(target.Id).displayNameKey));
+                        AddTarget(target, ActorName(target.Id));
                     }
                 }
                 actions.Add(new CombatArtActionSnapshot(id, displayProfile(id), profile?.CtPenalty ?? 0, targets,
@@ -855,11 +893,11 @@ namespace TianZhang.Features.Adventure
                 session.Combatants.TryGet(id, out CombatantSnapshot combatant);
                 bool isPlayer = combatant.Team == CombatTeam.Player;
                 entries.Add(new CombatTimelineEntrySnapshot(id,
-                    isPlayer ? playerDisplayName : resolveText(EnemyDataFor(id).displayNameKey),
+                    ActorName(id),
                     isPlayer ? CombatUnitDisplayFaction.Player : CombatUnitDisplayFaction.Enemy,
                     unit.Speed, unit.ChargeTime, unit.NextActionThreshold, unit.IsReady, queuePosition,
                     string.Equals(current, id, StringComparison.Ordinal), unit.TicksUntilReady,
-                    isPlayer ? "player" : EnemyDataFor(id).enemyId));
+                    PortraitKey(id)));
             }
             Add(current, -1);
             // A recorded boundary can contain the first ready actor already dequeued but not yet begun.
@@ -882,7 +920,8 @@ namespace TianZhang.Features.Adventure
                 _ => "combat_outcome_ongoing",
             }), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
-            unitPresentation.Remove(spawned.Player.Id);
+            session.Jindan?.Clear(session);
+            foreach (CombatantSnapshot player in spawned.Players) unitPresentation.Remove(player.Id);
             foreach (CombatantSnapshot enemy in spawned.Enemies) unitPresentation.Remove(enemy.Id);
             unitPresentation.Clear();
             session = null;

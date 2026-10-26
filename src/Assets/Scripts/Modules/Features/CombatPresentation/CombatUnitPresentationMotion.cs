@@ -31,6 +31,12 @@ namespace TianZhang.Features.CombatPresentation
             {
                 Vector3 CenterOnSurface(CombatUnitPresentationPose pose) => pose.IsDoubleCell
                     ? (surface.Center(pose.Position)+surface.Center(pose.Rear))*.5f : surface.Center(pose.Position);
+                if (!step.From.IsDoubleCell && surface.IsOneWayDrop(step.From.Position, step.To.Position))
+                {
+                    yield return support.Drop(root, CenterOnSurface(step.From), CenterOnSurface(step.To),
+                        yawDegrees[step.To.Facing], cellsPerSecond);
+                    yield break;
+                }
                 float startYaw = yawDegrees[step.From.Facing];
                 if (step.From.IsDoubleCell)
                 foreach (int facing in step.TurnFacings)

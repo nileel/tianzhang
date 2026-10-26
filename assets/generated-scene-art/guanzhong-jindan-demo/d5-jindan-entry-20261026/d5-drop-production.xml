@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="2" result="Failed(Child)" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.5026638">
+  <test-suite type="TestSuite" id="1262" name="src" fullname="src" runstate="Runnable" testcasecount="211" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.502664" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1255" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="211" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.496077" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="36056" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1256" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="211" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.494735" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1257" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="211" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.493547" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1258" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="211" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:47:02Z" duration="38.492412" total="2" passed="1" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1014" name="D5JindanEntryPlayModeTests" fullname="TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests" classname="TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests" runstate="Runnable" testcasecount="2" result="Failed" site="Child" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:46:52Z" duration="28.034789" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1015" name="ProductionEntryAndLedger" fullname="TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests.ProductionEntryAndLedger" methodname="ProductionEntryAndLedger" classname="TianZhang.Tests.PlayMode.D5JindanEntryPlayModeTests" runstate="Runnable" seed="1299919859" result="Failed" start-time="2026-10-26 11:46:24Z" end-time="2026-10-26 11:46:52Z" duration="28.024941" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[Unhandled log message: '[Exception] InvalidOperationException: jindan_rehearsal_entry_failed:movement_blocked'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                  <stack-trace><![CDATA[TianZhang.Bootstrap.AdventureSceneInstaller.BeginJindanRehearsal (System.Int32 segmentIndex, System.String earthEffect) (at Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs:88)
+TianZhang.Features.Adventure.JindanRehearsalPresenter.HandleAction (System.String key) (at Assets/Scripts/Modules/Features/Adventure/JindanRehearsalPresenter.cs:75)
+TianZhang.Bootstrap.AdventureSceneInstaller.HandleJindanAction (System.String key) (at Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs:94)
+TianZhang.Features.CombatPresentation.JindanDemoView.Request (System.String key) (at Assets/Scripts/Modules/Features/CombatPresentation/JindanDemoView.cs:61)
+TianZhang.Features.CombatPresentation.JindanDemoView+<>c__DisplayClass15_0.<BindButtons>b__0 () (at Assets/Scripts/Modules/Features/CombatPresentation/JindanDemoView.cs:40)
+UnityEngine.Events.InvokableCall.Invoke () (at <987aa4221989419a947e2c4ff5d6829c>:0)
+UnityEngine.Events.UnityEvent.Invoke () (at <987aa4221989419a947e2c4ff5d6829c>:0)
+UnityEngine.UI.Button.Press () (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/UI/Core/Button.cs:70)
+UnityEngine.UI.Button.OnPointerClick (UnityEngine.EventSystems.PointerEventData eventData) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/UI/Core/Button.cs:114)
+UnityEngine.EventSystems.ExecuteEvents.Execute (UnityEngine.EventSystems.IPointerClickHandler handler, UnityEngine.EventSystems.BaseEventData eventData) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/ExecuteEvents.cs:57)
+UnityEngine.EventSystems.ExecuteEvents.Execute[T] (UnityEngine.GameObject target, UnityEngine.EventSystems.BaseEventData eventData, UnityEngine.EventSystems.ExecuteEvents+EventFunction`1[T1] functor) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/ExecuteEvents.cs:272)
+UnityEngine.EventSystems.EventSystem:Update() (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[InvalidOperationException: jindan_rehearsal_entry_failed:movement_blocked
+TianZhang.Bootstrap.AdventureSceneInstaller.BeginJindanRehearsal (System.Int32 segmentIndex, System.String earthEffect) (at Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs:88)
+TianZhang.Features.Adventure.JindanRehearsalPresenter.HandleAction (System.String key) (at Assets/Scripts/Modules/Features/Adventure/JindanRehearsalPresenter.cs:75)
+TianZhang.Bootstrap.AdventureSceneInstaller.HandleJindanAction (System.String key) (at Assets/Scripts/Modules/Bootstrap/AdventureSceneInstaller.cs:94)
+TianZhang.Features.CombatPresentation.JindanDemoView.Request (System.String key) (at Assets/Scripts/Modules/Features/CombatPresentation/JindanDemoView.cs:61)
+TianZhang.Features.CombatPresentation.JindanDemoView+<>c__DisplayClass15_0.<BindButtons>b__0 () (at Assets/Scripts/Modules/Features/CombatPresentation/JindanDemoView.cs:40)
+UnityEngine.Events.InvokableCall.Invoke () (at <987aa4221989419a947e2c4ff5d6829c>:0)
+UnityEngine.Events.UnityEvent.Invoke () (at <987aa4221989419a947e2c4ff5d6829c>:0)
+UnityEngine.UI.Button.Press () (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/UI/Core/Button.cs:70)
+UnityEngine.UI.Button.OnPointerClick (UnityEngine.EventSystems.PointerEventData eventData) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/UI/Core/Button.cs:114)
+UnityEngine.EventSystems.ExecuteEvents.Execute (UnityEngine.EventSystems.IPointerClickHandler handler, UnityEngine.EventSystems.BaseEventData eventData) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/ExecuteEvents.cs:57)
+UnityEngine.EventSystems.ExecuteEvents.Execute[T] (UnityEngine.GameObject target, UnityEngine.EventSystems.BaseEventData eventData, UnityEngine.EventSystems.ExecuteEvents+EventFunction`1[T1] functor) (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/ExecuteEvents.cs:272)
+UnityEngine.EventSystems.EventSystem:Update() (at ./Library/PackageCache/com.unity.ugui@2e4da8434a5c/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+]]></output>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1205" name="GuanzhongTerrainRehearsalPlayModeTests" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-26 11:46:52Z" end-time="2026-10-26 11:47:02Z" duration="10.450414" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1211" name="MotionRegressions" fullname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions" methodname="MotionRegressions" classname="TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests" runstate="Runnable" seed="1455525174" result="Passed" start-time="2026-10-26 11:46:52Z" end-time="2026-10-26 11:47:02Z" duration="10.438986" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

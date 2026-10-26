@@ -8,7 +8,7 @@ namespace TianZhang.Spatial
     {
         public SpatialSceneObjectRules(string id, HexCoord cell, HexCoord? edgeOther, bool blocksMovement,
             bool blocksSight, int coverTier, int maxProtectedBodyScaleRank = 2,
-            string replacesWallConnectionId = null)
+            string replacesWallConnectionId = null, bool isSupportMarker = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Scene object ID is required.", nameof(id));
             if (edgeOther.HasValue && !cell.TryGetDirectionTo(edgeOther.Value, out _))
@@ -23,6 +23,9 @@ namespace TianZhang.Spatial
             BlocksMovement = blocksMovement; BlocksSight = blocksSight; CoverTier = coverTier;
             MaxProtectedBodyScaleRank = maxProtectedBodyScaleRank;
             ReplacesWallConnectionId = replacesWallConnectionId;
+            if (isSupportMarker && (blocksMovement || blocksSight || coverTier != 0 || replacesWallConnectionId != null))
+                throw new ArgumentException("A support marker cannot own obstruction or cover.", nameof(isSupportMarker));
+            IsSupportMarker = isSupportMarker;
         }
 
         public string Id { get; }
@@ -33,6 +36,7 @@ namespace TianZhang.Spatial
         public int CoverTier { get; }
         public int MaxProtectedBodyScaleRank { get; }
         public string ReplacesWallConnectionId { get; }
+        public bool IsSupportMarker { get; }
     }
 
     /// <summary>Immutable spatial projection; never owns durability, damage, turns or AI.</summary>
@@ -60,6 +64,8 @@ namespace TianZhang.Spatial
                 if (!cells.ContainsKey(item.Cell) || item.EdgeOther.HasValue && !cells.ContainsKey(item.EdgeOther.Value))
                     throw new ArgumentException("Scene object anchor is outside the board.", nameof(objects));
                 byId.Add(item.Id, item);
+                // An ability marker is targetable but does not consume a primary scene-object anchor.
+                if (item.IsSupportMarker) continue;
                 if (!item.EdgeOther.HasValue)
                 {
                     if (byCell.ContainsKey(item.Cell))
@@ -121,7 +127,7 @@ namespace TianZhang.Spatial
             foreach (SpatialSceneObjectRules item in byId.Values)
                 result.Add(item.Id == id
                     ? new SpatialSceneObjectRules(item.Id, item.Cell, item.EdgeOther, false, false, 0,
-                        item.MaxProtectedBodyScaleRank, item.ReplacesWallConnectionId)
+                        item.MaxProtectedBodyScaleRank, item.ReplacesWallConnectionId, item.IsSupportMarker)
                     : item);
             return result.AsReadOnly();
         }

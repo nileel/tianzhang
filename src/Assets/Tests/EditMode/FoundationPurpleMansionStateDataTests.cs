@@ -81,14 +81,14 @@ namespace TianZhang.Tests
         }
 
         [Test]
-        public void ProductionFoundationPurpleMansionCsvHasNoRows()
+        public void ProductionFoundationPurpleMansionCsvHasFiveDemoRows()
         {
             string path = Path.Combine(Application.dataPath, "DataConfig/FoundationPurpleMansionStates.csv");
             string[] dataRows = File.ReadAllLines(path);
             Assert.That(Array.FindAll(dataRows, line => line.StartsWith("schemaId,")).Length, Is.EqualTo(1));
             Assert.That(Array.FindAll(dataRows, line =>
                 !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#") && !line.StartsWith("schemaId,")).Length,
-                Is.EqualTo(0));
+                Is.EqualTo(5));
         }
 
         private static Dictionary<string, string> BuildValues(string fixture)

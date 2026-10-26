@@ -15,6 +15,7 @@ namespace TianZhang.Spatial
         private readonly Dictionary<SpatialDirectedEdge, SpatialEdgeRules> edges;
         private readonly SpatialQueryLimits limits;
         private readonly SpatialSceneObjectSet sceneObjects = SpatialSceneObjectSet.Empty;
+        private readonly SpatialMetricOverrideSet metricOverrides = SpatialMetricOverrideSet.Empty;
 
         public SpatialQueryBoard(
             IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
@@ -32,14 +33,29 @@ namespace TianZhang.Spatial
 
         private SpatialQueryBoard(IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
             IReadOnlyDictionary<SpatialDirectedEdge, SpatialEdgeRules> edges, SpatialQueryLimits limits,
-            IReadOnlyList<SpatialSceneObjectRules> sceneObjects) : this(cells, edges, limits)
+            IReadOnlyList<SpatialSceneObjectRules> sceneObjects, SpatialMetricOverrideSet metricOverrides) : this(cells, edges, limits)
         {
             this.sceneObjects = new SpatialSceneObjectSet(sceneObjects, this.cells, this.edges);
+            this.metricOverrides = metricOverrides;
+        }
+
+        private SpatialQueryBoard(SpatialQueryBoard source, SpatialMetricOverrideSet metricOverrides)
+            : this(source.cells, source.edges, source.limits)
+        {
+            sceneObjects = source.sceneObjects;
+            this.metricOverrides = metricOverrides;
         }
 
         /// <summary>Replace one immutable object projection; the original board and its base edges stay intact.</summary>
         public SpatialQueryBoard WithSceneObjects(IReadOnlyList<SpatialSceneObjectRules> objects) =>
-            new SpatialQueryBoard(cells, edges, limits, objects);
+            new SpatialQueryBoard(cells, edges, limits, objects, metricOverrides);
+
+        /// <summary>Replace the complete active metric projection; an empty set restores the underlying edge rules.</summary>
+        public SpatialQueryBoard WithMetricOverrides(IReadOnlyList<SpatialMetricOverride> overrides) =>
+            new SpatialQueryBoard(this, new SpatialMetricOverrideSet(overrides, cells, edges, limits.UnitsPerRange));
+
+        public IReadOnlyList<SpatialMetricOverride> MetricOverrides => metricOverrides.Rules;
+        public bool TryGetCell(HexCoord cell, out SpatialCellRules rules) => cells.TryGetValue(cell, out rules);
 
         public int UnitsPerRange => limits.UnitsPerRange;
         public int MaxQueryRange => limits.MaxQueryRange;
@@ -69,7 +85,7 @@ namespace TianZhang.Spatial
             }
 
             bool movement = kind == SpatialQueryKind.Movement || kind == SpatialQueryKind.ForcedMovement;
-            edgeRules = sceneObjects.ResolveEdge(key, edgeRules);
+            edgeRules = metricOverrides.ResolveEdge(key, sceneObjects.ResolveEdge(key, edgeRules));
             if (sceneObjects.BlocksEdge(from, to, movement) || sceneObjects.BlocksCell(to, movement))
                 return Reject(edgeRules, movement ? SpatialQueryReasons.SceneObjectBlocksMovement :
                     SpatialQueryReasons.SceneObjectBlocksEffects);

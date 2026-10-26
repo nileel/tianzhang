@@ -1,0 +1,4 @@
+deployed: AP -250, MP -400, support 200, metric 1; same tick has no upkeep | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP750000:MP5600:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+maintained 10 ticks × 40 MP; close AP -25, metric restored to 2 | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+stage2: both allies accept commands through the same coordinator | actor=demo_20261024_water tick=10 turn=3 units=demo_20261024_earth:AP0:MP6000:HP3474;demo_20261024_water:AP950000:MP6000:HP3104;demo_20261024_fire:AP0:MP6000:HP3474
+ordinary bounty: entered and guard paid AP without rehearsal state | actor=player tick=13 turn=1 units=player:AP50000:MP180:HP571;enemy:AP0:MP54:HP329;enemy_2:AP0:MP66:HP190

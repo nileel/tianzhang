@@ -28,10 +28,9 @@ namespace TianZhang.Editor.ConfigEditor
         private const string RuleAsset = "Assets/Data/CombatRuleSet.asset";
         private static readonly string[] Order = {
             "CultivationContentImporter.ImportNpcCultivationActionWeightProfiles",
-            "CultivationContentImporter.ImportFoundationPurpleMansionStates", "CultivationContentImporter.ImportJindanStaticStates",
             "WorldContentImporter.ImportCharterRuleDefinitions", "CombatContentImporter.ImportAttackProfiles",
             "CultivationContentImporter.ImportGongFa", "CombatContentImporter.ImportSpells", "CombatContentImporter.ImportSkills",
-            "CharacterContentImporter.ImportCharacterDefinitions", "SettlementContentImporter.ImportContentCatalog",
+            "CharacterContentImporter.ImportCharacterDefinitions", "JindanDemoContentImporter.Import", "SettlementContentImporter.ImportContentCatalog",
             "SettlementContentImporter.ImportCharterSites", "SettlementContentImporter.ImportCharacterCreationPointBuy",
             "WorldContentImporter.ImportEnvironmentProfiles", "AdventureContentImporter.Import" };
         private readonly List<ScriptableObject> owned = new List<ScriptableObject>();
@@ -184,16 +183,18 @@ namespace TianZhang.Editor.ConfigEditor
                     foreach (var value in policies) Own(value);
                     foreach (var value in policies) Add("Assets/Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_" + AssetCommitter.SanitizeName(value.profileId) + ".asset", value);
                     import = CultivationContentImporter.ImportNpcCultivationActionWeightProfiles; break;
-                case "CultivationContentImporter.ImportFoundationPurpleMansionStates":
-                    var foundation = CultivationContentImporter.ParseFoundationPurpleMansionStates(Lines("FoundationPurpleMansionStates"), "FoundationPurpleMansionStates", false);
-                    foreach (var value in foundation) Own(value);
-                    if (foundation.Length != 0) throw new InvalidDataException("生产道基表不允许新增角色行。");
-                    import = CultivationContentImporter.ImportFoundationPurpleMansionStates; break;
-                case "CultivationContentImporter.ImportJindanStaticStates":
-                    var jindan = CultivationContentImporter.ParseJindanStaticStates(Lines("JindanStaticStates"), "JindanStaticStates", new JindanStaticReferenceCatalog(), false);
-                    foreach (var value in jindan) Own(value);
-                    if (jindan.Length != 0) throw new InvalidDataException("生产金丹表不允许新增角色行。");
-                    import = CultivationContentImporter.ImportJindanStaticStates; break;
+                case "JindanDemoContentImporter.Import":
+                    var demo = Own(JindanDemoContentImporter.ReadPreview(Lines("FoundationPurpleMansionStates"), Lines("JindanStaticStates")));
+                    foreach (var preset in demo.presets)
+                    {
+                        Add(JindanDemoContentImporter.FoundationPath(preset.characterId), preset.foundationState);
+                        Add(JindanDemoContentImporter.StaticPath(preset.characterId), preset.jindanState);
+                        // The persisted catalog references the stable imported assets, not preview objects.
+                        preset.foundationState = Required<FoundationPurpleMansionStateData>(JindanDemoContentImporter.FoundationPath(preset.characterId));
+                        preset.jindanState = Required<JindanStaticStateData>(JindanDemoContentImporter.StaticPath(preset.characterId));
+                    }
+                    Add(JindanDemoContentImporter.CatalogPath, demo);
+                    import = JindanDemoContentImporter.Import; break;
                 default: throw new InvalidDataException("未知导入步骤。");
             }
             if (!new HashSet<string>(products.Keys, StringComparer.Ordinal).SetEquals(description.ProductPaths))

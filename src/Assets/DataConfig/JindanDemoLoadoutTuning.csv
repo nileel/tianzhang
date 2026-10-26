@@ -1,0 +1,2 @@
+tuningId,combatSwitchActionMode,maxSwitchesPerOwnAction,switchCostProfileId,safeStateSwitchMode,switchActionPointCostMode,switchManaCost,switchCtPenalty,switchCooldownTicks,activationGate,sourceDocument
+demo_20261024_loadout_v1,UNUSED_FULL_OWN_TURN_AP,1,demo_20261024_switch_full_ap,FREE,SNAPSHOT_MAX_AP,0,0,0,NEXT_OWN_TURN_START,docs/基础设定/金丹基础效果装配与冲突规则.txt

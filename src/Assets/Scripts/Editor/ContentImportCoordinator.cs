@@ -10,14 +10,13 @@ namespace TianZhang.Editor
         public static void ImportAll()
         {
             CultivationContentImporter.ImportNpcCultivationActionWeightProfiles();
-            CultivationContentImporter.ImportFoundationPurpleMansionStates();
-            CultivationContentImporter.ImportJindanStaticStates();
             WorldContentImporter.ImportCharterRuleDefinitions();
             SettlementContentImporter.ImportCharterSites();
             CultivationContentImporter.ImportGongFa();
             CombatContentImporter.ImportSpells();
             CombatContentImporter.ImportSkills();
             CharacterContentImporter.ImportCharacterDefinitions();
+            JindanDemoContentImporter.Import();
             SettlementContentImporter.ImportContentCatalog();
             SettlementContentImporter.ImportCharacterCreationPointBuy();
             WorldContentImporter.ImportEnvironmentProfiles();

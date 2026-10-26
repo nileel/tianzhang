@@ -25,8 +25,7 @@ namespace TianZhang.Editor
         public static void Import()
         {
             ImportGongFa();
-            ImportFoundationPurpleMansionStates();
-            ImportJindanStaticStates();
+            JindanDemoContentImporter.Import();
             ImportNpcCultivationActionWeightProfiles();
         }
 
@@ -408,46 +407,23 @@ namespace TianZhang.Editor
             throw new InvalidDataException($"NPC_WEIGHT_MISSING_EXPLICIT_VALUE: {sourceName} has invalid enabled flag.");
         }
 
-        [MenuItem("天章/导入道基紫府状态配置")]
         [MenuItem("天章/导入金丹静态状态配置")]
-        public static void ImportJindanStaticStates()
+        public static void ImportJindanStaticStates() => JindanDemoContentImporter.Import();
+
+        public static void CommitJindanStaticStates(JindanStaticStateData[] states)
         {
-            const string path = "Assets/DataConfig/JindanStaticStates.csv";
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Jindan static state CSV was not found: {path}", path);
-
-            // No production authority table exists in this slice. A non-empty production table must
-            // therefore fail closed instead of treating fixture identifiers as live content.
-            var states = ParseJindanStaticStates(
-                File.ReadAllLines(path),
-                path,
-                new JindanStaticReferenceCatalog(),
-                allowFixtures: false);
-            try
+            foreach (var state in states)
             {
-                foreach (var state in states)
+                string path = JindanDemoContentImporter.StaticPath(state.characterId);
+                var existing = AssetDatabase.LoadAssetAtPath<JindanStaticStateData>(path);
+                if (existing == null)
                 {
-                    string assetPath =
-                        $"Assets/Data/JindanStaticStates/JindanStaticState_{AssetCommitter.SanitizeName(state.characterId)}.asset";
-                    var asset = AssetDatabase.LoadAssetAtPath<JindanStaticStateData>(assetPath);
-                    bool isNew = asset == null;
-                    if (isNew)
-                    {
-                        asset = ScriptableObject.CreateInstance<JindanStaticStateData>();
-                        AssetCommitter.EnsureDirectory(assetPath);
-                    }
-
-                    CopyJindanStaticState(state, asset);
-                    if (isNew)
-                        AssetDatabase.CreateAsset(asset, assetPath);
-                    else
-                        EditorUtility.SetDirty(asset);
+                    AssetCommitter.EnsureDirectory(path);
+                    existing = ScriptableObject.CreateInstance<JindanStaticStateData>();
+                    CopyJindanStaticState(state, existing);
+                    AssetDatabase.CreateAsset(existing, path);
                 }
-            }
-            finally
-            {
-                foreach (var state in states)
-                    UnityEngine.Object.DestroyImmediate(state);
+                else { CopyJindanStaticState(state, existing); EditorUtility.SetDirty(existing); }
             }
         }
 
@@ -1060,45 +1036,23 @@ namespace TianZhang.Editor
             destination.abilityLedgerBindings = source.abilityLedgerBindings;
         }
 
-        public static void ImportFoundationPurpleMansionStates()
+        [MenuItem("天章/导入道基紫府状态配置")]
+        public static void ImportFoundationPurpleMansionStates() => JindanDemoContentImporter.Import();
+
+        public static void CommitFoundationPurpleMansionStates(FoundationPurpleMansionStateData[] states)
         {
-            const string path = "Assets/DataConfig/FoundationPurpleMansionStates.csv";
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Foundation/Purple Mansion CSV was not found: {path}", path);
-
-            string[] lines = File.ReadAllLines(path);
-            int headerLineIndex = CsvTableReader.FindHeaderIndex(lines);
-            bool hasDataRows = headerLineIndex >= 0 && lines.Skip(headerLineIndex + 1).Any(line =>
-                !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("#"));
-            if (!hasDataRows)
-                return;
-
-            var states = ParseFoundationPurpleMansionStates(lines, path, allowFixtures: false);
-            try
+            foreach (var state in states)
             {
-                foreach (var state in states)
+                string path = JindanDemoContentImporter.FoundationPath(state.characterId);
+                var existing = AssetDatabase.LoadAssetAtPath<FoundationPurpleMansionStateData>(path);
+                if (existing == null)
                 {
-                    string assetPath =
-                        $"Assets/Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_{AssetCommitter.SanitizeName(state.characterId)}.asset";
-                    var asset = AssetDatabase.LoadAssetAtPath<FoundationPurpleMansionStateData>(assetPath);
-                    bool isNew = asset == null;
-                    if (isNew)
-                    {
-                        asset = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
-                        AssetCommitter.EnsureDirectory(assetPath);
-                    }
-
-                    CopyFoundationPurpleMansionState(state, asset);
-                    if (isNew)
-                        AssetDatabase.CreateAsset(asset, assetPath);
-                    else
-                        EditorUtility.SetDirty(asset);
+                    AssetCommitter.EnsureDirectory(path);
+                    existing = ScriptableObject.CreateInstance<FoundationPurpleMansionStateData>();
+                    CopyFoundationPurpleMansionState(state, existing);
+                    AssetDatabase.CreateAsset(existing, path);
                 }
-            }
-            finally
-            {
-                foreach (var state in states)
-                    UnityEngine.Object.DestroyImmediate(state);
+                else { CopyFoundationPurpleMansionState(state, existing); EditorUtility.SetDirty(existing); }
             }
         }
 
@@ -1109,7 +1063,8 @@ namespace TianZhang.Editor
         public static FoundationPurpleMansionStateData[] ParseFoundationPurpleMansionStates(
             string[] lines,
             string sourceName,
-            bool allowFixtures = true)
+            bool allowFixtures = true,
+            JindanDemoCatalogData productionReferences = null)
         {
             if (lines == null)
                 throw FoundationError("FPM_TABLE_INVALID", sourceName, "has no rows.");
@@ -1143,7 +1098,8 @@ namespace TianZhang.Editor
                         headers,
                         columns,
                         $"{sourceName} row {index + 1}",
-                        allowFixtures);
+                        allowFixtures,
+                        productionReferences);
                     if (!characterIds.Add(state.characterId))
                     {
                         UnityEngine.Object.DestroyImmediate(state);
@@ -1167,7 +1123,8 @@ namespace TianZhang.Editor
             string[] headers,
             string[] columns,
             string sourceName,
-            bool allowFixtures)
+            bool allowFixtures,
+            JindanDemoCatalogData productionReferences)
         {
             string fixtureId = GetFoundationColumnValue(headers, columns, "fixtureId");
             string expectation = GetFoundationColumnValue(headers, columns, "expect");
@@ -1285,7 +1242,7 @@ namespace TianZhang.Editor
                     sourceName);
 
                 ValidateFoundationPurpleMansionState(state, sourceName);
-                ValidateFixtureCarryingCapacity(state, fixtureId, fixtureNumericProfile, sourceName);
+                ValidateCarryingCapacityReferences(state, fixtureId, fixtureNumericProfile, sourceName, productionReferences);
                 return state;
             }
             catch
@@ -1450,8 +1407,10 @@ namespace TianZhang.Editor
                 }
 
                 string requiredBindingId = RequiredMansionBodyBindingId(mansion.mansionKind);
-                if (mansion.mansionBodyEffectBindingId != requiredBindingId ||
-                    !effectsById.TryGetValue(mansion.mansionBodyEffectBindingId, out var bodyEffect) ||
+                if (!effectsById.TryGetValue(mansion.mansionBodyEffectBindingId, out var bodyEffect) ||
+                    (mansion.mansionBodyEffectBindingId != requiredBindingId &&
+                     (mansion.mansionBodyEffectBindingId != mansion.mansionInstanceId + "_body" ||
+                      bodyEffect.atomicEffectType != requiredBindingId)) ||
                     bodyEffect.carrierKind != FoundationEffectCarrierKind.MansionBody ||
                     bodyEffect.carrierId != mansion.mansionInstanceId ||
                     !guardiansById.TryGetValue(mansion.guardianAbilityInstanceId, out var guardian) ||
@@ -1636,17 +1595,23 @@ namespace TianZhang.Editor
             }
         }
 
-        private static void ValidateFixtureCarryingCapacity(
+        private static void ValidateCarryingCapacityReferences(
             FoundationPurpleMansionStateData state,
             string fixtureId,
             string fixtureNumericProfile,
-            string sourceName)
+            string sourceName,
+            JindanDemoCatalogData productionReferences)
         {
             if (IsNone(fixtureId))
             {
                 if (!IsNone(fixtureNumericProfile))
                     throw FoundationError("FPM_FIXTURE_IN_PRODUCTION", sourceName, "fixtureOnlyNumericProfile requires fixtureId.");
-                throw FoundationError("FPM_EXTERNAL_REFERENCE_UNRESOLVED", sourceName, "phaseBoundarySetId requires an external numeric profile.");
+                if (productionReferences == null)
+                    throw FoundationError("FPM_EXTERNAL_REFERENCE_UNRESOLVED", sourceName, "phaseBoundarySetId requires an external numeric profile.");
+                // The five approved D1 presets are the complete external authority for this import.
+                // This checks exact phase/capacity/source IDs, COMPLETE values and their five-mansion inputs.
+                JindanDemoCatalogValidator.ValidateFoundation(productionReferences, state);
+                return;
             }
 
             var parts = fixtureNumericProfile.Split(new[] { '~' }, StringSplitOptions.None);

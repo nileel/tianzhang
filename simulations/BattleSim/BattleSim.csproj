@@ -26,6 +26,10 @@
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryTypes.cs" Link="Spatial\SpatialQueryTypes.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryBoard.cs" Link="Spatial\SpatialQueryBoard.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSceneObjects.cs" Link="Combat\CombatSceneObjects.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanDefinitions.cs" Link="Combat\CombatJindanDefinitions.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanLoadout.cs" Link="Combat\CombatJindanLoadout.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatScaleRules.cs" Link="Combat\CombatScaleRules.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialMetricOverride.cs" Link="Spatial\SpatialMetricOverride.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialSceneObjectRules.cs" Link="Spatial\SpatialSceneObjectRules.cs" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,21 @@
+deploy native=(-938.39, 1799.77) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(230.00, 304.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(227.00, 263.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(683.00, 403.50) target=4:14 | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(760.00, 403.50) target=5:14 | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(191.00, 222.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy native=(334.00, 222.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP1000000:MP6000:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deploy completed | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP750000:MP5600:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+deployed: AP -250, MP -400, support 200, metric 1; same tick has no upkeep | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP750000:MP5600:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+maintain native=(1269.00, 99.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP750000:MP5600:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+maintain native=(1229.00, 155.50) target=UI | actor=demo_20261024_space_yang tick=10 turn=2 units=demo_20261024_space_yang:AP750000:MP5600:HP2991;demo_20261024_seal_yin:AP0:MP6000:HP3474
+maintain completed | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP1000000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+close native=(227.00, 180.50) target=UI | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP1000000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+close native=(334.00, 222.50) target=UI | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP1000000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+close completed | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+maintained 10 ticks × 40 MP; close AP -25, metric restored to 2 | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+withdraw native=(1274.00, 729.50) target=UI | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+withdraw native=(553.00, 285.50) target=UI | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+withdraw completed | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+reenter native=(904.00, 106.50) target=UI | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474
+reenter completed | actor=demo_20261024_space_yang tick=20 turn=4 units=demo_20261024_space_yang:AP975000:MP5200:HP2436;demo_20261024_seal_yin:AP0:MP6000:HP3474

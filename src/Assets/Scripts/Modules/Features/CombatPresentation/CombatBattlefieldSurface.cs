@@ -17,11 +17,24 @@ namespace TianZhang.Features.CombatPresentation
             public float[] riserY = Array.Empty<float>();
         }
 
+        [Serializable] public sealed class DropEdge
+        {
+            public int fromQ, fromR, toQ, toR;
+        }
+
         [SerializeField] private Cell[] cells = Array.Empty<Cell>();
+        [SerializeField] private DropEdge[] oneWayDrops = Array.Empty<DropEdge>();
         private Dictionary<Vector2Int,Cell> index;
         private static readonly Vector2Int[] Neighbors = { Vector2Int.zero,new Vector2Int(1,0),new Vector2Int(1,-1),
             new Vector2Int(0,-1),new Vector2Int(-1,0),new Vector2Int(-1,1),new Vector2Int(0,1) };
         public IReadOnlyList<Cell> Cells => cells;
+        public bool IsOneWayDrop(CombatUnitPresentationHex from, CombatUnitPresentationHex to)
+        {
+            foreach (DropEdge edge in oneWayDrops)
+                if (edge.fromQ == from.Q && edge.fromR == from.R && edge.toQ == to.Q && edge.toR == to.R)
+                    return true;
+            return false;
+        }
         public bool IsStair(Vector3 point)
         {
             foreach(Cell cell in cells) if(cell.kind==2 && Contains(cell,point)) return true;

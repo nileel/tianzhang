@@ -95,6 +95,29 @@ namespace TianZhang.Features.CombatPresentation
             root.SetPositionAndRotation(p,q);
         }
 
+        /// <summary>For an explicit one-way drop, clear the ledge horizontally before descending to the supported landing.</summary>
+        public System.Collections.IEnumerator Drop(Transform root, Vector3 start, Vector3 end, float yaw, float speed)
+        {
+            Evaluate(start, yaw, out Vector3 origin, out Quaternion fromRotation);
+            Evaluate(end, yaw, out Vector3 landing, out Quaternion toRotation);
+            if (origin.y <= landing.y) throw new InvalidOperationException("presentation_drop_not_descending");
+            Vector3 corner = new Vector3(landing.x, origin.y, landing.z);
+            float horizontal = Vector3.Distance(origin, corner);
+            float vertical = origin.y - landing.y;
+            float length = horizontal + vertical;
+            float travelled = 0;
+            root.SetPositionAndRotation(origin, fromRotation);
+            while (travelled < length)
+            {
+                yield return null;
+                travelled = Mathf.Min(length, travelled + Time.deltaTime * speed);
+                Vector3 position = travelled < horizontal
+                    ? Vector3.Lerp(origin, corner, travelled / horizontal)
+                    : Vector3.Lerp(corner, landing, (travelled - horizontal) / vertical);
+                root.SetPositionAndRotation(position, Quaternion.Slerp(fromRotation, toRotation, travelled / length));
+            }
+        }
+
         /// <summary>Translate horizontally only after lifting to the next true tread envelope; reverse on descent.</summary>
         public System.Collections.IEnumerator Move(Transform root, Vector3 start,Vector3 end,float yaw,float speed)
         {

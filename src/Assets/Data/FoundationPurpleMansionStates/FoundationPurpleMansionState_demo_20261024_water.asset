@@ -1,0 +1,167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 597a0f4603b44ff8a1372a116c7a3b8e, type: 3}
+  m_Name: FoundationPurpleMansionState_demo_20261024_water
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.FoundationPurpleMansionStateData
+  schemaId: foundationPurpleMansionState
+  schemaVersion: 2
+  characterId: demo_20261024_water
+  foundationState:
+    foundationInstanceId: demo_20261024_water_foundation
+    foundationDefinitionId: demo_20261024_qiushui_foundation
+    sourceGongFaId: gongfa_qiushuiyouxin
+    stageId: 30
+    stageCode: 30
+    continuousProgress: 0
+    phaseBoundarySetId: foundation_mansion_complete_v2
+    naturalMansionCapacity: 1
+    expansionGrants: []
+    expandedMansionCapacity: 0
+    carryingCapacityProfileId: demo_20261024_capacity_1
+    currentMansionCarryingCapacity: 1
+    completionMansionCapacity: 1
+  mansionStates:
+  - mansionKind: 0
+    state: 0
+    embryoId:
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+    continuousProgress: 0
+    progressChannelId:
+    relatedActionStateId:
+  - mansionKind: 1
+    state: 2
+    embryoId:
+    mansionInstanceId: demo_20261024_water_hun
+    mansionBodyEffectBindingId: demo_20261024_water_hun_body
+    guardianAbilityInstanceId: demo_20261024_water_guardian
+    sourceSpellId: demo_20261024_spell_xingshui
+    upgradePlanId: demo_20261024_spell_xingshui_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+    continuousProgress: 0
+    progressChannelId:
+    relatedActionStateId:
+  - mansionKind: 2
+    state: 0
+    embryoId:
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+    continuousProgress: 0
+    progressChannelId:
+    relatedActionStateId:
+  - mansionKind: 3
+    state: 0
+    embryoId:
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+    continuousProgress: 0
+    progressChannelId:
+    relatedActionStateId:
+  - mansionKind: 4
+    state: 0
+    embryoId:
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+    continuousProgress: 0
+    progressChannelId:
+    relatedActionStateId:
+  effectBindings:
+  - effectBindingId: demo_20261024_water_hun_body
+    carrierKind: 1
+    carrierId: demo_20261024_water_hun
+    order: 1
+    trigger: PASSIVE
+    conditions: []
+    target: SELF
+    atomicEffectType: MANSION_BODY_HUN_LINGTAI_DINGPO
+    parameters: []
+  - effectBindingId: demo_20261024_water_guardian_body
+    carrierKind: 2
+    carrierId: demo_20261024_water_guardian
+    order: 1
+    trigger: MANUAL
+    conditions: []
+    target: DECLARED_TARGET
+    atomicEffectType: REGISTERED_GUARDIAN_BODY
+    parameters:
+    - definition:demo_20261024_guardian_xulan
+  guardianAbilities:
+  - abilityInstanceId: demo_20261024_water_guardian
+    abilityDefinitionId: demo_20261024_guardian_xulan
+    mansionInstanceId: demo_20261024_water_hun
+    sourceSpellId: demo_20261024_spell_xingshui
+    upgradePlanId: demo_20261024_spell_xingshui_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+    form: 0
+    effectBindingIds:
+    - demo_20261024_water_guardian_body
+  enhancementNodes: []
+  cultivationActionState:
+    actionStateId:
+    actionKind: 0
+    status: 0
+    targetRef:
+    fixedCycleDefinitionId:
+    lastStableBoundaryId:
+    committedCycleIds: []
+    progressChannelId:
+    numericProfileRefs: []
+  closedRetreatPlan:
+    actionStateId:
+    targetRef:
+    stopConditions: []
+  jindanLock:
+    status: 1
+    formationSnapshot:
+      foundationInstanceId: demo_20261024_water_foundation
+      stageId: 30
+      stageCode: 30
+      naturalMansionCapacity: 1
+      completionMansionCapacity: 1
+      expansionGrantIds: []
+      mansionStates:
+      - mansionKind: 0
+        state: 0
+        mansionBodyEffectBindingId:
+        guardianAbilityInstanceId:
+      - mansionKind: 1
+        state: 2
+        mansionBodyEffectBindingId: demo_20261024_water_hun_body
+        guardianAbilityInstanceId: demo_20261024_water_guardian
+      - mansionKind: 2
+        state: 0
+        mansionBodyEffectBindingId:
+        guardianAbilityInstanceId:
+      - mansionKind: 3
+        state: 0
+        mansionBodyEffectBindingId:
+        guardianAbilityInstanceId:
+      - mansionKind: 4
+        state: 0
+        mansionBodyEffectBindingId:
+        guardianAbilityInstanceId:

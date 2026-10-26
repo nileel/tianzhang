@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25d7a763b4241a4b8e8a7f5f6254c52, type: 3}
+  m_Name: JindanStaticState_demo_20261024_fire
+  m_EditorClassIdentifier: TianZhang.Content::TianZhang.Entity.JindanStaticStateData
+  schemaId: jindanStaticState
+  schemaVersion: 1
+  characterId: demo_20261024_fire
+  foundationPurpleMansionStateRef: demo_20261024_fire_foundation
+  mansionInputs:
+  - mansionKind: 0
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 1
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 2
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  - mansionKind: 3
+    state: 2
+    mansionInstanceId: demo_20261024_fire_wu
+    mansionBodyEffectBindingId: demo_20261024_fire_wu_body
+    guardianAbilityInstanceId: demo_20261024_fire_guardian
+    sourceSpellId: demo_20261024_spell_chuanxin
+    upgradePlanId: demo_20261024_spell_chuanxin_upgrade_v1
+    sourceSpellDisposition: INTERNALIZE
+  - mansionKind: 4
+    state: 0
+    mansionInstanceId:
+    mansionBodyEffectBindingId:
+    guardianAbilityInstanceId:
+    sourceSpellId:
+    upgradePlanId:
+    sourceSpellDisposition:
+  jindanCoreBinding:
+    jindanCoreBindingId: demo_20261024_fire_core_binding
+    jindanInstanceId: demo_20261024_fire_jindan
+    boundDanshuCoreId: demo_20261024_fire_core
+    formationTransactionId: demo_20261024_fire_formation
+    formationVersion: 1
+  danxiang:
+    danxiangInstanceId: demo_20261024_fire_danxiang
+    jindanInstanceId: demo_20261024_fire_jindan
+    danxiangNameKey: demo_20261024_fire_danxiang_name
+    danxingDefinitionId:
+    danxiangPresentationProfileId: demo_20261024_fire_danxiang_presentation
+  stablePositionBindings:
+  - positionId: JD_FiveElements_Fire_DOMAIN01
+    expectedPositionVersion: 102
+    roadId: ROAD_FIRE
+    positionType: 2
+    proofProfileId: PROOF_FIRE_DOMAIN01_01
+    equippedBaseEffectId: FIRE_MANIFEST
+    compatibilityProfileId: demo_compat_sha256_8e61b514e617086c5b5692c71acfd9a1cc0d604e91974fcd710d0c4637b4cda2
+    primaryCarrierAbilityInstanceId: demo_20261024_fire_guardian
+    auxiliaryCarrierAbilityInstanceIds: []
+  abilityLedgerBindings:
+  - abilityInstanceId: demo_20261024_fire_guardian
+    resourceDebitLedgerRef: demo_20261024_fire_guardian_resource
+    cooldownLedgerRef: demo_20261024_fire_guardian_cooldown
+    chargeLedgerRef:
+    costLedgerRef: demo_20261024_fire_guardian_cost
+    conflictReserveLedgerRef:
+    conflictCostProfileId:
