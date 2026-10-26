@@ -37,6 +37,10 @@ namespace TianZhang.Entity
                               actor.facing >= 0 && actor.facing < 6, "SEGMENT_ACTOR_SOURCE");
                 }
                 ValidateTuning(catalog.loadoutTuning);
+                Check(catalog.demolition != null && catalog.GetPreset(catalog.demolition.characterId) != null &&
+                    catalog.demolition.sourceProfileId == "spell_guanshiji" && catalog.demolition.profileId == "demo_20261026_polei" &&
+                    catalog.demolition.environmentDamage == 375 && catalog.demolition.environmentTargetTypes.SequenceEqual(new[]{"high_wall","stone_support"}) &&
+                    !string.IsNullOrWhiteSpace(catalog.demolition.sourceDocument), "DEMOLITION_CONFIGURATION");
                 reason = null;
                 return true;
             }
@@ -149,14 +153,23 @@ namespace TianZhang.Entity
             if (command.enabled)
             {
                 bool flight = command.effectId == "FLIGHT" && command.abilityDefinitionId == "demo_20261024_yufeng_flight";
+                bool earth = command.effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && command.abilityDefinitionId == "demo_20261024_guardian_houzai";
                 Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
+                      earth && command.kind is ("DEPLOY" or "TERMINATE") ||
                       command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
                       command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
                 if (flight)
                     Check(command.upkeepClock == "OWN_TURN_START" && command.durationClock == "OWN_TURN_END" &&
                         command.durationCount == 3 && command.upkeepMana == 100 && command.ctPenalty == 0 &&
                         command.maximumInstances == 1 && command.capacity == 1, "FLIGHT_CONFIGURATION");
-                else if (command.kind == "DEPLOY")
+                else if (earth && command.kind == "DEPLOY")
+                    Check(command.actionPointCostUnits == 250000 && command.manaCost == 400 && command.upkeepMana == 0 &&
+                        command.range == 4 && command.verticalReachRank == 3 && command.maximumInstances == 1 &&
+                        command.durationCount == (command.effectId == "EARTH_MANIFEST" ? 3 : 2) &&
+                        command.capacity == (command.effectId == "EARTH_MANIFEST" ? 2 : 1) &&
+                        command.cooldownTicks == (command.effectId == "EARTH_MANIFEST" ? 1 : 3) &&
+                        command.durationClock == (command.effectId == "EARTH_MANIFEST" ? "OWN_TURN_END" : "TARGET_OWN_TURN_END"), "EARTH_CONFIGURATION");
+                else if (!earth && command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");
             }

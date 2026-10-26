@@ -332,8 +332,9 @@ namespace TianZhang.Features.Adventure
                 return CombatActionResult.Rejected("combat_quote_stale");
             var result = ExecuteCommand(command, quote);
             string action = command.Kind == CombatCommandKind.SwapJindan ? "切换金丹装配" :
-                command.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" :
-                command.Kind == CombatCommandKind.Flight ? "御风飞行" : "布设方位定尺";
+                command.Kind == CombatCommandKind.CloseJindan ? "关闭当前位格效果" :
+                command.Kind == CombatCommandKind.Flight ? "御风飞行" : command.Kind==CombatCommandKind.Art?"演武·破垒":
+                command.Jindan?.EarthMode.HasValue==true?"厚载·"+command.Jindan.EarthMode:"布设方位定尺";
             presentation.AppendLog(result.Succeeded ? ActorName(command.ActorId) + "：" + action +
                 "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent : displayReason(result.RejectionReason));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
@@ -641,7 +642,8 @@ namespace TianZhang.Features.Adventure
 
         private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
         {
-            var flightBefore = command.Kind == CombatCommandKind.EndTurn ? SnapshotFlightStates() : null;
+            var flightBefore = command.Kind is CombatCommandKind.EndTurn or CombatCommandKind.JindanAbility
+                ? SnapshotFlightStates() : null;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
             CombatUnitPresentationHex actorStart = actorBefore == null
                 ? default
@@ -701,7 +703,7 @@ namespace TianZhang.Features.Adventure
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
             if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
                 ProjectPresentation(command, result, actorBefore, actorStart, quote);
-            else if (result.Succeeded) ProjectFlightStates(flightBefore);
+            if (result.Succeeded) ProjectFlightStates(flightBefore);
             return result;
         }
 
@@ -1108,7 +1110,7 @@ namespace TianZhang.Features.Adventure
         }
 
         private static CombatUnitPresentationMovementStep ToPresentationStep(SpatialMovementStep step) =>
-            new CombatUnitPresentationMovementStep(ToPresentationPose(step.From), ToPresentationPose(step.To), step.TurnFacings);
+            new CombatUnitPresentationMovementStep(ToPresentationPose(step.From), ToPresentationPose(step.To), step.TurnFacings, step.IsLightLeap);
 
         private static bool SameMovementSteps(IReadOnlyList<CombatUnitPresentationMovementStep> shown,
             IReadOnlyList<SpatialMovementStep> quoted)

@@ -36,11 +36,18 @@ namespace TianZhang.Features.CombatPresentation
                 position = center;
                 return;
             }
-            float gradient = 0;
+            float gradient = 0, gradientX=0;
             if (surface.TryHeight(center+Vector3.forward*.01f,out float a) &&
                 surface.TryHeight(center-Vector3.forward*.01f,out float b)) gradient = (a-b)/.02f;
-            float pitch = Mathf.Atan(gradient*Mathf.Cos(radians));
-            float roll = -Mathf.Atan2(gradient*Mathf.Sin(radians),Mathf.Sqrt(1+Mathf.Pow(gradient*Mathf.Cos(radians),2)));
+            if(surface.TryHeight(center+Vector3.right*.01f,out float rightHeight) &&
+                surface.TryHeight(center-Vector3.right*.01f,out float leftHeight)) gradientX=(rightHeight-leftHeight)/.02f;
+            float forwardGradient=gradient*Mathf.Cos(radians)+gradientX*Mathf.Sin(radians);
+            float rightGradient=gradientX*Mathf.Cos(radians)-gradient*Mathf.Sin(radians);
+            float pitch = Mathf.Atan(forwardGradient);
+            // A single-cell manifested ramp is a short climb: keep the person upright along the climb,
+            // while the existing sole fit still resolves left/right support and required lift.
+            if (!pair && surface.IsEarthRamp(center)) pitch = 0;
+            float roll = Mathf.Atan2(rightGradient,Mathf.Sqrt(1+forwardGradient*forwardGradient));
             float initial = pair ? pitch : roll;
             float lo = initial-20*Mathf.Deg2Rad, hi = initial+20*Mathf.Deg2Rad;
             float Difference(float angle)
@@ -93,6 +100,26 @@ namespace TianZhang.Features.CombatPresentation
         {
             Evaluate(center,yaw,out Vector3 p,out Quaternion q);
             root.SetPositionAndRotation(p,q);
+        }
+
+        /// <summary>Only an explicitly quoted single-edge light leap clears the high ledge, then lands on real support.</summary>
+        public System.Collections.IEnumerator Leap(Transform root, Vector3 start, Vector3 end, float yaw, float speed)
+        {
+            Evaluate(start, yaw, out Vector3 origin, out Quaternion fromRotation);
+            Evaluate(end, yaw, out Vector3 landing, out Quaternion toRotation);
+            float apex = Mathf.Max(origin.y, landing.y) + .35f;
+            var points = new[] { origin, new Vector3(origin.x, apex, origin.z), new Vector3(landing.x, apex, landing.z), landing };
+            for (int i = 1; i < points.Length; i++)
+            {
+                float length = Vector3.Distance(points[i-1], points[i]);
+                for (float distance = 0; distance < length;)
+                {
+                    yield return null;
+                    distance = Mathf.Min(length, distance + Time.deltaTime * speed);
+                    root.SetPositionAndRotation(Vector3.Lerp(points[i-1], points[i], distance / length),
+                        Quaternion.Slerp(fromRotation, toRotation, (i-1 + distance / length) / 3));
+                }
+            }
         }
 
         /// <summary>For an explicit one-way drop, clear the ledge horizontally before descending to the supported landing.</summary>

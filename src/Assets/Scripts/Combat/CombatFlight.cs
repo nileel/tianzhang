@@ -185,10 +185,14 @@ namespace TianZhang.Combat
                 }
                 else if (state.Active)
                 {
+                    if (CombatForceMovement.LoadRank(actor) == 3 && actor.AltitudeBand == 2)
+                    { actor.SetMovementMode(SpatialMovementMode.Fly, 1); Revision++; }
                     string reason = FlightReason(session, actor, state, actor.AltitudeBand);
                     if (reason.Length > 0) Fail(session, actor, state, reason);
                 }
             }
+            // A forced landing can kill a gravity target or its source in this same settlement.
+            session.Jindan?.Reconcile(session);
         }
 
         public void Clear(CombatSession session)
@@ -206,6 +210,8 @@ namespace TianZhang.Combat
         {
             if (!state.SourceAvailable || actor.GetAbilityInstanceId(ProfileId) != state.InstanceId) return "flight_source_missing";
             if (actor.HasStatus(CombatStatusKind.SealSpirit)) return "combat_actor_sealed";
+            int load = CombatForceMovement.LoadRank(actor);
+            if (load >= 4 || load == 3 && altitude > 1) return "flight_load_exceeded";
             return session.SceneObjects.Board.InspectPlacement(Pose(actor, SpatialMovementMode.Fly, altitude),
                 session.GetOccupiedPositionsExcept(actor.Id));
         }

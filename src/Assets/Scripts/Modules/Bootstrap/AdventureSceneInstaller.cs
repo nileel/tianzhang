@@ -61,6 +61,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private JindanDemoCatalogData jindanDemoCatalog;
         [SerializeField] private JindanDemoView jindanDemoView;
         [SerializeField] private JindanScaleView jindanScaleView;
+        [SerializeField] private CombatEarthView earthView;
         private JindanRehearsalPresenter jindan;
 
         public void OpenJindanPreparation()
@@ -77,6 +78,7 @@ namespace TianZhang.Bootstrap
             static3DUnitPresentationProvider.ConfigureSurface(terrainRehearsalSurface);
             combatTargetInput.ConfigureSurface(terrainRehearsalSurface);
             jindanScaleView.ConfigureSurface(terrainRehearsalSurface);
+            earthView.ConfigureSurface(terrainRehearsalSurface);
             battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
                 terrainRehearsalSurface.transform, .340433121f);
             var placement = jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == 0);
@@ -125,6 +127,11 @@ namespace TianZhang.Bootstrap
             jindanScaleView.Present(scale?.Path.Select(value => new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(value.Q, value.R)).ToArray()
                 ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatUnitPresentationHex>(), scale?.MetricDistanceUnits ?? 0,
                 scale?.Support.Durability ?? 0, scale?.Support.Definition.MaxDurability ?? 0);
+            earthView.Present(encounterCoordinator.CurrentSession?.Jindan?.Seats.Where(s=>s.ActiveEarth!=null)
+                .SelectMany(s=>s.ActiveEarth.Objects).Select(o=>new TianZhang.Gameplay.Contracts.CombatEarthObjectSnapshot(o.Id,
+                    new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(o.Cell.Q,o.Cell.R),
+                    new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(o.EdgeOther.Value.Q,o.EdgeOther.Value.R),
+                    o.Definition.IsTemporaryRamp,o.Durability)).ToArray() ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatEarthObjectSnapshot>());
         }
 
         public void BeginTerrainRehearsal()
@@ -237,6 +244,7 @@ namespace TianZhang.Bootstrap
                     RequireReference(jindanDemoCatalog, "jindan_demo_catalog_missing");
                     RequireReference(jindanDemoView, "jindan_demo_view_missing");
                     RequireReference(jindanScaleView, "jindan_scale_view_missing");
+                    RequireReference(earthView, "jindan_earth_view_missing");
                     jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve);
                     jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
                     jindanDemoView.ActionRequested += HandleJindanAction;
@@ -258,7 +266,7 @@ namespace TianZhang.Bootstrap
         {
             AttackProfileData profile = Array.Find(attackProfiles,
                 item => item != null && string.Equals(item.attackProfileId, profileId, StringComparison.Ordinal));
-            return profile == null ? profileId : UiText.Resolve(profile.displayNameKey);
+            return profile == null ? UiText.Resolve(profileId) : UiText.Resolve(profile.displayNameKey);
         }
 
         private static void RequireReference(UnityEngine.Object value, string reason)

@@ -8,7 +8,7 @@ namespace TianZhang.Spatial
     {
         public SpatialSceneObjectRules(string id, HexCoord cell, HexCoord? edgeOther, bool blocksMovement,
             bool blocksSight, int coverTier, int maxProtectedBodyScaleRank = 2,
-            string replacesWallConnectionId = null, bool isSupportMarker = false)
+            string replacesWallConnectionId = null, bool isSupportMarker = false, bool isTemporaryRamp = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Scene object ID is required.", nameof(id));
             if (edgeOther.HasValue && !cell.TryGetDirectionTo(edgeOther.Value, out _))
@@ -26,6 +26,9 @@ namespace TianZhang.Spatial
             if (isSupportMarker && (blocksMovement || blocksSight || coverTier != 0 || replacesWallConnectionId != null))
                 throw new ArgumentException("A support marker cannot own obstruction or cover.", nameof(isSupportMarker));
             IsSupportMarker = isSupportMarker;
+            if (isTemporaryRamp && (!edgeOther.HasValue || blocksMovement || blocksSight || isSupportMarker))
+                throw new ArgumentException("temporary_ramp_invalid");
+            IsTemporaryRamp = isTemporaryRamp;
         }
 
         public string Id { get; }
@@ -37,6 +40,7 @@ namespace TianZhang.Spatial
         public int MaxProtectedBodyScaleRank { get; }
         public string ReplacesWallConnectionId { get; }
         public bool IsSupportMarker { get; }
+        public bool IsTemporaryRamp { get; }
     }
 
     /// <summary>Immutable spatial projection; never owns durability, damage, turns or AI.</summary>
@@ -98,7 +102,12 @@ namespace TianZhang.Spatial
 
         internal SpatialEdgeRules ResolveEdge(SpatialDirectedEdge key, SpatialEdgeRules original)
         {
-            if (!byEdge.TryGetValue(key, out var item) || item.ReplacesWallConnectionId == null) return original;
+            if (!byEdge.TryGetValue(key, out var item)) return original;
+            if (item.IsTemporaryRamp)
+                return new SpatialEdgeRules(original.MetricDistanceUnits, true, original.AllowsEffects,
+                    original.EffectBlockerMask, 1, SpatialEdgeKind.Slope, original.MovementBurdenUnits,
+                    item.Id, original.AllowsFlight, original.FlightMovementBurdenUnits);
+            if (item.ReplacesWallConnectionId == null) return original;
             // Only this exact pair replaces its static wall. Other edges may share the connection ID.
             return new SpatialEdgeRules(original.MetricDistanceUnits, true, true, original.EffectBlockerMask,
                 original.ClearanceLimit, SpatialEdgeKind.Flat, original.MovementBurdenUnits, original.ConnectionId,
@@ -128,7 +137,7 @@ namespace TianZhang.Spatial
             foreach (SpatialSceneObjectRules item in byId.Values)
                 result.Add(item.Id == id
                     ? new SpatialSceneObjectRules(item.Id, item.Cell, item.EdgeOther, false, false, 0,
-                        item.MaxProtectedBodyScaleRank, item.ReplacesWallConnectionId, item.IsSupportMarker)
+                        item.MaxProtectedBodyScaleRank, item.ReplacesWallConnectionId, item.IsSupportMarker, item.IsTemporaryRamp)
                     : item);
             return result.AsReadOnly();
         }

@@ -1,0 +1,5 @@
+ramp mesh/support vertices=364 maxError=1.430511E-06 | tick=10 AP=489585 MP=5600 HP=3474
+six directions, two physical rises: vertices/picks=4368 maxError=3.278255E-07 | tick=10 AP=489585 MP=5600 HP=3474
+ramp motion frames=11 maxBodyPenetration=0.0004705191 maxFootGap=0.0004166365 | tick=10 AP=447919 MP=5600 HP=3474
+real ramp traversal (7, 8, -15) -> (7, 9, -16) | tick=10 AP=447919 MP=5600 HP=3474
+ramp close restores original edge while occupant remains on legal high cell | tick=10 AP=422919 MP=5600 HP=3474

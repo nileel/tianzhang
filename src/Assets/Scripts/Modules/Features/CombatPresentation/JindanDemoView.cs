@@ -25,6 +25,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text toggleLabel;
         [SerializeField] private GameObject flightActions;
         [SerializeField] private GameObject scaleActions;
+        [SerializeField] private GameObject earthActions;
         [SerializeField] private ActionButton[] buttons = Array.Empty<ActionButton>();
         private bool bound;
         private bool collapsed;
@@ -54,10 +55,11 @@ namespace TianZhang.Features.CombatPresentation
 
         private void Request(string key)
         {
-            if (key is "flight_tab" or "scale_tab")
+            if (key is "flight_tab" or "scale_tab" or "earth_tab")
             {
                 flightActions.SetActive(key == "flight_tab"); scaleActions.SetActive(key == "scale_tab");
-                ActionRequested?.Invoke("cancel_targeting"); return;
+                earthActions.SetActive(key=="earth_tab");
+                ActionRequested?.Invoke(key=="flight_tab"?"cancel_targeting":key); return;
             }
             if (key == "toggle_panel")
             {

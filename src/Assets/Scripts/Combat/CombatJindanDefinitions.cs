@@ -11,7 +11,7 @@ namespace TianZhang.Combat
         public CombatJindanAbilityDefinition(string effectId, bool enabled, int actionPoints, int mana,
             int cooldown, int closeActionPoints, int upkeepMana, int range, int verticalReach,
             int capacity, int supportDurability, int remoteMana, int visionRange,
-            IEnumerable<int> metricModes, string unavailableReason)
+            IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0)
         {
             if (string.IsNullOrWhiteSpace(effectId) || actionPoints <= 0 || mana < 0 || cooldown < 0 ||
                 closeActionPoints <= 0 || upkeepMana < 0 || range < 0 || verticalReach < 0 || capacity < 1 ||
@@ -22,8 +22,11 @@ namespace TianZhang.Combat
             SupportDurability = supportDurability; RemoteMana = remoteMana; VisionRange = visionRange;
             MetricModes = Array.AsReadOnly((metricModes ?? Array.Empty<int>()).ToArray());
             UnavailableReason = unavailableReason ?? "jindan_effect_not_implemented";
-            if (enabled && (supportDurability <= 0 || remoteMana < 0 || MetricModes.Count != 2 ||
+            DurationOwnTurnEnds = durationOwnTurnEnds;
+            if (enabled && effectId == "SPACE_SCALE" && (supportDurability <= 0 || remoteMana < 0 || MetricModes.Count != 2 ||
                 MetricModes.Any(value => value <= 0))) throw new ArgumentException("jindan_scale_definition_invalid");
+            if (enabled && effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && durationOwnTurnEnds < 1)
+                throw new ArgumentException("jindan_earth_duration_invalid");
         }
         public string EffectId { get; }
         public bool Enabled { get; }
@@ -40,6 +43,7 @@ namespace TianZhang.Combat
         public int VisionRange { get; }
         public IReadOnlyList<int> MetricModes { get; }
         public string UnavailableReason { get; }
+        public int DurationOwnTurnEnds { get; }
     }
 
     public sealed class CombatJindanSeatDefinition
@@ -66,18 +70,23 @@ namespace TianZhang.Combat
     public sealed class CombatJindanRequest
     {
         public CombatJindanRequest(string seatId, IEnumerable<HexCoord> edgePath = null,
-            int metricDistanceUnits = 0, HexCoord? remoteOrigin = null)
+            int metricDistanceUnits = 0, HexCoord? remoteOrigin = null, CombatEarthMode? earthMode = null,
+            string earthTargetId = null, HexCoord? selectedTargetCell = null)
         {
             SeatId = seatId ?? string.Empty;
             EdgePath = Array.AsReadOnly((edgePath ?? Array.Empty<HexCoord>()).ToArray());
             MetricDistanceUnits = metricDistanceUnits; RemoteOrigin = remoteOrigin;
+            EarthMode = earthMode; EarthTargetId = earthTargetId; SelectedTargetCell = selectedTargetCell;
         }
         public string SeatId { get; }
         public IReadOnlyList<HexCoord> EdgePath { get; }
         public int MetricDistanceUnits { get; }
         public HexCoord? RemoteOrigin { get; }
+        public CombatEarthMode? EarthMode { get; }
+        public string EarthTargetId { get; }
+        public HexCoord? SelectedTargetCell { get; }
         internal string Facts => SeatId + ":" + MetricDistanceUnits + ":" + RemoteOrigin + ":" +
-            string.Join("/", EdgePath);
+            string.Join("/", EdgePath) + ":" + EarthMode + ":" + EarthTargetId + ":" + SelectedTargetCell;
     }
 
     public sealed class CombatJindanSeatState
@@ -93,6 +102,7 @@ namespace TianZhang.Combat
         public int SuccessfulDeployments { get; internal set; }
         public int MaintenancePayments { get; internal set; }
         public CombatScaleInstance ActiveScale { get; internal set; }
+        public CombatEarthInstance ActiveEarth { get; internal set; }
         public string LastEndReason { get; internal set; } = string.Empty;
     }
 

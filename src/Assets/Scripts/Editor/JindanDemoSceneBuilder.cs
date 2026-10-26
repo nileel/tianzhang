@@ -53,6 +53,7 @@ namespace TianZhang.Editor
             Remove(canvas, "JindanDemoPreparationRoot");
             Remove(canvas, "JindanDemoCombatRoot");
             Remove(owner.transform, "JindanScaleRoot");
+            Remove(owner.transform, "JindanEarthRoot");
             var view = owner.GetComponent<JindanDemoView>() ?? owner.AddComponent<JindanDemoView>();
             var bindings = new List<JindanDemoView.ActionButton>();
             BuildPreparation(canvas, view, bindings);
@@ -79,10 +80,36 @@ namespace TianZhang.Editor
             if (catalog == null) throw new InvalidOperationException("Jindan demo catalog is missing.");
             SceneBuildSupport.SetObject(installer, "jindanDemoView", view);
             SceneBuildSupport.SetObject(installer, "jindanScaleView", scale);
+            BuildEarthRamp();
+            var earthRoot = new GameObject("JindanEarthRoot");
+            earthRoot.transform.SetParent(owner.transform, false);
+            var earth = earthRoot.AddComponent<CombatEarthView>();
+            SceneBuildSupport.SetObject(earth, "wallPrefab", SceneBuildSupport.RequireAsset<GameObject>(
+                GuanzhongPropSampleBuilder.AssetRoot + "/HighWall.prefab"));
+            SceneBuildSupport.SetObject(earth, "rampPrefab", SceneBuildSupport.RequireAsset<GameObject>(
+                "Assets/Art/Environments/Guanzhong/EarthManifest/EarthManifestRamp.prefab"));
+            SceneBuildSupport.SetObject(installer, "earthView", earth);
             SceneBuildSupport.SetObject(installer, "jindanDemoCatalog", catalog);
             // The existing withdrawal dialog remains above every combat panel and receives its clicks.
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        private static void BuildEarthRamp()
+        {
+            const string root = "Assets/Art/Environments/Guanzhong/EarthManifest/EarthManifestRamp";
+            var importer = (ModelImporter)AssetImporter.GetAtPath(root + ".fbx");
+            importer.isReadable = true;
+            importer.importAnimation = false;
+            importer.importCameras = false;
+            importer.importLights = false;
+            importer.SaveAndReimport();
+            var ramp = (GameObject)PrefabUtility.InstantiatePrefab(SceneBuildSupport.RequireAsset<GameObject>(root + ".fbx"));
+            ramp.name = "EarthManifestRamp";
+            foreach (MeshRenderer renderer in ramp.GetComponentsInChildren<MeshRenderer>())
+                renderer.sharedMaterial = SceneBuildSupport.RequireAsset<Material>(GuanzhongRampSampleBuilder.AssetRoot + "/Earth.mat");
+            PrefabUtility.SaveAsPrefabAsset(ramp, root + ".prefab");
+            UnityEngine.Object.DestroyImmediate(ramp);
         }
 
         private static void BuildPreparation(Transform canvas, JindanDemoView view,
@@ -97,7 +124,7 @@ namespace TianZhang.Editor
             rect.anchoredPosition = Vector2.zero; rect.sizeDelta = new Vector2(1280, 880);
             Label(dialog.transform, "Heading", "金丹演武 · 战前配置", 30, 32, 814, 1216, 44);
             AddButton(dialog.transform, bindings, "stage1", "第一段 · 御风飞行", 32, 742, 392, 60);
-            AddButton(dialog.transform, bindings, "stage2", "第二段 · 浏览", 444, 742, 392, 60);
+            AddButton(dialog.transform, bindings, "stage2", "第二段 · 土石与受力", 444, 742, 392, 60);
             AddButton(dialog.transform, bindings, "stage3", "第三段 · 方位定尺", 856, 742, 392, 60);
             Text details = ScrollText(dialog.transform, "PreparationDetails", 32, 166, 1216, 560, 24);
             AddButton(dialog.transform, bindings, "preset_next", "切换预设", 32, 90, 594, 60);
@@ -119,9 +146,10 @@ namespace TianZhang.Editor
             Place(root.GetComponent<RectTransform>(), 160, 220, 620, 628);
             GameObject header = Panel(root.transform, "JindanCombatHeader");
             Place(header.GetComponent<RectTransform>(), 0, 580, 620, 48);
-            Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 440, 44);
-            AddButton(header.transform, bindings, "flight_tab", "飞行", 260, 0, 100, 48);
-            AddButton(header.transform, bindings, "scale_tab", "位格", 370, 0, 100, 48);
+            Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 180, 44);
+            AddButton(header.transform, bindings, "flight_tab", "飞行", 200, 0, 85, 48);
+            AddButton(header.transform, bindings, "scale_tab", "位格", 292, 0, 85, 48);
+            AddButton(header.transform, bindings, "earth_tab", "土系", 384, 0, 85, 48);
             Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 480, 0, 140, 48);
             GameObject body = Panel(root.transform, "JindanCombatBody");
             Place(body.GetComponent<RectTransform>(), 0, 0, 620, 580);
@@ -134,7 +162,7 @@ namespace TianZhang.Editor
             AddButton(scale.transform, bindings, "pick_edges", "选定 2–3 个相连格", 16, 126, 286, 50);
             AddButton(scale.transform, bindings, "pick_origin", "选择遥施空格", 318, 126, 286, 50);
             AddButton(scale.transform, bindings, "preview", "预演", 16, 68, 184, 50);
-            AddButton(scale.transform, bindings, "close_effect", "关闭方位定尺", 16, 10, 286, 50);
+            AddButton(scale.transform, bindings, "close_effect", "关闭当前位格效果", 16, 10, 286, 50);
             AddButton(scale.transform, bindings, "swap_effect", "战中换装（土候选）", 318, 10, 286, 50);
             var flight = new GameObject("FlightActions", typeof(RectTransform)); flight.transform.SetParent(body.transform, false);
             Place(flight.GetComponent<RectTransform>(), 0, 0, 620, 240);
@@ -144,6 +172,20 @@ namespace TianZhang.Editor
             AddButton(flight.transform, bindings, "flight_land", "原柱降落 · 预演", 318, 126, 286, 50);
             AddButton(flight.transform, bindings, "flight_recover", "失效后续御 · 预演", 16, 10, 588, 50);
             flight.SetActive(false);
+            var earth = new GameObject("EarthActions", typeof(RectTransform)); earth.transform.SetParent(body.transform,false);
+            Place(earth.GetComponent<RectTransform>(),0,0,620,240);
+            AddButton(earth.transform,bindings,"earth_wall","岩墙 · 选空边",16,184,286,50);
+            AddButton(earth.transform,bindings,"earth_ramp","窄坡 · 选高差1",318,184,286,50);
+            AddButton(earth.transform,bindings,"earth_heavy","极重",16,126,136,50);
+            AddButton(earth.transform,bindings,"earth_light","失重",166,126,136,50);
+            AddButton(earth.transform,bindings,"earth_anchor","镇岳",318,126,136,50);
+            AddButton(earth.transform,bindings,"earth_next_target","切换目标",468,126,136,50);
+            AddButton(earth.transform,bindings,"earth_preview","预演",16,68,184,50);
+            AddButton(earth.transform,bindings,"earth_close","解除实例",16,10,184,50);
+            AddButton(earth.transform,bindings,"earth_swap","切换装配",218,10,184,50);
+            AddButton(earth.transform,bindings,"break_object","破垒 · 选构件",420,10,184,50);
+            earth.SetActive(false);
+            SceneBuildSupport.SetObject(view,"earthActions",earth);
             SceneBuildSupport.SetObject(view, "flightActions", flight);
             SceneBuildSupport.SetObject(view, "scaleActions", scale);
             AddButton(body.transform, bindings, "confirm", "确认施放", 218, 68, 184, 50);

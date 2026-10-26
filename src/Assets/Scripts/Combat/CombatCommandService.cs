@@ -219,6 +219,7 @@ namespace TianZhang.Combat
             {
                 actor.SpendActionPoints(current.ActionPointCostUnits);
                 commit();
+                if (command.Kind == CombatCommandKind.Move) actor.RecordPhysicalMovement(current.MovementSteps.Count);
                 session.Jindan?.Reconcile(session);
                 session.Flight?.Reconcile(session);
                 if (current.AppliesRepeatCost)
@@ -356,6 +357,7 @@ namespace TianZhang.Combat
                 actor.SoulShieldRate, actor.SoulShieldReduction, actor.DodgeRate, actor.CriticalRate, actor.CriticalDamage,
                 actor.HitRateBonus, string.Join(",", actor.EquippedArtProfileIds), string.Join(",", actor.EquippedDivineProfileIds),
                 string.Join(",", actor.Cooldowns.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + ":" + pair.Value)),
-                string.Join(",", actor.Statuses.Select(status => status.Kind + ":" + status.RemainingOwnTurnEnds + ":" + status.DamagePerStart)))));
+                string.Join(",", actor.Statuses.Select(status => status.Kind + ":" + status.RemainingOwnTurnEnds + ":" + status.DamagePerStart +
+                    ":" + status.SourceRef + ":" + status.EarthMode + ":" + status.GravityShiftRank + ":" + status.Pressure)))));
     }
 }

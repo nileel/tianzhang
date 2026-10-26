@@ -4,10 +4,10 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
-    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime, Attribute, Xuantong, WaterMark, WaterReduction, KuxingDefenseDebt }
-    public enum CombatStatusPolarity { BUFF, DEBUFF }
+    public enum CombatStatusKind { Stun, Immobilize, SealSpirit, DamageOverTime, Attribute, Xuantong, WaterMark, WaterReduction, KuxingDefenseDebt, EarthGravity }
+    public enum CombatStatusPolarity { BUFF, DEBUFF, MIXED }
     [Flags]
-    public enum CombatStatusTags { ATTRIBUTE = 1, OFFENSE = 2, DEFENSE = 4, ACTION = 8, CONTROL = 16 }
+    public enum CombatStatusTags { ATTRIBUTE = 1, OFFENSE = 2, DEFENSE = 4, ACTION = 8, CONTROL = 16, GRAVITY = 32, ANCHOR = 64 }
     public enum CombatStatusSourceKind { SELF_ABILITY, OTHER_ABILITY }
 
     public sealed class CombatOwnTurnStatus
@@ -30,7 +30,10 @@ namespace TianZhang.Combat
         public int StackCount { get; internal set; }
         public int SourceRealmOrder { get; internal set; }
         public string AbilityTierId { get; internal set; }
-        public string RemovalPolicy => "NORMAL";
+        public string RemovalPolicy => Kind == CombatStatusKind.EarthGravity ? "ANCHORED" : "NORMAL";
+        public CombatEarthMode? EarthMode { get; internal set; }
+        public int GravityShiftRank { get; internal set; }
+        public int Pressure { get; internal set; }
         internal CombatOwnTurnStatus Copy() => (CombatOwnTurnStatus)MemberwiseClone();
     }
 
@@ -235,7 +238,7 @@ namespace TianZhang.Combat
         public void ApplyStatus(CombatStatusKind kind, int ownTurnEnds, int damagePerStart = 0,
             string sourceRef = null, bool selfAbility = false)
         {
-            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || kind is CombatStatusKind.Attribute or CombatStatusKind.WaterMark or CombatStatusKind.WaterReduction or CombatStatusKind.KuxingDefenseDebt ||
+            if (!Enum.IsDefined(typeof(CombatStatusKind), kind) || kind is CombatStatusKind.Attribute or CombatStatusKind.WaterMark or CombatStatusKind.WaterReduction or CombatStatusKind.KuxingDefenseDebt or CombatStatusKind.EarthGravity ||
                 ownTurnEnds <= 0 || damagePerStart < 0 ||
                 (kind == CombatStatusKind.Xuantong && (string.IsNullOrWhiteSpace(sourceRef) || damagePerStart != 0)))
                 throw new ArgumentOutOfRangeException(nameof(ownTurnEnds));
@@ -254,6 +257,24 @@ namespace TianZhang.Combat
         }
 
         internal void ClearStatuses() => statuses.Clear();
+
+        internal void ApplyEarthGravity(CombatOwnTurnStatus status)
+        {
+            statuses.RemoveAll(value => value.Kind == CombatStatusKind.EarthGravity && value.SourceRef == status.SourceRef);
+            statuses.Add(status);
+        }
+
+        internal void RemoveEarthGravity(string sourceRef) =>
+            statuses.RemoveAll(value => value.Kind == CombatStatusKind.EarthGravity && value.SourceRef == sourceRef);
+
+        internal void RecordPhysicalMovement(int edges)
+        {
+            if (edges <= 0) return;
+            HasMovedThisTurn = true;
+            foreach (var status in statuses)
+                if (status.Kind == CombatStatusKind.EarthGravity && status.EarthMode == CombatEarthMode.Heavy)
+                    status.Pressure = Math.Min(2, status.Pressure + edges);
+        }
 
         internal void ApplyKuxingDefenseDebt(string sourceRef)
         {
@@ -477,6 +498,8 @@ namespace TianZhang.Combat
                 FudanStacks = Math.Min(FudanStacks + 1, MaximumFudanStacks);
             foreach (CombatOwnTurnStatus status in statuses)
             {
+                if (status.Kind == CombatStatusKind.EarthGravity && status.EarthMode == CombatEarthMode.Heavy && !HasMovedThisTurn)
+                    status.Pressure = Math.Max(0, status.Pressure - 2);
                 if (status.Kind is CombatStatusKind.WaterMark or CombatStatusKind.WaterReduction or CombatStatusKind.KuxingDefenseDebt) continue;
                 if (status.DeferCurrentEnd) status.DeferCurrentEnd = false;
                 else status.RemainingOwnTurnEnds--;

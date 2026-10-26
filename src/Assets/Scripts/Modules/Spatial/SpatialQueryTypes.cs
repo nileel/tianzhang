@@ -409,18 +409,20 @@ namespace TianZhang.Spatial
     public readonly struct SpatialMovementStep : IEquatable<SpatialMovementStep>
     {
         public SpatialMovementStep(SpatialPose from, SpatialPose to, IReadOnlyList<int> turnFacings,
-            SpatialMovementEdgeCost edge)
+            SpatialMovementEdgeCost edge, bool isLightLeap = false)
         {
             From = from; To = to; Edge = edge;
+            IsLightLeap = isLightLeap;
             TurnFacings = new List<int>(turnFacings ?? Array.Empty<int>()).AsReadOnly();
         }
         public SpatialPose From { get; }
         public SpatialPose To { get; }
         public IReadOnlyList<int> TurnFacings { get; }
         public SpatialMovementEdgeCost Edge { get; }
+        public bool IsLightLeap { get; }
         public bool Equals(SpatialMovementStep other)
         {
-            if (From != other.From || To != other.To || !Edge.Equals(other.Edge)) return false;
+            if (From != other.From || To != other.To || !Edge.Equals(other.Edge) || IsLightLeap != other.IsLightLeap) return false;
             int count = TurnFacings?.Count ?? 0;
             if (count != (other.TurnFacings?.Count ?? 0)) return false;
             for (int index = 0; index < count; index++)
@@ -431,6 +433,7 @@ namespace TianZhang.Spatial
         public override int GetHashCode()
         {
             int hash = unchecked((From.GetHashCode() * 397 ^ To.GetHashCode()) * 397 ^ Edge.GetHashCode());
+            hash = unchecked(hash * 397 ^ IsLightLeap.GetHashCode());
             if (TurnFacings != null)
                 foreach (int facing in TurnFacings) hash = unchecked(hash * 397 ^ facing);
             return hash;

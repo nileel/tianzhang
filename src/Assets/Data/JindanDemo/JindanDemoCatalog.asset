@@ -719,8 +719,8 @@ MonoBehaviour:
     failurePolicy: END_ALL
     capacityUnit: COMPONENT
     additionalRulesKey: demo_20261024_earth_manifest_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d7
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
   - commandId: demo_20261024_earth_manifest_terminate
     displayNameKey: demo_20261024_earth_manifest_terminate
@@ -747,8 +747,8 @@ MonoBehaviour:
     failurePolicy: END_ALL
     capacityUnit: COMPONENT
     additionalRulesKey: demo_20261024_earth_manifest_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d7
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
   - commandId: demo_20261024_earth_gravity_deploy
     displayNameKey: demo_20261024_earth_gravity_deploy
@@ -775,8 +775,8 @@ MonoBehaviour:
     failurePolicy: END_STATUS
     capacityUnit: TARGET
     additionalRulesKey: demo_20261024_earth_gravity_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d7
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
   - commandId: demo_20261024_earth_gravity_terminate
     displayNameKey: demo_20261024_earth_gravity_terminate
@@ -803,8 +803,8 @@ MonoBehaviour:
     failurePolicy: END_STATUS
     capacityUnit: TARGET
     additionalRulesKey: demo_20261024_earth_gravity_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d7
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u539A\u8F7D.txt"
   - commandId: demo_20261024_water_tide_deploy
     displayNameKey: demo_20261024_water_tide_deploy
@@ -1548,3 +1548,12 @@ MonoBehaviour:
     switchCooldownTicks: 0
     activationGate: NEXT_OWN_TURN_START
     sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"
+  demolition:
+    characterId: demo_20261024_earth
+    sourceProfileId: spell_guanshiji
+    profileId: demo_20261026_polei
+    environmentDamage: 375
+    environmentTargetTypes:
+    - high_wall
+    - stone_support
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u7834\u5792.txt"

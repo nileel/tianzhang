@@ -1,0 +1,1 @@
+single-edge light leap cost=15625 maxRootY=2.190433 remainsGROUND; no flight instance | tick=10 AP=453127 MP=5600 HP=3474

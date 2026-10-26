@@ -232,6 +232,7 @@ namespace TianZhang.Combat
             if (loadout == null) throw new ArgumentNullException(nameof(loadout));
             loadout.ValidateBindings(this);
             Jindan = loadout;
+            SpatialQuery = new CombatGravitySpatialQuery(this, SpatialQuery);
         }
         internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
             !Combatants.HasLivingMembers(CombatTeam.Enemy);
@@ -287,7 +288,7 @@ namespace TianZhang.Combat
         internal void FinishTurn()
         {
             if (Combatants.TryGet(CurrentActorId, out CombatantSnapshot actor) && actor.OwnTurnActive)
-            { Flight?.EndOwnTurn(this, actor); actor.EndOwnTurn(); }
+            { Flight?.EndOwnTurn(this, actor); actor.EndOwnTurn(); Jindan?.EndOwnTurn(this, actor); Flight?.Reconcile(this); }
             if (TurnPhase != CombatTurnPhase.Finished) StateVersion = checked(StateVersion + 1);
             CurrentActorId = string.Empty;
             TurnPhase = CombatTurnPhase.Finished;
@@ -344,7 +345,7 @@ namespace TianZhang.Combat
         }
 
         public CombatantRegistry Combatants { get; }
-        public ICombatSpatialQuery SpatialQuery { get; }
+        public ICombatSpatialQuery SpatialQuery { get; private set; }
         public CombatSceneObjects SceneObjects { get; }
         public float SpiritRecoveryEnvironmentMultiplier { get; }
         public CombatTurnScheduler TurnScheduler { get; }
@@ -706,9 +707,8 @@ namespace TianZhang.Combat
                         edge.From != from.Anchor || edge.To != movement.Path[index] || from.Anchor.DirectionTo(edge.To) < 0 ||
                         edge.MetricDistanceUnits <= 0 || edge.MovementBurdenUnits < 0 || occupied.Contains(edge.To))
                         return CombatActionResult.Rejected("combat_move_path_invalid");
-                    long numerator = checked(100000000L * checked(edge.MetricDistanceUnits + (long)edge.MovementBurdenUnits));
-                    long denominator = checked((long)movement.UnitsPerRange * actor.MovementEfficiencyMilliUnits);
-                    cost = checked(cost + checked((int)Math.Max(1L, numerator / denominator)));
+                    cost = checked(cost + CombatForceMovement.Policy(actor).Price(edge.MetricDistanceUnits,
+                        edge.MovementBurdenUnits, movement.UnitsPerRange, actor.MovementEfficiencyMilliUnits));
                     from = step.To;
                 }
                 if (cost != movement.ActionPointCostUnits) return CombatActionResult.Rejected("combat_move_quote_invalid");

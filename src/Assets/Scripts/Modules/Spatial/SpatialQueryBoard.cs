@@ -56,6 +56,13 @@ namespace TianZhang.Spatial
 
         public IReadOnlyList<SpatialMetricOverride> MetricOverrides => metricOverrides.Rules;
         public bool TryGetCell(HexCoord cell, out SpatialCellRules rules) => cells.TryGetValue(cell, out rules);
+        public bool TryGetEdge(HexCoord from, HexCoord to, out SpatialEdgeRules rules)
+        {
+            var key = new SpatialDirectedEdge(from, to);
+            if (!edges.TryGetValue(key, out rules)) return false;
+            rules = metricOverrides.ResolveEdge(key, sceneObjects.ResolveEdge(key, rules));
+            return true;
+        }
 
         public int UnitsPerRange => limits.UnitsPerRange;
         public int MaxQueryRange => limits.MaxQueryRange;
@@ -91,6 +98,8 @@ namespace TianZhang.Spatial
                     SpatialQueryReasons.SceneObjectBlocksEffects);
             if (movement)
             {
+                if ((edgeRules.EffectBlockerMask & activeEffectBlockers) != 0)
+                    return Reject(edgeRules, SpatialQueryReasons.DirectedEdgeBlocksEffects);
                 // Height difference itself is not a rejection: the explicit edge type decides
                 // whether a connection exists. The kind checks keep a mislabelled flat edge from
                 // silently bridging a height step.
@@ -488,7 +497,7 @@ namespace TianZhang.Spatial
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
             IReadOnlyCollection<HexCoord> occupied = null,
-            int? targetFacing = null)
+            int? targetFacing = null, SpatialMovementPolicy policy = null)
         {
             ValidateMovementInputs(actionPointBudgetUnits, movementEfficiencyMilliUnits);
             if (targetFacing.HasValue && (targetFacing.Value < 0 || targetFacing.Value >= 6))
@@ -498,20 +507,19 @@ namespace TianZhang.Spatial
             if (start.Anchor == target)
                 return UnpricedMovementPath(SpatialQueryReasons.DestinationUnchanged);
             var traversal = TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits,
-                occupied, target, targetFacing);
+                occupied, target, targetFacing, policy);
             if (!traversal.Destination.HasValue)
                 return UnpricedMovementPath(traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
             var steps = new List<SpatialMovementStep>();
             var current = traversal.Destination.Value;
-            while (current != start)
+            while (traversal.Previous.TryGetValue(current, out var previous))
             {
-                SpatialMovementStep step = traversal.Previous[current];
-                steps.Add(step);
-                current = step.From;
+                steps.Add(previous.step);
+                current = previous.from;
             }
             steps.Reverse();
             return new SpatialMovementPathResult(steps, limits.UnitsPerRange,
-                traversal.Costs[traversal.Destination.Value], SpatialQueryReasons.Ok);
+                traversal.Costs[traversal.Destination.Value.pose], SpatialQueryReasons.Ok);
         }
 
         /// <summary>
@@ -522,12 +530,12 @@ namespace TianZhang.Spatial
             SpatialPose start,
             int actionPointBudgetUnits,
             int movementEfficiencyMilliUnits,
-            IReadOnlyCollection<HexCoord> occupied = null)
+            IReadOnlyCollection<HexCoord> occupied = null, SpatialMovementPolicy policy = null)
         {
             ValidateMovementInputs(actionPointBudgetUnits, movementEfficiencyMilliUnits);
             if (movementEfficiencyMilliUnits == 0)
                 return new Dictionary<SpatialPose, int>();
-            return TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, null, null).Costs;
+            return TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, null, null, policy).Costs;
         }
 
         private SpatialMovementPathResult UnpricedMovementPath(string reason) =>
@@ -540,14 +548,16 @@ namespace TianZhang.Spatial
         }
 
         private PoseTraversalResult TraversePoses(SpatialPose start, int budget, int efficiency,
-            IReadOnlyCollection<HexCoord> occupied, HexCoord? target, int? targetFacing)
+            IReadOnlyCollection<HexCoord> occupied, HexCoord? target, int? targetFacing, SpatialMovementPolicy policy)
         {
             var result = new PoseTraversalResult();
+            policy ??= SpatialMovementPolicy.Normal;
+            if (policy.BlockedReason.Length > 0) { result.FirstRejection = policy.BlockedReason; return result; }
             var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
             string initial = InspectPlacement(start, blocked);
             if (initial.Length != 0) { result.FirstRejection = initial; return result; }
-            var weight = new ActionPointEdgeWeight(limits.UnitsPerRange, efficiency);
             var frontier = new List<PoseFrontierEntry> { new PoseFrontierEntry(start, 0) };
+            var stateCosts = new Dictionary<(SpatialPose pose, int depth), int> { [(start, 0)] = 0 };
             result.Costs.Add(start, 0);
             while (frontier.Count > 0)
             {
@@ -556,13 +566,14 @@ namespace TianZhang.Spatial
                     if (frontier[index].CompareTo(frontier[best]) < 0) best = index;
                 PoseFrontierEntry current = frontier[best];
                 frontier.RemoveAt(best);
-                if (result.Costs[current.Pose] != current.Cost) continue;
+                if (stateCosts[(current.Pose, current.Depth)] != current.Cost) continue;
                 if (target.HasValue && current.Pose.Anchor == target.Value &&
                     (!targetFacing.HasValue || current.Pose.Facing == targetFacing.Value))
-                { result.Destination = current.Pose; break; }
+                { result.Destination = (current.Pose, current.Depth); break; }
+                if (current.Depth >= policy.MaximumEdges) continue;
                 for (int direction = 0; direction < 6; direction++)
                 {
-                    if (!TryMovementStep(current.Pose, direction, blocked, out var step, out string reason))
+                    if (!TryMovementStep(current.Pose, direction, blocked, out var step, out string reason, policy))
                     {
                         // Missing outer cells and occupied alternatives do not hide a meaningful rule rejection.
                         if (result.FirstRejection == null && (reason == SpatialQueryReasons.ClearanceInsufficient ||
@@ -573,21 +584,24 @@ namespace TianZhang.Spatial
                             result.FirstRejection = reason;
                         continue;
                     }
-                    if (!weight.TryGetEdgeCostUnits(step.Edge.MetricDistanceUnits, step.Edge.MovementBurdenUnits, out int edgeCost) ||
-                        (long)current.Cost + edgeCost > int.MaxValue)
-                    { result.FirstRejection ??= SpatialQueryReasons.ActionPointCostOverflow; continue; }
-                    int nextCost = current.Cost + edgeCost;
-                    if (nextCost > budget || result.Costs.TryGetValue(step.To, out int known) && known <= nextCost) continue;
-                    result.Costs[step.To] = nextCost;
-                    result.Previous[step.To] = step;
-                    frontier.Add(new PoseFrontierEntry(step.To, nextCost));
+                    int nextCost;
+                    try { nextCost = checked(current.Cost + policy.Price(step.Edge.MetricDistanceUnits,
+                        step.Edge.MovementBurdenUnits, limits.UnitsPerRange, efficiency)); }
+                    catch (OverflowException) { result.FirstRejection ??= SpatialQueryReasons.ActionPointCostOverflow; continue; }
+                    int depth = policy.MaximumEdges == int.MaxValue ? 0 : current.Depth + 1;
+                    var key = (step.To, depth);
+                    if (nextCost > budget || stateCosts.TryGetValue(key, out int known) && known <= nextCost) continue;
+                    stateCosts[key] = nextCost;
+                    if (!result.Costs.TryGetValue(step.To, out int prior) || nextCost < prior) result.Costs[step.To] = nextCost;
+                    result.Previous[key] = ((current.Pose, current.Depth), step);
+                    frontier.Add(new PoseFrontierEntry(step.To, nextCost, depth));
                 }
             }
             return result;
         }
 
         private bool TryMovementStep(SpatialPose from, int direction, HashSet<HexCoord> blocked,
-            out SpatialMovementStep step, out string reason)
+            out SpatialMovementStep step, out string reason, SpatialMovementPolicy policy)
         {
             step = default;
             int delta = (direction - from.Facing + 6) % 6;
@@ -602,7 +616,7 @@ namespace TianZhang.Spatial
             if (reason.Length != 0) return false;
             SpatialEdgeInspection frontEdge = from.MovementMode == SpatialMovementMode.Fly
                 ? InspectFlightEdge(from, to.Anchor)
-                : InspectEdge(from.Anchor, to.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
+                : InspectGroundMoveEdge(from, to.Anchor, policy.LightLeap);
             if (!frontEdge.IsLegal) { reason = frontEdge.Reason; return false; }
             if (from.Footprint == SpatialFootprintKind.AdjacentPair)
             {
@@ -614,9 +628,27 @@ namespace TianZhang.Spatial
                 ? cells[to.Anchor].FlightMovementBurdenUnits : cells[to.Anchor].MovementBurdenUnits);
             if (burdenUnits > int.MaxValue) { reason = SpatialQueryReasons.ActionPointCostOverflow; return false; }
             step = new SpatialMovementStep(from, to, turns,
-                new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, (int)burdenUnits));
+                new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, (int)burdenUnits),
+                policy.LightLeap && from.MovementMode == SpatialMovementMode.Ground &&
+                !InspectEdge(from.Anchor, to.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank).IsLegal);
             reason = SpatialQueryReasons.Ok;
             return true;
+        }
+
+        public SpatialEdgeInspection InspectGroundMoveEdge(SpatialPose from, HexCoord to, bool lightLeap)
+        {
+            var normal = InspectEdge(from.Anchor, to, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
+            if (normal.IsLegal || !lightLeap || from.Footprint != SpatialFootprintKind.Single ||
+                from.MovementMode != SpatialMovementMode.Ground || !TryGetEdge(from.Anchor, to, out var edge) ||
+                !cells.TryGetValue(from.Anchor, out var source) || !cells.TryGetValue(to, out var target) ||
+                Math.Abs((long)source.HeightLevel - target.HeightLevel) > 1 ||
+                edge.EdgeKind is not (SpatialEdgeKind.OpenCliff or SpatialEdgeKind.Climb or SpatialEdgeKind.OneWayDrop)) return normal;
+            var effect = InspectEdge(from.Anchor, to, SpatialQueryKind.Attack);
+            if (!effect.IsLegal) return effect;
+            if (sceneObjects.BlocksEdge(from.Anchor, to, true)) return Reject(edge, SpatialQueryReasons.SceneObjectBlocksMovement);
+            if (edge.ClearanceLimit > 0 && from.BodyScaleRank > edge.ClearanceLimit) return Reject(edge, SpatialQueryReasons.ClearanceInsufficient);
+            string placement = InspectPlacement(from.WithAnchor(to));
+            return placement.Length == 0 ? new SpatialEdgeInspection(true, edge.MetricDistanceUnits, "", edge.MovementBurdenUnits) : Reject(edge, placement);
         }
 
         public SpatialEdgeInspection InspectFlightEdge(SpatialPose from, HexCoord to)
@@ -851,7 +883,8 @@ namespace TianZhang.Spatial
 
         private readonly struct PoseFrontierEntry : IComparable<PoseFrontierEntry>
         {
-            public PoseFrontierEntry(SpatialPose pose, int cost) { Pose = pose; Cost = cost; }
+            public PoseFrontierEntry(SpatialPose pose, int cost, int depth = 0) { Pose = pose; Cost = cost; Depth = depth; }
+            public int Depth { get; }
             public SpatialPose Pose { get; }
             public int Cost { get; }
             public int CompareTo(PoseFrontierEntry other)
@@ -866,8 +899,9 @@ namespace TianZhang.Spatial
         private sealed class PoseTraversalResult
         {
             public readonly Dictionary<SpatialPose, int> Costs = new Dictionary<SpatialPose, int>();
-            public readonly Dictionary<SpatialPose, SpatialMovementStep> Previous = new Dictionary<SpatialPose, SpatialMovementStep>();
-            public SpatialPose? Destination;
+            public readonly Dictionary<(SpatialPose pose, int depth), ((SpatialPose pose, int depth) from, SpatialMovementStep step)> Previous =
+                new Dictionary<(SpatialPose pose, int depth), ((SpatialPose pose, int depth) from, SpatialMovementStep step)>();
+            public (SpatialPose pose, int depth)? Destination;
             public string FirstRejection;
         }
 

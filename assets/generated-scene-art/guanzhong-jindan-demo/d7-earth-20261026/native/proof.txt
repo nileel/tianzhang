@@ -1,0 +1,18 @@
+selected wall (4, 1, -5) -> (4, 2, -6) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(-930.53, 1805.01) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(-930.53, 1805.01) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(227.00, 304.50) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(721.00, 424.50) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(760.00, 465.50) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(190.00, 222.50) | tick=10 AP=1000000 MP=6000 HP=3474
+build native=(334.00, 222.50) | tick=10 AP=1000000 MP=6000 HP=3474
+wall750 blocks movement and line; paid250AP400MP | tick=10 AP=750000 MP=5600 HP=3474
+hit1 native=(478.00, 181.50) | tick=10 AP=750000 MP=5600 HP=3474
+hit1 native=(721.00, 424.50) | tick=10 AP=750000 MP=5600 HP=3474
+hit1 native=(334.00, 222.50) | tick=10 AP=750000 MP=5600 HP=3474
+break hit1 durability=375 | tick=10 AP=700000 MP=5588 HP=3474
+hit2 native=(478.00, 181.50) | tick=10 AP=700000 MP=5588 HP=3474
+hit2 native=(721.00, 424.50) | tick=10 AP=700000 MP=5588 HP=3474
+hit2 native=(334.00, 222.50) | tick=10 AP=700000 MP=5588 HP=3474
+break hit2 durability=0 | tick=10 AP=650000 MP=5576 HP=3474
+withdrawal, fresh entry and world identity preserved | tick=10 AP=1000000 MP=6000 HP=3474

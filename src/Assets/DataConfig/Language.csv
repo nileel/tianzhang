@@ -696,6 +696,7 @@ combat_session_finished,战斗已经结束
 combat_turn_actor_invalid,尚未轮到该单位行动
 combat_turn_phase_invalid,当前行动阶段不可执行
 spell_guanshiji,贯石击
+demo_20261026_polei,演武·破垒
 attack_profile_not_learned,尚未学会该术法
 attack_profile_not_equipped,尚未装配该术法
 attack_profile_requirements_not_met,境界或灵根不满足要求

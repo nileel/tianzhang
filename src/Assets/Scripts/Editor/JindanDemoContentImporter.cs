@@ -16,7 +16,7 @@ namespace TianZhang.Editor
         public static readonly string[] DefinitionTables =
         {
             "JindanDemoPresets", "JindanDemoSeats", "JindanDemoAbilities", "JindanDemoCommands",
-            "JindanDemoContracts", "JindanDemoLoadoutTuning", "JindanDemoSegments",
+            "JindanDemoContracts", "JindanDemoLoadoutTuning", "JindanDemoSegments", "JindanDemoDemolition",
         };
         public static string[] DefinitionPaths => DefinitionTables.Select(t => "Assets/DataConfig/" + t + ".csv").ToArray();
         public static string FoundationPath(string id) => "Assets/Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_" + AssetCommitter.SanitizeName(id) + ".asset";
@@ -146,6 +146,7 @@ namespace TianZhang.Editor
                 .Select(CsvTableReader.ParseRow).ToDictionary(r => r[0], r => r[1], StringComparer.Ordinal);
             var gongfas = Rows("GongFa").ToDictionary(r => r["name"], StringComparer.Ordinal);
             var characters = Rows("Characters").Select(r => r["name"]).ToHashSet(StringComparer.Ordinal);
+            Require(Source(catalog.demolition.sourceDocument).Contains(catalog.demolition.profileId), "DEMOLITION_SOURCE");
             foreach (var ability in catalog.abilities)
             {
                 string source = Source(ability.sourceDocument);

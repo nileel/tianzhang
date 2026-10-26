@@ -1,0 +1,2 @@
+real ally takeoff/high -> gravity altitude0 rootOffset=0 targetHP=2756 unchangedAP=0 | tick=20 AP=750000 MP=5600 HP=3474
+removal does not undo damage or freely ascend | tick=20 AP=725000 MP=5600 HP=3474

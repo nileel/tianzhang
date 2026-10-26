@@ -1,0 +1,34 @@
+《天章》D7 土石显化、重力与强制位移验收（2026-10-26）
+
+实现边界
+- 沿 AdventureSceneInstaller → JindanRehearsalFactory → CombatSession 的生产入口，启用 EARTH_MANIFEST／EARTH_GRAVITY；同源唯一土席互换，不并装两种土效果。
+- 显化墙／坡：250AP、400MP、750耐久、容量2、首次实例后续3次施法者回合结束；追加不续期。墙阻通行、飞行与作用线，坡只打通相邻高差1的单格通路。耐久大于0完整生效，归零无残留；25AP解除，来源失效、期限、撤离清理沿既有账本。
+- 重力：极重、失重、镇岳使用 MIXED／ANCHORED 状态及来源引用；实际接地决定档差2／3。地面完整边费用×2或×3/4后取整，极重压力按实走边计；轻跃仍为GROUND。强移保留朝向，检查前后身体格、边、封锁、锚定、占位和实际向下落差，不扣目标AP。
+- 用户明确同意新增演武专用破垒，复用贯石击费用、人物效果及资格，只给土预设授予演武术栏；环境白名单墙／土石支点，375×2击碎750耐久。正式成长和原贯石击不改。
+- 实际潮推与水击留D8；本项未新增推拉技能、碰撞伤害公式或通用重量模拟，也不据此作人物伤害平衡结论。
+
+正式场景与输入证据
+- ProductionWallAndTwoHitDemolition：从创建角色、世界、聚落、冒险的实际入口进入演武；生成750耐久墙，破垒50AP/12MP两次，750→375→0，第一次仍阻挡、第二次恢复作用线；撤离／重入清理，世界角色记录不变。
+- native：同一正式入口，进入和撤离准备由测试完成；生成墙、预演／确认以及两次破垒由 Windows Computer Use 的原生鼠标完成。proof.txt逐次记录 Mouse.current.native=true 的按下位置和AP/MP。1366×768，Game View 1×；并非全流程人工试玩。
+- AirborneSourceLowersFlyingAlly／GroundSourceLandsFlyingAlly：第二段土／水友方轮流通过实际飞行按钮起飞；土修在空中施放极重令高空水修降至低空（根节点高0.75米、无坠落伤害），接地土修令其落地（根节点高0、关闭投影、伤害为最大生命10%向上取整）。目标AP保持，解除不返伤害也不免费升空。
+- ProductionRampChangesRouteAndSupportsActualTraversal：通过正式移动到中台，造坡连接(7,8)→(7,9)，实际走上高台、解除恢复原边。相机平移用于看清该路线；没有替换角色位置或绕过命令费用。单格人物在临时陡坡保持纵向直立，沿真实脚底支承抬升；原固定坡阶和双格贴坡仍沿原逻辑。
+- 最终坡网格364个顶面采样的支承最大误差0.001431毫米；六向×0.375/0.75米两种升高共4368个顶点／拾取检查，最大误差0.000328毫米。30fps采样的11帧实际运动，最大身体侵入0.471毫米、脚底误差0.417毫米（均低于既有2毫米容差）。截图02-ramp-moving.png为实际途中帧。
+- ProductionLightLeapKeepsGroundModeAndClearsTheLedge：同一裸崖单边轻跃报价15.625AP，根节点最高Y=2.190433；越过崖缘后落到真实格面，全程规则形态GROUND，未创建飞行实例。
+- GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions通过，覆盖既有地形单双格动作回归。D7最终共7个不同PlayMode用例通过。
+
+测试结果文件与修复前记录
+- d7-core-final.xml：102项，初次99通过；3项失败是新双格夹具遗漏必需SwapSpell普通行动定义。d7-core-followup.xml补齐后23/23通过，含该3项、保留第二敌人的压落致死即时清理用例，以及19项资格检查。合计121个不同EditMode用例最终通过；不是重跑全项目。
+- d7-runtime.xml：两项飞行友方重力联动通过；其中初次墙／坡失败已由后续结果替代。
+- d7-runtime3.xml：墙／坡2/2通过，验证破垒完整生产资格、正式费用及退出重入。
+- d7-native-light.xml：原生造墙破墙与轻跃2/2通过。
+- d7-geometry-regression.xml：原地形动作回归通过；初次新坡六向拾取发现上沿超出共用边，已缩窄新模型。
+- d7-ramp-upright.xml：最终坡模型、六向两种升高、拾取、逐帧接地、造坡／走坡／解除1/1通过。原始含失败的XML保留以便追溯，不把其中旧失败当最终结论。
+- 独立只读核心检查发现并修复：明确目标身体格、地面封锁检查、压落致死即时清理、向上轻跃／飞越误报坠落；修复复核无新增核心缺陷。独立集成检查发现并修复目标高度投影、实际坡端高度、状态预演与页签同步等问题。
+- 导入／重建／保存重开使用 TianZhang.Editor.JindanDemoSceneBuilder.ImportAndRebuild，完成且退出码0；最终坡FBX导入由上述PlayMode验证。没有与同工程图形编辑器并发启动批处理。
+- check-data-chain通过；BattleSim Release编译0错误0警告，--self-test two-cell-production通过；程序集实际依赖图检查（-SkipRequiredAssemblies）19程序集／2 asmref通过。默认检查器既有必需程序集名单与全局配置编辑器列标签限制沿D6记录，本项没有改动它们。
+
+资产与复现
+- 新窄坡：assets/source/environments/guanzhong-jindan-demo/d7-earth/，324顶点／644三角／封闭流形，半余弦坡面，宽0.5米；.blend以对象库保存，Append其中EarthManifestRamp对象即可编辑，已重新加载核对。build-ramp.py记录构造及FBX导出。Unity派生使用既有Ramp/Earth.mat。
+- 岩墙复用Guanzhong/Props/HighWall.prefab，只显示完整态直到归零；原有岩堆与角色资产的未提交改动未纳入本次提交。
+- 运行D7EarthTests及D7EarthPlayModeTests；原生用例NativeWallAndTwoHitDemolition会等待真实鼠标，指引与坐标在src/Logs/d7/native/pending.json。图形PlayMode使用Unity命令行-runTests -testPlatform PlayMode，不能带-batchmode/-nographics；EditMode可用批处理定向-testFilter。生产菜单可重建演武接入。
+- 数值与截图仅证明上述有限场景和输入；连续三段、更多组合与最终双分辨率试玩仍依计划留D12。

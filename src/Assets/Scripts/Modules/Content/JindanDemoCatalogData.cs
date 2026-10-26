@@ -17,6 +17,7 @@ namespace TianZhang.Entity
         public JindanDemoCompatibilityContract[] contracts;
         public JindanDemoSegmentDefinition[] segments;
         public JindanDemoLoadoutTuning loadoutTuning;
+        public JindanDemoDemolitionDefinition demolition;
 
         public JindanDemoPresetDefinition GetPreset(string id) => presets?.SingleOrDefault(x => x.characterId == id);
         public JindanDemoSeatDefinition GetSeat(string id) => seats?.SingleOrDefault(x => x.seatInstanceId == id);
@@ -24,6 +25,17 @@ namespace TianZhang.Entity
         public JindanDemoCommandDefinition GetCommand(string id) => commands?.SingleOrDefault(x => x.commandId == id);
         public JindanDemoSegmentDefinition GetSegment(string id) => segments?.SingleOrDefault(x => x.segmentId == id);
         public bool Validate(out string reason) => JindanDemoCatalogValidator.Validate(this, true, out reason);
+    }
+
+    [Serializable]
+    public sealed class JindanDemoDemolitionDefinition
+    {
+        public string characterId;
+        public string sourceProfileId;
+        public string profileId;
+        public int environmentDamage;
+        public string[] environmentTargetTypes;
+        public string sourceDocument;
     }
 
     [Serializable]

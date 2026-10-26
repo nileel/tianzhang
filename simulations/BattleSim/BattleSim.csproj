@@ -15,6 +15,9 @@
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatActionResult.cs" Link="Combat\CombatActionResult.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSession.cs" Link="Combat\CombatSession.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatFlight.cs" Link="Combat\CombatFlight.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatEarthRules.cs" Link="Combat\CombatEarthRules.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatForceMovement.cs" Link="Combat\CombatForceMovement.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialMovementPolicy.cs" Link="Spatial\SpatialMovementPolicy.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatActionResolver.cs" Link="Combat\CombatActionResolver.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatCommandService.cs" Link="Combat\CombatCommandService.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatTurnScheduler.cs" Link="Combat\CombatTurnScheduler.cs" />

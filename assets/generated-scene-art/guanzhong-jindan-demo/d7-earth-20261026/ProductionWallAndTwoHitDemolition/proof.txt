@@ -1,0 +1,11 @@
+selected wall (4, 1, -5) -> (4, 2, -6) | tick=10 AP=1000000 MP=6000 HP=3474
+wall750 blocks movement and line; paid250AP400MP | tick=10 AP=750000 MP=5600 HP=3474
+demolition preview: 演武·破垒  50AP / 12MP / CT 0 / CD 0tick
+环境命中目标：demo_20261024_earth_guardian:earth:1
+报价已冻结，请核对环境目标后确认。 | tick=10 AP=750000 MP=5600 HP=3474
+break hit1 durability=375 | tick=10 AP=700000 MP=5588 HP=3474
+demolition preview: 演武·破垒  50AP / 12MP / CT 0 / CD 0tick
+环境命中目标：demo_20261024_earth_guardian:earth:1
+报价已冻结，请核对环境目标后确认。 | tick=10 AP=700000 MP=5588 HP=3474
+break hit2 durability=0 | tick=10 AP=650000 MP=5576 HP=3474
+withdrawal, fresh entry and world identity preserved | tick=10 AP=1000000 MP=6000 HP=3474

@@ -25,11 +25,33 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Cell[] cells = Array.Empty<Cell>();
         [SerializeField] private DropEdge[] oneWayDrops = Array.Empty<DropEdge>();
         private Dictionary<Vector2Int,Cell> index;
+        public sealed class EarthRamp
+        {
+            public EarthRamp(CombatUnitPresentationHex a,CombatUnitPresentationHex b,Vector3 low,Vector3 high)
+            { A=a;B=b;Low=low;High=high; }
+            public CombatUnitPresentationHex A {get;} public CombatUnitPresentationHex B {get;}
+            public Vector3 Low {get;} public Vector3 High {get;}
+            public bool TryHeight(Vector3 point,out float height)
+            {
+                Vector3 direction=High-Low;direction.y=0;direction.Normalize();
+                Vector3 delta=point-Low;delta.y=0;
+                float along=Vector3.Dot(delta,direction),across=Vector3.Dot(delta,Vector3.Cross(Vector3.up,direction));
+                height=Mathf.Lerp(Low.y,High.y,(1-Mathf.Cos(Mathf.PI*Mathf.Clamp01((along-.1f)/.4f)))*.5f);
+                return along>=.09999f && along<=.50001f && Mathf.Abs(across)<=.25001f;
+            }
+        }
+        private EarthRamp[] earthRamps=Array.Empty<EarthRamp>();
+        public void SetEarthRamps(EarthRamp[] value)=>earthRamps=value;
+        public bool IsEarthRamp(Vector3 point)=>Array.Exists(earthRamps,r=>r.TryHeight(point,out _));
+        public bool HasEarthRamp(CombatUnitPresentationHex a,CombatUnitPresentationHex b)=>
+            Array.Exists(earthRamps,r=>(r.A.Q==a.Q && r.A.R==a.R && r.B.Q==b.Q && r.B.R==b.R)||
+                (r.B.Q==a.Q && r.B.R==a.R && r.A.Q==b.Q && r.A.R==b.R));
         private static readonly Vector2Int[] Neighbors = { Vector2Int.zero,new Vector2Int(1,0),new Vector2Int(1,-1),
             new Vector2Int(0,-1),new Vector2Int(-1,0),new Vector2Int(-1,1),new Vector2Int(0,1) };
         public IReadOnlyList<Cell> Cells => cells;
         public bool IsOneWayDrop(CombatUnitPresentationHex from, CombatUnitPresentationHex to)
         {
+            if(HasEarthRamp(from,to))return false;
             foreach (DropEdge edge in oneWayDrops)
                 if (edge.fromQ == from.Q && edge.fromR == from.R && edge.toQ == to.Q && edge.toR == to.R)
                     return true;
@@ -73,6 +95,7 @@ namespace TianZhang.Features.CombatPresentation
             foreach(var offset in Neighbors)
                 if(index.TryGetValue(key+offset,out Cell cell) && Contains(cell,p))
                     height = Mathf.Max(height,Height(cell,p.z));
+            foreach(var ramp in earthRamps) if(ramp.TryHeight(p,out float y)) height=Mathf.Max(height,y);
             return !float.IsNegativeInfinity(height);
         }
 
@@ -124,6 +147,24 @@ namespace TianZhang.Features.CombatPresentation
                     for (int i=0;i<cell.riserY.Length;i++)
                         Consider((cell.riserY[i]-ray.origin.y)/ray.direction.y,cell);
                 }
+            }
+            foreach (var ramp in earthRamps)
+            {
+                float a = (ramp.High.y-ray.origin.y)/ray.direction.y;
+                float b = (ramp.Low.y-ray.origin.y)/ray.direction.y;
+                float lo = Mathf.Min(a,b), hi = Mathf.Max(a,b);
+                ramp.TryHeight(ray.GetPoint(lo),out float startHeight);
+                float sign = ray.GetPoint(lo).y-startHeight;
+                for (int i=0;i<24;i++)
+                {
+                    float mid=(lo+hi)*.5f; Vector3 point=ray.GetPoint(mid);
+                    ramp.TryHeight(point,out float y);
+                    if((point.y-y)*sign>0)lo=mid;else hi=mid;
+                }
+                float distance=(lo+hi)*.5f;
+                if(distance>=0 && distance<nearest && ramp.TryHeight(ray.GetPoint(distance),out _) &&
+                    TryCell(ray.GetPoint(distance),out var cell))
+                { nearest=distance; result=cell; }
             }
             hex = result;
             return !float.IsPositiveInfinity(nearest);

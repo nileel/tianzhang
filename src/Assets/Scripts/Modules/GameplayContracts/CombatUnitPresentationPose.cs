@@ -48,7 +48,7 @@ namespace TianZhang.Gameplay.Contracts
     public sealed class CombatUnitPresentationMovementStep : IEquatable<CombatUnitPresentationMovementStep>
     {
         public CombatUnitPresentationMovementStep(CombatUnitPresentationPose from, CombatUnitPresentationPose to,
-            IReadOnlyList<int> turnFacings = null)
+            IReadOnlyList<int> turnFacings = null, bool isLightLeap = false)
         {
             if (from.IsDoubleCell != to.IsDoubleCell ||
                 !CombatUnitPresentationPose.Step(from.Position, to.Facing).Equals(to.Position))
@@ -75,13 +75,15 @@ namespace TianZhang.Gameplay.Contracts
             From = from;
             To = to;
             TurnFacings = turns.AsReadOnly();
+            IsLightLeap = isLightLeap;
         }
         public CombatUnitPresentationPose From { get; }
         public CombatUnitPresentationPose To { get; }
         public IReadOnlyList<int> TurnFacings { get; }
+        public bool IsLightLeap { get; }
         public bool Equals(CombatUnitPresentationMovementStep other)
         {
-            if (other == null || !From.Equals(other.From) || !To.Equals(other.To) || TurnFacings.Count != other.TurnFacings.Count)
+            if (other == null || !From.Equals(other.From) || !To.Equals(other.To) || TurnFacings.Count != other.TurnFacings.Count || IsLightLeap != other.IsLightLeap)
                 return false;
             for (int index = 0; index < TurnFacings.Count; index++)
                 if (TurnFacings[index] != other.TurnFacings[index]) return false;
@@ -91,6 +93,7 @@ namespace TianZhang.Gameplay.Contracts
         public override int GetHashCode()
         {
             int hash = From.GetHashCode() * 397 ^ To.GetHashCode();
+            hash = hash * 397 ^ IsLightLeap.GetHashCode();
             foreach (int facing in TurnFacings) hash = hash * 397 ^ facing;
             return hash;
         }

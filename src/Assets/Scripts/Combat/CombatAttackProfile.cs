@@ -242,6 +242,12 @@ namespace TianZhang.Combat
                 OtherTargetSpiritRecoveryMultiplier, qualification, IsTalisman, RuleMetadata, Area, policy,
                 EnvironmentTargetTypes, EnvironmentDamage);
 
+        public CombatAttackProfile WithEnvironmentVariant(string id, IEnumerable<string> targetTypes, int damage) =>
+            new CombatAttackProfile(id, Kind, Effect, MinimumRange, MaximumRange, ActionPointCostUnits, MinimumNetCostUnits,
+                CtPenalty, ReuseCooldownTicks, PhysicalMultiplier, SoulMultiplier, HealAmount, SpiritCost, DamageElement,
+                SoulDefensePenetration, SpiritRecoveryMultiplier, MinimumSpiritRecovery, OtherTargetSpiritCost,
+                OtherTargetSpiritRecoveryMultiplier, qualification, IsTalisman, RuleMetadata, Area, SpatialPolicy, targetTypes, damage);
+
         public int GetSpiritCost(bool targetsSelf) =>
             Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf ? OtherTargetSpiritCost : SpiritCost;
 

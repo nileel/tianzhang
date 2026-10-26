@@ -28,7 +28,11 @@ namespace TianZhang.Features.Adventure
         private CombatSession observedSession;
         private string observedActor;
         private string message = string.Empty;
-        private enum SelectionMode { None, Edges, Origin }
+        private CombatEarthMode earthMode = CombatEarthMode.Wall;
+        private HexCoord? earthCell;
+        private string earthTarget;
+        private bool earthPage;
+        private enum SelectionMode { None, Edges, Origin, EarthTarget, BreakTarget }
 
         public JindanRehearsalPresenter(JindanDemoCatalogData catalog, EncounterCoordinator encounter,
             Action<int, string> enter, Func<string, string> text)
@@ -82,12 +86,24 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
+            if (key is "earth_tab" or "scale_tab")
+            { earthPage = key == "earth_tab"; ClearTargeting(); Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
             if (!encounter.AcceptsPlayerCommand)
             { message = "等待当前演出或敌方行动结束。"; Refresh(); return; }
             switch (key)
             {
+                case "earth_tab": earthPage=true; ClearTargeting(); break;
+                case "scale_tab": earthPage=false; ClearTargeting(); break;
+                case "earth_wall": case "earth_ramp":
+                    ClearTargeting(); earthPage=true; earthMode=key=="earth_wall"?CombatEarthMode.Wall:CombatEarthMode.Ramp;
+                    selection=SelectionMode.Edges; message="依次选择一条空边的两个相邻落点，再预演。"; break;
+                case "earth_heavy": case "earth_light": case "earth_anchor":
+                    ClearTargeting(); earthPage=true; earthMode=key=="earth_heavy"?CombatEarthMode.Heavy:key=="earth_light"?CombatEarthMode.Light:CombatEarthMode.Anchor;
+                    selection=SelectionMode.EarthTarget; message="点击单位的明确身体格或土石构件；同格对象可用切换目标浏览。"; break;
+                case "earth_next_target": if(earthCell.HasValue) SelectEarthTarget(earthCell.Value,true); break;
+                case "break_object": ClearTargeting(); selection=SelectionMode.BreakTarget; message="点击相邻墙／土石支点所在格，预演破垒；两次命中破750耐久。"; break;
                 case "compress": metric = 1; ClearQuote(); message = "已选压缩：每边0.5距离；请选择2–3个相连格。"; break;
                 case "expand": metric = 4; ClearQuote(); message = "已选扩张：每边2距离；请选择2–3个相连格。"; break;
                 case "pick_edges":
@@ -96,9 +112,9 @@ namespace TianZhang.Features.Adventure
                 case "pick_origin":
                     selection = SelectionMode.Origin; ClearQuote();
                     message = "点击当前视野内空格作遥施原点；点自身改回自身。"; break;
-                case "preview": Preview(CombatCommandKind.JindanAbility); break;
-                case "close_effect": Preview(CombatCommandKind.CloseJindan); break;
-                case "swap_effect": Preview(CombatCommandKind.SwapJindan); break;
+                case "preview": case "earth_preview": Preview(CombatCommandKind.JindanAbility); break;
+                case "close_effect": case "earth_close": Preview(CombatCommandKind.CloseJindan); break;
+                case "swap_effect": case "earth_swap": Preview(CombatCommandKind.SwapJindan); break;
                 case "confirm": Confirm(); break;
                 case "flight_takeoff": PreviewFlight(CombatFlightAction.Takeoff); break;
                 case "flight_ascend": PreviewFlight(CombatFlightAction.Ascend); break;
@@ -115,6 +131,17 @@ namespace TianZhang.Features.Adventure
             if (!IsSelecting || !encounter.AcceptsPlayerCommand || encounter.CurrentSession?.Jindan == null) return;
             var cell = new HexCoord(q, r);
             ClearQuote();
+            if (selection == SelectionMode.EarthTarget)
+            { SelectEarthTarget(cell,false); Refresh(); return; }
+            if (selection == SelectionMode.BreakTarget)
+            {
+                selection=SelectionMode.None;
+                frozenCommand=new CombatCommand(CombatCommandKind.Art,encounter.ControlledActorId,
+                    profileId:catalog.demolition.profileId,targetCell:cell);
+                frozenQuote=encounter.PreviewJindan(frozenCommand);
+                message=frozenQuote?.IsLegal==true?"报价已冻结，请核对环境目标后确认。":Explain(frozenQuote?.RejectionReason);
+                Refresh(); return;
+            }
             if (selection == SelectionMode.Origin)
             {
                 encounter.CurrentSession.Combatants.TryGet(encounter.ControlledActorId, out var actor);
@@ -124,7 +151,7 @@ namespace TianZhang.Features.Adventure
             }
             else if (path.Count > 0 && path[path.Count - 1] == cell)
             { path.RemoveAt(path.Count - 1); message = "已撤销末格。"; }
-            else if (path.Count == 3) message = "最多选3个相连格；点末格撤销或重新选边。";
+            else if (path.Count == (earthPage?2:3)) message = "已达当前形态选格上限；点末格撤销或重新选边。";
             else if (path.Contains(cell)) message = "同一格不可重复；请沿相连边继续选择。";
             else if (path.Count > 0 && !path[path.Count - 1].TryGetDirectionTo(cell, out _))
                 message = "下一格必须与末格相邻。";
@@ -134,6 +161,16 @@ namespace TianZhang.Features.Adventure
                 message = path.Count == 1 ? "已选首格，请再点相邻格。" : "已选" + (path.Count - 1) + "条边，可继续选格或点击预演。";
             }
             Refresh();
+        }
+
+        private void SelectEarthTarget(HexCoord cell,bool next)
+        {
+            var s=encounter.CurrentSession;
+            var ids=s.Combatants.All.Where(a=>a.IsAlive && a.OccupiedCells.Contains(cell)).Select(a=>a.Id)
+                .Concat(s.SceneObjects.All.Where(o=>!o.IsDestroyed && o.Contains(cell) && o.Definition.MaterialType is "stone" or "earth").Select(o=>o.Id)).ToArray();
+            earthCell=cell;
+            earthTarget=ids.Length==0?null:ids[next?(Array.IndexOf(ids,earthTarget)+1)%ids.Length:0];
+            ClearQuote(); message=earthTarget==null?"此格没有合法受力对象。":"已选"+Short(earthTarget)+"，身体格"+CellText(cell)+"；点击预演。";
         }
 
         public void Refresh()
@@ -160,17 +197,17 @@ namespace TianZhang.Features.Adventure
             var owned = session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId).ToArray();
             var seat = kind == CombatCommandKind.SwapJindan
                 ? owned.FirstOrDefault(value => value.Definition.Candidates.Count > 1)
-                : owned.FirstOrDefault(value => value.EffectId == "SPACE_SCALE");
+                : owned.FirstOrDefault(value => earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
             if (seat == null)
             {
                 message = kind == CombatCommandKind.SwapJindan ? "当前角色没有可切换的同席候选。" :
-                    "当前角色没有装配方位定尺；请查看下方能力进度。";
+                    "当前角色没有本页装配；请切换位格／土系页或查看能力。";
                 return;
             }
             string effect = kind == CombatCommandKind.SwapJindan
                 ? seat.Definition.Candidates.First(value => value != seat.EffectId) : seat.EffectId;
             var request = kind == CombatCommandKind.JindanAbility
-                ? new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin)
+                ? new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin,earthPage?earthMode:null,earthTarget,earthCell)
                 : new CombatJindanRequest(seat.Definition.SeatId);
             frozenCommand = new CombatCommand(kind, actorId, profileId: effect, jindan: request);
             frozenQuote = encounter.PreviewJindan(frozenCommand);
@@ -203,7 +240,7 @@ namespace TianZhang.Features.Adventure
 
         private void ClearQuote() { frozenCommand = null; frozenQuote = null; }
         private void ClearTargeting()
-        { ClearQuote(); path.Clear(); remoteOrigin = null; selection = SelectionMode.None; }
+        { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; selection = SelectionMode.None; }
         private void SelectSegmentPreset()
         {
             string id = catalog.segments[segmentIndex].actors.First(value => value.team == 0).characterId;
@@ -258,7 +295,9 @@ namespace TianZhang.Features.Adventure
                 session.SceneObjects.Board.TryGetCell(actor.Position, out var cell);
                 result.AppendLine("飞行·" + (actor.AltitudeBand == 0 ? "地面" : actor.AltitudeBand == 1 ? "低空" : "高空") +
                     "  有效高度 " + (cell.HeightLevel + actor.AltitudeBand) + "  接地 " + (actor.AltitudeBand == 0 ? "是" : "否") +
-                    "  负载1／升力2");
+                    "  受力"+CombatForceMovement.LoadRank(actor)+"／升力2");
+                if (!earthPage)
+                {
                 result.AppendLine("来源 " + Short(flight.InstanceId) + "  CD " + actor.GetCooldown(CombatFlight.ProfileId) + "tick");
                 result.AppendLine("剩余后续回合结束 " + flight.RemainingOwnTurnEnds + "；下一本人回合维护 " +
                     (flight.Active ? session.Flight.UpkeepMana : 0) + "MP；已付 " + flight.TotalManaSpent + "MP");
@@ -267,18 +306,20 @@ namespace TianZhang.Features.Adventure
                 if (flight.FailedLanding) result.AppendLine("失效滞空：不能自主移动／升降；后续本人回合结束损失20%最大生命，可有费续御。");
                 else if (flight.LastEndReason.Length > 0) result.AppendLine(Explain(flight.LastEndReason));
                 result.AppendLine("失效先尝试原柱落地并扣10%最大生命；无落点保留占柱进入有限失效过程。");
+                }
             }
             foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId))
             {
                 var definition = session.Jindan.Ability(seat.EffectId);
                 var active = seat.ActiveScale;
                 result.AppendLine(Position(seat.Definition.PositionType) + "·" + Effect(seat.EffectId) +
-                    "  CD " + actor.GetCooldown(seat.EffectId) + "tick  容量 " + (active == null ? 0 : active.Path.Count - 1) + "/" + definition.Capacity);
+                    "  CD " + actor.GetCooldown(seat.EffectId) + "tick  容量 " + (seat.ActiveEarth!=null ? Math.Max(1,seat.ActiveEarth.Objects.Count) : active == null ? 0 : active.Path.Count - 1) + "/" + definition.Capacity);
                 if (definition.Enabled)
                 {
                     result.AppendLine("累计支出 " + Ap(seat.TotalActionPointSpent) + "AP / " + seat.TotalManaSpent +
                         "MP；展开 " + seat.SuccessfulDeployments + "，维护 " + seat.MaintenancePayments + "次");
-                    result.AppendLine(active == null ? "未展开；后续每全局tick维护 " + definition.UpkeepMana + "MP" :
+                    result.AppendLine(seat.ActiveEarth!=null ? "土系实例已展开，维护0MP" +
+                        (seat.ActiveEarth.TargetId == null ? "；剩余施法者结束 " + seat.ActiveEarth.RemainingOwnTurnEnds : "；期限见受力目标") : active == null ? "未展开；维护 " + definition.UpkeepMana + "MP" :
                         "规则 " + Metric(active.MetricDistanceUnits) + "；支点 " + active.Support.Durability + "/" +
                         active.Support.Definition.MaxDurability + "；维护 " + definition.UpkeepMana + "MP/tick");
                     if (active != null) result.AppendLine("生效边：" + PathText(active.Path) + "；原点 " + CellText(active.Origin));
@@ -286,7 +327,19 @@ namespace TianZhang.Features.Adventure
                 }
                 else result.AppendLine(Explain(definition.UnavailableReason));
                 result.AppendLine("共源账本 " + Short(seat.Definition.AbilityInstanceId));
+                if(seat.ActiveEarth!=null) foreach(var obj in seat.ActiveEarth.Objects)
+                    result.AppendLine((obj.Definition.IsTemporaryRamp?"窄坡":"岩墙")+" "+CellText(obj.Cell)+"→"+CellText(obj.EdgeOther.Value)+" 耐久"+obj.Durability+"/"+obj.Definition.MaxDurability);
+                if(seat.ActiveEarth?.ObjectStatus is {} objectStatus)
+                    result.AppendLine("构件 "+Short(seat.ActiveEarth.TargetId)+" "+EarthName(objectStatus.EarthMode.Value)+
+                        " 档差"+objectStatus.GravityShiftRank+"；剩余施法者结束"+seat.ActiveEarth.RemainingOwnTurnEnds);
             }
+            foreach(var unit in session.Combatants.All)
+            {
+                var gravity=CombatForceMovement.Gravity(unit); if(gravity==null)continue;
+                result.AppendLine(Short(unit.Id)+" "+EarthName(gravity.EarthMode.Value)+" 档差"+gravity.GravityShiftRank+
+                    " 受力"+CombatForceMovement.LoadRank(unit)+" 压力"+gravity.Pressure+"/2；剩余目标结束"+gravity.RemainingOwnTurnEnds);
+            }
+            if(earthPage) { result.Append("待选："+EarthName(earthMode)+"；"+PathText(path)+"；对象"+Short(earthTarget)); return result.ToString(); }
             result.Append("待选：" + Metric(metric) + "；" + PathText(path) + "；原点 " +
                 (remoteOrigin.HasValue ? CellText(remoteOrigin.Value) + "（+" + DeployDefinition("SPACE_SCALE").remoteOriginManaCost + "MP）" : "自身"));
             return result.ToString();
@@ -297,11 +350,30 @@ namespace TianZhang.Features.Adventure
             if (frozenQuote == null) return message;
             string action = frozenCommand.Kind == CombatCommandKind.Flight ? FlightName(frozenCommand.FlightAction.Value) :
                 frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
-                frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" : "展开方位定尺";
+                frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(frozenCommand.ProfileId) :
+                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开方位定尺";
             string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
                 "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
             if (frozenCommand.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";
+            else if(frozenCommand.Kind==CombatCommandKind.Art) result+="\n环境命中目标："+string.Join("、",frozenQuote.AttackArea?.EnvironmentTargetIds??Array.Empty<string>());
             else if (frozenCommand.Kind == CombatCommandKind.CloseJindan) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
+            if (frozenCommand.Kind == CombatCommandKind.JindanAbility && frozenCommand.Jindan?.EarthMode is {} earth)
+            {
+                var session = encounter.CurrentSession;
+                var seat = session.Jindan.Find(frozenCommand.Jindan.SeatId);
+                var active = seat?.ActiveEarth;
+                if (earth is CombatEarthMode.Wall or CombatEarthMode.Ramp)
+                    result += "\n接地受养：是；耐久750；容量" + (active?.Objects.Count ?? 0) + "→" + ((active?.Objects.Count ?? 0)+1) +
+                        "/2；剩余施法者结束" + (active?.RemainingOwnTurnEnds ?? 3) + "（追加不刷新）。";
+                else
+                {
+                    session.Combatants.TryGet(frozenCommand.ActorId, out var caster);
+                    session.Combatants.TryGet(frozenCommand.Jindan.EarthTargetId ?? "", out var target);
+                    bool nourished = caster.MovementMode == SpatialMovementMode.Ground || target == null || target.MovementMode == SpatialMovementMode.Ground;
+                    result += "\n接地受养：" + (nourished ? "是" : "否") + "；有效档差" + (nourished ? 3 : 2) +
+                        "；压力" + (target == null ? 0 : CombatForceMovement.Gravity(target)?.Pressure ?? 0) + "/2；持续2次" + (target == null ? "施法者" : "目标") + "本人结束。";
+                }
+            }
             return result + "\n" + message;
         }
 
@@ -314,6 +386,7 @@ namespace TianZhang.Features.Adventure
         private static string PathText(IEnumerable<HexCoord> values)
         { var items = values.Select(CellText).ToArray(); return items.Length == 0 ? "未选边" : string.Join("→", items); }
         private static string Metric(int units) => units == 1 ? "压缩0.5" : "扩张2";
+        private static string EarthName(CombatEarthMode mode)=>mode switch { CombatEarthMode.Wall=>"岩墙",CombatEarthMode.Ramp=>"窄土坡",CombatEarthMode.Heavy=>"极重",CombatEarthMode.Light=>"失重",_=>"镇岳" };
         private static string Position(string type) => type.ToUpperInvariant() switch
         { "SOURCE" => "源", "TRANSFORMATION" => "化", "DOMAIN" => "界", _ => type };
         private static string Effect(string effect) => effect switch
@@ -334,6 +407,11 @@ namespace TianZhang.Features.Adventure
             return reason switch
             {
                 "combat_quote_stale" => "状态已变化，本次未执行；请重新预演。",
+                "earth_selection_invalid"=>"选择须符合当前装配：显化选墙／坡和空边，重力选模式与对象。",
+                "earth_anchor_occupied"=>"该边或落点已有主场景物。", "earth_edge_blocked"=>"该边被作用封锁。",
+                "earth_ramp_height_invalid"=>"土坡只接相邻高差1，不能覆盖固定坡阶。", "earth_target_invalid"=>"受力对象或所选身体格无效。",
+                "earth_anchored"=>"受锚定限制，当前力量不足以移动。", "earth_pressure_limit"=>"极重压力已满，须完成一个无位移本人回合。",
+                "flight_load_exceeded"=>"当前受力超过该飞行高度的升力。",
                 "action_points_insufficient" => "行动力不足。", "spirit_insufficient" => "共享灵力不足。",
                 "combat_ability_on_cooldown" => "同源能力仍在冷却。", "combat_actor_sealed" => "当前封灵，不能展开。",
                 "combat_actor_stunned" => "当前眩晕，不能行动。", "combat_turn_actor_invalid" => "当前不是该角色的行动。",

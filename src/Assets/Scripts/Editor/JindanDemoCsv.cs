@@ -54,6 +54,7 @@ namespace TianZhang.Editor
                 catalog.contracts = Parse<JindanDemoCompatibilityContract>(read("JindanDemoContracts"), "JindanDemoContracts");
                 catalog.segments = Parse<JindanDemoSegmentDefinition>(read("JindanDemoSegments"), "JindanDemoSegments");
                 catalog.loadoutTuning = Parse<JindanDemoLoadoutTuning>(read("JindanDemoLoadoutTuning"), "JindanDemoLoadoutTuning").Single();
+                catalog.demolition = Parse<JindanDemoDemolitionDefinition>(read("JindanDemoDemolition"), "JindanDemoDemolition").Single();
                 foreach (var contract in catalog.contracts)
                 {
                     if (contract.compatibilityProfileId != "compile")

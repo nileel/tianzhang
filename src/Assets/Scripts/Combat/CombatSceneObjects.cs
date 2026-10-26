@@ -9,7 +9,7 @@ namespace TianZhang.Combat
     {
         public CombatSceneObjectDefinition(string contentType, string materialType, int maxDurability,
             int coverTier, int maxProtectedBodyScaleRank, bool blocksMovement, bool blocksSight, string residueType,
-            bool isSupportMarker = false)
+            bool isSupportMarker = false, bool isTemporaryRamp = false)
         {
             if (string.IsNullOrWhiteSpace(contentType) || string.IsNullOrWhiteSpace(materialType) ||
                 maxDurability <= 0 || coverTier < 0 || coverTier > 2 || maxProtectedBodyScaleRank < 0 || coverTier > 0 && maxProtectedBodyScaleRank == 0 ||
@@ -18,6 +18,7 @@ namespace TianZhang.Combat
             CoverTier = coverTier; MaxProtectedBodyScaleRank = maxProtectedBodyScaleRank;
             BlocksMovement = blocksMovement; BlocksSight = blocksSight; ResidueType = residueType;
             IsSupportMarker = isSupportMarker;
+            IsTemporaryRamp = isTemporaryRamp;
         }
         public string ContentType { get; }
         public string MaterialType { get; }
@@ -28,6 +29,7 @@ namespace TianZhang.Combat
         public bool BlocksSight { get; }
         public string ResidueType { get; }
         public bool IsSupportMarker { get; }
+        public bool IsTemporaryRamp { get; }
     }
 
     public sealed class CombatSceneObject
@@ -56,7 +58,8 @@ namespace TianZhang.Combat
         internal void ApplyDurability(int durability) => Durability = durability;
         internal SpatialSceneObjectRules SpatialRules => new SpatialSceneObjectRules(Id, Cell, EdgeOther,
             !IsDestroyed && Definition.BlocksMovement, !IsDestroyed && Definition.BlocksSight,
-            CoverTier, Definition.MaxProtectedBodyScaleRank, ReplacesWallConnectionId, Definition.IsSupportMarker);
+            CoverTier, Definition.MaxProtectedBodyScaleRank, ReplacesWallConnectionId, Definition.IsSupportMarker,
+            !IsDestroyed && Definition.IsTemporaryRamp);
     }
 
     public readonly struct CombatSceneObjectChange

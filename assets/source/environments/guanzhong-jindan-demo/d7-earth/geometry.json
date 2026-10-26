@@ -1,0 +1,11 @@
+{
+  "blend": "D:\\天章游戏开发\\assets\\source\\environments\\guanzhong-jindan-demo\\d7-earth\\EarthManifestRamp.blend",
+  "fbx": "D:\\天章游戏开发\\src\\Assets\\Art\\Environments\\Guanzhong\\EarthManifest\\EarthManifestRamp.fbx",
+  "vertices": 324,
+  "triangles": 644,
+  "nonManifoldEdges": 0,
+  "width": 0.5,
+  "lowerCellStart": 0.1,
+  "sharedEdgeEnd": 0.5,
+  "rise": 0.75
+}

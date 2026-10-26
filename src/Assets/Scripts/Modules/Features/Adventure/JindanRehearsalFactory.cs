@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Character;
 using TianZhang.Combat;
+using TianZhang.Content;
 using TianZhang.Entity;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Spatial;
@@ -41,16 +42,18 @@ namespace TianZhang.Features.Adventure
                     stats.PhysicalAttack, stats.MagicAttack, stats.PhysicalDefense, stats.MagicDefense,
                     preset.actionPointMaximumUnits, preset.movementEfficiencyMilliUnits, preset.realmMultiplier,
                     basicAttackProfileId: preset.basicAttackProfileId, rawSpirit: attributes.Spirit, rawMind: attributes.Mind,
-                    realmStage: "金丹", visibleRootElement: string.Join("/", preset.rootElements),
+                    realmStage: "金丹", visibleRootElement: string.Join("/", preset.rootElements.Select(CombatElementFacts.ResolveElement)),
                     visibleRootGrade: preset.rootGrade == 2 ? "中品" : "上品", abilityInstanceIds: bindings,
-                    facing: placement.facing)
+                    facing: placement.facing,
+                    equippedArtProfileIds: preset.characterId == catalog.demolition.characterId ? new[]{catalog.demolition.profileId} : Array.Empty<string>(),
+                    availableArtProfileIds: preset.characterId == catalog.demolition.characterId ? new[]{catalog.demolition.profileId} : Array.Empty<string>())
                 { GongFaId = preset.sourceGongFaId };
                 actor.SetSpirit(preset.manaMaximum, preset.manaMaximum);
                 (actor.Team == CombatTeam.Player ? players : enemies).Add(actor);
                 names.Add(actor.Id, text(preset.displayNameKey));
             }
             return new AdventureSpawnSet(players[0], enemies[0], null, players[0].BasicAttackProfileId,
-                enemies[0].BasicAttackProfileId, Array.Empty<string>(), enemies.Skip(1).ToArray(),
+                enemies[0].BasicAttackProfileId, players[0].EquippedArtProfileIds.ToArray(), enemies.Skip(1).ToArray(),
                 additionalPlayers: players.Skip(1).ToArray(), rehearsalNames: names);
         }
 
@@ -72,7 +75,7 @@ namespace TianZhang.Features.Adventure
                     deploy.manaCost, deploy.cooldownTicks, close.actionPointCostUnits, deploy.upkeepMana,
                     deploy.range, deploy.verticalReachRank, deploy.capacity, deploy.supportDurability,
                     deploy.remoteOriginManaCost, catalog.GetPreset(seat.characterId).normalVisionRange,
-                    deploy.metricDistanceModes, deploy.unavailableReasonKey));
+                    deploy.metricDistanceModes, deploy.unavailableReasonKey, deploy.durationCount));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
         }
@@ -99,6 +102,8 @@ namespace TianZhang.Features.Adventure
         {
             if (!catalog.Validate(out string reason)) throw new ArgumentException(reason);
             var result = originals.ToList();
+            result.Add(originals.Single(value=>value.Id==catalog.demolition.sourceProfileId).WithEnvironmentVariant(
+                catalog.demolition.profileId,catalog.demolition.environmentTargetTypes,catalog.demolition.environmentDamage));
             foreach (var preset in catalog.presets.GroupBy(value => value.basicAttackProfileId).Select(group => group.First()))
             {
                 var source = originals.Single(value => value.Id == preset.basicAttackProfileId);
