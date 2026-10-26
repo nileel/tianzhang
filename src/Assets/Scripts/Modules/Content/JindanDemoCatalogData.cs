@@ -35,6 +35,8 @@ namespace TianZhang.Entity
         public string realmSubstage;
         public float realmMultiplier;
         public string basicAttackProfileId;
+        public int basicAttackSourceModeMask;
+        public int basicAttackTargetModeMask;
         public string sourceGongFaId;
         public string sourceGongFaDocument;
         public string sourceCharacterDefinitionId;

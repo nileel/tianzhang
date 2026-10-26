@@ -80,9 +80,9 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 
 生产行固定为 `env_guanzhong_wild`（旧平地地图）与 `env_guanzhong_jindan_demo`（D1 三档演武地图）。表头固定为：
 
-`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers,sceneObjects`
+`profileId,queryLimits,battlefieldCells,surfacePrototypeRefs,phenomenonChannels,phenomenonPairs,elementRelationRefs,spiritRecoveryEnvironment,edgeClearanceLimits,mapSchemaVersion,mapVersion,directedEdgeOverrides,physicalSurfaceProfiles,mapMarkers,sceneObjects,flightSpace`
 
-`mapSchemaVersion` 留空表示旧版（v1）三段格契约，唯一显式值 `2` 表示固定高差地图；其他值失败关闭，不回退推断。v1 行的五个追加列必须留空，按旧九列语义导入，不改变百格、四个岩石或平地有向边。
+`mapSchemaVersion` 留空表示旧版（v1）三段格契约，唯一显式值 `2` 表示固定高差地图；其他值失败关闭，不回退推断。v1 行从mapSchemaVersion起的七个追加列必须留空，按旧九列语义导入，不改变百格、四个岩石或平地有向边。
 
 - `queryLimits` 格式为 `unitsPerRange=<正整数>;maxQueryRange=<正整数>`。
 - v1 `battlefieldCells` 以 `|` 分隔，每项 `q:r@blocksGroundMove@blocksLineOfSight`，标志只接受 0／1，按 q、r 排序且坐标唯一。导入器从全部拓扑相邻格生成平接有向边，边长度为 `unitsPerRange`。
@@ -96,6 +96,7 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 - v2 `physicalSurfaceProfiles` 是一个带引号的 JSON 单元，包含 `gridGeometry`、`flatProfiles`、`rampProfiles`、`stairConnections`；导入器校验 JSON、支承 ID 唯一、格与坡／阶引用、坡肩阻挡、三平台高度和台阶连接 ID。几何细节留待 D3 读取，不用表现层反推规则。
 - v2 `mapMarkers` 是一个带引号的 JSON 数组，标记 ID 唯一且格存在；标记不创造占位、阻挡或接触资格，只有所属遭遇启用后才成为对象。
 - `sceneObjects` 是D4主要场景交互物的JSON配置，旧平地行留空；地图schema仍为2。顶层显式包含lightCoverHitPenalty=10、heavyCoverHitPenalty=20、types与instances。导入器直接解析为EnvironmentSceneObjectConfiguration并完整验证，运行时消费已解析asset，不另读取JSON。
+- `flightSpace` 是D6空中许可JSON，旧地图留空。cells与全部地格、edges与全部有向邻边一一对应、坐标唯一；每格显式allowsFlight、maximumEffectiveHeight、movementBurdenUnits，每边显式allowsFlight、movementBurdenUnits。演武144柱、760有向边基础许可全开、最高有效高度4、空中额外负担0；独立的墙／场景物／空间封锁／占柱和原型跨高限制仍生效。空配置不开放飞行。导入器验证后写入asset，运行时不读CSV或按模型猜测；数据链脚本核对完整CSV→asset投影。
 - 类型只允许low_wall/high_wall/stone_support/low_plant；每型声明materialType（stone/plant）、anchorMode（edge/cell）、maxDurability、coverMode（edge/none）、coverTier、maxProtectedBodyScaleRank、blocksMovement/blocksSight、stateRules=half_durability、residueType（rubble/failed/charred）、targetFlags=attack、interactionType=destructible、reactionRules=fixed_residue。固定耐久分别为30/60/60/15；剩余耐久<=一半进入受损，低墙重2降轻1（保护体型至2），高墙受损仍阻挡，归零后所有残留无阻挡／掩体。
 - 实例声明instanceId、contentType、cell、edgeOther、sourceRef、replacesWallConnectionId。实例与原型ID、占槽唯一；格边须两端存在且相邻。高墙必须逐无向格边精确绑定已有entity_wall正反边及connectionId，两段共用mid_sealed_wall名称但分别解除；不能按连接名一次拆掉整组墙。普通支点与低植不提供领域或燃烧周期，四个public_planned_support标记仍未激活。
 - 有向边负担与格负担分别投影到 `SpatialEdgeRules.MovementBurdenUnits` 与 `SpatialCellRules.MovementBurdenUnits`；攻击距离仍只读 `metricDistanceUnits`，不把上坡负担算成射程。高度资格、边类型与双向连接由 `SpatialQueryBoard` 统一判定，不从 Transform 或模型高度推断。
@@ -219,12 +220,12 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 唯一规则来源为 `docs/基础设定/金丹基础效果装配与冲突规则.txt` 的演示预设节、七份位格原文，
 以及 `docs/角色养成/演示原型/` 的七源术、七镇府神通和御风飞行原文。七张表按公开类型严格读写：
 
-- `Presets`：五名固定角色、根资质、容量、来源、共享 AP/MP、移动效率、视野、身份与席位引用。
+- `Presets`：五名固定角色、根资质、容量、来源、共享 AP/MP、移动效率、视野、身份与席位引用。D6追加basicAttackSourceModeMask／basicAttackTargetModeMask，五名均显式3；演武会话从原金丹徒手档案派生空间资格，保留原ID定价、伤害、射程和垂直触及1。普通AttackProfiles资产仍为GROUND掩码1，不随飞行能力自动扩权。
 - `Seats`：七个唯一席位、版本与道证、唯一主承载、四项作用范围、候选效果与默认装配。
 - `Abilities`：十五项定义、源术升格、内化处置、合法府属及对象／操作／媒介／结果范围。
 - `Commands`：每个候选效果各一项展开和终止，以及五项飞行命令；费用、时钟、容量、射程、
-  模式、支点、遥施、失效与禁用原因均为显式字段。本轮仅 `SPACE_SCALE` 展开与关闭启用；
-  其余只可浏览，尚待对应 D6–D11 的真实效果实现，不能用空账本执行。
+  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE` 展开／关闭及五种 `FLIGHT` 动作已启用；
+  其余只可浏览，尚待对应 D7–D11 的真实效果实现，不能用空账本执行。
 - `Contracts`：八项固定效果合同。`compatibilityProfileId` 必须写 `compile`，导入时用来源版本、
   具体主承载、席位／道证版本、四项交集与费用容量语义生成稳定 SHA-256 标识；不接受伪造兼容 ID。
   静态根写 `compile_<contractId>`（不使用结构保留的冒号），同批导入替换为编译结果。仅验证八项明确合同，未实现通用效果推导。

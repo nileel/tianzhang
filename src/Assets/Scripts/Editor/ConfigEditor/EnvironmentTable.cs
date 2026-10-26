@@ -55,7 +55,9 @@ namespace TianZhang.Editor.ConfigEditor
                 clearance, mapSchemaVersion, mapVersion,
                 Opaque("directedEdgeOverrides", "有向边覆盖", "v2 有向边的类型、代价、净空与具名连接；由固定地图脚本生成，导入器逐条校验。"),
                 Opaque("physicalSurfaceProfiles", "物理支承档案", "v2 六角几何、坡肩、真实台阶与支承profile的JSON；导入器解析并核对引用，D3读取同一档案。"),
-                Opaque("mapMarkers", "地图标记", "v2 出生点、目标、支点与掩体标记JSON；只有所属遭遇启用后才成为对象，标记不创造占位或阻挡。")
+                Opaque("mapMarkers", "地图标记", "v2 出生点、目标、支点与掩体标记JSON；只有所属遭遇启用后才成为对象，标记不创造占位或阻挡。"),
+                Opaque("sceneObjects", "场景物", "场景物类型和实例JSON；导入器按同一地格与有向边校验。"),
+                Opaque("flightSpace", "空中许可", "已有柱与有向邻边的空中许可、最高有效高度及额外负担JSON；空配置不开放飞行。")
             };
             fields[2].Help = "编辑后按q、r排序；重复坐标拒绝。v2 固定地图格由脚本生成，编辑器只读。";
             yield return WorldFields.Table(TableId, "战场环境", "profileId", fields, this);
@@ -127,6 +129,8 @@ namespace TianZhang.Editor.ConfigEditor
             values["directedEdgeOverrides"] = ConfigValue.Scalar("");
             values["physicalSurfaceProfiles"] = ConfigValue.Scalar("");
             values["mapMarkers"] = ConfigValue.Scalar("");
+            values["sceneObjects"] = ConfigValue.Scalar("");
+            values["flightSpace"] = ConfigValue.Scalar("");
             return ConfigValue.Group(values);
         }
 
@@ -156,6 +160,8 @@ namespace TianZhang.Editor.ConfigEditor
             values["directedEdgeOverrides"] = "";
             values["physicalSurfaceProfiles"] = "";
             values["mapMarkers"] = "";
+            values["sceneObjects"] = "";
+            values["flightSpace"] = "";
             return values;
         }
 
@@ -194,7 +200,9 @@ namespace TianZhang.Editor.ConfigEditor
                 }
                 catch (InvalidDataException e)
                 {
-                    var path = e.Message.Contains("physicalSurfaceProfiles") ? "physicalSurfaceProfiles" :
+                    var path = e.Message.Contains("flightSpace") ? "flightSpace" :
+                        e.Message.Contains("sceneObjects") ? "sceneObjects" :
+                        e.Message.Contains("physicalSurfaceProfiles") ? "physicalSurfaceProfiles" :
                         e.Message.Contains("mapMarkers") ? "mapMarkers" :
                         e.Message.Contains("directedEdge") ? "directedEdgeOverrides" :
                         e.Message.Contains("mapVersion") ? "mapVersion" :

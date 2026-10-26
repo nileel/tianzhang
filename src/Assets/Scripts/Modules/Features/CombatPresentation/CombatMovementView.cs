@@ -360,7 +360,13 @@ namespace TianZhang.Features.CombatPresentation
                 return;
             }
             pathPoints.Clear();
-            if (option.MovementSteps.Count > 0 && option.MovementSteps[0].From.IsDoubleCell)
+            bool flying = option.MovementSteps.Count > 0 && option.MovementSteps[0].From.AltitudeBand > 0;
+            if (flying)
+            {
+                pathPoints.Add(CombatUnitFlightVisual.Position(option.MovementSteps[0].From, surface));
+                foreach (var step in option.MovementSteps) pathPoints.Add(CombatUnitFlightVisual.Position(step.To, surface));
+            }
+            else if (option.MovementSteps.Count > 0 && option.MovementSteps[0].From.IsDoubleCell)
             {
                 pathPoints.Add(PoseCenter(option.MovementSteps[0].From));
                 foreach (CombatUnitPresentationMovementStep step in option.MovementSteps)
@@ -375,7 +381,7 @@ namespace TianZhang.Features.CombatPresentation
                 pathPoints.Add(centers[Key(snapshot.Movement.Origin)]);
                 foreach (CombatUnitPresentationHex cell in option.Path) pathPoints.Add(centers[Key(cell)]);
             }
-            if (surface != null) surface.DrawPath(pathLine,pathPoints,SelectionBorderOffset);
+            if (surface != null && !flying) surface.DrawPath(pathLine,pathPoints,SelectionBorderOffset);
             else
             {
                 pathLine.positionCount = pathPoints.Count;
@@ -393,7 +399,7 @@ namespace TianZhang.Features.CombatPresentation
                 {
                     float radians = (30f + corner * 60f) * Mathf.Deg2Rad;
                     Vector3 p=nodeCenter + new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * PathNodeRadius;
-                    if(surface != null && surface.TryHeight(p,out float y)) p.y=y+SelectionBorderOffset;
+                    if(surface != null && !flying && surface.TryHeight(p,out float y)) p.y=y+SelectionBorderOffset;
                     node.SetPosition(corner,p);
                 }
                 ShowRing(node, DestinationColor, 0.05f);

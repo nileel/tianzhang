@@ -20,6 +20,8 @@ MonoBehaviour:
     realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
     realmMultiplier: 6
     basicAttackProfileId: basic_body_human_jindan
+    basicAttackSourceModeMask: 3
+    basicAttackTargetModeMask: 3
     sourceGongFaId: gongfa_qiushuiyouxin
     sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
     sourceCharacterDefinitionId: char_sanxiuqiangdao
@@ -50,6 +52,8 @@ MonoBehaviour:
     realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
     realmMultiplier: 6
     basicAttackProfileId: basic_body_human_jindan
+    basicAttackSourceModeMask: 3
+    basicAttackTargetModeMask: 3
     sourceGongFaId: gongfa_qiushuiyouxin
     sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
     sourceCharacterDefinitionId: char_sanxiuqiangdao
@@ -80,6 +84,8 @@ MonoBehaviour:
     realmSubstage: "\u91D1\u4E39\u521D\u7ED3"
     realmMultiplier: 6
     basicAttackProfileId: basic_body_human_jindan
+    basicAttackSourceModeMask: 3
+    basicAttackTargetModeMask: 3
     sourceGongFaId: gongfa_qiushuiyouxin
     sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
     sourceCharacterDefinitionId: char_sanxiuqiangdao
@@ -110,6 +116,8 @@ MonoBehaviour:
     realmSubstage: "\u91D1\u4E39\u6E29\u517B"
     realmMultiplier: 6
     basicAttackProfileId: basic_body_human_jindan
+    basicAttackSourceModeMask: 3
+    basicAttackTargetModeMask: 3
     sourceGongFaId: gongfa_qiushuiyouxin
     sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
     sourceCharacterDefinitionId: char_sanxiuqiangdao
@@ -142,6 +150,8 @@ MonoBehaviour:
     realmSubstage: "\u91D1\u4E39\u6E29\u517B"
     realmMultiplier: 6
     basicAttackProfileId: basic_body_human_jindan
+    basicAttackSourceModeMask: 3
+    basicAttackTargetModeMask: 3
     sourceGongFaId: gongfa_qiushuiyouxin
     sourceGongFaDocument: "docs/\u89D2\u8272\u517B\u6210/\u529F\u6CD5/\u6563\u4FEE/\u79CB\u6C34\u6E38\u5FC3\u7ECF.txt"
     sourceCharacterDefinitionId: char_sanxiuqiangdao
@@ -1157,8 +1167,8 @@ MonoBehaviour:
     failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
     capacityUnit: SELF
     additionalRulesKey: demo_20261024_flight_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d6
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
   - commandId: demo_20261024_flight_ascend
     displayNameKey: demo_20261024_flight_ascend
@@ -1185,8 +1195,8 @@ MonoBehaviour:
     failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
     capacityUnit: SELF
     additionalRulesKey: demo_20261024_flight_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d6
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
   - commandId: demo_20261024_flight_descend
     displayNameKey: demo_20261024_flight_descend
@@ -1213,8 +1223,8 @@ MonoBehaviour:
     failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
     capacityUnit: SELF
     additionalRulesKey: demo_20261024_flight_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d6
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
   - commandId: demo_20261024_flight_land
     displayNameKey: demo_20261024_flight_land
@@ -1241,8 +1251,8 @@ MonoBehaviour:
     failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
     capacityUnit: SELF
     additionalRulesKey: demo_20261024_flight_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d6
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
   - commandId: demo_20261024_flight_recover
     displayNameKey: demo_20261024_flight_recover
@@ -1269,8 +1279,8 @@ MonoBehaviour:
     failurePolicy: FORCED_LANDING_OR_FINITE_FAILURE_PROCESS
     capacityUnit: SELF
     additionalRulesKey: demo_20261024_flight_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d6
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u672F\u6CD5/\u6563\u4FEE/\u6F14\u6B66\xB7\u5FA1\u98CE\u98DE\u884C.txt"
   contracts:
   - contractId: demo_20261024_earth_manifest_contract_v1

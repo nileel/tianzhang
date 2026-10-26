@@ -136,9 +136,13 @@
 
 ## 九、关中金丹演武地图与共用尺寸（2026-10-24）
 
+D6演武五预设徒手普攻按《金丹基础效果装配与冲突规则》§9.3的独立会话声明使用GROUND／FLY来源与目标、垂直触及1；其余生产模板沿§八.11原声明。持有飞行能力不自动扩展攻击资格。
+
+D4／D6在原D2环境契约后追加sceneObjects／flightSpace，当前共16列，旧平地行的七个追加列均留空。flightSpace显式覆盖144个已有柱与760条有向邻边，基础空中许可全开、最高合法有效高度4、格与边飞行额外负担0。实体墙、主要场景物、空间封锁、完整柱占位及原型跨高上限独立限制通行；坡肩／岩障可作为空中柱，仍不是合法GROUND落点。缺失地图柱不产生空中落点。该追加不改变原GROUND拓扑与移动负担。
+
 目标采用 assets/generated-scene-art/guanzhong-jindan-demo/terrain-target-20261024/terrain-target-v3.png，保留独立六角地块、三档阶地、左坡、前右短阶及后右高台阶梯。用户已批准双格在坡阶跨高停留，并允许按真实外形增加坡阶占格和重定过渡。固定配表、复现脚本及编码合同在 docs/基础设定/演武地图/关中阶地-20261024/map/；原始资产量测及实际Blender画面在同目录geometry/，最终长坡证据在geometry/long-transition/。设计配表与实体尺寸核查不代替D2导入、D3正式资产或D3运行表现验收。
 
-1. 单一生产入口仍为 src/Assets/DataConfig/EnvironmentProfiles.csv → WorldContentImporter → EnvironmentProfile资产 → CombatEntryAdapter → 既有空间查询。内容ID固定为env_guanzhong_jindan_demo，保留env_guanzhong_wild及旧平地行为；生产CSV同时含两行，v1行五个追加列留空。EnvironmentProfiles.candidate.csv是该链的D1待实施输入定义，D2已按同一数据链实现v2导入，不增加JSON运行加载器。原九列保留，追加mapSchemaVersion、mapVersion、directedEdgeOverrides、physicalSurfaceProfiles、mapMarkers共五列。缺省版本按v1三段格记录解释、H0及负担0；v2使用七段格记录，并显式编码有向边、唯一物理支承profile及marker。编码、错误条件、旧行迁移和引用规则以d2-import-contract.json为准。144格及760条有向边经生产CSV—资产—空间查询链还原；导入器逐项校验v2字段、支承引用、边类型、双向坡度／阶连接和标记格，字符串能读回不再代替生产导入。
+1. 单一生产入口仍为 src/Assets/DataConfig/EnvironmentProfiles.csv → WorldContentImporter → EnvironmentProfile资产 → CombatEntryAdapter → 既有空间查询。内容ID固定为env_guanzhong_jindan_demo，保留env_guanzhong_wild及旧平地行为；生产CSV同时含两行，v1行现有七个追加列均留空。EnvironmentProfiles.candidate.csv是该链的D1待实施输入定义，D2已按同一数据链实现v2导入，不增加JSON运行加载器。原九列保留，追加mapSchemaVersion、mapVersion、directedEdgeOverrides、physicalSurfaceProfiles、mapMarkers共五列。缺省版本按v1三段格记录解释、H0及负担0；v2使用七段格记录，并显式编码有向边、唯一物理支承profile及marker。编码、错误条件、旧行迁移和引用规则以d2-import-contract.json为准。144格及760条有向边经生产CSV—资产—空间查询链还原；导入器逐项校验v2字段、支承引用、边类型、双向坡度／阶连接和标记格，字符串能读回不再代替生产导入。
 
 2. 地图版本guanzhong-jindan-v3-d1-supported-map-20261024.4。显式坐标集为r=-1时q=1～8，r=0～7时q=0～9，r=8～15时q=3～9，共144个支承格；其中36格为不可走坡肩、3格为岩障，105个可停格全部单格连通。为保留原兽模型及0.75m单档高差，约百格可玩区外增加必要坡肩和落脚平台；不能把整个外接矩形当地图。heightLevel只有0／1／2，逐格取配表，半坡及阶梯中台的真实Y不新增规则高度档。生成760条有向邻边，再应用532条显式覆盖；缺反向记录是数据错误。
 

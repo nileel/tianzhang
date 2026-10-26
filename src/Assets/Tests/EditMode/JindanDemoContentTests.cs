@@ -31,7 +31,8 @@ namespace TianZhang.Tests.EditMode
             Assert.That(catalog.abilities.Count(a => a.kind == "GUARDIAN"), Is.EqualTo(7));
             Assert.That(catalog.abilities.Count(a => a.kind == "FLIGHT"), Is.EqualTo(1));
             Assert.That(catalog.commands.Where(c => c.enabled).Select(c => c.commandId), Is.EquivalentTo(new[]
-            { "demo_20261024_scale_deploy", "demo_20261024_scale_terminate" }));
+            { "demo_20261024_scale_deploy", "demo_20261024_scale_terminate", "demo_20261024_flight_takeoff",
+                "demo_20261024_flight_ascend", "demo_20261024_flight_descend", "demo_20261024_flight_land", "demo_20261024_flight_recover" }));
             Assert.That(catalog.commands.Where(c => !c.enabled).All(c => !string.IsNullOrEmpty(c.unavailableReasonKey)), Is.True);
             Assert.That(JindanDemoCatalogValidator.Validate(catalog, false, out string reason), Is.True, reason);
         }
@@ -139,7 +140,7 @@ namespace TianZhang.Tests.EditMode
         public void EnablingAnUnimplementedAbilityFailsClosed()
         {
             var catalog = Read();
-            var flight = catalog.commands.First(c => c.effectId == "FLIGHT");
+            var flight = catalog.commands.First(c => c.effectId == "EARTH_GRAVITY");
             flight.enabled = true; flight.unavailableReasonKey = string.Empty;
             Assert.That(JindanDemoCatalogValidator.Validate(catalog, false, out string reason), Is.False);
             Assert.That(reason, Is.EqualTo("JD_DEMO_UNIMPLEMENTED_COMMAND_ENABLED"));

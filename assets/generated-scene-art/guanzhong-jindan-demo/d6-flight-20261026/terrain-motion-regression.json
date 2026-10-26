@@ -1,0 +1,18 @@
+{
+    "singlePathDeviation": 0.0,
+    "actionScaleDeviation": 0.0,
+    "actionPenetration": 0.0,
+    "actionSoleGap": 1.1920928955078126e-7,
+    "stairPenetration": 0.00009119510650634766,
+    "stairRestGap": 0.0,
+    "seconds": [
+        0.2666664123535156,
+        0.25,
+        0.25
+    ],
+    "flatAttackScale": {
+        "x": 1.0800000429153443,
+        "y": 0.9399999976158142,
+        "z": 1.0800000429153443
+    }
+}

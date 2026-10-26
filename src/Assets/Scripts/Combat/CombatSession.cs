@@ -220,6 +220,12 @@ namespace TianZhang.Combat
         public long StateVersion { get; private set; }
         public bool HasCommittedBenefit { get; private set; }
         public CombatJindanLoadout Jindan { get; private set; }
+        public CombatFlight Flight { get; private set; }
+        public void ConfigureFlight(CombatFlight flight)
+        {
+            if (TurnSequence != 0 || Flight != null) throw new InvalidOperationException("flight_session_already_started");
+            flight.ValidateBindings(this); Flight = flight;
+        }
         public void ConfigureJindan(CombatJindanLoadout loadout)
         {
             if (TurnSequence != 0 || Jindan != null) throw new InvalidOperationException("jindan_session_already_started");
@@ -266,7 +272,9 @@ namespace TianZhang.Combat
             HasCommittedBenefit = false;
             TurnSequence = checked(TurnSequence + 1);
             StateVersion = checked(StateVersion + 1);
-            return actor.BeginOwnTurn();
+            bool ready = actor.BeginOwnTurn();
+            Flight?.BeginOwnTurn(this, actor);
+            return ready && actor.IsAlive;
         }
 
         internal void RecordAction(int ctPenalty)
@@ -278,7 +286,8 @@ namespace TianZhang.Combat
 
         internal void FinishTurn()
         {
-            if (Combatants.TryGet(CurrentActorId, out CombatantSnapshot actor)) actor.EndOwnTurn();
+            if (Combatants.TryGet(CurrentActorId, out CombatantSnapshot actor) && actor.OwnTurnActive)
+            { Flight?.EndOwnTurn(this, actor); actor.EndOwnTurn(); }
             if (TurnPhase != CombatTurnPhase.Finished) StateVersion = checked(StateVersion + 1);
             CurrentActorId = string.Empty;
             TurnPhase = CombatTurnPhase.Finished;
@@ -288,6 +297,7 @@ namespace TianZhang.Combat
         internal void Terminate()
         {
             Jindan?.Clear(this);
+            Flight?.Clear(this);
             FinishTurn();
             foreach (CombatantSnapshot actor in Combatants.All)
             { actor.ClearActionPoints(); actor.IsGuarding = false; actor.ClearStatuses(); }
@@ -478,6 +488,7 @@ namespace TianZhang.Combat
                 CombatCommandKind.Art => ValidateAttack(command, actor, CombatAttackKind.Art, out attackArea),
                 CombatCommandKind.Divine => ValidateAttack(command, actor, CombatAttackKind.Divine, out attackArea),
                 CombatCommandKind.Move => ValidateMove(command, actor),
+                CombatCommandKind.Flight => Flight?.Validate(this, command, actor) ?? CombatActionResult.Rejected("flight_source_missing"),
                 CombatCommandKind.SwapSpell => ValidateSwapSpell(command, actor),
                 CombatCommandKind.SwapEquipment => ValidateEquipment(command, actor),
                 CombatCommandKind.UseItem => ValidateItem(command, actor),
@@ -654,6 +665,8 @@ namespace TianZhang.Combat
 
         private CombatActionResult ValidateMove(CombatCommand command, CombatantSnapshot actor)
         {
+            string flightReason = Flight?.MovementReason(this, actor) ?? (actor.MovementMode == SpatialMovementMode.Fly ? "flight_source_missing" : string.Empty);
+            if (flightReason.Length > 0) return CombatActionResult.Rejected(flightReason);
             if (!command.Destination.HasValue || command.Destination.Value == actor.Position ||
                 command.DestinationFacing is < 0 or > 5)
                 return CombatActionResult.Rejected("combat_move_destination_invalid");
@@ -688,6 +701,7 @@ namespace TianZhang.Combat
                     SpatialMovementEdgeCost edge = movement.MovementEdges[index];
                     SpatialMovementStep step = movement.Steps[index];
                     if (!step.From.Equals(from) || step.To.Footprint != actor.Footprint || step.To.BodyScaleRank != actor.BodyScaleRank ||
+                        step.To.MovementMode != actor.MovementMode || step.To.AltitudeBand != actor.AltitudeBand ||
                         step.To.Facing != edge.From.DirectionTo(edge.To) ||
                         edge.From != from.Anchor || edge.To != movement.Path[index] || from.Anchor.DirectionTo(edge.To) < 0 ||
                         edge.MetricDistanceUnits <= 0 || edge.MovementBurdenUnits < 0 || occupied.Contains(edge.To))

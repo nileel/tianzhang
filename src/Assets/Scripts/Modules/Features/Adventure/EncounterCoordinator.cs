@@ -213,6 +213,7 @@ namespace TianZhang.Features.Adventure
             if (combatRoutine != null) StopCoroutine(combatRoutine);
             combatRoutine = null;
             session.Jindan?.Clear(session);
+            session.Flight?.Clear(session);
             session = null;
             spawned = null;
             enemyPolicies = null;
@@ -331,7 +332,8 @@ namespace TianZhang.Features.Adventure
                 return CombatActionResult.Rejected("combat_quote_stale");
             var result = ExecuteCommand(command, quote);
             string action = command.Kind == CombatCommandKind.SwapJindan ? "切换金丹装配" :
-                command.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" : "布设方位定尺";
+                command.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" :
+                command.Kind == CombatCommandKind.Flight ? "御风飞行" : "布设方位定尺";
             presentation.AppendLog(result.Succeeded ? ActorName(command.ActorId) + "：" + action +
                 "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent : displayReason(result.RejectionReason));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
@@ -560,12 +562,14 @@ namespace TianZhang.Features.Adventure
             {
                 RefreshGrowth();
                 acceptsPlayerCommand = false;
+                var flightBefore = SnapshotFlightStates();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
+                ProjectFlightStates(flightBefore);
                 Present("回合推进", false, advanceSteps);
                 while (IsPresenting) yield return null;
                 if (!advance.HasActor)
                 {
-                    Complete(CombatSessionOutcome.Defeat);
+                    Complete(resultBuilder.Build(session).Outcome);
                     yield break;
                 }
 
@@ -637,6 +641,7 @@ namespace TianZhang.Features.Adventure
 
         private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
         {
+            var flightBefore = command.Kind == CombatCommandKind.EndTurn ? SnapshotFlightStates() : null;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
             CombatUnitPresentationHex actorStart = actorBefore == null
                 ? default
@@ -696,6 +701,7 @@ namespace TianZhang.Features.Adventure
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
             if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn)
                 ProjectPresentation(command, result, actorBefore, actorStart, quote);
+            else if (result.Succeeded) ProjectFlightStates(flightBefore);
             return result;
         }
 
@@ -921,6 +927,7 @@ namespace TianZhang.Features.Adventure
             }), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
             session.Jindan?.Clear(session);
+            session.Flight?.Clear(session);
             foreach (CombatantSnapshot player in spawned.Players) unitPresentation.Remove(player.Id);
             foreach (CombatantSnapshot enemy in spawned.Enemies) unitPresentation.Remove(enemy.Id);
             unitPresentation.Clear();
@@ -1003,6 +1010,7 @@ namespace TianZhang.Features.Adventure
                     CombatCommandKind.Art or CombatCommandKind.Divine => CombatUnitPresentationEvent.Cast,
                     _ => CombatUnitPresentationEvent.Idle,
                 };
+                if (!actorBefore.IsAlive) actionEvent = CombatUnitPresentationEvent.Death;
                 // The actor event carries every affected target: heals for restored spirit and the
                 // damage group, so presentation can place one impact per affected unit without
                 // reading combat state. Individual Hit/Death events still follow separately.
@@ -1046,6 +1054,7 @@ namespace TianZhang.Features.Adventure
                     affected,
                     result.MovementPath.Select(ToPresentationHex).ToArray(),
                     profileId: command.ProfileId, movementSteps: result.MovementSteps.Select(ToPresentationStep).ToArray(),
+                    altitudeBand: actorBefore.AltitudeBand,
                     targetCell: command.TargetCell.HasValue ? ToPresentationHex(command.TargetCell.Value) : null,
                     sourceCell: command.TargetCell.HasValue && quote.AttackArea != null
                         ? ToPresentationHex(quote.AttackArea.CellContacts.First(contact => contact.TargetCell == command.TargetCell.Value).SourceCell) : null));
@@ -1059,7 +1068,7 @@ namespace TianZhang.Features.Adventure
                     unitPresentation.Present(new CombatUnitPresentationEventProjection(
                         target.Id, isDead ? CombatUnitPresentationEvent.Death : CombatUnitPresentationEvent.Hit,
                         ToPresentationHex(target.Position), ToPresentationHex(target.Position), target.Facing,
-                        new[] { TargetResult(target.Id, finalDamage, isDead) }));
+                        new[] { TargetResult(target.Id, finalDamage, isDead) }, altitudeBand: target.AltitudeBand));
                 }
             }
             catch (Exception exception)
@@ -1072,7 +1081,31 @@ namespace TianZhang.Features.Adventure
             new CombatUnitPresentationHex(value.Q, value.R);
 
         private static CombatUnitPresentationPose ToPresentationPose(SpatialPose pose) =>
-            new CombatUnitPresentationPose(ToPresentationHex(pose.Anchor), pose.Facing, pose.Footprint == SpatialFootprintKind.AdjacentPair);
+            new CombatUnitPresentationPose(ToPresentationHex(pose.Anchor), pose.Facing, pose.Footprint == SpatialFootprintKind.AdjacentPair, pose.AltitudeBand);
+
+        private Dictionary<string, (SpatialPose Pose, int Health)> SnapshotFlightStates() =>
+            session.Flight?.States.ToDictionary(value => value.ActorId, value =>
+            {
+                session.Combatants.TryGet(value.ActorId, out var actor);
+                return (actor.Pose, actor.CurrentHealth);
+            });
+
+        private void ProjectFlightStates(Dictionary<string, (SpatialPose Pose, int Health)> before)
+        {
+            if (session?.Flight == null || before == null) return;
+            foreach (var flight in session.Flight.States)
+            {
+                session.Combatants.TryGet(flight.ActorId, out var actor);
+                var previous = before[actor.Id];
+                if (previous.Health <= 0 || previous.Pose == actor.Pose && previous.Health == actor.CurrentHealth) continue;
+                int damage = Math.Max(0, previous.Health - actor.CurrentHealth);
+                unitPresentation.Present(new CombatUnitPresentationEventProjection(actor.Id,
+                    !actor.IsAlive ? CombatUnitPresentationEvent.Death : damage > 0 ? CombatUnitPresentationEvent.Hit : CombatUnitPresentationEvent.Idle,
+                    ToPresentationHex(actor.Position), ToPresentationHex(actor.Position), actor.Facing,
+                    damage == 0 ? null : new[] { new CombatUnitPresentationTargetResult(actor.Id, damage, !actor.IsAlive) },
+                    altitudeBand: actor.AltitudeBand));
+            }
+        }
 
         private static CombatUnitPresentationMovementStep ToPresentationStep(SpatialMovementStep step) =>
             new CombatUnitPresentationMovementStep(ToPresentationPose(step.From), ToPresentationPose(step.To), step.TurnFacings);
@@ -1086,8 +1119,10 @@ namespace TianZhang.Features.Adventure
                 var left = shown[index]; var right = quoted[index];
                 if (!left.From.Position.Equals(ToPresentationHex(right.From.Anchor)) || left.From.Facing != right.From.Facing ||
                     left.From.IsDoubleCell != (right.From.Footprint == SpatialFootprintKind.AdjacentPair) ||
+                    left.From.AltitudeBand != right.From.AltitudeBand ||
                     !left.To.Position.Equals(ToPresentationHex(right.To.Anchor)) || left.To.Facing != right.To.Facing ||
                     left.To.IsDoubleCell != (right.To.Footprint == SpatialFootprintKind.AdjacentPair) ||
+                    left.To.AltitudeBand != right.To.AltitudeBand ||
                     !left.TurnFacings.SequenceEqual(right.TurnFacings)) return false;
             }
             return true;

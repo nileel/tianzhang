@@ -34,6 +34,10 @@ namespace TianZhang.Combat
             AddIfValid(session, new CombatCommand(CombatCommandKind.EndTurn, actor.Id), actions);
             AddMoves(session, actor, actions);
             AddSpellSwaps(session, actor, actions);
+            if (session.Flight?.Find(actor.Id) != null)
+                foreach (CombatFlightAction action in Enum.GetValues(typeof(CombatFlightAction)))
+                    AddIfValid(session, new CombatCommand(CombatCommandKind.Flight, actor.Id,
+                        profileId: CombatFlight.ProfileId, flightAction: action), actions);
             if (session.ExternalResources != null)
             {
                 foreach (CombatCommand candidate in session.ExternalResources.GetEquipmentCandidates(actor.Id))

@@ -6629,3 +6629,6 @@ MonoBehaviour:
     heavyCoverHitPenalty: 0
     types: []
     instances: []
+  flightSpace:
+    cells: []
+    edges: []

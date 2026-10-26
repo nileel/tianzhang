@@ -195,7 +195,8 @@ namespace TianZhang.Spatial
             bool blocksMovement,
             bool blocksSight,
             bool isEntityObstacle,
-            int movementBurdenUnits)
+            int movementBurdenUnits, bool allowsFlight = false, int maximumFlightHeight = 0,
+            int flightMovementBurdenUnits = 0)
         {
             if (movementBurdenUnits < 0)
                 throw new ArgumentOutOfRangeException(nameof(movementBurdenUnits));
@@ -204,6 +205,9 @@ namespace TianZhang.Spatial
             BlocksSight = blocksSight || isEntityObstacle;
             IsEntityObstacle = isEntityObstacle;
             MovementBurdenUnits = movementBurdenUnits;
+            if (maximumFlightHeight < 0 || flightMovementBurdenUnits < 0) throw new ArgumentOutOfRangeException(nameof(maximumFlightHeight));
+            AllowsFlight = allowsFlight; MaximumFlightHeight = maximumFlightHeight;
+            FlightMovementBurdenUnits = flightMovementBurdenUnits;
         }
 
         public int HeightLevel { get; }
@@ -211,6 +215,9 @@ namespace TianZhang.Spatial
         public bool BlocksSight { get; }
         public bool IsEntityObstacle { get; }
         public int MovementBurdenUnits { get; }
+        public bool AllowsFlight { get; }
+        public int MaximumFlightHeight { get; }
+        public int FlightMovementBurdenUnits { get; }
     }
 
     public readonly struct SpatialEdgeRules
@@ -223,7 +230,7 @@ namespace TianZhang.Spatial
             int clearanceLimit = 0,
             SpatialEdgeKind edgeKind = SpatialEdgeKind.Flat,
             int movementBurdenUnits = 0,
-            string connectionId = null)
+            string connectionId = null, bool allowsFlight = false, int flightMovementBurdenUnits = 0)
         {
             if (metricDistanceUnits < 1)
                 throw new ArgumentOutOfRangeException(nameof(metricDistanceUnits));
@@ -239,6 +246,8 @@ namespace TianZhang.Spatial
             EdgeKind = edgeKind;
             MovementBurdenUnits = movementBurdenUnits;
             ConnectionId = connectionId;
+            if (flightMovementBurdenUnits < 0) throw new ArgumentOutOfRangeException(nameof(flightMovementBurdenUnits));
+            AllowsFlight = allowsFlight; FlightMovementBurdenUnits = flightMovementBurdenUnits;
         }
 
         public int MetricDistanceUnits { get; }
@@ -250,6 +259,8 @@ namespace TianZhang.Spatial
         /// <summary>Movement-only extra burden; never part of attack metric distance.</summary>
         public int MovementBurdenUnits { get; }
         public string ConnectionId { get; }
+        public bool AllowsFlight { get; }
+        public int FlightMovementBurdenUnits { get; }
     }
 
     public readonly struct SpatialQueryLimits

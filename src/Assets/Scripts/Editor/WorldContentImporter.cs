@@ -46,6 +46,7 @@ namespace TianZhang.Editor
             "physicalSurfaceProfiles",
             "mapMarkers",
             "sceneObjects",
+            "flightSpace",
         };
 
         private const int EnvironmentMapSchemaVersion2 = 2;
@@ -277,6 +278,14 @@ namespace TianZhang.Editor
                 if (profile.sceneObjects == null ||
                     !profile.sceneObjects.TryValidate(battlefieldCells, directedEdges, out sceneReason))
                     throw new InvalidDataException($"{sourceName} sceneObjects invalid: {sceneReason ?? "configuration_missing"}");
+            }
+            string flightSpace = GetOptionalValue(headers, cols, "flightSpace");
+            if (flightSpace.Length > 0)
+            {
+                profile.flightSpace = JsonUtility.FromJson<EnvironmentFlightConfiguration>(flightSpace);
+                string flightReason = null;
+                if (profile.flightSpace == null || !profile.flightSpace.TryValidate(battlefieldCells, directedEdges, out flightReason))
+                    throw new InvalidDataException($"{sourceName} flightSpace invalid: {flightReason}");
             }
             return profile;
         }

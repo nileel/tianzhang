@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TianZhang.Content;
 using TianZhang.Spatial;
 
@@ -83,6 +84,9 @@ namespace TianZhang.Infrastructure.UnityContent
                 return Fail(SpatialQuerySnapshotReasons.CellsNotConfigured, out reason);
 
             var cells = new Dictionary<HexCoord, SpatialCellRules>();
+            var airCells = environment.FlightSpace?.cells.ToDictionary(value => new HexCoord(value.q, value.r));
+            var airEdges = environment.FlightSpace?.edges.ToDictionary(value =>
+                new SpatialDirectedEdge(new HexCoord(value.fromQ, value.fromR), new HexCoord(value.toQ, value.toR)));
             var unitAnchors = new Dictionary<int, HexCoord>();
             foreach (var tile in grid.Tiles)
             {
@@ -90,12 +94,14 @@ namespace TianZhang.Infrastructure.UnityContent
                     return Fail(SpatialQuerySnapshotReasons.EntityObstacleSourceNotConfigured, out reason);
 
                 var coord = tile.Coord;
+                EnvironmentFlightCell air = airCells != null && airCells.TryGetValue(coord, out var configuredAir) ? configuredAir : null;
                 cells.Add(coord, new SpatialCellRules(
                     tile.HeightLevel,
                     tile.BlocksGroundMove,
                     tile.BlocksLineOfSight,
                     tile.IsEntityObstacle,
-                    tile.MovementBurdenUnits));
+                    tile.MovementBurdenUnits, air?.allowsFlight == true && !tile.BlocksFlyingMove,
+                    air?.maximumEffectiveHeight ?? 0, air?.movementBurdenUnits ?? 0));
                 if (!tile.IsOccupied)
                     continue;
                 if (unitAnchors.ContainsKey(tile.OccupiedUnitId))
@@ -116,6 +122,7 @@ namespace TianZhang.Infrastructure.UnityContent
                 try
                 {
                     edge = new SpatialDirectedEdge(from, to);
+                    EnvironmentFlightEdge air = airEdges != null && airEdges.TryGetValue(edge, out var configuredAir) ? configuredAir : null;
                     rules = new SpatialEdgeRules(
                         configured.metricDistanceUnits,
                         configured.allowsMovement,
@@ -123,7 +130,8 @@ namespace TianZhang.Infrastructure.UnityContent
                         clearanceLimit: configured.clearanceLimit,
                         edgeKind: ToSpatialEdgeKind(configured.edgeKind),
                         movementBurdenUnits: configured.movementBurdenUnits,
-                        connectionId: configured.connectionId);
+                        connectionId: configured.connectionId, allowsFlight: air?.allowsFlight == true,
+                        flightMovementBurdenUnits: air?.movementBurdenUnits ?? 0);
                 }
                 catch (ArgumentException)
                 {

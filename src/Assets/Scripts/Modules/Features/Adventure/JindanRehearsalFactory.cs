@@ -34,6 +34,8 @@ namespace TianZhang.Features.Adventure
                 var bindings = preset.seatInstanceIds.Select(catalog.GetSeat).SelectMany(seat =>
                     seat.candidateEffectIds.Select(effect => new KeyValuePair<string, string>(effect, seat.guardianAbilityInstanceId)))
                     .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+                if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId))
+                    bindings.Add(CombatFlight.ProfileId, preset.flightAbilityInstanceId);
                 var actor = new CombatantSnapshot(preset.characterId, placement.team == 0 ? CombatTeam.Player : CombatTeam.Enemy,
                     new HexCoord(placement.q, placement.r), attributes.Reaction, stats.MaxHealth, stats.MaxHealth,
                     stats.PhysicalAttack, stats.MagicAttack, stats.PhysicalDefense, stats.MagicDefense,
@@ -73,6 +75,38 @@ namespace TianZhang.Features.Adventure
                     deploy.metricDistanceModes, deploy.unavailableReasonKey));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
+        }
+
+        public static CombatFlight CreateFlight(JindanDemoCatalogData catalog, AdventureSpawnSet spawned)
+        {
+            var actors = spawned.Players.Concat(spawned.Enemies).Select(value => value.Id).ToHashSet();
+            var sources = catalog.presets.Where(value => actors.Contains(value.characterId) &&
+                !string.IsNullOrEmpty(value.flightAbilityInstanceId)).Select(value =>
+                    new KeyValuePair<string, string>(value.characterId, value.flightAbilityInstanceId));
+            var commands = catalog.commands.Where(value => value.effectId == "FLIGHT").ToArray();
+            if (commands.Length != 5 || commands.Any(value => !value.enabled)) throw new ArgumentException("flight_commands_missing");
+            var takeoff = commands.Single(value => value.kind == "FLIGHT_TAKEOFF");
+            return new CombatFlight(sources, commands.Select(value => new CombatFlightCost(value.kind switch
+            {
+                "FLIGHT_TAKEOFF" => CombatFlightAction.Takeoff, "FLIGHT_ASCEND" => CombatFlightAction.Ascend,
+                "FLIGHT_DESCEND" => CombatFlightAction.Descend, "FLIGHT_LAND" => CombatFlightAction.Land,
+                "FLIGHT_RECOVER" => CombatFlightAction.Recover, _ => throw new ArgumentException("flight_command_unknown"),
+            }, value.actionPointCostUnits, value.manaCost, value.cooldownTicks)), takeoff.upkeepMana, takeoff.durationCount);
+        }
+
+        public static IReadOnlyList<CombatAttackProfile> ProjectAttacks(JindanDemoCatalogData catalog,
+            IReadOnlyList<CombatAttackProfile> originals)
+        {
+            if (!catalog.Validate(out string reason)) throw new ArgumentException(reason);
+            var result = originals.ToList();
+            foreach (var preset in catalog.presets.GroupBy(value => value.basicAttackProfileId).Select(group => group.First()))
+            {
+                var source = originals.Single(value => value.Id == preset.basicAttackProfileId);
+                result[result.IndexOf(source)] = source.WithSpatialPolicy(
+                    new SpatialAttackPolicy((SpatialMovementMode)preset.basicAttackSourceModeMask,
+                        (SpatialMovementMode)preset.basicAttackTargetModeMask, source.SpatialPolicy.VerticalReachRank, source.SpatialPolicy.IsMelee));
+            }
+            return result.AsReadOnly();
         }
 
         public static IReadOnlyList<CombatUnitPresentationDescriptor> Descriptors(AdventureSpawnSet spawned, string humanProfile)

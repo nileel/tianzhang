@@ -235,6 +235,13 @@ namespace TianZhang.Combat
         public bool MeetsRequirements(string realmStage, string rootElement, string rootGrade) =>
             qualification == null || qualification(realmStage, rootElement, rootGrade);
 
+        public CombatAttackProfile WithSpatialPolicy(SpatialAttackPolicy policy) =>
+            new CombatAttackProfile(Id, Kind, Effect, MinimumRange, MaximumRange, ActionPointCostUnits, MinimumNetCostUnits,
+                CtPenalty, ReuseCooldownTicks, PhysicalMultiplier, SoulMultiplier, HealAmount, SpiritCost, DamageElement,
+                SoulDefensePenetration, SpiritRecoveryMultiplier, MinimumSpiritRecovery, OtherTargetSpiritCost,
+                OtherTargetSpiritRecoveryMultiplier, qualification, IsTalisman, RuleMetadata, Area, policy,
+                EnvironmentTargetTypes, EnvironmentDamage);
+
         public int GetSpiritCost(bool targetsSelf) =>
             Effect == CombatAttackEffect.RestoreSpirit && !targetsSelf ? OtherTargetSpiritCost : SpiritCost;
 

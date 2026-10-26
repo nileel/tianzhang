@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="44" result="Passed" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.9497002">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1591" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.949700" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2840" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1575" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.926460" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="53924" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2841" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1575" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.907110" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2842" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1575" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.885638" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2843" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="761" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.834186" total="44" passed="44" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="2554" name="D4CombatEnvironmentTests" fullname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" classname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.102967" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2557" name="AreaHitsOnePairUnitOnce" fullname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests.AreaHitsOnePairUnitOnce" methodname="AreaHitsOnePairUnitOnce" classname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" runstate="Runnable" seed="1349183095" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.069392" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2558" name="CoverChangesHitChanceButNotDamageAndHeightDoesNotAddDamage" fullname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests.CoverChangesHitChanceButNotDamageAndHeightDoesNotAddDamage" methodname="CoverChangesHitChanceButNotDamageAndHeightDoesNotAddDamage" classname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" runstate="Runnable" seed="1806333962" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.006404" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2555" name="OneAreaDamagesEachObjectOnceAndNeverRetargetsBehindTheBrokenWall" fullname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests.OneAreaDamagesEachObjectOnceAndNeverRetargetsBehindTheBrokenWall" methodname="OneAreaDamagesEachObjectOnceAndNeverRetargetsBehindTheBrokenWall" classname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" runstate="Runnable" seed="2064236325" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.013540" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2556" name="OrdinaryEmptyCastCannotDamageAnObjectAndPermittedArtPaysItsExistingCosts" fullname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests.OrdinaryEmptyCastCannotDamageAnObjectAndPermittedArtPaysItsExistingCosts" methodname="OrdinaryEmptyCastCannotDamageAnObjectAndPermittedArtPaysItsExistingCosts" classname="TianZhang.Tests.EditMode.D4CombatEnvironmentTests" runstate="Runnable" seed="1852238476" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.003258" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2559" name="D4SpatialAttackTests" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.014874" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2560" name="AttackChecksModeMasksAndVerticalReachWithoutChangingHorizontalDistance" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.AttackChecksModeMasksAndVerticalReachWithoutChangingHorizontalDistance" methodname="AttackChecksModeMasksAndVerticalReachWithoutChangingHorizontalDistance" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="241452705" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.001035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2570" name="CellObjectBlocksPlacementAndEffectsUntilDestroyedWithoutErasingBaseObstacle" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.CellObjectBlocksPlacementAndEffectsUntilDestroyedWithoutErasingBaseObstacle" methodname="CellObjectBlocksPlacementAndEffectsUntilDestroyedWithoutErasingBaseObstacle" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1411955074" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.001001" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2565" name="CoverUsesLastIncomingEdgeAndHighestTierWhileMeleeIgnoresOnlyCellCover" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.CoverUsesLastIncomingEdgeAndHighestTierWhileMeleeIgnoresOnlyCellCover" methodname="CoverUsesLastIncomingEdgeAndHighestTierWhileMeleeIgnoresOnlyCellCover" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="352544777" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000457" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2569" name="DestroyedWallRefreshesRouteAndSightButPreservesOtherSameConnectionWall" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.DestroyedWallRefreshesRouteAndSightButPreservesOtherSameConnectionWall" methodname="DestroyedWallRefreshesRouteAndSightButPreservesOtherSameConnectionWall" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1063765387" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.004793" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2566" name="HighGroundAirAndOversizedTargetsIgnoreOrdinaryLowCover" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.HighGroundAirAndOversizedTargetsIgnoreOrdinaryLowCover" methodname="HighGroundAirAndOversizedTargetsIgnoreOrdinaryLowCover" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="2143137254" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000579" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2567" name="HighGroundIgnoresCoverButCannotCrossAnEntityWall" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.HighGroundIgnoresCoverButCannotCrossAnEntityWall" methodname="HighGroundIgnoresCoverButCannotCrossAnEntityWall" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1521119202" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000466" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2563" name="MinimumRangeCannotSelectFartherBodyCellToEscapeDeadZone" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.MinimumRangeCannotSelectFartherBodyCellToEscapeDeadZone" methodname="MinimumRangeCannotSelectFartherBodyCellToEscapeDeadZone" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1000134063" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000894" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2562" name="PairSourceChecksHeightBeforeSelectingNearestLegalContact" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.PairSourceChecksHeightBeforeSelectingNearestLegalContact" methodname="PairSourceChecksHeightBeforeSelectingNearestLegalContact" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1163862215" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000265" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2561" name="PairTargetUsesEachHeightAndExplicitSelectedCellNeverSubstitutesAnotherBodyCell" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.PairTargetUsesEachHeightAndExplicitSelectedCellNeverSubstitutesAnotherBodyCell" methodname="PairTargetUsesEachHeightAndExplicitSelectedCellNeverSubstitutesAnotherBodyCell" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1168415821" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000296" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2564" name="PoseCopiesAndEqualityRetainModeAndAltitude" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.PoseCopiesAndEqualityRetainModeAndAltitude" methodname="PoseCopiesAndEqualityRetainModeAndAltitude" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="1662918822" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.001180" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2571" name="SceneObjectQueriesRejectWrongIdsAnchorsAndMismatchedWallReplacement" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.SceneObjectQueriesRejectWrongIdsAnchorsAndMismatchedWallReplacement" methodname="SceneObjectQueriesRejectWrongIdsAnchorsAndMismatchedWallReplacement" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="2013586739" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.001130" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2568" name="WallCanBeTargetedWithoutExposingUnitBehindItOrIgnoringAnotherWall" fullname="TianZhang.Tests.EditMode.D4SpatialAttackTests.WallCanBeTargetedWithoutExposingUnitBehindItOrIgnoringAnotherWall" methodname="WallCanBeTargetedWithoutExposingUnitBehindItOrIgnoringAnotherWall" classname="TianZhang.Tests.EditMode.D4SpatialAttackTests" runstate="Runnable" seed="2083740653" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.000524" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2572" name="D5ConfigEditorIntegrationTests" fullname="TianZhang.Tests.EditMode.D5ConfigEditorIntegrationTests" classname="TianZhang.Tests.EditMode.D5ConfigEditorIntegrationTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.575276" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2573" name="ProductionIdentityTablesResolveTogetherAndRejectStalePositionVersions" fullname="TianZhang.Tests.EditMode.D5ConfigEditorIntegrationTests.ProductionIdentityTablesResolveTogetherAndRejectStalePositionVersions" methodname="ProductionIdentityTablesResolveTogetherAndRejectStalePositionVersions" classname="TianZhang.Tests.EditMode.D5ConfigEditorIntegrationTests" runstate="Runnable" seed="1386818926" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:44Z" duration="0.574795" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2620" name="D6FlightContentTests" fullname="TianZhang.Tests.EditMode.D6FlightContentTests" classname="TianZhang.Tests.EditMode.D6FlightContentTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.110171" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2621" name="EnvironmentEditorPreservesAllFlightAndSceneObjectSourceTokens" fullname="TianZhang.Tests.EditMode.D6FlightContentTests.EnvironmentEditorPreservesAllFlightAndSceneObjectSourceTokens" methodname="EnvironmentEditorPreservesAllFlightAndSceneObjectSourceTokens" classname="TianZhang.Tests.EditMode.D6FlightContentTests" runstate="Runnable" seed="656418620" result="Passed" start-time="2026-10-26 13:18:44Z" end-time="2026-10-26 13:18:45Z" duration="0.085844" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2622" name="ImportedFlightRequiresCompleteCellAndDirectedEdgeCoverage" fullname="TianZhang.Tests.EditMode.D6FlightContentTests.ImportedFlightRequiresCompleteCellAndDirectedEdgeCoverage" methodname="ImportedFlightRequiresCompleteCellAndDirectedEdgeCoverage" classname="TianZhang.Tests.EditMode.D6FlightContentTests" runstate="Runnable" seed="1719364279" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.008650" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2623" name="RehearsalCommandCatalogRejectsMissingFlightActionEvenWhenIdsAreUnique" fullname="TianZhang.Tests.EditMode.D6FlightContentTests.RehearsalCommandCatalogRejectsMissingFlightActionEvenWhenIdsAreUnique" methodname="RehearsalCommandCatalogRejectsMissingFlightActionEvenWhenIdsAreUnique" classname="TianZhang.Tests.EditMode.D6FlightContentTests" runstate="Runnable" seed="1928685765" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.014484" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2806" name="SpatialQueryBoardTests" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" testcasecount="24" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.018438" total="24" passed="24" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2814" name="ActionPointReachabilityAndQuoteShareOneEdgeWeightWhileMetricDistanceStaysSeparate" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.ActionPointReachabilityAndQuoteShareOneEdgeWeightWhileMetricDistanceStaysSeparate" methodname="ActionPointReachabilityAndQuoteShareOneEdgeWeightWhileMetricDistanceStaysSeparate" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="2141787768" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000905" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2829" name="AdjacentPairKeepsBothCellsWhenOneIsRejected" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.003239" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2822" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;boundary&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;boundary&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="278560266" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.001745" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2823" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;missing_edge&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;missing_edge&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1713761452" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000322" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2824" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;reverse_edge&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;reverse_edge&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="887904743" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000077" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2825" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;effect_blocker&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;effect_blocker&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1448336329" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000071" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2826" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;entity_obstacle&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;entity_obstacle&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="887601326" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000110" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2827" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;wall&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;wall&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1874307314" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000061" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2828" name="AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;weighted_range&quot;)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AdjacentPairKeepsBothCellsWhenOneIsRejected(&quot;weighted_range&quot;)" methodname="AdjacentPairKeepsBothCellsWhenOneIsRejected" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="724576046" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000057" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2810" name="AreaQueryUsesEffectPathWithoutRequiringOrdinaryLineOfSight" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.AreaQueryUsesEffectPathWithoutRequiringOrdinaryLineOfSight" methodname="AreaQueryUsesEffectPathWithoutRequiringOrdinaryLineOfSight" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1034755100" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000310" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2807" name="DirectedWeightedEdgesAreTheOnlyDistanceSource" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.DirectedWeightedEdgesAreTheOnlyDistanceSource" methodname="DirectedWeightedEdgesAreTheOnlyDistanceSource" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1761801089" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000259" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2809" name="EntityObstacleBlocksMovementAndLineOfSight" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.EntityObstacleBlocksMovementAndLineOfSight" methodname="EntityObstacleBlocksMovementAndLineOfSight" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1658933678" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000258" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2808" name="ExpandedNeighborIsOutsideBasicAttackRange" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.ExpandedNeighborIsOutsideBasicAttackRange" methodname="ExpandedNeighborIsOutsideBasicAttackRange" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1970287890" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.001300" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2830" name="ForwardPairCannotBypassSightObstacleViaMetricDetour" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.ForwardPairCannotBypassSightObstacleViaMetricDetour" methodname="ForwardPairCannotBypassSightObstacleViaMetricDetour" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1034033471" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000511" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2811" name="HeightNeedsAnExplicitConnectionForMovementButNotForEffects" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.HeightNeedsAnExplicitConnectionForMovementButNotForEffects" methodname="HeightNeedsAnExplicitConnectionForMovementButNotForEffects" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="207234799" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000299" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2812" name="OccupiedLandingIsExcludedWithoutBecomingEntityObstacle" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.OccupiedLandingIsExcludedWithoutBecomingEntityObstacle" methodname="OccupiedLandingIsExcludedWithoutBecomingEntityObstacle" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1624989541" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000587" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2833" name="TwoCellAreaRejectsDirectionOutsideSixChoices" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellAreaRejectsDirectionOutsideSixChoices" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000714" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2831" name="TwoCellAreaRejectsDirectionOutsideSixChoices(-1)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellAreaRejectsDirectionOutsideSixChoices(-1)" methodname="TwoCellAreaRejectsDirectionOutsideSixChoices" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1196222150" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000307" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2832" name="TwoCellAreaRejectsDirectionOutsideSixChoices(6)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellAreaRejectsDirectionOutsideSixChoices(6)" methodname="TwoCellAreaRejectsDirectionOutsideSixChoices" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1666601990" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000049" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2821" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.001861" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2815" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(0,1,0,2,0,1,-1)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(0,1,0,2,0,1,-1)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1247608071" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000699" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2816" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(1,1,-1,2,-2,0,-1)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(1,1,-1,2,-2,0,-1)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="497777308" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000109" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2817" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(2,0,-1,0,-2,-1,0)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(2,0,-1,0,-2,-1,0)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="963709923" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000090" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2818" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(3,-1,0,-2,0,-1,1)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(3,-1,0,-2,0,-1,1)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1410218057" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000085" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2819" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(4,-1,1,-2,2,0,1)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(4,-1,1,-2,2,0,1)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="1594477727" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000152" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2820" name="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(5,0,1,0,2,1,0)" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin(5,0,1,0,2,1,0)" methodname="TwoCellShapesUseApprovedSixDirectionsAndTranslatedOrigin" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="429539671" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.000113" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2813" name="UnityFactoryMapsExplicitProfileAndRejectsDuplicateUnitAnchors" fullname="TianZhang.Tests.EditMode.SpatialQueryBoardTests.UnityFactoryMapsExplicitProfileAndRejectsDuplicateUnitAnchors" methodname="UnityFactoryMapsExplicitProfileAndRejectsDuplicateUnitAnchors" classname="TianZhang.Tests.EditMode.SpatialQueryBoardTests" runstate="Runnable" seed="441417449" result="Passed" start-time="2026-10-26 13:18:45Z" end-time="2026-10-26 13:18:45Z" duration="0.005835" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -9784,3 +9784,5286 @@ MonoBehaviour:
       edgeOther:
       sourceRef:
       replacesWallConnectionId:
+  flightSpace:
+    cells:
+    - q: 0
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 0
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 1
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 2
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 3
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 4
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 5
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 6
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 7
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: -1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 8
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 0
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 1
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 2
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 3
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 4
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 5
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 6
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 7
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 8
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 9
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 10
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 11
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 12
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 13
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 14
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    - q: 9
+      r: 15
+      allowsFlight: 1
+      maximumEffectiveHeight: 4
+      movementBurdenUnits: 0
+    edges:
+    - fromQ: 0
+      fromR: 0
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 0
+      toQ: 1
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 0
+      toQ: 0
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 1
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 1
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 1
+      toQ: 0
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 1
+      toQ: 0
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 2
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 2
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 2
+      toQ: 0
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 2
+      toQ: 0
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 3
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 3
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 3
+      toQ: 0
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 3
+      toQ: 0
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 4
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 4
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 4
+      toQ: 0
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 4
+      toQ: 0
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 5
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 5
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 5
+      toQ: 0
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 5
+      toQ: 0
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 6
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 6
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 6
+      toQ: 0
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 6
+      toQ: 0
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 7
+      toQ: 1
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 7
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 0
+      fromR: 7
+      toQ: 0
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: -1
+      toQ: 2
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: -1
+      toQ: 0
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: -1
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 2
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 1
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 0
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 0
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 0
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 0
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 0
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 1
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 0
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 0
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 2
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 0
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 0
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 3
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 0
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 0
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 4
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 0
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 0
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 5
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 0
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 0
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 6
+      toQ: 1
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 7
+      toQ: 2
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 7
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 7
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 1
+      fromR: 7
+      toQ: 0
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: -1
+      toQ: 3
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: -1
+      toQ: 1
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: -1
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: -1
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 3
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 2
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 1
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 0
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 1
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 1
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 1
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 2
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 1
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 3
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 1
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 4
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 1
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 5
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 1
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 1
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 6
+      toQ: 2
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 7
+      toQ: 3
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 7
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 7
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 2
+      fromR: 7
+      toQ: 1
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: -1
+      toQ: 4
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: -1
+      toQ: 2
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: -1
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: -1
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 4
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 3
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 2
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 0
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 2
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 1
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 2
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 2
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 2
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 3
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 2
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 4
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 2
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 5
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 2
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 2
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 6
+      toQ: 3
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 7
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 7
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 7
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 7
+      toQ: 2
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 7
+      toQ: 3
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 8
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 8
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 8
+      toQ: 3
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 8
+      toQ: 3
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 9
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 9
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 9
+      toQ: 3
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 9
+      toQ: 3
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 10
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 10
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 10
+      toQ: 3
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 10
+      toQ: 3
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 11
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 11
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 11
+      toQ: 3
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 11
+      toQ: 3
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 12
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 12
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 12
+      toQ: 3
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 12
+      toQ: 3
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 13
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 13
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 13
+      toQ: 3
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 13
+      toQ: 3
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 14
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 14
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 14
+      toQ: 3
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 14
+      toQ: 3
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 15
+      toQ: 4
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 15
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 3
+      fromR: 15
+      toQ: 3
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: -1
+      toQ: 5
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: -1
+      toQ: 3
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: -1
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: -1
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 5
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 4
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 3
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 0
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 3
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 1
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 3
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 2
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 3
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 3
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 3
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 4
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 3
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 5
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 3
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 3
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 6
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 3
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 3
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 7
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 3
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 3
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 8
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 3
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 3
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 9
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 3
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 3
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 10
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 3
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 3
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 11
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 3
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 3
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 12
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 3
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 3
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 13
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 3
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 3
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 14
+      toQ: 4
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 15
+      toQ: 5
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 15
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 15
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 4
+      fromR: 15
+      toQ: 3
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: -1
+      toQ: 6
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: -1
+      toQ: 4
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: -1
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: -1
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 6
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 5
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 4
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 0
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 4
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 1
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 4
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 2
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 4
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 3
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 4
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 4
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 4
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 5
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 4
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 6
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 4
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 7
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 4
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 8
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 4
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 9
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 4
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 10
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 4
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 11
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 4
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 12
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 4
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 13
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 4
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 4
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 14
+      toQ: 5
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 15
+      toQ: 6
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 15
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 15
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 5
+      fromR: 15
+      toQ: 4
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: -1
+      toQ: 7
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: -1
+      toQ: 5
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: -1
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: -1
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 7
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 6
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 5
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 0
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 5
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 1
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 5
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 2
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 5
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 3
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 5
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 4
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 5
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 5
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 5
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 6
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 5
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 7
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 5
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 8
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 5
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 9
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 5
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 10
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 5
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 11
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 5
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 12
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 5
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 13
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 5
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 5
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 14
+      toQ: 6
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 15
+      toQ: 7
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 15
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 15
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 6
+      fromR: 15
+      toQ: 5
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: -1
+      toQ: 8
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: -1
+      toQ: 6
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: -1
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: -1
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 8
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 8
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 7
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 6
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 0
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 8
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 6
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 1
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 6
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 2
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 6
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 3
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 6
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 4
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 6
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 5
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 6
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 6
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 6
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 7
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 6
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 8
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 6
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 9
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 6
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 10
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 6
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 11
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 6
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 12
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 6
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 13
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 6
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 6
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 14
+      toQ: 7
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 15
+      toQ: 8
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 15
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 15
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 7
+      fromR: 15
+      toQ: 6
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: -1
+      toQ: 7
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: -1
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: -1
+      toQ: 8
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 0
+      toQ: 9
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 0
+      toQ: 8
+      toR: -1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 0
+      toQ: 7
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 0
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 0
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 9
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 9
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 8
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 7
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 1
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 9
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 9
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 7
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 2
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 9
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 9
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 7
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 3
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 9
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 9
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 7
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 4
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 9
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 9
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 7
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 5
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 9
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 9
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 7
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 6
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 9
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 9
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 7
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 7
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 9
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 9
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 7
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 8
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 9
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 9
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 7
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 9
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 9
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 9
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 7
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 10
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 9
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 9
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 7
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 11
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 9
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 9
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 7
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 12
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 9
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 9
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 7
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 13
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 9
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 9
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 7
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 7
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 14
+      toQ: 8
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 15
+      toQ: 9
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 15
+      toQ: 9
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 15
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 8
+      fromR: 15
+      toQ: 7
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 0
+      toQ: 8
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 0
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 0
+      toQ: 9
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 1
+      toQ: 9
+      toR: 0
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 1
+      toQ: 8
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 1
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 1
+      toQ: 9
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 2
+      toQ: 9
+      toR: 1
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 2
+      toQ: 8
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 2
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 2
+      toQ: 9
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 3
+      toQ: 9
+      toR: 2
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 3
+      toQ: 8
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 3
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 3
+      toQ: 9
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 4
+      toQ: 9
+      toR: 3
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 4
+      toQ: 8
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 4
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 4
+      toQ: 9
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 5
+      toQ: 9
+      toR: 4
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 5
+      toQ: 8
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 5
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 5
+      toQ: 9
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 6
+      toQ: 9
+      toR: 5
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 6
+      toQ: 8
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 6
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 6
+      toQ: 9
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 7
+      toQ: 9
+      toR: 6
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 7
+      toQ: 8
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 7
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 7
+      toQ: 9
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 8
+      toQ: 9
+      toR: 7
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 8
+      toQ: 8
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 8
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 8
+      toQ: 9
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 9
+      toQ: 9
+      toR: 8
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 9
+      toQ: 8
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 9
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 9
+      toQ: 9
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 10
+      toQ: 9
+      toR: 9
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 10
+      toQ: 8
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 10
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 10
+      toQ: 9
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 11
+      toQ: 9
+      toR: 10
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 11
+      toQ: 8
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 11
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 11
+      toQ: 9
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 12
+      toQ: 9
+      toR: 11
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 12
+      toQ: 8
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 12
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 12
+      toQ: 9
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 13
+      toQ: 9
+      toR: 12
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 13
+      toQ: 8
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 13
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 13
+      toQ: 9
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 14
+      toQ: 9
+      toR: 13
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 14
+      toQ: 8
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 14
+      toQ: 8
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 14
+      toQ: 9
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 15
+      toQ: 9
+      toR: 14
+      allowsFlight: 1
+      movementBurdenUnits: 0
+    - fromQ: 9
+      fromR: 15
+      toQ: 8
+      toR: 15
+      allowsFlight: 1
+      movementBurdenUnits: 0

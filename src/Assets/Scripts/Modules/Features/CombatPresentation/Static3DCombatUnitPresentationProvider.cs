@@ -28,6 +28,8 @@ namespace TianZhang.Features.CombatPresentation
 
         private void FitSurface(string id, Transform root, CombatUnitPresentationPose pose, float yaw)
         {
+            if (pose.AltitudeBand > 0)
+            { root.position = CombatUnitFlightVisual.Position(pose, surface); root.rotation = Quaternion.Euler(0, yaw, 0); return; }
             if (surface == null) return;
             Vector3 center = pose.IsDoubleCell ? (SurfacePosition(pose.Position)+SurfacePosition(pose.Rear))*.5f : SurfacePosition(pose.Position);
             surfacePoses[id].Place(root,center,yaw);
@@ -36,6 +38,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Static3DCombatUnitPresentationProfileSet profileSet;
         [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
         [SerializeField] private Material targetPreviewMaterial;
+        [SerializeField] private Material flightLineMaterial;
         [SerializeField, Range(.1f, 1f)] private float doubleCellFootprintFill = .9f;
 
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
@@ -168,10 +171,23 @@ namespace TianZhang.Features.CombatPresentation
             }
             if (movements.ContainsKey(unit.CombatantId))
                 throw new InvalidOperationException("static_3d_presentation_busy");
+            if (presentationEvent.AltitudeBand.HasValue && presentationEvent.AltitudeBand.Value != unit.Pose.AltitudeBand &&
+                presentationEvent.PresentationEvent != CombatUnitPresentationEvent.Death)
+            {
+                var target = new CombatUnitPresentationPose(presentationEvent.EndPosition, presentationEvent.Facing,
+                    unit.Pose.IsDoubleCell, presentationEvent.AltitudeBand.Value);
+                unit.Pose = target;
+                StopActionRecovery(unit.CombatantId); ResetRootScale(unit);
+                movements.Add(unit.CombatantId, StartCoroutine(CombatUnitFlightVisual.Transition(unit.Root.transform, target,
+                    surface, surface != null ? surfacePoses[unit.CombatantId] : null, profile.sixDirectionYawDegrees[target.Facing],
+                    MovementCellsPerSecond, () => movements.Remove(unit.CombatantId))));
+                return;
+            }
             // A long body can turn only along the committed movement pose path. Attack direction
             // is carried separately by its contact cells and never changes the occupied footprint.
             int facing = unit.Pose.IsDoubleCell ? unit.Pose.Facing : presentationEvent.Facing;
-            unit.Pose = new CombatUnitPresentationPose(presentationEvent.EndPosition, facing, unit.Pose.IsDoubleCell);
+            unit.Pose = new CombatUnitPresentationPose(presentationEvent.EndPosition, facing, unit.Pose.IsDoubleCell,
+                presentationEvent.AltitudeBand ?? unit.Pose.AltitudeBand);
             unit.Root.transform.rotation = Quaternion.Euler(0f, profile.sixDirectionYawDegrees[facing], 0f);
             unit.Root.transform.position = PoseToWorld(unit.Pose);
             FitSurface(unit.CombatantId,unit.Root.transform,unit.Pose,profile.sixDirectionYawDegrees[facing]);
@@ -259,7 +275,12 @@ namespace TianZhang.Features.CombatPresentation
 
         private void LateUpdate()
         {
-            foreach (PresentedUnit unit in units.Values) RefreshTargetPreview(unit);
+            foreach (PresentedUnit unit in units.Values)
+            {
+                RefreshTargetPreview(unit);
+                if (unit.Pose.AltitudeBand > 0) unit.FlightVisual ??= new CombatUnitFlightVisual(unit.Root.transform, flightLineMaterial);
+                unit.FlightVisual?.Refresh(unit.Pose, surface);
+            }
         }
 
         private void RefreshTargetPreview(PresentedUnit unit)
@@ -359,6 +380,7 @@ namespace TianZhang.Features.CombatPresentation
                     CombatUnitPresentationMovementStep step = projection.MovementSteps[index];
                     if (step == null || !step.From.Position.Equals(previousPose.Position) ||
                         step.From.IsDoubleCell != previousPose.IsDoubleCell ||
+                        step.From.AltitudeBand != previousPose.AltitudeBand ||
                         (previousPose.IsDoubleCell && step.From.Facing != previousPose.Facing) ||
                         !step.To.Position.Equals(projection.MovementPath[index]))
                         throw new InvalidOperationException("static_3d_presentation_move_pose_stale");
@@ -486,7 +508,7 @@ namespace TianZhang.Features.CombatPresentation
             Vector3 position = (surface != null ? unit.Root.transform.position : PoseToWorld(unit.Pose)) + Vector3.up * 0.22f;
             if (presentationEvent.PresentationEvent is CombatUnitPresentationEvent.Hit or CombatUnitPresentationEvent.Death)
                 foreach (CombatUnitPresentationTargetResult target in presentationEvent.TargetResults)
-                    if (target.CombatantId == unit.CombatantId && target.TargetCell.HasValue)
+                    if (unit.Pose.AltitudeBand == 0 && target.CombatantId == unit.CombatantId && target.TargetCell.HasValue)
                     { position = SurfacePosition(target.TargetCell.Value) + Vector3.up * .22f; break; }
             Static3DCombatFeedbackProfile feedback = profile.combatFeedback;
             AudioClip cue = feedback.GetCue(presentationEvent.PresentationEvent);
@@ -617,6 +639,7 @@ namespace TianZhang.Features.CombatPresentation
             public GameObject Root { get; }
             public Renderer[] BodyRenderers { get; }
             public CombatTargetPreview TargetPreview { get; set; }
+            public CombatUnitFlightVisual FlightVisual { get; set; }
             public string ProfileId { get; set; }
             public CombatUnitPresentationPose Pose { get; set; }
             public string CombatantId { get; }

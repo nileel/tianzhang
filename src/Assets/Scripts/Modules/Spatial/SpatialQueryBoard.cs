@@ -147,11 +147,19 @@ namespace TianZhang.Spatial
         public string InspectPlacement(SpatialPose pose, IReadOnlyCollection<HexCoord> occupied = null)
         {
             if (!IsValidPose(pose)) return SpatialQueryReasons.InvalidPose;
+            if (pose.MovementMode == SpatialMovementMode.Fly &&
+                (pose.Footprint != SpatialFootprintKind.Single || pose.BodyScaleRank != 1 || pose.AltitudeBand is < 1 or > 2))
+                return "flight_pose_invalid";
             foreach (HexCoord coord in pose.OccupiedCells)
             {
                 if (!cells.TryGetValue(coord, out var rules)) return SpatialQueryReasons.MissingCell;
                 if (rules.IsEntityObstacle) return SpatialQueryReasons.EntityObstacle;
-                if (rules.BlocksMovement) return SpatialQueryReasons.MovementBlocked;
+                if (pose.MovementMode == SpatialMovementMode.Fly)
+                {
+                    if (!rules.AllowsFlight) return "flight_cell_not_permitted";
+                    if ((long)rules.HeightLevel + pose.AltitudeBand > rules.MaximumFlightHeight) return "flight_ceiling_exceeded";
+                }
+                else if (rules.BlocksMovement) return SpatialQueryReasons.MovementBlocked;
                 if (sceneObjects.BlocksCell(coord, true)) return SpatialQueryReasons.SceneObjectBlocksMovement;
                 if (Contains(occupied, coord)) return SpatialQueryReasons.Occupied;
             }
@@ -592,8 +600,9 @@ namespace TianZhang.Spatial
             SpatialPose to = rotated.WithAnchor(from.Anchor.Step(direction));
             reason = InspectPlacement(to, blocked);
             if (reason.Length != 0) return false;
-            SpatialEdgeInspection frontEdge = InspectEdge(from.Anchor, to.Anchor, SpatialQueryKind.Movement,
-                bodyScaleRank: from.BodyScaleRank);
+            SpatialEdgeInspection frontEdge = from.MovementMode == SpatialMovementMode.Fly
+                ? InspectFlightEdge(from, to.Anchor)
+                : InspectEdge(from.Anchor, to.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
             if (!frontEdge.IsLegal) { reason = frontEdge.Reason; return false; }
             if (from.Footprint == SpatialFootprintKind.AdjacentPair)
             {
@@ -601,12 +610,31 @@ namespace TianZhang.Spatial
                 var rearEdge = InspectEdge(rear, from.Anchor, SpatialQueryKind.Movement, bodyScaleRank: from.BodyScaleRank);
                 if (!rearEdge.IsLegal) { reason = rearEdge.Reason; return false; }
             }
-            long burdenUnits = (long)frontEdge.MovementBurdenUnits + cells[to.Anchor].MovementBurdenUnits;
+            long burdenUnits = (long)frontEdge.MovementBurdenUnits + (from.MovementMode == SpatialMovementMode.Fly
+                ? cells[to.Anchor].FlightMovementBurdenUnits : cells[to.Anchor].MovementBurdenUnits);
             if (burdenUnits > int.MaxValue) { reason = SpatialQueryReasons.ActionPointCostOverflow; return false; }
             step = new SpatialMovementStep(from, to, turns,
                 new SpatialMovementEdgeCost(from.Anchor, to.Anchor, frontEdge.MetricDistanceUnits, (int)burdenUnits));
             reason = SpatialQueryReasons.Ok;
             return true;
+        }
+
+        public SpatialEdgeInspection InspectFlightEdge(SpatialPose from, HexCoord to)
+        {
+            if (!from.Anchor.TryGetDirectionTo(to, out _)) return new SpatialEdgeInspection(false, 0, "flight_edge_not_adjacent");
+            if (!cells.TryGetValue(from.Anchor, out var source) || !cells.TryGetValue(to, out var target))
+                return new SpatialEdgeInspection(false, 0, SpatialQueryReasons.MissingCell);
+            var key = new SpatialDirectedEdge(from.Anchor, to);
+            if (!edges.TryGetValue(key, out var edge)) return new SpatialEdgeInspection(false, 0, SpatialQueryReasons.MissingDirectedEdge);
+            edge = metricOverrides.ResolveEdge(key, sceneObjects.ResolveEdge(key, edge));
+            string reason = InspectPlacement(from);
+            if (reason.Length == 0) reason = InspectPlacement(from.WithAnchor(to));
+            if (reason.Length == 0 && (sceneObjects.BlocksEdge(from.Anchor, to, true) || edge.EdgeKind == SpatialEdgeKind.EntityWall))
+                reason = SpatialQueryReasons.EntityWallBlocksMovement;
+            if (reason.Length == 0 && (!edge.AllowsFlight || edge.EffectBlockerMask != 0)) reason = "flight_edge_not_permitted";
+            if (reason.Length == 0 && Math.Abs((long)source.HeightLevel - target.HeightLevel) > from.AltitudeBand)
+                reason = "flight_height_difference_exceeded";
+            return new SpatialEdgeInspection(reason.Length == 0, edge.MetricDistanceUnits, reason, edge.FlightMovementBurdenUnits);
         }
 
         private bool TryTurns(SpatialPose from, int direction, int sign, HashSet<HexCoord> blocked,

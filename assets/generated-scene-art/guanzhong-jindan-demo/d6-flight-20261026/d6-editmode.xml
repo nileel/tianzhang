@@ -1,0 +1,1298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="84" result="Failed(Child)" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.6291183">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1588" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.629118" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="2836" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1572" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.608750" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="18356" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="2837" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1572" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.592995" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="2838" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1572" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.577256" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="2839" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="758" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.560263" total="84" passed="38" failed="46" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="2510" name="ConfigEditorWorldTests" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" testcasecount="34" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.188567" total="34" passed="0" failed="34" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="2515" name="AdventureCoordinatesTypesAndFormalContentAreValidatedBeforeDiskWrites" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.AdventureCoordinatesTypesAndFormalContentAreValidatedBeforeDiskWrites" methodname="AdventureCoordinatesTypesAndFormalContentAreValidatedBeforeDiskWrites" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1914360086" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.024200" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.AdventureCoordinatesTypesAndFormalContentAreValidatedBeforeDiskWrites () [0x00006] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:129
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2514" name="AdventureGroupFieldsHaveOneOwnerMirrorOnlyTheirMapAndReturnToBaseline" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.AdventureGroupFieldsHaveOneOwnerMirrorOnlyTheirMapAndReturnToBaseline" methodname="AdventureGroupFieldsHaveOneOwnerMirrorOnlyTheirMapAndReturnToBaseline" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="693407133" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000913" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.AdventureGroupFieldsHaveOneOwnerMirrorOnlyTheirMapAndReturnToBaseline () [0x00006] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:102
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2512" name="ApprovedAdditionalEnemySurvivesAdventureRoundTripAndCannotBeEdited" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.ApprovedAdditionalEnemySurvivesAdventureRoundTripAndCannotBeEdited" methodname="ApprovedAdditionalEnemySurvivesAdventureRoundTripAndCannotBeEdited" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1454782461" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000748" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.ApprovedAdditionalEnemySurvivesAdventureRoundTripAndCannotBeEdited () [0x00006] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:74
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2542" name="EnvironmentNestedEditsSortCellsPreserveFlagsChannelsResultsAndUntouchedTokens" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.EnvironmentNestedEditsSortCellsPreserveFlagsChannelsResultsAndUntouchedTokens" methodname="EnvironmentNestedEditsSortCellsPreserveFlagsChannelsResultsAndUntouchedTokens" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="506107919" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.001342" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.EnvironmentNestedEditsSortCellsPreserveFlagsChannelsResultsAndUntouchedTokens () [0x00006] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:190
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2513" name="FixedTablesAndStableKeysRejectScalarAndNestedEdits" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.FixedTablesAndStableKeysRejectScalarAndNestedEdits" methodname="FixedTablesAndStableKeysRejectScalarAndNestedEdits" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="366676480" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000686" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.FixedTablesAndStableKeysRejectScalarAndNestedEdits () [0x00006] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:87
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2541" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" testcasecount="25" result="Failed" site="Child" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.016524" total="25" passed="0" failed="25" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <failure>
+                  <message><![CDATA[One or more child tests had errors]]></message>
+                </failure>
+                <test-case id="2516" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Settlements&quot;,&quot;features&quot;,&quot;bounty_board~settlement_feature_bounty_board~enabled~desc_enemy_shijiahou&quot;,&quot;features/0/disabledReasonKey&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Settlements&quot;,&quot;features&quot;,&quot;bounty_board~settlement_feature_bounty_board~enabled~desc_enemy_shijiahou&quot;,&quot;features/0/disabledReasonKey&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="659308071" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000750" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2517" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Settlements&quot;,&quot;adventureEntranceIds&quot;,&quot;guanzhong_wild|guanzhong_wild&quot;,&quot;adventureEntranceIds&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Settlements&quot;,&quot;adventureEntranceIds&quot;,&quot;guanzhong_wild|guanzhong_wild&quot;,&quot;adventureEntranceIds&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="830085742" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000359" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2518" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;missing_item@3&quot;,&quot;rewardEntries/0/itemId&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;missing_item@3&quot;,&quot;rewardEntries/0/itemId&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="2075715176" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000332" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2519" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@100&quot;,&quot;rewardEntries/0/quantity&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@100&quot;,&quot;rewardEntries/0/quantity&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1992509272" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000384" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2520" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@0&quot;,&quot;rewardEntries/0/quantity&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@0&quot;,&quot;rewardEntries/0/quantity&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1288870405" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000335" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2521" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@3|item_lingshi_low@3&quot;,&quot;rewardEntries/1/itemId&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;item_lingshi_low@3|item_lingshi_low@3&quot;,&quot;rewardEntries/1/itemId&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="397936087" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000320" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2522" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;&quot;,&quot;rewardEntries&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Bounties&quot;,&quot;rewardEntries&quot;,&quot;&quot;,&quot;rewardEntries&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1436532454" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000319" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2523" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;q&quot;,&quot;1.5&quot;,&quot;q&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;q&quot;,&quot;1.5&quot;,&quot;q&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1357409928" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000340" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2524" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;contentId&quot;,&quot;enemy_shijiahou&quot;,&quot;contentId&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;contentId&quot;,&quot;enemy_shijiahou&quot;,&quot;contentId&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="180218823" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000447" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2525" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;enemyFacing&quot;,&quot;2&quot;,&quot;enemyFacing&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;Adventures&quot;,&quot;enemyFacing&quot;,&quot;2&quot;,&quot;enemyFacing&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="2083866327" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000505" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2526" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;queryLimits&quot;,&quot;unitsPerRange=0;maxQueryRange=16&quot;,&quot;queryLimits/unitsPerRange&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;queryLimits&quot;,&quot;unitsPerRange=0;maxQueryRange=16&quot;,&quot;queryLimits/unitsPerRange&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="212159088" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000428" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2527" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;0:0@0@0|0:0@1@0&quot;,&quot;battlefieldCells/1/q&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;0:0@0@0|0:0@1@0&quot;,&quot;battlefieldCells/1/q&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1289074195" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000430" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2528" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;0:0@2@0&quot;,&quot;battlefieldCells/0/blocksGroundMove&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;0:0@2@0&quot;,&quot;battlefieldCells/0/blocksGroundMove&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="2025922096" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000451" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2529" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;2147483648:0@0@0&quot;,&quot;battlefieldCells/0/q&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;2147483648:0@0@0&quot;,&quot;battlefieldCells/0/q&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1121420326" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000407" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2530" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;1:0@0@0|0:0@0@0&quot;,&quot;battlefieldCells&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;battlefieldCells&quot;,&quot;1:0@0@0|0:0@0@0&quot;,&quot;battlefieldCells&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="7533499" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000470" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2531" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;surfacePrototypeRefs&quot;,&quot;surface_grassland|surface_grassland&quot;,&quot;surfacePrototypeRefs&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;surfacePrototypeRefs&quot;,&quot;surface_grassland|surface_grassland&quot;,&quot;surfacePrototypeRefs&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1455059943" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000443" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2532" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonChannels&quot;,&quot;airflow=wind+wind;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning&quot;,&quot;phenomenonChannels&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonChannels&quot;,&quot;airflow=wind+wind;visibility=mist+haze;temperature=heat+cold;precipitation=rain+drizzle;suspendedHazard=ash+dust;cloudDischarge=storm+lightning&quot;,&quot;phenomenonChannels&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1322338467" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000453" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2533" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+gust&gt;outside&quot;,&quot;phenomenonPairs&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+gust&gt;outside&quot;,&quot;phenomenonPairs&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1987370817" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000644" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2534" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+gust&gt;gust|airflow:gust+wind&gt;wind&quot;,&quot;phenomenonPairs&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+gust&gt;gust|airflow:gust+wind&gt;wind&quot;,&quot;phenomenonPairs&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="355278128" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000595" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2535" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+wind&gt;wind&quot;,&quot;phenomenonPairs&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;phenomenonPairs&quot;,&quot;airflow:wind+wind&gt;wind&quot;,&quot;phenomenonPairs&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="713865695" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000533" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2536" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;elementRelationRefs&quot;,&quot;element_wood|element_fire&quot;,&quot;elementRelationRefs&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;elementRelationRefs&quot;,&quot;element_wood|element_fire&quot;,&quot;elementRelationRefs&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="755944901" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000463" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2537" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;spiritRecoveryEnvironment&quot;,&quot;unknown&quot;,&quot;spiritRecoveryEnvironment&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;spiritRecoveryEnvironment&quot;,&quot;unknown&quot;,&quot;spiritRecoveryEnvironment&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="752116194" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000490" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2538" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;1:0@0&quot;,&quot;edgeClearanceLimits&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;1:0@0&quot;,&quot;edgeClearanceLimits&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="65057498" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000700" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2539" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;1:0@1|0:0&gt;1:0@2&quot;,&quot;edgeClearanceLimits&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;1:0@1|0:0&gt;1:0@2&quot;,&quot;edgeClearanceLimits&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="109989614" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000534" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2540" name="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;2147483648:0@1&quot;,&quot;edgeClearanceLimits&quot;)" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput(&quot;EnvironmentProfiles&quot;,&quot;edgeClearanceLimits&quot;,&quot;0:0&gt;2147483648:0@1&quot;,&quot;edgeClearanceLimits&quot;)" methodname="InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="2046083898" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000570" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.InvalidSourceValuesKeepPreciseChineseLocationsAndDoNotRepairInput (System.String id, System.String column, System.String token, System.String path) [0x00015] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:181
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+              </test-suite>
+              <test-case id="2511" name="ProductionColumnsChineseControlsAndUneditedBytesAreComplete" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.ProductionColumnsChineseControlsAndUneditedBytesAreComplete" methodname="ProductionColumnsChineseControlsAndUneditedBytesAreComplete" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1565497579" result="Failed" label="Error" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:01Z" duration="0.000933" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.ProductionColumnsChineseControlsAndUneditedBytesAreComplete () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:41
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2545" name="RealWindowRendersFixedTablesEditsNestedEnvironmentAndAdventureThenUndoesWithoutIO" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.RealWindowRendersFixedTablesEditsNestedEnvironmentAndAdventureThenUndoesWithoutIO" methodname="RealWindowRendersFixedTablesEditsNestedEnvironmentAndAdventureThenUndoesWithoutIO" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="468958273" result="Failed" start-time="2026-10-26 13:12:01Z" end-time="2026-10-26 13:12:02Z" duration="0.127491" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[Unhandled log message: '[Error] No graphic device is available to initialize the view.'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                  <stack-trace><![CDATA[UnityEditor.EditorWindow:GetWindow<TianZhang.Editor.ConfigEditor.ConfigEditorWindow> (string)
+TianZhang.Editor.ConfigEditor.ConfigEditorWindow:Open () (at Assets/Scripts/Editor/ConfigEditor/ConfigEditorWindow.cs:38)
+TianZhang.Tests.EditMode.ConfigEditorWorldTests/<RealWindowRendersFixedTablesEditsNestedEnvironmentAndAdventureThenUndoesWithoutIO>d__16:MoveNext () (at Assets/Tests/EditMode/ConfigEditorWorldTests.cs:275)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[No graphic device is available to initialize the view.
+No graphic device is available to show the window.
+No graphic device is available to initialize the view.
+]]></output>
+              </test-case>
+              <test-case id="2543" name="RequiredListsAndMalformedEnvelopesFailWithoutDefaults" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.RequiredListsAndMalformedEnvelopesFailWithoutDefaults" methodname="RequiredListsAndMalformedEnvelopesFailWithoutDefaults" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="377646484" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001865" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.RequiredListsAndMalformedEnvelopesFailWithoutDefaults () [0x00027] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:238
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2544" name="ValidationUsesCandidateReferenceDocumentsAndImportPlansOnlyDescribeExistingOutputs" fullname="TianZhang.Tests.EditMode.ConfigEditorWorldTests.ValidationUsesCandidateReferenceDocumentsAndImportPlansOnlyDescribeExistingOutputs" methodname="ValidationUsesCandidateReferenceDocumentsAndImportPlansOnlyDescribeExistingOutputs" classname="TianZhang.Tests.EditMode.ConfigEditorWorldTests" runstate="Runnable" seed="1049076096" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001918" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.IndexOutOfRangeException : Index was outside the bounds of the array.]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<>c.<AttackTable>b__9_0 (System.String c, System.Int32 i) [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at System.Linq.Enumerable+<SelectIterator>d__154`2[TSource,TResult].MoveNext () [0x0005a] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.LargeArrayBuilder`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] items) [0x0003d] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Collections.Generic.EnumerableHelpers.ToArray[T] (System.Collections.Generic.IEnumerable`1[T] source) [0x00033] in <80564d689e48448fa2a7101993ee7201>:0
+  at System.Linq.Enumerable.ToArray[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00018] in <80564d689e48448fa2a7101993ee7201>:0
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables.AttackTable () [0x00000] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:61
+  at TianZhang.Editor.ConfigEditor.CombatAbilityTables+<GetTables>d__7.MoveNext () [0x00026] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\CombatAbilityTables.cs:44
+  at System.Collections.Generic.List`1[T].AddEnumerable (System.Collections.Generic.IEnumerable`1[T] enumerable) [0x00059] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].InsertRange (System.Int32 index, System.Collections.Generic.IEnumerable`1[T] collection) [0x000f4] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at System.Collections.Generic.List`1[T].AddRange (System.Collections.Generic.IEnumerable`1[T] collection) [0x00000] in <41d29b352f6a475ab1bf7c6628b82790>:0
+  at TianZhang.Editor.ConfigEditor.ConfigTableRegistry.Discover () [0x00062] in D:\天章游戏开发\src\Assets\Scripts\Editor\ConfigEditor\ConfigTableRegistry.cs:47
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.Session (System.String id, System.String column, System.String token) [0x0000d] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:23
+  at TianZhang.Tests.EditMode.ConfigEditorWorldTests.ValidationUsesCandidateReferenceDocumentsAndImportPlansOnlyDescribeExistingOutputs () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\ConfigEditorWorldTests.cs:249
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2574" name="D5JindanLedgerTests" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" testcasecount="24" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.121853" total="24" passed="24" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2596" name="BenefitCommandBlocksEarthSwitchEvenIfActionPointsAreRefundedToFull" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.BenefitCommandBlocksEarthSwitchEvenIfActionPointsAreRefundedToFull" methodname="BenefitCommandBlocksEarthSwitchEvenIfActionPointsAreRefundedToFull" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1955165399" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.047178" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2598" name="ConfigureRejectsAnUnownedGuardianBindingBeforeStartingTheSession" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.ConfigureRejectsAnUnownedGuardianBindingBeforeStartingTheSession" methodname="ConfigureRejectsAnUnownedGuardianBindingBeforeStartingTheSession" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1646024556" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.003356" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2595" name="EarthSwitchPaysTheUnusedWholeTurnPreservesSourceCooldownAndLocksUntilNextOwnTurn" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.EarthSwitchPaysTheUnusedWholeTurnPreservesSourceCooldownAndLocksUntilNextOwnTurn" methodname="EarthSwitchPaysTheUnusedWholeTurnPreservesSourceCooldownAndLocksUntilNextOwnTurn" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="28156616" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.008627" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2587" name="ExistingInstanceConsumesCapacityAndCloseKeepsCooldownAndCountsAsBenefit" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.ExistingInstanceConsumesCapacityAndCloseKeepsCooldownAndCountsAsBenefit" methodname="ExistingInstanceConsumesCapacityAndCloseKeepsCooldownAndCountsAsBenefit" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="603394149" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.016668" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2577" name="MultiTickAdvanceChargesEachTickAndFailedUpkeepNeverPartiallyDebits" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.MultiTickAdvanceChargesEachTickAndFailedUpkeepNeverPartiallyDebits" methodname="MultiTickAdvanceChargesEachTickAndFailedUpkeepNeverPartiallyDebits" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="352185273" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.012378" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2586" name="OldQuoteAndChangedSelectionCannotCommitOrPay" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.OldQuoteAndChangedSelectionCannotCommitOrPay" methodname="OldQuoteAndChangedSelectionCannotCommitOrPay" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1910467933" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001147" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2575" name="PreviewAndPreparationDoNotPayThenDeploymentPaysOneSharedReceipt" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.PreviewAndPreparationDoNotPayThenDeploymentPaysOneSharedReceipt" methodname="PreviewAndPreparationDoNotPayThenDeploymentPaysOneSharedReceipt" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1499483007" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.002262" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2585" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.004213" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2578" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;mana&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;mana&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="459338764" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000813" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2579" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;ap&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;ap&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1070971051" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000240" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2580" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;bad_mode&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;bad_mode&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1530160795" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000138" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2581" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;bad_edge&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;bad_edge&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="569182566" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000136" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2582" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;range&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;range&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1509600554" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000336" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2583" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;occupied_remote&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;occupied_remote&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1841341250" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000516" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2584" name="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;sealed&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched(&quot;sealed&quot;)" methodname="RejectedDeploymentLeavesResourcesCooldownObjectsAndReceiptsUntouched" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1009365669" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000661" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2588" name="RemoteOriginAddsFiftyManaAndDoesNotMoveActorOrCreateASecondPool" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.RemoteOriginAddsFiftyManaAndDoesNotMoveActorOrCreateASecondPool" methodname="RemoteOriginAddsFiftyManaAndDoesNotMoveActorOrCreateASecondPool" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="54531512" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001784" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2576" name="SameTickOtherActorDoesNotMaintainButNextGlobalTickPaysFortyOnce" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.SameTickOtherActorDoesNotMaintainButNextGlobalTickPaysFortyOnce" methodname="SameTickOtherActorDoesNotMaintainButNextGlobalTickPaysFortyOnce" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1626325052" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000986" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2597" name="SeatDefinitionsRejectDuplicatePositionOrSlotOrSourceAndReconfiguration" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.SeatDefinitionsRejectDuplicatePositionOrSlotOrSourceAndReconfiguration" methodname="SeatDefinitionsRejectDuplicatePositionOrSlotOrSourceAndReconfiguration" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1351114648" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000731" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2600" name="SourceDisableEndsTheExistingScaleWithoutChargingMaintenance" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.SourceDisableEndsTheExistingScaleWithoutChargingMaintenance" methodname="SourceDisableEndsTheExistingScaleWithoutChargingMaintenance" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="402591241" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000643" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2589" name="StoneSupportUsesEnvironmentPermissionAndDestructionEndsOnlyItsRule" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.StoneSupportUsesEnvironmentPermissionAndDestructionEndsOnlyItsRule" methodname="StoneSupportUsesEnvironmentPermissionAndDestructionEndsOnlyItsRule" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="792042028" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.011619" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2590" name="SupportCanShareAnExistingNonblockingEdgeAndItsDestructionKeepsOriginalObject" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.SupportCanShareAnExistingNonblockingEdgeAndItsDestructionKeepsOriginalObject" methodname="SupportCanShareAnExistingNonblockingEdgeAndItsDestructionKeepsOriginalObject" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1274963055" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001419" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2599" name="SwitchingIntoEnabledScaleCannotDeployBeforeNextOwnTurn" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.SwitchingIntoEnabledScaleCannotDeployBeforeNextOwnTurn" methodname="SwitchingIntoEnabledScaleCannotDeployBeforeNextOwnTurn" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1234747004" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000717" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2594" name="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.002386" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2591" name="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;owner&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;owner&quot;)" methodname="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="281411766" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001112" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2592" name="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;opponent&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;opponent&quot;)" methodname="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="1780665238" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000327" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2593" name="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;withdrawal&quot;)" fullname="TianZhang.Tests.EditMode.D5JindanLedgerTests.TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown(&quot;withdrawal&quot;)" methodname="TerminalCleanupAndFreshSessionDoNotReuseSupportReceiptsOrCooldown" classname="TianZhang.Tests.EditMode.D5JindanLedgerTests" runstate="Runnable" seed="927853089" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000425" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+            <test-suite type="TestFixture" id="2620" name="D6FlightTests" fullname="TianZhang.Tests.EditMode.D6FlightTests" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" testcasecount="14" result="Failed" site="Child" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.015826" total="14" passed="2" failed="12" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="2634" name="AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" fullname="TianZhang.Tests.EditMode.D6FlightTests.AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" methodname="AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="392962789" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.008817" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2635" name="ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" fullname="TianZhang.Tests.EditMode.D6FlightTests.ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" methodname="ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1618146727" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000438" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2630" name="FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" fullname="TianZhang.Tests.EditMode.D6FlightTests.FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" methodname="FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1625020604" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001203" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:89
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2623" name="InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" fullname="TianZhang.Tests.EditMode.D6FlightTests.InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" methodname="InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1709306199" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000278" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:62
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2622" name="MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" fullname="TianZhang.Tests.EditMode.D6FlightTests.MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" methodname="MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1060473627" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000408" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:45
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2632" name="OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" fullname="TianZhang.Tests.EditMode.D6FlightTests.OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" methodname="OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1673621130" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000430" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:125
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2621" name="PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" fullname="TianZhang.Tests.EditMode.D6FlightTests.PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" methodname="PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1927633738" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000555" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:20
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2631" name="RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" fullname="TianZhang.Tests.EditMode.D6FlightTests.RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" methodname="RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="956420361" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000451" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:108
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2629" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.001327" total="5" passed="0" failed="5" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <failure>
+                  <message><![CDATA[One or more child tests had errors]]></message>
+                </failure>
+                <test-case id="2624" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;mana&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;mana&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1279863974" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000331" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown (System.String reason) [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:75
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2625" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;ap&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;ap&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1268706490" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000117" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown (System.String reason) [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:75
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2626" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;source&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;source&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="302167446" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000111" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown (System.String reason) [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:75
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2627" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;sealed&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;sealed&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="48036387" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000103" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown (System.String reason) [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:75
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+                <test-case id="2628" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;immobilized&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;immobilized&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="204526000" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000089" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                    <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown (System.String reason) [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:75
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                  </failure>
+                </test-case>
+              </test-suite>
+              <test-case id="2633" name="SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" fullname="TianZhang.Tests.EditMode.D6FlightTests.SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" methodname="SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="839239319" result="Failed" label="Error" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.000416" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[System.ArgumentException : Guard and SwapSpell definitions are required.
+Parameter name: ordinaryActions]]></message>
+                  <stack-trace><![CDATA[  at TianZhang.Combat.CombatSession..ctor (System.Collections.Generic.IEnumerable`1[T] combatants, System.Collections.Generic.IEnumerable`1[T] attackProfiles, TianZhang.Combat.ICombatSpatialQuery spatialQuery, System.Collections.Generic.IEnumerable`1[T] ordinaryActions, System.Single spiritRecoveryEnvironmentMultiplier, TianZhang.Combat.CombatRuleSet ruleSet, TianZhang.Combat.CombatSceneObjects sceneObjects) [0x001e7] in D:\天章游戏开发\src\Assets\Scripts\Combat\CombatSession.cs:211
+  at TianZhang.Tests.EditMode.D6FlightTests.Ready (System.Int32 mana, System.Int32 ap, System.Int32 blockedGround) [0x00138] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:194
+  at TianZhang.Tests.EditMode.D6FlightTests.SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession () [0x00000] in D:\天章游戏开发\src\Assets\Tests\EditMode\D6FlightTests.cs:141
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <41d29b352f6a475ab1bf7c6628b82790>:0 ]]></stack-trace>
+                </failure>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2774" name="JindanDemoContentTests" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.223505" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2779" name="CompilerRejectsOperationOutsideBothSourceAndPosition" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.CompilerRejectsOperationOutsideBothSourceAndPosition" methodname="CompilerRejectsOperationOutsideBothSourceAndPosition" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="182845812" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.026143" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2780" name="CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" methodname="CompilerRejectsUnregisteredSourceRatherThanTrustingAContractId" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1776112466" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.010481" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2783" name="EnablingAnUnimplementedAbilityFailsClosed" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.EnablingAnUnimplementedAbilityFailsClosed" methodname="EnablingAnUnimplementedAbilityFailsClosed" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="437046098" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.009836" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2781" name="FrozenHashIsOrderIndependentButChangesWithActualPrice" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.FrozenHashIsOrderIndependentButChangesWithActualPrice" methodname="FrozenHashIsOrderIndependentButChangesWithActualPrice" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1803466740" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.011263" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2777" name="FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" methodname="FullProductionPreviewResolvesNumericProfilesAndIdentityRoots" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="803574382" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.031547" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2785" name="MansionBindingUsesInstanceIdentityAndRejectsWrongModule" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.MansionBindingUsesInstanceIdentityAndRejectsWrongModule" methodname="MansionBindingUsesInstanceIdentityAndRejectsWrongModule" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1061802355" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.021060" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2782" name="PositionVersionAndConcreteCarrierAreRequired" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.PositionVersionAndConcreteCarrierAreRequired" methodname="PositionVersionAndConcreteCarrierAreRequired" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1007446339" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.011444" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2776" name="ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" methodname="ProductionIdentityRootsResolveSourceInstancesAndCompiledHashes" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1556237804" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.023441" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2778" name="ProductionNumericProfilesRequireExplicitRegisteredAuthority" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionNumericProfilesRequireExplicitRegisteredAuthority" methodname="ProductionNumericProfilesRequireExplicitRegisteredAuthority" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1355002378" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.032543" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2775" name="ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" methodname="ProductionSourcesRegisterOnlyTheApprovedRosterAndExecutableScale" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1767516555" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.011679" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2786" name="SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" methodname="SharedMpInputsAndSwitchGateAreExplicitWithoutGrowthInference" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1625022540" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.010635" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2784" name="TwoEarthCandidatesShareOneGuardianAndOneSeat" fullname="TianZhang.Tests.EditMode.JindanDemoContentTests.TwoEarthCandidatesShareOneGuardianAndOneSeat" methodname="TwoEarthCandidatesShareOneGuardianAndOneSeat" classname="TianZhang.Tests.EditMode.JindanDemoContentTests" runstate="Runnable" seed="1171160258" result="Passed" start-time="2026-10-26 13:12:02Z" end-time="2026-10-26 13:12:02Z" duration="0.020837" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

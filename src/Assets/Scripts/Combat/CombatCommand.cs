@@ -19,6 +19,7 @@ namespace TianZhang.Combat
         JindanAbility,
         SwapJindan,
         CloseJindan,
+        Flight,
     }
 
     /// <summary>Fixed roll values make a command replayable without a runtime random source.</summary>
@@ -66,7 +67,7 @@ namespace TianZhang.Combat
             long contextVersion = 0, string equipmentSlotId = null, string itemId = null, string instanceId = null,
             int itemQuantityCost = 1, int? attackDirection = null,
             IReadOnlyList<CombatTargetResolutionRolls> targetRolls = null, int? destinationFacing = null,
-            HexCoord? targetCell = null, CombatJindanRequest jindan = null)
+            HexCoord? targetCell = null, CombatJindanRequest jindan = null, CombatFlightAction? flightAction = null)
         {
             if (string.IsNullOrWhiteSpace(actorId))
                 throw new ArgumentException("Actor ID is required.", nameof(actorId));
@@ -87,12 +88,14 @@ namespace TianZhang.Combat
             AttackDirection = attackDirection;
             TargetCell = targetCell;
             Jindan = jindan;
+            FlightAction = flightAction;
             TargetRolls = new List<CombatTargetResolutionRolls>(targetRolls ??
                 Array.Empty<CombatTargetResolutionRolls>()).AsReadOnly();
         }
 
         public int ItemQuantityCost { get; }
         public CombatJindanRequest Jindan { get; }
+        public CombatFlightAction? FlightAction { get; }
         public int? AttackDirection { get; }
         public HexCoord? TargetCell { get; }
         public IReadOnlyList<CombatTargetResolutionRolls> TargetRolls { get; }

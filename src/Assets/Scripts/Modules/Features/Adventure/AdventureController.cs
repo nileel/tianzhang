@@ -48,8 +48,9 @@ namespace TianZhang.Features.Adventure
             reason = "adventure_not_exploring";
             if (!CanSelectExplorationNode) return false;
             var actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text);
-            if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason)) return false;
+            if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
             prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
+            prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
             if (!encounters.TryBeginRehearsal(actors, prepared,
                 JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
                 environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;

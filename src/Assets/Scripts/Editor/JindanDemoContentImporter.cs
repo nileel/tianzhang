@@ -116,7 +116,7 @@ namespace TianZhang.Editor
                 }
                 else { EditorUtility.CopySerialized(preview, existing); EditorUtility.SetDirty(existing); }
                 AssetDatabase.SaveAssets();
-                Debug.Log("[JindanDemoContentImporter] Imported five fixed presets and eight compiled contracts; only SPACE_SCALE is enabled.");
+                Debug.Log("[JindanDemoContentImporter] Imported five fixed presets and eight compiled contracts; SPACE_SCALE and independent FLIGHT are enabled.");
             }
             finally
             {

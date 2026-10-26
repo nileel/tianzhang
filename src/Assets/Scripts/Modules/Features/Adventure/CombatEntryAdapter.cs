@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Combat;
 using TianZhang.Content;
+using TianZhang.Entity;
 using TianZhang.Infrastructure.UnityContent;
 using TianZhang.Spatial;
 
@@ -41,7 +42,7 @@ namespace TianZhang.Features.Adventure
             AttackProfileData[] attackProfiles,
             EnvironmentProfileAsset environmentProfile,
             out CombatSession session,
-            out string reason)
+            out string reason, JindanDemoCatalogData rehearsalCatalog = null)
         {
             session = null;
             if (rules == null) { reason = ruleFailure ?? "combat_rule_set_missing"; return false; }
@@ -51,6 +52,11 @@ namespace TianZhang.Features.Adventure
                 return false;
             }
             if (!TryProjectProfiles(attackProfiles, out var profiles, out reason)) return false;
+            if (rehearsalCatalog != null)
+            {
+                if (!spawned.IsJindanRehearsal) { reason = "jindan_attack_scope_invalid"; return false; }
+                profiles = JindanRehearsalFactory.ProjectAttacks(rehearsalCatalog, profiles);
+            }
             foreach (CombatantSnapshot actor in spawned.Players.Concat(spawned.Enemies))
                 if (!string.IsNullOrEmpty(actor.BasicAttackProfileId) &&
                     !profiles.Any(profile => profile.Id == actor.BasicAttackProfileId && profile.Kind == CombatAttackKind.Basic))

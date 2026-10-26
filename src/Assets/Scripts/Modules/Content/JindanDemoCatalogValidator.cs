@@ -21,6 +21,9 @@ namespace TianZhang.Entity
                 Check(catalog.seats.Select(s => s.guardianAbilityInstanceId).Distinct().Count() == 7, "DUPLICATE_CARRIER");
                 foreach (var ability in catalog.abilities) ValidateAbility(catalog, ability);
                 foreach (var command in catalog.commands) ValidateCommand(catalog, command);
+                foreach (string kind in new[] { "FLIGHT_TAKEOFF", "FLIGHT_ASCEND", "FLIGHT_DESCEND", "FLIGHT_LAND", "FLIGHT_RECOVER" })
+                    Check(catalog.commands.Count(c => c.effectId == "FLIGHT" && c.kind == kind && c.enabled) == 1,
+                        "FLIGHT_COMMAND_SET");
                 foreach (var contract in catalog.contracts)
                     Check(contract.compatibilityProfileId == JindanDemoCompatibilityCompiler.Compile(catalog, contract), "STALE_COMPILATION");
                 foreach (var preset in catalog.presets) ValidatePreset(catalog, preset, requireBindings);
@@ -81,6 +84,7 @@ namespace TianZhang.Entity
         {
             Check(preset.realmId == "realm_jindan" && preset.actionPointMaximumUnits > 0 &&
                   preset.realmMultiplier > 0 && preset.basicAttackProfileId == "basic_body_human_jindan" &&
+                  preset.basicAttackSourceModeMask == 3 && preset.basicAttackTargetModeMask == 3 &&
                   preset.movementEfficiencyMilliUnits > 0 && preset.manaMaximum > 0 && preset.normalVisionRange >= 4 &&
                   preset.rootElements.Length > 0 && preset.rootElements.Distinct().Count() == preset.rootElements.Length &&
                   preset.rootGrade is 2 or 3 && preset.naturalMansionCapacity == preset.rootGrade - 1, "PRESET_RESOURCES");
@@ -144,9 +148,15 @@ namespace TianZhang.Entity
                   command.targetModeMask <= 3 && command.range >= 0 && command.verticalReachRank >= 0, "COMMAND_SPACE");
             if (command.enabled)
             {
-                Check(command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
-                      command.kind is "DEPLOY" or "TERMINATE" && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
-                if (command.kind == "DEPLOY")
+                bool flight = command.effectId == "FLIGHT" && command.abilityDefinitionId == "demo_20261024_yufeng_flight";
+                Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
+                      command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
+                      command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
+                if (flight)
+                    Check(command.upkeepClock == "OWN_TURN_START" && command.durationClock == "OWN_TURN_END" &&
+                        command.durationCount == 3 && command.upkeepMana == 100 && command.ctPenalty == 0 &&
+                        command.maximumInstances == 1 && command.capacity == 1, "FLIGHT_CONFIGURATION");
+                else if (command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");
             }

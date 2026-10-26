@@ -146,6 +146,7 @@ namespace TianZhang.Content
 
         public string ProfileId { get; }
         public SpiritRecoveryEnvironment SpiritRecoveryEnvironment { get; }
+        public EnvironmentFlightConfiguration FlightSpace { get; private set; }
         public int UnitsPerRange { get; }
         public int MaxQueryRange { get; }
         public IReadOnlyList<EnvironmentDirectedEdge> DirectedEdges => directedEdges;
@@ -279,6 +280,8 @@ namespace TianZhang.Content
             if (profile.sceneObjects != null &&
                 !profile.sceneObjects.TryValidate(profile.battlefieldCells, profile.directedEdges, out reason))
                 return false;
+            if (profile.flightSpace != null && !profile.flightSpace.IsEmpty &&
+                !profile.flightSpace.TryValidate(profile.battlefieldCells, profile.directedEdges, out reason)) return false;
 
             var edges = new EnvironmentDirectedEdge[profile.directedEdges.Length];
             Array.Copy(profile.directedEdges, edges, edges.Length);
@@ -292,6 +295,7 @@ namespace TianZhang.Content
                 profile.unitsPerRange,
                 profile.maxQueryRange,
                 profile.spiritRecoveryEnvironment);
+            runtime.FlightSpace = profile.flightSpace?.IsEmpty == false ? profile.flightSpace : null;
             reason = EnvironmentRuntimeReasons.Ok;
             return true;
         }
@@ -476,5 +480,6 @@ namespace TianZhang.Content
         /// <summary>Raw version-2 map marker JSON; markers never imply occupancy or blocking.</summary>
         public string mapMarkers;
         public EnvironmentSceneObjectConfiguration sceneObjects;
+        public EnvironmentFlightConfiguration flightSpace;
     }
 }

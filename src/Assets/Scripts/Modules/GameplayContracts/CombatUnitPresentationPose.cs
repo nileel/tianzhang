@@ -7,26 +7,29 @@ namespace TianZhang.Gameplay.Contracts
     [Serializable]
     public readonly struct CombatUnitPresentationPose : IEquatable<CombatUnitPresentationPose>
     {
-        public CombatUnitPresentationPose(CombatUnitPresentationHex position, int facing, bool isDoubleCell = false)
+        public CombatUnitPresentationPose(CombatUnitPresentationHex position, int facing, bool isDoubleCell = false, int altitudeBand = 0)
         {
             if (facing < 0 || facing >= 6) throw new ArgumentOutOfRangeException(nameof(facing));
             Position = position;
             Facing = facing;
             IsDoubleCell = isDoubleCell;
+            if (altitudeBand is < 0 or > 2 || isDoubleCell && altitudeBand != 0) throw new ArgumentOutOfRangeException(nameof(altitudeBand));
+            AltitudeBand = altitudeBand;
         }
 
         public CombatUnitPresentationHex Position { get; }
         public int Facing { get; }
         public bool IsDoubleCell { get; }
+        public int AltitudeBand { get; }
         public CombatUnitPresentationHex Rear => Step(Position, (Facing + 3) % 6);
         public IReadOnlyList<CombatUnitPresentationHex> OccupiedCells => IsDoubleCell
             ? new[] { Position, Rear } : new[] { Position };
         public bool Occupies(CombatUnitPresentationHex cell) => Position.Equals(cell) ||
             (IsDoubleCell && Rear.Equals(cell));
         public bool Equals(CombatUnitPresentationPose other) => Position.Equals(other.Position) &&
-            Facing == other.Facing && IsDoubleCell == other.IsDoubleCell;
+            Facing == other.Facing && IsDoubleCell == other.IsDoubleCell && AltitudeBand == other.AltitudeBand;
         public override bool Equals(object obj) => obj is CombatUnitPresentationPose other && Equals(other);
-        public override int GetHashCode() => (Position.GetHashCode() * 397 ^ Facing) * 397 ^ IsDoubleCell.GetHashCode();
+        public override int GetHashCode() => ((Position.GetHashCode() * 397 ^ Facing) * 397 ^ IsDoubleCell.GetHashCode()) * 397 ^ AltitudeBand;
 
         public static CombatUnitPresentationHex Step(CombatUnitPresentationHex position, int direction) => direction switch
         {

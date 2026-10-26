@@ -101,7 +101,8 @@ namespace TianZhang.Spatial
             if (!byEdge.TryGetValue(key, out var item) || item.ReplacesWallConnectionId == null) return original;
             // Only this exact pair replaces its static wall. Other edges may share the connection ID.
             return new SpatialEdgeRules(original.MetricDistanceUnits, true, true, original.EffectBlockerMask,
-                original.ClearanceLimit, SpatialEdgeKind.Flat, original.MovementBurdenUnits, original.ConnectionId);
+                original.ClearanceLimit, SpatialEdgeKind.Flat, original.MovementBurdenUnits, original.ConnectionId,
+                original.AllowsFlight, original.FlightMovementBurdenUnits);
         }
 
         internal bool BlocksCell(HexCoord cell, bool movement) =>

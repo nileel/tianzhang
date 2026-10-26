@@ -16,6 +16,7 @@ namespace TianZhang.Editor
         [MenuItem("天章/场景/D5 导入并接入金丹演武")]
         public static void ImportAndRebuild()
         {
+            WorldContentImporter.ImportEnvironmentProfiles();
             JindanDemoContentImporter.Import();
             Rebuild();
         }
@@ -39,6 +40,8 @@ namespace TianZhang.Editor
             if (owner == null || canvasObject == null)
                 throw new InvalidOperationException("Jindan presentation owners are missing.");
             var installer = owner.GetComponent<AdventureSceneInstaller>();
+            SceneBuildSupport.SetObject(owner.GetComponent<Static3DCombatUnitPresentationProvider>(), "flightLineMaterial",
+                SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
             Transform canvas = canvasObject.transform;
             Transform exploration = canvas.Find("AdventurePanel");
             if (exploration == null) throw new InvalidOperationException("AdventurePanel is missing.");
@@ -93,7 +96,7 @@ namespace TianZhang.Editor
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
             rect.anchoredPosition = Vector2.zero; rect.sizeDelta = new Vector2(1280, 880);
             Label(dialog.transform, "Heading", "金丹演武 · 战前配置", 30, 32, 814, 1216, 44);
-            AddButton(dialog.transform, bindings, "stage1", "第一段 · 浏览", 32, 742, 392, 60);
+            AddButton(dialog.transform, bindings, "stage1", "第一段 · 御风飞行", 32, 742, 392, 60);
             AddButton(dialog.transform, bindings, "stage2", "第二段 · 浏览", 444, 742, 392, 60);
             AddButton(dialog.transform, bindings, "stage3", "第三段 · 方位定尺", 856, 742, 392, 60);
             Text details = ScrollText(dialog.transform, "PreparationDetails", 32, 166, 1216, 560, 24);
@@ -117,20 +120,34 @@ namespace TianZhang.Editor
             GameObject header = Panel(root.transform, "JindanCombatHeader");
             Place(header.GetComponent<RectTransform>(), 0, 580, 620, 48);
             Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 440, 44);
+            AddButton(header.transform, bindings, "flight_tab", "飞行", 260, 0, 100, 48);
+            AddButton(header.transform, bindings, "scale_tab", "位格", 370, 0, 100, 48);
             Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 480, 0, 140, 48);
             GameObject body = Panel(root.transform, "JindanCombatBody");
             Place(body.GetComponent<RectTransform>(), 0, 0, 620, 580);
             Text details = ScrollText(body.transform, "CombatDetails", 16, 330, 588, 238, 22);
             Text quote = ScrollText(body.transform, "CombatQuote", 16, 242, 588, 80, 22);
-            AddButton(body.transform, bindings, "compress", "压缩边（1）", 16, 184, 286, 50);
-            AddButton(body.transform, bindings, "expand", "拉长边（4）", 318, 184, 286, 50);
-            AddButton(body.transform, bindings, "pick_edges", "选定 2–3 个相连格", 16, 126, 286, 50);
-            AddButton(body.transform, bindings, "pick_origin", "选择遥施空格", 318, 126, 286, 50);
-            AddButton(body.transform, bindings, "preview", "预演", 16, 68, 184, 50);
+            var scale = new GameObject("ScaleActions", typeof(RectTransform)); scale.transform.SetParent(body.transform, false);
+            Place(scale.GetComponent<RectTransform>(), 0, 0, 620, 240);
+            AddButton(scale.transform, bindings, "compress", "压缩边（1）", 16, 184, 286, 50);
+            AddButton(scale.transform, bindings, "expand", "拉长边（4）", 318, 184, 286, 50);
+            AddButton(scale.transform, bindings, "pick_edges", "选定 2–3 个相连格", 16, 126, 286, 50);
+            AddButton(scale.transform, bindings, "pick_origin", "选择遥施空格", 318, 126, 286, 50);
+            AddButton(scale.transform, bindings, "preview", "预演", 16, 68, 184, 50);
+            AddButton(scale.transform, bindings, "close_effect", "关闭方位定尺", 16, 10, 286, 50);
+            AddButton(scale.transform, bindings, "swap_effect", "战中换装（土候选）", 318, 10, 286, 50);
+            var flight = new GameObject("FlightActions", typeof(RectTransform)); flight.transform.SetParent(body.transform, false);
+            Place(flight.GetComponent<RectTransform>(), 0, 0, 620, 240);
+            AddButton(flight.transform, bindings, "flight_takeoff", "起飞 · 预演", 16, 184, 286, 50);
+            AddButton(flight.transform, bindings, "flight_ascend", "升至高空 · 预演", 318, 184, 286, 50);
+            AddButton(flight.transform, bindings, "flight_descend", "降至低空 · 预演", 16, 126, 286, 50);
+            AddButton(flight.transform, bindings, "flight_land", "原柱降落 · 预演", 318, 126, 286, 50);
+            AddButton(flight.transform, bindings, "flight_recover", "失效后续御 · 预演", 16, 10, 588, 50);
+            flight.SetActive(false);
+            SceneBuildSupport.SetObject(view, "flightActions", flight);
+            SceneBuildSupport.SetObject(view, "scaleActions", scale);
             AddButton(body.transform, bindings, "confirm", "确认施放", 218, 68, 184, 50);
             AddButton(body.transform, bindings, "cancel_targeting", "取消选格", 420, 68, 184, 50);
-            AddButton(body.transform, bindings, "close_effect", "关闭方位定尺", 16, 10, 286, 50);
-            AddButton(body.transform, bindings, "swap_effect", "战中换装（土候选）", 318, 10, 286, 50);
             SceneBuildSupport.SetObject(view, "combatRoot", root);
             SceneBuildSupport.SetObject(view, "combatBody", body);
             SceneBuildSupport.SetObject(view, "combatDetails", details);

@@ -1,0 +1,15 @@
+same destination (4, 5, -9): ground=6/166666 air=5/104165 | tick=10 AP=1000000 MP=6000 HP=3474
+takeoff confirmed | tick=10 AP=750000 MP=5800 HP=3474
+visual band=1 root offset=0.75 projection=True | tick=10 AP=750000 MP=5800 HP=3474
+ascend confirmed | tick=10 AP=625000 MP=5800 HP=3474
+visual band=2 root offset=1.5 projection=True | tick=10 AP=625000 MP=5800 HP=3474
+descend confirmed | tick=10 AP=500000 MP=5800 HP=3474
+hovered airborne path: 6 points, first point 0.75m above origin | tick=10 AP=500000 MP=5800 HP=3474
+visual band=1 root offset=0.75 projection=True | tick=10 AP=395835 MP=5800 HP=3474
+air path committed: (4, 1, -5) -> (4, 2, -6) -> (4, 3, -7) -> (4, 4, -8) -> (4, 5, -9) | tick=10 AP=395835 MP=5800 HP=3474
+land confirmed | tick=10 AP=345835 MP=5800 HP=3474
+visual band=0 root offset=0 projection=False | tick=10 AP=345835 MP=5800 HP=3474
+same-height enemy: low reachable, high rejected by vertical reach 1 | tick=20 AP=625000 MP=5600 HP=2991
+visual band=1 root offset=0.75 projection=True | tick=30 AP=1000000 MP=5500 HP=2508
+enemy legally hit low-air player; own start paid one maintenance | tick=30 AP=1000000 MP=5500 HP=2508
+withdrawal and fresh re-entry clear flight, source ledger and resources | tick=10 AP=1000000 MP=6000 HP=3474

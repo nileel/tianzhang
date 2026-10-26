@@ -188,8 +188,8 @@ namespace TianZhang.Combat
         public HexCoord Position { get; private set; }
         public SpatialFootprintKind Footprint { get; }
         public int BodyScaleRank { get; }
-        public SpatialMovementMode MovementMode { get; }
-        public int AltitudeBand { get; }
+        public SpatialMovementMode MovementMode { get; private set; }
+        public int AltitudeBand { get; private set; }
         public SpatialPose Pose => new SpatialPose(Position, Facing, Footprint, BodyScaleRank, MovementMode, AltitudeBand);
         public IReadOnlyList<HexCoord> OccupiedCells => Pose.OccupiedCells;
         public int Speed { get; }
@@ -424,6 +424,12 @@ namespace TianZhang.Combat
         public void SetPosition(HexCoord position)
         {
             Position = position;
+        }
+
+        internal void SetMovementMode(SpatialMovementMode mode, int altitude)
+        {
+            var pose = new SpatialPose(Position, Facing, Footprint, BodyScaleRank, mode, altitude);
+            MovementMode = pose.MovementMode; AltitudeBand = pose.AltitudeBand;
         }
 
         internal void SetLongTermActionEconomy(int maximum, int movement)

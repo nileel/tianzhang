@@ -86,7 +86,7 @@ namespace TianZhang.Spatial
             if (!byEdge.TryGetValue(key, out var item)) return original;
             return new SpatialEdgeRules(item.MetricDistanceUnits, original.AllowsMovement, original.AllowsEffects,
                 original.EffectBlockerMask, original.ClearanceLimit, original.EdgeKind,
-                original.MovementBurdenUnits, original.ConnectionId);
+                original.MovementBurdenUnits, original.ConnectionId, original.AllowsFlight, original.FlightMovementBurdenUnits);
         }
     }
 }

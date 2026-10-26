@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.151477">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1588" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.151477" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="2836" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1572" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.134282" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="18116" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="2837" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1572" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.121596" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="2838" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1572" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.107441" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="2839" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="758" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.095979" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="2620" name="D6FlightTests" fullname="TianZhang.Tests.EditMode.D6FlightTests" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.090516" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2634" name="AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" fullname="TianZhang.Tests.EditMode.D6FlightTests.AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" methodname="AirEdgesIgnoreGroundBurdenButKeepMetricCeilingsCliffsWallsAndOccupancy" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="525002409" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.028171" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2635" name="ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" fullname="TianZhang.Tests.EditMode.D6FlightTests.ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" methodname="ExplicitAntiAirPolicyCanReachLowButNotHighAndDoesNotGrantUnlistedSources" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="280914211" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.005441" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2630" name="FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" fullname="TianZhang.Tests.EditMode.D6FlightTests.FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" methodname="FailedLandingKeepsColumnAllowsOtherActionsAndChargesOnlyLaterOwnEndsUntilDeath" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1011962286" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.036959" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2623" name="InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" fullname="TianZhang.Tests.EditMode.D6FlightTests.InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" methodname="InsufficientUpkeepNeverPartiallyPaysAndLandingDamageOccursOnce" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1693535845" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000470" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2622" name="MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" fullname="TianZhang.Tests.EditMode.D6FlightTests.MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" methodname="MaintenanceUsesSubsequentOwnStartsAfterRecoveryAndDurationUsesThreeSubsequentEnds" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="910613791" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.001040" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2632" name="OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" fullname="TianZhang.Tests.EditMode.D6FlightTests.OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" methodname="OccupiedColumnRejectsLandingAndSourceLossRescuesOnlyAfterColumnBecomesFree" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="1232440632" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000655" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2621" name="PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" fullname="TianZhang.Tests.EditMode.D6FlightTests.PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" methodname="PreviewCancelAndStaleQuotesNeverPayAndTransformsHaveFixedSharedCosts" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="130480466" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.001081" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2631" name="RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" fullname="TianZhang.Tests.EditMode.D6FlightTests.RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" methodname="RecoveryRequiresSourceAndCooldownThenRestoresLowAirInSameColumn" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="583546462" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000856" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2629" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.003733" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2624" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;mana&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;mana&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="431699713" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000534" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2625" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;ap&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;ap&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="997087025" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000135" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2626" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;source&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;source&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="404722617" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000092" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2627" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;sealed&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;sealed&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="215174860" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000776" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2628" name="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;immobilized&quot;)" fullname="TianZhang.Tests.EditMode.D6FlightTests.RejectedTakeoffDoesNotChangePoseResourcesOrCooldown(&quot;immobilized&quot;)" methodname="RejectedTakeoffDoesNotChangePoseResourcesOrCooldown" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="253706046" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.000141" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2633" name="SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" fullname="TianZhang.Tests.EditMode.D6FlightTests.SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" methodname="SealReconcilesAndTerminalCleanupDoesNotChargeFallOrCarryFlightToFreshSession" classname="TianZhang.Tests.EditMode.D6FlightTests" runstate="Runnable" seed="904174190" result="Passed" start-time="2026-10-26 13:13:32Z" end-time="2026-10-26 13:13:32Z" duration="0.001220" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

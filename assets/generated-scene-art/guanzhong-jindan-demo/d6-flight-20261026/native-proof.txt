@@ -1,0 +1,26 @@
+same destination (4, 5, -9): ground=6/166666 air=5/104165 | tick=10 AP=1000000 MP=6000 HP=3474
+takeoff native=(224.61, 304.11) | tick=10 AP=1000000 MP=6000 HP=3474
+takeoff native=(334.62, 222.91) | tick=10 AP=1000000 MP=6000 HP=3474
+takeoff confirmed | tick=10 AP=750000 MP=5800 HP=3474
+visual band=1 root offset=0.75 projection=True | tick=10 AP=750000 MP=5800 HP=3474
+ascend native=(439.40, 304.11) | tick=10 AP=750000 MP=5800 HP=3474
+ascend native=(334.62, 222.91) | tick=10 AP=750000 MP=5800 HP=3474
+ascend confirmed | tick=10 AP=625000 MP=5800 HP=3474
+visual band=2 root offset=1.5 projection=True | tick=10 AP=625000 MP=5800 HP=3474
+descend native=(224.61, 264.82) | tick=10 AP=625000 MP=5800 HP=3474
+descend native=(334.62, 222.91) | tick=10 AP=625000 MP=5800 HP=3474
+descend confirmed | tick=10 AP=500000 MP=5800 HP=3474
+move native=(504.88, 584.38) | tick=10 AP=500000 MP=5800 HP=3474
+move native=(672.52, 78.84) | tick=10 AP=500000 MP=5800 HP=3474
+move native=(871.59, 634.15) | tick=10 AP=500000 MP=5800 HP=3474
+visual band=1 root offset=0.75 projection=True | tick=10 AP=395835 MP=5800 HP=3474
+air path committed: (4, 1, -5) -> (4, 2, -6) -> (4, 3, -7) -> (4, 4, -8) -> (4, 5, -9) | tick=10 AP=395835 MP=5800 HP=3474
+land native=(504.88, 584.38) | tick=10 AP=395835 MP=5800 HP=3474
+land native=(442.02, 264.82) | tick=10 AP=395835 MP=5800 HP=3474
+land native=(334.62, 222.91) | tick=10 AP=395835 MP=5800 HP=3474
+land confirmed | tick=10 AP=345835 MP=5800 HP=3474
+visual band=0 root offset=0 projection=False | tick=10 AP=345835 MP=5800 HP=3474
+same-height enemy: low reachable, high rejected by vertical reach 1 | tick=20 AP=625000 MP=5600 HP=3152
+visual band=1 root offset=0.75 projection=True | tick=30 AP=1000000 MP=5500 HP=2669
+enemy legally hit low-air player; own start paid one maintenance | tick=30 AP=1000000 MP=5500 HP=2669
+withdrawal and fresh re-entry clear flight, source ledger and resources | tick=10 AP=1000000 MP=6000 HP=3474

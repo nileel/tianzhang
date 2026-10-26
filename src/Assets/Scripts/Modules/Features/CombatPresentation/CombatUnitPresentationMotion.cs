@@ -27,6 +27,19 @@ namespace TianZhang.Features.CombatPresentation
         public static IEnumerator AnimateStep(Transform root, CombatUnitPresentationMovementStep step,
             int[] yawDegrees, float cellsPerSecond, CombatBattlefieldSurface surface = null, CombatUnitSurfacePose support = null)
         {
+            if (step.From.AltitudeBand > 0)
+            {
+                root.rotation = Quaternion.Euler(0, yawDegrees[step.To.Facing], 0);
+                Vector3 start = CombatUnitFlightVisual.Position(step.From, surface);
+                Vector3 end = CombatUnitFlightVisual.Position(step.To, surface);
+                for (float t = 0; t < 1;)
+                {
+                    yield return null;
+                    t = Mathf.Min(1, t + Time.deltaTime * cellsPerSecond);
+                    root.position = Vector3.Lerp(start, end, t);
+                }
+                yield break;
+            }
             if (surface != null)
             {
                 Vector3 CenterOnSurface(CombatUnitPresentationPose pose) => pose.IsDoubleCell

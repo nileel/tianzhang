@@ -75,7 +75,7 @@ namespace TianZhang.Features.Adventure
                         enter(segmentIndex, earthEffect);
                         PreparationOpen = false;
                         ClearTargeting();
-                        message = "进入演武；方位定尺可选边预演，其余能力显示接入进度。";
+                        message = "进入演武；飞行与方位定尺均先预演再确认。";
                         break;
                 }
                 Refresh();
@@ -100,6 +100,11 @@ namespace TianZhang.Features.Adventure
                 case "close_effect": Preview(CombatCommandKind.CloseJindan); break;
                 case "swap_effect": Preview(CombatCommandKind.SwapJindan); break;
                 case "confirm": Confirm(); break;
+                case "flight_takeoff": PreviewFlight(CombatFlightAction.Takeoff); break;
+                case "flight_ascend": PreviewFlight(CombatFlightAction.Ascend); break;
+                case "flight_descend": PreviewFlight(CombatFlightAction.Descend); break;
+                case "flight_land": PreviewFlight(CombatFlightAction.Land); break;
+                case "flight_recover": PreviewFlight(CombatFlightAction.Recover); break;
             }
             Refresh();
         }
@@ -187,6 +192,15 @@ namespace TianZhang.Features.Adventure
             else { message = Explain(result.RejectionReason); ClearQuote(); }
         }
 
+        private void PreviewFlight(CombatFlightAction action)
+        {
+            ClearTargeting();
+            frozenCommand = new CombatCommand(CombatCommandKind.Flight, encounter.ControlledActorId,
+                profileId: CombatFlight.ProfileId, flightAction: action);
+            frozenQuote = encounter.PreviewJindan(frozenCommand);
+            message = frozenQuote?.IsLegal == true ? "报价已冻结，请核对后确认。" : Explain(frozenQuote?.RejectionReason);
+        }
+
         private void ClearQuote() { frozenCommand = null; frozenQuote = null; }
         private void ClearTargeting()
         { ClearQuote(); path.Clear(); remoteOrigin = null; selection = SelectionMode.None; }
@@ -222,7 +236,8 @@ namespace TianZhang.Features.Adventure
                     command.cooldownTicks + "tick；" + (command.enabled ? "已接入" : Explain(command.unavailableReasonKey)));
             }
             if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId) && preset.flightAbilityInstanceId != "none")
-                result.AppendLine("独立飞行：" + Short(preset.flightAbilityInstanceId) + "；" + Explain("demo_20261024_unavailable_d6"));
+                result.AppendLine("独立飞行：" + Short(preset.flightAbilityInstanceId) + "；起飞250AP/200MP，后续本人回合开始维护100MP，最多3回合。");
+            result.AppendLine("演武徒手允许地面／空中出手与对空，垂直触及1；费用、伤害与射程沿原金丹徒手。");
             result.AppendLine("战中换装：未动用完整本人回合预算；新效果下一本人回合才可发动。结束销毁演武会话。");
             if (PreparationOpen && message.Length > 0) result.Append(message);
             return result.ToString();
@@ -237,6 +252,22 @@ namespace TianZhang.Features.Adventure
                 (encounter.AcceptsPlayerCommand ? " · 你的行动" : " · 等待行动"));
             result.AppendLine("AP " + Ap(actor.ActionPointsRemainingUnits) + "/" + Ap(actor.ActionPointLimitAtTurnStartUnits) +
                 "  MP " + actor.CurrentSpirit + "/" + actor.MaximumSpirit);
+            var flight = session.Flight?.Find(actorId);
+            if (flight != null)
+            {
+                session.SceneObjects.Board.TryGetCell(actor.Position, out var cell);
+                result.AppendLine("飞行·" + (actor.AltitudeBand == 0 ? "地面" : actor.AltitudeBand == 1 ? "低空" : "高空") +
+                    "  有效高度 " + (cell.HeightLevel + actor.AltitudeBand) + "  接地 " + (actor.AltitudeBand == 0 ? "是" : "否") +
+                    "  负载1／升力2");
+                result.AppendLine("来源 " + Short(flight.InstanceId) + "  CD " + actor.GetCooldown(CombatFlight.ProfileId) + "tick");
+                result.AppendLine("剩余后续回合结束 " + flight.RemainingOwnTurnEnds + "；下一本人回合维护 " +
+                    (flight.Active ? session.Flight.UpkeepMana : 0) + "MP；已付 " + flight.TotalManaSpent + "MP");
+                string landing = session.Flight.LandingReason(session, actor);
+                result.AppendLine("本柱落地：" + (landing.Length == 0 ? "合法" : Explain(landing)));
+                if (flight.FailedLanding) result.AppendLine("失效滞空：不能自主移动／升降；后续本人回合结束损失20%最大生命，可有费续御。");
+                else if (flight.LastEndReason.Length > 0) result.AppendLine(Explain(flight.LastEndReason));
+                result.AppendLine("失效先尝试原柱落地并扣10%最大生命；无落点保留占柱进入有限失效过程。");
+            }
             foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId))
             {
                 var definition = session.Jindan.Ability(seat.EffectId);
@@ -264,7 +295,8 @@ namespace TianZhang.Features.Adventure
         private string QuoteText()
         {
             if (frozenQuote == null) return message;
-            string action = frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
+            string action = frozenCommand.Kind == CombatCommandKind.Flight ? FlightName(frozenCommand.FlightAction.Value) :
+                frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
                 frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭方位定尺" : "展开方位定尺";
             string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
                 "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
@@ -289,6 +321,11 @@ namespace TianZhang.Features.Adventure
             "SPACE_SCALE" => "方位定尺", "EARTH_GRAVITY" => "厚载·重力", "EARTH_MANIFEST" => "厚载·造物",
             "WATER_TIDE" => "蓄澜", "FIRE_MANIFEST" => "长明", "YANG_RADIANCE" => "日坛昭明",
             "SPACE_SEAL" => "门枢封关", "YIN_CONCEAL" => "朔坛藏真", _ => effect,
+        };
+        private static string FlightName(CombatFlightAction action) => action switch
+        {
+            CombatFlightAction.Takeoff => "原地起飞", CombatFlightAction.Ascend => "升至高空",
+            CombatFlightAction.Descend => "降至低空", CombatFlightAction.Land => "原柱降落", _ => "续御脱险",
         };
         private string Explain(string reason)
         {
@@ -321,6 +358,22 @@ namespace TianZhang.Features.Adventure
                 "attack_source_mode_not_allowed" => "当前移动模式不能发动该能力。",
                 "attack_target_mode_not_allowed" => "目标移动模式不符合能力要求。",
                 "cell_not_configured" => "目标不在合法地图格内。",
+                "flight_source_missing" => "没有可用的御风飞行来源。",
+                "flight_not_active" => "飞行已失效，不能自主移动。",
+                "flight_takeoff_requires_ground" => "只能从地面起飞，不能重复起飞刷新期限。",
+                "flight_recovery_requires_failure" => "仅失效滞空时可续御。",
+                "flight_landing_requires_low" => "主动降落须先降低至低空。",
+                "flight_altitude_invalid" => "当前高度不满足本次升降要求。",
+                "flight_ceiling_exceeded" => "超出该柱允许的最高有效高度。",
+                "flight_cell_not_permitted" or "flight_edge_not_permitted" => "该柱或格边未允许飞行。",
+                "flight_height_difference_exceeded" => "当前飞行档位不能跨越此高差。",
+                "cell_movement_blocked" or "movement_blocked" => "本柱地面不可站立。",
+                "cell_occupied" or "occupied" => "该柱已有单位，不能叠放或落地。",
+                "flight_upkeep_failed" => "维护不足，已执行失效落地处理。",
+                "flight_expired" => "飞行期限已到，已执行失效落地处理。",
+                "flight_landed" or "flight_rescued_landing" => "已接地，停止飞行维护。",
+                "flight_owner_dead" => "飞行持有者死亡。",
+                "flight_session_ended" => "演武结束，飞行已清理。",
                 "attack_vertical_reach_exceeded" => "目标超过垂直触及高度。",
                 "scene_object_blocks_effects" or "entity_wall_blocks_effects" or "sight_blocked" => "实体墙或遮挡阻断作用路径。",
                 "demo_20261024_unavailable_d6" => "飞行待D6接入。", "demo_20261024_unavailable_d7" => "土能力待D7接入。",

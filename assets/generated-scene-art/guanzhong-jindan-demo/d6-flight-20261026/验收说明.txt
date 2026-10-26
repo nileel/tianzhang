@@ -1,0 +1,47 @@
+D6 飞行起降、移动和对空作用闭环
+日期：2026-10-26
+状态：D6 已完成。下一项 D7 未执行。
+
+范围与内容选择
+- 复用 D5 演武入口、同一 CombatSession、AP／MP、报价确认和个人回合调度，接入 D1《演武·御风飞行》五个动作。只向已明确持有来源的土、水、空阳预设授予飞行；双格石甲兽保持 GROUND。
+- 用户确认使用演武专用徒手配置。五预设在本次演武会话中复用 basic_body_human_jindan 的全部伤害、费用、射程和身份，仅显式声明 GROUND／FLY 来源和目标，verticalReachRank 保持1。保留原 ID 以满足 fixed_unarmed 数值合同；普通 AttackProfiles 数据及正式角色行为未改。
+- EnvironmentProfiles.csv → 导入资产 → SpatialQueryBoard 共用数据链。新增 flightSpace 明确覆盖144柱、760条有向邻边，最高有效高度4，空中附加负担0；基础许可仍受完整柱占位、实体墙、空间封锁与原型跨高限制。旧平地的 flightSpace 留空，不自动获得飞行许可。
+- 空中表现为低空0.75米／高空1.5米偏移，配地面六角投影、高度连线和空中路径。规则只读取 GROUND／FLY、altitudeBand 与地形高度，模型位置不作结算依据。
+- D6验证地表接触标签和回避地面移动负担；普通燃烧／水击／潮推的真实伤害在D8验证，重力压低／压落与强制位移在D7实现，完整空间封锁组合实操留D9。合法行动查询已含飞行命令，AI主动选择和评分仍留D12。
+
+通过证据
+- EditMode 最终有效定向用例共95项：d6-core.xml 的 D6 核心14/14；d6-enemy-upkeep.xml 新增敌方同费／维护死亡胜负用例1/1；d6-regression.xml 的内容3、D4战场4、D4攻击12、空间查询24、D5配置定向1，共44/44；d6-editmode.xml 中 D5JindanLedgerTests 24/24、JindanDemoContentTests 12/12。最后这份为混合结果，不代表整批通过，失败情况另列下方。
+- 核心覆盖起飞／升降／降落／续御固定费用、取消和旧报价零扣费、同源CD、后续本人回合维护与三次后续结束期限、封灵／来源移除、99MP维护不足不部分扣费、合法地面一次10%坠落伤害、非法落地保留原柱、后续20%伤害直至死亡、恢复／救援不重复坠落、占格拒绝、墙／顶棚／跨崖／缺格／双格拒绝及演武空中攻击资格。
+- 占格落地拒绝由定向夹具模拟外部占位变化；生产自主移动本身禁止形成叠柱。封灵用例验证SealSpirit状态，不等同D9空间封锁实操。
+- PlayMode 5/5：d6-native-play.xml 原生闭环1；d6-endings-play.xml 到期与维护失败／续御2；d6-final-play.xml 自动正式闭环1及原单双格地形动作回归1。采用 Unity 6000.3.18f1 普通图形模式，游戏视口1366×768。
+- 最终数据链检查通过，见 data-chain.txt。导入与场景重建保存后，经重新启动Unity运行正式场景验证；原始导入／重建日志为 src/Logs/d6-import.log、d6-scene-rebuild.log。
+- BattleSim：dotnet build -c Release --no-restore simulations/BattleSim 通过，0警告／0错误；dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test two-cell-production 通过。只补共用CombatFlight源编译引用，不增加场景模拟或提出数值平衡结论。
+- 独立只读检查覆盖核心时钟、空间边界与表现投影。修正已死单位重复投影、敌方维护死亡后错误判败、空中受击定位及EndTurn到期落地未同步表现的问题后复核通过。
+
+正式入口与原生操作
+- NativeFlightLoop 由测试经正式创建／世界／聚落入口建立隔离角色并进入金丹演武第一段。原生鼠标完成起飞确认、升高、降低、收起面板、移动选点、重新展开面板及降落确认；native-proof.txt 含真实设备点击记录。对空、维护、撤离和重入由该测试继续通过正式命令链验证，不把整个用例都称作手工操作。
+- 中途用户自由试玩改变过资源与位置，用户随后确认继续固定验收；最终原生结果来自重新启动的干净测试，未混用先前状态。
+- 起点(4,0)、终点(4,5)：地面6步／166.666AP；低空沿(4,1)→(4,2)→(4,3)→(4,4)→(4,5)，5步／104.165AP。飞越开放断崖及不可GROUND站立的岩柱，逐相邻边移动，没有瞬移。
+- 起飞 AP1000→750、MP6000→5800；升高AP750→625，降低625→500；移动500→395.835；降落395.835→345.835，MP仍5800。
+- 01-low-air.png、02-high-air.png 显示低／高空、来源、期限、维护和费用；03-cliff-shortcut.png、04-landed.png 为原生移动后与落地画面。
+- 自动正式闭环另检查悬停路径：6个折点、首点高于原格中心0.75米，实际预览费用104.165AP，见00-air-path-preview.png及production-proof.txt。
+- 同地面高度的敌方徒手可达相邻低空，玩家升至高空时被垂直触及档1拒绝。玩家降低后，真实敌方AI实际命中：原生记录HP3152→2669；下一本人回合维护MP5600→5500，仅支付一次，见05-anti-air-hit.png。自动复测的首次接敌伤害存在随机差异，独立原始记录保留，不混用两次HP值。
+- 演武过程中正式角色记录逐字保持；撤离清空旧会话飞行／失败过程，再入恢复AP1000、MP6000、HP3474、GROUND和零维护次数。
+
+到期、失败与地面回归
+- AutomaticExpiryLandsBeforeNextGroundMove：三次后续本人结束后到期，实际表现姿态落地、投影关闭，下一次GROUND移动正常，见d6-endings-play.xml及06-expired-ground-move.png。
+- FailedLandingFromUpkeepCanRecoverWithoutMovingColumn：夹具仅设置初始MP299，实际支付起飞200后飞至(4,3)岩柱。主动落地被拒绝；下一本人开始99<100，未扣部分维护，保留低空原柱并进入失败过程；升高被拒绝。夹具再将MP置500以覆盖恢复分支，经真实续御命令支付250AP／200MP，原柱低空恢复3回合实例，剩AP750／MP300，见07、08截图及failed-landing-proof.txt。
+- 两个到期／失败测试最初共用日志目录，后一项覆盖了proof.txt；因此该原始文本只记录失败／续御。到期通过证据来自XML、断言和06截图。测试输出已改为按方法分目录，避免后续覆盖；未为路径调整重复执行已经通过的同范围检查。
+- MotionRegressions 使用原正式单双格身体、楼梯、斜坡及30/60/120Hz移动验证，见d6-final-play.xml和terrain-motion-regression.json。单格路径偏差0、动作缩放偏差0、动作穿入0，楼梯最大顶点穿入0.0912毫米、静止支承误差0。证据限既有用例及当前资源，不声称任意模型／地形均已验证。
+
+未通过检查及既有独立限制
+- d6-editmode.xml 原始混合结果84项：38通过、46失败。D6最初12项因测试夹具遗漏CombatSession要求的SwapSpell普通动作定义失败；补齐夹具后同14项全过，见d6-core.xml，未修改需求断言。
+- 同批 ConfigEditorWorldTests 34项在全局注册发现时失败，原因是既有CombatAbilityTables.AttackTable列数69与AttackLabels标签63不匹配，索引越界。该文件本轮未改；D5记录已有同一根因。本轮环境flightSpace由独立表／实际导入与内容用例验证，没有把全局编辑器套件报告为通过。
+- check-unity-assembly-boundaries.ps1 默认检查失败：既有Bootstrap.asmdef包含TianZhang.Spatial及Unity.InputSystem，但检查器固定预期名单缺少这两个引用。两个文件本轮均未改。使用-SkipRequiredAssemblies时结构引用／循环检查通过（19 assemblies、2 asmrefs）；这不等于默认完整检查通过，未借D6修订无关名单。
+
+复现
+- 入口：Unity菜单“天章/场景/D5 导入并接入金丹演武”统一导入环境与演武数据；进入关中野外→金丹演武→第一段“御风飞行”→进入→飞行页。
+- EditMode过滤：TianZhang.Tests.EditMode.D6FlightTests、D6FlightContentTests；相关回归类名见上述XML。可使用Unity原生-testFilter，项目run-unity-editmode-tests.ps1不支持过滤参数。
+- 图形PlayMode过滤：TianZhang.Tests.PlayMode.D6FlightPlayModeTests.ProductionFlightLoop、AutomaticExpiryLandsBeforeNextGroundMove、FailedLandingFromUpkeepCanRecoverWithoutMovingColumn；双格／地面回归为TianZhang.Tests.PlayMode.GuanzhongTerrainRehearsalPlayModeTests.MotionRegressions。
+- 原生PlayMode过滤：TianZhang.Tests.PlayMode.D6FlightPlayModeTests.NativeFlightLoop，按src/Logs/d6/native/pending.json的阶段操作，勿同时自由试玩。其余截图测试也使用普通图形模式，不加-batchmode／-nographics；WaitForEndOfFrame需要实际图形帧。
+- 同一工程的图形编辑器与批处理不得并行；仓库脚本使用pwsh -NoProfile -ExecutionPolicy Bypass -File。

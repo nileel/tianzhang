@@ -1,0 +1,4 @@
+visual band=1 root offset=0.75 projection=True | tick=20 AP=1000000 MP=99 HP=2571
+upkeep 99 < 100: no partial debit, illegal rock column retained with failed-landing process | tick=20 AP=1000000 MP=99 HP=2571
+visual band=1 root offset=0.75 projection=True | tick=20 AP=750000 MP=300 HP=2571
+paid recovery AP250/MP200 restores low air in the original column | tick=20 AP=750000 MP=300 HP=2571

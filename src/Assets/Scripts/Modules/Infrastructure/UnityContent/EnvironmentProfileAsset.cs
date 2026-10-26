@@ -23,6 +23,7 @@ namespace TianZhang.Infrastructure.UnityContent
         public string physicalSurfaceProfiles;
         public string mapMarkers;
         public EnvironmentSceneObjectConfiguration sceneObjects;
+        public EnvironmentFlightConfiguration flightSpace;
 
         public bool TryCreateDefinition(out EnvironmentProfileDefinition definition, out string reason)
         {
@@ -44,6 +45,7 @@ namespace TianZhang.Infrastructure.UnityContent
                 physicalSurfaceProfiles = physicalSurfaceProfiles,
                 mapMarkers = mapMarkers,
                 sceneObjects = sceneObjects,
+                flightSpace = flightSpace,
             };
             return EnvironmentProfileRuntime.TryCreate(definition, out _, out reason);
         }
@@ -66,6 +68,7 @@ namespace TianZhang.Infrastructure.UnityContent
             physicalSurfaceProfiles = definition.physicalSurfaceProfiles;
             mapMarkers = definition.mapMarkers;
             sceneObjects = definition.sceneObjects;
+            flightSpace = definition.flightSpace;
         }
     }
 }
