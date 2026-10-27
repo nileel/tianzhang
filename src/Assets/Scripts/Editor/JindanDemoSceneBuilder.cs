@@ -55,6 +55,7 @@ namespace TianZhang.Editor
             Remove(canvas, "JindanDemoCombatRoot");
             Remove(owner.transform, "JindanScaleRoot");
             Remove(owner.transform, "JindanSealRoot");
+            Remove(owner.transform, "JindanFireDomainRoot");
             Remove(owner.transform, "JindanEarthRoot");
             Remove(owner.transform, "JindanSurfaceRoot");
             var view = owner.GetComponent<JindanDemoView>() ?? owner.AddComponent<JindanDemoView>();
@@ -91,6 +92,13 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(seal, "supportMarker", marker.gameObject);
             SceneBuildSupport.SetObject(seal, "edgeMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
             SceneBuildSupport.SetObject(installer, "jindanSealView", seal);
+            var fireRoot = new GameObject("JindanFireDomainRoot");
+            fireRoot.transform.SetParent(owner.transform, false);
+            var fire = fireRoot.AddComponent<JindanFireDomainView>();
+            var fireMarker = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .Single(value => value.name == "fire_domain_support");
+            SceneBuildSupport.SetObject(fire, "supportMarker", fireMarker.gameObject);
+            SceneBuildSupport.SetObject(installer, "jindanFireDomainView", fire);
             BuildEarthRamp();
             var earthRoot = new GameObject("JindanEarthRoot");
             earthRoot.transform.SetParent(owner.transform, false);
@@ -157,8 +165,9 @@ namespace TianZhang.Editor
             AddButton(dialog.transform, bindings, "stage2", "第二段 · 水火与土石", 444, 742, 392, 60);
             AddButton(dialog.transform, bindings, "stage3", "第三段 · 方位定尺", 856, 742, 392, 60);
             Text details = ScrollText(dialog.transform, "PreparationDetails", 32, 166, 1216, 560, 24);
-            AddButton(dialog.transform, bindings, "preset_next", "切换预设", 32, 90, 594, 60);
-            AddButton(dialog.transform, bindings, "earth_toggle", "切换土支撑装配", 654, 90, 594, 60);
+            AddButton(dialog.transform, bindings, "preset_next", "切换预设", 32, 90, 392, 60);
+            AddButton(dialog.transform, bindings, "earth_toggle", "切换土支撑装配", 444, 90, 392, 60);
+            AddButton(dialog.transform, bindings, "fire_side", "第二段 · 切换攻守", 856, 90, 392, 60);
             AddButton(dialog.transform, bindings, "cancel_preparation", "返回冒险", 32, 20, 594, 60);
             AddButton(dialog.transform, bindings, "enter", "进入演武", 654, 20, 594, 60);
             SceneBuildSupport.SetObject(view, "preparationRoot", root);
@@ -224,7 +233,9 @@ namespace TianZhang.Editor
             AddButton(tide.transform, bindings, "tide_charge", "切换普通／蓄力", 16, 126, 286, 50);
             AddButton(tide.transform, bindings, "tide_eye", "无源潮眼 · 选干格", 318, 126, 286, 50);
             AddButton(tide.transform, bindings, "tide_preview", "预演", 16, 68, 184, 50);
-            AddButton(tide.transform, bindings, "tide_close", "终止本源水面／准备", 16, 10, 588, 50);
+            AddButton(tide.transform, bindings, "tide_close", "终止水面", 16, 10, 184, 50);
+            AddButton(tide.transform, bindings, "fire_preview", "展开长明", 218, 10, 184, 50);
+            AddButton(tide.transform, bindings, "fire_close", "关闭火界", 420, 10, 184, 50);
             tide.SetActive(false);
             SceneBuildSupport.SetObject(view, "tideActions", tide);
             SceneBuildSupport.SetObject(view, "flightActions", flight);

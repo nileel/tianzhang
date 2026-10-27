@@ -20,7 +20,9 @@ namespace TianZhang.Features.Adventure
             return new CombatSurfacePresentationSnapshot(session.Surfaces.Revision,
                 session.Surfaces.Cells.Select(value => new CombatSurfaceCellSnapshot(Hex(value.Cell),
                     (CombatSurfaceDisplayKind)value.Kind, value.Fuel)).ToArray(),
-                tide?.Changes.Select(value => Hex(value.Cell)).ToArray(),
+                quote?.IsLegal == true && command.ProfileId == CombatFireDomainRules.Effect && command.Kind == CombatCommandKind.JindanAbility
+                    ? session.Surfaces.Cells.Select(value => Hex(value.Cell)).ToArray()
+                    : tide?.Changes.Select(value => Hex(value.Cell)).ToArray(),
                 tide?.Pushes.Select(value => new CombatTidePushSnapshot(value.ActorId, Hex(value.Movement.Origin.Anchor),
                     Hex(value.Movement.Destination.Anchor), value.Direction, value.Movement.Reason)).ToArray(),
                 source.HasValue ? Hex(source.Value) : null, sourceHeight, tide?.WaterlineHeight ?? 0);

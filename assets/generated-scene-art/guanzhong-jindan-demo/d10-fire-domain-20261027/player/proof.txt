@@ -1,0 +1,5 @@
+player paid 500AP/1000MP, center600, free9/reserved6 | tick=10
+one later own-turn-end maintenance 200MP; source burning=1 | tick=30
+paid 25AP close; finite two-cycle tail | tick=30
+withdraw while paid tail is active; natural expiry covered by own-turn rule tests | tick=30
+fresh entry resets field node and leaves world identity unchanged | tick=10

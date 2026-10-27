@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.2397044">
+  <test-suite type="TestSuite" id="1288" name="src" fullname="src" runstate="Runnable" testcasecount="232" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.239704" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1281" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="232" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.231006" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="71780" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1282" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="232" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.228462" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1283" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="232" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.226085" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1284" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="232" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.224045" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1011" name="D10FireDomainPlayModeTests" fullname="TianZhang.Tests.PlayMode.D10FireDomainPlayModeTests" classname="TianZhang.Tests.PlayMode.D10FireDomainPlayModeTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.217947" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1012" name="PlayerDeploysMaintainsClosesAndReentersWithoutWorldChanges" fullname="TianZhang.Tests.PlayMode.D10FireDomainPlayModeTests.PlayerDeploysMaintainsClosesAndReentersWithoutWorldChanges" methodname="PlayerDeploysMaintainsClosesAndReentersWithoutWorldChanges" classname="TianZhang.Tests.PlayMode.D10FireDomainPlayModeTests" runstate="Runnable" seed="512514062" result="Passed" start-time="2026-10-27 13:26:31Z" end-time="2026-10-27 13:27:26Z" duration="55.206181" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

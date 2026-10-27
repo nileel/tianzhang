@@ -17,7 +17,7 @@ namespace TianZhang.Editor
         {
             "JindanDemoPresets", "JindanDemoSeats", "JindanDemoAbilities", "JindanDemoCommands",
             "JindanDemoContracts", "JindanDemoLoadoutTuning", "JindanDemoSegments", "JindanDemoDemolition",
-            "JindanDemoSurfaceRules", "JindanDemoSurfaceCells", "JindanDemoSurfaceFires", "JindanDemoSealRules",
+            "JindanDemoSurfaceRules", "JindanDemoSurfaceCells", "JindanDemoSurfaceFires", "JindanDemoSealRules", "JindanDemoFireDomainRules",
         };
         public static string[] DefinitionPaths => DefinitionTables.Select(t => "Assets/DataConfig/" + t + ".csv").ToArray();
         public static string FoundationPath(string id) => "Assets/Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_" + AssetCommitter.SanitizeName(id) + ".asset";
@@ -150,6 +150,7 @@ namespace TianZhang.Editor
             Require(Source(catalog.demolition.sourceDocument).Contains(catalog.demolition.profileId), "DEMOLITION_SOURCE");
             Require(Source(catalog.surfaceRules.sourceDocument).Contains(catalog.surfaceRules.rulesId), "SURFACE_RULES_SOURCE");
             Require(Source(catalog.sealRules.sourceDocument).Contains(catalog.sealRules.supportId), "SEAL_RULES_SOURCE");
+            Require(Source(catalog.fireDomainRules.sourceDocument).Contains("中心公开燃料预算15"), "FIRE_DOMAIN_RULES_SOURCE");
             foreach (var fire in catalog.surfaceFires)
                 Require(Source(fire.sourceDocument).Contains(fire.sourceRef), "SURFACE_FIRE_SOURCE");
             foreach (var ability in catalog.abilities)

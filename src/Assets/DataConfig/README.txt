@@ -224,19 +224,21 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 - `Seats`：七个唯一席位、版本与道证、唯一主承载、四项作用范围、候选效果与默认装配。
 - `Abilities`：十五项定义、源术升格、内化处置、合法府属及对象／操作／媒介／结果范围。
 - `Commands`：每个候选效果各一项展开和终止，以及五项飞行命令；费用、时钟、容量、射程、
-  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`SPACE_SEAL`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`展开／关闭及五种 `FLIGHT` 动作已启用；
+  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`SPACE_SEAL`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`、`FIRE_MANIFEST`展开／关闭及五种 `FLIGHT` 动作已启用；
   `JindanDemoSealRules.csv`固定封锁方向、锚点、局部维持半径与破层期限；费用和6tick期限仍读Commands。Presets的equippedArtProfileIds显式登记space_yang的现有贯石击。
-  其余只可浏览，尚待对应 D9–D11 的真实效果实现，不能用空账本执行。潮汐涨／退、普通／蓄力、无源潮眼共用一份主枢命令，附费与效果参数由SurfaceRules读取。
+  其余只可浏览，尚待 D11 的真实显隐效果实现，不能用空账本执行。潮汐涨／退、普通／蓄力、无源潮眼共用一份主枢命令，附费与效果参数由SurfaceRules读取。
 - `Contracts`：八项固定效果合同。`compatibilityProfileId` 必须写 `compile`，导入时用来源版本、
   具体主承载、席位／道证版本、四项交集与费用容量语义生成稳定 SHA-256 标识；不接受伪造兼容 ID。
   静态根写 `compile_<contractId>`（不使用结构保留的冒号），同批导入替换为编译结果。仅验证八项明确合同，未实现通用效果推导。
 - `LoadoutTuning`：安全态免费切装；战斗中本回合未用完整行动、每席每本人行动至多一次，
   扣本回合最大 AP 快照，MP/CT/CD 为零，下个本人回合开始生效。
-- `Segments`：三段固定演员、队伍、六角坐标与朝向；第二段土＋水对火，第三段六合／阳对封关／阴。
+- `Segments`：三段固定演员、队伍、六角坐标与朝向；第二段默认土＋水对火，战前可切为执火守阵（同阵容仅对换操控方）；第三段六合／阳对封关／阴。
 - `Demolition`：D7获准的土系预设破垒派生，明确引用原贯石击、独立profileId、环境白名单及375固定耐久伤害；复用原费用、人物攻击和形态资格，只在演武会话授予术栏。
 - `SurfaceRules`：D8演武专用水面移动负担、固定潮汐模板、水线、推力、蓄力／潮眼附费、水击与冲蚀；这些参数加入WATER_TIDE兼容哈希，其他合同不变。
 - `SurfaceCells`：仅第二段三格有限燃料与一个初始燃烧格；低植燃料引用真实场景物实例，破坏后不能继续供燃。自然水／泥由实际EnvironmentProfiles.battlefieldCells.surfaceKind初始化，不把基础地形与不可走格推断为火源。
-- `SurfaceFires`：环境火源的唯一来源、伤害承载角色、10tick周期、40tick期限、3格容量和12总燃料；不开放FIRE_MANIFEST领域，不提供余火或永久场景改造。水火地表与本地燃料均随新演武会话重置。
+- `SurfaceFires`：环境火源的唯一来源、伤害承载角色、10tick周期、40tick期限、3格容量和12总燃料；此表仅定义D8环境火，不提供领域余火或永久场景改造。水火地表与本地燃料均随新演武会话重置。
+
+- `FireDomainRules`：D10中心(7,12)、总燃料15、每次锁定尾效6、尾效2个本人结束周期、2400神攻承载及0.01弱燃烧；全部进入FIRE_MANIFEST兼容哈希。主周期与费用读Commands。仅合法展开时中心成为规则对象；停止后保留场内燃料／耐久，撤离重入重置。起火资格来自尚有本地燃料的公开格或存活low_plant；后者可借中心有限燃料，不回填D8燃料。
 
 初始 AP=1000、MP=6000、v=4.8 来自 D1。`normalVisionRange=4` 为本轮普通视野输入。
 基础体魄等先天输入引用既有 `char_sanxiuqiangdao`，不继承其身份、境界或能力；

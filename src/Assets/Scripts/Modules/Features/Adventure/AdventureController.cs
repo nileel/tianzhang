@@ -43,11 +43,11 @@ namespace TianZhang.Features.Adventure
         public bool IsTerrainRehearsal { get; private set; }
 
         public bool BeginJindanRehearsal(JindanDemoCatalogData demo, int segmentIndex, string earthEffect,
-            EnvironmentProfileAsset environment, Func<string, string> text, out string reason)
+            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false)
         {
             reason = "adventure_not_exploring";
             if (!CanSelectExplorationNode) return false;
-            var actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text);
+            var actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
             if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
             prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
             prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));

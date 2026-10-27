@@ -1,0 +1,6 @@
+NPC moved into range, deployed and maintained through shared ledger | tick=20
+earth anchoring and fire temperature coexist, no conflict/QTE | tick=30
+legal flight approach and landing at (7,11); earth AP=216670 | tick=30
+two legal polei attacks destroy600 center; seat identity remains and old quote rejects | tick=30
+paid tide eye/rise extinguished (9,8); paid tail extinguished after center break | tick=30
+counter-side withdrawal and reentry reset node | tick=10

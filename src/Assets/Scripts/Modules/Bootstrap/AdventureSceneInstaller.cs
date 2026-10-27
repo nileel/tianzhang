@@ -62,6 +62,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private JindanDemoView jindanDemoView;
         [SerializeField] private JindanScaleView jindanScaleView;
         [SerializeField] private JindanSealView jindanSealView;
+        [SerializeField] private JindanFireDomainView jindanFireDomainView;
         [SerializeField] private CombatEarthView earthView;
         [SerializeField] private CombatSurfaceView surfaceView;
         private JindanRehearsalPresenter jindan;
@@ -85,11 +86,11 @@ namespace TianZhang.Bootstrap
             surfaceView.ConfigureSurface(terrainRehearsalSurface);
             battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
                 terrainRehearsalSurface.transform, .340433121f);
-            var placement = jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == 0);
+            var placement = jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == (jindan.ControlFire ? 1 : 0));
             Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(placement.q, placement.r));
             battlefieldCamera.transform.position = focus - battlefieldCamera.transform.forward * 20;
             if (!controller.BeginJindanRehearsal(jindanDemoCatalog, segmentIndex, earthEffect,
-                terrainRehearsalEnvironment, UiText.Resolve, out string reason))
+                terrainRehearsalEnvironment, UiText.Resolve, out string reason, jindan.ControlFire))
                 throw new InvalidOperationException("jindan_rehearsal_entry_failed:" + reason);
         }
 
@@ -137,6 +138,8 @@ namespace TianZhang.Bootstrap
                     new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(o.EdgeOther.Value.Q,o.EdgeOther.Value.R),
                     o.Definition.IsTemporaryRamp,o.Durability)).ToArray() ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatEarthObjectSnapshot>());
             surfaceView.Present(jindan.SurfacePresentation);
+            var fire = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.FireDomain != null)?.FireDomain;
+            jindanFireDomainView.Present(fire?.Main != null, fire?.Support.IsDestroyed == true);
             var sealSeat = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "SPACE_SEAL");
             var seal = sealSeat?.ActiveSeal;
             jindanSealView.Present(seal == null ? null : new[] {
@@ -256,6 +259,7 @@ namespace TianZhang.Bootstrap
                     RequireReference(jindanDemoView, "jindan_demo_view_missing");
                     RequireReference(jindanScaleView, "jindan_scale_view_missing");
                     RequireReference(jindanSealView, "jindan_seal_view_missing");
+                    RequireReference(jindanFireDomainView, "jindan_fire_domain_view_missing");
                     RequireReference(earthView, "jindan_earth_view_missing");
                     RequireReference(surfaceView, "jindan_surface_view_missing");
                     jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve);

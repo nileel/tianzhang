@@ -893,8 +893,8 @@ MonoBehaviour:
     failurePolicy: FINITE_PREPAID_TAIL
     capacityUnit: BURNING_CELL
     additionalRulesKey: demo_20261024_fire_manifest_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d10
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
   - commandId: demo_20261024_fire_manifest_terminate
     displayNameKey: demo_20261024_fire_manifest_terminate
@@ -921,8 +921,8 @@ MonoBehaviour:
     failurePolicy: FINITE_PREPAID_TAIL
     capacityUnit: BURNING_CELL
     additionalRulesKey: demo_20261024_fire_manifest_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d10
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
   - commandId: demo_20261024_scale_deploy
     displayNameKey: demo_20261024_scale_deploy
@@ -1398,7 +1398,7 @@ MonoBehaviour:
     capacitySchemaId: demo_20261024_fire_manifest_deploy
     forbiddenContractIds:
     - UNDECLARED
-    compatibilityProfileId: demo_compat_sha256_8e61b514e617086c5b5692c71acfd9a1cc0d604e91974fcd710d0c4637b4cda2
+    compatibilityProfileId: demo_compat_sha256_964f6a54c7abc074f442b76bc8c1a7df580a8f4b84e4b5c664fb657ac2d68fd1
   - contractId: demo_20261024_space_scale_contract_v1
     contractVersion: 1.0
     positionId: JD_Cosmos_Space_SOURCE
@@ -1626,3 +1626,14 @@ MonoBehaviour:
     layerDurability: 100
     brokenLayerTicks: 2
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u95E8\u67A2\u5C01\u5173.txt"
+  fireDomainRules:
+    rulesId: demo_20261027_fire_domain_rules
+    centerQ: 7
+    centerR: 12
+    supportId: fire_domain_support
+    fuelBudget: 15
+    tailFuel: 6
+    tailCycles: 2
+    attackCapacity: 2400
+    damageMultiplier: 0.01
+    sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"

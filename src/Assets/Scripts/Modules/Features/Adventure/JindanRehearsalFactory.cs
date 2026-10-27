@@ -14,12 +14,13 @@ namespace TianZhang.Features.Adventure
     public static class JindanRehearsalFactory
     {
         public static AdventureSpawnSet Create(JindanDemoCatalogData catalog, int segmentIndex,
-            string earthEffect, Func<string, string> text)
+            string earthEffect, Func<string, string> text, bool controlFire = false)
         {
             if (catalog == null || !catalog.Validate(out string reason))
                 throw new ArgumentException("jindan_catalog_invalid");
             if (segmentIndex < 0 || segmentIndex >= catalog.segments.Length) throw new ArgumentOutOfRangeException(nameof(segmentIndex));
             var segment = catalog.segments[segmentIndex];
+            if (controlFire && segmentIndex != 1) throw new ArgumentException("fire_control_requires_second_segment");
             var players = new List<CombatantSnapshot>();
             var enemies = new List<CombatantSnapshot>();
             var names = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -39,7 +40,8 @@ namespace TianZhang.Features.Adventure
                     bindings.Add(CombatFlight.ProfileId, preset.flightAbilityInstanceId);
                 var arts = preset.equippedArtProfileIds.Concat(preset.characterId == catalog.demolition.characterId
                     ? new[] { catalog.demolition.profileId } : Array.Empty<string>()).ToArray();
-                var actor = new CombatantSnapshot(preset.characterId, placement.team == 0 ? CombatTeam.Player : CombatTeam.Enemy,
+                int team = controlFire ? 1 - placement.team : placement.team;
+                var actor = new CombatantSnapshot(preset.characterId, team == 0 ? CombatTeam.Player : CombatTeam.Enemy,
                     new HexCoord(placement.q, placement.r), attributes.Reaction, stats.MaxHealth, stats.MaxHealth,
                     stats.PhysicalAttack, stats.MagicAttack, stats.PhysicalDefense, stats.MagicDefense,
                     preset.actionPointMaximumUnits, preset.movementEfficiencyMilliUnits, preset.realmMultiplier,
@@ -81,7 +83,11 @@ namespace TianZhang.Features.Adventure
                     effect == "SPACE_SEAL" ? new CombatSealDefinition(new HexCoord(catalog.sealRules.fromQ, catalog.sealRules.fromR),
                         new HexCoord(catalog.sealRules.toQ, catalog.sealRules.toR), catalog.sealRules.supportId,
                         catalog.sealRules.localRadius, catalog.sealRules.layerDurability, catalog.sealRules.brokenLayerTicks,
-                        deploy.durationCount) : null));
+                        deploy.durationCount) : null,
+                    effect == CombatFireDomainRules.Effect ? new CombatFireDomainDefinition(
+                        new HexCoord(catalog.fireDomainRules.centerQ, catalog.fireDomainRules.centerR), catalog.fireDomainRules.supportId,
+                        catalog.fireDomainRules.fuelBudget, catalog.fireDomainRules.tailFuel, catalog.fireDomainRules.tailCycles,
+                        catalog.fireDomainRules.attackCapacity, catalog.fireDomainRules.damageMultiplier) : null));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
         }

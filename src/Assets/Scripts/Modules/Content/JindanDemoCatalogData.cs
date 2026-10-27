@@ -22,6 +22,7 @@ namespace TianZhang.Entity
         public JindanDemoSurfaceCell[] surfaceCells;
         public JindanDemoSurfaceFire[] surfaceFires;
         public JindanDemoSealRules sealRules;
+        public JindanDemoFireDomainRules fireDomainRules;
 
         public JindanDemoPresetDefinition GetPreset(string id) => presets?.SingleOrDefault(x => x.characterId == id);
         public JindanDemoSeatDefinition GetSeat(string id) => seats?.SingleOrDefault(x => x.seatInstanceId == id);
@@ -77,6 +78,21 @@ namespace TianZhang.Entity
         public GongFaGrowthData sourceGongFa;
         public FoundationPurpleMansionStateData foundationState;
         public JindanStaticStateData jindanState;
+    }
+
+    [Serializable]
+    public sealed class JindanDemoFireDomainRules
+    {
+        public string rulesId;
+        public int centerQ;
+        public int centerR;
+        public string supportId;
+        public int fuelBudget;
+        public int tailFuel;
+        public int tailCycles;
+        public int attackCapacity;
+        public float damageMultiplier;
+        public string sourceDocument;
     }
 
     [Serializable]

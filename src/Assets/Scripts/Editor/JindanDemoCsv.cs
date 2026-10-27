@@ -59,6 +59,7 @@ namespace TianZhang.Editor
                 catalog.surfaceCells = Parse<JindanDemoSurfaceCell>(read("JindanDemoSurfaceCells"), "JindanDemoSurfaceCells");
                 catalog.surfaceFires = Parse<JindanDemoSurfaceFire>(read("JindanDemoSurfaceFires"), "JindanDemoSurfaceFires");
                 catalog.sealRules = Parse<JindanDemoSealRules>(read("JindanDemoSealRules"), "JindanDemoSealRules").Single();
+                catalog.fireDomainRules = Parse<JindanDemoFireDomainRules>(read("JindanDemoFireDomainRules"), "JindanDemoFireDomainRules").Single();
                 foreach (var contract in catalog.contracts)
                 {
                     if (contract.compatibilityProfileId != "compile")

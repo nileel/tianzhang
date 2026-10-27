@@ -96,6 +96,14 @@ namespace TianZhang.Entity
                     seal.toR.ToString(CultureInfo.InvariantCulture), seal.supportId, seal.localRadius.ToString(CultureInfo.InvariantCulture),
                     seal.layerDurability.ToString(CultureInfo.InvariantCulture), seal.brokenLayerTicks.ToString(CultureInfo.InvariantCulture) }).ToArray();
             }
+            if (contract.effectId == "FIRE_MANIFEST")
+            {
+                var fire = catalog.fireDomainRules ?? throw new InvalidDataException("JD_DEMO_FIRE_DOMAIN_RULES_MISSING");
+                frozen = frozen.Concat(new[] { fire.rulesId, fire.centerQ.ToString(CultureInfo.InvariantCulture),
+                    fire.centerR.ToString(CultureInfo.InvariantCulture), fire.supportId, fire.fuelBudget.ToString(CultureInfo.InvariantCulture),
+                    fire.tailFuel.ToString(CultureInfo.InvariantCulture), fire.tailCycles.ToString(CultureInfo.InvariantCulture),
+                    fire.attackCapacity.ToString(CultureInfo.InvariantCulture), fire.damageMultiplier.ToString("R", CultureInfo.InvariantCulture) }).ToArray();
+            }
             using var sha = SHA256.Create();
             return "demo_compat_sha256_" + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(
                 string.Join("\n", frozen)))).Replace("-", "").ToLowerInvariant();

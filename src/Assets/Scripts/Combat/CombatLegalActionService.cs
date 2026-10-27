@@ -35,8 +35,12 @@ namespace TianZhang.Combat
             AddMoves(session, actor, actions);
             AddSpellSwaps(session, actor, actions);
             if (session.Jindan != null)
+            {
                 foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actor.Id && value.EffectId == "SPACE_SEAL"))
                     AddIfValid(session, CombatSealRules.Deployment(seat), actions);
+                foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actor.Id && value.EffectId == CombatFireDomainRules.Effect))
+                    AddIfValid(session, CombatFireDomainRules.Deployment(seat), actions);
+            }
             if (session.Flight?.Find(actor.Id) != null)
                 foreach (CombatFlightAction action in Enum.GetValues(typeof(CombatFlightAction)))
                     AddIfValid(session, new CombatCommand(CombatCommandKind.Flight, actor.Id,

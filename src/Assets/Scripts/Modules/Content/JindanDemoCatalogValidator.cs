@@ -38,6 +38,10 @@ namespace TianZhang.Entity
                 }
                 ValidateTuning(catalog.loadoutTuning);
                 JindanDemoSurfaceValidator.Validate(catalog);
+                var fire = catalog.fireDomainRules;
+                Check(fire != null && fire.centerQ == 7 && fire.centerR == 12 && fire.supportId == "fire_domain_support" &&
+                    fire.fuelBudget == 15 && fire.tailFuel == 6 && fire.tailCycles == 2 && fire.attackCapacity == 2400 &&
+                    fire.damageMultiplier == 0.01f && !string.IsNullOrWhiteSpace(fire.sourceDocument), "FIRE_DOMAIN_RULES");
                 var seal = catalog.sealRules;
                 Check(seal != null && seal.rulesId == "demo_20261024_space_seal_rules" &&
                     seal.fromQ == 8 && seal.fromR == 12 && seal.toQ == 9 && seal.toR == 12 &&
@@ -167,10 +171,12 @@ namespace TianZhang.Entity
                 bool earth = command.effectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" && command.abilityDefinitionId == "demo_20261024_guardian_houzai";
                 bool water = command.effectId == "WATER_TIDE" && command.abilityDefinitionId == "demo_20261024_guardian_xulan";
                 bool seal = command.effectId == "SPACE_SEAL" && command.abilityDefinitionId == "demo_20261024_guardian_menshu_fengguan";
+                bool fire = command.effectId == "FIRE_MANIFEST" && command.abilityDefinitionId == "demo_20261024_guardian_changming";
                 Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
                       earth && command.kind is ("DEPLOY" or "TERMINATE") ||
                       water && command.kind is ("DEPLOY" or "TERMINATE") ||
                       seal && command.kind is ("DEPLOY" or "TERMINATE") ||
+                      fire && command.kind is ("DEPLOY" or "TERMINATE") ||
                       command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
                       command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
                 if (flight)
@@ -201,6 +207,14 @@ namespace TianZhang.Entity
                               command.durationClock == "GLOBAL_TICK" && command.capacity == 1 && command.maximumInstances == 1 &&
                               command.supportDurability == 200 && command.range == 4 && command.verticalReachRank == 3
                             : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0), "SEAL_COMMAND");
+                else if (fire)
+                    Check(command.ctPenalty == 0 && command.failurePolicy == "FINITE_PREPAID_TAIL" &&
+                        command.capacityUnit == "BURNING_CELL" && (command.kind == "DEPLOY"
+                            ? command.actionPointCostUnits == 500000 && command.manaCost == 1000 && command.cooldownTicks == 1 &&
+                              command.upkeepMana == 200 && command.upkeepClock == "OWN_TURN_END" && command.durationCount == 3 &&
+                              command.durationClock == "OWN_TURN_END" && command.capacity == 3 && command.maximumInstances == 1 &&
+                              command.supportDurability == 600 && command.range == 4 && command.verticalReachRank == 3
+                            : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0), "FIRE_DOMAIN_COMMAND");
                 else if (!earth && command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");

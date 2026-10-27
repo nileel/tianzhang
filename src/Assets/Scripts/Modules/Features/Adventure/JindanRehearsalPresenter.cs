@@ -49,6 +49,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public bool PreparationOpen { get; private set; }
+        public bool ControlFire { get; private set; }
         public bool IsSelecting => selection != SelectionMode.None;
         public string PreparationDetails { get; private set; } = string.Empty;
         public string CombatDetails { get; private set; } = string.Empty;
@@ -79,12 +80,13 @@ namespace TianZhang.Features.Adventure
                     case "stage3": segmentIndex = 2; SelectSegmentPreset(); break;
                     case "preset_next": presetIndex = (presetIndex + 1) % catalog.presets.Length; break;
                     case "earth_toggle": earthEffect = earthEffect == "EARTH_GRAVITY" ? "EARTH_MANIFEST" : "EARTH_GRAVITY"; break;
+                    case "fire_side": segmentIndex = 1; ControlFire = !ControlFire; SelectSegmentPreset(); break;
                     case "cancel_preparation": PreparationOpen = false; message = string.Empty; break;
                     case "enter":
                         enter(segmentIndex, earthEffect);
                         PreparationOpen = false;
                         ClearTargeting();
-                        message = "进入演武；飞行与方位定尺均先预演再确认。";
+                        message = "进入演武；能力均先预演再确认。";
                         break;
                 }
                 Refresh();
@@ -107,6 +109,8 @@ namespace TianZhang.Features.Adventure
                 case "tide_charge": tideCharged = !tideCharged; ClearQuote(); message = tideCharged ? "一档蓄力：先付费，1全局tick后完成时重验。" : "普通潮汐：确认即结算。"; break;
                 case "tide_preview": Preview(CombatCommandKind.JindanAbility); break;
                 case "tide_close": Preview(CombatCommandKind.CloseJindan); break;
+                case "fire_preview": Preview(CombatCommandKind.JindanAbility, true); break;
+                case "fire_close": Preview(CombatCommandKind.CloseJindan, true); break;
                 case "earth_tab": earthPage=true; ClearTargeting(); break;
                 case "scale_tab": earthPage=false; ClearTargeting(); break;
                 case "earth_wall": case "earth_ramp":
@@ -204,7 +208,7 @@ namespace TianZhang.Features.Adventure
             QuoteDetails = QuoteText();
         }
 
-        private void Preview(CombatCommandKind kind)
+        private void Preview(CombatCommandKind kind, bool fire = false)
         {
             ClearQuote(); selection = SelectionMode.None;
             var session = encounter.CurrentSession;
@@ -212,7 +216,7 @@ namespace TianZhang.Features.Adventure
             var owned = session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId).ToArray();
             var seat = kind == CombatCommandKind.SwapJindan
                 ? owned.FirstOrDefault(value => value.Definition.Candidates.Count > 1)
-                : owned.FirstOrDefault(value => tidePage ? value.EffectId == "WATER_TIDE" : earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
+                : owned.FirstOrDefault(value => fire ? value.EffectId == CombatFireDomainRules.Effect : tidePage ? value.EffectId == "WATER_TIDE" : earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
             if (seat == null)
             {
                 message = kind == CombatCommandKind.SwapJindan ? "当前角色没有可切换的同席候选。" :
@@ -222,7 +226,8 @@ namespace TianZhang.Features.Adventure
             string effect = kind == CombatCommandKind.SwapJindan
                 ? seat.Definition.Candidates.First(value => value != seat.EffectId) : seat.EffectId;
             var request = kind == CombatCommandKind.JindanAbility
-                ? tidePage ? new CombatJindanRequest(seat.Definition.SeatId, tideAction: tideAction, tideSource: tideSource,
+                ? fire ? new CombatJindanRequest(seat.Definition.SeatId)
+                : tidePage ? new CombatJindanRequest(seat.Definition.SeatId, tideAction: tideAction, tideSource: tideSource,
                     charged: tideCharged, createTideEye: tideEye)
                 : new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin,earthPage?earthMode:null,earthTarget,earthCell)
                 : new CombatJindanRequest(seat.Definition.SeatId);
@@ -260,7 +265,8 @@ namespace TianZhang.Features.Adventure
         { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; tideSource = null; selection = SelectionMode.None; }
         private void SelectSegmentPreset()
         {
-            string id = catalog.segments[segmentIndex].actors.First(value => value.team == 0).characterId;
+            if (segmentIndex != 1) ControlFire = false;
+            string id = catalog.segments[segmentIndex].actors.First(value => value.team == (ControlFire ? 1 : 0)).characterId;
             presetIndex = Array.FindIndex(catalog.presets, value => value.characterId == id);
         }
 
@@ -270,8 +276,9 @@ namespace TianZhang.Features.Adventure
             var segment = catalog.segments[segmentIndex];
             var result = new StringBuilder();
             result.AppendLine("当前选段：" + Local(segment.displayNameKey));
+            if (segmentIndex == 1) result.AppendLine(ControlFire ? "执火守阵：操控火修，可展开、维持和关闭长明。" : "破火阵：操控土／水修，可绕行、灭火或破中心。");
             result.AppendLine("阵容：" + string.Join("、", segment.actors.Select(value =>
-                (value.team == 0 ? "我方·" : "对手·") + Local(catalog.GetPreset(value.characterId).displayNameKey))));
+                (value.team == (ControlFire ? 1 : 0) ? "我方·" : "对手·") + Local(catalog.GetPreset(value.characterId).displayNameKey))));
             result.AppendLine("土系战前装配：" + Effect(earthEffect) + "；浏览预设 " + (presetIndex + 1) + "/" + catalog.presets.Length);
             result.AppendLine(Local(preset.displayNameKey) + " · " + preset.realmSubstage + " · " + Local(preset.danxiangNameKey));
             result.AppendLine("AP " + Ap(preset.actionPointMaximumUnits) + " · MP " + preset.manaMaximum +
@@ -307,6 +314,7 @@ namespace TianZhang.Features.Adventure
             result.AppendLine("AP " + Ap(actor.ActionPointsRemainingUnits) + "/" + Ap(actor.ActionPointLimitAtTurnStartUnits) +
                 "  MP " + actor.CurrentSpirit + "/" + actor.MaximumSpirit);
             result.Append(JindanSealPresentation.Details(session));
+            result.Append(JindanFireDomainPresentation.Details(session));
             if (tidePage) return result + JindanTidePresentation.Details(session, actor, tideSource, tideAction, tideCharged, tideEye);
             var flight = session.Flight?.Find(actorId);
             if (flight != null)
@@ -370,15 +378,20 @@ namespace TianZhang.Features.Adventure
             string action = frozenCommand.Kind == CombatCommandKind.Flight ? FlightName(frozenCommand.FlightAction.Value) :
                 frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
                 frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(frozenCommand.ProfileId) :
-                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.Jindan?.TideAction is {} water
+                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.ProfileId == CombatFireDomainRules.Effect ? "展开长明火界" : frozenCommand.Jindan?.TideAction is {} water
                     ? JindanTidePresentation.Name(water, frozenCommand.Jindan.Charged, frozenCommand.Jindan.CreateTideEye)
                     : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开方位定尺";
             string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
                 "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
             if (frozenCommand.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";
             else if(frozenCommand.Kind==CombatCommandKind.Art) result+="\n环境命中目标："+string.Join("、",frozenQuote.AttackArea?.EnvironmentTargetIds??Array.Empty<string>());
-            else if (frozenCommand.Kind == CombatCommandKind.CloseJindan) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
+            else if (frozenCommand.Kind == CombatCommandKind.CloseJindan && frozenCommand.ProfileId != CombatFireDomainRules.Effect) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
             if (frozenQuote.Tide != null) result += "\n" + JindanTidePresentation.Quote(frozenQuote.Tide, frozenCommand.Jindan);
+            if (frozenCommand.ProfileId == CombatFireDomainRules.Effect)
+                result += "\n" + (frozenCommand.Kind == CombatCommandKind.CloseJindan
+                    ? "仅结束主规则；合法本源燃烧转为已付余烬，最多再2个本人结束周期；不能重复关闭。"
+                    : "整棋盘地表弱火热；施放当回合不跳动。预留6燃料，后续每次本人结束维护200MP，最多3次。") +
+                    "\n" + JindanFireDomainPresentation.Candidates(encounter.CurrentSession);
             if (frozenCommand.Kind == CombatCommandKind.JindanAbility && frozenCommand.Jindan?.EarthMode is {} earth)
             {
                 var session = encounter.CurrentSession;
@@ -424,6 +437,7 @@ namespace TianZhang.Features.Adventure
         };
         private string Explain(string reason)
         {
+            if (reason?.StartsWith("fire_", StringComparison.Ordinal) == true) return JindanFireDomainPresentation.Explain(reason);
             if (reason?.StartsWith("tide_", StringComparison.Ordinal) == true) return JindanTidePresentation.Explain(reason);
             string localized = Local(reason);
             if (!string.IsNullOrEmpty(localized) && localized != reason) return localized;

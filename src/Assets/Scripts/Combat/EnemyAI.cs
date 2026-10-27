@@ -58,6 +58,8 @@ namespace TianZhang.Combat
 
             var gate = legalActions.FirstOrDefault(action => action.Kind == CombatCommandKind.JindanAbility && action.ProfileId == "SPACE_SEAL");
             if (gate != null) return gate;
+            var fire = CombatFireDomainRules.ChooseDeploymentOrApproach(session, legalActions);
+            if (fire != null) return fire;
             legalActions = CombatSealRules.MaintainingActions(session, legalActions);
             CombatCommand attack = CombatAIQuery.Pick(legalActions, CombatCommandKind.Art)
                 ?? CombatAIQuery.Pick(legalActions, CombatCommandKind.Divine)

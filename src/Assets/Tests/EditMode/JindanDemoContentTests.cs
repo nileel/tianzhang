@@ -36,7 +36,8 @@ namespace TianZhang.Tests.EditMode
                 "demo_20261024_earth_manifest_deploy","demo_20261024_earth_manifest_terminate",
                 "demo_20261024_earth_gravity_deploy","demo_20261024_earth_gravity_terminate",
                 "demo_20261024_water_tide_deploy","demo_20261024_water_tide_terminate",
-                "demo_20261024_space_seal_deploy","demo_20261024_space_seal_terminate" }));
+                "demo_20261024_space_seal_deploy","demo_20261024_space_seal_terminate",
+                "demo_20261024_fire_manifest_deploy","demo_20261024_fire_manifest_terminate" }));
             Assert.That(catalog.commands.Where(c => !c.enabled).All(c => !string.IsNullOrEmpty(c.unavailableReasonKey)), Is.True);
             Assert.That(JindanDemoCatalogValidator.Validate(catalog, false, out string reason), Is.True, reason);
         }
@@ -144,7 +145,7 @@ namespace TianZhang.Tests.EditMode
         public void EnablingAnUnimplementedAbilityFailsClosed()
         {
             var catalog = Read();
-            var flight = catalog.commands.First(c => c.effectId == "FIRE_MANIFEST");
+            var flight = catalog.commands.First(c => c.effectId == "YANG_RADIANCE");
             flight.enabled = true; flight.unavailableReasonKey = string.Empty;
             Assert.That(JindanDemoCatalogValidator.Validate(catalog, false, out string reason), Is.False);
             Assert.That(reason, Is.EqualTo("JD_DEMO_UNIMPLEMENTED_COMMAND_ENABLED"));

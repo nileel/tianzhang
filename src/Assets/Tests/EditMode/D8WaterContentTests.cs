@@ -42,7 +42,7 @@ namespace TianZhang.Tests.EditMode
             Assert.That(rules.waterMultiplier * rules.chargeMultiplier, Is.EqualTo(13f / 224f).Within(0.00000001f));
             Assert.That(deploy.capacity, Is.EqualTo(7));
             Assert.That(deploy.failurePolicy, Is.EqualTo("KEEP_COMMITTED_SURFACES"));
-            Assert.That(catalog.commands.Where(value => value.effectId == "FIRE_MANIFEST").All(value => !value.enabled), Is.True);
+            Assert.That(catalog.commands.Where(value => value.effectId == "FIRE_MANIFEST").All(value => value.enabled), Is.True);
         }
 
         [Test]
