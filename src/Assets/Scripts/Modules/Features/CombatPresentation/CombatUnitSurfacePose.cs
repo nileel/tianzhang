@@ -8,8 +8,16 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>Fits the approved static body's real soles to finite support, without changing its scale.</summary>
     internal sealed class CombatUnitSurfacePose
     {
+#if UNITY_EDITOR
+        internal static Action<int, int, double> PathMeasured;
+#endif
         private readonly CombatBattlefieldSurface surface;
         private readonly Vector3[] soles;
+        private readonly SoleNode firstSoles, secondSoles;
+        private readonly float soleCoordinateScale;
+        private readonly Vector3 soleMiddle, soleExtent;
+        private readonly List<CombatBattlefieldSurface.Cell> heightCells = new();
+        private Vector3 axisX, axisY, axisZ, extentX, extentY, extentZ;
         private readonly bool pair;
         public CombatUnitSurfacePose(CombatBattlefieldSurface surface, Transform body, bool pair)
         {
@@ -20,7 +28,14 @@ namespace TianZhang.Features.CombatPresentation
             foreach (MeshFilter filter in body.GetComponentsInChildren<MeshFilter>())
                 points.AddRange(filter.sharedMesh.vertices.Select(v => root.InverseTransformPoint(filter.transform.TransformPoint(v))));
             float minimum = points.Min(p => p.y);
-            soles = points.Where(p => p.y <= minimum+.01f).ToArray();
+            soles = points.Where(p => p.y <= minimum+.01f).Distinct().ToArray();
+            bool First(Vector3 p) => pair ? p.z>0 : p.x<0;
+            int firstCount=soles.Count(First);
+            soles=soles.Where(First).Concat(soles.Where(p=>!First(p))).ToArray();
+            soleCoordinateScale=soles.Max(p=>Mathf.Abs(p.x)+Mathf.Abs(p.y)+Mathf.Abs(p.z));
+            Vector3 minimumSole=soles.Aggregate(Vector3.Min),maximumSole=soles.Aggregate(Vector3.Max);
+            soleMiddle=(minimumSole+maximumSole)*.5f;soleExtent=(maximumSole-minimumSole)*.5f;
+            firstSoles=BuildSoles(0,firstCount); secondSoles=BuildSoles(firstCount,soles.Length-firstCount);
         }
 
         public void Evaluate(Vector3 center, float yaw, out Vector3 position, out Quaternion rotation)
@@ -32,7 +47,7 @@ namespace TianZhang.Features.CombatPresentation
             if (onStair)
             {
                 rotation = Quaternion.Euler(0,yaw,0);
-                center.y = Required(center,rotation,0);
+                center.y = Required(center,rotation).height;
                 position = center;
                 return;
             }
@@ -53,12 +68,15 @@ namespace TianZhang.Features.CombatPresentation
             float Difference(float angle)
             {
                 Quaternion q = Rotation(pair ? angle : pitch,pair ? roll : angle);
-                return Required(center,q,1)-Required(center,q,2);
+                var support = Required(center,q);
+                return support.first-support.second;
             }
-            if(Mathf.Abs(Difference(initial))<.000001f)
+            var initialRotation = Rotation(pitch,roll);
+            var initialSupport = Required(center,initialRotation);
+            if(Mathf.Abs(initialSupport.first-initialSupport.second)<.000001f)
             {
-                rotation=Rotation(pitch,roll);
-                center.y=Required(center,rotation,0);
+                rotation=initialRotation;
+                center.y=initialSupport.height;
                 position=center;
                 return;
             }
@@ -68,11 +86,12 @@ namespace TianZhang.Features.CombatPresentation
             for (int i=0;i<20;i++)
             {
                 float mid = (lo+hi)*.5f;
-                if (low*Difference(mid)<=0) hi=mid; else { lo=mid; low=Difference(mid); }
+                float difference = Difference(mid);
+                if (low*difference<=0) hi=mid; else { lo=mid; low=difference; }
             }
             if (pair) pitch=(lo+hi)*.5f; else roll=(lo+hi)*.5f;
             rotation=Rotation(pitch,roll);
-            center.y=Required(center,rotation,0);
+            center.y=Required(center,rotation).height;
             if (float.IsInfinity(center.y)) throw new InvalidOperationException("unit_sole_outside_support");
             position=center;
 
@@ -83,17 +102,77 @@ namespace TianZhang.Features.CombatPresentation
             }
         }
 
-        private float Required(Vector3 center, Quaternion rotation, int group)
+        private (float height, float first, float second) Required(Vector3 center, Quaternion rotation)
         {
-            float height=float.NegativeInfinity;
-            foreach (Vector3 sole in soles)
+            // Padding only makes bounds less selective; every accepted height still comes from
+            // an original vertex and the original finite-support query. Include coordinate scale
+            // in XZ as well as Y so rounding cannot omit a stair or a higher neighboring tile.
+            float padding=2e-6f*(1+soleCoordinateScale+Mathf.Abs(center.x)+Mathf.Abs(center.y)+Mathf.Abs(center.z));
+            axisX=rotation*Vector3.right;axisY=rotation*Vector3.up;axisZ=rotation*Vector3.forward;
+            extentX=Abs(axisX);extentY=Abs(axisY);extentZ=Abs(axisZ);
+            RotateBounds(soleMiddle,soleExtent,rotation,padding,out _,out var minimum,out var maximum);
+            surface.CollectHeightCells(center+minimum,center+maximum,heightCells);
+            float first=float.NegativeInfinity,second=float.NegativeInfinity;
+            Search(firstSoles,Bound(firstSoles,center,rotation,padding),ref first);
+            Search(secondSoles,Bound(secondSoles,center,rotation,padding),ref second);
+            return (Mathf.Max(first,second),first,second);
+
+            void Search(SoleNode node,float upper,ref float best)
             {
-                bool first = pair ? sole.z>0 : sole.x<0;
-                if (group==1 && !first || group==2 && first) continue;
-                Vector3 p=rotation*sole;
-                if (surface.TryHeight(center+p,out float y)) height=Mathf.Max(height,y-p.y);
+                if(node==null || upper<=best)return;
+                if(node.Left==null)
+                {
+                    for(int i=node.Start;i<node.Start+node.Count;i++)
+                    {
+                        Vector3 p=rotation*soles[i];
+                        if(surface.TryHeight(center+p,heightCells,out float y))best=Mathf.Max(best,y-p.y);
+                    }
+                    return;
+                }
+                float left=Bound(node.Left,center,rotation,padding),right=Bound(node.Right,center,rotation,padding);
+                if(left>=right){Search(node.Left,left,ref best);Search(node.Right,right,ref best);}
+                else {Search(node.Right,right,ref best);Search(node.Left,left,ref best);}
             }
-            return height;
+        }
+
+        private float Bound(SoleNode node,Vector3 center,Quaternion rotation,float padding)
+        {
+            if(node==null)return float.NegativeInfinity;
+            RotateBounds(node.Middle,node.Extent,rotation,padding,out var middle,out var minimum,out var maximum);
+            return surface.SoleHeightUpperBound(heightCells,middle,node.Extent,axisX,axisY,axisZ,
+                center,center+minimum,center+maximum,padding);
+        }
+
+        private void RotateBounds(Vector3 localMiddle,Vector3 extent,Quaternion rotation,float padding,
+            out Vector3 middle,out Vector3 minimum,out Vector3 maximum)
+        {
+            middle=rotation*localMiddle;
+            Vector3 half=extentX*extent.x+extentY*extent.y+extentZ*extent.z+Vector3.one*padding;
+            minimum=middle-half;maximum=middle+half;
+        }
+
+        private static Vector3 Abs(Vector3 value)=>new(Mathf.Abs(value.x),Mathf.Abs(value.y),Mathf.Abs(value.z));
+
+        private SoleNode BuildSoles(int start,int count)
+        {
+            if(count==0)return null;
+            Vector3 minimum=soles[start],maximum=soles[start];
+            for(int i=start+1;i<start+count;i++)
+            {minimum=Vector3.Min(minimum,soles[i]);maximum=Vector3.Max(maximum,soles[i]);}
+            var node=new SoleNode {Start=start,Count=count,Middle=(minimum+maximum)*.5f,Extent=(maximum-minimum)*.5f};
+            if(count<=8)return node;
+            Vector3 size=maximum-minimum;
+            int axis=size.x>=size.y && size.x>=size.z?0:size.y>=size.z?1:2;
+            Array.Sort(soles,start,count,Comparer<Vector3>.Create((a,b)=>a[axis].CompareTo(b[axis])));
+            int half=count/2;node.Left=BuildSoles(start,half);node.Right=BuildSoles(start+half,count-half);
+            return node;
+        }
+
+        private sealed class SoleNode
+        {
+            public int Start,Count;
+            public Vector3 Middle,Extent;
+            public SoleNode Left,Right;
         }
 
         public void Place(Transform root,Vector3 center,float yaw)
@@ -148,6 +227,9 @@ namespace TianZhang.Features.CombatPresentation
         /// <summary>Translate horizontally only after lifting to the next true tread envelope; reverse on descent.</summary>
         public System.Collections.IEnumerator Move(Transform root, Vector3 start,Vector3 end,float yaw,float speed)
         {
+#if UNITY_EDITOR
+            long sampledAt = PathMeasured == null ? 0 : System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
             float distance=Vector3.Distance(new Vector3(start.x,0,start.z),new Vector3(end.x,0,end.z));
             int count=Mathf.Max(1,Mathf.CeilToInt(distance/.015f));
             Place(root,start,yaw);
@@ -166,6 +248,10 @@ namespace TianZhang.Features.CombatPresentation
                 }
                 Add(next,q);
             }
+#if UNITY_EDITOR
+            PathMeasured?.Invoke(soles.Length, count,
+                (System.Diagnostics.Stopwatch.GetTimestamp() - sampledAt) * 1000d / System.Diagnostics.Stopwatch.Frequency);
+#endif
             // Spatial precision must not impose a frame wait on every sample or stair corner.
             float travelled=0, length=path[path.Count-1].distance;
             int segment=1;

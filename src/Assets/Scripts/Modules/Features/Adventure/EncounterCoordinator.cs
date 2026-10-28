@@ -663,6 +663,9 @@ namespace TianZhang.Features.Adventure
 
         private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("execute/" + command.ActorId + "/" + command.Kind);
+#endif
             var flightBefore = command.Kind is CombatCommandKind.EndTurn or CombatCommandKind.JindanAbility
                 ? SnapshotFlightStates() : null;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot actorBefore);
@@ -740,7 +743,11 @@ namespace TianZhang.Features.Adventure
 
         private void Present(string turnText, bool acceptsCommands, IReadOnlyList<CombatTurnSnapshot> advanceSteps = null)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("hud");
+#endif
             if (session == null) return;
+            using var queries = session.SceneObjects?.Board.BeginQueryBatch();
             RefreshGrowth();
             session.Combatants.TryGet(ControlledActorId, out CombatantSnapshot player);
             presentedInventoryVersion = inventoryVersion?.Invoke() ?? 0;
@@ -762,9 +769,9 @@ namespace TianZhang.Features.Adventure
                 movement: BuildMovement(player, acceptsCommands),
                 isPresenting: IsPresenting || (advanceSteps != null && advanceSteps.Count > 1 &&
                     advanceSteps[advanceSteps.Count - 1].CurrentTick > advanceSteps[0].CurrentTick),
-                artActions: BuildArtActions(player),
+                artActions: BuildArtActions(player, acceptsCommands),
                 commandContextVersion: commandContextVersion,
-                actions: BuildActions(player, enemy),
+                actions: BuildActions(player, enemy, acceptsCommands),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
                 enemies: spawned.Players.Concat(spawned.Enemies).Where(value => value.Id != player.Id && VisibleTo(player.Id, value.Id))
@@ -807,7 +814,7 @@ namespace TianZhang.Features.Adventure
                 session.TurnPhase.ToString(), options);
         }
 
-        private IReadOnlyList<CombatArtActionSnapshot> BuildArtActions(CombatantSnapshot player)
+        private IReadOnlyList<CombatArtActionSnapshot> BuildArtActions(CombatantSnapshot player, bool acceptsCommands)
         {
             var actions = new List<CombatArtActionSnapshot>();
             if (player == null) return actions;
@@ -819,7 +826,7 @@ namespace TianZhang.Features.Adventure
                 CombatActionPreviewSnapshot entryQuote = null;
                 if (profile != null)
                 {
-                    foreach (HexCoord cell in battlefieldCells)
+                    foreach (HexCoord cell in acceptsCommands ? battlefieldCells : Array.Empty<HexCoord>())
                         if (session.QueryAttackCell(player.Id, id, cell).Cells[0].IsLegal)
                             castableCells.Add(ToPresentationHex(cell));
                     CombatUnitPresentationHex entryCell = profile.MinimumRange == 0 ? ToPresentationHex(player.Position) :
@@ -853,7 +860,7 @@ namespace TianZhang.Features.Adventure
             return actions;
         }
 
-        private IReadOnlyList<CombatActionPreviewSnapshot> BuildActions(CombatantSnapshot player, CombatantSnapshot enemy)
+        private IReadOnlyList<CombatActionPreviewSnapshot> BuildActions(CombatantSnapshot player, CombatantSnapshot enemy, bool acceptsCommands)
         {
             var actions = new List<CombatActionPreviewSnapshot>();
             if (player == null) return actions;
@@ -865,7 +872,7 @@ namespace TianZhang.Features.Adventure
             }
             else
             {
-                foreach (HexCoord cell in battlefieldCells)
+                foreach (HexCoord cell in acceptsCommands ? battlefieldCells : Array.Empty<HexCoord>())
                     Add(CombatActionKind.BasicAttack, targetCell: ToPresentationHex(cell));
             }
             Add(CombatActionKind.Guard);
@@ -1025,6 +1032,9 @@ namespace TianZhang.Features.Adventure
             CombatantSnapshot actorBefore,
             CombatUnitPresentationHex actorStart, CombatCommandPreview quote)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("presentation/" + command.Kind);
+#endif
             if (actorBefore == null) return;
             try
             {

@@ -1,0 +1,3 @@
+player count=647 unique=312 minY=0 maxY=0.009862244
+enemy count=2802 unique=1547 minY=0 maxY=0.009794742
+enemy_2 count=2802 unique=1547 minY=0 maxY=0.009794742

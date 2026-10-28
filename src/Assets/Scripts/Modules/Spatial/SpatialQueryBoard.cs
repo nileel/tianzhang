@@ -16,6 +16,10 @@ namespace TianZhang.Spatial
         private readonly SpatialQueryLimits limits;
         private readonly SpatialSceneObjectSet sceneObjects = SpatialSceneObjectSet.Empty;
         private readonly SpatialMetricOverrideSet metricOverrides = SpatialMetricOverrideSet.Empty;
+        private QueryBatch queryBatch;
+
+        /// <summary>Reuse complete searches only during one synchronous, read-only query batch.</summary>
+        public IDisposable BeginQueryBatch() => queryBatch = new QueryBatch(this, queryBatch);
 
         public SpatialQueryBoard(
             IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
@@ -345,7 +349,14 @@ namespace TianZhang.Spatial
                 return new SpatialMetricDistanceResult(true, 0, SpatialQueryReasons.Ok);
 
             int distanceLimit = checked(rangeLimit * limits.UnitsPerRange);
-            var traversal = Traverse(start, kind, distanceLimit, null, activeEffectBlockers, target, canTraverse);
+            TraversalResult traversal;
+            if (queryBatch != null && canTraverse == null)
+            {
+                var key = (start, kind, distanceLimit, activeEffectBlockers);
+                if (!queryBatch.Metric.TryGetValue(key, out traversal))
+                    queryBatch.Metric.Add(key, traversal = Traverse(start, kind, distanceLimit, null, activeEffectBlockers, null, null));
+            }
+            else traversal = Traverse(start, kind, distanceLimit, null, activeEffectBlockers, target, canTraverse);
             return traversal.Costs.TryGetValue(target, out int distance)
                 ? new SpatialMetricDistanceResult(true, distance, SpatialQueryReasons.Ok)
                 : new SpatialMetricDistanceResult(false, -1, traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
@@ -364,6 +375,7 @@ namespace TianZhang.Spatial
 
             int minimumUnits = checked(minRange * limits.UnitsPerRange);
             int maximumUnits = checked(maxRange * limits.UnitsPerRange);
+            using var batch = BeginQueryBatch();
             var entries = new Dictionary<HexCoord, SpatialRangeEntry>();
             foreach (var coord in cells.Keys)
                 entries[coord] = QueryRangeEntryUnits(
@@ -520,12 +532,26 @@ namespace TianZhang.Spatial
                 return UnpricedMovementPath(SpatialQueryReasons.MovementEfficiencyZero);
             if (start.Anchor == target)
                 return UnpricedMovementPath(SpatialQueryReasons.DestinationUnchanged);
-            var traversal = TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits,
-                occupied, target, targetFacing, policy);
-            if (!traversal.Destination.HasValue)
+            policy ??= SpatialMovementPolicy.Normal;
+            PoseTraversalResult traversal;
+            (SpatialPose pose, int depth)? destination;
+            if (queryBatch?.Movement?.Matches(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, policy) == true)
+            {
+                traversal = queryBatch.Movement.Result;
+                destination = targetFacing.HasValue
+                    ? traversal.SettledPoses.TryGetValue(start.WithAnchor(target).WithFacing(targetFacing.Value), out var poseState) ? poseState : null
+                    : traversal.SettledAnchors.TryGetValue(target, out var anchorState) ? anchorState : null;
+            }
+            else
+            {
+                traversal = TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits,
+                    occupied, target, targetFacing, policy);
+                destination = traversal.Destination;
+            }
+            if (!destination.HasValue)
                 return UnpricedMovementPath(traversal.FirstRejection ?? SpatialQueryReasons.NoLegalPath);
             var steps = new List<SpatialMovementStep>();
-            var current = traversal.Destination.Value;
+            var current = destination.Value;
             while (traversal.Previous.TryGetValue(current, out var previous))
             {
                 steps.Add(previous.step);
@@ -533,7 +559,7 @@ namespace TianZhang.Spatial
             }
             steps.Reverse();
             return new SpatialMovementPathResult(steps, limits.UnitsPerRange,
-                traversal.Costs[traversal.Destination.Value.pose], SpatialQueryReasons.Ok);
+                traversal.Costs[destination.Value.pose], SpatialQueryReasons.Ok);
         }
 
         /// <summary>
@@ -549,7 +575,13 @@ namespace TianZhang.Spatial
             ValidateMovementInputs(actionPointBudgetUnits, movementEfficiencyMilliUnits);
             if (movementEfficiencyMilliUnits == 0)
                 return new Dictionary<SpatialPose, int>();
-            return TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, null, null, policy).Costs;
+            policy ??= SpatialMovementPolicy.Normal;
+            if (queryBatch?.Movement?.Matches(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, policy) == true)
+                return queryBatch.Movement.Result.Costs;
+            var traversal = TraversePoses(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, null, null, policy);
+            if (queryBatch != null)
+                queryBatch.Movement = new MovementSearch(start, actionPointBudgetUnits, movementEfficiencyMilliUnits, occupied, policy, traversal);
+            return traversal.Costs;
         }
 
         private SpatialMovementPathResult UnpricedMovementPath(string reason) =>
@@ -564,23 +596,25 @@ namespace TianZhang.Spatial
         private PoseTraversalResult TraversePoses(SpatialPose start, int budget, int efficiency,
             IReadOnlyCollection<HexCoord> occupied, HexCoord? target, int? targetFacing, SpatialMovementPolicy policy)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("movement_search");
+#endif
             var result = new PoseTraversalResult();
             policy ??= SpatialMovementPolicy.Normal;
             if (policy.BlockedReason.Length > 0) { result.FirstRejection = policy.BlockedReason; return result; }
             var blocked = occupied == null ? null : new HashSet<HexCoord>(occupied);
             string initial = InspectPlacement(start, blocked);
             if (initial.Length != 0) { result.FirstRejection = initial; return result; }
-            var frontier = new List<PoseFrontierEntry> { new PoseFrontierEntry(start, 0) };
+            var frontier = new SpatialSearchHeap<PoseFrontierEntry>();
+            frontier.Enqueue(new PoseFrontierEntry(start, 0));
             var stateCosts = new Dictionary<(SpatialPose pose, int depth), int> { [(start, 0)] = 0 };
             result.Costs.Add(start, 0);
             while (frontier.Count > 0)
             {
-                int best = 0;
-                for (int index = 1; index < frontier.Count; index++)
-                    if (frontier[index].CompareTo(frontier[best]) < 0) best = index;
-                PoseFrontierEntry current = frontier[best];
-                frontier.RemoveAt(best);
+                PoseFrontierEntry current = frontier.Dequeue();
                 if (stateCosts[(current.Pose, current.Depth)] != current.Cost) continue;
+                if (!result.SettledPoses.ContainsKey(current.Pose)) result.SettledPoses.Add(current.Pose, (current.Pose, current.Depth));
+                if (!result.SettledAnchors.ContainsKey(current.Pose.Anchor)) result.SettledAnchors.Add(current.Pose.Anchor, (current.Pose, current.Depth));
                 if (target.HasValue && current.Pose.Anchor == target.Value &&
                     (!targetFacing.HasValue || current.Pose.Facing == targetFacing.Value))
                 { result.Destination = (current.Pose, current.Depth); break; }
@@ -608,7 +642,7 @@ namespace TianZhang.Spatial
                     stateCosts[key] = nextCost;
                     if (!result.Costs.TryGetValue(step.To, out int prior) || nextCost < prior) result.Costs[step.To] = nextCost;
                     result.Previous[key] = ((current.Pose, current.Depth), step);
-                    frontier.Add(new PoseFrontierEntry(step.To, nextCost, depth));
+                    frontier.Enqueue(new PoseFrontierEntry(step.To, nextCost, depth));
                 }
             }
             return result;
@@ -782,17 +816,21 @@ namespace TianZhang.Spatial
             HexCoord? stopAt,
             Func<HexCoord, bool> canTraverse)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("metric_search");
+#endif
             var costs = new Dictionary<HexCoord, int>();
             var previous = new Dictionary<HexCoord, HexCoord>();
             if (!cells.ContainsKey(start) || blocked?.Contains(start) == true || canTraverse?.Invoke(start) == false)
                 return new TraversalResult(costs, previous, SpatialQueryReasons.MissingCell);
 
-            var frontier = new List<FrontierEntry> { new FrontierEntry(start, 0) };
+            var frontier = new SpatialSearchHeap<FrontierEntry>();
+            frontier.Enqueue(new FrontierEntry(start, 0));
             costs[start] = 0;
             string firstRejection = null;
             while (frontier.Count > 0)
             {
-                var currentEntry = DequeueMinimum(frontier);
+                var currentEntry = frontier.Dequeue();
                 if (!costs.TryGetValue(currentEntry.Coord, out int currentCost) || currentCost != currentEntry.Cost)
                     continue;
                 if (stopAt.HasValue && currentEntry.Coord == stopAt.Value)
@@ -816,29 +854,17 @@ namespace TianZhang.Spatial
                     long burdenUnits = (long)edge.MovementBurdenUnits + cells[neighbor].MovementBurdenUnits;
                     if (burdenUnits > int.MaxValue) continue;
                     int movementBurden = kind == SpatialQueryKind.Movement ? (int)burdenUnits : 0;
-                    int nextCost = checked(currentCost + edge.MetricDistanceUnits + movementBurden);
-                    if (nextCost > budgetUnits ||
-                        (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost))
+                    long accumulatedCost = (long)currentCost + edge.MetricDistanceUnits + movementBurden;
+                    if (accumulatedCost > budgetUnits) continue;
+                    int nextCost = (int)accumulatedCost;
+                    if (costs.TryGetValue(neighbor, out int knownCost) && knownCost <= nextCost)
                         continue;
                     costs[neighbor] = nextCost;
                     previous[neighbor] = currentEntry.Coord;
-                    frontier.Add(new FrontierEntry(neighbor, nextCost));
+                    frontier.Enqueue(new FrontierEntry(neighbor, nextCost));
                 }
             }
             return new TraversalResult(costs, previous, firstRejection);
-        }
-
-        private static FrontierEntry DequeueMinimum(List<FrontierEntry> frontier)
-        {
-            int bestIndex = 0;
-            for (int index = 1; index < frontier.Count; index++)
-            {
-                if (frontier[index].CompareTo(frontier[bestIndex]) < 0)
-                    bestIndex = index;
-            }
-            var result = frontier[bestIndex];
-            frontier.RemoveAt(bestIndex);
-            return result;
         }
 
         private static IReadOnlyList<HexCoord> TraceLine(HexCoord source, HexCoord target)
@@ -917,11 +943,42 @@ namespace TianZhang.Spatial
 
         private sealed class PoseTraversalResult
         {
+            public readonly Dictionary<SpatialPose, (SpatialPose pose, int depth)> SettledPoses = new();
+            public readonly Dictionary<HexCoord, (SpatialPose pose, int depth)> SettledAnchors = new();
             public readonly Dictionary<SpatialPose, int> Costs = new Dictionary<SpatialPose, int>();
             public readonly Dictionary<(SpatialPose pose, int depth), ((SpatialPose pose, int depth) from, SpatialMovementStep step)> Previous =
                 new Dictionary<(SpatialPose pose, int depth), ((SpatialPose pose, int depth) from, SpatialMovementStep step)>();
             public (SpatialPose pose, int depth)? Destination;
             public string FirstRejection;
+        }
+
+        private sealed class QueryBatch : IDisposable
+        {
+            private readonly SpatialQueryBoard board;
+            private readonly QueryBatch previous;
+            public readonly Dictionary<(HexCoord, SpatialQueryKind, int, ulong), TraversalResult> Metric = new();
+            public MovementSearch Movement;
+            public QueryBatch(SpatialQueryBoard board, QueryBatch previous) { this.board = board; this.previous = previous; }
+            public void Dispose() { board.queryBatch = previous; }
+        }
+
+        private sealed class MovementSearch
+        {
+            private readonly SpatialPose start;
+            private readonly int budget, efficiency;
+            private readonly HashSet<HexCoord> occupied;
+            private readonly SpatialMovementPolicy policy;
+            public PoseTraversalResult Result { get; }
+            public MovementSearch(SpatialPose start, int budget, int efficiency, IReadOnlyCollection<HexCoord> occupied,
+                SpatialMovementPolicy policy, PoseTraversalResult result)
+            {
+                this.start = start; this.budget = budget; this.efficiency = efficiency;
+                this.occupied = new HashSet<HexCoord>(occupied ?? Array.Empty<HexCoord>());
+                this.policy = policy; Result = result;
+            }
+            public bool Matches(SpatialPose source, int costLimit, int speed, IReadOnlyCollection<HexCoord> blockers, SpatialMovementPolicy rules) =>
+                start == source && budget == costLimit && efficiency == speed && policy.HasSameRules(rules) &&
+                occupied.SetEquals(blockers ?? Array.Empty<HexCoord>());
         }
 
         /// <summary>

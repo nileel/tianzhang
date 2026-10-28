@@ -1,0 +1,15 @@
+{
+  "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs": "69cc5cf08c0447e3c38b25f3fb5121f9d21e18f1b2d7ca5cefb56056cc52aa5f",
+  "src/Assets/Scripts/Modules/Spatial/SpatialSearchHeap.cs": "b386bc09e2069845f997eede1d317a5fa648b7f09ffc3bdcc591db7bcffc7c03",
+  "src/Assets/Scripts/Modules/Spatial/SpatialQueryMeasurement.cs": "2a209c6157262caf884416c0d661ee05385c8accf5f5b8f14fc92e0cb0bfab43",
+  "src/Assets/Scripts/Modules/Spatial/SpatialMovementPolicy.cs": "92a90a306895043feafbdd072227b1758065d17f8d483e29cff1afe658d04fbf",
+  "src/Assets/Scripts/Combat/CombatLegalActionService.cs": "50ac9f062cba07d9f82e97c9884e8ff7e1c197de3f1174e197e0bb98b14b966f",
+  "src/Assets/Scripts/Combat/EnemyAI.cs": "c79922fec00f24f539a86f061ebe074a4b47056e9c6c639659ce469e9fc81bb1",
+  "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs": "cb326bf6acf9f67899bc8cd89649d7eb2ed4b33277a4d47fafdeb696d3377aa5",
+  "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitSurfacePose.cs": "378d01adececaccb9598812215231a8c3ea44cbfbfd098b47a4e7829590ea095",
+  "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatBattlefieldSurface.cs": "69f2192113bff86a0bfa8e0f17ca1566c144729347ff104624d8efbdcb497456",
+  "src/Assets/Tests/EditMode/R1SpatialSearchTests.cs": "36da90d89a5aa4afd5d2876bb04f519fbcefa8bdd287a3f3ec317e34aa8054c6",
+  "src/Assets/Tests/EditMode/R1SurfaceQueryTests.cs": "d56da4f8708051d3bd80e4943fe7c920964e6b63f1e2cb7b1bdbaa62ff27bbfd",
+  "src/Assets/Tests/PlayMode/R1ProductionAiMeasurementTests.cs": "f5dc17768e6b583947f076a9bf227334660f99287cfae8d38377b2d7b85bcfbe",
+  "simulations/BattleSim/BattleSim.csproj": "67c8628aaf50435a7ac9b2bfc1368bc2e9cf7b2917f1fa2793234ceb055ced92"
+}

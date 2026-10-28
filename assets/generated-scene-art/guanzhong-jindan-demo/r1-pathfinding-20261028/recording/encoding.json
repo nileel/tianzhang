@@ -1,0 +1,24 @@
+{
+  "requestedCaptures": 211,
+  "writtenFrames": 207,
+  "missingCaptureRequests": [
+    {
+      "file": "frame-00048.png",
+      "realtime": "19.516094"
+    },
+    {
+      "file": "frame-00107.png",
+      "realtime": "22.686670"
+    },
+    {
+      "file": "frame-00179.png",
+      "realtime": "26.991942"
+    },
+    {
+      "file": "frame-00211.png",
+      "realtime": "28.783622"
+    }
+  ],
+  "durationSeconds": 11.702890999999997,
+  "encoding": "Variable frame rate, actual capture timestamps; missing requested images hold the previous real frame until the next capture, preserving wall-clock duration. Recording overhead excluded from timing comparison."
+}

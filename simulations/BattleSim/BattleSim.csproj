@@ -32,6 +32,7 @@
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\HexCoord.cs" Link="Spatial\HexCoord.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryTypes.cs" Link="Spatial\SpatialQueryTypes.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialQueryBoard.cs" Link="Spatial\SpatialQueryBoard.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialSearchHeap.cs" Link="Spatial\SpatialSearchHeap.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSceneObjects.cs" Link="Combat\CombatSceneObjects.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanDefinitions.cs" Link="Combat\CombatJindanDefinitions.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatJindanLoadout.cs" Link="Combat\CombatJindanLoadout.cs" />

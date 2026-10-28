@@ -82,6 +82,104 @@ namespace TianZhang.Features.CombatPresentation
             return h;
         }
 
+        // Enumerate once per sole query, including every tile that could touch its padded box.
+        // Bounding-box overlap may include extra tiles, which only reduces pruning.
+        internal void CollectHeightCells(Vector3 minimum, Vector3 maximum, List<Cell> result)
+        {
+            if (index == null) TryHeight((minimum + maximum) * .5f, out _);
+            result.Clear();
+            Vector3 center = (minimum + maximum) * .5f, half = (maximum - minimum) * .5f;
+            int firstR = Mathf.FloorToInt((minimum.z - 1 - .57737f) / .8660254f);
+            int lastR = Mathf.CeilToInt((maximum.z - 1 + .57737f) / .8660254f);
+            for (int r = firstR; r <= lastR; r++)
+            {
+                int firstQ = Mathf.FloorToInt(minimum.x - .5f * r - .50001f);
+                int lastQ = Mathf.CeilToInt(maximum.x - .5f * r + .50001f);
+                for (int q = firstQ; q <= lastQ; q++)
+                {
+                    Vector3 location = Horizontal(q,r), d = location - center;
+                    if (Mathf.Abs(d.x) > .50001f + half.x || Mathf.Abs(d.z) > .57737f + half.z ||
+                        !index.TryGetValue(new Vector2Int(q,r),out var cell)) continue;
+                    result.Add(cell);
+                }
+            }
+        }
+
+        // Upper bound on height(center + p) - p.y for a rotated sole box. The ramp
+        // tangent retains the correlation between Z and Y; its curvature remainder
+        // bounds the clamped cosine on both sides, including descending ramps.
+        internal float SoleHeightUpperBound(List<Cell> candidates, Vector3 middle, Vector3 extent,
+            Vector3 axisX, Vector3 axisY, Vector3 axisZ, Vector3 center, Vector3 minimum, Vector3 maximum, float padding)
+        {
+            float height = float.NegativeInfinity;
+            Cell lastRamp=null;
+            for (int candidate=0;candidate<candidates.Count;candidate++)
+            {
+                var cell=candidates[candidate];
+                Vector3 location = Horizontal(cell.q,cell.r);
+                if (maximum.x < location.x-.50001f || minimum.x > location.x+.50001f ||
+                    maximum.z < location.z-.57737f || minimum.z > location.z+.57737f) continue;
+                float low = Mathf.Max(minimum.z,location.z-.57737f);
+                float high = Mathf.Min(maximum.z,location.z+.57737f);
+                float upper;
+                if (cell.kind == 1)
+                {
+                    // Adjacent tiles often carry the same ramp. Its bound over the entire
+                    // node is identical, so evaluate that profile only once per node.
+                    if(lastRamp!=null && lastRamp.lowerY==cell.lowerY && lastRamp.upperY==cell.upperY &&
+                        lastRamp.startZ==cell.startZ && lastRamp.endZ==cell.endZ)continue;
+                    lastRamp=cell;
+                    float z = (minimum.z+maximum.z)*.5f, length = cell.endZ-cell.startZ;
+                    float phase = Mathf.Clamp01((z-cell.startZ)/length);
+                    float gradient = phase>0 && phase<1
+                        ? (cell.upperY-cell.lowerY)*Mathf.PI/(2*length)*Mathf.Sin(Mathf.PI*phase) : 0;
+                    float atCenter = Height(cell,z);
+                    // Maximum of the tangent minus rotated Y over the local AABB.
+                    // This is the same affine maximum as testing all eight corners.
+                    upper = atCenter+gradient*(center.z+middle.z-z)-middle.y +
+                        Mathf.Abs(gradient*axisX.z-axisX.y)*extent.x +
+                        Mathf.Abs(gradient*axisY.z-axisY.y)*extent.y +
+                        Mathf.Abs(gradient*axisZ.z-axisZ.y)*extent.z;
+                    float radius = Mathf.Max(Mathf.Abs(minimum.z-z),Mathf.Abs(maximum.z-z));
+                    float curvature = maximum.z<=Mathf.Min(cell.startZ,cell.endZ) || minimum.z>=Mathf.Max(cell.startZ,cell.endZ)
+                        ? 0 : Mathf.Abs(cell.upperY-cell.lowerY)*Mathf.PI*Mathf.PI/(2*length*length);
+                    float remainder = .5f*curvature*radius*radius;
+                    upper += remainder + (1+Mathf.Abs(gradient))*padding +
+                        2e-6f*(1+Mathf.Abs(atCenter)+Mathf.Abs(upper)+remainder);
+                }
+                else
+                {
+                    upper = Mathf.Max(Height(cell,low),Height(cell,high));
+                    if (cell.kind == 2)
+                        for (int i=0;i<cell.riserZ.Length;i++)
+                            if (cell.riserZ[i]>=low && cell.riserZ[i]<=high) upper=Mathf.Max(upper,cell.riserY[i]);
+                    upper += 2e-6f*(1+Mathf.Abs(upper));
+                    upper -= minimum.y-center.y;
+                }
+                height = Mathf.Max(height,upper);
+            }
+            // A manifested ramp can provide support even where no base cell exists.
+            foreach (var ramp in earthRamps)
+                height=Mathf.Max(height,Mathf.Max(ramp.Low.y,ramp.High.y)-(minimum.y-center.y));
+            return height+padding;
+        }
+
+        // The BVH has already collected the candidate cells. Preserve the original rounded
+        // hex neighborhood and finite Contains test while avoiding seven hash lookups per point.
+        internal bool TryHeight(Vector3 p, List<Cell> candidates, out float height)
+        {
+            height=float.NegativeInfinity;
+            int r=Mathf.RoundToInt((p.z-1)/.8660254f),q=Mathf.RoundToInt(p.x-.5f*r);
+            foreach(var cell in candidates)
+            {
+                int dq=cell.q-q,dr=cell.r-r;
+                if(Math.Abs(dq)<=1 && Math.Abs(dr)<=1 && Math.Abs(dq+dr)<=1 && Contains(cell,p))
+                    height=Mathf.Max(height,Height(cell,p.z));
+            }
+            foreach(var ramp in earthRamps) if(ramp.TryHeight(p,out float y)) height=Mathf.Max(height,y);
+            return !float.IsNegativeInfinity(height);
+        }
+
         public bool TryHeight(Vector3 p, out float height)
         {
             if(index==null)

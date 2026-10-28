@@ -1,0 +1,44 @@
+{
+  "baselineRevision": "85eefcac40ea48f18aa8e831306041eaadb7aaa4",
+  "unity": "6000.3.18f1",
+  "resolution": [
+    1366,
+    768
+  ],
+  "combatRandomSeed": 1729,
+  "productionPolicies": {
+    "enemy": "RangedActionAI",
+    "enemy_2": "LegalActionAI"
+  },
+  "ordinaryPlayerStart": [
+    4,
+    0
+  ],
+  "measurementPlayerStart": [
+    8,
+    8
+  ],
+  "approach": "Real legal moves and EndTurn through the formal Adventure terrain entry; no enemy-policy replacement.",
+  "pathComparisons": 1755,
+  "surfaceComparisons": 468,
+  "surfaceMaximumPositionError": 0,
+  "surfaceMaximumQuaternionComponentError": 0,
+  "actionStateTranscriptsMatch": true,
+  "assemblyBoundaryCheck": "Existing tool fails on unchanged Bootstrap reference allowlist (Spatial and Unity.InputSystem); no asmdef modified. Live 19-assembly dependency graph is acyclic.",
+  "battleSim": [
+    "Release build --no-restore passed",
+    "--self-test ap2 passed",
+    "--self-test two-cell-production passed"
+  ],
+  "completed": "2026-10-29",
+  "finalSurfaceComparison": "final-compare/legacy-surface.csv",
+  "finalMaxMeasuredRoundFrameMs": 110.8536,
+  "finalMaximumSurfacePathMs": 98.0138,
+  "regressionRuns": {
+    "existing": 175,
+    "finalTargeted": 19,
+    "nativeFinal": 1,
+    "nativeRecordingAfterTemporaryCodeRemoval": 1
+  },
+  "followup": "R2 performance budgets and dual-resolution coverage; R3 projectile analysis remain pending"
+}

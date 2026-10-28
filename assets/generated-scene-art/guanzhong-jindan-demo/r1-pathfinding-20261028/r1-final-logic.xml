@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="19" result="Passed" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.1762784">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1803" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.176278" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="3095" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1787" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.154129" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="23700" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="3096" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1787" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.137341" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="3097" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1787" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.120292" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="3098" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="964" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:53Z" duration="6.089486" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="3025" name="R1LegacyComparisonTests" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:52Z" duration="5.309269" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="3031" name="CompareOriginalRevision" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:52Z" duration="5.306438" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="3026" name="CompareOriginalRevision(&quot;wild&quot;,False,False)" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision(&quot;wild&quot;,False,False)" methodname="CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" seed="1084551112" result="Passed" start-time="2026-10-28 16:20:47Z" end-time="2026-10-28 16:20:48Z" duration="0.675989" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3027" name="CompareOriginalRevision(&quot;wild&quot;,True,False)" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision(&quot;wild&quot;,True,False)" methodname="CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" seed="775550605" result="Passed" start-time="2026-10-28 16:20:48Z" end-time="2026-10-28 16:20:48Z" duration="0.017185" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3028" name="CompareOriginalRevision(&quot;jindan_demo&quot;,False,False)" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision(&quot;jindan_demo&quot;,False,False)" methodname="CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" seed="506047726" result="Passed" start-time="2026-10-28 16:20:48Z" end-time="2026-10-28 16:20:48Z" duration="0.742408" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3029" name="CompareOriginalRevision(&quot;jindan_demo&quot;,True,False)" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision(&quot;jindan_demo&quot;,True,False)" methodname="CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" seed="1695931040" result="Passed" start-time="2026-10-28 16:20:48Z" end-time="2026-10-28 16:20:49Z" duration="0.437373" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3030" name="CompareOriginalRevision(&quot;jindan_demo&quot;,False,True)" fullname="TianZhang.Tests.EditMode.R1LegacyComparisonTests.CompareOriginalRevision(&quot;jindan_demo&quot;,False,True)" methodname="CompareOriginalRevision" classname="TianZhang.Tests.EditMode.R1LegacyComparisonTests" runstate="Runnable" seed="1204911273" result="Passed" start-time="2026-10-28 16:20:49Z" end-time="2026-10-28 16:20:52Z" duration="3.424687" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+            <test-suite type="TestFixture" id="3032" name="R1SpatialSearchTests" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:53Z" duration="0.368889" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="3040" name="CompleteMetricSearchSkipsUnrelatedEdgesBeyondIntegerBudget" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteMetricSearchSkipsUnrelatedEdgesBeyondIntegerBudget" methodname="CompleteMetricSearchSkipsUnrelatedEdgesBeyondIntegerBudget" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="2127821682" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:52Z" duration="0.001235" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="3037" name="CompleteSearchReusesExactCostsAndPosePredecessors" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteSearchReusesExactCostsAndPosePredecessors" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:53Z" duration="0.351771" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="3033" name="CompleteSearchReusesExactCostsAndPosePredecessors(False,int.MaxValue)" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteSearchReusesExactCostsAndPosePredecessors(False,int.MaxValue)" methodname="CompleteSearchReusesExactCostsAndPosePredecessors" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="822126802" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:52Z" duration="0.109302" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3034" name="CompleteSearchReusesExactCostsAndPosePredecessors(True,int.MaxValue)" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteSearchReusesExactCostsAndPosePredecessors(True,int.MaxValue)" methodname="CompleteSearchReusesExactCostsAndPosePredecessors" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="755656876" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:52Z" duration="0.129941" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3035" name="CompleteSearchReusesExactCostsAndPosePredecessors(False,3)" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteSearchReusesExactCostsAndPosePredecessors(False,3)" methodname="CompleteSearchReusesExactCostsAndPosePredecessors" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="1405231207" result="Passed" start-time="2026-10-28 16:20:52Z" end-time="2026-10-28 16:20:53Z" duration="0.034727" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3036" name="CompleteSearchReusesExactCostsAndPosePredecessors(True,3)" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.CompleteSearchReusesExactCostsAndPosePredecessors(True,3)" methodname="CompleteSearchReusesExactCostsAndPosePredecessors" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="271734515" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.076601" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="3041" name="MetricBatchNeverReusesDelegateTraversalOrDifferentLimits" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.MetricBatchNeverReusesDelegateTraversalOrDifferentLimits" methodname="MetricBatchNeverReusesDelegateTraversalOrDifferentLimits" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="398073353" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.000738" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="3039" name="RangeBatchPreservesEveryDistanceSightAndRejection" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.RangeBatchPreservesEveryDistanceSightAndRejection" methodname="RangeBatchPreservesEveryDistanceSightAndRejection" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="1372227302" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.005026" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="3038" name="ReuseChecksOccupancyPolicyBudgetSpeedPoseAndBoard" fullname="TianZhang.Tests.EditMode.R1SpatialSearchTests.ReuseChecksOccupancyPolicyBudgetSpeedPoseAndBoard" methodname="ReuseChecksOccupancyPolicyBudgetSpeedPoseAndBoard" classname="TianZhang.Tests.EditMode.R1SpatialSearchTests" runstate="Runnable" seed="176899180" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.008244" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="3042" name="R1SurfaceQueryTests" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.385028" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="3050" name="BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.373730" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="3048" name="BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles(False)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles(False)" methodname="BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="835570454" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.196945" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3049" name="BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles(True)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles(True)" methodname="BatchedSoleSupportMatchesEveryOriginalPointAcrossProfilesAndHoles" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="583500059" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.176116" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="3047" name="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.010460" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="3043" name="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(0,False)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(0,False)" methodname="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="1550275465" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.003236" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3044" name="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(1,False)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(1,False)" methodname="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="2033929196" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.000988" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3045" name="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(1,True)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(1,True)" methodname="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="1087306136" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.001025" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="3046" name="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(2,False)" fullname="TianZhang.Tests.EditMode.R1SurfaceQueryTests.HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps(2,False)" methodname="HeightBoundsCoverProfilesHolesStepBoundariesAndManifestedRamps" classname="TianZhang.Tests.EditMode.R1SurfaceQueryTests" runstate="Runnable" seed="693464550" result="Passed" start-time="2026-10-28 16:20:53Z" end-time="2026-10-28 16:20:53Z" duration="0.004074" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

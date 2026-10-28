@@ -1,0 +1,4 @@
+stage,count,total_ms,max_ms
+hud,2,359.3130,194.9597
+metric_search,1708,269.4248,3.2776
+movement_search,23,10.5938,5.8760

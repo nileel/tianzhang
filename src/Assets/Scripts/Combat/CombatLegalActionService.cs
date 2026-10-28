@@ -17,8 +17,12 @@ namespace TianZhang.Combat
 
         public IReadOnlyList<CombatCommand> GetLegalActions(CombatSession session, string actorId)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("legal_actions");
+#endif
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
+            using var queries = session.SceneObjects?.Board.BeginQueryBatch();
             if (!session.Combatants.TryGet(actorId, out CombatantSnapshot actor) ||
                 !actor.IsAlive || session.IsFinished || session.TurnPhase == CombatTurnPhase.Finished ||
                 !string.Equals(session.CurrentActorId, actor.Id, StringComparison.Ordinal) ||

@@ -1,0 +1,564 @@
+{
+  "before-phases": {
+    "entry": {
+      "frames": 287,
+      "frame_max_ms": 365.7657,
+      "frame_p95_ms": 4.8188,
+      "stages": {
+        "hud": {
+          "count": 2,
+          "total_ms": 359.313,
+          "max_ms": 194.9597
+        },
+        "metric_search": {
+          "count": 1708,
+          "total_ms": 269.4248,
+          "max_ms": 3.2776
+        },
+        "movement_search": {
+          "count": 23,
+          "total_ms": 10.5938,
+          "max_ms": 5.876
+        }
+      }
+    },
+    "round-1": {
+      "frames": 68,
+      "frame_max_ms": 4017.2136,
+      "frame_p95_ms": 310.3844,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 40.491,
+          "max_ms": 40.4797
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 3183.3913,
+          "max_ms": 3183.0283
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 1403.1688,
+          "max_ms": 167.0724
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 7.3077,
+          "max_ms": 4.472
+        },
+        "metric_search": {
+          "count": 8740,
+          "total_ms": 1369.0136,
+          "max_ms": 5.7428
+        },
+        "movement_search": {
+          "count": 31,
+          "total_ms": 8.0892,
+          "max_ms": 3.3253
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 3182.3278,
+          "max_ms": 3182.3278
+        }
+      }
+    },
+    "round-2": {
+      "frames": 696,
+      "frame_max_ms": 325.0221,
+      "frame_p95_ms": 2.3332,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 0.0136,
+          "max_ms": 0.0092
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 12.9452,
+          "max_ms": 12.6056
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 1407.4664,
+          "max_ms": 168.183
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 6.0297,
+          "max_ms": 3.177
+        },
+        "metric_search": {
+          "count": 8404,
+          "total_ms": 1334.3349,
+          "max_ms": 5.9738
+        },
+        "movement_search": {
+          "count": 17,
+          "total_ms": 1.7018,
+          "max_ms": 0.2608
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 6.1122,
+          "max_ms": 6.1122
+        }
+      }
+    },
+    "round-3": {
+      "frames": 559,
+      "frame_max_ms": 4155.7237,
+      "frame_p95_ms": 5.3625,
+      "stages": {
+        "decision": {
+          "count": 4,
+          "total_ms": 23.8454,
+          "max_ms": 23.8208
+        },
+        "execute": {
+          "count": 5,
+          "total_ms": 3975.9467,
+          "max_ms": 3970.9304
+        },
+        "hud": {
+          "count": 14,
+          "total_ms": 2224.7837,
+          "max_ms": 207.719
+        },
+        "legal_actions": {
+          "count": 4,
+          "total_ms": 12.2315,
+          "max_ms": 3.3103
+        },
+        "metric_search": {
+          "count": 13268,
+          "total_ms": 2134.0448,
+          "max_ms": 6.1775
+        },
+        "movement_search": {
+          "count": 27,
+          "total_ms": 6.3951,
+          "max_ms": 3.35
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 3.6047,
+          "max_ms": 3.6047
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 3970.248,
+          "max_ms": 3970.248
+        }
+      }
+    },
+    "round-4": {
+      "frames": 328,
+      "frame_max_ms": 314.5353,
+      "frame_p95_ms": 2.3983,
+      "stages": {
+        "execute": {
+          "count": 1,
+          "total_ms": 0.1939,
+          "max_ms": 0.1939
+        },
+        "hud": {
+          "count": 4,
+          "total_ms": 620.6326,
+          "max_ms": 156.5191
+        },
+        "metric_search": {
+          "count": 3712,
+          "total_ms": 586.7417,
+          "max_ms": 0.4895
+        },
+        "movement_search": {
+          "count": 15,
+          "total_ms": 1.6533,
+          "max_ms": 0.2602
+        }
+      }
+    }
+  },
+  "after-search": {
+    "entry": {
+      "frames": 383,
+      "frame_max_ms": 208.9044,
+      "frame_p95_ms": 3.4903,
+      "stages": {
+        "hud": {
+          "count": 2,
+          "total_ms": 85.8337,
+          "max_ms": 53.8018
+        },
+        "metric_search": {
+          "count": 16,
+          "total_ms": 7.2873,
+          "max_ms": 4.1094
+        },
+        "movement_search": {
+          "count": 1,
+          "total_ms": 7.2622,
+          "max_ms": 7.2622
+        }
+      }
+    },
+    "round-1": {
+      "frames": 603,
+      "frame_max_ms": 4016.7172,
+      "frame_p95_ms": 2.3387,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 30.6221,
+          "max_ms": 30.5932
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 3182.2176,
+          "max_ms": 3181.7346
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 26.9365,
+          "max_ms": 9.6614
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 5.429,
+          "max_ms": 3.0246
+        },
+        "metric_search": {
+          "count": 134,
+          "total_ms": 37.5802,
+          "max_ms": 0.3709
+        },
+        "movement_search": {
+          "count": 6,
+          "total_ms": 4.2136,
+          "max_ms": 3.2403
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 3181.0012,
+          "max_ms": 3181.0012
+        }
+      }
+    },
+    "round-2": {
+      "frames": 1245,
+      "frame_max_ms": 22.5716,
+      "frame_p95_ms": 2.1399,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 0.0152,
+          "max_ms": 0.0105
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 12.7684,
+          "max_ms": 12.4167
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 28.8916,
+          "max_ms": 9.9417
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 5.5183,
+          "max_ms": 3.0466
+        },
+        "metric_search": {
+          "count": 60,
+          "total_ms": 11.9987,
+          "max_ms": 0.412
+        },
+        "movement_search": {
+          "count": 2,
+          "total_ms": 0.2818,
+          "max_ms": 0.256
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 6.1901,
+          "max_ms": 6.1901
+        }
+      }
+    },
+    "round-3": {
+      "frames": 1192,
+      "frame_max_ms": 4043.6618,
+      "frame_p95_ms": 2.4722,
+      "stages": {
+        "decision": {
+          "count": 4,
+          "total_ms": 24.0751,
+          "max_ms": 24.0493
+        },
+        "execute": {
+          "count": 5,
+          "total_ms": 4014.7845,
+          "max_ms": 4009.8004
+        },
+        "hud": {
+          "count": 14,
+          "total_ms": 43.7536,
+          "max_ms": 14.1199
+        },
+        "legal_actions": {
+          "count": 4,
+          "total_ms": 10.047,
+          "max_ms": 3.0165
+        },
+        "metric_search": {
+          "count": 138,
+          "total_ms": 37.9688,
+          "max_ms": 0.6205
+        },
+        "movement_search": {
+          "count": 7,
+          "total_ms": 4.3456,
+          "max_ms": 3.745
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 3.6014,
+          "max_ms": 3.6014
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 4009.3101,
+          "max_ms": 4009.3101
+        }
+      }
+    },
+    "round-4": {
+      "frames": 551,
+      "frame_max_ms": 14.2563,
+      "frame_p95_ms": 2.362,
+      "stages": {
+        "execute": {
+          "count": 1,
+          "total_ms": 0.2048,
+          "max_ms": 0.2048
+        },
+        "hud": {
+          "count": 4,
+          "total_ms": 16.9764,
+          "max_ms": 10.1414
+        },
+        "metric_search": {
+          "count": 30,
+          "total_ms": 5.2642,
+          "max_ms": 0.3307
+        },
+        "movement_search": {
+          "count": 1,
+          "total_ms": 0.2651,
+          "max_ms": 0.2651
+        }
+      }
+    }
+  },
+  "final": {
+    "entry": {
+      "frames": 381,
+      "frame_max_ms": 200.2846,
+      "frame_p95_ms": 3.8155,
+      "stages": {
+        "hud": {
+          "count": 2,
+          "total_ms": 81.2403,
+          "max_ms": 48.7998
+        },
+        "metric_search": {
+          "count": 16,
+          "total_ms": 6.6036,
+          "max_ms": 3.4644
+        },
+        "movement_search": {
+          "count": 1,
+          "total_ms": 7.6286,
+          "max_ms": 7.6286
+        }
+      },
+      "enemy2_position_samples": 2
+    },
+    "round-1": {
+      "frames": 860,
+      "frame_max_ms": 110.8536,
+      "frame_p95_ms": 2.0187,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 30.2753,
+          "max_ms": 30.2648
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 73.1379,
+          "max_ms": 72.7942
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 25.8658,
+          "max_ms": 9.4009
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 5.1009,
+          "max_ms": 2.8693
+        },
+        "metric_search": {
+          "count": 134,
+          "total_ms": 37.1586,
+          "max_ms": 0.3411
+        },
+        "movement_search": {
+          "count": 6,
+          "total_ms": 4.221,
+          "max_ms": 3.2763
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 72.0792,
+          "max_ms": 72.0792
+        },
+        "surface_path": {
+          "count": 2,
+          "total_ms": 169.6125,
+          "max_ms": 98.0138
+        }
+      },
+      "enemy2_position_samples": 175
+    },
+    "round-2": {
+      "frames": 1288,
+      "frame_max_ms": 18.9237,
+      "frame_p95_ms": 2.1472,
+      "stages": {
+        "decision": {
+          "count": 2,
+          "total_ms": 0.0152,
+          "max_ms": 0.0108
+        },
+        "execute": {
+          "count": 3,
+          "total_ms": 9.7331,
+          "max_ms": 9.398
+        },
+        "hud": {
+          "count": 9,
+          "total_ms": 30.452,
+          "max_ms": 9.8788
+        },
+        "legal_actions": {
+          "count": 2,
+          "total_ms": 4.6366,
+          "max_ms": 2.3472
+        },
+        "metric_search": {
+          "count": 60,
+          "total_ms": 11.5573,
+          "max_ms": 0.3742
+        },
+        "movement_search": {
+          "count": 2,
+          "total_ms": 0.2898,
+          "max_ms": 0.2655
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 3.1034,
+          "max_ms": 3.1034
+        }
+      },
+      "enemy2_position_samples": 1
+    },
+    "round-3": {
+      "frames": 1601,
+      "frame_max_ms": 106.849,
+      "frame_p95_ms": 2.2026,
+      "stages": {
+        "decision": {
+          "count": 4,
+          "total_ms": 21.8425,
+          "max_ms": 21.8172
+        },
+        "execute": {
+          "count": 5,
+          "total_ms": 79.0342,
+          "max_ms": 77.231
+        },
+        "hud": {
+          "count": 14,
+          "total_ms": 37.1585,
+          "max_ms": 9.6119
+        },
+        "legal_actions": {
+          "count": 4,
+          "total_ms": 9.5541,
+          "max_ms": 2.5143
+        },
+        "metric_search": {
+          "count": 138,
+          "total_ms": 35.5118,
+          "max_ms": 0.3522
+        },
+        "movement_search": {
+          "count": 7,
+          "total_ms": 3.7483,
+          "max_ms": 3.1986
+        },
+        "presentation/Art": {
+          "count": 1,
+          "total_ms": 0.4682,
+          "max_ms": 0.4682
+        },
+        "presentation/Move": {
+          "count": 1,
+          "total_ms": 76.8032,
+          "max_ms": 76.8032
+        },
+        "surface_path": {
+          "count": 2,
+          "total_ms": 120.1716,
+          "max_ms": 76.2728
+        }
+      },
+      "enemy2_position_samples": 207
+    },
+    "round-4": {
+      "frames": 561,
+      "frame_max_ms": 7.3484,
+      "frame_p95_ms": 2.5193,
+      "stages": {
+        "execute": {
+          "count": 1,
+          "total_ms": 0.1887,
+          "max_ms": 0.1887
+        },
+        "hud": {
+          "count": 4,
+          "total_ms": 16.5199,
+          "max_ms": 10.1026
+        },
+        "metric_search": {
+          "count": 30,
+          "total_ms": 5.2397,
+          "max_ms": 0.3352
+        },
+        "movement_search": {
+          "count": 1,
+          "total_ms": 0.2576,
+          "max_ms": 0.2576
+        }
+      },
+      "enemy2_position_samples": 1
+    }
+  },
+  "action_state_transcripts_exactly_equal": true
+}

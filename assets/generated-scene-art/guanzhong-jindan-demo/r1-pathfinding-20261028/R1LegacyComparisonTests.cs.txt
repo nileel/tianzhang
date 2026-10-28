@@ -1,0 +1,55 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using NUnit.Framework;
+using TianZhang.Infrastructure.UnityContent;
+using TianZhang.Spatial;
+using UnityEditor;
+using UnityEngine;
+
+namespace TianZhang.Tests.EditMode
+{
+    public sealed class R1LegacyComparisonTests
+    {
+        [TestCase("wild",false,false)] [TestCase("wild",true,false)]
+        [TestCase("jindan_demo",false,false)] [TestCase("jindan_demo",true,false)]
+        [TestCase("jindan_demo",false,true)]
+        public void CompareOriginalRevision(string map,bool pair,bool flight)
+        {
+            var asset=AssetDatabase.LoadAssetAtPath<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_"+map+".asset");
+            var board=(SpatialQueryBoard)typeof(D2HeightMapIntegrationTests).GetMethod("Board",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new object[] {asset});
+            var legacy=new R1LegacySpatialQueryBoard(Field<Dictionary<HexCoord,SpatialCellRules>>(board,"cells"),
+                Field<Dictionary<SpatialDirectedEdge,SpatialEdgeRules>>(board,"edges"),Field<SpatialQueryLimits>(board,"limits"));
+            var start=new SpatialPose(new HexCoord(4,0),0,pair?SpatialFootprintKind.AdjacentPair:SpatialFootprintKind.Single,
+                pair?2:1,flight?SpatialMovementMode.Fly:SpatialMovementMode.Ground,flight?2:0);
+            const int budget=1000000, speed=8000;
+            var expected=legacy.FindReachableWithinActionPoints(start,budget,speed);
+            var report=new List<string>{"pose,cost,path"};
+            using(board.BeginQueryBatch())
+            {
+                var actual=board.FindReachableWithinActionPoints(start,budget,speed);
+                CollectionAssert.AreEquivalent(expected,actual);
+                Assert.Greater(actual.Count,1);
+                foreach(var pose in expected.Keys.Where(p=>p.Anchor!=start.Anchor))
+                {
+                    var before=legacy.QueryMovementPath(start,pose.Anchor,budget,speed,targetFacing:pose.Facing);
+                    var after=board.QueryMovementPath(start,pose.Anchor,budget,speed,targetFacing:pose.Facing);
+                    Assert.AreEqual(Describe(before),Describe(after),pose.Anchor+"/"+pose.Facing);
+                    report.Add(pose.Anchor+"/"+pose.Facing+","+after.ActionPointCostUnits+","+Describe(after));
+                }
+                foreach(var cell in board.Cells)
+                {
+                    Assert.AreEqual(legacy.QueryRangeEntry(start.Anchor,cell,1,3,SpatialQueryKind.Attack,true),
+                        board.QueryRangeEntry(start.Anchor,cell,1,3,SpatialQueryKind.Attack,true));
+                }
+            }
+            string output=Path.GetFullPath(Path.Combine(Application.dataPath,"../Logs/r1/legacy"));Directory.CreateDirectory(output);
+            File.WriteAllLines(Path.Combine(output,map+"-"+pair+"-"+flight+".csv"),report);
+        }
+        private static T Field<T>(object instance,string name)=>(T)instance.GetType().GetField(name,BindingFlags.NonPublic|BindingFlags.Instance).GetValue(instance);
+        private static string Describe(SpatialMovementPathResult route)=>route.Reason+":"+route.ActionPointCostUnits+":"+
+            string.Join(";",route.Steps.Select(s=>s.From.Anchor+"/"+s.From.Facing+">"+s.To.Anchor+"/"+s.To.Facing+"/"+
+                string.Join("|",s.TurnFacings)+"/"+s.Edge.MetricDistanceUnits+"/"+s.Edge.MovementBurdenUnits));
+    }
+}

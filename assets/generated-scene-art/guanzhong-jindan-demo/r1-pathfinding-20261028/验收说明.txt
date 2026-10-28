@@ -1,0 +1,67 @@
+R1 寻路、重复查询与贴地计算验收
+完成日期：2026-10-29。取样开始于2026-10-28；目录日期保留。
+
+1. 结果及边界
+正式入口、生产AI、固定种子与相同场景下，原来约4秒的行动停顿降为最长110.854ms单帧。
+仍有约111ms的单帧峰值；本结果不是稳定60FPS承诺。R2负责双分辨率、完整场景覆盖与性能预算，R3负责飞星指专项逐帧验证，本次均未标记完成。
+没有改变AI策略、动作费用、动画速度、0.015m贴地采样间距或20次二分求解；没有新增等待。
+
+2. 根因、实际修改与算法选择
+原SpatialQueryBoard逐次线性扫描frontier，范围/HUD/AI又逐终点重复搜索。单终点、全范围共享原搜索规则，改用自写稳定二叉最小堆；完整搜索仅在同步、只读调用作用域内复用。单终点无可复用结果时仍提前停止。
+本项目全范围查询占主要重复开销，且有空间压缩、有向边、姿态与AP报价。选择Dijkstra便于保留旧版同价路径和完整前驱；用户已明确A*只是备选，不作为硬性要求。
+有限MaximumEdges保留(pose,depth)状态；棋盘实例、占用集合、起姿、预算、效率与policy规则匹配才复用，带委托的metric查询不复用。独立检查发现的无关高费用边int溢出改为long累加、预算内再转int。
+EncounterCoordinator在不能操作时保留动作信息与单项报价，仅省去整图候选扫描；合法动作和AI不改变规则分支。
+只优化寻路/HUD后，移动仍停顿约4秒。实际根因是CombatUnitSurfacePose.Move第一次yield前为整步逐样点、逐顶点计算贴地姿态。
+经用户两次明确确认，把此处纳入R1。实现合并精确重复顶点、一次求两组支承最大值、消除重复求解，再按原顶点构建包围盒树。平地/阶梯用保守高度界；余弦坡面用切线最大值加曲率余项，保留旋转后Z与Y的相关性。只跳过不可能超过当前最大支承的点组，叶仍按原七格邻域、Contains、Height和显化坡查询实际点。两足组独立保留最大值。
+旧“共有高度profile快捷分支”和无效的平地整步复用试验已移除，未与裁剪叠加。最终只在节点内复用已经算过的相同坡面上界。节点中心/半尺寸建树时计算，不跨姿态复用高度。
+容量4/8/16/32/64/128实测见capacity-compare/leaf-capacity.csv；8点叶整体最好，未增加调参接口。
+社区资料仅作算法参考，未移植源码或引入第三方依赖：
+https://www.redblobgames.com/pathfinding/a-star/implementation.html
+https://github.com/BlueRaja/High-Speed-Priority-Queue-for-C-Sharp
+
+3. 测量场景与口径
+基线提交：85eefcac40ea48f18aa8e831306041eaadb7aaa4。
+Unity 6000.3.18f1；原生编辑器PlayMode，1366×768。计时运行不录制、不更改镜头。Unity批处理不用于WaitForEndOfFrame录制。
+真实流程：StartMenu创建普通origin_minor_clan角色→guanzhong_hub→guanzhong_wild→Adventure→鼠标点击TerrainRehearsalButton。随机种子1729；enemy=RangedActionAI，enemy_2=LegalActionAI，未替换WaitPolicy。
+沿固定合法路径3:0,2:1,2:2,2:3,2:4,2:5,2:6,2:7,3:7,4:7,5:7,6:7,7:7,8:7,8:8行进；预算不足时正常结束行动，敌方照常行动。
+正式采样起点tick65，玩家(8,8)、enemy(7,10)、enemy_2(5,13)。后续四次均以鼠标结束行动并确认，等待正式命令链返回玩家可操作状态及HUD刷新。
+round-1：enemy_2从(5,13)移动到(5,11)。round-2：enemy施法，玩家571→567HP。round-3：enemy施法567→563HP，enemy_2移动到(5,9)。round-4无敌方动作，仅作为调度/HUD对照，不冒充AI行动轮。
+stage计时为同步作用域，存在嵌套，不可相加作为整轮总耗时；metric_search和movement_search统计实际执行的搜索次数，不是含缓存命中的API调用数。surface_path覆盖每步Move第一次yield之前的完整预计算，后续步也单独统计。
+帧耗时取相邻Update的realtime差；P95使用排序后ceil(N×0.95)项。稀疏长帧可能被P95掩盖，因此同时给最大值。
+
+4. 前后结果（毫秒）
+                     metric搜索        movement搜索     最大帧                 P95帧
+round-1              8740→134           31→6             4017.214→110.854       310.384→2.019
+round-2              8404→60            17→2             325.022→18.924         2.333→2.147
+round-3              13268→138          27→7             4155.724→106.849       5.363→2.203
+round-4（对照）       3712→30            15→1             314.535→7.348          2.398→2.519
+首次入口单列：搜索1708→16、移动搜索23→1、最大帧365.766→200.285ms；入口仍有加载工作，不混入稳定回合。
+HUD单次最大：round-1 167.072→9.401；round-2 168.183→9.879；round-3 207.719→9.612ms。
+四段敌人贴地预计算：surface-before为3249.8/4047.5/3968.6/3540.2ms，final为71.599/98.014/76.273/43.899ms。原始sole顶点2802个，精确去重后1547个；每步仍67个空间样点。
+before-phases与final的actions.csv逐字相同，包括接近阶段及正式采样的行动、tick、朝向、HP、AP与位置。final两次敌人移动在逐帧数据中分别有175、207个不同位置，未整段跳到终点。
+完整分阶段次数、总耗时和最大值见performance-summary.json及对应*-stages.csv；after-search保留只改寻路/HUD时移动仍卡约4秒的隔离证据。
+
+5. 正确性和独立检查
+既有规则回归175/175通过：空间查询、AP、双格、高差、尺度、飞行、改地表、封锁及AI；见r1-editmode.xml。
+最终定向19/19通过：8个R1搜索用例、6个地表用例、5个旧算法差分用例；见r1-final-logic.xml。此数字与既有175有重叠，不应相加。
+1755条旧悬赏/阶地/单双格/飞行路径，对比最短费用、步骤、转向、可达集合与范围事实，全部一致。
+最终真实三模型×13位置×2偏移×6朝向=468姿态，原算法与新算法的位置及四元数各分量误差全部为0；见final-compare/legacy-surface.csv、r1-final-compare.xml。容量实验另有2808次与同一旧结果精确比较通过。
+地表测试还逐节点断言上界不低于节点内任一原点的真实支承值，覆盖混合升降坡、阶梯非单调踏高、缺格、边界、转向中间态、±20°倾角和显化坡。
+删除所有临时旧算法类与临时差分测试后，正式操作录制再次编译并通过1/1，且断言正式采样确有移动和施法；见r1-recording.xml。
+BattleSim Release --no-restore构建0警告0错误，--self-test ap2、--self-test two-cell-production通过；无数值平衡结论变化。
+pathfinding_audit独立只读检查寻路/AI/HUD，发现并确认溢出问题已修复；runtime_audit独立只读检查裁剪、候选叶查询和节点上界。均未参与文件写入，未发现剩余实质问题。
+现有check-unity-assembly-boundaries.ps1因未改动的Bootstrap引用允许表缺少Spatial、Unity.InputSystem而失败；未修改该工具或asmdef。实际19个程序集依赖图无环，Unity编译通过。不把现有检查器失败记为通过。
+
+6. 运行画面与录制
+production-ai-continuous.mp4：11.70秒，实际鼠标结束行动与生产AI连续过程。为让角色可见，仅录制运行把镜头中心放到(7,10)；分辨率保持1366×768。该次截图开销不纳入上表性能对照。
+207张实际写出的PNG按真实捕获时间编码为变帧率视频，未加速；4次同帧截图请求未独立写出，间隔保持上一张真实画面，详情见recording/encoding.json。原PNG保留在未入Git的src/Logs/r1/recording，视频和时间表入Git。
+motion-contact-sheet.jpg为录制选帧，runtime-after.png为结束画面。画面确认双格兽沿坡行进、玩家受击后回到可操作状态；不以本录制替代R3飞星指专项验收。
+
+7. 复现
+关闭打开此工程的Unity后，PowerShell 7启动同一6000.3.18f1编辑器，参数：
+-projectPath "D:\天章游戏开发\src" -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.R1ProductionAiMeasurementTests.TerrainProductionAi1366 -testResults "D:\天章游戏开发\src\Logs\r1-repro.xml" -logFile "D:\天章游戏开发\src\Logs\r1-repro.log"
+设置TZ_R1_LABEL为新的输出名；不设置TZ_R1_RECORD用于计时，设为1用于镜头跟进的连续PNG录制。输出在src/Logs/r1/<label>。勿重复用同一label，否则追加的surface.csv会混合多次取样。
+EditMode可用Unity命令行-testFilter选择TianZhang.Tests.EditMode.R1SpatialSearchTests与TianZhang.Tests.EditMode.R1SurfaceQueryTests；项目现有EditMode脚本不提供TestFilter参数。
+旧版差分为临时诊断，不随产品保留第二套算法。重做时从基线git show导出SpatialQueryBoard及CombatUnitSurfacePose，分别只将类名/构造器名改为R1LegacySpatialQueryBoard、R1LegacyCombatUnitSurfacePose，临时放回原模块；将本目录两个R1Legacy*.cs.txt复制回同名测试目录，在正式测量夹具Ready/SaveStages(entry)后调用R1LegacySurfaceComparison.Run(surface,provider,output)并yield break。验证后删除临时类、测试及其meta。
+R1LeafCapacityComparison.cs.txt仅记录容量试验代码，需临时增加供反射设置的LeafCapacity并在BuildSoles使用，最终产品固定8、不保留该开关。
+源码摘要见source-sha256.json；旧日志状态仅描述当次验证，不覆盖当前开发计划。

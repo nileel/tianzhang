@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using NUnit.Framework;
+using TianZhang.Features.CombatPresentation;
+using UnityEngine;
+
+namespace TianZhang.Tests.PlayMode
+{
+    internal static class R1LegacySurfaceComparison
+    {
+        internal static void Run(CombatBattlefieldSurface surface,Static3DCombatUnitPresentationProvider provider,string output)
+        {
+            var assembly=typeof(CombatBattlefieldSurface).Assembly;
+            Type current=assembly.GetType("TianZhang.Features.CombatPresentation.CombatUnitSurfacePose");
+            Type legacy=assembly.GetType("TianZhang.Features.CombatPresentation.R1LegacyCombatUnitSurfacePose");
+            var rows=new List<string>{"unit,x,z,yaw,position_error,rotation_error,status"};
+            int compared=0;
+            var timings=new List<string>{"unit,capacity,evaluations,total_ms"};
+            foreach(string id in new[] {"player","enemy","enemy_2"})
+            {
+                Assert.IsTrue(provider.TryGetPresentedUnit(id,out var root));
+                Assert.IsTrue(provider.TryGetPresentedPose(id,out var pose));
+                object Create(Type type)=>Activator.CreateInstance(type,BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic,null,
+                    new object[] {surface,root.transform.GetChild(0),pose.IsDoubleCell},null);
+                object before=Create(legacy),after=Create(current);
+                var expected=new List<(Vector3 center,float yaw,Vector3 position,Quaternion rotation)>();
+                foreach(var hex in new[] {new Vector2(2,2),new Vector2(2,3),new Vector2(2,4),new Vector2(2,5),new Vector2(2,6),
+                    new Vector2(4,7),new Vector2(8,8),new Vector2(8,9),new Vector2(8,10),new Vector2(5,11),new Vector2(5,12),new Vector2(5,13),new Vector2(4,0)})
+                foreach(float offset in new[] {0f,.3f}) foreach(float yaw in new[] {0f,60f,120f,180f,240f,300f})
+                {
+                    Vector3 center=CombatBattlefieldSurface.Horizontal((int)hex.x,(int)hex.y)+Vector3.forward*offset;
+                    object[] a={center,yaw,null,null},b={center,yaw,null,null};
+                    string Failure(Type t,object instance,object[] args)
+                    {try {t.GetMethod("Evaluate").Invoke(instance,args);return null;}catch(TargetInvocationException e){return e.InnerException.Message;}}
+                    string oldReason=Failure(legacy,before,a),newReason=Failure(current,after,b);
+                    Assert.AreEqual(oldReason,newReason);
+                    if(oldReason!=null){rows.Add(id+","+center.x+","+center.z+","+yaw+",0,0,"+oldReason);continue;}
+                    float pe=Vector3.Distance((Vector3)a[2],(Vector3)b[2]);
+                    Quaternion ar=(Quaternion)a[3],br=(Quaternion)b[3];
+                    float re=Mathf.Max(Mathf.Abs(ar.x-br.x),Mathf.Abs(ar.y-br.y),Mathf.Abs(ar.z-br.z),Mathf.Abs(ar.w-br.w));
+                    Assert.LessOrEqual(pe,.000001f,id+" position "+center); Assert.LessOrEqual(re,.000001f,id+" rotation "+center);
+                    rows.Add(string.Join(",",id,center.x,center.z,yaw,pe.ToString("G9",CultureInfo.InvariantCulture),re.ToString("G9",CultureInfo.InvariantCulture),"matched"));
+                    compared++;
+                    expected.Add((center,yaw,(Vector3)a[2],(Quaternion)a[3]));
+                }
+                foreach(int capacity in new[] {4,8,16,32,64,128})
+                {
+                    current.GetField("LeafCapacity",BindingFlags.Static|BindingFlags.NonPublic).SetValue(null,capacity);
+                    object candidate=Create(current);var stopwatch=System.Diagnostics.Stopwatch.StartNew();
+                    foreach(var item in expected)
+                    {
+                        object[] args={item.center,item.yaw,null,null};current.GetMethod("Evaluate").Invoke(candidate,args);
+                        Assert.AreEqual(item.position,(Vector3)args[2]);Assert.AreEqual(item.rotation,(Quaternion)args[3]);
+                    }
+                    stopwatch.Stop();timings.Add(string.Join(",",id,capacity,expected.Count,stopwatch.Elapsed.TotalMilliseconds.ToString("F4",CultureInfo.InvariantCulture)));
+                }
+                current.GetField("LeafCapacity",BindingFlags.Static|BindingFlags.NonPublic).SetValue(null,8);
+            }
+            Assert.Greater(compared,100);File.WriteAllLines(Path.Combine(output,"legacy-surface.csv"),rows);
+            File.WriteAllLines(Path.Combine(output,"leaf-capacity.csv"),timings);
+        }
+    }
+}

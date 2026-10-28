@@ -53,6 +53,9 @@ namespace TianZhang.Combat
     {
         public CombatCommand ChooseAction(CombatSession session, IReadOnlyList<CombatCommand> legalActions)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("decision");
+#endif
             if (legalActions == null || legalActions.Count == 0)
                 return null;
 
@@ -85,6 +88,9 @@ namespace TianZhang.Combat
     {
         public CombatCommand ChooseAction(CombatSession session, IReadOnlyList<CombatCommand> legalActions)
         {
+#if UNITY_EDITOR
+            using var measurement = new SpatialQueryMeasurement("decision");
+#endif
             if (legalActions == null || legalActions.Count == 0)
                 return null;
 
@@ -175,6 +181,7 @@ namespace TianZhang.Combat
             IReadOnlyList<CombatCommand> legalActions,
             int minimum, int maximum)
         {
+            using var queries = session.SceneObjects?.Board.BeginQueryBatch();
             var moves = legalActions.Where(action => action.Kind == CombatCommandKind.Move).ToArray();
             if (moves.Length == 0) return null;
             var targets = session.Combatants.All.Where(unit => unit.IsAlive && unit.Team != actor.Team &&

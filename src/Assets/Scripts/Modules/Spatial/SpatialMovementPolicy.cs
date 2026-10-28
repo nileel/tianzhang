@@ -17,6 +17,9 @@ namespace TianZhang.Spatial
             this.sealedEdges = new HashSet<SpatialDirectedEdge>(sealedEdges ?? Array.Empty<SpatialDirectedEdge>());
         }
         private readonly HashSet<SpatialDirectedEdge> sealedEdges;
+        internal bool HasSameRules(SpatialMovementPolicy other) => other != null &&
+            Numerator == other.Numerator && Denominator == other.Denominator && LightLeap == other.LightLeap &&
+            MaximumEdges == other.MaximumEdges && BlockedReason == other.BlockedReason && sealedEdges.SetEquals(other.sealedEdges);
         public bool BlocksEdge(HexCoord from, HexCoord to) => sealedEdges.Contains(new SpatialDirectedEdge(from, to));
         public SpatialMovementPolicy WithSealedEdges(IEnumerable<SpatialDirectedEdge> edges) =>
             new SpatialMovementPolicy(Numerator, Denominator, LightLeap, MaximumEdges, BlockedReason, edges);

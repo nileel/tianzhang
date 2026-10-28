@@ -1,0 +1,10 @@
+stage,count,total_ms,max_ms
+decision,4,23.2718,23.2482
+execute,5,80.3952,78.4441
+hud,14,41.1474,10.1213
+legal_actions,4,9.9096,2.6870
+metric_search,138,37.0673,0.5698
+movement_search,7,3.7403,3.1874
+presentation/Art,1,0.5623,0.5623
+presentation/Move,1,78.0444,78.0444
+surface_path,2,122.2616,77.5710

@@ -1,0 +1,5 @@
+stage,count,total_ms,max_ms
+execute,1,0.1939,0.1939
+hud,4,620.6326,156.5191
+metric_search,3712,586.7417,0.4895
+movement_search,15,1.6533,0.2602
