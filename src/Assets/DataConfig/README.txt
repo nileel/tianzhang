@@ -30,7 +30,7 @@
 | `NpcCultivationActionWeightProfiles.csv` | NPC 修炼行动权重 | `Data/NpcCultivationActionWeightProfiles/NpcCultivationActionWeightProfile_*.asset` |
 | `FoundationPurpleMansionStates.csv` | 五名演武角色的道基、紫府与修炼根状态 | `Data/FoundationPurpleMansionStates/FoundationPurpleMansionState_*.asset` |
 | `JindanStaticStates.csv` | 五名演武角色的金丹静态根 | `Data/JindanStaticStates/JindanStaticState_*.asset` |
-| `JindanDemoPresets/Seats/Abilities/Commands/Contracts/LoadoutTuning/Segments/Demolition/SurfaceRules/SurfaceCells/SurfaceFires.csv` | 金丹演武预设、唯一席位、能力来源、命令、有限合同、切装、选段与水火地表 | `Data/JindanDemo/JindanDemoCatalog.asset` |
+| `JindanDemoPresets/Seats/Abilities/Commands/Contracts/LoadoutTuning/Segments/Demolition/SurfaceRules/SurfaceCells/SurfaceFires/SealRules/FireDomainRules/VisibilityRules.csv` | 金丹演武预设、唯一席位、能力来源、命令、有限合同、切装、选段与地表／领域／显隐配置 | `Data/JindanDemo/JindanDemoCatalog.asset` |
 | `CharterRuleDefinitions.csv` | 册界规则定义 | `Data/CharterRuleDefinitions/CharterRuleDefinition_*.asset` |
 | `CharterSites.csv` | 册界单据点站点契约 | `Data/CharterSites/CharterSite_*.asset` |
 
@@ -218,15 +218,15 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 ## JindanDemo 演武目录
 
 唯一规则来源为 `docs/基础设定/金丹基础效果装配与冲突规则.txt` 的演示预设节、七份位格原文，
-以及 `docs/角色养成/演示原型/` 的七源术、七镇府神通、御风飞行和获准破垒派生原文。十一张表按公开类型严格读写：
+以及 `docs/角色养成/演示原型/` 的七源术、七镇府神通、御风飞行和获准破垒派生原文。以下定义表按公开类型严格读写：
 
 - `Presets`：五名固定角色、根资质、容量、来源、共享 AP/MP、移动效率、视野、身份与席位引用。D6追加basicAttackSourceModeMask／basicAttackTargetModeMask，五名均显式3；演武会话从原金丹徒手档案派生空间资格，保留原ID定价、伤害、射程和垂直触及1。普通AttackProfiles资产仍为GROUND掩码1，不随飞行能力自动扩权。
 - `Seats`：七个唯一席位、版本与道证、唯一主承载、四项作用范围、候选效果与默认装配。
 - `Abilities`：十五项定义、源术升格、内化处置、合法府属及对象／操作／媒介／结果范围。
 - `Commands`：每个候选效果各一项展开和终止，以及五项飞行命令；费用、时钟、容量、射程、
-  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`SPACE_SEAL`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`、`FIRE_MANIFEST`展开／关闭及五种 `FLIGHT` 动作已启用；
+  模式、支点、遥施、失效与禁用原因均为显式字段。`SPACE_SCALE`、`SPACE_SEAL`、`EARTH_MANIFEST`、`EARTH_GRAVITY`、`WATER_TIDE`、`FIRE_MANIFEST`、`YANG_RADIANCE`、`YIN_CONCEAL`展开／关闭及五种 `FLIGHT` 动作已启用；
   `JindanDemoSealRules.csv`固定封锁方向、锚点、局部维持半径与破层期限；费用和6tick期限仍读Commands。Presets的equippedArtProfileIds显式登记space_yang的现有贯石击。
-  其余只可浏览，尚待 D11 的真实显隐效果实现，不能用空账本执行。潮汐涨／退、普通／蓄力、无源潮眼共用一份主枢命令，附费与效果参数由SurfaceRules读取。
+  显隐两域的独立支点、共享MP冲突额度、真实时间输入窗口与附性预算由VisibilityRules读取。潮汐涨／退、普通／蓄力、无源潮眼共用一份主枢命令，附费与效果参数由SurfaceRules读取。
 - `Contracts`：八项固定效果合同。`compatibilityProfileId` 必须写 `compile`，导入时用来源版本、
   具体主承载、席位／道证版本、四项交集与费用容量语义生成稳定 SHA-256 标识；不接受伪造兼容 ID。
   静态根写 `compile_<contractId>`（不使用结构保留的冒号），同批导入替换为编译结果。仅验证八项明确合同，未实现通用效果推导。
@@ -239,6 +239,8 @@ environmentTargetTypes以分号分隔且不允许空项／重复／未知类型�
 - `SurfaceFires`：环境火源的唯一来源、伤害承载角色、10tick周期、40tick期限、3格容量和12总燃料；此表仅定义D8环境火，不提供领域余火或永久场景改造。水火地表与本地燃料均随新演武会话重置。
 
 - `FireDomainRules`：D10中心(7,12)、总燃料15、每次锁定尾效6、尾效2个本人结束周期、2400神攻承载及0.01弱燃烧；全部进入FIRE_MANIFEST兼容哈希。主周期与费用读Commands。仅合法展开时中心成为规则对象；停止后保留场内燃料／耐久，撤离重入重置。起火资格来自尚有本地燃料的公开格或存活low_plant；后者可借中心有限燃料，不回填D8燃料。
+
+- `VisibilityRules`：D11昭明殿与藏真域的独立支点、支点档／承载、每神通200MP冲突额度及50MP同步脉冲；1000ms周期、[250,750)ms窗口、Space维持与A／D交替输入（可配置重绑），每次正确+50、100胜出。另声明昭明4tick窗口与两域10%／100上限、昭明每窗300预算。两域兼容哈希均包含这些参数，其他效果不受影响。额度从真实MP支付，不能因重开领域或换装重置。
 
 初始 AP=1000、MP=6000、v=4.8 来自 D1。`normalVisionRange=4` 为本轮普通视野输入。
 基础体魄等先天输入引用既有 `char_sanxiuqiangdao`，不继承其身份、境界或能力；

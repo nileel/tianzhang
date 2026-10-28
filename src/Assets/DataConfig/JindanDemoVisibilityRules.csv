@@ -1,0 +1,2 @@
+rulesId,patternProfileId,gaugeProfileId,yangSupportId,yangQ,yangR,yinSupportId,yinQ,yinR,supportRank,carrying,conflictReserve,pulseMana,pulseMilliseconds,windowOpenMilliseconds,windowCloseMilliseconds,gaugeStep,gaugeWin,holdKey,firstKey,secondKey,yangWindowTicks,reductionPercent,reductionCap,yangWindowBudget,sourceDocument
+demo_20261024_visibility_conflict_v1,demo_20261024_visibility_hold_v1,demo_20261024_visibility_gauge_v1,reveal_support,4,15,conceal_support,7,15,1,1,200,50,1000,250,750,50,100,Space,A,D,4,10,100,300,docs/基础设定/金丹基础效果装配与冲突规则.txt

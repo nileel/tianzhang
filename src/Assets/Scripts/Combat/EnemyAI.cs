@@ -56,6 +56,8 @@ namespace TianZhang.Combat
             if (legalActions == null || legalActions.Count == 0)
                 return null;
 
+            var visibility = legalActions.FirstOrDefault(action => action.Kind == CombatCommandKind.JindanAbility && CombatVisibility.IsEffect(action.ProfileId));
+            if (visibility != null) return visibility;
             var gate = legalActions.FirstOrDefault(action => action.Kind == CombatCommandKind.JindanAbility && action.ProfileId == "SPACE_SEAL");
             if (gate != null) return gate;
             var fire = CombatFireDomainRules.ChooseDeploymentOrApproach(session, legalActions);
@@ -175,7 +177,8 @@ namespace TianZhang.Combat
         {
             var moves = legalActions.Where(action => action.Kind == CombatCommandKind.Move).ToArray();
             if (moves.Length == 0) return null;
-            var targets = session.Combatants.All.Where(unit => unit.IsAlive && unit.Team != actor.Team)
+            var targets = session.Combatants.All.Where(unit => unit.IsAlive && unit.Team != actor.Team &&
+                    (session.Visibility == null || session.Visibility.IsVisible(actor.Id, unit.Id)))
                 .OrderBy(unit => unit.Id, StringComparer.Ordinal).ToArray();
             bool CanEngage(SpatialPose pose) => targets.Any(target =>
                 session.SpatialQuery.QueryRange(pose, target.Pose, minimum, maximum).IsInRange);

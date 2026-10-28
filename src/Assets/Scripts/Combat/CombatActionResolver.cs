@@ -53,6 +53,7 @@ namespace TianZhang.Combat
             commit = null;
             session.Combatants.TryGet(command.ActorId, out CombatantSnapshot originalActor);
             var actor = originalActor.CopyForResolution();
+            var protection = new CombatVisibilityProtection(session);
             var originals = new List<CombatantSnapshot>();
             var targets = new List<CombatantSnapshot>();
             bool directional = attackArea != null && attackArea.Direction >= 0;
@@ -87,7 +88,7 @@ namespace TianZhang.Combat
                 CombatCommandKind.EndTurn => CombatActionResult.Success(),
                 CombatCommandKind.Wait => CombatActionResult.Success(),
                 CombatCommandKind.BasicAttack or CombatCommandKind.Art or CombatCommandKind.Divine =>
-                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, directional, validation.TargetContacts),
+                    ResolveAttack(session, command, actor, targets, reuseCooldownTicks, directional, validation.TargetContacts, protection),
                 CombatCommandKind.Move => ResolveMove(actor, command, validation),
                 CombatCommandKind.SwapSpell => ResolveSwapSpell(actor, command, reuseCooldownTicks),
                 CombatCommandKind.SwapEquipment => ResolveEquipment(actor, command),
@@ -106,6 +107,7 @@ namespace TianZhang.Combat
                     if (originals[index] != originalActor) originals[index].CommitResolvedState(targets[index]);
                 // Targets/contacts above belong to the old board for the whole action.
                 session.SceneObjects?.Apply(objectChanges);
+                protection.Commit();
             };
             return result;
         }
@@ -157,7 +159,7 @@ namespace TianZhang.Combat
             CombatCommand command,
             CombatantSnapshot actor,
             IReadOnlyList<CombatantSnapshot> targets,
-            int cooldown, bool isArea, IReadOnlyList<CombatTargetContact> contacts)
+            int cooldown, bool isArea, IReadOnlyList<CombatTargetContact> contacts, CombatVisibilityProtection protection)
         {
             session.TryGetProfile(command.ProfileId, out CombatAttackProfile profile);
 
@@ -225,7 +227,7 @@ namespace TianZhang.Combat
                     SpatialContactResult contact = contacts.Single(value => value.TargetId == target.Id).Contact;
                     int incomingDirection = contact.TargetCell.DirectionToward(contact.SourceCell);
                     CombatDamageResult damage = ResolveEffect(effectActor, target, profile, rolls, lowHealthBonus, incomingDirection,
-                        session.SceneObjects?.HitPenalty(contact.CoverTier) ?? 0);
+                        session.SceneObjects?.HitPenalty(contact.CoverTier) ?? 0, protection);
                     if (isArea && damage.IsHit) actor.LeijieStacks = effectActor.LeijieStacks;
                     if (profile.RuleMetadata?.PrototypeDefinitionRef == "WaterDivine")
                     {
@@ -283,33 +285,47 @@ namespace TianZhang.Combat
             CombatantSnapshot actor,
             CombatantSnapshot target,
             CombatAttackProfile profile,
-            CombatResolutionRolls rolls, bool kuxingLowHealthBonus, int incomingDirection, int coverHitPenalty)
+            CombatResolutionRolls rolls, bool kuxingLowHealthBonus, int incomingDirection, int coverHitPenalty,
+            CombatVisibilityProtection protection)
         {
+            float existingPercent = CombatVisibilityProtection.ExistingPercent(target);
+            CombatDamageResult result;
+            CombatDamageResult physical = default, soul = default;
             switch (profile.Effect)
             {
                 case CombatAttackEffect.Heal:
                     target.RestoreHealth(profile.HealAmount);
                     return new CombatDamageResult(0, true, false, false, false);
                 case CombatAttackEffect.Physical:
-                    return ResolvePhysical(actor, target, profile, rolls, true, true, incomingDirection, kuxingLowHealthBonus, coverHitPenalty);
+                    result = ResolvePhysical(actor, target, profile, rolls, true, false, incomingDirection, kuxingLowHealthBonus, coverHitPenalty); break;
                 case CombatAttackEffect.Soul:
-                    return ResolveSoul(actor, target, profile, rolls, true, true, incomingDirection, coverHitPenalty);
+                    result = ResolveSoul(actor, target, profile, rolls, true, false, incomingDirection, coverHitPenalty); break;
                 case CombatAttackEffect.Hybrid:
-                    CombatDamageResult physical = ResolvePhysical(actor, target, profile, rolls, false, false, incomingDirection, kuxingLowHealthBonus, coverHitPenalty);
-                    CombatDamageResult soul = ResolveSoul(actor, target, profile, rolls, false, false, incomingDirection, coverHitPenalty);
-                    if (physical.IsHit)
-                        target.ReceiveDamage(physical.FinalDamage);
-                    if (soul.IsHit)
-                        target.ReceiveDamage(soul.FinalDamage);
-                    return new CombatDamageResult(
+                    physical = ResolvePhysical(actor, target, profile, rolls, false, false, incomingDirection, kuxingLowHealthBonus, coverHitPenalty);
+                    soul = ResolveSoul(actor, target, profile, rolls, false, false, incomingDirection, coverHitPenalty);
+                    result = new CombatDamageResult(
                         checked(physical.FinalDamage + soul.FinalDamage),
                         physical.IsHit || soul.IsHit,
                         physical.IsCritical || soul.IsCritical,
                         physical.IsBlocked,
-                        soul.IsSoulShielded);
+                        soul.IsSoulShielded); break;
                 default:
                     throw new InvalidOperationException("Validated combat profile has an unsupported effect.");
             }
+            if (!result.IsHit) return result;
+            int finalDamage = protection.Reduce(actor, target, result.FinalDamage, existingPercent);
+            if (profile.Effect == CombatAttackEffect.Hybrid)
+            {
+                int reduction = result.FinalDamage - finalDamage;
+                int physicalReduction = result.FinalDamage == 0 ? 0 : (int)((long)reduction * physical.FinalDamage / result.FinalDamage);
+                int soulReduction = result.FinalDamage == 0 ? 0 : (int)((long)reduction * soul.FinalDamage / result.FinalDamage);
+                int remainder = reduction - physicalReduction - soulReduction;
+                if (physical.FinalDamage > 0) physicalReduction += remainder; else soulReduction += remainder;
+                if (physical.IsHit) target.ReceiveDamage(physical.FinalDamage - physicalReduction);
+                if (soul.IsHit) target.ReceiveDamage(soul.FinalDamage - soulReduction);
+            }
+            else target.ReceiveDamage(finalDamage);
+            return new CombatDamageResult(finalDamage, result.IsHit, result.IsCritical, result.IsBlocked, result.IsSoulShielded);
         }
 
         private static CombatDamageResult ResolvePhysical(

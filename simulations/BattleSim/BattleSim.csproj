@@ -38,6 +38,10 @@
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatScaleRules.cs" Link="Combat\CombatScaleRules.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatSealRules.cs" Link="Combat\CombatSealRules.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Combat\CombatFireDomainRules.cs" Link="Combat\CombatFireDomainRules.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatVisibilityDefinitions.cs" Link="Combat\CombatVisibilityDefinitions.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatVisibilityConflict.cs" Link="Combat\CombatVisibilityConflict.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatVisibility.cs" Link="Combat\CombatVisibility.cs" />
+    <Compile Include="..\..\src\Assets\Scripts\Combat\CombatVisibilityProtection.cs" Link="Combat\CombatVisibilityProtection.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialMetricOverride.cs" Link="Spatial\SpatialMetricOverride.cs" />
     <Compile Include="..\..\src\Assets\Scripts\Modules\Spatial\SpatialSceneObjectRules.cs" Link="Spatial\SpatialSceneObjectRules.cs" />
   </ItemGroup>

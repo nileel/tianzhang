@@ -53,6 +53,7 @@ namespace TianZhang.Editor
 
             Remove(canvas, "JindanDemoPreparationRoot");
             Remove(canvas, "JindanDemoCombatRoot");
+            Remove(canvas, "JindanConflictRoot");
             Remove(owner.transform, "JindanScaleRoot");
             Remove(owner.transform, "JindanSealRoot");
             Remove(owner.transform, "JindanFireDomainRoot");
@@ -62,6 +63,7 @@ namespace TianZhang.Editor
             var bindings = new List<JindanDemoView.ActionButton>();
             BuildPreparation(canvas, view, bindings);
             BuildCombat(canvas, view, bindings);
+            BuildVisibility(scene, owner, canvas, installer);
             var serialized = new SerializedObject(view);
             SerializedProperty buttons = serialized.FindProperty("buttons");
             buttons.arraySize = bindings.Count;
@@ -185,12 +187,13 @@ namespace TianZhang.Editor
             Place(root.GetComponent<RectTransform>(), 160, 220, 620, 628);
             GameObject header = Panel(root.transform, "JindanCombatHeader");
             Place(header.GetComponent<RectTransform>(), 0, 580, 620, 48);
-            Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 180, 44);
-            AddButton(header.transform, bindings, "flight_tab", "飞行", 200, 0, 66, 48);
-            AddButton(header.transform, bindings, "scale_tab", "位格", 274, 0, 66, 48);
-            AddButton(header.transform, bindings, "earth_tab", "土系", 348, 0, 66, 48);
-            AddButton(header.transform, bindings, "tide_tab", "水火", 422, 0, 66, 48);
-            Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 496, 0, 124, 48);
+            Label(header.transform, "Heading", "金丹演武", 24, 16, 2, 132, 44);
+            AddButton(header.transform, bindings, "flight_tab", "飞行", 150, 0, 60, 48);
+            AddButton(header.transform, bindings, "scale_tab", "位格", 216, 0, 60, 48);
+            AddButton(header.transform, bindings, "earth_tab", "土系", 282, 0, 60, 48);
+            AddButton(header.transform, bindings, "tide_tab", "水火", 348, 0, 60, 48);
+            AddButton(header.transform, bindings, "visibility_tab", "显隐", 414, 0, 60, 48);
+            Button toggle = AddButton(header.transform, bindings, "toggle_panel", "收起", 480, 0, 140, 48);
             GameObject body = Panel(root.transform, "JindanCombatBody");
             Place(body.GetComponent<RectTransform>(), 0, 0, 620, 580);
             Text details = ScrollText(body.transform, "CombatDetails", 16, 330, 588, 238, 22);
@@ -237,6 +240,12 @@ namespace TianZhang.Editor
             AddButton(tide.transform, bindings, "fire_preview", "展开长明", 218, 10, 184, 50);
             AddButton(tide.transform, bindings, "fire_close", "关闭火界", 420, 10, 184, 50);
             tide.SetActive(false);
+            var visibility = new GameObject("VisibilityActions", typeof(RectTransform)); visibility.transform.SetParent(body.transform, false);
+            Place(visibility.GetComponent<RectTransform>(), 0, 0, 620, 240);
+            AddButton(visibility.transform, bindings, "visibility_deploy", "展开显隐领域 · 预演", 16, 184, 588, 50);
+            AddButton(visibility.transform, bindings, "visibility_close", "关闭本域 · 预演", 16, 126, 588, 50);
+            visibility.SetActive(false);
+            SceneBuildSupport.SetObject(view, "visibilityActions", visibility);
             SceneBuildSupport.SetObject(view, "tideActions", tide);
             SceneBuildSupport.SetObject(view, "flightActions", flight);
             SceneBuildSupport.SetObject(view, "scaleActions", scale);
@@ -248,6 +257,40 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(view, "combatQuote", quote);
             SceneBuildSupport.SetObject(view, "toggleLabel", toggle.GetComponentInChildren<Text>());
             root.SetActive(false);
+        }
+
+        private static void BuildVisibility(Scene scene, GameObject owner, Transform canvas, AdventureSceneInstaller installer)
+        {
+            var view = owner.GetComponent<JindanVisibilityView>() ?? owner.AddComponent<JindanVisibilityView>();
+            var root = Panel(canvas, "JindanConflictRoot", false);
+            var rootRect = root.GetComponent<RectTransform>();
+            rootRect.anchorMin = Vector2.zero; rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = rootRect.offsetMax = Vector2.zero;
+            root.GetComponent<Image>().color = new Color(0, 0, 0, .65f);
+            var panel = Panel(root.transform, "ConflictDialog");
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
+            rect.anchoredPosition = Vector2.zero; rect.sizeDelta = new Vector2(760, 560);
+            var details = Label(panel.transform, "ConflictDetails", "", 24, 24, 164, 712, 374);
+            details.alignment = TextAnchor.UpperLeft;
+            var keys = Label(panel.transform, "ConflictBindings", "", 22, 24, 122, 712, 40);
+            var unused = new List<JindanDemoView.ActionButton>();
+            foreach (var item in new[] { ("holdBinding", "改维持键", 24f), ("firstBinding", "改破绽键一", 266f), ("secondBinding", "改破绽键二", 508f) })
+            {
+                var button = AddButton(panel.transform, unused, item.Item1, item.Item2, item.Item3, 70, 228, 46);
+                button.navigation = new Navigation { mode = Navigation.Mode.None }; SceneBuildSupport.SetObject(view, item.Item1, button);
+            }
+            foreach (var item in new[] { ("skipButton", "跳过本次", 24f), ("autoButton", "本场自动跳过", 266f), ("exitButton", "撤离演武", 508f) })
+            {
+                var button = AddButton(panel.transform, unused, item.Item1, item.Item2, item.Item3, 14, 228, 46);
+                button.navigation = new Navigation { mode = Navigation.Mode.None }; SceneBuildSupport.SetObject(view, item.Item1, button);
+            }
+            SceneBuildSupport.SetObject(view, "dialogRoot", root); SceneBuildSupport.SetObject(view, "details", details);
+            SceneBuildSupport.SetObject(view, "bindingsText", keys);
+            foreach (var item in new[] { ("yangMarker", "reveal_support"), ("yinMarker", "conceal_support") })
+                SceneBuildSupport.SetObject(view, item.Item1, scene.GetRootGameObjects().SelectMany(value => value.GetComponentsInChildren<Transform>(true))
+                    .Single(value => value.name == item.Item2).gameObject);
+            SceneBuildSupport.SetObject(installer, "jindanVisibilityView", view);
         }
 
         private static Button AddButton(Transform parent, List<JindanDemoView.ActionButton> bindings,

@@ -27,7 +27,6 @@ namespace TianZhang.Tests.EditMode
             Assert.IsTrue(ability.Enabled); Assert.AreEqual(200, ability.SupportDurability);
             Assert.AreEqual(6, ability.Seal.DurationTicks); Assert.AreEqual(2, ability.Seal.LocalRadius);
             Assert.AreEqual(100, ability.Seal.LayerDurability);
-            Assert.IsFalse(loadout.Ability("YANG_RADIANCE").Enabled); Assert.IsFalse(loadout.Ability("YIN_CONCEAL").Enabled);
         }
 
         [Test]

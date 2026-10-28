@@ -1005,8 +1005,8 @@ MonoBehaviour:
     failurePolicy: END_FUTURE_EFFECT
     capacityUnit: DOMAIN
     additionalRulesKey: demo_20261024_yang_radiance_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d11
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u575B\u662D\u660E.txt"
   - commandId: demo_20261024_yang_radiance_terminate
     displayNameKey: demo_20261024_yang_radiance_terminate
@@ -1033,8 +1033,8 @@ MonoBehaviour:
     failurePolicy: END_FUTURE_EFFECT
     capacityUnit: DOMAIN
     additionalRulesKey: demo_20261024_yang_radiance_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d11
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u65E5\u575B\u662D\u660E.txt"
   - commandId: demo_20261024_space_seal_deploy
     displayNameKey: demo_20261024_space_seal_deploy
@@ -1117,8 +1117,8 @@ MonoBehaviour:
     failurePolicy: END_FUTURE_EFFECT
     capacityUnit: DOMAIN
     additionalRulesKey: demo_20261024_yin_conceal_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d11
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u6714\u575B\u85CF\u771F.txt"
   - commandId: demo_20261024_yin_conceal_terminate
     displayNameKey: demo_20261024_yin_conceal_terminate
@@ -1145,8 +1145,8 @@ MonoBehaviour:
     failurePolicy: END_FUTURE_EFFECT
     capacityUnit: DOMAIN
     additionalRulesKey: demo_20261024_yin_conceal_rules
-    enabled: 0
-    unavailableReasonKey: demo_20261024_unavailable_d11
+    enabled: 1
+    unavailableReasonKey:
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u6714\u575B\u85CF\u771F.txt"
   - commandId: demo_20261024_flight_takeoff
     displayNameKey: demo_20261024_flight_takeoff
@@ -1447,7 +1447,7 @@ MonoBehaviour:
     capacitySchemaId: demo_20261024_yang_radiance_deploy
     forbiddenContractIds:
     - UNDECLARED
-    compatibilityProfileId: demo_compat_sha256_5c6363bad1e7eb3ba8abbe9cdec7e0f3d47bc06ca385130cbfcf270c7b87e786
+    compatibilityProfileId: demo_compat_sha256_dc19ab200950cd90eb18056b7cce2ad61f7fb8219f5f55358acc88f5d3caaa34
   - contractId: demo_20261024_space_seal_contract_v1
     contractVersion: 1.0
     positionId: JD_Cosmos_Space_TRANSFORM01
@@ -1496,7 +1496,7 @@ MonoBehaviour:
     capacitySchemaId: demo_20261024_yin_conceal_deploy
     forbiddenContractIds:
     - UNDECLARED
-    compatibilityProfileId: demo_compat_sha256_4a2742d19c344f0ec34d524ebfe1c2eea3204c25aa89205faf1766d21f633f9e
+    compatibilityProfileId: demo_compat_sha256_46d0be7e89119db70aba349b556994b2fb542476f6b9e80571da3085456e70b9
   segments:
   - segmentId: demo_20261024_segment_1
     displayNameKey: demo_20261024_segment_1
@@ -1637,3 +1637,30 @@ MonoBehaviour:
     attackCapacity: 2400
     damageMultiplier: 0.01
     sourceDocument: "docs/\u89D2\u8272\u517B\u6210/\u6F14\u793A\u539F\u578B/\u795E\u901A/\u6563\u4FEE/\u6F14\u6B66\xB7\u957F\u660E.txt"
+  visibilityRules:
+    rulesId: demo_20261024_visibility_conflict_v1
+    patternProfileId: demo_20261024_visibility_hold_v1
+    gaugeProfileId: demo_20261024_visibility_gauge_v1
+    yangSupportId: reveal_support
+    yangQ: 4
+    yangR: 15
+    yinSupportId: conceal_support
+    yinQ: 7
+    yinR: 15
+    supportRank: 1
+    carrying: 1
+    conflictReserve: 200
+    pulseMana: 50
+    pulseMilliseconds: 1000
+    windowOpenMilliseconds: 250
+    windowCloseMilliseconds: 750
+    gaugeStep: 50
+    gaugeWin: 100
+    holdKey: Space
+    firstKey: A
+    secondKey: D
+    yangWindowTicks: 4
+    reductionPercent: 10
+    reductionCap: 100
+    yangWindowBudget: 300
+    sourceDocument: "docs/\u57FA\u7840\u8BBE\u5B9A/\u91D1\u4E39\u57FA\u7840\u6548\u679C\u88C5\u914D\u4E0E\u51B2\u7A81\u89C4\u5219.txt"

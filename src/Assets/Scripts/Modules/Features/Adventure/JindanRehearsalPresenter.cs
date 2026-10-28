@@ -93,7 +93,7 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
-            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab")
+            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab")
             { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
@@ -101,6 +101,8 @@ namespace TianZhang.Features.Adventure
             { message = "等待当前演出或敌方行动结束。"; Refresh(); return; }
             switch (key)
             {
+                case "visibility_deploy": PreviewVisibility(CombatCommandKind.JindanAbility); break;
+                case "visibility_close": PreviewVisibility(CombatCommandKind.CloseJindan); break;
                 case "tide_rise": case "tide_ebb": case "tide_eye":
                     ClearTargeting(); tidePage = true; earthPage = false;
                     tideAction = key == "tide_ebb" ? CombatTideAction.Ebb : CombatTideAction.Rise;
@@ -204,7 +206,7 @@ namespace TianZhang.Features.Adventure
                 observedSession = session; observedActor = actorId;
             }
             PreparationDetails = PreparationText();
-            CombatDetails = CombatText(session, actorId);
+            CombatDetails = JindanVisibilityPresentation.Details(session) + CombatText(session, actorId);
             QuoteDetails = QuoteText();
         }
 
@@ -249,6 +251,18 @@ namespace TianZhang.Features.Adventure
                 ClearTargeting();
             }
             else { message = Explain(result.RejectionReason); ClearQuote(); }
+        }
+
+        private void PreviewVisibility(CombatCommandKind kind)
+        {
+            ClearTargeting();
+            var seat = encounter.CurrentSession.Jindan.Seats.FirstOrDefault(value =>
+                value.Definition.ActorId == encounter.ControlledActorId && CombatVisibility.IsEffect(value.EffectId));
+            if (seat == null) { message = "此角色没有显隐领域装配。"; return; }
+            frozenCommand = new CombatCommand(kind, encounter.ControlledActorId, profileId: seat.EffectId,
+                jindan: new CombatJindanRequest(seat.Definition.SeatId));
+            frozenQuote = encounter.PreviewJindan(frozenCommand);
+            message = frozenQuote?.IsLegal == true ? "固定全图领域；支点和费用已复核，请确认。" : Explain(frozenQuote?.RejectionReason);
         }
 
         private void PreviewFlight(CombatFlightAction action)
@@ -380,7 +394,7 @@ namespace TianZhang.Features.Adventure
                 frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(frozenCommand.ProfileId) :
                 frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.ProfileId == CombatFireDomainRules.Effect ? "展开长明火界" : frozenCommand.Jindan?.TideAction is {} water
                     ? JindanTidePresentation.Name(water, frozenCommand.Jindan.Charged, frozenCommand.Jindan.CreateTideEye)
-                    : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开方位定尺";
+                    : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开" + Effect(frozenCommand.ProfileId);
             string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
                 "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
             if (frozenCommand.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";

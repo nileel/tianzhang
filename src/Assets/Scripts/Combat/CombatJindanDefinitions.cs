@@ -12,7 +12,7 @@ namespace TianZhang.Combat
             int cooldown, int closeActionPoints, int upkeepMana, int range, int verticalReach,
             int capacity, int supportDurability, int remoteMana, int visionRange,
             IEnumerable<int> metricModes, string unavailableReason, int durationOwnTurnEnds = 0, CombatTideDefinition tide = null,
-            CombatSealDefinition seal = null, CombatFireDomainDefinition fireDomain = null)
+            CombatSealDefinition seal = null, CombatFireDomainDefinition fireDomain = null, CombatVisibilityDefinition visibility = null)
         {
             if (string.IsNullOrWhiteSpace(effectId) || actionPoints <= 0 || mana < 0 || cooldown < 0 ||
                 closeActionPoints <= 0 || upkeepMana < 0 || range < 0 || verticalReach < 0 || capacity < 1 ||
@@ -27,6 +27,9 @@ namespace TianZhang.Combat
             Tide = tide;
             Seal = seal;
             FireDomain = fireDomain;
+            Visibility = visibility;
+            if (enabled && CombatVisibility.IsEffect(effectId) && (visibility == null || supportDurability <= 0 || capacity != 1))
+                throw new ArgumentException("visibility_definition_missing");
             if (enabled && effectId == CombatFireDomainRules.Effect && (fireDomain == null || durationOwnTurnEnds < 1 || supportDurability <= 0))
                 throw new ArgumentException("fire_domain_definition_missing");
             if (enabled && effectId == "SPACE_SEAL" && (seal == null || supportDurability != checked(seal.LayerDurability * 2) || capacity != 1))
@@ -56,6 +59,7 @@ namespace TianZhang.Combat
         public CombatTideDefinition Tide { get; }
         public CombatSealDefinition Seal { get; }
         public CombatFireDomainDefinition FireDomain { get; }
+        public CombatVisibilityDefinition Visibility { get; }
     }
 
     public sealed class CombatJindanSeatDefinition
@@ -124,6 +128,8 @@ namespace TianZhang.Combat
         public CombatSealInstance ActiveSeal { get; internal set; }
         public CombatEarthInstance ActiveEarth { get; internal set; }
         public CombatFireDomainState FireDomain { get; internal set; }
+        public CombatVisibilityInstance ActiveVisibility { get; internal set; }
+        public CombatVisibilityLedger VisibilityLedger { get; internal set; }
         public CombatPendingTide PendingTide { get; internal set; }
         public int OwnedSurfaceCount { get; internal set; }
         public string LastEndReason { get; internal set; } = string.Empty;

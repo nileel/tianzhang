@@ -38,6 +38,7 @@ namespace TianZhang.Entity
                 }
                 ValidateTuning(catalog.loadoutTuning);
                 JindanDemoSurfaceValidator.Validate(catalog);
+                ValidateVisibility(catalog.visibilityRules);
                 var fire = catalog.fireDomainRules;
                 Check(fire != null && fire.centerQ == 7 && fire.centerR == 12 && fire.supportId == "fire_domain_support" &&
                     fire.fuelBudget == 15 && fire.tailFuel == 6 && fire.tailCycles == 2 && fire.attackCapacity == 2400 &&
@@ -172,11 +173,14 @@ namespace TianZhang.Entity
                 bool water = command.effectId == "WATER_TIDE" && command.abilityDefinitionId == "demo_20261024_guardian_xulan";
                 bool seal = command.effectId == "SPACE_SEAL" && command.abilityDefinitionId == "demo_20261024_guardian_menshu_fengguan";
                 bool fire = command.effectId == "FIRE_MANIFEST" && command.abilityDefinitionId == "demo_20261024_guardian_changming";
+                bool visibility = (command.effectId == "YANG_RADIANCE" && command.abilityDefinitionId == "demo_20261024_guardian_ritan_zhaoming") ||
+                    (command.effectId == "YIN_CONCEAL" && command.abilityDefinitionId == "demo_20261024_guardian_shuotan_cangzhen");
                 Check((flight && command.kind is ("FLIGHT_TAKEOFF" or "FLIGHT_ASCEND" or "FLIGHT_DESCEND" or "FLIGHT_LAND" or "FLIGHT_RECOVER") ||
                       earth && command.kind is ("DEPLOY" or "TERMINATE") ||
                       water && command.kind is ("DEPLOY" or "TERMINATE") ||
                       seal && command.kind is ("DEPLOY" or "TERMINATE") ||
                       fire && command.kind is ("DEPLOY" or "TERMINATE") ||
+                      visibility && command.kind is ("DEPLOY" or "TERMINATE") ||
                       command.effectId == "SPACE_SCALE" && command.abilityDefinitionId == "demo_20261024_guardian_fangwei_dingchi" &&
                       command.kind is ("DEPLOY" or "TERMINATE")) && string.IsNullOrEmpty(command.unavailableReasonKey), "UNIMPLEMENTED_COMMAND_ENABLED");
                 if (flight)
@@ -215,11 +219,41 @@ namespace TianZhang.Entity
                               command.durationClock == "OWN_TURN_END" && command.capacity == 3 && command.maximumInstances == 1 &&
                               command.supportDurability == 600 && command.range == 4 && command.verticalReachRank == 3
                             : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0), "FIRE_DOMAIN_COMMAND");
+                else if (visibility)
+                    Check(command.ctPenalty == 0 && command.failurePolicy == "END_FUTURE_EFFECT" &&
+                        command.capacityUnit == "DOMAIN" && command.remoteOriginManaCost == 0 &&
+                        command.sourceModeMask == 3 && command.targetModeMask == 3 &&
+                        command.metricDistanceModes.Length == 0 && (command.kind == "DEPLOY"
+                            ? command.actionPointCostUnits == 250000 && command.manaCost == 400 && command.cooldownTicks == 1 &&
+                              command.upkeepMana == 40 && command.upkeepClock == "GLOBAL_TICK" && command.durationCount == 6 &&
+                              command.durationClock == "GLOBAL_TICK" && command.capacity == 1 && command.maximumInstances == 1 &&
+                              command.supportDurability == 600 && command.range == 4 && command.verticalReachRank == 3
+                            : command.actionPointCostUnits == 25000 && command.manaCost == 0 && command.cooldownTicks == 0 &&
+                              command.upkeepMana == 0 && command.upkeepClock == "NONE" && command.durationCount == 0 &&
+                              command.durationClock == "NONE"), "VISIBILITY_COMMAND");
                 else if (!earth && command.kind == "DEPLOY")
                     Check(command.metricDistanceModes.SequenceEqual(new[] { 1, 4 }) && command.capacity == 2 &&
                           command.upkeepClock == "GLOBAL_TICK" && command.durationClock == "UNTIL_INVALID", "SCALE_CONFIGURATION");
             }
             else Check(!string.IsNullOrWhiteSpace(command.unavailableReasonKey), "MISSING_UNAVAILABLE_REASON");
+        }
+
+        private static void ValidateVisibility(JindanDemoVisibilityRules rules)
+        {
+            Check(rules != null && rules.rulesId == "demo_20261024_visibility_conflict_v1" &&
+                rules.patternProfileId == "demo_20261024_visibility_hold_v1" &&
+                rules.gaugeProfileId == "demo_20261024_visibility_gauge_v1" &&
+                rules.yangSupportId == "reveal_support" && rules.yangQ == 4 && rules.yangR == 15 &&
+                rules.yinSupportId == "conceal_support" && rules.yinQ == 7 && rules.yinR == 15 &&
+                rules.supportRank == 1 && rules.carrying == 1 &&
+                rules.conflictReserve == 200 && rules.pulseMana == 50 && rules.pulseMilliseconds == 1000 &&
+                rules.windowOpenMilliseconds == 250 && rules.windowCloseMilliseconds == 750 &&
+                rules.gaugeStep == 50 && rules.gaugeWin == 100 && rules.yangWindowTicks == 4 &&
+                rules.reductionPercent == 10 && rules.reductionCap == 100 && rules.yangWindowBudget == 300 &&
+                !string.IsNullOrWhiteSpace(rules.sourceDocument), "VISIBILITY_RULES");
+            var keys = new[] { rules.holdKey, rules.firstKey, rules.secondKey };
+            Check(keys.All(key => !string.IsNullOrWhiteSpace(key)) && keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() == 3,
+                "VISIBILITY_INPUT_KEYS");
         }
 
         private static void ValidateTuning(JindanDemoLoadoutTuning tuning)

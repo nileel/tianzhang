@@ -1,0 +1,992 @@
+[
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionStateAdvancesToProjectedShouyiAndFudanCaps",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AiEnumerationUsesTheSameAuthorizationAsDirectExecution",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"cell\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"context\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"death\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"direction\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"facing\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"move\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"origin\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(\"reason\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(3)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(4)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(AdjacentPair)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(ForwardPair)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"duplicate\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"missing\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"other\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(\"reverse\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,3)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,4)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,3)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,4)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(AdjacentPair)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(ForwardPair)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullFudanUsesItsProjectedCapForPenetrationAndPostActionState",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.KernelSourcesDoNotReferenceProductionOwnersOrUnityPresentation",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveRejectionsLeavePositionAndCtbStateUnchanged",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsTwoSchedulesEveryLivingInstance",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PlayerAndAiReceiveTheSameEightLegalCommandKinds",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,100,70,False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,50,30,False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(13,8,10,False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(220,50,0,True)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsKeepDistinctKnownIdsInOrder",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.0f,3,5,3,0.15f,3,1.0f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.5f,3,5,3,0.15f,3,1.1f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(12.0f,5,5,5,0.22f,12,1.25f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(24.0f,5,5,5,0.3f,12,1.3f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(3.0f,4,3,3,0.15f,5,1.15f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(6.0f,5,5,5,0.18f,8,1.2f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RangeAndTeamRejectionsLeaveTheTurnReadyForAValidRetry",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,100,0,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,98,2,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,0,5,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,10,5,15)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,100,0,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,2,100,2,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"blessed_land\",2.0f,False,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"blessed_land\",2.0f,True,11)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"ordinary\",1.0f,False,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"ordinary\",1.0f,True,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"spirit_vein_node\",2.0f,False,5)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(\"spirit_vein_node\",2.0f,True,11)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectionsLeaveLoadoutCooldownAndCtbStateUnchanged",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectsEmptyCandidatesDuplicateEquipmentAndAnExhaustedLimit",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapUsesTheLegacyLimitAndFixedCooldownWithoutCtbPenalty",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(0.0f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(1.5f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(3.0f)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"actor_dead\",\"combat_session_actor_invalid\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"cooldown\",\"attack_profile_cooldown_active\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"cost\",\"spirit_insufficient\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"dead\",\"combat_session_target_invalid\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"far\",\"target_out_of_range\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"grade\",\"attack_profile_requirements_not_met\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"missing\",\"combat_session_target_invalid\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"realm\",\"attack_profile_requirements_not_met\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"root\",\"attack_profile_requirements_not_met\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"same_cell\",\"target_out_of_range\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"unequipped\",\"attack_profile_not_equipped\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(\"unknown\",\"attack_profile_not_learned\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SwapEquippedArtUpdatesAuthorizationToTheNewSlot",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.TwoVsTwoAndResultProjectionRemainSessionLocal",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.CombatRuntimeKernelTests.XuanganMindStrengthChangesOnlyTheSoulDamageLine",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.CloseCostsTwentyFiveAPOnceAndOldTailBlocksCapacityWithoutRefresh",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.DeathAndSessionEndRemoveMainAndTail(False)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.DeathAndSessionEndRemoveMainAndTail(True)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.ExistingForeignFireIsNotReattributedAndWarmthDoesNotChargeItsPool",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.FuelCannotPartiallyPayAPeriodAndDeathInsideTheFireCycleEndsTheSession",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.GroundPairIsHitOnceAndAirAvoidsTheSameSurface(False)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.GroundPairIsHitOnceAndAirAvoidsTheSameSurface(True)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.HeatNeverSkipsTheUniqueWaterSurface(DeepWater,ShallowWater)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.HeatNeverSkipsTheUniqueWaterSurface(ShallowWater,Wet)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.HeatNeverSkipsTheUniqueWaterSurface(Wet,None)",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InsufficientUpkeepIsAtomicAndConvertsOnlyExistingFireToTail",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidCenterOrCarrierEndsMainButPreservesOnlyPaidTail(\"center\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidCenterOrCarrierEndsMainButPreservesOnlyPaidTail(\"sealed\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidDeploymentPaysNothing(\"ap\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidDeploymentPaysNothing(\"center\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidDeploymentPaysNothing(\"mana\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidDeploymentPaysNothing(\"sealed\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.InvalidDeploymentPaysNothing(\"selection\")",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.PrepareIsPureAndDeploymentUsesTheSharedLedgerAndReservesRealFuel",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.PublicLivingPlantCanUseCenterFuelWithoutRefillingD8Fuel",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.ThreeLaterOwnEndsAndTwoTailEndsNeverTickOnDeploymentOrGlobalTicks",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D10FireDomainTests.TideExtinguishesPaidTailAndASecondDeploymentCannotRefreshItsOldDeadline",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.APreparedButUncommittedAttackDoesNotConsumeProtection",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.ClosingAndRedeployingKeepsTheSameGuardianFirstHitReceipt",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.ExistingOrdinaryReductionLeavesAtMostThirtyPercentForTheCombinedRule",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.HiddenTargetRejectsDirectSelectionButLegalBlindCellAttackStillHits",
+    "result": "Passed",
+    "source": "d11-editmode-blind.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(1,10,10,1,1)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(400,600,900,2,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.HybridWithoutActiveDomainsRetainsBothLeijieDamageReceipts",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.LosingVisibilityDoesNotRemoveYinsIndependentDistantProtection",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.MissDoesNotConsumeTheNextEligibleFirstHit",
+    "result": "Passed",
+    "source": "d11-editmode-miss.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.YangFirstHitRenewsAtThePublicFourTickBoundary",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.YangProtectsOnlyTheFirstRootPerMemberAndSharesTheConfiguredBudget",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.YinProtectsDistantIncomingRootsButNotAdjacentOnes(1,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11ProtectionTests.YinProtectsDistantIncomingRootsButNotAdjacentOnes(3,90)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.BothDomainsUseIndependentSupportsAndEqualPaidTerms",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"conflictReserve\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"gaugeStep\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"pulseMana\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"supportRank\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"windowCloseMilliseconds\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"yangWindowBudget\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(\"yinQ\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.MissingConfigAndUnequalDeploymentCannotEnterTheCatalog",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityContentTests.RebindingKeepsResourceRulesAndRequiresDistinctNonemptyKeys",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.ANewTickAllowsANewObservationWithoutRefillingBattleReserves",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(0,0,Neutral,0,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(0,200,Right,0,50)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(100,150,Right,100,150)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(150,100,Left,150,100)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(200,0,Left,50,0)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(200,200,Neutral,200,200)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(49,200,Right,0,50)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.BattleClearCancelsPendingInputAndLeavesNoDomainOrLatePayment",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.BattleEndingDeathCancelsTheContestBeforeAnotherClockAdvance",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.BattleReserveCapsPulsesEvenWithPlentyOfMana",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.BothDomainsDeployThroughTheSharedLedgerAndReadQueriesCannotCharge",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.ClosingAndRedeployingCannotRefillTheGuardianConflictBudget",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(\"carrying\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(\"paid_cost\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(\"permission\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(\"position\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(\"support\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EqualExhaustionUsesTheObservedVariablesNeutralBaseline(False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EqualExhaustionUsesTheObservedVariablesNeutralBaseline(True)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.EqualPriorityWaitsAndMixedPaidCurrenciesCannotInventAnExchangeRate",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(1,False,True)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(3,True,False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(6,False,False)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.OldEventAndBackwardTimeCannotAdvanceOrPayTheCurrentContest",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(1,4,4)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(2,1,2)",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.PendingConflictFreezesAuthorityClocksStatusesCooldownsAndEnvironmentUntilItResolves",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.QuoteFromBeforeConflictCannotCommitDuringOrAfterSettlement",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.ReleasingStopsImmediatelyAndDoesNotPayFuturePulses",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.SkipAfterManualProgressUsesOnlyRemainingReserves",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(\"a_yang\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(\"z_yin\")",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.WaitingWithoutSpaceDoesNotPayAndWindowIs250Inclusive750Exclusive",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.WholeBattleSkipAutomaticallySettlesLaterObservations",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D11VisibilityTests.WrongAndSimultaneousKeysHaveNoPenaltyAndOnlyOneCorrectEdgeCountsPerWindow",
+    "result": "Passed",
+    "source": "d11-editmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D9SpaceContentTests.DirectionAndLayerContractChangesInvalidateCompilation",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.EditMode.D9SpaceContentTests.ImportedThirdSegmentUsesFrozenGateAndExistingStoneStrike",
+    "result": "Passed",
+    "source": "d11-editmode.xml"
+  },
+  {
+    "name": "TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.HiddenTargetsStayOutOfHudAndBlindPreviewAndReleaseLosesWithoutClockAdvance",
+    "result": "Passed",
+    "source": "d11-playmode-hidden.xml"
+  },
+  {
+    "name": "TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.MouseSkipAndWholeBattleSkipAreNeutralAndWaitingExitDoesNotSettle",
+    "result": "Passed",
+    "source": "d11-playmode-final.xml"
+  },
+  {
+    "name": "TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.PaidDomainsAcceptRealHoldAndTwoWindowEdgesThenExitAndReenterCleanly",
+    "result": "Passed",
+    "source": "d11-playmode-final.xml"
+  }
+]

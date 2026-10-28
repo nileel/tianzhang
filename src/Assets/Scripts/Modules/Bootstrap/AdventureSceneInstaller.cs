@@ -63,6 +63,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private JindanScaleView jindanScaleView;
         [SerializeField] private JindanSealView jindanSealView;
         [SerializeField] private JindanFireDomainView jindanFireDomainView;
+        [SerializeField] private JindanVisibilityView jindanVisibilityView;
         [SerializeField] private CombatEarthView earthView;
         [SerializeField] private CombatSurfaceView surfaceView;
         private JindanRehearsalPresenter jindan;
@@ -121,6 +122,25 @@ namespace TianZhang.Bootstrap
         private void LateUpdate()
         {
             if (jindan == null) return;
+            var visibilitySession = encounterCoordinator.CurrentSession;
+            var visibility = visibilitySession?.Visibility;
+            var conflict = visibility?.Current;
+            jindanVisibilityView.Present(visibility?.IsPaused == true, conflict?.EventId ?? 0,
+                JindanVisibilityPresentation.Conflict(conflict, visibilitySession?.TurnScheduler.CurrentTick ?? 0), conflict?.Started == true, conflict?.PulseCount ?? 0);
+            if (visibilitySession?.Jindan != null)
+            {
+                foreach (var actor in visibilitySession.Combatants.All)
+                    if (static3DUnitPresentationProvider.TryGetPresentedUnit(actor.Id, out var root))
+                    {
+                        bool observed = actor.Team == TianZhang.Combat.CombatTeam.Player || visibilitySession.Combatants.All.Any(observer =>
+                            observer.IsAlive && observer.Team == TianZhang.Combat.CombatTeam.Player && visibility.IsVisible(observer.Id, actor.Id));
+                        root.SetActive(actor.IsAlive && observed);
+                    }
+            }
+            var yangSeat = visibilitySession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "YANG_RADIANCE");
+            var yinSeat = visibilitySession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "YIN_CONCEAL");
+            jindanVisibilityView.PresentSupports(yangSeat?.ActiveVisibility != null, yangSeat?.LastEndReason == "jindan_support_destroyed",
+                yinSeat?.ActiveVisibility != null, yinSeat?.LastEndReason == "jindan_support_destroyed");
             jindan.Refresh();
             combatTargetInput.enabled = !jindan.IsSelecting;
             if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
@@ -170,6 +190,22 @@ namespace TianZhang.Bootstrap
         {
             try
             {
+                jindanVisibilityView.ConfigureKeys(jindanDemoCatalog.visibilityRules.holdKey,
+                    jindanDemoCatalog.visibilityRules.firstKey, jindanDemoCatalog.visibilityRules.secondKey);
+                jindanVisibilityView.InputRequested += (id, time, pressed, released, keys) =>
+                {
+                    var visibility = encounterCoordinator.CurrentSession?.Visibility;
+                    if (visibility == null) return;
+                    long revision = visibility.Revision;
+                    visibility.Input(id, time, pressed, released, keys);
+                    if (visibility.Revision != revision) encounterCoordinator.RefreshVisibilityPresentation();
+                };
+                jindanVisibilityView.SkipRequested += (id, all) =>
+                {
+                    encounterCoordinator.CurrentSession?.Visibility?.Skip(id, all);
+                    encounterCoordinator.RefreshVisibilityPresentation();
+                };
+                jindanVisibilityView.ExitRequested += () => { controller.RequestReturn(); controller.ConfirmWithdrawal(); };
                 RequireReference(languageTable, "adventure_language_table_missing");
                 RequireReference(contentCatalog, "adventure_content_catalog_missing");
                 if (!contentCatalog.TryGetCombatRuleSet(out var combatRules, out string ruleReason))

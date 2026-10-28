@@ -711,6 +711,8 @@ combat_actor_immobilized,定身中，无法移动
 combat_spirit_sealed,封灵中，无法施法
 movement_efficiency_zero,当前无法移动
 combat_quote_stale,行动状态已变化，请重新选择
+combat_target_not_visible,当前无法看见该目标
+combat_visibility_conflict_pending,显隐对抗中，正常战斗已暂停
 combat_ct_penalty_overflow,累计行动惩罚超出上限
 combat_effect_overflow,行动结果超出上限
 combat_move_quote_invalid,移动费用已变化，请重新选择

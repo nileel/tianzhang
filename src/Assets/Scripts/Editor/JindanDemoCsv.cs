@@ -60,6 +60,7 @@ namespace TianZhang.Editor
                 catalog.surfaceFires = Parse<JindanDemoSurfaceFire>(read("JindanDemoSurfaceFires"), "JindanDemoSurfaceFires");
                 catalog.sealRules = Parse<JindanDemoSealRules>(read("JindanDemoSealRules"), "JindanDemoSealRules").Single();
                 catalog.fireDomainRules = Parse<JindanDemoFireDomainRules>(read("JindanDemoFireDomainRules"), "JindanDemoFireDomainRules").Single();
+                catalog.visibilityRules = Parse<JindanDemoVisibilityRules>(read("JindanDemoVisibilityRules"), "JindanDemoVisibilityRules").Single();
                 foreach (var contract in catalog.contracts)
                 {
                     if (contract.compatibilityProfileId != "compile")

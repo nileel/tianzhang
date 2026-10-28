@@ -1,0 +1,37 @@
+《天章》D11 同阶显隐冲突与可选操作对抗验收（2026-10-28）
+
+实现与事实源
+- 仅完成开发计划D11，连续三段、双分辨率完整录制与两种解法仍留D12。依据《金丹基础效果装配与冲突规则》§四、§9.4–9.5及阳／阴独立镇府原文，沿现有第三段两人预设实现，不增加角色、战斗资源池或世界存档字段。
+- 新增JindanDemoVisibilityRules.csv，显式保存两个固定支点、同档比较值、对抗200MP额度／50MP脉冲、1000ms节拍、250≤窗口<750ms、Space与A/D、50推进／100胜出，以及两项减伤附性。配置纳入两域兼容哈希，导入同步Catalog与两个静态契约资产；SPACE_SCALE契约不受显隐配置变化影响。
+- 两域各使用真实250AP／400MP／CD1，共享原角色MP；独立600耐久支点、容量1、40MP/全局tick、期限6tick。在t+1至t+5维护五次，t+6先到期。主动关闭25AP，重开不补对抗额度、不刷新当期首击账本。
+- 先检查正常视野、视线与自然现形。物理邻接或任何存活敌方加权近距≤1时不建立冲突；压缩后的近距也适用。不同变量继续共存，败方领域及减伤附性保留。
+- 权限与合法对象→席位→实际依托→本次结果已付代价→有效承载依序比较。本轮只接同DOMAIN固定见证，不定义其他位置的未授权高低表，不换算AP与MP。核对过World的CharterConflictRules；保留其逐项比较原则，未引入Combat→World引用，也未照搬世界双方全额费用模型。
+- CombatSession.Visibility持有观察回执；每observer／target／tick／两域实例及相关空间、支点事实结算一次。UI读取不收费；已结束事件、旧报价和旧输入不能二次提交。事件日志包含查询、双方guardian、五项实际值、脉冲实际支付和终止原因。
+- 对抗额度是原MP可花上限，每脉冲先检查双方再同步扣费。200/200各花200后中性；150/100花150/100后前者胜出；双方已不足一次支付的新观察立即中性，0脉冲、不再暂停。跳过本次、本场自动跳过、NPC确定性处理使用同一支付规则。
+- CombatCommandService的普通提交与时间推进在Pending期间拒绝／冻结。输入使用实时单调毫秒，不推进游戏tick；等待Space不扣费，松键终止，错键／双键／窗口外输入不追加惩罚。退出停止原战斗协程、取消Pending并清理领域；已有费用不返还。
+- 阳护按公开4tick窗口、每成员第一根命中攻击、10%／单根100／共享300预算；阴护只适用非邻接且加权攻击距离>1的根攻击。混合组件合并计算领域减伤，再比例分摊，余量按物理在前；仍保留原两个组件ReceiveDamage及雷劫受击规则。准备但未提交、未命中不消费阳护账本。
+- 视觉沿AdventureSceneInstaller→JindanVisibilityView及既有CombatHudPresenter。显隐页、冲突模态与支点微光复用现有UI和资产。隐藏目标不进入模型拾取、HUD目标表、术法目标表或范围预览命中名单；Combat真实盲打仍可命中。对抗资源变化立即刷新HUD。
+
+正式场景运行证据（1366×768，图形Unity PlayMode）
+- 测试均从正式创建角色→世界→聚落→冒险→金丹演武第三段进入，用InputSystem键盘边沿和鼠标射线驱动实际UI，不直接调用按钮委托。这里不是操作系统原生输入证明；D12保留完整原生双分辨率试玩。
+- 同速排序使阴方先付费展开，玩家随后确认阳照即触发对抗；两域均在t=10展开，250AP／400MP已实付，两个支点600，五项相等。预演取消不扣费。
+- manual/proof.txt：等待不扣费；Space首脉冲双方50，首窗口A推进50，次脉冲与D推进100胜出，双方各100。全过程t=10、turn=2、玩家CT100／阈值100、敌方CT0／阈值100、玩家AP750、HP3474、CD与本人回合计数、领域维护次数0、surface revision/settlement=0/0、飞行状态保持一致。胜出同步时再次比较完整冻结串；撤离后世界人物序列化记录不变，重入额度各200、无冲突历史和自动跳过残留。
+- skip-exit/proof.txt：鼠标跳过本次双方各200，中性可见；重复读取、Refresh与原地防御没有额外扣费。另一次入场验证本场自动跳过；再入场等待时撤离，Cancelled且双方0脉冲费用、无结果提交；随后重入干净。
+- concealment/proof.txt：隐方在HUD／术法目标／显示命中名单中不可见；Space后立即松键，阴方胜出，双方各50，完整时钟串不变，目标模型隐藏且正常行动窗口恢复。01-hidden-after-release.png已人工检查，阴方角色与血条消失，领域支点仍保留。
+- manual/02-conflict-first-window.png、manual/03-manual-result.png、skip-exit/02-auto-neutral.png及concealment/01-hidden-after-release.png均已实际读取检查；模态、资源与结果文字可读，没有用截图文件名代替检查。
+
+验证结果与复现
+- Unity 6000.3.18f1，正式src工程。通过JindanDemoSceneBuilder.ImportAndRebuild导入、重建、保存并重开AdventureScene；随后测试多次从磁盘加载该场景。生成场景仅归并原有对象fileID及无语义空白，避免重复生成的随机ID扩大差异，未改用户已有RockCluster资源。
+- 195个不同EditMode用例最终通过：D11VisibilityTests、D11ProtectionTests、D11VisibilityContentTests、CombatRuntimeKernelTests，加首轮D10FireDomainTests、D9SpaceContentTests回归。覆盖五项提前判定、资源穷尽、窗口边界／错误输入、旧事件／报价、暂停、取消、近距／墙／视距、真实付费尺度联动、两域严格到期、附性预算、重开、混合根与雷劫。
+- 原始XML保留各轮真实结果：d11-editmode.xml为66/66；d11-editmode-final.xml为169/170；d11-editmode-miss.xml为修正夹具后1/1；d11-editmode-blind.xml为新增盲打1/1。按fullname取最近结果去重为195/195，未把重复运行相加冒充不同用例。
+- 图形PlayMode三个不同用例最终通过：d11-playmode-final.xml中原两项通过，新增潜伏用例失败；d11-playmode-hidden.xml修正该用例前提后1/1。latest-test-results.json逐项列出195+3个最近结果及对应原始XML，全部Passed。
+- 测试前提修正：首次图形测试错等玩家展开后普通窗口，实际阴方先展开且确认阳照即暂停；未改CTB／AI。未命中夹具原100%命中率下roll100仍命中，改为显式20闪避，未改生产命中规则。正式贯石击射程1而见证距离3，不能据此断言盲打命中；合法盲打伤害改由range6的核心测试通过正式CommandService证明，直接选隐者拒绝而选地格命中90。另修正新测试的Id字段编译错误，未改生产接口。
+- 数据链check-data-chain.ps1通过：GongFa29/29、Spells84/84、Skills31/31、Language805。实际程序集依赖检查check-unity-assembly-boundaries.ps1 -SkipRequiredAssemblies通过（19程序集、2asmref）；保留D6已记录的旧required名单限制，未新增程序集依赖。
+- BattleSim按先后执行dotnet build -c Release --no-restore simulations/BattleSim（0警告／0错误），再dotnet run --no-build -c Release --project simulations/BattleSim -- --self-test two-cell-production（PASS）。只加入四个新纯Combat文件的现有显式编译链接；不新增地图模拟，也不作角色平衡结论。
+- EditMode复现：Unity -batchmode -nographics -projectPath <repo>/src -runTests -testPlatform EditMode -testFilter "D11VisibilityTests;D11ProtectionTests;D11VisibilityContentTests;CombatRuntimeKernelTests;D10FireDomainTests;D9SpaceContentTests" -testResults <path> -logFile <path>。图形复现移除batchmode/nographics，testPlatform PlayMode，testFilter D11VisibilityPlayModeTests。先确认同工程无另一个打开的Unity实例。
+
+独立检查与范围
+- 未参与实现的只读规则子智能体对核心与最终改动独立检查，指出并复核了混合组件受击回归、AI／预览潜伏目标泄漏、回执失效范围过大、双方无额度反复暂停、事件事实与重映射显示问题；最终指定代码复核无新增问题。测试编写与内容导入由其他独立目录协助，主智能体统一复核、集成和运行；无子智能体提交或合并。
+- 使用unity-agent-workflows；按需读项目结构、模块架构、runtime-owner-proof、内容与系统、UI、验证、持久化说明。实际owner为既有Combat／Content／Adventure／CombatPresentation，未新增跨模块依赖或管理流程。沿已有批准的D11设计实施，没有另建规则文档、旧任务卡或定时器。
+- 现有合法根攻击命中最低伤害1，最多30%领域减伤后无法构造零伤根；代码仍按IsHit消费首击，但本轮未声称取得合法零伤命中运行证据。两人每侧上限下共享预算耗尽夹具使用150预算，生产配置保持300。上述不改原需求与数值。
+- 保留原有角色立绘、RockCluster、设计总结及.agents/summary_state.json的无关改动。D12未执行。

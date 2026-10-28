@@ -246,6 +246,7 @@ namespace TianZhang.Combat
                     if (session.IsFinished) { EndTurn(session, actor.Id); session.Terminate(); }
                     else if (!actor.IsAlive) EndTurn(session, actor.Id);
                 }
+                if (!session.IsFinished) session.Visibility?.Refresh();
             };
             return result.WithPayment(current.ActionPointCostUnits, quotedRefund, current.StateVersion + 1);
         }
@@ -318,6 +319,8 @@ namespace TianZhang.Combat
             if (session == null) throw new ArgumentNullException(nameof(session));
             Record();
             int ticks = 0;
+            if (session.IsFinished) { session.Terminate(); return new CombatTurnAdvance(string.Empty, 0); }
+            if (session.Visibility?.IsPaused == true) return new CombatTurnAdvance(session.CurrentActorId, 0);
             while (true)
             {
                 if (session.IsFinished) { session.Terminate(); return new CombatTurnAdvance(string.Empty, ticks); }
@@ -341,7 +344,8 @@ namespace TianZhang.Combat
                 if (session.IsFinished) { session.Terminate(); return new CombatTurnAdvance(string.Empty,ticks); }
                 if (!advance.HasActor) return new CombatTurnAdvance(string.Empty, ticks);
                 session.Combatants.TryGet(advance.ActorId, out var actor);
-                if (session.BeginTurn(actor)) return new CombatTurnAdvance(actor.Id, ticks);
+                if (session.BeginTurn(actor))
+                { session.Visibility?.Refresh(); return new CombatTurnAdvance(actor.Id, ticks); }
                 EndTurn(session, actor.Id);
                 Record();
             }
@@ -359,6 +363,7 @@ namespace TianZhang.Combat
         // Snapshot setters are also used by deterministic fixtures and external state effects; quote them
         // as facts as well as checking the aggregate version, so a changed target/v/position cannot slip through.
         private static string Facts(CombatSession session) => (session.SceneObjects?.Revision ?? 0) + ";" +
+            (session.Visibility?.Revision ?? 0) + ";" +
             (session.Jindan?.Revision ?? 0) + ";" + (session.Flight?.Revision ?? 0) + ";" + (session.Surfaces?.Revision ?? 0) + ";" + string.Join(";", session.Combatants.All.Select(actor =>
             string.Join("|", actor.Id, actor.Position, actor.Footprint, actor.BodyScaleRank, actor.CurrentHealth, actor.MaximumSpirit, actor.CurrentSpirit,
                 actor.ActionPointsRemainingUnits, actor.MovementEfficiencyMilliUnits, actor.IsGuarding, actor.Facing, actor.MovementMode, actor.AltitudeBand,

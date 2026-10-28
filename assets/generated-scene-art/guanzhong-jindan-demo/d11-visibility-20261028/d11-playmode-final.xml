@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Failed(Child)" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="37.015944">
+  <test-suite type="TestSuite" id="1292" name="src" fullname="src" runstate="Runnable" testcasecount="235" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="37.015944" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1285" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="235" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="37.006865" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="4828" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1286" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="235" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="37.004264" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1287" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="235" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="37.002097" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1288" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="235" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="36.999955" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1014" name="D11VisibilityPlayModeTests" fullname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests" classname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests" runstate="Runnable" testcasecount="3" result="Failed" site="Child" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:41Z" duration="36.994783" total="3" passed="2" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1017" name="HiddenTargetsStayOutOfHudAndBlindPreviewAndReleaseLosesWithoutClockAdvance" fullname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.HiddenTargetsStayOutOfHudAndBlindPreviewAndReleaseLosesWithoutClockAdvance" methodname="HiddenTargetsStayOutOfHudAndBlindPreviewAndReleaseLosesWithoutClockAdvance" classname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests" runstate="Runnable" seed="1752681382" result="Failed" start-time="2026-10-28 12:59:04Z" end-time="2026-10-28 12:59:10Z" duration="5.645801" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  True blind-cast target resolution must remain intact.
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests+<HiddenTargetsStayOutOfHudAndBlindPreviewAndReleaseLosesWithoutClockAdvance>d__20.MoveNext () [0x00227] in D:\天章游戏开发\src\Assets\Tests\PlayMode\D11VisibilityPlayModeTests.cs:167
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="1016" name="MouseSkipAndWholeBattleSkipAreNeutralAndWaitingExitDoesNotSettle" fullname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.MouseSkipAndWholeBattleSkipAreNeutralAndWaitingExitDoesNotSettle" methodname="MouseSkipAndWholeBattleSkipAreNeutralAndWaitingExitDoesNotSettle" classname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests" runstate="Runnable" seed="2063566149" result="Passed" start-time="2026-10-28 12:59:10Z" end-time="2026-10-28 12:59:30Z" duration="19.860581" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="PaidDomainsAcceptRealHoldAndTwoWindowEdgesThenExitAndReenterCleanly" fullname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests.PaidDomainsAcceptRealHoldAndTwoWindowEdgesThenExitAndReenterCleanly" methodname="PaidDomainsAcceptRealHoldAndTwoWindowEdgesThenExitAndReenterCleanly" classname="TianZhang.Tests.PlayMode.D11VisibilityPlayModeTests" runstate="Runnable" seed="359865416" result="Passed" start-time="2026-10-28 12:59:30Z" end-time="2026-10-28 12:59:41Z" duration="11.475779" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

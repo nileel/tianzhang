@@ -104,6 +104,23 @@ namespace TianZhang.Entity
                     fire.tailFuel.ToString(CultureInfo.InvariantCulture), fire.tailCycles.ToString(CultureInfo.InvariantCulture),
                     fire.attackCapacity.ToString(CultureInfo.InvariantCulture), fire.damageMultiplier.ToString("R", CultureInfo.InvariantCulture) }).ToArray();
             }
+            if (contract.effectId is "YANG_RADIANCE" or "YIN_CONCEAL")
+            {
+                var rules = catalog.visibilityRules ?? throw new InvalidDataException("JD_DEMO_VISIBILITY_RULES_MISSING");
+                frozen = frozen.Concat(new[]
+                {
+                    rules.rulesId, rules.patternProfileId, rules.gaugeProfileId,
+                    rules.yangSupportId, rules.yangQ.ToString(CultureInfo.InvariantCulture), rules.yangR.ToString(CultureInfo.InvariantCulture),
+                    rules.yinSupportId, rules.yinQ.ToString(CultureInfo.InvariantCulture), rules.yinR.ToString(CultureInfo.InvariantCulture),
+                    rules.supportRank.ToString(CultureInfo.InvariantCulture), rules.carrying.ToString(CultureInfo.InvariantCulture),
+                    rules.conflictReserve.ToString(CultureInfo.InvariantCulture), rules.pulseMana.ToString(CultureInfo.InvariantCulture),
+                    rules.pulseMilliseconds.ToString(CultureInfo.InvariantCulture), rules.windowOpenMilliseconds.ToString(CultureInfo.InvariantCulture),
+                    rules.windowCloseMilliseconds.ToString(CultureInfo.InvariantCulture), rules.gaugeStep.ToString(CultureInfo.InvariantCulture),
+                    rules.gaugeWin.ToString(CultureInfo.InvariantCulture), rules.holdKey, rules.firstKey, rules.secondKey,
+                    rules.yangWindowTicks.ToString(CultureInfo.InvariantCulture), rules.reductionPercent.ToString(CultureInfo.InvariantCulture),
+                    rules.reductionCap.ToString(CultureInfo.InvariantCulture), rules.yangWindowBudget.ToString(CultureInfo.InvariantCulture),
+                }).ToArray();
+            }
             using var sha = SHA256.Create();
             return "demo_compat_sha256_" + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(
                 string.Join("\n", frozen)))).Replace("-", "").ToLowerInvariant();

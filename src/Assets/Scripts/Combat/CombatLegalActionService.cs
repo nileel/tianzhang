@@ -36,6 +36,9 @@ namespace TianZhang.Combat
             AddSpellSwaps(session, actor, actions);
             if (session.Jindan != null)
             {
+                foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actor.Id && CombatVisibility.IsEffect(value.EffectId)))
+                    AddIfValid(session, new CombatCommand(CombatCommandKind.JindanAbility, actor.Id, profileId: seat.EffectId,
+                        jindan: new CombatJindanRequest(seat.Definition.SeatId)), actions);
                 foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actor.Id && value.EffectId == "SPACE_SEAL"))
                     AddIfValid(session, CombatSealRules.Deployment(seat), actions);
                 foreach (var seat in session.Jindan.Seats.Where(value => value.Definition.ActorId == actor.Id && value.EffectId == CombatFireDomainRules.Effect))
@@ -72,7 +75,8 @@ namespace TianZhang.Combat
                             attackDirection: direction);
                         var quote = commandService.Preview(session, command);
                         // AI action discovery remains target-driven; players may intentionally empty-cast.
-                        if (quote.IsLegal && quote.AttackArea.TargetIds.Count > 0) actions.Add(command);
+                        if (quote.IsLegal && quote.AttackArea.TargetIds.Any(id => session.Visibility == null ||
+                            session.Visibility.IsVisible(actor.Id, id))) actions.Add(command);
                     }
                     continue;
                 }

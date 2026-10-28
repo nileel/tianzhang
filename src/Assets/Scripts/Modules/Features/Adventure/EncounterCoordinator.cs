@@ -157,12 +157,22 @@ namespace TianZhang.Features.Adventure
 
         /// <summary>The only window in which a direct <c>Request*</c> command is performed instead of
         /// dropped: the player's turn is active and its advance presentation has finished.</summary>
-        public bool AcceptsPlayerCommand => acceptsPlayerCommand && !IsPresenting;
+        public bool AcceptsPlayerCommand => acceptsPlayerCommand && !IsPresenting && session?.Visibility?.IsPaused != true;
+
+        public void RefreshVisibilityPresentation()
+        {
+            if (session == null) return;
+            Present(session.Visibility?.IsPaused == true ? "显隐对抗中" :
+                IsPlayerActor(session.CurrentActorId) ? "你的行动" : "敌方行动", AcceptsPlayerCommand);
+        }
+
+        private bool VisibleTo(string observer, string target) => session.Visibility == null || session.Visibility.IsVisible(observer, target);
 
         public bool CanWithdraw(out string reason)
         {
             reason = "回合切换中";
             if (session == null) return false;
+            if (session.Visibility?.IsPaused == true) { reason = null; return true; }
             if (resultBuilder.Build(session).Outcome != CombatSessionOutcome.Ongoing)
             {
                 reason = "胜负已定，等待结算";
@@ -340,7 +350,7 @@ namespace TianZhang.Features.Adventure
                 command.Kind == CombatCommandKind.Flight ? "御风飞行" : command.Kind==CombatCommandKind.Art?"演武·破垒":
                 command.Jindan?.TideAction.HasValue == true ? JindanTidePresentation.Name(command.Jindan.TideAction.Value,
                     command.Jindan.Charged, command.Jindan.CreateTideEye) :
-                command.Jindan?.EarthMode.HasValue==true?"厚载·"+command.Jindan.EarthMode:"布设方位定尺";
+                command.Jindan?.EarthMode.HasValue==true?"厚载·"+command.Jindan.EarthMode:"展开"+JindanRehearsalPresenter.Effect(command.ProfileId);
             presentation.AppendLog(result.Succeeded ? ActorName(command.ActorId) + "：" + action +
                 "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent : displayReason(result.RejectionReason));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
@@ -388,6 +398,8 @@ namespace TianZhang.Features.Adventure
             CombatantSnapshot actor = null, quotedTarget = null;
             session?.Combatants.TryGet(command.ActorId, out actor);
             session?.Combatants.TryGet(command.TargetId, out quotedTarget);
+            if (quotedTarget != null && !VisibleTo(command.ActorId, quotedTarget.Id))
+            { quotedTarget = null; targetName = "未见目标"; }
             float targetDistance = -1;
             if (command.TargetCell.HasValue && preview?.AttackArea != null)
             {
@@ -425,7 +437,7 @@ namespace TianZhang.Features.Adventure
                 ToPresentationHex(preview.AttackArea.Origin), preview.AttackArea.Direction,
                 preview.AttackArea.Cells.Select(cell => new CombatAttackAreaCellSnapshot(
                     ToPresentationHex(cell.Coord), cell.IsLegal, cell.IsLegal ? string.Empty : displayReason(cell.Reason))).ToArray(),
-                preview.AttackArea.TargetIds.Select(id =>
+                preview.AttackArea.TargetIds.Where(id => VisibleTo(command.ActorId, id)).Select(id =>
                 {
                     session.Combatants.TryGet(id, out var target);
                     return ToHud(target, ActorName(id));
@@ -567,6 +579,7 @@ namespace TianZhang.Features.Adventure
         {
             while (resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
             {
+                while (session.Visibility?.IsPaused == true || withdrawalPaused) yield return null;
                 RefreshGrowth();
                 acceptsPlayerCommand = false;
                 var flightBefore = SnapshotFlightStates();
@@ -590,7 +603,7 @@ namespace TianZhang.Features.Adventure
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing))
                     {
                         yield return null;
-                        while (withdrawalPaused) yield return null;
+                        while (withdrawalPaused || session.Visibility?.IsPaused == true) yield return null;
                         if (RefreshGrowth() || (inventoryVersion?.Invoke() ?? 0) != presentedInventoryVersion)
                             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished);
                         if (wasPresenting != IsPresenting)
@@ -609,6 +622,7 @@ namespace TianZhang.Features.Adventure
                     while (session.TurnPhase != CombatTurnPhase.Finished &&
                            resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
                     {
+                        while (withdrawalPaused || session.Visibility?.IsPaused == true) yield return null;
                         IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
                         if (!enemyPolicies.TryGetValue(advance.ActorId, out ICombatActionPolicy policy))
                             throw new InvalidOperationException("combat_enemy_ai_profile_missing");
@@ -731,7 +745,8 @@ namespace TianZhang.Features.Adventure
             session.Combatants.TryGet(ControlledActorId, out CombatantSnapshot player);
             presentedInventoryVersion = inventoryVersion?.Invoke() ?? 0;
             CombatantSnapshot enemy = spawned.Enemies.FirstOrDefault(value => value.IsAlive) ?? spawned.Enemy;
-            acceptsCommands = acceptsCommands && !IsPresenting;
+            if (enemy != null && !VisibleTo(player.Id, enemy.Id)) enemy = null;
+            acceptsCommands = acceptsCommands && !IsPresenting && session.Visibility?.IsPaused != true;
             ++commandContextVersion;
             presentation.Present(new CombatHudSnapshot(
                 ToHud(player, ActorName(player.Id), PortraitKey(player.Id)),
@@ -752,7 +767,7 @@ namespace TianZhang.Features.Adventure
                 actions: BuildActions(player, enemy),
                 actionPointLimitUnits: player?.ActionPointLimitAtTurnStartUnits ?? 0,
                 pendingCtPenalty: session.PendingCtPenalty,
-                enemies: spawned.Players.Concat(spawned.Enemies).Where(value => value.Id != player.Id)
+                enemies: spawned.Players.Concat(spawned.Enemies).Where(value => value.Id != player.Id && VisibleTo(player.Id, value.Id))
                     .Select(value => ToHud(value, ActorName(value.Id), PortraitKey(value.Id))).ToArray(),
                 sceneObjects: session.SceneObjects?.All.Select(value => ProjectSceneObject(value)).ToArray()));
         }
@@ -819,7 +834,7 @@ namespace TianZhang.Features.Adventure
                     ordered.AddRange(session.Combatants.All.Where(target => target.Id != player.Id));
                     foreach (CombatantSnapshot target in ordered)
                     {
-                        if (!target.IsAlive || !profile.AllowsTarget(player.Team, target.Team)) continue;
+                        if (!target.IsAlive || !profile.AllowsTarget(player.Team, target.Team) || !VisibleTo(player.Id, target.Id)) continue;
                         AddTarget(target, ActorName(target.Id));
                     }
                 }
@@ -872,7 +887,7 @@ namespace TianZhang.Features.Adventure
             {
                 if (session.TryGetProfile(profileId, out var divine) && divine.Effect == CombatAttackEffect.RestoreSpirit)
                     Add(CombatActionKind.Divine, player.Id, profileId);
-                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive))
+                foreach (CombatantSnapshot target in spawned.Enemies.Where(value => value.IsAlive && VisibleTo(player.Id, value.Id)))
                     Add(CombatActionKind.Divine, target.Id, profileId);
             }
             for (int slot = 0; slot < player.EquippedArtProfileIds.Count; slot++)

@@ -85,7 +85,7 @@ MonoBehaviour:
     positionType: 2
     proofProfileId: PROOF_YANG_DOMAIN01_01
     equippedBaseEffectId: YANG_RADIANCE
-    compatibilityProfileId: demo_compat_sha256_5c6363bad1e7eb3ba8abbe9cdec7e0f3d47bc06ca385130cbfcf270c7b87e786
+    compatibilityProfileId: demo_compat_sha256_dc19ab200950cd90eb18056b7cce2ad61f7fb8219f5f55358acc88f5d3caaa34
     primaryCarrierAbilityInstanceId: demo_20261024_space_yang_yang_guardian
     auxiliaryCarrierAbilityInstanceIds: []
   abilityLedgerBindings:

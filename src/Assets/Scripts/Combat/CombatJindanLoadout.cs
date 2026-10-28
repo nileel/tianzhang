@@ -45,6 +45,13 @@ namespace TianZhang.Combat
                         throw new ArgumentException("fire_center_missing");
                     seat.FireDomain = new CombatFireDomainState(seat.Definition, ability);
                 }
+                var visibility = seat.Definition.Candidates.Select(id => abilities[id]).FirstOrDefault(value => value.Enabled && value.Visibility != null);
+                if (visibility != null)
+                {
+                    if (seat.Definition.PositionType != "Domain" || !session.SceneObjects.Board.TryGetCell(visibility.Visibility.Center, out _))
+                        throw new ArgumentException("visibility_binding_invalid");
+                    seat.VisibilityLedger = new CombatVisibilityLedger(visibility.Visibility.Conflict.Reserve);
+                }
             }
         }
 
@@ -88,17 +95,18 @@ namespace TianZhang.Combat
             {
                 if (seat.EffectId == CombatFireDomainRules.Effect)
                     return seat.FireDomain?.Main == null ? Reject("jindan_instance_missing") : CombatActionResult.Success();
-                return seat.ActiveScale == null && seat.ActiveSeal == null && seat.ActiveEarth == null && seat.PendingTide==null &&
+                return seat.ActiveVisibility == null && seat.ActiveScale == null && seat.ActiveSeal == null && seat.ActiveEarth == null && seat.PendingTide==null &&
                     (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId)??0)==0 ? Reject("jindan_instance_missing") : CombatActionResult.Success();
             }
             if (!definition.Enabled) return Reject(definition.UnavailableReason);
             if (seat.LockedOwnTurn >= actor.OwnTurnsStarted) return Reject("jindan_effect_wait_next_own_turn");
             if (actor.HasStatus(CombatStatusKind.SealSpirit)) return Reject("combat_actor_sealed");
             if (actor.GetCooldown(seat.EffectId) > 0) return Reject("combat_ability_on_cooldown");
-            if (seat.ActiveScale != null || seat.ActiveSeal != null) return Reject("jindan_capacity_full");
+            if (seat.ActiveScale != null || seat.ActiveSeal != null || seat.ActiveVisibility != null) return Reject("jindan_capacity_full");
             if (seat.PendingTide!=null) return Reject("tide_process_pending");
             if (actor.CurrentSpirit < Costs(command, actor).mana) return Reject("spirit_insufficient");
-            string reason = seat.EffectId == CombatFireDomainRules.Effect ? CombatFireDomainRules.Validate(session, actor, seat, command.Jindan, definition)
+            string reason = CombatVisibility.IsEffect(seat.EffectId) ? CombatVisibility.Validate(session, actor, command.Jindan, definition)
+                : seat.EffectId == CombatFireDomainRules.Effect ? CombatFireDomainRules.Validate(session, actor, seat, command.Jindan, definition)
                 : seat.EffectId == "SPACE_SEAL" ? CombatSealRules.Validate(session, actor, command.Jindan, definition)
                 : seat.EffectId=="WATER_TIDE" ? CombatTideRules.Preview(session,actor,seat,command.Jindan).Reason : seat.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY"
                 ? CombatEarthRules.Validate(session, actor, seat, command.Jindan, definition)
@@ -138,8 +146,11 @@ namespace TianZhang.Combat
             CombatScaleInstance next = null;
             CombatSealInstance nextSeal = null;
             CombatEarthInstance nextEarth = null;
+            CombatVisibilityInstance nextVisibility = null;
             CombatOwnTurnStatus unitStatus = null;
-            if (command.Kind == CombatCommandKind.JindanAbility && seat.EffectId == "SPACE_SEAL")
+            if (command.Kind == CombatCommandKind.JindanAbility && CombatVisibility.IsEffect(seat.EffectId))
+                nextVisibility = CombatVisibility.Prepare(session, seat, definition);
+            else if (command.Kind == CombatCommandKind.JindanAbility && seat.EffectId == "SPACE_SEAL")
                 nextSeal = CombatSealRules.Prepare(session, actor, seat, definition);
             else if (command.Kind == CombatCommandKind.JindanAbility && seat.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY")
                 nextEarth = CombatEarthRules.Prepare(session, actor, seat, command.Jindan, definition, out unitStatus);
@@ -153,7 +164,7 @@ namespace TianZhang.Combat
                     command.Jindan.RemoteOrigin ?? actor.Position, command.Jindan.EdgePath,
                     command.Jindan.MetricDistanceUnits, support);
             }
-            Action publish = PrepareProjection(session, seat, next, nextEarth, nextSeal);
+            Action publish = PrepareProjection(session, seat, next, nextEarth, nextSeal, nextVisibility);
             apply = () =>
             {
                 actor.TryConsumeSpirit(costs.mana);
@@ -167,6 +178,7 @@ namespace TianZhang.Combat
                 seat.ActiveScale = next;
                 seat.ActiveSeal = nextSeal;
                 seat.ActiveEarth = nextEarth;
+                seat.ActiveVisibility = nextVisibility;
                 if (command.Kind == CombatCommandKind.SwapJindan)
                 {
                     if (seat.FireDomain?.Main != null)
@@ -178,7 +190,7 @@ namespace TianZhang.Combat
                     seat.EffectId = command.ProfileId; seat.LastSwitchTurn = session.TurnSequence;
                     seat.LockedOwnTurn = actor.OwnTurnsStarted; seat.LastEndReason = "jindan_switched_end";
                 }
-                else if (next != null || nextEarth != null || nextSeal != null)
+                else if (next != null || nextEarth != null || nextSeal != null || nextVisibility != null)
                 {
                     actor.SetCooldown(seat.EffectId, costs.cooldown);
                     seat.SuccessfulDeployments++;
@@ -197,6 +209,18 @@ namespace TianZhang.Combat
             int now = session.TurnScheduler.CurrentTick;
             for (int tick = now - elapsed + 1; tick <= now && elapsed > 0; tick++)
             {
+                foreach (var seat in Seats.Where(value => value.ActiveVisibility != null).ToArray())
+                {
+                    var instance = seat.ActiveVisibility;
+                    if (tick <= instance.LastPaidTick) continue;
+                    if (tick >= instance.ExpiresTick) { End(session, seat, "visibility_expired"); continue; }
+                    session.Combatants.TryGet(seat.Definition.ActorId, out var owner);
+                    int cost = abilities[seat.EffectId].UpkeepMana;
+                    if (seat.TotalManaSpent > int.MaxValue - cost || !owner.TryConsumeSpirit(cost))
+                    { End(session, seat, "jindan_upkeep_failed"); continue; }
+                    seat.TotalManaSpent += cost; seat.MaintenancePayments++; instance.PaidMana += cost;
+                    instance.LastPaidTick = tick; Revision++;
+                }
                 // The scheduler may return several ticks at once. Process expiry/payment before each tick's effects.
                 foreach (var seat in Seats.Where(value => value.ActiveSeal != null).ToArray())
                 {
@@ -231,6 +255,13 @@ namespace TianZhang.Combat
 
         internal void Reconcile(CombatSession session)
         {
+            foreach (var seat in Seats.Where(value => value.ActiveVisibility != null).ToArray())
+            {
+                session.Combatants.TryGet(seat.Definition.ActorId, out var owner);
+                if (!owner.IsAlive) End(session, seat, "jindan_owner_dead");
+                else if (owner.HasStatus(CombatStatusKind.SealSpirit)) End(session, seat, "jindan_source_disabled");
+                else if (seat.ActiveVisibility.Support.IsDestroyed) End(session, seat, "jindan_support_destroyed");
+            }
             foreach (var seat in Seats.Where(value => value.FireDomain != null))
             {
                 bool active = seat.FireDomain.Main != null;
@@ -328,9 +359,10 @@ namespace TianZhang.Combat
 
         public void Clear(CombatSession session)
         {
+            session.Visibility?.Clear();
             foreach (var seat in Seats.Where(value => value.FireDomain != null))
             { CombatFireDomainRules.Clear(session, seat); seat.LastEndReason = "jindan_session_ended"; Revision++; }
-            foreach (var seat in Seats.Where(value => value.ActiveScale != null || value.ActiveSeal != null || value.ActiveEarth != null || value.PendingTide!=null || value.OwnedSurfaceCount>0).ToArray())
+            foreach (var seat in Seats.Where(value => value.ActiveVisibility != null || value.ActiveScale != null || value.ActiveSeal != null || value.ActiveEarth != null || value.PendingTide!=null || value.OwnedSurfaceCount>0).ToArray())
                 End(session, seat, "jindan_session_ended");
             session.Surfaces?.Clear(session);
             PrepareProjection(session, null, null, null)();
@@ -340,6 +372,7 @@ namespace TianZhang.Combat
         {
             PrepareProjection(session, seat, null, null)();
             RemoveGravity(session, seat);
+            seat.ActiveVisibility = null;
             seat.ActiveScale = null; seat.ActiveSeal = null; seat.ActiveEarth = null; seat.PendingTide=null; seat.OwnedSurfaceCount=0; seat.LastEndReason = reason; Revision++;
         }
 
@@ -391,7 +424,7 @@ namespace TianZhang.Combat
         }
 
         private Action PrepareProjection(CombatSession session, CombatJindanSeatState changed, CombatScaleInstance next,
-            CombatEarthInstance nextEarth, CombatSealInstance nextSeal = null)
+            CombatEarthInstance nextEarth, CombatSealInstance nextSeal = null, CombatVisibilityInstance nextVisibility = null)
         {
             var instances = Seats.Select(seat => (seat, instance: seat == changed ? next : seat.ActiveScale))
                 .Where(value => value.instance != null).ToArray();
@@ -404,8 +437,10 @@ namespace TianZhang.Combat
                 .Where(value => value != null).SelectMany(value => value.Objects);
             var supports = Seats.Select(seat => seat == changed ? nextSeal : seat.ActiveSeal)
                 .Where(value => value != null).Select(value => value.Support);
+            var visibilitySupports = Seats.Select(seat => seat == changed ? nextVisibility : seat.ActiveVisibility)
+                .Where(value => value != null).Select(value => value.Support);
             return session.SceneObjects.PrepareAbilityObjects(instances.Select(value => value.instance.Support)
-                .Concat(earthObjects).Concat(supports).Concat(Seats.Where(value => value.FireDomain is { Cleared: false, Main: not null })
+                .Concat(earthObjects).Concat(supports).Concat(visibilitySupports).Concat(Seats.Where(value => value.FireDomain is { Cleared: false, Main: not null })
                     .Select(value => value.FireDomain.Support)).ToArray(), rules);
         }
         private static CombatActionResult Reject(string reason) => CombatActionResult.Rejected(reason);

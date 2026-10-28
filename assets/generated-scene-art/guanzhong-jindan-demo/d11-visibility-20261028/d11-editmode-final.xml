@@ -1,0 +1,1150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="170" result="Failed(Child)" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.7573191">
+  <test-suite type="TestSuite" id="1000" name="src" fullname="src" runstate="Runnable" testcasecount="1783" result="Failed" site="Child" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.757319" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="3068" name="TianZhang.EditModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.EditModeTests.dll" runstate="Runnable" testcasecount="1767" result="Failed" site="Child" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.738469" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="64720" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="3069" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="1767" result="Failed" site="Child" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.724693" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="3070" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="1767" result="Failed" site="Child" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.710888" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="3071" name="EditMode" fullname="TianZhang.Tests.EditMode" runstate="Runnable" testcasecount="944" result="Failed" site="Child" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.684391" total="170" passed="169" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="2351" name="CombatRuntimeKernelTests" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="112" result="Passed" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.325590" total="112" passed="112" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2382" name="ActionStateAdvancesToProjectedShouyiAndFudanCaps" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionStateAdvancesToProjectedShouyiAndFudanCaps" methodname="ActionStateAdvancesToProjectedShouyiAndFudanCaps" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="356609598" result="Passed" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:24Z" duration="0.064534" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2362" name="ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce" methodname="ActionThenMovementRetainsItsCooldownAndEndTurnSettlesExactlyOnce" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1522975926" result="Passed" start-time="2026-10-28 12:57:24Z" end-time="2026-10-28 12:57:25Z" duration="0.013095" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2366" name="AiEnumerationUsesTheSameAuthorizationAsDirectExecution" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AiEnumerationUsesTheSameAuthorizationAsDirectExecution" methodname="AiEnumerationUsesTheSameAuthorizationAsDirectExecution" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="604033519" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.006254" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2464" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.019558" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2456" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;move&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;move&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="925493684" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.010187" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2457" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;death&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;death&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1588861242" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001459" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2458" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;origin&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;origin&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="123796707" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000615" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2459" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;facing&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;facing&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="535912665" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000610" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2460" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;direction&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;direction&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1586567007" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000478" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2461" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;context&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;context&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="876959127" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000471" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2462" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;cell&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;cell&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1178286465" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000573" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2463" name="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;reason&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling(&quot;reason&quot;)" methodname="AreaConfirmationRejectsChangedTargetGeometryOrContextBeforeSampling" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1173673696" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001486" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2449" name="AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement" methodname="AreaDeclarationDoesNotAuthorizeLegacySingleTargetSettlement" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="12340263" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000748" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2450" name="AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery" methodname="AreaDeclarationRejectsUnsupportedProfilesAndSingleTargetKeepsOldQuery" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1932519950" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002343" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2476" name="AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce" methodname="AreaDiscoveryTargetsUnitsWhileEmptyConfirmationPaysOnce" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="345111147" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004370" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2475" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005122" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2470" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects(0)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(0)" methodname="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="260937045" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001315" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2471" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects(1)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(1)" methodname="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1305888004" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000728" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2472" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects(2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(2)" methodname="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="307716557" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000535" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2473" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects(3)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(3)" methodname="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="337773794" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000500" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2474" name="AreaInvalidIndependentSampleRejectsWithoutPartialEffects(4)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaInvalidIndependentSampleRejectsWithoutPartialEffects(4)" methodname="AreaInvalidIndependentSampleRejectsWithoutPartialEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="461777765" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000716" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2454" name="AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo" methodname="AreaPartialDeathContinuesAndLastDeathEndsOneVsTwo" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1935416641" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002937" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2453" name="AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004800" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2451" name="AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(ForwardPair)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(ForwardPair)" methodname="AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="345322413" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003192" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2452" name="AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(AdjacentPair)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder(AdjacentPair)" methodname="AreaReplayBindsIndependentResultsToOrdinalIdsRegardlessOfRegistryOrder" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1030665662" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001008" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2469" name="AreaRequiresExactlyTheQuotedTargetRollBindings" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005328" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2465" name="AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;missing&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;missing&quot;)" methodname="AreaRequiresExactlyTheQuotedTargetRollBindings" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1350450995" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002062" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2466" name="AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;duplicate&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;duplicate&quot;)" methodname="AreaRequiresExactlyTheQuotedTargetRollBindings" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1508914494" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000592" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2467" name="AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;other&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;other&quot;)" methodname="AreaRequiresExactlyTheQuotedTargetRollBindings" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1905002759" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000808" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2468" name="AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;reverse&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AreaRequiresExactlyTheQuotedTargetRollBindings(&quot;reverse&quot;)" methodname="AreaRequiresExactlyTheQuotedTargetRollBindings" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1922332460" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000817" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2445" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003803" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2439" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,0)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,0)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1096814877" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001039" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2440" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,1)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,1)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1871544986" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000572" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2441" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(ForwardPair,2)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="633844838" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000197" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2442" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,0)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,0)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="731572721" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000111" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2443" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,1)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,1)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="985812581" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000074" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2444" name="AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryFiltersDeadFriendsAndOutsideCells(AdjacentPair,2)" methodname="AttackAreaQueryFiltersDeadFriendsAndOutsideCells" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="227743856" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000090" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2438" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.009651" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2426" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,0)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,0)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="219026289" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002036" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2427" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,1)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,1)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="452896124" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000528" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2428" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,2)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1906116368" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000506" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2429" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,3)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,3)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="388551869" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000455" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2430" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,4)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,4)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1984039720" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000484" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2431" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(ForwardPair,5)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1597277456" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000487" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2432" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,0)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,0)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1794997305" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000479" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2433" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,1)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,1)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1534456354" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000469" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2434" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,2)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="252484129" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000460" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2435" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,3)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,3)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1406318795" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000459" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2436" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,4)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,4)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="2043488836" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000458" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2437" name="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation(AdjacentPair,5)" methodname="AttackAreaQueryReturnsAllEnemiesInStableOrderWithoutSessionMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="529996815" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000476" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2448" name="AttackAreaQueryUsesExistingSpatialBoundaryForEachCell" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.012351" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2446" name="AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(ForwardPair)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(ForwardPair)" methodname="AttackAreaQueryUsesExistingSpatialBoundaryForEachCell" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="336208204" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.011501" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2447" name="AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(AdjacentPair)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.AttackAreaQueryUsesExistingSpatialBoundaryForEachCell(AdjacentPair)" methodname="AttackAreaQueryUsesExistingSpatialBoundaryForEachCell" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1337551544" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000172" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2386" name="CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases" methodname="CombatParityCasesMatchBattleSimForTheEightNeutralPhysicalCases" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="563589216" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.015949" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2361" name="ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn" methodname="ContinuousMovesConsumeCanonicalCostsWithoutChargingCtOrResettingAnUnfinishedTurn" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="958369314" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002142" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2420" name="CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly" methodname="CtAxisAndReuseLedgerReadTheirOwnFrozenFieldsOnly" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1588421564" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000967" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2365" name="DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects" methodname="DirectExecuteRejectsUnauthorizedProfilesWithoutSideEffects" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="192270232" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001439" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2381" name="FullFudanUsesItsProjectedCapForPenetrationAndPostActionState" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullFudanUsesItsProjectedCapForPenetrationAndPostActionState" methodname="FullFudanUsesItsProjectedCapForPenetrationAndPostActionState" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="868543727" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001842" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2380" name="FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap" methodname="FullShouyiAndLeijieChecksUseTheProjectedFiveStackCap" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1385988140" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002128" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2419" name="GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown" methodname="GuanshijiRetainsPhysicalDamageRollsAndReportsItsRealCostAndCooldown" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1765865914" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001249" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2378" name="HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth" methodname="HanhongAndZaiwuRecomputeBothDefenseLinesFromCurrentHealth" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1124215877" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002678" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2385" name="KernelSourcesDoNotReferenceProductionOwnersOrUnityPresentation" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.KernelSourcesDoNotReferenceProductionOwnersOrUnityPresentation" methodname="KernelSourcesDoNotReferenceProductionOwnersOrUnityPresentation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="308667652" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.009257" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2379" name="LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes" methodname="LeijieChargesToTheProjectedCapUsesTheRealmRateAndThenConsumes" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1038130163" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002937" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2360" name="MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts" methodname="MovementQueryCarriesRawEdgesAndActionPointCostWithoutChangingKernelCosts" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1425343612" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001619" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2355" name="MoveRejectionsLeavePositionAndCtbStateUnchanged" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveRejectionsLeavePositionAndCtbStateUnchanged" methodname="MoveRejectionsLeavePositionAndCtbStateUnchanged" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1932585978" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001134" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2354" name="MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints" methodname="MoveUsesTheCanonicalSpatialPathAndConsumesActionPoints" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1611893419" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001530" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2352" name="OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine" methodname="OneVsOneUsesStableIdsCtbAndTheEstablishedPhysicalDamageLine" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1102617116" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000959" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2455" name="OneVsTwoSchedulesEveryLivingInstance" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.OneVsTwoSchedulesEveryLivingInstance" methodname="OneVsTwoSchedulesEveryLivingInstance" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="492047082" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001092" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2359" name="PlayerAndAiReceiveTheSameEightLegalCommandKinds" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PlayerAndAiReceiveTheSameEightLegalCommandKinds" methodname="PlayerAndAiReceiveTheSameEightLegalCommandKinds" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1245101015" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005222" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2425" name="PreviewMatchesIndependentRealSettlementWithoutMutation" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.011128" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2421" name="PreviewMatchesIndependentRealSettlementWithoutMutation(100,50,30,False)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,50,30,False)" methodname="PreviewMatchesIndependentRealSettlementWithoutMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1004023557" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003891" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2422" name="PreviewMatchesIndependentRealSettlementWithoutMutation(100,100,70,False)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(100,100,70,False)" methodname="PreviewMatchesIndependentRealSettlementWithoutMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="776668030" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002034" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2423" name="PreviewMatchesIndependentRealSettlementWithoutMutation(220,50,0,True)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(220,50,0,True)" methodname="PreviewMatchesIndependentRealSettlementWithoutMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="177062804" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001236" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2424" name="PreviewMatchesIndependentRealSettlementWithoutMutation(13,8,10,False)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.PreviewMatchesIndependentRealSettlementWithoutMutation(13,8,10,False)" methodname="PreviewMatchesIndependentRealSettlementWithoutMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1844049428" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001639" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2368" name="ProfileIdListsKeepDistinctKnownIdsInOrder" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsKeepDistinctKnownIdsInOrder" methodname="ProfileIdListsKeepDistinctKnownIdsInOrder" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1046326039" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000356" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2369" name="ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets" methodname="ProfileIdListsRemoveBlankAndDuplicateEntriesForArtAndDivineSets" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1404009517" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000297" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2376" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003371" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2370" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.0f,3,5,3,0.15f,3,1.0f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.0f,3,5,3,0.15f,3,1.0f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="321616487" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000426" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2371" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.5f,3,5,3,0.15f,3,1.1f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(1.5f,3,5,3,0.15f,3,1.1f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="962432161" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000084" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2372" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(3.0f,4,3,3,0.15f,5,1.15f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(3.0f,4,3,3,0.15f,5,1.15f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1799140119" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000063" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2373" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(6.0f,5,5,5,0.18f,8,1.2f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(6.0f,5,5,5,0.18f,8,1.2f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="663759524" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000049" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2374" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(12.0f,5,5,5,0.22f,12,1.25f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(12.0f,5,5,5,0.22f,12,1.25f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="21569753" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000051" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2375" name="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(24.0f,5,5,5,0.3f,12,1.3f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.ProjectedRealmRulesMatchEstablishedStackAndDefenseValues(24.0f,5,5,5,0.3f,12,1.3f)" methodname="ProjectedRealmRulesMatchEstablishedStackAndDefenseValues" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1854961413" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000073" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2353" name="RangeAndTeamRejectionsLeaveTheTurnReadyForAValidRetry" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RangeAndTeamRejectionsLeaveTheTurnReadyForAValidRetry" methodname="RangeAndTeamRejectionsLeaveTheTurnReadyForAValidRetry" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="542780449" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004699" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2364" name="RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources" methodname="RejectedMovementAndDeadOrNonCurrentActorsCannotSpendAnyTurnResources" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1625991705" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.009487" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2400" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.028474" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2394" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,10,5,15)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,10,5,15)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="364101675" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002778" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2395" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,0,5,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,0,5,5)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="480308844" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001922" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2396" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,100,0,100)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,0,100,0,100)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1345005606" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001763" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2397" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,98,2,100)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,98,2,100)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="342708291" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001658" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2398" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,100,0,100)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(False,20,100,0,100)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1505611257" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.013921" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2399" name="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,2,100,2,100)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction(True,2,100,2,100)" methodname="RestoreSpiritPaysBeforeRecoveryCapsAtMaximumAndFullTargetsStillConsumeAction" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="490622723" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000768" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2393" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.009197" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2387" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;ordinary&quot;,1.0f,True,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;ordinary&quot;,1.0f,True,5)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1412129003" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002449" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2388" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;spirit_vein_node&quot;,2.0f,True,11)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;spirit_vein_node&quot;,2.0f,True,11)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="150339230" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000873" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2389" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;blessed_land&quot;,2.0f,True,11)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;blessed_land&quot;,2.0f,True,11)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="737184536" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000899" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2390" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;ordinary&quot;,1.0f,False,2)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;ordinary&quot;,1.0f,False,2)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1594166608" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000931" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2391" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;spirit_vein_node&quot;,2.0f,False,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;spirit_vein_node&quot;,2.0f,False,5)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="285520813" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000908" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2392" name="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;blessed_land&quot;,2.0f,False,5)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors(&quot;blessed_land&quot;,2.0f,False,5)" methodname="RestoreSpiritUsesRawSpiritAndFloorsOnlyAfterEnvironmentAndTargetFactors" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="558057312" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000973" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2384" name="SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne" methodname="SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="789433617" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002865" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2357" name="SpellSwapRejectionsLeaveLoadoutCooldownAndCtbStateUnchanged" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectionsLeaveLoadoutCooldownAndCtbStateUnchanged" methodname="SpellSwapRejectionsLeaveLoadoutCooldownAndCtbStateUnchanged" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1561776282" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001173" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2358" name="SpellSwapRejectsEmptyCandidatesDuplicateEquipmentAndAnExhaustedLimit" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapRejectsEmptyCandidatesDuplicateEquipmentAndAnExhaustedLimit" methodname="SpellSwapRejectsEmptyCandidatesDuplicateEquipmentAndAnExhaustedLimit" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="538306694" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001835" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2356" name="SpellSwapUsesTheLegacyLimitAndFixedCooldownWithoutCtbPenalty" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpellSwapUsesTheLegacyLimitAndFixedCooldownWithoutCtbPenalty" methodname="SpellSwapUsesTheLegacyLimitAndFixedCooldownWithoutCtbPenalty" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1944421406" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001072" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2418" name="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001443" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2415" name="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(0.0f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(0.0f)" methodname="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="916491256" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000481" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2416" name="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(1.5f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(1.5f)" methodname="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="689979300" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000079" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2417" name="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(3.0f)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers(3.0f)" methodname="SpiritRecoveryEnvironmentRejectsUndeclaredMultipliers" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="551576054" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000047" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2401" name="SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering" methodname="SpiritRecoveryLegalTargetsIncludeSelfAlliesAndEnemiesWithoutFactionFiltering" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1543821912" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001505" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2414" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.014782" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2402" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;unknown&quot;,&quot;attack_profile_not_learned&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;unknown&quot;,&quot;attack_profile_not_learned&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1087203843" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001753" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2403" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;unequipped&quot;,&quot;attack_profile_not_equipped&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;unequipped&quot;,&quot;attack_profile_not_equipped&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1549678149" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000830" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2404" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;realm&quot;,&quot;attack_profile_requirements_not_met&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;realm&quot;,&quot;attack_profile_requirements_not_met&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1863160309" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000995" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2405" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;root&quot;,&quot;attack_profile_requirements_not_met&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;root&quot;,&quot;attack_profile_requirements_not_met&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1437268195" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000797" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2406" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;grade&quot;,&quot;attack_profile_requirements_not_met&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;grade&quot;,&quot;attack_profile_requirements_not_met&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1457450647" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000791" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2407" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;cost&quot;,&quot;spirit_insufficient&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;cost&quot;,&quot;spirit_insufficient&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="890461287" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000855" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2408" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;dead&quot;,&quot;combat_session_target_invalid&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;dead&quot;,&quot;combat_session_target_invalid&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1110273318" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001568" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2409" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;actor_dead&quot;,&quot;combat_session_actor_invalid&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;actor_dead&quot;,&quot;combat_session_actor_invalid&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1315119544" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000700" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2410" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;far&quot;,&quot;target_out_of_range&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;far&quot;,&quot;target_out_of_range&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="556202755" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000814" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2411" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;same_cell&quot;,&quot;target_out_of_range&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;same_cell&quot;,&quot;target_out_of_range&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="594847384" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000804" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2412" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;missing&quot;,&quot;combat_session_target_invalid&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;missing&quot;,&quot;combat_session_target_invalid&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="52152235" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000803" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2413" name="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;cooldown&quot;,&quot;attack_profile_cooldown_active&quot;)" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation(&quot;cooldown&quot;,&quot;attack_profile_cooldown_active&quot;)" methodname="SpiritRecoveryRejectsBeforeAnyResourceTurnOrCombatStateMutation" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1406059552" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000800" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2367" name="SwapEquippedArtUpdatesAuthorizationToTheNewSlot" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.SwapEquippedArtUpdatesAuthorizationToTheNewSlot" methodname="SwapEquippedArtUpdatesAuthorizationToTheNewSlot" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="1706237512" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000811" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2383" name="TwoVsTwoAndResultProjectionRemainSessionLocal" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.TwoVsTwoAndResultProjectionRemainSessionLocal" methodname="TwoVsTwoAndResultProjectionRemainSessionLocal" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="586883330" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000986" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2363" name="WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting" methodname="WaitBeforeAnyBenefitPreservesHalfCtAndMovementPreventsWaiting" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="222530101" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001208" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2377" name="XuanganMindStrengthChangesOnlyTheSoulDamageLine" fullname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests.XuanganMindStrengthChangesOnlyTheSoulDamageLine" methodname="XuanganMindStrengthChangesOnlyTheSoulDamageLine" classname="TianZhang.Tests.EditMode.CombatRuntimeKernelTests" runstate="Runnable" seed="681121505" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001785" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2584" name="D11ProtectionTests" fullname="TianZhang.Tests.EditMode.D11ProtectionTests" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" testcasecount="12" result="Failed" site="Child" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.054984" total="12" passed="11" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="2587" name="APreparedButUncommittedAttackDoesNotConsumeProtection" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.APreparedButUncommittedAttackDoesNotConsumeProtection" methodname="APreparedButUncommittedAttackDoesNotConsumeProtection" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1154781469" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.024035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2589" name="ClosingAndRedeployingKeepsTheSameGuardianFirstHitReceipt" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.ClosingAndRedeployingKeepsTheSameGuardianFirstHitReceipt" methodname="ClosingAndRedeployingKeepsTheSameGuardianFirstHitReceipt" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="141250709" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002451" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2594" name="ExistingOrdinaryReductionLeavesAtMostThirtyPercentForTheCombinedRule" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.ExistingOrdinaryReductionLeavesAtMostThirtyPercentForTheCombinedRule" methodname="ExistingOrdinaryReductionLeavesAtMostThirtyPercentForTheCombinedRule" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="564169104" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001986" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2597" name="HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003502" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2595" name="HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(1,10,10,1,1)" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(1,10,10,1,1)" methodname="HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1870984349" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001426" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2596" name="HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(400,600,900,2,100)" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst(400,600,900,2,100)" methodname="HybridIsOneProtectedRootAndRoundingRemainderUsesPhysicalFirst" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="2136312402" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001104" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2598" name="HybridWithoutActiveDomainsRetainsBothLeijieDamageReceipts" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.HybridWithoutActiveDomainsRetainsBothLeijieDamageReceipts" methodname="HybridWithoutActiveDomainsRetainsBothLeijieDamageReceipts" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1599178792" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000955" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2593" name="LosingVisibilityDoesNotRemoveYinsIndependentDistantProtection" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.LosingVisibilityDoesNotRemoveYinsIndependentDistantProtection" methodname="LosingVisibilityDoesNotRemoveYinsIndependentDistantProtection" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1780597827" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005747" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2588" name="MissDoesNotConsumeTheNextEligibleFirstHit" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.MissDoesNotConsumeTheNextEligibleFirstHit" methodname="MissDoesNotConsumeTheNextEligibleFirstHit" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1168388030" result="Failed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003833" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Expected: False
+  But was:  True
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.Tests.EditMode.D11ProtectionTests.MissDoesNotConsumeTheNextEligibleFirstHit () [0x0002b] in D:\天章游戏开发\src\Assets\Tests\EditMode\D11ProtectionTests.cs:64
+]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case id="2586" name="YangFirstHitRenewsAtThePublicFourTickBoundary" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.YangFirstHitRenewsAtThePublicFourTickBoundary" methodname="YangFirstHitRenewsAtThePublicFourTickBoundary" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="847892783" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002537" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2585" name="YangProtectsOnlyTheFirstRootPerMemberAndSharesTheConfiguredBudget" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.YangProtectsOnlyTheFirstRootPerMemberAndSharesTheConfiguredBudget" methodname="YangProtectsOnlyTheFirstRootPerMemberAndSharesTheConfiguredBudget" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1298823162" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002708" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2592" name="YinProtectsDistantIncomingRootsButNotAdjacentOnes" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.YinProtectsDistantIncomingRootsButNotAdjacentOnes" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005387" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2590" name="YinProtectsDistantIncomingRootsButNotAdjacentOnes(3,90)" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.YinProtectsDistantIncomingRootsButNotAdjacentOnes(3,90)" methodname="YinProtectsDistantIncomingRootsButNotAdjacentOnes" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="325576832" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003219" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2591" name="YinProtectsDistantIncomingRootsButNotAdjacentOnes(1,100)" fullname="TianZhang.Tests.EditMode.D11ProtectionTests.YinProtectsDistantIncomingRootsButNotAdjacentOnes(1,100)" methodname="YinProtectsDistantIncomingRootsButNotAdjacentOnes" classname="TianZhang.Tests.EditMode.D11ProtectionTests" runstate="Runnable" seed="1894592782" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001584" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+            <test-suite type="TestFixture" id="2599" name="D11VisibilityContentTests" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.211014" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2600" name="BothDomainsUseIndependentSupportsAndEqualPaidTerms" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.BothDomainsUseIndependentSupportsAndEqualPaidTerms" methodname="BothDomainsUseIndependentSupportsAndEqualPaidTerms" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="1615423263" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.051142" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2608" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.123013" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2601" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;conflictReserve&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;conflictReserve&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="764716377" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.016699" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2602" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;pulseMana&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;pulseMana&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="1308694017" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.015942" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2603" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;windowCloseMilliseconds&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;windowCloseMilliseconds&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="1750287292" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.017911" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2604" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;gaugeStep&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;gaugeStep&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="120929612" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.018154" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2605" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;supportRank&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;supportRank&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="347054860" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.019218" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2606" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;yangWindowBudget&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;yangWindowBudget&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="719748008" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.016998" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2607" name="ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;yinQ&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.ChangedVisibilityTermsInvalidateBothContractsButNotSpace(&quot;yinQ&quot;)" methodname="ChangedVisibilityTermsInvalidateBothContractsButNotSpace" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="1840120915" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.016402" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2610" name="MissingConfigAndUnequalDeploymentCannotEnterTheCatalog" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.MissingConfigAndUnequalDeploymentCannotEnterTheCatalog" methodname="MissingConfigAndUnequalDeploymentCannotEnterTheCatalog" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="342721434" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.016408" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2609" name="RebindingKeepsResourceRulesAndRequiresDistinctNonemptyKeys" fullname="TianZhang.Tests.EditMode.D11VisibilityContentTests.RebindingKeepsResourceRulesAndRequiresDistinctNonemptyKeys" methodname="RebindingKeepsResourceRulesAndRequiresDistinctNonemptyKeys" classname="TianZhang.Tests.EditMode.D11VisibilityContentTests" runstate="Runnable" seed="1056994258" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.019051" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="2611" name="D11VisibilityTests" fullname="TianZhang.Tests.EditMode.D11VisibilityTests" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="36" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.068150" total="36" passed="36" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="2637" name="ANewTickAllowsANewObservationWithoutRefillingBattleReserves" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.ANewTickAllowsANewObservationWithoutRefillingBattleReserves" methodname="ANewTickAllowsANewObservationWithoutRefillingBattleReserves" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="827128426" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.011958" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2626" name="AutomaticPulsesStopAtTheFirstUnaffordableSide" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.005841" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2619" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(200,200,Neutral,200,200)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(200,200,Neutral,200,200)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1538172129" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001264" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2620" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(150,100,Left,150,100)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(150,100,Left,150,100)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="787335018" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000650" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2621" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(100,150,Right,100,150)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(100,150,Right,100,150)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="340592110" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000557" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2622" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(0,200,Right,0,50)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(0,200,Right,0,50)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1279880881" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000564" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2623" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(200,0,Left,50,0)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(200,0,Left,50,0)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1381738507" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000540" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2624" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(0,0,Neutral,0,0)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(0,0,Neutral,0,0)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="904964625" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000849" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2625" name="AutomaticPulsesStopAtTheFirstUnaffordableSide(49,200,Right,0,50)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.AutomaticPulsesStopAtTheFirstUnaffordableSide(49,200,Right,0,50)" methodname="AutomaticPulsesStopAtTheFirstUnaffordableSide" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="509725200" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000553" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2651" name="BattleClearCancelsPendingInputAndLeavesNoDomainOrLatePayment" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.BattleClearCancelsPendingInputAndLeavesNoDomainOrLatePayment" methodname="BattleClearCancelsPendingInputAndLeavesNoDomainOrLatePayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1781531243" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002507" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2653" name="BattleEndingDeathCancelsTheContestBeforeAnotherClockAdvance" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.BattleEndingDeathCancelsTheContestBeforeAnotherClockAdvance" methodname="BattleEndingDeathCancelsTheContestBeforeAnotherClockAdvance" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1843065863" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002228" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2630" name="BattleReserveCapsPulsesEvenWithPlentyOfMana" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.BattleReserveCapsPulsesEvenWithPlentyOfMana" methodname="BattleReserveCapsPulsesEvenWithPlentyOfMana" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1154834331" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000872" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2636" name="BothDomainsDeployThroughTheSharedLedgerAndReadQueriesCannotCharge" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.BothDomainsDeployThroughTheSharedLedgerAndReadQueriesCannotCharge" methodname="BothDomainsDeployThroughTheSharedLedgerAndReadQueriesCannotCharge" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="464897796" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002263" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2650" name="ClosingAndRedeployingCannotRefillTheGuardianConflictBudget" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.ClosingAndRedeployingCannotRefillTheGuardianConflictBudget" methodname="ClosingAndRedeployingCannotRefillTheGuardianConflictBudget" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1663741259" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001882" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2617" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.003875" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2612" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;permission&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;permission&quot;)" methodname="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1524319482" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000950" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2613" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;position&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;position&quot;)" methodname="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="553772975" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000625" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2614" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;support&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;support&quot;)" methodname="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="275142465" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000555" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2615" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;paid_cost&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;paid_cost&quot;)" methodname="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="818532613" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000538" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2616" name="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;carrying&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment(&quot;carrying&quot;)" methodname="EachPriorityDecidesBeforeLaterAdvantagesAndWithoutPayment" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="154300914" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000552" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="2629" name="EqualExhaustionUsesTheObservedVariablesNeutralBaseline" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EqualExhaustionUsesTheObservedVariablesNeutralBaseline" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001905" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2627" name="EqualExhaustionUsesTheObservedVariablesNeutralBaseline(True)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EqualExhaustionUsesTheObservedVariablesNeutralBaseline(True)" methodname="EqualExhaustionUsesTheObservedVariablesNeutralBaseline" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="541988304" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000808" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2628" name="EqualExhaustionUsesTheObservedVariablesNeutralBaseline(False)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EqualExhaustionUsesTheObservedVariablesNeutralBaseline(False)" methodname="EqualExhaustionUsesTheObservedVariablesNeutralBaseline" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="797904303" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000656" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2618" name="EqualPriorityWaitsAndMixedPaidCurrenciesCannotInventAnExchangeRate" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.EqualPriorityWaitsAndMixedPaidCurrenciesCannotInventAnExchangeRate" methodname="EqualPriorityWaitsAndMixedPaidCurrenciesCannotInventAnExchangeRate" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1931948828" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001167" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2643" name="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004687" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2640" name="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(1,False,True)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(1,False,True)" methodname="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="138618641" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001658" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2641" name="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(3,True,False)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(3,True,False)" methodname="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="243425610" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001268" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2642" name="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(6,False,False)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.NearTargetsWallsAndOutOfVisionDoNotCreateAConflict(6,False,False)" methodname="NearTargetsWallsAndOutOfVisionDoNotCreateAConflict" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1325472568" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001144" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2635" name="OldEventAndBackwardTimeCannotAdvanceOrPayTheCurrentContest" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.OldEventAndBackwardTimeCannotAdvanceOrPayTheCurrentContest" methodname="OldEventAndBackwardTimeCannotAdvanceOrPayTheCurrentContest" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1367970384" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000763" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2646" name="PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.010114" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2644" name="PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(2,1,2)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(2,1,2)" methodname="PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="902819263" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.007910" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2645" name="PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(1,4,4)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours(1,4,4)" methodname="PaidSpaceScaleRevealsCompressedNearTargetsAndCannotHidePhysicalNeighbours" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="2056301918" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001727" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2639" name="PendingConflictFreezesAuthorityClocksStatusesCooldownsAndEnvironmentUntilItResolves" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.PendingConflictFreezesAuthorityClocksStatusesCooldownsAndEnvironmentUntilItResolves" methodname="PendingConflictFreezesAuthorityClocksStatusesCooldownsAndEnvironmentUntilItResolves" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1300645022" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004411" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2652" name="QuoteFromBeforeConflictCannotCommitDuringOrAfterSettlement" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.QuoteFromBeforeConflictCannotCommitDuringOrAfterSettlement" methodname="QuoteFromBeforeConflictCannotCommitDuringOrAfterSettlement" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1378341485" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001610" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2633" name="ReleasingStopsImmediatelyAndDoesNotPayFuturePulses" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.ReleasingStopsImmediatelyAndDoesNotPayFuturePulses" methodname="ReleasingStopsImmediatelyAndDoesNotPayFuturePulses" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1090509899" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000767" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2634" name="SkipAfterManualProgressUsesOnlyRemainingReserves" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.SkipAfterManualProgressUsesOnlyRemainingReserves" methodname="SkipAfterManualProgressUsesOnlyRemainingReserves" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="405579487" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000694" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="2649" name="VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.004015" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="2647" name="VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(&quot;a_yang&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(&quot;a_yang&quot;)" methodname="VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="235751342" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.002110" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="2648" name="VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(&quot;z_yin&quot;)" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks(&quot;z_yin&quot;)" methodname="VisibilityExpiresAtCreationPlusSixAfterExactlyFivePaidMaintenanceTicks" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="320088219" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001479" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="2631" name="WaitingWithoutSpaceDoesNotPayAndWindowIs250Inclusive750Exclusive" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.WaitingWithoutSpaceDoesNotPayAndWindowIs250Inclusive750Exclusive" methodname="WaitingWithoutSpaceDoesNotPayAndWindowIs250Inclusive750Exclusive" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="156464417" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000776" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2638" name="WholeBattleSkipAutomaticallySettlesLaterObservations" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.WholeBattleSkipAutomaticallySettlesLaterObservations" methodname="WholeBattleSkipAutomaticallySettlesLaterObservations" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1246461658" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.001384" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="2632" name="WrongAndSimultaneousKeysHaveNoPenaltyAndOnlyOneCorrectEdgeCountsPerWindow" fullname="TianZhang.Tests.EditMode.D11VisibilityTests.WrongAndSimultaneousKeysHaveNoPenaltyAndOnlyOneCorrectEdgeCountsPerWindow" methodname="WrongAndSimultaneousKeysHaveNoPenaltyAndOnlyOneCorrectEdgeCountsPerWindow" classname="TianZhang.Tests.EditMode.D11VisibilityTests" runstate="Runnable" seed="1288379091" result="Passed" start-time="2026-10-28 12:57:25Z" end-time="2026-10-28 12:57:25Z" duration="0.000779" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

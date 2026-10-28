@@ -23,6 +23,7 @@ namespace TianZhang.Entity
         public JindanDemoSurfaceFire[] surfaceFires;
         public JindanDemoSealRules sealRules;
         public JindanDemoFireDomainRules fireDomainRules;
+        public JindanDemoVisibilityRules visibilityRules;
 
         public JindanDemoPresetDefinition GetPreset(string id) => presets?.SingleOrDefault(x => x.characterId == id);
         public JindanDemoSeatDefinition GetSeat(string id) => seats?.SingleOrDefault(x => x.seatInstanceId == id);
@@ -78,6 +79,37 @@ namespace TianZhang.Entity
         public GongFaGrowthData sourceGongFa;
         public FoundationPurpleMansionStateData foundationState;
         public JindanStaticStateData jindanState;
+    }
+
+    [Serializable]
+    public sealed class JindanDemoVisibilityRules
+    {
+        public string rulesId;
+        public string patternProfileId;
+        public string gaugeProfileId;
+        public string yangSupportId;
+        public int yangQ;
+        public int yangR;
+        public string yinSupportId;
+        public int yinQ;
+        public int yinR;
+        public int supportRank;
+        public int carrying;
+        public int conflictReserve;
+        public int pulseMana;
+        public int pulseMilliseconds;
+        public int windowOpenMilliseconds;
+        public int windowCloseMilliseconds;
+        public int gaugeStep;
+        public int gaugeWin;
+        public string holdKey;
+        public string firstKey;
+        public string secondKey;
+        public int yangWindowTicks;
+        public int reductionPercent;
+        public int reductionCap;
+        public int yangWindowBudget;
+        public string sourceDocument;
     }
 
     [Serializable]

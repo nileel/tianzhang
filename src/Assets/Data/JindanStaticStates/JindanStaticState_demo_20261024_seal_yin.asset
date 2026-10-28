@@ -85,7 +85,7 @@ MonoBehaviour:
     positionType: 2
     proofProfileId: PROOF_YIN_DOMAIN01_01
     equippedBaseEffectId: YIN_CONCEAL
-    compatibilityProfileId: demo_compat_sha256_4a2742d19c344f0ec34d524ebfe1c2eea3204c25aa89205faf1766d21f633f9e
+    compatibilityProfileId: demo_compat_sha256_46d0be7e89119db70aba349b556994b2fb542476f6b9e80571da3085456e70b9
     primaryCarrierAbilityInstanceId: demo_20261024_seal_yin_yin_guardian
     auxiliaryCarrierAbilityInstanceIds: []
   abilityLedgerBindings:

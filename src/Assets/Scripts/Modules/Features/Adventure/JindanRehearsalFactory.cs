@@ -87,7 +87,8 @@ namespace TianZhang.Features.Adventure
                     effect == CombatFireDomainRules.Effect ? new CombatFireDomainDefinition(
                         new HexCoord(catalog.fireDomainRules.centerQ, catalog.fireDomainRules.centerR), catalog.fireDomainRules.supportId,
                         catalog.fireDomainRules.fuelBudget, catalog.fireDomainRules.tailFuel, catalog.fireDomainRules.tailCycles,
-                        catalog.fireDomainRules.attackCapacity, catalog.fireDomainRules.damageMultiplier) : null));
+                        catalog.fireDomainRules.attackCapacity, catalog.fireDomainRules.damageMultiplier) : null,
+                    CombatVisibility.IsEffect(effect) ? CreateVisibility(catalog.visibilityRules, effect, deploy.durationCount) : null));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);
         }
@@ -97,6 +98,17 @@ namespace TianZhang.Features.Adventure
             rules.chargeExtraActionPoints, rules.chargeExtraMana, rules.chargeTicks,
             rules.eyeExtraActionPoints, rules.eyeExtraMana, rules.attackCapacity,
             rules.waterMultiplier, rules.chargeMultiplier, rules.erosionDamage);
+
+        private static CombatVisibilityDefinition CreateVisibility(JindanDemoVisibilityRules rule, string effect, int duration)
+        {
+            bool yang = effect == CombatVisibility.Yang;
+            return new CombatVisibilityDefinition(new HexCoord(yang ? rule.yangQ : rule.yinQ, yang ? rule.yangR : rule.yinR),
+                yang ? rule.yangSupportId : rule.yinSupportId, rule.supportRank, rule.carrying, duration,
+                new CombatConflictSettings(rule.rulesId, rule.conflictReserve, rule.pulseMana, rule.pulseMilliseconds,
+                    rule.windowOpenMilliseconds, rule.windowCloseMilliseconds, rule.gaugeStep, rule.gaugeWin,
+                    rule.holdKey, rule.firstKey, rule.secondKey), rule.yangWindowTicks, rule.reductionPercent,
+                rule.reductionCap, rule.yangWindowBudget);
+        }
 
         public static CombatSurfaces CreateSurfaces(JindanDemoCatalogData catalog,
             EnvironmentProfileDefinition environment, int segmentIndex)

@@ -222,6 +222,7 @@ namespace TianZhang.Combat
         public CombatJindanLoadout Jindan { get; private set; }
         public CombatFlight Flight { get; private set; }
         public CombatSurfaces Surfaces { get; private set; }
+        public CombatVisibility Visibility { get; private set; }
         public void ConfigureSurfaces(CombatSurfaces surfaces)
         {
             if (TurnSequence!=0 || Surfaces!=null) throw new InvalidOperationException("surface_session_already_started");
@@ -239,6 +240,7 @@ namespace TianZhang.Combat
             if (loadout == null) throw new ArgumentNullException(nameof(loadout));
             loadout.ValidateBindings(this);
             Jindan = loadout;
+            Visibility = new CombatVisibility(this);
             SpatialQuery = new CombatGravitySpatialQuery(this, SpatialQuery);
         }
         internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
@@ -480,6 +482,8 @@ namespace TianZhang.Combat
                 return CombatActionResult.Rejected("combat_session_actor_invalid");
             if (IsFinished)
                 return CombatActionResult.Rejected("combat_session_finished");
+            if (Visibility?.IsPaused == true)
+                return CombatActionResult.Rejected("combat_visibility_conflict_pending");
             if (!string.Equals(CurrentActorId, actor.Id, StringComparison.Ordinal) ||
                 TurnPhase == CombatTurnPhase.Finished)
                 return CombatActionResult.Rejected("combat_turn_actor_invalid");
@@ -598,6 +602,8 @@ namespace TianZhang.Combat
                     if (!Combatants.TryGet(command.TargetId, out CombatantSnapshot target) || !target.IsAlive ||
                         !profile.AllowsTarget(actor.Team, target.Team))
                         return CombatActionResult.Rejected("combat_session_target_invalid");
+                    if (Visibility != null && !Visibility.IsVisible(actor.Id, target.Id))
+                        return CombatActionResult.Rejected("combat_target_not_visible");
                     targets.Add(target);
                 }
             }
