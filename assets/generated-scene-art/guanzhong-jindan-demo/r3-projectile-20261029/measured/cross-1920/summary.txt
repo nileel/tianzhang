@@ -1,0 +1,1 @@
+flyingFrames=123;distinctHeadPositions=123;impactFrames=165;destroyedAt=46.075930

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="6" result="Passed" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.5710708">
+  <test-suite type="TestSuite" id="1307" name="src" fullname="src" runstate="Runnable" testcasecount="247" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.571071" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1300" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="247" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.560662" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="48388" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1301" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="247" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.556062" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1302" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="247" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.550637" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1303" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="247" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.546423" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1274" name="R3ProjectileEvidenceTests" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:45:24Z" duration="108.540811" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1275" name="Flat1366" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.Flat1366" methodname="Flat1366" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="38176850" result="Passed" start-time="2026-10-29 13:43:35Z" end-time="2026-10-29 13:43:44Z" duration="8.286749" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1278" name="Flat1920" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.Flat1920" methodname="Flat1920" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="1281021029" result="Passed" start-time="2026-10-29 13:43:44Z" end-time="2026-10-29 13:43:51Z" duration="7.603134" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1277" name="TerrainCross1366" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.TerrainCross1366" methodname="TerrainCross1366" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="243186918" result="Passed" start-time="2026-10-29 13:43:51Z" end-time="2026-10-29 13:44:05Z" duration="13.471251" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1280" name="TerrainCross1920" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.TerrainCross1920" methodname="TerrainCross1920" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="1145831493" result="Passed" start-time="2026-10-29 13:44:05Z" end-time="2026-10-29 13:44:18Z" duration="13.470215" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1276" name="TerrainSame1366" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.TerrainSame1366" methodname="TerrainSame1366" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="654213806" result="Passed" start-time="2026-10-29 13:44:18Z" end-time="2026-10-29 13:44:51Z" duration="32.835578" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1279" name="TerrainSame1920" fullname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests.TerrainSame1920" methodname="TerrainSame1920" classname="TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests" runstate="Runnable" seed="532281855" result="Passed" start-time="2026-10-29 13:44:51Z" end-time="2026-10-29 13:45:24Z" duration="32.861653" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

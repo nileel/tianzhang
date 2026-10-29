@@ -1,0 +1,77 @@
+R3 地形试玩飞星指轨迹排查
+日期：2026-10-29
+生产源码基线：9da720bf（已含 R1、R2）；本项不修改生产特效、战斗规则、目录、场景或美术。
+
+结论
+当前版本的旧平地、地形同高和地形跨高合法施法均有连续飞行过程。1920×1080、1366×768六种配置中，星核和点状拖尾可见；未复现“整段轨迹缺失”。
+无录制定向 PlayMode 六项通过；录制验收见 recorded-playmode.xml 中五项通过与 recorded-same1920-playmode.xml 的补齐项。
+原有0.5秒总时长、0.275秒飞行窗口保持，未用延长特效或等待掩盖问题。本项交付取证测试、逐帧数据、原速短片及代表帧。
+
+关于R1的结论边界
+R1/R2后的当前版本已经能显示轨迹，当前施法后的HUD刷新没有吞掉飞行窗口。R1完成提交5a7c8240至本次基线，EncounterCoordinator、Static3DCombatUnitPresentationProvider、CombatAttackVfx和目录资产均无差异；R1的非操作期HUD整图扫描削减与此恢复相符。
+本次没有运行R1之前或只含R1的历史版本，不能把“旧问题必由HUD长帧导致”或“R1单独已经通过本项实机验收”写成事实。历史根因仍缺同配置前后施法帧对照；R3确认的是当前状态，不追造历史证据。
+
+已证实的运行时所有者
+AdventureScene（同一正式场景，旧悬赏/144格地形入口）
+→ EncounterCoordinator.PreviewAction/ConfirmAction/ExecuteCommand/ProjectPresentation
+→ Static3DCombatUnitPresentationProvider.Present/PlayAttackVfx
+→ Assets/Data/CombatAttackVfx/CombatAttackVfxCatalog.asset 中 spell_feixingzhi
+→ CombatAttackVfx.PlayProjectile/Update/RenderProjectile/OnDestroy。
+测试中的RecordingPort仅透传原provider并观察创建，不替换策略、结算或特效生成。按正式命令结束回合/移动/施法，未瞬移人物、改角色资源、替换WaitPolicy或修改Time.timeScale/Time.captureDeltaTime。
+
+可复现条件
+Unity 6000.3.18f1，正常图形编辑器PlayMode（非batchmode），RTX 4070；相机正交size=5，施法前平移到施法者与接触格中点。此结论覆盖这些常用居中视角，不宣称所有镜头、遮挡组合均通过。
+StartMenu选择origin_minor_clan建角，经World/guanzhong_hub、Settlement/guanzhong_wild进入AdventureScene。结算随机源SystemCombatResolutionRandomSource(1729)。旧平地遭遇随机源固定返回0。
+flat：进入lieshijia_encounter，玩家原地结束回合至tick39，玩家(0,0)对enemy_2身体接触格(0,3)施放飞星指。
+same：进入正式地形演武，玩家原地结束回合至tick247，玩家(4,0)对enemy_2接触格(7,1)施法。
+cross：地形演武中沿3:0,2:1,2:2,2:3,2:4,2:5,2:6,2:7,3:7,4:7,5:7,6:7合法移动；AP不足时正式结束行动，让生产AI执行。玩家(6,7)对enemy接触格(7,10)施法。
+逐步位置、HP/AP账本见各route.txt；施法前后见command.txt，AP实际100000→50000。跨高样本结算未扣目标血不等于未施法，视觉弹体仍沿已接受的接触格播放；本项“命中时刻”指视觉到达，不是伤害结算时刻。
+最终取证代码等待CanSelectExplorationNode后调用正式按钮处理器AdventureSceneInstaller.BeginTerrainRehearsal。早期已通过样本由合成鼠标触发同处理器；本项不是原生鼠标输入验收。
+
+无录制逐帧结果（单位ms，命中elapsed单位秒）
+样本          首次Update dt   飞行帧数   最大HUD CPU   命中elapsed
+flat-1366        25.819          121         4.5830       0.276442
+flat-1920        10.830          129         6.3105       0.277023
+same-1366         8.583          124         2.4966       0.275327
+same-1920         9.878          120         2.6454       0.277140
+cross-1366        8.695          130         3.0137       0.275838
+cross-1920        8.694          123         2.5124       0.275230
+每组首次采样帧=创建观察帧+1，elapsed=该帧deltaTime；summarize.py逐组断言这两点。飞行帧中头部与四个尾部active、Renderer enabled，头部位于相机前方及屏幕内，并有至少三个不同位置。画面核对另见录制，不用这些字段单独代替实际可见性。
+deltaTime是整帧步长，并不等于“创建后墙钟间隔”；在Update开头直接累加它，正是首帧足够长时可跳段的机制。当前地形样本首帧均不足10ms，远小于275ms；本次不能据代码机制倒推出旧问题已经确认的根因。
+第一次视觉到达发生于elapsed=0.275230–0.277140s，最后存在样本elapsed约0.598–0.600s，随后头尾和主体均销毁，未出现提前清理或残留。
+
+空间与资源检查
+flat起终点世界Y：1.190000→1.090000；same：1.190433→1.090433；cross：1.940433→2.590433。
+扣除起点0.85m与终点0.75m表现偏移后，同高支承面差0，跨高差0.75m。实际from/to与正式SpatialQuery接触格的Surface.Center逐项一致，误差小于0.0001m。
+六组shader均Sprites/Default且isSupported=true，程序生成CombatAttackVfx_Glow纹理和金色材质存在；画面没有粉材质或整段被地块遮没。飞行阶段使用Head与4个Tail Quad，Ribbon此时按原设计清空，命中后才绘制环，不能因飞行时Ribbon为空断言资源丢失。
+录制中能辨认移动星核及后方点状拖尾；平地草顶上的对比度比灰土路低，未把本次排查扩大为FX风格重做。
+
+创建时的独立细节
+所有created行中Head/Tail仍位于世界原点；PlayProjectile在创建Quad后未调用RenderProjectile(0)，首个Update才设置位置。这是确定的初始化细节，且本次下一帧已正确定位；测试在EndOfFrame之后发出命令，没有捕获创建当帧被渲染出来的原点闪光，故不称为已证实的可见故障或整段轨迹缺失根因。
+若以后确需消除创建到首次Update前的未定位状态，最小修改归属CombatAttackVfx.PlayProjectile，在头尾创建完成后调用现有RenderProjectile(0f)即可；不需要改时长、新计时器或新特效管理器。本项未实施这项非必要变更。
+
+取证口径和文件
+measured/：无截图回读，逐帧字段先缓存在内存，播放结束后落盘。stage计时存在嵌套，不相加；max_hud_ms取整个采样窗口中的最大一次HUD。
+recorded/：同配置录像另跑，最多60Hz回读实际屏幕，播放结束后统一JPEG编码。回读仍有开销，录制帧耗时不作为纯运行性能结论。
+各flight.mp4以captures.csv的真实时间间隔进行VFR编码，1ms输入时基，不固定加速到30/60fps。保留飞行前一帧和销毁后采集；素材短于1秒，循环或拖动进度可细看。flight-early/middle/late.jpg为原始截图拷贝，无裁剪或合成。
+frames.csv中providerBefore/providerAfter（详见command.txt）夹住创建所在Present调用，代表创建时间区间，不是精确Create方法时刻。destroyed行是首次发现已销毁；summary.txt的destroyedAt稍后才写，不能当作精确OnDestroy时刻。
+完整JPEG序列保存在src/Logs/r3/recorded/<样本>/，本目录提交原速视频、代表帧、原始数值与时间戳。summary.json由summarize.py计算，不手填。
+
+取证过程的失败与修正
+首次编译错误是测试引用了不存在的GuanzhongBasicAttackPlayModeTests.EncounterRandom；改为本测试内同接口的确定随机源，无生产改动。
+首轮current/六组已采完，但NUnit Assert.IsNull不采用Unity已销毁对象的==null语义，故六项均失败；改用effect==null。同时将创建后的command.txt写盘移到播放结束，并收紧可见候选帧判据。该轮未作为通过结果；正式无录制measured/六项全部通过。
+首轮录制5项通过，same-1920在采样前surface=null，合成点击未激活演武，未产生有效施法证据。因R3不测试原生输入，最终删除合成输入装置，显式等探索状态后调用同一正式按钮处理器；只重跑缺失的same-1920录制。已通过样本的命令、采样与断言未改，未重跑同范围检查。
+原始失败日志/XML保留src/Logs/r3-current*与src/Logs/r3-recorded*；本目录保留录制原始混合结果XML并补充缺失项XML，不伪造成一次全绿批次。
+提交的XML副本仅清理行尾空白，结果字段完整保留。六段VFR视频均以保留解码时基的FFmpeg命令完整解码通过；测试生成的ProjectSettings两处空白变化已恢复。
+
+复现命令（先关闭同一工程Unity；PowerShell 7）
+$env:TZ_R3_LABEL='repro'; $env:TZ_R3_RECORD='0'
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe' -projectPath 'D:\天章游戏开发\src' -runTests -testPlatform PlayMode -testFilter TianZhang.Tests.PlayMode.R3ProjectileEvidenceTests -testResults 'D:\天章游戏开发\src\Logs\r3-repro.xml' -logFile 'D:\天章游戏开发\src\Logs\r3-repro.log'
+录制另设TZ_R3_LABEL='repro-recorded'、TZ_R3_RECORD='1'，其余条件不变；只复验一组时TestFilter用完整方法名。
+python assets/generated-scene-art/guanzhong-jindan-demo/r3-projectile-20261029/summarize.py src/Logs/r3/repro <输出目录>
+录制汇总在末尾加--video（Python需已有imageio-ffmpeg），会复制数据、验证首次更新采样、编码短片并选择代表帧。
+
+修改与验证范围
+仅新增R3ProjectileEvidenceTests.cs及meta、本目录证据，更新开发计划R3状态。不涉及CSV/docs数据链、BattleSim、公共接口或战斗规则，无需运行无关全项目、数值平衡或数据导入检查。
+只读子智能体核对正式链、候选原因和取证口径；主智能体核对原始运行画面。未恢复自动推进、任务卡或旧队列。
+使用unity-agent-workflows；读取runtime-owner-proof、unity-validation、ai-workflows、project-structure-discovery、modular-architecture，项目地图读取UNITY_STRUCTURE、runtime、assemblies，历史地图条目以当前源码和实际144格入口为准。

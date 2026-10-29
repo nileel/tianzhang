@@ -1,0 +1,26 @@
+[
+  {
+    "path": "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+    "sha256": "CB326BF6ACF9F67899BC8CD89649D7EB2ED4B33277A4D47FAFDEB696D3377AA5"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
+    "sha256": "2ECD5243067D9F15CBBBF4BEA4A44FD98311E055250BDA4829D0525DAEB224D8"
+  },
+  {
+    "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatAttackVfx.cs",
+    "sha256": "8D16598D7EE8BFB69848060F61A01FD1A9284F5A9926648B1985980E0698E8DE"
+  },
+  {
+    "path": "src/Assets/Data/CombatAttackVfx/CombatAttackVfxCatalog.asset",
+    "sha256": "70F4A7C1B3AE83C79D20A29309786E864ED359A5C1FDB7C8619909C103404176"
+  },
+  {
+    "path": "src/Assets/Scenes/AdventureScene.unity",
+    "sha256": "31DA8EB7A47B64275F4F5F64DEA19C1725CDF622927649DA3957DEF4F77A1EB5"
+  },
+  {
+    "path": "src/Assets/Tests/PlayMode/R3ProjectileEvidenceTests.cs",
+    "sha256": "E315AB166AA0F585A27C0ED7864D0AF12F4E61AE925D3A0A8651369C237CC0ED"
+  }
+]

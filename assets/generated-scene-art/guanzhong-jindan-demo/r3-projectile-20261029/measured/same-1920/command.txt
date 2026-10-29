@@ -1,0 +1,6 @@
+scenario=same;seed=1729;record=False;timeScale=1.000000;captureDeltaTime=0.000000
+tick=247;actor=player;player@(4, 0, -4)/hp=571/ap=100000;enemy@(4, 7, -11)/hp=190/ap=0;enemy_2@(7, 1, -8)/hp=329/ap=0
+tick=247;actor=player;player@(4, 0, -4)/hp=571/ap=50000;enemy@(4, 7, -11)/hp=190/ap=0;enemy_2@(7, 1, -8)/hp=267/ap=0
+source=(4, 0, -4);target=(7, 1, -8);from=4.000000,1.190433,1.000000;to=7.500000,1.090433,1.866025
+commandFrame=48717;commandAt=111.167579;providerBefore=111.168913;providerAfter=111.169898;returnedAt=111.173404
+shader=Sprites/Default;supported=True;texture=CombatAttackVfx_Glow;color=RGBA(1.000, 0.840, 0.350, 1.000);camera=5.750000,12.653662,-14.327205;orthographicSize=5.000000

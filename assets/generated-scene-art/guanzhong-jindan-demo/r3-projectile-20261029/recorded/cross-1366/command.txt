@@ -1,0 +1,6 @@
+scenario=cross;seed=1729;record=True;timeScale=1.000000;captureDeltaTime=0.000000
+tick=65;actor=player;player@(6, 7, -13)/hp=571/ap=100000;enemy@(7, 10, -17)/hp=190/ap=0;enemy_2@(5, 13, -18)/hp=329/ap=0
+tick=65;actor=player;player@(6, 7, -13)/hp=571/ap=50000;enemy@(7, 10, -17)/hp=190/ap=0;enemy_2@(5, 13, -18)/hp=329/ap=0
+source=(6, 7, -13);target=(7, 10, -17);from=9.500000,1.940433,7.062178;to=12.000000,2.590433,9.660254
+commandFrame=10942;commandAt=33.226041;providerBefore=33.227332;providerAfter=33.227948;returnedAt=33.230690
+shader=Sprites/Default;supported=True;texture=CombatAttackVfx_Glow;color=RGBA(1.000, 0.840, 0.350, 1.000);camera=10.750000,12.653662,-5.959067;orthographicSize=5.000000
