@@ -51,11 +51,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 4677960a4ce7f19478ed424f1375e38b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value:
-      objectReference: {fileID: 2100000, guid: 2fe7e3920d772314cbe652484456e840, type: 2}
-    - target: {fileID: -7511558181221131132, guid: 4677960a4ce7f19478ed424f1375e38b, type: 3}
-      propertyPath: 'm_Materials.Array.data[1]'
-      value:
-      objectReference: {fileID: 2100000, guid: 75ebf57edfb4e1e46ad3cb45ca01ec9a, type: 2}
+      objectReference: {fileID: 2100000, guid: 72e97579e3d16fb4bb270314c822bcbc, type: 2}
     - target: {fileID: 919132149155446097, guid: 4677960a4ce7f19478ed424f1375e38b, type: 3}
       propertyPath: m_Name
       value: LowWallDamaged

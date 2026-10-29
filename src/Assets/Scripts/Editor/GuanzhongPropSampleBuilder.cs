@@ -22,6 +22,7 @@ namespace TianZhang.Editor
         {
             AssetDatabase.Refresh();
             var materials=new Dictionary<string,Material> {
+                {"LowWallTripoStone",LowWallStone()},
                 {"WeatheredStone",Stone("WeatheredStone",new Color(.66f,.69f,.63f))},
                 {"StoneEdge",Stone("StoneEdge",new Color(.81f,.79f,.67f))},
                 {"DarkStone",Stone("DarkStone",new Color(.32f,.37f,.34f))},
@@ -46,6 +47,35 @@ namespace TianZhang.Editor
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene(),ScenePath);
             EditorSceneManager.OpenScene(ScenePath,OpenSceneMode.Single);
             Debug.Log("D35_SAMPLE_BUILT "+ScenePath);
+        }
+
+        [MenuItem("天章/美术/R4 重建低掩体")]
+        public static void BuildLowWall()
+        {
+            AssetDatabase.Refresh();
+            var materials=new Dictionary<string,Material> { {"LowWallTripoStone",LowWallStone()} };
+            BuildModel("LowWallIntact",materials);
+            BuildModel("LowWallDamaged",materials);
+            BuildStates("LowWall",new[]{"Intact","Damaged","Remnant"},new[]{"LowWallIntact","LowWallDamaged","SharedRubble"});
+            AssetDatabase.SaveAssets();
+            var scene=EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath,OpenSceneMode.Single);
+            EditorSceneManager.SaveScene(scene);
+            EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath,OpenSceneMode.Single);
+            Debug.Log("R4_LOW_WALL_BUILT");
+        }
+
+        private static Material LowWallStone()
+        {
+            var textureImporter=(TextureImporter)AssetImporter.GetAtPath(AssetRoot+"/LowWall_basecolor.jpg");
+            textureImporter.maxTextureSize=4096;
+            textureImporter.sRGBTexture=true;
+            textureImporter.SaveAndReimport();
+            Material material=MaterialAt("LowWallTripoStone",Shader.Find("Universal Render Pipeline/Lit"));
+            material.SetTexture("_BaseMap",SceneBuildSupport.RequireAsset<Texture2D>(AssetRoot+"/LowWall_basecolor.jpg"));
+            material.SetColor("_BaseColor",Color.white);
+            material.SetFloat("_Smoothness",.08f);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static Material Stone(string name,Color tint)

@@ -1,6 +1,6 @@
-R4低掩体：前期调查与四视图草稿（2026-10-29）
+R4低掩体：四视图、Tripo模型接入与实机验收（2026-10-29）
 
-状态：候选模型已生成并保留；尚未修改Unity模型／Prefab／Builder／规则，R4未完成。用户已在自己的页面登录，随后新建受控页面已获得同一账号会话。
+状态：已按用户修订范围完成模型接入和双分辨率验收。保留当前穿行表现和正常移动AP扣费，不新增翻越动作或跨墙附加费；“不穿过可见实心主体”不再作为本轮条件。移动规则代码未改。用户已在自己的页面登录，随后新建受控页面已获得同一账号会话。
 Tripo当前报价：前／左／右／后四槽多视图输入、H3.1最高质量、纹理生成开、4K选中、四边面、5000面；超清几何／AI增强／去光／PBR／8K均关闭。生成40点，生成前余额3080点。先执行1个候选；本资产累计达到70点前按项目规则确认，不自动付费重试。
 曾误选“批量图片转3D”并上传四图，看到批量标识后在提交前切换正确的四槽多视图入口；没有执行批量生成或因此扣点。
 唯一候选75d3f959-3d04-4a96-9a04-9395bd391213已生成，页面https://studio.tripo3d.ai/zh/workspace/generate/75d3f959-3d04-4a96-9a04-9395bd391213，余额3080→3040，累计40点。页面4674四边面／4676顶点。原始GLB保存于assets/source/environments/guanzhong-jindan-demo/r4-low-cover/raw/r4-low-cover-tripo-source.glb；GLB结构、长度、图像解码及4096×4096纹理核对通过，实际索引28044即9348三角。SHA256和检查结果在同目录上级source-proof.json。
@@ -12,7 +12,7 @@ Tripo当前报价：前／左／右／后四槽多视图输入、H3.1最高质�
 GuanzhongDemoBattlefieldBuilder.InstallSceneObjects→Props/LowWall.prefab→Intact/LowWallIntact、Damaged/LowWallDamaged、Remnant/SharedRubble。
 mid_low_cover_a位于(4,5)↔(4,6)，mid_low_cover_b位于(9,7)↔(9,8)；以共边中点锚定、yaw约30°、scale=(.93,1,1)。CombatHudPresenter→CombatSceneObjectView仅切换状态。
 原build-props.py制作三排满宽石块，源宽.61m、深.16m、高约.375m；中央实心与规则允许直接跨边不相符。
-规则保持30耐久、16–30完整掩体2、1–15受损掩体1、0残留无掩体，不阻移动／视线；SharedRubble也有中央实体，必须验证残留，不可直接改其共用网格波及高墙。
+规则保持30耐久、16–30完整掩体2、1–15受损掩体1、0残留无掩体，不阻移动／视线；SharedRubble保持原样，三态均已实测移动扣费。
 
 只读几何调查（子智能体解析当前FBX顶点及三角边，SHA256与正式Profile一致；不是Unity穿行验收）
 距地0–.375m：正式玩家scale1.4，x范围[-.251839,.227184]m；以移动中心线对称开口，至少.503679m才包住该正向轮廓。
@@ -21,28 +21,45 @@ mid_low_cover_a位于(4,5)↔(4,6)，mid_low_cover_b位于(9,7)↔(9,8)；以共
 源缺口.4m经缩放仅.372m，不足以通行。世界净空.85–.86m仅为正向跨边候选，不是全方向通过结论。双格兽相对墙法线±60°时沿墙投影约1.556m，须验证邻侧路线及转身，不应简单继续扩大缺口。
 旧D3.5测试只检查平行墙边的.4m通道，没有跨墙边证据；R2轨迹零误差也不能替代本项穿行验收。
 
-接入前发现的范围冲突
+接入前发现的范围冲突（历史调查；用户随后接受保留穿行表现）
 以t为沿墙方向、n为垂直墙面方向，原锚点t=n=0。尝试的.86m中央净空＋两侧各.12m实体，对应t=±[.43,.55]；真实共享边半长仅1/(2√3)=.288675m。
 a左侧进入(3,6)不可停坡肩，有支承但比锚点低2.46–4.68mm，是可继续检查的候选空间；a右侧进入(5,5)浅水格和合法邻路。
 b左侧进入(8,8)阶梯下端平台及合法单格邻路；b右侧进入地图不存在的(10,7)柱，三个中心线采样均无支承。
 只读子智能体按真实角色FBX与生产缩放计算：a右侧拟实体平面内，双格front=(5,5),rear=(4,5),facing=0有46个三角边交点（含重复），例t=.491241,h=.291112,n=0；玩家(4,5)→(5,5)有348个顶点轨迹进入该区域，例进度.624466、t=.490556,h=.009862。
 b左侧拟实体平面内，玩家(9,7)→(8,8)有260个顶点轨迹进入该区域，例进度.739291、t=-.490556,h=.201471；交点高度覆盖0–.369834m。
 这些是对拟放实体带和当前角色的源几何计算，不是最终Tripo网格碰撞或Unity实机失败结论。它们否定了“只保证中央缺口，再把左右模块直接摆开”的接入假设；尚未得到两处均能共用的安全布置，也未证明所有不对称造型都不可能。
-依据AGENTS.md的先查明根因、不得叠加补丁或突破既定边界要求，停止生产接入。R4又明确禁止新增翻越系统、擅自修改阻挡规则；如需跨越表现或改变地图／通行约束，必须先由用户调整本项范围。当前不靠变薄／隐藏主体等未经验证的补丁收口。
+当时依据AGENTS.md的先查明根因、不得叠加补丁或突破既定边界要求停止接入。用户随后明确“先不用改表现，只要AP消耗计算逻辑有处理就行”，并选择“保留正常移动扣费”；因此取消本轮无穿模条件，保留原位置／尺寸与普通移动链，不沿用向两侧扩展的候选布置。
 
 图像草稿
 工具：内置image_gen，提示词完整保存在prompt-v1.txt／prompt-v2.txt。
 four-view-draft-v1.png：中央缺口比例不足；侧视图投影高度不一致。不得作为已通过四视图。
 four-view-draft-v2.png：加宽缺口的修订草稿；背面没有正确反转非对称轮廓，左右视图仍不等高、比例也不足以证明目标净空。不得直接提交Tripo消耗点数。
-下一步先修正四视图一致性，避免图中不同方向被识别成不同模型；最终净空只能以Tripo实体及正式移动验证。
-已改为单块可复用残垣模块四张独立视图module-front/back/left/right.png，同一正视图生成其余方向；前后高低轮廓正确反转、侧面为相同高端及低端重叠投影。视图有轻微顶部透视及纹理差异，不作为精确尺寸图；将作为Tripo形状／材质参考。现有Prefab摆放两侧模块留出可测缺口，不让生成器猜测两个分离对象间的空带。没有以程序化几何替代Tripo主体。
+后续已改为单块残垣模块四张独立视图module-front/back/left/right.png，同一正视图生成其余方向；前后高低轮廓反转、侧面为相同高端及低端重叠投影。视图有轻微顶部透视及纹理差异，不作为精确尺寸图；四张作为Tripo形状／材质参考，仅提交一个多视图生成任务。最终单块模型使用原格边锚点，没有摆开两侧模块，也没有程序化重造石块主体。
 
-最小后续验证
-使用既有GuanzhongPropSampleBuilder／GuanzhongDemoBattlefieldBuilder链，保存并重开；保留原源文件和无关RockCluster改动。
-正式入口进入地形，验证两个实例跨边移动、邻侧合法路线与双格转身；记录1920x1080、1366x768常用镜头、接地／锚点、三状态、掩体2/1/0和逐帧穿行短片。
-受损15耐久可用明确标注的状态夹具，不把夹具称为真实攻击证据。原spell_guanshiji伤害30会直接摧毁低墙。
+最终模型与接入
+Blender仅复制Tripo网格并适配原包围范围：长.61m、厚.16m、高.375m，实际场景仍scale=(.93,1,1)。受损状态从同一Tripo副本裁去上部墙体并封闭切口，高约.239881m；没有从零重建石块。完整9348三角、受损6432三角，均复用原4K纹理；破坏状态继续引用SharedRubble。
+适配脚本adapt-tripo.py仅通过blender_lab在当前Blender执行，脚本要求新会话避免数据块重名。首次试验会话发生Intact.001后缀，发现后校正所属临时对象／材质名称并重新导出两FBX，误命名临时文件已移除。最终散列和范围见adaptation-proof.json。
+原GLB、旧D3.5 StaticProps.blend/build-props.py均保留；新源库assets/source/environments/guanzhong-jindan-demo/r4-low-cover/working/LowWall-Tripo.blend保留原Tripo对象和适配对象。源目录沿仓库既有忽略规则本地保留；交付FBX、纹理、脚本和来源证据入Git。
+GuanzhongPropSampleBuilder新增BuildLowWall入口，复用既有BuildModel／BuildStates，仅重建两低墙模型及LowWall状态Prefab，再打开／保存／重开原AdventureScene。完整Build也加入LowWallTripoStone材质映射。4K以DefaultTexturePlatform maxTextureSize=4096生效，运行时实际纹理宽4096；meta旧顶层2048以及未启用的Standalone覆写值不是生效设置。
+
+实机结果与证据边界
+R4LowCoverEvidenceTests沿StartMenu建角→世界→关中→探索→正式地形按钮处理器进入144格地图；为隔离资产验收，将敌人策略设为WaitPolicy，不宣称AI回合验收。角色移动全部经过正式EncounterCoordinator命令、报价和播放，不传送角色或改AP余额。
+1920x1080／1366x768两项PlayMode均通过；每组两墙×三态×双向共12次跨边，HUD费用＝正式报价＝实际扣费。当前试玩角色每次25000内部单位即25AP，每次为直接单步；正反向、完整／受损／残留同价。途中浅水／坡阶出现37.5AP，证明未把所有移动固定成25AP。AP耗尽后按正式结束行动恢复下一回合预算。
+两处锚点与原共边中点误差<.0001m，原缩放保留，完整／受损最低点与锚点误差<.0001m，高度分别.375m／约.239881m，无新增Collider，状态掩体为2/1/0。未改SceneObject规则或范围投影。
+15耐久和随后0耐久由明确状态夹具经CombatSceneObjects.Apply→正式Presenter/View更新，用于状态及扣费检查，不称玩家攻击证据；现有贯石击伤害30会直接摧毁低墙。没有新增双格／飞行验收；相应规则代码未改。
+runtime/1366与runtime/1920保留两墙六张三态实机整屏图、ap-ledger.csv、captures.csv、三态通行中间帧及a-wall-three-passages.mp4。常用镜头size=5；已检查两处分辨率代表画面，低矮断口、受损减高、碎石残留可分，仍保留原穿行／穿模表现。
+视频只包含a墙三态正向片段，每段26帧，按原捕获间隔编码；反向移动与状态准备未录，三段之间直接切换，不称全流程连续录像。两段视频均完整解码通过。b墙提供三态截图与双向扣费账本。package-evidence.py为打包入口，原始帧保留src/Logs/r4/。
+
+发现并撤回的重建范围问题
+首次误调用GuanzhongDemoBattlefieldBuilder.Rebuild整图入口，重新生成场景对象使金丹火域／显隐支点引用失效，两项测试因UnassignedReferenceException失败；原始失败结果保留runtime/r4-playmode.xml。已撤回本次整图场景变化，改为只重建LowWall资产并保存重开原场景，之后两项测试通过（runtime/r4-lowwall-playmode.xml）。最终AdventureScene无语义或文本差异，未扩展修复金丹系统，也未用异常忽略掩盖问题。
+只读检查发现原CSV坐标含逗号会错列，已在最终测试前改为q:r，并补齐反向单步／同价断言；最终账本每行六列。保存重开的纯行尾空白变化已移除，无关RockCluster和角色改动保留。
 
 工具状态
-Blender Lab首次只读检查无法连接localhost:9876；本机无Blender进程，旧service-state记录已失效。以隐藏窗口打开既有Blender程序和专用会话文件，未改旧服务状态、登录任务或原blend；同一blender_lab通道恢复连接，只读确认Scene中为Cube／Camera／Light，尚未修改。
-无运行中的同工程Unity编辑器；尚未执行Unity测试，因为本轮没有生产模型变更。
+Blender Lab首次只读检查无法连接localhost:9876；本机无Blender进程，旧service-state记录已失效。以隐藏窗口打开既有Blender程序和专用会话文件，同一blender_lab通道恢复；源资产导入新场景，原会话blend文件未覆盖。隐藏窗口截屏为黑，未作为模型验证证据；采用真实Unity运行画面验收。
+Unity批处理与PlayMode先后执行，未与同工程编辑器并行。
 已加载Unity技能的所有者、资产身份、源资产、序列化、AI工作流及验证参考，以及项目Blender流程、imagegen和skill-creator；结构索引读取UNITY_STRUCTURE.md与UNITY_STRUCTURE.assemblies.md。
+
+复现（先关闭同工程Unity，PowerShell 7）
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe' -batchmode -projectPath 'D:\天章游戏开发\src' -executeMethod TianZhang.Editor.GuanzhongPropSampleBuilder.BuildLowWall -quit -logFile 'D:\天章游戏开发\src\Logs\r4-rebuild.log'
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -ProjectPath 'D:\天章游戏开发\src' -ResultXmlPath 'D:\天章游戏开发\src\Logs\r4-repro.xml' -TestFilter TianZhang.Tests.PlayMode.R4LowCoverEvidenceTests -EnableGraphics
+无需重跑未变动的BattleSim、CSV导入或全项目回归。测试重跑会覆盖src/Logs/r4下同名取证文件；已提交证据在本目录runtime。

@@ -1,0 +1,58 @@
+[
+  {
+    "resolution": "1366x768",
+    "crossings": 12,
+    "crossingCostAP": 25,
+    "segments": [
+      {
+        "state": 0,
+        "frames": 26,
+        "start": 8.919853,
+        "end": 9.771207
+      },
+      {
+        "state": 1,
+        "frames": 26,
+        "start": 11.451473,
+        "end": 12.309113
+      },
+      {
+        "state": 2,
+        "frames": 26,
+        "start": 12.658014,
+        "end": 13.5224
+      }
+    ],
+    "video": "a-wall-three-passages.mp4",
+    "omitted": "reverse moves and state fixture preparation",
+    "decode": "passed"
+  },
+  {
+    "resolution": "1920x1080",
+    "crossings": 12,
+    "crossingCostAP": 25,
+    "segments": [
+      {
+        "state": 0,
+        "frames": 26,
+        "start": 29.387096,
+        "end": 30.241179
+      },
+      {
+        "state": 1,
+        "frames": 26,
+        "start": 31.952434,
+        "end": 32.80539
+      },
+      {
+        "state": 2,
+        "frames": 26,
+        "start": 33.192173,
+        "end": 34.047324
+      }
+    ],
+    "video": "a-wall-three-passages.mp4",
+    "omitted": "reverse moves and state fixture preparation",
+    "decode": "passed"
+  }
+]

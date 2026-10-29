@@ -1,0 +1,48 @@
+{
+  "source": "D:/天章游戏开发/assets/source/environments/guanzhong-jindan-demo/r4-low-cover/raw/r4-low-cover-tripo-source.glb",
+  "sourceSha256": "5414ddff055c84f2b301f665109f0fa5b3e03f71cf6153552d7b24a187d62f0b",
+  "textureSize": [
+    4096,
+    4096
+  ],
+  "sourceBlenderVertices": 7703,
+  "adaptation": "Tripo duplicate fitted to existing .61 x .16 x .375m envelope; damaged duplicate upper section trimmed and capped; shared rubble reused.",
+  "models": [
+    {
+      "name": "LowWallIntact",
+      "vertices": 7703,
+      "triangles": 9348,
+      "bounds": [
+        [
+          -0.3050000071525574,
+          -0.07999999821186066,
+          0.0
+        ],
+        [
+          0.3050000071525574,
+          0.07999999821186066,
+          0.375
+        ]
+      ],
+      "sha256": "d640e35250950ba383611aeda31dd0302eb7c5c3aeefa46d66f30976c33b43ca"
+    },
+    {
+      "name": "LowWallDamaged",
+      "vertices": 3218,
+      "triangles": 6432,
+      "bounds": [
+        [
+          -0.3050000071525574,
+          -0.07999999821186066,
+          0.0
+        ],
+        [
+          0.3050000071525574,
+          0.07999999821186066,
+          0.23988138139247894
+        ]
+      ],
+      "sha256": "07eb97f49d6feb41a510b92f36032e579864f0cba117b795e4e294ce146fed5b"
+    }
+  ]
+}
