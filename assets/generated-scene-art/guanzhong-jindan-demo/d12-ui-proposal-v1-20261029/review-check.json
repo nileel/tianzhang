@@ -1,0 +1,623 @@
+{
+  "kind": "browser design review; not Unity runtime evidence",
+  "errors": [],
+  "interaction": {
+    "nameRetained": true,
+    "presetRetained": true,
+    "returnedToPreparation": true,
+    "conflictStoryboard": true,
+    "normalHasNoJindan": true,
+    "movementRemainsMovement": true,
+    "invalidDoesNotSubmit": true,
+    "modeSwitchClearsJindan": true,
+    "normalAbilityUsesOrdinaryPreview": true
+  },
+  "results": [
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "create",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "loadout",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "prepare",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "battle",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "target",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "ability",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "invalid",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "enemy",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "hidden",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "conflict",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "victory",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "defeat",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "withdraw",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "state": "save",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "create",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "loadout",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "prepare",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "battle",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "target",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "ability",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "invalid",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "enemy",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "hidden",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "conflict",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "victory",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "defeat",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "withdraw",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": [
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png"
+        },
+        {
+          "loaded": true,
+          "src": "../../../../src/Assets/Art/UI/Guanzhong/CombatCompact/enemy_shijiahou.png"
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "state": "save",
+      "outside": [],
+      "clippedText": [],
+      "detailOverlapsDock": false,
+      "pageOverflow": false,
+      "images": []
+    }
+  ]
+}
