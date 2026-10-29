@@ -1,0 +1,13 @@
+actor,profile,descending,samples,playback_frames,max_position_error,max_rotation_error
+player,0,False,121,27,0,0
+player,0,True,121,27,0,0
+player,1,False,121,32,0,0
+player,1,True,121,32,0,0
+player,2,False,121,42,0,0
+player,2,True,121,42,0,0
+enemy_2,0,False,121,27,0,0
+enemy_2,0,True,121,27,0,0
+enemy_2,1,False,121,31,0,0
+enemy_2,1,True,121,31,0,0
+enemy_2,2,False,121,36,0,0
+enemy_2,2,True,121,39,0,0

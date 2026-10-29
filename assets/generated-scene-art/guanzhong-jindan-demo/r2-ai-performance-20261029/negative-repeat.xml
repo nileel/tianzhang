@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.6931017">
+  <test-suite type="TestSuite" id="1300" name="src" fullname="src" runstate="Runnable" testcasecount="241" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.693102" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1293" name="TianZhang.PlayModeTests.dll" fullname="D:/天章游戏开发/src/Library/ScriptAssemblies/TianZhang.PlayModeTests.dll" runstate="Runnable" testcasecount="241" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.682605" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="41500" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1294" name="TianZhang" fullname="TianZhang" runstate="Runnable" testcasecount="241" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.678794" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1295" name="Tests" fullname="TianZhang.Tests" runstate="Runnable" testcasecount="241" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.674983" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1296" name="PlayMode" fullname="TianZhang.Tests.PlayMode" runstate="Runnable" testcasecount="241" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.671342" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1268" name="R2ProductionAiPerformanceTests" fullname="TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests" classname="TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.666333" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1269" name="InitialHandoff1366" fullname="TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests.InitialHandoff1366" methodname="InitialHandoff1366" classname="TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests" runstate="Runnable" seed="860034449" result="Failed" start-time="2026-10-29 02:17:11Z" end-time="2026-10-29 02:17:19Z" duration="7.656466" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="Timeout" value="600000" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  round-1 repeated AI decisions
+  Expected: 2
+  But was:  4
+]]></message>
+                  <stack-trace><![CDATA[at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests.AssertBudgets (System.Boolean engaged) [0x00122] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:251
+at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests+<Run>d__21.MoveNext () [0x00970] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:156
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[Saving results to: C:/Users/WINDOWS/AppData/LocalLow/DefaultCompany/src\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,11 @@
+phase,frame,actor,kind,visible_particle_frames
+round-2,32084,enemy,Art,224
+round-3,33672,enemy,Art,220
+round-5,35845,enemy,Art,221
+round-6,37848,enemy,Art,211
+round-8,39580,enemy,Art,212
+round-9,41951,enemy,Art,214
+round-11,43756,enemy,Art,230
+round-11,44609,enemy_2,BasicAttack,225
+round-11,45236,enemy_2,BasicAttack,212
+round-12,46667,enemy,Art,221

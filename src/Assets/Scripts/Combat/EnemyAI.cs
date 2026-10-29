@@ -181,7 +181,7 @@ namespace TianZhang.Combat
             IReadOnlyList<CombatCommand> legalActions,
             int minimum, int maximum)
         {
-            using var queries = session.SceneObjects?.Board.BeginQueryBatch();
+            using var queries = session.SceneObjects?.Board.BeginQueryBatch(metricDistancesToTarget: true);
             var moves = legalActions.Where(action => action.Kind == CombatCommandKind.Move).ToArray();
             if (moves.Length == 0) return null;
             var targets = session.Combatants.All.Where(unit => unit.IsAlive && unit.Team != actor.Team &&

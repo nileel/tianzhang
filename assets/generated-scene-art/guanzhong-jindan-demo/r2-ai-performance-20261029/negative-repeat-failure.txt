@@ -1,0 +1,6 @@
+  round-1 repeated AI decisions
+  Expected: 2
+  But was:  4
+at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests.AssertBudgets (System.Boolean engaged) [0x00122] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:251
+at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests+<Run>d__21.MoveNext () [0x00970] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:156
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44

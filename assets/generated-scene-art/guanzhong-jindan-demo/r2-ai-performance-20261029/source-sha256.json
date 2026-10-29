@@ -1,0 +1,42 @@
+{
+  "baselineCommit": "9b281b16fe39d4edadd7f4e869eb47bfaba17b83",
+  "note": "Final sources. After positive-final and negative checks, only the optional test recording branch changed PNG capture to full-resolution JPEG. Runtime, assertions and non-recording measurement are unchanged.",
+  "files": [
+    {
+      "path": "src/Assets/Scripts/Combat/EnemyAI.cs",
+      "sha256": "51c1850030d9ffcadfdf9ee9f7626408c102d2d966fbdf89db2a15c3614e4f9e"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
+      "sha256": "cf96a7154c50d11eb908bfe31ebef079d6859f609d9a24116227c92ec1b64766"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitSurfacePose.cs",
+      "sha256": "ae67c6562ac9f7c7df9d358ca0473285d1bc6d6ab793548c85c6fde11c90ae3c"
+    },
+    {
+      "path": "src/Assets/Tests/EditMode/R2IncomingMetricTests.cs",
+      "sha256": "937c6a5eb602ee08e4cf617b0c6e7547b2dd13c3a72eca9a870eacfbc72fae29"
+    },
+    {
+      "path": "src/Assets/Tests/PlayMode/R2ProductionAiPerformanceTests.cs",
+      "sha256": "7599fdfcf3651b978c03952b7b3ef3cc4146573c5c738d2fdf9aa329f5e3a8f9"
+    },
+    {
+      "path": "src/Assets/Tests/PlayMode/R2SurfacePlaybackComparison.cs",
+      "sha256": "98b7a49327262f336959d88aa088aff27f728f6c9e391d2f464391a2df1aa607"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+      "sha256": "cb326bf6acf9f67899bc8cd89649d7eb2ed4b33277a4d47fafdeb696d3377aa5"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
+      "sha256": "9118e29fe31de9352d89a6a12a8ede91d26bad75f96a3b730ff8adb015074618"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/Static3DCombatUnitPresentationProvider.cs",
+      "sha256": "2ecd5243067d9f15cbbbf4bea4a44fd98311e055250bda4829d0525daeb224d8"
+    }
+  ]
+}

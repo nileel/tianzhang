@@ -1,0 +1,29 @@
+{
+  "baselineCommit": "9b281b16fe39d4edadd7f4e869eb47bfaba17b83",
+  "files": [
+    {
+      "path": "src/Assets/Tests/PlayMode/R2ProductionAiPerformanceTests.cs",
+      "sha256": "807B7EC317B65D2718DEC9243304197D30C949882AF7DDD1DC53A4532C080D71"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/Adventure/EncounterCoordinator.cs",
+      "sha256": "CB326BF6ACF9F67899BC8CD89649D7EB2ED4B33277A4D47FAFDEB696D3377AA5"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/Adventure/AdventureCameraController.cs",
+      "sha256": "9118E29FE31DE9352D89A6A12A8EDE91D26BAD75F96A3B730FF8ADB015074618"
+    },
+    {
+      "path": "src/Assets/Scripts/Combat/EnemyAI.cs",
+      "sha256": "C79922FEC00F24F539A86F061EBE074A4B47056E9C6C639659CE469E9FC81BB1"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Spatial/SpatialQueryBoard.cs",
+      "sha256": "69CC5CF08C0447E3C38B25F3FB5121F9D21E18F1B2D7CA5CEFB56056CC52AA5F"
+    },
+    {
+      "path": "src/Assets/Scripts/Modules/Features/CombatPresentation/CombatUnitSurfacePose.cs",
+      "sha256": "378D01ADECECACCB9598812215231A8C3EA44CBFBFD098B47A4E7829590EA095"
+    }
+  ]
+}

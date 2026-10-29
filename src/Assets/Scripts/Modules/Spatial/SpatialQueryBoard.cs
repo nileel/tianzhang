@@ -19,7 +19,8 @@ namespace TianZhang.Spatial
         private QueryBatch queryBatch;
 
         /// <summary>Reuse complete searches only during one synchronous, read-only query batch.</summary>
-        public IDisposable BeginQueryBatch() => queryBatch = new QueryBatch(this, queryBatch);
+        public IDisposable BeginQueryBatch(bool metricDistancesToTarget = false) =>
+            queryBatch = new QueryBatch(this, queryBatch, metricDistancesToTarget);
 
         public SpatialQueryBoard(
             IReadOnlyDictionary<HexCoord, SpatialCellRules> cells,
@@ -352,7 +353,17 @@ namespace TianZhang.Spatial
             TraversalResult traversal;
             if (queryBatch != null && canTraverse == null)
             {
-                var key = (start, kind, distanceLimit, activeEffectBlockers);
+                if (queryBatch.MetricDistancesToTarget && kind is SpatialQueryKind.Attack or SpatialQueryKind.Sight)
+                {
+                    var inboundKey = (target, kind, distanceLimit, activeEffectBlockers, true);
+                    if (!queryBatch.Metric.TryGetValue(inboundKey, out var inbound))
+                        queryBatch.Metric.Add(inboundKey, inbound = Traverse(target, kind, distanceLimit,
+                            null, activeEffectBlockers, null, null, reverse: true));
+                    if (inbound.Costs.TryGetValue(start, out int inboundDistance))
+                        return new SpatialMetricDistanceResult(true, inboundDistance, SpatialQueryReasons.Ok);
+                    // Rejection ordering belongs to the original source traversal, not the reverse tree.
+                }
+                var key = (start, kind, distanceLimit, activeEffectBlockers, false);
                 if (!queryBatch.Metric.TryGetValue(key, out traversal))
                     queryBatch.Metric.Add(key, traversal = Traverse(start, kind, distanceLimit, null, activeEffectBlockers, null, null));
             }
@@ -814,7 +825,8 @@ namespace TianZhang.Spatial
             HashSet<HexCoord> blocked,
             ulong activeEffectBlockers,
             HexCoord? stopAt,
-            Func<HexCoord, bool> canTraverse)
+            Func<HexCoord, bool> canTraverse,
+            bool reverse = false)
         {
 #if UNITY_EDITOR
             using var measurement = new SpatialQueryMeasurement("metric_search");
@@ -840,7 +852,9 @@ namespace TianZhang.Spatial
                 {
                     if (blocked?.Contains(neighbor) == true || canTraverse?.Invoke(neighbor) == false)
                         continue;
-                    var edge = InspectEdge(currentEntry.Coord, neighbor, kind, activeEffectBlockers);
+                    HexCoord from = reverse ? neighbor : currentEntry.Coord;
+                    HexCoord to = reverse ? currentEntry.Coord : neighbor;
+                    var edge = InspectEdge(from, to, kind, activeEffectBlockers);
                     if (!edge.IsLegal)
                     {
                         if (firstRejection == null &&
@@ -851,7 +865,7 @@ namespace TianZhang.Spatial
                         continue;
                     }
 
-                    long burdenUnits = (long)edge.MovementBurdenUnits + cells[neighbor].MovementBurdenUnits;
+                    long burdenUnits = (long)edge.MovementBurdenUnits + cells[to].MovementBurdenUnits;
                     if (burdenUnits > int.MaxValue) continue;
                     int movementBurden = kind == SpatialQueryKind.Movement ? (int)burdenUnits : 0;
                     long accumulatedCost = (long)currentCost + edge.MetricDistanceUnits + movementBurden;
@@ -956,9 +970,11 @@ namespace TianZhang.Spatial
         {
             private readonly SpatialQueryBoard board;
             private readonly QueryBatch previous;
-            public readonly Dictionary<(HexCoord, SpatialQueryKind, int, ulong), TraversalResult> Metric = new();
+            public readonly Dictionary<(HexCoord, SpatialQueryKind, int, ulong, bool), TraversalResult> Metric = new();
+            public readonly bool MetricDistancesToTarget;
             public MovementSearch Movement;
-            public QueryBatch(SpatialQueryBoard board, QueryBatch previous) { this.board = board; this.previous = previous; }
+            public QueryBatch(SpatialQueryBoard board, QueryBatch previous, bool metricDistancesToTarget)
+            { this.board = board; this.previous = previous; MetricDistancesToTarget = metricDistancesToTarget; }
             public void Dispose() { board.queryBatch = previous; }
         }
 

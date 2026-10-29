@@ -1,0 +1,248 @@
+[
+  {
+    "scenario": "initial-1366",
+    "passed": true,
+    "actions_identical_to_baseline": true,
+    "rounds": [
+      {
+        "round": 1,
+        "first_pan_ms": 56.383,
+        "frames": 29,
+        "uninterrupted": true,
+        "camera_path_length": 5.638169
+      },
+      {
+        "round": 2,
+        "first_pan_ms": 53.247,
+        "frames": 63,
+        "uninterrupted": true,
+        "camera_path_length": 12.248302
+      },
+      {
+        "round": 3,
+        "first_pan_ms": 53.731,
+        "frames": 34,
+        "uninterrupted": true,
+        "camera_path_length": 6.606572
+      }
+    ],
+    "native_keyboard_events": 39,
+    "attack_feedback_min_frames": 0
+  },
+  {
+    "scenario": "initial-1920",
+    "passed": true,
+    "actions_identical_to_baseline": true,
+    "rounds": [
+      {
+        "round": 1,
+        "first_pan_ms": 41.425,
+        "frames": 180,
+        "uninterrupted": true,
+        "camera_path_length": 4.487778
+      },
+      {
+        "round": 2,
+        "first_pan_ms": 32.962,
+        "frames": 442,
+        "uninterrupted": true,
+        "camera_path_length": 10.592282
+      },
+      {
+        "round": 3,
+        "first_pan_ms": 33.949,
+        "frames": 225,
+        "uninterrupted": true,
+        "camera_path_length": 5.526871
+      }
+    ],
+    "native_keyboard_events": 31,
+    "attack_feedback_min_frames": 0
+  },
+  {
+    "scenario": "engaged-1366",
+    "passed": true,
+    "actions_identical_to_baseline": true,
+    "rounds": [
+      {
+        "round": 1,
+        "first_pan_ms": 27.451,
+        "frames": 472,
+        "uninterrupted": true,
+        "camera_path_length": 6.749518
+      },
+      {
+        "round": 2,
+        "first_pan_ms": 23.617,
+        "frames": 794,
+        "uninterrupted": true,
+        "camera_path_length": 9.039225
+      },
+      {
+        "round": 3,
+        "first_pan_ms": 22.956,
+        "frames": 970,
+        "uninterrupted": true,
+        "camera_path_length": 12.019816
+      },
+      {
+        "round": 4,
+        "first_pan_ms": 22.987,
+        "frames": 364,
+        "uninterrupted": true,
+        "camera_path_length": 4.217709
+      },
+      {
+        "round": 5,
+        "first_pan_ms": 24.815,
+        "frames": 789,
+        "uninterrupted": true,
+        "camera_path_length": 8.751358
+      },
+      {
+        "round": 6,
+        "first_pan_ms": 58.264,
+        "frames": 962,
+        "uninterrupted": true,
+        "camera_path_length": 11.004267
+      },
+      {
+        "round": 7,
+        "first_pan_ms": 30.905,
+        "frames": 381,
+        "uninterrupted": true,
+        "camera_path_length": 2.80229
+      },
+      {
+        "round": 8,
+        "first_pan_ms": 22.229,
+        "frames": 760,
+        "uninterrupted": true,
+        "camera_path_length": 7.788963
+      },
+      {
+        "round": 9,
+        "first_pan_ms": 22.948,
+        "frames": 1255,
+        "uninterrupted": true,
+        "camera_path_length": 13.362426
+      },
+      {
+        "round": 10,
+        "first_pan_ms": 23.544,
+        "frames": 368,
+        "uninterrupted": true,
+        "camera_path_length": 4.196868
+      },
+      {
+        "round": 11,
+        "first_pan_ms": 22.629,
+        "frames": 1474,
+        "uninterrupted": true,
+        "camera_path_length": 16.01692
+      },
+      {
+        "round": 12,
+        "first_pan_ms": 22.452,
+        "frames": 856,
+        "uninterrupted": true,
+        "camera_path_length": 7.859112
+      }
+    ],
+    "native_keyboard_events": 175,
+    "attack_feedback_min_frames": 123
+  },
+  {
+    "scenario": "engaged-1920",
+    "passed": true,
+    "actions_identical_to_baseline": true,
+    "rounds": [
+      {
+        "round": 1,
+        "first_pan_ms": 38.511,
+        "frames": 213,
+        "uninterrupted": true,
+        "camera_path_length": 6.771564
+      },
+      {
+        "round": 2,
+        "first_pan_ms": 36.169,
+        "frames": 381,
+        "uninterrupted": true,
+        "camera_path_length": 9.158578
+      },
+      {
+        "round": 3,
+        "first_pan_ms": 36.345,
+        "frames": 464,
+        "uninterrupted": true,
+        "camera_path_length": 12.210741
+      },
+      {
+        "round": 4,
+        "first_pan_ms": 33.803,
+        "frames": 195,
+        "uninterrupted": true,
+        "camera_path_length": 4.253252
+      },
+      {
+        "round": 5,
+        "first_pan_ms": 32.973,
+        "frames": 396,
+        "uninterrupted": true,
+        "camera_path_length": 8.088431
+      },
+      {
+        "round": 6,
+        "first_pan_ms": 33.34,
+        "frames": 480,
+        "uninterrupted": true,
+        "camera_path_length": 11.14102
+      },
+      {
+        "round": 7,
+        "first_pan_ms": 36.111,
+        "frames": 196,
+        "uninterrupted": true,
+        "camera_path_length": 3.58483
+      },
+      {
+        "round": 8,
+        "first_pan_ms": 32.424,
+        "frames": 382,
+        "uninterrupted": true,
+        "camera_path_length": 7.336243
+      },
+      {
+        "round": 9,
+        "first_pan_ms": 32.223,
+        "frames": 633,
+        "uninterrupted": true,
+        "camera_path_length": 13.250098
+      },
+      {
+        "round": 10,
+        "first_pan_ms": 32.91,
+        "frames": 199,
+        "uninterrupted": true,
+        "camera_path_length": 3.959239
+      },
+      {
+        "round": 11,
+        "first_pan_ms": 32.966,
+        "frames": 744,
+        "uninterrupted": true,
+        "camera_path_length": 15.787649
+      },
+      {
+        "round": 12,
+        "first_pan_ms": 36.378,
+        "frames": 415,
+        "uninterrupted": true,
+        "camera_path_length": 8.276488
+      }
+    ],
+    "native_keyboard_events": 175,
+    "attack_feedback_min_frames": 57
+  }
+]

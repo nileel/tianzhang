@@ -10,6 +10,7 @@ namespace TianZhang.Features.CombatPresentation
     {
 #if UNITY_EDITOR
         internal static Action<int, int, double> PathMeasured;
+        internal static Action<int, double> SamplesMeasured;
 #endif
         private readonly CombatBattlefieldSurface surface;
         private readonly Vector3[] soles;
@@ -228,41 +229,59 @@ namespace TianZhang.Features.CombatPresentation
         public System.Collections.IEnumerator Move(Transform root, Vector3 start,Vector3 end,float yaw,float speed)
         {
 #if UNITY_EDITOR
-            long sampledAt = PathMeasured == null ? 0 : System.Diagnostics.Stopwatch.GetTimestamp();
+            double samplingMs = 0;
 #endif
             float distance=Vector3.Distance(new Vector3(start.x,0,start.z),new Vector3(end.x,0,end.z));
             int count=Mathf.Max(1,Mathf.CeilToInt(distance/.015f));
             Place(root,start,yaw);
             var path = new List<(Vector3 position, Quaternion rotation, float distance)>
                 { (root.position, root.rotation, 0f) };
-            for(int i=1;i<=count;i++)
-            {
-                Vector3 center=Vector3.Lerp(start,end,i/(float)count);
-                Evaluate(center,yaw,out Vector3 next,out Quaternion q);
-                Vector3 previous=path[path.Count-1].position;
-                bool stair=surface.IsStair(center);
-                if (stair && Mathf.Abs(next.y-previous.y)>.002f)
-                {
-                    Vector3 high=next.y>previous.y ? new Vector3(previous.x,next.y,previous.z) : new Vector3(next.x,previous.y,next.z);
-                    Add(high,q);
-                }
-                Add(next,q);
-            }
-#if UNITY_EDITOR
-            PathMeasured?.Invoke(soles.Length, count,
-                (System.Diagnostics.Stopwatch.GetTimestamp() - sampledAt) * 1000d / System.Diagnostics.Stopwatch.Frequency);
-#endif
-            // Spatial precision must not impose a frame wait on every sample or stair corner.
-            float travelled=0, length=path[path.Count-1].distance;
-            int segment=1;
-            while(travelled<length)
+            int sampled=0, segment=1;
+            float travelled=0;
+            ExtendPath(0);
+            // Evaluate only the original samples needed for this frame's travelled distance.
+            // Retain cumulative distances and stair corners, so interpolation and speed are unchanged.
+            while(sampled<count || travelled<path[path.Count-1].distance)
             {
                 yield return null;
-                travelled=Mathf.Min(length,travelled+Time.deltaTime*speed);
+                float requested=travelled+Time.deltaTime*speed;
+                ExtendPath(requested);
+                travelled=Mathf.Min(path[path.Count-1].distance,requested);
                 while(segment<path.Count-1 && path[segment].distance<travelled) segment++;
                 var a=path[segment-1]; var b=path[segment];
                 float t=(travelled-a.distance)/(b.distance-a.distance);
                 root.SetPositionAndRotation(Vector3.Lerp(a.position,b.position,t),Quaternion.Slerp(a.rotation,b.rotation,t));
+            }
+#if UNITY_EDITOR
+            PathMeasured?.Invoke(soles.Length, count, samplingMs);
+#endif
+            void ExtendPath(float requiredDistance)
+            {
+#if UNITY_EDITOR
+                long began = PathMeasured == null && SamplesMeasured == null ? 0 : System.Diagnostics.Stopwatch.GetTimestamp();
+                int before = sampled;
+#endif
+                while(sampled<count && (path.Count==1 || path[path.Count-1].distance<requiredDistance))
+                {
+                    Vector3 center=Vector3.Lerp(start,end,++sampled/(float)count);
+                    Evaluate(center,yaw,out Vector3 next,out Quaternion q);
+                    Vector3 previous=path[path.Count-1].position;
+                    bool stair=surface.IsStair(center);
+                    if (stair && Mathf.Abs(next.y-previous.y)>.002f)
+                    {
+                        Vector3 high=next.y>previous.y ? new Vector3(previous.x,next.y,previous.z) : new Vector3(next.x,previous.y,next.z);
+                        Add(high,q);
+                    }
+                    Add(next,q);
+                }
+#if UNITY_EDITOR
+                if (began != 0 && sampled>before)
+                {
+                    double ms=(System.Diagnostics.Stopwatch.GetTimestamp()-began)*1000d/System.Diagnostics.Stopwatch.Frequency;
+                    samplingMs+=ms;
+                    SamplesMeasured?.Invoke(sampled-before,ms);
+                }
+#endif
             }
             void Add(Vector3 p,Quaternion q)
             {

@@ -1,0 +1,3 @@
+1920x1080; seed=1729; production RangedActionAI/LegalActionAI; synthetic InputSystem mouse/keyboard
+tick=65;actor=player;player@(8, 8, -16)/5/hp=571/ap=25000;enemy@(7, 10, -17)/2/hp=190/ap=0;enemy_2@(5, 13, -18)/2/hp=329/ap=0
+Native sampling: virtual setup devices removed; OS Mouse/Keyboard required.

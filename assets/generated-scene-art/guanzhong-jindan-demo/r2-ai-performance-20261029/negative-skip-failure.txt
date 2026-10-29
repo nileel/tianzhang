@@ -1,0 +1,6 @@
+  Move must have intermediate positions, not only the endpoint.
+  Expected: greater than or equal to 4
+  But was:  2
+at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests.AssertActions (System.Boolean engaged) [0x0021f] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:221
+at TianZhang.Tests.PlayMode.R2ProductionAiPerformanceTests+<Run>d__21.MoveNext () [0x00964] in D:\天章游戏开发\src\Assets\Tests\PlayMode\R2ProductionAiPerformanceTests.cs:155
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@ecf40a72f8c1\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
