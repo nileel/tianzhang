@@ -1,0 +1,27 @@
+{
+  "tripoId": "75d3f959-3d04-4a96-9a04-9395bd391213",
+  "studioCreditsSpent": 40,
+  "balanceAfter": 3040,
+  "glbBytes": 3015012,
+  "sha256": "5414ddff055c84f2b301f665109f0fa5b3e03f71cf6153552d7b24a187d62f0b",
+  "meshCount": 1,
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "width": 4096,
+      "height": 4096,
+      "bytes": 2654420
+    }
+  ],
+  "primitives": [
+    {
+      "attributes": {
+        "POSITION": 0,
+        "NORMAL": 1,
+        "TEXCOORD_0": 2
+      },
+      "mode": 4,
+      "indexCount": 28044
+    }
+  ]
+}
