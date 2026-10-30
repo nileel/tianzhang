@@ -1,0 +1,3180 @@
+{
+  "kind": "V2 browser proposal review only; no Unity execution",
+  "date": "2026-10-30",
+  "screenCount": 84,
+  "checkedThisRun": 8,
+  "errors": [],
+  "failedRequests": [],
+  "evidence": [
+    {
+      "sequence": "earth-wall",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/native/01-wall750.png"
+    },
+    {
+      "sequence": "earth-wall",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/native/03-wall0.png"
+    },
+    {
+      "sequence": "earth-ramp",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/ProductionRampChangesRouteAndSupportsActualTraversal/01-created-ramp.png"
+    },
+    {
+      "sequence": "earth-ramp",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/ProductionRampChangesRouteAndSupportsActualTraversal/02-ramp-moving.png"
+    },
+    {
+      "sequence": "gravity",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/AirborneSourceLowersFlyingAlly/01-pressure-lowered.png"
+    },
+    {
+      "sequence": "gravity",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d7-earth-20261026/GroundSourceLandsFlyingAlly/01-pressure-landed.png"
+    },
+    {
+      "sequence": "tide",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d8-water-fire-20261027/ProductionTideMovesBurningSurfaceAndReturnsToShore/01-preview.png"
+    },
+    {
+      "sequence": "tide",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d8-water-fire-20261027/ProductionTideMovesBurningSurfaceAndReturnsToShore/02-tide-result.png"
+    },
+    {
+      "sequence": "fire",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d10-fire-domain-20261027/player/03-maintained-fire.png"
+    },
+    {
+      "sequence": "fire",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d10-fire-domain-20261027/counter/02-center-broken.png"
+    },
+    {
+      "sequence": "scale",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d9-space-20261027/scale-compressed.png"
+    },
+    {
+      "sequence": "scale",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d9-space-20261027/scale-expanded.png"
+    },
+    {
+      "sequence": "seal",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d9-space-20261027/gate-intact.png"
+    },
+    {
+      "sequence": "seal",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d9-space-20261027/gate-outer-broken.png"
+    },
+    {
+      "sequence": "visibility",
+      "next": true,
+      "previous": true,
+      "which": "1",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d11-visibility-20261028/concealment/01-hidden-after-release.png"
+    },
+    {
+      "sequence": "visibility",
+      "next": true,
+      "previous": true,
+      "which": "2",
+      "width": 1366,
+      "height": 768,
+      "src": "../../d11-visibility-20261028/manual/03-manual-result.png"
+    }
+  ],
+  "results": [
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "seal",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "seal",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "seal",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "seal",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "seal",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "seal",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "seal",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "seal",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "tide",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "tide",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-wall",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-wall",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-wall",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-wall",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-ramp",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-ramp",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-ramp",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "earth-ramp",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.265625,
+        "w": 1122,
+        "h": 631.453125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "gravity",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "fire",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "scale",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 184.59375,
+        "w": 1122,
+        "h": 630.8125
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "visibility",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 384,
+        "y": 289.515625,
+        "w": 1122,
+        "h": 420.96875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-wall",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-wall",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-wall",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-wall",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-ramp",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-ramp",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-ramp",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "earth-ramp",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.265625,
+        "w": 772,
+        "h": 434.46875
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "gravity",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "fire",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": false,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "scale",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1366,
+          "height": 1152
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 138.484375,
+        "w": 772,
+        "h": 434.03125
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 1,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 2,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 3,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 4,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 5,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    },
+    {
+      "resolution": [
+        1366,
+        768
+      ],
+      "sequence": "visibility",
+      "frame": 6,
+      "out": [],
+      "textClip": [],
+      "sceneCollisions": [],
+      "contextScroll": true,
+      "images": [
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "loaded": true,
+          "width": 1672,
+          "height": 941
+        }
+      ],
+      "scene": {
+        "name": "scene-crop",
+        "x": 284,
+        "y": 210.671875,
+        "w": 772,
+        "h": 289.640625
+      }
+    }
+  ]
+}

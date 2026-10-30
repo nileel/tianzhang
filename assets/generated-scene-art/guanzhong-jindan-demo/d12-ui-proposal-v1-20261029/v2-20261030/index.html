@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天章 D12 · V2 能力生效分镜</title>
+<link rel="stylesheet" href="../proposal.css"><link rel="stylesheet" href="review.css">
+</head>
+<body>
+<div class="review">
+<strong>D12 / V2 · 视觉方案，非 Unity 实机</strong>
+<label>能力 <select id="sequence" aria-label="能力分镜"></select></label>
+<label>状态 <select id="frame" aria-label="分镜状态"></select></label>
+<button id="previous" aria-label="上一帧">←</button><button id="next" aria-label="下一帧">→</button>
+<span id="resolution"></span>
+</div>
+<main id="app" class="combat"></main>
+<dialog id="evidence"><div class="evidence-head"><strong>历史 Unity 实机原图 · 未经修改</strong><button id="close-evidence">关闭</button></div><p>原始 1366×768 图形运行证据；不是 V2 制作或双分辨率运行验收。</p><img id="evidence-image" alt="历史 Unity 实机"><a id="evidence-link" target="_blank">打开原文件</a></dialog>
+<script src="storyboards.js"></script><script src="review.js"></script>
+</body></html>

@@ -1,0 +1,50 @@
+/* V2 uses the accepted V1 panel positions and palette. Only the review scene is added. */
+.review {gap:12px}
+.review label {margin-left:0;white-space:nowrap}
+.review label:first-of-type {margin-left:auto}
+.review button {min-height:24px;padding:0 9px;font-size:14px}
+.review select {max-width:230px}
+a {color:var(--gold);text-underline-offset:4px}
+.topbar .row {font-size:.72em}
+.v2-stage {position:absolute;left:384px;right:414px;top:116px;bottom:232px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scene-crop {position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;box-shadow:0 8px 30px #051b2466}
+.scene-crop img {position:absolute;max-width:none;display:block}
+.scene-crop::after {content:"V2 视觉方案 · Imagegen · 非实机";position:absolute;left:8px;bottom:8px;padding:3px 7px;background:#102b33df;color:#f3ead8;font-size:12px;pointer-events:none}
+.player .pill {display:inline-block;white-space:normal}
+.player .stats {font-size:.72em}
+.player .cast {font-size:.72em;margin-top:12px;color:var(--muted);line-height:1.6}
+.timeline {width:122px}
+.timeline .turn {padding:11px 0}
+.objective h3 {font-size:1.15em;line-height:1.5;margin:7px 0 13px}
+.objective .steps {font-size:.76em;line-height:1.65}
+.context p {font-size:.77em;line-height:1.75}
+.context .eyebrow {font-size:.66em;letter-spacing:1px;margin-bottom:8px}
+.context .links {display:flex;gap:9px;flex-wrap:wrap;font-size:.72em;margin-top:14px}
+.context .links button {min-height:36px;padding:4px 9px;font-size:inherit}
+.context .rule {margin:13px 0}
+.context {top:390px;bottom:233px}
+.dock .action {cursor:default}
+.quote {font-size:.82em}
+.quote small {font-size:.85em}
+.quote .price {margin-top:4px}
+.dock .actions-header {gap:20px}
+.scene-note {position:absolute;left:384px;right:414px;bottom:217px;font-size:12px;text-align:center;color:var(--muted)}
+dialog {padding:22px;border:1px solid var(--gold);background:#133039;color:var(--paper);width:min(1440px,94vw);max-height:95vh}
+dialog::backdrop {background:#00141be8}
+.evidence-head {display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+dialog p {font-size:14px;margin-bottom:10px}
+dialog img {display:block;max-width:100%;max-height:70vh;margin:auto;object-fit:contain}
+dialog a {display:block;text-align:center;font-size:14px;margin-top:12px}
+@media(max-width:1699px) and (min-width:1451px) {.v2-stage,.scene-note{left:344px;right:374px}.context{top:365px}}
+@media(max-width:1450px) {
+.review{gap:8px;padding:0 14px;letter-spacing:0}.review select{max-width:190px}
+.v2-stage{left:284px;right:310px;top:94px;bottom:187px}
+.scene-note{left:284px;right:310px;bottom:174px;font-size:11px}
+.context{top:320px;bottom:186px}.context p{font-size:.79em}
+.timeline{width:85px;top:340px}.timeline .turn{padding:7px 0}
+.player .avatar{width:46px;height:58px}.player h3{font-size:1.1em}
+.player .cast{font-size:.7em}.player .stats{font-size:.7em}
+.objective h3{font-size:1.1em;margin:5px 0 9px}.objective .steps{font-size:.76em}
+.context .links{gap:7px;font-size:.75em}.context .links button{min-height:32px;padding:3px 6px}
+.quote{font-size:.8em}.dock .actions-header{gap:15px}.action b{font-size:1em}
+}
