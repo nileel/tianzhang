@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-30",
+  "tool": "built-in image_gen.imagegen; no CLI fallback",
+  "kind": "concept background only, no Unity evidence",
+  "prompts": [
+    {
+      "id": "baseline",
+      "prompt": "Use case: compositing. Asset: Tianzhang V3 tactical RPG interface DESIGN BACKGROUND, NOT gameplay evidence, no UI in this background.\nImage 1 is the true Unity scene reference. Image 2 is approved V2 fire storyboard, a supporting design reference.\nCreate ONE high fidelity 16:9 full-screen background, preferably 1920x1080 or higher, NOT a contact sheet. Use the actual game's blue-gray stone HEXAGON terraces, modest grass and dirt path, stair and turquoise water, warm mountain mist. Maintain its recognizable architecture and restrained game lighting; no invented grand architecture.\nFrame a close tactical section of the upper terrace as an expansive world background, no giant blank web panels. Camera iso, matching source style. Reserve upper 18% for small HUD overlays and bottom 19% for ability bar, in those areas only backdrop/terrain, no characters or interactive props. Main interactive play zone x=20–82%, y=25–73%.\nShow exactly two distinct blue-robed cultivators on separate neighboring grass hexes near the center: player at x45%, feet y59%, target at x57%, feet y55%, leave enough space between. Show the public dormant low stone fire center at x65%,y48%, no light. Existing permanent jade-gray stone stele at x74%,y36%. A low plant on the dry fuel hex x56%, y67%; stone staircase at x69%,y65% leading down left to water. Keep faces/feet, ground hex outlines, stair ends and support clearly visible.\nThis is PRE-CAST state: NO fire, NO glow, NO magic, NO UI, NO text, NO rings, no arrows, no floating health bars. Do not add enemies beyond two figures. High clarity natural game art, muted jade/stone colors, terrain remains the visual focus. Map is a reference reconstruction, not permission to alter production geometry.",
+      "refs": [
+        "../../r4-low-cover-20261029/runtime/1920/mid_low_cover_a-state-0.png",
+        "../v2-20261030/art/fire.png"
+      ],
+      "generationFile": "exec-6608b319-2ae7-4f6a-b2a8-0bab8e4b3940.png",
+      "output": "art/reference-composition.png"
+    },
+    {
+      "id": "before",
+      "prompt": "Precise-object-edit of the supplied SINGLE 16:9 Tianzhang scene design. Keep exact camera, hex terrain, lighting, both blue-robed people, stairs, permanent tall pillars, water, textures and image size. NO HUD, text, arrows or selection rings. This is one scene, not a contact sheet. The ONLY changes are: Remove the SHORT octagonal dark stone fire center at image position x68%, y44% entirely, restore continuous ordinary grass there. All permanent taller pillars at right/back remain. Keep the green small plant x58%, y54% unchanged. NO fire, no warmth, no rubble. This center is a temporary ability object, absent before deployment.",
+      "refs": [
+        "art/reference-composition.png"
+      ],
+      "generationFile": "exec-897c15b1-0b27-4d26-9deb-aed8dff84475.png",
+      "output": "art/before.png"
+    },
+    {
+      "id": "deployed",
+      "prompt": "Precise-object-edit of the supplied SINGLE 16:9 Tianzhang scene design. Keep exact camera, hex terrain, lighting, both blue-robed people, stairs, permanent tall pillars, water, textures and image size. NO HUD, text, arrows or selection rings. This is one scene, not a contact sheet. The ONLY changes are: Activate ONLY the short octagonal fire center at x68%, y44% with a restrained engraved amber light on its top. Add VERY faint amber warmth ALONG ALL visible hex terrace rims over the entire visible board, not a circular local area. Main terrain colors stay unchanged. No flame anywhere: deployment hasn't reached maintenance yet. Keep green small plant x58%, y54%. The two people remain at exact positions.",
+      "refs": [
+        "art/reference-composition.png"
+      ],
+      "generationFile": "exec-902f837f-2e7f-4505-893c-821b9e859d4c.png",
+      "output": "art/deployed.png"
+    },
+    {
+      "id": "maintained",
+      "prompt": "Precise-object-edit of the supplied SINGLE 16:9 Tianzhang scene design. Keep exact camera, hex terrain, lighting, both blue-robed people, stairs, permanent tall pillars, water, textures and image size. NO HUD, text, arrows or selection rings. This is one scene, not a contact sheet. The ONLY changes are: Activate the short octagonal fire center x68%,y44% with restrained engraved amber light. Add VERY faint amber warmth along ALL visible hex terrace rims of the whole board. On exactly ONE dry hex at x59%,y57% next to the top of the staircase add sparse ankle-low orange fire around the small plant, plant scorched. No other fire. Player feet, target, center and tile boundaries fully readable. No large flame or explosion. This is ongoing fire domain after the first charged maintenance.",
+      "refs": [
+        "art/reference-composition.png"
+      ],
+      "generationFile": "exec-0dcd7399-0d76-487f-9123-83c4df0ba1d4.png",
+      "output": "art/maintained.png"
+    },
+    {
+      "id": "embers",
+      "prompt": "Precise-object-edit of the supplied SINGLE 16:9 Tianzhang scene design. Keep exact camera, hex terrain, lighting, both blue-robed people, stairs, permanent tall pillars, water, textures and image size. NO HUD, text, arrows or selection rings. This is one scene, not a contact sheet. The ONLY changes are: Remove ONLY the short octagonal fire center x68%,y44% completely, restore grass with no rubble. All other permanent tall pillars remain. NO board-wide amber light; original cool rims. Exactly ONE old dry fuel hex x59%,y57% next to stair has dim, sparse ankle-low ember flames around scorched plant, still alive. No new fires, no fire at former center. Keep both cultivators exactly at same positions. Destroying center ends main warmth but not already-paid embers.",
+      "refs": [
+        "art/reference-composition.png"
+      ],
+      "generationFile": "exec-8ec8a45f-131e-4b7f-a807-86a44c619c6b.png",
+      "output": "art/embers.png"
+    },
+    {
+      "id": "maintained-lighting-correction",
+      "prompt": "Precise local lighting edit of this single 16:9 Tianzhang scene. Keep every character, camera, terrain hex, object position, plant, staircase, and the one burning ground hex identical. Reduce ALL amber grid/rim lines to about 25 percent of their current brightness: subtle thin warmth, not luminous orange tactical selection. Especially remove glowing vertical cliff creases. Keep the top of the short fire center engraved with a soft warm disc but remove the small upright flame or vertical light spike on its top. The ONLY actual flames are the one sparse ankle-high ground patch beside the stair. No changes to people, no added UI or symbols, no new flame anywhere. This background is design art, not runtime.",
+      "refs": [
+        "art/maintained.png"
+      ],
+      "generationFile": "exec-5862eb57-5cd6-481b-9ef5-141d208d0d85.png",
+      "output": "art/maintained.png"
+    },
+    {
+      "id": "maintained-neighbor",
+      "refs": [
+        "previous generation exec-5862eb57-5cd6-481b-9ef5-141d208d0d85.png"
+      ],
+      "prompt": "Precise character-position edit of the supplied 16:9 Tianzhang concept frame. The two human figures are currently too far apart for adjacent-hex unarmed combat. Move ONLY the upper/right blue-robed opponent by one hex toward the lower-left player. Put the opponent's FEET at approximately (815,470) in the 1672x941 image, on the center of the clear green hex immediately upper-right of the player's feet at (729,518). That makes the players adjacent with two clearly separate feet positions, ~86 pixels apart horizontally. Erase the opponent completely from the old location near (931,425). Keep exactly two humans and their ordinary ground shadows, same robes, no attacking or VFX on people. Everything else is locked: the player does not move, camera, dimensions, the octagonal fire center, weak amber tile warmth, the single small burning ground hex and public steles all remain at exactly the same positions. No UI or text. This state follows an opponent approaching during intervening turns.",
+      "generationFile": "exec-728ad27a-bb90-489c-b68e-9ecfdb317b38.png",
+      "output": "art/maintained.png"
+    }
+  ],
+  "reuse": [
+    {
+      "path": "../v2-20261030/art/visibility.png",
+      "reason": "V2 checked public altars and hidden target absence; used without image editing"
+    }
+  ]
+}

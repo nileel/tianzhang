@@ -1,0 +1,27 @@
+// Design storyboard snapshots, not a combat simulator. Values are explicitly illustrative.
+const sequences = [
+ {id:'fire',name:'长明 · 连续混合行动',build:'长明',objective:'守住火域，保留安全退路',frames:[
+  {id:'01-spell',title:'普通术法 · 锁定飞星指',art:'before',ap:1000,mp:6000,select:'star',target:'spell',quote:'50 AP · 10 MP',after:'AP 1000 → 950',status:['长明 · 未展开','地面',''],hint:'地面出手 · 地面目标 · 垂直触及 2',note:'第 1 本人回合。飞星指已显式学会并装配；左键锁定，确认后才提交。',next:'确认施放'},
+  {id:'02-domain',title:'术法已施放 · 接着展开长明',art:'before',ap:950,mp:5990,select:'fire',target:'center',quote:'500 AP · 1000 MP',after:'AP 950 → 450',status:['长明 · 未展开','飞星指已施放',''],hint:'含余火预付 200 MP · 展开当回合不结算燃烧',note:'同一角色、同一回合。飞星指消耗 50 AP／10 MP 后，长明合计 500 AP／1000 MP；本例不添御风或水潮。',next:'确认展开'},
+  {id:'03-deployed',title:'领域已展开 · 普通行动仍在',art:'deployed',ap:450,mp:4990,select:'move',target:'move',quote:'路径费用待实际报价',after:'锁定合法路径后确认',status:['长明 · 主规则生效','中心 600/600 · 火 0/3','首次维护：后续本人结束'],hint:'移动预览 · 选择安全落点',note:'刚展开，中心与全图弱热已出现，仍无燃烧。移动与普攻不被金丹面板替换；本帧预览未扣费。',next:'继续分镜'},
+  {id:'04-maintained',title:'首次维护后 · 火域中选择普攻',art:'maintained',ap:1000,mp:4790,select:'attack',target:'attack',quote:'250 AP · 0 MP',after:'AP 1000 → 750',status:['长明 · 主规则生效','中心 600/600 · 火 1/3','下次本人结束 −200 MP'],hint:'相邻敌手 · 地面 · 徒手普攻',note:'省略第 1 回合结束（不跳周期）、第 2 本人回合等待并结束（维护 200 MP）及其间对手付费接近至相邻格；来到第 3 本人回合。此间没有额外施法或返还。普通普攻沿金丹徒手首击报价。',next:'确认普攻'},
+  {id:'05-hit',title:'普通攻击已确认 · 返回同一 HUD',art:'maintained',ap:750,mp:4790,select:null,target:'hit',quote:'普攻已提交 · −250 AP',after:'本回合仍可行动',status:['长明 · 主规则生效','中心 600/600 · 火 1/3','下次本人结束 −200 MP'],hint:'本回合还可行动',note:'普通普攻结算后 AP 750；画面标记只表示分镜中的提交结果，不推算伤害、不当作真实命中证据。火域与来源账本不因普通行动切换而消失。',next:'查看反制后'},
+  {id:'06-embers',title:'对手破中心后 · 余火中预览移动',art:'embers',ap:1000,mp:4590,select:'move',target:'move',quote:'路径费用待实际报价',after:'避开燃烧格再锁定',status:['长明主规则 · 已结束','中心已毁 · 余火 1/3','余火最多 2 次本人结束'],hint:'原路线仍有余火 · 可绕行',note:'第 3 本人回合结束再维护 200 MP；对手后续合法攻击破坏中心。新本人回合预算恢复，余火保留。本例以公开反制结果衔接，不伪造对手免费连击或指定 AI。',next:'查看结束行动'},
+  {id:'07-end',title:'手动结束 · 余火仍按自己的时钟走',art:'embers',ap:1000,mp:4590,select:null,target:null,quote:'结束当前行动',after:'剩余 AP 放弃使用',status:['长明主规则 · 已结束','余火仍在 · 火 1/3','本次结束后：最多余 1 次'],hint:'结束后由下一行动者接手',note:'结束是玩家显式选择。余火每本人结束推进一次；水灭变湿、自然燃尽变焦的 V2 边界保留。',next:'结束（分镜）'},
+  {id:'08-enemy',title:'结束后 · 对手行动',art:'embers',ap:0,mp:4590,select:null,target:null,quote:'等待对手行动',after:'可查看公开信息',status:['长明主规则 · 已结束','余火 1/3','剩余 1 次本人结束'],hint:'对手行动中 · 可查看地表',note:'本人已手动结束。示例余火从 2 个本人结束周期减至 1 个。按照实际顺序轮到对手，本人行动栏暂挂。',enemy:true,next:'重看本段'},
+  {id:'09-disabled',title:'边界样例 · AP 耗尽，仍手动结束',art:'embers',ap:0,mp:4590,select:'star',target:null,quote:'需要 50 AP · 当前 0',after:'尚未提交，不产生费用',status:['长明主规则 · 已结束','余火仍占 1/3','余火时钟与 AP 分离'],hint:'行动力不足 · 可查看信息或结束行动',note:'独立边界样例，非上一帧免费改变数值。展示不可用的原因、清楚的文本对比度及 AP=0 手动结束。',disabled:true,next:'结束行动'}
+ ]},
+ {id:'sight',name:'尺度与阳照 · 显隐返回',build:'尺度与阳照',objective:'取得有效观察，寻找通过路线',frames:[
+  {id:'01-spell',title:'普通术法 · 先用飞星指',v2:0,ap:1000,mp:6000,select:'star',target:'sight-target',quote:'50 AP · 10 MP',after:'AP 1000 → 950',status:['阳照 · 未展开','定尺 · 未展开','地面'],hint:'已选地格 · 地面目标',note:'独立合法构筑：尺度与阳照；普通术法按 V1 方案显式装配。未拥有封关或藏真。',next:'确认施放'},
+  {id:'02-concealed',title:'对手藏真后 · 选择自有阳照',v2:1,ap:1000,mp:5990,select:'sun',target:null,quote:'250 AP · 400 MP',after:'AP 1000 → 750',status:['敌方藏真 · 生效','目标不可见','公开坛仍可观察'],hint:'观察受限 · 可展开日坛昭明',note:'跨过本人结束及对手合法藏真行动后，下一本人回合选择阳照。先前已支付飞星指 10 MP。阳照不加视距、不穿墙。',next:'确认展开'},
+  {id:'03-conflict',title:'显隐冲突 · 等待维持',v2:3,ap:750,mp:5590,select:'sun',target:null,quote:'普通战斗暂挂',after:'战斗时钟与维护暂停',status:['我方阳照 · 生效','敌方藏真 · 生效','仅本次观察待判'],hint:'此次观察待定 · 日月两坛仍生效',note:'阳照展开已支付 250 AP／400 MP。可付量取各自来源剩余额度与真实 MP 的较小值，初始额度各 200；分镜是按步骤审阅，没有另造计时小游戏。',conflict:'wait',next:'查看维持窗口'},
+  {id:'04-window',title:'维持中 · A 窗口',v2:3,ap:750,mp:5540,select:'sun',target:null,quote:'已付 50 MP',after:'窗口 250–750 ms',status:['我方阳照 · 生效','敌方藏真 · 生效','战斗时钟暂停'],hint:'按住 Space · 亮起时按 A；下个窗口为 D',note:'首次按住立即触发第 1 脉冲，双方各付 50 MP，剩余额度各 150。正确 +50，100 胜；错键不额外扣费，松开判负。',conflict:'window',next:'查看阳胜分支'},
+  {id:'05-return',title:'阳胜本次观察 · 回到普通术法预览',v2:2,ap:750,mp:5490,select:'star',target:'sight-target',quote:'50 AP · 10 MP',after:'AP 750 → 700',status:['我方阳照 · 生效','敌方藏真 · 生效','下个 tick 阳照 −40 MP'],hint:'本次可见 · 旧目标报价已失效，请重新确认',note:'阳胜示例完成两次脉冲和 A、D 两个窗口，各付 100 MP，重新取得观察与报价；普通飞星指重新可选。藏真及其独立减伤并未被消除。',next:'收起预览'},
+  {id:'06-yin',title:'并列结果 · 阴胜，仍回同一 HUD',v2:3,ap:750,mp:5540,select:'move',target:null,quote:'选择合法地格接近',after:'不追踪不可见目标',status:['我方阳照 · 生效','敌方藏真 · 生效','本次目标不可见'],hint:'移动接近，或对合法地格施术',note:'并列阴胜分支，假设首脉冲后主动松开，各付 50 MP；不是阳胜后又免费隐身。没有隐者坐标或可定位标记。',next:'查看近距分支'},
+  {id:'07-near',title:'独立近距分支 · 移动后自然现形',v2:5,ap:'按路径结算',mp:'按 tick 结算',select:null,target:null,quote:'已经到达相邻合法格',after:'自然现形条件优先',status:['我方阳照 · 生效','敌方藏真 · 生效','近距正常可见'],hint:'目标已在近距 · 可见',note:'在阴胜分支后另取合法路径并支付实际费用。V2 图展示观察者已移动到近距；本方案没有计算该路径的实际 AP 或经历的 tick，不虚填精确余额。',next:'重看本段'},
+  {id:'08-neutral',title:'并列结果 · 跳过后中性',v2:4,ap:750,mp:5390,select:null,target:null,quote:'双方各付 200 MP',after:'本次按正常观察基础判定为可见',status:['我方阳照 · 生效','敌方藏真 · 生效','双方对抗额度已用尽'],hint:'本次观察已恢复 · 可继续普通行动',note:'从相同初始两方各 200 额度出发。中途跳过保留已付费用，按剩余额度续算，共各付 200。两个公开坛仍在。',next:'重看本段'}
+ ]},
+ {id:'normal',name:'普通开局 · 同一 HUD',build:'普通开局',objective:'完成一次合法术法与移动',frames:[
+  {id:'01-common',title:'普通开局只改变角色配置',art:'before',ap:100,mp:180,select:'star',target:'spell',quote:'50 AP · 10 MP',after:'AP 100 → 50',status:['地面'],hint:'地面目标 · 确认前可重选',note:'相同 HUD 模板。普通与金丹不是战斗模式切换；此入口仅供审阅不同开局内容，不在战中换人。',next:'收起预览'}
+ ]}
+];
