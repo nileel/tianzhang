@@ -4,7 +4,8 @@ const query=new URLSearchParams(location.search);
 let group=Math.max(0,sequences.findIndex(s=>s.id===query.get('sequence')));
 let frame=Math.min(Math.max(0,Number(query.get('frame'))||0),sequences[group].frames.length-1);
 let selected=null,detail=null,cancelled=false;
-const portrait='../../../../../src/Assets/Art/UI/Guanzhong/FormalPlayer_Default_Portrait.png';
+const artSource=id=>document.getElementById('art-'+id).src;
+const portrait=artSource('portrait');
 const icons={
  move:'M5 22L14 5l3 8 10 5-17 9 1-8M15 5l-4 14',
  attack:'M9 23l-3-9 3-2 3 5-2-10 3-1 3 10-1-12 3 0 2 12 1-9 3 1 0 12-4 7-9 0z',
@@ -50,7 +51,7 @@ function render(){
  const pct=Number.isFinite(f.ap)?Math.max(0,f.ap/maxAp*100):60;
  const mpPct=Number.isFinite(f.mp)?f.mp/maxMp*100:65;
  root.className=normal?'normal':'';
- root.innerHTML=`<div class="world ${isSight?'v2':''}" style="background-image:url('${isSight?'../v2-20261030/art/visibility.png':'art/'+f.art+'.png'}');${isSight?'background-position:'+(f.v2%2*100)+'% '+(Math.floor(f.v2/2)*50)+'%;':''}"></div><div class="vignette"></div>
+ root.innerHTML=`<div class="world ${isSight?'v2':''}" style="background-image:url('${artSource(isSight?'visibility':f.art)}');${isSight?'background-position:'+(f.v2%2*100)+'% '+(Math.floor(f.v2/2)*50)+'%;':''}"></div><div class="vignette"></div>
  <div class="proof">D12.0 / V3 · 方案图，非 Unity 实机 · 数值为分镜示例</div>
  <nav class="review" aria-label="方案审阅工具"><select id="sequence" aria-label="独立构筑分镜">${sequences.map((x,i)=>`<option value="${i}" ${i===group?'selected':''}>${x.name}</option>`).join('')}</select><button id="prev" aria-label="上一帧">←</button><select id="frame" aria-label="分镜状态">${s.frames.map((x,i)=>`<option value="${i}" ${i===frame?'selected':''}>${i+1}. ${x.title}</option>`).join('')}</select><button id="next" aria-label="下一帧">→</button><a href="README.md">说明</a></nav>
  <section class="identity" aria-label="同一行动者与共享资源"><img class="portrait" src="${portrait}" alt="沈行舟"><div class="vitals"><div class="name">沈行舟<span class="build">${s.build}</span></div><div class="resource hp"><label>生命</label><span class="meter"><i style="width:100%"></i></span><b>${normal?'571 / 571':'3474 / 3474'}</b></div><div class="resource mp"><label>灵力</label><span class="meter"><i style="width:${mpPct}%"></i></span><b>${f.mp}${Number.isFinite(f.mp)?' / '+maxMp:''}</b></div><div class="resource ap"><label>AP</label><span class="meter"><i style="width:${pct}%"></i></span><b>${f.ap}${Number.isFinite(f.ap)?' / '+maxAp:''}</b></div></div></section>
