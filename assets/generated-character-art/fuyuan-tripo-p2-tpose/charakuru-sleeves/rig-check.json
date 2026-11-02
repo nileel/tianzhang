@@ -1,0 +1,65 @@
+{
+  "elbowsAndWristsM": {
+    "upper_arm.L": [
+      0.139746,
+      0.017042,
+      1.428232
+    ],
+    "lower_arm.L": [
+      0.356389,
+      0.017042,
+      1.428232
+    ],
+    "hand.L": [
+      0.702795,
+      0.017042,
+      1.428232
+    ],
+    "upper_arm.R": [
+      -0.132929,
+      0.017042,
+      1.428233
+    ],
+    "lower_arm.R": [
+      -0.349572,
+      0.017042,
+      1.428233
+    ],
+    "hand.R": [
+      -0.670742,
+      0.017042,
+      1.428233
+    ]
+  },
+  "verticesReweighted": {
+    "R": 3590,
+    "L": 3589
+  },
+  "springVertices": {
+    "R": 2023,
+    "L": 2002
+  },
+  "forearm65": {
+    "L": {
+      "severe": 0,
+      "maxAddedM": 0.006711223823896217
+    },
+    "R": {
+      "severe": 0,
+      "maxAddedM": 0.0070638686717205135
+    }
+  },
+  "originalSpringsPreserved": 11,
+  "newChains": [
+    "SleeveInnerL",
+    "SleeveCuffL",
+    "SleeveInnerR",
+    "SleeveCuffR"
+  ],
+  "newDeformBones": 16,
+  "newTerminals": 4,
+  "totalColliders": 11,
+  "otherBodyWeightsMatch": true,
+  "noLegOrFingerInfluenceOnLowerSleeves": true,
+  "maxWeightSumError": 4.516914486885071e-08
+}

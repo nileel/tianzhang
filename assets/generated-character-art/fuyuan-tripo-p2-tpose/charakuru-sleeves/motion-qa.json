@@ -1,0 +1,360 @@
+{
+  "description": "Independent test against Charakuru PreviewAvatar, using exported VRMs; original hand-supplied fixes are not inferred from the screenshot.",
+  "runtime": "Charakuru 1.1.1 public/preview-avatar.mjs",
+  "test": {
+    "elbow": "Both elbows rotate 45 degrees over 18 frames and hold. Physics advances at 60 Hz. Left/right arrays are indexed by avatar-space X negative/positive. impulse is ON minus OFF at frame 18. lag is the additional translation from frame 18 to 30 with physics enabled. heldOff uses the same comparison with physics disabled. Lower cuff selection consists of 498 positions on each side, 0.55<abs(x)<0.72 and 0.56<y<0.90 metres at rest. seam is the upper cuff/wrist region, 0.635<abs(x)<0.68 and 1.447<y<1.48.",
+    "walk": "The default bundled elyth_base_walk_v1.vrma sampled every 10 frames from frame 20 until 120 at 60 Hz. Edges use rest-position mask abs(x)>0.32 and 0.57<y<1.39 m on Body, rest edge length >= 1 mm; extreme = animated edge length > 2x rest and added length > 20 mm. Stats are for the 13,391 edges in the comparison region, not all garment edges."
+  },
+  "before": {
+    "sha256": "d390953a437459c0fc639399f2068ab83ea6fa7fd41ee590398ac21b48ca3ed6",
+    "model": "D:/Tools/Charakuru/charakuru-1.1.1-2026-11-02T09-36-05-842Z/projects/4e5377ea-a0d9-46e8-8b1a-74859c9db6d7/work/review.vrm",
+    "impulse": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "lag": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "heldOff": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "wristAfterStop": [
+      0,
+      0
+    ],
+    "walk": [
+      {
+        "f": 20,
+        "edges": 13391,
+        "maxAddedMM": 887.8,
+        "p99AddedMM": 738.7,
+        "p99Ratio": 12.22,
+        "extreme": 738
+      },
+      {
+        "f": 30,
+        "edges": 13391,
+        "maxAddedMM": 903.2,
+        "p99AddedMM": 751.4,
+        "p99Ratio": 12.37,
+        "extreme": 772
+      },
+      {
+        "f": 40,
+        "edges": 13391,
+        "maxAddedMM": 884.1,
+        "p99AddedMM": 712.8,
+        "p99Ratio": 12.18,
+        "extreme": 780
+      },
+      {
+        "f": 50,
+        "edges": 13391,
+        "maxAddedMM": 873.6,
+        "p99AddedMM": 703.9,
+        "p99Ratio": 12.19,
+        "extreme": 714
+      },
+      {
+        "f": 60,
+        "edges": 13391,
+        "maxAddedMM": 890,
+        "p99AddedMM": 744.2,
+        "p99Ratio": 12.53,
+        "extreme": 694
+      },
+      {
+        "f": 70,
+        "edges": 13391,
+        "maxAddedMM": 889.4,
+        "p99AddedMM": 756.3,
+        "p99Ratio": 12.59,
+        "extreme": 747
+      },
+      {
+        "f": 80,
+        "edges": 13391,
+        "maxAddedMM": 862.9,
+        "p99AddedMM": 699.8,
+        "p99Ratio": 12.09,
+        "extreme": 746
+      },
+      {
+        "f": 90,
+        "edges": 13391,
+        "maxAddedMM": 866.5,
+        "p99AddedMM": 708.4,
+        "p99Ratio": 12,
+        "extreme": 727
+      },
+      {
+        "f": 100,
+        "edges": 13391,
+        "maxAddedMM": 894.4,
+        "p99AddedMM": 746.5,
+        "p99Ratio": 12.27,
+        "extreme": 743
+      },
+      {
+        "f": 110,
+        "edges": 13391,
+        "maxAddedMM": 901.7,
+        "p99AddedMM": 746.3,
+        "p99Ratio": 12.37,
+        "extreme": 772
+      },
+      {
+        "f": 120,
+        "edges": 13391,
+        "maxAddedMM": 875.4,
+        "p99AddedMM": 692.3,
+        "p99Ratio": 12.08,
+        "extreme": 753
+      }
+    ]
+  },
+  "after": {
+    "sha256": "37522e373498395f0c29483b6243b73b5f7b26f8a49e71049ccb302745851c81",
+    "model": "D:/Tools/Charakuru/charakuru-1.1.1-2026-11-02T09-36-05-842Z/projects/4e5377ea-a0d9-46e8-8b1a-74859c9db6d7/work/sleeve-physics/test.vrm",
+    "impulse": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 214.04,
+          "p95MM": 269.49
+        },
+        {
+          "count": 498,
+          "medianMM": 207.95,
+          "p95MM": 263.55
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "lag": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 126,
+          "p95MM": 145.28
+        },
+        {
+          "count": 498,
+          "medianMM": 123.02,
+          "p95MM": 142.14
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "heldOff": {
+      "hem": [
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 498,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ],
+      "seam": [
+        {
+          "count": 61,
+          "medianMM": 0,
+          "p95MM": 0
+        },
+        {
+          "count": 78,
+          "medianMM": 0,
+          "p95MM": 0
+        }
+      ]
+    },
+    "wristAfterStop": [
+      0,
+      0
+    ],
+    "walk": [
+      {
+        "f": 20,
+        "edges": 13391,
+        "maxAddedMM": 44.8,
+        "p99AddedMM": 19.9,
+        "p99Ratio": 1.49,
+        "extreme": 0
+      },
+      {
+        "f": 30,
+        "edges": 13391,
+        "maxAddedMM": 59.2,
+        "p99AddedMM": 17.2,
+        "p99Ratio": 1.49,
+        "extreme": 0
+      },
+      {
+        "f": 40,
+        "edges": 13391,
+        "maxAddedMM": 51.9,
+        "p99AddedMM": 15,
+        "p99Ratio": 1.44,
+        "extreme": 0
+      },
+      {
+        "f": 50,
+        "edges": 13391,
+        "maxAddedMM": 47.9,
+        "p99AddedMM": 18.1,
+        "p99Ratio": 1.57,
+        "extreme": 0
+      },
+      {
+        "f": 60,
+        "edges": 13391,
+        "maxAddedMM": 59.5,
+        "p99AddedMM": 18.1,
+        "p99Ratio": 1.59,
+        "extreme": 15
+      },
+      {
+        "f": 70,
+        "edges": 13391,
+        "maxAddedMM": 49.9,
+        "p99AddedMM": 12.8,
+        "p99Ratio": 1.39,
+        "extreme": 0
+      },
+      {
+        "f": 80,
+        "edges": 13391,
+        "maxAddedMM": 41.1,
+        "p99AddedMM": 14.4,
+        "p99Ratio": 1.4,
+        "extreme": 0
+      },
+      {
+        "f": 90,
+        "edges": 13391,
+        "maxAddedMM": 62.1,
+        "p99AddedMM": 21.5,
+        "p99Ratio": 1.67,
+        "extreme": 14
+      },
+      {
+        "f": 100,
+        "edges": 13391,
+        "maxAddedMM": 57.2,
+        "p99AddedMM": 17.6,
+        "p99Ratio": 1.53,
+        "extreme": 3
+      },
+      {
+        "f": 110,
+        "edges": 13391,
+        "maxAddedMM": 47.5,
+        "p99AddedMM": 13.6,
+        "p99Ratio": 1.38,
+        "extreme": 0
+      },
+      {
+        "f": 120,
+        "edges": 13391,
+        "maxAddedMM": 40.2,
+        "p99AddedMM": 14.8,
+        "p99Ratio": 1.4,
+        "extreme": 0
+      }
+    ]
+  }
+}
