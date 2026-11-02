@@ -1,0 +1,110 @@
+{
+  "mesh_identical_in_rest": true,
+  "rest_vertices": 21603,
+  "edges_in_sleeve_region": 6019,
+  "edges_in_hem_region": 5731,
+  "frames": {
+    "move": {
+      "frame": 16,
+      "max_bone_matrix_difference": 0.0,
+      "original": {
+        "sleeves": {
+          "over_1.5x": 50,
+          "under_0.67x": 22,
+          "p95": 1.0174479763473743,
+          "max": 83.06542069063612
+        },
+        "hem": {
+          "over_1.5x": 26,
+          "under_0.67x": 9,
+          "p95": 1.0223432103761345,
+          "max": 6.565109203913676
+        }
+      },
+      "charakuru": {
+        "sleeves": {
+          "over_1.5x": 209,
+          "under_0.67x": 2,
+          "p95": 1.0075721452211637,
+          "max": 69.7129210809533
+        },
+        "hem": {
+          "over_1.5x": 19,
+          "under_0.67x": 0,
+          "p95": 1.0000017772307142,
+          "max": 25.332567171663392
+        }
+      }
+    },
+    "attack": {
+      "frame": 30,
+      "max_bone_matrix_difference": 0.0,
+      "original": {
+        "sleeves": {
+          "over_1.5x": 50,
+          "under_0.67x": 15,
+          "p95": 1.145893344342002,
+          "max": 107.5149725932635
+        },
+        "hem": {
+          "over_1.5x": 30,
+          "under_0.67x": 40,
+          "p95": 1.054801816069992,
+          "max": 7.442271065754255
+        }
+      },
+      "charakuru": {
+        "sleeves": {
+          "over_1.5x": 221,
+          "under_0.67x": 9,
+          "p95": 1.0060749531912123,
+          "max": 89.057548725927
+        },
+        "hem": {
+          "over_1.5x": 19,
+          "under_0.67x": 0,
+          "p95": 1.000001191016254,
+          "max": 16.27721457219841
+        }
+      }
+    }
+  },
+  "kit": "Charakuru v1.1.1",
+  "workflow": "avatar-weight-transfer / manual-transfer / fit then transfer, with original project rig kept fixed",
+  "input": "Blend copy of the existing fitted Fuyuan P2 v2 39-bone project mesh; identical rest positions and edge indices for A/B",
+  "bone_mapping": "Finger chains map to their side hand; eyes map to Head. Existing sleeve/hem secondary bones have no donor counterparts. No clothing separation or spring-bone finishing.",
+  "shape_samples": {
+    "coordinate_space": "Blender world, metres (rest pose)",
+    "sleeves_edge_midpoints": "0.32 < abs(x) < 0.71; 0.59 < z < 1.32; rest edge length > 0.001 m",
+    "hem_edge_midpoints": "abs(x) < 0.37; 0.14 < z < 0.58; rest edge length > 0.001 m",
+    "lower_sleeve_vertices": "0.40 < abs(x) < 0.71; 0.60 < z < 1.05",
+    "lower_sleeve_count": 1710,
+    "dominant_bone_original": {
+      "RightLowerArm": 394,
+      "LeftLowerArm": 393,
+      "Sec_Sleeve_L_02": 337,
+      "Sec_Sleeve_R_02": 337,
+      "Sec_Sleeve_L_01": 120,
+      "Sec_Sleeve_R_01": 120,
+      "LeftUpperArm": 5,
+      "RightUpperArm": 4
+    },
+    "dominant_bone_charakuru": {
+      "LeftUpperLeg": 689,
+      "RightUpperLeg": 688,
+      "LeftLowerArm": 151,
+      "RightLowerArm": 151,
+      "Hips": 15,
+      "LeftUpperArm": 7,
+      "RightUpperArm": 7,
+      "UpperChest": 2
+    }
+  },
+  "donor_surface_distance": {
+    "mesh": "FU_Yuan_Working",
+    "vertices": 21603,
+    "max_gap_m": 0.48612862825393677,
+    "over_5cm": 9027,
+    "max_influences": 4
+  }
+}
